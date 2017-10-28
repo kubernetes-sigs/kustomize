@@ -6,25 +6,21 @@
 # travis logs to see how branch files were considered.
 function consider-early-travis-exit {
   if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-    echo "Not a travis pull request."
+    echo "Unknown pull request."
     return
   fi
-  if [ -z "$TRAVIS_BRANCH" ]; then
-    echo "Unknown travis branch."
-    return
-  fi
-  echo "TRAVIS_BRANCH=$TRAVIS_BRANCH"
-  local branchFiles=$(git diff --name-only FETCH_HEAD...$TRAVIS_BRANCH)
-  local invisibles=0
-  local triggers=0
-  echo "Branch Files (X==invisible to travis):"
+  # Might use this to improve checks on multi-commit PRs.
+  echo "TRAVIS_COMMIT_RANGE=$TRAVIS_COMMIT_RANGE"
+  echo "Branch Files ('T'==trigger tests, ' '=ignore):"
   echo "---"
-  for fn in $branchFiles; do
+  local triggers=0
+  local invisibles=0
+  for fn in $(git diff --name-only HEAD origin/master); do
     if [[ "$fn" =~ (\.md$)|(^docs/) ]]; then
-      echo "  X  $fn"
+      echo "     $fn"
       let invisibles+=1
     else
-      echo "     $fn"
+      echo "  T  $fn"
       let triggers+=1
     fi
   done
@@ -32,7 +28,7 @@ function consider-early-travis-exit {
   printf >&2 "%6d files invisible to travis.\n" $invisibles
   printf >&2 "%6d files trigger travis.\n" $triggers
   if [ $triggers -eq 0 ]; then
-    echo "Exiting travis early."
+    echo "No files triggered travis test, exiting early."
     # see https://github.com/travis-ci/travis-build/blob/master/lib/travis/build/templates/header.sh
     travis_terminate 0
   fi
