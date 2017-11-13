@@ -1,46 +1,25 @@
 #!/bin/bash
-# Runs pre-commit tests.
-#
-# Instead of failing on first error, complete all checks, then fail if need be.
 
-# Echo go's version to verify against go's behavior below.
-# Different versions do different things with respect to vendored code.
-go version
+rc=0
 
-# Assert state.
-if [ -n "$failIt" ]; then
-  echo "Expecting failIt to be empty."
-  exit 1
-fi
+go_dirs() {
+  go list -f '{{.Dir}}' ./... | tr '\n' '\0'
+}
 
-wantEmpty=$(gofmt -s -d -l . 2>&1 )
-if [ -n "$wantEmpty" ]; then
-  printf >&2 '\ngofmt failed for:\n%s\n' "$wantEmpty"
-  failIt=1
-fi
+echo "Running go fmt"
+go_dirs | xargs -0 gofmt -s -d -l
+rc=$((rc || $?))
 
-wantEmpty=$(goimports -l $(find . -type f -name '*.go' -not -path "./vendor/*") 2>&1)
-if [ -n "$wantEmpty" ]; then
-  printf >&2 '\ngoimports failed for:\n%s\n' "$wantEmpty"
-  failIt=1
-fi
+echo "Running goimports"
+diff -u <(echo -n) <(go_dirs | xargs -0 goimports -l)
+rc=$((rc || $?))
 
-wantEmpty=$(go vet -all ./... 2>&1)
-if [ -n "$wantEmpty" ]; then
-  printf >&2 '\ngo vet failed for:\n%s\n' "$wantEmpty"
-  failIt=1
-fi
+echo "Running go vet"
+go vet -all ./...
+rc=$((rc || $?))
 
-wantEmpty=$(golint ./...)
-if [ -n "$wantEmpty" ]; then
-  printf >&2 '\ngolint failed for:\n%s\n' "$wantEmpty"
-  failIt=1
-fi
-
-if [ -n "$failIt" ]; then
-  unset failIt
-  exit 1
-fi
-
+echo "Running go test"
 go test -v ./...
+rc=$((rc || $?))
 
+exit $rc
