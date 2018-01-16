@@ -15,7 +15,7 @@ go_dirs() {
 }
 
 echo "Running go fmt"
-go_dirs | xargs -0 gofmt -s -d -l
+diff <(echo -n) <(go_dirs | xargs -0 gofmt -s -d -l)
 rc=$((rc || $?))
 
 echo "Running goimports"
