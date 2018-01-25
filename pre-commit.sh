@@ -26,10 +26,6 @@ echo "Running go vet"
 go vet -all ./...
 rc=$((rc || $?))
 
-echo "Installing test binaries"
-./pkg/framework/test/scripts/download-binaries.sh
-rc=$((rc || $?))
-
 echo "Running go test"
 go test -v ./...
 rc=$((rc || $?))
