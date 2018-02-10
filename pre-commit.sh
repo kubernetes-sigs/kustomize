@@ -30,4 +30,8 @@ echo "Running go test"
 go test -v ./...
 rc=$((rc || $?))
 
+echo "Testing kinflate demos"
+mdrip --mode test --label test ./cmd/kinflate
+rc=$((rc || $?))
+
 exit $rc
