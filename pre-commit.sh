@@ -10,28 +10,47 @@ cd "$base_dir" || {
 
 rc=0
 
-go_dirs() {
+function go_dirs {
   go list -f '{{.Dir}}' ./... | tr '\n' '\0'
 }
 
-echo "Running go fmt"
-diff <(echo -n) <(go_dirs | xargs -0 gofmt -s -d -l)
-rc=$((rc || $?))
+function runTest {
+  local name=$1
+  local result="SUCCESS"
+  printf "============== begin %s\n" "$name"
+  $name
+  local code=$?
+  rc=$((rc || $code))
+  if [ $code -ne 0 ]; then
+    result="FAILURE"
+  fi
+  printf "============== end %s : %s code=%d\n\n\n" "$name" "$result" $code
+}
 
-echo "Running goimports"
-diff -u <(echo -n) <(go_dirs | xargs -0 goimports -l)
-rc=$((rc || $?))
+function testGoFmt {
+  diff <(echo -n) <(go_dirs | xargs -0 gofmt -s -d -l)
+}
 
-echo "Running go vet"
-go vet -all ./...
-rc=$((rc || $?))
+function testGoImports {
+  diff -u <(echo -n) <(go_dirs | xargs -0 goimports -l)
+}
 
-echo "Running go test"
-go test -v ./...
-rc=$((rc || $?))
+function testGoVet {
+  go vet -all ./...
+}
 
-echo "Testing kinflate demos"
-mdrip --mode test --label test ./cmd/kinflate
-rc=$((rc || $?))
+function testGoTest {
+  go test -v ./...
+}
+
+function testTutorial {
+  mdrip --mode test --label test ./cmd/kinflate
+}
+
+runTest testGoFmt
+runTest testGoImports
+runTest testGoVet
+runTest testGoTest
+runTest testTutorial
 
 exit $rc
