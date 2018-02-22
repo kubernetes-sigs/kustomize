@@ -28,11 +28,11 @@ func TestFileLoaderHappyPath(t *testing.T) {
 	location := "foo"
 	content := []byte("bar")
 	fakefs.WriteFile(location, content)
-	l, err := NewFileLoader(fakefs, location)
+	l, err := newFileLoader(fakefs)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	b, err := l.Load()
+	b, err := l.load(location)
 	if err != nil {
 		t.Fatalf("unexpected error in Load: %v", err)
 	}
@@ -43,11 +43,11 @@ func TestFileLoaderHappyPath(t *testing.T) {
 
 func TestFileLoaderFileNotFound(t *testing.T) {
 	fakefs := fs.MakeFakeFS()
-	l, err := NewFileLoader(fakefs, "path/does/not/exist")
+	l, err := newFileLoader(fakefs)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	_, err = l.Load()
+	_, err = l.load("/path/does/not/exist")
 	if err == nil {
 		t.Fatal("expected error in Load, but no error returned")
 	}

@@ -17,19 +17,32 @@ limitations under the License.
 package loader
 
 import (
+	"path/filepath"
+
 	"k8s.io/kubectl/pkg/kinflate/util/fs"
 )
 
+// Implements internal interface schemeLoader.
 type fileLoader struct {
 	fs fs.FileSystem
-
-	path string
 }
 
-func NewFileLoader(fs fs.FileSystem, path string) (Loader, error) {
-	return &fileLoader{fs: fs, path: path}, nil
+func newFileLoader(fs fs.FileSystem) (schemeLoader, error) {
+	return &fileLoader{fs: fs}, nil
 }
 
-func (l *fileLoader) Load() ([]byte, error) {
-	return l.fs.ReadFile(l.path)
+// Join the root path with the location path.
+func (l *fileLoader) fullLocation(root string, location string) string {
+	fullLocation := location
+	if !filepath.IsAbs(location) {
+		fullLocation = filepath.Join(root, location)
+	}
+	return fullLocation
+}
+
+// Load returns the bytes from reading a file at fullFilePath.
+// Implements the Loader interface.
+func (l *fileLoader) load(fullFilePath string) ([]byte, error) {
+	// TODO: Check that fullFilePath is an absolute file path.
+	return l.fs.ReadFile(fullFilePath)
 }

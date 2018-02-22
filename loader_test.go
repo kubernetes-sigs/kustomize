@@ -17,20 +17,23 @@ limitations under the License.
 package loader
 
 import (
-	"fmt"
+	"reflect"
+	"testing"
 
 	"k8s.io/kubectl/pkg/kinflate/util/fs"
 )
 
-func GetLoader(location string) (Loader, error) {
-	switch {
-	case isFilePath(location):
-		return NewFileLoader(fs.MakeRealFS(), location)
-	default:
-		return nil, fmt.Errorf("unknown scheme: %v", location)
+func TestLoader_Load(t *testing.T) {
+	fakefs := fs.MakeFakeFS()
+	location := "/home/seans/project/Kube-manifest.yaml"
+	content := []byte("This is a kinflate manifest")
+	fakefs.WriteFile(location, content)
+	loader := RootLoader(location, fakefs)
+	manifestBytes, err := loader.Load(location)
+	if err != nil {
+		t.Fatalf("Unexpected error in Load(): %v", err)
 	}
-}
-
-func isFilePath(location string) bool {
-	return true
+	if !reflect.DeepEqual(content, manifestBytes) {
+		t.Fatalf("expected %s, but got %s", content, manifestBytes)
+	}
 }
