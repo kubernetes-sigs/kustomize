@@ -17,32 +17,75 @@ limitations under the License.
 package loader
 
 import (
+	"fmt"
+	"os"
 	"path/filepath"
 
 	"k8s.io/kubectl/pkg/kinflate/util/fs"
 )
 
-// Implements internal interface schemeLoader.
+const currentDir = "."
+
+// Internal implementation of SchemeLoader interface.
 type fileLoader struct {
 	fs fs.FileSystem
 }
 
-func newFileLoader(fs fs.FileSystem) (schemeLoader, error) {
-	return &fileLoader{fs: fs}, nil
+// NewFileLoader returns a SchemeLoader to handle a file system.
+func NewFileLoader(fs fs.FileSystem) SchemeLoader {
+	return &fileLoader{fs: fs}
 }
 
-// Join the root path with the location path.
-func (l *fileLoader) fullLocation(root string, location string) string {
+// Is the location calculated with the root and location params a full file path.
+func (l *fileLoader) IsScheme(root string, location string) bool {
+	fullFilePath, err := l.FullLocation(root, location)
+	if err != nil {
+		return false
+	}
+	return filepath.IsAbs(fullFilePath)
+}
+
+// Returns the directory of the calculated full file path.
+// Example: "/home/seans/project", "subdir/file.txt" -> "/home/seans/project/subdir".
+func (l *fileLoader) Root(root string, location string) (string, error) {
+	fullFilePath, err := l.FullLocation(root, location)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Dir(fullFilePath), nil
+}
+
+// If location is a full file path, then ignore root. If location is relative, then
+// join the root path with the location path. Either root or location can be empty,
+// but not both.
+// Example: "/home/seans/project", "subdir/file.txt" -> "/home/seans/project/subdir/file.txt".
+func (l *fileLoader) FullLocation(root string, location string) (string, error) {
+	// First, validate the parameters
+	if len(root) == 0 && len(location) == 0 {
+		return "", fmt.Errorf("Unable to calculate full location: root and location empty")
+	}
+	// Special case current directory, expanding to full file path.
+	if location == currentDir {
+		currentDir, err := os.Getwd()
+		if err != nil {
+			return "", err
+		}
+		location = currentDir
+	}
+	// Assume the location is an full file path. If not, then join root with location.
 	fullLocation := location
 	if !filepath.IsAbs(location) {
 		fullLocation = filepath.Join(root, location)
 	}
-	return fullLocation
+	return fullLocation, nil
 }
 
 // Load returns the bytes from reading a file at fullFilePath.
 // Implements the Loader interface.
-func (l *fileLoader) load(fullFilePath string) ([]byte, error) {
-	// TODO: Check that fullFilePath is an absolute file path.
+func (l *fileLoader) Load(fullFilePath string) ([]byte, error) {
+	// Validate path to load from is a full file path.
+	if !filepath.IsAbs(fullFilePath) {
+		return nil, fmt.Errorf("Attempting to load file without full file path: %s\n", fullFilePath)
+	}
 	return l.fs.ReadFile(fullFilePath)
 }
