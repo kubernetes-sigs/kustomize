@@ -21,6 +21,10 @@ type FakeLoader struct {
 	Content string
 }
 
+func (f FakeLoader) Root() string {
+	return "/fake/root"
+}
+
 func (f FakeLoader) New(root string) (Loader, error) {
 	return f, nil
 }
