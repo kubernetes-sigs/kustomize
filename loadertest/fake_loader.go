@@ -14,7 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package loader
+package loadertest
+
+import "k8s.io/kubectl/pkg/loader"
 
 // FakeLoader implements Loader interface.
 type FakeLoader struct {
@@ -25,7 +27,7 @@ func (f FakeLoader) Root() string {
 	return "/fake/root"
 }
 
-func (f FakeLoader) New(root string) (Loader, error) {
+func (f FakeLoader) New(root string) (loader.Loader, error) {
 	return f, nil
 }
 
@@ -33,4 +35,4 @@ func (f FakeLoader) Load(location string) ([]byte, error) {
 	return []byte(f.Content), nil
 }
 
-var _ Loader = FakeLoader{}
+var _ loader.Loader = FakeLoader{}
