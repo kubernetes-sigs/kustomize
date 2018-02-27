@@ -16,23 +16,50 @@ limitations under the License.
 
 package loadertest
 
-import "k8s.io/kubectl/pkg/loader"
+import (
+	"os"
 
-// FakeLoader implements Loader interface.
+	"k8s.io/kubectl/pkg/kinflate/util/fs"
+	"k8s.io/kubectl/pkg/loader"
+)
+
+// FakeLoader encapsulates the delegate Loader and the fake file system.
 type FakeLoader struct {
-	Content string
+	fs       fs.FileSystem
+	delegate loader.Loader
+}
+
+// NewFakeLoader returns a Loader that delegates calls, and encapsulates
+// a fake file system that the Loader reads from . "initialFilePath" parameter
+// must be an absolute path.
+func NewFakeLoader(initialFilePath string) FakeLoader {
+	// Create fake filesystem and inject it into initial Loader.
+	fakefs := fs.MakeFakeFS()
+	var schemes []loader.SchemeLoader
+	schemes = append(schemes, loader.NewFileLoader(fakefs))
+	rootLoader := loader.Init(schemes)
+	loader, _ := rootLoader.New(initialFilePath)
+	return FakeLoader{fs: fakefs, delegate: loader}
+}
+
+// Adds a fake file to the file system.
+func (f FakeLoader) AddFile(fullFilePath string, content []byte) error {
+	return f.fs.WriteFile(fullFilePath, content)
+}
+
+// Adds a fake directory to the file system.
+func (f FakeLoader) AddDirectory(fullDirPath string, mode os.FileMode) error {
+	return f.fs.Mkdir(fullDirPath, mode)
 }
 
 func (f FakeLoader) Root() string {
-	return "/fake/root"
+	return f.delegate.Root()
 }
 
-func (f FakeLoader) New(root string) (loader.Loader, error) {
-	return f, nil
+func (f FakeLoader) New(newRoot string) (loader.Loader, error) {
+	return f.delegate.New(newRoot)
 }
 
 func (f FakeLoader) Load(location string) ([]byte, error) {
-	return []byte(f.Content), nil
+	return f.delegate.Load(location)
 }
-
-var _ loader.Loader = FakeLoader{}
