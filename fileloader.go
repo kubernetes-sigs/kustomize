@@ -45,20 +45,10 @@ func (l *fileLoader) IsScheme(root string, location string) bool {
 	return filepath.IsAbs(fullFilePath)
 }
 
-// Returns the directory of the calculated full file path.
-// Example: "/home/seans/project", "subdir/file.txt" -> "/home/seans/project/subdir".
-func (l *fileLoader) Root(root string, location string) (string, error) {
-	fullFilePath, err := l.FullLocation(root, location)
-	if err != nil {
-		return "", err
-	}
-	return filepath.Dir(fullFilePath), nil
-}
-
 // If location is a full file path, then ignore root. If location is relative, then
 // join the root path with the location path. Either root or location can be empty,
-// but not both.
-// Example: "/home/seans/project", "subdir/file.txt" -> "/home/seans/project/subdir/file.txt".
+// but not both. Special case for ".": Expands to current working directory.
+// Example: "/home/seans/project", "subdir/bar" -> "/home/seans/project/subdir/bar".
 func (l *fileLoader) FullLocation(root string, location string) (string, error) {
 	// First, validate the parameters
 	if len(root) == 0 && len(location) == 0 {
@@ -72,7 +62,7 @@ func (l *fileLoader) FullLocation(root string, location string) (string, error) 
 		}
 		location = currentDir
 	}
-	// Assume the location is an full file path. If not, then join root with location.
+	// Assume the location is a full file path. If not, then join root with location.
 	fullLocation := location
 	if !filepath.IsAbs(location) {
 		fullLocation = filepath.Join(root, location)

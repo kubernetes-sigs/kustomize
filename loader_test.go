@@ -49,15 +49,16 @@ func TestLoader_Root(t *testing.T) {
 		t.Fatalf("Expected error for unknown scheme not returned")
 	}
 
-	loader, err := rootLoader.New("/home/seans/project/file.yaml")
+	// Test with trailing slash in directory.
+	loader, err := rootLoader.New("/home/seans/project/")
 	if err != nil {
 		t.Fatalf("Unexpected in New(): %v\n", err)
 	}
-	if "/home/seans/project" != loader.Root() {
+	if "/home/seans/project/" != loader.Root() {
 		t.Fatalf("Incorrect Loader Root: %s\n", loader.Root())
 	}
 
-	subLoader, err := loader.New("subdir/file.yaml")
+	subLoader, err := loader.New("subdir")
 	if err != nil {
 		t.Fatalf("Unexpected in New(): %v\n", err)
 	}
@@ -65,7 +66,8 @@ func TestLoader_Root(t *testing.T) {
 		t.Fatalf("Incorrect Loader Root: %s\n", subLoader.Root())
 	}
 
-	anotherLoader, err := loader.New("/home/seans/project2/file.yaml")
+	// Test without trailing slash in directory.
+	anotherLoader, err := loader.New("/home/seans/project2")
 	if err != nil {
 		t.Fatalf("Unexpected in New(): %v\n", err)
 	}
@@ -92,7 +94,7 @@ func TestLoader_Load(t *testing.T) {
 	fakefs.WriteFile("/home/seans/project2/file.yaml", []byte("This is another yaml file"))
 	rootLoader := initializeRootLoader(fakefs)
 
-	loader, err := rootLoader.New("/home/seans/project/file.yaml")
+	loader, err := rootLoader.New("/home/seans/project")
 	if err != nil {
 		t.Fatalf("Unexpected in New(): %v\n", err)
 	}

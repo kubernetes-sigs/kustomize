@@ -39,8 +39,6 @@ type loaderImpl struct {
 type SchemeLoader interface {
 	// Does this location correspond to this scheme.
 	IsScheme(root string, location string) bool
-	// Calulcate a new root.
-	Root(root string, location string) (string, error)
 	// Combines the root and path into a full location string.
 	FullLocation(root string, path string) (string, error)
 	// Load bytes at scheme-specific location or an error.
@@ -60,13 +58,17 @@ func (l *loaderImpl) Root() string {
 	return l.root
 }
 
-// Returns a new Loader rooted at newRoot.
+// Returns a new Loader rooted at newRoot. "newRoot" MUST be
+// a directory (not a file). The directory can have a trailing
+// slash or not.
+// Example: "/home/seans/project" or "/home/seans/project/"
+// NOT "/home/seans/project/file.yaml".
 func (l *loaderImpl) New(newRoot string) (Loader, error) {
 	scheme, err := l.getSchemeLoader(newRoot)
 	if err != nil {
 		return nil, err
 	}
-	root, err := scheme.Root(l.root, newRoot)
+	root, err := scheme.FullLocation(l.root, newRoot)
 	if err != nil {
 		return nil, err
 	}
@@ -74,6 +76,8 @@ func (l *loaderImpl) New(newRoot string) (Loader, error) {
 }
 
 // Load returns all the bytes read from scheme-specific location or an error.
+// "location" can be an absolute path, or if relative, full location is
+// calculated from the Root().
 func (l *loaderImpl) Load(location string) ([]byte, error) {
 	scheme, err := l.getSchemeLoader(location)
 	if err != nil {
