@@ -19,7 +19,7 @@ package loadertest
 import (
 	"os"
 
-	"k8s.io/kubectl/pkg/kinflate/util/fs"
+	"k8s.io/kubectl/pkg/kustomize/util/fs"
 	"k8s.io/kubectl/pkg/loader"
 )
 
