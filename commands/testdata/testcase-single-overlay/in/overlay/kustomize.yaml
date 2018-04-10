@@ -1,0 +1,25 @@
+apiVersion: manifest.k8s.io/v1alpha1
+kind: Manifest
+metadata:
+  name: nginx-app
+namePrefix: staging-
+objectLabels:
+  env: staging
+  team: override-foo
+patches:
+  - deployment.yaml
+bases:
+  - ../package/
+configMapGenerator:
+  - name: configmap-in-overlay
+    literals:
+      - hello=world
+  - name: configmap-in-base
+    behavior: replace
+    literals:
+      - foo=override-bar
+secretGenerator:
+- name: secret-in-base
+  behavior: merge
+  commands:
+    proxy: "printf haproxy"

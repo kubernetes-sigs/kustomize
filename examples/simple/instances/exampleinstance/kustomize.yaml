@@ -1,0 +1,35 @@
+# This example is from https://docs.google.com/document/d/1cLPGweVEYrVqQvBLJg6sxV-TrE5Rm2MNOBA_cxZP2WU/edit#heading=h.dr88tktf0e99
+
+apiVersion: manifest.k8s.io/v1alpha1
+kind: Manifest
+metadata:
+  name: test-infra-mungebot
+namePrefix: test-infra-
+# Labels to add to all objects and selectors.
+# These labels would also be used to form the selector for apply --prune
+# Named differently than “labels” to avoid confusion with metadata for this object
+objectLabels:
+  app: mungebot
+  org: kubernetes
+  repo: test-infra
+objectAnnotations:
+  note: This is a test annotation
+bases:
+- ../../package/
+#These are strategic merge patch overlays in the form of API resources
+patches:
+- deployment/deployment.yaml
+#There could also be configmaps in Base, which would make these overlays
+configMapGenerator:
+- name: app-env
+  env: configmap/app.env
+- name: app-config
+  files:
+  - configmap/app-init.ini
+#There could be secrets in Base, if just using a fork/rebase workflow
+secretGenerator:
+- name: app-tls
+  commands:
+    tls.crt: "cat secret/tls.cert"
+    tls.key: "cat secret/tls.key"
+  type: "kubernetes.io/tls"

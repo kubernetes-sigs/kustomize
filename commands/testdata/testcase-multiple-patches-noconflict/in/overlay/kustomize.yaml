@@ -1,0 +1,16 @@
+apiVersion: manifest.k8s.io/v1alpha1
+kind: Manifest
+metadata:
+  name: nginx-app
+namePrefix: staging-
+objectLabels:
+  env: staging
+patches:
+  - deployment-patch1.yaml
+  - deployment-patch2.yaml
+bases:
+  - ../package/
+configMapGenerator:
+  - name: configmap-in-overlay
+    literals:
+      - hello=world

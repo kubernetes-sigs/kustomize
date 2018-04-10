@@ -1,0 +1,15 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      volumes:
+      - name: nginx-persistent-storage
+        emptyDir: null
+        gcePersistentDisk:
+          pdName: nginx-persistent-storage
+      - configMap:
+          name: configmap-in-overlay
+        name: configmap-in-overlay
