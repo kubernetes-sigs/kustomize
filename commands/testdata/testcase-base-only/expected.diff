@@ -1,0 +1,58 @@
+diff -u -N /tmp/noop/apps_v1beta2_Deployment_nginx.yaml /tmp/transformed/apps_v1beta2_Deployment_nginx.yaml
+--- /tmp/noop/apps_v1beta2_Deployment_nginx.yaml	YYYY-MM-DD HH:MM:SS
++++ /tmp/transformed/apps_v1beta2_Deployment_nginx.yaml	YYYY-MM-DD HH:MM:SS
+@@ -1,14 +1,27 @@
+ apiVersion: apps/v1beta2
+ kind: Deployment
+ metadata:
++  annotations:
++    note: This is a test annotation
+   labels:
+-    app: nginx
+-  name: nginx
++    app: mynginx
++    org: example.com
++    team: foo
++  name: team-foo-nginx
+ spec:
++  selector:
++    matchLabels:
++      app: mynginx
++      org: example.com
++      team: foo
+   template:
+     metadata:
++      annotations:
++        note: This is a test annotation
+       labels:
+-        app: nginx
++        app: mynginx
++        org: example.com
++        team: foo
+     spec:
+       containers:
+       - image: nginx
+diff -u -N /tmp/noop/v1_Service_nginx.yaml /tmp/transformed/v1_Service_nginx.yaml
+--- /tmp/noop/v1_Service_nginx.yaml	YYYY-MM-DD HH:MM:SS
++++ /tmp/transformed/v1_Service_nginx.yaml	YYYY-MM-DD HH:MM:SS
+@@ -1,11 +1,17 @@
+ apiVersion: v1
+ kind: Service
+ metadata:
++  annotations:
++    note: This is a test annotation
+   labels:
+-    app: nginx
+-  name: nginx
++    app: mynginx
++    org: example.com
++    team: foo
++  name: team-foo-nginx
+ spec:
+   ports:
+   - port: 80
+   selector:
+-    app: nginx
++    app: mynginx
++    org: example.com
++    team: foo

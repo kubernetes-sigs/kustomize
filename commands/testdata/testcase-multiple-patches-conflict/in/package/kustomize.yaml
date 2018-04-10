@@ -1,0 +1,18 @@
+apiVersion: manifest.k8s.io/v1alpha1
+kind: Manifest
+metadata:
+  name: nginx-app
+namePrefix: team-foo-
+objectLabels:
+  app: mynginx
+  org: example.com
+  team: foo
+objectAnnotations:
+  note: This is a test annotation
+resources:
+  - deployment.yaml
+  - service.yaml
+configMapGenerator:
+  - name: configmap-in-base
+    literals:
+      - foo=bar
