@@ -44,7 +44,7 @@ function testGoTest {
 }
 
 function testTutorial {
-  mdrip --mode test --label test ./cmd/kinflate
+  mdrip --mode test --label test ./cmd/kustomize
 }
 
 runTest testGoFmt
