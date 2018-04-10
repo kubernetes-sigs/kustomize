@@ -21,7 +21,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"k8s.io/kubectl/pkg/kinflate/util/fs"
+	"k8s.io/kubectl/pkg/kustomize/util/fs"
 )
 
 const currentDir = "."
