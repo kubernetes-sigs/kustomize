@@ -1,0 +1,30 @@
+#  Copyright 2018 The Kubernetes Authors.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+# TODO(droot): add instructions for running in production.
+steps:
+- name: "ubuntu"
+  args: ["mkdir", "-p", "/workspace/_output"]
+- name: "golang:1.10-stretch"
+  args: ["bash", "cmd/kustomize/build/build.sh"]
+  env:
+  - 'GOOS=${_GOOS}'
+  - 'GOARCH=${_GOARCH}'
+  - 'VERSION=${TAG_NAME}'
+- name: 'gcr.io/cloud-builders/gsutil'
+  args: ['-h', 'Content-Type:application/gzip', 'cp', '-a', 'public-read', 'kustomize-${TAG_NAME}-${_GOOS}-${_GOARCH}.tar.gz', 'gs://kustomize-release/kustomize-${TAG_NAME}-${_GOOS}-${_GOARCH}.tar.gz']
+  env:
+  - 'GOOS=${_GOOS}'
+  - 'GOARCH=${_GOARCH}'
+  - 'VERSION=${TAG_NAME}'
