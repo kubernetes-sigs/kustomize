@@ -19,62 +19,31 @@ could add to a k8s cluster to run sbdemo.
 
 <!-- @makeSpringBootDir @test -->
 ```
+
 DEMO_HOME=$(mktemp -d)
 cd $DEMO_HOME
 
+CONTENT=https://raw.githubusercontent.com/kinflate
+
 # Get SpringBoot configs
 for f in service deployment; do \
-  wget https://raw.githubusercontent.com/kinflate/example-springboot/master/$f.yaml ; \
+  wget -q $CONTENT/example-springboot/master/$f.yaml ; \
 done
 ```
 
-### Initialize a manifest
+### Initialize kustomize.yaml
 
-A _manifest_ groups these resources together.
+The `kustomize` program gets its instructions from
+a file called `kustomize.yaml`.
 
-Create one:
+Start this file:
 
-<!-- @initApp @test -->
+<!-- @kustomizeYaml @test -->
 ```
-cd $DEMO_HOME
-kustomize init
-```
-
-The above step will create a `kustomize` configuration file called `kustomize.yaml` in current directory.
-
-<!-- @catMan @test -->
-```
-cat $DEMO_HOME/kustomize.yaml
+touch $DEMO_HOME/kustomize.yaml
 ```
 
-containing something like:
-
-
-> ```
-> apiVersion: manifest.k8s.io/v1alpha1
-> kind: Manifest
-> metadata:
->   name: helloworld
-> # description: helloworld does useful stuff.
-> namePrefix: some-prefix
-> # Labels to add to all objects and selectors.
-> # These labels would also be used to form the selector for apply --prune
-> # Named differently than “labels” to avoid confusion with metadata for this object
-> objectLabels:
->   app: helloworld
-> objectAnnotations:
->   note: This is a example annotation
-> resources:
-> - deployment.yaml
-> - service.yaml
-> # There could also be configmaps in Base, which would make these overlays
-> configMapGenerator: []
-> # There could be secrets in Base, if just using a fork/rebase workflow
-> secretGenerator: []
-> ```
-
-
-### Add the resources to the manifest
+### Add the resources
 
 <!-- @addResources @test -->
 ```
@@ -89,29 +58,29 @@ cat kustomize.yaml
 `kustomize.yaml`'s resources section should contain:
 
 > ```
-> apiVersion: manifest.k8s.io/v1alpha1
-> ....
 > resources:
 > - service.yaml
 > - deployment.yaml
 > ```
 
-### Add configmap to the manifest
+### Add configmap generator
+
 <!-- @addConfigMap @test -->
 ```
 cd $DEMO_HOME
-wget https://raw.githubusercontent.com/kinflate/example-springboot/master/application.properties
+wget -q $CONTENT/example-springboot/master/application.properties
 kustomize edit add configmap demo-configmap --from-file application.properties
 
 cat kustomize.yaml
 ```
+
 `kustomize.yaml`'s configMapGenerator section should contain:
+
 > ```
 > configMapGenerator:
 > - files:
 >   - application.properties
 >   name: demo-configmap
-> kind: Manifest
 > ```
 
 ### Customize configmap
@@ -119,11 +88,12 @@ We want to add database credentials for the prod environment. In general, these 
 However, for some cases, we want to keep the credentials in a different file and keep application specific configs in `application.properties`.
  With this clear separation, the credentials and application specific things can be managed and maintained flexibly by different teams.
 For example, application developers only tune the application configs in `application.properties` and operation teams or SREs
-only care about the credentials. 
+only care about the credentials.
 
 For Spring Boot application, we can set an active profile through the environment variable `spring.profiles.active`. Then
-the application will pick up an extra `application-<profile>.properties` file. With this, we can customize the configmap in two 
+the application will pick up an extra `application-<profile>.properties` file. With this, we can customize the configmap in two
 steps. Add an environment variable through the patch and add a file to the configmap.
+
 <!-- @customizeConfigMap @test -->
 ```
 cat <<EOF >$DEMO_HOME/patch.yaml
@@ -157,6 +127,7 @@ kustomize edit add configmap demo-configmap --from-file application-prod.propert
 
 cat kustomize.yaml
 ```
+
 `kustomize.yaml`'s configMapGenerator section should contain:
 > ```
 > configMapGenerator:
@@ -164,7 +135,6 @@ cat kustomize.yaml
 >   - application.properties
 >   - application-prod.properties
 >   name: demo-configmap
-> kind: Manifest
 > ```
 
 ### Name Customization
@@ -185,8 +155,6 @@ cat kustomize.yaml
 `kustomize.yaml` should have updated value of namePrefix field:
 
 > ```
-> apiVersion: manifest.k8s.io/v1alpha1
-> ....
 > namePrefix: prod-
 > objectAnnotations:
 >  note: This is a example annotation
@@ -201,6 +169,7 @@ kustomize build $DEMO_HOME
 ```
 
 The output should contain:
+
 > ```
 > apiVersion: v1
 > data:
@@ -250,21 +219,24 @@ generate MySQL configs with name-prefix 'prod-' and
 labels `env:prod`.
 
 
-### Download Patch for JVM memory 
+### Download Patch for JVM memory
 When a Spring Boot application is deployed in a k8s cluster, the JVM is running inside a container. We want to set memory limit for the container and make sure
-the JVM is aware of that limit. In K8s deployment, we can set the resource limits for containers and inject these limits to 
+the JVM is aware of that limit. In K8s deployment, we can set the resource limits for containers and inject these limits to
 some environment variables by downward API. When the container starts to run, it can pick up the environment variables and
 set JVM options accordingly.
 
 Download the patch `memorylimit_patch.yaml`. It contains the memory limits setup.
+
 <!-- @downloadPatch @test -->
 ```
 cd $DEMO_HOME
-wget https://raw.githubusercontent.com/kinflate/example-springboot-instances/master/production/memorylimit_patch.yaml
+wget -q $CONTENT/example-springboot-instances/master/production/memorylimit_patch.yaml
 
 cat memorylimit_patch.yaml
 ```
+
 The output contains
+
 > ```
 > apiVersion: apps/v1beta2
 > kind: Deployment
@@ -292,14 +264,17 @@ We also want to add liveness check and readiness check in the production environ
 has end points such as `/actuator/health` for this. We can customize the k8s deployment resource to talk to Spring Boot end point.
 
 Download the patch `healthcheck_patch.yaml`. It contains the liveness probes and readyness probes.
+
 <!-- @downloadPatch @test -->
 ```
 cd $DEMO_HOME
-wget https://raw.githubusercontent.com/kinflate/example-springboot-instances/master/production/healthcheck_patch.yaml
+wget -q $CONTENT/example-springboot-instances/master/production/healthcheck_patch.yaml
 
 cat healthcheck_patch.yaml
 ```
+
 The output contains
+
 > ```
 > apiVersion: apps/v1beta2
 > kind: Deployment
@@ -324,15 +299,21 @@ The output contains
 >               port: 8080
 > ```
 
-### Add patch to Manifest
-Currently `kustomize` doesn't provide a command to add a file as a patch, but we can edit the file `kustomize.yaml` to 
+### Add patches
+
+Currently `kustomize` doesn't provide a command to add a file as a patch, but we can edit the file `kustomize.yaml` to
 include this patch.
+
 <!-- @addPatch @test -->
 ```
 mv $DEMO_HOME/kustomize.yaml $DEMO_HOME/tmp.yaml
-sed '/patches:$/{N;s/- patch.yaml/- patch.yaml\n- memorylimit_patch.yaml\n- healthcheck_patch.yaml/}' $DEMO_HOME/tmp.yaml >& $DEMO_HOME/kustomize.yaml
+
+sed '/patches:$/{N;s/- patch.yaml/- patch.yaml\n- memorylimit_patch.yaml\n- healthcheck_patch.yaml/}' \
+    $DEMO_HOME/tmp.yaml >& $DEMO_HOME/kustomize.yaml
 ```
+
 `kustomize.yaml` should have patches field:
+
 > ```
 > patches
 > - patch.yaml
