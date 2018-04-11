@@ -21,60 +21,28 @@ could add to a k8s cluster to run MySql.
 DEMO_HOME=$(mktemp -d)
 cd $DEMO_HOME
 
+CONTENT=https://raw.githubusercontent.com/kinflate
+
 # Get MySQL configs
 for f in service secret deployment ; do \
-  wget https://raw.githubusercontent.com/kinflate/mysql/master/emptyDir/$f.yaml ; \
+  wget -q $CONTENT/mysql/master/emptyDir/$f.yaml ; \
 done
 ```
 
-### Initialize a manifest
 
-A _manifest_ groups these resources together.
+### Initialize kustomize.yaml
 
-Create one:
+The `kustomize` program gets its instructions from
+a file called `kustomize.yaml`.
 
-<!-- @initApp @test -->
+Start this file:
+
+<!-- @kustomizeYaml @test -->
 ```
-cd $DEMO_HOME
-kustomize init
-```
-
-You should now have a file called `kustomize.yaml`:
-
-<!-- @catMan @test -->
-```
-cat $DEMO_HOME/kustomize.yaml
+touch $DEMO_HOME/kustomize.yaml
 ```
 
-containing something like:
-
-
-> ```
-> apiVersion: manifest.k8s.io/v1alpha1
-> kind: Manifest
-> metadata:
->   name: helloworld
-> # description: helloworld does useful stuff.
-> namePrefix: some-prefix
-> # Labels to add to all objects and selectors.
-> # These labels would also be used to form the selector for apply --prune
-> # Named differently than “labels” to avoid confusion with metadata for this object
-> objectLabels:
->   app: helloworld
-> objectAnnotations:
->   note: This is a example annotation
-> resources:
-> - deployment.yaml
-> - service.yaml
-> # There could also be configmaps in Base, which would make these overlays
-> configmaps: []
-> # There could be secrets in Base, if just using a fork/rebase workflow
-> secrets: []
-> recursive: true
-> ```
-
-
-### Add the resources to the manifest
+### Add the resources
 
 <!-- @addResources @test -->
 ```
@@ -90,8 +58,6 @@ cat kustomize.yaml
 `kustomize.yaml`'s resources section should contain:
 
 > ```
-> apiVersion: manifest.k8s.io/v1alpha1
-> ....
 > resources:
 > - secret.yaml
 > - service.yaml
@@ -116,11 +82,7 @@ cat kustomize.yaml
 `kustomize.yaml` should have updated value of namePrefix field:
 
 > ```
-> apiVersion: manifest.k8s.io/v1alpha1
-> ....
 > namePrefix: prod-
-> objectAnnotations:
->  note: This is a example annotation
 > ```
 
 This `namePrefix` directive adds _prod-_ to all
@@ -132,6 +94,7 @@ kustomize build $DEMO_HOME
 ```
 
 The output should contain:
+
 > ```
 > apiVersion: v1
 > data:
@@ -207,7 +170,7 @@ spec:
 EOF
 ```
 
-Specify the patch file in the manifest:
+Add the patch file to `kustomize.yaml`:
 
 <!-- @specifyPatch @test -->
 ```
