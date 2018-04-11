@@ -23,9 +23,10 @@
 steps:
 - name: "ubuntu"
   args: ["mkdir", "-p", "/workspace/_output"]
-- name: "golang:1.10-stretch"
+- name: "gcr.io/kustomize-199618/golang_with_goreleaser:1.10-stretch"
   args: ["bash", "cmd/kustomize/build/build.sh"]
-  env:
-  - 'GOOS=${_GOOS}'
-  - 'GOARCH=${_GOARCH}'
-  - 'VERSION=${TAG_NAME}'
+  secretEnv: ['GITHUB_TOKEN']
+secrets:
+- kmsKeyName: projects/kustomize-199618/locations/global/keyRings/github-tokens/cryptoKeys/gh-release-token
+  secretEnv:
+   GITHUB_TOKEN: CiQAyrREbPgXJOeT7M3t+WlxkhXwlMPudixBeiyWTjmLOMLqdK4SUQA0W+xUmDJKAhyfHCcwqSEzUn9OwKC7XAYcmwe0CCKTCbPbDgmioDK24q3LVapndXNvnnHvCjhOJNEr1o+P1DCF+LlzYV2YL8lP09rrKrslPg==

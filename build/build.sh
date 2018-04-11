@@ -22,30 +22,21 @@ set -x
 # - Create the directory to host the code that matches the expected GOPATH package locations
 # - Use /go as the default GOPATH because this is what the image uses
 # - Link our current directory (containing the source code) to the package location in the GOPATH
+
 export PKG=k8s.io
 export REPO=kubectl
 export CMD=kustomize
 
-mkdir -p /go/src/$PKG
-ln -s $(pwd) /go/src/$PKG/$REPO
+GO_PKG_OWNER=$GOPATH/src/$PKG
+GO_PKG_PATH=$GO_PKG_OWNER/$REPO
 
-# Create the output directory for the binaries we will build
-# Make sure CGO is 0 so the binaries are statically compiled and linux which is necessary for cross compiling go
-export CGO=0
-export DEST=/workspace/_output/$CMD/bin
-mkdir -p $DEST || echo ""
+mkdir -p $GO_PKG_OWNER
+ln -s $(pwd) $GO_PKG_PATH
 
-go build -o $DEST/$CMD $PKG/$REPO/cmd/$CMD
+# When invoked in container builder, this script runs under /workspace which is
+# not under $GOPATH, so we need to `cd` to repo under GOPATH for it to build
+cd $GO_PKG_PATH
 
-# Explicitly set the values of the variables in package "X" using ldflag so that they are statically compiled into
-# the "version" command
-export GITCOMMIT=$(git rev-parse HEAD)
-export BUILDDATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
-export X=$PKG/$REPO/cmd/$CMD/version
-go build -o $DEST/$CMD \
- -ldflags "-X $X.kustomizeVersion=$TAG -X $X.goos=$GOOS -X $X.goarch=$GOARCH -X $X.gitCommit=$GITCOMMIT -X $X.buildDate=$BUILDDATE" \
-	$PKG/$REPO/cmd/$CMD
-
-# Generate the tar archive
-cd /workspace/_output/
-tar -czvf /workspace/$CMD-$VERSION-$GOOS-$GOARCH.tar.gz $CMD
+/goreleaser release --config=cmd/$CMD/build/.goreleaser.yml --debug --rm-dist
+# --skip-validate
+# --snapshot --skip-publish
