@@ -22,9 +22,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	manifest "k8s.io/kubectl/pkg/apis/manifest/v1alpha1"
 	"k8s.io/kubectl/pkg/kustomize/configmapandsecret"
 	"k8s.io/kubectl/pkg/kustomize/constants"
+	"k8s.io/kubectl/pkg/kustomize/types"
 	"k8s.io/kubectl/pkg/kustomize/util/fs"
 )
 
@@ -32,13 +32,13 @@ func newCmdAddConfigMap(errOut io.Writer, fsys fs.FileSystem) *cobra.Command {
 	var config dataConfig
 	cmd := &cobra.Command{
 		Use:   "configmap NAME [--from-file=[key=]source] [--from-literal=key1=value1]",
-		Short: "Adds a configmap to the manifest.",
+		Short: "Adds a configmap to the kustomize config file.",
 		Long:  "",
 		Example: `
-	# Adds a configmap to the Manifest (with a specified key)
+	# Adds a configmap to the kustomize config file (with a specified key)
 	kustomize edit add configmap my-configmap --from-file=my-key=file/path --from-literal=my-literal=12345
 
-	# Adds a configmap to the Manifest (key is the filename)
+	# Adds a configmap to the kustomize config file (key is the filename)
 	kustomize edit add configmap my-configmap --from-file=file/path
 
 	# Adds a configmap from env-file
@@ -50,7 +50,7 @@ func newCmdAddConfigMap(errOut io.Writer, fsys fs.FileSystem) *cobra.Command {
 				return err
 			}
 
-			// Load in the manifest file.
+			// Load in the kustomize config file.
 			mf, err := newManifestFile(constants.KustomizeFileName, fsys)
 			if err != nil {
 				return err
@@ -61,13 +61,13 @@ func newCmdAddConfigMap(errOut io.Writer, fsys fs.FileSystem) *cobra.Command {
 				return err
 			}
 
-			// Add the config map to the manifest.
+			// Add the config map to the kustomize config file.
 			err = addConfigMap(m, config)
 			if err != nil {
 				return err
 			}
 
-			// Write out the manifest with added configmap.
+			// Write out the kustomize config file with added configmap.
 			return mf.write(m)
 		},
 	}
@@ -79,10 +79,10 @@ func newCmdAddConfigMap(errOut io.Writer, fsys fs.FileSystem) *cobra.Command {
 	return cmd
 }
 
-// addConfigMap updates a configmap within a manifest, using the data in config.
-// Note: error may leave manifest in an undefined state. Suggest passing a copy
-// of manifest.
-func addConfigMap(m *manifest.Manifest, config dataConfig) error {
+// addConfigMap updates a configmap within a kustomize config file, using the data in config.
+// Note: error may leave kustomize config file in an undefined state. Suggest passing a copy
+// of kustomize config file.
+func addConfigMap(m *types.Manifest, config dataConfig) error {
 	cm := getOrCreateConfigMap(m, config.Name)
 
 	err := mergeData(&cm.DataSources, config)
@@ -90,7 +90,7 @@ func addConfigMap(m *manifest.Manifest, config dataConfig) error {
 		return err
 	}
 
-	// Validate manifest's configmap by trying to create corev1.configmap.
+	// Validate by trying to create corev1.configmap.
 	_, _, err = configmapandsecret.MakeConfigmapAndGenerateName(*cm)
 	if err != nil {
 		return err
@@ -99,19 +99,19 @@ func addConfigMap(m *manifest.Manifest, config dataConfig) error {
 	return nil
 }
 
-func getOrCreateConfigMap(m *manifest.Manifest, name string) *manifest.ConfigMapArgs {
+func getOrCreateConfigMap(m *types.Manifest, name string) *types.ConfigMapArgs {
 	for i, v := range m.ConfigMapGenerator {
 		if name == v.Name {
 			return &m.ConfigMapGenerator[i]
 		}
 	}
-	// config map not found, create new one and add it to the manifest.
-	cm := &manifest.ConfigMapArgs{Name: name}
+	// config map not found, create new one and add it to the kustomize config file.
+	cm := &types.ConfigMapArgs{Name: name}
 	m.ConfigMapGenerator = append(m.ConfigMapGenerator, *cm)
 	return &m.ConfigMapGenerator[len(m.ConfigMapGenerator)-1]
 }
 
-func mergeData(src *manifest.DataSources, config dataConfig) error {
+func mergeData(src *types.DataSources, config dataConfig) error {
 	src.LiteralSources = append(src.LiteralSources, config.LiteralSources...)
 	src.FileSources = append(src.FileSources, config.FileSources...)
 	if src.EnvSource != "" && src.EnvSource != config.EnvFileSource {

@@ -22,11 +22,11 @@ import (
 
 	"github.com/ghodss/yaml"
 
-	manifest "k8s.io/kubectl/pkg/apis/manifest/v1alpha1"
 	"k8s.io/kubectl/pkg/kustomize/constants"
 	interror "k8s.io/kubectl/pkg/kustomize/internal/error"
 	"k8s.io/kubectl/pkg/kustomize/resource"
 	"k8s.io/kubectl/pkg/kustomize/transformers"
+	"k8s.io/kubectl/pkg/kustomize/types"
 	"k8s.io/kubectl/pkg/loader"
 )
 
@@ -35,8 +35,10 @@ type Application interface {
 	Resources() (resource.ResourceCollection, error)
 	// SemiResources computes and returns the resources without name hash and name reference for the app
 	SemiResources() (resource.ResourceCollection, error)
-	// RawResources computes and returns the raw resources from the manifest.
-	// It contains resources from 1) untransformed resources from current manifest 2) transformed resources from sub packages
+	// RawResources computes and returns the raw resources from the kustomize config file.
+	// It contains resources from
+	// 1) untransformed resources from current kustomize config file
+	// 2) transformed resources from sub packages
 	RawResources() (resource.ResourceCollection, error)
 }
 
@@ -44,19 +46,19 @@ var _ Application = &applicationImpl{}
 
 // Private implementation of the Application interface
 type applicationImpl struct {
-	manifest *manifest.Manifest
+	manifest *types.Manifest
 	loader   loader.Loader
 }
 
-// NewApp parses the manifest at the path using the loader.
+// NewApp parses the kustomize config file at the path using the loader.
 func New(loader loader.Loader) (Application, error) {
-	// load the manifest using the loader
+	// load the kustomize config file using the loader
 	manifestBytes, err := loader.Load(constants.KustomizeFileName)
 	if err != nil {
 		return nil, err
 	}
 
-	var m manifest.Manifest
+	var m types.Manifest
 	err = unmarshal(manifestBytes, &m)
 	if err != nil {
 		return nil, err
@@ -64,7 +66,7 @@ func New(loader loader.Loader) (Application, error) {
 	return &applicationImpl{manifest: &m, loader: loader}, nil
 }
 
-// Resources computes and returns the resources from the manifest.
+// Resources computes and returns the resources from the kustomize config file.
 // The namehashing for configmap/secrets and resolving name reference is only done
 // in the most top overlay once at the end of getting resources.
 func (a *applicationImpl) Resources() (resource.ResourceCollection, error) {
@@ -130,7 +132,7 @@ func (a *applicationImpl) SemiResources() (resource.ResourceCollection, error) {
 	return allRes, nil
 }
 
-// RawResources computes and returns the raw resources from the manifest.
+// RawResources computes and returns the raw resources from the kustomize config file.
 // The namehashing for configmap/secrets and resolving name reference is only done
 // in the most top overlay once at the end of getting resources.
 func (a *applicationImpl) RawResources() (resource.ResourceCollection, error) {

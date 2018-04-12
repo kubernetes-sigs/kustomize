@@ -21,12 +21,12 @@ import (
 	"strings"
 	"testing"
 
-	manifest "k8s.io/kubectl/pkg/apis/manifest/v1alpha1"
+	"k8s.io/kubectl/pkg/kustomize/types"
 	"k8s.io/kubectl/pkg/kustomize/util/fs"
 )
 
 func TestWriteAndRead(t *testing.T) {
-	manifest := &manifest.Manifest{
+	manifest := &types.Manifest{
 		NamePrefix: "prefix",
 	}
 
@@ -67,21 +67,23 @@ func TestNewNotExist(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expect an error")
 	}
-	if !strings.Contains(err.Error(), "Run `kustomize init` first") {
-		t.Fatalf("expect an error contains %q, but got %v", "does not exist", err)
+	contained := "Missing kustomize config file"
+	if !strings.Contains(err.Error(), contained) {
+		t.Fatalf("expect an error contains %q, but got %v", contained, err)
 	}
 	_, err = newManifestFile("kustomize.yaml", fakeFS)
 	if err == nil {
 		t.Fatalf("expect an error")
 	}
-	if !strings.Contains(err.Error(), "Run `kustomize init` first") {
-		t.Fatalf("expect an error contains %q, but got %v", "does not exist", err)
+	if !strings.Contains(err.Error(), contained) {
+		t.Fatalf("expect an error contains %q, but got %v", contained, err)
 	}
 	_, err = newManifestFile(badSuffix, fakeFS)
 	if err == nil {
 		t.Fatalf("expect an error")
 	}
-	if !strings.Contains(err.Error(), "should have .yaml suffix") {
-		t.Fatalf("expect an error contains %q, but got %v", "does not exist", err)
+	contained = "should have .yaml suffix"
+	if !strings.Contains(err.Error(), contained) {
+		t.Fatalf("expect an error contains %q, but got %v", contained, err)
 	}
 }

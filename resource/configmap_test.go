@@ -22,15 +22,15 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	manifest "k8s.io/kubectl/pkg/apis/manifest/v1alpha1"
 	"k8s.io/kubectl/pkg/kustomize/resource"
+	"k8s.io/kubectl/pkg/kustomize/types"
 	"k8s.io/kubectl/pkg/loader/loadertest"
 )
 
 func TestNewFromConfigMaps(t *testing.T) {
 	type testCase struct {
 		description string
-		input       []manifest.ConfigMapArgs
+		input       []types.ConfigMapArgs
 		filepath    string
 		content     string
 		expected    resource.ResourceCollection
@@ -40,10 +40,10 @@ func TestNewFromConfigMaps(t *testing.T) {
 	testCases := []testCase{
 		{
 			description: "construct config map from env",
-			input: []manifest.ConfigMapArgs{
+			input: []types.ConfigMapArgs{
 				{
 					Name: "envConfigMap",
-					DataSources: manifest.DataSources{
+					DataSources: types.DataSources{
 						EnvSource: "app.env",
 					},
 				},
@@ -74,9 +74,9 @@ func TestNewFromConfigMaps(t *testing.T) {
 		},
 		{
 			description: "construct config map from file",
-			input: []manifest.ConfigMapArgs{{
+			input: []types.ConfigMapArgs{{
 				Name: "fileConfigMap",
-				DataSources: manifest.DataSources{
+				DataSources: types.DataSources{
 					FileSources: []string{"app-init.ini"},
 				},
 			},
@@ -108,10 +108,10 @@ BAR=baz
 		},
 		{
 			description: "construct config map from literal",
-			input: []manifest.ConfigMapArgs{
+			input: []types.ConfigMapArgs{
 				{
 					Name: "literalConfigMap",
-					DataSources: manifest.DataSources{
+					DataSources: types.DataSources{
 						LiteralSources: []string{"a=x", "b=y"},
 					},
 				},
