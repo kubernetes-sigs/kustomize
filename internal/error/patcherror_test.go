@@ -25,7 +25,7 @@ func TestPatchError_Error(t *testing.T) {
 	filepath := "/path/to/kustomize.yaml"
 	patchfilepath := "/path/to/patch/patch.yaml"
 	errorMsg := "file not found"
-	me := PatchError{ManifestFilepath: filepath, PatchFilepath: patchfilepath, ErrorMsg: errorMsg}
+	me := PatchError{KustomizationPath: filepath, PatchFilepath: patchfilepath, ErrorMsg: errorMsg}
 	if !strings.Contains(me.Error(), filepath) {
 		t.Errorf("Incorrect PatchError.Error() message \n")
 		t.Errorf("Expected filepath %s, but unfound\n", filepath)

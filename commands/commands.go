@@ -60,10 +60,10 @@ More info at https://github.com/kubernetes/kubectl/tree/master/cmd/kustomize
 func newCmdEdit(stdOut, stdErr io.Writer, fsys fs.FileSystem) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "edit",
-		Short: "Edits a manifest file",
+		Short: "Edits a kustomization file",
 		Long:  "",
 		Example: `
-	# Adds a configmap to the manifest
+	# Adds a configmap to the kustomization file
 	kustomize edit add configmap NAME --from-literal=k=v
 
 	# Sets the nameprefix field
@@ -82,16 +82,16 @@ func newCmdEdit(stdOut, stdErr io.Writer, fsys fs.FileSystem) *cobra.Command {
 func newCmdAdd(stdOut, stdErr io.Writer, fsys fs.FileSystem) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "add",
-		Short: "Adds configmap/resource/secret to the manifest.",
+		Short: "Adds configmap/resource/secret to the kustomization file.",
 		Long:  "",
 		Example: `
-	# Adds a configmap to the manifest
+	# Adds a configmap to the kustomization file
 	kustomize edit add configmap NAME --from-literal=k=v
 
-	# Adds a secret to the manifest
+	# Adds a secret to the kustomization file
 	kustomize edit add secret NAME --from-literal=k=v
 
-	# Adds a resource to the manifest
+	# Adds a resource to the kustomization
 	kustomize edit add resource <filepath>
 `,
 		Args: cobra.MinimumNArgs(1),
@@ -107,7 +107,7 @@ func newCmdAdd(stdOut, stdErr io.Writer, fsys fs.FileSystem) *cobra.Command {
 func newCmdSet(stdOut, stdErr io.Writer, fsys fs.FileSystem) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "set",
-		Short: "Sets the value of different fields in manifest.",
+		Short: "Sets the value of different fields in kustomization file.",
 		Long:  "",
 		Example: `
 	# Sets the nameprefix field

@@ -35,9 +35,9 @@ type Application interface {
 	Resources() (resource.ResourceCollection, error)
 	// SemiResources computes and returns the resources without name hash and name reference for the app
 	SemiResources() (resource.ResourceCollection, error)
-	// RawResources computes and returns the raw resources from the kustomize config file.
+	// RawResources computes and returns the raw resources from the kustomization file.
 	// It contains resources from
-	// 1) untransformed resources from current kustomize config file
+	// 1) untransformed resources from current kustomization file
 	// 2) transformed resources from sub packages
 	RawResources() (resource.ResourceCollection, error)
 }
@@ -46,27 +46,26 @@ var _ Application = &applicationImpl{}
 
 // Private implementation of the Application interface
 type applicationImpl struct {
-	manifest *types.Manifest
-	loader   loader.Loader
+	kustomization *types.Kustomization
+	loader        loader.Loader
 }
 
-// NewApp parses the kustomize config file at the path using the loader.
+// NewApp parses the kustomization file at the path using the loader.
 func New(loader loader.Loader) (Application, error) {
-	// load the kustomize config file using the loader
-	manifestBytes, err := loader.Load(constants.KustomizeFileName)
+	content, err := loader.Load(constants.KustomizationFileName)
 	if err != nil {
 		return nil, err
 	}
 
-	var m types.Manifest
-	err = unmarshal(manifestBytes, &m)
+	var m types.Kustomization
+	err = unmarshal(content, &m)
 	if err != nil {
 		return nil, err
 	}
-	return &applicationImpl{manifest: &m, loader: loader}, nil
+	return &applicationImpl{kustomization: &m, loader: loader}, nil
 }
 
-// Resources computes and returns the resources from the kustomize config file.
+// Resources computes and returns the resources from the kustomization file.
 // The namehashing for configmap/secrets and resolving name reference is only done
 // in the most top overlay once at the end of getting resources.
 func (a *applicationImpl) Resources() (resource.ResourceCollection, error) {
@@ -87,17 +86,17 @@ func (a *applicationImpl) Resources() (resource.ResourceCollection, error) {
 
 // SemiResources computes and returns the resources without name hash and name reference for the app
 func (a *applicationImpl) SemiResources() (resource.ResourceCollection, error) {
-	errs := &interror.ManifestErrors{}
+	errs := &interror.KustomizationErrors{}
 	raw, err := a.rawResources()
 	if err != nil {
 		errs.Append(err)
 	}
 
-	cms, err := resource.NewFromConfigMaps(a.loader, a.manifest.ConfigMapGenerator)
+	cms, err := resource.NewFromConfigMaps(a.loader, a.kustomization.ConfigMapGenerator)
 	if err != nil {
 		errs.Append(err)
 	}
-	secrets, err := resource.NewFromSecretGenerators(a.loader.Root(), a.manifest.SecretGenerator)
+	secrets, err := resource.NewFromSecretGenerators(a.loader.Root(), a.kustomization.SecretGenerator)
 	if err != nil {
 		errs.Append(err)
 	}
@@ -111,7 +110,7 @@ func (a *applicationImpl) SemiResources() (resource.ResourceCollection, error) {
 		return nil, err
 	}
 
-	patches, err := resource.NewFromPatches(a.loader, a.manifest.Patches)
+	patches, err := resource.NewFromPatches(a.loader, a.kustomization.Patches)
 	if err != nil {
 		errs.Append(err)
 	}
@@ -132,7 +131,7 @@ func (a *applicationImpl) SemiResources() (resource.ResourceCollection, error) {
 	return allRes, nil
 }
 
-// RawResources computes and returns the raw resources from the kustomize config file.
+// RawResources computes and returns the raw resources from the kustomization file.
 // The namehashing for configmap/secrets and resolving name reference is only done
 // in the most top overlay once at the end of getting resources.
 func (a *applicationImpl) RawResources() (resource.ResourceCollection, error) {
@@ -153,7 +152,7 @@ func (a *applicationImpl) RawResources() (resource.ResourceCollection, error) {
 
 func (a *applicationImpl) rawResources() (resource.ResourceCollection, error) {
 	subAppResources, errs := a.subAppResources()
-	resources, err := resource.NewFromResources(a.loader, a.manifest.Resources)
+	resources, err := resource.NewFromResources(a.loader, a.kustomization.Resources)
 	if err != nil {
 		errs.Append(err)
 	}
@@ -165,10 +164,10 @@ func (a *applicationImpl) rawResources() (resource.ResourceCollection, error) {
 	return resource.Merge(resources, subAppResources)
 }
 
-func (a *applicationImpl) subAppResources() (resource.ResourceCollection, *interror.ManifestErrors) {
+func (a *applicationImpl) subAppResources() (resource.ResourceCollection, *interror.KustomizationErrors) {
 	sliceOfSubAppResources := []resource.ResourceCollection{}
-	errs := &interror.ManifestErrors{}
-	for _, pkgPath := range a.manifest.Bases {
+	errs := &interror.KustomizationErrors{}
+	for _, pkgPath := range a.kustomization.Bases {
 		subloader, err := a.loader.New(pkgPath)
 		if err != nil {
 			errs.Append(err)
@@ -208,19 +207,19 @@ func (a *applicationImpl) getTransformer(patches []*resource.Resource) (transfor
 	}
 	ts = append(ts, ot)
 
-	npt, err := transformers.NewDefaultingNamePrefixTransformer(string(a.manifest.NamePrefix))
+	npt, err := transformers.NewDefaultingNamePrefixTransformer(string(a.kustomization.NamePrefix))
 	if err != nil {
 		return nil, err
 	}
 	ts = append(ts, npt)
 
-	lt, err := transformers.NewDefaultingLabelsMapTransformer(a.manifest.ObjectLabels)
+	lt, err := transformers.NewDefaultingLabelsMapTransformer(a.kustomization.ObjectLabels)
 	if err != nil {
 		return nil, err
 	}
 	ts = append(ts, lt)
 
-	at, err := transformers.NewDefaultingAnnotationsMapTransformer(a.manifest.ObjectAnnotations)
+	at, err := transformers.NewDefaultingAnnotationsMapTransformer(a.kustomization.ObjectAnnotations)
 	if err != nil {
 		return nil, err
 	}

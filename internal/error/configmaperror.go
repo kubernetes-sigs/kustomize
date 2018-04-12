@@ -19,10 +19,10 @@ package error
 import "fmt"
 
 type ConfigmapError struct {
-	ManifestFilepath string
-	ErrorMsg         string
+	Path     string
+	ErrorMsg string
 }
 
 func (e ConfigmapError) Error() string {
-	return fmt.Sprintf("Manifest file [%s] encounters a configmap error: %s\n", e.ManifestFilepath, e.ErrorMsg)
+	return fmt.Sprintf("Kustomization file [%s] encounters a configmap error: %s\n", e.Path, e.ErrorMsg)
 }

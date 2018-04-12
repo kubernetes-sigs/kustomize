@@ -32,7 +32,7 @@ import (
 )
 
 func setupTest(t *testing.T) loader.Loader {
-	manifestContent := []byte(`kustomizationName: nginx-app
+	kustomizationContent := []byte(`kustomizationName: nginx-app
 namePrefix: foo-
 objectLabels:
   app: nginx
@@ -59,7 +59,7 @@ metadata:
 `)
 
 	loader := loadertest.NewFakeLoader("/testpath")
-	err := loader.AddFile("/testpath/kustomize.yaml", manifestContent)
+	err := loader.AddFile("/testpath/kustomize.yaml", kustomizationContent)
 	if err != nil {
 		t.Fatalf("Failed to setup fake loader.")
 	}

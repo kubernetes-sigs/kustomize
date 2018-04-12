@@ -130,7 +130,7 @@ func addKV(m map[string]string, kv kvPair) error {
 	return nil
 }
 
-// NewFromConfigMaps returns a Resource slice given a configmap metadata slice from kustomize config file.
+// NewFromConfigMaps returns a Resource slice given a configmap metadata slice from kustomization file.
 func NewFromConfigMaps(loader loader.Loader, cmList []types.ConfigMapArgs) (ResourceCollection, error) {
 	allResources := []*Resource{}
 	for _, cm := range cmList {
