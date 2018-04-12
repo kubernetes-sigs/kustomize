@@ -20,11 +20,11 @@ import "fmt"
 
 // First pass to encapsulate fields for more informative error messages.
 type ResourceError struct {
-	ManifestFilepath string
-	ResourceFilepath string
-	ErrorMsg         string
+	KustomizationPath string
+	ResourceFilepath  string
+	ErrorMsg          string
 }
 
 func (e ResourceError) Error() string {
-	return fmt.Sprintf("Manifest file [%s] encounters a resource error for [%s]: %s\n", e.ManifestFilepath, e.ResourceFilepath, e.ErrorMsg)
+	return fmt.Sprintf("Kustomization file [%s] encounters a resource error for [%s]: %s\n", e.KustomizationPath, e.ResourceFilepath, e.ErrorMsg)
 }

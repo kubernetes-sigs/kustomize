@@ -34,21 +34,21 @@ func TestInitHappyPath(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	f, err := fakeFS.Open(constants.KustomizeFileName)
+	f, err := fakeFS.Open(constants.KustomizationFileName)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	file := f.(*fs.FakeFile)
-	if !file.ContentMatches([]byte(manifestTemplate)) {
+	if !file.ContentMatches([]byte(kustomizationTemplate)) {
 		t.Fatalf("actual: %v doesn't match expected: %v",
-			string(file.GetContent()), manifestTemplate)
+			string(file.GetContent()), kustomizationTemplate)
 	}
 }
 
 func TestInitFileAlreadyExist(t *testing.T) {
 	content := "hey there"
 	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile(constants.KustomizeFileName, []byte(content))
+	fakeFS.WriteFile(constants.KustomizationFileName, []byte(content))
 
 	buf := bytes.NewBuffer([]byte{})
 	cmd := newCmdInit(buf, os.Stderr, fakeFS)
@@ -56,7 +56,7 @@ func TestInitFileAlreadyExist(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected error")
 	}
-	if err.Error() != `"`+constants.KustomizeFileName+`" already exists` {
+	if err.Error() != `"`+constants.KustomizationFileName+`" already exists` {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

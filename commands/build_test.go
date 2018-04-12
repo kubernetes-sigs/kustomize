@@ -50,7 +50,7 @@ func TestBuildValidate(t *testing.T) {
 		{"noargs", []string{}, "./", ""},
 		{"file", []string{"beans"}, "beans", ""},
 		{"path", []string{"a/b/c"}, "a/b/c", ""},
-		{"path", []string{"too", "many"}, "", "specify one path to manifest"},
+		{"path", []string{"too", "many"}, "", "specify one path to kustomization file"},
 	}
 	for _, mycase := range cases {
 		opts := buildOptions{}
@@ -68,8 +68,8 @@ func TestBuildValidate(t *testing.T) {
 			t.Errorf("%s: unknown error %v", mycase.name, e)
 			continue
 		}
-		if opts.manifestPath != mycase.path {
-			t.Errorf("%s: expected path '%s', got '%s'", mycase.name, mycase.path, opts.manifestPath)
+		if opts.kustomizationPath != mycase.path {
+			t.Errorf("%s: expected path '%s', got '%s'", mycase.name, mycase.path, opts.kustomizationPath)
 		}
 	}
 }
@@ -115,7 +115,7 @@ func TestBuild(t *testing.T) {
 			}
 
 			ops := &buildOptions{
-				manifestPath: testcase.Filename,
+				kustomizationPath: testcase.Filename,
 			}
 			buf := bytes.NewBuffer([]byte{})
 			err = ops.RunBuild(buf, os.Stderr, fs)

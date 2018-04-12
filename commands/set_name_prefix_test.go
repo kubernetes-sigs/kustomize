@@ -34,7 +34,7 @@ const (
 func TestSetNamePrefixHappyPath(t *testing.T) {
 	buf := bytes.NewBuffer([]byte{})
 	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile(constants.KustomizeFileName, []byte(manifestTemplate))
+	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationTemplate))
 
 	cmd := newCmdSetNamePrefix(buf, os.Stderr, fakeFS)
 	args := []string{goodPrefixValue}
@@ -42,12 +42,12 @@ func TestSetNamePrefixHappyPath(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	content, err := fakeFS.ReadFile(constants.KustomizeFileName)
+	content, err := fakeFS.ReadFile(constants.KustomizationFileName)
 	if err != nil {
 		t.Errorf("unexpected read error: %v", err)
 	}
 	if !strings.Contains(string(content), goodPrefixValue) {
-		t.Errorf("expected prefix value in manifest")
+		t.Errorf("expected prefix value in kustomization file")
 	}
 }
 

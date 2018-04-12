@@ -39,7 +39,7 @@ func TestAddResourceHappyPath(t *testing.T) {
 	buf := bytes.NewBuffer([]byte{})
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile(resourceFileName, []byte(resourceFileContent))
-	fakeFS.WriteFile(constants.KustomizeFileName, []byte(manifestTemplate))
+	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationTemplate))
 
 	cmd := newCmdAddResource(buf, os.Stderr, fakeFS)
 	args := []string{resourceFileName}
@@ -47,12 +47,12 @@ func TestAddResourceHappyPath(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	content, err := fakeFS.ReadFile(constants.KustomizeFileName)
+	content, err := fakeFS.ReadFile(constants.KustomizationFileName)
 	if err != nil {
 		t.Errorf("unexpected read error: %v", err)
 	}
 	if !strings.Contains(string(content), resourceFileName) {
-		t.Errorf("expected resource name in manifest")
+		t.Errorf("expected resource name in kustomization")
 	}
 }
 
@@ -60,7 +60,7 @@ func TestAddResourceAlreadyThere(t *testing.T) {
 	buf := bytes.NewBuffer([]byte{})
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile(resourceFileName, []byte(resourceFileContent))
-	fakeFS.WriteFile(constants.KustomizeFileName, []byte(manifestTemplate))
+	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationTemplate))
 
 	cmd := newCmdAddResource(buf, os.Stderr, fakeFS)
 	args := []string{resourceFileName}
@@ -74,7 +74,7 @@ func TestAddResourceAlreadyThere(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected already there problem")
 	}
-	if err.Error() != "resource "+resourceFileName+" already in manifest" {
+	if err.Error() != "resource "+resourceFileName+" already in kustomization file" {
 		t.Errorf("unexpected error %v", err)
 	}
 }

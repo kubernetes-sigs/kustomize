@@ -31,7 +31,7 @@ import (
 )
 
 type diffOptions struct {
-	manifestPath string
+	kustomizationPath string
 }
 
 // newCmdDiff makes the diff command.
@@ -56,7 +56,7 @@ func newCmdDiff(out, errOut io.Writer, fs fs.FileSystem) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&o.manifestPath, "filename", "f", "", "Pass in a kustomize.yaml file or a directory that contains the file.")
+	cmd.Flags().StringVarP(&o.kustomizationPath, "filename", "f", "", "Pass in a kustomize.yaml file or a directory that contains the file.")
 	cmd.MarkFlagRequired("filename")
 	return cmd
 }
@@ -85,7 +85,7 @@ func (o *diffOptions) RunDiff(out, errOut io.Writer, fs fs.FileSystem) error {
 
 	l := loader.Init([]loader.SchemeLoader{loader.NewFileLoader(fs)})
 
-	absPath, err := filepath.Abs(o.manifestPath)
+	absPath, err := filepath.Abs(o.kustomizationPath)
 	if err != nil {
 		return err
 	}

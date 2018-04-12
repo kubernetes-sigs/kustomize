@@ -32,13 +32,13 @@ func newCmdAddConfigMap(errOut io.Writer, fsys fs.FileSystem) *cobra.Command {
 	var config dataConfig
 	cmd := &cobra.Command{
 		Use:   "configmap NAME [--from-file=[key=]source] [--from-literal=key1=value1]",
-		Short: "Adds a configmap to the kustomize config file.",
+		Short: "Adds a configmap to the kustomization file.",
 		Long:  "",
 		Example: `
-	# Adds a configmap to the kustomize config file (with a specified key)
+	# Adds a configmap to the kustomization file (with a specified key)
 	kustomize edit add configmap my-configmap --from-file=my-key=file/path --from-literal=my-literal=12345
 
-	# Adds a configmap to the kustomize config file (key is the filename)
+	# Adds a configmap to the kustomization file (key is the filename)
 	kustomize edit add configmap my-configmap --from-file=file/path
 
 	# Adds a configmap from env-file
@@ -50,8 +50,8 @@ func newCmdAddConfigMap(errOut io.Writer, fsys fs.FileSystem) *cobra.Command {
 				return err
 			}
 
-			// Load in the kustomize config file.
-			mf, err := newManifestFile(constants.KustomizeFileName, fsys)
+			// Load in the kustomization file.
+			mf, err := newKustomizationFile(constants.KustomizationFileName, fsys)
 			if err != nil {
 				return err
 			}
@@ -61,28 +61,40 @@ func newCmdAddConfigMap(errOut io.Writer, fsys fs.FileSystem) *cobra.Command {
 				return err
 			}
 
-			// Add the config map to the kustomize config file.
+			// Add the config map to the kustomization file.
 			err = addConfigMap(m, config)
 			if err != nil {
 				return err
 			}
 
-			// Write out the kustomize config file with added configmap.
+			// Write out the kustomization file with added configmap.
 			return mf.write(m)
 		},
 	}
 
-	cmd.Flags().StringSliceVar(&config.FileSources, "from-file", []string{}, "Key file can be specified using its file path, in which case file basename will be used as configmap key, or optionally with a key and file path, in which case the given key will be used.  Specifying a directory will iterate each named file in the directory whose basename is a valid configmap key.")
-	cmd.Flags().StringArrayVar(&config.LiteralSources, "from-literal", []string{}, "Specify a key and literal value to insert in configmap (i.e. mykey=somevalue)")
-	cmd.Flags().StringVar(&config.EnvFileSource, "from-env-file", "", "Specify the path to a file to read lines of key=val pairs to create a configmap (i.e. a Docker .env file).")
+	cmd.Flags().StringSliceVar(
+		&config.FileSources,
+		"from-file",
+		[]string{},
+		"Key file can be specified using its file path, in which case file basename will be used as configmap key, or optionally with a key and file path, in which case the given key will be used.  Specifying a directory will iterate each named file in the directory whose basename is a valid configmap key.")
+	cmd.Flags().StringArrayVar(
+		&config.LiteralSources,
+		"from-literal",
+		[]string{},
+		"Specify a key and literal value to insert in configmap (i.e. mykey=somevalue)")
+	cmd.Flags().StringVar(
+		&config.EnvFileSource,
+		"from-env-file",
+		"",
+		"Specify the path to a file to read lines of key=val pairs to create a configmap (i.e. a Docker .env file).")
 
 	return cmd
 }
 
-// addConfigMap updates a configmap within a kustomize config file, using the data in config.
-// Note: error may leave kustomize config file in an undefined state. Suggest passing a copy
-// of kustomize config file.
-func addConfigMap(m *types.Manifest, config dataConfig) error {
+// addConfigMap updates a configmap within a kustomization file, using the data in config.
+// Note: error may leave kustomization file in an undefined state. Suggest passing a copy
+// of kustomization file.
+func addConfigMap(m *types.Kustomization, config dataConfig) error {
 	cm := getOrCreateConfigMap(m, config.Name)
 
 	err := mergeData(&cm.DataSources, config)
@@ -99,13 +111,13 @@ func addConfigMap(m *types.Manifest, config dataConfig) error {
 	return nil
 }
 
-func getOrCreateConfigMap(m *types.Manifest, name string) *types.ConfigMapArgs {
+func getOrCreateConfigMap(m *types.Kustomization, name string) *types.ConfigMapArgs {
 	for i, v := range m.ConfigMapGenerator {
 		if name == v.Name {
 			return &m.ConfigMapGenerator[i]
 		}
 	}
-	// config map not found, create new one and add it to the kustomize config file.
+	// config map not found, create new one and add it to the kustomization file.
 	cm := &types.ConfigMapArgs{Name: name}
 	m.ConfigMapGenerator = append(m.ConfigMapGenerator, *cm)
 	return &m.ConfigMapGenerator[len(m.ConfigMapGenerator)-1]
