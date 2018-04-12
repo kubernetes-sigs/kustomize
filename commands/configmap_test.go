@@ -19,7 +19,7 @@ package commands
 import (
 	"testing"
 
-	manifest "k8s.io/kubectl/pkg/apis/manifest/v1alpha1"
+	"k8s.io/kubectl/pkg/kustomize/types"
 	"k8s.io/kubectl/pkg/kustomize/util/fs"
 )
 
@@ -32,7 +32,7 @@ func TestNewAddConfigMapIsNotNil(t *testing.T) {
 func TestGetOrCreateConfigMap(t *testing.T) {
 	cmName := "test-config-name"
 
-	manifest := &manifest.Manifest{
+	manifest := &types.Manifest{
 		NamePrefix: "test-name-prefix",
 	}
 
@@ -65,7 +65,7 @@ func TestGetOrCreateConfigMap(t *testing.T) {
 }
 
 func TestMergeData_LiteralSources(t *testing.T) {
-	ds := &manifest.DataSources{}
+	ds := &types.DataSources{}
 
 	err := mergeData(ds, dataConfig{LiteralSources: []string{"k1=v1"}})
 	if err != nil {
@@ -87,7 +87,7 @@ func TestMergeData_LiteralSources(t *testing.T) {
 }
 
 func TestMergeData_FileSources(t *testing.T) {
-	ds := &manifest.DataSources{}
+	ds := &types.DataSources{}
 
 	err := mergeData(ds, dataConfig{FileSources: []string{"file1"}})
 	if err != nil {
@@ -111,7 +111,7 @@ func TestMergeData_FileSources(t *testing.T) {
 func TestMergeData_EnvSource(t *testing.T) {
 	envFileName := "env1"
 	envFileName2 := "env2"
-	ds := &manifest.DataSources{}
+	ds := &types.DataSources{}
 
 	err := mergeData(ds, dataConfig{EnvFileSource: envFileName})
 	if err != nil {

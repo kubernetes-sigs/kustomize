@@ -24,9 +24,9 @@ import (
 
 	"github.com/ghodss/yaml"
 
-	manifest "k8s.io/kubectl/pkg/apis/manifest/v1alpha1"
 	"k8s.io/kubectl/pkg/kustomize/constants"
 	interror "k8s.io/kubectl/pkg/kustomize/internal/error"
+	"k8s.io/kubectl/pkg/kustomize/types"
 	"k8s.io/kubectl/pkg/kustomize/util/fs"
 )
 
@@ -47,7 +47,7 @@ func newManifestFile(mPath string, fsys fs.FileSystem) (*manifestFile, error) {
 func (mf *manifestFile) validate() error {
 	f, err := mf.fsys.Stat(mf.mPath)
 	if err != nil {
-		errorMsg := fmt.Sprintf("Manifest (%s) missing\nRun `kustomize init` first", mf.mPath)
+		errorMsg := fmt.Sprintf("Missing kustomize config file '%s'.\n", mf.mPath)
 		merr := interror.ManifestError{ManifestFilepath: mf.mPath, ErrorMsg: errorMsg}
 		return merr
 	}
@@ -55,13 +55,13 @@ func (mf *manifestFile) validate() error {
 		mf.mPath = path.Join(mf.mPath, constants.KustomizeFileName)
 		_, err = mf.fsys.Stat(mf.mPath)
 		if err != nil {
-			errorMsg := fmt.Sprintf("Manifest (%s) missing\nRun `kustomize init` first", mf.mPath)
+			errorMsg := fmt.Sprintf("Missing kustomize config file '%s'.\n", mf.mPath)
 			merr := interror.ManifestError{ManifestFilepath: mf.mPath, ErrorMsg: errorMsg}
 			return merr
 		}
 	} else {
 		if !strings.HasSuffix(mf.mPath, constants.KustomizeFileName) {
-			errorMsg := fmt.Sprintf("Manifest file (%s) should have %s suffix\n", mf.mPath, constants.KustomizeSuffix)
+			errorMsg := fmt.Sprintf("Kustomize config file path (%s) should have %s suffix\n", mf.mPath, constants.KustomizeSuffix)
 			merr := interror.ManifestError{ManifestFilepath: mf.mPath, ErrorMsg: errorMsg}
 			return merr
 		}
@@ -69,12 +69,12 @@ func (mf *manifestFile) validate() error {
 	return nil
 }
 
-func (mf *manifestFile) read() (*manifest.Manifest, error) {
+func (mf *manifestFile) read() (*types.Manifest, error) {
 	bytes, err := mf.fsys.ReadFile(mf.mPath)
 	if err != nil {
 		return nil, err
 	}
-	var manifest manifest.Manifest
+	var manifest types.Manifest
 	err = yaml.Unmarshal(bytes, &manifest)
 	if err != nil {
 		return nil, err
@@ -82,9 +82,9 @@ func (mf *manifestFile) read() (*manifest.Manifest, error) {
 	return &manifest, err
 }
 
-func (mf *manifestFile) write(manifest *manifest.Manifest) error {
+func (mf *manifestFile) write(manifest *types.Manifest) error {
 	if manifest == nil {
-		return errors.New("util: failed to write passed-in nil manifest")
+		return errors.New("util: kustomize config file arg is nil.")
 	}
 	bytes, err := yaml.Marshal(manifest)
 	if err != nil {

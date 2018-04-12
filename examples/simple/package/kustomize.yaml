@@ -1,11 +1,4 @@
-# This example is from https://docs.google.com/document/d/1cLPGweVEYrVqQvBLJg6sxV-TrE5Rm2MNOBA_cxZP2WU/edit#heading=h.dr88tktf0e99
-
-# Inspired by https://github.com/kubernetes/helm/blob/master/docs/charts.md
-# But Kubernetes API style
-apiVersion: manifest.k8s.io/v1alpha1
-kind: Manifest
-metadata:
-  name: mungebot
+kustomizationName: mungebot
 namePrefix: baseprefix-
 # Labels to add to all objects and selectors.
 # These labels would also be used to form the selector for apply --prune

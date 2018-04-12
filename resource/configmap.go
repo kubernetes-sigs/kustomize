@@ -22,12 +22,12 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
-	manifest "k8s.io/kubectl/pkg/apis/manifest/v1alpha1"
 	cutil "k8s.io/kubectl/pkg/kustomize/configmapandsecret/util"
+	"k8s.io/kubectl/pkg/kustomize/types"
 	"k8s.io/kubectl/pkg/loader"
 )
 
-func newFromConfigMap(l loader.Loader, cm manifest.ConfigMapArgs) (*Resource, error) {
+func newFromConfigMap(l loader.Loader, cm types.ConfigMapArgs) (*Resource, error) {
 	corev1CM, err := makeConfigMap(l, cm)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func newFromConfigMap(l loader.Loader, cm manifest.ConfigMapArgs) (*Resource, er
 	return &Resource{Data: data, Behavior: cm.Behavior}, nil
 }
 
-func makeConfigMap(l loader.Loader, cm manifest.ConfigMapArgs) (*corev1.ConfigMap, error) {
+func makeConfigMap(l loader.Loader, cm types.ConfigMapArgs) (*corev1.ConfigMap, error) {
 	var envPairs, literalPairs, filePairs []kvPair
 	var err error
 
@@ -130,8 +130,8 @@ func addKV(m map[string]string, kv kvPair) error {
 	return nil
 }
 
-// NewFromConfigMaps returns a Resource slice given a configmap metadata slice from manifest file.
-func NewFromConfigMaps(loader loader.Loader, cmList []manifest.ConfigMapArgs) (ResourceCollection, error) {
+// NewFromConfigMaps returns a Resource slice given a configmap metadata slice from kustomize config file.
+func NewFromConfigMaps(loader loader.Loader, cmList []types.ConfigMapArgs) (ResourceCollection, error) {
 	allResources := []*Resource{}
 	for _, cm := range cmList {
 		res, err := newFromConfigMap(loader, cm)

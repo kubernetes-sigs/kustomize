@@ -24,7 +24,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	manifest "k8s.io/kubectl/pkg/apis/manifest/v1alpha1"
+	"k8s.io/kubectl/pkg/kustomize/types"
 )
 
 func makeEnvConfigMap(name string) *corev1.ConfigMap {
@@ -131,16 +131,16 @@ func makeUnstructuredSecret(name string) *unstructured.Unstructured {
 func TestConstructConfigMap(t *testing.T) {
 	type testCase struct {
 		description string
-		input       manifest.ConfigMapArgs
+		input       types.ConfigMapArgs
 		expected    *corev1.ConfigMap
 	}
 
 	testCases := []testCase{
 		{
 			description: "construct config map from env",
-			input: manifest.ConfigMapArgs{
+			input: types.ConfigMapArgs{
 				Name: "envConfigMap",
-				DataSources: manifest.DataSources{
+				DataSources: types.DataSources{
 					EnvSource: "../examples/simple/instances/exampleinstance/configmap/app.env",
 				},
 			},
@@ -148,9 +148,9 @@ func TestConstructConfigMap(t *testing.T) {
 		},
 		{
 			description: "construct config map from file",
-			input: manifest.ConfigMapArgs{
+			input: types.ConfigMapArgs{
 				Name: "fileConfigMap",
-				DataSources: manifest.DataSources{
+				DataSources: types.DataSources{
 					FileSources: []string{"../examples/simple/instances/exampleinstance/configmap/app-init.ini"},
 				},
 			},
@@ -158,9 +158,9 @@ func TestConstructConfigMap(t *testing.T) {
 		},
 		{
 			description: "construct config map from literal",
-			input: manifest.ConfigMapArgs{
+			input: types.ConfigMapArgs{
 				Name: "literalConfigMap",
-				DataSources: manifest.DataSources{
+				DataSources: types.DataSources{
 					LiteralSources: []string{"a=x", "b=y"},
 				},
 			},
@@ -180,7 +180,7 @@ func TestConstructConfigMap(t *testing.T) {
 }
 
 func TestConstructSecret(t *testing.T) {
-	secret := manifest.SecretArgs{
+	secret := types.SecretArgs{
 		Name: "secret",
 		Commands: map[string]string{
 			"DB_USERNAME": "printf admin",
@@ -199,7 +199,7 @@ func TestConstructSecret(t *testing.T) {
 }
 
 func TestFailConstructSecret(t *testing.T) {
-	secret := manifest.SecretArgs{
+	secret := types.SecretArgs{
 		Name: "secret",
 		Commands: map[string]string{
 			"FAILURE": "false", // This will fail.

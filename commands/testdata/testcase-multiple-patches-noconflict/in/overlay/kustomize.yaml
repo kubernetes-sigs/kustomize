@@ -1,7 +1,4 @@
-apiVersion: manifest.k8s.io/v1alpha1
-kind: Manifest
-metadata:
-  name: nginx-app
+kustomizationName: nginx-app
 namePrefix: staging-
 objectLabels:
   env: staging

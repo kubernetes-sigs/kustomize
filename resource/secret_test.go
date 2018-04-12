@@ -24,11 +24,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	manifest "k8s.io/kubectl/pkg/apis/manifest/v1alpha1"
+	"k8s.io/kubectl/pkg/kustomize/types"
 )
 
 func TestNewFromSecretGenerators(t *testing.T) {
-	secrets := []manifest.SecretArgs{
+	secrets := []types.SecretArgs{
 		{
 			Name: "secret",
 			Commands: map[string]string{

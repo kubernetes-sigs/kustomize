@@ -32,10 +32,7 @@ import (
 )
 
 func setupTest(t *testing.T) loader.Loader {
-	manifestContent := []byte(`apiVersion: manifest.k8s.io/v1alpha1
-kind: Manifest
-metadata:
-  name: nginx-app
+	manifestContent := []byte(`kustomizationName: nginx-app
 namePrefix: foo-
 objectLabels:
   app: nginx
