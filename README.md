@@ -6,7 +6,7 @@
 [demo]: demos/README.md
 [imageBase]: docs/base.jpg
 [imageOverlay]: docs/overlay.jpg
-[manifest]: docs/glossary.md#manifest
+[kustomization]: docs/glossary.md#kustomization
 [overlay]: docs/glossary.md#overlay
 [resources]: docs/glossary.md#resource
 [workflows]: docs/workflows.md
@@ -29,7 +29,7 @@ go get k8s.io/kubectl/cmd/kustomize
 
 #### 1) Make a base
 
-A [base] configuration is a [manifest] listing a set of
+A [base] configuration is a [kustomization] file listing a set of
 k8s [resources] - deployments, services, configmaps,
 secrets that serve some common purpose.
 

@@ -3,7 +3,7 @@
 [hello]: https://github.com/monopole/hello
 [instance]: ../docs/glossary.md#instance
 [instances]: ../docs/glossary.md#instance
-[manifest]: ../docs/glossary.md#manifest
+[kustomization]: ../docs/glossary.md#kustomization
 [original]: https://github.com/kinflate/example-hello
 [overlay]: ../docs/glossary.md#overlay
 [overlays]: ../docs/glossary.md#overlay
@@ -74,11 +74,11 @@ cluster:
 to instantiate the _hello_ service.  `kubectl`
 would only recognize the resource files.
 
-## The Base Manifest
+## The Base Kustomization
 
-The `base` directory has a [manifest] file:
+The `base` directory has a [kustomization] file:
 
-<!-- @showManifest @test -->
+<!-- @showKustomization @test -->
 ```
 BASE=$DEMO_HOME/base
 more $BASE/kustomize.yaml
@@ -125,12 +125,12 @@ mkdir -p $OVERLAYS/staging
 mkdir -p $OVERLAYS/production
 ```
 
-#### Staging Manifest
+#### Staging Kustomization
 
-In the `staging` directory, make a manifest
+In the `staging` directory, make a kustomization
 defining a new name prefix, and some different labels.
 
-<!-- @makeStagingManifest @test -->
+<!-- @makeStagingKustomization @test -->
 ```
 cat <<'EOF' >$OVERLAYS/staging/kustomize.yaml
 kustomizationName: makes-staging-hello
@@ -167,12 +167,12 @@ data:
 EOF
 ```
 
-#### Production Manifest
+#### Production Kustomization
 
-In the production directory, make a manifest
+In the production directory, make a kustomization
 with a different name prefix and labels.
 
-<!-- @makeProductionManifest @test -->
+<!-- @makeProductionKustomization @test -->
 ```
 cat <<EOF >$OVERLAYS/production/kustomize.yaml
 kustomizationName: makes-production-tuthello
@@ -215,7 +215,7 @@ EOF
  - a _base_ directory - a slightly customized clone
    of the original configuration, and
 
- - an _overlays_ directory, containing the manifests
+ - an _overlays_ directory, containing the kustomizations
    and patches required to create distinct _staging_
    and _production_ instances in a cluster.
 
