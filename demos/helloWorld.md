@@ -133,10 +133,7 @@ defining a new name prefix, and some different labels.
 <!-- @makeStagingManifest @test -->
 ```
 cat <<'EOF' >$OVERLAYS/staging/kustomize.yaml
-apiVersion: manifest.k8s.io/v1alpha1
-kind: Package
-metadata:
-  name: makes-staging-hello
+kustomizationName: makes-staging-hello
 namePrefix: staging-
 objectLabels:
   instance: staging
@@ -178,10 +175,7 @@ with a different name prefix and labels.
 <!-- @makeProductionManifest @test -->
 ```
 cat <<EOF >$OVERLAYS/production/kustomize.yaml
-apiVersion: manifest.k8s.io/v1alpha1
-kind: Package
-metadata:
-  name: makes-production-tuthello
+kustomizationName: makes-production-tuthello
 namePrefix: production-
 objectLabels:
   instance: production
