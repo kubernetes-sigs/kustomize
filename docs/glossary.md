@@ -11,7 +11,7 @@
 [bases]: #base
 [bespoke]: #bespoke-configuration
 [kustomize]: #kustomize
-[manifest]: #manifest
+[kustomization]: #kustomization
 [off-the-shelf]: #off-the-shelf
 [overlay]: #overlay
 [overlays]: #overlay
@@ -73,7 +73,7 @@ be able to [apply] a base to a cluster directly.
 
 ## bespoke configuration
 
-A _bespoke_ configuration is a [manifest] and some
+A _bespoke_ configuration is a [kustomization] and some
 [resources] created and maintained internally by some
 organization for their own purposes.
 
@@ -120,6 +120,27 @@ an [overlay] to a [base].
 > deployments with a large number of replicas and higher
 > cpu and memory requests.
 
+## kustomization
+
+A _kustomization_ is a file called `kustomize.yaml` that
+describes a configuration consumable by [kustomize].
+
+Here's an [example](kustomize.yaml).
+
+A kustomization contains fields falling into these categories:
+
+ * Immediate customization instructions -
+   _nameprefix_, _labelprefix_, etc.
+ * Resource _generators_ for configmaps and secrets.
+ * References to _external files_ in these categories:
+   * [resources] - completely specified k8s API objects,
+      e.g. `deployment.yaml`, `configmap.yaml`, etc.
+   * [patches] - _partial_ resources that modify full
+     resources defined in a [base]
+     (only meaningful in an [overlay]).
+   * [bases] - path to a directory containing
+     a [kustomization] (only meaningful in an [overlay]).
+ * (_TBD_) Standard k8s API kind-version fields.
 
 ## kustomize
 
@@ -134,31 +155,10 @@ of resource patching.
 
 kustomize is an implementation of [DAM].
 
-## manifest
-
-A _manifest_ is a file called `kustomize.yaml` that
-describes a configuration consumable by [kustomize].
-
-Here's an [example](Kube-manifest.yaml).
-
-A manifest contains fields falling into these categories:
-
- * Immediate customization instructions -
-   _nameprefix_, _labelprefix_, etc.
- * Resource _generators_ for configmaps and secrets.
- * References to _external files_ in these categories:
-   * [resources] - completely specified k8s API objects,
-      e.g. `deployment.yaml`, `configmap.yaml`, etc.
-   * [patches] - _partial_ resources that modify full
-     resources defined in a [base]
-     (only meaningful in an [overlay]).
-   * [bases] - path to a directory containing
-     a [manifest] (only meaningful in an [overlay]).
- * (_TBD_) Standard k8s API kind-version fields.
 
 ## off-the-shelf configuration
 
-An _off-the-shelf_ configuration is a manifest and
+An _off-the-shelf_ configuration is a kustomization and
 resources intentionally published somewhere for others
 to use.
 
@@ -184,8 +184,8 @@ own [overlays] to do further customization.
 An _overlay_ is a [target] that modifies (and thus
 depends on) another target.
 
-The [manifest] in an overlay refers to (via file path,
-URI or other method) to _some other manifest_, known as
+The [kustomization] in an overlay refers to (via file path,
+URI or other method) to _some other kustomization_, known as
 its [base].
 
 An overlay is unusable without its base.
@@ -207,7 +207,7 @@ One configures the cluser like this:
 >      kubectl apply -f -
 > ```
 
-Usage of the base is implicit (the overlay's manifest
+Usage of the base is implicit (the overlay's kustomization
 points to the base).
 
 An overlay may act as a base to another overlay.
@@ -225,7 +225,7 @@ A _patch_ is a partially defined k8s resource with a
 name that must match a resource already known per
 traversal rules built into [kustomize].
 
-_Patch_ is a field in the manifest, distinct from
+_Patch_ is a field in the kustomization, distinct from
 resources, because a patch file looks like a resource
 file, but has different semantics.  A patch depends on
 (modifies) a resource, whereas a resourse has no
@@ -252,7 +252,7 @@ The _target_ is the argument to `build`, e.g.:
 
 `$target` must be a path to a directory that
 immediately contains a file called
-`kustomize.yaml` (i.e. a [manifest]).
+`kustomize.yaml` (i.e. a [kustomization]).
 
 The target contains, or refers to, all the information
 needed to create customized resources to send to the

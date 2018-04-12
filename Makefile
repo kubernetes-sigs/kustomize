@@ -1,6 +1,6 @@
 SHELL := /bin/bash -euo pipefail
 
-config_file_name = Kube-manifest.yaml
+config_file_name = kustomize.yaml
 example_config = docs/$(config_file_name)
 
 .PHONY: all

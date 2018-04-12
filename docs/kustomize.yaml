@@ -1,9 +1,5 @@
 # This is a generated example; do not edit.  Rebuild with 'make docs'.
- 
-apiVersion: manifest.k8s.io/v1alpha1
-kind: Manifest
-metadata:
-  name: helloworld
+kustomizationName: helloworld
 description: helloworld does useful stuff.
 namePrefix: some-prefix
 # Labels to add to all objects and selectors.
