@@ -21,11 +21,11 @@ import (
 )
 
 type PatchError struct {
-	ManifestFilepath string
-	PatchFilepath    string
-	ErrorMsg         string
+	KustomizationPath string
+	PatchFilepath     string
+	ErrorMsg          string
 }
 
 func (e PatchError) Error() string {
-	return fmt.Sprintf("Manifest file [%s] encounters a patch error for [%s]: %s\n", e.ManifestFilepath, e.PatchFilepath, e.ErrorMsg)
+	return fmt.Sprintf("Kustomization file [%s] encounters a patch error for [%s]: %s\n", e.KustomizationPath, e.PatchFilepath, e.ErrorMsg)
 }

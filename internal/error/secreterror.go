@@ -19,10 +19,10 @@ package error
 import "fmt"
 
 type SecretError struct {
-	ManifestFilepath string
-	ErrorMsg         string
+	KustomizationPath string
+	ErrorMsg          string
 }
 
 func (e SecretError) Error() string {
-	return fmt.Sprintf("Manifest file [%s] encounters a secret error: %s\n", e.ManifestFilepath, e.ErrorMsg)
+	return fmt.Sprintf("Kustomization file [%s] encounters a secret error: %s\n", e.KustomizationPath, e.ErrorMsg)
 }

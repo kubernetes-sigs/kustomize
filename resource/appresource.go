@@ -20,7 +20,7 @@ import (
 	"k8s.io/kubectl/pkg/loader"
 )
 
-//  NewFromResources returns a ResourceCollection given a resource path slice from manifest file.
+//  NewFromResources returns a ResourceCollection given a resource path slice from kustomization file.
 func NewFromResources(loader loader.Loader, paths []string) (ResourceCollection, error) {
 	allResources := []ResourceCollection{}
 	for _, path := range paths {
@@ -38,7 +38,7 @@ func NewFromResources(loader loader.Loader, paths []string) (ResourceCollection,
 	return Merge(allResources...)
 }
 
-//  NewFromPatches returns a slice of Resources given a patch path slice from manifest file.
+//  NewFromPatches returns a slice of Resources given a patch path slice from kustomization file.
 func NewFromPatches(loader loader.Loader, paths []string) ([]*Resource, error) {
 	allResources := []*Resource{}
 	for _, path := range paths {

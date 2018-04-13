@@ -21,37 +21,37 @@ import (
 )
 
 // First pass to encapsulate fields for more informative error messages.
-type ManifestError struct {
-	ManifestFilepath string
-	ErrorMsg         string
+type KustomizationError struct {
+	KustomizationPath string
+	ErrorMsg          string
 }
 
-func (me ManifestError) Error() string {
-	return fmt.Sprintf("Manifest File [%s]: %s\n", me.ManifestFilepath, me.ErrorMsg)
+func (ke KustomizationError) Error() string {
+	return fmt.Sprintf("Kustomization File [%s]: %s\n", ke.KustomizationPath, ke.ErrorMsg)
 }
 
-type ManifestErrors struct {
-	merrors []error
+type KustomizationErrors struct {
+	kErrors []error
 }
 
-func (me *ManifestErrors) Error() string {
+func (ke *KustomizationErrors) Error() string {
 	errormsg := ""
-	for _, e := range me.merrors {
+	for _, e := range ke.kErrors {
 		errormsg += e.Error() + "\n"
 	}
 	return errormsg
 }
 
-func (me *ManifestErrors) Append(e error) {
-	me.merrors = append(me.merrors, e)
+func (ke *KustomizationErrors) Append(e error) {
+	ke.kErrors = append(ke.kErrors, e)
 }
 
-func (me *ManifestErrors) Get() []error {
-	return me.merrors
+func (ke *KustomizationErrors) Get() []error {
+	return ke.kErrors
 }
 
-func (me *ManifestErrors) BatchAppend(e ManifestErrors) {
+func (ke *KustomizationErrors) BatchAppend(e KustomizationErrors) {
 	for _, err := range e.Get() {
-		me.merrors = append(me.merrors, err)
+		ke.kErrors = append(ke.kErrors, err)
 	}
 }

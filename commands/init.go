@@ -27,11 +27,7 @@ import (
 	"k8s.io/kubectl/pkg/kustomize/util/fs"
 )
 
-const manifestTemplate = `apiVersion: manifest.k8s.io/v1alpha1
-kind: Manifest
-metadata:
-  name: helloworld
-description: helloworld does useful stuff.
+const kustomizationTemplate = `kustomizationName: helloworld
 namePrefix: some-prefix
 # Labels to add to all objects and selectors.
 # These labels would also be used to form the selector for apply --prune
@@ -58,9 +54,9 @@ func newCmdInit(out, errOut io.Writer, fs fs.FileSystem) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "init",
-		Short: "Creates a file called \"" + constants.KustomizeFileName + "\" in the current directory",
+		Short: "Creates a file called \"" + constants.KustomizationFileName + "\" in the current directory",
 		Long: "Creates a file called \"" +
-			constants.KustomizeFileName + "\" in the current directory with example values.",
+			constants.KustomizationFileName + "\" in the current directory with example values.",
 		Example:      `init`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -91,10 +87,10 @@ func (o *initOptions) Complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// RunInit writes a manifest file.
+// RunInit writes a kustomization file.
 func (o *initOptions) RunInit(out, errOut io.Writer, fs fs.FileSystem) error {
-	if _, err := fs.Stat(constants.KustomizeFileName); err == nil {
-		return fmt.Errorf("%q already exists", constants.KustomizeFileName)
+	if _, err := fs.Stat(constants.KustomizationFileName); err == nil {
+		return fmt.Errorf("%q already exists", constants.KustomizationFileName)
 	}
-	return fs.WriteFile(constants.KustomizeFileName, []byte(manifestTemplate))
+	return fs.WriteFile(constants.KustomizationFileName, []byte(kustomizationTemplate))
 }

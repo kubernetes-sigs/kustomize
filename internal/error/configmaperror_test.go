@@ -24,7 +24,7 @@ import (
 func TestConfigmapError_Error(t *testing.T) {
 	filepath := "/path/to/kustomize.yaml"
 	errorMsg := "configmap name is missing"
-	me := ConfigmapError{ManifestFilepath: filepath, ErrorMsg: errorMsg}
+	me := ConfigmapError{Path: filepath, ErrorMsg: errorMsg}
 
 	if !strings.Contains(me.Error(), filepath) {
 		t.Errorf("Incorrect ConfigmapError.Error() message \n")

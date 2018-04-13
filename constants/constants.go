@@ -16,9 +16,10 @@ limitations under the License.
 
 package constants
 
-// KustomizeFileName is the Well-Known File Name for a kubernetes app manifest.
-const KustomizeSuffix = ".yaml"
-const KustomizeFileName = "kustomize" + KustomizeSuffix
+const KustomizationSuffix = ".yaml"
+
+// KustomizationFileName is the Well-Known File Name for a kustomize configuration file
+const KustomizationFileName = "kustomize" + KustomizationSuffix
 
 // Configmap behaviors
 const CreateBehavior = "create"
