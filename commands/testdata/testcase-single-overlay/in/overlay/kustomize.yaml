@@ -1,6 +1,5 @@
-kustomizationName: nginx-app
 namePrefix: staging-
-objectLabels:
+labelsToAdd:
   env: staging
   team: override-foo
 patches:

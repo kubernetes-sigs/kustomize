@@ -18,11 +18,6 @@ package types
 
 // Kustomization holds the information needed to generate customized k8s api resources.
 type Kustomization struct {
-	// KustomizationName is a documentation field - a name for the customizations
-	// in a marshalled version of this struct, that survives YAML unmarshalling
-	// that discards comments.
-	KustomizationName string `json:"kustomizationName,omitempty" yaml:"kustomizationName,omitempty"`
-
 	// NamePrefix will prefix the names of all resources mentioned in the kustomization
 	// file including generated configmaps and secrets.
 	NamePrefix string `json:"namePrefix,omitempty" yaml:"namePrefix,omitempty"`
@@ -31,10 +26,10 @@ type Kustomization struct {
 	// These labels would also be used to form the selector for apply --prune
 	// Named differently than “labels” to avoid confusion with metadata for
 	// this object
-	ObjectLabels map[string]string `json:"objectLabels,omitempty" yaml:"objectLabels,omitempty"`
+	LabelsToAdd map[string]string `json:"labelsToAdd,omitempty" yaml:"labelsToAdd,omitempty"`
 
 	// Annotations to add to all objects.
-	ObjectAnnotations map[string]string `json:"objectAnnotations,omitempty" yaml:"objectAnnotations,omitempty"`
+	AnnotationsToAdd map[string]string `json:"annotationsToAdd,omitempty" yaml:"annotationsToAdd,omitempty"`
 
 	// Bases contain the paths to other packages that this kustomization depends on.
 	// Each path should be either a path to a kustomize.yaml or a path of

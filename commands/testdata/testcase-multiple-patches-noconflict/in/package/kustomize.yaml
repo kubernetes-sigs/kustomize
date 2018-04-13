@@ -1,10 +1,9 @@
-kustomizationName: nginx-app
 namePrefix: team-foo-
-objectLabels:
+labelsToAdd:
   app: mynginx
   org: example.com
   team: foo
-objectAnnotations:
+annotationsToAdd:
   note: This is a test annotation
 resources:
   - deployment.yaml

@@ -32,11 +32,11 @@ import (
 )
 
 func setupTest(t *testing.T) loader.Loader {
-	kustomizationContent := []byte(`kustomizationName: nginx-app
+	kustomizationContent := []byte(`
 namePrefix: foo-
-objectLabels:
+labelsToAdd:
   app: nginx
-objectAnnotations:
+annotationsToAdd:
   note: This is a test annotation
 resources:
   - deployment.yaml
