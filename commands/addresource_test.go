@@ -33,13 +33,30 @@ const (
 Lorem ipsum dolor sit amet, consectetur adipiscing elit,
 sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 `
+	kustomizationContent = `kustomizationName: helloworld
+namePrefix: some-prefix
+# Labels to add to all objects and selectors.
+# These labels would also be used to form the selector for apply --prune
+# Named differently than “labels” to avoid confusion with metadata for this object
+objectLabels:
+  app: helloworld
+objectAnnotations:
+  note: This is an example annotation
+resources: []
+#- service.yaml
+#- ../some-dir/
+# There could also be configmaps in Base, which would make these overlays
+configMapGenerator: []
+# There could be secrets in Base, if just using a fork/rebase workflow
+secretGenerator: []
+`
 )
 
 func TestAddResourceHappyPath(t *testing.T) {
 	buf := bytes.NewBuffer([]byte{})
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile(resourceFileName, []byte(resourceFileContent))
-	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationTemplate))
+	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
 	cmd := newCmdAddResource(buf, os.Stderr, fakeFS)
 	args := []string{resourceFileName}
@@ -60,7 +77,7 @@ func TestAddResourceAlreadyThere(t *testing.T) {
 	buf := bytes.NewBuffer([]byte{})
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile(resourceFileName, []byte(resourceFileContent))
-	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationTemplate))
+	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
 	cmd := newCmdAddResource(buf, os.Stderr, fakeFS)
 	args := []string{resourceFileName}

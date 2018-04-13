@@ -34,7 +34,7 @@ const (
 func TestSetNamePrefixHappyPath(t *testing.T) {
 	buf := bytes.NewBuffer([]byte{})
 	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationTemplate))
+	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
 	cmd := newCmdSetNamePrefix(buf, os.Stderr, fakeFS)
 	args := []string{goodPrefixValue}

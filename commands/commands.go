@@ -44,7 +44,6 @@ More info at https://github.com/kubernetes/kubectl/tree/master/cmd/kustomize
 	c.AddCommand(
 		newCmdBuild(stdOut, stdErr, fsys),
 		newCmdDiff(stdOut, stdErr, fsys),
-		newCmdInit(stdOut, stdErr, fsys),
 		newCmdEdit(stdOut, stdErr, fsys),
 		version.NewCmdVersion(stdOut),
 	)
