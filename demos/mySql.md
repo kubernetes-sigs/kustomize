@@ -131,7 +131,7 @@ selector.
 `kustomize` does not have `set label` command to add
 label, but we can edit `kustomize.yaml` file under
 `prod` directory and add the production labels under
-`objectLabels` fields as highlighted below.
+`labelsToAdd` fields as highlighted below.
 
 <!-- @customizeLabels @test -->
 ```

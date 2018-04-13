@@ -1,12 +1,10 @@
-kustomizationName: helloworld
-description: helloworld does useful stuff.
 namePrefix: some-prefix
 # Labels to add to all objects and selectors.
 # These labels would also be used to form the selector for apply --prune
 # Named differently than “labels” to avoid confusion with metadata for this object
-objectLabels:
+labelsToAdd:
   app: helloworld
-objectAnnotations:
+annotationsToAdd:
   note: This is an example annotation
 resources: []
 #- service.yaml

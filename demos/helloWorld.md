@@ -133,12 +133,11 @@ defining a new name prefix, and some different labels.
 <!-- @makeStagingKustomization @test -->
 ```
 cat <<'EOF' >$OVERLAYS/staging/kustomize.yaml
-kustomizationName: makes-staging-hello
 namePrefix: staging-
-objectLabels:
+labelsToAdd:
   instance: staging
   org: acmeCorporation
-objectAnnotations:
+annotationsToAdd:
   note: Hello, I am staging!
 bases:
 - ../../base
@@ -175,12 +174,11 @@ with a different name prefix and labels.
 <!-- @makeProductionKustomization @test -->
 ```
 cat <<EOF >$OVERLAYS/production/kustomize.yaml
-kustomizationName: makes-production-tuthello
 namePrefix: production-
-objectLabels:
+labelsToAdd:
   instance: production
   org: acmeCorporation
-objectAnnotations:
+annotationsToAdd:
   note: Hello, I am production!
 bases:
 - ../../base
