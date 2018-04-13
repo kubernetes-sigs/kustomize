@@ -1,11 +1,7 @@
-kustomizationName: mungebot
 namePrefix: baseprefix-
-# Labels to add to all objects and selectors.
-# These labels would also be used to form the selector for apply --prune
-# Named differently than “labels” to avoid confusion with metadata for this object
-objectLabels:
+labelsToAdd:
   foo: bar
-objectAnnotations:
+annotationsToAdd:
   baseAnno: This is an base annotation
 resources:
 - deployment/deployment.yaml
