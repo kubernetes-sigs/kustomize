@@ -1,4 +1,3 @@
-# This is a generated example; do not edit.  Rebuild with 'make docs'.
 kustomizationName: helloworld
 description: helloworld does useful stuff.
 namePrefix: some-prefix
