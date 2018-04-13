@@ -31,14 +31,13 @@ type addResourceOptions struct {
 	resourceFilePath string
 }
 
-// newCmdAddResource adds the name of a file containing a resource to the manifest.
+// newCmdAddResource adds the name of a file containing a resource to the kustomization file.
 func newCmdAddResource(out, errOut io.Writer, fsys fs.FileSystem) *cobra.Command {
 	var o addResourceOptions
 
 	cmd := &cobra.Command{
 		Use:   "resource",
-		Short: "Add the name of a file containing a resource to the manifest.",
-		Long:  "Add the name of a file containing a resource to the manifest.",
+		Short: "Add the name of a file containing a resource to the kustomization file.",
 		Example: `
 		add resource {filepath}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -86,7 +85,7 @@ func (o *addResourceOptions) RunAddResource(out, errOut io.Writer, fsys fs.FileS
 		return err
 	}
 
-	mf, err := newManifestFile(constants.KustomizeFileName, fsys)
+	mf, err := newKustomizationFile(constants.KustomizationFileName, fsys)
 	if err != nil {
 		return err
 	}
@@ -97,7 +96,7 @@ func (o *addResourceOptions) RunAddResource(out, errOut io.Writer, fsys fs.FileS
 	}
 
 	if stringInSlice(o.resourceFilePath, m.Resources) {
-		return fmt.Errorf("resource %s already in manifest", o.resourceFilePath)
+		return fmt.Errorf("resource %s already in kustomization file", o.resourceFilePath)
 	}
 
 	m.Resources = append(m.Resources, o.resourceFilePath)

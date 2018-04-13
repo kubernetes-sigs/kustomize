@@ -26,35 +26,35 @@ import (
 )
 
 func TestWriteAndRead(t *testing.T) {
-	manifest := &types.Manifest{
+	kustomization := &types.Kustomization{
 		NamePrefix: "prefix",
 	}
 
 	fsys := fs.MakeFakeFS()
 	fsys.Create("kustomize.yaml")
-	mf, err := newManifestFile("kustomize.yaml", fsys)
+	mf, err := newKustomizationFile("kustomize.yaml", fsys)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
 	}
 
-	if err := mf.write(manifest); err != nil {
-		t.Fatalf("Couldn't write manifest file: %v\n", err)
+	if err := mf.write(kustomization); err != nil {
+		t.Fatalf("Couldn't write kustomization file: %v\n", err)
 	}
 
-	readManifest, err := mf.read()
+	content, err := mf.read()
 	if err != nil {
-		t.Fatalf("Couldn't read manifest file: %v\n", err)
+		t.Fatalf("Couldn't read kustomization file: %v\n", err)
 	}
-	if !reflect.DeepEqual(manifest, readManifest) {
-		t.Fatal("Read manifest is different from written manifest")
+	if !reflect.DeepEqual(kustomization, content) {
+		t.Fatal("Read kustomization is different from written kustomization")
 	}
 }
 
 func TestEmptyFile(t *testing.T) {
 	fsys := fs.MakeFakeFS()
-	_, err := newManifestFile("", fsys)
+	_, err := newKustomizationFile("", fsys)
 	if err == nil {
-		t.Fatalf("Creat manifestFile from empty filename should fail")
+		t.Fatalf("Creat kustomizationFile from empty filename should fail")
 	}
 }
 
@@ -63,22 +63,22 @@ func TestNewNotExist(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.Mkdir(".", 0644)
 	fakeFS.Create(badSuffix)
-	_, err := newManifestFile("kustomize.yaml", fakeFS)
+	_, err := newKustomizationFile("kustomize.yaml", fakeFS)
 	if err == nil {
 		t.Fatalf("expect an error")
 	}
-	contained := "Missing kustomize config file"
+	contained := "Missing kustomization file"
 	if !strings.Contains(err.Error(), contained) {
 		t.Fatalf("expect an error contains %q, but got %v", contained, err)
 	}
-	_, err = newManifestFile("kustomize.yaml", fakeFS)
+	_, err = newKustomizationFile("kustomize.yaml", fakeFS)
 	if err == nil {
 		t.Fatalf("expect an error")
 	}
 	if !strings.Contains(err.Error(), contained) {
 		t.Fatalf("expect an error contains %q, but got %v", contained, err)
 	}
-	_, err = newManifestFile(badSuffix, fakeFS)
+	_, err = newKustomizationFile(badSuffix, fakeFS)
 	if err == nil {
 		t.Fatalf("expect an error")
 	}

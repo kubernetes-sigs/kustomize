@@ -32,34 +32,34 @@ func TestNewAddConfigMapIsNotNil(t *testing.T) {
 func TestGetOrCreateConfigMap(t *testing.T) {
 	cmName := "test-config-name"
 
-	manifest := &types.Manifest{
+	kustomization := &types.Kustomization{
 		NamePrefix: "test-name-prefix",
 	}
 
-	if len(manifest.ConfigMapGenerator) != 0 {
-		t.Fatal("Initial manifest should not have any configmaps")
+	if len(kustomization.ConfigMapGenerator) != 0 {
+		t.Fatal("Initial kustomization should not have any configmaps")
 	}
-	cm := getOrCreateConfigMap(manifest, cmName)
+	cm := getOrCreateConfigMap(kustomization, cmName)
 
 	if cm == nil {
 		t.Fatalf("ConfigMap should always be non-nil")
 	}
 
-	if len(manifest.ConfigMapGenerator) != 1 {
-		t.Fatalf("Manifest should have newly created configmap")
+	if len(kustomization.ConfigMapGenerator) != 1 {
+		t.Fatalf("Kustomization should have newly created configmap")
 	}
 
-	if &manifest.ConfigMapGenerator[len(manifest.ConfigMapGenerator)-1] != cm {
+	if &kustomization.ConfigMapGenerator[len(kustomization.ConfigMapGenerator)-1] != cm {
 		t.Fatalf("Pointer address for newly inserted configmap should be same")
 	}
 
-	existingCM := getOrCreateConfigMap(manifest, cmName)
+	existingCM := getOrCreateConfigMap(kustomization, cmName)
 
 	if existingCM != cm {
 		t.Fatalf("should have returned an existing cm with name: %v", cmName)
 	}
 
-	if len(manifest.ConfigMapGenerator) != 1 {
+	if len(kustomization.ConfigMapGenerator) != 1 {
 		t.Fatalf("Should not insert configmap for an existing name: %v", cmName)
 	}
 }

@@ -86,7 +86,7 @@ func TestDiff(t *testing.T) {
 			}
 
 			diffOps := &diffOptions{
-				manifestPath: testcase.Filename,
+				kustomizationPath: testcase.Filename,
 			}
 			buf := bytes.NewBuffer([]byte{})
 			err = diffOps.RunDiff(buf, os.Stderr, fs)

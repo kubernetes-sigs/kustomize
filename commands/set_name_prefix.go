@@ -30,19 +30,17 @@ type setNamePrefixOptions struct {
 	prefix string
 }
 
-// newCmdSetNamePrefix sets the value of the namePrefix field in the manifest.
+// newCmdSetNamePrefix sets the value of the namePrefix field in the kustomization.
 func newCmdSetNamePrefix(out, errOut io.Writer, fsys fs.FileSystem) *cobra.Command {
 	var o setNamePrefixOptions
 
 	cmd := &cobra.Command{
 		Use:   "nameprefix",
-		Short: "Sets the value of the namePrefix field in the manifest.",
-		Long:  "Sets the value of the namePrefix field in the manifest.",
-		//
+		Short: "Sets the value of the namePrefix field in the kustomization file.",
 		Example: `
 The command
   set nameprefix acme-
-will add the field "namePrefix: acme-" to the manifest file if it doesn't exist,
+will add the field "namePrefix: acme-" to the kustomization file if it doesn't exist,
 and overwrite the value with "acme-" if the field does exist.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -77,7 +75,7 @@ func (o *setNamePrefixOptions) Complete(cmd *cobra.Command, args []string) error
 
 // RunSetNamePrefix runs setNamePrefix command (does real work).
 func (o *setNamePrefixOptions) RunSetNamePrefix(out, errOut io.Writer, fsys fs.FileSystem) error {
-	mf, err := newManifestFile(constants.KustomizeFileName, fsys)
+	mf, err := newKustomizationFile(constants.KustomizationFileName, fsys)
 	if err != nil {
 		return err
 	}

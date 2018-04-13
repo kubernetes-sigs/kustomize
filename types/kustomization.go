@@ -16,18 +16,15 @@ limitations under the License.
 
 package types
 
-// Manifest has all the information to expand of generate the k8s api resources.
-// It can be used by kubectl or some other tooling.
-// A manifest could be either a Base or an Overlay.
-// TODO: rename Manifest to Kustomization
-type Manifest struct {
+// Kustomization holds the information needed to generate customized k8s api resources.
+type Kustomization struct {
 	// KustomizationName is a documentation field - a name for the customizations
 	// in a marshalled version of this struct, that survives YAML unmarshalling
 	// that discards comments.
 	KustomizationName string `json:"kustomizationName,omitempty" yaml:"kustomizationName,omitempty"`
 
-	// NamePrefix will prefix the names of all resources mentioned in the manifest
-	// including generated configmaps and secrets.
+	// NamePrefix will prefix the names of all resources mentioned in the kustomization
+	// file including generated configmaps and secrets.
 	NamePrefix string `json:"namePrefix,omitempty" yaml:"namePrefix,omitempty"`
 
 	// Labels to add to all objects and selectors.
@@ -39,7 +36,7 @@ type Manifest struct {
 	// Annotations to add to all objects.
 	ObjectAnnotations map[string]string `json:"objectAnnotations,omitempty" yaml:"objectAnnotations,omitempty"`
 
-	// Bases contain the paths to other packages that this manifest depends on.
+	// Bases contain the paths to other packages that this kustomization depends on.
 	// Each path should be either a path to a kustomize.yaml or a path of
 	// a directory that contains a kustomize.yaml file.
 	Bases []string `json:"bases,omitempty" yaml:"bases,omitempty"`
@@ -72,7 +69,7 @@ type Manifest struct {
 // ConfigMapArg contains the metadata of how to generate a configmap.
 type ConfigMapArgs struct {
 	// Name of the configmap.
-	// The full name should be Manifest.NamePrefix + Configmap.Name +
+	// The full name should be Kustomization.NamePrefix + Configmap.Name +
 	// hash(content of configmap).
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 
@@ -89,7 +86,7 @@ type ConfigMapArgs struct {
 // SecretGenerator contains the metadata of how to generate a secret.
 type SecretArgs struct {
 	// Name of the secret.
-	// The full name should be Manifest.NamePrefix + SecretGenerator.Name +
+	// The full name should be Kustomization.NamePrefix + SecretGenerator.Name +
 	// hash(content of secret).
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 

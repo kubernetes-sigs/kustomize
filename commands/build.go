@@ -34,7 +34,7 @@ import (
 )
 
 type buildOptions struct {
-	manifestPath string
+	kustomizationPath string
 }
 
 // newCmdBuild creates a new build command.
@@ -43,7 +43,7 @@ func newCmdBuild(out, errOut io.Writer, fs fs.FileSystem) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "build [path]",
-		Short: "Print current configuration per contents of " + constants.KustomizeFileName,
+		Short: "Print current configuration per contents of " + constants.KustomizationFileName,
 		Example: `
 		# Use the kustomize.yaml file under somedir/ to generate a set of api resources.
 		build somedir/`,
@@ -66,13 +66,13 @@ func newCmdBuild(out, errOut io.Writer, fs fs.FileSystem) *cobra.Command {
 // Validate validates build command.
 func (o *buildOptions) Validate(args []string) error {
 	if len(args) > 1 {
-		return errors.New("specify one path to manifest")
+		return errors.New("specify one path to kustomization file")
 	}
 	if len(args) == 0 {
-		o.manifestPath = "./"
+		o.kustomizationPath = "./"
 		return nil
 	}
-	o.manifestPath = args[0]
+	o.kustomizationPath = args[0]
 	return nil
 }
 
@@ -80,7 +80,7 @@ func (o *buildOptions) Validate(args []string) error {
 func (o *buildOptions) RunBuild(out, errOut io.Writer, fs fs.FileSystem) error {
 	l := loader.Init([]loader.SchemeLoader{loader.NewFileLoader(fs)})
 
-	absPath, err := filepath.Abs(o.manifestPath)
+	absPath, err := filepath.Abs(o.kustomizationPath)
 	if err != nil {
 		return err
 	}
