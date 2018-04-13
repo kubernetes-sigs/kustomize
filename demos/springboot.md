@@ -156,7 +156,7 @@ cat kustomize.yaml
 
 > ```
 > namePrefix: prod-
-> objectAnnotations:
+> annotationsToAdd:
 >  note: This is a example annotation
 > ```
 
@@ -206,7 +206,7 @@ selector.
 `kustomize` does not have `edit set label` command to add
 label, but we can edit `kustomize.yaml` file under
 `prod` directory and add the production labels under
-`objectLabels` fields as highlighted below.
+`labelsToAdd` fields as highlighted below.
 
 <!-- @customizeLabels @test -->
 ```
