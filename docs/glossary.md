@@ -130,7 +130,7 @@ Here's an [example](kustomize.yaml).
 A kustomization contains fields falling into these categories:
 
  * Immediate customization instructions -
-   _nameprefix_, _labelprefix_, etc.
+   _namePrefix_, _labelsToAdd_, etc.
  * Resource _generators_ for configmaps and secrets.
  * References to _external files_ in these categories:
    * [resources] - completely specified k8s API objects,
@@ -200,10 +200,10 @@ refer to a common base that holds common configuration.
 One configures the cluser like this:
 
 > ```
->  kustomize inflate someapp/overlays/staging |\
+>  kustomize build someapp/overlays/staging |\
 >      kubectl apply -f -
 >
->  kustomize inflate someapp/overlays/production |\
+>  kustomize build someapp/overlays/production |\
 >      kubectl apply -f -
 > ```
 
