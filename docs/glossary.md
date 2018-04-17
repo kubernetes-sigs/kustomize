@@ -122,15 +122,16 @@ an [overlay] to a [base].
 
 ## kustomization
 
-A _kustomization_ is a file called `kustomize.yaml` that
+A _kustomization_ is a file called `kustomization.yaml` that
 describes a configuration consumable by [kustomize].
 
-Here's an [example](kustomize.yaml).
+
+Here's an [example](kustomization.yaml).
 
 A kustomization contains fields falling into these categories:
 
- * Immediate customization instructions -
-   _namePrefix_, _labelsToAdd_, etc.
+ * Immediate customization declarations, e.g.
+   _namePrefix_, _commonLabels_, etc.
  * Resource _generators_ for configmaps and secrets.
  * References to _external files_ in these categories:
    * [resources] - completely specified k8s API objects,
@@ -166,7 +167,7 @@ E.g. one might create a github repository like this:
 
 > ```
 > github.com/username/someapp/
->   kustomize.yaml
+>   kustomization.yaml
 >   deployment.yaml
 >   configmap.yaml
 >   README.md
@@ -252,7 +253,7 @@ The _target_ is the argument to `build`, e.g.:
 
 `$target` must be a path to a directory that
 immediately contains a file called
-`kustomize.yaml` (i.e. a [kustomization]).
+`kustomization.yaml` (i.e. a [kustomization]).
 
 The target contains, or refers to, all the information
 needed to create customized resources to send to the

@@ -31,16 +31,16 @@ for f in service deployment; do \
 done
 ```
 
-### Initialize kustomize.yaml
+### Initialize kustomization.yaml
 
 The `kustomize` program gets its instructions from
-a file called `kustomize.yaml`.
+a file called `kustomization.yaml`.
 
 Start this file:
 
 <!-- @kustomizeYaml @test -->
 ```
-touch $DEMO_HOME/kustomize.yaml
+touch $DEMO_HOME/kustomization.yaml
 ```
 
 ### Add the resources
@@ -52,10 +52,10 @@ cd $DEMO_HOME
 kustomize edit add resource service.yaml
 kustomize edit add resource deployment.yaml
 
-cat kustomize.yaml
+cat kustomization.yaml
 ```
 
-`kustomize.yaml`'s resources section should contain:
+`kustomization.yaml`'s resources section should contain:
 
 > ```
 > resources:
@@ -71,10 +71,10 @@ cd $DEMO_HOME
 wget -q $CONTENT/example-springboot/master/application.properties
 kustomize edit add configmap demo-configmap --from-file application.properties
 
-cat kustomize.yaml
+cat kustomization.yaml
 ```
 
-`kustomize.yaml`'s configMapGenerator section should contain:
+`kustomization.yaml`'s configMapGenerator section should contain:
 
 > ```
 > configMapGenerator:
@@ -111,7 +111,7 @@ spec:
             value: prod
 EOF
 
-cat <<EOF >>$DEMO_HOME/kustomize.yaml
+cat <<EOF >>$DEMO_HOME/kustomization.yaml
 patches:
 - patch.yaml
 EOF
@@ -125,10 +125,10 @@ EOF
 
 kustomize edit add configmap demo-configmap --from-file application-prod.properties
 
-cat kustomize.yaml
+cat kustomization.yaml
 ```
 
-`kustomize.yaml`'s configMapGenerator section should contain:
+`kustomization.yaml`'s configMapGenerator section should contain:
 > ```
 > configMapGenerator:
 > - files:
@@ -149,14 +149,14 @@ cd $DEMO_HOME
 
 kustomize edit set nameprefix 'prod-'
 
-cat kustomize.yaml
+cat kustomization.yaml
 ```
 
-`kustomize.yaml` should have updated value of namePrefix field:
+`kustomization.yaml` should have updated value of namePrefix field:
 
 > ```
 > namePrefix: prod-
-> annotationsToAdd:
+> commonAnnotations:
 >  note: This is a example annotation
 > ```
 
@@ -204,14 +204,12 @@ certain labels so that we can query them by label
 selector.
 
 `kustomize` does not have `edit set label` command to add
-label, but we can edit `kustomize.yaml` file under
-`prod` directory and add the production labels under
-`labelsToAdd` fields as highlighted below.
+a label, but one can always edit `kustomization.yaml` directly:
 
 <!-- @customizeLabels @test -->
 ```
 sed -i 's/app: helloworld/app: prod/' \
-    $DEMO_HOME/kustomize.yaml
+    $DEMO_HOME/kustomization.yaml
 ```
 
 At this point, running `kustomize build` will
@@ -301,18 +299,18 @@ The output contains
 
 ### Add patches
 
-Currently `kustomize` doesn't provide a command to add a file as a patch, but we can edit the file `kustomize.yaml` to
+Currently `kustomize` doesn't provide a command to add a file as a patch, but we can edit the file `kustomization.yaml` to
 include this patch.
 
 <!-- @addPatch @test -->
 ```
-mv $DEMO_HOME/kustomize.yaml $DEMO_HOME/tmp.yaml
+mv $DEMO_HOME/kustomization.yaml $DEMO_HOME/tmp.yaml
 
 sed '/patches:$/{N;s/- patch.yaml/- patch.yaml\n- memorylimit_patch.yaml\n- healthcheck_patch.yaml/}' \
-    $DEMO_HOME/tmp.yaml >& $DEMO_HOME/kustomize.yaml
+    $DEMO_HOME/tmp.yaml >& $DEMO_HOME/kustomization.yaml
 ```
 
-`kustomize.yaml` should have patches field:
+`kustomization.yaml` should have patches field:
 
 > ```
 > patches

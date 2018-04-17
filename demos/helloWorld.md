@@ -57,7 +57,7 @@ Expecting something like:
 > └── base
 >     ├── configMap.yaml
 >     ├── deployment.yaml
->     ├── kustomize.yaml
+>     ├── kustomization.yaml
 >     ├── LICENSE
 >     ├── README.md
 >     └── service.yaml
@@ -81,7 +81,7 @@ The `base` directory has a [kustomization] file:
 <!-- @showKustomization @test -->
 ```
 BASE=$DEMO_HOME/base
-more $BASE/kustomize.yaml
+more $BASE/kustomization.yaml
 ```
 
 Run `kustomize` on the base to emit customized resources
@@ -100,7 +100,7 @@ label_ applied to all resources:
 <!-- @addLabel @test -->
 ```
 sed -i 's/app: hello/app: my-hello/' \
-    $BASE/kustomize.yaml
+    $BASE/kustomization.yaml
 ```
 
 See the effect:
@@ -132,12 +132,12 @@ defining a new name prefix, and some different labels.
 
 <!-- @makeStagingKustomization @test -->
 ```
-cat <<'EOF' >$OVERLAYS/staging/kustomize.yaml
+cat <<'EOF' >$OVERLAYS/staging/kustomization.yaml
 namePrefix: staging-
-labelsToAdd:
+commonLabels:
   instance: staging
   org: acmeCorporation
-annotationsToAdd:
+commonAnnotations:
   note: Hello, I am staging!
 bases:
 - ../../base
@@ -173,12 +173,12 @@ with a different name prefix and labels.
 
 <!-- @makeProductionKustomization @test -->
 ```
-cat <<EOF >$OVERLAYS/production/kustomize.yaml
+cat <<EOF >$OVERLAYS/production/kustomization.yaml
 namePrefix: production-
-labelsToAdd:
+commonLabels:
   instance: production
   org: acmeCorporation
-annotationsToAdd:
+commonAnnotations:
   note: Hello, I am production!
 bases:
 - ../../base
@@ -231,16 +231,16 @@ Expecting something like:
 > ├── base
 > │   ├── configMap.yaml
 > │   ├── deployment.yaml
-> │   ├── kustomize.yaml
+> │   ├── kustomization.yaml
 > │   ├── LICENSE
 > │   ├── README.md
 > │   └── service.yaml
 > └── overlays
 >     ├── production
 >     │   ├── deployment.yaml
->     │   └── kustomize.yaml
+>     │   └── kustomization.yaml
 >     └── staging
->         ├── kustomize.yaml
+>         ├── kustomization.yaml
 >         └── map.yaml
 > ```
 
@@ -373,7 +373,7 @@ kustomize build $OVERLAYS/staging |\
 
 The configMap name is prefixed by _staging-_, per the
 `namePrefix` field in
-`$OVERLAYS/staging/kustomize.yaml`.
+`$OVERLAYS/staging/kustomization.yaml`.
 
 The suffix to the configMap name is generated from a
 hash of the maps content - in this case the name suffix
