@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"k8s.io/kubectl/pkg/kustomize/app"
+	"k8s.io/kubectl/pkg/kustomize/constants"
 	"k8s.io/kubectl/pkg/kustomize/util"
 	"k8s.io/kubectl/pkg/kustomize/util/fs"
 	"k8s.io/kubectl/pkg/loader"
@@ -56,7 +57,12 @@ func newCmdDiff(out, errOut io.Writer, fs fs.FileSystem) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&o.kustomizationPath, "filename", "f", "", "Pass in a kustomize.yaml file or a directory that contains the file.")
+	cmd.Flags().StringVarP(
+		&o.kustomizationPath,
+		"filename",
+		"f",
+		"",
+		"Specify a directory containing "+constants.KustomizationFileName)
 	cmd.MarkFlagRequired("filename")
 	return cmd
 }

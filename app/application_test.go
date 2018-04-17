@@ -25,6 +25,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/kubectl/pkg/kustomize/constants"
 	"k8s.io/kubectl/pkg/kustomize/resource"
 	"k8s.io/kubectl/pkg/kustomize/types"
 	"k8s.io/kubectl/pkg/loader"
@@ -34,9 +35,9 @@ import (
 func setupTest(t *testing.T) loader.Loader {
 	kustomizationContent := []byte(`
 namePrefix: foo-
-labelsToAdd:
+commonLabels:
   app: nginx
-annotationsToAdd:
+commonAnnotations:
   note: This is a test annotation
 resources:
   - deployment.yaml
@@ -59,7 +60,7 @@ metadata:
 `)
 
 	loader := loadertest.NewFakeLoader("/testpath")
-	err := loader.AddFile("/testpath/kustomize.yaml", kustomizationContent)
+	err := loader.AddFile("/testpath/"+constants.KustomizationFileName, kustomizationContent)
 	if err != nil {
 		t.Fatalf("Failed to setup fake loader.")
 	}

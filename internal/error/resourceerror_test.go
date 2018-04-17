@@ -19,10 +19,12 @@ package error
 import (
 	"strings"
 	"testing"
+
+	"k8s.io/kubectl/pkg/kustomize/constants"
 )
 
 func TestResourceError_Error(t *testing.T) {
-	filepath := "/path/to/kustomize.yaml"
+	filepath := "/path/to/" + constants.KustomizationFileName
 	resourcefilepath := "/path/to/resource/deployment.yaml"
 	errorMsg := "file not found"
 	me := ResourceError{KustomizationPath: filepath, ResourceFilepath: resourcefilepath, ErrorMsg: errorMsg}

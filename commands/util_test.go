@@ -21,6 +21,7 @@ import (
 	"strings"
 	"testing"
 
+	"k8s.io/kubectl/pkg/kustomize/constants"
 	"k8s.io/kubectl/pkg/kustomize/types"
 	"k8s.io/kubectl/pkg/kustomize/util/fs"
 )
@@ -31,8 +32,8 @@ func TestWriteAndRead(t *testing.T) {
 	}
 
 	fsys := fs.MakeFakeFS()
-	fsys.Create("kustomize.yaml")
-	mf, err := newKustomizationFile("kustomize.yaml", fsys)
+	fsys.Create(constants.KustomizationFileName)
+	mf, err := newKustomizationFile(constants.KustomizationFileName, fsys)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
 	}
@@ -63,7 +64,7 @@ func TestNewNotExist(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.Mkdir(".", 0644)
 	fakeFS.Create(badSuffix)
-	_, err := newKustomizationFile("kustomize.yaml", fakeFS)
+	_, err := newKustomizationFile(constants.KustomizationFileName, fakeFS)
 	if err == nil {
 		t.Fatalf("expect an error")
 	}
@@ -71,7 +72,7 @@ func TestNewNotExist(t *testing.T) {
 	if !strings.Contains(err.Error(), contained) {
 		t.Fatalf("expect an error contains %q, but got %v", contained, err)
 	}
-	_, err = newKustomizationFile("kustomize.yaml", fakeFS)
+	_, err = newKustomizationFile(constants.KustomizationFileName, fakeFS)
 	if err == nil {
 		t.Fatalf("expect an error")
 	}

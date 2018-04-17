@@ -19,10 +19,12 @@ package error
 import (
 	"strings"
 	"testing"
+
+	"k8s.io/kubectl/pkg/kustomize/constants"
 )
 
 func TestConfigmapError_Error(t *testing.T) {
-	filepath := "/path/to/kustomize.yaml"
+	filepath := "/path/to/" + constants.KustomizationFileName
 	errorMsg := "configmap name is missing"
 	me := ConfigmapError{Path: filepath, ErrorMsg: errorMsg}
 

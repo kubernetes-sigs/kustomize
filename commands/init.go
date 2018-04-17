@@ -32,9 +32,9 @@ namePrefix: some-prefix
 # Labels to add to all objects and selectors.
 # These labels would also be used to form the selector for apply --prune
 # Named differently than “labels” to avoid confusion with metadata for this object
-labelsToAdd:
+commonLabels:
   app: helloworld
-annotationsToAdd:
+commonAnnotations:
   note: This is an example annotation
 resources: []
 #- service.yaml

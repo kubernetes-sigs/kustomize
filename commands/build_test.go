@@ -28,6 +28,7 @@ import (
 	"github.com/ghodss/yaml"
 
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/kubectl/pkg/kustomize/constants"
 	"k8s.io/kubectl/pkg/kustomize/util/fs"
 )
 
@@ -50,7 +51,8 @@ func TestBuildValidate(t *testing.T) {
 		{"noargs", []string{}, "./", ""},
 		{"file", []string{"beans"}, "beans", ""},
 		{"path", []string{"a/b/c"}, "a/b/c", ""},
-		{"path", []string{"too", "many"}, "", "specify one path to kustomization file"},
+		{"path", []string{"too", "many"},
+			"", "specify one path to " + constants.KustomizationFileName},
 	}
 	for _, mycase := range cases {
 		opts := buildOptions{}
