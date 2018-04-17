@@ -30,16 +30,16 @@ done
 ```
 
 
-### Initialize kustomize.yaml
+### Initialize kustomization.yaml
 
 The `kustomize` program gets its instructions from
-a file called `kustomize.yaml`.
+a file called `kustomization.yaml`.
 
 Start this file:
 
 <!-- @kustomizeYaml @test -->
 ```
-touch $DEMO_HOME/kustomize.yaml
+touch $DEMO_HOME/kustomization.yaml
 ```
 
 ### Add the resources
@@ -52,10 +52,10 @@ kustomize edit add resource secret.yaml
 kustomize edit add resource service.yaml
 kustomize edit add resource deployment.yaml
 
-cat kustomize.yaml
+cat kustomization.yaml
 ```
 
-`kustomize.yaml`'s resources section should contain:
+`kustomization.yaml`'s resources section should contain:
 
 > ```
 > resources:
@@ -76,10 +76,10 @@ cd $DEMO_HOME
 
 kustomize edit set nameprefix 'prod-'
 
-cat kustomize.yaml
+cat kustomization.yaml
 ```
 
-`kustomize.yaml` should have updated value of namePrefix field:
+`kustomization.yaml` should have updated value of namePrefix field:
 
 > ```
 > namePrefix: prod-
@@ -128,15 +128,13 @@ We want resources in production environment to have
 certain labels so that we can query them by label
 selector.
 
-`kustomize` does not have `set label` command to add
-label, but we can edit `kustomize.yaml` file under
-`prod` directory and add the production labels under
-`labelsToAdd` fields as highlighted below.
+`kustomize` does not have `edit set label` command to add
+a label, but one can always edit `kustomization.yaml` directly:
 
 <!-- @customizeLabels @test -->
 ```
 sed -i 's/app: helloworld/app: prod/' \
-    $DEMO_HOME/kustomize.yaml
+    $DEMO_HOME/kustomization.yaml
 ```
 
 At this point, running `kustomize build` will
@@ -170,11 +168,11 @@ spec:
 EOF
 ```
 
-Add the patch file to `kustomize.yaml`:
+Add the patch file to `kustomization.yaml`:
 
 <!-- @specifyPatch @test -->
 ```
-cat <<'EOF' >> $DEMO_HOME/kustomize.yaml
+cat <<'EOF' >> $DEMO_HOME/kustomization.yaml
 patches:
 - persistent-disk.yaml
 EOF
@@ -187,7 +185,7 @@ Lets break this down:
   in deployment.yaml
 
 - Then we added `persistent-disk.yaml` to list of
-  `patches` in `kustomize.yaml`. `kustomize build`
+  `patches` in `kustomization.yaml`. `kustomize build`
   will apply this patch to the deployment resource with
   the name `mysql` as defined in the patch.
 
