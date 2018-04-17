@@ -213,13 +213,13 @@ func (a *applicationImpl) getTransformer(patches []*resource.Resource) (transfor
 	}
 	ts = append(ts, npt)
 
-	lt, err := transformers.NewDefaultingLabelsMapTransformer(a.kustomization.LabelsToAdd)
+	lt, err := transformers.NewDefaultingLabelsMapTransformer(a.kustomization.CommonLabels)
 	if err != nil {
 		return nil, err
 	}
 	ts = append(ts, lt)
 
-	at, err := transformers.NewDefaultingAnnotationsMapTransformer(a.kustomization.AnnotationsToAdd)
+	at, err := transformers.NewDefaultingAnnotationsMapTransformer(a.kustomization.CommonAnnotations)
 	if err != nil {
 		return nil, err
 	}

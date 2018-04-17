@@ -18,8 +18,8 @@ package constants
 
 const KustomizationSuffix = ".yaml"
 
-// KustomizationFileName is the Well-Known File Name for a kustomize configuration file
-const KustomizationFileName = "kustomize" + KustomizationSuffix
+// KustomizationFileName is the Well-Known File Name for a kustomize configuration file.
+const KustomizationFileName = "kustomization" + KustomizationSuffix
 
 // Configmap behaviors
 const CreateBehavior = "create"

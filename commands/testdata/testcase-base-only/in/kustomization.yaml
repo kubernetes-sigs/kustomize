@@ -1,9 +1,9 @@
 namePrefix: team-foo-
-labelsToAdd:
+commonLabels:
   app: mynginx
   org: example.com
   team: foo
-annotationsToAdd:
+commonAnnotations:
   note: This is a test annotation
 resources:
   - deployment.yaml

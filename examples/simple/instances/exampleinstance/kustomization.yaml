@@ -1,9 +1,9 @@
 namePrefix: test-infra-
-labelsToAdd:
+commonLabels:
   app: mungebot
   org: kubernetes
   repo: test-infra
-annotationsToAdd:
+commonAnnotations:
   note: This is a test annotation
 bases:
 - ../../package/

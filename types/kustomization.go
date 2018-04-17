@@ -26,14 +26,13 @@ type Kustomization struct {
 	// These labels would also be used to form the selector for apply --prune
 	// Named differently than “labels” to avoid confusion with metadata for
 	// this object
-	LabelsToAdd map[string]string `json:"labelsToAdd,omitempty" yaml:"labelsToAdd,omitempty"`
+	CommonLabels map[string]string `json:"commonLabels,omitempty" yaml:"commonLabels,omitempty"`
 
 	// Annotations to add to all objects.
-	AnnotationsToAdd map[string]string `json:"annotationsToAdd,omitempty" yaml:"annotationsToAdd,omitempty"`
+	CommonAnnotations map[string]string `json:"commonAnnotations,omitempty" yaml:"commonAnnotations,omitempty"`
 
-	// Bases contain the paths to other packages that this kustomization depends on.
-	// Each path should be either a path to a kustomize.yaml or a path of
-	// a directory that contains a kustomize.yaml file.
+	// Each entry should be either a path to a file with a name matching the value of
+	// constants.KustomizationFileName, or a path to a directory containing a file with that name.
 	Bases []string `json:"bases,omitempty" yaml:"bases,omitempty"`
 
 	// Resources specifies the relative paths within the package.

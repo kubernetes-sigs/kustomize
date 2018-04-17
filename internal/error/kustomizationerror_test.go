@@ -20,10 +20,12 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+
+	"k8s.io/kubectl/pkg/kustomize/constants"
 )
 
 func TestKustomizationError_Error(t *testing.T) {
-	filepath := "/path/to/kustomize.yaml"
+	filepath := "/path/to/" + constants.KustomizationFileName
 	errorMsg := "Kustomization not found"
 
 	me := KustomizationError{KustomizationPath: filepath, ErrorMsg: errorMsg}

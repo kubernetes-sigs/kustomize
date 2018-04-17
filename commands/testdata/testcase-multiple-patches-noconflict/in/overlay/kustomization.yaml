@@ -1,5 +1,5 @@
 namePrefix: staging-
-labelsToAdd:
+commonLabels:
   env: staging
 patches:
   - deployment-patch1.yaml

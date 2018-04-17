@@ -1,7 +1,7 @@
 namePrefix: baseprefix-
-labelsToAdd:
+commonLabels:
   foo: bar
-annotationsToAdd:
+commonAnnotations:
   baseAnno: This is an base annotation
 resources:
 - deployment/deployment.yaml

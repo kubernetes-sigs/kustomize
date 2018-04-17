@@ -44,9 +44,8 @@ func newCmdBuild(out, errOut io.Writer, fs fs.FileSystem) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "build [path]",
 		Short: "Print current configuration per contents of " + constants.KustomizationFileName,
-		Example: `
-		# Use the kustomize.yaml file under somedir/ to generate a set of api resources.
-		build somedir/`,
+		Example: "Use the file somedir/" + constants.KustomizationFileName +
+			" to generate a set of api resources:\nbuild somedir/",
 		Run: func(cmd *cobra.Command, args []string) {
 			err := o.Validate(args)
 			if err != nil {
@@ -66,7 +65,7 @@ func newCmdBuild(out, errOut io.Writer, fs fs.FileSystem) *cobra.Command {
 // Validate validates build command.
 func (o *buildOptions) Validate(args []string) error {
 	if len(args) > 1 {
-		return errors.New("specify one path to kustomization file")
+		return errors.New("specify one path to " + constants.KustomizationFileName)
 	}
 	if len(args) == 0 {
 		o.kustomizationPath = "./"
