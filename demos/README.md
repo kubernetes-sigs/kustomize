@@ -6,7 +6,7 @@ These demos are covered by presubmit tests.
    (differently configured) instances of a simple Hello
    World server.
 
- * [mysql](mySql.md) - Create a mySql production
+ * [mysql](mySql.md) - Create a Mysql production
    configuration from scratch.
    
  * [springboot](springboot.md) - Create a Spring Boot application production
