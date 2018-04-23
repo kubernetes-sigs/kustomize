@@ -198,7 +198,7 @@ environment instances.
 The configuration of these environments is specified in
 individual overlays (one per environment) that all
 refer to a common base that holds common configuration.
-One configures the cluster like this:
+One configures the cluser like this:
 
 > ```
 >  kustomize build someapp/overlays/staging |\
