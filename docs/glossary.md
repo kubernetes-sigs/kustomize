@@ -186,7 +186,7 @@ An _overlay_ is a [target] that modifies (and thus
 depends on) another target.
 
 The [kustomization] in an overlay refers to (via file path,
-URI or other method) to _some other kustomization_, known as
+URI or other method) _some other kustomization_, known as
 its [base].
 
 An overlay is unusable without its base.
@@ -198,7 +198,7 @@ environment instances.
 The configuration of these environments is specified in
 individual overlays (one per environment) that all
 refer to a common base that holds common configuration.
-One configures the cluser like this:
+One configures the cluster like this:
 
 > ```
 >  kustomize build someapp/overlays/staging |\
