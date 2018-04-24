@@ -10,6 +10,8 @@
 [base]: #base
 [bases]: #base
 [bespoke]: #bespoke-configuration
+[k8s]: #kubernetes
+[kubernetes]: #kubernetes
 [kustomize]: #kustomize
 [kustomization]: #kustomization
 [off-the-shelf]: #off-the-shelf
@@ -143,11 +145,30 @@ A kustomization contains fields falling into these categories:
      a [kustomization] (only meaningful in an [overlay]).
  * (_TBD_) Standard k8s API kind-version fields.
 
+## kubernetes
+
+[Kubernetes](https://kubernetes.io) is an open-source
+system for automating deployment, scaling, and
+management of containerized applications.
+
+It's often abbreviated as _k8s_.
+
+## kubernetes-style object
+
+[fields required]: https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/#required-fields
+
+An object, expressed in a YAML or JSON file, with the
+[fields required] by kubernetes.  Basically just a
+`kind` field to identify the type, a `metadata/name`
+field to identify the instance, and an `apiVersion`
+field to identify the version (if there's more than one
+version).
+
 ## kustomize
 
 _kustomize_ is a command line tool supporting template-free
 customization of declarative configuration targetted to
-k8s.
+k8s-style objects.
 
 _Targetted to k8s means_ that kustomize may need some
 limited understanding of API resources, k8s concepts
@@ -236,8 +257,21 @@ a patch just by looking at the file's [YAML].
 
 ## resource
 
-A _resource_ is a path to a [YAML] or [JSON] file that
-completely defines a functional k8s API object.
+A _resource_, in the context of kustomize, is a path to
+a [YAML] or [JSON] file that completely defines a
+functional k8s API object, like a deployment or a
+configmap.
+
+More generally, a resource can be any correct YAML file
+that [defines an object](https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/#required-fields)
+with a `kind` and a `metadata/name` field.
+
+
+A _resource_ in the content of a REST-ful API is the
+target of an HTTP operation like _GET_, _PUT_ or
+_POST_.  k8s offers a RESTful API surface to interact
+with clients.
+
 
 ## sub-target / sub-application / sub-package
 
