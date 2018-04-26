@@ -28,37 +28,21 @@ import (
 )
 
 const (
-	resourceFileName    = "myWonderfulResource.yaml"
-	resourceFileContent = `
+	patchFileName    = "myWonderfulPatch.yaml"
+	patchFileContent = `
 Lorem ipsum dolor sit amet, consectetur adipiscing elit,
 sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 `
-	kustomizationContent = `namePrefix: some-prefix
-# Labels to add to all objects and selectors.
-# These labels would also be used to form the selector for apply --prune
-# Named differently than “labels” to avoid confusion with metadata for this object
-commonLabels:
-  app: helloworld
-commonAnnotations:
-  note: This is an example annotation
-resources: []
-#- service.yaml
-#- ../some-dir/
-# There could also be configmaps in Base, which would make these overlays
-configMapGenerator: []
-# There could be secrets in Base, if just using a fork/rebase workflow
-secretGenerator: []
-`
 )
 
-func TestAddResourceHappyPath(t *testing.T) {
+func TestAddPatchHappyPath(t *testing.T) {
 	buf := bytes.NewBuffer([]byte{})
 	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile(resourceFileName, []byte(resourceFileContent))
+	fakeFS.WriteFile(patchFileName, []byte(patchFileContent))
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
-	cmd := newCmdAddResource(buf, os.Stderr, fakeFS)
-	args := []string{resourceFileName}
+	cmd := newCmdAddPatch(buf, os.Stderr, fakeFS)
+	args := []string{patchFileName}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
@@ -67,44 +51,44 @@ func TestAddResourceHappyPath(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected read error: %v", err)
 	}
-	if !strings.Contains(string(content), resourceFileName) {
-		t.Errorf("expected resource name in kustomization")
+	if !strings.Contains(string(content), patchFileName) {
+		t.Errorf("expected patch name in kustomization")
 	}
 }
 
-func TestAddResourceAlreadyThere(t *testing.T) {
+func TestAddPatchAlreadyThere(t *testing.T) {
 	buf := bytes.NewBuffer([]byte{})
 	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile(resourceFileName, []byte(resourceFileContent))
+	fakeFS.WriteFile(patchFileName, []byte(patchFileContent))
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
-	cmd := newCmdAddResource(buf, os.Stderr, fakeFS)
-	args := []string{resourceFileName}
+	cmd := newCmdAddPatch(buf, os.Stderr, fakeFS)
+	args := []string{patchFileName}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
 		t.Fatalf("unexpected cmd error: %v", err)
 	}
 
-	// adding an existing resource should return an error
+	// adding an existing patch should return an error
 	err = cmd.RunE(cmd, args)
 	if err == nil {
 		t.Errorf("expected already there problem")
 	}
-	if err.Error() != "resource "+resourceFileName+" already in kustomization file" {
+	if err.Error() != "patch "+patchFileName+" already in kustomization file" {
 		t.Errorf("unexpected error %v", err)
 	}
 }
 
-func TestAddResourceNoArgs(t *testing.T) {
+func TestAddPatchNoArgs(t *testing.T) {
 	buf := bytes.NewBuffer([]byte{})
 	fakeFS := fs.MakeFakeFS()
 
-	cmd := newCmdAddResource(buf, os.Stderr, fakeFS)
+	cmd := newCmdAddPatch(buf, os.Stderr, fakeFS)
 	err := cmd.Execute()
 	if err == nil {
 		t.Errorf("expected error: %v", err)
 	}
-	if err.Error() != "must specify a resource file" {
+	if err.Error() != "must specify a patch file" {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }

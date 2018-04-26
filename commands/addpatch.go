@@ -27,19 +27,19 @@ import (
 	"k8s.io/kubectl/pkg/kustomize/util/fs"
 )
 
-type addResourceOptions struct {
-	resourceFilePath string
+type addPatchOptions struct {
+	patchFilePath string
 }
 
-// newCmdAddResource adds the name of a file containing a resource to the kustomization file.
-func newCmdAddResource(out, errOut io.Writer, fsys fs.FileSystem) *cobra.Command {
-	var o addResourceOptions
+// newCmdAddPatch adds the name of a file containing a patch to the kustomization file.
+func newCmdAddPatch(out, errOut io.Writer, fsys fs.FileSystem) *cobra.Command {
+	var o addPatchOptions
 
 	cmd := &cobra.Command{
-		Use:   "resource",
-		Short: "Add the name of a file containing a resource to the kustomization file.",
+		Use:   "patch",
+		Short: "Add the name of a file containing a patch to the kustomization file.",
 		Example: `
-		add resource {filepath}`,
+		add patch {filepath}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := o.Validate(args)
 			if err != nil {
@@ -49,29 +49,29 @@ func newCmdAddResource(out, errOut io.Writer, fsys fs.FileSystem) *cobra.Command
 			if err != nil {
 				return err
 			}
-			return o.RunAddResource(out, errOut, fsys)
+			return o.RunAddPatch(out, errOut, fsys)
 		},
 	}
 	return cmd
 }
 
-// Validate validates addResource command.
-func (o *addResourceOptions) Validate(args []string) error {
+// Validate validates addPatch command.
+func (o *addPatchOptions) Validate(args []string) error {
 	if len(args) != 1 {
-		return errors.New("must specify a resource file")
+		return errors.New("must specify a patch file")
 	}
-	o.resourceFilePath = args[0]
+	o.patchFilePath = args[0]
 	return nil
 }
 
-// Complete completes addResource command.
-func (o *addResourceOptions) Complete(cmd *cobra.Command, args []string) error {
+// Complete completes addPatch command.
+func (o *addPatchOptions) Complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// RunAddResource runs addResource command (do real work).
-func (o *addResourceOptions) RunAddResource(out, errOut io.Writer, fsys fs.FileSystem) error {
-	_, err := fsys.Stat(o.resourceFilePath)
+// RunAddPatch runs addPatch command (do real work).
+func (o *addPatchOptions) RunAddPatch(out, errOut io.Writer, fsys fs.FileSystem) error {
+	_, err := fsys.Stat(o.patchFilePath)
 	if err != nil {
 		return err
 	}
@@ -86,11 +86,11 @@ func (o *addResourceOptions) RunAddResource(out, errOut io.Writer, fsys fs.FileS
 		return err
 	}
 
-	if stringInSlice(o.resourceFilePath, m.Resources) {
-		return fmt.Errorf("resource %s already in kustomization file", o.resourceFilePath)
+	if stringInSlice(o.patchFilePath, m.Patches) {
+		return fmt.Errorf("patch %s already in kustomization file", o.patchFilePath)
 	}
 
-	m.Resources = append(m.Resources, o.resourceFilePath)
+	m.Patches = append(m.Patches, o.patchFilePath)
 
 	return mf.write(m)
 }
