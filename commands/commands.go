@@ -92,11 +92,15 @@ func newCmdAdd(stdOut, stdErr io.Writer, fsys fs.FileSystem) *cobra.Command {
 
 	# Adds a resource to the kustomization
 	kustomize edit add resource <filepath>
+
+	# Adds a patch to the kustomization
+	kustomize edit add patch <filepath>
 `,
 		Args: cobra.MinimumNArgs(1),
 	}
 	c.AddCommand(
 		newCmdAddResource(stdOut, stdErr, fsys),
+		newCmdAddPatch(stdOut, stdErr, fsys),
 		newCmdAddConfigMap(stdErr, fsys),
 	)
 	return c

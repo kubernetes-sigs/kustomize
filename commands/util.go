@@ -93,3 +93,12 @@ func (mf *kustomizationFile) write(kustomization *types.Kustomization) error {
 
 	return mf.fsys.WriteFile(mf.path, bytes)
 }
+
+func stringInSlice(str string, list []string) bool {
+	for _, v := range list {
+		if v == str {
+			return true
+		}
+	}
+	return false
+}
