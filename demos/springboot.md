@@ -111,10 +111,7 @@ spec:
             value: prod
 EOF
 
-cat <<EOF >>$DEMO_HOME/kustomization.yaml
-patches:
-- patch.yaml
-EOF
+kustomize edit add patch patch.yaml
 
 cat <<EOF >$DEMO_HOME/application-prod.properties
 spring.jpa.hibernate.ddl-auto=update
@@ -304,16 +301,14 @@ include this patch.
 
 <!-- @addPatch @test -->
 ```
-mv $DEMO_HOME/kustomization.yaml $DEMO_HOME/tmp.yaml
-
-sed '/patches:$/{N;s/- patch.yaml/- patch.yaml\n- memorylimit_patch.yaml\n- healthcheck_patch.yaml/}' \
-    $DEMO_HOME/tmp.yaml >& $DEMO_HOME/kustomization.yaml
+kustomize edit add patch memorylimit_patch.yaml
+kustomize edit add patch healthcheck_patch.yaml
 ```
 
 `kustomization.yaml` should have patches field:
 
 > ```
-> patches
+> patches:
 > - patch.yaml
 > - memorylimit_patch.yaml
 > - healthcheck_patch.yaml
