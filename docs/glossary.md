@@ -250,7 +250,7 @@ traversal rules built into [kustomize].
 _Patch_ is a field in the kustomization, distinct from
 resources, because a patch file looks like a resource
 file, but has different semantics.  A patch depends on
-(modifies) a resource, whereas a resourse has no
+(modifies) a resource, whereas a resource has no
 dependencies.  Since any resource file can be used as a
 patch, one cannot reliably distinguish a resource from
 a patch just by looking at the file's [YAML].
