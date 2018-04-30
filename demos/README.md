@@ -11,3 +11,5 @@ These demos are covered by presubmit tests.
    
  * [springboot](springboot.md) - Create a Spring Boot application production
    configuration from scratch.
+
+ * [breakfast](breakfast.md) - Customize breakfast for Alice and Bob.
