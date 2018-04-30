@@ -69,8 +69,6 @@ Expect something like:
 >     ├── configMap.yaml
 >     ├── deployment.yaml
 >     ├── kustomization.yaml
->     ├── LICENSE
->     ├── README.md
 >     └── service.yaml
 > ```
 
@@ -242,8 +240,6 @@ Expecting something like:
 > │   ├── configMap.yaml
 > │   ├── deployment.yaml
 > │   ├── kustomization.yaml
-> │   ├── LICENSE
-> │   ├── README.md
 > │   └── service.yaml
 > └── overlays
 >     ├── production
