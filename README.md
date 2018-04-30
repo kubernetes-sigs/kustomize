@@ -10,15 +10,22 @@
 [overlay]: docs/glossary.md#overlay
 [resources]: docs/glossary.md#resource
 [workflows]: docs/workflows.md
+[kubernetes style]: docs/glossary.md#kubernetes-style-object
 
 `kustomize` is a command line tool supporting
-template-free customization of declarative
-configuration targetted to kubernetes.
+template-free customization of YAML (or JSON)
+objects that conform to the [kubernetes style].
+
+If your objects have a `kind` and a `metadata` field,
+kustomize can patch them to help you manage
+configuration sharing and re-use.
+
+For more details, try a [demo].
 
 ## Installation
 
-Assumes [Go](https://golang.org/) is installed
-and your `PATH` contains `$GOPATH/bin`:
+This assumes [Go](https://golang.org/) (v1.10.1 or higher)
+is installed and your `PATH` contains `$GOPATH/bin`:
 
 <!-- @installkustomize @test -->
 ```
@@ -48,5 +55,3 @@ _development, staging and production_.
 Run kustomize on your overlay.  The result
 is printed to `stdout` as a set of complete
 resources, ready to be [applied] to a cluster.
-
-For more details, try a [demo].
