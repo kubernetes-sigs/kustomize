@@ -1,5 +1,6 @@
 [base]: ../docs/glossary.md#base
 [config]: https://github.com/kinflate/example-hello
+[gitops]: ../docs/glossary.md#gitops
 [hello]: https://github.com/monopole/hello
 [instance]: ../docs/glossary.md#instance
 [instances]: ../docs/glossary.md#instance
@@ -34,23 +35,33 @@ Alternatively, use
 ## Clone an example
 
 Let's run the [hello] service.
-Here's an existing [config] for it.
 
-Clone this config to a directory called `base`:
+We'll first need a [base] configuration for it -
+the resource files we'll build on with overlays.
 
-<!-- @cloneIt @test -->
+To keep this document shorter, we'll copy them in
+(rather than declare them as HERE documents):
+
+<!-- @downloadBase @test -->
 ```
-git clone \
-    https://github.com/kinflate/example-hello \
-    $DEMO_HOME/base
+BASE=$DEMO_HOME/base
+mkdir -p $BASE
+
+exRepo=https://raw.githubusercontent.com/kubernetes/kubectl
+exDir=master/cmd/kustomize/demos/data/helloWorld
+
+curl -s "$exRepo/$exDir/{configMap,deployment,kustomization,service}.yaml" \
+    -o "$BASE/#1.yaml"
 ```
+
+Look at the directory:
 
 <!-- @runTree @test -->
 ```
 tree $DEMO_HOME
 ```
 
-Expecting something like:
+Expect something like:
 
 > ```
 > /tmp/tmp.IyYQQlHaJP
@@ -80,7 +91,6 @@ The `base` directory has a [kustomization] file:
 
 <!-- @showKustomization @test -->
 ```
-BASE=$DEMO_HOME/base
 more $BASE/kustomization.yaml
 ```
 

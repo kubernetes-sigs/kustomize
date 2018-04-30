@@ -73,6 +73,18 @@ A base has no knowledge of the overlays that refer to it.
 A base is usable in isolation, i.e. one should
 be able to [apply] a base to a cluster directly.
 
+For simple [gitops] management, a base configuration
+could be the _sole content of a git repository
+dedicated to that purpose_.  Same with [overlays].
+Changes in a repo could generate a build, test and
+deploy cycle.
+
+Some of the demos for [kustomize] will break from this
+idiom and store all demo config files in directories
+_next_ to the `kustomize` code so that the code and
+demos can be more easily maintained by the same group
+of people.
+
 ## bespoke configuration
 
 A _bespoke_ configuration is a [kustomization] and some
@@ -103,6 +115,12 @@ of k8s clusters.
  * Eschews crossing the line into templating, domain
    specific languages, etc., frustrating the other
    goals.
+
+## gitops
+
+Devops or CICD workflows that use a git repository as a
+single source of truth and take action (e.g., build,
+test or deploy) when that truth changes.
 
 ## instance
 
