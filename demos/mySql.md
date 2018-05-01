@@ -10,25 +10,28 @@ In the production environment we want:
 - MySQL resources to have 'env: prod' labels.
 - MySQL to use persistent disk for storing data.
 
-### Download resources
-
-Download `deployment.yaml`, `service.yaml` and
-`secret.yaml`.  These are plain k8s resources files one
-could add to a k8s cluster to run MySql.
-
-<!-- @makeMySQLDir @test -->
+First make a place to work:
+<!-- @makeDemoHome @test -->
 ```
 DEMO_HOME=$(mktemp -d)
-cd $DEMO_HOME
-
-CONTENT=https://raw.githubusercontent.com/kinflate
-
-# Get MySQL configs
-for f in service secret deployment ; do \
-  wget -q $CONTENT/mysql/master/emptyDir/$f.yaml ; \
-done
 ```
 
+### Download resources
+
+To keep this document shorter, the base resources
+needed to run MySql on a k8s cluster are off in a
+supplemental data directory rather than declared here
+as HERE documents.
+
+Download them:
+
+<!-- @downloadResources @test -->
+```
+curl -s  -o "$DEMO_HOME/#1.yaml" \
+  "https://raw.githubusercontent.com/kubernetes/kubectl\
+/master/cmd/kustomize/demos/data/mySql\
+/{deployment,secret,service}.yaml"
+```
 
 ### Initialize kustomization.yaml
 

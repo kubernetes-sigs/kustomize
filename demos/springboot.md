@@ -12,23 +12,28 @@ In the production environment we want to customize the following:
 - JVM memory to be properly set.
 - health check and readiness check.
 
-### Download resources
-
-Download `deployment.yaml`, `service.yaml`. These are plain k8s resources files one
-could add to a k8s cluster to run sbdemo.
-
-<!-- @makeSpringBootDir @test -->
+First make a place to work:
+<!-- @makeDemoHome @test -->
+```
+DEMO_HOME=$(mktemp -d)
 ```
 
-DEMO_HOME=$(mktemp -d)
-cd $DEMO_HOME
+### Download resources
 
-CONTENT=https://raw.githubusercontent.com/kinflate
+To keep this document shorter, the base resources
+needed to run springboot on a k8s cluster are off in a
+supplemental data directory rather than declared here
+as HERE documents.
 
-# Get SpringBoot configs
-for f in service deployment; do \
-  wget -q $CONTENT/example-springboot/master/$f.yaml ; \
-done
+Download them:
+
+<!-- @downloadResources @test -->
+```
+CONTENT="https://raw.githubusercontent.com/kubernetes/kubectl\
+/master/cmd/kustomize/demos/data/springboot"
+
+curl -s  -o "$DEMO_HOME/#1.yaml" \
+  "$CONTENT/base/{deployment,service}.yaml"
 ```
 
 ### Initialize kustomization.yaml
@@ -63,13 +68,14 @@ cat kustomization.yaml
 > - deployment.yaml
 > ```
 
-### Add configmap generator
+### Add configMap generator
 
 <!-- @addConfigMap @test -->
 ```
-cd $DEMO_HOME
-wget -q $CONTENT/example-springboot/master/application.properties
-kustomize edit add configmap demo-configmap --from-file application.properties
+echo "app.name=Kustomize Demo" >$DEMO_HOME/application.properties
+
+kustomize edit add configmap demo-configmap \
+  --from-file application.properties
 
 cat kustomization.yaml
 ```
@@ -83,7 +89,8 @@ cat kustomization.yaml
 >   name: demo-configmap
 > ```
 
-### Customize configmap
+### Customize configMap
+
 We want to add database credentials for the prod environment. In general, these credentials can be put into the file `application.properties`.
 However, for some cases, we want to keep the credentials in a different file and keep application specific configs in `application.properties`.
  With this clear separation, the credentials and application specific things can be managed and maintained flexibly by different teams.
@@ -91,8 +98,8 @@ For example, application developers only tune the application configs in `applic
 only care about the credentials.
 
 For Spring Boot application, we can set an active profile through the environment variable `spring.profiles.active`. Then
-the application will pick up an extra `application-<profile>.properties` file. With this, we can customize the configmap in two
-steps. Add an environment variable through the patch and add a file to the configmap.
+the application will pick up an extra `application-<profile>.properties` file. With this, we can customize the configMap in two
+steps. Add an environment variable through the patch and add a file to the configMap.
 
 <!-- @customizeConfigMap @test -->
 ```
@@ -120,7 +127,8 @@ spring.datasource.username=root
 spring.datasource.password=admin
 EOF
 
-kustomize edit add configmap demo-configmap --from-file application-prod.properties
+kustomize edit add configmap \
+  demo-configmap --from-file application-prod.properties
 
 cat kustomization.yaml
 ```
@@ -143,56 +151,23 @@ environment):
 <!-- @customizeLabel @test -->
 ```
 cd $DEMO_HOME
-
 kustomize edit set nameprefix 'prod-'
-
-cat kustomization.yaml
 ```
 
 `kustomization.yaml` should have updated value of namePrefix field:
 
 > ```
 > namePrefix: prod-
-> commonAnnotations:
->  note: This is a example annotation
 > ```
 
 This `namePrefix` directive adds _prod-_ to all
-resource names.
+resource names, as can be seen by building the
+resources:
 
-<!-- @genNamePrefixConfig @test -->
+<!-- @build1 @test -->
 ```
-kustomize build $DEMO_HOME
+kustomize build $DEMO_HOME | grep prod-
 ```
-
-The output should contain:
-
-> ```
-> apiVersion: v1
-> data:
->   ....
-> kind: ConfigMap
-> metadata:
->   ....
->   name: prod-demo-configmap-7746248cmc
-> ---
-> apiVersion: v1
-> kind: Service
-> metadata:
->   ....
->   name: prod-sbdemo
-> spec:
->   ....
-> ---
-> apiVersion: apps/v1beta2
-> kind: Deployment
-> metadata:
->   ....
->   name: prod-sbdemo
-> spec:
->   selector:
->     ....
-> ```
 
 ### Label Customization
 
@@ -200,21 +175,28 @@ We want resources in production environment to have
 certain labels so that we can query them by label
 selector.
 
-`kustomize` does not have `edit set label` command to add
-a label, but one can always edit `kustomization.yaml` directly:
+`kustomize` does not have `edit set label` command to
+add a label, but one can always edit
+`kustomization.yaml` directly:
 
 <!-- @customizeLabels @test -->
 ```
-sed -i 's/app: helloworld/app: prod/' \
-    $DEMO_HOME/kustomization.yaml
+cat <<EOF >>$DEMO_HOME/kustomization.yaml
+commonLabels:
+  env: prod
+EOF
 ```
 
-At this point, running `kustomize build` will
-generate MySQL configs with name-prefix 'prod-' and
-labels `env:prod`.
+Confirm that the resources now all have names prefixed
+by `prod-` and the label tuple `env:prod`:
 
+<!-- @build2 @test -->
+```
+kustomize build $DEMO_HOME | grep -C 3 env
+```
 
 ### Download Patch for JVM memory
+
 When a Spring Boot application is deployed in a k8s cluster, the JVM is running inside a container. We want to set memory limit for the container and make sure
 the JVM is aware of that limit. In K8s deployment, we can set the resource limits for containers and inject these limits to
 some environment variables by downward API. When the container starts to run, it can pick up the environment variables and
@@ -224,10 +206,10 @@ Download the patch `memorylimit_patch.yaml`. It contains the memory limits setup
 
 <!-- @downloadPatch @test -->
 ```
-cd $DEMO_HOME
-wget -q $CONTENT/example-springboot-instances/master/production/memorylimit_patch.yaml
+curl -s  -o "$DEMO_HOME/#1.yaml" \
+  "$CONTENT/overlays/production/{memorylimit_patch}.yaml"
 
-cat memorylimit_patch.yaml
+cat $DEMO_HOME/memorylimit_patch.yaml
 ```
 
 The output contains
@@ -262,10 +244,10 @@ Download the patch `healthcheck_patch.yaml`. It contains the liveness probes and
 
 <!-- @downloadPatch @test -->
 ```
-cd $DEMO_HOME
-wget -q $CONTENT/example-springboot-instances/master/production/healthcheck_patch.yaml
+curl -s  -o "$DEMO_HOME/#1.yaml" \
+  "$CONTENT/overlays/production/{healthcheck_patch}.yaml"
 
-cat healthcheck_patch.yaml
+cat $DEMO_HOME/healthcheck_patch.yaml
 ```
 
 The output contains
@@ -296,11 +278,11 @@ The output contains
 
 ### Add patches
 
-Currently `kustomize` doesn't provide a command to add a file as a patch, but we can edit the file `kustomization.yaml` to
-include this patch.
+Add these patches to the kustomization:
 
 <!-- @addPatch @test -->
 ```
+cd $DEMO_HOME
 kustomize edit add patch memorylimit_patch.yaml
 kustomize edit add patch healthcheck_patch.yaml
 ```

@@ -1,5 +1,5 @@
 # ----------------------------------------------------
-# Example kustomize.yaml content.
+# Example kustomization.yaml content.
 #
 # This file declares the customization provided by
 # the kustomize program.
