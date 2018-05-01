@@ -10,6 +10,7 @@
 [base]: #base
 [bases]: #base
 [bespoke]: #bespoke-configuration
+[gitops]: #gitops
 [k8s]: #kubernetes
 [kubernetes]: #kubernetes
 [kustomize]: #kustomize

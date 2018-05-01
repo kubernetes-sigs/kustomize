@@ -1,6 +1,7 @@
 # Demos
 
-These demos are covered by presubmit tests.
+These demos assume that `kustomize` is on your `$PATH`.
+They are covered by pre-submit tests.
 
  * [hello world](helloWorld.md) - Deploy multiple
    (differently configured) instances of a simple Hello
