@@ -32,26 +32,27 @@ Alternatively, use
 > DEMO_HOME=~/hello
 > ```
 
-## Clone an example
+## Establish the base
 
 Let's run the [hello] service.
 
-We'll first need a [base] configuration for it -
-the resource files we'll build on with overlays.
+To use [overlays] to create [instances], we must
+first establish a common [base].
 
-To keep this document shorter, we'll copy them in
-(rather than declare them as HERE documents):
+To keep this document shorter, the base resources are
+off in a supplemental data directory rather than
+declared here as HERE documents.  Download them:
 
 <!-- @downloadBase @test -->
 ```
 BASE=$DEMO_HOME/base
 mkdir -p $BASE
 
-exRepo=https://raw.githubusercontent.com/kubernetes/kubectl
-exDir=master/cmd/kustomize/demos/data/helloWorld
+resources="https://raw.githubusercontent.com/kubernetes/kubectl\
+/master/cmd/kustomize/demos/data/helloWorld\
+/{configMap,deployment,kustomization,service}.yaml"
 
-curl -s "$exRepo/$exDir/{configMap,deployment,kustomization,service}.yaml" \
-    -o "$BASE/#1.yaml"
+curl -s $resources -o "$BASE/#1.yaml"
 ```
 
 Look at the directory:
@@ -83,7 +84,7 @@ cluster:
 to instantiate the _hello_ service.  `kubectl`
 would only recognize the resource files.
 
-## The Base Kustomization
+### The Base Kustomization
 
 The `base` directory has a [kustomization] file:
 
@@ -92,15 +93,15 @@ The `base` directory has a [kustomization] file:
 more $BASE/kustomization.yaml
 ```
 
-Run `kustomize` on the base to emit customized resources
-to `stdout`:
+Optionally, run `kustomize` on the base to emit
+customized resources to `stdout`:
 
 <!-- @buildBase @test -->
 ```
 kustomize build $BASE
 ```
 
-## Customize the base
+### Customize the base
 
 A first customization step could be to change the _app
 label_ applied to all resources:
@@ -413,7 +414,8 @@ uses the map:
 
 <!-- @countHashes @test -->
 ```
-test 3 == $(kustomize build $OVERLAYS/staging | grep khk45ktkd9 | wc -l)
+test 3 == \
+  $(kustomize build $OVERLAYS/staging | grep khk45ktkd9 | wc -l)
 ```
 
 Applying these resources to the cluster will result in
