@@ -4,6 +4,7 @@
 [base]: docs/glossary.md#base
 [declarative configuration]: docs/glossary.md#declarative-application-management
 [demo]: demos/README.md
+[demos]: demos/README.md
 [imageBase]: docs/base.jpg
 [imageOverlay]: docs/overlay.jpg
 [kustomization]: docs/glossary.md#kustomization
@@ -13,12 +14,11 @@
 [kubernetes style]: docs/glossary.md#kubernetes-style-object
 
 `kustomize` is a command line tool supporting
-template-free customization of YAML (or JSON)
-objects that conform to the [kubernetes style].
-
-If your objects have a `kind` and a `metadata` field,
-kustomize can patch them to help you manage
-configuration sharing and re-use.
+template-free customization of YAML (or JSON) objects
+that conform to the [kubernetes style].  If your
+objects have a `kind` and a `metadata` field,
+`kustomize` can patch them to support configuration
+sharing and re-use.
 
 For more details, try a [demo].
 
@@ -52,6 +52,7 @@ _development, staging and production_.
 
 #### 3) Run kustomize
 
-Run kustomize on your overlay.  The result
+Run `kustomize` on your overlay.  The result
 is printed to `stdout` as a set of complete
 resources, ready to be [applied] to a cluster.
+See the [demos].
