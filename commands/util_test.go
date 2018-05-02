@@ -55,7 +55,7 @@ func TestEmptyFile(t *testing.T) {
 	fsys := fs.MakeFakeFS()
 	_, err := newKustomizationFile("", fsys)
 	if err == nil {
-		t.Fatalf("Creat kustomizationFile from empty filename should fail")
+		t.Fatalf("Create kustomizationFile from empty filename should fail")
 	}
 }
 
