@@ -145,7 +145,7 @@ mkdir -p $DEMO_HOME/base
 ```
 
 Make the data for the base.  This direction by
-defintion should hold resources common to all
+definition should hold resources common to all
 environments. Here we're only defining a java
 properties file, and a `kustomization` file that
 references it.
