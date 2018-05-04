@@ -7,6 +7,9 @@ They are covered by pre-submit tests.
    (differently configured) instances of a simple Hello
    World server.
 
+ * [LDAP](ldap.md) - Deploy multiple
+   (differently configured) instances of a LDAP server.
+
  * [mySql](mySql.md) - Create a MySQL production
    configuration from scratch.
 
