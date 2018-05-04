@@ -31,10 +31,7 @@ go install ./cmd/kustomize || { exit_with "Failed to install kustomize"; }
 export PATH=$GOPATH/bin:$PATH
 
 home=`pwd`
-example_dir="some/default/dir/for/examples"
-if [ $# -eq 1 ]; then
-  example_dir=$1
-fi
+example_dir="./cmd/kustomize/demos/data/ldap/base"
 if [ ! -d ${example_dir} ]; then
   exit_with "directory ${example_dir} doesn't exist"
 fi
