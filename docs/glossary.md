@@ -125,24 +125,6 @@ Devops or CICD workflows that use a git repository as a
 single source of truth and take action (e.g., build,
 test or deploy) when that truth changes.
 
-## variant
-
-An _variant_ is the outcome, in a cluster, of applying
-an [overlay] to a [base].
-
-> E.g., a _staging_ and _production_ overlay both modify some
-> common base to create distinct variants.
->
-> The _staging_ variant is the set of resources
-> exposed to quality assurance testing, or to some
-> external users who'd like to see what the next
-> version of production will look like.
->
-> The _production_ variant is the set of resources
-> exposed to production traffic, and thus may employ
-> deployments with a large number of replicas and higher
-> cpu and memory requests.
-
 ## kustomization
 
 A _kustomization_ is a file called `kustomization.yaml` that
@@ -296,11 +278,12 @@ with clients.
 
 ## sub-target / sub-application / sub-package
 
-A _sub-whatever_ is not a thing. There are only [bases] and [overlays].
+A _sub-whatever_ is not a thing. There are only
+[bases] and [overlays].
 
 ## target
 
-The _target_ is the argument to `build`, e.g.:
+The _target_ is the argument to `kustomize build`, e.g.:
 
 > ```
 >  kustomize build $target
@@ -315,3 +298,21 @@ needed to create customized resources to send to the
 [apply] operation.
 
 A target is a [base] or an [overlay].
+
+## variant
+
+A _variant_ is the outcome, in a cluster, of applying
+an [overlay] to a [base].
+
+> E.g., a _staging_ and _production_ overlay both modify some
+> common base to create distinct variants.
+>
+> The _staging_ variant is the set of resources
+> exposed to quality assurance testing, or to some
+> external users who'd like to see what the next
+> version of production will look like.
+>
+> The _production_ variant is the set of resources
+> exposed to production traffic, and thus may employ
+> deployments with a large number of replicas and higher
+> cpu and memory requests.
