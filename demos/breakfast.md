@@ -1,4 +1,5 @@
 [kubernetes API object style]: https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/#required-fields
+[variant]: ../docs/glossary.md#variant
 
 # Demo: configure breakfast
 
@@ -45,8 +46,8 @@ data:
 EOF
 ```
 
-The `name` field merely distinguishes this instance of coffee from others (if
-there were any).
+The `name` field merely distinguishes this [variant] of
+coffee from others (if there were any).
 
 Likewise, define _pancakes_:
 <!-- @pancakes @test -->
