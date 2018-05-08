@@ -13,16 +13,12 @@
    the repo in question.
 1. The [repo owners](OWNERS) will respond to your issue
    promptly.
-1. If your proposed change is accepted, and you haven't
-   already done so, sign a Contributor License
-   Agreement (see details above).
-1. Fork the desired repo, develop and test your code.
-   See the [github workflow guide] for more information.
-1. For new features, provide a markdown based demo following
-   the pattern established in the `demos` directory.
+1. Fork the repo, develop and test your code.
+   See the [github workflow guide].
+1. For _new features_, provide a markdown-based demo following
+   the pattern established in the [demos](demos) directory.
    Run `bin/pre-commit.sh` to test your demo.
 1. Submit a pull request.
-
 
 ## Community, discussion, contribution, and support
 
