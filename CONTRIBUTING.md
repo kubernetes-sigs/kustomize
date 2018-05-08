@@ -4,7 +4,7 @@
 [github workflow guide]: https://github.com/kubernetes/community/blob/master/contributors/guide/github-workflow.md
 [CNCF code of conduct]: https://github.com/cncf/foundation/blob/master/code-of-conduct.md
 
-## Contributing A Patch
+## Contributing a Patch
 
 1. Kubernetes projects require contributors to sign the
    [Contributor License Agreement] before pull requests
