@@ -2,14 +2,14 @@
 [config]: https://github.com/kinflate/example-hello
 [gitops]: ../docs/glossary.md#gitops
 [hello]: https://github.com/monopole/hello
-[instance]: ../docs/glossary.md#instance
-[instances]: ../docs/glossary.md#instance
 [kustomization]: ../docs/glossary.md#kustomization
 [original]: https://github.com/kinflate/example-hello
 [overlay]: ../docs/glossary.md#overlay
 [overlays]: ../docs/glossary.md#overlay
+[variant]: ../docs/glossary.md#variant
+[variants]: ../docs/glossary.md#variant
 
-# Demo: hello world with instances
+# Demo: hello world with variants
 
 Steps:
 
@@ -36,7 +36,7 @@ Alternatively, use
 
 Let's run the [hello] service.
 
-To use [overlays] to create [instances], we must
+To use [overlays] to create [variants], we must
 first establish a common [base].
 
 To keep this document shorter, the base resources are
@@ -125,7 +125,7 @@ Create a _staging_ and _production_ [overlay]:
  * _Staging_ enables a risky feature not enabled in production.
  * _Production_ has a higher replica count.
  * Web server greetings from these cluster
-   [instances] will differ from each other.
+   [variants] will differ from each other.
 
 <!-- @overlayDirectories @test -->
 ```
@@ -144,7 +144,7 @@ defining a new name prefix, and some different labels.
 cat <<'EOF' >$OVERLAYS/staging/kustomization.yaml
 namePrefix: staging-
 commonLabels:
-  instance: staging
+  variant: staging
   org: acmeCorporation
 commonAnnotations:
   note: Hello, I am staging!
@@ -185,7 +185,7 @@ with a different name prefix and labels.
 cat <<EOF >$OVERLAYS/production/kustomization.yaml
 namePrefix: production-
 commonLabels:
-  instance: production
+  variant: production
   org: acmeCorporation
 commonAnnotations:
   note: Hello, I am production!
@@ -224,7 +224,7 @@ EOF
 
  - an _overlays_ directory, containing the kustomizations
    and patches required to create distinct _staging_
-   and _production_ instances in a cluster.
+   and _production_ [variants] in a cluster.
 
 Review the directory structure and differences:
 
@@ -276,9 +276,9 @@ something like
 > ---
 > >     note: Hello, I am production!
 > 11c11
-> <     instance: staging
+> <     variant: staging
 > ---
-> >     instance: production
+> >     variant: production
 > 13c13
 > (...truncated)
 > ```
@@ -346,7 +346,7 @@ collected.
 
 [patch]: ../docs/glossary.md#patch
 
-The _staging_ instance here has a configMap [patch]:
+The _staging_ [variant] here has a configMap [patch]:
 
 <!-- @showMapPatch @test -->
 ```

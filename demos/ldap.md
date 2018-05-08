@@ -1,12 +1,12 @@
 [base]: ../docs/glossary.md#base
 [gitops]: ../docs/glossary.md#gitops
-[instance]: ../docs/glossary.md#instance
-[instances]: ../docs/glossary.md#instance
 [kustomization]: ../docs/glossary.md#kustomization
 [overlay]: ../docs/glossary.md#overlay
 [overlays]: ../docs/glossary.md#overlay
+[variant]: ../docs/glossary.md#variant
+[variants]: ../docs/glossary.md#variant
 
-# Demo: LDAP with instances
+# Demo: LDAP with variants
 
 Steps:
 
@@ -31,7 +31,7 @@ Alternatively, use
 
 ## Establish the base
 
-To use [overlays] to create [instances], we must
+To use [overlays] to create [variants], we must
 first establish a common [base].
 
 To keep this document shorter, the base resources are
@@ -118,7 +118,7 @@ Create a _staging_ and _production_ [overlay]:
 
  * _Staging_ adds a configMap.
  * _Production_ has a higher replica count and a persistent disk.
- * [instances] will differ from each other.
+ * [variants] will differ from each other.
 
 <!-- @overlayDirectories @test -->
 ```
@@ -195,7 +195,7 @@ The production customization adds 6 replica as well as a consistent disk.
 
  - an _overlays_ directory, containing the kustomizations
    and patches required to create distinct _staging_
-   and _production_ instances in a cluster.
+   and _production_ [variants] in a cluster.
 
 Review the directory structure and differences:
 
@@ -282,4 +282,3 @@ To deploy, pipe the above commands to kubectl apply:
 > kustomize build $OVERLAYS/production |\
 >    kubectl apply -f -
 > ```
-

@@ -3,7 +3,7 @@
 [applying]: glossary.md#apply
 [base]: glossary.md#base
 [fork]: https://guides.github.com/activities/forking/
-[instances]: glossary.md#instance
+[variants]: glossary.md#variant
 [kustomization]: glossary.md#kustomization
 [off-the-shelf]: glossary.md#off-the-shelf
 [overlays]: glossary.md#overlay
@@ -59,7 +59,7 @@ The _production_ directory might get a patch
 that increases the replica count in a deployment
 specified in the base.
 
-#### 4) bring up [instances]
+#### 4) bring up [variants]
 
 Run kustomize, and pipe the output to [apply].
 
@@ -108,7 +108,7 @@ The [overlays] are siblings to each other and to the
 > ```
 
 
-#### 4) bring up instances
+#### 4) bring up [variants]
 
 > ```
 > kustomize ~/ldap/overlays/staging | kubectl apply -f -

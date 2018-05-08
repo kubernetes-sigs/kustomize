@@ -26,6 +26,8 @@
 [resources]: #resource
 [rpm]: https://en.wikipedia.org/wiki/Rpm_(software)
 [target]: #target
+[variant]: #variant
+[variants]: #variant
 [workflow]: workflows.md
 
 ## application
@@ -107,7 +109,7 @@ of k8s clusters.
  * Works with any configuration, be it bespoke,
    off-the-shelf, stateless, stateful, etc.
  * Supports common customizations, and creation of
-   instance variants (dev vs, staging vs. production).
+   [variants] (dev vs. staging vs. production).
  * Exposes and teaches native k8s APIs, rather than
    hiding them.
  * No friction integration with version control to
@@ -123,20 +125,20 @@ Devops or CICD workflows that use a git repository as a
 single source of truth and take action (e.g., build,
 test or deploy) when that truth changes.
 
-## instance
+## variant
 
-An _instance_ is the outcome, in a cluster, of applying
+An _variant_ is the outcome, in a cluster, of applying
 an [overlay] to a [base].
 
 > E.g., a _staging_ and _production_ overlay both modify some
-> common base to create distinct instances.
+> common base to create distinct variants.
 >
-> The _staging_ instance is the set of resources
+> The _staging_ variant is the set of resources
 > exposed to quality assurance testing, or to some
 > external users who'd like to see what the next
 > version of production will look like.
 >
-> The _production_ instance is the set of resources
+> The _production_ variant is the set of resources
 > exposed to production traffic, and thus may employ
 > deployments with a large number of replicas and higher
 > cpu and memory requests.
@@ -179,7 +181,7 @@ It's often abbreviated as _k8s_.
 An object, expressed in a YAML or JSON file, with the
 [fields required] by kubernetes.  Basically just a
 `kind` field to identify the type, a `metadata/name`
-field to identify the instance, and an `apiVersion`
+field to identify the variant, and an `apiVersion`
 field to identify the version (if there's more than one
 version).
 
@@ -225,15 +227,15 @@ own [overlays] to do further customization.
 An _overlay_ is a [target] that modifies (and thus
 depends on) another target.
 
-The [kustomization] in an overlay refers to (via file path,
-URI or other method) _some other kustomization_, known as
-its [base].
+The [kustomization] in an overlay refers to (via file
+path, URI or other method) _some other kustomization_,
+known as its [base].
 
 An overlay is unusable without its base.
 
 An overlay supports the typical notion of a
 _development_, _QA_, _staging_ and _production_
-environment instances.
+environment variants.
 
 The configuration of these environments is specified in
 individual overlays (one per environment) that all
