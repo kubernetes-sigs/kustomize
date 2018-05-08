@@ -46,7 +46,7 @@ data:
 EOF
 ```
 
-The `name` field merely distinguishes this [variant] of
+The `name` field merely distinguishes this instance of
 coffee from others (if there were any).
 
 Likewise, define _pancakes_:
@@ -61,7 +61,7 @@ topping: none
 EOF
 ```
 
-Make a custom version of breakfast for Alice, who
+Make a custom [variant] of breakfast for Alice, who
 likes her coffee hot:
 
 <!-- @aliceOverlay @test -->
