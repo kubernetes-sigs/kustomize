@@ -85,7 +85,7 @@ temperature: hot!
 EOF
 ```
 
-And likewise for Bob, who wants _five_ pancakes, with strawberries:
+And likewise a [variant] for Bob, who wants _five_ pancakes, with strawberries:
 
 <!-- @bobOverlay @test -->
 ```
