@@ -22,10 +22,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"k8s.io/kubectl/pkg/kustomize/configmapandsecret"
-	"k8s.io/kubectl/pkg/kustomize/constants"
-	"k8s.io/kubectl/pkg/kustomize/types"
-	"k8s.io/kubectl/pkg/kustomize/util/fs"
+	"github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret"
+	"github.com/kubernetes-sigs/kustomize/pkg/constants"
+	"github.com/kubernetes-sigs/kustomize/pkg/types"
+	"github.com/kubernetes-sigs/kustomize/pkg/util/fs"
 )
 
 func newCmdAddConfigMap(errOut io.Writer, fsys fs.FileSystem) *cobra.Command {

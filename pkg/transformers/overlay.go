@@ -22,11 +22,11 @@ import (
 
 	jsonpatch "github.com/evanphx/json-patch"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/kubectl/pkg/kustomize/resource"
 )
 
 // overlayTransformer contains a map of overlay objects

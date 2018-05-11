@@ -8,6 +8,7 @@
 [imageBase]: docs/base.jpg
 [imageOverlay]: docs/overlay.jpg
 [kubernetes style]: docs/glossary.md#kubernetes-style-object
+[KEP]: https://github.com/kubernetes/community/pull/2132
 [kustomization]: docs/glossary.md#kustomization
 [overlay]: docs/glossary.md#overlay
 [resources]: docs/glossary.md#resource
@@ -61,4 +62,4 @@ See the [demos].
 
 ## About
 
-This project sponsored by [sig-cli].
+This project sponsored by [sig-cli] ([KEP]).

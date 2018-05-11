@@ -17,7 +17,7 @@ limitations under the License.
 package resource
 
 import (
-	"k8s.io/kubectl/pkg/loader"
+	"github.com/kubernetes-sigs/kustomize/pkg/loader"
 )
 
 //  NewFromResources returns a ResourceCollection given a resource path slice from kustomization file.

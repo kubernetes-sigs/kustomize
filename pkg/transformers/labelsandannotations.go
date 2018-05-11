@@ -20,8 +20,8 @@ import (
 	"errors"
 	"fmt"
 
-	"k8s.io/kubectl/pkg/kustomize/resource"
-	"k8s.io/kubectl/pkg/kustomize/types"
+	"github.com/kubernetes-sigs/kustomize/pkg/resource"
+	"github.com/kubernetes-sigs/kustomize/pkg/types"
 )
 
 // mapTransformer contains a map string->string and path configs
