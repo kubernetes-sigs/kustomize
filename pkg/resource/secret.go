@@ -23,8 +23,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/kubectl/pkg/kustomize/types"
 )
 
 func newFromSecretGenerator(p string, s types.SecretArgs) (*Resource, error) {

@@ -21,7 +21,7 @@ import (
 
 	"github.com/golang/glog"
 
-	"k8s.io/kubectl/pkg/kustomize/commands"
+	"github.com/kubernetes-sigs/kustomize/pkg/commands"
 )
 
 func main() {

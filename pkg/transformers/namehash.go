@@ -20,12 +20,12 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/hash"
+	"github.com/kubernetes-sigs/kustomize/pkg/resource"
+	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/kubectl/pkg/kustomize/hash"
-	"k8s.io/kubectl/pkg/kustomize/resource"
-	"k8s.io/kubectl/pkg/kustomize/types"
 )
 
 // nameHashTransformer contains the prefix and the path config for each field that

@@ -21,7 +21,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"k8s.io/kubectl/pkg/kustomize/util/fs"
+	"github.com/kubernetes-sigs/kustomize/pkg/util/fs"
 )
 
 const currentDir = "."

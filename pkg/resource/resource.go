@@ -19,9 +19,9 @@ package resource
 import (
 	"encoding/json"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/kubectl/pkg/kustomize/types"
 )
 
 // Resource represents a Kubernetes Resource Object for ex. Deployment, Server

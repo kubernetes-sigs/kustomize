@@ -16,7 +16,7 @@ limitations under the License.
 
 package transformers
 
-import "k8s.io/kubectl/pkg/kustomize/resource"
+import "github.com/kubernetes-sigs/kustomize/pkg/resource"
 
 // noOpTransformer contains a no-op transformer.
 type noOpTransformer struct{}

@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"k8s.io/kubectl/pkg/kustomize/resource"
-	"k8s.io/kubectl/pkg/kustomize/types"
+	"github.com/kubernetes-sigs/kustomize/pkg/resource"
+	"github.com/kubernetes-sigs/kustomize/pkg/types"
 )
 
 func compareMap(m1, m2 resource.ResourceCollection) error {

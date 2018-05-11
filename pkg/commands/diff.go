@@ -23,11 +23,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"k8s.io/kubectl/pkg/kustomize/app"
-	"k8s.io/kubectl/pkg/kustomize/constants"
-	"k8s.io/kubectl/pkg/kustomize/util"
-	"k8s.io/kubectl/pkg/kustomize/util/fs"
-	"k8s.io/kubectl/pkg/loader"
+	"github.com/kubernetes-sigs/kustomize/pkg/app"
+	"github.com/kubernetes-sigs/kustomize/pkg/constants"
+	"github.com/kubernetes-sigs/kustomize/pkg/loader"
+	"github.com/kubernetes-sigs/kustomize/pkg/util"
+	"github.com/kubernetes-sigs/kustomize/pkg/util/fs"
 	"k8s.io/utils/exec"
 )
 

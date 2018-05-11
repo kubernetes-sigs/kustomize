@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"k8s.io/kubectl/pkg/kustomize/constants"
+	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 )
 
 func TestPatchError_Error(t *testing.T) {

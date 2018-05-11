@@ -22,12 +22,12 @@ import (
 
 	"github.com/ghodss/yaml"
 
-	"k8s.io/kubectl/pkg/kustomize/constants"
-	interror "k8s.io/kubectl/pkg/kustomize/internal/error"
-	"k8s.io/kubectl/pkg/kustomize/resource"
-	"k8s.io/kubectl/pkg/kustomize/transformers"
-	"k8s.io/kubectl/pkg/kustomize/types"
-	"k8s.io/kubectl/pkg/loader"
+	"github.com/kubernetes-sigs/kustomize/pkg/constants"
+	interror "github.com/kubernetes-sigs/kustomize/pkg/internal/error"
+	"github.com/kubernetes-sigs/kustomize/pkg/loader"
+	"github.com/kubernetes-sigs/kustomize/pkg/resource"
+	"github.com/kubernetes-sigs/kustomize/pkg/transformers"
+	"github.com/kubernetes-sigs/kustomize/pkg/types"
 )
 
 type Application interface {

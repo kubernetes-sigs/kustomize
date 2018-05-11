@@ -27,8 +27,8 @@ import (
 
 	"github.com/ghodss/yaml"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/util/fs"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/kubectl/pkg/kustomize/util/fs"
 )
 
 type DiffTestCase struct {
