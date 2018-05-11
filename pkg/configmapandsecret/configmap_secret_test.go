@@ -21,10 +21,10 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/kubectl/pkg/kustomize/types"
 )
 
 func makeEnvConfigMap(name string) *corev1.ConfigMap {

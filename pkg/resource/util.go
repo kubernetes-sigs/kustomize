@@ -23,9 +23,9 @@ import (
 
 	"github.com/golang/glog"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/kubectl/pkg/kustomize/constants"
 )
 
 // decode decodes a list of objects in byte array format

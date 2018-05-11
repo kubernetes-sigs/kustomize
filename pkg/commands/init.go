@@ -22,9 +22,9 @@ import (
 
 	"errors"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/constants"
+	"github.com/kubernetes-sigs/kustomize/pkg/util/fs"
 	"github.com/spf13/cobra"
-	"k8s.io/kubectl/pkg/kustomize/constants"
-	"k8s.io/kubectl/pkg/kustomize/util/fs"
 )
 
 const kustomizationTemplate = `

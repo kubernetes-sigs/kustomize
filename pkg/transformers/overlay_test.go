@@ -21,9 +21,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/kubectl/pkg/kustomize/resource"
 )
 
 func TestOverlayRun(t *testing.T) {

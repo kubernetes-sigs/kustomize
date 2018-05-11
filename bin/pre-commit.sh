@@ -11,7 +11,7 @@ cd "$base_dir" || {
 rc=0
 
 function go_dirs {
-  go list -f '{{.Dir}}' ./... | tr '\n' '\0'
+  go list -f '{{.Dir}}' ./... | tail -n +2 | tr '\n' '\0'
 }
 
 function runTest {
@@ -43,14 +43,14 @@ function testGoTest {
   go test -v ./...
 }
 
-function testTutorial {
-  mdrip --mode test --label test ./cmd/kustomize
+function testDemos {
+  mdrip --mode test --label test ./demos
 }
 
 runTest testGoFmt
 runTest testGoImports
 runTest testGoVet
 runTest testGoTest
-runTest testTutorial
+runTest testDemos
 
 exit $rc

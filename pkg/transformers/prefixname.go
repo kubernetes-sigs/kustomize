@@ -20,8 +20,8 @@ import (
 	"errors"
 	"fmt"
 
-	"k8s.io/kubectl/pkg/kustomize/resource"
-	"k8s.io/kubectl/pkg/kustomize/types"
+	"github.com/kubernetes-sigs/kustomize/pkg/resource"
+	"github.com/kubernetes-sigs/kustomize/pkg/types"
 )
 
 // namePrefixTransformer contains the prefix and the path config for each field that

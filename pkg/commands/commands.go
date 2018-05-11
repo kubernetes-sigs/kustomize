@@ -21,9 +21,9 @@ import (
 	"io"
 	"os"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/util/fs"
+	"github.com/kubernetes-sigs/kustomize/version"
 	"github.com/spf13/cobra"
-	"k8s.io/kubectl/cmd/kustomize/version"
-	"k8s.io/kubectl/pkg/kustomize/util/fs"
 )
 
 // NewDefaultCommand returns the default (aka root) command for kustomize command.

@@ -20,11 +20,11 @@ import (
 	"fmt"
 	"strings"
 
+	cutil "github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret/util"
+	"github.com/kubernetes-sigs/kustomize/pkg/loader"
+	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
-	cutil "k8s.io/kubectl/pkg/kustomize/configmapandsecret/util"
-	"k8s.io/kubectl/pkg/kustomize/types"
-	"k8s.io/kubectl/pkg/loader"
 )
 
 func newFromConfigMap(l loader.Loader, cm types.ConfigMapArgs) (*Resource, error) {

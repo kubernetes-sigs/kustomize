@@ -22,8 +22,8 @@ import (
 
 	"github.com/ghodss/yaml"
 
-	"k8s.io/kubectl/pkg/kustomize/resource"
-	"k8s.io/kubectl/pkg/kustomize/types"
+	"github.com/kubernetes-sigs/kustomize/pkg/resource"
+	"github.com/kubernetes-sigs/kustomize/pkg/types"
 )
 
 // Encode encodes the map `in` and output the encoded objects separated by `---`.

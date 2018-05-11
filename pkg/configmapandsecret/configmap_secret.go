@@ -25,13 +25,13 @@ import (
 	"path/filepath"
 	"time"
 
+	cutil "github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret/util"
+	"github.com/kubernetes-sigs/kustomize/pkg/hash"
+	"github.com/kubernetes-sigs/kustomize/pkg/resource"
+	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	cutil "k8s.io/kubectl/pkg/kustomize/configmapandsecret/util"
-	"k8s.io/kubectl/pkg/kustomize/hash"
-	"k8s.io/kubectl/pkg/kustomize/resource"
-	"k8s.io/kubectl/pkg/kustomize/types"
 )
 
 // MakeConfigmapAndGenerateName makes a configmap and returns the configmap and the name appended with a hash.

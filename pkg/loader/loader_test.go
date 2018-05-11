@@ -21,7 +21,7 @@ import (
 	"reflect"
 	"testing"
 
-	"k8s.io/kubectl/pkg/kustomize/util/fs"
+	"github.com/kubernetes-sigs/kustomize/pkg/util/fs"
 )
 
 func initializeRootLoader(fakefs fs.FileSystem) Loader {

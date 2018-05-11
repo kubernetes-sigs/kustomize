@@ -19,8 +19,8 @@ package commands
 import (
 	"testing"
 
-	"k8s.io/kubectl/pkg/kustomize/types"
-	"k8s.io/kubectl/pkg/kustomize/util/fs"
+	"github.com/kubernetes-sigs/kustomize/pkg/types"
+	"github.com/kubernetes-sigs/kustomize/pkg/util/fs"
 )
 
 func TestNewAddConfigMapIsNotNil(t *testing.T) {
