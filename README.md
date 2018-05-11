@@ -15,6 +15,7 @@
 [sig-cli]: https://github.com/kubernetes/community/blob/master/sig-cli/README.md
 [workflows]: docs/workflows.md
 
+
 `kustomize` is a command line tool supporting
 template-free customization of YAML (or JSON) objects
 that conform to the [kubernetes style].  If your
@@ -24,6 +25,10 @@ sharing and re-use.
 
 For more details, try a [demo].
 
+[![Build Status](https://travis-ci.org/kubernetes-sigs/kustomize.svg?branch=master)](https://travis-ci.org/kubernetes-sigs/kustomize)
+[![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes-sigs/kustomize)](https://goreportcard.com/report/github.com/kubernetes-sigs/kustomize)
+
+
 ## Installation
 
 This assumes [Go](https://golang.org/) (v1.10.1 or higher)
@@ -31,8 +36,9 @@ is installed and your `PATH` contains `$GOPATH/bin`:
 
 <!-- @installkustomize @test -->
 ```
-go get k8s.io/kubectl/cmd/kustomize
+go get github.com/kubernetes-sigs/kustomize
 ```
+
 
 ## Usage
 
