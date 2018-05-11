@@ -1,0 +1,4 @@
+description: conflict between multiple patches
+args: []
+filename: testdata/testcase-multiple-patches-conflict/in/overlay/
+expectedError: conflict
