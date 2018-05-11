@@ -3,7 +3,7 @@ language: go
 go:
   - 1.10.x
 
-go_import_path: k8s.io/kubectl
+# go_import_path: k8s.io/kubectl
 
 before_install:
   - source ./bin/consider-early-travis-exit.sh
