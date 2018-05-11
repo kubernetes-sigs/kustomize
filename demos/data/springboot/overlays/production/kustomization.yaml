@@ -1,0 +1,7 @@
+bases:
+- ../../base
+patches:
+- patch.yaml
+- healthcheck_patch.yaml
+- memorylimit_patch.yaml
+namePrefix: production-

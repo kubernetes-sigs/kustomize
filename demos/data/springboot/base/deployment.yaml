@@ -1,0 +1,27 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: sbdemo
+  labels:
+    app: sbdemo
+spec:
+  selector:
+    matchLabels:
+      app: sbdemo
+  template:
+    metadata:
+      labels:
+        app: sbdemo
+    spec:
+      containers:
+        - name: sbdemo
+          image: jingfang/sbdemo
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: demo-config
+              mountPath: /config
+      volumes:
+        - name: "demo-config"
+          configMap:
+            name: "demo-configmap"
