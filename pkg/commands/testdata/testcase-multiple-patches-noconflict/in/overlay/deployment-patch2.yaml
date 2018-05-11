@@ -1,0 +1,16 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        env:
+        - name: ANOTHERENV
+          value: FOO
+      - name: sidecar
+        image: sidecar
+      volumes:
+      - name: nginx-persistent-storage

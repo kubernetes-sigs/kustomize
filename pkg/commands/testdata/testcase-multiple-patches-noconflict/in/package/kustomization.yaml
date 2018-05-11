@@ -1,0 +1,14 @@
+namePrefix: team-foo-
+commonLabels:
+  app: mynginx
+  org: example.com
+  team: foo
+commonAnnotations:
+  note: This is a test annotation
+resources:
+  - deployment.yaml
+  - service.yaml
+configMapGenerator:
+  - name: configmap-in-base
+    literals:
+      - foo=bar
