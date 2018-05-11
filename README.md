@@ -7,11 +7,12 @@
 [demos]: demos/README.md
 [imageBase]: docs/base.jpg
 [imageOverlay]: docs/overlay.jpg
+[kubernetes style]: docs/glossary.md#kubernetes-style-object
 [kustomization]: docs/glossary.md#kustomization
 [overlay]: docs/glossary.md#overlay
 [resources]: docs/glossary.md#resource
+[sig-cli]: https://github.com/kubernetes/community/blob/master/sig-cli/README.md
 [workflows]: docs/workflows.md
-[kubernetes style]: docs/glossary.md#kubernetes-style-object
 
 `kustomize` is a command line tool supporting
 template-free customization of YAML (or JSON) objects
@@ -56,3 +57,8 @@ Run `kustomize` on your overlay.  The result
 is printed to `stdout` as a set of complete
 resources, ready to be [applied] to a cluster.
 See the [demos].
+
+
+## About
+
+This project sponsored by [sig-cli].
