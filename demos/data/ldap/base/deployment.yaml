@@ -1,0 +1,46 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: ldap
+  labels:
+    app: ldap
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ldap
+  template:
+    metadata:
+      labels:
+        app: ldap
+    spec:
+      containers:
+        - name: ldap
+          image: osixia/openldap:1.1.11
+          args: ["--copy-service"]
+          volumeMounts:
+            - name: ldap-data
+              mountPath: /var/lib/ldap
+            - name: ldap-config
+              mountPath: /etc/ldap/slapd.d
+            - name: ldap-certs
+              mountPath: /container/service/slapd/assets/certs
+            - name: configmap-volume
+              mountPath: /container/environment/01-custom
+            - name: container-run
+              mountPath: /container/run
+          ports:
+            - containerPort: 389
+              name: openldap
+      volumes:
+        - name: ldap-data
+          emptyDir: {}
+        - name: ldap-config
+          emptyDir: {}
+        - name: ldap-certs
+          emptyDir: {}
+        - name: "configmap-volume"
+          configMap:
+            name: "ldap-configmap"
+        - name: container-run
+          emptyDir: {}
