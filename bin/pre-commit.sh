@@ -47,6 +47,7 @@ function testDemos {
   mdrip --mode test --label test ./demos
 }
 
+go install github.com/kubernetes-sigs/kustomize
 runTest testGoFmt
 runTest testGoImports
 runTest testGoVet
