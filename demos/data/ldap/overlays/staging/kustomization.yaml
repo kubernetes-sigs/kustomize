@@ -1,0 +1,9 @@
+bases:
+  - ../../base
+patches:
+  - deployment.yaml
+nameprefix: staging-
+configMapGenerator:
+  - name: env-config
+    files:
+      - config.env

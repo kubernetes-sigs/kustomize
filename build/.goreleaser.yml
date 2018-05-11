@@ -1,0 +1,29 @@
+# This is an example goreleaser.yaml file with some sane defaults.
+# Make sure to check the documentation at http://goreleaser.com
+project_name: kustomize
+builds:
+- main: ./cmd/kustomize
+  binary: kustomize
+  ldflags: -s -X k8s.io/kubectl/cmd/kustomize/version.kustomizeVersion={{.Version}} -X k8s.io/kubectl/cmd/kustomize/version.gitCommit={{.Commit}} -X k8s.io/kubectl/cmd/kustomize/version.buildDate={{.Date}}
+  goos:
+  - darwin
+  - linux
+  - windows
+  env:
+  - CGO_ENABLED=0
+archive:
+  wrap_in_directory: true
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+release:
+  github:
+    owner: droot
+    name: kubectl
