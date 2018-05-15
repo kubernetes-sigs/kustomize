@@ -29,10 +29,11 @@ Download them:
 
 <!-- @downloadResources @test -->
 ```
-CONTENT="https://raw.githubusercontent.com/kubernetes/kubectl\
-/master/cmd/kustomize/demos/data/springboot"
+CONTENT="https://raw.githubusercontent.com\
+/kubernetes-sigs/kustomize\
+/master/demos/data/springboot"
 
-curl -s  -o "$DEMO_HOME/#1.yaml" \
+curl -s -o "$DEMO_HOME/#1.yaml" \
   "$CONTENT/base/{deployment,service}.yaml"
 ```
 
