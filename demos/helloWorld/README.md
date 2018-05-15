@@ -50,7 +50,7 @@ mkdir -p $BASE
 
 curl -s -o "$BASE/#1.yaml" "https://raw.githubusercontent.com\
 /kubernetes-sigs/kustomize\
-/master/demos/data/helloWorld\
+/master/demos/helloWorld\
 /{configMap,deployment,kustomization,service}.yaml"
 ```
 
