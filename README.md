@@ -8,7 +8,7 @@
 [imageBase]: docs/base.jpg
 [imageOverlay]: docs/overlay.jpg
 [kubernetes style]: docs/glossary.md#kubernetes-style-object
-[KEP]: https://github.com/kubernetes/community/pull/2132
+[KEP]: https://github.com/kubernetes/community/blob/master/keps/sig-cli/0008-kustomize.md
 [kustomization]: docs/glossary.md#kustomization
 [overlay]: docs/glossary.md#overlay
 [resources]: docs/glossary.md#resource
