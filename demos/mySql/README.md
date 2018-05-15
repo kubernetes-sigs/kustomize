@@ -29,7 +29,7 @@ Download them:
 ```
 curl -s  -o "$DEMO_HOME/#1.yaml" "https://raw.githubusercontent.com\
 /kubernetes-sigs/kustomize\
-/master/demos/data/mySql\
+/master/demos/mySql\
 /{deployment,secret,service}.yaml"
 ```
 

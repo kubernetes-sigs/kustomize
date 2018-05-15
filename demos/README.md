@@ -3,17 +3,17 @@
 These demos assume that `kustomize` is on your `$PATH`.
 They are covered by pre-submit tests.
 
- * [hello world](helloWorld.md) - Deploy multiple
+ * [hello world](helloWorld/README.md) - Deploy multiple
    (differently configured) variants of a simple Hello
    World server.
 
- * [LDAP](ldap.md) - Deploy multiple
+ * [LDAP](ldap/README.md) - Deploy multiple
    (differently configured) variants of a LDAP server.
 
- * [mySql](mySql.md) - Create a MySQL production
+ * [mySql](mySql/README.md) - Create a MySQL production
    configuration from scratch.
 
- * [springboot](springboot.md) - Create a Spring Boot
+ * [springboot](springboot/README.md) - Create a Spring Boot
    application production configuration from scratch.
 
  * [configGeneration](configGeneration.md) -
