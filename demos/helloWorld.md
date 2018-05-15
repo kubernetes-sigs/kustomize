@@ -48,11 +48,10 @@ declared here as HERE documents.  Download them:
 BASE=$DEMO_HOME/base
 mkdir -p $BASE
 
-resources="https://raw.githubusercontent.com/kubernetes/kubectl\
-/master/cmd/kustomize/demos/data/helloWorld\
+curl -s -o "$BASE/#1.yaml" "https://raw.githubusercontent.com\
+/kubernetes-sigs/kustomize\
+/master/demos/data/helloWorld\
 /{configMap,deployment,kustomization,service}.yaml"
-
-curl -s $resources -o "$BASE/#1.yaml"
 ```
 
 Look at the directory:

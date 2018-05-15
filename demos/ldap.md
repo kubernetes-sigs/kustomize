@@ -43,11 +43,12 @@ declared here as HERE documents.  Download them:
 BASE=$DEMO_HOME/base
 mkdir -p $BASE
 
-resources="https://raw.githubusercontent.com/kubernetes/kubectl\
-/master/cmd/kustomize/demos/data/ldap/base\
-/{deployment.yaml,kustomization.yaml,service.yaml,env.startup.txt}"
+CONTENT="https://raw.githubusercontent.com\
+/kubernetes-sigs/kustomize\
+/master/demos/data/ldap"
 
-curl -s $resources -o "$BASE/#1"
+curl -s -o "$BASE/#1" "$CONTENT/base\
+/{deployment.yaml,kustomization.yaml,service.yaml,env.startup.txt}"
 ```
 
 Look at the directory:
@@ -130,14 +131,13 @@ mkdir -p $OVERLAYS/production
 #### Staging Kustomization
 
 Download the staging customization and patch.
+
 <!-- @downloadStagingKustomization @test -->
 ```
-resources="https://raw.githubusercontent.com/kubernetes/kubectl\
-/master/cmd/kustomize/demos/data/ldap/overlays/staging\
+curl -s -o "$OVERLAYS/staging/#1" "$CONTENT/overlays/staging\
 /{config.env,deployment.yaml,kustomization.yaml}"
-
-curl -s $resources -o "$OVERLAYS/staging/#1"
 ```
+
 The staging customization adds a configMap.
 > ```cat $OVERLAYS/staging/kustomization.yaml
 > (...truncated)
@@ -161,11 +161,8 @@ as well as 2 replica
 Download the production customization and patch.
 <!-- @downloadProductionKustomization @test -->
 ```
-resources="https://raw.githubusercontent.com/kubernetes/kubectl\
-/master/cmd/kustomize/demos/data/ldap/overlays/production\
+curl -s -o "$OVERLAYS/production/#1" "$CONTENT/overlays/production\
 /{deployment.yaml,kustomization.yaml}"
-
-curl -s $resources -o "$OVERLAYS/production/#1"
 ```
 
 The production customization adds 6 replica as well as a consistent disk.
