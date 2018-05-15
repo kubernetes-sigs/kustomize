@@ -27,9 +27,9 @@ Download them:
 
 <!-- @downloadResources @test -->
 ```
-curl -s  -o "$DEMO_HOME/#1.yaml" \
-  "https://raw.githubusercontent.com/kubernetes/kubectl\
-/master/cmd/kustomize/demos/data/mySql\
+curl -s  -o "$DEMO_HOME/#1.yaml" "https://raw.githubusercontent.com\
+/kubernetes-sigs/kustomize\
+/master/demos/data/mySql\
 /{deployment,secret,service}.yaml"
 ```
 
