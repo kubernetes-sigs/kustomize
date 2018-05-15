@@ -14,6 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+# This script run periodically by kubernetes test-infra.
+# At time of writing, it's 'call point' was in
+# https://github.com/kubernetes/test-infra/blob/master/jobs/config.json
+
 function exit_with {
   local msg=$1
   echo >&2 ${msg}
@@ -22,25 +27,31 @@ function exit_with {
 
 base_dir="$( cd "$(dirname "$0")/../../.." && pwd )"
 cd "$base_dir" || {
-  echo "Cannot cd to '$base_dir'. Aborting." >&2
-  exit 1
+  exit_with "Cannot cd to ${base_dir}. Aborting."
 }
 
-# Install kustomize to $GOPATH/bin and export PATH
-go install ./cmd/kustomize || { exit_with "Failed to install kustomize"; }
+go install github.com/kubernetes-sigs/kustomize || \
+  { exit_with "Failed to install kustomize"; }
 export PATH=$GOPATH/bin:$PATH
 
 home=`pwd`
-example_dir="./cmd/kustomize/demos/data/ldap/base"
-if [ ! -d ${example_dir} ]; then
-  exit_with "directory ${example_dir} doesn't exist"
+
+### LDAP TEST ###
+demo_dir="./demos/ldap"
+if [ ! -d ${demo_dir} ]; then
+  exit_with "directory ${demo_dir} doesn't exist"
 fi
 
-if [ -x "${example_dir}/tests/test.sh" ]; then
-  ${example_dir}/tests/test.sh ${example_dir}
+test_script="${demo_dir}/integration_test.sh"
+
+if [ -x "${test_script}" ]; then
+  ${test_script} ${demo_dir}/base
   if [ $? -eq 0 ]; then
-    echo "testing ${example_dir} passed."
+    echo "testing ${demo_dir} passed."
   else
-    exit_with "testing ${example_dir} failed."
+    exit_with "testing ${demo_dir} failed."
   fi
+else
+  exit_with "Unable to run ${test_script}"
 fi
+#################

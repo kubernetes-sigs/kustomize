@@ -31,7 +31,7 @@ Download them:
 ```
 CONTENT="https://raw.githubusercontent.com\
 /kubernetes-sigs/kustomize\
-/master/demos/data/springboot"
+/master/demos/springboot"
 
 curl -s -o "$DEMO_HOME/#1.yaml" \
   "$CONTENT/base/{deployment,service}.yaml"
