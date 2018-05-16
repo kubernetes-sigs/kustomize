@@ -15,27 +15,36 @@
 # limitations under the License.
 
 
-# This script is run periodically by kubernetes test-infra.
+# This script is run periodically by kubernetes
+# test-infra.
 #
-# It's meant to use kustomized configurations against a live cluster.
+# It uses kustomized configurations in a live cluster,
+# to assure that the generated configs work as
+# expected.
+#
+# This script assumes that the process running it has
+# checked out the kubernetes-sigs/kustomize repo, and
+# has cd'ed into it (i.e. the directory above "demos")
+# before running it.
 #
 # At time of writing, its 'call point' was in
 # https://github.com/kubernetes/test-infra/blob/master/jobs/config.json
-#
-# The script is written to assume that the process running it
-# has checked out kubernetes-sigs/kustomize repo, and has
-# changed the current directory to
 
 function exit_with {
   local msg=$1
   echo >&2 ${msg}
   exit 1
 }
+export -f exit_with
 
 repo=kubernetes-sigs/kustomize
 if [[ `pwd` != */$repo ]]; then
   exit_with "Script must be run from $repo"
 fi
+
+echo    pwd is `pwd`
+echo GOPATH is $GOPATH
+echo   PATH is $PATH
 
 go install . || \
   { exit_with "Failed to install kustomize."; }
