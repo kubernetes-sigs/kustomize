@@ -28,28 +28,23 @@
 
 set -x
 
-function exit_with {
-  local msg=$1
-  echo >&2 ${msg}
-  exit 1
-}
+target=$1
 
-# make sure kustomize and kubectl are available
-command -v kustomize >/dev/null 2>&1 || \
-  { exit_with "Require kustomize but it's not installed.  Aborting."; }
-command -v kubectl >/dev/null 2>&1 || \
-  { exit_with "Require kubectl but it's not installed.  Aborting."; }
-
-# set namespace to default
-kubectl config set-context $(kubectl config current-context) --namespace=default
-
-echo Kustomizing \"$1\"
-ls $1
-kustomize build $1 > generatedResources.yaml
+echo pwd is `pwd`
+echo Kustomizing \"$target\"
+ls $target
+kustomize build $target > generatedResources.yaml
 [[ $? -eq 0 ]] || { exit_with "Failed to kustomize build"; }
+
 cat generatedResources.yaml
+
+# Setting the namespace this way is a test-infra thing?
+kubectl config set-context \
+  $(kubectl config current-context) --namespace=default
+
 kubectl apply -f generatedResources.yaml
 [[ $? -eq 0 ]] || { exit_with "Failed to run kubectl apply"; }
+
 sleep 20
 
 # get the pod and namespace
