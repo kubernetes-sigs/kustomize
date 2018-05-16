@@ -1,13 +1,14 @@
-[base]: ../docs/glossary.md#base
+[base]: ../../docs/glossary.md#base
 [config]: https://github.com/kinflate/example-hello
-[gitops]: ../docs/glossary.md#gitops
+[gitops]: ../../docs/glossary.md#gitops
 [hello]: https://github.com/monopole/hello
-[kustomization]: ../docs/glossary.md#kustomization
+[kustomization]: ../../docs/glossary.md#kustomization
 [original]: https://github.com/kinflate/example-hello
-[overlay]: ../docs/glossary.md#overlay
-[overlays]: ../docs/glossary.md#overlay
-[variant]: ../docs/glossary.md#variant
-[variants]: ../docs/glossary.md#variant
+[overlay]: ../../docs/glossary.md#overlay
+[overlays]: ../../docs/glossary.md#overlay
+[patch]: ../../docs/glossary.md#patch
+[variant]: ../../docs/glossary.md#variant
+[variants]: ../../docs/glossary.md#variant
 
 # Demo: hello world with variants
 
@@ -342,8 +343,6 @@ referenced by any other resource, is eventually garbage
 collected.
 
 ### How this works with kustomize
-
-[patch]: ../docs/glossary.md#patch
 
 The _staging_ [variant] here has a configMap [patch]:
 
