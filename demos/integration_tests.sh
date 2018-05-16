@@ -37,14 +37,14 @@ export PATH=$GOPATH/bin:$PATH
 function runTest {
   local script=$1
   shift
-	local args=$@
+  local args=$@
 
   if [ ! -x "$script" ]; then
     exit_with "Unable to run $script"
   fi
 
   $script "$args"
-	if [ $? -ne 0 ]; then
+  if [ $? -ne 0 ]; then
     exit_with "Failed: $script $args"
   fi
   echo "$script passed."
