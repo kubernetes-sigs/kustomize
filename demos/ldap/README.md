@@ -1,10 +1,10 @@
-[base]: ../docs/glossary.md#base
-[gitops]: ../docs/glossary.md#gitops
-[kustomization]: ../docs/glossary.md#kustomization
-[overlay]: ../docs/glossary.md#overlay
-[overlays]: ../docs/glossary.md#overlay
-[variant]: ../docs/glossary.md#variant
-[variants]: ../docs/glossary.md#variant
+[base]: ../../docs/glossary.md#base
+[gitops]: ../../docs/glossary.md#gitops
+[kustomization]: ../../docs/glossary.md#kustomization
+[overlay]: ../../docs/glossary.md#overlay
+[overlays]: ../../docs/glossary.md#overlay
+[variant]: ../../docs/glossary.md#variant
+[variants]: ../../docs/glossary.md#variant
 
 # Demo: LDAP with variants
 
