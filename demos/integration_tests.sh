@@ -15,9 +15,16 @@
 # limitations under the License.
 
 
-# This script run periodically by kubernetes test-infra.
-# At time of writing, it's 'call point' was in
+# This script is run periodically by kubernetes test-infra.
+#
+# It's meant to use kustomized configurations against a live cluster.
+#
+# At time of writing, its 'call point' was in
 # https://github.com/kubernetes/test-infra/blob/master/jobs/config.json
+#
+# The script is written to assume that the process running it
+# has checked out kubernetes-sigs/kustomize repo, and has
+# changed the current directory to
 
 function exit_with {
   local msg=$1
@@ -25,14 +32,21 @@ function exit_with {
   exit 1
 }
 
-base_dir="$( cd "$(dirname "$0")/../../.." && pwd )"
-cd "$base_dir" || {
-  exit_with "Cannot cd to ${base_dir}. Aborting."
-}
+repo=kubernetes-sigs/kustomize
+if [[ `pwd` != */$repo ]]; then
+  exit_with "Script must be run from $repo"
+fi
 
-go install github.com/kubernetes-sigs/kustomize || \
-  { exit_with "Failed to install kustomize"; }
+go install . || \
+  { exit_with "Failed to install kustomize."; }
+
 export PATH=$GOPATH/bin:$PATH
+
+command -v kustomize >/dev/null 2>&1 || \
+  { exit_with "Require kustomize but it's not installed."; }
+
+command -v kubectl >/dev/null 2>&1 || \
+  { exit_with "Require kubectl but it's not installed."; }
 
 function runTest {
   local script=$1
@@ -50,4 +64,6 @@ function runTest {
   echo "$script passed."
 }
 
+pushd demos
 runTest ldap/integration_test.sh ldap/base
+popd
