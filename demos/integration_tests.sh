@@ -34,24 +34,20 @@ go install github.com/kubernetes-sigs/kustomize || \
   { exit_with "Failed to install kustomize"; }
 export PATH=$GOPATH/bin:$PATH
 
-home=`pwd`
+function runTest {
+  local script=$1
+  shift
+  local args=$@
 
-### LDAP TEST ###
-demo_dir="./demos/ldap"
-if [ ! -d ${demo_dir} ]; then
-  exit_with "directory ${demo_dir} doesn't exist"
-fi
-
-test_script="${demo_dir}/integration_test.sh"
-
-if [ -x "${test_script}" ]; then
-  ${test_script} ${demo_dir}/base
-  if [ $? -eq 0 ]; then
-    echo "testing ${demo_dir} passed."
-  else
-    exit_with "testing ${demo_dir} failed."
+  if [ ! -x "$script" ]; then
+    exit_with "Unable to run $script"
   fi
-else
-  exit_with "Unable to run ${test_script}"
-fi
-#################
+
+  $script "$args"
+  if [ $? -ne 0 ]; then
+    exit_with "Failed: $script $args"
+  fi
+  echo "$script passed."
+}
+
+runTest ldap/integration_test.sh ldap/base
