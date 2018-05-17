@@ -30,32 +30,37 @@
 # At time of writing, its 'call point' was in
 # https://github.com/kubernetes/test-infra/blob/master/jobs/config.json
 
-function exit_with {
+function exitWith {
   local msg=$1
   echo >&2 ${msg}
   exit 1
 }
-export -f exit_with
+export -f exitWith
 
-repo=kubernetes-sigs/kustomize
-if [[ `pwd` != */$repo ]]; then
-  exit_with "Script must be run from $repo"
-fi
+function expectCommand {
+  command -v $1 >/dev/null 2>&1 || \
+    { exitWith "Expected $1 on PATH."; }
+}
 
-echo    pwd is `pwd`
-echo GOPATH is $GOPATH
-echo   PATH is $PATH
+function setUpEnv {
+  local repo=$(git rev-parse --show-toplevel)
+  cd $repo
+  [[ $? -eq 0 ]] || "Failed to cd to $repo"
+  echo "pwd is " `pwd`
 
-go install . || \
-  { exit_with "Failed to install kustomize."; }
+  local expectedRepo=kubernetes-sigs/kustomize
+  if [[ `pwd` != */$expectedRepo ]]; then
+    exitWith "Script must be run from $expectedRepo"
+  fi
 
-export PATH=$GOPATH/bin:$PATH
+  go install . || \
+    { exitWith "Failed to install kustomize."; }
 
-command -v kustomize >/dev/null 2>&1 || \
-  { exit_with "Require kustomize but it's not installed."; }
+  PATH=$GOPATH/bin:$PATH
 
-command -v kubectl >/dev/null 2>&1 || \
-  { exit_with "Require kubectl but it's not installed."; }
+  expectCommand kustomize
+  expectCommand kubectl
+}
 
 function runTest {
   local script=$1
@@ -63,15 +68,16 @@ function runTest {
   local args=$@
 
   if [ ! -x "$script" ]; then
-    exit_with "Unable to run $script"
+    exitWith "Unable to run $script"
   fi
 
   $script "$args"
-  if [ $? -ne 0 ]; then
-    exit_with "Failed: $script $args"
-  fi
+  [[ $? -eq 0 ]] || exitWith "Failed: $script $args"
+
   echo "$script passed."
 }
+
+setUpEnv
 
 pushd demos
 runTest ldap/integration_test.sh ldap/base

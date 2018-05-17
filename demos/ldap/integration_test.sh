@@ -30,68 +30,105 @@ set -x
 
 target=$1
 
-echo pwd is `pwd`
-echo Kustomizing \"$target\"
+echo Kustomizing: \"$target\"
 ls $target
-kustomize build $target > generatedResources.yaml
-[[ $? -eq 0 ]] || { exit_with "Failed to kustomize build"; }
 
-cat generatedResources.yaml
+tmpDir=$(mktemp -d)
 
-# Setting the namespace this way is a test-infra thing?
-kubectl config set-context \
-  $(kubectl config current-context) --namespace=default
+function configureCluster {
+  kustomize build $target > $tmpDir/my.yaml
+  [[ $? -eq 0 ]] || { exitWith "Failed to kustomize build"; }
 
-kubectl apply -f generatedResources.yaml
-[[ $? -eq 0 ]] || { exit_with "Failed to run kubectl apply"; }
+  cat $tmpDir/my.yaml
 
-sleep 20
+  # Setting the namespace this way is a test-infra thing?
+  kubectl config set-context \
+    $(kubectl config current-context) --namespace=default
 
-# get the pod and namespace
-pod=$(kubectl get pods -l app=ldap  -o jsonpath='{.items[0].metadata.name}')
-namespace=$(kubectl get pods -l app=ldap  -o jsonpath='{.items[0].metadata.namespace}')
-container="ldap"
-[[ -z ${pod} ]] && { exit_with "Pod is not started successfully"; }
-[[ -z ${namespace} ]] && { exit_with "Couldn't get namespace for Pod ${pod}"; }
+  kubectl apply -f $tmpDir/my.yaml
+  [[ $? -eq 0 ]] || { exitWith "Failed to run kubectl apply"; }
 
-# create a user ldif file locally
-ldiffile="user.ldif"
-cat <<EOF >$ldiffile
+  sleep 20
+}
+
+function tearDownCluster {
+  kubectl delete -f $tmpDir/my.yaml
+  rm -rf $tmpDir
+}
+
+function getPodField {
+  echo $(kubectl get pods -l app=ldap -o jsonpath=$1)
+}
+
+function podExec {
+  kubectl exec $podName -c $containerName -- "$@"
+}
+
+function addUser {
+  local namespace=`getPodField '{.items[0].metadata.namespace}'`
+  [[ -z $namespace ]] && { exitWith "Unable to get namespace"; }
+
+  # Create a user ldif file
+  local userFile="user.ldif"
+  cat <<EOF >$tmpDir/$userFile
 dn: cn=The Postmaster,dc=example,dc=org
 objectClass: organizationalRole
 cn: The Postmaster
 EOF
-[[ -f ${ldiffile} ]] || { exit_with "Failed to create ldif file locally"; }
+  [[ -f $tmpDir/$userFile ]] || { exitWith "Failed to create $tmpDir/$userFile"; }
 
-# add a user
-pod_ldiffile="/tmp/user.ldif"
-kubectl cp $ldiffile  ${namespace}/${pod}:${pod_ldiffile} || \
-  { exit_with "Failed to copy ldif file to Pod ${pod}"; }
+  kubectl cp $tmpDir/$userFile  $namespace/$podName:/tmp/$userFile || \
+    { exitWith "Failed to copy ldif file to Pod $podName"; }
 
-kubectl exec ${pod} -c ${container} -- \
-  ldapadd -x -H ldap://localhost -D "cn=admin,dc=example,dc=org" -w admin \
-  -f ${pod_ldiffile} || { exit_with "Failed to add a user"; }
+  rm $tmpDir/$userFile
 
-# query the added user
-r=$(kubectl exec ${pod} -c ${container} -- \
-  ldapsearch -x -H ldap://localhost -b dc=example,dc=org \
-  -D "cn=admin,dc=example,dc=org" -w admin)
+  podExec \
+    ldapadd \
+    -x \
+    -w admin \
+    -H ldap://localhost \
+    -D "cn=admin,dc=example,dc=org" \
+    -f /tmp/$userFile
+}
 
-user_count=$(echo ${r} | grep "cn: The Postmaster" | wc -l)
-[[ ${user_count} -eq 0 ]] && { exit_with "Couldn't find the new added user"; }
+function getUserCount {
+  local result=$(\
+    podExec \
+      ldapsearch \
+      -x \
+      -w admin \
+      -H ldap://localhost \
+      -D "cn=admin,dc=example,dc=org" \
+      -b dc=example,dc=org \
+      )
+  return $(echo $result | grep "cn: The Postmaster" | wc -l)
+}
 
-# delete the added user
-kubectl exec ${pod} -c ${container} -- \
-  ldapdelete -v -x -H ldap://localhost "cn=The Postmaster,dc=example,dc=org" \
-  -D "cn=admin,dc=example,dc=org" -w admin || \
-  {  exit_with "Failed to delete the user"; }
+function deleteAddedUser {
+  podExec \
+    ldapdelete \
+    -v \
+    -x \
+    -w admin \
+    -H ldap://localhost \
+    -D "cn=admin,dc=example,dc=org" \
+    "cn=The Postmaster,dc=example,dc=org"
+}
 
-r=$(kubectl exec ${pod} -c ${container} -- \
-  ldapsearch -x -H ldap://localhost -b dc=example,dc=org \
-  -D "cn=admin,dc=example,dc=org" -w admin)
-user_count=$(echo ${r} | grep "cn: The Postmaster" | wc -l)
-[[ ${user_count} -ne 0 ]] && { exit_with "The user hasn't been deleted."; }
+configureCluster
 
-# kubectl delete
-kubectl delete -f generatedResources.yaml
-rm $ldiffile
+podName=`getPodField '{.items[0].metadata.name}'`
+[[ -z $podName ]] && { exitWith "Unable to get pod name"; }
+
+echo pod is $podName
+containerName="ldap"
+
+getUserCount; [[ $? -eq 0 ]] || { exitWith "Expected no users."; }
+
+addUser || { exitWith "Failed to add a user"; }
+getUserCount; [[ $? -eq 1 ]] || { exitWith "Couldn't find the new added user"; }
+
+deleteAddedUser || { exitWith "Failed to delete the user"; }
+getUserCount; [[ $? -eq 0 ]] || { exitWith "User has not been deleted."; }
+
+tearDownCluster
