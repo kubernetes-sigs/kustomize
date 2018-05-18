@@ -28,13 +28,6 @@
 
 set -x
 
-target=$1
-
-echo Kustomizing: \"$target\"
-ls $target
-
-tmpDir=$(mktemp -d)
-
 function configureCluster {
   kustomize build $target > $tmpDir/my.yaml
   [[ $? -eq 0 ]] || { exitWith "Failed to kustomize build"; }
@@ -114,6 +107,13 @@ function deleteAddedUser {
     -D "cn=admin,dc=example,dc=org" \
     "cn=The Postmaster,dc=example,dc=org"
 }
+
+target=$1
+
+echo Kustomizing: \"$target\"
+ls $target
+
+tmpDir=$(mktemp -d)
 
 configureCluster
 
