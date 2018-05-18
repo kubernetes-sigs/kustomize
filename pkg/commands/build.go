@@ -17,9 +17,7 @@ limitations under the License.
 package commands
 
 import (
-	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
@@ -46,17 +44,12 @@ func newCmdBuild(out, errOut io.Writer, fs fs.FileSystem) *cobra.Command {
 		Short: "Print current configuration per contents of " + constants.KustomizationFileName,
 		Example: "Use the file somedir/" + constants.KustomizationFileName +
 			" to generate a set of api resources:\nbuild somedir/",
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			err := o.Validate(args)
 			if err != nil {
-				fmt.Fprintf(errOut, "error: %v\n", err)
-				os.Exit(1)
+				return err
 			}
-			err = o.RunBuild(out, errOut, fs)
-			if err != nil {
-				fmt.Fprintf(errOut, "error: %v\n", err)
-				os.Exit(1)
-			}
+			return o.RunBuild(out, errOut, fs)
 		},
 	}
 	return cmd
