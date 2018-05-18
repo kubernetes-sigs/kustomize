@@ -40,43 +40,29 @@ func newCmdDiff(out, errOut io.Writer, fs fs.FileSystem) *cobra.Command {
 	var o diffOptions
 
 	cmd := &cobra.Command{
-		Use:     "diff",
-		Short:   "diff between transformed resources and untransformed resources",
-		Long:    "diff between transformed resources and untransformed resources and the subpackages are all transformed.",
-		Example: `diff -f .`,
+		Use:   "diff [path]",
+		Short: "diff between customized resources and uncustomized resources",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := o.Validate(cmd, args)
-			if err != nil {
-				return err
-			}
-			err = o.Complete(cmd, args)
 			if err != nil {
 				return err
 			}
 			return o.RunDiff(out, errOut, fs)
 		},
 	}
-
-	cmd.Flags().StringVarP(
-		&o.kustomizationPath,
-		"filename",
-		"f",
-		"",
-		"Specify a directory containing "+constants.KustomizationFileName)
-	cmd.MarkFlagRequired("filename")
 	return cmd
 }
 
 // Validate validates diff command.
 func (o *diffOptions) Validate(cmd *cobra.Command, args []string) error {
-	if len(args) > 0 {
-		return errors.New("The diff command takes no arguments.")
+	if len(args) > 1 {
+		return errors.New("specify one path to " + constants.KustomizationFileName)
 	}
-	return nil
-}
-
-// Complete completes diff command.
-func (o *diffOptions) Complete(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		o.kustomizationPath = "./"
+		return nil
+	}
+	o.kustomizationPath = args[0]
 	return nil
 }
 
