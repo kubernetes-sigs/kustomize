@@ -1,6 +1,6 @@
 ## Overview
 
-This directory contains scripts and configruation files for publishing a
+This directory contains scripts and configuration files for publishing a
 `kustomize` release on [release page](https://github.com/kubernetes-sigs/kustomize/releases)
 
 ## Steps to run build a release locally
