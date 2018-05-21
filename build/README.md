@@ -1,16 +1,13 @@
-## Steps to run build locally
+## Overview
 
-Install container-builder-local from github and define GOOS, GOARCH, OUTPUT env
-variables and run following command
+This directory contains scripts and configruation files for publishing a
+`kustomize` release on [release page](https://github.com/kubernetes-sigs/kustomize/releases)
+
+## Steps to run build a release locally
+Install container-builder-local from [github](https://github.com/GoogleCloudPlatform/container-builder-local). 
 
 ```sh
-container-builder-local --config=cmd/kustomize/build/cloudbuild_local.yaml --dryrun=false --substitutions=_GOOS=$GOOS,_GOARCH=$GOARCH --write-workspace=$OUTPUT .
+container-builder-local --config=build/cloudbuild_local.yaml --dryrun=false --write-workspace=/tmp/w .
 ```
 
-## Steps to submit build to Google container builder
-
-You need to be at the repo level to be able to run the following command
-
-```
-gcloud container builds submit . --config=cmd/kustomize/build/cloudbuild.yaml --substitutions=_GOOS=$GOOS,_GOARCH=$GOARCH
-```
+You will find the build artifacts under `/tmp/w/dist` directory
