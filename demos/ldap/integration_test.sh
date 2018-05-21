@@ -29,10 +29,14 @@
 set -x
 
 function configureCluster {
+  local tmpDir=$1
+  local target=$2
+
+  echo Kustomizing: \"$target\"
+  ls $target
+
   kustomize build $target > $tmpDir/my.yaml
   [[ $? -eq 0 ]] || { exitWith "Failed to kustomize build"; }
-
-  cat $tmpDir/my.yaml
 
   # Setting the namespace this way is a test-infra thing?
   kubectl config set-context \
@@ -45,6 +49,7 @@ function configureCluster {
 }
 
 function tearDownCluster {
+  local tmpDir=$1
   kubectl delete -f $tmpDir/my.yaml
   rm -rf $tmpDir
 }
@@ -58,22 +63,26 @@ function podExec {
 }
 
 function addUser {
+  local tmpDir=$1
   local namespace=`getPodField '{.items[0].metadata.namespace}'`
   [[ -z $namespace ]] && { exitWith "Unable to get namespace"; }
 
-  # Create a user ldif file
-  local userFile="user.ldif"
-  cat <<EOF >$tmpDir/$userFile
+  local myUserFile=$tmpDir/user.ldif
+  local podUserFile=/tmp/user.ldif
+
+  cat <<EOF >$myUserFile
 dn: cn=The Postmaster,dc=example,dc=org
 objectClass: organizationalRole
 cn: The Postmaster
 EOF
-  [[ -f $tmpDir/$userFile ]] || { exitWith "Failed to create $tmpDir/$userFile"; }
+  [[ -f $myUserFile ]] || \
+    { exitWith "Failed to create $myUserFile"; }
 
-  kubectl cp $tmpDir/$userFile  $namespace/$podName:/tmp/$userFile || \
-    { exitWith "Failed to copy ldif file to Pod $podName"; }
+  kubectl cp $myUserFile \
+    $namespace/$podName:$podUserFile || \
+    { exitWith "Failed to copy $myUserFile to pod $podName"; }
 
-  rm $tmpDir/$userFile
+  rm $myUserFile
 
   podExec \
     ldapadd \
@@ -81,7 +90,7 @@ EOF
     -w admin \
     -H ldap://localhost \
     -D "cn=admin,dc=example,dc=org" \
-    -f /tmp/$userFile
+    -f $podUserFile
 }
 
 function getUserCount {
@@ -108,27 +117,20 @@ function deleteAddedUser {
     "cn=The Postmaster,dc=example,dc=org"
 }
 
-target=$1
-
-echo Kustomizing: \"$target\"
-ls $target
-
 tmpDir=$(mktemp -d)
 
-configureCluster
+configureCluster $tmpDir $1
 
 podName=`getPodField '{.items[0].metadata.name}'`
 [[ -z $podName ]] && { exitWith "Unable to get pod name"; }
-
-echo pod is $podName
 containerName="ldap"
 
 getUserCount; [[ $? -eq 0 ]] || { exitWith "Expected no users."; }
 
-addUser || { exitWith "Failed to add a user"; }
+addUser $tmpDir || { exitWith "Failed to add a user"; }
 getUserCount; [[ $? -eq 1 ]] || { exitWith "Couldn't find the new added user"; }
 
 deleteAddedUser || { exitWith "Failed to delete the user"; }
 getUserCount; [[ $? -eq 0 ]] || { exitWith "User has not been deleted."; }
 
-tearDownCluster
+tearDownCluster $tmpDir
