@@ -10,7 +10,7 @@
 [patch]: glossary.md#patch
 [patches]: glossary.md#patch
 [rebase]: https://git-scm.com/docs/git-rebase
-[resources]: glossary.md#resources
+[resources]: glossary.md#resource
 [workflowBespoke]: workflowBespoke.jpg
 [workflowOts]: workflowOts.jpg
 
@@ -64,8 +64,8 @@ specified in the base.
 Run kustomize, and pipe the output to [apply].
 
 > ```
-> kustomize ~/ldap/overlays/staging | kubectl apply -f -
-> kustomize ~/ldap/overlays/production | kubectl apply -f -
+> kustomize build ~/ldap/overlays/staging | kubectl apply -f -
+> kustomize build ~/ldap/overlays/production | kubectl apply -f -
 > ```
 
 
@@ -85,13 +85,13 @@ is periodically consulted for updates.
 
 The [base] directory is maintained in a repo whose
 upstream is an [OTS] configuration, in this case
-https://github.com/kinflate/ldap.
+some user's `ldap` repo:
 
 > ```
 > mkdir ~/ldap
 > git clone https://github.com/$USER/ldap ~/ldap/base
 > cd ~/ldap/base
-> git remote add upstream git@github.com:kustomize/ldap
+> git remote add upstream git@github.com:$USER/ldap
 > ```
 
 #### 3) create [overlays]
@@ -107,17 +107,19 @@ The [overlays] are siblings to each other and to the
 > mkdir -p ~/ldap/overlays/production
 > ```
 
+The user can maintain the `overlays` directory in a
+distinct repository.
 
 #### 4) bring up [variants]
 
 > ```
-> kustomize ~/ldap/overlays/staging | kubectl apply -f -
-> kustomize ~/ldap/overlays/production | kubectl apply -f -
+> kustomize build ~/ldap/overlays/staging | kubectl apply -f -
+> kustomize build ~/ldap/overlays/production | kubectl apply -f -
 > ```
 
 #### 5) (optionally) capture changes from upstream
 
-The user can optionally [rebase] their [base] to
+The user can periodically [rebase] their [base] to
 capture changes made in the upstream repository.
 
 > ```
