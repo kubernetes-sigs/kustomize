@@ -68,4 +68,4 @@ See the [demos].
 
 ## About
 
-This project sponsored by [sig-cli] ([KEP]).
+This project is sponsored by [sig-cli] ([KEP]).
