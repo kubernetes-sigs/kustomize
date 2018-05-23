@@ -42,7 +42,7 @@ go get github.com/kubernetes-sigs/kustomize
 
 ## Usage
 
-#### 1) Make a base
+#### 1) Make a customized base
 
 A [base] configuration is a [kustomization] file listing a set of
 k8s [resources] - deployments, services, configmaps,
@@ -50,20 +50,60 @@ secrets that serve some common purpose.
 
 ![base image][imageBase]
 
-#### 2) Customize it with overlays
+File structure:
+
+> ```
+> ~/yourApp
+> └── base
+>     ├── deployment.yaml
+>     ├── kustomization.yaml
+>     └── service.yaml
+> ```
+
+Your base could be a fork of someone else's
+configuration, that your occasionally rebase from to
+capture improvements.
+
+#### 2) Further customize with overlays
 
 An [overlay] customizes your base along different dimensions
 for different purposes or different teams, e.g. for
-_development, staging and production_.
+_development_ and _production_.
 
 ![overlay image][imageOverlay]
 
+File structure:
+> ```
+> ~/yourApp
+> ├── base
+> │   ├── deployment.yaml
+> │   ├── kustomization.yaml
+> │   └── service.yaml
+> └── overlays
+>     ├── development
+>     │   ├── cpu_count.yaml
+>     │   ├── kustomization.yaml
+>     │   └── replica_count.yaml
+>     └── production
+>         ├── cpu_count.yaml
+>         ├── kustomization.yaml
+>         └── replica_count.yaml
+> ```
+
+Your overlays could sit in your own repository.
+
 #### 3) Run kustomize
 
-Run `kustomize` on your overlay.  The result
-is printed to `stdout` as a set of complete
-resources, ready to be [applied] to a cluster.
-See the [demos].
+Run `kustomize` on an overlay, e.g.
+
+```
+kustomize build ~/yourApp/overlays/production
+```
+
+The result is printed to `stdout` as a set of complete
+resources, ready to be [applied] to a cluster.  See the
+[demos].
+
 
 
 ## About
