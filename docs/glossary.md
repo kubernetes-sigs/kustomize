@@ -68,13 +68,10 @@ management in k8s.
 
 A _base_ is a [target] that some [overlay] modifies.
 
-Any target, including an overlay, can be a base to
+Any target, including an [overlay], can be a base to
 another target.
 
 A base has no knowledge of the overlays that refer to it.
-
-A base is usable in isolation, i.e. one should
-be able to [apply] a base to a cluster directly.
 
 For simple [gitops] management, a base configuration
 could be the _sole content of a git repository
@@ -82,11 +79,6 @@ dedicated to that purpose_.  Same with [overlays].
 Changes in a repo could generate a build, test and
 deploy cycle.
 
-Some of the demos for [kustomize] will break from this
-idiom and store all demo config files in directories
-_next_ to the `kustomize` code so that the code and
-demos can be more easily maintained by the same group
-of people.
 
 ## bespoke configuration
 
@@ -163,9 +155,9 @@ It's often abbreviated as _k8s_.
 An object, expressed in a YAML or JSON file, with the
 [fields required] by kubernetes.  Basically just a
 _kind_ field to identify the type, a _metadata/name_
-field to identify the variant, and an _apiVersion_
-field to identify the version (if there's more than one
-version).
+field to identify the particular instance, and an
+_apiVersion_ field to identify the version (if there's
+more than one version).
 
 ## kustomize
 
@@ -210,19 +202,24 @@ An _overlay_ is a [target] that modifies (and thus
 depends on) another target.
 
 The [kustomization] in an overlay refers to (via file
-path, URI or other method) _some other kustomization_,
+path, URI or other method) some other kustomization,
 known as its [base].
 
 An overlay is unusable without its base.
 
-An overlay supports the typical notion of a
-_development_, _QA_, _staging_ and _production_
-environment variants.
+An overlay may act as a base to another overlay.
 
-The configuration of these environments is specified in
-individual overlays (one per environment) that all
-refer to a common base that holds common configuration.
-One configures the cluster like this:
+Overlays make the most sense when there is _more than
+one_, because they create different [variants] of a
+common base - e.g.  _development_, _QA_, _staging_ and
+_production_ environment variants.
+
+These variants use the same overall resources, and vary
+in relatively simple ways, e.g. the number of replicas
+in a deployment, the CPU to a particular pod, the data
+source used in a configmap, etc.
+
+One configures a cluster like this:
 
 > ```
 >  kustomize build someapp/overlays/staging |\
@@ -232,10 +229,9 @@ One configures the cluster like this:
 >      kubectl apply -f -
 > ```
 
-Usage of the base is implicit (the overlay's kustomization
-points to the base).
+Usage of the base is implicit - the overlay's
+kustomization points to the base.
 
-An overlay may act as a base to another overlay.
 
 ## package
 
