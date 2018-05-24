@@ -1,7 +1,14 @@
 # Demos
 
 These demos assume that `kustomize` is on your `$PATH`.
-They are covered by pre-submit tests.
+
+They are covered by [pre-commit](../bin/pre-commit.sh)
+tests, and should work with HEAD
+
+<!-- @installkustomize @test -->
+```
+go get github.com/kubernetes-sigs/kustomize
+```
 
  * [hello world](helloWorld/README.md) - Deploy multiple
    (differently configured) variants of a simple Hello
