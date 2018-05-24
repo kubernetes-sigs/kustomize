@@ -162,8 +162,8 @@ It's often abbreviated as _k8s_.
 
 An object, expressed in a YAML or JSON file, with the
 [fields required] by kubernetes.  Basically just a
-`kind` field to identify the type, a `metadata/name`
-field to identify the variant, and an `apiVersion`
+_kind_ field to identify the type, a _metadata/name_
+field to identify the variant, and an _apiVersion_
 field to identify the version (if there's more than one
 version).
 
@@ -267,7 +267,7 @@ configmap.
 
 More generally, a resource can be any correct YAML file
 that [defines an object](https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/#required-fields)
-with a `kind` and a `metadata/name` field.
+with a _kind_ and a _metadata/name_ field.
 
 
 A _resource_ in the content of a REST-ful API is the
@@ -290,8 +290,7 @@ The _target_ is the argument to `kustomize build`, e.g.:
 > ```
 
 `$target` must be a path to a directory that
-immediately contains a file called
-`kustomization.yaml` (i.e. a [kustomization]).
+immediately contains a [kustomization].
 
 The target contains, or refers to, all the information
 needed to create customized resources to send to the
@@ -304,15 +303,15 @@ A target is a [base] or an [overlay].
 A _variant_ is the outcome, in a cluster, of applying
 an [overlay] to a [base].
 
-> E.g., a _staging_ and _production_ overlay both modify some
-> common base to create distinct variants.
->
-> The _staging_ variant is the set of resources
-> exposed to quality assurance testing, or to some
-> external users who'd like to see what the next
-> version of production will look like.
->
-> The _production_ variant is the set of resources
-> exposed to production traffic, and thus may employ
-> deployments with a large number of replicas and higher
-> cpu and memory requests.
+E.g., a _staging_ and _production_ overlay both modify
+some common base to create distinct variants.
+
+The _staging_ variant is the set of resources exposed
+to quality assurance testing, or to some external users
+who'd like to see what the next version of production
+will look like.
+
+The _production_ variant is the set of resources
+exposed to production traffic, and thus may employ
+deployments with a large number of replicas and higher
+cpu and memory requests.
