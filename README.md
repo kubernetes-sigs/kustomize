@@ -8,7 +8,7 @@
 [demos]: demos/README.md
 [imageBase]: docs/base.jpg
 [imageOverlay]: docs/overlay.jpg
-[installation]: INSTALL.md
+[install]: INSTALL.md
 [kubernetes style]: docs/glossary.md#kubernetes-style-object
 [kustomization]: docs/glossary.md#kustomization
 [overlay]: docs/glossary.md#overlay
@@ -35,67 +35,64 @@ and it's like [`sed`], in that it emits editted text.
 [![Build Status](https://travis-ci.org/kubernetes-sigs/kustomize.svg?branch=master)](https://travis-ci.org/kubernetes-sigs/kustomize)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes-sigs/kustomize)](https://goreportcard.com/report/github.com/kubernetes-sigs/kustomize)
 
-**Installation**:
-Download a binary from the [release page], or
-see these [installation] alternatives.
-
-Be sure to try one of the tested [demos].
+**Installation**: Download a binary from the [release
+page], or see these [install] notes. Then try one of
+the tested [demos].
 
 ## Usage
 
 
-### Make a [base]
+### 1) Make a [kustomization] file
 
 In some directory containing your YAML [resource]
 files (deployments, services, configmaps, etc.), create a
 [kustomization] file.
 
 This file should declare those resources, and any
-common customization to apply to them, e.g. _add a
-common label_.
+customization to apply to them, e.g. _add a common
+label_.
 
 ![base image][imageBase]
 
 File structure:
 
 > ```
-> ~/yourApp
-> └── base
->     ├── deployment.yaml
->     ├── kustomization.yaml
->     └── service.yaml
+> ~/someApp
+> ├── deployment.yaml
+> ├── kustomization.yaml
+> └── service.yaml
 > ```
 
-This is your [base].  The resources in it could be a
-fork of someone else's configuration.  If so, you can
-easily rebase from the source material to capture
+The resources in this directory could be a fork of
+someone else's configuration.  If so, you can easily
+rebase from the source material to capture
 improvements, because you don't modify the resources
 directly.
 
 Generate customized YAML with:
 
 ```
-kustomize build ~/yourApp/base
+kustomize build ~/someApp
 ```
 
 The YAML can be directly [applied] to a cluster:
 
 > ```
-> kustomize build ~/yourApp/base | kubectl apply -f -
+> kustomize build ~/someApp | kubectl apply -f -
 > ```
 
 
-###  Create [variants] of a common base using [overlays]
+### 2) Create [variants] using [overlays]
 
-Manage traditional [variants] of a configuration like
-_development_, _staging_ and _production_ using
-[overlays].
+Manage traditional [variants] of a configuration - like
+_development_, _staging_ and _production_ - using
+[overlays] that modify a common [base].
 
 ![overlay image][imageOverlay]
 
 File structure:
 > ```
-> ~/yourApp
+> ~/someApp
 > ├── base
 > │   ├── deployment.yaml
 > │   ├── kustomization.yaml
@@ -111,21 +108,32 @@ File structure:
 >         └── replica_count.yaml
 > ```
 
-Store your overlays in your own repository.  On disk,
-the overlay can reference a base in a sibling
-directory.  This avoids trouble with nesting git
-repositories.
+Take the work from step (1) above, move it into a
+`someApp` subdirectory called `base`, then
+place overlays in a sibling directory.
+
+An overlay is just another kustomization, refering to
+the base, and referring to patches to apply to that
+base.
+
+This arrangement makes it easy to manage your
+configuration with `git`.  The base could have files
+from an upstream repository managed by someone else.
+The overlays could be in a repository you own.
+Arranging the repo clones as siblings on disk avoids
+the need for git submodules (though that works fine, if
+you are a submodule fan).
 
 Generate YAML with
 
 ```
-kustomize build ~/yourApp/overlays/production
+kustomize build ~/someApp/overlays/production
 ```
 
 The YAML can be directly [applied] to a cluster:
 
 > ```
-> kustomize build ~/yourApp/overlays/production | kubectl apply -f -
+> kustomize build ~/someApp/overlays/production | kubectl apply -f -
 > ```
 
 ## About
