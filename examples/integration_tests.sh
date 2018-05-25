@@ -24,7 +24,7 @@
 #
 # This script assumes that the process running it has
 # checked out the kubernetes-sigs/kustomize repo, and
-# has cd'ed into it (i.e. the directory above "demos")
+# has cd'ed into it (i.e. the directory above "examples")
 # before running it.
 #
 # At time of writing, its 'call point' was in
@@ -79,6 +79,6 @@ function runTest {
 
 setUpEnv
 
-pushd demos
+pushd examples
 runTest ldap/integration_test.sh ldap/base
 popd
