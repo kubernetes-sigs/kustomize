@@ -1,26 +1,3 @@
-[KEP]: https://github.com/kubernetes/community/blob/master/keps/sig-cli/0008-kustomize.md
-[`make`]: https://www.gnu.org/software/make
-[`sed`]: https://www.gnu.org/software/sed
-[applied]: docs/glossary.md#apply
-[base]: docs/glossary.md#base
-[declarative configuration]: docs/glossary.md#declarative-application-management
-[demo]: demos/README.md
-[demos]: demos/README.md
-[imageBase]: docs/base.jpg
-[imageOverlay]: docs/overlay.jpg
-[install]: INSTALL.md
-[kubernetes style]: docs/glossary.md#kubernetes-style-object
-[kustomization]: docs/glossary.md#kustomization
-[overlay]: docs/glossary.md#overlay
-[overlays]: docs/glossary.md#overlay
-[release page]: https://github.com/kubernetes-sigs/kustomize/releases
-[resource]: docs/glossary.md#resource
-[resources]: docs/glossary.md#resource
-[sig-cli]: https://github.com/kubernetes/community/blob/master/sig-cli/README.md
-[variant]: docs/glossary.md#variant
-[variants]: docs/glossary.md#variant
-[workflows]: docs/workflows.md
-
 # kustomize
 
 `kustomize` lets you customize raw, template-free YAML
@@ -37,7 +14,7 @@ and it's like [`sed`], in that it emits editted text.
 
 **Installation**: Download a binary from the [release
 page], or see these [install] notes. Then try one of
-the tested [demos].
+the tested [examples].
 
 ## Usage
 
@@ -126,16 +103,39 @@ you are a submodule fan).
 
 Generate YAML with
 
-```
+```sh
 kustomize build ~/someApp/overlays/production
 ```
 
 The YAML can be directly [applied] to a cluster:
 
-> ```
+> ```sh
 > kustomize build ~/someApp/overlays/production | kubectl apply -f -
 > ```
 
 ## About
 
 This tool is sponsored by [sig-cli] ([KEP]).
+
+
+[KEP]: https://github.com/kubernetes/community/blob/master/keps/sig-cli/0008-kustomize.md
+[`make`]: https://www.gnu.org/software/make
+[`sed`]: https://www.gnu.org/software/sed
+[applied]: docs/glossary.md#apply
+[base]: docs/glossary.md#base
+[declarative configuration]: docs/glossary.md#declarative-application-management
+[examples]: examples/README.md
+[imageBase]: docs/base.jpg
+[imageOverlay]: docs/overlay.jpg
+[install]: INSTALL.md
+[kubernetes style]: docs/glossary.md#kubernetes-style-object
+[kustomization]: docs/glossary.md#kustomization
+[overlay]: docs/glossary.md#overlay
+[overlays]: docs/glossary.md#overlay
+[release page]: https://github.com/kubernetes-sigs/kustomize/releases
+[resource]: docs/glossary.md#resource
+[resources]: docs/glossary.md#resource
+[sig-cli]: https://github.com/kubernetes/community/blob/master/sig-cli/README.md
+[variant]: docs/glossary.md#variant
+[variants]: docs/glossary.md#variant
+[workflows]: docs/workflows.md

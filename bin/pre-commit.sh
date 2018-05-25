@@ -43,14 +43,14 @@ function testGoTest {
   go test -v ./...
 }
 
-function testDemos {
-  mdrip --mode test --label test README.md ./demos
+function testExamples {
+  mdrip --mode test --label test README.md ./examples
 }
 
 runTest testGoFmt
 runTest testGoImports
 runTest testGoVet
 runTest testGoTest
-runTest testDemos
+runTest testExamples
 
 exit $rc

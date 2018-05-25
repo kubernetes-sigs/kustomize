@@ -45,7 +45,7 @@ mkdir -p $BASE
 
 CONTENT="https://raw.githubusercontent.com\
 /kubernetes-sigs/kustomize\
-/master/demos/ldap"
+/master/examples/ldap"
 
 curl -s -o "$BASE/#1" "$CONTENT/base\
 /{deployment.yaml,kustomization.yaml,service.yaml,env.startup.txt}"
