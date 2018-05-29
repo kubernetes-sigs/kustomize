@@ -81,14 +81,11 @@ func newCmdEdit(stdOut, stdErr io.Writer, fsys fs.FileSystem) *cobra.Command {
 func newCmdAdd(stdOut, stdErr io.Writer, fsys fs.FileSystem) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "add",
-		Short: "Adds configmap/resource/secret to the kustomization file.",
+		Short: "Adds configmap/resource/patch to the kustomization file.",
 		Long:  "",
 		Example: `
 	# Adds a configmap to the kustomization file
 	kustomize edit add configmap NAME --from-literal=k=v
-
-	# Adds a secret to the kustomization file
-	kustomize edit add secret NAME --from-literal=k=v
 
 	# Adds a resource to the kustomization
 	kustomize edit add resource <filepath>
