@@ -16,7 +16,7 @@
 1. Fork the repo, develop and test your code.
    See the [github workflow guide].
 1. For _new features_, provide a markdown-based demo following
-   the pattern established in the [demos](demos) directory.
+   the pattern established in the [examples](examples) directory.
    Run `bin/pre-commit.sh` to test your demo.
 1. Submit a pull request.
 

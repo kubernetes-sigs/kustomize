@@ -1,6 +1,6 @@
-# Demos
+# Examples
 
-These demos assume that `kustomize` is on your `$PATH`.
+These examples assume that `kustomize` is on your `$PATH`.
 
 They are covered by [pre-commit](../bin/pre-commit.sh)
 tests, and should work with HEAD
