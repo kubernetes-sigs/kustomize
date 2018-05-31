@@ -37,7 +37,7 @@ func NewDefaultCommand() *cobra.Command {
 		Long: `
 kustomize manages declarative configuration of Kubernetes.
 
-More info at https://github.com/kubernetes/kubectl/tree/master/cmd/kustomize
+See https://github.com/kubernetes-sigs/kustomize
 `,
 	}
 
