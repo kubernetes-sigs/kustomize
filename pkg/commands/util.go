@@ -61,7 +61,7 @@ func (mf *kustomizationFile) validate() error {
 		}
 	} else {
 		if !strings.HasSuffix(mf.path, constants.KustomizationFileName) {
-			errorMsg := fmt.Sprintf("Kustomization file path (%s) should have %s suffix\n", mf.path, constants.KustomizationSuffix)
+			errorMsg := fmt.Sprintf("Kustomization file path (%s) should have %s suffix\n", mf.path, constants.KustomizationFileSuffix)
 			merr := interror.KustomizationError{KustomizationPath: mf.path, ErrorMsg: errorMsg}
 			return merr
 		}
