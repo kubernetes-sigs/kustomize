@@ -25,10 +25,9 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/app"
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
+	"github.com/kubernetes-sigs/kustomize/pkg/diff"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
-	"github.com/kubernetes-sigs/kustomize/pkg/util"
 	"github.com/kubernetes-sigs/kustomize/pkg/util/fs"
-	"k8s.io/utils/exec"
 )
 
 type diffOptions struct {
@@ -68,12 +67,6 @@ func (o *diffOptions) Validate(cmd *cobra.Command, args []string) error {
 
 // RunDiff gets the differences between Application.Resources() and Application.RawResources().
 func (o *diffOptions) RunDiff(out, errOut io.Writer, fs fs.FileSystem) error {
-	printer := util.Printer{}
-	diff := util.DiffProgram{
-		Exec:   exec.New(),
-		Stdout: out,
-		Stderr: errOut,
-	}
 
 	l := loader.Init([]loader.SchemeLoader{loader.NewFileLoader(fs)})
 
@@ -91,7 +84,7 @@ func (o *diffOptions) RunDiff(out, errOut io.Writer, fs fs.FileSystem) error {
 	if err != nil {
 		return err
 	}
-	resources, err := application.Resources()
+	transformedResources, err := application.Resources()
 	if err != nil {
 		return err
 	}
@@ -100,17 +93,5 @@ func (o *diffOptions) RunDiff(out, errOut io.Writer, fs fs.FileSystem) error {
 		return err
 	}
 
-	transformedDir, err := util.WriteToDir(resources, "transformed", printer)
-	if err != nil {
-		return err
-	}
-	defer transformedDir.Delete()
-
-	noopDir, err := util.WriteToDir(rawResources, "noop", printer)
-	if err != nil {
-		return err
-	}
-	defer noopDir.Delete()
-
-	return diff.Run(noopDir.Name, transformedDir.Name)
+	return diff.RunDiff(rawResources, transformedResources, out, errOut)
 }

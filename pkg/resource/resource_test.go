@@ -14,15 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package util
+package resource
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/resource"
-	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -38,11 +35,11 @@ kind: ConfigMap
 metadata:
   name: cm2
 `)
-	input := resource.ResourceCollection{
+	input := ResourceCollection{
 		{
 			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"},
 			Name: "cm1",
-		}: &resource.Resource{
+		}: &Resource{
 			Data: &unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
@@ -56,7 +53,7 @@ metadata:
 		{
 			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"},
 			Name: "cm2",
-		}: &resource.Resource{
+		}: &Resource{
 			Data: &unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
@@ -68,35 +65,11 @@ metadata:
 			},
 		},
 	}
-	out, err := Encode(input)
+	out, err := input.EncodeAsYaml()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !reflect.DeepEqual(out, encoded) {
 		t.Fatalf("%s doesn't match expected %s", out, encoded)
 	}
-}
-
-func compareMap(m1, m2 resource.ResourceCollection) error {
-	if len(m1) != len(m2) {
-		keySet1 := []types.GroupVersionKindName{}
-		keySet2 := []types.GroupVersionKindName{}
-		for GVKn := range m1 {
-			keySet1 = append(keySet1, GVKn)
-		}
-		for GVKn := range m1 {
-			keySet2 = append(keySet2, GVKn)
-		}
-		return fmt.Errorf("maps has different number of entries: %#v doesn't equals %#v", keySet1, keySet2)
-	}
-	for GVKn, obj1 := range m1 {
-		obj2, found := m2[GVKn]
-		if !found {
-			return fmt.Errorf("%#v doesn't exist in %#v", GVKn, m2)
-		}
-		if !reflect.DeepEqual(obj1, obj2) {
-			return fmt.Errorf("%#v doesn't match %#v", obj1, obj2)
-		}
-	}
-	return nil
 }
