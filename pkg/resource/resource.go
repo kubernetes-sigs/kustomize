@@ -17,7 +17,11 @@ limitations under the License.
 package resource
 
 import (
+	"bytes"
 	"encoding/json"
+	"sort"
+
+	"github.com/ghodss/yaml"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -41,9 +45,6 @@ func (r *Resource) GVKN() types.GroupVersionKindName {
 	return types.GroupVersionKindName{GVK: gvk, Name: r.Data.GetName()}
 }
 
-// ResourceCollection is a map from GroupVersionKindName to Resource
-type ResourceCollection map[types.GroupVersionKindName]*Resource
-
 func objectToUnstructured(in runtime.Object) (*unstructured.Unstructured, error) {
 	marshaled, err := json.Marshal(in)
 	if err != nil {
@@ -52,4 +53,39 @@ func objectToUnstructured(in runtime.Object) (*unstructured.Unstructured, error)
 	var out unstructured.Unstructured
 	err = out.UnmarshalJSON(marshaled)
 	return &out, err
+}
+
+// ResourceCollection is a map from GroupVersionKindName to Resource
+type ResourceCollection map[types.GroupVersionKindName]*Resource
+
+// EncodeAsYaml encodes the map `in` and output the encoded objects separated by `---`.
+func (in ResourceCollection) EncodeAsYaml() ([]byte, error) {
+	gvknList := []types.GroupVersionKindName{}
+	for gvkn := range in {
+		gvknList = append(gvknList, gvkn)
+	}
+	sort.Sort(types.ByGVKN(gvknList))
+
+	firstObj := true
+	var b []byte
+	buf := bytes.NewBuffer(b)
+	for _, gvkn := range gvknList {
+		obj := in[gvkn].Data
+		out, err := yaml.Marshal(obj)
+		if err != nil {
+			return nil, err
+		}
+		if !firstObj {
+			_, err = buf.WriteString("---\n")
+			if err != nil {
+				return nil, err
+			}
+		}
+		_, err = buf.Write(out)
+		if err != nil {
+			return nil, err
+		}
+		firstObj = false
+	}
+	return buf.Bytes(), nil
 }
