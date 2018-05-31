@@ -27,7 +27,6 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/app"
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
-	kutil "github.com/kubernetes-sigs/kustomize/pkg/util"
 	"github.com/kubernetes-sigs/kustomize/pkg/util/fs"
 )
 
@@ -94,7 +93,7 @@ func (o *buildOptions) RunBuild(out, errOut io.Writer, fs fs.FileSystem) error {
 	}
 
 	// Output the objects.
-	res, err := kutil.Encode(allResources)
+	res, err := allResources.EncodeAsYaml()
 	if err != nil {
 		return err
 	}
