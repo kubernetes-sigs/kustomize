@@ -23,7 +23,6 @@ import (
 
 	"github.com/golang/glog"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
 )
@@ -94,8 +93,13 @@ func Merge(rcs ...ResourceCollection) (ResourceCollection, error) {
 	return all, nil
 }
 
-// MergeWithOverride will merge all of the entries in the slice of ResourceCollection with Override
-// If there is already an entry with the same GVKN exists, different actions are performed according to value of Behavior field
+const behaviorCreate = "create"
+const behaviorReplace = "replace"
+const behaviorMerge = "merge"
+
+// MergeWithOverride merges the entries in the ResourceCollection slice with Override.
+// If there is already an entry with the same GVKN , different actions are performed
+// according to value of Behavior field:
 // 'create': create a new one;
 // 'replace': replace the data only; keep the labels and annotations
 // 'merge': merge the data; keep the labels and annotations
@@ -106,13 +110,13 @@ func MergeWithOverride(rcs ...ResourceCollection) (ResourceCollection, error) {
 		for gvkn, obj := range rc {
 			if _, found := all[gvkn]; found {
 				switch obj.Behavior {
-				case "", constants.CreateBehavior:
+				case "", behaviorCreate:
 					return nil, fmt.Errorf("Create an existing gvkn %#v is not allowed", gvkn)
-				case constants.ReplaceBehavior:
+				case behaviorReplace:
 					glog.V(4).Infof("Replace object %v by %v", all[gvkn].Data.Object, obj.Data.Object)
 					obj.replace(all[gvkn])
 					all[gvkn] = obj
-				case constants.MergeBehavior:
+				case behaviorMerge:
 					glog.V(4).Infof("Merge object %v with %v", all[gvkn].Data.Object, obj.Data.Object)
 					obj.merge(all[gvkn])
 					all[gvkn] = obj
@@ -122,9 +126,9 @@ func MergeWithOverride(rcs ...ResourceCollection) (ResourceCollection, error) {
 				}
 			} else {
 				switch obj.Behavior {
-				case "", constants.CreateBehavior:
+				case "", behaviorCreate:
 					all[gvkn] = obj
-				case constants.MergeBehavior, constants.ReplaceBehavior:
+				case behaviorMerge, behaviorReplace:
 					return nil, fmt.Errorf("No merge or replace is allowed for non existing gvkn %#v", gvkn)
 				default:
 					return nil, fmt.Errorf("The behavior of %#v must be create since it doesn't exist", gvkn)

@@ -53,4 +53,10 @@ runTest testGoVet
 runTest testGoTest
 runTest testExamples
 
+if [ $rc -eq 0 ]; then
+  echo "SUCCESS!"
+else
+  echo "FAILURE; exit code $rc"
+fi
+
 exit $rc
