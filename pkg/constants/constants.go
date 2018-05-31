@@ -14,14 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package constants holds global constants for the kustomize tool.
 package constants
 
-const KustomizationSuffix = ".yaml"
+// KustomizationFileSuffix is expected suffix for KustomizationFileName.
+const KustomizationFileSuffix = ".yaml"
 
 // KustomizationFileName is the Well-Known File Name for a kustomize configuration file.
-const KustomizationFileName = "kustomization" + KustomizationSuffix
-
-// Configmap behaviors
-const CreateBehavior = "create"
-const ReplaceBehavior = "replace"
-const MergeBehavior = "merge"
+const KustomizationFileName = "kustomization" + KustomizationFileSuffix
