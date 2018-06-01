@@ -67,7 +67,7 @@ type ConfigMapArgs struct {
 	// hash(content of configmap).
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 
-	// Behavior of configmap, must be one of create, merge and replace
+	// behavior of configmap, must be one of create, merge and replace
 	// 'create': create a new one;
 	// 'replace': replace the existing one;
 	// 'merge': merge the existing one.
@@ -84,7 +84,7 @@ type SecretArgs struct {
 	// hash(content of secret).
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 
-	// Behavior of secretGenerator, must be one of create, merge and replace
+	// behavior of secretGenerator, must be one of create, merge and replace
 	// 'create': create a new one;
 	// 'replace': replace the existing one;
 	// 'merge': merge the existing one.

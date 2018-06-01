@@ -21,7 +21,7 @@ import (
 	"fmt"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/hash"
-	"github.com/kubernetes-sigs/kustomize/pkg/resource"
+	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -40,14 +40,14 @@ func NewNameHashTransformer() Transformer {
 }
 
 // Transform appends hash to configmaps and secrets.
-func (o *nameHashTransformer) Transform(m resource.ResourceCollection) error {
-	for gvkn, obj := range m {
+func (o *nameHashTransformer) Transform(m resmap.ResMap) error {
+	for id, obj := range m {
 		switch {
-		case types.SelectByGVK(gvkn.GVK, &schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"}):
-			appendHashForConfigMap(obj.Data)
+		case types.SelectByGVK(id.Gvk(), &schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"}):
+			appendHashForConfigMap(obj.Unstruct())
 
-		case types.SelectByGVK(gvkn.GVK, &schema.GroupVersionKind{Version: "v1", Kind: "Secret"}):
-			appendHashForSecret(obj.Data)
+		case types.SelectByGVK(id.Gvk(), &schema.GroupVersionKind{Version: "v1", Kind: "Secret"}):
+			appendHashForSecret(obj.Unstruct())
 		}
 	}
 	return nil

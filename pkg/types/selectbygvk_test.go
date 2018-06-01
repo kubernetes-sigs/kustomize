@@ -22,7 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func TestFilterByGVK(t *testing.T) {
+func TestSelectByGVK(t *testing.T) {
 	type testCase struct {
 		description string
 		in          schema.GroupVersionKind
@@ -37,7 +37,7 @@ func TestFilterByGVK(t *testing.T) {
 			expected:    true,
 		},
 		{
-			description: "GVK matches",
+			description: "gvk matches",
 			in: schema.GroupVersionKind{
 				Group:   "group1",
 				Version: "version1",

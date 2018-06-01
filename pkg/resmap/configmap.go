@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package resource
+package resmap
 
 import (
 	"fmt"
@@ -22,22 +22,23 @@ import (
 
 	cutil "github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret/util"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
+	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
-func newFromConfigMap(l loader.Loader, cm types.ConfigMapArgs) (*Resource, error) {
+func newResourceFromConfigMap(l loader.Loader, cm types.ConfigMapArgs) (*resource.Resource, error) {
 	corev1CM, err := makeConfigMap(l, cm)
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := objectToUnstructured(corev1CM)
+	data, err := newUnstructuredFromObject(corev1CM)
 	if err != nil {
 		return nil, err
 	}
-	return &Resource{Data: data, Behavior: cm.Behavior}, nil
+	return resource.NewResource(data, cm.Behavior), nil
 }
 
 func makeConfigMap(l loader.Loader, cm types.ConfigMapArgs) (*corev1.ConfigMap, error) {
@@ -130,15 +131,15 @@ func addKV(m map[string]string, kv kvPair) error {
 	return nil
 }
 
-// NewFromConfigMaps returns a Resource slice given a configmap metadata slice from kustomization file.
-func NewFromConfigMaps(loader loader.Loader, cmList []types.ConfigMapArgs) (ResourceCollection, error) {
-	allResources := []*Resource{}
+// NewResMapFromConfigMapArgs returns a Resource slice given a configmap metadata slice from kustomization file.
+func NewResMapFromConfigMapArgs(loader loader.Loader, cmList []types.ConfigMapArgs) (ResMap, error) {
+	allResources := []*resource.Resource{}
 	for _, cm := range cmList {
-		res, err := newFromConfigMap(loader, cm)
+		res, err := newResourceFromConfigMap(loader, cm)
 		if err != nil {
 			return nil, err
 		}
 		allResources = append(allResources, res)
 	}
-	return resourceCollectionFromResources(allResources)
+	return newResMapFromResourceSlice(allResources)
 }

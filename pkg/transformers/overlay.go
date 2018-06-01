@@ -22,6 +22,7 @@ import (
 
 	jsonpatch "github.com/evanphx/json-patch"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -45,8 +46,8 @@ func NewOverlayTransformer(overlay []*resource.Resource) (Transformer, error) {
 }
 
 // Transform apply the overlay on top of the base resources.
-func (o *overlayTransformer) Transform(baseResourceMap resource.ResourceCollection) error {
-	// Merge and then index the patches by GVKN.
+func (o *overlayTransformer) Transform(baseResourceMap resmap.ResMap) error {
+	// Merge and then index the patches by Id.
 	overlays, err := o.mergePatches()
 	if err != nil {
 		return err
@@ -55,22 +56,22 @@ func (o *overlayTransformer) Transform(baseResourceMap resource.ResourceCollecti
 	// Strategic merge the resources exist in both base and overlay.
 	for _, overlay := range overlays {
 		// Merge overlay with base resource.
-		gvkn := overlay.GVKN()
-		base, found := baseResourceMap[gvkn]
+		id := overlay.Id()
+		base, found := baseResourceMap[id]
 		if !found {
-			return fmt.Errorf("failed to find an object with %#v to apply the patch", gvkn.GVK)
+			return fmt.Errorf("failed to find an object with %#v to apply the patch", id.Gvk())
 		}
 		merged := map[string]interface{}{}
-		versionedObj, err := scheme.Scheme.New(gvkn.GVK)
-		baseName := base.Data.GetName()
+		versionedObj, err := scheme.Scheme.New(id.Gvk())
+		baseName := base.Unstruct().GetName()
 		switch {
 		case runtime.IsNotRegisteredError(err):
 			// Use JSON merge patch to handle types w/o schema
-			baseBytes, err := json.Marshal(base.Data)
+			baseBytes, err := json.Marshal(base.Unstruct())
 			if err != nil {
 				return err
 			}
-			patchBytes, err := json.Marshal(overlay.Data)
+			patchBytes, err := json.Marshal(overlay.Unstruct())
 			if err != nil {
 				return err
 			}
@@ -94,33 +95,33 @@ func (o *overlayTransformer) Transform(baseResourceMap resource.ResourceCollecti
 				return err
 			}
 			merged, err = strategicpatch.StrategicMergeMapPatchUsingLookupPatchMeta(
-				base.Data.Object,
-				overlay.Data.Object,
+				base.Unstruct().Object,
+				overlay.Unstruct().Object,
 				lookupPatchMeta)
 			if err != nil {
 				return err
 			}
 		}
-		base.Data.SetName(baseName)
-		baseResourceMap[gvkn].Data.Object = merged
+		base.Unstruct().SetName(baseName)
+		baseResourceMap[id].Unstruct().Object = merged
 	}
 	return nil
 }
 
-// mergePatches merge and index patches by GVKN.
+// mergePatches merge and index patches by Id.
 // It errors out if there is conflict between patches.
-func (o *overlayTransformer) mergePatches() (resource.ResourceCollection, error) {
-	rc := resource.ResourceCollection{}
+func (o *overlayTransformer) mergePatches() (resmap.ResMap, error) {
+	rc := resmap.ResMap{}
 	patches := resourcesToObjects(o.overlay)
 	for ix, patch := range o.overlay {
-		gvkn := patch.GVKN()
-		existing, found := rc[gvkn]
+		id := patch.Id()
+		existing, found := rc[id]
 		if !found {
-			rc[gvkn] = patch
+			rc[id] = patch
 			continue
 		}
 
-		versionedObj, err := scheme.Scheme.New(gvkn.GVK)
+		versionedObj, err := scheme.Scheme.New(id.Gvk())
 		if err != nil && !runtime.IsNotRegisteredError(err) {
 			return nil, err
 		}
@@ -134,7 +135,7 @@ func (o *overlayTransformer) mergePatches() (resource.ResourceCollection, error)
 			}
 		}
 
-		conflict, err := cd.hasConflict(existing.Data, patch.Data)
+		conflict, err := cd.hasConflict(existing.Unstruct(), patch.Unstruct())
 		if err != nil {
 			return nil, err
 		}
@@ -143,13 +144,13 @@ func (o *overlayTransformer) mergePatches() (resource.ResourceCollection, error)
 			if err != nil {
 				return nil, err
 			}
-			return nil, fmt.Errorf("there is conflict between %#v and %#v", conflictingPatch.Object, patch.Data.Object)
+			return nil, fmt.Errorf("there is conflict between %#v and %#v", conflictingPatch.Object, patch.Unstruct().Object)
 		} else {
-			merged, err := cd.mergePatches(existing.Data, patch.Data)
+			merged, err := cd.mergePatches(existing.Unstruct(), patch.Unstruct())
 			if err != nil {
 				return nil, err
 			}
-			existing.Data = merged
+			existing.SetUnstruct(merged)
 		}
 	}
 	return rc, nil
@@ -158,7 +159,7 @@ func (o *overlayTransformer) mergePatches() (resource.ResourceCollection, error)
 func resourcesToObjects(rs []*resource.Resource) []*unstructured.Unstructured {
 	objectList := make([]*unstructured.Unstructured, len(rs))
 	for i := range rs {
-		objectList[i] = rs[i].Data
+		objectList[i] = rs[i].Unstruct()
 	}
 	return objectList
 }

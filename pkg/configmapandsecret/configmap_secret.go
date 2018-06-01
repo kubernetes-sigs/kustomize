@@ -27,7 +27,6 @@ import (
 
 	cutil "github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret/util"
 	"github.com/kubernetes-sigs/kustomize/pkg/hash"
-	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -120,51 +119,6 @@ func makeSecret(secret types.SecretArgs, path string) (*corev1.Secret, error) {
 	}
 
 	return corev1secret, nil
-}
-
-func populateMap(m resource.ResourceCollection, obj *unstructured.Unstructured, newName string) error {
-	oldName := obj.GetName()
-	gvk := obj.GroupVersionKind()
-	gvkn := types.GroupVersionKindName{GVK: gvk, Name: oldName}
-
-	if _, found := m[gvkn]; found {
-		return fmt.Errorf("The <name: %q, GroupVersionKind: %v> already exists in the map", oldName, gvk)
-	}
-	obj.SetName(newName)
-	m[gvkn] = &resource.Resource{Data: obj}
-	return nil
-}
-
-// MakeConfigMapsResourceCollection returns a map of <GVK, oldName> -> unstructured object.
-func MakeConfigMapsResourceCollection(maps []types.ConfigMapArgs) (resource.ResourceCollection, error) {
-	m := resource.ResourceCollection{}
-	for _, cm := range maps {
-		unstructuredConfigMap, nameWithHash, err := MakeConfigmapAndGenerateName(cm)
-		if err != nil {
-			return nil, err
-		}
-		err = populateMap(m, unstructuredConfigMap, nameWithHash)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return m, nil
-}
-
-// MakeSecretsResourceCollection returns a map of <GVK, oldName> -> unstructured object.
-func MakeSecretsResourceCollection(secrets []types.SecretArgs, path string) (resource.ResourceCollection, error) {
-	m := resource.ResourceCollection{}
-	for _, secret := range secrets {
-		unstructuredSecret, nameWithHash, err := MakeSecretAndGenerateName(secret, path)
-		if err != nil {
-			return nil, err
-		}
-		err = populateMap(m, unstructuredSecret, nameWithHash)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return m, nil
 }
 
 func createSecretKey(wd string, command string) ([]byte, error) {

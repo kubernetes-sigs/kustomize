@@ -20,7 +20,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/resource"
+	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 )
 
@@ -56,12 +56,12 @@ func NewMapTransformer(pc []PathConfig, m map[string]string) (Transformer, error
 
 // Transform apply each <key, value> pair in the mapTransformer to the
 // fields specified in mapTransformer.
-func (o *mapTransformer) Transform(m resource.ResourceCollection) error {
-	for gvkn := range m {
-		obj := m[gvkn].Data
+func (o *mapTransformer) Transform(m resmap.ResMap) error {
+	for id := range m {
+		obj := m[id].Unstruct()
 		objMap := obj.UnstructuredContent()
 		for _, path := range o.pathConfigs {
-			if !types.SelectByGVK(gvkn.GVK, path.GroupVersionKind) {
+			if !types.SelectByGVK(id.Gvk(), path.GroupVersionKind) {
 				continue
 			}
 			err := mutateField(objMap, path.Path, path.CreateIfNotPresent, o.addMap)

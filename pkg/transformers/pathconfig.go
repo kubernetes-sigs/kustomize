@@ -20,14 +20,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-// PathConfig contains the configuration of a field, including the GVK it ties to,
+// PathConfig contains the configuration of a field, including the gvk it ties to,
 // path to the field, etc.
 type PathConfig struct {
 	// If true, it will create the path if it is not found.
 	CreateIfNotPresent bool
-	// The GVK that this path tied to.
-	// If unset, it applied to any GVK
-	// If some fields are set, it applies to all matching GVK.
+	// The gvk that this path tied to.
+	// If unset, it applied to any gvk
+	// If some fields are set, it applies to all matching gvk.
 	GroupVersionKind *schema.GroupVersionKind
 	// Path to the field that will be munged.
 	Path []string
@@ -48,8 +48,8 @@ type PathConfig struct {
 //	}
 type referencePathConfig struct {
 	// referencedGVK is the GroupVersionKind that is referenced by
-	// the PathConfig's GVK in the path of PathConfig.Path.
+	// the PathConfig's gvk in the path of PathConfig.Path.
 	referencedGVK schema.GroupVersionKind
-	// PathConfig is the GVK that is referencing the referencedGVK object's name.
+	// PathConfig is the gvk that is referencing the referencedGVK object's name.
 	pathConfigs []PathConfig
 }

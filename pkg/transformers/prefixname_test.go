@@ -20,18 +20,15 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func TestPrefixNameRun(t *testing.T) {
-	m := resource.ResourceCollection{
-		{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"},
-			Name: "cm1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+	m := resmap.ResMap{
+		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "ConfigMap",
@@ -39,13 +36,9 @@ func TestPrefixNameRun(t *testing.T) {
 						"name": "cm1",
 					},
 				},
-			},
-		},
-		{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"},
-			Name: "cm2",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+			}),
+		resource.NewResId(cmap, "cm2"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "ConfigMap",
@@ -53,15 +46,11 @@ func TestPrefixNameRun(t *testing.T) {
 						"name": "cm2",
 					},
 				},
-			},
-		},
+			}),
 	}
-	expected := resource.ResourceCollection{
-		{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"},
-			Name: "cm1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+	expected := resmap.ResMap{
+		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "ConfigMap",
@@ -69,13 +58,9 @@ func TestPrefixNameRun(t *testing.T) {
 						"name": "someprefix-cm1",
 					},
 				},
-			},
-		},
-		{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"},
-			Name: "cm2",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+			}),
+		resource.NewResId(cmap, "cm2"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "ConfigMap",
@@ -83,8 +68,7 @@ func TestPrefixNameRun(t *testing.T) {
 						"name": "someprefix-cm2",
 					},
 				},
-			},
-		},
+			}),
 	}
 
 	npt, err := NewDefaultingNamePrefixTransformer("someprefix-")
@@ -96,7 +80,7 @@ func TestPrefixNameRun(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !reflect.DeepEqual(m, expected) {
-		err = compareMap(m, expected)
+		err = expected.ErrorIfNotEqual(m)
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
