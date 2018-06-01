@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package types
+package transformers
 
 import (
 	"testing"
@@ -123,7 +123,7 @@ func TestSelectByGVK(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		filtered := SelectByGVK(tc.in, tc.filter)
+		filtered := selectByGVK(tc.in, tc.filter)
 		if filtered != tc.expected {
 			t.Fatalf("unexpected filter result for test case: %v", tc.description)
 		}
