@@ -14,18 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package resource
+package resmap
 
 import (
 	"encoding/base64"
 	"reflect"
 	"testing"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
+
+var secret = schema.GroupVersionKind{Version: "v1", Kind: "Secret"}
 
 func TestNewFromSecretGenerators(t *testing.T) {
 	secrets := []types.SecretArgs{
@@ -38,17 +41,14 @@ func TestNewFromSecretGenerators(t *testing.T) {
 			Type: "Opaque",
 		},
 	}
-	re, err := NewFromSecretGenerators(".", secrets)
+	re, err := NewResMapFromSecretArgs(".", secrets)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	expected := ResourceCollection{
-		{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "Secret"},
-			Name: "secret",
-		}: &Resource{
-			Data: &unstructured.Unstructured{
+	expected := ResMap{
+		resource.NewResId(secret, "secret"): resource.NewResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "Secret",
@@ -63,7 +63,7 @@ func TestNewFromSecretGenerators(t *testing.T) {
 					},
 				},
 			},
-		},
+			""),
 	}
 
 	if !reflect.DeepEqual(re, expected) {

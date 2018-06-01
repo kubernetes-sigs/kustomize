@@ -16,10 +16,10 @@ limitations under the License.
 
 package transformers
 
-import "github.com/kubernetes-sigs/kustomize/pkg/resource"
+import "github.com/kubernetes-sigs/kustomize/pkg/resmap"
 
 // Transformer can transform objects.
 type Transformer interface {
 	// Transform modifies objects in a map, e.g. add prefixes or additional labels.
-	Transform(m resource.ResourceCollection) error
+	Transform(m resmap.ResMap) error
 }
