@@ -19,8 +19,8 @@ package loadertest
 import (
 	"os"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
-	"github.com/kubernetes-sigs/kustomize/pkg/util/fs"
 )
 
 // FakeLoader encapsulates the delegate Loader and the fake file system.

@@ -22,8 +22,8 @@ import (
 	"testing"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
-	"github.com/kubernetes-sigs/kustomize/pkg/util/fs"
 )
 
 func TestWriteAndRead(t *testing.T) {
