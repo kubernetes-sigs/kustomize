@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
-	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -57,7 +56,7 @@ func (o *nameReferenceTransformer) Transform(
 		objMap := obj.UnstructuredContent()
 		for _, referencePathConfig := range o.pathConfigs {
 			for _, path := range referencePathConfig.pathConfigs {
-				if !types.SelectByGVK(id.Gvk(), path.GroupVersionKind) {
+				if !selectByGVK(id.Gvk(), path.GroupVersionKind) {
 					continue
 				}
 				err := mutateField(objMap, path.Path, path.CreateIfNotPresent,
@@ -82,7 +81,7 @@ func (o *nameReferenceTransformer) updateNameReference(
 		}
 
 		for id, obj := range m {
-			if !types.SelectByGVK(id.Gvk(), &GVK) {
+			if !selectByGVK(id.Gvk(), &GVK) {
 				continue
 			}
 			if id.Name() == s {

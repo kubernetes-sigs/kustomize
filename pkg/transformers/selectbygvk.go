@@ -14,20 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package types
+package transformers
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-// SelectByGVK returns true if `selector` selects `in`; otherwise, false.
+// selectByGVK returns true if `selector` selects `in`; otherwise, false.
 // If `selector` and `in` are the same, return true.
 // If `selector` is nil, it is considered as a wildcard and always return true.
 // e.g. selector <Group: "", Version: "", Kind: "Deployment"> CAN select
 // <Group: "extensions", Version: "v1beta1", Kind: "Deployment">.
 // selector <Group: "apps", Version: "", Kind: "Deployment"> CANNOT select
 // <Group: "extensions", Version: "v1beta1", Kind: "Deployment">.
-func SelectByGVK(in schema.GroupVersionKind, selector *schema.GroupVersionKind) bool {
+func selectByGVK(in schema.GroupVersionKind, selector *schema.GroupVersionKind) bool {
 	if selector == nil {
 		return true
 	}

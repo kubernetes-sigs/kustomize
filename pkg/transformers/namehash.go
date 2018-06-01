@@ -22,7 +22,6 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/hash"
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
-	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -43,10 +42,10 @@ func NewNameHashTransformer() Transformer {
 func (o *nameHashTransformer) Transform(m resmap.ResMap) error {
 	for id, obj := range m {
 		switch {
-		case types.SelectByGVK(id.Gvk(), &schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"}):
+		case selectByGVK(id.Gvk(), &schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"}):
 			appendHashForConfigMap(obj.Unstruct())
 
-		case types.SelectByGVK(id.Gvk(), &schema.GroupVersionKind{Version: "v1", Kind: "Secret"}):
+		case selectByGVK(id.Gvk(), &schema.GroupVersionKind{Version: "v1", Kind: "Secret"}):
 			appendHashForSecret(obj.Unstruct())
 		}
 	}
