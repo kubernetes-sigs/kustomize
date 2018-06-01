@@ -16,7 +16,7 @@ limitations under the License.
 
 package transformers
 
-import "github.com/kubernetes-sigs/kustomize/pkg/resource"
+import "github.com/kubernetes-sigs/kustomize/pkg/resmap"
 
 // noOpTransformer contains a no-op transformer.
 type noOpTransformer struct{}
@@ -29,6 +29,6 @@ func NewNoOpTransformer() Transformer {
 }
 
 // Transform does nothing.
-func (o *noOpTransformer) Transform(_ resource.ResourceCollection) error {
+func (o *noOpTransformer) Transform(_ resmap.ResMap) error {
 	return nil
 }
