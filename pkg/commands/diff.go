@@ -26,8 +26,8 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/app"
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/diff"
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
-	"github.com/kubernetes-sigs/kustomize/pkg/util/fs"
 )
 
 type diffOptions struct {
