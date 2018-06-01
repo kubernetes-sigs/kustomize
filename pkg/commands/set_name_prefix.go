@@ -23,7 +23,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
-	"github.com/kubernetes-sigs/kustomize/pkg/util/fs"
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 )
 
 type setNamePrefixOptions struct {
