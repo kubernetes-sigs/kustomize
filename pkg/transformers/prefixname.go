@@ -20,7 +20,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/resource"
+	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 )
 
@@ -57,12 +57,12 @@ func NewNamePrefixTransformer(pc []PathConfig, np string) (Transformer, error) {
 }
 
 // Transform prepends the name prefix.
-func (o *namePrefixTransformer) Transform(m resource.ResourceCollection) error {
-	for gvkn := range m {
-		obj := m[gvkn].Data
+func (o *namePrefixTransformer) Transform(m resmap.ResMap) error {
+	for id := range m {
+		obj := m[id].Unstruct()
 		objMap := obj.UnstructuredContent()
 		for _, path := range o.pathConfigs {
-			if !types.SelectByGVK(gvkn.GVK, path.GroupVersionKind) {
+			if !types.SelectByGVK(id.Gvk(), path.GroupVersionKind) {
 				continue
 			}
 			err := mutateField(objMap, path.Path, path.CreateIfNotPresent, o.addPrefix)

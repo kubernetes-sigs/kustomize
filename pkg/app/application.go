@@ -25,6 +25,7 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	interror "github.com/kubernetes-sigs/kustomize/pkg/internal/error"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
+	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/transformers"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
@@ -32,14 +33,14 @@ import (
 
 type Application interface {
 	// Resources computes and returns the resources for the app.
-	Resources() (resource.ResourceCollection, error)
+	Resources() (resmap.ResMap, error)
 	// SemiResources computes and returns the resources without name hash and name reference for the app
-	SemiResources() (resource.ResourceCollection, error)
+	SemiResources() (resmap.ResMap, error)
 	// RawResources computes and returns the raw resources from the kustomization file.
 	// It contains resources from
 	// 1) untransformed resources from current kustomization file
 	// 2) transformed resources from sub packages
-	RawResources() (resource.ResourceCollection, error)
+	RawResources() (resmap.ResMap, error)
 }
 
 var _ Application = &applicationImpl{}
@@ -68,7 +69,7 @@ func New(loader loader.Loader) (Application, error) {
 // Resources computes and returns the resources from the kustomization file.
 // The namehashing for configmap/secrets and resolving name reference is only done
 // in the most top overlay once at the end of getting resources.
-func (a *applicationImpl) Resources() (resource.ResourceCollection, error) {
+func (a *applicationImpl) Resources() (resmap.ResMap, error) {
 	res, err := a.SemiResources()
 	if err != nil {
 		return nil, err
@@ -85,32 +86,32 @@ func (a *applicationImpl) Resources() (resource.ResourceCollection, error) {
 }
 
 // SemiResources computes and returns the resources without name hash and name reference for the app
-func (a *applicationImpl) SemiResources() (resource.ResourceCollection, error) {
+func (a *applicationImpl) SemiResources() (resmap.ResMap, error) {
 	errs := &interror.KustomizationErrors{}
 	raw, err := a.rawResources()
 	if err != nil {
 		errs.Append(err)
 	}
 
-	cms, err := resource.NewFromConfigMaps(a.loader, a.kustomization.ConfigMapGenerator)
+	cms, err := resmap.NewResMapFromConfigMapArgs(a.loader, a.kustomization.ConfigMapGenerator)
 	if err != nil {
 		errs.Append(err)
 	}
-	secrets, err := resource.NewFromSecretGenerators(a.loader.Root(), a.kustomization.SecretGenerator)
+	secrets, err := resmap.NewResMapFromSecretArgs(a.loader.Root(), a.kustomization.SecretGenerator)
 	if err != nil {
 		errs.Append(err)
 	}
-	res, err := resource.Merge(cms, secrets)
+	res, err := resmap.Merge(cms, secrets)
 	if err != nil {
 		return nil, err
 	}
 
-	allRes, err := resource.MergeWithOverride(raw, res)
+	allRes, err := resmap.MergeWithOverride(raw, res)
 	if err != nil {
 		return nil, err
 	}
 
-	patches, err := resource.NewFromPatches(a.loader, a.kustomization.Patches)
+	patches, err := resmap.NewResourceSliceFromPatches(a.loader, a.kustomization.Patches)
 	if err != nil {
 		errs.Append(err)
 	}
@@ -134,7 +135,7 @@ func (a *applicationImpl) SemiResources() (resource.ResourceCollection, error) {
 // RawResources computes and returns the raw resources from the kustomization file.
 // The namehashing for configmap/secrets and resolving name reference is only done
 // in the most top overlay once at the end of getting resources.
-func (a *applicationImpl) RawResources() (resource.ResourceCollection, error) {
+func (a *applicationImpl) RawResources() (resmap.ResMap, error) {
 	res, err := a.rawResources()
 	if err != nil {
 		return nil, err
@@ -150,9 +151,9 @@ func (a *applicationImpl) RawResources() (resource.ResourceCollection, error) {
 	return res, nil
 }
 
-func (a *applicationImpl) rawResources() (resource.ResourceCollection, error) {
+func (a *applicationImpl) rawResources() (resmap.ResMap, error) {
 	subAppResources, errs := a.subAppResources()
-	resources, err := resource.NewFromResources(a.loader, a.kustomization.Resources)
+	resources, err := resmap.NewResMapFromFiles(a.loader, a.kustomization.Resources)
 	if err != nil {
 		errs.Append(err)
 	}
@@ -161,11 +162,11 @@ func (a *applicationImpl) rawResources() (resource.ResourceCollection, error) {
 		return nil, errs
 	}
 
-	return resource.Merge(resources, subAppResources)
+	return resmap.Merge(resources, subAppResources)
 }
 
-func (a *applicationImpl) subAppResources() (resource.ResourceCollection, *interror.KustomizationErrors) {
-	sliceOfSubAppResources := []resource.ResourceCollection{}
+func (a *applicationImpl) subAppResources() (resmap.ResMap, *interror.KustomizationErrors) {
+	sliceOfSubAppResources := []resmap.ResMap{}
 	errs := &interror.KustomizationErrors{}
 	for _, pkgPath := range a.kustomization.Bases {
 		subloader, err := a.loader.New(pkgPath)
@@ -186,7 +187,7 @@ func (a *applicationImpl) subAppResources() (resource.ResourceCollection, *inter
 		}
 		sliceOfSubAppResources = append(sliceOfSubAppResources, subAppResources)
 	}
-	allResources, err := resource.Merge(sliceOfSubAppResources...)
+	allResources, err := resmap.Merge(sliceOfSubAppResources...)
 	if err != nil {
 		errs.Append(err)
 	}

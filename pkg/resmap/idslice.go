@@ -14,16 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package types
+package resmap
 
 import (
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sort"
+
+	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 )
 
-// GroupVersionKindName contains GroupVersionKind and original name of the resource.
-type GroupVersionKindName struct {
-	// GroupVersionKind of the resource.
-	GVK schema.GroupVersionKind
-	// original name of the resource before transformation.
-	Name string
+// IdSlice implements the sort interface.
+type IdSlice []resource.ResId
+
+var _ sort.Interface = IdSlice{}
+
+func (a IdSlice) Len() int      { return len(a) }
+func (a IdSlice) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a IdSlice) Less(i, j int) bool {
+	if a[i].Gvk().String() != a[j].Gvk().String() {
+		return a[i].Gvk().String() < a[j].Gvk().String()
+	}
+	return a[i].Name() < a[j].Name()
 }

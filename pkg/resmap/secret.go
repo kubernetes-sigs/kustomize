@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package resource
+package resmap
 
 import (
 	"context"
@@ -23,11 +23,12 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	corev1 "k8s.io/api/core/v1"
 )
 
-func newFromSecretGenerator(p string, s types.SecretArgs) (*Resource, error) {
+func newFromSecretGenerator(p string, s types.SecretArgs) (*resource.Resource, error) {
 	corev1secret := &corev1.Secret{}
 	corev1secret.APIVersion = "v1"
 	corev1secret.Kind = "Secret"
@@ -46,13 +47,13 @@ func newFromSecretGenerator(p string, s types.SecretArgs) (*Resource, error) {
 		corev1secret.Data[k] = out
 	}
 
-	obj, err := objectToUnstructured(corev1secret)
+	obj, err := newUnstructuredFromObject(corev1secret)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &Resource{Data: obj, Behavior: s.Behavior}, nil
+	return resource.NewResource(obj, s.Behavior), nil
 }
 
 func createSecretKey(wd string, command string) ([]byte, error) {
@@ -68,10 +69,10 @@ func createSecretKey(wd string, command string) ([]byte, error) {
 	return cmd.Output()
 }
 
-// NewFromSecretGenerators takes a SecretGenerator slice and executes its command in directory p
+// NewResMapFromSecretArgs takes a SecretArgs slice and executes its command in directory p
 // then writes the output to a Resource slice and return it.
-func NewFromSecretGenerators(p string, secretList []types.SecretArgs) (ResourceCollection, error) {
-	allResources := []*Resource{}
+func NewResMapFromSecretArgs(p string, secretList []types.SecretArgs) (ResMap, error) {
+	allResources := []*resource.Resource{}
 	for _, secret := range secretList {
 		res, err := newFromSecretGenerator(p, secret)
 		if err != nil {
@@ -79,5 +80,5 @@ func NewFromSecretGenerators(p string, secretList []types.SecretArgs) (ResourceC
 		}
 		allResources = append(allResources, res)
 	}
-	return resourceCollectionFromResources(allResources)
+	return newResMapFromResourceSlice(allResources)
 }

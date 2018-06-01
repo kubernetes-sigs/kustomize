@@ -20,18 +20,23 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
+var service = schema.GroupVersionKind{Version: "v1", Kind: "Service"}
+var secret = schema.GroupVersionKind{Version: "v1", Kind: "Secret"}
+var cmap = schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"}
+var deploy = schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"}
+var statefulset = schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "StatefulSet"}
+var foo = schema.GroupVersionKind{Group: "example.com", Version: "v1", Kind: "Foo"}
+
 func TestLabelsRun(t *testing.T) {
-	m := resource.ResourceCollection{
-		{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"},
-			Name: "cm1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+	m := resmap.ResMap{
+		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "ConfigMap",
@@ -39,13 +44,9 @@ func TestLabelsRun(t *testing.T) {
 						"name": "cm1",
 					},
 				},
-			},
-		},
-		{
-			GVK:  schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"},
-			Name: "deploy1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+			}),
+		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"group":      "apps",
 					"apiVersion": "v1",
@@ -71,13 +72,9 @@ func TestLabelsRun(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
-		{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "Service"},
-			Name: "svc1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+			}),
+		resource.NewResId(service, "svc1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "Service",
@@ -93,15 +90,11 @@ func TestLabelsRun(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
+			}),
 	}
-	expected := resource.ResourceCollection{
-		{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"},
-			Name: "cm1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+	expected := resmap.ResMap{
+		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "ConfigMap",
@@ -113,13 +106,9 @@ func TestLabelsRun(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
-		{
-			GVK:  schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"},
-			Name: "deploy1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+			}),
+		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"group":      "apps",
 					"apiVersion": "v1",
@@ -157,13 +146,9 @@ func TestLabelsRun(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
-		{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "Service"},
-			Name: "svc1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+			}),
+		resource.NewResId(service, "svc1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "Service",
@@ -187,8 +172,7 @@ func TestLabelsRun(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
+			}),
 	}
 
 	lt, err := NewDefaultingLabelsMapTransformer(map[string]string{"label-key1": "label-value1", "label-key2": "label-value2"})
@@ -200,7 +184,7 @@ func TestLabelsRun(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !reflect.DeepEqual(m, expected) {
-		err = compareMap(m, expected)
+		err = expected.ErrorIfNotEqual(m)
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
@@ -284,12 +268,9 @@ func makeAnnotatededService() *unstructured.Unstructured {
 }
 
 func TestAnnotationsRun(t *testing.T) {
-	m := resource.ResourceCollection{
-		{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"},
-			Name: "cm1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+	m := resmap.ResMap{
+		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "ConfigMap",
@@ -297,13 +278,9 @@ func TestAnnotationsRun(t *testing.T) {
 						"name": "cm1",
 					},
 				},
-			},
-		},
-		{
-			GVK:  schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"},
-			Name: "deploy1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+			}),
+		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"group":      "apps",
 					"apiVersion": "v1",
@@ -329,13 +306,9 @@ func TestAnnotationsRun(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
-		{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "Service"},
-			Name: "svc1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+			}),
+		resource.NewResId(service, "svc1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "Service",
@@ -351,15 +324,11 @@ func TestAnnotationsRun(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
+			}),
 	}
-	expected := resource.ResourceCollection{
-		{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"},
-			Name: "cm1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+	expected := resmap.ResMap{
+		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "ConfigMap",
@@ -371,13 +340,9 @@ func TestAnnotationsRun(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
-		{
-			GVK:  schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"},
-			Name: "deploy1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+			}),
+		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"group":      "apps",
 					"apiVersion": "v1",
@@ -411,13 +376,9 @@ func TestAnnotationsRun(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
-		{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "Service"},
-			Name: "svc1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+			}),
+		resource.NewResId(service, "svc1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "Service",
@@ -437,8 +398,7 @@ func TestAnnotationsRun(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
+			}),
 	}
 	at, err := NewDefaultingAnnotationsMapTransformer(map[string]string{"anno-key1": "anno-value1", "anno-key2": "anno-value2"})
 	if err != nil {
@@ -449,7 +409,7 @@ func TestAnnotationsRun(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !reflect.DeepEqual(m, expected) {
-		err = compareMap(m, expected)
+		err = expected.ErrorIfNotEqual(m)
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
