@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
-	"github.com/kubernetes-sigs/kustomize/pkg/types"
 )
 
 // mapTransformer contains a map string->string and path configs
@@ -61,7 +60,7 @@ func (o *mapTransformer) Transform(m resmap.ResMap) error {
 		obj := m[id].Unstruct()
 		objMap := obj.UnstructuredContent()
 		for _, path := range o.pathConfigs {
-			if !types.SelectByGVK(id.Gvk(), path.GroupVersionKind) {
+			if !selectByGVK(id.Gvk(), path.GroupVersionKind) {
 				continue
 			}
 			err := mutateField(objMap, path.Path, path.CreateIfNotPresent, o.addMap)
