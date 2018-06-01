@@ -24,8 +24,8 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret"
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
-	"github.com/kubernetes-sigs/kustomize/pkg/util/fs"
 )
 
 func newCmdAddConfigMap(errOut io.Writer, fsys fs.FileSystem) *cobra.Command {
