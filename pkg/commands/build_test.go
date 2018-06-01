@@ -28,7 +28,7 @@ import (
 	"github.com/ghodss/yaml"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
-	"github.com/kubernetes-sigs/kustomize/pkg/util/fs"
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 

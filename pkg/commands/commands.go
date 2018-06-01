@@ -21,7 +21,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/util/fs"
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/version"
 	"github.com/spf13/cobra"
 )
