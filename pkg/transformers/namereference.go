@@ -20,7 +20,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/resource"
+	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -51,13 +51,13 @@ func NewNameReferenceTransformer(pc []referencePathConfig) (Transformer, error) 
 // associated with the key. e.g. if <k, v> is one of the key-value pair in the map,
 // then the old name is k.Name and the new name is v.GetName()
 func (o *nameReferenceTransformer) Transform(
-	m resource.ResourceCollection) error {
-	for GVKn := range m {
-		obj := m[GVKn].Data
+	m resmap.ResMap) error {
+	for id := range m {
+		obj := m[id].Unstruct()
 		objMap := obj.UnstructuredContent()
 		for _, referencePathConfig := range o.pathConfigs {
 			for _, path := range referencePathConfig.pathConfigs {
-				if !types.SelectByGVK(GVKn.GVK, path.GroupVersionKind) {
+				if !types.SelectByGVK(id.Gvk(), path.GroupVersionKind) {
 					continue
 				}
 				err := mutateField(objMap, path.Path, path.CreateIfNotPresent,
@@ -71,25 +71,9 @@ func (o *nameReferenceTransformer) Transform(
 	return nil
 }
 
-// noMatchingGVKNError indicates failing to find a gvkn.GroupVersionKindName.
-type noMatchingGVKNError struct {
-	message string
-}
-
-// newNoMatchingGVKNError constructs an instance of noMatchingGVKNError with
-// a given error message.
-func newNoMatchingGVKNError(errMsg string) noMatchingGVKNError {
-	return noMatchingGVKNError{errMsg}
-}
-
-// Error returns the error in string format.
-func (err noMatchingGVKNError) Error() string {
-	return err.message
-}
-
 func (o *nameReferenceTransformer) updateNameReference(
 	GVK schema.GroupVersionKind,
-	m resource.ResourceCollection,
+	m resmap.ResMap,
 ) func(in interface{}) (interface{}, error) {
 	return func(in interface{}) (interface{}, error) {
 		s, ok := in.(string)
@@ -97,12 +81,12 @@ func (o *nameReferenceTransformer) updateNameReference(
 			return nil, fmt.Errorf("%#v is expectd to be %T", in, s)
 		}
 
-		for GVKn, obj := range m {
-			if !types.SelectByGVK(GVKn.GVK, &GVK) {
+		for id, obj := range m {
+			if !types.SelectByGVK(id.Gvk(), &GVK) {
 				continue
 			}
-			if GVKn.Name == s {
-				return obj.Data.GetName(), nil
+			if id.Name() == s {
+				return obj.Unstruct().GetName(), nil
 			}
 		}
 		return in, nil

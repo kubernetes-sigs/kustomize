@@ -5,12 +5,11 @@ import (
 
 	"io"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/resource"
+	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 )
 
-// RunDiff runs system diff program to compare two ResourceCollections.
-func RunDiff(raw, transformed resource.ResourceCollection,
-	out, errOut io.Writer) error {
+// RunDiff runs system diff program to compare two Maps.
+func RunDiff(raw, transformed resmap.ResMap, out, errOut io.Writer) error {
 	transformedDir, err := writeYamlToNewDir(transformed, "transformed")
 	if err != nil {
 		return err
@@ -26,10 +25,10 @@ func RunDiff(raw, transformed resource.ResourceCollection,
 	return newProgram(out, errOut).run(noopDir.name(), transformedDir.name())
 }
 
-// writeYamlToNewDir writes each obj in ResourceCollection to a file in a new directory.
+// writeYamlToNewDir writes each obj in ResMap to a file in a new directory.
 // The directory's name will begin with the given prefix.
 // Each file is named with GroupVersionKindName.
-func writeYamlToNewDir(in resource.ResourceCollection, prefix string) (*directory, error) {
+func writeYamlToNewDir(in resmap.ResMap, prefix string) (*directory, error) {
 	dir, err := newDirectory(prefix)
 	if err != nil {
 		return nil, err
@@ -40,7 +39,7 @@ func writeYamlToNewDir(in resource.ResourceCollection, prefix string) (*director
 		if err != nil {
 			return nil, err
 		}
-		err = print(obj.Data, f)
+		err = print(obj.Unstruct(), f)
 		f.Close()
 		if err != nil {
 			return nil, err

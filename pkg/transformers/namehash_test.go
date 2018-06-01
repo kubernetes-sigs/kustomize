@@ -20,18 +20,15 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func TestNameHashTransformer(t *testing.T) {
-	objs := resource.ResourceCollection{
-		{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"},
-			Name: "cm1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+	objs := resmap.ResMap{
+		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "ConfigMap",
@@ -39,13 +36,9 @@ func TestNameHashTransformer(t *testing.T) {
 						"name": "cm1",
 					},
 				},
-			},
-		},
-		{
-			GVK:  schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"},
-			Name: "deploy1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+			}),
+		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"group":      "apps",
 					"apiVersion": "v1",
@@ -71,13 +64,9 @@ func TestNameHashTransformer(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
-		{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "Service"},
-			Name: "svc1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+			}),
+		resource.NewResId(service, "svc1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "Service",
@@ -93,13 +82,9 @@ func TestNameHashTransformer(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
-		{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "Secret"},
-			Name: "secret1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+			}),
+		resource.NewResId(secret, "secret1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "Secret",
@@ -107,16 +92,12 @@ func TestNameHashTransformer(t *testing.T) {
 						"name": "secret1",
 					},
 				},
-			},
-		},
+			}),
 	}
 
-	expected := resource.ResourceCollection{
-		{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"},
-			Name: "cm1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+	expected := resmap.ResMap{
+		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "ConfigMap",
@@ -124,13 +105,9 @@ func TestNameHashTransformer(t *testing.T) {
 						"name": "cm1-m462kdfb68",
 					},
 				},
-			},
-		},
-		{
-			GVK:  schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"},
-			Name: "deploy1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+			}),
+		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"group":      "apps",
 					"apiVersion": "v1",
@@ -156,13 +133,9 @@ func TestNameHashTransformer(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
-		{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "Service"},
-			Name: "svc1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+			}),
+		resource.NewResId(service, "svc1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "Service",
@@ -178,13 +151,9 @@ func TestNameHashTransformer(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
-		{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "Secret"},
-			Name: "secret1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+			}),
+		resource.NewResId(secret, "secret1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "Secret",
@@ -192,15 +161,14 @@ func TestNameHashTransformer(t *testing.T) {
 						"name": "secret1-7kc45hd5f7",
 					},
 				},
-			},
-		},
+			}),
 	}
 
 	tran := NewNameHashTransformer()
 	tran.Transform(objs)
 
 	if !reflect.DeepEqual(objs, expected) {
-		err := compareMap(objs, expected)
+		err := expected.ErrorIfNotEqual(objs)
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }

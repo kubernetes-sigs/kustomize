@@ -18,15 +18,14 @@ package app
 
 import (
 	"encoding/base64"
-	"fmt"
 	"reflect"
 	"testing"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader/loadertest"
+	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
-	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -71,13 +70,14 @@ metadata:
 	return loader
 }
 
+var deploy = schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"}
+var cmap = schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"}
+var secret = schema.GroupVersionKind{Version: "v1", Kind: "Secret"}
+
 func TestResources(t *testing.T) {
-	expected := resource.ResourceCollection{
-		types.GroupVersionKindName{
-			GVK:  schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"},
-			Name: "dply1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+	expected := resmap.ResMap{
+		resource.NewResId(deploy, "dply1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "apps/v1",
 					"kind":       "Deployment",
@@ -108,13 +108,9 @@ func TestResources(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
-		types.GroupVersionKindName{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"},
-			Name: "literalConfigMap",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+			}),
+		resource.NewResId(cmap, "literalConfigMap"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "ConfigMap",
@@ -133,13 +129,9 @@ func TestResources(t *testing.T) {
 						"DB_PASSWORD": "somepw",
 					},
 				},
-			},
-		},
-		types.GroupVersionKindName{
-			GVK:  schema.GroupVersionKind{Version: "v1", Kind: "Secret"},
-			Name: "secret",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+			}),
+		resource.NewResId(secret, "secret"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "Secret",
@@ -159,8 +151,7 @@ func TestResources(t *testing.T) {
 						"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 					},
 				},
-			},
-		},
+			}),
 	}
 	l := setupTest(t)
 	app, err := New(l)
@@ -173,18 +164,15 @@ func TestResources(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(actual, expected) {
-		err = compareMap(actual, expected)
+		err = expected.ErrorIfNotEqual(actual)
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
 func TestRawResources(t *testing.T) {
-	expected := resource.ResourceCollection{
-		types.GroupVersionKindName{
-			GVK:  schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"},
-			Name: "dply1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+	expected := resmap.ResMap{
+		resource.NewResId(deploy, "dply1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "apps/v1",
 					"kind":       "Deployment",
@@ -192,8 +180,7 @@ func TestRawResources(t *testing.T) {
 						"name": "dply1",
 					},
 				},
-			},
-		},
+			}),
 	}
 	l := setupTest(t)
 	app, err := New(l)
@@ -205,31 +192,7 @@ func TestRawResources(t *testing.T) {
 		t.Fatalf("Unexpected error %v", err)
 	}
 
-	if err := compareMap(actual, expected); err != nil {
+	if err := expected.ErrorIfNotEqual(actual); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-}
-
-func compareMap(m1, m2 resource.ResourceCollection) error {
-	if len(m1) != len(m2) {
-		keySet1 := []types.GroupVersionKindName{}
-		keySet2 := []types.GroupVersionKindName{}
-		for GVKn := range m1 {
-			keySet1 = append(keySet1, GVKn)
-		}
-		for GVKn := range m1 {
-			keySet2 = append(keySet2, GVKn)
-		}
-		return fmt.Errorf("maps has different number of entries: %#v doesn't equals %#v", keySet1, keySet2)
-	}
-	for GVKn, obj1 := range m1 {
-		obj2, found := m2[GVKn]
-		if !found {
-			return fmt.Errorf("%#v doesn't exist in %#v", GVKn, m2)
-		}
-		if !reflect.DeepEqual(obj1, obj2) {
-			return fmt.Errorf("%#v doesn't match %#v", obj1, obj2)
-		}
-	}
-	return nil
 }

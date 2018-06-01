@@ -21,18 +21,15 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func TestOverlayRun(t *testing.T) {
-	base := resource.ResourceCollection{
-		{
-			GVK:  schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"},
-			Name: "deploy1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+	base := resmap.ResMap{
+		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "apps/v1",
 					"kind":       "Deployment",
@@ -57,35 +54,32 @@ func TestOverlayRun(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
+			}),
 	}
 	overlay := []*resource.Resource{
-		{
-			Data: &unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "apps/v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name": "deploy1",
-					},
-					"spec": map[string]interface{}{
-						"template": map[string]interface{}{
-							"metadata": map[string]interface{}{
-								"labels": map[string]interface{}{
-									"another-label": "foo",
-								},
+		resource.NewBehaviorlessResource(&unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "deploy1",
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"metadata": map[string]interface{}{
+							"labels": map[string]interface{}{
+								"another-label": "foo",
 							},
-							"spec": map[string]interface{}{
-								"containers": []interface{}{
-									map[string]interface{}{
-										"name":  "nginx",
-										"image": "nginx:latest",
-										"env": []interface{}{
-											map[string]interface{}{
-												"name":  "SOMEENV",
-												"value": "BAR",
-											},
+						},
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"name":  "nginx",
+									"image": "nginx:latest",
+									"env": []interface{}{
+										map[string]interface{}{
+											"name":  "SOMEENV",
+											"value": "BAR",
 										},
 									},
 								},
@@ -95,13 +89,11 @@ func TestOverlayRun(t *testing.T) {
 				},
 			},
 		},
+		),
 	}
-	expected := resource.ResourceCollection{
-		{
-			GVK:  schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"},
-			Name: "deploy1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+	expected := resmap.ResMap{
+		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "apps/v1",
 					"kind":       "Deployment",
@@ -133,8 +125,7 @@ func TestOverlayRun(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
+			}),
 	}
 	lt, err := NewOverlayTransformer(overlay)
 	if err != nil {
@@ -145,18 +136,15 @@ func TestOverlayRun(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !reflect.DeepEqual(base, expected) {
-		err = compareMap(base, expected)
+		err = expected.ErrorIfNotEqual(base)
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
 
 func TestMultiplePatches(t *testing.T) {
-	base := resource.ResourceCollection{
-		{
-			GVK:  schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"},
-			Name: "deploy1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+	base := resmap.ResMap{
+		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "apps/v1",
 					"kind":       "Deployment",
@@ -176,30 +164,27 @@ func TestMultiplePatches(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
+			}),
 	}
 	overlay := []*resource.Resource{
-		{
-			Data: &unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "apps/v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name": "deploy1",
-					},
-					"spec": map[string]interface{}{
-						"template": map[string]interface{}{
-							"spec": map[string]interface{}{
-								"containers": []interface{}{
-									map[string]interface{}{
-										"name":  "nginx",
-										"image": "nginx:latest",
-										"env": []interface{}{
-											map[string]interface{}{
-												"name":  "SOMEENV",
-												"value": "BAR",
-											},
+		resource.NewBehaviorlessResource(&unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "deploy1",
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"name":  "nginx",
+									"image": "nginx:latest",
+									"env": []interface{}{
+										map[string]interface{}{
+											"name":  "SOMEENV",
+											"value": "BAR",
 										},
 									},
 								},
@@ -209,31 +194,30 @@ func TestMultiplePatches(t *testing.T) {
 				},
 			},
 		},
-		{
-			Data: &unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "apps/v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name": "deploy1",
-					},
-					"spec": map[string]interface{}{
-						"template": map[string]interface{}{
-							"spec": map[string]interface{}{
-								"containers": []interface{}{
-									map[string]interface{}{
-										"name": "nginx",
-										"env": []interface{}{
-											map[string]interface{}{
-												"name":  "ANOTHERENV",
-												"value": "HELLO",
-											},
+		),
+		resource.NewBehaviorlessResource(&unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "deploy1",
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"name": "nginx",
+									"env": []interface{}{
+										map[string]interface{}{
+											"name":  "ANOTHERENV",
+											"value": "HELLO",
 										},
 									},
-									map[string]interface{}{
-										"name":  "busybox",
-										"image": "busybox",
-									},
+								},
+								map[string]interface{}{
+									"name":  "busybox",
+									"image": "busybox",
 								},
 							},
 						},
@@ -241,13 +225,11 @@ func TestMultiplePatches(t *testing.T) {
 				},
 			},
 		},
+		),
 	}
-	expected := resource.ResourceCollection{
-		{
-			GVK:  schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"},
-			Name: "deploy1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+	expected := resmap.ResMap{
+		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "apps/v1",
 					"kind":       "Deployment",
@@ -281,8 +263,7 @@ func TestMultiplePatches(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
+			}),
 	}
 	lt, err := NewOverlayTransformer(overlay)
 	if err != nil {
@@ -293,18 +274,15 @@ func TestMultiplePatches(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !reflect.DeepEqual(base, expected) {
-		err = compareMap(base, expected)
+		err = expected.ErrorIfNotEqual(base)
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
 
 func TestMultiplePatchesWithConflict(t *testing.T) {
-	base := resource.ResourceCollection{
-		{
-			GVK:  schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"},
-			Name: "deploy1",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+	base := resmap.ResMap{
+		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "apps/v1",
 					"kind":       "Deployment",
@@ -324,30 +302,27 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
+			}),
 	}
 	overlay := []*resource.Resource{
-		{
-			Data: &unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "apps/v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name": "deploy1",
-					},
-					"spec": map[string]interface{}{
-						"template": map[string]interface{}{
-							"spec": map[string]interface{}{
-								"containers": []interface{}{
-									map[string]interface{}{
-										"name":  "nginx",
-										"image": "nginx:latest",
-										"env": []interface{}{
-											map[string]interface{}{
-												"name":  "SOMEENV",
-												"value": "BAR",
-											},
+		resource.NewBehaviorlessResource(&unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "deploy1",
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"name":  "nginx",
+									"image": "nginx:latest",
+									"env": []interface{}{
+										map[string]interface{}{
+											"name":  "SOMEENV",
+											"value": "BAR",
 										},
 									},
 								},
@@ -357,22 +332,21 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 				},
 			},
 		},
-		{
-			Data: &unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "apps/v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name": "deploy1",
-					},
-					"spec": map[string]interface{}{
-						"template": map[string]interface{}{
-							"spec": map[string]interface{}{
-								"containers": []interface{}{
-									map[string]interface{}{
-										"name":  "nginx",
-										"image": "nginx:1.7.9",
-									},
+		),
+		resource.NewBehaviorlessResource(&unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "deploy1",
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"name":  "nginx",
+									"image": "nginx:1.7.9",
 								},
 							},
 						},
@@ -380,6 +354,7 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 				},
 			},
 		},
+		),
 	}
 
 	lt, err := NewOverlayTransformer(overlay)
@@ -396,12 +371,9 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 }
 
 func TestNoSchemaOverlayRun(t *testing.T) {
-	base := resource.ResourceCollection{
-		{
-			GVK:  schema.GroupVersionKind{Group: "example.com", Version: "v1", Kind: "Foo"},
-			Name: "my-foo",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+	base := resmap.ResMap{
+		resource.NewResId(foo, "my-foo"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "example.com/v1",
 					"kind":       "Foo",
@@ -415,34 +387,29 @@ func TestNoSchemaOverlayRun(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
+			}),
 	}
 	overlay := []*resource.Resource{
-		{
-			Data: &unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "example.com/v1",
-					"kind":       "Foo",
-					"metadata": map[string]interface{}{
-						"name": "my-foo",
-					},
-					"spec": map[string]interface{}{
-						"bar": map[string]interface{}{
-							"B": nil,
-							"C": "Z",
-						},
+		resource.NewBehaviorlessResource(&unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": "example.com/v1",
+				"kind":       "Foo",
+				"metadata": map[string]interface{}{
+					"name": "my-foo",
+				},
+				"spec": map[string]interface{}{
+					"bar": map[string]interface{}{
+						"B": nil,
+						"C": "Z",
 					},
 				},
 			},
 		},
+		),
 	}
-	expected := resource.ResourceCollection{
-		{
-			GVK:  schema.GroupVersionKind{Group: "example.com", Version: "v1", Kind: "Foo"},
-			Name: "my-foo",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+	expected := resmap.ResMap{
+		resource.NewResId(foo, "my-foo"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "example.com/v1",
 					"kind":       "Foo",
@@ -456,8 +423,7 @@ func TestNoSchemaOverlayRun(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
+			}),
 	}
 
 	lt, err := NewOverlayTransformer(overlay)
@@ -468,18 +434,15 @@ func TestNoSchemaOverlayRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err = compareMap(base, expected); err != nil {
+	if err = expected.ErrorIfNotEqual(base); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
 
 func TestNoSchemaMultiplePatches(t *testing.T) {
-	base := resource.ResourceCollection{
-		{
-			GVK:  schema.GroupVersionKind{Group: "example.com", Version: "v1", Kind: "Foo"},
-			Name: "my-foo",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+	base := resmap.ResMap{
+		resource.NewResId(foo, "my-foo"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "example.com/v1",
 					"kind":       "Foo",
@@ -493,54 +456,48 @@ func TestNoSchemaMultiplePatches(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
+			}),
 	}
 	overlay := []*resource.Resource{
-		{
-			Data: &unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "example.com/v1",
-					"kind":       "Foo",
-					"metadata": map[string]interface{}{
-						"name": "my-foo",
-					},
-					"spec": map[string]interface{}{
-						"bar": map[string]interface{}{
-							"B": nil,
-							"C": "Z",
-						},
+		resource.NewBehaviorlessResource(&unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": "example.com/v1",
+				"kind":       "Foo",
+				"metadata": map[string]interface{}{
+					"name": "my-foo",
+				},
+				"spec": map[string]interface{}{
+					"bar": map[string]interface{}{
+						"B": nil,
+						"C": "Z",
 					},
 				},
 			},
 		},
-		{
-			Data: &unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "example.com/v1",
-					"kind":       "Foo",
-					"metadata": map[string]interface{}{
-						"name": "my-foo",
+		),
+		resource.NewBehaviorlessResource(&unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": "example.com/v1",
+				"kind":       "Foo",
+				"metadata": map[string]interface{}{
+					"name": "my-foo",
+				},
+				"spec": map[string]interface{}{
+					"bar": map[string]interface{}{
+						"C": "Z",
+						"D": "W",
 					},
-					"spec": map[string]interface{}{
-						"bar": map[string]interface{}{
-							"C": "Z",
-							"D": "W",
-						},
-						"baz": map[string]interface{}{
-							"hello": "world",
-						},
+					"baz": map[string]interface{}{
+						"hello": "world",
 					},
 				},
 			},
 		},
+		),
 	}
-	expected := resource.ResourceCollection{
-		{
-			GVK:  schema.GroupVersionKind{Group: "example.com", Version: "v1", Kind: "Foo"},
-			Name: "my-foo",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+	expected := resmap.ResMap{
+		resource.NewResId(foo, "my-foo"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "example.com/v1",
 					"kind":       "Foo",
@@ -558,8 +515,7 @@ func TestNoSchemaMultiplePatches(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
+			}),
 	}
 
 	lt, err := NewOverlayTransformer(overlay)
@@ -570,18 +526,15 @@ func TestNoSchemaMultiplePatches(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err = compareMap(base, expected); err != nil {
+	if err = expected.ErrorIfNotEqual(base); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
 
 func TestNoSchemaMultiplePatchesWithConflict(t *testing.T) {
-	base := resource.ResourceCollection{
-		{
-			GVK:  schema.GroupVersionKind{Group: "example.com", Version: "v1", Kind: "Foo"},
-			Name: "my-foo",
-		}: &resource.Resource{
-			Data: &unstructured.Unstructured{
+	base := resmap.ResMap{
+		resource.NewResId(foo, "my-foo"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "example.com/v1",
 					"kind":       "Foo",
@@ -595,43 +548,38 @@ func TestNoSchemaMultiplePatchesWithConflict(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
+			}),
 	}
 	overlay := []*resource.Resource{
-		{
-			Data: &unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "example.com/v1",
-					"kind":       "Foo",
-					"metadata": map[string]interface{}{
-						"name": "my-foo",
-					},
-					"spec": map[string]interface{}{
-						"bar": map[string]interface{}{
-							"B": nil,
-							"C": "Z",
-						},
+		resource.NewBehaviorlessResource(&unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": "example.com/v1",
+				"kind":       "Foo",
+				"metadata": map[string]interface{}{
+					"name": "my-foo",
+				},
+				"spec": map[string]interface{}{
+					"bar": map[string]interface{}{
+						"B": nil,
+						"C": "Z",
 					},
 				},
 			},
-		},
-		{
-			Data: &unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "example.com/v1",
-					"kind":       "Foo",
-					"metadata": map[string]interface{}{
-						"name": "my-foo",
-					},
-					"spec": map[string]interface{}{
-						"bar": map[string]interface{}{
-							"C": "NOT_Z",
-						},
+		}),
+		resource.NewBehaviorlessResource(&unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": "example.com/v1",
+				"kind":       "Foo",
+				"metadata": map[string]interface{}{
+					"name": "my-foo",
+				},
+				"spec": map[string]interface{}{
+					"bar": map[string]interface{}{
+						"C": "NOT_Z",
 					},
 				},
 			},
-		},
+		}),
 	}
 
 	lt, err := NewOverlayTransformer(overlay)
