@@ -25,9 +25,9 @@ import (
 	"github.com/ghodss/yaml"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	interror "github.com/kubernetes-sigs/kustomize/pkg/internal/error"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
-	"github.com/kubernetes-sigs/kustomize/pkg/util/fs"
 )
 
 type kustomizationFile struct {
