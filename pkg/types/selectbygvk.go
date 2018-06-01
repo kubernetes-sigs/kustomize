@@ -17,25 +17,16 @@ limitations under the License.
 package types
 
 import (
-	"strings"
-
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
-
-func (gvkn GroupVersionKindName) String() string {
-	if gvkn.GVK.Group == "" {
-		return strings.Join([]string{gvkn.GVK.Version, gvkn.GVK.Kind, gvkn.Name}, "_") + ".yaml"
-	}
-	return strings.Join([]string{gvkn.GVK.Group, gvkn.GVK.Version, gvkn.GVK.Kind, gvkn.Name}, "_") + ".yaml"
-}
 
 // SelectByGVK returns true if `selector` selects `in`; otherwise, false.
 // If `selector` and `in` are the same, return true.
 // If `selector` is nil, it is considered as a wildcard and always return true.
-// e.g. selector <Group: "", Version: "", Kind: "Deployemt"> CAN select
-// <Group: "extensions", Version: "v1beta1", Kind: "Deployemt">.
-// selector <Group: "apps", Version: "", Kind: "Deployemt"> CANNOT select
-// <Group: "extensions", Version: "v1beta1", Kind: "Deployemt">.
+// e.g. selector <Group: "", Version: "", Kind: "Deployment"> CAN select
+// <Group: "extensions", Version: "v1beta1", Kind: "Deployment">.
+// selector <Group: "apps", Version: "", Kind: "Deployment"> CANNOT select
+// <Group: "extensions", Version: "v1beta1", Kind: "Deployment">.
 func SelectByGVK(in schema.GroupVersionKind, selector *schema.GroupVersionKind) bool {
 	if selector == nil {
 		return true

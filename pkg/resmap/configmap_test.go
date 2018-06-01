@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package resource_test
+package resmap
 
 import (
 	"reflect"
@@ -27,13 +27,15 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
+var cmap = schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"}
+
 func TestNewFromConfigMaps(t *testing.T) {
 	type testCase struct {
 		description string
 		input       []types.ConfigMapArgs
 		filepath    string
 		content     string
-		expected    resource.ResourceCollection
+		expected    ResMap
 	}
 
 	l := loadertest.NewFakeLoader("/home/seans/project/")
@@ -50,12 +52,9 @@ func TestNewFromConfigMaps(t *testing.T) {
 			},
 			filepath: "/home/seans/project/app.env",
 			content:  "DB_USERNAME=admin\nDB_PASSWORD=somepw",
-			expected: resource.ResourceCollection{
-				{
-					GVK:  schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"},
-					Name: "envConfigMap",
-				}: &resource.Resource{
-					Data: &unstructured.Unstructured{
+			expected: ResMap{
+				resource.NewResId(cmap, "envConfigMap"): resource.NewBehaviorlessResource(
+					&unstructured.Unstructured{
 						Object: map[string]interface{}{
 							"apiVersion": "v1",
 							"kind":       "ConfigMap",
@@ -68,8 +67,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 								"DB_PASSWORD": "somepw",
 							},
 						},
-					},
-				},
+					}),
 			},
 		},
 		{
@@ -83,12 +81,9 @@ func TestNewFromConfigMaps(t *testing.T) {
 			},
 			filepath: "/home/seans/project/app-init.ini",
 			content:  "FOO=bar\nBAR=baz\n",
-			expected: resource.ResourceCollection{
-				{
-					GVK:  schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"},
-					Name: "fileConfigMap",
-				}: &resource.Resource{
-					Data: &unstructured.Unstructured{
+			expected: ResMap{
+				resource.NewResId(cmap, "fileConfigMap"): resource.NewBehaviorlessResource(
+					&unstructured.Unstructured{
 						Object: map[string]interface{}{
 							"apiVersion": "v1",
 							"kind":       "ConfigMap",
@@ -102,8 +97,7 @@ BAR=baz
 `,
 							},
 						},
-					},
-				},
+					}),
 			},
 		},
 		{
@@ -116,12 +110,9 @@ BAR=baz
 					},
 				},
 			},
-			expected: resource.ResourceCollection{
-				{
-					GVK:  schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"},
-					Name: "literalConfigMap",
-				}: &resource.Resource{
-					Data: &unstructured.Unstructured{
+			expected: ResMap{
+				resource.NewResId(cmap, "literalConfigMap"): resource.NewBehaviorlessResource(
+					&unstructured.Unstructured{
 						Object: map[string]interface{}{
 							"apiVersion": "v1",
 							"kind":       "ConfigMap",
@@ -134,8 +125,7 @@ BAR=baz
 								"b": "y",
 							},
 						},
-					},
-				},
+					}),
 			},
 		},
 		// TODO: add testcase for data coming from multiple sources like
@@ -147,7 +137,7 @@ BAR=baz
 		if ferr := l.AddFile(tc.filepath, []byte(tc.content)); ferr != nil {
 			t.Fatalf("Error adding fake file: %v\n", ferr)
 		}
-		r, err := resource.NewFromConfigMaps(l, tc.input)
+		r, err := NewResMapFromConfigMapArgs(l, tc.input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
