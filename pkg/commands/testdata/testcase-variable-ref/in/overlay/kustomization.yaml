@@ -1,0 +1,4 @@
+namePrefix: dev-
+bases:
+- ../package
+
