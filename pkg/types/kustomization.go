@@ -16,6 +16,10 @@ limitations under the License.
 
 package types
 
+import (
+	corev1 "k8s.io/api/core/v1"
+)
+
 // Kustomization holds the information needed to generate customized k8s api resources.
 type Kustomization struct {
 	// NamePrefix will prefix the names of all resources mentioned in the kustomization
@@ -61,6 +65,9 @@ type Kustomization struct {
 	// If a secret want to have a base and an overlay, it should go to Bases and
 	// Overlays fields.
 	SecretGenerator []SecretArgs `json:"secretGenerator,omitempty" yaml:"secretGenerator,omitempty"`
+
+	// Variables which will be substituted at runtime
+	Vars []Var `json:"vars,omitempty" yaml:"vars,omitempty"`
 }
 
 // ConfigMapArg contains the metadata of how to generate a configmap.
@@ -128,4 +135,18 @@ type DataSources struct {
 	// pairs to create a configmap.
 	// i.e. a Docker .env file or a .ini file.
 	EnvSource string `json:"env,omitempty" yaml:"env,omitempty"`
+}
+
+// Var represents a variable whose value will be source'd from a Kubernetes object
+// and will be substituted at runtime.
+type Var struct {
+	// Value of identifier name e.g. FOO used in container args, annotations
+	// Appears in pod template as $(FOO)
+	Name string `json:"name" yaml:"name"`
+
+	// ObjRef refers to a Kubernetes Resource
+	ObjRef corev1.ObjectReference `json:"objref" yaml:"objref"`
+
+	// FieldRef refers to the fieldpath to extract value from a Kubernetes Object
+	FieldRef corev1.ObjectFieldSelector `json:"fieldref" yaml:"objref"`
 }
