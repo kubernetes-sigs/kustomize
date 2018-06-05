@@ -208,6 +208,8 @@ func (a *applicationImpl) getTransformer(patches []*resource.Resource) (transfor
 	}
 	ts = append(ts, ot)
 
+	ts = append(ts, transformers.NewNamespaceTransformer(string(a.kustomization.Namespace)))
+
 	npt, err := transformers.NewDefaultingNamePrefixTransformer(string(a.kustomization.NamePrefix))
 	if err != nil {
 		return nil, err
