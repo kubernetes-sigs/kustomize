@@ -22,6 +22,9 @@ type Kustomization struct {
 	// file including generated configmaps and secrets.
 	NamePrefix string `json:"namePrefix,omitempty" yaml:"namePrefix,omitempty"`
 
+	// Namespace to add to all objects.
+	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+
 	// Labels to add to all objects and selectors.
 	// These labels would also be used to form the selector for apply --prune
 	// Named differently than “labels” to avoid confusion with metadata for
