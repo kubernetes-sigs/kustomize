@@ -34,6 +34,7 @@ import (
 func setupTest(t *testing.T) loader.Loader {
 	kustomizationContent := []byte(`
 namePrefix: foo-
+namespace: foo
 commonLabels:
   app: nginx
 commonAnnotations:
@@ -82,7 +83,8 @@ func TestResources(t *testing.T) {
 					"apiVersion": "apps/v1",
 					"kind":       "Deployment",
 					"metadata": map[string]interface{}{
-						"name": "foo-dply1",
+						"name":      "foo-dply1",
+						"namespace": "foo",
 						"labels": map[string]interface{}{
 							"app": "nginx",
 						},
@@ -115,7 +117,8 @@ func TestResources(t *testing.T) {
 					"apiVersion": "v1",
 					"kind":       "ConfigMap",
 					"metadata": map[string]interface{}{
-						"name": "foo-literalConfigMap-mc92bgcbh5",
+						"name":      "foo-literalConfigMap-mc92bgcbh5",
+						"namespace": "foo",
 						"labels": map[string]interface{}{
 							"app": "nginx",
 						},
@@ -136,7 +139,8 @@ func TestResources(t *testing.T) {
 					"apiVersion": "v1",
 					"kind":       "Secret",
 					"metadata": map[string]interface{}{
-						"name": "foo-secret-877fcfhgt5",
+						"name":      "foo-secret-877fcfhgt5",
+						"namespace": "foo",
 						"labels": map[string]interface{}{
 							"app": "nginx",
 						},
