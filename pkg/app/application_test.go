@@ -34,12 +34,14 @@ import (
 func setupTest(t *testing.T) loader.Loader {
 	kustomizationContent := []byte(`
 namePrefix: foo-
+namespace: ns1
 commonLabels:
   app: nginx
 commonAnnotations:
   note: This is a test annotation
 resources:
   - deployment.yaml
+  - namespace.yaml
 configMapGenerator:
 - name: literalConfigMap
   literals:
@@ -57,6 +59,11 @@ kind: Deployment
 metadata:
   name: dply1
 `)
+	namespaceContent := []byte(`apiVersion: v1
+kind: Namespace
+metadata:
+  name: ns1
+  `)
 
 	loader := loadertest.NewFakeLoader("/testpath")
 	err := loader.AddFile("/testpath/"+constants.KustomizationFileName, kustomizationContent)
@@ -67,12 +74,17 @@ metadata:
 	if err != nil {
 		t.Fatalf("Failed to setup fake loader.")
 	}
+	err = loader.AddFile("/testpath/namespace.yaml", namespaceContent)
+	if err != nil {
+		t.Fatalf("Failed to setup fake loader.")
+	}
 	return loader
 }
 
 var deploy = schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"}
 var cmap = schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"}
 var secret = schema.GroupVersionKind{Version: "v1", Kind: "Secret"}
+var ns = schema.GroupVersionKind{Version: "v1", Kind: "Namespace"}
 
 func TestResources(t *testing.T) {
 	expected := resmap.ResMap{
@@ -82,7 +94,8 @@ func TestResources(t *testing.T) {
 					"apiVersion": "apps/v1",
 					"kind":       "Deployment",
 					"metadata": map[string]interface{}{
-						"name": "foo-dply1",
+						"name":      "foo-dply1",
+						"namespace": "ns1",
 						"labels": map[string]interface{}{
 							"app": "nginx",
 						},
@@ -115,7 +128,8 @@ func TestResources(t *testing.T) {
 					"apiVersion": "v1",
 					"kind":       "ConfigMap",
 					"metadata": map[string]interface{}{
-						"name": "foo-literalConfigMap-mc92bgcbh5",
+						"name":      "foo-literalConfigMap-mc92bgcbh5",
+						"namespace": "ns1",
 						"labels": map[string]interface{}{
 							"app": "nginx",
 						},
@@ -136,7 +150,8 @@ func TestResources(t *testing.T) {
 					"apiVersion": "v1",
 					"kind":       "Secret",
 					"metadata": map[string]interface{}{
-						"name": "foo-secret-877fcfhgt5",
+						"name":      "foo-secret-877fcfhgt5",
+						"namespace": "ns1",
 						"labels": map[string]interface{}{
 							"app": "nginx",
 						},
@@ -149,6 +164,23 @@ func TestResources(t *testing.T) {
 					"data": map[string]interface{}{
 						"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
 						"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
+					},
+				},
+			}),
+		resource.NewResId(ns, "ns1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "Namespace",
+					"metadata": map[string]interface{}{
+						"name":      "foo-ns1",
+						"namespace": "ns1",
+						"labels": map[string]interface{}{
+							"app": "nginx",
+						},
+						"annotations": map[string]interface{}{
+							"note": "This is a test annotation",
+						},
 					},
 				},
 			}),
@@ -178,6 +210,16 @@ func TestRawResources(t *testing.T) {
 					"kind":       "Deployment",
 					"metadata": map[string]interface{}{
 						"name": "dply1",
+					},
+				},
+			}),
+		resource.NewResId(ns, "ns1"): resource.NewBehaviorlessResource(
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "Namespace",
+					"metadata": map[string]interface{}{
+						"name": "ns1",
 					},
 				},
 			}),
