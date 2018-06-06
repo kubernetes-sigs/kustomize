@@ -14,10 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package app
+package resource
 
 import (
-	"strings"
 	"testing"
 )
 
@@ -31,21 +30,37 @@ func TestGetFieldAsString(t *testing.T) {
 			"name": "service-name",
 		},
 	}
-	p := []string{"Kind"}
-	s, _ := getFieldAsString(m, p)
-	if s != "Service" {
-		t.Errorf("Expected to get Service, but actually got %s", s)
+
+	tests := []struct {
+		pathToField   []string
+		expectedName  string
+		expectedError bool
+	}{
+		{
+			pathToField:   []string{"Kind"},
+			expectedName:  "Service",
+			expectedError: false,
+		},
+		{
+			pathToField:   []string{"metadata", "name"},
+			expectedName:  "service-name",
+			expectedError: false,
+		},
+		{
+			pathToField:   []string{"metadata", "non-existing-field"},
+			expectedName:  "",
+			expectedError: true,
+		},
 	}
 
-	p = []string{"metadata", "name"}
-	s, _ = getFieldAsString(m, p)
-	if s != "service-name" {
-		t.Errorf("Expected to get service-name, but actually got %s", s)
-	}
-
-	p = []string{"metadata", "non-existing-field"}
-	s, err := getFieldAsString(m, p)
-	if !strings.HasSuffix(err.Error(), "field at given fieldpath does not exist") {
-		t.Errorf("Unexpected failure due to incorrect error message %s", err.Error())
+	for _, test := range tests {
+		s, err := GetFieldValue(m, test.pathToField)
+		if test.expectedError && err == nil {
+			t.Fatalf("should return error, but no error returned")
+		} else {
+			if test.expectedName != s {
+				t.Fatalf("Got:%s expected:%s", s, test.expectedName)
+			}
+		}
 	}
 }
