@@ -1,3 +1,20 @@
+/*
+Copyright 2018 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+// Package resmap implements a map from ResId to Resource that tracks all resources in a kustomization.
 package resmap
 
 import (
@@ -17,7 +34,7 @@ import (
 	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
 )
 
-// ResMap is a map from ResId to Resource
+// ResMap is a map from ResId to Resource.
 type ResMap map[resource.ResId]*resource.Resource
 
 // EncodeAsYaml encodes a ResMap to YAML; encoded objects separated by `---`.

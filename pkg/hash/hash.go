@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package hash generates hash strings from configmaps and secrets.
 package hash
 
 import (

@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package types holds struct definitions that should find a better home.
 package types
 
 // Kustomization holds the information needed to generate customized k8s api resources.

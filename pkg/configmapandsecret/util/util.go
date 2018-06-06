@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package util offers Configmap and Secret generation utilities.
 package util
 
 import (
