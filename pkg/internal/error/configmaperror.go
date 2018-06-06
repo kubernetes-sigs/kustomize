@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package error has contextual error types.
 package error
 
 import "fmt"
