@@ -137,16 +137,22 @@ type DataSources struct {
 	EnvSource string `json:"env,omitempty" yaml:"env,omitempty"`
 }
 
-// Var represents a variable whose value will be source'd from a Kubernetes object
-// and will be substituted at runtime.
+// Var represents a variable whose value will be sourced
+// from a field in a Kubernetes object.
 type Var struct {
 	// Value of identifier name e.g. FOO used in container args, annotations
 	// Appears in pod template as $(FOO)
 	Name string `json:"name" yaml:"name"`
 
-	// ObjRef refers to a Kubernetes Resource
+	// ObjRef must refer to a Kubernetes resource under the
+	// purview of this kustomization. ObjRef should use the
+	// raw name of the object (the name specified in its YAML,
+	// before addition of a namePrefix).
 	ObjRef corev1.ObjectReference `json:"objref" yaml:"objref"`
 
-	// FieldRef refers to the fieldpath to extract value from a Kubernetes Object
-	FieldRef corev1.ObjectFieldSelector `json:"fieldref" yaml:"objref"`
+	// FieldRef refers to the field of the object referred to by
+	// ObjRef whose value will be extracted for use in
+	// replacing $(FOO).
+	// If unspecified, this defaults to fieldpath: metadata.name
+	FieldRef corev1.ObjectFieldSelector `json:"fieldref,omitempty" yaml:"objref,omitempty"`
 }
