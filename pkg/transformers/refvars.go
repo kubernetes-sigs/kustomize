@@ -72,7 +72,6 @@ func (rv *refvarTransformer) Transform(resources resmap.ResMap) error {
 				default:
 					return "", fmt.Errorf("invalid type encountered %T", vt)
 				}
-				return "", fmt.Errorf("invalid type encountered")
 			})
 			if err != nil {
 				return err

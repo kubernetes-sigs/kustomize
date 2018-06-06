@@ -1,4 +1,4 @@
-description: varialbe reference and substitution
+description: variable reference and substitution
 args: []
 filename: testdata/testcase-variable-ref/in/overlay/
 expectedStdout: testdata/testcase-variable-ref/expected.yaml

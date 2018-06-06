@@ -347,7 +347,10 @@ func (a *applicationImpl) Vars() ([]types.Var, error) {
 		}
 		vars = append(vars, subAppVars...)
 	}
-	vars = append(vars, a.kustomization.Vars...)
+	for _, v := range a.kustomization.Vars {
+		v.Defaulting()
+		vars = append(vars, v)
+	}
 	if len(errs.Get()) > 0 {
 		return nil, errs
 	}
