@@ -92,11 +92,27 @@ var defaultNameReferencePathConfigs = []referencePathConfig{
 					Version: "v1",
 					Kind:    "Pod",
 				},
+				Path:               []string{"spec", "initContainers", "env", "valueFrom", "configMapKeyRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Version: "v1",
+					Kind:    "Pod",
+				},
 				Path:               []string{"spec", "containers", "envFrom", "configMapRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
 				GroupVersionKind: &schema.GroupVersionKind{
+					Version: "v1",
+					Kind:    "Pod",
+				},
+				Path:               []string{"spec", "initContainers", "envFrom", "configMapRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "Deployment",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "configMap", "name"},
@@ -113,7 +129,21 @@ var defaultNameReferencePathConfigs = []referencePathConfig{
 				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "Deployment",
 				},
+				Path:               []string{"spec", "template", "spec", "initContainers", "env", "valueFrom", "configMapKeyRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "Deployment",
+				},
 				Path:               []string{"spec", "template", "spec", "containers", "envFrom", "configMapRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "Deployment",
+				},
+				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "configMapRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
@@ -134,7 +164,21 @@ var defaultNameReferencePathConfigs = []referencePathConfig{
 				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "ReplicaSet",
 				},
+				Path:               []string{"spec", "template", "spec", "initContainers", "env", "valueFrom", "configMapKeyRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "ReplicaSet",
+				},
 				Path:               []string{"spec", "template", "spec", "containers", "envFrom", "configMapRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "ReplicaSet",
+				},
+				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "configMapRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
@@ -155,7 +199,21 @@ var defaultNameReferencePathConfigs = []referencePathConfig{
 				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "DaemonSet",
 				},
+				Path:               []string{"spec", "template", "spec", "initContainers", "env", "valueFrom", "configMapKeyRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "DaemonSet",
+				},
 				Path:               []string{"spec", "template", "spec", "containers", "envFrom", "configMapRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "DaemonSet",
+				},
+				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "configMapRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
@@ -176,7 +234,21 @@ var defaultNameReferencePathConfigs = []referencePathConfig{
 				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "StatefulSet",
 				},
+				Path:               []string{"spec", "template", "spec", "initContainers", "env", "valueFrom", "configMapKeyRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "StatefulSet",
+				},
 				Path:               []string{"spec", "template", "spec", "containers", "envFrom", "configMapRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "StatefulSet",
+				},
+				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "configMapRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
@@ -197,7 +269,21 @@ var defaultNameReferencePathConfigs = []referencePathConfig{
 				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "Job",
 				},
+				Path:               []string{"spec", "template", "spec", "initContainers", "env", "valueFrom", "configMapKeyRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "Job",
+				},
 				Path:               []string{"spec", "template", "spec", "containers", "envFrom", "configMapRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "Job",
+				},
+				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "configMapRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
@@ -218,7 +304,21 @@ var defaultNameReferencePathConfigs = []referencePathConfig{
 				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "CronJob",
 				},
+				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "initContainers", "env", "valueFrom", "configMapKeyRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "CronJob",
+				},
 				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "containers", "envFrom", "configMapRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "CronJob",
+				},
+				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "initContainers", "envFrom", "configMapRef", "name"},
 				CreateIfNotPresent: false,
 			},
 		},
@@ -250,11 +350,27 @@ var defaultNameReferencePathConfigs = []referencePathConfig{
 					Version: "v1",
 					Kind:    "Pod",
 				},
+				Path:               []string{"spec", "initContainers", "env", "valueFrom", "secretKeyRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Version: "v1",
+					Kind:    "Pod",
+				},
 				Path:               []string{"spec", "containers", "envFrom", "secretRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
 				GroupVersionKind: &schema.GroupVersionKind{
+					Version: "v1",
+					Kind:    "Pod",
+				},
+				Path:               []string{"spec", "initContainers", "envFrom", "secretRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "Deployment",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "secret", "secretName"},
@@ -271,7 +387,21 @@ var defaultNameReferencePathConfigs = []referencePathConfig{
 				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "Deployment",
 				},
+				Path:               []string{"spec", "template", "spec", "initContainers", "env", "valueFrom", "secretKeyRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "Deployment",
+				},
 				Path:               []string{"spec", "template", "spec", "containers", "envFrom", "secretRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "Deployment",
+				},
+				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "secretRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
@@ -292,7 +422,21 @@ var defaultNameReferencePathConfigs = []referencePathConfig{
 				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "ReplicaSet",
 				},
+				Path:               []string{"spec", "template", "spec", "initContainers", "env", "valueFrom", "secretKeyRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "ReplicaSet",
+				},
 				Path:               []string{"spec", "template", "spec", "containers", "envFrom", "secretRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "ReplicaSet",
+				},
+				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "secretRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
@@ -313,7 +457,21 @@ var defaultNameReferencePathConfigs = []referencePathConfig{
 				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "DaemonSet",
 				},
+				Path:               []string{"spec", "template", "spec", "initContainers", "env", "valueFrom", "secretKeyRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "DaemonSet",
+				},
 				Path:               []string{"spec", "template", "spec", "containers", "envFrom", "secretRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "DaemonSet",
+				},
+				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "secretRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
@@ -334,7 +492,21 @@ var defaultNameReferencePathConfigs = []referencePathConfig{
 				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "StatefulSet",
 				},
+				Path:               []string{"spec", "template", "spec", "initContainers", "env", "valueFrom", "secretKeyRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "StatefulSet",
+				},
 				Path:               []string{"spec", "template", "spec", "containers", "envFrom", "secretRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "StatefulSet",
+				},
+				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "secretRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
@@ -355,7 +527,21 @@ var defaultNameReferencePathConfigs = []referencePathConfig{
 				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "Job",
 				},
+				Path:               []string{"spec", "template", "spec", "initContainers", "env", "valueFrom", "secretKeyRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "Job",
+				},
 				Path:               []string{"spec", "template", "spec", "containers", "envFrom", "secretRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "Job",
+				},
+				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "secretRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
@@ -376,7 +562,21 @@ var defaultNameReferencePathConfigs = []referencePathConfig{
 				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "CronJob",
 				},
+				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "initContainers", "env", "valueFrom", "secretKeyRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "CronJob",
+				},
 				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "containers", "envFrom", "secretRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "CronJob",
+				},
+				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "initContainers", "envFrom", "secretRef", "name"},
 				CreateIfNotPresent: false,
 			},
 		},
