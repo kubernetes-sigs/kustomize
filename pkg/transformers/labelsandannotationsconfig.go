@@ -107,6 +107,11 @@ var defaultLabelsPathConfigs = []PathConfig{
 		Path:               []string{"spec", "jobTemplate", "spec", "template", "metadata", "labels"},
 		CreateIfNotPresent: true,
 	},
+	{
+		GroupVersionKind:   &schema.GroupVersionKind{Group: "policy", Kind: "PodDisruptionBudget"},
+		Path:               []string{"spec", "selector", "matchLabels"},
+		CreateIfNotPresent: true,
+	},
 }
 
 // defaultLabelsPathConfigs is the default configuration for mutating annotations
