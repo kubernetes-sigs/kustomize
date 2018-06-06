@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package configmapandsecret generates configmaps and secrets per generator rules.
 package configmapandsecret
 
 import (
