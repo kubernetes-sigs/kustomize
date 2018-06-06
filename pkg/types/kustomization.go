@@ -16,10 +16,6 @@ limitations under the License.
 
 package types
 
-import (
-	corev1 "k8s.io/api/core/v1"
-)
-
 // Kustomization holds the information needed to generate customized k8s api resources.
 type Kustomization struct {
 	// NamePrefix will prefix the names of all resources mentioned in the kustomization
@@ -135,24 +131,4 @@ type DataSources struct {
 	// pairs to create a configmap.
 	// i.e. a Docker .env file or a .ini file.
 	EnvSource string `json:"env,omitempty" yaml:"env,omitempty"`
-}
-
-// Var represents a variable whose value will be sourced
-// from a field in a Kubernetes object.
-type Var struct {
-	// Value of identifier name e.g. FOO used in container args, annotations
-	// Appears in pod template as $(FOO)
-	Name string `json:"name" yaml:"name"`
-
-	// ObjRef must refer to a Kubernetes resource under the
-	// purview of this kustomization. ObjRef should use the
-	// raw name of the object (the name specified in its YAML,
-	// before addition of a namePrefix).
-	ObjRef corev1.ObjectReference `json:"objref" yaml:"objref"`
-
-	// FieldRef refers to the field of the object referred to by
-	// ObjRef whose value will be extracted for use in
-	// replacing $(FOO).
-	// If unspecified, this defaults to fieldpath: metadata.name
-	FieldRef corev1.ObjectFieldSelector `json:"fieldref,omitempty" yaml:"objref,omitempty"`
 }

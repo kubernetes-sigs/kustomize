@@ -79,7 +79,7 @@ func (a *applicationImpl) Resources() (resmap.ResMap, error) {
 	if err != nil {
 		return nil, err
 	}
-	t, err := a.getHashAndReferenceTransformer(res)
+	t, err := a.newHashAndReferenceTransformer(res)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func (a *applicationImpl) SemiResources() (resmap.ResMap, error) {
 		return nil, errs
 	}
 
-	t, err := a.getTransformer(patches)
+	t, err := a.newTransformer(patches)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (a *applicationImpl) RawResources() (resmap.ResMap, error) {
 	if err != nil {
 		return nil, err
 	}
-	t, err := a.getHashAndReferenceTransformer(res)
+	t, err := a.newHashAndReferenceTransformer(res)
 	if err != nil {
 		return nil, err
 	}
@@ -220,12 +220,12 @@ func (a *applicationImpl) subApp() ([]Application, error) {
 	return apps, nil
 }
 
-// getTransformer generates the following transformers:
+// newTransformer generates the following transformers:
 // 1) apply overlay
 // 2) name prefix
 // 3) apply labels
 // 4) apply annotations
-func (a *applicationImpl) getTransformer(patches []*resource.Resource) (transformers.Transformer, error) {
+func (a *applicationImpl) newTransformer(patches []*resource.Resource) (transformers.Transformer, error) {
 	ts := []transformers.Transformer{}
 
 	ot, err := transformers.NewOverlayTransformer(patches)
@@ -257,11 +257,11 @@ func (a *applicationImpl) getTransformer(patches []*resource.Resource) (transfor
 	return transformers.NewMultiTransformer(ts), nil
 }
 
-// getHashAndReferenceTransformer generates the following transformers:
+// newHashAndReferenceTransformer generates the following transformers:
 // 1) name hash for configmap and secrests
 // 2) apply name reference
 // 3) apply reference variables
-func (a *applicationImpl) getHashAndReferenceTransformer(allRes resmap.ResMap) (transformers.Transformer, error) {
+func (a *applicationImpl) newHashAndReferenceTransformer(allRes resmap.ResMap) (transformers.Transformer, error) {
 	ts := []transformers.Transformer{}
 	nht := transformers.NewNameHashTransformer()
 	ts = append(ts, nht)
@@ -271,7 +271,7 @@ func (a *applicationImpl) getHashAndReferenceTransformer(allRes resmap.ResMap) (
 		return nil, err
 	}
 	ts = append(ts, nrt)
-	t, err := a.getVariableReferenceTransformer(allRes)
+	t, err := a.newVariableReferenceTransformer(allRes)
 	if err != nil {
 		return nil, err
 	}
@@ -280,7 +280,7 @@ func (a *applicationImpl) getHashAndReferenceTransformer(allRes resmap.ResMap) (
 	return transformers.NewMultiTransformer(ts), nil
 }
 
-func (a *applicationImpl) getVariableReferenceTransformer(allRes resmap.ResMap) (transformers.Transformer, error) {
+func (a *applicationImpl) newVariableReferenceTransformer(allRes resmap.ResMap) (transformers.Transformer, error) {
 	refvars, err := a.resolveRefVars(allRes)
 	if err != nil {
 		return nil, err
@@ -314,9 +314,9 @@ func (a *applicationImpl) resolveRefVars(resources resmap.ResMap) (map[string]st
 	}
 
 	for _, refvar := range vars {
-		refGVKN := gvkn(refvar)
+		refGVKN := resource.NewResId(refvar.ObjRef.GroupVersionKind(), refvar.ObjRef.Name)
 		if r, found := resources[refGVKN]; found {
-			s, err := getFieldAsString(r.Unstruct().UnstructuredContent(), strings.Split(refvar.FieldRef.FieldPath, "."))
+			s, err := resource.GetFieldValue(r.Unstruct().UnstructuredContent(), strings.Split(refvar.FieldRef.FieldPath, "."))
 			if err != nil {
 				return nil, fmt.Errorf("failed to resolve referred var: %+v", refvar)
 			}
