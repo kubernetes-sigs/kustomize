@@ -14,12 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package transformers has implementations of resmap.ResMap transformers.
 package transformers
 
 import "github.com/kubernetes-sigs/kustomize/pkg/resmap"
 
-// Transformer can transform objects.
+// A Transformer modifies an instance of resmap.ResMap.
 type Transformer interface {
-	// Transform modifies objects in a map, e.g. add prefixes or additional labels.
+	// Transform modifies data in the argument, e.g. adding labels to resources that can be labelled.
 	Transform(m resmap.ResMap) error
 }

@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package resource implements representations of k8s API resources as "unstructured" objects.
 package resource
 
 import (
