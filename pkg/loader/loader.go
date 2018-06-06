@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package loader has a data loading interface and various implementations.
 package loader
 
 import "fmt"

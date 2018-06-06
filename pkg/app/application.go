@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package app implements state for the set of all resources being customized.
+// Should rename this - there's nothing "app"y about it.
 package app
 
 import (
