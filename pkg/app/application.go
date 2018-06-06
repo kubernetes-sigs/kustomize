@@ -21,8 +21,11 @@ package app
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"strings"
 
 	"github.com/ghodss/yaml"
+	"github.com/golang/glog"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	interror "github.com/kubernetes-sigs/kustomize/pkg/internal/error"
@@ -43,6 +46,8 @@ type Application interface {
 	// 1) untransformed resources from current kustomization file
 	// 2) transformed resources from sub packages
 	RawResources() (resmap.ResMap, error)
+	// Vars returns all the variables defined by the app
+	Vars() ([]types.Var, error)
 }
 
 var _ Application = &applicationImpl{}
@@ -76,7 +81,7 @@ func (a *applicationImpl) Resources() (resmap.ResMap, error) {
 	if err != nil {
 		return nil, err
 	}
-	t, err := a.getHashAndReferenceTransformer()
+	t, err := a.newHashAndReferenceTransformer(res)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +127,7 @@ func (a *applicationImpl) SemiResources() (resmap.ResMap, error) {
 		return nil, errs
 	}
 
-	t, err := a.getTransformer(patches)
+	t, err := a.newTransformer(patches)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +135,6 @@ func (a *applicationImpl) SemiResources() (resmap.ResMap, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return allRes, nil
 }
 
@@ -142,7 +146,7 @@ func (a *applicationImpl) RawResources() (resmap.ResMap, error) {
 	if err != nil {
 		return nil, err
 	}
-	t, err := a.getHashAndReferenceTransformer()
+	t, err := a.newHashAndReferenceTransformer(res)
 	if err != nil {
 		return nil, err
 	}
@@ -196,12 +200,34 @@ func (a *applicationImpl) subAppResources() (resmap.ResMap, *interror.Kustomizat
 	return allResources, errs
 }
 
-// getTransformer generates the following transformers:
+func (a *applicationImpl) subApp() ([]Application, error) {
+	var apps []Application
+	errs := &interror.KustomizationErrors{}
+	for _, basePath := range a.kustomization.Bases {
+		subloader, err := a.loader.New(basePath)
+		if err != nil {
+			errs.Append(err)
+			continue
+		}
+		subapp, err := New(subloader)
+		if err != nil {
+			errs.Append(err)
+			continue
+		}
+		apps = append(apps, subapp)
+	}
+	if len(errs.Get()) > 0 {
+		return nil, errs
+	}
+	return apps, nil
+}
+
+// newTransformer generates the following transformers:
 // 1) apply overlay
 // 2) name prefix
 // 3) apply labels
 // 4) apply annotations
-func (a *applicationImpl) getTransformer(patches []*resource.Resource) (transformers.Transformer, error) {
+func (a *applicationImpl) newTransformer(patches []*resource.Resource) (transformers.Transformer, error) {
 	ts := []transformers.Transformer{}
 
 	ot, err := transformers.NewOverlayTransformer(patches)
@@ -233,10 +259,11 @@ func (a *applicationImpl) getTransformer(patches []*resource.Resource) (transfor
 	return transformers.NewMultiTransformer(ts), nil
 }
 
-// getHashAndReferenceTransformer generates the following transformers:
+// newHashAndReferenceTransformer generates the following transformers:
 // 1) name hash for configmap and secrests
 // 2) apply name reference
-func (a *applicationImpl) getHashAndReferenceTransformer() (transformers.Transformer, error) {
+// 3) apply reference variables
+func (a *applicationImpl) newHashAndReferenceTransformer(allRes resmap.ResMap) (transformers.Transformer, error) {
 	ts := []transformers.Transformer{}
 	nht := transformers.NewNameHashTransformer()
 	ts = append(ts, nht)
@@ -246,7 +273,28 @@ func (a *applicationImpl) getHashAndReferenceTransformer() (transformers.Transfo
 		return nil, err
 	}
 	ts = append(ts, nrt)
+	t, err := a.newVariableReferenceTransformer(allRes)
+	if err != nil {
+		return nil, err
+	}
+	ts = append(ts, t)
+
 	return transformers.NewMultiTransformer(ts), nil
+}
+
+func (a *applicationImpl) newVariableReferenceTransformer(allRes resmap.ResMap) (transformers.Transformer, error) {
+	refvars, err := a.resolveRefVars(allRes)
+	if err != nil {
+		return nil, err
+	}
+
+	glog.Infof("found all the refvars: %+v", refvars)
+
+	varExpander, err := transformers.NewRefVarTransformer(refvars)
+	if err != nil {
+		return nil, err
+	}
+	return varExpander, nil
 }
 
 func unmarshal(y []byte, o interface{}) error {
@@ -258,4 +306,55 @@ func unmarshal(y []byte, o interface{}) error {
 	dec := json.NewDecoder(bytes.NewReader(j))
 	dec.DisallowUnknownFields()
 	return dec.Decode(o)
+}
+
+func (a *applicationImpl) resolveRefVars(resources resmap.ResMap) (map[string]string, error) {
+	refvars := map[string]string{}
+	vars, err := a.Vars()
+	if err != nil {
+		return refvars, err
+	}
+
+	for _, refvar := range vars {
+		refGVKN := resource.NewResId(refvar.ObjRef.GroupVersionKind(), refvar.ObjRef.Name)
+		if r, found := resources[refGVKN]; found {
+			s, err := resource.GetFieldValue(r.Unstruct().UnstructuredContent(), strings.Split(refvar.FieldRef.FieldPath, "."))
+			if err != nil {
+				return nil, fmt.Errorf("failed to resolve referred var: %+v", refvar)
+			}
+			refvars[refvar.Name] = s
+		} else {
+			glog.Infof("couldn't resolve refvar: %v", refvar)
+		}
+	}
+	return refvars, nil
+}
+
+// Vars returns all the variables defined at the app and subapps of the app
+func (a *applicationImpl) Vars() ([]types.Var, error) {
+	vars := []types.Var{}
+	errs := &interror.KustomizationErrors{}
+
+	apps, err := a.subApp()
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: computing vars and resources for subApps can be combined
+	for _, subApp := range apps {
+		subAppVars, err := subApp.Vars()
+		if err != nil {
+			errs.Append(err)
+			continue
+		}
+		vars = append(vars, subAppVars...)
+	}
+	for _, v := range a.kustomization.Vars {
+		v.Defaulting()
+		vars = append(vars, v)
+	}
+	if len(errs.Get()) > 0 {
+		return nil, errs
+	}
+	return vars, nil
 }

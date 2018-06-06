@@ -19,6 +19,7 @@ package resource
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -108,4 +109,30 @@ func newUnstructuredFromObject(in runtime.Object) (*unstructured.Unstructured, e
 	var out unstructured.Unstructured
 	err = out.UnmarshalJSON(marshaled)
 	return &out, err
+}
+
+func GetFieldValue(m map[string]interface{}, pathToField []string) (string, error) {
+	if len(pathToField) == 0 {
+		return "", fmt.Errorf("Field not found")
+	}
+
+	if len(pathToField) == 1 {
+		if v, found := m[pathToField[0]]; found {
+			if s, ok := v.(string); ok {
+				return s, nil
+			}
+			return "", fmt.Errorf("value at fieldpath is not of string type")
+		}
+		return "", fmt.Errorf("field at given fieldpath does not exist")
+	}
+
+	curr, rest := pathToField[0], pathToField[1]
+
+	v := m[curr]
+	switch typedV := v.(type) {
+	case map[string]interface{}:
+		return GetFieldValue(typedV, []string{rest})
+	default:
+		return "", fmt.Errorf("%#v is not expected to be a primitive type", typedV)
+	}
 }
