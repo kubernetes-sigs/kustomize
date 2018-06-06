@@ -25,6 +25,48 @@ import (
 var defaultNameReferencePathConfigs = []referencePathConfig{
 	{
 		referencedGVK: schema.GroupVersionKind{
+			Kind: "Deployment",
+		},
+		pathConfigs: []PathConfig{
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "HorizontalPodAutoscaler",
+				},
+				Path:               []string{"spec", "scaleTargetRef", "name"},
+				CreateIfNotPresent: false,
+			},
+		},
+	},
+	{
+		referencedGVK: schema.GroupVersionKind{
+			Kind: "ReplicationController",
+		},
+		pathConfigs: []PathConfig{
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "HorizontalPodAutoscaler",
+				},
+				Path:               []string{"spec", "scaleTargetRef", "name"},
+				CreateIfNotPresent: false,
+			},
+		},
+	},
+	{
+		referencedGVK: schema.GroupVersionKind{
+			Kind: "ReplicaSet",
+		},
+		pathConfigs: []PathConfig{
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "HorizontalPodAutoscaler",
+				},
+				Path:               []string{"spec", "scaleTargetRef", "name"},
+				CreateIfNotPresent: false,
+			},
+		},
+	},
+	{
+		referencedGVK: schema.GroupVersionKind{
 			Version: "v1",
 			Kind:    "ConfigMap",
 		},
