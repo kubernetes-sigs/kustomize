@@ -62,6 +62,9 @@ type Kustomization struct {
 	// If a secret want to have a base and an overlay, it should go to Bases and
 	// Overlays fields.
 	SecretGenerator []SecretArgs `json:"secretGenerator,omitempty" yaml:"secretGenerator,omitempty"`
+
+	// Variables which will be substituted at runtime
+	Vars []Var `json:"vars,omitempty" yaml:"vars,omitempty"`
 }
 
 // ConfigMapArg contains the metadata of how to generate a configmap.

@@ -1,0 +1,26 @@
+namePrefix: base-
+resources:
+ - cockroachdb-statefulset-secure.yaml
+vars:
+ - name: CDB_PUBLIC_SVC
+   objref:
+        kind: Service
+        name: cockroachdb-public
+        apiVersion: v1
+   fieldref:
+        fieldpath: metadata.name
+ - name: CDB_STATEFULSET_NAME
+   objref:
+        kind: StatefulSet
+        name: cockroachdb
+        apiVersion: apps/v1beta1
+   fieldref:
+        fieldpath: metadata.name
+ - name: CDB_STATEFULSET_SVC
+   objref:
+        kind: Service
+        name: cockroachdb
+        apiVersion: v1
+   fieldref:
+        fieldpath: metadata.name
+
