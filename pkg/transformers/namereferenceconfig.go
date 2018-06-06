@@ -596,6 +596,20 @@ var defaultNameReferencePathConfigs = []referencePathConfig{
 				Path:               []string{"spec", "serviceName"},
 				CreateIfNotPresent: false,
 			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "Ingress",
+				},
+				Path:               []string{"spec", "rules", "http", "paths", "backend", "serviceName"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "Ingress",
+				},
+				Path:               []string{"spec", "backend", "serviceName"},
+				CreateIfNotPresent: false,
+			},
 		},
 	},
 	{
