@@ -45,8 +45,7 @@ func NewRefVarTransformer(vars map[string]string) (Transformer, error) {
 // 3.  Add remaining service environment vars
 func (rv *refvarTransformer) Transform(resources resmap.ResMap) error {
 	for GVKn := range resources {
-		obj := resources[GVKn].Unstruct()
-		objMap := obj.UnstructuredContent()
+		objMap := resources[GVKn].UnstructuredContent()
 		for _, pc := range rv.pathConfigs {
 			if !selectByGVK(GVKn.Gvk(), pc.GroupVersionKind) {
 				continue

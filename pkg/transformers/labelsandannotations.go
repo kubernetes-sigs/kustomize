@@ -57,8 +57,7 @@ func NewMapTransformer(pc []PathConfig, m map[string]string) (Transformer, error
 // fields specified in mapTransformer.
 func (o *mapTransformer) Transform(m resmap.ResMap) error {
 	for id := range m {
-		obj := m[id].Unstruct()
-		objMap := obj.UnstructuredContent()
+		objMap := m[id].UnstructuredContent()
 		for _, path := range o.pathConfigs {
 			if !selectByGVK(id.Gvk(), path.GroupVersionKind) {
 				continue
