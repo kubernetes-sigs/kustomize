@@ -112,6 +112,11 @@ sed -i 's/app: hello/app: my-hello/' \
     $BASE/kustomization.yaml
 ```
 
+*Note* `sed` works differently on different systems. On MacOS, for example, use this command instead:
+```
+sed -i '' 's/pineapple/kiwi/' $OVERLAYS/staging/map.yaml
+```
+
 See the effect:
 <!-- @checkLabel @test -->
 ```
@@ -402,7 +407,7 @@ Run kustomize again to see the new names:
 <!-- @grepStagingName @test -->
 ```
 kustomize build $OVERLAYS/staging |\
-    grep -B 8 -A 1 staging-the-map
+    kustomize build $OVERLAYS/staging | grep -B 2 -A 3 kiwi
 ```
 
 Confirm that the change in configMap content resulted
@@ -413,7 +418,7 @@ uses the map:
 <!-- @countHashes @test -->
 ```
 test 3 == \
-  $(kustomize build $OVERLAYS/staging | grep khk45ktkd9 | wc -l)
+  $(kustomize build $OVERLAYS/staging | grep khk45ktkd9 | wc -l); echo $?
 ```
 
 Applying these resources to the cluster will result in
