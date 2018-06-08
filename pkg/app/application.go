@@ -22,7 +22,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
@@ -316,10 +315,9 @@ func (a *applicationImpl) resolveRefVars(resources resmap.ResMap) (map[string]st
 	}
 
 	for _, refvar := range vars {
-		refGVKN := resource.NewResId(refvar.ObjRef.GroupVersionKind(), refvar.ObjRef.Name)
-		if r, found := resources[refGVKN]; found {
-			s, err := resource.GetFieldValue(
-				r.UnstructuredContent(), strings.Split(refvar.FieldRef.FieldPath, "."))
+		id := resource.NewResId(refvar.ObjRef.GroupVersionKind(), refvar.ObjRef.Name)
+		if r, found := resources[id]; found {
+			s, err := r.GetFieldValue(refvar.FieldRef.FieldPath)
 			if err != nil {
 				return nil, fmt.Errorf("failed to resolve referred var: %+v", refvar)
 			}
