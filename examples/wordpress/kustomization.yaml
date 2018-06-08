@@ -1,0 +1,19 @@
+bases:
+  - wordpress
+  - mysql
+patches:
+  - patch.yaml
+namePrefix: demo-
+
+vars:
+  - name: WORDPRESS_SERVICE
+    objref:
+      kind: Service
+      name: wordpress
+      apiVersion: v1
+  - name: MYSQL_SERVICE
+    objref:
+      kind: Service
+      name: mysql
+      apiVersion: v1
+
