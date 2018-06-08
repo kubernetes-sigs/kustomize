@@ -28,42 +28,37 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
-func newResourceFromConfigMap(l loader.Loader, cm types.ConfigMapArgs) (*resource.Resource, error) {
-	corev1CM, err := makeConfigMap(l, cm)
+func newResourceFromConfigMap(l loader.Loader, cmArgs types.ConfigMapArgs) (*resource.Resource, error) {
+	cm, err := makeConfigMap(l, cmArgs)
 	if err != nil {
 		return nil, err
 	}
-
-	data, err := newUnstructuredFromObject(corev1CM)
-	if err != nil {
-		return nil, err
-	}
-	return resource.NewResource(data, cm.Behavior), nil
+	return resource.NewResourceWithBehavior(cm, resource.NewGenerationBehavior(cmArgs.Behavior))
 }
 
-func makeConfigMap(l loader.Loader, cm types.ConfigMapArgs) (*corev1.ConfigMap, error) {
+func makeConfigMap(l loader.Loader, cmArgs types.ConfigMapArgs) (*corev1.ConfigMap, error) {
 	var envPairs, literalPairs, filePairs []kvPair
 	var err error
 
-	corev1cm := &corev1.ConfigMap{}
-	corev1cm.APIVersion = "v1"
-	corev1cm.Kind = "ConfigMap"
-	corev1cm.Name = cm.Name
-	corev1cm.Data = map[string]string{}
+	cm := &corev1.ConfigMap{}
+	cm.APIVersion = "v1"
+	cm.Kind = "ConfigMap"
+	cm.Name = cmArgs.Name
+	cm.Data = map[string]string{}
 
-	if cm.EnvSource != "" {
-		envPairs, err = keyValuesFromEnvFile(l, cm.EnvSource)
+	if cmArgs.EnvSource != "" {
+		envPairs, err = keyValuesFromEnvFile(l, cmArgs.EnvSource)
 		if err != nil {
-			return nil, fmt.Errorf("error reading keys from env source file: %s %v", cm.EnvSource, err)
+			return nil, fmt.Errorf("error reading keys from env source file: %s %v", cmArgs.EnvSource, err)
 		}
 	}
 
-	literalPairs, err = keyValuesFromLiteralSources(cm.LiteralSources)
+	literalPairs, err = keyValuesFromLiteralSources(cmArgs.LiteralSources)
 	if err != nil {
 		return nil, fmt.Errorf("error reading key values from literal sources: %v", err)
 	}
 
-	filePairs, err = keyValuesFromFileSources(l, cm.FileSources)
+	filePairs, err = keyValuesFromFileSources(l, cmArgs.FileSources)
 	if err != nil {
 		return nil, fmt.Errorf("error reading key values from file sources: %v", err)
 	}
@@ -72,13 +67,13 @@ func makeConfigMap(l loader.Loader, cm types.ConfigMapArgs) (*corev1.ConfigMap, 
 
 	// merge key value pairs from all the sources
 	for _, kv := range allPairs {
-		err = addKV(corev1cm.Data, kv)
+		err = addKV(cm.Data, kv)
 		if err != nil {
 			return nil, fmt.Errorf("error adding key in configmap: %v", err)
 		}
 	}
 
-	return corev1cm, nil
+	return cm, nil
 }
 
 func keyValuesFromEnvFile(l loader.Loader, path string) ([]kvPair, error) {

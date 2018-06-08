@@ -318,7 +318,8 @@ func (a *applicationImpl) resolveRefVars(resources resmap.ResMap) (map[string]st
 	for _, refvar := range vars {
 		refGVKN := resource.NewResId(refvar.ObjRef.GroupVersionKind(), refvar.ObjRef.Name)
 		if r, found := resources[refGVKN]; found {
-			s, err := resource.GetFieldValue(r.Unstruct().UnstructuredContent(), strings.Split(refvar.FieldRef.FieldPath, "."))
+			s, err := resource.GetFieldValue(
+				r.UnstructuredContent(), strings.Split(refvar.FieldRef.FieldPath, "."))
 			if err != nil {
 				return nil, fmt.Errorf("failed to resolve referred var: %+v", refvar)
 			}
