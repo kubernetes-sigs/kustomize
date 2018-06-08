@@ -20,8 +20,8 @@ import (
 	"testing"
 )
 
-func TestGetFieldAsString(t *testing.T) {
-	m := map[string]interface{}{
+func TestGetFieldValue(t *testing.T) {
+	res := NewResource(map[string]interface{}{
 		"Kind": "Service",
 		"metadata": map[string]interface{}{
 			"labels": map[string]string{
@@ -29,37 +29,47 @@ func TestGetFieldAsString(t *testing.T) {
 			},
 			"name": "service-name",
 		},
-	}
+		"spec": map[string]interface{}{
+			"ports": map[string]interface{}{
+				"port": "80",
+			},
+		},
+	})
 
 	tests := []struct {
-		pathToField   []string
-		expectedName  string
-		expectedError bool
+		pathToField   string
+		expectedValue string
+		errorExpected bool
 	}{
 		{
-			pathToField:   []string{"Kind"},
-			expectedName:  "Service",
-			expectedError: false,
+			pathToField:   "Kind",
+			expectedValue: "Service",
+			errorExpected: false,
 		},
 		{
-			pathToField:   []string{"metadata", "name"},
-			expectedName:  "service-name",
-			expectedError: false,
+			pathToField:   "metadata.name",
+			expectedValue: "service-name",
+			errorExpected: false,
 		},
 		{
-			pathToField:   []string{"metadata", "non-existing-field"},
-			expectedName:  "",
-			expectedError: true,
+			pathToField:   "metadata.non-existing-field",
+			expectedValue: "",
+			errorExpected: true,
+		},
+		{
+			pathToField:   "spec.ports.port",
+			expectedValue: "80",
+			errorExpected: false,
 		},
 	}
 
 	for _, test := range tests {
-		s, err := GetFieldValue(m, test.pathToField)
-		if test.expectedError && err == nil {
+		s, err := res.GetFieldValue(test.pathToField)
+		if test.errorExpected && err == nil {
 			t.Fatalf("should return error, but no error returned")
 		} else {
-			if test.expectedName != s {
-				t.Fatalf("Got:%s expected:%s", s, test.expectedName)
+			if test.expectedValue != s {
+				t.Fatalf("Got:%s expected:%s", s, test.expectedValue)
 			}
 		}
 	}
