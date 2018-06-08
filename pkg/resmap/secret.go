@@ -28,32 +28,34 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func newFromSecretGenerator(p string, s types.SecretArgs) (*resource.Resource, error) {
-	corev1secret := &corev1.Secret{}
-	corev1secret.APIVersion = "v1"
-	corev1secret.Kind = "Secret"
-	corev1secret.Name = s.Name
-	corev1secret.Type = corev1.SecretType(s.Type)
-	if corev1secret.Type == "" {
-		corev1secret.Type = corev1.SecretTypeOpaque
+func newResourceFromSecretGenerator(p string, sArgs types.SecretArgs) (*resource.Resource, error) {
+	s, err := makeSecret(p, sArgs)
+	if err != nil {
+		return nil, err
 	}
-	corev1secret.Data = map[string][]byte{}
+	return resource.NewResourceWithBehavior(
+		s, resource.NewGenerationBehavior(sArgs.Behavior))
+}
 
-	for k, v := range s.Commands {
+func makeSecret(p string, sArgs types.SecretArgs) (*corev1.Secret, error) {
+	s := &corev1.Secret{}
+	s.APIVersion = "v1"
+	s.Kind = "Secret"
+	s.Name = sArgs.Name
+	s.Type = corev1.SecretType(sArgs.Type)
+	if s.Type == "" {
+		s.Type = corev1.SecretTypeOpaque
+	}
+	s.Data = map[string][]byte{}
+
+	for k, v := range sArgs.Commands {
 		out, err := createSecretKey(p, v)
 		if err != nil {
 			return nil, err
 		}
-		corev1secret.Data[k] = out
+		s.Data[k] = out
 	}
-
-	obj, err := newUnstructuredFromObject(corev1secret)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return resource.NewResource(obj, s.Behavior), nil
+	return s, nil
 }
 
 func createSecretKey(wd string, command string) ([]byte, error) {
@@ -65,7 +67,6 @@ func createSecretKey(wd string, command string) ([]byte, error) {
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "sh", "-c", command)
 	cmd.Dir = wd
-
 	return cmd.Output()
 }
 
@@ -74,7 +75,7 @@ func createSecretKey(wd string, command string) ([]byte, error) {
 func NewResMapFromSecretArgs(p string, secretList []types.SecretArgs) (ResMap, error) {
 	allResources := []*resource.Resource{}
 	for _, secret := range secretList {
-		res, err := newFromSecretGenerator(p, secret)
+		res, err := newResourceFromSecretGenerator(p, secret)
 		if err != nil {
 			return nil, err
 		}

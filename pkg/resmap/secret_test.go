@@ -30,10 +30,10 @@ import (
 
 var secret = schema.GroupVersionKind{Version: "v1", Kind: "Secret"}
 
-func TestNewFromSecretGenerators(t *testing.T) {
+func TestNewResMapFromSecretArgs(t *testing.T) {
 	secrets := []types.SecretArgs{
 		{
-			Name: "secret",
+			Name: "apple",
 			Commands: map[string]string{
 				"DB_USERNAME": "printf admin",
 				"DB_PASSWORD": "printf somepw",
@@ -41,19 +41,20 @@ func TestNewFromSecretGenerators(t *testing.T) {
 			Type: "Opaque",
 		},
 	}
-	re, err := NewResMapFromSecretArgs(".", secrets)
+	actual, err := NewResMapFromSecretArgs(".", secrets)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+
 	expected := ResMap{
-		resource.NewResId(secret, "secret"): resource.NewResource(
+		resource.NewResId(secret, "apple"): resource.NewBehaviorlessResource(
 			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "Secret",
 					"metadata": map[string]interface{}{
-						"name":              "secret",
+						"name":              "apple",
 						"creationTimestamp": nil,
 					},
 					"type": string(corev1.SecretTypeOpaque),
@@ -62,11 +63,9 @@ func TestNewFromSecretGenerators(t *testing.T) {
 						"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 					},
 				},
-			},
-			""),
+			}),
 	}
-
-	if !reflect.DeepEqual(re, expected) {
-		t.Fatalf("%#v\ndoesn't match expected:\n%#v", re, expected)
+	if !reflect.DeepEqual(actual, expected) {
+		t.Fatalf("%#v\ndoesn't match expected:\n%#v", actual, expected)
 	}
 }
