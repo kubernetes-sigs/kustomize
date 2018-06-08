@@ -19,18 +19,18 @@ package transformers
 import (
 	"encoding/json"
 
-	jsonpatch "github.com/evanphx/json-patch"
+	"github.com/evanphx/json-patch"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/mergepatch"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 )
 
 type conflictDetector interface {
-	hasConflict(patch1, patch2 *unstructured.Unstructured) (bool, error)
-	findConflict(conflictingPatchIdx int, patches []*unstructured.Unstructured) (*unstructured.Unstructured, error)
-	mergePatches(patch1, patch2 *unstructured.Unstructured) (*unstructured.Unstructured, error)
+	hasConflict(patch1, patch2 *resource.Resource) (bool, error)
+	findConflict(conflictingPatchIdx int, patches []*resource.Resource) (*resource.Resource, error)
+	mergePatches(patch1, patch2 *resource.Resource) (*resource.Resource, error)
 }
 
 type jsonMergePatch struct{}
@@ -41,11 +41,11 @@ func newJMPConflictDetector() conflictDetector {
 	return &jsonMergePatch{}
 }
 
-func (jmp *jsonMergePatch) hasConflict(patch1, patch2 *unstructured.Unstructured) (bool, error) {
+func (jmp *jsonMergePatch) hasConflict(patch1, patch2 *resource.Resource) (bool, error) {
 	return mergepatch.HasConflicts(patch1.Object, patch2.Object)
 }
 
-func (jmp *jsonMergePatch) findConflict(conflictingPatchIdx int, patches []*unstructured.Unstructured) (*unstructured.Unstructured, error) {
+func (jmp *jsonMergePatch) findConflict(conflictingPatchIdx int, patches []*resource.Resource) (*resource.Resource, error) {
 	for i, patch := range patches {
 		if i == conflictingPatchIdx {
 			continue
@@ -65,8 +65,8 @@ func (jmp *jsonMergePatch) findConflict(conflictingPatchIdx int, patches []*unst
 	return nil, nil
 }
 
-func (jmp *jsonMergePatch) mergePatches(patch1, patch2 *unstructured.Unstructured) (*unstructured.Unstructured, error) {
-	var merged unstructured.Unstructured
+func (jmp *jsonMergePatch) mergePatches(patch1, patch2 *resource.Resource) (*resource.Resource, error) {
+	var merged resource.Resource
 	var mergedMap map[string]interface{}
 	baseBytes, err := json.Marshal(patch1.Object)
 	if err != nil {
@@ -96,11 +96,11 @@ func newSMPConflictDetector(versionedObj runtime.Object) (conflictDetector, erro
 	return &strategicMergePatch{lookupPatchMeta: lookupPatchMeta}, err
 }
 
-func (smp *strategicMergePatch) hasConflict(patch1, patch2 *unstructured.Unstructured) (bool, error) {
+func (smp *strategicMergePatch) hasConflict(patch1, patch2 *resource.Resource) (bool, error) {
 	return strategicpatch.MergingMapsHaveConflicts(patch1.Object, patch2.Object, smp.lookupPatchMeta)
 }
 
-func (smp *strategicMergePatch) findConflict(conflictingPatchIdx int, patches []*unstructured.Unstructured) (*unstructured.Unstructured, error) {
+func (smp *strategicMergePatch) findConflict(conflictingPatchIdx int, patches []*resource.Resource) (*resource.Resource, error) {
 	for i, patch := range patches {
 		if i == conflictingPatchIdx {
 			continue
@@ -121,8 +121,8 @@ func (smp *strategicMergePatch) findConflict(conflictingPatchIdx int, patches []
 	return nil, nil
 }
 
-func (smp *strategicMergePatch) mergePatches(patch1, patch2 *unstructured.Unstructured) (*unstructured.Unstructured, error) {
-	merged := unstructured.Unstructured{}
+func (smp *strategicMergePatch) mergePatches(patch1, patch2 *resource.Resource) (*resource.Resource, error) {
+	merged := resource.Resource{}
 	mergeJsonMap, err := strategicpatch.MergeStrategicMergeMapPatchUsingLookupPatchMeta(
 		smp.lookupPatchMeta, patch1.Object, patch2.Object)
 	merged.SetUnstructuredContent(mergeJsonMap)

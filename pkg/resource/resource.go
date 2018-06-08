@@ -25,56 +25,49 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// Resource is a Kubernetes Resource Object paired with a behavior.
+// Resource is an "Unstructured" (json/map form) Kubernetes API resource object
+// paired with a GenerationBehavior.
 type Resource struct {
-	unstruct *unstructured.Unstructured
-	behavior string
+	unstructured.Unstructured
+	b GenerationBehavior
 }
 
-// NewResource returns a new instance of Resource.
-func NewResource(u *unstructured.Unstructured, b string) *Resource {
-	return &Resource{unstruct: u, behavior: b}
+// NewResourceWithBehavior returns a new instance of Resource.
+func NewResourceWithBehavior(obj runtime.Object, b GenerationBehavior) (*Resource, error) {
+	// Convert obj to a byte stream, then convert that to JSON (Unstructured).
+	marshaled, err := json.Marshal(obj)
+	if err != nil {
+		return nil, err
+	}
+	var u unstructured.Unstructured
+	err = u.UnmarshalJSON(marshaled)
+	return &Resource{Unstructured: u, b: b}, nil
 }
 
 // NewBehaviorlessResource returns a new instance of Resource.
 func NewBehaviorlessResource(u *unstructured.Unstructured) *Resource {
-	return &Resource{unstruct: u}
+	return &Resource{Unstructured: *u, b: BehaviorUnspecified}
 }
 
 // Behavior returns the behavior for the resource.
-func (r *Resource) Behavior() string {
-	return r.behavior
-}
-
-// Unstruct returns the unstructured object holding the resource.
-func (r *Resource) Unstruct() *unstructured.Unstructured {
-	return r.unstruct
-}
-
-// SetUnstruct sets a new member.
-func (r *Resource) SetUnstruct(u *unstructured.Unstructured) {
-	r.unstruct = u
+func (r *Resource) Behavior() GenerationBehavior {
+	return r.b
 }
 
 // Id returns the ResId for the resource.
 func (r *Resource) Id() ResId {
-	var empty ResId
-	if r.unstruct == nil {
-		return empty
-	}
-	gvk := r.unstruct.GroupVersionKind()
-	return NewResId(gvk, r.unstruct.GetName())
+	return NewResId(r.GroupVersionKind(), r.GetName())
 }
 
 func (r *Resource) Merge(other *Resource) {
 	r.Replace(other)
-	mergeConfigmap(r.unstruct.Object, other.unstruct.Object, r.unstruct.Object)
+	mergeConfigmap(r.Object, other.Object, r.Object)
 }
 
 func (r *Resource) Replace(other *Resource) {
-	r.unstruct.SetLabels(mergeStringMaps(other.unstruct.GetLabels(), r.unstruct.GetLabels()))
-	r.unstruct.SetAnnotations(mergeStringMaps(other.unstruct.GetAnnotations(), r.unstruct.GetAnnotations()))
-	r.unstruct.SetName(other.unstruct.GetName())
+	r.SetLabels(mergeStringMaps(other.GetLabels(), r.GetLabels()))
+	r.SetAnnotations(mergeStringMaps(other.GetAnnotations(), r.GetAnnotations()))
+	r.SetName(other.GetName())
 }
 
 // TODO: Add BinaryData once we sync to new k8s.io/api
