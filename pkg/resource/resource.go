@@ -21,6 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"strings"
+
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -47,6 +49,13 @@ func NewResourceWithBehavior(obj runtime.Object, b GenerationBehavior) (*Resourc
 // NewBehaviorlessResource returns a new instance of Resource.
 func NewBehaviorlessResource(u *unstructured.Unstructured) *Resource {
 	return &Resource{Unstructured: *u, b: BehaviorUnspecified}
+}
+
+// NewResource returns a new instance of Resource.
+func NewResource(m map[string]interface{}) *Resource {
+	return &Resource{
+		Unstructured: unstructured.Unstructured{Object: m},
+		b:            BehaviorUnspecified}
 }
 
 // Behavior returns the behavior for the resource.
@@ -94,21 +103,14 @@ func mergeStringMaps(maps ...map[string]string) map[string]string {
 	return result
 }
 
-func newUnstructuredFromObject(in runtime.Object) (*unstructured.Unstructured, error) {
-	marshaled, err := json.Marshal(in)
-	if err != nil {
-		return nil, err
-	}
-	var out unstructured.Unstructured
-	err = out.UnmarshalJSON(marshaled)
-	return &out, err
+func (r *Resource) GetFieldValue(fieldPath string) (string, error) {
+	return getFieldValue(r.UnstructuredContent(), strings.Split(fieldPath, "."))
 }
 
-func GetFieldValue(m map[string]interface{}, pathToField []string) (string, error) {
+func getFieldValue(m map[string]interface{}, pathToField []string) (string, error) {
 	if len(pathToField) == 0 {
 		return "", fmt.Errorf("Field not found")
 	}
-
 	if len(pathToField) == 1 {
 		if v, found := m[pathToField[0]]; found {
 			if s, ok := v.(string); ok {
@@ -118,13 +120,10 @@ func GetFieldValue(m map[string]interface{}, pathToField []string) (string, erro
 		}
 		return "", fmt.Errorf("field at given fieldpath does not exist")
 	}
-
-	curr, rest := pathToField[0], pathToField[1]
-
-	v := m[curr]
+	v := m[pathToField[0]]
 	switch typedV := v.(type) {
 	case map[string]interface{}:
-		return GetFieldValue(typedV, []string{rest})
+		return getFieldValue(typedV, pathToField[1:])
 	default:
 		return "", fmt.Errorf("%#v is not expected to be a primitive type", typedV)
 	}
