@@ -36,8 +36,8 @@ func NewNamespaceTransformer(ns string) Transformer {
 
 // Transform adds the namespace.
 func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
-	for _, obj := range m {
-		obj.Unstruct().SetNamespace(o.namespace)
+	for _, res := range m {
+		res.SetNamespace(o.namespace)
 	}
 	return nil
 }

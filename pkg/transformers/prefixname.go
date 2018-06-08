@@ -58,8 +58,7 @@ func NewNamePrefixTransformer(pc []PathConfig, np string) (Transformer, error) {
 // Transform prepends the name prefix.
 func (o *namePrefixTransformer) Transform(m resmap.ResMap) error {
 	for id := range m {
-		obj := m[id].Unstruct()
-		objMap := obj.UnstructuredContent()
+		objMap := m[id].UnstructuredContent()
 		for _, path := range o.pathConfigs {
 			if !selectByGVK(id.Gvk(), path.GroupVersionKind) {
 				continue

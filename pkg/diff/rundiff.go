@@ -51,12 +51,12 @@ func writeYamlToNewDir(in resmap.ResMap, prefix string) (*directory, error) {
 		return nil, err
 	}
 
-	for gvkn, obj := range in {
-		f, err := dir.newFile(gvkn.String())
+	for id, obj := range in {
+		f, err := dir.newFile(id.String())
 		if err != nil {
 			return nil, err
 		}
-		err = print(obj.Unstruct(), f)
+		err = print(obj, f)
 		f.Close()
 		if err != nil {
 			return nil, err
