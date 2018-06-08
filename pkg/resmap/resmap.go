@@ -19,7 +19,6 @@ package resmap
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"reflect"
@@ -30,7 +29,6 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
 	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
 )
 
@@ -40,8 +38,8 @@ type ResMap map[resource.ResId]*resource.Resource
 // EncodeAsYaml encodes a ResMap to YAML; encoded objects separated by `---`.
 func (m ResMap) EncodeAsYaml() ([]byte, error) {
 	ids := []resource.ResId{}
-	for gvkn := range m {
-		ids = append(ids, gvkn)
+	for id := range m {
+		ids = append(ids, id)
 	}
 	sort.Sort(IdSlice(ids))
 
@@ -49,7 +47,7 @@ func (m ResMap) EncodeAsYaml() ([]byte, error) {
 	var b []byte
 	buf := bytes.NewBuffer(b)
 	for _, id := range ids {
-		obj := m[id].Unstruct()
+		obj := m[id]
 		out, err := yaml.Marshal(obj)
 		if err != nil {
 			return nil, err
@@ -87,8 +85,8 @@ func (m1 ResMap) ErrorIfNotEqual(m2 ResMap) error {
 		if !found {
 			return fmt.Errorf("%#v doesn't exist in %#v", id, m2)
 		}
-		if !reflect.DeepEqual(obj1.Unstruct(), obj2.Unstruct()) {
-			return fmt.Errorf("%#v doesn't match %#v", obj1.Unstruct(), obj2.Unstruct())
+		if !reflect.DeepEqual(obj1, obj2) {
+			return fmt.Errorf("%#v doesn't match %#v", obj1, obj2)
 		}
 	}
 	return nil
@@ -153,11 +151,11 @@ func newResMapFromBytes(b []byte) (ResMap, error) {
 
 	result := ResMap{}
 	for _, res := range resources {
-		gvkn := res.Id()
-		if _, found := result[gvkn]; found {
-			return result, fmt.Errorf("GroupVersionKindName: %#v already exists b the map", gvkn)
+		id := res.Id()
+		if _, found := result[id]; found {
+			return result, fmt.Errorf("GroupVersionKindName: %#v already exists b the map", id)
 		}
-		result[gvkn] = res
+		result[id] = res
 	}
 	return result, nil
 }
@@ -165,11 +163,11 @@ func newResMapFromBytes(b []byte) (ResMap, error) {
 func newResMapFromResourceSlice(resources []*resource.Resource) (ResMap, error) {
 	result := ResMap{}
 	for _, res := range resources {
-		gvkn := res.Id()
-		if _, found := result[gvkn]; found {
-			return nil, fmt.Errorf("duplicated %#v is not allowed", gvkn)
+		id := res.Id()
+		if _, found := result[id]; found {
+			return nil, fmt.Errorf("duplicated %#v is not allowed", id)
 		}
-		result[gvkn] = res
+		result[id] = res
 	}
 	return result, nil
 }
@@ -197,20 +195,16 @@ func newResourceSliceFromBytes(in []byte) ([]*resource.Resource, error) {
 func Merge(maps ...ResMap) (ResMap, error) {
 	result := ResMap{}
 	for _, m := range maps {
-		for gvkn, obj := range m {
-			if _, found := result[gvkn]; found {
-				return nil, fmt.Errorf("there is already an entry: %q", gvkn)
+		for id, obj := range m {
+			if _, found := result[id]; found {
+				return nil, fmt.Errorf("there is already an entry: %q", id)
 			}
-			result[gvkn] = obj
+			result[id] = obj
 		}
 	}
 
 	return result, nil
 }
-
-const behaviorCreate = "create"
-const behaviorReplace = "replace"
-const behaviorMerge = "merge"
 
 // MergeWithOverride merges the entries in the ResMap slice with Override.
 // If there is already an entry with the same Id , different actions are performed
@@ -221,44 +215,30 @@ const behaviorMerge = "merge"
 func MergeWithOverride(maps ...ResMap) (ResMap, error) {
 	result := ResMap{}
 	for _, m := range maps {
-		for gvkn, resource := range m {
-			if _, found := result[gvkn]; found {
-				switch resource.Behavior() {
-				case "", behaviorCreate:
-					return nil, fmt.Errorf("Create an existing gvkn %#v is not allowed", gvkn)
-				case behaviorReplace:
-					glog.V(4).Infof("Replace object %v by %v", result[gvkn].Unstruct().Object, resource.Unstruct().Object)
-					resource.Replace(result[gvkn])
-					result[gvkn] = resource
-				case behaviorMerge:
-					glog.V(4).Infof("Merge object %v with %v", result[gvkn].Unstruct().Object, resource.Unstruct().Object)
-					resource.Merge(result[gvkn])
-					result[gvkn] = resource
-					glog.V(4).Infof("The merged object is %v", result[gvkn].Unstruct().Object)
+		for id, r := range m {
+			if _, found := result[id]; found {
+				switch r.Behavior() {
+				case resource.BehaviorReplace:
+					glog.V(4).Infof("Replace object %v by %v", result[id].Object, r.Object)
+					r.Replace(result[id])
+					result[id] = r
+				case resource.BehaviorMerge:
+					glog.V(4).Infof("Merge object %v with %v", result[id].Object, r.Object)
+					r.Merge(result[id])
+					result[id] = r
+					glog.V(4).Infof("The merged object is %v", result[id].Object)
 				default:
-					return nil, fmt.Errorf("The behavior of %#v must be one of merge and replace since it already exists in the base", gvkn)
+					return nil, fmt.Errorf("Id %#v exists; must merge or replace.", id)
 				}
 			} else {
-				switch resource.Behavior() {
-				case "", behaviorCreate:
-					result[gvkn] = resource
-				case behaviorMerge, behaviorReplace:
-					return nil, fmt.Errorf("No merge or replace is allowed for non existing gvkn %#v", gvkn)
+				switch r.Behavior() {
+				case resource.BehaviorMerge, resource.BehaviorReplace:
+					return nil, fmt.Errorf("Id %#v does not exist; cannot merge or replace.", id)
 				default:
-					return nil, fmt.Errorf("The behavior of %#v must be create since it doesn't exist", gvkn)
+					result[id] = r
 				}
 			}
 		}
 	}
 	return result, nil
-}
-
-func newUnstructuredFromObject(in runtime.Object) (*unstructured.Unstructured, error) {
-	marshaled, err := json.Marshal(in)
-	if err != nil {
-		return nil, err
-	}
-	var out unstructured.Unstructured
-	err = out.UnmarshalJSON(marshaled)
-	return &out, err
 }

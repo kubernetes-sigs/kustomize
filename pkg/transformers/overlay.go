@@ -24,7 +24,6 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -63,15 +62,15 @@ func (o *overlayTransformer) Transform(baseResourceMap resmap.ResMap) error {
 		}
 		merged := map[string]interface{}{}
 		versionedObj, err := scheme.Scheme.New(id.Gvk())
-		baseName := base.Unstruct().GetName()
+		baseName := base.GetName()
 		switch {
 		case runtime.IsNotRegisteredError(err):
 			// Use JSON merge patch to handle types w/o schema
-			baseBytes, err := json.Marshal(base.Unstruct())
+			baseBytes, err := json.Marshal(base)
 			if err != nil {
 				return err
 			}
-			patchBytes, err := json.Marshal(overlay.Unstruct())
+			patchBytes, err := json.Marshal(overlay)
 			if err != nil {
 				return err
 			}
@@ -95,15 +94,15 @@ func (o *overlayTransformer) Transform(baseResourceMap resmap.ResMap) error {
 				return err
 			}
 			merged, err = strategicpatch.StrategicMergeMapPatchUsingLookupPatchMeta(
-				base.Unstruct().Object,
-				overlay.Unstruct().Object,
+				base.Object,
+				overlay.Object,
 				lookupPatchMeta)
 			if err != nil {
 				return err
 			}
 		}
-		base.Unstruct().SetName(baseName)
-		baseResourceMap[id].Unstruct().Object = merged
+		base.SetName(baseName)
+		baseResourceMap[id].Object = merged
 	}
 	return nil
 }
@@ -112,7 +111,6 @@ func (o *overlayTransformer) Transform(baseResourceMap resmap.ResMap) error {
 // It errors out if there is conflict between patches.
 func (o *overlayTransformer) mergePatches() (resmap.ResMap, error) {
 	rc := resmap.ResMap{}
-	patches := resourcesToObjects(o.overlay)
 	for ix, patch := range o.overlay {
 		id := patch.Id()
 		existing, found := rc[id]
@@ -135,31 +133,22 @@ func (o *overlayTransformer) mergePatches() (resmap.ResMap, error) {
 			}
 		}
 
-		conflict, err := cd.hasConflict(existing.Unstruct(), patch.Unstruct())
+		conflict, err := cd.hasConflict(existing, patch)
 		if err != nil {
 			return nil, err
 		}
 		if conflict {
-			conflictingPatch, err := cd.findConflict(ix, patches)
+			conflictingPatch, err := cd.findConflict(ix, o.overlay)
 			if err != nil {
 				return nil, err
 			}
-			return nil, fmt.Errorf("there is conflict between %#v and %#v", conflictingPatch.Object, patch.Unstruct().Object)
-		} else {
-			merged, err := cd.mergePatches(existing.Unstruct(), patch.Unstruct())
-			if err != nil {
-				return nil, err
-			}
-			existing.SetUnstruct(merged)
+			return nil, fmt.Errorf("there is conflict between %#v and %#v", conflictingPatch.Object, patch.Object)
 		}
+		merged, err := cd.mergePatches(existing, patch)
+		if err != nil {
+			return nil, err
+		}
+		rc[id] = merged
 	}
 	return rc, nil
-}
-
-func resourcesToObjects(rs []*resource.Resource) []*unstructured.Unstructured {
-	objectList := make([]*unstructured.Unstructured, len(rs))
-	for i := range rs {
-		objectList[i] = rs[i].Unstruct()
-	}
-	return objectList
 }

@@ -22,8 +22,8 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/hash"
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
+	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -40,20 +40,20 @@ func NewNameHashTransformer() Transformer {
 
 // Transform appends hash to configmaps and secrets.
 func (o *nameHashTransformer) Transform(m resmap.ResMap) error {
-	for id, obj := range m {
+	for id, res := range m {
 		switch {
 		case selectByGVK(id.Gvk(), &schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"}):
-			appendHashForConfigMap(obj.Unstruct())
+			appendHashForConfigMap(res)
 
 		case selectByGVK(id.Gvk(), &schema.GroupVersionKind{Version: "v1", Kind: "Secret"}):
-			appendHashForSecret(obj.Unstruct())
+			appendHashForSecret(res)
 		}
 	}
 	return nil
 }
 
-func appendHashForConfigMap(obj *unstructured.Unstructured) error {
-	cm, err := unstructuredToConfigmap(obj)
+func appendHashForConfigMap(res *resource.Resource) error {
+	cm, err := unstructuredToConfigmap(res)
 	if err != nil {
 		return err
 	}
@@ -61,14 +61,14 @@ func appendHashForConfigMap(obj *unstructured.Unstructured) error {
 	if err != nil {
 		return err
 	}
-	nameWithHash := fmt.Sprintf("%s-%s", obj.GetName(), h)
-	obj.SetName(nameWithHash)
+	nameWithHash := fmt.Sprintf("%s-%s", res.GetName(), h)
+	res.SetName(nameWithHash)
 	return nil
 }
 
 // TODO: Remove this function after we support hash unstructured objects
-func unstructuredToConfigmap(in *unstructured.Unstructured) (*v1.ConfigMap, error) {
-	marshaled, err := json.Marshal(in)
+func unstructuredToConfigmap(res *resource.Resource) (*v1.ConfigMap, error) {
+	marshaled, err := json.Marshal(res)
 	if err != nil {
 		return nil, err
 	}
@@ -77,8 +77,8 @@ func unstructuredToConfigmap(in *unstructured.Unstructured) (*v1.ConfigMap, erro
 	return &out, err
 }
 
-func appendHashForSecret(obj *unstructured.Unstructured) error {
-	secret, err := unstructuredToSecret(obj)
+func appendHashForSecret(res *resource.Resource) error {
+	secret, err := unstructuredToSecret(res)
 	if err != nil {
 		return err
 	}
@@ -86,14 +86,14 @@ func appendHashForSecret(obj *unstructured.Unstructured) error {
 	if err != nil {
 		return err
 	}
-	nameWithHash := fmt.Sprintf("%s-%s", obj.GetName(), h)
-	obj.SetName(nameWithHash)
+	nameWithHash := fmt.Sprintf("%s-%s", res.GetName(), h)
+	res.SetName(nameWithHash)
 	return nil
 }
 
 // TODO: Remove this function after we support hash unstructured objects
-func unstructuredToSecret(in *unstructured.Unstructured) (*v1.Secret, error) {
-	marshaled, err := json.Marshal(in)
+func unstructuredToSecret(res *resource.Resource) (*v1.Secret, error) {
+	marshaled, err := json.Marshal(res)
 	if err != nil {
 		return nil, err
 	}
