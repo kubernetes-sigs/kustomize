@@ -27,7 +27,6 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -88,99 +87,91 @@ var ns = schema.GroupVersionKind{Version: "v1", Kind: "Namespace"}
 
 func TestResources(t *testing.T) {
 	expected := resmap.ResMap{
-		resource.NewResId(deploy, "dply1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "apps/v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name":      "foo-dply1",
-						"namespace": "ns1",
-						"labels": map[string]interface{}{
+		resource.NewResId(deploy, "dply1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name":      "foo-dply1",
+					"namespace": "ns1",
+					"labels": map[string]interface{}{
+						"app": "nginx",
+					},
+					"annotations": map[string]interface{}{
+						"note": "This is a test annotation",
+					},
+				},
+				"spec": map[string]interface{}{
+					"selector": map[string]interface{}{
+						"matchLabels": map[string]interface{}{
 							"app": "nginx",
 						},
-						"annotations": map[string]interface{}{
-							"note": "This is a test annotation",
-						},
 					},
-					"spec": map[string]interface{}{
-						"selector": map[string]interface{}{
-							"matchLabels": map[string]interface{}{
+					"template": map[string]interface{}{
+						"metadata": map[string]interface{}{
+							"annotations": map[string]interface{}{
+								"note": "This is a test annotation",
+							},
+							"labels": map[string]interface{}{
 								"app": "nginx",
 							},
 						},
-						"template": map[string]interface{}{
-							"metadata": map[string]interface{}{
-								"annotations": map[string]interface{}{
-									"note": "This is a test annotation",
-								},
-								"labels": map[string]interface{}{
-									"app": "nginx",
-								},
-							},
-						},
 					},
 				},
 			}),
-		resource.NewResId(cmap, "literalConfigMap"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name":      "foo-literalConfigMap-mc92bgcbh5",
-						"namespace": "ns1",
-						"labels": map[string]interface{}{
-							"app": "nginx",
-						},
-						"annotations": map[string]interface{}{
-							"note": "This is a test annotation",
-						},
-						"creationTimestamp": nil,
+		resource.NewResId(cmap, "literalConfigMap"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name":      "foo-literalConfigMap-mc92bgcbh5",
+					"namespace": "ns1",
+					"labels": map[string]interface{}{
+						"app": "nginx",
 					},
-					"data": map[string]interface{}{
-						"DB_USERNAME": "admin",
-						"DB_PASSWORD": "somepw",
+					"annotations": map[string]interface{}{
+						"note": "This is a test annotation",
 					},
+					"creationTimestamp": nil,
+				},
+				"data": map[string]interface{}{
+					"DB_USERNAME": "admin",
+					"DB_PASSWORD": "somepw",
 				},
 			}),
-		resource.NewResId(secret, "secret"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "Secret",
-					"metadata": map[string]interface{}{
-						"name":      "foo-secret-877fcfhgt5",
-						"namespace": "ns1",
-						"labels": map[string]interface{}{
-							"app": "nginx",
-						},
-						"annotations": map[string]interface{}{
-							"note": "This is a test annotation",
-						},
-						"creationTimestamp": nil,
+		resource.NewResId(secret, "secret"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Secret",
+				"metadata": map[string]interface{}{
+					"name":      "foo-secret-877fcfhgt5",
+					"namespace": "ns1",
+					"labels": map[string]interface{}{
+						"app": "nginx",
 					},
-					"type": string(corev1.SecretTypeOpaque),
-					"data": map[string]interface{}{
-						"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
-						"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
+					"annotations": map[string]interface{}{
+						"note": "This is a test annotation",
 					},
+					"creationTimestamp": nil,
+				},
+				"type": string(corev1.SecretTypeOpaque),
+				"data": map[string]interface{}{
+					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
+					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
 			}),
-		resource.NewResId(ns, "ns1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "Namespace",
-					"metadata": map[string]interface{}{
-						"name":      "foo-ns1",
-						"namespace": "ns1",
-						"labels": map[string]interface{}{
-							"app": "nginx",
-						},
-						"annotations": map[string]interface{}{
-							"note": "This is a test annotation",
-						},
+		resource.NewResId(ns, "ns1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Namespace",
+				"metadata": map[string]interface{}{
+					"name":      "foo-ns1",
+					"namespace": "ns1",
+					"labels": map[string]interface{}{
+						"app": "nginx",
+					},
+					"annotations": map[string]interface{}{
+						"note": "This is a test annotation",
 					},
 				},
 			}),
@@ -203,24 +194,20 @@ func TestResources(t *testing.T) {
 
 func TestRawResources(t *testing.T) {
 	expected := resmap.ResMap{
-		resource.NewResId(deploy, "dply1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "apps/v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name": "dply1",
-					},
+		resource.NewResId(deploy, "dply1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "dply1",
 				},
 			}),
-		resource.NewResId(ns, "ns1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "Namespace",
-					"metadata": map[string]interface{}{
-						"name": "ns1",
-					},
+		resource.NewResId(ns, "ns1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Namespace",
+				"metadata": map[string]interface{}{
+					"name": "ns1",
 				},
 			}),
 	}

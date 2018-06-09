@@ -101,7 +101,7 @@ func (m ResMap) insert(newName string, obj *unstructured.Unstructured) error {
 		return fmt.Errorf("The <name: %q, GroupVersionKind: %v> already exists in the map", oldName, gvk)
 	}
 	obj.SetName(newName)
-	m[id] = resource.NewBehaviorlessResource(obj)
+	m[id] = resource.NewResourceFromUnstruct(*obj)
 	return nil
 }
 
@@ -183,7 +183,7 @@ func newResourceSliceFromBytes(in []byte) ([]*resource.Resource, error) {
 		if err != nil {
 			break
 		}
-		result = append(result, resource.NewBehaviorlessResource(&out))
+		result = append(result, resource.NewResourceFromUnstruct(out))
 	}
 	if err != io.EOF {
 		return nil, err

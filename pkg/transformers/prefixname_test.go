@@ -22,51 +22,42 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 func TestPrefixNameRun(t *testing.T) {
 	m := resmap.ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name": "cm1",
-					},
+		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "cm1",
 				},
 			}),
-		resource.NewResId(cmap, "cm2"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name": "cm2",
-					},
+		resource.NewResId(cmap, "cm2"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "cm2",
 				},
 			}),
 	}
 	expected := resmap.ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name": "someprefix-cm1",
-					},
+		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "someprefix-cm1",
 				},
 			}),
-		resource.NewResId(cmap, "cm2"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name": "someprefix-cm2",
-					},
+		resource.NewResId(cmap, "cm2"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "someprefix-cm2",
 				},
 			}),
 	}
