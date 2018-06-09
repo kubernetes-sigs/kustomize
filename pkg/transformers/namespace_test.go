@@ -22,54 +22,45 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 func TestNamespaceRun(t *testing.T) {
 	m := resmap.ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name": "cm1",
-					},
+		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "cm1",
 				},
 			}),
-		resource.NewResId(cmap, "cm2"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name":      "cm2",
-						"namespace": "foo",
-					},
+		resource.NewResId(cmap, "cm2"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name":      "cm2",
+					"namespace": "foo",
 				},
 			}),
 	}
 	expected := resmap.ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name":      "cm1",
-						"namespace": "test",
-					},
+		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name":      "cm1",
+					"namespace": "test",
 				},
 			}),
-		resource.NewResId(cmap, "cm2"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name":      "cm2",
-						"namespace": "test",
-					},
+		resource.NewResId(cmap, "cm2"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name":      "cm2",
+					"namespace": "test",
 				},
 			}),
 	}
