@@ -22,90 +22,83 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 func TestNameReferenceRun(t *testing.T) {
 	m := resmap.ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name": "someprefix-cm1-somehash",
-					},
+		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "someprefix-cm1-somehash",
 				},
 			}),
-		resource.NewResId(secret, "secret1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "Secret",
-					"metadata": map[string]interface{}{
-						"name": "someprefix-secret1-somehash",
-					},
+		resource.NewResId(secret, "secret1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Secret",
+				"metadata": map[string]interface{}{
+					"name": "someprefix-secret1-somehash",
 				},
 			}),
-		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"group":      "apps",
-					"apiVersion": "v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name": "deploy1",
-					},
-					"spec": map[string]interface{}{
-						"template": map[string]interface{}{
-							"spec": map[string]interface{}{
-								"containers": []interface{}{
-									map[string]interface{}{
-										"name":  "nginx",
-										"image": "nginx:1.7.9",
-										"env": []interface{}{
-											map[string]interface{}{
-												"name": "CM_FOO",
-												"valueFrom": map[string]interface{}{
-													"configMapKeyRef": map[string]interface{}{
-														"name": "cm1",
-														"key":  "somekey",
-													},
-												},
-											},
-											map[string]interface{}{
-												"name": "SECRET_FOO",
-												"valueFrom": map[string]interface{}{
-													"secretKeyRef": map[string]interface{}{
-														"name": "secret1",
-														"key":  "somekey",
-													},
-												},
-											},
-										},
-										"envFrom": []interface{}{
-											map[string]interface{}{
-												"configMapRef": map[string]interface{}{
+		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"group":      "apps",
+				"apiVersion": "v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "deploy1",
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"name":  "nginx",
+									"image": "nginx:1.7.9",
+									"env": []interface{}{
+										map[string]interface{}{
+											"name": "CM_FOO",
+											"valueFrom": map[string]interface{}{
+												"configMapKeyRef": map[string]interface{}{
 													"name": "cm1",
 													"key":  "somekey",
 												},
 											},
-											map[string]interface{}{
-												"secretRef": map[string]interface{}{
+										},
+										map[string]interface{}{
+											"name": "SECRET_FOO",
+											"valueFrom": map[string]interface{}{
+												"secretKeyRef": map[string]interface{}{
 													"name": "secret1",
 													"key":  "somekey",
 												},
 											},
 										},
 									},
+									"envFrom": []interface{}{
+										map[string]interface{}{
+											"configMapRef": map[string]interface{}{
+												"name": "cm1",
+												"key":  "somekey",
+											},
+										},
+										map[string]interface{}{
+											"secretRef": map[string]interface{}{
+												"name": "secret1",
+												"key":  "somekey",
+											},
+										},
+									},
 								},
-								"volumes": map[string]interface{}{
-									"configMap": map[string]interface{}{
-										"name": "cm1",
-									},
-									"secret": map[string]interface{}{
-										"secretName": "secret1",
-									},
+							},
+							"volumes": map[string]interface{}{
+								"configMap": map[string]interface{}{
+									"name": "cm1",
+								},
+								"secret": map[string]interface{}{
+									"secretName": "secret1",
 								},
 							},
 						},
@@ -115,85 +108,79 @@ func TestNameReferenceRun(t *testing.T) {
 	}
 
 	expected := resmap.ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name": "someprefix-cm1-somehash",
-					},
+		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "someprefix-cm1-somehash",
 				},
 			}),
-		resource.NewResId(secret, "secret1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "Secret",
-					"metadata": map[string]interface{}{
-						"name": "someprefix-secret1-somehash",
-					},
+		resource.NewResId(secret, "secret1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Secret",
+				"metadata": map[string]interface{}{
+					"name": "someprefix-secret1-somehash",
 				},
 			}),
-		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"group":      "apps",
-					"apiVersion": "v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name": "deploy1",
-					},
-					"spec": map[string]interface{}{
-						"template": map[string]interface{}{
-							"spec": map[string]interface{}{
-								"containers": []interface{}{
-									map[string]interface{}{
-										"name":  "nginx",
-										"image": "nginx:1.7.9",
-										"env": []interface{}{
-											map[string]interface{}{
-												"name": "CM_FOO",
-												"valueFrom": map[string]interface{}{
-													"configMapKeyRef": map[string]interface{}{
-														"name": "someprefix-cm1-somehash",
-														"key":  "somekey",
-													},
-												},
-											},
-											map[string]interface{}{
-												"name": "SECRET_FOO",
-												"valueFrom": map[string]interface{}{
-													"secretKeyRef": map[string]interface{}{
-														"name": "someprefix-secret1-somehash",
-														"key":  "somekey",
-													},
-												},
-											},
-										},
-										"envFrom": []interface{}{
-											map[string]interface{}{
-												"configMapRef": map[string]interface{}{
+		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"group":      "apps",
+				"apiVersion": "v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "deploy1",
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"name":  "nginx",
+									"image": "nginx:1.7.9",
+									"env": []interface{}{
+										map[string]interface{}{
+											"name": "CM_FOO",
+											"valueFrom": map[string]interface{}{
+												"configMapKeyRef": map[string]interface{}{
 													"name": "someprefix-cm1-somehash",
 													"key":  "somekey",
 												},
 											},
-											map[string]interface{}{
-												"secretRef": map[string]interface{}{
+										},
+										map[string]interface{}{
+											"name": "SECRET_FOO",
+											"valueFrom": map[string]interface{}{
+												"secretKeyRef": map[string]interface{}{
 													"name": "someprefix-secret1-somehash",
 													"key":  "somekey",
 												},
 											},
 										},
 									},
+									"envFrom": []interface{}{
+										map[string]interface{}{
+											"configMapRef": map[string]interface{}{
+												"name": "someprefix-cm1-somehash",
+												"key":  "somekey",
+											},
+										},
+										map[string]interface{}{
+											"secretRef": map[string]interface{}{
+												"name": "someprefix-secret1-somehash",
+												"key":  "somekey",
+											},
+										},
+									},
 								},
-								"volumes": map[string]interface{}{
-									"configMap": map[string]interface{}{
-										"name": "someprefix-cm1-somehash",
-									},
-									"secret": map[string]interface{}{
-										"secretName": "someprefix-secret1-somehash",
-									},
+							},
+							"volumes": map[string]interface{}{
+								"configMap": map[string]interface{}{
+									"name": "someprefix-cm1-somehash",
+								},
+								"secret": map[string]interface{}{
+									"secretName": "someprefix-secret1-somehash",
 								},
 							},
 						},
