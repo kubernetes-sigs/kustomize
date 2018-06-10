@@ -579,6 +579,13 @@ var defaultNameReferencePathConfigs = []referencePathConfig{
 				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "initContainers", "envFrom", "secretRef", "name"},
 				CreateIfNotPresent: false,
 			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "Ingress",
+				},
+				Path:               []string{"spec", "tls", "secretName"},
+				CreateIfNotPresent: false,
+			},
 		},
 	},
 	{
