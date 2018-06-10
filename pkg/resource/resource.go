@@ -46,16 +46,14 @@ func NewResourceWithBehavior(obj runtime.Object, b GenerationBehavior) (*Resourc
 	return &Resource{Unstructured: u, b: b}, nil
 }
 
-// NewBehaviorlessResource returns a new instance of Resource.
-func NewBehaviorlessResource(u *unstructured.Unstructured) *Resource {
-	return &Resource{Unstructured: *u, b: BehaviorUnspecified}
+// NewResourceFromMap returns a new instance of Resource.
+func NewResourceFromMap(m map[string]interface{}) *Resource {
+	return NewResourceFromUnstruct(unstructured.Unstructured{Object: m})
 }
 
-// NewResource returns a new instance of Resource.
-func NewResource(m map[string]interface{}) *Resource {
-	return &Resource{
-		Unstructured: unstructured.Unstructured{Object: m},
-		b:            BehaviorUnspecified}
+// NewResourceFromUnstruct returns a new instance of Resource.
+func NewResourceFromUnstruct(u unstructured.Unstructured) *Resource {
+	return &Resource{Unstructured: u, b: BehaviorUnspecified}
 }
 
 // Behavior returns the behavior for the resource.
