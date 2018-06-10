@@ -230,7 +230,7 @@ func (a *applicationImpl) subApp() ([]Application, error) {
 func (a *applicationImpl) newTransformer(patches []*resource.Resource) (transformers.Transformer, error) {
 	ts := []transformers.Transformer{}
 
-	ot, err := transformers.NewOverlayTransformer(patches)
+	ot, err := transformers.NewPatchTransformer(patches)
 	if err != nil {
 		return nil, err
 	}
