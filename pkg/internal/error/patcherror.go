@@ -20,6 +20,7 @@ import (
 	"fmt"
 )
 
+// PatchError represents error during Patch.
 type PatchError struct {
 	KustomizationPath string
 	PatchFilepath     string

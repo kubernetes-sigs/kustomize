@@ -18,7 +18,7 @@ package error
 
 import "fmt"
 
-// First pass to encapsulate fields for more informative error messages.
+// ResourceError represents error in a resource.
 type ResourceError struct {
 	KustomizationPath string
 	ResourceFilepath  string

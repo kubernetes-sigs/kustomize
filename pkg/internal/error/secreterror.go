@@ -18,9 +18,11 @@ package error
 
 import "fmt"
 
+// SecretError represents error with a secret.
 type SecretError struct {
 	KustomizationPath string
-	ErrorMsg          string
+	// ErrorMsg is an error message
+	ErrorMsg string
 }
 
 func (e SecretError) Error() string {

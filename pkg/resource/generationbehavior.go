@@ -20,13 +20,13 @@ package resource
 type GenerationBehavior int
 
 const (
-	// Unspecified behavior typically treated as a Create.
+	// BehaviorUnspecified is an Unspecified behavior; typically treated as a Create.
 	BehaviorUnspecified GenerationBehavior = iota
-	// Make a new resource.
+	// BehaviorCreate makes a new resource.
 	BehaviorCreate
-	// Replace a resource.
+	// BehaviorReplace replaces a resource.
 	BehaviorReplace
-	// Attempt to merge a new resource with an existing resource.
+	// BehaviorMerge attempts to merge a new resource with an existing resource.
 	BehaviorMerge
 )
 
