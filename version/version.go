@@ -32,14 +32,21 @@ var (
 	buildDate = "1970-01-01T00:00:00Z" // build date in ISO8601 format, output of $(date -u +'%Y-%m-%dT%H:%M:%SZ')
 )
 
+// Version represens kustomize version.
 type Version struct {
+	// KustomizeVersion is a kustomize binary version.
 	KustomizeVersion string `json:"kustomizeVersion"`
-	GitCommit        string `json:"gitCommit"`
-	BuildDate        string `json:"buildDate"`
-	GoOs             string `json:"goOs"`
-	GoArch           string `json:"goArch"`
+	// GitCommit is a git commit
+	GitCommit string `json:"gitCommit"`
+	// BuildDate is a build date of the binary.
+	BuildDate string `json:"buildDate"`
+	// GoOs holds OS name.
+	GoOs string `json:"goOs"`
+	// GoArch holds architecture name.
+	GoArch string `json:"goArch"`
 }
 
+// GetVersion returns version.
 func GetVersion() Version {
 	return Version{
 		kustomizeVersion,
@@ -50,6 +57,7 @@ func GetVersion() Version {
 	}
 }
 
+// Print prints version.
 func (v Version) Print(w io.Writer) {
 	fmt.Fprintf(w, "Version: %+v\n", v)
 }
