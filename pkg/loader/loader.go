@@ -36,7 +36,7 @@ type loaderImpl struct {
 	schemes []SchemeLoader
 }
 
-// Interface for different types of loaders (e.g. fileLoader, httpLoader, etc.)
+// SchemeLoader is the interface for different types of loaders (e.g. fileLoader, httpLoader, etc.)
 type SchemeLoader interface {
 	// Does this location correspond to this scheme.
 	IsScheme(root string, location string) bool

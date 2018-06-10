@@ -35,6 +35,7 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 )
 
+// Application interface exposes methods to get resources of the application.
 type Application interface {
 	// Resources computes and returns the resources for the app.
 	Resources() (resmap.ResMap, error)
@@ -57,7 +58,7 @@ type applicationImpl struct {
 	loader        loader.Loader
 }
 
-// NewApp parses the kustomization file at the path using the loader.
+// New parses the kustomization file at the path using the loader and returns application.
 func New(loader loader.Loader) (Application, error) {
 	content, err := loader.Load(constants.KustomizationFileName)
 	if err != nil {
