@@ -85,7 +85,7 @@ func (pt *patchTransformer) Transform(baseResourceMap resmap.ResMap) error {
 		case err != nil:
 			return err
 		default:
-			// Use Strategic Merge Patch to handle types w/ schema
+			// Use Strategic-Merge-Patch to handle types w/ schema
 			// TODO: Change this to use the new Merge package.
 			// Store the name of the base object, because this name may have been munged.
 			// Apply this name to the StrategicMergePatched object.
