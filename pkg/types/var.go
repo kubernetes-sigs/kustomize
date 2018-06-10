@@ -40,6 +40,7 @@ type Var struct {
 	FieldRef corev1.ObjectFieldSelector `json:"fieldref,omitempty" yaml:"objref,omitempty"`
 }
 
+// Defaulting sets reference to field used by default.
 func (v *Var) Defaulting() {
 	if (corev1.ObjectFieldSelector{}) == v.FieldRef {
 		v.FieldRef = corev1.ObjectFieldSelector{FieldPath: "metadata.name"}

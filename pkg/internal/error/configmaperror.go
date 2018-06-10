@@ -19,6 +19,7 @@ package error
 
 import "fmt"
 
+// ConfigmapError represents error with a configmap.
 type ConfigmapError struct {
 	Path     string
 	ErrorMsg string

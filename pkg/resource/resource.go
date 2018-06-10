@@ -68,11 +68,13 @@ func (r *Resource) Id() ResId {
 	return NewResId(r.GroupVersionKind(), r.GetName())
 }
 
+// Merge performs merge with other resource.
 func (r *Resource) Merge(other *Resource) {
 	r.Replace(other)
 	mergeConfigmap(r.Object, other.Object, r.Object)
 }
 
+// Replace performs replace with other resource.
 func (r *Resource) Replace(other *Resource) {
 	r.SetLabels(mergeStringMaps(other.GetLabels(), r.GetLabels()))
 	r.SetAnnotations(mergeStringMaps(other.GetAnnotations(), r.GetAnnotations()))
@@ -103,6 +105,7 @@ func mergeStringMaps(maps ...map[string]string) map[string]string {
 	return result
 }
 
+// GetFieldValue returns value at the given fieldpath.
 func (r *Resource) GetFieldValue(fieldPath string) (string, error) {
 	return getFieldValue(r.UnstructuredContent(), strings.Split(fieldPath, "."))
 }

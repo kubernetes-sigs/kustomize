@@ -35,6 +35,10 @@ function testGoImports {
   diff -u <(echo -n) <(go_dirs | xargs -0 goimports -l)
 }
 
+function testGoLint {
+  diff -u <(echo -n) <(go_dirs | xargs -0 golint --min_confidence 0.85 )
+}
+
 function testGoVet {
   go vet -all ./...
 }
@@ -49,6 +53,7 @@ function testExamples {
 
 runTest testGoFmt
 runTest testGoImports
+runTest testGoLint
 runTest testGoVet
 runTest testGoTest
 runTest testExamples

@@ -30,6 +30,7 @@ type ResId struct {
 	name string
 }
 
+// NewResId creates new resource identifier
 func NewResId(g schema.GroupVersionKind, n string) ResId {
 	return ResId{gvk: g, name: n}
 }
@@ -41,10 +42,12 @@ func (n ResId) String() string {
 	return strings.Join([]string{n.gvk.Group, n.gvk.Version, n.gvk.Kind, n.name}, "_") + ".yaml"
 }
 
+// Gvk returns Group/Version/Kind of the resource.
 func (n ResId) Gvk() schema.GroupVersionKind {
 	return n.gvk
 }
 
+// Name returns resource name.
 func (n ResId) Name() string {
 	return n.name
 }
