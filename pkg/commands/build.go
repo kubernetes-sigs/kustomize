@@ -81,12 +81,12 @@ func (o *buildOptions) RunBuild(out, errOut io.Writer, fs fs.FileSystem) error {
 		return err
 	}
 
-	application, err := app.New(rootLoader)
+	application, err := app.NewApplication(rootLoader)
 	if err != nil {
 		return err
 	}
 
-	allResources, err := application.Resources()
+	allResources, err := application.MakeCustomizedResMap()
 
 	if err != nil {
 		return err
