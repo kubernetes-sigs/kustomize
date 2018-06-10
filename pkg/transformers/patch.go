@@ -29,33 +29,33 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
-// overlayTransformer contains a map of overlay objects
-type overlayTransformer struct {
-	overlay []*resource.Resource
+// patchTransformer applies patches.
+type patchTransformer struct {
+	patches []*resource.Resource
 }
 
-var _ Transformer = &overlayTransformer{}
+var _ Transformer = &patchTransformer{}
 
-// NewOverlayTransformer constructs a overlayTransformer.
-func NewOverlayTransformer(overlay []*resource.Resource) (Transformer, error) {
-	if len(overlay) == 0 {
+// NewPatchTransformer constructs a patchTransformer.
+func NewPatchTransformer(slice []*resource.Resource) (Transformer, error) {
+	if len(slice) == 0 {
 		return NewNoOpTransformer(), nil
 	}
-	return &overlayTransformer{overlay}, nil
+	return &patchTransformer{slice}, nil
 }
 
-// Transform apply the overlay on top of the base resources.
-func (o *overlayTransformer) Transform(baseResourceMap resmap.ResMap) error {
+// Transform apply the patches on top of the base resources.
+func (pt *patchTransformer) Transform(baseResourceMap resmap.ResMap) error {
 	// Merge and then index the patches by Id.
-	overlays, err := o.mergePatches()
+	patches, err := pt.mergePatches()
 	if err != nil {
 		return err
 	}
 
-	// Strategic merge the resources exist in both base and overlay.
-	for _, overlay := range overlays {
-		// Merge overlay with base resource.
-		id := overlay.Id()
+	// Strategic merge the resources exist in both base and patches.
+	for _, patch := range patches {
+		// Merge patches with base resource.
+		id := patch.Id()
 		base, found := baseResourceMap[id]
 		if !found {
 			return fmt.Errorf("failed to find an object with %#v to apply the patch", id.Gvk())
@@ -70,7 +70,7 @@ func (o *overlayTransformer) Transform(baseResourceMap resmap.ResMap) error {
 			if err != nil {
 				return err
 			}
-			patchBytes, err := json.Marshal(overlay)
+			patchBytes, err := json.Marshal(patch)
 			if err != nil {
 				return err
 			}
@@ -95,7 +95,7 @@ func (o *overlayTransformer) Transform(baseResourceMap resmap.ResMap) error {
 			}
 			merged, err = strategicpatch.StrategicMergeMapPatchUsingLookupPatchMeta(
 				base.Object,
-				overlay.Object,
+				patch.Object,
 				lookupPatchMeta)
 			if err != nil {
 				return err
@@ -109,9 +109,9 @@ func (o *overlayTransformer) Transform(baseResourceMap resmap.ResMap) error {
 
 // mergePatches merge and index patches by Id.
 // It errors out if there is conflict between patches.
-func (o *overlayTransformer) mergePatches() (resmap.ResMap, error) {
+func (pt *patchTransformer) mergePatches() (resmap.ResMap, error) {
 	rc := resmap.ResMap{}
-	for ix, patch := range o.overlay {
+	for ix, patch := range pt.patches {
 		id := patch.Id()
 		existing, found := rc[id]
 		if !found {
@@ -138,7 +138,7 @@ func (o *overlayTransformer) mergePatches() (resmap.ResMap, error) {
 			return nil, err
 		}
 		if conflict {
-			conflictingPatch, err := cd.findConflict(ix, o.overlay)
+			conflictingPatch, err := cd.findConflict(ix, pt.patches)
 			if err != nil {
 				return nil, err
 			}

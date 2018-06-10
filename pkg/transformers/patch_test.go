@@ -53,7 +53,7 @@ func TestOverlayRun(t *testing.T) {
 				},
 			}),
 	}
-	overlay := []*resource.Resource{
+	patch := []*resource.Resource{
 		resource.NewResourceFromMap(map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
@@ -120,7 +120,7 @@ func TestOverlayRun(t *testing.T) {
 				},
 			}),
 	}
-	lt, err := NewOverlayTransformer(overlay)
+	lt, err := NewPatchTransformer(patch)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -157,7 +157,7 @@ func TestMultiplePatches(t *testing.T) {
 				},
 			}),
 	}
-	overlay := []*resource.Resource{
+	patch := []*resource.Resource{
 		resource.NewResourceFromMap(map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
@@ -250,7 +250,7 @@ func TestMultiplePatches(t *testing.T) {
 				},
 			}),
 	}
-	lt, err := NewOverlayTransformer(overlay)
+	lt, err := NewPatchTransformer(patch)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -287,7 +287,7 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 				},
 			}),
 	}
-	overlay := []*resource.Resource{
+	patch := []*resource.Resource{
 		resource.NewResourceFromMap(map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
@@ -336,7 +336,7 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 		),
 	}
 
-	lt, err := NewOverlayTransformer(overlay)
+	lt, err := NewPatchTransformer(patch)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -366,7 +366,7 @@ func TestNoSchemaOverlayRun(t *testing.T) {
 				},
 			}),
 	}
-	overlay := []*resource.Resource{
+	patch := []*resource.Resource{
 		resource.NewResourceFromMap(map[string]interface{}{
 			"apiVersion": "example.com/v1",
 			"kind":       "Foo",
@@ -399,7 +399,7 @@ func TestNoSchemaOverlayRun(t *testing.T) {
 			}),
 	}
 
-	lt, err := NewOverlayTransformer(overlay)
+	lt, err := NewPatchTransformer(patch)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -429,7 +429,7 @@ func TestNoSchemaMultiplePatches(t *testing.T) {
 				},
 			}),
 	}
-	overlay := []*resource.Resource{
+	patch := []*resource.Resource{
 		resource.NewResourceFromMap(map[string]interface{}{
 			"apiVersion": "example.com/v1",
 			"kind":       "Foo",
@@ -483,7 +483,7 @@ func TestNoSchemaMultiplePatches(t *testing.T) {
 			}),
 	}
 
-	lt, err := NewOverlayTransformer(overlay)
+	lt, err := NewPatchTransformer(patch)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -513,7 +513,7 @@ func TestNoSchemaMultiplePatchesWithConflict(t *testing.T) {
 				},
 			}),
 	}
-	overlay := []*resource.Resource{
+	patch := []*resource.Resource{
 		resource.NewResourceFromMap(map[string]interface{}{
 			"apiVersion": "example.com/v1",
 			"kind":       "Foo",
@@ -541,7 +541,7 @@ func TestNoSchemaMultiplePatchesWithConflict(t *testing.T) {
 		}),
 	}
 
-	lt, err := NewOverlayTransformer(overlay)
+	lt, err := NewPatchTransformer(patch)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
