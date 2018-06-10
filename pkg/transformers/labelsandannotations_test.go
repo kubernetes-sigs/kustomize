@@ -22,7 +22,6 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -35,141 +34,129 @@ var foo = schema.GroupVersionKind{Group: "example.com", Version: "v1", Kind: "Fo
 
 func TestLabelsRun(t *testing.T) {
 	m := resmap.ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name": "cm1",
-					},
+		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "cm1",
 				},
 			}),
-		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"group":      "apps",
-					"apiVersion": "v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name": "deploy1",
-					},
-					"spec": map[string]interface{}{
-						"template": map[string]interface{}{
-							"metadata": map[string]interface{}{
-								"labels": map[string]interface{}{
-									"old-label": "old-value",
-								},
+		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"group":      "apps",
+				"apiVersion": "v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "deploy1",
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"metadata": map[string]interface{}{
+							"labels": map[string]interface{}{
+								"old-label": "old-value",
 							},
-							"spec": map[string]interface{}{
-								"containers": []interface{}{
-									map[string]interface{}{
-										"name":  "nginx",
-										"image": "nginx:1.7.9",
-									},
+						},
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"name":  "nginx",
+									"image": "nginx:1.7.9",
 								},
 							},
 						},
 					},
 				},
 			}),
-		resource.NewResId(service, "svc1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "Service",
-					"metadata": map[string]interface{}{
-						"name": "svc1",
-					},
-					"spec": map[string]interface{}{
-						"ports": []interface{}{
-							map[string]interface{}{
-								"name": "port1",
-								"port": "12345",
-							},
+		resource.NewResId(service, "svc1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Service",
+				"metadata": map[string]interface{}{
+					"name": "svc1",
+				},
+				"spec": map[string]interface{}{
+					"ports": []interface{}{
+						map[string]interface{}{
+							"name": "port1",
+							"port": "12345",
 						},
 					},
 				},
 			}),
 	}
 	expected := resmap.ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name": "cm1",
-						"labels": map[string]interface{}{
-							"label-key1": "label-value1",
-							"label-key2": "label-value2",
-						},
+		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "cm1",
+					"labels": map[string]interface{}{
+						"label-key1": "label-value1",
+						"label-key2": "label-value2",
 					},
 				},
 			}),
-		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"group":      "apps",
-					"apiVersion": "v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name": "deploy1",
-						"labels": map[string]interface{}{
+		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"group":      "apps",
+				"apiVersion": "v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "deploy1",
+					"labels": map[string]interface{}{
+						"label-key1": "label-value1",
+						"label-key2": "label-value2",
+					},
+				},
+				"spec": map[string]interface{}{
+					"selector": map[string]interface{}{
+						"matchLabels": map[string]interface{}{
 							"label-key1": "label-value1",
 							"label-key2": "label-value2",
 						},
 					},
-					"spec": map[string]interface{}{
-						"selector": map[string]interface{}{
-							"matchLabels": map[string]interface{}{
+					"template": map[string]interface{}{
+						"metadata": map[string]interface{}{
+							"labels": map[string]interface{}{
+								"old-label":  "old-value",
 								"label-key1": "label-value1",
 								"label-key2": "label-value2",
 							},
 						},
-						"template": map[string]interface{}{
-							"metadata": map[string]interface{}{
-								"labels": map[string]interface{}{
-									"old-label":  "old-value",
-									"label-key1": "label-value1",
-									"label-key2": "label-value2",
-								},
-							},
-							"spec": map[string]interface{}{
-								"containers": []interface{}{
-									map[string]interface{}{
-										"name":  "nginx",
-										"image": "nginx:1.7.9",
-									},
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"name":  "nginx",
+									"image": "nginx:1.7.9",
 								},
 							},
 						},
 					},
 				},
 			}),
-		resource.NewResId(service, "svc1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "Service",
-					"metadata": map[string]interface{}{
-						"name": "svc1",
-						"labels": map[string]interface{}{
-							"label-key1": "label-value1",
-							"label-key2": "label-value2",
+		resource.NewResId(service, "svc1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Service",
+				"metadata": map[string]interface{}{
+					"name": "svc1",
+					"labels": map[string]interface{}{
+						"label-key1": "label-value1",
+						"label-key2": "label-value2",
+					},
+				},
+				"spec": map[string]interface{}{
+					"ports": []interface{}{
+						map[string]interface{}{
+							"name": "port1",
+							"port": "12345",
 						},
 					},
-					"spec": map[string]interface{}{
-						"ports": []interface{}{
-							map[string]interface{}{
-								"name": "port1",
-								"port": "12345",
-							},
-						},
-						"selector": map[string]interface{}{
-							"label-key1": "label-value1",
-							"label-key2": "label-value2",
-						},
+					"selector": map[string]interface{}{
+						"label-key1": "label-value1",
+						"label-key2": "label-value2",
 					},
 				},
 			}),
@@ -189,212 +176,122 @@ func TestLabelsRun(t *testing.T) {
 	}
 }
 
-func makeAnnotatededConfigMap() *unstructured.Unstructured {
-	return &unstructured.Unstructured{
-		Object: map[string]interface{}{
-			"apiVersion": "v1",
-			"kind":       "ConfigMap",
-			"metadata": map[string]interface{}{
-				"name": "cm1",
-				"annotations": map[string]interface{}{
-					"anno-key1": "anno-value1",
-					"anno-key2": "anno-value2",
-				},
-			},
-		},
-	}
-}
-
-func makeAnnotatededDeployment() *unstructured.Unstructured {
-	return &unstructured.Unstructured{
-		Object: map[string]interface{}{
-			"group":      "apps",
-			"apiVersion": "v1",
-			"kind":       "Deployment",
-			"metadata": map[string]interface{}{
-				"name": "deploy1",
-				"annotations": map[string]interface{}{
-					"anno-key1": "anno-value1",
-					"anno-key2": "anno-value2",
-				},
-			},
-			"spec": map[string]interface{}{
-				"template": map[string]interface{}{
-					"metadata": map[string]interface{}{
-						"annotations": map[string]interface{}{
-							"anno-key1": "anno-value1",
-							"anno-key2": "anno-value2",
-						},
-						"labels": map[string]interface{}{
-							"old-label": "old-value",
-						},
-					},
-					"spec": map[string]interface{}{
-						"containers": []interface{}{
-							map[string]interface{}{
-								"name":  "nginx",
-								"image": "nginx:1.7.9",
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func makeAnnotatededService() *unstructured.Unstructured {
-	return &unstructured.Unstructured{
-		Object: map[string]interface{}{
-			"apiVersion": "v1",
-			"kind":       "Service",
-			"metadata": map[string]interface{}{
-				"name": "svc1",
-				"annotations": map[string]interface{}{
-					"anno-key1": "anno-value1",
-					"anno-key2": "anno-value2",
-				},
-			},
-			"spec": map[string]interface{}{
-				"ports": []interface{}{
-					map[string]interface{}{
-						"name": "port1",
-						"port": "12345",
-					},
-				},
-			},
-		},
-	}
-}
-
 func TestAnnotationsRun(t *testing.T) {
 	m := resmap.ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name": "cm1",
-					},
+		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "cm1",
 				},
 			}),
-		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"group":      "apps",
-					"apiVersion": "v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name": "deploy1",
-					},
-					"spec": map[string]interface{}{
-						"template": map[string]interface{}{
-							"metadata": map[string]interface{}{
-								"labels": map[string]interface{}{
-									"old-label": "old-value",
-								},
+		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"group":      "apps",
+				"apiVersion": "v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "deploy1",
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"metadata": map[string]interface{}{
+							"labels": map[string]interface{}{
+								"old-label": "old-value",
 							},
-							"spec": map[string]interface{}{
-								"containers": []interface{}{
-									map[string]interface{}{
-										"name":  "nginx",
-										"image": "nginx:1.7.9",
-									},
+						},
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"name":  "nginx",
+									"image": "nginx:1.7.9",
 								},
 							},
 						},
 					},
 				},
 			}),
-		resource.NewResId(service, "svc1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "Service",
-					"metadata": map[string]interface{}{
-						"name": "svc1",
-					},
-					"spec": map[string]interface{}{
-						"ports": []interface{}{
-							map[string]interface{}{
-								"name": "port1",
-								"port": "12345",
-							},
+		resource.NewResId(service, "svc1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Service",
+				"metadata": map[string]interface{}{
+					"name": "svc1",
+				},
+				"spec": map[string]interface{}{
+					"ports": []interface{}{
+						map[string]interface{}{
+							"name": "port1",
+							"port": "12345",
 						},
 					},
 				},
 			}),
 	}
 	expected := resmap.ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name": "cm1",
-						"annotations": map[string]interface{}{
-							"anno-key1": "anno-value1",
-							"anno-key2": "anno-value2",
-						},
+		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "cm1",
+					"annotations": map[string]interface{}{
+						"anno-key1": "anno-value1",
+						"anno-key2": "anno-value2",
 					},
 				},
 			}),
-		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"group":      "apps",
-					"apiVersion": "v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name": "deploy1",
-						"annotations": map[string]interface{}{
-							"anno-key1": "anno-value1",
-							"anno-key2": "anno-value2",
-						},
+		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"group":      "apps",
+				"apiVersion": "v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "deploy1",
+					"annotations": map[string]interface{}{
+						"anno-key1": "anno-value1",
+						"anno-key2": "anno-value2",
 					},
-					"spec": map[string]interface{}{
-						"template": map[string]interface{}{
-							"metadata": map[string]interface{}{
-								"annotations": map[string]interface{}{
-									"anno-key1": "anno-value1",
-									"anno-key2": "anno-value2",
-								},
-								"labels": map[string]interface{}{
-									"old-label": "old-value",
-								},
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"metadata": map[string]interface{}{
+							"annotations": map[string]interface{}{
+								"anno-key1": "anno-value1",
+								"anno-key2": "anno-value2",
 							},
-							"spec": map[string]interface{}{
-								"containers": []interface{}{
-									map[string]interface{}{
-										"name":  "nginx",
-										"image": "nginx:1.7.9",
-									},
+							"labels": map[string]interface{}{
+								"old-label": "old-value",
+							},
+						},
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"name":  "nginx",
+									"image": "nginx:1.7.9",
 								},
 							},
 						},
 					},
 				},
 			}),
-		resource.NewResId(service, "svc1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "Service",
-					"metadata": map[string]interface{}{
-						"name": "svc1",
-						"annotations": map[string]interface{}{
-							"anno-key1": "anno-value1",
-							"anno-key2": "anno-value2",
-						},
+		resource.NewResId(service, "svc1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Service",
+				"metadata": map[string]interface{}{
+					"name": "svc1",
+					"annotations": map[string]interface{}{
+						"anno-key1": "anno-value1",
+						"anno-key2": "anno-value2",
 					},
-					"spec": map[string]interface{}{
-						"ports": []interface{}{
-							map[string]interface{}{
-								"name": "port1",
-								"port": "12345",
-							},
+				},
+				"spec": map[string]interface{}{
+					"ports": []interface{}{
+						map[string]interface{}{
+							"name": "port1",
+							"port": "12345",
 						},
 					},
 				},

@@ -22,144 +22,127 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 func TestNameHashTransformer(t *testing.T) {
 	objs := resmap.ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name": "cm1",
-					},
+		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "cm1",
 				},
 			}),
-		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"group":      "apps",
-					"apiVersion": "v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name": "deploy1",
-					},
-					"spec": map[string]interface{}{
-						"template": map[string]interface{}{
-							"metadata": map[string]interface{}{
-								"labels": map[string]interface{}{
-									"old-label": "old-value",
-								},
+		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"group":      "apps",
+				"apiVersion": "v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "deploy1",
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"metadata": map[string]interface{}{
+							"labels": map[string]interface{}{
+								"old-label": "old-value",
 							},
-							"spec": map[string]interface{}{
-								"containers": []interface{}{
-									map[string]interface{}{
-										"name":  "nginx",
-										"image": "nginx:1.7.9",
-									},
+						},
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"name":  "nginx",
+									"image": "nginx:1.7.9",
 								},
 							},
 						},
 					},
 				},
 			}),
-		resource.NewResId(service, "svc1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "Service",
-					"metadata": map[string]interface{}{
-						"name": "svc1",
-					},
-					"spec": map[string]interface{}{
-						"ports": []interface{}{
-							map[string]interface{}{
-								"name": "port1",
-								"port": "12345",
-							},
+		resource.NewResId(service, "svc1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Service",
+				"metadata": map[string]interface{}{
+					"name": "svc1",
+				},
+				"spec": map[string]interface{}{
+					"ports": []interface{}{
+						map[string]interface{}{
+							"name": "port1",
+							"port": "12345",
 						},
 					},
 				},
 			}),
-		resource.NewResId(secret, "secret1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "Secret",
-					"metadata": map[string]interface{}{
-						"name": "secret1",
-					},
+		resource.NewResId(secret, "secret1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Secret",
+				"metadata": map[string]interface{}{
+					"name": "secret1",
 				},
 			}),
 	}
 
 	expected := resmap.ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name": "cm1-m462kdfb68",
-					},
+		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "cm1-m462kdfb68",
 				},
 			}),
-		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"group":      "apps",
-					"apiVersion": "v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name": "deploy1",
-					},
-					"spec": map[string]interface{}{
-						"template": map[string]interface{}{
-							"metadata": map[string]interface{}{
-								"labels": map[string]interface{}{
-									"old-label": "old-value",
-								},
+		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"group":      "apps",
+				"apiVersion": "v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "deploy1",
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"metadata": map[string]interface{}{
+							"labels": map[string]interface{}{
+								"old-label": "old-value",
 							},
-							"spec": map[string]interface{}{
-								"containers": []interface{}{
-									map[string]interface{}{
-										"name":  "nginx",
-										"image": "nginx:1.7.9",
-									},
+						},
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"name":  "nginx",
+									"image": "nginx:1.7.9",
 								},
 							},
 						},
 					},
 				},
 			}),
-		resource.NewResId(service, "svc1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "Service",
-					"metadata": map[string]interface{}{
-						"name": "svc1",
-					},
-					"spec": map[string]interface{}{
-						"ports": []interface{}{
-							map[string]interface{}{
-								"name": "port1",
-								"port": "12345",
-							},
+		resource.NewResId(service, "svc1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Service",
+				"metadata": map[string]interface{}{
+					"name": "svc1",
+				},
+				"spec": map[string]interface{}{
+					"ports": []interface{}{
+						map[string]interface{}{
+							"name": "port1",
+							"port": "12345",
 						},
 					},
 				},
 			}),
-		resource.NewResId(secret, "secret1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "Secret",
-					"metadata": map[string]interface{}{
-						"name": "secret1-7kc45hd5f7",
-					},
+		resource.NewResId(secret, "secret1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Secret",
+				"metadata": map[string]interface{}{
+					"name": "secret1-7kc45hd5f7",
 				},
 			}),
 	}

@@ -21,7 +21,7 @@ import (
 )
 
 func TestGetFieldValue(t *testing.T) {
-	res := NewResource(map[string]interface{}{
+	res := NewResourceFromMap(map[string]interface{}{
 		"Kind": "Service",
 		"metadata": map[string]interface{}{
 			"labels": map[string]string{

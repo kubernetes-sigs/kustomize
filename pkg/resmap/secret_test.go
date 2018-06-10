@@ -24,7 +24,6 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -48,20 +47,18 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	}
 
 	expected := ResMap{
-		resource.NewResId(secret, "apple"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "Secret",
-					"metadata": map[string]interface{}{
-						"name":              "apple",
-						"creationTimestamp": nil,
-					},
-					"type": string(corev1.SecretTypeOpaque),
-					"data": map[string]interface{}{
-						"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
-						"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
-					},
+		resource.NewResId(secret, "apple"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Secret",
+				"metadata": map[string]interface{}{
+					"name":              "apple",
+					"creationTimestamp": nil,
+				},
+				"type": string(corev1.SecretTypeOpaque),
+				"data": map[string]interface{}{
+					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
+					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
 			}),
 	}

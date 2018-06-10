@@ -23,7 +23,6 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/internal/loadertest"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -42,24 +41,20 @@ metadata:
   name: cm2
 `)
 	input := ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name": "cm1",
-					},
+		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "cm1",
 				},
 			}),
-		resource.NewResId(cmap, "cm2"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name": "cm2",
-					},
+		resource.NewResId(cmap, "cm2"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "cm2",
 				},
 			}),
 	}
@@ -89,24 +84,20 @@ metadata:
 	if ferr := l.AddFile("/home/seans/project/deployment.yaml", []byte(resourceStr)); ferr != nil {
 		t.Fatalf("Error adding fake file: %v\n", ferr)
 	}
-	expected := ResMap{resource.NewResId(deploy, "dply1"): resource.NewBehaviorlessResource(
-		&unstructured.Unstructured{
-			Object: map[string]interface{}{
+	expected := ResMap{resource.NewResId(deploy, "dply1"): resource.NewResourceFromMap(
+		map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "dply1",
+			},
+		}),
+		resource.NewResId(deploy, "dply2"): resource.NewResourceFromMap(
+			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
 				"metadata": map[string]interface{}{
-					"name": "dply1",
-				},
-			},
-		}),
-		resource.NewResId(deploy, "dply2"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "apps/v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name": "dply2",
-					},
+					"name": "dply2",
 				},
 			}),
 	}
@@ -133,24 +124,20 @@ metadata:
   name: cm2
 `)
 	expected := ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name": "cm1",
-					},
+		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "cm1",
 				},
 			}),
-		resource.NewResId(cmap, "cm2"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "ConfigMap",
-					"metadata": map[string]interface{}{
-						"name": "cm2",
-					},
+		resource.NewResId(cmap, "cm2"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "cm2",
 				},
 			}),
 	}
@@ -166,49 +153,41 @@ metadata:
 
 func TestMerge(t *testing.T) {
 	input1 := ResMap{
-		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "apps/v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name": "foo-deploy1",
-					},
+		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "foo-deploy1",
 				},
 			}),
 	}
 	input2 := ResMap{
-		resource.NewResId(statefulset, "stateful1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "apps/v1",
-					"kind":       "StatefulSet",
-					"metadata": map[string]interface{}{
-						"name": "bar-stateful",
-					},
+		resource.NewResId(statefulset, "stateful1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "StatefulSet",
+				"metadata": map[string]interface{}{
+					"name": "bar-stateful",
 				},
 			}),
 	}
 	input := []ResMap{input1, input2}
 	expected := ResMap{
-		resource.NewResId(deploy, "deploy1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "apps/v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name": "foo-deploy1",
-					},
+		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "foo-deploy1",
 				},
 			}),
-		resource.NewResId(statefulset, "stateful1"): resource.NewBehaviorlessResource(
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "apps/v1",
-					"kind":       "StatefulSet",
-					"metadata": map[string]interface{}{
-						"name": "bar-stateful",
-					},
+		resource.NewResId(statefulset, "stateful1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "StatefulSet",
+				"metadata": map[string]interface{}{
+					"name": "bar-stateful",
 				},
 			}),
 	}

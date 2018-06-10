@@ -23,7 +23,6 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/internal/loadertest"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -53,19 +52,17 @@ func TestNewFromConfigMaps(t *testing.T) {
 			filepath: "/home/seans/project/app.env",
 			content:  "DB_USERNAME=admin\nDB_PASSWORD=somepw",
 			expected: ResMap{
-				resource.NewResId(cmap, "envConfigMap"): resource.NewBehaviorlessResource(
-					&unstructured.Unstructured{
-						Object: map[string]interface{}{
-							"apiVersion": "v1",
-							"kind":       "ConfigMap",
-							"metadata": map[string]interface{}{
-								"name":              "envConfigMap",
-								"creationTimestamp": nil,
-							},
-							"data": map[string]interface{}{
-								"DB_USERNAME": "admin",
-								"DB_PASSWORD": "somepw",
-							},
+				resource.NewResId(cmap, "envConfigMap"): resource.NewResourceFromMap(
+					map[string]interface{}{
+						"apiVersion": "v1",
+						"kind":       "ConfigMap",
+						"metadata": map[string]interface{}{
+							"name":              "envConfigMap",
+							"creationTimestamp": nil,
+						},
+						"data": map[string]interface{}{
+							"DB_USERNAME": "admin",
+							"DB_PASSWORD": "somepw",
 						},
 					}),
 			},
@@ -82,20 +79,18 @@ func TestNewFromConfigMaps(t *testing.T) {
 			filepath: "/home/seans/project/app-init.ini",
 			content:  "FOO=bar\nBAR=baz\n",
 			expected: ResMap{
-				resource.NewResId(cmap, "fileConfigMap"): resource.NewBehaviorlessResource(
-					&unstructured.Unstructured{
-						Object: map[string]interface{}{
-							"apiVersion": "v1",
-							"kind":       "ConfigMap",
-							"metadata": map[string]interface{}{
-								"name":              "fileConfigMap",
-								"creationTimestamp": nil,
-							},
-							"data": map[string]interface{}{
-								"app-init.ini": `FOO=bar
+				resource.NewResId(cmap, "fileConfigMap"): resource.NewResourceFromMap(
+					map[string]interface{}{
+						"apiVersion": "v1",
+						"kind":       "ConfigMap",
+						"metadata": map[string]interface{}{
+							"name":              "fileConfigMap",
+							"creationTimestamp": nil,
+						},
+						"data": map[string]interface{}{
+							"app-init.ini": `FOO=bar
 BAR=baz
 `,
-							},
 						},
 					}),
 			},
@@ -111,19 +106,17 @@ BAR=baz
 				},
 			},
 			expected: ResMap{
-				resource.NewResId(cmap, "literalConfigMap"): resource.NewBehaviorlessResource(
-					&unstructured.Unstructured{
-						Object: map[string]interface{}{
-							"apiVersion": "v1",
-							"kind":       "ConfigMap",
-							"metadata": map[string]interface{}{
-								"name":              "literalConfigMap",
-								"creationTimestamp": nil,
-							},
-							"data": map[string]interface{}{
-								"a": "x",
-								"b": "y",
-							},
+				resource.NewResId(cmap, "literalConfigMap"): resource.NewResourceFromMap(
+					map[string]interface{}{
+						"apiVersion": "v1",
+						"kind":       "ConfigMap",
+						"metadata": map[string]interface{}{
+							"name":              "literalConfigMap",
+							"creationTimestamp": nil,
+						},
+						"data": map[string]interface{}{
+							"a": "x",
+							"b": "y",
 						},
 					}),
 			},
