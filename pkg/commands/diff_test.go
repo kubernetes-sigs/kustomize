@@ -74,51 +74,57 @@ func TestDiff(t *testing.T) {
 
 	for _, testcaseName := range testcases.List() {
 		t.Run(testcaseName, func(t *testing.T) {
-			name := testcaseName
-			testcase := DiffTestCase{}
-			testcaseDir := filepath.Join("testdata", "testcase-"+name)
-			testcaseData, err := ioutil.ReadFile(filepath.Join(testcaseDir, "test.yaml"))
-			if err != nil {
-				t.Fatalf("%s: %v", name, err)
-			}
-			if err := yaml.Unmarshal(testcaseData, &testcase); err != nil {
-				t.Fatalf("%s: %v", name, err)
-			}
-
-			diffOps := &diffOptions{
-				kustomizationPath: testcase.Filename,
-			}
-			buf := bytes.NewBuffer([]byte{})
-			err = diffOps.RunDiff(buf, os.Stderr, fs)
-			switch {
-			case err != nil && len(testcase.ExpectedError) == 0:
-				t.Errorf("unexpected error: %v", err)
-			case err != nil && len(testcase.ExpectedError) != 0:
-				if !strings.Contains(err.Error(), testcase.ExpectedError) {
-					t.Errorf("expected error to contain %q but got: %v", testcase.ExpectedError, err)
-				}
-				return
-			case err == nil && len(testcase.ExpectedError) != 0:
-				t.Errorf("unexpected no error")
-			}
-
-			actualString := string(buf.Bytes())
-			actualString = noopDir.ReplaceAllString(actualString, "/tmp/noop/")
-			actualString = transformedDir.ReplaceAllString(actualString, "/tmp/transformed/")
-			actualString = timestamp.ReplaceAllString(actualString, "YYYY-MM-DD HH:MM:SS")
-			actualBytes := []byte(actualString)
-			if !updateKustomizeExpected {
-				expectedBytes, err := ioutil.ReadFile(testcase.ExpectedDiff)
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-				if !reflect.DeepEqual(actualBytes, expectedBytes) {
-					t.Errorf("%s\ndoesn't equal expected:\n%s\n", actualBytes, expectedBytes)
-				}
-			} else {
-				ioutil.WriteFile(testcase.ExpectedDiff, actualBytes, 0644)
-			}
-
+			runDiffTestCase(t, testcaseName, updateKustomizeExpected, fs,
+				noopDir, transformedDir, timestamp)
 		})
 	}
+}
+
+func runDiffTestCase(t *testing.T, testcaseName string, updateKustomizeExpected bool, fs fs.FileSystem,
+	noopDir, transformedDir, timestamp *regexp.Regexp) {
+	name := testcaseName
+	testcase := DiffTestCase{}
+	testcaseDir := filepath.Join("testdata", "testcase-"+name)
+	testcaseData, err := ioutil.ReadFile(filepath.Join(testcaseDir, "test.yaml"))
+	if err != nil {
+		t.Fatalf("%s: %v", name, err)
+	}
+	if err := yaml.Unmarshal(testcaseData, &testcase); err != nil {
+		t.Fatalf("%s: %v", name, err)
+	}
+
+	diffOps := &diffOptions{
+		kustomizationPath: testcase.Filename,
+	}
+	buf := bytes.NewBuffer([]byte{})
+	err = diffOps.RunDiff(buf, os.Stderr, fs)
+	switch {
+	case err != nil && len(testcase.ExpectedError) == 0:
+		t.Errorf("unexpected error: %v", err)
+	case err != nil && len(testcase.ExpectedError) != 0:
+		if !strings.Contains(err.Error(), testcase.ExpectedError) {
+			t.Errorf("expected error to contain %q but got: %v", testcase.ExpectedError, err)
+		}
+		return
+	case err == nil && len(testcase.ExpectedError) != 0:
+		t.Errorf("unexpected no error")
+	}
+
+	actualString := string(buf.Bytes())
+	actualString = noopDir.ReplaceAllString(actualString, "/tmp/noop/")
+	actualString = transformedDir.ReplaceAllString(actualString, "/tmp/transformed/")
+	actualString = timestamp.ReplaceAllString(actualString, "YYYY-MM-DD HH:MM:SS")
+	actualBytes := []byte(actualString)
+	if !updateKustomizeExpected {
+		expectedBytes, err := ioutil.ReadFile(testcase.ExpectedDiff)
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+		if !reflect.DeepEqual(actualBytes, expectedBytes) {
+			t.Errorf("%s\ndoesn't equal expected:\n%s\n", actualBytes, expectedBytes)
+		}
+	} else {
+		ioutil.WriteFile(testcase.ExpectedDiff, actualBytes, 0644)
+	}
+
 }

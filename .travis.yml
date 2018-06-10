@@ -12,6 +12,7 @@ before_install:
   - go get -u golang.org/x/tools/cmd/goimports
   - go get -u github.com/onsi/ginkgo/ginkgo
   - go get -u github.com/monopole/mdrip
+  - go get -u github.com/fzipp/gocyclo
 
 # Install must be set to prevent default `go get` to run.
 # The dependencies have already been vendored by `dep` so

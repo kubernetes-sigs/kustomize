@@ -31,6 +31,11 @@ function testGoFmt {
   diff <(echo -n) <(go_dirs | xargs -0 gofmt -s -d -l)
 }
 
+
+function testGoCyclo {
+  diff <(echo -n) <(go_dirs | xargs -0 gocyclo -over 15)
+}
+
 function testGoImports {
   diff -u <(echo -n) <(go_dirs | xargs -0 goimports -l)
 }
@@ -55,6 +60,7 @@ runTest testGoFmt
 runTest testGoImports
 runTest testGoLint
 runTest testGoVet
+runTest testGoCyclo
 runTest testGoTest
 runTest testExamples
 
