@@ -104,49 +104,51 @@ func TestBuild(t *testing.T) {
 	}
 
 	for _, testcaseName := range testcases.List() {
-		t.Run(testcaseName, func(t *testing.T) {
-			name := testcaseName
-			testcase := buildTestCase{}
-			testcaseDir := filepath.Join("testdata", "testcase-"+name)
-			testcaseData, err := ioutil.ReadFile(filepath.Join(testcaseDir, "test.yaml"))
-			if err != nil {
-				t.Fatalf("%s: %v", name, err)
-			}
-			if err := yaml.Unmarshal(testcaseData, &testcase); err != nil {
-				t.Fatalf("%s: %v", name, err)
-			}
+		t.Run(testcaseName, func(t *testing.T) { runBuildTestCase(t, testcaseName, updateKustomizeExpected, fs) })
+	}
 
-			ops := &buildOptions{
-				kustomizationPath: testcase.Filename,
-			}
-			buf := bytes.NewBuffer([]byte{})
-			err = ops.RunBuild(buf, os.Stderr, fs)
-			switch {
-			case err != nil && len(testcase.ExpectedError) == 0:
-				t.Errorf("unexpected error: %v", err)
-			case err != nil && len(testcase.ExpectedError) != 0:
-				if !strings.Contains(err.Error(), testcase.ExpectedError) {
-					t.Errorf("expected error to contain %q but got: %v", testcase.ExpectedError, err)
-				}
-				return
-			case err == nil && len(testcase.ExpectedError) != 0:
-				t.Errorf("unexpected no error")
-			}
+}
 
-			actualBytes := buf.Bytes()
-			if !updateKustomizeExpected {
-				expectedBytes, err := ioutil.ReadFile(testcase.ExpectedStdout)
-				if err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-				if !reflect.DeepEqual(actualBytes, expectedBytes) {
-					t.Errorf("%s\ndoesn't equal expected:\n%s\n", actualBytes, expectedBytes)
-				}
-			} else {
-				ioutil.WriteFile(testcase.ExpectedStdout, actualBytes, 0644)
-			}
+func runBuildTestCase(t *testing.T, testcaseName string, updateKustomizeExpected bool, fs fs.FileSystem) {
+	name := testcaseName
+	testcase := buildTestCase{}
+	testcaseDir := filepath.Join("testdata", "testcase-"+name)
+	testcaseData, err := ioutil.ReadFile(filepath.Join(testcaseDir, "test.yaml"))
+	if err != nil {
+		t.Fatalf("%s: %v", name, err)
+	}
+	if err := yaml.Unmarshal(testcaseData, &testcase); err != nil {
+		t.Fatalf("%s: %v", name, err)
+	}
 
-		})
+	ops := &buildOptions{
+		kustomizationPath: testcase.Filename,
+	}
+	buf := bytes.NewBuffer([]byte{})
+	err = ops.RunBuild(buf, os.Stderr, fs)
+	switch {
+	case err != nil && len(testcase.ExpectedError) == 0:
+		t.Errorf("unexpected error: %v", err)
+	case err != nil && len(testcase.ExpectedError) != 0:
+		if !strings.Contains(err.Error(), testcase.ExpectedError) {
+			t.Errorf("expected error to contain %q but got: %v", testcase.ExpectedError, err)
+		}
+		return
+	case err == nil && len(testcase.ExpectedError) != 0:
+		t.Errorf("unexpected no error")
+	}
+
+	actualBytes := buf.Bytes()
+	if !updateKustomizeExpected {
+		expectedBytes, err := ioutil.ReadFile(testcase.ExpectedStdout)
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+		if !reflect.DeepEqual(actualBytes, expectedBytes) {
+			t.Errorf("%s\ndoesn't equal expected:\n%s\n", actualBytes, expectedBytes)
+		}
+	} else {
+		ioutil.WriteFile(testcase.ExpectedStdout, actualBytes, 0644)
 	}
 
 }
