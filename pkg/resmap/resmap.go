@@ -68,11 +68,12 @@ func (m ResMap) EncodeAsYaml() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (m1 ResMap) ErrorIfNotEqual(m2 ResMap) error {
-	if len(m1) != len(m2) {
+// ErrorIfNotEqual returns error if maps are not equal.
+func (m ResMap) ErrorIfNotEqual(m2 ResMap) error {
+	if len(m) != len(m2) {
 		keySet1 := []resource.ResId{}
 		keySet2 := []resource.ResId{}
-		for id := range m1 {
+		for id := range m {
 			keySet1 = append(keySet1, id)
 		}
 		for id := range m2 {
@@ -80,7 +81,7 @@ func (m1 ResMap) ErrorIfNotEqual(m2 ResMap) error {
 		}
 		return fmt.Errorf("maps has different number of entries: %#v doesn't equals %#v", keySet1, keySet2)
 	}
-	for id, obj1 := range m1 {
+	for id, obj1 := range m {
 		obj2, found := m2[id]
 		if !found {
 			return fmt.Errorf("%#v doesn't exist in %#v", id, m2)

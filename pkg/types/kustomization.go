@@ -67,7 +67,7 @@ type Kustomization struct {
 	Vars []Var `json:"vars,omitempty" yaml:"vars,omitempty"`
 }
 
-// ConfigMapArg contains the metadata of how to generate a configmap.
+// ConfigMapArgs contains the metadata of how to generate a configmap.
 type ConfigMapArgs struct {
 	// Name of the configmap.
 	// The full name should be Kustomization.NamePrefix + Configmap.Name +
@@ -84,7 +84,7 @@ type ConfigMapArgs struct {
 	DataSources `json:",inline,omitempty" yaml:",inline,omitempty"`
 }
 
-// SecretGenerator contains the metadata of how to generate a secret.
+// SecretArgs contains the metadata of how to generate a secret.
 type SecretArgs struct {
 	// Name of the secret.
 	// The full name should be Kustomization.NamePrefix + SecretGenerator.Name +
