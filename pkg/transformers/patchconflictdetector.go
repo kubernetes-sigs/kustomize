@@ -19,8 +19,7 @@ package transformers
 import (
 	"encoding/json"
 
-	"github.com/evanphx/json-patch"
-
+	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/mergepatch"
