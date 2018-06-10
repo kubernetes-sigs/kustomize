@@ -27,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
-// handleConfigMapFromLiteralSources adds the specified literal source
+// HandleConfigMapFromLiteralSources adds the specified literal source
 // information into the provided configMap.
 func HandleConfigMapFromLiteralSources(configMap *v1.ConfigMap, literalSources []string) error {
 	for _, literalSource := range literalSources {
@@ -43,7 +43,7 @@ func HandleConfigMapFromLiteralSources(configMap *v1.ConfigMap, literalSources [
 	return nil
 }
 
-// handleConfigMapFromFileSources adds the specified file source information
+// HandleConfigMapFromFileSources adds the specified file source information
 // into the provided configMap
 func HandleConfigMapFromFileSources(configMap *v1.ConfigMap, fileSources []string) error {
 	for _, fileSource := range fileSources {
@@ -88,7 +88,7 @@ func HandleConfigMapFromFileSources(configMap *v1.ConfigMap, fileSources []strin
 	return nil
 }
 
-// handleConfigMapFromEnvFileSource adds the specified env file source information
+// HandleConfigMapFromEnvFileSource adds the specified env file source information
 // into the provided configMap
 func HandleConfigMapFromEnvFileSource(configMap *v1.ConfigMap, envFileSource string) error {
 	info, err := os.Stat(envFileSource)

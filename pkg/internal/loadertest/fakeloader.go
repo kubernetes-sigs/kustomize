@@ -43,24 +43,27 @@ func NewFakeLoader(initialDir string) FakeLoader {
 	return FakeLoader{fs: fakefs, delegate: loader}
 }
 
-// Adds a fake file to the file system.
+// AddFile adds a fake file to the file system.
 func (f FakeLoader) AddFile(fullFilePath string, content []byte) error {
 	return f.fs.WriteFile(fullFilePath, content)
 }
 
-// Adds a fake directory to the file system.
+// AddDirectory adds a fake directory to the file system.
 func (f FakeLoader) AddDirectory(fullDirPath string, mode os.FileMode) error {
 	return f.fs.Mkdir(fullDirPath, mode)
 }
 
+// Root returns root.
 func (f FakeLoader) Root() string {
 	return f.delegate.Root()
 }
 
+// New creates a new loader from a new root.
 func (f FakeLoader) New(newRoot string) (loader.Loader, error) {
 	return f.delegate.New(newRoot)
 }
 
+// Load performs load from a given location.
 func (f FakeLoader) Load(location string) ([]byte, error) {
 	return f.delegate.Load(location)
 }
