@@ -1,10 +1,10 @@
-# Demo: WordPress
+# Demo: Injecting k8s runtime data into containers
 
-In this tutorial, you will learn - how to use `kustomize` to declare a variable reference and substitute it in container's command.
+In this tutorial, you will learn how to use `kustomize` to declare a variable reference and substitute it in container's command.
 
-In the WordPress example, we want 
+To run WordPress, it's necessary to
 
-- to connect WordPress with a MySQL database
+- connect WordPress with a MySQL database
 - access the service name of MySQL database from WordPress container
 
 First make a place to work:
@@ -44,7 +44,7 @@ curl -s -o "$MYSQL_HOME/#1.yaml" \
 ```
 
 ### Create kustomization.yaml
-We create a new kustomization, which has two bases: mysql and wordpress.
+Create a new kustomization with two bases:
 
 <!-- @createKustomization @test -->
 ```
@@ -57,9 +57,9 @@ EOF
 ```
 
 ### Download patch for WordPress
-In the new kustomization, we apply a patch for wordpress deployment. The patch does two things
+In the new kustomization, apply a patch for wordpress deployment. The patch does two things
 - Add an initial container to show the mysql service name
-- Add environment variable for mysql database so that wordpress can connect to it
+- Add environment variable that allow wordpress to find the mysql database
 
 <!-- @downloadPatch @test -->
 ```
@@ -96,11 +96,10 @@ The patch has following content
 >               name: mysql-pass
 >               key: password
 > ```
-In the init container's command, there are two variables as `$(WORDPRESS_SERVICE)` and `$(MYSQL_SERVICE)`, which are for the service names of wordpress and mysql. If we define those variables in `kustomization.yaml`, they will be substituted in `kustomize build` to the correct names.
+The init container's command requires information that depends on k8s resource object fields, represented by the placeholder variables
+$(WORDPRESS_SERVICE) and $(MYSQL_SERVICE).
 
-
-### Add Variable Reference
-Let us define the variables needed in the init container's command. 
+### Bind the Variables to k8s Object Fields
 
 <!-- @addVarRef @test -->
 ```
@@ -123,14 +122,14 @@ EOF
 `WORDPRESS_SERVICE` is from the field `metadata.name` of Service `wordpress`. If we don't specify `fieldref`, the default is `metadata.name`. So `MYSQL_SERVICE` is from the field `metadata.name` of Service `mysql`.
 
 ### Substitution
-We can see the substitution by `kustomize build`
+Confirm the variable substitution:
 
 <!-- @kustomizeBuild @test -->
 ```
 kustomize build $DEMO_HOME
 ```
 
-We will see the init Container's command as
+Expect this in the output:
 
 > ```
 > (truncated)
