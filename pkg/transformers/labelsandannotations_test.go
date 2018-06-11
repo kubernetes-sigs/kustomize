@@ -28,6 +28,7 @@ import (
 var service = schema.GroupVersionKind{Version: "v1", Kind: "Service"}
 var secret = schema.GroupVersionKind{Version: "v1", Kind: "Secret"}
 var cmap = schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"}
+var ns = schema.GroupVersionKind{Version: "v1", Kind: "Namespace"}
 var deploy = schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"}
 var statefulset = schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "StatefulSet"}
 var foo = schema.GroupVersionKind{Group: "example.com", Version: "v1", Kind: "Foo"}
