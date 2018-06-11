@@ -191,7 +191,7 @@ func TestMerge(t *testing.T) {
 				},
 			}),
 	}
-	merged, err := Merge(input...)
+	merged, err := MergeWithoutOverride(input...)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
