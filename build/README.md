@@ -26,7 +26,7 @@ git fetch upstream
 git rebase upstream/master
 ```
 
-Decide on your version, e.g.:
+Define the version (see [semver principles](https://semver.org)), e.g.:
 ```
 version=v1.0.3
 ```
