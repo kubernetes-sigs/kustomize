@@ -18,6 +18,7 @@ package app
 
 import (
 	"encoding/base64"
+	"os"
 	"reflect"
 	"testing"
 
@@ -30,8 +31,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func setupTest(t *testing.T) loader.Loader {
-	kustomizationContent := []byte(`
+const (
+	kustomizationContent1 = `
 namePrefix: foo-
 namespace: ns1
 commonLabels:
@@ -52,28 +53,30 @@ secretGenerator:
     DB_USERNAME: "printf admin"
     DB_PASSWORD: "printf somepw"
   type: Opaque
-`)
-	deploymentContent := []byte(`apiVersion: apps/v1
-kind: Deployment
+`
+	deploymentContent = `apiVersion: apps/v1
 metadata:
   name: dply1
-`)
-	namespaceContent := []byte(`apiVersion: v1
+kind: Deployment
+`
+	namespaceContent = `apiVersion: v1
 kind: Namespace
 metadata:
   name: ns1
-  `)
+`
+)
 
+func makeLoader1(t *testing.T) loader.Loader {
 	loader := loadertest.NewFakeLoader("/testpath")
-	err := loader.AddFile("/testpath/"+constants.KustomizationFileName, kustomizationContent)
+	err := loader.AddFile("/testpath/"+constants.KustomizationFileName, []byte(kustomizationContent1))
 	if err != nil {
 		t.Fatalf("Failed to setup fake loader.")
 	}
-	err = loader.AddFile("/testpath/deployment.yaml", deploymentContent)
+	err = loader.AddFile("/testpath/deployment.yaml", []byte(deploymentContent))
 	if err != nil {
 		t.Fatalf("Failed to setup fake loader.")
 	}
-	err = loader.AddFile("/testpath/namespace.yaml", namespaceContent)
+	err = loader.AddFile("/testpath/namespace.yaml", []byte(namespaceContent))
 	if err != nil {
 		t.Fatalf("Failed to setup fake loader.")
 	}
@@ -84,8 +87,9 @@ var deploy = schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deploy
 var cmap = schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"}
 var secret = schema.GroupVersionKind{Version: "v1", Kind: "Secret"}
 var ns = schema.GroupVersionKind{Version: "v1", Kind: "Namespace"}
+var svc = schema.GroupVersionKind{Version: "v1", Kind: "Service"}
 
-func TestResources(t *testing.T) {
+func TestResources1(t *testing.T) {
 	expected := resmap.ResMap{
 		resource.NewResId(deploy, "dply1"): resource.NewResourceFromMap(
 			map[string]interface{}{
@@ -176,23 +180,23 @@ func TestResources(t *testing.T) {
 				},
 			}),
 	}
-	l := setupTest(t)
+	l := makeLoader1(t)
 	app, err := New(l)
 	if err != nil {
-		t.Fatalf("Unexpected error %v", err)
+		t.Fatalf("Unexpected construction error %v", err)
 	}
 	actual, err := app.Resources()
 	if err != nil {
-		t.Fatalf("Unexpected error %v", err)
+		t.Fatalf("Unexpected Resources error %v", err)
 	}
 
 	if !reflect.DeepEqual(actual, expected) {
 		err = expected.ErrorIfNotEqual(actual)
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatalf("unexpected inequality: %v", err)
 	}
 }
 
-func TestRawResources(t *testing.T) {
+func TestRawResources1(t *testing.T) {
 	expected := resmap.ResMap{
 		resource.NewResId(deploy, "dply1"): resource.NewResourceFromMap(
 			map[string]interface{}{
@@ -211,17 +215,127 @@ func TestRawResources(t *testing.T) {
 				},
 			}),
 	}
-	l := setupTest(t)
+	l := makeLoader1(t)
 	app, err := New(l)
 	if err != nil {
-		t.Fatalf("Unexpected error %v", err)
+		t.Fatalf("Unexpected construction error %v", err)
 	}
 	actual, err := app.RawResources()
 	if err != nil {
-		t.Fatalf("Unexpected error %v", err)
+		t.Fatalf("Unexpected RawResources error %v", err)
 	}
 
 	if err := expected.ErrorIfNotEqual(actual); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatalf("unexpected inequality: %v", err)
+	}
+}
+
+const (
+	kustomizationContentBase = `
+namePrefix: foo-
+commonLabels:
+  app: banana
+resources:
+  - deployment.yaml
+`
+	kustomizationContentOverlay = `
+commonLabels:
+  env: staging
+resources:
+  - service.yaml
+bases:
+  - base
+`
+	serviceContent = `apiVersion: v1
+kind: Service
+metadata:
+  name: svc
+spec:
+  type: LoadBalancer
+`
+)
+
+func makeLoader2(t *testing.T) loader.Loader {
+	loader := loadertest.NewFakeLoader("/testpath")
+	err := loader.AddFile("/testpath/"+constants.KustomizationFileName, []byte(kustomizationContentOverlay))
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = loader.AddFile("/testpath/service.yaml", []byte(serviceContent))
+	if err != nil {
+		t.Fatalf("Failed to setup fake loader.")
+	}
+	err = loader.AddDirectory("/testpath/base", os.ModeDir)
+	if err != nil {
+		t.Fatalf("Failed to setup fake loader.")
+	}
+	err = loader.AddFile("/testpath/base/"+constants.KustomizationFileName, []byte(kustomizationContentBase))
+	if err != nil {
+		t.Fatalf("Failed to setup fake loader.")
+	}
+	err = loader.AddFile("/testpath/base/deployment.yaml", []byte(deploymentContent))
+	if err != nil {
+		t.Fatalf("Failed to setup fake loader.")
+	}
+	return loader
+}
+
+// TODO: This test covers incorrect behavior; it should not pass.
+// It asks for raw resources.  The Service resource is returned in raw form,
+// but the resources in the base are modified to have the banana label,
+// the 'foo' name prefix, etc.  This method exists only to support the
+// diff command comparing customized to non-customized resources;
+// perhaps it's not worth supporting the command.
+func TestRawResources2(t *testing.T) {
+	expected := resmap.ResMap{
+		resource.NewResId(deploy, "dply1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "foo-dply1",
+					"labels": map[string]interface{}{
+						"app": "banana",
+					},
+				},
+				"spec": map[string]interface{}{
+					"selector": map[string]interface{}{
+						"matchLabels": map[string]interface{}{
+							"app": "banana",
+						},
+					},
+					"template": map[string]interface{}{
+						"metadata": map[string]interface{}{
+							"labels": map[string]interface{}{
+								"app": "banana",
+							},
+						},
+					},
+				},
+			}),
+		resource.NewResId(svc, "svc"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Service",
+				"metadata": map[string]interface{}{
+					"name": "svc",
+				},
+				"spec": map[string]interface{}{
+					"type": "LoadBalancer",
+				},
+			}),
+	}
+	l := makeLoader2(t)
+	app, err := New(l)
+	if err != nil {
+		t.Fatalf("Unexpected construction error %v", err)
+	}
+	actual, err := app.RawResources()
+	if err != nil {
+		t.Fatalf("Unexpected RawResources error %v", err)
+	}
+
+	if err := expected.ErrorIfNotEqual(actual); err != nil {
+		t.Fatalf("unexpected inequality: %v", err)
 	}
 }
