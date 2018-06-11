@@ -28,6 +28,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
+	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
 )
@@ -87,7 +88,7 @@ func (m ResMap) ErrorIfNotEqual(m2 ResMap) error {
 			return fmt.Errorf("%#v doesn't exist in %#v", id, m2)
 		}
 		if !reflect.DeepEqual(obj1, obj2) {
-			return fmt.Errorf("%#v doesn't match %#v", obj1, obj2)
+			return fmt.Errorf("%#v doesn't deep equal %#v", obj1, obj2)
 		}
 	}
 	return nil
@@ -131,9 +132,8 @@ func NewResMapFromFiles(loader loader.Loader, paths []string) (ResMap, error) {
 	for _, path := range paths {
 		content, err := loader.Load(path)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "Load from path "+path+" failed")
 		}
-
 		res, err := newResMapFromBytes(content)
 		if err != nil {
 			return nil, err
