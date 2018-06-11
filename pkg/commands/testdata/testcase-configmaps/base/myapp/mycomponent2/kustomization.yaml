@@ -1,0 +1,6 @@
+namePrefix: p2-
+configMapGenerator:
+- name: com2
+  behavior: create
+  literals:
+    - from=base

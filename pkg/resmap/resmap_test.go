@@ -151,7 +151,7 @@ metadata:
 	}
 }
 
-func TestMerge(t *testing.T) {
+func TestMergeWithoutOverride(t *testing.T) {
 	input1 := ResMap{
 		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
 			map[string]interface{}{
@@ -192,6 +192,66 @@ func TestMerge(t *testing.T) {
 			}),
 	}
 	merged, err := MergeWithoutOverride(input...)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !reflect.DeepEqual(merged, expected) {
+		t.Fatalf("%#v doesn't equal expected %#v", merged, expected)
+	}
+}
+
+func TestMergeWithOverride(t *testing.T) {
+	input1 := ResMap{
+		resource.NewResId(cmap, "cmap"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "cmap",
+				},
+				"data": map[string]interface{}{
+					"a": "x",
+					"b": "y",
+				},
+			}),
+	}
+	input2 := ResMap{
+		resource.NewResId(cmap, "cmap"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "cmap",
+				},
+				"data": map[string]interface{}{
+					"a": "u",
+					"b": "v",
+					"c": "w",
+				},
+			}),
+	}
+	input1[resource.NewResId(cmap, "cmap")].SetBehavior(resource.BehaviorCreate)
+	input2[resource.NewResId(cmap, "cmap")].SetBehavior(resource.BehaviorMerge)
+	input := []ResMap{input1, input2}
+	expected := ResMap{
+		resource.NewResId(cmap, "cmap"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"annotations": map[string]interface{}{},
+					"labels":      map[string]interface{}{},
+					"name":        "cmap",
+				},
+				"data": map[string]interface{}{
+					"a": "u",
+					"b": "v",
+					"c": "w",
+				},
+			}),
+	}
+	expected[resource.NewResId(cmap, "cmap")].SetBehavior(resource.BehaviorCreate)
+	merged, err := MergeWithOverride(input...)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
