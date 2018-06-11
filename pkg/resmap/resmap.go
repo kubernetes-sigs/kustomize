@@ -107,7 +107,7 @@ func (m ResMap) insert(newName string, obj *unstructured.Unstructured) error {
 	return nil
 }
 
-// NewResourceSliceFromPatches returns a slice of Resources given a patch path slice from kustomization file.
+// NewResourceSliceFromPatches returns a slice of resources given a patch path slice from a kustomization file.
 func NewResourceSliceFromPatches(
 	loader loader.Loader, paths []string) ([]*resource.Resource, error) {
 	result := []*resource.Resource{}
@@ -140,7 +140,7 @@ func NewResMapFromFiles(loader loader.Loader, paths []string) (ResMap, error) {
 		}
 		result = append(result, res)
 	}
-	return Merge(result...)
+	return MergeWithoutOverride(result...)
 }
 
 // newResMapFromBytes decodes a list of objects in byte array format.
@@ -192,27 +192,26 @@ func newResourceSliceFromBytes(in []byte) ([]*resource.Resource, error) {
 	return result, nil
 }
 
-// Merge combines many maps to one.
-func Merge(maps ...ResMap) (ResMap, error) {
+// MergeWithoutOverride combines multiple ResMap instances, failing on key collision.
+func MergeWithoutOverride(maps ...ResMap) (ResMap, error) {
 	result := ResMap{}
 	for _, m := range maps {
-		for id, obj := range m {
+		for id, resource := range m {
 			if _, found := result[id]; found {
-				return nil, fmt.Errorf("there is already an entry: %q", id)
+				return nil, fmt.Errorf("id '%q' already used", id)
 			}
-			result[id] = obj
+			result[id] = resource
 		}
 	}
-
 	return result, nil
 }
 
-// MergeWithOverride merges the entries in the ResMap slice with Override.
-// If there is already an entry with the same Id , different actions are performed
-// according to value of behavior field:
-// 'create': create a new one;
-// 'replace': replace the data only; keep the labels and annotations
-// 'merge': merge the data; keep the labels and annotations
+// MergeWithOverride combines multiple ResMap instances, allowing and sometimes
+// demanding certain collisions.
+// When looping over the instances to combine them, if a resource id for resource X
+// is found to be already in the combined map, then the behavior field for X
+// must be BehaviorMerge or BehaviorReplace.  If X is not in the map, then it's
+// behavior cannot be merge or replace.
 func MergeWithOverride(maps ...ResMap) (ResMap, error) {
 	result := ResMap{}
 	for _, m := range maps {
@@ -220,14 +219,14 @@ func MergeWithOverride(maps ...ResMap) (ResMap, error) {
 			if _, found := result[id]; found {
 				switch r.Behavior() {
 				case resource.BehaviorReplace:
-					glog.V(4).Infof("Replace object %v by %v", result[id].Object, r.Object)
+					glog.V(4).Infof("Replace %v with %v", result[id].Object, r.Object)
 					r.Replace(result[id])
 					result[id] = r
 				case resource.BehaviorMerge:
-					glog.V(4).Infof("Merge object %v with %v", result[id].Object, r.Object)
+					glog.V(4).Infof("Merging %v with %v", result[id].Object, r.Object)
 					r.Merge(result[id])
 					result[id] = r
-					glog.V(4).Infof("The merged object is %v", result[id].Object)
+					glog.V(4).Infof("Merged object is %v", result[id].Object)
 				default:
 					return nil, fmt.Errorf("Id %#v exists; must merge or replace.", id)
 				}

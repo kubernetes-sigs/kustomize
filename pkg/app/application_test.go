@@ -181,11 +181,11 @@ func TestResources1(t *testing.T) {
 			}),
 	}
 	l := makeLoader1(t)
-	app, err := New(l)
+	app, err := NewApplication(l)
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
-	actual, err := app.Resources()
+	actual, err := app.MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Unexpected Resources error %v", err)
 	}
@@ -216,11 +216,11 @@ func TestRawResources1(t *testing.T) {
 			}),
 	}
 	l := makeLoader1(t)
-	app, err := New(l)
+	app, err := NewApplication(l)
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
-	actual, err := app.RawResources()
+	actual, err := app.MakeUncustomizedResMap()
 	if err != nil {
 		t.Fatalf("Unexpected RawResources error %v", err)
 	}
@@ -326,11 +326,11 @@ func TestRawResources2(t *testing.T) {
 			}),
 	}
 	l := makeLoader2(t)
-	app, err := New(l)
+	app, err := NewApplication(l)
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
-	actual, err := app.RawResources()
+	actual, err := app.MakeUncustomizedResMap()
 	if err != nil {
 		t.Fatalf("Unexpected RawResources error %v", err)
 	}
