@@ -8,7 +8,7 @@ metadata:
   annotations: {}
   creationTimestamp: null
   labels: {}
-  name: com1-com1-687g9gmkdf
+  name: p1-com1-dhbbm922gd
 ---
 apiVersion: v1
 data:
@@ -18,4 +18,4 @@ metadata:
   annotations: {}
   creationTimestamp: null
   labels: {}
-  name: com2-com2-bcd85m642t
+  name: p2-com2-c4b8md75k9
