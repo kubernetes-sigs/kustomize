@@ -18,10 +18,38 @@ package transformers
 
 import (
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 type namespaceTransformer struct {
-	namespace string
+	namespace       string
+	pathConfigs     []PathConfig
+	skipPathConfigs []PathConfig
+}
+
+var namespacePathConfigs = []PathConfig{
+	{
+		Path:               []string{"metadata", "namespace"},
+		CreateIfNotPresent: true,
+	},
+}
+
+var skipNamespacePathConfigs = []PathConfig{
+	{
+		GroupVersionKind: &schema.GroupVersionKind{
+			Kind: "Namespace",
+		},
+	},
+	{
+		GroupVersionKind: &schema.GroupVersionKind{
+			Kind: "ClusterRoleBinding",
+		},
+	},
+	{
+		GroupVersionKind: &schema.GroupVersionKind{
+			Kind: "ClusterRole",
+		},
+	},
 }
 
 var _ Transformer = &namespaceTransformer{}
@@ -31,13 +59,43 @@ func NewNamespaceTransformer(ns string) Transformer {
 	if len(ns) == 0 {
 		return NewNoOpTransformer()
 	}
-	return &namespaceTransformer{namespace: ns}
+
+	return &namespaceTransformer{
+		namespace:       ns,
+		pathConfigs:     namespacePathConfigs,
+		skipPathConfigs: skipNamespacePathConfigs,
+	}
 }
 
 // Transform adds the namespace.
 func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
-	for _, res := range m {
-		res.SetNamespace(o.namespace)
+	mf := resmap.ResMap{}
+
+	for id := range m {
+		mf[id] = m[id]
+		for _, path := range o.skipPathConfigs {
+			if selectByGVK(id.Gvk(), path.GroupVersionKind) {
+				delete(mf, id)
+				break
+			}
+		}
+	}
+
+	for id := range mf {
+		objMap := m[id].UnstructuredContent()
+		for _, path := range o.pathConfigs {
+			if !selectByGVK(id.Gvk(), path.GroupVersionKind) {
+				continue
+			}
+
+			err := mutateField(objMap, path.Path, path.CreateIfNotPresent, func(_ interface{}) (interface{}, error) {
+				return o.namespace, nil
+			})
+			if err != nil {
+				return err
+			}
+		}
+
 	}
 	return nil
 }

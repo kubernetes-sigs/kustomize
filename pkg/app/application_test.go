@@ -165,8 +165,7 @@ func TestResources(t *testing.T) {
 				"apiVersion": "v1",
 				"kind":       "Namespace",
 				"metadata": map[string]interface{}{
-					"name":      "foo-ns1",
-					"namespace": "ns1",
+					"name": "foo-ns1",
 					"labels": map[string]interface{}{
 						"app": "nginx",
 					},
