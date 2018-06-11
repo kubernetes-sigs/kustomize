@@ -61,8 +61,8 @@ func (r *Resource) Behavior() GenerationBehavior {
 	return r.b
 }
 
-// ChangeBehavior changes the resource to the new behavior
-func (r *Resource) ChangeBehavior(b GenerationBehavior) {
+// SetBehavior changes the resource to the new behavior
+func (r *Resource) SetBehavior(b GenerationBehavior) {
 	r.b = b
 }
 

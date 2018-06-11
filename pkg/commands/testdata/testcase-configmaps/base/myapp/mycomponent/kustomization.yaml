@@ -1,4 +1,4 @@
-namePrefix: com1-
+namePrefix: p1-
 configMapGenerator:
 - name: com1
   behavior: create

@@ -12,5 +12,5 @@ diff -u -N /tmp/noop/v1_ConfigMap_com1.yaml /tmp/transformed/v1_ConfigMap_com1.y
    annotations: {}
    creationTimestamp: null
    labels: {}
--  name: com1-com1-8mk424df76
-+  name: com1-com1-687g9gmkdf
+-  name: p1-com1-cmdb776d5b
++  name: p1-com1-dhbbm922gd
