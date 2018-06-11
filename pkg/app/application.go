@@ -33,6 +33,7 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/transformers"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
+	"github.com/pkg/errors"
 )
 
 // Application interface exposes methods to get resources of the application.
@@ -97,20 +98,20 @@ func (a *applicationImpl) SemiResources() (resmap.ResMap, error) {
 	errs := &interror.KustomizationErrors{}
 	raw, err := a.rawResources()
 	if err != nil {
-		errs.Append(err)
+		errs.Append(errors.Wrap(err, "rawResources"))
 	}
 
 	cms, err := resmap.NewResMapFromConfigMapArgs(a.loader, a.kustomization.ConfigMapGenerator)
 	if err != nil {
-		errs.Append(err)
+		errs.Append(errors.Wrap(err, "NewResMapFromConfigMapArgs"))
 	}
 	secrets, err := resmap.NewResMapFromSecretArgs(a.loader.Root(), a.kustomization.SecretGenerator)
 	if err != nil {
-		errs.Append(err)
+		errs.Append(errors.Wrap(err, "NewResMapFromSecretArgs"))
 	}
 	res, err := resmap.Merge(cms, secrets)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Merge")
 	}
 
 	allRes, err := resmap.MergeWithOverride(raw, res)
@@ -120,7 +121,7 @@ func (a *applicationImpl) SemiResources() (resmap.ResMap, error) {
 
 	patches, err := resmap.NewResourceSliceFromPatches(a.loader, a.kustomization.Patches)
 	if err != nil {
-		errs.Append(err)
+		errs.Append(errors.Wrap(err, "NewResourceSliceFromPatches"))
 	}
 
 	if len(errs.Get()) > 0 {
@@ -144,7 +145,7 @@ func (a *applicationImpl) SemiResources() (resmap.ResMap, error) {
 func (a *applicationImpl) RawResources() (resmap.ResMap, error) {
 	res, err := a.rawResources()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "RawResources")
 	}
 	t, err := a.newHashAndReferenceTransformer(res)
 	if err != nil {
@@ -161,7 +162,7 @@ func (a *applicationImpl) rawResources() (resmap.ResMap, error) {
 	subAppResources, errs := a.subAppResources()
 	resources, err := resmap.NewResMapFromFiles(a.loader, a.kustomization.Resources)
 	if err != nil {
-		errs.Append(err)
+		errs.Append(errors.Wrap(err, "rawResources failed to read Resources"))
 	}
 
 	if len(errs.Get()) > 0 {
@@ -177,25 +178,25 @@ func (a *applicationImpl) subAppResources() (resmap.ResMap, *interror.Kustomizat
 	for _, pkgPath := range a.kustomization.Bases {
 		subloader, err := a.loader.New(pkgPath)
 		if err != nil {
-			errs.Append(err)
+			errs.Append(errors.Wrap(err, "couldn't make loader for "+pkgPath))
 			continue
 		}
 		subapp, err := New(subloader)
 		if err != nil {
-			errs.Append(err)
+			errs.Append(errors.Wrap(err, "couldn't make app for "+pkgPath))
 			continue
 		}
 		// Gather all transformed resources from subpackages.
 		subAppResources, err := subapp.SemiResources()
 		if err != nil {
-			errs.Append(err)
+			errs.Append(errors.Wrap(err, "SemiResources"))
 			continue
 		}
 		sliceOfSubAppResources = append(sliceOfSubAppResources, subAppResources)
 	}
 	allResources, err := resmap.Merge(sliceOfSubAppResources...)
 	if err != nil {
-		errs.Append(err)
+		errs.Append(errors.Wrap(err, "Merge failed"))
 	}
 	return allResources, errs
 }
