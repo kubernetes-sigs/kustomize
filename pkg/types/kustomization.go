@@ -44,6 +44,9 @@ type Kustomization struct {
 	// URLs and globs.
 	Resources []string `json:"resources,omitempty" yaml:"resources,omitempty"`
 
+	// CRDs specifies relative paths to custom resource definition files.
+	CRDs []string `json:"crds,omitempty" yaml:"crds,omitempty"`
+
 	// An Patch entry is very similar to an Resource entry.
 	// It specifies the relative paths within the package, and could be any
 	// format that kubectl -f allows.
