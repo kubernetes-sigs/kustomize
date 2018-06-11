@@ -43,7 +43,7 @@ func NewResourceWithBehavior(obj runtime.Object, b GenerationBehavior) (*Resourc
 	}
 	var u unstructured.Unstructured
 	err = u.UnmarshalJSON(marshaled)
-	return &Resource{Unstructured: u, b: b}, nil
+	return &Resource{Unstructured: u, b: b}, err
 }
 
 // NewResourceFromMap returns a new instance of Resource.
