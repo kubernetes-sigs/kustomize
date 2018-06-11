@@ -311,3 +311,23 @@ func TestAnnotationsRun(t *testing.T) {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
+
+func TestAddPathConfigs(t *testing.T) {
+	aexpected := len(defaultAnnotationsPathConfigs) + 1
+	lexpected := len(defaultLabelsPathConfigs) + 1
+	pathConfigs := []PathConfig{
+		{
+			GroupVersionKind:   &schema.GroupVersionKind{Group: "GroupA", Kind: "KindB"},
+			Path:               []string{"path", "to", "a", "field"},
+			CreateIfNotPresent: true,
+		},
+	}
+	AddLabelsPathConfigs(pathConfigs)
+	AddAnnotationsPathConfigs(pathConfigs)
+	if len(defaultAnnotationsPathConfigs) != aexpected {
+		t.Fatalf("actual %v doesn't match expected: %v", len(defaultAnnotationsPathConfigs), aexpected)
+	}
+	if len(defaultLabelsPathConfigs) != lexpected {
+		t.Fatalf("actual %v doesn't match expected: %v", len(defaultLabelsPathConfigs), lexpected)
+	}
+}
