@@ -29,3 +29,5 @@ go get github.com/kubernetes-sigs/kustomize
 
  * [breakfast](breakfast.md) - Customize breakfast for
    Alice and Bob.
+   
+ * [container args](wordpress/README.md) - Injecting k8s runtime data into container arguments (e.g. to point wordpress to a SQL service).
