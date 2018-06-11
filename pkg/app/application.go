@@ -60,10 +60,35 @@ func NewApplication(loader loader.Loader) (*Application, error) {
 	return &Application{kustomization: &m, loader: loader}, nil
 }
 
+func unmarshal(y []byte, o interface{}) error {
+	j, err := yaml.YAMLToJSON(y)
+	if err != nil {
+		return err
+	}
+
+	dec := json.NewDecoder(bytes.NewReader(j))
+	dec.DisallowUnknownFields()
+	return dec.Decode(o)
+}
+
 // MakeCustomizedResMap creates a ResMap per kustomization instructions.
 // The Resources in the returned ResMap are fully customized.
 func (a *Application) MakeCustomizedResMap() (resmap.ResMap, error) {
 	m, err := a.loadCustomizedResMap()
+	if err != nil {
+		return nil, err
+	}
+	return a.resolveRefsToGeneratedResources(m)
+}
+
+// MakeUncustomizedResMap purports to create a ResMap without customization.
+// The Resources in the returned ResMap include all resources mentioned
+// in the kustomization file and transitively reachable via its Bases,
+// and all generated secrets and configMaps.
+// Meant for use in generating a diff against customized resources.
+// TODO: See https://github.com/kubernetes-sigs/kustomize/issues/85
+func (a *Application) MakeUncustomizedResMap() (resmap.ResMap, error) {
+	m, err := a.loadResMapFromBasesAndResources()
 	if err != nil {
 		return nil, err
 	}
@@ -140,19 +165,6 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 		return nil, err
 	}
 	return result, nil
-}
-
-// MakeUncustomizedResMap purports to create a ResMap without customization.
-// The Resources in the returned ResMap include all resources mentioned
-// in the kustomization file and transitively reachable via its Bases,
-// and all generated secrets and configMaps.
-// Meant for use in generating a diff against customized resources.
-func (a *Application) MakeUncustomizedResMap() (resmap.ResMap, error) {
-	m, err := a.loadResMapFromBasesAndResources()
-	if err != nil {
-		return nil, err
-	}
-	return a.resolveRefsToGeneratedResources(m)
 }
 
 // Gets Bases and Resources as advertised.
@@ -245,17 +257,6 @@ func (a *Application) newTransformer(patches []*resource.Resource) (transformers
 	}
 	r = append(r, t)
 	return transformers.NewMultiTransformer(r), nil
-}
-
-func unmarshal(y []byte, o interface{}) error {
-	j, err := yaml.YAMLToJSON(y)
-	if err != nil {
-		return err
-	}
-
-	dec := json.NewDecoder(bytes.NewReader(j))
-	dec.DisallowUnknownFields()
-	return dec.Decode(o)
 }
 
 func (a *Application) resolveRefVars(m resmap.ResMap) (map[string]string, error) {
