@@ -21,13 +21,16 @@ import (
 	"fmt"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
+
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // namePrefixTransformer contains the prefix and the path config for each field that
 // the name prefix will be applied.
 type namePrefixTransformer struct {
-	prefix      string
-	pathConfigs []PathConfig
+	prefix          string
+	pathConfigs     []PathConfig
+	skipPathConfigs []PathConfig
 }
 
 var _ Transformer = &namePrefixTransformer{}
@@ -36,6 +39,12 @@ var defaultNamePrefixPathConfigs = []PathConfig{
 	{
 		Path:               []string{"metadata", "name"},
 		CreateIfNotPresent: false,
+	},
+}
+
+var skipNamePrefixPathConfigs = []PathConfig{
+	{
+		GroupVersionKind: &schema.GroupVersionKind{Kind: "CustomResourceDefinition"},
 	},
 }
 
@@ -52,13 +61,25 @@ func NewNamePrefixTransformer(pc []PathConfig, np string) (Transformer, error) {
 	if pc == nil {
 		return nil, errors.New("pathConfigs is not expected to be nil")
 	}
-	return &namePrefixTransformer{pathConfigs: pc, prefix: np}, nil
+	return &namePrefixTransformer{pathConfigs: pc, prefix: np, skipPathConfigs: skipNamePrefixPathConfigs}, nil
 }
 
 // Transform prepends the name prefix.
 func (o *namePrefixTransformer) Transform(m resmap.ResMap) error {
+	mf := resmap.ResMap{}
+
 	for id := range m {
-		objMap := m[id].UnstructuredContent()
+		mf[id] = m[id]
+		for _, path := range o.skipPathConfigs {
+			if selectByGVK(id.Gvk(), path.GroupVersionKind) {
+				delete(mf, id)
+				break
+			}
+		}
+	}
+
+	for id := range mf {
+		objMap := mf[id].UnstructuredContent()
 		for _, path := range o.pathConfigs {
 			if !selectByGVK(id.Gvk(), path.GroupVersionKind) {
 				continue
