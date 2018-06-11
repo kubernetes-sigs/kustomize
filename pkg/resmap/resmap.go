@@ -222,11 +222,13 @@ func MergeWithOverride(maps ...ResMap) (ResMap, error) {
 					glog.V(4).Infof("Replace %v with %v", result[id].Object, r.Object)
 					r.Replace(result[id])
 					result[id] = r
+					result[id].ChangeBehavior(resource.BehaviorCreate)
 				case resource.BehaviorMerge:
 					glog.V(4).Infof("Merging %v with %v", result[id].Object, r.Object)
 					r.Merge(result[id])
 					result[id] = r
 					glog.V(4).Infof("Merged object is %v", result[id].Object)
+					result[id].ChangeBehavior(resource.BehaviorCreate)
 				default:
 					return nil, fmt.Errorf("Id %#v exists; must merge or replace.", id)
 				}
