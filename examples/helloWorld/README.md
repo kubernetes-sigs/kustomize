@@ -112,10 +112,11 @@ sed -i 's/app: hello/app: my-hello/' \
     $BASE/kustomization.yaml
 ```
 
-*Note* `sed` works differently on different systems. On MacOS, for example, use this command instead:
+On a Mac, use:
 ```
-sed -i '' 's/pineapple/kiwi/' $OVERLAYS/staging/map.yaml
+sed -i '' $pattern $file
 ```
+to get in-place editing.
 
 See the effect:
 <!-- @checkLabel @test -->
@@ -418,7 +419,8 @@ uses the map:
 <!-- @countHashes @test -->
 ```
 test 3 == \
-  $(kustomize build $OVERLAYS/staging | grep khk45ktkd9 | wc -l); echo $?
+  $(kustomize build $OVERLAYS/staging | grep khk45ktkd9 | wc -l); \
+  echo $?
 ```
 
 Applying these resources to the cluster will result in
