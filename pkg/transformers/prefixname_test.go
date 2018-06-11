@@ -42,6 +42,14 @@ func TestPrefixNameRun(t *testing.T) {
 					"name": "cm2",
 				},
 			}),
+		resource.NewResId(crd, "crd"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "apiextensions.k8s.io/v1beta1",
+				"kind":       "CustomResourceDefinition",
+				"metadata": map[string]interface{}{
+					"name": "crd",
+				},
+			}),
 	}
 	expected := resmap.ResMap{
 		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
@@ -58,6 +66,14 @@ func TestPrefixNameRun(t *testing.T) {
 				"kind":       "ConfigMap",
 				"metadata": map[string]interface{}{
 					"name": "someprefix-cm2",
+				},
+			}),
+		resource.NewResId(crd, "crd"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "apiextensions.k8s.io/v1beta1",
+				"kind":       "CustomResourceDefinition",
+				"metadata": map[string]interface{}{
+					"name": "crd",
 				},
 			}),
 	}
