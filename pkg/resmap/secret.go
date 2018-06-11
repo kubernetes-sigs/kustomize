@@ -25,13 +25,14 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
+	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 )
 
 func newResourceFromSecretGenerator(p string, sArgs types.SecretArgs) (*resource.Resource, error) {
 	s, err := makeSecret(p, sArgs)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "makeSecret")
 	}
 	return resource.NewResourceWithBehavior(
 		s, resource.NewGenerationBehavior(sArgs.Behavior))
@@ -51,7 +52,7 @@ func makeSecret(p string, sArgs types.SecretArgs) (*corev1.Secret, error) {
 	for k, v := range sArgs.Commands {
 		out, err := createSecretKey(p, v)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "createSecretKey")
 		}
 		s.Data[k] = out
 	}
@@ -77,7 +78,7 @@ func NewResMapFromSecretArgs(p string, secretList []types.SecretArgs) (ResMap, e
 	for _, secret := range secretList {
 		res, err := newResourceFromSecretGenerator(p, secret)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "newResourceFromSecretGenerator")
 		}
 		allResources = append(allResources, res)
 	}
