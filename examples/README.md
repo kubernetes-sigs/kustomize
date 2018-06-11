@@ -29,3 +29,5 @@ go get github.com/kubernetes-sigs/kustomize
 
  * [breakfast](breakfast.md) - Customize breakfast for
    Alice and Bob.
+   
+ * [wordpress](wordpress/README.md) - Create wordpress with mysql
