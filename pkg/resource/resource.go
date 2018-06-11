@@ -61,6 +61,11 @@ func (r *Resource) Behavior() GenerationBehavior {
 	return r.b
 }
 
+// SetBehavior changes the resource to the new behavior
+func (r *Resource) SetBehavior(b GenerationBehavior) {
+	r.b = b
+}
+
 // Id returns the ResId for the resource.
 func (r *Resource) Id() ResId {
 	return NewResId(r.GroupVersionKind(), r.GetName())
