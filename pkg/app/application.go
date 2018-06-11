@@ -36,31 +36,17 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Application interface exposes methods to get resources of the application.
-type Application interface {
-	// Resources computes and returns the resources for the app.
-	Resources() (resmap.ResMap, error)
-	// SemiResources computes and returns the resources without name hash and name reference for the app
-	SemiResources() (resmap.ResMap, error)
-	// RawResources computes and returns the raw resources from the kustomization file.
-	// It contains resources from
-	// 1) untransformed resources from current kustomization file
-	// 2) transformed resources from sub packages
-	RawResources() (resmap.ResMap, error)
-	// Vars returns all the variables defined by the app
-	Vars() ([]types.Var, error)
-}
-
-var _ Application = &applicationImpl{}
-
-// Private implementation of the Application interface
-type applicationImpl struct {
+// Application implements the guts of the kustomize 'build' command.
+// TODO: Change name, as "application" is overloaded and somewhat
+// misleading (one can customize an RBAC policy).  Perhaps "Target"
+// https://github.com/kubernetes-sigs/kustomize/blob/master/docs/glossary.md#target
+type Application struct {
 	kustomization *types.Kustomization
 	loader        loader.Loader
 }
 
-// New parses the kustomization file at the path using the loader and returns application.
-func New(loader loader.Loader) (Application, error) {
+// NewApplication returns a new instance of Application primed with a Loader.
+func NewApplication(loader loader.Loader) (*Application, error) {
 	content, err := loader.Load(constants.KustomizationFileName)
 	if err != nil {
 		return nil, err
@@ -71,32 +57,50 @@ func New(loader loader.Loader) (Application, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &applicationImpl{kustomization: &m, loader: loader}, nil
+	return &Application{kustomization: &m, loader: loader}, nil
 }
 
-// Resources computes and returns the resources from the kustomization file.
-// The namehashing for configmap/secrets and resolving name reference is only done
-// in the most top overlay once at the end of getting resources.
-func (a *applicationImpl) Resources() (resmap.ResMap, error) {
-	res, err := a.SemiResources()
+// MakeCustomizedResMap creates a ResMap per kustomization instructions.
+// The Resources in the returned ResMap are fully customized.
+func (a *Application) MakeCustomizedResMap() (resmap.ResMap, error) {
+	m, err := a.loadCustomizedResMap()
 	if err != nil {
 		return nil, err
 	}
-	t, err := a.newHashAndReferenceTransformer(res)
-	if err != nil {
-		return nil, err
-	}
-	err = t.Transform(res)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
+	return a.resolveRefsToGeneratedResources(m)
 }
 
-// SemiResources computes and returns the resources without name hash and name reference for the app
-func (a *applicationImpl) SemiResources() (resmap.ResMap, error) {
+// resolveRefsToGeneratedResources fixes all name references.
+func (a *Application) resolveRefsToGeneratedResources(m resmap.ResMap) (resmap.ResMap, error) {
+	r := []transformers.Transformer{transformers.NewNameHashTransformer()}
+
+	t, err := transformers.NewDefaultingNameReferenceTransformer()
+	if err != nil {
+		return nil, err
+	}
+	r = append(r, t)
+
+	refVars, err := a.resolveRefVars(m)
+	if err != nil {
+		return nil, err
+	}
+	t, err = transformers.NewRefVarTransformer(refVars)
+	if err != nil {
+		return nil, err
+	}
+	r = append(r, t)
+
+	err = transformers.NewMultiTransformer(r).Transform(m)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// loadCustomizedResMap loads and customizes resources to build a ResMap.
+func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 	errs := &interror.KustomizationErrors{}
-	raw, err := a.rawResources()
+	result, err := a.loadResMapFromBasesAndResources()
 	if err != nil {
 		errs.Append(errors.Wrap(err, "rawResources"))
 	}
@@ -109,12 +113,12 @@ func (a *applicationImpl) SemiResources() (resmap.ResMap, error) {
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromSecretArgs"))
 	}
-	res, err := resmap.Merge(cms, secrets)
+	res, err := resmap.MergeWithoutOverride(cms, secrets)
 	if err != nil {
 		return nil, errors.Wrap(err, "Merge")
 	}
 
-	allRes, err := resmap.MergeWithOverride(raw, res)
+	result, err = resmap.MergeWithOverride(result, res)
 	if err != nil {
 		return nil, err
 	}
@@ -127,175 +131,120 @@ func (a *applicationImpl) SemiResources() (resmap.ResMap, error) {
 	if len(errs.Get()) > 0 {
 		return nil, errs
 	}
-
 	t, err := a.newTransformer(patches)
 	if err != nil {
 		return nil, err
 	}
-	err = t.Transform(allRes)
+	err = t.Transform(result)
 	if err != nil {
 		return nil, err
 	}
-	return allRes, nil
+	return result, nil
 }
 
-// RawResources computes and returns the raw resources from the kustomization file.
-// The namehashing for configmap/secrets and resolving name reference is only done
-// in the most top overlay once at the end of getting resources.
-func (a *applicationImpl) RawResources() (resmap.ResMap, error) {
-	res, err := a.rawResources()
-	if err != nil {
-		return nil, errors.Wrap(err, "RawResources")
-	}
-	t, err := a.newHashAndReferenceTransformer(res)
+// MakeUncustomizedResMap purports to create a ResMap without customization.
+// The Resources in the returned ResMap include all resources mentioned
+// in the kustomization file and transitively reachable via its Bases,
+// and all generated secrets and configMaps.
+// Meant for use in generating a diff against customized resources.
+func (a *Application) MakeUncustomizedResMap() (resmap.ResMap, error) {
+	m, err := a.loadResMapFromBasesAndResources()
 	if err != nil {
 		return nil, err
 	}
-	err = t.Transform(res)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
+	return a.resolveRefsToGeneratedResources(m)
 }
 
-func (a *applicationImpl) rawResources() (resmap.ResMap, error) {
-	subAppResources, errs := a.subAppResources()
+// Gets Bases and Resources as advertised.
+func (a *Application) loadResMapFromBasesAndResources() (resmap.ResMap, error) {
+	bases, errs := a.loadCustomizedBases()
 	resources, err := resmap.NewResMapFromFiles(a.loader, a.kustomization.Resources)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "rawResources failed to read Resources"))
 	}
-
 	if len(errs.Get()) > 0 {
 		return nil, errs
 	}
-
-	return resmap.Merge(resources, subAppResources)
+	return resmap.MergeWithoutOverride(resources, bases)
 }
 
-func (a *applicationImpl) subAppResources() (resmap.ResMap, *interror.KustomizationErrors) {
-	sliceOfSubAppResources := []resmap.ResMap{}
+// Loop through the Bases of this kustomization recursively loading resources.
+// Combine into one ResMap, demanding unique Ids for each resource.
+func (a *Application) loadCustomizedBases() (resmap.ResMap, *interror.KustomizationErrors) {
+	list := []resmap.ResMap{}
 	errs := &interror.KustomizationErrors{}
-	for _, pkgPath := range a.kustomization.Bases {
-		subloader, err := a.loader.New(pkgPath)
+	for _, path := range a.kustomization.Bases {
+		loader, err := a.loader.New(path)
 		if err != nil {
-			errs.Append(errors.Wrap(err, "couldn't make loader for "+pkgPath))
+			errs.Append(errors.Wrap(err, "couldn't make loader for "+path))
 			continue
 		}
-		subapp, err := New(subloader)
+		app, err := NewApplication(loader)
 		if err != nil {
-			errs.Append(errors.Wrap(err, "couldn't make app for "+pkgPath))
+			errs.Append(errors.Wrap(err, "couldn't make app for "+path))
 			continue
 		}
-		// Gather all transformed resources from subpackages.
-		subAppResources, err := subapp.SemiResources()
+		resMap, err := app.loadCustomizedResMap()
 		if err != nil {
 			errs.Append(errors.Wrap(err, "SemiResources"))
 			continue
 		}
-		sliceOfSubAppResources = append(sliceOfSubAppResources, subAppResources)
+		list = append(list, resMap)
 	}
-	allResources, err := resmap.Merge(sliceOfSubAppResources...)
+	result, err := resmap.MergeWithoutOverride(list...)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "Merge failed"))
 	}
-	return allResources, errs
+	return result, errs
 }
 
-func (a *applicationImpl) subApp() ([]Application, error) {
-	var apps []Application
+func (a *Application) loadBasesAsFlatList() ([]*Application, error) {
+	var result []*Application
 	errs := &interror.KustomizationErrors{}
-	for _, basePath := range a.kustomization.Bases {
-		subloader, err := a.loader.New(basePath)
+	for _, path := range a.kustomization.Bases {
+		loader, err := a.loader.New(path)
 		if err != nil {
 			errs.Append(err)
 			continue
 		}
-		subapp, err := New(subloader)
+		a, err := NewApplication(loader)
 		if err != nil {
 			errs.Append(err)
 			continue
 		}
-		apps = append(apps, subapp)
+		result = append(result, a)
 	}
 	if len(errs.Get()) > 0 {
 		return nil, errs
 	}
-	return apps, nil
+	return result, nil
 }
 
-// newTransformer generates the following transformers:
-// 1) apply overlay
-// 2) name prefix
-// 3) apply labels
-// 4) apply annotations
-func (a *applicationImpl) newTransformer(patches []*resource.Resource) (transformers.Transformer, error) {
-	ts := []transformers.Transformer{}
-
-	ot, err := transformers.NewPatchTransformer(patches)
+// newTransformer makes a Transformer that does everything except resolve generated names.
+func (a *Application) newTransformer(patches []*resource.Resource) (transformers.Transformer, error) {
+	r := []transformers.Transformer{}
+	t, err := transformers.NewPatchTransformer(patches)
 	if err != nil {
 		return nil, err
 	}
-	ts = append(ts, ot)
-
-	ts = append(ts, transformers.NewNamespaceTransformer(string(a.kustomization.Namespace)))
-
-	npt, err := transformers.NewDefaultingNamePrefixTransformer(string(a.kustomization.NamePrefix))
+	r = append(r, t)
+	r = append(r, transformers.NewNamespaceTransformer(string(a.kustomization.Namespace)))
+	t, err = transformers.NewDefaultingNamePrefixTransformer(string(a.kustomization.NamePrefix))
 	if err != nil {
 		return nil, err
 	}
-	ts = append(ts, npt)
-
-	lt, err := transformers.NewDefaultingLabelsMapTransformer(a.kustomization.CommonLabels)
+	r = append(r, t)
+	t, err = transformers.NewDefaultingLabelsMapTransformer(a.kustomization.CommonLabels)
 	if err != nil {
 		return nil, err
 	}
-	ts = append(ts, lt)
-
-	at, err := transformers.NewDefaultingAnnotationsMapTransformer(a.kustomization.CommonAnnotations)
+	r = append(r, t)
+	t, err = transformers.NewDefaultingAnnotationsMapTransformer(a.kustomization.CommonAnnotations)
 	if err != nil {
 		return nil, err
 	}
-	ts = append(ts, at)
-
-	return transformers.NewMultiTransformer(ts), nil
-}
-
-// newHashAndReferenceTransformer generates the following transformers:
-// 1) name hash for configmap and secrests
-// 2) apply name reference
-// 3) apply reference variables
-func (a *applicationImpl) newHashAndReferenceTransformer(allRes resmap.ResMap) (transformers.Transformer, error) {
-	ts := []transformers.Transformer{}
-	nht := transformers.NewNameHashTransformer()
-	ts = append(ts, nht)
-
-	nrt, err := transformers.NewDefaultingNameReferenceTransformer()
-	if err != nil {
-		return nil, err
-	}
-	ts = append(ts, nrt)
-	t, err := a.newVariableReferenceTransformer(allRes)
-	if err != nil {
-		return nil, err
-	}
-	ts = append(ts, t)
-
-	return transformers.NewMultiTransformer(ts), nil
-}
-
-func (a *applicationImpl) newVariableReferenceTransformer(allRes resmap.ResMap) (transformers.Transformer, error) {
-	refvars, err := a.resolveRefVars(allRes)
-	if err != nil {
-		return nil, err
-	}
-
-	glog.Infof("found all the refvars: %+v", refvars)
-
-	varExpander, err := transformers.NewRefVarTransformer(refvars)
-	if err != nil {
-		return nil, err
-	}
-	return varExpander, nil
+	r = append(r, t)
+	return transformers.NewMultiTransformer(r), nil
 }
 
 func unmarshal(y []byte, o interface{}) error {
@@ -309,53 +258,52 @@ func unmarshal(y []byte, o interface{}) error {
 	return dec.Decode(o)
 }
 
-func (a *applicationImpl) resolveRefVars(resources resmap.ResMap) (map[string]string, error) {
-	refvars := map[string]string{}
-	vars, err := a.Vars()
+func (a *Application) resolveRefVars(m resmap.ResMap) (map[string]string, error) {
+	result := map[string]string{}
+	vars, err := a.getAllVars()
 	if err != nil {
-		return refvars, err
+		return result, err
 	}
-
-	for _, refvar := range vars {
-		id := resource.NewResId(refvar.ObjRef.GroupVersionKind(), refvar.ObjRef.Name)
-		if r, found := resources[id]; found {
-			s, err := r.GetFieldValue(refvar.FieldRef.FieldPath)
+	for _, v := range vars {
+		id := resource.NewResId(v.ObjRef.GroupVersionKind(), v.ObjRef.Name)
+		if r, found := m[id]; found {
+			s, err := r.GetFieldValue(v.FieldRef.FieldPath)
 			if err != nil {
-				return nil, fmt.Errorf("failed to resolve referred var: %+v", refvar)
+				return nil, fmt.Errorf("failed to resolve referred var: %+v", v)
 			}
-			refvars[refvar.Name] = s
+			result[v.Name] = s
 		} else {
-			glog.Infof("couldn't resolve refvar: %v", refvar)
+			glog.Infof("couldn't resolve v: %v", v)
 		}
 	}
-	return refvars, nil
+	return result, nil
 }
 
-// Vars returns all the variables defined at the app and subapps of the app
-func (a *applicationImpl) Vars() ([]types.Var, error) {
-	vars := []types.Var{}
+// getAllVars returns all the "environment" style Var instances defined in the app.
+func (a *Application) getAllVars() ([]types.Var, error) {
+	result := []types.Var{}
 	errs := &interror.KustomizationErrors{}
 
-	apps, err := a.subApp()
+	bases, err := a.loadBasesAsFlatList()
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: computing vars and resources for subApps can be combined
-	for _, subApp := range apps {
-		subAppVars, err := subApp.Vars()
+	// TODO: computing vars and resources for bases can be combined
+	for _, b := range bases {
+		vars, err := b.getAllVars()
 		if err != nil {
 			errs.Append(err)
 			continue
 		}
-		vars = append(vars, subAppVars...)
+		result = append(result, vars...)
 	}
 	for _, v := range a.kustomization.Vars {
 		v.Defaulting()
-		vars = append(vars, v)
+		result = append(result, v)
 	}
 	if len(errs.Get()) > 0 {
 		return nil, errs
 	}
-	return vars, nil
+	return result, nil
 }

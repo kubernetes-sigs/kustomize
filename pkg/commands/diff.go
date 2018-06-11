@@ -65,7 +65,7 @@ func (o *diffOptions) Validate(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// RunDiff gets the differences between Application.Resources() and Application.RawResources().
+// RunDiff gets the differences between Application.MakeCustomizedResMap() and Application.MakeUncustomizedResMap().
 func (o *diffOptions) RunDiff(out, errOut io.Writer, fs fs.FileSystem) error {
 
 	l := loader.Init([]loader.SchemeLoader{loader.NewFileLoader(fs)})
@@ -80,15 +80,15 @@ func (o *diffOptions) RunDiff(out, errOut io.Writer, fs fs.FileSystem) error {
 		return err
 	}
 
-	application, err := app.New(rootLoader)
+	application, err := app.NewApplication(rootLoader)
 	if err != nil {
 		return err
 	}
-	transformedResources, err := application.Resources()
+	transformedResources, err := application.MakeCustomizedResMap()
 	if err != nil {
 		return err
 	}
-	rawResources, err := application.RawResources()
+	rawResources, err := application.MakeUncustomizedResMap()
 	if err != nil {
 		return err
 	}
