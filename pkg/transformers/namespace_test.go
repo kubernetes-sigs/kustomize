@@ -43,8 +43,24 @@ func TestNamespaceRun(t *testing.T) {
 					"namespace": "foo",
 				},
 			}),
+		resource.NewResId(ns, "ns1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Namespace",
+				"metadata": map[string]interface{}{
+					"name": "ns1",
+				},
+			}),
 	}
 	expected := resmap.ResMap{
+		resource.NewResId(ns, "ns1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Namespace",
+				"metadata": map[string]interface{}{
+					"name": "ns1",
+				},
+			}),
 		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
