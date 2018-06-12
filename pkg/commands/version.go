@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package version
+package commands
 
 import (
 	"fmt"
@@ -32,8 +32,8 @@ var (
 	buildDate = "1970-01-01T00:00:00Z" // build date in ISO8601 format, output of $(date -u +'%Y-%m-%dT%H:%M:%SZ')
 )
 
-// Version represens kustomize version.
-type Version struct {
+// version returns the version of kustomize.
+type version struct {
 	// KustomizeVersion is a kustomize binary version.
 	KustomizeVersion string `json:"kustomizeVersion"`
 	// GitCommit is a git commit
@@ -46,9 +46,9 @@ type Version struct {
 	GoArch string `json:"goArch"`
 }
 
-// GetVersion returns version.
-func GetVersion() Version {
-	return Version{
+// getVersion returns version.
+func getVersion() version {
+	return version{
 		kustomizeVersion,
 		gitCommit,
 		buildDate,
@@ -58,18 +58,18 @@ func GetVersion() Version {
 }
 
 // Print prints version.
-func (v Version) Print(w io.Writer) {
+func (v version) Print(w io.Writer) {
 	fmt.Fprintf(w, "Version: %+v\n", v)
 }
 
 // NewCmdVersion makes version command.
-func NewCmdVersion(w io.Writer) *cobra.Command {
+func newCmdVersion(w io.Writer) *cobra.Command {
 	return &cobra.Command{
 		Use:     "version",
 		Short:   "Prints the kustomize version",
 		Example: `kustomize version`,
 		Run: func(cmd *cobra.Command, args []string) {
-			GetVersion().Print(w)
+			getVersion().Print(w)
 		},
 	}
 }
