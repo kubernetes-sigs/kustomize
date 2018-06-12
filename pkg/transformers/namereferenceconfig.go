@@ -733,3 +733,8 @@ var defaultNameReferencePathConfigs = []referencePathConfig{
 		},
 	},
 }
+
+// AddNameReferencePathConfigs adds extra reference path configs to the default one
+func AddNameReferencePathConfigs(r []referencePathConfig) {
+	defaultNameReferencePathConfigs = append(defaultNameReferencePathConfigs, r...)
+}
