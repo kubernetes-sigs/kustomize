@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package temptest provides utilities for testing temp
-// files/directories testing.
-package temptest
+// Package exec provides an injectable interface and implementations for running commands.
+// TODO: delete this package, use k8s.io/utils/exec instead.
+// That package was copied here as a temporary workaround to make progress on b/80488884
+// (avoid the need to import exec first).
+package exec
