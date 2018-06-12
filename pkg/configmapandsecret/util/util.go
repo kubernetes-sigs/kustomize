@@ -18,7 +18,7 @@ limitations under the License.
 package util
 
 import (
-	"crypto/md5"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"path"
@@ -47,7 +47,7 @@ func HashObject(obj runtime.Object, codec runtime.Codec) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%x", md5.Sum(data)), nil
+	return fmt.Sprintf("%x", sha256.Sum256(data)), nil
 }
 
 // ParseFileSource parses the source given.
