@@ -20,7 +20,7 @@ import (
 	"io"
 	"os"
 
-	"k8s.io/utils/exec"
+	"github.com/kubernetes-sigs/kustomize/pkg/exec"
 )
 
 // program wraps the system diff program.
