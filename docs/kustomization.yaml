@@ -115,3 +115,19 @@ patches:
 - service_port_8888.yaml
 - deployment_increase_replicas.yaml
 - deployment_increase_memory.yaml
+
+
+# Each entry in this list should be a relative path to
+# a file for custom resource definition(CRD).
+#
+# The presence of this field is to allow kustomize be
+# aware of CRDs and apply proper
+# transformation for any objects in those types.
+#
+# Typical use case: A CRD object refers to a ConfigMap object.
+# In kustomization, the ConfigMap object name may change by adding namePrefix or hashing
+# The name reference for this ConfigMap object in CRD object need to be
+# updated with namePrefix or hashing in the same way.
+crds:
+- crds/typeA.yaml
+- crds/typeB.yaml

@@ -27,6 +27,7 @@ import (
 	"github.com/golang/glog"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
+	"github.com/kubernetes-sigs/kustomize/pkg/crds"
 	interror "github.com/kubernetes-sigs/kustomize/pkg/internal/error"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
@@ -127,7 +128,11 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 	errs := &interror.KustomizationErrors{}
 	result, err := a.loadResMapFromBasesAndResources()
 	if err != nil {
-		errs.Append(errors.Wrap(err, "rawResources"))
+		errs.Append(errors.Wrap(err, "loadResMapFromBasesAndResources"))
+	}
+	err = crds.RegisterCRDs(a.loader, a.kustomization.CRDs)
+	if err != nil {
+		errs.Append(errors.Wrap(err, "RegisterCRDs"))
 	}
 
 	cms, err := resmap.NewResMapFromConfigMapArgs(a.loader, a.kustomization.ConfigMapGenerator)

@@ -22,6 +22,7 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func TestNameReferenceRun(t *testing.T) {
@@ -197,5 +198,31 @@ func TestNameReferenceRun(t *testing.T) {
 	if !reflect.DeepEqual(m, expected) {
 		err = expected.ErrorIfNotEqual(m)
 		t.Fatalf("actual doesn't match expected: %v", err)
+	}
+}
+
+func TestAddNameReferencePathConfigs(t *testing.T) {
+	expected := len(defaultNameReferencePathConfigs) + 1
+
+	pathConfigs := []referencePathConfig{
+		{
+			referencedGVK: schema.GroupVersionKind{
+				Kind: "KindA",
+			},
+			pathConfigs: []PathConfig{
+				{
+					GroupVersionKind: &schema.GroupVersionKind{
+						Kind: "KindB",
+					},
+					Path:               []string{"path", "to", "a", "field"},
+					CreateIfNotPresent: false,
+				},
+			},
+		},
+	}
+
+	AddNameReferencePathConfigs(pathConfigs)
+	if len(defaultNameReferencePathConfigs) != expected {
+		t.Fatalf("actual %v doesn't match expected: %v", len(defaultAnnotationsPathConfigs), expected)
 	}
 }
