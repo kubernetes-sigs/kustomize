@@ -403,6 +403,13 @@ the server will use:
 sed -i 's/pineapple/kiwi/' $OVERLAYS/staging/map.yaml
 ```
 
+See the new greeting:
+
+```
+kustomize build $OVERLAYS/staging |\
+  grep -B 2 -A 3 kiwi
+```
+
 Run kustomize again to see the new configMap names:
 
 <!-- @grepStagingName @test -->
