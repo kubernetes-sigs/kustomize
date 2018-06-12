@@ -206,10 +206,12 @@ func (e CodeExitError) String() string {
 	return e.Err.Error()
 }
 
+// Exited returns true.
 func (e CodeExitError) Exited() bool {
 	return true
 }
 
+// ExitStatus delegates to Code.
 func (e CodeExitError) ExitStatus() int {
 	return e.Code
 }

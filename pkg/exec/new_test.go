@@ -14,44 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package temptest
+package exec_test
 
 import (
-	"errors"
+	"bytes"
 	"fmt"
-	"io"
 
-	"k8s.io/utils/temp"
+	"github.com/kubernetes-sigs/kustomize/pkg/exec"
 )
 
-func TestedCode(dir temp.Directory) error {
-	f, err := dir.NewFile("filename")
-	if err != nil {
-		return err
-	}
-	_, err = io.WriteString(f, "Bonjour!")
-	if err != nil {
-		return err
-	}
-	return dir.Delete()
-}
+func ExampleNew() {
+	exec := exec.New()
 
-func Example() {
-	dir := FakeDir{}
-
-	err := TestedCode(&dir)
-	if err != nil {
+	cmd := exec.Command("echo", "Bonjour!")
+	buff := bytes.Buffer{}
+	cmd.SetStdout(&buff)
+	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
-
-	if dir.Deleted == false {
-		panic(errors.New("Directory should have been deleted."))
-	}
-
-	if dir.Files["filename"] == nil {
-		panic(errors.New(`"filename" should have been created.`))
-	}
-
-	fmt.Println(dir.Files["filename"].Buffer.String())
+	fmt.Println(buff.String())
 	// Output: Bonjour!
 }
