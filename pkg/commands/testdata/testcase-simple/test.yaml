@@ -1,5 +1,5 @@
 description: simple
 args: []
-filename: ../examples/simple/instances/exampleinstance/
+filename: ../examplelayout/simple/instances/exampleinstance/
 expectedStdout: testdata/testcase-simple/expected.yaml
 expectedDiff: testdata/testcase-simple/expected.diff
