@@ -23,7 +23,6 @@ import (
 	"os"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
-	"github.com/kubernetes-sigs/kustomize/version"
 	"github.com/spf13/cobra"
 )
 
@@ -46,7 +45,7 @@ See https://github.com/kubernetes-sigs/kustomize
 		newCmdBuild(stdOut, stdErr, fsys),
 		newCmdDiff(stdOut, stdErr, fsys),
 		newCmdEdit(stdOut, stdErr, fsys),
-		version.NewCmdVersion(stdOut),
+		newCmdVersion(stdOut),
 	)
 	c.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 
