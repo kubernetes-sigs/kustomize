@@ -49,6 +49,7 @@ function testGoMetalinter {
   --enable=goimports \
   --enable=varcheck \
   --enable=goconst \
+  --enable=unparam \
   --enable=ineffassign \
   --enable=nakedret \
   --enable=interfacer \

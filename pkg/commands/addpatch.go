@@ -19,7 +19,6 @@ package commands
 import (
 	"errors"
 	"fmt"
-	"io"
 
 	"github.com/spf13/cobra"
 
@@ -32,7 +31,7 @@ type addPatchOptions struct {
 }
 
 // newCmdAddPatch adds the name of a file containing a patch to the kustomization file.
-func newCmdAddPatch(out, errOut io.Writer, fsys fs.FileSystem) *cobra.Command {
+func newCmdAddPatch(fsys fs.FileSystem) *cobra.Command {
 	var o addPatchOptions
 
 	cmd := &cobra.Command{
@@ -49,7 +48,7 @@ func newCmdAddPatch(out, errOut io.Writer, fsys fs.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return o.RunAddPatch(out, errOut, fsys)
+			return o.RunAddPatch(fsys)
 		},
 	}
 	return cmd
@@ -70,7 +69,7 @@ func (o *addPatchOptions) Complete(cmd *cobra.Command, args []string) error {
 }
 
 // RunAddPatch runs addPatch command (do real work).
-func (o *addPatchOptions) RunAddPatch(out, errOut io.Writer, fsys fs.FileSystem) error {
+func (o *addPatchOptions) RunAddPatch(fsys fs.FileSystem) error {
 	_, err := fsys.Stat(o.patchFilePath)
 	if err != nil {
 		return err
