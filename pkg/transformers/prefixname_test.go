@@ -22,6 +22,7 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func TestPrefixNameRun(t *testing.T) {
@@ -89,5 +90,21 @@ func TestPrefixNameRun(t *testing.T) {
 	if !reflect.DeepEqual(m, expected) {
 		err = expected.ErrorIfNotEqual(m)
 		t.Fatalf("actual doesn't match expected: %v", err)
+	}
+}
+
+func TestAddPrefixPathConfigs(t *testing.T) {
+	expected := len(defaultNamePrefixPathConfigs) + 1
+
+	pathConfigs := []PathConfig{
+		{
+			GroupVersionKind:   &schema.GroupVersionKind{Group: "GroupA", Kind: "KindB"},
+			Path:               []string{"path", "to", "a", "field"},
+			CreateIfNotPresent: true,
+		},
+	}
+	AddPrefixPathConfigs(pathConfigs...)
+	if len(defaultNamePrefixPathConfigs) != expected {
+		t.Fatalf("actual %v doesn't match expected: %v", len(defaultNamePrefixPathConfigs), expected)
 	}
 }
