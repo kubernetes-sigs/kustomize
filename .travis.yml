@@ -13,6 +13,7 @@ before_install:
   - go get -u github.com/onsi/ginkgo/ginkgo
   - go get -u github.com/monopole/mdrip
   - go get -u github.com/fzipp/gocyclo
+  - go get -u gopkg.in/alecthomas/gometalinter.v2 && gometalinter.v2 --install
 
 # Install must be set to prevent default `go get` to run.
 # The dependencies have already been vendored by `dep` so
