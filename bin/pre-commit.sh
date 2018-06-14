@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # Make sure, we run in the root of the repo and
 # therefore run the tests on all packages
@@ -36,13 +37,26 @@ function testGoCyclo {
   diff <(echo -n) <(go_dirs | xargs -0 gocyclo -over 15)
 }
 
-function testGoImports {
-  diff -u <(echo -n) <(go_dirs | xargs -0 goimports -l)
-}
-
 function testGoLint {
   diff -u <(echo -n) <(go_dirs | xargs -0 golint --min_confidence 0.85 )
 }
+
+function testGoMetalinter {
+  diff -u <(echo -n) <(go_dirs | xargs -0 gometalinter.v2 --disable-all --deadline 5m \
+  --enable=misspell \
+  --enable=structcheck \
+  --enable=deadcode \
+  --enable=goimports \
+  --enable=varcheck \
+  --enable=goconst \
+  --enable=ineffassign \
+  --enable=nakedret \
+  --enable=interfacer \
+  --enable=misspell \
+  --line-length=170 --enable=lll \
+  --dupl-threshold=400 --enable=dupl)
+}
+
 
 function testGoVet {
   go vet -all ./...
@@ -57,7 +71,7 @@ function testExamples {
 }
 
 runTest testGoFmt
-runTest testGoImports
+runTest testGoMetalinter
 runTest testGoLint
 runTest testGoVet
 runTest testGoCyclo

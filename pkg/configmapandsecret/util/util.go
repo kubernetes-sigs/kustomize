@@ -42,7 +42,7 @@ func ParseRFC3339(s string, nowFn func() metav1.Time) (metav1.Time, error) {
 }
 
 // HashObject encodes object using given codec and returns MD5 sum of the result.
-func HashObject(obj runtime.Object, codec runtime.Codec) (string, error) {
+func HashObject(obj runtime.Object, codec runtime.Encoder) (string, error) {
 	data, err := runtime.Encode(codec, obj)
 	if err != nil {
 		return "", err
