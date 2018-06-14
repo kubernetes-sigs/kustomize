@@ -164,11 +164,11 @@ var defaultAnnotationsPathConfigs = []PathConfig{
 }
 
 // AddLabelsPathConfigs adds extra path configs to the default one
-func AddLabelsPathConfigs(pathConfigs []PathConfig) {
+func AddLabelsPathConfigs(pathConfigs ...PathConfig) {
 	defaultLabelsPathConfigs = append(defaultLabelsPathConfigs, pathConfigs...)
 }
 
 // AddAnnotationsPathConfigs adds extra path configs to the default one
-func AddAnnotationsPathConfigs(pathConfigs []PathConfig) {
+func AddAnnotationsPathConfigs(pathConfigs ...PathConfig) {
 	defaultAnnotationsPathConfigs = append(defaultAnnotationsPathConfigs, pathConfigs...)
 }

@@ -322,8 +322,8 @@ func TestAddPathConfigs(t *testing.T) {
 			CreateIfNotPresent: true,
 		},
 	}
-	AddLabelsPathConfigs(pathConfigs)
-	AddAnnotationsPathConfigs(pathConfigs)
+	AddLabelsPathConfigs(pathConfigs...)
+	AddAnnotationsPathConfigs(pathConfigs[0])
 	if len(defaultAnnotationsPathConfigs) != aexpected {
 		t.Fatalf("actual %v doesn't match expected: %v", len(defaultAnnotationsPathConfigs), aexpected)
 	}
