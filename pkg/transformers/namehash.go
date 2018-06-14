@@ -43,10 +43,16 @@ func (o *nameHashTransformer) Transform(m resmap.ResMap) error {
 	for id, res := range m {
 		switch {
 		case selectByGVK(id.Gvk(), &schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"}):
-			appendHashForConfigMap(res)
+			err := appendHashForConfigMap(res)
+			if err != nil {
+				return err
+			}
 
 		case selectByGVK(id.Gvk(), &schema.GroupVersionKind{Version: "v1", Kind: "Secret"}):
-			appendHashForSecret(res)
+			err := appendHashForSecret(res)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

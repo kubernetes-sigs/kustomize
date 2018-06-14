@@ -234,10 +234,10 @@ func TestObjectConvertToUnstructured(t *testing.T) {
 	for _, tc := range testCases {
 		actual, err := objectToUnstructured(tc.input)
 		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
+			t.Fatalf("%s: unexpected error: %v", tc.description, err)
 		}
 		if !reflect.DeepEqual(actual, tc.expected) {
-			t.Fatalf("%#v\ndoesn't match expected\n%#v\n", actual, tc.expected)
+			t.Fatalf("%s: %#v\ndoesn't match expected\n%#v\n", tc.description, actual, tc.expected)
 		}
 	}
 }
