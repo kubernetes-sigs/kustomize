@@ -17,8 +17,6 @@ limitations under the License.
 package commands
 
 import (
-	"bytes"
-	"os"
 	"testing"
 
 	"strings"
@@ -52,12 +50,11 @@ secretGenerator: []
 )
 
 func TestAddResourceHappyPath(t *testing.T) {
-	buf := bytes.NewBuffer([]byte{})
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile(resourceFileName, []byte(resourceFileContent))
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
-	cmd := newCmdAddResource(buf, os.Stderr, fakeFS)
+	cmd := newCmdAddResource(fakeFS)
 	args := []string{resourceFileName}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
@@ -73,12 +70,11 @@ func TestAddResourceHappyPath(t *testing.T) {
 }
 
 func TestAddResourceAlreadyThere(t *testing.T) {
-	buf := bytes.NewBuffer([]byte{})
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile(resourceFileName, []byte(resourceFileContent))
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
-	cmd := newCmdAddResource(buf, os.Stderr, fakeFS)
+	cmd := newCmdAddResource(fakeFS)
 	args := []string{resourceFileName}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
@@ -96,10 +92,9 @@ func TestAddResourceAlreadyThere(t *testing.T) {
 }
 
 func TestAddResourceNoArgs(t *testing.T) {
-	buf := bytes.NewBuffer([]byte{})
 	fakeFS := fs.MakeFakeFS()
 
-	cmd := newCmdAddResource(buf, os.Stderr, fakeFS)
+	cmd := newCmdAddResource(fakeFS)
 	err := cmd.Execute()
 	if err == nil {
 		t.Errorf("expected error: %v", err)

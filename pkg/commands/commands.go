@@ -19,7 +19,6 @@ package commands
 
 import (
 	"flag"
-	"io"
 	"os"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
@@ -42,9 +41,10 @@ See https://github.com/kubernetes-sigs/kustomize
 	}
 
 	c.AddCommand(
-		newCmdBuild(stdOut, stdErr, fsys),
+		// TODO: Make consistent API for newCmd* functions.
+		newCmdBuild(stdOut, fsys),
 		newCmdDiff(stdOut, stdErr, fsys),
-		newCmdEdit(stdOut, stdErr, fsys),
+		newCmdEdit(fsys),
 		newCmdVersion(stdOut),
 	)
 	c.PersistentFlags().AddGoFlagSet(flag.CommandLine)
@@ -56,7 +56,7 @@ See https://github.com/kubernetes-sigs/kustomize
 }
 
 // newCmdEdit returns an instance of 'edit' subcommand.
-func newCmdEdit(stdOut, stdErr io.Writer, fsys fs.FileSystem) *cobra.Command {
+func newCmdEdit(fsys fs.FileSystem) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "edit",
 		Short: "Edits a kustomization file",
@@ -71,14 +71,14 @@ func newCmdEdit(stdOut, stdErr io.Writer, fsys fs.FileSystem) *cobra.Command {
 		Args: cobra.MinimumNArgs(1),
 	}
 	c.AddCommand(
-		newCmdAdd(stdOut, stdErr, fsys),
-		newCmdSet(stdOut, stdErr, fsys),
+		newCmdAdd(fsys),
+		newCmdSet(fsys),
 	)
 	return c
 }
 
 // newAddCommand returns an instance of 'add' subcommand.
-func newCmdAdd(stdOut, stdErr io.Writer, fsys fs.FileSystem) *cobra.Command {
+func newCmdAdd(fsys fs.FileSystem) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "add",
 		Short: "Adds configmap/resource/patch to the kustomization file.",
@@ -96,15 +96,15 @@ func newCmdAdd(stdOut, stdErr io.Writer, fsys fs.FileSystem) *cobra.Command {
 		Args: cobra.MinimumNArgs(1),
 	}
 	c.AddCommand(
-		newCmdAddResource(stdOut, stdErr, fsys),
-		newCmdAddPatch(stdOut, stdErr, fsys),
-		newCmdAddConfigMap(stdErr, fsys),
+		newCmdAddResource(fsys),
+		newCmdAddPatch(fsys),
+		newCmdAddConfigMap(fsys),
 	)
 	return c
 }
 
 // newSetCommand returns an instance of 'set' subcommand.
-func newCmdSet(stdOut, stdErr io.Writer, fsys fs.FileSystem) *cobra.Command {
+func newCmdSet(fsys fs.FileSystem) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "set",
 		Short: "Sets the value of different fields in kustomization file.",
@@ -117,7 +117,7 @@ func newCmdSet(stdOut, stdErr io.Writer, fsys fs.FileSystem) *cobra.Command {
 	}
 
 	c.AddCommand(
-		newCmdSetNamePrefix(stdOut, stdErr, fsys),
+		newCmdSetNamePrefix(fsys),
 	)
 	return c
 }

@@ -18,7 +18,6 @@ package commands
 
 import (
 	"fmt"
-	"io"
 
 	"github.com/spf13/cobra"
 
@@ -28,7 +27,7 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 )
 
-func newCmdAddConfigMap(errOut io.Writer, fsys fs.FileSystem) *cobra.Command {
+func newCmdAddConfigMap(fsys fs.FileSystem) *cobra.Command {
 	var config dataConfig
 	cmd := &cobra.Command{
 		Use:   "configmap NAME [--from-file=[key=]source] [--from-literal=key1=value1]",

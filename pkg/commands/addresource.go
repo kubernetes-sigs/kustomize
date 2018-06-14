@@ -19,7 +19,6 @@ package commands
 import (
 	"errors"
 	"fmt"
-	"io"
 
 	"github.com/spf13/cobra"
 
@@ -32,7 +31,7 @@ type addResourceOptions struct {
 }
 
 // newCmdAddResource adds the name of a file containing a resource to the kustomization file.
-func newCmdAddResource(out, errOut io.Writer, fsys fs.FileSystem) *cobra.Command {
+func newCmdAddResource(fsys fs.FileSystem) *cobra.Command {
 	var o addResourceOptions
 
 	cmd := &cobra.Command{
@@ -49,7 +48,7 @@ func newCmdAddResource(out, errOut io.Writer, fsys fs.FileSystem) *cobra.Command
 			if err != nil {
 				return err
 			}
-			return o.RunAddResource(out, errOut, fsys)
+			return o.RunAddResource(fsys)
 		},
 	}
 	return cmd
@@ -70,7 +69,7 @@ func (o *addResourceOptions) Complete(cmd *cobra.Command, args []string) error {
 }
 
 // RunAddResource runs addResource command (do real work).
-func (o *addResourceOptions) RunAddResource(out, errOut io.Writer, fsys fs.FileSystem) error {
+func (o *addResourceOptions) RunAddResource(fsys fs.FileSystem) error {
 	_, err := fsys.Stat(o.resourceFilePath)
 	if err != nil {
 		return err
