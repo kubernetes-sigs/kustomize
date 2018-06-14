@@ -1,0 +1,103 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0",
+    "title": "To-do Demo",
+    "description":
+      "### Notes:\n\nThis OAS2 (Swagger 2) specification defines common models and responses, that other specifications may reference.\n\nFor example, check out the user poperty in the main.oas2 todo-partial model - it references the user model in this specification!\n\nLikewise, the main.oas2 operations reference the shared error responses in this common specification.",
+    "contact": {
+      "name": "Stoplight",
+      "url": "https://stoplight.io"
+    },
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "host": "example.com",
+  "securityDefinitions": {},
+  "paths": {},
+  "responses": {
+    "401": {
+      "description": "",
+      "schema": {
+        "$ref": "#/definitions/error-response"
+      },
+      "examples": {
+        "application/json": {
+          "status": "401",
+          "error": "Not Authorized"
+        }
+      }
+    },
+    "403": {
+      "description": "",
+      "schema": {
+        "$ref": "#/definitions/error-response"
+      },
+      "examples": {
+        "application/json": {
+          "status": "403",
+          "error": "Forbbiden"
+        }
+      }
+    },
+    "404": {
+      "description": "",
+      "schema": {
+        "$ref": "#/definitions/error-response"
+      },
+      "examples": {
+        "application/json": {
+          "status": "404",
+          "error": "Not Found"
+        }
+      }
+    },
+    "500": {
+      "description": "",
+      "schema": {
+        "$ref": "#/definitions/error-response"
+      },
+      "examples": {
+        "application/json": {
+          "status": "500",
+          "error": "Server Error"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "user": {
+      "title": "User",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The user's full name."
+        },
+        "age": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 150
+        },
+        "error": {
+          "$ref": "#/definitions/error-response"
+        }
+      },
+      "required": ["name", "age"]
+    },
+    "error-response": {
+      "type": "object",
+      "title": "Error Response",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "error": {
+          "type": "string"
+        }
+      },
+      "required": ["status", "error"]
+    }
+  }
+}
