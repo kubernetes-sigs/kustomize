@@ -1,0 +1,6 @@
+apiVersion: v1beta1
+kind: Bee
+metadata:
+  name: bee
+spec:
+  action: fly
