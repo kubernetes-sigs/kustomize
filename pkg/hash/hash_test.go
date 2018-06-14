@@ -96,15 +96,19 @@ func TestEncodeConfigMap(t *testing.T) {
 		// one key
 		{"one key", &v1.ConfigMap{Data: map[string]string{"one": ""}}, `{"data":{"one":""},"kind":"ConfigMap","name":""}`, ""},
 		// three keys (tests sorting order)
-		{"three keys", &v1.ConfigMap{Data: map[string]string{"two": "2", "one": "", "three": "3"}}, `{"data":{"one":"","three":"3","two":"2"},"kind":"ConfigMap","name":""}`, ""},
+		{"three keys", &v1.ConfigMap{Data: map[string]string{"two": "2", "one": "", "three": "3"}},
+			`{"data":{"one":"","three":"3","two":"2"},"kind":"ConfigMap","name":""}`, ""},
 		// empty binary map
 		{"empty data", &v1.ConfigMap{BinaryData: map[string][]byte{}}, `{"data":null,"kind":"ConfigMap","name":""}`, ""},
 		// one key with binary data
-		{"one key", &v1.ConfigMap{BinaryData: map[string][]byte{"one": []byte("")}}, `{"binaryData":{"one":""},"data":null,"kind":"ConfigMap","name":""}`, ""},
+		{"one key", &v1.ConfigMap{BinaryData: map[string][]byte{"one": []byte("")}},
+			`{"binaryData":{"one":""},"data":null,"kind":"ConfigMap","name":""}`, ""},
 		// three keys with binary data (tests sorting order)
-		{"three keys", &v1.ConfigMap{BinaryData: map[string][]byte{"two": []byte("2"), "one": []byte(""), "three": []byte("3")}}, `{"binaryData":{"one":"","three":"Mw==","two":"Mg=="},"data":null,"kind":"ConfigMap","name":""}`, ""},
+		{"three keys", &v1.ConfigMap{BinaryData: map[string][]byte{"two": []byte("2"), "one": []byte(""), "three": []byte("3")}},
+			`{"binaryData":{"one":"","three":"Mw==","two":"Mg=="},"data":null,"kind":"ConfigMap","name":""}`, ""},
 		// two keys, one string and one binary values
-		{"two keys with one each", &v1.ConfigMap{Data: map[string]string{"one": ""}, BinaryData: map[string][]byte{"two": []byte("")}}, `{"binaryData":{"two":""},"data":{"one":""},"kind":"ConfigMap","name":""}`, ""},
+		{"two keys with one each", &v1.ConfigMap{Data: map[string]string{"one": ""}, BinaryData: map[string][]byte{"two": []byte("")}},
+			`{"binaryData":{"two":""},"data":{"one":""},"kind":"ConfigMap","name":""}`, ""},
 	}
 	for _, c := range cases {
 		s, err := encodeConfigMap(c.cm)
@@ -129,7 +133,11 @@ func TestEncodeSecret(t *testing.T) {
 		// one key
 		{"one key", &v1.Secret{Type: "my-type", Data: map[string][]byte{"one": []byte("")}}, `{"data":{"one":""},"kind":"Secret","name":"","type":"my-type"}`, ""},
 		// three keys (tests sorting order) - note json.Marshal base64 encodes the values because they come in as []byte
-		{"three keys", &v1.Secret{Type: "my-type", Data: map[string][]byte{"two": []byte("2"), "one": []byte(""), "three": []byte("3")}}, `{"data":{"one":"","three":"Mw==","two":"Mg=="},"kind":"Secret","name":"","type":"my-type"}`, ""},
+		{"three keys", &v1.Secret{
+			Type: "my-type",
+			Data: map[string][]byte{"two": []byte("2"), "one": []byte(""), "three": []byte("3")},
+		},
+			`{"data":{"one":"","three":"Mw==","two":"Mg=="},"kind":"Secret","name":"","type":"my-type"}`, ""},
 	}
 	for _, c := range cases {
 		s, err := encodeSecret(c.secret)

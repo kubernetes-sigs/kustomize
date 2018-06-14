@@ -31,11 +31,6 @@ type FakeFile struct {
 	open    bool
 }
 
-// makeFile makes a fake file.
-func makeFile() *FakeFile {
-	return &FakeFile{}
-}
-
 // makeDir makes a fake directory.
 func makeDir(name string) *FakeFile {
 	return &FakeFile{name: name, dir: true}

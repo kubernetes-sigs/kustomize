@@ -76,7 +76,9 @@ func newCmdAddConfigMap(errOut io.Writer, fsys fs.FileSystem) *cobra.Command {
 		&config.FileSources,
 		"from-file",
 		[]string{},
-		"Key file can be specified using its file path, in which case file basename will be used as configmap key, or optionally with a key and file path, in which case the given key will be used.  Specifying a directory will iterate each named file in the directory whose basename is a valid configmap key.")
+		"Key file can be specified using its file path, in which case file basename will be used as configmap "+
+			"key, or optionally with a key and file path, in which case the given key will be used.  Specifying a "+
+			"directory will iterate each named file in the directory whose basename is a valid configmap key.")
 	cmd.Flags().StringArrayVar(
 		&config.LiteralSources,
 		"from-literal",
