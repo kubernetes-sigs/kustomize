@@ -52,3 +52,7 @@
 [[constraint]]
   branch = "master"
   name = "k8s.io/utils"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/go-openapi/spec"
