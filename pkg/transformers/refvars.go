@@ -58,6 +58,26 @@ func NewRefVarTransformer(vars map[string]string) (Transformer, error) {
 				GroupVersionKind: &schema.GroupVersionKind{Kind: "Job"},
 				Path:             []string{"spec", "template", "spec", "containers", "args"},
 			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{Kind: "StatefulSet"},
+				Path:             []string{"spec", "template", "spec", "initContainers", "env", "value"},
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{Kind: "StatefulSet"},
+				Path:             []string{"spec", "template", "spec", "containers", "env", "value"},
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{Kind: "Deployment"},
+				Path:             []string{"spec", "template", "spec", "initContainers", "env", "value"},
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{Kind: "Deployment"},
+				Path:             []string{"spec", "template", "spec", "containers", "env", "value"},
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{Kind: "Job"},
+				Path:             []string{"spec", "template", "spec", "containers", "env", "value"},
+			},
 		},
 	}, nil
 }
