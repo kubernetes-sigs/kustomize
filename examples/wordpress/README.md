@@ -89,7 +89,7 @@ The patch has following content
 >       - name: wordpress
 >         env:
 >         - name: WORDPRESS_DB_HOST
->           value: mysql
+>           value: $(MYSQL_SERVICE)
 >         - name: WORDPRESS_DB_PASSWORD
 >           valueFrom:
 >             secretKeyRef:
