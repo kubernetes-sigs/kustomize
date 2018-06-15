@@ -66,7 +66,7 @@ func processEnvFileLine(line []byte, filePath string,
 		// from the environment.
 		value = os.Getenv(key)
 	}
-	return
+	return key, value, err
 }
 
 // addFromEnvFile processes an env file allows a generic addTo to handle the

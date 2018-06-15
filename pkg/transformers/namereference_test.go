@@ -191,6 +191,9 @@ func TestNameReferenceRun(t *testing.T) {
 	}
 
 	nrt, err := NewDefaultingNameReferenceTransformer()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	err = nrt.Transform(m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
