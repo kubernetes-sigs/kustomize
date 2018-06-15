@@ -39,11 +39,10 @@ func newProgram(out, errOut io.Writer) *program {
 }
 
 func (d *program) makeCommand(args ...string) exec.Cmd {
-	diff := ""
+	diff := "diff"
 	if envDiff := os.Getenv("KUBERNETES_EXTERNAL_DIFF"); envDiff != "" {
 		diff = envDiff
 	} else {
-		diff = "diff"
 		args = append([]string{"-u", "-N"}, args...)
 	}
 	cmd := exec.New().Command(diff, args...)
