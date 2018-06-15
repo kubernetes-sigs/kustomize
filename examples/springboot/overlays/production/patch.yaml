@@ -4,7 +4,7 @@ metadata:
   name: demo-configmap
 data:
   application.properties: |
-    app.name=Staging Kinflate Demo
+    app.name=Production Kinflate Demo
     spring.jpa.hibernate.ddl-auto=update
     spring.datasource.url=jdbc:mysql://<production_db_ip>:3306/db_example
     spring.datasource.username=root
