@@ -54,7 +54,7 @@ func TestExecutorNoArgs(t *testing.T) {
 	}
 
 	cmd = ex.Command("/does/not/exist")
-	out, err = cmd.CombinedOutput()
+	_, err = cmd.CombinedOutput()
 	if err == nil {
 		t.Errorf("expected failure, got nil error")
 	}
