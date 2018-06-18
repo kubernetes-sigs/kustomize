@@ -35,7 +35,7 @@ type buildOptions struct {
 }
 
 // newCmdBuild creates a new build command.
-func newCmdBuild(out, errOut io.Writer, fs fs.FileSystem) *cobra.Command {
+func newCmdBuild(out io.Writer, fs fs.FileSystem) *cobra.Command {
 	var o buildOptions
 
 	cmd := &cobra.Command{
@@ -48,7 +48,7 @@ func newCmdBuild(out, errOut io.Writer, fs fs.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return o.RunBuild(out, errOut, fs)
+			return o.RunBuild(out, fs)
 		},
 	}
 	return cmd
@@ -68,7 +68,7 @@ func (o *buildOptions) Validate(args []string) error {
 }
 
 // RunBuild runs build command.
-func (o *buildOptions) RunBuild(out, errOut io.Writer, fs fs.FileSystem) error {
+func (o *buildOptions) RunBuild(out io.Writer, fs fs.FileSystem) error {
 	l := loader.Init([]loader.SchemeLoader{loader.NewFileLoader(fs)})
 
 	absPath, err := filepath.Abs(o.kustomizationPath)

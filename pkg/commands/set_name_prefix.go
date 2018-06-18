@@ -18,7 +18,6 @@ package commands
 
 import (
 	"errors"
-	"io"
 
 	"github.com/spf13/cobra"
 
@@ -31,7 +30,7 @@ type setNamePrefixOptions struct {
 }
 
 // newCmdSetNamePrefix sets the value of the namePrefix field in the kustomization.
-func newCmdSetNamePrefix(out, errOut io.Writer, fsys fs.FileSystem) *cobra.Command {
+func newCmdSetNamePrefix(fsys fs.FileSystem) *cobra.Command {
 	var o setNamePrefixOptions
 
 	cmd := &cobra.Command{
@@ -52,7 +51,7 @@ and overwrite the value with "acme-" if the field does exist.
 			if err != nil {
 				return err
 			}
-			return o.RunSetNamePrefix(out, errOut, fsys)
+			return o.RunSetNamePrefix(fsys)
 		},
 	}
 	return cmd
@@ -74,7 +73,7 @@ func (o *setNamePrefixOptions) Complete(cmd *cobra.Command, args []string) error
 }
 
 // RunSetNamePrefix runs setNamePrefix command (does real work).
-func (o *setNamePrefixOptions) RunSetNamePrefix(out, errOut io.Writer, fsys fs.FileSystem) error {
+func (o *setNamePrefixOptions) RunSetNamePrefix(fsys fs.FileSystem) error {
 	mf, err := newKustomizationFile(constants.KustomizationFileName, fsys)
 	if err != nil {
 		return err
