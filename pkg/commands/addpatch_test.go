@@ -17,8 +17,6 @@ limitations under the License.
 package commands
 
 import (
-	"bytes"
-	"os"
 	"testing"
 
 	"strings"
@@ -36,12 +34,11 @@ sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 )
 
 func TestAddPatchHappyPath(t *testing.T) {
-	buf := bytes.NewBuffer([]byte{})
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile(patchFileName, []byte(patchFileContent))
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
-	cmd := newCmdAddPatch(buf, os.Stderr, fakeFS)
+	cmd := newCmdAddPatch(fakeFS)
 	args := []string{patchFileName}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
@@ -57,12 +54,11 @@ func TestAddPatchHappyPath(t *testing.T) {
 }
 
 func TestAddPatchAlreadyThere(t *testing.T) {
-	buf := bytes.NewBuffer([]byte{})
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile(patchFileName, []byte(patchFileContent))
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
-	cmd := newCmdAddPatch(buf, os.Stderr, fakeFS)
+	cmd := newCmdAddPatch(fakeFS)
 	args := []string{patchFileName}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
@@ -80,10 +76,9 @@ func TestAddPatchAlreadyThere(t *testing.T) {
 }
 
 func TestAddPatchNoArgs(t *testing.T) {
-	buf := bytes.NewBuffer([]byte{})
 	fakeFS := fs.MakeFakeFS()
 
-	cmd := newCmdAddPatch(buf, os.Stderr, fakeFS)
+	cmd := newCmdAddPatch(fakeFS)
 	err := cmd.Execute()
 	if err == nil {
 		t.Errorf("expected error: %v", err)

@@ -125,7 +125,7 @@ func runBuildTestCase(t *testing.T, testcaseName string, updateKustomizeExpected
 		kustomizationPath: testcase.Filename,
 	}
 	buf := bytes.NewBuffer([]byte{})
-	err = ops.RunBuild(buf, os.Stderr, fs)
+	err = ops.RunBuild(buf, fs)
 	switch {
 	case err != nil && len(testcase.ExpectedError) == 0:
 		t.Errorf("unexpected error: %v", err)

@@ -26,18 +26,22 @@ import (
 )
 
 // RunDiff runs system diff program to compare two Maps.
-func RunDiff(raw, transformed resmap.ResMap, out, errOut io.Writer) error {
+func RunDiff(raw, transformed resmap.ResMap, out, errOut io.Writer) (err error) {
 	transformedDir, err := writeYamlToNewDir(transformed, "transformed")
 	if err != nil {
 		return err
 	}
-	defer transformedDir.delete()
+	defer func() {
+		err = transformedDir.delete()
+	}()
 
 	noopDir, err := writeYamlToNewDir(raw, "noop")
 	if err != nil {
 		return err
 	}
-	defer noopDir.delete()
+	defer func() {
+		err = noopDir.delete()
+	}()
 
 	return newProgram(out, errOut).run(noopDir.name(), transformedDir.name())
 }

@@ -30,7 +30,7 @@ import (
 )
 
 // ParseRFC3339 parses an RFC3339 date in either RFC3339Nano or RFC3339 format.
-func ParseRFC3339(s string, nowFn func() metav1.Time) (metav1.Time, error) {
+func ParseRFC3339(s string) (metav1.Time, error) {
 	if t, timeErr := time.Parse(time.RFC3339Nano, s); timeErr == nil {
 		return metav1.Time{Time: t}, nil
 	}

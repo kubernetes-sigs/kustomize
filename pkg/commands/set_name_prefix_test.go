@@ -17,8 +17,6 @@ limitations under the License.
 package commands
 
 import (
-	"bytes"
-	"os"
 	"testing"
 
 	"strings"
@@ -32,11 +30,10 @@ const (
 )
 
 func TestSetNamePrefixHappyPath(t *testing.T) {
-	buf := bytes.NewBuffer([]byte{})
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
-	cmd := newCmdSetNamePrefix(buf, os.Stderr, fakeFS)
+	cmd := newCmdSetNamePrefix(fakeFS)
 	args := []string{goodPrefixValue}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
@@ -52,10 +49,9 @@ func TestSetNamePrefixHappyPath(t *testing.T) {
 }
 
 func TestSetNamePrefixNoArgs(t *testing.T) {
-	buf := bytes.NewBuffer([]byte{})
 	fakeFS := fs.MakeFakeFS()
 
-	cmd := newCmdSetNamePrefix(buf, os.Stderr, fakeFS)
+	cmd := newCmdSetNamePrefix(fakeFS)
 	err := cmd.Execute()
 	if err == nil {
 		t.Errorf("expected error: %v", err)

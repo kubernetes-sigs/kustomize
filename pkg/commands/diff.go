@@ -42,7 +42,7 @@ func newCmdDiff(out, errOut io.Writer, fs fs.FileSystem) *cobra.Command {
 		Use:   "diff [path]",
 		Short: "diff between customized resources and uncustomized resources",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := o.Validate(cmd, args)
+			err := o.Validate(args)
 			if err != nil {
 				return err
 			}
@@ -53,7 +53,7 @@ func newCmdDiff(out, errOut io.Writer, fs fs.FileSystem) *cobra.Command {
 }
 
 // Validate validates diff command.
-func (o *diffOptions) Validate(cmd *cobra.Command, args []string) error {
+func (o *diffOptions) Validate(args []string) error {
 	if len(args) > 1 {
 		return errors.New("specify one path to " + constants.KustomizationFileName)
 	}
