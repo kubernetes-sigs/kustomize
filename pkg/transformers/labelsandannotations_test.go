@@ -32,6 +32,7 @@ var ns = schema.GroupVersionKind{Version: "v1", Kind: "Namespace"}
 var deploy = schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"}
 var foo = schema.GroupVersionKind{Group: "example.com", Version: "v1", Kind: "Foo"}
 var crd = schema.GroupVersionKind{Group: "apiwctensions.k8s.io", Version: "v1beta1", Kind: "CustomResourceDefinition"}
+var job = schema.GroupVersionKind{Group: "batch", Version: "v1", Kind: "Job"}
 
 func TestLabelsRun(t *testing.T) {
 	m := resmap.ResMap{
@@ -81,6 +82,51 @@ func TestLabelsRun(t *testing.T) {
 						map[string]interface{}{
 							"name": "port1",
 							"port": "12345",
+						},
+					},
+				},
+			}),
+		resource.NewResId(job, "job1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "batch/v1",
+				"kind":       "Job",
+				"metadata": map[string]interface{}{
+					"name": "job1",
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"name":  "nginx",
+									"image": "nginx:1.7.9",
+								},
+							},
+						},
+					},
+				},
+			}),
+		resource.NewResId(job, "job2"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "batch/v1",
+				"kind":       "Job",
+				"metadata": map[string]interface{}{
+					"name": "job2",
+				},
+				"spec": map[string]interface{}{
+					"selector": map[string]interface{}{
+						"matchLabels": map[string]interface{}{
+							"old-label": "old-value",
+						},
+					},
+					"template": map[string]interface{}{
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"name":  "nginx",
+									"image": "nginx:1.7.9",
+								},
+							},
 						},
 					},
 				},
@@ -158,6 +204,73 @@ func TestLabelsRun(t *testing.T) {
 					"selector": map[string]interface{}{
 						"label-key1": "label-value1",
 						"label-key2": "label-value2",
+					},
+				},
+			}),
+		resource.NewResId(job, "job1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "batch/v1",
+				"kind":       "Job",
+				"metadata": map[string]interface{}{
+					"name": "job1",
+					"labels": map[string]interface{}{
+						"label-key1": "label-value1",
+						"label-key2": "label-value2",
+					},
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"metadata": map[string]interface{}{
+							"labels": map[string]interface{}{
+								"label-key1": "label-value1",
+								"label-key2": "label-value2",
+							},
+						},
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"name":  "nginx",
+									"image": "nginx:1.7.9",
+								},
+							},
+						},
+					},
+				},
+			}),
+		resource.NewResId(job, "job2"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "batch/v1",
+				"kind":       "Job",
+				"metadata": map[string]interface{}{
+					"name": "job2",
+					"labels": map[string]interface{}{
+						"label-key1": "label-value1",
+						"label-key2": "label-value2",
+					},
+				},
+				"spec": map[string]interface{}{
+					"selector": map[string]interface{}{
+						"matchLabels": map[string]interface{}{
+							"label-key1": "label-value1",
+							"label-key2": "label-value2",
+							"old-label":  "old-value",
+						},
+					},
+					"template": map[string]interface{}{
+						"metadata": map[string]interface{}{
+							"labels": map[string]interface{}{
+								"label-key1": "label-value1",
+								"label-key2": "label-value2",
+							},
+						},
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"name":  "nginx",
+									"image": "nginx:1.7.9",
+								},
+							},
+						},
 					},
 				},
 			}),
