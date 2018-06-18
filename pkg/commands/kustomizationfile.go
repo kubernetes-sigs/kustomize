@@ -35,7 +35,7 @@ type kustomizationFile struct {
 	fsys fs.FileSystem
 }
 
-func newKustomizationFile(mPath string, fsys fs.FileSystem) (*kustomizationFile, error) {
+func newKustomizationFile(mPath string, fsys fs.FileSystem) (*kustomizationFile, error) { // nolint
 	mf := &kustomizationFile{path: mPath, fsys: fsys}
 	err := mf.validate()
 	if err != nil {
