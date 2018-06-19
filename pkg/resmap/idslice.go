@@ -20,6 +20,7 @@ import (
 	"sort"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // IdSlice implements the sort interface.
@@ -31,7 +32,17 @@ func (a IdSlice) Len() int      { return len(a) }
 func (a IdSlice) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a IdSlice) Less(i, j int) bool {
 	if a[i].Gvk().String() != a[j].Gvk().String() {
-		return a[i].Gvk().String() < a[j].Gvk().String()
+		return gvkLess(a[i].Gvk(), a[j].Gvk())
 	}
 	return a[i].Name() < a[j].Name()
+}
+
+func gvkLess(i, j schema.GroupVersionKind) bool {
+	if i.Kind == "Namespace" {
+		return true
+	} else if j.Kind == "Namespace" {
+		return false
+	} else {
+		return i.String() < j.String()
+	}
 }
