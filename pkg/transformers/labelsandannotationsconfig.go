@@ -85,7 +85,7 @@ var defaultLabelsPathConfigs = []PathConfig{
 	{
 		GroupVersionKind:   &schema.GroupVersionKind{Group: "batch", Kind: "Job"},
 		Path:               []string{"spec", "selector", "matchLabels"},
-		CreateIfNotPresent: true,
+		CreateIfNotPresent: false,
 	},
 	{
 		GroupVersionKind:   &schema.GroupVersionKind{Group: "batch", Kind: "Job"},
@@ -95,12 +95,7 @@ var defaultLabelsPathConfigs = []PathConfig{
 	{
 		GroupVersionKind:   &schema.GroupVersionKind{Group: "batch", Kind: "CronJob"},
 		Path:               []string{"spec", "jobTemplate", "spec", "selector", "matchLabels"},
-		CreateIfNotPresent: true,
-	},
-	{
-		GroupVersionKind:   &schema.GroupVersionKind{Group: "batch", Kind: "CronJob"},
-		Path:               []string{"spec", "jobTemplate", "spec", "metadata", "labels"},
-		CreateIfNotPresent: true,
+		CreateIfNotPresent: false,
 	},
 	{
 		GroupVersionKind:   &schema.GroupVersionKind{Group: "batch", Kind: "CronJob"},
