@@ -33,6 +33,7 @@ var deploy = schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deploy
 var foo = schema.GroupVersionKind{Group: "example.com", Version: "v1", Kind: "Foo"}
 var crd = schema.GroupVersionKind{Group: "apiwctensions.k8s.io", Version: "v1beta1", Kind: "CustomResourceDefinition"}
 var job = schema.GroupVersionKind{Group: "batch", Version: "v1", Kind: "Job"}
+var cronjob = schema.GroupVersionKind{Group: "batch", Version: "v1beta1", Kind: "CronJob"}
 
 func TestLabelsRun(t *testing.T) {
 	m := resmap.ResMap{
@@ -125,6 +126,61 @@ func TestLabelsRun(t *testing.T) {
 								map[string]interface{}{
 									"name":  "nginx",
 									"image": "nginx:1.7.9",
+								},
+							},
+						},
+					},
+				},
+			}),
+		resource.NewResId(cronjob, "cronjob1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "batch/v1beta1",
+				"kind":       "CronJob",
+				"metadata": map[string]interface{}{
+					"name": "cronjob1",
+				},
+				"spec": map[string]interface{}{
+					"schedule": "* 23 * * *",
+					"jobTemplate": map[string]interface{}{
+						"spec": map[string]interface{}{
+							"template": map[string]interface{}{
+								"spec": map[string]interface{}{
+									"containers": []interface{}{
+										map[string]interface{}{
+											"name":  "nginx",
+											"image": "nginx:1.7.9",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			}),
+		resource.NewResId(cronjob, "cronjob2"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "batch/v1beta1",
+				"kind":       "CronJob",
+				"metadata": map[string]interface{}{
+					"name": "cronjob2",
+				},
+				"spec": map[string]interface{}{
+					"schedule": "* 23 * * *",
+					"jobTemplate": map[string]interface{}{
+						"spec": map[string]interface{}{
+							"selector": map[string]interface{}{
+								"matchLabels": map[string]interface{}{
+									"old-label": "old-value",
+								},
+							},
+							"template": map[string]interface{}{
+								"spec": map[string]interface{}{
+									"containers": []interface{}{
+										map[string]interface{}{
+											"name":  "nginx",
+											"image": "nginx:1.7.9",
+										},
+									},
 								},
 							},
 						},
@@ -268,6 +324,83 @@ func TestLabelsRun(t *testing.T) {
 								map[string]interface{}{
 									"name":  "nginx",
 									"image": "nginx:1.7.9",
+								},
+							},
+						},
+					},
+				},
+			}),
+		resource.NewResId(cronjob, "cronjob1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "batch/v1beta1",
+				"kind":       "CronJob",
+				"metadata": map[string]interface{}{
+					"name": "cronjob1",
+					"labels": map[string]interface{}{
+						"label-key1": "label-value1",
+						"label-key2": "label-value2",
+					},
+				},
+				"spec": map[string]interface{}{
+					"schedule": "* 23 * * *",
+					"jobTemplate": map[string]interface{}{
+						"spec": map[string]interface{}{
+							"template": map[string]interface{}{
+								"metadata": map[string]interface{}{
+									"labels": map[string]interface{}{
+										"label-key1": "label-value1",
+										"label-key2": "label-value2",
+									},
+								},
+								"spec": map[string]interface{}{
+									"containers": []interface{}{
+										map[string]interface{}{
+											"name":  "nginx",
+											"image": "nginx:1.7.9",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			}),
+		resource.NewResId(cronjob, "cronjob2"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "batch/v1beta1",
+				"kind":       "CronJob",
+				"metadata": map[string]interface{}{
+					"name": "cronjob2",
+					"labels": map[string]interface{}{
+						"label-key1": "label-value1",
+						"label-key2": "label-value2",
+					},
+				},
+				"spec": map[string]interface{}{
+					"schedule": "* 23 * * *",
+					"jobTemplate": map[string]interface{}{
+						"spec": map[string]interface{}{
+							"selector": map[string]interface{}{
+								"matchLabels": map[string]interface{}{
+									"old-label":  "old-value",
+									"label-key1": "label-value1",
+									"label-key2": "label-value2",
+								},
+							},
+							"template": map[string]interface{}{
+								"metadata": map[string]interface{}{
+									"labels": map[string]interface{}{
+										"label-key1": "label-value1",
+										"label-key2": "label-value2",
+									},
+								},
+								"spec": map[string]interface{}{
+									"containers": []interface{}{
+										map[string]interface{}{
+											"name":  "nginx",
+											"image": "nginx:1.7.9",
+										},
+									},
 								},
 							},
 						},
