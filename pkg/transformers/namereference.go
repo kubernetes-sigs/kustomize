@@ -26,7 +26,7 @@ import (
 
 // nameReferenceTransformer contains the referencing info between 2 GroupVersionKinds
 type nameReferenceTransformer struct {
-	pathConfigs []referencePathConfig
+	pathConfigs []ReferencePathConfig
 }
 
 var _ Transformer = &nameReferenceTransformer{}
@@ -38,7 +38,7 @@ func NewDefaultingNameReferenceTransformer() (Transformer, error) {
 }
 
 // NewNameReferenceTransformer construct a nameReferenceTransformer.
-func NewNameReferenceTransformer(pc []referencePathConfig) (Transformer, error) {
+func NewNameReferenceTransformer(pc []ReferencePathConfig) (Transformer, error) {
 	if pc == nil {
 		return nil, errors.New("pathConfigs is not expected to be nil")
 	}

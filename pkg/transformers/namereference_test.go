@@ -207,7 +207,7 @@ func TestNameReferenceRun(t *testing.T) {
 func TestAddNameReferencePathConfigs(t *testing.T) {
 	expected := len(defaultNameReferencePathConfigs) + 1
 
-	pathConfigs := []referencePathConfig{
+	pathConfigs := []ReferencePathConfig{
 		{
 			referencedGVK: schema.GroupVersionKind{
 				Kind: "KindA",
