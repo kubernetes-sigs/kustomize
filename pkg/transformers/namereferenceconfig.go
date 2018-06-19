@@ -22,7 +22,7 @@ import (
 
 // defaultNameReferencePathConfigs is the default configuration for updating
 // the fields reference the name of other resources.
-var defaultNameReferencePathConfigs = []referencePathConfig{
+var defaultNameReferencePathConfigs = []ReferencePathConfig{
 	{
 		referencedGVK: schema.GroupVersionKind{
 			Kind: "Deployment",
@@ -735,6 +735,27 @@ var defaultNameReferencePathConfigs = []referencePathConfig{
 }
 
 // AddNameReferencePathConfigs adds extra reference path configs to the default one
-func AddNameReferencePathConfigs(r []referencePathConfig) {
-	defaultNameReferencePathConfigs = append(defaultNameReferencePathConfigs, r...)
+func AddNameReferencePathConfigs(r []ReferencePathConfig) {
+	for _, p := range r {
+		defaultNameReferencePathConfigs = MergeNameReferencePathConfigs(defaultNameReferencePathConfigs, p)
+	}
+}
+
+// MergeNameReferencePathConfigs merges one ReferencePathConfig into a slice of ReferencePathConfig
+func MergeNameReferencePathConfigs(configs []ReferencePathConfig, config ReferencePathConfig) []ReferencePathConfig {
+	result := []ReferencePathConfig{}
+
+	found := false
+	for _, c := range configs {
+		if c.referencedGVK == config.referencedGVK {
+			c.pathConfigs = append(c.pathConfigs, config.pathConfigs...)
+			found = true
+		}
+		result = append(result, c)
+	}
+
+	if !found {
+		result = append(result, config)
+	}
+	return result
 }
