@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package crds read in files for CRD schemas and parse annotations from it
 package crds
 
 // Annotation is to mark a field as annotations.
