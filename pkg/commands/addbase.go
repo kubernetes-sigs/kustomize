@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2018 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -27,7 +28,7 @@ import (
 )
 
 type addBaseOptions struct {
-	baseDirectoryPath string
+	baseDirectoryPaths string
 }
 
 // newCmdAddBase adds the file path of the kustomize base to the kustomization file.
@@ -36,9 +37,9 @@ func newCmdAddBase(fsys fs.FileSystem) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "base",
-		Short: "Adds a directory path to a base kustomization to the current directory's kustomization file.",
+		Short: "Adds one or more bases to the kustomization.yaml in current directory",
 		Example: `
-		add base {filepath}`,
+		add base {filepath1},{filepath2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := o.Validate(args)
 			if err != nil {
@@ -59,7 +60,7 @@ func (o *addBaseOptions) Validate(args []string) error {
 	if len(args) != 1 {
 		return errors.New("must specify a base directory")
 	}
-	o.baseDirectoryPath = args[0]
+	o.baseDirectoryPaths = args[0]
 	return nil
 }
 
@@ -70,11 +71,6 @@ func (o *addBaseOptions) Complete(cmd *cobra.Command, args []string) error {
 
 // RunAddBase runs addBase command (do real work).
 func (o *addBaseOptions) RunAddBase(fsys fs.FileSystem) error {
-	_, err := fsys.Stat(o.baseDirectoryPath)
-	if err != nil {
-		return err
-	}
-
 	mf, err := newKustomizationFile(constants.KustomizationFileName, fsys)
 	if err != nil {
 		return err
@@ -85,11 +81,19 @@ func (o *addBaseOptions) RunAddBase(fsys fs.FileSystem) error {
 		return err
 	}
 
-	if stringInSlice(o.baseDirectoryPath, m.Bases) {
-		return fmt.Errorf("base %s already in kustomization file", o.baseDirectoryPath)
-	}
+	// split directory paths
+	paths := strings.Split(o.baseDirectoryPaths, ",")
+	for _, path := range paths {
+		_, err := fsys.Stat(path)
+		if err != nil {
+			return err
+		}
+		if stringInSlice(path, m.Bases) {
+			return fmt.Errorf("base %s already in kustomization file", path)
+		}
+		m.Bases = append(m.Bases, path)
 
-	m.Bases = append(m.Bases, o.baseDirectoryPath)
+	}
 
 	return mf.write(m)
 }
