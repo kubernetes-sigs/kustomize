@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2018 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,16 +26,19 @@ import (
 )
 
 const (
-	baseDirectoryPath = "my/path/to/wonderful/base"
+	baseDirectoryPaths = "my/path/to/wonderful/base,other/path/to/even/more/wonderful/base"
 )
 
 func TestAddBaseHappyPath(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
-	fakeFS.Mkdir(baseDirectoryPath, 0777)
+	bases := strings.Split(baseDirectoryPaths, ",")
+	for _, base := range bases {
+		fakeFS.Mkdir(base, 0777)
+	}
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
 	cmd := newCmdAddBase(fakeFS)
-	args := []string{baseDirectoryPath}
+	args := []string{baseDirectoryPaths}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
@@ -44,19 +47,25 @@ func TestAddBaseHappyPath(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected read error: %v", err)
 	}
-	if !strings.Contains(string(content), baseDirectoryPath) {
-		t.Errorf("expected patch name in kustomization")
+
+	for _, base := range bases {
+		if !strings.Contains(string(content), base) {
+			t.Errorf("expected base name in kustomization")
+		}
 	}
 }
 
 func TestAddBaseAlreadyThere(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
-	// Create fake directory
-	fakeFS.Mkdir(baseDirectoryPath, 0777)
+	// Create fake directories
+	bases := strings.Split(baseDirectoryPaths, ",")
+	for _, base := range bases {
+		fakeFS.Mkdir(base, 0777)
+	}
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
 	cmd := newCmdAddBase(fakeFS)
-	args := []string{baseDirectoryPath}
+	args := []string{baseDirectoryPaths}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
 		t.Fatalf("unexpected cmd error: %v", err)
@@ -66,9 +75,15 @@ func TestAddBaseAlreadyThere(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected already there problem")
 	}
-	if err.Error() != "base "+baseDirectoryPath+" already in kustomization file" {
-		t.Errorf("unexpected error %v", err)
+	var expectedErrors []string
+	for _, base := range bases {
+		error := "base " + base + " already in kustomization file"
+		expectedErrors = append(expectedErrors, error)
+		if !stringInSlice(error, expectedErrors) {
+			t.Errorf("unexpected error %v", err)
+		}
 	}
+
 }
 
 func TestAddBaseNoArgs(t *testing.T) {

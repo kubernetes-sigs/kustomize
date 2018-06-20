@@ -93,8 +93,9 @@ func newCmdAdd(fsys fs.FileSystem) *cobra.Command {
 	# Adds a patch to the kustomization
 	kustomize edit add patch <filepath>
 
-	# Adds a base directory to the kustomization
+	# Adds one or more base directories to the kustomization
 	kustomize edit add base <filepath>
+	kustomize edit add base <filepath1>,<filepath2>,<filepath3>
 `,
 		Args: cobra.MinimumNArgs(1),
 	}
