@@ -79,3 +79,13 @@ func (l *fileLoader) Load(fullFilePath string) ([]byte, error) {
 	}
 	return l.fs.ReadFile(fullFilePath)
 }
+
+// GlobLoad returns the map from path to bytes from reading a glob path.
+// Implements the Loader interface.
+func (l *fileLoader) GlobLoad(fullFilePath string) (map[string][]byte, error) {
+	// Validate path to load from is a full file path.
+	if !filepath.IsAbs(fullFilePath) {
+		return nil, fmt.Errorf("Attempting to load file without full file path: %s\n", fullFilePath)
+	}
+	return l.fs.ReadFiles(fullFilePath)
+}

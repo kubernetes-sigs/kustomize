@@ -71,10 +71,29 @@ func (fs *FakeFS) ReadFile(name string) ([]byte, error) {
 	return nil, fmt.Errorf("cannot read file %q", name)
 }
 
+// ReadFiles looks through all files in the fake filesystem
+// and find the matching files and then read content from all of them
+func (fs *FakeFS) ReadFiles(name string) (map[string][]byte, error) {
+	result := map[string][]byte{}
+	for p, f := range fs.m {
+		if fs.pathMatch(p, name) {
+			result[p] = f.content
+		}
+	}
+	return result, nil
+}
+
 // WriteFile always succeeds and does nothing.
 func (fs *FakeFS) WriteFile(name string, c []byte) error {
 	ff := &FakeFile{}
 	ff.Write(c)
 	fs.m[name] = ff
 	return nil
+}
+
+func (fs *FakeFS) pathMatch(path, pattern string) bool {
+	if path == pattern {
+		return true
+	}
+	return false
 }
