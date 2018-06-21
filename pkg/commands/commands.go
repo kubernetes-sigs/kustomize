@@ -81,7 +81,7 @@ func newCmdEdit(fsys fs.FileSystem) *cobra.Command {
 func newCmdAdd(fsys fs.FileSystem) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "add",
-		Short: "Adds configmap/resource/patch to the kustomization file.",
+		Short: "Adds configmap/resource/patch/base to the kustomization file.",
 		Long:  "",
 		Example: `
 	# Adds a configmap to the kustomization file
@@ -92,6 +92,10 @@ func newCmdAdd(fsys fs.FileSystem) *cobra.Command {
 
 	# Adds a patch to the kustomization
 	kustomize edit add patch <filepath>
+
+	# Adds one or more base directories to the kustomization
+	kustomize edit add base <filepath>
+	kustomize edit add base <filepath1>,<filepath2>,<filepath3>
 `,
 		Args: cobra.MinimumNArgs(1),
 	}
@@ -99,6 +103,7 @@ func newCmdAdd(fsys fs.FileSystem) *cobra.Command {
 		newCmdAddResource(fsys),
 		newCmdAddPatch(fsys),
 		newCmdAddConfigMap(fsys),
+		newCmdAddBase(fsys),
 	)
 	return c
 }
