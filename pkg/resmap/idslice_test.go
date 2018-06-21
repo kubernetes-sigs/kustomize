@@ -31,10 +31,18 @@ func TestLess(t *testing.T) {
 		resource.NewResId(schema.GroupVersionKind{Kind: "Pod"}, "pod"),
 		resource.NewResId(schema.GroupVersionKind{Kind: "Namespace"}, "ns1"),
 		resource.NewResId(schema.GroupVersionKind{Kind: "Namespace"}, "ns2"),
+		resource.NewResId(schema.GroupVersionKind{Kind: "Role"}, "ro"),
+		resource.NewResId(schema.GroupVersionKind{Kind: "RoleBinding"}, "rb"),
+		resource.NewResId(schema.GroupVersionKind{Kind: "CustomResourceDefinition"}, "crd"),
+		resource.NewResId(schema.GroupVersionKind{Kind: "ServiceAccount"}, "sa"),
 	}
 	expected := IdSlice{
 		resource.NewResId(schema.GroupVersionKind{Kind: "Namespace"}, "ns1"),
 		resource.NewResId(schema.GroupVersionKind{Kind: "Namespace"}, "ns2"),
+		resource.NewResId(schema.GroupVersionKind{Kind: "CustomResourceDefinition"}, "crd"),
+		resource.NewResId(schema.GroupVersionKind{Kind: "ServiceAccount"}, "sa"),
+		resource.NewResId(schema.GroupVersionKind{Kind: "Role"}, "ro"),
+		resource.NewResId(schema.GroupVersionKind{Kind: "RoleBinding"}, "rb"),
 		resource.NewResId(schema.GroupVersionKind{Kind: "ConfigMap"}, "cm"),
 		resource.NewResId(schema.GroupVersionKind{Kind: "Pod"}, "pod"),
 	}
