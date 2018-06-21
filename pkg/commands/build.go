@@ -43,6 +43,7 @@ func newCmdBuild(out io.Writer, fs fs.FileSystem) *cobra.Command {
 		Short: "Print current configuration per contents of " + constants.KustomizationFileName,
 		Example: "Use the file somedir/" + constants.KustomizationFileName +
 			" to generate a set of api resources:\nbuild somedir/",
+		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := o.Validate(args)
 			if err != nil {
