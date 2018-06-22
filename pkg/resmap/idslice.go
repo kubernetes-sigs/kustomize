@@ -37,15 +37,15 @@ func (a IdSlice) Less(i, j int) bool {
 	return a[i].Name() < a[j].Name()
 }
 
-var typeOrders = map[string]int{
-	"Namespace":                0,
-	"CustomResourceDefinition": 1,
-	"ServiceAccount":           2,
-	"Role":                     3,
-	"ClusterRole":              4,
-	"RoleBinding":              5,
-	"ClusterRoleBinding":       6,
-}
+var order = []string{"Namespace", "CustomResourceDefinition", "ServiceAccount",
+	"Role", "ClusterRole", "RoleBinding", "ClusterRoleBinding"}
+var typeOrders = func() map[string]int {
+	m := map[string]int{}
+	for i, n := range order {
+		m[n] = i
+	}
+	return m
+}()
 
 func gvkLess(i, j schema.GroupVersionKind) bool {
 	indexi, foundi := typeOrders[i.Kind]
