@@ -94,6 +94,11 @@ func TestNameReferenceRun(t *testing.T) {
 									},
 								},
 							},
+							"imagePullSecrets": []interface{}{
+								map[string]interface{}{
+									"name": "secret1",
+								},
+							},
 							"volumes": map[string]interface{}{
 								"configMap": map[string]interface{}{
 									"name": "cm1",
@@ -174,6 +179,11 @@ func TestNameReferenceRun(t *testing.T) {
 											},
 										},
 									},
+								},
+							},
+							"imagePullSecrets": []interface{}{
+								map[string]interface{}{
+									"name": "someprefix-secret1-somehash",
 								},
 							},
 							"volumes": map[string]interface{}{

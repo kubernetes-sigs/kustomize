@@ -371,6 +371,14 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 			},
 			{
 				GroupVersionKind: &schema.GroupVersionKind{
+					Version: "v1",
+					Kind:    "Pod",
+				},
+				Path:               []string{"spec", "imagePullSecrets", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "Deployment",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "secret", "secretName"},
@@ -402,6 +410,13 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 					Kind: "Deployment",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "secretRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "Deployment",
+				},
+				Path:               []string{"spec", "template", "spec", "imagePullSecrets", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
@@ -441,6 +456,13 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 			},
 			{
 				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "ReplicaSet",
+				},
+				Path:               []string{"spec", "template", "spec", "imagePullSecrets", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "DaemonSet",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "secret", "secretName"},
@@ -476,6 +498,13 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 			},
 			{
 				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "DaemonSet",
+				},
+				Path:               []string{"spec", "template", "spec", "imagePullSecrets", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "StatefulSet",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "secret", "secretName"},
@@ -511,6 +540,13 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 			},
 			{
 				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "StatefulSet",
+				},
+				Path:               []string{"spec", "template", "spec", "imagePullSecrets", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "Job",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "secret", "secretName"},
@@ -542,6 +578,13 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 					Kind: "Job",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "secretRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "Job",
+				},
+				Path:               []string{"spec", "template", "spec", "imagePullSecrets", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
@@ -581,9 +624,23 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 			},
 			{
 				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "CronJob",
+				},
+				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "imagePullSecrets", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "Ingress",
 				},
 				Path:               []string{"spec", "tls", "secretName"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "ServiceAccount",
+				},
+				Path:               []string{"imagePullSecrets", "name"},
 				CreateIfNotPresent: false,
 			},
 		},
