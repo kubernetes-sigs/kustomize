@@ -1,4 +1,72 @@
 apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: cockroachdb
+  name: dev-base-cockroachdb
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  labels:
+    app: cockroachdb
+  name: dev-base-cockroachdb
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    app: cockroachdb
+  name: dev-base-cockroachdb
+rules:
+- apiGroups:
+  - certificates.k8s.io
+  resources:
+  - certificatesigningrequests
+  verbs:
+  - create
+  - get
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  labels:
+    app: cockroachdb
+  name: dev-base-cockroachdb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: dev-base-cockroachdb
+subjects:
+- kind: ServiceAccount
+  name: dev-base-cockroachdb
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app: cockroachdb
+  name: dev-base-cockroachdb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: dev-base-cockroachdb
+subjects:
+- kind: ServiceAccount
+  name: dev-base-cockroachdb
+  namespace: default
+---
+apiVersion: v1
 kind: Service
 metadata:
   annotations:
@@ -37,13 +105,6 @@ spec:
     targetPort: 8080
   selector:
     app: cockroachdb
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    app: cockroachdb
-  name: dev-base-cockroachdb
 ---
 apiVersion: apps/v1beta1
 kind: StatefulSet
@@ -142,64 +203,3 @@ spec:
   selector:
     matchLabels:
       app: cockroachdb
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  labels:
-    app: cockroachdb
-  name: dev-base-cockroachdb
-rules:
-- apiGroups:
-  - certificates.k8s.io
-  resources:
-  - certificatesigningrequests
-  verbs:
-  - create
-  - get
-  - watch
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    app: cockroachdb
-  name: dev-base-cockroachdb
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: dev-base-cockroachdb
-subjects:
-- kind: ServiceAccount
-  name: dev-base-cockroachdb
-  namespace: default
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: Role
-metadata:
-  labels:
-    app: cockroachdb
-  name: dev-base-cockroachdb
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - secrets
-  verbs:
-  - create
-  - get
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: RoleBinding
-metadata:
-  labels:
-    app: cockroachdb
-  name: dev-base-cockroachdb
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: dev-base-cockroachdb
-subjects:
-- kind: ServiceAccount
-  name: dev-base-cockroachdb
-  namespace: default
