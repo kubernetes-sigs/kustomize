@@ -61,7 +61,7 @@ func newCmdAddConfigMap(fsys fs.FileSystem) *cobra.Command {
 			}
 
 			// Add the config map to the kustomization file.
-			err = addConfigMap(m, config)
+			err = addConfigMap(fsys, m, config)
 			if err != nil {
 				return err
 			}
@@ -95,7 +95,7 @@ func newCmdAddConfigMap(fsys fs.FileSystem) *cobra.Command {
 // addConfigMap updates a configmap within a kustomization file, using the data in config.
 // Note: error may leave kustomization file in an undefined state. Suggest passing a copy
 // of kustomization file.
-func addConfigMap(m *types.Kustomization, config dataConfig) error {
+func addConfigMap(fs fs.FileSystem, m *types.Kustomization, config dataConfig) error {
 	cm := getOrCreateConfigMap(m, config.Name)
 
 	err := mergeData(&cm.DataSources, config)
@@ -104,7 +104,7 @@ func addConfigMap(m *types.Kustomization, config dataConfig) error {
 	}
 
 	// Validate by trying to create corev1.configmap.
-	_, _, err = configmapandsecret.MakeConfigmapAndGenerateName(*cm)
+	_, _, err = configmapandsecret.MakeConfigmapAndGenerateName(fs, *cm)
 	if err != nil {
 		return err
 	}

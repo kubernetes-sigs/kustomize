@@ -18,19 +18,19 @@ package resmap
 
 import (
 	"context"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 )
 
-func newResourceFromSecretGenerator(p string, sArgs types.SecretArgs) (*resource.Resource, error) {
-	s, err := makeSecret(p, sArgs)
+func newResourceFromSecretGenerator(fs fs.FileSystem, p string, sArgs types.SecretArgs) (*resource.Resource, error) {
+	s, err := makeSecret(fs, p, sArgs)
 	if err != nil {
 		return nil, errors.Wrap(err, "makeSecret")
 	}
@@ -38,7 +38,7 @@ func newResourceFromSecretGenerator(p string, sArgs types.SecretArgs) (*resource
 		s, resource.NewGenerationBehavior(sArgs.Behavior))
 }
 
-func makeSecret(p string, sArgs types.SecretArgs) (*corev1.Secret, error) {
+func makeSecret(fs fs.FileSystem, p string, sArgs types.SecretArgs) (*corev1.Secret, error) {
 	s := &corev1.Secret{}
 	s.APIVersion = "v1"
 	s.Kind = "Secret"
@@ -50,7 +50,7 @@ func makeSecret(p string, sArgs types.SecretArgs) (*corev1.Secret, error) {
 	s.Data = map[string][]byte{}
 
 	for k, v := range sArgs.Commands {
-		out, err := createSecretKey(p, v)
+		out, err := createSecretKey(fs, p, v)
 		if err != nil {
 			return nil, errors.Wrap(err, "createSecretKey")
 		}
@@ -59,8 +59,8 @@ func makeSecret(p string, sArgs types.SecretArgs) (*corev1.Secret, error) {
 	return s, nil
 }
 
-func createSecretKey(wd string, command string) ([]byte, error) {
-	fi, err := os.Stat(wd)
+func createSecretKey(fs fs.FileSystem, wd string, command string) ([]byte, error) {
+	fi, err := fs.Stat(wd)
 	if err != nil || !fi.IsDir() {
 		wd = filepath.Dir(wd)
 	}
@@ -73,10 +73,10 @@ func createSecretKey(wd string, command string) ([]byte, error) {
 
 // NewResMapFromSecretArgs takes a SecretArgs slice and executes its command in directory p
 // then writes the output to a Resource slice and return it.
-func NewResMapFromSecretArgs(p string, secretList []types.SecretArgs) (ResMap, error) {
-	allResources := []*resource.Resource{}
+func NewResMapFromSecretArgs(fs fs.FileSystem, p string, secretList []types.SecretArgs) (ResMap, error) {
+	var allResources []*resource.Resource
 	for _, secret := range secretList {
-		res, err := newResourceFromSecretGenerator(p, secret)
+		res, err := newResourceFromSecretGenerator(fs, p, secret)
 		if err != nil {
 			return nil, errors.Wrap(err, "newResourceFromSecretGenerator")
 		}
