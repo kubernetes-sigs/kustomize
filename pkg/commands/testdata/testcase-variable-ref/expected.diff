@@ -41,6 +41,31 @@ diff -u -N /tmp/noop/apps_v1beta1_StatefulSet_cockroachdb.yaml /tmp/transformed/
        terminationGracePeriodSeconds: 60
        volumes:
        - name: datadir
+diff -u -N /tmp/noop/batch_v1beta1_CronJob_cronjob-example.yaml /tmp/transformed/batch_v1beta1_CronJob_cronjob-example.yaml
+--- /tmp/noop/batch_v1beta1_CronJob_cronjob-example.yaml	YYYY-MM-DD HH:MM:SS
++++ /tmp/transformed/batch_v1beta1_CronJob_cronjob-example.yaml	YYYY-MM-DD HH:MM:SS
+@@ -1,7 +1,7 @@
+ apiVersion: batch/v1beta1
+ kind: CronJob
+ metadata:
+-  name: base-cronjob-example
++  name: dev-base-cronjob-example
+ spec:
+   concurrencyPolicy: Forbid
+   jobTemplate:
+@@ -11,10 +11,10 @@
+           containers:
+           - command:
+             - echo
+-            - base-cockroachdb
++            - dev-base-cockroachdb
+             env:
+             - name: CDB_PUBLIC_SVC
+-              value: base-cockroachdb-public
++              value: dev-base-cockroachdb-public
+             image: cockroachdb/cockroach:v1.1.5
+             name: cronjob-example
+   schedule: '*/1 * * * *'
 diff -u -N /tmp/noop/policy_v1beta1_PodDisruptionBudget_cockroachdb-budget.yaml /tmp/transformed/policy_v1beta1_PodDisruptionBudget_cockroachdb-budget.yaml
 --- /tmp/noop/policy_v1beta1_PodDisruptionBudget_cockroachdb-budget.yaml	YYYY-MM-DD HH:MM:SS
 +++ /tmp/transformed/policy_v1beta1_PodDisruptionBudget_cockroachdb-budget.yaml	YYYY-MM-DD HH:MM:SS
