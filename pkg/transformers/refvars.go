@@ -39,6 +39,10 @@ func NewRefVarTransformer(vars map[string]string) (Transformer, error) {
 				Path:             []string{"spec", "template", "spec", "containers", "command"},
 			},
 			{
+				GroupVersionKind: &schema.GroupVersionKind{Kind: "CronJob"},
+				Path:             []string{"spec", "jobTemplate", "spec", "template", "spec", "containers", "command"},
+			},
+			{
 				GroupVersionKind: &schema.GroupVersionKind{Kind: "StatefulSet"},
 				Path:             []string{"spec", "template", "spec", "initContainers", "args"},
 			},
@@ -59,6 +63,10 @@ func NewRefVarTransformer(vars map[string]string) (Transformer, error) {
 				Path:             []string{"spec", "template", "spec", "containers", "args"},
 			},
 			{
+				GroupVersionKind: &schema.GroupVersionKind{Kind: "CronJob"},
+				Path:             []string{"spec", "jobTemplate", "spec", "template", "spec", "containers", "args"},
+			},
+			{
 				GroupVersionKind: &schema.GroupVersionKind{Kind: "StatefulSet"},
 				Path:             []string{"spec", "template", "spec", "initContainers", "env", "value"},
 			},
@@ -77,6 +85,10 @@ func NewRefVarTransformer(vars map[string]string) (Transformer, error) {
 			{
 				GroupVersionKind: &schema.GroupVersionKind{Kind: "Job"},
 				Path:             []string{"spec", "template", "spec", "containers", "env", "value"},
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{Kind: "CronJob"},
+				Path:             []string{"spec", "jobTemplate", "spec", "template", "spec", "containers", "env", "value"},
 			},
 			{
 				GroupVersionKind: &schema.GroupVersionKind{Kind: "Pod"},
