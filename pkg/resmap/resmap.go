@@ -26,6 +26,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
+	internal "github.com/kubernetes-sigs/kustomize/pkg/internal/error"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/pkg/errors"
@@ -119,7 +120,7 @@ func NewResourceSliceFromPatches(
 
 		res, err := newResourceSliceFromBytes(content)
 		if err != nil {
-			return nil, err
+			return nil, internal.ErrorHandler(err, path)
 		}
 		result = append(result, res...)
 	}
@@ -136,7 +137,7 @@ func NewResMapFromFiles(loader loader.Loader, paths []string) (ResMap, error) {
 		}
 		res, err := newResMapFromBytes(content)
 		if err != nil {
-			return nil, err
+			return nil, internal.ErrorHandler(err, path)
 		}
 		result = append(result, res)
 	}
