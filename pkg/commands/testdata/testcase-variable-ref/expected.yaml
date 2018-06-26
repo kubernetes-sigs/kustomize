@@ -192,6 +192,27 @@ spec:
         requests:
           storage: 1Gi
 ---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: dev-base-cronjob-example
+spec:
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - command:
+            - echo
+            - dev-base-cockroachdb
+            env:
+            - name: CDB_PUBLIC_SVC
+              value: dev-base-cockroachdb-public
+            image: cockroachdb/cockroach:v1.1.5
+            name: cronjob-example
+  schedule: '*/1 * * * *'
+---
 apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
 metadata:
