@@ -107,6 +107,21 @@ var defaultLabelsPathConfigs = []PathConfig{
 		Path:               []string{"spec", "selector", "matchLabels"},
 		CreateIfNotPresent: true,
 	},
+	{
+		GroupVersionKind:   &schema.GroupVersionKind{Group: "networking.k8s.io", Kind: "NetworkPolicy"},
+		Path:               []string{"spec", "podSelector", "matchLabels"},
+		CreateIfNotPresent: true,
+	},
+	{
+		GroupVersionKind:   &schema.GroupVersionKind{Group: "networking.k8s.io", Kind: "NetworkPolicy"},
+		Path:               []string{"spec", "ingress", "from", "podSelector", "matchLabels"},
+		CreateIfNotPresent: false,
+	},
+	{
+		GroupVersionKind:   &schema.GroupVersionKind{Group: "networking.k8s.io", Kind: "NetworkPolicy"},
+		Path:               []string{"spec", "egress", "to", "podSelector", "matchLabels"},
+		CreateIfNotPresent: false,
+	},
 }
 
 // defaultLabelsPathConfigs is the default configuration for mutating annotations
