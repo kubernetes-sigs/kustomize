@@ -82,6 +82,11 @@ secretGenerator:
     tls.crt: "cat secret/tls.cert"
     tls.key: "cat secret/tls.key"
   type: "kubernetes.io/tls"
+- name: downloaded_secret
+  commands:
+    username: "curl -s https://path/to/secrets/username.yaml"
+    password: "curl -s https://path/to/secrets/password.yaml"
+  type: Opaque
 
 # Each entry in this list should resolve to a directory
 # containing a kustomization file, else the
