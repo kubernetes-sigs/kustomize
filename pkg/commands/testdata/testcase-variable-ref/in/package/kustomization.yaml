@@ -1,6 +1,7 @@
 namePrefix: base-
 resources:
  - cockroachdb-statefulset-secure.yaml
+ - cronjob.yaml
 vars:
  - name: CDB_PUBLIC_SVC
    objref:
