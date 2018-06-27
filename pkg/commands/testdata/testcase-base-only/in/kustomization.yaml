@@ -6,5 +6,4 @@ commonLabels:
 commonAnnotations:
   note: This is a test annotation
 resources:
-  - deployment.yaml
-  - service.yaml
+  - resources/*.yaml
