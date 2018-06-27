@@ -113,16 +113,18 @@ func NewResourceSliceFromPatches(
 	loader loader.Loader, paths []string) ([]*resource.Resource, error) {
 	result := []*resource.Resource{}
 	for _, path := range paths {
-		content, err := loader.Load(path)
+		contents, err := loader.GlobLoad(path)
 		if err != nil {
 			return nil, err
 		}
+		for p, content := range contents {
+			res, err := newResourceSliceFromBytes(content)
+			if err != nil {
+				return nil, internal.ErrorHandler(err, p)
+			}
+			result = append(result, res...)
 
-		res, err := newResourceSliceFromBytes(content)
-		if err != nil {
-			return nil, internal.ErrorHandler(err, path)
 		}
-		result = append(result, res...)
 	}
 	return result, nil
 }
@@ -131,15 +133,17 @@ func NewResourceSliceFromPatches(
 func NewResMapFromFiles(loader loader.Loader, paths []string) (ResMap, error) {
 	result := []ResMap{}
 	for _, path := range paths {
-		content, err := loader.Load(path)
+		contents, err := loader.GlobLoad(path)
 		if err != nil {
 			return nil, errors.Wrap(err, "Load from path "+path+" failed")
 		}
-		res, err := newResMapFromBytes(content)
-		if err != nil {
-			return nil, internal.ErrorHandler(err, path)
+		for p, content := range contents {
+			res, err := newResMapFromBytes(content)
+			if err != nil {
+				return nil, internal.ErrorHandler(err, p)
+			}
+			result = append(result, res)
 		}
-		result = append(result, res)
 	}
 	return MergeWithoutOverride(result...)
 }

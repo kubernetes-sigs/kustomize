@@ -29,6 +29,7 @@ type FileSystem interface {
 	Open(name string) (File, error)
 	Stat(name string) (os.FileInfo, error)
 	ReadFile(name string) ([]byte, error)
+	ReadFiles(name string) (map[string][]byte, error)
 	WriteFile(name string, data []byte) error
 }
 

@@ -28,6 +28,8 @@ type Loader interface {
 	New(newRoot string) (Loader, error)
 	// Load returns the bytes read from the location or an error.
 	Load(location string) ([]byte, error)
+	// GlobLoad returns the bytes read from a glob path or an error.
+	GlobLoad(location string) (map[string][]byte, error)
 }
 
 // Private implmentation of Loader interface.
@@ -44,6 +46,8 @@ type SchemeLoader interface {
 	FullLocation(root string, path string) (string, error)
 	// Load bytes at scheme-specific location or an error.
 	Load(location string) ([]byte, error)
+	// GlobLoad returns the bytes read from a glob path or an error.
+	GlobLoad(location string) (map[string][]byte, error)
 }
 
 const emptyRoot = ""
@@ -89,6 +93,21 @@ func (l *loaderImpl) Load(location string) ([]byte, error) {
 		return nil, err
 	}
 	return scheme.Load(fullLocation)
+}
+
+// GlobLoad returns a map from path to bytes read from scheme-specific location or an error.
+// "location" can be an absolute path, or if relative, full location is
+// calculated from the Root().
+func (l *loaderImpl) GlobLoad(location string) (map[string][]byte, error) {
+	scheme, err := l.getSchemeLoader(location)
+	if err != nil {
+		return nil, err
+	}
+	fullLocation, err := scheme.FullLocation(l.root, location)
+	if err != nil {
+		return nil, err
+	}
+	return scheme.GlobLoad(fullLocation)
 }
 
 // Helper function to parse scheme from location parameter.
