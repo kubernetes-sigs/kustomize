@@ -61,3 +61,8 @@ func NewReferencePathConfig(gvk schema.GroupVersionKind, pathconfigs []PathConfi
 		pathConfigs:   pathconfigs,
 	}
 }
+
+// GVK returns the Group version kind of a Reference PathConfig
+func (r ReferencePathConfig) GVK() string {
+	return r.referencedGVK.String()
+}

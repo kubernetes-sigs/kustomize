@@ -18,6 +18,7 @@ package crds
 
 import (
 	"reflect"
+	"sort"
 	"testing"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/internal/loadertest"
@@ -150,36 +151,46 @@ func makeLoader(t *testing.T) loader.Loader {
 }
 
 func TestRegisterCRD(t *testing.T) {
+	refpathconfigs := []transformers.ReferencePathConfig{
+		transformers.NewReferencePathConfig(
+			schema.GroupVersionKind{Kind: "Bee", Version: "v1beta1"},
+			[]transformers.PathConfig{
+				{
+					CreateIfNotPresent: false,
+					GroupVersionKind:   &schema.GroupVersionKind{Kind: "MyKind"},
+					Path:               []string{"spec", "beeRef", "name"},
+				},
+			},
+		),
+		transformers.NewReferencePathConfig(
+			schema.GroupVersionKind{Kind: "Secret", Version: "v1"},
+			[]transformers.PathConfig{
+				{
+					CreateIfNotPresent: false,
+					GroupVersionKind:   &schema.GroupVersionKind{Kind: "MyKind"},
+					Path:               []string{"spec", "secretRef", "name"},
+				},
+			},
+		),
+	}
+
+	sort.Slice(refpathconfigs, func(i, j int) bool {
+		return refpathconfigs[i].GVK() < refpathconfigs[j].GVK()
+	})
+
 	expected := []pathConfigs{
 		{
-			namereferencePathConfigs: []transformers.ReferencePathConfig{
-				transformers.NewReferencePathConfig(
-					schema.GroupVersionKind{Kind: "Bee", Version: "v1beta1"},
-					[]transformers.PathConfig{
-						{
-							CreateIfNotPresent: false,
-							GroupVersionKind:   &schema.GroupVersionKind{Kind: "MyKind"},
-							Path:               []string{"spec", "beeRef", "name"},
-						},
-					},
-				),
-				transformers.NewReferencePathConfig(
-					schema.GroupVersionKind{Kind: "Secret", Version: "v1"},
-					[]transformers.PathConfig{
-						{
-							CreateIfNotPresent: false,
-							GroupVersionKind:   &schema.GroupVersionKind{Kind: "MyKind"},
-							Path:               []string{"spec", "secretRef", "name"},
-						},
-					},
-				),
-			},
+			namereferencePathConfigs: refpathconfigs,
 		},
 	}
 
 	loader := makeLoader(t)
 
 	pathconfig, _ := registerCRD(loader, "/testpath/crd.json")
+
+	sort.Slice(pathconfig[0].namereferencePathConfigs, func(i, j int) bool {
+		return pathconfig[0].namereferencePathConfigs[i].GVK() < pathconfig[0].namereferencePathConfigs[j].GVK()
+	})
 
 	if !reflect.DeepEqual(pathconfig, expected) {
 		t.Fatalf("expected\n %v\n but got\n %v\n", expected, pathconfig)
