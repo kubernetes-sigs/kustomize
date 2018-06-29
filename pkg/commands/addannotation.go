@@ -19,8 +19,8 @@ package commands
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"regexp"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -64,9 +64,9 @@ func (o *addAnnotationOptions) Validate(args []string) error {
 	if len(args) > 1 {
 		return errors.New("annotations must be comma-separated, with no spaces. See help text for example.")
 	}
-	inputs := strings.Split(args[0],",")
+	inputs := strings.Split(args[0], ",")
 	for _, input := range inputs {
-			ok, err := regexp.MatchString(`\A([a-zA-Z0-9_.-]+):([a-zA-Z0-9_.-]+)\z`, input)
+		ok, err := regexp.MatchString(`\A([a-zA-Z0-9_.-]+):([a-zA-Z0-9_.-]+)\z`, input)
 		if err != nil {
 			return err
 		}
@@ -95,7 +95,7 @@ func (o *addAnnotationOptions) RunAddAnnotation(fsys fs.FileSystem) error {
 		return err
 	}
 
-	if m.CommonAnnotations == nil{
+	if m.CommonAnnotations == nil {
 		m.CommonAnnotations = make(map[string]string)
 	}
 	annotations := strings.Split(o.annotations, ",")
