@@ -17,9 +17,9 @@ limitations under the License.
 package commands
 
 import (
-	"regexp"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -57,21 +57,16 @@ func newCmdAddLabel(fsys fs.FileSystem) *cobra.Command {
 }
 
 // Validate validates addLabel command.
-// TODO: make sure label is of correct format key:value
 func (o *addLabelOptions) Validate(args []string) error {
-	for _, arg := range args {
-		fmt.Println(arg + "****")
-	}
-
 	if len(args) < 1 {
 		return errors.New("must specify a label")
 	}
 	if len(args) > 1 {
 		return errors.New("labels must be comma-separated, with no spaces. See help text for example.")
 	}
-	inputs := strings.Split(args[0],",")
+	inputs := strings.Split(args[0], ",")
 	for _, input := range inputs {
-			ok, err := regexp.MatchString(`\A([a-zA-Z0-9_.-]+):([a-zA-Z0-9_.-]+)\z`, input)
+		ok, err := regexp.MatchString(`\A([a-zA-Z0-9_.-]+):([a-zA-Z0-9_.-]+)\z`, input)
 		if err != nil {
 			return err
 		}
@@ -102,7 +97,7 @@ func (o *addLabelOptions) RunAddLabel(fsys fs.FileSystem) error {
 		return err
 	}
 
-	if m.CommonLabels == nil{
+	if m.CommonLabels == nil {
 		m.CommonLabels = make(map[string]string)
 	}
 
