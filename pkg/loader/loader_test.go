@@ -27,7 +27,7 @@ import (
 func initializeRootLoader(fakefs fs.FileSystem) Loader {
 	var schemes []SchemeLoader
 	schemes = append(schemes, NewFileLoader(fakefs))
-	rootLoader := Init(schemes)
+	rootLoader := Init(schemes, fakefs)
 	return rootLoader
 }
 

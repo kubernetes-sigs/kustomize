@@ -38,7 +38,7 @@ func NewFakeLoader(initialDir string) FakeLoader {
 	fakefs := fs.MakeFakeFS()
 	var schemes []loader.SchemeLoader
 	schemes = append(schemes, loader.NewFileLoader(fakefs))
-	rootLoader := loader.Init(schemes)
+	rootLoader := loader.Init(schemes, fakefs)
 	loader, _ := rootLoader.New(initialDir)
 	return FakeLoader{fs: fakefs, delegate: loader}
 }
@@ -71,4 +71,9 @@ func (f FakeLoader) Load(location string) ([]byte, error) {
 // GlobLoad performs load from a given location.
 func (f FakeLoader) GlobLoad(location string) (map[string][]byte, error) {
 	return f.delegate.GlobLoad(location)
+}
+
+// GetFileSystem returns file system.
+func (f FakeLoader) GetFileSystem() fs.FileSystem {
+	return f.fs
 }
