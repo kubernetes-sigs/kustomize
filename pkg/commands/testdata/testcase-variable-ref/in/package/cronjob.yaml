@@ -15,6 +15,7 @@ spec:
             command:
             - echo
             - "$(CDB_STATEFULSET_NAME)"
+            - "$(TEST_CONFIG_MAP)"
             env:
               - name: CDB_PUBLIC_SVC
                 value: "$(CDB_PUBLIC_SVC)"
