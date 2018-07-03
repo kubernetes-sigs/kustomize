@@ -789,6 +789,63 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 			},
 		},
 	},
+	{
+		referencedGVK: schema.GroupVersionKind{
+			Version: "v1",
+			Kind:    "PersistentVolumeClaim",
+		},
+		pathConfigs: []PathConfig{
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "Pod",
+				},
+				Path:               []string{"spec", "volumes", "persistentVolumeClaim", "claimName"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "StatefulSet",
+				},
+				Path:               []string{"spec", "template", "spec", "volumes", "persistentVolumeClaim", "claimName"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "Deployment",
+				},
+				Path:               []string{"spec", "template", "spec", "volumes", "persistentVolumeClaim", "claimName"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "ReplicationController",
+				},
+				Path:               []string{"spec", "template", "spec", "volumes", "persistentVolumeClaim", "claimName"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "CronJob",
+				},
+				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "volumes", "persistentVolumeClaim", "claimName"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "Job",
+				},
+				Path:               []string{"spec", "template", "spec", "volumes", "persistentVolumeClaim", "claimName"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "DaemonSet",
+				},
+				Path:               []string{"spec", "template", "spec", "volumes", "persistentVolumeClaim", "claimName"},
+				CreateIfNotPresent: false,
+			},
+		},
+	},
 }
 
 // AddNameReferencePathConfigs adds extra reference path configs to the default one
