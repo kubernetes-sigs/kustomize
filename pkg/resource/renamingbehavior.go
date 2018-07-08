@@ -22,6 +22,9 @@ type RenamingBehavior int
 const (
 	// RenamingBehaviorUnspecified is an Unspecified behavior; typically treated as the default.
 	RenamingBehaviorUnspecified RenamingBehavior = iota
+	// RenamingBehaviorHash is a behavior where the content is hashed and added as a suffix to the resource name
+	// Typically treated as the default.
+	RenamingBehaviorHash
 	// RenamingBehaviorNone suppresses the addition of a hash suffix on the end of the resource
 	RenamingBehaviorNone
 )
@@ -31,6 +34,8 @@ func (b RenamingBehavior) String() string {
 	switch b {
 	case RenamingBehaviorNone:
 		return "none"
+	case RenamingBehaviorHash:
+		return "hash"
 	default:
 		return "unspecified"
 	}
@@ -41,6 +46,8 @@ func NewRenamingBehavior(s string) RenamingBehavior {
 	switch s {
 	case "none":
 		return RenamingBehaviorNone
+	case "hash":
+		return RenamingBehaviorHash;
 	default:
 		return RenamingBehaviorUnspecified
 	}

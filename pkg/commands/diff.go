@@ -28,10 +28,12 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/diff"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
+	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 )
 
 type diffOptions struct {
 	kustomizationPath string
+	defaultRenamingBehavior string
 }
 
 // newCmdDiff makes the diff command.
@@ -49,6 +51,13 @@ func newCmdDiff(out, errOut io.Writer, fs fs.FileSystem) *cobra.Command {
 			return o.RunDiff(out, errOut, fs)
 		},
 	}
+
+	cmd.Flags().StringVar(
+		&o.defaultRenamingBehavior,
+		"default-rename-behavior",
+		"hash",
+		"The default renaming behavior during the processing of configmaps and secrets. Can be 'none' or 'hash'.")
+
 	return cmd
 }
 
@@ -84,11 +93,11 @@ func (o *diffOptions) RunDiff(out, errOut io.Writer, fs fs.FileSystem) error {
 	if err != nil {
 		return err
 	}
-	transformedResources, err := application.MakeCustomizedResMap()
+	transformedResources, err := application.MakeCustomizedResMap(resource.NewRenamingBehavior(o.defaultRenamingBehavior))
 	if err != nil {
 		return err
 	}
-	rawResources, err := application.MakeUncustomizedResMap()
+	rawResources, err := application.MakeUncustomizedResMap(resource.NewRenamingBehavior(o.defaultRenamingBehavior))
 	if err != nil {
 		return err
 	}
