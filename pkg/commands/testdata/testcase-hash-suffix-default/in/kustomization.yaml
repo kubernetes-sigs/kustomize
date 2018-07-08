@@ -1,14 +1,27 @@
 resources:
 - config-map.yaml
+- secret.yaml
 configMapGenerator:
 - name: default
   literals:
-  - value_1=value_1
+  - key_1=value_1
 - name: default-with-none-override
   renaming: none
   literals:
-  - value_1=value_1
+  - key_2=value_2
 - name: default-with-hash-override
   renaming: hash
   literals:
-  - value_1=value_1
+  - key_3=value_3
+secretGenerator:
+- name: default
+  commands:
+    VALUE_1: "printf value_1"
+- name: default-with-none-override
+  renaming: none
+  commands:
+    VALUE_2: "printf value_2"
+- name: default-with-hash-override
+  renaming: hash
+  commands:
+    VALUE_3: "printf value_3"

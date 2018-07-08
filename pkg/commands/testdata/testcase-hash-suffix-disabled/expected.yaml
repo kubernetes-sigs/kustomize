@@ -7,7 +7,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  value_1: value_1
+  key_1: value_1
 kind: ConfigMap
 metadata:
   creationTimestamp: null
@@ -15,16 +15,50 @@ metadata:
 ---
 apiVersion: v1
 data:
-  value_1: value_1
+  key_3: value_3
 kind: ConfigMap
 metadata:
   creationTimestamp: null
-  name: default-with-hash-override-m46fh86fch
+  name: default-with-hash-override-k226dt925b
 ---
 apiVersion: v1
 data:
-  value_1: value_1
+  key_2: value_2
 kind: ConfigMap
 metadata:
   creationTimestamp: null
   name: default-with-none-override
+---
+apiVersion: v1
+data:
+  my-key: bXktdmFsdWUK
+kind: Secret
+metadata:
+  name: a-static-secret
+---
+apiVersion: v1
+data:
+  VALUE_1: dmFsdWVfMQ==
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: default
+type: Opaque
+---
+apiVersion: v1
+data:
+  VALUE_3: dmFsdWVfMw==
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: default-with-hash-override-86bbmd66hf
+type: Opaque
+---
+apiVersion: v1
+data:
+  VALUE_2: dmFsdWVfMg==
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: default-with-none-override
+type: Opaque
