@@ -31,7 +31,7 @@ import (
 // paired with a GenerationBehavior.
 type Resource struct {
 	unstructured.Unstructured
-	b GenerationBehavior
+	b  GenerationBehavior
 	rb RenamingBehavior
 }
 

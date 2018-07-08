@@ -32,7 +32,7 @@ import (
 )
 
 type diffOptions struct {
-	kustomizationPath string
+	kustomizationPath       string
 	defaultRenamingBehavior string
 }
 

@@ -32,7 +32,7 @@ import (
 )
 
 type buildOptions struct {
-	kustomizationPath string
+	kustomizationPath       string
 	defaultRenamingBehavior string
 }
 

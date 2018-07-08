@@ -29,7 +29,7 @@ import (
 
 // nameHashTransformer contains the prefix and the path config for each field that
 // the name prefix will be applied.
-type nameHashTransformer struct{
+type nameHashTransformer struct {
 	defaultRenamingBehavior resource.RenamingBehavior
 }
 
@@ -37,7 +37,7 @@ var _ Transformer = &nameHashTransformer{}
 
 // NewNameHashTransformer construct a nameHashTransformer.
 func NewNameHashTransformer(defaultRenamingBehavior resource.RenamingBehavior) Transformer {
-	return &nameHashTransformer{ defaultRenamingBehavior: defaultRenamingBehavior }
+	return &nameHashTransformer{defaultRenamingBehavior: defaultRenamingBehavior}
 }
 
 // Transform appends hash to configmaps and secrets.

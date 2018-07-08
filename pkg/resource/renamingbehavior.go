@@ -47,7 +47,7 @@ func NewRenamingBehavior(s string) RenamingBehavior {
 	case "none":
 		return RenamingBehaviorNone
 	case "hash":
-		return RenamingBehaviorHash;
+		return RenamingBehaviorHash
 	default:
 		return RenamingBehaviorUnspecified
 	}
