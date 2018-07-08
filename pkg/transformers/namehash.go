@@ -93,6 +93,11 @@ func appendHashForSecret(res *resource.Resource) error {
 	if err != nil {
 		return err
 	}
+
+	if res.RenamingBehavior() == resource.RenamingBehaviorNone {
+		return nil
+	}
+
 	h, err := hash.SecretHash(secret)
 	if err != nil {
 		return err
