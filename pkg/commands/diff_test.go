@@ -32,9 +32,9 @@ import (
 )
 
 type DiffTestCase struct {
-	Description string   `yaml:"description"`
-	Args        []string `yaml:"args"`
-	Filename    string   `yaml:"filename"`
+	Description      string `yaml:"description"`
+	Filename         string `yaml:"filename"`
+	RenamingBehavior string `yaml:"renamingBehavior"`
 	// path to the file that contains the expected output
 	ExpectedDiff  string `yaml:"expectedDiff"`
 	ExpectedError string `yaml:"expectedError"`
@@ -94,7 +94,8 @@ func runDiffTestCase(t *testing.T, testcaseName string, updateKustomizeExpected 
 	}
 
 	diffOps := &diffOptions{
-		kustomizationPath: testcase.Filename,
+		kustomizationPath:       testcase.Filename,
+		defaultRenamingBehavior: testcase.RenamingBehavior,
 	}
 	buf := bytes.NewBuffer([]byte{})
 	err = diffOps.RunDiff(buf, os.Stderr, fs)

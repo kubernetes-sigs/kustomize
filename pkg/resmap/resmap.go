@@ -201,11 +201,11 @@ func newResourceSliceFromBytes(in []byte) ([]*resource.Resource, error) {
 func MergeWithoutOverride(maps ...ResMap) (ResMap, error) {
 	result := ResMap{}
 	for _, m := range maps {
-		for id, resource := range m {
+		for id, res := range m {
 			if _, found := result[id]; found {
 				return nil, fmt.Errorf("id '%q' already used", id)
 			}
-			result[id] = resource
+			result[id] = res
 		}
 	}
 	return result, nil

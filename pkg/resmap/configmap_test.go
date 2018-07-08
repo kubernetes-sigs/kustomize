@@ -121,6 +121,33 @@ BAR=baz
 					}),
 			},
 		},
+		{
+			description: "config map with custom rename behavior",
+			input: []types.ConfigMapArgs{
+				{
+					Name:             "literalConfigMap",
+					RenamingBehavior: "none",
+					DataSources: types.DataSources{
+						LiteralSources: []string{"a=b"},
+					},
+				},
+			},
+			expected: ResMap{
+				resource.NewResId(cmap, "literalConfigMap"): NewResourceFromMapWithRenamingBehavior(
+					map[string]interface{}{
+						"apiVersion": "v1",
+						"kind":       "ConfigMap",
+						"metadata": map[string]interface{}{
+							"name":              "literalConfigMap",
+							"creationTimestamp": nil,
+						},
+						"data": map[string]interface{}{
+							"a": "b",
+						},
+					},
+					resource.RenamingBehaviorNone),
+			},
+		},
 		// TODO: add testcase for data coming from multiple sources like
 		// files/literal/env etc.
 	}
@@ -138,4 +165,10 @@ BAR=baz
 			t.Fatalf("in testcase: %q got:\n%+v\n expected:\n%+v\n", tc.description, r, tc.expected)
 		}
 	}
+}
+
+func NewResourceFromMapWithRenamingBehavior(m map[string]interface{}, renamingBehavior resource.RenamingBehavior) *resource.Resource {
+	var resourceMap = resource.NewResourceFromMap(m)
+	resourceMap.SetRenamingBehavior(renamingBehavior)
+	return resourceMap
 }

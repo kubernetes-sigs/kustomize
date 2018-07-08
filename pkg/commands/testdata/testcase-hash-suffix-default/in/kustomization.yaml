@@ -1,0 +1,14 @@
+resources:
+- config-map.yaml
+configMapGenerator:
+- name: default
+  literals:
+  - value_1=value_1
+- name: default-with-none-override
+  renaming: none
+  literals:
+  - value_1=value_1
+- name: default-with-hash-override
+  renaming: hash
+  literals:
+  - value_1=value_1

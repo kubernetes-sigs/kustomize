@@ -147,7 +147,7 @@ func TestNameHashTransformer(t *testing.T) {
 			}),
 	}
 
-	tran := NewNameHashTransformer()
+	tran := NewNameHashTransformer(resource.RenamingBehaviorUnspecified)
 	tran.Transform(objs)
 
 	if !reflect.DeepEqual(objs, expected) {

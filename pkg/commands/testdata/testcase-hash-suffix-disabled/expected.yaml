@@ -1,0 +1,30 @@
+apiVersion: v1
+data:
+  my: data
+kind: ConfigMap
+metadata:
+  name: a-static-configmap
+---
+apiVersion: v1
+data:
+  value_1: value_1
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: default
+---
+apiVersion: v1
+data:
+  value_1: value_1
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: default-with-hash-override-m46fh86fch
+---
+apiVersion: v1
+data:
+  value_1: value_1
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: default-with-none-override

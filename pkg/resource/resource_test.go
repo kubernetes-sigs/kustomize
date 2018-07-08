@@ -18,7 +18,32 @@ package resource
 
 import (
 	"testing"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
+
+func TestNewResourceFromUnstructDefaultsToRenamingUnspecified(t *testing.T) {
+	var res = NewResourceFromUnstruct(unstructured.Unstructured{})
+
+	if res.RenamingBehavior() != RenamingBehaviorUnspecified {
+		t.Fatalf("Got:%s expected:%s", res.RenamingBehavior(), RenamingBehaviorUnspecified)
+	}
+}
+
+func TestNewResourceWithBehaviorHasCorrectRenamingBehavior(t *testing.T) {
+	tests := []RenamingBehavior {
+		RenamingBehaviorHash,
+		RenamingBehaviorNone,
+		RenamingBehaviorUnspecified,
+	}
+
+	for _, test := range tests {
+		var res, _= NewResourceWithBehavior(&unstructured.Unstructured{}, BehaviorUnspecified, test)
+
+		if res.RenamingBehavior() != test {
+			t.Fatalf("Got:%s expected:%s", res.RenamingBehavior(), test)
+		}
+	}
+}
 
 func TestGetFieldValue(t *testing.T) {
 	res := NewResourceFromMap(map[string]interface{}{

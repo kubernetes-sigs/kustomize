@@ -1,0 +1,5 @@
+description: hash suffix preference disabled
+renamingBehavior: none
+filename: testdata/testcase-hash-suffix-default/in
+expectedStdout: testdata/testcase-hash-suffix-disabled/expected.yaml
+expectedDiff: testdata/testcase-hash-suffix-disabled/expected.diff
