@@ -32,10 +32,11 @@ import (
 type Resource struct {
 	unstructured.Unstructured
 	b GenerationBehavior
+	rb RenamingBehavior
 }
 
 // NewResourceWithBehavior returns a new instance of Resource.
-func NewResourceWithBehavior(obj runtime.Object, b GenerationBehavior) (*Resource, error) {
+func NewResourceWithBehavior(obj runtime.Object, b GenerationBehavior, rb RenamingBehavior) (*Resource, error) {
 	// Convert obj to a byte stream, then convert that to JSON (Unstructured).
 	marshaled, err := json.Marshal(obj)
 	if err != nil {
@@ -43,7 +44,7 @@ func NewResourceWithBehavior(obj runtime.Object, b GenerationBehavior) (*Resourc
 	}
 	var u unstructured.Unstructured
 	err = u.UnmarshalJSON(marshaled)
-	return &Resource{Unstructured: u, b: b}, err
+	return &Resource{Unstructured: u, b: b, rb: rb}, err
 }
 
 // NewResourceFromMap returns a new instance of Resource.
@@ -53,7 +54,7 @@ func NewResourceFromMap(m map[string]interface{}) *Resource {
 
 // NewResourceFromUnstruct returns a new instance of Resource.
 func NewResourceFromUnstruct(u unstructured.Unstructured) *Resource {
-	return &Resource{Unstructured: u, b: BehaviorUnspecified}
+	return &Resource{Unstructured: u, b: BehaviorUnspecified, rb: RenamingBehaviorUnspecified}
 }
 
 // Behavior returns the behavior for the resource.
@@ -64,6 +65,16 @@ func (r *Resource) Behavior() GenerationBehavior {
 // SetBehavior changes the resource to the new behavior
 func (r *Resource) SetBehavior(b GenerationBehavior) {
 	r.b = b
+}
+
+// RenamingBehavior returns the renamingBehavior for the resource.
+func (r *Resource) RenamingBehavior() RenamingBehavior {
+	return r.rb
+}
+
+// SetRenamingBehavior changes the resource to the new renamingBehavior
+func (r *Resource) SetRenamingBehavior(rb RenamingBehavior) {
+	r.rb = rb
 }
 
 // Id returns the ResId for the resource.

@@ -63,6 +63,11 @@ func appendHashForConfigMap(res *resource.Resource) error {
 	if err != nil {
 		return err
 	}
+
+	if res.RenamingBehavior() == resource.RenamingBehaviorNone {
+		return nil
+	}
+
 	h, err := hash.ConfigMapHash(cm)
 	if err != nil {
 		return err

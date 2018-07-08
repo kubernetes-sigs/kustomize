@@ -34,8 +34,7 @@ func newResourceFromSecretGenerator(p string, sArgs types.SecretArgs) (*resource
 	if err != nil {
 		return nil, errors.Wrap(err, "makeSecret")
 	}
-	return resource.NewResourceWithBehavior(
-		s, resource.NewGenerationBehavior(sArgs.Behavior))
+	return resource.NewResourceWithBehavior(s, resource.NewGenerationBehavior(sArgs.Behavior), resource.NewRenamingBehavior(sArgs.RenamingBehavior))
 }
 
 func makeSecret(p string, sArgs types.SecretArgs) (*corev1.Secret, error) {

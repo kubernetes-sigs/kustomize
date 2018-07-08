@@ -33,7 +33,7 @@ func newResourceFromConfigMap(l loader.Loader, cmArgs types.ConfigMapArgs) (*res
 	if err != nil {
 		return nil, err
 	}
-	return resource.NewResourceWithBehavior(cm, resource.NewGenerationBehavior(cmArgs.Behavior))
+	return resource.NewResourceWithBehavior(cm, resource.NewGenerationBehavior(cmArgs.Behavior), resource.NewRenamingBehavior(cmArgs.RenamingBehavior))
 }
 
 func makeConfigMap(l loader.Loader, cmArgs types.ConfigMapArgs) (*corev1.ConfigMap, error) {
