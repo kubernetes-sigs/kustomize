@@ -102,6 +102,10 @@ func NewRefVarTransformer(vars map[string]string) (Transformer, error) {
 				GroupVersionKind: &schema.GroupVersionKind{Kind: "Pod"},
 				Path:             []string{"spec", "containers", "env", "value"},
 			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{Kind: "ClusterRoleBinding"},
+				Path:             []string{"subjects", "namespace"},
+			},
 		},
 	}, nil
 }
