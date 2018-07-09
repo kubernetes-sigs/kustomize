@@ -34,6 +34,7 @@ var foo = schema.GroupVersionKind{Group: "example.com", Version: "v1", Kind: "Fo
 var crd = schema.GroupVersionKind{Group: "apiwctensions.k8s.io", Version: "v1beta1", Kind: "CustomResourceDefinition"}
 var job = schema.GroupVersionKind{Group: "batch", Version: "v1", Kind: "Job"}
 var cronjob = schema.GroupVersionKind{Group: "batch", Version: "v1beta1", Kind: "CronJob"}
+var pvc = schema.GroupVersionKind{Version: "v1", Kind: "PersistentVolumeClaim"}
 
 func TestLabelsRun(t *testing.T) {
 	m := resmap.ResMap{

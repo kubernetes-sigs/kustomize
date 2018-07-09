@@ -43,6 +43,14 @@ func TestNameReferenceRun(t *testing.T) {
 					"name": "someprefix-secret1-somehash",
 				},
 			}),
+		resource.NewResId(pvc, "claim1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "PersistentVolumeClaim",
+				"metadata": map[string]interface{}{
+					"name": "someprefix-claim1",
+				},
+			}),
 		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"group":      "apps",
@@ -106,6 +114,9 @@ func TestNameReferenceRun(t *testing.T) {
 								"secret": map[string]interface{}{
 									"secretName": "secret1",
 								},
+								"persistentVolumeClaim": map[string]interface{}{
+									"claimName": "claim1",
+								},
 							},
 						},
 					},
@@ -128,6 +139,14 @@ func TestNameReferenceRun(t *testing.T) {
 				"kind":       "Secret",
 				"metadata": map[string]interface{}{
 					"name": "someprefix-secret1-somehash",
+				},
+			}),
+		resource.NewResId(pvc, "claim1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "PersistentVolumeClaim",
+				"metadata": map[string]interface{}{
+					"name": "someprefix-claim1",
 				},
 			}),
 		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
@@ -192,6 +211,9 @@ func TestNameReferenceRun(t *testing.T) {
 								},
 								"secret": map[string]interface{}{
 									"secretName": "someprefix-secret1-somehash",
+								},
+								"persistentVolumeClaim": map[string]interface{}{
+									"claimName": "someprefix-claim1",
 								},
 							},
 						},
