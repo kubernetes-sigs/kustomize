@@ -35,6 +35,8 @@ var crd = schema.GroupVersionKind{Group: "apiwctensions.k8s.io", Version: "v1bet
 var job = schema.GroupVersionKind{Group: "batch", Version: "v1", Kind: "Job"}
 var cronjob = schema.GroupVersionKind{Group: "batch", Version: "v1beta1", Kind: "CronJob"}
 var pvc = schema.GroupVersionKind{Version: "v1", Kind: "PersistentVolumeClaim"}
+var clusterrolebinding = schema.GroupVersionKind{Version: "rbac.authorization.k8s.io/v1", Kind: "ClusterRoleBinding"}
+var sa = schema.GroupVersionKind{Version: "v1", Kind: "ServiceAccount"}
 
 func TestLabelsRun(t *testing.T) {
 	m := resmap.ResMap{

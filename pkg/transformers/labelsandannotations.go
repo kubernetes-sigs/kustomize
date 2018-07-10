@@ -62,7 +62,7 @@ func (o *mapTransformer) Transform(m resmap.ResMap) error {
 			if !selectByGVK(id.Gvk(), path.GroupVersionKind) {
 				continue
 			}
-			err := mutateField(objMap, path.Path, path.CreateIfNotPresent, o.addMap)
+			err := mutateField(objMap, path.Path, path.CreateIfNotPresent, path.IgnoreIfPresent, o.addMap)
 			if err != nil {
 				return err
 			}

@@ -32,23 +32,24 @@ var namespacePathConfigs = []PathConfig{
 		Path:               []string{"metadata", "namespace"},
 		CreateIfNotPresent: true,
 	},
+	{
+		GroupVersionKind:   &schema.GroupVersionKind{Kind: "ClusterRoleBinding"},
+		Path:               []string{"subjects", "namespace"},
+		CreateIfNotPresent: true,
+		IgnoreIfPresent:    true,
+	},
 }
 
 var skipNamespacePathConfigs = []PathConfig{
 	{
-		GroupVersionKind: &schema.GroupVersionKind{
-			Kind: "Namespace",
-		},
+		GroupVersionKind: &schema.GroupVersionKind{Kind: "Namespace"},
 	},
 	{
-		GroupVersionKind: &schema.GroupVersionKind{
-			Kind: "ClusterRoleBinding",
-		},
+		GroupVersionKind: &schema.GroupVersionKind{Kind: "ClusterRoleBinding"},
+		Path:             []string{"metadata", "namespace"},
 	},
 	{
-		GroupVersionKind: &schema.GroupVersionKind{
-			Kind: "ClusterRole",
-		},
+		GroupVersionKind: &schema.GroupVersionKind{Kind: "ClusterRole"},
 	},
 }
 
@@ -69,26 +70,14 @@ func NewNamespaceTransformer(ns string) Transformer {
 
 // Transform adds the namespace.
 func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
-	mf := resmap.ResMap{}
-
 	for id := range m {
-		mf[id] = m[id]
-		for _, path := range o.skipPathConfigs {
-			if selectByGVK(id.Gvk(), path.GroupVersionKind) {
-				delete(mf, id)
-				break
-			}
-		}
-	}
-
-	for id := range mf {
 		objMap := m[id].UnstructuredContent()
 		for _, path := range o.pathConfigs {
-			if !selectByGVK(id.Gvk(), path.GroupVersionKind) {
+			if !selectByGVK(id.Gvk(), path.GroupVersionKind) || selectByPath(id.Gvk(), path, skipNamespacePathConfigs) {
 				continue
 			}
 
-			err := mutateField(objMap, path.Path, path.CreateIfNotPresent, func(_ interface{}) (interface{}, error) {
+			err := mutateField(objMap, path.Path, path.CreateIfNotPresent, path.IgnoreIfPresent, func(_ interface{}) (interface{}, error) {
 				return o.namespace, nil
 			})
 			if err != nil {

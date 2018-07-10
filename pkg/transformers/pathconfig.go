@@ -25,6 +25,8 @@ import (
 type PathConfig struct {
 	// If true, it will create the path if it is not found.
 	CreateIfNotPresent bool
+	// If true, the path will be ignored if the path is found.
+	IgnoreIfPresent bool
 	// The gvk that this path tied to.
 	// If unset, it applied to any gvk
 	// If some fields are set, it applies to all matching gvk.

@@ -102,10 +102,6 @@ func NewRefVarTransformer(vars map[string]string) (Transformer, error) {
 				GroupVersionKind: &schema.GroupVersionKind{Kind: "Pod"},
 				Path:             []string{"spec", "containers", "env", "value"},
 			},
-			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "ClusterRoleBinding"},
-				Path:             []string{"subjects", "namespace"},
-			},
 		},
 	}, nil
 }
@@ -126,7 +122,7 @@ func (rv *refvarTransformer) Transform(resources resmap.ResMap) error {
 			if !selectByGVK(GVKn.Gvk(), pc.GroupVersionKind) {
 				continue
 			}
-			err := mutateField(objMap, pc.Path, false, func(in interface{}) (interface{}, error) {
+			err := mutateField(objMap, pc.Path, false, false, func(in interface{}) (interface{}, error) {
 				var (
 					mappingFunc = expansion.MappingFuncFor(rv.vars)
 				)
