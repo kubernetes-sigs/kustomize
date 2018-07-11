@@ -85,6 +85,10 @@ type ConfigMapArgs struct {
 
 	// DataSources for configmap.
 	DataSources `json:",inline,omitempty" yaml:",inline,omitempty"`
+
+	// Naming behavior of configmap, must be one of none
+	// 'none': disable renaming behavior.
+	RenamingBehavior string `json:"renaming,omitempty" yaml:"renaming,omitempty"`
 }
 
 // SecretArgs contains the metadata of how to generate a secret.
@@ -111,6 +115,10 @@ type SecretArgs struct {
 
 	// Map of keys to commands to generate the values
 	Commands map[string]string `json:",commands,omitempty" yaml:",inline,omitempty"`
+
+	// Naming behavior of configmap, must be one of none
+	// 'none': disable renaming behavior.
+	RenamingBehavior string `json:"renaming,omitempty" yaml:"renaming,omitempty"`
 }
 
 // DataSources contains some generic sources for configmap or secret.

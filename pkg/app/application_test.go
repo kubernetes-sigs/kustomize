@@ -184,7 +184,7 @@ func TestResources1(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
-	actual, err := app.MakeCustomizedResMap()
+	actual, err := app.MakeCustomizedResMap(resource.RenamingBehaviorUnspecified)
 	if err != nil {
 		t.Fatalf("Unexpected Resources error %v", err)
 	}
@@ -219,7 +219,7 @@ func TestRawResources1(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
-	actual, err := app.MakeUncustomizedResMap()
+	actual, err := app.MakeUncustomizedResMap(resource.RenamingBehaviorUnspecified)
 	if err != nil {
 		t.Fatalf("Unexpected RawResources error %v", err)
 	}
@@ -329,7 +329,7 @@ func TestRawResources2(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
-	actual, err := app.MakeUncustomizedResMap()
+	actual, err := app.MakeUncustomizedResMap(resource.RenamingBehaviorUnspecified)
 	if err != nil {
 		t.Fatalf("Unexpected RawResources error %v", err)
 	}

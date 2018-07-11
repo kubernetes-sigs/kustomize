@@ -1,0 +1,5 @@
+description: hash suffix preference
+args: []
+filename: testdata/testcase-hash-suffix-default/in
+expectedStdout: testdata/testcase-hash-suffix-default/expected.yaml
+expectedDiff: testdata/testcase-hash-suffix-default/expected.diff

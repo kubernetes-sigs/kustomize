@@ -33,9 +33,9 @@ import (
 )
 
 type buildTestCase struct {
-	Description string   `yaml:"description"`
-	Args        []string `yaml:"args"`
-	Filename    string   `yaml:"filename"`
+	Description      string `yaml:"description"`
+	Filename         string `yaml:"filename"`
+	RenamingBehavior string `yaml:"renamingBehavior"`
 	// path to the file that contains the expected output
 	ExpectedStdout string `yaml:"expectedStdout"`
 	ExpectedError  string `yaml:"expectedError"`
@@ -122,7 +122,8 @@ func runBuildTestCase(t *testing.T, testcaseName string, updateKustomizeExpected
 	}
 
 	ops := &buildOptions{
-		kustomizationPath: testcase.Filename,
+		kustomizationPath:       testcase.Filename,
+		defaultRenamingBehavior: testcase.RenamingBehavior,
 	}
 	buf := bytes.NewBuffer([]byte{})
 	err = ops.RunBuild(buf, fs)

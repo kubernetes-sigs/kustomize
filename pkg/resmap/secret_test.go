@@ -66,3 +66,36 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 		t.Fatalf("%#v\ndoesn't match expected:\n%#v", actual, expected)
 	}
 }
+
+func TestNewResMapFromSecretArgsWithCustomRenamingBehavior(t *testing.T) {
+	secrets := []types.SecretArgs{
+		{
+			Name:             "my-config-map",
+			Commands:         map[string]string{},
+			RenamingBehavior: "none",
+		},
+	}
+
+	expected := ResMap{
+		resource.NewResId(secret, "my-config-map"): NewResourceFromMapWithRenamingBehavior(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Secret",
+				"metadata": map[string]interface{}{
+					"name":              "my-config-map",
+					"creationTimestamp": nil,
+				},
+				"type": string(corev1.SecretTypeOpaque),
+			},
+			resource.RenamingBehaviorNone,
+		),
+	}
+
+	actual, err := NewResMapFromSecretArgs(".", secrets)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if !reflect.DeepEqual(actual, expected) {
+		t.Fatalf("%#v\ndoesn't match expected:\n%#v", actual, expected)
+	}
+}

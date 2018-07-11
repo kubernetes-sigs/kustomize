@@ -1,0 +1,69 @@
+diff -u -N /tmp/noop/v1_ConfigMap_default-with-hash-override.yaml /tmp/transformed/v1_ConfigMap_default-with-hash-override.yaml
+--- /tmp/noop/v1_ConfigMap_default-with-hash-override.yaml	YYYY-MM-DD HH:MM:SS
++++ /tmp/transformed/v1_ConfigMap_default-with-hash-override.yaml	YYYY-MM-DD HH:MM:SS
+@@ -0,0 +1,7 @@
++apiVersion: v1
++data:
++  key_3: value_3
++kind: ConfigMap
++metadata:
++  creationTimestamp: null
++  name: default-with-hash-override-k226dt925b
+diff -u -N /tmp/noop/v1_ConfigMap_default-with-none-override.yaml /tmp/transformed/v1_ConfigMap_default-with-none-override.yaml
+--- /tmp/noop/v1_ConfigMap_default-with-none-override.yaml	YYYY-MM-DD HH:MM:SS
++++ /tmp/transformed/v1_ConfigMap_default-with-none-override.yaml	YYYY-MM-DD HH:MM:SS
+@@ -0,0 +1,7 @@
++apiVersion: v1
++data:
++  key_2: value_2
++kind: ConfigMap
++metadata:
++  creationTimestamp: null
++  name: default-with-none-override
+diff -u -N /tmp/noop/v1_ConfigMap_default.yaml /tmp/transformed/v1_ConfigMap_default.yaml
+--- /tmp/noop/v1_ConfigMap_default.yaml	YYYY-MM-DD HH:MM:SS
++++ /tmp/transformed/v1_ConfigMap_default.yaml	YYYY-MM-DD HH:MM:SS
+@@ -0,0 +1,7 @@
++apiVersion: v1
++data:
++  key_1: value_1
++kind: ConfigMap
++metadata:
++  creationTimestamp: null
++  name: default
+diff -u -N /tmp/noop/v1_Secret_default-with-hash-override.yaml /tmp/transformed/v1_Secret_default-with-hash-override.yaml
+--- /tmp/noop/v1_Secret_default-with-hash-override.yaml	YYYY-MM-DD HH:MM:SS
++++ /tmp/transformed/v1_Secret_default-with-hash-override.yaml	YYYY-MM-DD HH:MM:SS
+@@ -0,0 +1,8 @@
++apiVersion: v1
++data:
++  VALUE_3: dmFsdWVfMw==
++kind: Secret
++metadata:
++  creationTimestamp: null
++  name: default-with-hash-override-86bbmd66hf
++type: Opaque
+diff -u -N /tmp/noop/v1_Secret_default-with-none-override.yaml /tmp/transformed/v1_Secret_default-with-none-override.yaml
+--- /tmp/noop/v1_Secret_default-with-none-override.yaml	YYYY-MM-DD HH:MM:SS
++++ /tmp/transformed/v1_Secret_default-with-none-override.yaml	YYYY-MM-DD HH:MM:SS
+@@ -0,0 +1,8 @@
++apiVersion: v1
++data:
++  VALUE_2: dmFsdWVfMg==
++kind: Secret
++metadata:
++  creationTimestamp: null
++  name: default-with-none-override
++type: Opaque
+diff -u -N /tmp/noop/v1_Secret_default.yaml /tmp/transformed/v1_Secret_default.yaml
+--- /tmp/noop/v1_Secret_default.yaml	YYYY-MM-DD HH:MM:SS
++++ /tmp/transformed/v1_Secret_default.yaml	YYYY-MM-DD HH:MM:SS
+@@ -0,0 +1,8 @@
++apiVersion: v1
++data:
++  VALUE_1: dmFsdWVfMQ==
++kind: Secret
++metadata:
++  creationTimestamp: null
++  name: default
++type: Opaque

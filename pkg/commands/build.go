@@ -28,10 +28,12 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
+	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 )
 
 type buildOptions struct {
-	kustomizationPath string
+	kustomizationPath       string
+	defaultRenamingBehavior string
 }
 
 // newCmdBuild creates a new build command.
@@ -52,6 +54,13 @@ func newCmdBuild(out io.Writer, fs fs.FileSystem) *cobra.Command {
 			return o.RunBuild(out, fs)
 		},
 	}
+
+	cmd.Flags().StringVar(
+		&o.defaultRenamingBehavior,
+		"default-rename-behavior",
+		"hash",
+		"The default renaming behavior during the processing of configmaps and secrets. Can be 'none' or 'hash'.")
+
 	return cmd
 }
 
@@ -87,7 +96,7 @@ func (o *buildOptions) RunBuild(out io.Writer, fs fs.FileSystem) error {
 		return err
 	}
 
-	allResources, err := application.MakeCustomizedResMap()
+	allResources, err := application.MakeCustomizedResMap(resource.NewRenamingBehavior(o.defaultRenamingBehavior))
 
 	if err != nil {
 		return err

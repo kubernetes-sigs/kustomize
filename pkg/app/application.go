@@ -74,12 +74,12 @@ func unmarshal(y []byte, o interface{}) error {
 
 // MakeCustomizedResMap creates a ResMap per kustomization instructions.
 // The Resources in the returned ResMap are fully customized.
-func (a *Application) MakeCustomizedResMap() (resmap.ResMap, error) {
+func (a *Application) MakeCustomizedResMap(defaultRenamingBehaviour resource.RenamingBehavior) (resmap.ResMap, error) {
 	m, err := a.loadCustomizedResMap()
 	if err != nil {
 		return nil, err
 	}
-	return a.resolveRefsToGeneratedResources(m)
+	return a.resolveRefsToGeneratedResources(defaultRenamingBehaviour, m)
 }
 
 // MakeUncustomizedResMap purports to create a ResMap without customization.
@@ -88,17 +88,17 @@ func (a *Application) MakeCustomizedResMap() (resmap.ResMap, error) {
 // and all generated secrets and configMaps.
 // Meant for use in generating a diff against customized resources.
 // TODO: See https://github.com/kubernetes-sigs/kustomize/issues/85
-func (a *Application) MakeUncustomizedResMap() (resmap.ResMap, error) {
+func (a *Application) MakeUncustomizedResMap(defaultRenamingBehaviour resource.RenamingBehavior) (resmap.ResMap, error) {
 	m, err := a.loadResMapFromBasesAndResources()
 	if err != nil {
 		return nil, err
 	}
-	return a.resolveRefsToGeneratedResources(m)
+	return a.resolveRefsToGeneratedResources(defaultRenamingBehaviour, m)
 }
 
 // resolveRefsToGeneratedResources fixes all name references.
-func (a *Application) resolveRefsToGeneratedResources(m resmap.ResMap) (resmap.ResMap, error) {
-	r := []transformers.Transformer{transformers.NewNameHashTransformer()}
+func (a *Application) resolveRefsToGeneratedResources(defaultRenamingBehavior resource.RenamingBehavior, m resmap.ResMap) (resmap.ResMap, error) {
+	r := []transformers.Transformer{transformers.NewNameHashTransformer(defaultRenamingBehavior)}
 
 	t, err := transformers.NewDefaultingNameReferenceTransformer()
 	if err != nil {

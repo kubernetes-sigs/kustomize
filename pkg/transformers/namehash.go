@@ -29,18 +29,24 @@ import (
 
 // nameHashTransformer contains the prefix and the path config for each field that
 // the name prefix will be applied.
-type nameHashTransformer struct{}
+type nameHashTransformer struct {
+	defaultRenamingBehavior resource.RenamingBehavior
+}
 
 var _ Transformer = &nameHashTransformer{}
 
 // NewNameHashTransformer construct a nameHashTransformer.
-func NewNameHashTransformer() Transformer {
-	return &nameHashTransformer{}
+func NewNameHashTransformer(defaultRenamingBehavior resource.RenamingBehavior) Transformer {
+	return &nameHashTransformer{defaultRenamingBehavior: defaultRenamingBehavior}
 }
 
 // Transform appends hash to configmaps and secrets.
 func (o *nameHashTransformer) Transform(m resmap.ResMap) error {
 	for id, res := range m {
+		if shouldNotHashName(res.RenamingBehavior(), o.defaultRenamingBehavior) {
+			continue
+		}
+
 		switch {
 		case selectByGVK(id.Gvk(), &schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"}):
 			err := appendHashForConfigMap(res)
@@ -58,11 +64,18 @@ func (o *nameHashTransformer) Transform(m resmap.ResMap) error {
 	return nil
 }
 
+func shouldNotHashName(resourceBehaviour resource.RenamingBehavior, defaultBehavior resource.RenamingBehavior) bool {
+	return resourceBehaviour == resource.RenamingBehaviorNone ||
+		(resourceBehaviour == resource.RenamingBehaviorUnspecified &&
+			defaultBehavior == resource.RenamingBehaviorNone)
+}
+
 func appendHashForConfigMap(res *resource.Resource) error {
 	cm, err := unstructuredToConfigmap(res)
 	if err != nil {
 		return err
 	}
+
 	h, err := hash.ConfigMapHash(cm)
 	if err != nil {
 		return err
@@ -88,6 +101,7 @@ func appendHashForSecret(res *resource.Resource) error {
 	if err != nil {
 		return err
 	}
+
 	h, err := hash.SecretHash(secret)
 	if err != nil {
 		return err
