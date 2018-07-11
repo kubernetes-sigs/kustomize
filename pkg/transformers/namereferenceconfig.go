@@ -148,6 +148,13 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 			},
 			{
 				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "Deployment",
+				},
+				Path:               []string{"spec", "template", "spec", "volumes", "projected", "sources", "configMap", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "ReplicaSet",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "configMap", "name"},
@@ -249,6 +256,13 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 					Kind: "StatefulSet",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "configMapRef", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "StatefulSet",
+				},
+				Path:               []string{"spec", "template", "spec", "volumes", "projected", "sources", "configMap", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
