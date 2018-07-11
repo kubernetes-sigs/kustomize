@@ -5,5 +5,10 @@ commonLabels:
 
 resources:
 - deployment.yaml
-- configMap.yaml
 - service.yaml
+
+configMapGenerator:
+- name: the-map
+  literals:
+    - altGreeting="Good Morning!"
+    - enableRisky="false"
