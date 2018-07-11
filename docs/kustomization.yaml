@@ -136,3 +136,51 @@ patches:
 crds:
 - crds/typeA.yaml
 - crds/typeB.yaml
+
+# Vars are used to insert values from resources that cannot be referenced
+# otherwise. For example if you need to pass a Service's name to the arguments
+# or environment variables of a program but without hard coding the actual name
+# of the Service you'd insert `$(MY_SERVICE_NAME)` into the value field of the
+# env var or into the command or args of the container as shown here:
+# ```
+#   containers:
+#     - image: myimage
+#       command: ["start", "--host", "$(MY_SERVICE_NAME)"]
+#       env:
+#         - name: SECRET_TOKEN
+#           value: $(SOME_SECRET_NAME)
+# ```
+#
+# Then you'll add an entry to `vars:` like shown below with the same name
+# and a reference to the resource from which to pull the field's value.
+# The actual field's path is optional and by default it will use
+# `metadata.name`. Currently only string type fields are supported, no integers
+# or booleans, etc. Also array access is currently not possible. For example getting
+# the image field of container number 2 inside of a pod can currently not be done.
+#
+# Not every location of a variable is supported. To see a complete list of locations
+# see the file [refvars.go](https://github.com/kubernetes-sigs/kustomize/blob/master/pkg/transformers/refvars.go#L20).
+#
+# An example of a situation where you'd not use vars is when you'd like to set a
+# pod's `serviceAccountName`. In that case you would just reference the ServiceAccount
+# by name and Kustomize will resolve it to the eventual name while building the manifests.
+vars:
+  - name: SOME_SECRET_NAME
+    objref:
+      kind: Secret
+      name: my-secret
+      apiVersion: v1
+  - name: MY_SERVICE_NAME
+    objref:
+      kind: Service
+      name: my-service
+      apiVersion: v1
+    fieldref:
+      fieldpath: metadata.name
+  - name: ANOTHER_DEPLOYMENTS_POD_RESTART_POLICY
+    objref:
+      kind: Deployment
+      name: my-deployment
+      apiVersion: apps/v1
+    fieldref:
+      fieldpath: spec.template.spec.restartPolicy
