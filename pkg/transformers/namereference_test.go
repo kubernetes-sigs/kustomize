@@ -35,6 +35,14 @@ func TestNameReferenceRun(t *testing.T) {
 					"name": "someprefix-cm1-somehash",
 				},
 			}),
+		resource.NewResId(cmap, "cm2"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "someprefix-cm2-somehash",
+				},
+			}),
 		resource.NewResId(secret, "secret1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
@@ -111,11 +119,48 @@ func TestNameReferenceRun(t *testing.T) {
 								"configMap": map[string]interface{}{
 									"name": "cm1",
 								},
+								"projected": map[string]interface{}{
+									"sources": map[string]interface{}{
+										"configMap": map[string]interface{}{
+											"name": "cm2",
+										},
+									},
+								},
 								"secret": map[string]interface{}{
 									"secretName": "secret1",
 								},
 								"persistentVolumeClaim": map[string]interface{}{
 									"claimName": "claim1",
+								},
+							},
+						},
+					},
+				},
+			}),
+		resource.NewResId(statefulset, "statefulset1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"group":      "apps",
+				"apiVersion": "v1",
+				"kind":       "StatefulSet",
+				"metadata": map[string]interface{}{
+					"name": "statefulset1",
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"name":  "nginx",
+									"image": "nginx:1.7.9",
+								},
+							},
+							"volumes": map[string]interface{}{
+								"projected": map[string]interface{}{
+									"sources": map[string]interface{}{
+										"configMap": map[string]interface{}{
+											"name": "cm2",
+										},
+									},
 								},
 							},
 						},
@@ -131,6 +176,14 @@ func TestNameReferenceRun(t *testing.T) {
 				"kind":       "ConfigMap",
 				"metadata": map[string]interface{}{
 					"name": "someprefix-cm1-somehash",
+				},
+			}),
+		resource.NewResId(cmap, "cm2"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "someprefix-cm2-somehash",
 				},
 			}),
 		resource.NewResId(secret, "secret1"): resource.NewResourceFromMap(
@@ -209,11 +262,48 @@ func TestNameReferenceRun(t *testing.T) {
 								"configMap": map[string]interface{}{
 									"name": "someprefix-cm1-somehash",
 								},
+								"projected": map[string]interface{}{
+									"sources": map[string]interface{}{
+										"configMap": map[string]interface{}{
+											"name": "someprefix-cm2-somehash",
+										},
+									},
+								},
 								"secret": map[string]interface{}{
 									"secretName": "someprefix-secret1-somehash",
 								},
 								"persistentVolumeClaim": map[string]interface{}{
 									"claimName": "someprefix-claim1",
+								},
+							},
+						},
+					},
+				},
+			}),
+		resource.NewResId(statefulset, "statefulset1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"group":      "apps",
+				"apiVersion": "v1",
+				"kind":       "StatefulSet",
+				"metadata": map[string]interface{}{
+					"name": "statefulset1",
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"name":  "nginx",
+									"image": "nginx:1.7.9",
+								},
+							},
+							"volumes": map[string]interface{}{
+								"projected": map[string]interface{}{
+									"sources": map[string]interface{}{
+										"configMap": map[string]interface{}{
+											"name": "someprefix-cm2-somehash",
+										},
+									},
 								},
 							},
 						},
