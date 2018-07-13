@@ -98,8 +98,12 @@ func (a *Application) MakeUncustomizedResMap() (resmap.ResMap, error) {
 
 // resolveRefsToGeneratedResources fixes all name references.
 func (a *Application) resolveRefsToGeneratedResources(m resmap.ResMap) (resmap.ResMap, error) {
-	r := []transformers.Transformer{transformers.NewNameHashTransformer()}
+	err := transformers.NewNameHashTransformer().Transform(m)
+	if err != nil {
+		return nil, err
+	}
 
+	r := []transformers.Transformer{}
 	t, err := transformers.NewDefaultingNameReferenceTransformer()
 	if err != nil {
 		return nil, err
