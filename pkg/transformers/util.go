@@ -22,7 +22,7 @@ import (
 
 type mutateFunc func(interface{}) (interface{}, error)
 
-func mutateField(m map[string]interface{}, pathToField []string, createIfNotPresent bool, fns ...mutateFunc) error {
+func mutateField(m map[string]interface{}, pathToField []string, createIfNotPresent bool, ignoreIfPresent bool, fns ...mutateFunc) error {
 	if len(pathToField) == 0 {
 		return nil
 	}
@@ -36,6 +36,9 @@ func mutateField(m map[string]interface{}, pathToField []string, createIfNotPres
 	}
 
 	if len(pathToField) == 1 {
+		if found && ignoreIfPresent {
+			return nil
+		}
 		var err error
 		for _, fn := range fns {
 			m[pathToField[0]], err = fn(m[pathToField[0]])
@@ -50,7 +53,7 @@ func mutateField(m map[string]interface{}, pathToField []string, createIfNotPres
 	newPathToField := pathToField[1:]
 	switch typedV := v.(type) {
 	case map[string]interface{}:
-		return mutateField(typedV, newPathToField, createIfNotPresent, fns...)
+		return mutateField(typedV, newPathToField, createIfNotPresent, ignoreIfPresent, fns...)
 	case []interface{}:
 		for i := range typedV {
 			item := typedV[i]
@@ -58,7 +61,7 @@ func mutateField(m map[string]interface{}, pathToField []string, createIfNotPres
 			if !ok {
 				return fmt.Errorf("%#v is expectd to be %T", item, typedItem)
 			}
-			err := mutateField(typedItem, newPathToField, createIfNotPresent, fns...)
+			err := mutateField(typedItem, newPathToField, createIfNotPresent, ignoreIfPresent, fns...)
 			if err != nil {
 				return err
 			}

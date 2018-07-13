@@ -122,7 +122,7 @@ func (rv *refvarTransformer) Transform(resources resmap.ResMap) error {
 			if !selectByGVK(GVKn.Gvk(), pc.GroupVersionKind) {
 				continue
 			}
-			err := mutateField(objMap, pc.Path, false, func(in interface{}) (interface{}, error) {
+			err := mutateField(objMap, pc.Path, false, false, func(in interface{}) (interface{}, error) {
 				var (
 					mappingFunc = expansion.MappingFuncFor(rv.vars)
 				)

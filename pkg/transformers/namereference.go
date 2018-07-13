@@ -57,7 +57,7 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 				if !selectByGVK(id.Gvk(), path.GroupVersionKind) {
 					continue
 				}
-				err := mutateField(objMap, path.Path, path.CreateIfNotPresent,
+				err := mutateField(objMap, path.Path, path.CreateIfNotPresent, path.IgnoreIfPresent,
 					o.updateNameReference(referencePathConfig.referencedGVK, m))
 				if err != nil {
 					return err

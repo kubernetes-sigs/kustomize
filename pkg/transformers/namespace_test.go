@@ -51,6 +51,33 @@ func TestNamespaceRun(t *testing.T) {
 					"name": "ns1",
 				},
 			}),
+		resource.NewResId(sa, "sa1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ServiceAccount",
+				"metadata": map[string]interface{}{
+					"name": "sa1",
+				},
+			}),
+		resource.NewResId(clusterrolebinding, "clusterrolebinding1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ClusterRoleBinding",
+				"metadata": map[string]interface{}{
+					"name": "clusterrolebinding1",
+				},
+				"subjects": []interface{}{
+					map[string]interface{}{
+						"kind": "ServiceAccount",
+						"name": "sa1",
+					},
+					map[string]interface{}{
+						"kind":      "ServiceAccount",
+						"name":      "sa2",
+						"namespace": "foo",
+					},
+				},
+			}),
 	}
 	expected := resmap.ResMap{
 		resource.NewResId(ns, "ns1"): resource.NewResourceFromMap(
@@ -77,6 +104,35 @@ func TestNamespaceRun(t *testing.T) {
 				"metadata": map[string]interface{}{
 					"name":      "cm2",
 					"namespace": "test",
+				},
+			}),
+		resource.NewResId(sa, "sa1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ServiceAccount",
+				"metadata": map[string]interface{}{
+					"name":      "sa1",
+					"namespace": "test",
+				},
+			}),
+		resource.NewResId(clusterrolebinding, "clusterrolebinding1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ClusterRoleBinding",
+				"metadata": map[string]interface{}{
+					"name": "clusterrolebinding1",
+				},
+				"subjects": []interface{}{
+					map[string]interface{}{
+						"kind":      "ServiceAccount",
+						"name":      "sa1",
+						"namespace": "test",
+					},
+					map[string]interface{}{
+						"kind":      "ServiceAccount",
+						"name":      "sa2",
+						"namespace": "foo",
+					},
 				},
 			}),
 	}

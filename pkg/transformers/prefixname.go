@@ -84,7 +84,7 @@ func (o *namePrefixTransformer) Transform(m resmap.ResMap) error {
 			if !selectByGVK(id.Gvk(), path.GroupVersionKind) {
 				continue
 			}
-			err := mutateField(objMap, path.Path, path.CreateIfNotPresent, o.addPrefix)
+			err := mutateField(objMap, path.Path, path.CreateIfNotPresent, path.IgnoreIfPresent, o.addPrefix)
 			if err != nil {
 				return err
 			}
