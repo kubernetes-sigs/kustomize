@@ -67,6 +67,15 @@ subjects:
   namespace: default
 ---
 apiVersion: v1
+data:
+  baz: qux
+  foo: bar
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: dev-base-test-config-map-b2g2dmd64b
+---
+apiVersion: v1
 kind: Service
 metadata:
   annotations:
@@ -206,6 +215,7 @@ spec:
           - command:
             - echo
             - dev-base-cockroachdb
+            - dev-base-test-config-map-b2g2dmd64b
             env:
             - name: CDB_PUBLIC_SVC
               value: dev-base-cockroachdb-public

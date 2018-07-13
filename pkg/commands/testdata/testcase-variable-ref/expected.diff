@@ -53,12 +53,14 @@ diff -u -N /tmp/noop/batch_v1beta1_CronJob_cronjob-example.yaml /tmp/transformed
  spec:
    concurrencyPolicy: Forbid
    jobTemplate:
-@@ -11,10 +11,10 @@
+@@ -11,11 +11,11 @@
            containers:
            - command:
              - echo
 -            - base-cockroachdb
+-            - base-test-config-map-259876d7fg
 +            - dev-base-cockroachdb
++            - dev-base-test-config-map-b2g2dmd64b
              env:
              - name: CDB_PUBLIC_SVC
 -              value: base-cockroachdb-public
@@ -140,6 +142,15 @@ diff -u -N /tmp/noop/rbac.authorization.k8s.io_v1beta1_Role_cockroachdb.yaml /tm
  rules:
  - apiGroups:
    - ""
+diff -u -N /tmp/noop/v1_ConfigMap_test-config-map.yaml /tmp/transformed/v1_ConfigMap_test-config-map.yaml
+--- /tmp/noop/v1_ConfigMap_test-config-map.yaml	YYYY-MM-DD HH:MM:SS
++++ /tmp/transformed/v1_ConfigMap_test-config-map.yaml	YYYY-MM-DD HH:MM:SS
+@@ -5,4 +5,4 @@
+ kind: ConfigMap
+ metadata:
+   creationTimestamp: null
+-  name: base-test-config-map-259876d7fg
++  name: dev-base-test-config-map-b2g2dmd64b
 diff -u -N /tmp/noop/v1_ServiceAccount_cockroachdb.yaml /tmp/transformed/v1_ServiceAccount_cockroachdb.yaml
 --- /tmp/noop/v1_ServiceAccount_cockroachdb.yaml	YYYY-MM-DD HH:MM:SS
 +++ /tmp/transformed/v1_ServiceAccount_cockroachdb.yaml	YYYY-MM-DD HH:MM:SS
