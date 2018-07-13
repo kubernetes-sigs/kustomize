@@ -97,5 +97,41 @@ func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
 		}
 
 	}
+	o.updateClusterRoleBinding(m)
 	return nil
+}
+
+func (o *namespaceTransformer) updateClusterRoleBinding(m resmap.ResMap) {
+	saMap := map[string]bool{}
+	saGVK := schema.GroupVersionKind{Version: "v1", Kind: "ServiceAccount"}
+	for id := range m {
+		if id.Gvk().String() == saGVK.String() {
+			saMap[id.Name()] = true
+		}
+	}
+
+	for id := range m {
+		if id.Gvk().Kind != "ClusterRoleBinding" && id.Gvk().Kind != "RoleBinding" {
+			continue
+		}
+		objMap := m[id].UnstructuredContent()
+		subjects := objMap["subjects"].([]interface{})
+		for i := range subjects {
+			subject := subjects[i].(map[string]interface{})
+			kind, foundk := subject["kind"]
+			name, foundn := subject["name"]
+			if !foundk || !foundn || kind.(string) != "ServiceAccount" {
+				continue
+			}
+			// a ServiceAccount named “default” exists in every active namespace
+			if name.(string) == "default" || saMap[name.(string)] {
+				subject := subjects[i].(map[string]interface{})
+				mutateField(subject, []string{"namespace"}, true, func(_ interface{}) (interface{}, error) {
+					return o.namespace, nil
+				})
+				subjects[i] = subject
+			}
+		}
+		objMap["subjects"] = subjects
+	}
 }

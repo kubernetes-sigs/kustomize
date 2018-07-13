@@ -51,6 +51,49 @@ func TestNamespaceRun(t *testing.T) {
 					"name": "ns1",
 				},
 			}),
+		resource.NewResId(sa, "default"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ServiceAccount",
+				"metadata": map[string]interface{}{
+					"name":      "default",
+					"namespace": "system",
+				},
+			}),
+		resource.NewResId(sa, "service-account"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ServiceAccount",
+				"metadata": map[string]interface{}{
+					"name":      "service-account",
+					"namespace": "system",
+				},
+			}),
+		resource.NewResId(crb, "crb"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "rbac.authorization.k8s.io/v1",
+				"kind":       "ClusterRoleBinding",
+				"metadata": map[string]interface{}{
+					"name": "manager-rolebinding",
+				},
+				"subjects": []interface{}{
+					map[string]interface{}{
+						"kind":      "ServiceAccount",
+						"name":      "default",
+						"namespace": "system",
+					},
+					map[string]interface{}{
+						"kind":      "ServiceAccount",
+						"name":      "service-account",
+						"namespace": "system",
+					},
+					map[string]interface{}{
+						"kind":      "ServiceAccount",
+						"name":      "another",
+						"namespace": "random",
+					},
+				},
+			}),
 	}
 	expected := resmap.ResMap{
 		resource.NewResId(ns, "ns1"): resource.NewResourceFromMap(
@@ -77,6 +120,49 @@ func TestNamespaceRun(t *testing.T) {
 				"metadata": map[string]interface{}{
 					"name":      "cm2",
 					"namespace": "test",
+				},
+			}),
+		resource.NewResId(sa, "default"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ServiceAccount",
+				"metadata": map[string]interface{}{
+					"name":      "default",
+					"namespace": "test",
+				},
+			}),
+		resource.NewResId(sa, "service-account"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ServiceAccount",
+				"metadata": map[string]interface{}{
+					"name":      "service-account",
+					"namespace": "test",
+				},
+			}),
+		resource.NewResId(crb, "crb"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "rbac.authorization.k8s.io/v1",
+				"kind":       "ClusterRoleBinding",
+				"metadata": map[string]interface{}{
+					"name": "manager-rolebinding",
+				},
+				"subjects": []interface{}{
+					map[string]interface{}{
+						"kind":      "ServiceAccount",
+						"name":      "default",
+						"namespace": "test",
+					},
+					map[string]interface{}{
+						"kind":      "ServiceAccount",
+						"name":      "service-account",
+						"namespace": "test",
+					},
+					map[string]interface{}{
+						"kind":      "ServiceAccount",
+						"name":      "another",
+						"namespace": "random",
+					},
 				},
 			}),
 	}
