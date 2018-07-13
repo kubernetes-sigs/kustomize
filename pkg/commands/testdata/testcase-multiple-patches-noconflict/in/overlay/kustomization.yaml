@@ -2,7 +2,8 @@ namePrefix: staging-
 commonLabels:
   env: staging
 patches:
-  - patches/deployment-patch*.yaml
+  - patches/deployment-patch1.yaml
+  - patches/deployment-patch2.yaml
 bases:
   - ../package/
 configMapGenerator:
