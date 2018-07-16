@@ -17,24 +17,25 @@ limitations under the License.
 package commands
 
 import (
-	"errors"
-	"fmt"
-	"regexp"
-	"strings"
+	// "errors"
+	// "fmt"
+	// "regexp"
+	// "strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/constants"
+	// "github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 )
 
-type addLabelOptions struct {
-	labels string
-}
+
+// type addLabelOptions struct {
+// 	labels string
+// }
 
 // newCmdAddLabel adds one or more commonLabels to the kustomization file.
 func newCmdAddLabel(fsys fs.FileSystem) *cobra.Command {
-	var o addLabelOptions
+	var o addMetadataOptions
 
 	cmd := &cobra.Command{
 		Use:   "label",
@@ -42,7 +43,8 @@ func newCmdAddLabel(fsys fs.FileSystem) *cobra.Command {
 		Example: `
 		add label {labelKey1:labelValue1},{labelKey2:labelValue2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := o.Validate(args)
+			mdKind := "label"
+			err := o.Validate(args, mdKind)
 			if err != nil {
 				return err
 			}
@@ -50,65 +52,65 @@ func newCmdAddLabel(fsys fs.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return o.RunAddLabel(fsys)
+			return o.RunAddMetadata(fsys, mdKind)
 		},
 	}
 	return cmd
 }
 
-// Validate validates addLabel command.
-func (o *addLabelOptions) Validate(args []string) error {
-	if len(args) < 1 {
-		return errors.New("must specify a label")
-	}
-	if len(args) > 1 {
-		return errors.New("labels must be comma-separated, with no spaces. See help text for example.")
-	}
-	inputs := strings.Split(args[0], ",")
-	for _, input := range inputs {
-		ok, err := regexp.MatchString(`\A([a-zA-Z0-9_.-]+):([a-zA-Z0-9_.-]+)\z`, input)
-		if err != nil {
-			return err
-		}
-		if !ok {
-			return fmt.Errorf("invalid label format: %s", input)
-		}
+// // Validate validates addLabel command.
+// func (o *addLabelOptions) Validate(args []string) error {
+// 	if len(args) < 1 {
+// 		return errors.New("must specify a label")
+// 	}
+// 	if len(args) > 1 {
+// 		return errors.New("labels must be comma-separated, with no spaces. See help text for example.")
+// 	}
+// 	inputs := strings.Split(args[0], ",")
+// 	for _, input := range inputs {
+// 		ok, err := regexp.MatchString(`\A([a-zA-Z0-9_.-]+):([a-zA-Z0-9_.-]+)\z`, input)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		if !ok {
+// 			return fmt.Errorf("invalid label format: %s", input)
+// 		}
 
-	}
+// 	}
 
-	o.labels = args[0]
-	return nil
-}
+// 	o.labels = args[0]
+// 	return nil
+// }
 
-// Complete completes addLabel command.
-func (o *addLabelOptions) Complete(cmd *cobra.Command, args []string) error {
-	return nil
-}
+// // Complete completes addLabel command.
+// func (o *addLabelOptions) Complete(cmd *cobra.Command, args []string) error {
+// 	return nil
+// }
 
-// RunAddLabel runs addLabel command (do real work).
-func (o *addLabelOptions) RunAddLabel(fsys fs.FileSystem) error {
-	mf, err := newKustomizationFile(constants.KustomizationFileName, fsys)
-	if err != nil {
-		return err
-	}
+// // RunAddLabel runs addLabel command (do real work).
+// func (o *addLabelOptions) RunAddLabel(fsys fs.FileSystem) error {
+// 	mf, err := newKustomizationFile(constants.KustomizationFileName, fsys)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	m, err := mf.read()
-	if err != nil {
-		return err
-	}
+// 	m, err := mf.read()
+// 	if err != nil {
+// 		return err
+// 	}
 
-	if m.CommonLabels == nil {
-		m.CommonLabels = make(map[string]string)
-	}
+// 	if m.CommonLabels == nil {
+// 		m.CommonLabels = make(map[string]string)
+// 	}
 
-	labels := strings.Split(o.labels, ",")
-	for _, label := range labels {
-		kv := strings.Split(label, ":")
-		if _, ok := m.CommonLabels[kv[0]]; ok {
-			return fmt.Errorf("label %s already in kustomization file", kv[0])
-		}
-		m.CommonLabels[kv[0]] = kv[1]
-	}
+// 	labels := strings.Split(o.labels, ",")
+// 	for _, label := range labels {
+// 		kv := strings.Split(label, ":")
+// 		if _, ok := m.CommonLabels[kv[0]]; ok {
+// 			return fmt.Errorf("label %s already in kustomization file", kv[0])
+// 		}
+// 		m.CommonLabels[kv[0]] = kv[1]
+// 	}
 
-	return mf.write(m)
-}
+// 	return mf.write(m)
+// }
