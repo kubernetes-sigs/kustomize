@@ -50,6 +50,11 @@ var skipNamespacePathConfigs = []PathConfig{
 			Kind: "ClusterRole",
 		},
 	},
+	{
+		GroupVersionKind: &schema.GroupVersionKind{
+			Kind: "CustomResourceDefinition",
+		},
+	},
 }
 
 var _ Transformer = &namespaceTransformer{}
