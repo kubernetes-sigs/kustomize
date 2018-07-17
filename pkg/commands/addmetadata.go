@@ -18,12 +18,16 @@ package commands
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
+
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/spf13/cobra"
-	"regexp"
-	"strings"
 )
+
+const label = "label"
+const ann = "annotation"
 
 type addMetadataOptions struct {
 	metadata string
@@ -39,7 +43,7 @@ func newCmdAddAnnotation(fsys fs.FileSystem) *cobra.Command {
 		Example: `
 		add annotation {annotationKey1:annotationValue1},{annotationKey2:annotationValue2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			mdKind := "annotation"
+			mdKind := ann
 			err := o.Validate(args, mdKind)
 			if err != nil {
 				return err
@@ -64,7 +68,7 @@ func newCmdAddLabel(fsys fs.FileSystem) *cobra.Command {
 		Example: `
 		add label {labelKey1:labelValue1},{labelKey2:labelValue2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			mdKind := "label"
+			mdKind := label
 			err := o.Validate(args, mdKind)
 			if err != nil {
 				return err
@@ -120,24 +124,24 @@ func (o *addMetadataOptions) RunAddMetadata(fsys fs.FileSystem, mdKind string) e
 		return err
 	}
 
-	if mdKind == "label" && m.CommonLabels == nil {
+	if mdKind == label && m.CommonLabels == nil {
 		m.CommonLabels = make(map[string]string)
 	}
 
-	if mdKind == "annotation" && m.CommonAnnotations == nil {
+	if mdKind == ann && m.CommonAnnotations == nil {
 		m.CommonAnnotations = make(map[string]string)
 	}
 
 	entries := strings.Split(o.metadata, ",")
 	for _, entry := range entries {
 		kv := strings.Split(entry, ":")
-		if mdKind == "label" {
+		if mdKind == label {
 			if _, ok := m.CommonLabels[kv[0]]; ok {
 				return fmt.Errorf("%s %s already in kustomization file", mdKind, kv[0])
 			}
 			m.CommonLabels[kv[0]] = kv[1]
 		}
-		if mdKind == "annotation" {
+		if mdKind == ann {
 			if _, ok := m.CommonAnnotations[kv[0]]; ok {
 				return fmt.Errorf("%s %s already in kustomization file", mdKind, kv[0])
 			}
