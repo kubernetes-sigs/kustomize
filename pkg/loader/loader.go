@@ -17,7 +17,11 @@ limitations under the License.
 // Package loader has a data loading interface and various implementations.
 package loader
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
+)
 
 // Loader interface exposes methods to read bytes in a scheme-agnostic manner.
 // The Loader encapsulating a root location to calculate where to read from.
@@ -30,12 +34,15 @@ type Loader interface {
 	Load(location string) ([]byte, error)
 	// GlobLoad returns the bytes read from a glob path or an error.
 	GlobLoad(location string) (map[string][]byte, error)
+	// GetFileSystem returns filesystem used by this loader.
+	GetFileSystem() fs.FileSystem
 }
 
-// Private implmentation of Loader interface.
+// Private implementation of Loader interface.
 type loaderImpl struct {
 	root    string
 	schemes []SchemeLoader
+	fsys    fs.FileSystem
 }
 
 // SchemeLoader is the interface for different types of loaders (e.g. fileLoader, httpLoader, etc.)
@@ -54,8 +61,8 @@ const emptyRoot = ""
 
 // Init initializes the first loader with the supported schemes.
 // Example schemes: fileLoader, httpLoader, gitLoader.
-func Init(schemes []SchemeLoader) Loader {
-	return &loaderImpl{root: emptyRoot, schemes: schemes}
+func Init(schemes []SchemeLoader, fs fs.FileSystem) Loader {
+	return &loaderImpl{root: emptyRoot, schemes: schemes, fsys: fs}
 }
 
 // Root returns the scheme-specific root location for this Loader.
@@ -77,7 +84,7 @@ func (l *loaderImpl) New(newRoot string) (Loader, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &loaderImpl{root: root, schemes: l.schemes}, nil
+	return &loaderImpl{root: root, schemes: l.schemes, fsys: l.GetFileSystem()}, nil
 }
 
 // Load returns all the bytes read from scheme-specific location or an error.
@@ -118,4 +125,9 @@ func (l *loaderImpl) getSchemeLoader(location string) (SchemeLoader, error) {
 		}
 	}
 	return nil, fmt.Errorf("Unknown Scheme: %s, %s\n", l.root, location)
+}
+
+// GetFileSystem returns filesystem used by this loader.
+func (l *loaderImpl) GetFileSystem() fs.FileSystem {
+	return l.fsys
 }

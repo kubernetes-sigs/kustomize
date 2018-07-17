@@ -23,6 +23,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
@@ -45,13 +46,13 @@ func HandleConfigMapFromLiteralSources(configMap *v1.ConfigMap, literalSources [
 
 // HandleConfigMapFromFileSources adds the specified file source information
 // into the provided configMap
-func HandleConfigMapFromFileSources(configMap *v1.ConfigMap, fileSources []string) error {
+func HandleConfigMapFromFileSources(fs fs.FileSystem, configMap *v1.ConfigMap, fileSources []string) error {
 	for _, fileSource := range fileSources {
 		keyName, filePath, err := ParseFileSource(fileSource)
 		if err != nil {
 			return err
 		}
-		info, err := os.Stat(filePath)
+		info, err := fs.Stat(filePath)
 		if err != nil {
 			switch err := err.(type) {
 			case *os.PathError:
@@ -90,8 +91,8 @@ func HandleConfigMapFromFileSources(configMap *v1.ConfigMap, fileSources []strin
 
 // HandleConfigMapFromEnvFileSource adds the specified env file source information
 // into the provided configMap
-func HandleConfigMapFromEnvFileSource(configMap *v1.ConfigMap, envFileSource string) error {
-	info, err := os.Stat(envFileSource)
+func HandleConfigMapFromEnvFileSource(fs fs.FileSystem, configMap *v1.ConfigMap, envFileSource string) error {
+	info, err := fs.Stat(envFileSource)
 	if err != nil {
 		switch err := err.(type) {
 		case *os.PathError:

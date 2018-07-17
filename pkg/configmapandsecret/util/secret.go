@@ -23,6 +23,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
@@ -42,13 +43,13 @@ func HandleFromLiteralSources(secret *v1.Secret, literalSources []string) error 
 }
 
 // HandleFromFileSources adds the specified file source information into the provided secret
-func HandleFromFileSources(secret *v1.Secret, fileSources []string) error {
+func HandleFromFileSources(fs fs.FileSystem, secret *v1.Secret, fileSources []string) error {
 	for _, fileSource := range fileSources {
 		keyName, filePath, err := ParseFileSource(fileSource)
 		if err != nil {
 			return err
 		}
-		info, err := os.Stat(filePath)
+		info, err := fs.Stat(filePath)
 		if err != nil {
 			switch err := err.(type) {
 			case *os.PathError:
@@ -86,8 +87,8 @@ func HandleFromFileSources(secret *v1.Secret, fileSources []string) error {
 
 // HandleFromEnvFileSource adds the specified env file source information
 // into the provided secret
-func HandleFromEnvFileSource(secret *v1.Secret, envFileSource string) error {
-	info, err := os.Stat(envFileSource)
+func HandleFromEnvFileSource(fs fs.FileSystem, secret *v1.Secret, envFileSource string) error {
+	info, err := fs.Stat(envFileSource)
 	if err != nil {
 		switch err := err.(type) {
 		case *os.PathError:

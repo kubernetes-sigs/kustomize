@@ -21,6 +21,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -168,8 +169,9 @@ func TestConstructConfigMap(t *testing.T) {
 		},
 	}
 
+	realFS := fs.MakeRealFS()
 	for _, tc := range testCases {
-		cm, err := makeConfigMap(tc.input)
+		cm, err := makeConfigMap(realFS, tc.input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -188,7 +190,7 @@ func TestConstructSecret(t *testing.T) {
 		},
 		Type: "Opaque",
 	}
-	cm, err := makeSecret(secret, ".")
+	cm, err := makeSecret(fs.MakeRealFS(), secret, ".")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -206,7 +208,7 @@ func TestFailConstructSecret(t *testing.T) {
 		},
 		Type: "Opaque",
 	}
-	_, err := makeSecret(secret, ".")
+	_, err := makeSecret(fs.MakeFakeFS(), secret, ".")
 	if err == nil {
 		t.Fatalf("Expected failure.")
 	}

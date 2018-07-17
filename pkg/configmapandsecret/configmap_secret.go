@@ -27,6 +27,7 @@ import (
 	"time"
 
 	cutil "github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret/util"
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/pkg/hash"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	corev1 "k8s.io/api/core/v1"
@@ -35,8 +36,8 @@ import (
 )
 
 // MakeConfigmapAndGenerateName makes a configmap and returns the configmap and the name appended with a hash.
-func MakeConfigmapAndGenerateName(cm types.ConfigMapArgs) (*unstructured.Unstructured, string, error) {
-	corev1CM, err := makeConfigMap(cm)
+func MakeConfigmapAndGenerateName(fs fs.FileSystem, cm types.ConfigMapArgs) (*unstructured.Unstructured, string, error) {
+	corev1CM, err := makeConfigMap(fs, cm)
 	if err != nil {
 		return nil, "", err
 	}
@@ -50,8 +51,8 @@ func MakeConfigmapAndGenerateName(cm types.ConfigMapArgs) (*unstructured.Unstruc
 }
 
 // MakeSecretAndGenerateName returns a secret with the name appended with a hash.
-func MakeSecretAndGenerateName(secret types.SecretArgs, path string) (*unstructured.Unstructured, string, error) {
-	corev1Secret, err := makeSecret(secret, path)
+func MakeSecretAndGenerateName(fs fs.FileSystem, secret types.SecretArgs, path string) (*unstructured.Unstructured, string, error) {
+	corev1Secret, err := makeSecret(fs, secret, path)
 	if err != nil {
 		return nil, "", err
 	}
@@ -74,7 +75,7 @@ func objectToUnstructured(in runtime.Object) (*unstructured.Unstructured, error)
 	return &out, err
 }
 
-func makeConfigMap(cm types.ConfigMapArgs) (*corev1.ConfigMap, error) {
+func makeConfigMap(fs fs.FileSystem, cm types.ConfigMapArgs) (*corev1.ConfigMap, error) {
 	corev1cm := &corev1.ConfigMap{}
 	corev1cm.APIVersion = "v1"
 	corev1cm.Kind = "ConfigMap"
@@ -82,12 +83,12 @@ func makeConfigMap(cm types.ConfigMapArgs) (*corev1.ConfigMap, error) {
 	corev1cm.Data = map[string]string{}
 
 	if cm.EnvSource != "" {
-		if err := cutil.HandleConfigMapFromEnvFileSource(corev1cm, cm.EnvSource); err != nil {
+		if err := cutil.HandleConfigMapFromEnvFileSource(fs, corev1cm, cm.EnvSource); err != nil {
 			return nil, err
 		}
 	}
 	if cm.FileSources != nil {
-		if err := cutil.HandleConfigMapFromFileSources(corev1cm, cm.FileSources); err != nil {
+		if err := cutil.HandleConfigMapFromFileSources(fs, corev1cm, cm.FileSources); err != nil {
 			return nil, err
 		}
 	}
@@ -100,7 +101,7 @@ func makeConfigMap(cm types.ConfigMapArgs) (*corev1.ConfigMap, error) {
 	return corev1cm, nil
 }
 
-func makeSecret(secret types.SecretArgs, path string) (*corev1.Secret, error) {
+func makeSecret(fs fs.FileSystem, secret types.SecretArgs, path string) (*corev1.Secret, error) {
 	corev1secret := &corev1.Secret{}
 	corev1secret.APIVersion = "v1"
 	corev1secret.Kind = "Secret"
@@ -112,7 +113,7 @@ func makeSecret(secret types.SecretArgs, path string) (*corev1.Secret, error) {
 	corev1secret.Data = map[string][]byte{}
 
 	for k, v := range secret.Commands {
-		out, err := createSecretKey(path, v)
+		out, err := createSecretKey(fs, path, v)
 		if err != nil {
 			return nil, err
 		}
@@ -122,8 +123,16 @@ func makeSecret(secret types.SecretArgs, path string) (*corev1.Secret, error) {
 	return corev1secret, nil
 }
 
-func createSecretKey(wd string, command string) ([]byte, error) {
-	fi, err := os.Stat(wd)
+func createSecretKey(fs fs.FileSystem, wd string, command string) ([]byte, error) {
+	fi, err := fs.Stat(wd)
+	if err != nil {
+		switch err := err.(type) {
+		case *os.PathError:
+			return nil, fmt.Errorf("unable to get info %s: %v", wd, err.Err)
+		default:
+			return nil, fmt.Errorf("unable to get info %s: %v", wd, err)
+		}
+	}
 	if err != nil || !fi.IsDir() {
 		wd = filepath.Dir(wd)
 	}
