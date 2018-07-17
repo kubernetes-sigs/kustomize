@@ -94,6 +94,14 @@ func TestNamespaceRun(t *testing.T) {
 					},
 				},
 			}),
+		resource.NewResId(crd, "crd"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "apiextensions.k8s.io/v1beta1",
+				"kind":       "CustomResourceDefinition",
+				"metadata": map[string]interface{}{
+					"name": "crd",
+				},
+			}),
 	}
 	expected := resmap.ResMap{
 		resource.NewResId(ns, "ns1"): resource.NewResourceFromMap(
@@ -163,6 +171,14 @@ func TestNamespaceRun(t *testing.T) {
 						"name":      "another",
 						"namespace": "random",
 					},
+				},
+			}),
+		resource.NewResId(crd, "crd"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "apiextensions.k8s.io/v1beta1",
+				"kind":       "CustomResourceDefinition",
+				"metadata": map[string]interface{}{
+					"name": "crd",
 				},
 			}),
 	}
