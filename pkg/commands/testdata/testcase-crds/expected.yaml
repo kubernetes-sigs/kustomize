@@ -3,7 +3,7 @@ data:
   PATH: YmJiYmJiYmIK
 kind: Secret
 metadata:
-  name: test-crdsecret-m48btmkck5
+  name: test-crdsecret
 ---
 apiVersion: v1beta1
 kind: Bee
@@ -20,4 +20,4 @@ spec:
   beeRef:
     name: test-bee
   secretRef:
-    name: test-crdsecret-m48btmkck5
+    name: test-crdsecret
