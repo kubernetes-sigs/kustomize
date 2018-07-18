@@ -142,7 +142,7 @@ func TestResources1(t *testing.T) {
 					"DB_USERNAME": "admin",
 					"DB_PASSWORD": "somepw",
 				},
-			}),
+			}).SetBehavior(resource.BehaviorCreate),
 		resource.NewResId(secret, "secret"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
@@ -163,7 +163,7 @@ func TestResources1(t *testing.T) {
 					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
-			}),
+			}).SetBehavior(resource.BehaviorCreate),
 		resource.NewResId(ns, "ns1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",

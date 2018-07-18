@@ -12,8 +12,8 @@ diff -u -N /tmp/noop/jingfang.example.com_v1beta1_MyKind_mykind.yaml /tmp/transf
 -    name: bee
 +    name: test-bee
    secretRef:
--    name: crdsecret-m5ht5thcb4
-+    name: test-crdsecret-m48btmkck5
+-    name: crdsecret
++    name: test-crdsecret
 diff -u -N /tmp/noop/v1beta1_Bee_bee.yaml /tmp/transformed/v1beta1_Bee_bee.yaml
 --- /tmp/noop/v1beta1_Bee_bee.yaml	YYYY-MM-DD HH:MM:SS
 +++ /tmp/transformed/v1beta1_Bee_bee.yaml	YYYY-MM-DD HH:MM:SS
@@ -32,5 +32,5 @@ diff -u -N /tmp/noop/v1_Secret_crdsecret.yaml /tmp/transformed/v1_Secret_crdsecr
    PATH: YmJiYmJiYmIK
  kind: Secret
  metadata:
--  name: crdsecret-m5ht5thcb4
-+  name: test-crdsecret-m48btmkck5
+-  name: crdsecret
++  name: test-crdsecret
