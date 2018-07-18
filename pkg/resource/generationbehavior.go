@@ -54,7 +54,6 @@ func NewGenerationBehavior(s string) GenerationBehavior {
 	case "create":
 		return BehaviorCreate
 	default:
-		//return BehaviorUnspecified
-		return BehaviorCreate
+		return BehaviorUnspecified
 	}
 }
