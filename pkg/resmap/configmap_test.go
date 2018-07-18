@@ -64,7 +64,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 							"DB_USERNAME": "admin",
 							"DB_PASSWORD": "somepw",
 						},
-					}),
+					}).SetBehavior(resource.BehaviorCreate),
 			},
 		},
 		{
@@ -92,7 +92,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 BAR=baz
 `,
 						},
-					}),
+					}).SetBehavior(resource.BehaviorCreate),
 			},
 		},
 		{
@@ -118,7 +118,7 @@ BAR=baz
 							"a": "x",
 							"b": "y",
 						},
-					}),
+					}).SetBehavior(resource.BehaviorCreate),
 			},
 		},
 		// TODO: add testcase for data coming from multiple sources like

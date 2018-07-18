@@ -62,8 +62,14 @@ func (r *Resource) Behavior() GenerationBehavior {
 }
 
 // SetBehavior changes the resource to the new behavior
-func (r *Resource) SetBehavior(b GenerationBehavior) {
+func (r *Resource) SetBehavior(b GenerationBehavior) *Resource {
 	r.b = b
+	return r
+}
+
+// IsGenerated checks if the resource is generated from a generator
+func (r *Resource) IsGenerated() bool {
+	return r.b != BehaviorUnspecified
 }
 
 // Id returns the ResId for the resource.
