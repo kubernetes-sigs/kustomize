@@ -33,6 +33,9 @@ func newResourceFromConfigMap(l loader.Loader, cmArgs types.ConfigMapArgs) (*res
 	if err != nil {
 		return nil, err
 	}
+	if cmArgs.Behavior == "" {
+		cmArgs.Behavior = "create"
+	}
 	return resource.NewResourceWithBehavior(cm, resource.NewGenerationBehavior(cmArgs.Behavior))
 }
 

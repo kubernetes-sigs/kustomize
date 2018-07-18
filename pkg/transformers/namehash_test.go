@@ -83,7 +83,7 @@ func TestNameHashTransformer(t *testing.T) {
 				"metadata": map[string]interface{}{
 					"name": "secret1",
 				},
-			}),
+			}).SetBehavior(resource.BehaviorCreate),
 	}
 
 	expected := resmap.ResMap{
@@ -92,7 +92,7 @@ func TestNameHashTransformer(t *testing.T) {
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
 				"metadata": map[string]interface{}{
-					"name": "cm1-m462kdfb68",
+					"name": "cm1",
 				},
 			}),
 		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
@@ -144,7 +144,7 @@ func TestNameHashTransformer(t *testing.T) {
 				"metadata": map[string]interface{}{
 					"name": "secret1-7kc45hd5f7",
 				},
-			}),
+			}).SetBehavior(resource.BehaviorCreate),
 	}
 
 	tran := NewNameHashTransformer()
