@@ -62,7 +62,7 @@ func TestEmptyFile(t *testing.T) {
 func TestNewNotExist(t *testing.T) {
 	badSuffix := "foo.bar"
 	fakeFS := fs.MakeFakeFS()
-	fakeFS.Mkdir(".", 0644)
+	fakeFS.Mkdir(".")
 	fakeFS.Create(badSuffix)
 	_, err := newKustomizationFile(constants.KustomizationFileName, fakeFS)
 	if err == nil {

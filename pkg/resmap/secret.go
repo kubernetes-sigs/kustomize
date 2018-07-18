@@ -18,10 +18,11 @@ package resmap
 
 import (
 	"context"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
+
+	"os"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
@@ -62,6 +63,7 @@ func makeSecret(p string, sArgs types.SecretArgs) (*corev1.Secret, error) {
 	return s, nil
 }
 
+// Run a command, return its output as the secret.
 func createSecretKey(wd string, command string) ([]byte, error) {
 	fi, err := os.Stat(wd)
 	if err != nil || !fi.IsDir() {

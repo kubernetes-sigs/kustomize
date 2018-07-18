@@ -84,9 +84,8 @@ func (o *addBaseOptions) RunAddBase(fsys fs.FileSystem) error {
 	// split directory paths
 	paths := strings.Split(o.baseDirectoryPaths, ",")
 	for _, path := range paths {
-		_, err := fsys.Stat(path)
-		if err != nil {
-			return err
+		if !fsys.Exists(path) {
+			return errors.New(path + " does not exist")
 		}
 		if stringInSlice(path, m.Bases) {
 			return fmt.Errorf("base %s already in kustomization file", path)
