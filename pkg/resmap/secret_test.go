@@ -60,7 +60,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
-			}),
+			}).SetBehavior(resource.BehaviorCreate),
 	}
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("%#v\ndoesn't match expected:\n%#v", actual, expected)
