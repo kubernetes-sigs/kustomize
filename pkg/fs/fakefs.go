@@ -18,7 +18,6 @@ package fs
 
 import (
 	"fmt"
-	"os"
 )
 
 var _ FileSystem = &FakeFS{}
@@ -42,7 +41,7 @@ func (fs *FakeFS) Create(name string) (File, error) {
 }
 
 // Mkdir assures a fake directory appears in the in-memory file system.
-func (fs *FakeFS) Mkdir(name string, perm os.FileMode) error {
+func (fs *FakeFS) Mkdir(name string) error {
 	fs.m[name] = makeDir(name)
 	return nil
 }
@@ -55,12 +54,19 @@ func (fs *FakeFS) Open(name string) (File, error) {
 	return fs.m[name], nil
 }
 
-// Stat always returns nil FileInfo, and returns an error if file does not exist.
-func (fs *FakeFS) Stat(name string) (os.FileInfo, error) {
-	if f, found := fs.m[name]; found {
-		return &Fakefileinfo{f}, nil
+// Exists returns true if file is known.
+func (fs *FakeFS) Exists(name string) bool {
+	_, found := fs.m[name]
+	return found
+}
+
+// IsDir returns true if the file exists and is a directory.
+func (fs *FakeFS) IsDir(name string) bool {
+	f, found := fs.m[name]
+	if !found {
+		return false
 	}
-	return nil, fmt.Errorf("file %q does not exist", name)
+	return f.dir
 }
 
 // ReadFile always returns an empty bytes and error depending on content of m.

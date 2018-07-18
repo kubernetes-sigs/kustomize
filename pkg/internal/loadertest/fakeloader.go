@@ -18,8 +18,6 @@ limitations under the License.
 package loadertest
 
 import (
-	"os"
-
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
 )
@@ -49,8 +47,8 @@ func (f FakeLoader) AddFile(fullFilePath string, content []byte) error {
 }
 
 // AddDirectory adds a fake directory to the file system.
-func (f FakeLoader) AddDirectory(fullDirPath string, mode os.FileMode) error {
-	return f.fs.Mkdir(fullDirPath, mode)
+func (f FakeLoader) AddDirectory(fullDirPath string) error {
+	return f.fs.Mkdir(fullDirPath)
 }
 
 // Root returns root.

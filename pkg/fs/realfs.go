@@ -36,13 +36,27 @@ func MakeRealFS() FileSystem {
 func (realFS) Create(name string) (File, error) { return os.Create(name) }
 
 // Mkdir delegates to os.Mkdir.
-func (realFS) Mkdir(name string, perm os.FileMode) error { return os.Mkdir(name, perm) }
+func (realFS) Mkdir(name string) error {
+	return os.Mkdir(name, 0777|os.ModeDir)
+}
 
 // Open delegates to os.Open.
 func (realFS) Open(name string) (File, error) { return os.Open(name) }
 
-// Stat delegates to os.Stat.
-func (realFS) Stat(name string) (os.FileInfo, error) { return os.Stat(name) }
+// Exists returns true if os.Stat succeeds.
+func (realFS) Exists(name string) bool {
+	_, err := os.Stat(name)
+	return err == nil
+}
+
+// IsDir delegates to os.Stat and FileInfo.IsDir
+func (realFS) IsDir(name string) bool {
+	info, err := os.Stat(name)
+	if err != nil {
+		return false
+	}
+	return info.IsDir()
+}
 
 // ReadFile delegates to ioutil.ReadFile.
 func (realFS) ReadFile(name string) ([]byte, error) { return ioutil.ReadFile(name) }
