@@ -45,25 +45,23 @@ func newKustomizationFile(mPath string, fsys fs.FileSystem) (*kustomizationFile,
 }
 
 func (mf *kustomizationFile) validate() error {
-	f, err := mf.fsys.Stat(mf.path)
-	if err != nil {
+	if !mf.fsys.Exists(mf.path) {
 		errorMsg := fmt.Sprintf("Missing kustomization file '%s'.\n", mf.path)
 		merr := interror.KustomizationError{KustomizationPath: mf.path, ErrorMsg: errorMsg}
 		return merr
 	}
-	if f.IsDir() {
+	if mf.fsys.IsDir(mf.path) {
 		mf.path = path.Join(mf.path, constants.KustomizationFileName)
-		_, err = mf.fsys.Stat(mf.path)
-		if err != nil {
+		if !mf.fsys.Exists(mf.path) {
 			errorMsg := fmt.Sprintf("Missing kustomization file '%s'.\n", mf.path)
 			merr := interror.KustomizationError{KustomizationPath: mf.path, ErrorMsg: errorMsg}
 			return merr
 		}
 	} else {
 		if !strings.HasSuffix(mf.path, constants.KustomizationFileName) {
-			errorMsg := fmt.Sprintf("Kustomization file path (%s) should have %s suffix\n", mf.path, constants.KustomizationFileSuffix)
-			merr := interror.KustomizationError{KustomizationPath: mf.path, ErrorMsg: errorMsg}
-			return merr
+			errorMsg := fmt.Sprintf("Kustomization file path (%s) should have %s suffix\n",
+				mf.path, constants.KustomizationFileSuffix)
+			return interror.KustomizationError{KustomizationPath: mf.path, ErrorMsg: errorMsg}
 		}
 	}
 	return nil

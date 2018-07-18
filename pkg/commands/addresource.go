@@ -70,11 +70,9 @@ func (o *addResourceOptions) Complete(cmd *cobra.Command, args []string) error {
 
 // RunAddResource runs addResource command (do real work).
 func (o *addResourceOptions) RunAddResource(fsys fs.FileSystem) error {
-	_, err := fsys.Stat(o.resourceFilePath)
-	if err != nil {
-		return err
+	if !fsys.Exists(o.resourceFilePath) {
+		return errors.New(o.resourceFilePath + " does not exist")
 	}
-
 	mf, err := newKustomizationFile(constants.KustomizationFileName, fsys)
 	if err != nil {
 		return err

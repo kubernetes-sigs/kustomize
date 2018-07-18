@@ -33,7 +33,7 @@ func TestAddBaseHappyPath(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	bases := strings.Split(baseDirectoryPaths, ",")
 	for _, base := range bases {
-		fakeFS.Mkdir(base, 0777)
+		fakeFS.Mkdir(base)
 	}
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
@@ -60,7 +60,7 @@ func TestAddBaseAlreadyThere(t *testing.T) {
 	// Create fake directories
 	bases := strings.Split(baseDirectoryPaths, ",")
 	for _, base := range bases {
-		fakeFS.Mkdir(base, 0777)
+		fakeFS.Mkdir(base)
 	}
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
@@ -77,9 +77,9 @@ func TestAddBaseAlreadyThere(t *testing.T) {
 	}
 	var expectedErrors []string
 	for _, base := range bases {
-		error := "base " + base + " already in kustomization file"
-		expectedErrors = append(expectedErrors, error)
-		if !stringInSlice(error, expectedErrors) {
+		msg := "base " + base + " already in kustomization file"
+		expectedErrors = append(expectedErrors, msg)
+		if !stringInSlice(msg, expectedErrors) {
 			t.Errorf("unexpected error %v", err)
 		}
 	}
