@@ -34,6 +34,9 @@ func newResourceFromSecretGenerator(p string, sArgs types.SecretArgs) (*resource
 	if err != nil {
 		return nil, errors.Wrap(err, "makeSecret")
 	}
+	if sArgs.Behavior == "" {
+		sArgs.Behavior = "create"
+	}
 	return resource.NewResourceWithBehavior(
 		s, resource.NewGenerationBehavior(sArgs.Behavior))
 }
