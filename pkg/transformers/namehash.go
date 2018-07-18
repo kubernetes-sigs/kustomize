@@ -41,17 +41,19 @@ func NewNameHashTransformer() Transformer {
 // Transform appends hash to configmaps and secrets.
 func (o *nameHashTransformer) Transform(m resmap.ResMap) error {
 	for id, res := range m {
-		switch {
-		case selectByGVK(id.Gvk(), &schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"}):
-			err := appendHashForConfigMap(res)
-			if err != nil {
-				return err
-			}
+		if res.IsGenerated() {
+			switch {
+			case selectByGVK(id.Gvk(), &schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"}):
+				err := appendHashForConfigMap(res)
+				if err != nil {
+					return err
+				}
 
-		case selectByGVK(id.Gvk(), &schema.GroupVersionKind{Version: "v1", Kind: "Secret"}):
-			err := appendHashForSecret(res)
-			if err != nil {
-				return err
+			case selectByGVK(id.Gvk(), &schema.GroupVersionKind{Version: "v1", Kind: "Secret"}):
+				err := appendHashForSecret(res)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
