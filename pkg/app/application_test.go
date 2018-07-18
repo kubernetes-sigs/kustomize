@@ -18,7 +18,6 @@ package app
 
 import (
 	"encoding/base64"
-	"os"
 	"reflect"
 	"testing"
 
@@ -264,7 +263,7 @@ func makeLoader2(t *testing.T) loader.Loader {
 	if err != nil {
 		t.Fatalf("Failed to setup fake loader.")
 	}
-	err = loader.AddDirectory("/testpath/base", os.ModeDir)
+	err = loader.AddDirectory("/testpath/base")
 	if err != nil {
 		t.Fatalf("Failed to setup fake loader.")
 	}

@@ -70,9 +70,8 @@ func (o *addPatchOptions) Complete(cmd *cobra.Command, args []string) error {
 
 // RunAddPatch runs addPatch command (do real work).
 func (o *addPatchOptions) RunAddPatch(fsys fs.FileSystem) error {
-	_, err := fsys.Stat(o.patchFilePath)
-	if err != nil {
-		return err
+	if !fsys.Exists(o.patchFilePath) {
+		return errors.New(o.patchFilePath + " doesn't exist")
 	}
 
 	mf, err := newKustomizationFile(constants.KustomizationFileName, fsys)

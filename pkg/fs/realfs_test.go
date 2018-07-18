@@ -26,17 +26,30 @@ import (
 func TestReadFilesRealFS(t *testing.T) {
 	x := MakeRealFS()
 	testDir := "kustomize_testing_dir"
-	err := x.Mkdir(testDir, 0777)
+	err := x.Mkdir(testDir)
 	defer os.RemoveAll(testDir)
 
 	if err != nil {
 		t.Fatalf("unexpected error %s", err)
+	}
+	if !x.Exists(testDir) {
+		t.Fatalf("expected existence")
+	}
+	if !x.IsDir(testDir) {
+		t.Fatalf("expected directory")
 	}
 
 	err = x.WriteFile(path.Join(testDir, "foo"), []byte(`foo`))
 	if err != nil {
 		t.Fatalf("unexpected error %s", err)
 	}
+	if !x.Exists(path.Join(testDir, "foo")) {
+		t.Fatalf("expected foo")
+	}
+	if x.IsDir(path.Join(testDir, "foo")) {
+		t.Fatalf("expected foo not to be a directory")
+	}
+
 	err = x.WriteFile(path.Join(testDir, "bar"), []byte(`bar`))
 	if err != nil {
 		t.Fatalf("unexpected error %s", err)

@@ -25,9 +25,10 @@ import (
 // FileSystem groups basic os filesystem methods.
 type FileSystem interface {
 	Create(name string) (File, error)
-	Mkdir(name string, perm os.FileMode) error
+	Mkdir(name string) error
 	Open(name string) (File, error)
-	Stat(name string) (os.FileInfo, error)
+	IsDir(name string) bool
+	Exists(name string) bool
 	ReadFile(name string) ([]byte, error)
 	ReadFiles(name string) (map[string][]byte, error)
 	WriteFile(name string, data []byte) error
