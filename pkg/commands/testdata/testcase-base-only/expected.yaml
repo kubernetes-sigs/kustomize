@@ -44,3 +44,28 @@ spec:
       containers:
       - image: nginx
         name: nginx
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    org: example.com
+    team: foo
+  name: team-foo-nginx
+spec:
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: mynginx
+          org: example.com
+          team: foo
+  podSelector:
+    matchExpressions:
+    - key: app
+      operator: In
+      values:
+      - test
