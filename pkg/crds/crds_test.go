@@ -142,12 +142,12 @@ If it is not set we generate a secret dynamically",
 )
 
 func makeLoader(t *testing.T) loader.Loader {
-	loader := loadertest.NewFakeLoader("/testpath")
-	err := loader.AddFile("/testpath/crd.json", []byte(crdContent))
+	ldr := loadertest.NewFakeLoader("/testpath")
+	err := ldr.AddFile("/testpath/crd.json", []byte(crdContent))
 	if err != nil {
-		t.Fatalf("Failed to setup fake loader.")
+		t.Fatalf("Failed to setup fake ldr.")
 	}
-	return loader
+	return ldr
 }
 
 func TestRegisterCRD(t *testing.T) {
@@ -184,9 +184,9 @@ func TestRegisterCRD(t *testing.T) {
 		},
 	}
 
-	loader := makeLoader(t)
+	ldr := makeLoader(t)
 
-	pathconfig, _ := registerCRD(loader, "/testpath/crd.json")
+	pathconfig, _ := registerCRD(ldr, "/testpath/crd.json")
 
 	sort.Slice(pathconfig[0].namereferencePathConfigs, func(i, j int) bool {
 		return pathconfig[0].namereferencePathConfigs[i].GVK() < pathconfig[0].namereferencePathConfigs[j].GVK()
