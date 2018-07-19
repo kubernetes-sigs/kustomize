@@ -27,8 +27,8 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 )
 
-func newCmdAddConfigMap(fsys fs.FileSystem) *cobra.Command {
-	var config dataConfig
+func newCmdAddConfigMap(fSys fs.FileSystem) *cobra.Command {
+	var flagsAndArgs cMapFlagsAndArgs
 	cmd := &cobra.Command{
 		Use:   "configmap NAME [--from-file=[key=]source] [--from-literal=key1=value1]",
 		Short: "Adds a configmap to the kustomization file.",
@@ -44,47 +44,47 @@ func newCmdAddConfigMap(fsys fs.FileSystem) *cobra.Command {
 	kustomize edit add configmap my-configmap --from-env-file=env/path.env
 `,
 		RunE: func(_ *cobra.Command, args []string) error {
-			err := config.Validate(args)
+			err := flagsAndArgs.Validate(args)
 			if err != nil {
 				return err
 			}
 
-			// Load in the kustomization file.
-			mf, err := newKustomizationFile(constants.KustomizationFileName, fsys)
+			// Load the kustomization file.
+			mf, err := newKustomizationFile(constants.KustomizationFileName, fSys)
 			if err != nil {
 				return err
 			}
 
-			m, err := mf.read()
+			kustomization, err := mf.read()
 			if err != nil {
 				return err
 			}
 
-			// Add the config map to the kustomization file.
-			err = addConfigMap(m, config)
+			// Add the flagsAndArgs map to the kustomization file.
+			err = addConfigMap(kustomization, flagsAndArgs, fSys)
 			if err != nil {
 				return err
 			}
 
 			// Write out the kustomization file with added configmap.
-			return mf.write(m)
+			return mf.write(kustomization)
 		},
 	}
 
 	cmd.Flags().StringSliceVar(
-		&config.FileSources,
+		&flagsAndArgs.FileSources,
 		"from-file",
 		[]string{},
 		"Key file can be specified using its file path, in which case file basename will be used as configmap "+
 			"key, or optionally with a key and file path, in which case the given key will be used.  Specifying a "+
 			"directory will iterate each named file in the directory whose basename is a valid configmap key.")
 	cmd.Flags().StringArrayVar(
-		&config.LiteralSources,
+		&flagsAndArgs.LiteralSources,
 		"from-literal",
 		[]string{},
 		"Specify a key and literal value to insert in configmap (i.e. mykey=somevalue)")
 	cmd.Flags().StringVar(
-		&config.EnvFileSource,
+		&flagsAndArgs.EnvFileSource,
 		"from-env-file",
 		"",
 		"Specify the path to a file to read lines of key=val pairs to create a configmap (i.e. a Docker .env file).")
@@ -92,19 +92,21 @@ func newCmdAddConfigMap(fsys fs.FileSystem) *cobra.Command {
 	return cmd
 }
 
-// addConfigMap updates a configmap within a kustomization file, using the data in config.
+// addConfigMap adds a configmap to a kustomization file.
 // Note: error may leave kustomization file in an undefined state. Suggest passing a copy
 // of kustomization file.
-func addConfigMap(m *types.Kustomization, config dataConfig) error {
-	cm := getOrCreateConfigMap(m, config.Name)
+func addConfigMap(k *types.Kustomization, flagsAndArgs cMapFlagsAndArgs, fSys fs.FileSystem) error {
+	cmArgs := makeConfigMapArgs(k, flagsAndArgs.Name)
 
-	err := mergeData(&cm.DataSources, config)
+	err := mergeFlagsIntoCmArgs(&cmArgs.DataSources, flagsAndArgs)
 	if err != nil {
 		return err
 	}
 
+	factory := configmapandsecret.NewConfigMapFactory(cmArgs, fSys)
+
 	// Validate by trying to create corev1.configmap.
-	_, _, err = configmapandsecret.MakeConfigmapAndGenerateName(*cm)
+	_, _, err = factory.MakeUnstructAndGenerateName()
 	if err != nil {
 		return err
 	}
@@ -112,7 +114,7 @@ func addConfigMap(m *types.Kustomization, config dataConfig) error {
 	return nil
 }
 
-func getOrCreateConfigMap(m *types.Kustomization, name string) *types.ConfigMapArgs {
+func makeConfigMapArgs(m *types.Kustomization, name string) *types.ConfigMapArgs {
 	for i, v := range m.ConfigMapGenerator {
 		if name == v.Name {
 			return &m.ConfigMapGenerator[i]
@@ -124,13 +126,12 @@ func getOrCreateConfigMap(m *types.Kustomization, name string) *types.ConfigMapA
 	return &m.ConfigMapGenerator[len(m.ConfigMapGenerator)-1]
 }
 
-func mergeData(src *types.DataSources, config dataConfig) error {
-	src.LiteralSources = append(src.LiteralSources, config.LiteralSources...)
-	src.FileSources = append(src.FileSources, config.FileSources...)
-	if src.EnvSource != "" && src.EnvSource != config.EnvFileSource {
+func mergeFlagsIntoCmArgs(src *types.DataSources, flags cMapFlagsAndArgs) error {
+	src.LiteralSources = append(src.LiteralSources, flags.LiteralSources...)
+	src.FileSources = append(src.FileSources, flags.FileSources...)
+	if src.EnvSource != "" && src.EnvSource != flags.EnvFileSource {
 		return fmt.Errorf("updating existing env source '%s' not allowed", src.EnvSource)
 	}
-	src.EnvSource = config.EnvFileSource
-
+	src.EnvSource = flags.EnvFileSource
 	return nil
 }
