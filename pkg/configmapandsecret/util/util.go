@@ -18,37 +18,11 @@ limitations under the License.
 package util
 
 import (
-	"crypto/sha256"
 	"errors"
 	"fmt"
 	"path"
 	"strings"
-	"time"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
-
-// ParseRFC3339 parses an RFC3339 date in either RFC3339Nano or RFC3339 format.
-func ParseRFC3339(s string) (metav1.Time, error) {
-	if t, timeErr := time.Parse(time.RFC3339Nano, s); timeErr == nil {
-		return metav1.Time{Time: t}, nil
-	}
-	t, err := time.Parse(time.RFC3339, s)
-	if err != nil {
-		return metav1.Time{}, err
-	}
-	return metav1.Time{Time: t}, nil
-}
-
-// HashObject encodes object using given codec and returns MD5 sum of the result.
-func HashObject(obj runtime.Object, codec runtime.Encoder) (string, error) {
-	data, err := runtime.Encode(codec, obj)
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%x", sha256.Sum256(data)), nil
-}
 
 // ParseFileSource parses the source given.
 //

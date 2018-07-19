@@ -20,8 +20,8 @@ import (
 	"fmt"
 )
 
-// dataConfig encapsulates the options for add configmap/Secret commands.
-type dataConfig struct {
+// cMapFlagsAndArgs encapsulates the options for add configmap commands.
+type cMapFlagsAndArgs struct {
 	// Name of configMap/Secret (required)
 	Name string
 	// FileSources to derive the configMap/Secret from (optional)
@@ -34,7 +34,7 @@ type dataConfig struct {
 }
 
 // Validate validates required fields are set to support structured generation.
-func (a *dataConfig) Validate(args []string) error {
+func (a *cMapFlagsAndArgs) Validate(args []string) error {
 	if len(args) != 1 {
 		return fmt.Errorf("name must be specified once")
 	}
