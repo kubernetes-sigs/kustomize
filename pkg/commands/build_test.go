@@ -79,7 +79,7 @@ func TestBuildValidate(t *testing.T) {
 func TestBuild(t *testing.T) {
 	const updateEnvVar = "UPDATE_KUSTOMIZE_EXPECTED_DATA"
 	updateKustomizeExpected := os.Getenv(updateEnvVar) == "true"
-	fs := fs.MakeRealFS()
+	fSys := fs.MakeRealFS()
 
 	testcases := sets.NewString()
 	filepath.Walk("testdata", func(path string, info os.FileInfo, err error) error {
@@ -104,12 +104,12 @@ func TestBuild(t *testing.T) {
 	}
 
 	for _, testcaseName := range testcases.List() {
-		t.Run(testcaseName, func(t *testing.T) { runBuildTestCase(t, testcaseName, updateKustomizeExpected, fs) })
+		t.Run(testcaseName, func(t *testing.T) { runBuildTestCase(t, testcaseName, updateKustomizeExpected, fSys) })
 	}
 
 }
 
-func runBuildTestCase(t *testing.T, testcaseName string, updateKustomizeExpected bool, fs fs.FileSystem) {
+func runBuildTestCase(t *testing.T, testcaseName string, updateKustomizeExpected bool, fSys fs.FileSystem) {
 	name := testcaseName
 	testcase := buildTestCase{}
 	testcaseDir := filepath.Join("testdata", "testcase-"+name)
@@ -125,7 +125,7 @@ func runBuildTestCase(t *testing.T, testcaseName string, updateKustomizeExpected
 		kustomizationPath: testcase.Filename,
 	}
 	buf := bytes.NewBuffer([]byte{})
-	err = ops.RunBuild(buf, fs)
+	err = ops.RunBuild(buf, fSys)
 	switch {
 	case err != nil && len(testcase.ExpectedError) == 0:
 		t.Errorf("unexpected error: %v", err)

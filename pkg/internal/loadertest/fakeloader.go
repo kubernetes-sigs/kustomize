@@ -37,8 +37,8 @@ func NewFakeLoader(initialDir string) FakeLoader {
 	var schemes []loader.SchemeLoader
 	schemes = append(schemes, loader.NewFileLoader(fakefs))
 	rootLoader := loader.Init(schemes)
-	loader, _ := rootLoader.New(initialDir)
-	return FakeLoader{fs: fakefs, delegate: loader}
+	ldr, _ := rootLoader.New(initialDir)
+	return FakeLoader{fs: fakefs, delegate: ldr}
 }
 
 // AddFile adds a fake file to the file system.

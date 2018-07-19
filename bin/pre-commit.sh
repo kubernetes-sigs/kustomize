@@ -46,7 +46,9 @@ function testGoMetalinter {
   --enable=misspell \
   --enable=structcheck \
   --enable=deadcode \
-  --enable=goimports \
+# Disabling 'goimports' because it reports hyphens in imported package \
+# names as errors, and we have to vendor them in regardless. \
+#  --enable=goimports \
   --enable=varcheck \
   --enable=goconst \
   --enable=unparam \

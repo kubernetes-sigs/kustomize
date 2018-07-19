@@ -22,7 +22,7 @@ import (
 	"testing"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
-	yaml "k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 var (
@@ -49,9 +49,9 @@ func TestYamlFormatError_Error(t *testing.T) {
 func TestErrorHandler(t *testing.T) {
 	f := foo{}
 	err := yaml.NewYAMLToJSONDecoder(bytes.NewReader([]byte(doc))).Decode(&f)
-	testErr := ErrorHandler(err, filepath)
-	expectedErr := fmt.Errorf("Format error message")
-	fmtErr := ErrorHandler(expectedErr, filepath)
+	testErr := Handler(err, filepath)
+	expectedErr := fmt.Errorf("format error message")
+	fmtErr := Handler(expectedErr, filepath)
 	if fmtErr.Error() != expectedErr.Error() {
 		t.Errorf("Expected returning fmt.Error, but found %T", fmtErr)
 	}

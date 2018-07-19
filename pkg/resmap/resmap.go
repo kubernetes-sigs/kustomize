@@ -39,7 +39,7 @@ type ResMap map[resource.ResId]*resource.Resource
 
 // EncodeAsYaml encodes a ResMap to YAML; encoded objects separated by `---`.
 func (m ResMap) EncodeAsYaml() ([]byte, error) {
-	ids := []resource.ResId{}
+	var ids []resource.ResId
 	for id := range m {
 		ids = append(ids, id)
 	}
@@ -73,8 +73,8 @@ func (m ResMap) EncodeAsYaml() ([]byte, error) {
 // ErrorIfNotEqual returns error if maps are not equal.
 func (m ResMap) ErrorIfNotEqual(m2 ResMap) error {
 	if len(m) != len(m2) {
-		keySet1 := []resource.ResId{}
-		keySet2 := []resource.ResId{}
+		var keySet1 []resource.ResId
+		var keySet2 []resource.ResId
 		for id := range m {
 			keySet1 = append(keySet1, id)
 		}
@@ -101,7 +101,7 @@ func (m ResMap) insert(newName string, obj *unstructured.Unstructured) error {
 	id := resource.NewResId(gvk, oldName)
 
 	if _, found := m[id]; found {
-		return fmt.Errorf("The <name: %q, GroupVersionKind: %v> already exists in the map", oldName, gvk)
+		return fmt.Errorf("the <name: %q, GroupVersionKind: %v> already exists in the map", oldName, gvk)
 	}
 	obj.SetName(newName)
 	m[id] = resource.NewResourceFromUnstruct(*obj)
@@ -111,7 +111,7 @@ func (m ResMap) insert(newName string, obj *unstructured.Unstructured) error {
 // NewResourceSliceFromPatches returns a slice of resources given a patch path slice from a kustomization file.
 func NewResourceSliceFromPatches(
 	loader loader.Loader, paths []string) ([]*resource.Resource, error) {
-	result := []*resource.Resource{}
+	var result []*resource.Resource
 	for _, path := range paths {
 		contents, err := loader.GlobLoad(path)
 		if err != nil {
@@ -120,7 +120,7 @@ func NewResourceSliceFromPatches(
 		for p, content := range contents {
 			res, err := newResourceSliceFromBytes(content)
 			if err != nil {
-				return nil, internal.ErrorHandler(err, p)
+				return nil, internal.Handler(err, p)
 			}
 			result = append(result, res...)
 
@@ -131,7 +131,7 @@ func NewResourceSliceFromPatches(
 
 // NewResMapFromFiles returns a ResMap given a resource path slice.
 func NewResMapFromFiles(loader loader.Loader, paths []string) (ResMap, error) {
-	result := []ResMap{}
+	var result []ResMap
 	for _, path := range paths {
 		contents, err := loader.GlobLoad(path)
 		if err != nil {
@@ -140,7 +140,7 @@ func NewResMapFromFiles(loader loader.Loader, paths []string) (ResMap, error) {
 		for p, content := range contents {
 			res, err := newResMapFromBytes(content)
 			if err != nil {
-				return nil, internal.ErrorHandler(err, p)
+				return nil, internal.Handler(err, p)
 			}
 			result = append(result, res)
 		}
@@ -180,8 +180,7 @@ func newResMapFromResourceSlice(resources []*resource.Resource) (ResMap, error) 
 
 func newResourceSliceFromBytes(in []byte) ([]*resource.Resource, error) {
 	decoder := k8syaml.NewYAMLOrJSONDecoder(bytes.NewReader(in), 1024)
-	result := []*resource.Resource{}
-
+	var result []*resource.Resource
 	var err error
 	for {
 		var out unstructured.Unstructured
@@ -201,11 +200,11 @@ func newResourceSliceFromBytes(in []byte) ([]*resource.Resource, error) {
 func MergeWithoutOverride(maps ...ResMap) (ResMap, error) {
 	result := ResMap{}
 	for _, m := range maps {
-		for id, resource := range m {
+		for id, res := range m {
 			if _, found := result[id]; found {
 				return nil, fmt.Errorf("id '%q' already used", id)
 			}
-			result[id] = resource
+			result[id] = res
 		}
 	}
 	return result, nil
@@ -235,12 +234,12 @@ func MergeWithOverride(maps ...ResMap) (ResMap, error) {
 					glog.V(4).Infof("Merged object is %v", result[id].Object)
 					result[id].SetBehavior(resource.BehaviorCreate)
 				default:
-					return nil, fmt.Errorf("Id %#v exists; must merge or replace.", id)
+					return nil, fmt.Errorf("id %#v exists; must merge or replace", id)
 				}
 			} else {
 				switch r.Behavior() {
 				case resource.BehaviorMerge, resource.BehaviorReplace:
-					return nil, fmt.Errorf("Id %#v does not exist; cannot merge or replace.", id)
+					return nil, fmt.Errorf("id %#v does not exist; cannot merge or replace", id)
 				default:
 					result[id] = r
 				}

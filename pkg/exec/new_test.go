@@ -24,9 +24,7 @@ import (
 )
 
 func ExampleNew() {
-	exec := exec.New()
-
-	cmd := exec.Command("echo", "Bonjour!")
+	cmd := exec.New().Command("echo", "Bonjour!")
 	buff := bytes.Buffer{}
 	cmd.SetStdout(&buff)
 	if err := cmd.Run(); err != nil {
