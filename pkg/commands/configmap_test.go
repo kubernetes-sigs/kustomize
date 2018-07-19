@@ -29,7 +29,7 @@ func TestNewAddConfigMapIsNotNil(t *testing.T) {
 	}
 }
 
-func TestGetOrCreateConfigMap(t *testing.T) {
+func TestMakeConfigMapArgs(t *testing.T) {
 	cmName := "test-config-name"
 
 	kustomization := &types.Kustomization{
@@ -39,24 +39,24 @@ func TestGetOrCreateConfigMap(t *testing.T) {
 	if len(kustomization.ConfigMapGenerator) != 0 {
 		t.Fatal("Initial kustomization should not have any configmaps")
 	}
-	cm := getOrCreateConfigMap(kustomization, cmName)
+	args := makeConfigMapArgs(kustomization, cmName)
 
-	if cm == nil {
-		t.Fatalf("ConfigMap should always be non-nil")
+	if args == nil {
+		t.Fatalf("args should always be non-nil")
 	}
 
 	if len(kustomization.ConfigMapGenerator) != 1 {
 		t.Fatalf("Kustomization should have newly created configmap")
 	}
 
-	if &kustomization.ConfigMapGenerator[len(kustomization.ConfigMapGenerator)-1] != cm {
-		t.Fatalf("Pointer address for newly inserted configmap should be same")
+	if &kustomization.ConfigMapGenerator[len(kustomization.ConfigMapGenerator)-1] != args {
+		t.Fatalf("Pointer address for newly inserted configmap generator should be same")
 	}
 
-	existingCM := getOrCreateConfigMap(kustomization, cmName)
+	args2 := makeConfigMapArgs(kustomization, cmName)
 
-	if existingCM != cm {
-		t.Fatalf("should have returned an existing cm with name: %v", cmName)
+	if args2 != args {
+		t.Fatalf("should have returned an existing args with name: %v", cmName)
 	}
 
 	if len(kustomization.ConfigMapGenerator) != 1 {
@@ -64,10 +64,10 @@ func TestGetOrCreateConfigMap(t *testing.T) {
 	}
 }
 
-func TestMergeData_LiteralSources(t *testing.T) {
+func TestMergeFlagsIntoCmArgs_LiteralSources(t *testing.T) {
 	ds := &types.DataSources{}
 
-	err := mergeData(ds, dataConfig{LiteralSources: []string{"k1=v1"}})
+	err := mergeFlagsIntoCmArgs(ds, cMapFlagsAndArgs{LiteralSources: []string{"k1=v1"}})
 	if err != nil {
 		t.Fatalf("Merge initial literal source should not return error")
 	}
@@ -76,7 +76,7 @@ func TestMergeData_LiteralSources(t *testing.T) {
 		t.Fatalf("Initial literal source should have been added")
 	}
 
-	err = mergeData(ds, dataConfig{LiteralSources: []string{"k2=v2"}})
+	err = mergeFlagsIntoCmArgs(ds, cMapFlagsAndArgs{LiteralSources: []string{"k2=v2"}})
 	if err != nil {
 		t.Fatalf("Merge second literal source should not return error")
 	}
@@ -86,10 +86,10 @@ func TestMergeData_LiteralSources(t *testing.T) {
 	}
 }
 
-func TestMergeData_FileSources(t *testing.T) {
+func TestMergeFlagsIntoCmArgs_FileSources(t *testing.T) {
 	ds := &types.DataSources{}
 
-	err := mergeData(ds, dataConfig{FileSources: []string{"file1"}})
+	err := mergeFlagsIntoCmArgs(ds, cMapFlagsAndArgs{FileSources: []string{"file1"}})
 	if err != nil {
 		t.Fatalf("Merge initial file source should not return error")
 	}
@@ -98,7 +98,7 @@ func TestMergeData_FileSources(t *testing.T) {
 		t.Fatalf("Initial file source should have been added")
 	}
 
-	err = mergeData(ds, dataConfig{FileSources: []string{"file2"}})
+	err = mergeFlagsIntoCmArgs(ds, cMapFlagsAndArgs{FileSources: []string{"file2"}})
 	if err != nil {
 		t.Fatalf("Merge second file source should not return error")
 	}
@@ -108,12 +108,12 @@ func TestMergeData_FileSources(t *testing.T) {
 	}
 }
 
-func TestMergeData_EnvSource(t *testing.T) {
+func TestMergeFlagsIntoCmArgs_EnvSource(t *testing.T) {
 	envFileName := "env1"
 	envFileName2 := "env2"
 	ds := &types.DataSources{}
 
-	err := mergeData(ds, dataConfig{EnvFileSource: envFileName})
+	err := mergeFlagsIntoCmArgs(ds, cMapFlagsAndArgs{EnvFileSource: envFileName})
 	if err != nil {
 		t.Fatalf("Merge initial env source should not return error")
 	}
@@ -122,7 +122,7 @@ func TestMergeData_EnvSource(t *testing.T) {
 		t.Fatalf("Initial env source filename should have been added")
 	}
 
-	err = mergeData(ds, dataConfig{EnvFileSource: envFileName2})
+	err = mergeFlagsIntoCmArgs(ds, cMapFlagsAndArgs{EnvFileSource: envFileName2})
 	if err == nil {
 		t.Fatalf("Updating env source should return an error")
 	}
