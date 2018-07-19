@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package util
+package configmapandsecret
 
 import (
 	"bufio"
@@ -71,7 +71,7 @@ func processEnvFileLine(line []byte, filePath string,
 
 // AddFromEnvFile processes an env file allows a generic addTo to handle the
 // collection of key value pairs or returns an error.
-func AddFromEnvFile(filePath string, addTo func(key, value string) error) error {
+func addFromEnvFile(filePath string, addTo func(key, value string) error) error {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return err
