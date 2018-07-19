@@ -66,20 +66,20 @@ metadata:
 )
 
 func makeLoader1(t *testing.T) loader.Loader {
-	loader := loadertest.NewFakeLoader("/testpath")
-	err := loader.AddFile("/testpath/"+constants.KustomizationFileName, []byte(kustomizationContent1))
+	ldr := loadertest.NewFakeLoader("/testpath")
+	err := ldr.AddFile("/testpath/"+constants.KustomizationFileName, []byte(kustomizationContent1))
 	if err != nil {
-		t.Fatalf("Failed to setup fake loader.")
+		t.Fatalf("Failed to setup fake ldr.")
 	}
-	err = loader.AddFile("/testpath/deployment.yaml", []byte(deploymentContent))
+	err = ldr.AddFile("/testpath/deployment.yaml", []byte(deploymentContent))
 	if err != nil {
-		t.Fatalf("Failed to setup fake loader.")
+		t.Fatalf("Failed to setup fake ldr.")
 	}
-	err = loader.AddFile("/testpath/namespace.yaml", []byte(namespaceContent))
+	err = ldr.AddFile("/testpath/namespace.yaml", []byte(namespaceContent))
 	if err != nil {
-		t.Fatalf("Failed to setup fake loader.")
+		t.Fatalf("Failed to setup fake ldr.")
 	}
-	return loader
+	return ldr
 }
 
 var deploy = schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"}
@@ -254,28 +254,28 @@ spec:
 )
 
 func makeLoader2(t *testing.T) loader.Loader {
-	loader := loadertest.NewFakeLoader("/testpath")
-	err := loader.AddFile("/testpath/"+constants.KustomizationFileName, []byte(kustomizationContentOverlay))
+	ldr := loadertest.NewFakeLoader("/testpath")
+	err := ldr.AddFile("/testpath/"+constants.KustomizationFileName, []byte(kustomizationContentOverlay))
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = loader.AddFile("/testpath/service.yaml", []byte(serviceContent))
+	err = ldr.AddFile("/testpath/service.yaml", []byte(serviceContent))
 	if err != nil {
-		t.Fatalf("Failed to setup fake loader.")
+		t.Fatalf("Failed to setup fake ldr.")
 	}
-	err = loader.AddDirectory("/testpath/base")
+	err = ldr.AddDirectory("/testpath/base")
 	if err != nil {
-		t.Fatalf("Failed to setup fake loader.")
+		t.Fatalf("Failed to setup fake ldr.")
 	}
-	err = loader.AddFile("/testpath/base/"+constants.KustomizationFileName, []byte(kustomizationContentBase))
+	err = ldr.AddFile("/testpath/base/"+constants.KustomizationFileName, []byte(kustomizationContentBase))
 	if err != nil {
-		t.Fatalf("Failed to setup fake loader.")
+		t.Fatalf("Failed to setup fake ldr.")
 	}
-	err = loader.AddFile("/testpath/base/deployment.yaml", []byte(deploymentContent))
+	err = ldr.AddFile("/testpath/base/deployment.yaml", []byte(deploymentContent))
 	if err != nil {
-		t.Fatalf("Failed to setup fake loader.")
+		t.Fatalf("Failed to setup fake ldr.")
 	}
-	return loader
+	return ldr
 }
 
 // TODO: This test covers incorrect behavior; it should not pass.
