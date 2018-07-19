@@ -19,12 +19,12 @@ package configmapandsecret
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"path"
 	"strings"
 
-	cutil "github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret/util"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/pkg/hash"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
@@ -102,7 +102,7 @@ func (f *ConfigMapFactory) MakeConfigMap() (*corev1.ConfigMap, error) {
 // information into the provided configMap.
 func (f *ConfigMapFactory) handleConfigMapFromLiteralSources(configMap *v1.ConfigMap) error {
 	for _, literalSource := range f.args.LiteralSources {
-		keyName, value, err := cutil.ParseLiteralSource(literalSource)
+		keyName, value, err := ParseLiteralSource(literalSource)
 		if err != nil {
 			return err
 		}
@@ -118,7 +118,7 @@ func (f *ConfigMapFactory) handleConfigMapFromLiteralSources(configMap *v1.Confi
 // into the provided configMap
 func (f *ConfigMapFactory) handleConfigMapFromFileSources(configMap *v1.ConfigMap) error {
 	for _, fileSource := range f.args.FileSources {
-		keyName, filePath, err := cutil.ParseFileSource(fileSource)
+		keyName, filePath, err := ParseFileSource(fileSource)
 		if err != nil {
 			return err
 		}
@@ -162,7 +162,7 @@ func (f *ConfigMapFactory) handleConfigMapFromEnvFileSource(configMap *v1.Config
 		return fmt.Errorf("env config file %s cannot be a directory", f.args.EnvSource)
 	}
 
-	return cutil.AddFromEnvFile(f.args.EnvSource, func(key, value string) error {
+	return addFromEnvFile(f.args.EnvSource, func(key, value string) error {
 		return addKeyFromLiteralToConfigMap(configMap, key, value)
 	})
 }
@@ -189,4 +189,46 @@ func addKeyFromLiteralToConfigMap(configMap *v1.ConfigMap, keyName, data string)
 	}
 	configMap.Data[keyName] = data
 	return nil
+}
+
+// ParseFileSource parses the source given.
+//
+//  Acceptable formats include:
+//   1.  source-path: the basename will become the key name
+//   2.  source-name=source-path: the source-name will become the key name and
+//       source-path is the path to the key file.
+//
+// Key names cannot include '='.
+func ParseFileSource(source string) (keyName, filePath string, err error) {
+	numSeparators := strings.Count(source, "=")
+	switch {
+	case numSeparators == 0:
+		return path.Base(source), source, nil
+	case numSeparators == 1 && strings.HasPrefix(source, "="):
+		return "", "", fmt.Errorf("key name for file path %v missing", strings.TrimPrefix(source, "="))
+	case numSeparators == 1 && strings.HasSuffix(source, "="):
+		return "", "", fmt.Errorf("file path for key name %v missing", strings.TrimSuffix(source, "="))
+	case numSeparators > 1:
+		return "", "", errors.New("key names or file paths cannot contain '='")
+	default:
+		components := strings.Split(source, "=")
+		return components[0], components[1], nil
+	}
+}
+
+// ParseLiteralSource parses the source key=val pair into its component pieces.
+// This functionality is distinguished from strings.SplitN(source, "=", 2) since
+// it returns an error in the case of empty keys, values, or a missing equals sign.
+func ParseLiteralSource(source string) (keyName, value string, err error) {
+	// leading equal is invalid
+	if strings.Index(source, "=") == 0 {
+		return "", "", fmt.Errorf("invalid literal source %v, expected key=value", source)
+	}
+	// split after the first equal (so values can have the = character)
+	items := strings.SplitN(source, "=", 2)
+	if len(items) != 2 {
+		return "", "", fmt.Errorf("invalid literal source %v, expected key=value", source)
+	}
+
+	return items[0], items[1], nil
 }
