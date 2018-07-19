@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	cutil "github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret/util"
+	"github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
@@ -91,7 +91,7 @@ func keyValuesFromLiteralSources(sources []string) ([]kvPair, error) {
 	var kvs []kvPair
 	for _, s := range sources {
 		// TODO: move ParseLiteralSource in this file
-		k, v, err := cutil.ParseLiteralSource(s)
+		k, v, err := configmapandsecret.ParseLiteralSource(s)
 		if err != nil {
 			return nil, err
 		}
@@ -104,7 +104,7 @@ func keyValuesFromFileSources(l loader.Loader, sources []string) ([]kvPair, erro
 	var kvs []kvPair
 
 	for _, s := range sources {
-		key, path, err := cutil.ParseFileSource(s)
+		key, path, err := configmapandsecret.ParseFileSource(s)
 		if err != nil {
 			return nil, err
 		}
