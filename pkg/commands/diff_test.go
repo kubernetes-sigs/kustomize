@@ -48,7 +48,7 @@ func TestDiff(t *testing.T) {
 	transformedDir, _ := regexp.Compile(`/tmp/transformed-[0-9]*/`)
 	timestamp, _ := regexp.Compile(`[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) (2[0-3]|[01][0-9]):[0-5][0-9]:[0-5][0-9].[0-9]* [+-]{1}[0-9]{4}`)
 
-	fs := fs.MakeRealFS()
+	fSys := fs.MakeRealFS()
 
 	testcases := sets.NewString()
 	filepath.Walk("testdata", func(path string, info os.FileInfo, err error) error {
@@ -74,7 +74,7 @@ func TestDiff(t *testing.T) {
 
 	for _, testcaseName := range testcases.List() {
 		t.Run(testcaseName, func(t *testing.T) {
-			runDiffTestCase(t, testcaseName, updateKustomizeExpected, fs,
+			runDiffTestCase(t, testcaseName, updateKustomizeExpected, fSys,
 				noopDir, transformedDir, timestamp)
 		})
 	}

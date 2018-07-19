@@ -66,7 +66,7 @@ func (p *pathConfigs) addPrefixPathConfig(config transformers.PathConfig) {
 
 // RegisterCRDs parse CRD schemas from paths and update various pathConfigs
 func RegisterCRDs(loader loader.Loader, paths []string) error {
-	pathConfigs := []pathConfigs{}
+	var pathConfigs []pathConfigs
 	for _, path := range paths {
 		pathConfig, err := registerCRD(loader, path)
 		if err != nil {
@@ -80,8 +80,7 @@ func RegisterCRDs(loader loader.Loader, paths []string) error {
 
 // register CRD from one path
 func registerCRD(loader loader.Loader, path string) ([]pathConfigs, error) {
-	result := []pathConfigs{}
-
+	var result []pathConfigs
 	content, err := loader.Load(path)
 	if err != nil {
 		return result, err

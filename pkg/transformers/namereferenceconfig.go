@@ -871,8 +871,7 @@ func AddNameReferencePathConfigs(r []ReferencePathConfig) {
 
 // MergeNameReferencePathConfigs merges one ReferencePathConfig into a slice of ReferencePathConfig
 func MergeNameReferencePathConfigs(configs []ReferencePathConfig, config ReferencePathConfig) []ReferencePathConfig {
-	result := []ReferencePathConfig{}
-
+	var result []ReferencePathConfig
 	found := false
 	for _, c := range configs {
 		if c.referencedGVK == config.referencedGVK {

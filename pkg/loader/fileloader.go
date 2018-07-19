@@ -52,7 +52,7 @@ func (l *fileLoader) IsScheme(root string, location string) bool {
 func (l *fileLoader) FullLocation(root string, location string) (string, error) {
 	// First, validate the parameters
 	if len(root) == 0 && len(location) == 0 {
-		return "", fmt.Errorf("Unable to calculate full location: root and location empty")
+		return "", fmt.Errorf("unable to calculate full location: root and location empty")
 	}
 	// Special case current directory, expanding to full file path.
 	if location == currentDir {
@@ -75,7 +75,7 @@ func (l *fileLoader) FullLocation(root string, location string) (string, error) 
 func (l *fileLoader) Load(fullFilePath string) ([]byte, error) {
 	// Validate path to load from is a full file path.
 	if !filepath.IsAbs(fullFilePath) {
-		return nil, fmt.Errorf("Attempting to load file without full file path: %s\n", fullFilePath)
+		return nil, fmt.Errorf("attempting to load file without full file path: %s\n", fullFilePath)
 	}
 	return l.fs.ReadFile(fullFilePath)
 }

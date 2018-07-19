@@ -17,7 +17,6 @@ limitations under the License.
 package fs
 
 import (
-	"errors"
 	"os"
 )
 
@@ -26,14 +25,6 @@ var _ File = &realFile{}
 // realFile implements File using the local filesystem.
 type realFile struct {
 	file *os.File
-}
-
-// MakeRealFile makes an instance of realFile.
-func MakeRealFile(f *os.File) (File, error) {
-	if f == nil {
-		return nil, errors.New("file argument may not be nil")
-	}
-	return &realFile{file: f}, nil
 }
 
 // Close closes a file.

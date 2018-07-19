@@ -103,7 +103,7 @@ func (a *Application) resolveRefsToGeneratedResources(m resmap.ResMap) (resmap.R
 		return nil, err
 	}
 
-	r := []transformers.Transformer{}
+	var r []transformers.Transformer
 	t, err := transformers.NewDefaultingNameReferenceTransformer()
 	if err != nil {
 		return nil, err
@@ -192,15 +192,15 @@ func (a *Application) loadResMapFromBasesAndResources() (resmap.ResMap, error) {
 // Loop through the Bases of this kustomization recursively loading resources.
 // Combine into one ResMap, demanding unique Ids for each resource.
 func (a *Application) loadCustomizedBases() (resmap.ResMap, *interror.KustomizationErrors) {
-	list := []resmap.ResMap{}
+	var list []resmap.ResMap
 	errs := &interror.KustomizationErrors{}
 	for _, path := range a.kustomization.Bases {
-		loader, err := a.loader.New(path)
+		ldr, err := a.loader.New(path)
 		if err != nil {
-			errs.Append(errors.Wrap(err, "couldn't make loader for "+path))
+			errs.Append(errors.Wrap(err, "couldn't make ldr for "+path))
 			continue
 		}
-		app, err := NewApplication(loader)
+		app, err := NewApplication(ldr)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "couldn't make app for "+path))
 			continue
@@ -223,12 +223,12 @@ func (a *Application) loadBasesAsFlatList() ([]*Application, error) {
 	var result []*Application
 	errs := &interror.KustomizationErrors{}
 	for _, path := range a.kustomization.Bases {
-		loader, err := a.loader.New(path)
+		ldr, err := a.loader.New(path)
 		if err != nil {
 			errs.Append(err)
 			continue
 		}
-		a, err := NewApplication(loader)
+		a, err := NewApplication(ldr)
 		if err != nil {
 			errs.Append(err)
 			continue
@@ -243,7 +243,7 @@ func (a *Application) loadBasesAsFlatList() ([]*Application, error) {
 
 // newTransformer makes a Transformer that does everything except resolve generated names.
 func (a *Application) newTransformer(patches []*resource.Resource) (transformers.Transformer, error) {
-	r := []transformers.Transformer{}
+	var r []transformers.Transformer
 	t, err := transformers.NewPatchTransformer(patches)
 	if err != nil {
 		return nil, err
@@ -291,7 +291,7 @@ func (a *Application) resolveRefVars(m resmap.ResMap) (map[string]string, error)
 
 // getAllVars returns all the "environment" style Var instances defined in the app.
 func (a *Application) getAllVars() ([]types.Var, error) {
-	result := []types.Var{}
+	var result []types.Var
 	errs := &interror.KustomizationErrors{}
 
 	bases, err := a.loadBasesAsFlatList()
