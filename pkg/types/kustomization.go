@@ -68,6 +68,12 @@ type Kustomization struct {
 
 	// Variables which will be substituted at runtime
 	Vars []Var `json:"vars,omitempty" yaml:"vars,omitempty"`
+
+	// If set to true, all images need to have tags
+	RequireTag bool `json:"requireTag,omitempty" yaml:"requireTag,omitempty"`
+
+	// ImageTags is a list of ImageTag for changing image tags
+	ImageTags []ImageTag `json:"imageTags,omitempty" yaml:"imageTags,omitempty"`
 }
 
 // ConfigMapArgs contains the metadata of how to generate a configmap.
@@ -135,4 +141,13 @@ type DataSources struct {
 	// pairs to create a configmap.
 	// i.e. a Docker .env file or a .ini file.
 	EnvSource string `json:"env,omitempty" yaml:"env,omitempty"`
+}
+
+// ImageTag contains an image and a new tag, which will replace the original tag.
+type ImageTag struct {
+	// Name is a tag-less image name.
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+
+	// NewTag is the value to use in replacing the original tag.
+	NewTag string `json:"newTag,omitempty" yaml:"newTag,omitempty"`
 }
