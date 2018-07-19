@@ -82,7 +82,7 @@ func (mf *kustomizationFile) read() (*types.Kustomization, error) {
 
 func (mf *kustomizationFile) write(kustomization *types.Kustomization) error {
 	if kustomization == nil {
-		return errors.New("util: kustomization file arg is nil.")
+		return errors.New("util: kustomization file arg is nil")
 	}
 	bytes, err := yaml.Marshal(kustomization)
 	if err != nil {

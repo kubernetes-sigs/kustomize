@@ -128,7 +128,7 @@ func mergeData(src *types.DataSources, config dataConfig) error {
 	src.LiteralSources = append(src.LiteralSources, config.LiteralSources...)
 	src.FileSources = append(src.FileSources, config.FileSources...)
 	if src.EnvSource != "" && src.EnvSource != config.EnvFileSource {
-		return fmt.Errorf("updating existing env source '%s' not allowed.", src.EnvSource)
+		return fmt.Errorf("updating existing env source '%s' not allowed", src.EnvSource)
 	}
 	src.EnvSource = config.EnvFileSource
 

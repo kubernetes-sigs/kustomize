@@ -121,7 +121,7 @@ func (r *Resource) GetFieldValue(fieldPath string) (string, error) {
 
 func getFieldValue(m map[string]interface{}, pathToField []string) (string, error) {
 	if len(pathToField) == 0 {
-		return "", fmt.Errorf("Field not found")
+		return "", fmt.Errorf("field not found")
 	}
 	if len(pathToField) == 1 {
 		if v, found := m[pathToField[0]]; found {

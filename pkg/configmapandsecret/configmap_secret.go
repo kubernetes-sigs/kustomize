@@ -18,14 +18,8 @@ limitations under the License.
 package configmapandsecret
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"time"
-
 	cutil "github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret/util"
 	"github.com/kubernetes-sigs/kustomize/pkg/hash"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
@@ -46,21 +40,6 @@ func MakeConfigmapAndGenerateName(cm types.ConfigMapArgs) (*unstructured.Unstruc
 	}
 	nameWithHash := fmt.Sprintf("%s-%s", corev1CM.GetName(), h)
 	unstructuredCM, err := objectToUnstructured(corev1CM)
-	return unstructuredCM, nameWithHash, err
-}
-
-// MakeSecretAndGenerateName returns a secret with the name appended with a hash.
-func MakeSecretAndGenerateName(secret types.SecretArgs, path string) (*unstructured.Unstructured, string, error) {
-	corev1Secret, err := makeSecret(secret, path)
-	if err != nil {
-		return nil, "", err
-	}
-	h, err := hash.SecretHash(corev1Secret)
-	if err != nil {
-		return nil, "", err
-	}
-	nameWithHash := fmt.Sprintf("%s-%s", secret.Name, h)
-	unstructuredCM, err := objectToUnstructured(corev1Secret)
 	return unstructuredCM, nameWithHash, err
 }
 
@@ -98,39 +77,4 @@ func makeConfigMap(cm types.ConfigMapArgs) (*corev1.ConfigMap, error) {
 	}
 
 	return corev1cm, nil
-}
-
-func makeSecret(secret types.SecretArgs, path string) (*corev1.Secret, error) {
-	corev1secret := &corev1.Secret{}
-	corev1secret.APIVersion = "v1"
-	corev1secret.Kind = "Secret"
-	corev1secret.Name = secret.Name
-	corev1secret.Type = corev1.SecretType(secret.Type)
-	if corev1secret.Type == "" {
-		corev1secret.Type = corev1.SecretTypeOpaque
-	}
-	corev1secret.Data = map[string][]byte{}
-
-	for k, v := range secret.Commands {
-		out, err := createSecretKey(path, v)
-		if err != nil {
-			return nil, err
-		}
-		corev1secret.Data[k] = out
-	}
-
-	return corev1secret, nil
-}
-
-func createSecretKey(wd string, command string) ([]byte, error) {
-	fi, err := os.Stat(wd)
-	if err != nil || !fi.IsDir() {
-		wd = filepath.Dir(wd)
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, "sh", "-c", command)
-	cmd.Dir = wd
-
-	return cmd.Output()
 }
