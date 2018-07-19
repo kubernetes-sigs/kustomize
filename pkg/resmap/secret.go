@@ -79,7 +79,7 @@ func createSecretKey(wd string, command string) ([]byte, error) {
 // NewResMapFromSecretArgs takes a SecretArgs slice and executes its command in directory p
 // then writes the output to a Resource slice and return it.
 func NewResMapFromSecretArgs(p string, secretList []types.SecretArgs) (ResMap, error) {
-	allResources := []*resource.Resource{}
+	var allResources []*resource.Resource
 	for _, secret := range secretList {
 		res, err := newResourceFromSecretGenerator(p, secret)
 		if err != nil {

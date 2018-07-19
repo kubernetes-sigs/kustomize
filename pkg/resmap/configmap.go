@@ -123,7 +123,7 @@ func addKV(m map[string]string, kv kvPair) error {
 		return fmt.Errorf("%q is not a valid key name: %s", kv.key, strings.Join(errs, ";"))
 	}
 	if _, exists := m[kv.key]; exists {
-		return fmt.Errorf("key %s already exists: %v.", kv.key, m)
+		return fmt.Errorf("key %s already exists: %v", kv.key, m)
 	}
 	m[kv.key] = kv.value
 	return nil
@@ -131,7 +131,7 @@ func addKV(m map[string]string, kv kvPair) error {
 
 // NewResMapFromConfigMapArgs returns a Resource slice given a configmap metadata slice from kustomization file.
 func NewResMapFromConfigMapArgs(loader loader.Loader, cmList []types.ConfigMapArgs) (ResMap, error) {
-	allResources := []*resource.Resource{}
+	var allResources []*resource.Resource
 	for _, cm := range cmList {
 		res, err := newResourceFromConfigMap(loader, cm)
 		if err != nil {

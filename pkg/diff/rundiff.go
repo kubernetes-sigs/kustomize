@@ -60,7 +60,7 @@ func writeYamlToNewDir(in resmap.ResMap, prefix string) (*directory, error) {
 		if err != nil {
 			return nil, err
 		}
-		err = print(obj, f)
+		err = write(obj, f)
 		f.Close()
 		if err != nil {
 			return nil, err
@@ -69,8 +69,8 @@ func writeYamlToNewDir(in resmap.ResMap, prefix string) (*directory, error) {
 	return dir, nil
 }
 
-// Print the object as YAML.
-func print(obj interface{}, w io.Writer) error {
+// Write the object as YAML.
+func write(obj interface{}, w io.Writer) error {
 	if obj == nil {
 		return nil
 	}
