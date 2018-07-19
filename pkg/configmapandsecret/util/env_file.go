@@ -69,9 +69,9 @@ func processEnvFileLine(line []byte, filePath string,
 	return key, value, err
 }
 
-// addFromEnvFile processes an env file allows a generic addTo to handle the
+// AddFromEnvFile processes an env file allows a generic addTo to handle the
 // collection of key value pairs or returns an error.
-func addFromEnvFile(filePath string, addTo func(key, value string) error) error {
+func AddFromEnvFile(filePath string, addTo func(key, value string) error) error {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return err

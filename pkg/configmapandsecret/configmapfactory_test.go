@@ -20,12 +20,7 @@ import (
 	"reflect"
 	"testing"
 
-	"context"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"time"
-
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -98,23 +93,6 @@ func makeLiteralConfigMap(name string) *corev1.ConfigMap {
 	}
 }
 
-func makeTestSecret(name string) *corev1.Secret {
-	return &corev1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Secret",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
-		Data: map[string][]byte{
-			"DB_USERNAME": []byte("admin"),
-			"DB_PASSWORD": []byte("somepw"),
-		},
-		Type: corev1.SecretTypeOpaque,
-	}
-}
-
 func TestConstructConfigMap(t *testing.T) {
 	type testCase struct {
 		description string
@@ -156,81 +134,16 @@ func TestConstructConfigMap(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		cm, err := makeConfigMap(tc.input)
+		// TODO: all tests should use a FakeFs
+		fSys := fs.MakeRealFS()
+		f := NewConfigMapFactory(&tc.input, fSys)
+		cm, err := f.MakeConfigMap()
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 		if !reflect.DeepEqual(*cm, *tc.expected) {
 			t.Fatalf("in testcase: %q updated:\n%#v\ndoesn't match expected:\n%#v\n", tc.description, *cm, tc.expected)
 		}
-	}
-}
-
-func TestConstructSecret(t *testing.T) {
-	secret := types.SecretArgs{
-		Name: "secret",
-		Commands: map[string]string{
-			"DB_USERNAME": "printf admin",
-			"DB_PASSWORD": "printf somepw",
-		},
-		Type: "Opaque",
-	}
-	cm, err := makeSecret(secret, ".")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	expected := makeTestSecret("secret")
-	if !reflect.DeepEqual(*cm, *expected) {
-		t.Fatalf("%#v\ndoesn't match expected:\n%#v", *cm, *expected)
-	}
-}
-
-func makeSecret(secret types.SecretArgs, path string) (*corev1.Secret, error) {
-	corev1secret := &corev1.Secret{}
-	corev1secret.APIVersion = "v1"
-	corev1secret.Kind = "Secret"
-	corev1secret.Name = secret.Name
-	corev1secret.Type = corev1.SecretType(secret.Type)
-	if corev1secret.Type == "" {
-		corev1secret.Type = corev1.SecretTypeOpaque
-	}
-	corev1secret.Data = map[string][]byte{}
-
-	for k, v := range secret.Commands {
-		out, err := createSecretKey(path, v)
-		if err != nil {
-			return nil, err
-		}
-		corev1secret.Data[k] = out
-	}
-
-	return corev1secret, nil
-}
-
-func createSecretKey(wd string, command string) ([]byte, error) {
-	fi, err := os.Stat(wd)
-	if err != nil || !fi.IsDir() {
-		wd = filepath.Dir(wd)
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, "sh", "-c", command)
-	cmd.Dir = wd
-
-	return cmd.Output()
-}
-
-func TestFailConstructSecret(t *testing.T) {
-	secret := types.SecretArgs{
-		Name: "secret",
-		Commands: map[string]string{
-			"FAILURE": "false", // This will fail.
-		},
-		Type: "Opaque",
-	}
-	_, err := makeSecret(secret, ".")
-	if err == nil {
-		t.Fatalf("Expected failure.")
 	}
 }
 
