@@ -21,7 +21,7 @@ import (
 )
 
 func TestDataConfigValidation_NoName(t *testing.T) {
-	config := dataConfig{}
+	config := cMapFlagsAndArgs{}
 
 	if config.Validate([]string{}) == nil {
 		t.Fatal("Validation should fail if no name is specified")
@@ -29,7 +29,7 @@ func TestDataConfigValidation_NoName(t *testing.T) {
 }
 
 func TestDataConfigValidation_MoreThanOneName(t *testing.T) {
-	config := dataConfig{}
+	config := cMapFlagsAndArgs{}
 
 	if config.Validate([]string{"name", "othername"}) == nil {
 		t.Fatal("Validation should fail if more than one name is specified")
@@ -39,12 +39,12 @@ func TestDataConfigValidation_MoreThanOneName(t *testing.T) {
 func TestDataConfigValidation_Flags(t *testing.T) {
 	tests := []struct {
 		name       string
-		config     dataConfig
+		config     cMapFlagsAndArgs
 		shouldFail bool
 	}{
 		{
 			name: "env-file-source and literal are both set",
-			config: dataConfig{
+			config: cMapFlagsAndArgs{
 				LiteralSources: []string{"one", "two"},
 				EnvFileSource:  "three",
 			},
@@ -52,7 +52,7 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 		},
 		{
 			name: "env-file-source and from-file are both set",
-			config: dataConfig{
+			config: cMapFlagsAndArgs{
 				FileSources:   []string{"one", "two"},
 				EnvFileSource: "three",
 			},
@@ -60,12 +60,12 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 		},
 		{
 			name:       "we don't have any option set",
-			config:     dataConfig{},
+			config:     cMapFlagsAndArgs{},
 			shouldFail: true,
 		},
 		{
 			name: "we have from-file and literal ",
-			config: dataConfig{
+			config: cMapFlagsAndArgs{
 				LiteralSources: []string{"one", "two"},
 				FileSources:    []string{"three", "four"},
 			},
