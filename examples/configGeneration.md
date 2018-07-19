@@ -113,7 +113,7 @@ A cluster environment is created by
 running `kustomize build` on a [target] that happens to
 be an [overlay].
 
-[helloworld]: helloworld.md
+[helloworld]: helloWorld/README.md
 
 The following example will do that, but will focus on
 configMap construction, and not worry about how to
