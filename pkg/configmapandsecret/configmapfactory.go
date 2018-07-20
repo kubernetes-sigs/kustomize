@@ -27,6 +27,7 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/pkg/hash"
+	"github.com/kubernetes-sigs/kustomize/pkg/loader"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	"k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -39,16 +40,20 @@ import (
 type ConfigMapFactory struct {
 	args *types.ConfigMapArgs
 	fSys fs.FileSystem
+	ldr  loader.Loader
 }
 
 // NewConfigMapFactory returns a new ConfigMapFactory.
-func NewConfigMapFactory(args *types.ConfigMapArgs, fSys fs.FileSystem) *ConfigMapFactory {
-	return &ConfigMapFactory{args: args, fSys: fSys}
+func NewConfigMapFactory(
+	args *types.ConfigMapArgs,
+	fSys fs.FileSystem,
+	l loader.Loader) *ConfigMapFactory {
+	return &ConfigMapFactory{args: args, fSys: fSys, ldr: l}
 }
 
 // MakeUnstructAndGenerateName returns an configmap and the name appended with a hash.
 func (f *ConfigMapFactory) MakeUnstructAndGenerateName() (*unstructured.Unstructured, string, error) {
-	cm, err := f.MakeConfigMap()
+	cm, err := f.MakeConfigMap1()
 	if err != nil {
 		return nil, "", err
 	}
@@ -71,13 +76,18 @@ func objectToUnstructured(in runtime.Object) (*unstructured.Unstructured, error)
 	return &out, err
 }
 
-// MakeConfigMap returns a new ConfigMap, or nil and an error.
-func (f *ConfigMapFactory) MakeConfigMap() (*corev1.ConfigMap, error) {
+func (f *ConfigMapFactory) makeFreshConfigMap() *corev1.ConfigMap {
 	cm := &corev1.ConfigMap{}
 	cm.APIVersion = "v1"
 	cm.Kind = "ConfigMap"
 	cm.Name = f.args.Name
 	cm.Data = map[string]string{}
+	return cm
+}
+
+// MakeConfigMap1 returns a new ConfigMap, or nil and an error.
+func (f *ConfigMapFactory) MakeConfigMap1() (*corev1.ConfigMap, error) {
+	cm := f.makeFreshConfigMap()
 
 	if f.args.EnvSource != "" {
 		if err := f.handleConfigMapFromEnvFileSource(cm); err != nil {
@@ -94,13 +104,66 @@ func (f *ConfigMapFactory) MakeConfigMap() (*corev1.ConfigMap, error) {
 			return nil, err
 		}
 	}
-
 	return cm, nil
+}
+
+// MakeConfigMap2 returns a new ConfigMap, or nil and an error.
+// TODO: Get rid of the nearly duplicated code in MakeConfigMap1 vs MakeConfigMap2
+func (f *ConfigMapFactory) MakeConfigMap2() (*corev1.ConfigMap, error) {
+	var envPairs, literalPairs, filePairs []kvPair
+	var err error
+
+	cm := f.makeFreshConfigMap()
+
+	if f.args.EnvSource != "" {
+		envPairs, err = keyValuesFromEnvFile(f.ldr, f.args.EnvSource)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"error reading keys from env source file: %s %v",
+				f.args.EnvSource, err)
+		}
+	}
+
+	literalPairs, err = keyValuesFromLiteralSources(f.args.LiteralSources)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"error reading key values from literal sources: %v", err)
+	}
+
+	filePairs, err = keyValuesFromFileSources(f.ldr, f.args.FileSources)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"error reading key values from file sources: %v", err)
+	}
+
+	allPairs := append(append(envPairs, literalPairs...), filePairs...)
+
+	// merge key value pairs from all the sources
+	for _, kv := range allPairs {
+		err = addKV(cm.Data, kv)
+		if err != nil {
+			return nil, fmt.Errorf("error adding key in configmap: %v", err)
+		}
+	}
+	return cm, nil
+}
+
+func keyValuesFromLiteralSources(sources []string) ([]kvPair, error) {
+	var kvs []kvPair
+	for _, s := range sources {
+		k, v, err := ParseLiteralSource(s)
+		if err != nil {
+			return nil, err
+		}
+		kvs = append(kvs, kvPair{key: k, value: v})
+	}
+	return kvs, nil
 }
 
 // handleConfigMapFromLiteralSources adds the specified literal source
 // information into the provided configMap.
-func (f *ConfigMapFactory) handleConfigMapFromLiteralSources(configMap *v1.ConfigMap) error {
+func (f *ConfigMapFactory) handleConfigMapFromLiteralSources(
+	configMap *v1.ConfigMap) error {
 	for _, literalSource := range f.args.LiteralSources {
 		keyName, value, err := ParseLiteralSource(literalSource)
 		if err != nil {
@@ -112,6 +175,22 @@ func (f *ConfigMapFactory) handleConfigMapFromLiteralSources(configMap *v1.Confi
 		}
 	}
 	return nil
+}
+
+func keyValuesFromFileSources(ldr loader.Loader, sources []string) ([]kvPair, error) {
+	var kvs []kvPair
+	for _, s := range sources {
+		k, path, err := ParseFileSource(s)
+		if err != nil {
+			return nil, err
+		}
+		content, err := ldr.Load(path)
+		if err != nil {
+			return nil, err
+		}
+		kvs = append(kvs, kvPair{key: k, value: string(content)})
+	}
+	return kvs, nil
 }
 
 // handleConfigMapFromFileSources adds the specified file source information
@@ -152,6 +231,14 @@ func (f *ConfigMapFactory) handleConfigMapFromFileSources(configMap *v1.ConfigMa
 	return nil
 }
 
+func keyValuesFromEnvFile(l loader.Loader, path string) ([]kvPair, error) {
+	content, err := l.Load(path)
+	if err != nil {
+		return nil, err
+	}
+	return keyValuesFromLines(content)
+}
+
 // HandleConfigMapFromEnvFileSource adds the specified env file source information
 // into the provided configMap
 func (f *ConfigMapFactory) handleConfigMapFromEnvFileSource(configMap *v1.ConfigMap) error {
@@ -161,7 +248,6 @@ func (f *ConfigMapFactory) handleConfigMapFromEnvFileSource(configMap *v1.Config
 	if f.fSys.IsDir(f.args.EnvSource) {
 		return fmt.Errorf("env config file %s cannot be a directory", f.args.EnvSource)
 	}
-
 	return addFromEnvFile(f.args.EnvSource, func(key, value string) error {
 		return addKeyFromLiteralToConfigMap(configMap, key, value)
 	})
@@ -231,4 +317,19 @@ func ParseLiteralSource(source string) (keyName, value string, err error) {
 	}
 
 	return items[0], items[1], nil
+}
+
+// addKV adds key-value pair to the provided map.
+func addKV(m map[string]string, kv kvPair) error {
+	if errs := validation.IsConfigMapKey(kv.key); len(errs) != 0 {
+		return fmt.Errorf(
+			"%q is not a valid key name: %s",
+			kv.key, strings.Join(errs, ";"))
+	}
+	if _, exists := m[kv.key]; exists {
+		return fmt.Errorf(
+			"key %s already exists: %v", kv.key, m)
+	}
+	m[kv.key] = kv.value
+	return nil
 }

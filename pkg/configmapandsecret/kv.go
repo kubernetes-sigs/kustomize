@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package resmap
+package configmapandsecret
 
 import (
 	"bufio"
@@ -27,8 +27,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/validation"
 )
-
-var utf8bom = []byte{0xEF, 0xBB, 0xBF}
 
 // kvPair represents a key value pair.
 type kvPair struct {
