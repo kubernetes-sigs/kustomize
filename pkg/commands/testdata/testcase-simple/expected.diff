@@ -48,7 +48,7 @@ diff -u -N /tmp/noop/extensions_v1beta1_Deployment_mungebot.yaml /tmp/transforme
          - name: foo
            value: bar
 -        image: nginx
-+        image: nginx:1.7.9
++        image: nginx:1.8.0
          name: nginx
          ports:
          - containerPort: 80
