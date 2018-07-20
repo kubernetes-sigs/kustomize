@@ -180,7 +180,9 @@ func TestResources1(t *testing.T) {
 			}),
 	}
 	l := makeLoader1(t)
-	app, err := NewApplication(l, fs.MakeFakeFS())
+	fakeFs := fs.MakeFakeFS()
+	fakeFs.Mkdir("/")
+	app, err := NewApplication(l, fakeFs)
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
