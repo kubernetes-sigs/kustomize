@@ -46,9 +46,9 @@ type ConfigMapFactory struct {
 // NewConfigMapFactory returns a new ConfigMapFactory.
 func NewConfigMapFactory(
 	args *types.ConfigMapArgs,
-	fSys fs.FileSystem,
-	l loader.Loader) *ConfigMapFactory {
-	return &ConfigMapFactory{args: args, fSys: fSys, ldr: l}
+	l loader.Loader,
+	fSys fs.FileSystem) *ConfigMapFactory {
+	return &ConfigMapFactory{args: args, ldr: l, fSys: fSys}
 }
 
 // MakeUnstructAndGenerateName returns an configmap and the name appended with a hash.

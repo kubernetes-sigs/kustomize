@@ -103,7 +103,7 @@ func addConfigMap(k *types.Kustomization, flagsAndArgs cMapFlagsAndArgs, fSys fs
 		return err
 	}
 
-	factory := configmapandsecret.NewConfigMapFactory(cmArgs, fSys, nil)
+	factory := configmapandsecret.NewConfigMapFactory(cmArgs, nil, fSys)
 
 	// Validate by trying to create corev1.configmap.
 	_, _, err = factory.MakeUnstructAndGenerateName()
