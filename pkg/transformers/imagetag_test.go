@@ -39,14 +39,16 @@ func TestImageTagTransformer(t *testing.T) {
 				"spec": map[string]interface{}{
 					"template": map[string]interface{}{
 						"spec": map[string]interface{}{
+							"initContainers": []interface{}{
+								map[string]interface{}{
+									"name":  "nginx2",
+									"image": "my-nginx:1.8.0",
+								},
+							},
 							"containers": []interface{}{
 								map[string]interface{}{
 									"name":  "nginx",
 									"image": "nginx:1.7.9",
-								},
-								map[string]interface{}{
-									"name":  "nginx2",
-									"image": "my-nginx:1.8.0",
 								},
 							},
 						},
@@ -101,14 +103,16 @@ func TestImageTagTransformer(t *testing.T) {
 				"spec": map[string]interface{}{
 					"template": map[string]interface{}{
 						"spec": map[string]interface{}{
+							"initContainers": []interface{}{
+								map[string]interface{}{
+									"name":  "nginx2",
+									"image": "my-nginx:previous",
+								},
+							},
 							"containers": []interface{}{
 								map[string]interface{}{
 									"name":  "nginx",
 									"image": "nginx:v2",
-								},
-								map[string]interface{}{
-									"name":  "nginx2",
-									"image": "my-nginx:previous",
 								},
 							},
 						},
