@@ -21,3 +21,6 @@ secretGenerator:
     tls.crt: "cat secret/tls.cert"
     tls.key: "cat secret/tls.key"
   type: "kubernetes.io/tls"
+imageTags:
+- name: nginx
+  newTag: 1.8.0
