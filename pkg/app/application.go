@@ -146,7 +146,8 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromConfigMapArgs"))
 	}
-	secrets, err := resmap.NewResMapFromSecretArgs(a.loader.Root(), a.kustomization.SecretGenerator)
+	secrets, err := resmap.NewResMapFromSecretArgs(
+		a.loader.Root(), a.fSys, a.kustomization.SecretGenerator)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromSecretArgs"))
 	}
