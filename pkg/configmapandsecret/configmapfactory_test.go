@@ -136,8 +136,8 @@ func TestConstructConfigMap(t *testing.T) {
 	for _, tc := range testCases {
 		// TODO: all tests should use a FakeFs
 		fSys := fs.MakeRealFS()
-		f := NewConfigMapFactory(&tc.input, fSys)
-		cm, err := f.MakeConfigMap()
+		f := NewConfigMapFactory(&tc.input, fSys, nil)
+		cm, err := f.MakeConfigMap1()
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
