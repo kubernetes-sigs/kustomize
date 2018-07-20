@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/pkg/internal/loadertest"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
@@ -130,7 +131,7 @@ BAR=baz
 		if ferr := l.AddFile(tc.filepath, []byte(tc.content)); ferr != nil {
 			t.Fatalf("Error adding fake file: %v\n", ferr)
 		}
-		r, err := NewResMapFromConfigMapArgs(l, tc.input)
+		r, err := NewResMapFromConfigMapArgs(l, fs.MakeFakeFS(), tc.input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
