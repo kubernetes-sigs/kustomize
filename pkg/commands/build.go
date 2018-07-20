@@ -69,8 +69,8 @@ func (o *buildOptions) Validate(args []string) error {
 }
 
 // RunBuild runs build command.
-func (o *buildOptions) RunBuild(out io.Writer, fs fs.FileSystem) error {
-	l := loader.Init([]loader.SchemeLoader{loader.NewFileLoader(fs)})
+func (o *buildOptions) RunBuild(out io.Writer, fSys fs.FileSystem) error {
+	l := loader.Init([]loader.SchemeLoader{loader.NewFileLoader(fSys)})
 
 	absPath, err := filepath.Abs(o.kustomizationPath)
 	if err != nil {
@@ -82,7 +82,7 @@ func (o *buildOptions) RunBuild(out io.Writer, fs fs.FileSystem) error {
 		return err
 	}
 
-	application, err := app.NewApplication(rootLoader)
+	application, err := app.NewApplication(rootLoader, fSys)
 	if err != nil {
 		return err
 	}
