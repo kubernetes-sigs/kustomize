@@ -55,15 +55,25 @@ func (pt *imageTagTransformer) Transform(resources resmap.ResMap) error {
  then loops though all images inside containers session, finds matched ones and update the tag name
 */
 func (pt *imageTagTransformer) findAndReplaceTag(obj map[string]interface{}) error {
-	_, found := obj["containers"]
-	if found {
-		return pt.updateContainers(obj)
+	paths := []string{"containers", "initContainers"}
+	found := false
+	for _, path := range paths {
+		_, found = obj[path]
+		if found {
+			err := pt.updateContainers(obj, path)
+			if err != nil {
+				return err
+			}
+		}
 	}
-	return pt.findContainers(obj)
+	if !found {
+		return pt.findContainers(obj)
+	}
+	return nil
 }
 
-func (pt *imageTagTransformer) updateContainers(obj map[string]interface{}) error {
-	containers := obj["containers"].([]interface{})
+func (pt *imageTagTransformer) updateContainers(obj map[string]interface{}, path string) error {
+	containers := obj[path].([]interface{})
 	for i := range containers {
 		container := containers[i].(map[string]interface{})
 		image, found := container["image"]
