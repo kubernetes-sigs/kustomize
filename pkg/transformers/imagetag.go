@@ -76,9 +76,7 @@ func (pt *imageTagTransformer) updateContainers(obj map[string]interface{}) erro
 				break
 			}
 		}
-		containers[i] = container
 	}
-	obj["containers"] = containers
 	return nil
 }
 
@@ -100,7 +98,6 @@ func (pt *imageTagTransformer) findContainers(obj map[string]interface{}) error 
 						return err
 					}
 				}
-				typedV[i] = typedItem
 			}
 		}
 	}
@@ -109,8 +106,5 @@ func (pt *imageTagTransformer) findContainers(obj map[string]interface{}) error 
 
 func isImageMatched(s, t string) bool {
 	imagetag := strings.Split(s, ":")
-	if len(imagetag) >= 1 {
-		return imagetag[0] == t
-	}
-	return false
+	return len(imagetag) >= 1 && imagetag[0] == t
 }
