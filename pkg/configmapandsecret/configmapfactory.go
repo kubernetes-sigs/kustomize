@@ -180,11 +180,11 @@ func (f *ConfigMapFactory) handleConfigMapFromLiteralSources(
 func keyValuesFromFileSources(ldr loader.Loader, sources []string) ([]kvPair, error) {
 	var kvs []kvPair
 	for _, s := range sources {
-		k, path, err := ParseFileSource(s)
+		k, fPath, err := ParseFileSource(s)
 		if err != nil {
 			return nil, err
 		}
-		content, err := ldr.Load(path)
+		content, err := ldr.Load(fPath)
 		if err != nil {
 			return nil, err
 		}
