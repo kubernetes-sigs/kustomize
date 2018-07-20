@@ -169,11 +169,20 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 	if len(errs.Get()) > 0 {
 		return nil, errs
 	}
+
+	var r []transformers.Transformer
 	t, err := a.newTransformer(patches)
 	if err != nil {
 		return nil, err
 	}
-	err = t.Transform(result)
+	r = append(r, t)
+	t, err = transformers.NewImageTagTransformer(a.kustomization.ImageTags)
+	if err != nil {
+		return nil, err
+	}
+	r = append(r, t)
+
+	err = transformers.NewMultiTransformer(r).Transform(result)
 	if err != nil {
 		return nil, err
 	}
