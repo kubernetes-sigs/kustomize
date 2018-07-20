@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/pkg/internal/loadertest"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
@@ -179,7 +180,7 @@ func TestResources1(t *testing.T) {
 			}),
 	}
 	l := makeLoader1(t)
-	app, err := NewApplication(l)
+	app, err := NewApplication(l, fs.MakeFakeFS())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
@@ -214,7 +215,7 @@ func TestRawResources1(t *testing.T) {
 			}),
 	}
 	l := makeLoader1(t)
-	app, err := NewApplication(l)
+	app, err := NewApplication(l, fs.MakeFakeFS())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
@@ -324,7 +325,7 @@ func TestRawResources2(t *testing.T) {
 			}),
 	}
 	l := makeLoader2(t)
-	app, err := NewApplication(l)
+	app, err := NewApplication(l, fs.MakeFakeFS())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
