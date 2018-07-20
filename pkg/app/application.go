@@ -28,6 +28,7 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/crds"
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	interror "github.com/kubernetes-sigs/kustomize/pkg/internal/error"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
@@ -44,10 +45,11 @@ import (
 type Application struct {
 	kustomization *types.Kustomization
 	loader        loader.Loader
+	fSys          fs.FileSystem
 }
 
 // NewApplication returns a new instance of Application primed with a Loader.
-func NewApplication(loader loader.Loader) (*Application, error) {
+func NewApplication(loader loader.Loader, fSys fs.FileSystem) (*Application, error) {
 	content, err := loader.Load(constants.KustomizationFileName)
 	if err != nil {
 		return nil, err
@@ -58,7 +60,7 @@ func NewApplication(loader loader.Loader) (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Application{kustomization: &m, loader: loader}, nil
+	return &Application{kustomization: &m, loader: loader, fSys: fSys}, nil
 }
 
 func unmarshal(y []byte, o interface{}) error {
@@ -139,7 +141,8 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 		errs.Append(errors.Wrap(err, "RegisterCRDs"))
 	}
 
-	cms, err := resmap.NewResMapFromConfigMapArgs(a.loader, a.kustomization.ConfigMapGenerator)
+	cms, err := resmap.NewResMapFromConfigMapArgs(
+		a.loader, a.fSys, a.kustomization.ConfigMapGenerator)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromConfigMapArgs"))
 	}
@@ -200,7 +203,7 @@ func (a *Application) loadCustomizedBases() (resmap.ResMap, *interror.Kustomizat
 			errs.Append(errors.Wrap(err, "couldn't make ldr for "+path))
 			continue
 		}
-		app, err := NewApplication(ldr)
+		app, err := NewApplication(ldr, a.fSys)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "couldn't make app for "+path))
 			continue
@@ -228,7 +231,7 @@ func (a *Application) loadBasesAsFlatList() ([]*Application, error) {
 			errs.Append(err)
 			continue
 		}
-		a, err := NewApplication(ldr)
+		a, err := NewApplication(ldr, a.fSys)
 		if err != nil {
 			errs.Append(err)
 			continue
