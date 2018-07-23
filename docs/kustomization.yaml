@@ -184,3 +184,19 @@ vars:
       apiVersion: apps/v1
     fieldref:
       fieldpath: spec.template.spec.restartPolicy
+
+# ImageTags modify the tags for images without creating patches.
+# E.g. Given this fragment of a Deployment:
+# ```
+#  containers:
+#    - name: myapp
+#      image: mycontainerregistry/myimage:v0
+#    - name: nginxapp
+#      image: nginx:1.7.9
+#```
+# one can change the tag of myimage to v1 and the tag of nginx to 1.8.0 with the following:
+imageTags:
+  - name: mycontainerregistry/myimage
+    newTag: v1
+  - name: nginx
+    newTag: 1.8.0
