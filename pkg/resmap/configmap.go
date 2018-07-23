@@ -18,8 +18,6 @@ package resmap
 
 import (
 	"github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret"
-	"github.com/kubernetes-sigs/kustomize/pkg/fs"
-	"github.com/kubernetes-sigs/kustomize/pkg/loader"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 )
@@ -27,16 +25,14 @@ import (
 // NewResMapFromConfigMapArgs returns a Resource slice given
 // a configmap metadata slice from kustomization file.
 func NewResMapFromConfigMapArgs(
-	ldr loader.Loader,
-	fSys fs.FileSystem,
+	f *configmapandsecret.ConfigMapFactory,
 	cmArgsList []types.ConfigMapArgs) (ResMap, error) {
 	var allResources []*resource.Resource
 	for _, cmArgs := range cmArgsList {
 		if cmArgs.Behavior == "" {
 			cmArgs.Behavior = "create"
 		}
-		f := configmapandsecret.NewConfigMapFactory(&cmArgs, ldr, fSys)
-		cm, err := f.MakeConfigMap2()
+		cm, err := f.MakeConfigMap2(&cmArgs)
 		if err != nil {
 			return nil, err
 		}
