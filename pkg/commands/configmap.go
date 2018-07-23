@@ -59,9 +59,10 @@ func newCmdAddConfigMap(fSys fs.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
-
 			// Add the flagsAndArgs map to the kustomization file.
-			err = addConfigMap(kustomization, flagsAndArgs, fSys)
+			err = addConfigMap(
+				kustomization, flagsAndArgs,
+				configmapandsecret.NewConfigMapFactory(fSys, nil))
 			if err != nil {
 				return err
 			}
@@ -93,24 +94,22 @@ func newCmdAddConfigMap(fSys fs.FileSystem) *cobra.Command {
 }
 
 // addConfigMap adds a configmap to a kustomization file.
-// Note: error may leave kustomization file in an undefined state. Suggest passing a copy
-// of kustomization file.
-func addConfigMap(k *types.Kustomization, flagsAndArgs cMapFlagsAndArgs, fSys fs.FileSystem) error {
+// Note: error may leave kustomization file in an undefined state.
+// Suggest passing a copy of kustomization file.
+func addConfigMap(
+	k *types.Kustomization,
+	flagsAndArgs cMapFlagsAndArgs,
+	factory *configmapandsecret.ConfigMapFactory) error {
 	cmArgs := makeConfigMapArgs(k, flagsAndArgs.Name)
-
 	err := mergeFlagsIntoCmArgs(&cmArgs.DataSources, flagsAndArgs)
 	if err != nil {
 		return err
 	}
-
-	factory := configmapandsecret.NewConfigMapFactory(cmArgs, nil, fSys)
-
 	// Validate by trying to create corev1.configmap.
-	_, _, err = factory.MakeUnstructAndGenerateName()
+	_, _, err = factory.MakeUnstructAndGenerateName(cmArgs)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

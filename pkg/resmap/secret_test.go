@@ -21,6 +21,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
@@ -43,7 +44,8 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	}
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir(".")
-	actual, err := NewResMapFromSecretArgs(".", fakeFs, secrets)
+	actual, err := NewResMapFromSecretArgs(
+		configmapandsecret.NewSecretFactory(fakeFs, "."), secrets)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
