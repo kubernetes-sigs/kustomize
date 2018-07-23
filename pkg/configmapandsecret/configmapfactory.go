@@ -38,22 +38,20 @@ import (
 
 // ConfigMapFactory makes ConfigMaps.
 type ConfigMapFactory struct {
-	args *types.ConfigMapArgs
 	fSys fs.FileSystem
 	ldr  loader.Loader
 }
 
 // NewConfigMapFactory returns a new ConfigMapFactory.
 func NewConfigMapFactory(
-	args *types.ConfigMapArgs,
-	l loader.Loader,
-	fSys fs.FileSystem) *ConfigMapFactory {
-	return &ConfigMapFactory{args: args, ldr: l, fSys: fSys}
+	fSys fs.FileSystem, l loader.Loader) *ConfigMapFactory {
+	return &ConfigMapFactory{fSys: fSys, ldr: l}
 }
 
 // MakeUnstructAndGenerateName returns an configmap and the name appended with a hash.
-func (f *ConfigMapFactory) MakeUnstructAndGenerateName() (*unstructured.Unstructured, string, error) {
-	cm, err := f.MakeConfigMap1()
+func (f *ConfigMapFactory) MakeUnstructAndGenerateName(
+	args *types.ConfigMapArgs) (*unstructured.Unstructured, string, error) {
+	cm, err := f.MakeConfigMap1(args)
 	if err != nil {
 		return nil, "", err
 	}
@@ -76,31 +74,32 @@ func objectToUnstructured(in runtime.Object) (*unstructured.Unstructured, error)
 	return &out, err
 }
 
-func (f *ConfigMapFactory) makeFreshConfigMap() *corev1.ConfigMap {
+func (f *ConfigMapFactory) makeFreshConfigMap(
+	args *types.ConfigMapArgs) *corev1.ConfigMap {
 	cm := &corev1.ConfigMap{}
 	cm.APIVersion = "v1"
 	cm.Kind = "ConfigMap"
-	cm.Name = f.args.Name
+	cm.Name = args.Name
 	cm.Data = map[string]string{}
 	return cm
 }
 
 // MakeConfigMap1 returns a new ConfigMap, or nil and an error.
-func (f *ConfigMapFactory) MakeConfigMap1() (*corev1.ConfigMap, error) {
-	cm := f.makeFreshConfigMap()
-
-	if f.args.EnvSource != "" {
-		if err := f.handleConfigMapFromEnvFileSource(cm); err != nil {
+func (f *ConfigMapFactory) MakeConfigMap1(
+	args *types.ConfigMapArgs) (*corev1.ConfigMap, error) {
+	cm := f.makeFreshConfigMap(args)
+	if args.EnvSource != "" {
+		if err := f.handleConfigMapFromEnvFileSource(cm, args); err != nil {
 			return nil, err
 		}
 	}
-	if f.args.FileSources != nil {
-		if err := f.handleConfigMapFromFileSources(cm); err != nil {
+	if args.FileSources != nil {
+		if err := f.handleConfigMapFromFileSources(cm, args); err != nil {
 			return nil, err
 		}
 	}
-	if f.args.LiteralSources != nil {
-		if err := f.handleConfigMapFromLiteralSources(cm); err != nil {
+	if args.LiteralSources != nil {
+		if err := f.handleConfigMapFromLiteralSources(cm, args); err != nil {
 			return nil, err
 		}
 	}
@@ -109,35 +108,30 @@ func (f *ConfigMapFactory) MakeConfigMap1() (*corev1.ConfigMap, error) {
 
 // MakeConfigMap2 returns a new ConfigMap, or nil and an error.
 // TODO: Get rid of the nearly duplicated code in MakeConfigMap1 vs MakeConfigMap2
-func (f *ConfigMapFactory) MakeConfigMap2() (*corev1.ConfigMap, error) {
+func (f *ConfigMapFactory) MakeConfigMap2(
+	args *types.ConfigMapArgs) (*corev1.ConfigMap, error) {
 	var envPairs, literalPairs, filePairs []kvPair
 	var err error
-
-	cm := f.makeFreshConfigMap()
-
-	if f.args.EnvSource != "" {
-		envPairs, err = keyValuesFromEnvFile(f.ldr, f.args.EnvSource)
+	cm := f.makeFreshConfigMap(args)
+	if args.EnvSource != "" {
+		envPairs, err = keyValuesFromEnvFile(f.ldr, args.EnvSource)
 		if err != nil {
 			return nil, fmt.Errorf(
 				"error reading keys from env source file: %s %v",
-				f.args.EnvSource, err)
+				args.EnvSource, err)
 		}
 	}
-
-	literalPairs, err = keyValuesFromLiteralSources(f.args.LiteralSources)
+	literalPairs, err = keyValuesFromLiteralSources(args.LiteralSources)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"error reading key values from literal sources: %v", err)
 	}
-
-	filePairs, err = keyValuesFromFileSources(f.ldr, f.args.FileSources)
+	filePairs, err = keyValuesFromFileSources(f.ldr, args.FileSources)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"error reading key values from file sources: %v", err)
 	}
-
 	allPairs := append(append(envPairs, literalPairs...), filePairs...)
-
 	// merge key value pairs from all the sources
 	for _, kv := range allPairs {
 		err = addKV(cm.Data, kv)
@@ -163,8 +157,8 @@ func keyValuesFromLiteralSources(sources []string) ([]kvPair, error) {
 // handleConfigMapFromLiteralSources adds the specified literal source
 // information into the provided configMap.
 func (f *ConfigMapFactory) handleConfigMapFromLiteralSources(
-	configMap *v1.ConfigMap) error {
-	for _, literalSource := range f.args.LiteralSources {
+	configMap *v1.ConfigMap, args *types.ConfigMapArgs) error {
+	for _, literalSource := range args.LiteralSources {
 		keyName, value, err := ParseLiteralSource(literalSource)
 		if err != nil {
 			return err
@@ -195,8 +189,9 @@ func keyValuesFromFileSources(ldr loader.Loader, sources []string) ([]kvPair, er
 
 // handleConfigMapFromFileSources adds the specified file source information
 // into the provided configMap
-func (f *ConfigMapFactory) handleConfigMapFromFileSources(configMap *v1.ConfigMap) error {
-	for _, fileSource := range f.args.FileSources {
+func (f *ConfigMapFactory) handleConfigMapFromFileSources(
+	configMap *v1.ConfigMap, args *types.ConfigMapArgs) error {
+	for _, fileSource := range args.FileSources {
 		keyName, filePath, err := ParseFileSource(fileSource)
 		if err != nil {
 			return err
@@ -241,14 +236,15 @@ func keyValuesFromEnvFile(l loader.Loader, path string) ([]kvPair, error) {
 
 // HandleConfigMapFromEnvFileSource adds the specified env file source information
 // into the provided configMap
-func (f *ConfigMapFactory) handleConfigMapFromEnvFileSource(configMap *v1.ConfigMap) error {
-	if !f.fSys.Exists(f.args.EnvSource) {
-		return fmt.Errorf("unable to read configmap env file %s", f.args.EnvSource)
+func (f *ConfigMapFactory) handleConfigMapFromEnvFileSource(
+	configMap *v1.ConfigMap, args *types.ConfigMapArgs) error {
+	if !f.fSys.Exists(args.EnvSource) {
+		return fmt.Errorf("unable to read configmap env file %s", args.EnvSource)
 	}
-	if f.fSys.IsDir(f.args.EnvSource) {
-		return fmt.Errorf("env config file %s cannot be a directory", f.args.EnvSource)
+	if f.fSys.IsDir(args.EnvSource) {
+		return fmt.Errorf("env config file %s cannot be a directory", args.EnvSource)
 	}
-	return addFromEnvFile(f.args.EnvSource, func(key, value string) error {
+	return addFromEnvFile(args.EnvSource, func(key, value string) error {
 		return addKeyFromLiteralToConfigMap(configMap, key, value)
 	})
 }
