@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/pkg/internal/loadertest"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
@@ -39,6 +40,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 	}
 
 	l := loadertest.NewFakeLoader("/home/seans/project/")
+	f := configmapandsecret.NewConfigMapFactory(fs.MakeFakeFS(), l)
 	testCases := []testCase{
 		{
 			description: "construct config map from env",
@@ -127,11 +129,10 @@ BAR=baz
 	}
 
 	for _, tc := range testCases {
-
 		if ferr := l.AddFile(tc.filepath, []byte(tc.content)); ferr != nil {
 			t.Fatalf("Error adding fake file: %v\n", ferr)
 		}
-		r, err := NewResMapFromConfigMapArgs(l, fs.MakeFakeFS(), tc.input)
+		r, err := NewResMapFromConfigMapArgs(f, tc.input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
