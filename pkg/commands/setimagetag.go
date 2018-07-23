@@ -58,10 +58,6 @@ and overwrite the previous newTag if the image name exists.
 			if err != nil {
 				return err
 			}
-			err = o.Complete(cmd, args)
-			if err != nil {
-				return err
-			}
 			return o.RunSetImageTags(fsys)
 		},
 	}
@@ -81,11 +77,6 @@ func (o *setImageTagOptions) Validate(args []string) error {
 		}
 		o.imageTagMap[imagetag[0]] = imagetag[1]
 	}
-	return nil
-}
-
-// Complete completes setImageTag command.
-func (o *setImageTagOptions) Complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
