@@ -26,6 +26,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 
+	"github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret"
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/crds"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
@@ -44,13 +45,13 @@ import (
 // https://github.com/kubernetes-sigs/kustomize/blob/master/docs/glossary.md#target
 type Application struct {
 	kustomization *types.Kustomization
-	loader        loader.Loader
+	ldr           loader.Loader
 	fSys          fs.FileSystem
 }
 
 // NewApplication returns a new instance of Application primed with a Loader.
-func NewApplication(loader loader.Loader, fSys fs.FileSystem) (*Application, error) {
-	content, err := loader.Load(constants.KustomizationFileName)
+func NewApplication(ldr loader.Loader, fSys fs.FileSystem) (*Application, error) {
+	content, err := ldr.Load(constants.KustomizationFileName)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +61,8 @@ func NewApplication(loader loader.Loader, fSys fs.FileSystem) (*Application, err
 	if err != nil {
 		return nil, err
 	}
-	return &Application{kustomization: &m, loader: loader, fSys: fSys}, nil
+
+	return &Application{kustomization: &m, ldr: ldr, fSys: fSys}, nil
 }
 
 func unmarshal(y []byte, o interface{}) error {
@@ -136,18 +138,19 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 	if err != nil {
 		errs.Append(errors.Wrap(err, "loadResMapFromBasesAndResources"))
 	}
-	err = crds.RegisterCRDs(a.loader, a.kustomization.CRDs)
+	err = crds.RegisterCRDs(a.ldr, a.kustomization.CRDs)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "RegisterCRDs"))
 	}
-
 	cms, err := resmap.NewResMapFromConfigMapArgs(
-		a.loader, a.fSys, a.kustomization.ConfigMapGenerator)
+		configmapandsecret.NewConfigMapFactory(a.fSys, a.ldr),
+		a.kustomization.ConfigMapGenerator)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromConfigMapArgs"))
 	}
 	secrets, err := resmap.NewResMapFromSecretArgs(
-		a.loader.Root(), a.fSys, a.kustomization.SecretGenerator)
+		configmapandsecret.NewSecretFactory(a.fSys, a.ldr.Root()),
+		a.kustomization.SecretGenerator)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromSecretArgs"))
 	}
@@ -161,7 +164,7 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 		return nil, err
 	}
 
-	patches, err := resmap.NewResourceSliceFromPatches(a.loader, a.kustomization.Patches)
+	patches, err := resmap.NewResourceSliceFromPatches(a.ldr, a.kustomization.Patches)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResourceSliceFromPatches"))
 	}
@@ -192,7 +195,7 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 // Gets Bases and Resources as advertised.
 func (a *Application) loadResMapFromBasesAndResources() (resmap.ResMap, error) {
 	bases, errs := a.loadCustomizedBases()
-	resources, err := resmap.NewResMapFromFiles(a.loader, a.kustomization.Resources)
+	resources, err := resmap.NewResMapFromFiles(a.ldr, a.kustomization.Resources)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "rawResources failed to read Resources"))
 	}
@@ -208,7 +211,7 @@ func (a *Application) loadCustomizedBases() (resmap.ResMap, *interror.Kustomizat
 	var list []resmap.ResMap
 	errs := &interror.KustomizationErrors{}
 	for _, path := range a.kustomization.Bases {
-		ldr, err := a.loader.New(path)
+		ldr, err := a.ldr.New(path)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "couldn't make ldr for "+path))
 			continue
@@ -236,7 +239,7 @@ func (a *Application) loadBasesAsFlatList() ([]*Application, error) {
 	var result []*Application
 	errs := &interror.KustomizationErrors{}
 	for _, path := range a.kustomization.Bases {
-		ldr, err := a.loader.New(path)
+		ldr, err := a.ldr.New(path)
 		if err != nil {
 			errs.Append(err)
 			continue

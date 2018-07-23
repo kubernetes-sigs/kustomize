@@ -18,20 +18,19 @@ package resmap
 
 import (
 	"github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret"
-	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	"github.com/pkg/errors"
 )
 
-// NewResMapFromSecretArgs takes a SecretArgs slice and executes its command in directory
-// wd then writes the output to a Resource slice and return it.
+// NewResMapFromSecretArgs takes a SecretArgs slice, generates
+// secrets from each entry, and accumulates them in a ResMap.
 func NewResMapFromSecretArgs(
-	wd string, fSys fs.FileSystem,
+	f *configmapandsecret.SecretFactory,
 	secretList []types.SecretArgs) (ResMap, error) {
 	var allResources []*resource.Resource
 	for _, args := range secretList {
-		s, err := configmapandsecret.NewSecretFactory(args, fSys).MakeSecret(wd)
+		s, err := f.MakeSecret(args)
 		if err != nil {
 			return nil, errors.Wrap(err, "makeSecret")
 		}
