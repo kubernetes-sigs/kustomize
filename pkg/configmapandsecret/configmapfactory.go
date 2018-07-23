@@ -19,7 +19,6 @@ package configmapandsecret
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"path"
@@ -29,6 +28,7 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/hash"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
+	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -99,7 +99,7 @@ func (f *ConfigMapFactory) MakeConfigMap1(
 		}
 	}
 	if args.LiteralSources != nil {
-		if err := f.handleConfigMapFromLiteralSources(cm, args); err != nil {
+		if err := f.handleConfigMapFromLiteralSources(cm, args.LiteralSources); err != nil {
 			return nil, err
 		}
 	}
@@ -110,33 +110,36 @@ func (f *ConfigMapFactory) MakeConfigMap1(
 // TODO: Get rid of the nearly duplicated code in MakeConfigMap1 vs MakeConfigMap2
 func (f *ConfigMapFactory) MakeConfigMap2(
 	args *types.ConfigMapArgs) (*corev1.ConfigMap, error) {
-	var envPairs, literalPairs, filePairs []kvPair
+	var all []kvPair
 	var err error
 	cm := f.makeFreshConfigMap(args)
-	if args.EnvSource != "" {
-		envPairs, err = keyValuesFromEnvFile(f.ldr, args.EnvSource)
-		if err != nil {
-			return nil, fmt.Errorf(
-				"error reading keys from env source file: %s %v",
-				args.EnvSource, err)
-		}
-	}
-	literalPairs, err = keyValuesFromLiteralSources(args.LiteralSources)
+
+	pairs, err := keyValuesFromEnvFile(f.ldr, args.EnvSource)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"error reading key values from literal sources: %v", err)
+		return nil, errors.Wrap(err, fmt.Sprintf(
+			"env source file: %s",
+			args.EnvSource))
 	}
-	filePairs, err = keyValuesFromFileSources(f.ldr, args.FileSources)
+	all = append(all, pairs...)
+
+	pairs, err = keyValuesFromLiteralSources(args.LiteralSources)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"error reading key values from file sources: %v", err)
+		return nil, errors.Wrap(err, fmt.Sprintf(
+			"literal sources %v", args.LiteralSources))
 	}
-	allPairs := append(append(envPairs, literalPairs...), filePairs...)
-	// merge key value pairs from all the sources
-	for _, kv := range allPairs {
-		err = addKV(cm.Data, kv)
+	all = append(all, pairs...)
+
+	pairs, err = keyValuesFromFileSources(f.ldr, args.FileSources)
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf(
+			"file sources: %v", args.FileSources))
+	}
+	all = append(all, pairs...)
+
+	for _, kv := range all {
+		err = addKeyFromLiteralToConfigMap(cm, kv.key, kv.value)
 		if err != nil {
-			return nil, fmt.Errorf("error adding key in configmap: %v", err)
+			return nil, err
 		}
 	}
 	return cm, nil
@@ -157,13 +160,13 @@ func keyValuesFromLiteralSources(sources []string) ([]kvPair, error) {
 // handleConfigMapFromLiteralSources adds the specified literal source
 // information into the provided configMap.
 func (f *ConfigMapFactory) handleConfigMapFromLiteralSources(
-	configMap *v1.ConfigMap, args *types.ConfigMapArgs) error {
-	for _, literalSource := range args.LiteralSources {
-		keyName, value, err := ParseLiteralSource(literalSource)
+	configMap *v1.ConfigMap, sources []string) error {
+	for _, s := range sources {
+		k, v, err := ParseLiteralSource(s)
 		if err != nil {
 			return err
 		}
-		err = addKeyFromLiteralToConfigMap(configMap, keyName, value)
+		err = addKeyFromLiteralToConfigMap(configMap, k, v)
 		if err != nil {
 			return err
 		}
@@ -227,6 +230,9 @@ func (f *ConfigMapFactory) handleConfigMapFromFileSources(
 }
 
 func keyValuesFromEnvFile(l loader.Loader, path string) ([]kvPair, error) {
+	if path == "" {
+		return nil, nil
+	}
 	content, err := l.Load(path)
 	if err != nil {
 		return nil, err
@@ -313,19 +319,4 @@ func ParseLiteralSource(source string) (keyName, value string, err error) {
 	}
 
 	return items[0], items[1], nil
-}
-
-// addKV adds key-value pair to the provided map.
-func addKV(m map[string]string, kv kvPair) error {
-	if errs := validation.IsConfigMapKey(kv.key); len(errs) != 0 {
-		return fmt.Errorf(
-			"%q is not a valid key name: %s",
-			kv.key, strings.Join(errs, ";"))
-	}
-	if _, exists := m[kv.key]; exists {
-		return fmt.Errorf(
-			"key %s already exists: %v", kv.key, m)
-	}
-	m[kv.key] = kv.value
-	return nil
 }
