@@ -4,7 +4,7 @@ project_name: kustomize
 builds:
 - main: ./kustomize.go
   binary: kustomize
-  ldflags: -s -X github.com/kubernetes-sigs/kustomize/version.kustomizeVersion={{.Version}} -X github.com/kubernetes-sigs/kustomize/version.gitCommit={{.Commit}} -X github.com/kubernetes-sigs/kustomize/version.buildDate={{.Date}}
+  ldflags: -s -X github.com/kubernetes-sigs/kustomize/pkg/commands.kustomizeVersion={{.Version}} -X github.com/kubernetes-sigs/kustomize/pkg/commands.gitCommit={{.Commit}} -X github.com/kubernetes-sigs/kustomize/pkg/commands.buildDate={{.Date}}
   goos:
   - darwin
   - linux
