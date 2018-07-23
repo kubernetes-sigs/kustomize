@@ -44,8 +44,9 @@ func TestDiff(t *testing.T) {
 	const updateEnvVar = "UPDATE_KUSTOMIZE_EXPECTED_DATA"
 	updateKustomizeExpected := os.Getenv(updateEnvVar) == "true"
 
-	noopDir, _ := regexp.Compile(`/tmp/noop-[0-9]*/`)
-	transformedDir, _ := regexp.Compile(`/tmp/transformed-[0-9]*/`)
+	tempDir := regexp.QuoteMeta(filepath.Clean(os.TempDir()))
+	noopDir, _ := regexp.Compile(tempDir + `/noop-[0-9]*/`)
+	transformedDir, _ := regexp.Compile(tempDir + `/transformed-[0-9]*/`)
 	timestamp, _ := regexp.Compile(`[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) (2[0-3]|[01][0-9]):[0-5][0-9]:[0-5][0-9].[0-9]* [+-]{1}[0-9]{4}`)
 
 	fs := fs.MakeRealFS()
