@@ -23,9 +23,12 @@ go get github.com/kubernetes-sigs/kustomize
  * [springboot](springboot/README.md) - Create a Spring Boot
    application production configuration from scratch.
 
- * [configGeneration](configGeneration.md) -
+ * [combineConfigs](combineConfigs.md) -
    Mixing configuration data from different owners
    (e.g. devops/SRE and developers).
+   
+ * [configGenerations](configGeneration.md) -
+   Rolling update when ConfigMapGenerator changes
 
  * [breakfast](breakfast.md) - Customize breakfast for
    Alice and Bob.
