@@ -123,6 +123,7 @@ func newCmdSet(fsys fs.FileSystem) *cobra.Command {
 
 	c.AddCommand(
 		newCmdSetNamePrefix(fsys),
+		newCmdSetImageTag(fsys),
 	)
 	return c
 }
