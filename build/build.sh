@@ -56,4 +56,4 @@ case $key in
 esac
 done
 
-/goreleaser release --config=build/goreleaser.yml --rm-dist --skip-validate ${SNAPSHOT}
+/goreleaser release --config=build/goreleaser.yaml --rm-dist --skip-validate ${SNAPSHOT}
