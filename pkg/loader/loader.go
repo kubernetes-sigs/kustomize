@@ -19,10 +19,9 @@ package loader
 
 import "fmt"
 
-// Loader interface exposes methods to read bytes in a scheme-agnostic manner.
-// The Loader encapsulating a root location to calculate where to read from.
+// Loader interface exposes methods to read bytes.
 type Loader interface {
-	// Root returns the scheme-specific string representing the root location for this Loader.
+	// Root returns the root location for this Loader.
 	Root() string
 	// New returns Loader located at newRoot.
 	New(newRoot string) (Loader, error)
@@ -32,33 +31,20 @@ type Loader interface {
 	GlobLoad(location string) (map[string][]byte, error)
 }
 
-// Private implmentation of Loader interface.
+// Private implementation of Loader interface.
 type loaderImpl struct {
 	root    string
-	schemes []SchemeLoader
-}
-
-// SchemeLoader is the interface for different types of loaders (e.g. fileLoader, httpLoader, etc.)
-type SchemeLoader interface {
-	// Does this location correspond to this scheme.
-	IsScheme(root string, location string) bool
-	// Combines the root and path into a full location string.
-	FullLocation(root string, path string) (string, error)
-	// Load bytes at scheme-specific location or an error.
-	Load(location string) ([]byte, error)
-	// GlobLoad returns the bytes read from a glob path or an error.
-	GlobLoad(location string) (map[string][]byte, error)
+	fLoader *FileLoader
 }
 
 const emptyRoot = ""
 
-// Init initializes the first loader with the supported schemes.
-// Example schemes: fileLoader, httpLoader, gitLoader.
-func Init(schemes []SchemeLoader) Loader {
-	return &loaderImpl{root: emptyRoot, schemes: schemes}
+// NewLoader initializes the first loader with the supported fLoader.
+func NewLoader(fl *FileLoader) Loader {
+	return &loaderImpl{root: emptyRoot, fLoader: fl}
 }
 
-// Root returns the scheme-specific root location for this Loader.
+// Root returns the root location for this Loader.
 func (l *loaderImpl) Root() string {
 	return l.root
 }
@@ -69,53 +55,35 @@ func (l *loaderImpl) Root() string {
 // Example: "/home/seans/project" or "/home/seans/project/"
 // NOT "/home/seans/project/file.yaml".
 func (l *loaderImpl) New(newRoot string) (Loader, error) {
-	scheme, err := l.getSchemeLoader(newRoot)
+	if !l.fLoader.IsAbsPath(l.root, newRoot) {
+		return nil, fmt.Errorf("Not abs path: l.root='%s', loc='%s'\n", l.root, newRoot)
+	}
+	root, err := l.fLoader.FullLocation(l.root, newRoot)
 	if err != nil {
 		return nil, err
 	}
-	root, err := scheme.FullLocation(l.root, newRoot)
-	if err != nil {
-		return nil, err
-	}
-	return &loaderImpl{root: root, schemes: l.schemes}, nil
+	return &loaderImpl{root: root, fLoader: l.fLoader}, nil
 }
 
-// Load returns all the bytes read from scheme-specific location or an error.
+// Load returns all the bytes read from location or an error.
 // "location" can be an absolute path, or if relative, full location is
 // calculated from the Root().
 func (l *loaderImpl) Load(location string) ([]byte, error) {
-	scheme, err := l.getSchemeLoader(location)
+	fullLocation, err := l.fLoader.FullLocation(l.root, location)
 	if err != nil {
+		fmt.Printf("Trouble in fulllocation: %v\n", err)
 		return nil, err
 	}
-	fullLocation, err := scheme.FullLocation(l.root, location)
-	if err != nil {
-		return nil, err
-	}
-	return scheme.Load(fullLocation)
+	return l.fLoader.Load(fullLocation)
 }
 
-// GlobLoad returns a map from path to bytes read from scheme-specific location or an error.
+// GlobLoad returns a map from path to bytes read from the location or an error.
 // "location" can be an absolute path, or if relative, full location is
 // calculated from the Root().
 func (l *loaderImpl) GlobLoad(location string) (map[string][]byte, error) {
-	scheme, err := l.getSchemeLoader(location)
+	fullLocation, err := l.fLoader.FullLocation(l.root, location)
 	if err != nil {
 		return nil, err
 	}
-	fullLocation, err := scheme.FullLocation(l.root, location)
-	if err != nil {
-		return nil, err
-	}
-	return scheme.GlobLoad(fullLocation)
-}
-
-// Helper function to parse scheme from location parameter.
-func (l *loaderImpl) getSchemeLoader(location string) (SchemeLoader, error) {
-	for _, scheme := range l.schemes {
-		if scheme.IsScheme(l.root, location) {
-			return scheme, nil
-		}
-	}
-	return nil, fmt.Errorf("Unknown Scheme: %s, %s\n", l.root, location)
+	return l.fLoader.GlobLoad(fullLocation)
 }
