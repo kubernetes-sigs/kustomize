@@ -25,10 +25,7 @@ import (
 )
 
 func initializeRootLoader(fakefs fs.FileSystem) Loader {
-	var schemes []SchemeLoader
-	schemes = append(schemes, NewFileLoader(fakefs))
-	rootLoader := Init(schemes)
-	return rootLoader
+	return NewLoader(NewFileLoader(fakefs))
 }
 
 func TestLoader_Root(t *testing.T) {
@@ -46,7 +43,7 @@ func TestLoader_Root(t *testing.T) {
 	}
 	_, err = rootLoader.New("https://google.com/project")
 	if err == nil {
-		t.Fatalf("Expected error for unknown scheme not returned")
+		t.Fatalf("Expected error")
 	}
 
 	// Test with trailing slash in directory.

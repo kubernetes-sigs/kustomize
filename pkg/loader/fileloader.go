@@ -26,18 +26,19 @@ import (
 
 const currentDir = "."
 
-// Internal implementation of SchemeLoader interface.
-type fileLoader struct {
+// FileLoader loads files from a file system.
+type FileLoader struct {
 	fs fs.FileSystem
 }
 
-// NewFileLoader returns a SchemeLoader to handle a file system.
-func NewFileLoader(fs fs.FileSystem) SchemeLoader {
-	return &fileLoader{fs: fs}
+// NewFileLoader returns a new FileLoader.
+func NewFileLoader(fs fs.FileSystem) *FileLoader {
+	return &FileLoader{fs: fs}
 }
 
-// Is the location calculated with the root and location params a full file path.
-func (l *fileLoader) IsScheme(root string, location string) bool {
+// IsAbsPath return true if the location calculated with the root
+// and location params a full file path.
+func (l *FileLoader) IsAbsPath(root string, location string) bool {
 	fullFilePath, err := l.FullLocation(root, location)
 	if err != nil {
 		return false
@@ -45,11 +46,12 @@ func (l *fileLoader) IsScheme(root string, location string) bool {
 	return filepath.IsAbs(fullFilePath)
 }
 
+// FullLocation returns some notion of a full path.
 // If location is a full file path, then ignore root. If location is relative, then
 // join the root path with the location path. Either root or location can be empty,
 // but not both. Special case for ".": Expands to current working directory.
 // Example: "/home/seans/project", "subdir/bar" -> "/home/seans/project/subdir/bar".
-func (l *fileLoader) FullLocation(root string, location string) (string, error) {
+func (l *FileLoader) FullLocation(root string, location string) (string, error) {
 	// First, validate the parameters
 	if len(root) == 0 && len(location) == 0 {
 		return "", fmt.Errorf("unable to calculate full location: root and location empty")
@@ -72,20 +74,12 @@ func (l *fileLoader) FullLocation(root string, location string) (string, error) 
 
 // Load returns the bytes from reading a file at fullFilePath.
 // Implements the Loader interface.
-func (l *fileLoader) Load(fullFilePath string) ([]byte, error) {
-	// Validate path to load from is a full file path.
-	if !filepath.IsAbs(fullFilePath) {
-		return nil, fmt.Errorf("attempting to load file without full file path: %s\n", fullFilePath)
-	}
-	return l.fs.ReadFile(fullFilePath)
+func (l *FileLoader) Load(p string) ([]byte, error) {
+	return l.fs.ReadFile(p)
 }
 
 // GlobLoad returns the map from path to bytes from reading a glob path.
 // Implements the Loader interface.
-func (l *fileLoader) GlobLoad(fullFilePath string) (map[string][]byte, error) {
-	// Validate path to load from is a full file path.
-	if !filepath.IsAbs(fullFilePath) {
-		return nil, fmt.Errorf("Attempting to load file without full file path: %s\n", fullFilePath)
-	}
-	return l.fs.ReadFiles(fullFilePath)
+func (l *FileLoader) GlobLoad(p string) (map[string][]byte, error) {
+	return l.fs.ReadFiles(p)
 }

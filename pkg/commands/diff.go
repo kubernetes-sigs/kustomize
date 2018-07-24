@@ -68,7 +68,7 @@ func (o *diffOptions) Validate(args []string) error {
 // RunDiff gets the differences between Application.MakeCustomizedResMap() and Application.MakeUncustomizedResMap().
 func (o *diffOptions) RunDiff(out, errOut io.Writer, fSys fs.FileSystem) error {
 
-	l := loader.Init([]loader.SchemeLoader{loader.NewFileLoader(fSys)})
+	l := loader.NewLoader(loader.NewFileLoader(fSys))
 
 	absPath, err := filepath.Abs(o.kustomizationPath)
 	if err != nil {
