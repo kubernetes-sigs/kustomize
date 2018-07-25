@@ -24,6 +24,7 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret"
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
+	"github.com/kubernetes-sigs/kustomize/pkg/loader"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 )
 
@@ -59,10 +60,12 @@ func newCmdAddConfigMap(fSys fs.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
+
 			// Add the flagsAndArgs map to the kustomization file.
 			err = addConfigMap(
 				kustomization, flagsAndArgs,
-				configmapandsecret.NewConfigMapFactory(fSys, nil))
+				configmapandsecret.NewConfigMapFactory(
+					fSys, loader.NewLoader(loader.NewFileLoader(fSys))))
 			if err != nil {
 				return err
 			}

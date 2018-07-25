@@ -32,7 +32,7 @@ func NewResMapFromConfigMapArgs(
 		if cmArgs.Behavior == "" {
 			cmArgs.Behavior = "create"
 		}
-		cm, err := f.MakeConfigMap2(&cmArgs)
+		cm, err := f.MakeConfigMap(&cmArgs)
 		if err != nil {
 			return nil, err
 		}

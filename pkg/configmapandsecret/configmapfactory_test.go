@@ -139,7 +139,7 @@ func TestConstructConfigMap(t *testing.T) {
 	f := NewConfigMapFactory(fSys,
 		loader.NewLoader(loader.NewFileLoader(fSys)))
 	for _, tc := range testCases {
-		cm, err := f.MakeConfigMap1(&tc.input)
+		cm, err := f.MakeConfigMap(&tc.input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
