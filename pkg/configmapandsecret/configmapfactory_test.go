@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
+	"github.com/kubernetes-sigs/kustomize/pkg/loader"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -134,7 +135,9 @@ func TestConstructConfigMap(t *testing.T) {
 	}
 
 	// TODO: all tests should use a FakeFs
-	f := NewConfigMapFactory(fs.MakeRealFS(), nil)
+	fSys := fs.MakeRealFS()
+	f := NewConfigMapFactory(fSys,
+		loader.NewLoader(loader.NewFileLoader(fSys)))
 	for _, tc := range testCases {
 		cm, err := f.MakeConfigMap1(&tc.input)
 		if err != nil {
