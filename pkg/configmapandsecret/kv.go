@@ -34,6 +34,8 @@ type kvPair struct {
 	value string
 }
 
+var utf8bom = []byte{0xEF, 0xBB, 0xBF}
+
 // keyValuesFromLines parses given content in to a list of key-value pairs.
 func keyValuesFromLines(content []byte) ([]kvPair, error) {
 	var kvs []kvPair
