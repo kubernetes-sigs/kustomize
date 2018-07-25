@@ -20,7 +20,6 @@ package configmapandsecret
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"path"
 	"strings"
 
@@ -51,7 +50,7 @@ func NewConfigMapFactory(
 // MakeUnstructAndGenerateName returns an configmap and the name appended with a hash.
 func (f *ConfigMapFactory) MakeUnstructAndGenerateName(
 	args *types.ConfigMapArgs) (*unstructured.Unstructured, string, error) {
-	cm, err := f.MakeConfigMap1(args)
+	cm, err := f.MakeConfigMap(args)
 	if err != nil {
 		return nil, "", err
 	}
@@ -84,31 +83,8 @@ func (f *ConfigMapFactory) makeFreshConfigMap(
 	return cm
 }
 
-// MakeConfigMap1 returns a new ConfigMap, or nil and an error.
-func (f *ConfigMapFactory) MakeConfigMap1(
-	args *types.ConfigMapArgs) (*corev1.ConfigMap, error) {
-	cm := f.makeFreshConfigMap(args)
-	if args.EnvSource != "" {
-		if err := f.handleConfigMapFromEnvFileSource(cm, args); err != nil {
-			return nil, err
-		}
-	}
-	if args.FileSources != nil {
-		if err := f.handleConfigMapFromFileSources(cm, args); err != nil {
-			return nil, err
-		}
-	}
-	if args.LiteralSources != nil {
-		if err := f.handleConfigMapFromLiteralSources(cm, args.LiteralSources); err != nil {
-			return nil, err
-		}
-	}
-	return cm, nil
-}
-
-// MakeConfigMap2 returns a new ConfigMap, or nil and an error.
-// TODO: Get rid of the nearly duplicated code in MakeConfigMap1 vs MakeConfigMap2
-func (f *ConfigMapFactory) MakeConfigMap2(
+// MakeConfigMap returns a new ConfigMap, or nil and an error.
+func (f *ConfigMapFactory) MakeConfigMap(
 	args *types.ConfigMapArgs) (*corev1.ConfigMap, error) {
 	var all []kvPair
 	var err error
@@ -137,7 +113,7 @@ func (f *ConfigMapFactory) MakeConfigMap2(
 	all = append(all, pairs...)
 
 	for _, kv := range all {
-		err = AddKv(cm, kv.key, kv.value)
+		err = addKvToConfigMap(cm, kv.key, kv.value)
 		if err != nil {
 			return nil, err
 		}
@@ -148,7 +124,7 @@ func (f *ConfigMapFactory) MakeConfigMap2(
 func keyValuesFromLiteralSources(sources []string) ([]kvPair, error) {
 	var kvs []kvPair
 	for _, s := range sources {
-		k, v, err := ParseLiteralSource(s)
+		k, v, err := parseLiteralSource(s)
 		if err != nil {
 			return nil, err
 		}
@@ -157,27 +133,10 @@ func keyValuesFromLiteralSources(sources []string) ([]kvPair, error) {
 	return kvs, nil
 }
 
-// handleConfigMapFromLiteralSources adds the specified literal source
-// information into the provided configMap.
-func (f *ConfigMapFactory) handleConfigMapFromLiteralSources(
-	configMap *v1.ConfigMap, sources []string) error {
-	for _, s := range sources {
-		k, v, err := ParseLiteralSource(s)
-		if err != nil {
-			return err
-		}
-		err = AddKv(configMap, k, v)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func keyValuesFromFileSources(ldr loader.Loader, sources []string) ([]kvPair, error) {
 	var kvs []kvPair
 	for _, s := range sources {
-		k, fPath, err := ParseFileSource(s)
+		k, fPath, err := parseFileSource(s)
 		if err != nil {
 			return nil, err
 		}
@@ -188,45 +147,6 @@ func keyValuesFromFileSources(ldr loader.Loader, sources []string) ([]kvPair, er
 		kvs = append(kvs, kvPair{key: k, value: string(content)})
 	}
 	return kvs, nil
-}
-
-// handleConfigMapFromFileSources adds the specified file source information
-// into the provided configMap
-func (f *ConfigMapFactory) handleConfigMapFromFileSources(
-	configMap *v1.ConfigMap, args *types.ConfigMapArgs) error {
-	for _, fileSource := range args.FileSources {
-		keyName, filePath, err := ParseFileSource(fileSource)
-		if err != nil {
-			return err
-		}
-		if !f.fSys.Exists(filePath) {
-			return fmt.Errorf("unable to read configmap source file %s", filePath)
-		}
-		if f.fSys.IsDir(filePath) {
-			if strings.Contains(fileSource, "=") {
-				return fmt.Errorf("cannot give a key name for a directory path")
-			}
-			fileList, err := ioutil.ReadDir(filePath)
-			if err != nil {
-				return fmt.Errorf("error listing files in %s: %v", filePath, err)
-			}
-			for _, item := range fileList {
-				itemPath := path.Join(filePath, item.Name())
-				if item.Mode().IsRegular() {
-					keyName = item.Name()
-					err = addKeyFromFileToConfigMap(configMap, keyName, itemPath)
-					if err != nil {
-						return err
-					}
-				}
-			}
-		} else {
-			if err := addKeyFromFileToConfigMap(configMap, keyName, filePath); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
 }
 
 func keyValuesFromEnvFile(l loader.Loader, path string) ([]kvPair, error) {
@@ -240,34 +160,9 @@ func keyValuesFromEnvFile(l loader.Loader, path string) ([]kvPair, error) {
 	return keyValuesFromLines(content)
 }
 
-// HandleConfigMapFromEnvFileSource adds the specified env file source information
-// into the provided configMap
-func (f *ConfigMapFactory) handleConfigMapFromEnvFileSource(
-	configMap *v1.ConfigMap, args *types.ConfigMapArgs) error {
-	if !f.fSys.Exists(args.EnvSource) {
-		return fmt.Errorf("unable to read configmap env file %s", args.EnvSource)
-	}
-	if f.fSys.IsDir(args.EnvSource) {
-		return fmt.Errorf("env config file %s cannot be a directory", args.EnvSource)
-	}
-	return addFromEnvFile(args.EnvSource, func(key, value string) error {
-		return AddKv(configMap, key, value)
-	})
-}
-
-// addKeyFromFileToConfigMap adds a key with the given name to a ConfigMap, populating
-// the value with the content of the given file path, or returns an error.
-func addKeyFromFileToConfigMap(configMap *v1.ConfigMap, keyName, filePath string) error {
-	data, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return err
-	}
-	return AddKv(configMap, keyName, string(data))
-}
-
-// AddKv adds the given key and data to the given config map.
+// addKvToConfigMap adds the given key and data to the given config map.
 // Error if key invalid, or already exists.
-func AddKv(configMap *v1.ConfigMap, keyName, data string) error {
+func addKvToConfigMap(configMap *v1.ConfigMap, keyName, data string) error {
 	// Note, the rules for ConfigMap keys are the exact same as the ones for SecretKeys.
 	if errs := validation.IsConfigMapKey(keyName); len(errs) != 0 {
 		return fmt.Errorf("%q is not a valid key name for a ConfigMap: %s", keyName, strings.Join(errs, ";"))
@@ -279,7 +174,7 @@ func AddKv(configMap *v1.ConfigMap, keyName, data string) error {
 	return nil
 }
 
-// ParseFileSource parses the source given.
+// parseFileSource parses the source given.
 //
 //  Acceptable formats include:
 //   1.  source-path: the basename will become the key name
@@ -287,7 +182,7 @@ func AddKv(configMap *v1.ConfigMap, keyName, data string) error {
 //       source-path is the path to the key file.
 //
 // Key names cannot include '='.
-func ParseFileSource(source string) (keyName, filePath string, err error) {
+func parseFileSource(source string) (keyName, filePath string, err error) {
 	numSeparators := strings.Count(source, "=")
 	switch {
 	case numSeparators == 0:
@@ -304,10 +199,10 @@ func ParseFileSource(source string) (keyName, filePath string, err error) {
 	}
 }
 
-// ParseLiteralSource parses the source key=val pair into its component pieces.
+// parseLiteralSource parses the source key=val pair into its component pieces.
 // This functionality is distinguished from strings.SplitN(source, "=", 2) since
 // it returns an error in the case of empty keys, values, or a missing equals sign.
-func ParseLiteralSource(source string) (keyName, value string, err error) {
+func parseLiteralSource(source string) (keyName, value string, err error) {
 	// leading equal is invalid
 	if strings.Index(source, "=") == 0 {
 		return "", "", fmt.Errorf("invalid literal source %v, expected key=value", source)
