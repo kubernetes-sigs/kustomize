@@ -137,7 +137,7 @@ func (f *ConfigMapFactory) MakeConfigMap2(
 	all = append(all, pairs...)
 
 	for _, kv := range all {
-		err = addKeyFromLiteralToConfigMap(cm, kv.key, kv.value)
+		err = AddKv(cm, kv.key, kv.value)
 		if err != nil {
 			return nil, err
 		}
@@ -166,7 +166,7 @@ func (f *ConfigMapFactory) handleConfigMapFromLiteralSources(
 		if err != nil {
 			return err
 		}
-		err = addKeyFromLiteralToConfigMap(configMap, k, v)
+		err = AddKv(configMap, k, v)
 		if err != nil {
 			return err
 		}
@@ -251,7 +251,7 @@ func (f *ConfigMapFactory) handleConfigMapFromEnvFileSource(
 		return fmt.Errorf("env config file %s cannot be a directory", args.EnvSource)
 	}
 	return addFromEnvFile(args.EnvSource, func(key, value string) error {
-		return addKeyFromLiteralToConfigMap(configMap, key, value)
+		return AddKv(configMap, key, value)
 	})
 }
 
@@ -262,12 +262,12 @@ func addKeyFromFileToConfigMap(configMap *v1.ConfigMap, keyName, filePath string
 	if err != nil {
 		return err
 	}
-	return addKeyFromLiteralToConfigMap(configMap, keyName, string(data))
+	return AddKv(configMap, keyName, string(data))
 }
 
-// addKeyFromLiteralToConfigMap adds the given key and data to the given config map,
-// returning an error if the key is not valid or if the key already exists.
-func addKeyFromLiteralToConfigMap(configMap *v1.ConfigMap, keyName, data string) error {
+// AddKv adds the given key and data to the given config map.
+// Error if key invalid, or already exists.
+func AddKv(configMap *v1.ConfigMap, keyName, data string) error {
 	// Note, the rules for ConfigMap keys are the exact same as the ones for SecretKeys.
 	if errs := validation.IsConfigMapKey(keyName); len(errs) != 0 {
 		return fmt.Errorf("%q is not a valid key name for a ConfigMap: %s", keyName, strings.Join(errs, ";"))
