@@ -91,7 +91,7 @@ var svc = schema.GroupVersionKind{Version: "v1", Kind: "Service"}
 
 func TestResources1(t *testing.T) {
 	expected := resmap.ResMap{
-		resource.NewResId(deploy, "dply1"): resource.NewResourceFromMap(
+		resource.NewResIdWithPrefix(deploy, "dply1", "foo-"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -123,7 +123,7 @@ func TestResources1(t *testing.T) {
 					},
 				},
 			}),
-		resource.NewResId(cmap, "literalConfigMap"): resource.NewResourceFromMap(
+		resource.NewResIdWithPrefix(cmap, "literalConfigMap", "foo-"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -143,7 +143,7 @@ func TestResources1(t *testing.T) {
 					"DB_PASSWORD": "somepw",
 				},
 			}).SetBehavior(resource.BehaviorCreate),
-		resource.NewResId(secret, "secret"): resource.NewResourceFromMap(
+		resource.NewResIdWithPrefix(secret, "secret", "foo-"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -164,7 +164,7 @@ func TestResources1(t *testing.T) {
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
 			}).SetBehavior(resource.BehaviorCreate),
-		resource.NewResId(ns, "ns1"): resource.NewResourceFromMap(
+		resource.NewResIdWithPrefix(ns, "ns1", "foo-"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Namespace",
@@ -289,7 +289,7 @@ func makeLoader2(t *testing.T) loader.Loader {
 // perhaps it's not worth supporting the command.
 func TestRawResources2(t *testing.T) {
 	expected := resmap.ResMap{
-		resource.NewResId(deploy, "dply1"): resource.NewResourceFromMap(
+		resource.NewResIdWithPrefix(deploy, "dply1", "foo-"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",

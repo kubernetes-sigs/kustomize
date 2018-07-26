@@ -55,10 +55,15 @@ func (pt *patchTransformer) Transform(baseResourceMap resmap.ResMap) error {
 	for _, patch := range patches {
 		// Merge patches with base resource.
 		id := patch.Id()
-		base, found := baseResourceMap[id]
-		if !found {
+		matchedIds := baseResourceMap.FindByGVKN(id)
+		if len(matchedIds) == 0 {
 			return fmt.Errorf("failed to find an object with %#v to apply the patch", id.Gvk())
 		}
+		if len(matchedIds) > 1 {
+			return fmt.Errorf("Found multiple objects %#v that the patch %#v can apply", matchedIds, id)
+		}
+		id = matchedIds[0]
+		base := baseResourceMap[id]
 		merged := map[string]interface{}{}
 		versionedObj, err := scheme.Scheme.New(id.Gvk())
 		baseName := base.GetName()

@@ -53,7 +53,7 @@ func TestPrefixNameRun(t *testing.T) {
 			}),
 	}
 	expected := resmap.ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+		resource.NewResIdWithPrefix(cmap, "cm1", "someprefix-"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -61,7 +61,7 @@ func TestPrefixNameRun(t *testing.T) {
 					"name": "someprefix-cm1",
 				},
 			}),
-		resource.NewResId(cmap, "cm2"): resource.NewResourceFromMap(
+		resource.NewResIdWithPrefix(cmap, "cm2", "someprefix-"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
