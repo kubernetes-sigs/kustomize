@@ -34,7 +34,7 @@ type FakeLoader struct {
 func NewFakeLoader(initialDir string) FakeLoader {
 	// Create fake filesystem and inject it into initial Loader.
 	fakefs := fs.MakeFakeFS()
-	rootLoader := loader.NewLoader(loader.NewFileLoader(fakefs))
+	rootLoader := loader.NewFileLoader(fakefs)
 	ldr, _ := rootLoader.New(initialDir)
 	return FakeLoader{fs: fakefs, delegate: ldr}
 }
