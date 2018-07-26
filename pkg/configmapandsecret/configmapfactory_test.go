@@ -136,8 +136,7 @@ func TestConstructConfigMap(t *testing.T) {
 
 	// TODO: all tests should use a FakeFs
 	fSys := fs.MakeRealFS()
-	f := NewConfigMapFactory(fSys,
-		loader.NewLoader(loader.NewFileLoader(fSys)))
+	f := NewConfigMapFactory(fSys, loader.NewFileLoader(fSys))
 	for _, tc := range testCases {
 		cm, err := f.MakeConfigMap(&tc.input)
 		if err != nil {

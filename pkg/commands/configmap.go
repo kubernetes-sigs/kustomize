@@ -65,7 +65,7 @@ func newCmdAddConfigMap(fSys fs.FileSystem) *cobra.Command {
 			err = addConfigMap(
 				kustomization, flagsAndArgs,
 				configmapandsecret.NewConfigMapFactory(
-					fSys, loader.NewLoader(loader.NewFileLoader(fSys))))
+					fSys, loader.NewFileLoader(fSys)))
 			if err != nil {
 				return err
 			}

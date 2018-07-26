@@ -24,10 +24,6 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 )
 
-func initializeRootLoader(fakefs fs.FileSystem) Loader {
-	return NewLoader(NewFileLoader(fakefs))
-}
-
 func TestLoader_Root(t *testing.T) {
 
 	// Initialize the fake file system and the root loader.
@@ -35,7 +31,7 @@ func TestLoader_Root(t *testing.T) {
 	fakefs.WriteFile("/home/seans/project/file.yaml", []byte("Unused"))
 	fakefs.WriteFile("/home/seans/project/subdir/file.yaml", []byte("Unused"))
 	fakefs.WriteFile("/home/seans/project2/file.yaml", []byte("Unused"))
-	rootLoader := initializeRootLoader(fakefs)
+	rootLoader := NewFileLoader(fakefs)
 
 	_, err := rootLoader.New("")
 	if err == nil {
@@ -89,7 +85,7 @@ func TestLoader_Load(t *testing.T) {
 	fakefs.WriteFile("/home/seans/project/file.yaml", []byte("This is a yaml file"))
 	fakefs.WriteFile("/home/seans/project/subdir/file.yaml", []byte("Subdirectory file content"))
 	fakefs.WriteFile("/home/seans/project2/file.yaml", []byte("This is another yaml file"))
-	rootLoader := initializeRootLoader(fakefs)
+	rootLoader := NewFileLoader(fakefs)
 
 	loader, err := rootLoader.New("/home/seans/project")
 	if err != nil {
