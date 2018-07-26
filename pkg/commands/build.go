@@ -70,7 +70,7 @@ func (o *buildOptions) Validate(args []string) error {
 
 // RunBuild runs build command.
 func (o *buildOptions) RunBuild(out io.Writer, fSys fs.FileSystem) error {
-	l := loader.NewLoader(loader.NewFileLoader(fSys))
+	l := loader.NewFileLoader(fSys)
 
 	absPath, err := filepath.Abs(o.kustomizationPath)
 	if err != nil {

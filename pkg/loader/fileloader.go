@@ -26,32 +26,59 @@ import (
 
 const currentDir = "."
 
-// FileLoader loads files from a file system.
-type FileLoader struct {
-	fs fs.FileSystem
+// fileLoader loads files from a file system.
+type fileLoader struct {
+	root string
+	fSys fs.FileSystem
 }
 
-// NewFileLoader returns a new FileLoader.
-func NewFileLoader(fs fs.FileSystem) *FileLoader {
-	return &FileLoader{fs: fs}
+// NewFileLoader returns a new fileLoader.
+func NewFileLoader(fSys fs.FileSystem) *fileLoader {
+	return newFileLoaderAtRoot("", fSys)
+}
+
+// newFileLoaderAtRoot returns a new fileLoader with given root.
+func newFileLoaderAtRoot(root string, fs fs.FileSystem) *fileLoader {
+	return &fileLoader{root: root, fSys: fs}
+}
+
+// Root returns the root location for this Loader.
+func (l *fileLoader) Root() string {
+	return l.root
+}
+
+// Returns a new Loader rooted at newRoot. "newRoot" MUST be
+// a directory (not a file). The directory can have a trailing
+// slash or not.
+// Example: "/home/seans/project" or "/home/seans/project/"
+// NOT "/home/seans/project/file.yaml".
+func (l *fileLoader) New(newRoot string) (Loader, error) {
+	if !l.IsAbsPath(l.root, newRoot) {
+		return nil, fmt.Errorf("Not abs path: l.root='%s', loc='%s'\n", l.root, newRoot)
+	}
+	root, err := l.fullLocation(l.root, newRoot)
+	if err != nil {
+		return nil, err
+	}
+	return newFileLoaderAtRoot(root, l.fSys), nil
 }
 
 // IsAbsPath return true if the location calculated with the root
 // and location params a full file path.
-func (l *FileLoader) IsAbsPath(root string, location string) bool {
-	fullFilePath, err := l.FullLocation(root, location)
+func (l *fileLoader) IsAbsPath(root string, location string) bool {
+	fullFilePath, err := l.fullLocation(root, location)
 	if err != nil {
 		return false
 	}
 	return filepath.IsAbs(fullFilePath)
 }
 
-// FullLocation returns some notion of a full path.
+// fullLocation returns some notion of a full path.
 // If location is a full file path, then ignore root. If location is relative, then
 // join the root path with the location path. Either root or location can be empty,
 // but not both. Special case for ".": Expands to current working directory.
 // Example: "/home/seans/project", "subdir/bar" -> "/home/seans/project/subdir/bar".
-func (l *FileLoader) FullLocation(root string, location string) (string, error) {
+func (l *fileLoader) fullLocation(root string, location string) (string, error) {
 	// First, validate the parameters
 	if len(root) == 0 && len(location) == 0 {
 		return "", fmt.Errorf("unable to calculate full location: root and location empty")
@@ -74,12 +101,21 @@ func (l *FileLoader) FullLocation(root string, location string) (string, error) 
 
 // Load returns the bytes from reading a file at fullFilePath.
 // Implements the Loader interface.
-func (l *FileLoader) Load(p string) ([]byte, error) {
-	return l.fs.ReadFile(p)
+func (l *fileLoader) Load(location string) ([]byte, error) {
+	fullLocation, err := l.fullLocation(l.root, location)
+	if err != nil {
+		fmt.Printf("Trouble in fulllocation: %v\n", err)
+		return nil, err
+	}
+	return l.fSys.ReadFile(fullLocation)
 }
 
 // GlobLoad returns the map from path to bytes from reading a glob path.
 // Implements the Loader interface.
-func (l *FileLoader) GlobLoad(p string) (map[string][]byte, error) {
-	return l.fs.ReadFiles(p)
+func (l *fileLoader) GlobLoad(location string) (map[string][]byte, error) {
+	fullLocation, err := l.fullLocation(l.root, location)
+	if err != nil {
+		return nil, err
+	}
+	return l.fSys.ReadFiles(fullLocation)
 }
