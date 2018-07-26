@@ -2,6 +2,7 @@ package configmapandsecret
 
 import (
 	"context"
+	"fmt"
 	"os/exec"
 	"path/filepath"
 	"time"
@@ -37,7 +38,8 @@ func (f *SecretFactory) MakeSecret(args types.SecretArgs) (*corev1.Secret, error
 	for k, v := range args.Commands {
 		out, err := f.createSecretKey(v)
 		if err != nil {
-			return nil, errors.Wrap(err, "createSecretKey")
+			errMsg := fmt.Sprintf("createSecretKey: couldn't make secret %s for key %s", s.Name, k)
+			return nil, errors.Wrap(err, errMsg)
 		}
 		s.Data[k] = out
 	}
