@@ -32,6 +32,15 @@ type ResId struct {
 	// an untransformed resource has no prefix, fully transformed resource has an arbitrary number of prefixes
 	// concatenated together.
 	prefix string
+	// namespace the resource belongs to
+	// an untransformed resource has no namespace, fully transformed resource has the namespace from
+	// the top most overlay
+	namespace string
+}
+
+// NewResIdWithPrefixNamespace creates new resource identifier with a prefix and a namespace
+func NewResIdWithPrefixNamespace(g schema.GroupVersionKind, n, p, ns string) ResId {
+	return ResId{gvk: g, name: n, prefix: p, namespace: ns}
 }
 
 // NewResIdWithPrefix creates new resource identifier with a prefix
@@ -46,7 +55,7 @@ func NewResId(g schema.GroupVersionKind, n string) ResId {
 
 // String of ResId based on GVK, name and prefix
 func (n ResId) String() string {
-	fields := []string{n.gvk.Group, n.gvk.Version, n.gvk.Kind, n.prefix, n.name}
+	fields := []string{n.gvk.Group, n.gvk.Version, n.gvk.Kind, n.namespace, n.prefix, n.name}
 	return strings.Join(fields, "_") + ".yaml"
 }
 
@@ -81,7 +90,17 @@ func (n ResId) Prefix() string {
 	return n.prefix
 }
 
+// Namespace returns resource namespace.
+func (n ResId) Namespace() string {
+	return n.namespace
+}
+
 // CopyWithNewPrefix make a new copy from current ResId and append a new prefix
 func (n ResId) CopyWithNewPrefix(p string) ResId {
-	return ResId{gvk: n.gvk, name: n.name, prefix: p + n.prefix}
+	return ResId{gvk: n.gvk, name: n.name, prefix: p + n.prefix, namespace: n.namespace}
+}
+
+// CopyWithNewNamespace make a new copy from current ResId and set a new namespace
+func (n ResId) CopyWithNewNamespace(ns string) ResId {
+	return ResId{gvk: n.gvk, name: n.name, prefix: n.prefix, namespace: ns}
 }
