@@ -17,6 +17,7 @@ limitations under the License.
 package transformers
 
 import (
+	"os"
 	"strings"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
@@ -82,7 +83,11 @@ func (pt *imageTagTransformer) updateContainers(obj map[string]interface{}, path
 		}
 		for _, imagetag := range pt.imageTags {
 			if isImageMatched(image.(string), imagetag.Name) {
-				container["image"] = strings.Join([]string{imagetag.Name, imagetag.NewTag}, ":")
+				newTag := os.Getenv(imagetag.NewTagFromEnv)
+				if newTag == "" {
+					newTag = imagetag.NewTag
+				}
+				container["image"] = strings.Join([]string{imagetag.Name, newTag}, ":")
 				break
 			}
 		}
