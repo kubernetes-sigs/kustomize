@@ -1,0 +1,4 @@
+bases:
+- ./../base
+
+namePrefix: dev-
