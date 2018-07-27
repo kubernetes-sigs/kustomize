@@ -195,8 +195,10 @@ vars:
 #      image: nginx:1.7.9
 #```
 # one can change the tag of myimage to v1 and the tag of nginx to 1.8.0 with the following:
+# if variable in newTagFromEnv is empty, it will default to `newTag`
 imageTags:
   - name: mycontainerregistry/myimage
-    newTag: v1
+    newTag: dev
+    newTagFromEnv: COMMIT_SHA_FROM_CI
   - name: nginx
     newTag: 1.8.0

@@ -150,4 +150,7 @@ type ImageTag struct {
 
 	// NewTag is the value to use in replacing the original tag.
 	NewTag string `json:"newTag,omitempty" yaml:"newTag,omitempty"`
+
+	// NewTagFromEnv is the name of the environment variable to use to substitute the original tag. If not present will default to the `newTag` value
+	NewTagFromEnv string `json:"newTagFromEnv,omitempty" yaml:"newTag,omitempty"`
 }

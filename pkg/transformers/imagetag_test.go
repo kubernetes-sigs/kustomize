@@ -17,6 +17,7 @@ limitations under the License.
 package transformers
 
 import (
+	"os"
 	"reflect"
 	"testing"
 
@@ -155,10 +156,11 @@ func TestImageTagTransformer(t *testing.T) {
 				},
 			}),
 	}
-
+	os.Setenv("APPLICATION_VERSION", "v2")
+	os.Setenv("MY_NGINX_VERSION", "previous")
 	it, err := NewImageTagTransformer([]types.ImageTag{
-		{Name: "nginx", NewTag: "v2"},
-		{Name: "my-nginx", NewTag: "previous"},
+		{Name: "nginx", NewTag: "v2", NewTagFromEnv: "APPLICATION_VERSION"},
+		{Name: "my-nginx", NewTag: "previous", NewTagFromEnv: "MY_NGINX_VERSION"},
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
