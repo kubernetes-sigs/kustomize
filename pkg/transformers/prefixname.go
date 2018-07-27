@@ -69,12 +69,16 @@ func (o *namePrefixTransformer) Transform(m resmap.ResMap) error {
 	mf := resmap.ResMap{}
 
 	for id := range m {
-		mf[id] = m[id]
+		found := false
 		for _, path := range o.skipPathConfigs {
 			if selectByGVK(id.Gvk(), path.GroupVersionKind) {
-				delete(mf, id)
+				found = true
 				break
 			}
+		}
+		if !found {
+			mf[id] = m[id]
+			delete(m, id)
 		}
 	}
 
@@ -88,6 +92,8 @@ func (o *namePrefixTransformer) Transform(m resmap.ResMap) error {
 			if err != nil {
 				return err
 			}
+			newId := id.CopyWithNewPrefix(o.prefix)
+			m[newId] = mf[id]
 		}
 	}
 	return nil
