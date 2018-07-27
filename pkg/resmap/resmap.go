@@ -37,6 +37,26 @@ import (
 // ResMap is a map from ResId to Resource.
 type ResMap map[resource.ResId]*resource.Resource
 
+// FindByGVKN find the matched ResIds by Group/Version/Kind and Name
+func (m ResMap) FindByGVKN(inputId resource.ResId) []resource.ResId {
+	var result []resource.ResId
+	for id := range m {
+		if id.GvknEquals(inputId) {
+			result = append(result, id)
+		}
+	}
+	return result
+}
+
+// DemandOneMatchForId find the matched resource by Group/Version/Kind and Name
+func (m ResMap) DemandOneMatchForId(inputId resource.ResId) (*resource.Resource, bool) {
+	result := m.FindByGVKN(inputId)
+	if len(result) == 1 {
+		return m[result[0]], true
+	}
+	return nil, false
+}
+
 // EncodeAsYaml encodes a ResMap to YAML; encoded objects separated by `---`.
 func (m ResMap) EncodeAsYaml() ([]byte, error) {
 	var ids []resource.ResId
@@ -217,10 +237,12 @@ func MergeWithoutOverride(maps ...ResMap) (ResMap, error) {
 // must be BehaviorMerge or BehaviorReplace.  If X is not in the map, then it's
 // behavior cannot be merge or replace.
 func MergeWithOverride(maps ...ResMap) (ResMap, error) {
-	result := ResMap{}
-	for _, m := range maps {
+	result := maps[0]
+	for _, m := range maps[1:] {
 		for id, r := range m {
-			if _, found := result[id]; found {
+			matchedId := result.FindByGVKN(id)
+			if len(matchedId) == 1 {
+				id = matchedId[0]
 				switch r.Behavior() {
 				case resource.BehaviorReplace:
 					glog.V(4).Infof("Replace %v with %v", result[id].Object, r.Object)
@@ -236,13 +258,15 @@ func MergeWithOverride(maps ...ResMap) (ResMap, error) {
 				default:
 					return nil, fmt.Errorf("id %#v exists; must merge or replace", id)
 				}
-			} else {
+			} else if len(matchedId) == 0 {
 				switch r.Behavior() {
 				case resource.BehaviorMerge, resource.BehaviorReplace:
 					return nil, fmt.Errorf("id %#v does not exist; cannot merge or replace", id)
 				default:
 					result[id] = r
 				}
+			} else {
+				return nil, fmt.Errorf("Merge conflict, found multiple objects %v the Resmap %v can merge into", matchedId, id)
 			}
 		}
 	}

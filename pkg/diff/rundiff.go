@@ -56,7 +56,7 @@ func writeYamlToNewDir(in resmap.ResMap, prefix string) (*directory, error) {
 	}
 
 	for id, obj := range in {
-		f, err := dir.newFile(id.String())
+		f, err := dir.newFile(id.GvknString())
 		if err != nil {
 			return nil, err
 		}

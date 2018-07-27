@@ -292,7 +292,7 @@ func (a *Application) resolveRefVars(m resmap.ResMap) (map[string]string, error)
 	}
 	for _, v := range vars {
 		id := resource.NewResId(v.ObjRef.GroupVersionKind(), v.ObjRef.Name)
-		if r, found := m[id]; found {
+		if r, found := m.DemandOneMatchForId(id); found {
 			s, err := r.GetFieldValue(v.FieldRef.FieldPath)
 			if err != nil {
 				return nil, fmt.Errorf("failed to resolve referred var: %+v", v)
