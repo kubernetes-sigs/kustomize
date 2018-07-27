@@ -23,6 +23,7 @@ import (
 	"io"
 	"reflect"
 	"sort"
+	"strings"
 
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
@@ -202,13 +203,12 @@ func newResourceSliceFromBytes(in []byte) ([]*resource.Resource, error) {
 	decoder := k8syaml.NewYAMLOrJSONDecoder(bytes.NewReader(in), 1024)
 	var result []*resource.Resource
 	var err error
-	for {
+	for err == nil || isEmptyYamlError(err) {
 		var out unstructured.Unstructured
 		err = decoder.Decode(&out)
-		if err != nil {
-			break
+		if err == nil {
+			result = append(result, resource.NewResourceFromUnstruct(out))
 		}
-		result = append(result, resource.NewResourceFromUnstruct(out))
 	}
 	if err != io.EOF {
 		return nil, err
@@ -271,4 +271,8 @@ func MergeWithOverride(maps ...ResMap) (ResMap, error) {
 		}
 	}
 	return result, nil
+}
+
+func isEmptyYamlError(err error) bool {
+	return strings.Contains(err.Error(), "is missing in 'null'")
 }
