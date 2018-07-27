@@ -104,7 +104,7 @@ func TestNamespaceRun(t *testing.T) {
 			}),
 	}
 	expected := resmap.ResMap{
-		resource.NewResId(ns, "ns1"): resource.NewResourceFromMap(
+		resource.NewResIdWithPrefixNamespace(ns, "ns1", "", ""): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Namespace",
@@ -112,7 +112,7 @@ func TestNamespaceRun(t *testing.T) {
 					"name": "ns1",
 				},
 			}),
-		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+		resource.NewResIdWithPrefixNamespace(cmap, "cm1", "", "test"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -121,7 +121,7 @@ func TestNamespaceRun(t *testing.T) {
 					"namespace": "test",
 				},
 			}),
-		resource.NewResId(cmap, "cm2"): resource.NewResourceFromMap(
+		resource.NewResIdWithPrefixNamespace(cmap, "cm2", "", "test"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -130,7 +130,7 @@ func TestNamespaceRun(t *testing.T) {
 					"namespace": "test",
 				},
 			}),
-		resource.NewResId(sa, "default"): resource.NewResourceFromMap(
+		resource.NewResIdWithPrefixNamespace(sa, "default", "", "test"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ServiceAccount",
@@ -139,7 +139,7 @@ func TestNamespaceRun(t *testing.T) {
 					"namespace": "test",
 				},
 			}),
-		resource.NewResId(sa, "service-account"): resource.NewResourceFromMap(
+		resource.NewResIdWithPrefixNamespace(sa, "service-account", "", "test"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ServiceAccount",
