@@ -46,13 +46,6 @@ func NewResId(g schema.GroupVersionKind, n string) ResId {
 
 // String of ResId based on GVK, name and prefix
 func (n ResId) String() string {
-	//var fields []string
-	//for _, s := range []string{n.gvk.Group, n.gvk.Version, n.gvk.Kind, n.prefix, n.name} {
-	//	if s != "" {
-	//		fields = append(fields, s)
-	//	}
-	//}
-	//return strings.Join(fields, "_") + ".yaml"
 	fields := []string{n.gvk.Group, n.gvk.Version, n.gvk.Kind, n.prefix, n.name}
 	return strings.Join(fields, "_") + ".yaml"
 }

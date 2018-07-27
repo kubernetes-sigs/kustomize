@@ -1,8 +1,12 @@
 # Demo: multibases with a common base
 
-When managing application in different environment, many Kustomize users have seen this scenario. There is a base _Kustomization_ for this application. On top of this base, there are several variants such as dev, staging and production variants. In each of those variants, a different _namePrefix_ is applied. Users sometimes need to create another _kustomization_ compsing all three variants, applying the same _namePrefix_, _commonLables_ or _commonAnnotations_ and deploying them together with one `kubectl` command.
+`kustomize` encourages defining multiple variants - e.g. dev, staging and prod, as overlays on a common base.
 
-Kustomize supports composing multiple variants like that in the same `kustomization.yaml`. This demo shows how this works with a pod object.
+It's possible to create an additional overlay to compose these variants together - just declare the overlays as the bases of a new kustomization.
+
+This is also a means to apply a common label or annotation across the variants, if for some reason the base isn't under your control. It also allows one to define a left-most namePrefix across the variants - something that cannot be done by modifying the common base.
+
+The following demonstrates this using a base that's just one pod.
 
 Define a place to work:
 
