@@ -123,4 +123,5 @@ test 1 == \
   $(kustomize build $DEMO_HOME | grep cluster-a-prod-myapp-pod | wc -l); \
   echo $?    
 ```
-
+Similarly to adding different `namePrefix` in different variants, one can also add different `namespace` and compose those variants in
+one _kustomization_. For more details, take a look at [multi-namespaces](multi-namespace.md).
