@@ -134,18 +134,15 @@ func NewResourceSliceFromPatches(
 	loader loader.Loader, paths []string) ([]*resource.Resource, error) {
 	var result []*resource.Resource
 	for _, path := range paths {
-		contents, err := loader.GlobLoad(path)
+		content, err := loader.Load(path)
 		if err != nil {
 			return nil, err
 		}
-		for p, content := range contents {
-			res, err := newResourceSliceFromBytes(content)
-			if err != nil {
-				return nil, internal.Handler(err, p)
-			}
-			result = append(result, res...)
-
+		res, err := newResourceSliceFromBytes(content)
+		if err != nil {
+			return nil, internal.Handler(err, path)
 		}
+		result = append(result, res...)
 	}
 	return result, nil
 }
@@ -154,17 +151,15 @@ func NewResourceSliceFromPatches(
 func NewResMapFromFiles(loader loader.Loader, paths []string) (ResMap, error) {
 	var result []ResMap
 	for _, path := range paths {
-		contents, err := loader.GlobLoad(path)
+		content, err := loader.Load(path)
 		if err != nil {
 			return nil, errors.Wrap(err, "Load from path "+path+" failed")
 		}
-		for p, content := range contents {
-			res, err := newResMapFromBytes(content)
-			if err != nil {
-				return nil, internal.Handler(err, p)
-			}
-			result = append(result, res)
+		res, err := newResMapFromBytes(content)
+		if err != nil {
+			return nil, internal.Handler(err, path)
 		}
+		result = append(result, res)
 	}
 	return MergeWithoutOverride(result...)
 }
