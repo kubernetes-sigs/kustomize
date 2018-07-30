@@ -78,6 +78,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: dply2
+---
+# some comment
+---
+---
 `
 
 	l := loadertest.NewFakeLoader("/home/seans/project")
