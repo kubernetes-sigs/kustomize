@@ -136,15 +136,17 @@ func keyValuesFromLiteralSources(sources []string) ([]kvPair, error) {
 func keyValuesFromFileSources(ldr loader.Loader, sources []string) ([]kvPair, error) {
 	var kvs []kvPair
 	for _, s := range sources {
-		k, fPath, err := parseFileSource(s)
+		contents, err := ldr.GlobLoad(s)
 		if err != nil {
 			return nil, err
 		}
-		content, err := ldr.Load(fPath)
-		if err != nil {
-			return nil, err
+		for path, content := range contents {
+			k, _, err := parseFileSource(path)
+			if err != nil {
+				return nil, err
+			}
+			kvs = append(kvs, kvPair{key: k, value: string(content)})
 		}
-		kvs = append(kvs, kvPair{key: k, value: string(content)})
 	}
 	return kvs, nil
 }
