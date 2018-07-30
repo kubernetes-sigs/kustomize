@@ -17,6 +17,7 @@ limitations under the License.
 package transformers
 
 import (
+	"regexp"
 	"strings"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
@@ -115,6 +116,7 @@ func (pt *imageTagTransformer) findContainers(obj map[string]interface{}) error 
 }
 
 func isImageMatched(s, t string) bool {
-	imagetag := strings.Split(s, ":")
-	return len(imagetag) >= 1 && imagetag[0] == t
+	// Tag values are limited to [a-zA-Z0-9_.-].
+	pattern, _ := regexp.Compile("^" + t + "(:[a-zA-Z0-9_.-]*)?$")
+	return pattern.MatchString(s)
 }
