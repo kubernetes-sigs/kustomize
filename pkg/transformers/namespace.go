@@ -77,17 +77,21 @@ func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
 	mf := resmap.ResMap{}
 
 	for id := range m {
-		mf[id] = m[id]
+		found := false
 		for _, path := range o.skipPathConfigs {
 			if selectByGVK(id.Gvk(), path.GroupVersionKind) {
-				delete(mf, id)
+				found = true
 				break
 			}
+		}
+		if !found {
+			mf[id] = m[id]
+			delete(m, id)
 		}
 	}
 
 	for id := range mf {
-		objMap := m[id].UnstructuredContent()
+		objMap := mf[id].UnstructuredContent()
 		for _, path := range o.pathConfigs {
 			if !selectByGVK(id.Gvk(), path.GroupVersionKind) {
 				continue
@@ -99,6 +103,8 @@ func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
 			if err != nil {
 				return err
 			}
+			newid := id.CopyWithNewNamespace(o.namespace)
+			m[newid] = mf[id]
 		}
 
 	}
