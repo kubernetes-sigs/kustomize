@@ -66,8 +66,8 @@ func TestImageTagTransformer(t *testing.T) {
 									"image": "nginx",
 								},
 								map[string]interface{}{
-									"name":  "nginx2",
-									"image": "my-nginx:random",
+									"name":  "myimage",
+									"image": "myprivaterepohostname:1234/my/image:latest",
 								},
 							},
 						},
@@ -78,7 +78,7 @@ func TestImageTagTransformer(t *testing.T) {
 						"spec": map[string]interface{}{
 							"containers": []interface{}{
 								map[string]interface{}{
-									"name":  "ngin3",
+									"name":  "nginx3",
 									"image": "nginx:v1",
 								},
 								map[string]interface{}{
@@ -130,8 +130,8 @@ func TestImageTagTransformer(t *testing.T) {
 									"image": "nginx:v2",
 								},
 								map[string]interface{}{
-									"name":  "nginx2",
-									"image": "my-nginx:previous",
+									"name":  "myimage",
+									"image": "myprivaterepohostname:1234/my/image:v1.0.1",
 								},
 							},
 						},
@@ -142,7 +142,7 @@ func TestImageTagTransformer(t *testing.T) {
 						"spec": map[string]interface{}{
 							"containers": []interface{}{
 								map[string]interface{}{
-									"name":  "ngin3",
+									"name":  "nginx3",
 									"image": "nginx:v2",
 								},
 								map[string]interface{}{
@@ -159,6 +159,7 @@ func TestImageTagTransformer(t *testing.T) {
 	it, err := NewImageTagTransformer([]types.ImageTag{
 		{Name: "nginx", NewTag: "v2"},
 		{Name: "my-nginx", NewTag: "previous"},
+		{Name: "myprivaterepohostname:1234/my/image", NewTag: "v1.0.1"},
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
