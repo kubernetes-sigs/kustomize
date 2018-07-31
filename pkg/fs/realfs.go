@@ -49,6 +49,11 @@ func (realFS) Exists(name string) bool {
 	return err == nil
 }
 
+// Glob returns the list of matching files
+func (realFS) Glob(pattern string) ([]string, error) {
+	return filepath.Glob(pattern)
+}
+
 // IsDir delegates to os.Stat and FileInfo.IsDir
 func (realFS) IsDir(name string) bool {
 	info, err := os.Stat(name)
@@ -60,26 +65,6 @@ func (realFS) IsDir(name string) bool {
 
 // ReadFile delegates to ioutil.ReadFile.
 func (realFS) ReadFile(name string) ([]byte, error) { return ioutil.ReadFile(name) }
-
-// ReadFiles use glob to find the matching files and then read content from all of them
-func (realFS) ReadFiles(name string) (map[string][]byte, error) {
-	files, err := filepath.Glob(name)
-	if err != nil || len(files) == 0 {
-		return nil, err
-	}
-
-	output := map[string][]byte{}
-	for _, file := range files {
-		bytes, err := ioutil.ReadFile(file)
-		if err != nil {
-			return nil, err
-		}
-		if bytes != nil {
-			output[file] = bytes
-		}
-	}
-	return output, nil
-}
 
 // WriteFile delegates to ioutil.WriteFile with read/write permissions.
 func (realFS) WriteFile(name string, c []byte) error {
