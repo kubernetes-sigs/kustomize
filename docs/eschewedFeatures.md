@@ -1,12 +1,12 @@
 # Eschewed Features
 
-## Removal Directives
+## Removal directives
 
-Kustomize supports configurations that can be reasoned about as
+`kustomize` supports configurations that can be reasoned about as
 _compositions_ or _mixins_ - concepts that are widely accepted as
 a best practice in various programming languages.
 
-To this end, Kustomize offers various _addition_ directives.  One
+To this end, `kustomize` offers various _addition_ directives.  One
 can add labels, annotations, patches, resources and bases.
 Corresponding _removal_ directives are not offered.
 
@@ -27,45 +27,45 @@ what you don't want and commit it to your private fork, then use
 kustomize on your fork.  As often as desired, use _git rebase_ to
 capture improvements from the upstream base.
 
-## Environment Variable Substitution
+## Build-time side effects from CLI args or env variables
 
-Kustomize wants to support the best practice of storing one's
+`kustomize` supports the best practice of storing one's
 entire configuration in a version control system.
 
-Consulting the environment at `kustomize build` time would
-violate that goal.
+Changing `kustomize build` configuration output as a result
+of additional arguments or flags to `build`, or by
+consulting shell environment variable values in `build`
+code, would violate that goal.
 
-Kustomize will instead provide kustomization file editting
-commands that can accept environment variable arguments, expand
-them at _edit time_, and store the result in the kustomization
-file.
+`kustomize` insteads offers [kustomization] file `edit`
+commands.  Like any shell command, they can accept
+environment variable arguments.
 
-If one wants to, say, set the tag used on an image to match an
-environment variable, the best practice would be to make
-the command
+For example, to set the tag used on an image to match an
+environment variable, run
 
 ```
 kustomize edit set imagetag nginx:$MY_NGINX_VERSION
 ```
 
-part of some encapsulating work flow executed before `kustomize
-build`.
+as part of some encapsulating work flow executed before
+`kustomize build`.
 
 
-## Globs in Kustomization Files
+## Globs in kustomization files
 
-Kustomize wants to support the best practice of storing one's
+`kustomize` supports the best practice of storing one's
 entire configuration in a version control system.
 
 Globbing the local file system for files not explicitly
-declared in the kustomization file at `kustomize build` time
+declared in the [kustomization] file at `kustomize build` time
 would violate that goal.
 
 Allowing globbing in a kustomization file would also introduce
 the same problems as allowing globbing in [java import]
 declarations or BUILD/Makefile dependency rules.
 
-Kustomize will instead provide kustomization file editting
+`kustomize` will instead provide kustomization file editting
 commands that accept globbed arguments, expand them at _edit
 time_ relative to the local file system, and store the resulting
 explicit names into the kustomization file.
