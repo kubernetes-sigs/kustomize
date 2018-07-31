@@ -18,6 +18,7 @@ package fs
 
 import (
 	"bytes"
+	"reflect"
 	"testing"
 )
 
@@ -88,5 +89,22 @@ func TestWriteFile(t *testing.T) {
 	}
 	if bytes.Compare(c, content) != 0 {
 		t.Fatalf("incorrect content: %v", content)
+	}
+}
+
+func TestGlob(t *testing.T) {
+	x := MakeFakeFS()
+	x.Create("dir/foo")
+	x.Create("dir/bar")
+	files, err := x.Glob("dir/*")
+	if err != nil {
+		t.Fatalf("expected no error")
+	}
+	expected := []string{
+		"dir/bar",
+		"dir/foo",
+	}
+	if !reflect.DeepEqual(files, expected) {
+		t.Fatalf("incorrect files found by glob: %v", files)
 	}
 }
