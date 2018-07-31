@@ -72,7 +72,7 @@ resources:
 namespace: namespace-b
 EOF
 
-cat <<EOF >$NSA/namespace.yaml
+cat <<EOF >$NSB/namespace.yaml
 apiVersion: v1
 kind: Namespace
 metadata:
