@@ -29,8 +29,8 @@ type FileSystem interface {
 	Open(name string) (File, error)
 	IsDir(name string) bool
 	Exists(name string) bool
+	Glob(pattern string) ([]string, error)
 	ReadFile(name string) ([]byte, error)
-	ReadFiles(name string) (map[string][]byte, error)
 	WriteFile(name string, data []byte) error
 }
 
