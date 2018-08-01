@@ -59,6 +59,25 @@ func TestNameReferenceRun(t *testing.T) {
 					"name": "someprefix-claim1",
 				},
 			}),
+		resource.NewResId(ingress, "ingress1"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"group":      "extensions",
+				"apiVersion": "v1beta1",
+				"kind":       "Ingress",
+				"metadata": map[string]interface{}{
+					"name": "ingress1",
+					"annotations": map[string]interface{}{
+						"ingress.kubernetes.io/auth-secret": "secret1",
+					},
+				},
+				"spec": map[string]interface{}{
+					"backend": map[string]interface{}{
+						"serviceName": "testsvc",
+						"servicePort": "80",
+					},
+				},
+			},
+		),
 		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"group":      "apps",
@@ -282,6 +301,25 @@ func TestNameReferenceRun(t *testing.T) {
 				},
 			},
 		})
+	expected[resource.NewResId(ingress, "ingress1")] = resource.NewResourceFromMap(
+		map[string]interface{}{
+			"group":      "extensions",
+			"apiVersion": "v1beta1",
+			"kind":       "Ingress",
+			"metadata": map[string]interface{}{
+				"name": "ingress1",
+				"annotations": map[string]interface{}{
+					"ingress.kubernetes.io/auth-secret": "someprefix-secret1-somehash",
+				},
+			},
+			"spec": map[string]interface{}{
+				"backend": map[string]interface{}{
+					"serviceName": "testsvc",
+					"servicePort": "80",
+				},
+			},
+		},
+	)
 
 	nrt, err := NewDefaultingNameReferenceTransformer()
 	if err != nil {
