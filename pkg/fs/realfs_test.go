@@ -55,17 +55,15 @@ func TestReadFilesRealFS(t *testing.T) {
 		t.Fatalf("unexpected error %s", err)
 	}
 
-	expected := map[string][]byte{
-		path.Join(testDir, "foo"): []byte(`foo`),
-		path.Join(testDir, "bar"): []byte(`bar`),
-	}
-
-	content, err := x.ReadFiles("kustomize_testing_dir/*")
-	if !reflect.DeepEqual(content, expected) {
-		t.Fatalf("actual: %+v doesn't match expected: %+v", content, expected)
-
+	files, err := x.Glob(path.Join("testDir", "*"))
+	expected := []string{
+		path.Join(testDir, "bar"),
+		path.Join(testDir, "foo"),
 	}
 	if err != nil {
-		t.Fatalf("unexpected error %s", err)
+		t.Fatalf("expected no error")
+	}
+	if reflect.DeepEqual(files, expected) {
+		t.Fatalf("incorrect files found by glob: %v", files)
 	}
 }

@@ -109,13 +109,3 @@ func (l *fileLoader) Load(location string) ([]byte, error) {
 	}
 	return l.fSys.ReadFile(fullLocation)
 }
-
-// GlobLoad returns the map from path to bytes from reading a glob path.
-// Implements the Loader interface.
-func (l *fileLoader) GlobLoad(location string) (map[string][]byte, error) {
-	fullLocation, err := l.fullLocation(l.root, location)
-	if err != nil {
-		return nil, err
-	}
-	return l.fSys.ReadFiles(fullLocation)
-}

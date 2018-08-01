@@ -18,6 +18,8 @@ package fs
 
 import (
 	"fmt"
+	"path/filepath"
+	"sort"
 )
 
 var _ FileSystem = &FakeFS{}
@@ -60,6 +62,18 @@ func (fs *FakeFS) Exists(name string) bool {
 	return found
 }
 
+// Glob returns the list of matching files
+func (fs *FakeFS) Glob(pattern string) ([]string, error) {
+	var result []string
+	for p := range fs.m {
+		if fs.pathMatch(p, pattern) {
+			result = append(result, p)
+		}
+	}
+	sort.Strings(result)
+	return result, nil
+}
+
 // IsDir returns true if the file exists and is a directory.
 func (fs *FakeFS) IsDir(name string) bool {
 	f, found := fs.m[name]
@@ -77,18 +91,6 @@ func (fs *FakeFS) ReadFile(name string) ([]byte, error) {
 	return nil, fmt.Errorf("cannot read file %q", name)
 }
 
-// ReadFiles looks through all files in the fake filesystem
-// and find the matching files and then read content from all of them
-func (fs *FakeFS) ReadFiles(name string) (map[string][]byte, error) {
-	result := map[string][]byte{}
-	for p, f := range fs.m {
-		if fs.pathMatch(p, name) {
-			result[p] = f.content
-		}
-	}
-	return result, nil
-}
-
 // WriteFile always succeeds and does nothing.
 func (fs *FakeFS) WriteFile(name string, c []byte) error {
 	ff := &FakeFile{}
@@ -98,8 +100,6 @@ func (fs *FakeFS) WriteFile(name string, c []byte) error {
 }
 
 func (fs *FakeFS) pathMatch(path, pattern string) bool {
-	if path == pattern {
-		return true
-	}
-	return false
+	match, _ := filepath.Match(pattern, path)
+	return match
 }
