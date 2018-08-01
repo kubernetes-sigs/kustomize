@@ -652,6 +652,13 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 			},
 			{
 				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "Ingress",
+				},
+				Path:               []string{"metadata", "annotations", "ingress.kubernetes.io/auth-secret"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
 					Kind: "ServiceAccount",
 				},
 				Path:               []string{"imagePullSecrets", "name"},
