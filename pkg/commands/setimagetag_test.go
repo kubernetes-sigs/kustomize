@@ -29,7 +29,7 @@ func TestSetImageTagsHappyPath(t *testing.T) {
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
 	cmd := newCmdSetImageTag(fakeFS)
-	args := []string{"image1:tag1", "image2:tag2"}
+	args := []string{"image1:tag1", "image2:tag2", "localhost:5000/operator:1.0.0"}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
@@ -44,6 +44,8 @@ imageTags:
   newTag: tag1
 - name: image2
   newTag: tag2
+- name: localhost:5000/operator
+  newTag: 1.0.0
 `)
 	if !strings.Contains(string(content), string(expected)) {
 		t.Errorf("expected imageTags in kustomization file")
