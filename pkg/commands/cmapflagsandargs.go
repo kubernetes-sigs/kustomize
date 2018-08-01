@@ -18,6 +18,8 @@ package commands
 
 import (
 	"fmt"
+
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 )
 
 // cMapFlagsAndArgs encapsulates the options for add configmap commands.
@@ -46,5 +48,14 @@ func (a *cMapFlagsAndArgs) Validate(args []string) error {
 		return fmt.Errorf("from-env-file cannot be combined with from-file or from-literal")
 	}
 	// TODO: Should we check if the path exists? if it's valid, if it's within the same (sub-)directory?
+	return nil
+}
+
+func (a *cMapFlagsAndArgs) ExpandFileSource(fSys fs.FileSystem) error {
+	result, err := globPatterns(fSys, a.FileSources)
+	if err != nil {
+		return err
+	}
+	a.FileSources = result
 	return nil
 }

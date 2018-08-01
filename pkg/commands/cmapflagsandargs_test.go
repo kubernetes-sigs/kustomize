@@ -17,7 +17,10 @@ limitations under the License.
 package commands
 
 import (
+	"reflect"
 	"testing"
+
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 )
 
 func TestDataConfigValidation_NoName(t *testing.T) {
@@ -79,5 +82,23 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 		} else if test.config.Validate([]string{"name"}) != nil && !test.shouldFail {
 			t.Fatalf("Validation should succeed if %s", test.name)
 		}
+	}
+}
+
+func TestExpandFileSource(t *testing.T) {
+	fakeFS := fs.MakeFakeFS()
+	fakeFS.Create("dir/config1")
+	fakeFS.Create("dir/config2")
+	fakeFS.Create("dir/reademe")
+	config := cMapFlagsAndArgs{
+		FileSources: []string{"dir/config*"},
+	}
+	config.ExpandFileSource(fakeFS)
+	expected := []string{
+		"dir/config1",
+		"dir/config2",
+	}
+	if !reflect.DeepEqual(config.FileSources, expected) {
+		t.Fatalf("FileSources is not correctly expanded: %v", config.FileSources)
 	}
 }

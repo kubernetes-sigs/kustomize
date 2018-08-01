@@ -18,7 +18,7 @@ package commands
 
 import (
 	"errors"
-	"fmt"
+	"log"
 
 	"github.com/spf13/cobra"
 
@@ -27,7 +27,7 @@ import (
 )
 
 type addPatchOptions struct {
-	patchFilePath string
+	patchFilePaths []string
 }
 
 // newCmdAddPatch adds the name of a file containing a patch to the kustomization file.
@@ -56,10 +56,10 @@ func newCmdAddPatch(fsys fs.FileSystem) *cobra.Command {
 
 // Validate validates addPatch command.
 func (o *addPatchOptions) Validate(args []string) error {
-	if len(args) != 1 {
+	if len(args) == 0 {
 		return errors.New("must specify a patch file")
 	}
-	o.patchFilePath = args[0]
+	o.patchFilePaths = args
 	return nil
 }
 
@@ -70,8 +70,12 @@ func (o *addPatchOptions) Complete(cmd *cobra.Command, args []string) error {
 
 // RunAddPatch runs addPatch command (do real work).
 func (o *addPatchOptions) RunAddPatch(fsys fs.FileSystem) error {
-	if !fsys.Exists(o.patchFilePath) {
-		return errors.New(o.patchFilePath + " doesn't exist")
+	patches, err := globPatterns(fsys, o.patchFilePaths)
+	if err != nil {
+		return err
+	}
+	if len(patches) == 0 {
+		return nil
 	}
 
 	mf, err := newKustomizationFile(constants.KustomizationFileName, fsys)
@@ -84,11 +88,13 @@ func (o *addPatchOptions) RunAddPatch(fsys fs.FileSystem) error {
 		return err
 	}
 
-	if stringInSlice(o.patchFilePath, m.Patches) {
-		return fmt.Errorf("patch %s already in kustomization file", o.patchFilePath)
+	for _, patch := range patches {
+		if stringInSlice(patch, m.Patches) {
+			log.Printf("patch %s already in kustomization file", patch)
+			continue
+		}
+		m.Patches = append(m.Patches, patch)
 	}
-
-	m.Patches = append(m.Patches, o.patchFilePath)
 
 	return mf.write(m)
 }
