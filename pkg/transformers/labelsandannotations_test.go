@@ -38,6 +38,7 @@ var cronjob = schema.GroupVersionKind{Group: "batch", Version: "v1beta1", Kind: 
 var pvc = schema.GroupVersionKind{Version: "v1", Kind: "PersistentVolumeClaim"}
 var crb = schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRoleBinding"}
 var sa = schema.GroupVersionKind{Version: "v1", Kind: "ServiceAccount"}
+var ingress = schema.GroupVersionKind{Kind: "Ingress"}
 
 func TestLabelsRun(t *testing.T) {
 	m := resmap.ResMap{
