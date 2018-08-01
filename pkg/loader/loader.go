@@ -25,6 +25,4 @@ type Loader interface {
 	New(newRoot string) (Loader, error)
 	// Load returns the bytes read from the location or an error.
 	Load(location string) ([]byte, error)
-	// GlobLoad returns the bytes read from a glob path or an error.
-	GlobLoad(location string) (map[string][]byte, error)
 }

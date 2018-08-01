@@ -63,8 +63,3 @@ func (f FakeLoader) New(newRoot string) (loader.Loader, error) {
 func (f FakeLoader) Load(location string) ([]byte, error) {
 	return f.delegate.Load(location)
 }
-
-// GlobLoad performs load from a given location.
-func (f FakeLoader) GlobLoad(location string) (map[string][]byte, error) {
-	return f.delegate.GlobLoad(location)
-}

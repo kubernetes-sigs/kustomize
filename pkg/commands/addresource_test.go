@@ -17,9 +17,8 @@ limitations under the License.
 package commands
 
 import (
-	"testing"
-
 	"strings"
+	"testing"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
@@ -52,10 +51,11 @@ secretGenerator: []
 func TestAddResourceHappyPath(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile(resourceFileName, []byte(resourceFileContent))
+	fakeFS.WriteFile(resourceFileName+"another", []byte(resourceFileContent))
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
 	cmd := newCmdAddResource(fakeFS)
-	args := []string{resourceFileName}
+	args := []string{resourceFileName + "*"}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
@@ -65,6 +65,9 @@ func TestAddResourceHappyPath(t *testing.T) {
 		t.Errorf("unexpected read error: %v", err)
 	}
 	if !strings.Contains(string(content), resourceFileName) {
+		t.Errorf("expected resource name in kustomization")
+	}
+	if !strings.Contains(string(content), resourceFileName+"another") {
 		t.Errorf("expected resource name in kustomization")
 	}
 }
@@ -81,13 +84,10 @@ func TestAddResourceAlreadyThere(t *testing.T) {
 		t.Fatalf("unexpected cmd error: %v", err)
 	}
 
-	// adding an existing resource should return an error
+	// adding an existing resource doesn't return an error
 	err = cmd.RunE(cmd, args)
-	if err == nil {
-		t.Errorf("expected already there problem")
-	}
-	if err.Error() != "resource "+resourceFileName+" already in kustomization file" {
-		t.Errorf("unexpected error %v", err)
+	if err != nil {
+		t.Errorf("unexpected cmd error :%v", err)
 	}
 }
 
