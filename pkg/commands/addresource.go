@@ -18,7 +18,7 @@ package commands
 
 import (
 	"errors"
-	"fmt"
+	"log"
 
 	"github.com/spf13/cobra"
 
@@ -27,7 +27,7 @@ import (
 )
 
 type addResourceOptions struct {
-	resourceFilePath string
+	resourceFilePaths []string
 }
 
 // newCmdAddResource adds the name of a file containing a resource to the kustomization file.
@@ -56,10 +56,10 @@ func newCmdAddResource(fsys fs.FileSystem) *cobra.Command {
 
 // Validate validates addResource command.
 func (o *addResourceOptions) Validate(args []string) error {
-	if len(args) != 1 {
+	if len(args) == 0 {
 		return errors.New("must specify a resource file")
 	}
-	o.resourceFilePath = args[0]
+	o.resourceFilePaths = args
 	return nil
 }
 
@@ -70,9 +70,24 @@ func (o *addResourceOptions) Complete(cmd *cobra.Command, args []string) error {
 
 // RunAddResource runs addResource command (do real work).
 func (o *addResourceOptions) RunAddResource(fsys fs.FileSystem) error {
-	if !fsys.Exists(o.resourceFilePath) {
-		return errors.New(o.resourceFilePath + " does not exist")
+	var resources []string
+
+	for _, pattern := range o.resourceFilePaths {
+		files, err := fsys.Glob(pattern)
+		if err != nil {
+			return err
+		}
+		if len(files) == 0 {
+			log.Printf("%s has no match", pattern)
+			continue
+		}
+		resources = append(resources, files...)
 	}
+
+	if len(resources) == 0 {
+		return nil
+	}
+
 	mf, err := newKustomizationFile(constants.KustomizationFileName, fsys)
 	if err != nil {
 		return err
@@ -83,11 +98,13 @@ func (o *addResourceOptions) RunAddResource(fsys fs.FileSystem) error {
 		return err
 	}
 
-	if stringInSlice(o.resourceFilePath, m.Resources) {
-		return fmt.Errorf("resource %s already in kustomization file", o.resourceFilePath)
+	for _, resource := range resources {
+		if stringInSlice(resource, m.Resources) {
+			log.Printf("resource %s already in kustomization file", resource)
+			continue
+		}
+		m.Resources = append(m.Resources, resource)
 	}
-
-	m.Resources = append(m.Resources, o.resourceFilePath)
 
 	return mf.write(m)
 }
