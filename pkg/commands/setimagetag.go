@@ -18,19 +18,21 @@ package commands
 
 import (
 	"errors"
-	"strings"
+	"regexp"
+	"sort"
 
 	"github.com/spf13/cobra"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
-	"sort"
 )
 
 type setImageTagOptions struct {
 	imageTagMap map[string]string
 }
+
+var pattern = regexp.MustCompile("^(.*):([a-zA-Z0-9._-]*)$")
 
 // newCmdSetImageTag sets the new tags for images in the kustomization.
 func newCmdSetImageTag(fsys fs.FileSystem) *cobra.Command {
@@ -71,11 +73,11 @@ func (o *setImageTagOptions) Validate(args []string) error {
 	}
 	o.imageTagMap = make(map[string]string)
 	for _, arg := range args {
-		imagetag := strings.Split(arg, ":")
-		if len(imagetag) != 2 {
+		imagetag := pattern.FindStringSubmatch(arg)
+		if len(imagetag) != 3 {
 			return errors.New("Invalid format of imagetag, must specify it as <image>:<newtag>")
 		}
-		o.imageTagMap[imagetag[0]] = imagetag[1]
+		o.imageTagMap[imagetag[1]] = imagetag[2]
 	}
 	return nil
 }
