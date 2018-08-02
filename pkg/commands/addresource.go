@@ -70,20 +70,10 @@ func (o *addResourceOptions) Complete(cmd *cobra.Command, args []string) error {
 
 // RunAddResource runs addResource command (do real work).
 func (o *addResourceOptions) RunAddResource(fsys fs.FileSystem) error {
-	var resources []string
-
-	for _, pattern := range o.resourceFilePaths {
-		files, err := fsys.Glob(pattern)
-		if err != nil {
-			return err
-		}
-		if len(files) == 0 {
-			log.Printf("%s has no match", pattern)
-			continue
-		}
-		resources = append(resources, files...)
+	resources, err := globPatterns(fsys, o.resourceFilePaths)
+	if err != nil {
+		return err
 	}
-
 	if len(resources) == 0 {
 		return nil
 	}
