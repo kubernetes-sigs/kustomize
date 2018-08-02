@@ -36,10 +36,11 @@ sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 func TestAddPatchHappyPath(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile(patchFileName, []byte(patchFileContent))
+	fakeFS.WriteFile(patchFileName+"another", []byte(patchFileContent))
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
 	cmd := newCmdAddPatch(fakeFS)
-	args := []string{patchFileName}
+	args := []string{patchFileName + "*"}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
@@ -49,6 +50,9 @@ func TestAddPatchHappyPath(t *testing.T) {
 		t.Errorf("unexpected read error: %v", err)
 	}
 	if !strings.Contains(string(content), patchFileName) {
+		t.Errorf("expected patch name in kustomization")
+	}
+	if !strings.Contains(string(content), patchFileName+"another") {
 		t.Errorf("expected patch name in kustomization")
 	}
 }
@@ -65,13 +69,10 @@ func TestAddPatchAlreadyThere(t *testing.T) {
 		t.Fatalf("unexpected cmd error: %v", err)
 	}
 
-	// adding an existing patch should return an error
+	// adding an existing patch shouldn't return an error
 	err = cmd.RunE(cmd, args)
-	if err == nil {
-		t.Errorf("expected already there problem")
-	}
-	if err.Error() != "patch "+patchFileName+" already in kustomization file" {
-		t.Errorf("unexpected error %v", err)
+	if err != nil {
+		t.Errorf("unexpected cmd error: %v", err)
 	}
 }
 
