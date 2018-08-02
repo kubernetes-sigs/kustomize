@@ -50,6 +50,11 @@ func newCmdAddConfigMap(fSys fs.FileSystem) *cobra.Command {
 				return err
 			}
 
+			err = flagsAndArgs.ExpandFileSource(fSys)
+			if err != nil {
+				return err
+			}
+
 			// Load the kustomization file.
 			mf, err := newKustomizationFile(constants.KustomizationFileName, fSys)
 			if err != nil {
