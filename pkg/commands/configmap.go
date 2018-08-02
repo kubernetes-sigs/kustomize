@@ -45,12 +45,12 @@ func newCmdAddConfigMap(fSys fs.FileSystem) *cobra.Command {
 	kustomize edit add configmap my-configmap --from-env-file=env/path.env
 `,
 		RunE: func(_ *cobra.Command, args []string) error {
-			err := flagsAndArgs.Validate(args)
+			err := flagsAndArgs.ExpandFileSource(fSys)
 			if err != nil {
 				return err
 			}
 
-			err = flagsAndArgs.ExpandFileSource(fSys)
+			err = flagsAndArgs.Validate(args)
 			if err != nil {
 				return err
 			}
