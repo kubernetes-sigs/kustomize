@@ -1,16 +1,16 @@
 [releases page]: https://github.com/kubernetes-sigs/kustomize/releases
-[`container-builder-local`]: https://github.com/GoogleCloudPlatform/container-builder-local
-[Google Container Builder]: https://cloud.google.com/container-builder
+[`cloud-build-local`]: https://github.com/GoogleCloudPlatform/cloud-build-local
+[Google Cloud Build]: https://cloud.google.com/cloud-build
 
 Scripts and configuration files for publishing a
 `kustomize` release on the [releases page].
 
 ### Build a release locally
 
-Install [`container-builder-local`], then run
+Install [`cloud-build-local`], then run
 
 ```
-container-builder-local \
+cloud-build-local \
    --config=build/cloudbuild_local.yaml \
    --dryrun=false --write-workspace=/tmp/w .
 ```
@@ -41,5 +41,5 @@ Push the tag upstream:
 git push upstream $version
 ```
 
-The new tag will trigger a job in [Google Container
-Builder] to put a new release on the [releases page].
+The new tag will trigger a job in [Google Cloud
+Build] to put a new release on the [releases page].
