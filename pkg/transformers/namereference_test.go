@@ -67,7 +67,8 @@ func TestNameReferenceRun(t *testing.T) {
 				"metadata": map[string]interface{}{
 					"name": "ingress1",
 					"annotations": map[string]interface{}{
-						"ingress.kubernetes.io/auth-secret": "secret1",
+						"ingress.kubernetes.io/auth-secret":       "secret1",
+						"nginx.ingress.kubernetes.io/auth-secret": "secret1",
 					},
 				},
 				"spec": map[string]interface{}{
@@ -309,7 +310,8 @@ func TestNameReferenceRun(t *testing.T) {
 			"metadata": map[string]interface{}{
 				"name": "ingress1",
 				"annotations": map[string]interface{}{
-					"ingress.kubernetes.io/auth-secret": "someprefix-secret1-somehash",
+					"ingress.kubernetes.io/auth-secret":       "someprefix-secret1-somehash",
+					"nginx.ingress.kubernetes.io/auth-secret": "someprefix-secret1-somehash",
 				},
 			},
 			"spec": map[string]interface{}{
