@@ -46,9 +46,6 @@ var skipNamePrefixPathConfigs = []PathConfig{
 	{
 		GroupVersionKind: &schema.GroupVersionKind{Kind: "CustomResourceDefinition"},
 	},
-	{
-		GroupVersionKind: &schema.GroupVersionKind{Kind: "Namespace"},
-	},
 }
 
 // NewDefaultingNamePrefixTransformer construct a namePrefixTransformer with defaultNamePrefixPathConfigs.
