@@ -115,11 +115,21 @@ type SecretArgs struct {
 	// keys: "tls.key" and "tls.crt"
 	Type string `json:"type,omitempty" yaml:"type,omitempty"`
 
-	// Map of keys to commands to generate the values
-	Commands map[string]string `json:",commands,omitempty" yaml:",inline,omitempty"`
+	// CommandSources for secret.
+	CommandSources `json:",inline,omitempty" yaml:",inline,omitempty"`
 }
 
-// DataSources contains some generic sources for configmap or secret.
+// CommandSources contains some generic sources for secrets.
+// Only one field can be set.
+type CommandSources struct {
+	// Map of keys to commands to generate the values
+	Commands map[string]string `json:"commands,omitempty" yaml:"literals,omitempty"`
+	// EnvCommand to output lines of key=val pairs to create a secret.
+	// i.e. a Docker .env file or a .ini file.
+	EnvCommand string `json:"envCommand,omitempty" yaml:"env,omitempty"`
+}
+
+// DataSources contains some generic sources for configmaps.
 // Only one field can be set.
 type DataSources struct {
 	// LiteralSources is a list of literal sources.
