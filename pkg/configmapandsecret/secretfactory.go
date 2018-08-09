@@ -89,10 +89,10 @@ func (f *SecretFactory) MakeSecret(args *types.SecretArgs) (*corev1.Secret, erro
 func addKvToSecret(secret *corev1.Secret, keyName, data string) error {
 	// Note, the rules for SecretKeys  keys are the exact same as the ones for ConfigMap.
 	if errs := validation.IsConfigMapKey(keyName); len(errs) != 0 {
-		return fmt.Errorf("%q is not a valid key name for a ConfigMap: %s", keyName, strings.Join(errs, ";"))
+		return fmt.Errorf("%q is not a valid key name for a Secret: %s", keyName, strings.Join(errs, ";"))
 	}
 	if _, entryExists := secret.Data[keyName]; entryExists {
-		return fmt.Errorf("cannot add key %s, another key by that name already exists: %v", keyName, secret.Data)
+		return fmt.Errorf("cannot add key %s, another key by that name already exists", keyName)
 	}
 	secret.Data[keyName] = []byte(data)
 	return nil
@@ -110,7 +110,6 @@ func (f *SecretFactory) keyValuesFromCommands(sources map[string]string) ([]kvPa
 	var kvs []kvPair
 	for k, cmd := range sources {
 		content, err := f.createSecretKey(cmd)
-		fmt.Println("createSecretKey:", content)
 		if err != nil {
 			return nil, err
 		}
