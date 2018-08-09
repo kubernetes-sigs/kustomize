@@ -88,3 +88,136 @@ func TestNewNotExist(t *testing.T) {
 		t.Fatalf("expect an error contains %q, but got %v", contained, err)
 	}
 }
+
+func TestPreserveComments(t *testing.T) {
+	kustomizationContentWithComments := []byte(
+		`# shem qing some comments
+# This is some comment we should preserve
+# don't delete it
+resources:
+- pod.yaml
+- service.yaml
+# something you may want to keep
+vars:
+- fieldref:
+    fieldPath: metadata.name
+  name: MY_SERVICE_NAME
+  objref:
+    apiVersion: v1
+    kind: Service
+    name: my-service
+bases:
+- ../namespaces
+# some descriptions for the patches
+patches:
+- service.yaml
+- pod.yaml
+`)
+	fsys := fs.MakeFakeFS()
+	fsys.Create(constants.KustomizationFileName)
+	fsys.WriteFile(constants.KustomizationFileName, kustomizationContentWithComments)
+	mf, err := newKustomizationFile(constants.KustomizationFileName, fsys)
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	kustomization, err := mf.read()
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	if err = mf.write(kustomization); err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	bytes, _ := fsys.ReadFile(mf.path)
+
+	if !reflect.DeepEqual(kustomizationContentWithComments, bytes) {
+		t.Fatal("written kustomization with comments is not the same as original one")
+	}
+}
+
+func TestPreserveCommentsWithAdjust(t *testing.T) {
+	kustomizationContentWithComments := []byte(`
+
+    
+
+# shem qing some comments
+# This is some comment we should preserve
+# don't delete it
+resources:
+- pod.yaml
+  # See which field this comment goes into
+- service.yaml
+
+
+# something you may want to keep
+vars:
+- fieldref:
+    fieldPath: metadata.name
+  name: MY_SERVICE_NAME
+  objref:
+    apiVersion: v1
+    kind: Service
+    name: my-service
+
+bases:
+- ../namespaces
+
+# some descriptions for the patches
+
+patches:
+- service.yaml
+- pod.yaml
+`)
+
+	expected := []byte(`
+
+    
+
+# shem qing some comments
+# This is some comment we should preserve
+# don't delete it
+  # See which field this comment goes into
+resources:
+- pod.yaml
+- service.yaml
+
+
+# something you may want to keep
+vars:
+- fieldref:
+    fieldPath: metadata.name
+  name: MY_SERVICE_NAME
+  objref:
+    apiVersion: v1
+    kind: Service
+    name: my-service
+
+bases:
+- ../namespaces
+
+# some descriptions for the patches
+
+patches:
+- service.yaml
+- pod.yaml
+`)
+	fsys := fs.MakeFakeFS()
+	fsys.Create(constants.KustomizationFileName)
+	fsys.WriteFile(constants.KustomizationFileName, kustomizationContentWithComments)
+	mf, err := newKustomizationFile(constants.KustomizationFileName, fsys)
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+
+	kustomization, err := mf.read()
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	if err = mf.write(kustomization); err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	bytes, _ := fsys.ReadFile(mf.path)
+
+	if !reflect.DeepEqual(expected, bytes) {
+		t.Fatal("written kustomization with comments is not the same as original one\n", string(bytes))
+	}
+}
