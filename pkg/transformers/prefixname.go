@@ -19,6 +19,7 @@ package transformers
 import (
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 
@@ -46,6 +47,11 @@ var skipNamePrefixPathConfigs = []PathConfig{
 	{
 		GroupVersionKind: &schema.GroupVersionKind{Kind: "CustomResourceDefinition"},
 	},
+}
+
+// deprecateNamePrefixPathConfig will be moved into skipNamePrefixPathConfigs in next release
+var deprecateNamePrefixPathConfig = PathConfig{
+	GroupVersionKind: &schema.GroupVersionKind{Kind: "Namespace"},
 }
 
 // NewDefaultingNamePrefixTransformer construct a namePrefixTransformer with defaultNamePrefixPathConfigs.
@@ -83,6 +89,9 @@ func (o *namePrefixTransformer) Transform(m resmap.ResMap) error {
 	}
 
 	for id := range mf {
+		if selectByGVK(id.Gvk(), deprecateNamePrefixPathConfig.GroupVersionKind) {
+			log.Println("Adding nameprefix to Namespace resource will be deprecated in next release.")
+		}
 		objMap := mf[id].UnstructuredContent()
 		for _, path := range o.pathConfigs {
 			if !selectByGVK(id.Gvk(), path.GroupVersionKind) {
