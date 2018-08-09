@@ -30,7 +30,7 @@ func NewResMapFromSecretArgs(
 	secretList []types.SecretArgs) (ResMap, error) {
 	var allResources []*resource.Resource
 	for _, args := range secretList {
-		s, err := f.MakeSecret(args)
+		s, err := f.MakeSecret(&args)
 		if err != nil {
 			return nil, errors.Wrap(err, "makeSecret")
 		}
