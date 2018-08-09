@@ -17,9 +17,13 @@ limitations under the License.
 package commands
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"path"
+	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -30,9 +34,27 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 )
 
+var (
+	kustomizationFields = []string{"resources", "bases", "namePrefix", "namespace", "crds", "commonLabels", "commonAnnotations", "patches", "configMapGenerator", "secretGenerator", "vars", "imageTags"}
+	recognizedFields    = regexp.MustCompile("^(" + strings.Join(kustomizationFields, "|") + "):")
+)
+
+// commentedField records the comment associated with a kustomization field
+// field has to be a recognized kustomization field
+// comment can be empty
+type commentedField struct {
+	field   string
+	comment []byte
+}
+
+func (cf *commentedField) appendComment(comment []byte) {
+	cf.comment = append(cf.comment, comment...)
+}
+
 type kustomizationFile struct {
-	path string
-	fsys fs.FileSystem
+	path           string
+	fsys           fs.FileSystem
+	originalFields []*commentedField
 }
 
 func newKustomizationFile(mPath string, fsys fs.FileSystem) (*kustomizationFile, error) { // nolint
@@ -77,6 +99,10 @@ func (mf *kustomizationFile) read() (*types.Kustomization, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = mf.parseCommentedFields(bytes)
+	if err != nil {
+		return nil, err
+	}
 	return &kustomization, err
 }
 
@@ -84,11 +110,10 @@ func (mf *kustomizationFile) write(kustomization *types.Kustomization) error {
 	if kustomization == nil {
 		return errors.New("util: kustomization file arg is nil")
 	}
-	bytes, err := yaml.Marshal(kustomization)
+	bytes, err := mf.marshal(kustomization)
 	if err != nil {
 		return err
 	}
-
 	return mf.fsys.WriteFile(mf.path, bytes)
 }
 
@@ -99,4 +124,96 @@ func stringInSlice(str string, list []string) bool {
 		}
 	}
 	return false
+}
+
+func (mf *kustomizationFile) parseCommentedFields(content []byte) error {
+	buffer := bytes.NewBuffer(content)
+	var comments [][]byte
+	var currentfield string
+
+	line, err := buffer.ReadBytes('\n')
+	for err == nil {
+		if isCommentOrBlankLine(line) {
+			comments = append(comments, line)
+		} else if recognizedFields.Match(line) {
+			fields := recognizedFields.FindSubmatch(line)
+			currentfield = string(fields[1])
+			mf.originalFields = append(mf.originalFields, &commentedField{field: currentfield, comment: bytes.Join(comments, []byte(``))})
+			comments = [][]byte{}
+		} else if len(comments) > 0 {
+			mf.originalFields[len(mf.originalFields)-1].appendComment(bytes.Join(comments, []byte(``)))
+			comments = [][]byte{}
+		}
+		line, err = buffer.ReadBytes('\n')
+	}
+
+	if err != io.EOF {
+		return err
+	}
+	return nil
+}
+
+func (mf *kustomizationFile) marshal(kustomization *types.Kustomization) ([]byte, error) {
+	output := []byte{}
+	for _, comment := range mf.originalFields {
+		output = append(output, comment.comment...)
+		content, err := marshalField(comment.field, kustomization)
+		if err != nil {
+			return content, err
+		}
+		output = append(output, content...)
+	}
+	for _, field := range kustomizationFields {
+		if mf.hasField(field) {
+			continue
+		}
+		content, err := marshalField(field, kustomization)
+		if err != nil {
+			return content, nil
+		}
+		output = append(output, content...)
+
+	}
+	return output, nil
+}
+
+func (mf *kustomizationFile) hasField(name string) bool {
+	for _, n := range mf.originalFields {
+		if n.field == name {
+			return true
+		}
+	}
+	return false
+}
+
+/*
+ isCommentOrBlankLine determines if a line is a comment or blank line
+ Return true for following lines
+ # This line is a comment
+       # This line is also a comment with several leading white spaces
+
+ (The line above is a blank line)
+*/
+func isCommentOrBlankLine(line []byte) bool {
+	s := bytes.TrimRight(bytes.TrimLeft(line, " "), "\n")
+	return len(s) == 0 || bytes.HasPrefix(s, []byte(`#`))
+}
+
+// marshalField marshal a given field of a kustomization object into yaml format.
+// If the field wasn't in the original kustomization.yaml file or wasn't added,
+// an empty []byte is returned.
+func marshalField(field string, kustomization *types.Kustomization) ([]byte, error) {
+	r := reflect.ValueOf(*kustomization)
+	v := r.FieldByName(strings.Title(field))
+
+	if !v.IsValid() || v.Len() == 0 {
+		return []byte{}, nil
+	}
+
+	k := &types.Kustomization{}
+	kr := reflect.ValueOf(k)
+	kv := kr.Elem().FieldByName(strings.Title(field))
+	kv.Set(v)
+
+	return yaml.Marshal(k)
 }
