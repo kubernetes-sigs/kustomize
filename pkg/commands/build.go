@@ -32,6 +32,7 @@ import (
 
 type buildOptions struct {
 	kustomizationPath string
+	outputPath        string
 }
 
 // newCmdBuild creates a new build command.
@@ -52,6 +53,10 @@ func newCmdBuild(out io.Writer, fs fs.FileSystem) *cobra.Command {
 			return o.RunBuild(out, fs)
 		},
 	}
+	cmd.Flags().StringVarP(
+		&o.outputPath,
+		"output", "o", "",
+		"If specified, write the build output to this path.")
 	return cmd
 }
 
@@ -97,6 +102,10 @@ func (o *buildOptions) RunBuild(out io.Writer, fSys fs.FileSystem) error {
 	res, err := allResources.EncodeAsYaml()
 	if err != nil {
 		return err
+	}
+
+	if o.outputPath != "" {
+		return fSys.WriteFile(o.outputPath, res)
 	}
 	_, err = out.Write(res)
 	return err
