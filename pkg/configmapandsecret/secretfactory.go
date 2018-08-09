@@ -1,3 +1,19 @@
+/*
+Copyright 2018 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package configmapandsecret
 
 import (
@@ -5,12 +21,14 @@ import (
 	"fmt"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 // SecretFactory makes Secrets.
@@ -24,8 +42,7 @@ func NewSecretFactory(fSys fs.FileSystem, wd string) *SecretFactory {
 	return &SecretFactory{fSys: fSys, wd: wd}
 }
 
-// MakeSecret returns a new secret.
-func (f *SecretFactory) MakeSecret(args types.SecretArgs) (*corev1.Secret, error) {
+func (f *SecretFactory) makeFreshSecret(args *types.SecretArgs) *corev1.Secret {
 	s := &corev1.Secret{}
 	s.APIVersion = "v1"
 	s.Kind = "Secret"
@@ -35,15 +52,71 @@ func (f *SecretFactory) MakeSecret(args types.SecretArgs) (*corev1.Secret, error
 		s.Type = corev1.SecretTypeOpaque
 	}
 	s.Data = map[string][]byte{}
-	for k, v := range args.Commands {
-		out, err := f.createSecretKey(v)
-		if err != nil {
-			errMsg := fmt.Sprintf("createSecretKey: couldn't make secret %s for key %s", s.Name, k)
-			return nil, errors.Wrap(err, errMsg)
-		}
-		s.Data[k] = out
+	return s
+}
+
+// MakeSecret returns a new secret.
+func (f *SecretFactory) MakeSecret(args *types.SecretArgs) (*corev1.Secret, error) {
+	var all []kvPair
+	var err error
+	s := f.makeFreshSecret(args)
+
+	pairs, err := f.keyValuesFromEnvFileCommand(args.EnvCommand)
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf(
+			"env source file: %s",
+			args.EnvCommand))
 	}
+	all = append(all, pairs...)
+
+	pairs, err = f.keyValuesFromCommands(args.Commands)
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf(
+			"commands %v", args.Commands))
+	}
+	all = append(all, pairs...)
+
+	for _, kv := range all {
+		err = addKvToSecret(s, kv.key, kv.value)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return s, nil
+}
+
+func addKvToSecret(secret *corev1.Secret, keyName, data string) error {
+	// Note, the rules for SecretKeys  keys are the exact same as the ones for ConfigMap.
+	if errs := validation.IsConfigMapKey(keyName); len(errs) != 0 {
+		return fmt.Errorf("%q is not a valid key name for a ConfigMap: %s", keyName, strings.Join(errs, ";"))
+	}
+	if _, entryExists := secret.Data[keyName]; entryExists {
+		return fmt.Errorf("cannot add key %s, another key by that name already exists: %v", keyName, secret.Data)
+	}
+	secret.Data[keyName] = []byte(data)
+	return nil
+}
+
+func (f *SecretFactory) keyValuesFromEnvFileCommand(cmd string) ([]kvPair, error) {
+	content, err := f.createSecretKey(cmd)
+	if err != nil {
+		return nil, err
+	}
+	return keyValuesFromLines(content)
+}
+
+func (f *SecretFactory) keyValuesFromCommands(sources map[string]string) ([]kvPair, error) {
+	var kvs []kvPair
+	for k, cmd := range sources {
+		content, err := f.createSecretKey(cmd)
+		fmt.Println("createSecretKey:", content)
+		if err != nil {
+			return nil, err
+		}
+		kvs = append(kvs, kvPair{key: k, value: string(content)})
+	}
+	return kvs, nil
 }
 
 // Run a command, return its output as the secret.

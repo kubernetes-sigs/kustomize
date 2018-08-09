@@ -35,9 +35,18 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	secrets := []types.SecretArgs{
 		{
 			Name: "apple",
-			Commands: map[string]string{
-				"DB_USERNAME": "printf admin",
-				"DB_PASSWORD": "printf somepw",
+			CommandSources: types.CommandSources{
+				Commands: map[string]string{
+					"DB_USERNAME": "printf admin",
+					"DB_PASSWORD": "printf somepw",
+				},
+			},
+			Type: "Opaque",
+		},
+		{
+			Name: "peanuts",
+			CommandSources: types.CommandSources{
+				EnvCommand: "printf \"DB_USERNAME=admin\nDB_PASSWORD=somepw\"",
 			},
 			Type: "Opaque",
 		},
@@ -58,6 +67,20 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 				"kind":       "Secret",
 				"metadata": map[string]interface{}{
 					"name":              "apple",
+					"creationTimestamp": nil,
+				},
+				"type": string(corev1.SecretTypeOpaque),
+				"data": map[string]interface{}{
+					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
+					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
+				},
+			}).SetBehavior(resource.BehaviorCreate),
+		resource.NewResId(secret, "peanuts"): resource.NewResourceFromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Secret",
+				"metadata": map[string]interface{}{
+					"name":              "peanuts",
 					"creationTimestamp": nil,
 				},
 				"type": string(corev1.SecretTypeOpaque),
