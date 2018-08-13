@@ -202,6 +202,22 @@ func TestMergeWithoutOverride(t *testing.T) {
 	if !reflect.DeepEqual(merged, expected) {
 		t.Fatalf("%#v doesn't equal expected %#v", merged, expected)
 	}
+	input3 := []ResMap{merged, nil}
+	merged1, err := MergeWithoutOverride(input3...)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !reflect.DeepEqual(merged1, expected) {
+		t.Fatalf("%#v doesn't equal expected %#v", merged1, expected)
+	}
+	input4 := []ResMap{nil, merged}
+	merged2, err := MergeWithoutOverride(input4...)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !reflect.DeepEqual(merged2, expected) {
+		t.Fatalf("%#v doesn't equal expected %#v", merged2, expected)
+	}
 }
 
 func TestMergeWithOverride(t *testing.T) {
@@ -261,5 +277,21 @@ func TestMergeWithOverride(t *testing.T) {
 	}
 	if !reflect.DeepEqual(merged, expected) {
 		t.Fatalf("%#v doesn't equal expected %#v", merged, expected)
+	}
+	input3 := []ResMap{merged, nil}
+	merged1, err := MergeWithOverride(input3...)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !reflect.DeepEqual(merged1, expected) {
+		t.Fatalf("%#v doesn't equal expected %#v", merged1, expected)
+	}
+	input4 := []ResMap{nil, merged}
+	merged2, err := MergeWithOverride(input4...)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !reflect.DeepEqual(merged2, expected) {
+		t.Fatalf("%#v doesn't equal expected %#v", merged2, expected)
 	}
 }
