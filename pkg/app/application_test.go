@@ -19,6 +19,7 @@ package app
 import (
 	"encoding/base64"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
@@ -194,6 +195,27 @@ func TestResources1(t *testing.T) {
 	if !reflect.DeepEqual(actual, expected) {
 		err = expected.ErrorIfNotEqual(actual)
 		t.Fatalf("unexpected inequality: %v", err)
+	}
+}
+
+func TestResourceNotFound(t *testing.T) {
+	l := loadertest.NewFakeLoader("/testpath")
+	err := l.AddFile("/testpath/"+constants.KustomizationFileName, []byte(kustomizationContent1))
+	if err != nil {
+		t.Fatalf("Failed to setup fake ldr.")
+	}
+	fakeFs := fs.MakeFakeFS()
+	fakeFs.Mkdir("/")
+	app, err := NewApplication(l, fakeFs)
+	if err != nil {
+		t.Fatalf("Unexpected construction error %v", err)
+	}
+	_, err = app.MakeCustomizedResMap()
+	if err == nil {
+		t.Fatalf("Didn't get the expected error for an unknown resource")
+	}
+	if !strings.Contains(err.Error(), `cannot read file "/testpath/deployment.yaml"`) {
+		t.Fatalf("Unpexpected error message %q", err)
 	}
 }
 
