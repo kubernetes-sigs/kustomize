@@ -63,10 +63,6 @@ func newCmdAddAnnotation(fsys fs.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			err = o.Complete(cmd, args)
-			if err != nil {
-				return err
-			}
 			return o.RunAddMetadata(fsys, annotation)
 		},
 	}
@@ -84,10 +80,6 @@ func newCmdAddLabel(fsys fs.FileSystem) *cobra.Command {
 		add label {labelKey1:labelValue1},{labelKey2:labelValue2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := o.Validate(args, label)
-			if err != nil {
-				return err
-			}
-			err = o.Complete(cmd, args)
 			if err != nil {
 				return err
 			}
@@ -118,11 +110,6 @@ func (o *addMetadataOptions) Validate(args []string, k KindOfAdd) error {
 	}
 
 	o.metadata = args[0]
-	return nil
-}
-
-// Complete completes addMetadata command.
-func (o *addMetadataOptions) Complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
