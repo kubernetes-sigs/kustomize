@@ -26,8 +26,24 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const label = "label"
-const ann = "annotation"
+// KindOfAdd is the kind of metadata being added: label or annotation
+type KindOfAdd int
+
+const (
+	annotation KindOfAdd = iota
+	label
+)
+
+func (kind KindOfAdd) String() string {
+	kinds := [...]string{
+		"annotation",
+		"label",
+	}
+	if kind < 0 || kind > 1 {
+		return "Unknown metadatakind"
+	}
+	return kinds[kind]
+}
 
 type addMetadataOptions struct {
 	metadata string
@@ -43,8 +59,7 @@ func newCmdAddAnnotation(fsys fs.FileSystem) *cobra.Command {
 		Example: `
 		add annotation {annotationKey1:annotationValue1},{annotationKey2:annotationValue2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			mdKind := ann
-			err := o.Validate(args, mdKind)
+			err := o.Validate(args, annotation)
 			if err != nil {
 				return err
 			}
@@ -52,7 +67,7 @@ func newCmdAddAnnotation(fsys fs.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return o.RunAddMetadata(fsys, mdKind)
+			return o.RunAddMetadata(fsys, annotation)
 		},
 	}
 	return cmd
@@ -68,8 +83,7 @@ func newCmdAddLabel(fsys fs.FileSystem) *cobra.Command {
 		Example: `
 		add label {labelKey1:labelValue1},{labelKey2:labelValue2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			mdKind := label
-			err := o.Validate(args, mdKind)
+			err := o.Validate(args, label)
 			if err != nil {
 				return err
 			}
@@ -77,20 +91,20 @@ func newCmdAddLabel(fsys fs.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return o.RunAddMetadata(fsys, mdKind)
+			return o.RunAddMetadata(fsys, label)
 		},
 	}
 	return cmd
 }
 
 // Validate validates addLabel and addAnnotation commands.
-func (o *addMetadataOptions) Validate(args []string, mdKind string) error {
+func (o *addMetadataOptions) Validate(args []string, k KindOfAdd) error {
 
 	if len(args) < 1 {
-		return fmt.Errorf("must specify %s", mdKind)
+		return fmt.Errorf("must specify %s", k)
 	}
 	if len(args) > 1 {
-		return fmt.Errorf("%ss must be comma-separated, with no spaces. See help text for example", mdKind)
+		return fmt.Errorf("%ss must be comma-separated, with no spaces. See help text for example", k)
 	}
 	inputs := strings.Split(args[0], ",")
 	for _, input := range inputs {
@@ -99,7 +113,7 @@ func (o *addMetadataOptions) Validate(args []string, mdKind string) error {
 			return err
 		}
 		if !ok {
-			return fmt.Errorf("invalid %s format: %s", mdKind, input)
+			return fmt.Errorf("invalid %s format: %s", k, input)
 		}
 	}
 
@@ -113,7 +127,7 @@ func (o *addMetadataOptions) Complete(cmd *cobra.Command, args []string) error {
 }
 
 // RunAddMetadata runs addLabel and addAnnotation commands (do real work).
-func (o *addMetadataOptions) RunAddMetadata(fsys fs.FileSystem, mdKind string) error {
+func (o *addMetadataOptions) RunAddMetadata(fsys fs.FileSystem, k KindOfAdd) error {
 	mf, err := newKustomizationFile(constants.KustomizationFileName, fsys)
 	if err != nil {
 		return err
@@ -124,26 +138,26 @@ func (o *addMetadataOptions) RunAddMetadata(fsys fs.FileSystem, mdKind string) e
 		return err
 	}
 
-	if mdKind == label && m.CommonLabels == nil {
+	if k == label && m.CommonLabels == nil {
 		m.CommonLabels = make(map[string]string)
 	}
 
-	if mdKind == ann && m.CommonAnnotations == nil {
+	if k == annotation && m.CommonAnnotations == nil {
 		m.CommonAnnotations = make(map[string]string)
 	}
 
 	entries := strings.Split(o.metadata, ",")
 	for _, entry := range entries {
 		kv := strings.Split(entry, ":")
-		if mdKind == label {
+		if k == label {
 			if _, ok := m.CommonLabels[kv[0]]; ok {
-				return fmt.Errorf("%s %s already in kustomization file", mdKind, kv[0])
+				return fmt.Errorf("%s %s already in kustomization file", k, kv[0])
 			}
 			m.CommonLabels[kv[0]] = kv[1]
 		}
-		if mdKind == ann {
+		if k == annotation {
 			if _, ok := m.CommonAnnotations[kv[0]]; ok {
-				return fmt.Errorf("%s %s already in kustomization file", mdKind, kv[0])
+				return fmt.Errorf("%s %s already in kustomization file", k, kv[0])
 			}
 			m.CommonAnnotations[kv[0]] = kv[1]
 		}
