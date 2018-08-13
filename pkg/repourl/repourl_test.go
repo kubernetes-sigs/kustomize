@@ -25,33 +25,45 @@ import (
 func TestNewRepo(t *testing.T) {
 	type testcase struct {
 		repoUrl  string
-		expected Repo
+		expected *Repo
 	}
 
 	testcases := []testcase{
 		{
 			repoUrl:  "git@github.com:kubernetes-sigs/kustomize.git",
-			expected: Repo{"https://github.com/kubernetes-sigs/kustomize.git", ""},
+			expected: &Repo{"https://github.com/kubernetes-sigs/kustomize.git", "", ""},
 		},
 		{
 			repoUrl:  "https://github.com/kubernetes-sigs/kustomize.git",
-			expected: Repo{"https://github.com/kubernetes-sigs/kustomize.git", ""},
+			expected: &Repo{"https://github.com/kubernetes-sigs/kustomize.git", "", ""},
 		},
 		{
 			repoUrl:  "https://github.com/kubernetes-sigs/kustomize",
-			expected: Repo{"https://github.com/kubernetes-sigs/kustomize.git", ""},
+			expected: &Repo{"https://github.com/kubernetes-sigs/kustomize.git", "", ""},
 		},
 		{
 			repoUrl:  "https://github.com/kubernetes-sigs/kustomize#v1.0.6",
-			expected: Repo{"https://github.com/kubernetes-sigs/kustomize.git", "v1.0.6"},
+			expected: &Repo{"https://github.com/kubernetes-sigs/kustomize.git", "v1.0.6", ""},
 		},
 		{
 			repoUrl:  "github.com/kubernetes-sigs/kustomize#017c4ae0aa19195db2a51ecc5aa82c56a1f1c99b",
-			expected: Repo{"https://github.com/kubernetes-sigs/kustomize.git", "017c4ae0aa19195db2a51ecc5aa82c56a1f1c99b"},
+			expected: &Repo{"https://github.com/kubernetes-sigs/kustomize.git", "017c4ae0aa19195db2a51ecc5aa82c56a1f1c99b", ""},
 		},
 		{
 			repoUrl:  "git@github.com:kubernetes-sigs/kustomize.git#test-branch",
-			expected: Repo{"https://github.com/kubernetes-sigs/kustomize.git", "test-branch"},
+			expected: &Repo{"https://github.com/kubernetes-sigs/kustomize.git", "test-branch", ""},
+		},
+		{
+			repoUrl:  "git@github.com:kubernetes-sigs/kustomize.git/examples/helloWorld",
+			expected: &Repo{"https://github.com/kubernetes-sigs/kustomize.git", "", "examples/helloWorld"},
+		},
+		{
+			repoUrl:  "git@github.com:kubernetes-sigs/kustomize.git/examples/multibases#test-branch",
+			expected: &Repo{"https://github.com/kubernetes-sigs/kustomize.git", "test-branch", "examples/multibases"},
+		},
+		{
+			repoUrl:  "https://github.com/kubernetes-sigs/kustomize/examples/multibases",
+			expected: &Repo{"https://github.com/kubernetes-sigs/kustomize.git", "", "examples/multibases"},
 		},
 	}
 	for _, tc := range testcases {
@@ -59,7 +71,7 @@ func TestNewRepo(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected error %s", err)
 		}
-		if reflect.DeepEqual(actual, tc.expected) {
+		if !reflect.DeepEqual(actual, tc.expected) {
 			t.Fatalf("expected %v, but got %v", tc.expected, actual)
 		}
 	}

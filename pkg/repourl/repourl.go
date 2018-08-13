@@ -23,8 +23,8 @@ import (
 )
 
 var recognizedRepos = []*regexp.Regexp{
-	regexp.MustCompile("^(git@|)([^:@]*):([^/]*)/([^.#/ ]*)(.git|)(|#([a-zA-Z0-9._-]*))$"),
-	regexp.MustCompile("^(https://|)([^/@]*)/([^/]*)/([^.#/ ]*)(.git|)(|#([a-zA-Z0-9._-]*))$"),
+	regexp.MustCompile("^(git@|)([^:@]+):([^/]+)/([^.#/ ]+)(.git|)(|/([0-9A-Za-z-_/]+))(|#([a-zA-Z0-9._-]*))$"),
+	regexp.MustCompile("^(https://|)([^/@]+)/([^/]+)/([^.#/ ]+)(.git|)(|/([0-9A-Za-z-_/]+))(|#([a-zA-Z0-9._-]*))$"),
 }
 
 // Repo defines a remote repo target
@@ -33,6 +33,7 @@ var recognizedRepos = []*regexp.Regexp{
 type Repo struct {
 	url string
 	ref string
+	dir string
 }
 
 // NewRepo create a Repo object from a repoUrl
@@ -55,7 +56,7 @@ func NewRepo(repoUrl string) (*Repo, error) {
 			continue
 		}
 		repo := fmt.Sprintf("https://%s/%s/%s.git", matches[2], matches[3], matches[4])
-		return &Repo{url: repo, ref: matches[7]}, nil
+		return &Repo{url: repo, ref: matches[9], dir: matches[7]}, nil
 	}
 	return nil, fmt.Errorf("%s is not valid github repo", repoUrl)
 }

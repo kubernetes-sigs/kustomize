@@ -19,32 +19,43 @@ package repourl
 import (
 	"log"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
 // Checkout clones a github repo and checkout the specified commit/tag/branch
-func Checkout(url, dir string) error {
+func Checkout(url, dir string) (string, error) {
 	repo, err := NewRepo(url)
 	if err != nil {
-		return err
+		return dir, err
 	}
 
 	cmd := exec.Command("git", "clone", repo.url, dir)
 	err = cmd.Run()
 	if err != nil {
-		return err
+		return dir, err
 	}
 
 	log.Printf("Checked out %s into %s", repo.url, dir)
 
 	if repo.ref == "" {
-		return nil
+		if repo.dir != "" {
+			return filepath.Join(dir, repo.dir), nil
+		}
+		return dir, nil
 	}
 
 	cmd = exec.Command("git", "checkout", repo.ref)
 	cmd.Dir = dir
-	return cmd.Run()
+	err = cmd.Run()
+	if err != nil {
+		return dir, err
+	}
 
+	if repo.dir != "" {
+		return filepath.Join(dir, repo.dir), nil
+	}
+	return dir, nil
 }
 
 // IsRepoUrl checks if a string is a repo Url
