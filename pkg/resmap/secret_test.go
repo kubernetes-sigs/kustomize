@@ -20,6 +20,7 @@ import (
 	"encoding/base64"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
@@ -92,5 +93,27 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	}
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("%#v\ndoesn't match expected:\n%#v", actual, expected)
+	}
+}
+
+func TestSecretTimeout(t *testing.T) {
+	secrets := []types.SecretArgs{
+		{
+			Name: "slow",
+			CommandSources: types.CommandSources{
+				Commands: map[string]string{
+					"USER": "sleep 1",
+				},
+			},
+			Type: "Opaque",
+		},
+	}
+	fakeFs := fs.MakeFakeFS()
+	fakeFs.Mkdir(".")
+	_, err := NewResMapFromSecretArgs(
+		configmapandsecret.NewSecretFactory(fakeFs, ".", 10*time.Millisecond), secrets)
+
+	if err == nil {
+		t.Fatal("didn't get the expected timeout error", err)
 	}
 }
