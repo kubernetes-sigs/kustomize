@@ -182,7 +182,7 @@ func TestResources1(t *testing.T) {
 	l := makeLoader1(t)
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
-	app, err := NewApplication(l, fakeFs)
+	app, err := NewApplication(l, fakeFs, 0)
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
@@ -217,7 +217,7 @@ func TestRawResources1(t *testing.T) {
 			}),
 	}
 	l := makeLoader1(t)
-	app, err := NewApplication(l, fs.MakeFakeFS())
+	app, err := NewApplication(l, fs.MakeFakeFS(), 0)
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
@@ -327,7 +327,7 @@ func TestRawResources2(t *testing.T) {
 			}),
 	}
 	l := makeLoader2(t)
-	app, err := NewApplication(l, fs.MakeFakeFS())
+	app, err := NewApplication(l, fs.MakeFakeFS(), 0)
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}

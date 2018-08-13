@@ -20,6 +20,7 @@ import (
 	"errors"
 	"io"
 	"path/filepath"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -32,6 +33,7 @@ import (
 
 type diffOptions struct {
 	kustomizationPath string
+	cmdTimeout        time.Duration
 }
 
 // newCmdDiff makes the diff command.
@@ -49,6 +51,10 @@ func newCmdDiff(out, errOut io.Writer, fs fs.FileSystem) *cobra.Command {
 			return o.RunDiff(out, errOut, fs)
 		},
 	}
+	cmd.Flags().DurationVarP(
+		&o.cmdTimeout,
+		"command-timeout", "", 5*time.Second,
+		"Sets timeout for the shell commands invoked by kustomize")
 	return cmd
 }
 
@@ -80,7 +86,7 @@ func (o *diffOptions) RunDiff(out, errOut io.Writer, fSys fs.FileSystem) error {
 		return err
 	}
 
-	application, err := app.NewApplication(rootLoader, fSys)
+	application, err := app.NewApplication(rootLoader, fSys, o.cmdTimeout)
 	if err != nil {
 		return err
 	}
