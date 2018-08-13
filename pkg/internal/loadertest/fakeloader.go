@@ -63,3 +63,8 @@ func (f FakeLoader) New(newRoot string) (loader.Loader, error) {
 func (f FakeLoader) Load(location string) ([]byte, error) {
 	return f.delegate.Load(location)
 }
+
+// Cleanup does nothing
+func (f FakeLoader) Cleanup() error {
+	return nil
+}
