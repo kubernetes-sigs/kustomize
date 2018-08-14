@@ -117,6 +117,9 @@ type SecretArgs struct {
 
 	// CommandSources for secret.
 	CommandSources `json:",inline,omitempty" yaml:",inline,omitempty"`
+
+	// TimeoutSeconds specifies the timeout for commands.
+	TimeoutSeconds *int64 `json:"timeoutSeconds,omitempty" yaml:"timeoutSeconds,omitempty"`
 }
 
 // CommandSources contains some generic sources for secrets.
