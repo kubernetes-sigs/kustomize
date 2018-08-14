@@ -19,7 +19,6 @@ package commands
 import (
 	"errors"
 	"io"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -68,17 +67,11 @@ func (o *diffOptions) Validate(args []string) error {
 // RunDiff gets the differences between Application.MakeCustomizedResMap() and Application.MakeUncustomizedResMap().
 func (o *diffOptions) RunDiff(out, errOut io.Writer, fSys fs.FileSystem) error {
 
-	l := loader.NewFileLoader(fSys)
-
-	absPath, err := filepath.Abs(o.kustomizationPath)
+	rootLoader, err := loader.NewLoader(o.kustomizationPath, fSys)
 	if err != nil {
 		return err
 	}
-
-	rootLoader, err := l.New(absPath)
-	if err != nil {
-		return err
-	}
+	defer rootLoader.Cleanup()
 
 	application, err := app.NewApplication(rootLoader, fSys)
 	if err != nil {

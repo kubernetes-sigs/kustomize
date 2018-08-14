@@ -17,6 +17,14 @@ limitations under the License.
 // Package loader has a data loading interface and various implementations.
 package loader
 
+import (
+	"fmt"
+	"path/filepath"
+
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
+	"github.com/kubernetes-sigs/kustomize/pkg/repourl"
+)
+
 // Loader interface exposes methods to read bytes.
 type Loader interface {
 	// Root returns the root location for this Loader.
@@ -25,4 +33,29 @@ type Loader interface {
 	New(newRoot string) (Loader, error)
 	// Load returns the bytes read from the location or an error.
 	Load(location string) ([]byte, error)
+	// Cleanup cleans the loader
+	Cleanup() error
+}
+
+// NewLoader returns a Loader given a target
+// The target can be a local disk directory or a github Url
+func NewLoader(target string, fSys fs.FileSystem) (Loader, error) {
+	if repourl.IsRepoUrl(target) {
+		return newGithubLoader(target, fSys)
+	}
+
+	l := NewFileLoader(fSys)
+	absPath, err := filepath.Abs(target)
+	if err != nil {
+		return nil, err
+	}
+
+	if !l.IsAbsPath(l.root, absPath) {
+		return nil, fmt.Errorf("Not abs path: l.root='%s', loc='%s'\n", l.root, absPath)
+	}
+	root, err := l.fullLocation(l.root, absPath)
+	if err != nil {
+		return nil, err
+	}
+	return newFileLoaderAtRoot(root, l.fSys), nil
 }
