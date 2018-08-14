@@ -31,15 +31,24 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
+const (
+	defaultCommandTimeout = 5 * time.Second
+)
+
 // SecretFactory makes Secrets.
 type SecretFactory struct {
-	fSys fs.FileSystem
-	wd   string
+	fSys       fs.FileSystem
+	wd         string
+	cmdTimeout time.Duration
 }
 
-// NewSecretFactory returns a new SecretFactory.
-func NewSecretFactory(fSys fs.FileSystem, wd string) *SecretFactory {
-	return &SecretFactory{fSys: fSys, wd: wd}
+// NewSecretFactory returns a new SecretFactory. If cmdTimeout is zero,
+// the default value of 5 seconds is used instead.
+func NewSecretFactory(fSys fs.FileSystem, wd string, cmdTimeout time.Duration) *SecretFactory {
+	if cmdTimeout == 0 {
+		cmdTimeout = defaultCommandTimeout
+	}
+	return &SecretFactory{fSys: fSys, wd: wd, cmdTimeout: cmdTimeout}
 }
 
 func (f *SecretFactory) makeFreshSecret(args *types.SecretArgs) *corev1.Secret {
@@ -126,7 +135,7 @@ func (f *SecretFactory) createSecretKey(command string) ([]byte, error) {
 			return nil, errors.New("not a directory: " + f.wd)
 		}
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), f.cmdTimeout)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "sh", "-c", command)
 	cmd.Dir = f.wd

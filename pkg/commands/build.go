@@ -19,6 +19,7 @@ package commands
 import (
 	"io"
 	"path/filepath"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -33,6 +34,7 @@ import (
 type buildOptions struct {
 	kustomizationPath string
 	outputPath        string
+	cmdTimeout        time.Duration
 }
 
 // newCmdBuild creates a new build command.
@@ -57,6 +59,10 @@ func newCmdBuild(out io.Writer, fs fs.FileSystem) *cobra.Command {
 		&o.outputPath,
 		"output", "o", "",
 		"If specified, write the build output to this path.")
+	cmd.Flags().DurationVarP(
+		&o.cmdTimeout,
+		"command-timeout", "", 5*time.Second,
+		"Sets timeout for the shell commands invoked by kustomize")
 	return cmd
 }
 
@@ -87,7 +93,7 @@ func (o *buildOptions) RunBuild(out io.Writer, fSys fs.FileSystem) error {
 		return err
 	}
 
-	application, err := app.NewApplication(rootLoader, fSys)
+	application, err := app.NewApplication(rootLoader, fSys, o.cmdTimeout)
 	if err != nil {
 		return err
 	}

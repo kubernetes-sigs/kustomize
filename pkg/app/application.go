@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
@@ -47,10 +48,11 @@ type Application struct {
 	kustomization *types.Kustomization
 	ldr           loader.Loader
 	fSys          fs.FileSystem
+	cmdTimeout    time.Duration
 }
 
 // NewApplication returns a new instance of Application primed with a Loader.
-func NewApplication(ldr loader.Loader, fSys fs.FileSystem) (*Application, error) {
+func NewApplication(ldr loader.Loader, fSys fs.FileSystem, cmdTimeout time.Duration) (*Application, error) {
 	content, err := ldr.Load(constants.KustomizationFileName)
 	if err != nil {
 		return nil, err
@@ -62,7 +64,7 @@ func NewApplication(ldr loader.Loader, fSys fs.FileSystem) (*Application, error)
 		return nil, err
 	}
 
-	return &Application{kustomization: &m, ldr: ldr, fSys: fSys}, nil
+	return &Application{kustomization: &m, ldr: ldr, fSys: fSys, cmdTimeout: cmdTimeout}, nil
 }
 
 func unmarshal(y []byte, o interface{}) error {
@@ -149,7 +151,7 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 		errs.Append(errors.Wrap(err, "NewResMapFromConfigMapArgs"))
 	}
 	secrets, err := resmap.NewResMapFromSecretArgs(
-		configmapandsecret.NewSecretFactory(a.fSys, a.ldr.Root()),
+		configmapandsecret.NewSecretFactory(a.fSys, a.ldr.Root(), a.cmdTimeout),
 		a.kustomization.SecretGenerator)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromSecretArgs"))
@@ -216,7 +218,7 @@ func (a *Application) loadCustomizedBases() (resmap.ResMap, *interror.Kustomizat
 			errs.Append(errors.Wrap(err, "couldn't make ldr for "+path))
 			continue
 		}
-		app, err := NewApplication(ldr, a.fSys)
+		app, err := NewApplication(ldr, a.fSys, a.cmdTimeout)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "couldn't make app for "+path))
 			continue
@@ -244,7 +246,7 @@ func (a *Application) loadBasesAsFlatList() ([]*Application, error) {
 			errs.Append(err)
 			continue
 		}
-		a, err := NewApplication(ldr, a.fSys)
+		a, err := NewApplication(ldr, a.fSys, a.cmdTimeout)
 		if err != nil {
 			errs.Append(err)
 			continue
