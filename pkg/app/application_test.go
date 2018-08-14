@@ -55,6 +55,14 @@ secretGenerator:
     DB_PASSWORD: "printf somepw"
   type: Opaque
 `
+	kustomizationContent2 = `
+secretGenerator:
+- name: secret
+  timeoutSeconds: 1
+  commands:
+    USER: "sleep 2"
+  type: Opaque
+`
 	deploymentContent = `apiVersion: apps/v1
 metadata:
   name: dply1
@@ -360,5 +368,26 @@ func TestRawResources2(t *testing.T) {
 
 	if err := expected.ErrorIfNotEqual(actual); err != nil {
 		t.Fatalf("unexpected inequality: %v", err)
+	}
+}
+
+func TestSecretTimeout(t *testing.T) {
+	l := loadertest.NewFakeLoader("/testpath")
+	err := l.AddFile("/testpath/"+constants.KustomizationFileName, []byte(kustomizationContent2))
+	if err != nil {
+		t.Fatalf("Failed to setup fake ldr.")
+	}
+	fakeFs := fs.MakeFakeFS()
+	fakeFs.Mkdir("/")
+	app, err := NewApplication(l, fakeFs)
+	if err != nil {
+		t.Fatalf("Unexpected construction error %v", err)
+	}
+	_, err = app.MakeCustomizedResMap()
+	if err == nil {
+		t.Fatalf("Didn't get the expected error for an unknown resource")
+	}
+	if !strings.Contains(err.Error(), "killed") {
+		t.Fatalf("Unpexpected error message %q", err)
 	}
 }

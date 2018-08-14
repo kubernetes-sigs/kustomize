@@ -83,6 +83,9 @@ secretGenerator:
     tls.key: "cat secret/tls.key"
   type: "kubernetes.io/tls"
 - name: downloaded_secret
+  # timeoutSeconds specifies the number of seconds to
+  # wait for the commands below. It defaults to 5 seconds.
+  timeoutSeconds: 30
   commands:
     username: "curl -s https://path/to/secrets/username.yaml"
     password: "curl -s https://path/to/secrets/password.yaml"

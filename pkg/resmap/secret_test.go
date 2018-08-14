@@ -94,3 +94,27 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 		t.Fatalf("%#v\ndoesn't match expected:\n%#v", actual, expected)
 	}
 }
+
+func TestSecretTimeout(t *testing.T) {
+	timeout := int64(1)
+	secrets := []types.SecretArgs{
+		{
+			Name:           "slow",
+			TimeoutSeconds: &timeout,
+			CommandSources: types.CommandSources{
+				Commands: map[string]string{
+					"USER": "sleep 2",
+				},
+			},
+			Type: "Opaque",
+		},
+	}
+	fakeFs := fs.MakeFakeFS()
+	fakeFs.Mkdir(".")
+	_, err := NewResMapFromSecretArgs(
+		configmapandsecret.NewSecretFactory(fakeFs, "."), secrets)
+
+	if err == nil {
+		t.Fatal("didn't get the expected timeout error", err)
+	}
+}
