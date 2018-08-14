@@ -53,6 +53,9 @@ func (l *fileLoader) Root() string {
 // Example: "/home/seans/project" or "/home/seans/project/"
 // NOT "/home/seans/project/file.yaml".
 func (l *fileLoader) New(newRoot string) (Loader, error) {
+	if isRepoUrl(newRoot) {
+		return newGithubLoader(newRoot, l.fSys)
+	}
 	if !l.IsAbsPath(l.root, newRoot) {
 		return nil, fmt.Errorf("Not abs path: l.root='%s', loc='%s'\n", l.root, newRoot)
 	}
@@ -108,4 +111,9 @@ func (l *fileLoader) Load(location string) ([]byte, error) {
 		return nil, err
 	}
 	return l.fSys.ReadFile(fullLocation)
+}
+
+// Cleanup does nothing
+func (l *fileLoader) Cleanup() error {
+	return nil
 }
