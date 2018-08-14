@@ -211,10 +211,14 @@ func newResourceSliceFromBytes(in []byte) ([]*resource.Resource, error) {
 	return result, nil
 }
 
-// MergeWithoutOverride combines multiple ResMap instances, failing on key collision.
+// MergeWithoutOverride combines multiple ResMap instances, failing on key collision
+// and skipping nil maps. In case if all of the maps are nil, an empty ResMap is returned.
 func MergeWithoutOverride(maps ...ResMap) (ResMap, error) {
 	result := ResMap{}
 	for _, m := range maps {
+		if m == nil {
+			continue
+		}
 		for id, res := range m {
 			if _, found := result[id]; found {
 				return nil, fmt.Errorf("id '%q' already used", id)
@@ -226,14 +230,21 @@ func MergeWithoutOverride(maps ...ResMap) (ResMap, error) {
 }
 
 // MergeWithOverride combines multiple ResMap instances, allowing and sometimes
-// demanding certain collisions.
+// demanding certain collisions and skipping nil maps.
+// In case if all of the maps are nil, an empty ResMap is returned.
 // When looping over the instances to combine them, if a resource id for resource X
 // is found to be already in the combined map, then the behavior field for X
 // must be BehaviorMerge or BehaviorReplace.  If X is not in the map, then it's
 // behavior cannot be merge or replace.
 func MergeWithOverride(maps ...ResMap) (ResMap, error) {
 	result := maps[0]
+	if result == nil {
+		result = ResMap{}
+	}
 	for _, m := range maps[1:] {
+		if m == nil {
+			continue
+		}
 		for id, r := range m {
 			matchedId := result.FindByGVKN(id)
 			if len(matchedId) == 1 {
