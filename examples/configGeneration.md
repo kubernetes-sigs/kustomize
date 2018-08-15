@@ -109,8 +109,8 @@ configuration is to
 
 This latter change initiates rolling update to the pods
 in the deployment.  The older configMap, when no longer
-referenced by any other resource, is eventually garbage
-collected.
+referenced by any other resource, is eventually [garbage
+collected](https://github.com/kubernetes-sigs/kustomize/issues/242).
 
 ### How this works with kustomize
 
