@@ -47,7 +47,7 @@ func TestLoader_Root(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected in New(): %v\n", err)
 	}
-	if "/home/seans/project/" != loader.Root() {
+	if "/home/seans/project" != loader.Root() {
 		t.Fatalf("Incorrect Loader Root: %s\n", loader.Root())
 	}
 
