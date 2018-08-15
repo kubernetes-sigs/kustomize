@@ -17,6 +17,13 @@ limitations under the License.
 // Package loader has a data loading interface and various implementations.
 package loader
 
+import (
+	"fmt"
+	"path/filepath"
+
+	"github.com/kubernetes-sigs/kustomize/pkg/fs"
+)
+
 // Loader interface exposes methods to read bytes.
 type Loader interface {
 	// Root returns the root location for this Loader.
@@ -25,4 +32,44 @@ type Loader interface {
 	New(newRoot string) (Loader, error)
 	// Load returns the bytes read from the location or an error.
 	Load(location string) ([]byte, error)
+	// Cleanup cleans the loader
+	Cleanup() error
+}
+
+// NewLoader returns a Loader given a target
+// The target can be a local disk directory or a github Url
+func NewLoader(target, r string, fSys fs.FileSystem) (Loader, error) {
+	if !isValidLoaderPath(target, r) {
+		return nil, fmt.Errorf("Not valid path: root='%s', loc='%s'\n", r, target)
+	}
+
+	if isRepoUrl(target) {
+		return newGithubLoader(target, fSys)
+	}
+
+	l := newFileLoaderAtRoot(r, fSys)
+	if isRootLoaderPath(r) {
+		absPath, err := filepath.Abs(target)
+		if err != nil {
+			return nil, err
+		}
+		target = absPath
+	}
+
+	if !l.IsAbsPath(l.root, target) {
+		return nil, fmt.Errorf("Not abs path: l.root='%s', loc='%s'\n", l.root, target)
+	}
+	root, err := l.fullLocation(l.root, target)
+	if err != nil {
+		return nil, err
+	}
+	return newFileLoaderAtRoot(root, l.fSys), nil
+}
+
+func isValidLoaderPath(target, root string) bool {
+	return target != "" || root != ""
+}
+
+func isRootLoaderPath(root string) bool {
+	return root == ""
 }
