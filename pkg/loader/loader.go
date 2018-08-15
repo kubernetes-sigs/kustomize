@@ -38,23 +38,38 @@ type Loader interface {
 
 // NewLoader returns a Loader given a target
 // The target can be a local disk directory or a github Url
-func NewLoader(target string, fSys fs.FileSystem) (Loader, error) {
+func NewLoader(target, r string, fSys fs.FileSystem) (Loader, error) {
+	if !isValidLoaderPath(target, r) {
+		return nil, fmt.Errorf("Not valid path: root='%s', loc='%s'\n", r, target)
+	}
+
 	if isRepoUrl(target) {
 		return newGithubLoader(target, fSys)
 	}
 
-	l := NewFileLoader(fSys)
-	absPath, err := filepath.Abs(target)
-	if err != nil {
-		return nil, err
+	l := newFileLoaderAtRoot(r, fSys)
+	if isRootLoaderPath(r) {
+		absPath, err := filepath.Abs(target)
+		if err != nil {
+			return nil, err
+		}
+		target = absPath
 	}
 
-	if !l.IsAbsPath(l.root, absPath) {
-		return nil, fmt.Errorf("Not abs path: l.root='%s', loc='%s'\n", l.root, absPath)
+	if !l.IsAbsPath(l.root, target) {
+		return nil, fmt.Errorf("Not abs path: l.root='%s', loc='%s'\n", l.root, target)
 	}
-	root, err := l.fullLocation(l.root, absPath)
+	root, err := l.fullLocation(l.root, target)
 	if err != nil {
 		return nil, err
 	}
 	return newFileLoaderAtRoot(root, l.fSys), nil
+}
+
+func isValidLoaderPath(target, root string) bool {
+	return target != "" || root != ""
+}
+
+func isRootLoaderPath(root string) bool {
+	return root == ""
 }

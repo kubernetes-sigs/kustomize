@@ -31,7 +31,6 @@ import (
 type githubLoader struct {
 	repo        string
 	checkoutDir string
-	fSys        fs.FileSystem
 	loader      *fileLoader
 }
 
@@ -70,7 +69,6 @@ func newGithubLoader(repoUrl string, fs fs.FileSystem) (*githubLoader, error) {
 	return &githubLoader{
 		repo:        repoUrl,
 		checkoutDir: target,
-		fSys:        fs,
 		loader:      l,
 	}, nil
 }
