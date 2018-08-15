@@ -34,19 +34,19 @@ const (
 	label
 )
 
-func (kind KindOfAdd) String() string {
+func (k KindOfAdd) String() string {
 	kinds := [...]string{
 		"annotation",
 		"label",
 	}
-	if kind < 0 || kind > 1 {
+	if k < 0 || k > 1 {
 		return "Unknown metadatakind"
 	}
-	return kinds[kind]
+	return kinds[k]
 }
 
 type addMetadataOptions struct {
-	metadata string
+	metadata map[string]string
 }
 
 // newCmdAddAnnotation adds one or more commonAnnotations to the kustomization file.
@@ -108,8 +108,13 @@ func (o *addMetadataOptions) Validate(args []string, k KindOfAdd) error {
 			return fmt.Errorf("invalid %s format: %s", k, input)
 		}
 	}
-
-	o.metadata = args[0]
+	//parse annotation keys and values into metadata
+	entries := strings.Split(args[0], ",")
+	o.metadata = make(map[string]string)
+	for _, entry := range entries {
+		kv := strings.Split(entry, ":")
+		o.metadata[kv[0]] = kv[1]
+	}
 	return nil
 }
 
@@ -133,20 +138,18 @@ func (o *addMetadataOptions) RunAddMetadata(fsys fs.FileSystem, k KindOfAdd) err
 		m.CommonAnnotations = make(map[string]string)
 	}
 
-	entries := strings.Split(o.metadata, ",")
-	for _, entry := range entries {
-		kv := strings.Split(entry, ":")
+	for key, value := range o.metadata {
 		if k == label {
-			if _, ok := m.CommonLabels[kv[0]]; ok {
-				return fmt.Errorf("%s %s already in kustomization file", k, kv[0])
+			if _, ok := m.CommonLabels[key]; ok {
+				return fmt.Errorf("%s %s already in kustomization file", k, key)
 			}
-			m.CommonLabels[kv[0]] = kv[1]
+			m.CommonLabels[key] = value
 		}
 		if k == annotation {
-			if _, ok := m.CommonAnnotations[kv[0]]; ok {
-				return fmt.Errorf("%s %s already in kustomization file", k, kv[0])
+			if _, ok := m.CommonAnnotations[key]; ok {
+				return fmt.Errorf("%s %s already in kustomization file", k, key)
 			}
-			m.CommonAnnotations[kv[0]] = kv[1]
+			m.CommonAnnotations[key] = value
 		}
 	}
 
