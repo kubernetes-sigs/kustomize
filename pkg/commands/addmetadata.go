@@ -63,7 +63,7 @@ func newCmdAddAnnotation(fsys fs.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return o.RunAddMetadata(fsys, annotation)
+			return o.RunAddAnnotation(fsys, annotation)
 		},
 	}
 	return cmd
@@ -83,7 +83,7 @@ func newCmdAddLabel(fsys fs.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return o.RunAddMetadata(fsys, label)
+			return o.RunAddLabel(fsys, label)
 		},
 	}
 	return cmd
@@ -118,33 +118,22 @@ func (o *addMetadataOptions) Validate(args []string, k KindOfAdd) error {
 	return nil
 }
 
-// RunAddMetadata runs addLabel and addAnnotation commands (do real work).
-func (o *addMetadataOptions) RunAddMetadata(fsys fs.FileSystem, k KindOfAdd) error {
+// RunAddAnnotation runs addAnnotation command, doing the real work.
+func (o *addMetadataOptions) RunAddAnnotation(fsys fs.FileSystem, k KindOfAdd) error {
 	mf, err := newKustomizationFile(constants.KustomizationFileName, fsys)
 	if err != nil {
 		return err
 	}
-
 	m, err := mf.read()
 	if err != nil {
 		return err
 	}
 
-	if k == label && m.CommonLabels == nil {
-		m.CommonLabels = make(map[string]string)
-	}
-
-	if k == annotation && m.CommonAnnotations == nil {
+	if m.CommonAnnotations == nil {
 		m.CommonAnnotations = make(map[string]string)
 	}
 
 	for key, value := range o.metadata {
-		if k == label {
-			if _, ok := m.CommonLabels[key]; ok {
-				return fmt.Errorf("%s %s already in kustomization file", k, key)
-			}
-			m.CommonLabels[key] = value
-		}
 		if k == annotation {
 			if _, ok := m.CommonAnnotations[key]; ok {
 				return fmt.Errorf("%s %s already in kustomization file", k, key)
@@ -152,6 +141,29 @@ func (o *addMetadataOptions) RunAddMetadata(fsys fs.FileSystem, k KindOfAdd) err
 			m.CommonAnnotations[key] = value
 		}
 	}
+	return mf.write(m)
+}
 
+// RunAddLabel runs addLabel command, doing the real work.
+func (o *addMetadataOptions) RunAddLabel(fsys fs.FileSystem, k KindOfAdd) error {
+	mf, err := newKustomizationFile(constants.KustomizationFileName, fsys)
+	if err != nil {
+		return err
+	}
+	m, err := mf.read()
+	if err != nil {
+		return err
+	}
+
+	if m.CommonLabels == nil {
+		m.CommonLabels = make(map[string]string)
+	}
+
+	for key, value := range o.metadata {
+		if _, ok := m.CommonLabels[key]; ok {
+			return fmt.Errorf("%s %s already in kustomization file", k, key)
+		}
+		m.CommonLabels[key] = value
+	}
 	return mf.write(m)
 }
