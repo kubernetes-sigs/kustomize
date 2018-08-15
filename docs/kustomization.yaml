@@ -90,6 +90,12 @@ secretGenerator:
     username: "curl -s https://path/to/secrets/username.yaml"
     password: "curl -s https://path/to/secrets/password.yaml"
   type: Opaque
+- name: env_file_secret
+  # envCommand is similar to command but outputs lines of key=val pairs
+  # i.e. a Docker .env file or a .ini file.
+  # you can only specify one envCommand per secret.
+  envCommand: printf \"DB_USERNAME=admin\nDB_PASSWORD=somepw\"
+  type: Opaque
 
 # Each entry in this list should resolve to a directory
 # containing a kustomization file, else the
