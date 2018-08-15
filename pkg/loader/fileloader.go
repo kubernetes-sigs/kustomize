@@ -53,14 +53,7 @@ func (l *fileLoader) Root() string {
 // Example: "/home/seans/project" or "/home/seans/project/"
 // NOT "/home/seans/project/file.yaml".
 func (l *fileLoader) New(newRoot string) (Loader, error) {
-	if !l.IsAbsPath(l.root, newRoot) {
-		return nil, fmt.Errorf("Not abs path: l.root='%s', loc='%s'\n", l.root, newRoot)
-	}
-	root, err := l.fullLocation(l.root, newRoot)
-	if err != nil {
-		return nil, err
-	}
-	return newFileLoaderAtRoot(root, l.fSys), nil
+	return NewLoader(newRoot, l.root, l.fSys)
 }
 
 // IsAbsPath return true if the location calculated with the root
@@ -108,4 +101,9 @@ func (l *fileLoader) Load(location string) ([]byte, error) {
 		return nil, err
 	}
 	return l.fSys.ReadFile(fullLocation)
+}
+
+// Cleanup does nothing
+func (l *fileLoader) Cleanup() error {
+	return nil
 }

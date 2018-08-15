@@ -18,7 +18,6 @@ package commands
 
 import (
 	"io"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -75,17 +74,11 @@ func (o *buildOptions) Validate(args []string) error {
 
 // RunBuild runs build command.
 func (o *buildOptions) RunBuild(out io.Writer, fSys fs.FileSystem) error {
-	l := loader.NewFileLoader(fSys)
-
-	absPath, err := filepath.Abs(o.kustomizationPath)
+	rootLoader, err := loader.NewLoader(o.kustomizationPath, "", fSys)
 	if err != nil {
 		return err
 	}
-
-	rootLoader, err := l.New(absPath)
-	if err != nil {
-		return err
-	}
+	defer rootLoader.Cleanup()
 
 	application, err := app.NewApplication(rootLoader, fSys)
 	if err != nil {
