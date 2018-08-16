@@ -35,23 +35,22 @@ type Kustomization struct {
 	// Annotations to add to all objects.
 	CommonAnnotations map[string]string `json:"commonAnnotations,omitempty" yaml:"commonAnnotations,omitempty"`
 
-	// Each entry should be either a path to a file with a name matching the value of
-	// constants.KustomizationFileName, or a path to a directory containing a file with that name.
+	// Each entry should be either a path to a directory containing kustomization.yaml
+	// Or a repo URL pointing to a remote directory containing kustomization.yaml
+	// The repo URL should follow hashicorp/go-getter URL format
+	// https://github.com/hashicorp/go-getter#url-format
 	Bases []string `json:"bases,omitempty" yaml:"bases,omitempty"`
 
-	// Resources specifies the relative paths within the package.
-	// It could be any format that kubectl -f allows, i.e. files, directories,
-	// URLs and globs.
+	// Resources specifies the relative paths for resource files within the package.
+	// URLs and globs are not supported
 	Resources []string `json:"resources,omitempty" yaml:"resources,omitempty"`
 
 	// Crds specifies relative paths to custom resource definition files.
 	Crds []string `json:"crds,omitempty" yaml:"crds,omitempty"`
 
 	// An Patch entry is very similar to an Resource entry.
-	// It specifies the relative paths within the package, and could be any
-	// format that kubectl -f allows.
-	// It should be able to be merged by Strategic Merge Patch on top of its
-	// corresponding base resource.
+	// It specifies the relative paths for patch files within the package.
+	// URLs and globs are not supported
 	Patches []string `json:"patches,omitempty" yaml:"patches,omitempty"`
 
 	// List of configmaps to generate from configuration sources.
