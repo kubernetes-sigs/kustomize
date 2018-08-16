@@ -35,8 +35,23 @@ import (
 )
 
 var (
-	kustomizationFields = []string{"resources", "bases", "namePrefix", "namespace", "crds", "commonLabels", "commonAnnotations", "patches", "configMapGenerator", "secretGenerator", "vars", "imageTags"}
-	recognizedFields    = regexp.MustCompile("^(" + strings.Join(kustomizationFields, "|") + "):")
+	// These field names are the exact kustomization fields
+	kustomizationFields = []string{
+		"APIVersion",
+		"Kind",
+		"Resources",
+		"Bases",
+		"NamePrefix",
+		"Namespace",
+		"Crds",
+		"CommonLabels",
+		"CommonAnnotations",
+		"Patches",
+		"ConfigMapGenerator",
+		"SecretGenerator",
+		"Vars",
+		"ImageTags",
+	}
 )
 
 // commentedField records the comment associated with a kustomization field
@@ -49,6 +64,10 @@ type commentedField struct {
 
 func (cf *commentedField) appendComment(comment []byte) {
 	cf.comment = append(cf.comment, comment...)
+}
+
+func squash(x [][]byte) []byte {
+	return bytes.Join(x, []byte(``))
 }
 
 type kustomizationFile struct {
@@ -129,20 +148,20 @@ func stringInSlice(str string, list []string) bool {
 func (mf *kustomizationFile) parseCommentedFields(content []byte) error {
 	buffer := bytes.NewBuffer(content)
 	var comments [][]byte
-	var currentfield string
 
 	line, err := buffer.ReadBytes('\n')
 	for err == nil {
 		if isCommentOrBlankLine(line) {
 			comments = append(comments, line)
-		} else if recognizedFields.Match(line) {
-			fields := recognizedFields.FindSubmatch(line)
-			currentfield = string(fields[1])
-			mf.originalFields = append(mf.originalFields, &commentedField{field: currentfield, comment: bytes.Join(comments, []byte(``))})
-			comments = [][]byte{}
-		} else if len(comments) > 0 {
-			mf.originalFields[len(mf.originalFields)-1].appendComment(bytes.Join(comments, []byte(``)))
-			comments = [][]byte{}
+		} else {
+			matched, field := findMatchedField(line)
+			if matched {
+				mf.originalFields = append(mf.originalFields, &commentedField{field: field, comment: squash(comments)})
+				comments = [][]byte{}
+			} else if len(comments) > 0 {
+				mf.originalFields[len(mf.originalFields)-1].appendComment(squash(comments))
+				comments = [][]byte{}
+			}
 		}
 		line, err = buffer.ReadBytes('\n')
 	}
@@ -197,6 +216,17 @@ func (mf *kustomizationFile) hasField(name string) bool {
 func isCommentOrBlankLine(line []byte) bool {
 	s := bytes.TrimRight(bytes.TrimLeft(line, " "), "\n")
 	return len(s) == 0 || bytes.HasPrefix(s, []byte(`#`))
+}
+
+func findMatchedField(line []byte) (bool, string) {
+	for _, field := range kustomizationFields {
+		// (?i) is for case insensitive regexp matching
+		r := regexp.MustCompile("^(" + "(?i)" + field + "):")
+		if r.Match(line) {
+			return true, field
+		}
+	}
+	return false, ""
 }
 
 // marshalField marshal a given field of a kustomization object into yaml format.
