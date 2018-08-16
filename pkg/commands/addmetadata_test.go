@@ -17,6 +17,7 @@ limitations under the License.
 package commands
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -76,11 +77,6 @@ func TestInputValid(t *testing.T) {
 				"123": "45",
 			},
 		},
-		{
-			input: "",
-			valid: false,
-			name:  "Empty input",
-		},
 	}
 	var o addMetadataOptions
 	for _, tc := range testcases {
@@ -97,17 +93,94 @@ func TestInputValid(t *testing.T) {
 		if err == nil && (tc.name == "Metadata keys must be unique") {
 			t.Errorf("unexpected error: for test case %s, expected already there problem", tc.name)
 		}
+		if err != nil && (tc.name == "Multiple args") {
+			fmt.Println(err.Error())
+			if err.Error() != "must specify label" {
+				t.Errorf("unexpected error: for test case %s, expected must specify label error", tc.name)
+			}
+		}
 
 		//o.metadata should be the same as expectedData
 		if tc.valid {
 			if !reflect.DeepEqual(o.metadata, tc.expectedData) {
-				t.Errorf("unexpeceted error: for test case %s, unexpected data was added", tc.name)
+				t.Errorf("unexpected error: for test case %s, unexpected data was added", tc.name)
 			}
 		} else {
 			if len(o.metadata) != 0 {
-				t.Errorf("unexpeceted error: for test case %s, expected no data to be added", tc.name)
+				t.Errorf("unexpected error: for test case %s, expected no data to be added", tc.name)
 			}
 		}
+	}
+}
+
+func TestRunAddAnnotation(t *testing.T) {
+	fakeFS := fs.MakeFakeFS()
+	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
+	var o addMetadataOptions
+	o.metadata = map[string]string{"owls": "cute", "otters": "adorable"}
+
+	err := o.RunAddAnnotation(fakeFS, annotation)
+	if err != nil {
+		t.Errorf("unexpected error: could not write to kustomization file")
+	}
+	// adding the same test input should not work
+	err = o.RunAddAnnotation(fakeFS, annotation)
+	if err == nil {
+		t.Errorf("expected already in kustomization file error")
+	}
+	// adding new annotations should work
+	o.metadata = map[string]string{"new": "annotation"}
+	err = o.RunAddAnnotation(fakeFS, annotation)
+	if err != nil {
+		t.Errorf("unexpected error: could not write to kustomization file")
+	}
+}
+
+func TestAddAnnotationNoArgs(t *testing.T) {
+	fakeFS := fs.MakeFakeFS()
+	cmd := newCmdAddAnnotation(fakeFS)
+	err := cmd.Execute()
+	if err == nil {
+		t.Errorf("expected an error but error is %v", err)
+	}
+	if err != nil && err.Error() != "must specify annotation" {
+		t.Errorf("incorrect error: %v", err.Error())
+	}
+}
+func TestAddAnnotationMultipleArgs(t *testing.T) {
+	fakeFS := fs.MakeFakeFS()
+	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
+	cmd := newCmdAddAnnotation(fakeFS)
+	args := []string{"this:annotation", "has:spaces"}
+	err := cmd.RunE(cmd, args)
+	if err == nil {
+		t.Errorf("expected an error but error is %v", err)
+	}
+	if err != nil && err.Error() != "annotations must be comma-separated, with no spaces. See help text for example" {
+		t.Errorf("incorrect error: %v", err.Error())
+	}
+}
+
+func TestRunAddLabel(t *testing.T) {
+	fakeFS := fs.MakeFakeFS()
+	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
+	var o addMetadataOptions
+	o.metadata = map[string]string{"owls": "cute", "otters": "adorable"}
+
+	err := o.RunAddLabel(fakeFS, label)
+	if err != nil {
+		t.Errorf("unexpected error: could not write to kustomization file")
+	}
+	// adding the same test input should not work
+	err = o.RunAddLabel(fakeFS, label)
+	if err == nil {
+		t.Errorf("expected already in kustomization file error")
+	}
+	// adding new labels should work
+	o.metadata = map[string]string{"new": "label"}
+	err = o.RunAddLabel(fakeFS, label)
+	if err != nil {
+		t.Errorf("unexpected error: could not write to kustomization file")
 	}
 }
 
@@ -134,33 +207,6 @@ func TestAddLabelMultipleArgs(t *testing.T) {
 		t.Errorf("expected an error but error is: %v", err)
 	}
 	if err != nil && err.Error() != "labels must be comma-separated, with no spaces. See help text for example" {
-		t.Errorf("incorrect error: %v", err.Error())
-	}
-}
-
-func TestAddAnnotationNoArgs(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-
-	cmd := newCmdAddAnnotation(fakeFS)
-	err := cmd.Execute()
-	if err == nil {
-		t.Errorf("expected an error but error is %v", err)
-	}
-	if err != nil && err.Error() != "must specify annotation" {
-		t.Errorf("incorrect error: %v", err.Error())
-	}
-}
-
-func TestAddAnnotationMultipleArgs(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
-	cmd := newCmdAddAnnotation(fakeFS)
-	args := []string{"this:annotation", "has:spaces"}
-	err := cmd.RunE(cmd, args)
-	if err == nil {
-		t.Errorf("expected an error but error is %v", err)
-	}
-	if err != nil && err.Error() != "annotations must be comma-separated, with no spaces. See help text for example" {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }
