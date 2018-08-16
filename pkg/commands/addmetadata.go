@@ -91,7 +91,7 @@ func newCmdAddLabel(fsys fs.FileSystem) *cobra.Command {
 
 // Validate validates addLabel and addAnnotation commands.
 func (o *addMetadataOptions) Validate(args []string, k KindOfAdd) error {
-
+	o.metadata = make(map[string]string)
 	if len(args) < 1 {
 		return fmt.Errorf("must specify %s", k)
 	}
@@ -110,7 +110,6 @@ func (o *addMetadataOptions) Validate(args []string, k KindOfAdd) error {
 	}
 	//parse annotation keys and values into metadata
 	entries := strings.Split(args[0], ",")
-	o.metadata = make(map[string]string)
 	for _, entry := range entries {
 		kv := strings.Split(entry, ":")
 		o.metadata[kv[0]] = kv[1]

@@ -17,34 +17,36 @@ limitations under the License.
 package commands
 
 import (
+	"reflect"
 	"testing"
-
-	"strings"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 )
 
-func TestLabelsValid(t *testing.T) {
+func TestInputValid(t *testing.T) {
 	var testcases = []struct {
-		input string
-		valid bool
-		name  string
+		input        string
+		valid        bool
+		name         string
+		expectedData map[string]string
 	}{
-		{
-			input: "owls:great,unicorns:magical",
-			valid: true,
-			name:  "Adds two labels",
-		},
-		{
-			input: "owls:great",
-			valid: false,
-			name:  "Label keys must be unique",
-		},
 		{
 			input: "otters:cute",
 			valid: true,
-			name:  "Adds single label",
+			name:  "Adds single input",
+			expectedData: map[string]string{
+				"otters": "cute",
+			},
+		},
+		{
+			input: "owls:great,unicorns:magical",
+			valid: true,
+			name:  "Adds two items",
+			expectedData: map[string]string{
+				"owls":     "great",
+				"unicorns": "magical",
+			},
 		},
 		{
 			input: "dogs,cats",
@@ -61,41 +63,52 @@ func TestLabelsValid(t *testing.T) {
 			valid: false,
 			name:  "Missing value",
 		},
+		{
+			input: "exclamation!:point",
+			valid: false,
+			name:  "Non-alphanumeric input",
+		},
+		{
+			input: "123:45",
+			valid: true,
+			name:  "Numeric input is allowed",
+			expectedData: map[string]string{
+				"123": "45",
+			},
+		},
+		{
+			input: "",
+			valid: false,
+			name:  "Empty input",
+		},
 	}
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
-	cmd := newCmdAddLabel(fakeFS)
-
+	var o addMetadataOptions
 	for _, tc := range testcases {
-		labels := strings.Split(tc.input, ",")
-		//run command with test input
+
 		args := []string{tc.input}
-		err := cmd.RunE(cmd, args)
+		err := o.Validate(args, label) //use label since in Validate kindofAdd is only used for error messages
 
 		if err != nil && tc.valid {
 			t.Errorf("for test case %s, unexpected cmd error: %v", tc.name, err)
 		}
 		if err == nil && !tc.valid {
-			t.Errorf("unexpected error: expected invalid annotation format error for test case %v", tc.name)
+			t.Errorf("unexpected error: expected invalid format error for test case %v", tc.name)
 		}
-		if err == nil && (tc.name == "Label keys must be unique") {
+		if err == nil && (tc.name == "Metadata keys must be unique") {
 			t.Errorf("unexpected error: for test case %s, expected already there problem", tc.name)
 		}
 
-		content, readErr := fakeFS.ReadFile(constants.KustomizationFileName)
-		if readErr != nil {
-			t.Errorf("unexpected read error: %v", readErr)
-		}
-		//check if valid input was added to commonLabels
-		for _, label := range labels {
-			key := strings.Split(label, ":")[0]
-			if !strings.Contains(string(content), key) && tc.valid {
-				t.Errorf("unexpected error: for test case %s, expected key to be in file.", tc.name)
+		//o.metadata should be the same as expectedData
+		if tc.valid {
+			if !reflect.DeepEqual(o.metadata, tc.expectedData) {
+				t.Errorf("unexpeceted error: for test case %s, unexpected data was added", tc.name)
+			}
+		} else {
+			if len(o.metadata) != 0 {
+				t.Errorf("unexpeceted error: for test case %s, expected no data to be added", tc.name)
 			}
 		}
-
 	}
-
 }
 
 func TestAddLabelNoArgs(t *testing.T) {
@@ -123,79 +136,6 @@ func TestAddLabelMultipleArgs(t *testing.T) {
 	if err != nil && err.Error() != "labels must be comma-separated, with no spaces. See help text for example" {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
-}
-
-func TestAnnotationsValid(t *testing.T) {
-	var testcases = []struct {
-		input string
-		valid bool
-		name  string
-	}{
-		{
-			input: "cats:great,dogs:okay",
-			valid: true,
-			name:  "Adds two annotations",
-		},
-		{
-			input: "cats:great",
-			valid: false,
-			name:  "Annotation keys must be unique",
-		},
-		{
-			input: "owls:best",
-			valid: true,
-			name:  "Adds single annotation",
-		},
-		{
-			input: "cake,cookies",
-			valid: false,
-			name:  "Does not contain colon",
-		},
-		{
-			input: ":hasNoKey",
-			valid: false,
-			name:  "Missing key",
-		},
-		{
-			input: "hasNoValue:",
-			valid: false,
-			name:  "Missing value",
-		},
-	}
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
-	cmd := newCmdAddAnnotation(fakeFS)
-
-	for _, tc := range testcases {
-		annotations := strings.Split(tc.input, ",")
-		//run command with test input
-		args := []string{tc.input}
-		err := cmd.RunE(cmd, args)
-
-		if err != nil && tc.valid {
-			t.Errorf("for test case %s, unexpected cmd error: %v", tc.name, err)
-		}
-		if err == nil && !tc.valid {
-			t.Errorf("unexpected error: expected invalid annotation format error for test case %v", tc.name)
-		}
-		if err == nil && (tc.name == "Annotation keys must be unique") {
-			t.Errorf("unexpected error: for test case %s, expected already there problem", tc.name)
-		}
-
-		content, readErr := fakeFS.ReadFile(constants.KustomizationFileName)
-		if readErr != nil {
-			t.Errorf("unexpected read error: %v", readErr)
-		}
-		//check if valid input was added to commonAnnotations
-		for _, annotation := range annotations {
-			key := strings.Split(annotation, ":")[0]
-			if !strings.Contains(string(content), key) && tc.valid {
-				t.Errorf("unexpected error: for test case %s, expected key to be in file.", tc.name)
-			}
-		}
-
-	}
-
 }
 
 func TestAddAnnotationNoArgs(t *testing.T) {
