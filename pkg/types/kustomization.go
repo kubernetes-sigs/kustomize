@@ -17,8 +17,14 @@ limitations under the License.
 // Package types holds struct definitions that should find a better home.
 package types
 
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
 // Kustomization holds the information needed to generate customized k8s api resources.
 type Kustomization struct {
+	metav1.TypeMeta `json:",inline" yaml:",inline"`
+
 	// NamePrefix will prefix the names of all resources mentioned in the kustomization
 	// file including generated configmaps and secrets.
 	NamePrefix string `json:"namePrefix,omitempty" yaml:"namePrefix,omitempty"`
