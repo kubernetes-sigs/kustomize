@@ -3,7 +3,13 @@
 
 ## Installation
 
-Download a binary from the [release page].
+On macOS, you can install kustomize with Homebrew package
+manager:
+
+    brew install kustomize
+
+For all operating systems, download a binary from the
+[release page].
 
 Or try this to grab the latest official release
 using the command line:
