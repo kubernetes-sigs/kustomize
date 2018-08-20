@@ -34,15 +34,29 @@ type buildOptions struct {
 	outputPath        string
 }
 
+var examples = `
+Use the file somedir/kustomization.yaml to generate a set of api resources:
+    build somedir
+
+Use a url pointing to a remote directory/kustomization.yaml to generate a set of api resources:
+    build url
+The url should follow hashicorp/go-getter URL format described in
+https://github.com/hashicorp/go-getter#url-format
+
+url examples:
+  github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6
+  github.com/Liujingfang1/mysql
+  github.com/Liujingfang1/kustomize//examples/helloWorld?ref=repoUrl2
+`
+
 // newCmdBuild creates a new build command.
 func newCmdBuild(out io.Writer, fs fs.FileSystem) *cobra.Command {
 	var o buildOptions
 
 	cmd := &cobra.Command{
-		Use:   "build [path]",
-		Short: "Print current configuration per contents of " + constants.KustomizationFileName,
-		Example: "Use the file somedir/" + constants.KustomizationFileName +
-			" to generate a set of api resources:\nbuild somedir/",
+		Use:          "build [path]",
+		Short:        "Print current configuration per contents of " + constants.KustomizationFileName,
+		Example:      examples,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := o.Validate(args)
