@@ -38,3 +38,5 @@ go get github.com/kubernetes-sigs/kustomize
  * [image tags](imageTags.md) - Updating image tags without applying a patch.
 
  * [multibases](multibases/README.md) - Composing three variants (dev, staging, production) with a common base.
+
+ * [remote target](remoteBuild.md) - Building a kustomization from a github URL
