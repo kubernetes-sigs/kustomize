@@ -285,7 +285,7 @@ The _target_ is the argument to `kustomize build`, e.g.:
 >  kustomize build $target
 > ```
 
-`$target` must be a path to a directory that
+`$target` must be a path or a url to a directory that
 immediately contains a [kustomization].
 
 The target contains, or refers to, all the information
