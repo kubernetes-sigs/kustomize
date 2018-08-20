@@ -147,6 +147,8 @@ resources:
   # See which field this comment goes into
 - service.yaml
 
+APIVersion: v1beta1
+kind: kustomization.yaml
 
 # something you may want to keep
 vars:
@@ -158,7 +160,7 @@ vars:
     kind: Service
     name: my-service
 
-bases:
+BASES:
 - ../namespaces
 
 # some descriptions for the patches
@@ -180,6 +182,8 @@ resources:
 - pod.yaml
 - service.yaml
 
+apiVersion: v1beta1
+kind: kustomization.yaml
 
 # something you may want to keep
 vars:
