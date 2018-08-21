@@ -53,6 +53,8 @@ bases:
   - wordpress
   - mysql
 namePrefix: demo-
+patches:
+  - patch.yaml
 EOF
 ```
 
@@ -65,7 +67,7 @@ In the new kustomization, apply a patch for wordpress deployment. The patch does
 ```
 CONTENT="https://raw.githubusercontent.com\
 /kubernetes-sigs/kustomize\
-/master/examples/patch.yaml"
+/master/examples/wordpress"
 
 curl -s -o "$DEMO_HOME/#1.yaml" \
   "$CONTENT/{patch}.yaml"
