@@ -22,6 +22,9 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
 )
 
+// CleanupCalled indicates if Cleanup is called.
+var CleanupCalled = false
+
 // FakeLoader encapsulates the delegate Loader and the fake file system.
 type FakeLoader struct {
 	fs       fs.FileSystem
@@ -56,7 +59,11 @@ func (f FakeLoader) Root() string {
 
 // New creates a new loader from a new root.
 func (f FakeLoader) New(newRoot string) (loader.Loader, error) {
-	return f.delegate.New(newRoot)
+	l, err := f.delegate.New(newRoot)
+	if err != nil {
+		return nil, err
+	}
+	return FakeLoader{fs: f.fs, delegate: l}, nil
 }
 
 // Load performs load from a given location.
@@ -66,5 +73,6 @@ func (f FakeLoader) Load(location string) ([]byte, error) {
 
 // Cleanup does nothing
 func (f FakeLoader) Cleanup() error {
+	CleanupCalled = true
 	return nil
 }
