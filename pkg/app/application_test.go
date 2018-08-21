@@ -369,6 +369,9 @@ func TestRawResources2(t *testing.T) {
 	if err := expected.ErrorIfNotEqual(actual); err != nil {
 		t.Fatalf("unexpected inequality: %v", err)
 	}
+	if !loadertest.CleanupCalled {
+		t.Fatalf("Cleanup should be called")
+	}
 }
 
 func TestSecretTimeout(t *testing.T) {
