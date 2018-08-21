@@ -226,6 +226,7 @@ func (a *Application) loadCustomizedBases() (resmap.ResMap, *interror.Kustomizat
 			errs.Append(errors.Wrap(err, "SemiResources"))
 			continue
 		}
+		ldr.Cleanup()
 		list = append(list, resMap)
 	}
 	result, err := resmap.MergeWithoutOverride(list...)
@@ -322,6 +323,7 @@ func (a *Application) getAllVars() ([]types.Var, error) {
 			errs.Append(err)
 			continue
 		}
+		b.ldr.Cleanup()
 		result = append(result, vars...)
 	}
 	for _, v := range a.kustomization.Vars {
