@@ -96,6 +96,12 @@ func newCmdAdd(fsys fs.FileSystem) *cobra.Command {
 	# Adds one or more base directories to the kustomization
 	kustomize edit add base <filepath>
 	kustomize edit add base <filepath1>,<filepath2>,<filepath3>
+
+	# Adds one or more commonLabels to the kustomization
+	kustomize edit add label {labelKey1:labelValue1},{labelKey2:labelValue2}
+
+	# Adds one or more commonAnnotations to the kustomization
+	kustomize edit add annotation {annotationKey1:annotationValue1},{annotationKey2:annotationValue2}
 `,
 		Args: cobra.MinimumNArgs(1),
 	}
@@ -104,6 +110,8 @@ func newCmdAdd(fsys fs.FileSystem) *cobra.Command {
 		newCmdAddPatch(fsys),
 		newCmdAddConfigMap(fsys),
 		newCmdAddBase(fsys),
+		newCmdAddLabel(fsys),
+		newCmdAddAnnotation(fsys),
 	)
 	return c
 }
