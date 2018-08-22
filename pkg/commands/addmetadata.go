@@ -18,11 +18,11 @@ package commands
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
+	"github.com/kubernetes-sigs/kustomize/pkg/validate"
 	"github.com/spf13/cobra"
 )
 
@@ -59,7 +59,7 @@ func newCmdAddAnnotation(fsys fs.FileSystem) *cobra.Command {
 		Example: `
 		add annotation {annotationKey1:annotationValue1},{annotationKey2:annotationValue2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := o.Validate(args, annotation)
+			err := o.ValidateAndParse(args, annotation)
 			if err != nil {
 				return err
 			}
@@ -79,7 +79,7 @@ func newCmdAddLabel(fsys fs.FileSystem) *cobra.Command {
 		Example: `
 		add label {labelKey1:labelValue1},{labelKey2:labelValue2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := o.Validate(args, label)
+			err := o.ValidateAndParse(args, label)
 			if err != nil {
 				return err
 			}
@@ -89,8 +89,8 @@ func newCmdAddLabel(fsys fs.FileSystem) *cobra.Command {
 	return cmd
 }
 
-// Validate validates addLabel and addAnnotation commands.
-func (o *addMetadataOptions) Validate(args []string, k KindOfAdd) error {
+// ValidateAndParse validates addLabel and addAnnotation commands and parses them into o.metadata
+func (o *addMetadataOptions) ValidateAndParse(args []string, k KindOfAdd) error {
 	o.metadata = make(map[string]string)
 	if len(args) < 1 {
 		return fmt.Errorf("must specify %s", k)
@@ -100,18 +100,22 @@ func (o *addMetadataOptions) Validate(args []string, k KindOfAdd) error {
 	}
 	inputs := strings.Split(args[0], ",")
 	for _, input := range inputs {
-		ok, err := regexp.MatchString(`\A([a-zA-Z0-9_.-]+):([a-zA-Z0-9_.-]+)\z`, input)
-		if err != nil {
-			return err
+		switch k {
+		case label:
+			valid, err := validate.IsValidLabel(input)
+			if !valid {
+				return err
+			}
+		case annotation:
+			valid, err := validate.IsValidAnnotation(input)
+			if !valid {
+				return err
+			}
+		default:
+			return fmt.Errorf("unknown metadata kind %s", k)
 		}
-		if !ok {
-			return fmt.Errorf("invalid %s format: %s", k, input)
-		}
-	}
-	//parse annotation keys and values into metadata
-	entries := strings.Split(args[0], ",")
-	for _, entry := range entries {
-		kv := strings.Split(entry, ":")
+		//parse annotation keys and values into metadata
+		kv := strings.Split(input, ":")
 		o.metadata[kv[0]] = kv[1]
 	}
 	return nil
