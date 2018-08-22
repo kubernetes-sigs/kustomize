@@ -17,7 +17,6 @@ limitations under the License.
 package commands
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -25,12 +24,13 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 )
 
-func TestInputValid(t *testing.T) {
+func TestParseValidateInput(t *testing.T) {
 	var testcases = []struct {
 		input        string
 		valid        bool
 		name         string
 		expectedData map[string]string
+		kind         KindOfAdd
 	}{
 		{
 			input: "otters:cute",
@@ -39,6 +39,7 @@ func TestInputValid(t *testing.T) {
 			expectedData: map[string]string{
 				"otters": "cute",
 			},
+			kind: label,
 		},
 		{
 			input: "owls:great,unicorns:magical",
@@ -48,26 +49,7 @@ func TestInputValid(t *testing.T) {
 				"owls":     "great",
 				"unicorns": "magical",
 			},
-		},
-		{
-			input: "dogs,cats",
-			valid: false,
-			name:  "Does not contain colon",
-		},
-		{
-			input: ":noKey",
-			valid: false,
-			name:  "Missing key",
-		},
-		{
-			input: "noValue:",
-			valid: false,
-			name:  "Missing value",
-		},
-		{
-			input: "exclamation!:point",
-			valid: false,
-			name:  "Non-alphanumeric input",
+			kind: label,
 		},
 		{
 			input: "123:45",
@@ -76,30 +58,26 @@ func TestInputValid(t *testing.T) {
 			expectedData: map[string]string{
 				"123": "45",
 			},
+			kind: annotation,
+		},
+		{
+			input:        " ",
+			valid:        false,
+			name:         "Empty space input",
+			expectedData: nil,
+			kind:         annotation,
 		},
 	}
 	var o addMetadataOptions
 	for _, tc := range testcases {
-
 		args := []string{tc.input}
-		err := o.Validate(args, label) //use label since in Validate kindofAdd is only used for error messages
-
+		err := o.ValidateAndParse(args, tc.kind)
 		if err != nil && tc.valid {
 			t.Errorf("for test case %s, unexpected cmd error: %v", tc.name, err)
 		}
 		if err == nil && !tc.valid {
 			t.Errorf("unexpected error: expected invalid format error for test case %v", tc.name)
 		}
-		if err == nil && (tc.name == "Metadata keys must be unique") {
-			t.Errorf("unexpected error: for test case %s, expected already there problem", tc.name)
-		}
-		if err != nil && (tc.name == "Multiple args") {
-			fmt.Println(err.Error())
-			if err.Error() != "must specify label" {
-				t.Errorf("unexpected error: for test case %s, expected must specify label error", tc.name)
-			}
-		}
-
 		//o.metadata should be the same as expectedData
 		if tc.valid {
 			if !reflect.DeepEqual(o.metadata, tc.expectedData) {
