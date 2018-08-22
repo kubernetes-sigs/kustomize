@@ -21,13 +21,16 @@ use and maintain a configuration.
 
 ## Bespoke configuration
 
-In this workflow, all configuration files are owned by
-the user.  No content is incorporated from version
+In this workflow, all configuration (resource YAML) files
+are owned by the user.  No content is incorporated from version
 control repositories owned by others.
 
 ![bespoke config workflow image][workflowBespoke]
 
 #### 1) create a directory in version control
+
+Speculate some overall cluster application called _ldap_;
+we want to keep its configuration in its own repo.
 
 > ```
 > git init ~/ldap

@@ -1,12 +1,13 @@
 # Kustomize docs
    
- * [glossary](glossary.md) - glossary for Kustomize.
- 
- * [Sample kustomization.yaml](kustomization.yaml) - A sample kustomization.yaml
-   with explanation for each field.
-   
- * [workflow](workflows.md) - Explaining the workflow for
-   both bespoke configuration and off-the-shelf configuration.
+ * [kustomization.yaml](kustomization.yaml) - Example of a
+   [kustomization](glossary.md#kustomization)
+   with explanations of each field.
+
+ * [workflow](workflows.md) - Some steps one might take in using
+   bespoke and off-the-shelf configurations.
   
- * [eschewed features](eschewedFeatures.md) - explaining the eschewed features
-    and why they are not supported in Kustomize.
+ * [glossary](glossary.md) - An attempt to disambiguiate terminology.
+   
+ * [eschewed features](eschewedFeatures.md) - Why certain features are (currently)
+   not supported in Kustomize.
