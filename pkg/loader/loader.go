@@ -43,7 +43,7 @@ func NewLoader(target, r string, fSys fs.FileSystem) (Loader, error) {
 		return nil, fmt.Errorf("Not valid path: root='%s', loc='%s'\n", r, target)
 	}
 
-	if isRepoUrl(target) {
+	if !isLocalTarget(target, fSys) && isRepoUrl(target) {
 		return newGithubLoader(target, fSys)
 	}
 
@@ -72,4 +72,9 @@ func isValidLoaderPath(target, root string) bool {
 
 func isRootLoaderPath(root string) bool {
 	return root == ""
+}
+
+// isLocalTarget checks if a file exists in the filesystem
+func isLocalTarget(s string, fs fs.FileSystem) bool {
+	return fs.Exists(s)
 }
