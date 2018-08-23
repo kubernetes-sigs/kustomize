@@ -93,7 +93,7 @@ func TestSetImageTagsNoArgs(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected error: %v", err)
 	}
-	if err.Error() != "No image and newTag specified." {
+	if err.Error() != "no image and newTag specified" {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }
