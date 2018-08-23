@@ -90,6 +90,8 @@ func makeLiteralConfigMap(name string) *corev1.ConfigMap {
 		Data: map[string]string{
 			"a": "x",
 			"b": "y",
+			"c": "Hello World",
+			"d": "true",
 		},
 	}
 }
@@ -127,7 +129,7 @@ func TestConstructConfigMap(t *testing.T) {
 			input: types.ConfigMapArgs{
 				Name: "literalConfigMap",
 				DataSources: types.DataSources{
-					LiteralSources: []string{"a=x", "b=y"},
+					LiteralSources: []string{"a=x", "b=y", "c=\"Hello World\"", "d='true'"},
 				},
 			},
 			expected: makeLiteralConfigMap("literalConfigMap"),
