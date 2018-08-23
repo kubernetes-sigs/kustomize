@@ -69,13 +69,13 @@ and overwrite the previous newTag if the image name exists.
 // Validate validates setImageTag command.
 func (o *setImageTagOptions) Validate(args []string) error {
 	if len(args) == 0 {
-		return errors.New("No image and newTag specified.")
+		return errors.New("no image and newTag specified")
 	}
 	o.imageTagMap = make(map[string]string)
 	for _, arg := range args {
 		imagetag := pattern.FindStringSubmatch(arg)
 		if len(imagetag) != 3 {
-			return errors.New("Invalid format of imagetag, must specify it as <image>:<newtag>")
+			return errors.New("invalid format of imagetag, must specify it as <image>:<newtag>")
 		}
 		o.imageTagMap[imagetag[1]] = imagetag[2]
 	}
