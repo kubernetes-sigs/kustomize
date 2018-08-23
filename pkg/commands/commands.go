@@ -28,7 +28,7 @@ import (
 // NewDefaultCommand returns the default (aka root) command for kustomize command.
 func NewDefaultCommand() *cobra.Command {
 	fsys := fs.MakeRealFS()
-	stdOut, stdErr := os.Stdout, os.Stderr
+	stdOut := os.Stdout
 
 	c := &cobra.Command{
 		Use:   "kustomize",
@@ -43,7 +43,6 @@ See https://github.com/kubernetes-sigs/kustomize
 	c.AddCommand(
 		// TODO: Make consistent API for newCmd* functions.
 		newCmdBuild(stdOut, fsys),
-		newCmdDiff(stdOut, stdErr, fsys),
 		newCmdEdit(fsys),
 		newCmdVersion(stdOut),
 	)

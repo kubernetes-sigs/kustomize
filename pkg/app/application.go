@@ -86,20 +86,6 @@ func (a *Application) MakeCustomizedResMap() (resmap.ResMap, error) {
 	return a.resolveRefsToGeneratedResources(m)
 }
 
-// MakeUncustomizedResMap purports to create a ResMap without customization.
-// The Resources in the returned ResMap include all resources mentioned
-// in the kustomization file and transitively reachable via its Bases,
-// and all generated secrets and configMaps.
-// Meant for use in generating a diff against customized resources.
-// TODO: See https://github.com/kubernetes-sigs/kustomize/issues/85
-func (a *Application) MakeUncustomizedResMap() (resmap.ResMap, error) {
-	m, err := a.loadResMapFromBasesAndResources()
-	if err != nil {
-		return nil, err
-	}
-	return a.resolveRefsToGeneratedResources(m)
-}
-
 // resolveRefsToGeneratedResources fixes all name references.
 func (a *Application) resolveRefsToGeneratedResources(m resmap.ResMap) (resmap.ResMap, error) {
 	err := transformers.NewNameHashTransformer().Transform(m)
