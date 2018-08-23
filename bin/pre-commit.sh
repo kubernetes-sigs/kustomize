@@ -41,14 +41,14 @@ function testGoLint {
   diff -u <(echo -n) <(go_dirs | xargs -0 golint --min_confidence 0.85 )
 }
 
+# Not using the 'goimports' check because it reports hyphens in imported
+# package names as errors, and we vendor in packages that have
+# hyphens in their names.
 function testGoMetalinter {
   diff -u <(echo -n) <(go_dirs | xargs -0 gometalinter.v2 --disable-all --deadline 5m \
   --enable=misspell \
   --enable=structcheck \
   --enable=deadcode \
-# Disabling 'goimports' because it reports hyphens in imported package \
-# names as errors, and we have to vendor them in regardless. \
-#  --enable=goimports \
   --enable=varcheck \
   --enable=goconst \
   --enable=unparam \
@@ -59,7 +59,6 @@ function testGoMetalinter {
   --line-length=170 --enable=lll \
   --dupl-threshold=400 --enable=dupl)
 }
-
 
 function testGoVet {
   go vet -all ./...
