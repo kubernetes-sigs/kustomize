@@ -109,16 +109,16 @@ func (mf *kustomizationFile) validate() error {
 }
 
 func (mf *kustomizationFile) read() (*types.Kustomization, error) {
-	bytes, err := mf.fsys.ReadFile(mf.path)
+	data, err := mf.fsys.ReadFile(mf.path)
 	if err != nil {
 		return nil, err
 	}
 	var kustomization types.Kustomization
-	err = yaml.Unmarshal(bytes, &kustomization)
+	err = yaml.Unmarshal(data, &kustomization)
 	if err != nil {
 		return nil, err
 	}
-	err = mf.parseCommentedFields(bytes)
+	err = mf.parseCommentedFields(data)
 	if err != nil {
 		return nil, err
 	}
@@ -129,11 +129,11 @@ func (mf *kustomizationFile) write(kustomization *types.Kustomization) error {
 	if kustomization == nil {
 		return errors.New("util: kustomization file arg is nil")
 	}
-	bytes, err := mf.marshal(kustomization)
+	data, err := mf.marshal(kustomization)
 	if err != nil {
 		return err
 	}
-	return mf.fsys.WriteFile(mf.path, bytes)
+	return mf.fsys.WriteFile(mf.path, data)
 }
 
 func stringInSlice(str string, list []string) bool {
@@ -173,7 +173,7 @@ func (mf *kustomizationFile) parseCommentedFields(content []byte) error {
 }
 
 func (mf *kustomizationFile) marshal(kustomization *types.Kustomization) ([]byte, error) {
-	output := []byte{}
+	var output []byte
 	for _, comment := range mf.originalFields {
 		output = append(output, comment.comment...)
 		content, err := marshalField(comment.field, kustomization)

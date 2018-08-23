@@ -272,7 +272,7 @@ func MergeWithOverride(maps ...ResMap) (ResMap, error) {
 					result[id] = r
 				}
 			} else {
-				return nil, fmt.Errorf("Merge conflict, found multiple objects %v the Resmap %v can merge into", matchedId, id)
+				return nil, fmt.Errorf("merge conflict, found multiple objects %v the Resmap %v can merge into", matchedId, id)
 			}
 		}
 	}
