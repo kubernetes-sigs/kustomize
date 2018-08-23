@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
@@ -61,7 +62,12 @@ func NewApplication(ldr loader.Loader, fSys fs.FileSystem) (*Application, error)
 	if err != nil {
 		return nil, err
 	}
-
+	if m.PatchesJson6902 != nil {
+		log.Printf("field patchesJson6902 ignored; no implementation yet.")
+	}
+	if m.Patches != nil {
+		log.Println("field patches will be deprecated, please change it to patchesStategicMerge")
+	}
 	return &Application{kustomization: &m, ldr: ldr, fSys: fSys}, nil
 }
 
@@ -150,7 +156,8 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 		return nil, err
 	}
 
-	patches, err := resmap.NewResourceSliceFromPatches(a.ldr, a.kustomization.Patches)
+	a.kustomization.PatchesStrategicMerge = append(a.kustomization.PatchesStrategicMerge, a.kustomization.Patches...)
+	patches, err := resmap.NewResourceSliceFromPatches(a.ldr, a.kustomization.PatchesStrategicMerge)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResourceSliceFromPatches"))
 	}
