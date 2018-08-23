@@ -212,6 +212,5 @@ func parseLiteralSource(source string) (keyName, value string, err error) {
 	if len(items) != 2 {
 		return "", "", fmt.Errorf("invalid literal source %v, expected key=value", source)
 	}
-
-	return items[0], items[1], nil
+	return items[0], strings.Trim(items[1], "\"'"), nil
 }
