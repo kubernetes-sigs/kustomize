@@ -49,11 +49,11 @@
   name = "k8s.io/client-go"
   version = "7.0.0"
 
-[[constraint]]
+[[override]]
   branch = "master"
   name = "k8s.io/utils"
 
-[[constraint]]
+[[override]]
   branch = "master"
   name = "github.com/go-openapi/spec"
 
