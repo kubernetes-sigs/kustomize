@@ -60,7 +60,7 @@ func (pt *patchTransformer) Transform(baseResourceMap resmap.ResMap) error {
 			return fmt.Errorf("failed to find an object with %#v to apply the patch", id.Gvk())
 		}
 		if len(matchedIds) > 1 {
-			return fmt.Errorf("Found multiple objects %#v that the patch %#v can apply", matchedIds, id)
+			return fmt.Errorf("found multiple objects %#v targeted by patch %#v (ambiguous)", matchedIds, id)
 		}
 		id = matchedIds[0]
 		base := baseResourceMap[id]
