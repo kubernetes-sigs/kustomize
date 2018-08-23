@@ -68,7 +68,7 @@ func newGithubLoader(repoUrl string, fs fs.FileSystem) (*githubLoader, error) {
 	l := newFileLoaderAtRoot(target, fs)
 	return &githubLoader{
 		repo:        repoUrl,
-		checkoutDir: target,
+		checkoutDir: dir,
 		loader:      l,
 	}, nil
 }
