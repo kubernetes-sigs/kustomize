@@ -127,7 +127,7 @@ This tool is sponsored by [sig-cli] ([KEP]).
 [examples]: examples/README.md
 [imageBase]: docs/base.jpg
 [imageOverlay]: docs/overlay.jpg
-[install]: INSTALL.md
+[install]: docs/INSTALL.md
 [kubernetes style]: docs/glossary.md#kubernetes-style-object
 [kustomization]: docs/glossary.md#kustomization
 [overlay]: docs/glossary.md#overlay
