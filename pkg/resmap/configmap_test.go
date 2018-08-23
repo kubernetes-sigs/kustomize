@@ -104,7 +104,7 @@ BAR=baz
 				{
 					Name: "literalConfigMap",
 					DataSources: types.DataSources{
-						LiteralSources: []string{"a=x", "b=y"},
+						LiteralSources: []string{"a=x", "b=y", "c=\"Good Morning\"", "d=\"false\""},
 					},
 				},
 			},
@@ -120,6 +120,8 @@ BAR=baz
 						"data": map[string]interface{}{
 							"a": "x",
 							"b": "y",
+							"c": "Good Morning",
+							"d": "false",
 						},
 					}).SetBehavior(resource.BehaviorCreate),
 			},
