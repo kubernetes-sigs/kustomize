@@ -75,7 +75,11 @@ func newGithubLoader(repoUrl string, fs fs.FileSystem) (*githubLoader, error) {
 
 // isRepoUrl checks if a string is a repo Url
 func isRepoUrl(s string) bool {
-	return strings.Contains(s, ".com") || strings.Contains(s, ".org") || strings.Contains(s, "https://")
+	if strings.HasPrefix(s, "https://") {
+		return true
+	}
+	host := strings.SplitN(s, "/", 2)[0]
+	return strings.Contains(host, ".com") || strings.Contains(host, ".org")
 }
 
 // Checkout clones a github repo with specified commit/tag/branch
