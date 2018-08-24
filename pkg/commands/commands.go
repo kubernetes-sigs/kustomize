@@ -106,7 +106,6 @@ func newCmdAdd(fsys fs.FileSystem) *cobra.Command {
 	}
 	c.AddCommand(
 		newCmdAddResource(fsys),
-		newCmdAddPatch(fsys),
 		newCmdAddConfigMap(fsys),
 		newCmdAddBase(fsys),
 		newCmdAddLabel(fsys),

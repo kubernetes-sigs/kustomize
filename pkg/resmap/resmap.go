@@ -30,6 +30,7 @@ import (
 	internal "github.com/kubernetes-sigs/kustomize/pkg/internal/error"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
+	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
@@ -131,16 +132,20 @@ func (m ResMap) insert(newName string, obj *unstructured.Unstructured) error {
 
 // NewResourceSliceFromPatches returns a slice of resources given a patch path slice from a kustomization file.
 func NewResourceSliceFromPatches(
-	loader loader.Loader, paths []string) ([]*resource.Resource, error) {
+	loader loader.Loader, patches []interface{}) ([]*resource.Resource, error) {
 	var result []*resource.Resource
-	for _, path := range paths {
-		content, err := loader.Load(path)
+	for _, patch := range patches {
+		patchArgs, err := types.NewPatchArgs(patch)
+		if err != nil {
+			return nil, err
+		}
+		content, err := loader.Load(patchArgs.Path)
 		if err != nil {
 			return nil, err
 		}
 		res, err := newResourceSliceFromBytes(content)
 		if err != nil {
-			return nil, internal.Handler(err, path)
+			return nil, internal.Handler(err, patchArgs.Path)
 		}
 		result = append(result, res...)
 	}
