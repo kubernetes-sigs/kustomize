@@ -57,7 +57,8 @@ type Kustomization struct {
 	// An Patch entry is very similar to an Resource entry.
 	// It specifies the relative paths for patch files within the package.
 	// URLs and globs are not supported
-	Patches []string `json:"patches,omitempty" yaml:"patches,omitempty"`
+	// Patches []string `json:"patches,omitempty" yaml:"patches,omitempty"`
+	Patches []interface{} `json:"patches,omitempty" yaml:"patches,omitempty"`
 
 	// List of configmaps to generate from configuration sources.
 	// Base/overlay concept doesn't apply to this field.
