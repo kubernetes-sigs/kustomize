@@ -157,7 +157,7 @@ var defaultLabelsPathConfigs = []PathConfig{
 	{
 		GroupVersionKind:   &schema.GroupVersionKind{Group: "policy", Kind: "PodDisruptionBudget"},
 		Path:               []string{"spec", "selector", "matchLabels"},
-		CreateIfNotPresent: true,
+		CreateIfNotPresent: false,
 	},
 	{
 		GroupVersionKind:   &schema.GroupVersionKind{Group: "networking.k8s.io", Kind: "NetworkPolicy"},
