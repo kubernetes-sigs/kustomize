@@ -19,8 +19,10 @@ package transformers
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
+	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -58,7 +60,7 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 					continue
 				}
 				err := mutateField(objMap, path.Path, path.CreateIfNotPresent,
-					o.updateNameReference(referencePathConfig.referencedGVK, m))
+					o.updateNameReference(referencePathConfig.referencedGVK, m, id, path.Path))
 				if err != nil {
 					return err
 				}
@@ -69,21 +71,23 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 }
 
 func (o *nameReferenceTransformer) updateNameReference(
-	GVK schema.GroupVersionKind, m resmap.ResMap) func(in interface{}) (interface{}, error) {
+	GVK schema.GroupVersionKind, m resmap.ResMap, referencingId resource.ResId, referencingPath []string) func(in interface{}) (interface{}, error) {
 	return func(in interface{}) (interface{}, error) {
 		s, ok := in.(string)
 		if !ok {
 			return nil, fmt.Errorf("%#v is expectd to be %T", in, s)
 		}
 
-		for id, res := range m {
-			if !selectByGVK(id.Gvk(), &GVK) {
-				continue
-			}
-			if id.Name() == s {
-				return res.GetName(), nil
-			}
+		matchedIds := m.FindByGVKN(resource.NewResId(GVK, s))
+		if len(matchedIds) == 0 {
+			return in, nil
 		}
-		return in, nil
+		if len(matchedIds) > 1 {
+			return nil, fmt.Errorf("found multiple objects %#v matching name reference %#v path %s",
+				matchedIds, referencingId, strings.Join(referencingPath, "."))
+		}
+
+		res, _ := m.DemandOneMatchForId(matchedIds[0])
+		return res.GetName(), nil
 	}
 }
