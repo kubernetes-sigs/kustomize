@@ -33,6 +33,7 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	interror "github.com/kubernetes-sigs/kustomize/pkg/internal/error"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
+	"github.com/kubernetes-sigs/kustomize/pkg/patch"
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/transformers"
@@ -64,9 +65,6 @@ func NewApplication(ldr loader.Loader, fSys fs.FileSystem) (*Application, error)
 	}
 	if m.PatchesJson6902 != nil {
 		log.Printf("field patchesJson6902 ignored; no implementation yet.")
-	}
-	if m.Patches != nil {
-		log.Println("field patches will be deprecated, please change it to patchesStategicMerge")
 	}
 	return &Application{kustomization: &m, ldr: ldr, fSys: fSys}, nil
 }
@@ -156,7 +154,7 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 		return nil, err
 	}
 
-	a.kustomization.PatchesStrategicMerge = append(a.kustomization.PatchesStrategicMerge, a.kustomization.Patches...)
+	a.kustomization.PatchesStrategicMerge = patch.Append(a.kustomization.PatchesStrategicMerge, a.kustomization.Patches)
 	patches, err := resmap.NewResourceSliceFromPatches(a.ldr, a.kustomization.PatchesStrategicMerge)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResourceSliceFromPatches"))
