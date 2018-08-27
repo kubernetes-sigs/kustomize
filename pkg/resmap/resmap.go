@@ -29,6 +29,7 @@ import (
 	"github.com/golang/glog"
 	internal "github.com/kubernetes-sigs/kustomize/pkg/internal/error"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
+	"github.com/kubernetes-sigs/kustomize/pkg/patch"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -131,16 +132,16 @@ func (m ResMap) insert(newName string, obj *unstructured.Unstructured) error {
 
 // NewResourceSliceFromPatches returns a slice of resources given a patch path slice from a kustomization file.
 func NewResourceSliceFromPatches(
-	loader loader.Loader, paths []string) ([]*resource.Resource, error) {
+	loader loader.Loader, paths []patch.PatchStrategicMerge) ([]*resource.Resource, error) {
 	var result []*resource.Resource
 	for _, path := range paths {
-		content, err := loader.Load(path)
+		content, err := loader.Load(string(path))
 		if err != nil {
 			return nil, err
 		}
 		res, err := newResourceSliceFromBytes(content)
 		if err != nil {
-			return nil, internal.Handler(err, path)
+			return nil, internal.Handler(err, string(path))
 		}
 		result = append(result, res...)
 	}
