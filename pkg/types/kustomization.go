@@ -19,6 +19,8 @@ package types
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/kubernetes-sigs/kustomize/pkg/patch"
 )
 
 // Kustomization holds the information needed to generate customized k8s api resources.
@@ -56,8 +58,16 @@ type Kustomization struct {
 
 	// An Patch entry is very similar to an Resource entry.
 	// It specifies the relative paths for patch files within the package.
-	// URLs and globs are not supported
-	Patches []string `json:"patches,omitempty" yaml:"patches,omitempty"`
+	// URLs and globs are not supported.
+	// The patch files should be Stategic Merge Patch, the default patching behavior for kubectl.
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/strategic-merge-patch.md
+	Patches               []string                    `json:"patches,omitempty" yaml:"patches,omitempty"`
+	PatchesStrategicMerge []patch.PatchStrategicMerge `json:"patchesSrategicMerge,omitempty" yaml:"patchesStategicMerge,omitempty"`
+
+	// JSONPatches is a list of JSONPatch for applying JSON patch.
+	// The JSON patch is documented at https://tools.ietf.org/html/rfc6902
+	// and http://jsonpatch.com/.
+	PatchesJson6902 []patch.PatchJson6902 `json:"patchesJson6902,omitempty" yaml:"patchesJson6902,omitempty"`
 
 	// List of configmaps to generate from configuration sources.
 	// Base/overlay concept doesn't apply to this field.
