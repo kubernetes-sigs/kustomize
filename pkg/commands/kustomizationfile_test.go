@@ -109,7 +109,7 @@ vars:
 bases:
 - ../namespaces
 # some descriptions for the patches
-patches:
+patchesStrategicMerge:
 - service.yaml
 - pod.yaml
 `)
@@ -165,7 +165,7 @@ BASES:
 
 # some descriptions for the patches
 
-patches:
+patchesStrategicMerge:
 - service.yaml
 - pod.yaml
 `)
@@ -200,7 +200,7 @@ bases:
 
 # some descriptions for the patches
 
-patches:
+patchesStrategicMerge:
 - service.yaml
 - pod.yaml
 `)

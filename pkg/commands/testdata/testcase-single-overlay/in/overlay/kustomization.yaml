@@ -2,7 +2,7 @@ namePrefix: staging-
 commonLabels:
   env: staging
   team: override-foo
-patches:
+patchesStrategicMerge:
   - deployment.yaml
 bases:
   - ../package/

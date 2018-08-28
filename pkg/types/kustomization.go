@@ -62,7 +62,7 @@ type Kustomization struct {
 	// The patch files should be Stategic Merge Patch, the default patching behavior for kubectl.
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/strategic-merge-patch.md
 	Patches               []string                    `json:"patches,omitempty" yaml:"patches,omitempty"`
-	PatchesStrategicMerge []patch.PatchStrategicMerge `json:"patchesSrategicMerge,omitempty" yaml:"patchesStategicMerge,omitempty"`
+	PatchesStrategicMerge []patch.PatchStrategicMerge `json:"patchesStrategicMerge,omitempty" yaml:"patchesStrategicMerge,omitempty"`
 
 	// JSONPatches is a list of JSONPatch for applying JSON patch.
 	// The JSON patch is documented at https://tools.ietf.org/html/rfc6902

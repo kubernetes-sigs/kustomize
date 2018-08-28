@@ -73,7 +73,7 @@ commonLabels:
   who: alice
 bases:
 - ../../base
-patches:
+patchesStrategicMerge:
 - temperature.yaml
 EOF
 
@@ -96,7 +96,7 @@ commonLabels:
   who: bob
 bases:
 - ../../base
-patches:
+patchesStrategicMerge:
 - topping.yaml
 EOF
 
