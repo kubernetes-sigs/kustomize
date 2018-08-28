@@ -22,9 +22,19 @@ package patch
 type PatchStrategicMerge string
 
 // Append appends a slice of patch paths to a PatchStategicMerge slice
-func Append(patches []PatchStrategicMerge, paths []string) []PatchStrategicMerge {
+func Append(patches []PatchStrategicMerge, paths ...string) []PatchStrategicMerge {
 	for _, p := range paths {
 		patches = append(patches, PatchStrategicMerge(p))
 	}
 	return patches
+}
+
+// Exist determines if a patch path exists in a slice of PatchStategicMerge
+func Exist(patches []PatchStrategicMerge, path string) bool {
+	for _, p := range patches {
+		if p == PatchStrategicMerge(path) {
+			return true
+		}
+	}
+	return false
 }

@@ -7,7 +7,7 @@ commonAnnotations:
   note: This is a test annotation
 bases:
 - ../../package/
-patches:
+patchesStrategicMerge:
 - deployment/deployment.yaml
 configMapGenerator:
 - name: app-env
