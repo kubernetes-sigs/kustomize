@@ -22,7 +22,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
@@ -37,6 +36,7 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/transformers"
+	patchtransformer "github.com/kubernetes-sigs/kustomize/pkg/transformers/patch"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	"github.com/pkg/errors"
 )
@@ -62,9 +62,6 @@ func NewApplication(ldr loader.Loader, fSys fs.FileSystem) (*Application, error)
 	err = unmarshal(content, &m)
 	if err != nil {
 		return nil, err
-	}
-	if m.PatchesJson6902 != nil {
-		log.Printf("field patchesJson6902 ignored; no implementation yet.")
 	}
 	return &Application{kustomization: &m, ldr: ldr, fSys: fSys}, nil
 }
@@ -163,9 +160,16 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 	if len(errs.Get()) > 0 {
 		return nil, errs
 	}
+	patchesJson6902, err := patch.NewPatchJson6902(a.ldr, a.kustomization.PatchesJson6902)
+	if err != nil {
+		errs.Append(errors.Wrap(err, "NewPatchesJson6902"))
+	}
+	if len(errs.Get()) > 0 {
+		return nil, errs
+	}
 
 	var r []transformers.Transformer
-	t, err := a.newTransformer(patches)
+	t, err := a.newTransformer(patches, patchesJson6902)
 	if err != nil {
 		return nil, err
 	}
@@ -250,9 +254,9 @@ func (a *Application) loadBasesAsFlatList() ([]*Application, error) {
 }
 
 // newTransformer makes a Transformer that does everything except resolve generated names.
-func (a *Application) newTransformer(patches []*resource.Resource) (transformers.Transformer, error) {
+func (a *Application) newTransformer(patches []*resource.Resource, patchesJson6902 map[resource.ResId][]byte) (transformers.Transformer, error) {
 	var r []transformers.Transformer
-	t, err := transformers.NewPatchTransformer(patches)
+	t, err := patchtransformer.NewPatchTransformer(patches, patchesJson6902)
 	if err != nil {
 		return nil, err
 	}
