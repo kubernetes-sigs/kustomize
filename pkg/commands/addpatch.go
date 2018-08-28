@@ -24,6 +24,7 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
+	"github.com/kubernetes-sigs/kustomize/pkg/patch"
 )
 
 type addPatchOptions struct {
@@ -88,12 +89,12 @@ func (o *addPatchOptions) RunAddPatch(fsys fs.FileSystem) error {
 		return err
 	}
 
-	for _, patch := range patches {
-		if stringInSlice(patch, m.Patches) {
-			log.Printf("patch %s already in kustomization file", patch)
+	for _, p := range patches {
+		if patch.Exist(m.PatchesStrategicMerge, p) || stringInSlice(p, m.Patches) {
+			log.Printf("patch %s already in kustomization file", p)
 			continue
 		}
-		m.Patches = append(m.Patches, patch)
+		m.PatchesStrategicMerge = patch.Append(m.PatchesStrategicMerge, p)
 	}
 
 	return mf.write(m)

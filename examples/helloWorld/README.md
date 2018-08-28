@@ -156,7 +156,7 @@ commonAnnotations:
   note: Hello, I am staging!
 bases:
 - ../../base
-patches:
+patchesStrategicMerge:
 - map.yaml
 EOF
 ```
@@ -197,7 +197,7 @@ commonAnnotations:
   note: Hello, I am production!
 bases:
 - ../../base
-patches:
+patchesStrategicMerge:
 - deployment.yaml
 EOF
 ```
