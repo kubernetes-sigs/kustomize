@@ -14,37 +14,38 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package transformers
+package patch
 
 import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/evanphx/json-patch"
+	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
+	"github.com/kubernetes-sigs/kustomize/pkg/transformers"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
 // patchTransformer applies patches.
-type patchTransformer struct {
+type patchStrategicMergeTransformer struct {
 	patches []*resource.Resource
 }
 
-var _ Transformer = &patchTransformer{}
+var _ transformers.Transformer = &patchStrategicMergeTransformer{}
 
-// NewPatchTransformer constructs a patchTransformer.
-func NewPatchTransformer(slice []*resource.Resource) (Transformer, error) {
+// NewPatchStrategicMergeTransformer constructs a patchTransformer.
+func NewPatchStrategicMergeTransformer(slice []*resource.Resource) (transformers.Transformer, error) {
 	if len(slice) == 0 {
-		return NewNoOpTransformer(), nil
+		return transformers.NewNoOpTransformer(), nil
 	}
-	return &patchTransformer{slice}, nil
+	return &patchStrategicMergeTransformer{slice}, nil
 }
 
 // Transform apply the patches on top of the base resources.
-func (pt *patchTransformer) Transform(baseResourceMap resmap.ResMap) error {
+func (pt *patchStrategicMergeTransformer) Transform(baseResourceMap resmap.ResMap) error {
 	// Merge and then index the patches by Id.
 	patches, err := pt.mergePatches()
 	if err != nil {
@@ -113,7 +114,7 @@ func (pt *patchTransformer) Transform(baseResourceMap resmap.ResMap) error {
 
 // mergePatches merge and index patches by Id.
 // It errors out if there is conflict between patches.
-func (pt *patchTransformer) mergePatches() (resmap.ResMap, error) {
+func (pt *patchStrategicMergeTransformer) mergePatches() (resmap.ResMap, error) {
 	rc := resmap.ResMap{}
 	for ix, patch := range pt.patches {
 		id := patch.Id()
