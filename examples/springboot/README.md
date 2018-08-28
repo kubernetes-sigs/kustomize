@@ -291,7 +291,7 @@ kustomize edit add patch healthcheck_patch.yaml
 `kustomization.yaml` should have patches field:
 
 > ```
-> patches:
+> patchesStrategicMerge:
 > - patch.yaml
 > - memorylimit_patch.yaml
 > - healthcheck_patch.yaml

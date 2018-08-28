@@ -1,7 +1,7 @@
 bases:
   - wordpress
   - mysql
-patches:
+patchesStrategicMerge:
   - patch.yaml
 namePrefix: demo-
 

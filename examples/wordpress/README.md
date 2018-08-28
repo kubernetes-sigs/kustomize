@@ -53,7 +53,7 @@ bases:
   - wordpress
   - mysql
 namePrefix: demo-
-patches:
+patchesStrategicMerge:
   - patch.yaml
 EOF
 ```
