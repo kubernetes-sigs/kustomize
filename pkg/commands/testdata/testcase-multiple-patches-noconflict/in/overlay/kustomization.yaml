@@ -1,7 +1,7 @@
 namePrefix: staging-
 commonLabels:
   env: staging
-patches:
+patchesStrategicMerge:
   - patches/deployment-patch1.yaml
   - patches/deployment-patch2.yaml
 bases:

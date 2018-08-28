@@ -47,6 +47,7 @@ var (
 		"CommonLabels",
 		"CommonAnnotations",
 		"Patches",
+		"PatchesStrategicMerge",
 		"ConfigMapGenerator",
 		"SecretGenerator",
 		"Vars",

@@ -154,7 +154,7 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 		return nil, err
 	}
 
-	a.kustomization.PatchesStrategicMerge = patch.Append(a.kustomization.PatchesStrategicMerge, a.kustomization.Patches)
+	a.kustomization.PatchesStrategicMerge = patch.Append(a.kustomization.PatchesStrategicMerge, a.kustomization.Patches...)
 	patches, err := resmap.NewResourceSliceFromPatches(a.ldr, a.kustomization.PatchesStrategicMerge)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResourceSliceFromPatches"))
