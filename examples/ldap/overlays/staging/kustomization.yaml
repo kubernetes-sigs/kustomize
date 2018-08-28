@@ -1,6 +1,6 @@
 bases:
   - ../../base
-patches:
+patchesStrategicMerge:
   - deployment.yaml
 nameprefix: staging-
 configMapGenerator:

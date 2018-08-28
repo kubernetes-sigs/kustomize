@@ -150,7 +150,7 @@ Off the shelf MySQL uses `emptyDir` type volume, which
 gets wiped away if the MySQL Pod is recreated, and that
 is certainly not desirable for production
 environment. So we want to use Persistent Disk in
-production. kustomize lets you apply `patches` to the
+production. kustomize lets you apply `patchesStrategicMerge` to the
 resources.
 
 <!-- @createPatchFile @test -->
@@ -176,7 +176,7 @@ Add the patch file to `kustomization.yaml`:
 <!-- @specifyPatch @test -->
 ```
 cat <<'EOF' >> $DEMO_HOME/kustomization.yaml
-patches:
+patchesStrategicMerge:
 - persistent-disk.yaml
 EOF
 ```
@@ -188,7 +188,7 @@ Lets break this down:
   in deployment.yaml
 
 - Then we added `persistent-disk.yaml` to list of
-  `patches` in `kustomization.yaml`. `kustomize build`
+  `patchesStrategicMerge` in `kustomization.yaml`. `kustomize build`
   will apply this patch to the deployment resource with
   the name `mysql` as defined in the patch.
 

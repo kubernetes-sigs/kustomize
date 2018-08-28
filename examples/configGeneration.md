@@ -67,7 +67,7 @@ commonAnnotations:
   note: Hello, I am staging!
 bases:
 - ../../base
-patches:
+patchesStrategicMerge:
 - map.yaml
 EOF
 
