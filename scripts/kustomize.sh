@@ -41,21 +41,21 @@ case "$UNAME" in
 		ARCH="darwin_amd64"
 		CHECKSUM_EXPECTED="$CHECKSUM_DARWIN"
 		sha256() {
-			shasum -a 256 $1 | awk '{print $1}'
+			shasum -a 256 "$1" | awk '{print $1}'
 		}
 		;;
 	"Linux x86_64")
 		ARCH="linux_amd64"
 		CHECKSUM_EXPECTED="$CHECKSUM_LINUX"
 		sha256() {
-			sha256sum $1 | awk '{print $1}'
+			sha256sum "$1" | awk '{print $1}'
 		}
 		;;
 	MINGW*)
 		ARCH="windows_amd64"
 		CHECKSUM_EXPECTED="$CHECKSUM_WINDOWS"
 		sha256() {
-			sha256sum $1 | awk '{print $1}'
+			sha256sum "$1" | awk '{print $1}'
 		}
 		;;
 	*)
@@ -66,8 +66,8 @@ esac
 
 verify_checksum() {
 	printf "verifying checksum..." >&2
-	sha256_new=$(sha256 $1)
-	if [[ $sha256_new != $2 ]]; then
+	sha256_new=$(sha256 "$1")
+	if [[ $sha256_new != "$2" ]]; then
 		echo "ERROR: wrong checksum of downloaded binary $1 (expected: $2, is: $sha256_new)" >&2
 		exit 1
 	fi
@@ -82,14 +82,14 @@ CACHED_BINARY="$CACHE_DIR/$BINARY_NAME"
 
 # Download if needed
 if [[ ! -e "$CACHED_BINARY" ]]; then
-	mkdir -p $CACHE_DIR
+	mkdir -p "$CACHE_DIR"
 	echo "downloading $BINARY_NAME..." >&2
-	curl --fail --location --progress-bar $RELEASE_DOWNLOAD_BASE/$BINARY_NAME >$CACHED_BINARY.$$
+	curl --fail --location --progress-bar $RELEASE_DOWNLOAD_BASE/$BINARY_NAME >"$CACHED_BINARY.$$"
 	# Verify checksum
 	verify_checksum "$CACHED_BINARY.$$" "$CHECKSUM_EXPECTED"
-	chmod +x $CACHED_BINARY.$$
-	mv $CACHED_BINARY.$$ $CACHED_BINARY
+	chmod +x "$CACHED_BINARY.$$"
+	mv "$CACHED_BINARY.$$" "$CACHED_BINARY"
 fi
 
 # Execute
-exec $CACHED_BINARY "$@"
+exec "$CACHED_BINARY" "$@"
