@@ -369,13 +369,6 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 			},
 			{
 				GroupVersionKind: &schema.GroupVersionKind{
-					Kind: "StorageClass",
-				},
-				Path:               []string{"parameters", "secretName"},
-				CreateIfNotPresent: false,
-			},
-			{
-				GroupVersionKind: &schema.GroupVersionKind{
 					Version: "v1",
 					Kind:    "Pod",
 				},
@@ -676,6 +669,34 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 					Kind: "ServiceAccount",
 				},
 				Path:               []string{"imagePullSecrets", "name"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "StorageClass",
+				},
+				Path:               []string{"parameters", "secretName"}, // This is for Glusterfs,
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "StorageClass",
+				},
+				Path:               []string{"parameters", "adminSecretName"}, // This is for Quobyte, CephRBD, StorageOS
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "StorageClass",
+				},
+				Path:               []string{"parameters", "userSecretName"}, // This is for CephRBD
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "StorageClass",
+				},
+				Path:               []string{"parameters", "secretRef"}, // This is for ScaleIO
 				CreateIfNotPresent: false,
 			},
 		},
