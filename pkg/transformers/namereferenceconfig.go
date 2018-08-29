@@ -369,6 +369,13 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 			},
 			{
 				GroupVersionKind: &schema.GroupVersionKind{
+					Kind: "StorageClass",
+				},
+				Path:               []string{"parameters", "secretName"},
+				CreateIfNotPresent: false,
+			},
+			{
+				GroupVersionKind: &schema.GroupVersionKind{
 					Version: "v1",
 					Kind:    "Pod",
 				},
