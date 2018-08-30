@@ -60,3 +60,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/hashicorp/go-getter"
+
+[[constraint]]
+  name = "github.com/krishicks/yaml-patch"
+  version = "0.0.10"
