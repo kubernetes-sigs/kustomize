@@ -31,3 +31,17 @@ To install from head with [Go] v1.10.1 or higher:
 ```
 go get github.com/kubernetes-sigs/kustomize
 ```
+
+## Installation using the kustomize.sh wrapper
+
+[kustomize.sh](scripts/kustomize.sh) is an example script that shows how to
+automatically download and cache the binary when kustomize is started.
+You could for example add that script in your project git repo, making it
+easier to use kustomize for all developers and also from your ci/cd pipeline.
+
+One advantage of this approach is that you can also better control what
+version of kustomize is in use for your project.
+
+The script can be easily adapt to your needs. You can for example change where the
+binaries are stored locally, and from what repo the binaries are download if a
+local copy is not found.
