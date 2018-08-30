@@ -22,8 +22,10 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
-	"github.com/kubernetes-sigs/kustomize/pkg/validate"
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/api/validation"
+	v1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 // KindOfAdd is the kind of metadata being added: label or annotation
@@ -46,12 +48,17 @@ func (k KindOfAdd) String() string {
 }
 
 type addMetadataOptions struct {
-	metadata map[string]string
+	metadata            map[string]string
+	validateAnnotations func(map[string]string) field.ErrorList
+	validateLabels      func(map[string]string) field.ErrorList
 }
 
 // newCmdAddAnnotation adds one or more commonAnnotations to the kustomization file.
 func newCmdAddAnnotation(fsys fs.FileSystem) *cobra.Command {
 	var o addMetadataOptions
+	o.validateAnnotations = func(x map[string]string) field.ErrorList {
+		return validation.ValidateAnnotations(x, field.NewPath("field"))
+	}
 
 	cmd := &cobra.Command{
 		Use:   "annotation",
@@ -72,6 +79,9 @@ func newCmdAddAnnotation(fsys fs.FileSystem) *cobra.Command {
 // newCmdAddLabel adds one or more commonLabels to the kustomization file.
 func newCmdAddLabel(fsys fs.FileSystem) *cobra.Command {
 	var o addMetadataOptions
+	o.validateLabels = func(x map[string]string) field.ErrorList {
+		return v1validation.ValidateLabels(x, field.NewPath("field"))
+	}
 
 	cmd := &cobra.Command{
 		Use:   "label",
@@ -100,23 +110,30 @@ func (o *addMetadataOptions) ValidateAndParse(args []string, k KindOfAdd) error 
 	}
 	inputs := strings.Split(args[0], ",")
 	for _, input := range inputs {
+		metadata := make(map[string]string)
+		//parse annotation keys and values into metadata
+		kv := strings.Split(input, ":")
+		if len(kv[0]) < 1 {
+			return fmt.Errorf("invalid %s format: %s", k, input)
+		}
+		if len(kv) > 1 {
+			metadata[kv[0]] = kv[1]
+		} else {
+			metadata[kv[0]] = ""
+		}
 		switch k {
 		case label:
-			valid, err := validate.IsValidLabel(input)
-			if !valid {
-				return err
+			if errs := o.validateLabels(metadata); len(errs) != 0 {
+				return fmt.Errorf("invalid %s format: %s", k, input)
 			}
 		case annotation:
-			valid, err := validate.IsValidAnnotation(input)
-			if !valid {
-				return err
+			if errs := o.validateAnnotations(metadata); len(errs) != 0 {
+				return fmt.Errorf("invalid %s format: %s", k, input)
 			}
 		default:
 			return fmt.Errorf("unknown metadata kind %s", k)
 		}
-		//parse annotation keys and values into metadata
-		kv := strings.Split(input, ":")
-		o.metadata[kv[0]] = kv[1]
+		o.metadata[kv[0]] = metadata[kv[0]]
 	}
 	return nil
 }
