@@ -78,6 +78,9 @@ func isRepoUrl(s string) bool {
 	if strings.HasPrefix(s, "https://") {
 		return true
 	}
+	if strings.HasPrefix(s, "git::") {
+		return true
+	}
 	host := strings.SplitN(s, "/", 2)[0]
 	return strings.Contains(host, ".com") || strings.Contains(host, ".org")
 }
