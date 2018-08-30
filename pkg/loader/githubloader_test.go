@@ -46,6 +46,10 @@ func TestIsRepoURL(t *testing.T) {
 			input:    "../relative",
 			expected: false,
 		},
+		{
+			input:    "git::https://gitlab.com/org/repo",
+			expected: true,
+		},
 	}
 	for _, tc := range testcases {
 		actual := isRepoUrl(tc.input)
