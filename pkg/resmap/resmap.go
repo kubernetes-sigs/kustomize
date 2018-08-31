@@ -117,6 +117,16 @@ func (m ResMap) ErrorIfNotEqual(m2 ResMap) error {
 	return nil
 }
 
+// DeepCopy clone the resmap into a new one
+func (m ResMap) DeepCopy() ResMap {
+	mcopy := make(ResMap)
+	for id, obj := range m {
+		mcopy[id] = resource.NewResourceFromUnstruct(obj.Unstructured)
+		mcopy[id].SetBehavior(obj.Behavior())
+	}
+	return mcopy
+}
+
 func (m ResMap) insert(newName string, obj *unstructured.Unstructured) error {
 	oldName := obj.GetName()
 	gvk := obj.GroupVersionKind()
