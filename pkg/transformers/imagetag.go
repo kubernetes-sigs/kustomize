@@ -82,6 +82,13 @@ func (pt *imageTagTransformer) updateContainers(obj map[string]interface{}, path
 			continue
 		}
 		for _, imagetag := range pt.imageTags {
+			if imagetag.GitHead {
+				gitTag, err := gitHead()
+				if err != nil {
+					return err
+				}
+				imagetag.NewTag = gitTag
+			}
 			if isImageMatched(image.(string), imagetag.Name) {
 				container["image"] = strings.Join([]string{imagetag.Name, imagetag.NewTag}, ":")
 				break

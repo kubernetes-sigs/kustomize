@@ -176,4 +176,8 @@ type ImageTag struct {
 
 	// NewTag is the value to use in replacing the original tag.
 	NewTag string `json:"newTag,omitempty" yaml:"newTag,omitempty"`
+
+	// gitHead determines whether to use the git HEAD as the NewTag
+	// This will overwrite NewTag if both are used.
+	GitHead bool `json:"gitHead,omitempty" yaml:"gitHead,omitempty"`
 }

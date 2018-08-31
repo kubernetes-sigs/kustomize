@@ -17,7 +17,10 @@ limitations under the License.
 package transformers
 
 import (
+	"errors"
 	"fmt"
+	"os/exec"
+	"strings"
 )
 
 type mutateFunc func(interface{}) (interface{}, error)
@@ -67,4 +70,14 @@ func mutateField(m map[string]interface{}, pathToField []string, createIfNotPres
 	default:
 		return fmt.Errorf("%#v is not expected to be a primitive type", typedV)
 	}
+}
+
+// gitHead will fetch the git HEAD for a repo
+func gitHead() (string, error) {
+	out, err := exec.Command("git", "rev-parse", "HEAD").Output()
+	if err != nil {
+		return "", errors.New("Attempted to use 'gitHead', but no git HEAD exists in this location.")
+	}
+	output := strings.TrimSpace(string(out))
+	return output, nil
 }
