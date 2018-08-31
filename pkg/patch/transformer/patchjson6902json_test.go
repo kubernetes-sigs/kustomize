@@ -20,14 +20,16 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/patch"
+	jsonpatch "github.com/evanphx/json-patch"
+
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 )
 
 func TestJsonPatchJSONTransformer_Transform(t *testing.T) {
+	id := resource.NewResId(deploy, "deploy1")
 	base := resmap.ResMap{
-		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		id: resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -54,21 +56,17 @@ func TestJsonPatchJSONTransformer_Transform(t *testing.T) {
 			}),
 	}
 
-	target := patch.Target{
-		Group:   "apps",
-		Version: "v1",
-		Kind:    "Deployment",
-		Name:    "deploy1",
-	}
-
 	operations := []byte(`[
         {"op": "replace", "path": "/spec/template/spec/containers/0/name", "value": "my-nginx"},
         {"op": "add", "path": "/spec/replica", "value": "3"},
         {"op": "add", "path": "/spec/template/spec/containers/0/command", "value": ["arg1", "arg2", "arg3"]}
 ]`)
-
+	patch, err := jsonpatch.DecodePatch(operations)
+	if err != nil {
+		t.Fatalf("unexpected error : %v", err)
+	}
 	expected := resmap.ResMap{
-		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		id: resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -100,7 +98,7 @@ func TestJsonPatchJSONTransformer_Transform(t *testing.T) {
 				},
 			}),
 	}
-	jpt, err := NewPatchJson6902JSONTransformer(&target, operations)
+	jpt, err := newPatchJson6902JSONTransformer(id, patch)
 	if err != nil {
 		t.Fatalf("unexpected error : %v", err)
 	}

@@ -17,13 +17,8 @@ limitations under the License.
 package transformer
 
 import (
-	"fmt"
-	"log"
-
 	jsonpatch "github.com/evanphx/json-patch"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/patch"
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/transformers"
@@ -31,58 +26,31 @@ import (
 
 // patchJson6902Transformer applies patches.
 type patchJson6902JSONTransformer struct {
-	target     *patch.Target
-	operations []byte
+	target resource.ResId
+	patch  jsonpatch.Patch
 }
 
 var _ transformers.Transformer = &patchJson6902JSONTransformer{}
 
-// NewPatchJson6902JSONTransformer constructs a PatchJson6902 transformer.
-func NewPatchJson6902JSONTransformer(t *patch.Target, o []byte) (transformers.Transformer, error) {
-	return &patchJson6902JSONTransformer{target: t, operations: o}, nil
+// newPatchJson6902JSONTransformer constructs a PatchJson6902 transformer.
+func newPatchJson6902JSONTransformer(t resource.ResId, p jsonpatch.Patch) (transformers.Transformer, error) {
+	if len(p) == 0 {
+		return transformers.NewNoOpTransformer(), nil
+	}
+	return &patchJson6902JSONTransformer{target: t, patch: p}, nil
 }
 
 // Transform apply the json patches on top of the base resources.
 func (t *patchJson6902JSONTransformer) Transform(baseResourceMap resmap.ResMap) error {
-	targetId := resource.NewResIdWithPrefixNamespace(
-		schema.GroupVersionKind{
-			Group:   t.target.Group,
-			Version: t.target.Version,
-			Kind:    t.target.Kind,
-		},
-		t.target.Name,
-		"",
-		t.target.Namespace,
-	)
-
-	matchedIds := baseResourceMap.FindByGVKN(targetId)
-	if targetId.Namespace() != "" {
-		ids := []resource.ResId{}
-		for _, id := range matchedIds {
-			if id.Namespace() == targetId.Namespace() {
-				ids = append(ids, id)
-			}
-		}
-		matchedIds = ids
-	}
-	if len(matchedIds) == 0 {
-		log.Printf("Couldn't find any object to apply the json patch %v, skipping it.", targetId)
-		return nil
-	}
-	if len(matchedIds) > 1 {
-		return fmt.Errorf("found multiple objects that the patch can apply %v", matchedIds)
-	}
-
-	decodedPatch, err := jsonpatch.DecodePatch(t.operations)
-	if err != nil {
+	obj, err := findTargetObj(baseResourceMap, t.target)
+	if obj == nil {
 		return err
 	}
-	obj := baseResourceMap[matchedIds[0]]
 	rawObj, err := obj.Unstructured.MarshalJSON()
 	if err != nil {
 		return err
 	}
-	modifiedObj, err := decodedPatch.Apply(rawObj)
+	modifiedObj, err := t.patch.Apply(rawObj)
 	if err != nil {
 		return err
 	}
