@@ -252,6 +252,14 @@
   version = "1.1.3"
 
 [[projects]]
+  digest = "1:10e1dfc240bcd0fce14366215fd2b070e79d9b9460b27382db4423ad74204f2b"
+  name = "github.com/krishicks/yaml-patch"
+  packages = ["."]
+  pruneopts = ""
+  revision = "83cc9ac50becbbfafb86a89167f3bc5372e8e530"
+  version = "v0.0.10"
+
+[[projects]]
   branch = "master"
   digest = "1:d9e483f4b9e306facf126bd90b02d512bd22ea4471e1568867e32221a8abbb16"
   name = "github.com/mailru/easyjson"
@@ -495,6 +503,7 @@
     "github.com/ghodss/yaml",
     "github.com/golang/glog",
     "github.com/hashicorp/go-getter",
+    "github.com/krishicks/yaml-patch",
     "github.com/pkg/errors",
     "github.com/spf13/cobra",
     "k8s.io/api/core/v1",
