@@ -16,18 +16,25 @@ limitations under the License.
 
 package patch
 
+import (
+	yamlpatch "github.com/krishicks/yaml-patch"
+)
+
 // PatchJson6902 represents a json patch for an object
 // with format documented https://tools.ietf.org/html/rfc6902.
 type PatchJson6902 struct {
-	// Relative file path within the kustomization for a json patch file.
-	Path string `json:"path" yaml:"path"`
-
 	// Target refers to a Kubernetes object that the json patch will be
 	// applied to. It must refer to a Kubernetes resource under the
 	// purview of this kustomization. Target should use the
 	// raw name of the object (the name specified in its YAML,
 	// before addition of a namePrefix).
-	Target Target `json:"target" yaml:"target"`
+	Target *Target `json:"target" yaml:"target"`
+
+	// jsonPatch is a list of operations in YAML format that follows JSON 6902 rule.
+	JsonPatch yamlpatch.Patch `json:"jsonPatch,omitempty" yaml:"jsonPatch,omitempty"`
+
+	// relative file path for a json patch file inside a kustomization
+	Path string `json:"path,omitempty" yaml:"path,omitempty"`
 }
 
 // Target represents the kubernetes object that the patch is applied to
