@@ -21,6 +21,7 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
+	"github.com/kubernetes-sigs/kustomize/pkg/validators"
 )
 
 func TestRunAddAnnotation(t *testing.T) {
@@ -29,18 +30,18 @@ func TestRunAddAnnotation(t *testing.T) {
 	var o addMetadataOptions
 	o.metadata = map[string]string{"owls": "cute", "otters": "adorable"}
 
-	err := o.RunAddAnnotation(fakeFS, annotation)
+	err := o.RunAddAnnotation(fakeFS)
 	if err != nil {
 		t.Errorf("unexpected error: could not write to kustomization file")
 	}
 	// adding the same test input should not work
-	err = o.RunAddAnnotation(fakeFS, annotation)
+	err = o.RunAddAnnotation(fakeFS)
 	if err == nil {
 		t.Errorf("expected already in kustomization file error")
 	}
 	// adding new annotations should work
 	o.metadata = map[string]string{"new": "annotation"}
-	err = o.RunAddAnnotation(fakeFS, annotation)
+	err = o.RunAddAnnotation(fakeFS)
 	if err != nil {
 		t.Errorf("unexpected error: could not write to kustomization file")
 	}
@@ -48,38 +49,72 @@ func TestRunAddAnnotation(t *testing.T) {
 
 func TestAddAnnotationNoArgs(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
-	cmd := newCmdAddAnnotation(fakeFS)
+	v := validators.MakeHappyMapValidator(t)
+	cmd := newCmdAddAnnotation(fakeFS, v.Validator)
 	err := cmd.Execute()
+	v.VerifyNoCall()
 	if err == nil {
-		t.Errorf("expected an error but error is %v", err)
+		t.Errorf("expected an error")
 	}
-	if err != nil && err.Error() != "must specify annotation" {
+	if err.Error() != "must specify annotation" {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }
 
 func TestAddAnnotationInvalidFormat(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
-	cmd := newCmdAddAnnotation(fakeFS)
-	args := []string{"exclamation!:point"}
+	v := validators.MakeSadMapValidator(t)
+	cmd := newCmdAddAnnotation(fakeFS, v.Validator)
+	args := []string{"whatever:whatever"}
 	err := cmd.RunE(cmd, args)
+	v.VerifyCall()
 	if err == nil {
-		t.Errorf("expected an error but error is %v", err)
+		t.Errorf("expected an error")
 	}
-	if err != nil && err.Error() != "invalid annotation format: exclamation!:point" {
+	if err.Error() != validators.SAD {
 		t.Errorf("incorrect error: %v", err.Error())
+	}
+}
+
+func TestAddAnnotationManyArgs(t *testing.T) {
+	fakeFS := fs.MakeFakeFS()
+	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
+	v := validators.MakeHappyMapValidator(t)
+	cmd := newCmdAddAnnotation(fakeFS, v.Validator)
+	args := []string{"k1:v1,k2:v2,k3:v3,k4:v5"}
+	err := cmd.RunE(cmd, args)
+	v.VerifyCall()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err.Error())
 	}
 }
 
 func TestAddAnnotationNoKey(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
-	cmd := newCmdAddAnnotation(fakeFS)
+	v := validators.MakeHappyMapValidator(t)
+	cmd := newCmdAddAnnotation(fakeFS, v.Validator)
 	args := []string{":nokey"}
 	err := cmd.RunE(cmd, args)
+	v.VerifyNoCall()
 	if err == nil {
-		t.Errorf("expected an error but error is %v", err)
+		t.Errorf("expected an error")
 	}
-	if err != nil && err.Error() != "invalid annotation format: :nokey" {
+	if err.Error() != "invalid annotation: :nokey (empty key)" {
+		t.Errorf("incorrect error: %v", err.Error())
+	}
+}
+
+func TestAddAnnotationTooManyColons(t *testing.T) {
+	fakeFS := fs.MakeFakeFS()
+	v := validators.MakeHappyMapValidator(t)
+	cmd := newCmdAddAnnotation(fakeFS, v.Validator)
+	args := []string{"key:v1:v2"}
+	err := cmd.RunE(cmd, args)
+	v.VerifyNoCall()
+	if err == nil {
+		t.Errorf("expected an error")
+	}
+	if err.Error() != "invalid annotation: key:v1:v2 (too many colons)" {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }
@@ -87,9 +122,11 @@ func TestAddAnnotationNoKey(t *testing.T) {
 func TestAddAnnotationNoValue(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
-	cmd := newCmdAddAnnotation(fakeFS)
+	v := validators.MakeHappyMapValidator(t)
+	cmd := newCmdAddAnnotation(fakeFS, v.Validator)
 	args := []string{"no:,value"}
 	err := cmd.RunE(cmd, args)
+	v.VerifyCall()
 	if err != nil {
 		t.Errorf("unexpected error: %v", err.Error())
 	}
@@ -98,13 +135,15 @@ func TestAddAnnotationNoValue(t *testing.T) {
 func TestAddAnnotationMultipleArgs(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
-	cmd := newCmdAddAnnotation(fakeFS)
+	v := validators.MakeHappyMapValidator(t)
+	cmd := newCmdAddAnnotation(fakeFS, v.Validator)
 	args := []string{"this:annotation", "has:spaces"}
 	err := cmd.RunE(cmd, args)
+	v.VerifyNoCall()
 	if err == nil {
-		t.Errorf("expected an error but error is %v", err)
+		t.Errorf("expected an error")
 	}
-	if err != nil && err.Error() != "annotations must be comma-separated, with no spaces. See help text for example" {
+	if err.Error() != "annotations must be comma-separated, with no spaces" {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }
@@ -115,18 +154,18 @@ func TestRunAddLabel(t *testing.T) {
 	var o addMetadataOptions
 	o.metadata = map[string]string{"owls": "cute", "otters": "adorable"}
 
-	err := o.RunAddLabel(fakeFS, label)
+	err := o.RunAddLabel(fakeFS)
 	if err != nil {
 		t.Errorf("unexpected error: could not write to kustomization file")
 	}
 	// adding the same test input should not work
-	err = o.RunAddLabel(fakeFS, label)
+	err = o.RunAddLabel(fakeFS)
 	if err == nil {
 		t.Errorf("expected already in kustomization file error")
 	}
 	// adding new labels should work
 	o.metadata = map[string]string{"new": "label"}
-	err = o.RunAddLabel(fakeFS, label)
+	err = o.RunAddLabel(fakeFS)
 	if err != nil {
 		t.Errorf("unexpected error: could not write to kustomization file")
 	}
@@ -134,38 +173,59 @@ func TestRunAddLabel(t *testing.T) {
 
 func TestAddLabelNoArgs(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
-	cmd := newCmdAddLabel(fakeFS)
+	v := validators.MakeHappyMapValidator(t)
+	cmd := newCmdAddLabel(fakeFS, v.Validator)
 	err := cmd.Execute()
+	v.VerifyNoCall()
 	if err == nil {
-		t.Errorf("expected an error but error is: %v", err)
+		t.Errorf("expected an error")
 	}
-	if err != nil && err.Error() != "must specify label" {
+	if err.Error() != "must specify label" {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }
 
 func TestAddLabelInvalidFormat(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
-	cmd := newCmdAddLabel(fakeFS)
+	v := validators.MakeSadMapValidator(t)
+	cmd := newCmdAddLabel(fakeFS, v.Validator)
 	args := []string{"exclamation!:point"}
 	err := cmd.RunE(cmd, args)
+	v.VerifyCall()
 	if err == nil {
-		t.Errorf("expected an error but error is: %v", err)
+		t.Errorf("expected an error")
 	}
-	if err != nil && err.Error() != "invalid label format: exclamation!:point" {
+	if err.Error() != validators.SAD {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }
 
 func TestAddLabelNoKey(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
-	cmd := newCmdAddLabel(fakeFS)
+	v := validators.MakeHappyMapValidator(t)
+	cmd := newCmdAddLabel(fakeFS, v.Validator)
 	args := []string{":nokey"}
 	err := cmd.RunE(cmd, args)
+	v.VerifyNoCall()
 	if err == nil {
-		t.Errorf("expected an error but error is: %v", err)
+		t.Errorf("expected an error")
 	}
-	if err != nil && err.Error() != "invalid label format: :nokey" {
+	if err.Error() != "invalid label: :nokey (empty key)" {
+		t.Errorf("incorrect error: %v", err.Error())
+	}
+}
+
+func TestAddLabelTooManyColons(t *testing.T) {
+	fakeFS := fs.MakeFakeFS()
+	v := validators.MakeHappyMapValidator(t)
+	cmd := newCmdAddLabel(fakeFS, v.Validator)
+	args := []string{"key:v1:v2"}
+	err := cmd.RunE(cmd, args)
+	v.VerifyNoCall()
+	if err == nil {
+		t.Errorf("expected an error")
+	}
+	if err.Error() != "invalid label: key:v1:v2 (too many colons)" {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }
@@ -173,9 +233,11 @@ func TestAddLabelNoKey(t *testing.T) {
 func TestAddLabelNoValue(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
-	cmd := newCmdAddLabel(fakeFS)
+	v := validators.MakeHappyMapValidator(t)
+	cmd := newCmdAddLabel(fakeFS, v.Validator)
 	args := []string{"no,value:"}
 	err := cmd.RunE(cmd, args)
+	v.VerifyCall()
 	if err != nil {
 		t.Errorf("unexpected error: %v", err.Error())
 	}
@@ -184,13 +246,15 @@ func TestAddLabelNoValue(t *testing.T) {
 func TestAddLabelMultipleArgs(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
-	cmd := newCmdAddLabel(fakeFS)
+	v := validators.MakeHappyMapValidator(t)
+	cmd := newCmdAddLabel(fakeFS, v.Validator)
 	args := []string{"this:input", "has:spaces"}
 	err := cmd.RunE(cmd, args)
+	v.VerifyNoCall()
 	if err == nil {
-		t.Errorf("expected an error but error is: %v", err)
+		t.Errorf("expected an error")
 	}
-	if err != nil && err.Error() != "labels must be comma-separated, with no spaces. See help text for example" {
+	if err.Error() != "labels must be comma-separated, with no spaces" {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }
