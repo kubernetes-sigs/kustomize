@@ -157,6 +157,8 @@ func TestImageTagTransformer(t *testing.T) {
 	}
 
 	it, err := NewImageTagTransformer([]types.ImageTag{
+		{Name: "nginx", NewTag: "v2", GitHead: false},
+		{Name: "nginx", NewTag: "v2", GitHead: true},
 		{Name: "nginx", NewTag: "v2"},
 		{Name: "my-nginx", NewTag: "previous"},
 		{Name: "myprivaterepohostname:1234/my/image", NewTag: "v1.0.1"},
