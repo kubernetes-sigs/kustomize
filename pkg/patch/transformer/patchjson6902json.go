@@ -23,7 +23,7 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/transformers"
 )
 
-// patchJson6902Transformer applies patches.
+// patchJson6902JSONTransformer applies patches.
 type patchJson6902JSONTransformer struct {
 	target resource.ResId
 	patch  jsonpatch.Patch
