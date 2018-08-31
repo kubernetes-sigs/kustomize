@@ -22,6 +22,7 @@ import (
 	"os"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
+	"github.com/kubernetes-sigs/kustomize/pkg/validators"
 	"github.com/spf13/cobra"
 )
 
@@ -109,8 +110,8 @@ func newCmdAdd(fsys fs.FileSystem) *cobra.Command {
 		newCmdAddPatch(fsys),
 		newCmdAddConfigMap(fsys),
 		newCmdAddBase(fsys),
-		newCmdAddLabel(fsys),
-		newCmdAddAnnotation(fsys),
+		newCmdAddLabel(fsys, validators.MakeLabelValidator()),
+		newCmdAddAnnotation(fsys, validators.MakeAnnotationValidator()),
 	)
 	return c
 }
