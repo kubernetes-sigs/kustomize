@@ -19,14 +19,13 @@ package transformer
 import (
 	"fmt"
 
-	jsonpatch "github.com/evanphx/json-patch"
-	yamlpatch "github.com/krishicks/yaml-patch"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-
+	"github.com/evanphx/json-patch"
+	"github.com/krishicks/yaml-patch"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
 	"github.com/kubernetes-sigs/kustomize/pkg/patch"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/transformers"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // PatchJson6902Factory makes PatchJson6902 transformers.
