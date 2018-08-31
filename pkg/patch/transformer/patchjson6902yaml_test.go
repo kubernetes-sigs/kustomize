@@ -21,7 +21,6 @@ import (
 	"testing"
 
 	yamlpatch "github.com/krishicks/yaml-patch"
-	"github.com/kubernetes-sigs/kustomize/pkg/patch"
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -30,8 +29,9 @@ import (
 var deploy = schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"}
 
 func TestJsonPatchYAMLTransformer_Transform(t *testing.T) {
+	id := resource.NewResId(deploy, "deploy1")
 	base := resmap.ResMap{
-		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		id: resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -58,13 +58,6 @@ func TestJsonPatchYAMLTransformer_Transform(t *testing.T) {
 			}),
 	}
 
-	target := patch.Target{
-		Group:   "apps",
-		Version: "v1",
-		Kind:    "Deployment",
-		Name:    "deploy1",
-	}
-
 	var image, replica, command interface{}
 	image = "my-nginx"
 	replica = "3"
@@ -88,7 +81,7 @@ func TestJsonPatchYAMLTransformer_Transform(t *testing.T) {
 	}
 
 	expected := resmap.ResMap{
-		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		id: resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -120,7 +113,7 @@ func TestJsonPatchYAMLTransformer_Transform(t *testing.T) {
 				},
 			}),
 	}
-	jpt, err := NewPatchJson6902YAMLTransformer(&target, patch)
+	jpt, err := newPatchJson6902YAMLTransformer(id, patch)
 	if err != nil {
 		t.Fatalf("unexpected error : %v", err)
 	}
