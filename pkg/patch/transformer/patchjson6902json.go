@@ -17,8 +17,7 @@ limitations under the License.
 package transformer
 
 import (
-	jsonpatch "github.com/evanphx/json-patch"
-
+	"github.com/evanphx/json-patch"
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/transformers"
