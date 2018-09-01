@@ -1,6 +1,6 @@
-[patch]: ../../docs/glossary.md#patch
-[resource]: ../../docs/glossary.md#resource
-[variant]: ../../docs/glossary.md#variant
+[patch]: ../docs/glossary.md#patch
+[resource]: ../docs/glossary.md#resource
+[variant]: ../docs/glossary.md#variant
 
 ## ConfigMap generation and rolling updates
 
