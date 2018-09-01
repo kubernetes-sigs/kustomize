@@ -1,11 +1,11 @@
-[OTS]: glossary.md#off-the-shelf
+[OTS]: glossary.md#off-the-shelf-configuration
 [apply]: glossary.md#apply
 [applying]: glossary.md#apply
 [base]: glossary.md#base
 [fork]: https://guides.github.com/activities/forking/
 [variants]: glossary.md#variant
 [kustomization]: glossary.md#kustomization
-[off-the-shelf]: glossary.md#off-the-shelf
+[off-the-shelf]: glossary.md#off-the-shelf-configuration
 [overlays]: glossary.md#overlay
 [patch]: glossary.md#patch
 [patches]: glossary.md#patch
