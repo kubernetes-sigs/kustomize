@@ -15,7 +15,7 @@
 [kubernetes]: #kubernetes
 [kustomize]: #kustomize
 [kustomization]: #kustomization
-[off-the-shelf]: #off-the-shelf
+[off-the-shelf]: #off-the-shelf-configuration
 [overlay]: #overlay
 [overlays]: #overlay
 [patch]: #patch
