@@ -11,12 +11,12 @@
    can be considered.
 1. Submit an issue describing your proposed change to
    the repo in question.
-1. The [repo owners](OWNERS) will respond to your issue
+1. The [repo owners](../OWNERS) will respond to your issue
    promptly.
 1. Fork the repo, develop and test your code.
    See the [github workflow guide].
 1. For _new features_, provide a markdown-based demo following
-   the pattern established in the [examples](examples) directory.
+   the pattern established in the [examples](../examples) directory.
    Run `bin/pre-commit.sh` to test your demo.
 1. Submit a pull request.
 
