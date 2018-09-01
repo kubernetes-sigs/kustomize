@@ -14,9 +14,9 @@
  * [eschewed features](eschewedFeatures.md) - Why certain features are (currently)
    not supported in Kustomize.
 
- * [contributing guidelines](CONTRIBUTING.md) - Please read before sending a PR.
+ * [contributing guidelines](../CONTRIBUTING.md) - Please read before sending a PR.
  
- * [code of conduct](CODE_OF_CONDUCT.md)
+ * [code of conduct](../code-of-conduct.md)
  
  
  
