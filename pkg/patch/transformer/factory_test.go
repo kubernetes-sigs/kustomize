@@ -17,12 +17,16 @@ limitations under the License.
 package transformer
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/internal/loadertest"
 	"github.com/kubernetes-sigs/kustomize/pkg/patch"
+	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
+	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"gopkg.in/yaml.v2"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func TestNewPatchJson6902FactoryNull(t *testing.T) {
@@ -31,18 +35,19 @@ func TestNewPatchJson6902FactoryNull(t *testing.T) {
 			Name: "some-name",
 		},
 	}
-	f, err := NewPatchJson6902Factory(nil, p)
+	f := NewPatchJson6902Factory(nil)
+	tr, err := f.makeOnePatchJson6902Transformer(p)
 	if err != nil {
 		t.Fatalf("unexpected error : %v", err)
 	}
-	if f != nil {
+	if tr != nil {
 		t.Fatal("a nil should be returned")
 	}
 }
 
 func TestNewPatchJson6902FactoryNoTarget(t *testing.T) {
 	p := patch.PatchJson6902{}
-	_, err := NewPatchJson6902Factory(nil, p)
+	_, err := NewPatchJson6902Factory(nil).makeOnePatchJson6902Transformer(p)
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -70,7 +75,8 @@ path: /some/dir/some/file
 	if err != nil {
 		t.Fatalf("expected error %v", err)
 	}
-	_, err = NewPatchJson6902Factory(nil, p)
+	f := NewPatchJson6902Factory(nil)
+	_, err = f.makeOnePatchJson6902Transformer(p)
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -103,17 +109,13 @@ path: /testpath/patch.json
 		t.Fatal("expected error")
 	}
 
-	f, err := NewPatchJson6902Factory(ldr, p)
+	f := NewPatchJson6902Factory(ldr)
+	tr, err := f.makeOnePatchJson6902Transformer(p)
 	if err != nil {
 		t.Fatalf("unexpected error : %v", err)
 	}
-	if f == nil {
-		t.Fatalf("the returned factory shouldn't be nil ")
-	}
-
-	_, err = f.MakePatchJson6902Transformer()
-	if err != nil {
-		t.Fatalf("unexpected error : %v", err)
+	if tr == nil {
+		t.Fatal("the returned transformer should not be nil")
 	}
 }
 
@@ -139,17 +141,197 @@ jsonPatch:
 		t.Fatalf("unexpected error : %v", err)
 	}
 
-	f, err := NewPatchJson6902Factory(nil, p)
+	f := NewPatchJson6902Factory(nil)
+	tr, err := f.makeOnePatchJson6902Transformer(p)
 	if err != nil {
 		t.Fatalf("unexpected error : %v", err)
 	}
-	if f == nil {
-		t.Fatalf("the returned factory shouldn't be nil ")
+	if tr == nil {
+		t.Fatal("the returned transformer should not be nil")
+	}
+}
+
+func TestNewPatchJson6902FactoryMulti(t *testing.T) {
+	ldr := loadertest.NewFakeLoader("/testpath")
+	operations := []byte(`[
+        {"op": "replace", "path": "/spec/template/spec/containers/0/name", "value": "my-nginx"},
+        {"op": "add", "path": "/spec/replica", "value": "3"}
+]`)
+	err := ldr.AddFile("/testpath/patch.json", operations)
+	if err != nil {
+		t.Fatalf("Failed to setup fake ldr.")
 	}
 
-	_, err = f.MakePatchJson6902Transformer()
+	jsonPatches := []byte(`
+- target:
+    kind: foo
+    name: some-name
+  path: /testpath/patch.json
+
+- target:
+    kind: foo
+    name: some-name
+  jsonPatch:
+  - op: add
+    path: /spec/template/spec/containers/0/command
+    value: ["arg1", "arg2", "arg3"]
+`)
+	var p []patch.PatchJson6902
+	err = yaml.Unmarshal(jsonPatches, &p)
 	if err != nil {
 		t.Fatalf("unexpected error : %v", err)
 	}
 
+	f := NewPatchJson6902Factory(ldr)
+	tr, err := f.MakePatchJson6902Transformer(p)
+	if err != nil {
+		t.Fatalf("unexpected error : %v", err)
+	}
+	if tr == nil {
+		t.Fatal("the returned transformer should not be nil")
+	}
+
+	id := resource.NewResId(schema.GroupVersionKind{Kind: "foo"}, "some-name")
+	base := resmap.ResMap{
+		id: resource.NewResourceFromMap(
+			map[string]interface{}{
+				"kind": "foo",
+				"metadata": map[string]interface{}{
+					"name": "some-name",
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"metadata": map[string]interface{}{
+							"labels": map[string]interface{}{
+								"old-label": "old-value",
+							},
+						},
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"image": "nginx",
+									"name":  "nginx",
+								},
+							},
+						},
+					},
+				},
+			}),
+	}
+	expected := resmap.ResMap{
+		id: resource.NewResourceFromMap(
+			map[string]interface{}{
+				"kind": "foo",
+				"metadata": map[string]interface{}{
+					"name": "some-name",
+				},
+				"spec": map[string]interface{}{
+					"replica": "3",
+					"template": map[string]interface{}{
+						"metadata": map[string]interface{}{
+							"labels": map[string]interface{}{
+								"old-label": "old-value",
+							},
+						},
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"image": "nginx",
+									"name":  "my-nginx",
+									"command": []interface{}{
+										"arg1",
+										"arg2",
+										"arg3",
+									},
+								},
+							},
+						},
+					},
+				},
+			}),
+	}
+	err = tr.Transform(base)
+	if err != nil {
+		t.Fatalf("unexpected error : %v", err)
+	}
+	if !reflect.DeepEqual(base, expected) {
+		err = expected.ErrorIfNotEqual(base)
+		t.Fatalf("actual doesn't match expected: %v", err)
+	}
+}
+
+func TestNewPatchJson6902FactoryMultiConflict(t *testing.T) {
+	ldr := loadertest.NewFakeLoader("/testpath")
+	operations := []byte(`[
+        {"op": "add", "path": "/spec/replica", "value": "3"}
+]`)
+	err := ldr.AddFile("/testpath/patch.json", operations)
+	if err != nil {
+		t.Fatalf("Failed to setup fake ldr.")
+	}
+
+	jsonPatches := []byte(`
+- target:
+    kind: foo
+    name: some-name
+  path: /testpath/patch.json
+
+- target:
+    kind: foo
+    name: some-name
+  jsonPatch:
+  - op: add
+    path: /spec/replica
+    value: 4
+`)
+	var p []patch.PatchJson6902
+	err = yaml.Unmarshal(jsonPatches, &p)
+	if err != nil {
+		t.Fatalf("unexpected error : %v", err)
+	}
+
+	f := NewPatchJson6902Factory(ldr)
+	tr, err := f.MakePatchJson6902Transformer(p)
+	if err != nil {
+		t.Fatalf("unexpected error : %v", err)
+	}
+	if tr == nil {
+		t.Fatal("the returned transformer should not be nil")
+	}
+
+	id := resource.NewResId(schema.GroupVersionKind{Kind: "foo"}, "some-name")
+	base := resmap.ResMap{
+		id: resource.NewResourceFromMap(
+			map[string]interface{}{
+				"kind": "foo",
+				"metadata": map[string]interface{}{
+					"name": "somename",
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"metadata": map[string]interface{}{
+							"labels": map[string]interface{}{
+								"old-label": "old-value",
+							},
+						},
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"image": "nginx",
+									"name":  "nginx",
+								},
+							},
+						},
+					},
+				},
+			}),
+	}
+
+	err = tr.Transform(base)
+	if err == nil {
+		t.Fatal("expected conflict")
+	}
+	if !strings.Contains(err.Error(), "found conflict between different patches") {
+		t.Fatalf("incorrect error happened %v", err)
+	}
 }
