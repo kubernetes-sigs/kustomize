@@ -19,14 +19,9 @@ limitations under the License.
 package app
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"log"
 
-	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
-
 	"github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret"
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/crds"
@@ -34,11 +29,13 @@ import (
 	interror "github.com/kubernetes-sigs/kustomize/pkg/internal/error"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
 	"github.com/kubernetes-sigs/kustomize/pkg/patch"
+	patchtransformer "github.com/kubernetes-sigs/kustomize/pkg/patch/transformer"
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/transformers"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 )
 
 // Application implements the guts of the kustomize 'build' command.
@@ -63,21 +60,11 @@ func NewApplication(ldr loader.Loader, fSys fs.FileSystem) (*Application, error)
 	if err != nil {
 		return nil, err
 	}
-	if m.PatchesJson6902 != nil {
-		log.Printf("field patchesJson6902 ignored; no implementation yet.")
-	}
 	return &Application{kustomization: &m, ldr: ldr, fSys: fSys}, nil
 }
 
 func unmarshal(y []byte, o interface{}) error {
-	j, err := yaml.YAMLToJSON(y)
-	if err != nil {
-		return err
-	}
-
-	dec := json.NewDecoder(bytes.NewReader(j))
-	dec.DisallowUnknownFields()
-	return dec.Decode(o)
+	return yaml.Unmarshal(y, o)
 }
 
 // MakeCustomizedResMap creates a ResMap per kustomization instructions.
@@ -170,6 +157,13 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 		return nil, err
 	}
 	r = append(r, t)
+	f := patchtransformer.NewPatchJson6902Factory(a.ldr)
+	t, err = f.MakePatchJson6902Transformer(a.kustomization.PatchesJson6902)
+	if err != nil {
+		return nil, err
+	}
+	r = append(r, t)
+
 	t, err = transformers.NewImageTagTransformer(a.kustomization.ImageTags)
 	if err != nil {
 		return nil, err

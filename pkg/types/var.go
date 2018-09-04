@@ -17,7 +17,7 @@ limitations under the License.
 package types
 
 import (
-	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // Var represents a variable whose value will be sourced
@@ -31,18 +31,36 @@ type Var struct {
 	// purview of this kustomization. ObjRef should use the
 	// raw name of the object (the name specified in its YAML,
 	// before addition of a namePrefix).
-	ObjRef corev1.ObjectReference `json:"objref" yaml:"objref"`
+	ObjRef Target `json:"objref" yaml:"objref"`
 
 	// FieldRef refers to the field of the object referred to by
 	// ObjRef whose value will be extracted for use in
 	// replacing $(FOO).
 	// If unspecified, this defaults to fieldpath: metadata.name
-	FieldRef corev1.ObjectFieldSelector `json:"fieldref,omitempty" yaml:"objref,omitempty"`
+	FieldRef FieldRef `json:"fieldref,omitempty" yaml:"fieldref,omitempty"`
+}
+
+// Target represents a Kubernetes object reference
+type Target struct {
+	ApiVersion string `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty"`
+	Kind       string `json:"kind,omitempty" yaml:"kind,omitempty"`
+	Namespace  string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	Name       string `json:"name" yaml:"name"`
+}
+
+//FieldRef refers to a field of an kubernetes object
+type FieldRef struct {
+	FieldPath string `json:"fieldPath,omitempty" yaml:"fieldPath,omitempty"`
 }
 
 // Defaulting sets reference to field used by default.
 func (v *Var) Defaulting() {
-	if (corev1.ObjectFieldSelector{}) == v.FieldRef {
-		v.FieldRef = corev1.ObjectFieldSelector{FieldPath: "metadata.name"}
+	if v.FieldRef.FieldPath == "" {
+		v.FieldRef.FieldPath = "metadata.name"
 	}
+}
+
+// GroupVersionKind returns a GVK
+func (t Target) GroupVersionKind() schema.GroupVersionKind {
+	return schema.FromAPIVersionAndKind(t.ApiVersion, t.Kind)
 }
