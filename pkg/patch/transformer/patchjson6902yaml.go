@@ -18,8 +18,7 @@ package transformer
 
 import (
 	"github.com/ghodss/yaml"
-	yamlpatch "github.com/krishicks/yaml-patch"
-
+	"github.com/krishicks/yaml-patch"
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/transformers"

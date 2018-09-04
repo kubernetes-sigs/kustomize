@@ -17,7 +17,7 @@ limitations under the License.
 package patch
 
 import (
-	yamlpatch "github.com/krishicks/yaml-patch"
+	"github.com/krishicks/yaml-patch"
 )
 
 // PatchJson6902 represents a json patch for an object
