@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"testing"
 
-	yamlpatch "github.com/krishicks/yaml-patch"
+	"github.com/krishicks/yaml-patch"
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"k8s.io/apimachinery/pkg/runtime/schema"
