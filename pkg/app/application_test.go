@@ -54,6 +54,13 @@ secretGenerator:
     DB_USERNAME: "printf admin"
     DB_PASSWORD: "printf somepw"
   type: Opaque
+patchesJson6902:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: dply1
+  path: /testpath/jsonpatch
 `
 	kustomizationContent2 = `
 secretGenerator:
@@ -73,6 +80,9 @@ kind: Namespace
 metadata:
   name: ns1
 `
+	jsonpatchContent = `[
+		{"op": "add", "path": "/spec/replica", "value": "3"}
+	]`
 )
 
 func makeLoader1(t *testing.T) loader.Loader {
@@ -86,6 +96,10 @@ func makeLoader1(t *testing.T) loader.Loader {
 		t.Fatalf("Failed to setup fake ldr.")
 	}
 	err = ldr.AddFile("/testpath/namespace.yaml", []byte(namespaceContent))
+	if err != nil {
+		t.Fatalf("Failed to setup fake ldr.")
+	}
+	err = ldr.AddFile("/testpath/jsonpatch", []byte(jsonpatchContent))
 	if err != nil {
 		t.Fatalf("Failed to setup fake ldr.")
 	}
@@ -114,6 +128,7 @@ func TestResources1(t *testing.T) {
 					},
 				},
 				"spec": map[string]interface{}{
+					"replica": "3",
 					"selector": map[string]interface{}{
 						"matchLabels": map[string]interface{}{
 							"app": "nginx",

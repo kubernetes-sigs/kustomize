@@ -26,12 +26,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ghodss/yaml"
-
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	interror "github.com/kubernetes-sigs/kustomize/pkg/internal/error"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
+	"gopkg.in/yaml.v2"
 )
 
 var (
