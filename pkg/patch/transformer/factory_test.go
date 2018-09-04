@@ -20,10 +20,9 @@ import (
 	"strings"
 	"testing"
 
-	yaml "gopkg.in/yaml.v2"
-
 	"github.com/kubernetes-sigs/kustomize/pkg/internal/loadertest"
 	"github.com/kubernetes-sigs/kustomize/pkg/patch"
+	"gopkg.in/yaml.v2"
 )
 
 func TestNewPatchJson6902FactoryNull(t *testing.T) {

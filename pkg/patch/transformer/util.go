@@ -27,7 +27,7 @@ import (
 func findTargetObj(m resmap.ResMap, targetId resource.ResId) (*resource.Resource, error) {
 	matchedIds := m.FindByGVKN(targetId)
 	if targetId.Namespace() != "" {
-		ids := []resource.ResId{}
+		var ids []resource.ResId
 		for _, id := range matchedIds {
 			if id.Namespace() == targetId.Namespace() {
 				ids = append(ids, id)
