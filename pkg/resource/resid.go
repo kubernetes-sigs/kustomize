@@ -97,10 +97,35 @@ func (n ResId) Namespace() string {
 
 // CopyWithNewPrefix make a new copy from current ResId and append a new prefix
 func (n ResId) CopyWithNewPrefix(p string) ResId {
-	return ResId{gvk: n.gvk, name: n.name, prefix: p + n.prefix, namespace: n.namespace}
+	return ResId{gvk: n.gvk, name: n.name, prefix: n.concatePrefix(p), namespace: n.namespace}
 }
 
 // CopyWithNewNamespace make a new copy from current ResId and set a new namespace
 func (n ResId) CopyWithNewNamespace(ns string) ResId {
 	return ResId{gvk: n.gvk, name: n.name, prefix: n.prefix, namespace: ns}
+}
+
+// HasSamePrefix check if two ResIds have the same leading prefix
+func (n ResId) HasSamePrefix(id ResId) bool {
+	prefixes1 := n.prefixList()
+	prefixes2 := id.prefixList()
+	return len(prefixes1) == 0 || len(prefixes2) == 0 || prefixes1[0] == prefixes2[0]
+}
+
+func (n ResId) concatePrefix(p string) string {
+	if p == "" {
+		return n.prefix
+	}
+	if n.prefix == "" {
+		return p
+	}
+	return p + ":" + n.prefix
+}
+
+func (n ResId) prefixList() []string {
+	var plist []string
+	if n.prefix == "" {
+		return plist
+	}
+	return strings.Split(n.prefix, ":")
 }
