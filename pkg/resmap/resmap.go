@@ -140,6 +140,18 @@ func (m ResMap) insert(newName string, obj *unstructured.Unstructured) error {
 	return nil
 }
 
+// FilterBy returns a ResMap containing ResIds with the same namespace and nameprefix
+// with the inputId
+func (m ResMap) FilterBy(inputId resource.ResId) ResMap {
+	result := ResMap{}
+	for id, res := range m {
+		if id.Namespace() == inputId.Namespace() && id.HasSameLeftmostPrefix(inputId) {
+			result[id] = res
+		}
+	}
+	return result
+}
+
 // NewResourceSliceFromPatches returns a slice of resources given a patch path slice from a kustomization file.
 func NewResourceSliceFromPatches(
 	loader loader.Loader, paths []patch.PatchStrategicMerge) ([]*resource.Resource, error) {
