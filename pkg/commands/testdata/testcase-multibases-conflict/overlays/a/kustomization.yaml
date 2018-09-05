@@ -1,0 +1,7 @@
+bases:
+- ../../base/
+
+namePrefix: a-
+
+resources:
+- serviceaccount.yaml
