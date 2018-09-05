@@ -1,0 +1,4 @@
+description: multibases with name reference
+args: []
+filename: testdata/testcase-multibases-conflict/combined
+expectedError: detected conflicts when resolving name references serviceaccount
