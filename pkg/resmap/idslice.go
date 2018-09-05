@@ -34,7 +34,7 @@ func (a IdSlice) Less(i, j int) bool {
 	if a[i].Gvk().String() != a[j].Gvk().String() {
 		return gvkLess(a[i].Gvk(), a[j].Gvk())
 	}
-	return a[i].Name() < a[j].Name()
+	return a[i].String() < a[j].String()
 }
 
 var order = []string{"Namespace", "CustomResourceDefinition", "ServiceAccount",
