@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
+	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -58,7 +59,7 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 					continue
 				}
 				err := mutateField(objMap, path.Path, path.CreateIfNotPresent,
-					o.updateNameReference(referencePathConfig.referencedGVK, m))
+					o.updateNameReference(referencePathConfig.referencedGVK, m.FilterBy(id)))
 				if err != nil {
 					return err
 				}
@@ -81,9 +82,21 @@ func (o *nameReferenceTransformer) updateNameReference(
 				continue
 			}
 			if id.Name() == s {
+				err := o.detectConflict(id, m, s)
+				if err != nil {
+					return nil, err
+				}
 				return res.GetName(), nil
 			}
 		}
 		return in, nil
 	}
+}
+
+func (o *nameReferenceTransformer) detectConflict(id resource.ResId, m resmap.ResMap, name string) error {
+	matchedIds := m.FindByGVKN(id)
+	if len(matchedIds) > 1 {
+		return fmt.Errorf("detected conflicts when resolving name references %s:\n%v", name, matchedIds)
+	}
+	return nil
 }
