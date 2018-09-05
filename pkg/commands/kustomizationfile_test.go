@@ -99,13 +99,13 @@ resources:
 - service.yaml
 # something you may want to keep
 vars:
-- fieldref:
-    fieldPath: metadata.name
-  name: MY_SERVICE_NAME
+- name: MY_SERVICE_NAME
   objref:
     apiVersion: v1
     kind: Service
     name: my-service
+  fieldref:
+    fieldPath: metadata.name
 bases:
 - ../namespaces
 # some descriptions for the patches
@@ -147,7 +147,7 @@ resources:
   # See which field this comment goes into
 - service.yaml
 
-APIVersion: v1beta1
+apiVersion: v1beta1
 kind: kustomization.yaml
 
 # something you may want to keep
@@ -160,7 +160,7 @@ vars:
     kind: Service
     name: my-service
 
-BASES:
+bases:
 - ../namespaces
 
 # some descriptions for the patches
@@ -187,13 +187,13 @@ kind: kustomization.yaml
 
 # something you may want to keep
 vars:
-- fieldref:
-    fieldPath: metadata.name
-  name: MY_SERVICE_NAME
+- name: MY_SERVICE_NAME
   objref:
     apiVersion: v1
     kind: Service
     name: my-service
+  fieldref:
+    fieldPath: metadata.name
 
 bases:
 - ../namespaces
