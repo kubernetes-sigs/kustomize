@@ -145,7 +145,7 @@ func (m ResMap) insert(newName string, obj *unstructured.Unstructured) error {
 func (m ResMap) FilterBy(inputId resource.ResId) ResMap {
 	result := ResMap{}
 	for id, res := range m {
-		if id.Namespace() == inputId.Namespace() && id.HasSamePrefix(inputId) {
+		if id.Namespace() == inputId.Namespace() && id.HasSameLeftmostPrefix(inputId) {
 			result[id] = res
 		}
 	}
