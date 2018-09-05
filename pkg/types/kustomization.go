@@ -18,14 +18,25 @@ limitations under the License.
 package types
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/kubernetes-sigs/kustomize/pkg/patch"
 )
 
 // Kustomization holds the information needed to generate customized k8s api resources.
 type Kustomization struct {
-	metav1.TypeMeta `json:",inline" yaml:",inline"`
+	// Kind is a string value representing the REST resource this object represents.
+	// Servers may infer this from the endpoint the client submits requests to.
+	// Cannot be updated.
+	// In CamelCase.
+	// More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds
+	// +optional
+	Kind string `json:"kind,omitempty" yaml:"kind,omitempty"`
+
+	// APIVersion defines the versioned schema of this representation of an object.
+	// Servers should convert recognized schemas to the latest internal value, and
+	// may reject unrecognized values.
+	// More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources
+	// +optional
+	APIVersion string `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty"`
 
 	// NamePrefix will prefix the names of all resources mentioned in the kustomization
 	// file including generated configmaps and secrets.

@@ -19,13 +19,8 @@ limitations under the License.
 package app
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"log"
-
-	"github.com/ghodss/yaml"
-	"github.com/golang/glog"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret"
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
@@ -39,6 +34,7 @@ import (
 	"github.com/kubernetes-sigs/kustomize/pkg/transformers"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 )
 
 // Application implements the guts of the kustomize 'build' command.
@@ -70,14 +66,7 @@ func NewApplication(ldr loader.Loader, fSys fs.FileSystem) (*Application, error)
 }
 
 func unmarshal(y []byte, o interface{}) error {
-	j, err := yaml.YAMLToJSON(y)
-	if err != nil {
-		return err
-	}
-
-	dec := json.NewDecoder(bytes.NewReader(j))
-	dec.DisallowUnknownFields()
-	return dec.Decode(o)
+	return yaml.Unmarshal(y, o)
 }
 
 // MakeCustomizedResMap creates a ResMap per kustomization instructions.
@@ -291,7 +280,7 @@ func (a *Application) resolveRefVars(m resmap.ResMap) (map[string]string, error)
 			}
 			result[v.Name] = s
 		} else {
-			glog.Infof("couldn't resolve v: %v", v)
+			log.Printf("couldn't resolve v: %v", v)
 		}
 	}
 	return result, nil
