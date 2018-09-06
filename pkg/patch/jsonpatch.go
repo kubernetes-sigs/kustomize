@@ -16,10 +16,6 @@ limitations under the License.
 
 package patch
 
-import (
-	"github.com/krishicks/yaml-patch"
-)
-
 // PatchJson6902 represents a json patch for an object
 // with format documented https://tools.ietf.org/html/rfc6902.
 type PatchJson6902 struct {
@@ -29,9 +25,6 @@ type PatchJson6902 struct {
 	// raw name of the object (the name specified in its YAML,
 	// before addition of a namePrefix).
 	Target *Target `json:"target" yaml:"target"`
-
-	// jsonPatch is a list of operations in YAML format that follows JSON 6902 rule.
-	JsonPatch yamlpatch.Patch `json:"jsonPatch,omitempty" yaml:"jsonPatch,omitempty"`
 
 	// relative file path for a json patch file inside a kustomization
 	Path string `json:"path,omitempty" yaml:"path,omitempty"`
