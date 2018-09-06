@@ -48,6 +48,7 @@ var (
 		"CommonAnnotations",
 		"Patches",
 		"PatchesStrategicMerge",
+		"PatchesJson6902",
 		"ConfigMapGenerator",
 		"SecretGenerator",
 		"Vars",
