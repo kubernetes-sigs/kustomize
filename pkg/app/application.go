@@ -22,7 +22,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
@@ -34,6 +33,7 @@ import (
 	interror "github.com/kubernetes-sigs/kustomize/pkg/internal/error"
 	"github.com/kubernetes-sigs/kustomize/pkg/loader"
 	"github.com/kubernetes-sigs/kustomize/pkg/patch"
+	patchtransformer "github.com/kubernetes-sigs/kustomize/pkg/patch/transformer"
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/kubernetes-sigs/kustomize/pkg/transformers"
@@ -62,9 +62,6 @@ func NewApplication(ldr loader.Loader, fSys fs.FileSystem) (*Application, error)
 	err = unmarshal(content, &m)
 	if err != nil {
 		return nil, err
-	}
-	if m.PatchesJson6902 != nil {
-		log.Printf("field patchesJson6902 ignored; no implementation yet.")
 	}
 	return &Application{kustomization: &m, ldr: ldr, fSys: fSys}, nil
 }
@@ -166,6 +163,11 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 
 	var r []transformers.Transformer
 	t, err := a.newTransformer(patches)
+	if err != nil {
+		return nil, err
+	}
+	r = append(r, t)
+	t, err = patchtransformer.NewPatchJson6902Factory(a.ldr).MakePatchJson6902Transformer(a.kustomization.PatchesJson6902)
 	if err != nil {
 		return nil, err
 	}
