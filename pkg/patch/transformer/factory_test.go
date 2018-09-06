@@ -29,22 +29,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func TestNewPatchJson6902FactoryNull(t *testing.T) {
-	p := patch.PatchJson6902{
-		Target: &patch.Target{
-			Name: "some-name",
-		},
-	}
-	f := NewPatchJson6902Factory(nil)
-	tr, err := f.makeOnePatchJson6902Transformer(p)
-	if err != nil {
-		t.Fatalf("unexpected error : %v", err)
-	}
-	if tr != nil {
-		t.Fatal("a nil should be returned")
-	}
-}
-
 func TestNewPatchJson6902FactoryNoTarget(t *testing.T) {
 	p := patch.PatchJson6902{}
 	_, err := NewPatchJson6902Factory(nil).makeOnePatchJson6902Transformer(p)
@@ -61,14 +45,6 @@ func TestNewPatchJson6902FactoryConflict(t *testing.T) {
 target:
   name: some-name
   kind: Deployment
-jsonPatch:
-  - op: replace
-    path: /spec/template/spec/containers/0/name
-    value: my-nginx
-  - op: add
-    path: /spec/template/spec/containers/0/command
-    value: [arg1,arg2,arg3]
-path: /some/dir/some/file
 `)
 	p := patch.PatchJson6902{}
 	err := yaml.Unmarshal(jsonPatch, &p)
@@ -80,7 +56,7 @@ path: /some/dir/some/file
 	if err == nil {
 		t.Fatal("expected error")
 	}
-	if !strings.Contains(err.Error(), "cannot specify path and jsonPath at the same time") {
+	if !strings.Contains(err.Error(), "must specify the path for a json patch file") {
 		t.Fatalf("incorrect error returned %v", err)
 	}
 }
@@ -109,8 +85,7 @@ path: /testpath/patch.json
 		t.Fatal("expected error")
 	}
 
-	f := NewPatchJson6902Factory(ldr)
-	tr, err := f.makeOnePatchJson6902Transformer(p)
+	tr, err := NewPatchJson6902Factory(ldr).makeOnePatchJson6902Transformer(p)
 	if err != nil {
 		t.Fatalf("unexpected error : %v", err)
 	}
@@ -120,11 +95,8 @@ path: /testpath/patch.json
 }
 
 func TestNewPatchJson6902FactoryYAML(t *testing.T) {
-	jsonPatch := []byte(`
-target:
-  name: some-name
-  kind: Deployment
-jsonPatch:
+	ldr := loadertest.NewFakeLoader("/testpath")
+	operations := []byte(`
 - op: replace
   path: /spec/template/spec/containers/0/name
   value: my-nginx
@@ -135,14 +107,23 @@ jsonPatch:
   path: /spec/template/spec/containers/0/command
   value: ["arg1", "arg2", "arg3"]
 `)
+	err := ldr.AddFile("/testpath/patch.yaml", operations)
+	if err != nil {
+		t.Fatalf("Failed to setup fake ldr.")
+	}
+	jsonPatch := []byte(`
+target:
+  name: some-name
+  kind: Deployment
+path: /testpath/patch.yaml
+`)
 	p := patch.PatchJson6902{}
-	err := yaml.Unmarshal(jsonPatch, &p)
+	err = yaml.Unmarshal(jsonPatch, &p)
 	if err != nil {
 		t.Fatalf("unexpected error : %v", err)
 	}
 
-	f := NewPatchJson6902Factory(nil)
-	tr, err := f.makeOnePatchJson6902Transformer(p)
+	tr, err := NewPatchJson6902Factory(ldr).makeOnePatchJson6902Transformer(p)
 	if err != nil {
 		t.Fatalf("unexpected error : %v", err)
 	}
@@ -162,6 +143,16 @@ func TestNewPatchJson6902FactoryMulti(t *testing.T) {
 		t.Fatalf("Failed to setup fake ldr.")
 	}
 
+	operations = []byte(`
+- op: add
+  path: /spec/template/spec/containers/0/command
+  value: ["arg1", "arg2", "arg3"]
+`)
+	err = ldr.AddFile("/testpath/patch.yaml", operations)
+	if err != nil {
+		t.Fatalf("Failed to setup fake ldr.")
+	}
+
 	jsonPatches := []byte(`
 - target:
     kind: foo
@@ -171,10 +162,7 @@ func TestNewPatchJson6902FactoryMulti(t *testing.T) {
 - target:
     kind: foo
     name: some-name
-  jsonPatch:
-  - op: add
-    path: /spec/template/spec/containers/0/command
-    value: ["arg1", "arg2", "arg3"]
+  path: /testpath/patch.yaml
 `)
 	var p []patch.PatchJson6902
 	err = yaml.Unmarshal(jsonPatches, &p)
@@ -269,6 +257,15 @@ func TestNewPatchJson6902FactoryMultiConflict(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to setup fake ldr.")
 	}
+	operations = []byte(`
+- op: add
+  path: /spec/replica
+  value: 4
+`)
+	err = ldr.AddFile("/testpath/patch.yaml", operations)
+	if err != nil {
+		t.Fatalf("Failed to setup fake ldr.")
+	}
 
 	jsonPatches := []byte(`
 - target:
@@ -279,10 +276,7 @@ func TestNewPatchJson6902FactoryMultiConflict(t *testing.T) {
 - target:
     kind: foo
     name: some-name
-  jsonPatch:
-  - op: add
-    path: /spec/replica
-    value: 4
+  path: /testpath/patch.yaml
 `)
 	var p []patch.PatchJson6902
 	err = yaml.Unmarshal(jsonPatches, &p)
