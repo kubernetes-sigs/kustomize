@@ -29,7 +29,8 @@ func TestSetImageTagsHappyPath(t *testing.T) {
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
 	cmd := newCmdSetImageTag(fakeFS)
-	args := []string{"image1:tag1", "image2:tag2", "localhost:5000/operator:1.0.0"}
+	args := []string{"image1:tag1", "image2:tag2", "localhost:5000/operator:1.0.0",
+		"foo.bar.baz:5000/one/two@sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3"}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
@@ -40,6 +41,8 @@ func TestSetImageTagsHappyPath(t *testing.T) {
 	}
 	expected := []byte(`
 imageTags:
+- digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3
+  name: foo.bar.baz:5000/one/two
 - name: image1
   newTag: tag1
 - name: image2
