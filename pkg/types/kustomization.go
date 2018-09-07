@@ -176,4 +176,8 @@ type ImageTag struct {
 
 	// NewTag is the value to use in replacing the original tag.
 	NewTag string `json:"newTag,omitempty" yaml:"newTag,omitempty"`
+
+	// Digest is the value used to replace the original image tag.
+	// If digest is present NewTag value is ignored.
+	Digest string `json:"digest,omitempty" yaml:"digest,omitempty"`
 }

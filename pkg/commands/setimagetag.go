@@ -20,6 +20,7 @@ import (
 	"errors"
 	"regexp"
 	"sort"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -29,7 +30,7 @@ import (
 )
 
 type setImageTagOptions struct {
-	imageTagMap map[string]string
+	imageTagMap map[string]types.ImageTag
 }
 
 var pattern = regexp.MustCompile("^(.*):([a-zA-Z0-9._-]*)$")
@@ -40,10 +41,10 @@ func newCmdSetImageTag(fsys fs.FileSystem) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "imagetag",
-		Short: "Sets images and their new tags in the kustomization file",
+		Short: "Sets images and their new tags or digests in the kustomization file",
 		Example: `
 The command
-  set imagetag nginx:1.8.0 my-app:latest
+  set imagetag nginx:1.8.0 my-app:latest alpine@sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3
 will add 
 
 imageTags:
@@ -51,9 +52,11 @@ imageTags:
   newTag: 1.8.0
 - name: my-app
   newTag: latest
+- name: alpine
+  digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3
 
 to the kustomization file if it doesn't exist,
-and overwrite the previous newTag if the image name exists.
+and overwrite the previous ones if the image tag exists.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := o.Validate(args)
@@ -71,13 +74,27 @@ func (o *setImageTagOptions) Validate(args []string) error {
 	if len(args) == 0 {
 		return errors.New("no image and newTag specified")
 	}
-	o.imageTagMap = make(map[string]string)
+
+	o.imageTagMap = make(map[string]types.ImageTag)
+
 	for _, arg := range args {
+		if strings.Contains(arg, "@") {
+			img := strings.Split(arg, "@")
+			o.imageTagMap[img[0]] = types.ImageTag{
+				Name:   img[0],
+				Digest: img[1],
+			}
+			continue
+		}
+
 		imagetag := pattern.FindStringSubmatch(arg)
 		if len(imagetag) != 3 {
-			return errors.New("invalid format of imagetag, must specify it as <image>:<newtag>")
+			return errors.New("invalid format of imagetag, must specify it as <image>:<newtag> or <image>@<digest>")
 		}
-		o.imageTagMap[imagetag[1]] = imagetag[2]
+		o.imageTagMap[imagetag[1]] = types.ImageTag{
+			Name:   imagetag[1],
+			NewTag: imagetag[2],
+		}
 	}
 	return nil
 }
@@ -92,16 +109,18 @@ func (o *setImageTagOptions) RunSetImageTags(fsys fs.FileSystem) error {
 	if err != nil {
 		return err
 	}
-	imageTagMap := map[string]string{}
+
 	for _, it := range m.ImageTags {
-		imageTagMap[it.Name] = it.NewTag
+		if _, ok := o.imageTagMap[it.Name]; ok {
+			continue
+		}
+
+		o.imageTagMap[it.Name] = it
 	}
-	for key, value := range o.imageTagMap {
-		imageTagMap[key] = value
-	}
+
 	var imageTags []types.ImageTag
-	for key, value := range imageTagMap {
-		imageTags = append(imageTags, types.ImageTag{Name: key, NewTag: value})
+	for _, v := range o.imageTagMap {
+		imageTags = append(imageTags, v)
 	}
 	sort.Slice(imageTags, func(i, j int) bool {
 		return imageTags[i].Name < imageTags[j].Name

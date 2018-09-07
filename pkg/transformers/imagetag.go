@@ -18,7 +18,6 @@ package transformers
 
 import (
 	"regexp"
-	"strings"
 
 	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
@@ -83,7 +82,12 @@ func (pt *imageTagTransformer) updateContainers(obj map[string]interface{}, path
 		}
 		for _, imagetag := range pt.imageTags {
 			if isImageMatched(image.(string), imagetag.Name) {
-				container["image"] = strings.Join([]string{imagetag.Name, imagetag.NewTag}, ":")
+				container["image"] = imagetag.Name + ":" + imagetag.NewTag
+
+				if imagetag.Digest != "" {
+					container["image"] = imagetag.Name + "@" + imagetag.Digest
+				}
+
 				break
 			}
 		}
