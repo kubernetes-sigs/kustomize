@@ -40,3 +40,5 @@ go get github.com/kubernetes-sigs/kustomize
  * [multibases](multibases/README.md) - Composing three variants (dev, staging, production) with a common base.
 
  * [remote target](remoteBuild.md) - Building a kustomization from a github URL
+ 
+ * [json patch](jsonpatch.md) - Apply a json patch in a kustomization

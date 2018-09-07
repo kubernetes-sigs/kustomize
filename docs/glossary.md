@@ -2,6 +2,7 @@
 
 [DAM]: #declarative-application-management
 [JSON]: https://www.json.org/
+[JSONPatch]: https://tools.ietf.org/html/rfc6902
 [Resource]: #resource
 [YAML]: http://www.yaml.org/start.html
 [application]: #application
@@ -20,11 +21,14 @@
 [overlays]: #overlay
 [patch]: #patch
 [patches]: #patch
+[patchJson6902]: #patchJson6902
+[patchesJson6902]: #patchjson6902
 [proposal]: https://github.com/kubernetes/community/pull/1629
 [rebase]: https://git-scm.com/docs/git-rebase
 [resource]: #resource
 [resources]: #resource
 [rpm]: https://en.wikipedia.org/wiki/Rpm_(software)
+[strategic merge]: https://github.com/kubernetes/community/blob/master/contributors/devel/strategic-merge-patch.md
 [target]: #target
 [variant]: #variant
 [variants]: #variant
@@ -253,6 +257,15 @@ file, but has different semantics.  A patch depends on
 dependencies.  Since any resource file can be used as a
 patch, one cannot reliably distinguish a resource from
 a patch just by looking at the file's [YAML].
+
+## patchJson6902
+A _patchJson6902_ refers to a kubernetes object and a [JSONPatch]
+that can patch the object. A [JSONPatch] contains a list of operations to change the object's field directly. 
+This is different from [patch], which is
+applied to a target kubernetes object by [strategic merge]. 
+
+_patchesJson6902_ is a field in kustomization. It contains a list of
+_patchJson6902_.
 
 ## resource
 

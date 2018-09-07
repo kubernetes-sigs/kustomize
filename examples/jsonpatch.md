@@ -1,0 +1,77 @@
+# Demo: applying a json patch
+
+A kustomization file supports customizing resources via [JSON patches](https://tools.ietf.org/html/rfc6902).
+
+The example below modifies an `Ingress` object with such a patch.
+
+Make a `kustomization` containing an ingress resource.
+
+<!-- @createIngress @test -->
+```
+DEMO_HOME=$(mktemp -d)
+
+cat <<EOF >$DEMO_HOME/kustomization.yaml
+resources:
+- ingress.yaml
+EOF
+
+cat <<EOF >$DEMO_HOME/ingress.yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: my-ingress
+spec:
+  rules:
+  - host: foo.bar.com
+    http:
+      paths:
+      - backend:
+          serviceName: my-api
+          servicePort: 80
+EOF
+```
+
+Declare a JSON patch file to update two fields of the Ingress object:
+
+- change host from `foo.bar.com` to `foo.bar.io`
+- change servicePort from `80` to `8080`
+
+<!-- @addJsonPatch @test -->
+```
+cat <<EOF >$DEMO_HOME/ingress_patch.json
+[
+  {"op": "replace", "path": "/spec/rules/0/host", "value": "foo.bar.io"},
+  {"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/servicePort", "value": 8080}
+]
+EOF
+```
+
+Apply the patch by adding _patchesJson6902_ field in kustomization.yaml
+
+<!-- @applyJsonPatch @test -->
+```
+cat <<EOF >>$DEMO_HOME/kustomization.yaml
+patchesJson6902:
+- target:
+    group: extensions
+    version: v1beta1
+    kind: Ingress
+    name: my-ingress
+  path: ingress_patch.json
+EOF
+```
+
+Running `kustomize build $DEMO_HOME`, in the ourput confirm that host has been updated correctly.
+<!-- @confirmHost @test -->
+```
+test 1 == \
+  $(kustomize build $DEMO_HOME | grep "host: foo.bar.io" | wc -l); \
+  echo $?
+```
+Running `kustomize build $DEMO_HOME`, in the ourput confirm that the servicePort has been updated correctly.
+<!-- @confirmServicePort @test -->
+```
+test 1 == \
+  $(kustomize build $DEMO_HOME | grep "servicePort: 8080" | wc -l); \
+  echo $?
+```
