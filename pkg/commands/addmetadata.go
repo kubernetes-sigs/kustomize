@@ -22,6 +22,7 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
+	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	"github.com/kubernetes-sigs/kustomize/pkg/validators"
 	"github.com/spf13/cobra"
 )
@@ -56,18 +57,13 @@ func newCmdAddAnnotation(fSys fs.FileSystem, v validators.MapValidatorFunc) *cob
 	var o addMetadataOptions
 	o.kind = annotation
 	o.mapValidator = v
-
 	cmd := &cobra.Command{
 		Use:   "annotation",
 		Short: "Adds one or more commonAnnotations to " + constants.KustomizationFileName,
 		Example: `
 		add annotation {annotationKey1:annotationValue1},{annotationKey2:annotationValue2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := o.ValidateAndParse(args)
-			if err != nil {
-				return err
-			}
-			return o.RunAddAnnotation(fSys)
+			return o.runE(args, fSys, o.addAnnotations)
 		},
 	}
 	return cmd
@@ -78,25 +74,41 @@ func newCmdAddLabel(fSys fs.FileSystem, v validators.MapValidatorFunc) *cobra.Co
 	var o addMetadataOptions
 	o.kind = label
 	o.mapValidator = v
-
 	cmd := &cobra.Command{
 		Use:   "label",
 		Short: "Adds one or more commonLabels to " + constants.KustomizationFileName,
 		Example: `
 		add label {labelKey1:labelValue1},{labelKey2:labelValue2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := o.ValidateAndParse(args)
-			if err != nil {
-				return err
-			}
-			return o.RunAddLabel(fSys)
+			return o.runE(args, fSys, o.addLabels)
 		},
 	}
 	return cmd
 }
 
-// ValidateAndParse validates addLabel and addAnnotation commands and parses them into o.metadata
-func (o *addMetadataOptions) ValidateAndParse(args []string) error {
+func (o *addMetadataOptions) runE(
+	args []string, fSys fs.FileSystem, adder func(*types.Kustomization) error) error {
+	err := o.validateAndParse(args)
+	if err != nil {
+		return err
+	}
+	kf, err := newKustomizationFile(constants.KustomizationFileName, fSys)
+	if err != nil {
+		return err
+	}
+	m, err := kf.read()
+	if err != nil {
+		return err
+	}
+	err = adder(m)
+	if err != nil {
+		return err
+	}
+	return kf.write(m)
+}
+
+// validateAndParse validates `add` commands and parses them into o.metadata
+func (o *addMetadataOptions) validateAndParse(args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("must specify %s", o.kind)
 	}
@@ -120,10 +132,10 @@ func (o *addMetadataOptions) convertToMap(arg string) (map[string]string, error)
 	for _, input := range inputs {
 		kv := strings.Split(input, ":")
 		if len(kv[0]) < 1 {
-			return nil, makeError(o.kind, input, "empty key")
+			return nil, o.makeError(input, "empty key")
 		}
 		if len(kv) > 2 {
-			return nil, makeError(o.kind, input, "too many colons")
+			return nil, o.makeError(input, "too many colons")
 		}
 		if len(kv) > 1 {
 			result[kv[0]] = kv[1]
@@ -134,54 +146,30 @@ func (o *addMetadataOptions) convertToMap(arg string) (map[string]string, error)
 	return result, nil
 }
 
-// RunAddAnnotation runs addAnnotation command, doing the real work.
-func (o *addMetadataOptions) RunAddAnnotation(fsys fs.FileSystem) error {
-	mf, err := newKustomizationFile(constants.KustomizationFileName, fsys)
-	if err != nil {
-		return err
-	}
-	m, err := mf.read()
-	if err != nil {
-		return err
-	}
-
+func (o *addMetadataOptions) addAnnotations(m *types.Kustomization) error {
 	if m.CommonAnnotations == nil {
 		m.CommonAnnotations = make(map[string]string)
 	}
-
-	for key, value := range o.metadata {
-		if _, ok := m.CommonAnnotations[key]; ok {
-			return fmt.Errorf("%s %s already in kustomization file", o.kind, key)
-		}
-		m.CommonAnnotations[key] = value
-	}
-	return mf.write(m)
+	return o.writeToMap(m.CommonAnnotations, annotation)
 }
 
-// RunAddLabel runs addLabel command, doing the real work.
-func (o *addMetadataOptions) RunAddLabel(fsys fs.FileSystem) error {
-	mf, err := newKustomizationFile(constants.KustomizationFileName, fsys)
-	if err != nil {
-		return err
-	}
-	m, err := mf.read()
-	if err != nil {
-		return err
-	}
-
+func (o *addMetadataOptions) addLabels(m *types.Kustomization) error {
 	if m.CommonLabels == nil {
 		m.CommonLabels = make(map[string]string)
 	}
-
-	for key, value := range o.metadata {
-		if _, ok := m.CommonLabels[key]; ok {
-			return fmt.Errorf("%s %s already in kustomization file", o.kind, key)
-		}
-		m.CommonLabels[key] = value
-	}
-	return mf.write(m)
+	return o.writeToMap(m.CommonLabels, label)
 }
 
-func makeError(k kindOfAdd, input string, message string) error {
-	return fmt.Errorf("invalid %s: %s (%s)", k, input, message)
+func (o *addMetadataOptions) writeToMap(m map[string]string, kind kindOfAdd) error {
+	for k, v := range o.metadata {
+		if _, ok := m[k]; ok {
+			return fmt.Errorf("%s %s already in kustomization file", kind, k)
+		}
+		m[k] = v
+	}
+	return nil
+}
+
+func (o *addMetadataOptions) makeError(input string, message string) error {
+	return fmt.Errorf("invalid %s: %s (%s)", o.kind, input, message)
 }
