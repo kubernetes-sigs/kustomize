@@ -21,27 +21,41 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
+	"github.com/kubernetes-sigs/kustomize/pkg/types"
 	"github.com/kubernetes-sigs/kustomize/pkg/validators"
 )
 
-func TestRunAddAnnotation(t *testing.T) {
+func makeKustomization(t *testing.T) *types.Kustomization {
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
+	kf, err := newKustomizationFile(constants.KustomizationFileName, fakeFS)
+	if err != nil {
+		t.Errorf("unexpected new error %v", err)
+	}
+	m, err := kf.read()
+	if err != nil {
+		t.Errorf("unexpected read error %v", err)
+	}
+	return m
+}
+
+func TestRunAddAnnotation(t *testing.T) {
 	var o addMetadataOptions
 	o.metadata = map[string]string{"owls": "cute", "otters": "adorable"}
 
-	err := o.RunAddAnnotation(fakeFS)
+	m := makeKustomization(t)
+	err := o.addAnnotations(m)
 	if err != nil {
 		t.Errorf("unexpected error: could not write to kustomization file")
 	}
 	// adding the same test input should not work
-	err = o.RunAddAnnotation(fakeFS)
+	err = o.addAnnotations(m)
 	if err == nil {
 		t.Errorf("expected already in kustomization file error")
 	}
 	// adding new annotations should work
 	o.metadata = map[string]string{"new": "annotation"}
-	err = o.RunAddAnnotation(fakeFS)
+	err = o.addAnnotations(m)
 	if err != nil {
 		t.Errorf("unexpected error: could not write to kustomization file")
 	}
@@ -149,23 +163,22 @@ func TestAddAnnotationMultipleArgs(t *testing.T) {
 }
 
 func TestRunAddLabel(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 	var o addMetadataOptions
 	o.metadata = map[string]string{"owls": "cute", "otters": "adorable"}
 
-	err := o.RunAddLabel(fakeFS)
+	m := makeKustomization(t)
+	err := o.addLabels(m)
 	if err != nil {
 		t.Errorf("unexpected error: could not write to kustomization file")
 	}
 	// adding the same test input should not work
-	err = o.RunAddLabel(fakeFS)
+	err = o.addLabels(m)
 	if err == nil {
 		t.Errorf("expected already in kustomization file error")
 	}
 	// adding new labels should work
 	o.metadata = map[string]string{"new": "label"}
-	err = o.RunAddLabel(fakeFS)
+	err = o.addLabels(m)
 	if err != nil {
 		t.Errorf("unexpected error: could not write to kustomization file")
 	}
