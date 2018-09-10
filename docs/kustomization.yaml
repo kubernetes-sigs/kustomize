@@ -247,8 +247,12 @@ vars:
 #      image: nginx:1.7.9
 #```
 # one can change the tag of myimage to v1 and the tag of nginx to 1.8.0 with the following:
+#
+# It also supports digests. If digest is present newTag is ignored.
 imageTags:
   - name: mycontainerregistry/myimage
     newTag: v1
   - name: nginx
     newTag: 1.8.0
+  - name: alpine
+    digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3
