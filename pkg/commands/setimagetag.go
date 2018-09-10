@@ -72,28 +72,27 @@ and overwrite the previous ones if the image tag exists.
 // Validate validates setImageTag command.
 func (o *setImageTagOptions) Validate(args []string) error {
 	if len(args) == 0 {
-		return errors.New("no image and newTag specified")
+		return errors.New("no image specified")
 	}
 
 	o.imageTagMap = make(map[string]types.ImageTag)
 
 	for _, arg := range args {
-		if strings.Contains(arg, "@") {
-			img := strings.Split(arg, "@")
-			o.imageTagMap[img[0]] = types.ImageTag{
-				Name:   img[0],
-				Digest: img[1],
+		if s := strings.Split(arg, "@"); len(s) > 1 {
+			o.imageTagMap[s[0]] = types.ImageTag{
+				Name:   s[0],
+				Digest: s[1],
 			}
 			continue
 		}
 
-		imagetag := pattern.FindStringSubmatch(arg)
-		if len(imagetag) != 3 {
+		s := pattern.FindStringSubmatch(arg)
+		if len(s) != 3 {
 			return errors.New("invalid format of imagetag, must specify it as <image>:<newtag> or <image>@<digest>")
 		}
-		o.imageTagMap[imagetag[1]] = types.ImageTag{
-			Name:   imagetag[1],
-			NewTag: imagetag[2],
+		o.imageTagMap[s[1]] = types.ImageTag{
+			Name:   s[1],
+			NewTag: s[2],
 		}
 	}
 	return nil
