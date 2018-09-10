@@ -50,6 +50,10 @@ func TestImageTagTransformer(t *testing.T) {
 									"name":  "nginx",
 									"image": "nginx:1.7.9",
 								},
+								map[string]interface{}{
+									"name":  "replaced-with-digest",
+									"image": "foobar:1",
+								},
 							},
 						},
 					},
@@ -114,6 +118,10 @@ func TestImageTagTransformer(t *testing.T) {
 									"name":  "nginx",
 									"image": "nginx:v2",
 								},
+								map[string]interface{}{
+									"name":  "replaced-with-digest",
+									"image": "foobar@sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3",
+								},
 							},
 						},
 					},
@@ -160,6 +168,7 @@ func TestImageTagTransformer(t *testing.T) {
 		{Name: "nginx", NewTag: "v2"},
 		{Name: "my-nginx", NewTag: "previous"},
 		{Name: "myprivaterepohostname:1234/my/image", NewTag: "v1.0.1"},
+		{Name: "foobar", Digest: "sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3"},
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
