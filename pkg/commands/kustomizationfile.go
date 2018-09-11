@@ -30,7 +30,6 @@ import (
 
 	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"github.com/kubernetes-sigs/kustomize/pkg/fs"
-	interror "github.com/kubernetes-sigs/kustomize/pkg/internal/error"
 	"github.com/kubernetes-sigs/kustomize/pkg/types"
 )
 
@@ -89,22 +88,17 @@ func newKustomizationFile(mPath string, fsys fs.FileSystem) (*kustomizationFile,
 
 func (mf *kustomizationFile) validate() error {
 	if !mf.fsys.Exists(mf.path) {
-		errorMsg := fmt.Sprintf("Missing kustomization file '%s'.\n", mf.path)
-		merr := interror.KustomizationError{KustomizationPath: mf.path, ErrorMsg: errorMsg}
-		return merr
+		return fmt.Errorf("Missing kustomization file '%s'.\n", mf.path)
 	}
 	if mf.fsys.IsDir(mf.path) {
 		mf.path = path.Join(mf.path, constants.KustomizationFileName)
 		if !mf.fsys.Exists(mf.path) {
-			errorMsg := fmt.Sprintf("Missing kustomization file '%s'.\n", mf.path)
-			merr := interror.KustomizationError{KustomizationPath: mf.path, ErrorMsg: errorMsg}
-			return merr
+			return fmt.Errorf("Missing kustomization file '%s'.\n", mf.path)
 		}
 	} else {
 		if !strings.HasSuffix(mf.path, constants.KustomizationFileName) {
-			errorMsg := fmt.Sprintf("Kustomization file path (%s) should have %s suffix\n",
+			return fmt.Errorf("Kustomization file path (%s) should have %s suffix\n",
 				mf.path, constants.KustomizationFileSuffix)
-			return interror.KustomizationError{KustomizationPath: mf.path, ErrorMsg: errorMsg}
 		}
 	}
 	return nil
