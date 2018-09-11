@@ -19,8 +19,8 @@ package transformers
 import (
 	"regexp"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
-	"github.com/kubernetes-sigs/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 // imageTagTransformer replace image tags

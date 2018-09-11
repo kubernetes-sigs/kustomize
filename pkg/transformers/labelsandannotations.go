@@ -20,7 +20,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resmap"
 )
 
 // mapTransformer contains a map string->string and path configs

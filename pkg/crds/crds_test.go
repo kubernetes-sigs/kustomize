@@ -21,10 +21,10 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/internal/loadertest"
-	"github.com/kubernetes-sigs/kustomize/pkg/loader"
-	"github.com/kubernetes-sigs/kustomize/pkg/transformers"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
+	"sigs.k8s.io/kustomize/pkg/loader"
+	"sigs.k8s.io/kustomize/pkg/transformers"
 )
 
 const (

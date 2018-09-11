@@ -18,8 +18,8 @@ limitations under the License.
 package loadertest
 
 import (
-	"github.com/kubernetes-sigs/kustomize/pkg/fs"
-	"github.com/kubernetes-sigs/kustomize/pkg/loader"
+	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/loader"
 )
 
 // FakeLoader encapsulates the delegate Loader and the fake file system.

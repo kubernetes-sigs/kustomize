@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/evanphx/json-patch"
-	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
-	"github.com/kubernetes-sigs/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
 func TestJsonPatchJSONTransformer_Transform(t *testing.T) {

@@ -17,8 +17,8 @@ limitations under the License.
 package transformers
 
 import (
-	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/resmap"
 )
 
 type namespaceTransformer struct {
