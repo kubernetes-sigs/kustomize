@@ -107,7 +107,7 @@ Now the workspace has following directories
 >     └── kustomization.yaml
 > ```
 
-Confirm that the `kustomize build` output contains three pod objects from dev, staing and production variants.
+Confirm that the `kustomize build` output contains three pod objects from dev, staging and production variants.
 
 <!-- @confirmVariants @test -->
 ```
