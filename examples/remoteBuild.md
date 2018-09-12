@@ -16,6 +16,17 @@ test 3 == \
   echo $?
 ```
 
+Overlays can be remote as well:
+
+<!-- @remoteOverlayBuild @test -->
+
+```
+target=github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6
+test 1 == \
+  $(kustomize build $target | grep cluster-a-dev-myapp-pod | wc -l); \
+  echo $?
+```
+
 A base can also be specified as a URL:
 
 <!-- @createOverlay @test -->
