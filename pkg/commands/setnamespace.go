@@ -21,10 +21,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/constants"
-	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/validation"
+	"sigs.k8s.io/kustomize/pkg/constants"
+	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
 type setNamespaceOptions struct {

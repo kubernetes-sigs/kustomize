@@ -22,14 +22,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/constants"
-	"github.com/kubernetes-sigs/kustomize/pkg/fs"
-	"github.com/kubernetes-sigs/kustomize/pkg/internal/loadertest"
-	"github.com/kubernetes-sigs/kustomize/pkg/loader"
-	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
-	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/constants"
+	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
+	"sigs.k8s.io/kustomize/pkg/loader"
+	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
 const (

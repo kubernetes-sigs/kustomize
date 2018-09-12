@@ -21,12 +21,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/internal/loadertest"
-	"github.com/kubernetes-sigs/kustomize/pkg/patch"
-	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
-	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
+	"sigs.k8s.io/kustomize/pkg/patch"
+	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
 func TestNewPatchJson6902FactoryNoTarget(t *testing.T) {

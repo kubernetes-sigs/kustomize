@@ -21,8 +21,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
 func TestLess(t *testing.T) {

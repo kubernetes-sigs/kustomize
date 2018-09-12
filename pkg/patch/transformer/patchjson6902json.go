@@ -18,9 +18,9 @@ package transformer
 
 import (
 	"github.com/evanphx/json-patch"
-	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
-	"github.com/kubernetes-sigs/kustomize/pkg/resource"
-	"github.com/kubernetes-sigs/kustomize/pkg/transformers"
+	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/transformers"
 )
 
 // patchJson6902JSONTransformer applies patches.

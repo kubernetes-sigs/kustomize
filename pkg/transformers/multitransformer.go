@@ -19,7 +19,7 @@ package transformers
 import (
 	"fmt"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resmap"
 )
 
 // multiTransformer contains a list of transformers.

@@ -17,9 +17,9 @@ limitations under the License.
 package resmap
 
 import (
-	"github.com/kubernetes-sigs/kustomize/pkg/configmapandsecret"
-	"github.com/kubernetes-sigs/kustomize/pkg/resource"
-	"github.com/kubernetes-sigs/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/pkg/configmapandsecret"
+	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 // NewResMapFromConfigMapArgs returns a Resource slice given

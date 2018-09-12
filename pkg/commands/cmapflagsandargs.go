@@ -19,7 +19,7 @@ package commands
 import (
 	"fmt"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
 // cMapFlagsAndArgs encapsulates the options for add configmap commands.

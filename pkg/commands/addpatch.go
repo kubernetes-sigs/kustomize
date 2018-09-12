@@ -22,9 +22,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/constants"
-	"github.com/kubernetes-sigs/kustomize/pkg/fs"
-	"github.com/kubernetes-sigs/kustomize/pkg/patch"
+	"sigs.k8s.io/kustomize/pkg/constants"
+	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/patch"
 )
 
 type addPatchOptions struct {

@@ -23,10 +23,10 @@ import (
 	"strings"
 
 	"github.com/ghodss/yaml"
-	"github.com/kubernetes-sigs/kustomize/pkg/loader"
-	"github.com/kubernetes-sigs/kustomize/pkg/transformers"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/kube-openapi/pkg/common"
+	"sigs.k8s.io/kustomize/pkg/loader"
+	"sigs.k8s.io/kustomize/pkg/transformers"
 )
 
 type pathConfigs struct {

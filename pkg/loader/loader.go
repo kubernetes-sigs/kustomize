@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
 // Loader interface exposes methods to read bytes.

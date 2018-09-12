@@ -16,7 +16,7 @@ limitations under the License.
 
 package transformers
 
-import "github.com/kubernetes-sigs/kustomize/pkg/resmap"
+import "sigs.k8s.io/kustomize/pkg/resmap"
 
 // noOpTransformer contains a no-op transformer.
 type noOpTransformer struct{}
