@@ -29,14 +29,17 @@ import (
 
 // githubLoader loads files from a checkout github repo
 type githubLoader struct {
-	repo        string
+	repo string
+	// target is the directory which is to be built
+	targetDir string
+	// checkoutDir is for the whole repository
 	checkoutDir string
 	loader      *fileLoader
 }
 
 // Root returns the root location for this Loader.
 func (l *githubLoader) Root() string {
-	return l.checkoutDir
+	return l.targetDir
 }
 
 // New delegates to fileLoader.New
@@ -60,15 +63,18 @@ func newGithubLoader(repoUrl string, fs fs.FileSystem) (*githubLoader, error) {
 	if err != nil {
 		return nil, err
 	}
-	target := filepath.Join(dir, "repo")
-	err = checkout(repoUrl, target)
+	repodir := filepath.Join(dir, "repo")
+	src, subdir := getter.SourceDirSubdir(repoUrl)
+	err = checkout(src, repodir)
 	if err != nil {
 		return nil, err
 	}
+	target := filepath.Join(repodir, subdir)
 	l := newFileLoaderAtRoot(target, fs)
 	return &githubLoader{
 		repo:        repoUrl,
-		checkoutDir: dir,
+		targetDir:   target,
+		checkoutDir: repodir,
 		loader:      l,
 	}, nil
 }
