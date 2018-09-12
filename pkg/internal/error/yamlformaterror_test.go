@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/constants"
 	"k8s.io/apimachinery/pkg/util/yaml"
+	"sigs.k8s.io/kustomize/pkg/constants"
 )
 
 var (

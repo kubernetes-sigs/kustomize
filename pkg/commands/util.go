@@ -19,7 +19,7 @@ package commands
 import (
 	"log"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
 func globPatterns(fsys fs.FileSystem, patterns []string) ([]string, error) {

@@ -20,10 +20,10 @@ import (
 	"encoding/json"
 
 	"github.com/evanphx/json-patch"
-	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/mergepatch"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
+	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
 type conflictDetector interface {

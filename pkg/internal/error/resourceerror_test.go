@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/constants"
+	"sigs.k8s.io/kustomize/pkg/constants"
 )
 
 func TestResourceError_Error(t *testing.T) {

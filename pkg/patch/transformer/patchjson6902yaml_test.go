@@ -21,9 +21,9 @@ import (
 	"testing"
 
 	"github.com/krishicks/yaml-patch"
-	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
-	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
 var deploy = schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"}

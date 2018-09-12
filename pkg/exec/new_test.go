@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/exec"
+	"sigs.k8s.io/kustomize/pkg/exec"
 )
 
 func ExampleNew() {

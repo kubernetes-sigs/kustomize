@@ -7,7 +7,7 @@ tests, and should work with HEAD
 
 <!-- @installkustomize @test -->
 ```
-go get github.com/kubernetes-sigs/kustomize
+go get sigs.k8s.io/kustomize
 ```
 
  * [hello world](helloWorld/README.md) - Deploy multiple

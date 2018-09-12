@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resmap"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )

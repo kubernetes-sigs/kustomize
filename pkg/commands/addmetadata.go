@@ -20,11 +20,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/constants"
-	"github.com/kubernetes-sigs/kustomize/pkg/fs"
-	"github.com/kubernetes-sigs/kustomize/pkg/types"
-	"github.com/kubernetes-sigs/kustomize/pkg/validators"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/pkg/constants"
+	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/pkg/validators"
 )
 
 // kindOfAdd is the kind of metadata being added: label or annotation

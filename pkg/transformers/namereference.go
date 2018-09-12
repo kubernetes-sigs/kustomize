@@ -20,9 +20,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
-	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
 // nameReferenceTransformer contains the referencing info between 2 GroupVersionKinds

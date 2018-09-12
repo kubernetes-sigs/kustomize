@@ -19,8 +19,8 @@ package resmap
 import (
 	"sort"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
 // IdSlice implements the sort interface.
