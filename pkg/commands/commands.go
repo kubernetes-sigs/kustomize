@@ -21,9 +21,9 @@ import (
 	"flag"
 	"os"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/fs"
-	"github.com/kubernetes-sigs/kustomize/pkg/validators"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/validators"
 )
 
 // NewDefaultCommand returns the default (aka root) command for kustomize command.
@@ -37,7 +37,7 @@ func NewDefaultCommand() *cobra.Command {
 		Long: `
 kustomize manages declarative configuration of Kubernetes.
 
-See https://github.com/kubernetes-sigs/kustomize
+See https://sigs.k8s.io/kustomize
 `,
 	}
 

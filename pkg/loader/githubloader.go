@@ -24,7 +24,7 @@ import (
 
 	"github.com/hashicorp/go-getter"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
 // githubLoader loads files from a checkout github repo

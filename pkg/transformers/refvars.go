@@ -3,9 +3,9 @@ package transformers
 import (
 	"fmt"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/expansion"
-	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/expansion"
+	"sigs.k8s.io/kustomize/pkg/resmap"
 )
 
 type refvarTransformer struct {

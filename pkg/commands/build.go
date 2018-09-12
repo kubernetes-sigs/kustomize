@@ -23,10 +23,10 @@ import (
 
 	"errors"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/app"
-	"github.com/kubernetes-sigs/kustomize/pkg/constants"
-	"github.com/kubernetes-sigs/kustomize/pkg/fs"
-	"github.com/kubernetes-sigs/kustomize/pkg/loader"
+	"sigs.k8s.io/kustomize/pkg/app"
+	"sigs.k8s.io/kustomize/pkg/constants"
+	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/loader"
 )
 
 type buildOptions struct {
@@ -44,7 +44,7 @@ The url should follow hashicorp/go-getter URL format described in
 https://github.com/hashicorp/go-getter#url-format
 
 url examples:
-  github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6
+  sigs.k8s.io/kustomize//examples/multibases?ref=v1.0.6
   github.com/Liujingfang1/mysql
   github.com/Liujingfang1/kustomize//examples/helloWorld?ref=repoUrl2
 `

@@ -27,13 +27,13 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
-	internal "github.com/kubernetes-sigs/kustomize/pkg/internal/error"
-	"github.com/kubernetes-sigs/kustomize/pkg/loader"
-	"github.com/kubernetes-sigs/kustomize/pkg/patch"
-	"github.com/kubernetes-sigs/kustomize/pkg/resource"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
+	internal "sigs.k8s.io/kustomize/pkg/internal/error"
+	"sigs.k8s.io/kustomize/pkg/loader"
+	"sigs.k8s.io/kustomize/pkg/patch"
+	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
 // ResMap is a map from ResId to Resource.

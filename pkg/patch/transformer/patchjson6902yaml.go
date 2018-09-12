@@ -19,9 +19,9 @@ package transformer
 import (
 	"github.com/ghodss/yaml"
 	"github.com/krishicks/yaml-patch"
-	"github.com/kubernetes-sigs/kustomize/pkg/resmap"
-	"github.com/kubernetes-sigs/kustomize/pkg/resource"
-	"github.com/kubernetes-sigs/kustomize/pkg/transformers"
+	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/transformers"
 )
 
 // patchJson6902YAMLTransformer applies patches.

@@ -27,9 +27,9 @@ import (
 
 	"github.com/ghodss/yaml"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/constants"
-	"github.com/kubernetes-sigs/kustomize/pkg/fs"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"sigs.k8s.io/kustomize/pkg/constants"
+	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
 type buildTestCase struct {

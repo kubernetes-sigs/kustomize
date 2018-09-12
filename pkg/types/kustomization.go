@@ -20,7 +20,7 @@ package types
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/kubernetes-sigs/kustomize/pkg/patch"
+	"sigs.k8s.io/kustomize/pkg/patch"
 )
 
 // Kustomization holds the information needed to generate customized k8s api resources.
