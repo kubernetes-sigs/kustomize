@@ -23,10 +23,10 @@ set -x
 # - Use /go as the default GOPATH because this is what the image uses
 # - Link our current directory (containing the source code) to the package location in the GOPATH
 
-OWNER="kubernetes-sigs"
+OWNER="sigs.k8s.io"
 REPO="kustomize"
 
-GO_PKG_OWNER=$GOPATH/src/github.com/$OWNER
+GO_PKG_OWNER=$GOPATH/src/$OWNER
 GO_PKG_PATH=$GO_PKG_OWNER/$REPO
 
 mkdir -p $GO_PKG_OWNER
