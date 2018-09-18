@@ -72,7 +72,6 @@ data:
   foo: bar
 kind: ConfigMap
 metadata:
-  creationTimestamp: null
   name: dev-base-test-config-map-b2g2dmd64b
 ---
 apiVersion: v1

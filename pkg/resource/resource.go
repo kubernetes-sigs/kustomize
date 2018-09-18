@@ -23,6 +23,7 @@ import (
 
 	"strings"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -43,6 +44,8 @@ func NewResourceWithBehavior(obj runtime.Object, b GenerationBehavior) (*Resourc
 	}
 	var u unstructured.Unstructured
 	err = u.UnmarshalJSON(marshaled)
+	// creationTimestamp always 'null', remove it
+	u.SetCreationTimestamp(metav1.Time{})
 	return &Resource{Unstructured: u, b: b}, err
 }
 
