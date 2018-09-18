@@ -26,6 +26,7 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation"
@@ -70,6 +71,7 @@ func objectToUnstructured(in runtime.Object) (*unstructured.Unstructured, error)
 	}
 	var out unstructured.Unstructured
 	err = out.UnmarshalJSON(marshaled)
+	out.SetCreationTimestamp(metav1.Time{})
 	return &out, err
 }
 
