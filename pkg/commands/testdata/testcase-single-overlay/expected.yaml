@@ -5,7 +5,6 @@ kind: ConfigMap
 metadata:
   annotations:
     note: This is a test annotation
-  creationTimestamp: null
   labels:
     app: mynginx
     env: staging
@@ -18,7 +17,6 @@ data:
   hello: world
 kind: ConfigMap
 metadata:
-  creationTimestamp: null
   labels:
     env: staging
     team: override-foo
@@ -33,7 +31,6 @@ kind: Secret
 metadata:
   annotations:
     note: This is a test annotation
-  creationTimestamp: null
   labels:
     app: mynginx
     env: staging
