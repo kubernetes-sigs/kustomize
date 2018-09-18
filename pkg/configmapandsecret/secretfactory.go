@@ -52,6 +52,9 @@ func (f *SecretFactory) makeFreshSecret(args *types.SecretArgs) *corev1.Secret {
 	s.Kind = "Secret"
 	s.Name = args.Name
 	s.Type = corev1.SecretType(args.Type)
+	s.ObjectMeta.Annotations = map[string]string{
+		"kustomize.sigs.k8s.io/generated": "true",
+	}
 	if s.Type == "" {
 		s.Type = corev1.SecretTypeOpaque
 	}
