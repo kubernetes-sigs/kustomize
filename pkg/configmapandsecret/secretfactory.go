@@ -137,7 +137,7 @@ func (f *SecretFactory) createSecretKey(command string, timeout time.Duration) (
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "sh", "-c", command)
+	cmd := exec.CommandContext(ctx, "sh", "-o", "pipefail", "-e", "-c", command)
 	cmd.Dir = f.wd
 	return cmd.Output()
 }
