@@ -159,7 +159,6 @@ func TestResources1(t *testing.T) {
 					"annotations": map[string]interface{}{
 						"note": "This is a test annotation",
 					},
-					"creationTimestamp": nil,
 				},
 				"data": map[string]interface{}{
 					"DB_USERNAME": "admin",
@@ -179,7 +178,6 @@ func TestResources1(t *testing.T) {
 					"annotations": map[string]interface{}{
 						"note": "This is a test annotation",
 					},
-					"creationTimestamp": nil,
 				},
 				"type": string(corev1.SecretTypeOpaque),
 				"data": map[string]interface{}{

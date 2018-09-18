@@ -60,8 +60,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
 						"metadata": map[string]interface{}{
-							"name":              "envConfigMap",
-							"creationTimestamp": nil,
+							"name": "envConfigMap",
 						},
 						"data": map[string]interface{}{
 							"DB_USERNAME": "admin",
@@ -87,8 +86,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
 						"metadata": map[string]interface{}{
-							"name":              "fileConfigMap",
-							"creationTimestamp": nil,
+							"name": "fileConfigMap",
 						},
 						"data": map[string]interface{}{
 							"app-init.ini": `FOO=bar
@@ -114,8 +112,7 @@ BAR=baz
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
 						"metadata": map[string]interface{}{
-							"name":              "literalConfigMap",
-							"creationTimestamp": nil,
+							"name": "literalConfigMap",
 						},
 						"data": map[string]interface{}{
 							"a": "x",
