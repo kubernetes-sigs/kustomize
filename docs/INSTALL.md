@@ -29,5 +29,5 @@ To install from head with [Go] v1.10.1 or higher:
 
 <!-- @installkustomize @test -->
 ```
-go get github.com/kubernetes-sigs/kustomize
+go get sigs.k8s.io/kustomize
 ```
