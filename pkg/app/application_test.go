@@ -157,7 +157,8 @@ func TestResources1(t *testing.T) {
 						"app": "nginx",
 					},
 					"annotations": map[string]interface{}{
-						"note": "This is a test annotation",
+						"kustomize.sigs.k8s.io/generated": "true",
+						"note":                            "This is a test annotation",
 					},
 					"creationTimestamp": nil,
 				},
@@ -177,7 +178,8 @@ func TestResources1(t *testing.T) {
 						"app": "nginx",
 					},
 					"annotations": map[string]interface{}{
-						"note": "This is a test annotation",
+						"kustomize.sigs.k8s.io/generated": "true",
+						"note":                            "This is a test annotation",
 					},
 					"creationTimestamp": nil,
 				},

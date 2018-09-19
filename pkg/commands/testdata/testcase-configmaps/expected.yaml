@@ -5,17 +5,28 @@ data:
   from: overlay
 kind: ConfigMap
 metadata:
-  annotations: {}
+  annotations:
+    kustomize.sigs.k8s.io/generated: "true"
   creationTimestamp: null
   labels: {}
   name: p1-com1-dhbbm922gd
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    test-annotation: value
+  labels:
+    test-label: value
+  name: p1-non-generated-configmap
 ---
 apiVersion: v1
 data:
   from: overlay
 kind: ConfigMap
 metadata:
-  annotations: {}
+  annotations:
+    kustomize.sigs.k8s.io/generated: "true"
   creationTimestamp: null
   labels: {}
   name: p2-com2-c4b8md75k9

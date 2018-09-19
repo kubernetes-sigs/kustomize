@@ -76,7 +76,7 @@ func (f *SecretFactory) MakeSecret(args *types.SecretArgs) (*corev1.Secret, erro
 	pairs, err := f.keyValuesFromEnvFileCommand(args.EnvCommand, timeout)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf(
-			"env source file: %s",
+			"env source file: \"%s\"",
 			args.EnvCommand))
 	}
 	all = append(all, pairs...)

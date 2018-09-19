@@ -72,6 +72,8 @@ data:
   foo: bar
 kind: ConfigMap
 metadata:
+  annotations:
+    kustomize.sigs.k8s.io/generated: "true"
   creationTimestamp: null
   name: dev-base-test-config-map-b2g2dmd64b
 ---

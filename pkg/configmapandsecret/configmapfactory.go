@@ -96,7 +96,7 @@ func (f *ConfigMapFactory) MakeConfigMap(
 	pairs, err := keyValuesFromEnvFile(f.ldr, args.EnvSource)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf(
-			"env source file: %s",
+			"env source file: \"%s\"",
 			args.EnvSource))
 	}
 	all = append(all, pairs...)

@@ -1,3 +1,5 @@
+resources:
+- "non-generated-configmap.yaml"
 namePrefix: p1-
 configMapGenerator:
 - name: com1
