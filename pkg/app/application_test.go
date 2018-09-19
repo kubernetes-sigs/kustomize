@@ -158,7 +158,8 @@ func TestResources1(t *testing.T) {
 					},
 					"annotations": map[string]interface{}{
 						"kustomize.sigs.k8s.io/generated": "true",
-						"note":                            "This is a test annotation",
+
+						"note": "This is a test annotation",
 					},
 					"creationTimestamp": nil,
 				},
@@ -179,7 +180,8 @@ func TestResources1(t *testing.T) {
 					},
 					"annotations": map[string]interface{}{
 						"kustomize.sigs.k8s.io/generated": "true",
-						"note":                            "This is a test annotation",
+
+						"note": "This is a test annotation",
 					},
 					"creationTimestamp": nil,
 				},
