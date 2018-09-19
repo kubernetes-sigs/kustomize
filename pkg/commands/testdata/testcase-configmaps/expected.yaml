@@ -30,3 +30,12 @@ metadata:
   creationTimestamp: null
   labels: {}
   name: p2-com2-c4b8md75k9
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    test-annotation: value
+  labels:
+    test-label: value
+  name: p1-non-generated-secret

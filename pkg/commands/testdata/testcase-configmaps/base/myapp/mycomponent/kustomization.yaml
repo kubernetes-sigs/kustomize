@@ -1,5 +1,6 @@
 resources:
 - "non-generated-configmap.yaml"
+- "non-generated-secret.yaml"
 namePrefix: p1-
 configMapGenerator:
 - name: com1
