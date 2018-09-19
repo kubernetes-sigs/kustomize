@@ -82,6 +82,12 @@ func (f *ConfigMapFactory) makeFreshConfigMap(
 	cm.ObjectMeta.Annotations = map[string]string{
 		"kustomize.sigs.k8s.io/generated": "true",
 	}
+	for key, value := range args.Annotations {
+		cm.ObjectMeta.Annotations[key] = value
+	}
+	for key, value := range args.Labels {
+		cm.ObjectMeta.Labels[key] = value
+	}
 	cm.Data = map[string]string{}
 	return cm
 }
