@@ -60,7 +60,10 @@ func TestNewFromConfigMaps(t *testing.T) {
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
 						"metadata": map[string]interface{}{
-							"name":              "envConfigMap",
+							"name": "envConfigMap",
+							"annotations": map[string]interface{}{
+								"kustomize.sigs.k8s.io/generated": "true",
+							},
 							"creationTimestamp": nil,
 						},
 						"data": map[string]interface{}{
@@ -87,7 +90,10 @@ func TestNewFromConfigMaps(t *testing.T) {
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
 						"metadata": map[string]interface{}{
-							"name":              "fileConfigMap",
+							"name": "fileConfigMap",
+							"annotations": map[string]interface{}{
+								"kustomize.sigs.k8s.io/generated": "true",
+							},
 							"creationTimestamp": nil,
 						},
 						"data": map[string]interface{}{
@@ -114,7 +120,10 @@ BAR=baz
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
 						"metadata": map[string]interface{}{
-							"name":              "literalConfigMap",
+							"name": "literalConfigMap",
+							"annotations": map[string]interface{}{
+								"kustomize.sigs.k8s.io/generated": "true",
+							},
 							"creationTimestamp": nil,
 						},
 						"data": map[string]interface{}{

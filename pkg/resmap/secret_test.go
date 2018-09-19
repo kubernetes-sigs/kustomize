@@ -66,7 +66,10 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 				"apiVersion": "v1",
 				"kind":       "Secret",
 				"metadata": map[string]interface{}{
-					"name":              "apple",
+					"name": "apple",
+					"annotations": map[string]interface{}{
+						"kustomize.sigs.k8s.io/generated": "true",
+					},
 					"creationTimestamp": nil,
 				},
 				"type": string(corev1.SecretTypeOpaque),
@@ -80,7 +83,10 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 				"apiVersion": "v1",
 				"kind":       "Secret",
 				"metadata": map[string]interface{}{
-					"name":              "peanuts",
+					"name": "peanuts",
+					"annotations": map[string]interface{}{
+						"kustomize.sigs.k8s.io/generated": "true",
+					},
 					"creationTimestamp": nil,
 				},
 				"type": string(corev1.SecretTypeOpaque),

@@ -36,6 +36,9 @@ func makeEnvConfigMap(name string) *corev1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
+			Annotations: map[string]string{
+				"kustomize.sigs.k8s.io/generated": "true",
+			},
 		},
 		Data: map[string]string{
 			"DB_USERNAME": "admin",
@@ -50,7 +53,10 @@ func makeUnstructuredEnvConfigMap(name string) *unstructured.Unstructured {
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
 			"metadata": map[string]interface{}{
-				"name":              name,
+				"name": name,
+				"annotations": map[string]interface{}{
+					"kustomize.sigs.k8s.io/generated": "true",
+				},
 				"creationTimestamp": nil,
 			},
 			"data": map[string]interface{}{
@@ -69,6 +75,9 @@ func makeFileConfigMap(name string) *corev1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
+			Annotations: map[string]string{
+				"kustomize.sigs.k8s.io/generated": "true",
+			},
 		},
 		Data: map[string]string{
 			"app-init.ini": `FOO=bar
@@ -86,6 +95,9 @@ func makeLiteralConfigMap(name string) *corev1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
+			Annotations: map[string]string{
+				"kustomize.sigs.k8s.io/generated": "true",
+			},
 		},
 		Data: map[string]string{
 			"a": "x",

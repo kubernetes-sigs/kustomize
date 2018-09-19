@@ -4,6 +4,7 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
+    kustomize.sigs.k8s.io/generated: "true"
     note: This is a test annotation
   creationTimestamp: null
   labels:
@@ -18,6 +19,8 @@ data:
   hello: world
 kind: ConfigMap
 metadata:
+  annotations:
+    kustomize.sigs.k8s.io/generated: "true"
   creationTimestamp: null
   labels:
     env: staging
@@ -32,6 +35,7 @@ data:
 kind: Secret
 metadata:
   annotations:
+    kustomize.sigs.k8s.io/generated: "true"
     note: This is a test annotation
   creationTimestamp: null
   labels:
