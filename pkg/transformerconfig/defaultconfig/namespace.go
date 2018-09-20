@@ -14,23 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package defaultconfig provides the default
-// transformer configurations
 package defaultconfig
 
-import (
-	"bytes"
+const (
+	namespacePathConfigs = `
+namespace:
+- path: metadata/namespace
+`
 )
-
-// GetDefaultPathConfigs returns the default pathConfigs data
-func GetDefaultPathConfigs() []byte {
-	configData := [][]byte{
-		[]byte(namePrefixPathConfigs),
-		[]byte(commonLabelPathConfigs),
-		[]byte(commonAnnotationPathConfigs),
-		[]byte(namespacePathConfigs),
-		[]byte(varReferencePathConfigs),
-		[]byte(nameReferencePathConfigs),
-	}
-	return bytes.Join(configData, []byte(`\n`))
-}
