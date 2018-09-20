@@ -61,6 +61,11 @@ resources:
 - some-service.yaml
 - ../some-dir/some-deployment.yaml
 
+# It's possible to override the shell used in generator
+# commands by passing this optional parameter. Default is:
+#  ["/bin/sh", "-c"]
+generatorShell: ["/bin/bash", "-c"]
+
 # Each entry in this list results in the creation of
 # one ConfigMap resource (it's a generator of n maps).
 # The example below creates a ConfigMap with the
