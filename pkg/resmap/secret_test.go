@@ -54,7 +54,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir(".")
 	actual, err := NewResMapFromSecretArgs(
-		configmapandsecret.NewSecretFactory(fakeFs, "."), secrets)
+		configmapandsecret.NewSecretFactory(fakeFs, ".", "/bin/sh", []string{"-c"}), secrets)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -112,7 +112,7 @@ func TestSecretTimeout(t *testing.T) {
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir(".")
 	_, err := NewResMapFromSecretArgs(
-		configmapandsecret.NewSecretFactory(fakeFs, "."), secrets)
+		configmapandsecret.NewSecretFactory(fakeFs, ".", "/bin/sh", []string{"-c"}), secrets)
 
 	if err == nil {
 		t.Fatal("didn't get the expected timeout error", err)

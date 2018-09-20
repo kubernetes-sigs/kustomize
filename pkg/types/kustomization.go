@@ -69,6 +69,9 @@ type Kustomization struct {
 	// and http://jsonpatch.com/.
 	PatchesJson6902 []patch.PatchJson6902 `json:"patchesJson6902,omitempty" yaml:"patchesJson6902,omitempty"`
 
+	// Shell binary, arguments to use for ConfigMap and Secret generators
+	GeneratorShell []string `json:"generatorShell,omitempty" yaml:"generatorShell,omitempty"`
+
 	// List of configmaps to generate from configuration sources.
 	// Base/overlay concept doesn't apply to this field.
 	// If a configmap want to have a base and an overlay, it should go to Bases

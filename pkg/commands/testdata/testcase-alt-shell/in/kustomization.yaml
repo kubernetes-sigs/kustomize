@@ -1,0 +1,5 @@
+generatorShell: ["/bin/bash", "-c"]
+secretGenerator:
+- name: pipefail-secret-test
+  commands:
+    test-0: echo "$0"

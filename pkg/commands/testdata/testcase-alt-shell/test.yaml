@@ -1,0 +1,4 @@
+description: base only
+args: []
+filename: testdata/testcase-alt-shell/in
+expectedStdout: testdata/testcase-alt-shell/expected.yaml

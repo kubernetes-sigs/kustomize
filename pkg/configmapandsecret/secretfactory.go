@@ -38,12 +38,15 @@ const (
 // SecretFactory makes Secrets.
 type SecretFactory struct {
 	fSys fs.FileSystem
-	wd   string
+	// Working directory
+	wd     string
+	sh     string
+	shArgs []string
 }
 
 // NewSecretFactory returns a new SecretFactory.
-func NewSecretFactory(fSys fs.FileSystem, wd string) *SecretFactory {
-	return &SecretFactory{fSys: fSys, wd: wd}
+func NewSecretFactory(fSys fs.FileSystem, wd, sh string, shArgs []string) *SecretFactory {
+	return &SecretFactory{fSys: fSys, wd: wd, sh: sh, shArgs: shArgs}
 }
 
 func (f *SecretFactory) makeFreshSecret(args *types.SecretArgs) *corev1.Secret {
@@ -108,6 +111,9 @@ func addKvToSecret(secret *corev1.Secret, keyName, data string) error {
 }
 
 func (f *SecretFactory) keyValuesFromEnvFileCommand(cmd string, timeout time.Duration) ([]kvPair, error) {
+	if cmd == "" {
+		return []kvPair{}, nil
+	}
 	content, err := f.createSecretKey(cmd, timeout)
 	if err != nil {
 		return nil, err
@@ -137,7 +143,12 @@ func (f *SecretFactory) createSecretKey(command string, timeout time.Duration) (
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "sh", "-c", command)
+	args := append(f.shArgs, command)
+	cmd := exec.CommandContext(ctx, f.sh, args...)
 	cmd.Dir = f.wd
-	return cmd.Output()
+	output, err := cmd.Output()
+	if err != nil {
+		err = errors.Errorf("command: \"%v\" with args: %v returned error: \"%v\"", f.sh, args, err.Error())
+	}
+	return output, err
 }

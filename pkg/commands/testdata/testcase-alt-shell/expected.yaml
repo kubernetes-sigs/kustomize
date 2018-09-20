@@ -1,0 +1,8 @@
+apiVersion: v1
+data:
+  test-0: L2Jpbi9iYXNoCg==
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: pipefail-secret-test-tct7hmhk56
+type: Opaque

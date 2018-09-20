@@ -59,6 +59,7 @@ func NewApplication(ldr loader.Loader, fSys fs.FileSystem) (*Application, error)
 	}
 
 	var m types.Kustomization
+	m.GeneratorShell = []string{"sh", "-c"}
 	err = unmarshal(content, &m)
 	if err != nil {
 		return nil, err
@@ -135,8 +136,10 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromConfigMapArgs"))
 	}
+	shell := a.kustomization.GeneratorShell[0]
+	args := a.kustomization.GeneratorShell[1:]
 	secrets, err := resmap.NewResMapFromSecretArgs(
-		configmapandsecret.NewSecretFactory(a.fSys, a.ldr.Root()),
+		configmapandsecret.NewSecretFactory(a.fSys, a.ldr.Root(), shell, args),
 		a.kustomization.SecretGenerator)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromSecretArgs"))
