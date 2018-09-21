@@ -50,8 +50,7 @@ func makeUnstructuredEnvConfigMap(name string) *unstructured.Unstructured {
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
 			"metadata": map[string]interface{}{
-				"name":              name,
-				"creationTimestamp": nil,
+				"name": name,
 			},
 			"data": map[string]interface{}{
 				"DB_USERNAME": "admin",

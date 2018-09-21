@@ -7,7 +7,6 @@ kind: ConfigMap
 metadata:
   annotations:
     note: This is a test annotation
-  creationTimestamp: null
   labels:
     app: mungebot
     org: kubernetes
@@ -22,7 +21,6 @@ kind: ConfigMap
 metadata:
   annotations:
     note: This is a test annotation
-  creationTimestamp: null
   labels:
     app: mungebot
     org: kubernetes
@@ -37,7 +35,6 @@ kind: Secret
 metadata:
   annotations:
     note: This is a test annotation
-  creationTimestamp: null
   labels:
     app: mungebot
     org: kubernetes

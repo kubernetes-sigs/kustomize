@@ -66,8 +66,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 				"apiVersion": "v1",
 				"kind":       "Secret",
 				"metadata": map[string]interface{}{
-					"name":              "apple",
-					"creationTimestamp": nil,
+					"name": "apple",
 				},
 				"type": string(corev1.SecretTypeOpaque),
 				"data": map[string]interface{}{
@@ -80,8 +79,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 				"apiVersion": "v1",
 				"kind":       "Secret",
 				"metadata": map[string]interface{}{
-					"name":              "peanuts",
-					"creationTimestamp": nil,
+					"name": "peanuts",
 				},
 				"type": string(corev1.SecretTypeOpaque),
 				"data": map[string]interface{}{
