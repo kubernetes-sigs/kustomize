@@ -6,7 +6,6 @@ data:
 kind: ConfigMap
 metadata:
   annotations: {}
-  creationTimestamp: null
   labels: {}
   name: p1-com1-dhbbm922gd
 ---
@@ -16,6 +15,5 @@ data:
 kind: ConfigMap
 metadata:
   annotations: {}
-  creationTimestamp: null
   labels: {}
   name: p2-com2-c4b8md75k9
