@@ -21,13 +21,13 @@ import (
 	"reflect"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
-var deploy = schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"}
-var statefulset = schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "StatefulSet"}
+var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
+var statefulset = gvk.Gvk{Group: "apps", Version: "v1", Kind: "StatefulSet"}
 
 func TestEncodeAsYaml(t *testing.T) {
 	encoded := []byte(`apiVersion: v1

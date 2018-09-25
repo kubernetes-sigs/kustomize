@@ -21,7 +21,7 @@ import (
 	"sort"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/transformers"
@@ -153,21 +153,21 @@ func makeLoader(t *testing.T) loader.Loader {
 func TestRegisterCRD(t *testing.T) {
 	refpathconfigs := []transformers.ReferencePathConfig{
 		transformers.NewReferencePathConfig(
-			schema.GroupVersionKind{Kind: "Bee", Version: "v1beta1"},
+			gvk.Gvk{Kind: "Bee", Version: "v1beta1"},
 			[]transformers.PathConfig{
 				{
 					CreateIfNotPresent: false,
-					GroupVersionKind:   &schema.GroupVersionKind{Kind: "MyKind"},
+					GroupVersionKind:   &gvk.Gvk{Kind: "MyKind"},
 					Path:               []string{"spec", "beeRef", "name"},
 				},
 			},
 		),
 		transformers.NewReferencePathConfig(
-			schema.GroupVersionKind{Kind: "Secret", Version: "v1"},
+			gvk.Gvk{Kind: "Secret", Version: "v1"},
 			[]transformers.PathConfig{
 				{
 					CreateIfNotPresent: false,
-					GroupVersionKind:   &schema.GroupVersionKind{Kind: "MyKind"},
+					GroupVersionKind:   &gvk.Gvk{Kind: "MyKind"},
 					Path:               []string{"spec", "secretRef", "name"},
 				},
 			},

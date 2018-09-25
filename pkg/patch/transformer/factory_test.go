@@ -22,7 +22,7 @@ import (
 	"testing"
 
 	"gopkg.in/yaml.v2"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/patch"
 	"sigs.k8s.io/kustomize/pkg/resmap"
@@ -179,7 +179,7 @@ func TestNewPatchJson6902FactoryMulti(t *testing.T) {
 		t.Fatal("the returned transformer should not be nil")
 	}
 
-	id := resource.NewResId(schema.GroupVersionKind{Kind: "foo"}, "some-name")
+	id := resource.NewResId(gvk.FromKind("foo"), "some-name")
 	base := resmap.ResMap{
 		id: resource.NewResourceFromMap(
 			map[string]interface{}{
@@ -293,7 +293,7 @@ func TestNewPatchJson6902FactoryMultiConflict(t *testing.T) {
 		t.Fatal("the returned transformer should not be nil")
 	}
 
-	id := resource.NewResId(schema.GroupVersionKind{Kind: "foo"}, "some-name")
+	id := resource.NewResId(gvk.FromKind("foo"), "some-name")
 	base := resmap.ResMap{
 		id: resource.NewResourceFromMap(
 			map[string]interface{}{

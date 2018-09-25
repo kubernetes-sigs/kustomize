@@ -65,7 +65,7 @@ func (pt *patchTransformer) Transform(baseResourceMap resmap.ResMap) error {
 		id = matchedIds[0]
 		base := baseResourceMap[id]
 		merged := map[string]interface{}{}
-		versionedObj, err := scheme.Scheme.New(id.Gvk())
+		versionedObj, err := scheme.Scheme.New(id.Gvk().ToSchemaGvk())
 		baseName := base.GetName()
 		switch {
 		case runtime.IsNotRegisteredError(err):
@@ -123,7 +123,7 @@ func (pt *patchTransformer) mergePatches() (resmap.ResMap, error) {
 			continue
 		}
 
-		versionedObj, err := scheme.Scheme.New(id.Gvk())
+		versionedObj, err := scheme.Scheme.New(id.Gvk().ToSchemaGvk())
 		if err != nil && !runtime.IsNotRegisteredError(err) {
 			return nil, err
 		}

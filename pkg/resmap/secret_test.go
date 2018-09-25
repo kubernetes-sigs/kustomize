@@ -22,14 +22,14 @@ import (
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/pkg/configmapandsecret"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
-var secret = schema.GroupVersionKind{Version: "v1", Kind: "Secret"}
+var secret = gvk.Gvk{Version: "v1", Kind: "Secret"}
 
 func TestNewResMapFromSecretArgs(t *testing.T) {
 	secrets := []types.SecretArgs{

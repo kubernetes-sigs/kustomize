@@ -17,27 +17,17 @@ limitations under the License.
 package transformerconfig
 
 import (
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"strings"
+
+	"sigs.k8s.io/kustomize/pkg/gvk"
 )
 
 // PathConfig contains the configuration of a field, including the gvk it ties to,
 // path to the field, etc.
 type PathConfig struct {
-	Group              string `json:"group,omitempty" yaml:"group,omitempty"`
-	Version            string `json:"version,omitempty" yaml:"version,omitempty"`
-	Kind               string `json:"kind,omitempty" yaml:"kind,omitempty"`
+	gvk.Gvk            `json:",inline,omitempty" yaml:",inline,omitempty"`
 	Path               string `json:"path,omitempty" yaml:"path,omitempty"`
 	CreateIfNotPresent bool   `json:"create,omitempty" yaml:"create,omitempty"`
-}
-
-// Gvk returns GroupVersionKind of the pathConfig
-func (p PathConfig) Gvk() *schema.GroupVersionKind {
-	return &schema.GroupVersionKind{
-		Group:   p.Group,
-		Version: p.Version,
-		Kind:    p.Kind,
-	}
 }
 
 // PathSlice converts the path string to a slice of strings, separated by "/"
