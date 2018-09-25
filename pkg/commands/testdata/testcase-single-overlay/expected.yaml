@@ -6,7 +6,6 @@ metadata:
   annotations:
     kustomize.sigs.k8s.io/generated: "true"
     note: This is a test annotation
-  creationTimestamp: null
   labels:
     app: mynginx
     env: staging
@@ -37,7 +36,6 @@ metadata:
   annotations:
     kustomize.sigs.k8s.io/generated: "true"
     note: This is a test annotation
-  creationTimestamp: null
   labels:
     app: mynginx
     env: staging
