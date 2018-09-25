@@ -21,9 +21,8 @@ import (
 	"fmt"
 	"log"
 
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
-
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // namePrefixTransformer contains the prefix and the path config for each field that
@@ -45,13 +44,13 @@ var defaultNamePrefixPathConfigs = []PathConfig{
 
 var skipNamePrefixPathConfigs = []PathConfig{
 	{
-		GroupVersionKind: &schema.GroupVersionKind{Kind: "CustomResourceDefinition"},
+		GroupVersionKind: &gvk.Gvk{Kind: "CustomResourceDefinition"},
 	},
 }
 
 // deprecateNamePrefixPathConfig will be moved into skipNamePrefixPathConfigs in next release
 var deprecateNamePrefixPathConfig = PathConfig{
-	GroupVersionKind: &schema.GroupVersionKind{Kind: "Namespace"},
+	GroupVersionKind: &gvk.Gvk{Kind: "Namespace"},
 }
 
 // NewDefaultingNamePrefixTransformer construct a namePrefixTransformer with defaultNamePrefixPathConfigs.
@@ -77,7 +76,7 @@ func (o *namePrefixTransformer) Transform(m resmap.ResMap) error {
 	for id := range m {
 		found := false
 		for _, path := range o.skipPathConfigs {
-			if selectByGVK(id.Gvk(), path.GroupVersionKind) {
+			if id.Gvk().IsSelected(path.GroupVersionKind) {
 				found = true
 				break
 			}
@@ -89,12 +88,12 @@ func (o *namePrefixTransformer) Transform(m resmap.ResMap) error {
 	}
 
 	for id := range mf {
-		if selectByGVK(id.Gvk(), deprecateNamePrefixPathConfig.GroupVersionKind) {
+		if id.Gvk().IsSelected(deprecateNamePrefixPathConfig.GroupVersionKind) {
 			log.Println("Adding nameprefix to Namespace resource will be deprecated in next release.")
 		}
 		objMap := mf[id].UnstructuredContent()
 		for _, path := range o.pathConfigs {
-			if !selectByGVK(id.Gvk(), path.GroupVersionKind) {
+			if !id.Gvk().IsSelected(path.GroupVersionKind) {
 				continue
 			}
 			err := mutateField(objMap, path.Path, path.CreateIfNotPresent, o.addPrefix)

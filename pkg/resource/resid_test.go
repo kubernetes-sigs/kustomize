@@ -3,26 +3,26 @@ package resource
 import (
 	"testing"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 )
 
 var stringTests = []struct {
 	x ResId
 	s string
 }{
-	{ResId{gvk: schema.GroupVersionKind{Group: "g", Version: "v", Kind: "k"},
+	{ResId{gvKind: gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
 		name: "nm", prefix: "p", namespace: "ns"}, "g_v_k_ns_p_nm.yaml"},
-	{ResId{gvk: schema.GroupVersionKind{Version: "v", Kind: "k"},
+	{ResId{gvKind: gvk.Gvk{Version: "v", Kind: "k"},
 		name: "nm", prefix: "p", namespace: "ns"}, "_v_k_ns_p_nm.yaml"},
-	{ResId{gvk: schema.GroupVersionKind{Kind: "k"},
+	{ResId{gvKind: gvk.Gvk{Kind: "k"},
 		name: "nm", prefix: "p", namespace: "ns"}, "__k_ns_p_nm.yaml"},
-	{ResId{gvk: schema.GroupVersionKind{},
+	{ResId{gvKind: gvk.Gvk{},
 		name: "nm", prefix: "p", namespace: "ns"}, "___ns_p_nm.yaml"},
-	{ResId{gvk: schema.GroupVersionKind{},
+	{ResId{gvKind: gvk.Gvk{},
 		name: "nm", prefix: "p"}, "____p_nm.yaml"},
-	{ResId{gvk: schema.GroupVersionKind{},
+	{ResId{gvKind: gvk.Gvk{},
 		name: "nm"}, "_____nm.yaml"},
-	{ResId{gvk: schema.GroupVersionKind{}}, "_____.yaml"},
+	{ResId{gvKind: gvk.Gvk{}}, "_____.yaml"},
 	{ResId{}, "_____.yaml"},
 }
 
@@ -38,19 +38,19 @@ var gvknStringTests = []struct {
 	x ResId
 	s string
 }{
-	{ResId{gvk: schema.GroupVersionKind{Group: "g", Version: "v", Kind: "k"},
+	{ResId{gvKind: gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
 		name: "nm", prefix: "p", namespace: "ns"}, "g_v_k_nm.yaml"},
-	{ResId{gvk: schema.GroupVersionKind{Version: "v", Kind: "k"},
+	{ResId{gvKind: gvk.Gvk{Version: "v", Kind: "k"},
 		name: "nm", prefix: "p", namespace: "ns"}, "v_k_nm.yaml"},
-	{ResId{gvk: schema.GroupVersionKind{Kind: "k"},
+	{ResId{gvKind: gvk.Gvk{Kind: "k"},
 		name: "nm", prefix: "p", namespace: "ns"}, "_k_nm.yaml"},
-	{ResId{gvk: schema.GroupVersionKind{},
+	{ResId{gvKind: gvk.Gvk{},
 		name: "nm", prefix: "p", namespace: "ns"}, "__nm.yaml"},
-	{ResId{gvk: schema.GroupVersionKind{},
+	{ResId{gvKind: gvk.Gvk{},
 		name: "nm", prefix: "p"}, "__nm.yaml"},
-	{ResId{gvk: schema.GroupVersionKind{},
+	{ResId{gvKind: gvk.Gvk{},
 		name: "nm"}, "__nm.yaml"},
-	{ResId{gvk: schema.GroupVersionKind{}}, "__.yaml"},
+	{ResId{gvKind: gvk.Gvk{}}, "__.yaml"},
 	{ResId{}, "__.yaml"},
 }
 
@@ -66,17 +66,17 @@ var GvknEqualsTest = []struct {
 	x1 ResId
 	x2 ResId
 }{
-	{ResId{gvk: schema.GroupVersionKind{Group: "g", Version: "v", Kind: "k"},
+	{ResId{gvKind: gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
 		name: "nm", prefix: "AA", namespace: "X"},
-		ResId{gvk: schema.GroupVersionKind{Group: "g", Version: "v", Kind: "k"},
+		ResId{gvKind: gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
 			name: "nm", prefix: "BB", namespace: "Z"}},
-	{ResId{gvk: schema.GroupVersionKind{Version: "v", Kind: "k"},
+	{ResId{gvKind: gvk.Gvk{Version: "v", Kind: "k"},
 		name: "nm", prefix: "AA", namespace: "X"},
-		ResId{gvk: schema.GroupVersionKind{Version: "v", Kind: "k"},
+		ResId{gvKind: gvk.Gvk{Version: "v", Kind: "k"},
 			name: "nm", prefix: "BB", namespace: "Z"}},
-	{ResId{gvk: schema.GroupVersionKind{Kind: "k"},
+	{ResId{gvKind: gvk.Gvk{Kind: "k"},
 		name: "nm", prefix: "AA", namespace: "X"},
-		ResId{gvk: schema.GroupVersionKind{Kind: "k"},
+		ResId{gvKind: gvk.Gvk{Kind: "k"},
 			name: "nm", prefix: "BB", namespace: "Z"}},
 	{ResId{name: "nm", prefix: "AA", namespace: "X"},
 		ResId{name: "nm", prefix: "BB", namespace: "Z"}},

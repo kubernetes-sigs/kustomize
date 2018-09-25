@@ -17,7 +17,7 @@ limitations under the License.
 package transformers
 
 import (
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 )
 
@@ -36,22 +36,22 @@ var namespacePathConfigs = []PathConfig{
 
 var skipNamespacePathConfigs = []PathConfig{
 	{
-		GroupVersionKind: &schema.GroupVersionKind{
+		GroupVersionKind: &gvk.Gvk{
 			Kind: "Namespace",
 		},
 	},
 	{
-		GroupVersionKind: &schema.GroupVersionKind{
+		GroupVersionKind: &gvk.Gvk{
 			Kind: "ClusterRoleBinding",
 		},
 	},
 	{
-		GroupVersionKind: &schema.GroupVersionKind{
+		GroupVersionKind: &gvk.Gvk{
 			Kind: "ClusterRole",
 		},
 	},
 	{
-		GroupVersionKind: &schema.GroupVersionKind{
+		GroupVersionKind: &gvk.Gvk{
 			Kind: "CustomResourceDefinition",
 		},
 	},
@@ -79,7 +79,7 @@ func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
 	for id := range m {
 		found := false
 		for _, path := range o.skipPathConfigs {
-			if selectByGVK(id.Gvk(), path.GroupVersionKind) {
+			if id.Gvk().IsSelected(path.GroupVersionKind) {
 				found = true
 				break
 			}
@@ -93,7 +93,7 @@ func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
 	for id := range mf {
 		objMap := mf[id].UnstructuredContent()
 		for _, path := range o.pathConfigs {
-			if !selectByGVK(id.Gvk(), path.GroupVersionKind) {
+			if !id.Gvk().IsSelected(path.GroupVersionKind) {
 				continue
 			}
 
@@ -114,9 +114,8 @@ func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
 
 func (o *namespaceTransformer) updateClusterRoleBinding(m resmap.ResMap) {
 	saMap := map[string]bool{}
-	saGVK := schema.GroupVersionKind{Version: "v1", Kind: "ServiceAccount"}
 	for id := range m {
-		if id.Gvk().String() == saGVK.String() {
+		if id.Gvk().Equals(gvk.Gvk{Version: "v1", Kind: "ServiceAccount"}) {
 			saMap[id.Name()] = true
 		}
 	}

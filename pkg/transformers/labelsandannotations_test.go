@@ -20,25 +20,25 @@ import (
 	"reflect"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
-var service = schema.GroupVersionKind{Version: "v1", Kind: "Service"}
-var secret = schema.GroupVersionKind{Version: "v1", Kind: "Secret"}
-var cmap = schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"}
-var ns = schema.GroupVersionKind{Version: "v1", Kind: "Namespace"}
-var deploy = schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"}
-var statefulset = schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "StatefulSet"}
-var foo = schema.GroupVersionKind{Group: "example.com", Version: "v1", Kind: "Foo"}
-var crd = schema.GroupVersionKind{Group: "apiwctensions.k8s.io", Version: "v1beta1", Kind: "CustomResourceDefinition"}
-var job = schema.GroupVersionKind{Group: "batch", Version: "v1", Kind: "Job"}
-var cronjob = schema.GroupVersionKind{Group: "batch", Version: "v1beta1", Kind: "CronJob"}
-var pvc = schema.GroupVersionKind{Version: "v1", Kind: "PersistentVolumeClaim"}
-var crb = schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRoleBinding"}
-var sa = schema.GroupVersionKind{Version: "v1", Kind: "ServiceAccount"}
-var ingress = schema.GroupVersionKind{Kind: "Ingress"}
+var service = gvk.Gvk{Version: "v1", Kind: "Service"}
+var secret = gvk.Gvk{Version: "v1", Kind: "Secret"}
+var cmap = gvk.Gvk{Version: "v1", Kind: "ConfigMap"}
+var ns = gvk.Gvk{Version: "v1", Kind: "Namespace"}
+var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
+var statefulset = gvk.Gvk{Group: "apps", Version: "v1", Kind: "StatefulSet"}
+var foo = gvk.Gvk{Group: "example.com", Version: "v1", Kind: "Foo"}
+var crd = gvk.Gvk{Group: "apiwctensions.k8s.io", Version: "v1beta1", Kind: "CustomResourceDefinition"}
+var job = gvk.Gvk{Group: "batch", Version: "v1", Kind: "Job"}
+var cronjob = gvk.Gvk{Group: "batch", Version: "v1beta1", Kind: "CronJob"}
+var pvc = gvk.Gvk{Version: "v1", Kind: "PersistentVolumeClaim"}
+var crb = gvk.Gvk{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRoleBinding"}
+var sa = gvk.Gvk{Version: "v1", Kind: "ServiceAccount"}
+var ingress = gvk.Gvk{Kind: "Ingress"}
 
 func TestLabelsRun(t *testing.T) {
 	m := resmap.ResMap{
@@ -568,7 +568,7 @@ func TestAddPathConfigs(t *testing.T) {
 	lexpected := len(defaultLabelsPathConfigs) + 1
 	pathConfigs := []PathConfig{
 		{
-			GroupVersionKind:   &schema.GroupVersionKind{Group: "GroupA", Kind: "KindB"},
+			GroupVersionKind:   &gvk.Gvk{Group: "GroupA", Kind: "KindB"},
 			Path:               []string{"path", "to", "a", "field"},
 			CreateIfNotPresent: true,
 		},

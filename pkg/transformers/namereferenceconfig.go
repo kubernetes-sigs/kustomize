@@ -17,19 +17,19 @@ limitations under the License.
 package transformers
 
 import (
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 )
 
 // defaultNameReferencePathConfigs is the default configuration for updating
 // the fields reference the name of other resources.
 var defaultNameReferencePathConfigs = []ReferencePathConfig{
 	{
-		referencedGVK: schema.GroupVersionKind{
+		referencedGVK: gvk.Gvk{
 			Kind: "Deployment",
 		},
 		pathConfigs: []PathConfig{
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "HorizontalPodAutoscaler",
 				},
 				Path:               []string{"spec", "scaleTargetRef", "name"},
@@ -38,12 +38,12 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 		},
 	},
 	{
-		referencedGVK: schema.GroupVersionKind{
+		referencedGVK: gvk.Gvk{
 			Kind: "ReplicationController",
 		},
 		pathConfigs: []PathConfig{
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "HorizontalPodAutoscaler",
 				},
 				Path:               []string{"spec", "scaleTargetRef", "name"},
@@ -52,12 +52,12 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 		},
 	},
 	{
-		referencedGVK: schema.GroupVersionKind{
+		referencedGVK: gvk.Gvk{
 			Kind: "ReplicaSet",
 		},
 		pathConfigs: []PathConfig{
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "HorizontalPodAutoscaler",
 				},
 				Path:               []string{"spec", "scaleTargetRef", "name"},
@@ -66,13 +66,13 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 		},
 	},
 	{
-		referencedGVK: schema.GroupVersionKind{
+		referencedGVK: gvk.Gvk{
 			Version: "v1",
 			Kind:    "ConfigMap",
 		},
 		pathConfigs: []PathConfig{
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Version: "v1",
 					Kind:    "Pod",
 				},
@@ -80,7 +80,7 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Version: "v1",
 					Kind:    "Pod",
 				},
@@ -88,7 +88,7 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Version: "v1",
 					Kind:    "Pod",
 				},
@@ -96,7 +96,7 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Version: "v1",
 					Kind:    "Pod",
 				},
@@ -104,7 +104,7 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Version: "v1",
 					Kind:    "Pod",
 				},
@@ -112,224 +112,224 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Deployment",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "configMap", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Deployment",
 				},
 				Path:               []string{"spec", "template", "spec", "containers", "env", "valueFrom", "configMapKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Deployment",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "env", "valueFrom", "configMapKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Deployment",
 				},
 				Path:               []string{"spec", "template", "spec", "containers", "envFrom", "configMapRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Deployment",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "configMapRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Deployment",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "projected", "sources", "configMap", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "ReplicaSet",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "configMap", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "ReplicaSet",
 				},
 				Path:               []string{"spec", "template", "spec", "containers", "env", "valueFrom", "configMapKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "ReplicaSet",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "env", "valueFrom", "configMapKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "ReplicaSet",
 				},
 				Path:               []string{"spec", "template", "spec", "containers", "envFrom", "configMapRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "ReplicaSet",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "configMapRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "DaemonSet",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "configMap", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "DaemonSet",
 				},
 				Path:               []string{"spec", "template", "spec", "containers", "env", "valueFrom", "configMapKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "DaemonSet",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "env", "valueFrom", "configMapKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "DaemonSet",
 				},
 				Path:               []string{"spec", "template", "spec", "containers", "envFrom", "configMapRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "DaemonSet",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "configMapRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "StatefulSet",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "configMap", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "StatefulSet",
 				},
 				Path:               []string{"spec", "template", "spec", "containers", "env", "valueFrom", "configMapKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "StatefulSet",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "env", "valueFrom", "configMapKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "StatefulSet",
 				},
 				Path:               []string{"spec", "template", "spec", "containers", "envFrom", "configMapRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "StatefulSet",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "configMapRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "StatefulSet",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "projected", "sources", "configMap", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Job",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "configMap", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Job",
 				},
 				Path:               []string{"spec", "template", "spec", "containers", "env", "valueFrom", "configMapKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Job",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "env", "valueFrom", "configMapKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Job",
 				},
 				Path:               []string{"spec", "template", "spec", "containers", "envFrom", "configMapRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Job",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "configMapRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "CronJob",
 				},
 				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "volumes", "configMap", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "CronJob",
 				},
 				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "containers", "env", "valueFrom", "configMapKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "CronJob",
 				},
 				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "initContainers", "env", "valueFrom", "configMapKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "CronJob",
 				},
 				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "containers", "envFrom", "configMapRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "CronJob",
 				},
 				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "initContainers", "envFrom", "configMapRef", "name"},
@@ -338,13 +338,13 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 		},
 	},
 	{
-		referencedGVK: schema.GroupVersionKind{
+		referencedGVK: gvk.Gvk{
 			Version: "v1",
 			Kind:    "Secret",
 		},
 		pathConfigs: []PathConfig{
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Version: "v1",
 					Kind:    "Pod",
 				},
@@ -352,7 +352,7 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Version: "v1",
 					Kind:    "Pod",
 				},
@@ -360,7 +360,7 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Version: "v1",
 					Kind:    "Pod",
 				},
@@ -368,7 +368,7 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Version: "v1",
 					Kind:    "Pod",
 				},
@@ -376,7 +376,7 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Version: "v1",
 					Kind:    "Pod",
 				},
@@ -384,7 +384,7 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Version: "v1",
 					Kind:    "Pod",
 				},
@@ -392,308 +392,308 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Deployment",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "secret", "secretName"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Deployment",
 				},
 				Path:               []string{"spec", "template", "spec", "containers", "env", "valueFrom", "secretKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Deployment",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "env", "valueFrom", "secretKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Deployment",
 				},
 				Path:               []string{"spec", "template", "spec", "containers", "envFrom", "secretRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Deployment",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "secretRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Deployment",
 				},
 				Path:               []string{"spec", "template", "spec", "imagePullSecrets", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "ReplicaSet",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "secret", "secretName"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "ReplicaSet",
 				},
 				Path:               []string{"spec", "template", "spec", "containers", "env", "valueFrom", "secretKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "ReplicaSet",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "env", "valueFrom", "secretKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "ReplicaSet",
 				},
 				Path:               []string{"spec", "template", "spec", "containers", "envFrom", "secretRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "ReplicaSet",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "secretRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "ReplicaSet",
 				},
 				Path:               []string{"spec", "template", "spec", "imagePullSecrets", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "DaemonSet",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "secret", "secretName"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "DaemonSet",
 				},
 				Path:               []string{"spec", "template", "spec", "containers", "env", "valueFrom", "secretKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "DaemonSet",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "env", "valueFrom", "secretKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "DaemonSet",
 				},
 				Path:               []string{"spec", "template", "spec", "containers", "envFrom", "secretRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "DaemonSet",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "secretRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "DaemonSet",
 				},
 				Path:               []string{"spec", "template", "spec", "imagePullSecrets", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "StatefulSet",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "secret", "secretName"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "StatefulSet",
 				},
 				Path:               []string{"spec", "template", "spec", "containers", "env", "valueFrom", "secretKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "StatefulSet",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "env", "valueFrom", "secretKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "StatefulSet",
 				},
 				Path:               []string{"spec", "template", "spec", "containers", "envFrom", "secretRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "StatefulSet",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "secretRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "StatefulSet",
 				},
 				Path:               []string{"spec", "template", "spec", "imagePullSecrets", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Job",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "secret", "secretName"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Job",
 				},
 				Path:               []string{"spec", "template", "spec", "containers", "env", "valueFrom", "secretKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Job",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "env", "valueFrom", "secretKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Job",
 				},
 				Path:               []string{"spec", "template", "spec", "containers", "envFrom", "secretRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Job",
 				},
 				Path:               []string{"spec", "template", "spec", "initContainers", "envFrom", "secretRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Job",
 				},
 				Path:               []string{"spec", "template", "spec", "imagePullSecrets", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "CronJob",
 				},
 				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "volumes", "secret", "secretName"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "CronJob",
 				},
 				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "containers", "env", "valueFrom", "secretKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "CronJob",
 				},
 				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "initContainers", "env", "valueFrom", "secretKeyRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "CronJob",
 				},
 				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "containers", "envFrom", "secretRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "CronJob",
 				},
 				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "initContainers", "envFrom", "secretRef", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "CronJob",
 				},
 				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "imagePullSecrets", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Ingress",
 				},
 				Path:               []string{"spec", "tls", "secretName"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Ingress",
 				},
 				Path:               []string{"metadata", "annotations", "ingress.kubernetes.io/auth-secret"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Ingress",
 				},
 				Path:               []string{"metadata", "annotations", "nginx.ingress.kubernetes.io/auth-secret"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "ServiceAccount",
 				},
 				Path:               []string{"imagePullSecrets", "name"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "StorageClass",
 				},
 				Path:               []string{"parameters", "secretName"}, // This is for Glusterfs,
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "StorageClass",
 				},
 				Path:               []string{"parameters", "adminSecretName"}, // This is for Quobyte, CephRBD, StorageOS
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "StorageClass",
 				},
 				Path:               []string{"parameters", "userSecretName"}, // This is for CephRBD
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "StorageClass",
 				},
 				Path:               []string{"parameters", "secretRef"}, // This is for ScaleIO
@@ -703,13 +703,13 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 	},
 	{
 		// StatefulSet references headless service, so need to update the references.
-		referencedGVK: schema.GroupVersionKind{
+		referencedGVK: gvk.Gvk{
 			Version: "v1",
 			Kind:    "Service",
 		},
 		pathConfigs: []PathConfig{
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Group: "apps",
 					Kind:  "StatefulSet",
 				},
@@ -717,14 +717,14 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Ingress",
 				},
 				Path:               []string{"spec", "rules", "http", "paths", "backend", "serviceName"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Ingress",
 				},
 				Path:               []string{"spec", "backend", "serviceName"},
@@ -733,13 +733,13 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 		},
 	},
 	{
-		referencedGVK: schema.GroupVersionKind{
+		referencedGVK: gvk.Gvk{
 			Group: "rbac.authorization.k8s.io",
 			Kind:  "Role",
 		},
 		pathConfigs: []PathConfig{
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Group: "rbac.authorization.k8s.io",
 					Kind:  "RoleBinding",
 				},
@@ -749,13 +749,13 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 		},
 	},
 	{
-		referencedGVK: schema.GroupVersionKind{
+		referencedGVK: gvk.Gvk{
 			Group: "rbac.authorization.k8s.io",
 			Kind:  "ClusterRole",
 		},
 		pathConfigs: []PathConfig{
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Group: "rbac.authorization.k8s.io",
 					Kind:  "RoleBinding",
 				},
@@ -763,7 +763,7 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Group: "rbac.authorization.k8s.io",
 					Kind:  "ClusterRoleBinding",
 				},
@@ -773,13 +773,13 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 		},
 	},
 	{
-		referencedGVK: schema.GroupVersionKind{
+		referencedGVK: gvk.Gvk{
 			Version: "v1",
 			Kind:    "ServiceAccount",
 		},
 		pathConfigs: []PathConfig{
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Group: "rbac.authorization.k8s.io",
 					Kind:  "RoleBinding",
 				},
@@ -787,7 +787,7 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Group: "rbac.authorization.k8s.io",
 					Kind:  "ClusterRoleBinding",
 				},
@@ -795,49 +795,49 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Pod",
 				},
 				Path:               []string{"spec", "serviceAccountName"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "StatefulSet",
 				},
 				Path:               []string{"spec", "template", "spec", "serviceAccountName"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Deployment",
 				},
 				Path:               []string{"spec", "template", "spec", "serviceAccountName"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "ReplicationController",
 				},
 				Path:               []string{"spec", "template", "spec", "serviceAccountName"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "CronJob",
 				},
 				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "serviceAccountName"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Job",
 				},
 				Path:               []string{"spec", "template", "spec", "serviceAccountName"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "DaemonSet",
 				},
 				Path:               []string{"spec", "template", "spec", "serviceAccountName"},
@@ -846,55 +846,55 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 		},
 	},
 	{
-		referencedGVK: schema.GroupVersionKind{
+		referencedGVK: gvk.Gvk{
 			Version: "v1",
 			Kind:    "PersistentVolumeClaim",
 		},
 		pathConfigs: []PathConfig{
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Pod",
 				},
 				Path:               []string{"spec", "volumes", "persistentVolumeClaim", "claimName"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "StatefulSet",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "persistentVolumeClaim", "claimName"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Deployment",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "persistentVolumeClaim", "claimName"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "ReplicationController",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "persistentVolumeClaim", "claimName"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "CronJob",
 				},
 				Path:               []string{"spec", "jobTemplate", "spec", "template", "spec", "volumes", "persistentVolumeClaim", "claimName"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "Job",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "persistentVolumeClaim", "claimName"},
 				CreateIfNotPresent: false,
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "DaemonSet",
 				},
 				Path:               []string{"spec", "template", "spec", "volumes", "persistentVolumeClaim", "claimName"},
@@ -903,13 +903,13 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 		},
 	},
 	{
-		referencedGVK: schema.GroupVersionKind{
+		referencedGVK: gvk.Gvk{
 			Version: "v1",
 			Kind:    "PersistentVolume",
 		},
 		pathConfigs: []PathConfig{
 			{
-				GroupVersionKind: &schema.GroupVersionKind{
+				GroupVersionKind: &gvk.Gvk{
 					Kind: "PersistentVolumeClaim",
 				},
 				Path:               []string{"spec", "volumeName"},

@@ -21,7 +21,7 @@ import (
 
 	"github.com/evanphx/json-patch"
 	"github.com/krishicks/yaml-patch"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/patch"
 	"sigs.k8s.io/kustomize/pkg/resource"
@@ -62,7 +62,7 @@ func (f PatchJson6902Factory) makeOnePatchJson6902Transformer(p patch.PatchJson6
 	}
 
 	targetId := resource.NewResIdWithPrefixNamespace(
-		schema.GroupVersionKind{
+		gvk.Gvk{
 			Group:   p.Target.Group,
 			Version: p.Target.Version,
 			Kind:    p.Target.Kind,

@@ -14,36 +14,90 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package transformers
+package gvk
 
-import (
-	"testing"
+import "testing"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
-)
+var equalsTests = []struct {
+	x1 Gvk
+	x2 Gvk
+}{
+	{Gvk{Group: "a", Version: "b", Kind: "c"},
+		Gvk{Group: "a", Version: "b", Kind: "c"}},
+	{Gvk{Version: "b", Kind: "c"},
+		Gvk{Version: "b", Kind: "c"}},
+	{Gvk{Kind: "c"},
+		Gvk{Kind: "c"}},
+}
+
+func TestEquals(t *testing.T) {
+	for _, hey := range equalsTests {
+		if !hey.x1.Equals(hey.x2) {
+			t.Fatalf("%v should equal %v", hey.x1, hey.x2)
+		}
+	}
+}
+
+var lessThanTests = []struct {
+	x1 Gvk
+	x2 Gvk
+}{
+	{Gvk{Group: "a", Version: "b", Kind: "CustomResourceDefinition"},
+		Gvk{Group: "a", Version: "b", Kind: "RoleBinding"}},
+	{Gvk{Group: "a", Version: "b", Kind: "Namespace"},
+		Gvk{Group: "a", Version: "b", Kind: "ClusterRole"}},
+	{Gvk{Group: "a", Version: "b", Kind: "a"},
+		Gvk{Group: "a", Version: "b", Kind: "b"}},
+}
+
+func TestIsLessThan1(t *testing.T) {
+	for _, hey := range lessThanTests {
+		if !hey.x1.IsLessThan(hey.x2) {
+			t.Fatalf("%v should be less than %v", hey.x1, hey.x2)
+		}
+	}
+}
+
+var stringTests = []struct {
+	x Gvk
+	s string
+}{
+	{Gvk{Group: "a", Version: "b", Kind: "c"}, "a_b_c"},
+	{Gvk{Group: "a", Kind: "c"}, "a__c"},
+	{Gvk{Kind: "c"}, "_c"},
+	{Gvk{Version: "b", Kind: "c"}, "b_c"},
+}
+
+func TestString(t *testing.T) {
+	for _, hey := range stringTests {
+		if hey.x.String() != hey.s {
+			t.Fatalf("bad string for %v '%s'", hey.x, hey.s)
+		}
+	}
+}
 
 func TestSelectByGVK(t *testing.T) {
 	type testCase struct {
 		description string
-		in          schema.GroupVersionKind
-		filter      *schema.GroupVersionKind
+		in          Gvk
+		filter      *Gvk
 		expected    bool
 	}
 	testCases := []testCase{
 		{
 			description: "nil filter",
-			in:          schema.GroupVersionKind{},
+			in:          Gvk{},
 			filter:      nil,
 			expected:    true,
 		},
 		{
 			description: "gvk matches",
-			in: schema.GroupVersionKind{
+			in: Gvk{
 				Group:   "group1",
 				Version: "version1",
 				Kind:    "kind1",
 			},
-			filter: &schema.GroupVersionKind{
+			filter: &Gvk{
 				Group:   "group1",
 				Version: "version1",
 				Kind:    "kind1",
@@ -52,12 +106,12 @@ func TestSelectByGVK(t *testing.T) {
 		},
 		{
 			description: "group doesn't matches",
-			in: schema.GroupVersionKind{
+			in: Gvk{
 				Group:   "group1",
 				Version: "version1",
 				Kind:    "kind1",
 			},
-			filter: &schema.GroupVersionKind{
+			filter: &Gvk{
 				Group:   "group2",
 				Version: "version1",
 				Kind:    "kind1",
@@ -66,12 +120,12 @@ func TestSelectByGVK(t *testing.T) {
 		},
 		{
 			description: "version doesn't matches",
-			in: schema.GroupVersionKind{
+			in: Gvk{
 				Group:   "group1",
 				Version: "version1",
 				Kind:    "kind1",
 			},
-			filter: &schema.GroupVersionKind{
+			filter: &Gvk{
 				Group:   "group1",
 				Version: "version2",
 				Kind:    "kind1",
@@ -80,12 +134,12 @@ func TestSelectByGVK(t *testing.T) {
 		},
 		{
 			description: "kind doesn't matches",
-			in: schema.GroupVersionKind{
+			in: Gvk{
 				Group:   "group1",
 				Version: "version1",
 				Kind:    "kind1",
 			},
-			filter: &schema.GroupVersionKind{
+			filter: &Gvk{
 				Group:   "group1",
 				Version: "version1",
 				Kind:    "kind2",
@@ -94,12 +148,12 @@ func TestSelectByGVK(t *testing.T) {
 		},
 		{
 			description: "no version in filter",
-			in: schema.GroupVersionKind{
+			in: Gvk{
 				Group:   "group1",
 				Version: "version1",
 				Kind:    "kind1",
 			},
-			filter: &schema.GroupVersionKind{
+			filter: &Gvk{
 				Group:   "group1",
 				Version: "",
 				Kind:    "kind1",
@@ -108,12 +162,12 @@ func TestSelectByGVK(t *testing.T) {
 		},
 		{
 			description: "only kind is set in filter",
-			in: schema.GroupVersionKind{
+			in: Gvk{
 				Group:   "group1",
 				Version: "version1",
 				Kind:    "kind1",
 			},
-			filter: &schema.GroupVersionKind{
+			filter: &Gvk{
 				Group:   "",
 				Version: "",
 				Kind:    "kind1",
@@ -123,7 +177,7 @@ func TestSelectByGVK(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		filtered := selectByGVK(tc.in, tc.filter)
+		filtered := tc.in.IsSelected(tc.filter)
 		if filtered != tc.expected {
 			t.Fatalf("unexpected filter result for test case: %v", tc.description)
 		}

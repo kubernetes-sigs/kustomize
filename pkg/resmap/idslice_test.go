@@ -21,30 +21,29 @@ import (
 	"sort"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
 func TestLess(t *testing.T) {
 	ids := IdSlice{
-		resource.NewResId(schema.GroupVersionKind{Kind: "ConfigMap"}, "cm"),
-		resource.NewResId(schema.GroupVersionKind{Kind: "Pod"}, "pod"),
-		resource.NewResId(schema.GroupVersionKind{Kind: "Namespace"}, "ns1"),
-		resource.NewResId(schema.GroupVersionKind{Kind: "Namespace"}, "ns2"),
-		resource.NewResId(schema.GroupVersionKind{Kind: "Role"}, "ro"),
-		resource.NewResId(schema.GroupVersionKind{Kind: "RoleBinding"}, "rb"),
-		resource.NewResId(schema.GroupVersionKind{Kind: "CustomResourceDefinition"}, "crd"),
-		resource.NewResId(schema.GroupVersionKind{Kind: "ServiceAccount"}, "sa"),
+		resource.NewResIdKindOnly("ConfigMap", "cm"),
+		resource.NewResIdKindOnly("Pod", "pod"),
+		resource.NewResIdKindOnly("Namespace", "ns1"),
+		resource.NewResIdKindOnly("Namespace", "ns2"),
+		resource.NewResIdKindOnly("Role", "ro"),
+		resource.NewResIdKindOnly("RoleBinding", "rb"),
+		resource.NewResIdKindOnly("CustomResourceDefinition", "crd"),
+		resource.NewResIdKindOnly("ServiceAccount", "sa"),
 	}
 	expected := IdSlice{
-		resource.NewResId(schema.GroupVersionKind{Kind: "Namespace"}, "ns1"),
-		resource.NewResId(schema.GroupVersionKind{Kind: "Namespace"}, "ns2"),
-		resource.NewResId(schema.GroupVersionKind{Kind: "CustomResourceDefinition"}, "crd"),
-		resource.NewResId(schema.GroupVersionKind{Kind: "ServiceAccount"}, "sa"),
-		resource.NewResId(schema.GroupVersionKind{Kind: "Role"}, "ro"),
-		resource.NewResId(schema.GroupVersionKind{Kind: "RoleBinding"}, "rb"),
-		resource.NewResId(schema.GroupVersionKind{Kind: "ConfigMap"}, "cm"),
-		resource.NewResId(schema.GroupVersionKind{Kind: "Pod"}, "pod"),
+		resource.NewResIdKindOnly("Namespace", "ns1"),
+		resource.NewResIdKindOnly("Namespace", "ns2"),
+		resource.NewResIdKindOnly("CustomResourceDefinition", "crd"),
+		resource.NewResIdKindOnly("ServiceAccount", "sa"),
+		resource.NewResIdKindOnly("Role", "ro"),
+		resource.NewResIdKindOnly("RoleBinding", "rb"),
+		resource.NewResIdKindOnly("ConfigMap", "cm"),
+		resource.NewResIdKindOnly("Pod", "pod"),
 	}
 	sort.Sort(ids)
 	if !reflect.DeepEqual(ids, expected) {
