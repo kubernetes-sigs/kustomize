@@ -21,7 +21,7 @@ import (
 	"fmt"
 
 	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/hash"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
@@ -43,13 +43,13 @@ func (o *nameHashTransformer) Transform(m resmap.ResMap) error {
 	for id, res := range m {
 		if res.IsGenerated() {
 			switch {
-			case selectByGVK(id.Gvk(), &schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"}):
+			case id.Gvk().IsSelected(&gvk.Gvk{Version: "v1", Kind: "ConfigMap"}):
 				err := appendHashForConfigMap(res)
 				if err != nil {
 					return err
 				}
 
-			case selectByGVK(id.Gvk(), &schema.GroupVersionKind{Version: "v1", Kind: "Secret"}):
+			case id.Gvk().IsSelected(&gvk.Gvk{Version: "v1", Kind: "Secret"}):
 				err := appendHashForSecret(res)
 				if err != nil {
 					return err

@@ -20,12 +20,12 @@ package resource
 import (
 	"encoding/json"
 	"fmt"
-
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 )
 
 // Resource is an "Unstructured" (json/map form) Kubernetes API resource object
@@ -77,7 +77,7 @@ func (r *Resource) IsGenerated() bool {
 
 // Id returns the ResId for the resource.
 func (r *Resource) Id() ResId {
-	return NewResId(r.GroupVersionKind(), r.GetName())
+	return NewResId(gvk.FromSchemaGvk(r.GroupVersionKind()), r.GetName())
 }
 
 // Merge performs merge with other resource.

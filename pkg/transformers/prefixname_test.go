@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
@@ -98,7 +98,7 @@ func TestAddPrefixPathConfigs(t *testing.T) {
 
 	pathConfigs := []PathConfig{
 		{
-			GroupVersionKind:   &schema.GroupVersionKind{Group: "GroupA", Kind: "KindB"},
+			GroupVersionKind:   &gvk.Gvk{Group: "GroupA", Kind: "KindB"},
 			Path:               []string{"path", "to", "a", "field"},
 			CreateIfNotPresent: true,
 		},
