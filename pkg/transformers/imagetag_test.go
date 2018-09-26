@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
@@ -59,7 +59,7 @@ func TestImageTagTransformer(t *testing.T) {
 					},
 				},
 			}),
-		resource.NewResId(schema.GroupVersionKind{Kind: "randomeKind"}, "random"): resource.NewResourceFromMap(
+		resource.NewResId(gvk.Gvk{Kind: "randomKind"}, "random"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"spec": map[string]interface{}{
 					"template": map[string]interface{}{
@@ -127,7 +127,7 @@ func TestImageTagTransformer(t *testing.T) {
 					},
 				},
 			}),
-		resource.NewResId(schema.GroupVersionKind{Kind: "randomeKind"}, "random"): resource.NewResourceFromMap(
+		resource.NewResId(gvk.Gvk{Kind: "randomKind"}, "random"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"spec": map[string]interface{}{
 					"template": map[string]interface{}{

@@ -5,13 +5,6 @@ kind: Secret
 metadata:
   name: test-crdsecret
 ---
-apiVersion: v1beta1
-kind: Bee
-metadata:
-  name: test-bee
-spec:
-  action: fly
----
 apiVersion: jingfang.example.com/v1beta1
 kind: MyKind
 metadata:
@@ -21,3 +14,10 @@ spec:
     name: test-bee
   secretRef:
     name: test-crdsecret
+---
+apiVersion: v1beta1
+kind: Bee
+metadata:
+  name: test-bee
+spec:
+  action: fly

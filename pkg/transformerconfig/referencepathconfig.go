@@ -17,7 +17,7 @@ limitations under the License.
 package transformerconfig
 
 import (
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 )
 
 // ReferencePathConfig contains the configuration of a field that references
@@ -34,27 +34,16 @@ import (
 //		},
 //	}
 type ReferencePathConfig struct {
-	Group   string `json:"group,omitempty" yaml:"group,omitempty"`
-	Version string `json:"version,omitempty" yaml:"version,omitempty"`
-	Kind    string `json:"kind,omitempty" yaml:"kind,omitempty"`
+	gvk.Gvk `json:",inline,omitempty" yaml:",inline,omitempty"`
 	// PathConfig is the gvk that is referencing the referencedGVK object's name.
 	PathConfigs []PathConfig `json:"pathConfigs,omitempty" yaml:"pathConfigs,omitempty"`
-}
-
-// Gvk returns GroupVersionKind of the reference pathConfig
-func (p ReferencePathConfig) Gvk() *schema.GroupVersionKind {
-	return &schema.GroupVersionKind{
-		Group:   p.Group,
-		Version: p.Version,
-		Kind:    p.Kind,
-	}
 }
 
 func merge(configs []ReferencePathConfig, config ReferencePathConfig) []ReferencePathConfig {
 	var result []ReferencePathConfig
 	found := false
 	for _, c := range configs {
-		if c.Gvk() == config.Gvk() {
+		if c.Equals(config.Gvk) {
 			c.PathConfigs = append(c.PathConfigs, config.PathConfigs...)
 			found = true
 		}
