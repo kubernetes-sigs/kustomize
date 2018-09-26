@@ -145,7 +145,7 @@ func runBuildTestCase(t *testing.T, testcaseName string, updateKustomizeExpected
 			t.Errorf("unexpected error: %v", err)
 		}
 		if !reflect.DeepEqual(actualBytes, expectedBytes) {
-			t.Errorf("%s\ndoesn't equal expected:\n%s\n", actualBytes, expectedBytes)
+			t.Errorf("\n**** Actual:\n\n%s\n\n**** doesn't equal expected:\n\n%s\n\n", actualBytes, expectedBytes)
 		}
 	} else {
 		ioutil.WriteFile(testcase.ExpectedStdout, actualBytes, 0644)

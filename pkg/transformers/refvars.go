@@ -3,8 +3,8 @@ package transformers
 import (
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/pkg/expansion"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 )
 
@@ -19,87 +19,87 @@ func NewRefVarTransformer(vars map[string]string) (Transformer, error) {
 		vars: vars,
 		pathConfigs: []PathConfig{
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "StatefulSet"},
+				GroupVersionKind: &gvk.Gvk{Kind: "StatefulSet"},
 				Path:             []string{"spec", "template", "spec", "initContainers", "command"},
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "StatefulSet"},
+				GroupVersionKind: &gvk.Gvk{Kind: "StatefulSet"},
 				Path:             []string{"spec", "template", "spec", "containers", "command"},
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "Deployment"},
+				GroupVersionKind: &gvk.Gvk{Kind: "Deployment"},
 				Path:             []string{"spec", "template", "spec", "initContainers", "command"},
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "Deployment"},
+				GroupVersionKind: &gvk.Gvk{Kind: "Deployment"},
 				Path:             []string{"spec", "template", "spec", "containers", "command"},
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "Job"},
+				GroupVersionKind: &gvk.Gvk{Kind: "Job"},
 				Path:             []string{"spec", "template", "spec", "containers", "command"},
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "CronJob"},
+				GroupVersionKind: &gvk.Gvk{Kind: "CronJob"},
 				Path:             []string{"spec", "jobTemplate", "spec", "template", "spec", "containers", "command"},
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "StatefulSet"},
+				GroupVersionKind: &gvk.Gvk{Kind: "StatefulSet"},
 				Path:             []string{"spec", "template", "spec", "initContainers", "args"},
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "StatefulSet"},
+				GroupVersionKind: &gvk.Gvk{Kind: "StatefulSet"},
 				Path:             []string{"spec", "template", "spec", "containers", "args"},
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "Deployment"},
+				GroupVersionKind: &gvk.Gvk{Kind: "Deployment"},
 				Path:             []string{"spec", "template", "spec", "initContainers", "args"},
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "Deployment"},
+				GroupVersionKind: &gvk.Gvk{Kind: "Deployment"},
 				Path:             []string{"spec", "template", "spec", "containers", "args"},
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "Job"},
+				GroupVersionKind: &gvk.Gvk{Kind: "Job"},
 				Path:             []string{"spec", "template", "spec", "containers", "args"},
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "CronJob"},
+				GroupVersionKind: &gvk.Gvk{Kind: "CronJob"},
 				Path:             []string{"spec", "jobTemplate", "spec", "template", "spec", "containers", "args"},
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "StatefulSet"},
+				GroupVersionKind: &gvk.Gvk{Kind: "StatefulSet"},
 				Path:             []string{"spec", "template", "spec", "initContainers", "env", "value"},
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "StatefulSet"},
+				GroupVersionKind: &gvk.Gvk{Kind: "StatefulSet"},
 				Path:             []string{"spec", "template", "spec", "containers", "env", "value"},
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "Deployment"},
+				GroupVersionKind: &gvk.Gvk{Kind: "Deployment"},
 				Path:             []string{"spec", "template", "spec", "initContainers", "env", "value"},
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "Deployment"},
+				GroupVersionKind: &gvk.Gvk{Kind: "Deployment"},
 				Path:             []string{"spec", "template", "spec", "containers", "env", "value"},
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "Job"},
+				GroupVersionKind: &gvk.Gvk{Kind: "Job"},
 				Path:             []string{"spec", "template", "spec", "containers", "env", "value"},
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "CronJob"},
+				GroupVersionKind: &gvk.Gvk{Kind: "CronJob"},
 				Path:             []string{"spec", "jobTemplate", "spec", "template", "spec", "containers", "env", "value"},
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "Pod"},
+				GroupVersionKind: &gvk.Gvk{Kind: "Pod"},
 				Path:             []string{"spec", "containers", "command"},
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "Pod"},
+				GroupVersionKind: &gvk.Gvk{Kind: "Pod"},
 				Path:             []string{"spec", "containers", "args"},
 			},
 			{
-				GroupVersionKind: &schema.GroupVersionKind{Kind: "Pod"},
+				GroupVersionKind: &gvk.Gvk{Kind: "Pod"},
 				Path:             []string{"spec", "containers", "env", "value"},
 			},
 		},
@@ -116,10 +116,10 @@ func NewRefVarTransformer(vars map[string]string) (Transformer, error) {
 // 2.  Create the container's environment in the order variables are declared
 // 3.  Add remaining service environment vars
 func (rv *refvarTransformer) Transform(resources resmap.ResMap) error {
-	for GVKn := range resources {
-		objMap := resources[GVKn].UnstructuredContent()
+	for resId := range resources {
+		objMap := resources[resId].UnstructuredContent()
 		for _, pc := range rv.pathConfigs {
-			if !selectByGVK(GVKn.Gvk(), pc.GroupVersionKind) {
+			if !resId.Gvk().IsSelected(pc.GroupVersionKind) {
 				continue
 			}
 			err := mutateField(objMap, pc.Path, false, func(in interface{}) (interface{}, error) {

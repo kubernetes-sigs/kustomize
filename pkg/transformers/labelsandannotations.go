@@ -59,7 +59,7 @@ func (o *mapTransformer) Transform(m resmap.ResMap) error {
 	for id := range m {
 		objMap := m[id].UnstructuredContent()
 		for _, path := range o.pathConfigs {
-			if !selectByGVK(id.Gvk(), path.GroupVersionKind) {
+			if !id.Gvk().IsSelected(path.GroupVersionKind) {
 				continue
 			}
 			err := mutateField(objMap, path.Path, path.CreateIfNotPresent, o.addMap)

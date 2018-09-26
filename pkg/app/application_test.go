@@ -23,9 +23,9 @@ import (
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/resmap"
@@ -106,10 +106,10 @@ func makeLoader1(t *testing.T) loader.Loader {
 	return ldr
 }
 
-var deploy = schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"}
-var cmap = schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"}
-var secret = schema.GroupVersionKind{Version: "v1", Kind: "Secret"}
-var ns = schema.GroupVersionKind{Version: "v1", Kind: "Namespace"}
+var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
+var cmap = gvk.Gvk{Version: "v1", Kind: "ConfigMap"}
+var secret = gvk.Gvk{Version: "v1", Kind: "Secret"}
+var ns = gvk.Gvk{Version: "v1", Kind: "Namespace"}
 
 func TestResources1(t *testing.T) {
 	expected := resmap.ResMap{

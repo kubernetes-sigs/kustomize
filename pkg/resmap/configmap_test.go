@@ -20,15 +20,15 @@ import (
 	"reflect"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/pkg/configmapandsecret"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
-var cmap = schema.GroupVersionKind{Version: "v1", Kind: "ConfigMap"}
+var cmap = gvk.Gvk{Version: "v1", Kind: "ConfigMap"}
 
 func TestNewFromConfigMaps(t *testing.T) {
 	type testCase struct {
