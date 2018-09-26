@@ -48,7 +48,7 @@ function setUpEnv {
   [[ $? -eq 0 ]] || "Failed to cd to $repo"
   echo "pwd is " `pwd`
 
-  local expectedRepo=kubernetes-sigs/kustomize
+  local expectedRepo=sigs.k8s.io/kustomize
   if [[ `pwd` != */$expectedRepo ]]; then
     exitWith "Script must be run from $expectedRepo"
   fi
