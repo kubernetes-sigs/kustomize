@@ -30,6 +30,7 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	internal "sigs.k8s.io/kustomize/pkg/internal/error"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/patch"
@@ -129,11 +130,12 @@ func (m ResMap) DeepCopy() ResMap {
 
 func (m ResMap) insert(newName string, obj *unstructured.Unstructured) error {
 	oldName := obj.GetName()
-	gvk := obj.GroupVersionKind()
-	id := resource.NewResId(gvk, oldName)
+	gvKind := gvk.FromSchemaGvk(obj.GroupVersionKind())
+	id := resource.NewResId(gvKind, oldName)
 
 	if _, found := m[id]; found {
-		return fmt.Errorf("the <name: %q, GroupVersionKind: %v> already exists in the map", oldName, gvk)
+		return fmt.Errorf(
+			"the <name: %q, GroupVersionKind: %v> already exists in the map", oldName, gvKind)
 	}
 	obj.SetName(newName)
 	m[id] = resource.NewResourceFromUnstruct(*obj)

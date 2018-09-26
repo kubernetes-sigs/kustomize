@@ -25,6 +25,7 @@ import (
 	"github.com/ghodss/yaml"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/kube-openapi/pkg/common"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/transformers"
 )
@@ -100,9 +101,10 @@ func registerCRD(loader loader.Loader, path string) ([]pathConfigs, error) {
 	}
 
 	crds := getCRDs(types)
-	for crd, gvk := range crds {
+	for crd, k := range crds {
 		crdPathConfigs := pathConfigs{}
-		err = getCRDPathConfig(types, crd, crd, gvk, []string{}, &crdPathConfigs)
+		err = getCRDPathConfig(
+			types, crd, crd, gvk.FromSchemaGvk(k), []string{}, &crdPathConfigs)
 		if err != nil {
 			return result, err
 		}
@@ -134,7 +136,8 @@ func getCRDs(types map[string]common.OpenAPIDefinition) map[string]schema.GroupV
 }
 
 // getCRDPathConfig gets pathConfigs for one CRD recursively
-func getCRDPathConfig(types map[string]common.OpenAPIDefinition, atype string, crd string, gvk schema.GroupVersionKind,
+func getCRDPathConfig(
+	types map[string]common.OpenAPIDefinition, atype string, crd string, in gvk.Gvk,
 	path []string, configs *pathConfigs) error {
 	if _, ok := types[crd]; !ok {
 		return nil
@@ -146,7 +149,7 @@ func getCRDPathConfig(types map[string]common.OpenAPIDefinition, atype string, c
 			configs.addAnnotationPathConfig(
 				transformers.PathConfig{
 					CreateIfNotPresent: false,
-					GroupVersionKind:   &gvk,
+					GroupVersionKind:   &in,
 					Path:               append(path, propname),
 				},
 			)
@@ -156,7 +159,7 @@ func getCRDPathConfig(types map[string]common.OpenAPIDefinition, atype string, c
 			configs.addLabelPathConfig(
 				transformers.PathConfig{
 					CreateIfNotPresent: false,
-					GroupVersionKind:   &gvk,
+					GroupVersionKind:   &in,
 					Path:               append(path, propname),
 				},
 			)
@@ -166,7 +169,7 @@ func getCRDPathConfig(types map[string]common.OpenAPIDefinition, atype string, c
 			configs.addPrefixPathConfig(
 				transformers.PathConfig{
 					CreateIfNotPresent: false,
-					GroupVersionKind:   &gvk,
+					GroupVersionKind:   &in,
 					Path:               append(path, propname),
 				},
 			)
@@ -180,10 +183,10 @@ func getCRDPathConfig(types map[string]common.OpenAPIDefinition, atype string, c
 					nameKey = "name"
 				}
 				configs.addNamereferencePathConfig(transformers.NewReferencePathConfig(
-					schema.GroupVersionKind{Kind: kind, Version: version},
+					gvk.Gvk{Kind: kind, Version: version},
 					[]transformers.PathConfig{
 						{CreateIfNotPresent: false,
-							GroupVersionKind: &gvk,
+							GroupVersionKind: &in,
 							Path:             append(path, propname, nameKey),
 						}}))
 
@@ -191,7 +194,7 @@ func getCRDPathConfig(types map[string]common.OpenAPIDefinition, atype string, c
 		}
 
 		if property.Ref.GetURL() != nil {
-			getCRDPathConfig(types, property.Ref.String(), crd, gvk, append(path, propname), configs)
+			getCRDPathConfig(types, property.Ref.String(), crd, in, append(path, propname), configs)
 		}
 	}
 	return nil

@@ -17,7 +17,7 @@ limitations under the License.
 package transformers
 
 import (
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 )
 
 // PathConfig contains the configuration of a field, including the gvk it ties to,
@@ -28,7 +28,7 @@ type PathConfig struct {
 	// The gvk that this path tied to.
 	// If unset, it applied to any gvk
 	// If some fields are set, it applies to all matching gvk.
-	GroupVersionKind *schema.GroupVersionKind
+	GroupVersionKind *gvk.Gvk
 	// Path to the field that will be munged.
 	Path []string
 }
@@ -49,15 +49,15 @@ type PathConfig struct {
 type ReferencePathConfig struct {
 	// referencedGVK is the GroupVersionKind that is referenced by
 	// the PathConfig's gvk in the path of PathConfig.Path.
-	referencedGVK schema.GroupVersionKind
+	referencedGVK gvk.Gvk
 	// PathConfig is the gvk that is referencing the referencedGVK object's name.
 	pathConfigs []PathConfig
 }
 
 // NewReferencePathConfig creates a new ReferencePathConfig object
-func NewReferencePathConfig(gvk schema.GroupVersionKind, pathconfigs []PathConfig) ReferencePathConfig {
+func NewReferencePathConfig(k gvk.Gvk, pathconfigs []PathConfig) ReferencePathConfig {
 	return ReferencePathConfig{
-		referencedGVK: gvk,
+		referencedGVK: k,
 		pathConfigs:   pathconfigs,
 	}
 }

@@ -21,12 +21,12 @@ import (
 	"testing"
 
 	"github.com/krishicks/yaml-patch"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
-var deploy = schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"}
+var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
 
 func TestJsonPatchYAMLTransformer_Transform(t *testing.T) {
 	id := resource.NewResId(deploy, "deploy1")

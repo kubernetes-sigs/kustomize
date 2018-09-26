@@ -16,6 +16,8 @@ limitations under the License.
 
 package patch
 
+import "sigs.k8s.io/kustomize/pkg/gvk"
+
 // PatchJson6902 represents a json patch for an object
 // with format documented https://tools.ietf.org/html/rfc6902.
 type PatchJson6902 struct {
@@ -32,9 +34,7 @@ type PatchJson6902 struct {
 
 // Target represents the kubernetes object that the patch is applied to
 type Target struct {
-	Group     string `json:"group,omitempty" yaml:"group,omitempty"`
-	Version   string `json:"version,omitempty" yaml:"version,omitempty"`
-	Kind      string `json:"kind,omitempty" yaml:"kind,omitempty"`
+	gvk.Gvk   `json:",inline,omitempty" yaml:",inline,omitempty"`
 	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 	Name      string `json:"name" yaml:"name"`
 }

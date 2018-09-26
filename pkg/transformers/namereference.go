@@ -20,7 +20,7 @@ import (
 	"errors"
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
@@ -55,7 +55,7 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 		objMap := m[id].UnstructuredContent()
 		for _, referencePathConfig := range o.pathConfigs {
 			for _, path := range referencePathConfig.pathConfigs {
-				if !selectByGVK(id.Gvk(), path.GroupVersionKind) {
+				if !id.Gvk().IsSelected(path.GroupVersionKind) {
 					continue
 				}
 				err := mutateField(objMap, path.Path, path.CreateIfNotPresent,
@@ -70,7 +70,7 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 }
 
 func (o *nameReferenceTransformer) updateNameReference(
-	GVK schema.GroupVersionKind, m resmap.ResMap) func(in interface{}) (interface{}, error) {
+	k gvk.Gvk, m resmap.ResMap) func(in interface{}) (interface{}, error) {
 	return func(in interface{}) (interface{}, error) {
 		s, ok := in.(string)
 		if !ok {
@@ -78,7 +78,7 @@ func (o *nameReferenceTransformer) updateNameReference(
 		}
 
 		for id, res := range m {
-			if !selectByGVK(id.Gvk(), &GVK) {
+			if !id.Gvk().IsSelected(&k) {
 				continue
 			}
 			if id.Name() == s {
