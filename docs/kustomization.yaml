@@ -162,7 +162,7 @@ patches:
 #   path: /some/existing/path
 #   value: new value
 #
-patchesJson6902
+patchesJson6902:
 - target:
     version: v1
     kind: Deployment
