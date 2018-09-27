@@ -62,10 +62,14 @@ var stringTests = []struct {
 	x Gvk
 	s string
 }{
-	{Gvk{Group: "a", Version: "b", Kind: "c"}, "a_b_c"},
-	{Gvk{Group: "a", Kind: "c"}, "a__c"},
-	{Gvk{Kind: "c"}, "_c"},
-	{Gvk{Version: "b", Kind: "c"}, "b_c"},
+	{Gvk{}, "noGroup_noVersion_noKind"},
+	{Gvk{Kind: "k"}, "noGroup_noVersion_k"},
+	{Gvk{Version: "v"}, "noGroup_v_noKind"},
+	{Gvk{Version: "v", Kind: "k"}, "noGroup_v_k"},
+	{Gvk{Group: "g"}, "g_noVersion_noKind"},
+	{Gvk{Group: "g", Kind: "k"}, "g_noVersion_k"},
+	{Gvk{Group: "g", Version: "v"}, "g_v_noKind"},
+	{Gvk{Group: "g", Version: "v", Kind: "k"}, "g_v_k"},
 }
 
 func TestString(t *testing.T) {
