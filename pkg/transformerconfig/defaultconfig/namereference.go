@@ -123,10 +123,10 @@ nameReference:
   - path: spec/volumes/secret/secretName
     version: v1
     kind: Pod
-  - path: spec/containers/env/valueFrom/secretkeyRef/name
+  - path: spec/containers/env/valueFrom/secretKeyRef/name
     version: v1
     kind: Pod
-  - path: spec/initContainers/env/valueFrom/secretkeyRef/name
+  - path: spec/initContainers/env/valueFrom/secretKeyRef/name
     version: v1
     kind: Pod
   - path: spec/containers/envFrom/secretRef/name
@@ -142,7 +142,7 @@ nameReference:
     kind: Deployment
   - path: spec/template/spec/containers/env/valueFrom/secretKeyRef/name
     kind: Deployment
-  - path: spec/template/spec/initContainers/env/valueFrom/secretkeyRef/name
+  - path: spec/template/spec/initContainers/env/valueFrom/secretKeyRef/name
     kind: Deployment
   - path: spec/template/spec/containers/envFrom/secretRef/name
     kind: Deployment

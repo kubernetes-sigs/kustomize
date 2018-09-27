@@ -32,5 +32,5 @@ func GetDefaultPathConfigs() []byte {
 		[]byte(varReferencePathConfigs),
 		[]byte(nameReferencePathConfigs),
 	}
-	return bytes.Join(configData, []byte(`\n`))
+	return bytes.Join(configData, []byte("\n"))
 }
