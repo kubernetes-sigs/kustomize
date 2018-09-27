@@ -114,8 +114,3 @@ func (o *namePrefixTransformer) addPrefix(in interface{}) (interface{}, error) {
 	}
 	return o.prefix + s, nil
 }
-
-// AddPrefixPathConfigs adds extra path configs to the default one
-func AddPrefixPathConfigs(pathConfigs ...PathConfig) {
-	defaultNamePrefixPathConfigs = append(defaultNamePrefixPathConfigs, pathConfigs...)
-}

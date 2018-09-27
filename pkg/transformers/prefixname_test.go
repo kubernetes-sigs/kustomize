@@ -20,7 +20,6 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
@@ -90,21 +89,5 @@ func TestPrefixNameRun(t *testing.T) {
 	if !reflect.DeepEqual(m, expected) {
 		err = expected.ErrorIfNotEqual(m)
 		t.Fatalf("actual doesn't match expected: %v", err)
-	}
-}
-
-func TestAddPrefixPathConfigs(t *testing.T) {
-	expected := len(defaultNamePrefixPathConfigs) + 1
-
-	pathConfigs := []PathConfig{
-		{
-			GroupVersionKind:   &gvk.Gvk{Group: "GroupA", Kind: "KindB"},
-			Path:               []string{"path", "to", "a", "field"},
-			CreateIfNotPresent: true,
-		},
-	}
-	AddPrefixPathConfigs(pathConfigs...)
-	if len(defaultNamePrefixPathConfigs) != expected {
-		t.Fatalf("actual %v doesn't match expected: %v", len(defaultNamePrefixPathConfigs), expected)
 	}
 }

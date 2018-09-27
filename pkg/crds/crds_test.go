@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/loader"
-	"sigs.k8s.io/kustomize/pkg/transformers"
+	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 )
 
 const (
@@ -151,46 +151,40 @@ func makeLoader(t *testing.T) loader.Loader {
 }
 
 func TestRegisterCRD(t *testing.T) {
-	refpathconfigs := []transformers.ReferencePathConfig{
-		transformers.NewReferencePathConfig(
-			gvk.Gvk{Kind: "Bee", Version: "v1beta1"},
-			[]transformers.PathConfig{
+	refpathconfigs := []transformerconfig.ReferencePathConfig{
+		{
+			Gvk: gvk.Gvk{Kind: "Bee", Version: "v1beta1"},
+			PathConfigs: []transformerconfig.PathConfig{
 				{
 					CreateIfNotPresent: false,
-					GroupVersionKind:   &gvk.Gvk{Kind: "MyKind"},
-					Path:               []string{"spec", "beeRef", "name"},
+					Gvk:                gvk.Gvk{Kind: "MyKind"},
+					Path:               "spec/beeRef/name",
 				},
 			},
-		),
-		transformers.NewReferencePathConfig(
-			gvk.Gvk{Kind: "Secret", Version: "v1"},
-			[]transformers.PathConfig{
+		},
+		{
+			Gvk: gvk.Gvk{Kind: "Secret", Version: "v1"},
+			PathConfigs: []transformerconfig.PathConfig{
 				{
 					CreateIfNotPresent: false,
-					GroupVersionKind:   &gvk.Gvk{Kind: "MyKind"},
-					Path:               []string{"spec", "secretRef", "name"},
+					Gvk:                gvk.Gvk{Kind: "MyKind"},
+					Path:               "spec/secretRef/name",
 				},
 			},
-		),
+		},
 	}
 
 	sort.Slice(refpathconfigs, func(i, j int) bool {
-		return refpathconfigs[i].GVK() < refpathconfigs[j].GVK()
+		return refpathconfigs[i].Gvk.String() < refpathconfigs[j].Gvk.String()
 	})
 
-	expected := []pathConfigs{
-		{
-			namereferencePathConfigs: refpathconfigs,
-		},
+	expected := &transformerconfig.TransformerConfig{
+		NameReference: refpathconfigs,
 	}
 
 	ldr := makeLoader(t)
 
 	pathconfig, _ := registerCRD(ldr, "/testpath/crd.json")
-
-	sort.Slice(pathconfig[0].namereferencePathConfigs, func(i, j int) bool {
-		return pathconfig[0].namereferencePathConfigs[i].GVK() < pathconfig[0].namereferencePathConfigs[j].GVK()
-	})
 
 	if !reflect.DeepEqual(pathconfig, expected) {
 		t.Fatalf("expected\n %v\n but got\n %v\n", expected, pathconfig)

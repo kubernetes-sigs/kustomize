@@ -20,7 +20,6 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
@@ -334,31 +333,5 @@ func TestNameReferenceRun(t *testing.T) {
 	if !reflect.DeepEqual(m, expected) {
 		err = expected.ErrorIfNotEqual(m)
 		t.Fatalf("actual doesn't match expected: %v", err)
-	}
-}
-
-func TestAddNameReferencePathConfigs(t *testing.T) {
-	expected := len(defaultNameReferencePathConfigs) + 1
-
-	pathConfigs := []ReferencePathConfig{
-		{
-			referencedGVK: gvk.Gvk{
-				Kind: "KindA",
-			},
-			pathConfigs: []PathConfig{
-				{
-					GroupVersionKind: &gvk.Gvk{
-						Kind: "KindB",
-					},
-					Path:               []string{"path", "to", "a", "field"},
-					CreateIfNotPresent: false,
-				},
-			},
-		},
-	}
-
-	AddNameReferencePathConfigs(pathConfigs)
-	if len(defaultNameReferencePathConfigs) != expected {
-		t.Fatalf("actual %v doesn't match expected: %v", len(defaultAnnotationsPathConfigs), expected)
 	}
 }

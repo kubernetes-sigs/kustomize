@@ -54,14 +54,6 @@ type ReferencePathConfig struct {
 	pathConfigs []PathConfig
 }
 
-// NewReferencePathConfig creates a new ReferencePathConfig object
-func NewReferencePathConfig(k gvk.Gvk, pathconfigs []PathConfig) ReferencePathConfig {
-	return ReferencePathConfig{
-		referencedGVK: k,
-		pathConfigs:   pathconfigs,
-	}
-}
-
 // GVK returns the Group version kind of a Reference PathConfig
 func (r ReferencePathConfig) GVK() string {
 	return r.referencedGVK.String()
