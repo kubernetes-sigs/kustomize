@@ -20,5 +20,6 @@ const (
 	namespacePathConfigs = `
 namespace:
 - path: metadata/namespace
+  create: true
 `
 )

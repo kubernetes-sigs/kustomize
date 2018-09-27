@@ -21,6 +21,7 @@ package transformerconfig
 import (
 	"github.com/ghodss/yaml"
 	"sigs.k8s.io/kustomize/pkg/loader"
+	"sigs.k8s.io/kustomize/pkg/transformerconfig/defaultconfig"
 )
 
 // TransformerConfig represents the path configurations for different transformations
@@ -95,4 +96,9 @@ func MakeTransformerConfigFromBytes(data []byte) (*TransformerConfig, error) {
 // MakeEmptyTransformerConfig returns an empty TransformerConfig object
 func MakeEmptyTransformerConfig() *TransformerConfig {
 	return &TransformerConfig{}
+}
+
+// MakeDefaultTransformerConfig returns a TransformerConfig object from the default configurations
+func MakeDefaultTransformerConfig() (*TransformerConfig, error) {
+	return MakeTransformerConfigFromBytes(defaultconfig.GetDefaultPathConfigs())
 }
