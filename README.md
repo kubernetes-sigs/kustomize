@@ -9,6 +9,8 @@ patch [kubernetes style] API objects.  It's like
 [`make`], in that what it does is declared in a file,
 and it's like [`sed`], in that it emits editted text.
 
+This tool is sponsored by [sig-cli] ([KEP]).
+
 [![Build Status](https://travis-ci.org/kubernetes-sigs/kustomize.svg?branch=master)](https://travis-ci.org/kubernetes-sigs/kustomize)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes-sigs/kustomize)](https://goreportcard.com/report/github.com/kubernetes-sigs/kustomize)
 
@@ -113,10 +115,18 @@ The YAML can be directly [applied] to a cluster:
 > kustomize build ~/someApp/overlays/production | kubectl apply -f -
 > ```
 
-## About
+## Community, discussion, contribution, and support
 
-This tool is sponsored by [sig-cli] ([KEP]).
+Learn how to engage with the Kubernetes community on the [community page].
 
+You can reach the maintainers of this project at:
+
+- [Slack]
+- [Mailing List]
+
+### Code of conduct
+
+Participation in the Kubernetes community is governed by the [Kubernetes Code of Conduct].
 
 [KEP]: https://github.com/kubernetes/community/blob/master/keps/sig-cli/0008-kustomize.md
 [`make`]: https://www.gnu.org/software/make
@@ -139,3 +149,7 @@ This tool is sponsored by [sig-cli] ([KEP]).
 [variant]: docs/glossary.md#variant
 [variants]: docs/glossary.md#variant
 [workflows]: docs/workflows.md
+[community page]: http://kubernetes.io/community/
+[Kubernetes Code of Conduct]: code-of-conduct.md
+[Slack]: https://kubernetes.slack.com/messages/sig-cli
+[Mailing List]: https://groups.google.com/forum/#!forum/kubernetes-sig-cli
