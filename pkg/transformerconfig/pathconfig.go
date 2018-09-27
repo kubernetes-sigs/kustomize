@@ -30,7 +30,31 @@ type PathConfig struct {
 	CreateIfNotPresent bool   `json:"create,omitempty" yaml:"create,omitempty"`
 }
 
+const (
+	escapedForwardSlash  = "\\/"
+	tempSlashReplacement = "???"
+)
+
 // PathSlice converts the path string to a slice of strings, separated by "/"
+// "/" can be contained in a fieldname.
+// such as ingress.kubernetes.io/auth-secret in Ingress annotations.
+// To deal with this special case, the path to this field should be formatted as
+//
+// metadata/annotations/ingress.kubernetes.io\/auth-secret
+//
+// Then PathSlice will return
+//
+// []string{"metadata", "annotations", "ingress.auth-secretkubernetes.io/auth-secret"}
 func (p PathConfig) PathSlice() []string {
-	return strings.Split(p.Path, "/")
+	if !strings.Contains(p.Path, escapedForwardSlash) {
+		return strings.Split(p.Path, "/")
+	}
+
+	s := strings.Replace(p.Path, escapedForwardSlash, tempSlashReplacement, -1)
+	paths := strings.Split(s, "/")
+	var result []string
+	for _, path := range paths {
+		result = append(result, strings.Replace(path, tempSlashReplacement, "/", -1))
+	}
+	return result
 }
