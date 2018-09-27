@@ -58,16 +58,35 @@ func NewResIdKindOnly(k string, n string) ResId {
 	return ResId{gvKind: gvk.FromKind(k), name: n}
 }
 
+const (
+	noNamespace = "noNamespace"
+	noPrefix    = "noPrefix"
+	noName      = "noName"
+	separator   = "|"
+)
+
 // String of ResId based on GVK, name and prefix
 func (n ResId) String() string {
-	fields := []string{n.gvKind.Group, n.gvKind.Version, n.gvKind.Kind,
-		n.namespace, n.prefix, n.name}
-	return strings.Join(fields, "_") + ".yaml"
+	ns := n.namespace
+	if ns == "" {
+		ns = noNamespace
+	}
+	p := n.prefix
+	if p == "" {
+		p = noPrefix
+	}
+	nm := n.name
+	if nm == "" {
+		nm = noName
+	}
+
+	return strings.Join(
+		[]string{n.gvKind.String(), ns, p, nm}, separator)
 }
 
 // GvknString of ResId based on GVK and name
 func (n ResId) GvknString() string {
-	return n.gvKind.String() + "_" + n.name + ".yaml"
+	return n.gvKind.String() + separator + n.name
 }
 
 // GvknEquals return if two ResId have the same Group/Version/Kind and name

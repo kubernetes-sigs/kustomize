@@ -18,6 +18,7 @@ package gvk
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"strings"
 )
 
 // Gvk identifies a Kubernetes API type.
@@ -53,12 +54,28 @@ func (x Gvk) ToSchemaGvk() schema.GroupVersionKind {
 	}
 }
 
+const (
+	noGroup   = "noGroup"
+	noVersion = "noVersion"
+	noKind    = "noKind"
+	separator = "_"
+)
+
 // String returns a string representation of the GVK.
 func (x Gvk) String() string {
-	if x.Group == "" {
-		return x.Version + "_" + x.Kind
+	g := x.Group
+	if g == "" {
+		g = noGroup
 	}
-	return x.Group + "_" + x.Version + "_" + x.Kind
+	v := x.Version
+	if v == "" {
+		v = noVersion
+	}
+	k := x.Kind
+	if k == "" {
+		k = noKind
+	}
+	return strings.Join([]string{g, v, k}, separator)
 }
 
 // Equals returns true if the Gvk's have equal fields.
@@ -66,6 +83,10 @@ func (x Gvk) Equals(o Gvk) bool {
 	return x.Group == o.Group && x.Version == o.Version && x.Kind == o.Kind
 }
 
+// An attempt to order things to help k8s, e.g.
+// a Service should come before things that refer to it.
+// Namespace should be first.
+// In some cases order just specified to provide determinism.
 var order = []string{
 	"Namespace",
 	"CustomResourceDefinition",
@@ -77,6 +98,10 @@ var order = []string{
 	"ConfigMap",
 	"Secret",
 	"Service",
+	"Deployment",
+	"StatefulSet",
+	"CronJob",
+	"PodDisruptionBudget",
 }
 var typeOrders = func() map[string]int {
 	m := map[string]int{}
