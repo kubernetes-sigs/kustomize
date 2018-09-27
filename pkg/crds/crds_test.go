@@ -18,7 +18,6 @@ package crds
 
 import (
 	"reflect"
-	"sort"
 	"testing"
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
@@ -173,10 +172,6 @@ func TestRegisterCRD(t *testing.T) {
 			},
 		},
 	}
-
-	sort.Slice(refpathconfigs, func(i, j int) bool {
-		return refpathconfigs[i].Gvk.String() < refpathconfigs[j].Gvk.String()
-	})
 
 	expected := &transformerconfig.TransformerConfig{
 		NameReference: refpathconfigs,
