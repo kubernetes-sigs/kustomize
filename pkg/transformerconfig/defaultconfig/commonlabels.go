@@ -115,7 +115,7 @@ commonLabels:
   group: batch
   kind: Job
 
-- path: spec/template/metadata/Labels
+- path: spec/template/metadata/labels
   create: true
   group: batch
   kind: Job
