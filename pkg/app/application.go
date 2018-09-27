@@ -125,7 +125,7 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 	if err != nil {
 		errs.Append(errors.Wrap(err, "loadResMapFromBasesAndResources"))
 	}
-	err = crds.RegisterCRDs(a.ldr, a.kustomization.Crds)
+	_, err = crds.RegisterCRDs(a.ldr, a.kustomization.Crds)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "RegisterCRDs"))
 	}
