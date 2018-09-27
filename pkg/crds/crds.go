@@ -19,7 +19,6 @@ package crds
 
 import (
 	"encoding/json"
-	"reflect"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -27,61 +26,25 @@ import (
 	"k8s.io/kube-openapi/pkg/common"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/loader"
-	"sigs.k8s.io/kustomize/pkg/transformers"
+	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 )
 
-type pathConfigs struct {
-	labelPathConfig          transformers.PathConfig
-	annotationPathConfig     transformers.PathConfig
-	prefixPathConfig         transformers.PathConfig
-	namereferencePathConfigs []transformers.ReferencePathConfig
-}
-
-func (p *pathConfigs) addLabelPathConfig(config transformers.PathConfig) {
-	if *(p.labelPathConfig.GroupVersionKind) == *config.GroupVersionKind {
-		p.labelPathConfig.Path = append(p.labelPathConfig.Path, config.Path...)
-	} else {
-		p.labelPathConfig = config
-	}
-}
-
-func (p *pathConfigs) addAnnotationPathConfig(config transformers.PathConfig) {
-	if *(p.annotationPathConfig.GroupVersionKind) == *config.GroupVersionKind {
-		p.annotationPathConfig.Path = append(p.labelPathConfig.Path, config.Path...)
-	} else {
-		p.annotationPathConfig = config
-	}
-}
-
-func (p *pathConfigs) addNamereferencePathConfig(config transformers.ReferencePathConfig) {
-	p.namereferencePathConfigs = transformers.MergeNameReferencePathConfigs(p.namereferencePathConfigs, config)
-}
-
-func (p *pathConfigs) addPrefixPathConfig(config transformers.PathConfig) {
-	if *(p.prefixPathConfig.GroupVersionKind) == *config.GroupVersionKind {
-		p.prefixPathConfig.Path = append(p.prefixPathConfig.Path, config.Path...)
-	} else {
-		p.prefixPathConfig = config
-	}
-}
-
 // RegisterCRDs parse CRD schemas from paths and update various pathConfigs
-func RegisterCRDs(loader loader.Loader, paths []string) error {
-	var pathConfigs []pathConfigs
+func RegisterCRDs(loader loader.Loader, paths []string) (*transformerconfig.TransformerConfig, error) {
+	pathConfigs := transformerconfig.MakeEmptyTransformerConfig()
 	for _, path := range paths {
 		pathConfig, err := registerCRD(loader, path)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		pathConfigs = append(pathConfigs, pathConfig...)
+		pathConfigs = pathConfigs.Merge(pathConfig)
 	}
-	addPathConfigs(pathConfigs)
-	return nil
+	return pathConfigs, nil
 }
 
 // register CRD from one path
-func registerCRD(loader loader.Loader, path string) ([]pathConfigs, error) {
-	var result []pathConfigs
+func registerCRD(loader loader.Loader, path string) (*transformerconfig.TransformerConfig, error) {
+	result := transformerconfig.MakeEmptyTransformerConfig()
 	content, err := loader.Load(path)
 	if err != nil {
 		return result, err
@@ -102,15 +65,13 @@ func registerCRD(loader loader.Loader, path string) ([]pathConfigs, error) {
 
 	crds := getCRDs(types)
 	for crd, k := range crds {
-		crdPathConfigs := pathConfigs{}
+		crdPathConfigs := transformerconfig.MakeEmptyTransformerConfig()
 		err = getCRDPathConfig(
-			types, crd, crd, gvk.FromSchemaGvk(k), []string{}, &crdPathConfigs)
+			types, crd, crd, gvk.FromSchemaGvk(k), []string{}, crdPathConfigs)
 		if err != nil {
 			return result, err
 		}
-		if !reflect.DeepEqual(crdPathConfigs, pathConfigs{}) {
-			result = append(result, crdPathConfigs)
-		}
+		result = result.Merge(crdPathConfigs)
 	}
 
 	return result, nil
@@ -138,7 +99,7 @@ func getCRDs(types map[string]common.OpenAPIDefinition) map[string]schema.GroupV
 // getCRDPathConfig gets pathConfigs for one CRD recursively
 func getCRDPathConfig(
 	types map[string]common.OpenAPIDefinition, atype string, crd string, in gvk.Gvk,
-	path []string, configs *pathConfigs) error {
+	path []string, configs *transformerconfig.TransformerConfig) error {
 	if _, ok := types[crd]; !ok {
 		return nil
 	}
@@ -146,31 +107,31 @@ func getCRDPathConfig(
 	for propname, property := range types[atype].Schema.SchemaProps.Properties {
 		_, annotate := property.Extensions.GetString(Annotation)
 		if annotate {
-			configs.addAnnotationPathConfig(
-				transformers.PathConfig{
+			configs.AddAnnotationPathConfig(
+				transformerconfig.PathConfig{
 					CreateIfNotPresent: false,
-					GroupVersionKind:   &in,
-					Path:               append(path, propname),
+					Gvk:                in,
+					Path:               strings.Join(append(path, propname), "/"),
 				},
 			)
 		}
 		_, label := property.Extensions.GetString(LabelSelector)
 		if label {
-			configs.addLabelPathConfig(
-				transformers.PathConfig{
+			configs.AddLabelPathConfig(
+				transformerconfig.PathConfig{
 					CreateIfNotPresent: false,
-					GroupVersionKind:   &in,
-					Path:               append(path, propname),
+					Gvk:                in,
+					Path:               strings.Join(append(path, propname), "/"),
 				},
 			)
 		}
 		_, identity := property.Extensions.GetString(Identity)
 		if identity {
-			configs.addPrefixPathConfig(
-				transformers.PathConfig{
+			configs.AddPrefixPathConfig(
+				transformerconfig.PathConfig{
 					CreateIfNotPresent: false,
-					GroupVersionKind:   &in,
-					Path:               append(path, propname),
+					Gvk:                in,
+					Path:               strings.Join(append(path, propname), "/"),
 				},
 			)
 		}
@@ -182,14 +143,16 @@ func getCRDPathConfig(
 				if !ok {
 					nameKey = "name"
 				}
-				configs.addNamereferencePathConfig(transformers.NewReferencePathConfig(
-					gvk.Gvk{Kind: kind, Version: version},
-					[]transformers.PathConfig{
-						{CreateIfNotPresent: false,
-							GroupVersionKind: &in,
-							Path:             append(path, propname, nameKey),
-						}}))
-
+				configs.AddNamereferencePathConfig(transformerconfig.ReferencePathConfig{
+					Gvk: gvk.Gvk{Kind: kind, Version: version},
+					PathConfigs: []transformerconfig.PathConfig{
+						{
+							CreateIfNotPresent: false,
+							Gvk:                in,
+							Path:               strings.Join(append(path, propname, nameKey), "/"),
+						},
+					},
+				})
 			}
 		}
 
@@ -198,14 +161,4 @@ func getCRDPathConfig(
 		}
 	}
 	return nil
-}
-
-// addPathConfigs add extra path configs to the default ones
-func addPathConfigs(p []pathConfigs) {
-	for _, pc := range p {
-		transformers.AddLabelsPathConfigs(pc.labelPathConfig)
-		transformers.AddAnnotationsPathConfigs(pc.annotationPathConfig)
-		transformers.AddNameReferencePathConfigs(pc.namereferencePathConfigs)
-		transformers.AddPrefixPathConfigs(pc.prefixPathConfig)
-	}
 }

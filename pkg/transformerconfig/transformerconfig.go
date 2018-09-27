@@ -33,6 +33,26 @@ type TransformerConfig struct {
 	VarReference      []PathConfig          `json:"varReference,omitempty" yaml:"varReference,omitempty"`
 }
 
+// AddPrefixPathConfig adds a PathConfig to NamePrefix
+func (t *TransformerConfig) AddPrefixPathConfig(config PathConfig) {
+	t.NamePrefix = append(t.NamePrefix, config)
+}
+
+// AddLabelPathConfig adds a PathConfig to CommonLabels
+func (t *TransformerConfig) AddLabelPathConfig(config PathConfig) {
+	t.CommonLabels = append(t.CommonLabels, config)
+}
+
+// AddAnnotationPathConfig adds a PathConfig to CommonAnnotations
+func (t *TransformerConfig) AddAnnotationPathConfig(config PathConfig) {
+	t.CommonAnnotations = append(t.CommonAnnotations, config)
+}
+
+// AddNamereferencePathConfig adds a ReferencePathConfig to NameReference
+func (t *TransformerConfig) AddNamereferencePathConfig(config ReferencePathConfig) {
+	t.NameReference = mergeNameReferencePathConfigs(t.NameReference, []ReferencePathConfig{config})
+}
+
 // Merge merges two TransformerConfigs objects into a new TransformerConfig object
 func (t *TransformerConfig) Merge(input *TransformerConfig) *TransformerConfig {
 	merged := &TransformerConfig{}
@@ -70,4 +90,9 @@ func MakeTransformerConfigFromBytes(data []byte) (*TransformerConfig, error) {
 		return nil, err
 	}
 	return &t, nil
+}
+
+// MakeEmptyTransformerConfig returns an empty TransformerConfig object
+func MakeEmptyTransformerConfig() *TransformerConfig {
+	return &TransformerConfig{}
 }

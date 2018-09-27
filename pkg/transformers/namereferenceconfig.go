@@ -918,28 +918,3 @@ var defaultNameReferencePathConfigs = []ReferencePathConfig{
 		},
 	},
 }
-
-// AddNameReferencePathConfigs adds extra reference path configs to the default one
-func AddNameReferencePathConfigs(r []ReferencePathConfig) {
-	for _, p := range r {
-		defaultNameReferencePathConfigs = MergeNameReferencePathConfigs(defaultNameReferencePathConfigs, p)
-	}
-}
-
-// MergeNameReferencePathConfigs merges one ReferencePathConfig into a slice of ReferencePathConfig
-func MergeNameReferencePathConfigs(configs []ReferencePathConfig, config ReferencePathConfig) []ReferencePathConfig {
-	var result []ReferencePathConfig
-	found := false
-	for _, c := range configs {
-		if c.referencedGVK == config.referencedGVK {
-			c.pathConfigs = append(c.pathConfigs, config.pathConfigs...)
-			found = true
-		}
-		result = append(result, c)
-	}
-
-	if !found {
-		result = append(result, config)
-	}
-	return result
-}
