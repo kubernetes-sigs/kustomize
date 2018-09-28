@@ -184,12 +184,8 @@ func TestNamespaceRun(t *testing.T) {
 			}),
 	}
 
-	tcfg, err := transformerconfig.MakeDefaultTransformerConfig()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	nst := NewNamespaceTransformer("test", tcfg.NameSpace)
-	err = nst.Transform(m)
+	nst := NewNamespaceTransformer("test", transformerconfig.MakeDefaultTransformerConfig().NameSpace)
+	err := nst.Transform(m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
