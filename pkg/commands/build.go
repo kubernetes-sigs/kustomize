@@ -19,15 +19,14 @@ package commands
 import (
 	"errors"
 	"io"
+	"log"
 	"strings"
 
 	"github.com/spf13/cobra"
-
-	"log"
-	"sigs.k8s.io/kustomize/pkg/app"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/loader"
+	"sigs.k8s.io/kustomize/pkg/target"
 	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 )
 
@@ -121,13 +120,12 @@ func (o *buildOptions) RunBuild(out io.Writer, fSys fs.FileSystem) error {
 		return err
 	}
 	defer rootLoader.Cleanup()
-
-	application, err := app.NewApplication(
+	target, err := target.NewKustTarget(
 		rootLoader, fSys, makeTransformerconfig(fSys, o.transformerconfigPaths))
 	if err != nil {
 		return err
 	}
-	allResources, err := application.MakeCustomizedResMap()
+	allResources, err := target.MakeCustomizedResMap()
 	if err != nil {
 		return err
 	}
