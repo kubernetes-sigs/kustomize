@@ -17,12 +17,13 @@ limitations under the License.
 package commands
 
 import (
+	"errors"
 	"io"
+	"strings"
 
 	"github.com/spf13/cobra"
 
-	"errors"
-
+	"log"
 	"sigs.k8s.io/kustomize/pkg/app"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
@@ -31,8 +32,9 @@ import (
 )
 
 type buildOptions struct {
-	kustomizationPath string
-	outputPath        string
+	kustomizationPath      string
+	outputPath             string
+	transformerconfigPaths []string
 }
 
 var examples = `
@@ -48,11 +50,17 @@ url examples:
   sigs.k8s.io/kustomize//examples/multibases?ref=v1.0.6
   github.com/Liujingfang1/mysql
   github.com/Liujingfang1/kustomize//examples/helloWorld?ref=repoUrl2
+
+Advanced usage:
+Use different transformer configurations by passing files to kustomize
+    build somedir -t someconfigdir
+    build somedir -t some-transformer-configfile,another-transformer-configfile
 `
 
 // newCmdBuild creates a new build command.
 func newCmdBuild(out io.Writer, fs fs.FileSystem) *cobra.Command {
 	var o buildOptions
+	var p string
 
 	cmd := &cobra.Command{
 		Use:          "build [path]",
@@ -60,7 +68,7 @@ func newCmdBuild(out io.Writer, fs fs.FileSystem) *cobra.Command {
 		Example:      examples,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := o.Validate(args)
+			err := o.Validate(args, p, fs)
 			if err != nil {
 				return err
 			}
@@ -71,11 +79,15 @@ func newCmdBuild(out io.Writer, fs fs.FileSystem) *cobra.Command {
 		&o.outputPath,
 		"output", "o", "",
 		"If specified, write the build output to this path.")
+	cmd.Flags().StringVarP(
+		&p,
+		"transformer-config", "t", "",
+		"If specified, use the transformer configs load from these files.")
 	return cmd
 }
 
 // Validate validates build command.
-func (o *buildOptions) Validate(args []string) error {
+func (o *buildOptions) Validate(args []string, p string, fs fs.FileSystem) error {
 	if len(args) > 1 {
 		return errors.New("specify one path to " + constants.KustomizationFileName)
 	}
@@ -84,6 +96,21 @@ func (o *buildOptions) Validate(args []string) error {
 		return nil
 	}
 	o.kustomizationPath = args[0]
+
+	if p == "" {
+		return nil
+	}
+
+	if fs.IsDir(p) {
+		paths, err := fs.Glob(p + "/*")
+		if err != nil {
+			return err
+		}
+		o.transformerconfigPaths = paths
+	} else {
+		o.transformerconfigPaths = strings.Split(p, ",")
+	}
+
 	return nil
 }
 
@@ -94,8 +121,9 @@ func (o *buildOptions) RunBuild(out io.Writer, fSys fs.FileSystem) error {
 		return err
 	}
 	defer rootLoader.Cleanup()
+
 	application, err := app.NewApplication(
-		rootLoader, fSys, transformerconfig.MakeDefaultTransformerConfig())
+		rootLoader, fSys, makeTransformerconfig(fSys, o.transformerconfigPaths))
 	if err != nil {
 		return err
 	}
@@ -113,4 +141,21 @@ func (o *buildOptions) RunBuild(out io.Writer, fSys fs.FileSystem) error {
 	}
 	_, err = out.Write(res)
 	return err
+}
+
+// makeTransformerConfig returns a complete TransformerConfig object from either files
+// or the default configs
+func makeTransformerconfig(fSys fs.FileSystem, paths []string) *transformerconfig.TransformerConfig {
+	ldr, err := loader.NewLoader(".", "", fSys)
+	if err != nil {
+		log.Fatalf("error creating loader to load transformer configurations %v\n", err)
+	}
+	if paths == nil || len(paths) == 0 {
+		return transformerconfig.MakeDefaultTransformerConfig()
+	}
+	t, err := transformerconfig.MakeTransformerConfigFromFiles(ldr, paths)
+	if err != nil {
+		log.Fatalf("failed to load transformer configrations %v\n", err)
+	}
+	return t
 }
