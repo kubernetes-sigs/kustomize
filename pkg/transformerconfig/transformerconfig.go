@@ -20,6 +20,7 @@ package transformerconfig
 
 import (
 	"github.com/ghodss/yaml"
+	"log"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/transformerconfig/defaultconfig"
 )
@@ -98,7 +99,12 @@ func MakeEmptyTransformerConfig() *TransformerConfig {
 	return &TransformerConfig{}
 }
 
-// MakeDefaultTransformerConfig returns a TransformerConfig object from the default configurations
-func MakeDefaultTransformerConfig() (*TransformerConfig, error) {
-	return MakeTransformerConfigFromBytes(defaultconfig.GetDefaultPathConfigs())
+// MakeDefaultTransformerConfig returns a default TransformerConfig.
+// This should never fail, hence the Fatal panic.
+func MakeDefaultTransformerConfig() *TransformerConfig {
+	c, err := MakeTransformerConfigFromBytes(defaultconfig.GetDefaultPathConfigs())
+	if err != nil {
+		log.Fatalf("Unable to make default transformconfig: %v", err)
+	}
+	return c
 }
