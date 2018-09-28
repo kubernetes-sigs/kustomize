@@ -30,6 +30,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 )
 
 const (
@@ -203,7 +204,8 @@ func TestResources1(t *testing.T) {
 	l := makeLoader1(t)
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
-	app, err := NewApplication(l, fakeFs)
+	cfg, _ := transformerconfig.MakeDefaultTransformerConfig()
+	app, err := NewApplication(l, fakeFs, cfg)
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
@@ -226,7 +228,8 @@ func TestResourceNotFound(t *testing.T) {
 	}
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
-	app, err := NewApplication(l, fakeFs)
+	cfg, _ := transformerconfig.MakeDefaultTransformerConfig()
+	app, err := NewApplication(l, fakeFs, cfg)
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
@@ -247,7 +250,8 @@ func TestSecretTimeout(t *testing.T) {
 	}
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
-	app, err := NewApplication(l, fakeFs)
+	cfg, _ := transformerconfig.MakeDefaultTransformerConfig()
+	app, err := NewApplication(l, fakeFs, cfg)
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}

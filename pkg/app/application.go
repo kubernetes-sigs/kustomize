@@ -37,6 +37,7 @@ import (
 	patchtransformer "sigs.k8s.io/kustomize/pkg/patch/transformer"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 	"sigs.k8s.io/kustomize/pkg/transformers"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -49,10 +50,11 @@ type Application struct {
 	kustomization *types.Kustomization
 	ldr           loader.Loader
 	fSys          fs.FileSystem
+	tcfg          *transformerconfig.TransformerConfig
 }
 
 // NewApplication returns a new instance of Application primed with a Loader.
-func NewApplication(ldr loader.Loader, fSys fs.FileSystem) (*Application, error) {
+func NewApplication(ldr loader.Loader, fSys fs.FileSystem, tcfg *transformerconfig.TransformerConfig) (*Application, error) {
 	content, err := ldr.Load(constants.KustomizationFileName)
 	if err != nil {
 		return nil, err
@@ -63,7 +65,12 @@ func NewApplication(ldr loader.Loader, fSys fs.FileSystem) (*Application, error)
 	if err != nil {
 		return nil, err
 	}
-	return &Application{kustomization: &m, ldr: ldr, fSys: fSys}, nil
+	return &Application{
+		kustomization: &m,
+		ldr:           ldr,
+		fSys:          fSys,
+		tcfg:          tcfg,
+	}, nil
 }
 
 func unmarshal(y []byte, o interface{}) error {
@@ -95,7 +102,7 @@ func (a *Application) resolveRefsToGeneratedResources(m resmap.ResMap) (resmap.R
 	}
 
 	var r []transformers.Transformer
-	t, err := transformers.NewDefaultingNameReferenceTransformer()
+	t, err := transformers.NewNameReferenceTransformer(a.tcfg.NameReference)
 	if err != nil {
 		return nil, err
 	}
@@ -105,10 +112,7 @@ func (a *Application) resolveRefsToGeneratedResources(m resmap.ResMap) (resmap.R
 	if err != nil {
 		return nil, err
 	}
-	t, err = transformers.NewRefVarTransformer(refVars)
-	if err != nil {
-		return nil, err
-	}
+	t = transformers.NewRefVarTransformer(refVars, a.tcfg.VarReference)
 	r = append(r, t)
 
 	err = transformers.NewMultiTransformer(r).Transform(m)
@@ -125,7 +129,8 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 	if err != nil {
 		errs.Append(errors.Wrap(err, "loadResMapFromBasesAndResources"))
 	}
-	_, err = crds.RegisterCRDs(a.ldr, a.kustomization.Crds)
+	crdPathConfigs, err := crds.RegisterCRDs(a.ldr, a.kustomization.Crds)
+	a.tcfg = a.tcfg.Merge(crdPathConfigs)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "RegisterCRDs"))
 	}
@@ -209,7 +214,7 @@ func (a *Application) loadCustomizedBases() (resmap.ResMap, *interror.Kustomizat
 			errs.Append(errors.Wrap(err, "couldn't make ldr for "+path))
 			continue
 		}
-		app, err := NewApplication(ldr, a.fSys)
+		app, err := NewApplication(ldr, a.fSys, a.tcfg)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "couldn't make app for "+path))
 			continue
@@ -238,7 +243,7 @@ func (a *Application) loadBasesAsFlatList() ([]*Application, error) {
 			errs.Append(err)
 			continue
 		}
-		a, err := NewApplication(ldr, a.fSys)
+		a, err := NewApplication(ldr, a.fSys, a.tcfg)
 		if err != nil {
 			errs.Append(err)
 			continue
@@ -259,18 +264,18 @@ func (a *Application) newTransformer(patches []*resource.Resource) (transformers
 		return nil, err
 	}
 	r = append(r, t)
-	r = append(r, transformers.NewNamespaceTransformer(string(a.kustomization.Namespace)))
-	t, err = transformers.NewDefaultingNamePrefixTransformer(string(a.kustomization.NamePrefix))
+	r = append(r, transformers.NewNamespaceTransformer(string(a.kustomization.Namespace), a.tcfg.NameSpace))
+	t, err = transformers.NewNamePrefixTransformer(string(a.kustomization.NamePrefix), a.tcfg.NamePrefix)
 	if err != nil {
 		return nil, err
 	}
 	r = append(r, t)
-	t, err = transformers.NewDefaultingLabelsMapTransformer(a.kustomization.CommonLabels)
+	t, err = transformers.NewLabelsMapTransformer(a.kustomization.CommonLabels, a.tcfg.CommonLabels)
 	if err != nil {
 		return nil, err
 	}
 	r = append(r, t)
-	t, err = transformers.NewDefaultingAnnotationsMapTransformer(a.kustomization.CommonAnnotations)
+	t, err = transformers.NewAnnotationsMapTransformer(a.kustomization.CommonAnnotations, a.tcfg.CommonAnnotations)
 	if err != nil {
 		return nil, err
 	}
