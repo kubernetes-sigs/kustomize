@@ -23,43 +23,32 @@ import (
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 )
 
 // namePrefixTransformer contains the prefix and the path config for each field that
 // the name prefix will be applied.
 type namePrefixTransformer struct {
 	prefix          string
-	pathConfigs     []PathConfig
-	skipPathConfigs []PathConfig
+	pathConfigs     []transformerconfig.PathConfig
+	skipPathConfigs []transformerconfig.PathConfig
 }
 
 var _ Transformer = &namePrefixTransformer{}
 
-var defaultNamePrefixPathConfigs = []PathConfig{
+var skipNamePrefixPathConfigs = []transformerconfig.PathConfig{
 	{
-		Path:               []string{"metadata", "name"},
-		CreateIfNotPresent: false,
-	},
-}
-
-var skipNamePrefixPathConfigs = []PathConfig{
-	{
-		GroupVersionKind: &gvk.Gvk{Kind: "CustomResourceDefinition"},
+		Gvk: gvk.Gvk{Kind: "CustomResourceDefinition"},
 	},
 }
 
 // deprecateNamePrefixPathConfig will be moved into skipNamePrefixPathConfigs in next release
-var deprecateNamePrefixPathConfig = PathConfig{
-	GroupVersionKind: &gvk.Gvk{Kind: "Namespace"},
-}
-
-// NewDefaultingNamePrefixTransformer construct a namePrefixTransformer with defaultNamePrefixPathConfigs.
-func NewDefaultingNamePrefixTransformer(nameprefix string) (Transformer, error) {
-	return NewNamePrefixTransformer(defaultNamePrefixPathConfigs, nameprefix)
+var deprecateNamePrefixPathConfig = transformerconfig.PathConfig{
+	Gvk: gvk.Gvk{Kind: "Namespace"},
 }
 
 // NewNamePrefixTransformer construct a namePrefixTransformer.
-func NewNamePrefixTransformer(pc []PathConfig, np string) (Transformer, error) {
+func NewNamePrefixTransformer(np string, pc []transformerconfig.PathConfig) (Transformer, error) {
 	if len(np) == 0 {
 		return NewNoOpTransformer(), nil
 	}
@@ -76,7 +65,7 @@ func (o *namePrefixTransformer) Transform(m resmap.ResMap) error {
 	for id := range m {
 		found := false
 		for _, path := range o.skipPathConfigs {
-			if id.Gvk().IsSelected(path.GroupVersionKind) {
+			if id.Gvk().IsSelected(&path.Gvk) {
 				found = true
 				break
 			}
@@ -88,15 +77,15 @@ func (o *namePrefixTransformer) Transform(m resmap.ResMap) error {
 	}
 
 	for id := range mf {
-		if id.Gvk().IsSelected(deprecateNamePrefixPathConfig.GroupVersionKind) {
+		if id.Gvk().IsSelected(&deprecateNamePrefixPathConfig.Gvk) {
 			log.Println("Adding nameprefix to Namespace resource will be deprecated in next release.")
 		}
 		objMap := mf[id].UnstructuredContent()
 		for _, path := range o.pathConfigs {
-			if !id.Gvk().IsSelected(path.GroupVersionKind) {
+			if !id.Gvk().IsSelected(&path.Gvk) {
 				continue
 			}
-			err := mutateField(objMap, path.Path, path.CreateIfNotPresent, o.addPrefix)
+			err := mutateField(objMap, path.PathSlice(), path.CreateIfNotPresent, o.addPrefix)
 			if err != nil {
 				return err
 			}
