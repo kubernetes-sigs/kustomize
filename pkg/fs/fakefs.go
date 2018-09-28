@@ -48,6 +48,11 @@ func (fs *FakeFS) Mkdir(name string) error {
 	return nil
 }
 
+// MkdirAll delegates to Mkdir
+func (fs *FakeFS) MkdirAll(name string) error {
+	return fs.Mkdir(name)
+}
+
 // Open returns a fake file in the open state.
 func (fs *FakeFS) Open(name string) (File, error) {
 	if _, found := fs.m[name]; !found {
