@@ -19,39 +19,33 @@ package transformers
 import (
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 )
 
 type namespaceTransformer struct {
 	namespace       string
-	pathConfigs     []PathConfig
-	skipPathConfigs []PathConfig
+	pathConfigs     []transformerconfig.PathConfig
+	skipPathConfigs []transformerconfig.PathConfig
 }
 
-var namespacePathConfigs = []PathConfig{
+var skipNamespacePathConfigs = []transformerconfig.PathConfig{
 	{
-		Path:               []string{"metadata", "namespace"},
-		CreateIfNotPresent: true,
-	},
-}
-
-var skipNamespacePathConfigs = []PathConfig{
-	{
-		GroupVersionKind: &gvk.Gvk{
+		Gvk: gvk.Gvk{
 			Kind: "Namespace",
 		},
 	},
 	{
-		GroupVersionKind: &gvk.Gvk{
+		Gvk: gvk.Gvk{
 			Kind: "ClusterRoleBinding",
 		},
 	},
 	{
-		GroupVersionKind: &gvk.Gvk{
+		Gvk: gvk.Gvk{
 			Kind: "ClusterRole",
 		},
 	},
 	{
-		GroupVersionKind: &gvk.Gvk{
+		Gvk: gvk.Gvk{
 			Kind: "CustomResourceDefinition",
 		},
 	},
@@ -60,14 +54,14 @@ var skipNamespacePathConfigs = []PathConfig{
 var _ Transformer = &namespaceTransformer{}
 
 // NewNamespaceTransformer construct a namespaceTransformer.
-func NewNamespaceTransformer(ns string) Transformer {
+func NewNamespaceTransformer(ns string, cf []transformerconfig.PathConfig) Transformer {
 	if len(ns) == 0 {
 		return NewNoOpTransformer()
 	}
 
 	return &namespaceTransformer{
 		namespace:       ns,
-		pathConfigs:     namespacePathConfigs,
+		pathConfigs:     cf,
 		skipPathConfigs: skipNamespacePathConfigs,
 	}
 }
@@ -79,7 +73,7 @@ func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
 	for id := range m {
 		found := false
 		for _, path := range o.skipPathConfigs {
-			if id.Gvk().IsSelected(path.GroupVersionKind) {
+			if id.Gvk().IsSelected(&path.Gvk) {
 				found = true
 				break
 			}
@@ -93,11 +87,11 @@ func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
 	for id := range mf {
 		objMap := mf[id].UnstructuredContent()
 		for _, path := range o.pathConfigs {
-			if !id.Gvk().IsSelected(path.GroupVersionKind) {
+			if !id.Gvk().IsSelected(&path.Gvk) {
 				continue
 			}
 
-			err := mutateField(objMap, path.Path, path.CreateIfNotPresent, func(_ interface{}) (interface{}, error) {
+			err := mutateField(objMap, path.PathSlice(), path.CreateIfNotPresent, func(_ interface{}) (interface{}, error) {
 				return o.namespace, nil
 			})
 			if err != nil {

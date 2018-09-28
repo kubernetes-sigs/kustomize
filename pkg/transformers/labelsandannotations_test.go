@@ -23,6 +23,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 )
 
 var service = gvk.Gvk{Version: "v1", Kind: "Service"}
@@ -414,7 +415,11 @@ func TestLabelsRun(t *testing.T) {
 			}),
 	}
 
-	lt, err := NewDefaultingLabelsMapTransformer(map[string]string{"label-key1": "label-value1", "label-key2": "label-value2"})
+	tcfg, err := transformerconfig.MakeDefaultTransformerConfig()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	lt, err := NewLabelsMapTransformer(map[string]string{"label-key1": "label-value1", "label-key2": "label-value2"}, tcfg.CommonLabels)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -549,7 +554,11 @@ func TestAnnotationsRun(t *testing.T) {
 				},
 			}),
 	}
-	at, err := NewDefaultingAnnotationsMapTransformer(map[string]string{"anno-key1": "anno-value1", "anno-key2": "anno-value2"})
+	tcfg, err := transformerconfig.MakeDefaultTransformerConfig()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	at, err := NewAnnotationsMapTransformer(map[string]string{"anno-key1": "anno-value1", "anno-key2": "anno-value2"}, tcfg.CommonAnnotations)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
