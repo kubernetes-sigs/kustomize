@@ -143,8 +143,6 @@ func TestMerge(t *testing.T) {
 }
 
 func TestMakeDefaultTransformerConfig(t *testing.T) {
-	_, err := MakeDefaultTransformerConfig()
-	if err != nil {
-		t.Fatalf("unexpected error %v\n", err)
-	}
+	// Confirm default can be made without fatal error inside call.
+	_ = MakeDefaultTransformerConfig()
 }

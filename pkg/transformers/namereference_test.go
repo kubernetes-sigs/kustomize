@@ -322,12 +322,7 @@ func TestNameReferenceRun(t *testing.T) {
 			},
 		},
 	)
-
-	tcfg, err := transformerconfig.MakeDefaultTransformerConfig()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	nrt, err := NewNameReferenceTransformer(tcfg.NameReference)
+	nrt, err := NewNameReferenceTransformer(transformerconfig.MakeDefaultTransformerConfig().NameReference)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

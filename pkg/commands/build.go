@@ -94,28 +94,20 @@ func (o *buildOptions) RunBuild(out io.Writer, fSys fs.FileSystem) error {
 		return err
 	}
 	defer rootLoader.Cleanup()
-
-	cfg, err := transformerconfig.MakeDefaultTransformerConfig()
+	application, err := app.NewApplication(
+		rootLoader, fSys, transformerconfig.MakeDefaultTransformerConfig())
 	if err != nil {
 		return err
 	}
-	application, err := app.NewApplication(rootLoader, fSys, cfg)
-	if err != nil {
-		return err
-	}
-
 	allResources, err := application.MakeCustomizedResMap()
-
 	if err != nil {
 		return err
 	}
-
 	// Output the objects.
 	res, err := allResources.EncodeAsYaml()
 	if err != nil {
 		return err
 	}
-
 	if o.outputPath != "" {
 		return fSys.WriteFile(o.outputPath, res)
 	}
