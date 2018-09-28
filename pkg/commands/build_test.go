@@ -56,7 +56,7 @@ func TestBuildValidate(t *testing.T) {
 	}
 	for _, mycase := range cases {
 		opts := buildOptions{}
-		e := opts.Validate(mycase.args)
+		e := opts.Validate(mycase.args, "", nil)
 		if len(mycase.erMsg) > 0 {
 			if e == nil {
 				t.Errorf("%s: Expected an error %v", mycase.name, mycase.erMsg)
