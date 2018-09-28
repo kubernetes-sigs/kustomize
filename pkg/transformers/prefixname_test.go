@@ -79,11 +79,8 @@ func TestPrefixNameRun(t *testing.T) {
 			}),
 	}
 
-	tcfg, err := transformerconfig.MakeDefaultTransformerConfig()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	npt, err := NewNamePrefixTransformer("someprefix-", tcfg.NamePrefix)
+	npt, err := NewNamePrefixTransformer(
+		"someprefix-", transformerconfig.MakeDefaultTransformerConfig().NamePrefix)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
