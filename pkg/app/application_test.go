@@ -204,8 +204,7 @@ func TestResources1(t *testing.T) {
 	l := makeLoader1(t)
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
-	cfg, _ := transformerconfig.MakeDefaultTransformerConfig()
-	app, err := NewApplication(l, fakeFs, cfg)
+	app, err := NewApplication(l, fakeFs, transformerconfig.MakeDefaultTransformerConfig())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
@@ -228,8 +227,7 @@ func TestResourceNotFound(t *testing.T) {
 	}
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
-	cfg, _ := transformerconfig.MakeDefaultTransformerConfig()
-	app, err := NewApplication(l, fakeFs, cfg)
+	app, err := NewApplication(l, fakeFs, transformerconfig.MakeDefaultTransformerConfig())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
@@ -250,8 +248,7 @@ func TestSecretTimeout(t *testing.T) {
 	}
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
-	cfg, _ := transformerconfig.MakeDefaultTransformerConfig()
-	app, err := NewApplication(l, fakeFs, cfg)
+	app, err := NewApplication(l, fakeFs, transformerconfig.MakeDefaultTransformerConfig())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
