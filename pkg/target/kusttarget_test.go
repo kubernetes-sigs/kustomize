@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package app
+package target
 
 import (
 	"encoding/base64"
@@ -204,11 +204,11 @@ func TestResources1(t *testing.T) {
 	l := makeLoader1(t)
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
-	app, err := NewApplication(l, fakeFs, transformerconfig.MakeDefaultTransformerConfig())
+	target, err := NewKustTarget(l, fakeFs, transformerconfig.MakeDefaultTransformerConfig())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
-	actual, err := app.MakeCustomizedResMap()
+	actual, err := target.MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Unexpected Resources error %v", err)
 	}
@@ -227,11 +227,11 @@ func TestResourceNotFound(t *testing.T) {
 	}
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
-	app, err := NewApplication(l, fakeFs, transformerconfig.MakeDefaultTransformerConfig())
+	target, err := NewKustTarget(l, fakeFs, transformerconfig.MakeDefaultTransformerConfig())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
-	_, err = app.MakeCustomizedResMap()
+	_, err = target.MakeCustomizedResMap()
 	if err == nil {
 		t.Fatalf("Didn't get the expected error for an unknown resource")
 	}
@@ -248,11 +248,11 @@ func TestSecretTimeout(t *testing.T) {
 	}
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
-	app, err := NewApplication(l, fakeFs, transformerconfig.MakeDefaultTransformerConfig())
+	target, err := NewKustTarget(l, fakeFs, transformerconfig.MakeDefaultTransformerConfig())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
-	_, err = app.MakeCustomizedResMap()
+	_, err = target.MakeCustomizedResMap()
 	if err == nil {
 		t.Fatalf("Didn't get the expected error for an unknown resource")
 	}
