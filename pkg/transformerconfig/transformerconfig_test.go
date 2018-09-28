@@ -20,7 +20,9 @@ import (
 	"testing"
 
 	"reflect"
+	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/loader"
 )
 
 func TestAddNameReferencePathConfigs(t *testing.T) {
@@ -145,4 +147,35 @@ func TestMerge(t *testing.T) {
 func TestMakeDefaultTransformerConfig(t *testing.T) {
 	// Confirm default can be made without fatal error inside call.
 	_ = MakeDefaultTransformerConfig()
+}
+
+func makeFakeLoaderAndOutput() (loader.Loader, *TransformerConfig, *TransformerConfig) {
+	transformerConfig := `
+namePrefix:
+- path: nameprefix/path
+  kind: SomeKind
+`
+	fakeFS := fs.MakeFakeFS()
+	fakeFS.WriteFile("transformerconfig/test/config.yaml", []byte(transformerConfig))
+	ldr := loader.NewFileLoader(fakeFS)
+	expected := &TransformerConfig{
+		NamePrefix: []PathConfig{
+			{
+				Gvk:  gvk.Gvk{Kind: "SomeKind"},
+				Path: "nameprefix/path",
+			},
+		},
+	}
+	return ldr, expected, MakeDefaultTransformerConfig()
+}
+func TestMakeTransformerConfigFromFiles(t *testing.T) {
+	ldr, expected, _ := makeFakeLoaderAndOutput()
+	tcfg, err := MakeTransformerConfigFromFiles(ldr, []string{"transformerconfig/test/config.yaml"})
+	if err != nil {
+		t.Fatalf("unexpected error %v", err)
+	}
+
+	if !reflect.DeepEqual(tcfg, expected) {
+		t.Fatalf("expected %v\n but go6t %v\n", expected, tcfg)
+	}
 }
