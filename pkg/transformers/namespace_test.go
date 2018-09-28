@@ -22,6 +22,7 @@ import (
 
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 )
 
 func TestNamespaceRun(t *testing.T) {
@@ -183,8 +184,12 @@ func TestNamespaceRun(t *testing.T) {
 			}),
 	}
 
-	nst := NewNamespaceTransformer("test")
-	err := nst.Transform(m)
+	tcfg, err := transformerconfig.MakeDefaultTransformerConfig()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	nst := NewNamespaceTransformer("test", tcfg.NameSpace)
+	err = nst.Transform(m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
