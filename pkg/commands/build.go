@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/loader"
+	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 )
 
 type buildOptions struct {
@@ -94,7 +95,11 @@ func (o *buildOptions) RunBuild(out io.Writer, fSys fs.FileSystem) error {
 	}
 	defer rootLoader.Cleanup()
 
-	application, err := app.NewApplication(rootLoader, fSys)
+	cfg, err := transformerconfig.MakeDefaultTransformerConfig()
+	if err != nil {
+		return err
+	}
+	application, err := app.NewApplication(rootLoader, fSys, cfg)
 	if err != nil {
 		return err
 	}
