@@ -14,9 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package app implements state for the set of all resources being customized.
-// Should rename this - there's nothing "app"y about it.
-package app
+// Package target implements state for the set of all resources being customized.
+package target
 
 import (
 	"bytes"
@@ -42,19 +41,18 @@ import (
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
-// Application implements the guts of the kustomize 'build' command.
-// TODO: Change name, as "application" is overloaded and somewhat
-// misleading (one can customize an RBAC policy).  Perhaps "Target"
-// https://github.com/kubernetes-sigs/kustomize/blob/master/docs/glossary.md#target
-type Application struct {
+// KustTarget encapsulates the entirety of a kustomization build.
+type KustTarget struct {
 	kustomization *types.Kustomization
 	ldr           loader.Loader
 	fSys          fs.FileSystem
 	tcfg          *transformerconfig.TransformerConfig
 }
 
-// NewApplication returns a new instance of Application primed with a Loader.
-func NewApplication(ldr loader.Loader, fSys fs.FileSystem, tcfg *transformerconfig.TransformerConfig) (*Application, error) {
+// NewKustTarget returns a new instance of KustTarget primed with a Loader.
+func NewKustTarget(
+	ldr loader.Loader, fSys fs.FileSystem,
+	tcfg *transformerconfig.TransformerConfig) (*KustTarget, error) {
 	content, err := ldr.Load(constants.KustomizationFileName)
 	if err != nil {
 		return nil, err
@@ -65,7 +63,7 @@ func NewApplication(ldr loader.Loader, fSys fs.FileSystem, tcfg *transformerconf
 	if err != nil {
 		return nil, err
 	}
-	return &Application{
+	return &KustTarget{
 		kustomization: &m,
 		ldr:           ldr,
 		fSys:          fSys,
@@ -86,33 +84,33 @@ func unmarshal(y []byte, o interface{}) error {
 
 // MakeCustomizedResMap creates a ResMap per kustomization instructions.
 // The Resources in the returned ResMap are fully customized.
-func (a *Application) MakeCustomizedResMap() (resmap.ResMap, error) {
-	m, err := a.loadCustomizedResMap()
+func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
+	m, err := kt.loadCustomizedResMap()
 	if err != nil {
 		return nil, err
 	}
-	return a.resolveRefsToGeneratedResources(m)
+	return kt.resolveRefsToGeneratedResources(m)
 }
 
 // resolveRefsToGeneratedResources fixes all name references.
-func (a *Application) resolveRefsToGeneratedResources(m resmap.ResMap) (resmap.ResMap, error) {
+func (kt *KustTarget) resolveRefsToGeneratedResources(m resmap.ResMap) (resmap.ResMap, error) {
 	err := transformers.NewNameHashTransformer().Transform(m)
 	if err != nil {
 		return nil, err
 	}
 
 	var r []transformers.Transformer
-	t, err := transformers.NewNameReferenceTransformer(a.tcfg.NameReference)
+	t, err := transformers.NewNameReferenceTransformer(kt.tcfg.NameReference)
 	if err != nil {
 		return nil, err
 	}
 	r = append(r, t)
 
-	refVars, err := a.resolveRefVars(m)
+	refVars, err := kt.resolveRefVars(m)
 	if err != nil {
 		return nil, err
 	}
-	t = transformers.NewRefVarTransformer(refVars, a.tcfg.VarReference)
+	t = transformers.NewRefVarTransformer(refVars, kt.tcfg.VarReference)
 	r = append(r, t)
 
 	err = transformers.NewMultiTransformer(r).Transform(m)
@@ -123,26 +121,26 @@ func (a *Application) resolveRefsToGeneratedResources(m resmap.ResMap) (resmap.R
 }
 
 // loadCustomizedResMap loads and customizes resources to build a ResMap.
-func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
+func (kt *KustTarget) loadCustomizedResMap() (resmap.ResMap, error) {
 	errs := &interror.KustomizationErrors{}
-	result, err := a.loadResMapFromBasesAndResources()
+	result, err := kt.loadResMapFromBasesAndResources()
 	if err != nil {
 		errs.Append(errors.Wrap(err, "loadResMapFromBasesAndResources"))
 	}
-	crdPathConfigs, err := crds.RegisterCRDs(a.ldr, a.kustomization.Crds)
-	a.tcfg = a.tcfg.Merge(crdPathConfigs)
+	crdPathConfigs, err := crds.RegisterCRDs(kt.ldr, kt.kustomization.Crds)
+	kt.tcfg = kt.tcfg.Merge(crdPathConfigs)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "RegisterCRDs"))
 	}
 	cms, err := resmap.NewResMapFromConfigMapArgs(
-		configmapandsecret.NewConfigMapFactory(a.fSys, a.ldr),
-		a.kustomization.ConfigMapGenerator)
+		configmapandsecret.NewConfigMapFactory(kt.fSys, kt.ldr),
+		kt.kustomization.ConfigMapGenerator)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromConfigMapArgs"))
 	}
 	secrets, err := resmap.NewResMapFromSecretArgs(
-		configmapandsecret.NewSecretFactory(a.fSys, a.ldr.Root()),
-		a.kustomization.SecretGenerator)
+		configmapandsecret.NewSecretFactory(kt.fSys, kt.ldr.Root()),
+		kt.kustomization.SecretGenerator)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromSecretArgs"))
 	}
@@ -156,8 +154,11 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 		return nil, err
 	}
 
-	a.kustomization.PatchesStrategicMerge = patch.Append(a.kustomization.PatchesStrategicMerge, a.kustomization.Patches...)
-	patches, err := resmap.NewResourceSliceFromPatches(a.ldr, a.kustomization.PatchesStrategicMerge)
+	kt.kustomization.PatchesStrategicMerge = patch.Append(
+		kt.kustomization.PatchesStrategicMerge,
+		kt.kustomization.Patches...)
+	patches, err := resmap.NewResourceSliceFromPatches(
+		kt.ldr, kt.kustomization.PatchesStrategicMerge)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResourceSliceFromPatches"))
 	}
@@ -167,17 +168,18 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 	}
 
 	var r []transformers.Transformer
-	t, err := a.newTransformer(patches)
+	t, err := kt.newTransformer(patches)
 	if err != nil {
 		return nil, err
 	}
 	r = append(r, t)
-	t, err = patchtransformer.NewPatchJson6902Factory(a.ldr).MakePatchJson6902Transformer(a.kustomization.PatchesJson6902)
+	t, err = patchtransformer.NewPatchJson6902Factory(kt.ldr).
+		MakePatchJson6902Transformer(kt.kustomization.PatchesJson6902)
 	if err != nil {
 		return nil, err
 	}
 	r = append(r, t)
-	t, err = transformers.NewImageTagTransformer(a.kustomization.ImageTags)
+	t, err = transformers.NewImageTagTransformer(kt.kustomization.ImageTags)
 	if err != nil {
 		return nil, err
 	}
@@ -191,9 +193,9 @@ func (a *Application) loadCustomizedResMap() (resmap.ResMap, error) {
 }
 
 // Gets Bases and Resources as advertised.
-func (a *Application) loadResMapFromBasesAndResources() (resmap.ResMap, error) {
-	bases, errs := a.loadCustomizedBases()
-	resources, err := resmap.NewResMapFromFiles(a.ldr, a.kustomization.Resources)
+func (kt *KustTarget) loadResMapFromBasesAndResources() (resmap.ResMap, error) {
+	bases, errs := kt.loadCustomizedBases()
+	resources, err := resmap.NewResMapFromFiles(kt.ldr, kt.kustomization.Resources)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "rawResources failed to read Resources"))
 	}
@@ -205,21 +207,21 @@ func (a *Application) loadResMapFromBasesAndResources() (resmap.ResMap, error) {
 
 // Loop through the Bases of this kustomization recursively loading resources.
 // Combine into one ResMap, demanding unique Ids for each resource.
-func (a *Application) loadCustomizedBases() (resmap.ResMap, *interror.KustomizationErrors) {
+func (kt *KustTarget) loadCustomizedBases() (resmap.ResMap, *interror.KustomizationErrors) {
 	var list []resmap.ResMap
 	errs := &interror.KustomizationErrors{}
-	for _, path := range a.kustomization.Bases {
-		ldr, err := a.ldr.New(path)
+	for _, path := range kt.kustomization.Bases {
+		ldr, err := kt.ldr.New(path)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "couldn't make ldr for "+path))
 			continue
 		}
-		app, err := NewApplication(ldr, a.fSys, a.tcfg)
+		target, err := NewKustTarget(ldr, kt.fSys, kt.tcfg)
 		if err != nil {
-			errs.Append(errors.Wrap(err, "couldn't make app for "+path))
+			errs.Append(errors.Wrap(err, "couldn't make target for "+path))
 			continue
 		}
-		resMap, err := app.loadCustomizedResMap()
+		resMap, err := target.loadCustomizedResMap()
 		if err != nil {
 			errs.Append(errors.Wrap(err, "SemiResources"))
 			continue
@@ -234,21 +236,21 @@ func (a *Application) loadCustomizedBases() (resmap.ResMap, *interror.Kustomizat
 	return result, errs
 }
 
-func (a *Application) loadBasesAsFlatList() ([]*Application, error) {
-	var result []*Application
+func (kt *KustTarget) loadBasesAsFlatList() ([]*KustTarget, error) {
+	var result []*KustTarget
 	errs := &interror.KustomizationErrors{}
-	for _, path := range a.kustomization.Bases {
-		ldr, err := a.ldr.New(path)
+	for _, path := range kt.kustomization.Bases {
+		ldr, err := kt.ldr.New(path)
 		if err != nil {
 			errs.Append(err)
 			continue
 		}
-		a, err := NewApplication(ldr, a.fSys, a.tcfg)
+		target, err := NewKustTarget(ldr, kt.fSys, kt.tcfg)
 		if err != nil {
 			errs.Append(err)
 			continue
 		}
-		result = append(result, a)
+		result = append(result, target)
 	}
 	if len(errs.Get()) > 0 {
 		return nil, errs
@@ -257,25 +259,29 @@ func (a *Application) loadBasesAsFlatList() ([]*Application, error) {
 }
 
 // newTransformer makes a Transformer that does everything except resolve generated names.
-func (a *Application) newTransformer(patches []*resource.Resource) (transformers.Transformer, error) {
+func (kt *KustTarget) newTransformer(patches []*resource.Resource) (transformers.Transformer, error) {
 	var r []transformers.Transformer
 	t, err := transformers.NewPatchTransformer(patches)
 	if err != nil {
 		return nil, err
 	}
 	r = append(r, t)
-	r = append(r, transformers.NewNamespaceTransformer(string(a.kustomization.Namespace), a.tcfg.NameSpace))
-	t, err = transformers.NewNamePrefixTransformer(string(a.kustomization.NamePrefix), a.tcfg.NamePrefix)
+	r = append(r, transformers.NewNamespaceTransformer(
+		string(kt.kustomization.Namespace), kt.tcfg.NameSpace))
+	t, err = transformers.NewNamePrefixTransformer(
+		string(kt.kustomization.NamePrefix), kt.tcfg.NamePrefix)
 	if err != nil {
 		return nil, err
 	}
 	r = append(r, t)
-	t, err = transformers.NewLabelsMapTransformer(a.kustomization.CommonLabels, a.tcfg.CommonLabels)
+	t, err = transformers.NewLabelsMapTransformer(
+		kt.kustomization.CommonLabels, kt.tcfg.CommonLabels)
 	if err != nil {
 		return nil, err
 	}
 	r = append(r, t)
-	t, err = transformers.NewAnnotationsMapTransformer(a.kustomization.CommonAnnotations, a.tcfg.CommonAnnotations)
+	t, err = transformers.NewAnnotationsMapTransformer(
+		kt.kustomization.CommonAnnotations, kt.tcfg.CommonAnnotations)
 	if err != nil {
 		return nil, err
 	}
@@ -283,9 +289,9 @@ func (a *Application) newTransformer(patches []*resource.Resource) (transformers
 	return transformers.NewMultiTransformer(r), nil
 }
 
-func (a *Application) resolveRefVars(m resmap.ResMap) (map[string]string, error) {
+func (kt *KustTarget) resolveRefVars(m resmap.ResMap) (map[string]string, error) {
 	result := map[string]string{}
-	vars, err := a.getAllVars()
+	vars, err := kt.getAllVars()
 	if err != nil {
 		return result, err
 	}
@@ -306,11 +312,11 @@ func (a *Application) resolveRefVars(m resmap.ResMap) (map[string]string, error)
 }
 
 // getAllVars returns all the "environment" style Var instances defined in the app.
-func (a *Application) getAllVars() ([]types.Var, error) {
+func (kt *KustTarget) getAllVars() ([]types.Var, error) {
 	var result []types.Var
 	errs := &interror.KustomizationErrors{}
 
-	bases, err := a.loadBasesAsFlatList()
+	bases, err := kt.loadBasesAsFlatList()
 	if err != nil {
 		return nil, err
 	}
@@ -325,7 +331,7 @@ func (a *Application) getAllVars() ([]types.Var, error) {
 		b.ldr.Cleanup()
 		result = append(result, vars...)
 	}
-	for _, v := range a.kustomization.Vars {
+	for _, v := range kt.kustomization.Vars {
 		v.Defaulting()
 		result = append(result, v)
 	}
