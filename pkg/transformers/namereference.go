@@ -23,23 +23,19 @@ import (
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 )
 
 // nameReferenceTransformer contains the referencing info between 2 GroupVersionKinds
 type nameReferenceTransformer struct {
-	pathConfigs []ReferencePathConfig
+	pathConfigs []transformerconfig.ReferencePathConfig
 }
 
 var _ Transformer = &nameReferenceTransformer{}
 
-// NewDefaultingNameReferenceTransformer constructs a nameReferenceTransformer
-// with defaultNameReferencepathConfigs.
-func NewDefaultingNameReferenceTransformer() (Transformer, error) {
-	return NewNameReferenceTransformer(defaultNameReferencePathConfigs)
-}
-
-// NewNameReferenceTransformer construct a nameReferenceTransformer.
-func NewNameReferenceTransformer(pc []ReferencePathConfig) (Transformer, error) {
+// NewNameReferenceTransformer constructs a nameReferenceTransformer
+// with a given Reference PathConfig slice
+func NewNameReferenceTransformer(pc []transformerconfig.ReferencePathConfig) (Transformer, error) {
 	if pc == nil {
 		return nil, errors.New("pathConfigs is not expected to be nil")
 	}
@@ -54,12 +50,12 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 	for id := range m {
 		objMap := m[id].UnstructuredContent()
 		for _, referencePathConfig := range o.pathConfigs {
-			for _, path := range referencePathConfig.pathConfigs {
-				if !id.Gvk().IsSelected(path.GroupVersionKind) {
+			for _, path := range referencePathConfig.PathConfigs {
+				if !id.Gvk().IsSelected(&path.Gvk) {
 					continue
 				}
-				err := mutateField(objMap, path.Path, path.CreateIfNotPresent,
-					o.updateNameReference(referencePathConfig.referencedGVK, m.FilterBy(id)))
+				err := mutateField(objMap, path.PathSlice(), path.CreateIfNotPresent,
+					o.updateNameReference(referencePathConfig.Gvk, m.FilterBy(id)))
 				if err != nil {
 					return err
 				}

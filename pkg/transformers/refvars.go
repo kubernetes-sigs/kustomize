@@ -4,106 +4,21 @@ import (
 	"fmt"
 
 	"sigs.k8s.io/kustomize/pkg/expansion"
-	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 )
 
 type refvarTransformer struct {
-	pathConfigs []PathConfig
+	pathConfigs []transformerconfig.PathConfig
 	vars        map[string]string
 }
 
 // NewRefVarTransformer returns a Trasformer that replaces $(VAR) style variables with values.
-func NewRefVarTransformer(vars map[string]string) (Transformer, error) {
+func NewRefVarTransformer(vars map[string]string, p []transformerconfig.PathConfig) Transformer {
 	return &refvarTransformer{
-		vars: vars,
-		pathConfigs: []PathConfig{
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "StatefulSet"},
-				Path:             []string{"spec", "template", "spec", "initContainers", "command"},
-			},
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "StatefulSet"},
-				Path:             []string{"spec", "template", "spec", "containers", "command"},
-			},
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "Deployment"},
-				Path:             []string{"spec", "template", "spec", "initContainers", "command"},
-			},
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "Deployment"},
-				Path:             []string{"spec", "template", "spec", "containers", "command"},
-			},
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "Job"},
-				Path:             []string{"spec", "template", "spec", "containers", "command"},
-			},
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "CronJob"},
-				Path:             []string{"spec", "jobTemplate", "spec", "template", "spec", "containers", "command"},
-			},
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "StatefulSet"},
-				Path:             []string{"spec", "template", "spec", "initContainers", "args"},
-			},
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "StatefulSet"},
-				Path:             []string{"spec", "template", "spec", "containers", "args"},
-			},
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "Deployment"},
-				Path:             []string{"spec", "template", "spec", "initContainers", "args"},
-			},
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "Deployment"},
-				Path:             []string{"spec", "template", "spec", "containers", "args"},
-			},
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "Job"},
-				Path:             []string{"spec", "template", "spec", "containers", "args"},
-			},
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "CronJob"},
-				Path:             []string{"spec", "jobTemplate", "spec", "template", "spec", "containers", "args"},
-			},
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "StatefulSet"},
-				Path:             []string{"spec", "template", "spec", "initContainers", "env", "value"},
-			},
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "StatefulSet"},
-				Path:             []string{"spec", "template", "spec", "containers", "env", "value"},
-			},
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "Deployment"},
-				Path:             []string{"spec", "template", "spec", "initContainers", "env", "value"},
-			},
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "Deployment"},
-				Path:             []string{"spec", "template", "spec", "containers", "env", "value"},
-			},
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "Job"},
-				Path:             []string{"spec", "template", "spec", "containers", "env", "value"},
-			},
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "CronJob"},
-				Path:             []string{"spec", "jobTemplate", "spec", "template", "spec", "containers", "env", "value"},
-			},
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "Pod"},
-				Path:             []string{"spec", "containers", "command"},
-			},
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "Pod"},
-				Path:             []string{"spec", "containers", "args"},
-			},
-			{
-				GroupVersionKind: &gvk.Gvk{Kind: "Pod"},
-				Path:             []string{"spec", "containers", "env", "value"},
-			},
-		},
-	}, nil
+		vars:        vars,
+		pathConfigs: p,
+	}
 }
 
 // Transform determines the final values of variables:
@@ -119,10 +34,10 @@ func (rv *refvarTransformer) Transform(resources resmap.ResMap) error {
 	for resId := range resources {
 		objMap := resources[resId].UnstructuredContent()
 		for _, pc := range rv.pathConfigs {
-			if !resId.Gvk().IsSelected(pc.GroupVersionKind) {
+			if !resId.Gvk().IsSelected(&pc.Gvk) {
 				continue
 			}
-			err := mutateField(objMap, pc.Path, false, func(in interface{}) (interface{}, error) {
+			err := mutateField(objMap, pc.PathSlice(), false, func(in interface{}) (interface{}, error) {
 				var (
 					mappingFunc = expansion.MappingFuncFor(rv.vars)
 				)
