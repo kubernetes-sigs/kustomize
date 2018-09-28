@@ -34,3 +34,15 @@ func GetDefaultPathConfigs() []byte {
 	}
 	return bytes.Join(configData, []byte("\n"))
 }
+
+// GetDefaultPathConfigStrings returns the default pathConfigs in string format
+func GetDefaultPathConfigStrings() map[string]string {
+	result := make(map[string]string)
+	result["nameprefix"] = namePrefixPathConfigs
+	result["commonlabels"] = commonLabelPathConfigs
+	result["commonannotations"] = commonAnnotationPathConfigs
+	result["namespace"] = namespacePathConfigs
+	result["varreference"] = varReferencePathConfigs
+	result["namereference"] = namespacePathConfigs
+	return result
+}
