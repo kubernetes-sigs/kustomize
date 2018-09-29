@@ -16,23 +16,23 @@ limitations under the License.
 
 package patch
 
-// PatchStrategicMerge represents a relative path to a
-// stategic merget patch with the format
+// StrategicMerge represents a relative path to a
+// stategic merge patch with the format
 // https://github.com/kubernetes/community/blob/master/contributors/devel/strategic-merge-patch.md
-type PatchStrategicMerge string
+type StrategicMerge string
 
 // Append appends a slice of patch paths to a PatchStategicMerge slice
-func Append(patches []PatchStrategicMerge, paths ...string) []PatchStrategicMerge {
+func Append(patches []StrategicMerge, paths ...string) []StrategicMerge {
 	for _, p := range paths {
-		patches = append(patches, PatchStrategicMerge(p))
+		patches = append(patches, StrategicMerge(p))
 	}
 	return patches
 }
 
 // Exist determines if a patch path exists in a slice of PatchStategicMerge
-func Exist(patches []PatchStrategicMerge, path string) bool {
+func Exist(patches []StrategicMerge, path string) bool {
 	for _, p := range patches {
-		if p == PatchStrategicMerge(path) {
+		if p == StrategicMerge(path) {
 			return true
 		}
 	}

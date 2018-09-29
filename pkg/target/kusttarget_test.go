@@ -204,11 +204,11 @@ func TestResources1(t *testing.T) {
 	l := makeLoader1(t)
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
-	target, err := NewKustTarget(l, fakeFs, transformerconfig.MakeDefaultTransformerConfig())
+	kt, err := NewKustTarget(l, fakeFs, transformerconfig.MakeDefaultTransformerConfig())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
-	actual, err := target.MakeCustomizedResMap()
+	actual, err := kt.MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Unexpected Resources error %v", err)
 	}
@@ -227,11 +227,11 @@ func TestResourceNotFound(t *testing.T) {
 	}
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
-	target, err := NewKustTarget(l, fakeFs, transformerconfig.MakeDefaultTransformerConfig())
+	kt, err := NewKustTarget(l, fakeFs, transformerconfig.MakeDefaultTransformerConfig())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
-	_, err = target.MakeCustomizedResMap()
+	_, err = kt.MakeCustomizedResMap()
 	if err == nil {
 		t.Fatalf("Didn't get the expected error for an unknown resource")
 	}
@@ -248,11 +248,11 @@ func TestSecretTimeout(t *testing.T) {
 	}
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
-	target, err := NewKustTarget(l, fakeFs, transformerconfig.MakeDefaultTransformerConfig())
+	kt, err := NewKustTarget(l, fakeFs, transformerconfig.MakeDefaultTransformerConfig())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
-	_, err = target.MakeCustomizedResMap()
+	_, err = kt.MakeCustomizedResMap()
 	if err == nil {
 		t.Fatalf("Didn't get the expected error for an unknown resource")
 	}

@@ -156,7 +156,7 @@ func (m ResMap) FilterBy(inputId resource.ResId) ResMap {
 
 // NewResourceSliceFromPatches returns a slice of resources given a patch path slice from a kustomization file.
 func NewResourceSliceFromPatches(
-	loader loader.Loader, paths []patch.PatchStrategicMerge) ([]*resource.Resource, error) {
+	loader loader.Loader, paths []patch.StrategicMerge) ([]*resource.Resource, error) {
 	var result []*resource.Resource
 	for _, path := range paths {
 		content, err := loader.Load(string(path))

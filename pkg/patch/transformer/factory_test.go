@@ -30,7 +30,7 @@ import (
 )
 
 func TestNewPatchJson6902FactoryNoTarget(t *testing.T) {
-	p := patch.PatchJson6902{}
+	p := patch.Json6902{}
 	_, err := NewPatchJson6902Factory(nil).makeOnePatchJson6902Transformer(p)
 	if err == nil {
 		t.Fatal("expected error")
@@ -46,7 +46,7 @@ target:
   name: some-name
   kind: Deployment
 `)
-	p := patch.PatchJson6902{}
+	p := patch.Json6902{}
 	err := yaml.Unmarshal(jsonPatch, &p)
 	if err != nil {
 		t.Fatalf("expected error %v", err)
@@ -79,7 +79,7 @@ target:
   name: some-name
 path: /testpath/patch.json
 `)
-	p := patch.PatchJson6902{}
+	p := patch.Json6902{}
 	err = yaml.Unmarshal(jsonPatch, &p)
 	if err != nil {
 		t.Fatal("expected error")
@@ -117,7 +117,7 @@ target:
   kind: Deployment
 path: /testpath/patch.yaml
 `)
-	p := patch.PatchJson6902{}
+	p := patch.Json6902{}
 	err = yaml.Unmarshal(jsonPatch, &p)
 	if err != nil {
 		t.Fatalf("unexpected error : %v", err)
@@ -164,7 +164,7 @@ func TestNewPatchJson6902FactoryMulti(t *testing.T) {
     name: some-name
   path: /testpath/patch.yaml
 `)
-	var p []patch.PatchJson6902
+	var p []patch.Json6902
 	err = yaml.Unmarshal(jsonPatches, &p)
 	if err != nil {
 		t.Fatalf("unexpected error : %v", err)
@@ -278,7 +278,7 @@ func TestNewPatchJson6902FactoryMultiConflict(t *testing.T) {
     name: some-name
   path: /testpath/patch.yaml
 `)
-	var p []patch.PatchJson6902
+	var p []patch.Json6902
 	err = yaml.Unmarshal(jsonPatches, &p)
 	if err != nil {
 		t.Fatalf("unexpected error : %v", err)
