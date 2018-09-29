@@ -120,12 +120,12 @@ func (o *buildOptions) RunBuild(out io.Writer, fSys fs.FileSystem) error {
 		return err
 	}
 	defer rootLoader.Cleanup()
-	target, err := target.NewKustTarget(
+	kt, err := target.NewKustTarget(
 		rootLoader, fSys, makeTransformerconfig(fSys, o.transformerconfigPaths))
 	if err != nil {
 		return err
 	}
-	allResources, err := target.MakeCustomizedResMap()
+	allResources, err := kt.MakeCustomizedResMap()
 	if err != nil {
 		return err
 	}

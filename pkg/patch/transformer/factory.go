@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/transformers"
 )
 
-// PatchJson6902Factory makes PatchJson6902 transformers
+// PatchJson6902Factory makes Json6902 transformers
 type PatchJson6902Factory struct {
 	loader loader.Loader
 }
@@ -39,7 +39,7 @@ func NewPatchJson6902Factory(l loader.Loader) PatchJson6902Factory {
 }
 
 // MakePatchJson6902Transformer returns a transformer for applying Json6902 patch
-func (f PatchJson6902Factory) MakePatchJson6902Transformer(patches []patch.PatchJson6902) (transformers.Transformer, error) {
+func (f PatchJson6902Factory) MakePatchJson6902Transformer(patches []patch.Json6902) (transformers.Transformer, error) {
 	var ts []transformers.Transformer
 	for _, p := range patches {
 		t, err := f.makeOnePatchJson6902Transformer(p)
@@ -53,7 +53,7 @@ func (f PatchJson6902Factory) MakePatchJson6902Transformer(patches []patch.Patch
 	return transformers.NewMultiTransformerWithConflictCheck(ts), nil
 }
 
-func (f PatchJson6902Factory) makeOnePatchJson6902Transformer(p patch.PatchJson6902) (transformers.Transformer, error) {
+func (f PatchJson6902Factory) makeOnePatchJson6902Transformer(p patch.Json6902) (transformers.Transformer, error) {
 	if p.Target == nil {
 		return nil, fmt.Errorf("must specify the target field in patchesJson6902")
 	}
