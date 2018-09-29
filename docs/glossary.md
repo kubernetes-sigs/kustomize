@@ -21,7 +21,7 @@
 [overlays]: #overlay
 [patch]: #patch
 [patches]: #patch
-[patchJson6902]: #patchJson6902
+[patchJson6902]: #patchjson6902
 [patchesJson6902]: #patchjson6902
 [proposal]: https://github.com/kubernetes/community/pull/1629
 [rebase]: https://git-scm.com/docs/git-rebase
