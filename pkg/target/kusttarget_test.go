@@ -19,6 +19,7 @@ package target
 import (
 	"encoding/base64"
 	"reflect"
+	"sigs.k8s.io/kustomize/pkg/internal/k8sdeps"
 	"strings"
 	"testing"
 
@@ -204,7 +205,9 @@ func TestResources1(t *testing.T) {
 	l := makeLoader1(t)
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
-	kt, err := NewKustTarget(l, fakeFs, transformerconfig.MakeDefaultTransformerConfig())
+	kt, err := NewKustTarget(
+		l, fakeFs, transformerconfig.MakeDefaultTransformerConfig(),
+		k8sdeps.NewKustDecoder())
 	if err != nil {
 		t.Fatalf("unexpected construction error %v", err)
 	}
@@ -227,7 +230,9 @@ func TestResourceNotFound(t *testing.T) {
 	}
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
-	kt, err := NewKustTarget(l, fakeFs, transformerconfig.MakeDefaultTransformerConfig())
+	kt, err := NewKustTarget(
+		l, fakeFs, transformerconfig.MakeDefaultTransformerConfig(),
+		k8sdeps.NewKustDecoder())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
@@ -248,7 +253,9 @@ func TestSecretTimeout(t *testing.T) {
 	}
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
-	kt, err := NewKustTarget(l, fakeFs, transformerconfig.MakeDefaultTransformerConfig())
+	kt, err := NewKustTarget(
+		l, fakeFs, transformerconfig.MakeDefaultTransformerConfig(),
+		k8sdeps.NewKustDecoder())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
