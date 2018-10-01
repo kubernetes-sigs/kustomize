@@ -19,6 +19,7 @@ package resmap
 import (
 	"fmt"
 	"reflect"
+	"sigs.k8s.io/kustomize/pkg/internal/k8sdeps"
 	"testing"
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
@@ -106,7 +107,9 @@ metadata:
 			}),
 	}
 
-	m, _ := NewResMapFromFiles(l, []string{"/home/seans/project/deployment.yaml"})
+	m, _ := NewResMapFromFiles(
+		l, []string{"/home/seans/project/deployment.yaml"},
+		k8sdeps.NewKustDecoder())
 	if len(m) != 2 {
 		t.Fatalf("%#v should contain 2 appResource, but got %d", m, len(m))
 	}
@@ -145,7 +148,7 @@ metadata:
 				},
 			}),
 	}
-	m, err := newResMapFromBytes(encoded)
+	m, err := newResMapFromBytes(encoded, k8sdeps.NewKustDecoder())
 	fmt.Printf("%v\n", m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

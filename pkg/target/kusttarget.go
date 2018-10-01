@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
@@ -44,6 +45,7 @@ import (
 // KustTarget encapsulates the entirety of a kustomization build.
 type KustTarget struct {
 	kustomization *types.Kustomization
+	decoder       ifc.Decoder
 	ldr           loader.Loader
 	fSys          fs.FileSystem
 	tcfg          *transformerconfig.TransformerConfig
@@ -52,7 +54,8 @@ type KustTarget struct {
 // NewKustTarget returns a new instance of KustTarget primed with a Loader.
 func NewKustTarget(
 	ldr loader.Loader, fSys fs.FileSystem,
-	tcfg *transformerconfig.TransformerConfig) (*KustTarget, error) {
+	tcfg *transformerconfig.TransformerConfig,
+	d ifc.Decoder) (*KustTarget, error) {
 	content, err := ldr.Load(constants.KustomizationFileName)
 	if err != nil {
 		return nil, err
@@ -68,6 +71,7 @@ func NewKustTarget(
 		ldr:           ldr,
 		fSys:          fSys,
 		tcfg:          tcfg,
+		decoder:       d,
 	}, nil
 }
 
@@ -158,7 +162,7 @@ func (kt *KustTarget) loadCustomizedResMap() (resmap.ResMap, error) {
 		kt.kustomization.PatchesStrategicMerge,
 		kt.kustomization.Patches...)
 	patches, err := resource.NewResourceSliceFromPatches(
-		kt.ldr, kt.kustomization.PatchesStrategicMerge)
+		kt.ldr, kt.kustomization.PatchesStrategicMerge, kt.decoder)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResourceSliceFromPatches"))
 	}
@@ -195,7 +199,8 @@ func (kt *KustTarget) loadCustomizedResMap() (resmap.ResMap, error) {
 // Gets Bases and Resources as advertised.
 func (kt *KustTarget) loadResMapFromBasesAndResources() (resmap.ResMap, error) {
 	bases, errs := kt.loadCustomizedBases()
-	resources, err := resmap.NewResMapFromFiles(kt.ldr, kt.kustomization.Resources)
+	resources, err := resmap.NewResMapFromFiles(
+		kt.ldr, kt.kustomization.Resources, kt.decoder)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "rawResources failed to read Resources"))
 	}
@@ -216,7 +221,7 @@ func (kt *KustTarget) loadCustomizedBases() (resmap.ResMap, *interror.Kustomizat
 			errs.Append(errors.Wrap(err, "couldn't make ldr for "+path))
 			continue
 		}
-		target, err := NewKustTarget(ldr, kt.fSys, kt.tcfg)
+		target, err := NewKustTarget(ldr, kt.fSys, kt.tcfg, kt.decoder)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "couldn't make target for "+path))
 			continue
@@ -245,7 +250,7 @@ func (kt *KustTarget) loadBasesAsFlatList() ([]*KustTarget, error) {
 			errs.Append(err)
 			continue
 		}
-		target, err := NewKustTarget(ldr, kt.fSys, kt.tcfg)
+		target, err := NewKustTarget(ldr, kt.fSys, kt.tcfg, kt.decoder)
 		if err != nil {
 			errs.Append(err)
 			continue
