@@ -92,7 +92,7 @@ func (pt *patchTransformer) Transform(baseResourceMap resmap.ResMap) error {
 			// Use Strategic-Merge-Patch to handle types w/ schema
 			// TODO: Change this to use the new Merge package.
 			// Store the name of the base object, because this name may have been munged.
-			// Apply this name to the StrategicMergePatched object.
+			// Apply this name to the patched object.
 			lookupPatchMeta, err := strategicpatch.NewPatchMetaFromStruct(versionedObj)
 			if err != nil {
 				return err
