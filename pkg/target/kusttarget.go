@@ -157,7 +157,7 @@ func (kt *KustTarget) loadCustomizedResMap() (resmap.ResMap, error) {
 	kt.kustomization.PatchesStrategicMerge = patch.Append(
 		kt.kustomization.PatchesStrategicMerge,
 		kt.kustomization.Patches...)
-	patches, err := resmap.NewResourceSliceFromPatches(
+	patches, err := resource.NewResourceSliceFromPatches(
 		kt.ldr, kt.kustomization.PatchesStrategicMerge)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResourceSliceFromPatches"))

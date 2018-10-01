@@ -17,8 +17,219 @@ limitations under the License.
 package resource
 
 import (
+	"reflect"
 	"testing"
+
+	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
+	"sigs.k8s.io/kustomize/pkg/patch"
 )
+
+var testConfigMap = NewResourceFromMap(
+	map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata": map[string]interface{}{
+			"name": "winnie",
+		},
+	})
+
+const testConfigMapString = `unspecified:{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"winnie"}}`
+
+var testDeployment = NewResourceFromMap(
+	map[string]interface{}{
+		"apiVersion": "apps/v1",
+		"kind":       "Deployment",
+		"metadata": map[string]interface{}{
+			"name": "pooh",
+		},
+	})
+
+const testDeploymentString = `unspecified:{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"name":"pooh"}}`
+
+func TestResourceString(t *testing.T) {
+	tests := []struct {
+		in *Resource
+		s  string
+	}{
+		{
+			in: testConfigMap,
+			s:  testConfigMapString,
+		},
+		{
+			in: testDeployment,
+			s:  testDeploymentString,
+		},
+	}
+	for _, test := range tests {
+		if test.in.String() != test.s {
+			t.Fatalf("Expected %s == %s", test.in.String(), test.s)
+		}
+	}
+}
+
+func TestNewResourceSliceFromPatches(t *testing.T) {
+	patchGood1 := patch.StrategicMerge("/foo/patch1.yaml")
+	patch1 := `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pooh
+`
+	patchGood2 := patch.StrategicMerge("/foo/patch2.yaml")
+	patch2 := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+---
+# some comment
+---
+---
+`
+	patchBad := patch.StrategicMerge("/foo/patch3.yaml")
+	patch3 := `
+WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOT: woot
+`
+	l := loadertest.NewFakeLoader("/foo")
+	l.AddFile(string(patchGood1), []byte(patch1))
+	l.AddFile(string(patchGood2), []byte(patch2))
+	l.AddFile(string(patchBad), []byte(patch3))
+
+	tests := []struct {
+		name        string
+		input       []patch.StrategicMerge
+		expectedOut []*Resource
+		expectedErr bool
+	}{
+		{
+			name:        "happy",
+			input:       []patch.StrategicMerge{patchGood1, patchGood2},
+			expectedOut: []*Resource{testDeployment, testConfigMap},
+			expectedErr: false,
+		},
+		{
+			name:        "badFileName",
+			input:       []patch.StrategicMerge{patchGood1, "doesNotExist"},
+			expectedOut: []*Resource{},
+			expectedErr: true,
+		},
+		{
+			name:        "badData",
+			input:       []patch.StrategicMerge{patchGood1, patchBad},
+			expectedOut: []*Resource{},
+			expectedErr: true,
+		},
+	}
+	for _, test := range tests {
+		rs, err := NewResourceSliceFromPatches(l, test.input)
+		if test.expectedErr && err == nil {
+			t.Fatalf("%v: should return error", test.name)
+		}
+		if !test.expectedErr && err != nil {
+			t.Fatalf("%v: unexpected error: %s", test.name, err)
+		}
+		if len(rs) != len(test.expectedOut) {
+			t.Fatalf("%s: length mismatch %d != %d",
+				test.name, len(rs), len(test.expectedOut))
+		}
+		for i := range rs {
+			if !reflect.DeepEqual(test.expectedOut[i], rs[i]) {
+				t.Fatalf("%s: Got: %v\nexpected:%v",
+					test.name, test.expectedOut[i], rs[i])
+			}
+		}
+	}
+}
+
+func TestNewResourceSliceFromBytes(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       []byte
+		expectedOut []*Resource
+		expectedErr bool
+	}{
+		{
+			name:        "garbage",
+			input:       []byte("garbageIn: garbageOut"),
+			expectedOut: []*Resource{},
+			expectedErr: true,
+		},
+		{
+			name:        "noBytes",
+			input:       []byte{},
+			expectedOut: []*Resource{},
+			expectedErr: false,
+		},
+		{
+			name: "goodJson",
+			input: []byte(`
+{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"winnie"}}
+`),
+			expectedOut: []*Resource{testConfigMap},
+			expectedErr: false,
+		},
+		{
+			name: "goodYaml1",
+			input: []byte(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+`),
+			expectedOut: []*Resource{testConfigMap},
+			expectedErr: false,
+		},
+		{
+			name: "goodYaml2",
+			input: []byte(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+`),
+			expectedOut: []*Resource{testConfigMap, testConfigMap},
+			expectedErr: false,
+		},
+		{
+			name: "garbageInOneOfTwoObjects",
+			input: []byte(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+---
+WOOOOOOOOOOOOOOOOOOOOOOOOT:  woot
+`),
+			expectedOut: []*Resource{},
+			expectedErr: true,
+		},
+	}
+
+	for _, test := range tests {
+		rs, err := NewResourceSliceFromBytes(test.input)
+		if test.expectedErr && err == nil {
+			t.Fatalf("%v: should return error", test.name)
+		}
+		if !test.expectedErr && err != nil {
+			t.Fatalf("%v: unexpected error: %s", test.name, err)
+		}
+		if len(rs) != len(test.expectedOut) {
+			t.Fatalf("%s: length mismatch %d != %d",
+				test.name, len(rs), len(test.expectedOut))
+		}
+		for i := range rs {
+			if !reflect.DeepEqual(test.expectedOut[i], rs[i]) {
+				t.Fatalf("%s: Got: %v\nexpected:%v",
+					test.name, test.expectedOut[i], rs[i])
+			}
+		}
+	}
+}
 
 func TestGetFieldValue(t *testing.T) {
 	res := NewResourceFromMap(map[string]interface{}{
