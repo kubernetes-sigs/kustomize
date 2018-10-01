@@ -206,11 +206,11 @@ func TestResources1(t *testing.T) {
 	fakeFs.Mkdir("/")
 	kt, err := NewKustTarget(l, fakeFs, transformerconfig.MakeDefaultTransformerConfig())
 	if err != nil {
-		t.Fatalf("Unexpected construction error %v", err)
+		t.Fatalf("unexpected construction error %v", err)
 	}
 	actual, err := kt.MakeCustomizedResMap()
 	if err != nil {
-		t.Fatalf("Unexpected Resources error %v", err)
+		t.Fatalf("unexpected Resources error %v", err)
 	}
 
 	if !reflect.DeepEqual(actual, expected) {
@@ -236,7 +236,7 @@ func TestResourceNotFound(t *testing.T) {
 		t.Fatalf("Didn't get the expected error for an unknown resource")
 	}
 	if !strings.Contains(err.Error(), `cannot read file "/testpath/deployment.yaml"`) {
-		t.Fatalf("Unpexpected error message %q", err)
+		t.Fatalf("unexpected error: %q", err)
 	}
 }
 
@@ -257,6 +257,6 @@ func TestSecretTimeout(t *testing.T) {
 		t.Fatalf("Didn't get the expected error for an unknown resource")
 	}
 	if !strings.Contains(err.Error(), "killed") {
-		t.Fatalf("Unpexpected error message %q", err)
+		t.Fatalf("unexpected error: %q", err)
 	}
 }
