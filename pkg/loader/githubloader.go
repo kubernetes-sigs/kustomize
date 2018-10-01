@@ -30,7 +30,7 @@ import (
 // githubLoader loads files from a checkout github repo
 type githubLoader struct {
 	repo string
-	// target is the directory which is to be built
+	// targetDir will hold the local repo
 	targetDir string
 	// checkoutDir is for the whole repository
 	checkoutDir string
