@@ -18,14 +18,20 @@ limitations under the License.
 package resource
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/kustomize/pkg/gvk"
+	internal "sigs.k8s.io/kustomize/pkg/internal/error"
+	"sigs.k8s.io/kustomize/pkg/loader"
+	"sigs.k8s.io/kustomize/pkg/patch"
 )
 
 // Resource is an "Unstructured" (json/map form) Kubernetes API resource object
@@ -57,6 +63,56 @@ func NewResourceFromMap(m map[string]interface{}) *Resource {
 // NewResourceFromUnstruct returns a new instance of Resource.
 func NewResourceFromUnstruct(u unstructured.Unstructured) *Resource {
 	return &Resource{Unstructured: u, b: BehaviorUnspecified}
+}
+
+// NewResourceSliceFromPatches returns a slice of resources given a patch path
+// slice from a kustomization file.
+func NewResourceSliceFromPatches(
+	ldr loader.Loader, paths []patch.StrategicMerge) ([]*Resource, error) {
+	var result []*Resource
+	for _, path := range paths {
+		content, err := ldr.Load(string(path))
+		if err != nil {
+			return nil, err
+		}
+		res, err := NewResourceSliceFromBytes(content)
+		if err != nil {
+			return nil, internal.Handler(err, string(path))
+		}
+		result = append(result, res...)
+	}
+	return result, nil
+}
+
+// NewResourceSliceFromBytes unmarshalls bytes into a Resource slice.
+func NewResourceSliceFromBytes(in []byte) ([]*Resource, error) {
+	decoder := yaml.NewYAMLOrJSONDecoder(bytes.NewReader(in), 1024)
+	var result []*Resource
+	var err error
+	for err == nil || isEmptyYamlError(err) {
+		var out unstructured.Unstructured
+		err = decoder.Decode(&out)
+		if err == nil {
+			result = append(result, NewResourceFromUnstruct(out))
+		}
+	}
+	if err != io.EOF {
+		return nil, err
+	}
+	return result, nil
+}
+
+func isEmptyYamlError(err error) bool {
+	return strings.Contains(err.Error(), "is missing in 'null'")
+}
+
+// String returns resource as JSON.
+func (r *Resource) String() string {
+	bs, err := r.MarshalJSON()
+	if err != nil {
+		return "<" + err.Error() + ">"
+	}
+	return r.b.String() + ":" + strings.TrimSpace(string(bs))
 }
 
 // Behavior returns the behavior for the resource.
