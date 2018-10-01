@@ -27,7 +27,6 @@ import (
 
 	"github.com/ghodss/yaml"
 
-	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 )
@@ -81,7 +80,7 @@ func TestBuild(t *testing.T) {
 	updateKustomizeExpected := os.Getenv(updateEnvVar) == "true"
 	fSys := fs.MakeRealFS()
 
-	testcases := sets.NewString()
+	testcases := []string{}
 	filepath.Walk("testdata", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -92,18 +91,18 @@ func TestBuild(t *testing.T) {
 		name := filepath.Base(path)
 		if info.IsDir() {
 			if strings.HasPrefix(name, "testcase-") {
-				testcases.Insert(strings.TrimPrefix(name, "testcase-"))
+				testcases = append(testcases, strings.TrimPrefix(name, "testcase-"))
 			}
 			return filepath.SkipDir
 		}
 		return nil
 	})
 	// sanity check that we found the right folder
-	if !testcases.Has("simple") {
+	if !stringInSlice("simple", testcases) {
 		t.Fatalf("Error locating testcases")
 	}
 
-	for _, testcaseName := range testcases.List() {
+	for _, testcaseName := range testcases {
 		t.Run(testcaseName, func(t *testing.T) { runBuildTestCase(t, testcaseName, updateKustomizeExpected, fSys) })
 	}
 
