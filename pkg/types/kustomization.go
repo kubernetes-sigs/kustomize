@@ -61,13 +61,13 @@ type Kustomization struct {
 	// URLs and globs are not supported.
 	// The patch files should be Stategic Merge Patch, the default patching behavior for kubectl.
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/strategic-merge-patch.md
-	Patches               []string                    `json:"patches,omitempty" yaml:"patches,omitempty"`
-	PatchesStrategicMerge []patch.PatchStrategicMerge `json:"patchesStrategicMerge,omitempty" yaml:"patchesStrategicMerge,omitempty"`
+	Patches               []string               `json:"patches,omitempty" yaml:"patches,omitempty"`
+	PatchesStrategicMerge []patch.StrategicMerge `json:"patchesStrategicMerge,omitempty" yaml:"patchesStrategicMerge,omitempty"`
 
 	// JSONPatches is a list of JSONPatch for applying JSON patch.
 	// The JSON patch is documented at https://tools.ietf.org/html/rfc6902
 	// and http://jsonpatch.com/.
-	PatchesJson6902 []patch.PatchJson6902 `json:"patchesJson6902,omitempty" yaml:"patchesJson6902,omitempty"`
+	PatchesJson6902 []patch.Json6902 `json:"patchesJson6902,omitempty" yaml:"patchesJson6902,omitempty"`
 
 	// List of configmaps to generate from configuration sources.
 	// Base/overlay concept doesn't apply to this field.
