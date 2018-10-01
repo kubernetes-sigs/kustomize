@@ -18,12 +18,14 @@ package expansion
 
 import (
 	"testing"
-
-	api "k8s.io/api/core/v1"
 )
 
 func TestMapReference(t *testing.T) {
-	envs := []api.EnvVar{
+	type env struct {
+		Name  string
+		Value string
+	}
+	envs := []env{
 		{
 			Name:  "FOO",
 			Value: "bar",
