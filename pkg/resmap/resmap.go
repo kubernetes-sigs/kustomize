@@ -20,20 +20,16 @@ package resmap
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"reflect"
 	"sort"
-	"strings"
 
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	internal "sigs.k8s.io/kustomize/pkg/internal/error"
 	"sigs.k8s.io/kustomize/pkg/loader"
-	"sigs.k8s.io/kustomize/pkg/patch"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
@@ -154,24 +150,6 @@ func (m ResMap) FilterBy(inputId resource.ResId) ResMap {
 	return result
 }
 
-// NewResourceSliceFromPatches returns a slice of resources given a patch path slice from a kustomization file.
-func NewResourceSliceFromPatches(
-	loader loader.Loader, paths []patch.StrategicMerge) ([]*resource.Resource, error) {
-	var result []*resource.Resource
-	for _, path := range paths {
-		content, err := loader.Load(string(path))
-		if err != nil {
-			return nil, err
-		}
-		res, err := newResourceSliceFromBytes(content)
-		if err != nil {
-			return nil, internal.Handler(err, string(path))
-		}
-		result = append(result, res...)
-	}
-	return result, nil
-}
-
 // NewResMapFromFiles returns a ResMap given a resource path slice.
 func NewResMapFromFiles(loader loader.Loader, paths []string) (ResMap, error) {
 	var result []ResMap
@@ -191,7 +169,7 @@ func NewResMapFromFiles(loader loader.Loader, paths []string) (ResMap, error) {
 
 // newResMapFromBytes decodes a list of objects in byte array format.
 func newResMapFromBytes(b []byte) (ResMap, error) {
-	resources, err := newResourceSliceFromBytes(b)
+	resources, err := resource.NewResourceSliceFromBytes(b)
 	if err != nil {
 		return nil, err
 	}
@@ -215,23 +193,6 @@ func newResMapFromResourceSlice(resources []*resource.Resource) (ResMap, error) 
 			return nil, fmt.Errorf("duplicated %#v is not allowed", id)
 		}
 		result[id] = res
-	}
-	return result, nil
-}
-
-func newResourceSliceFromBytes(in []byte) ([]*resource.Resource, error) {
-	decoder := k8syaml.NewYAMLOrJSONDecoder(bytes.NewReader(in), 1024)
-	var result []*resource.Resource
-	var err error
-	for err == nil || isEmptyYamlError(err) {
-		var out unstructured.Unstructured
-		err = decoder.Decode(&out)
-		if err == nil {
-			result = append(result, resource.NewResourceFromUnstruct(out))
-		}
-	}
-	if err != io.EOF {
-		return nil, err
 	}
 	return result, nil
 }
@@ -302,8 +263,4 @@ func MergeWithOverride(maps ...ResMap) (ResMap, error) {
 		}
 	}
 	return result, nil
-}
-
-func isEmptyYamlError(err error) bool {
-	return strings.Contains(err.Error(), "is missing in 'null'")
 }
