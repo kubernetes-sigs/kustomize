@@ -20,7 +20,7 @@ package error
 import (
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/util/yaml"
+	"sigs.k8s.io/kustomize/pkg/decoder"
 )
 
 // YamlFormatError represents error with yaml file name where json/yaml format error happens.
@@ -35,7 +35,7 @@ func (e YamlFormatError) Error() string {
 
 // Handler handles YamlFormatError
 func Handler(e error, path string) error {
-	if err, ok := e.(yaml.YAMLSyntaxError); ok {
+	if err, ok := e.(decoder.YAMLSyntaxError); ok {
 		return YamlFormatError{
 			Path:     path,
 			ErrorMsg: err.Error(),

@@ -27,7 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/yaml"
+	"sigs.k8s.io/kustomize/pkg/decoder"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	internal "sigs.k8s.io/kustomize/pkg/internal/error"
 	"sigs.k8s.io/kustomize/pkg/loader"
@@ -86,7 +86,7 @@ func NewResourceSliceFromPatches(
 
 // NewResourceSliceFromBytes unmarshalls bytes into a Resource slice.
 func NewResourceSliceFromBytes(in []byte) ([]*Resource, error) {
-	decoder := yaml.NewYAMLOrJSONDecoder(bytes.NewReader(in), 1024)
+	decoder := decoder.NewYAMLOrJSONDecoder(bytes.NewReader(in), 1024)
 	var result []*Resource
 	var err error
 	for err == nil || isEmptyYamlError(err) {
