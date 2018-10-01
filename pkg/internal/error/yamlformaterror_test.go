@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/kustomize/pkg/constants"
+	"sigs.k8s.io/kustomize/pkg/decoder"
 )
 
 var (
@@ -48,7 +48,7 @@ func TestYamlFormatError_Error(t *testing.T) {
 
 func TestErrorHandler(t *testing.T) {
 	f := foo{}
-	err := yaml.NewYAMLToJSONDecoder(bytes.NewReader([]byte(doc))).Decode(&f)
+	err := decoder.NewYAMLToJSONDecoder(bytes.NewReader([]byte(doc))).Decode(&f)
 	testErr := Handler(err, filepath)
 	expectedErr := fmt.Errorf("format error message")
 	fmtErr := Handler(expectedErr, filepath)
