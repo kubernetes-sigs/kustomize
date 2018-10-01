@@ -26,6 +26,7 @@ import (
 type FileSystem interface {
 	Create(name string) (File, error)
 	Mkdir(name string) error
+	MkdirAll(name string) error
 	Open(name string) (File, error)
 	IsDir(name string) bool
 	Exists(name string) bool

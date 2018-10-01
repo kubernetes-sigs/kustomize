@@ -45,6 +45,7 @@ See https://sigs.k8s.io/kustomize
 		// TODO: Make consistent API for newCmd* functions.
 		newCmdBuild(stdOut, fsys),
 		newCmdEdit(fsys),
+		newCmdConfig(fsys),
 		newCmdVersion(stdOut),
 	)
 	c.PersistentFlags().AddGoFlagSet(flag.CommandLine)

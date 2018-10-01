@@ -40,6 +40,11 @@ func (realFS) Mkdir(name string) error {
 	return os.Mkdir(name, 0777|os.ModeDir)
 }
 
+// MkdirAll delegates to os.MkdirAll.
+func (realFS) MkdirAll(name string) error {
+	return os.MkdirAll(name, 0777|os.ModeDir)
+}
+
 // Open delegates to os.Open.
 func (realFS) Open(name string) (File, error) { return os.Open(name) }
 
