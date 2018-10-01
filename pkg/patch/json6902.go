@@ -18,9 +18,9 @@ package patch
 
 import "sigs.k8s.io/kustomize/pkg/gvk"
 
-// PatchJson6902 represents a json patch for an object
+// Json6902 represents a json patch for an object
 // with format documented https://tools.ietf.org/html/rfc6902.
-type PatchJson6902 struct {
+type Json6902 struct {
 	// Target refers to a Kubernetes object that the json patch will be
 	// applied to. It must refer to a Kubernetes resource under the
 	// purview of this kustomization. Target should use the
