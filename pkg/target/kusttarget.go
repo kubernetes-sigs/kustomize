@@ -29,7 +29,6 @@ import (
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/crds"
 	"sigs.k8s.io/kustomize/pkg/fs"
-	"sigs.k8s.io/kustomize/pkg/gvk"
 	interror "sigs.k8s.io/kustomize/pkg/internal/error"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/patch"
@@ -296,8 +295,7 @@ func (kt *KustTarget) resolveRefVars(m resmap.ResMap) (map[string]string, error)
 		return result, err
 	}
 	for _, v := range vars {
-		id := resource.NewResId(
-			gvk.FromSchemaGvk(v.ObjRef.GroupVersionKind()), v.ObjRef.Name)
+		id := resource.NewResId(v.ObjRef.GVK(), v.ObjRef.Name)
 		if r, found := m.DemandOneMatchForId(id); found {
 			s, err := r.GetFieldValue(v.FieldRef.FieldPath)
 			if err != nil {
