@@ -15,7 +15,7 @@ type MapValidatorFunc func(map[string]string) error
 func MakeAnnotationValidator() MapValidatorFunc {
 	return func(x map[string]string) error {
 		errs := apivalidation.ValidateAnnotations(x, field.NewPath("field"))
-		if errs != nil {
+		if len(errs) > 0 {
 			return errors.New(errs.ToAggregate().Error())
 		}
 		return nil
@@ -26,7 +26,7 @@ func MakeAnnotationValidator() MapValidatorFunc {
 func MakeLabelValidator() MapValidatorFunc {
 	return func(x map[string]string) error {
 		errs := v1validation.ValidateLabels(x, field.NewPath("field"))
-		if errs != nil {
+		if len(errs) > 0 {
 			return errors.New(errs.ToAggregate().Error())
 		}
 		return nil
