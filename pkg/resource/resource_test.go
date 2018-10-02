@@ -18,6 +18,7 @@ package resource
 
 import (
 	"reflect"
+	"sigs.k8s.io/kustomize/pkg/internal/k8sdeps"
 	"testing"
 
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
@@ -121,7 +122,8 @@ WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOT: woot
 		},
 	}
 	for _, test := range tests {
-		rs, err := NewResourceSliceFromPatches(l, test.input)
+		rs, err := NewResourceSliceFromPatches(
+			l, test.input, k8sdeps.NewKustDecoder())
 		if test.expectedErr && err == nil {
 			t.Fatalf("%v: should return error", test.name)
 		}
@@ -211,7 +213,8 @@ WOOOOOOOOOOOOOOOOOOOOOOOOT:  woot
 	}
 
 	for _, test := range tests {
-		rs, err := NewResourceSliceFromBytes(test.input)
+		rs, err := NewResourceSliceFromBytes(
+			test.input, k8sdeps.NewKustDecoder())
 		if test.expectedErr && err == nil {
 			t.Fatalf("%v: should return error", test.name)
 		}
