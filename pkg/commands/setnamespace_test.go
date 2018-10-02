@@ -23,6 +23,7 @@ import (
 
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/validators"
 )
 
 const (
@@ -33,7 +34,7 @@ func TestSetNamespaceHappyPath(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
-	cmd := newCmdSetNamespace(fakeFS)
+	cmd := newCmdSetNamespace(fakeFS, validators.MakeFakeValidator())
 	args := []string{goodNamespaceValue}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
@@ -53,7 +54,7 @@ func TestSetNamespaceOverride(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
-	cmd := newCmdSetNamespace(fakeFS)
+	cmd := newCmdSetNamespace(fakeFS, validators.MakeFakeValidator())
 	args := []string{goodNamespaceValue}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
@@ -77,7 +78,7 @@ func TestSetNamespaceOverride(t *testing.T) {
 func TestSetNamespaceNoArgs(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 
-	cmd := newCmdSetNamespace(fakeFS)
+	cmd := newCmdSetNamespace(fakeFS, validators.MakeFakeValidator())
 	err := cmd.Execute()
 	if err == nil {
 		t.Errorf("expected error: %v", err)
@@ -91,7 +92,7 @@ func TestSetNamespaceInvalid(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile(constants.KustomizationFileName, []byte(kustomizationContent))
 
-	cmd := newCmdSetNamespace(fakeFS)
+	cmd := newCmdSetNamespace(fakeFS, validators.MakeFakeValidator())
 	args := []string{"/badnamespace/"}
 	err := cmd.RunE(cmd, args)
 	if err == nil {
