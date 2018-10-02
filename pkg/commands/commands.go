@@ -20,6 +20,7 @@ package commands
 import (
 	"flag"
 	"os"
+	"sigs.k8s.io/kustomize/pkg/internal/k8sdeps"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/fs"
@@ -43,7 +44,7 @@ See https://sigs.k8s.io/kustomize
 
 	c.AddCommand(
 		// TODO: Make consistent API for newCmd* functions.
-		newCmdBuild(stdOut, fsys),
+		newCmdBuild(stdOut, fsys, k8sdeps.NewKustDecoder()),
 		newCmdEdit(fsys),
 		newCmdConfig(fsys),
 		newCmdVersion(stdOut),

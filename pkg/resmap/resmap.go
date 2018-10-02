@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"fmt"
 	"reflect"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sort"
 
 	"github.com/ghodss/yaml"
@@ -151,14 +152,16 @@ func (m ResMap) FilterBy(inputId resource.ResId) ResMap {
 }
 
 // NewResMapFromFiles returns a ResMap given a resource path slice.
-func NewResMapFromFiles(loader loader.Loader, paths []string) (ResMap, error) {
+func NewResMapFromFiles(
+	loader loader.Loader, paths []string,
+	d ifc.Decoder) (ResMap, error) {
 	var result []ResMap
 	for _, path := range paths {
 		content, err := loader.Load(path)
 		if err != nil {
 			return nil, errors.Wrap(err, "Load from path "+path+" failed")
 		}
-		res, err := newResMapFromBytes(content)
+		res, err := newResMapFromBytes(content, d)
 		if err != nil {
 			return nil, internal.Handler(err, path)
 		}
@@ -168,8 +171,8 @@ func NewResMapFromFiles(loader loader.Loader, paths []string) (ResMap, error) {
 }
 
 // newResMapFromBytes decodes a list of objects in byte array format.
-func newResMapFromBytes(b []byte) (ResMap, error) {
-	resources, err := resource.NewResourceSliceFromBytes(b)
+func newResMapFromBytes(b []byte, d ifc.Decoder) (ResMap, error) {
+	resources, err := resource.NewResourceSliceFromBytes(b, d)
 	if err != nil {
 		return nil, err
 	}

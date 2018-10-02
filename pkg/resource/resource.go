@@ -18,7 +18,6 @@ limitations under the License.
 package resource
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -27,8 +26,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	internal "sigs.k8s.io/kustomize/pkg/internal/error"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/patch"
@@ -68,14 +67,15 @@ func NewResourceFromUnstruct(u unstructured.Unstructured) *Resource {
 // NewResourceSliceFromPatches returns a slice of resources given a patch path
 // slice from a kustomization file.
 func NewResourceSliceFromPatches(
-	ldr loader.Loader, paths []patch.StrategicMerge) ([]*Resource, error) {
+	ldr loader.Loader, paths []patch.StrategicMerge,
+	decoder ifc.Decoder) ([]*Resource, error) {
 	var result []*Resource
 	for _, path := range paths {
 		content, err := ldr.Load(string(path))
 		if err != nil {
 			return nil, err
 		}
-		res, err := NewResourceSliceFromBytes(content)
+		res, err := NewResourceSliceFromBytes(content, decoder)
 		if err != nil {
 			return nil, internal.Handler(err, string(path))
 		}
@@ -85,8 +85,9 @@ func NewResourceSliceFromPatches(
 }
 
 // NewResourceSliceFromBytes unmarshalls bytes into a Resource slice.
-func NewResourceSliceFromBytes(in []byte) ([]*Resource, error) {
-	decoder := yaml.NewYAMLOrJSONDecoder(bytes.NewReader(in), 1024)
+func NewResourceSliceFromBytes(
+	in []byte, decoder ifc.Decoder) ([]*Resource, error) {
+	decoder.SetInput(in)
 	var result []*Resource
 	var err error
 	for err == nil || isEmptyYamlError(err) {

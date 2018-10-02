@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sigs.k8s.io/kustomize/pkg/internal/k8sdeps"
 	"strings"
 	"testing"
 
@@ -124,7 +125,7 @@ func runBuildTestCase(t *testing.T, testcaseName string, updateKustomizeExpected
 		kustomizationPath: testcase.Filename,
 	}
 	buf := bytes.NewBuffer([]byte{})
-	err = ops.RunBuild(buf, fSys)
+	err = ops.RunBuild(buf, fSys, k8sdeps.NewKustDecoder())
 	switch {
 	case err != nil && len(testcase.ExpectedError) == 0:
 		t.Errorf("unexpected error: %v", err)
