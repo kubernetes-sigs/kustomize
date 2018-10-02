@@ -22,17 +22,18 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/util/validation"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
 type setNamespaceOptions struct {
 	namespace string
+	validator ifc.Validator
 }
 
 // newCmdSetNamespace sets the value of the namespace field in the kustomization.
-func newCmdSetNamespace(fsys fs.FileSystem) *cobra.Command {
+func newCmdSetNamespace(fsys fs.FileSystem, v ifc.Validator) *cobra.Command {
 	var o setNamespaceOptions
 
 	cmd := &cobra.Command{
@@ -45,6 +46,7 @@ will add the field "namespace: staging" to the kustomization file if it doesn't 
 and overwrite the value with "staging" if the field does exist.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			o.validator = v
 			err := o.Validate(args)
 			if err != nil {
 				return err
@@ -61,7 +63,7 @@ func (o *setNamespaceOptions) Validate(args []string) error {
 		return errors.New("must specify exactly one namespace value")
 	}
 	ns := args[0]
-	if errs := validation.IsDNS1123Label(ns); len(errs) != 0 {
+	if errs := o.validator.ValidateNamespace(ns); len(errs) != 0 {
 		return fmt.Errorf("%q is not a valid namespace name: %s", ns, strings.Join(errs, ";"))
 	}
 	o.namespace = ns
