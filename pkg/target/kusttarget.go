@@ -135,24 +135,11 @@ func (kt *KustTarget) loadCustomizedResMap() (resmap.ResMap, error) {
 	if err != nil {
 		errs.Append(errors.Wrap(err, "RegisterCRDs"))
 	}
-	cms, err := resmap.NewResMapFromConfigMapArgs(
-		configmapandsecret.NewConfigMapFactory(kt.fSys, kt.ldr),
-		kt.kustomization.ConfigMapGenerator)
+	resMap, err := kt.generateConfigMapsAndSecrets(errs)
 	if err != nil {
-		errs.Append(errors.Wrap(err, "NewResMapFromConfigMapArgs"))
+		errs.Append(errors.Wrap(err, "generateConfigMapsAndSecrets"))
 	}
-	secrets, err := resmap.NewResMapFromSecretArgs(
-		configmapandsecret.NewSecretFactory(kt.fSys, kt.ldr.Root()),
-		kt.kustomization.SecretGenerator)
-	if err != nil {
-		errs.Append(errors.Wrap(err, "NewResMapFromSecretArgs"))
-	}
-	res, err := resmap.MergeWithoutOverride(cms, secrets)
-	if err != nil {
-		return nil, errors.Wrap(err, "Merge")
-	}
-
-	result, err = resmap.MergeWithOverride(result, res)
+	result, err = resmap.MergeWithOverride(result, resMap)
 	if err != nil {
 		return nil, err
 	}
@@ -190,6 +177,23 @@ func (kt *KustTarget) loadCustomizedResMap() (resmap.ResMap, error) {
 		return nil, err
 	}
 	return result, nil
+}
+
+func (kt *KustTarget) generateConfigMapsAndSecrets(
+	errs *interror.KustomizationErrors) (resmap.ResMap, error) {
+	cms, err := resmap.NewResMapFromConfigMapArgs(
+		configmapandsecret.NewConfigMapFactory(kt.fSys, kt.ldr),
+		kt.kustomization.ConfigMapGenerator)
+	if err != nil {
+		errs.Append(errors.Wrap(err, "NewResMapFromConfigMapArgs"))
+	}
+	secrets, err := resmap.NewResMapFromSecretArgs(
+		configmapandsecret.NewSecretFactory(kt.fSys, kt.ldr.Root()),
+		kt.kustomization.SecretGenerator)
+	if err != nil {
+		errs.Append(errors.Wrap(err, "NewResMapFromSecretArgs"))
+	}
+	return resmap.MergeWithoutOverride(cms, secrets)
 }
 
 // Gets Bases and Resources as advertised.
