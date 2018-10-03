@@ -220,7 +220,10 @@ func MergeWithoutOverride(maps ...ResMap) (ResMap, error) {
 
 // MergeWithOverride combines multiple ResMap instances, allowing and sometimes
 // demanding certain collisions and skipping nil maps.
-// In case if all of the maps are nil, an empty ResMap is returned.
+// A collision would be demanded, say, when a generated ConfigMap has the
+// "replace" option in its generation instructions, meaning it is supposed
+// to replace something from the raw resources list.
+// If all of the maps are nil, an empty ResMap is returned.
 // When looping over the instances to combine them, if a resource id for resource X
 // is found to be already in the combined map, then the behavior field for X
 // must be BehaviorMerge or BehaviorReplace.  If X is not in the map, then it's
