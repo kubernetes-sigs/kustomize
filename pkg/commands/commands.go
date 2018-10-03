@@ -24,7 +24,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/fs"
-	"sigs.k8s.io/kustomize/pkg/validators"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
 // NewDefaultCommand returns the default (aka root) command for kustomize command.
@@ -45,7 +45,7 @@ See https://sigs.k8s.io/kustomize
 	c.AddCommand(
 		// TODO: Make consistent API for newCmd* functions.
 		newCmdBuild(stdOut, fsys, k8sdeps.NewKustDecoder()),
-		newCmdEdit(fsys),
+		newCmdEdit(fsys, k8sdeps.NewKustValidator()),
 		newCmdConfig(fsys),
 		newCmdVersion(stdOut),
 	)
@@ -58,7 +58,7 @@ See https://sigs.k8s.io/kustomize
 }
 
 // newCmdEdit returns an instance of 'edit' subcommand.
-func newCmdEdit(fsys fs.FileSystem) *cobra.Command {
+func newCmdEdit(fsys fs.FileSystem, v ifc.Validator) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "edit",
 		Short: "Edits a kustomization file",
@@ -73,14 +73,14 @@ func newCmdEdit(fsys fs.FileSystem) *cobra.Command {
 		Args: cobra.MinimumNArgs(1),
 	}
 	c.AddCommand(
-		newCmdAdd(fsys),
-		newCmdSet(fsys),
+		newCmdAdd(fsys, v),
+		newCmdSet(fsys, v),
 	)
 	return c
 }
 
 // newAddCommand returns an instance of 'add' subcommand.
-func newCmdAdd(fsys fs.FileSystem) *cobra.Command {
+func newCmdAdd(fsys fs.FileSystem, v ifc.Validator) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "add",
 		Short: "Adds configmap/resource/patch/base to the kustomization file.",
@@ -112,14 +112,14 @@ func newCmdAdd(fsys fs.FileSystem) *cobra.Command {
 		newCmdAddPatch(fsys),
 		newCmdAddConfigMap(fsys),
 		newCmdAddBase(fsys),
-		newCmdAddLabel(fsys, validators.MakeLabelValidator()),
-		newCmdAddAnnotation(fsys, validators.MakeAnnotationValidator()),
+		newCmdAddLabel(fsys, v.MakeLabelValidator()),
+		newCmdAddAnnotation(fsys, v.MakeAnnotationValidator()),
 	)
 	return c
 }
 
 // newSetCommand returns an instance of 'set' subcommand.
-func newCmdSet(fsys fs.FileSystem) *cobra.Command {
+func newCmdSet(fsys fs.FileSystem, v ifc.Validator) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "set",
 		Short: "Sets the value of different fields in kustomization file.",
@@ -133,7 +133,7 @@ func newCmdSet(fsys fs.FileSystem) *cobra.Command {
 
 	c.AddCommand(
 		newCmdSetNamePrefix(fsys),
-		newCmdSetNamespace(fsys),
+		newCmdSetNamespace(fsys, v),
 		newCmdSetImageTag(fsys),
 	)
 	return c
