@@ -91,6 +91,18 @@ type Kustomization struct {
 	ImageTags []ImageTag `json:"imageTags,omitempty" yaml:"imageTags,omitempty"`
 }
 
+// DealWithDeprecatedFields should be called immediately after
+// loading from storage.
+func (k *Kustomization) DealWithDeprecatedFields() {
+	// The Patches field, meant to hold StrategicMerge patches,
+	// is deprecated. Append anything found there to the
+	// PatchesStrategicMerge field.
+	// This happened when the PatchesJson6902 field was introduced.
+	k.PatchesStrategicMerge = patch.Append(
+		k.PatchesStrategicMerge, k.Patches...)
+	k.Patches = []string{}
+}
+
 // ConfigMapArgs contains the metadata of how to generate a configmap.
 type ConfigMapArgs struct {
 	// Name of the configmap.

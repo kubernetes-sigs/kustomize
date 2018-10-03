@@ -32,7 +32,6 @@ import (
 	"sigs.k8s.io/kustomize/pkg/fs"
 	interror "sigs.k8s.io/kustomize/pkg/internal/error"
 	"sigs.k8s.io/kustomize/pkg/loader"
-	"sigs.k8s.io/kustomize/pkg/patch"
 	patchtransformer "sigs.k8s.io/kustomize/pkg/patch/transformer"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
@@ -60,13 +59,14 @@ func NewKustTarget(
 		return nil, err
 	}
 
-	var m types.Kustomization
-	err = unmarshal(content, &m)
+	var k types.Kustomization
+	err = unmarshal(content, &k)
 	if err != nil {
 		return nil, err
 	}
+	k.DealWithDeprecatedFields()
 	return &KustTarget{
-		kustomization: &m,
+		kustomization: &k,
 		ldr:           ldr,
 		fSys:          fSys,
 		tcfg:          tcfg,
@@ -157,9 +157,6 @@ func (kt *KustTarget) loadCustomizedResMap() (resmap.ResMap, error) {
 		return nil, err
 	}
 
-	kt.kustomization.PatchesStrategicMerge = patch.Append(
-		kt.kustomization.PatchesStrategicMerge,
-		kt.kustomization.Patches...)
 	patches, err := resource.NewResourceSliceFromPatches(
 		kt.ldr, kt.kustomization.PatchesStrategicMerge, kt.decoder)
 	if err != nil {
