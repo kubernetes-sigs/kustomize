@@ -24,7 +24,6 @@ import (
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/types"
-	"sigs.k8s.io/kustomize/pkg/validators"
 )
 
 // kindOfAdd is the kind of metadata being added: label or annotation
@@ -48,12 +47,12 @@ func (k kindOfAdd) String() string {
 
 type addMetadataOptions struct {
 	metadata     map[string]string
-	mapValidator validators.MapValidatorFunc
+	mapValidator func(map[string]string) error
 	kind         kindOfAdd
 }
 
 // newCmdAddAnnotation adds one or more commonAnnotations to the kustomization file.
-func newCmdAddAnnotation(fSys fs.FileSystem, v validators.MapValidatorFunc) *cobra.Command {
+func newCmdAddAnnotation(fSys fs.FileSystem, v func(map[string]string) error) *cobra.Command {
 	var o addMetadataOptions
 	o.kind = annotation
 	o.mapValidator = v
@@ -70,7 +69,7 @@ func newCmdAddAnnotation(fSys fs.FileSystem, v validators.MapValidatorFunc) *cob
 }
 
 // newCmdAddLabel adds one or more commonLabels to the kustomization file.
-func newCmdAddLabel(fSys fs.FileSystem, v validators.MapValidatorFunc) *cobra.Command {
+func newCmdAddLabel(fSys fs.FileSystem, v func(map[string]string) error) *cobra.Command {
 	var o addMetadataOptions
 	o.kind = label
 	o.mapValidator = v
