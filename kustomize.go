@@ -20,14 +20,16 @@ import (
 	"os"
 
 	"github.com/golang/glog"
-
+	"sigs.k8s.io/kustomize/internal/k8sdeps"
 	"sigs.k8s.io/kustomize/pkg/commands"
 )
 
 func main() {
 	defer glog.Flush()
 
-	if err := commands.NewDefaultCommand().Execute(); err != nil {
+	if err := commands.NewDefaultCommand(
+		k8sdeps.NewKustDecoder(),
+		k8sdeps.NewKustValidator()).Execute(); err != nil {
 		os.Exit(1)
 	}
 	os.Exit(0)

@@ -22,7 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"sigs.k8s.io/kustomize/pkg/internal/k8sdeps"
+	"sigs.k8s.io/kustomize/internal/k8sdeps"
 	"strings"
 	"testing"
 
