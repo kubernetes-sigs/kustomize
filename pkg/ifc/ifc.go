@@ -24,3 +24,10 @@ type Decoder interface {
 	// Decode yields the next object from the input, else io.EOF
 	Decode(interface{}) error
 }
+
+// Validator provides functions to validate annotations and labels
+type Validator interface {
+	MakeAnnotationValidator() func(map[string]string) error
+	MakeLabelValidator() func(map[string]string) error
+	ValidateNamespace(string) []string
+}
