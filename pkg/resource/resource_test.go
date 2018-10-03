@@ -18,7 +18,7 @@ package resource
 
 import (
 	"reflect"
-	"sigs.k8s.io/kustomize/pkg/internal/k8sdeps"
+	"sigs.k8s.io/kustomize/internal/k8sdeps"
 	"testing"
 
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
