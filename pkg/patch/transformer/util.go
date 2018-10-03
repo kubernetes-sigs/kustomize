@@ -18,7 +18,6 @@ package transformer
 
 import (
 	"fmt"
-	"log"
 
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
@@ -37,8 +36,7 @@ func findTargetObj(m resmap.ResMap, targetId resource.ResId) (*resource.Resource
 	}
 
 	if len(matchedIds) == 0 {
-		log.Printf("Couldn't find any object to apply the json patch %v, skipping it.", targetId)
-		return nil, nil
+		return nil, fmt.Errorf("couldn't find any object to apply the json patch %v", targetId)
 	}
 	if len(matchedIds) > 1 {
 		return nil, fmt.Errorf("found multiple objects that the patch can apply %v", matchedIds)
