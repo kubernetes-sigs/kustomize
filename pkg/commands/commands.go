@@ -22,6 +22,9 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/pkg/commands/build"
+	"sigs.k8s.io/kustomize/pkg/commands/edit"
+	"sigs.k8s.io/kustomize/pkg/commands/misc"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 )
@@ -44,97 +47,15 @@ See https://sigs.k8s.io/kustomize
 
 	c.AddCommand(
 		// TODO: Make consistent API for newCmd* functions.
-		newCmdBuild(stdOut, fsys, decoder),
-		newCmdEdit(fsys, validator),
-		newCmdConfig(fsys),
-		newCmdVersion(stdOut),
+		build.NewCmdBuild(stdOut, fsys, decoder),
+		edit.NewCmdEdit(fsys, validator),
+		misc.NewCmdConfig(fsys),
+		misc.NewCmdVersion(stdOut),
 	)
 	c.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 
 	// Workaround for this issue:
 	// https://github.com/kubernetes/kubernetes/issues/17162
 	flag.CommandLine.Parse([]string{})
-	return c
-}
-
-// newCmdEdit returns an instance of 'edit' subcommand.
-func newCmdEdit(fsys fs.FileSystem, v ifc.Validator) *cobra.Command {
-	c := &cobra.Command{
-		Use:   "edit",
-		Short: "Edits a kustomization file",
-		Long:  "",
-		Example: `
-	# Adds a configmap to the kustomization file
-	kustomize edit add configmap NAME --from-literal=k=v
-
-	# Sets the nameprefix field
-	kustomize edit set nameprefix <prefix-value>
-`,
-		Args: cobra.MinimumNArgs(1),
-	}
-	c.AddCommand(
-		newCmdAdd(fsys, v),
-		newCmdSet(fsys, v),
-	)
-	return c
-}
-
-// newAddCommand returns an instance of 'add' subcommand.
-func newCmdAdd(fsys fs.FileSystem, v ifc.Validator) *cobra.Command {
-	c := &cobra.Command{
-		Use:   "add",
-		Short: "Adds configmap/resource/patch/base to the kustomization file.",
-		Long:  "",
-		Example: `
-	# Adds a configmap to the kustomization file
-	kustomize edit add configmap NAME --from-literal=k=v
-
-	# Adds a resource to the kustomization
-	kustomize edit add resource <filepath>
-
-	# Adds a patch to the kustomization
-	kustomize edit add patch <filepath>
-
-	# Adds one or more base directories to the kustomization
-	kustomize edit add base <filepath>
-	kustomize edit add base <filepath1>,<filepath2>,<filepath3>
-
-	# Adds one or more commonLabels to the kustomization
-	kustomize edit add label {labelKey1:labelValue1},{labelKey2:labelValue2}
-
-	# Adds one or more commonAnnotations to the kustomization
-	kustomize edit add annotation {annotationKey1:annotationValue1},{annotationKey2:annotationValue2}
-`,
-		Args: cobra.MinimumNArgs(1),
-	}
-	c.AddCommand(
-		newCmdAddResource(fsys),
-		newCmdAddPatch(fsys),
-		newCmdAddConfigMap(fsys),
-		newCmdAddBase(fsys),
-		newCmdAddLabel(fsys, v.MakeLabelValidator()),
-		newCmdAddAnnotation(fsys, v.MakeAnnotationValidator()),
-	)
-	return c
-}
-
-// newSetCommand returns an instance of 'set' subcommand.
-func newCmdSet(fsys fs.FileSystem, v ifc.Validator) *cobra.Command {
-	c := &cobra.Command{
-		Use:   "set",
-		Short: "Sets the value of different fields in kustomization file.",
-		Long:  "",
-		Example: `
-	# Sets the nameprefix field
-	kustomize edit set nameprefix <prefix-value>
-`,
-		Args: cobra.MinimumNArgs(1),
-	}
-
-	c.AddCommand(
-		newCmdSetNamePrefix(fsys),
-		newCmdSetNamespace(fsys, v),
-		newCmdSetImageTag(fsys),
-	)
 	return c
 }
