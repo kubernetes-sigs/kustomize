@@ -115,7 +115,7 @@ func addConfigMap(
 		return err
 	}
 	// Validate by trying to create corev1.configmap.
-	_, _, err = factory.MakeUnstructAndGenerateName(cmArgs)
+	_, err = factory.MakeConfigMap(cmArgs)
 	if err != nil {
 		return err
 	}
