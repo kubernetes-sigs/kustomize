@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"path/filepath"
 	"sort"
+
+	"sigs.k8s.io/kustomize/pkg/constants"
 )
 
 var _ FileSystem = &FakeFS{}
@@ -32,6 +34,31 @@ type FakeFS struct {
 // MakeFakeFS returns an instance of FakeFS with no files in it.
 func MakeFakeFS() *FakeFS {
 	return &FakeFS{m: map[string]*FakeFile{}}
+}
+
+// kustomizationContent is used in tests.
+const kustomizationContent = `namePrefix: some-prefix
+# Labels to add to all objects and selectors.
+# These labels would also be used to form the selector for apply --prune
+# Named differently than “labels” to avoid confusion with metadata for this object
+commonLabels:
+  app: helloworld
+commonAnnotations:
+  note: This is an example annotation
+resources: []
+#- service.yaml
+#- ../some-dir/
+# There could also be configmaps in Base, which would make these overlays
+configMapGenerator: []
+# There could be secrets in Base, if just using a fork/rebase workflow
+secretGenerator: []
+`
+
+// WriteTestKustomization writes a standard test file.
+func (fs *FakeFS) WriteTestKustomization() {
+	fs.WriteFile(
+		constants.KustomizationFileName,
+		[]byte(kustomizationContent))
 }
 
 // Create assures a fake file appears in the in-memory file system.
