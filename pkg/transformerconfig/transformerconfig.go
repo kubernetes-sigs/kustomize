@@ -19,9 +19,10 @@ limitations under the License.
 package transformerconfig
 
 import (
-	"github.com/ghodss/yaml"
 	"log"
-	"sigs.k8s.io/kustomize/pkg/loader"
+
+	"github.com/ghodss/yaml"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/transformerconfig/defaultconfig"
 )
 
@@ -68,7 +69,7 @@ func (t *TransformerConfig) Merge(input *TransformerConfig) *TransformerConfig {
 }
 
 // MakeTransformerConfigFromFiles returns a TranformerConfig object from a list of files
-func MakeTransformerConfigFromFiles(ldr loader.Loader, paths []string) (*TransformerConfig, error) {
+func MakeTransformerConfigFromFiles(ldr ifc.Loader, paths []string) (*TransformerConfig, error) {
 	result := &TransformerConfig{}
 	for _, path := range paths {
 		data, err := ldr.Load(path)

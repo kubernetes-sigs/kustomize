@@ -21,7 +21,6 @@ import (
 	"bytes"
 	"fmt"
 	"reflect"
-	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sort"
 
 	"github.com/ghodss/yaml"
@@ -29,17 +28,18 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	internal "sigs.k8s.io/kustomize/pkg/internal/error"
-	"sigs.k8s.io/kustomize/pkg/loader"
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
 // ResMap is a map from ResId to Resource.
-type ResMap map[resource.ResId]*resource.Resource
+type ResMap map[resid.ResId]*resource.Resource
 
 // FindByGVKN find the matched ResIds by Group/Version/Kind and Name
-func (m ResMap) FindByGVKN(inputId resource.ResId) []resource.ResId {
-	var result []resource.ResId
+func (m ResMap) FindByGVKN(inputId resid.ResId) []resid.ResId {
+	var result []resid.ResId
 	for id := range m {
 		if id.GvknEquals(inputId) {
 			result = append(result, id)
@@ -49,7 +49,7 @@ func (m ResMap) FindByGVKN(inputId resource.ResId) []resource.ResId {
 }
 
 // DemandOneMatchForId find the matched resource by Group/Version/Kind and Name
-func (m ResMap) DemandOneMatchForId(inputId resource.ResId) (*resource.Resource, bool) {
+func (m ResMap) DemandOneMatchForId(inputId resid.ResId) (*resource.Resource, bool) {
 	result := m.FindByGVKN(inputId)
 	if len(result) == 1 {
 		return m[result[0]], true
@@ -59,7 +59,7 @@ func (m ResMap) DemandOneMatchForId(inputId resource.ResId) (*resource.Resource,
 
 // EncodeAsYaml encodes a ResMap to YAML; encoded objects separated by `---`.
 func (m ResMap) EncodeAsYaml() ([]byte, error) {
-	var ids []resource.ResId
+	var ids []resid.ResId
 	for id := range m {
 		ids = append(ids, id)
 	}
@@ -93,8 +93,8 @@ func (m ResMap) EncodeAsYaml() ([]byte, error) {
 // ErrorIfNotEqual returns error if maps are not equal.
 func (m ResMap) ErrorIfNotEqual(m2 ResMap) error {
 	if len(m) != len(m2) {
-		var keySet1 []resource.ResId
-		var keySet2 []resource.ResId
+		var keySet1 []resid.ResId
+		var keySet2 []resid.ResId
 		for id := range m {
 			keySet1 = append(keySet1, id)
 		}
@@ -128,7 +128,7 @@ func (m ResMap) DeepCopy() ResMap {
 func (m ResMap) insert(newName string, obj *unstructured.Unstructured) error {
 	oldName := obj.GetName()
 	gvKind := gvk.FromSchemaGvk(obj.GroupVersionKind())
-	id := resource.NewResId(gvKind, oldName)
+	id := resid.NewResId(gvKind, oldName)
 
 	if _, found := m[id]; found {
 		return fmt.Errorf(
@@ -141,7 +141,7 @@ func (m ResMap) insert(newName string, obj *unstructured.Unstructured) error {
 
 // FilterBy returns a ResMap containing ResIds with the same namespace and nameprefix
 // with the inputId
-func (m ResMap) FilterBy(inputId resource.ResId) ResMap {
+func (m ResMap) FilterBy(inputId resid.ResId) ResMap {
 	result := ResMap{}
 	for id, res := range m {
 		if id.Namespace() == inputId.Namespace() && id.HasSameLeftmostPrefix(inputId) {
@@ -153,7 +153,7 @@ func (m ResMap) FilterBy(inputId resource.ResId) ResMap {
 
 // NewResMapFromFiles returns a ResMap given a resource path slice.
 func NewResMapFromFiles(
-	loader loader.Loader, paths []string,
+	loader ifc.Loader, paths []string,
 	d ifc.Decoder) (ResMap, error) {
 	var result []ResMap
 	for _, path := range paths {
@@ -242,23 +242,23 @@ func MergeWithOverride(maps ...ResMap) (ResMap, error) {
 			if len(matchedId) == 1 {
 				id = matchedId[0]
 				switch r.Behavior() {
-				case resource.BehaviorReplace:
+				case ifc.BehaviorReplace:
 					glog.V(4).Infof("Replace %v with %v", result[id].Object, r.Object)
 					r.Replace(result[id])
 					result[id] = r
-					result[id].SetBehavior(resource.BehaviorCreate)
-				case resource.BehaviorMerge:
+					result[id].SetBehavior(ifc.BehaviorCreate)
+				case ifc.BehaviorMerge:
 					glog.V(4).Infof("Merging %v with %v", result[id].Object, r.Object)
 					r.Merge(result[id])
 					result[id] = r
 					glog.V(4).Infof("Merged object is %v", result[id].Object)
-					result[id].SetBehavior(resource.BehaviorCreate)
+					result[id].SetBehavior(ifc.BehaviorCreate)
 				default:
 					return nil, fmt.Errorf("id %#v exists; must merge or replace", id)
 				}
 			} else if len(matchedId) == 0 {
 				switch r.Behavior() {
-				case resource.BehaviorMerge, resource.BehaviorReplace:
+				case ifc.BehaviorMerge, ifc.BehaviorReplace:
 					return nil, fmt.Errorf("id %#v does not exist; cannot merge or replace", id)
 				default:
 					result[id] = r

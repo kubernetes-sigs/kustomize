@@ -21,29 +21,29 @@ import (
 	"sort"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/resid"
 )
 
 func TestLess(t *testing.T) {
 	ids := IdSlice{
-		resource.NewResIdKindOnly("ConfigMap", "cm"),
-		resource.NewResIdKindOnly("Pod", "pod"),
-		resource.NewResIdKindOnly("Namespace", "ns1"),
-		resource.NewResIdKindOnly("Namespace", "ns2"),
-		resource.NewResIdKindOnly("Role", "ro"),
-		resource.NewResIdKindOnly("RoleBinding", "rb"),
-		resource.NewResIdKindOnly("CustomResourceDefinition", "crd"),
-		resource.NewResIdKindOnly("ServiceAccount", "sa"),
+		resid.NewResIdKindOnly("ConfigMap", "cm"),
+		resid.NewResIdKindOnly("Pod", "pod"),
+		resid.NewResIdKindOnly("Namespace", "ns1"),
+		resid.NewResIdKindOnly("Namespace", "ns2"),
+		resid.NewResIdKindOnly("Role", "ro"),
+		resid.NewResIdKindOnly("RoleBinding", "rb"),
+		resid.NewResIdKindOnly("CustomResourceDefinition", "crd"),
+		resid.NewResIdKindOnly("ServiceAccount", "sa"),
 	}
 	expected := IdSlice{
-		resource.NewResIdKindOnly("Namespace", "ns1"),
-		resource.NewResIdKindOnly("Namespace", "ns2"),
-		resource.NewResIdKindOnly("CustomResourceDefinition", "crd"),
-		resource.NewResIdKindOnly("ServiceAccount", "sa"),
-		resource.NewResIdKindOnly("Role", "ro"),
-		resource.NewResIdKindOnly("RoleBinding", "rb"),
-		resource.NewResIdKindOnly("ConfigMap", "cm"),
-		resource.NewResIdKindOnly("Pod", "pod"),
+		resid.NewResIdKindOnly("Namespace", "ns1"),
+		resid.NewResIdKindOnly("Namespace", "ns2"),
+		resid.NewResIdKindOnly("CustomResourceDefinition", "crd"),
+		resid.NewResIdKindOnly("ServiceAccount", "sa"),
+		resid.NewResIdKindOnly("Role", "ro"),
+		resid.NewResIdKindOnly("RoleBinding", "rb"),
+		resid.NewResIdKindOnly("ConfigMap", "cm"),
+		resid.NewResIdKindOnly("Pod", "pod"),
 	}
 	sort.Sort(ids)
 	if !reflect.DeepEqual(ids, expected) {

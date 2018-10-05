@@ -29,19 +29,19 @@ import (
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	internal "sigs.k8s.io/kustomize/pkg/internal/error"
-	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/patch"
+	"sigs.k8s.io/kustomize/pkg/resid"
 )
 
 // Resource is an "Unstructured" (json/map form) Kubernetes API resource object
 // paired with a GenerationBehavior.
 type Resource struct {
 	unstructured.Unstructured
-	b GenerationBehavior
+	b ifc.GenerationBehavior
 }
 
 // NewResourceWithBehavior returns a new instance of Resource.
-func NewResourceWithBehavior(obj runtime.Object, b GenerationBehavior) (*Resource, error) {
+func NewResourceWithBehavior(obj runtime.Object, b ifc.GenerationBehavior) (*Resource, error) {
 	// Convert obj to a byte stream, then convert that to JSON (Unstructured).
 	marshaled, err := json.Marshal(obj)
 	if err != nil {
@@ -61,13 +61,13 @@ func NewResourceFromMap(m map[string]interface{}) *Resource {
 
 // NewResourceFromUnstruct returns a new instance of Resource.
 func NewResourceFromUnstruct(u unstructured.Unstructured) *Resource {
-	return &Resource{Unstructured: u, b: BehaviorUnspecified}
+	return &Resource{Unstructured: u, b: ifc.BehaviorUnspecified}
 }
 
 // NewResourceSliceFromPatches returns a slice of resources given a patch path
 // slice from a kustomization file.
 func NewResourceSliceFromPatches(
-	ldr loader.Loader, paths []patch.StrategicMerge,
+	ldr ifc.Loader, paths []patch.StrategicMerge,
 	decoder ifc.Decoder) ([]*Resource, error) {
 	var result []*Resource
 	for _, path := range paths {
@@ -117,24 +117,24 @@ func (r *Resource) String() string {
 }
 
 // Behavior returns the behavior for the resource.
-func (r *Resource) Behavior() GenerationBehavior {
+func (r *Resource) Behavior() ifc.GenerationBehavior {
 	return r.b
 }
 
 // SetBehavior changes the resource to the new behavior
-func (r *Resource) SetBehavior(b GenerationBehavior) *Resource {
+func (r *Resource) SetBehavior(b ifc.GenerationBehavior) *Resource {
 	r.b = b
 	return r
 }
 
 // IsGenerated checks if the resource is generated from a generator
 func (r *Resource) IsGenerated() bool {
-	return r.b != BehaviorUnspecified
+	return r.b != ifc.BehaviorUnspecified
 }
 
 // Id returns the ResId for the resource.
-func (r *Resource) Id() ResId {
-	return NewResId(gvk.FromSchemaGvk(r.GroupVersionKind()), r.GetName())
+func (r *Resource) Id() resid.ResId {
+	return resid.NewResId(gvk.FromSchemaGvk(r.GroupVersionKind()), r.GetName())
 }
 
 // Merge performs merge with other resource.

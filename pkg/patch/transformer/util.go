@@ -19,14 +19,15 @@ package transformer
 import (
 	"fmt"
 
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
-func findTargetObj(m resmap.ResMap, targetId resource.ResId) (*resource.Resource, error) {
+func findTargetObj(m resmap.ResMap, targetId resid.ResId) (*resource.Resource, error) {
 	matchedIds := m.FindByGVKN(targetId)
 	if targetId.Namespace() != "" {
-		var ids []resource.ResId
+		var ids []resid.ResId
 		for _, id := range matchedIds {
 			if id.Namespace() == targetId.Namespace() {
 				ids = append(ids, id)
