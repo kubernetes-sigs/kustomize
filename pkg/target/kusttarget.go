@@ -44,6 +44,7 @@ import (
 type KustTarget struct {
 	kustomization *types.Kustomization
 	decoder       ifc.Decoder
+	hash          ifc.Hash
 	ldr           ifc.Loader
 	fSys          fs.FileSystem
 	tcfg          *transformerconfig.TransformerConfig
@@ -53,7 +54,7 @@ type KustTarget struct {
 func NewKustTarget(
 	ldr ifc.Loader, fSys fs.FileSystem,
 	tcfg *transformerconfig.TransformerConfig,
-	d ifc.Decoder) (*KustTarget, error) {
+	d ifc.Decoder, h ifc.Hash) (*KustTarget, error) {
 	content, err := ldr.Load(constants.KustomizationFileName)
 	if err != nil {
 		return nil, err
@@ -71,6 +72,7 @@ func NewKustTarget(
 		fSys:          fSys,
 		tcfg:          tcfg,
 		decoder:       d,
+		hash:          h,
 	}, nil
 }
 
@@ -97,7 +99,7 @@ func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 
 // resolveRefsToGeneratedResources fixes all name references.
 func (kt *KustTarget) resolveRefsToGeneratedResources(m resmap.ResMap) (resmap.ResMap, error) {
-	err := transformers.NewNameHashTransformer().Transform(m)
+	err := transformers.NewNameHashTransformer(kt.hash).Transform(m)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +223,7 @@ func (kt *KustTarget) loadCustomizedBases() (resmap.ResMap, *interror.Kustomizat
 			errs.Append(errors.Wrap(err, "couldn't make ldr for "+path))
 			continue
 		}
-		target, err := NewKustTarget(ldr, kt.fSys, kt.tcfg, kt.decoder)
+		target, err := NewKustTarget(ldr, kt.fSys, kt.tcfg, kt.decoder, kt.hash)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "couldn't make target for "+path))
 			continue
@@ -250,7 +252,7 @@ func (kt *KustTarget) loadBasesAsFlatList() ([]*KustTarget, error) {
 			errs.Append(err)
 			continue
 		}
-		target, err := NewKustTarget(ldr, kt.fSys, kt.tcfg, kt.decoder)
+		target, err := NewKustTarget(ldr, kt.fSys, kt.tcfg, kt.decoder, kt.hash)
 		if err != nil {
 			errs.Append(err)
 			continue

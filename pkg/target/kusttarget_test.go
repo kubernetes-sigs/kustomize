@@ -208,7 +208,7 @@ func TestResources1(t *testing.T) {
 	fakeFs.Mkdir("/")
 	kt, err := NewKustTarget(
 		l, fakeFs, transformerconfig.MakeDefaultTransformerConfig(),
-		k8sdeps.NewKustDecoder())
+		k8sdeps.NewKustDecoder(), k8sdeps.NewKustHash())
 	if err != nil {
 		t.Fatalf("unexpected construction error %v", err)
 	}
@@ -233,7 +233,7 @@ func TestResourceNotFound(t *testing.T) {
 	fakeFs.Mkdir("/")
 	kt, err := NewKustTarget(
 		l, fakeFs, transformerconfig.MakeDefaultTransformerConfig(),
-		k8sdeps.NewKustDecoder())
+		k8sdeps.NewKustDecoder(), k8sdeps.NewKustHash())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
@@ -256,7 +256,7 @@ func TestSecretTimeout(t *testing.T) {
 	fakeFs.Mkdir("/")
 	kt, err := NewKustTarget(
 		l, fakeFs, transformerconfig.MakeDefaultTransformerConfig(),
-		k8sdeps.NewKustDecoder())
+		k8sdeps.NewKustDecoder(), k8sdeps.NewKustHash())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
