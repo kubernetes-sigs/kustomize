@@ -18,6 +18,7 @@ package transformers
 
 import (
 	"reflect"
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"testing"
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
@@ -28,7 +29,7 @@ import (
 
 func TestImageTagTransformer(t *testing.T) {
 	m := resmap.ResMap{
-		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"group":      "apps",
 				"apiVersion": "v1",
@@ -59,7 +60,7 @@ func TestImageTagTransformer(t *testing.T) {
 					},
 				},
 			}),
-		resource.NewResId(gvk.Gvk{Kind: "randomKind"}, "random"): resource.NewResourceFromMap(
+		resid.NewResId(gvk.Gvk{Kind: "randomKind"}, "random"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"spec": map[string]interface{}{
 					"template": map[string]interface{}{
@@ -96,7 +97,7 @@ func TestImageTagTransformer(t *testing.T) {
 			}),
 	}
 	expected := resmap.ResMap{
-		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"group":      "apps",
 				"apiVersion": "v1",
@@ -127,7 +128,7 @@ func TestImageTagTransformer(t *testing.T) {
 					},
 				},
 			}),
-		resource.NewResId(gvk.Gvk{Kind: "randomKind"}, "random"): resource.NewResourceFromMap(
+		resid.NewResId(gvk.Gvk{Kind: "randomKind"}, "random"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"spec": map[string]interface{}{
 					"template": map[string]interface{}{

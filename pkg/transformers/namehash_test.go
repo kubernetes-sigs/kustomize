@@ -20,13 +20,15 @@ import (
 	"reflect"
 	"testing"
 
+	"sigs.k8s.io/kustomize/pkg/ifc"
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
 func TestNameHashTransformer(t *testing.T) {
 	objs := resmap.ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -34,7 +36,7 @@ func TestNameHashTransformer(t *testing.T) {
 					"name": "cm1",
 				},
 			}),
-		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"group":      "apps",
 				"apiVersion": "v1",
@@ -60,7 +62,7 @@ func TestNameHashTransformer(t *testing.T) {
 					},
 				},
 			}),
-		resource.NewResId(service, "svc1"): resource.NewResourceFromMap(
+		resid.NewResId(service, "svc1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Service",
@@ -76,18 +78,18 @@ func TestNameHashTransformer(t *testing.T) {
 					},
 				},
 			}),
-		resource.NewResId(secret, "secret1"): resource.NewResourceFromMap(
+		resid.NewResId(secret, "secret1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
 				"metadata": map[string]interface{}{
 					"name": "secret1",
 				},
-			}).SetBehavior(resource.BehaviorCreate),
+			}).SetBehavior(ifc.BehaviorCreate),
 	}
 
 	expected := resmap.ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -95,7 +97,7 @@ func TestNameHashTransformer(t *testing.T) {
 					"name": "cm1",
 				},
 			}),
-		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"group":      "apps",
 				"apiVersion": "v1",
@@ -121,7 +123,7 @@ func TestNameHashTransformer(t *testing.T) {
 					},
 				},
 			}),
-		resource.NewResId(service, "svc1"): resource.NewResourceFromMap(
+		resid.NewResId(service, "svc1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Service",
@@ -137,14 +139,14 @@ func TestNameHashTransformer(t *testing.T) {
 					},
 				},
 			}),
-		resource.NewResId(secret, "secret1"): resource.NewResourceFromMap(
+		resid.NewResId(secret, "secret1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
 				"metadata": map[string]interface{}{
 					"name": "secret1-7kc45hd5f7",
 				},
-			}).SetBehavior(resource.BehaviorCreate),
+			}).SetBehavior(ifc.BehaviorCreate),
 	}
 
 	tran := NewNameHashTransformer()

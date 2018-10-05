@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
-	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 )
 
@@ -140,7 +140,7 @@ If it is not set we generate a secret dynamically",
 `
 )
 
-func makeLoader(t *testing.T) loader.Loader {
+func makeLoader(t *testing.T) ifc.Loader {
 	ldr := loadertest.NewFakeLoader("/testpath")
 	err := ldr.AddFile("/testpath/crd.json", []byte(crdContent))
 	if err != nil {
