@@ -18,6 +18,7 @@ package crds
 
 import (
 	"reflect"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"testing"
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
