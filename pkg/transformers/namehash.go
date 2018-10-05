@@ -17,11 +17,8 @@ limitations under the License.
 package transformers
 
 import (
-	"encoding/json"
 	"fmt"
 
-	"k8s.io/api/core/v1"
-	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/hash"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
@@ -40,72 +37,23 @@ func NewNameHashTransformer() Transformer {
 
 // Transform appends hash to configmaps and secrets.
 func (o *nameHashTransformer) Transform(m resmap.ResMap) error {
-	for id, res := range m {
+	for _, res := range m {
 		if res.IsGenerated() {
-			switch {
-			case id.Gvk().IsSelected(&gvk.Gvk{Version: "v1", Kind: "ConfigMap"}):
-				err := appendHashForConfigMap(res)
-				if err != nil {
-					return err
-				}
-
-			case id.Gvk().IsSelected(&gvk.Gvk{Version: "v1", Kind: "Secret"}):
-				err := appendHashForSecret(res)
-				if err != nil {
-					return err
-				}
+			err := appendHash(res)
+			if err != nil {
+				return err
 			}
 		}
 	}
 	return nil
 }
 
-func appendHashForConfigMap(res *resource.Resource) error {
-	cm, err := unstructuredToConfigmap(res)
-	if err != nil {
-		return err
-	}
-	h, err := hash.ConfigMapHash(cm)
+func appendHash(res *resource.Resource) error {
+	h, err := hash.Hash(res.Object)
 	if err != nil {
 		return err
 	}
 	nameWithHash := fmt.Sprintf("%s-%s", res.GetName(), h)
 	res.SetName(nameWithHash)
 	return nil
-}
-
-// TODO: Remove this function after we support hash unstructured objects
-func unstructuredToConfigmap(res *resource.Resource) (*v1.ConfigMap, error) {
-	marshaled, err := json.Marshal(res)
-	if err != nil {
-		return nil, err
-	}
-	var out v1.ConfigMap
-	err = json.Unmarshal(marshaled, &out)
-	return &out, err
-}
-
-func appendHashForSecret(res *resource.Resource) error {
-	secret, err := unstructuredToSecret(res)
-	if err != nil {
-		return err
-	}
-	h, err := hash.SecretHash(secret)
-	if err != nil {
-		return err
-	}
-	nameWithHash := fmt.Sprintf("%s-%s", res.GetName(), h)
-	res.SetName(nameWithHash)
-	return nil
-}
-
-// TODO: Remove this function after we support hash unstructured objects
-func unstructuredToSecret(res *resource.Resource) (*v1.Secret, error) {
-	marshaled, err := json.Marshal(res)
-	if err != nil {
-		return nil, err
-	}
-	var out v1.Secret
-	err = json.Unmarshal(marshaled, &out)
-	return &out, err
 }
