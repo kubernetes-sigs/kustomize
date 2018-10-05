@@ -18,7 +18,6 @@ package transformer
 
 import (
 	"reflect"
-	"sigs.k8s.io/kustomize/pkg/resid"
 	"testing"
 
 	"github.com/evanphx/json-patch"

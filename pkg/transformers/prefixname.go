@@ -80,7 +80,7 @@ func (o *namePrefixTransformer) Transform(m resmap.ResMap) error {
 		if id.Gvk().IsSelected(&deprecateNamePrefixPathConfig.Gvk) {
 			log.Println("Adding nameprefix to Namespace resource will be deprecated in next release.")
 		}
-		objMap := mf[id].UnstructuredContent()
+		objMap := mf[id].FunStruct().Map()
 		for _, path := range o.pathConfigs {
 			if !id.Gvk().IsSelected(&path.Gvk) {
 				continue

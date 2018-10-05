@@ -17,6 +17,8 @@ limitations under the License.
 // Package ifc holds miscellaneous interfaces used by kustomize.
 package ifc
 
+import "sigs.k8s.io/kustomize/pkg/gvk"
+
 // Decoder unmarshalls byte input into an object.
 type Decoder interface {
 	// SetInput accepts new input.
@@ -42,4 +44,22 @@ type Loader interface {
 	Load(location string) ([]byte, error)
 	// Cleanup cleans the loader
 	Cleanup() error
+}
+
+// FunStruct is a wrapper for apimachinery unstructured.Unstructured.
+type FunStruct interface {
+	Map() map[string]interface{}
+	SetMap(map[string]interface{})
+	Copy() FunStruct
+	GetFieldValue(fieldPath string) (string, error)
+	MarshalJSON() ([]byte, error)
+	UnmarshalJSON([]byte) error
+	GetGvk() gvk.Gvk
+	GetKind() string
+	GetName() string
+	SetName(string)
+	GetLabels() map[string]string
+	SetLabels(map[string]string)
+	GetAnnotations() map[string]string
+	SetAnnotations(map[string]string)
 }
