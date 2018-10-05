@@ -81,7 +81,7 @@ func TestBuild(t *testing.T) {
 	updateKustomizeExpected := os.Getenv(updateEnvVar) == "true"
 	fSys := fs.MakeRealFS()
 
-	testcases := []string{}
+	var testcases []string
 	filepath.Walk("testdata", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err

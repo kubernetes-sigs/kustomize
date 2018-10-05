@@ -61,7 +61,7 @@ func TestComplete(t *testing.T) {
 		},
 		{
 			dir:    "/some/file",
-			expect: fmt.Errorf("%s is not a directory. Please use a different directory name.", "/some/file"),
+			expect: fmt.Errorf("%s is not a directory", "/some/file"),
 		},
 	}
 
