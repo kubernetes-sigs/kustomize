@@ -48,7 +48,7 @@ func NewNameReferenceTransformer(pc []transformerconfig.ReferencePathConfig) (Tr
 // then the old name is k.Name and the new name is v.GetName()
 func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 	for id := range m {
-		objMap := m[id].UnstructuredContent()
+		objMap := m[id].FunStruct().Map()
 		for _, referencePathConfig := range o.pathConfigs {
 			for _, path := range referencePathConfig.PathConfigs {
 				if !id.Gvk().IsSelected(&path.Gvk) {
@@ -82,7 +82,7 @@ func (o *nameReferenceTransformer) updateNameReference(
 				if err != nil {
 					return nil, err
 				}
-				return res.GetName(), nil
+				return res.FunStruct().GetName(), nil
 			}
 		}
 		return in, nil

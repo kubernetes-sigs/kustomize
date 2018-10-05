@@ -26,8 +26,6 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	"github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	internal "sigs.k8s.io/kustomize/pkg/internal/error"
 	"sigs.k8s.io/kustomize/pkg/resid"
@@ -70,7 +68,7 @@ func (m ResMap) EncodeAsYaml() ([]byte, error) {
 	buf := bytes.NewBuffer(b)
 	for _, id := range ids {
 		obj := m[id]
-		out, err := yaml.Marshal(obj)
+		out, err := yaml.Marshal(obj.FunStruct().Map())
 		if err != nil {
 			return nil, err
 		}
@@ -119,24 +117,10 @@ func (m ResMap) ErrorIfNotEqual(m2 ResMap) error {
 func (m ResMap) DeepCopy() ResMap {
 	mcopy := make(ResMap)
 	for id, obj := range m {
-		mcopy[id] = resource.NewResourceFromUnstruct(obj.Unstructured)
+		mcopy[id] = resource.NewResourceFromFunStruct(obj.FunStruct().Copy())
 		mcopy[id].SetBehavior(obj.Behavior())
 	}
 	return mcopy
-}
-
-func (m ResMap) insert(newName string, obj *unstructured.Unstructured) error {
-	oldName := obj.GetName()
-	gvKind := gvk.FromSchemaGvk(obj.GroupVersionKind())
-	id := resid.NewResId(gvKind, oldName)
-
-	if _, found := m[id]; found {
-		return fmt.Errorf(
-			"the <name: %q, GroupVersionKind: %v> already exists in the map", oldName, gvKind)
-	}
-	obj.SetName(newName)
-	m[id] = resource.NewResourceFromUnstruct(*obj)
-	return nil
 }
 
 // FilterBy returns a ResMap containing ResIds with the same namespace and nameprefix
@@ -243,15 +227,18 @@ func MergeWithOverride(maps ...ResMap) (ResMap, error) {
 				id = matchedId[0]
 				switch r.Behavior() {
 				case ifc.BehaviorReplace:
-					glog.V(4).Infof("Replace %v with %v", result[id].Object, r.Object)
+					glog.V(4).Infof("Replace %v with %v",
+						result[id].FunStruct().Map(), r.FunStruct().Map())
 					r.Replace(result[id])
 					result[id] = r
 					result[id].SetBehavior(ifc.BehaviorCreate)
 				case ifc.BehaviorMerge:
-					glog.V(4).Infof("Merging %v with %v", result[id].Object, r.Object)
+					glog.V(4).Infof("Merging %v with %v",
+						result[id].FunStruct().Map(), r.FunStruct().Map())
 					r.Merge(result[id])
 					result[id] = r
-					glog.V(4).Infof("Merged object is %v", result[id].Object)
+					glog.V(4).Infof("Merged object is %v",
+						result[id].FunStruct().Map())
 					result[id].SetBehavior(ifc.BehaviorCreate)
 				default:
 					return nil, fmt.Errorf("id %#v exists; must merge or replace", id)

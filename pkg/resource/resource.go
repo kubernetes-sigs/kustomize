@@ -18,50 +18,42 @@ limitations under the License.
 package resource
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
+	"log"
 	"strings"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/internal/k8sdeps"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	internal "sigs.k8s.io/kustomize/pkg/internal/error"
 	"sigs.k8s.io/kustomize/pkg/patch"
 	"sigs.k8s.io/kustomize/pkg/resid"
 )
 
-// Resource is an "Unstructured" (json/map form) Kubernetes API resource object
+// Resource is map representation of a Kubernetes API resource object
 // paired with a GenerationBehavior.
 type Resource struct {
-	unstructured.Unstructured
-	b ifc.GenerationBehavior
+	funStruct ifc.FunStruct
+	b         ifc.GenerationBehavior
 }
 
 // NewResourceWithBehavior returns a new instance of Resource.
 func NewResourceWithBehavior(obj runtime.Object, b ifc.GenerationBehavior) (*Resource, error) {
-	// Convert obj to a byte stream, then convert that to JSON (Unstructured).
-	marshaled, err := json.Marshal(obj)
-	if err != nil {
-		return nil, err
-	}
-	var u unstructured.Unstructured
-	err = u.UnmarshalJSON(marshaled)
-	// creationTimestamp always 'null', remove it
-	u.SetCreationTimestamp(metav1.Time{})
-	return &Resource{Unstructured: u, b: b}, err
+	u, err := k8sdeps.NewKustFunStructFromObject(obj)
+	return &Resource{funStruct: u, b: b}, err
 }
 
 // NewResourceFromMap returns a new instance of Resource.
 func NewResourceFromMap(m map[string]interface{}) *Resource {
-	return NewResourceFromUnstruct(unstructured.Unstructured{Object: m})
+	u := k8sdeps.NewKustFunStructFromMap(m)
+	return &Resource{funStruct: u, b: ifc.BehaviorUnspecified}
 }
 
-// NewResourceFromUnstruct returns a new instance of Resource.
-func NewResourceFromUnstruct(u unstructured.Unstructured) *Resource {
-	return &Resource{Unstructured: u, b: ifc.BehaviorUnspecified}
+// NewResourceFromFunStruct returns a new instance of Resource.
+func NewResourceFromFunStruct(u ifc.FunStruct) *Resource {
+	if u == nil {
+		log.Fatal("unstruct ifc must not be null")
+	}
+	return &Resource{funStruct: u, b: ifc.BehaviorUnspecified}
 }
 
 // NewResourceSliceFromPatches returns a slice of resources given a patch path
@@ -87,29 +79,24 @@ func NewResourceSliceFromPatches(
 // NewResourceSliceFromBytes unmarshalls bytes into a Resource slice.
 func NewResourceSliceFromBytes(
 	in []byte, decoder ifc.Decoder) ([]*Resource, error) {
-	decoder.SetInput(in)
-	var result []*Resource
-	var err error
-	for err == nil || isEmptyYamlError(err) {
-		var out unstructured.Unstructured
-		err = decoder.Decode(&out)
-		if err == nil {
-			result = append(result, NewResourceFromUnstruct(out))
-		}
-	}
-	if err != io.EOF {
+	funStructs, err := k8sdeps.NewFunStructSliceFromBytes(in, decoder)
+	if err != nil {
 		return nil, err
+	}
+	var result []*Resource
+	for _, u := range funStructs {
+		result = append(result, NewResourceFromFunStruct(u))
 	}
 	return result, nil
 }
 
-func isEmptyYamlError(err error) bool {
-	return strings.Contains(err.Error(), "is missing in 'null'")
+func (r *Resource) FunStruct() ifc.FunStruct {
+	return r.funStruct
 }
 
 // String returns resource as JSON.
 func (r *Resource) String() string {
-	bs, err := r.MarshalJSON()
+	bs, err := r.funStruct.MarshalJSON()
 	if err != nil {
 		return "<" + err.Error() + ">"
 	}
@@ -134,20 +121,25 @@ func (r *Resource) IsGenerated() bool {
 
 // Id returns the ResId for the resource.
 func (r *Resource) Id() resid.ResId {
-	return resid.NewResId(gvk.FromSchemaGvk(r.GroupVersionKind()), r.GetName())
+	return resid.NewResId(r.funStruct.GetGvk(), r.funStruct.GetName())
 }
 
 // Merge performs merge with other resource.
 func (r *Resource) Merge(other *Resource) {
 	r.Replace(other)
-	mergeConfigmap(r.Object, other.Object, r.Object)
+	mergeConfigmap(
+		r.funStruct.Map(), other.funStruct.Map(), r.funStruct.Map())
 }
 
 // Replace performs replace with other resource.
 func (r *Resource) Replace(other *Resource) {
-	r.SetLabels(mergeStringMaps(other.GetLabels(), r.GetLabels()))
-	r.SetAnnotations(mergeStringMaps(other.GetAnnotations(), r.GetAnnotations()))
-	r.SetName(other.GetName())
+	r.funStruct.SetLabels(
+		mergeStringMaps(
+			other.funStruct.GetLabels(), r.funStruct.GetLabels()))
+	r.funStruct.SetAnnotations(
+		mergeStringMaps(
+			other.funStruct.GetAnnotations(), r.funStruct.GetAnnotations()))
+	r.funStruct.SetName(other.funStruct.GetName())
 }
 
 // TODO: Add BinaryData once we sync to new k8s.io/api
@@ -176,27 +168,5 @@ func mergeStringMaps(maps ...map[string]string) map[string]string {
 
 // GetFieldValue returns value at the given fieldpath.
 func (r *Resource) GetFieldValue(fieldPath string) (string, error) {
-	return getFieldValue(r.UnstructuredContent(), strings.Split(fieldPath, "."))
-}
-
-func getFieldValue(m map[string]interface{}, pathToField []string) (string, error) {
-	if len(pathToField) == 0 {
-		return "", fmt.Errorf("field not found")
-	}
-	if len(pathToField) == 1 {
-		if v, found := m[pathToField[0]]; found {
-			if s, ok := v.(string); ok {
-				return s, nil
-			}
-			return "", fmt.Errorf("value at fieldpath is not of string type")
-		}
-		return "", fmt.Errorf("field at given fieldpath does not exist")
-	}
-	v := m[pathToField[0]]
-	switch typedV := v.(type) {
-	case map[string]interface{}:
-		return getFieldValue(typedV, pathToField[1:])
-	default:
-		return "", fmt.Errorf("%#v is not expected to be a primitive type", typedV)
-	}
+	return r.funStruct.GetFieldValue(fieldPath)
 }

@@ -41,7 +41,7 @@ func (pt *imageTagTransformer) Transform(resources resmap.ResMap) error {
 		return nil
 	}
 	for _, res := range resources {
-		err := pt.findAndReplaceTag(res.UnstructuredContent())
+		err := pt.findAndReplaceTag(res.FunStruct().Map())
 		if err != nil {
 			return err
 		}
