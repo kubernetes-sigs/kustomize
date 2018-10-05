@@ -18,7 +18,6 @@ limitations under the License.
 package configmapandsecret
 
 import (
-	"encoding/json"
 	"fmt"
 	"path"
 	"strings"
@@ -26,9 +25,6 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/loader"
@@ -45,28 +41,6 @@ type ConfigMapFactory struct {
 func NewConfigMapFactory(
 	fSys fs.FileSystem, l loader.Loader) *ConfigMapFactory {
 	return &ConfigMapFactory{fSys: fSys, ldr: l}
-}
-
-// MakeUnstruct returns an configmap in unstructured representation.
-func (f *ConfigMapFactory) MakeUnstruct(
-	args *types.ConfigMapArgs) (*unstructured.Unstructured, error) {
-	cm, err := f.MakeConfigMap(args)
-	if err != nil {
-		return nil, err
-	}
-	unstructuredCM, err := objectToUnstructured(cm)
-	return unstructuredCM, err
-}
-
-func objectToUnstructured(in runtime.Object) (*unstructured.Unstructured, error) {
-	marshaled, err := json.Marshal(in)
-	if err != nil {
-		return nil, err
-	}
-	var out unstructured.Unstructured
-	err = out.UnmarshalJSON(marshaled)
-	out.SetCreationTimestamp(metav1.Time{})
-	return &out, err
 }
 
 func (f *ConfigMapFactory) makeFreshConfigMap(
