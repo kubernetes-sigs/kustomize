@@ -31,7 +31,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"sigs.k8s.io/kustomize/pkg/fs"
-	"sigs.k8s.io/kustomize/pkg/hash"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -48,20 +47,15 @@ func NewConfigMapFactory(
 	return &ConfigMapFactory{fSys: fSys, ldr: l}
 }
 
-// MakeUnstructAndGenerateName returns an configmap and the name appended with a hash.
-func (f *ConfigMapFactory) MakeUnstructAndGenerateName(
-	args *types.ConfigMapArgs) (*unstructured.Unstructured, string, error) {
+// MakeUnstruct returns an configmap in unstructured representation.
+func (f *ConfigMapFactory) MakeUnstruct(
+	args *types.ConfigMapArgs) (*unstructured.Unstructured, error) {
 	cm, err := f.MakeConfigMap(args)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
-	h, err := hash.ConfigMapHash(cm)
-	if err != nil {
-		return nil, "", err
-	}
-	nameWithHash := fmt.Sprintf("%s-%s", cm.GetName(), h)
 	unstructuredCM, err := objectToUnstructured(cm)
-	return unstructuredCM, nameWithHash, err
+	return unstructuredCM, err
 }
 
 func objectToUnstructured(in runtime.Object) (*unstructured.Unstructured, error) {
