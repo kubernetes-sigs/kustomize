@@ -97,7 +97,7 @@ func (o *saveOptions) Complete(fsys fs.FileSystem) error {
 	if fsys.IsDir(o.saveDirectory) {
 		return nil
 	}
-	return fmt.Errorf("%s is not a directory. Please use a different directory name.", o.saveDirectory)
+	return fmt.Errorf("%s is not a directory", o.saveDirectory)
 }
 
 // RunSave saves the default transformer configurations local directory
