@@ -18,6 +18,7 @@ package resmap
 
 import (
 	"sigs.k8s.io/kustomize/pkg/configmapandsecret"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -37,7 +38,7 @@ func NewResMapFromConfigMapArgs(
 			return nil, err
 		}
 		res, err := resource.NewResourceWithBehavior(
-			cm, resource.NewGenerationBehavior(cmArgs.Behavior))
+			cm, ifc.NewGenerationBehavior(cmArgs.Behavior))
 		if err != nil {
 			return nil, err
 		}

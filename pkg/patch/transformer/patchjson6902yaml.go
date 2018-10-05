@@ -19,21 +19,21 @@ package transformer
 import (
 	"github.com/ghodss/yaml"
 	"github.com/krishicks/yaml-patch"
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
-	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
 )
 
 // patchJson6902YAMLTransformer applies patches.
 type patchJson6902YAMLTransformer struct {
-	target resource.ResId
+	target resid.ResId
 	patch  yamlpatch.Patch
 }
 
 var _ transformers.Transformer = &patchJson6902YAMLTransformer{}
 
 // newPatchJson6902YAMLTransformer constructs a PatchJson6902 transformer.
-func newPatchJson6902YAMLTransformer(t resource.ResId, p yamlpatch.Patch) (transformers.Transformer, error) {
+func newPatchJson6902YAMLTransformer(t resid.ResId, p yamlpatch.Patch) (transformers.Transformer, error) {
 	if len(p) == 0 {
 		return transformers.NewNoOpTransformer(), nil
 	}

@@ -25,6 +25,8 @@ import (
 	"sigs.k8s.io/kustomize/pkg/configmapandsecret"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/ifc"
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -61,7 +63,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	}
 
 	expected := ResMap{
-		resource.NewResId(secret, "apple"): resource.NewResourceFromMap(
+		resid.NewResId(secret, "apple"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -73,8 +75,8 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
-			}).SetBehavior(resource.BehaviorCreate),
-		resource.NewResId(secret, "peanuts"): resource.NewResourceFromMap(
+			}).SetBehavior(ifc.BehaviorCreate),
+		resid.NewResId(secret, "peanuts"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -86,7 +88,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
-			}).SetBehavior(resource.BehaviorCreate),
+			}).SetBehavior(ifc.BehaviorCreate),
 	}
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("%#v\ndoesn't match expected:\n%#v", actual, expected)

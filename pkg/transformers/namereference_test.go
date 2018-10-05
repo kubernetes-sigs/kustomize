@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"testing"
 
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformerconfig"
@@ -27,7 +28,7 @@ import (
 
 func TestNameReferenceRun(t *testing.T) {
 	m := resmap.ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -35,7 +36,7 @@ func TestNameReferenceRun(t *testing.T) {
 					"name": "someprefix-cm1-somehash",
 				},
 			}),
-		resource.NewResId(cmap, "cm2"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cm2"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -43,7 +44,7 @@ func TestNameReferenceRun(t *testing.T) {
 					"name": "someprefix-cm2-somehash",
 				},
 			}),
-		resource.NewResId(secret, "secret1"): resource.NewResourceFromMap(
+		resid.NewResId(secret, "secret1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -51,7 +52,7 @@ func TestNameReferenceRun(t *testing.T) {
 					"name": "someprefix-secret1-somehash",
 				},
 			}),
-		resource.NewResId(pvc, "claim1"): resource.NewResourceFromMap(
+		resid.NewResId(pvc, "claim1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "PersistentVolumeClaim",
@@ -59,7 +60,7 @@ func TestNameReferenceRun(t *testing.T) {
 					"name": "someprefix-claim1",
 				},
 			}),
-		resource.NewResId(ingress, "ingress1"): resource.NewResourceFromMap(
+		resid.NewResId(ingress, "ingress1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"group":      "extensions",
 				"apiVersion": "v1beta1",
@@ -79,7 +80,7 @@ func TestNameReferenceRun(t *testing.T) {
 				},
 			},
 		),
-		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"group":      "apps",
 				"apiVersion": "v1",
@@ -157,7 +158,7 @@ func TestNameReferenceRun(t *testing.T) {
 					},
 				},
 			}),
-		resource.NewResId(statefulset, "statefulset1"): resource.NewResourceFromMap(
+		resid.NewResId(statefulset, "statefulset1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"group":      "apps",
 				"apiVersion": "v1",
@@ -194,7 +195,7 @@ func TestNameReferenceRun(t *testing.T) {
 		expected[k] = v
 	}
 
-	expected[resource.NewResId(deploy, "deploy1")] = resource.NewResourceFromMap(
+	expected[resid.NewResId(deploy, "deploy1")] = resource.NewResourceFromMap(
 		map[string]interface{}{
 			"group":      "apps",
 			"apiVersion": "v1",
@@ -272,7 +273,7 @@ func TestNameReferenceRun(t *testing.T) {
 				},
 			},
 		})
-	expected[resource.NewResId(statefulset, "statefulset1")] = resource.NewResourceFromMap(
+	expected[resid.NewResId(statefulset, "statefulset1")] = resource.NewResourceFromMap(
 		map[string]interface{}{
 			"group":      "apps",
 			"apiVersion": "v1",
@@ -302,7 +303,7 @@ func TestNameReferenceRun(t *testing.T) {
 				},
 			},
 		})
-	expected[resource.NewResId(ingress, "ingress1")] = resource.NewResourceFromMap(
+	expected[resid.NewResId(ingress, "ingress1")] = resource.NewResourceFromMap(
 		map[string]interface{}{
 			"group":      "extensions",
 			"apiVersion": "v1beta1",
