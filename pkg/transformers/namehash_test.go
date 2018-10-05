@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"testing"
 
+	"sigs.k8s.io/kustomize/internal/k8sdeps"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
@@ -149,7 +150,7 @@ func TestNameHashTransformer(t *testing.T) {
 			}).SetBehavior(ifc.BehaviorCreate),
 	}
 
-	tran := NewNameHashTransformer()
+	tran := NewNameHashTransformer(k8sdeps.NewKustHash())
 	tran.Transform(objs)
 
 	if !reflect.DeepEqual(objs, expected) {
