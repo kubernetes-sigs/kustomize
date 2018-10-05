@@ -19,11 +19,13 @@ package resmap
 import (
 	"fmt"
 	"reflect"
-	"sigs.k8s.io/kustomize/internal/k8sdeps"
 	"testing"
 
+	"sigs.k8s.io/kustomize/internal/k8sdeps"
 	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
@@ -42,7 +44,7 @@ metadata:
   name: cm2
 `)
 	input := ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -50,7 +52,7 @@ metadata:
 					"name": "cm1",
 				},
 			}),
-		resource.NewResId(cmap, "cm2"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cm2"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -89,7 +91,7 @@ metadata:
 	if ferr := l.AddFile("/home/seans/project/deployment.yaml", []byte(resourceStr)); ferr != nil {
 		t.Fatalf("Error adding fake file: %v\n", ferr)
 	}
-	expected := ResMap{resource.NewResId(deploy, "dply1"): resource.NewResourceFromMap(
+	expected := ResMap{resid.NewResId(deploy, "dply1"): resource.NewResourceFromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
@@ -97,7 +99,7 @@ metadata:
 				"name": "dply1",
 			},
 		}),
-		resource.NewResId(deploy, "dply2"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "dply2"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -131,7 +133,7 @@ metadata:
   name: cm2
 `)
 	expected := ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -139,7 +141,7 @@ metadata:
 					"name": "cm1",
 				},
 			}),
-		resource.NewResId(cmap, "cm2"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cm2"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -160,7 +162,7 @@ metadata:
 
 func TestMergeWithoutOverride(t *testing.T) {
 	input1 := ResMap{
-		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -170,7 +172,7 @@ func TestMergeWithoutOverride(t *testing.T) {
 			}),
 	}
 	input2 := ResMap{
-		resource.NewResId(statefulset, "stateful1"): resource.NewResourceFromMap(
+		resid.NewResId(statefulset, "stateful1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "StatefulSet",
@@ -181,7 +183,7 @@ func TestMergeWithoutOverride(t *testing.T) {
 	}
 	input := []ResMap{input1, input2}
 	expected := ResMap{
-		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -189,7 +191,7 @@ func TestMergeWithoutOverride(t *testing.T) {
 					"name": "foo-deploy1",
 				},
 			}),
-		resource.NewResId(statefulset, "stateful1"): resource.NewResourceFromMap(
+		resid.NewResId(statefulset, "stateful1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "StatefulSet",
@@ -225,7 +227,7 @@ func TestMergeWithoutOverride(t *testing.T) {
 
 func TestMergeWithOverride(t *testing.T) {
 	input1 := ResMap{
-		resource.NewResId(cmap, "cmap"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cmap"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "ConfigMap",
@@ -239,7 +241,7 @@ func TestMergeWithOverride(t *testing.T) {
 			}),
 	}
 	input2 := ResMap{
-		resource.NewResId(cmap, "cmap"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cmap"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "ConfigMap",
@@ -253,11 +255,11 @@ func TestMergeWithOverride(t *testing.T) {
 				},
 			}),
 	}
-	input1[resource.NewResId(cmap, "cmap")].SetBehavior(resource.BehaviorCreate)
-	input2[resource.NewResId(cmap, "cmap")].SetBehavior(resource.BehaviorMerge)
+	input1[resid.NewResId(cmap, "cmap")].SetBehavior(ifc.BehaviorCreate)
+	input2[resid.NewResId(cmap, "cmap")].SetBehavior(ifc.BehaviorMerge)
 	input := []ResMap{input1, input2}
 	expected := ResMap{
-		resource.NewResId(cmap, "cmap"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cmap"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "ConfigMap",
@@ -273,7 +275,7 @@ func TestMergeWithOverride(t *testing.T) {
 				},
 			}),
 	}
-	expected[resource.NewResId(cmap, "cmap")].SetBehavior(resource.BehaviorCreate)
+	expected[resid.NewResId(cmap, "cmap")].SetBehavior(ifc.BehaviorCreate)
 	merged, err := MergeWithOverride(input...)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

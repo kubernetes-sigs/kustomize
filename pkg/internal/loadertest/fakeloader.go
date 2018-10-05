@@ -19,13 +19,14 @@ package loadertest
 
 import (
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/loader"
 )
 
 // FakeLoader encapsulates the delegate Loader and the fake file system.
 type FakeLoader struct {
 	fs       fs.FileSystem
-	delegate loader.Loader
+	delegate ifc.Loader
 }
 
 // NewFakeLoader returns a Loader that delegates calls, and encapsulates
@@ -55,7 +56,7 @@ func (f FakeLoader) Root() string {
 }
 
 // New creates a new loader from a new root.
-func (f FakeLoader) New(newRoot string) (loader.Loader, error) {
+func (f FakeLoader) New(newRoot string) (ifc.Loader, error) {
 	l, err := f.delegate.New(newRoot)
 	if err != nil {
 		return nil, err

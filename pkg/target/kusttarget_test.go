@@ -19,16 +19,17 @@ package target
 import (
 	"encoding/base64"
 	"reflect"
-	"sigs.k8s.io/kustomize/internal/k8sdeps"
 	"strings"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/kustomize/internal/k8sdeps"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
-	"sigs.k8s.io/kustomize/pkg/loader"
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformerconfig"
@@ -87,7 +88,7 @@ metadata:
 ]`
 )
 
-func makeLoader1(t *testing.T) loader.Loader {
+func makeLoader1(t *testing.T) ifc.Loader {
 	ldr := loadertest.NewFakeLoader("/testpath")
 	err := ldr.AddFile("/testpath/"+constants.KustomizationFileName, []byte(kustomizationContent1))
 	if err != nil {
@@ -115,7 +116,7 @@ var ns = gvk.Gvk{Version: "v1", Kind: "Namespace"}
 
 func TestResources1(t *testing.T) {
 	expected := resmap.ResMap{
-		resource.NewResIdWithPrefixNamespace(deploy, "dply1", "foo-", "ns1"): resource.NewResourceFromMap(
+		resid.NewResIdWithPrefixNamespace(deploy, "dply1", "foo-", "ns1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -148,7 +149,7 @@ func TestResources1(t *testing.T) {
 					},
 				},
 			}),
-		resource.NewResIdWithPrefixNamespace(cmap, "literalConfigMap", "foo-", "ns1"): resource.NewResourceFromMap(
+		resid.NewResIdWithPrefixNamespace(cmap, "literalConfigMap", "foo-", "ns1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -166,8 +167,8 @@ func TestResources1(t *testing.T) {
 					"DB_USERNAME": "admin",
 					"DB_PASSWORD": "somepw",
 				},
-			}).SetBehavior(resource.BehaviorCreate),
-		resource.NewResIdWithPrefixNamespace(secret, "secret", "foo-", "ns1"): resource.NewResourceFromMap(
+			}).SetBehavior(ifc.BehaviorCreate),
+		resid.NewResIdWithPrefixNamespace(secret, "secret", "foo-", "ns1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -186,8 +187,8 @@ func TestResources1(t *testing.T) {
 					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
-			}).SetBehavior(resource.BehaviorCreate),
-		resource.NewResIdWithPrefixNamespace(ns, "ns1", "foo-", ""): resource.NewResourceFromMap(
+			}).SetBehavior(ifc.BehaviorCreate),
+		resid.NewResIdWithPrefixNamespace(ns, "ns1", "foo-", ""): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Namespace",

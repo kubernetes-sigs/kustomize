@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
 const currentDir = "."
@@ -52,7 +53,7 @@ func (l *fileLoader) Root() string {
 // slash or not.
 // Example: "/home/seans/project" or "/home/seans/project/"
 // NOT "/home/seans/project/file.yaml".
-func (l *fileLoader) New(newRoot string) (Loader, error) {
+func (l *fileLoader) New(newRoot string) (ifc.Loader, error) {
 	return NewLoader(newRoot, l.root, l.fSys)
 }
 
