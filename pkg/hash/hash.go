@@ -23,14 +23,14 @@ import (
 	"fmt"
 
 	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"sigs.k8s.io/kustomize/internal/k8sdeps"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
 // Hash returns a hash of either a ConfigMap or a Secret
 func Hash(m map[string]interface{}) (string, error) {
-	u := unstructured.Unstructured{
-		Object: m,
-	}
+	var u ifc.FunStruct
+	u = k8sdeps.NewKustFunStructFromMap(m)
 	kind := u.GetKind()
 	switch kind {
 	case "ConfigMap":
@@ -140,8 +140,8 @@ func hash(data string) string {
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(data)))
 }
 
-func unstructuredToConfigmap(u unstructured.Unstructured) (*v1.ConfigMap, error) {
-	marshaled, err := json.Marshal(u.Object)
+func unstructuredToConfigmap(u ifc.FunStruct) (*v1.ConfigMap, error) {
+	marshaled, err := json.Marshal(u.Map())
 	if err != nil {
 		return nil, err
 	}
@@ -150,8 +150,8 @@ func unstructuredToConfigmap(u unstructured.Unstructured) (*v1.ConfigMap, error)
 	return &out, err
 }
 
-func unstructuredToSecret(u unstructured.Unstructured) (*v1.Secret, error) {
-	marshaled, err := json.Marshal(u.Object)
+func unstructuredToSecret(u ifc.FunStruct) (*v1.Secret, error) {
+	marshaled, err := json.Marshal(u.Map())
 	if err != nil {
 		return nil, err
 	}

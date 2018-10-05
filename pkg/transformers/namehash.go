@@ -49,11 +49,11 @@ func (o *nameHashTransformer) Transform(m resmap.ResMap) error {
 }
 
 func appendHash(res *resource.Resource) error {
-	h, err := hash.Hash(res.Object)
+	h, err := hash.Hash(res.FunStruct().Map())
 	if err != nil {
 		return err
 	}
-	nameWithHash := fmt.Sprintf("%s-%s", res.GetName(), h)
-	res.SetName(nameWithHash)
+	nameWithHash := fmt.Sprintf("%s-%s", res.FunStruct().GetName(), h)
+	res.FunStruct().SetName(nameWithHash)
 	return nil
 }

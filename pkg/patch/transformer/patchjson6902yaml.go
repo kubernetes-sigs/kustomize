@@ -46,7 +46,7 @@ func (t *patchJson6902YAMLTransformer) Transform(baseResourceMap resmap.ResMap) 
 	if obj == nil {
 		return err
 	}
-	rawObj, err := yaml.Marshal(obj.Unstructured.Object)
+	rawObj, err := yaml.Marshal(obj.FunStruct().Map())
 	if err != nil {
 		return err
 	}
@@ -54,9 +54,11 @@ func (t *patchJson6902YAMLTransformer) Transform(baseResourceMap resmap.ResMap) 
 	if err != nil {
 		return err
 	}
-	err = yaml.Unmarshal(modifiedObj, &obj.Unstructured.Object)
+	m := make(map[string]interface{})
+	err = yaml.Unmarshal(modifiedObj, &m)
 	if err != nil {
 		return err
 	}
+	obj.FunStruct().SetMap(m)
 	return nil
 }

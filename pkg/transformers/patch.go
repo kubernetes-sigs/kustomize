@@ -66,15 +66,15 @@ func (pt *patchTransformer) Transform(baseResourceMap resmap.ResMap) error {
 		base := baseResourceMap[id]
 		merged := map[string]interface{}{}
 		versionedObj, err := scheme.Scheme.New(id.Gvk().ToSchemaGvk())
-		baseName := base.GetName()
+		baseName := base.FunStruct().GetName()
 		switch {
 		case runtime.IsNotRegisteredError(err):
 			// Use JSON merge patch to handle types w/o schema
-			baseBytes, err := json.Marshal(base)
+			baseBytes, err := json.Marshal(base.FunStruct().Map())
 			if err != nil {
 				return err
 			}
-			patchBytes, err := json.Marshal(patch)
+			patchBytes, err := json.Marshal(patch.FunStruct().Map())
 			if err != nil {
 				return err
 			}
@@ -98,15 +98,15 @@ func (pt *patchTransformer) Transform(baseResourceMap resmap.ResMap) error {
 				return err
 			}
 			merged, err = strategicpatch.StrategicMergeMapPatchUsingLookupPatchMeta(
-				base.Object,
-				patch.Object,
+				base.FunStruct().Map(),
+				patch.FunStruct().Map(),
 				lookupPatchMeta)
 			if err != nil {
 				return err
 			}
 		}
-		base.SetName(baseName)
-		baseResourceMap[id].Object = merged
+		base.FunStruct().SetName(baseName)
+		baseResourceMap[id].FunStruct().SetMap(merged)
 	}
 	return nil
 }
@@ -146,7 +146,9 @@ func (pt *patchTransformer) mergePatches() (resmap.ResMap, error) {
 			if err != nil {
 				return nil, err
 			}
-			return nil, fmt.Errorf("there is conflict between %#v and %#v", conflictingPatch.Object, patch.Object)
+			return nil, fmt.Errorf(
+				"conflict between %#v and %#v",
+				conflictingPatch.FunStruct().Map(), patch.FunStruct().Map())
 		}
 		merged, err := cd.mergePatches(existing, patch)
 		if err != nil {
