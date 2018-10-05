@@ -29,7 +29,8 @@ func main() {
 
 	if err := commands.NewDefaultCommand(
 		k8sdeps.NewKustDecoder(),
-		k8sdeps.NewKustValidator()).Execute(); err != nil {
+		k8sdeps.NewKustValidator(),
+		k8sdeps.NewKustHash()).Execute(); err != nil {
 		os.Exit(1)
 	}
 	os.Exit(0)

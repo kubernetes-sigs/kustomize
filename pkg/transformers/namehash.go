@@ -19,27 +19,29 @@ package transformers
 import (
 	"fmt"
 
-	"sigs.k8s.io/kustomize/pkg/hash"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
 // nameHashTransformer contains the prefix and the path config for each field that
 // the name prefix will be applied.
-type nameHashTransformer struct{}
+type nameHashTransformer struct {
+	hash ifc.Hash
+}
 
 var _ Transformer = &nameHashTransformer{}
 
 // NewNameHashTransformer construct a nameHashTransformer.
-func NewNameHashTransformer() Transformer {
-	return &nameHashTransformer{}
+func NewNameHashTransformer(h ifc.Hash) Transformer {
+	return &nameHashTransformer{hash: h}
 }
 
 // Transform appends hash to configmaps and secrets.
 func (o *nameHashTransformer) Transform(m resmap.ResMap) error {
 	for _, res := range m {
 		if res.IsGenerated() {
-			err := appendHash(res)
+			err := o.appendHash(res)
 			if err != nil {
 				return err
 			}
@@ -48,8 +50,8 @@ func (o *nameHashTransformer) Transform(m resmap.ResMap) error {
 	return nil
 }
 
-func appendHash(res *resource.Resource) error {
-	h, err := hash.Hash(res.Object)
+func (o *nameHashTransformer) appendHash(res *resource.Resource) error {
+	h, err := o.hash.Hash(res.Object)
 	if err != nil {
 		return err
 	}
