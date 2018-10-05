@@ -22,7 +22,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/resid"
 
 	"github.com/evanphx/json-patch"
-	"github.com/krishicks/yaml-patch"
+	"github.com/ghodss/yaml"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/patch"
 	"sigs.k8s.io/kustomize/pkg/transformers"
@@ -76,18 +76,20 @@ func (f PatchJson6902Factory) makeOnePatchJson6902Transformer(p patch.Json6902) 
 	if err != nil {
 		return nil, err
 	}
-	if isJsonFormat(rawOp) {
-		decodedPatch, err := jsonpatch.DecodePatch(rawOp)
+
+	if !isJsonFormat(rawOp) {
+		// if it isn't JSON, try to parse it as YAML
+		rawOp, err = yaml.YAMLToJSON(rawOp)
 		if err != nil {
 			return nil, err
 		}
-		return newPatchJson6902JSONTransformer(targetId, decodedPatch)
 	}
-	decodedPatch, err := yamlpatch.DecodePatch(rawOp)
+
+	decodedPatch, err := jsonpatch.DecodePatch(rawOp)
 	if err != nil {
 		return nil, err
 	}
-	return newPatchJson6902YAMLTransformer(targetId, decodedPatch)
+	return newPatchJson6902JSONTransformer(targetId, decodedPatch)
 }
 
 func isJsonFormat(data []byte) bool {
