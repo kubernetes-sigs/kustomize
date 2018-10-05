@@ -148,33 +148,3 @@ func TestConstructConfigMap(t *testing.T) {
 		}
 	}
 }
-
-func TestObjectConvertToUnstructured(t *testing.T) {
-	type testCase struct {
-		description string
-		input       *corev1.ConfigMap
-		expected    *unstructured.Unstructured
-	}
-
-	testCases := []testCase{
-		{
-			description: "convert config map",
-			input:       makeEnvConfigMap("envConfigMap"),
-			expected:    makeUnstructuredEnvConfigMap("envConfigMap"),
-		},
-		{
-			description: "convert secret",
-			input:       makeEnvConfigMap("envSecret"),
-			expected:    makeUnstructuredEnvConfigMap("envSecret"),
-		},
-	}
-	for _, tc := range testCases {
-		actual, err := objectToUnstructured(tc.input)
-		if err != nil {
-			t.Fatalf("%s: unexpected error: %v", tc.description, err)
-		}
-		if !reflect.DeepEqual(actual, tc.expected) {
-			t.Fatalf("%s: %#v\ndoesn't match expected\n%#v\n", tc.description, actual, tc.expected)
-		}
-	}
-}
