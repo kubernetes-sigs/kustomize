@@ -23,7 +23,33 @@ import (
 	"fmt"
 
 	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
+
+// Hash returns a hash of either a ConfigMap or a Secret
+func Hash(m map[string]interface{}) (string, error) {
+	u := unstructured.Unstructured{
+		Object: m,
+	}
+	kind := u.GetKind()
+	switch kind {
+	case "ConfigMap":
+		cm, err := unstructuredToConfigmap(u)
+		if err != nil {
+			return "", err
+		}
+		return ConfigMapHash(cm)
+	case "Secret":
+		sec, err := unstructuredToSecret(u)
+
+		if err != nil {
+			return "", err
+		}
+		return SecretHash(sec)
+	default:
+		return "", fmt.Errorf("Type %s is supported for hashing in %v", kind, m)
+	}
+}
 
 // ConfigMapHash returns a hash of the ConfigMap.
 // The Data, Kind, and Name are taken into account.
@@ -112,4 +138,24 @@ func encodeHash(hex string) (string, error) {
 // hash hashes `data` with sha256 and returns the hex string
 func hash(data string) string {
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(data)))
+}
+
+func unstructuredToConfigmap(u unstructured.Unstructured) (*v1.ConfigMap, error) {
+	marshaled, err := json.Marshal(u.Object)
+	if err != nil {
+		return nil, err
+	}
+	var out v1.ConfigMap
+	err = json.Unmarshal(marshaled, &out)
+	return &out, err
+}
+
+func unstructuredToSecret(u unstructured.Unstructured) (*v1.Secret, error) {
+	marshaled, err := json.Marshal(u.Object)
+	if err != nil {
+		return nil, err
+	}
+	var out v1.Secret
+	err = json.Unmarshal(marshaled, &out)
+	return &out, err
 }
