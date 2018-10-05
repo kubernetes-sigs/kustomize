@@ -43,3 +43,8 @@ type Loader interface {
 	// Cleanup cleans the loader
 	Cleanup() error
 }
+
+// Hash interface provides function to compute hash of objects
+type Hash interface {
+	Hash(m map[string]interface{}) (string, error)
+}
