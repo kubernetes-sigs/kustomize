@@ -21,13 +21,14 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
 func TestOverlayRun(t *testing.T) {
 	base := resmap.ResMap{
-		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -87,7 +88,7 @@ func TestOverlayRun(t *testing.T) {
 		),
 	}
 	expected := resmap.ResMap{
-		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -136,7 +137,7 @@ func TestOverlayRun(t *testing.T) {
 
 func TestMultiplePatches(t *testing.T) {
 	base := resmap.ResMap{
-		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -215,7 +216,7 @@ func TestMultiplePatches(t *testing.T) {
 		),
 	}
 	expected := resmap.ResMap{
-		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -266,7 +267,7 @@ func TestMultiplePatches(t *testing.T) {
 
 func TestMultiplePatchesWithConflict(t *testing.T) {
 	base := resmap.ResMap{
-		resource.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -351,7 +352,7 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 
 func TestNoSchemaOverlayRun(t *testing.T) {
 	base := resmap.ResMap{
-		resource.NewResId(foo, "my-foo"): resource.NewResourceFromMap(
+		resid.NewResId(foo, "my-foo"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "example.com/v1",
 				"kind":       "Foo",
@@ -383,7 +384,7 @@ func TestNoSchemaOverlayRun(t *testing.T) {
 		),
 	}
 	expected := resmap.ResMap{
-		resource.NewResId(foo, "my-foo"): resource.NewResourceFromMap(
+		resid.NewResId(foo, "my-foo"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "example.com/v1",
 				"kind":       "Foo",
@@ -414,7 +415,7 @@ func TestNoSchemaOverlayRun(t *testing.T) {
 
 func TestNoSchemaMultiplePatches(t *testing.T) {
 	base := resmap.ResMap{
-		resource.NewResId(foo, "my-foo"): resource.NewResourceFromMap(
+		resid.NewResId(foo, "my-foo"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "example.com/v1",
 				"kind":       "Foo",
@@ -463,7 +464,7 @@ func TestNoSchemaMultiplePatches(t *testing.T) {
 		),
 	}
 	expected := resmap.ResMap{
-		resource.NewResId(foo, "my-foo"): resource.NewResourceFromMap(
+		resid.NewResId(foo, "my-foo"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "example.com/v1",
 				"kind":       "Foo",
@@ -498,7 +499,7 @@ func TestNoSchemaMultiplePatches(t *testing.T) {
 
 func TestNoSchemaMultiplePatchesWithConflict(t *testing.T) {
 	base := resmap.ResMap{
-		resource.NewResId(foo, "my-foo"): resource.NewResourceFromMap(
+		resid.NewResId(foo, "my-foo"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "example.com/v1",
 				"kind":       "Foo",

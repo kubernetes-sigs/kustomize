@@ -19,6 +19,7 @@ package resmap
 import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/pkg/configmapandsecret"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -38,7 +39,7 @@ func NewResMapFromSecretArgs(
 			args.Behavior = "create"
 		}
 		res, err := resource.NewResourceWithBehavior(
-			s, resource.NewGenerationBehavior(args.Behavior))
+			s, ifc.NewGenerationBehavior(args.Behavior))
 		if err != nil {
 			return nil, errors.Wrap(err, "NewResourceWithBehavior")
 		}

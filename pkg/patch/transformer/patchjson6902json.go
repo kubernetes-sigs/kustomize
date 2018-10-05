@@ -18,21 +18,21 @@ package transformer
 
 import (
 	"github.com/evanphx/json-patch"
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
-	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
 )
 
 // patchJson6902JSONTransformer applies patches.
 type patchJson6902JSONTransformer struct {
-	target resource.ResId
+	target resid.ResId
 	patch  jsonpatch.Patch
 }
 
 var _ transformers.Transformer = &patchJson6902JSONTransformer{}
 
 // newPatchJson6902JSONTransformer constructs a PatchJson6902 transformer.
-func newPatchJson6902JSONTransformer(t resource.ResId, p jsonpatch.Patch) (transformers.Transformer, error) {
+func newPatchJson6902JSONTransformer(t resid.ResId, p jsonpatch.Patch) (transformers.Transformer, error) {
 	if len(p) == 0 {
 		return transformers.NewNoOpTransformer(), nil
 	}

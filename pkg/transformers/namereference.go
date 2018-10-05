@@ -21,8 +21,8 @@ import (
 	"fmt"
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
-	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 )
 
@@ -89,7 +89,7 @@ func (o *nameReferenceTransformer) updateNameReference(
 	}
 }
 
-func (o *nameReferenceTransformer) detectConflict(id resource.ResId, m resmap.ResMap, name string) error {
+func (o *nameReferenceTransformer) detectConflict(id resid.ResId, m resmap.ResMap, name string) error {
 	matchedIds := m.FindByGVKN(id)
 	if len(matchedIds) > 1 {
 		return fmt.Errorf("detected conflicts when resolving name references %s:\n%v", name, matchedIds)

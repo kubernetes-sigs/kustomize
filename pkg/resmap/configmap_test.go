@@ -23,7 +23,9 @@ import (
 	"sigs.k8s.io/kustomize/pkg/configmapandsecret"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -55,7 +57,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 			filepath: "/home/seans/project/app.env",
 			content:  "DB_USERNAME=admin\nDB_PASSWORD=somepw",
 			expected: ResMap{
-				resource.NewResId(cmap, "envConfigMap"): resource.NewResourceFromMap(
+				resid.NewResId(cmap, "envConfigMap"): resource.NewResourceFromMap(
 					map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -66,7 +68,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 							"DB_USERNAME": "admin",
 							"DB_PASSWORD": "somepw",
 						},
-					}).SetBehavior(resource.BehaviorCreate),
+					}).SetBehavior(ifc.BehaviorCreate),
 			},
 		},
 		{
@@ -81,7 +83,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 			filepath: "/home/seans/project/app-init.ini",
 			content:  "FOO=bar\nBAR=baz\n",
 			expected: ResMap{
-				resource.NewResId(cmap, "fileConfigMap"): resource.NewResourceFromMap(
+				resid.NewResId(cmap, "fileConfigMap"): resource.NewResourceFromMap(
 					map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -93,7 +95,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 BAR=baz
 `,
 						},
-					}).SetBehavior(resource.BehaviorCreate),
+					}).SetBehavior(ifc.BehaviorCreate),
 			},
 		},
 		{
@@ -107,7 +109,7 @@ BAR=baz
 				},
 			},
 			expected: ResMap{
-				resource.NewResId(cmap, "literalConfigMap"): resource.NewResourceFromMap(
+				resid.NewResId(cmap, "literalConfigMap"): resource.NewResourceFromMap(
 					map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -120,7 +122,7 @@ BAR=baz
 							"c": "Good Morning",
 							"d": "false",
 						},
-					}).SetBehavior(resource.BehaviorCreate),
+					}).SetBehavior(ifc.BehaviorCreate),
 			},
 		},
 		// TODO: add testcase for data coming from multiple sources like

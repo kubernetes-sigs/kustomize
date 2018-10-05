@@ -17,6 +17,7 @@ limitations under the License.
 package transformerconfig
 
 import (
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"testing"
 
 	"reflect"
@@ -149,7 +150,7 @@ func TestMakeDefaultTransformerConfig(t *testing.T) {
 	_ = MakeDefaultTransformerConfig()
 }
 
-func makeFakeLoaderAndOutput() (loader.Loader, *TransformerConfig, *TransformerConfig) {
+func makeFakeLoaderAndOutput() (ifc.Loader, *TransformerConfig, *TransformerConfig) {
 	transformerConfig := `
 namePrefix:
 - path: nameprefix/path

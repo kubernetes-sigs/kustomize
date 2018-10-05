@@ -18,23 +18,23 @@ package transformer
 
 import (
 	"fmt"
+	"sigs.k8s.io/kustomize/pkg/ifc"
+	"sigs.k8s.io/kustomize/pkg/resid"
 
 	"github.com/evanphx/json-patch"
 	"github.com/krishicks/yaml-patch"
 	"sigs.k8s.io/kustomize/pkg/gvk"
-	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/patch"
-	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
 )
 
 // PatchJson6902Factory makes Json6902 transformers
 type PatchJson6902Factory struct {
-	loader loader.Loader
+	loader ifc.Loader
 }
 
 // NewPatchJson6902Factory returns a new PatchJson6902Factory.
-func NewPatchJson6902Factory(l loader.Loader) PatchJson6902Factory {
+func NewPatchJson6902Factory(l ifc.Loader) PatchJson6902Factory {
 	return PatchJson6902Factory{loader: l}
 }
 
@@ -61,7 +61,7 @@ func (f PatchJson6902Factory) makeOnePatchJson6902Transformer(p patch.Json6902) 
 		return nil, fmt.Errorf("must specify the path for a json patch file")
 	}
 
-	targetId := resource.NewResIdWithPrefixNamespace(
+	targetId := resid.NewResIdWithPrefixNamespace(
 		gvk.Gvk{
 			Group:   p.Target.Group,
 			Version: p.Target.Version,
