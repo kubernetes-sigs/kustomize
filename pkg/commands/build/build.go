@@ -60,7 +60,7 @@ Use different transformer configurations by passing files to kustomize
 // NewCmdBuild creates a new build command.
 func NewCmdBuild(
 	out io.Writer, fs fs.FileSystem,
-	decoder ifc.Decoder) *cobra.Command {
+	decoder ifc.Decoder, hash ifc.Hash) *cobra.Command {
 	var o buildOptions
 	var p string
 
@@ -74,7 +74,7 @@ func NewCmdBuild(
 			if err != nil {
 				return err
 			}
-			return o.RunBuild(out, fs, decoder)
+			return o.RunBuild(out, fs, decoder, hash)
 		},
 	}
 	cmd.Flags().StringVarP(
@@ -119,7 +119,7 @@ func (o *buildOptions) Validate(args []string, p string, fs fs.FileSystem) error
 // RunBuild runs build command.
 func (o *buildOptions) RunBuild(
 	out io.Writer, fSys fs.FileSystem,
-	decoder ifc.Decoder) error {
+	decoder ifc.Decoder, hash ifc.Hash) error {
 	rootLoader, err := loader.NewLoader(o.kustomizationPath, "", fSys)
 	if err != nil {
 		return err
@@ -128,7 +128,7 @@ func (o *buildOptions) RunBuild(
 	kt, err := target.NewKustTarget(
 		rootLoader, fSys,
 		makeTransformerconfig(fSys, o.transformerconfigPaths),
-		decoder)
+		decoder, hash)
 	if err != nil {
 		return err
 	}

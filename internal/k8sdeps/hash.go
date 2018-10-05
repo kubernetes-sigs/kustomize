@@ -14,8 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package hash generates hash strings from configmaps and secrets.
-package hash
+package k8sdeps
 
 import (
 	"crypto/sha256"
@@ -26,8 +25,16 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
+// KustHash compute hash for unstructured objects
+type KustHash struct{}
+
+// NewKustHash returns a KustHash object
+func NewKustHash() *KustHash {
+	return &KustHash{}
+}
+
 // Hash returns a hash of either a ConfigMap or a Secret
-func Hash(m map[string]interface{}) (string, error) {
+func (h *KustHash) Hash(m map[string]interface{}) (string, error) {
 	u := unstructured.Unstructured{
 		Object: m,
 	}
