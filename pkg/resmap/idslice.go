@@ -19,11 +19,11 @@ package resmap
 import (
 	"sort"
 
-	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/resid"
 )
 
 // IdSlice implements the sort interface.
-type IdSlice []resource.ResId
+type IdSlice []resid.ResId
 
 var _ sort.Interface = IdSlice{}
 

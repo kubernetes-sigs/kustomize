@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"testing"
 
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformerconfig"
@@ -27,7 +28,7 @@ import (
 
 func TestPrefixNameRun(t *testing.T) {
 	m := resmap.ResMap{
-		resource.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -35,7 +36,7 @@ func TestPrefixNameRun(t *testing.T) {
 					"name": "cm1",
 				},
 			}),
-		resource.NewResId(cmap, "cm2"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cm2"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -43,7 +44,7 @@ func TestPrefixNameRun(t *testing.T) {
 					"name": "cm2",
 				},
 			}),
-		resource.NewResId(crd, "crd"): resource.NewResourceFromMap(
+		resid.NewResId(crd, "crd"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apiextensions.k8s.io/v1beta1",
 				"kind":       "CustomResourceDefinition",
@@ -53,7 +54,7 @@ func TestPrefixNameRun(t *testing.T) {
 			}),
 	}
 	expected := resmap.ResMap{
-		resource.NewResIdWithPrefix(cmap, "cm1", "someprefix-"): resource.NewResourceFromMap(
+		resid.NewResIdWithPrefix(cmap, "cm1", "someprefix-"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -61,7 +62,7 @@ func TestPrefixNameRun(t *testing.T) {
 					"name": "someprefix-cm1",
 				},
 			}),
-		resource.NewResIdWithPrefix(cmap, "cm2", "someprefix-"): resource.NewResourceFromMap(
+		resid.NewResIdWithPrefix(cmap, "cm2", "someprefix-"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -69,7 +70,7 @@ func TestPrefixNameRun(t *testing.T) {
 					"name": "someprefix-cm2",
 				},
 			}),
-		resource.NewResId(crd, "crd"): resource.NewResourceFromMap(
+		resid.NewResId(crd, "crd"): resource.NewResourceFromMap(
 			map[string]interface{}{
 				"apiVersion": "apiextensions.k8s.io/v1beta1",
 				"kind":       "CustomResourceDefinition",

@@ -25,12 +25,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/kube-openapi/pkg/common"
 	"sigs.k8s.io/kustomize/pkg/gvk"
-	"sigs.k8s.io/kustomize/pkg/loader"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 )
 
 // RegisterCRDs parse CRD schemas from paths and update various pathConfigs
-func RegisterCRDs(loader loader.Loader, paths []string) (*transformerconfig.TransformerConfig, error) {
+func RegisterCRDs(loader ifc.Loader, paths []string) (*transformerconfig.TransformerConfig, error) {
 	pathConfigs := transformerconfig.MakeEmptyTransformerConfig()
 	for _, path := range paths {
 		pathConfig, err := registerCRD(loader, path)
@@ -43,7 +43,7 @@ func RegisterCRDs(loader loader.Loader, paths []string) (*transformerconfig.Tran
 }
 
 // register CRD from one path
-func registerCRD(loader loader.Loader, path string) (*transformerconfig.TransformerConfig, error) {
+func registerCRD(loader ifc.Loader, path string) (*transformerconfig.TransformerConfig, error) {
 	result := transformerconfig.MakeEmptyTransformerConfig()
 	content, err := loader.Load(path)
 	if err != nil {

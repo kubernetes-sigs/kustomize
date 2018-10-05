@@ -20,25 +20,14 @@ package loader
 import (
 	"fmt"
 	"path/filepath"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 
 	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
-// Loader interface exposes methods to read bytes.
-type Loader interface {
-	// Root returns the root location for this Loader.
-	Root() string
-	// New returns Loader located at newRoot.
-	New(newRoot string) (Loader, error)
-	// Load returns the bytes read from the location or an error.
-	Load(location string) ([]byte, error)
-	// Cleanup cleans the loader
-	Cleanup() error
-}
-
 // NewLoader returns a Loader given a target
 // The target can be a local disk directory or a github Url
-func NewLoader(target, r string, fSys fs.FileSystem) (Loader, error) {
+func NewLoader(target, r string, fSys fs.FileSystem) (ifc.Loader, error) {
 	if !isValidLoaderPath(target, r) {
 		return nil, fmt.Errorf("Not valid path: root='%s', loc='%s'\n", r, target)
 	}

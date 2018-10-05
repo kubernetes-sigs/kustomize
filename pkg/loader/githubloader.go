@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"strings"
 
 	"github.com/hashicorp/go-getter"
@@ -43,7 +44,7 @@ func (l *githubLoader) Root() string {
 }
 
 // New delegates to fileLoader.New
-func (l *githubLoader) New(newRoot string) (Loader, error) {
+func (l *githubLoader) New(newRoot string) (ifc.Loader, error) {
 	return l.loader.New(newRoot)
 }
 

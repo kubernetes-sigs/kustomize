@@ -21,12 +21,13 @@ import (
 	"testing"
 
 	"github.com/evanphx/json-patch"
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
 func TestJsonPatchJSONTransformer_Transform(t *testing.T) {
-	id := resource.NewResId(deploy, "deploy1")
+	id := resid.NewResId(deploy, "deploy1")
 	base := resmap.ResMap{
 		id: resource.NewResourceFromMap(
 			map[string]interface{}{
