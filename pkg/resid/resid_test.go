@@ -1,4 +1,4 @@
-package resource
+package resid
 
 import (
 	"testing"

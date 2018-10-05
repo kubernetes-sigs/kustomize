@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sigs.k8s.io/kustomize/pkg/ifc"
+	"sigs.k8s.io/kustomize/pkg/resid"
 
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
@@ -31,7 +32,6 @@ import (
 	"sigs.k8s.io/kustomize/pkg/crds"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	interror "sigs.k8s.io/kustomize/pkg/internal/error"
-	"sigs.k8s.io/kustomize/pkg/loader"
 	patchtransformer "sigs.k8s.io/kustomize/pkg/patch/transformer"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
@@ -44,14 +44,14 @@ import (
 type KustTarget struct {
 	kustomization *types.Kustomization
 	decoder       ifc.Decoder
-	ldr           loader.Loader
+	ldr           ifc.Loader
 	fSys          fs.FileSystem
 	tcfg          *transformerconfig.TransformerConfig
 }
 
 // NewKustTarget returns a new instance of KustTarget primed with a Loader.
 func NewKustTarget(
-	ldr loader.Loader, fSys fs.FileSystem,
+	ldr ifc.Loader, fSys fs.FileSystem,
 	tcfg *transformerconfig.TransformerConfig,
 	d ifc.Decoder) (*KustTarget, error) {
 	content, err := ldr.Load(constants.KustomizationFileName)
@@ -301,7 +301,7 @@ func (kt *KustTarget) resolveRefVars(m resmap.ResMap) (map[string]string, error)
 		return result, err
 	}
 	for _, v := range vars {
-		id := resource.NewResId(v.ObjRef.GVK(), v.ObjRef.Name)
+		id := resid.NewResId(v.ObjRef.GVK(), v.ObjRef.Name)
 		if r, found := m.DemandOneMatchForId(id); found {
 			s, err := r.GetFieldValue(v.FieldRef.FieldPath)
 			if err != nil {
