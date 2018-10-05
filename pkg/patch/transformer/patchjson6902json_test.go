@@ -22,9 +22,12 @@ import (
 
 	"github.com/evanphx/json-patch"
 	"sigs.k8s.io/kustomize/pkg/resid"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
+
+var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
 
 func TestJsonPatchJSONTransformer_Transform(t *testing.T) {
 	id := resid.NewResId(deploy, "deploy1")
