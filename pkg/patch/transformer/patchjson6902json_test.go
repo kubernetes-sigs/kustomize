@@ -32,7 +32,7 @@ var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
 func TestJsonPatchJSONTransformer_Transform(t *testing.T) {
 	id := resid.NewResId(deploy, "deploy1")
 	base := resmap.ResMap{
-		id: resource.NewResourceFromMap(
+		id: resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -69,7 +69,7 @@ func TestJsonPatchJSONTransformer_Transform(t *testing.T) {
 		t.Fatalf("unexpected error : %v", err)
 	}
 	expected := resmap.ResMap{
-		id: resource.NewResourceFromMap(
+		id: resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",

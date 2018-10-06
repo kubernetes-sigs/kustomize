@@ -28,7 +28,7 @@ import (
 
 func TestPrefixNameRun(t *testing.T) {
 	m := resmap.ResMap{
-		resid.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cm1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -36,7 +36,7 @@ func TestPrefixNameRun(t *testing.T) {
 					"name": "cm1",
 				},
 			}),
-		resid.NewResId(cmap, "cm2"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cm2"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -44,7 +44,7 @@ func TestPrefixNameRun(t *testing.T) {
 					"name": "cm2",
 				},
 			}),
-		resid.NewResId(crd, "crd"): resource.NewResourceFromMap(
+		resid.NewResId(crd, "crd"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "apiextensions.k8s.io/v1beta1",
 				"kind":       "CustomResourceDefinition",
@@ -54,7 +54,7 @@ func TestPrefixNameRun(t *testing.T) {
 			}),
 	}
 	expected := resmap.ResMap{
-		resid.NewResIdWithPrefix(cmap, "cm1", "someprefix-"): resource.NewResourceFromMap(
+		resid.NewResIdWithPrefix(cmap, "cm1", "someprefix-"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -62,7 +62,7 @@ func TestPrefixNameRun(t *testing.T) {
 					"name": "someprefix-cm1",
 				},
 			}),
-		resid.NewResIdWithPrefix(cmap, "cm2", "someprefix-"): resource.NewResourceFromMap(
+		resid.NewResIdWithPrefix(cmap, "cm2", "someprefix-"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -70,7 +70,7 @@ func TestPrefixNameRun(t *testing.T) {
 					"name": "someprefix-cm2",
 				},
 			}),
-		resid.NewResId(crd, "crd"): resource.NewResourceFromMap(
+		resid.NewResId(crd, "crd"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "apiextensions.k8s.io/v1beta1",
 				"kind":       "CustomResourceDefinition",

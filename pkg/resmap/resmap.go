@@ -68,7 +68,7 @@ func (m ResMap) EncodeAsYaml() ([]byte, error) {
 	buf := bytes.NewBuffer(b)
 	for _, id := range ids {
 		obj := m[id]
-		out, err := yaml.Marshal(obj)
+		out, err := yaml.Marshal(obj.Map())
 		if err != nil {
 			return nil, err
 		}
@@ -117,7 +117,7 @@ func (m ResMap) ErrorIfNotEqual(m2 ResMap) error {
 func (m ResMap) DeepCopy() ResMap {
 	mcopy := make(ResMap)
 	for id, obj := range m {
-		mcopy[id] = resource.NewResourceFromUnstruct(obj.Unstructured)
+		mcopy[id] = resource.NewFromKunstructured(obj.Copy())
 		mcopy[id].SetBehavior(obj.Behavior())
 	}
 	return mcopy
@@ -156,7 +156,7 @@ func NewResMapFromFiles(
 
 // newResMapFromBytes decodes a list of objects in byte array format.
 func newResMapFromBytes(b []byte, d ifc.Decoder) (ResMap, error) {
-	resources, err := resource.NewResourceSliceFromBytes(b, d)
+	resources, err := resource.NewSliceFromBytes(b, d)
 	if err != nil {
 		return nil, err
 	}
@@ -227,15 +227,18 @@ func MergeWithOverride(maps ...ResMap) (ResMap, error) {
 				id = matchedId[0]
 				switch r.Behavior() {
 				case ifc.BehaviorReplace:
-					glog.V(4).Infof("Replace %v with %v", result[id].Object, r.Object)
+					glog.V(4).Infof(
+						"Replace %v with %v", result[id].Map(), r.Map())
 					r.Replace(result[id])
 					result[id] = r
 					result[id].SetBehavior(ifc.BehaviorCreate)
 				case ifc.BehaviorMerge:
-					glog.V(4).Infof("Merging %v with %v", result[id].Object, r.Object)
+					glog.V(4).Infof(
+						"Merging %v with %v", result[id].Map(), r.Map())
 					r.Merge(result[id])
 					result[id] = r
-					glog.V(4).Infof("Merged object is %v", result[id].Object)
+					glog.V(4).Infof(
+						"Merged object is %v", result[id].Map())
 					result[id].SetBehavior(ifc.BehaviorCreate)
 				default:
 					return nil, fmt.Errorf("id %#v exists; must merge or replace", id)
