@@ -26,7 +26,7 @@ import (
 
 // NewResMapFromSecretArgs takes a SecretArgs slice, generates
 // secrets from each entry, and accumulates them in a ResMap.
-func NewResMapFromSecretArgs(
+func (rmF *Factory) NewResMapFromSecretArgs(
 	f *configmapandsecret.SecretFactory,
 	secretList []types.SecretArgs) (ResMap, error) {
 	var allResources []*resource.Resource
@@ -38,10 +38,10 @@ func NewResMapFromSecretArgs(
 		if args.Behavior == "" {
 			args.Behavior = "create"
 		}
-		res, err := resource.NewWithBehavior(
+		res, err := rmF.resF.WithBehavior(
 			s, ifc.NewGenerationBehavior(args.Behavior))
 		if err != nil {
-			return nil, errors.Wrap(err, "NewWithBehavior")
+			return nil, errors.Wrap(err, "WithBehavior")
 		}
 		allResources = append(allResources, res)
 	}

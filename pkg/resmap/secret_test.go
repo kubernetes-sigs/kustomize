@@ -27,7 +27,6 @@ import (
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resid"
-	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
@@ -55,7 +54,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	}
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir(".")
-	actual, err := NewResMapFromSecretArgs(
+	actual, err := rmF.NewResMapFromSecretArgs(
 		configmapandsecret.NewSecretFactory(fakeFs, "."), secrets)
 
 	if err != nil {
@@ -63,7 +62,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	}
 
 	expected := ResMap{
-		resid.NewResId(secret, "apple"): resource.NewFromMap(
+		resid.NewResId(secret, "apple"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -76,7 +75,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
 			}).SetBehavior(ifc.BehaviorCreate),
-		resid.NewResId(secret, "peanuts"): resource.NewFromMap(
+		resid.NewResId(secret, "peanuts"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -111,7 +110,7 @@ func TestSecretTimeout(t *testing.T) {
 	}
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir(".")
-	_, err := NewResMapFromSecretArgs(
+	_, err := rmF.NewResMapFromSecretArgs(
 		configmapandsecret.NewSecretFactory(fakeFs, "."), secrets)
 
 	if err == nil {

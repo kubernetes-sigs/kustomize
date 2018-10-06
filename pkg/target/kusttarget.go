@@ -47,12 +47,14 @@ type KustTarget struct {
 	hash          ifc.Hash
 	ldr           ifc.Loader
 	fSys          fs.FileSystem
+	rf            *resmap.Factory
 	tcfg          *transformerconfig.TransformerConfig
 }
 
 // NewKustTarget returns a new instance of KustTarget primed with a Loader.
 func NewKustTarget(
 	ldr ifc.Loader, fSys fs.FileSystem,
+	rf *resmap.Factory,
 	tcfg *transformerconfig.TransformerConfig,
 	d ifc.Decoder, h ifc.Hash) (*KustTarget, error) {
 	content, err := ldr.Load(constants.KustomizationFileName)
@@ -70,6 +72,7 @@ func NewKustTarget(
 		kustomization: &k,
 		ldr:           ldr,
 		fSys:          fSys,
+		rf:            rf,
 		tcfg:          tcfg,
 		decoder:       d,
 		hash:          h,
@@ -146,10 +149,10 @@ func (kt *KustTarget) loadCustomizedResMap() (resmap.ResMap, error) {
 		return nil, err
 	}
 
-	patches, err := resource.NewSliceFromPatches(
-		kt.ldr, kt.kustomization.PatchesStrategicMerge, kt.decoder)
+	patches, err := kt.rf.RF().SliceFromPatches(
+		kt.ldr, kt.kustomization.PatchesStrategicMerge)
 	if err != nil {
-		errs.Append(errors.Wrap(err, "NewSliceFromPatches"))
+		errs.Append(errors.Wrap(err, "SliceFromPatches"))
 	}
 
 	if len(errs.Get()) > 0 {
@@ -183,13 +186,13 @@ func (kt *KustTarget) loadCustomizedResMap() (resmap.ResMap, error) {
 
 func (kt *KustTarget) generateConfigMapsAndSecrets(
 	errs *interror.KustomizationErrors) (resmap.ResMap, error) {
-	cms, err := resmap.NewResMapFromConfigMapArgs(
+	cms, err := kt.rf.NewResMapFromConfigMapArgs(
 		configmapandsecret.NewConfigMapFactory(kt.fSys, kt.ldr),
 		kt.kustomization.ConfigMapGenerator)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromConfigMapArgs"))
 	}
-	secrets, err := resmap.NewResMapFromSecretArgs(
+	secrets, err := kt.rf.NewResMapFromSecretArgs(
 		configmapandsecret.NewSecretFactory(kt.fSys, kt.ldr.Root()),
 		kt.kustomization.SecretGenerator)
 	if err != nil {
@@ -201,8 +204,8 @@ func (kt *KustTarget) generateConfigMapsAndSecrets(
 // Gets Bases and Resources as advertised.
 func (kt *KustTarget) loadResMapFromBasesAndResources() (resmap.ResMap, error) {
 	bases, errs := kt.loadCustomizedBases()
-	resources, err := resmap.NewResMapFromFiles(
-		kt.ldr, kt.kustomization.Resources, kt.decoder)
+	resources, err := kt.rf.FromFiles(
+		kt.ldr, kt.kustomization.Resources)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "rawResources failed to read Resources"))
 	}
@@ -223,7 +226,8 @@ func (kt *KustTarget) loadCustomizedBases() (resmap.ResMap, *interror.Kustomizat
 			errs.Append(errors.Wrap(err, "couldn't make ldr for "+path))
 			continue
 		}
-		target, err := NewKustTarget(ldr, kt.fSys, kt.tcfg, kt.decoder, kt.hash)
+		target, err := NewKustTarget(
+			ldr, kt.fSys, kt.rf, kt.tcfg, kt.decoder, kt.hash)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "couldn't make target for "+path))
 			continue
@@ -252,7 +256,8 @@ func (kt *KustTarget) loadBasesAsFlatList() ([]*KustTarget, error) {
 			errs.Append(err)
 			continue
 		}
-		target, err := NewKustTarget(ldr, kt.fSys, kt.tcfg, kt.decoder, kt.hash)
+		target, err := NewKustTarget(
+			ldr, kt.fSys, kt.rf, kt.tcfg, kt.decoder, kt.hash)
 		if err != nil {
 			errs.Append(err)
 			continue
@@ -268,7 +273,7 @@ func (kt *KustTarget) loadBasesAsFlatList() ([]*KustTarget, error) {
 // newTransformer makes a Transformer that does everything except resolve generated names.
 func (kt *KustTarget) newTransformer(patches []*resource.Resource) (transformers.Transformer, error) {
 	var r []transformers.Transformer
-	t, err := transformers.NewPatchTransformer(patches)
+	t, err := transformers.NewPatchTransformer(patches, kt.rf.RF())
 	if err != nil {
 		return nil, err
 	}

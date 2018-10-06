@@ -114,10 +114,10 @@ func (m ResMap) ErrorIfNotEqual(m2 ResMap) error {
 }
 
 // DeepCopy clone the resmap into a new one
-func (m ResMap) DeepCopy() ResMap {
+func (m ResMap) DeepCopy(rf *resource.Factory) ResMap {
 	mcopy := make(ResMap)
 	for id, obj := range m {
-		mcopy[id] = resource.NewFromKunstructured(obj.Copy())
+		mcopy[id] = rf.FromKunstructured(obj.Copy())
 		mcopy[id].SetBehavior(obj.Behavior())
 	}
 	return mcopy
@@ -135,17 +135,31 @@ func (m ResMap) FilterBy(inputId resid.ResId) ResMap {
 	return result
 }
 
-// NewResMapFromFiles returns a ResMap given a resource path slice.
-func NewResMapFromFiles(
-	loader ifc.Loader, paths []string,
-	d ifc.Decoder) (ResMap, error) {
+// Factory makes instances of ResMap.
+type Factory struct {
+	resF *resource.Factory
+}
+
+// NewFactory returns a new resmap.Factory.
+func NewFactory(rf *resource.Factory) *Factory {
+	return &Factory{resF: rf}
+}
+
+// RF returns a resource.Factory.
+func (rmF *Factory) RF() *resource.Factory {
+	return rmF.resF
+}
+
+// FromFiles returns a ResMap given a resource path slice.
+func (rmF *Factory) FromFiles(
+	loader ifc.Loader, paths []string) (ResMap, error) {
 	var result []ResMap
 	for _, path := range paths {
 		content, err := loader.Load(path)
 		if err != nil {
 			return nil, errors.Wrap(err, "Load from path "+path+" failed")
 		}
-		res, err := newResMapFromBytes(content, d)
+		res, err := rmF.newResMapFromBytes(content)
 		if err != nil {
 			return nil, internal.Handler(err, path)
 		}
@@ -155,8 +169,8 @@ func NewResMapFromFiles(
 }
 
 // newResMapFromBytes decodes a list of objects in byte array format.
-func newResMapFromBytes(b []byte, d ifc.Decoder) (ResMap, error) {
-	resources, err := resource.NewSliceFromBytes(b, d)
+func (rmF *Factory) newResMapFromBytes(b []byte) (ResMap, error) {
+	resources, err := rmF.resF.SliceFromBytes(b)
 	if err != nil {
 		return nil, err
 	}

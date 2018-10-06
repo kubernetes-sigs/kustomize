@@ -29,46 +29,53 @@ import (
 	"sigs.k8s.io/kustomize/pkg/resid"
 )
 
-// Resource is map representation of a Kubernetes API resource object
-// paired with a GenerationBehavior.
-type Resource struct {
-	ifc.Kunstructured
-	b ifc.GenerationBehavior
+// Factory makes instances of Resource.
+type Factory struct {
+	kf ifc.KunstructuredFactory
 }
 
-// NewWithBehavior returns a new instance of Resource.
-func NewWithBehavior(obj runtime.Object, b ifc.GenerationBehavior) (*Resource, error) {
+// NewFactory makes an instance of Factory.
+func NewFactory(kf ifc.KunstructuredFactory) *Factory {
+	return &Factory{kf: kf}
+}
+
+// WithBehavior returns a new instance of Resource.
+// TODO(monopole): This runtime dependence must be refactored away.
+// The logic calling this has to move to k8sdeps.
+func (rf *Factory) WithBehavior(
+	obj runtime.Object, b ifc.GenerationBehavior) (*Resource, error) {
+	// TODO(monopole): This k8sdeps dependence must be refactored away.
 	u, err := k8sdeps.NewKunstructuredFromObject(obj)
 	return &Resource{Kunstructured: u, b: b}, err
 }
 
-// NewFromMap returns a new instance of Resource.
-func NewFromMap(m map[string]interface{}) *Resource {
+// FromMap returns a new instance of Resource.
+func (rf *Factory) FromMap(m map[string]interface{}) *Resource {
 	return &Resource{
-		Kunstructured: k8sdeps.NewKunstructuredFromMap(m),
+		Kunstructured: rf.kf.FromMap(m),
 		b:             ifc.BehaviorUnspecified}
 }
 
-// NewFromKunstructured returns a new instance of Resource.
-func NewFromKunstructured(u ifc.Kunstructured) *Resource {
+// FromKunstructured returns a new instance of Resource.
+func (rf *Factory) FromKunstructured(
+	u ifc.Kunstructured) *Resource {
 	if u == nil {
 		log.Fatal("unstruct ifc must not be null")
 	}
 	return &Resource{Kunstructured: u, b: ifc.BehaviorUnspecified}
 }
 
-// NewSliceFromPatches returns a slice of resources given a patch path
+// SliceFromPatches returns a slice of resources given a patch path
 // slice from a kustomization file.
-func NewSliceFromPatches(
-	ldr ifc.Loader, paths []patch.StrategicMerge,
-	decoder ifc.Decoder) ([]*Resource, error) {
+func (rf *Factory) SliceFromPatches(
+	ldr ifc.Loader, paths []patch.StrategicMerge) ([]*Resource, error) {
 	var result []*Resource
 	for _, path := range paths {
 		content, err := ldr.Load(string(path))
 		if err != nil {
 			return nil, err
 		}
-		res, err := NewSliceFromBytes(content, decoder)
+		res, err := rf.SliceFromBytes(content)
 		if err != nil {
 			return nil, internal.Handler(err, string(path))
 		}
@@ -77,18 +84,24 @@ func NewSliceFromPatches(
 	return result, nil
 }
 
-// NewSliceFromBytes unmarshalls bytes into a Resource slice.
-func NewSliceFromBytes(
-	in []byte, decoder ifc.Decoder) ([]*Resource, error) {
-	funStructs, err := k8sdeps.NewKunstructuredSliceFromBytes(in, decoder)
+// SliceFromBytes unmarshalls bytes into a Resource slice.
+func (rf *Factory) SliceFromBytes(in []byte) ([]*Resource, error) {
+	kunStructs, err := rf.kf.SliceFromBytes(in)
 	if err != nil {
 		return nil, err
 	}
 	var result []*Resource
-	for _, u := range funStructs {
-		result = append(result, NewFromKunstructured(u))
+	for _, u := range kunStructs {
+		result = append(result, rf.FromKunstructured(u))
 	}
 	return result, nil
+}
+
+// Resource is map representation of a Kubernetes API resource object
+// paired with a GenerationBehavior.
+type Resource struct {
+	ifc.Kunstructured
+	b ifc.GenerationBehavior
 }
 
 // String returns resource as JSON.

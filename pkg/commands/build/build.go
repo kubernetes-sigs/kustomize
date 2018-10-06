@@ -20,13 +20,15 @@ import (
 	"errors"
 	"io"
 	"log"
-	"sigs.k8s.io/kustomize/pkg/ifc"
+	"sigs.k8s.io/kustomize/pkg/resmap"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/loader"
+	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/target"
 	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 )
@@ -60,6 +62,7 @@ Use different transformer configurations by passing files to kustomize
 // NewCmdBuild creates a new build command.
 func NewCmdBuild(
 	out io.Writer, fs fs.FileSystem,
+	kf ifc.KunstructuredFactory,
 	decoder ifc.Decoder, hash ifc.Hash) *cobra.Command {
 	var o buildOptions
 	var p string
@@ -74,7 +77,7 @@ func NewCmdBuild(
 			if err != nil {
 				return err
 			}
-			return o.RunBuild(out, fs, decoder, hash)
+			return o.RunBuild(out, fs, kf, decoder, hash)
 		},
 	}
 	cmd.Flags().StringVarP(
@@ -119,6 +122,7 @@ func (o *buildOptions) Validate(args []string, p string, fs fs.FileSystem) error
 // RunBuild runs build command.
 func (o *buildOptions) RunBuild(
 	out io.Writer, fSys fs.FileSystem,
+	kf ifc.KunstructuredFactory,
 	decoder ifc.Decoder, hash ifc.Hash) error {
 	rootLoader, err := loader.NewLoader(o.kustomizationPath, "", fSys)
 	if err != nil {
@@ -127,6 +131,7 @@ func (o *buildOptions) RunBuild(
 	defer rootLoader.Cleanup()
 	kt, err := target.NewKustTarget(
 		rootLoader, fSys,
+		resmap.NewFactory(resource.NewFactory(kf)),
 		makeTransformerconfig(fSys, o.transformerconfigPaths),
 		decoder, hash)
 	if err != nil {
