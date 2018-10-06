@@ -44,7 +44,7 @@ var ingress = gvk.Gvk{Kind: "Ingress"}
 
 func TestLabelsRun(t *testing.T) {
 	m := resmap.ResMap{
-		resid.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cm1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -52,7 +52,7 @@ func TestLabelsRun(t *testing.T) {
 					"name": "cm1",
 				},
 			}),
-		resid.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "deploy1"): resource.NewFromMap(
 			map[string]interface{}{
 				"group":      "apps",
 				"apiVersion": "v1",
@@ -78,7 +78,7 @@ func TestLabelsRun(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(service, "svc1"): resource.NewResourceFromMap(
+		resid.NewResId(service, "svc1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Service",
@@ -94,7 +94,7 @@ func TestLabelsRun(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(job, "job1"): resource.NewResourceFromMap(
+		resid.NewResId(job, "job1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "batch/v1",
 				"kind":       "Job",
@@ -114,7 +114,7 @@ func TestLabelsRun(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(job, "job2"): resource.NewResourceFromMap(
+		resid.NewResId(job, "job2"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "batch/v1",
 				"kind":       "Job",
@@ -139,7 +139,7 @@ func TestLabelsRun(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(cronjob, "cronjob1"): resource.NewResourceFromMap(
+		resid.NewResId(cronjob, "cronjob1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "batch/v1beta1",
 				"kind":       "CronJob",
@@ -164,7 +164,7 @@ func TestLabelsRun(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(cronjob, "cronjob2"): resource.NewResourceFromMap(
+		resid.NewResId(cronjob, "cronjob2"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "batch/v1beta1",
 				"kind":       "CronJob",
@@ -196,7 +196,7 @@ func TestLabelsRun(t *testing.T) {
 			}),
 	}
 	expected := resmap.ResMap{
-		resid.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cm1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -208,7 +208,7 @@ func TestLabelsRun(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "deploy1"): resource.NewFromMap(
 			map[string]interface{}{
 				"group":      "apps",
 				"apiVersion": "v1",
@@ -246,7 +246,7 @@ func TestLabelsRun(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(service, "svc1"): resource.NewResourceFromMap(
+		resid.NewResId(service, "svc1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Service",
@@ -270,7 +270,7 @@ func TestLabelsRun(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(job, "job1"): resource.NewResourceFromMap(
+		resid.NewResId(job, "job1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "batch/v1",
 				"kind":       "Job",
@@ -300,7 +300,7 @@ func TestLabelsRun(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(job, "job2"): resource.NewResourceFromMap(
+		resid.NewResId(job, "job2"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "batch/v1",
 				"kind":       "Job",
@@ -337,7 +337,7 @@ func TestLabelsRun(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(cronjob, "cronjob1"): resource.NewResourceFromMap(
+		resid.NewResId(cronjob, "cronjob1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "batch/v1beta1",
 				"kind":       "CronJob",
@@ -372,7 +372,7 @@ func TestLabelsRun(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(cronjob, "cronjob2"): resource.NewResourceFromMap(
+		resid.NewResId(cronjob, "cronjob2"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "batch/v1beta1",
 				"kind":       "CronJob",
@@ -433,7 +433,7 @@ func TestLabelsRun(t *testing.T) {
 
 func TestAnnotationsRun(t *testing.T) {
 	m := resmap.ResMap{
-		resid.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cm1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -441,7 +441,7 @@ func TestAnnotationsRun(t *testing.T) {
 					"name": "cm1",
 				},
 			}),
-		resid.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "deploy1"): resource.NewFromMap(
 			map[string]interface{}{
 				"group":      "apps",
 				"apiVersion": "v1",
@@ -467,7 +467,7 @@ func TestAnnotationsRun(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(service, "svc1"): resource.NewResourceFromMap(
+		resid.NewResId(service, "svc1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Service",
@@ -485,7 +485,7 @@ func TestAnnotationsRun(t *testing.T) {
 			}),
 	}
 	expected := resmap.ResMap{
-		resid.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cm1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -497,7 +497,7 @@ func TestAnnotationsRun(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "deploy1"): resource.NewFromMap(
 			map[string]interface{}{
 				"group":      "apps",
 				"apiVersion": "v1",
@@ -531,7 +531,7 @@ func TestAnnotationsRun(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(service, "svc1"): resource.NewResourceFromMap(
+		resid.NewResId(service, "svc1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Service",

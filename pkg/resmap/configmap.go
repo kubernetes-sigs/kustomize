@@ -37,7 +37,7 @@ func NewResMapFromConfigMapArgs(
 		if err != nil {
 			return nil, err
 		}
-		res, err := resource.NewResourceWithBehavior(
+		res, err := resource.NewWithBehavior(
 			cm, ifc.NewGenerationBehavior(cmArgs.Behavior))
 		if err != nil {
 			return nil, err
