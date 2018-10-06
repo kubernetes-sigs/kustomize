@@ -29,7 +29,7 @@ import (
 
 func TestNameHashTransformer(t *testing.T) {
 	objs := resmap.ResMap{
-		resid.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cm1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -37,7 +37,7 @@ func TestNameHashTransformer(t *testing.T) {
 					"name": "cm1",
 				},
 			}),
-		resid.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "deploy1"): resource.NewFromMap(
 			map[string]interface{}{
 				"group":      "apps",
 				"apiVersion": "v1",
@@ -63,7 +63,7 @@ func TestNameHashTransformer(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(service, "svc1"): resource.NewResourceFromMap(
+		resid.NewResId(service, "svc1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Service",
@@ -79,7 +79,7 @@ func TestNameHashTransformer(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(secret, "secret1"): resource.NewResourceFromMap(
+		resid.NewResId(secret, "secret1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -90,7 +90,7 @@ func TestNameHashTransformer(t *testing.T) {
 	}
 
 	expected := resmap.ResMap{
-		resid.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cm1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -98,7 +98,7 @@ func TestNameHashTransformer(t *testing.T) {
 					"name": "cm1",
 				},
 			}),
-		resid.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "deploy1"): resource.NewFromMap(
 			map[string]interface{}{
 				"group":      "apps",
 				"apiVersion": "v1",
@@ -124,7 +124,7 @@ func TestNameHashTransformer(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(service, "svc1"): resource.NewResourceFromMap(
+		resid.NewResId(service, "svc1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Service",
@@ -140,7 +140,7 @@ func TestNameHashTransformer(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(secret, "secret1"): resource.NewResourceFromMap(
+		resid.NewResId(secret, "secret1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",

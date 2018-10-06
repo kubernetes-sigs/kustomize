@@ -29,7 +29,7 @@ import (
 
 func TestImageTagTransformer(t *testing.T) {
 	m := resmap.ResMap{
-		resid.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "deploy1"): resource.NewFromMap(
 			map[string]interface{}{
 				"group":      "apps",
 				"apiVersion": "v1",
@@ -60,7 +60,7 @@ func TestImageTagTransformer(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(gvk.Gvk{Kind: "randomKind"}, "random"): resource.NewResourceFromMap(
+		resid.NewResId(gvk.Gvk{Kind: "randomKind"}, "random"): resource.NewFromMap(
 			map[string]interface{}{
 				"spec": map[string]interface{}{
 					"template": map[string]interface{}{
@@ -97,7 +97,7 @@ func TestImageTagTransformer(t *testing.T) {
 			}),
 	}
 	expected := resmap.ResMap{
-		resid.NewResId(deploy, "deploy1"): resource.NewResourceFromMap(
+		resid.NewResId(deploy, "deploy1"): resource.NewFromMap(
 			map[string]interface{}{
 				"group":      "apps",
 				"apiVersion": "v1",
@@ -128,7 +128,7 @@ func TestImageTagTransformer(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(gvk.Gvk{Kind: "randomKind"}, "random"): resource.NewResourceFromMap(
+		resid.NewResId(gvk.Gvk{Kind: "randomKind"}, "random"): resource.NewFromMap(
 			map[string]interface{}{
 				"spec": map[string]interface{}{
 					"template": map[string]interface{}{
