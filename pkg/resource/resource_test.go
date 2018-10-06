@@ -18,14 +18,17 @@ package resource
 
 import (
 	"reflect"
-	"sigs.k8s.io/kustomize/internal/k8sdeps"
 	"testing"
 
+	"sigs.k8s.io/kustomize/internal/k8sdeps"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/patch"
 )
 
-var testConfigMap = NewFromMap(
+var factory = NewFactory(
+	k8sdeps.NewKustKunstructuredFactory(k8sdeps.NewKustDecoder()))
+
+var testConfigMap = factory.FromMap(
 	map[string]interface{}{
 		"apiVersion": "v1",
 		"kind":       "ConfigMap",
@@ -36,7 +39,7 @@ var testConfigMap = NewFromMap(
 
 const testConfigMapString = `unspecified:{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"winnie"}}`
 
-var testDeployment = NewFromMap(
+var testDeployment = factory.FromMap(
 	map[string]interface{}{
 		"apiVersion": "apps/v1",
 		"kind":       "Deployment",
@@ -68,7 +71,8 @@ func TestResourceString(t *testing.T) {
 	}
 }
 
-func TestNewResourceSliceFromPatches(t *testing.T) {
+func TestSliceFromPatches(t *testing.T) {
+
 	patchGood1 := patch.StrategicMerge("/foo/patch1.yaml")
 	patch1 := `
 apiVersion: apps/v1
@@ -122,8 +126,7 @@ WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOT: woot
 		},
 	}
 	for _, test := range tests {
-		rs, err := NewSliceFromPatches(
-			l, test.input, k8sdeps.NewKustDecoder())
+		rs, err := factory.SliceFromPatches(l, test.input)
 		if test.expectedErr && err == nil {
 			t.Fatalf("%v: should return error", test.name)
 		}

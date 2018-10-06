@@ -26,7 +26,6 @@ import (
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/resid"
-	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
@@ -42,7 +41,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 	}
 
 	l := loadertest.NewFakeLoader("/home/seans/project/")
-	f := configmapandsecret.NewConfigMapFactory(fs.MakeFakeFS(), l)
+	cf := configmapandsecret.NewConfigMapFactory(fs.MakeFakeFS(), l)
 	testCases := []testCase{
 		{
 			description: "construct config map from env",
@@ -57,7 +56,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 			filepath: "/home/seans/project/app.env",
 			content:  "DB_USERNAME=admin\nDB_PASSWORD=somepw",
 			expected: ResMap{
-				resid.NewResId(cmap, "envConfigMap"): resource.NewFromMap(
+				resid.NewResId(cmap, "envConfigMap"): rf.FromMap(
 					map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -83,7 +82,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 			filepath: "/home/seans/project/app-init.ini",
 			content:  "FOO=bar\nBAR=baz\n",
 			expected: ResMap{
-				resid.NewResId(cmap, "fileConfigMap"): resource.NewFromMap(
+				resid.NewResId(cmap, "fileConfigMap"): rf.FromMap(
 					map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -109,7 +108,7 @@ BAR=baz
 				},
 			},
 			expected: ResMap{
-				resid.NewResId(cmap, "literalConfigMap"): resource.NewFromMap(
+				resid.NewResId(cmap, "literalConfigMap"): rf.FromMap(
 					map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -133,7 +132,7 @@ BAR=baz
 		if ferr := l.AddFile(tc.filepath, []byte(tc.content)); ferr != nil {
 			t.Fatalf("Error adding fake file: %v\n", ferr)
 		}
-		r, err := NewResMapFromConfigMapArgs(f, tc.input)
+		r, err := rmF.NewResMapFromConfigMapArgs(cf, tc.input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
