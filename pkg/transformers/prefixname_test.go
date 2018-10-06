@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"testing"
 
+	"sigs.k8s.io/kustomize/internal/k8sdeps"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
@@ -27,8 +28,10 @@ import (
 )
 
 func TestPrefixNameRun(t *testing.T) {
+	rf := resource.NewFactory(
+		k8sdeps.NewKustKunstructuredFactory(k8sdeps.NewKustDecoder()))
 	m := resmap.ResMap{
-		resid.NewResId(cmap, "cm1"): resource.NewFromMap(
+		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -36,7 +39,7 @@ func TestPrefixNameRun(t *testing.T) {
 					"name": "cm1",
 				},
 			}),
-		resid.NewResId(cmap, "cm2"): resource.NewFromMap(
+		resid.NewResId(cmap, "cm2"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -44,7 +47,7 @@ func TestPrefixNameRun(t *testing.T) {
 					"name": "cm2",
 				},
 			}),
-		resid.NewResId(crd, "crd"): resource.NewFromMap(
+		resid.NewResId(crd, "crd"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apiextensions.k8s.io/v1beta1",
 				"kind":       "CustomResourceDefinition",
@@ -54,7 +57,7 @@ func TestPrefixNameRun(t *testing.T) {
 			}),
 	}
 	expected := resmap.ResMap{
-		resid.NewResIdWithPrefix(cmap, "cm1", "someprefix-"): resource.NewFromMap(
+		resid.NewResIdWithPrefix(cmap, "cm1", "someprefix-"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -62,7 +65,7 @@ func TestPrefixNameRun(t *testing.T) {
 					"name": "someprefix-cm1",
 				},
 			}),
-		resid.NewResIdWithPrefix(cmap, "cm2", "someprefix-"): resource.NewFromMap(
+		resid.NewResIdWithPrefix(cmap, "cm2", "someprefix-"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -70,7 +73,7 @@ func TestPrefixNameRun(t *testing.T) {
 					"name": "someprefix-cm2",
 				},
 			}),
-		resid.NewResId(crd, "crd"): resource.NewFromMap(
+		resid.NewResId(crd, "crd"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apiextensions.k8s.io/v1beta1",
 				"kind":       "CustomResourceDefinition",

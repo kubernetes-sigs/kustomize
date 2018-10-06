@@ -31,6 +31,9 @@ import (
 
 var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
 var statefulset = gvk.Gvk{Group: "apps", Version: "v1", Kind: "StatefulSet"}
+var rf = resource.NewFactory(
+	k8sdeps.NewKustKunstructuredFactory(k8sdeps.NewKustDecoder()))
+var rmF = NewFactory(rf)
 
 func TestEncodeAsYaml(t *testing.T) {
 	encoded := []byte(`apiVersion: v1
@@ -44,7 +47,7 @@ metadata:
   name: cm2
 `)
 	input := ResMap{
-		resid.NewResId(cmap, "cm1"): resource.NewFromMap(
+		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -52,7 +55,7 @@ metadata:
 					"name": "cm1",
 				},
 			}),
-		resid.NewResId(cmap, "cm2"): resource.NewFromMap(
+		resid.NewResId(cmap, "cm2"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -72,7 +75,7 @@ metadata:
 
 func TestDemandOneMatchForId(t *testing.T) {
 	rm1 := ResMap{
-		resid.NewResIdWithPrefixNamespace(cmap, "cm1", "prefix1", "ns1"): resource.NewFromMap(
+		resid.NewResIdWithPrefixNamespace(cmap, "cm1", "prefix1", "ns1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -80,7 +83,7 @@ func TestDemandOneMatchForId(t *testing.T) {
 					"name": "cm1",
 				},
 			}),
-		resid.NewResIdWithPrefixNamespace(cmap, "cm2", "prefix1", "ns1"): resource.NewFromMap(
+		resid.NewResIdWithPrefixNamespace(cmap, "cm2", "prefix1", "ns1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -118,7 +121,7 @@ func TestDemandOneMatchForId(t *testing.T) {
 }
 
 func TestFilterBy(t *testing.T) {
-	rm := ResMap{resid.NewResIdWithPrefixNamespace(cmap, "cm1", "prefix1", "ns1"): resource.NewFromMap(
+	rm := ResMap{resid.NewResIdWithPrefixNamespace(cmap, "cm1", "prefix1", "ns1"): rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -126,7 +129,7 @@ func TestFilterBy(t *testing.T) {
 				"name": "cm1",
 			},
 		}),
-		resid.NewResIdWithPrefixNamespace(cmap, "cm2", "prefix1", "ns1"): resource.NewFromMap(
+		resid.NewResIdWithPrefixNamespace(cmap, "cm2", "prefix1", "ns1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -136,7 +139,7 @@ func TestFilterBy(t *testing.T) {
 			}),
 	}
 	rm1 := ResMap{
-		resid.NewResIdWithPrefixNamespace(cmap, "cm3", "prefix1", "ns2"): resource.NewFromMap(
+		resid.NewResIdWithPrefixNamespace(cmap, "cm3", "prefix1", "ns2"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -162,7 +165,7 @@ func TestFilterBy(t *testing.T) {
 }
 func TestDeepCopy(t *testing.T) {
 	rm1 := ResMap{
-		resid.NewResId(cmap, "cm1"): resource.NewFromMap(
+		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -170,7 +173,7 @@ func TestDeepCopy(t *testing.T) {
 					"name": "cm1",
 				},
 			}),
-		resid.NewResId(cmap, "cm2"): resource.NewFromMap(
+		resid.NewResId(cmap, "cm2"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -180,7 +183,7 @@ func TestDeepCopy(t *testing.T) {
 			}),
 	}
 
-	rm2 := rm1.DeepCopy()
+	rm2 := rm1.DeepCopy(rf)
 
 	if &rm1 == &rm2 {
 		t.Fatal("DeepCopy returned a reference to itself instead of a copy")
@@ -194,7 +197,7 @@ func TestDeepCopy(t *testing.T) {
 func TestErrorIfNotEqual(t *testing.T) {
 
 	rm1 := ResMap{
-		resid.NewResId(cmap, "cm1"): resource.NewFromMap(
+		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -202,7 +205,7 @@ func TestErrorIfNotEqual(t *testing.T) {
 					"name": "cm1",
 				},
 			}),
-		resid.NewResId(cmap, "cm2"): resource.NewFromMap(
+		resid.NewResId(cmap, "cm2"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -218,7 +221,7 @@ func TestErrorIfNotEqual(t *testing.T) {
 	}
 
 	rm2 := ResMap{
-		resid.NewResId(cmap, "cm1"): resource.NewFromMap(
+		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -235,7 +238,7 @@ func TestErrorIfNotEqual(t *testing.T) {
 	}
 
 	rm3 := ResMap{
-		resid.NewResId(cmap, "cm2"): resource.NewFromMap(
+		resid.NewResId(cmap, "cm2"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -252,7 +255,7 @@ func TestErrorIfNotEqual(t *testing.T) {
 	}
 
 	rm4 := ResMap{
-		resid.NewResId(cmap, "cm1"): resource.NewFromMap(
+		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -291,7 +294,7 @@ metadata:
 	if ferr := l.AddFile("/home/seans/project/deployment.yaml", []byte(resourceStr)); ferr != nil {
 		t.Fatalf("Error adding fake file: %v\n", ferr)
 	}
-	expected := ResMap{resid.NewResId(deploy, "dply1"): resource.NewFromMap(
+	expected := ResMap{resid.NewResId(deploy, "dply1"): rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
@@ -299,7 +302,7 @@ metadata:
 				"name": "dply1",
 			},
 		}),
-		resid.NewResId(deploy, "dply2"): resource.NewFromMap(
+		resid.NewResId(deploy, "dply2"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -309,9 +312,8 @@ metadata:
 			}),
 	}
 
-	m, _ := NewResMapFromFiles(
-		l, []string{"/home/seans/project/deployment.yaml"},
-		k8sdeps.NewKustDecoder())
+	m, _ := rmF.FromFiles(
+		l, []string{"/home/seans/project/deployment.yaml"})
 	if len(m) != 2 {
 		t.Fatalf("%#v should contain 2 appResource, but got %d", m, len(m))
 	}
@@ -333,7 +335,7 @@ metadata:
   name: cm2
 `)
 	expected := ResMap{
-		resid.NewResId(cmap, "cm1"): resource.NewFromMap(
+		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -341,7 +343,7 @@ metadata:
 					"name": "cm1",
 				},
 			}),
-		resid.NewResId(cmap, "cm2"): resource.NewFromMap(
+		resid.NewResId(cmap, "cm2"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -350,7 +352,7 @@ metadata:
 				},
 			}),
 	}
-	m, err := newResMapFromBytes(encoded, k8sdeps.NewKustDecoder())
+	m, err := rmF.newResMapFromBytes(encoded)
 	fmt.Printf("%v\n", m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -362,7 +364,7 @@ metadata:
 
 func TestMergeWithoutOverride(t *testing.T) {
 	input1 := ResMap{
-		resid.NewResId(deploy, "deploy1"): resource.NewFromMap(
+		resid.NewResId(deploy, "deploy1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -372,7 +374,7 @@ func TestMergeWithoutOverride(t *testing.T) {
 			}),
 	}
 	input2 := ResMap{
-		resid.NewResId(statefulset, "stateful1"): resource.NewFromMap(
+		resid.NewResId(statefulset, "stateful1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "StatefulSet",
@@ -383,7 +385,7 @@ func TestMergeWithoutOverride(t *testing.T) {
 	}
 	input := []ResMap{input1, input2}
 	expected := ResMap{
-		resid.NewResId(deploy, "deploy1"): resource.NewFromMap(
+		resid.NewResId(deploy, "deploy1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -391,7 +393,7 @@ func TestMergeWithoutOverride(t *testing.T) {
 					"name": "foo-deploy1",
 				},
 			}),
-		resid.NewResId(statefulset, "stateful1"): resource.NewFromMap(
+		resid.NewResId(statefulset, "stateful1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "StatefulSet",
@@ -428,7 +430,7 @@ func TestMergeWithoutOverride(t *testing.T) {
 func generateMergeFixtures(b ifc.GenerationBehavior) []ResMap {
 
 	input1 := ResMap{
-		resid.NewResId(cmap, "cmap"): resource.NewFromMap(
+		resid.NewResId(cmap, "cmap"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "ConfigMap",
@@ -442,7 +444,7 @@ func generateMergeFixtures(b ifc.GenerationBehavior) []ResMap {
 			}),
 	}
 	input2 := ResMap{
-		resid.NewResId(cmap, "cmap"): resource.NewFromMap(
+		resid.NewResId(cmap, "cmap"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "ConfigMap",
@@ -463,7 +465,7 @@ func generateMergeFixtures(b ifc.GenerationBehavior) []ResMap {
 
 func TestMergeWithOverride(t *testing.T) {
 	expected := ResMap{
-		resid.NewResId(cmap, "cmap"): resource.NewFromMap(
+		resid.NewResId(cmap, "cmap"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "ConfigMap",
