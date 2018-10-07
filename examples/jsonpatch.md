@@ -46,6 +46,25 @@ cat <<EOF >$DEMO_HOME/ingress_patch.json
 EOF
 ```
 
+You can also write the patch in YAML format. This example also shows the "add" operation:
+
+<!-- @addYamlPatch @test -->
+```
+cat <<EOF >$DEMO_HOME/ingress_patch.yaml
+- op: replace
+  path: /spec/rules/0/host
+  value: foo.bar.io
+
+- op: add
+  path: /spec/rules/0/http/paths/-
+  value:
+    path: '/test'
+    backend:
+      serviceName: my-test
+      servicePort: 8081
+EOF
+```
+
 Apply the patch by adding _patchesJson6902_ field in kustomization.yaml
 
 <!-- @applyJsonPatch @test -->
@@ -61,17 +80,39 @@ patchesJson6902:
 EOF
 ```
 
-Running `kustomize build $DEMO_HOME`, in the ourput confirm that host has been updated correctly.
+Running `kustomize build $DEMO_HOME`, in the output confirm that host has been updated correctly.
 <!-- @confirmHost @test -->
 ```
 test 1 == \
   $(kustomize build $DEMO_HOME | grep "host: foo.bar.io" | wc -l); \
   echo $?
 ```
-Running `kustomize build $DEMO_HOME`, in the ourput confirm that the servicePort has been updated correctly.
+Running `kustomize build $DEMO_HOME`, in the output confirm that the servicePort has been updated correctly.
 <!-- @confirmServicePort @test -->
 ```
 test 1 == \
   $(kustomize build $DEMO_HOME | grep "servicePort: 8080" | wc -l); \
+  echo $?
+```
+
+If the patch is YAML-formatted, it will be parsed correctly:
+
+<!-- @applyYamlPatch @test -->
+```
+cat <<EOF >>$DEMO_HOME/kustomization.yaml
+patchesJson6902:
+- target:
+    group: extensions
+    version: v1beta1
+    kind: Ingress
+    name: my-ingress
+  path: ingress_patch.yaml
+EOF
+```
+
+<!-- @confirmYamlPatch @test -->
+```
+test 1 == \
+  $(kustomize build $DEMO_HOME | grep "path: /test" | wc -l); \
   echo $?
 ```
