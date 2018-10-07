@@ -108,15 +108,9 @@ label_ applied to all resources:
 
 <!-- @addLabel @test -->
 ```
-sed -i 's/app: hello/app: my-hello/' \
+sed -i.bak 's/app: hello/app: my-hello/' \
     $BASE/kustomization.yaml
 ```
-
-On a Mac, use:
-```
-sed -i '' $pattern $file
-```
-to get in-place editing.
 
 See the effect:
 <!-- @checkLabel @test -->
