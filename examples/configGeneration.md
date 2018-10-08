@@ -164,7 +164,7 @@ the server will use:
 
 <!-- @changeMap @test -->
 ```
-sed -i 's/pineapple/kiwi/' $OVERLAYS/staging/map.yaml
+sed -i.bak 's/pineapple/kiwi/' $OVERLAYS/staging/map.yaml
 ```
 
 See the new greeting:
