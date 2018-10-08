@@ -27,6 +27,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"sigs.k8s.io/kustomize/internal/k8sdeps"
+	"sigs.k8s.io/kustomize/internal/k8sdeps/patch"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
@@ -131,6 +132,7 @@ func runBuildTestCase(t *testing.T, testcaseName string, updateKustomizeExpected
 	err = ops.RunBuild(
 		buf, fSys,
 		k8sdeps.NewKustKunstructuredFactory(k8sdeps.NewKustDecoder()),
+		patch.NewPatchTransformerFactory(),
 		k8sdeps.NewKustDecoder(), k8sdeps.NewKustHash())
 	switch {
 	case err != nil && len(testcase.ExpectedError) == 0:

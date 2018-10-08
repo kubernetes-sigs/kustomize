@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2018 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,27 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+// Package patch holds miscellaneous interfaces used by kustomize.
+package patch
 
 import (
-	"os"
-
-	"github.com/golang/glog"
-	"sigs.k8s.io/kustomize/internal/k8sdeps"
-	"sigs.k8s.io/kustomize/internal/k8sdeps/patch"
-	"sigs.k8s.io/kustomize/pkg/commands"
+	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/transformers"
 )
 
-func main() {
-	defer glog.Flush()
-
-	if err := commands.NewDefaultCommand(
-		k8sdeps.NewKustKunstructuredFactory(k8sdeps.NewKustDecoder()),
-		patch.NewPatchTransformerFactory(),
-		k8sdeps.NewKustDecoder(),
-		k8sdeps.NewKustValidator(),
-		k8sdeps.NewKustHash()).Execute(); err != nil {
-		os.Exit(1)
-	}
-	os.Exit(0)
+// PatchTransformerFactory makes patch transformer.
+type PatchTransformerFactory interface {
+	MakePatchTransformer(slice []*resource.Resource, rf *resource.Factory) (transformers.Transformer, error)
 }
