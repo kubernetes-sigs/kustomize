@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"github.com/ghodss/yaml"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/kube-openapi/pkg/common"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
@@ -67,7 +66,7 @@ func registerCRD(loader ifc.Loader, path string) (*transformerconfig.Transformer
 	for crd, k := range crds {
 		crdPathConfigs := transformerconfig.MakeEmptyTransformerConfig()
 		err = getCRDPathConfig(
-			types, crd, crd, gvk.FromSchemaGvk(k), []string{}, crdPathConfigs)
+			types, crd, crd, k, []string{}, crdPathConfigs)
 		if err != nil {
 			return result, err
 		}
@@ -78,8 +77,8 @@ func registerCRD(loader ifc.Loader, path string) (*transformerconfig.Transformer
 }
 
 // getCRDs get all CRD types
-func getCRDs(types map[string]common.OpenAPIDefinition) map[string]schema.GroupVersionKind {
-	crds := map[string]schema.GroupVersionKind{}
+func getCRDs(types map[string]common.OpenAPIDefinition) map[string]gvk.Gvk {
+	crds := map[string]gvk.Gvk{}
 
 	for typename, t := range types {
 		properties := t.Schema.SchemaProps.Properties
@@ -90,7 +89,7 @@ func getCRDs(types map[string]common.OpenAPIDefinition) map[string]schema.GroupV
 			// TODO: Get Group and Version for CRD from the openAPI definition once
 			// "x-kubernetes-group-version-kind" is available in CRD
 			kind := strings.Split(typename, ".")[len(strings.Split(typename, "."))-1]
-			crds[typename] = schema.GroupVersionKind{Kind: kind}
+			crds[typename] = gvk.Gvk{Kind: kind}
 		}
 	}
 	return crds
