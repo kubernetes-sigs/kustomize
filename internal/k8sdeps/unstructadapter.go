@@ -1,9 +1,24 @@
+/*
+Copyright 2018 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package k8sdeps
 
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,35 +50,6 @@ func NewKunstructuredFromObject(obj runtime.Object) (ifc.Kunstructured, error) {
 	// creationTimestamp always 'null', remove it
 	u.SetCreationTimestamp(metav1.Time{})
 	return &UnstructAdapter{Unstructured: u}, err
-}
-
-// NewKunstructuredFromMap returns a new instance of Kunstructured.
-func NewKunstructuredFromMap(m map[string]interface{}) ifc.Kunstructured {
-	return NewKunstructuredFromUnstruct(unstructured.Unstructured{Object: m})
-}
-
-// NewKunstructuredFromUnstruct returns a new instance of Kunstructured.
-func NewKunstructuredFromUnstruct(u unstructured.Unstructured) ifc.Kunstructured {
-	return &UnstructAdapter{Unstructured: u}
-}
-
-// NewKunstructuredSliceFromBytes unmarshalls bytes into a Kunstructured slice.
-func NewKunstructuredSliceFromBytes(
-	in []byte, decoder ifc.Decoder) ([]ifc.Kunstructured, error) {
-	decoder.SetInput(in)
-	var result []ifc.Kunstructured
-	var err error
-	for err == nil || isEmptyYamlError(err) {
-		var out unstructured.Unstructured
-		err = decoder.Decode(&out)
-		if err == nil {
-			result = append(result, &UnstructAdapter{Unstructured: out})
-		}
-	}
-	if err != io.EOF {
-		return nil, err
-	}
-	return result, nil
 }
 
 // GetGvk returns the Gvk name of the object.

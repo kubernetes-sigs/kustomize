@@ -88,6 +88,9 @@ metadata:
 ]`
 )
 
+var rf = resmap.NewFactory(resource.NewFactory(
+	k8sdeps.NewKustKunstructuredFactory(k8sdeps.NewKustDecoder())))
+
 func makeLoader1(t *testing.T) ifc.Loader {
 	ldr := loadertest.NewFakeLoader("/testpath")
 	err := ldr.AddFile("/testpath/"+constants.KustomizationFileName, []byte(kustomizationContent1))
@@ -116,7 +119,7 @@ var ns = gvk.Gvk{Version: "v1", Kind: "Namespace"}
 
 func TestResources1(t *testing.T) {
 	expected := resmap.ResMap{
-		resid.NewResIdWithPrefixNamespace(deploy, "dply1", "foo-", "ns1"): resource.NewFromMap(
+		resid.NewResIdWithPrefixNamespace(deploy, "dply1", "foo-", "ns1"): rf.RF().FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -149,7 +152,7 @@ func TestResources1(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResIdWithPrefixNamespace(cmap, "literalConfigMap", "foo-", "ns1"): resource.NewFromMap(
+		resid.NewResIdWithPrefixNamespace(cmap, "literalConfigMap", "foo-", "ns1"): rf.RF().FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -168,7 +171,7 @@ func TestResources1(t *testing.T) {
 					"DB_PASSWORD": "somepw",
 				},
 			}).SetBehavior(ifc.BehaviorCreate),
-		resid.NewResIdWithPrefixNamespace(secret, "secret", "foo-", "ns1"): resource.NewFromMap(
+		resid.NewResIdWithPrefixNamespace(secret, "secret", "foo-", "ns1"): rf.RF().FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -188,7 +191,7 @@ func TestResources1(t *testing.T) {
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
 			}).SetBehavior(ifc.BehaviorCreate),
-		resid.NewResIdWithPrefixNamespace(ns, "ns1", "foo-", ""): resource.NewFromMap(
+		resid.NewResIdWithPrefixNamespace(ns, "ns1", "foo-", ""): rf.RF().FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Namespace",
@@ -207,7 +210,7 @@ func TestResources1(t *testing.T) {
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
 	kt, err := NewKustTarget(
-		l, fakeFs, transformerconfig.MakeDefaultTransformerConfig(),
+		l, fakeFs, rf, transformerconfig.MakeDefaultTransformerConfig(),
 		k8sdeps.NewKustDecoder(), k8sdeps.NewKustHash())
 	if err != nil {
 		t.Fatalf("unexpected construction error %v", err)
@@ -232,7 +235,7 @@ func TestResourceNotFound(t *testing.T) {
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
 	kt, err := NewKustTarget(
-		l, fakeFs, transformerconfig.MakeDefaultTransformerConfig(),
+		l, fakeFs, rf, transformerconfig.MakeDefaultTransformerConfig(),
 		k8sdeps.NewKustDecoder(), k8sdeps.NewKustHash())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
@@ -255,7 +258,7 @@ func TestSecretTimeout(t *testing.T) {
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
 	kt, err := NewKustTarget(
-		l, fakeFs, transformerconfig.MakeDefaultTransformerConfig(),
+		l, fakeFs, rf, transformerconfig.MakeDefaultTransformerConfig(),
 		k8sdeps.NewKustDecoder(), k8sdeps.NewKustHash())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)

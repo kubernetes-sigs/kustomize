@@ -17,15 +17,15 @@ limitations under the License.
 package resource
 
 import (
-	"reflect"
-	"sigs.k8s.io/kustomize/internal/k8sdeps"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
-	"sigs.k8s.io/kustomize/pkg/patch"
+	"sigs.k8s.io/kustomize/internal/k8sdeps"
 )
 
-var testConfigMap = NewFromMap(
+var factory = NewFactory(
+	k8sdeps.NewKustKunstructuredFactory(k8sdeps.NewKustDecoder()))
+
+var testConfigMap = factory.FromMap(
 	map[string]interface{}{
 		"apiVersion": "v1",
 		"kind":       "ConfigMap",
@@ -36,7 +36,7 @@ var testConfigMap = NewFromMap(
 
 const testConfigMapString = `unspecified:{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"winnie"}}`
 
-var testDeployment = NewFromMap(
+var testDeployment = factory.FromMap(
 	map[string]interface{}{
 		"apiVersion": "apps/v1",
 		"kind":       "Deployment",
@@ -64,81 +64,6 @@ func TestResourceString(t *testing.T) {
 	for _, test := range tests {
 		if test.in.String() != test.s {
 			t.Fatalf("Expected %s == %s", test.in.String(), test.s)
-		}
-	}
-}
-
-func TestNewResourceSliceFromPatches(t *testing.T) {
-	patchGood1 := patch.StrategicMerge("/foo/patch1.yaml")
-	patch1 := `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: pooh
-`
-	patchGood2 := patch.StrategicMerge("/foo/patch2.yaml")
-	patch2 := `
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: winnie
----
-# some comment
----
----
-`
-	patchBad := patch.StrategicMerge("/foo/patch3.yaml")
-	patch3 := `
-WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOT: woot
-`
-	l := loadertest.NewFakeLoader("/foo")
-	l.AddFile(string(patchGood1), []byte(patch1))
-	l.AddFile(string(patchGood2), []byte(patch2))
-	l.AddFile(string(patchBad), []byte(patch3))
-
-	tests := []struct {
-		name        string
-		input       []patch.StrategicMerge
-		expectedOut []*Resource
-		expectedErr bool
-	}{
-		{
-			name:        "happy",
-			input:       []patch.StrategicMerge{patchGood1, patchGood2},
-			expectedOut: []*Resource{testDeployment, testConfigMap},
-			expectedErr: false,
-		},
-		{
-			name:        "badFileName",
-			input:       []patch.StrategicMerge{patchGood1, "doesNotExist"},
-			expectedOut: []*Resource{},
-			expectedErr: true,
-		},
-		{
-			name:        "badData",
-			input:       []patch.StrategicMerge{patchGood1, patchBad},
-			expectedOut: []*Resource{},
-			expectedErr: true,
-		},
-	}
-	for _, test := range tests {
-		rs, err := NewSliceFromPatches(
-			l, test.input, k8sdeps.NewKustDecoder())
-		if test.expectedErr && err == nil {
-			t.Fatalf("%v: should return error", test.name)
-		}
-		if !test.expectedErr && err != nil {
-			t.Fatalf("%v: unexpected error: %s", test.name, err)
-		}
-		if len(rs) != len(test.expectedOut) {
-			t.Fatalf("%s: length mismatch %d != %d",
-				test.name, len(rs), len(test.expectedOut))
-		}
-		for i := range rs {
-			if !reflect.DeepEqual(test.expectedOut[i], rs[i]) {
-				t.Fatalf("%s: Got: %v\nexpected:%v",
-					test.name, test.expectedOut[i], rs[i])
-			}
 		}
 	}
 }

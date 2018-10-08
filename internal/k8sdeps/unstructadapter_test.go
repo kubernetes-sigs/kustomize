@@ -1,113 +1,28 @@
+/*
+Copyright 2018 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package k8sdeps
 
 import (
-	"reflect"
-	"sigs.k8s.io/kustomize/pkg/ifc"
 	"testing"
 )
 
-var testConfigMap = NewKunstructuredFromMap(
-	map[string]interface{}{
-		"apiVersion": "v1",
-		"kind":       "ConfigMap",
-		"metadata": map[string]interface{}{
-			"name": "winnie",
-		},
-	})
-
-func TestNewKunstructuredSliceFromBytes(t *testing.T) {
-	tests := []struct {
-		name        string
-		input       []byte
-		expectedOut []ifc.Kunstructured
-		expectedErr bool
-	}{
-		{
-			name:        "garbage",
-			input:       []byte("garbageIn: garbageOut"),
-			expectedOut: []ifc.Kunstructured{},
-			expectedErr: true,
-		},
-		{
-			name:        "noBytes",
-			input:       []byte{},
-			expectedOut: []ifc.Kunstructured{},
-			expectedErr: false,
-		},
-		{
-			name: "goodJson",
-			input: []byte(`
-{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"winnie"}}
-`),
-			expectedOut: []ifc.Kunstructured{testConfigMap},
-			expectedErr: false,
-		},
-		{
-			name: "goodYaml1",
-			input: []byte(`
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: winnie
-`),
-			expectedOut: []ifc.Kunstructured{testConfigMap},
-			expectedErr: false,
-		},
-		{
-			name: "goodYaml2",
-			input: []byte(`
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: winnie
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: winnie
-`),
-			expectedOut: []ifc.Kunstructured{testConfigMap, testConfigMap},
-			expectedErr: false,
-		},
-		{
-			name: "garbageInOneOfTwoObjects",
-			input: []byte(`
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: winnie
----
-WOOOOOOOOOOOOOOOOOOOOOOOOT:  woot
-`),
-			expectedOut: []ifc.Kunstructured{},
-			expectedErr: true,
-		},
-	}
-
-	for _, test := range tests {
-		rs, err := NewKunstructuredSliceFromBytes(
-			test.input, NewKustDecoder())
-		if test.expectedErr && err == nil {
-			t.Fatalf("%v: should return error", test.name)
-		}
-		if !test.expectedErr && err != nil {
-			t.Fatalf("%v: unexpected error: %s", test.name, err)
-		}
-		if len(rs) != len(test.expectedOut) {
-			t.Fatalf("%s: length mismatch %d != %d",
-				test.name, len(rs), len(test.expectedOut))
-		}
-		for i := range rs {
-			if !reflect.DeepEqual(test.expectedOut[i], rs[i]) {
-				t.Fatalf("%s: Got: %v\nexpected:%v",
-					test.name, test.expectedOut[i], rs[i])
-			}
-		}
-	}
-}
-
 func TestGetFieldValue(t *testing.T) {
-	funStruct := NewKunstructuredFromMap(map[string]interface{}{
+	factory := NewKustKunstructuredFactory(NewKustDecoder())
+	kunstructured := factory.FromMap(map[string]interface{}{
 		"Kind": "Service",
 		"metadata": map[string]interface{}{
 			"labels": map[string]string{
@@ -150,7 +65,7 @@ func TestGetFieldValue(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		s, err := funStruct.GetFieldValue(test.pathToField)
+		s, err := kunstructured.GetFieldValue(test.pathToField)
 		if test.errorExpected && err == nil {
 			t.Fatalf("should return error, but no error returned")
 		} else {

@@ -69,3 +69,9 @@ type Kunstructured interface {
 	GetAnnotations() map[string]string
 	SetAnnotations(map[string]string)
 }
+
+// KunstructuredFactory makes instances of Kunstructured.
+type KunstructuredFactory interface {
+	SliceFromBytes([]byte) ([]Kunstructured, error)
+	FromMap(m map[string]interface{}) Kunstructured
+}
