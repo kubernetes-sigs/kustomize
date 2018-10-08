@@ -116,7 +116,7 @@ var ns = gvk.Gvk{Version: "v1", Kind: "Namespace"}
 
 func TestResources1(t *testing.T) {
 	expected := resmap.ResMap{
-		resid.NewResIdWithPrefixNamespace(deploy, "dply1", "foo-", "ns1"): resource.NewResourceFromMap(
+		resid.NewResIdWithPrefixNamespace(deploy, "dply1", "foo-", "ns1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -149,7 +149,7 @@ func TestResources1(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResIdWithPrefixNamespace(cmap, "literalConfigMap", "foo-", "ns1"): resource.NewResourceFromMap(
+		resid.NewResIdWithPrefixNamespace(cmap, "literalConfigMap", "foo-", "ns1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -168,7 +168,7 @@ func TestResources1(t *testing.T) {
 					"DB_PASSWORD": "somepw",
 				},
 			}).SetBehavior(ifc.BehaviorCreate),
-		resid.NewResIdWithPrefixNamespace(secret, "secret", "foo-", "ns1"): resource.NewResourceFromMap(
+		resid.NewResIdWithPrefixNamespace(secret, "secret", "foo-", "ns1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -188,7 +188,7 @@ func TestResources1(t *testing.T) {
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
 			}).SetBehavior(ifc.BehaviorCreate),
-		resid.NewResIdWithPrefixNamespace(ns, "ns1", "foo-", ""): resource.NewResourceFromMap(
+		resid.NewResIdWithPrefixNamespace(ns, "ns1", "foo-", ""): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Namespace",

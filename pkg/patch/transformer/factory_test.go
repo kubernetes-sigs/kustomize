@@ -182,7 +182,7 @@ func TestNewPatchJson6902FactoryMulti(t *testing.T) {
 
 	id := resid.NewResId(gvk.FromKind("foo"), "some-name")
 	base := resmap.ResMap{
-		id: resource.NewResourceFromMap(
+		id: resource.NewFromMap(
 			map[string]interface{}{
 				"kind": "foo",
 				"metadata": map[string]interface{}{
@@ -208,7 +208,7 @@ func TestNewPatchJson6902FactoryMulti(t *testing.T) {
 			}),
 	}
 	expected := resmap.ResMap{
-		id: resource.NewResourceFromMap(
+		id: resource.NewFromMap(
 			map[string]interface{}{
 				"kind": "foo",
 				"metadata": map[string]interface{}{
@@ -296,7 +296,7 @@ func TestNewPatchJson6902FactoryMultiConflict(t *testing.T) {
 
 	id := resid.NewResId(gvk.FromKind("foo"), "some-name")
 	base := resmap.ResMap{
-		id: resource.NewResourceFromMap(
+		id: resource.NewFromMap(
 			map[string]interface{}{
 				"kind": "foo",
 				"metadata": map[string]interface{}{

@@ -54,7 +54,7 @@ func (h *KustHash) Hash(m map[string]interface{}) (string, error) {
 		}
 		return SecretHash(sec)
 	default:
-		return "", fmt.Errorf("Type %s is supported for hashing in %v", kind, m)
+		return "", fmt.Errorf("type %s is supported for hashing in %v", kind, m)
 	}
 }
 

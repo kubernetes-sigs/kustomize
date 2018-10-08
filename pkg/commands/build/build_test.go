@@ -104,7 +104,10 @@ func TestBuild(t *testing.T) {
 	}
 
 	for _, testcaseName := range testcases {
-		t.Run(testcaseName, func(t *testing.T) { runBuildTestCase(t, testcaseName, updateKustomizeExpected, fSys) })
+		t.Run(testcaseName,
+			func(t *testing.T) {
+				runBuildTestCase(t, testcaseName, updateKustomizeExpected, fSys)
+			})
 	}
 
 }
