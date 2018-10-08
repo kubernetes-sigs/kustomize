@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/kustomize/internal/k8sdeps"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/patch"
@@ -29,6 +30,9 @@ import (
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
+
+var rf = resource.NewFactory(
+	k8sdeps.NewKustKunstructuredFactory(k8sdeps.NewKustDecoder()))
 
 func TestNewPatchJson6902FactoryNoTarget(t *testing.T) {
 	p := patch.Json6902{}
@@ -182,7 +186,7 @@ func TestNewPatchJson6902FactoryMulti(t *testing.T) {
 
 	id := resid.NewResId(gvk.FromKind("foo"), "some-name")
 	base := resmap.ResMap{
-		id: resource.NewFromMap(
+		id: rf.FromMap(
 			map[string]interface{}{
 				"kind": "foo",
 				"metadata": map[string]interface{}{
@@ -208,7 +212,7 @@ func TestNewPatchJson6902FactoryMulti(t *testing.T) {
 			}),
 	}
 	expected := resmap.ResMap{
-		id: resource.NewFromMap(
+		id: rf.FromMap(
 			map[string]interface{}{
 				"kind": "foo",
 				"metadata": map[string]interface{}{
@@ -296,7 +300,7 @@ func TestNewPatchJson6902FactoryMultiConflict(t *testing.T) {
 
 	id := resid.NewResId(gvk.FromKind("foo"), "some-name")
 	base := resmap.ResMap{
-		id: resource.NewFromMap(
+		id: rf.FromMap(
 			map[string]interface{}{
 				"kind": "foo",
 				"metadata": map[string]interface{}{

@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/evanphx/json-patch"
+	"sigs.k8s.io/kustomize/internal/k8sdeps"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
@@ -30,9 +31,11 @@ import (
 var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
 
 func TestJsonPatchJSONTransformer_Transform(t *testing.T) {
+	rf := resource.NewFactory(
+		k8sdeps.NewKustKunstructuredFactory(k8sdeps.NewKustDecoder()))
 	id := resid.NewResId(deploy, "deploy1")
 	base := resmap.ResMap{
-		id: resource.NewFromMap(
+		id: rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -69,7 +72,7 @@ func TestJsonPatchJSONTransformer_Transform(t *testing.T) {
 		t.Fatalf("unexpected error : %v", err)
 	}
 	expected := resmap.ResMap{
-		id: resource.NewFromMap(
+		id: rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",

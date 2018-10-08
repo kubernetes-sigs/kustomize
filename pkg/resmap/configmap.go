@@ -25,19 +25,19 @@ import (
 
 // NewResMapFromConfigMapArgs returns a Resource slice given
 // a configmap metadata slice from kustomization file.
-func NewResMapFromConfigMapArgs(
-	f *configmapandsecret.ConfigMapFactory,
+func (rmF *Factory) NewResMapFromConfigMapArgs(
+	cf *configmapandsecret.ConfigMapFactory,
 	cmArgsList []types.ConfigMapArgs) (ResMap, error) {
 	var allResources []*resource.Resource
 	for _, cmArgs := range cmArgsList {
 		if cmArgs.Behavior == "" {
 			cmArgs.Behavior = "create"
 		}
-		cm, err := f.MakeConfigMap(&cmArgs)
+		cm, err := cf.MakeConfigMap(&cmArgs)
 		if err != nil {
 			return nil, err
 		}
-		res, err := resource.NewWithBehavior(
+		res, err := rmF.resF.WithBehavior(
 			cm, ifc.NewGenerationBehavior(cmArgs.Behavior))
 		if err != nil {
 			return nil, err

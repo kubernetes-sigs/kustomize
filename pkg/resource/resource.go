@@ -18,14 +18,9 @@ limitations under the License.
 package resource
 
 import (
-	"log"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/kustomize/internal/k8sdeps"
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	internal "sigs.k8s.io/kustomize/pkg/internal/error"
-	"sigs.k8s.io/kustomize/pkg/patch"
 	"sigs.k8s.io/kustomize/pkg/resid"
 )
 
@@ -34,61 +29,6 @@ import (
 type Resource struct {
 	ifc.Kunstructured
 	b ifc.GenerationBehavior
-}
-
-// NewWithBehavior returns a new instance of Resource.
-func NewWithBehavior(obj runtime.Object, b ifc.GenerationBehavior) (*Resource, error) {
-	u, err := k8sdeps.NewKunstructuredFromObject(obj)
-	return &Resource{Kunstructured: u, b: b}, err
-}
-
-// NewFromMap returns a new instance of Resource.
-func NewFromMap(m map[string]interface{}) *Resource {
-	return &Resource{
-		Kunstructured: k8sdeps.NewKunstructuredFromMap(m),
-		b:             ifc.BehaviorUnspecified}
-}
-
-// NewFromKunstructured returns a new instance of Resource.
-func NewFromKunstructured(u ifc.Kunstructured) *Resource {
-	if u == nil {
-		log.Fatal("unstruct ifc must not be null")
-	}
-	return &Resource{Kunstructured: u, b: ifc.BehaviorUnspecified}
-}
-
-// NewSliceFromPatches returns a slice of resources given a patch path
-// slice from a kustomization file.
-func NewSliceFromPatches(
-	ldr ifc.Loader, paths []patch.StrategicMerge,
-	decoder ifc.Decoder) ([]*Resource, error) {
-	var result []*Resource
-	for _, path := range paths {
-		content, err := ldr.Load(string(path))
-		if err != nil {
-			return nil, err
-		}
-		res, err := NewSliceFromBytes(content, decoder)
-		if err != nil {
-			return nil, internal.Handler(err, string(path))
-		}
-		result = append(result, res...)
-	}
-	return result, nil
-}
-
-// NewSliceFromBytes unmarshalls bytes into a Resource slice.
-func NewSliceFromBytes(
-	in []byte, decoder ifc.Decoder) ([]*Resource, error) {
-	funStructs, err := k8sdeps.NewKunstructuredSliceFromBytes(in, decoder)
-	if err != nil {
-		return nil, err
-	}
-	var result []*Resource
-	for _, u := range funStructs {
-		result = append(result, NewFromKunstructured(u))
-	}
-	return result, nil
 }
 
 // String returns resource as JSON.
