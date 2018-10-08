@@ -136,7 +136,7 @@ a label, but one can always edit `kustomization.yaml` directly:
 
 <!-- @customizeLabels @test -->
 ```
-sed -i 's/app: helloworld/app: prod/' \
+sed -i.bak 's/app: helloworld/app: prod/' \
     $DEMO_HOME/kustomization.yaml
 ```
 
