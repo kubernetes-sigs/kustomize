@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package transformers
+package patch
 
 import (
 	"encoding/json"
@@ -26,7 +26,21 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/transformers"
 )
+
+// patchTransformerFactory makes patch transformer
+type patchTransformerFactory struct{}
+
+// NewPatchTransformerFactory makes a new patchTransformerFactory
+func NewPatchTransformerFactory() *patchTransformerFactory {
+	return &patchTransformerFactory{}
+}
+
+// MakePatchTransformer makes a new patch transformer
+func (p *patchTransformerFactory) MakePatchTransformer(slice []*resource.Resource, rf *resource.Factory) (transformers.Transformer, error) {
+	return NewPatchTransformer(slice, rf)
+}
 
 // patchTransformer applies patches.
 type patchTransformer struct {
@@ -34,13 +48,13 @@ type patchTransformer struct {
 	rf      *resource.Factory
 }
 
-var _ Transformer = &patchTransformer{}
+var _ transformers.Transformer = &patchTransformer{}
 
 // NewPatchTransformer constructs a patchTransformer.
 func NewPatchTransformer(
-	slice []*resource.Resource, rf *resource.Factory) (Transformer, error) {
+	slice []*resource.Resource, rf *resource.Factory) (transformers.Transformer, error) {
 	if len(slice) == 0 {
-		return NewNoOpTransformer(), nil
+		return transformers.NewNoOpTransformer(), nil
 	}
 	return &patchTransformer{patches: slice, rf: rf}, nil
 }
