@@ -29,7 +29,7 @@ func main() {
 	defer glog.Flush()
 
 	if err := commands.NewDefaultCommand(
-		k8sdeps.NewKustKunstructuredFactory(k8sdeps.NewKustDecoder()),
+		k8sdeps.NewKunstructuredFactoryImpl(k8sdeps.NewKustDecoder()),
 		patch.NewPatchTransformerFactory(),
 		k8sdeps.NewKustDecoder(),
 		k8sdeps.NewKustValidator(),

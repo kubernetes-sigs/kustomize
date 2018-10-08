@@ -152,22 +152,22 @@ func makeLoader(t *testing.T) ifc.Loader {
 func TestRegisterCRD(t *testing.T) {
 	refpathconfigs := []transformerconfig.ReferencePathConfig{
 		{
-			Gvk: gvk.Gvk{Kind: "Bee", Version: "v1beta1"},
-			PathConfigs: []transformerconfig.PathConfig{
-				{
-					CreateIfNotPresent: false,
-					Gvk:                gvk.Gvk{Kind: "MyKind"},
-					Path:               "spec/beeRef/name",
-				},
-			},
-		},
-		{
 			Gvk: gvk.Gvk{Kind: "Secret", Version: "v1"},
 			PathConfigs: []transformerconfig.PathConfig{
 				{
 					CreateIfNotPresent: false,
 					Gvk:                gvk.Gvk{Kind: "MyKind"},
 					Path:               "spec/secretRef/name",
+				},
+			},
+		},
+		{
+			Gvk: gvk.Gvk{Kind: "Bee", Version: "v1beta1"},
+			PathConfigs: []transformerconfig.PathConfig{
+				{
+					CreateIfNotPresent: false,
+					Gvk:                gvk.Gvk{Kind: "MyKind"},
+					Path:               "spec/beeRef/name",
 				},
 			},
 		},

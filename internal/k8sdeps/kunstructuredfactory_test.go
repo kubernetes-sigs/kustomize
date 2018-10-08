@@ -24,7 +24,7 @@ import (
 )
 
 func TestSliceFromBytes(t *testing.T) {
-	factory := NewKustKunstructuredFactory(NewKustDecoder())
+	factory := NewKunstructuredFactoryImpl(NewKustDecoder())
 	testConfigMap := factory.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
