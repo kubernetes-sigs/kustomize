@@ -131,7 +131,7 @@ func runBuildTestCase(t *testing.T, testcaseName string, updateKustomizeExpected
 	buf := bytes.NewBuffer([]byte{})
 	err = ops.RunBuild(
 		buf, fSys,
-		k8sdeps.NewKustKunstructuredFactory(k8sdeps.NewKustDecoder()),
+		k8sdeps.NewKunstructuredFactoryImpl(k8sdeps.NewKustDecoder()),
 		patch.NewPatchTransformerFactory(),
 		k8sdeps.NewKustDecoder(), k8sdeps.NewKustHash())
 	switch {

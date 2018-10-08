@@ -90,7 +90,7 @@ metadata:
 )
 
 var rf = resmap.NewFactory(resource.NewFactory(
-	k8sdeps.NewKustKunstructuredFactory(k8sdeps.NewKustDecoder())))
+	k8sdeps.NewKunstructuredFactoryImpl(k8sdeps.NewKustDecoder())))
 
 func makeLoader1(t *testing.T) ifc.Loader {
 	ldr := loadertest.NewFakeLoader("/testpath")

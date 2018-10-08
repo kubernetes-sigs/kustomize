@@ -32,7 +32,7 @@ import (
 )
 
 var rf = resource.NewFactory(
-	k8sdeps.NewKustKunstructuredFactory(k8sdeps.NewKustDecoder()))
+	k8sdeps.NewKunstructuredFactoryImpl(k8sdeps.NewKustDecoder()))
 
 func TestNewPatchJson6902FactoryNoTarget(t *testing.T) {
 	p := patch.Json6902{}
