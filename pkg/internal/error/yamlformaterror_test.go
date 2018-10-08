@@ -17,11 +17,9 @@ limitations under the License.
 package error
 
 import (
-	"bytes"
 	"fmt"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/kustomize/pkg/constants"
 )
 
@@ -29,11 +27,6 @@ var (
 	filepath = "/path/to/" + constants.KustomizationFileName
 	expected = "YAML file [/path/to/kustomization.yaml] encounters a format error.\n" +
 		"error converting YAML to JSON: yaml: line 2: found character that cannot start any token\n"
-	doc = `
-	foo:
-	- fiz
-	- fu
-	`
 )
 
 func TestYamlFormatError_Error(t *testing.T) {
@@ -47,8 +40,7 @@ func TestYamlFormatError_Error(t *testing.T) {
 }
 
 func TestErrorHandler(t *testing.T) {
-	f := foo{}
-	err := yaml.NewYAMLToJSONDecoder(bytes.NewReader([]byte(doc))).Decode(&f)
+	err := fmt.Errorf("error converting YAML to JSON: yaml: line 2: found character that cannot start any token")
 	testErr := Handler(err, filepath)
 	expectedErr := fmt.Errorf("format error message")
 	fmtErr := Handler(expectedErr, filepath)
@@ -62,6 +54,3 @@ func TestErrorHandler(t *testing.T) {
 		t.Errorf("Expected : %s\n, but found : %s\n", expected, testErr.Error())
 	}
 }
-
-//type foo struct
-type foo struct{}
