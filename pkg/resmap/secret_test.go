@@ -63,7 +63,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	}
 
 	expected := ResMap{
-		resid.NewResId(secret, "apple"): resource.NewResourceFromMap(
+		resid.NewResId(secret, "apple"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -76,7 +76,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
 			}).SetBehavior(ifc.BehaviorCreate),
-		resid.NewResId(secret, "peanuts"): resource.NewResourceFromMap(
+		resid.NewResId(secret, "peanuts"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",

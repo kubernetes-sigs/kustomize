@@ -38,10 +38,10 @@ func NewResMapFromSecretArgs(
 		if args.Behavior == "" {
 			args.Behavior = "create"
 		}
-		res, err := resource.NewResourceWithBehavior(
+		res, err := resource.NewWithBehavior(
 			s, ifc.NewGenerationBehavior(args.Behavior))
 		if err != nil {
-			return nil, errors.Wrap(err, "NewResourceWithBehavior")
+			return nil, errors.Wrap(err, "NewWithBehavior")
 		}
 		allResources = append(allResources, res)
 	}

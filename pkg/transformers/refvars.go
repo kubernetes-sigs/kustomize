@@ -32,7 +32,7 @@ func NewRefVarTransformer(vars map[string]string, p []transformerconfig.PathConf
 // 3.  Add remaining service environment vars
 func (rv *refvarTransformer) Transform(resources resmap.ResMap) error {
 	for resId := range resources {
-		objMap := resources[resId].UnstructuredContent()
+		objMap := resources[resId].Map()
 		for _, pc := range rv.pathConfigs {
 			if !resId.Gvk().IsSelected(&pc.Gvk) {
 				continue

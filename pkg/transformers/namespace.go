@@ -85,7 +85,7 @@ func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
 	}
 
 	for id := range mf {
-		objMap := mf[id].UnstructuredContent()
+		objMap := mf[id].Map()
 		for _, path := range o.pathConfigs {
 			if !id.Gvk().IsSelected(&path.Gvk) {
 				continue
@@ -118,7 +118,7 @@ func (o *namespaceTransformer) updateClusterRoleBinding(m resmap.ResMap) {
 		if id.Gvk().Kind != "ClusterRoleBinding" && id.Gvk().Kind != "RoleBinding" {
 			continue
 		}
-		objMap := m[id].UnstructuredContent()
+		objMap := m[id].Map()
 		subjects := objMap["subjects"].([]interface{})
 		for i := range subjects {
 			subject := subjects[i].(map[string]interface{})

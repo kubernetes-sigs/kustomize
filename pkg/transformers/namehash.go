@@ -51,7 +51,7 @@ func (o *nameHashTransformer) Transform(m resmap.ResMap) error {
 }
 
 func (o *nameHashTransformer) appendHash(res *resource.Resource) error {
-	h, err := o.hash.Hash(res.Object)
+	h, err := o.hash.Hash(res.Map())
 	if err != nil {
 		return err
 	}

@@ -57,7 +57,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 			filepath: "/home/seans/project/app.env",
 			content:  "DB_USERNAME=admin\nDB_PASSWORD=somepw",
 			expected: ResMap{
-				resid.NewResId(cmap, "envConfigMap"): resource.NewResourceFromMap(
+				resid.NewResId(cmap, "envConfigMap"): resource.NewFromMap(
 					map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -83,7 +83,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 			filepath: "/home/seans/project/app-init.ini",
 			content:  "FOO=bar\nBAR=baz\n",
 			expected: ResMap{
-				resid.NewResId(cmap, "fileConfigMap"): resource.NewResourceFromMap(
+				resid.NewResId(cmap, "fileConfigMap"): resource.NewFromMap(
 					map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -109,7 +109,7 @@ BAR=baz
 				},
 			},
 			expected: ResMap{
-				resid.NewResId(cmap, "literalConfigMap"): resource.NewResourceFromMap(
+				resid.NewResId(cmap, "literalConfigMap"): resource.NewFromMap(
 					map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",

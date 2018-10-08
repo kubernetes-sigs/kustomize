@@ -18,55 +18,48 @@ limitations under the License.
 package resource
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
+	"log"
 	"strings"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/internal/k8sdeps"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	internal "sigs.k8s.io/kustomize/pkg/internal/error"
 	"sigs.k8s.io/kustomize/pkg/patch"
 	"sigs.k8s.io/kustomize/pkg/resid"
 )
 
-// Resource is an "Unstructured" (json/map form) Kubernetes API resource object
+// Resource is map representation of a Kubernetes API resource object
 // paired with a GenerationBehavior.
 type Resource struct {
-	unstructured.Unstructured
+	ifc.Kunstructured
 	b ifc.GenerationBehavior
 }
 
-// NewResourceWithBehavior returns a new instance of Resource.
-func NewResourceWithBehavior(obj runtime.Object, b ifc.GenerationBehavior) (*Resource, error) {
-	// Convert obj to a byte stream, then convert that to JSON (Unstructured).
-	marshaled, err := json.Marshal(obj)
-	if err != nil {
-		return nil, err
+// NewWithBehavior returns a new instance of Resource.
+func NewWithBehavior(obj runtime.Object, b ifc.GenerationBehavior) (*Resource, error) {
+	u, err := k8sdeps.NewKunstructuredFromObject(obj)
+	return &Resource{Kunstructured: u, b: b}, err
+}
+
+// NewFromMap returns a new instance of Resource.
+func NewFromMap(m map[string]interface{}) *Resource {
+	return &Resource{
+		Kunstructured: k8sdeps.NewKunstructuredFromMap(m),
+		b:             ifc.BehaviorUnspecified}
+}
+
+// NewFromKunstructured returns a new instance of Resource.
+func NewFromKunstructured(u ifc.Kunstructured) *Resource {
+	if u == nil {
+		log.Fatal("unstruct ifc must not be null")
 	}
-	var u unstructured.Unstructured
-	err = u.UnmarshalJSON(marshaled)
-	// creationTimestamp always 'null', remove it
-	u.SetCreationTimestamp(metav1.Time{})
-	return &Resource{Unstructured: u, b: b}, err
+	return &Resource{Kunstructured: u, b: ifc.BehaviorUnspecified}
 }
 
-// NewResourceFromMap returns a new instance of Resource.
-func NewResourceFromMap(m map[string]interface{}) *Resource {
-	return NewResourceFromUnstruct(unstructured.Unstructured{Object: m})
-}
-
-// NewResourceFromUnstruct returns a new instance of Resource.
-func NewResourceFromUnstruct(u unstructured.Unstructured) *Resource {
-	return &Resource{Unstructured: u, b: ifc.BehaviorUnspecified}
-}
-
-// NewResourceSliceFromPatches returns a slice of resources given a patch path
+// NewSliceFromPatches returns a slice of resources given a patch path
 // slice from a kustomization file.
-func NewResourceSliceFromPatches(
+func NewSliceFromPatches(
 	ldr ifc.Loader, paths []patch.StrategicMerge,
 	decoder ifc.Decoder) ([]*Resource, error) {
 	var result []*Resource
@@ -75,7 +68,7 @@ func NewResourceSliceFromPatches(
 		if err != nil {
 			return nil, err
 		}
-		res, err := NewResourceSliceFromBytes(content, decoder)
+		res, err := NewSliceFromBytes(content, decoder)
 		if err != nil {
 			return nil, internal.Handler(err, string(path))
 		}
@@ -84,27 +77,18 @@ func NewResourceSliceFromPatches(
 	return result, nil
 }
 
-// NewResourceSliceFromBytes unmarshalls bytes into a Resource slice.
-func NewResourceSliceFromBytes(
+// NewSliceFromBytes unmarshalls bytes into a Resource slice.
+func NewSliceFromBytes(
 	in []byte, decoder ifc.Decoder) ([]*Resource, error) {
-	decoder.SetInput(in)
-	var result []*Resource
-	var err error
-	for err == nil || isEmptyYamlError(err) {
-		var out unstructured.Unstructured
-		err = decoder.Decode(&out)
-		if err == nil {
-			result = append(result, NewResourceFromUnstruct(out))
-		}
-	}
-	if err != io.EOF {
+	funStructs, err := k8sdeps.NewKunstructuredSliceFromBytes(in, decoder)
+	if err != nil {
 		return nil, err
 	}
+	var result []*Resource
+	for _, u := range funStructs {
+		result = append(result, NewFromKunstructured(u))
+	}
 	return result, nil
-}
-
-func isEmptyYamlError(err error) bool {
-	return strings.Contains(err.Error(), "is missing in 'null'")
 }
 
 // String returns resource as JSON.
@@ -134,24 +118,27 @@ func (r *Resource) IsGenerated() bool {
 
 // Id returns the ResId for the resource.
 func (r *Resource) Id() resid.ResId {
-	return resid.NewResId(gvk.FromSchemaGvk(r.GroupVersionKind()), r.GetName())
+	return resid.NewResId(r.GetGvk(), r.GetName())
 }
 
 // Merge performs merge with other resource.
 func (r *Resource) Merge(other *Resource) {
 	r.Replace(other)
-	mergeConfigmap(r.Object, other.Object, r.Object)
+	mergeConfigmap(r.Map(), other.Map(), r.Map())
 }
 
 // Replace performs replace with other resource.
 func (r *Resource) Replace(other *Resource) {
 	r.SetLabels(mergeStringMaps(other.GetLabels(), r.GetLabels()))
-	r.SetAnnotations(mergeStringMaps(other.GetAnnotations(), r.GetAnnotations()))
+	r.SetAnnotations(
+		mergeStringMaps(other.GetAnnotations(), r.GetAnnotations()))
 	r.SetName(other.GetName())
 }
 
 // TODO: Add BinaryData once we sync to new k8s.io/api
-func mergeConfigmap(mergedTo map[string]interface{}, maps ...map[string]interface{}) {
+func mergeConfigmap(
+	mergedTo map[string]interface{},
+	maps ...map[string]interface{}) {
 	mergedMap := map[string]interface{}{}
 	for _, m := range maps {
 		datamap, ok := m["data"].(map[string]interface{})
@@ -172,31 +159,4 @@ func mergeStringMaps(maps ...map[string]string) map[string]string {
 		}
 	}
 	return result
-}
-
-// GetFieldValue returns value at the given fieldpath.
-func (r *Resource) GetFieldValue(fieldPath string) (string, error) {
-	return getFieldValue(r.UnstructuredContent(), strings.Split(fieldPath, "."))
-}
-
-func getFieldValue(m map[string]interface{}, pathToField []string) (string, error) {
-	if len(pathToField) == 0 {
-		return "", fmt.Errorf("field not found")
-	}
-	if len(pathToField) == 1 {
-		if v, found := m[pathToField[0]]; found {
-			if s, ok := v.(string); ok {
-				return s, nil
-			}
-			return "", fmt.Errorf("value at fieldpath is not of string type")
-		}
-		return "", fmt.Errorf("field at given fieldpath does not exist")
-	}
-	v := m[pathToField[0]]
-	switch typedV := v.(type) {
-	case map[string]interface{}:
-		return getFieldValue(typedV, pathToField[1:])
-	default:
-		return "", fmt.Errorf("%#v is not expected to be a primitive type", typedV)
-	}
 }
