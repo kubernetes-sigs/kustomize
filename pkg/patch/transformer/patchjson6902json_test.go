@@ -32,7 +32,7 @@ var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
 
 func TestJsonPatchJSONTransformer_Transform(t *testing.T) {
 	rf := resource.NewFactory(
-		k8sdeps.NewKustKunstructuredFactory(k8sdeps.NewKustDecoder()))
+		k8sdeps.NewKunstructuredFactoryImpl(k8sdeps.NewKustDecoder()))
 	id := resid.NewResId(deploy, "deploy1")
 	base := resmap.ResMap{
 		id: rf.FromMap(
