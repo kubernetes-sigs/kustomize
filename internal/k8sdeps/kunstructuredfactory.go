@@ -29,8 +29,8 @@ type KunstructurerFactoryImpl struct {
 
 var _ ifc.KunstructuredFactory = &KunstructurerFactoryImpl{}
 
-// NewKustKunstructuredFactory returns a factory.
-func NewKustKunstructuredFactory(d ifc.Decoder) ifc.KunstructuredFactory {
+// NewKunstructuredFactoryImpl returns a factory.
+func NewKunstructuredFactoryImpl(d ifc.Decoder) ifc.KunstructuredFactory {
 	return &KunstructurerFactoryImpl{decoder: d}
 }
 

@@ -32,7 +32,7 @@ import (
 
 // NewDefaultCommand returns the default (aka root) command for kustomize command.
 func NewDefaultCommand(
-	kf ifc.KunstructuredFactory, ptf patch.PatchTransformerFactory,
+	kf ifc.KunstructuredFactory, ptf patch.TransformerFactory,
 	decoder ifc.Decoder,
 	validator ifc.Validator, hash ifc.Hash) *cobra.Command {
 	fsys := fs.MakeRealFS()

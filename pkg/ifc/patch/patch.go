@@ -22,7 +22,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/transformers"
 )
 
-// PatchTransformerFactory makes patch transformer.
-type PatchTransformerFactory interface {
+// TransformerFactory makes patch transformer.
+type TransformerFactory interface {
 	MakePatchTransformer(slice []*resource.Resource, rf *resource.Factory) (transformers.Transformer, error)
 }

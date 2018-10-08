@@ -64,7 +64,7 @@ Use different transformer configurations by passing files to kustomize
 func NewCmdBuild(
 	out io.Writer, fs fs.FileSystem,
 	kf ifc.KunstructuredFactory,
-	ptf patch.PatchTransformerFactory,
+	ptf patch.TransformerFactory,
 	decoder ifc.Decoder, hash ifc.Hash) *cobra.Command {
 	var o buildOptions
 	var p string
@@ -125,7 +125,7 @@ func (o *buildOptions) Validate(args []string, p string, fs fs.FileSystem) error
 func (o *buildOptions) RunBuild(
 	out io.Writer, fSys fs.FileSystem,
 	kf ifc.KunstructuredFactory,
-	ptf patch.PatchTransformerFactory,
+	ptf patch.TransformerFactory,
 	decoder ifc.Decoder, hash ifc.Hash) error {
 	rootLoader, err := loader.NewLoader(o.kustomizationPath, "", fSys)
 	if err != nil {

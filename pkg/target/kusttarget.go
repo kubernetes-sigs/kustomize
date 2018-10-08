@@ -50,14 +50,14 @@ type KustTarget struct {
 	fSys          fs.FileSystem
 	rf            *resmap.Factory
 	tcfg          *transformerconfig.TransformerConfig
-	ptf           patch.PatchTransformerFactory
+	ptf           patch.TransformerFactory
 }
 
 // NewKustTarget returns a new instance of KustTarget primed with a Loader.
 func NewKustTarget(
 	ldr ifc.Loader, fSys fs.FileSystem,
 	rf *resmap.Factory,
-	ptf patch.PatchTransformerFactory,
+	ptf patch.TransformerFactory,
 	tcfg *transformerconfig.TransformerConfig,
 	d ifc.Decoder, h ifc.Hash) (*KustTarget, error) {
 	content, err := ldr.Load(constants.KustomizationFileName)
