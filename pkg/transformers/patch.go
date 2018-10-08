@@ -31,16 +31,18 @@ import (
 // patchTransformer applies patches.
 type patchTransformer struct {
 	patches []*resource.Resource
+	rf      *resource.Factory
 }
 
 var _ Transformer = &patchTransformer{}
 
 // NewPatchTransformer constructs a patchTransformer.
-func NewPatchTransformer(slice []*resource.Resource) (Transformer, error) {
+func NewPatchTransformer(
+	slice []*resource.Resource, rf *resource.Factory) (Transformer, error) {
 	if len(slice) == 0 {
 		return NewNoOpTransformer(), nil
 	}
-	return &patchTransformer{slice}, nil
+	return &patchTransformer{patches: slice, rf: rf}, nil
 }
 
 // Transform apply the patches on top of the base resources.
@@ -129,9 +131,9 @@ func (pt *patchTransformer) mergePatches() (resmap.ResMap, error) {
 		}
 		var cd conflictDetector
 		if err != nil {
-			cd = newJMPConflictDetector()
+			cd = newJMPConflictDetector(pt.rf)
 		} else {
-			cd, err = newSMPConflictDetector(versionedObj)
+			cd, err = newSMPConflictDetector(versionedObj, pt.rf)
 			if err != nil {
 				return nil, err
 			}

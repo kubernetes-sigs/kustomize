@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"testing"
 
+	"sigs.k8s.io/kustomize/internal/k8sdeps"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
@@ -27,8 +28,10 @@ import (
 )
 
 func TestNameReferenceRun(t *testing.T) {
+	rf := resource.NewFactory(
+		k8sdeps.NewKustKunstructuredFactory(k8sdeps.NewKustDecoder()))
 	m := resmap.ResMap{
-		resid.NewResId(cmap, "cm1"): resource.NewFromMap(
+		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -36,7 +39,7 @@ func TestNameReferenceRun(t *testing.T) {
 					"name": "someprefix-cm1-somehash",
 				},
 			}),
-		resid.NewResId(cmap, "cm2"): resource.NewFromMap(
+		resid.NewResId(cmap, "cm2"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -44,7 +47,7 @@ func TestNameReferenceRun(t *testing.T) {
 					"name": "someprefix-cm2-somehash",
 				},
 			}),
-		resid.NewResId(secret, "secret1"): resource.NewFromMap(
+		resid.NewResId(secret, "secret1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -52,7 +55,7 @@ func TestNameReferenceRun(t *testing.T) {
 					"name": "someprefix-secret1-somehash",
 				},
 			}),
-		resid.NewResId(pvc, "claim1"): resource.NewFromMap(
+		resid.NewResId(pvc, "claim1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "PersistentVolumeClaim",
@@ -60,7 +63,7 @@ func TestNameReferenceRun(t *testing.T) {
 					"name": "someprefix-claim1",
 				},
 			}),
-		resid.NewResId(ingress, "ingress1"): resource.NewFromMap(
+		resid.NewResId(ingress, "ingress1"): rf.FromMap(
 			map[string]interface{}{
 				"group":      "extensions",
 				"apiVersion": "v1beta1",
@@ -80,7 +83,7 @@ func TestNameReferenceRun(t *testing.T) {
 				},
 			},
 		),
-		resid.NewResId(deploy, "deploy1"): resource.NewFromMap(
+		resid.NewResId(deploy, "deploy1"): rf.FromMap(
 			map[string]interface{}{
 				"group":      "apps",
 				"apiVersion": "v1",
@@ -158,7 +161,7 @@ func TestNameReferenceRun(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(statefulset, "statefulset1"): resource.NewFromMap(
+		resid.NewResId(statefulset, "statefulset1"): rf.FromMap(
 			map[string]interface{}{
 				"group":      "apps",
 				"apiVersion": "v1",
@@ -195,7 +198,7 @@ func TestNameReferenceRun(t *testing.T) {
 		expected[k] = v
 	}
 
-	expected[resid.NewResId(deploy, "deploy1")] = resource.NewFromMap(
+	expected[resid.NewResId(deploy, "deploy1")] = rf.FromMap(
 		map[string]interface{}{
 			"group":      "apps",
 			"apiVersion": "v1",
@@ -273,7 +276,7 @@ func TestNameReferenceRun(t *testing.T) {
 				},
 			},
 		})
-	expected[resid.NewResId(statefulset, "statefulset1")] = resource.NewFromMap(
+	expected[resid.NewResId(statefulset, "statefulset1")] = rf.FromMap(
 		map[string]interface{}{
 			"group":      "apps",
 			"apiVersion": "v1",
@@ -303,7 +306,7 @@ func TestNameReferenceRun(t *testing.T) {
 				},
 			},
 		})
-	expected[resid.NewResId(ingress, "ingress1")] = resource.NewFromMap(
+	expected[resid.NewResId(ingress, "ingress1")] = rf.FromMap(
 		map[string]interface{}{
 			"group":      "extensions",
 			"apiVersion": "v1beta1",

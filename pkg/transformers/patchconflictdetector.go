@@ -18,6 +18,7 @@ package transformers
 
 import (
 	"encoding/json"
+
 	"github.com/evanphx/json-patch"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/mergepatch"
@@ -31,12 +32,14 @@ type conflictDetector interface {
 	mergePatches(patch1, patch2 *resource.Resource) (*resource.Resource, error)
 }
 
-type jsonMergePatch struct{}
+type jsonMergePatch struct {
+	rf *resource.Factory
+}
 
 var _ conflictDetector = &jsonMergePatch{}
 
-func newJMPConflictDetector() conflictDetector {
-	return &jsonMergePatch{}
+func newJMPConflictDetector(rf *resource.Factory) conflictDetector {
+	return &jsonMergePatch{rf: rf}
 }
 
 func (jmp *jsonMergePatch) hasConflict(
@@ -82,18 +85,21 @@ func (jmp *jsonMergePatch) mergePatches(
 	}
 	mergedMap := make(map[string]interface{})
 	err = json.Unmarshal(mergedBytes, &mergedMap)
-	return resource.NewFromMap(mergedMap), err
+	return jmp.rf.FromMap(mergedMap), err
 }
 
 type strategicMergePatch struct {
 	lookupPatchMeta strategicpatch.LookupPatchMeta
+	rf              *resource.Factory
 }
 
 var _ conflictDetector = &strategicMergePatch{}
 
-func newSMPConflictDetector(versionedObj runtime.Object) (conflictDetector, error) {
+func newSMPConflictDetector(
+	versionedObj runtime.Object,
+	rf *resource.Factory) (conflictDetector, error) {
 	lookupPatchMeta, err := strategicpatch.NewPatchMetaFromStruct(versionedObj)
-	return &strategicMergePatch{lookupPatchMeta: lookupPatchMeta}, err
+	return &strategicMergePatch{lookupPatchMeta: lookupPatchMeta, rf: rf}, err
 }
 
 func (smp *strategicMergePatch) hasConflict(p1, p2 *resource.Resource) (bool, error) {
@@ -127,5 +133,5 @@ func (smp *strategicMergePatch) findConflict(
 func (smp *strategicMergePatch) mergePatches(patch1, patch2 *resource.Resource) (*resource.Resource, error) {
 	mergeJsonMap, err := strategicpatch.MergeStrategicMergeMapPatchUsingLookupPatchMeta(
 		smp.lookupPatchMeta, patch1.Map(), patch2.Map())
-	return resource.NewFromMap(mergeJsonMap), err
+	return smp.rf.FromMap(mergeJsonMap), err
 }

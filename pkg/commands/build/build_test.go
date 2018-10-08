@@ -128,7 +128,10 @@ func runBuildTestCase(t *testing.T, testcaseName string, updateKustomizeExpected
 		kustomizationPath: testcase.Filename,
 	}
 	buf := bytes.NewBuffer([]byte{})
-	err = ops.RunBuild(buf, fSys, k8sdeps.NewKustDecoder(), k8sdeps.NewKustHash())
+	err = ops.RunBuild(
+		buf, fSys,
+		k8sdeps.NewKustKunstructuredFactory(k8sdeps.NewKustDecoder()),
+		k8sdeps.NewKustDecoder(), k8sdeps.NewKustHash())
 	switch {
 	case err != nil && len(testcase.ExpectedError) == 0:
 		t.Errorf("unexpected error: %v", err)
