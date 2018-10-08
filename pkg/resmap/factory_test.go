@@ -17,12 +17,19 @@ limitations under the License.
 package resmap
 
 import (
+	"encoding/base64"
 	"fmt"
 	"reflect"
 	"testing"
 
+	"k8s.io/api/core/v1"
+	"sigs.k8s.io/kustomize/pkg/configmapandsecret"
+	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/resid"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 func TestFromFiles(t *testing.T) {
@@ -111,5 +118,206 @@ metadata:
 	}
 	if !reflect.DeepEqual(m, expected) {
 		t.Fatalf("%#v doesn't match expected %#v", m, expected)
+	}
+}
+
+var cmap = gvk.Gvk{Version: "v1", Kind: "ConfigMap"}
+
+func TestNewFromConfigMaps(t *testing.T) {
+	type testCase struct {
+		description string
+		input       []types.ConfigMapArgs
+		filepath    string
+		content     string
+		expected    ResMap
+	}
+
+	l := loadertest.NewFakeLoader("/home/seans/project/")
+	cf := configmapandsecret.NewConfigMapFactory(fs.MakeFakeFS(), l)
+	testCases := []testCase{
+		{
+			description: "construct config map from env",
+			input: []types.ConfigMapArgs{
+				{
+					Name: "envConfigMap",
+					DataSources: types.DataSources{
+						EnvSource: "app.env",
+					},
+				},
+			},
+			filepath: "/home/seans/project/app.env",
+			content:  "DB_USERNAME=admin\nDB_PASSWORD=somepw",
+			expected: ResMap{
+				resid.NewResId(cmap, "envConfigMap"): rf.FromMap(
+					map[string]interface{}{
+						"apiVersion": "v1",
+						"kind":       "ConfigMap",
+						"metadata": map[string]interface{}{
+							"name": "envConfigMap",
+						},
+						"data": map[string]interface{}{
+							"DB_USERNAME": "admin",
+							"DB_PASSWORD": "somepw",
+						},
+					}).SetBehavior(ifc.BehaviorCreate),
+			},
+		},
+		{
+			description: "construct config map from file",
+			input: []types.ConfigMapArgs{{
+				Name: "fileConfigMap",
+				DataSources: types.DataSources{
+					FileSources: []string{"app-init.ini"},
+				},
+			},
+			},
+			filepath: "/home/seans/project/app-init.ini",
+			content:  "FOO=bar\nBAR=baz\n",
+			expected: ResMap{
+				resid.NewResId(cmap, "fileConfigMap"): rf.FromMap(
+					map[string]interface{}{
+						"apiVersion": "v1",
+						"kind":       "ConfigMap",
+						"metadata": map[string]interface{}{
+							"name": "fileConfigMap",
+						},
+						"data": map[string]interface{}{
+							"app-init.ini": `FOO=bar
+BAR=baz
+`,
+						},
+					}).SetBehavior(ifc.BehaviorCreate),
+			},
+		},
+		{
+			description: "construct config map from literal",
+			input: []types.ConfigMapArgs{
+				{
+					Name: "literalConfigMap",
+					DataSources: types.DataSources{
+						LiteralSources: []string{"a=x", "b=y", "c=\"Good Morning\"", "d=\"false\""},
+					},
+				},
+			},
+			expected: ResMap{
+				resid.NewResId(cmap, "literalConfigMap"): rf.FromMap(
+					map[string]interface{}{
+						"apiVersion": "v1",
+						"kind":       "ConfigMap",
+						"metadata": map[string]interface{}{
+							"name": "literalConfigMap",
+						},
+						"data": map[string]interface{}{
+							"a": "x",
+							"b": "y",
+							"c": "Good Morning",
+							"d": "false",
+						},
+					}).SetBehavior(ifc.BehaviorCreate),
+			},
+		},
+		// TODO: add testcase for data coming from multiple sources like
+		// files/literal/env etc.
+	}
+
+	for _, tc := range testCases {
+		if ferr := l.AddFile(tc.filepath, []byte(tc.content)); ferr != nil {
+			t.Fatalf("Error adding fake file: %v\n", ferr)
+		}
+		r, err := rmF.NewResMapFromConfigMapArgs(cf, tc.input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !reflect.DeepEqual(r, tc.expected) {
+			t.Fatalf("in testcase: %q got:\n%+v\n expected:\n%+v\n", tc.description, r, tc.expected)
+		}
+	}
+}
+
+var secret = gvk.Gvk{Version: "v1", Kind: "Secret"}
+
+func TestNewResMapFromSecretArgs(t *testing.T) {
+	secrets := []types.SecretArgs{
+		{
+			Name: "apple",
+			CommandSources: types.CommandSources{
+				Commands: map[string]string{
+					"DB_USERNAME": "printf admin",
+					"DB_PASSWORD": "printf somepw",
+				},
+			},
+			Type: "Opaque",
+		},
+		{
+			Name: "peanuts",
+			CommandSources: types.CommandSources{
+				EnvCommand: "printf \"DB_USERNAME=admin\nDB_PASSWORD=somepw\"",
+			},
+			Type: "Opaque",
+		},
+	}
+	fakeFs := fs.MakeFakeFS()
+	fakeFs.Mkdir(".")
+	actual, err := rmF.NewResMapFromSecretArgs(
+		configmapandsecret.NewSecretFactory(fakeFs, "."), secrets)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expected := ResMap{
+		resid.NewResId(secret, "apple"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Secret",
+				"metadata": map[string]interface{}{
+					"name": "apple",
+				},
+				"type": string(v1.SecretTypeOpaque),
+				"data": map[string]interface{}{
+					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
+					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
+				},
+			}).SetBehavior(ifc.BehaviorCreate),
+		resid.NewResId(secret, "peanuts"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Secret",
+				"metadata": map[string]interface{}{
+					"name": "peanuts",
+				},
+				"type": string(v1.SecretTypeOpaque),
+				"data": map[string]interface{}{
+					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
+					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
+				},
+			}).SetBehavior(ifc.BehaviorCreate),
+	}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Fatalf("%#v\ndoesn't match expected:\n%#v", actual, expected)
+	}
+}
+
+func TestSecretTimeout(t *testing.T) {
+	timeout := int64(1)
+	secrets := []types.SecretArgs{
+		{
+			Name:           "slow",
+			TimeoutSeconds: &timeout,
+			CommandSources: types.CommandSources{
+				Commands: map[string]string{
+					"USER": "sleep 2",
+				},
+			},
+			Type: "Opaque",
+		},
+	}
+	fakeFs := fs.MakeFakeFS()
+	fakeFs.Mkdir(".")
+	_, err := rmF.NewResMapFromSecretArgs(
+		configmapandsecret.NewSecretFactory(fakeFs, "."), secrets)
+
+	if err == nil {
+		t.Fatal("didn't get the expected timeout error", err)
 	}
 }
