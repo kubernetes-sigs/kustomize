@@ -182,6 +182,10 @@ func TestDeepCopy(t *testing.T) {
 
 	rm2 := rm1.DeepCopy()
 
+	if &rm1 == &rm2 {
+		t.Fatalf("DeepCopy returned a reference to itself instead of a copy")
+	}
+
 	if !reflect.DeepEqual(rm1, rm2) {
 		t.Fatalf("%v doesn't equal it's deep copy %v", rm1, rm2)
 	}
