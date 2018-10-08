@@ -24,6 +24,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/kustomize/internal/k8sdeps"
+	"sigs.k8s.io/kustomize/internal/k8sdeps/patch"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/gvk"
@@ -210,7 +211,8 @@ func TestResources1(t *testing.T) {
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
 	kt, err := NewKustTarget(
-		l, fakeFs, rf, transformerconfig.MakeDefaultTransformerConfig(),
+		l, fakeFs, rf, patch.NewPatchTransformerFactory(),
+		transformerconfig.MakeDefaultTransformerConfig(),
 		k8sdeps.NewKustDecoder(), k8sdeps.NewKustHash())
 	if err != nil {
 		t.Fatalf("unexpected construction error %v", err)
@@ -235,7 +237,8 @@ func TestResourceNotFound(t *testing.T) {
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
 	kt, err := NewKustTarget(
-		l, fakeFs, rf, transformerconfig.MakeDefaultTransformerConfig(),
+		l, fakeFs, rf, patch.NewPatchTransformerFactory(),
+		transformerconfig.MakeDefaultTransformerConfig(),
 		k8sdeps.NewKustDecoder(), k8sdeps.NewKustHash())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
@@ -258,7 +261,8 @@ func TestSecretTimeout(t *testing.T) {
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
 	kt, err := NewKustTarget(
-		l, fakeFs, rf, transformerconfig.MakeDefaultTransformerConfig(),
+		l, fakeFs, rf, patch.NewPatchTransformerFactory(),
+		transformerconfig.MakeDefaultTransformerConfig(),
 		k8sdeps.NewKustDecoder(), k8sdeps.NewKustHash())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
