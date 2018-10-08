@@ -34,7 +34,6 @@ var cmap = gvk.Gvk{Version: "v1", Kind: "ConfigMap"}
 var ns = gvk.Gvk{Version: "v1", Kind: "Namespace"}
 var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
 var statefulset = gvk.Gvk{Group: "apps", Version: "v1", Kind: "StatefulSet"}
-var foo = gvk.Gvk{Group: "example.com", Version: "v1", Kind: "Foo"}
 var crd = gvk.Gvk{Group: "apiwctensions.k8s.io", Version: "v1beta1", Kind: "CustomResourceDefinition"}
 var job = gvk.Gvk{Group: "batch", Version: "v1", Kind: "Job"}
 var cronjob = gvk.Gvk{Group: "batch", Version: "v1beta1", Kind: "CronJob"}

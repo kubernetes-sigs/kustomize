@@ -31,6 +31,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/crds"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/ifc/patch"
 	interror "sigs.k8s.io/kustomize/pkg/internal/error"
 	patchtransformer "sigs.k8s.io/kustomize/pkg/patch/transformer"
 	"sigs.k8s.io/kustomize/pkg/resmap"
@@ -49,12 +50,14 @@ type KustTarget struct {
 	fSys          fs.FileSystem
 	rf            *resmap.Factory
 	tcfg          *transformerconfig.TransformerConfig
+	ptf           patch.PatchTransformerFactory
 }
 
 // NewKustTarget returns a new instance of KustTarget primed with a Loader.
 func NewKustTarget(
 	ldr ifc.Loader, fSys fs.FileSystem,
 	rf *resmap.Factory,
+	ptf patch.PatchTransformerFactory,
 	tcfg *transformerconfig.TransformerConfig,
 	d ifc.Decoder, h ifc.Hash) (*KustTarget, error) {
 	content, err := ldr.Load(constants.KustomizationFileName)
@@ -76,6 +79,7 @@ func NewKustTarget(
 		tcfg:          tcfg,
 		decoder:       d,
 		hash:          h,
+		ptf:           ptf,
 	}, nil
 }
 
@@ -227,7 +231,7 @@ func (kt *KustTarget) loadCustomizedBases() (resmap.ResMap, *interror.Kustomizat
 			continue
 		}
 		target, err := NewKustTarget(
-			ldr, kt.fSys, kt.rf, kt.tcfg, kt.decoder, kt.hash)
+			ldr, kt.fSys, kt.rf, kt.ptf, kt.tcfg, kt.decoder, kt.hash)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "couldn't make target for "+path))
 			continue
@@ -257,7 +261,7 @@ func (kt *KustTarget) loadBasesAsFlatList() ([]*KustTarget, error) {
 			continue
 		}
 		target, err := NewKustTarget(
-			ldr, kt.fSys, kt.rf, kt.tcfg, kt.decoder, kt.hash)
+			ldr, kt.fSys, kt.rf, kt.ptf, kt.tcfg, kt.decoder, kt.hash)
 		if err != nil {
 			errs.Append(err)
 			continue
@@ -273,7 +277,7 @@ func (kt *KustTarget) loadBasesAsFlatList() ([]*KustTarget, error) {
 // newTransformer makes a Transformer that does everything except resolve generated names.
 func (kt *KustTarget) newTransformer(patches []*resource.Resource) (transformers.Transformer, error) {
 	var r []transformers.Transformer
-	t, err := transformers.NewPatchTransformer(patches, kt.rf.RF())
+	t, err := kt.ptf.MakePatchTransformer(patches, kt.rf.RF())
 	if err != nil {
 		return nil, err
 	}
