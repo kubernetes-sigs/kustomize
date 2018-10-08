@@ -20,9 +20,11 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/pkg/configmapandsecret"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	internal "sigs.k8s.io/kustomize/pkg/internal/error"
 	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 // Factory makes instances of ResMap.
@@ -74,6 +76,54 @@ func (rmF *Factory) newResMapFromBytes(b []byte) (ResMap, error) {
 		result[id] = res
 	}
 	return result, nil
+}
+
+// NewResMapFromConfigMapArgs returns a Resource slice given
+// a configmap metadata slice from kustomization file.
+func (rmF *Factory) NewResMapFromConfigMapArgs(
+	cf *configmapandsecret.ConfigMapFactory,
+	argList []types.ConfigMapArgs) (ResMap, error) {
+	var resources []*resource.Resource
+	for _, args := range argList {
+		obj, err := cf.MakeConfigMap(&args)
+		if err != nil {
+			return nil, errors.Wrap(err, "NewResMapFromConfigMapArgs")
+		}
+		res, err := rmF.resF.WithBehavior(obj, fixBehavior(args.Behavior))
+		if err != nil {
+			return nil, err
+		}
+		resources = append(resources, res)
+	}
+	return newResMapFromResourceSlice(resources)
+}
+
+// NewResMapFromSecretArgs takes a SecretArgs slice, generates
+// secrets from each entry, and accumulates them in a ResMap.
+func (rmF *Factory) NewResMapFromSecretArgs(
+	sf *configmapandsecret.SecretFactory,
+	argsList []types.SecretArgs) (ResMap, error) {
+	var resources []*resource.Resource
+	for _, args := range argsList {
+		obj, err := sf.MakeSecret(&args)
+		if err != nil {
+			return nil, errors.Wrap(err, "NewResMapFromSecretArgs")
+		}
+		res, err := rmF.resF.WithBehavior(obj, fixBehavior(args.Behavior))
+		if err != nil {
+			return nil, errors.Wrap(err, "WithBehavior")
+		}
+		resources = append(resources, res)
+	}
+	return newResMapFromResourceSlice(resources)
+}
+
+func fixBehavior(s string) ifc.GenerationBehavior {
+	b := ifc.NewGenerationBehavior(s)
+	if b == ifc.BehaviorUnspecified {
+		return ifc.BehaviorCreate
+	}
+	return b
 }
 
 func newResMapFromResourceSlice(resources []*resource.Resource) (ResMap, error) {
