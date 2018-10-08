@@ -22,20 +22,20 @@ import (
 	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
-// KustKunstructuredFactory hides construction using apimachinery types.
-type KustKunstructuredFactory struct {
+// KunstructurerFactoryImpl hides construction using apimachinery types.
+type KunstructurerFactoryImpl struct {
 	decoder ifc.Decoder
 }
 
-var _ ifc.KunstructuredFactory = &KustKunstructuredFactory{}
+var _ ifc.KunstructuredFactory = &KunstructurerFactoryImpl{}
 
 // NewKustKunstructuredFactory returns a factory.
 func NewKustKunstructuredFactory(d ifc.Decoder) ifc.KunstructuredFactory {
-	return &KustKunstructuredFactory{decoder: d}
+	return &KunstructurerFactoryImpl{decoder: d}
 }
 
 // SliceFromBytes returns a slice of Kunstructured.
-func (kf *KustKunstructuredFactory) SliceFromBytes(
+func (kf *KunstructurerFactoryImpl) SliceFromBytes(
 	in []byte) ([]ifc.Kunstructured, error) {
 	kf.decoder.SetInput(in)
 	var result []ifc.Kunstructured
@@ -54,7 +54,7 @@ func (kf *KustKunstructuredFactory) SliceFromBytes(
 }
 
 // FromMap returns an instance of Kunstructured.
-func (kf *KustKunstructuredFactory) FromMap(
+func (kf *KunstructurerFactoryImpl) FromMap(
 	m map[string]interface{}) ifc.Kunstructured {
 	return &UnstructAdapter{Unstructured: unstructured.Unstructured{Object: m}}
 }
