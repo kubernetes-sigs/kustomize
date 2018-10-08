@@ -45,7 +45,7 @@ func (t *patchJson6902JSONTransformer) Transform(baseResourceMap resmap.ResMap) 
 	if obj == nil {
 		return err
 	}
-	rawObj, err := obj.Unstructured.MarshalJSON()
+	rawObj, err := obj.MarshalJSON()
 	if err != nil {
 		return err
 	}

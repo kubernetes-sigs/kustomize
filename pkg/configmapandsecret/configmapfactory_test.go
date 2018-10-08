@@ -22,7 +22,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/types"
@@ -40,22 +39,6 @@ func makeEnvConfigMap(name string) *corev1.ConfigMap {
 		Data: map[string]string{
 			"DB_USERNAME": "admin",
 			"DB_PASSWORD": "somepw",
-		},
-	}
-}
-
-func makeUnstructuredEnvConfigMap(name string) *unstructured.Unstructured {
-	return &unstructured.Unstructured{
-		Object: map[string]interface{}{
-			"apiVersion": "v1",
-			"kind":       "ConfigMap",
-			"metadata": map[string]interface{}{
-				"name": name,
-			},
-			"data": map[string]interface{}{
-				"DB_USERNAME": "admin",
-				"DB_PASSWORD": "somepw",
-			},
 		},
 	}
 }

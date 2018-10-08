@@ -17,6 +17,8 @@ limitations under the License.
 // Package ifc holds miscellaneous interfaces used by kustomize.
 package ifc
 
+import "sigs.k8s.io/kustomize/pkg/gvk"
+
 // Decoder unmarshalls byte input into an object.
 type Decoder interface {
 	// SetInput accepts new input.
@@ -47,4 +49,23 @@ type Loader interface {
 // Hash interface provides function to compute hash of objects
 type Hash interface {
 	Hash(m map[string]interface{}) (string, error)
+}
+
+// Kunstructured allows manipulation of k8s objects
+// that do not have Golang structs.
+type Kunstructured interface {
+	Map() map[string]interface{}
+	SetMap(map[string]interface{})
+	Copy() Kunstructured
+	GetFieldValue(string) (string, error)
+	MarshalJSON() ([]byte, error)
+	UnmarshalJSON([]byte) error
+	GetGvk() gvk.Gvk
+	GetKind() string
+	GetName() string
+	SetName(string)
+	GetLabels() map[string]string
+	SetLabels(map[string]string)
+	GetAnnotations() map[string]string
+	SetAnnotations(map[string]string)
 }

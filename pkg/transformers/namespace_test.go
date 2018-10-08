@@ -28,7 +28,7 @@ import (
 
 func TestNamespaceRun(t *testing.T) {
 	m := resmap.ResMap{
-		resid.NewResId(cmap, "cm1"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cm1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -36,7 +36,7 @@ func TestNamespaceRun(t *testing.T) {
 					"name": "cm1",
 				},
 			}),
-		resid.NewResId(cmap, "cm2"): resource.NewResourceFromMap(
+		resid.NewResId(cmap, "cm2"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -45,7 +45,7 @@ func TestNamespaceRun(t *testing.T) {
 					"namespace": "foo",
 				},
 			}),
-		resid.NewResId(ns, "ns1"): resource.NewResourceFromMap(
+		resid.NewResId(ns, "ns1"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Namespace",
@@ -53,7 +53,7 @@ func TestNamespaceRun(t *testing.T) {
 					"name": "ns1",
 				},
 			}),
-		resid.NewResId(sa, "default"): resource.NewResourceFromMap(
+		resid.NewResId(sa, "default"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ServiceAccount",
@@ -62,7 +62,7 @@ func TestNamespaceRun(t *testing.T) {
 					"namespace": "system",
 				},
 			}),
-		resid.NewResId(sa, "service-account"): resource.NewResourceFromMap(
+		resid.NewResId(sa, "service-account"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ServiceAccount",
@@ -71,7 +71,7 @@ func TestNamespaceRun(t *testing.T) {
 					"namespace": "system",
 				},
 			}),
-		resid.NewResId(crb, "crb"): resource.NewResourceFromMap(
+		resid.NewResId(crb, "crb"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "rbac.authorization.k8s.io/v1",
 				"kind":       "ClusterRoleBinding",
@@ -96,7 +96,7 @@ func TestNamespaceRun(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(crd, "crd"): resource.NewResourceFromMap(
+		resid.NewResId(crd, "crd"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "apiextensions.k8s.io/v1beta1",
 				"kind":       "CustomResourceDefinition",
@@ -106,7 +106,7 @@ func TestNamespaceRun(t *testing.T) {
 			}),
 	}
 	expected := resmap.ResMap{
-		resid.NewResIdWithPrefixNamespace(ns, "ns1", "", ""): resource.NewResourceFromMap(
+		resid.NewResIdWithPrefixNamespace(ns, "ns1", "", ""): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Namespace",
@@ -114,7 +114,7 @@ func TestNamespaceRun(t *testing.T) {
 					"name": "ns1",
 				},
 			}),
-		resid.NewResIdWithPrefixNamespace(cmap, "cm1", "", "test"): resource.NewResourceFromMap(
+		resid.NewResIdWithPrefixNamespace(cmap, "cm1", "", "test"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -123,7 +123,7 @@ func TestNamespaceRun(t *testing.T) {
 					"namespace": "test",
 				},
 			}),
-		resid.NewResIdWithPrefixNamespace(cmap, "cm2", "", "test"): resource.NewResourceFromMap(
+		resid.NewResIdWithPrefixNamespace(cmap, "cm2", "", "test"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -132,7 +132,7 @@ func TestNamespaceRun(t *testing.T) {
 					"namespace": "test",
 				},
 			}),
-		resid.NewResIdWithPrefixNamespace(sa, "default", "", "test"): resource.NewResourceFromMap(
+		resid.NewResIdWithPrefixNamespace(sa, "default", "", "test"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ServiceAccount",
@@ -141,7 +141,7 @@ func TestNamespaceRun(t *testing.T) {
 					"namespace": "test",
 				},
 			}),
-		resid.NewResIdWithPrefixNamespace(sa, "service-account", "", "test"): resource.NewResourceFromMap(
+		resid.NewResIdWithPrefixNamespace(sa, "service-account", "", "test"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ServiceAccount",
@@ -150,7 +150,7 @@ func TestNamespaceRun(t *testing.T) {
 					"namespace": "test",
 				},
 			}),
-		resid.NewResId(crb, "crb"): resource.NewResourceFromMap(
+		resid.NewResId(crb, "crb"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "rbac.authorization.k8s.io/v1",
 				"kind":       "ClusterRoleBinding",
@@ -175,7 +175,7 @@ func TestNamespaceRun(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(crd, "crd"): resource.NewResourceFromMap(
+		resid.NewResId(crd, "crd"): resource.NewFromMap(
 			map[string]interface{}{
 				"apiVersion": "apiextensions.k8s.io/v1beta1",
 				"kind":       "CustomResourceDefinition",
