@@ -26,8 +26,6 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	"github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	internal "sigs.k8s.io/kustomize/pkg/internal/error"
 	"sigs.k8s.io/kustomize/pkg/resid"
@@ -123,20 +121,6 @@ func (m ResMap) DeepCopy() ResMap {
 		mcopy[id].SetBehavior(obj.Behavior())
 	}
 	return mcopy
-}
-
-func (m ResMap) insert(newName string, obj *unstructured.Unstructured) error {
-	oldName := obj.GetName()
-	gvKind := gvk.FromSchemaGvk(obj.GroupVersionKind())
-	id := resid.NewResId(gvKind, oldName)
-
-	if _, found := m[id]; found {
-		return fmt.Errorf(
-			"the <name: %q, GroupVersionKind: %v> already exists in the map", oldName, gvKind)
-	}
-	obj.SetName(newName)
-	m[id] = resource.NewResourceFromUnstruct(*obj)
-	return nil
 }
 
 // FilterBy returns a ResMap containing ResIds with the same namespace and nameprefix
