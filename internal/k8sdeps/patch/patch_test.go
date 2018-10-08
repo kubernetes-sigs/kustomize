@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package transformers
+package patch
 
 import (
 	"reflect"
@@ -22,14 +22,18 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/internal/k8sdeps"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
+var rf = resource.NewFactory(
+	k8sdeps.NewKustKunstructuredFactory(k8sdeps.NewKustDecoder()))
+var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
+var foo = gvk.Gvk{Group: "example.com", Version: "v1", Kind: "Foo"}
+
 func TestOverlayRun(t *testing.T) {
-	rf := resource.NewFactory(
-		k8sdeps.NewKustKunstructuredFactory(k8sdeps.NewKustDecoder()))
 	base := resmap.ResMap{
 		resid.NewResId(deploy, "deploy1"): rf.FromMap(
 			map[string]interface{}{
