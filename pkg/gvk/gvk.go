@@ -17,7 +17,6 @@ limitations under the License.
 package gvk
 
 import (
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"strings"
 )
 
@@ -33,24 +32,6 @@ type Gvk struct {
 func FromKind(k string) Gvk {
 	return Gvk{
 		Kind: k,
-	}
-}
-
-// FromSchemaGvk converts from a schema.GroupVersionKind.
-func FromSchemaGvk(x schema.GroupVersionKind) Gvk {
-	return Gvk{
-		Group:   x.Group,
-		Version: x.Version,
-		Kind:    x.Kind,
-	}
-}
-
-// ToSchemaGvk converts to a schema.GroupVersionKind.
-func (x Gvk) ToSchemaGvk() schema.GroupVersionKind {
-	return schema.GroupVersionKind{
-		Group:   x.Group,
-		Version: x.Version,
-		Kind:    x.Kind,
 	}
 }
 
