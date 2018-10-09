@@ -18,14 +18,21 @@ limitations under the License.
 package types
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"sigs.k8s.io/kustomize/pkg/patch"
 )
 
+// TypeMeta copies apimachinery/pkg/apis/meta/v1.TypeMeta
+type TypeMeta struct {
+	// Kind copies apimachinery/pkg/apis/meta/v1.Typemeta.Kind
+	Kind string `json:"kind,omitempty" protobuf:"bytes,1,opt,name=kind"`
+
+	// APIVersion copies apimachinery/pkg/apis/meta/v1.Typemeta.APIVersion
+	APIVersion string `json:"apiVersion,omitempty" protobuf:"bytes,2,opt,name=apiVersion"`
+}
+
 // Kustomization holds the information needed to generate customized k8s api resources.
 type Kustomization struct {
-	metav1.TypeMeta `json:",inline" yaml:",inline"`
+	TypeMeta `json:",inline" yaml:",inline"`
 
 	// NamePrefix will prefix the names of all resources mentioned in the kustomization
 	// file including generated configmaps and secrets.
