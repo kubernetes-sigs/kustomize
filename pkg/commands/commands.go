@@ -51,7 +51,7 @@ See https://sigs.k8s.io/kustomize
 	c.AddCommand(
 		// TODO: Make consistent API for newCmd* functions.
 		build.NewCmdBuild(stdOut, fsys, kf, ptf, decoder, hash),
-		edit.NewCmdEdit(fsys, validator),
+		edit.NewCmdEdit(fsys, validator, kf),
 		misc.NewCmdConfig(fsys),
 		misc.NewCmdVersion(stdOut),
 	)
