@@ -52,14 +52,11 @@ func registerCRD(loader ifc.Loader, path string) (*transformerconfig.Transformer
 	var types map[string]common.OpenAPIDefinition
 	if content[0] == '{' {
 		err = json.Unmarshal(content, &types)
-		if err != nil {
-			return nil, err
-		}
 	} else {
 		err = yaml.Unmarshal(content, &types)
-		if err != nil {
-			return nil, err
-		}
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	crds := getCRDs(types)
