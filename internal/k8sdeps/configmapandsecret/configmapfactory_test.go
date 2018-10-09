@@ -91,7 +91,7 @@ func TestConstructConfigMap(t *testing.T) {
 			input: types.ConfigMapArgs{
 				Name: "envConfigMap",
 				DataSources: types.DataSources{
-					EnvSource: "../examplelayout/simple/instances/exampleinstance/configmap/app.env",
+					EnvSource: "../../../pkg/examplelayout/simple/instances/exampleinstance/configmap/app.env",
 				},
 			},
 			expected: makeEnvConfigMap("envConfigMap"),
@@ -101,7 +101,7 @@ func TestConstructConfigMap(t *testing.T) {
 			input: types.ConfigMapArgs{
 				Name: "fileConfigMap",
 				DataSources: types.DataSources{
-					FileSources: []string{"../examplelayout/simple/instances/exampleinstance/configmap/app-init.ini"},
+					FileSources: []string{"../../../pkg/examplelayout/simple/instances/exampleinstance/configmap/app-init.ini"},
 				},
 			},
 			expected: makeFileConfigMap("fileConfigMap"),
