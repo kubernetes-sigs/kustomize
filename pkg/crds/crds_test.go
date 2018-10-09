@@ -18,7 +18,6 @@ package crds
 
 import (
 	"reflect"
-	"sort"
 	"testing"
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
@@ -178,17 +177,7 @@ func TestRegisterCRD(t *testing.T) {
 		NameReference: refpathconfigs,
 	}
 
-	ldr := makeLoader(t)
-
-	pathconfig, _ := registerCRD(ldr, "/testpath/crd.json")
-
-	sort.Slice(expected.NameReference[:], func(i, j int) bool {
-		return expected.NameReference[i].Gvk.String() < expected.NameReference[j].Gvk.String()
-	})
-
-	sort.Slice(pathconfig.NameReference[:], func(i, j int) bool {
-		return pathconfig.NameReference[i].Gvk.String() < pathconfig.NameReference[j].Gvk.String()
-	})
+	pathconfig, _ := registerCRD(makeLoader(t), "/testpath/crd.json")
 
 	if !reflect.DeepEqual(pathconfig, expected) {
 		t.Fatalf("expected\n %v\n but got\n %v\n", expected, pathconfig)
