@@ -20,20 +20,47 @@ package transformerconfig
 
 import (
 	"log"
+	"sort"
 
 	"github.com/ghodss/yaml"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/transformerconfig/defaultconfig"
 )
 
+type rpcSlice []ReferencePathConfig
+
+func (s rpcSlice) Len() int      { return len(s) }
+func (s rpcSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s rpcSlice) Less(i, j int) bool {
+	return s[i].Gvk.IsLessThan(s[j].Gvk)
+}
+
+type pcSlice []PathConfig
+
+func (s pcSlice) Len() int      { return len(s) }
+func (s pcSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s pcSlice) Less(i, j int) bool {
+	return s[i].Gvk.IsLessThan(s[j].Gvk)
+}
+
 // TransformerConfig represents the path configurations for different transformations
 type TransformerConfig struct {
-	NamePrefix        []PathConfig          `json:"namePrefix,omitempty" yaml:"namePrefix,omitempty"`
-	NameSpace         []PathConfig          `json:"namespace,omitempty" yaml:"namespace,omitempty"`
-	CommonLabels      []PathConfig          `json:"commonLabels,omitempty" yaml:"commonLabels,omitempty"`
-	CommonAnnotations []PathConfig          `json:"commonAnnotations,omitempty" yaml:"commonAnnotations,omitempty"`
-	NameReference     []ReferencePathConfig `json:"nameReference,omitempty" yaml:"nameReference,omitempty"`
-	VarReference      []PathConfig          `json:"varReference,omitempty" yaml:"varReference,omitempty"`
+	NamePrefix        pcSlice  `json:"namePrefix,omitempty" yaml:"namePrefix,omitempty"`
+	NameSpace         pcSlice  `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	CommonLabels      pcSlice  `json:"commonLabels,omitempty" yaml:"commonLabels,omitempty"`
+	CommonAnnotations pcSlice  `json:"commonAnnotations,omitempty" yaml:"commonAnnotations,omitempty"`
+	NameReference     rpcSlice `json:"nameReference,omitempty" yaml:"nameReference,omitempty"`
+	VarReference      pcSlice  `json:"varReference,omitempty" yaml:"varReference,omitempty"`
+}
+
+// sortFields provides determinism in logging, tests, etc.
+func (t *TransformerConfig) sortFields() {
+	sort.Sort(t.NamePrefix)
+	sort.Sort(t.NameSpace)
+	sort.Sort(t.CommonLabels)
+	sort.Sort(t.CommonAnnotations)
+	sort.Sort(t.NameReference)
+	sort.Sort(t.VarReference)
 }
 
 // AddPrefixPathConfig adds a PathConfig to NamePrefix
@@ -65,6 +92,7 @@ func (t *TransformerConfig) Merge(input *TransformerConfig) *TransformerConfig {
 	merged.CommonLabels = append(t.CommonLabels, input.CommonLabels...)
 	merged.VarReference = append(t.VarReference, input.VarReference...)
 	merged.NameReference = mergeNameReferencePathConfigs(t.NameReference, input.NameReference)
+	merged.sortFields()
 	return merged
 }
 
@@ -92,6 +120,7 @@ func MakeTransformerConfigFromBytes(data []byte) (*TransformerConfig, error) {
 	if err != nil {
 		return nil, err
 	}
+	t.sortFields()
 	return &t, nil
 }
 
