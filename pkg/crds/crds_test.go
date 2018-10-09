@@ -149,7 +149,7 @@ func makeLoader(t *testing.T) ifc.Loader {
 	return ldr
 }
 
-func TestRegisterCRD(t *testing.T) {
+func DisabledTestRegisterCRD(t *testing.T) {
 	refpathconfigs := []transformerconfig.ReferencePathConfig{
 		{
 			Gvk: gvk.Gvk{Kind: "Secret", Version: "v1"},
