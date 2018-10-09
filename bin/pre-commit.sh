@@ -11,10 +11,6 @@ cd "$base_dir" || {
 
 rc=0
 
-function go_dirs {
-  go list -f '{{.Dir}}' ./... | tail -n +2 | tr '\n' '\0'
-}
-
 function runTest {
   local name=$1
   local result="SUCCESS"
@@ -28,40 +24,8 @@ function runTest {
   printf "============== end %s : %s code=%d\n\n\n" "$name" "$result" $code
 }
 
-function testGoFmt {
-  diff <(echo -n) <(go_dirs | xargs -0 gofmt -s -d -l)
-}
-
-
-function testGoCyclo {
-  diff <(echo -n) <(go_dirs | xargs -0 gocyclo -over 15)
-}
-
-function testGoLint {
-  diff -u <(echo -n) <(go_dirs | xargs -0 golint --min_confidence 0.85 )
-}
-
-# Not using the 'goimports' check because it reports hyphens in imported
-# package names as errors, and we vendor in packages that have
-# hyphens in their names.
-function testGoMetalinter {
-  diff -u <(echo -n) <(go_dirs | xargs -0 gometalinter.v2 --disable-all --deadline 5m \
-  --enable=misspell \
-  --enable=structcheck \
-  --enable=deadcode \
-  --enable=varcheck \
-  --enable=goconst \
-  --enable=unparam \
-  --enable=ineffassign \
-  --enable=nakedret \
-  --enable=interfacer \
-  --enable=misspell \
-  --line-length=170 --enable=lll \
-  --dupl-threshold=400 --enable=dupl)
-}
-
-function testGoVet {
-  go vet -all ./...
+function testGoLangCILint {
+  golangci-lint run ./...
 }
 
 function testGoTest {
@@ -72,11 +36,7 @@ function testExamples {
   mdrip --mode test --label test README.md ./examples
 }
 
-runTest testGoFmt
-runTest testGoMetalinter
-runTest testGoLint
-runTest testGoVet
-runTest testGoCyclo
+runTest testGoLangCILint
 runTest testGoTest
 runTest testExamples
 
