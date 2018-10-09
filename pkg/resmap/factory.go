@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/pkg/configmapandsecret"
+	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	internal "sigs.k8s.io/kustomize/pkg/internal/error"
 	"sigs.k8s.io/kustomize/pkg/resource"
@@ -80,18 +80,12 @@ func (rmF *Factory) newResMapFromBytes(b []byte) (ResMap, error) {
 
 // NewResMapFromConfigMapArgs returns a Resource slice given
 // a configmap metadata slice from kustomization file.
-func (rmF *Factory) NewResMapFromConfigMapArgs(
-	cf *configmapandsecret.ConfigMapFactory,
-	argList []types.ConfigMapArgs) (ResMap, error) {
+func (rmF *Factory) NewResMapFromConfigMapArgs(argList []types.ConfigMapArgs) (ResMap, error) {
 	var resources []*resource.Resource
 	for _, args := range argList {
-		obj, err := cf.MakeConfigMap(&args)
+		res, err := rmF.resF.MakeConfigMap(&args)
 		if err != nil {
 			return nil, errors.Wrap(err, "NewResMapFromConfigMapArgs")
-		}
-		res, err := rmF.resF.WithBehavior(obj, fixBehavior(args.Behavior))
-		if err != nil {
-			return nil, err
 		}
 		resources = append(resources, res)
 	}
@@ -100,30 +94,21 @@ func (rmF *Factory) NewResMapFromConfigMapArgs(
 
 // NewResMapFromSecretArgs takes a SecretArgs slice, generates
 // secrets from each entry, and accumulates them in a ResMap.
-func (rmF *Factory) NewResMapFromSecretArgs(
-	sf *configmapandsecret.SecretFactory,
-	argsList []types.SecretArgs) (ResMap, error) {
+func (rmF *Factory) NewResMapFromSecretArgs(argsList []types.SecretArgs) (ResMap, error) {
 	var resources []*resource.Resource
 	for _, args := range argsList {
-		obj, err := sf.MakeSecret(&args)
+		res, err := rmF.resF.MakeSecret(&args)
 		if err != nil {
 			return nil, errors.Wrap(err, "NewResMapFromSecretArgs")
-		}
-		res, err := rmF.resF.WithBehavior(obj, fixBehavior(args.Behavior))
-		if err != nil {
-			return nil, errors.Wrap(err, "WithBehavior")
 		}
 		resources = append(resources, res)
 	}
 	return newResMapFromResourceSlice(resources)
 }
 
-func fixBehavior(s string) ifc.GenerationBehavior {
-	b := ifc.NewGenerationBehavior(s)
-	if b == ifc.BehaviorUnspecified {
-		return ifc.BehaviorCreate
-	}
-	return b
+// Set sets the filesystem and loader for the underlying factory
+func (rmF *Factory) Set(fs fs.FileSystem, ldr ifc.Loader) {
+	rmF.resF.Set(fs, ldr)
 }
 
 func newResMapFromResourceSlice(resources []*resource.Resource) (ResMap, error) {
