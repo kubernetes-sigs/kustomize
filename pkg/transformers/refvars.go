@@ -45,7 +45,11 @@ func (rv *refvarTransformer) Transform(resources resmap.ResMap) error {
 				case []interface{}:
 					var xs []string
 					for _, a := range in.([]interface{}) {
-						xs = append(xs, expansion.Expand(a.(string), mappingFunc))
+						expanded, err := expansion.Expand(a.(string), mappingFunc)
+						if err != nil {
+							return nil, err
+						}
+						xs = append(xs, expanded)
 					}
 					return xs, nil
 				case interface{}:
@@ -53,7 +57,10 @@ func (rv *refvarTransformer) Transform(resources resmap.ResMap) error {
 					if !ok {
 						return nil, fmt.Errorf("%#v is expectd to be %T", in, s)
 					}
-					runtimeVal := expansion.Expand(s, mappingFunc)
+					runtimeVal, err := expansion.Expand(s, mappingFunc)
+					if err != nil {
+						return nil, err
+					}
 					return runtimeVal, nil
 				default:
 					return "", fmt.Errorf("invalid type encountered %T", vt)

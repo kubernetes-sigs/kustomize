@@ -17,6 +17,7 @@ limitations under the License.
 package expansion
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -51,7 +52,11 @@ func TestMapReference(t *testing.T) {
 	mapping := MappingFuncFor(declaredEnv, serviceEnv)
 
 	for _, env := range envs {
-		declaredEnv[env.Name] = Expand(env.Value, mapping)
+		var err error
+		declaredEnv[env.Name], err = Expand(env.Value, mapping)
+		if err != nil {
+			t.Errorf("Error expanding variables: %v", err)
+		}
 	}
 
 	expectedEnv := map[string]string{
@@ -101,11 +106,13 @@ func TestMappingDual(t *testing.T) {
 	doExpansionTest(t, mapping)
 }
 
-func doExpansionTest(t *testing.T, mapping func(string) string) {
+func doExpansionTest(t *testing.T, mapping func(string) (string, error)) {
+	unknownVarErrorType := reflect.TypeOf(&UnknownVarError{})
 	cases := []struct {
-		name     string
-		input    string
-		expected string
+		name              string
+		input             string
+		expected          string
+		expectedErrorType reflect.Type
 	}{
 		{
 			name:     "whole string",
@@ -168,14 +175,14 @@ func doExpansionTest(t *testing.T, mapping func(string) string) {
 			expected: "foo\\\\\\\\Abar",
 		},
 		{
-			name:     "nested var references",
-			input:    "$(VAR_A$(VAR_B))",
-			expected: "$(VAR_A$(VAR_B))",
+			name:              "nested var references",
+			input:             "$(VAR_A$(VAR_B))",
+			expectedErrorType: unknownVarErrorType,
 		},
 		{
-			name:     "nested var references second type",
-			input:    "$(VAR_A$(VAR_B)",
-			expected: "$(VAR_A$(VAR_B)",
+			name:              "nested var references second type",
+			input:             "$(VAR_A$(VAR_B)",
+			expectedErrorType: unknownVarErrorType,
 		},
 		{
 			name:     "value is a reference",
@@ -213,9 +220,9 @@ func doExpansionTest(t *testing.T, mapping func(string) string) {
 			expected: "$VAR_A",
 		},
 		{
-			name:     "undefined vars are passed through",
-			input:    "$(VAR_DNE)",
-			expected: "$(VAR_DNE)",
+			name:              "undefined vars are passed through",
+			input:             "$(VAR_DNE)",
+			expectedErrorType: unknownVarErrorType,
 		},
 		{
 			name:     "multiple (even) operators, var undefined",
@@ -228,9 +235,9 @@ func doExpansionTest(t *testing.T, mapping func(string) string) {
 			expected: "$$$(VAR_A)",
 		},
 		{
-			name:     "multiple (odd) operators, var undefined",
-			input:    "$$$$$$$(GOOD_ODDS)",
-			expected: "$$$$(GOOD_ODDS)",
+			name:              "multiple (odd) operators, var undefined",
+			input:             "$$$$$$$(GOOD_ODDS)",
+			expectedErrorType: unknownVarErrorType,
 		},
 		{
 			name:     "multiple (odd) operators, var defined",
@@ -283,9 +290,9 @@ func doExpansionTest(t *testing.T, mapping func(string) string) {
 			expected: "foo0--$($($($(",
 		},
 		{
-			name:     "escaped operators in variable names are not escaped",
-			input:    "$(foo$$var)",
-			expected: "$(foo$$var)",
+			name:              "escaped operators in variable names are not escaped",
+			input:             "$(foo$$var)",
+			expectedErrorType: unknownVarErrorType,
 		},
 		{
 			name:     "newline not expanded",
@@ -295,9 +302,22 @@ func doExpansionTest(t *testing.T, mapping func(string) string) {
 	}
 
 	for _, tc := range cases {
-		expanded := Expand(tc.input, mapping)
-		if e, a := tc.expected, expanded; e != a {
-			t.Errorf("%v: expected %q, got %q", tc.name, e, a)
+		expanded, err := Expand(tc.input, mapping)
+		if tc.expectedErrorType != nil {
+			if err == nil {
+				t.Errorf("Expected error of type %v but got no error for [%v] actual [%v]", tc.expectedErrorType, tc.name, expanded)
+			}
+			errType := reflect.TypeOf(err)
+			if errType != tc.expectedErrorType {
+				t.Errorf("Expected error or type %v but got %v for [%v] actual [%v]", tc.expectedErrorType, errType, tc.name, expanded)
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Error expanding variables: %v", err)
+			}
+			if e, a := tc.expected, expanded; e != a {
+				t.Errorf("%v: expected %q, got %q", tc.name, e, a)
+			}
 		}
 	}
 }
