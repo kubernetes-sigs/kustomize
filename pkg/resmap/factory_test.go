@@ -22,12 +22,11 @@ import (
 	"reflect"
 	"testing"
 
-	"k8s.io/api/core/v1"
-	"sigs.k8s.io/kustomize/pkg/configmapandsecret"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
+	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -133,7 +132,6 @@ func TestNewFromConfigMaps(t *testing.T) {
 	}
 
 	l := loadertest.NewFakeLoader("/home/seans/project/")
-	cf := configmapandsecret.NewConfigMapFactory(fs.MakeFakeFS(), l)
 	testCases := []testCase{
 		{
 			description: "construct config map from env",
@@ -219,12 +217,12 @@ BAR=baz
 		// TODO: add testcase for data coming from multiple sources like
 		// files/literal/env etc.
 	}
-
+	rmF.Set(fs.MakeFakeFS(), l)
 	for _, tc := range testCases {
 		if ferr := l.AddFile(tc.filepath, []byte(tc.content)); ferr != nil {
 			t.Fatalf("Error adding fake file: %v\n", ferr)
 		}
-		r, err := rmF.NewResMapFromConfigMapArgs(cf, tc.input)
+		r, err := rmF.NewResMapFromConfigMapArgs(tc.input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -246,20 +244,20 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 					"DB_PASSWORD": "printf somepw",
 				},
 			},
-			Type: "Opaque",
+			Type: ifc.SecretTypeOpaque,
 		},
 		{
 			Name: "peanuts",
 			CommandSources: types.CommandSources{
 				EnvCommand: "printf \"DB_USERNAME=admin\nDB_PASSWORD=somepw\"",
 			},
-			Type: "Opaque",
+			Type: ifc.SecretTypeOpaque,
 		},
 	}
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir(".")
-	actual, err := rmF.NewResMapFromSecretArgs(
-		configmapandsecret.NewSecretFactory(fakeFs, "."), secrets)
+	rmF.Set(fakeFs, loader.NewFileLoader(fakeFs))
+	actual, err := rmF.NewResMapFromSecretArgs(secrets)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -273,7 +271,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 				"metadata": map[string]interface{}{
 					"name": "apple",
 				},
-				"type": string(v1.SecretTypeOpaque),
+				"type": ifc.SecretTypeOpaque,
 				"data": map[string]interface{}{
 					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
@@ -286,7 +284,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 				"metadata": map[string]interface{}{
 					"name": "peanuts",
 				},
-				"type": string(v1.SecretTypeOpaque),
+				"type": ifc.SecretTypeOpaque,
 				"data": map[string]interface{}{
 					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
@@ -309,13 +307,13 @@ func TestSecretTimeout(t *testing.T) {
 					"USER": "sleep 2",
 				},
 			},
-			Type: "Opaque",
+			Type: ifc.SecretTypeOpaque,
 		},
 	}
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir(".")
-	_, err := rmF.NewResMapFromSecretArgs(
-		configmapandsecret.NewSecretFactory(fakeFs, "."), secrets)
+	rmF.Set(fakeFs, loader.NewFileLoader(fakeFs))
+	_, err := rmF.NewResMapFromSecretArgs(secrets)
 
 	if err == nil {
 		t.Fatal("didn't get the expected timeout error", err)

@@ -17,7 +17,11 @@ limitations under the License.
 // Package ifc holds miscellaneous interfaces used by kustomize.
 package ifc
 
-import "sigs.k8s.io/kustomize/pkg/gvk"
+import (
+	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/types"
+)
 
 // Decoder unmarshalls byte input into an object.
 type Decoder interface {
@@ -74,4 +78,10 @@ type Kunstructured interface {
 type KunstructuredFactory interface {
 	SliceFromBytes([]byte) ([]Kunstructured, error)
 	FromMap(m map[string]interface{}) Kunstructured
+	MakeConfigMap(args *types.ConfigMapArgs) (Kunstructured, error)
+	MakeSecret(args *types.SecretArgs) (Kunstructured, error)
+	Set(fs fs.FileSystem, ldr Loader)
 }
+
+// See core.v1.SecretTypeOpaque
+const SecretTypeOpaque = "Opaque"

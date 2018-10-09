@@ -21,15 +21,15 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
-	"sigs.k8s.io/kustomize/pkg/configmapandsecret"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 // newCmdAddConfigMap returns a new command.
-func newCmdAddConfigMap(fSys fs.FileSystem) *cobra.Command {
+func newCmdAddConfigMap(fSys fs.FileSystem, kf ifc.KunstructuredFactory) *cobra.Command {
 	var flagsAndArgs cMapFlagsAndArgs
 	cmd := &cobra.Command{
 		Use:   "configmap NAME [--from-file=[key=]source] [--from-literal=key1=value1]",
@@ -68,10 +68,8 @@ func newCmdAddConfigMap(fSys fs.FileSystem) *cobra.Command {
 			}
 
 			// Add the flagsAndArgs map to the kustomization file.
-			err = addConfigMap(
-				kustomization, flagsAndArgs,
-				configmapandsecret.NewConfigMapFactory(
-					fSys, loader.NewFileLoader(fSys)))
+			kf.Set(fSys, loader.NewFileLoader(fSys))
+			err = addConfigMap(kustomization, flagsAndArgs, kf)
 			if err != nil {
 				return err
 			}
@@ -107,15 +105,14 @@ func newCmdAddConfigMap(fSys fs.FileSystem) *cobra.Command {
 // Suggest passing a copy of kustomization file.
 func addConfigMap(
 	k *types.Kustomization,
-	flagsAndArgs cMapFlagsAndArgs,
-	factory *configmapandsecret.ConfigMapFactory) error {
+	flagsAndArgs cMapFlagsAndArgs, kf ifc.KunstructuredFactory) error {
 	cmArgs := makeConfigMapArgs(k, flagsAndArgs.Name)
 	err := mergeFlagsIntoCmArgs(&cmArgs.DataSources, flagsAndArgs)
 	if err != nil {
 		return err
 	}
 	// Validate by trying to create corev1.configmap.
-	_, err = factory.MakeConfigMap(cmArgs)
+	_, err = kf.MakeConfigMap(cmArgs)
 	if err != nil {
 		return err
 	}

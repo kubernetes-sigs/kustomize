@@ -25,7 +25,7 @@ import (
 )
 
 // NewCmdEdit returns an instance of 'edit' subcommand.
-func NewCmdEdit(fsys fs.FileSystem, v ifc.Validator) *cobra.Command {
+func NewCmdEdit(fsys fs.FileSystem, v ifc.Validator, kf ifc.KunstructuredFactory) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "edit",
 		Short: "Edits a kustomization file",
@@ -40,7 +40,7 @@ func NewCmdEdit(fsys fs.FileSystem, v ifc.Validator) *cobra.Command {
 		Args: cobra.MinimumNArgs(1),
 	}
 	c.AddCommand(
-		add.NewCmdAdd(fsys, v),
+		add.NewCmdAdd(fsys, v, kf),
 		set.NewCmdSet(fsys, v),
 	)
 	return c
