@@ -19,11 +19,11 @@ package resource
 import (
 	"log"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/kustomize/internal/k8sdeps"
+	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	internal "sigs.k8s.io/kustomize/pkg/internal/error"
 	"sigs.k8s.io/kustomize/pkg/patch"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 // Factory makes instances of Resource.
@@ -34,16 +34,6 @@ type Factory struct {
 // NewFactory makes an instance of Factory.
 func NewFactory(kf ifc.KunstructuredFactory) *Factory {
 	return &Factory{kf: kf}
-}
-
-// WithBehavior returns a new instance of Resource.
-// TODO(monopole): This runtime dependence must be refactored away.
-// The logic calling this has to move to k8sdeps.
-func (rf *Factory) WithBehavior(
-	obj runtime.Object, b ifc.GenerationBehavior) (*Resource, error) {
-	// TODO(monopole): This k8sdeps dependence must be refactored away.
-	u, err := k8sdeps.NewKunstructuredFromObject(obj)
-	return &Resource{Kunstructured: u, b: b}, err
 }
 
 // FromMap returns a new instance of Resource.
@@ -92,4 +82,35 @@ func (rf *Factory) SliceFromBytes(in []byte) ([]*Resource, error) {
 		result = append(result, rf.FromKunstructured(u))
 	}
 	return result, nil
+}
+
+// Set sets the filesystem and loader for the underlying factory
+func (rf *Factory) Set(fs fs.FileSystem, ldr ifc.Loader) {
+	rf.kf.Set(fs, ldr)
+}
+
+// MakeConfigMap makes an instance of Resource for ConfigMap
+func (rf *Factory) MakeConfigMap(args *types.ConfigMapArgs) (*Resource, error) {
+	u, err := rf.kf.MakeConfigMap(args)
+	if err != nil {
+		return nil, err
+	}
+	return &Resource{Kunstructured: u, b: fixBehavior(args.Behavior)}, nil
+}
+
+// MakeSecret makes an instance of Resource for Secret
+func (rf *Factory) MakeSecret(args *types.SecretArgs) (*Resource, error) {
+	u, err := rf.kf.MakeSecret(args)
+	if err != nil {
+		return nil, err
+	}
+	return &Resource{Kunstructured: u, b: fixBehavior(args.Behavior)}, nil
+}
+
+func fixBehavior(s string) ifc.GenerationBehavior {
+	b := ifc.NewGenerationBehavior(s)
+	if b == ifc.BehaviorUnspecified {
+		return ifc.BehaviorCreate
+	}
+	return b
 }

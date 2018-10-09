@@ -27,7 +27,6 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/pkg/configmapandsecret"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/crds"
 	"sigs.k8s.io/kustomize/pkg/fs"
@@ -190,15 +189,12 @@ func (kt *KustTarget) loadCustomizedResMap() (resmap.ResMap, error) {
 
 func (kt *KustTarget) generateConfigMapsAndSecrets(
 	errs *interror.KustomizationErrors) (resmap.ResMap, error) {
-	cms, err := kt.rf.NewResMapFromConfigMapArgs(
-		configmapandsecret.NewConfigMapFactory(kt.fSys, kt.ldr),
-		kt.kustomization.ConfigMapGenerator)
+	kt.rf.Set(kt.fSys, kt.ldr)
+	cms, err := kt.rf.NewResMapFromConfigMapArgs(kt.kustomization.ConfigMapGenerator)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromConfigMapArgs"))
 	}
-	secrets, err := kt.rf.NewResMapFromSecretArgs(
-		configmapandsecret.NewSecretFactory(kt.fSys, kt.ldr.Root()),
-		kt.kustomization.SecretGenerator)
+	secrets, err := kt.rf.NewResMapFromSecretArgs(kt.kustomization.SecretGenerator)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromSecretArgs"))
 	}

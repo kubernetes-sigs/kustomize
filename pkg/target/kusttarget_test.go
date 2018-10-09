@@ -22,7 +22,6 @@ import (
 	"strings"
 	"testing"
 
-	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/kustomize/internal/k8sdeps"
 	"sigs.k8s.io/kustomize/internal/k8sdeps/patch"
 	"sigs.k8s.io/kustomize/pkg/constants"
@@ -186,7 +185,7 @@ func TestResources1(t *testing.T) {
 						"note": "This is a test annotation",
 					},
 				},
-				"type": string(corev1.SecretTypeOpaque),
+				"type": ifc.SecretTypeOpaque,
 				"data": map[string]interface{}{
 					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
