@@ -22,8 +22,10 @@ import (
 
 	"github.com/evanphx/json-patch"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
@@ -81,7 +83,7 @@ func (pt *patchTransformer) Transform(baseResourceMap resmap.ResMap) error {
 		id = matchedIds[0]
 		base := baseResourceMap[id]
 		merged := map[string]interface{}{}
-		versionedObj, err := scheme.Scheme.New(id.Gvk().ToSchemaGvk())
+		versionedObj, err := scheme.Scheme.New(toSchemaGvk(id.Gvk()))
 		baseName := base.GetName()
 		switch {
 		case runtime.IsNotRegisteredError(err):
@@ -139,7 +141,7 @@ func (pt *patchTransformer) mergePatches() (resmap.ResMap, error) {
 			continue
 		}
 
-		versionedObj, err := scheme.Scheme.New(id.Gvk().ToSchemaGvk())
+		versionedObj, err := scheme.Scheme.New(toSchemaGvk(id.Gvk()))
 		if err != nil && !runtime.IsNotRegisteredError(err) {
 			return nil, err
 		}
@@ -173,4 +175,13 @@ func (pt *patchTransformer) mergePatches() (resmap.ResMap, error) {
 		rc[id] = merged
 	}
 	return rc, nil
+}
+
+// toSchemaGvk converts to a schema.GroupVersionKind.
+func toSchemaGvk(x gvk.Gvk) schema.GroupVersionKind {
+	return schema.GroupVersionKind{
+		Group:   x.Group,
+		Version: x.Version,
+		Kind:    x.Kind,
+	}
 }
