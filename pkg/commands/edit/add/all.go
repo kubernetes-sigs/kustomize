@@ -23,7 +23,7 @@ import (
 )
 
 // NewCmdAdd returns an instance of 'add' subcommand.
-func NewCmdAdd(fsys fs.FileSystem, v ifc.Validator) *cobra.Command {
+func NewCmdAdd(fsys fs.FileSystem, v ifc.Validator, kf ifc.KunstructuredFactory) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "add",
 		Short: "Adds configmap/resource/patch/base to the kustomization file.",
@@ -53,7 +53,7 @@ func NewCmdAdd(fsys fs.FileSystem, v ifc.Validator) *cobra.Command {
 	c.AddCommand(
 		newCmdAddResource(fsys),
 		newCmdAddPatch(fsys),
-		newCmdAddConfigMap(fsys),
+		newCmdAddConfigMap(fsys, kf),
 		newCmdAddBase(fsys),
 		newCmdAddLabel(fsys, v.MakeLabelValidator()),
 		newCmdAddAnnotation(fsys, v.MakeAnnotationValidator()),
