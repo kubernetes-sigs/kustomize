@@ -54,7 +54,12 @@ func NewKunstructuredFromObject(obj runtime.Object) (ifc.Kunstructured, error) {
 
 // GetGvk returns the Gvk name of the object.
 func (fs *UnstructAdapter) GetGvk() gvk.Gvk {
-	return gvk.FromSchemaGvk(fs.GroupVersionKind())
+	x := fs.GroupVersionKind()
+	return gvk.Gvk{
+		Group:   x.Group,
+		Version: x.Version,
+		Kind:    x.Kind,
+	}
 }
 
 // Copy provides a copy behind an interface.
