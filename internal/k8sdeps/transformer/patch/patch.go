@@ -31,19 +31,6 @@ import (
 	"sigs.k8s.io/kustomize/pkg/transformers"
 )
 
-// patchTransformerFactory makes patch transformer
-type patchTransformerFactory struct{}
-
-// NewPatchTransformerFactory makes a new patchTransformerFactory
-func NewPatchTransformerFactory() *patchTransformerFactory {
-	return &patchTransformerFactory{}
-}
-
-// MakePatchTransformer makes a new patch transformer
-func (p *patchTransformerFactory) MakePatchTransformer(slice []*resource.Resource, rf *resource.Factory) (transformers.Transformer, error) {
-	return NewPatchTransformer(slice, rf)
-}
-
 // patchTransformer applies patches.
 type patchTransformer struct {
 	patches []*resource.Resource

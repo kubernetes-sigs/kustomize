@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package k8sdeps
+package hash
 
 import (
 	"reflect"
@@ -22,7 +22,13 @@ import (
 	"testing"
 
 	"k8s.io/api/core/v1"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 )
+
+var service = gvk.Gvk{Version: "v1", Kind: "Service"}
+var secret = gvk.Gvk{Version: "v1", Kind: "Secret"}
+var cmap = gvk.Gvk{Version: "v1", Kind: "ConfigMap"}
+var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
 
 func TestConfigMapHash(t *testing.T) {
 	cases := []struct {
