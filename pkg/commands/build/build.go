@@ -30,7 +30,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/target"
-	"sigs.k8s.io/kustomize/pkg/transformerconfig"
+	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
 
 type buildOptions struct {
@@ -159,14 +159,14 @@ func (o *buildOptions) RunBuild(
 // makeTransformerConfig returns a complete TransformerConfig object from either files
 // or the default configs
 func makeTransformerconfig(
-	fSys fs.FileSystem, paths []string) (*transformerconfig.TransformerConfig, error) {
+	fSys fs.FileSystem, paths []string) (*config.TransformerConfig, error) {
 	if paths == nil || len(paths) == 0 {
-		return transformerconfig.NewFactory(nil).DefaultConfig(), nil
+		return config.NewFactory(nil).DefaultConfig(), nil
 	}
 	ldr, err := loader.NewLoader(".", "", fSys)
 	if err != nil {
 		return nil, errors.Wrap(
 			err, "cannot create transformer configuration loader")
 	}
-	return transformerconfig.NewFactory(ldr).FromFiles(paths)
+	return config.NewFactory(ldr).FromFiles(paths)
 }

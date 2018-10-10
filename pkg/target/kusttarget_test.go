@@ -32,7 +32,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
-	"sigs.k8s.io/kustomize/pkg/transformerconfig"
+	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
 
 const (
@@ -96,7 +96,7 @@ func makeKustTarget(t *testing.T, l ifc.Loader) *KustTarget {
 	fakeFs.Mkdir("/")
 	kt, err := NewKustTarget(
 		l, fakeFs, rf, transformer.NewFactoryImpl(),
-		transformerconfig.NewFactory(l).DefaultConfig())
+		config.NewFactory(l).DefaultConfig())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}

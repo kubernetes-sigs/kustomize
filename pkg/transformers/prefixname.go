@@ -23,32 +23,32 @@ import (
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
-	"sigs.k8s.io/kustomize/pkg/transformerconfig"
+	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
 
 // namePrefixTransformer contains the prefix and the path config for each field that
 // the name prefix will be applied.
 type namePrefixTransformer struct {
 	prefix          string
-	pathConfigs     []transformerconfig.PathConfig
-	skipPathConfigs []transformerconfig.PathConfig
+	pathConfigs     []config.PathConfig
+	skipPathConfigs []config.PathConfig
 }
 
 var _ Transformer = &namePrefixTransformer{}
 
-var skipNamePrefixPathConfigs = []transformerconfig.PathConfig{
+var skipNamePrefixPathConfigs = []config.PathConfig{
 	{
 		Gvk: gvk.Gvk{Kind: "CustomResourceDefinition"},
 	},
 }
 
 // deprecateNamePrefixPathConfig will be moved into skipNamePrefixPathConfigs in next release
-var deprecateNamePrefixPathConfig = transformerconfig.PathConfig{
+var deprecateNamePrefixPathConfig = config.PathConfig{
 	Gvk: gvk.Gvk{Kind: "Namespace"},
 }
 
 // NewNamePrefixTransformer construct a namePrefixTransformer.
-func NewNamePrefixTransformer(np string, pc []transformerconfig.PathConfig) (Transformer, error) {
+func NewNamePrefixTransformer(np string, pc []config.PathConfig) (Transformer, error) {
 	if len(np) == 0 {
 		return NewNoOpTransformer(), nil
 	}
