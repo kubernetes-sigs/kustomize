@@ -17,18 +17,17 @@ limitations under the License.
 package build
 
 import (
-	"errors"
 	"io"
-	"log"
-	"sigs.k8s.io/kustomize/pkg/resmap"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/ifc/patch"
 	"sigs.k8s.io/kustomize/pkg/loader"
+	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/target"
 	"sigs.k8s.io/kustomize/pkg/transformerconfig"
@@ -131,13 +130,15 @@ func (o *buildOptions) RunBuild(
 	if err != nil {
 		return err
 	}
+	tc, err := makeTransformerconfig(fSys, o.transformerconfigPaths)
+	if err != nil {
+		return err
+	}
 	defer rootLoader.Cleanup()
 	kt, err := target.NewKustTarget(
 		rootLoader, fSys,
 		resmap.NewFactory(resource.NewFactory(kf)),
-		ptf,
-		makeTransformerconfig(fSys, o.transformerconfigPaths),
-		hash)
+		ptf, tc, hash)
 	if err != nil {
 		return err
 	}
@@ -159,17 +160,15 @@ func (o *buildOptions) RunBuild(
 
 // makeTransformerConfig returns a complete TransformerConfig object from either files
 // or the default configs
-func makeTransformerconfig(fSys fs.FileSystem, paths []string) *transformerconfig.TransformerConfig {
+func makeTransformerconfig(
+	fSys fs.FileSystem, paths []string) (*transformerconfig.TransformerConfig, error) {
+	if paths == nil || len(paths) == 0 {
+		return transformerconfig.NewFactory(nil).DefaultConfig(), nil
+	}
 	ldr, err := loader.NewLoader(".", "", fSys)
 	if err != nil {
-		log.Fatalf("error creating loader to load transformer configurations %v\n", err)
+		return nil, errors.Wrap(
+			err, "cannot create transformer configuration loader")
 	}
-	if paths == nil || len(paths) == 0 {
-		return transformerconfig.MakeDefaultTransformerConfig()
-	}
-	t, err := transformerconfig.MakeTransformerConfigFromFiles(ldr, paths)
-	if err != nil {
-		log.Fatalf("failed to load transformer configrations %v\n", err)
-	}
-	return t
+	return transformerconfig.NewFactory(ldr).FromFiles(paths)
 }
