@@ -24,7 +24,6 @@ import (
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
-	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 )
 
 func TestNameReferenceRun(t *testing.T) {
@@ -326,7 +325,7 @@ func TestNameReferenceRun(t *testing.T) {
 			},
 		},
 	)
-	nrt, err := NewNameReferenceTransformer(transformerconfig.MakeDefaultTransformerConfig().NameReference)
+	nrt, err := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
