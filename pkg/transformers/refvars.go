@@ -5,16 +5,16 @@ import (
 
 	"sigs.k8s.io/kustomize/pkg/expansion"
 	"sigs.k8s.io/kustomize/pkg/resmap"
-	"sigs.k8s.io/kustomize/pkg/transformerconfig"
+	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
 
 type refvarTransformer struct {
-	pathConfigs []transformerconfig.PathConfig
+	pathConfigs []config.PathConfig
 	vars        map[string]string
 }
 
 // NewRefVarTransformer returns a Trasformer that replaces $(VAR) style variables with values.
-func NewRefVarTransformer(vars map[string]string, p []transformerconfig.PathConfig) Transformer {
+func NewRefVarTransformer(vars map[string]string, p []config.PathConfig) Transformer {
 	return &refvarTransformer{
 		vars:        vars,
 		pathConfigs: p,

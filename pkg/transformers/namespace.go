@@ -19,16 +19,16 @@ package transformers
 import (
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
-	"sigs.k8s.io/kustomize/pkg/transformerconfig"
+	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
 
 type namespaceTransformer struct {
 	namespace       string
-	pathConfigs     []transformerconfig.PathConfig
-	skipPathConfigs []transformerconfig.PathConfig
+	pathConfigs     []config.PathConfig
+	skipPathConfigs []config.PathConfig
 }
 
-var skipNamespacePathConfigs = []transformerconfig.PathConfig{
+var skipNamespacePathConfigs = []config.PathConfig{
 	{
 		Gvk: gvk.Gvk{
 			Kind: "Namespace",
@@ -54,7 +54,7 @@ var skipNamespacePathConfigs = []transformerconfig.PathConfig{
 var _ Transformer = &namespaceTransformer{}
 
 // NewNamespaceTransformer construct a namespaceTransformer.
-func NewNamespaceTransformer(ns string, cf []transformerconfig.PathConfig) Transformer {
+func NewNamespaceTransformer(ns string, cf []config.PathConfig) Transformer {
 	if len(ns) == 0 {
 		return NewNoOpTransformer()
 	}

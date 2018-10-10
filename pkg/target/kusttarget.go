@@ -34,8 +34,8 @@ import (
 	patchtransformer "sigs.k8s.io/kustomize/pkg/patch/transformer"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
-	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 	"sigs.k8s.io/kustomize/pkg/transformers"
+	"sigs.k8s.io/kustomize/pkg/transformers/config"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
@@ -45,7 +45,7 @@ type KustTarget struct {
 	ldr           ifc.Loader
 	fSys          fs.FileSystem
 	rf            *resmap.Factory
-	tcfg          *transformerconfig.TransformerConfig
+	tcfg          *config.TransformerConfig
 	ptf           transformer.Factory
 }
 
@@ -54,7 +54,7 @@ func NewKustTarget(
 	ldr ifc.Loader, fSys fs.FileSystem,
 	rf *resmap.Factory,
 	ptf transformer.Factory,
-	tcfg *transformerconfig.TransformerConfig) (*KustTarget, error) {
+	tcfg *config.TransformerConfig) (*KustTarget, error) {
 	content, err := ldr.Load(constants.KustomizationFileName)
 	if err != nil {
 		return nil, err
@@ -132,8 +132,7 @@ func (kt *KustTarget) loadCustomizedResMap() (resmap.ResMap, error) {
 	if err != nil {
 		errs.Append(errors.Wrap(err, "loadResMapFromBasesAndResources"))
 	}
-	crdPathConfigs, err := transformerconfig.
-		NewFactory(kt.ldr).LoadCRDs(kt.kustomization.Crds)
+	crdPathConfigs, err := config.NewFactory(kt.ldr).LoadCRDs(kt.kustomization.Crds)
 	kt.tcfg = kt.tcfg.Merge(crdPathConfigs)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "LoadCRDs"))
