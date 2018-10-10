@@ -1,5 +1,9 @@
 # Eschewed Features
 
+For a bigger picture about why kustomize
+does some things and not others, see the
+glossary entry for [DAM].
+
 ## Removal directives
 
 `kustomize` supports configurations that can be reasoned about as
@@ -74,6 +78,7 @@ In this way the resources, patches and bases used at _build time_
 remain explicitly declared in version control.
 
 
+[DAM]: glossary.md#declarative-application-management
 [base]: glossary.md#base
 [kustomization]: glossary.md#kustomization
 [OTS workflow]: workflows.md#off-the-shelf-configuration
