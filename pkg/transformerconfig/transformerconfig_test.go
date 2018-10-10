@@ -17,17 +17,15 @@ limitations under the License.
 package transformerconfig
 
 import (
-	"sigs.k8s.io/kustomize/pkg/ifc"
 	"testing"
 
 	"reflect"
-	"sigs.k8s.io/kustomize/pkg/fs"
+
 	"sigs.k8s.io/kustomize/pkg/gvk"
-	"sigs.k8s.io/kustomize/pkg/loader"
 )
 
 func TestAddNameReferencePathConfigs(t *testing.T) {
-	cfg := MakeEmptyTransformerConfig()
+	cfg := &TransformerConfig{}
 
 	pathConfig := ReferencePathConfig{
 		Gvk: gvk.Gvk{
@@ -51,7 +49,7 @@ func TestAddNameReferencePathConfigs(t *testing.T) {
 }
 
 func TestAddPathConfigs(t *testing.T) {
-	cfg := MakeEmptyTransformerConfig()
+	cfg := &TransformerConfig{}
 
 	pathConfig := PathConfig{
 		Gvk:                gvk.Gvk{Group: "GroupA", Kind: "KindB"},
@@ -116,11 +114,11 @@ func TestMerge(t *testing.T) {
 			CreateIfNotPresent: true,
 		},
 	}
-	cfga := MakeEmptyTransformerConfig()
+	cfga := &TransformerConfig{}
 	cfga.AddNamereferencePathConfig(nameReference[0])
 	cfga.AddPrefixPathConfig(pathConfigs[0])
 
-	cfgb := MakeEmptyTransformerConfig()
+	cfgb := &TransformerConfig{}
 	cfgb.AddNamereferencePathConfig(nameReference[1])
 	cfgb.AddPrefixPathConfig(pathConfigs[1])
 
@@ -134,7 +132,7 @@ func TestMerge(t *testing.T) {
 		t.Fatal("merge failed for namereference pathconfig")
 	}
 
-	expected := MakeEmptyTransformerConfig()
+	expected := &TransformerConfig{}
 	expected.AddNamereferencePathConfig(nameReference[0])
 	expected.AddNamereferencePathConfig(nameReference[1])
 	expected.AddPrefixPathConfig(pathConfigs[0])
@@ -142,41 +140,5 @@ func TestMerge(t *testing.T) {
 
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("expected: %v\n but got: %v\n", expected, actual)
-	}
-}
-
-func TestMakeDefaultTransformerConfig(t *testing.T) {
-	// Confirm default can be made without fatal error inside call.
-	_ = MakeDefaultTransformerConfig()
-}
-
-func makeFakeLoaderAndOutput() (ifc.Loader, *TransformerConfig, *TransformerConfig) {
-	transformerConfig := `
-namePrefix:
-- path: nameprefix/path
-  kind: SomeKind
-`
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile("transformerconfig/test/config.yaml", []byte(transformerConfig))
-	ldr := loader.NewFileLoader(fakeFS)
-	expected := &TransformerConfig{
-		NamePrefix: []PathConfig{
-			{
-				Gvk:  gvk.Gvk{Kind: "SomeKind"},
-				Path: "nameprefix/path",
-			},
-		},
-	}
-	return ldr, expected, MakeDefaultTransformerConfig()
-}
-func TestMakeTransformerConfigFromFiles(t *testing.T) {
-	ldr, expected, _ := makeFakeLoaderAndOutput()
-	tcfg, err := MakeTransformerConfigFromFiles(ldr, []string{"transformerconfig/test/config.yaml"})
-	if err != nil {
-		t.Fatalf("unexpected error %v", err)
-	}
-
-	if !reflect.DeepEqual(tcfg, expected) {
-		t.Fatalf("expected %v\n but go6t %v\n", expected, tcfg)
 	}
 }

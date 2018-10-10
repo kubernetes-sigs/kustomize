@@ -19,12 +19,7 @@ limitations under the License.
 package transformerconfig
 
 import (
-	"log"
 	"sort"
-
-	"github.com/ghodss/yaml"
-	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/transformerconfig/defaultconfig"
 )
 
 type rpcSlice []ReferencePathConfig
@@ -94,47 +89,4 @@ func (t *TransformerConfig) Merge(input *TransformerConfig) *TransformerConfig {
 	merged.NameReference = mergeNameReferencePathConfigs(t.NameReference, input.NameReference)
 	merged.sortFields()
 	return merged
-}
-
-// MakeTransformerConfigFromFiles returns a TranformerConfig object from a list of files
-func MakeTransformerConfigFromFiles(ldr ifc.Loader, paths []string) (*TransformerConfig, error) {
-	result := &TransformerConfig{}
-	for _, path := range paths {
-		data, err := ldr.Load(path)
-		if err != nil {
-			return nil, err
-		}
-		t, err := MakeTransformerConfigFromBytes(data)
-		if err != nil {
-			return nil, err
-		}
-		result = result.Merge(t)
-	}
-	return result, nil
-}
-
-// MakeTransformerConfigFromBytes returns a TransformerConfig object from bytes
-func MakeTransformerConfigFromBytes(data []byte) (*TransformerConfig, error) {
-	var t TransformerConfig
-	err := yaml.Unmarshal(data, &t)
-	if err != nil {
-		return nil, err
-	}
-	t.sortFields()
-	return &t, nil
-}
-
-// MakeEmptyTransformerConfig returns an empty TransformerConfig object
-func MakeEmptyTransformerConfig() *TransformerConfig {
-	return &TransformerConfig{}
-}
-
-// MakeDefaultTransformerConfig returns a default TransformerConfig.
-// This should never fail, hence the Fatal panic.
-func MakeDefaultTransformerConfig() *TransformerConfig {
-	c, err := MakeTransformerConfigFromBytes(defaultconfig.GetDefaultPathConfigs())
-	if err != nil {
-		log.Fatalf("Unable to make default transformconfig: %v", err)
-	}
-	return c
 }
