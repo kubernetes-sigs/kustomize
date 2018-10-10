@@ -29,7 +29,7 @@ import (
 
 func TestNameHashTransformer(t *testing.T) {
 	rf := resource.NewFactory(
-		k8sdeps.NewKunstructuredFactoryImpl(k8sdeps.NewKustDecoder()))
+		k8sdeps.NewKunstructuredFactoryImpl())
 	objs := resmap.ResMap{
 		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{

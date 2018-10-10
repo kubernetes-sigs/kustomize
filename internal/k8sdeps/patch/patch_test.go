@@ -29,7 +29,7 @@ import (
 )
 
 var rf = resource.NewFactory(
-	k8sdeps.NewKunstructuredFactoryImpl(k8sdeps.NewKustDecoder()))
+	k8sdeps.NewKunstructuredFactoryImpl())
 var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
 var foo = gvk.Gvk{Group: "example.com", Version: "v1", Kind: "Foo"}
 
