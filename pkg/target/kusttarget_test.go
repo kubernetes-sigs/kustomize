@@ -91,6 +91,19 @@ metadata:
 var rf = resmap.NewFactory(resource.NewFactory(
 	k8sdeps.NewKunstructuredFactoryImpl()))
 
+func makeKustTarget(t *testing.T, l ifc.Loader) *KustTarget {
+	fakeFs := fs.MakeFakeFS()
+	fakeFs.Mkdir("/")
+	kt, err := NewKustTarget(
+		l, fakeFs, rf, patch.NewPatchTransformerFactory(),
+		transformerconfig.NewFactory(l).DefaultConfig(),
+		k8sdeps.NewKustHash())
+	if err != nil {
+		t.Fatalf("Unexpected construction error %v", err)
+	}
+	return kt
+}
+
 func makeLoader1(t *testing.T) ifc.Loader {
 	ldr := loadertest.NewFakeLoader("/testpath")
 	err := ldr.AddFile("/testpath/"+constants.KustomizationFileName, []byte(kustomizationContent1))
@@ -206,17 +219,8 @@ func TestResources1(t *testing.T) {
 				},
 			}),
 	}
-	l := makeLoader1(t)
-	fakeFs := fs.MakeFakeFS()
-	fakeFs.Mkdir("/")
-	kt, err := NewKustTarget(
-		l, fakeFs, rf, patch.NewPatchTransformerFactory(),
-		transformerconfig.MakeDefaultTransformerConfig(),
-		k8sdeps.NewKustHash())
-	if err != nil {
-		t.Fatalf("unexpected construction error %v", err)
-	}
-	actual, err := kt.MakeCustomizedResMap()
+	actual, err := makeKustTarget(
+		t, makeLoader1(t)).MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("unexpected Resources error %v", err)
 	}
@@ -233,16 +237,7 @@ func TestResourceNotFound(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to setup fake ldr.")
 	}
-	fakeFs := fs.MakeFakeFS()
-	fakeFs.Mkdir("/")
-	kt, err := NewKustTarget(
-		l, fakeFs, rf, patch.NewPatchTransformerFactory(),
-		transformerconfig.MakeDefaultTransformerConfig(),
-		k8sdeps.NewKustHash())
-	if err != nil {
-		t.Fatalf("Unexpected construction error %v", err)
-	}
-	_, err = kt.MakeCustomizedResMap()
+	_, err = makeKustTarget(t, l).MakeCustomizedResMap()
 	if err == nil {
 		t.Fatalf("Didn't get the expected error for an unknown resource")
 	}
@@ -257,16 +252,7 @@ func TestSecretTimeout(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to setup fake ldr.")
 	}
-	fakeFs := fs.MakeFakeFS()
-	fakeFs.Mkdir("/")
-	kt, err := NewKustTarget(
-		l, fakeFs, rf, patch.NewPatchTransformerFactory(),
-		transformerconfig.MakeDefaultTransformerConfig(),
-		k8sdeps.NewKustHash())
-	if err != nil {
-		t.Fatalf("Unexpected construction error %v", err)
-	}
-	_, err = kt.MakeCustomizedResMap()
+	_, err = makeKustTarget(t, l).MakeCustomizedResMap()
 	if err == nil {
 		t.Fatalf("Didn't get the expected error for an unknown resource")
 	}

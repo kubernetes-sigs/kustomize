@@ -136,7 +136,8 @@ func (kt *KustTarget) loadCustomizedResMap() (resmap.ResMap, error) {
 	if err != nil {
 		errs.Append(errors.Wrap(err, "loadResMapFromBasesAndResources"))
 	}
-	crdPathConfigs, err := crds.RegisterCRDs(kt.ldr, kt.kustomization.Crds)
+	crdPathConfigs, err := crds.RegisterCRDs(
+		transformerconfig.NewFactory(kt.ldr), kt.kustomization.Crds)
 	kt.tcfg = kt.tcfg.Merge(crdPathConfigs)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "RegisterCRDs"))

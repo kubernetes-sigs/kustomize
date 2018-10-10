@@ -41,8 +41,8 @@ var pvc = gvk.Gvk{Version: "v1", Kind: "PersistentVolumeClaim"}
 var crb = gvk.Gvk{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRoleBinding"}
 var sa = gvk.Gvk{Version: "v1", Kind: "ServiceAccount"}
 var ingress = gvk.Gvk{Kind: "Ingress"}
-var rf = resource.NewFactory(
-	k8sdeps.NewKunstructuredFactoryImpl())
+var rf = resource.NewFactory(k8sdeps.NewKunstructuredFactoryImpl())
+var defaultTransformerConfig = transformerconfig.NewFactory(nil).DefaultConfig()
 
 func TestLabelsRun(t *testing.T) {
 	m := resmap.ResMap{
@@ -419,7 +419,7 @@ func TestLabelsRun(t *testing.T) {
 	}
 	lt, err := NewLabelsMapTransformer(
 		map[string]string{"label-key1": "label-value1", "label-key2": "label-value2"},
-		transformerconfig.MakeDefaultTransformerConfig().CommonLabels)
+		defaultTransformerConfig.CommonLabels)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -556,7 +556,7 @@ func TestAnnotationsRun(t *testing.T) {
 	}
 	at, err := NewAnnotationsMapTransformer(
 		map[string]string{"anno-key1": "anno-value1", "anno-key2": "anno-value2"},
-		transformerconfig.MakeDefaultTransformerConfig().CommonAnnotations)
+		defaultTransformerConfig.CommonAnnotations)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
