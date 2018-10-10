@@ -177,7 +177,8 @@ func TestRegisterCRD(t *testing.T) {
 		NameReference: refpathconfigs,
 	}
 
-	pathconfig, _ := registerCRD(makeLoader(t), "/testpath/crd.json")
+	pathconfig, _ := RegisterCRDs(
+		transformerconfig.NewFactory(makeLoader(t)), []string{"/testpath/crd.json"})
 
 	if !reflect.DeepEqual(pathconfig, expected) {
 		t.Fatalf("expected\n %v\n but got\n %v\n", expected, pathconfig)
