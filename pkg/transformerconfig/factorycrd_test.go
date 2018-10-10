@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package crds
+package transformerconfig
 
 import (
 	"reflect"
@@ -23,7 +23,6 @@ import (
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
-	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 )
 
 const (
@@ -149,11 +148,11 @@ func makeLoader(t *testing.T) ifc.Loader {
 	return ldr
 }
 
-func TestRegisterCRD(t *testing.T) {
-	refpathconfigs := []transformerconfig.ReferencePathConfig{
+func TestLoadCRDs(t *testing.T) {
+	refpathconfigs := []ReferencePathConfig{
 		{
 			Gvk: gvk.Gvk{Kind: "Secret", Version: "v1"},
-			PathConfigs: []transformerconfig.PathConfig{
+			PathConfigs: []PathConfig{
 				{
 					CreateIfNotPresent: false,
 					Gvk:                gvk.Gvk{Kind: "MyKind"},
@@ -163,7 +162,7 @@ func TestRegisterCRD(t *testing.T) {
 		},
 		{
 			Gvk: gvk.Gvk{Kind: "Bee", Version: "v1beta1"},
-			PathConfigs: []transformerconfig.PathConfig{
+			PathConfigs: []PathConfig{
 				{
 					CreateIfNotPresent: false,
 					Gvk:                gvk.Gvk{Kind: "MyKind"},
@@ -173,12 +172,12 @@ func TestRegisterCRD(t *testing.T) {
 		},
 	}
 
-	expected := &transformerconfig.TransformerConfig{
+	expected := &TransformerConfig{
 		NameReference: refpathconfigs,
 	}
 
-	pathconfig, _ := RegisterCRDs(
-		transformerconfig.NewFactory(makeLoader(t)), []string{"/testpath/crd.json"})
+	pathconfig, _ := NewFactory(makeLoader(t)).LoadCRDs(
+		[]string{"/testpath/crd.json"})
 
 	if !reflect.DeepEqual(pathconfig, expected) {
 		t.Fatalf("expected\n %v\n but got\n %v\n", expected, pathconfig)
