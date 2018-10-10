@@ -29,9 +29,8 @@ func main() {
 	defer glog.Flush()
 
 	if err := commands.NewDefaultCommand(
-		k8sdeps.NewKunstructuredFactoryImpl(k8sdeps.NewKustDecoder()),
+		k8sdeps.NewKunstructuredFactoryImpl(),
 		patch.NewPatchTransformerFactory(),
-		k8sdeps.NewKustDecoder(),
 		k8sdeps.NewKustValidator(),
 		k8sdeps.NewKustHash()).Execute(); err != nil {
 		os.Exit(1)

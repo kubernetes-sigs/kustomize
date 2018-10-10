@@ -29,7 +29,7 @@ import (
 
 func TestNameReferenceRun(t *testing.T) {
 	rf := resource.NewFactory(
-		k8sdeps.NewKunstructuredFactoryImpl(k8sdeps.NewKustDecoder()))
+		k8sdeps.NewKunstructuredFactoryImpl())
 	m := resmap.ResMap{
 		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{
