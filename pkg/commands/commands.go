@@ -27,13 +27,13 @@ import (
 	"sigs.k8s.io/kustomize/pkg/commands/misc"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/ifc/patch"
+	"sigs.k8s.io/kustomize/pkg/ifc/transformer"
 )
 
 // NewDefaultCommand returns the default (aka root) command for kustomize command.
 func NewDefaultCommand(
-	kf ifc.KunstructuredFactory, ptf patch.TransformerFactory,
-	validator ifc.Validator, hash ifc.Hash) *cobra.Command {
+	kf ifc.KunstructuredFactory, ptf transformer.Factory,
+	validator ifc.Validator) *cobra.Command {
 	fsys := fs.MakeRealFS()
 	stdOut := os.Stdout
 
@@ -49,7 +49,7 @@ See https://sigs.k8s.io/kustomize
 
 	c.AddCommand(
 		// TODO: Make consistent API for newCmd* functions.
-		build.NewCmdBuild(stdOut, fsys, kf, ptf, hash),
+		build.NewCmdBuild(stdOut, fsys, kf, ptf),
 		edit.NewCmdEdit(fsys, validator, kf),
 		misc.NewCmdConfig(fsys),
 		misc.NewCmdVersion(stdOut),

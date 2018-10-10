@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/internal/k8sdeps"
-	"sigs.k8s.io/kustomize/internal/k8sdeps/patch"
+	"sigs.k8s.io/kustomize/internal/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/gvk"
@@ -95,9 +95,8 @@ func makeKustTarget(t *testing.T, l ifc.Loader) *KustTarget {
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
 	kt, err := NewKustTarget(
-		l, fakeFs, rf, patch.NewPatchTransformerFactory(),
-		transformerconfig.NewFactory(l).DefaultConfig(),
-		k8sdeps.NewKustHash())
+		l, fakeFs, rf, transformer.NewFactoryImpl(),
+		transformerconfig.NewFactory(l).DefaultConfig())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
