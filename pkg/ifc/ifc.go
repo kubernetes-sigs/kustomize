@@ -42,11 +42,6 @@ type Loader interface {
 	Cleanup() error
 }
 
-// Hash interface provides function to compute hash of objects
-type Hash interface {
-	Hash(m map[string]interface{}) (string, error)
-}
-
 // Kunstructured allows manipulation of k8s objects
 // that do not have Golang structs.
 type Kunstructured interface {
