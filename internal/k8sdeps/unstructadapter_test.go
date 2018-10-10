@@ -21,7 +21,7 @@ import (
 )
 
 func TestGetFieldValue(t *testing.T) {
-	factory := NewKunstructuredFactoryImpl(NewKustDecoder())
+	factory := NewKunstructuredFactoryImpl()
 	kunstructured := factory.FromMap(map[string]interface{}{
 		"Kind": "Service",
 		"metadata": map[string]interface{}{

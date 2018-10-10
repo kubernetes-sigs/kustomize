@@ -17,8 +17,11 @@ limitations under the License.
 package k8sdeps
 
 import (
+	"bytes"
 	"io"
+
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/kustomize/internal/k8sdeps/configmapandsecret"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
@@ -27,7 +30,6 @@ import (
 
 // KunstructurerFactoryImpl hides construction using apimachinery types.
 type KunstructurerFactoryImpl struct {
-	decoder    ifc.Decoder
 	cmfactory  *configmapandsecret.ConfigMapFactory
 	secfactory *configmapandsecret.SecretFactory
 }
@@ -35,19 +37,19 @@ type KunstructurerFactoryImpl struct {
 var _ ifc.KunstructuredFactory = &KunstructurerFactoryImpl{}
 
 // NewKunstructuredFactoryImpl returns a factory.
-func NewKunstructuredFactoryImpl(d ifc.Decoder) ifc.KunstructuredFactory {
-	return &KunstructurerFactoryImpl{decoder: d}
+func NewKunstructuredFactoryImpl() ifc.KunstructuredFactory {
+	return &KunstructurerFactoryImpl{}
 }
 
 // SliceFromBytes returns a slice of Kunstructured.
 func (kf *KunstructurerFactoryImpl) SliceFromBytes(
 	in []byte) ([]ifc.Kunstructured, error) {
-	kf.decoder.SetInput(in)
+	decoder := yaml.NewYAMLOrJSONDecoder(bytes.NewReader(in), 1024)
 	var result []ifc.Kunstructured
 	var err error
 	for err == nil || isEmptyYamlError(err) {
 		var out unstructured.Unstructured
-		err = kf.decoder.Decode(&out)
+		err = decoder.Decode(&out)
 		if err == nil {
 			result = append(result, &UnstructAdapter{Unstructured: out})
 		}
