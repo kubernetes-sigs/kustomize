@@ -14,27 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package transformers
+package hash
 
 import (
 	"fmt"
 
-	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/transformers"
 )
 
 // nameHashTransformer contains the prefix and the path config for each field that
 // the name prefix will be applied.
-type nameHashTransformer struct {
-	hash ifc.Hash
-}
+type nameHashTransformer struct{}
 
-var _ Transformer = &nameHashTransformer{}
+var _ transformers.Transformer = &nameHashTransformer{}
 
 // NewNameHashTransformer construct a nameHashTransformer.
-func NewNameHashTransformer(h ifc.Hash) Transformer {
-	return &nameHashTransformer{hash: h}
+func NewNameHashTransformer() transformers.Transformer {
+	return &nameHashTransformer{}
 }
 
 // Transform appends hash to configmaps and secrets.
@@ -51,7 +49,7 @@ func (o *nameHashTransformer) Transform(m resmap.ResMap) error {
 }
 
 func (o *nameHashTransformer) appendHash(res *resource.Resource) error {
-	h, err := o.hash.Hash(res.Map())
+	h, err := NewKustHash().Hash(res.Map())
 	if err != nil {
 		return err
 	}

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package transformers
+package hash
 
 import (
 	"reflect"
@@ -152,7 +152,7 @@ func TestNameHashTransformer(t *testing.T) {
 			}).SetBehavior(ifc.BehaviorCreate),
 	}
 
-	tran := NewNameHashTransformer(k8sdeps.NewKustHash())
+	tran := NewNameHashTransformer()
 	tran.Transform(objs)
 
 	if !reflect.DeepEqual(objs, expected) {

@@ -29,7 +29,7 @@ import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
-	"sigs.k8s.io/kustomize/pkg/ifc/patch"
+	"sigs.k8s.io/kustomize/pkg/ifc/transformer"
 	interror "sigs.k8s.io/kustomize/pkg/internal/error"
 	patchtransformer "sigs.k8s.io/kustomize/pkg/patch/transformer"
 	"sigs.k8s.io/kustomize/pkg/resmap"
@@ -42,21 +42,19 @@ import (
 // KustTarget encapsulates the entirety of a kustomization build.
 type KustTarget struct {
 	kustomization *types.Kustomization
-	hash          ifc.Hash
 	ldr           ifc.Loader
 	fSys          fs.FileSystem
 	rf            *resmap.Factory
 	tcfg          *transformerconfig.TransformerConfig
-	ptf           patch.TransformerFactory
+	ptf           transformer.Factory
 }
 
 // NewKustTarget returns a new instance of KustTarget primed with a Loader.
 func NewKustTarget(
 	ldr ifc.Loader, fSys fs.FileSystem,
 	rf *resmap.Factory,
-	ptf patch.TransformerFactory,
-	tcfg *transformerconfig.TransformerConfig,
-	h ifc.Hash) (*KustTarget, error) {
+	ptf transformer.Factory,
+	tcfg *transformerconfig.TransformerConfig) (*KustTarget, error) {
 	content, err := ldr.Load(constants.KustomizationFileName)
 	if err != nil {
 		return nil, err
@@ -74,7 +72,6 @@ func NewKustTarget(
 		fSys:          fSys,
 		rf:            rf,
 		tcfg:          tcfg,
-		hash:          h,
 		ptf:           ptf,
 	}, nil
 }
@@ -102,7 +99,7 @@ func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 
 // resolveRefsToGeneratedResources fixes all name references.
 func (kt *KustTarget) resolveRefsToGeneratedResources(m resmap.ResMap) (resmap.ResMap, error) {
-	err := transformers.NewNameHashTransformer(kt.hash).Transform(m)
+	err := kt.ptf.MakeHashTransformer().Transform(m)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +222,7 @@ func (kt *KustTarget) loadCustomizedBases() (resmap.ResMap, *interror.Kustomizat
 			continue
 		}
 		target, err := NewKustTarget(
-			ldr, kt.fSys, kt.rf, kt.ptf, kt.tcfg, kt.hash)
+			ldr, kt.fSys, kt.rf, kt.ptf, kt.tcfg)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "couldn't make target for "+path))
 			continue
@@ -255,7 +252,7 @@ func (kt *KustTarget) loadBasesAsFlatList() ([]*KustTarget, error) {
 			continue
 		}
 		target, err := NewKustTarget(
-			ldr, kt.fSys, kt.rf, kt.ptf, kt.tcfg, kt.hash)
+			ldr, kt.fSys, kt.rf, kt.ptf, kt.tcfg)
 		if err != nil {
 			errs.Append(err)
 			continue
