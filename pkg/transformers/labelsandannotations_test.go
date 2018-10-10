@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
-	"sigs.k8s.io/kustomize/pkg/transformerconfig"
+	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
 
 var service = gvk.Gvk{Version: "v1", Kind: "Service"}
@@ -42,7 +42,7 @@ var crb = gvk.Gvk{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "Clus
 var sa = gvk.Gvk{Version: "v1", Kind: "ServiceAccount"}
 var ingress = gvk.Gvk{Kind: "Ingress"}
 var rf = resource.NewFactory(k8sdeps.NewKunstructuredFactoryImpl())
-var defaultTransformerConfig = transformerconfig.NewFactory(nil).DefaultConfig()
+var defaultTransformerConfig = config.NewFactory(nil).DefaultConfig()
 
 func TestLabelsRun(t *testing.T) {
 	m := resmap.ResMap{
