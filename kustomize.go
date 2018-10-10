@@ -21,7 +21,7 @@ import (
 
 	"github.com/golang/glog"
 	"sigs.k8s.io/kustomize/internal/k8sdeps"
-	"sigs.k8s.io/kustomize/internal/k8sdeps/patch"
+	"sigs.k8s.io/kustomize/internal/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/pkg/commands"
 )
 
@@ -30,9 +30,8 @@ func main() {
 
 	if err := commands.NewDefaultCommand(
 		k8sdeps.NewKunstructuredFactoryImpl(),
-		patch.NewPatchTransformerFactory(),
-		k8sdeps.NewKustValidator(),
-		k8sdeps.NewKustHash()).Execute(); err != nil {
+		transformer.NewFactoryImpl(),
+		k8sdeps.NewKustValidator()).Execute(); err != nil {
 		os.Exit(1)
 	}
 	os.Exit(0)
