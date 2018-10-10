@@ -14,8 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package crds read in files for CRD schemas and parse annotations from it
-package crds
+package transformerconfig
 
 import (
 	"encoding/json"
@@ -24,15 +23,13 @@ import (
 	"github.com/ghodss/yaml"
 	"k8s.io/kube-openapi/pkg/common"
 	"sigs.k8s.io/kustomize/pkg/gvk"
-	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 )
 
-// RegisterCRDs parse CRD schemas from paths and update various pathConfigs
-func RegisterCRDs(
-	tf *transformerconfig.Factory, paths []string) (*transformerconfig.TransformerConfig, error) {
+// LoadCRDs parse CRD schemas from paths into a TransformerConfig
+func (tf *Factory) LoadCRDs(paths []string) (*TransformerConfig, error) {
 	pathConfigs := tf.EmptyConfig()
 	for _, path := range paths {
-		pathConfig, err := registerCRD(tf, path)
+		pathConfig, err := tf.loadCRD(path)
 		if err != nil {
 			return nil, err
 		}
@@ -41,10 +38,9 @@ func RegisterCRDs(
 	return pathConfigs, nil
 }
 
-// register CRD from one path
-func registerCRD(tf *transformerconfig.Factory, path string) (*transformerconfig.TransformerConfig, error) {
+func (tf *Factory) loadCRD(path string) (*TransformerConfig, error) {
 	result := tf.EmptyConfig()
-	content, err := tf.Loader().Load(path)
+	content, err := tf.loader().Load(path)
 	if err != nil {
 		return result, err
 	}
@@ -95,7 +91,7 @@ func getCRDs(types map[string]common.OpenAPIDefinition) map[string]gvk.Gvk {
 // getCRDPathConfig gets pathConfigs for one CRD recursively
 func getCRDPathConfig(
 	types map[string]common.OpenAPIDefinition, atype string, crd string, in gvk.Gvk,
-	path []string, configs *transformerconfig.TransformerConfig) error {
+	path []string, configs *TransformerConfig) error {
 	if _, ok := types[crd]; !ok {
 		return nil
 	}
@@ -104,7 +100,7 @@ func getCRDPathConfig(
 		_, annotate := property.Extensions.GetString(Annotation)
 		if annotate {
 			configs.AddAnnotationPathConfig(
-				transformerconfig.PathConfig{
+				PathConfig{
 					CreateIfNotPresent: false,
 					Gvk:                in,
 					Path:               strings.Join(append(path, propname), "/"),
@@ -114,7 +110,7 @@ func getCRDPathConfig(
 		_, label := property.Extensions.GetString(LabelSelector)
 		if label {
 			configs.AddLabelPathConfig(
-				transformerconfig.PathConfig{
+				PathConfig{
 					CreateIfNotPresent: false,
 					Gvk:                in,
 					Path:               strings.Join(append(path, propname), "/"),
@@ -124,7 +120,7 @@ func getCRDPathConfig(
 		_, identity := property.Extensions.GetString(Identity)
 		if identity {
 			configs.AddPrefixPathConfig(
-				transformerconfig.PathConfig{
+				PathConfig{
 					CreateIfNotPresent: false,
 					Gvk:                in,
 					Path:               strings.Join(append(path, propname), "/"),
@@ -139,9 +135,9 @@ func getCRDPathConfig(
 				if !ok {
 					nameKey = "name"
 				}
-				configs.AddNamereferencePathConfig(transformerconfig.ReferencePathConfig{
+				configs.AddNamereferencePathConfig(ReferencePathConfig{
 					Gvk: gvk.Gvk{Kind: kind, Version: version},
-					PathConfigs: []transformerconfig.PathConfig{
+					PathConfigs: []PathConfig{
 						{
 							CreateIfNotPresent: false,
 							Gvk:                in,

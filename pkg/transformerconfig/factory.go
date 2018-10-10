@@ -26,18 +26,18 @@ import (
 
 // Factory makes instances of TransformerConfig.
 type Factory struct {
-	loader ifc.Loader
+	ldr ifc.Loader
 }
 
 func NewFactory(l ifc.Loader) *Factory {
-	return &Factory{loader: l}
+	return &Factory{ldr: l}
 }
 
-func (tf *Factory) Loader() ifc.Loader {
-	if tf.loader.(ifc.Loader) == nil {
+func (tf *Factory) loader() ifc.Loader {
+	if tf.ldr.(ifc.Loader) == nil {
 		log.Fatal("no loader")
 	}
-	return tf.loader
+	return tf.ldr
 }
 
 // FromFiles returns a TranformerConfig object from a list of files
@@ -45,7 +45,7 @@ func (tf *Factory) FromFiles(
 	paths []string) (*TransformerConfig, error) {
 	result := &TransformerConfig{}
 	for _, path := range paths {
-		data, err := tf.Loader().Load(path)
+		data, err := tf.loader().Load(path)
 		if err != nil {
 			return nil, err
 		}
