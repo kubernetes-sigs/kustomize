@@ -28,7 +28,6 @@ import (
 	"github.com/golang/glog"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/pkg/constants"
-	"sigs.k8s.io/kustomize/pkg/crds"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc/patch"
 	interror "sigs.k8s.io/kustomize/pkg/internal/error"
@@ -136,11 +135,11 @@ func (kt *KustTarget) loadCustomizedResMap() (resmap.ResMap, error) {
 	if err != nil {
 		errs.Append(errors.Wrap(err, "loadResMapFromBasesAndResources"))
 	}
-	crdPathConfigs, err := crds.RegisterCRDs(
-		transformerconfig.NewFactory(kt.ldr), kt.kustomization.Crds)
+	crdPathConfigs, err := transformerconfig.
+		NewFactory(kt.ldr).LoadCRDs(kt.kustomization.Crds)
 	kt.tcfg = kt.tcfg.Merge(crdPathConfigs)
 	if err != nil {
-		errs.Append(errors.Wrap(err, "RegisterCRDs"))
+		errs.Append(errors.Wrap(err, "LoadCRDs"))
 	}
 	resMap, err := kt.generateConfigMapsAndSecrets(errs)
 	if err != nil {
