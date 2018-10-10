@@ -23,19 +23,19 @@ import (
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
-	"sigs.k8s.io/kustomize/pkg/transformerconfig"
+	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
 
 // nameReferenceTransformer contains the referencing info between 2 GroupVersionKinds
 type nameReferenceTransformer struct {
-	pathConfigs []transformerconfig.ReferencePathConfig
+	pathConfigs []config.ReferencePathConfig
 }
 
 var _ Transformer = &nameReferenceTransformer{}
 
 // NewNameReferenceTransformer constructs a nameReferenceTransformer
 // with a given Reference PathConfig slice
-func NewNameReferenceTransformer(pc []transformerconfig.ReferencePathConfig) (Transformer, error) {
+func NewNameReferenceTransformer(pc []config.ReferencePathConfig) (Transformer, error) {
 	if pc == nil {
 		return nil, errors.New("pathConfigs is not expected to be nil")
 	}

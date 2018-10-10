@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package transformerconfig provides the functions to load default or user provided configurations
+// Package config provides the functions to load default or user provided configurations
 // for different transformers
-package transformerconfig
+package config
 
 import (
 	"sort"
