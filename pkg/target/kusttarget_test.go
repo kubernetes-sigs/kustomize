@@ -89,7 +89,7 @@ metadata:
 )
 
 var rf = resmap.NewFactory(resource.NewFactory(
-	k8sdeps.NewKunstructuredFactoryImpl(k8sdeps.NewKustDecoder())))
+	k8sdeps.NewKunstructuredFactoryImpl()))
 
 func makeLoader1(t *testing.T) ifc.Loader {
 	ldr := loadertest.NewFakeLoader("/testpath")
@@ -212,7 +212,7 @@ func TestResources1(t *testing.T) {
 	kt, err := NewKustTarget(
 		l, fakeFs, rf, patch.NewPatchTransformerFactory(),
 		transformerconfig.MakeDefaultTransformerConfig(),
-		k8sdeps.NewKustDecoder(), k8sdeps.NewKustHash())
+		k8sdeps.NewKustHash())
 	if err != nil {
 		t.Fatalf("unexpected construction error %v", err)
 	}
@@ -238,7 +238,7 @@ func TestResourceNotFound(t *testing.T) {
 	kt, err := NewKustTarget(
 		l, fakeFs, rf, patch.NewPatchTransformerFactory(),
 		transformerconfig.MakeDefaultTransformerConfig(),
-		k8sdeps.NewKustDecoder(), k8sdeps.NewKustHash())
+		k8sdeps.NewKustHash())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}
@@ -262,7 +262,7 @@ func TestSecretTimeout(t *testing.T) {
 	kt, err := NewKustTarget(
 		l, fakeFs, rf, patch.NewPatchTransformerFactory(),
 		transformerconfig.MakeDefaultTransformerConfig(),
-		k8sdeps.NewKustDecoder(), k8sdeps.NewKustHash())
+		k8sdeps.NewKustHash())
 	if err != nil {
 		t.Fatalf("Unexpected construction error %v", err)
 	}

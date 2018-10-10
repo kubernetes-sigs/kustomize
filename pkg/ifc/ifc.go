@@ -23,14 +23,6 @@ import (
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
-// Decoder unmarshalls byte input into an object.
-type Decoder interface {
-	// SetInput accepts new input.
-	SetInput([]byte)
-	// Decode yields the next object from the input, else io.EOF
-	Decode(interface{}) error
-}
-
 // Validator provides functions to validate annotations and labels
 type Validator interface {
 	MakeAnnotationValidator() func(map[string]string) error

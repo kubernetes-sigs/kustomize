@@ -30,7 +30,7 @@ import (
 
 func TestImageTagTransformer(t *testing.T) {
 	var rf = resource.NewFactory(
-		k8sdeps.NewKunstructuredFactoryImpl(k8sdeps.NewKustDecoder()))
+		k8sdeps.NewKunstructuredFactoryImpl())
 
 	m := resmap.ResMap{
 		resid.NewResId(deploy, "deploy1"): rf.FromMap(
