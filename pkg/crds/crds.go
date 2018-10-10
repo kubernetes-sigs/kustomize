@@ -24,15 +24,15 @@ import (
 	"github.com/ghodss/yaml"
 	"k8s.io/kube-openapi/pkg/common"
 	"sigs.k8s.io/kustomize/pkg/gvk"
-	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 )
 
 // RegisterCRDs parse CRD schemas from paths and update various pathConfigs
-func RegisterCRDs(loader ifc.Loader, paths []string) (*transformerconfig.TransformerConfig, error) {
-	pathConfigs := transformerconfig.MakeEmptyTransformerConfig()
+func RegisterCRDs(
+	tf *transformerconfig.Factory, paths []string) (*transformerconfig.TransformerConfig, error) {
+	pathConfigs := tf.EmptyConfig()
 	for _, path := range paths {
-		pathConfig, err := registerCRD(loader, path)
+		pathConfig, err := registerCRD(tf, path)
 		if err != nil {
 			return nil, err
 		}
@@ -42,9 +42,9 @@ func RegisterCRDs(loader ifc.Loader, paths []string) (*transformerconfig.Transfo
 }
 
 // register CRD from one path
-func registerCRD(loader ifc.Loader, path string) (*transformerconfig.TransformerConfig, error) {
-	result := transformerconfig.MakeEmptyTransformerConfig()
-	content, err := loader.Load(path)
+func registerCRD(tf *transformerconfig.Factory, path string) (*transformerconfig.TransformerConfig, error) {
+	result := tf.EmptyConfig()
+	content, err := tf.Loader().Load(path)
 	if err != nil {
 		return result, err
 	}
@@ -61,7 +61,7 @@ func registerCRD(loader ifc.Loader, path string) (*transformerconfig.Transformer
 
 	crds := getCRDs(types)
 	for crd, k := range crds {
-		crdPathConfigs := transformerconfig.MakeEmptyTransformerConfig()
+		crdPathConfigs := tf.EmptyConfig()
 		err = getCRDPathConfig(
 			types, crd, crd, k, []string{}, crdPathConfigs)
 		if err != nil {

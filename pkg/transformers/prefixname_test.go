@@ -24,7 +24,6 @@ import (
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
-	"sigs.k8s.io/kustomize/pkg/transformerconfig"
 )
 
 func TestPrefixNameRun(t *testing.T) {
@@ -84,7 +83,7 @@ func TestPrefixNameRun(t *testing.T) {
 	}
 
 	npt, err := NewNamePrefixTransformer(
-		"someprefix-", transformerconfig.MakeDefaultTransformerConfig().NamePrefix)
+		"someprefix-", defaultTransformerConfig.NamePrefix)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
