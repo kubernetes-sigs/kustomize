@@ -14,14 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package transformerconfig
+package config
 
 import (
 	"log"
 
 	"github.com/ghodss/yaml"
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/transformerconfig/defaultconfig"
+	"sigs.k8s.io/kustomize/pkg/transformers/config/defaultconfig"
 )
 
 // Factory makes instances of TransformerConfig.

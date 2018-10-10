@@ -21,30 +21,30 @@ import (
 	"fmt"
 
 	"sigs.k8s.io/kustomize/pkg/resmap"
-	"sigs.k8s.io/kustomize/pkg/transformerconfig"
+	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
 
 // mapTransformer contains a map string->string and path configs
 // The map will be applied to the fields specified in path configs.
 type mapTransformer struct {
 	m           map[string]string
-	pathConfigs []transformerconfig.PathConfig
+	pathConfigs []config.PathConfig
 }
 
 var _ Transformer = &mapTransformer{}
 
 // NewLabelsMapTransformer construct a mapTransformer with a given pathConfig slice
-func NewLabelsMapTransformer(m map[string]string, p []transformerconfig.PathConfig) (Transformer, error) {
+func NewLabelsMapTransformer(m map[string]string, p []config.PathConfig) (Transformer, error) {
 	return NewMapTransformer(p, m)
 }
 
 // NewAnnotationsMapTransformer construct a mapTransformer with a given pathConfig slice
-func NewAnnotationsMapTransformer(m map[string]string, p []transformerconfig.PathConfig) (Transformer, error) {
+func NewAnnotationsMapTransformer(m map[string]string, p []config.PathConfig) (Transformer, error) {
 	return NewMapTransformer(p, m)
 }
 
 // NewMapTransformer construct a mapTransformer.
-func NewMapTransformer(pc []transformerconfig.PathConfig, m map[string]string) (Transformer, error) {
+func NewMapTransformer(pc []config.PathConfig, m map[string]string) (Transformer, error) {
 	if m == nil {
 		return NewNoOpTransformer(), nil
 	}
