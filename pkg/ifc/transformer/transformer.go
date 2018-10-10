@@ -15,14 +15,15 @@ limitations under the License.
 */
 
 // Package patch holds miscellaneous interfaces used by kustomize.
-package patch
+package transformer
 
 import (
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
 )
 
-// TransformerFactory makes patch transformer.
-type TransformerFactory interface {
+// Factory makes transformers
+type Factory interface {
 	MakePatchTransformer(slice []*resource.Resource, rf *resource.Factory) (transformers.Transformer, error)
+	MakeHashTransformer() transformers.Transformer
 }
