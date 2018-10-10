@@ -1,6 +1,7 @@
 # Glossary
 
 [DAM]: #declarative-application-management
+[Declarative Application Management]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md
 [JSON]: https://www.json.org/
 [JSONPatch]: https://tools.ietf.org/html/rfc6902
 [Resource]: #resource
@@ -98,20 +99,22 @@ periodically capturing someone else's upgrades to the
 
 ## declarative application management
 
-_Declarative Application Management_ (DAM) is a [set of
-ideas](https://goo.gl/T66ZcD) aiming to ease management
-of k8s clusters.
+Kustomize aspires to support [Declarative Application Management],
+a set of best practices around managing k8s clusters.
 
- * Works with any configuration, be it bespoke,
+In brief, kustomize should
+
+ * Work with any configuration, be it bespoke,
    off-the-shelf, stateless, stateful, etc.
- * Supports common customizations, and creation of
-   [variants] (dev vs. staging vs. production).
- * Exposes and teaches native k8s APIs, rather than
-   hiding them.
- * No friction integration with version control to
+ * Support common customizations, and creation of
+   [variants] (e.g. _development_ vs.
+   _staging_ vs. _production_).
+ * Expose and teach native k8s APIs, rather than
+   hide them.
+ * Add no friction to version control integration to
    support reviews and audit trails.
- * Composable with other tools in a unix sense.
- * Eschews crossing the line into templating, domain
+ * Compose with other tools in a unix sense.
+ * Eschew crossing the line into templating, domain
    specific languages, etc., frustrating the other
    goals.
 
