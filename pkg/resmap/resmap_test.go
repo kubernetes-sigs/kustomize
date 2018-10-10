@@ -30,7 +30,7 @@ import (
 var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
 var statefulset = gvk.Gvk{Group: "apps", Version: "v1", Kind: "StatefulSet"}
 var rf = resource.NewFactory(
-	k8sdeps.NewKunstructuredFactoryImpl(k8sdeps.NewKustDecoder()))
+	k8sdeps.NewKunstructuredFactoryImpl())
 var rmF = NewFactory(rf)
 
 func TestEncodeAsYaml(t *testing.T) {

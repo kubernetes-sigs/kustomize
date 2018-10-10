@@ -23,7 +23,7 @@ import (
 )
 
 var factory = NewFactory(
-	k8sdeps.NewKunstructuredFactoryImpl(k8sdeps.NewKustDecoder()))
+	k8sdeps.NewKunstructuredFactoryImpl())
 
 var testConfigMap = factory.FromMap(
 	map[string]interface{}{

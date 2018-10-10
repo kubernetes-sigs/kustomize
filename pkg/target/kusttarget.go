@@ -43,7 +43,6 @@ import (
 // KustTarget encapsulates the entirety of a kustomization build.
 type KustTarget struct {
 	kustomization *types.Kustomization
-	decoder       ifc.Decoder
 	hash          ifc.Hash
 	ldr           ifc.Loader
 	fSys          fs.FileSystem
@@ -58,7 +57,7 @@ func NewKustTarget(
 	rf *resmap.Factory,
 	ptf patch.TransformerFactory,
 	tcfg *transformerconfig.TransformerConfig,
-	d ifc.Decoder, h ifc.Hash) (*KustTarget, error) {
+	h ifc.Hash) (*KustTarget, error) {
 	content, err := ldr.Load(constants.KustomizationFileName)
 	if err != nil {
 		return nil, err
@@ -76,7 +75,6 @@ func NewKustTarget(
 		fSys:          fSys,
 		rf:            rf,
 		tcfg:          tcfg,
-		decoder:       d,
 		hash:          h,
 		ptf:           ptf,
 	}, nil
@@ -227,7 +225,7 @@ func (kt *KustTarget) loadCustomizedBases() (resmap.ResMap, *interror.Kustomizat
 			continue
 		}
 		target, err := NewKustTarget(
-			ldr, kt.fSys, kt.rf, kt.ptf, kt.tcfg, kt.decoder, kt.hash)
+			ldr, kt.fSys, kt.rf, kt.ptf, kt.tcfg, kt.hash)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "couldn't make target for "+path))
 			continue
@@ -257,7 +255,7 @@ func (kt *KustTarget) loadBasesAsFlatList() ([]*KustTarget, error) {
 			continue
 		}
 		target, err := NewKustTarget(
-			ldr, kt.fSys, kt.rf, kt.ptf, kt.tcfg, kt.decoder, kt.hash)
+			ldr, kt.fSys, kt.rf, kt.ptf, kt.tcfg, kt.hash)
 		if err != nil {
 			errs.Append(err)
 			continue
