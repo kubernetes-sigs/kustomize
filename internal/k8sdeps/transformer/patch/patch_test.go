@@ -21,7 +21,7 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/internal/k8sdeps"
+	"sigs.k8s.io/kustomize/internal/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
@@ -29,7 +29,7 @@ import (
 )
 
 var rf = resource.NewFactory(
-	k8sdeps.NewKunstructuredFactoryImpl())
+	kunstruct.NewKunstructuredFactoryImpl())
 var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
 var foo = gvk.Gvk{Group: "example.com", Version: "v1", Kind: "Foo"}
 

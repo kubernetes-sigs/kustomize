@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/internal/k8sdeps"
+	"sigs.k8s.io/kustomize/internal/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
@@ -30,7 +30,7 @@ import (
 
 func TestImageTagTransformer(t *testing.T) {
 	var rf = resource.NewFactory(
-		k8sdeps.NewKunstructuredFactoryImpl())
+		kunstruct.NewKunstructuredFactoryImpl())
 
 	m := resmap.ResMap{
 		resid.NewResId(deploy, "deploy1"): rf.FromMap(
