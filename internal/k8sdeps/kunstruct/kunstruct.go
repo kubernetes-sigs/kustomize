@@ -14,7 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package k8sdeps
+// Package kunstruct provides unstructured from api machinery and factory for creating unstructured
+package kunstruct
 
 import (
 	"encoding/json"
