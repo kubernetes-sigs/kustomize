@@ -73,8 +73,8 @@ configMapGenerator:
   - more.properties
 - name: myJavaServerEnvVars
   literals:	
-    - JAVA_HOME=/opt/java/jdk
-    - JAVA_TOOL_OPTIONS=-agentlib:hprof
+  - JAVA_HOME=/opt/java/jdk
+  - JAVA_TOOL_OPTIONS=-agentlib:hprof
 
 # Each entry in this list results in the creation of
 # one Secret resource (it's a generator of n secrets).
