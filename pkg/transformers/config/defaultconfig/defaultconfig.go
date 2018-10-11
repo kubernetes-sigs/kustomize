@@ -22,27 +22,28 @@ import (
 	"bytes"
 )
 
-// GetDefaultPathConfigs returns the default pathConfigs data
-func GetDefaultPathConfigs() []byte {
+// GetDefaultFieldSpecs returns default fieldSpecs.
+func GetDefaultFieldSpecs() []byte {
 	configData := [][]byte{
-		[]byte(namePrefixPathConfigs),
-		[]byte(commonLabelPathConfigs),
-		[]byte(commonAnnotationPathConfigs),
-		[]byte(namespacePathConfigs),
-		[]byte(varReferencePathConfigs),
-		[]byte(nameReferencePathConfigs),
+		[]byte(namePrefixFieldSpecs),
+		[]byte(commonLabelFieldSpecs),
+		[]byte(commonAnnotationFieldSpecs),
+		[]byte(namespaceFieldSpecs),
+		[]byte(varReferenceFieldSpecs),
+		[]byte(nameReferenceFieldSpecs),
 	}
 	return bytes.Join(configData, []byte("\n"))
 }
 
-// GetDefaultPathConfigStrings returns the default pathConfigs in string format
-func GetDefaultPathConfigStrings() map[string]string {
+// GetDefaultFieldSpecsAsMap returns default fieldSpecs
+// as a string->string map.
+func GetDefaultFieldSpecsAsMap() map[string]string {
 	result := make(map[string]string)
-	result["nameprefix"] = namePrefixPathConfigs
-	result["commonlabels"] = commonLabelPathConfigs
-	result["commonannotations"] = commonAnnotationPathConfigs
-	result["namespace"] = namespacePathConfigs
-	result["varreference"] = varReferencePathConfigs
-	result["namereference"] = namespacePathConfigs
+	result["nameprefix"] = namePrefixFieldSpecs
+	result["commonlabels"] = commonLabelFieldSpecs
+	result["commonannotations"] = commonAnnotationFieldSpecs
+	result["namespace"] = namespaceFieldSpecs
+	result["varreference"] = varReferenceFieldSpecs
+	result["namereference"] = nameReferenceFieldSpecs
 	return result
 }

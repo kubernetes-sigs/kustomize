@@ -25,6 +25,12 @@ import (
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 )
 
+// This defines two CRD's:  Bee and MyKind.
+//
+// Bee is boring, it's spec has no dependencies.
+//
+// MyKind, however, has a spec that contains
+// a Bee and a (k8s native) Secret.
 const (
 	crdContent = `
 {
@@ -149,10 +155,10 @@ func makeLoader(t *testing.T) ifc.Loader {
 }
 
 func TestLoadCRDs(t *testing.T) {
-	refpathconfigs := []ReferencePathConfig{
+	nbrs := []NameBackReferences{
 		{
 			Gvk: gvk.Gvk{Kind: "Secret", Version: "v1"},
-			PathConfigs: []PathConfig{
+			FieldSpecs: []FieldSpec{
 				{
 					CreateIfNotPresent: false,
 					Gvk:                gvk.Gvk{Kind: "MyKind"},
@@ -162,7 +168,7 @@ func TestLoadCRDs(t *testing.T) {
 		},
 		{
 			Gvk: gvk.Gvk{Kind: "Bee", Version: "v1beta1"},
-			PathConfigs: []PathConfig{
+			FieldSpecs: []FieldSpec{
 				{
 					CreateIfNotPresent: false,
 					Gvk:                gvk.Gvk{Kind: "MyKind"},
@@ -172,14 +178,14 @@ func TestLoadCRDs(t *testing.T) {
 		},
 	}
 
-	expected := &TransformerConfig{
-		NameReference: refpathconfigs,
+	expectedTc := &TransformerConfig{
+		NameReference: nbrs,
 	}
 
-	pathconfig, _ := NewFactory(makeLoader(t)).LoadCRDs(
+	actualTc, _ := NewFactory(makeLoader(t)).LoadCRDs(
 		[]string{"/testpath/crd.json"})
 
-	if !reflect.DeepEqual(pathconfig, expected) {
-		t.Fatalf("expected\n %v\n but got\n %v\n", expected, pathconfig)
+	if !reflect.DeepEqual(actualTc, expectedTc) {
+		t.Fatalf("expected\n %v\n but got\n %v\n", expectedTc, actualTc)
 	}
 }

@@ -16,7 +16,7 @@ limitations under the License.
 
 package defaultconfig
 
-const commonLabelPathConfigs = `
+const commonLabelFieldSpecs = `
 commonLabels:
 - path: metadata/labels
   create: true

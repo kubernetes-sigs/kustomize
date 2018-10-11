@@ -27,15 +27,15 @@ import (
 
 // LoadCRDs parse CRD schemas from paths into a TransformerConfig
 func (tf *Factory) LoadCRDs(paths []string) (*TransformerConfig, error) {
-	pathConfigs := tf.EmptyConfig()
+	tc := tf.EmptyConfig()
 	for _, path := range paths {
-		pathConfig, err := tf.loadCRD(path)
+		otherTc, err := tf.loadCRD(path)
 		if err != nil {
 			return nil, err
 		}
-		pathConfigs = pathConfigs.Merge(pathConfig)
+		tc = tc.Merge(otherTc)
 	}
-	return pathConfigs, nil
+	return tc, nil
 }
 
 func (tf *Factory) loadCRD(path string) (*TransformerConfig, error) {
@@ -57,13 +57,13 @@ func (tf *Factory) loadCRD(path string) (*TransformerConfig, error) {
 
 	crds := getCRDs(types)
 	for crd, k := range crds {
-		crdPathConfigs := tf.EmptyConfig()
-		err = getCRDPathConfig(
-			types, crd, crd, k, []string{}, crdPathConfigs)
+		tc := tf.EmptyConfig()
+		err = loadCrdIntoConfig(
+			types, crd, crd, k, []string{}, tc)
 		if err != nil {
 			return result, err
 		}
-		result = result.Merge(crdPathConfigs)
+		result = result.Merge(tc)
 	}
 
 	return result, nil
@@ -88,10 +88,11 @@ func getCRDs(types map[string]common.OpenAPIDefinition) map[string]gvk.Gvk {
 	return crds
 }
 
-// getCRDPathConfig gets pathConfigs for one CRD recursively
-func getCRDPathConfig(
-	types map[string]common.OpenAPIDefinition, atype string, crd string, in gvk.Gvk,
-	path []string, configs *TransformerConfig) error {
+// loadCrdIntoConfig loads a CRD spec into a TransformerConfig
+func loadCrdIntoConfig(
+	types map[string]common.OpenAPIDefinition,
+	atype string, crd string, in gvk.Gvk,
+	path []string, config *TransformerConfig) error {
 	if _, ok := types[crd]; !ok {
 		return nil
 	}
@@ -99,8 +100,8 @@ func getCRDPathConfig(
 	for propname, property := range types[atype].Schema.SchemaProps.Properties {
 		_, annotate := property.Extensions.GetString(Annotation)
 		if annotate {
-			configs.AddAnnotationPathConfig(
-				PathConfig{
+			config.AddAnnotationFieldSpec(
+				FieldSpec{
 					CreateIfNotPresent: false,
 					Gvk:                in,
 					Path:               strings.Join(append(path, propname), "/"),
@@ -109,8 +110,8 @@ func getCRDPathConfig(
 		}
 		_, label := property.Extensions.GetString(LabelSelector)
 		if label {
-			configs.AddLabelPathConfig(
-				PathConfig{
+			config.AddLabelFieldSpec(
+				FieldSpec{
 					CreateIfNotPresent: false,
 					Gvk:                in,
 					Path:               strings.Join(append(path, propname), "/"),
@@ -119,8 +120,8 @@ func getCRDPathConfig(
 		}
 		_, identity := property.Extensions.GetString(Identity)
 		if identity {
-			configs.AddPrefixPathConfig(
-				PathConfig{
+			config.AddPrefixFieldSpec(
+				FieldSpec{
 					CreateIfNotPresent: false,
 					Gvk:                in,
 					Path:               strings.Join(append(path, propname), "/"),
@@ -135,9 +136,9 @@ func getCRDPathConfig(
 				if !ok {
 					nameKey = "name"
 				}
-				configs.AddNamereferencePathConfig(ReferencePathConfig{
+				config.AddNamereferenceFieldSpec(NameBackReferences{
 					Gvk: gvk.Gvk{Kind: kind, Version: version},
-					PathConfigs: []PathConfig{
+					FieldSpecs: []FieldSpec{
 						{
 							CreateIfNotPresent: false,
 							Gvk:                in,
@@ -149,7 +150,9 @@ func getCRDPathConfig(
 		}
 
 		if property.Ref.GetURL() != nil {
-			getCRDPathConfig(types, property.Ref.String(), crd, in, append(path, propname), configs)
+			loadCrdIntoConfig(
+				types, property.Ref.String(), crd, in,
+				append(path, propname), config)
 		}
 	}
 	return nil

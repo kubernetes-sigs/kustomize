@@ -24,34 +24,36 @@ import (
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
 
-// mapTransformer contains a map string->string and path configs
-// The map will be applied to the fields specified in path configs.
+// mapTransformer applies a string->string map to fieldSpecs.
 type mapTransformer struct {
-	m           map[string]string
-	pathConfigs []config.PathConfig
+	m          map[string]string
+	fieldSpecs []config.FieldSpec
 }
 
 var _ Transformer = &mapTransformer{}
 
-// NewLabelsMapTransformer construct a mapTransformer with a given pathConfig slice
-func NewLabelsMapTransformer(m map[string]string, p []config.PathConfig) (Transformer, error) {
-	return NewMapTransformer(p, m)
+// NewLabelsMapTransformer constructs a mapTransformer.
+func NewLabelsMapTransformer(
+	m map[string]string, fs []config.FieldSpec) (Transformer, error) {
+	return NewMapTransformer(fs, m)
 }
 
-// NewAnnotationsMapTransformer construct a mapTransformer with a given pathConfig slice
-func NewAnnotationsMapTransformer(m map[string]string, p []config.PathConfig) (Transformer, error) {
-	return NewMapTransformer(p, m)
+// NewAnnotationsMapTransformer construct a mapTransformer.
+func NewAnnotationsMapTransformer(
+	m map[string]string, fs []config.FieldSpec) (Transformer, error) {
+	return NewMapTransformer(fs, m)
 }
 
 // NewMapTransformer construct a mapTransformer.
-func NewMapTransformer(pc []config.PathConfig, m map[string]string) (Transformer, error) {
+func NewMapTransformer(
+	pc []config.FieldSpec, m map[string]string) (Transformer, error) {
 	if m == nil {
 		return NewNoOpTransformer(), nil
 	}
 	if pc == nil {
-		return nil, errors.New("pathConfigs is not expected to be nil")
+		return nil, errors.New("fieldSpecs is not expected to be nil")
 	}
-	return &mapTransformer{pathConfigs: pc, m: m}, nil
+	return &mapTransformer{fieldSpecs: pc, m: m}, nil
 }
 
 // Transform apply each <key, value> pair in the mapTransformer to the
@@ -59,7 +61,7 @@ func NewMapTransformer(pc []config.PathConfig, m map[string]string) (Transformer
 func (o *mapTransformer) Transform(m resmap.ResMap) error {
 	for id := range m {
 		objMap := m[id].Map()
-		for _, path := range o.pathConfigs {
+		for _, path := range o.fieldSpecs {
 			if !id.Gvk().IsSelected(&path.Gvk) {
 				continue
 			}

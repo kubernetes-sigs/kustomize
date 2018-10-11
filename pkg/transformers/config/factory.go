@@ -78,7 +78,7 @@ func (tf *Factory) EmptyConfig() *TransformerConfig {
 // This should never fail, hence the Fatal panic.
 func (tf *Factory) DefaultConfig() *TransformerConfig {
 	c, err := makeTransformerConfigFromBytes(
-		defaultconfig.GetDefaultPathConfigs())
+		defaultconfig.GetDefaultFieldSpecs())
 	if err != nil {
 		log.Fatalf("Unable to make default transformconfig: %v", err)
 	}
