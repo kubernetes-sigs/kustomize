@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/internal/k8sdeps"
+	"sigs.k8s.io/kustomize/internal/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
@@ -28,7 +28,7 @@ import (
 
 func TestNamespaceRun(t *testing.T) {
 	rf := resource.NewFactory(
-		k8sdeps.NewKunstructuredFactoryImpl())
+		kunstruct.NewKunstructuredFactoryImpl())
 	m := resmap.ResMap{
 		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{

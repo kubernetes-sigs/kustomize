@@ -19,11 +19,11 @@ package resource
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/internal/k8sdeps"
+	"sigs.k8s.io/kustomize/internal/k8sdeps/kunstruct"
 )
 
 var factory = NewFactory(
-	k8sdeps.NewKunstructuredFactoryImpl())
+	kunstruct.NewKunstructuredFactoryImpl())
 
 var testConfigMap = factory.FromMap(
 	map[string]interface{}{

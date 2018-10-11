@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/internal/k8sdeps"
+	"sigs.k8s.io/kustomize/internal/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
@@ -41,7 +41,7 @@ var pvc = gvk.Gvk{Version: "v1", Kind: "PersistentVolumeClaim"}
 var crb = gvk.Gvk{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRoleBinding"}
 var sa = gvk.Gvk{Version: "v1", Kind: "ServiceAccount"}
 var ingress = gvk.Gvk{Kind: "Ingress"}
-var rf = resource.NewFactory(k8sdeps.NewKunstructuredFactoryImpl())
+var rf = resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
 var defaultTransformerConfig = config.NewFactory(nil).DefaultConfig()
 
 func TestLabelsRun(t *testing.T) {
