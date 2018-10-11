@@ -20,19 +20,14 @@ import (
 	"os"
 
 	"github.com/golang/glog"
-	"sigs.k8s.io/kustomize/internal/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/internal/k8sdeps/transformer"
-	"sigs.k8s.io/kustomize/internal/k8sdeps/validator"
+	"sigs.k8s.io/kustomize/internal/k8sdeps"
 	"sigs.k8s.io/kustomize/pkg/commands"
 )
 
 func main() {
 	defer glog.Flush()
 
-	if err := commands.NewDefaultCommand(
-		kunstruct.NewKunstructuredFactoryImpl(),
-		transformer.NewFactoryImpl(),
-		validator.NewKustValidator()).Execute(); err != nil {
+	if err := commands.NewDefaultCommand(k8sdeps.NewFactory()).Execute(); err != nil {
 		os.Exit(1)
 	}
 	os.Exit(0)
