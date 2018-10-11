@@ -17,26 +17,26 @@ limitations under the License.
 package defaultconfig
 
 const (
-	nameReferencePathConfigs = `
+	nameReferenceFieldSpecs = `
 nameReference:
 - kind: Deployment
-  pathConfigs:
+  fieldSpecs:
   - path: spec/scaleTargetRef/name
     kind: HorizontalPodAutoscaler
 
 - kind: ReplicationController
-  pathConfigs:
+  fieldSpecs:
   - path: spec/scaleTargetRef/name
     kind: HorizontalPodAutoscaler
 
 - kind: ReplicaSet
-  pathConfigs:
+  fieldSpecs:
   - path: spec/scaleTargetRef/name
     kind: HorizontalPodAutoscaler
 
 - kind: ConfigMap
   version: v1
-  pathConfigs:
+  fieldSpecs:
   - path: spec/volumes/configMap/name
     version: v1
     kind: Pod
@@ -119,7 +119,7 @@ nameReference:
 
 - kind: Secret
   version: v1
-  pathConfigs:
+  fieldSpecs:
   - path: spec/volumes/secret/secretName
     version: v1
     kind: Pod
@@ -229,7 +229,7 @@ nameReference:
 
 - kind: Service
   version: v1
-  pathConfigs:
+  fieldSpecs:
   - path: spec/serviceName
     kind: StatefulSet
     group: apps
@@ -240,14 +240,14 @@ nameReference:
 
 - kind: Role
   group: rbac.authorization.k8s.io
-  pathConfigs:
+  fieldSpecs:
   - path: roleRef/name
     kind: RoleBinding
     group: rbac.authorization.k8s.io
 
 - kind: ClusterRole
   group: rbac.authorization.k8s.io
-  pathConfigs:
+  fieldSpecs:
   - path: roleRef/name
     kind: RoleBinding
     group: rbac.authorization.k8s.io
@@ -257,7 +257,7 @@ nameReference:
 
 - kind: ServiceAccount
   version: v1
-  pathConfigs:
+  fieldSpecs:
   - path: subjects/name
     kind: RoleBinding
     group: rbac.authorization.k8s.io
@@ -281,7 +281,7 @@ nameReference:
 
 - kind: PersistentVolumeClaim
   version: v1
-  pathConfigs:
+  fieldSpecs:
   - path: spec/volumes/persistentVolumeClaim/claimName
     kind: Pod
   - path: spec/template/spec/volumes/persistentVolumeClaim/claimName
@@ -299,7 +299,7 @@ nameReference:
 
 - kind: PersistentVolume
   version: v1
-  pathConfigs:
+  fieldSpecs:
   - path: spec/volumeName
     kind: PersistentVolumeClaim
 `

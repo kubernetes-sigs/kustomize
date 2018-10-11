@@ -26,36 +26,36 @@ import (
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
 
-// namePrefixTransformer contains the prefix and the path config for each field that
-// the name prefix will be applied.
+// namePrefixTransformer contains the prefix and the FieldSpecs
+// for each field needing a name prefix.
 type namePrefixTransformer struct {
-	prefix          string
-	pathConfigs     []config.PathConfig
-	skipPathConfigs []config.PathConfig
+	prefix           string
+	fieldSpecsToUse  []config.FieldSpec
+	fieldSpecsToSkip []config.FieldSpec
 }
 
 var _ Transformer = &namePrefixTransformer{}
 
-var skipNamePrefixPathConfigs = []config.PathConfig{
+var prefixFieldSpecsToSkip = []config.FieldSpec{
 	{
 		Gvk: gvk.Gvk{Kind: "CustomResourceDefinition"},
 	},
 }
 
-// deprecateNamePrefixPathConfig will be moved into skipNamePrefixPathConfigs in next release
-var deprecateNamePrefixPathConfig = config.PathConfig{
+// deprecateNamePrefixFieldSpec will be moved into prefixFieldSpecsToSkip in next release
+var deprecateNamePrefixFieldSpec = config.FieldSpec{
 	Gvk: gvk.Gvk{Kind: "Namespace"},
 }
 
 // NewNamePrefixTransformer construct a namePrefixTransformer.
-func NewNamePrefixTransformer(np string, pc []config.PathConfig) (Transformer, error) {
+func NewNamePrefixTransformer(np string, pc []config.FieldSpec) (Transformer, error) {
 	if len(np) == 0 {
 		return NewNoOpTransformer(), nil
 	}
 	if pc == nil {
-		return nil, errors.New("pathConfigs is not expected to be nil")
+		return nil, errors.New("fieldSpecs is not expected to be nil")
 	}
-	return &namePrefixTransformer{pathConfigs: pc, prefix: np, skipPathConfigs: skipNamePrefixPathConfigs}, nil
+	return &namePrefixTransformer{fieldSpecsToUse: pc, prefix: np, fieldSpecsToSkip: prefixFieldSpecsToSkip}, nil
 }
 
 // Transform prepends the name prefix.
@@ -64,7 +64,7 @@ func (o *namePrefixTransformer) Transform(m resmap.ResMap) error {
 
 	for id := range m {
 		found := false
-		for _, path := range o.skipPathConfigs {
+		for _, path := range o.fieldSpecsToSkip {
 			if id.Gvk().IsSelected(&path.Gvk) {
 				found = true
 				break
@@ -77,11 +77,11 @@ func (o *namePrefixTransformer) Transform(m resmap.ResMap) error {
 	}
 
 	for id := range mf {
-		if id.Gvk().IsSelected(&deprecateNamePrefixPathConfig.Gvk) {
+		if id.Gvk().IsSelected(&deprecateNamePrefixFieldSpec.Gvk) {
 			log.Println("Adding nameprefix to Namespace resource will be deprecated in next release.")
 		}
 		objMap := mf[id].Map()
-		for _, path := range o.pathConfigs {
+		for _, path := range o.fieldSpecsToUse {
 			if !id.Gvk().IsSelected(&path.Gvk) {
 				continue
 			}
