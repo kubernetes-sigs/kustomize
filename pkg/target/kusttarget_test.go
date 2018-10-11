@@ -22,7 +22,7 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/internal/k8sdeps"
+	"sigs.k8s.io/kustomize/internal/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/internal/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
@@ -89,7 +89,7 @@ metadata:
 )
 
 var rf = resmap.NewFactory(resource.NewFactory(
-	k8sdeps.NewKunstructuredFactoryImpl()))
+	kunstruct.NewKunstructuredFactoryImpl()))
 
 func makeKustTarget(t *testing.T, l ifc.Loader) *KustTarget {
 	fakeFs := fs.MakeFakeFS()

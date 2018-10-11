@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/evanphx/json-patch"
-	"sigs.k8s.io/kustomize/internal/k8sdeps"
+	"sigs.k8s.io/kustomize/internal/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
@@ -32,7 +32,7 @@ var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
 
 func TestJsonPatchJSONTransformer_Transform(t *testing.T) {
 	rf := resource.NewFactory(
-		k8sdeps.NewKunstructuredFactoryImpl())
+		kunstruct.NewKunstructuredFactoryImpl())
 	id := resid.NewResId(deploy, "deploy1")
 	base := resmap.ResMap{
 		id: rf.FromMap(

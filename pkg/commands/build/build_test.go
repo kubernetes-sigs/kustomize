@@ -26,7 +26,7 @@ import (
 	"testing"
 
 	"github.com/ghodss/yaml"
-	"sigs.k8s.io/kustomize/internal/k8sdeps"
+	"sigs.k8s.io/kustomize/internal/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/internal/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/pkg/constants"
@@ -131,7 +131,7 @@ func runBuildTestCase(t *testing.T, testcaseName string, updateKustomizeExpected
 	buf := bytes.NewBuffer([]byte{})
 	err = ops.RunBuild(
 		buf, fSys,
-		k8sdeps.NewKunstructuredFactoryImpl(),
+		kunstruct.NewKunstructuredFactoryImpl(),
 		transformer.NewFactoryImpl())
 	switch {
 	case err != nil && len(testcase.ExpectedError) == 0:

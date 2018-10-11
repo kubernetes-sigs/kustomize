@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/internal/k8sdeps"
+	"sigs.k8s.io/kustomize/internal/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
@@ -29,7 +29,7 @@ import (
 
 func TestNameHashTransformer(t *testing.T) {
 	rf := resource.NewFactory(
-		k8sdeps.NewKunstructuredFactoryImpl())
+		kunstruct.NewKunstructuredFactoryImpl())
 	objs := resmap.ResMap{
 		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{
