@@ -22,30 +22,30 @@ import (
 	"sort"
 )
 
-type rpcSlice []ReferencePathConfig
+type nbrSlice []NameBackReferences
 
-func (s rpcSlice) Len() int      { return len(s) }
-func (s rpcSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
-func (s rpcSlice) Less(i, j int) bool {
+func (s nbrSlice) Len() int      { return len(s) }
+func (s nbrSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s nbrSlice) Less(i, j int) bool {
 	return s[i].Gvk.IsLessThan(s[j].Gvk)
 }
 
-type pcSlice []PathConfig
+type fsSlice []FieldSpec
 
-func (s pcSlice) Len() int      { return len(s) }
-func (s pcSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
-func (s pcSlice) Less(i, j int) bool {
+func (s fsSlice) Len() int      { return len(s) }
+func (s fsSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s fsSlice) Less(i, j int) bool {
 	return s[i].Gvk.IsLessThan(s[j].Gvk)
 }
 
-// TransformerConfig represents the path configurations for different transformations
+// TransformerConfig holds the data needed to perform transformations.
 type TransformerConfig struct {
-	NamePrefix        pcSlice  `json:"namePrefix,omitempty" yaml:"namePrefix,omitempty"`
-	NameSpace         pcSlice  `json:"namespace,omitempty" yaml:"namespace,omitempty"`
-	CommonLabels      pcSlice  `json:"commonLabels,omitempty" yaml:"commonLabels,omitempty"`
-	CommonAnnotations pcSlice  `json:"commonAnnotations,omitempty" yaml:"commonAnnotations,omitempty"`
-	NameReference     rpcSlice `json:"nameReference,omitempty" yaml:"nameReference,omitempty"`
-	VarReference      pcSlice  `json:"varReference,omitempty" yaml:"varReference,omitempty"`
+	NamePrefix        fsSlice  `json:"namePrefix,omitempty" yaml:"namePrefix,omitempty"`
+	NameSpace         fsSlice  `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	CommonLabels      fsSlice  `json:"commonLabels,omitempty" yaml:"commonLabels,omitempty"`
+	CommonAnnotations fsSlice  `json:"commonAnnotations,omitempty" yaml:"commonAnnotations,omitempty"`
+	NameReference     nbrSlice `json:"nameReference,omitempty" yaml:"nameReference,omitempty"`
+	VarReference      fsSlice  `json:"varReference,omitempty" yaml:"varReference,omitempty"`
 }
 
 // sortFields provides determinism in logging, tests, etc.
@@ -58,24 +58,24 @@ func (t *TransformerConfig) sortFields() {
 	sort.Sort(t.VarReference)
 }
 
-// AddPrefixPathConfig adds a PathConfig to NamePrefix
-func (t *TransformerConfig) AddPrefixPathConfig(config PathConfig) {
-	t.NamePrefix = append(t.NamePrefix, config)
+// AddPrefixFieldSpec adds a FieldSpec to NamePrefix
+func (t *TransformerConfig) AddPrefixFieldSpec(fs FieldSpec) {
+	t.NamePrefix = append(t.NamePrefix, fs)
 }
 
-// AddLabelPathConfig adds a PathConfig to CommonLabels
-func (t *TransformerConfig) AddLabelPathConfig(config PathConfig) {
-	t.CommonLabels = append(t.CommonLabels, config)
+// AddLabelFieldSpec adds a FieldSpec to CommonLabels
+func (t *TransformerConfig) AddLabelFieldSpec(fs FieldSpec) {
+	t.CommonLabels = append(t.CommonLabels, fs)
 }
 
-// AddAnnotationPathConfig adds a PathConfig to CommonAnnotations
-func (t *TransformerConfig) AddAnnotationPathConfig(config PathConfig) {
-	t.CommonAnnotations = append(t.CommonAnnotations, config)
+// AddAnnotationFieldSpec adds a FieldSpec to CommonAnnotations
+func (t *TransformerConfig) AddAnnotationFieldSpec(fs FieldSpec) {
+	t.CommonAnnotations = append(t.CommonAnnotations, fs)
 }
 
-// AddNamereferencePathConfig adds a ReferencePathConfig to NameReference
-func (t *TransformerConfig) AddNamereferencePathConfig(config ReferencePathConfig) {
-	t.NameReference = mergeNameReferencePathConfigs(t.NameReference, []ReferencePathConfig{config})
+// AddNamereferenceFieldSpec adds a NameBackReferences to NameReference
+func (t *TransformerConfig) AddNamereferenceFieldSpec(nbrs NameBackReferences) {
+	t.NameReference = mergeNameBackReferences(t.NameReference, []NameBackReferences{nbrs})
 }
 
 // Merge merges two TransformerConfigs objects into a new TransformerConfig object
@@ -86,7 +86,7 @@ func (t *TransformerConfig) Merge(input *TransformerConfig) *TransformerConfig {
 	merged.CommonAnnotations = append(t.CommonAnnotations, input.CommonAnnotations...)
 	merged.CommonLabels = append(t.CommonLabels, input.CommonLabels...)
 	merged.VarReference = append(t.VarReference, input.VarReference...)
-	merged.NameReference = mergeNameReferencePathConfigs(t.NameReference, input.NameReference)
+	merged.NameReference = mergeNameBackReferences(t.NameReference, input.NameReference)
 	merged.sortFields()
 	return merged
 }

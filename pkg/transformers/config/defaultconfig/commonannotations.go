@@ -16,7 +16,7 @@ limitations under the License.
 
 package defaultconfig
 
-const commonAnnotationPathConfigs = `
+const commonAnnotationFieldSpecs = `
 commonAnnotations:
 - path: metadata/annotations
   create: true
