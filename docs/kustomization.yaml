@@ -63,13 +63,18 @@ resources:
 
 # Each entry in this list results in the creation of
 # one ConfigMap resource (it's a generator of n maps).
-# The example below creates a ConfigMap with the
-# names and contents of the given files.
+# The example below creates two ConfigMaps. One with the
+# names and contents of the given files, the other with
+# key/value as data.
 configMapGenerator:
 - name: myJavaServerProps
   files:
   - application.properties
   - more.properties
+- name: myJavaServerEnvVars
+  literals:	
+    - JAVA_HOME=/opt/java/jdk
+    - JAVA_TOOL_OPTIONS=-agentlib:hprof
 
 # Each entry in this list results in the creation of
 # one Secret resource (it's a generator of n secrets).
