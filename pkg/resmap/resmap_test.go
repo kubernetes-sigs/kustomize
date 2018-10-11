@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/internal/k8sdeps"
+	"sigs.k8s.io/kustomize/internal/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resid"
@@ -30,7 +30,7 @@ import (
 var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
 var statefulset = gvk.Gvk{Group: "apps", Version: "v1", Kind: "StatefulSet"}
 var rf = resource.NewFactory(
-	k8sdeps.NewKunstructuredFactoryImpl())
+	kunstruct.NewKunstructuredFactoryImpl())
 var rmF = NewFactory(rf)
 
 func TestEncodeAsYaml(t *testing.T) {

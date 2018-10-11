@@ -22,7 +22,7 @@ import (
 	"testing"
 
 	"gopkg.in/yaml.v2"
-	"sigs.k8s.io/kustomize/internal/k8sdeps"
+	"sigs.k8s.io/kustomize/internal/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/patch"
@@ -32,7 +32,7 @@ import (
 )
 
 var rf = resource.NewFactory(
-	k8sdeps.NewKunstructuredFactoryImpl())
+	kunstruct.NewKunstructuredFactoryImpl())
 
 func TestNewPatchJson6902FactoryNoTarget(t *testing.T) {
 	p := patch.Json6902{}
