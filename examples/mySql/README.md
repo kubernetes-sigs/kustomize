@@ -181,6 +181,8 @@ patchesStrategicMerge:
 EOF
 ```
 
+A `mysql-persistent-storage` persistent disk needs to exist for it to run successfully.
+
 Lets break this down:
 
 - In the first step, we created a YAML file named
