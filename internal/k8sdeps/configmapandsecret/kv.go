@@ -91,7 +91,7 @@ func kvFromLine(line []byte, currentLine int) (kvPair, error) {
 	}
 
 	if len(data) == 2 {
-		kv.value = data[1]
+		kv.value = stripQuotes(data[1])
 	} else {
 		// No value (no `=` in the line) is a signal to obtain the value
 		// from the environment.
@@ -99,4 +99,13 @@ func kvFromLine(line []byte, currentLine int) (kvPair, error) {
 	}
 	kv.key = key
 	return kv, nil
+}
+
+func stripQuotes(s string) string {
+	if len(s) >= 2 {
+		if s[0] == '"' && s[len(s)-1] == '"' {
+			return s[1 : len(s)-1]
+		}
+	}
+	return s
 }

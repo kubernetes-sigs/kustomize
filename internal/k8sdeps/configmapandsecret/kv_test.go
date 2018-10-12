@@ -65,3 +65,60 @@ func TestKeyValuesFromLines(t *testing.T) {
 
 	}
 }
+
+func TestStripQuotes(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			"no quotes",
+			"noquotes",
+			"noquotes",
+		},
+		{
+			"empty string",
+			"",
+			"",
+		},
+		{
+			"single character",
+			"a",
+			"a",
+		},
+		{
+			"two characters",
+			"aa",
+			"aa",
+		},
+		{
+			"only left quote",
+			"\"abcd",
+			"\"abcd",
+		},
+		{
+			"only right quote",
+			"abcd\"",
+			"abcd\"",
+		},
+		{
+			"only quotes",
+			"\"\"",
+			"",
+		},
+		{
+			"quoted string",
+			"\"testing three words\"",
+			"testing three words",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := stripQuotes(tt.input); got != tt.expected {
+				t.Errorf("stripQuotes() = %v, want %v", got, tt.expected)
+			}
+		})
+	}
+}
