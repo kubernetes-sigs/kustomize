@@ -85,3 +85,11 @@ func (fs FieldSpec) PathSlice() []string {
 	}
 	return result
 }
+
+type fsSlice []FieldSpec
+
+func (s fsSlice) Len() int      { return len(s) }
+func (s fsSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s fsSlice) Less(i, j int) bool {
+	return s[i].Gvk.IsLessThan(s[j].Gvk)
+}

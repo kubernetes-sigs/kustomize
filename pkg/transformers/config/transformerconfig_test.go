@@ -44,7 +44,7 @@ func TestAddNamereferenceFieldSpec(t *testing.T) {
 
 	cfg.AddNamereferenceFieldSpec(nbrs)
 	if len(cfg.NameReference) != 1 {
-		t.Fatal("failed to add namerefence FieldSpec")
+		t.Fatal("failed to add namereference FieldSpec")
 	}
 }
 
