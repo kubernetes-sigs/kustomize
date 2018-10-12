@@ -23,12 +23,12 @@ import (
 )
 
 type namespaceTransformer struct {
-	namespace       string
-	pathConfigs     []config.PathConfig
-	skipPathConfigs []config.PathConfig
+	namespace        string
+	fieldSpecsToUse  []config.FieldSpec
+	fieldSpecsToSkip []config.FieldSpec
 }
 
-var skipNamespacePathConfigs = []config.PathConfig{
+var namespaceFieldSpecsToSkip = []config.FieldSpec{
 	{
 		Gvk: gvk.Gvk{
 			Kind: "Namespace",
@@ -54,15 +54,15 @@ var skipNamespacePathConfigs = []config.PathConfig{
 var _ Transformer = &namespaceTransformer{}
 
 // NewNamespaceTransformer construct a namespaceTransformer.
-func NewNamespaceTransformer(ns string, cf []config.PathConfig) Transformer {
+func NewNamespaceTransformer(ns string, cf []config.FieldSpec) Transformer {
 	if len(ns) == 0 {
 		return NewNoOpTransformer()
 	}
 
 	return &namespaceTransformer{
-		namespace:       ns,
-		pathConfigs:     cf,
-		skipPathConfigs: skipNamespacePathConfigs,
+		namespace:        ns,
+		fieldSpecsToUse:  cf,
+		fieldSpecsToSkip: namespaceFieldSpecsToSkip,
 	}
 }
 
@@ -72,7 +72,7 @@ func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
 
 	for id := range m {
 		found := false
-		for _, path := range o.skipPathConfigs {
+		for _, path := range o.fieldSpecsToSkip {
 			if id.Gvk().IsSelected(&path.Gvk) {
 				found = true
 				break
@@ -86,7 +86,7 @@ func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
 
 	for id := range mf {
 		objMap := mf[id].Map()
-		for _, path := range o.pathConfigs {
+		for _, path := range o.fieldSpecsToUse {
 			if !id.Gvk().IsSelected(&path.Gvk) {
 				continue
 			}
