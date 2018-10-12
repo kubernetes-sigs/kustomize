@@ -41,7 +41,7 @@ namePrefix:
 	fakeFS.WriteFile("transformerconfig/test/config.yaml", []byte(transformerConfig))
 	ldr := loader.NewFileLoader(fakeFS)
 	expected := &TransformerConfig{
-		NamePrefix: []PathConfig{
+		NamePrefix: []FieldSpec{
 			{
 				Gvk:  gvk.Gvk{Kind: "SomeKind"},
 				Path: "nameprefix/path",

@@ -102,7 +102,7 @@ func (o *saveOptions) Complete(fsys fs.FileSystem) error {
 
 // RunSave saves the default transformer configurations local directory
 func (o *saveOptions) RunSave(fsys fs.FileSystem) error {
-	m := defaultconfig.GetDefaultPathConfigStrings()
+	m := defaultconfig.GetDefaultFieldSpecsAsMap()
 	for tname, tcfg := range m {
 		filename := filepath.Join(o.saveDirectory, tname+".yaml")
 		err := fsys.WriteFile(filename, []byte(tcfg))

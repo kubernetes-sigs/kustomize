@@ -26,36 +26,36 @@ import (
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
 
-// nameReferenceTransformer contains the referencing info between 2 GroupVersionKinds
 type nameReferenceTransformer struct {
-	pathConfigs []config.ReferencePathConfig
+	backRefs []config.NameBackReferences
 }
 
 var _ Transformer = &nameReferenceTransformer{}
 
 // NewNameReferenceTransformer constructs a nameReferenceTransformer
-// with a given Reference PathConfig slice
-func NewNameReferenceTransformer(pc []config.ReferencePathConfig) (Transformer, error) {
-	if pc == nil {
-		return nil, errors.New("pathConfigs is not expected to be nil")
+// with a given slice of NameBackReferences.
+func NewNameReferenceTransformer(
+	br []config.NameBackReferences) (Transformer, error) {
+	if br == nil {
+		return nil, errors.New("backrefs not expected to be nil")
 	}
-	return &nameReferenceTransformer{pathConfigs: pc}, nil
+	return &nameReferenceTransformer{backRefs: br}, nil
 }
 
-// Transform does the fields update according to pathConfigs.
+// Transform does the fields update according to fieldSpecs.
 // The old name is in the key in the map and the new name is in the object
 // associated with the key. e.g. if <k, v> is one of the key-value pair in the map,
 // then the old name is k.Name and the new name is v.GetName()
 func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 	for id := range m {
 		objMap := m[id].Map()
-		for _, referencePathConfig := range o.pathConfigs {
-			for _, path := range referencePathConfig.PathConfigs {
+		for _, backRef := range o.backRefs {
+			for _, path := range backRef.FieldSpecs {
 				if !id.Gvk().IsSelected(&path.Gvk) {
 					continue
 				}
 				err := mutateField(objMap, path.PathSlice(), path.CreateIfNotPresent,
-					o.updateNameReference(referencePathConfig.Gvk, m.FilterBy(id)))
+					o.updateNameReference(backRef.Gvk, m.FilterBy(id)))
 				if err != nil {
 					return err
 				}

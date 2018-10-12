@@ -17,7 +17,7 @@ limitations under the License.
 package defaultconfig
 
 const (
-	namespacePathConfigs = `
+	namespaceFieldSpecs = `
 namespace:
 - path: metadata/namespace
   create: true

@@ -24,14 +24,14 @@ import (
 	"sigs.k8s.io/kustomize/pkg/gvk"
 )
 
-func TestAddNameReferencePathConfigs(t *testing.T) {
+func TestAddNamereferenceFieldSpec(t *testing.T) {
 	cfg := &TransformerConfig{}
 
-	pathConfig := ReferencePathConfig{
+	nbrs := NameBackReferences{
 		Gvk: gvk.Gvk{
 			Kind: "KindA",
 		},
-		PathConfigs: []PathConfig{
+		FieldSpecs: []FieldSpec{
 			{
 				Gvk: gvk.Gvk{
 					Kind: "KindB",
@@ -42,42 +42,42 @@ func TestAddNameReferencePathConfigs(t *testing.T) {
 		},
 	}
 
-	cfg.AddNamereferencePathConfig(pathConfig)
+	cfg.AddNamereferenceFieldSpec(nbrs)
 	if len(cfg.NameReference) != 1 {
-		t.Fatal("failed to add namerefence pathconfig")
+		t.Fatal("failed to add namerefence FieldSpec")
 	}
 }
 
-func TestAddPathConfigs(t *testing.T) {
+func TestAddFieldSpecs(t *testing.T) {
 	cfg := &TransformerConfig{}
 
-	pathConfig := PathConfig{
+	fieldSpec := FieldSpec{
 		Gvk:                gvk.Gvk{Group: "GroupA", Kind: "KindB"},
 		Path:               "path/to/a/field",
 		CreateIfNotPresent: true,
 	}
 
-	cfg.AddPrefixPathConfig(pathConfig)
+	cfg.AddPrefixFieldSpec(fieldSpec)
 	if len(cfg.NamePrefix) != 1 {
-		t.Fatalf("failed to add nameprefix pathconfig")
+		t.Fatalf("failed to add nameprefix FieldSpec")
 	}
-	cfg.AddLabelPathConfig(pathConfig)
+	cfg.AddLabelFieldSpec(fieldSpec)
 	if len(cfg.CommonLabels) != 1 {
-		t.Fatalf("failed to add nameprefix pathconfig")
+		t.Fatalf("failed to add nameprefix FieldSpec")
 	}
-	cfg.AddAnnotationPathConfig(pathConfig)
+	cfg.AddAnnotationFieldSpec(fieldSpec)
 	if len(cfg.CommonAnnotations) != 1 {
-		t.Fatalf("failed to add nameprefix pathconfig")
+		t.Fatalf("failed to add nameprefix FieldSpec")
 	}
 }
 
 func TestMerge(t *testing.T) {
-	nameReference := []ReferencePathConfig{
+	nameReference := []NameBackReferences{
 		{
 			Gvk: gvk.Gvk{
 				Kind: "KindA",
 			},
-			PathConfigs: []PathConfig{
+			FieldSpecs: []FieldSpec{
 				{
 					Gvk: gvk.Gvk{
 						Kind: "KindB",
@@ -91,7 +91,7 @@ func TestMerge(t *testing.T) {
 			Gvk: gvk.Gvk{
 				Kind: "KindA",
 			},
-			PathConfigs: []PathConfig{
+			FieldSpecs: []FieldSpec{
 				{
 					Gvk: gvk.Gvk{
 						Kind: "KindC",
@@ -102,7 +102,7 @@ func TestMerge(t *testing.T) {
 			},
 		},
 	}
-	pathConfigs := []PathConfig{
+	fieldSpecs := []FieldSpec{
 		{
 			Gvk:                gvk.Gvk{Group: "GroupA", Kind: "KindB"},
 			Path:               "path/to/a/field",
@@ -115,28 +115,28 @@ func TestMerge(t *testing.T) {
 		},
 	}
 	cfga := &TransformerConfig{}
-	cfga.AddNamereferencePathConfig(nameReference[0])
-	cfga.AddPrefixPathConfig(pathConfigs[0])
+	cfga.AddNamereferenceFieldSpec(nameReference[0])
+	cfga.AddPrefixFieldSpec(fieldSpecs[0])
 
 	cfgb := &TransformerConfig{}
-	cfgb.AddNamereferencePathConfig(nameReference[1])
-	cfgb.AddPrefixPathConfig(pathConfigs[1])
+	cfgb.AddNamereferenceFieldSpec(nameReference[1])
+	cfgb.AddPrefixFieldSpec(fieldSpecs[1])
 
 	actual := cfga.Merge(cfgb)
 
 	if len(actual.NamePrefix) != 2 {
-		t.Fatal("merge failed for namePrefix pathconfig")
+		t.Fatal("merge failed for namePrefix FieldSpec")
 	}
 
 	if len(actual.NameReference) != 1 {
-		t.Fatal("merge failed for namereference pathconfig")
+		t.Fatal("merge failed for namereference FieldSpec")
 	}
 
 	expected := &TransformerConfig{}
-	expected.AddNamereferencePathConfig(nameReference[0])
-	expected.AddNamereferencePathConfig(nameReference[1])
-	expected.AddPrefixPathConfig(pathConfigs[0])
-	expected.AddPrefixPathConfig(pathConfigs[1])
+	expected.AddNamereferenceFieldSpec(nameReference[0])
+	expected.AddNamereferenceFieldSpec(nameReference[1])
+	expected.AddPrefixFieldSpec(fieldSpecs[0])
+	expected.AddPrefixFieldSpec(fieldSpecs[1])
 
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("expected: %v\n but got: %v\n", expected, actual)
