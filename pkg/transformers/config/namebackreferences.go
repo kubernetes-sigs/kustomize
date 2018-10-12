@@ -17,8 +17,9 @@ limitations under the License.
 package config
 
 import (
-	"sigs.k8s.io/kustomize/pkg/gvk"
 	"strings"
+
+	"sigs.k8s.io/kustomize/pkg/gvk"
 )
 
 // NameBackReferences is an association between a gvk.GVK and a list
@@ -63,21 +64,27 @@ func (n NameBackReferences) String() string {
 		strings.Join(r, "\n") + "\n)"
 }
 
-func mergeNameBackReferences(
-	a, b []NameBackReferences) []NameBackReferences {
-	for _, r := range b {
-		a = merge(a, r)
-	}
-	return a
+type nbrSlice []NameBackReferences
+
+func (s nbrSlice) Len() int      { return len(s) }
+func (s nbrSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s nbrSlice) Less(i, j int) bool {
+	return s[i].Gvk.IsLessThan(s[j].Gvk)
 }
 
-func merge(
-	backRefsSlice []NameBackReferences,
-	other NameBackReferences) []NameBackReferences {
-	var result []NameBackReferences
+func (s nbrSlice) mergeAll(o nbrSlice) nbrSlice {
+	result := s
+	for _, r := range o {
+		result = result.mergeOne(r)
+	}
+	return result
+}
+
+func (s nbrSlice) mergeOne(other NameBackReferences) nbrSlice {
+	var result nbrSlice
 	found := false
-	for _, c := range backRefsSlice {
-		if c.Equals(other.Gvk) {
+	for _, c := range s {
+		if c.Gvk.Equals(other.Gvk) {
 			c.FieldSpecs = append(c.FieldSpecs, other.FieldSpecs...)
 			found = true
 		}
