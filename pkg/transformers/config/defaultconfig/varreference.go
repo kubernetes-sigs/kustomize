@@ -17,7 +17,7 @@ limitations under the License.
 package defaultconfig
 
 const (
-	varReferencePathConfigs = `
+	varReferenceFieldSpecs = `
 varReference:
 - path: spec/template/spec/initContainers/command
   kind: StatefulSet

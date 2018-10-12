@@ -9,15 +9,15 @@ import (
 )
 
 type refvarTransformer struct {
-	pathConfigs []config.PathConfig
-	vars        map[string]string
+	fieldSpecs []config.FieldSpec
+	vars       map[string]string
 }
 
 // NewRefVarTransformer returns a Trasformer that replaces $(VAR) style variables with values.
-func NewRefVarTransformer(vars map[string]string, p []config.PathConfig) Transformer {
+func NewRefVarTransformer(vars map[string]string, p []config.FieldSpec) Transformer {
 	return &refvarTransformer{
-		vars:        vars,
-		pathConfigs: p,
+		vars:       vars,
+		fieldSpecs: p,
 	}
 }
 
@@ -33,7 +33,7 @@ func NewRefVarTransformer(vars map[string]string, p []config.PathConfig) Transfo
 func (rv *refvarTransformer) Transform(resources resmap.ResMap) error {
 	for resId := range resources {
 		objMap := resources[resId].Map()
-		for _, pc := range rv.pathConfigs {
+		for _, pc := range rv.fieldSpecs {
 			if !resId.Gvk().IsSelected(&pc.Gvk) {
 				continue
 			}

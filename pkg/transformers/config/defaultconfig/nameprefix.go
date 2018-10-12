@@ -17,7 +17,7 @@ limitations under the License.
 package defaultconfig
 
 const (
-	namePrefixPathConfigs = `
+	namePrefixFieldSpecs = `
 namePrefix:
 - path: metadata/name
 `

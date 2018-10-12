@@ -24,8 +24,6 @@ import (
 	"sigs.k8s.io/kustomize/pkg/transformers"
 )
 
-// nameHashTransformer contains the prefix and the path config for each field that
-// the name prefix will be applied.
 type nameHashTransformer struct{}
 
 var _ transformers.Transformer = &nameHashTransformer{}

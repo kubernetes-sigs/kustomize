@@ -37,8 +37,8 @@ func TestPathSlice(t *testing.T) {
 		},
 	}
 	for _, p := range paths {
-		pathConfig := PathConfig{Path: p.input}
-		actual := pathConfig.PathSlice()
+		fs := FieldSpec{Path: p.input}
+		actual := fs.PathSlice()
 		if !reflect.DeepEqual(actual, p.parsed) {
 			t.Fatalf("expected %v, but got %v", p.parsed, actual)
 		}
