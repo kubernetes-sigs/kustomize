@@ -22,22 +22,6 @@ import (
 	"sort"
 )
 
-type nbrSlice []NameBackReferences
-
-func (s nbrSlice) Len() int      { return len(s) }
-func (s nbrSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
-func (s nbrSlice) Less(i, j int) bool {
-	return s[i].Gvk.IsLessThan(s[j].Gvk)
-}
-
-type fsSlice []FieldSpec
-
-func (s fsSlice) Len() int      { return len(s) }
-func (s fsSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
-func (s fsSlice) Less(i, j int) bool {
-	return s[i].Gvk.IsLessThan(s[j].Gvk)
-}
-
 // TransformerConfig holds the data needed to perform transformations.
 type TransformerConfig struct {
 	NamePrefix        fsSlice  `json:"namePrefix,omitempty" yaml:"namePrefix,omitempty"`
@@ -75,7 +59,7 @@ func (t *TransformerConfig) AddAnnotationFieldSpec(fs FieldSpec) {
 
 // AddNamereferenceFieldSpec adds a NameBackReferences to NameReference
 func (t *TransformerConfig) AddNamereferenceFieldSpec(nbrs NameBackReferences) {
-	t.NameReference = mergeNameBackReferences(t.NameReference, []NameBackReferences{nbrs})
+	t.NameReference = t.NameReference.mergeOne(nbrs)
 }
 
 // Merge merges two TransformerConfigs objects into a new TransformerConfig object
@@ -86,7 +70,7 @@ func (t *TransformerConfig) Merge(input *TransformerConfig) *TransformerConfig {
 	merged.CommonAnnotations = append(t.CommonAnnotations, input.CommonAnnotations...)
 	merged.CommonLabels = append(t.CommonLabels, input.CommonLabels...)
 	merged.VarReference = append(t.VarReference, input.VarReference...)
-	merged.NameReference = mergeNameBackReferences(t.NameReference, input.NameReference)
+	merged.NameReference = t.NameReference.mergeAll(input.NameReference)
 	merged.sortFields()
 	return merged
 }

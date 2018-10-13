@@ -22,7 +22,7 @@ import (
 	"testing"
 )
 
-func TestFoo(t *testing.T) {
+func TestMergeAll(t *testing.T) {
 	fsSlice1 := []FieldSpec{
 		{
 			Gvk: gvk.Gvk{
@@ -56,7 +56,7 @@ func TestFoo(t *testing.T) {
 		},
 	}
 
-	nbrsSlice1 := []NameBackReferences{
+	nbrsSlice1 := nbrSlice{
 		{
 			Gvk: gvk.Gvk{
 				Kind: "ConfigMap",
@@ -70,7 +70,7 @@ func TestFoo(t *testing.T) {
 			FieldSpecs: fsSlice2,
 		},
 	}
-	nbrsSlice2 := []NameBackReferences{
+	nbrsSlice2 := nbrSlice{
 		{
 			Gvk: gvk.Gvk{
 				Kind: "ConfigMap",
@@ -84,7 +84,7 @@ func TestFoo(t *testing.T) {
 			FieldSpecs: fsSlice2,
 		},
 	}
-	expected := []NameBackReferences{
+	expected := nbrSlice{
 		{
 			Gvk: gvk.Gvk{
 				Kind: "ConfigMap",
@@ -99,7 +99,7 @@ func TestFoo(t *testing.T) {
 			FieldSpecs: append(fsSlice2, fsSlice2...),
 		},
 	}
-	actual := mergeNameBackReferences(nbrsSlice1, nbrsSlice2)
+	actual := nbrsSlice1.mergeAll(nbrsSlice2)
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("expected\n %v\n but got\n %v\n", expected, actual)
 	}
