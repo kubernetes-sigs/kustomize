@@ -11,6 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package k8sdeps provides kustomize factory with k8s dependencies
 package k8sdeps
 
 import (

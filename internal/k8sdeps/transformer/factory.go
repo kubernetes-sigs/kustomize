@@ -24,20 +24,20 @@ import (
 	"sigs.k8s.io/kustomize/pkg/transformers"
 )
 
-// factoryImpl makes patch transformer and name hash transformer
-type factoryImpl struct{}
+// FactoryImpl makes patch transformer and name hash transformer
+type FactoryImpl struct{}
 
 // NewFactoryImpl makes a new factoryImpl instance
-func NewFactoryImpl() *factoryImpl {
-	return &factoryImpl{}
+func NewFactoryImpl() *FactoryImpl {
+	return &FactoryImpl{}
 }
 
 // MakePatchTransformer makes a new patch transformer
-func (p *factoryImpl) MakePatchTransformer(slice []*resource.Resource, rf *resource.Factory) (transformers.Transformer, error) {
+func (p *FactoryImpl) MakePatchTransformer(slice []*resource.Resource, rf *resource.Factory) (transformers.Transformer, error) {
 	return patch.NewPatchTransformer(slice, rf)
 }
 
 // MakeHashTransformer makes a new name hash transformer
-func (p *factoryImpl) MakeHashTransformer() transformers.Transformer {
+func (p *FactoryImpl) MakeHashTransformer() transformers.Transformer {
 	return hash.NewNameHashTransformer()
 }

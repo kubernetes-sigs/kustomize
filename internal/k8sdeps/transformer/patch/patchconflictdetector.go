@@ -131,7 +131,7 @@ func (smp *strategicMergePatch) findConflict(
 }
 
 func (smp *strategicMergePatch) mergePatches(patch1, patch2 *resource.Resource) (*resource.Resource, error) {
-	mergeJsonMap, err := strategicpatch.MergeStrategicMergeMapPatchUsingLookupPatchMeta(
+	mergeJSONMap, err := strategicpatch.MergeStrategicMergeMapPatchUsingLookupPatchMeta(
 		smp.lookupPatchMeta, patch1.Map(), patch2.Map())
-	return smp.rf.FromMap(mergeJsonMap), err
+	return smp.rf.FromMap(mergeJSONMap), err
 }
