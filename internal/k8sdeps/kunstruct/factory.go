@@ -19,6 +19,7 @@ package kunstruct
 import (
 	"bytes"
 	"io"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -58,6 +59,10 @@ func (kf *KunstructurerFactoryImpl) SliceFromBytes(
 		return nil, err
 	}
 	return result, nil
+}
+
+func isEmptyYamlError(err error) bool {
+	return strings.Contains(err.Error(), "is missing in 'null'")
 }
 
 // FromMap returns an instance of Kunstructured.
