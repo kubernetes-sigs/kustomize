@@ -20,10 +20,7 @@ package kunstruct
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"strings"
-
-	"github.com/pkg/errors"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -83,30 +80,10 @@ func (fs *UnstructAdapter) SetMap(m map[string]interface{}) {
 
 // GetFieldValue returns value at the given fieldpath.
 func (fs *UnstructAdapter) GetFieldValue(path string) (string, error) {
-	s, err := getFieldValue(fs.UnstructuredContent(), strings.Split(path, "."))
-	if err != nil {
-		return "", errors.Wrapf(err, "at path '%s'", path)
+	s, found, err := unstructured.NestedString(
+		fs.UnstructuredContent(), strings.Split(path, ".")...)
+	if found || err != nil {
+		return s, err
 	}
-	return s, nil
-}
-
-func getFieldValue(m map[string]interface{}, path []string) (string, error) {
-	if len(path) == 0 {
-		return "", fmt.Errorf("%v not found", path)
-	}
-	v, ok := m[path[0]]
-	if !ok {
-		return "", fmt.Errorf("no field named '%s'", path[0])
-	}
-	if len(path) == 1 {
-		if s, ok := v.(string); ok {
-			return s, nil
-		}
-		return "", fmt.Errorf("value at '%v' not a string", path[0])
-	}
-	if deeper, ok := v.(map[string]interface{}); ok {
-		return getFieldValue(deeper, path[1:])
-	}
-	return "", fmt.Errorf("Expected map at %v, but got %s=%v",
-		path[0], reflect.TypeOf(v), v)
+	return "", fmt.Errorf("no field named '%s'", path)
 }
