@@ -104,7 +104,3 @@ func getFieldValue(m map[string]interface{}, pathToField []string) (string, erro
 		return "", fmt.Errorf("%#v is not expected to be a primitive type", typedV)
 	}
 }
-
-func isEmptyYamlError(err error) bool {
-	return strings.Contains(err.Error(), "is missing in 'null'")
-}
