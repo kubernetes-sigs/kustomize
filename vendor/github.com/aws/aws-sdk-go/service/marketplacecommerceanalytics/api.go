@@ -204,7 +204,7 @@ type GenerateDataSetInput struct {
 	// granularity for the desired month (the day value will be ignored).
 	//
 	// DataSetPublicationDate is a required field
-	DataSetPublicationDate *time.Time `locationName:"dataSetPublicationDate" type:"timestamp" required:"true"`
+	DataSetPublicationDate *time.Time `locationName:"dataSetPublicationDate" type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	// The desired data set type.
 	//
@@ -486,7 +486,7 @@ type StartSupportDataExportInput struct {
 	// only affects the customer_support_contacts_data data set type.
 	//
 	// FromDate is a required field
-	FromDate *time.Time `locationName:"fromDate" type:"timestamp" required:"true"`
+	FromDate *time.Time `locationName:"fromDate" type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the Role with an attached permissions policy
 	// to interact with the provided AWS services.

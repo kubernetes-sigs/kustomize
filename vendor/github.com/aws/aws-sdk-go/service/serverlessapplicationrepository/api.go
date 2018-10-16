@@ -68,8 +68,7 @@ func (c *ServerlessApplicationRepository) CreateApplicationRequest(input *Create
 //
 // Returned Error Codes:
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   The client is sending more than the allowed number of requests per unit of
-//   time.
+//   The client is sending more than the allowed number of requests per unit time.
 //
 //   * ErrCodeBadRequestException "BadRequestException"
 //   One of the parameters in the request is invalid.
@@ -161,8 +160,7 @@ func (c *ServerlessApplicationRepository) CreateApplicationVersionRequest(input 
 //
 // Returned Error Codes:
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   The client is sending more than the allowed number of requests per unit of
-//   time.
+//   The client is sending more than the allowed number of requests per unit time.
 //
 //   * ErrCodeBadRequestException "BadRequestException"
 //   One of the parameters in the request is invalid.
@@ -243,7 +241,7 @@ func (c *ServerlessApplicationRepository) CreateCloudFormationChangeSetRequest(i
 
 // CreateCloudFormationChangeSet API operation for AWSServerlessApplicationRepository.
 //
-// Creates an AWS CloudFormation change set for the given application.
+// Creates an AWS CloudFormation ChangeSet for the given application.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -254,8 +252,7 @@ func (c *ServerlessApplicationRepository) CreateCloudFormationChangeSetRequest(i
 //
 // Returned Error Codes:
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   The client is sending more than the allowed number of requests per unit of
-//   time.
+//   The client is sending more than the allowed number of requests per unit time.
 //
 //   * ErrCodeBadRequestException "BadRequestException"
 //   One of the parameters in the request is invalid.
@@ -357,11 +354,10 @@ func (c *ServerlessApplicationRepository) DeleteApplicationRequest(input *Delete
 //
 //   * ErrCodeNotFoundException "NotFoundException"
 //   The resource (for example, an access policy statement) specified in the request
-//   doesn't exist.
+//   does not exist.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   The client is sending more than the allowed number of requests per unit of
-//   time.
+//   The client is sending more than the allowed number of requests per unit time.
 //
 //   * ErrCodeConflictException "ConflictException"
 //   The resource already exists.
@@ -444,11 +440,10 @@ func (c *ServerlessApplicationRepository) GetApplicationRequest(input *GetApplic
 // Returned Error Codes:
 //   * ErrCodeNotFoundException "NotFoundException"
 //   The resource (for example, an access policy statement) specified in the request
-//   doesn't exist.
+//   does not exist.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   The client is sending more than the allowed number of requests per unit of
-//   time.
+//   The client is sending more than the allowed number of requests per unit time.
 //
 //   * ErrCodeBadRequestException "BadRequestException"
 //   One of the parameters in the request is invalid.
@@ -526,7 +521,7 @@ func (c *ServerlessApplicationRepository) GetApplicationPolicyRequest(input *Get
 
 // GetApplicationPolicy API operation for AWSServerlessApplicationRepository.
 //
-// Retrieves the policy for the application.
+// Gets the policy for the specified application.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -538,11 +533,10 @@ func (c *ServerlessApplicationRepository) GetApplicationPolicyRequest(input *Get
 // Returned Error Codes:
 //   * ErrCodeNotFoundException "NotFoundException"
 //   The resource (for example, an access policy statement) specified in the request
-//   doesn't exist.
+//   does not exist.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   The client is sending more than the allowed number of requests per unit of
-//   time.
+//   The client is sending more than the allowed number of requests per unit time.
 //
 //   * ErrCodeBadRequestException "BadRequestException"
 //   One of the parameters in the request is invalid.
@@ -638,11 +632,10 @@ func (c *ServerlessApplicationRepository) ListApplicationVersionsRequest(input *
 // Returned Error Codes:
 //   * ErrCodeNotFoundException "NotFoundException"
 //   The resource (for example, an access policy statement) specified in the request
-//   doesn't exist.
+//   does not exist.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   The client is sending more than the allowed number of requests per unit of
-//   time.
+//   The client is sending more than the allowed number of requests per unit time.
 //
 //   * ErrCodeBadRequestException "BadRequestException"
 //   One of the parameters in the request is invalid.
@@ -788,7 +781,7 @@ func (c *ServerlessApplicationRepository) ListApplicationsRequest(input *ListApp
 // Returned Error Codes:
 //   * ErrCodeNotFoundException "NotFoundException"
 //   The resource (for example, an access policy statement) specified in the request
-//   doesn't exist.
+//   does not exist.
 //
 //   * ErrCodeBadRequestException "BadRequestException"
 //   One of the parameters in the request is invalid.
@@ -916,9 +909,7 @@ func (c *ServerlessApplicationRepository) PutApplicationPolicyRequest(input *Put
 
 // PutApplicationPolicy API operation for AWSServerlessApplicationRepository.
 //
-// Sets the permission policy for an application. See Application Permissions
-// (https://docs.aws.amazon.com/serverlessrepo/latest/devguide/access-control-resource-based.html#application-permissions)
-// for the list of supported actions that can be used with this operation.
+// Puts the policy for the specified application.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -930,11 +921,10 @@ func (c *ServerlessApplicationRepository) PutApplicationPolicyRequest(input *Put
 // Returned Error Codes:
 //   * ErrCodeNotFoundException "NotFoundException"
 //   The resource (for example, an access policy statement) specified in the request
-//   doesn't exist.
+//   does not exist.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   The client is sending more than the allowed number of requests per unit of
-//   time.
+//   The client is sending more than the allowed number of requests per unit time.
 //
 //   * ErrCodeBadRequestException "BadRequestException"
 //   One of the parameters in the request is invalid.
@@ -1034,11 +1024,10 @@ func (c *ServerlessApplicationRepository) UpdateApplicationRequest(input *Update
 //
 //   * ErrCodeNotFoundException "NotFoundException"
 //   The resource (for example, an access policy statement) specified in the request
-//   doesn't exist.
+//   does not exist.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   The client is sending more than the allowed number of requests per unit of
-//   time.
+//   The client is sending more than the allowed number of requests per unit time.
 //
 //   * ErrCodeConflictException "ConflictException"
 //   The resource already exists.
@@ -1069,8 +1058,17 @@ func (c *ServerlessApplicationRepository) UpdateApplicationWithContext(ctx aws.C
 type ApplicationPolicyStatement struct {
 	_ struct{} `type:"structure"`
 
-	// See Application Permissions (https://docs.aws.amazon.com/serverlessrepo/latest/devguide/access-control-resource-based.html#application-permissions)
-	// for the list of supported actions.
+	// A list of supported actions:
+	//
+	// GetApplication
+	//
+	// CreateCloudFormationChangeSet
+	//
+	// ListApplicationVersions
+	//
+	// SearchApplications
+	//
+	// Deploy (Note: This action enables all other actions above.)
 	//
 	// Actions is a required field
 	Actions []*string `locationName:"actions" type:"list" required:"true"`
@@ -1132,26 +1130,26 @@ func (s *ApplicationPolicyStatement) SetStatementId(v string) *ApplicationPolicy
 type ApplicationSummary struct {
 	_ struct{} `type:"structure"`
 
-	// The application Amazon Resource Name (ARN).
+	// The application ARN.
 	//
 	// ApplicationId is a required field
 	ApplicationId *string `locationName:"applicationId" type:"string" required:"true"`
 
 	// The name of the author publishing the app.
 	//
-	// Minimum length=1. Maximum length=127.
+	// Min Length=1. Max Length=127.
 	//
 	// Pattern "^[a-z0-9](([a-z0-9]|-(?!-))*[a-z0-9])?$";
 	//
 	// Author is a required field
 	Author *string `locationName:"author" type:"string" required:"true"`
 
-	// The date and time this resource was created.
+	// The date/time this resource was created.
 	CreationTime *string `locationName:"creationTime" type:"string"`
 
 	// The description of the application.
 	//
-	// Minimum length=1. Maximum length=256
+	// Min Length=1. Max Length=256
 	//
 	// Description is a required field
 	Description *string `locationName:"description" type:"string" required:"true"`
@@ -1162,14 +1160,14 @@ type ApplicationSummary struct {
 
 	// Labels to improve discovery of apps in search results.
 	//
-	// Minimum length=1. Maximum length=127. Maximum number of labels: 10
+	// Min Length=1. Max Length=127. Maximum number of labels: 10
 	//
 	// Pattern: "^[a-zA-Z0-9+\\-_:\\/@]+$";
 	Labels []*string `locationName:"labels" type:"list"`
 
 	// The name of the application.
 	//
-	// Minimum length=1. Maximum length=140
+	// Min Length=1. Max Length=140
 	//
 	// Pattern: "[a-zA-Z0-9\\-]+";
 	//
@@ -1344,11 +1342,9 @@ func (s *CreateApplicationOutput) SetVersion(v *Version) *CreateApplicationOutpu
 type CreateApplicationRequest struct {
 	_ struct{} `type:"structure"`
 
-	// Author is a required field
-	Author *string `locationName:"author" type:"string" required:"true"`
+	Author *string `locationName:"author" type:"string"`
 
-	// Description is a required field
-	Description *string `locationName:"description" type:"string" required:"true"`
+	Description *string `locationName:"description" type:"string"`
 
 	HomePageUrl *string `locationName:"homePageUrl" type:"string"`
 
@@ -1358,8 +1354,7 @@ type CreateApplicationRequest struct {
 
 	LicenseUrl *string `locationName:"licenseUrl" type:"string"`
 
-	// Name is a required field
-	Name *string `locationName:"name" type:"string" required:"true"`
+	Name *string `locationName:"name" type:"string"`
 
 	ReadmeBody *string `locationName:"readmeBody" type:"string"`
 
@@ -1384,25 +1379,6 @@ func (s CreateApplicationRequest) String() string {
 // GoString returns the string representation
 func (s CreateApplicationRequest) GoString() string {
 	return s.String()
-}
-
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *CreateApplicationRequest) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "CreateApplicationRequest"}
-	if s.Author == nil {
-		invalidParams.Add(request.NewErrParamRequired("Author"))
-	}
-	if s.Description == nil {
-		invalidParams.Add(request.NewErrParamRequired("Description"))
-	}
-	if s.Name == nil {
-		invalidParams.Add(request.NewErrParamRequired("Name"))
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
 }
 
 // SetAuthor sets the Author field's value.
@@ -1679,8 +1655,7 @@ type CreateCloudFormationChangeSetRequest struct {
 
 	SemanticVersion *string `locationName:"semanticVersion" type:"string"`
 
-	// StackName is a required field
-	StackName *string `locationName:"stackName" type:"string" required:"true"`
+	StackName *string `locationName:"stackName" type:"string"`
 }
 
 // String returns the string representation
@@ -1698,9 +1673,6 @@ func (s *CreateCloudFormationChangeSetRequest) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateCloudFormationChangeSetRequest"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
-	}
-	if s.StackName == nil {
-		invalidParams.Add(request.NewErrParamRequired("StackName"))
 	}
 	if s.ParameterOverrides != nil {
 		for i, v := range s.ParameterOverrides {
@@ -2163,7 +2135,7 @@ type ParameterDefinition struct {
 	// A regular expression that represents the patterns to allow for String types.
 	AllowedPattern *string `locationName:"allowedPattern" type:"string"`
 
-	// An array containing the list of values allowed for the parameter.
+	// Array containing the list of values allowed for the parameter.
 	AllowedValues []*string `locationName:"allowedValues" type:"list"`
 
 	// A string that explains a constraint when the constraint is violated. For
@@ -2174,7 +2146,7 @@ type ParameterDefinition struct {
 	// Malformed input-Parameter MyParameter must match pattern [A-Za-z0-9]+
 	//
 	// By adding a constraint description, such as "must contain only uppercase
-	// and lowercase letters and numbers," you can display the following customized
+	// and lowercase letters, and numbers," you can display the following customized
 	// error message:
 	//
 	// Malformed input-Parameter MyParameter must contain only uppercase and lowercase
@@ -2189,20 +2161,20 @@ type ParameterDefinition struct {
 	// A string of up to 4,000 characters that describes the parameter.
 	Description *string `locationName:"description" type:"string"`
 
-	// An integer value that determines the largest number of characters that you
-	// want to allow for String types.
+	// An integer value that determines the largest number of characters you want
+	// to allow for String types.
 	MaxLength *int64 `locationName:"maxLength" type:"integer"`
 
-	// A numeric value that determines the largest numeric value that you want to
-	// allow for Number types.
+	// A numeric value that determines the largest numeric value you want to allow
+	// for Number types.
 	MaxValue *int64 `locationName:"maxValue" type:"integer"`
 
-	// An integer value that determines the smallest number of characters that you
-	// want to allow for String types.
+	// An integer value that determines the smallest number of characters you want
+	// to allow for String types.
 	MinLength *int64 `locationName:"minLength" type:"integer"`
 
-	// A numeric value that determines the smallest numeric value that you want
-	// to allow for Number types.
+	// A numeric value that determines the smallest numeric value you want to allow
+	// for Number types.
 	MinValue *int64 `locationName:"minValue" type:"integer"`
 
 	// The name of the parameter.
@@ -2226,28 +2198,27 @@ type ParameterDefinition struct {
 	//
 	// String: A literal string.
 	//
-	// For example, users can specify "MyUserName".
+	// For example, users could specify "MyUserName".
 	//
 	// Number: An integer or float. AWS CloudFormation validates the parameter value
-	// as a number. However, when you use the parameter elsewhere in your template
+	// as a number; however, when you use the parameter elsewhere in your template
 	// (for example, by using the Ref intrinsic function), the parameter value becomes
 	// a string.
 	//
-	// For example, users might specify "8888".
+	// For example, users could specify "8888".
 	//
 	// List<Number>: An array of integers or floats that are separated by commas.
-	// AWS CloudFormation validates the parameter value as numbers. However, when
+	// AWS CloudFormation validates the parameter value as numbers; however, when
 	// you use the parameter elsewhere in your template (for example, by using the
 	// Ref intrinsic function), the parameter value becomes a list of strings.
 	//
-	// For example, users might specify "80,20", and then Ref results in ["80","20"].
+	// For example, users could specify "80,20", and a Ref results in ["80","20"].
 	//
 	// CommaDelimitedList: An array of literal strings that are separated by commas.
 	// The total number of strings should be one more than the total number of commas.
 	// Also, each member string is space-trimmed.
 	//
-	// For example, users might specify "test,dev,prod", and then Ref results in
-	// ["test","dev","prod"].
+	// For example, users could specify "test,dev,prod", and a Ref results in ["test","dev","prod"].
 	Type *string `locationName:"type" type:"string"`
 }
 
@@ -2400,8 +2371,7 @@ type PutApplicationPolicyInput struct {
 	// ApplicationId is a required field
 	ApplicationId *string `location:"uri" locationName:"applicationId" type:"string" required:"true"`
 
-	// Statements is a required field
-	Statements []*ApplicationPolicyStatement `locationName:"statements" type:"list" required:"true"`
+	Statements []*ApplicationPolicyStatement `locationName:"statements" type:"list"`
 }
 
 // String returns the string representation
@@ -2419,9 +2389,6 @@ func (s *PutApplicationPolicyInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "PutApplicationPolicyInput"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
-	}
-	if s.Statements == nil {
-		invalidParams.Add(request.NewErrParamRequired("Statements"))
 	}
 	if s.Statements != nil {
 		for i, v := range s.Statements {
@@ -2670,12 +2637,12 @@ type Version struct {
 	// ApplicationId is a required field
 	ApplicationId *string `locationName:"applicationId" type:"string" required:"true"`
 
-	// The date and time this resource was created.
+	// The date/time this resource was created.
 	//
 	// CreationTime is a required field
 	CreationTime *string `locationName:"creationTime" type:"string" required:"true"`
 
-	// An array of parameter types supported by the application.
+	// Array of parameter types supported by the application.
 	//
 	// ParameterDefinitions is a required field
 	ParameterDefinitions []*ParameterDefinition `locationName:"parameterDefinitions" type:"list" required:"true"`
@@ -2742,7 +2709,7 @@ func (s *Version) SetTemplateUrl(v string) *Version {
 	return s
 }
 
-// An application version summary.
+// Application version summary.
 type VersionSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -2751,7 +2718,7 @@ type VersionSummary struct {
 	// ApplicationId is a required field
 	ApplicationId *string `locationName:"applicationId" type:"string" required:"true"`
 
-	// The date and time this resource was created.
+	// The date/time this resource was created.
 	//
 	// CreationTime is a required field
 	CreationTime *string `locationName:"creationTime" type:"string" required:"true"`

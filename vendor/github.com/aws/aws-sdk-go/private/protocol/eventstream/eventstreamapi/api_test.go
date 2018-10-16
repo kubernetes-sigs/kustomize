@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/private/protocol"
 	"github.com/aws/aws-sdk-go/private/protocol/eventstream"
@@ -108,51 +109,12 @@ func TestEventReader_Error(t *testing.T) {
 		t.Fatalf("expect no event, got %v", event)
 	}
 
-	if e, a := "errorCode: error message occur", err.Error(); e != a {
-		t.Errorf("expect %v error, got %v", e, a)
+	aerr := err.(awserr.Error)
+	if e, a := "errorCode", aerr.Code(); e != a {
+		t.Errorf("expect %v code, got %v", e, a)
 	}
-}
-
-func TestEventReader_Exception(t *testing.T) {
-	eventMsgs := []eventstream.Message{
-		{
-			Headers: eventstream.Headers{
-				eventstream.Header{
-					Name:  MessageTypeHeader,
-					Value: eventstream.StringValue(ExceptionMessageType),
-				},
-				eventstream.Header{
-					Name:  ExceptionTypeHeader,
-					Value: eventstream.StringValue("exception"),
-				},
-			},
-			Payload: []byte(`{"message":"exception message"}`),
-		},
-	}
-	stream := createStream(eventMsgs...)
-
-	var unmarshalers request.HandlerList
-	unmarshalers.PushBackNamed(restjson.UnmarshalHandler)
-
-	eventReader := NewEventReader(stream,
-		protocol.HandlerPayloadUnmarshal{
-			Unmarshalers: unmarshalers,
-		},
-		unmarshalerForEventType,
-	)
-
-	event, err := eventReader.ReadEvent()
-	if err == nil {
-		t.Fatalf("expect error got none")
-	}
-
-	if event != nil {
-		t.Fatalf("expect no event, got %v", event)
-	}
-
-	et := err.(*exceptionType)
-	if e, a := string(eventMsgs[0].Payload), string(et.Payload); e != a {
-		t.Errorf("expect %v payload, got %v", e, a)
+	if e, a := "error message occur", aerr.Message(); e != a {
+		t.Errorf("expect %v message, got %v", e, a)
 	}
 }
 
@@ -201,8 +163,6 @@ func unmarshalerForEventType(eventType string) (Unmarshaler, error) {
 	switch eventType {
 	case "eventABC":
 		return &eventABC{}, nil
-	case "exception":
-		return &exceptionType{}, nil
 	default:
 		return nil, fmt.Errorf("unknown event type, %v", eventType)
 	}
@@ -234,20 +194,4 @@ func createStream(msgs ...eventstream.Message) io.ReadCloser {
 	}
 
 	return ioutil.NopCloser(w)
-}
-
-type exceptionType struct {
-	Payload []byte
-}
-
-func (e exceptionType) Error() string {
-	return fmt.Sprintf("exception error message")
-}
-
-func (e *exceptionType) UnmarshalEvent(
-	unmarshaler protocol.PayloadUnmarshaler,
-	msg eventstream.Message,
-) error {
-	e.Payload = msg.Payload
-	return nil
 }

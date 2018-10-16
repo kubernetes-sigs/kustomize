@@ -701,11 +701,7 @@
         "MinUpdatePeriodSeconds": {
           "locationName": "minUpdatePeriodSeconds", 
           "shape": "__integer"
-        },
-        "PeriodTriggers": {
-          "locationName": "periodTriggers",
-          "shape": "__listOf__PeriodTriggersElement"
-        },
+        }, 
         "Profile": {
           "locationName": "profile", 
           "shape": "Profile"
@@ -1626,13 +1622,7 @@
         }
       }, 
       "type": "structure"
-    },
-    "__PeriodTriggersElement": {
-      "enum": [
-        "ADS"
-      ],
-      "type": "string"
-    },
+    }, 
     "__boolean": {
       "type": "boolean"
     }, 
@@ -1671,13 +1661,7 @@
         "shape": "OriginEndpoint"
       }, 
       "type": "list"
-    },
-    "__listOf__PeriodTriggersElement": {
-      "member": {
-        "shape": "__PeriodTriggersElement"
-      },
-      "type": "list"
-    },
+    }, 
     "__listOf__string": {
       "member": {
         "shape": "__string"

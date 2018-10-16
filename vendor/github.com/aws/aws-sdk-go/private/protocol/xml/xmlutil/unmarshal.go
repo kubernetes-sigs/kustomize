@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/aws/aws-sdk-go/private/protocol"
 )
 
 // UnmarshalXML deserializes an xml.Decoder into the container v. V
@@ -255,12 +253,8 @@ func parseScalar(r reflect.Value, node *XMLNode, tag reflect.StructTag) error {
 		}
 		r.Set(reflect.ValueOf(&v))
 	case *time.Time:
-		format := tag.Get("timestampFormat")
-		if len(format) == 0 {
-			format = protocol.ISO8601TimeFormatName
-		}
-
-		t, err := protocol.ParseTime(format, node.Text)
+		const ISO8601UTC = "2006-01-02T15:04:05Z"
+		t, err := time.Parse(ISO8601UTC, node.Text)
 		if err != nil {
 			return err
 		}

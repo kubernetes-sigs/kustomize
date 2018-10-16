@@ -5514,7 +5514,7 @@ type DescribeStreamProcessorOutput struct {
 	_ struct{} `type:"structure"`
 
 	// Date and time the stream processor was created
-	CreationTimestamp *time.Time `type:"timestamp"`
+	CreationTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Kinesis video stream that provides the source streaming video.
 	Input *StreamProcessorInput `type:"structure"`
@@ -5522,7 +5522,7 @@ type DescribeStreamProcessorOutput struct {
 	// The time, in Unix format, the stream processor was last updated. For example,
 	// when the stream processor moves from a running state to a failed state, or
 	// when the user starts or stops the stream processor.
-	LastUpdateTimestamp *time.Time `type:"timestamp"`
+	LastUpdateTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Name of the stream processor.
 	Name *string `min:"1" type:"string"`

@@ -26,7 +26,7 @@ import (
 //    // myFunc uses an SDK service client to make a request to
 //    // AWS CloudHSM V2.
 //    func myFunc(svc cloudhsmv2iface.CloudHSMV2API) bool {
-//        // Make svc.CopyBackupToRegion request
+//        // Make svc.CreateCluster request
 //    }
 //
 //    func main() {
@@ -42,7 +42,7 @@ import (
 //    type mockCloudHSMV2Client struct {
 //        cloudhsmv2iface.CloudHSMV2API
 //    }
-//    func (m *mockCloudHSMV2Client) CopyBackupToRegion(input *cloudhsmv2.CopyBackupToRegionInput) (*cloudhsmv2.CopyBackupToRegionOutput, error) {
+//    func (m *mockCloudHSMV2Client) CreateCluster(input *cloudhsmv2.CreateClusterInput) (*cloudhsmv2.CreateClusterOutput, error) {
 //        // mock response/functionality
 //    }
 //
@@ -60,10 +60,6 @@ import (
 // and waiters. Its suggested to use the pattern above for testing, or using
 // tooling to generate mocks to satisfy the interfaces.
 type CloudHSMV2API interface {
-	CopyBackupToRegion(*cloudhsmv2.CopyBackupToRegionInput) (*cloudhsmv2.CopyBackupToRegionOutput, error)
-	CopyBackupToRegionWithContext(aws.Context, *cloudhsmv2.CopyBackupToRegionInput, ...request.Option) (*cloudhsmv2.CopyBackupToRegionOutput, error)
-	CopyBackupToRegionRequest(*cloudhsmv2.CopyBackupToRegionInput) (*request.Request, *cloudhsmv2.CopyBackupToRegionOutput)
-
 	CreateCluster(*cloudhsmv2.CreateClusterInput) (*cloudhsmv2.CreateClusterOutput, error)
 	CreateClusterWithContext(aws.Context, *cloudhsmv2.CreateClusterInput, ...request.Option) (*cloudhsmv2.CreateClusterOutput, error)
 	CreateClusterRequest(*cloudhsmv2.CreateClusterInput) (*request.Request, *cloudhsmv2.CreateClusterOutput)

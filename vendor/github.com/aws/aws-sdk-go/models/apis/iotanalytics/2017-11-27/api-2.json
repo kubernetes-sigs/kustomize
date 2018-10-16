@@ -668,12 +668,6 @@
       "min":1,
       "pattern":"^[a-zA-Z0-9_]+$"
     },
-    "ChannelStatistics":{
-      "type":"structure",
-      "members":{
-        "size":{"shape":"EstimatedResourceSize"}
-      }
-    },
     "ChannelStatus":{
       "type":"string",
       "enum":[
@@ -906,12 +900,6 @@
       "min":1,
       "pattern":"^[a-zA-Z0-9_]+$"
     },
-    "DatastoreStatistics":{
-      "type":"structure",
-      "members":{
-        "size":{"shape":"EstimatedResourceSize"}
-      }
-    },
     "DatastoreStatus":{
       "type":"string",
       "enum":[
@@ -1001,19 +989,13 @@
           "shape":"ChannelName",
           "location":"uri",
           "locationName":"channelName"
-        },
-        "includeStatistics":{
-          "shape":"IncludeStatisticsFlag",
-          "location":"querystring",
-          "locationName":"includeStatistics"
         }
       }
     },
     "DescribeChannelResponse":{
       "type":"structure",
       "members":{
-        "channel":{"shape":"Channel"},
-        "statistics":{"shape":"ChannelStatistics"}
+        "channel":{"shape":"Channel"}
       }
     },
     "DescribeDatasetRequest":{
@@ -1041,19 +1023,13 @@
           "shape":"DatastoreName",
           "location":"uri",
           "locationName":"datastoreName"
-        },
-        "includeStatistics":{
-          "shape":"IncludeStatisticsFlag",
-          "location":"querystring",
-          "locationName":"includeStatistics"
         }
       }
     },
     "DescribeDatastoreResponse":{
       "type":"structure",
       "members":{
-        "datastore":{"shape":"Datastore"},
-        "statistics":{"shape":"DatastoreStatistics"}
+        "datastore":{"shape":"Datastore"}
       }
     },
     "DescribeLoggingOptionsRequest":{
@@ -1120,13 +1096,6 @@
     "EntryName":{"type":"string"},
     "ErrorCode":{"type":"string"},
     "ErrorMessage":{"type":"string"},
-    "EstimatedResourceSize":{
-      "type":"structure",
-      "members":{
-        "estimatedSizeInBytes":{"shape":"SizeInBytes"},
-        "estimatedOn":{"shape":"Timestamp"}
-      }
-    },
     "FilterActivity":{
       "type":"structure",
       "required":[
@@ -1168,7 +1137,6 @@
         "status":{"shape":"DatasetContentStatus"}
       }
     },
-    "IncludeStatisticsFlag":{"type":"boolean"},
     "InternalFailureException":{
       "type":"structure",
       "members":{
@@ -1607,7 +1575,6 @@
       "exception":true,
       "fault":true
     },
-    "SizeInBytes":{"type":"double"},
     "SqlQuery":{"type":"string"},
     "SqlQueryDatasetAction":{
       "type":"structure",

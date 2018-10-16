@@ -1544,58 +1544,30 @@ type OutputService10TestShapeOutputService10TestCaseOperation1Input struct {
 type OutputService10TestShapeOutputService10TestCaseOperation1Output struct {
 	_ struct{} `type:"structure"`
 
-	StructMember *OutputService10TestShapeTimeContainer `type:"structure"`
+	FooEnum *string `type:"string" enum:"OutputService10TestShapeEC2EnumType"`
 
-	TimeArg *time.Time `type:"timestamp"`
-
-	TimeCustom *time.Time `type:"timestamp" timestampFormat:"rfc822"`
-
-	TimeFormat *time.Time `type:"timestamp" timestampFormat:"unixTimestamp"`
+	ListEnums []*string `type:"list"`
 }
 
-// SetStructMember sets the StructMember field's value.
-func (s *OutputService10TestShapeOutputService10TestCaseOperation1Output) SetStructMember(v *OutputService10TestShapeTimeContainer) *OutputService10TestShapeOutputService10TestCaseOperation1Output {
-	s.StructMember = v
+// SetFooEnum sets the FooEnum field's value.
+func (s *OutputService10TestShapeOutputService10TestCaseOperation1Output) SetFooEnum(v string) *OutputService10TestShapeOutputService10TestCaseOperation1Output {
+	s.FooEnum = &v
 	return s
 }
 
-// SetTimeArg sets the TimeArg field's value.
-func (s *OutputService10TestShapeOutputService10TestCaseOperation1Output) SetTimeArg(v time.Time) *OutputService10TestShapeOutputService10TestCaseOperation1Output {
-	s.TimeArg = &v
+// SetListEnums sets the ListEnums field's value.
+func (s *OutputService10TestShapeOutputService10TestCaseOperation1Output) SetListEnums(v []*string) *OutputService10TestShapeOutputService10TestCaseOperation1Output {
+	s.ListEnums = v
 	return s
 }
 
-// SetTimeCustom sets the TimeCustom field's value.
-func (s *OutputService10TestShapeOutputService10TestCaseOperation1Output) SetTimeCustom(v time.Time) *OutputService10TestShapeOutputService10TestCaseOperation1Output {
-	s.TimeCustom = &v
-	return s
-}
+const (
+	// EC2EnumTypeFoo is a OutputService10TestShapeEC2EnumType enum value
+	EC2EnumTypeFoo = "foo"
 
-// SetTimeFormat sets the TimeFormat field's value.
-func (s *OutputService10TestShapeOutputService10TestCaseOperation1Output) SetTimeFormat(v time.Time) *OutputService10TestShapeOutputService10TestCaseOperation1Output {
-	s.TimeFormat = &v
-	return s
-}
-
-type OutputService10TestShapeTimeContainer struct {
-	_ struct{} `type:"structure"`
-
-	Bar *time.Time `locationName:"bar" type:"timestamp" timestampFormat:"unixTimestamp"`
-
-	Foo *time.Time `locationName:"foo" type:"timestamp"`
-}
-
-// SetBar sets the Bar field's value.
-func (s *OutputService10TestShapeTimeContainer) SetBar(v time.Time) *OutputService10TestShapeTimeContainer {
-	s.Bar = &v
-	return s
-}
-
-// SetFoo sets the Foo field's value.
-func (s *OutputService10TestShapeTimeContainer) SetFoo(v time.Time) *OutputService10TestShapeTimeContainer {
-	s.Foo = &v
-	return s
-}
+	// EC2EnumTypeBar is a OutputService10TestShapeEC2EnumType enum value
+	EC2EnumTypeBar = "bar"
+)
 
 //
 // Tests begin here
@@ -1874,10 +1846,10 @@ func TestOutputService9ProtocolTestEmptyStringCase1(t *testing.T) {
 
 }
 
-func TestOutputService10ProtocolTestTimestampMembersCase1(t *testing.T) {
+func TestOutputService10ProtocolTestEnumOutputCase1(t *testing.T) {
 	svc := NewOutputService10ProtocolTest(unit.Session, &aws.Config{Endpoint: aws.String("https://test")})
 
-	buf := bytes.NewReader([]byte("<OperationNameResponse><StructMember><foo>2014-04-29T18:30:38Z</foo><bar>1398796238</bar></StructMember><TimeArg>2014-04-29T18:30:38Z</TimeArg><TimeCustom>Tue, 29 Apr 2014 18:30:38 GMT</TimeCustom><TimeFormat>1398796238</TimeFormat><RequestId>requestid</RequestId></OperationNameResponse>"))
+	buf := bytes.NewReader([]byte("<OperationNameResponse><FooEnum>foo</FooEnum><ListEnums><member>foo</member><member>bar</member></ListEnums></OperationNameResponse>"))
 	req, out := svc.OutputService10TestCaseOperation1Request(nil)
 	req.HTTPResponse = &http.Response{StatusCode: 200, Body: ioutil.NopCloser(buf), Header: http.Header{}}
 
@@ -1894,19 +1866,13 @@ func TestOutputService10ProtocolTestTimestampMembersCase1(t *testing.T) {
 	if out == nil {
 		t.Errorf("expect not to be nil")
 	}
-	if e, a := time.Unix(1.398796238e+09, 0).UTC().String(), out.StructMember.Bar.UTC().String(); e != a {
+	if e, a := "foo", *out.FooEnum; e != a {
 		t.Errorf("expect %v, got %v", e, a)
 	}
-	if e, a := time.Unix(1.398796238e+09, 0).UTC().String(), out.StructMember.Foo.UTC().String(); e != a {
+	if e, a := "foo", *out.ListEnums[0]; e != a {
 		t.Errorf("expect %v, got %v", e, a)
 	}
-	if e, a := time.Unix(1.398796238e+09, 0).UTC().String(), out.TimeArg.UTC().String(); e != a {
-		t.Errorf("expect %v, got %v", e, a)
-	}
-	if e, a := time.Unix(1.398796238e+09, 0).UTC().String(), out.TimeCustom.UTC().String(); e != a {
-		t.Errorf("expect %v, got %v", e, a)
-	}
-	if e, a := time.Unix(1.398796238e+09, 0).UTC().String(), out.TimeFormat.UTC().String(); e != a {
+	if e, a := "bar", *out.ListEnums[1]; e != a {
 		t.Errorf("expect %v, got %v", e, a)
 	}
 

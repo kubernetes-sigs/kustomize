@@ -7,7 +7,6 @@
     "protocol":"json",
     "serviceAbbreviation":"AWSHealth",
     "serviceFullName":"AWS Health APIs and Notifications",
-    "serviceId":"Health",
     "signatureVersion":"v4",
     "targetPrefix":"AWSHealth_20160804",
     "uid":"health-2016-08-04"
@@ -423,7 +422,7 @@
     "eventArn":{
       "type":"string",
       "max":1600,
-      "pattern":"arn:aws:health:[^:]*:[^:]*:event(?:/[\\w-]+){1}((?:/[\\w-]+){2})?"
+      "pattern":"arn:aws:health:[^:]*:[^:]*:event/[\\w-]+"
     },
     "eventArnList":{
       "type":"list",

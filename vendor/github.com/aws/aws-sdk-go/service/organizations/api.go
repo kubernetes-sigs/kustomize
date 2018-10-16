@@ -9499,7 +9499,7 @@ type Account struct {
 	JoinedMethod *string `type:"string" enum:"AccountJoinedMethod"`
 
 	// The date the account became a part of the organization.
-	JoinedTimestamp *time.Time `type:"timestamp"`
+	JoinedTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The friendly name of the account.
 	//
@@ -9908,7 +9908,7 @@ type CreateAccountStatus struct {
 	AccountName *string `min:"1" type:"string"`
 
 	// The date and time that the account was created and the request completed.
-	CompletedTimestamp *time.Time `type:"timestamp"`
+	CompletedTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// If the request failed, a description of the reason for the failure.
 	//
@@ -9937,7 +9937,7 @@ type CreateAccountStatus struct {
 	Id *string `type:"string"`
 
 	// The date and time that the request was made for the account creation.
-	RequestedTimestamp *time.Time `type:"timestamp"`
+	RequestedTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The status of the request.
 	State *string `type:"string" enum:"CreateAccountState"`
@@ -11242,7 +11242,7 @@ type EnabledServicePrincipal struct {
 
 	// The date that the service principal was enabled for integration with AWS
 	// Organizations.
-	DateEnabled *time.Time `type:"timestamp"`
+	DateEnabled *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The name of the service principal. This is typically in the form of a URL,
 	// such as: servicename.amazonaws.com.
@@ -11310,7 +11310,7 @@ type Handshake struct {
 	// The date and time that the handshake expires. If the recipient of the handshake
 	// request fails to respond before the specified date and time, the handshake
 	// becomes inactive and is no longer valid.
-	ExpirationTimestamp *time.Time `type:"timestamp"`
+	ExpirationTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The unique identifier (ID) of a handshake. The originating account creates
 	// the ID when it initiates the handshake.
@@ -11323,7 +11323,7 @@ type Handshake struct {
 	Parties []*HandshakeParty `type:"list"`
 
 	// The date and time that the handshake request was made.
-	RequestedTimestamp *time.Time `type:"timestamp"`
+	RequestedTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Additional information that is needed to process the handshake.
 	Resources []*HandshakeResource `type:"list"`

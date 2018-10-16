@@ -152,10 +152,6 @@ func (c *AlexaForBusiness) AssociateDeviceWithRoomRequest(input *AssociateDevice
 //   You are performing an action that would put you beyond your account's limits.
 //   HTTP Status Code: 400
 //
-//   * ErrCodeDeviceNotRegisteredException "DeviceNotRegisteredException"
-//   The request failed because this device is no longer registered and therefore
-//   no longer managed by this account.
-//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/alexaforbusiness-2017-11-09/AssociateDeviceWithRoom
 func (c *AlexaForBusiness) AssociateDeviceWithRoom(input *AssociateDeviceWithRoomInput) (*AssociateDeviceWithRoomOutput, error) {
 	req, out := c.AssociateDeviceWithRoomRequest(input)
@@ -1427,12 +1423,6 @@ func (c *AlexaForBusiness) DisassociateDeviceFromRoomRequest(input *Disassociate
 //
 // See the AWS API reference guide for Alexa For Business's
 // API operation DisassociateDeviceFromRoom for usage and error information.
-//
-// Returned Error Codes:
-//   * ErrCodeDeviceNotRegisteredException "DeviceNotRegisteredException"
-//   The request failed because this device is no longer registered and therefore
-//   no longer managed by this account.
-//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/alexaforbusiness-2017-11-09/DisassociateDeviceFromRoom
 func (c *AlexaForBusiness) DisassociateDeviceFromRoom(input *DisassociateDeviceFromRoomInput) (*DisassociateDeviceFromRoomOutput, error) {
 	req, out := c.DisassociateDeviceFromRoomRequest(input)
@@ -2133,8 +2123,10 @@ func (c *AlexaForBusiness) ListDeviceEventsRequest(input *ListDeviceEventsInput)
 
 // ListDeviceEvents API operation for Alexa For Business.
 //
-// Lists the device event history, including device connection status, for up
-// to 30 days.
+// Lists the Device Event history for up to 30 days. If EventType isn't specified
+// in the request, this returns a list of all device events in reverse chronological
+// order. If EventType is specified, this returns a list of device events for
+// that EventType in reverse chronological order.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2399,7 +2391,7 @@ func (c *AlexaForBusiness) ListTagsRequest(input *ListTagsInput) (req *request.R
 
 // ListTags API operation for Alexa For Business.
 //
-// Lists all tags for the specified resource.
+// Lists all tags for a specific resource.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3767,12 +3759,6 @@ func (c *AlexaForBusiness) StartDeviceSyncRequest(input *StartDeviceSyncInput) (
 //
 // See the AWS API reference guide for Alexa For Business's
 // API operation StartDeviceSync for usage and error information.
-//
-// Returned Error Codes:
-//   * ErrCodeDeviceNotRegisteredException "DeviceNotRegisteredException"
-//   The request failed because this device is no longer registered and therefore
-//   no longer managed by this account.
-//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/alexaforbusiness-2017-11-09/StartDeviceSync
 func (c *AlexaForBusiness) StartDeviceSync(input *StartDeviceSyncInput) (*StartDeviceSyncOutput, error) {
 	req, out := c.StartDeviceSyncRequest(input)
@@ -4170,10 +4156,6 @@ func (c *AlexaForBusiness) UpdateDeviceRequest(input *UpdateDeviceInput) (req *r
 // Returned Error Codes:
 //   * ErrCodeNotFoundException "NotFoundException"
 //   The resource is not found. HTTP Status Code: 400
-//
-//   * ErrCodeDeviceNotRegisteredException "DeviceNotRegisteredException"
-//   The request failed because this device is no longer registered and therefore
-//   no longer managed by this account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/alexaforbusiness-2017-11-09/UpdateDevice
 func (c *AlexaForBusiness) UpdateDevice(input *UpdateDeviceInput) (*UpdateDeviceOutput, error) {
@@ -6085,7 +6067,7 @@ type DeviceEvent struct {
 	_ struct{} `type:"structure"`
 
 	// The time (in epoch) when the event occurred.
-	Timestamp *time.Time `type:"timestamp"`
+	Timestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The type of device event.
 	Type *string `type:"string" enum:"DeviceEventType"`
@@ -6787,21 +6769,17 @@ type ListDeviceEventsInput struct {
 	// DeviceArn is a required field
 	DeviceArn *string `type:"string" required:"true"`
 
-	// The event type to filter device events. If EventType isn't specified, this
-	// returns a list of all device events in reverse chronological order. If EventType
-	// is specified, this returns a list of device events for that EventType in
-	// reverse chronological order.
+	// The event type to filter device events.
 	EventType *string `type:"string" enum:"DeviceEventType"`
 
-	// The maximum number of results to include in the response. The default value
-	// is 50. If more results exist than the specified MaxResults value, a token
-	// is included in the response so that the remaining results can be retrieved.
+	// The maximum number of results to include in the response. If more results
+	// exist than the specified MaxResults value, a token is included in the response
+	// so that the remaining results can be retrieved. Required.
 	MaxResults *int64 `min:"1" type:"integer"`
 
 	// An optional token returned from a prior request. Use this token for pagination
 	// of results from this action. If this parameter is specified, the response
 	// only includes results beyond the token, up to the value specified by MaxResults.
-	// When the end of results is reached, the response has a value of null.
 	NextToken *string `min:"1" type:"string"`
 }
 
@@ -6861,10 +6839,8 @@ func (s *ListDeviceEventsInput) SetNextToken(v string) *ListDeviceEventsInput {
 type ListDeviceEventsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The device events requested for the device ARN.
 	DeviceEvents []*DeviceEvent `type:"list"`
 
-	// The token returned to indicate that there is more data available.
 	NextToken *string `min:"1" type:"string"`
 }
 
@@ -6987,7 +6963,7 @@ func (s *ListSkillsOutput) SetSkillSummaries(v []*SkillSummary) *ListSkillsOutpu
 type ListTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the specified resource for which to list tags.
+	// The ARN of the specific resource for which to list tags. Required.
 	//
 	// Arn is a required field
 	Arn *string `type:"string" required:"true"`
@@ -7056,7 +7032,7 @@ type ListTagsOutput struct {
 	// The token returned to indicate that there is more data available.
 	NextToken *string `min:"1" type:"string"`
 
-	// The tags requested for the specified resource.
+	// The list of tags requested for the specific resource.
 	Tags []*Tag `type:"list"`
 }
 

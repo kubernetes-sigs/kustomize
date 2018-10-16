@@ -12,17 +12,13 @@
     "DescribeElasticsearchInstanceTypeLimits": "<p> Describe Elasticsearch Limits for a given InstanceType and ElasticsearchVersion. When modifying existing Domain, specify the <code> <a>DomainName</a> </code> to know what Limits are supported for modifying. </p>",
     "DescribeReservedElasticsearchInstanceOfferings": "<p>Lists available reserved Elasticsearch instance offerings.</p>",
     "DescribeReservedElasticsearchInstances": "<p>Returns information about reserved Elasticsearch instances for this account.</p>",
-    "GetCompatibleElasticsearchVersions": "<p> Returns a list of upgrade compatible Elastisearch versions. You can optionally pass a <code> <a>DomainName</a> </code> to get all upgrade compatible Elasticsearch versions for that specific domain. </p>",
-    "GetUpgradeHistory": "<p>Retrieves the complete history of the last 10 upgrades that were performed on the domain.</p>",
-    "GetUpgradeStatus": "<p>Retrieves the latest status of the last upgrade or upgrade eligibility check that was performed on the domain.</p>",
     "ListDomainNames": "<p>Returns the name of all Elasticsearch domains owned by the current user's account. </p>",
     "ListElasticsearchInstanceTypes": "<p>List all Elasticsearch instance types that are supported for given ElasticsearchVersion</p>",
     "ListElasticsearchVersions": "<p>List all supported Elasticsearch versions</p>",
     "ListTags": "<p>Returns all tags for the given Elasticsearch domain.</p>",
     "PurchaseReservedElasticsearchInstanceOffering": "<p>Allows you to purchase reserved Elasticsearch instances.</p>",
     "RemoveTags": "<p>Removes the specified set of tags from the specified Elasticsearch domain.</p>",
-    "UpdateElasticsearchDomainConfig": "<p>Modifies the cluster configuration of the specified Elasticsearch domain, setting as setting the instance type and the number of instances. </p>",
-    "UpgradeElasticsearchDomain": "<p>Allows you to either upgrade your domain or perform an Upgrade eligibility check to a compatible Elasticsearch version.</p>"
+    "UpdateElasticsearchDomainConfig": "<p>Modifies the cluster configuration of the specified Elasticsearch domain, setting as setting the instance type and the number of instances. </p>"
   },
   "shapes": {
     "ARN": {
@@ -87,12 +83,9 @@
         "ElasticsearchDomainStatus$Created": "<p>The domain creation status. <code>True</code> if the creation of an Elasticsearch domain is complete. <code>False</code> if domain creation is still in progress.</p>",
         "ElasticsearchDomainStatus$Deleted": "<p>The domain deletion status. <code>True</code> if a delete request has been received for the domain but resource cleanup is still in progress. <code>False</code> if the domain has not been deleted. Once domain deletion is complete, the status of the domain is no longer returned.</p>",
         "ElasticsearchDomainStatus$Processing": "<p>The status of the Elasticsearch domain configuration. <code>True</code> if Amazon Elasticsearch Service is processing configuration changes. <code>False</code> if the configuration is active.</p>",
-        "ElasticsearchDomainStatus$UpgradeProcessing": "<p>The status of an Elasticsearch domain version upgrade. <code>True</code> if Amazon Elasticsearch Service is undergoing a version upgrade. <code>False</code> if the configuration is active.</p>",
         "EncryptionAtRestOptions$Enabled": "<p>Specifies the option to enable Encryption At Rest.</p>",
         "LogPublishingOption$Enabled": "<p> Specifies whether given log publishing option is enabled or not.</p>",
-        "OptionStatus$PendingDeletion": "<p>Indicates whether the Elasticsearch domain is being deleted.</p>",
-        "UpgradeElasticsearchDomainRequest$PerformCheckOnly": "<p> This flag, when set to True, indicates that an Upgrade Eligibility Check needs to be performed. This will not actually perform the Upgrade. </p>",
-        "UpgradeElasticsearchDomainResponse$PerformCheckOnly": "<p> This flag, when set to True, indicates that an Upgrade Eligibility Check needs to be performed. This will not actually perform the Upgrade. </p>"
+        "OptionStatus$PendingDeletion": "<p>Indicates whether the Elasticsearch domain is being deleted.</p>"
       }
     },
     "CloudWatchLogsLogGroupArn": {
@@ -114,18 +107,6 @@
       "base": "<p>Status of the Cognito options for the specified Elasticsearch domain.</p>",
       "refs": {
         "ElasticsearchDomainConfig$CognitoOptions": "<p>The <code>CognitoOptions</code> for the specified domain. For more information, see <a href=\"http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-cognito-auth.html\" target=\"_blank\">Amazon Cognito Authentication for Kibana</a>.</p>"
-      }
-    },
-    "CompatibleElasticsearchVersionsList": {
-      "base": null,
-      "refs": {
-        "GetCompatibleElasticsearchVersionsResponse$CompatibleElasticsearchVersions": "<p> A map of compatible Elasticsearch versions returned as part of the <code> <a>GetCompatibleElasticsearchVersions</a> </code> operation. </p>"
-      }
-    },
-    "CompatibleVersionsMap": {
-      "base": "<p> A map from an <code> <a>ElasticsearchVersion</a> </code> to a list of compatible <code> <a>ElasticsearchVersion</a> </code> s to which the domain can be upgraded. </p>",
-      "refs": {
-        "CompatibleElasticsearchVersionsList$member": null
       }
     },
     "CreateElasticsearchDomainRequest": {
@@ -242,13 +223,8 @@
         "DomainInfo$DomainName": "<p> Specifies the <code>DomainName</code>.</p>",
         "DomainNameList$member": null,
         "ElasticsearchDomainStatus$DomainName": "<p>The name of an Elasticsearch domain. Domain names are unique across the domains owned by an account within an AWS region. Domain names start with a letter or number and can contain the following characters: a-z (lowercase), 0-9, and - (hyphen).</p>",
-        "GetCompatibleElasticsearchVersionsRequest$DomainName": null,
-        "GetUpgradeHistoryRequest$DomainName": null,
-        "GetUpgradeStatusRequest$DomainName": null,
         "ListElasticsearchInstanceTypesRequest$DomainName": "<p>DomainName represents the name of the Domain that we are trying to modify. This should be present only if we are querying for list of available Elasticsearch instance types when modifying existing domain. </p>",
-        "UpdateElasticsearchDomainConfigRequest$DomainName": "<p>The name of the Elasticsearch domain that you are updating. </p>",
-        "UpgradeElasticsearchDomainRequest$DomainName": null,
-        "UpgradeElasticsearchDomainResponse$DomainName": null
+        "UpdateElasticsearchDomainConfigRequest$DomainName": "<p>The name of the Elasticsearch domain that you are updating. </p>"
       }
     },
     "DomainNameList": {
@@ -264,8 +240,7 @@
         "ReservedElasticsearchInstance$FixedPrice": "<p>The upfront fixed charge you will paid to purchase the specific reserved Elasticsearch instance offering. </p>",
         "ReservedElasticsearchInstance$UsagePrice": "<p>The rate you are charged for each hour for the domain that is using this reserved instance.</p>",
         "ReservedElasticsearchInstanceOffering$FixedPrice": "<p>The upfront fixed charge you will pay to purchase the specific reserved Elasticsearch instance offering. </p>",
-        "ReservedElasticsearchInstanceOffering$UsagePrice": "<p>The rate you are charged for each hour the domain that is using the offering is running.</p>",
-        "UpgradeStepItem$ProgressPercent": "<p>The Floating point value representing progress percentage of a particular step.</p>"
+        "ReservedElasticsearchInstanceOffering$UsagePrice": "<p>The rate you are charged for each hour the domain that is using the offering is running.</p>"
       }
     },
     "EBSOptions": {
@@ -340,7 +315,6 @@
     "ElasticsearchVersionList": {
       "base": "<p>List of supported elastic search versions. </p>",
       "refs": {
-        "CompatibleVersionsMap$TargetVersions": null,
         "ListElasticsearchVersionsResponse$ElasticsearchVersions": null
       }
     },
@@ -353,15 +327,12 @@
     "ElasticsearchVersionString": {
       "base": null,
       "refs": {
-        "CompatibleVersionsMap$SourceVersion": "<p>The current version of Elasticsearch on which a domain is.</p>",
         "CreateElasticsearchDomainRequest$ElasticsearchVersion": "<p>String of format X.Y to specify version for the Elasticsearch domain eg. \"1.5\" or \"2.3\". For more information, see <a href=\"http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-createupdatedomains.html#es-createdomains\" target=\"_blank\">Creating Elasticsearch Domains</a> in the <i>Amazon Elasticsearch Service Developer Guide</i>.</p>",
         "DescribeElasticsearchInstanceTypeLimitsRequest$ElasticsearchVersion": "<p> Version of Elasticsearch for which <code> <a>Limits</a> </code> are needed. </p>",
         "ElasticsearchDomainStatus$ElasticsearchVersion": null,
         "ElasticsearchVersionList$member": null,
         "ElasticsearchVersionStatus$Options": "<p> Specifies the Elasticsearch version for the specified Elasticsearch domain.</p>",
-        "ListElasticsearchInstanceTypesRequest$ElasticsearchVersion": "<p>Version of Elasticsearch for which list of supported elasticsearch instance types are needed. </p>",
-        "UpgradeElasticsearchDomainRequest$TargetVersion": "<p>The version of Elasticsearch that you intend to upgrade the domain to.</p>",
-        "UpgradeElasticsearchDomainResponse$TargetVersion": "<p>The version of Elasticsearch that you intend to upgrade the domain to.</p>"
+        "ListElasticsearchInstanceTypesRequest$ElasticsearchVersion": "<p>Version of Elasticsearch for which list of supported elasticsearch instance types are needed. </p>"
       }
     },
     "EncryptionAtRestOptions": {
@@ -399,36 +370,6 @@
         "PurchaseReservedElasticsearchInstanceOfferingResponse$ReservedElasticsearchInstanceId": "<p>Details of the reserved Elasticsearch instance which was purchased.</p>",
         "ReservedElasticsearchInstance$ReservedElasticsearchInstanceId": "<p>The unique identifier for the reservation.</p>",
         "ReservedElasticsearchInstanceOffering$ReservedElasticsearchInstanceOfferingId": "<p>The Elasticsearch reserved instance offering identifier.</p>"
-      }
-    },
-    "GetCompatibleElasticsearchVersionsRequest": {
-      "base": "<p> Container for request parameters to <code> <a>GetCompatibleElasticsearchVersions</a> </code> operation. </p>",
-      "refs": {
-      }
-    },
-    "GetCompatibleElasticsearchVersionsResponse": {
-      "base": "<p> Container for response returned by <code> <a>GetCompatibleElasticsearchVersions</a> </code> operation. </p>",
-      "refs": {
-      }
-    },
-    "GetUpgradeHistoryRequest": {
-      "base": "<p> Container for request parameters to <code> <a>GetUpgradeHistory</a> </code> operation. </p>",
-      "refs": {
-      }
-    },
-    "GetUpgradeHistoryResponse": {
-      "base": "<p> Container for response returned by <code> <a>GetUpgradeHistory</a> </code> operation. </p>",
-      "refs": {
-      }
-    },
-    "GetUpgradeStatusRequest": {
-      "base": "<p> Container for request parameters to <code> <a>GetUpgradeStatus</a> </code> operation. </p>",
-      "refs": {
-      }
-    },
-    "GetUpgradeStatusResponse": {
-      "base": "<p> Container for response returned by <code> <a>GetUpgradeStatus</a> </code> operation. </p>",
-      "refs": {
       }
     },
     "IdentityPoolId": {
@@ -487,18 +428,6 @@
     "InvalidTypeException": {
       "base": "<p>An exception for trying to create or access sub-resource that is either invalid or not supported. Gives http status code of 409.</p>",
       "refs": {
-      }
-    },
-    "Issue": {
-      "base": null,
-      "refs": {
-        "Issues$member": null
-      }
-    },
-    "Issues": {
-      "base": null,
-      "refs": {
-        "UpgradeStepItem$Issues": "<p>A list of strings containing detailed information about the errors encountered in a particular step.</p>"
       }
     },
     "KmsKeyId": {
@@ -601,7 +530,7 @@
       }
     },
     "LogType": {
-      "base": "<p>Type of Log File, it can be one of the following: <ul> <li>INDEX_SLOW_LOGS: Index slow logs contain insert requests that took more time than configured index query log threshold to execute.</li> <li>SEARCH_SLOW_LOGS: Search slow logs contain search queries that took more time than configured search query log threshold to execute.</li> <li>ES_APPLICATION_LOGS: Elasticsearch application logs contain information about errors and warnings raised during the operation of the service and can be useful for troubleshooting.</li> </ul> </p>",
+      "base": "<p>Type of Log File, it can be one of the following: <ul> <li>INDEX_SLOW_LOGS: Index slow logs contains insert requests that took more time than configured index query log threshold to execute.</li> <li>SEARCH_SLOW_LOGS: Search slow logs contains search queries that took more time than configured search query log threshold to execute.</li> </ul> </p>",
       "refs": {
         "LogPublishingOptions$key": null
       }
@@ -611,7 +540,6 @@
       "refs": {
         "DescribeReservedElasticsearchInstanceOfferingsRequest$MaxResults": "<p>Set this value to limit the number of results returned. If not specified, defaults to 100.</p>",
         "DescribeReservedElasticsearchInstancesRequest$MaxResults": "<p>Set this value to limit the number of results returned. If not specified, defaults to 100.</p>",
-        "GetUpgradeHistoryRequest$MaxResults": null,
         "ListElasticsearchInstanceTypesRequest$MaxResults": "<p> Set this value to limit the number of results returned. Value provided must be greater than 30 else it wont be honored. </p>",
         "ListElasticsearchVersionsRequest$MaxResults": "<p> Set this value to limit the number of results returned. Value provided must be greater than 10 else it wont be honored. </p>"
       }
@@ -634,7 +562,6 @@
         "DescribeReservedElasticsearchInstanceOfferingsRequest$NextToken": "<p>NextToken should be sent in case if earlier API call produced result containing NextToken. It is used for pagination.</p>",
         "DescribeReservedElasticsearchInstanceOfferingsResponse$NextToken": "<p>Provides an identifier to allow retrieval of paginated results.</p>",
         "DescribeReservedElasticsearchInstancesRequest$NextToken": "<p>NextToken should be sent in case if earlier API call produced result containing NextToken. It is used for pagination.</p>",
-        "GetUpgradeHistoryRequest$NextToken": null,
         "ListElasticsearchInstanceTypesRequest$NextToken": "<p>NextToken should be sent in case if earlier API call produced result containing NextToken. It is used for pagination. </p>",
         "ListElasticsearchInstanceTypesResponse$NextToken": "<p>In case if there are more results available NextToken would be present, make further request to the same API with received NextToken to paginate remaining results. </p>",
         "ListElasticsearchVersionsRequest$NextToken": null,
@@ -776,12 +703,6 @@
         "ElasticsearchDomainConfig$SnapshotOptions": "<p>Specifies the <code>SnapshotOptions</code> for the Elasticsearch domain.</p>"
       }
     },
-    "StartTimestamp": {
-      "base": null,
-      "refs": {
-        "UpgradeHistory$StartTimestamp": "<p>UTC Timestamp at which the Upgrade API call was made in \"yyyy-MM-ddTHH:mm:ssZ\" format.</p>"
-      }
-    },
     "StorageSubTypeName": {
       "base": "<p> SubType of the given storage type. List of available sub-storage options: For \"instance\" storageType we wont have any storageSubType, in case of \"ebs\" storageType we will have following valid storageSubTypes <ol> <li>standard</li> <li>gp2</li> <li>io1</li> </ol> Refer <code><a>VolumeType</a></code> for more information regarding above EBS storage options. </p>",
       "refs": {
@@ -825,7 +746,6 @@
         "AdvancedOptions$value": null,
         "DescribeReservedElasticsearchInstancesResponse$NextToken": "<p>Provides an identifier to allow retrieval of paginated results.</p>",
         "EndpointsMap$key": null,
-        "GetUpgradeHistoryResponse$NextToken": "<p>Pagination token that needs to be supplied to the next call to get the next page of results</p>",
         "RecurringCharge$RecurringChargeFrequency": "<p>The frequency of the recurring charge.</p>",
         "ReservedElasticsearchInstance$ReservedElasticsearchInstanceOfferingId": "<p>The offering identifier.</p>",
         "ReservedElasticsearchInstance$CurrencyCode": "<p>The currency code for the reserved Elasticsearch instance offering.</p>",
@@ -893,62 +813,6 @@
         "OptionStatus$CreationDate": "<p>Timestamp which tells the creation date for the entity.</p>",
         "OptionStatus$UpdateDate": "<p>Timestamp which tells the last updated time for the entity.</p>",
         "ReservedElasticsearchInstance$StartTime": "<p>The time the reservation started.</p>"
-      }
-    },
-    "UpgradeElasticsearchDomainRequest": {
-      "base": "<p> Container for request parameters to <code> <a>UpgradeElasticsearchDomain</a> </code> operation. </p>",
-      "refs": {
-      }
-    },
-    "UpgradeElasticsearchDomainResponse": {
-      "base": "<p> Container for response returned by <code> <a>UpgradeElasticsearchDomain</a> </code> operation. </p>",
-      "refs": {
-      }
-    },
-    "UpgradeHistory": {
-      "base": "<p>History of the last 10 Upgrades and Upgrade Eligibility Checks.</p>",
-      "refs": {
-        "UpgradeHistoryList$member": null
-      }
-    },
-    "UpgradeHistoryList": {
-      "base": null,
-      "refs": {
-        "GetUpgradeHistoryResponse$UpgradeHistories": "<p> A list of <code> <a>UpgradeHistory</a> </code> objects corresponding to each Upgrade or Upgrade Eligibility Check performed on a domain returned as part of <code> <a>GetUpgradeHistoryResponse</a> </code> object. </p>"
-      }
-    },
-    "UpgradeName": {
-      "base": null,
-      "refs": {
-        "GetUpgradeStatusResponse$UpgradeName": "<p>A string that describes the update briefly</p>",
-        "UpgradeHistory$UpgradeName": "<p>A string that describes the update briefly</p>"
-      }
-    },
-    "UpgradeStatus": {
-      "base": null,
-      "refs": {
-        "GetUpgradeStatusResponse$StepStatus": "<p> One of 4 statuses that a step can go through returned as part of the <code> <a>GetUpgradeStatusResponse</a> </code> object. The status can take one of the following values: <ul> <li>In Progress</li> <li>Succeeded</li> <li>Succeeded with Issues</li> <li>Failed</li> </ul> </p>",
-        "UpgradeHistory$UpgradeStatus": "<p> The overall status of the update. The status can take one of the following values: <ul> <li>In Progress</li> <li>Succeeded</li> <li>Succeeded with Issues</li> <li>Failed</li> </ul> </p>",
-        "UpgradeStepItem$UpgradeStepStatus": "<p> The status of a particular step during an upgrade. The status can take one of the following values: <ul> <li>In Progress</li> <li>Succeeded</li> <li>Succeeded with Issues</li> <li>Failed</li> </ul> </p>"
-      }
-    },
-    "UpgradeStep": {
-      "base": null,
-      "refs": {
-        "GetUpgradeStatusResponse$UpgradeStep": "<p> Represents one of 3 steps that an Upgrade or Upgrade Eligibility Check does through: <ul> <li>PreUpgradeCheck</li> <li>Snapshot</li> <li>Upgrade</li> </ul> </p>",
-        "UpgradeStepItem$UpgradeStep": "<p> Represents one of 3 steps that an Upgrade or Upgrade Eligibility Check does through: <ul> <li>PreUpgradeCheck</li> <li>Snapshot</li> <li>Upgrade</li> </ul> </p>"
-      }
-    },
-    "UpgradeStepItem": {
-      "base": "<p>Represents a single step of the Upgrade or Upgrade Eligibility Check workflow.</p>",
-      "refs": {
-        "UpgradeStepsList$member": null
-      }
-    },
-    "UpgradeStepsList": {
-      "base": null,
-      "refs": {
-        "UpgradeHistory$StepsList": "<p> A list of <code> <a>UpgradeStepItem</a> </code> s representing information about each step performed as pard of a specific Upgrade or Upgrade Eligibility Check. </p>"
       }
     },
     "UserPoolId": {

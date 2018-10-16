@@ -27,9 +27,9 @@
       "errors" : [ {
         "shape" : "BadRequestException"
       }, {
-        "shape" : "UnauthorizedException"
-      }, {
         "shape" : "InternalServerErrorException"
+      }, {
+        "shape" : "UnauthorizedException"
       }, {
         "shape" : "ConflictException"
       }, {
@@ -433,12 +433,8 @@
           "locationName" : "consoleURL"
         },
         "Endpoints" : {
-          "shape" : "__listOf__string",
+          "shape" : "ListOf__string",
           "locationName" : "endpoints"
-        },
-        "IpAddress" : {
-          "shape" : "__string",
-          "locationName" : "ipAddress"
         }
       }
     },
@@ -465,10 +461,6 @@
           "shape" : "BrokerState",
           "locationName" : "brokerState"
         },
-        "Created" : {
-          "shape" : "__timestampIso8601",
-          "locationName" : "created"
-        },
         "DeploymentMode" : {
           "shape" : "DeploymentMode",
           "locationName" : "deploymentMode"
@@ -489,10 +481,6 @@
         "Arn" : {
           "shape" : "__string",
           "locationName" : "arn"
-        },
-        "Created" : {
-          "shape" : "__timestampIso8601",
-          "locationName" : "created"
         },
         "Description" : {
           "shape" : "__string",
@@ -536,10 +524,6 @@
     "ConfigurationRevision" : {
       "type" : "structure",
       "members" : {
-        "Created" : {
-          "shape" : "__timestampIso8601",
-          "locationName" : "created"
-        },
         "Description" : {
           "shape" : "__string",
           "locationName" : "description"
@@ -558,7 +542,7 @@
           "locationName" : "current"
         },
         "History" : {
-          "shape" : "__listOfConfigurationId",
+          "shape" : "ListOfConfigurationId",
           "locationName" : "history"
         },
         "Pending" : {
@@ -620,10 +604,6 @@
           "shape" : "__string",
           "locationName" : "hostInstanceType"
         },
-        "Logs" : {
-          "shape" : "Logs",
-          "locationName" : "logs"
-        },
         "MaintenanceWindowStartTime" : {
           "shape" : "WeeklyStartTime",
           "locationName" : "maintenanceWindowStartTime"
@@ -633,15 +613,15 @@
           "locationName" : "publiclyAccessible"
         },
         "SecurityGroups" : {
-          "shape" : "__listOf__string",
+          "shape" : "ListOf__string",
           "locationName" : "securityGroups"
         },
         "SubnetIds" : {
-          "shape" : "__listOf__string",
+          "shape" : "ListOf__string",
           "locationName" : "subnetIds"
         },
         "Users" : {
-          "shape" : "__listOfUser",
+          "shape" : "ListOfUser",
           "locationName" : "users"
         }
       }
@@ -695,10 +675,6 @@
           "shape" : "__string",
           "locationName" : "hostInstanceType"
         },
-        "Logs" : {
-          "shape" : "Logs",
-          "locationName" : "logs"
-        },
         "MaintenanceWindowStartTime" : {
           "shape" : "WeeklyStartTime",
           "locationName" : "maintenanceWindowStartTime"
@@ -708,15 +684,15 @@
           "locationName" : "publiclyAccessible"
         },
         "SecurityGroups" : {
-          "shape" : "__listOf__string",
+          "shape" : "ListOf__string",
           "locationName" : "securityGroups"
         },
         "SubnetIds" : {
-          "shape" : "__listOf__string",
+          "shape" : "ListOf__string",
           "locationName" : "subnetIds"
         },
         "Users" : {
-          "shape" : "__listOfUser",
+          "shape" : "ListOfUser",
           "locationName" : "users"
         }
       }
@@ -758,10 +734,6 @@
           "shape" : "__string",
           "locationName" : "arn"
         },
-        "Created" : {
-          "shape" : "__timestampIso8601",
-          "locationName" : "created"
-        },
         "Id" : {
           "shape" : "__string",
           "locationName" : "id"
@@ -800,10 +772,6 @@
           "shape" : "__string",
           "locationName" : "arn"
         },
-        "Created" : {
-          "shape" : "__timestampIso8601",
-          "locationName" : "created"
-        },
         "Id" : {
           "shape" : "__string",
           "locationName" : "id"
@@ -826,7 +794,7 @@
           "locationName" : "consoleAccess"
         },
         "Groups" : {
-          "shape" : "__listOf__string",
+          "shape" : "ListOf__string",
           "locationName" : "groups"
         },
         "Password" : {
@@ -848,7 +816,7 @@
           "locationName" : "consoleAccess"
         },
         "Groups" : {
-          "shape" : "__listOf__string",
+          "shape" : "ListOf__string",
           "locationName" : "groups"
         },
         "Password" : {
@@ -940,7 +908,7 @@
           "locationName" : "brokerId"
         },
         "BrokerInstances" : {
-          "shape" : "__listOfBrokerInstance",
+          "shape" : "ListOfBrokerInstance",
           "locationName" : "brokerInstances"
         },
         "BrokerName" : {
@@ -954,10 +922,6 @@
         "Configurations" : {
           "shape" : "Configurations",
           "locationName" : "configurations"
-        },
-        "Created" : {
-          "shape" : "__timestampIso8601",
-          "locationName" : "created"
         },
         "DeploymentMode" : {
           "shape" : "DeploymentMode",
@@ -975,10 +939,6 @@
           "shape" : "__string",
           "locationName" : "hostInstanceType"
         },
-        "Logs" : {
-          "shape" : "LogsSummary",
-          "locationName" : "logs"
-        },
         "MaintenanceWindowStartTime" : {
           "shape" : "WeeklyStartTime",
           "locationName" : "maintenanceWindowStartTime"
@@ -988,15 +948,15 @@
           "locationName" : "publiclyAccessible"
         },
         "SecurityGroups" : {
-          "shape" : "__listOf__string",
+          "shape" : "ListOf__string",
           "locationName" : "securityGroups"
         },
         "SubnetIds" : {
-          "shape" : "__listOf__string",
+          "shape" : "ListOf__string",
           "locationName" : "subnetIds"
         },
         "Users" : {
-          "shape" : "__listOfUserSummary",
+          "shape" : "ListOfUserSummary",
           "locationName" : "users"
         }
       }
@@ -1028,7 +988,7 @@
           "locationName" : "brokerId"
         },
         "BrokerInstances" : {
-          "shape" : "__listOfBrokerInstance",
+          "shape" : "ListOfBrokerInstance",
           "locationName" : "brokerInstances"
         },
         "BrokerName" : {
@@ -1042,10 +1002,6 @@
         "Configurations" : {
           "shape" : "Configurations",
           "locationName" : "configurations"
-        },
-        "Created" : {
-          "shape" : "__timestampIso8601",
-          "locationName" : "created"
         },
         "DeploymentMode" : {
           "shape" : "DeploymentMode",
@@ -1063,10 +1019,6 @@
           "shape" : "__string",
           "locationName" : "hostInstanceType"
         },
-        "Logs" : {
-          "shape" : "LogsSummary",
-          "locationName" : "logs"
-        },
         "MaintenanceWindowStartTime" : {
           "shape" : "WeeklyStartTime",
           "locationName" : "maintenanceWindowStartTime"
@@ -1076,15 +1028,15 @@
           "locationName" : "publiclyAccessible"
         },
         "SecurityGroups" : {
-          "shape" : "__listOf__string",
+          "shape" : "ListOf__string",
           "locationName" : "securityGroups"
         },
         "SubnetIds" : {
-          "shape" : "__listOf__string",
+          "shape" : "ListOf__string",
           "locationName" : "subnetIds"
         },
         "Users" : {
-          "shape" : "__listOfUserSummary",
+          "shape" : "ListOfUserSummary",
           "locationName" : "users"
         }
       }
@@ -1106,10 +1058,6 @@
         "Arn" : {
           "shape" : "__string",
           "locationName" : "arn"
-        },
-        "Created" : {
-          "shape" : "__timestampIso8601",
-          "locationName" : "created"
         },
         "Description" : {
           "shape" : "__string",
@@ -1144,10 +1092,6 @@
           "shape" : "__string",
           "locationName" : "configurationId"
         },
-        "Created" : {
-          "shape" : "__timestampIso8601",
-          "locationName" : "created"
-        },
         "Data" : {
           "shape" : "__string",
           "locationName" : "data"
@@ -1181,10 +1125,6 @@
           "shape" : "__string",
           "locationName" : "configurationId"
         },
-        "Created" : {
-          "shape" : "__timestampIso8601",
-          "locationName" : "created"
-        },
         "Data" : {
           "shape" : "__string",
           "locationName" : "data"
@@ -1207,7 +1147,7 @@
           "locationName" : "consoleAccess"
         },
         "Groups" : {
-          "shape" : "__listOf__string",
+          "shape" : "ListOf__string",
           "locationName" : "groups"
         },
         "Pending" : {
@@ -1248,7 +1188,7 @@
           "locationName" : "consoleAccess"
         },
         "Groups" : {
-          "shape" : "__listOf__string",
+          "shape" : "ListOf__string",
           "locationName" : "groups"
         },
         "Pending" : {
@@ -1316,7 +1256,7 @@
       "type" : "structure",
       "members" : {
         "BrokerSummaries" : {
-          "shape" : "__listOfBrokerSummary",
+          "shape" : "ListOfBrokerSummary",
           "locationName" : "brokerSummaries"
         },
         "NextToken" : {
@@ -1344,7 +1284,7 @@
       "type" : "structure",
       "members" : {
         "BrokerSummaries" : {
-          "shape" : "__listOfBrokerSummary",
+          "shape" : "ListOfBrokerSummary",
           "locationName" : "brokerSummaries"
         },
         "NextToken" : {
@@ -1369,7 +1309,7 @@
           "locationName" : "nextToken"
         },
         "Revisions" : {
-          "shape" : "__listOfConfigurationRevision",
+          "shape" : "ListOfConfigurationRevision",
           "locationName" : "revisions"
         }
       }
@@ -1411,7 +1351,7 @@
           "locationName" : "nextToken"
         },
         "Revisions" : {
-          "shape" : "__listOfConfigurationRevision",
+          "shape" : "ListOfConfigurationRevision",
           "locationName" : "revisions"
         }
       }
@@ -1420,7 +1360,7 @@
       "type" : "structure",
       "members" : {
         "Configurations" : {
-          "shape" : "__listOfConfiguration",
+          "shape" : "ListOfConfiguration",
           "locationName" : "configurations"
         },
         "MaxResults" : {
@@ -1452,7 +1392,7 @@
       "type" : "structure",
       "members" : {
         "Configurations" : {
-          "shape" : "__listOfConfiguration",
+          "shape" : "ListOfConfiguration",
           "locationName" : "configurations"
         },
         "MaxResults" : {
@@ -1465,6 +1405,60 @@
         }
       }
     },
+    "ListOfBrokerInstance" : {
+      "type" : "list",
+      "member" : {
+        "shape" : "BrokerInstance"
+      }
+    },
+    "ListOfBrokerSummary" : {
+      "type" : "list",
+      "member" : {
+        "shape" : "BrokerSummary"
+      }
+    },
+    "ListOfConfiguration" : {
+      "type" : "list",
+      "member" : {
+        "shape" : "Configuration"
+      }
+    },
+    "ListOfConfigurationId" : {
+      "type" : "list",
+      "member" : {
+        "shape" : "ConfigurationId"
+      }
+    },
+    "ListOfConfigurationRevision" : {
+      "type" : "list",
+      "member" : {
+        "shape" : "ConfigurationRevision"
+      }
+    },
+    "ListOfSanitizationWarning" : {
+      "type" : "list",
+      "member" : {
+        "shape" : "SanitizationWarning"
+      }
+    },
+    "ListOfUser" : {
+      "type" : "list",
+      "member" : {
+        "shape" : "User"
+      }
+    },
+    "ListOfUserSummary" : {
+      "type" : "list",
+      "member" : {
+        "shape" : "UserSummary"
+      }
+    },
+    "ListOf__string" : {
+      "type" : "list",
+      "member" : {
+        "shape" : "__string"
+      }
+    },
     "ListUsersOutput" : {
       "type" : "structure",
       "members" : {
@@ -1473,7 +1467,7 @@
           "locationName" : "brokerId"
         },
         "MaxResults" : {
-          "shape" : "__integerMin5Max100",
+          "shape" : "__integer",
           "locationName" : "maxResults"
         },
         "NextToken" : {
@@ -1481,7 +1475,7 @@
           "locationName" : "nextToken"
         },
         "Users" : {
-          "shape" : "__listOfUserSummary",
+          "shape" : "ListOfUserSummary",
           "locationName" : "users"
         }
       }
@@ -1515,7 +1509,7 @@
           "locationName" : "brokerId"
         },
         "MaxResults" : {
-          "shape" : "__integerMin5Max100",
+          "shape" : "__integer",
           "locationName" : "maxResults"
         },
         "NextToken" : {
@@ -1523,46 +1517,8 @@
           "locationName" : "nextToken"
         },
         "Users" : {
-          "shape" : "__listOfUserSummary",
+          "shape" : "ListOfUserSummary",
           "locationName" : "users"
-        }
-      }
-    },
-    "Logs" : {
-      "type" : "structure",
-      "members" : {
-        "Audit" : {
-          "shape" : "__boolean",
-          "locationName" : "audit"
-        },
-        "General" : {
-          "shape" : "__boolean",
-          "locationName" : "general"
-        }
-      }
-    },
-    "LogsSummary" : {
-      "type" : "structure",
-      "members" : {
-        "Audit" : {
-          "shape" : "__boolean",
-          "locationName" : "audit"
-        },
-        "AuditLogGroup" : {
-          "shape" : "__string",
-          "locationName" : "auditLogGroup"
-        },
-        "General" : {
-          "shape" : "__boolean",
-          "locationName" : "general"
-        },
-        "GeneralLogGroup" : {
-          "shape" : "__string",
-          "locationName" : "generalLogGroup"
-        },
-        "Pending" : {
-          "shape" : "PendingLogs",
-          "locationName" : "pending"
         }
       }
     },
@@ -1586,19 +1542,6 @@
       "exception" : true,
       "error" : {
         "httpStatusCode" : 404
-      }
-    },
-    "PendingLogs" : {
-      "type" : "structure",
-      "members" : {
-        "Audit" : {
-          "shape" : "__boolean",
-          "locationName" : "audit"
-        },
-        "General" : {
-          "shape" : "__boolean",
-          "locationName" : "general"
-        }
       }
     },
     "RebootBrokerRequest" : {
@@ -1660,10 +1603,6 @@
         "Configuration" : {
           "shape" : "ConfigurationId",
           "locationName" : "configuration"
-        },
-        "Logs" : {
-          "shape" : "Logs",
-          "locationName" : "logs"
         }
       }
     },
@@ -1677,10 +1616,6 @@
         "Configuration" : {
           "shape" : "ConfigurationId",
           "locationName" : "configuration"
-        },
-        "Logs" : {
-          "shape" : "Logs",
-          "locationName" : "logs"
         }
       }
     },
@@ -1695,10 +1630,6 @@
         "Configuration" : {
           "shape" : "ConfigurationId",
           "locationName" : "configuration"
-        },
-        "Logs" : {
-          "shape" : "Logs",
-          "locationName" : "logs"
         }
       },
       "required" : [ "BrokerId" ]
@@ -1713,10 +1644,6 @@
         "Configuration" : {
           "shape" : "ConfigurationId",
           "locationName" : "configuration"
-        },
-        "Logs" : {
-          "shape" : "Logs",
-          "locationName" : "logs"
         }
       }
     },
@@ -1740,10 +1667,6 @@
           "shape" : "__string",
           "locationName" : "arn"
         },
-        "Created" : {
-          "shape" : "__timestampIso8601",
-          "locationName" : "created"
-        },
         "Id" : {
           "shape" : "__string",
           "locationName" : "id"
@@ -1757,7 +1680,7 @@
           "locationName" : "name"
         },
         "Warnings" : {
-          "shape" : "__listOfSanitizationWarning",
+          "shape" : "ListOfSanitizationWarning",
           "locationName" : "warnings"
         }
       }
@@ -1788,10 +1711,6 @@
           "shape" : "__string",
           "locationName" : "arn"
         },
-        "Created" : {
-          "shape" : "__timestampIso8601",
-          "locationName" : "created"
-        },
         "Id" : {
           "shape" : "__string",
           "locationName" : "id"
@@ -1805,7 +1724,7 @@
           "locationName" : "name"
         },
         "Warnings" : {
-          "shape" : "__listOfSanitizationWarning",
+          "shape" : "ListOfSanitizationWarning",
           "locationName" : "warnings"
         }
       }
@@ -1818,7 +1737,7 @@
           "locationName" : "consoleAccess"
         },
         "Groups" : {
-          "shape" : "__listOf__string",
+          "shape" : "ListOf__string",
           "locationName" : "groups"
         },
         "Password" : {
@@ -1840,7 +1759,7 @@
           "locationName" : "consoleAccess"
         },
         "Groups" : {
-          "shape" : "__listOf__string",
+          "shape" : "ListOf__string",
           "locationName" : "groups"
         },
         "Password" : {
@@ -1867,7 +1786,7 @@
           "locationName" : "consoleAccess"
         },
         "Groups" : {
-          "shape" : "__listOf__string",
+          "shape" : "ListOf__string",
           "locationName" : "groups"
         },
         "Password" : {
@@ -1888,7 +1807,7 @@
           "locationName" : "consoleAccess"
         },
         "Groups" : {
-          "shape" : "__listOf__string",
+          "shape" : "ListOf__string",
           "locationName" : "groups"
         },
         "PendingChange" : {
@@ -1936,78 +1855,11 @@
     "__integer" : {
       "type" : "integer"
     },
-    "__integerMin5Max100" : {
-      "type" : "integer",
-      "min" : 5,
-      "max" : 100
-    },
-    "__listOfBrokerInstance" : {
-      "type" : "list",
-      "member" : {
-        "shape" : "BrokerInstance"
-      }
-    },
-    "__listOfBrokerSummary" : {
-      "type" : "list",
-      "member" : {
-        "shape" : "BrokerSummary"
-      }
-    },
-    "__listOfConfiguration" : {
-      "type" : "list",
-      "member" : {
-        "shape" : "Configuration"
-      }
-    },
-    "__listOfConfigurationId" : {
-      "type" : "list",
-      "member" : {
-        "shape" : "ConfigurationId"
-      }
-    },
-    "__listOfConfigurationRevision" : {
-      "type" : "list",
-      "member" : {
-        "shape" : "ConfigurationRevision"
-      }
-    },
-    "__listOfSanitizationWarning" : {
-      "type" : "list",
-      "member" : {
-        "shape" : "SanitizationWarning"
-      }
-    },
-    "__listOfUser" : {
-      "type" : "list",
-      "member" : {
-        "shape" : "User"
-      }
-    },
-    "__listOfUserSummary" : {
-      "type" : "list",
-      "member" : {
-        "shape" : "UserSummary"
-      }
-    },
-    "__listOf__string" : {
-      "type" : "list",
-      "member" : {
-        "shape" : "__string"
-      }
-    },
-    "__long" : {
-      "type" : "long"
-    },
     "__string" : {
       "type" : "string"
     },
-    "__timestampIso8601" : {
-      "type" : "timestamp",
-      "timestampFormat" : "iso8601"
-    },
-    "__timestampUnix" : {
-      "type" : "timestamp",
-      "timestampFormat" : "unixTimestamp"
+    "__timestamp" : {
+      "type" : "timestamp"
     }
   }
 }

@@ -270,7 +270,7 @@ func (i *testCase) TestCase(idx int) string {
 		case "rest-xml":
 			i.InputTest.Body = util.SortXML(bytes.NewReader([]byte(i.InputTest.Body)))
 		case "json", "rest-json":
-			i.InputTest.Body = i.InputTest.Body
+			i.InputTest.Body = strings.Replace(i.InputTest.Body, " ", "", -1)
 		}
 
 		jsonValues := buildJSONValues(i.Given.InputRef.Shape)
@@ -518,10 +518,6 @@ func getType(t string) uint {
 }
 
 func main() {
-	if len(os.Getenv("AWS_SDK_CODEGEN_DEBUG")) != 0 {
-		api.LogDebug(os.Stdout)
-	}
-
 	fmt.Println("Generating test suite", os.Args[1:])
 	out := generateTestSuite(os.Args[1])
 	if len(os.Args) == 3 {

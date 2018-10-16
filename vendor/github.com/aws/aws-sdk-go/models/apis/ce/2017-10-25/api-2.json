@@ -108,10 +108,7 @@
   "shapes":{
     "AccountScope":{
       "type":"string",
-      "enum":[
-        "PAYER",
-        "LINKED"
-      ]
+      "enum":["PAYER"]
     },
     "AmortizedRecurringFee":{"type":"string"},
     "AmortizedUpfrontFee":{"type":"string"},
@@ -242,27 +239,6 @@
       "type":"structure",
       "members":{
         "OfferingClass":{"shape":"OfferingClass"}
-      }
-    },
-    "ESInstanceDetails":{
-      "type":"structure",
-      "members":{
-        "InstanceClass":{"shape":"GenericString"},
-        "InstanceSize":{"shape":"GenericString"},
-        "Region":{"shape":"GenericString"},
-        "CurrentGeneration":{"shape":"GenericBoolean"},
-        "SizeFlexEligible":{"shape":"GenericBoolean"}
-      }
-    },
-    "ElastiCacheInstanceDetails":{
-      "type":"structure",
-      "members":{
-        "Family":{"shape":"GenericString"},
-        "NodeType":{"shape":"GenericString"},
-        "Region":{"shape":"GenericString"},
-        "ProductDescription":{"shape":"GenericString"},
-        "CurrentGeneration":{"shape":"GenericBoolean"},
-        "SizeFlexEligible":{"shape":"GenericBoolean"}
       }
     },
     "Entity":{"type":"string"},
@@ -459,10 +435,7 @@
       "type":"structure",
       "members":{
         "EC2InstanceDetails":{"shape":"EC2InstanceDetails"},
-        "RDSInstanceDetails":{"shape":"RDSInstanceDetails"},
-        "RedshiftInstanceDetails":{"shape":"RedshiftInstanceDetails"},
-        "ElastiCacheInstanceDetails":{"shape":"ElastiCacheInstanceDetails"},
-        "ESInstanceDetails":{"shape":"ESInstanceDetails"}
+        "RDSInstanceDetails":{"shape":"RDSInstanceDetails"}
       }
     },
     "InvalidNextTokenException":{
@@ -532,10 +505,7 @@
       "enum":[
         "NO_UPFRONT",
         "PARTIAL_UPFRONT",
-        "ALL_UPFRONT",
-        "LIGHT_UTILIZATION",
-        "MEDIUM_UTILIZATION",
-        "HEAVY_UTILIZATION"
+        "ALL_UPFRONT"
       ]
     },
     "PurchasedHours":{"type":"string"},
@@ -546,19 +516,8 @@
         "InstanceType":{"shape":"GenericString"},
         "Region":{"shape":"GenericString"},
         "DatabaseEngine":{"shape":"GenericString"},
-        "DatabaseEdition":{"shape":"GenericString"},
         "DeploymentOption":{"shape":"GenericString"},
         "LicenseModel":{"shape":"GenericString"},
-        "CurrentGeneration":{"shape":"GenericBoolean"},
-        "SizeFlexEligible":{"shape":"GenericBoolean"}
-      }
-    },
-    "RedshiftInstanceDetails":{
-      "type":"structure",
-      "members":{
-        "Family":{"shape":"GenericString"},
-        "NodeType":{"shape":"GenericString"},
-        "Region":{"shape":"GenericString"},
         "CurrentGeneration":{"shape":"GenericBoolean"},
         "SizeFlexEligible":{"shape":"GenericBoolean"}
       }
