@@ -70,7 +70,6 @@ type Metadata struct {
 	JSONVersion         string
 	TargetPrefix        string
 	Protocol            string
-	ProtocolSettings    ProtocolSettings
 	UID                 string
 	EndpointsID         string
 	ServiceID           string
@@ -78,15 +77,8 @@ type Metadata struct {
 	NoResolveEndpoint bool
 }
 
-// ProtocolSettings define how the SDK should handle requests in the context
-// of of a protocol.
-type ProtocolSettings struct {
-	HTTP2 string `json:"h2,omitempty"`
-}
-
 var serviceAliases map[string]string
 
-// Bootstrap loads SDK model customizations prior to the API model is parsed.
 func Bootstrap() error {
 	b, err := ioutil.ReadFile(filepath.Join("..", "models", "customizations", "service-aliases.json"))
 	if err != nil {
@@ -855,7 +847,7 @@ func (a *API) APIErrorsGoCode() string {
 // removeOperation removes an operation, its input/output shapes, as well as
 // any references/shapes that are unique to this operation.
 func (a *API) removeOperation(name string) {
-	debugLogger.Logln("removing operation,", name)
+	fmt.Println("removing operation,", name)
 	op := a.Operations[name]
 
 	delete(a.Operations, name)
@@ -869,7 +861,7 @@ func (a *API) removeOperation(name string) {
 // shapes. Will also remove member reference targeted shapes if those shapes do
 // not have any additional references.
 func (a *API) removeShape(s *Shape) {
-	debugLogger.Logln("removing shape,", s.ShapeName)
+	fmt.Println("removing shape,", s.ShapeName)
 
 	delete(a.Shapes, s.ShapeName)
 

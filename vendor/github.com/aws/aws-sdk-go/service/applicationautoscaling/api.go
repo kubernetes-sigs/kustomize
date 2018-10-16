@@ -1362,11 +1362,6 @@ type DeleteScalingPolicyInput struct {
 	//    * Amazon SageMaker endpoint variants - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
-	//    * Custom resources are not supported with a resource type. This parameter
-	//    must specify the OutputValue from the CloudFormation template stack used
-	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
-	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -1402,15 +1397,11 @@ type DeleteScalingPolicyInput struct {
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
 	//
-	//    * custom-resource:ResourceType:Property - The scalable dimension for a
-	//    custom resource provided by your own application or service.
-	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// The namespace of the AWS service. For more information, see AWS Service Namespaces
+	// (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -1523,11 +1514,6 @@ type DeleteScheduledActionInput struct {
 	//    * Amazon SageMaker endpoint variants - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
-	//    * Custom resources are not supported with a resource type. This parameter
-	//    must specify the OutputValue from the CloudFormation template stack used
-	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
-	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -1562,9 +1548,6 @@ type DeleteScheduledActionInput struct {
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
-	//
-	//    * custom-resource:ResourceType:Property - The scalable dimension for a
-	//    custom resource provided by your own application or service.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The name of the scheduled action.
@@ -1572,9 +1555,8 @@ type DeleteScheduledActionInput struct {
 	// ScheduledActionName is a required field
 	ScheduledActionName *string `min:"1" type:"string" required:"true"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// The namespace of the AWS service. For more information, see AWS Service Namespaces
+	// (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -1684,11 +1666,6 @@ type DeregisterScalableTargetInput struct {
 	//    * Amazon SageMaker endpoint variants - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
-	//    * Custom resources are not supported with a resource type. This parameter
-	//    must specify the OutputValue from the CloudFormation template stack used
-	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
-	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -1724,15 +1701,11 @@ type DeregisterScalableTargetInput struct {
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
 	//
-	//    * custom-resource:ResourceType:Property - The scalable dimension for a
-	//    custom resource provided by your own application or service.
-	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// The namespace of the AWS service. For more information, see AWS Service Namespaces
+	// (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -1845,11 +1818,6 @@ type DescribeScalableTargetsInput struct {
 	//
 	//    * Amazon SageMaker endpoint variants - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
-	//
-	//    * Custom resources are not supported with a resource type. This parameter
-	//    must specify the OutputValue from the CloudFormation template stack used
-	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
 	ResourceIds []*string `type:"list"`
 
 	// The scalable dimension associated with the scalable target. This string consists
@@ -1884,14 +1852,10 @@ type DescribeScalableTargetsInput struct {
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
-	//
-	//    * custom-resource:ResourceType:Property - The scalable dimension for a
-	//    custom resource provided by your own application or service.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// The namespace of the AWS service. For more information, see AWS Service Namespaces
+	// (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -2026,11 +1990,6 @@ type DescribeScalingActivitiesInput struct {
 	//
 	//    * Amazon SageMaker endpoint variants - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
-	//
-	//    * Custom resources are not supported with a resource type. This parameter
-	//    must specify the OutputValue from the CloudFormation template stack used
-	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -2065,14 +2024,10 @@ type DescribeScalingActivitiesInput struct {
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
-	//
-	//    * custom-resource:ResourceType:Property - The scalable dimension for a
-	//    custom resource provided by your own application or service.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// The namespace of the AWS service. For more information, see AWS Service Namespaces
+	// (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -2213,11 +2168,6 @@ type DescribeScalingPoliciesInput struct {
 	//
 	//    * Amazon SageMaker endpoint variants - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
-	//
-	//    * Custom resources are not supported with a resource type. This parameter
-	//    must specify the OutputValue from the CloudFormation template stack used
-	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -2252,14 +2202,10 @@ type DescribeScalingPoliciesInput struct {
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
-	//
-	//    * custom-resource:ResourceType:Property - The scalable dimension for a
-	//    custom resource provided by your own application or service.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// The namespace of the AWS service. For more information, see AWS Service Namespaces
+	// (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -2403,11 +2349,6 @@ type DescribeScheduledActionsInput struct {
 	//
 	//    * Amazon SageMaker endpoint variants - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
-	//
-	//    * Custom resources are not supported with a resource type. This parameter
-	//    must specify the OutputValue from the CloudFormation template stack used
-	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -2442,17 +2383,13 @@ type DescribeScheduledActionsInput struct {
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
-	//
-	//    * custom-resource:ResourceType:Property - The scalable dimension for a
-	//    custom resource provided by your own application or service.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The names of the scheduled actions to describe.
 	ScheduledActionNames []*string `type:"list"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// The namespace of the AWS service. For more information, see AWS Service Namespaces
+	// (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -2712,11 +2649,6 @@ type PutScalingPolicyInput struct {
 	//    * Amazon SageMaker endpoint variants - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
-	//    * Custom resources are not supported with a resource type. This parameter
-	//    must specify the OutputValue from the CloudFormation template stack used
-	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
-	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -2752,15 +2684,11 @@ type PutScalingPolicyInput struct {
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
 	//
-	//    * custom-resource:ResourceType:Property - The scalable dimension for a
-	//    custom resource provided by your own application or service.
-	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// The namespace of the AWS service. For more information, see AWS Service Namespaces
+	// (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -2907,7 +2835,7 @@ type PutScheduledActionInput struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time for the scheduled action to end.
-	EndTime *time.Time `type:"timestamp"`
+	EndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The identifier of the resource associated with the scheduled action. This
 	// string consists of the resource type and unique identifier.
@@ -2935,11 +2863,6 @@ type PutScheduledActionInput struct {
 	//
 	//    * Amazon SageMaker endpoint variants - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
-	//
-	//    * Custom resources are not supported with a resource type. This parameter
-	//    must specify the OutputValue from the CloudFormation template stack used
-	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -2976,9 +2899,6 @@ type PutScheduledActionInput struct {
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
-	//
-	//    * custom-resource:ResourceType:Property - The scalable dimension for a
-	//    custom resource provided by your own application or service.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The new minimum and maximum capacity. You can set both values or just one.
@@ -3001,8 +2921,7 @@ type PutScheduledActionInput struct {
 	// For rate expressions, value is a positive integer and unit is minute | minutes
 	// | hour | hours | day | days.
 	//
-	// For more information about cron expressions, see Cron Expressions (http://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
-	// in the Amazon CloudWatch Events User Guide.
+	// For more information about cron expressions, see Cron (https://en.wikipedia.org/wiki/Cron).
 	Schedule *string `min:"1" type:"string"`
 
 	// The name of the scheduled action.
@@ -3010,16 +2929,15 @@ type PutScheduledActionInput struct {
 	// ScheduledActionName is a required field
 	ScheduledActionName *string `min:"1" type:"string" required:"true"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// The namespace of the AWS service. For more information, see AWS Service Namespaces
+	// (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `type:"string" required:"true" enum:"ServiceNamespace"`
 
 	// The date and time for the scheduled action to start.
-	StartTime *time.Time `type:"timestamp"`
+	StartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 }
 
 // String returns the string representation
@@ -3160,17 +3078,12 @@ type RegisterScalableTargetInput struct {
 	//    * Amazon SageMaker endpoint variants - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
-	//    * Custom resources are not supported with a resource type. This parameter
-	//    must specify the OutputValue from the CloudFormation template stack used
-	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
-	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
 	// Application Auto Scaling creates a service-linked role that grants it permissions
 	// to modify the scalable target on your behalf. For more information, see Service-Linked
-	// Roles for Application Auto Scaling (http://docs.aws.amazon.com/autoscaling/application/userguide/application-autoscaling-service-linked-roles.html).
+	// Roles for Application Auto Scaling (http://docs.aws.amazon.com/ApplicationAutoScaling/latest/APIReference/application-autoscaling-service-linked-roles.html).
 	//
 	// For resources that are not supported using a service-linked role, this parameter
 	// is required and must specify the ARN of an IAM role that allows Application
@@ -3209,15 +3122,11 @@ type RegisterScalableTargetInput struct {
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
 	//
-	//    * custom-resource:ResourceType:Property - The scalable dimension for a
-	//    custom resource provided by your own application or service.
-	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// The namespace of the AWS service. For more information, see AWS Service Namespaces
+	// (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -3316,7 +3225,7 @@ type ScalableTarget struct {
 	// The Unix timestamp for when the scalable target was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" required:"true"`
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	// The maximum value to scale to in response to a scale out event.
 	//
@@ -3354,11 +3263,6 @@ type ScalableTarget struct {
 	//
 	//    * Amazon SageMaker endpoint variants - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
-	//
-	//    * Custom resources are not supported with a resource type. This parameter
-	//    must specify the OutputValue from the CloudFormation template stack used
-	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -3401,15 +3305,11 @@ type ScalableTarget struct {
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
 	//
-	//    * custom-resource:ResourceType:Property - The scalable dimension for a
-	//    custom resource provided by your own application or service.
-	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// The namespace of the AWS service. For more information, see AWS Service Namespaces
+	// (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -3524,7 +3424,7 @@ type ScalingActivity struct {
 	Details *string `type:"string"`
 
 	// The Unix timestamp for when the scaling activity ended.
-	EndTime *time.Time `type:"timestamp"`
+	EndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The identifier of the resource associated with the scaling activity. This
 	// string consists of the resource type and unique identifier.
@@ -3552,11 +3452,6 @@ type ScalingActivity struct {
 	//
 	//    * Amazon SageMaker endpoint variants - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
-	//
-	//    * Custom resources are not supported with a resource type. This parameter
-	//    must specify the OutputValue from the CloudFormation template stack used
-	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -3593,15 +3488,11 @@ type ScalingActivity struct {
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
 	//
-	//    * custom-resource:ResourceType:Property - The scalable dimension for a
-	//    custom resource provided by your own application or service.
-	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// The namespace of the AWS service. For more information, see AWS Service Namespaces
+	// (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -3610,7 +3501,7 @@ type ScalingActivity struct {
 	// The Unix timestamp for when the scaling activity began.
 	//
 	// StartTime is a required field
-	StartTime *time.Time `type:"timestamp" required:"true"`
+	StartTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	// Indicates the status of the scaling activity.
 	//
@@ -3707,7 +3598,7 @@ type ScalingPolicy struct {
 	// The Unix timestamp for when the scaling policy was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" required:"true"`
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the scaling policy.
 	//
@@ -3751,11 +3642,6 @@ type ScalingPolicy struct {
 	//    * Amazon SageMaker endpoint variants - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
-	//    * Custom resources are not supported with a resource type. This parameter
-	//    must specify the OutputValue from the CloudFormation template stack used
-	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
-	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
@@ -3791,15 +3677,11 @@ type ScalingPolicy struct {
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
 	//
-	//    * custom-resource:ResourceType:Property - The scalable dimension for a
-	//    custom resource provided by your own application or service.
-	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// The namespace of the AWS service. For more information, see AWS Service Namespaces
+	// (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -3889,10 +3771,10 @@ type ScheduledAction struct {
 	// The date and time that the scheduled action was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" required:"true"`
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	// The date and time that the action is scheduled to end.
-	EndTime *time.Time `type:"timestamp"`
+	EndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The identifier of the resource associated with the scaling policy. This string
 	// consists of the resource type and unique identifier.
@@ -3920,11 +3802,6 @@ type ScheduledAction struct {
 	//
 	//    * Amazon SageMaker endpoint variants - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
-	//
-	//    * Custom resources are not supported with a resource type. This parameter
-	//    must specify the OutputValue from the CloudFormation template stack used
-	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -3960,9 +3837,6 @@ type ScheduledAction struct {
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
-	//
-	//    * custom-resource:ResourceType:Property - The scalable dimension for a
-	//    custom resource provided by your own application or service.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The new minimum and maximum capacity. You can set both values or just one.
@@ -3985,8 +3859,7 @@ type ScheduledAction struct {
 	// For rate expressions, value is a positive integer and unit is minute | minutes
 	// | hour | hours | day | days.
 	//
-	// For more information about cron expressions, see Cron Expressions (http://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
-	// in the Amazon CloudWatch Events User Guide.
+	// For more information about cron expressions, see Cron (https://en.wikipedia.org/wiki/Cron).
 	//
 	// Schedule is a required field
 	Schedule *string `min:"1" type:"string" required:"true"`
@@ -4001,16 +3874,15 @@ type ScheduledAction struct {
 	// ScheduledActionName is a required field
 	ScheduledActionName *string `min:"1" type:"string" required:"true"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// The namespace of the AWS service. For more information, see AWS Service Namespaces
+	// (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `type:"string" required:"true" enum:"ServiceNamespace"`
 
 	// The date and time that the action is scheduled to begin.
-	StartTime *time.Time `type:"timestamp"`
+	StartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 }
 
 // String returns the string representation
@@ -4509,9 +4381,6 @@ const (
 
 	// ScalableDimensionSagemakerVariantDesiredInstanceCount is a ScalableDimension enum value
 	ScalableDimensionSagemakerVariantDesiredInstanceCount = "sagemaker:variant:DesiredInstanceCount"
-
-	// ScalableDimensionCustomResourceResourceTypeProperty is a ScalableDimension enum value
-	ScalableDimensionCustomResourceResourceTypeProperty = "custom-resource:ResourceType:Property"
 )
 
 const (
@@ -4555,7 +4424,4 @@ const (
 
 	// ServiceNamespaceSagemaker is a ServiceNamespace enum value
 	ServiceNamespaceSagemaker = "sagemaker"
-
-	// ServiceNamespaceCustomResource is a ServiceNamespace enum value
-	ServiceNamespaceCustomResource = "custom-resource"
 )

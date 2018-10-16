@@ -301,6 +301,10 @@ const (
 	// No profile specified for the field-level encryption query argument.
 	ErrCodeQueryArgProfileEmpty = "QueryArgProfileEmpty"
 
+	// ErrCodeResourceInUse for service response error code
+	// "ResourceInUse".
+	ErrCodeResourceInUse = "ResourceInUse"
+
 	// ErrCodeStreamingDistributionAlreadyExists for service response error code
 	// "StreamingDistributionAlreadyExists".
 	ErrCodeStreamingDistributionAlreadyExists = "StreamingDistributionAlreadyExists"

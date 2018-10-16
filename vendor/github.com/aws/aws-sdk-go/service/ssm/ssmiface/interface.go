@@ -159,14 +159,6 @@ type SSMAPI interface {
 	DescribeAssociationWithContext(aws.Context, *ssm.DescribeAssociationInput, ...request.Option) (*ssm.DescribeAssociationOutput, error)
 	DescribeAssociationRequest(*ssm.DescribeAssociationInput) (*request.Request, *ssm.DescribeAssociationOutput)
 
-	DescribeAssociationExecutionTargets(*ssm.DescribeAssociationExecutionTargetsInput) (*ssm.DescribeAssociationExecutionTargetsOutput, error)
-	DescribeAssociationExecutionTargetsWithContext(aws.Context, *ssm.DescribeAssociationExecutionTargetsInput, ...request.Option) (*ssm.DescribeAssociationExecutionTargetsOutput, error)
-	DescribeAssociationExecutionTargetsRequest(*ssm.DescribeAssociationExecutionTargetsInput) (*request.Request, *ssm.DescribeAssociationExecutionTargetsOutput)
-
-	DescribeAssociationExecutions(*ssm.DescribeAssociationExecutionsInput) (*ssm.DescribeAssociationExecutionsOutput, error)
-	DescribeAssociationExecutionsWithContext(aws.Context, *ssm.DescribeAssociationExecutionsInput, ...request.Option) (*ssm.DescribeAssociationExecutionsOutput, error)
-	DescribeAssociationExecutionsRequest(*ssm.DescribeAssociationExecutionsInput) (*request.Request, *ssm.DescribeAssociationExecutionsOutput)
-
 	DescribeAutomationExecutions(*ssm.DescribeAutomationExecutionsInput) (*ssm.DescribeAutomationExecutionsOutput, error)
 	DescribeAutomationExecutionsWithContext(aws.Context, *ssm.DescribeAutomationExecutionsInput, ...request.Option) (*ssm.DescribeAutomationExecutionsOutput, error)
 	DescribeAutomationExecutionsRequest(*ssm.DescribeAutomationExecutionsInput) (*request.Request, *ssm.DescribeAutomationExecutionsOutput)
@@ -343,10 +335,6 @@ type SSMAPI interface {
 	GetPatchBaselineForPatchGroupWithContext(aws.Context, *ssm.GetPatchBaselineForPatchGroupInput, ...request.Option) (*ssm.GetPatchBaselineForPatchGroupOutput, error)
 	GetPatchBaselineForPatchGroupRequest(*ssm.GetPatchBaselineForPatchGroupInput) (*request.Request, *ssm.GetPatchBaselineForPatchGroupOutput)
 
-	LabelParameterVersion(*ssm.LabelParameterVersionInput) (*ssm.LabelParameterVersionOutput, error)
-	LabelParameterVersionWithContext(aws.Context, *ssm.LabelParameterVersionInput, ...request.Option) (*ssm.LabelParameterVersionOutput, error)
-	LabelParameterVersionRequest(*ssm.LabelParameterVersionInput) (*request.Request, *ssm.LabelParameterVersionOutput)
-
 	ListAssociationVersions(*ssm.ListAssociationVersionsInput) (*ssm.ListAssociationVersionsOutput, error)
 	ListAssociationVersionsWithContext(aws.Context, *ssm.ListAssociationVersionsInput, ...request.Option) (*ssm.ListAssociationVersionsOutput, error)
 	ListAssociationVersionsRequest(*ssm.ListAssociationVersionsInput) (*request.Request, *ssm.ListAssociationVersionsOutput)
@@ -450,10 +438,6 @@ type SSMAPI interface {
 	SendCommand(*ssm.SendCommandInput) (*ssm.SendCommandOutput, error)
 	SendCommandWithContext(aws.Context, *ssm.SendCommandInput, ...request.Option) (*ssm.SendCommandOutput, error)
 	SendCommandRequest(*ssm.SendCommandInput) (*request.Request, *ssm.SendCommandOutput)
-
-	StartAssociationsOnce(*ssm.StartAssociationsOnceInput) (*ssm.StartAssociationsOnceOutput, error)
-	StartAssociationsOnceWithContext(aws.Context, *ssm.StartAssociationsOnceInput, ...request.Option) (*ssm.StartAssociationsOnceOutput, error)
-	StartAssociationsOnceRequest(*ssm.StartAssociationsOnceInput) (*request.Request, *ssm.StartAssociationsOnceOutput)
 
 	StartAutomationExecution(*ssm.StartAutomationExecutionInput) (*ssm.StartAutomationExecutionOutput, error)
 	StartAutomationExecutionWithContext(aws.Context, *ssm.StartAutomationExecutionInput, ...request.Option) (*ssm.StartAutomationExecutionOutput, error)

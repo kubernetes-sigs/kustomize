@@ -1419,8 +1419,7 @@
         "Info",
         "Warning",
         "Degraded",
-        "Severe",
-        "Suspended"
+        "Severe"
       ]
     },
     "EnvironmentId":{"type":"string"},

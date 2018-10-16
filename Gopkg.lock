@@ -18,7 +18,7 @@
   revision = "de5bf2ad457846296e2031421a34e2568e304e35"
 
 [[projects]]
-  digest = "1:9299ad32dcec0f92ad06773f73426bd46a21efa96f6a8138c287bb185933e77e"
+  digest = "1:4905d4dce09d1a9e93fe2b9733f92bee5f149dd229727bbc074465b24fb489cd"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -54,8 +54,8 @@
     "service/sts",
   ]
   pruneopts = ""
-  revision = "daed0c76021ea9c4e659e3ec80bcd2d657297100"
-  version = "v1.15.12"
+  revision = "fde4ded7becdeae4d26bf1212916aabba79349b4"
+  version = "v1.14.12"
 
 [[projects]]
   branch = "master"
@@ -252,14 +252,6 @@
   version = "1.1.3"
 
 [[projects]]
-  digest = "1:10e1dfc240bcd0fce14366215fd2b070e79d9b9460b27382db4423ad74204f2b"
-  name = "github.com/krishicks/yaml-patch"
-  packages = ["."]
-  pruneopts = ""
-  revision = "83cc9ac50becbbfafb86a89167f3bc5372e8e530"
-  version = "v0.0.10"
-
-[[projects]]
   branch = "master"
   digest = "1:d9e483f4b9e306facf126bd90b02d512bd22ea4471e1568867e32221a8abbb16"
   name = "github.com/mailru/easyjson"
@@ -342,16 +334,16 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9e548233d0dc00e74be262e54a9d1bbe7e4c19e5951083520261740e37daeb02"
+  digest = "1:35171304d8332a0cfac5f3bd9222467f036732ddde75c65278b16f65216e03ed"
   name = "golang.org/x/net"
   packages = [
-    "http/httpguts",
     "http2",
     "http2/hpack",
     "idna",
+    "lex/httplex",
   ]
   pruneopts = ""
-  revision = "2491c5de3490fced2f6cff376127c667efeed857"
+  revision = "1c05540f6879653db88113bc4a2b70aec4bd491f"
 
 [[projects]]
   digest = "1:5acd3512b047305d49e8763eef7ba423901e85d5dd2fd1e71778a0ea8de10bd4"
@@ -503,7 +495,6 @@
     "github.com/ghodss/yaml",
     "github.com/golang/glog",
     "github.com/hashicorp/go-getter",
-    "github.com/krishicks/yaml-patch",
     "github.com/pkg/errors",
     "github.com/spf13/cobra",
     "gopkg.in/yaml.v2",
@@ -515,7 +506,6 @@
     "k8s.io/apimachinery/pkg/runtime",
     "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/apimachinery/pkg/util/mergepatch",
-    "k8s.io/apimachinery/pkg/util/sets",
     "k8s.io/apimachinery/pkg/util/strategicpatch",
     "k8s.io/apimachinery/pkg/util/validation",
     "k8s.io/apimachinery/pkg/util/validation/field",

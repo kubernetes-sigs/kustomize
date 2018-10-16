@@ -9,23 +9,22 @@
     "ListTranscriptionJobs": "<p>Lists transcription jobs with the specified status.</p>",
     "ListVocabularies": "<p>Returns a list of vocabularies that match the specified criteria. If no criteria are specified, returns the entire list of vocabularies.</p>",
     "StartTranscriptionJob": "<p>Starts an asynchronous job to transcribe speech to text.</p>",
-    "UpdateVocabulary": "<p>Updates an existing vocabulary with new values. The <code>UpdateVocabulary</code> operation overwrites all of the existing information with the values that you provide in the request.</p>"
+    "UpdateVocabulary": "<p>Updates an existing vocabulary with new values.</p>"
   },
   "shapes": {
     "BadRequestException": {
-      "base": "<p>Your request didn't pass one or more validation tests. For example, a name already exists when creating a resource or a name may not exist when getting a transcription job or custom vocabulary. See the exception <code>Message</code> field for more information.</p>",
+      "base": "<p>Your request didn't pass one or more validation tests. For example, a name already exists when createing a resource or a name may not exist when getting a transcription job or custom vocabulary. See the exception <code>Message</code> field for more information.</p>",
       "refs": {
       }
     },
     "Boolean": {
       "base": null,
       "refs": {
-        "Settings$ShowSpeakerLabels": "<p>Determines whether the transcription job uses speaker recognition to identify different speakers in the input audio. Speaker recognition labels individual speakers in the audio file. If you set the <code>ShowSpeakerLabels</code> field to true, you must also set the maximum number of speaker labels <code>MaxSpeakerLabels</code> field.</p> <p>You can't set both <code>ShowSpeakerLabels</code> and <code>ChannelIdentification</code> in the same request. If you set both, your request returns a <code>BadRequestException</code>.</p>",
-        "Settings$ChannelIdentification": "<p>Instructs Amazon Transcribe to process each audio channel separately and then merge the transcription output of each channel into a single transcription. </p> <p>Amazon Transcribe also produces a transcription of each item detected on an audio channel, including the start time and end time of the item and alternative transcriptions of the item including the confidence that Amazon Transcribe has in the transcription.</p> <p>You can't set both <code>ShowSpeakerLabels</code> and <code>ChannelIdentification</code> in the same request. If you set both, your request returns a <code>BadRequestException</code>.</p>"
+        "Settings$ShowSpeakerLabels": "<p>Determines whether the transcription job should use speaker recognition to identify different speakers in the input audio. If you set the <code>ShowSpeakerLabels</code> field to true, you must also set the maximum number of speaker labels <code>MaxSpeakerLabels</code> field.</p>"
       }
     },
     "ConflictException": {
-      "base": "<p>When you are using the <code>StartTranscriptionJob</code> operation, the <code>JobName</code> field is a duplicate of a previously entered job name. Resend your request with a different name.</p> <p>When you are using the <code>UpdateVocabulary</code> operation, there are two jobs running at the same time. Resend the second request later.</p>",
+      "base": "<p>The <code>JobName</code> field is a duplicate of a previously entered job name. Resend your request with a different name.</p>",
       "refs": {
       }
     },
@@ -44,10 +43,10 @@
       "refs": {
         "CreateVocabularyResponse$LastModifiedTime": "<p>The date and time that the vocabulary was created.</p>",
         "GetVocabularyResponse$LastModifiedTime": "<p>The date and time that the vocabulary was last modified.</p>",
-        "TranscriptionJob$CreationTime": "<p>A timestamp that shows when the job was created.</p>",
-        "TranscriptionJob$CompletionTime": "<p>A timestamp that shows when the job was completed.</p>",
-        "TranscriptionJobSummary$CreationTime": "<p>A timestamp that shows when the job was created.</p>",
-        "TranscriptionJobSummary$CompletionTime": "<p>A timestamp that shows when the job was completed.</p>",
+        "TranscriptionJob$CreationTime": "<p>Timestamp of the date and time that the job was created.</p>",
+        "TranscriptionJob$CompletionTime": "<p>Timestamp of the date and time that the job completed.</p>",
+        "TranscriptionJobSummary$CreationTime": "<p>Timestamp of the date and time that the job was created.</p>",
+        "TranscriptionJobSummary$CompletionTime": "<p>Timestamp of the date and time that the job completed.</p>",
         "UpdateVocabularyResponse$LastModifiedTime": "<p>The date and time that the vocabulary was updated.</p>",
         "VocabularyInfo$LastModifiedTime": "<p>The date and time that the vocabulary was last modified.</p>"
       }
@@ -64,7 +63,7 @@
         "CreateVocabularyResponse$FailureReason": "<p>If the <code>VocabularyState</code> field is <code>FAILED</code>, this field contains information about why the job failed.</p>",
         "GetVocabularyResponse$FailureReason": "<p>If the <code>VocabularyState</code> field is <code>FAILED</code>, this field contains information about why the job failed.</p>",
         "TranscriptionJob$FailureReason": "<p>If the <code>TranscriptionJobStatus</code> field is <code>FAILED</code>, this field contains information about why the job failed.</p>",
-        "TranscriptionJobSummary$FailureReason": "<p>If the <code>TranscriptionJobStatus</code> field is <code>FAILED</code>, a description of the error.</p>"
+        "TranscriptionJobSummary$FailureReason": "<p>If the <code>TranscriptionJobStatus</code> field is <code>FAILED</code>, this field contains a description of the error.</p>"
       }
     },
     "GetTranscriptionJobRequest": {
@@ -148,7 +147,7 @@
       "base": "<p>Describes the input media file in a transcription request.</p>",
       "refs": {
         "StartTranscriptionJobRequest$Media": "<p>An object that describes the input media for a transcription job.</p>",
-        "TranscriptionJob$Media": "<p>An object that describes the input media for the transcription job.</p>"
+        "TranscriptionJob$Media": "<p>An object that describes the input media for a transcription job.</p>"
       }
     },
     "MediaFormat": {
@@ -175,20 +174,8 @@
       }
     },
     "NotFoundException": {
-      "base": "<p>We can't find the requested resource. Check the name and try your request again.</p>",
+      "base": "<p>We can't find the requested transcription job or custom vocabulary. Check the name and try your request again.</p>",
       "refs": {
-      }
-    },
-    "OutputBucketName": {
-      "base": null,
-      "refs": {
-        "StartTranscriptionJobRequest$OutputBucketName": "<p>The location where the transcription is stored.</p> <p>If you set the <code>OutputBucketName</code>, Amazon Transcribe puts the transcription in the specified S3 bucket. When you call the <a>GetTranscriptionJob</a> operation, the operation returns this location in the <code>TranscriptFileUri</code> field. The S3 bucket must have permissions that allow Amazon Transcribe to put files in the bucket. For more information, see <a href=\"https://docs.aws.amazon.com/transcribe/latest/dg/access-control-managing-permissions.html#auth-role-iam-user\">Permissions Required for IAM User Roles</a>.</p> <p>If you don't set the <code>OutputBucketName</code>, Amazon Transcribe generates a pre-signed URL, a shareable URL that provides secure access to your transcription, and returns it in the <code>TranscriptFileUri</code> field. Use this URL to download the transcription.</p>"
-      }
-    },
-    "OutputLocationType": {
-      "base": null,
-      "refs": {
-        "TranscriptionJobSummary$OutputLocationType": "<p>Indicates the location of the output of the transcription job.</p> <p>If the value is <code>CUSTOMER_BUCKET</code> then the location is the S3 bucket specified in the <code>outputBucketName</code> field when the transcription job was started with the <code>StartTranscriptionJob</code> operation.</p> <p>If the value is <code>SERVICE_BUCKET</code> then the output is stored by Amazon Transcribe and can be retrieved using the URI in the <code>GetTranscriptionJob</code> response's <code>TranscriptFileUri</code> field.</p>"
       }
     },
     "Phrase": {
@@ -208,7 +195,7 @@
       "base": "<p>Provides optional settings for the <code>StartTranscriptionJob</code> operation.</p>",
       "refs": {
         "StartTranscriptionJobRequest$Settings": "<p>A <code>Settings</code> object that provides optional settings for a transcription job.</p>",
-        "TranscriptionJob$Settings": "<p>Optional settings for the transcription job. Use these settings to turn on speaker recognition, to set the maximum number of speakers that should be identified and to specify a custom vocabulary to use when processing the transcription job.</p>"
+        "TranscriptionJob$Settings": "<p>Optional settings for the transcription job.</p>"
       }
     },
     "StartTranscriptionJobRequest": {
@@ -231,7 +218,7 @@
       }
     },
     "Transcript": {
-      "base": "<p>Identifies the location of a transcription.</p>",
+      "base": "<p>Describes the output of a transcription job.</p>",
       "refs": {
         "TranscriptionJob$Transcript": "<p>An object that describes the output of the transcription job.</p>"
       }
@@ -248,9 +235,9 @@
       "refs": {
         "GetTranscriptionJobRequest$TranscriptionJobName": "<p>The name of the job.</p>",
         "ListTranscriptionJobsRequest$JobNameContains": "<p>When specified, the jobs returned in the list are limited to jobs whose name contains the specified string.</p>",
-        "StartTranscriptionJobRequest$TranscriptionJobName": "<p>The name of the job. You can't use the strings \".\" or \"..\" in the job name. The name must be unique within an AWS account.</p>",
-        "TranscriptionJob$TranscriptionJobName": "<p>The name of the transcription job.</p>",
-        "TranscriptionJobSummary$TranscriptionJobName": "<p>The name of the transcription job.</p>"
+        "StartTranscriptionJobRequest$TranscriptionJobName": "<p>The name of the job. The name must be unique within an AWS account.</p>",
+        "TranscriptionJob$TranscriptionJobName": "<p>A name to identify the transcription job.</p>",
+        "TranscriptionJobSummary$TranscriptionJobName": "<p>The name assigned to the transcription job when it was created.</p>"
       }
     },
     "TranscriptionJobStatus": {
@@ -290,7 +277,7 @@
       "refs": {
         "GetVocabularyResponse$DownloadUri": "<p>The S3 location where the vocabulary is stored. Use this URI to get the contents of the vocabulary. The URI is available for a limited time.</p>",
         "Media$MediaFileUri": "<p>The S3 location of the input media file. The URI must be in the same region as the API endpoint that you are calling. The general form is:</p> <p> <code> https://&lt;aws-region&gt;.amazonaws.com/&lt;bucket-name&gt;/&lt;keyprefix&gt;/&lt;objectkey&gt; </code> </p> <p>For example:</p> <p> <code>https://s3-us-east-1.amazonaws.com/examplebucket/example.mp4</code> </p> <p> <code>https://s3-us-east-1.amazonaws.com/examplebucket/mediadocs/example.mp4</code> </p> <p>For more information about S3 object names, see <a href=\"http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html#object-keys\">Object Keys</a> in the <i>Amazon S3 Developer Guide</i>.</p>",
-        "Transcript$TranscriptFileUri": "<p>The location where the transcription is stored.</p> <p>Use this URI to access the transcription. If you specified an S3 bucket in the <code>OutputBucketName</code> field when you created the job, this is the URI of that bucket. If you chose to store the transcription in Amazon Transcribe, this is a shareable URL that provides secure access to that location.</p>"
+        "Transcript$TranscriptFileUri": "<p>The S3 location where the transcription result is stored. Use this URI to access the results of the transcription job. </p>"
       }
     },
     "Vocabularies": {

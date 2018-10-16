@@ -106,21 +106,6 @@ type ElasticsearchServiceAPI interface {
 	DescribeReservedElasticsearchInstancesPages(*elasticsearchservice.DescribeReservedElasticsearchInstancesInput, func(*elasticsearchservice.DescribeReservedElasticsearchInstancesOutput, bool) bool) error
 	DescribeReservedElasticsearchInstancesPagesWithContext(aws.Context, *elasticsearchservice.DescribeReservedElasticsearchInstancesInput, func(*elasticsearchservice.DescribeReservedElasticsearchInstancesOutput, bool) bool, ...request.Option) error
 
-	GetCompatibleElasticsearchVersions(*elasticsearchservice.GetCompatibleElasticsearchVersionsInput) (*elasticsearchservice.GetCompatibleElasticsearchVersionsOutput, error)
-	GetCompatibleElasticsearchVersionsWithContext(aws.Context, *elasticsearchservice.GetCompatibleElasticsearchVersionsInput, ...request.Option) (*elasticsearchservice.GetCompatibleElasticsearchVersionsOutput, error)
-	GetCompatibleElasticsearchVersionsRequest(*elasticsearchservice.GetCompatibleElasticsearchVersionsInput) (*request.Request, *elasticsearchservice.GetCompatibleElasticsearchVersionsOutput)
-
-	GetUpgradeHistory(*elasticsearchservice.GetUpgradeHistoryInput) (*elasticsearchservice.GetUpgradeHistoryOutput, error)
-	GetUpgradeHistoryWithContext(aws.Context, *elasticsearchservice.GetUpgradeHistoryInput, ...request.Option) (*elasticsearchservice.GetUpgradeHistoryOutput, error)
-	GetUpgradeHistoryRequest(*elasticsearchservice.GetUpgradeHistoryInput) (*request.Request, *elasticsearchservice.GetUpgradeHistoryOutput)
-
-	GetUpgradeHistoryPages(*elasticsearchservice.GetUpgradeHistoryInput, func(*elasticsearchservice.GetUpgradeHistoryOutput, bool) bool) error
-	GetUpgradeHistoryPagesWithContext(aws.Context, *elasticsearchservice.GetUpgradeHistoryInput, func(*elasticsearchservice.GetUpgradeHistoryOutput, bool) bool, ...request.Option) error
-
-	GetUpgradeStatus(*elasticsearchservice.GetUpgradeStatusInput) (*elasticsearchservice.GetUpgradeStatusOutput, error)
-	GetUpgradeStatusWithContext(aws.Context, *elasticsearchservice.GetUpgradeStatusInput, ...request.Option) (*elasticsearchservice.GetUpgradeStatusOutput, error)
-	GetUpgradeStatusRequest(*elasticsearchservice.GetUpgradeStatusInput) (*request.Request, *elasticsearchservice.GetUpgradeStatusOutput)
-
 	ListDomainNames(*elasticsearchservice.ListDomainNamesInput) (*elasticsearchservice.ListDomainNamesOutput, error)
 	ListDomainNamesWithContext(aws.Context, *elasticsearchservice.ListDomainNamesInput, ...request.Option) (*elasticsearchservice.ListDomainNamesOutput, error)
 	ListDomainNamesRequest(*elasticsearchservice.ListDomainNamesInput) (*request.Request, *elasticsearchservice.ListDomainNamesOutput)
@@ -154,10 +139,6 @@ type ElasticsearchServiceAPI interface {
 	UpdateElasticsearchDomainConfig(*elasticsearchservice.UpdateElasticsearchDomainConfigInput) (*elasticsearchservice.UpdateElasticsearchDomainConfigOutput, error)
 	UpdateElasticsearchDomainConfigWithContext(aws.Context, *elasticsearchservice.UpdateElasticsearchDomainConfigInput, ...request.Option) (*elasticsearchservice.UpdateElasticsearchDomainConfigOutput, error)
 	UpdateElasticsearchDomainConfigRequest(*elasticsearchservice.UpdateElasticsearchDomainConfigInput) (*request.Request, *elasticsearchservice.UpdateElasticsearchDomainConfigOutput)
-
-	UpgradeElasticsearchDomain(*elasticsearchservice.UpgradeElasticsearchDomainInput) (*elasticsearchservice.UpgradeElasticsearchDomainOutput, error)
-	UpgradeElasticsearchDomainWithContext(aws.Context, *elasticsearchservice.UpgradeElasticsearchDomainInput, ...request.Option) (*elasticsearchservice.UpgradeElasticsearchDomainOutput, error)
-	UpgradeElasticsearchDomainRequest(*elasticsearchservice.UpgradeElasticsearchDomainInput) (*request.Request, *elasticsearchservice.UpgradeElasticsearchDomainOutput)
 }
 
 var _ ElasticsearchServiceAPI = (*elasticsearchservice.ElasticsearchService)(nil)

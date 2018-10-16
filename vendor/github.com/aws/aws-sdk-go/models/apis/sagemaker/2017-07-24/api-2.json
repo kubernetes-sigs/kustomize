@@ -2,12 +2,11 @@
   "version":"2.0",
   "metadata":{
     "apiVersion":"2017-07-24",
-    "endpointPrefix":"api.sagemaker",
+    "endpointPrefix":"sagemaker",
     "jsonVersion":"1.1",
     "protocol":"json",
     "serviceAbbreviation":"SageMaker",
     "serviceFullName":"Amazon SageMaker Service",
-    "serviceId":"SageMaker",
     "signatureVersion":"v4",
     "signingName":"sagemaker",
     "targetPrefix":"SageMaker",
@@ -113,19 +112,6 @@
       },
       "input":{"shape":"CreateTrainingJobRequest"},
       "output":{"shape":"CreateTrainingJobResponse"},
-      "errors":[
-        {"shape":"ResourceInUse"},
-        {"shape":"ResourceLimitExceeded"}
-      ]
-    },
-    "CreateTransformJob":{
-      "name":"CreateTransformJob",
-      "http":{
-        "method":"POST",
-        "requestUri":"/"
-      },
-      "input":{"shape":"CreateTransformJobRequest"},
-      "output":{"shape":"CreateTransformJobResponse"},
       "errors":[
         {"shape":"ResourceInUse"},
         {"shape":"ResourceLimitExceeded"}
@@ -249,18 +235,6 @@
         {"shape":"ResourceNotFound"}
       ]
     },
-    "DescribeTransformJob":{
-      "name":"DescribeTransformJob",
-      "http":{
-        "method":"POST",
-        "requestUri":"/"
-      },
-      "input":{"shape":"DescribeTransformJobRequest"},
-      "output":{"shape":"DescribeTransformJobResponse"},
-      "errors":[
-        {"shape":"ResourceNotFound"}
-      ]
-    },
     "ListEndpointConfigs":{
       "name":"ListEndpointConfigs",
       "http":{
@@ -345,15 +319,6 @@
         {"shape":"ResourceNotFound"}
       ]
     },
-    "ListTransformJobs":{
-      "name":"ListTransformJobs",
-      "http":{
-        "method":"POST",
-        "requestUri":"/"
-      },
-      "input":{"shape":"ListTransformJobsRequest"},
-      "output":{"shape":"ListTransformJobsResponse"}
-    },
     "StartNotebookInstance":{
       "name":"StartNotebookInstance",
       "http":{
@@ -391,17 +356,6 @@
         "requestUri":"/"
       },
       "input":{"shape":"StopTrainingJobRequest"},
-      "errors":[
-        {"shape":"ResourceNotFound"}
-      ]
-    },
-    "StopTransformJob":{
-      "name":"StopTransformJob",
-      "http":{
-        "method":"POST",
-        "requestUri":"/"
-      },
-      "input":{"shape":"StopTransformJobRequest"},
       "errors":[
         {"shape":"ResourceNotFound"}
       ]
@@ -456,10 +410,6 @@
     }
   },
   "shapes":{
-    "Accept":{
-      "type":"string",
-      "max":256
-    },
     "AddTagsInput":{
       "type":"structure",
       "required":[
@@ -491,20 +441,6 @@
         "TrainingImage":{"shape":"AlgorithmImage"},
         "TrainingInputMode":{"shape":"TrainingInputMode"}
       }
-    },
-    "AssemblyType":{
-      "type":"string",
-      "enum":[
-        "None",
-        "Line"
-      ]
-    },
-    "BatchStrategy":{
-      "type":"string",
-      "enum":[
-        "MultiRecord",
-        "SingleRecord"
-      ]
     },
     "CategoricalParameterRange":{
       "type":"structure",
@@ -755,35 +691,6 @@
         "TrainingJobArn":{"shape":"TrainingJobArn"}
       }
     },
-    "CreateTransformJobRequest":{
-      "type":"structure",
-      "required":[
-        "TransformJobName",
-        "ModelName",
-        "TransformInput",
-        "TransformOutput",
-        "TransformResources"
-      ],
-      "members":{
-        "TransformJobName":{"shape":"TransformJobName"},
-        "ModelName":{"shape":"ModelName"},
-        "MaxConcurrentTransforms":{"shape":"MaxConcurrentTransforms"},
-        "MaxPayloadInMB":{"shape":"MaxPayloadInMB"},
-        "BatchStrategy":{"shape":"BatchStrategy"},
-        "Environment":{"shape":"TransformEnvironmentMap"},
-        "TransformInput":{"shape":"TransformInput"},
-        "TransformOutput":{"shape":"TransformOutput"},
-        "TransformResources":{"shape":"TransformResources"},
-        "Tags":{"shape":"TagList"}
-      }
-    },
-    "CreateTransformJobResponse":{
-      "type":"structure",
-      "required":["TransformJobArn"],
-      "members":{
-        "TransformJobArn":{"shape":"TransformJobArn"}
-      }
-    },
     "CreationTime":{"type":"timestamp"},
     "DataSource":{
       "type":"structure",
@@ -842,18 +749,6 @@
       "type":"structure",
       "members":{
       }
-    },
-    "DeployedImage":{
-      "type":"structure",
-      "members":{
-        "SpecifiedImage":{"shape":"Image"},
-        "ResolvedImage":{"shape":"Image"},
-        "ResolutionTime":{"shape":"Timestamp"}
-      }
-    },
-    "DeployedImages":{
-      "type":"list",
-      "member":{"shape":"DeployedImage"}
     },
     "DescribeEndpointConfigInput":{
       "type":"structure",
@@ -1050,44 +945,7 @@
         "CreationTime":{"shape":"Timestamp"},
         "TrainingStartTime":{"shape":"Timestamp"},
         "TrainingEndTime":{"shape":"Timestamp"},
-        "LastModifiedTime":{"shape":"Timestamp"},
-        "SecondaryStatusTransitions":{"shape":"SecondaryStatusTransitions"}
-      }
-    },
-    "DescribeTransformJobRequest":{
-      "type":"structure",
-      "required":["TransformJobName"],
-      "members":{
-        "TransformJobName":{"shape":"TransformJobName"}
-      }
-    },
-    "DescribeTransformJobResponse":{
-      "type":"structure",
-      "required":[
-        "TransformJobName",
-        "TransformJobArn",
-        "TransformJobStatus",
-        "ModelName",
-        "TransformInput",
-        "TransformResources",
-        "CreationTime"
-      ],
-      "members":{
-        "TransformJobName":{"shape":"TransformJobName"},
-        "TransformJobArn":{"shape":"TransformJobArn"},
-        "TransformJobStatus":{"shape":"TransformJobStatus"},
-        "FailureReason":{"shape":"FailureReason"},
-        "ModelName":{"shape":"ModelName"},
-        "MaxConcurrentTransforms":{"shape":"MaxConcurrentTransforms"},
-        "MaxPayloadInMB":{"shape":"MaxPayloadInMB"},
-        "BatchStrategy":{"shape":"BatchStrategy"},
-        "Environment":{"shape":"TransformEnvironmentMap"},
-        "TransformInput":{"shape":"TransformInput"},
-        "TransformOutput":{"shape":"TransformOutput"},
-        "TransformResources":{"shape":"TransformResources"},
-        "CreationTime":{"shape":"Timestamp"},
-        "TransformStartTime":{"shape":"Timestamp"},
-        "TransformEndTime":{"shape":"Timestamp"}
+        "LastModifiedTime":{"shape":"Timestamp"}
       }
     },
     "DesiredWeightAndCapacity":{
@@ -1649,36 +1507,6 @@
         "NextToken":{"shape":"NextToken"}
       }
     },
-    "ListTransformJobsRequest":{
-      "type":"structure",
-      "members":{
-        "CreationTimeAfter":{"shape":"Timestamp"},
-        "CreationTimeBefore":{"shape":"Timestamp"},
-        "LastModifiedTimeAfter":{"shape":"Timestamp"},
-        "LastModifiedTimeBefore":{"shape":"Timestamp"},
-        "NameContains":{"shape":"NameContains"},
-        "StatusEquals":{"shape":"TransformJobStatus"},
-        "SortBy":{"shape":"SortBy"},
-        "SortOrder":{"shape":"SortOrder"},
-        "NextToken":{"shape":"NextToken"},
-        "MaxResults":{
-          "shape":"MaxResults",
-          "box":true
-        }
-      }
-    },
-    "ListTransformJobsResponse":{
-      "type":"structure",
-      "required":["TransformJobSummaries"],
-      "members":{
-        "TransformJobSummaries":{"shape":"TransformJobSummaries"},
-        "NextToken":{"shape":"NextToken"}
-      }
-    },
-    "MaxConcurrentTransforms":{
-      "type":"integer",
-      "min":0
-    },
     "MaxNumberOfTrainingJobs":{
       "type":"integer",
       "min":1
@@ -1686,10 +1514,6 @@
     "MaxParallelTrainingJobs":{
       "type":"integer",
       "min":1
-    },
-    "MaxPayloadInMB":{
-      "type":"integer",
-      "min":0
     },
     "MaxResults":{
       "type":"integer",
@@ -1880,8 +1704,7 @@
         "Stopping",
         "Stopped",
         "Failed",
-        "Deleting",
-        "Updating"
+        "Deleting"
       ]
     },
     "NotebookInstanceSummary":{
@@ -2030,7 +1853,6 @@
       "required":["VariantName"],
       "members":{
         "VariantName":{"shape":"VariantName"},
-        "DeployedImages":{"shape":"DeployedImages"},
         "CurrentWeight":{"shape":"VariantWeight"},
         "DesiredWeight":{"shape":"VariantWeight"},
         "CurrentInstanceCount":{"shape":"TaskCount"},
@@ -2140,10 +1962,7 @@
       "type":"string",
       "enum":[
         "Starting",
-        "LaunchingMLInstances",
-        "PreparingTrainingStack",
         "Downloading",
-        "DownloadingTrainingImage",
         "Training",
         "Uploading",
         "Stopping",
@@ -2152,23 +1971,6 @@
         "Completed",
         "Failed"
       ]
-    },
-    "SecondaryStatusTransition":{
-      "type":"structure",
-      "required":[
-        "Status",
-        "StartTime"
-      ],
-      "members":{
-        "Status":{"shape":"SecondaryStatus"},
-        "StartTime":{"shape":"Timestamp"},
-        "EndTime":{"shape":"Timestamp"},
-        "StatusMessage":{"shape":"StatusMessage"}
-      }
-    },
-    "SecondaryStatusTransitions":{
-      "type":"list",
-      "member":{"shape":"SecondaryStatusTransition"}
     },
     "SecurityGroupId":{
       "type":"string",
@@ -2199,14 +2001,6 @@
         "Descending"
       ]
     },
-    "SplitType":{
-      "type":"string",
-      "enum":[
-        "None",
-        "Line",
-        "RecordIO"
-      ]
-    },
     "StartNotebookInstanceInput":{
       "type":"structure",
       "required":["NotebookInstanceName"],
@@ -2214,7 +2008,6 @@
         "NotebookInstanceName":{"shape":"NotebookInstanceName"}
       }
     },
-    "StatusMessage":{"type":"string"},
     "StopHyperParameterTuningJobRequest":{
       "type":"structure",
       "required":["HyperParameterTuningJobName"],
@@ -2234,13 +2027,6 @@
       "required":["TrainingJobName"],
       "members":{
         "TrainingJobName":{"shape":"TrainingJobName"}
-      }
-    },
-    "StopTransformJobRequest":{
-      "type":"structure",
-      "required":["TransformJobName"],
-      "members":{
-        "TransformJobName":{"shape":"TransformJobName"}
       }
     },
     "StoppingCondition":{
@@ -2404,148 +2190,6 @@
         "TrainingEndTime":{"shape":"Timestamp"},
         "LastModifiedTime":{"shape":"Timestamp"},
         "TrainingJobStatus":{"shape":"TrainingJobStatus"}
-      }
-    },
-    "TransformDataSource":{
-      "type":"structure",
-      "required":["S3DataSource"],
-      "members":{
-        "S3DataSource":{"shape":"TransformS3DataSource"}
-      }
-    },
-    "TransformEnvironmentKey":{
-      "type":"string",
-      "max":1024,
-      "pattern":"[a-zA-Z_][a-zA-Z0-9_]*"
-    },
-    "TransformEnvironmentMap":{
-      "type":"map",
-      "key":{"shape":"TransformEnvironmentKey"},
-      "value":{"shape":"TransformEnvironmentValue"},
-      "max":16
-    },
-    "TransformEnvironmentValue":{
-      "type":"string",
-      "max":10240
-    },
-    "TransformInput":{
-      "type":"structure",
-      "required":["DataSource"],
-      "members":{
-        "DataSource":{"shape":"TransformDataSource"},
-        "ContentType":{"shape":"ContentType"},
-        "CompressionType":{"shape":"CompressionType"},
-        "SplitType":{"shape":"SplitType"}
-      }
-    },
-    "TransformInstanceCount":{
-      "type":"integer",
-      "min":1
-    },
-    "TransformInstanceType":{
-      "type":"string",
-      "enum":[
-        "ml.m4.xlarge",
-        "ml.m4.2xlarge",
-        "ml.m4.4xlarge",
-        "ml.m4.10xlarge",
-        "ml.m4.16xlarge",
-        "ml.c4.xlarge",
-        "ml.c4.2xlarge",
-        "ml.c4.4xlarge",
-        "ml.c4.8xlarge",
-        "ml.p2.xlarge",
-        "ml.p2.8xlarge",
-        "ml.p2.16xlarge",
-        "ml.p3.2xlarge",
-        "ml.p3.8xlarge",
-        "ml.p3.16xlarge",
-        "ml.c5.xlarge",
-        "ml.c5.2xlarge",
-        "ml.c5.4xlarge",
-        "ml.c5.9xlarge",
-        "ml.c5.18xlarge",
-        "ml.m5.large",
-        "ml.m5.xlarge",
-        "ml.m5.2xlarge",
-        "ml.m5.4xlarge",
-        "ml.m5.12xlarge",
-        "ml.m5.24xlarge"
-      ]
-    },
-    "TransformJobArn":{
-      "type":"string",
-      "max":256,
-      "pattern":"arn:aws[a-z\\-]*:sagemaker:[a-z0-9\\-]*:[0-9]{12}:transform-job/.*"
-    },
-    "TransformJobName":{
-      "type":"string",
-      "max":63,
-      "min":1,
-      "pattern":"^[a-zA-Z0-9](-*[a-zA-Z0-9])*"
-    },
-    "TransformJobStatus":{
-      "type":"string",
-      "enum":[
-        "InProgress",
-        "Completed",
-        "Failed",
-        "Stopping",
-        "Stopped"
-      ]
-    },
-    "TransformJobSummaries":{
-      "type":"list",
-      "member":{"shape":"TransformJobSummary"}
-    },
-    "TransformJobSummary":{
-      "type":"structure",
-      "required":[
-        "TransformJobName",
-        "TransformJobArn",
-        "CreationTime",
-        "TransformJobStatus"
-      ],
-      "members":{
-        "TransformJobName":{"shape":"TransformJobName"},
-        "TransformJobArn":{"shape":"TransformJobArn"},
-        "CreationTime":{"shape":"Timestamp"},
-        "TransformEndTime":{"shape":"Timestamp"},
-        "LastModifiedTime":{"shape":"Timestamp"},
-        "TransformJobStatus":{"shape":"TransformJobStatus"},
-        "FailureReason":{"shape":"FailureReason"}
-      }
-    },
-    "TransformOutput":{
-      "type":"structure",
-      "required":["S3OutputPath"],
-      "members":{
-        "S3OutputPath":{"shape":"S3Uri"},
-        "Accept":{"shape":"Accept"},
-        "AssembleWith":{"shape":"AssemblyType"},
-        "KmsKeyId":{"shape":"KmsKeyId"}
-      }
-    },
-    "TransformResources":{
-      "type":"structure",
-      "required":[
-        "InstanceType",
-        "InstanceCount"
-      ],
-      "members":{
-        "InstanceType":{"shape":"TransformInstanceType"},
-        "InstanceCount":{"shape":"TransformInstanceCount"}
-      }
-    },
-    "TransformS3DataSource":{
-      "type":"structure",
-      "required":[
-        "S3DataType",
-        "S3Uri"
-      ],
-      "members":{
-        "S3DataType":{"shape":"S3DataType"},
-        "S3Uri":{"shape":"S3Uri"}
       }
     },
     "UpdateEndpointInput":{

@@ -13,13 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol"
 )
 
-// BuildXML will serialize params into an xml.Encoder. Error will be returned
-// if the serialization of any of the params or nested values fails.
+// BuildXML will serialize params into an xml.Encoder.
+// Error will be returned if the serialization of any of the params or nested values fails.
 func BuildXML(params interface{}, e *xml.Encoder) error {
-	return buildXML(params, e, false)
-}
-
-func buildXML(params interface{}, e *xml.Encoder, sorted bool) error {
 	b := xmlBuilder{encoder: e, namespaces: map[string]string{}}
 	root := NewXMLElement(xml.Name{})
 	if err := b.buildValue(reflect.ValueOf(params), root, ""); err != nil {
@@ -27,7 +23,7 @@ func buildXML(params interface{}, e *xml.Encoder, sorted bool) error {
 	}
 	for _, c := range root.Children {
 		for _, v := range c {
-			return StructToXML(e, v, sorted)
+			return StructToXML(e, v, false)
 		}
 	}
 	return nil
@@ -94,6 +90,8 @@ func (b *xmlBuilder) buildStruct(value reflect.Value, current *XMLNode, tag refl
 		return nil
 	}
 
+	fieldAdded := false
+
 	// unwrap payloads
 	if payload := tag.Get("payload"); payload != "" {
 		field, _ := value.Type().FieldByName(payload)
@@ -121,8 +119,6 @@ func (b *xmlBuilder) buildStruct(value reflect.Value, current *XMLNode, tag refl
 		child.Attr = append(child.Attr, ns)
 	}
 
-	var payloadFields, nonPayloadFields int
-
 	t := value.Type()
 	for i := 0; i < value.NumField(); i++ {
 		member := elemOf(value.Field(i))
@@ -137,10 +133,8 @@ func (b *xmlBuilder) buildStruct(value reflect.Value, current *XMLNode, tag refl
 
 		mTag := field.Tag
 		if mTag.Get("location") != "" { // skip non-body members
-			nonPayloadFields++
 			continue
 		}
-		payloadFields++
 
 		if protocol.CanSetIdempotencyToken(value.Field(i), field) {
 			token := protocol.GetIdempotencyToken()
@@ -155,11 +149,11 @@ func (b *xmlBuilder) buildStruct(value reflect.Value, current *XMLNode, tag refl
 		if err := b.buildValue(member, child, mTag); err != nil {
 			return err
 		}
+
+		fieldAdded = true
 	}
 
-	// Only case where the child shape is not added is if the shape only contains
-	// non-payload fields, e.g headers/query.
-	if !(payloadFields == 0 && nonPayloadFields > 0) {
+	if fieldAdded { // only append this child if we have one ore more valid members
 		current.AddChild(child)
 	}
 
@@ -284,12 +278,8 @@ func (b *xmlBuilder) buildScalar(value reflect.Value, current *XMLNode, tag refl
 	case float32:
 		str = strconv.FormatFloat(float64(converted), 'f', -1, 32)
 	case time.Time:
-		format := tag.Get("timestampFormat")
-		if len(format) == 0 {
-			format = protocol.ISO8601TimeFormatName
-		}
-
-		str = protocol.FormatTime(format, converted)
+		const ISO8601UTC = "2006-01-02T15:04:05Z"
+		str = converted.UTC().Format(ISO8601UTC)
 	default:
 		return fmt.Errorf("unsupported value for param %s: %v (%s)",
 			tag.Get("locationName"), value.Interface(), value.Type().Name())

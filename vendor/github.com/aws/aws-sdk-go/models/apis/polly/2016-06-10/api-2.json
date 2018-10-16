@@ -52,21 +52,6 @@
         {"shape":"ServiceFailureException"}
       ]
     },
-    "GetSpeechSynthesisTask":{
-      "name":"GetSpeechSynthesisTask",
-      "http":{
-        "method":"GET",
-        "requestUri":"/v1/synthesisTasks/{TaskId}",
-        "responseCode":200
-      },
-      "input":{"shape":"GetSpeechSynthesisTaskInput"},
-      "output":{"shape":"GetSpeechSynthesisTaskOutput"},
-      "errors":[
-        {"shape":"InvalidTaskIdException"},
-        {"shape":"ServiceFailureException"},
-        {"shape":"SynthesisTaskNotFoundException"}
-      ]
-    },
     "ListLexicons":{
       "name":"ListLexicons",
       "http":{
@@ -76,20 +61,6 @@
       },
       "input":{"shape":"ListLexiconsInput"},
       "output":{"shape":"ListLexiconsOutput"},
-      "errors":[
-        {"shape":"InvalidNextTokenException"},
-        {"shape":"ServiceFailureException"}
-      ]
-    },
-    "ListSpeechSynthesisTasks":{
-      "name":"ListSpeechSynthesisTasks",
-      "http":{
-        "method":"GET",
-        "requestUri":"/v1/synthesisTasks",
-        "responseCode":200
-      },
-      "input":{"shape":"ListSpeechSynthesisTasksInput"},
-      "output":{"shape":"ListSpeechSynthesisTasksOutput"},
       "errors":[
         {"shape":"InvalidNextTokenException"},
         {"shape":"ServiceFailureException"}
@@ -114,29 +85,6 @@
         {"shape":"ServiceFailureException"}
       ]
     },
-    "StartSpeechSynthesisTask":{
-      "name":"StartSpeechSynthesisTask",
-      "http":{
-        "method":"POST",
-        "requestUri":"/v1/synthesisTasks",
-        "responseCode":200
-      },
-      "input":{"shape":"StartSpeechSynthesisTaskInput"},
-      "output":{"shape":"StartSpeechSynthesisTaskOutput"},
-      "errors":[
-        {"shape":"TextLengthExceededException"},
-        {"shape":"InvalidS3BucketException"},
-        {"shape":"InvalidS3KeyException"},
-        {"shape":"InvalidSampleRateException"},
-        {"shape":"InvalidSnsTopicArnException"},
-        {"shape":"InvalidSsmlException"},
-        {"shape":"LexiconNotFoundException"},
-        {"shape":"ServiceFailureException"},
-        {"shape":"MarksNotSupportedForFormatException"},
-        {"shape":"SsmlMarksNotSupportedForTextTypeException"},
-        {"shape":"LanguageNotSupportedException"}
-      ]
-    },
     "SynthesizeSpeech":{
       "name":"SynthesizeSpeech",
       "http":{
@@ -153,8 +101,7 @@
         {"shape":"LexiconNotFoundException"},
         {"shape":"ServiceFailureException"},
         {"shape":"MarksNotSupportedForFormatException"},
-        {"shape":"SsmlMarksNotSupportedForTextTypeException"},
-        {"shape":"LanguageNotSupportedException"}
+        {"shape":"SsmlMarksNotSupportedForTextTypeException"}
       ]
     }
   },
@@ -165,7 +112,6 @@
       "streaming":true
     },
     "ContentType":{"type":"string"},
-    "DateTime":{"type":"timestamp"},
     "DeleteLexiconInput":{
       "type":"structure",
       "required":["Name"],
@@ -189,11 +135,6 @@
           "shape":"LanguageCode",
           "location":"querystring",
           "locationName":"LanguageCode"
-        },
-        "IncludeAdditionalLanguageCodes":{
-          "shape":"IncludeAdditionalLanguageCodes",
-          "location":"querystring",
-          "locationName":"IncludeAdditionalLanguageCodes"
         },
         "NextToken":{
           "shape":"NextToken",
@@ -235,24 +176,6 @@
         "LexiconAttributes":{"shape":"LexiconAttributes"}
       }
     },
-    "GetSpeechSynthesisTaskInput":{
-      "type":"structure",
-      "required":["TaskId"],
-      "members":{
-        "TaskId":{
-          "shape":"TaskId",
-          "location":"uri",
-          "locationName":"TaskId"
-        }
-      }
-    },
-    "GetSpeechSynthesisTaskOutput":{
-      "type":"structure",
-      "members":{
-        "SynthesisTask":{"shape":"SynthesisTask"}
-      }
-    },
-    "IncludeAdditionalLanguageCodes":{"type":"boolean"},
     "InvalidLexiconException":{
       "type":"structure",
       "members":{
@@ -269,22 +192,6 @@
       "error":{"httpStatusCode":400},
       "exception":true
     },
-    "InvalidS3BucketException":{
-      "type":"structure",
-      "members":{
-        "message":{"shape":"ErrorMessage"}
-      },
-      "error":{"httpStatusCode":400},
-      "exception":true
-    },
-    "InvalidS3KeyException":{
-      "type":"structure",
-      "members":{
-        "message":{"shape":"ErrorMessage"}
-      },
-      "error":{"httpStatusCode":400},
-      "exception":true
-    },
     "InvalidSampleRateException":{
       "type":"structure",
       "members":{
@@ -293,23 +200,7 @@
       "error":{"httpStatusCode":400},
       "exception":true
     },
-    "InvalidSnsTopicArnException":{
-      "type":"structure",
-      "members":{
-        "message":{"shape":"ErrorMessage"}
-      },
-      "error":{"httpStatusCode":400},
-      "exception":true
-    },
     "InvalidSsmlException":{
-      "type":"structure",
-      "members":{
-        "message":{"shape":"ErrorMessage"}
-      },
-      "error":{"httpStatusCode":400},
-      "exception":true
-    },
-    "InvalidTaskIdException":{
       "type":"structure",
       "members":{
         "message":{"shape":"ErrorMessage"}
@@ -334,9 +225,8 @@
         "fr-FR",
         "is-IS",
         "it-IT",
-        "ja-JP",
-        "hi-IN",
         "ko-KR",
+        "ja-JP",
         "nb-NO",
         "nl-NL",
         "pl-PL",
@@ -348,19 +238,7 @@
         "tr-TR"
       ]
     },
-    "LanguageCodeList":{
-      "type":"list",
-      "member":{"shape":"LanguageCode"}
-    },
     "LanguageName":{"type":"string"},
-    "LanguageNotSupportedException":{
-      "type":"structure",
-      "members":{
-        "message":{"shape":"ErrorMessage"}
-      },
-      "error":{"httpStatusCode":400},
-      "exception":true
-    },
     "LastModified":{"type":"timestamp"},
     "LexemesCount":{"type":"integer"},
     "Lexicon":{
@@ -437,33 +315,6 @@
         "NextToken":{"shape":"NextToken"}
       }
     },
-    "ListSpeechSynthesisTasksInput":{
-      "type":"structure",
-      "members":{
-        "MaxResults":{
-          "shape":"MaxResults",
-          "location":"querystring",
-          "locationName":"MaxResults"
-        },
-        "NextToken":{
-          "shape":"NextToken",
-          "location":"querystring",
-          "locationName":"NextToken"
-        },
-        "Status":{
-          "shape":"TaskStatus",
-          "location":"querystring",
-          "locationName":"Status"
-        }
-      }
-    },
-    "ListSpeechSynthesisTasksOutput":{
-      "type":"structure",
-      "members":{
-        "NextToken":{"shape":"NextToken"},
-        "SynthesisTasks":{"shape":"SynthesisTasks"}
-      }
-    },
     "MarksNotSupportedForFormatException":{
       "type":"structure",
       "members":{
@@ -488,11 +339,6 @@
       "error":{"httpStatusCode":400},
       "exception":true
     },
-    "MaxResults":{
-      "type":"integer",
-      "max":100,
-      "min":1
-    },
     "NextToken":{"type":"string"},
     "OutputFormat":{
       "type":"string",
@@ -503,15 +349,6 @@
         "pcm"
       ]
     },
-    "OutputS3BucketName":{
-      "type":"string",
-      "pattern":"^[a-z0-9][\\.\\-a-z0-9]{1,61}[a-z0-9]$"
-    },
-    "OutputS3KeyPrefix":{
-      "type":"string",
-      "pattern":"^[0-9a-zA-Z\\/\\!\\-_\\.\\*\\'\\(\\)]{0,800}$"
-    },
-    "OutputUri":{"type":"string"},
     "PutLexiconInput":{
       "type":"structure",
       "required":[
@@ -544,10 +381,6 @@
       "fault":true
     },
     "Size":{"type":"integer"},
-    "SnsTopicArn":{
-      "type":"string",
-      "pattern":"^arn:aws(-(cn|iso(-b)?|us-gov))?:sns:.*:\\w{12}:.+$"
-    },
     "SpeechMarkType":{
       "type":"string",
       "enum":[
@@ -570,65 +403,6 @@
       "error":{"httpStatusCode":400},
       "exception":true
     },
-    "StartSpeechSynthesisTaskInput":{
-      "type":"structure",
-      "required":[
-        "OutputFormat",
-        "OutputS3BucketName",
-        "Text",
-        "VoiceId"
-      ],
-      "members":{
-        "LexiconNames":{"shape":"LexiconNameList"},
-        "OutputFormat":{"shape":"OutputFormat"},
-        "OutputS3BucketName":{"shape":"OutputS3BucketName"},
-        "OutputS3KeyPrefix":{"shape":"OutputS3KeyPrefix"},
-        "SampleRate":{"shape":"SampleRate"},
-        "SnsTopicArn":{"shape":"SnsTopicArn"},
-        "SpeechMarkTypes":{"shape":"SpeechMarkTypeList"},
-        "Text":{"shape":"Text"},
-        "TextType":{"shape":"TextType"},
-        "VoiceId":{"shape":"VoiceId"},
-        "LanguageCode":{"shape":"LanguageCode"}
-      }
-    },
-    "StartSpeechSynthesisTaskOutput":{
-      "type":"structure",
-      "members":{
-        "SynthesisTask":{"shape":"SynthesisTask"}
-      }
-    },
-    "SynthesisTask":{
-      "type":"structure",
-      "members":{
-        "TaskId":{"shape":"TaskId"},
-        "TaskStatus":{"shape":"TaskStatus"},
-        "TaskStatusReason":{"shape":"TaskStatusReason"},
-        "OutputUri":{"shape":"OutputUri"},
-        "CreationTime":{"shape":"DateTime"},
-        "RequestCharacters":{"shape":"RequestCharacters"},
-        "SnsTopicArn":{"shape":"SnsTopicArn"},
-        "LexiconNames":{"shape":"LexiconNameList"},
-        "OutputFormat":{"shape":"OutputFormat"},
-        "SampleRate":{"shape":"SampleRate"},
-        "SpeechMarkTypes":{"shape":"SpeechMarkTypeList"},
-        "TextType":{"shape":"TextType"},
-        "VoiceId":{"shape":"VoiceId"},
-        "LanguageCode":{"shape":"LanguageCode"}
-      }
-    },
-    "SynthesisTaskNotFoundException":{
-      "type":"structure",
-      "members":{
-        "message":{"shape":"ErrorMessage"}
-      },
-      "error":{"httpStatusCode":400},
-      "exception":true
-    },
-    "SynthesisTasks":{
-      "type":"list",
-      "member":{"shape":"SynthesisTask"}
-    },
     "SynthesizeSpeechInput":{
       "type":"structure",
       "required":[
@@ -643,8 +417,7 @@
         "SpeechMarkTypes":{"shape":"SpeechMarkTypeList"},
         "Text":{"shape":"Text"},
         "TextType":{"shape":"TextType"},
-        "VoiceId":{"shape":"VoiceId"},
-        "LanguageCode":{"shape":"LanguageCode"}
+        "VoiceId":{"shape":"VoiceId"}
       }
     },
     "SynthesizeSpeechOutput":{
@@ -664,21 +437,6 @@
       },
       "payload":"AudioStream"
     },
-    "TaskId":{
-      "type":"string",
-      "max":128,
-      "min":1
-    },
-    "TaskStatus":{
-      "type":"string",
-      "enum":[
-        "scheduled",
-        "inProgress",
-        "completed",
-        "failed"
-      ]
-    },
-    "TaskStatusReason":{"type":"string"},
     "Text":{"type":"string"},
     "TextLengthExceededException":{
       "type":"structure",
@@ -718,8 +476,7 @@
         "Id":{"shape":"VoiceId"},
         "LanguageCode":{"shape":"LanguageCode"},
         "LanguageName":{"shape":"LanguageName"},
-        "Name":{"shape":"VoiceName"},
-        "AdditionalLanguageCodes":{"shape":"LanguageCodeList"}
+        "Name":{"shape":"VoiceName"}
       }
     },
     "VoiceId":{

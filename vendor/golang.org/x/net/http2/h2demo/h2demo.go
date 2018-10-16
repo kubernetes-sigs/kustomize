@@ -8,7 +8,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"crypto/tls"
 	"flag"
 	"fmt"
@@ -20,6 +19,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"path"
 	"regexp"
 	"runtime"
@@ -28,9 +28,7 @@ import (
 	"sync"
 	"time"
 
-	"cloud.google.com/go/storage"
 	"go4.org/syncutil/singleflight"
-	"golang.org/x/build/autocertcache"
 	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/net/http2"
 )
@@ -428,10 +426,19 @@ func httpHost() string {
 	}
 }
 
-func serveProdTLS(autocertManager *autocert.Manager) error {
+func serveProdTLS() error {
+	const cacheDir = "/var/cache/autocert"
+	if err := os.MkdirAll(cacheDir, 0700); err != nil {
+		return err
+	}
+	m := autocert.Manager{
+		Cache:      autocert.DirCache(cacheDir),
+		Prompt:     autocert.AcceptTOS,
+		HostPolicy: autocert.HostWhitelist("http2.golang.org"),
+	}
 	srv := &http.Server{
 		TLSConfig: &tls.Config{
-			GetCertificate: autocertManager.GetCertificate,
+			GetCertificate: m.GetCertificate,
 		},
 	}
 	http2.ConfigureServer(srv, &http2.Server{
@@ -461,21 +468,9 @@ func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
 }
 
 func serveProd() error {
-	log.Printf("running in production mode")
-
-	storageClient, err := storage.NewClient(context.Background())
-	if err != nil {
-		log.Fatalf("storage.NewClient: %v", err)
-	}
-	autocertManager := &autocert.Manager{
-		Prompt:     autocert.AcceptTOS,
-		HostPolicy: autocert.HostWhitelist("http2.golang.org"),
-		Cache:      autocertcache.NewGoogleCloudStorageCache(storageClient, "golang-h2demo-autocert"),
-	}
-
 	errc := make(chan error, 2)
-	go func() { errc <- http.ListenAndServe(":80", autocertManager.HTTPHandler(http.DefaultServeMux)) }()
-	go func() { errc <- serveProdTLS(autocertManager) }()
+	go func() { errc <- http.ListenAndServe(":80", nil) }()
+	go func() { errc <- serveProdTLS() }()
 	return <-errc
 }
 

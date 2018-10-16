@@ -11,97 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 )
 
-const opCopyBackupToRegion = "CopyBackupToRegion"
-
-// CopyBackupToRegionRequest generates a "aws/request.Request" representing the
-// client's request for the CopyBackupToRegion operation. The "output" return
-// value will be populated with the request's response once the request completes
-// successfuly.
-//
-// Use "Send" method on the returned Request to send the API call to the service.
-// the "output" return value is not valid until after Send returns without error.
-//
-// See CopyBackupToRegion for more information on using the CopyBackupToRegion
-// API call, and error handling.
-//
-// This method is useful when you want to inject custom logic or configuration
-// into the SDK's request lifecycle. Such as custom headers, or retry logic.
-//
-//
-//    // Example sending a request using the CopyBackupToRegionRequest method.
-//    req, resp := client.CopyBackupToRegionRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
-//
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/CopyBackupToRegion
-func (c *CloudHSMV2) CopyBackupToRegionRequest(input *CopyBackupToRegionInput) (req *request.Request, output *CopyBackupToRegionOutput) {
-	op := &request.Operation{
-		Name:       opCopyBackupToRegion,
-		HTTPMethod: "POST",
-		HTTPPath:   "/",
-	}
-
-	if input == nil {
-		input = &CopyBackupToRegionInput{}
-	}
-
-	output = &CopyBackupToRegionOutput{}
-	req = c.newRequest(op, input, output)
-	return
-}
-
-// CopyBackupToRegion API operation for AWS CloudHSM V2.
-//
-// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
-// with awserr.Error's Code and Message methods to get detailed information about
-// the error.
-//
-// See the AWS API reference guide for AWS CloudHSM V2's
-// API operation CopyBackupToRegion for usage and error information.
-//
-// Returned Error Codes:
-//   * ErrCodeCloudHsmInternalFailureException "CloudHsmInternalFailureException"
-//   The request was rejected because of an AWS CloudHSM internal failure. The
-//   request can be retried.
-//
-//   * ErrCodeCloudHsmServiceException "CloudHsmServiceException"
-//   The request was rejected because an error occurred.
-//
-//   * ErrCodeCloudHsmResourceNotFoundException "CloudHsmResourceNotFoundException"
-//   The request was rejected because it refers to a resource that cannot be found.
-//
-//   * ErrCodeCloudHsmInvalidRequestException "CloudHsmInvalidRequestException"
-//   The request was rejected because it is not a valid request.
-//
-//   * ErrCodeCloudHsmAccessDeniedException "CloudHsmAccessDeniedException"
-//   The request was rejected because the requester does not have permission to
-//   perform the requested operation.
-//
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/CopyBackupToRegion
-func (c *CloudHSMV2) CopyBackupToRegion(input *CopyBackupToRegionInput) (*CopyBackupToRegionOutput, error) {
-	req, out := c.CopyBackupToRegionRequest(input)
-	return out, req.Send()
-}
-
-// CopyBackupToRegionWithContext is the same as CopyBackupToRegion with the addition of
-// the ability to pass a context and additional request options.
-//
-// See CopyBackupToRegion for details on how to use this API operation.
-//
-// The context must be non-nil and will be used for request cancellation. If
-// the context is nil a panic will occur. In the future the SDK may create
-// sub-contexts for http.Requests. See https://golang.org/pkg/context/
-// for more information on using Contexts.
-func (c *CloudHSMV2) CopyBackupToRegionWithContext(ctx aws.Context, input *CopyBackupToRegionInput, opts ...request.Option) (*CopyBackupToRegionOutput, error) {
-	req, out := c.CopyBackupToRegionRequest(input)
-	req.SetContext(ctx)
-	req.ApplyOptions(opts...)
-	return out, req.Send()
-}
-
 const opCreateCluster = "CreateCluster"
 
 // CreateClusterRequest generates a "aws/request.Request" representing the
@@ -1241,16 +1150,8 @@ type Backup struct {
 	// The identifier (ID) of the cluster that was backed up.
 	ClusterId *string `type:"string"`
 
-	CopyTimestamp *time.Time `type:"timestamp"`
-
 	// The date and time when the backup was created.
-	CreateTimestamp *time.Time `type:"timestamp"`
-
-	SourceBackup *string `type:"string"`
-
-	SourceCluster *string `type:"string"`
-
-	SourceRegion *string `type:"string"`
+	CreateTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
 }
 
 // String returns the string representation
@@ -1281,33 +1182,9 @@ func (s *Backup) SetClusterId(v string) *Backup {
 	return s
 }
 
-// SetCopyTimestamp sets the CopyTimestamp field's value.
-func (s *Backup) SetCopyTimestamp(v time.Time) *Backup {
-	s.CopyTimestamp = &v
-	return s
-}
-
 // SetCreateTimestamp sets the CreateTimestamp field's value.
 func (s *Backup) SetCreateTimestamp(v time.Time) *Backup {
 	s.CreateTimestamp = &v
-	return s
-}
-
-// SetSourceBackup sets the SourceBackup field's value.
-func (s *Backup) SetSourceBackup(v string) *Backup {
-	s.SourceBackup = &v
-	return s
-}
-
-// SetSourceCluster sets the SourceCluster field's value.
-func (s *Backup) SetSourceCluster(v string) *Backup {
-	s.SourceCluster = &v
-	return s
-}
-
-// SetSourceRegion sets the SourceRegion field's value.
-func (s *Backup) SetSourceRegion(v string) *Backup {
-	s.SourceRegion = &v
 	return s
 }
 
@@ -1387,7 +1264,7 @@ type Cluster struct {
 	ClusterId *string `type:"string"`
 
 	// The date and time when the cluster was created.
-	CreateTimestamp *time.Time `type:"timestamp"`
+	CreateTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The type of HSM that the cluster contains.
 	HsmType *string `type:"string"`
@@ -1504,76 +1381,6 @@ func (s *Cluster) SetSubnetMapping(v map[string]*string) *Cluster {
 // SetVpcId sets the VpcId field's value.
 func (s *Cluster) SetVpcId(v string) *Cluster {
 	s.VpcId = &v
-	return s
-}
-
-type CopyBackupToRegionInput struct {
-	_ struct{} `type:"structure"`
-
-	// BackupId is a required field
-	BackupId *string `type:"string" required:"true"`
-
-	// DestinationRegion is a required field
-	DestinationRegion *string `type:"string" required:"true"`
-}
-
-// String returns the string representation
-func (s CopyBackupToRegionInput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s CopyBackupToRegionInput) GoString() string {
-	return s.String()
-}
-
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *CopyBackupToRegionInput) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "CopyBackupToRegionInput"}
-	if s.BackupId == nil {
-		invalidParams.Add(request.NewErrParamRequired("BackupId"))
-	}
-	if s.DestinationRegion == nil {
-		invalidParams.Add(request.NewErrParamRequired("DestinationRegion"))
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
-}
-
-// SetBackupId sets the BackupId field's value.
-func (s *CopyBackupToRegionInput) SetBackupId(v string) *CopyBackupToRegionInput {
-	s.BackupId = &v
-	return s
-}
-
-// SetDestinationRegion sets the DestinationRegion field's value.
-func (s *CopyBackupToRegionInput) SetDestinationRegion(v string) *CopyBackupToRegionInput {
-	s.DestinationRegion = &v
-	return s
-}
-
-type CopyBackupToRegionOutput struct {
-	_ struct{} `type:"structure"`
-
-	DestinationBackup *DestinationBackup `type:"structure"`
-}
-
-// String returns the string representation
-func (s CopyBackupToRegionOutput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s CopyBackupToRegionOutput) GoString() string {
-	return s.String()
-}
-
-// SetDestinationBackup sets the DestinationBackup field's value.
-func (s *CopyBackupToRegionOutput) SetDestinationBackup(v *DestinationBackup) *CopyBackupToRegionOutput {
-	s.DestinationBackup = v
 	return s
 }
 
@@ -1934,8 +1741,6 @@ type DescribeBackupsInput struct {
 	// The NextToken value that you received in the previous response. Use this
 	// value to get more backups.
 	NextToken *string `type:"string"`
-
-	SortAscending *bool `type:"boolean"`
 }
 
 // String returns the string representation
@@ -1976,12 +1781,6 @@ func (s *DescribeBackupsInput) SetMaxResults(v int64) *DescribeBackupsInput {
 // SetNextToken sets the NextToken field's value.
 func (s *DescribeBackupsInput) SetNextToken(v string) *DescribeBackupsInput {
 	s.NextToken = &v
-	return s
-}
-
-// SetSortAscending sets the SortAscending field's value.
-func (s *DescribeBackupsInput) SetSortAscending(v bool) *DescribeBackupsInput {
-	s.SortAscending = &v
 	return s
 }
 
@@ -2115,52 +1914,6 @@ func (s *DescribeClustersOutput) SetClusters(v []*Cluster) *DescribeClustersOutp
 // SetNextToken sets the NextToken field's value.
 func (s *DescribeClustersOutput) SetNextToken(v string) *DescribeClustersOutput {
 	s.NextToken = &v
-	return s
-}
-
-type DestinationBackup struct {
-	_ struct{} `type:"structure"`
-
-	CreateTimestamp *time.Time `type:"timestamp"`
-
-	SourceBackup *string `type:"string"`
-
-	SourceCluster *string `type:"string"`
-
-	SourceRegion *string `type:"string"`
-}
-
-// String returns the string representation
-func (s DestinationBackup) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s DestinationBackup) GoString() string {
-	return s.String()
-}
-
-// SetCreateTimestamp sets the CreateTimestamp field's value.
-func (s *DestinationBackup) SetCreateTimestamp(v time.Time) *DestinationBackup {
-	s.CreateTimestamp = &v
-	return s
-}
-
-// SetSourceBackup sets the SourceBackup field's value.
-func (s *DestinationBackup) SetSourceBackup(v string) *DestinationBackup {
-	s.SourceBackup = &v
-	return s
-}
-
-// SetSourceCluster sets the SourceCluster field's value.
-func (s *DestinationBackup) SetSourceCluster(v string) *DestinationBackup {
-	s.SourceCluster = &v
-	return s
-}
-
-// SetSourceRegion sets the SourceRegion field's value.
-func (s *DestinationBackup) SetSourceRegion(v string) *DestinationBackup {
-	s.SourceRegion = &v
 	return s
 }
 

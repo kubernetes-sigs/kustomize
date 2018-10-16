@@ -1585,15 +1585,8 @@ type Build struct {
 	// The current build phase.
 	CurrentPhase *string `locationName:"currentPhase" type:"string"`
 
-	// The AWS Key Management Service (AWS KMS) customer master key (CMK) to be
-	// used for encrypting the build output artifacts.
-	//
-	// This is expressed either as the CMK's Amazon Resource Name (ARN) or, if specified,
-	// the CMK's alias (using the format alias/alias-name).
-	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
-
 	// When the build process ended, expressed in Unix time format.
-	EndTime *time.Time `locationName:"endTime" type:"timestamp"`
+	EndTime *time.Time `locationName:"endTime" type:"timestamp" timestampFormat:"unix"`
 
 	// Information about the build environment for this build.
 	Environment *ProjectEnvironment `locationName:"environment" type:"structure"`
@@ -1636,7 +1629,7 @@ type Build struct {
 	SourceVersion *string `locationName:"sourceVersion" min:"1" type:"string"`
 
 	// When the build process started, expressed in Unix time format.
-	StartTime *time.Time `locationName:"startTime" type:"timestamp"`
+	StartTime *time.Time `locationName:"startTime" type:"timestamp" timestampFormat:"unix"`
 
 	// How long, in minutes, for AWS CodeBuild to wait before timing out this build
 	// if it does not get marked as completed.
@@ -1692,12 +1685,6 @@ func (s *Build) SetCache(v *ProjectCache) *Build {
 // SetCurrentPhase sets the CurrentPhase field's value.
 func (s *Build) SetCurrentPhase(v string) *Build {
 	s.CurrentPhase = &v
-	return s
-}
-
-// SetEncryptionKey sets the EncryptionKey field's value.
-func (s *Build) SetEncryptionKey(v string) *Build {
-	s.EncryptionKey = &v
 	return s
 }
 
@@ -1789,9 +1776,6 @@ func (s *Build) SetVpcConfig(v *VpcConfig) *Build {
 type BuildArtifacts struct {
 	_ struct{} `type:"structure"`
 
-	// Information that tells you if encryption for build artifacts is disabled.
-	EncryptionDisabled *bool `locationName:"encryptionDisabled" type:"boolean"`
-
 	// Information about the location of the build artifacts.
 	Location *string `locationName:"location" type:"string"`
 
@@ -1803,12 +1787,6 @@ type BuildArtifacts struct {
 	// This value is available only if the build project's packaging value is set
 	// to ZIP.
 	Md5sum *string `locationName:"md5sum" type:"string"`
-
-	// If this flag is set, a name specified in the buildspec file overrides the
-	// artifact name. The name specified in a buildspec file is calculated at build
-	// time and uses the Shell Command Language. For example, you can append a date
-	// and time to your artifact name so that it is always unique.
-	OverrideArtifactName *bool `locationName:"overrideArtifactName" type:"boolean"`
 
 	// The SHA-256 hash of the build artifact.
 	//
@@ -1830,12 +1808,6 @@ func (s BuildArtifacts) GoString() string {
 	return s.String()
 }
 
-// SetEncryptionDisabled sets the EncryptionDisabled field's value.
-func (s *BuildArtifacts) SetEncryptionDisabled(v bool) *BuildArtifacts {
-	s.EncryptionDisabled = &v
-	return s
-}
-
 // SetLocation sets the Location field's value.
 func (s *BuildArtifacts) SetLocation(v string) *BuildArtifacts {
 	s.Location = &v
@@ -1845,12 +1817,6 @@ func (s *BuildArtifacts) SetLocation(v string) *BuildArtifacts {
 // SetMd5sum sets the Md5sum field's value.
 func (s *BuildArtifacts) SetMd5sum(v string) *BuildArtifacts {
 	s.Md5sum = &v
-	return s
-}
-
-// SetOverrideArtifactName sets the OverrideArtifactName field's value.
-func (s *BuildArtifacts) SetOverrideArtifactName(v bool) *BuildArtifacts {
-	s.OverrideArtifactName = &v
 	return s
 }
 
@@ -1906,7 +1872,7 @@ type BuildPhase struct {
 	DurationInSeconds *int64 `locationName:"durationInSeconds" type:"long"`
 
 	// When the build phase ended, expressed in Unix time format.
-	EndTime *time.Time `locationName:"endTime" type:"timestamp"`
+	EndTime *time.Time `locationName:"endTime" type:"timestamp" timestampFormat:"unix"`
 
 	// The current status of the build phase. Valid values include:
 	//
@@ -1948,7 +1914,7 @@ type BuildPhase struct {
 	PhaseType *string `locationName:"phaseType" type:"string" enum:"BuildPhaseType"`
 
 	// When the build phase started, expressed in Unix time format.
-	StartTime *time.Time `locationName:"startTime" type:"timestamp"`
+	StartTime *time.Time `locationName:"startTime" type:"timestamp" timestampFormat:"unix"`
 }
 
 // String returns the string representation
@@ -2036,9 +2002,7 @@ type CreateProjectInput struct {
 	// The ARN of the AWS Identity and Access Management (IAM) role that enables
 	// AWS CodeBuild to interact with dependent AWS services on behalf of the AWS
 	// account.
-	//
-	// ServiceRole is a required field
-	ServiceRole *string `locationName:"serviceRole" min:"1" type:"string" required:"true"`
+	ServiceRole *string `locationName:"serviceRole" min:"1" type:"string"`
 
 	// Information about the build input source code for the build project.
 	//
@@ -2087,9 +2051,6 @@ func (s *CreateProjectInput) Validate() error {
 	}
 	if s.Name != nil && len(*s.Name) < 2 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 2))
-	}
-	if s.ServiceRole == nil {
-		invalidParams.Add(request.NewErrParamRequired("ServiceRole"))
 	}
 	if s.ServiceRole != nil && len(*s.ServiceRole) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ServiceRole", 1))
@@ -3122,7 +3083,7 @@ type Project struct {
 	Cache *ProjectCache `locationName:"cache" type:"structure"`
 
 	// When the build project was created, expressed in Unix time format.
-	Created *time.Time `locationName:"created" type:"timestamp"`
+	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
 
 	// A description that makes the build project easy to identify.
 	Description *string `locationName:"description" type:"string"`
@@ -3139,7 +3100,7 @@ type Project struct {
 
 	// When the build project's settings were last modified, expressed in Unix time
 	// format.
-	LastModified *time.Time `locationName:"lastModified" type:"timestamp"`
+	LastModified *time.Time `locationName:"lastModified" type:"timestamp" timestampFormat:"unix"`
 
 	// The name of the build project.
 	Name *string `locationName:"name" min:"2" type:"string"`
@@ -3281,11 +3242,6 @@ func (s *Project) SetWebhook(v *Webhook) *Project {
 type ProjectArtifacts struct {
 	_ struct{} `type:"structure"`
 
-	// Set to true if you do not want your output artifacts encrypted. This option
-	// is only valid if your artifacts type is Amazon S3. If this is set with another
-	// artifacts type, an invalidInputException will be thrown.
-	EncryptionDisabled *bool `locationName:"encryptionDisabled" type:"boolean"`
-
 	// Information about the build output artifact location, as follows:
 	//
 	//    * If type is set to CODEPIPELINE, then AWS CodePipeline will ignore this
@@ -3347,12 +3303,6 @@ type ProjectArtifacts struct {
 	// and name is set to MyArtifact.zip, then the output artifact would be stored
 	// in MyArtifacts/build-ID/MyArtifact.zip.
 	NamespaceType *string `locationName:"namespaceType" type:"string" enum:"ArtifactNamespace"`
-
-	// If this flag is set, a name specified in the buildspec file overrides the
-	// artifact name. The name specified in a buildspec file is calculated at build
-	// time and uses the Shell Command Language. For example, you can append a date
-	// and time to your artifact name so that it is always unique.
-	OverrideArtifactName *bool `locationName:"overrideArtifactName" type:"boolean"`
 
 	// The type of build output artifact to create, as follows:
 	//
@@ -3427,12 +3377,6 @@ func (s *ProjectArtifacts) Validate() error {
 	return nil
 }
 
-// SetEncryptionDisabled sets the EncryptionDisabled field's value.
-func (s *ProjectArtifacts) SetEncryptionDisabled(v bool) *ProjectArtifacts {
-	s.EncryptionDisabled = &v
-	return s
-}
-
 // SetLocation sets the Location field's value.
 func (s *ProjectArtifacts) SetLocation(v string) *ProjectArtifacts {
 	s.Location = &v
@@ -3448,12 +3392,6 @@ func (s *ProjectArtifacts) SetName(v string) *ProjectArtifacts {
 // SetNamespaceType sets the NamespaceType field's value.
 func (s *ProjectArtifacts) SetNamespaceType(v string) *ProjectArtifacts {
 	s.NamespaceType = &v
-	return s
-}
-
-// SetOverrideArtifactName sets the OverrideArtifactName field's value.
-func (s *ProjectArtifacts) SetOverrideArtifactName(v bool) *ProjectArtifacts {
-	s.OverrideArtifactName = &v
 	return s
 }
 
@@ -3604,17 +3542,8 @@ type ProjectEnvironment struct {
 	// build commands. (Do not run the following build commands if the specified
 	// build environment image is provided by AWS CodeBuild with Docker support.)
 	//
-	// If the operating system's base image is Ubuntu Linux:
-	//
 	// - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375
-	// --storage-driver=overlay& - timeout 15 sh -c "until docker info; do echo
-	// .; sleep 1; done"
-	//
-	// If the operating system's base image is Alpine Linux, add the -t argument
-	// to timeout:
-	//
-	// - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375
-	// --storage-driver=overlay& - timeout 15 -t sh -c "until docker info; do echo
+	// --storage-driver=overlay& - timeout -t 15 sh -c "until docker info; do echo
 	// .; sleep 1; done"
 	PrivilegedMode *bool `locationName:"privilegedMode" type:"boolean"`
 
@@ -3768,12 +3697,6 @@ type ProjectSource struct {
 	//    source object, set the auth object's type value to OAUTH.
 	Location *string `locationName:"location" type:"string"`
 
-	// Set to true to report the status of a build's start and finish to your source
-	// provider. This option is only valid when your source provider is GitHub.
-	// If this is set and you use a different source provider, an invalidInputException
-	// is thrown.
-	ReportBuildStatus *bool `locationName:"reportBuildStatus" type:"boolean"`
-
 	// The type of repository that contains the source code to be built. Valid values
 	// include:
 	//
@@ -3848,12 +3771,6 @@ func (s *ProjectSource) SetInsecureSsl(v bool) *ProjectSource {
 // SetLocation sets the Location field's value.
 func (s *ProjectSource) SetLocation(v string) *ProjectSource {
 	s.Location = &v
-	return s
-}
-
-// SetReportBuildStatus sets the ReportBuildStatus field's value.
-func (s *ProjectSource) SetReportBuildStatus(v bool) *ProjectSource {
-	s.ReportBuildStatus = &v
 	return s
 }
 
@@ -3976,11 +3893,6 @@ type StartBuildInput struct {
 	//
 	// ProjectName is a required field
 	ProjectName *string `locationName:"projectName" min:"1" type:"string" required:"true"`
-
-	// Set to true to report to your source provider the status of a build's start
-	// and completion. If you use this option with a source provider other than
-	// GitHub, an invalidInputException is thrown.
-	ReportBuildStatusOverride *bool `locationName:"reportBuildStatusOverride" type:"boolean"`
 
 	// The name of a service role for this build that overrides the one specified
 	// in the build project.
@@ -4160,12 +4072,6 @@ func (s *StartBuildInput) SetPrivilegedModeOverride(v bool) *StartBuildInput {
 // SetProjectName sets the ProjectName field's value.
 func (s *StartBuildInput) SetProjectName(v string) *StartBuildInput {
 	s.ProjectName = &v
-	return s
-}
-
-// SetReportBuildStatusOverride sets the ReportBuildStatusOverride field's value.
-func (s *StartBuildInput) SetReportBuildStatusOverride(v bool) *StartBuildInput {
-	s.ReportBuildStatusOverride = &v
 	return s
 }
 
@@ -4720,7 +4626,7 @@ type Webhook struct {
 	BranchFilter *string `locationName:"branchFilter" type:"string"`
 
 	// A timestamp indicating the last time a repository's secret token was modified.
-	LastModifiedSecret *time.Time `locationName:"lastModifiedSecret" type:"timestamp"`
+	LastModifiedSecret *time.Time `locationName:"lastModifiedSecret" type:"timestamp" timestampFormat:"unix"`
 
 	// The CodeBuild endpoint where webhook events are sent.
 	PayloadUrl *string `locationName:"payloadUrl" min:"1" type:"string"`

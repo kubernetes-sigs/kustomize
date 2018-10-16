@@ -99,8 +99,8 @@
     "ListGroupResources":{
       "name":"ListGroupResources",
       "http":{
-        "method":"POST",
-        "requestUri":"/groups/{GroupName}/resource-identifiers-list"
+        "method":"GET",
+        "requestUri":"/groups/{GroupName}/resource-identifiers"
       },
       "input":{"shape":"ListGroupResourcesInput"},
       "output":{"shape":"ListGroupResourcesOutput"},
@@ -117,8 +117,8 @@
     "ListGroups":{
       "name":"ListGroups",
       "http":{
-        "method":"POST",
-        "requestUri":"/groups-list"
+        "method":"GET",
+        "requestUri":"/groups"
       },
       "input":{"shape":"ListGroupsInput"},
       "output":{"shape":"ListGroupsOutput"},
@@ -347,7 +347,7 @@
     "GroupDescription":{
       "type":"string",
       "max":512,
-      "pattern":"[\\sa-zA-Z0-9_\\.-]*"
+      "pattern":"[\\sa-zA-Z0-9_\\.-]+"
     },
     "GroupList":{
       "type":"list",
@@ -387,7 +387,6 @@
           "location":"uri",
           "locationName":"GroupName"
         },
-        "Filters":{"shape":"ResourceFilterList"},
         "MaxResults":{
           "shape":"MaxResults",
           "location":"querystring",
@@ -461,38 +460,7 @@
     },
     "ResourceArn":{
       "type":"string",
-      "pattern":"arn:aws:[a-z0-9\\-]*:([a-z]{2}-[a-z]+-\\d{1})?:([0-9]{12})?:.+"
-    },
-    "ResourceFilter":{
-      "type":"structure",
-      "required":[
-        "Name",
-        "Values"
-      ],
-      "members":{
-        "Name":{"shape":"ResourceFilterName"},
-        "Values":{"shape":"ResourceFilterValues"}
-      }
-    },
-    "ResourceFilterList":{
-      "type":"list",
-      "member":{"shape":"ResourceFilter"}
-    },
-    "ResourceFilterName":{
-      "type":"string",
-      "enum":["resource-type"]
-    },
-    "ResourceFilterValue":{
-      "type":"string",
-      "max":128,
-      "min":1,
-      "pattern":"AWS::[a-zA-Z0-9]+::[a-zA-Z0-9]+"
-    },
-    "ResourceFilterValues":{
-      "type":"list",
-      "member":{"shape":"ResourceFilterValue"},
-      "max":5,
-      "min":1
+      "pattern":"arn:aws:[a-z0-9]*:([a-z]{2}-[a-z]+-\\d{1})?:([0-9]{12})?:.+"
     },
     "ResourceIdentifier":{
       "type":"structure",

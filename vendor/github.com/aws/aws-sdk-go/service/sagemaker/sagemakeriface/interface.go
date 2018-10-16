@@ -96,10 +96,6 @@ type SageMakerAPI interface {
 	CreateTrainingJobWithContext(aws.Context, *sagemaker.CreateTrainingJobInput, ...request.Option) (*sagemaker.CreateTrainingJobOutput, error)
 	CreateTrainingJobRequest(*sagemaker.CreateTrainingJobInput) (*request.Request, *sagemaker.CreateTrainingJobOutput)
 
-	CreateTransformJob(*sagemaker.CreateTransformJobInput) (*sagemaker.CreateTransformJobOutput, error)
-	CreateTransformJobWithContext(aws.Context, *sagemaker.CreateTransformJobInput, ...request.Option) (*sagemaker.CreateTransformJobOutput, error)
-	CreateTransformJobRequest(*sagemaker.CreateTransformJobInput) (*request.Request, *sagemaker.CreateTransformJobOutput)
-
 	DeleteEndpoint(*sagemaker.DeleteEndpointInput) (*sagemaker.DeleteEndpointOutput, error)
 	DeleteEndpointWithContext(aws.Context, *sagemaker.DeleteEndpointInput, ...request.Option) (*sagemaker.DeleteEndpointOutput, error)
 	DeleteEndpointRequest(*sagemaker.DeleteEndpointInput) (*request.Request, *sagemaker.DeleteEndpointOutput)
@@ -151,10 +147,6 @@ type SageMakerAPI interface {
 	DescribeTrainingJob(*sagemaker.DescribeTrainingJobInput) (*sagemaker.DescribeTrainingJobOutput, error)
 	DescribeTrainingJobWithContext(aws.Context, *sagemaker.DescribeTrainingJobInput, ...request.Option) (*sagemaker.DescribeTrainingJobOutput, error)
 	DescribeTrainingJobRequest(*sagemaker.DescribeTrainingJobInput) (*request.Request, *sagemaker.DescribeTrainingJobOutput)
-
-	DescribeTransformJob(*sagemaker.DescribeTransformJobInput) (*sagemaker.DescribeTransformJobOutput, error)
-	DescribeTransformJobWithContext(aws.Context, *sagemaker.DescribeTransformJobInput, ...request.Option) (*sagemaker.DescribeTransformJobOutput, error)
-	DescribeTransformJobRequest(*sagemaker.DescribeTransformJobInput) (*request.Request, *sagemaker.DescribeTransformJobOutput)
 
 	ListEndpointConfigs(*sagemaker.ListEndpointConfigsInput) (*sagemaker.ListEndpointConfigsOutput, error)
 	ListEndpointConfigsWithContext(aws.Context, *sagemaker.ListEndpointConfigsInput, ...request.Option) (*sagemaker.ListEndpointConfigsOutput, error)
@@ -219,13 +211,6 @@ type SageMakerAPI interface {
 	ListTrainingJobsForHyperParameterTuningJobPages(*sagemaker.ListTrainingJobsForHyperParameterTuningJobInput, func(*sagemaker.ListTrainingJobsForHyperParameterTuningJobOutput, bool) bool) error
 	ListTrainingJobsForHyperParameterTuningJobPagesWithContext(aws.Context, *sagemaker.ListTrainingJobsForHyperParameterTuningJobInput, func(*sagemaker.ListTrainingJobsForHyperParameterTuningJobOutput, bool) bool, ...request.Option) error
 
-	ListTransformJobs(*sagemaker.ListTransformJobsInput) (*sagemaker.ListTransformJobsOutput, error)
-	ListTransformJobsWithContext(aws.Context, *sagemaker.ListTransformJobsInput, ...request.Option) (*sagemaker.ListTransformJobsOutput, error)
-	ListTransformJobsRequest(*sagemaker.ListTransformJobsInput) (*request.Request, *sagemaker.ListTransformJobsOutput)
-
-	ListTransformJobsPages(*sagemaker.ListTransformJobsInput, func(*sagemaker.ListTransformJobsOutput, bool) bool) error
-	ListTransformJobsPagesWithContext(aws.Context, *sagemaker.ListTransformJobsInput, func(*sagemaker.ListTransformJobsOutput, bool) bool, ...request.Option) error
-
 	StartNotebookInstance(*sagemaker.StartNotebookInstanceInput) (*sagemaker.StartNotebookInstanceOutput, error)
 	StartNotebookInstanceWithContext(aws.Context, *sagemaker.StartNotebookInstanceInput, ...request.Option) (*sagemaker.StartNotebookInstanceOutput, error)
 	StartNotebookInstanceRequest(*sagemaker.StartNotebookInstanceInput) (*request.Request, *sagemaker.StartNotebookInstanceOutput)
@@ -241,10 +226,6 @@ type SageMakerAPI interface {
 	StopTrainingJob(*sagemaker.StopTrainingJobInput) (*sagemaker.StopTrainingJobOutput, error)
 	StopTrainingJobWithContext(aws.Context, *sagemaker.StopTrainingJobInput, ...request.Option) (*sagemaker.StopTrainingJobOutput, error)
 	StopTrainingJobRequest(*sagemaker.StopTrainingJobInput) (*request.Request, *sagemaker.StopTrainingJobOutput)
-
-	StopTransformJob(*sagemaker.StopTransformJobInput) (*sagemaker.StopTransformJobOutput, error)
-	StopTransformJobWithContext(aws.Context, *sagemaker.StopTransformJobInput, ...request.Option) (*sagemaker.StopTransformJobOutput, error)
-	StopTransformJobRequest(*sagemaker.StopTransformJobInput) (*request.Request, *sagemaker.StopTransformJobOutput)
 
 	UpdateEndpoint(*sagemaker.UpdateEndpointInput) (*sagemaker.UpdateEndpointOutput, error)
 	UpdateEndpointWithContext(aws.Context, *sagemaker.UpdateEndpointInput, ...request.Option) (*sagemaker.UpdateEndpointOutput, error)

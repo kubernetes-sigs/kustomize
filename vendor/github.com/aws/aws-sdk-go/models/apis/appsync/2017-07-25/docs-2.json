@@ -154,7 +154,7 @@
       "base": null,
       "refs": {
         "CreateDataSourceRequest$type": "<p>The type of the <code>DataSource</code>.</p>",
-        "DataSource$type": "<p>The type of the data source.</p> <ul> <li> <p> <b>AMAZON_DYNAMODB</b>: The data source is an Amazon DynamoDB table.</p> </li> <li> <p> <b>AMAZON_ELASTICSEARCH</b>: The data source is an Amazon Elasticsearch Service domain.</p> </li> <li> <p> <b>AWS_LAMBDA</b>: The data source is an AWS Lambda function.</p> </li> <li> <p> <b>NONE</b>: There is no data source. This type is used when when you wish to invoke a GraphQL operation without connecting to a data source, such as performing data transformation with resolvers or triggering a subscription to be invoked from a mutation.</p> </li> <li> <p> <b>HTTP</b>: The data source is an HTTP endpoint.</p> </li> </ul>",
+        "DataSource$type": "<p>The type of the data source.</p> <ul> <li> <p> <b>AMAZON_DYNAMODB</b>: The data source is an Amazon DynamoDB table.</p> </li> <li> <p> <b>AMAZON_ELASTICSEARCH</b>: The data source is an Amazon Elasticsearch Service domain.</p> </li> <li> <p> <b>AWS_LAMBDA</b>: The data source is an AWS Lambda function.</p> </li> <li> <p> <b>NONE</b>: There is no data source. This type is used when when you wish to invoke a GraphQL operation without connecting to a data source, such as performing data transformation with resolvers or triggering a subscription to be invoked from a mutation.</p> </li> </ul>",
         "UpdateDataSourceRequest$type": "<p>The new data source type.</p>"
       }
     },
@@ -328,14 +328,6 @@
       "base": null,
       "refs": {
         "ListGraphqlApisResponse$graphqlApis": "<p>The <code>GraphqlApi</code> objects.</p>"
-      }
-    },
-    "HttpDataSourceConfig": {
-      "base": "<p>Describes a Http data source configuration.</p>",
-      "refs": {
-        "CreateDataSourceRequest$httpConfig": "<p>Http endpoint settings.</p>",
-        "DataSource$httpConfig": "<p>Http endpoint settings.</p>",
-        "UpdateDataSourceRequest$httpConfig": "<p>The new http endpoint configuration</p>"
       }
     },
     "InternalFailureException": {
@@ -584,7 +576,6 @@
         "GetTypeRequest$apiId": "<p>The API ID.</p>",
         "GraphqlApi$apiId": "<p>The API ID.</p>",
         "GraphqlApi$arn": "<p>The ARN.</p>",
-        "HttpDataSourceConfig$endpoint": "<p>The Http url endpoint. You can either specify the domain name or ip and port combination and the url scheme must be http(s). If the port is not specified, AWS AppSync will use the default port 80 for http endpoint and port 443 for https endpoints.</p>",
         "InternalFailureException$message": null,
         "LambdaDataSourceConfig$lambdaFunctionArn": "<p>The ARN for the Lambda function.</p>",
         "LimitExceededException$message": null,
