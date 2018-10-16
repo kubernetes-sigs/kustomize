@@ -2694,9 +2694,6 @@ type CreateDataSourceInput struct {
 	// Amazon Elasticsearch settings.
 	ElasticsearchConfig *ElasticsearchDataSourceConfig `locationName:"elasticsearchConfig" type:"structure"`
 
-	// Http endpoint settings.
-	HttpConfig *HttpDataSourceConfig `locationName:"httpConfig" type:"structure"`
-
 	// AWS Lambda settings.
 	LambdaConfig *LambdaDataSourceConfig `locationName:"lambdaConfig" type:"structure"`
 
@@ -2780,12 +2777,6 @@ func (s *CreateDataSourceInput) SetDynamodbConfig(v *DynamodbDataSourceConfig) *
 // SetElasticsearchConfig sets the ElasticsearchConfig field's value.
 func (s *CreateDataSourceInput) SetElasticsearchConfig(v *ElasticsearchDataSourceConfig) *CreateDataSourceInput {
 	s.ElasticsearchConfig = v
-	return s
-}
-
-// SetHttpConfig sets the HttpConfig field's value.
-func (s *CreateDataSourceInput) SetHttpConfig(v *HttpDataSourceConfig) *CreateDataSourceInput {
-	s.HttpConfig = v
 	return s
 }
 
@@ -3196,9 +3187,6 @@ type DataSource struct {
 	// Amazon Elasticsearch settings.
 	ElasticsearchConfig *ElasticsearchDataSourceConfig `locationName:"elasticsearchConfig" type:"structure"`
 
-	// Http endpoint settings.
-	HttpConfig *HttpDataSourceConfig `locationName:"httpConfig" type:"structure"`
-
 	// Lambda settings.
 	LambdaConfig *LambdaDataSourceConfig `locationName:"lambdaConfig" type:"structure"`
 
@@ -3222,8 +3210,6 @@ type DataSource struct {
 	//    to invoke a GraphQL operation without connecting to a data source, such
 	//    as performing data transformation with resolvers or triggering a subscription
 	//    to be invoked from a mutation.
-	//
-	//    * HTTP: The data source is an HTTP endpoint.
 	Type *string `locationName:"type" type:"string" enum:"DataSourceType"`
 }
 
@@ -3258,12 +3244,6 @@ func (s *DataSource) SetDynamodbConfig(v *DynamodbDataSourceConfig) *DataSource 
 // SetElasticsearchConfig sets the ElasticsearchConfig field's value.
 func (s *DataSource) SetElasticsearchConfig(v *ElasticsearchDataSourceConfig) *DataSource {
 	s.ElasticsearchConfig = v
-	return s
-}
-
-// SetHttpConfig sets the HttpConfig field's value.
-func (s *DataSource) SetHttpConfig(v *HttpDataSourceConfig) *DataSource {
-	s.HttpConfig = v
 	return s
 }
 
@@ -4285,33 +4265,6 @@ func (s *GraphqlApi) SetUserPoolConfig(v *UserPoolConfig) *GraphqlApi {
 	return s
 }
 
-// Describes a Http data source configuration.
-type HttpDataSourceConfig struct {
-	_ struct{} `type:"structure"`
-
-	// The Http url endpoint. You can either specify the domain name or ip and port
-	// combination and the url scheme must be http(s). If the port is not specified,
-	// AWS AppSync will use the default port 80 for http endpoint and port 443 for
-	// https endpoints.
-	Endpoint *string `locationName:"endpoint" type:"string"`
-}
-
-// String returns the string representation
-func (s HttpDataSourceConfig) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s HttpDataSourceConfig) GoString() string {
-	return s.String()
-}
-
-// SetEndpoint sets the Endpoint field's value.
-func (s *HttpDataSourceConfig) SetEndpoint(v string) *HttpDataSourceConfig {
-	s.Endpoint = &v
-	return s
-}
-
 // Describes a Lambda data source configuration.
 type LambdaDataSourceConfig struct {
 	_ struct{} `type:"structure"`
@@ -5264,9 +5217,6 @@ type UpdateDataSourceInput struct {
 	// The new Elasticsearch configuration.
 	ElasticsearchConfig *ElasticsearchDataSourceConfig `locationName:"elasticsearchConfig" type:"structure"`
 
-	// The new http endpoint configuration
-	HttpConfig *HttpDataSourceConfig `locationName:"httpConfig" type:"structure"`
-
 	// The new Lambda configuration.
 	LambdaConfig *LambdaDataSourceConfig `locationName:"lambdaConfig" type:"structure"`
 
@@ -5349,12 +5299,6 @@ func (s *UpdateDataSourceInput) SetDynamodbConfig(v *DynamodbDataSourceConfig) *
 // SetElasticsearchConfig sets the ElasticsearchConfig field's value.
 func (s *UpdateDataSourceInput) SetElasticsearchConfig(v *ElasticsearchDataSourceConfig) *UpdateDataSourceInput {
 	s.ElasticsearchConfig = v
-	return s
-}
-
-// SetHttpConfig sets the HttpConfig field's value.
-func (s *UpdateDataSourceInput) SetHttpConfig(v *HttpDataSourceConfig) *UpdateDataSourceInput {
-	s.HttpConfig = v
 	return s
 }
 
@@ -5866,9 +5810,6 @@ const (
 
 	// DataSourceTypeNone is a DataSourceType enum value
 	DataSourceTypeNone = "NONE"
-
-	// DataSourceTypeHttp is a DataSourceType enum value
-	DataSourceTypeHttp = "HTTP"
 )
 
 const (

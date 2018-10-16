@@ -4191,394 +4191,6 @@ func (s *AttributeValueUpdate) SetValue(v *AttributeValue) *AttributeValueUpdate
 	return s
 }
 
-// Represents the properties of the scaling policy.
-type AutoScalingPolicyDescription struct {
-	_ struct{} `type:"structure"`
-
-	// The name of the scaling policy.
-	PolicyName *string `min:"1" type:"string"`
-
-	// Represents a target tracking scaling policy configuration.
-	TargetTrackingScalingPolicyConfiguration *AutoScalingTargetTrackingScalingPolicyConfigurationDescription `type:"structure"`
-}
-
-// String returns the string representation
-func (s AutoScalingPolicyDescription) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s AutoScalingPolicyDescription) GoString() string {
-	return s.String()
-}
-
-// SetPolicyName sets the PolicyName field's value.
-func (s *AutoScalingPolicyDescription) SetPolicyName(v string) *AutoScalingPolicyDescription {
-	s.PolicyName = &v
-	return s
-}
-
-// SetTargetTrackingScalingPolicyConfiguration sets the TargetTrackingScalingPolicyConfiguration field's value.
-func (s *AutoScalingPolicyDescription) SetTargetTrackingScalingPolicyConfiguration(v *AutoScalingTargetTrackingScalingPolicyConfigurationDescription) *AutoScalingPolicyDescription {
-	s.TargetTrackingScalingPolicyConfiguration = v
-	return s
-}
-
-// Represents the autoscaling policy to be modified.
-type AutoScalingPolicyUpdate struct {
-	_ struct{} `type:"structure"`
-
-	// The name of the scaling policy.
-	PolicyName *string `min:"1" type:"string"`
-
-	// Represents a target tracking scaling policy configuration.
-	//
-	// TargetTrackingScalingPolicyConfiguration is a required field
-	TargetTrackingScalingPolicyConfiguration *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate `type:"structure" required:"true"`
-}
-
-// String returns the string representation
-func (s AutoScalingPolicyUpdate) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s AutoScalingPolicyUpdate) GoString() string {
-	return s.String()
-}
-
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *AutoScalingPolicyUpdate) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "AutoScalingPolicyUpdate"}
-	if s.PolicyName != nil && len(*s.PolicyName) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("PolicyName", 1))
-	}
-	if s.TargetTrackingScalingPolicyConfiguration == nil {
-		invalidParams.Add(request.NewErrParamRequired("TargetTrackingScalingPolicyConfiguration"))
-	}
-	if s.TargetTrackingScalingPolicyConfiguration != nil {
-		if err := s.TargetTrackingScalingPolicyConfiguration.Validate(); err != nil {
-			invalidParams.AddNested("TargetTrackingScalingPolicyConfiguration", err.(request.ErrInvalidParams))
-		}
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
-}
-
-// SetPolicyName sets the PolicyName field's value.
-func (s *AutoScalingPolicyUpdate) SetPolicyName(v string) *AutoScalingPolicyUpdate {
-	s.PolicyName = &v
-	return s
-}
-
-// SetTargetTrackingScalingPolicyConfiguration sets the TargetTrackingScalingPolicyConfiguration field's value.
-func (s *AutoScalingPolicyUpdate) SetTargetTrackingScalingPolicyConfiguration(v *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate) *AutoScalingPolicyUpdate {
-	s.TargetTrackingScalingPolicyConfiguration = v
-	return s
-}
-
-// Represents the autoscaling settings for a global table or global secondary
-// index.
-type AutoScalingSettingsDescription struct {
-	_ struct{} `type:"structure"`
-
-	// Disabled autoscaling for this global table or global secondary index.
-	AutoScalingDisabled *bool `type:"boolean"`
-
-	// Role ARN used for configuring autoScaling policy.
-	AutoScalingRoleArn *string `type:"string"`
-
-	// The maximum capacity units that a global table or global secondary index
-	// should be scaled up to.
-	MaximumUnits *int64 `min:"1" type:"long"`
-
-	// The minimum capacity units that a global table or global secondary index
-	// should be scaled down to.
-	MinimumUnits *int64 `min:"1" type:"long"`
-
-	// Information about the scaling policies.
-	ScalingPolicies []*AutoScalingPolicyDescription `type:"list"`
-}
-
-// String returns the string representation
-func (s AutoScalingSettingsDescription) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s AutoScalingSettingsDescription) GoString() string {
-	return s.String()
-}
-
-// SetAutoScalingDisabled sets the AutoScalingDisabled field's value.
-func (s *AutoScalingSettingsDescription) SetAutoScalingDisabled(v bool) *AutoScalingSettingsDescription {
-	s.AutoScalingDisabled = &v
-	return s
-}
-
-// SetAutoScalingRoleArn sets the AutoScalingRoleArn field's value.
-func (s *AutoScalingSettingsDescription) SetAutoScalingRoleArn(v string) *AutoScalingSettingsDescription {
-	s.AutoScalingRoleArn = &v
-	return s
-}
-
-// SetMaximumUnits sets the MaximumUnits field's value.
-func (s *AutoScalingSettingsDescription) SetMaximumUnits(v int64) *AutoScalingSettingsDescription {
-	s.MaximumUnits = &v
-	return s
-}
-
-// SetMinimumUnits sets the MinimumUnits field's value.
-func (s *AutoScalingSettingsDescription) SetMinimumUnits(v int64) *AutoScalingSettingsDescription {
-	s.MinimumUnits = &v
-	return s
-}
-
-// SetScalingPolicies sets the ScalingPolicies field's value.
-func (s *AutoScalingSettingsDescription) SetScalingPolicies(v []*AutoScalingPolicyDescription) *AutoScalingSettingsDescription {
-	s.ScalingPolicies = v
-	return s
-}
-
-// Represents the autoscaling settings to be modified for a global table or
-// global secondary index.
-type AutoScalingSettingsUpdate struct {
-	_ struct{} `type:"structure"`
-
-	// Disabled autoscaling for this global table or global secondary index.
-	AutoScalingDisabled *bool `type:"boolean"`
-
-	// Role ARN used for configuring autoscaling policy.
-	AutoScalingRoleArn *string `min:"1" type:"string"`
-
-	// The maximum capacity units that a global table or global secondary index
-	// should be scaled up to.
-	MaximumUnits *int64 `min:"1" type:"long"`
-
-	// The minimum capacity units that a global table or global secondary index
-	// should be scaled down to.
-	MinimumUnits *int64 `min:"1" type:"long"`
-
-	// The scaling policy to apply for scaling target global table or global secondary
-	// index capacity units.
-	ScalingPolicyUpdate *AutoScalingPolicyUpdate `type:"structure"`
-}
-
-// String returns the string representation
-func (s AutoScalingSettingsUpdate) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s AutoScalingSettingsUpdate) GoString() string {
-	return s.String()
-}
-
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *AutoScalingSettingsUpdate) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "AutoScalingSettingsUpdate"}
-	if s.AutoScalingRoleArn != nil && len(*s.AutoScalingRoleArn) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("AutoScalingRoleArn", 1))
-	}
-	if s.MaximumUnits != nil && *s.MaximumUnits < 1 {
-		invalidParams.Add(request.NewErrParamMinValue("MaximumUnits", 1))
-	}
-	if s.MinimumUnits != nil && *s.MinimumUnits < 1 {
-		invalidParams.Add(request.NewErrParamMinValue("MinimumUnits", 1))
-	}
-	if s.ScalingPolicyUpdate != nil {
-		if err := s.ScalingPolicyUpdate.Validate(); err != nil {
-			invalidParams.AddNested("ScalingPolicyUpdate", err.(request.ErrInvalidParams))
-		}
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
-}
-
-// SetAutoScalingDisabled sets the AutoScalingDisabled field's value.
-func (s *AutoScalingSettingsUpdate) SetAutoScalingDisabled(v bool) *AutoScalingSettingsUpdate {
-	s.AutoScalingDisabled = &v
-	return s
-}
-
-// SetAutoScalingRoleArn sets the AutoScalingRoleArn field's value.
-func (s *AutoScalingSettingsUpdate) SetAutoScalingRoleArn(v string) *AutoScalingSettingsUpdate {
-	s.AutoScalingRoleArn = &v
-	return s
-}
-
-// SetMaximumUnits sets the MaximumUnits field's value.
-func (s *AutoScalingSettingsUpdate) SetMaximumUnits(v int64) *AutoScalingSettingsUpdate {
-	s.MaximumUnits = &v
-	return s
-}
-
-// SetMinimumUnits sets the MinimumUnits field's value.
-func (s *AutoScalingSettingsUpdate) SetMinimumUnits(v int64) *AutoScalingSettingsUpdate {
-	s.MinimumUnits = &v
-	return s
-}
-
-// SetScalingPolicyUpdate sets the ScalingPolicyUpdate field's value.
-func (s *AutoScalingSettingsUpdate) SetScalingPolicyUpdate(v *AutoScalingPolicyUpdate) *AutoScalingSettingsUpdate {
-	s.ScalingPolicyUpdate = v
-	return s
-}
-
-// Represents the properties of a target tracking scaling policy.
-type AutoScalingTargetTrackingScalingPolicyConfigurationDescription struct {
-	_ struct{} `type:"structure"`
-
-	// Indicates whether scale in by the target tracking policy is disabled. If
-	// the value is true, scale in is disabled and the target tracking policy won't
-	// remove capacity from the scalable resource. Otherwise, scale in is enabled
-	// and the target tracking policy can remove capacity from the scalable resource.
-	// The default value is false.
-	DisableScaleIn *bool `type:"boolean"`
-
-	// The amount of time, in seconds, after a scale in activity completes before
-	// another scale in activity can start. The cooldown period is used to block
-	// subsequent scale in requests until it has expired. You should scale in conservatively
-	// to protect your application's availability. However, if another alarm triggers
-	// a scale out policy during the cooldown period after a scale-in, application
-	// autoscaling scales out your scalable target immediately.
-	ScaleInCooldown *int64 `type:"integer"`
-
-	// The amount of time, in seconds, after a scale out activity completes before
-	// another scale out activity can start. While the cooldown period is in effect,
-	// the capacity that has been added by the previous scale out event that initiated
-	// the cooldown is calculated as part of the desired capacity for the next scale
-	// out. You should continuously (but not excessively) scale out.
-	ScaleOutCooldown *int64 `type:"integer"`
-
-	// The target value for the metric. The range is 8.515920e-109 to 1.174271e+108
-	// (Base 10) or 2e-360 to 2e360 (Base 2).
-	//
-	// TargetValue is a required field
-	TargetValue *float64 `type:"double" required:"true"`
-}
-
-// String returns the string representation
-func (s AutoScalingTargetTrackingScalingPolicyConfigurationDescription) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s AutoScalingTargetTrackingScalingPolicyConfigurationDescription) GoString() string {
-	return s.String()
-}
-
-// SetDisableScaleIn sets the DisableScaleIn field's value.
-func (s *AutoScalingTargetTrackingScalingPolicyConfigurationDescription) SetDisableScaleIn(v bool) *AutoScalingTargetTrackingScalingPolicyConfigurationDescription {
-	s.DisableScaleIn = &v
-	return s
-}
-
-// SetScaleInCooldown sets the ScaleInCooldown field's value.
-func (s *AutoScalingTargetTrackingScalingPolicyConfigurationDescription) SetScaleInCooldown(v int64) *AutoScalingTargetTrackingScalingPolicyConfigurationDescription {
-	s.ScaleInCooldown = &v
-	return s
-}
-
-// SetScaleOutCooldown sets the ScaleOutCooldown field's value.
-func (s *AutoScalingTargetTrackingScalingPolicyConfigurationDescription) SetScaleOutCooldown(v int64) *AutoScalingTargetTrackingScalingPolicyConfigurationDescription {
-	s.ScaleOutCooldown = &v
-	return s
-}
-
-// SetTargetValue sets the TargetValue field's value.
-func (s *AutoScalingTargetTrackingScalingPolicyConfigurationDescription) SetTargetValue(v float64) *AutoScalingTargetTrackingScalingPolicyConfigurationDescription {
-	s.TargetValue = &v
-	return s
-}
-
-// Represents the settings of a target tracking scaling policy that will be
-// modified.
-type AutoScalingTargetTrackingScalingPolicyConfigurationUpdate struct {
-	_ struct{} `type:"structure"`
-
-	// Indicates whether scale in by the target tracking policy is disabled. If
-	// the value is true, scale in is disabled and the target tracking policy won't
-	// remove capacity from the scalable resource. Otherwise, scale in is enabled
-	// and the target tracking policy can remove capacity from the scalable resource.
-	// The default value is false.
-	DisableScaleIn *bool `type:"boolean"`
-
-	// The amount of time, in seconds, after a scale in activity completes before
-	// another scale in activity can start. The cooldown period is used to block
-	// subsequent scale in requests until it has expired. You should scale in conservatively
-	// to protect your application's availability. However, if another alarm triggers
-	// a scale out policy during the cooldown period after a scale-in, application
-	// autoscaling scales out your scalable target immediately.
-	ScaleInCooldown *int64 `type:"integer"`
-
-	// The amount of time, in seconds, after a scale out activity completes before
-	// another scale out activity can start. While the cooldown period is in effect,
-	// the capacity that has been added by the previous scale out event that initiated
-	// the cooldown is calculated as part of the desired capacity for the next scale
-	// out. You should continuously (but not excessively) scale out.
-	ScaleOutCooldown *int64 `type:"integer"`
-
-	// The target value for the metric. The range is 8.515920e-109 to 1.174271e+108
-	// (Base 10) or 2e-360 to 2e360 (Base 2).
-	//
-	// TargetValue is a required field
-	TargetValue *float64 `type:"double" required:"true"`
-}
-
-// String returns the string representation
-func (s AutoScalingTargetTrackingScalingPolicyConfigurationUpdate) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s AutoScalingTargetTrackingScalingPolicyConfigurationUpdate) GoString() string {
-	return s.String()
-}
-
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "AutoScalingTargetTrackingScalingPolicyConfigurationUpdate"}
-	if s.TargetValue == nil {
-		invalidParams.Add(request.NewErrParamRequired("TargetValue"))
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
-}
-
-// SetDisableScaleIn sets the DisableScaleIn field's value.
-func (s *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate) SetDisableScaleIn(v bool) *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate {
-	s.DisableScaleIn = &v
-	return s
-}
-
-// SetScaleInCooldown sets the ScaleInCooldown field's value.
-func (s *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate) SetScaleInCooldown(v int64) *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate {
-	s.ScaleInCooldown = &v
-	return s
-}
-
-// SetScaleOutCooldown sets the ScaleOutCooldown field's value.
-func (s *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate) SetScaleOutCooldown(v int64) *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate {
-	s.ScaleOutCooldown = &v
-	return s
-}
-
-// SetTargetValue sets the TargetValue field's value.
-func (s *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate) SetTargetValue(v float64) *AutoScalingTargetTrackingScalingPolicyConfigurationUpdate {
-	s.TargetValue = &v
-	return s
-}
-
 // Contains the description of the backup created for the table.
 type BackupDescription struct {
 	_ struct{} `type:"structure"`
@@ -4634,11 +4246,7 @@ type BackupDetails struct {
 	// Time at which the backup was created. This is the request time of the backup.
 	//
 	// BackupCreationDateTime is a required field
-	BackupCreationDateTime *time.Time `type:"timestamp" required:"true"`
-
-	// Time at which the automatic on demand backup created by DynamoDB will expire.
-	// This SYSTEM on demand backup expires automatically 35 days after its creation.
-	BackupExpiryDateTime *time.Time `type:"timestamp"`
+	BackupCreationDateTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	// Name of the requested backup.
 	//
@@ -4652,15 +4260,6 @@ type BackupDetails struct {
 	//
 	// BackupStatus is a required field
 	BackupStatus *string `type:"string" required:"true" enum:"BackupStatus"`
-
-	// BackupType:
-	//
-	//    * USER - On demand backup created by you.
-	//
-	//    * SYSTEM - On demand backup automatically created by DynamoDB.
-	//
-	// BackupType is a required field
-	BackupType *string `type:"string" required:"true" enum:"BackupType"`
 }
 
 // String returns the string representation
@@ -4685,12 +4284,6 @@ func (s *BackupDetails) SetBackupCreationDateTime(v time.Time) *BackupDetails {
 	return s
 }
 
-// SetBackupExpiryDateTime sets the BackupExpiryDateTime field's value.
-func (s *BackupDetails) SetBackupExpiryDateTime(v time.Time) *BackupDetails {
-	s.BackupExpiryDateTime = &v
-	return s
-}
-
 // SetBackupName sets the BackupName field's value.
 func (s *BackupDetails) SetBackupName(v string) *BackupDetails {
 	s.BackupName = &v
@@ -4709,12 +4302,6 @@ func (s *BackupDetails) SetBackupStatus(v string) *BackupDetails {
 	return s
 }
 
-// SetBackupType sets the BackupType field's value.
-func (s *BackupDetails) SetBackupType(v string) *BackupDetails {
-	s.BackupType = &v
-	return s
-}
-
 // Contains details for the backup.
 type BackupSummary struct {
 	_ struct{} `type:"structure"`
@@ -4723,11 +4310,7 @@ type BackupSummary struct {
 	BackupArn *string `min:"37" type:"string"`
 
 	// Time at which the backup was created.
-	BackupCreationDateTime *time.Time `type:"timestamp"`
-
-	// Time at which the automatic on demand backup created by DynamoDB will expire.
-	// This SYSTEM on demand backup expires automatically 35 days after its creation.
-	BackupExpiryDateTime *time.Time `type:"timestamp"`
+	BackupCreationDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Name of the specified backup.
 	BackupName *string `min:"3" type:"string"`
@@ -4737,13 +4320,6 @@ type BackupSummary struct {
 
 	// Backup can be in one of the following states: CREATING, ACTIVE, DELETED.
 	BackupStatus *string `type:"string" enum:"BackupStatus"`
-
-	// BackupType:
-	//
-	//    * USER - On demand backup created by you.
-	//
-	//    * SYSTEM - On demand backup automatically created by DynamoDB.
-	BackupType *string `type:"string" enum:"BackupType"`
 
 	// ARN associated with the table.
 	TableArn *string `type:"string"`
@@ -4777,12 +4353,6 @@ func (s *BackupSummary) SetBackupCreationDateTime(v time.Time) *BackupSummary {
 	return s
 }
 
-// SetBackupExpiryDateTime sets the BackupExpiryDateTime field's value.
-func (s *BackupSummary) SetBackupExpiryDateTime(v time.Time) *BackupSummary {
-	s.BackupExpiryDateTime = &v
-	return s
-}
-
 // SetBackupName sets the BackupName field's value.
 func (s *BackupSummary) SetBackupName(v string) *BackupSummary {
 	s.BackupName = &v
@@ -4798,12 +4368,6 @@ func (s *BackupSummary) SetBackupSizeBytes(v int64) *BackupSummary {
 // SetBackupStatus sets the BackupStatus field's value.
 func (s *BackupSummary) SetBackupStatus(v string) *BackupSummary {
 	s.BackupStatus = &v
-	return s
-}
-
-// SetBackupType sets the BackupType field's value.
-func (s *BackupSummary) SetBackupType(v string) *BackupSummary {
-	s.BackupType = &v
 	return s
 }
 
@@ -7918,7 +7482,7 @@ type GlobalTableDescription struct {
 	_ struct{} `type:"structure"`
 
 	// The creation time of the global table.
-	CreationDateTime *time.Time `type:"timestamp"`
+	CreationDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The unique identifier of the global table.
 	GlobalTableArn *string `type:"string"`
@@ -7992,10 +7556,6 @@ type GlobalTableGlobalSecondaryIndexSettingsUpdate struct {
 	// IndexName is a required field
 	IndexName *string `min:"3" type:"string" required:"true"`
 
-	// AutoScaling settings for managing a global secondary index's write capacity
-	// units.
-	ProvisionedWriteCapacityAutoScalingSettingsUpdate *AutoScalingSettingsUpdate `type:"structure"`
-
 	// The maximum number of writes consumed per second before DynamoDB returns
 	// a ThrottlingException.
 	ProvisionedWriteCapacityUnits *int64 `min:"1" type:"long"`
@@ -8023,11 +7583,6 @@ func (s *GlobalTableGlobalSecondaryIndexSettingsUpdate) Validate() error {
 	if s.ProvisionedWriteCapacityUnits != nil && *s.ProvisionedWriteCapacityUnits < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("ProvisionedWriteCapacityUnits", 1))
 	}
-	if s.ProvisionedWriteCapacityAutoScalingSettingsUpdate != nil {
-		if err := s.ProvisionedWriteCapacityAutoScalingSettingsUpdate.Validate(); err != nil {
-			invalidParams.AddNested("ProvisionedWriteCapacityAutoScalingSettingsUpdate", err.(request.ErrInvalidParams))
-		}
-	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -8038,12 +7593,6 @@ func (s *GlobalTableGlobalSecondaryIndexSettingsUpdate) Validate() error {
 // SetIndexName sets the IndexName field's value.
 func (s *GlobalTableGlobalSecondaryIndexSettingsUpdate) SetIndexName(v string) *GlobalTableGlobalSecondaryIndexSettingsUpdate {
 	s.IndexName = &v
-	return s
-}
-
-// SetProvisionedWriteCapacityAutoScalingSettingsUpdate sets the ProvisionedWriteCapacityAutoScalingSettingsUpdate field's value.
-func (s *GlobalTableGlobalSecondaryIndexSettingsUpdate) SetProvisionedWriteCapacityAutoScalingSettingsUpdate(v *AutoScalingSettingsUpdate) *GlobalTableGlobalSecondaryIndexSettingsUpdate {
-	s.ProvisionedWriteCapacityAutoScalingSettingsUpdate = v
 	return s
 }
 
@@ -8314,17 +7863,6 @@ func (s *KeysAndAttributes) SetProjectionExpression(v string) *KeysAndAttributes
 type ListBackupsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The backups from the table specified by BackupType are listed.
-	//
-	// Where BackupType can be:
-	//
-	//    * USER - On demand backup created by you.
-	//
-	//    * SYSTEM - On demand backup automatically created by DynamoDB.
-	//
-	//    * ALL - All types of on demand backups (USER and SYSTEM).
-	BackupType *string `type:"string" enum:"BackupTypeFilter"`
-
 	// LastEvaluatedBackupArn is the ARN of the backup last evaluated when the current
 	// page of results was returned, inclusive of the current page of results. This
 	// value may be specified as the ExclusiveStartBackupArn of a new ListBackups
@@ -8338,11 +7876,11 @@ type ListBackupsInput struct {
 	TableName *string `min:"3" type:"string"`
 
 	// Only backups created after this time are listed. TimeRangeLowerBound is inclusive.
-	TimeRangeLowerBound *time.Time `type:"timestamp"`
+	TimeRangeLowerBound *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Only backups created before this time are listed. TimeRangeUpperBound is
 	// exclusive.
-	TimeRangeUpperBound *time.Time `type:"timestamp"`
+	TimeRangeUpperBound *time.Time `type:"timestamp" timestampFormat:"unix"`
 }
 
 // String returns the string representation
@@ -8372,12 +7910,6 @@ func (s *ListBackupsInput) Validate() error {
 		return invalidParams
 	}
 	return nil
-}
-
-// SetBackupType sets the BackupType field's value.
-func (s *ListBackupsInput) SetBackupType(v string) *ListBackupsInput {
-	s.BackupType = &v
-	return s
 }
 
 // SetExclusiveStartBackupArn sets the ExclusiveStartBackupArn field's value.
@@ -8981,10 +8513,10 @@ type PointInTimeRecoveryDescription struct {
 
 	// Specifies the earliest point in time you can restore your table to. It You
 	// can restore your table to any point in time during the last 35 days.
-	EarliestRestorableDateTime *time.Time `type:"timestamp"`
+	EarliestRestorableDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// LatestRestorableDateTime is typically 5 minutes before the current time.
-	LatestRestorableDateTime *time.Time `type:"timestamp"`
+	LatestRestorableDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The current state of point in time recovery:
 	//
@@ -9200,10 +8732,10 @@ type ProvisionedThroughputDescription struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time of the last provisioned throughput decrease for this table.
-	LastDecreaseDateTime *time.Time `type:"timestamp"`
+	LastDecreaseDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The date and time of the last provisioned throughput increase for this table.
-	LastIncreaseDateTime *time.Time `type:"timestamp"`
+	LastIncreaseDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The number of provisioned throughput decreases for this table during this
 	// UTC calendar day. For current maximums on provisioned throughput decreases,
@@ -10213,17 +9745,9 @@ type ReplicaGlobalSecondaryIndexSettingsDescription struct {
 	//    * ACTIVE - The global secondary index is ready for use.
 	IndexStatus *string `type:"string" enum:"IndexStatus"`
 
-	// Autoscaling settings for a global secondary index replica's read capacity
-	// units.
-	ProvisionedReadCapacityAutoScalingSettings *AutoScalingSettingsDescription `type:"structure"`
-
 	// The maximum number of strongly consistent reads consumed per second before
 	// DynamoDB returns a ThrottlingException.
 	ProvisionedReadCapacityUnits *int64 `min:"1" type:"long"`
-
-	// AutoScaling settings for a global secondary index replica's write capacity
-	// units.
-	ProvisionedWriteCapacityAutoScalingSettings *AutoScalingSettingsDescription `type:"structure"`
 
 	// The maximum number of writes consumed per second before DynamoDB returns
 	// a ThrottlingException.
@@ -10252,21 +9776,9 @@ func (s *ReplicaGlobalSecondaryIndexSettingsDescription) SetIndexStatus(v string
 	return s
 }
 
-// SetProvisionedReadCapacityAutoScalingSettings sets the ProvisionedReadCapacityAutoScalingSettings field's value.
-func (s *ReplicaGlobalSecondaryIndexSettingsDescription) SetProvisionedReadCapacityAutoScalingSettings(v *AutoScalingSettingsDescription) *ReplicaGlobalSecondaryIndexSettingsDescription {
-	s.ProvisionedReadCapacityAutoScalingSettings = v
-	return s
-}
-
 // SetProvisionedReadCapacityUnits sets the ProvisionedReadCapacityUnits field's value.
 func (s *ReplicaGlobalSecondaryIndexSettingsDescription) SetProvisionedReadCapacityUnits(v int64) *ReplicaGlobalSecondaryIndexSettingsDescription {
 	s.ProvisionedReadCapacityUnits = &v
-	return s
-}
-
-// SetProvisionedWriteCapacityAutoScalingSettings sets the ProvisionedWriteCapacityAutoScalingSettings field's value.
-func (s *ReplicaGlobalSecondaryIndexSettingsDescription) SetProvisionedWriteCapacityAutoScalingSettings(v *AutoScalingSettingsDescription) *ReplicaGlobalSecondaryIndexSettingsDescription {
-	s.ProvisionedWriteCapacityAutoScalingSettings = v
 	return s
 }
 
@@ -10286,10 +9798,6 @@ type ReplicaGlobalSecondaryIndexSettingsUpdate struct {
 	//
 	// IndexName is a required field
 	IndexName *string `min:"3" type:"string" required:"true"`
-
-	// Autoscaling settings for managing a global secondary index replica's read
-	// capacity units.
-	ProvisionedReadCapacityAutoScalingSettingsUpdate *AutoScalingSettingsUpdate `type:"structure"`
 
 	// The maximum number of strongly consistent reads consumed per second before
 	// DynamoDB returns a ThrottlingException.
@@ -10318,11 +9826,6 @@ func (s *ReplicaGlobalSecondaryIndexSettingsUpdate) Validate() error {
 	if s.ProvisionedReadCapacityUnits != nil && *s.ProvisionedReadCapacityUnits < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("ProvisionedReadCapacityUnits", 1))
 	}
-	if s.ProvisionedReadCapacityAutoScalingSettingsUpdate != nil {
-		if err := s.ProvisionedReadCapacityAutoScalingSettingsUpdate.Validate(); err != nil {
-			invalidParams.AddNested("ProvisionedReadCapacityAutoScalingSettingsUpdate", err.(request.ErrInvalidParams))
-		}
-	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -10333,12 +9836,6 @@ func (s *ReplicaGlobalSecondaryIndexSettingsUpdate) Validate() error {
 // SetIndexName sets the IndexName field's value.
 func (s *ReplicaGlobalSecondaryIndexSettingsUpdate) SetIndexName(v string) *ReplicaGlobalSecondaryIndexSettingsUpdate {
 	s.IndexName = &v
-	return s
-}
-
-// SetProvisionedReadCapacityAutoScalingSettingsUpdate sets the ProvisionedReadCapacityAutoScalingSettingsUpdate field's value.
-func (s *ReplicaGlobalSecondaryIndexSettingsUpdate) SetProvisionedReadCapacityAutoScalingSettingsUpdate(v *AutoScalingSettingsUpdate) *ReplicaGlobalSecondaryIndexSettingsUpdate {
-	s.ProvisionedReadCapacityAutoScalingSettingsUpdate = v
 	return s
 }
 
@@ -10360,17 +9857,11 @@ type ReplicaSettingsDescription struct {
 	// Replica global secondary index settings for the global table.
 	ReplicaGlobalSecondaryIndexSettings []*ReplicaGlobalSecondaryIndexSettingsDescription `type:"list"`
 
-	// Autoscaling settings for a global table replica's read capacity units.
-	ReplicaProvisionedReadCapacityAutoScalingSettings *AutoScalingSettingsDescription `type:"structure"`
-
 	// The maximum number of strongly consistent reads consumed per second before
 	// DynamoDB returns a ThrottlingException. For more information, see Specifying
 	// Read and Write Requirements (http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithTables.html#ProvisionedThroughput)
 	// in the Amazon DynamoDB Developer Guide.
 	ReplicaProvisionedReadCapacityUnits *int64 `min:"1" type:"long"`
-
-	// AutoScaling settings for a global table replica's write capacity units.
-	ReplicaProvisionedWriteCapacityAutoScalingSettings *AutoScalingSettingsDescription `type:"structure"`
 
 	// The maximum number of writes consumed per second before DynamoDB returns
 	// a ThrottlingException. For more information, see Specifying Read and Write
@@ -10412,21 +9903,9 @@ func (s *ReplicaSettingsDescription) SetReplicaGlobalSecondaryIndexSettings(v []
 	return s
 }
 
-// SetReplicaProvisionedReadCapacityAutoScalingSettings sets the ReplicaProvisionedReadCapacityAutoScalingSettings field's value.
-func (s *ReplicaSettingsDescription) SetReplicaProvisionedReadCapacityAutoScalingSettings(v *AutoScalingSettingsDescription) *ReplicaSettingsDescription {
-	s.ReplicaProvisionedReadCapacityAutoScalingSettings = v
-	return s
-}
-
 // SetReplicaProvisionedReadCapacityUnits sets the ReplicaProvisionedReadCapacityUnits field's value.
 func (s *ReplicaSettingsDescription) SetReplicaProvisionedReadCapacityUnits(v int64) *ReplicaSettingsDescription {
 	s.ReplicaProvisionedReadCapacityUnits = &v
-	return s
-}
-
-// SetReplicaProvisionedWriteCapacityAutoScalingSettings sets the ReplicaProvisionedWriteCapacityAutoScalingSettings field's value.
-func (s *ReplicaSettingsDescription) SetReplicaProvisionedWriteCapacityAutoScalingSettings(v *AutoScalingSettingsDescription) *ReplicaSettingsDescription {
-	s.ReplicaProvisionedWriteCapacityAutoScalingSettings = v
 	return s
 }
 
@@ -10454,10 +9933,6 @@ type ReplicaSettingsUpdate struct {
 	// Represents the settings of a global secondary index for a global table that
 	// will be modified.
 	ReplicaGlobalSecondaryIndexSettingsUpdate []*ReplicaGlobalSecondaryIndexSettingsUpdate `min:"1" type:"list"`
-
-	// Autoscaling settings for managing a global table replica's read capacity
-	// units.
-	ReplicaProvisionedReadCapacityAutoScalingSettingsUpdate *AutoScalingSettingsUpdate `type:"structure"`
 
 	// The maximum number of strongly consistent reads consumed per second before
 	// DynamoDB returns a ThrottlingException. For more information, see Specifying
@@ -10498,11 +9973,6 @@ func (s *ReplicaSettingsUpdate) Validate() error {
 			}
 		}
 	}
-	if s.ReplicaProvisionedReadCapacityAutoScalingSettingsUpdate != nil {
-		if err := s.ReplicaProvisionedReadCapacityAutoScalingSettingsUpdate.Validate(); err != nil {
-			invalidParams.AddNested("ReplicaProvisionedReadCapacityAutoScalingSettingsUpdate", err.(request.ErrInvalidParams))
-		}
-	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -10519,12 +9989,6 @@ func (s *ReplicaSettingsUpdate) SetRegionName(v string) *ReplicaSettingsUpdate {
 // SetReplicaGlobalSecondaryIndexSettingsUpdate sets the ReplicaGlobalSecondaryIndexSettingsUpdate field's value.
 func (s *ReplicaSettingsUpdate) SetReplicaGlobalSecondaryIndexSettingsUpdate(v []*ReplicaGlobalSecondaryIndexSettingsUpdate) *ReplicaSettingsUpdate {
 	s.ReplicaGlobalSecondaryIndexSettingsUpdate = v
-	return s
-}
-
-// SetReplicaProvisionedReadCapacityAutoScalingSettingsUpdate sets the ReplicaProvisionedReadCapacityAutoScalingSettingsUpdate field's value.
-func (s *ReplicaSettingsUpdate) SetReplicaProvisionedReadCapacityAutoScalingSettingsUpdate(v *AutoScalingSettingsUpdate) *ReplicaSettingsUpdate {
-	s.ReplicaProvisionedReadCapacityAutoScalingSettingsUpdate = v
 	return s
 }
 
@@ -10600,7 +10064,7 @@ type RestoreSummary struct {
 	// Point in time or source backup time.
 	//
 	// RestoreDateTime is a required field
-	RestoreDateTime *time.Time `type:"timestamp" required:"true"`
+	RestoreDateTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	// Indicates if a restore is in progress or not.
 	//
@@ -10733,7 +10197,7 @@ type RestoreTableToPointInTimeInput struct {
 	_ struct{} `type:"structure"`
 
 	// Time in the past to restore the table to.
-	RestoreDateTime *time.Time `type:"timestamp"`
+	RestoreDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Name of the source table that is being restored.
 	//
@@ -11423,7 +10887,7 @@ type SourceTableDetails struct {
 	// Time when the source table was created.
 	//
 	// TableCreationDateTime is a required field
-	TableCreationDateTime *time.Time `type:"timestamp" required:"true"`
+	TableCreationDateTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	// Unique identifier for the table for which the backup was created.
 	//
@@ -11627,7 +11091,7 @@ type TableDescription struct {
 
 	// The date and time when the table was created, in UNIX epoch time (http://www.epochconverter.com/)
 	// format.
-	CreationDateTime *time.Time `type:"timestamp"`
+	CreationDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The global secondary indexes, if any, on the table. Each index is scoped
 	// to a given partition key value. Each element is composed of:
@@ -12491,10 +11955,6 @@ type UpdateGlobalTableSettingsInput struct {
 	// GlobalTableName is a required field
 	GlobalTableName *string `min:"3" type:"string" required:"true"`
 
-	// AutoScaling settings for managing provisioned write capacity for the global
-	// table.
-	GlobalTableProvisionedWriteCapacityAutoScalingSettingsUpdate *AutoScalingSettingsUpdate `type:"structure"`
-
 	// The maximum number of writes consumed per second before DynamoDB returns
 	// a ThrottlingException.
 	GlobalTableProvisionedWriteCapacityUnits *int64 `min:"1" type:"long"`
@@ -12541,11 +12001,6 @@ func (s *UpdateGlobalTableSettingsInput) Validate() error {
 			}
 		}
 	}
-	if s.GlobalTableProvisionedWriteCapacityAutoScalingSettingsUpdate != nil {
-		if err := s.GlobalTableProvisionedWriteCapacityAutoScalingSettingsUpdate.Validate(); err != nil {
-			invalidParams.AddNested("GlobalTableProvisionedWriteCapacityAutoScalingSettingsUpdate", err.(request.ErrInvalidParams))
-		}
-	}
 	if s.ReplicaSettingsUpdate != nil {
 		for i, v := range s.ReplicaSettingsUpdate {
 			if v == nil {
@@ -12572,12 +12027,6 @@ func (s *UpdateGlobalTableSettingsInput) SetGlobalTableGlobalSecondaryIndexSetti
 // SetGlobalTableName sets the GlobalTableName field's value.
 func (s *UpdateGlobalTableSettingsInput) SetGlobalTableName(v string) *UpdateGlobalTableSettingsInput {
 	s.GlobalTableName = &v
-	return s
-}
-
-// SetGlobalTableProvisionedWriteCapacityAutoScalingSettingsUpdate sets the GlobalTableProvisionedWriteCapacityAutoScalingSettingsUpdate field's value.
-func (s *UpdateGlobalTableSettingsInput) SetGlobalTableProvisionedWriteCapacityAutoScalingSettingsUpdate(v *AutoScalingSettingsUpdate) *UpdateGlobalTableSettingsInput {
-	s.GlobalTableProvisionedWriteCapacityAutoScalingSettingsUpdate = v
 	return s
 }
 
@@ -13316,25 +12765,6 @@ const (
 
 	// BackupStatusAvailable is a BackupStatus enum value
 	BackupStatusAvailable = "AVAILABLE"
-)
-
-const (
-	// BackupTypeUser is a BackupType enum value
-	BackupTypeUser = "USER"
-
-	// BackupTypeSystem is a BackupType enum value
-	BackupTypeSystem = "SYSTEM"
-)
-
-const (
-	// BackupTypeFilterUser is a BackupTypeFilter enum value
-	BackupTypeFilterUser = "USER"
-
-	// BackupTypeFilterSystem is a BackupTypeFilter enum value
-	BackupTypeFilterSystem = "SYSTEM"
-
-	// BackupTypeFilterAll is a BackupTypeFilter enum value
-	BackupTypeFilterAll = "ALL"
 )
 
 const (

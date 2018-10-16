@@ -1872,24 +1872,24 @@ type CertificateAuthority struct {
 	CertificateAuthorityConfiguration *CertificateAuthorityConfiguration `type:"structure"`
 
 	// Date and time at which your private CA was created.
-	CreatedAt *time.Time `type:"timestamp"`
+	CreatedAt *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Reason the request to create your private CA failed.
 	FailureReason *string `type:"string" enum:"FailureReason"`
 
 	// Date and time at which your private CA was last updated.
-	LastStateChangeAt *time.Time `type:"timestamp"`
+	LastStateChangeAt *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Date and time after which your private CA certificate is not valid.
-	NotAfter *time.Time `type:"timestamp"`
+	NotAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Date and time before which your private CA certificate is not valid.
-	NotBefore *time.Time `type:"timestamp"`
+	NotBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The period during which a deleted CA can be restored. For more information,
 	// see the PermanentDeletionTimeInDays parameter of the DeleteCertificateAuthorityRequest
 	// operation.
-	RestorableUntil *time.Time `type:"timestamp"`
+	RestorableUntil *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Information about the certificate revocation list (CRL) created and maintained
 	// by your private CA.
@@ -2560,7 +2560,7 @@ type DescribeCertificateAuthorityAuditReportOutput struct {
 	AuditReportStatus *string `type:"string" enum:"AuditReportStatus"`
 
 	// The date and time at which the report was created.
-	CreatedAt *time.Time `type:"timestamp"`
+	CreatedAt *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Name of the S3 bucket that contains the report.
 	S3BucketName *string `type:"string"`

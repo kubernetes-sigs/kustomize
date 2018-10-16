@@ -1307,7 +1307,7 @@ type ScalingPlan struct {
 	ApplicationSource *ApplicationSource `type:"structure" required:"true"`
 
 	// The Unix timestamp when the scaling plan was created.
-	CreationTime *time.Time `type:"timestamp"`
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The scaling instructions.
 	//
@@ -1346,7 +1346,7 @@ type ScalingPlan struct {
 	StatusMessage *string `type:"string"`
 
 	// The Unix timestamp when the scaling plan entered the current status.
-	StatusStartTime *time.Time `type:"timestamp"`
+	StatusStartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 }
 
 // String returns the string representation

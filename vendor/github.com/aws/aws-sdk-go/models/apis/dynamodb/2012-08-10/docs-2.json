@@ -126,67 +126,6 @@
         "AttributeUpdates$value": null
       }
     },
-    "AutoScalingPolicyDescription": {
-      "base": "<p>Represents the properties of the scaling policy.</p>",
-      "refs": {
-        "AutoScalingPolicyDescriptionList$member": null
-      }
-    },
-    "AutoScalingPolicyDescriptionList": {
-      "base": null,
-      "refs": {
-        "AutoScalingSettingsDescription$ScalingPolicies": "<p>Information about the scaling policies.</p>"
-      }
-    },
-    "AutoScalingPolicyName": {
-      "base": null,
-      "refs": {
-        "AutoScalingPolicyDescription$PolicyName": "<p>The name of the scaling policy.</p>",
-        "AutoScalingPolicyUpdate$PolicyName": "<p>The name of the scaling policy.</p>"
-      }
-    },
-    "AutoScalingPolicyUpdate": {
-      "base": "<p>Represents the autoscaling policy to be modified.</p>",
-      "refs": {
-        "AutoScalingSettingsUpdate$ScalingPolicyUpdate": "<p>The scaling policy to apply for scaling target global table or global secondary index capacity units.</p>"
-      }
-    },
-    "AutoScalingRoleArn": {
-      "base": null,
-      "refs": {
-        "AutoScalingSettingsUpdate$AutoScalingRoleArn": "<p>Role ARN used for configuring autoscaling policy.</p>"
-      }
-    },
-    "AutoScalingSettingsDescription": {
-      "base": "<p>Represents the autoscaling settings for a global table or global secondary index.</p>",
-      "refs": {
-        "ReplicaGlobalSecondaryIndexSettingsDescription$ProvisionedReadCapacityAutoScalingSettings": "<p>Autoscaling settings for a global secondary index replica's read capacity units.</p>",
-        "ReplicaGlobalSecondaryIndexSettingsDescription$ProvisionedWriteCapacityAutoScalingSettings": "<p>AutoScaling settings for a global secondary index replica's write capacity units.</p>",
-        "ReplicaSettingsDescription$ReplicaProvisionedReadCapacityAutoScalingSettings": "<p>Autoscaling settings for a global table replica's read capacity units.</p>",
-        "ReplicaSettingsDescription$ReplicaProvisionedWriteCapacityAutoScalingSettings": "<p>AutoScaling settings for a global table replica's write capacity units.</p>"
-      }
-    },
-    "AutoScalingSettingsUpdate": {
-      "base": "<p>Represents the autoscaling settings to be modified for a global table or global secondary index.</p>",
-      "refs": {
-        "GlobalTableGlobalSecondaryIndexSettingsUpdate$ProvisionedWriteCapacityAutoScalingSettingsUpdate": "<p>AutoScaling settings for managing a global secondary index's write capacity units.</p>",
-        "ReplicaGlobalSecondaryIndexSettingsUpdate$ProvisionedReadCapacityAutoScalingSettingsUpdate": "<p>Autoscaling settings for managing a global secondary index replica's read capacity units.</p>",
-        "ReplicaSettingsUpdate$ReplicaProvisionedReadCapacityAutoScalingSettingsUpdate": "<p>Autoscaling settings for managing a global table replica's read capacity units.</p>",
-        "UpdateGlobalTableSettingsInput$GlobalTableProvisionedWriteCapacityAutoScalingSettingsUpdate": "<p>AutoScaling settings for managing provisioned write capacity for the global table.</p>"
-      }
-    },
-    "AutoScalingTargetTrackingScalingPolicyConfigurationDescription": {
-      "base": "<p>Represents the properties of a target tracking scaling policy.</p>",
-      "refs": {
-        "AutoScalingPolicyDescription$TargetTrackingScalingPolicyConfiguration": "<p>Represents a target tracking scaling policy configuration.</p>"
-      }
-    },
-    "AutoScalingTargetTrackingScalingPolicyConfigurationUpdate": {
-      "base": "<p>Represents the settings of a target tracking scaling policy that will be modified.</p>",
-      "refs": {
-        "AutoScalingPolicyUpdate$TargetTrackingScalingPolicyConfiguration": "<p>Represents a target tracking scaling policy configuration.</p>"
-      }
-    },
     "Backfilling": {
       "base": null,
       "refs": {
@@ -271,19 +210,6 @@
         "BackupSummaries$member": null
       }
     },
-    "BackupType": {
-      "base": null,
-      "refs": {
-        "BackupDetails$BackupType": "<p>BackupType:</p> <ul> <li> <p> <code>USER</code> - On demand backup created by you.</p> </li> <li> <p> <code>SYSTEM</code> - On demand backup automatically created by DynamoDB.</p> </li> </ul>",
-        "BackupSummary$BackupType": "<p>BackupType:</p> <ul> <li> <p> <code>USER</code> - On demand backup created by you.</p> </li> <li> <p> <code>SYSTEM</code> - On demand backup automatically created by DynamoDB.</p> </li> </ul>"
-      }
-    },
-    "BackupTypeFilter": {
-      "base": null,
-      "refs": {
-        "ListBackupsInput$BackupType": "<p>The backups from the table specified by BackupType are listed.</p> <p>Where BackupType can be:</p> <ul> <li> <p> <code>USER</code> - On demand backup created by you.</p> </li> <li> <p> <code>SYSTEM</code> - On demand backup automatically created by DynamoDB.</p> </li> <li> <p> <code>ALL</code> - All types of on demand backups (USER and SYSTEM).</p> </li> </ul>"
-      }
-    },
     "BackupsInputLimit": {
       "base": null,
       "refs": {
@@ -352,10 +278,6 @@
     "BooleanObject": {
       "base": null,
       "refs": {
-        "AutoScalingSettingsDescription$AutoScalingDisabled": "<p>Disabled autoscaling for this global table or global secondary index.</p>",
-        "AutoScalingSettingsUpdate$AutoScalingDisabled": "<p>Disabled autoscaling for this global table or global secondary index.</p>",
-        "AutoScalingTargetTrackingScalingPolicyConfigurationDescription$DisableScaleIn": "<p>Indicates whether scale in by the target tracking policy is disabled. If the value is true, scale in is disabled and the target tracking policy won't remove capacity from the scalable resource. Otherwise, scale in is enabled and the target tracking policy can remove capacity from the scalable resource. The default value is false.</p>",
-        "AutoScalingTargetTrackingScalingPolicyConfigurationUpdate$DisableScaleIn": "<p>Indicates whether scale in by the target tracking policy is disabled. If the value is true, scale in is disabled and the target tracking policy won't remove capacity from the scalable resource. Otherwise, scale in is enabled and the target tracking policy can remove capacity from the scalable resource. The default value is false.</p>",
         "ExpectedAttributeValue$Exists": "<p>Causes DynamoDB to evaluate the value before attempting a conditional operation:</p> <ul> <li> <p>If <code>Exists</code> is <code>true</code>, DynamoDB will check to see if that attribute value already exists in the table. If it is found, then the operation succeeds. If it is not found, the operation fails with a <code>ConditionalCheckFailedException</code>.</p> </li> <li> <p>If <code>Exists</code> is <code>false</code>, DynamoDB assumes that the attribute value does not exist in the table. If in fact the value does not exist, then the assumption is valid and the operation succeeds. If the value is found, despite the assumption that it does not exist, the operation fails with a <code>ConditionalCheckFailedException</code>.</p> </li> </ul> <p>The default setting for <code>Exists</code> is <code>true</code>. If you supply a <code>Value</code> all by itself, DynamoDB assumes the attribute exists: You don't have to set <code>Exists</code> to <code>true</code>, because it is implied.</p> <p>DynamoDB returns a <code>ValidationException</code> if:</p> <ul> <li> <p> <code>Exists</code> is <code>true</code> but there is no <code>Value</code> to check. (You expect a value to exist, but don't specify what that value is.)</p> </li> <li> <p> <code>Exists</code> is <code>false</code> but you also provide a <code>Value</code>. (You cannot expect an attribute to have a value, while also expecting it not to exist.)</p> </li> </ul>",
         "PointInTimeRecoverySpecification$PointInTimeRecoveryEnabled": "<p>Indicates whether point in time recovery is enabled (true) or disabled (false) on the table.</p>",
         "QueryInput$ScanIndexForward": "<p>Specifies the order for index traversal: If <code>true</code> (default), the traversal is performed in ascending order; if <code>false</code>, the traversal is performed in descending order. </p> <p>Items with the same partition key value are stored in sorted order by sort key. If the sort key data type is Number, the results are stored in numeric order. For type String, the results are stored in order of UTF-8 bytes. For type Binary, DynamoDB treats each byte of the binary data as unsigned.</p> <p>If <code>ScanIndexForward</code> is <code>true</code>, DynamoDB returns the results in the order in which they are stored (by sort key value). This is the default behavior. If <code>ScanIndexForward</code> is <code>false</code>, DynamoDB reads the results in reverse order by sort key value, and then returns the results to the client.</p>",
@@ -506,8 +428,6 @@
     "Date": {
       "base": null,
       "refs": {
-        "BackupDetails$BackupExpiryDateTime": "<p>Time at which the automatic on demand backup created by DynamoDB will expire. This <code>SYSTEM</code> on demand backup expires automatically 35 days after its creation.</p>",
-        "BackupSummary$BackupExpiryDateTime": "<p>Time at which the automatic on demand backup created by DynamoDB will expire. This <code>SYSTEM</code> on demand backup expires automatically 35 days after its creation.</p>",
         "GlobalTableDescription$CreationDateTime": "<p>The creation time of the global table.</p>",
         "PointInTimeRecoveryDescription$EarliestRestorableDateTime": "<p>Specifies the earliest point in time you can restore your table to. It You can restore your table to any point in time during the last 35 days. </p>",
         "PointInTimeRecoveryDescription$LatestRestorableDateTime": "<p> <code>LatestRestorableDateTime</code> is typically 5 minutes before the current time. </p>",
@@ -634,13 +554,6 @@
     "DescribeTimeToLiveOutput": {
       "base": null,
       "refs": {
-      }
-    },
-    "Double": {
-      "base": null,
-      "refs": {
-        "AutoScalingTargetTrackingScalingPolicyConfigurationDescription$TargetValue": "<p>The target value for the metric. The range is 8.515920e-109 to 1.174271e+108 (Base 10) or 2e-360 to 2e360 (Base 2).</p>",
-        "AutoScalingTargetTrackingScalingPolicyConfigurationUpdate$TargetValue": "<p>The target value for the metric. The range is 8.515920e-109 to 1.174271e+108 (Base 10) or 2e-360 to 2e360 (Base 2).</p>"
       }
     },
     "ErrorMessage": {
@@ -874,15 +787,6 @@
         "QueryOutput$ScannedCount": "<p>The number of items evaluated, before any <code>QueryFilter</code> is applied. A high <code>ScannedCount</code> value with few, or no, <code>Count</code> results indicates an inefficient <code>Query</code> operation. For more information, see <a href=\"http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/QueryAndScan.html#Count\">Count and ScannedCount</a> in the <i>Amazon DynamoDB Developer Guide</i>.</p> <p>If you did not use a filter in the request, then <code>ScannedCount</code> is the same as <code>Count</code>.</p>",
         "ScanOutput$Count": "<p>The number of items in the response.</p> <p>If you set <code>ScanFilter</code> in the request, then <code>Count</code> is the number of items returned after the filter was applied, and <code>ScannedCount</code> is the number of matching items before the filter was applied.</p> <p>If you did not use a filter in the request, then <code>Count</code> is the same as <code>ScannedCount</code>.</p>",
         "ScanOutput$ScannedCount": "<p>The number of items evaluated, before any <code>ScanFilter</code> is applied. A high <code>ScannedCount</code> value with few, or no, <code>Count</code> results indicates an inefficient <code>Scan</code> operation. For more information, see <a href=\"http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/QueryAndScan.html#Count\">Count and ScannedCount</a> in the <i>Amazon DynamoDB Developer Guide</i>.</p> <p>If you did not use a filter in the request, then <code>ScannedCount</code> is the same as <code>Count</code>.</p>"
-      }
-    },
-    "IntegerObject": {
-      "base": null,
-      "refs": {
-        "AutoScalingTargetTrackingScalingPolicyConfigurationDescription$ScaleInCooldown": "<p>The amount of time, in seconds, after a scale in activity completes before another scale in activity can start. The cooldown period is used to block subsequent scale in requests until it has expired. You should scale in conservatively to protect your application's availability. However, if another alarm triggers a scale out policy during the cooldown period after a scale-in, application autoscaling scales out your scalable target immediately. </p>",
-        "AutoScalingTargetTrackingScalingPolicyConfigurationDescription$ScaleOutCooldown": "<p>The amount of time, in seconds, after a scale out activity completes before another scale out activity can start. While the cooldown period is in effect, the capacity that has been added by the previous scale out event that initiated the cooldown is calculated as part of the desired capacity for the next scale out. You should continuously (but not excessively) scale out.</p>",
-        "AutoScalingTargetTrackingScalingPolicyConfigurationUpdate$ScaleInCooldown": "<p>The amount of time, in seconds, after a scale in activity completes before another scale in activity can start. The cooldown period is used to block subsequent scale in requests until it has expired. You should scale in conservatively to protect your application's availability. However, if another alarm triggers a scale out policy during the cooldown period after a scale-in, application autoscaling scales out your scalable target immediately. </p>",
-        "AutoScalingTargetTrackingScalingPolicyConfigurationUpdate$ScaleOutCooldown": "<p>The amount of time, in seconds, after a scale out activity completes before another scale out activity can start. While the cooldown period is in effect, the capacity that has been added by the previous scale out event that initiated the cooldown is calculated as part of the desired capacity for the next scale out. You should continuously (but not excessively) scale out.</p>"
       }
     },
     "InternalServerError": {
@@ -1214,10 +1118,6 @@
     "PositiveLongObject": {
       "base": null,
       "refs": {
-        "AutoScalingSettingsDescription$MinimumUnits": "<p>The minimum capacity units that a global table or global secondary index should be scaled down to.</p>",
-        "AutoScalingSettingsDescription$MaximumUnits": "<p>The maximum capacity units that a global table or global secondary index should be scaled up to.</p>",
-        "AutoScalingSettingsUpdate$MinimumUnits": "<p>The minimum capacity units that a global table or global secondary index should be scaled down to.</p>",
-        "AutoScalingSettingsUpdate$MaximumUnits": "<p>The maximum capacity units that a global table or global secondary index should be scaled up to.</p>",
         "DescribeLimitsOutput$AccountMaxReadCapacityUnits": "<p>The maximum total read capacity units that your account allows you to provision across all of your tables in this region.</p>",
         "DescribeLimitsOutput$AccountMaxWriteCapacityUnits": "<p>The maximum total write capacity units that your account allows you to provision across all of your tables in this region.</p>",
         "DescribeLimitsOutput$TableMaxReadCapacityUnits": "<p>The maximum read capacity units that your account allows you to provision for a new table that you are creating in this region, including the read capacity units provisioned for its global secondary indexes (GSIs).</p>",
@@ -1630,7 +1530,6 @@
     "String": {
       "base": null,
       "refs": {
-        "AutoScalingSettingsDescription$AutoScalingRoleArn": "<p>Role ARN used for configuring autoScaling policy.</p>",
         "GlobalSecondaryIndexDescription$IndexArn": "<p>The Amazon Resource Name (ARN) that uniquely identifies the index.</p>",
         "LocalSecondaryIndexDescription$IndexArn": "<p>The Amazon Resource Name (ARN) that uniquely identifies the index.</p>",
         "TableDescription$TableArn": "<p>The Amazon Resource Name (ARN) that uniquely identifies the table.</p>",

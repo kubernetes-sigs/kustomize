@@ -3574,10 +3574,10 @@ type Channel struct {
 	Arn *string `locationName:"arn" type:"string"`
 
 	// When the channel was created.
-	CreationTime *time.Time `locationName:"creationTime" type:"timestamp"`
+	CreationTime *time.Time `locationName:"creationTime" type:"timestamp" timestampFormat:"unix"`
 
 	// When the channel was last updated.
-	LastUpdateTime *time.Time `locationName:"lastUpdateTime" type:"timestamp"`
+	LastUpdateTime *time.Time `locationName:"lastUpdateTime" type:"timestamp" timestampFormat:"unix"`
 
 	// The name of the channel.
 	Name *string `locationName:"name" min:"1" type:"string"`
@@ -3706,30 +3706,6 @@ func (s *ChannelActivity) SetNext(v string) *ChannelActivity {
 	return s
 }
 
-// Statistics information about the channel.
-type ChannelStatistics struct {
-	_ struct{} `type:"structure"`
-
-	// The estimated size of the channel.
-	Size *EstimatedResourceSize `locationName:"size" type:"structure"`
-}
-
-// String returns the string representation
-func (s ChannelStatistics) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s ChannelStatistics) GoString() string {
-	return s.String()
-}
-
-// SetSize sets the Size field's value.
-func (s *ChannelStatistics) SetSize(v *EstimatedResourceSize) *ChannelStatistics {
-	s.Size = v
-	return s
-}
-
 // A summary of information about a channel.
 type ChannelSummary struct {
 	_ struct{} `type:"structure"`
@@ -3738,10 +3714,10 @@ type ChannelSummary struct {
 	ChannelName *string `locationName:"channelName" min:"1" type:"string"`
 
 	// When the channel was created.
-	CreationTime *time.Time `locationName:"creationTime" type:"timestamp"`
+	CreationTime *time.Time `locationName:"creationTime" type:"timestamp" timestampFormat:"unix"`
 
 	// The last time the channel was updated.
-	LastUpdateTime *time.Time `locationName:"lastUpdateTime" type:"timestamp"`
+	LastUpdateTime *time.Time `locationName:"lastUpdateTime" type:"timestamp" timestampFormat:"unix"`
 
 	// The status of the channel.
 	Status *string `locationName:"status" type:"string" enum:"ChannelStatus"`
@@ -4345,10 +4321,10 @@ type Dataset struct {
 	Arn *string `locationName:"arn" type:"string"`
 
 	// When the data set was created.
-	CreationTime *time.Time `locationName:"creationTime" type:"timestamp"`
+	CreationTime *time.Time `locationName:"creationTime" type:"timestamp" timestampFormat:"unix"`
 
 	// The last time the data set was updated.
-	LastUpdateTime *time.Time `locationName:"lastUpdateTime" type:"timestamp"`
+	LastUpdateTime *time.Time `locationName:"lastUpdateTime" type:"timestamp" timestampFormat:"unix"`
 
 	// The name of the data set.
 	Name *string `locationName:"name" min:"1" type:"string"`
@@ -4536,13 +4512,13 @@ type DatasetSummary struct {
 	_ struct{} `type:"structure"`
 
 	// The time the data set was created.
-	CreationTime *time.Time `locationName:"creationTime" type:"timestamp"`
+	CreationTime *time.Time `locationName:"creationTime" type:"timestamp" timestampFormat:"unix"`
 
 	// The name of the data set.
 	DatasetName *string `locationName:"datasetName" min:"1" type:"string"`
 
 	// The last time the data set was updated.
-	LastUpdateTime *time.Time `locationName:"lastUpdateTime" type:"timestamp"`
+	LastUpdateTime *time.Time `locationName:"lastUpdateTime" type:"timestamp" timestampFormat:"unix"`
 
 	// The status of the data set.
 	Status *string `locationName:"status" type:"string" enum:"DatasetStatus"`
@@ -4614,10 +4590,10 @@ type Datastore struct {
 	Arn *string `locationName:"arn" type:"string"`
 
 	// When the data store was created.
-	CreationTime *time.Time `locationName:"creationTime" type:"timestamp"`
+	CreationTime *time.Time `locationName:"creationTime" type:"timestamp" timestampFormat:"unix"`
 
 	// The last time the data store was updated.
-	LastUpdateTime *time.Time `locationName:"lastUpdateTime" type:"timestamp"`
+	LastUpdateTime *time.Time `locationName:"lastUpdateTime" type:"timestamp" timestampFormat:"unix"`
 
 	// The name of the data store.
 	Name *string `locationName:"name" min:"1" type:"string"`
@@ -4740,42 +4716,18 @@ func (s *DatastoreActivity) SetName(v string) *DatastoreActivity {
 	return s
 }
 
-// Statistics information about the data store.
-type DatastoreStatistics struct {
-	_ struct{} `type:"structure"`
-
-	// The estimated size of the data store.
-	Size *EstimatedResourceSize `locationName:"size" type:"structure"`
-}
-
-// String returns the string representation
-func (s DatastoreStatistics) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s DatastoreStatistics) GoString() string {
-	return s.String()
-}
-
-// SetSize sets the Size field's value.
-func (s *DatastoreStatistics) SetSize(v *EstimatedResourceSize) *DatastoreStatistics {
-	s.Size = v
-	return s
-}
-
 // A summary of information about a data store.
 type DatastoreSummary struct {
 	_ struct{} `type:"structure"`
 
 	// When the data store was created.
-	CreationTime *time.Time `locationName:"creationTime" type:"timestamp"`
+	CreationTime *time.Time `locationName:"creationTime" type:"timestamp" timestampFormat:"unix"`
 
 	// The name of the data store.
 	DatastoreName *string `locationName:"datastoreName" min:"1" type:"string"`
 
 	// The last time the data store was updated.
-	LastUpdateTime *time.Time `locationName:"lastUpdateTime" type:"timestamp"`
+	LastUpdateTime *time.Time `locationName:"lastUpdateTime" type:"timestamp" timestampFormat:"unix"`
 
 	// The status of the data store.
 	Status *string `locationName:"status" type:"string" enum:"DatastoreStatus"`
@@ -5108,9 +5060,6 @@ type DescribeChannelInput struct {
 	//
 	// ChannelName is a required field
 	ChannelName *string `location:"uri" locationName:"channelName" min:"1" type:"string" required:"true"`
-
-	// If true, include statistics about the channel in the response.
-	IncludeStatistics *bool `location:"querystring" locationName:"includeStatistics" type:"boolean"`
 }
 
 // String returns the string representation
@@ -5145,21 +5094,11 @@ func (s *DescribeChannelInput) SetChannelName(v string) *DescribeChannelInput {
 	return s
 }
 
-// SetIncludeStatistics sets the IncludeStatistics field's value.
-func (s *DescribeChannelInput) SetIncludeStatistics(v bool) *DescribeChannelInput {
-	s.IncludeStatistics = &v
-	return s
-}
-
 type DescribeChannelOutput struct {
 	_ struct{} `type:"structure"`
 
 	// An object that contains information about the channel.
 	Channel *Channel `locationName:"channel" type:"structure"`
-
-	// Statistics about the channel. Included if the 'includeStatistics' parameter
-	// is set to true in the request.
-	Statistics *ChannelStatistics `locationName:"statistics" type:"structure"`
 }
 
 // String returns the string representation
@@ -5175,12 +5114,6 @@ func (s DescribeChannelOutput) GoString() string {
 // SetChannel sets the Channel field's value.
 func (s *DescribeChannelOutput) SetChannel(v *Channel) *DescribeChannelOutput {
 	s.Channel = v
-	return s
-}
-
-// SetStatistics sets the Statistics field's value.
-func (s *DescribeChannelOutput) SetStatistics(v *ChannelStatistics) *DescribeChannelOutput {
-	s.Statistics = v
 	return s
 }
 
@@ -5255,9 +5188,6 @@ type DescribeDatastoreInput struct {
 	//
 	// DatastoreName is a required field
 	DatastoreName *string `location:"uri" locationName:"datastoreName" min:"1" type:"string" required:"true"`
-
-	// If true, include statistics about the data store in the response.
-	IncludeStatistics *bool `location:"querystring" locationName:"includeStatistics" type:"boolean"`
 }
 
 // String returns the string representation
@@ -5292,21 +5222,11 @@ func (s *DescribeDatastoreInput) SetDatastoreName(v string) *DescribeDatastoreIn
 	return s
 }
 
-// SetIncludeStatistics sets the IncludeStatistics field's value.
-func (s *DescribeDatastoreInput) SetIncludeStatistics(v bool) *DescribeDatastoreInput {
-	s.IncludeStatistics = &v
-	return s
-}
-
 type DescribeDatastoreOutput struct {
 	_ struct{} `type:"structure"`
 
 	// Information about the data store.
 	Datastore *Datastore `locationName:"datastore" type:"structure"`
-
-	// Statistics about the data store. Included if the 'includeStatistics' parameter
-	// is set to true in the request.
-	Statistics *DatastoreStatistics `locationName:"statistics" type:"structure"`
 }
 
 // String returns the string representation
@@ -5322,12 +5242,6 @@ func (s DescribeDatastoreOutput) GoString() string {
 // SetDatastore sets the Datastore field's value.
 func (s *DescribeDatastoreOutput) SetDatastore(v *Datastore) *DescribeDatastoreOutput {
 	s.Datastore = v
-	return s
-}
-
-// SetStatistics sets the Statistics field's value.
-func (s *DescribeDatastoreOutput) SetStatistics(v *DatastoreStatistics) *DescribeDatastoreOutput {
-	s.Statistics = v
 	return s
 }
 
@@ -5643,39 +5557,6 @@ func (s *DeviceShadowEnrichActivity) SetThingName(v string) *DeviceShadowEnrichA
 	return s
 }
 
-// The estimated size of the resource.
-type EstimatedResourceSize struct {
-	_ struct{} `type:"structure"`
-
-	// The time when the estimate of the size of the resource was made.
-	EstimatedOn *time.Time `locationName:"estimatedOn" type:"timestamp"`
-
-	// The estimated size of the resource in bytes.
-	EstimatedSizeInBytes *float64 `locationName:"estimatedSizeInBytes" type:"double"`
-}
-
-// String returns the string representation
-func (s EstimatedResourceSize) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s EstimatedResourceSize) GoString() string {
-	return s.String()
-}
-
-// SetEstimatedOn sets the EstimatedOn field's value.
-func (s *EstimatedResourceSize) SetEstimatedOn(v time.Time) *EstimatedResourceSize {
-	s.EstimatedOn = &v
-	return s
-}
-
-// SetEstimatedSizeInBytes sets the EstimatedSizeInBytes field's value.
-func (s *EstimatedResourceSize) SetEstimatedSizeInBytes(v float64) *EstimatedResourceSize {
-	s.EstimatedSizeInBytes = &v
-	return s
-}
-
 // An activity that filters a message based on its attributes.
 type FilterActivity struct {
 	_ struct{} `type:"structure"`
@@ -5811,7 +5692,7 @@ type GetDatasetContentOutput struct {
 	Status *DatasetContentStatus `locationName:"status" type:"structure"`
 
 	// The time when the request was made.
-	Timestamp *time.Time `locationName:"timestamp" type:"timestamp"`
+	Timestamp *time.Time `locationName:"timestamp" type:"timestamp" timestampFormat:"unix"`
 }
 
 // String returns the string representation
@@ -6487,9 +6368,7 @@ type Message struct {
 	// MessageId is a required field
 	MessageId *string `locationName:"messageId" min:"1" type:"string" required:"true"`
 
-	// The payload of the message. This may be a JSON string or a Base64-encoded
-	// string representing binary data (in which case you must decode it by means
-	// of a pipeline activity).
+	// The payload of the message.
 	//
 	// Payload is automatically base64 encoded/decoded by the SDK.
 	//
@@ -6549,10 +6428,10 @@ type Pipeline struct {
 	Arn *string `locationName:"arn" type:"string"`
 
 	// When the pipeline was created.
-	CreationTime *time.Time `locationName:"creationTime" type:"timestamp"`
+	CreationTime *time.Time `locationName:"creationTime" type:"timestamp" timestampFormat:"unix"`
 
 	// The last time the pipeline was updated.
-	LastUpdateTime *time.Time `locationName:"lastUpdateTime" type:"timestamp"`
+	LastUpdateTime *time.Time `locationName:"lastUpdateTime" type:"timestamp" timestampFormat:"unix"`
 
 	// The name of the pipeline.
 	Name *string `locationName:"name" min:"1" type:"string"`
@@ -6779,10 +6658,10 @@ type PipelineSummary struct {
 	_ struct{} `type:"structure"`
 
 	// When the pipeline was created.
-	CreationTime *time.Time `locationName:"creationTime" type:"timestamp"`
+	CreationTime *time.Time `locationName:"creationTime" type:"timestamp" timestampFormat:"unix"`
 
 	// When the pipeline was last updated.
-	LastUpdateTime *time.Time `locationName:"lastUpdateTime" type:"timestamp"`
+	LastUpdateTime *time.Time `locationName:"lastUpdateTime" type:"timestamp" timestampFormat:"unix"`
 
 	// The name of the pipeline.
 	PipelineName *string `locationName:"pipelineName" min:"1" type:"string"`
@@ -6958,7 +6837,7 @@ type ReprocessingSummary struct {
 	_ struct{} `type:"structure"`
 
 	// The time the pipeline reprocessing was created.
-	CreationTime *time.Time `locationName:"creationTime" type:"timestamp"`
+	CreationTime *time.Time `locationName:"creationTime" type:"timestamp" timestampFormat:"unix"`
 
 	// The 'reprocessingId' returned by "StartPipelineReprocessing".
 	Id *string `locationName:"id" type:"string"`
@@ -7149,14 +7028,14 @@ type SampleChannelDataInput struct {
 	ChannelName *string `location:"uri" locationName:"channelName" min:"1" type:"string" required:"true"`
 
 	// The end of the time window from which sample messages are retrieved.
-	EndTime *time.Time `location:"querystring" locationName:"endTime" type:"timestamp"`
+	EndTime *time.Time `location:"querystring" locationName:"endTime" type:"timestamp" timestampFormat:"unix"`
 
 	// The number of sample messages to be retrieved. The limit is 10, the default
 	// is also 10.
 	MaxMessages *int64 `location:"querystring" locationName:"maxMessages" min:"1" type:"integer"`
 
 	// The start of the time window from which sample messages are retrieved.
-	StartTime *time.Time `location:"querystring" locationName:"startTime" type:"timestamp"`
+	StartTime *time.Time `location:"querystring" locationName:"startTime" type:"timestamp" timestampFormat:"unix"`
 }
 
 // String returns the string representation
@@ -7377,7 +7256,7 @@ type StartPipelineReprocessingInput struct {
 	_ struct{} `type:"structure"`
 
 	// The end time (exclusive) of raw message data that is reprocessed.
-	EndTime *time.Time `locationName:"endTime" type:"timestamp"`
+	EndTime *time.Time `locationName:"endTime" type:"timestamp" timestampFormat:"unix"`
 
 	// The name of the pipeline on which to start reprocessing.
 	//
@@ -7385,7 +7264,7 @@ type StartPipelineReprocessingInput struct {
 	PipelineName *string `location:"uri" locationName:"pipelineName" min:"1" type:"string" required:"true"`
 
 	// The start time (inclusive) of raw message data that is reprocessed.
-	StartTime *time.Time `locationName:"startTime" type:"timestamp"`
+	StartTime *time.Time `locationName:"startTime" type:"timestamp" timestampFormat:"unix"`
 }
 
 // String returns the string representation

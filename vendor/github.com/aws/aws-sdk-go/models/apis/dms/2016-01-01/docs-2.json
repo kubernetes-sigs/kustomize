@@ -447,14 +447,6 @@
         "ModifyEndpointMessage$SslMode": "<p>The SSL mode to be used.</p> <p>SSL mode can be one of four values: none, require, verify-ca, verify-full. </p> <p>The default value is none.</p>"
       }
     },
-    "DmsTransferSettings": {
-      "base": "<p> The settings in JSON format for the DMS Transfer type source endpoint. </p>",
-      "refs": {
-        "CreateEndpointMessage$DmsTransferSettings": "<p> The settings in JSON format for the DMS Transfer type source endpoint. </p> <p>Attributes include:</p> <ul> <li> <p>serviceAccessRoleArn - The IAM role that has permission to access the Amazon S3 bucket.</p> </li> <li> <p>bucketName - The name of the S3 bucket to use.</p> </li> <li> <p>compressionType - An optional parameter to use GZIP to compress the target files. Set to NONE (the default) or do not use to leave the files uncompressed.</p> </li> </ul> <p>Shorthand syntax: ServiceAccessRoleArn=string ,BucketName=string,CompressionType=string</p> <p>JSON syntax:</p> <p> { \"ServiceAccessRoleArn\": \"string\", \"BucketName\": \"string\", \"CompressionType\": \"none\"|\"gzip\" } </p>",
-        "Endpoint$DmsTransferSettings": "<p> The settings in JSON format for the DMS Transfer type source endpoint. </p> <p>Attributes include:</p> <ul> <li> <p>serviceAccessRoleArn - The IAM role that has permission to access the Amazon S3 bucket.</p> </li> <li> <p>bucketName - The name of the S3 bucket to use.</p> </li> <li> <p>compressionType - An optional parameter to use GZIP to compress the target files. Set to NONE (the default) or do not use to leave the files uncompressed.</p> </li> </ul> <p>Shorthand syntax: ServiceAccessRoleArn=string ,BucketName=string,CompressionType=string</p> <p>JSON syntax:</p> <p> { \"ServiceAccessRoleArn\": \"string\", \"BucketName\": \"string\", \"CompressionType\": \"none\"|\"gzip\" } </p>",
-        "ModifyEndpointMessage$DmsTransferSettings": "<p> The settings in JSON format for the DMS Transfer type source endpoint. </p> <p>Attributes include:</p> <ul> <li> <p>serviceAccessRoleArn - The IAM role that has permission to access the Amazon S3 bucket.</p> </li> <li> <p>BucketName - The name of the S3 bucket to use.</p> </li> <li> <p>compressionType - An optional parameter to use GZIP to compress the target files. Set to NONE (the default) or do not use to leave the files uncompressed.</p> </li> </ul> <p>Shorthand syntax: ServiceAccessRoleArn=string ,BucketName=string,CompressionType=string</p> <p>JSON syntax:</p> <p> { \"ServiceAccessRoleArn\": \"string\", \"BucketName\": \"string\", \"CompressionType\": \"none\"|\"gzip\" } </p>"
-      }
-    },
     "DynamoDbSettings": {
       "base": "<p/>",
       "refs": {
@@ -750,7 +742,7 @@
     "MongoDbSettings": {
       "base": "<p/>",
       "refs": {
-        "CreateEndpointMessage$MongoDbSettings": "<p>Settings in JSON format for the source MongoDB endpoint. For more information about the available settings, see the <b>Configuration Properties When Using MongoDB as a Source for AWS Database Migration Service</b> section at <a href=\"http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html\"> Using MongoDB as a Target for AWS Database Migration Service</a>. </p>",
+        "CreateEndpointMessage$MongoDbSettings": "<p>Settings in JSON format for the source MongoDB endpoint. For more information about the available settings, see the <b>Configuration Properties When Using MongoDB as a Source for AWS Database Migration Service</b> section at <a href=\"http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html\"> Using Amazon S3 as a Target for AWS Database Migration Service</a>. </p>",
         "Endpoint$MongoDbSettings": "<p>The settings for the MongoDB source endpoint. For more information, see the <code>MongoDbSettings</code> structure.</p>",
         "ModifyEndpointMessage$MongoDbSettings": "<p>Settings in JSON format for the source MongoDB endpoint. For more information about the available settings, see the <b>Configuration Properties When Using MongoDB as a Source for AWS Database Migration Service</b> section at <a href=\"http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html\"> Using Amazon S3 as a Target for AWS Database Migration Service</a>. </p>"
       }
@@ -804,12 +796,6 @@
       "base": null,
       "refs": {
         "RefreshSchemasStatus$Status": "<p>The status of the schema.</p>"
-      }
-    },
-    "ReloadOptionValue": {
-      "base": null,
-      "refs": {
-        "ReloadTablesMessage$ReloadOption": "<p>Options for reload. Specify <code>data-reload</code> to reload the data and re-validate it if validation is enabled. Specify <code>validate-only</code> to re-validate the table. This option applies only when validation is enabled for the task. </p> <p>Valid values: data-reload, validate-only</p> <p>Default value is data-reload.</p>"
       }
     },
     "ReloadTablesMessage": {
@@ -1137,8 +1123,6 @@
         "DescribeTableStatisticsMessage$Marker": "<p> An optional pagination token provided by a previous request. If this parameter is specified, the response includes only records beyond the marker, up to the value specified by <code>MaxRecords</code>. </p>",
         "DescribeTableStatisticsResponse$ReplicationTaskArn": "<p>The Amazon Resource Name (ARN) of the replication task.</p>",
         "DescribeTableStatisticsResponse$Marker": "<p> An optional pagination token provided by a previous request. If this parameter is specified, the response includes only records beyond the marker, up to the value specified by <code>MaxRecords</code>. </p>",
-        "DmsTransferSettings$ServiceAccessRoleArn": "<p> The IAM role that has permission to access the Amazon S3 bucket. </p>",
-        "DmsTransferSettings$BucketName": "<p> The name of the S3 bucket to use. </p>",
         "DynamoDbSettings$ServiceAccessRoleArn": "<p> The Amazon Resource Name (ARN) used by the service access IAM role. </p>",
         "Endpoint$EndpointIdentifier": "<p>The database endpoint identifier. Identifiers must begin with a letter; must contain only ASCII letters, digits, and hyphens; and must not end with a hyphen or contain two consecutive hyphens.</p>",
         "Endpoint$EngineName": "<p>The database engine name. Valid values, depending on the EndPointType, include mysql, oracle, postgres, mariadb, aurora, aurora-postgresql, redshift, s3, db2, azuredb, sybase, sybase, dynamodb, mongodb, and sqlserver.</p>",
@@ -1212,7 +1196,7 @@
         "RefreshSchemasStatus$EndpointArn": "<p>The Amazon Resource Name (ARN) string that uniquely identifies the endpoint.</p>",
         "RefreshSchemasStatus$ReplicationInstanceArn": "<p>The Amazon Resource Name (ARN) of the replication instance.</p>",
         "RefreshSchemasStatus$LastFailureMessage": "<p>The last failure message for the schema.</p>",
-        "ReloadTablesMessage$ReplicationTaskArn": "<p>The Amazon Resource Name (ARN) of the replication task. </p>",
+        "ReloadTablesMessage$ReplicationTaskArn": "<p>The Amazon Resource Name (ARN) of the replication instance. </p>",
         "ReloadTablesResponse$ReplicationTaskArn": "<p>The Amazon Resource Name (ARN) of the replication task. </p>",
         "RemoveTagsFromResourceMessage$ResourceArn": "<p>&gt;The Amazon Resource Name (ARN) of the AWS DMS resource the tag is to be removed from.</p>",
         "ReplicationInstance$ReplicationInstanceIdentifier": "<p>The replication instance identifier. This parameter is stored as a lowercase string.</p> <p>Constraints:</p> <ul> <li> <p>Must contain from 1 to 63 alphanumeric characters or hyphens.</p> </li> <li> <p>First character must be a letter.</p> </li> <li> <p>Cannot end with a hyphen or contain two consecutive hyphens.</p> </li> </ul> <p>Example: <code>myrepinstance</code> </p>",
@@ -1236,7 +1220,7 @@
         "ReplicationSubnetGroup$ReplicationSubnetGroupDescription": "<p>The description of the replication subnet group.</p>",
         "ReplicationSubnetGroup$VpcId": "<p>The ID of the VPC.</p>",
         "ReplicationSubnetGroup$SubnetGroupStatus": "<p>The status of the subnet group.</p>",
-        "ReplicationTask$ReplicationTaskIdentifier": "<p>The user-assigned replication task identifier or name.</p> <p>Constraints:</p> <ul> <li> <p>Must contain from 1 to 255 alphanumeric characters or hyphens.</p> </li> <li> <p>First character must be a letter.</p> </li> <li> <p>Cannot end with a hyphen or contain two consecutive hyphens.</p> </li> </ul>",
+        "ReplicationTask$ReplicationTaskIdentifier": "<p>The replication task identifier.</p> <p>Constraints:</p> <ul> <li> <p>Must contain from 1 to 255 alphanumeric characters or hyphens.</p> </li> <li> <p>First character must be a letter.</p> </li> <li> <p>Cannot end with a hyphen or contain two consecutive hyphens.</p> </li> </ul>",
         "ReplicationTask$SourceEndpointArn": "<p>The Amazon Resource Name (ARN) string that uniquely identifies the endpoint.</p>",
         "ReplicationTask$TargetEndpointArn": "<p>The Amazon Resource Name (ARN) string that uniquely identifies the endpoint.</p>",
         "ReplicationTask$ReplicationInstanceArn": "<p>The Amazon Resource Name (ARN) of the replication instance.</p>",
@@ -1277,7 +1261,6 @@
         "TableStatistics$TableName": "<p>The name of the table.</p>",
         "TableStatistics$TableState": "<p>The state of the tables described.</p> <p>Valid states: Table does not exist | Before load | Full load | Table completed | Table cancelled | Table error | Table all | Table updates | Table is being reloaded</p>",
         "TableStatistics$ValidationState": "<p>The validation state of the table.</p> <p>The parameter can have the following values</p> <ul> <li> <p>Not enabled—Validation is not enabled for the table in the migration task.</p> </li> <li> <p>Pending records—Some records in the table are waiting for validation.</p> </li> <li> <p>Mismatched records—Some records in the table do not match between the source and target.</p> </li> <li> <p>Suspended records—Some records in the table could not be validated.</p> </li> <li> <p>No primary key—The table could not be validated because it had no primary key.</p> </li> <li> <p>Table error—The table was not validated because it was in an error state and some data was not migrated.</p> </li> <li> <p>Validated—All rows in the table were validated. If the table is updated, the status can change from Validated.</p> </li> <li> <p>Error—The table could not be validated because of an unexpected error.</p> </li> </ul>",
-        "TableStatistics$ValidationStateDetails": "<p>Additional details about the state of validation.</p>",
         "TableToReload$SchemaName": "<p>The schema name of the table to be reloaded.</p>",
         "TableToReload$TableName": "<p>The table name of the table to be reloaded.</p>",
         "Tag$Key": "<p>A key is the required name of the tag. The string value can be from 1 to 128 Unicode characters in length and cannot be prefixed with \"aws:\" or \"dms:\". The string can only contain only the set of Unicode letters, digits, white-space, '_', '.', '/', '=', '+', '-' (Java regex: \"^([\\\\p{L}\\\\p{Z}\\\\p{N}_.:/=+\\\\-]*)$\").</p>",
@@ -1331,18 +1314,18 @@
         "Certificate$CertificateCreationDate": "<p>The date that the certificate was created.</p>",
         "Certificate$ValidFromDate": "<p>The beginning date that the certificate is valid.</p>",
         "Certificate$ValidToDate": "<p>The final date that the certificate is valid.</p>",
-        "CreateReplicationTaskMessage$CdcStartTime": "<p>Indicates the start time for a change data capture (CDC) operation. Use either CdcStartTime or CdcStartPosition to specify when you want a CDC operation to start. Specifying both values results in an error.</p> <p>Timestamp Example: --cdc-start-time “2018-03-08T12:12:12”</p>",
+        "CreateReplicationTaskMessage$CdcStartTime": "<p>Indicates the start time for a change data capture (CDC) operation. Use either CdcStartTime or CdcStartPosition to specify when you want a CDC operation to start. Specifying both values results in an error.</p>",
         "DescribeEventsMessage$StartTime": "<p>The start time for the events to be listed.</p>",
         "DescribeEventsMessage$EndTime": "<p>The end time for the events to be listed.</p>",
         "Event$Date": "<p>The date of the event.</p>",
-        "ModifyReplicationTaskMessage$CdcStartTime": "<p>Indicates the start time for a change data capture (CDC) operation. Use either CdcStartTime or CdcStartPosition to specify when you want a CDC operation to start. Specifying both values results in an error.</p> <p>Timestamp Example: --cdc-start-time “2018-03-08T12:12:12”</p>",
+        "ModifyReplicationTaskMessage$CdcStartTime": "<p>Indicates the start time for a change data capture (CDC) operation. Use either CdcStartTime or CdcStartPosition to specify when you want a CDC operation to start. Specifying both values results in an error.</p>",
         "RefreshSchemasStatus$LastRefreshDate": "<p>The date the schema was last refreshed.</p>",
         "ReplicationInstance$InstanceCreateTime": "<p>The time the replication instance was created.</p>",
         "ReplicationInstance$FreeUntil": "<p> The expiration date of the free replication instance that is part of the Free DMS program. </p>",
         "ReplicationTask$ReplicationTaskCreationDate": "<p>The date the replication task was created.</p>",
         "ReplicationTask$ReplicationTaskStartDate": "<p>The date the replication task is scheduled to start.</p>",
         "ReplicationTaskAssessmentResult$ReplicationTaskLastAssessmentDate": "<p>The date the task assessment was completed. </p>",
-        "StartReplicationTaskMessage$CdcStartTime": "<p>Indicates the start time for a change data capture (CDC) operation. Use either CdcStartTime or CdcStartPosition to specify when you want a CDC operation to start. Specifying both values results in an error.</p> <p>Timestamp Example: --cdc-start-time “2018-03-08T12:12:12”</p>",
+        "StartReplicationTaskMessage$CdcStartTime": "<p>Indicates the start time for a change data capture (CDC) operation. Use either CdcStartTime or CdcStartPosition to specify when you want a CDC operation to start. Specifying both values results in an error.</p>",
         "TableStatistics$LastUpdateTime": "<p>The last time the table was updated.</p>"
       }
     },

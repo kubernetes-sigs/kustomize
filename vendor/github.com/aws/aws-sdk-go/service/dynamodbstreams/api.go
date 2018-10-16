@@ -1095,7 +1095,7 @@ type StreamDescription struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time when the request to create this stream was issued.
-	CreationRequestDateTime *time.Time `type:"timestamp"`
+	CreationRequestDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The key attribute(s) of the stream's DynamoDB table.
 	KeySchema []*dynamodb.KeySchemaElement `min:"1" type:"list"`
@@ -1233,7 +1233,7 @@ type StreamRecord struct {
 
 	// The approximate date and time when the stream record was created, in UNIX
 	// epoch time (http://www.epochconverter.com/) format.
-	ApproximateCreationDateTime *time.Time `type:"timestamp"`
+	ApproximateCreationDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The primary key attribute(s) for the DynamoDB item that was modified.
 	Keys map[string]*dynamodb.AttributeValue `type:"map"`

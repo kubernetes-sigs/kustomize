@@ -5477,7 +5477,7 @@ type OptionStatus struct {
 	// A timestamp for when this option was created.
 	//
 	// CreationDate is a required field
-	CreationDate *time.Time `type:"timestamp" required:"true"`
+	CreationDate *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
 
 	// Indicates that the option will be deleted once processing is complete.
 	PendingDeletion *bool `type:"boolean"`
@@ -5499,7 +5499,7 @@ type OptionStatus struct {
 	// A timestamp for when this option was last updated.
 	//
 	// UpdateDate is a required field
-	UpdateDate *time.Time `type:"timestamp" required:"true"`
+	UpdateDate *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
 
 	// A unique integer that indicates when this option was last updated.
 	UpdateVersion *int64 `type:"integer"`

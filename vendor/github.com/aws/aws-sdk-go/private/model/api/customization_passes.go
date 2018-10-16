@@ -54,8 +54,8 @@ func s3Customizations(a *API) {
 	var strExpires *Shape
 
 	var keepContentMD5Ref = map[string]struct{}{
-		"PutObjectInput":  {},
-		"UploadPartInput": {},
+		"PutObjectInput":  struct{}{},
+		"UploadPartInput": struct{}{},
 	}
 
 	for name, s := range a.Shapes {

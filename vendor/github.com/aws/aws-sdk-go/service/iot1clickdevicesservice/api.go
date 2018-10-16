@@ -1424,14 +1424,14 @@ type ListDeviceEventsInput struct {
 	DeviceId *string `location:"uri" locationName:"deviceId" type:"string" required:"true"`
 
 	// FromTimeStamp is a required field
-	FromTimeStamp *time.Time `location:"querystring" locationName:"fromTimeStamp" type:"timestamp" timestampFormat:"iso8601" required:"true"`
+	FromTimeStamp *time.Time `location:"querystring" locationName:"fromTimeStamp" type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
 
 	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
 
 	// ToTimeStamp is a required field
-	ToTimeStamp *time.Time `location:"querystring" locationName:"toTimeStamp" type:"timestamp" timestampFormat:"iso8601" required:"true"`
+	ToTimeStamp *time.Time `location:"querystring" locationName:"toTimeStamp" type:"timestamp" timestampFormat:"unix" required:"true"`
 }
 
 // String returns the string representation

@@ -10780,7 +10780,7 @@ type MessageDsn struct {
 
 	// When the message was received by the reporting mail transfer agent (MTA),
 	// in RFC 822 (https://www.ietf.org/rfc/rfc0822.txt) date-time format.
-	ArrivalDate *time.Time `type:"timestamp"`
+	ArrivalDate *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
 	// Additional X-headers to include in the DSN.
 	ExtensionFields []*ExtensionField `type:"list"`
@@ -11463,7 +11463,7 @@ type ReceiptRuleSetMetadata struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time the receipt rule set was created.
-	CreatedTimestamp *time.Time `type:"timestamp"`
+	CreatedTimestamp *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
 	// The name of the receipt rule set. The name must:
 	//
@@ -11533,7 +11533,7 @@ type RecipientDsnFields struct {
 
 	// The time the final delivery attempt was made, in RFC 822 (https://www.ietf.org/rfc/rfc0822.txt)
 	// date-time format.
-	LastAttemptDate *time.Time `type:"timestamp"`
+	LastAttemptDate *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
 	// The MTA to which the remote MTA attempted to deliver the message, formatted
 	// as specified in RFC 3464 (https://tools.ietf.org/html/rfc3464) (mta-name-type;
@@ -11710,7 +11710,7 @@ type ReputationOptions struct {
 	//
 	// If email sending for the configuration set has never been disabled and later
 	// re-enabled, the value of this attribute is null.
-	LastFreshStart *time.Time `type:"timestamp"`
+	LastFreshStart *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
 	// Describes whether or not Amazon SES publishes reputation metrics for the
 	// configuration set, such as bounce and complaint rates, to Amazon CloudWatch.
@@ -12473,7 +12473,7 @@ type SendDataPoint struct {
 	Rejects *int64 `type:"long"`
 
 	// Time of the data point.
-	Timestamp *time.Time `type:"timestamp"`
+	Timestamp *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 }
 
 // String returns the string representation
@@ -13839,7 +13839,7 @@ type TemplateMetadata struct {
 	_ struct{} `type:"structure"`
 
 	// The time and date the template was created.
-	CreatedTimestamp *time.Time `type:"timestamp"`
+	CreatedTimestamp *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
 	// The name of the template.
 	Name *string `type:"string"`

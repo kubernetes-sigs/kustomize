@@ -1972,7 +1972,7 @@ type PolicyComplianceDetail struct {
 
 	// A time stamp that indicates when the returned information should be considered
 	// out-of-date.
-	ExpiredAt *time.Time `type:"timestamp"`
+	ExpiredAt *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The AWS account ID.
 	MemberAccount *string `min:"1" type:"string"`
@@ -2043,7 +2043,7 @@ type PolicyComplianceStatus struct {
 	EvaluationResults []*EvaluationResult `type:"list"`
 
 	// Time stamp of the last update to the EvaluationResult objects.
-	LastUpdated *time.Time `type:"timestamp"`
+	LastUpdated *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The member account ID.
 	MemberAccount *string `min:"1" type:"string"`

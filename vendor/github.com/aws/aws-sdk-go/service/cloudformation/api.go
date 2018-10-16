@@ -4056,7 +4056,7 @@ type ChangeSetSummary struct {
 	ChangeSetName *string `min:"1" type:"string"`
 
 	// The start time when the change set was created, in UTC.
-	CreationTime *time.Time `type:"timestamp"`
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
 	// Descriptive information about the change set.
 	Description *string `min:"1" type:"string"`
@@ -5911,7 +5911,7 @@ type DescribeChangeSetOutput struct {
 	Changes []*Change `type:"list"`
 
 	// The start time when the change set was created, in UTC.
-	CreationTime *time.Time `type:"timestamp"`
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
 	// Information about the change set.
 	Description *string `min:"1" type:"string"`
@@ -8922,10 +8922,10 @@ type Stack struct {
 	// The time at which the stack was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" required:"true"`
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
 
 	// The time the stack was deleted.
-	DeletionTime *time.Time `type:"timestamp"`
+	DeletionTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
 	// A user-defined description associated with the stack.
 	Description *string `min:"1" type:"string"`
@@ -8948,7 +8948,7 @@ type Stack struct {
 
 	// The time the stack was last updated. This field will only be returned if
 	// the stack has been updated at least once.
-	LastUpdatedTime *time.Time `type:"timestamp"`
+	LastUpdatedTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
 	// SNS topic ARNs to which stack related events are published.
 	NotificationARNs []*string `type:"list"`
@@ -9199,7 +9199,7 @@ type StackEvent struct {
 	// Time the status was updated.
 	//
 	// Timestamp is a required field
-	Timestamp *time.Time `type:"timestamp" required:"true"`
+	Timestamp *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
 }
 
 // String returns the string representation
@@ -9509,7 +9509,7 @@ type StackResource struct {
 	// Time the status was updated.
 	//
 	// Timestamp is a required field
-	Timestamp *time.Time `type:"timestamp" required:"true"`
+	Timestamp *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
 }
 
 // String returns the string representation
@@ -9586,7 +9586,7 @@ type StackResourceDetail struct {
 	// Time the status was updated.
 	//
 	// LastUpdatedTimestamp is a required field
-	LastUpdatedTimestamp *time.Time `type:"timestamp" required:"true"`
+	LastUpdatedTimestamp *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
 
 	// The logical name of the resource specified in the template.
 	//
@@ -9701,7 +9701,7 @@ type StackResourceSummary struct {
 	// Time the status was updated.
 	//
 	// LastUpdatedTimestamp is a required field
-	LastUpdatedTimestamp *time.Time `type:"timestamp" required:"true"`
+	LastUpdatedTimestamp *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
 
 	// The logical name of the resource specified in the template.
 	//
@@ -9931,12 +9931,12 @@ type StackSetOperation struct {
 	// stacks themselves. This is because AWS CloudFormation needs to perform preparatory
 	// work for the operation, such as dispatching the work to the requested regions,
 	// before actually creating the first stacks.
-	CreationTimestamp *time.Time `type:"timestamp"`
+	CreationTimestamp *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
 	// The time at which the stack set operation ended, across all accounts and
 	// regions specified. Note that this doesn't necessarily mean that the stack
 	// set operation was successful, or even attempted, in each account or region.
-	EndTimestamp *time.Time `type:"timestamp"`
+	EndTimestamp *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
 	// The name of the IAM execution role used to create or update the stack set.
 	//
@@ -10265,12 +10265,12 @@ type StackSetOperationSummary struct {
 	// stacks themselves. This is because AWS CloudFormation needs to perform preparatory
 	// work for the operation, such as dispatching the work to the requested regions,
 	// before actually creating the first stacks.
-	CreationTimestamp *time.Time `type:"timestamp"`
+	CreationTimestamp *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
 	// The time at which the stack set operation ended, across all accounts and
 	// regions specified. Note that this doesn't necessarily mean that the stack
 	// set operation was successful, or even attempted, in each account or region.
-	EndTimestamp *time.Time `type:"timestamp"`
+	EndTimestamp *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
 	// The unique ID of the stack set operation.
 	OperationId *string `min:"1" type:"string"`
@@ -10397,14 +10397,14 @@ type StackSummary struct {
 	// The time the stack was created.
 	//
 	// CreationTime is a required field
-	CreationTime *time.Time `type:"timestamp" required:"true"`
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
 
 	// The time the stack was deleted.
-	DeletionTime *time.Time `type:"timestamp"`
+	DeletionTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
 	// The time the stack was last updated. This field will only be returned if
 	// the stack has been updated at least once.
-	LastUpdatedTime *time.Time `type:"timestamp"`
+	LastUpdatedTime *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
 	// For nested stacks--stacks created as resources for another stack--the stack
 	// ID of the direct parent of this stack. For the first level of nested stacks,
