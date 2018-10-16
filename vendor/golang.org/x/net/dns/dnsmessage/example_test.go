@@ -37,20 +37,20 @@ func ExampleParser() {
 		},
 		Answers: []dnsmessage.Resource{
 			{
-				Header: dnsmessage.ResourceHeader{
+				dnsmessage.ResourceHeader{
 					Name:  mustNewName("foo.bar.example.com."),
 					Type:  dnsmessage.TypeA,
 					Class: dnsmessage.ClassINET,
 				},
-				Body: &dnsmessage.AResource{A: [4]byte{127, 0, 0, 1}},
+				&dnsmessage.AResource{[4]byte{127, 0, 0, 1}},
 			},
 			{
-				Header: dnsmessage.ResourceHeader{
+				dnsmessage.ResourceHeader{
 					Name:  mustNewName("bar.example.com."),
 					Type:  dnsmessage.TypeA,
 					Class: dnsmessage.ClassINET,
 				},
-				Body: &dnsmessage.AResource{A: [4]byte{127, 0, 0, 2}},
+				&dnsmessage.AResource{[4]byte{127, 0, 0, 2}},
 			},
 		},
 	}
