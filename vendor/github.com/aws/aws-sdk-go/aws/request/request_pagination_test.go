@@ -474,33 +474,33 @@ func TestPagination_Standalone(t *testing.T) {
 	cases := []testCaseList{
 		{
 			Cases: []testCase{
-				{aws.String("FirstValue"), aws.String("InitalToken"), aws.String("FirstToken")},
-				{aws.String("SecondValue"), aws.String("FirstToken"), aws.String("SecondToken")},
-				{aws.String("ThirdValue"), aws.String("SecondToken"), nil},
+				testCase{aws.String("FirstValue"), aws.String("InitalToken"), aws.String("FirstToken")},
+				testCase{aws.String("SecondValue"), aws.String("FirstToken"), aws.String("SecondToken")},
+				testCase{aws.String("ThirdValue"), aws.String("SecondToken"), nil},
 			},
 			StopOnSameToken: false,
 		},
 		{
 			Cases: []testCase{
-				{aws.String("FirstValue"), aws.String("InitalToken"), aws.String("FirstToken")},
-				{aws.String("SecondValue"), aws.String("FirstToken"), aws.String("SecondToken")},
-				{aws.String("ThirdValue"), aws.String("SecondToken"), aws.String("")},
+				testCase{aws.String("FirstValue"), aws.String("InitalToken"), aws.String("FirstToken")},
+				testCase{aws.String("SecondValue"), aws.String("FirstToken"), aws.String("SecondToken")},
+				testCase{aws.String("ThirdValue"), aws.String("SecondToken"), aws.String("")},
 			},
 			StopOnSameToken: false,
 		},
 		{
 			Cases: []testCase{
-				{aws.String("FirstValue"), aws.String("InitalToken"), aws.String("FirstToken")},
-				{aws.String("SecondValue"), aws.String("FirstToken"), aws.String("SecondToken")},
-				{nil, aws.String("SecondToken"), aws.String("SecondToken")},
+				testCase{aws.String("FirstValue"), aws.String("InitalToken"), aws.String("FirstToken")},
+				testCase{aws.String("SecondValue"), aws.String("FirstToken"), aws.String("SecondToken")},
+				testCase{nil, aws.String("SecondToken"), aws.String("SecondToken")},
 			},
 			StopOnSameToken: true,
 		},
 		{
 			Cases: []testCase{
-				{aws.String("FirstValue"), aws.String("InitalToken"), aws.String("FirstToken")},
-				{aws.String("SecondValue"), aws.String("FirstToken"), aws.String("SecondToken")},
-				{aws.String("SecondValue"), aws.String("SecondToken"), aws.String("SecondToken")},
+				testCase{aws.String("FirstValue"), aws.String("InitalToken"), aws.String("FirstToken")},
+				testCase{aws.String("SecondValue"), aws.String("FirstToken"), aws.String("SecondToken")},
+				testCase{aws.String("SecondValue"), aws.String("SecondToken"), aws.String("SecondToken")},
 			},
 			StopOnSameToken: true,
 		},

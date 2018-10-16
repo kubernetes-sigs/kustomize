@@ -165,12 +165,6 @@
         "UpdateChannelRequest$channelName": "<p>The name of the channel to be updated.</p>"
       }
     },
-    "ChannelStatistics": {
-      "base": "<p>Statistics information about the channel.</p>",
-      "refs": {
-        "DescribeChannelResponse$statistics": "<p>Statistics about the channel. Included if the 'includeStatistics' parameter is set to true in the request.</p>"
-      }
-    },
     "ChannelStatus": {
       "base": null,
       "refs": {
@@ -379,12 +373,6 @@
         "UpdateDatastoreRequest$datastoreName": "<p>The name of the data store to be updated.</p>"
       }
     },
-    "DatastoreStatistics": {
-      "base": "<p>Statistics information about the data store.</p>",
-      "refs": {
-        "DescribeDatastoreResponse$statistics": "<p>Statistics about the data store. Included if the 'includeStatistics' parameter is set to true in the request.</p>"
-      }
-    },
     "DatastoreStatus": {
       "base": null,
       "refs": {
@@ -516,13 +504,6 @@
         "BatchPutMessageErrorEntry$errorMessage": "<p>The message associated with the error.</p>"
       }
     },
-    "EstimatedResourceSize": {
-      "base": "<p>The estimated size of the resource.</p>",
-      "refs": {
-        "ChannelStatistics$size": "<p>The estimated size of the channel.</p>",
-        "DatastoreStatistics$size": "<p>The estimated size of the data store.</p>"
-      }
-    },
     "FilterActivity": {
       "base": "<p>An activity that filters a message based on its attributes.</p>",
       "refs": {
@@ -543,13 +524,6 @@
     "GetDatasetContentResponse": {
       "base": null,
       "refs": {
-      }
-    },
-    "IncludeStatisticsFlag": {
-      "base": null,
-      "refs": {
-        "DescribeChannelRequest$includeStatistics": "<p>If true, include statistics about the channel in the response.</p>",
-        "DescribeDatastoreRequest$includeStatistics": "<p>If true, include statistics about the data store in the response.</p>"
       }
     },
     "InternalFailureException": {
@@ -697,7 +671,7 @@
     "MessagePayload": {
       "base": null,
       "refs": {
-        "Message$payload": "<p>The payload of the message. This may be a JSON string or a Base64-encoded string representing binary data (in which case you must decode it by means of a pipeline activity).</p>",
+        "Message$payload": "<p>The payload of the message.</p>",
         "MessagePayloads$member": null
       }
     },
@@ -920,12 +894,6 @@
       "refs": {
       }
     },
-    "SizeInBytes": {
-      "base": null,
-      "refs": {
-        "EstimatedResourceSize$estimatedSizeInBytes": "<p>The estimated size of the resource in bytes.</p>"
-      }
-    },
     "SqlQuery": {
       "base": null,
       "refs": {
@@ -1021,7 +989,6 @@
         "Datastore$lastUpdateTime": "<p>The last time the data store was updated.</p>",
         "DatastoreSummary$creationTime": "<p>When the data store was created.</p>",
         "DatastoreSummary$lastUpdateTime": "<p>The last time the data store was updated.</p>",
-        "EstimatedResourceSize$estimatedOn": "<p>The time when the estimate of the size of the resource was made.</p>",
         "GetDatasetContentResponse$timestamp": "<p>The time when the request was made.</p>",
         "Pipeline$creationTime": "<p>When the pipeline was created.</p>",
         "Pipeline$lastUpdateTime": "<p>The last time the pipeline was updated.</p>",

@@ -1773,13 +1773,6 @@ type DashPackage struct {
 	// Streaming over HTTP (DASH) Media Presentation Description (MPD).
 	MinUpdatePeriodSeconds *int64 `locationName:"minUpdatePeriodSeconds" type:"integer"`
 
-	// A list of triggers that controls when the outgoing Dynamic Adaptive Streaming
-	// over HTTP (DASH)Media Presentation Description (MPD) will be partitioned
-	// into multiple periods. If empty, the content will notbe partitioned into
-	// more than one period. If the list contains "ADS", new periods will be created
-	// wherethe Channel source contains SCTE-35 ad markers.
-	PeriodTriggers []*string `locationName:"periodTriggers" type:"list"`
-
 	// The Dynamic Adaptive Streaming over HTTP (DASH) profile type. When set to
 	// "HBBTV_1_5", HbbTV 1.5 compliant output is enabled.
 	Profile *string `locationName:"profile" type:"string" enum:"Profile"`
@@ -1841,12 +1834,6 @@ func (s *DashPackage) SetMinBufferTimeSeconds(v int64) *DashPackage {
 // SetMinUpdatePeriodSeconds sets the MinUpdatePeriodSeconds field's value.
 func (s *DashPackage) SetMinUpdatePeriodSeconds(v int64) *DashPackage {
 	s.MinUpdatePeriodSeconds = &v
-	return s
-}
-
-// SetPeriodTriggers sets the PeriodTriggers field's value.
-func (s *DashPackage) SetPeriodTriggers(v []*string) *DashPackage {
-	s.PeriodTriggers = v
 	return s
 }
 
@@ -3699,9 +3686,4 @@ const (
 
 	// StreamOrderVideoBitrateDescending is a StreamOrder enum value
 	StreamOrderVideoBitrateDescending = "VIDEO_BITRATE_DESCENDING"
-)
-
-const (
-	// __PeriodTriggersElementAds is a __PeriodTriggersElement enum value
-	__PeriodTriggersElementAds = "ADS"
 )

@@ -108,10 +108,6 @@ const (
 	// You have attempted to exceed the maximum number of parameter groups.
 	ErrCodeParameterGroupQuotaExceededFault = "ParameterGroupQuotaExceededFault"
 
-	// ErrCodeServiceLinkedRoleNotFoundFault for service response error code
-	// "ServiceLinkedRoleNotFoundFault".
-	ErrCodeServiceLinkedRoleNotFoundFault = "ServiceLinkedRoleNotFoundFault"
-
 	// ErrCodeSubnetGroupAlreadyExistsFault for service response error code
 	// "SubnetGroupAlreadyExistsFault".
 	//

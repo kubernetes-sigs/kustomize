@@ -8597,14 +8597,14 @@ type Alias struct {
 
 	// Time stamp indicating when this data object was created. Format is a number
 	// expressed in Unix time as milliseconds (for example "1469498468.057").
-	CreationTime *time.Time `type:"timestamp"`
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Human-readable description of an alias.
 	Description *string `type:"string"`
 
 	// Time stamp indicating when this data object was last modified. Format is
 	// a number expressed in Unix time as milliseconds (for example "1469498468.057").
-	LastUpdatedTime *time.Time `type:"timestamp"`
+	LastUpdatedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Descriptive label that is associated with an alias. Alias names do not need
 	// to be unique.
@@ -8802,7 +8802,7 @@ type Build struct {
 
 	// Time stamp indicating when this data object was created. Format is a number
 	// expressed in Unix time as milliseconds (for example "1469498468.057").
-	CreationTime *time.Time `type:"timestamp"`
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Descriptive label that is associated with a build. Build names do not need
 	// to be unique. It can be set using CreateBuild or UpdateBuild.
@@ -11276,7 +11276,7 @@ type DescribeFleetEventsInput struct {
 	// Most recent date to retrieve event logs for. If no end time is specified,
 	// this call returns entries from the specified start time up to the present.
 	// Format is a number expressed in Unix time as milliseconds (ex: "1469498468.057").
-	EndTime *time.Time `type:"timestamp"`
+	EndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Unique identifier for a fleet to get event logs for.
 	//
@@ -11296,7 +11296,7 @@ type DescribeFleetEventsInput struct {
 	// this call returns entries starting from when the fleet was created to the
 	// specified end time. Format is a number expressed in Unix time as milliseconds
 	// (ex: "1469498468.057").
-	StartTime *time.Time `type:"timestamp"`
+	StartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 }
 
 // String returns the string representation
@@ -13131,7 +13131,7 @@ type Event struct {
 
 	// Time stamp indicating when this event occurred. Format is a number expressed
 	// in Unix time as milliseconds (for example "1469498468.057").
-	EventTime *time.Time `type:"timestamp"`
+	EventTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Additional information related to the event.
 	Message *string `min:"1" type:"string"`
@@ -13240,7 +13240,7 @@ type FleetAttributes struct {
 
 	// Time stamp indicating when this data object was created. Format is a number
 	// expressed in Unix time as milliseconds (for example "1469498468.057").
-	CreationTime *time.Time `type:"timestamp"`
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Human-readable description of the fleet.
 	Description *string `min:"1" type:"string"`
@@ -13337,7 +13337,7 @@ type FleetAttributes struct {
 
 	// Time stamp indicating when this data object was terminated. Format is a number
 	// expressed in Unix time as milliseconds (for example "1469498468.057").
-	TerminationTime *time.Time `type:"timestamp"`
+	TerminationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 }
 
 // String returns the string representation
@@ -13746,7 +13746,7 @@ type GameSession struct {
 
 	// Time stamp indicating when this data object was created. Format is a number
 	// expressed in Unix time as milliseconds (for example "1469498468.057").
-	CreationTime *time.Time `type:"timestamp"`
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Unique identifier for a player. This ID is used to enforce a resource protection
 	// policy (if one exists), that limits the number of game sessions a player
@@ -13814,7 +13814,7 @@ type GameSession struct {
 
 	// Time stamp indicating when this data object was terminated. Format is a number
 	// expressed in Unix time as milliseconds (for example "1469498468.057").
-	TerminationTime *time.Time `type:"timestamp"`
+	TerminationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 }
 
 // String returns the string representation
@@ -14038,7 +14038,7 @@ type GameSessionPlacement struct {
 
 	// Time stamp indicating when this request was completed, canceled, or timed
 	// out.
-	EndTime *time.Time `type:"timestamp"`
+	EndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Set of custom properties for a game session, formatted as key:value pairs.
 	// These properties are passed to a game server process in the GameSession object
@@ -14111,7 +14111,7 @@ type GameSessionPlacement struct {
 
 	// Time stamp indicating when this request was placed in the queue. Format is
 	// a number expressed in Unix time as milliseconds (for example "1469498468.057").
-	StartTime *time.Time `type:"timestamp"`
+	StartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Current status of the game session placement request.
 	//
@@ -14546,7 +14546,7 @@ type Instance struct {
 
 	// Time stamp indicating when this data object was created. Format is a number
 	// expressed in Unix time as milliseconds (for example "1469498468.057").
-	CreationTime *time.Time `type:"timestamp"`
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Unique identifier for a fleet that the instance is in.
 	FleetId *string `type:"string"`
@@ -15213,7 +15213,7 @@ type MatchmakingConfiguration struct {
 
 	// Time stamp indicating when this data object was created. Format is a number
 	// expressed in Unix time as milliseconds (for example "1469498468.057").
-	CreationTime *time.Time `type:"timestamp"`
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Information to attached to all events related to the matchmaking configuration.
 	CustomEventData *string `type:"string"`
@@ -15387,7 +15387,7 @@ type MatchmakingRuleSet struct {
 
 	// Time stamp indicating when this data object was created. Format is a number
 	// expressed in Unix time as milliseconds (for example "1469498468.057").
-	CreationTime *time.Time `type:"timestamp"`
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Collection of matchmaking rules, formatted as a JSON string. (Note that comments14
 	// are not allowed in JSON, but most elements support a description field.)
@@ -15442,7 +15442,7 @@ type MatchmakingTicket struct {
 	// Time stamp indicating when this matchmaking request stopped being processed
 	// due to success, failure, or cancellation. Format is a number expressed in
 	// Unix time as milliseconds (for example "1469498468.057").
-	EndTime *time.Time `type:"timestamp"`
+	EndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Average amount of time (in seconds) that players are currently waiting for
 	// a match. If there is not enough recent data, this property may be empty.
@@ -15461,7 +15461,7 @@ type MatchmakingTicket struct {
 
 	// Time stamp indicating when this matchmaking request was received. Format
 	// is a number expressed in Unix time as milliseconds (for example "1469498468.057").
-	StartTime *time.Time `type:"timestamp"`
+	StartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Current status of the matchmaking request.
 	//
@@ -15865,7 +15865,7 @@ type PlayerSession struct {
 
 	// Time stamp indicating when this data object was created. Format is a number
 	// expressed in Unix time as milliseconds (for example "1469498468.057").
-	CreationTime *time.Time `type:"timestamp"`
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Unique identifier for a fleet that the player's game session is running on.
 	FleetId *string `type:"string"`
@@ -15910,7 +15910,7 @@ type PlayerSession struct {
 
 	// Time stamp indicating when this data object was terminated. Format is a number
 	// expressed in Unix time as milliseconds (for example "1469498468.057").
-	TerminationTime *time.Time `type:"timestamp"`
+	TerminationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 }
 
 // String returns the string representation
@@ -19050,11 +19050,11 @@ type VpcPeeringAuthorization struct {
 
 	// Time stamp indicating when this authorization was issued. Format is a number
 	// expressed in Unix time as milliseconds (for example "1469498468.057").
-	CreationTime *time.Time `type:"timestamp"`
+	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Time stamp indicating when this authorization expires (24 hours after issuance).
 	// Format is a number expressed in Unix time as milliseconds (for example "1469498468.057").
-	ExpirationTime *time.Time `type:"timestamp"`
+	ExpirationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Unique identifier for the AWS account that you use to manage your Amazon
 	// GameLift fleet. You can find your Account ID in the AWS Management Console

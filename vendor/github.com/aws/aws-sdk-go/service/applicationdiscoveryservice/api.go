@@ -2059,7 +2059,7 @@ type ConfigurationTag struct {
 
 	// The time the configuration tag was created in Coordinated Universal Time
 	// (UTC).
-	TimeOfCreation *time.Time `locationName:"timeOfCreation" type:"timestamp"`
+	TimeOfCreation *time.Time `locationName:"timeOfCreation" type:"timestamp" timestampFormat:"unix"`
 
 	// A value on which to filter. For example key = serverType and value = web
 	// server.
@@ -3227,7 +3227,7 @@ type ExportInfo struct {
 	// The time that the data export was initiated.
 	//
 	// ExportRequestTime is a required field
-	ExportRequestTime *time.Time `locationName:"exportRequestTime" type:"timestamp" required:"true"`
+	ExportRequestTime *time.Time `locationName:"exportRequestTime" type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	// The status of the data export job.
 	//
@@ -3242,11 +3242,11 @@ type ExportInfo struct {
 
 	// The endTime used in the StartExportTask request. If no endTime was requested,
 	// this result does not appear in ExportInfo.
-	RequestedEndTime *time.Time `locationName:"requestedEndTime" type:"timestamp"`
+	RequestedEndTime *time.Time `locationName:"requestedEndTime" type:"timestamp" timestampFormat:"unix"`
 
 	// The value of startTime parameter in the StartExportTask request. If no startTime
 	// was requested, this result does not appear in ExportInfo.
-	RequestedStartTime *time.Time `locationName:"requestedStartTime" type:"timestamp"`
+	RequestedStartTime *time.Time `locationName:"requestedStartTime" type:"timestamp" timestampFormat:"unix"`
 
 	// A status message provided for API callers.
 	//
@@ -3925,7 +3925,7 @@ type StartExportTaskInput struct {
 	// The end timestamp for exported data from the single Application Discovery
 	// Agent selected in the filters. If no value is specified, exported data includes
 	// the most recent data collected by the agent.
-	EndTime *time.Time `locationName:"endTime" type:"timestamp"`
+	EndTime *time.Time `locationName:"endTime" type:"timestamp" timestampFormat:"unix"`
 
 	// The file format for the returned export data. Default value is CSV. Note:TheGRAPHMLoption
 	// has been deprecated.
@@ -3941,7 +3941,7 @@ type StartExportTaskInput struct {
 	// The start timestamp for exported data from the single Application Discovery
 	// Agent selected in the filters. If no value is specified, data is exported
 	// starting from the first data collected by the agent.
-	StartTime *time.Time `locationName:"startTime" type:"timestamp"`
+	StartTime *time.Time `locationName:"startTime" type:"timestamp" timestampFormat:"unix"`
 }
 
 // String returns the string representation

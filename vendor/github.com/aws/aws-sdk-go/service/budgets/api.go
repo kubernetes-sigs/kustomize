@@ -2832,7 +2832,7 @@ type TimePeriod struct {
 	//
 	// After the end date, AWS deletes the budget and all associated notifications
 	// and subscribers. You can change your end date with the UpdateBudget operation.
-	End *time.Time `type:"timestamp"`
+	End *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The start date for a budget. If you created your budget and didn't specify
 	// a start date, AWS defaults to the start of your chosen time period (i.e.
@@ -2843,7 +2843,7 @@ type TimePeriod struct {
 	// and Cost Management console and the API.
 	//
 	// You can change your start date with the UpdateBudget operation.
-	Start *time.Time `type:"timestamp"`
+	Start *time.Time `type:"timestamp" timestampFormat:"unix"`
 }
 
 // String returns the string representation

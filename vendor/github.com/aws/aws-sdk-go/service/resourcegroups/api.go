@@ -3,8 +3,6 @@
 package resourcegroups
 
 import (
-	"fmt"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -513,8 +511,8 @@ const opListGroupResources = "ListGroupResources"
 func (c *ResourceGroups) ListGroupResourcesRequest(input *ListGroupResourcesInput) (req *request.Request, output *ListGroupResourcesOutput) {
 	op := &request.Operation{
 		Name:       opListGroupResources,
-		HTTPMethod: "POST",
-		HTTPPath:   "/groups/{GroupName}/resource-identifiers-list",
+		HTTPMethod: "GET",
+		HTTPPath:   "/groups/{GroupName}/resource-identifiers",
 		Paginator: &request.Paginator{
 			InputTokens:     []string{"NextToken"},
 			OutputTokens:    []string{"NextToken"},
@@ -669,8 +667,8 @@ const opListGroups = "ListGroups"
 func (c *ResourceGroups) ListGroupsRequest(input *ListGroupsInput) (req *request.Request, output *ListGroupsOutput) {
 	op := &request.Operation{
 		Name:       opListGroups,
-		HTTPMethod: "POST",
-		HTTPPath:   "/groups-list",
+		HTTPMethod: "GET",
+		HTTPPath:   "/groups",
 		Paginator: &request.Paginator{
 			InputTokens:     []string{"NextToken"},
 			OutputTokens:    []string{"NextToken"},
@@ -1334,7 +1332,7 @@ type CreateGroupInput struct {
 
 	// The name of the group, which is the identifier of the group in other operations.
 	// A resource group name cannot be updated after it is created. A resource group
-	// name can have a maximum of 128 characters, including letters, numbers, hyphens,
+	// name can have a maximum of 127 characters, including letters, numbers, hyphens,
 	// dots, and underscores. The name cannot start with AWS or aws; these are reserved.
 	// A resource group name must be unique within your account.
 	//
@@ -1348,8 +1346,8 @@ type CreateGroupInput struct {
 	ResourceQuery *ResourceQuery `type:"structure" required:"true"`
 
 	// The tags to add to the group. A tag is a string-to-string map of key-value
-	// pairs. Tag keys can have a maximum character length of 128 characters, and
-	// tag values can have a maximum length of 256 characters.
+	// pairs. Tag keys can have a maximum character length of 127 characters, and
+	// tag values can have a maximum length of 255 characters.
 	Tags map[string]*string `type:"map"`
 }
 
@@ -1804,14 +1802,6 @@ func (s *GroupQuery) SetResourceQuery(v *ResourceQuery) *GroupQuery {
 type ListGroupResourcesInput struct {
 	_ struct{} `type:"structure"`
 
-	// Filters, formatted as ResourceFilter objects, that you want to apply to a
-	// ListGroupResources operation.
-	//
-	//    * resource-type - Filter resources by their type. Specify up to five resource
-	//    types in the format AWS::ServiceCode::ResourceType. For example, AWS::EC2::Instance,
-	//    or AWS::S3::Bucket.
-	Filters []*ResourceFilter `type:"list"`
-
 	// The name of the resource group.
 	//
 	// GroupName is a required field
@@ -1849,27 +1839,11 @@ func (s *ListGroupResourcesInput) Validate() error {
 	if s.MaxResults != nil && *s.MaxResults < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
 	}
-	if s.Filters != nil {
-		for i, v := range s.Filters {
-			if v == nil {
-				continue
-			}
-			if err := v.Validate(); err != nil {
-				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
-			}
-		}
-	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
-}
-
-// SetFilters sets the Filters field's value.
-func (s *ListGroupResourcesInput) SetFilters(v []*ResourceFilter) *ListGroupResourcesInput {
-	s.Filters = v
-	return s
 }
 
 // SetGroupName sets the GroupName field's value.
@@ -2002,64 +1976,6 @@ func (s *ListGroupsOutput) SetGroups(v []*Group) *ListGroupsOutput {
 // SetNextToken sets the NextToken field's value.
 func (s *ListGroupsOutput) SetNextToken(v string) *ListGroupsOutput {
 	s.NextToken = &v
-	return s
-}
-
-// A filter name and value pair that is used to obtain more specific results
-// from a list of resources.
-type ResourceFilter struct {
-	_ struct{} `type:"structure"`
-
-	// The name of the filter. Filter names are case-sensitive.
-	//
-	// Name is a required field
-	Name *string `type:"string" required:"true" enum:"ResourceFilterName"`
-
-	// One or more filter values. Allowed filter values vary by resource filter
-	// name, and are case-sensitive.
-	//
-	// Values is a required field
-	Values []*string `min:"1" type:"list" required:"true"`
-}
-
-// String returns the string representation
-func (s ResourceFilter) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s ResourceFilter) GoString() string {
-	return s.String()
-}
-
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *ResourceFilter) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "ResourceFilter"}
-	if s.Name == nil {
-		invalidParams.Add(request.NewErrParamRequired("Name"))
-	}
-	if s.Values == nil {
-		invalidParams.Add(request.NewErrParamRequired("Values"))
-	}
-	if s.Values != nil && len(s.Values) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("Values", 1))
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
-}
-
-// SetName sets the Name field's value.
-func (s *ResourceFilter) SetName(v string) *ResourceFilter {
-	s.Name = &v
-	return s
-}
-
-// SetValues sets the Values field's value.
-func (s *ResourceFilter) SetValues(v []*string) *ResourceFilter {
-	s.Values = v
 	return s
 }
 
@@ -2267,8 +2183,8 @@ type TagInput struct {
 	Arn *string `location:"uri" locationName:"Arn" type:"string" required:"true"`
 
 	// The tags to add to the specified resource. A tag is a string-to-string map
-	// of key-value pairs. Tag keys can have a maximum character length of 128 characters,
-	// and tag values can have a maximum length of 256 characters.
+	// of key-value pairs. Tag keys can have a maximum character length of 127 characters,
+	// and tag values can have a maximum length of 255 characters.
 	//
 	// Tags is a required field
 	Tags map[string]*string `type:"map" required:"true"`
@@ -2590,9 +2506,4 @@ func (s *UpdateGroupQueryOutput) SetGroupQuery(v *GroupQuery) *UpdateGroupQueryO
 const (
 	// QueryTypeTagFilters10 is a QueryType enum value
 	QueryTypeTagFilters10 = "TAG_FILTERS_1_0"
-)
-
-const (
-	// ResourceFilterNameResourceType is a ResourceFilterName enum value
-	ResourceFilterNameResourceType = "resource-type"
 )

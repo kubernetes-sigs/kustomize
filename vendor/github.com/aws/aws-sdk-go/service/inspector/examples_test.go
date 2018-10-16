@@ -55,8 +55,6 @@ func ExampleInspector_AddAttributesToFindings_shared00() {
 				fmt.Println(inspector.ErrCodeAccessDeniedException, aerr.Error())
 			case inspector.ErrCodeNoSuchEntityException:
 				fmt.Println(inspector.ErrCodeNoSuchEntityException, aerr.Error())
-			case inspector.ErrCodeServiceTemporarilyUnavailableException:
-				fmt.Println(inspector.ErrCodeServiceTemporarilyUnavailableException, aerr.Error())
 			default:
 				fmt.Println(aerr.Error())
 			}
@@ -99,8 +97,6 @@ func ExampleInspector_CreateAssessmentTarget_shared00() {
 				fmt.Println(inspector.ErrCodeNoSuchEntityException, aerr.Error())
 			case inspector.ErrCodeInvalidCrossAccountRoleException:
 				fmt.Println(inspector.ErrCodeInvalidCrossAccountRoleException, aerr.Error())
-			case inspector.ErrCodeServiceTemporarilyUnavailableException:
-				fmt.Println(inspector.ErrCodeServiceTemporarilyUnavailableException, aerr.Error())
 			default:
 				fmt.Println(aerr.Error())
 			}
@@ -150,8 +146,6 @@ func ExampleInspector_CreateAssessmentTemplate_shared00() {
 				fmt.Println(inspector.ErrCodeAccessDeniedException, aerr.Error())
 			case inspector.ErrCodeNoSuchEntityException:
 				fmt.Println(inspector.ErrCodeNoSuchEntityException, aerr.Error())
-			case inspector.ErrCodeServiceTemporarilyUnavailableException:
-				fmt.Println(inspector.ErrCodeServiceTemporarilyUnavailableException, aerr.Error())
 			default:
 				fmt.Println(aerr.Error())
 			}
@@ -195,8 +189,6 @@ func ExampleInspector_CreateResourceGroup_shared00() {
 				fmt.Println(inspector.ErrCodeLimitExceededException, aerr.Error())
 			case inspector.ErrCodeAccessDeniedException:
 				fmt.Println(inspector.ErrCodeAccessDeniedException, aerr.Error())
-			case inspector.ErrCodeServiceTemporarilyUnavailableException:
-				fmt.Println(inspector.ErrCodeServiceTemporarilyUnavailableException, aerr.Error())
 			default:
 				fmt.Println(aerr.Error())
 			}
@@ -234,8 +226,6 @@ func ExampleInspector_DeleteAssessmentRun_shared00() {
 				fmt.Println(inspector.ErrCodeAccessDeniedException, aerr.Error())
 			case inspector.ErrCodeNoSuchEntityException:
 				fmt.Println(inspector.ErrCodeNoSuchEntityException, aerr.Error())
-			case inspector.ErrCodeServiceTemporarilyUnavailableException:
-				fmt.Println(inspector.ErrCodeServiceTemporarilyUnavailableException, aerr.Error())
 			default:
 				fmt.Println(aerr.Error())
 			}
@@ -273,8 +263,6 @@ func ExampleInspector_DeleteAssessmentTarget_shared00() {
 				fmt.Println(inspector.ErrCodeAccessDeniedException, aerr.Error())
 			case inspector.ErrCodeNoSuchEntityException:
 				fmt.Println(inspector.ErrCodeNoSuchEntityException, aerr.Error())
-			case inspector.ErrCodeServiceTemporarilyUnavailableException:
-				fmt.Println(inspector.ErrCodeServiceTemporarilyUnavailableException, aerr.Error())
 			default:
 				fmt.Println(aerr.Error())
 			}
@@ -312,8 +300,6 @@ func ExampleInspector_DeleteAssessmentTemplate_shared00() {
 				fmt.Println(inspector.ErrCodeAccessDeniedException, aerr.Error())
 			case inspector.ErrCodeNoSuchEntityException:
 				fmt.Println(inspector.ErrCodeNoSuchEntityException, aerr.Error())
-			case inspector.ErrCodeServiceTemporarilyUnavailableException:
-				fmt.Println(inspector.ErrCodeServiceTemporarilyUnavailableException, aerr.Error())
 			default:
 				fmt.Println(aerr.Error())
 			}
@@ -943,8 +929,6 @@ func ExampleInspector_RegisterCrossAccountAccessRole_shared00() {
 				fmt.Println(inspector.ErrCodeAccessDeniedException, aerr.Error())
 			case inspector.ErrCodeInvalidCrossAccountRoleException:
 				fmt.Println(inspector.ErrCodeInvalidCrossAccountRoleException, aerr.Error())
-			case inspector.ErrCodeServiceTemporarilyUnavailableException:
-				fmt.Println(inspector.ErrCodeServiceTemporarilyUnavailableException, aerr.Error())
 			default:
 				fmt.Println(aerr.Error())
 			}
@@ -986,8 +970,6 @@ func ExampleInspector_RemoveAttributesFromFindings_shared00() {
 				fmt.Println(inspector.ErrCodeAccessDeniedException, aerr.Error())
 			case inspector.ErrCodeNoSuchEntityException:
 				fmt.Println(inspector.ErrCodeNoSuchEntityException, aerr.Error())
-			case inspector.ErrCodeServiceTemporarilyUnavailableException:
-				fmt.Println(inspector.ErrCodeServiceTemporarilyUnavailableException, aerr.Error())
 			default:
 				fmt.Println(aerr.Error())
 			}
@@ -1030,8 +1012,6 @@ func ExampleInspector_SetTagsForResource_shared00() {
 				fmt.Println(inspector.ErrCodeAccessDeniedException, aerr.Error())
 			case inspector.ErrCodeNoSuchEntityException:
 				fmt.Println(inspector.ErrCodeNoSuchEntityException, aerr.Error())
-			case inspector.ErrCodeServiceTemporarilyUnavailableException:
-				fmt.Println(inspector.ErrCodeServiceTemporarilyUnavailableException, aerr.Error())
 			default:
 				fmt.Println(aerr.Error())
 			}
@@ -1076,8 +1056,6 @@ func ExampleInspector_StartAssessmentRun_shared00() {
 				fmt.Println(inspector.ErrCodeInvalidCrossAccountRoleException, aerr.Error())
 			case inspector.ErrCodeAgentsAlreadyRunningAssessmentException:
 				fmt.Println(inspector.ErrCodeAgentsAlreadyRunningAssessmentException, aerr.Error())
-			case inspector.ErrCodeServiceTemporarilyUnavailableException:
-				fmt.Println(inspector.ErrCodeServiceTemporarilyUnavailableException, aerr.Error())
 			default:
 				fmt.Println(aerr.Error())
 			}
@@ -1113,8 +1091,6 @@ func ExampleInspector_StopAssessmentRun_shared00() {
 				fmt.Println(inspector.ErrCodeAccessDeniedException, aerr.Error())
 			case inspector.ErrCodeNoSuchEntityException:
 				fmt.Println(inspector.ErrCodeNoSuchEntityException, aerr.Error())
-			case inspector.ErrCodeServiceTemporarilyUnavailableException:
-				fmt.Println(inspector.ErrCodeServiceTemporarilyUnavailableException, aerr.Error())
 			default:
 				fmt.Println(aerr.Error())
 			}
@@ -1155,8 +1131,6 @@ func ExampleInspector_SubscribeToEvent_shared00() {
 				fmt.Println(inspector.ErrCodeAccessDeniedException, aerr.Error())
 			case inspector.ErrCodeNoSuchEntityException:
 				fmt.Println(inspector.ErrCodeNoSuchEntityException, aerr.Error())
-			case inspector.ErrCodeServiceTemporarilyUnavailableException:
-				fmt.Println(inspector.ErrCodeServiceTemporarilyUnavailableException, aerr.Error())
 			default:
 				fmt.Println(aerr.Error())
 			}
@@ -1195,8 +1169,6 @@ func ExampleInspector_UnsubscribeFromEvent_shared00() {
 				fmt.Println(inspector.ErrCodeAccessDeniedException, aerr.Error())
 			case inspector.ErrCodeNoSuchEntityException:
 				fmt.Println(inspector.ErrCodeNoSuchEntityException, aerr.Error())
-			case inspector.ErrCodeServiceTemporarilyUnavailableException:
-				fmt.Println(inspector.ErrCodeServiceTemporarilyUnavailableException, aerr.Error())
 			default:
 				fmt.Println(aerr.Error())
 			}
@@ -1234,8 +1206,6 @@ func ExampleInspector_UpdateAssessmentTarget_shared00() {
 				fmt.Println(inspector.ErrCodeAccessDeniedException, aerr.Error())
 			case inspector.ErrCodeNoSuchEntityException:
 				fmt.Println(inspector.ErrCodeNoSuchEntityException, aerr.Error())
-			case inspector.ErrCodeServiceTemporarilyUnavailableException:
-				fmt.Println(inspector.ErrCodeServiceTemporarilyUnavailableException, aerr.Error())
 			default:
 				fmt.Println(aerr.Error())
 			}

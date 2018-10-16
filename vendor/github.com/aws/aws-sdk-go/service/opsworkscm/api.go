@@ -1595,7 +1595,7 @@ type Backup struct {
 	BackupType *string `type:"string" enum:"BackupType"`
 
 	// The time stamp when the backup was created in the database. Example: 2016-07-29T13:38:47.520Z
-	CreatedAt *time.Time `type:"timestamp"`
+	CreatedAt *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// A user-provided description for a manual backup. This field is empty for
 	// automated backups.
@@ -3014,7 +3014,7 @@ type Server struct {
 	CloudFormationStackArn *string `type:"string"`
 
 	// Time stamp of server creation. Example 2016-07-29T13:38:47.520Z
-	CreatedAt *time.Time `type:"timestamp"`
+	CreatedAt *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Disables automated backups. The number of stored backups is dependent on
 	// the value of PreferredBackupCount.
@@ -3263,7 +3263,7 @@ type ServerEvent struct {
 	_ struct{} `type:"structure"`
 
 	// The time when the event occurred.
-	CreatedAt *time.Time `type:"timestamp"`
+	CreatedAt *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The Amazon S3 URL of the event's log file.
 	LogUrl *string `type:"string"`

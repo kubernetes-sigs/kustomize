@@ -4,40 +4,37 @@
   "operations": {
     "AssociateFleet": "<p>Associates the specified fleet with the specified stack.</p>",
     "CopyImage": "<p>Copies the image within the same region or to a new region within the same AWS account. Note that any tags you added to the image will not be copied.</p>",
-    "CreateDirectoryConfig": "<p>Creates a Directory Config object in AppStream 2.0. This object includes the information required to join streaming instances to an Active Directory domain.</p>",
-    "CreateFleet": "<p>Creates a fleet. A fleet consists of streaming instances that run a specified image.</p>",
-    "CreateImageBuilder": "<p>Creates an image builder. An image builder is a virtual machine that is used to create an image.</p> <p>The initial state of the builder is <code>PENDING</code>. When it is ready, the state is <code>RUNNING</code>.</p>",
+    "CreateDirectoryConfig": "<p>Creates a directory configuration.</p>",
+    "CreateFleet": "<p>Creates a fleet.</p>",
+    "CreateImageBuilder": "<p>Creates an image builder.</p> <p>The initial state of the builder is <code>PENDING</code>. When it is ready, the state is <code>RUNNING</code>.</p>",
     "CreateImageBuilderStreamingURL": "<p>Creates a URL to start an image builder streaming session.</p>",
-    "CreateStack": "<p>Creates a stack to start streaming applications to users. A stack consists of an associated fleet, user access policies, and storage configurations. </p>",
-    "CreateStreamingURL": "<p>Creates a temporary URL to start an AppStream 2.0 streaming session for the specified user. A streaming URL enables application streaming to be tested without user setup. </p>",
-    "DeleteDirectoryConfig": "<p>Deletes the specified Directory Config object from AppStream 2.0. This object includes the information required to join streaming instances to an Active Directory domain.</p>",
+    "CreateStack": "<p>Creates a stack.</p>",
+    "CreateStreamingURL": "<p>Creates a URL to start a streaming session for the specified user.</p>",
+    "DeleteDirectoryConfig": "<p>Deletes the specified directory configuration.</p>",
     "DeleteFleet": "<p>Deletes the specified fleet.</p>",
-    "DeleteImage": "<p>Deletes the specified image. You cannot delete an image when it is in use. After you delete an image, you cannot provision new capacity using the image.</p>",
+    "DeleteImage": "<p>Deletes the specified image. You cannot delete an image that is currently in use. After you delete an image, you cannot provision new capacity using the image.</p>",
     "DeleteImageBuilder": "<p>Deletes the specified image builder and releases the capacity.</p>",
-    "DeleteImagePermissions": "<p>Deletes permissions for the specified private image. After you delete permissions for an image, AWS accounts to which you previously granted these permissions can no longer use the image.</p>",
-    "DeleteStack": "<p>Deletes the specified stack. After the stack is deleted, the application streaming environment provided by the stack is no longer available to users. Also, any reservations made for application streaming sessions for the stack are released.</p>",
-    "DescribeDirectoryConfigs": "<p>Retrieves a list that describes one or more specified Directory Config objects for AppStream 2.0, if the names for these objects are provided. Otherwise, all Directory Config objects in the account are described. These objects include the information required to join streaming instances to an Active Directory domain. </p> <p>Although the response syntax in this topic includes the account password, this password is not returned in the actual response.</p>",
-    "DescribeFleets": "<p>Retrieves a list that describes one or more specified fleets, if the fleet names are provided. Otherwise, all fleets in the account are described.</p>",
-    "DescribeImageBuilders": "<p>Retrieves a list that describes one or more specified image builders, if the image builder names are provided. Otherwise, all image builders in the account are described.</p>",
-    "DescribeImagePermissions": "<p>Retrieves a list that describes the permissions for a private image that you own. </p>",
-    "DescribeImages": "<p>Retrieves a list that describes one or more specified images, if the image names are provided. Otherwise, all images in the account are described.</p>",
-    "DescribeSessions": "<p>Retrieves a list that describes the streaming sessions for a specified stack and fleet. If a user ID is provided for the stack and fleet, only streaming sessions for that user are described. If an authentication type is not provided, the default is to authenticate users using a streaming URL.</p>",
-    "DescribeStacks": "<p>Retrieves a list that describes one or more specified stacks, if the stack names are provided. Otherwise, all stacks in the account are described.</p>",
+    "DeleteStack": "<p>Deletes the specified stack. After this operation completes, the environment can no longer be activated and any reservations made for the stack are released.</p>",
+    "DescribeDirectoryConfigs": "<p>Describes the specified directory configurations. Note that although the response syntax in this topic includes the account password, this password is not returned in the actual response. </p>",
+    "DescribeFleets": "<p>Describes the specified fleets or all fleets in the account.</p>",
+    "DescribeImageBuilders": "<p>Describes the specified image builders or all image builders in the account.</p>",
+    "DescribeImages": "<p>Describes the specified images or all images in the account.</p>",
+    "DescribeSessions": "<p>Describes the streaming sessions for the specified stack and fleet. If a user ID is provided, only the streaming sessions for only that user are returned. If an authentication type is not provided, the default is to authenticate users using a streaming URL.</p>",
+    "DescribeStacks": "<p>Describes the specified stacks or all stacks in the account.</p>",
     "DisassociateFleet": "<p>Disassociates the specified fleet from the specified stack.</p>",
-    "ExpireSession": "<p>Immediately stops the specified streaming session.</p>",
-    "ListAssociatedFleets": "<p>Retrieves the name of the fleet that is associated with the specified stack.</p>",
-    "ListAssociatedStacks": "<p>Retrieves the name of the stack with which the specified fleet is associated.</p>",
-    "ListTagsForResource": "<p>Retrieves a list of all tags for the specified AppStream 2.0 resource. You can tag AppStream 2.0 image builders, images, fleets, and stacks.</p> <p>For more information about tags, see <a href=\"http://docs.aws.amazon.com/appstream2/latest/developerguide/tagging-basic.html\">Tagging Your Resources</a> in the <i>Amazon AppStream 2.0 Developer Guide</i>.</p>",
+    "ExpireSession": "<p>Stops the specified streaming session.</p>",
+    "ListAssociatedFleets": "<p>Lists the fleets associated with the specified stack.</p>",
+    "ListAssociatedStacks": "<p>Lists the stacks associated with the specified fleet.</p>",
+    "ListTagsForResource": "<p>Lists the tags for the specified AppStream 2.0 resource. You can tag AppStream 2.0 image builders, images, fleets, and stacks.</p> <p>For more information about tags, see <a href=\"http://docs.aws.amazon.com/appstream2/latest/developerguide/tagging-basic.html\">Tagging Your Resources</a> in the <i>Amazon AppStream 2.0 Developer Guide</i>.</p>",
     "StartFleet": "<p>Starts the specified fleet.</p>",
     "StartImageBuilder": "<p>Starts the specified image builder.</p>",
     "StopFleet": "<p>Stops the specified fleet.</p>",
     "StopImageBuilder": "<p>Stops the specified image builder.</p>",
     "TagResource": "<p>Adds or overwrites one or more tags for the specified AppStream 2.0 resource. You can tag AppStream 2.0 image builders, images, fleets, and stacks.</p> <p>Each tag consists of a key and an optional value. If a resource already has a tag with the same key, this operation updates its value.</p> <p>To list the current tags for your resources, use <a>ListTagsForResource</a>. To disassociate tags from your resources, use <a>UntagResource</a>.</p> <p>For more information about tags, see <a href=\"http://docs.aws.amazon.com/appstream2/latest/developerguide/tagging-basic.html\">Tagging Your Resources</a> in the <i>Amazon AppStream 2.0 Developer Guide</i>.</p>",
-    "UntagResource": "<p>Disassociates one or more specified tags from the specified AppStream 2.0 resource.</p> <p>To list the current tags for your resources, use <a>ListTagsForResource</a>.</p> <p>For more information about tags, see <a href=\"http://docs.aws.amazon.com/appstream2/latest/developerguide/tagging-basic.html\">Tagging Your Resources</a> in the <i>Amazon AppStream 2.0 Developer Guide</i>.</p>",
-    "UpdateDirectoryConfig": "<p>Updates the specified Directory Config object in AppStream 2.0. This object includes the information required to join streaming instances to an Active Directory domain.</p>",
+    "UntagResource": "<p>Disassociates the specified tags from the specified AppStream 2.0 resource.</p> <p>To list the current tags for your resources, use <a>ListTagsForResource</a>.</p> <p>For more information about tags, see <a href=\"http://docs.aws.amazon.com/appstream2/latest/developerguide/tagging-basic.html\">Tagging Your Resources</a> in the <i>Amazon AppStream 2.0 Developer Guide</i>.</p>",
+    "UpdateDirectoryConfig": "<p>Updates the specified directory configuration.</p>",
     "UpdateFleet": "<p>Updates the specified fleet.</p> <p>If the fleet is in the <code>STOPPED</code> state, you can update any attribute except the fleet name. If the fleet is in the <code>RUNNING</code> state, you can update the <code>DisplayName</code> and <code>ComputeCapacity</code> attributes. If the fleet is in the <code>STARTING</code> or <code>STOPPING</code> state, you can't update it.</p>",
-    "UpdateImagePermissions": "<p>Adds or updates permissions for the specified private image. </p>",
-    "UpdateStack": "<p>Updates the specified fields for the specified stack.</p>"
+    "UpdateStack": "<p>Updates the specified stack.</p>"
   },
   "shapes": {
     "AccountName": {
@@ -82,11 +79,7 @@
     "Arn": {
       "base": null,
       "refs": {
-        "ArnList$member": null,
-        "CreateFleetRequest$ImageArn": "<p>The ARN of the public, private, or shared image to use.</p>",
-        "CreateImageBuilderRequest$ImageArn": "<p>The ARN of the public, private, or shared image to use.</p>",
         "Fleet$Arn": "<p>The ARN for the fleet.</p>",
-        "Fleet$ImageArn": "<p>The ARN for the public, private, or shared image.</p>",
         "Image$Arn": "<p>The ARN of the image.</p>",
         "Image$BaseImageArn": "<p>The ARN of the image from which this image was created.</p>",
         "ImageBuilder$Arn": "<p>The ARN for the image builder.</p>",
@@ -94,14 +87,7 @@
         "ListTagsForResourceRequest$ResourceArn": "<p>The Amazon Resource Name (ARN) of the resource.</p>",
         "Stack$Arn": "<p>The ARN of the stack.</p>",
         "TagResourceRequest$ResourceArn": "<p>The Amazon Resource Name (ARN) of the resource.</p>",
-        "UntagResourceRequest$ResourceArn": "<p>The Amazon Resource Name (ARN) of the resource.</p>",
-        "UpdateFleetRequest$ImageArn": "<p>The ARN of the public, private, or shared image to use.</p>"
-      }
-    },
-    "ArnList": {
-      "base": null,
-      "refs": {
-        "DescribeImagesRequest$Arns": "<p>The ARNs of the public, private, and shared images to describe.</p>"
+        "UntagResourceRequest$ResourceArn": "<p>The Amazon Resource Name (ARN) of the resource.</p>"
       }
     },
     "AssociateFleetRequest": {
@@ -121,21 +107,6 @@
         "Session$AuthenticationType": "<p>The authentication method. The user is authenticated using a streaming URL (<code>API</code>) or SAML federation (<code>SAML</code>).</p>"
       }
     },
-    "AwsAccountId": {
-      "base": null,
-      "refs": {
-        "AwsAccountIdList$member": null,
-        "DeleteImagePermissionsRequest$SharedAccountId": "<p>The 12-digit ID of the AWS account for which to delete image permissions.</p>",
-        "SharedImagePermissions$sharedAccountId": "<p>The 12-digit ID of the AWS account with which the image is shared.</p>",
-        "UpdateImagePermissionsRequest$SharedAccountId": "<p>The 12-digit ID of the AWS account for which you want add or update image permissions.</p>"
-      }
-    },
-    "AwsAccountIdList": {
-      "base": null,
-      "refs": {
-        "DescribeImagePermissionsRequest$SharedAwsAccountIds": "<p>The 12-digit ID of one or more AWS accounts with which the image is shared.</p>"
-      }
-    },
     "Boolean": {
       "base": null,
       "refs": {
@@ -152,8 +123,6 @@
         "CreateImageBuilderRequest$EnableDefaultInternetAccess": "<p>Enables or disables default internet access for the image builder.</p>",
         "Fleet$EnableDefaultInternetAccess": "<p>Indicates whether default internet access is enabled for the fleet.</p>",
         "ImageBuilder$EnableDefaultInternetAccess": "<p>Enables or disables default internet access for the image builder.</p>",
-        "ImagePermissions$allowFleet": "<p>Indicates whether the image can be used for a fleet.</p>",
-        "ImagePermissions$allowImageBuilder": "<p>Indicates whether the image can be used for an image builder.</p>",
         "UpdateFleetRequest$EnableDefaultInternetAccess": "<p>Enables or disables default internet access for the fleet.</p>"
       }
     },
@@ -275,16 +244,6 @@
       "refs": {
       }
     },
-    "DeleteImagePermissionsRequest": {
-      "base": null,
-      "refs": {
-      }
-    },
-    "DeleteImagePermissionsResult": {
-      "base": null,
-      "refs": {
-      }
-    },
     "DeleteImageRequest": {
       "base": null,
       "refs": {
@@ -335,22 +294,6 @@
       "refs": {
       }
     },
-    "DescribeImagePermissionsRequest": {
-      "base": null,
-      "refs": {
-      }
-    },
-    "DescribeImagePermissionsResult": {
-      "base": null,
-      "refs": {
-      }
-    },
-    "DescribeImagesMaxResults": {
-      "base": null,
-      "refs": {
-        "DescribeImagesRequest$MaxResults": "<p>The maximum size of each page of results.</p>"
-      }
-    },
     "DescribeImagesRequest": {
       "base": null,
       "refs": {
@@ -397,7 +340,7 @@
       "refs": {
         "CreateDirectoryConfigResult$DirectoryConfig": "<p>Information about the directory configuration.</p>",
         "DirectoryConfigList$member": null,
-        "UpdateDirectoryConfigResult$DirectoryConfig": "<p>Information about the Directory Config object.</p>"
+        "UpdateDirectoryConfigResult$DirectoryConfig": "<p>Information about the directory configuration.</p>"
       }
     },
     "DirectoryConfigList": {
@@ -414,7 +357,7 @@
         "DirectoryConfig$DirectoryName": "<p>The fully qualified name of the directory (for example, corp.example.com).</p>",
         "DirectoryNameList$member": null,
         "DomainJoinInfo$DirectoryName": "<p>The fully qualified name of the directory (for example, corp.example.com).</p>",
-        "UpdateDirectoryConfigRequest$DirectoryName": "<p>The name of the Directory Config object.</p>"
+        "UpdateDirectoryConfigRequest$DirectoryName": "<p>The name of the directory configuration.</p>"
       }
     },
     "DirectoryNameList": {
@@ -604,14 +547,6 @@
         "DescribeImagesResult$Images": "<p>Information about the images.</p>"
       }
     },
-    "ImagePermissions": {
-      "base": "<p>Describes the permissions for an image. </p>",
-      "refs": {
-        "Image$ImagePermissions": "<p>The permissions to provide to the destination AWS account for the specified image.</p>",
-        "SharedImagePermissions$imagePermissions": "<p>Describes the permissions for a shared image.</p>",
-        "UpdateImagePermissionsRequest$ImagePermissions": "<p>The permissions for the image.</p>"
-      }
-    },
     "ImageState": {
       "base": null,
       "refs": {
@@ -711,12 +646,6 @@
         "CreateStreamingURLRequest$Validity": "<p>The time that the streaming URL will be valid, in seconds. Specify a value between 1 and 604800 seconds. The default is 60 seconds.</p>"
       }
     },
-    "MaxResults": {
-      "base": null,
-      "refs": {
-        "DescribeImagePermissionsRequest$MaxResults": "<p>The maximum size of each results page.</p>"
-      }
-    },
     "Metadata": {
       "base": null,
       "refs": {
@@ -731,19 +660,8 @@
         "CopyImageResponse$DestinationImageName": "<p>The name of the destination image.</p>",
         "CreateFleetRequest$Name": "<p>A unique name for the fleet.</p>",
         "CreateImageBuilderRequest$Name": "<p>A unique name for the image builder.</p>",
-        "CreateStackRequest$Name": "<p>The name of the stack.</p>",
         "DeleteImageBuilderRequest$Name": "<p>The name of the image builder.</p>",
-        "DeleteImagePermissionsRequest$Name": "<p>The name of the private image.</p>",
-        "DeleteImageRequest$Name": "<p>The name of the image.</p>",
-        "DescribeImagePermissionsRequest$Name": "<p>The name of the private image for which to describe permissions. The image must be one that you own. </p>",
-        "DescribeImagePermissionsResult$Name": "<p>The name of the private image.</p>",
-        "UpdateImagePermissionsRequest$Name": "<p>The name of the private image.</p>"
-      }
-    },
-    "NetworkAccessConfiguration": {
-      "base": "<p>The network details of the fleet instance for the streaming session.</p>",
-      "refs": {
-        "Session$NetworkAccessConfiguration": "<p>The network details for the streaming session.</p>"
+        "DeleteImageRequest$Name": "<p>The name of the image.</p>"
       }
     },
     "OperationNotPermittedException": {
@@ -861,18 +779,6 @@
       "base": "<p>Possible values for the state of a streaming session.</p>",
       "refs": {
         "Session$State": "<p>The current state of the streaming session.</p>"
-      }
-    },
-    "SharedImagePermissions": {
-      "base": "<p>Describes the permissions that are available to the specified AWS account for a shared image.</p>",
-      "refs": {
-        "SharedImagePermissionsList$member": null
-      }
-    },
-    "SharedImagePermissionsList": {
-      "base": null,
-      "refs": {
-        "DescribeImagePermissionsResult$SharedImagePermissionsList": "<p>The permissions for a private image that you own. </p>"
       }
     },
     "Stack": {
@@ -1001,6 +907,7 @@
         "CreateImageBuilderRequest$InstanceType": "<p>The instance type to use when launching the image builder.</p>",
         "CreateImageBuilderStreamingURLRequest$Name": "<p>The name of the image builder.</p>",
         "CreateImageBuilderStreamingURLResult$StreamingURL": "<p>The URL to start the AppStream 2.0 streaming session.</p>",
+        "CreateStackRequest$Name": "<p>The name of the stack.</p>",
         "CreateStreamingURLRequest$StackName": "<p>The name of the stack.</p>",
         "CreateStreamingURLRequest$FleetName": "<p>The name of the fleet.</p>",
         "CreateStreamingURLRequest$ApplicationId": "<p>The name of the application to launch after the session starts. This is the name that you specified as <b>Name</b> in the Image Assistant.</p>",
@@ -1014,10 +921,6 @@
         "DescribeFleetsResult$NextToken": "<p>The pagination token to use to retrieve the next page of results for this operation. If there are no more pages, this value is null.</p>",
         "DescribeImageBuildersRequest$NextToken": "<p>The pagination token to use to retrieve the next page of results for this operation. If this value is null, it retrieves the first page.</p>",
         "DescribeImageBuildersResult$NextToken": "<p>The pagination token to use to retrieve the next page of results for this operation. If there are no more pages, this value is null.</p>",
-        "DescribeImagePermissionsRequest$NextToken": "<p>The pagination token to use to retrieve the next page of results. If this value is empty, only the first page is retrieved.</p>",
-        "DescribeImagePermissionsResult$NextToken": "<p>The pagination token to use to retrieve the next page of results. If this value is empty, only the first page is retrieved.</p>",
-        "DescribeImagesRequest$NextToken": "<p>The pagination token to use to retrieve the next page of results. If this value is empty, only the first page is retrieved.</p>",
-        "DescribeImagesResult$NextToken": "<p>The pagination token to use to retrieve the next page of results. If there are no more pages, this value is null.</p>",
         "DescribeSessionsRequest$StackName": "<p>The name of the stack. This value is case-sensitive.</p>",
         "DescribeSessionsRequest$FleetName": "<p>The name of the fleet. This value is case-sensitive.</p>",
         "DescribeSessionsRequest$NextToken": "<p>The pagination token to use to retrieve the next page of results for this operation. If this value is null, it retrieves the first page.</p>",
@@ -1050,8 +953,6 @@
         "ListAssociatedStacksResult$NextToken": "<p>The pagination token to use to retrieve the next page of results for this operation. If there are no more pages, this value is null.</p>",
         "Metadata$key": null,
         "Metadata$value": null,
-        "NetworkAccessConfiguration$EniPrivateIpAddress": "<p>The private IP address of the elastic network interface that is attached to instances in your VPC.</p>",
-        "NetworkAccessConfiguration$EniId": "<p>The resource identifier of the elastic network interface that is attached to instances in your VPC. All network interfaces have the eni-xxxxxxxx resource identifier.</p>",
         "ResourceError$ErrorMessage": "<p>The error message.</p>",
         "SecurityGroupIdList$member": null,
         "Session$Id": "<p>The ID of the streaming session.</p>",
@@ -1080,8 +981,8 @@
         "DescribeImageBuildersRequest$Names": "<p>The names of the image builders to describe.</p>",
         "DescribeImagesRequest$Names": "<p>The names of the images to describe.</p>",
         "DescribeStacksRequest$Names": "<p>The names of the stacks to describe.</p>",
-        "ListAssociatedFleetsResult$Names": "<p>The name of the fleet.</p>",
-        "ListAssociatedStacksResult$Names": "<p>The name of the stack.</p>"
+        "ListAssociatedFleetsResult$Names": "<p>The names of the fleets.</p>",
+        "ListAssociatedStacksResult$Names": "<p>The names of the stacks.</p>"
       }
     },
     "SubnetIdList": {
@@ -1170,16 +1071,6 @@
       "refs": {
       }
     },
-    "UpdateImagePermissionsRequest": {
-      "base": null,
-      "refs": {
-      }
-    },
-    "UpdateImagePermissionsResult": {
-      "base": null,
-      "refs": {
-      }
-    },
     "UpdateStackRequest": {
       "base": null,
       "refs": {
@@ -1214,7 +1105,6 @@
     "VisibilityType": {
       "base": null,
       "refs": {
-        "DescribeImagesRequest$Type": "<p>The type of image (public, private, or shared) to describe. </p>",
         "Image$Visibility": "<p>Indicates whether the image is public or private.</p>"
       }
     },

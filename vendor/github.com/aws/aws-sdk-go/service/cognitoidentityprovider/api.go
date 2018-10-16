@@ -11486,10 +11486,10 @@ type AdminGetUserOutput struct {
 	UserAttributes []*AttributeType `type:"list"`
 
 	// The date the user was created.
-	UserCreateDate *time.Time `type:"timestamp"`
+	UserCreateDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The date the user was last modified.
-	UserLastModifiedDate *time.Time `type:"timestamp"`
+	UserLastModifiedDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The list of the user's MFA settings.
 	UserMFASettingList []*string `type:"list"`
@@ -13475,7 +13475,7 @@ type AuthEventType struct {
 	ChallengeResponses []*ChallengeResponseType `type:"list"`
 
 	// The creation date
-	CreationDate *time.Time `type:"timestamp"`
+	CreationDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The user context data captured at the time of an event request. It provides
 	// additional information about the client from which event the request is received.
@@ -16612,16 +16612,16 @@ type DeviceType struct {
 	DeviceAttributes []*AttributeType `type:"list"`
 
 	// The creation date of the device.
-	DeviceCreateDate *time.Time `type:"timestamp"`
+	DeviceCreateDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The device key.
 	DeviceKey *string `min:"1" type:"string"`
 
 	// The date in which the device was last authenticated.
-	DeviceLastAuthenticatedDate *time.Time `type:"timestamp"`
+	DeviceLastAuthenticatedDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The last modified date of the device.
-	DeviceLastModifiedDate *time.Time `type:"timestamp"`
+	DeviceLastModifiedDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 }
 
 // String returns the string representation
@@ -16853,7 +16853,7 @@ type EventFeedbackType struct {
 	_ struct{} `type:"structure"`
 
 	// The event feedback date.
-	FeedbackDate *time.Time `type:"timestamp"`
+	FeedbackDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The event feedback value.
 	//
@@ -17907,7 +17907,7 @@ type GroupType struct {
 	_ struct{} `type:"structure"`
 
 	// The date the group was created.
-	CreationDate *time.Time `type:"timestamp"`
+	CreationDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// A string containing the description of the group.
 	Description *string `type:"string"`
@@ -17916,7 +17916,7 @@ type GroupType struct {
 	GroupName *string `min:"1" type:"string"`
 
 	// The date the group was last modified.
-	LastModifiedDate *time.Time `type:"timestamp"`
+	LastModifiedDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// A nonnegative integer value that specifies the precedence of this group relative
 	// to the other groups that a user can belong to in the user pool. If a user
@@ -18035,13 +18035,13 @@ type IdentityProviderType struct {
 	AttributeMapping map[string]*string `type:"map"`
 
 	// The date the identity provider was created.
-	CreationDate *time.Time `type:"timestamp"`
+	CreationDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// A list of identity provider identifiers.
 	IdpIdentifiers []*string `type:"list"`
 
 	// The date the identity provider was last modified.
-	LastModifiedDate *time.Time `type:"timestamp"`
+	LastModifiedDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The identity provider details, such as MetadataURL and MetadataFile.
 	ProviderDetails map[string]*string `type:"map"`
@@ -19869,10 +19869,10 @@ type ProviderDescription struct {
 	_ struct{} `type:"structure"`
 
 	// The date the provider was added to the user pool.
-	CreationDate *time.Time `type:"timestamp"`
+	CreationDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The date the provider was last modified.
-	LastModifiedDate *time.Time `type:"timestamp"`
+	LastModifiedDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The identity provider name.
 	ProviderName *string `min:"1" type:"string"`
@@ -20386,7 +20386,7 @@ type RiskConfigurationType struct {
 	CompromisedCredentialsRiskConfiguration *CompromisedCredentialsRiskConfigurationType `type:"structure"`
 
 	// The last modified date.
-	LastModifiedDate *time.Time `type:"timestamp"`
+	LastModifiedDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The configuration to override the risk decision.
 	RiskExceptionConfiguration *RiskExceptionConfigurationType `type:"structure"`
@@ -21658,13 +21658,13 @@ type UICustomizationType struct {
 	ClientId *string `min:"1" type:"string"`
 
 	// The creation date for the UI customization.
-	CreationDate *time.Time `type:"timestamp"`
+	CreationDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The logo image for the UI customization.
 	ImageUrl *string `type:"string"`
 
 	// The last-modified date for the UI customization.
-	LastModifiedDate *time.Time `type:"timestamp"`
+	LastModifiedDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The user pool ID for the user pool.
 	UserPoolId *string `min:"1" type:"string"`
@@ -22890,13 +22890,13 @@ type UserImportJobType struct {
 	CloudWatchLogsRoleArn *string `min:"20" type:"string"`
 
 	// The date when the user import job was completed.
-	CompletionDate *time.Time `type:"timestamp"`
+	CompletionDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The message returned when the user import job is completed.
 	CompletionMessage *string `min:"1" type:"string"`
 
 	// The date the user import job was created.
-	CreationDate *time.Time `type:"timestamp"`
+	CreationDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The number of users that could not be imported.
 	FailedUsers *int64 `type:"long"`
@@ -22917,7 +22917,7 @@ type UserImportJobType struct {
 	SkippedUsers *int64 `type:"long"`
 
 	// The date when the user import job was started.
-	StartDate *time.Time `type:"timestamp"`
+	StartDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The status of the user import job. One of the following:
 	//
@@ -23165,7 +23165,7 @@ type UserPoolClientType struct {
 	ClientSecret *string `min:"1" type:"string"`
 
 	// The date the user pool client was created.
-	CreationDate *time.Time `type:"timestamp"`
+	CreationDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The default redirect URI. Must be in the CallbackURLs list.
 	//
@@ -23186,7 +23186,7 @@ type UserPoolClientType struct {
 	ExplicitAuthFlows []*string `type:"list"`
 
 	// The date the user pool client was last modified.
-	LastModifiedDate *time.Time `type:"timestamp"`
+	LastModifiedDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// A list of allowed logout URLs for the identity providers.
 	LogoutURLs []*string `type:"list"`
@@ -23332,7 +23332,7 @@ type UserPoolDescriptionType struct {
 	_ struct{} `type:"structure"`
 
 	// The date the user pool description was created.
-	CreationDate *time.Time `type:"timestamp"`
+	CreationDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The ID in a user pool description.
 	Id *string `min:"1" type:"string"`
@@ -23341,7 +23341,7 @@ type UserPoolDescriptionType struct {
 	LambdaConfig *LambdaConfigType `type:"structure"`
 
 	// The date the user pool description was last modified.
-	LastModifiedDate *time.Time `type:"timestamp"`
+	LastModifiedDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The name in a user pool description.
 	Name *string `min:"1" type:"string"`
@@ -23452,7 +23452,7 @@ type UserPoolType struct {
 	AutoVerifiedAttributes []*string `type:"list"`
 
 	// The date the user pool was created.
-	CreationDate *time.Time `type:"timestamp"`
+	CreationDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The device configuration.
 	DeviceConfiguration *DeviceConfigurationType `type:"structure"`
@@ -23482,7 +23482,7 @@ type UserPoolType struct {
 	LambdaConfig *LambdaConfigType `type:"structure"`
 
 	// The date the user pool was last modified.
-	LastModifiedDate *time.Time `type:"timestamp"`
+	LastModifiedDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Can be one of the following values:
 	//
@@ -23726,10 +23726,10 @@ type UserType struct {
 	MFAOptions []*MFAOptionType `type:"list"`
 
 	// The creation date of the user.
-	UserCreateDate *time.Time `type:"timestamp"`
+	UserCreateDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The last modified date of the user.
-	UserLastModifiedDate *time.Time `type:"timestamp"`
+	UserLastModifiedDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The user status. Can be one of the following:
 	//

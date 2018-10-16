@@ -9938,7 +9938,7 @@ type Job struct {
 	Counters *Counters `locationName:"counters" type:"structure"`
 
 	// When the job was created.
-	Created *time.Time `locationName:"created" type:"timestamp"`
+	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
 
 	// The device (phone or tablet).
 	Device *Device `locationName:"device" type:"structure"`
@@ -9975,7 +9975,7 @@ type Job struct {
 	Result *string `locationName:"result" type:"string" enum:"ExecutionResult"`
 
 	// The job's start time.
-	Started *time.Time `locationName:"started" type:"timestamp"`
+	Started *time.Time `locationName:"started" type:"timestamp" timestampFormat:"unix"`
 
 	// The job's status.
 	//
@@ -10001,7 +10001,7 @@ type Job struct {
 	Status *string `locationName:"status" type:"string" enum:"ExecutionStatus"`
 
 	// The job's stop time.
-	Stopped *time.Time `locationName:"stopped" type:"timestamp"`
+	Stopped *time.Time `locationName:"stopped" type:"timestamp" timestampFormat:"unix"`
 
 	// The job's type.
 	//
@@ -12126,7 +12126,7 @@ type OfferingStatus struct {
 	_ struct{} `type:"structure"`
 
 	// The date on which the offering is effective.
-	EffectiveOn *time.Time `locationName:"effectiveOn" type:"timestamp"`
+	EffectiveOn *time.Time `locationName:"effectiveOn" type:"timestamp" timestampFormat:"unix"`
 
 	// Represents the metadata of an offering status.
 	Offering *Offering `locationName:"offering" type:"structure"`
@@ -12180,7 +12180,7 @@ type OfferingTransaction struct {
 	Cost *MonetaryAmount `locationName:"cost" type:"structure"`
 
 	// The date on which an offering transaction was created.
-	CreatedOn *time.Time `locationName:"createdOn" type:"timestamp"`
+	CreatedOn *time.Time `locationName:"createdOn" type:"timestamp" timestampFormat:"unix"`
 
 	// The ID that corresponds to a device offering promotion.
 	OfferingPromotionId *string `locationName:"offeringPromotionId" min:"4" type:"string"`
@@ -12368,7 +12368,7 @@ type Project struct {
 	Arn *string `locationName:"arn" min:"32" type:"string"`
 
 	// When the project was created.
-	Created *time.Time `locationName:"created" type:"timestamp"`
+	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
 
 	// The default number of minutes (at the project level) a test run will execute
 	// before it times out. Default value is 60 minutes.
@@ -12596,7 +12596,7 @@ type RemoteAccessSession struct {
 	ClientId *string `locationName:"clientId" type:"string"`
 
 	// The date and time the remote access session was created.
-	Created *time.Time `locationName:"created" type:"timestamp"`
+	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
 
 	// The device (phone or tablet) used in the remote access session.
 	Device *Device `locationName:"device" type:"structure"`
@@ -12678,7 +12678,7 @@ type RemoteAccessSession struct {
 	SkipAppResign *bool `locationName:"skipAppResign" type:"boolean"`
 
 	// The date and time the remote access session was started.
-	Started *time.Time `locationName:"started" type:"timestamp"`
+	Started *time.Time `locationName:"started" type:"timestamp" timestampFormat:"unix"`
 
 	// The status of the remote access session. Can be any of the following:
 	//
@@ -12702,7 +12702,7 @@ type RemoteAccessSession struct {
 	Status *string `locationName:"status" type:"string" enum:"ExecutionStatus"`
 
 	// The date and time the remote access session was stopped.
-	Stopped *time.Time `locationName:"stopped" type:"timestamp"`
+	Stopped *time.Time `locationName:"stopped" type:"timestamp" timestampFormat:"unix"`
 }
 
 // String returns the string representation
@@ -13039,7 +13039,7 @@ type Run struct {
 	Counters *Counters `locationName:"counters" type:"structure"`
 
 	// When the run was created.
-	Created *time.Time `locationName:"created" type:"timestamp"`
+	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
 
 	// Output CustomerArtifactPaths object for the test run.
 	CustomerArtifactPaths *CustomerArtifactPaths `locationName:"customerArtifactPaths" type:"structure"`
@@ -13126,7 +13126,7 @@ type Run struct {
 	SkipAppResign *bool `locationName:"skipAppResign" type:"boolean"`
 
 	// The run's start time.
-	Started *time.Time `locationName:"started" type:"timestamp"`
+	Started *time.Time `locationName:"started" type:"timestamp" timestampFormat:"unix"`
 
 	// The run's status.
 	//
@@ -13152,7 +13152,7 @@ type Run struct {
 	Status *string `locationName:"status" type:"string" enum:"ExecutionStatus"`
 
 	// The run's stop time.
-	Stopped *time.Time `locationName:"stopped" type:"timestamp"`
+	Stopped *time.Time `locationName:"stopped" type:"timestamp" timestampFormat:"unix"`
 
 	// The total number of jobs for the run.
 	TotalJobs *int64 `locationName:"totalJobs" type:"integer"`
@@ -14051,7 +14051,7 @@ type Suite struct {
 	Counters *Counters `locationName:"counters" type:"structure"`
 
 	// When the suite was created.
-	Created *time.Time `locationName:"created" type:"timestamp"`
+	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
 
 	// Represents the total (metered or unmetered) minutes used by the test suite.
 	DeviceMinutes *DeviceMinutes `locationName:"deviceMinutes" type:"structure"`
@@ -14082,7 +14082,7 @@ type Suite struct {
 	Result *string `locationName:"result" type:"string" enum:"ExecutionResult"`
 
 	// The suite's start time.
-	Started *time.Time `locationName:"started" type:"timestamp"`
+	Started *time.Time `locationName:"started" type:"timestamp" timestampFormat:"unix"`
 
 	// The suite's status.
 	//
@@ -14108,7 +14108,7 @@ type Suite struct {
 	Status *string `locationName:"status" type:"string" enum:"ExecutionStatus"`
 
 	// The suite's stop time.
-	Stopped *time.Time `locationName:"stopped" type:"timestamp"`
+	Stopped *time.Time `locationName:"stopped" type:"timestamp" timestampFormat:"unix"`
 
 	// The suite's type.
 	//
@@ -14233,7 +14233,7 @@ type Test struct {
 	Counters *Counters `locationName:"counters" type:"structure"`
 
 	// When the test was created.
-	Created *time.Time `locationName:"created" type:"timestamp"`
+	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
 
 	// Represents the total (metered or unmetered) minutes used by the test.
 	DeviceMinutes *DeviceMinutes `locationName:"deviceMinutes" type:"structure"`
@@ -14264,7 +14264,7 @@ type Test struct {
 	Result *string `locationName:"result" type:"string" enum:"ExecutionResult"`
 
 	// The test's start time.
-	Started *time.Time `locationName:"started" type:"timestamp"`
+	Started *time.Time `locationName:"started" type:"timestamp" timestampFormat:"unix"`
 
 	// The test's status.
 	//
@@ -14290,7 +14290,7 @@ type Test struct {
 	Status *string `locationName:"status" type:"string" enum:"ExecutionStatus"`
 
 	// The test's stop time.
-	Stopped *time.Time `locationName:"stopped" type:"timestamp"`
+	Stopped *time.Time `locationName:"stopped" type:"timestamp" timestampFormat:"unix"`
 
 	// The test's type.
 	//
@@ -15135,7 +15135,7 @@ type Upload struct {
 	ContentType *string `locationName:"contentType" type:"string"`
 
 	// When the upload was created.
-	Created *time.Time `locationName:"created" type:"timestamp"`
+	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
 
 	// A message about the upload's result.
 	Message *string `locationName:"message" type:"string"`

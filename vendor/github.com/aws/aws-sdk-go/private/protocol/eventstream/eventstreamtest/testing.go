@@ -108,16 +108,9 @@ func MarshalEventPayload(
 	return w.Bytes()
 }
 
-// EventMessageTypeHeader is an event message type header for specifing an
-// event is an message type.
+// EventMessageTypeHeader is a event message type header for marking an
+// message as being the event type.
 var EventMessageTypeHeader = eventstream.Header{
 	Name:  eventstreamapi.MessageTypeHeader,
 	Value: eventstream.StringValue(eventstreamapi.EventMessageType),
-}
-
-// EventExceptionTypeHeader is an event exception type header for specifing an
-// event is an exeption type.
-var EventExceptionTypeHeader = eventstream.Header{
-	Name:  eventstreamapi.MessageTypeHeader,
-	Value: eventstream.StringValue(eventstreamapi.ExceptionMessageType),
 }
