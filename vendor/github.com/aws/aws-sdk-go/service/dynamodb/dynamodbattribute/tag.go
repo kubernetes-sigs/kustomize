@@ -24,8 +24,8 @@ func (t *tag) parseAVTag(structTag reflect.StructTag) {
 	t.parseTagStr(tagStr)
 }
 
-func (t *tag) parseStructTag(tag string, structTag reflect.StructTag) {
-	tagStr := structTag.Get(tag)
+func (t *tag) parseJSONTag(structTag reflect.StructTag) {
+	tagStr := structTag.Get("json")
 	if len(tagStr) == 0 {
 		return
 	}

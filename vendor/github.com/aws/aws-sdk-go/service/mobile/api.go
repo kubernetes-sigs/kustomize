@@ -1689,10 +1689,10 @@ type ProjectDetails struct {
 	ConsoleUrl *string `locationName:"consoleUrl" type:"string"`
 
 	// Date the project was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
 
 	// Date of the last modification of the project.
-	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
+	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
 
 	// Name of the project.
 	Name *string `locationName:"name" type:"string"`

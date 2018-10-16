@@ -33,13 +33,12 @@ const (
 	// "NotFoundException".
 	//
 	// The resource (for example, an access policy statement) specified in the request
-	// doesn't exist.
+	// does not exist.
 	ErrCodeNotFoundException = "NotFoundException"
 
 	// ErrCodeTooManyRequestsException for service response error code
 	// "TooManyRequestsException".
 	//
-	// The client is sending more than the allowed number of requests per unit of
-	// time.
+	// The client is sending more than the allowed number of requests per unit time.
 	ErrCodeTooManyRequestsException = "TooManyRequestsException"
 )

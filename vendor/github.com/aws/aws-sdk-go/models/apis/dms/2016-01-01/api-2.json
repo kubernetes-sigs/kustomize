@@ -724,7 +724,6 @@
         "ExternalTableDefinition":{"shape":"String"},
         "DynamoDbSettings":{"shape":"DynamoDbSettings"},
         "S3Settings":{"shape":"S3Settings"},
-        "DmsTransferSettings":{"shape":"DmsTransferSettings"},
         "MongoDbSettings":{"shape":"MongoDbSettings"}
       }
     },
@@ -1180,13 +1179,6 @@
         "verify-full"
       ]
     },
-    "DmsTransferSettings":{
-      "type":"structure",
-      "members":{
-        "ServiceAccessRoleArn":{"shape":"String"},
-        "BucketName":{"shape":"String"}
-      }
-    },
     "DynamoDbSettings":{
       "type":"structure",
       "required":["ServiceAccessRoleArn"],
@@ -1216,7 +1208,6 @@
         "ExternalId":{"shape":"String"},
         "DynamoDbSettings":{"shape":"DynamoDbSettings"},
         "S3Settings":{"shape":"S3Settings"},
-        "DmsTransferSettings":{"shape":"DmsTransferSettings"},
         "MongoDbSettings":{"shape":"MongoDbSettings"}
       }
     },
@@ -1390,7 +1381,6 @@
         "ExternalTableDefinition":{"shape":"String"},
         "DynamoDbSettings":{"shape":"DynamoDbSettings"},
         "S3Settings":{"shape":"S3Settings"},
-        "DmsTransferSettings":{"shape":"DmsTransferSettings"},
         "MongoDbSettings":{"shape":"MongoDbSettings"}
       }
     },
@@ -1567,13 +1557,6 @@
         "refreshing"
       ]
     },
-    "ReloadOptionValue":{
-      "type":"string",
-      "enum":[
-        "data-reload",
-        "validate-only"
-      ]
-    },
     "ReloadTablesMessage":{
       "type":"structure",
       "required":[
@@ -1582,8 +1565,7 @@
       ],
       "members":{
         "ReplicationTaskArn":{"shape":"String"},
-        "TablesToReload":{"shape":"TableListToReload"},
-        "ReloadOption":{"shape":"ReloadOptionValue"}
+        "TablesToReload":{"shape":"TableListToReload"}
       }
     },
     "ReloadTablesResponse":{
@@ -1938,8 +1920,7 @@
         "ValidationPendingRecords":{"shape":"Long"},
         "ValidationFailedRecords":{"shape":"Long"},
         "ValidationSuspendedRecords":{"shape":"Long"},
-        "ValidationState":{"shape":"String"},
-        "ValidationStateDetails":{"shape":"String"}
+        "ValidationState":{"shape":"String"}
       }
     },
     "TableStatisticsList":{

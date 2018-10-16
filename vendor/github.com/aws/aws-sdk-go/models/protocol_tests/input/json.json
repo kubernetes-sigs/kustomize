@@ -57,19 +57,8 @@
         "members": {
           "TimeArg": {
             "shape": "TimestampType"
-          },
-          "TimeCustom": {
-            "timestampFormat": "rfc822",
-            "shape": "TimestampType"
-          },
-          "TimeFormat": {
-            "shape": "TimestampFormatType"
           }
         }
-      },
-      "TimestampFormatType": {
-        "timestampFormat": "rfc822",
-        "type": "timestamp"
       },
       "TimestampType": {
         "type": "timestamp"
@@ -84,12 +73,10 @@
           "name": "OperationName"
         },
         "params": {
-          "TimeArg": 1422172800,
-          "TimeCustom": 1422172800,
-          "TimeFormat": 1422172800
+          "TimeArg": 1422172800
         },
         "serialized": {
-          "body": "{\"TimeArg\": 1422172800, \"TimeCustom\": \"Sun, 25 Jan 2015 08:00:00 GMT\", \"TimeFormat\": \"Sun, 25 Jan 2015 08:00:00 GMT\"}",
+          "body": "{\"TimeArg\": 1422172800}",
           "headers": {
             "X-Amz-Target": "com.amazonaws.foo.OperationName",
             "Content-Type": "application/x-amz-json-1.1"
@@ -114,7 +101,7 @@
             "shape": "BlobType"
           },
           "BlobMap": {
-            "shape": "BlobMapType"
+              "shape": "BlobMapType"
           }
         }
       },
@@ -159,8 +146,8 @@
         },
         "params": {
           "BlobMap": {
-            "key1": "foo",
-            "key2": "bar"
+              "key1": "foo",
+              "key2": "bar"
           }
         },
         "serialized": {
@@ -193,7 +180,7 @@
       "ListOfStructures": {
         "type": "list",
         "member": {
-          "shape": "BlobType"
+            "shape": "BlobType"
         }
       },
       "BlobType": {
@@ -217,10 +204,8 @@
         "serialized": {
           "body": "{\"ListParam\": [\"Zm9v\", \"YmFy\"]}",
           "uri": "/",
-          "headers": {
-            "X-Amz-Target": "com.amazonaws.foo.OperationName",
-            "Content-Type": "application/x-amz-json-1.1"
-          }
+          "headers": {"X-Amz-Target": "com.amazonaws.foo.OperationName",
+                      "Content-Type": "application/x-amz-json-1.1"}
         }
       }
     ]
@@ -503,7 +488,7 @@
         "members": {
           "Token": {
             "shape": "StringType",
-            "idempotencyToken": true
+              "idempotencyToken": true
           }
         }
       },

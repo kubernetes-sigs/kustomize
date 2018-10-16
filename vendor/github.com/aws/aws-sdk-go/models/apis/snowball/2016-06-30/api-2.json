@@ -7,7 +7,6 @@
     "protocol":"json",
     "serviceAbbreviation":"Amazon Snowball",
     "serviceFullName":"Amazon Import/Export Snowball",
-    "serviceId":"Snowball",
     "signatureVersion":"v4",
     "targetPrefix":"AWSIESnowballJobManagementService",
     "uid":"snowball-2016-06-30"
@@ -65,8 +64,7 @@
       "errors":[
         {"shape":"InvalidResourceException"},
         {"shape":"KMSRequestFailedException"},
-        {"shape":"InvalidInputCombinationException"},
-        {"shape":"Ec2RequestFailedException"}
+        {"shape":"InvalidInputCombinationException"}
       ]
     },
     "CreateJob":{
@@ -81,8 +79,7 @@
         {"shape":"InvalidResourceException"},
         {"shape":"KMSRequestFailedException"},
         {"shape":"InvalidInputCombinationException"},
-        {"shape":"ClusterLimitExceededException"},
-        {"shape":"Ec2RequestFailedException"}
+        {"shape":"ClusterLimitExceededException"}
       ]
     },
     "DescribeAddress":{
@@ -194,19 +191,6 @@
         {"shape":"InvalidNextTokenException"}
       ]
     },
-    "ListCompatibleImages":{
-      "name":"ListCompatibleImages",
-      "http":{
-        "method":"POST",
-        "requestUri":"/"
-      },
-      "input":{"shape":"ListCompatibleImagesRequest"},
-      "output":{"shape":"ListCompatibleImagesResult"},
-      "errors":[
-        {"shape":"InvalidNextTokenException"},
-        {"shape":"Ec2RequestFailedException"}
-      ]
-    },
     "ListJobs":{
       "name":"ListJobs",
       "http":{
@@ -231,8 +215,7 @@
         {"shape":"InvalidResourceException"},
         {"shape":"InvalidJobStateException"},
         {"shape":"KMSRequestFailedException"},
-        {"shape":"InvalidInputCombinationException"},
-        {"shape":"Ec2RequestFailedException"}
+        {"shape":"InvalidInputCombinationException"}
       ]
     },
     "UpdateJob":{
@@ -248,8 +231,7 @@
         {"shape":"InvalidJobStateException"},
         {"shape":"KMSRequestFailedException"},
         {"shape":"InvalidInputCombinationException"},
-        {"shape":"ClusterLimitExceededException"},
-        {"shape":"Ec2RequestFailedException"}
+        {"shape":"ClusterLimitExceededException"}
       ]
     }
   },
@@ -282,12 +264,6 @@
     "AddressList":{
       "type":"list",
       "member":{"shape":"Address"}
-    },
-    "AmiId":{
-      "type":"string",
-      "max":21,
-      "min":12,
-      "pattern":"(ami-[0-9a-f]{8})|(ami-[0-9a-f]{17})"
     },
     "Boolean":{"type":"boolean"},
     "CancelClusterRequest":{
@@ -367,17 +343,6 @@
         "Complete",
         "Cancelled"
       ]
-    },
-    "CompatibleImage":{
-      "type":"structure",
-      "members":{
-        "AmiId":{"shape":"String"},
-        "Name":{"shape":"String"}
-      }
-    },
-    "CompatibleImageList":{
-      "type":"list",
-      "member":{"shape":"CompatibleImage"}
     },
     "CreateAddressRequest":{
       "type":"structure",
@@ -506,25 +471,6 @@
         "SubJobMetadata":{"shape":"JobMetadataList"}
       }
     },
-    "Ec2AmiResource":{
-      "type":"structure",
-      "required":["AmiId"],
-      "members":{
-        "AmiId":{"shape":"AmiId"},
-        "SnowballAmiId":{"shape":"String"}
-      }
-    },
-    "Ec2AmiResourceList":{
-      "type":"list",
-      "member":{"shape":"Ec2AmiResource"}
-    },
-    "Ec2RequestFailedException":{
-      "type":"structure",
-      "members":{
-        "Message":{"shape":"String"}
-      },
-      "exception":true
-    },
     "EventTriggerDefinition":{
       "type":"structure",
       "members":{
@@ -605,8 +551,7 @@
     "InvalidResourceException":{
       "type":"structure",
       "members":{
-        "Message":{"shape":"String"},
-        "ResourceType":{"shape":"String"}
+        "Message":{"shape":"String"}
       },
       "exception":true
     },
@@ -670,8 +615,7 @@
       "type":"structure",
       "members":{
         "S3Resources":{"shape":"S3ResourceList"},
-        "LambdaResources":{"shape":"LambdaResourceList"},
-        "Ec2AmiResources":{"shape":"Ec2AmiResourceList"}
+        "LambdaResources":{"shape":"LambdaResourceList"}
       }
     },
     "JobState":{
@@ -760,20 +704,6 @@
       "type":"structure",
       "members":{
         "ClusterListEntries":{"shape":"ClusterListEntryList"},
-        "NextToken":{"shape":"String"}
-      }
-    },
-    "ListCompatibleImagesRequest":{
-      "type":"structure",
-      "members":{
-        "MaxResults":{"shape":"ListLimit"},
-        "NextToken":{"shape":"String"}
-      }
-    },
-    "ListCompatibleImagesResult":{
-      "type":"structure",
-      "members":{
-        "CompatibleImages":{"shape":"CompatibleImageList"},
         "NextToken":{"shape":"String"}
       }
     },

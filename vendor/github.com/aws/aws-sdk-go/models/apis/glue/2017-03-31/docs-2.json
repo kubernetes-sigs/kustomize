@@ -11,7 +11,7 @@
     "BatchStopJobRun": "<p>Stops one or more job runs for a specified job definition.</p>",
     "CreateClassifier": "<p>Creates a classifier in the user's account. This may be a <code>GrokClassifier</code>, an <code>XMLClassifier</code>, or abbrev <code>JsonClassifier</code>, depending on which field of the request is present.</p>",
     "CreateConnection": "<p>Creates a connection definition in the Data Catalog.</p>",
-    "CreateCrawler": "<p>Creates a new crawler with specified targets, role, configuration, and optional schedule. At least one crawl target must be specified, in the <i>s3Targets</i> field, the <i>jdbcTargets</i> field, or the <i>DynamoDBTargets</i> field.</p>",
+    "CreateCrawler": "<p>Creates a new crawler with specified targets, role, configuration, and optional schedule. At least one crawl target must be specified, in either the <i>s3Targets</i> or the <i>jdbcTargets</i> field.</p>",
     "CreateDatabase": "<p>Creates a new database in a Data Catalog.</p>",
     "CreateDevEndpoint": "<p>Creates a new DevEndpoint.</p>",
     "CreateJob": "<p>Creates a new job definition.</p>",
@@ -62,7 +62,7 @@
     "GetUserDefinedFunctions": "<p>Retrieves a multiple function definitions from the Data Catalog.</p>",
     "ImportCatalogToGlue": "<p>Imports an existing Athena Data Catalog to AWS Glue</p>",
     "ResetJobBookmark": "<p>Resets a bookmark entry.</p>",
-    "StartCrawler": "<p>Starts a crawl using the specified crawler, regardless of what is scheduled. If the crawler is already running, returns a <a href=\"https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-exceptions.html#aws-glue-api-exceptions-CrawlerRunningException\">CrawlerRunningException</a>.</p>",
+    "StartCrawler": "<p>Starts a crawl using the specified crawler, regardless of what is scheduled. If the crawler is already running, does nothing.</p>",
     "StartCrawlerSchedule": "<p>Changes the schedule state of the specified crawler to <code>SCHEDULED</code>, unless the crawler is already running or the schedule state is already <code>SCHEDULED</code>.</p>",
     "StartJobRun": "<p>Starts a job run using a job definition.</p>",
     "StartTrigger": "<p>Starts an existing trigger. See <a href=\"http://docs.aws.amazon.com/glue/latest/dg/trigger-job.html\">Triggering Jobs</a> for information about how different types of trigger are started.</p>",
@@ -341,7 +341,7 @@
       }
     },
     "Classifier": {
-      "base": "<p>Classifiers are triggered during a crawl task. A classifier checks whether a given file is in a format it can handle, and if it is, the classifier creates a schema in the form of a <code>StructType</code> object that matches that data format.</p> <p>You can use the standard classifiers that AWS Glue supplies, or you can write your own classifiers to best categorize your data sources and specify the appropriate schemas to use for them. A classifier can be a <code>grok</code> classifier, an <code>XML</code> classifier, or a <code>JSON</code> classifier, as specified in one of the fields in the <code>Classifier</code> object.</p>",
+      "base": "<p>Classifiers are written in Python and triggered during a crawl task. You can write your own classifiers to best categorize your data sources and specify the appropriate schemas to use for them. A classifier checks whether a given file is in a format it can handle, and if it is, the classifier creates a schema in the form of a <code>StructType</code> object that matches that data format.</p> <p>A classifier can be a <code>grok</code> classifier, an XML classifier, or a JSON classifier, asspecified in one of the fields in the <code>Classifier</code> object.</p>",
       "refs": {
         "ClassifierList$member": null,
         "GetClassifierResponse$Classifier": "<p>The requested classifier.</p>"
@@ -357,8 +357,8 @@
       "base": null,
       "refs": {
         "Crawler$Classifiers": "<p>A list of custom classifiers associated with the crawler.</p>",
-        "CreateCrawlerRequest$Classifiers": "<p>A list of custom classifiers that the user has registered. By default, all built-in classifiers are included in a crawl, but these custom classifiers always override the default classifiers for a given classification.</p>",
-        "UpdateCrawlerRequest$Classifiers": "<p>A list of custom classifiers that the user has registered. By default, all built-in classifiers are included in a crawl, but these custom classifiers always override the default classifiers for a given classification.</p>"
+        "CreateCrawlerRequest$Classifiers": "<p>A list of custom classifiers that the user has registered. By default, all AWS classifiers are included in a crawl, but these custom classifiers always override the default classifiers for a given classification.</p>",
+        "UpdateCrawlerRequest$Classifiers": "<p>A list of custom classifiers that the user has registered. By default, all classifiers are included in a crawl, but these custom classifiers always override the default classifiers for a given classification.</p>"
       }
     },
     "CodeGenArgName": {
@@ -405,8 +405,7 @@
       "refs": {
         "CodeGenNode$Args": "<p>Properties of the node, in the form of name-value pairs.</p>",
         "Location$Jdbc": "<p>A JDBC location.</p>",
-        "Location$S3": "<p>An Amazon S3 location.</p>",
-        "Location$DynamoDB": "<p>A DynamoDB Table location.</p>"
+        "Location$S3": "<p>An Amazon S3 location.</p>"
       }
     },
     "CodeGenNodeType": {
@@ -542,9 +541,9 @@
     "CrawlerConfiguration": {
       "base": null,
       "refs": {
-        "Crawler$Configuration": "<p>Crawler configuration information. This versioned JSON string allows users to specify aspects of a crawler's behavior. For more information, see <a href=\"http://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html\">Configuring a Crawler</a>.</p>",
-        "CreateCrawlerRequest$Configuration": "<p>Crawler configuration information. This versioned JSON string allows users to specify aspects of a crawler's behavior. For more information, see <a href=\"http://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html\">Configuring a Crawler</a>.</p>",
-        "UpdateCrawlerRequest$Configuration": "<p>Crawler configuration information. This versioned JSON string allows users to specify aspects of a crawler's behavior. For more information, see <a href=\"http://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html\">Configuring a Crawler</a>.</p>"
+        "Crawler$Configuration": "<p>Crawler configuration information. This versioned JSON string allows users to specify aspects of a Crawler's behavior.</p> <p>You can use this field to force partitions to inherit metadata such as classification, input format, output format, serde information, and schema from their parent table, rather than detect this information separately for each partition. Use the following JSON string to specify that behavior:</p> <p>Example: <code>'{ \"Version\": 1.0, \"CrawlerOutput\": { \"Partitions\": { \"AddOrUpdateBehavior\": \"InheritFromTable\" } } }'</code> </p>",
+        "CreateCrawlerRequest$Configuration": "<p>Crawler configuration information. This versioned JSON string allows users to specify aspects of a Crawler's behavior.</p> <p>You can use this field to force partitions to inherit metadata such as classification, input format, output format, serde information, and schema from their parent table, rather than detect this information separately for each partition. Use the following JSON string to specify that behavior:</p> <p>Example: <code>'{ \"Version\": 1.0, \"CrawlerOutput\": { \"Partitions\": { \"AddOrUpdateBehavior\": \"InheritFromTable\" } } }'</code> </p>",
+        "UpdateCrawlerRequest$Configuration": "<p>Crawler configuration information. This versioned JSON string allows users to specify aspects of a Crawler's behavior.</p> <p>You can use this field to force partitions to inherit metadata such as classification, input format, output format, serde information, and schema from their parent table, rather than detect this information separately for each partition. Use the following JSON string to specify that behavior:</p> <p>Example: <code>'{ \"Version\": 1.0, \"CrawlerOutput\": { \"Partitions\": { \"AddOrUpdateBehavior\": \"InheritFromTable\" } } }'</code> </p>"
       }
     },
     "CrawlerList": {
@@ -955,18 +954,6 @@
         "GetDevEndpointsResponse$DevEndpoints": "<p>A list of DevEndpoint definitions.</p>"
       }
     },
-    "DynamoDBTarget": {
-      "base": "<p>Specifies a DynamoDB table to crawl.</p>",
-      "refs": {
-        "DynamoDBTargetList$member": null
-      }
-    },
-    "DynamoDBTargetList": {
-      "base": null,
-      "refs": {
-        "CrawlerTargets$DynamoDBTargets": "<p>Specifies DynamoDB targets.</p>"
-      }
-    },
     "EntityNotFoundException": {
       "base": "<p>A specified entity does not exist</p>",
       "refs": {
@@ -1044,7 +1031,7 @@
       "refs": {
         "CreateDevEndpointRequest$EndpointName": "<p>The name to be assigned to the new DevEndpoint.</p>",
         "CreateDevEndpointRequest$SubnetId": "<p>The subnet ID for the new DevEndpoint to use.</p>",
-        "CreateDevEndpointRequest$PublicKey": "<p>The public key to be used by this DevEndpoint for authentication. This attribute is provided for backward compatibility, as the recommended attribute to use is public keys.</p>",
+        "CreateDevEndpointRequest$PublicKey": "<p>The public key to use for authentication.</p>",
         "CreateDevEndpointRequest$ExtraPythonLibsS3Path": "<p>Path(s) to one or more Python libraries in an S3 bucket that should be loaded in your DevEndpoint. Multiple values must be complete paths separated by a comma.</p> <p>Please note that only pure Python libraries can currently be used on a DevEndpoint. Libraries that rely on C extensions, such as the <a href=\"http://pandas.pydata.org/\">pandas</a> Python data analysis library, are not yet supported.</p>",
         "CreateDevEndpointRequest$ExtraJarsS3Path": "<p>Path to one or more Java Jars in an S3 bucket that should be loaded in your DevEndpoint.</p>",
         "CreateDevEndpointResponse$EndpointName": "<p>The name assigned to the new DevEndpoint.</p>",
@@ -1061,7 +1048,7 @@
         "DevEndpoint$EndpointName": "<p>The name of the DevEndpoint.</p>",
         "DevEndpoint$SubnetId": "<p>The subnet ID for this DevEndpoint.</p>",
         "DevEndpoint$YarnEndpointAddress": "<p>The YARN endpoint address used by this DevEndpoint.</p>",
-        "DevEndpoint$PrivateAddress": "<p>A private DNS to access the DevEndpoint within a VPC, if the DevEndpoint is created within one.</p>",
+        "DevEndpoint$PrivateAddress": "<p>The private address used by this DevEndpoint.</p>",
         "DevEndpoint$PublicAddress": "<p>The public VPC address used by this DevEndpoint.</p>",
         "DevEndpoint$Status": "<p>The current status of this DevEndpoint.</p>",
         "DevEndpoint$AvailabilityZone": "<p>The AWS availability zone where this DevEndpoint is located.</p>",
@@ -1070,7 +1057,7 @@
         "DevEndpoint$ExtraJarsS3Path": "<p>Path to one or more Java Jars in an S3 bucket that should be loaded in your DevEndpoint.</p> <p>Please note that only pure Java/Scala libraries can currently be used on a DevEndpoint.</p>",
         "DevEndpoint$FailureReason": "<p>The reason for a current failure in this DevEndpoint.</p>",
         "DevEndpoint$LastUpdateStatus": "<p>The status of the last update.</p>",
-        "DevEndpoint$PublicKey": "<p>The public key to be used by this DevEndpoint for authentication. This attribute is provided for backward compatibility, as the recommended attribute to use is public keys.</p>",
+        "DevEndpoint$PublicKey": "<p>The public key to be used by this DevEndpoint for authentication.</p>",
         "DevEndpointCustomLibraries$ExtraPythonLibsS3Path": "<p>Path(s) to one or more Python libraries in an S3 bucket that should be loaded in your DevEndpoint. Multiple values must be complete paths separated by a comma.</p> <p>Please note that only pure Python libraries can currently be used on a DevEndpoint. Libraries that rely on C extensions, such as the <a href=\"http://pandas.pydata.org/\">pandas</a> Python data analysis library, are not yet supported.</p>",
         "DevEndpointCustomLibraries$ExtraJarsS3Path": "<p>Path to one or more Java Jars in an S3 bucket that should be loaded in your DevEndpoint.</p> <p>Please note that only pure Java/Scala libraries can currently be used on a DevEndpoint.</p>",
         "GenericMap$key": null,
@@ -1085,7 +1072,6 @@
         "GetTriggersRequest$NextToken": "<p>A continuation token, if this is a continuation call.</p>",
         "GetTriggersResponse$NextToken": "<p>A continuation token, if not all the requested triggers have yet been returned.</p>",
         "JobCommand$Name": "<p>The name of the job command: this must be <code>glueetl</code>.</p>",
-        "PublicKeysList$member": null,
         "StringList$member": null,
         "Trigger$Schedule": "<p>A <code>cron</code> expression used to specify the schedule (see <a href=\"http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html\">Time-Based Schedules for Jobs and Crawlers</a>. For example, to run something every day at 12:15 UTC, you would specify: <code>cron(15 12 * * ? *)</code>.</p>",
         "TriggerUpdate$Schedule": "<p>A <code>cron</code> expression used to specify the schedule (see <a href=\"http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html\">Time-Based Schedules for Jobs and Crawlers</a>. For example, to run something every day at 12:15 UTC, you would specify: <code>cron(15 12 * * ? *)</code>.</p>",
@@ -2010,7 +1996,6 @@
     "Path": {
       "base": null,
       "refs": {
-        "DynamoDBTarget$Path": "<p>The name of the DynamoDB table to crawl.</p>",
         "JdbcTarget$Path": "<p>The path of the JDBC target.</p>",
         "PathList$member": null,
         "S3Target$Path": "<p>The path to the Amazon S3 target.</p>"
@@ -2061,15 +2046,6 @@
       "refs": {
         "UserDefinedFunction$OwnerType": "<p>The owner type.</p>",
         "UserDefinedFunctionInput$OwnerType": "<p>The owner type.</p>"
-      }
-    },
-    "PublicKeysList": {
-      "base": null,
-      "refs": {
-        "CreateDevEndpointRequest$PublicKeys": "<p>A list of public keys to be used by the DevEndpoints for authentication. The use of this attribute is preferred over a single public key because the public keys allow you to have a different private key per client.</p> <note> <p>If you previously created an endpoint with a public key, you must remove that key to be able to set a list of public keys: call the <code>UpdateDevEndpoint</code> API with the public key content in the <code>deletePublicKeys</code> attribute, and the list of new keys in the <code>addPublicKeys</code> attribute.</p> </note>",
-        "DevEndpoint$PublicKeys": "<p>A list of public keys to be used by the DevEndpoints for authentication. The use of this attribute is preferred over a single public key because the public keys allow you to have a different private key per client.</p> <note> <p>If you previously created an endpoint with a public key, you must remove that key to be able to set a list of public keys: call the <code>UpdateDevEndpoint</code> API with the public key content in the <code>deletePublicKeys</code> attribute, and the list of new keys in the <code>addPublicKeys</code> attribute.</p> </note>",
-        "UpdateDevEndpointRequest$AddPublicKeys": "<p>The list of public keys for the DevEndpoint to use.</p>",
-        "UpdateDevEndpointRequest$DeletePublicKeys": "<p>The list of public keys to be deleted from the DevEndpoint. </p>"
       }
     },
     "PythonScript": {

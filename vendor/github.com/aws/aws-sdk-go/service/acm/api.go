@@ -1332,7 +1332,7 @@ type CertificateDetail struct {
 
 	// The time at which the certificate was requested. This value exists only when
 	// the certificate type is AMAZON_ISSUED.
-	CreatedAt *time.Time `type:"timestamp"`
+	CreatedAt *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The fully qualified domain name for the certificate, such as www.example.com
 	// or example.com.
@@ -1356,7 +1356,7 @@ type CertificateDetail struct {
 
 	// The date and time at which the certificate was imported. This value exists
 	// only when the certificate type is IMPORTED.
-	ImportedAt *time.Time `type:"timestamp"`
+	ImportedAt *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// A list of ARNs for the AWS resources that are using the certificate. A certificate
 	// can be used by multiple AWS resources.
@@ -1364,7 +1364,7 @@ type CertificateDetail struct {
 
 	// The time at which the certificate was issued. This value exists only when
 	// the certificate type is AMAZON_ISSUED.
-	IssuedAt *time.Time `type:"timestamp"`
+	IssuedAt *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The name of the certificate authority that issued and signed the certificate.
 	Issuer *string `type:"string"`
@@ -1379,10 +1379,10 @@ type CertificateDetail struct {
 	KeyUsages []*KeyUsage `type:"list"`
 
 	// The time after which the certificate is not valid.
-	NotAfter *time.Time `type:"timestamp"`
+	NotAfter *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The time before which the certificate is not valid.
-	NotBefore *time.Time `type:"timestamp"`
+	NotBefore *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Value that specifies whether to add the certificate to a transparency log.
 	// Certificate transparency makes it possible to detect SSL certificates that
@@ -1405,7 +1405,7 @@ type CertificateDetail struct {
 
 	// The time at which the certificate was revoked. This value exists only when
 	// the certificate status is REVOKED.
-	RevokedAt *time.Time `type:"timestamp"`
+	RevokedAt *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The serial number of the certificate.
 	Serial *string `type:"string"`

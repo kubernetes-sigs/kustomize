@@ -6,7 +6,6 @@
     "jsonVersion":"1.1",
     "protocol":"json",
     "serviceFullName":"Alexa For Business",
-    "serviceId":"Alexa For Business",
     "signatureVersion":"v4",
     "targetPrefix":"AlexaForBusiness",
     "uid":"alexaforbusiness-2017-11-09"
@@ -33,8 +32,7 @@
       "input":{"shape":"AssociateDeviceWithRoomRequest"},
       "output":{"shape":"AssociateDeviceWithRoomResponse"},
       "errors":[
-        {"shape":"LimitExceededException"},
-        {"shape":"DeviceNotRegisteredException"}
+        {"shape":"LimitExceededException"}
       ]
     },
     "AssociateSkillGroupWithRoom":{
@@ -221,10 +219,7 @@
         "requestUri":"/"
       },
       "input":{"shape":"DisassociateDeviceFromRoomRequest"},
-      "output":{"shape":"DisassociateDeviceFromRoomResponse"},
-      "errors":[
-        {"shape":"DeviceNotRegisteredException"}
-      ]
+      "output":{"shape":"DisassociateDeviceFromRoomResponse"}
     },
     "DisassociateSkillGroupFromRoom":{
       "name":"DisassociateSkillGroupFromRoom",
@@ -468,10 +463,7 @@
         "requestUri":"/"
       },
       "input":{"shape":"StartDeviceSyncRequest"},
-      "output":{"shape":"StartDeviceSyncResponse"},
-      "errors":[
-        {"shape":"DeviceNotRegisteredException"}
-      ]
+      "output":{"shape":"StartDeviceSyncResponse"}
     },
     "TagResource":{
       "name":"TagResource",
@@ -531,8 +523,7 @@
       "input":{"shape":"UpdateDeviceRequest"},
       "output":{"shape":"UpdateDeviceResponse"},
       "errors":[
-        {"shape":"NotFoundException"},
-        {"shape":"DeviceNotRegisteredException"}
+        {"shape":"NotFoundException"}
       ]
     },
     "UpdateProfile":{
@@ -986,13 +977,6 @@
       "max":100,
       "min":2,
       "pattern":"[\\u0009\\u000A\\u000D\\u0020-\\u007E\\u0085\\u00A0-\\uD7FF\\uE000-\\uFFFD\\u10000-\\u10FFFF]*"
-    },
-    "DeviceNotRegisteredException":{
-      "type":"structure",
-      "members":{
-        "Message":{"shape":"ErrorMessage"}
-      },
-      "exception":true
     },
     "DeviceSerialNumber":{
       "type":"string",

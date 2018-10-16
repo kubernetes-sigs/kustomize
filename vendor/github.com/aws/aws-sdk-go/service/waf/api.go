@@ -15660,7 +15660,7 @@ type SampledHTTPRequest struct {
 
 	// The time at which AWS WAF received the request from your AWS resource, in
 	// Unix time format (in seconds).
-	Timestamp *time.Time `type:"timestamp"`
+	Timestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// A value that indicates how one result in the response relates proportionally
 	// to other results in the response. A result that has a weight of 2 represents
@@ -16424,7 +16424,7 @@ type TimeWindow struct {
 	// time range in the previous three hours.
 	//
 	// EndTime is a required field
-	EndTime *time.Time `type:"timestamp" required:"true"`
+	EndTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	// The beginning of the time range from which you want GetSampledRequests to
 	// return a sample of the requests that your AWS resource received. Specify
@@ -16432,7 +16432,7 @@ type TimeWindow struct {
 	// any time range in the previous three hours.
 	//
 	// StartTime is a required field
-	StartTime *time.Time `type:"timestamp" required:"true"`
+	StartTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
 }
 
 // String returns the string representation

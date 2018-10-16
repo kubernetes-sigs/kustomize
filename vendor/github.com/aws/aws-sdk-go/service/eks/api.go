@@ -466,7 +466,7 @@ type Cluster struct {
 	ClientRequestToken *string `locationName:"clientRequestToken" type:"string"`
 
 	// The Unix epoch time stamp in seconds for when the cluster was created.
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix"`
 
 	// The endpoint for your Kubernetes API server.
 	Endpoint *string `locationName:"endpoint" type:"string"`

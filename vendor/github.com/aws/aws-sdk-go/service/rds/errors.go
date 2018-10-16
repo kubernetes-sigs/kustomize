@@ -27,10 +27,6 @@ const (
 	// The DB security group authorization quota has been reached.
 	ErrCodeAuthorizationQuotaExceededFault = "AuthorizationQuotaExceeded"
 
-	// ErrCodeBackupPolicyNotFoundFault for service response error code
-	// "BackupPolicyNotFoundFault".
-	ErrCodeBackupPolicyNotFoundFault = "BackupPolicyNotFoundFault"
-
 	// ErrCodeCertificateNotFoundFault for service response error code
 	// "CertificateNotFound".
 	//
@@ -261,13 +257,6 @@ const (
 	// be able to resolve this error by updating your subnet group to use different
 	// Availability Zones that have more storage available.
 	ErrCodeInsufficientStorageClusterCapacityFault = "InsufficientStorageClusterCapacity"
-
-	// ErrCodeInvalidDBClusterCapacityFault for service response error code
-	// "InvalidDBClusterCapacityFault".
-	//
-	// Capacity isn't a valid Aurora Serverless DB cluster capacity. Valid capacity
-	// values are 2, 4, 8, 16, 32, 64, 128, and 256.
-	ErrCodeInvalidDBClusterCapacityFault = "InvalidDBClusterCapacityFault"
 
 	// ErrCodeInvalidDBClusterSnapshotStateFault for service response error code
 	// "InvalidDBClusterSnapshotStateFault".

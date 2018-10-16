@@ -2769,18 +2769,13 @@ func (c *CloudWatchLogs) PutLogEventsRequest(input *PutLogEventsInput) (req *req
 //    retention period of the log group.
 //
 //    * The log events in the batch must be in chronological ordered by their
-//    time stamp. The time stamp is the time the event occurred, expressed as
-//    the number of milliseconds after Jan 1, 1970 00:00:00 UTC. (In AWS Tools
-//    for PowerShell and the AWS SDK for .NET, the timestamp is specified in
-//    .NET format: yyyy-mm-ddThh:mm:ss. For example, 2017-09-15T13:45:30.)
+//    time stamp (the time the event occurred, expressed as the number of milliseconds
+//    after Jan 1, 1970 00:00:00 UTC).
 //
 //    * The maximum number of log events in a batch is 10,000.
 //
 //    * A batch of log events in a single request cannot span more than 24 hours.
 //    Otherwise, the operation fails.
-//
-// If a call to PutLogEvents returns "UnrecognizedClientException" the most
-// likely cause is an invalid AWS access key ID or secret key.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2804,9 +2799,6 @@ func (c *CloudWatchLogs) PutLogEventsRequest(input *PutLogEventsInput) (req *req
 //
 //   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
 //   The service cannot complete the request.
-//
-//   * ErrCodeUnrecognizedClientException "UnrecognizedClientException"
-//   The most likely cause is an invalid AWS access key ID or secret key.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/PutLogEvents
 func (c *CloudWatchLogs) PutLogEvents(input *PutLogEventsInput) (*PutLogEventsOutput, error) {
@@ -2974,7 +2966,7 @@ func (c *CloudWatchLogs) PutResourcePolicyRequest(input *PutResourcePolicyInput)
 //
 // Creates or updates a resource policy allowing other AWS services to put log
 // events to this account, such as Amazon Route 53. An account can have up to
-// 10 resource policies per region.
+// 50 resource policies per region.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4637,7 +4629,7 @@ type DescribeLogStreamsInput struct {
 
 	// The prefix to match.
 	//
-	// If orderBy is LastEventTime,you cannot specify this parameter.
+	// iIf orderBy is LastEventTime,you cannot specify this parameter.
 	LogStreamNamePrefix *string `locationName:"logStreamNamePrefix" min:"1" type:"string"`
 
 	// The token for the next set of items to return. (You received this token from
@@ -4776,14 +4768,11 @@ type DescribeMetricFiltersInput struct {
 	// The name of the log group.
 	LogGroupName *string `locationName:"logGroupName" min:"1" type:"string"`
 
-	// Filters results to include only those with the specified metric name. If
-	// you include this parameter in your request, you must also include the metricNamespace
-	// parameter.
+	// The name of the CloudWatch metric to which the monitored log information
+	// should be published. For example, you may publish to a metric called ErrorCount.
 	MetricName *string `locationName:"metricName" type:"string"`
 
-	// Filters results to include only those in the specified namespace. If you
-	// include this parameter in your request, you must also include the metricName
-	// parameter.
+	// The namespace of the CloudWatch metric.
 	MetricNamespace *string `locationName:"metricNamespace" type:"string"`
 
 	// The token for the next set of items to return. (You received this token from
@@ -5611,8 +5600,8 @@ type GetLogEventsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The end of the time range, expressed as the number of milliseconds after
-	// Jan 1, 1970 00:00:00 UTC. Events with a time stamp equal to or later than
-	// this time are not included.
+	// Jan 1, 1970 00:00:00 UTC. Events with a time stamp later than this time are
+	// not included.
 	EndTime *int64 `locationName:"endTime" type:"long"`
 
 	// The maximum number of log events returned. If you don't specify a value,
@@ -5640,9 +5629,8 @@ type GetLogEventsInput struct {
 	StartFromHead *bool `locationName:"startFromHead" type:"boolean"`
 
 	// The start of the time range, expressed as the number of milliseconds after
-	// Jan 1, 1970 00:00:00 UTC. Events with a time stamp equal to this time or
-	// later than this time are included. Events with a time stamp earlier than
-	// this time are not included.
+	// Jan 1, 1970 00:00:00 UTC. Events with a time stamp earlier than this time
+	// are not included.
 	StartTime *int64 `locationName:"startTime" type:"long"`
 }
 
@@ -5733,13 +5721,11 @@ type GetLogEventsOutput struct {
 	Events []*OutputLogEvent `locationName:"events" type:"list"`
 
 	// The token for the next set of items in the backward direction. The token
-	// expires after 24 hours. This token will never be null. If you have reached
-	// the end of the stream, it will return the same token you passed in.
+	// expires after 24 hours.
 	NextBackwardToken *string `locationName:"nextBackwardToken" min:"1" type:"string"`
 
 	// The token for the next set of items in the forward direction. The token expires
-	// after 24 hours. If you have reached the end of the stream, it will return
-	// the same token you passed in.
+	// after 24 hours.
 	NextForwardToken *string `locationName:"nextForwardToken" min:"1" type:"string"`
 }
 
@@ -5781,7 +5767,7 @@ type InputLogEvent struct {
 	// Message is a required field
 	Message *string `locationName:"message" min:"1" type:"string" required:"true"`
 
-	// The time the event occurred, expressed as the number of milliseconds after
+	// The time the event occurred, expressed as the number of milliseconds fter
 	// Jan 1, 1970 00:00:00 UTC.
 	//
 	// Timestamp is a required field
@@ -6728,9 +6714,9 @@ type PutResourcePolicyInput struct {
 	// to put DNS query logs in to the specified log group. Replace "logArn" with
 	// the ARN of your CloudWatch Logs resource, such as a log group or log stream.
 	//
-	// { "Version": "2012-10-17", "Statement": [ { "Sid": "Route53LogsToCloudWatchLogs",
+	// { "Version": "2012-10-17" "Statement": [ { "Sid": "Route53LogsToCloudWatchLogs",
 	// "Effect": "Allow", "Principal": { "Service": [ "route53.amazonaws.com" ]
-	// }, "Action":"logs:PutLogEvents", "Resource": "logArn" } ] }
+	// }, "Action":"logs:PutLogEvents", "Resource": logArn } ] }
 	PolicyDocument *string `locationName:"policyDocument" min:"1" type:"string"`
 
 	// Name of the new policy. This parameter is required.

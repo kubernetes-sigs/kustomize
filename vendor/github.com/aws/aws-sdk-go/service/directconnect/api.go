@@ -4605,9 +4605,6 @@ type BGPPeer struct {
 	// Example: asdf34example
 	AuthKey *string `locationName:"authKey" type:"string"`
 
-	// The Direct Connection endpoint which the BGP peer terminates on.
-	AwsDeviceV2 *string `locationName:"awsDeviceV2" type:"string"`
-
 	// The state of the BGP peer.
 	//
 	//    * Verifying: The BGP peering addresses or ASN require validation before
@@ -4627,9 +4624,6 @@ type BGPPeer struct {
 	// The Up/Down state of the BGP peer.
 	//
 	//    * Up: The BGP peer is established.
-	//
-	// A state of up does not indicate the state of the routing function. Ensure
-	//    that you are receiving routes over the BGP session.
 	//
 	//    * Down: The BGP peer is down.
 	BgpStatus *string `locationName:"bgpStatus" type:"string" enum:"BGPStatus"`
@@ -4671,12 +4665,6 @@ func (s *BGPPeer) SetAsn(v int64) *BGPPeer {
 // SetAuthKey sets the AuthKey field's value.
 func (s *BGPPeer) SetAuthKey(v string) *BGPPeer {
 	s.AuthKey = &v
-	return s
-}
-
-// SetAwsDeviceV2 sets the AwsDeviceV2 field's value.
-func (s *BGPPeer) SetAwsDeviceV2(v string) *BGPPeer {
-	s.AwsDeviceV2 = &v
 	return s
 }
 
@@ -5009,13 +4997,8 @@ func (s *ConfirmPublicVirtualInterfaceOutput) SetVirtualInterfaceState(v string)
 type Connection struct {
 	_ struct{} `type:"structure"`
 
-	// Deprecated in favor of awsDeviceV2.
-	//
 	// The Direct Connection endpoint which the physical connection terminates on.
-	AwsDevice *string `locationName:"awsDevice" deprecated:"true" type:"string"`
-
-	// The Direct Connection endpoint which the physical connection terminates on.
-	AwsDeviceV2 *string `locationName:"awsDeviceV2" type:"string"`
+	AwsDevice *string `locationName:"awsDevice" type:"string"`
 
 	// Bandwidth of the connection.
 	//
@@ -5069,7 +5052,7 @@ type Connection struct {
 	LagId *string `locationName:"lagId" type:"string"`
 
 	// The time of the most recent call to DescribeLoa for this connection.
-	LoaIssueTime *time.Time `locationName:"loaIssueTime" type:"timestamp"`
+	LoaIssueTime *time.Time `locationName:"loaIssueTime" type:"timestamp" timestampFormat:"unix"`
 
 	// Where the connection is located.
 	//
@@ -5110,12 +5093,6 @@ func (s Connection) GoString() string {
 // SetAwsDevice sets the AwsDevice field's value.
 func (s *Connection) SetAwsDevice(v string) *Connection {
 	s.AwsDevice = &v
-	return s
-}
-
-// SetAwsDeviceV2 sets the AwsDeviceV2 field's value.
-func (s *Connection) SetAwsDeviceV2(v string) *Connection {
-	s.AwsDeviceV2 = &v
 	return s
 }
 
@@ -7656,13 +7633,8 @@ func (s *GatewayAttachment) SetVirtualInterfaceRegion(v string) *GatewayAttachme
 type Interconnect struct {
 	_ struct{} `type:"structure"`
 
-	// Deprecated in favor of awsDeviceV2.
-	//
 	// The Direct Connection endpoint which the physical connection terminates on.
-	AwsDevice *string `locationName:"awsDevice" deprecated:"true" type:"string"`
-
-	// The Direct Connection endpoint which the physical connection terminates on.
-	AwsDeviceV2 *string `locationName:"awsDeviceV2" type:"string"`
+	AwsDevice *string `locationName:"awsDevice" type:"string"`
 
 	// Bandwidth of the connection.
 	//
@@ -7705,7 +7677,7 @@ type Interconnect struct {
 	LagId *string `locationName:"lagId" type:"string"`
 
 	// The time of the most recent call to DescribeInterconnectLoa for this Interconnect.
-	LoaIssueTime *time.Time `locationName:"loaIssueTime" type:"timestamp"`
+	LoaIssueTime *time.Time `locationName:"loaIssueTime" type:"timestamp" timestampFormat:"unix"`
 
 	// Where the connection is located.
 	//
@@ -7735,12 +7707,6 @@ func (s Interconnect) GoString() string {
 // SetAwsDevice sets the AwsDevice field's value.
 func (s *Interconnect) SetAwsDevice(v string) *Interconnect {
 	s.AwsDevice = &v
-	return s
-}
-
-// SetAwsDeviceV2 sets the AwsDeviceV2 field's value.
-func (s *Interconnect) SetAwsDeviceV2(v string) *Interconnect {
-	s.AwsDeviceV2 = &v
 	return s
 }
 
@@ -7805,13 +7771,8 @@ type Lag struct {
 	// This is intended for use by AWS Direct Connect partners only.
 	AllowsHostedConnections *bool `locationName:"allowsHostedConnections" type:"boolean"`
 
-	// Deprecated in favor of awsDeviceV2.
-	//
 	// The AWS Direct Connection endpoint that hosts the LAG.
-	AwsDevice *string `locationName:"awsDevice" deprecated:"true" type:"string"`
-
-	// The AWS Direct Connection endpoint that hosts the LAG.
-	AwsDeviceV2 *string `locationName:"awsDeviceV2" type:"string"`
+	AwsDevice *string `locationName:"awsDevice" type:"string"`
 
 	// A list of connections bundled by this LAG.
 	Connections []*Connection `locationName:"connections" type:"list"`
@@ -7894,12 +7855,6 @@ func (s *Lag) SetAllowsHostedConnections(v bool) *Lag {
 // SetAwsDevice sets the AwsDevice field's value.
 func (s *Lag) SetAwsDevice(v string) *Lag {
 	s.AwsDevice = &v
-	return s
-}
-
-// SetAwsDeviceV2 sets the AwsDeviceV2 field's value.
-func (s *Lag) SetAwsDeviceV2(v string) *Lag {
-	s.AwsDeviceV2 = &v
 	return s
 }
 
@@ -8013,13 +7968,6 @@ type Location struct {
 	// The name of the AWS Direct Connect location. The name includes the colocation
 	// partner name and the physical site of the lit building.
 	LocationName *string `locationName:"locationName" type:"string"`
-
-	// The AWS region where the AWS Direct connect location is located.
-	//
-	// Example: us-east-1
-	//
-	// Default: None
-	Region *string `locationName:"region" type:"string"`
 }
 
 // String returns the string representation
@@ -8041,12 +7989,6 @@ func (s *Location) SetLocationCode(v string) *Location {
 // SetLocationName sets the LocationName field's value.
 func (s *Location) SetLocationName(v string) *Location {
 	s.LocationName = &v
-	return s
-}
-
-// SetRegion sets the Region field's value.
-func (s *Location) SetRegion(v string) *Location {
-	s.Region = &v
 	return s
 }
 
@@ -9055,9 +8997,6 @@ type VirtualInterface struct {
 	// Example: asdf34example
 	AuthKey *string `locationName:"authKey" type:"string"`
 
-	// The Direct Connection endpoint which the virtual interface terminates on.
-	AwsDeviceV2 *string `locationName:"awsDeviceV2" type:"string"`
-
 	// A list of the BGP peers configured on this virtual interface.
 	BgpPeers []*BGPPeer `locationName:"bgpPeers" type:"list"`
 
@@ -9091,13 +9030,6 @@ type VirtualInterface struct {
 
 	// The AWS account that will own the new virtual interface.
 	OwnerAccount *string `locationName:"ownerAccount" type:"string"`
-
-	// The AWS region where the virtual interface is located.
-	//
-	// Example: us-east-1
-	//
-	// Default: None
-	Region *string `locationName:"region" type:"string"`
 
 	// A list of routes to be advertised to the AWS network in this region (public
 	// virtual interface).
@@ -9203,12 +9135,6 @@ func (s *VirtualInterface) SetAuthKey(v string) *VirtualInterface {
 	return s
 }
 
-// SetAwsDeviceV2 sets the AwsDeviceV2 field's value.
-func (s *VirtualInterface) SetAwsDeviceV2(v string) *VirtualInterface {
-	s.AwsDeviceV2 = &v
-	return s
-}
-
 // SetBgpPeers sets the BgpPeers field's value.
 func (s *VirtualInterface) SetBgpPeers(v []*BGPPeer) *VirtualInterface {
 	s.BgpPeers = v
@@ -9248,12 +9174,6 @@ func (s *VirtualInterface) SetLocation(v string) *VirtualInterface {
 // SetOwnerAccount sets the OwnerAccount field's value.
 func (s *VirtualInterface) SetOwnerAccount(v string) *VirtualInterface {
 	s.OwnerAccount = &v
-	return s
-}
-
-// SetRegion sets the Region field's value.
-func (s *VirtualInterface) SetRegion(v string) *VirtualInterface {
-	s.Region = &v
 	return s
 }
 
@@ -9346,9 +9266,6 @@ const (
 // The Up/Down state of the BGP peer.
 //
 //    * Up: The BGP peer is established.
-//
-// A state of up does not indicate the state of the routing function. Ensure
-//    that you are receiving routes over the BGP session.
 //
 //    * Down: The BGP peer is down.
 const (

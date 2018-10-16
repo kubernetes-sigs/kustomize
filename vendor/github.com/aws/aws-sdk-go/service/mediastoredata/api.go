@@ -556,7 +556,7 @@ type DescribeObjectOutput struct {
 	ETag *string `location:"header" locationName:"ETag" min:"1" type:"string"`
 
 	// The date and time that the object was last modified.
-	LastModified *time.Time `location:"header" locationName:"Last-Modified" type:"timestamp"`
+	LastModified *time.Time `location:"header" locationName:"Last-Modified" type:"timestamp" timestampFormat:"rfc822"`
 }
 
 // String returns the string representation
@@ -699,7 +699,7 @@ type GetObjectOutput struct {
 	ETag *string `location:"header" locationName:"ETag" min:"1" type:"string"`
 
 	// The date and time that the object was last modified.
-	LastModified *time.Time `location:"header" locationName:"Last-Modified" type:"timestamp"`
+	LastModified *time.Time `location:"header" locationName:"Last-Modified" type:"timestamp" timestampFormat:"rfc822"`
 
 	// The HTML status code of the request. Status codes ranging from 200 to 299
 	// indicate success. All other status codes indicate the type of error that
@@ -781,7 +781,7 @@ type Item struct {
 	ETag *string `min:"1" type:"string"`
 
 	// The date and time that the item was last modified.
-	LastModified *time.Time `type:"timestamp"`
+	LastModified *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The name of the item.
 	Name *string `type:"string"`

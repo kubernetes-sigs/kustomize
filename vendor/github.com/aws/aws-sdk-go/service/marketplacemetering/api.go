@@ -447,7 +447,7 @@ type MeterUsageInput struct {
 	// of the timestamp will be ignored.
 	//
 	// Timestamp is a required field
-	Timestamp *time.Time `type:"timestamp" required:"true"`
+	Timestamp *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	// It will be one of the fcp dimension name provided during the publishing of
 	// the product.
@@ -666,7 +666,7 @@ type UsageRecord struct {
 	// Your application can meter usage for up to one hour in the past.
 	//
 	// Timestamp is a required field
-	Timestamp *time.Time `type:"timestamp" required:"true"`
+	Timestamp *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
 }
 
 // String returns the string representation
