@@ -6,7 +6,6 @@
     "jsonVersion":"1.1",
     "protocol":"json",
     "serviceFullName":"Amazon Inspector",
-    "serviceId":"Inspector",
     "signatureVersion":"v4",
     "targetPrefix":"InspectorService",
     "uid":"inspector-2016-02-16"
@@ -24,8 +23,7 @@
         {"shape":"InternalException"},
         {"shape":"InvalidInputException"},
         {"shape":"AccessDeniedException"},
-        {"shape":"NoSuchEntityException"},
-        {"shape":"ServiceTemporarilyUnavailableException"}
+        {"shape":"NoSuchEntityException"}
       ]
     },
     "CreateAssessmentTarget":{
@@ -42,8 +40,7 @@
         {"shape":"LimitExceededException"},
         {"shape":"AccessDeniedException"},
         {"shape":"NoSuchEntityException"},
-        {"shape":"InvalidCrossAccountRoleException"},
-        {"shape":"ServiceTemporarilyUnavailableException"}
+        {"shape":"InvalidCrossAccountRoleException"}
       ]
     },
     "CreateAssessmentTemplate":{
@@ -59,25 +56,7 @@
         {"shape":"InvalidInputException"},
         {"shape":"LimitExceededException"},
         {"shape":"AccessDeniedException"},
-        {"shape":"NoSuchEntityException"},
-        {"shape":"ServiceTemporarilyUnavailableException"}
-      ]
-    },
-    "CreateExclusionsPreview":{
-      "name":"CreateExclusionsPreview",
-      "http":{
-        "method":"POST",
-        "requestUri":"/"
-      },
-      "input":{"shape":"CreateExclusionsPreviewRequest"},
-      "output":{"shape":"CreateExclusionsPreviewResponse"},
-      "errors":[
-        {"shape":"InvalidInputException"},
-        {"shape":"PreviewGenerationInProgressException"},
-        {"shape":"InternalException"},
-        {"shape":"AccessDeniedException"},
-        {"shape":"NoSuchEntityException"},
-        {"shape":"ServiceTemporarilyUnavailableException"}
+        {"shape":"NoSuchEntityException"}
       ]
     },
     "CreateResourceGroup":{
@@ -92,8 +71,7 @@
         {"shape":"InternalException"},
         {"shape":"InvalidInputException"},
         {"shape":"LimitExceededException"},
-        {"shape":"AccessDeniedException"},
-        {"shape":"ServiceTemporarilyUnavailableException"}
+        {"shape":"AccessDeniedException"}
       ]
     },
     "DeleteAssessmentRun":{
@@ -108,8 +86,7 @@
         {"shape":"InvalidInputException"},
         {"shape":"AssessmentRunInProgressException"},
         {"shape":"AccessDeniedException"},
-        {"shape":"NoSuchEntityException"},
-        {"shape":"ServiceTemporarilyUnavailableException"}
+        {"shape":"NoSuchEntityException"}
       ]
     },
     "DeleteAssessmentTarget":{
@@ -124,8 +101,7 @@
         {"shape":"InvalidInputException"},
         {"shape":"AssessmentRunInProgressException"},
         {"shape":"AccessDeniedException"},
-        {"shape":"NoSuchEntityException"},
-        {"shape":"ServiceTemporarilyUnavailableException"}
+        {"shape":"NoSuchEntityException"}
       ]
     },
     "DeleteAssessmentTemplate":{
@@ -140,8 +116,7 @@
         {"shape":"InvalidInputException"},
         {"shape":"AssessmentRunInProgressException"},
         {"shape":"AccessDeniedException"},
-        {"shape":"NoSuchEntityException"},
-        {"shape":"ServiceTemporarilyUnavailableException"}
+        {"shape":"NoSuchEntityException"}
       ]
     },
     "DescribeAssessmentRuns":{
@@ -192,19 +167,6 @@
       "output":{"shape":"DescribeCrossAccountAccessRoleResponse"},
       "errors":[
         {"shape":"InternalException"}
-      ]
-    },
-    "DescribeExclusions":{
-      "name":"DescribeExclusions",
-      "http":{
-        "method":"POST",
-        "requestUri":"/"
-      },
-      "input":{"shape":"DescribeExclusionsRequest"},
-      "output":{"shape":"DescribeExclusionsResponse"},
-      "errors":[
-        {"shape":"InternalException"},
-        {"shape":"InvalidInputException"}
       ]
     },
     "DescribeFindings":{
@@ -260,23 +222,7 @@
         {"shape":"AccessDeniedException"},
         {"shape":"NoSuchEntityException"},
         {"shape":"AssessmentRunInProgressException"},
-        {"shape":"UnsupportedFeatureException"},
-        {"shape":"ServiceTemporarilyUnavailableException"}
-      ]
-    },
-    "GetExclusionsPreview":{
-      "name":"GetExclusionsPreview",
-      "http":{
-        "method":"POST",
-        "requestUri":"/"
-      },
-      "input":{"shape":"GetExclusionsPreviewRequest"},
-      "output":{"shape":"GetExclusionsPreviewResponse"},
-      "errors":[
-        {"shape":"InvalidInputException"},
-        {"shape":"InternalException"},
-        {"shape":"AccessDeniedException"},
-        {"shape":"NoSuchEntityException"}
+        {"shape":"UnsupportedFeatureException"}
       ]
     },
     "GetTelemetryMetadata":{
@@ -368,21 +314,6 @@
         {"shape":"NoSuchEntityException"}
       ]
     },
-    "ListExclusions":{
-      "name":"ListExclusions",
-      "http":{
-        "method":"POST",
-        "requestUri":"/"
-      },
-      "input":{"shape":"ListExclusionsRequest"},
-      "output":{"shape":"ListExclusionsResponse"},
-      "errors":[
-        {"shape":"InternalException"},
-        {"shape":"InvalidInputException"},
-        {"shape":"AccessDeniedException"},
-        {"shape":"NoSuchEntityException"}
-      ]
-    },
     "ListFindings":{
       "name":"ListFindings",
       "http":{
@@ -454,8 +385,7 @@
         {"shape":"InternalException"},
         {"shape":"InvalidInputException"},
         {"shape":"AccessDeniedException"},
-        {"shape":"InvalidCrossAccountRoleException"},
-        {"shape":"ServiceTemporarilyUnavailableException"}
+        {"shape":"InvalidCrossAccountRoleException"}
       ]
     },
     "RemoveAttributesFromFindings":{
@@ -470,8 +400,7 @@
         {"shape":"InternalException"},
         {"shape":"InvalidInputException"},
         {"shape":"AccessDeniedException"},
-        {"shape":"NoSuchEntityException"},
-        {"shape":"ServiceTemporarilyUnavailableException"}
+        {"shape":"NoSuchEntityException"}
       ]
     },
     "SetTagsForResource":{
@@ -485,8 +414,7 @@
         {"shape":"InternalException"},
         {"shape":"InvalidInputException"},
         {"shape":"AccessDeniedException"},
-        {"shape":"NoSuchEntityException"},
-        {"shape":"ServiceTemporarilyUnavailableException"}
+        {"shape":"NoSuchEntityException"}
       ]
     },
     "StartAssessmentRun":{
@@ -504,8 +432,7 @@
         {"shape":"AccessDeniedException"},
         {"shape":"NoSuchEntityException"},
         {"shape":"InvalidCrossAccountRoleException"},
-        {"shape":"AgentsAlreadyRunningAssessmentException"},
-        {"shape":"ServiceTemporarilyUnavailableException"}
+        {"shape":"AgentsAlreadyRunningAssessmentException"}
       ]
     },
     "StopAssessmentRun":{
@@ -519,8 +446,7 @@
         {"shape":"InternalException"},
         {"shape":"InvalidInputException"},
         {"shape":"AccessDeniedException"},
-        {"shape":"NoSuchEntityException"},
-        {"shape":"ServiceTemporarilyUnavailableException"}
+        {"shape":"NoSuchEntityException"}
       ]
     },
     "SubscribeToEvent":{
@@ -535,8 +461,7 @@
         {"shape":"InvalidInputException"},
         {"shape":"LimitExceededException"},
         {"shape":"AccessDeniedException"},
-        {"shape":"NoSuchEntityException"},
-        {"shape":"ServiceTemporarilyUnavailableException"}
+        {"shape":"NoSuchEntityException"}
       ]
     },
     "UnsubscribeFromEvent":{
@@ -550,8 +475,7 @@
         {"shape":"InternalException"},
         {"shape":"InvalidInputException"},
         {"shape":"AccessDeniedException"},
-        {"shape":"NoSuchEntityException"},
-        {"shape":"ServiceTemporarilyUnavailableException"}
+        {"shape":"NoSuchEntityException"}
       ]
     },
     "UpdateAssessmentTarget":{
@@ -565,8 +489,7 @@
         {"shape":"InternalException"},
         {"shape":"InvalidInputException"},
         {"shape":"AccessDeniedException"},
-        {"shape":"NoSuchEntityException"},
-        {"shape":"ServiceTemporarilyUnavailableException"}
+        {"shape":"NoSuchEntityException"}
       ]
     }
   },
@@ -1076,12 +999,6 @@
       "max":10,
       "min":1
     },
-    "BatchDescribeExclusionsArnList":{
-      "type":"list",
-      "member":{"shape":"Arn"},
-      "max":100,
-      "min":1
-    },
     "Bool":{"type":"boolean"},
     "CreateAssessmentTargetRequest":{
       "type":"structure",
@@ -1119,20 +1036,6 @@
       "required":["assessmentTemplateArn"],
       "members":{
         "assessmentTemplateArn":{"shape":"Arn"}
-      }
-    },
-    "CreateExclusionsPreviewRequest":{
-      "type":"structure",
-      "required":["assessmentTemplateArn"],
-      "members":{
-        "assessmentTemplateArn":{"shape":"Arn"}
-      }
-    },
-    "CreateExclusionsPreviewResponse":{
-      "type":"structure",
-      "required":["previewToken"],
-      "members":{
-        "previewToken":{"shape":"UUID"}
       }
     },
     "CreateResourceGroupRequest":{
@@ -1237,25 +1140,6 @@
         "registeredAt":{"shape":"Timestamp"}
       }
     },
-    "DescribeExclusionsRequest":{
-      "type":"structure",
-      "required":["exclusionArns"],
-      "members":{
-        "exclusionArns":{"shape":"BatchDescribeExclusionsArnList"},
-        "locale":{"shape":"Locale"}
-      }
-    },
-    "DescribeExclusionsResponse":{
-      "type":"structure",
-      "required":[
-        "exclusions",
-        "failedItems"
-      ],
-      "members":{
-        "exclusions":{"shape":"ExclusionMap"},
-        "failedItems":{"shape":"FailedItems"}
-      }
-    },
     "DescribeFindingsRequest":{
       "type":"structure",
       "required":["findingArns"],
@@ -1340,53 +1224,6 @@
       "member":{"shape":"EventSubscription"},
       "max":50,
       "min":1
-    },
-    "Exclusion":{
-      "type":"structure",
-      "required":[
-        "arn",
-        "title",
-        "description",
-        "recommendation",
-        "scopes"
-      ],
-      "members":{
-        "arn":{"shape":"Arn"},
-        "title":{"shape":"Text"},
-        "description":{"shape":"Text"},
-        "recommendation":{"shape":"Text"},
-        "scopes":{"shape":"ScopeList"},
-        "attributes":{"shape":"AttributeList"}
-      }
-    },
-    "ExclusionMap":{
-      "type":"map",
-      "key":{"shape":"Arn"},
-      "value":{"shape":"Exclusion"},
-      "max":100,
-      "min":1
-    },
-    "ExclusionPreview":{
-      "type":"structure",
-      "required":[
-        "title",
-        "description",
-        "recommendation",
-        "scopes"
-      ],
-      "members":{
-        "title":{"shape":"Text"},
-        "description":{"shape":"Text"},
-        "recommendation":{"shape":"Text"},
-        "scopes":{"shape":"ScopeList"},
-        "attributes":{"shape":"AttributeList"}
-      }
-    },
-    "ExclusionPreviewList":{
-      "type":"list",
-      "member":{"shape":"ExclusionPreview"},
-      "max":100,
-      "min":0
     },
     "FailedItemDetails":{
       "type":"structure",
@@ -1495,29 +1332,6 @@
       "members":{
         "status":{"shape":"ReportStatus"},
         "url":{"shape":"Url"}
-      }
-    },
-    "GetExclusionsPreviewRequest":{
-      "type":"structure",
-      "required":[
-        "assessmentTemplateArn",
-        "previewToken"
-      ],
-      "members":{
-        "assessmentTemplateArn":{"shape":"Arn"},
-        "previewToken":{"shape":"UUID"},
-        "nextToken":{"shape":"PaginationToken"},
-        "maxResults":{"shape":"ListMaxResults"},
-        "locale":{"shape":"Locale"}
-      }
-    },
-    "GetExclusionsPreviewResponse":{
-      "type":"structure",
-      "required":["previewStatus"],
-      "members":{
-        "previewStatus":{"shape":"PreviewStatus"},
-        "exclusionPreviews":{"shape":"ExclusionPreviewList"},
-        "nextToken":{"shape":"PaginationToken"}
       }
     },
     "GetTelemetryMetadataRequest":{
@@ -1795,23 +1609,6 @@
         "nextToken":{"shape":"PaginationToken"}
       }
     },
-    "ListExclusionsRequest":{
-      "type":"structure",
-      "required":["assessmentRunArn"],
-      "members":{
-        "assessmentRunArn":{"shape":"Arn"},
-        "nextToken":{"shape":"PaginationToken"},
-        "maxResults":{"shape":"ListMaxResults"}
-      }
-    },
-    "ListExclusionsResponse":{
-      "type":"structure",
-      "required":["exclusionArns"],
-      "members":{
-        "exclusionArns":{"shape":"ListReturnedArnList"},
-        "nextToken":{"shape":"PaginationToken"}
-      }
-    },
     "ListFindingsRequest":{
       "type":"structure",
       "members":{
@@ -1955,21 +1752,6 @@
         "nextToken":{"shape":"PaginationToken"}
       }
     },
-    "PreviewGenerationInProgressException":{
-      "type":"structure",
-      "required":["message"],
-      "members":{
-        "message":{"shape":"ErrorMessage"}
-      },
-      "exception":true
-    },
-    "PreviewStatus":{
-      "type":"string",
-      "enum":[
-        "WORK_IN_PROGRESS",
-        "COMPLETED"
-      ]
-    },
     "ProviderName":{
       "type":"string",
       "max":1000,
@@ -2092,42 +1874,10 @@
       "max":1000,
       "min":0
     },
-    "Scope":{
-      "type":"structure",
-      "members":{
-        "key":{"shape":"ScopeType"},
-        "value":{"shape":"ScopeValue"}
-      }
-    },
-    "ScopeList":{
-      "type":"list",
-      "member":{"shape":"Scope"},
-      "min":1
-    },
-    "ScopeType":{
-      "type":"string",
-      "enum":[
-        "INSTANCE_ID",
-        "RULES_PACKAGE_ARN"
-      ]
-    },
-    "ScopeValue":{"type":"string"},
     "ServiceName":{
       "type":"string",
       "max":128,
       "min":0
-    },
-    "ServiceTemporarilyUnavailableException":{
-      "type":"structure",
-      "required":[
-        "message",
-        "canRetry"
-      ],
-      "members":{
-        "message":{"shape":"ErrorMessage"},
-        "canRetry":{"shape":"Bool"}
-      },
-      "exception":true
     },
     "SetTagsForResourceRequest":{
       "type":"structure",
@@ -2269,10 +2019,6 @@
         "beginDate":{"shape":"Timestamp"},
         "endDate":{"shape":"Timestamp"}
       }
-    },
-    "UUID":{
-      "type":"string",
-      "pattern":"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
     },
     "UnsubscribeFromEventRequest":{
       "type":"structure",

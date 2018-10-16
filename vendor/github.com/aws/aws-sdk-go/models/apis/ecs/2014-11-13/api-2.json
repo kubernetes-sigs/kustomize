@@ -679,7 +679,6 @@
       "members":{
         "name":{"shape":"String"},
         "image":{"shape":"String"},
-        "repositoryCredentials":{"shape":"RepositoryCredentials"},
         "cpu":{"shape":"Integer"},
         "memory":{"shape":"BoxedInteger"},
         "memoryReservation":{"shape":"BoxedInteger"},
@@ -1038,16 +1037,6 @@
       "type":"map",
       "key":{"shape":"String"},
       "value":{"shape":"String"}
-    },
-    "DockerVolumeConfiguration":{
-      "type":"structure",
-      "members":{
-        "scope":{"shape":"Scope"},
-        "autoprovision":{"shape":"BoxedBoolean"},
-        "driver":{"shape":"String"},
-        "driverOpts":{"shape":"StringMap"},
-        "labels":{"shape":"StringMap"}
-      }
     },
     "Double":{"type":"double"},
     "EnvironmentVariables":{
@@ -1485,13 +1474,6 @@
         "taskDefinition":{"shape":"TaskDefinition"}
       }
     },
-    "RepositoryCredentials":{
-      "type":"structure",
-      "required":["credentialsParameter"],
-      "members":{
-        "credentialsParameter":{"shape":"String"}
-      }
-    },
     "RequiresAttributes":{
       "type":"list",
       "member":{"shape":"Attribute"}
@@ -1540,13 +1522,6 @@
       "enum":[
         "REPLICA",
         "DAEMON"
-      ]
-    },
-    "Scope":{
-      "type":"string",
-      "enum":[
-        "task",
-        "shared"
       ]
     },
     "ServerException":{
@@ -1678,11 +1653,6 @@
     "StringList":{
       "type":"list",
       "member":{"shape":"String"}
-    },
-    "StringMap":{
-      "type":"map",
-      "key":{"shape":"String"},
-      "value":{"shape":"String"}
     },
     "SubmitContainerStateChangeRequest":{
       "type":"structure",
@@ -1965,8 +1935,7 @@
       "type":"structure",
       "members":{
         "name":{"shape":"String"},
-        "host":{"shape":"HostVolumeProperties"},
-        "dockerVolumeConfiguration":{"shape":"DockerVolumeConfiguration"}
+        "host":{"shape":"HostVolumeProperties"}
       }
     },
     "VolumeFrom":{

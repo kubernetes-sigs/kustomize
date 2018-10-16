@@ -99,12 +99,8 @@ func enumFields(t reflect.Type, opts MarshalOptions) []field {
 
 				fieldTag := tag{}
 				fieldTag.parseAVTag(sf.Tag)
-				// Because MarshalOptions.TagKey must be explicitly set, use it
-				// over JSON, which is enabled by default.
-				if opts.TagKey != "" && fieldTag == (tag{}) {
-					fieldTag.parseStructTag(opts.TagKey, sf.Tag)
-				} else if opts.SupportJSONTags && fieldTag == (tag{}) {
-					fieldTag.parseStructTag("json", sf.Tag)
+				if opts.SupportJSONTags && fieldTag == (tag{}) {
+					fieldTag.parseJSONTag(sf.Tag)
 				}
 
 				if fieldTag.Ignore {

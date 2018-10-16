@@ -20,6 +20,11 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol"
 )
 
+// RFC1123GMT is a RFC1123 (RFC822) formated timestame. This format is not
+// using the standard library's time.RFC1123 due to the desire to always use
+// GMT as the timezone.
+const RFC1123GMT = "Mon, 2 Jan 2006 15:04:05 GMT"
+
 // Whether the byte value can be sent without escaping in AWS URLs
 var noEscape [256]bool
 
@@ -267,14 +272,7 @@ func convertType(v reflect.Value, tag reflect.StructTag) (str string, err error)
 	case float64:
 		str = strconv.FormatFloat(value, 'f', -1, 64)
 	case time.Time:
-		format := tag.Get("timestampFormat")
-		if len(format) == 0 {
-			format = protocol.RFC822TimeFormatName
-			if tag.Get("location") == "querystring" {
-				format = protocol.ISO8601TimeFormatName
-			}
-		}
-		str = protocol.FormatTime(format, value)
+		str = value.UTC().Format(RFC1123GMT)
 	case aws.JSONValue:
 		if len(value) == 0 {
 			return "", errValueNotSet

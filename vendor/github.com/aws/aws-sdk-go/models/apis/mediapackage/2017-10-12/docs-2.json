@@ -190,12 +190,6 @@
         "MssPackage$StreamSelection" : null
       }
     },
-    "__PeriodTriggersElement" : {
-      "base" : null,
-      "refs" : {
-        "__listOf__PeriodTriggersElement$member" : null
-      }
-    },
     "__boolean" : {
       "base" : null,
       "refs" : {
@@ -266,12 +260,6 @@
       "base" : null,
       "refs" : {
         "OriginEndpointList$OriginEndpoints" : "A list of OriginEndpoint records."
-      }
-    },
-    "__listOf__PeriodTriggersElement" : {
-      "base" : null,
-      "refs" : {
-        "DashPackage$PeriodTriggers" : "A list of triggers that controls when the outgoing Dynamic Adaptive Streaming over HTTP (DASH)\nMedia Presentation Description (MPD) will be partitioned into multiple periods. If empty, the content will not\nbe partitioned into more than one period. If the list contains \"ADS\", new periods will be created where\nthe Channel source contains SCTE-35 ad markers.\n"
       }
     },
     "__listOf__string" : {

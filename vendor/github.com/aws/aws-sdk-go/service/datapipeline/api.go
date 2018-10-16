@@ -1994,7 +1994,7 @@ type ActivatePipelineInput struct {
 
 	// The date and time to resume the pipeline. By default, the pipeline resumes
 	// from the last completed execution.
-	StartTimestamp *time.Time `locationName:"startTimestamp" type:"timestamp"`
+	StartTimestamp *time.Time `locationName:"startTimestamp" type:"timestamp" timestampFormat:"unix"`
 }
 
 // String returns the string representation

@@ -1941,8 +1941,7 @@
       "type":"structure",
       "members":{
         "apiId":{"shape":"String"},
-        "stage":{"shape":"String"},
-        "throttle":{"shape":"MapOfApiStageThrottleSettings"}
+        "stage":{"shape":"String"}
       }
     },
     "Authorizer":{
@@ -4149,11 +4148,6 @@
       ]
     },
     "Long":{"type":"long"},
-    "MapOfApiStageThrottleSettings":{
-      "type":"map",
-      "key":{"shape":"String"},
-      "value":{"shape":"ThrottleSettings"}
-    },
     "MapOfHeaderValues":{
       "type":"map",
       "key":{"shape":"String"},

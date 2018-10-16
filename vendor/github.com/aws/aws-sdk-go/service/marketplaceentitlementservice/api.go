@@ -118,7 +118,7 @@ type Entitlement struct {
 	// the expiration date is the date at which the customer will renew or cancel
 	// their contract. Customers who are opting to renew their contract will still
 	// have entitlements with an expiration date.
-	ExpirationDate *time.Time `type:"timestamp"`
+	ExpirationDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// The product code for which the given entitlement applies. Product codes are
 	// provided by AWS Marketplace when the product listing is created.

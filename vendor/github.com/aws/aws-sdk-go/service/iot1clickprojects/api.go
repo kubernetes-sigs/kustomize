@@ -2046,7 +2046,7 @@ type PlacementDescription struct {
 	// The date when the placement was initially created, in UNIX epoch time format.
 	//
 	// CreatedDate is a required field
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" required:"true"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	// The name of the placement.
 	//
@@ -2063,7 +2063,7 @@ type PlacementDescription struct {
 	// same.
 	//
 	// UpdatedDate is a required field
-	UpdatedDate *time.Time `locationName:"updatedDate" type:"timestamp" required:"true"`
+	UpdatedDate *time.Time `locationName:"updatedDate" type:"timestamp" timestampFormat:"unix" required:"true"`
 }
 
 // String returns the string representation
@@ -2113,7 +2113,7 @@ type PlacementSummary struct {
 	// The date when the placement was originally created, in UNIX epoch time format.
 	//
 	// CreatedDate is a required field
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" required:"true"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	// The name of the placement being summarized.
 	//
@@ -2130,7 +2130,7 @@ type PlacementSummary struct {
 	// same.
 	//
 	// UpdatedDate is a required field
-	UpdatedDate *time.Time `locationName:"updatedDate" type:"timestamp" required:"true"`
+	UpdatedDate *time.Time `locationName:"updatedDate" type:"timestamp" timestampFormat:"unix" required:"true"`
 }
 
 // String returns the string representation
@@ -2210,7 +2210,7 @@ type ProjectDescription struct {
 	// The date when the project was originally created, in UNIX epoch time format.
 	//
 	// CreatedDate is a required field
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" required:"true"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	// The description of the project.
 	Description *string `locationName:"description" type:"string"`
@@ -2227,7 +2227,7 @@ type ProjectDescription struct {
 	// the project was not updated, then createdDate and updatedDate are the same.
 	//
 	// UpdatedDate is a required field
-	UpdatedDate *time.Time `locationName:"updatedDate" type:"timestamp" required:"true"`
+	UpdatedDate *time.Time `locationName:"updatedDate" type:"timestamp" timestampFormat:"unix" required:"true"`
 }
 
 // String returns the string representation
@@ -2278,7 +2278,7 @@ type ProjectSummary struct {
 	// The date when the project was originally created, in UNIX epoch time format.
 	//
 	// CreatedDate is a required field
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" required:"true"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	// The name of the project being summarized.
 	//
@@ -2289,7 +2289,7 @@ type ProjectSummary struct {
 	// the project was not updated, then createdDate and updatedDate are the same.
 	//
 	// UpdatedDate is a required field
-	UpdatedDate *time.Time `locationName:"updatedDate" type:"timestamp" required:"true"`
+	UpdatedDate *time.Time `locationName:"updatedDate" type:"timestamp" timestampFormat:"unix" required:"true"`
 }
 
 // String returns the string representation

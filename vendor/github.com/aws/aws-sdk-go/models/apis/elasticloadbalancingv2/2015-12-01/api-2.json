@@ -633,9 +633,7 @@
         "TargetGroupArn":{"shape":"TargetGroupArn"},
         "AuthenticateOidcConfig":{"shape":"AuthenticateOidcActionConfig"},
         "AuthenticateCognitoConfig":{"shape":"AuthenticateCognitoActionConfig"},
-        "Order":{"shape":"ActionOrder"},
-        "RedirectConfig":{"shape":"RedirectActionConfig"},
-        "FixedResponseConfig":{"shape":"FixedResponseActionConfig"}
+        "Order":{"shape":"ActionOrder"}
       }
     },
     "ActionOrder":{
@@ -648,9 +646,7 @@
       "enum":[
         "forward",
         "authenticate-oidc",
-        "authenticate-cognito",
-        "redirect",
-        "fixed-response"
+        "authenticate-cognito"
       ]
     },
     "Actions":{
@@ -1222,29 +1218,6 @@
       },
       "exception":true
     },
-    "FixedResponseActionConfig":{
-      "type":"structure",
-      "required":["StatusCode"],
-      "members":{
-        "MessageBody":{"shape":"FixedResponseActionMessage"},
-        "StatusCode":{"shape":"FixedResponseActionStatusCode"},
-        "ContentType":{"shape":"FixedResponseActionContentType"}
-      }
-    },
-    "FixedResponseActionContentType":{
-      "type":"string",
-      "max":32,
-      "min":0
-    },
-    "FixedResponseActionMessage":{
-      "type":"string",
-      "max":1024,
-      "min":0
-    },
-    "FixedResponseActionStatusCode":{
-      "type":"string",
-      "pattern":"^(2|4|5)\\d\\d$"
-    },
     "HealthCheckIntervalSeconds":{
       "type":"integer",
       "max":300,
@@ -1650,45 +1623,6 @@
         "HTTP",
         "HTTPS",
         "TCP"
-      ]
-    },
-    "RedirectActionConfig":{
-      "type":"structure",
-      "required":["StatusCode"],
-      "members":{
-        "Protocol":{"shape":"RedirectActionProtocol"},
-        "Port":{"shape":"RedirectActionPort"},
-        "Host":{"shape":"RedirectActionHost"},
-        "Path":{"shape":"RedirectActionPath"},
-        "Query":{"shape":"RedirectActionQuery"},
-        "StatusCode":{"shape":"RedirectActionStatusCodeEnum"}
-      }
-    },
-    "RedirectActionHost":{
-      "type":"string",
-      "max":128,
-      "min":1
-    },
-    "RedirectActionPath":{
-      "type":"string",
-      "max":128,
-      "min":1
-    },
-    "RedirectActionPort":{"type":"string"},
-    "RedirectActionProtocol":{
-      "type":"string",
-      "pattern":"^(HTTPS?|#\\{protocol\\})$"
-    },
-    "RedirectActionQuery":{
-      "type":"string",
-      "max":128,
-      "min":0
-    },
-    "RedirectActionStatusCodeEnum":{
-      "type":"string",
-      "enum":[
-        "HTTP_301",
-        "HTTP_302"
       ]
     },
     "RegisterTargetsInput":{

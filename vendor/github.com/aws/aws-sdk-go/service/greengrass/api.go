@@ -12144,7 +12144,7 @@ type LocalVolumeResourceData struct {
 	GroupOwnerSetting *GroupOwnerSetting `type:"structure"`
 
 	// The local absolute path of the volume resource on the host. The source path
-	// for a volume resource type cannot start with ''/sys''.
+	// for a volume resource type cannot start with ''/proc'' or ''/sys''.
 	SourcePath *string `type:"string"`
 }
 

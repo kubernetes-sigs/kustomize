@@ -1791,7 +1791,7 @@ type EnvironmentMember struct {
 
 	// The time, expressed in epoch time format, when the environment member last
 	// opened the environment.
-	LastAccess *time.Time `locationName:"lastAccess" type:"timestamp"`
+	LastAccess *time.Time `locationName:"lastAccess" type:"timestamp" timestampFormat:"unix"`
 
 	// The type of environment member permissions associated with this environment
 	// member. Available values include:

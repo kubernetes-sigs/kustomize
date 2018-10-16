@@ -13,7 +13,7 @@
     "AccountScope": {
       "base": null,
       "refs": {
-        "GetReservationPurchaseRecommendationRequest$AccountScope": "<p>The account scope that you want recommendations for. <code>PAYER</code> means that AWS includes the master account and any member accounts when it calculates its recommendations. <code>LINKED</code> means that AWS includes only member accounts when it calculates its recommendations.</p> <p>Valid values are <code>PAYER</code> and <code>LINKED</code>.</p>",
+        "GetReservationPurchaseRecommendationRequest$AccountScope": "<p>The account scope that you want recommendations for. The only valid value is <code>Payer</code>. This means that AWS includes the master account and any member accounts when it calculates its recommendations.</p>",
         "ReservationPurchaseRecommendation$AccountScope": "<p>The account scope that AWS recommends that you purchase this instance for. For example, you can purchase this reservation for an entire organization in AWS Organizations.</p>"
       }
     },
@@ -147,18 +147,6 @@
         "ServiceSpecification$EC2Specification": "<p>The EC2 hardware specifications that you want AWS to provide recommendations for.</p>"
       }
     },
-    "ESInstanceDetails": {
-      "base": "<p>Details about the ES instances that AWS recommends that you purchase.</p>",
-      "refs": {
-        "InstanceDetails$ESInstanceDetails": "<p>The Amazon ES instances that AWS recommends that you purchase.</p>"
-      }
-    },
-    "ElastiCacheInstanceDetails": {
-      "base": "<p>Details about the ElastiCache instances that AWS recommends that you purchase.</p>",
-      "refs": {
-        "InstanceDetails$ElastiCacheInstanceDetails": "<p>The ElastiCache instances that AWS recommends that you purchase.</p>"
-      }
-    },
     "Entity": {
       "base": null,
       "refs": {
@@ -187,7 +175,7 @@
         "Expression$Not": "<p>Return results that don't match a <code>Dimension</code> object.</p>",
         "Expressions$member": null,
         "GetCostAndUsageRequest$Filter": "<p>Filters AWS costs by different dimensions. For example, you can specify <code>SERVICE</code> and <code>LINKED_ACCOUNT</code> and get the costs that are associated with that account's usage of that service. You can nest <code>Expression</code> objects to define any combination of dimension filters. For more information, see <a href=\"http://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_Expression.html\">Expression</a>. </p>",
-        "GetReservationCoverageRequest$Filter": "<p>Filters utilization data by dimensions. You can filter by the following dimensions:</p> <ul> <li> <p>AZ</p> </li> <li> <p>CACHE_ENGINE</p> </li> <li> <p>DATABASE_ENGINE</p> </li> <li> <p>DEPLOYMENT_OPTION</p> </li> <li> <p>INSTANCE_TYPE</p> </li> <li> <p>LINKED_ACCOUNT</p> </li> <li> <p>OPERATING_SYSTEM</p> </li> <li> <p>PLATFORM</p> </li> <li> <p>REGION</p> </li> <li> <p>SERVICE</p> </li> <li> <p>TAG</p> </li> <li> <p>TENANCY</p> </li> </ul> <p> <code>GetReservationCoverage</code> uses the same <code> <a href=\"http://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_Expression.html\">Expression</a> </code> object as the other operations, but only <code>AND</code> is supported among each dimension. You can nest only one level deep. If there are multiple values for a dimension, they are OR'd together.</p> <p>If you don't provide a <code>SERVICE</code> filter, Cost Explorer defaults to EC2.</p>",
+        "GetReservationCoverageRequest$Filter": "<p>Filters utilization data by dimensions. You can filter by the following dimensions:</p> <ul> <li> <p>AZ</p> </li> <li> <p>CACHE_ENGINE</p> </li> <li> <p>DATABASE_ENGINE</p> </li> <li> <p>DEPLOYMENT_OPTION</p> </li> <li> <p>INSTANCE_TYPE</p> </li> <li> <p>LINKED_ACCOUNT</p> </li> <li> <p>OPERATING_SYSTEM</p> </li> <li> <p>PLATFORM</p> </li> <li> <p>REGION</p> </li> <li> <p>SERVICE</p> </li> <li> <p>TAG</p> </li> <li> <p>TENANCY</p> </li> </ul> <p> <code>GetReservationCoverage</code> uses the same <code> <a href=\"http://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_Expression.html\">Expression</a> </code> object as the other operations, but only <code>AND</code> is supported among each dimension. You can nest only one level deep. If there are multiple values for a dimension, they are OR'd together.</p>",
         "GetReservationUtilizationRequest$Filter": "<p>Filters utilization data by dimensions. You can filter by the following dimensions:</p> <ul> <li> <p>AZ</p> </li> <li> <p>CACHE_ENGINE</p> </li> <li> <p>DATABASE_ENGINE</p> </li> <li> <p>DEPLOYMENT_OPTION</p> </li> <li> <p>INSTANCE_TYPE</p> </li> <li> <p>LINKED_ACCOUNT</p> </li> <li> <p>OPERATING_SYSTEM</p> </li> <li> <p>PLATFORM</p> </li> <li> <p>REGION</p> </li> <li> <p>SERVICE</p> </li> <li> <p>SCOPE</p> </li> <li> <p>TENANCY</p> </li> </ul> <p> <code>GetReservationUtilization</code> uses the same <code> <a href=\"http://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_Expression.html\">Expression</a> </code> object as the other operations, but only <code>AND</code> is supported among each dimension, and nesting is supported up to only one level deep. If there are multiple values for a dimension, they are OR'd together.</p>"
       }
     },
@@ -203,14 +191,8 @@
       "refs": {
         "EC2InstanceDetails$CurrentGeneration": "<p>Whether the recommendation is for a current generation instance. </p>",
         "EC2InstanceDetails$SizeFlexEligible": "<p>Whether the recommended reservation is size flexible.</p>",
-        "ESInstanceDetails$CurrentGeneration": "<p>Whether the recommendation is for a current generation instance.</p>",
-        "ESInstanceDetails$SizeFlexEligible": "<p>Whether the recommended reservation is size flexible.</p>",
-        "ElastiCacheInstanceDetails$CurrentGeneration": "<p>Whether the recommendation is for a current generation instance.</p>",
-        "ElastiCacheInstanceDetails$SizeFlexEligible": "<p>Whether the recommended reservation is size flexible.</p>",
         "RDSInstanceDetails$CurrentGeneration": "<p>Whether the recommendation is for a current generation instance. </p>",
-        "RDSInstanceDetails$SizeFlexEligible": "<p>Whether the recommended reservation is size flexible.</p>",
-        "RedshiftInstanceDetails$CurrentGeneration": "<p>Whether the recommendation is for a current generation instance.</p>",
-        "RedshiftInstanceDetails$SizeFlexEligible": "<p>Whether the recommended reservation is size flexible.</p>"
+        "RDSInstanceDetails$SizeFlexEligible": "<p>Whether the recommended reservation is size flexible.</p>"
       }
     },
     "GenericString": {
@@ -222,25 +204,14 @@
         "EC2InstanceDetails$AvailabilityZone": "<p>The Availability Zone of the recommended reservation.</p>",
         "EC2InstanceDetails$Platform": "<p>The platform of the recommended reservation. The platform is the specific combination of operating system, license model, and software on an instance.</p>",
         "EC2InstanceDetails$Tenancy": "<p>Whether the recommended reservation is dedicated or shared.</p>",
-        "ESInstanceDetails$InstanceClass": "<p>The class of instance that AWS recommends.</p>",
-        "ESInstanceDetails$InstanceSize": "<p>The size of instance that AWS recommends.</p>",
-        "ESInstanceDetails$Region": "<p>The AWS Region of the recommended reservation.</p>",
-        "ElastiCacheInstanceDetails$Family": "<p>The instance family of the recommended reservation.</p>",
-        "ElastiCacheInstanceDetails$NodeType": "<p>The type of node that AWS recommends.</p>",
-        "ElastiCacheInstanceDetails$Region": "<p>The AWS Region of the recommended reservation.</p>",
-        "ElastiCacheInstanceDetails$ProductDescription": "<p>The description of the recommended reservation.</p>",
         "GetReservationPurchaseRecommendationRequest$AccountId": "<p>The account ID that is associated with the recommendation. </p>",
         "GetReservationPurchaseRecommendationRequest$Service": "<p>The specific service that you want recommendations for.</p>",
         "RDSInstanceDetails$Family": "<p>The instance family of the recommended reservation.</p>",
         "RDSInstanceDetails$InstanceType": "<p>The type of instance that AWS recommends.</p>",
         "RDSInstanceDetails$Region": "<p>The AWS Region of the recommended reservation.</p>",
         "RDSInstanceDetails$DatabaseEngine": "<p>The database engine that the recommended reservation supports.</p>",
-        "RDSInstanceDetails$DatabaseEdition": "<p>The database edition that the recommended reservation supports.</p>",
-        "RDSInstanceDetails$DeploymentOption": "<p>Whether the recommendation is for a reservation in a single Availability Zone or a reservation with a backup in a second Availability Zone.</p>",
+        "RDSInstanceDetails$DeploymentOption": "<p>Whether the recommendation is for a reservation in a single availability zone or a reservation with a backup in a second availability zone.</p>",
         "RDSInstanceDetails$LicenseModel": "<p>The license model that the recommended reservation supports.</p>",
-        "RedshiftInstanceDetails$Family": "<p>The instance family of the recommended reservation.</p>",
-        "RedshiftInstanceDetails$NodeType": "<p>The type of node that AWS recommends.</p>",
-        "RedshiftInstanceDetails$Region": "<p>The AWS Region of the recommended reservation.</p>",
         "ReservationPurchaseRecommendationDetail$RecommendedNumberOfInstancesToPurchase": "<p>The number of instances that AWS recommends that you purchase.</p>",
         "ReservationPurchaseRecommendationDetail$RecommendedNormalizedUnitsToPurchase": "<p>The number of normalized units that AWS recommends that you purchase.</p>",
         "ReservationPurchaseRecommendationDetail$MinimumNumberOfInstancesUsedPerHour": "<p>The minimum number of instances that you used in an hour during the historical period. AWS uses this to calculate your recommended reservation purchases.</p>",
@@ -404,7 +375,7 @@
       "base": null,
       "refs": {
         "GetReservationPurchaseRecommendationRequest$LookbackPeriodInDays": "<p>The number of previous days that you want AWS to consider when it calculates your recommendations.</p>",
-        "ReservationPurchaseRecommendation$LookbackPeriodInDays": "<p>How many days of previous usage that AWS considers when making this recommendation.</p>"
+        "ReservationPurchaseRecommendation$LookbackPeriodInDays": "<p>How many days of previous usage that AWS takes into consideration when making this recommendation.</p>"
       }
     },
     "MetricAmount": {
@@ -423,7 +394,7 @@
     "MetricNames": {
       "base": null,
       "refs": {
-        "GetCostAndUsageRequest$Metrics": "<p>Which metrics are returned in the query. For more information about blended and unblended rates, see <a href=\"https://aws.amazon.com/premiumsupport/knowledge-center/blended-rates-intro/\">Why does the \"blended\" annotation appear on some line items in my bill?</a>. </p> <p>Valid values are <code>AmortizedCost</code>, <code>BlendedCost</code>, <code>UnblendedCost</code>, and <code>UsageQuantity</code>.</p> <note> <p>If you return the <code>UsageQuantity</code> metric, the service aggregates all usage numbers without taking into account the units. For example, if you aggregate <code>usageQuantity</code> across all of EC2, the results aren't meaningful because EC2 compute hours and data transfer are measured in different units (for example, hours vs. GB). To get more meaningful <code>UsageQuantity</code> metrics, filter by <code>UsageType</code> or <code>UsageTypeGroups</code>. </p> </note> <p> <code>Metrics</code> is required for <code>GetCostAndUsage</code> requests.</p>"
+        "GetCostAndUsageRequest$Metrics": "<p>Which metrics are returned in the query. For more information about blended and unblended rates, see <a href=\"https://aws.amazon.com/premiumsupport/knowledge-center/blended-rates-intro/\">Why does the \"blended\" annotation appear on some line items in my bill?</a>. </p> <p>Valid values are <code>BlendedCost</code>, <code>UnblendedCost</code>, and <code>UsageQuantity</code>.</p> <note> <p>If you return the <code>UsageQuantity</code> metric, the service aggregates all usage numbers without taking into account the units. For example, if you aggregate <code>usageQuantity</code> across all of EC2, the results aren't meaningful because EC2 compute hours and data transfer are measured in different units (for example, hours vs. GB). To get more meaningful <code>UsageQuantity</code> metrics, filter by <code>UsageType</code> or <code>UsageTypeGroups</code>. </p> </note> <p> <code>Metrics</code> is required for <code>GetCostAndUsage</code> requests.</p>"
       }
     },
     "MetricUnit": {
@@ -448,7 +419,7 @@
     "NetRISavings": {
       "base": null,
       "refs": {
-        "ReservationAggregates$NetRISavings": "<p>How much you saved due to purchasing and utilizing RIs. AWS calculates this by subtracting <code>TotalAmortizedFee</code> from <code>OnDemandCostOfRIHoursUsed</code>.</p>"
+        "ReservationAggregates$NetRISavings": "<p>How much you saved due to purchasing and utilizing RIs. This is calculated by subtracting the <code>TotalAmortizedFee</code> from the <code>OnDemandCostOfRIHoursUsed</code>.</p>"
       }
     },
     "NextPageToken": {
@@ -520,19 +491,13 @@
         "InstanceDetails$RDSInstanceDetails": "<p>The RDS instances that AWS recommends that you purchase.</p>"
       }
     },
-    "RedshiftInstanceDetails": {
-      "base": "<p>Details about the Amazon Redshift instances that AWS recommends that you purchase.</p>",
-      "refs": {
-        "InstanceDetails$RedshiftInstanceDetails": "<p>The Amazon Redshift instances that AWS recommends that you purchase.</p>"
-      }
-    },
     "RequestChangedException": {
       "base": "<p>Your request parameters changed between pages. Try again with the old parameters or without a pagination token.</p>",
       "refs": {
       }
     },
     "ReservationAggregates": {
-      "base": "<p>The aggregated numbers for your Reserved Instance (RI) usage.</p>",
+      "base": "<p>The aggregated numbers for your RI usage.</p>",
       "refs": {
         "GetReservationUtilizationResponse$Total": "<p>The total amount of time that you utilized your RIs.</p>",
         "ReservationUtilizationGroup$Utilization": "<p>How much you used this group of RIs.</p>",
@@ -588,7 +553,7 @@
       }
     },
     "ReservationPurchaseRecommendationSummary": {
-      "base": "<p>A summary about this recommendation, such as the currency code, the amount that AWS estimates that you could save, and the total amount of reservation to purchase.</p>",
+      "base": "<p>A summary about this recommendation, such as the currency code, the amount that AWS estimates you could save, and the total amount of reservation to purchase.</p>",
       "refs": {
         "ReservationPurchaseRecommendation$RecommendationSummary": "<p>A summary about the recommended purchase.</p>"
       }
@@ -600,7 +565,7 @@
       }
     },
     "ReservationUtilizationGroup": {
-      "base": "<p>A group of Reserved Instances (RIs) that share a set of attributes.</p>",
+      "base": "<p>A group of RIs that share a set of attributes.</p>",
       "refs": {
         "ReservationUtilizationGroups$member": null
       }

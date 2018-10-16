@@ -108,8 +108,7 @@
         {"shape":"ServiceException"},
         {"shape":"ResourceNotFoundException"},
         {"shape":"InvalidParameterValueException"},
-        {"shape":"TooManyRequestsException"},
-        {"shape":"ResourceInUseException"}
+        {"shape":"TooManyRequestsException"}
       ]
     },
     "DeleteFunction":{
@@ -474,8 +473,7 @@
         {"shape":"ResourceNotFoundException"},
         {"shape":"InvalidParameterValueException"},
         {"shape":"TooManyRequestsException"},
-        {"shape":"ResourceConflictException"},
-        {"shape":"ResourceInUseException"}
+        {"shape":"ResourceConflictException"}
       ]
     },
     "UpdateFunctionCode":{
@@ -665,7 +663,8 @@
       "type":"structure",
       "required":[
         "EventSourceArn",
-        "FunctionName"
+        "FunctionName",
+        "StartingPosition"
       ],
       "members":{
         "EventSourceArn":{"shape":"Arn"},
@@ -1527,15 +1526,6 @@
       "error":{"httpStatusCode":409},
       "exception":true
     },
-    "ResourceInUseException":{
-      "type":"structure",
-      "members":{
-        "Type":{"shape":"String"},
-        "Message":{"shape":"String"}
-      },
-      "error":{"httpStatusCode":400},
-      "exception":true
-    },
     "ResourceNotFoundException":{
       "type":"structure",
       "members":{
@@ -1561,7 +1551,6 @@
         "python3.6",
         "dotnetcore1.0",
         "dotnetcore2.0",
-        "dotnetcore2.1",
         "nodejs4.3-edge",
         "go1.x"
       ]

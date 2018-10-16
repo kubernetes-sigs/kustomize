@@ -1187,7 +1187,6 @@
     "ListAliasesRequest":{
       "type":"structure",
       "members":{
-        "KeyId":{"shape":"KeyIdType"},
         "Limit":{"shape":"LimitType"},
         "Marker":{"shape":"MarkerType"}
       }

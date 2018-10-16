@@ -1119,12 +1119,6 @@
         "TestInvokeMethodResponse$latency": "<p>The execution latency of the test invoke request.</p>"
       }
     },
-    "MapOfApiStageThrottleSettings": {
-      "base": null,
-      "refs": {
-        "ApiStage$throttle": "<p>Map containing method level throttling information for API stage in a usage plan.</p>"
-      }
-    },
     "MapOfHeaderValues": {
       "base": null,
       "refs": {
@@ -1734,7 +1728,6 @@
         "LimitExceededException$retryAfterSeconds": null,
         "LimitExceededException$message": null,
         "ListOfString$member": null,
-        "MapOfApiStageThrottleSettings$key": null,
         "MapOfHeaderValues$key": null,
         "MapOfHeaderValues$value": null,
         "MapOfIntegrationResponse$key": null,
@@ -1944,7 +1937,6 @@
       "refs": {
         "Account$throttleSettings": "<p>Specifies the API request limits configured for the current <a>Account</a>.</p>",
         "CreateUsagePlanRequest$throttle": "<p>The throttling limits of the usage plan.</p>",
-        "MapOfApiStageThrottleSettings$value": null,
         "UsagePlan$throttle": "<p>The request throttle limits of a usage plan.</p>"
       }
     },

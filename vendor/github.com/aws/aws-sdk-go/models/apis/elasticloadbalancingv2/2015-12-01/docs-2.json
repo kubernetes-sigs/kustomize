@@ -8,7 +8,7 @@
     "CreateLoadBalancer": "<p>Creates an Application Load Balancer or a Network Load Balancer.</p> <p>When you create a load balancer, you can specify security groups, public subnets, IP address type, and tags. Otherwise, you could do so later using <a>SetSecurityGroups</a>, <a>SetSubnets</a>, <a>SetIpAddressType</a>, and <a>AddTags</a>.</p> <p>To create listeners for your load balancer, use <a>CreateListener</a>. To describe your current load balancers, see <a>DescribeLoadBalancers</a>. When you are finished with a load balancer, you can delete it using <a>DeleteLoadBalancer</a>.</p> <p>For limit information, see <a href=\"http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html\">Limits for Your Application Load Balancer</a> in the <i>Application Load Balancers Guide</i> and <a href=\"http://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-limits.html\">Limits for Your Network Load Balancer</a> in the <i>Network Load Balancers Guide</i>.</p> <p>This operation is idempotent, which means that it completes at most one time. If you attempt to create multiple load balancers with the same settings, each call succeeds.</p> <p>For more information, see <a href=\"http://docs.aws.amazon.com/elasticloadbalancing/latest/application/application-load-balancers.html\">Application Load Balancers</a> in the <i>Application Load Balancers Guide</i> and <a href=\"http://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html\">Network Load Balancers</a> in the <i>Network Load Balancers Guide</i>.</p>",
     "CreateRule": "<p>Creates a rule for the specified listener. The listener must be associated with an Application Load Balancer.</p> <p>Rules are evaluated in priority order, from the lowest value to the highest value. When the conditions for a rule are met, its actions are performed. If the conditions for no rules are met, the actions for the default rule are performed. For more information, see <a href=\"http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-listeners.html#listener-rules\">Listener Rules</a> in the <i>Application Load Balancers Guide</i>.</p> <p>To view your current rules, use <a>DescribeRules</a>. To update a rule, use <a>ModifyRule</a>. To set the priorities of your rules, use <a>SetRulePriorities</a>. To delete a rule, use <a>DeleteRule</a>.</p>",
     "CreateTargetGroup": "<p>Creates a target group.</p> <p>To register targets with the target group, use <a>RegisterTargets</a>. To update the health check settings for the target group, use <a>ModifyTargetGroup</a>. To monitor the health of targets in the target group, use <a>DescribeTargetHealth</a>.</p> <p>To route traffic to the targets in a target group, specify the target group in an action using <a>CreateListener</a> or <a>CreateRule</a>.</p> <p>To delete a target group, use <a>DeleteTargetGroup</a>.</p> <p>This operation is idempotent, which means that it completes at most one time. If you attempt to create multiple target groups with the same settings, each call succeeds.</p> <p>For more information, see <a href=\"http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html\">Target Groups for Your Application Load Balancers</a> in the <i>Application Load Balancers Guide</i> or <a href=\"http://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-target-groups.html\">Target Groups for Your Network Load Balancers</a> in the <i>Network Load Balancers Guide</i>.</p>",
-    "DeleteListener": "<p>Deletes the specified listener.</p> <p>Alternatively, your listener is deleted when you delete the load balancer to which it is attached, using <a>DeleteLoadBalancer</a>.</p>",
+    "DeleteListener": "<p>Deletes the specified listener.</p> <p>Alternatively, your listener is deleted when you delete the load balancer it is attached to using <a>DeleteLoadBalancer</a>.</p>",
     "DeleteLoadBalancer": "<p>Deletes the specified Application Load Balancer or Network Load Balancer and its attached listeners.</p> <p>You can't delete a load balancer if deletion protection is enabled. If the load balancer does not exist or has already been deleted, the call succeeds.</p> <p>Deleting a load balancer does not affect its registered targets. For example, your EC2 instances continue to run and are still registered to their target groups. If you no longer need these EC2 instances, you can stop or terminate them.</p>",
     "DeleteRule": "<p>Deletes the specified rule.</p>",
     "DeleteTargetGroup": "<p>Deletes the specified target group.</p> <p>You can delete a target group if it is not referenced by any actions. Deleting a target group also deletes any associated health checks.</p>",
@@ -32,10 +32,10 @@
     "RegisterTargets": "<p>Registers the specified targets with the specified target group.</p> <p>You can register targets by instance ID or by IP address. If the target is an EC2 instance, it must be in the <code>running</code> state when you register it.</p> <p>By default, the load balancer routes requests to registered targets using the protocol and port for the target group. Alternatively, you can override the port for a target when you register it. You can register each EC2 instance or IP address with the same target group multiple times using different ports.</p> <p>With a Network Load Balancer, you cannot register instances by instance ID if they have the following instance types: C1, CC1, CC2, CG1, CG2, CR1, CS1, G1, G2, HI1, HS1, M1, M2, M3, and T1. You can register instances of these types by IP address.</p> <p>To remove a target from a target group, use <a>DeregisterTargets</a>.</p>",
     "RemoveListenerCertificates": "<p>Removes the specified certificate from the specified secure listener.</p> <p>You can't remove the default certificate for a listener. To replace the default certificate, call <a>ModifyListener</a>.</p> <p>To list the certificates for your listener, use <a>DescribeListenerCertificates</a>.</p>",
     "RemoveTags": "<p>Removes the specified tags from the specified Elastic Load Balancing resource.</p> <p>To list the current tags for your resources, use <a>DescribeTags</a>.</p>",
-    "SetIpAddressType": "<p>Sets the type of IP addresses used by the subnets of the specified Application Load Balancer or Network Load Balancer.</p> <p>Network Load Balancers must use <code>ipv4</code>.</p>",
+    "SetIpAddressType": "<p>Sets the type of IP addresses used by the subnets of the specified Application Load Balancer or Network Load Balancer.</p> <p>Note that Network Load Balancers must use <code>ipv4</code>.</p>",
     "SetRulePriorities": "<p>Sets the priorities of the specified rules.</p> <p>You can reorder the rules as long as there are no priority conflicts in the new order. Any existing rules that you do not specify retain their current priority.</p>",
-    "SetSecurityGroups": "<p>Associates the specified security groups with the specified Application Load Balancer. The specified security groups override the previously associated security groups.</p> <p>You can't specify a security group for a Network Load Balancer.</p>",
-    "SetSubnets": "<p>Enables the Availability Zone for the specified public subnets for the specified Application Load Balancer. The specified subnets replace the previously enabled subnets.</p> <p>You can't change the subnets for a Network Load Balancer.</p>"
+    "SetSecurityGroups": "<p>Associates the specified security groups with the specified Application Load Balancer. The specified security groups override the previously associated security groups.</p> <p>Note that you can't specify a security group for a Network Load Balancer.</p>",
+    "SetSubnets": "<p>Enables the Availability Zone for the specified public subnets for the specified Application Load Balancer. The specified subnets replace the previously enabled subnets.</p> <p>Note that you can't change the subnets for a Network Load Balancer.</p>"
   },
   "shapes": {
     "Action": {
@@ -47,22 +47,22 @@
     "ActionOrder": {
       "base": null,
       "refs": {
-        "Action$Order": "<p>The order for the action. This value is required for rules with multiple actions. The action with the lowest value for order is performed first. The final action to be performed must be a <code>forward</code> or a <code>fixed-response</code> action.</p>"
+        "Action$Order": "<p>The order for the action. This value is required for rules with multiple actions. The action with the lowest value for order is performed first. The forward action must be performed last.</p>"
       }
     },
     "ActionTypeEnum": {
       "base": null,
       "refs": {
-        "Action$Type": "<p>The type of action. Each rule must include exactly one of the following types of actions: <code>forward</code>, <code>fixed-response</code>, or <code>redirect</code>.</p>"
+        "Action$Type": "<p>The type of action. Each rule must include one forward action.</p>"
       }
     },
     "Actions": {
       "base": null,
       "refs": {
-        "CreateListenerInput$DefaultActions": "<p>The actions for the default rule. The rule must include one forward action or one or more fixed-response actions.</p> <p>If the action type is <code>forward</code>, you can specify a single target group. The protocol of the target group must be HTTP or HTTPS for an Application Load Balancer or TCP for a Network Load Balancer.</p> <p>[HTTPS listener] If the action type is <code>authenticate-oidc</code>, you can use an identity provider that is OpenID Connect (OIDC) compliant to authenticate users as they access your application.</p> <p>[HTTPS listener] If the action type is <code>authenticate-cognito</code>, you can use Amazon Cognito to authenticate users as they access your application.</p> <p>[Application Load Balancer] If the action type is <code>redirect</code>, you can redirect HTTP and HTTPS requests.</p> <p>[Application Load Balancer] If the action type is <code>fixed-response</code>, you can return a custom HTTP response.</p>",
-        "CreateRuleInput$Actions": "<p>The actions. Each rule must include exactly one of the following types of actions: <code>forward</code>, <code>fixed-response</code>, or <code>redirect</code>.</p> <p>If the action type is <code>forward</code>, you can specify a single target group.</p> <p>[HTTPS listener] If the action type is <code>authenticate-oidc</code>, you can use an identity provider that is OpenID Connect (OIDC) compliant to authenticate users as they access your application.</p> <p>[HTTPS listener] If the action type is <code>authenticate-cognito</code>, you can use Amazon Cognito to authenticate users as they access your application.</p> <p>[Application Load Balancer] If the action type is <code>redirect</code>, you can redirect HTTP and HTTPS requests.</p> <p>[Application Load Balancer] If the action type is <code>fixed-response</code>, you can return a custom HTTP response.</p>",
+        "CreateListenerInput$DefaultActions": "<p>The actions for the default rule. The rule must include one forward action.</p> <p>If the action type is <code>forward</code>, you can specify a single target group. The protocol of the target group must be HTTP or HTTPS for an Application Load Balancer or TCP for a Network Load Balancer.</p> <p>If the action type is <code>authenticate-oidc</code>, you can use an identity provider that is OpenID Connect (OIDC) compliant to authenticate users as they access your application.</p> <p>If the action type is <code>authenticate-cognito</code>, you can use Amazon Cognito to authenticate users as they access your application.</p>",
+        "CreateRuleInput$Actions": "<p>The actions. Each rule must include one forward action.</p> <p>If the action type is <code>forward</code>, you can specify a single target group.</p> <p>If the action type is <code>authenticate-oidc</code>, you can use an identity provider that is OpenID Connect (OIDC) compliant to authenticate users as they access your application.</p> <p>If the action type is <code>authenticate-cognito</code>, you can use Amazon Cognito to authenticate users as they access your application.</p>",
         "Listener$DefaultActions": "<p>The default actions for the listener.</p>",
-        "ModifyListenerInput$DefaultActions": "<p>The actions for the default rule. The rule must include one forward action or one or more fixed-response actions.</p> <p>If the action type is <code>forward</code>, you can specify a single target group. The protocol of the target group must be HTTP or HTTPS for an Application Load Balancer or TCP for a Network Load Balancer.</p> <p>[HTTPS listener] If the action type is <code>authenticate-oidc</code>, you can use an identity provider that is OpenID Connect (OIDC) compliant to authenticate users as they access your application.</p> <p>[HTTPS listener] If the action type is <code>authenticate-cognito</code>, you can use Amazon Cognito to authenticate users as they access your application.</p> <p>[Application Load Balancer] If the action type is <code>redirect</code>, you can redirect HTTP and HTTPS requests.</p> <p>[Application Load Balancer] If the action type is <code>fixed-response</code>, you can return a custom HTTP response.</p>",
+        "ModifyListenerInput$DefaultActions": "<p>The actions for the default rule. The rule must include one forward action.</p> <p>If the action type is <code>forward</code>, you can specify a single target group. The protocol of the target group must be HTTP or HTTPS for an Application Load Balancer or TCP for a Network Load Balancer.</p> <p>If the action type is <code>authenticate-oidc</code>, you can use an identity provider that is OpenID Connect (OIDC) compliant to authenticate users as they access your application.</p> <p>If the action type is <code>authenticate-cognito</code>, you can use Amazon Cognito to authenticate users as they access your application.</p>",
         "ModifyRuleInput$Actions": "<p>The actions.</p> <p>If the action type is <code>forward</code>, you can specify a single target group.</p> <p>If the action type is <code>authenticate-oidc</code>, you can use an identity provider that is OpenID Connect (OIDC) compliant to authenticate users as they access your application.</p> <p>If the action type is <code>authenticate-cognito</code>, you can use Amazon Cognito to authenticate users as they access your application.</p>",
         "Rule$Actions": "<p>The actions.</p>"
       }
@@ -290,10 +290,10 @@
       "refs": {
         "AddListenerCertificatesInput$Certificates": "<p>The certificate to add. You can specify one certificate per call.</p>",
         "AddListenerCertificatesOutput$Certificates": "<p>Information about the certificates.</p>",
-        "CreateListenerInput$Certificates": "<p>[HTTPS listeners] The default SSL server certificate. You must provide exactly one default certificate. To create a certificate list, use <a>AddListenerCertificates</a>.</p>",
+        "CreateListenerInput$Certificates": "<p>[HTTPS listeners] The default SSL server certificate. You must provide exactly one certificate. To create a certificate list, use <a>AddListenerCertificates</a>.</p>",
         "DescribeListenerCertificatesOutput$Certificates": "<p>Information about the certificates.</p>",
         "Listener$Certificates": "<p>The SSL server certificate. You must provide a certificate if the protocol is HTTPS.</p>",
-        "ModifyListenerInput$Certificates": "<p>[HTTPS listeners] The default SSL server certificate. You must provide exactly one default certificate. To create a certificate list, use <a>AddListenerCertificates</a>.</p>",
+        "ModifyListenerInput$Certificates": "<p>[HTTPS listeners] The default SSL server certificate. You must provide exactly one certificate. To create a certificate list, use <a>AddListenerCertificates</a>.</p>",
         "RemoveListenerCertificatesInput$Certificates": "<p>The certificate to remove. You can specify one certificate per call.</p>"
       }
     },
@@ -576,35 +576,11 @@
       "refs": {
       }
     },
-    "FixedResponseActionConfig": {
-      "base": "<p>Information about an action that returns a custom HTTP response.</p>",
-      "refs": {
-        "Action$FixedResponseConfig": "<p>[Application Load Balancer] Information for creating an action that returns a custom HTTP response. Specify only when <code>Type</code> is <code>fixed-response</code>.</p>"
-      }
-    },
-    "FixedResponseActionContentType": {
-      "base": null,
-      "refs": {
-        "FixedResponseActionConfig$ContentType": "<p>The content type.</p> <p>Valid Values: text/plain | text/css | text/html | application/javascript | application/json</p>"
-      }
-    },
-    "FixedResponseActionMessage": {
-      "base": null,
-      "refs": {
-        "FixedResponseActionConfig$MessageBody": "<p>The message.</p>"
-      }
-    },
-    "FixedResponseActionStatusCode": {
-      "base": null,
-      "refs": {
-        "FixedResponseActionConfig$StatusCode": "<p>The HTTP response code (2XX, 4XX, or 5XX).</p>"
-      }
-    },
     "HealthCheckIntervalSeconds": {
       "base": null,
       "refs": {
-        "CreateTargetGroupInput$HealthCheckIntervalSeconds": "<p>The approximate amount of time, in seconds, between health checks of an individual target. For Application Load Balancers, the range is 5–300 seconds. For Network Load Balancers, the supported values are 10 or 30 seconds. The default is 30 seconds.</p>",
-        "ModifyTargetGroupInput$HealthCheckIntervalSeconds": "<p>The approximate amount of time, in seconds, between health checks of an individual target. For Application Load Balancers, the range is 5–300 seconds. For Network Load Balancers, the supported values are 10 or 30 seconds.</p>",
+        "CreateTargetGroupInput$HealthCheckIntervalSeconds": "<p>The approximate amount of time, in seconds, between health checks of an individual target. For Application Load Balancers, the range is 5 to 300 seconds. For Network Load Balancers, the supported values are 10 or 30 seconds. The default is 30 seconds.</p>",
+        "ModifyTargetGroupInput$HealthCheckIntervalSeconds": "<p>The approximate amount of time, in seconds, between health checks of an individual target. For Application Load Balancers, the range is 5 to 300 seconds. For Network Load Balancers, the supported values are 10 or 30 seconds.</p>",
         "TargetGroup$HealthCheckIntervalSeconds": "<p>The approximate amount of time, in seconds, between health checks of an individual target.</p>"
       }
     },
@@ -631,7 +607,7 @@
     "HealthCheckTimeoutSeconds": {
       "base": null,
       "refs": {
-        "CreateTargetGroupInput$HealthCheckTimeoutSeconds": "<p>The amount of time, in seconds, during which no response from a target means a failed health check. For Application Load Balancers, the range is 2–60 seconds and the default is 5 seconds. For Network Load Balancers, this is 10 seconds for TCP and HTTPS health checks and 6 seconds for HTTP health checks.</p>",
+        "CreateTargetGroupInput$HealthCheckTimeoutSeconds": "<p>The amount of time, in seconds, during which no response from a target means a failed health check. For Application Load Balancers, the range is 2 to 60 seconds and the default is 5 seconds. For Network Load Balancers, this is 10 seconds for TCP and HTTPS health checks and 6 seconds for HTTP health checks.</p>",
         "ModifyTargetGroupInput$HealthCheckTimeoutSeconds": "<p>[HTTP/HTTPS health checks] The amount of time, in seconds, during which no response means a failed health check.</p>",
         "TargetGroup$HealthCheckTimeoutSeconds": "<p>The amount of time, in seconds, during which no response means a failed health check.</p>"
       }
@@ -644,7 +620,7 @@
     "HttpCode": {
       "base": null,
       "refs": {
-        "Matcher$HttpCode": "<p>The HTTP codes.</p> <p>For Application Load Balancers, you can specify values between 200 and 499, and the default value is 200. You can specify multiple values (for example, \"200,202\") or a range of values (for example, \"200-299\").</p> <p>For Network Load Balancers, this is 200–399.</p>"
+        "Matcher$HttpCode": "<p>The HTTP codes.</p> <p>For Application Load Balancers, you can specify values between 200 and 499, and the default value is 200. You can specify multiple values (for example, \"200,202\") or a range of values (for example, \"200-299\").</p> <p>For Network Load Balancers, this is 200 to 399.</p>"
       }
     },
     "IncompatibleProtocolsException": {
@@ -718,7 +694,7 @@
     "ListOfString": {
       "base": null,
       "refs": {
-        "RuleCondition$Values": "<p>The condition value.</p> <p>If the field name is <code>host-header</code>, you can specify a single host name (for example, my.example.com). A host name is case insensitive, can be up to 128 characters in length, and can contain any of the following characters. You can include up to three wildcard characters.</p> <ul> <li> <p>A-Z, a-z, 0-9</p> </li> <li> <p>- .</p> </li> <li> <p>* (matches 0 or more characters)</p> </li> <li> <p>? (matches exactly 1 character)</p> </li> </ul> <p>If the field name is <code>path-pattern</code>, you can specify a single path pattern (for example, /img/*). A path pattern is case-sensitive, can be up to 128 characters in length, and can contain any of the following characters. You can include up to three wildcard characters.</p> <ul> <li> <p>A-Z, a-z, 0-9</p> </li> <li> <p>_ - . $ / ~ \" ' @ : +</p> </li> <li> <p>&amp; (using &amp;amp;)</p> </li> <li> <p>* (matches 0 or more characters)</p> </li> <li> <p>? (matches exactly 1 character)</p> </li> </ul>"
+        "RuleCondition$Values": "<p>The condition value.</p> <p>If the field name is <code>host-header</code>, you can specify a single host name (for example, my.example.com). A host name is case insensitive, can be up to 128 characters in length, and can contain any of the following characters. Note that you can include up to three wildcard characters.</p> <ul> <li> <p>A-Z, a-z, 0-9</p> </li> <li> <p>- .</p> </li> <li> <p>* (matches 0 or more characters)</p> </li> <li> <p>? (matches exactly 1 character)</p> </li> </ul> <p>If the field name is <code>path-pattern</code>, you can specify a single path pattern (for example, /img/*). A path pattern is case sensitive, can be up to 128 characters in length, and can contain any of the following characters. Note that you can include up to three wildcard characters.</p> <ul> <li> <p>A-Z, a-z, 0-9</p> </li> <li> <p>_ - . $ / ~ \" ' @ : +</p> </li> <li> <p>&amp; (using &amp;amp;)</p> </li> <li> <p>* (matches 0 or more characters)</p> </li> <li> <p>? (matches exactly 1 character)</p> </li> </ul>"
       }
     },
     "Listener": {
@@ -811,7 +787,7 @@
     "LoadBalancerAttributeKey": {
       "base": null,
       "refs": {
-        "LoadBalancerAttribute$Key": "<p>The name of the attribute.</p> <p>The following attributes are supported by both Application Load Balancers and Network Load Balancers:</p> <ul> <li> <p> <code>deletion_protection.enabled</code> - Indicates whether deletion protection is enabled. The value is <code>true</code> or <code>false</code>. The default is <code>false</code>.</p> </li> </ul> <p>The following attributes are supported by only Application Load Balancers:</p> <ul> <li> <p> <code>access_logs.s3.enabled</code> - Indicates whether access logs are enabled. The value is <code>true</code> or <code>false</code>. The default is <code>false</code>.</p> </li> <li> <p> <code>access_logs.s3.bucket</code> - The name of the S3 bucket for the access logs. This attribute is required if access logs are enabled. The bucket must exist in the same region as the load balancer and have a bucket policy that grants Elastic Load Balancing permissions to write to the bucket.</p> </li> <li> <p> <code>access_logs.s3.prefix</code> - The prefix for the location in the S3 bucket for the access logs.</p> </li> <li> <p> <code>idle_timeout.timeout_seconds</code> - The idle timeout value, in seconds. The valid range is 1-4000 seconds. The default is 60 seconds.</p> </li> <li> <p> <code>routing.http2.enabled</code> - Indicates whether HTTP/2 is enabled. The value is <code>true</code> or <code>false</code>. The default is <code>true</code>.</p> </li> </ul> <p>The following attributes are supported by only Network Load Balancers:</p> <ul> <li> <p> <code>load_balancing.cross_zone.enabled</code> - Indicates whether cross-zone load balancing is enabled. The value is <code>true</code> or <code>false</code>. The default is <code>false</code>.</p> </li> </ul>"
+        "LoadBalancerAttribute$Key": "<p>The name of the attribute.</p> <p>The following attributes are supported by both Application Load Balancers and Network Load Balancers:</p> <ul> <li> <p> <code>deletion_protection.enabled</code> - Indicates whether deletion protection is enabled. The value is <code>true</code> or <code>false</code>. The default is <code>false</code>.</p> </li> </ul> <p>The following attributes are supported by only Application Load Balancers:</p> <ul> <li> <p> <code>access_logs.s3.enabled</code> - Indicates whether access logs are enabled. The value is <code>true</code> or <code>false</code>. The default is <code>false</code>.</p> </li> <li> <p> <code>access_logs.s3.bucket</code> - The name of the S3 bucket for the access logs. This attribute is required if access logs are enabled. The bucket must exist in the same region as the load balancer and have a bucket policy that grants Elastic Load Balancing permission to write to the bucket.</p> </li> <li> <p> <code>access_logs.s3.prefix</code> - The prefix for the location in the S3 bucket for the access logs.</p> </li> <li> <p> <code>idle_timeout.timeout_seconds</code> - The idle timeout value, in seconds. The valid range is 1-4000 seconds. The default is 60 seconds.</p> </li> <li> <p> <code>routing.http2.enabled</code> - Indicates whether HTTP/2 is enabled. The value is <code>true</code> or <code>false</code>. The default is <code>true</code>.</p> </li> </ul> <p>The following attributes are supported by only Network Load Balancers:</p> <ul> <li> <p> <code>load_balancing.cross_zone.enabled</code> - Indicates whether cross-zone load balancing is enabled. The value is <code>true</code> or <code>false</code>. The default is <code>false</code>.</p> </li> </ul>"
       }
     },
     "LoadBalancerAttributeValue": {
@@ -850,8 +826,8 @@
     "LoadBalancerSchemeEnum": {
       "base": null,
       "refs": {
-        "CreateLoadBalancerInput$Scheme": "<p>The nodes of an Internet-facing load balancer have public IP addresses. The DNS name of an Internet-facing load balancer is publicly resolvable to the public IP addresses of the nodes. Therefore, Internet-facing load balancers can route requests from clients over the internet.</p> <p>The nodes of an internal load balancer have only private IP addresses. The DNS name of an internal load balancer is publicly resolvable to the private IP addresses of the nodes. Therefore, internal load balancers can only route requests from clients with access to the VPC for the load balancer.</p> <p>The default is an Internet-facing load balancer.</p>",
-        "LoadBalancer$Scheme": "<p>The nodes of an Internet-facing load balancer have public IP addresses. The DNS name of an Internet-facing load balancer is publicly resolvable to the public IP addresses of the nodes. Therefore, Internet-facing load balancers can route requests from clients over the internet.</p> <p>The nodes of an internal load balancer have only private IP addresses. The DNS name of an internal load balancer is publicly resolvable to the private IP addresses of the nodes. Therefore, internal load balancers can only route requests from clients with access to the VPC for the load balancer.</p>"
+        "CreateLoadBalancerInput$Scheme": "<p>The nodes of an Internet-facing load balancer have public IP addresses. The DNS name of an Internet-facing load balancer is publicly resolvable to the public IP addresses of the nodes. Therefore, Internet-facing load balancers can route requests from clients over the Internet.</p> <p>The nodes of an internal load balancer have only private IP addresses. The DNS name of an internal load balancer is publicly resolvable to the private IP addresses of the nodes. Therefore, internal load balancers can only route requests from clients with access to the VPC for the load balancer.</p> <p>The default is an Internet-facing load balancer.</p>",
+        "LoadBalancer$Scheme": "<p>The nodes of an Internet-facing load balancer have public IP addresses. The DNS name of an Internet-facing load balancer is publicly resolvable to the public IP addresses of the nodes. Therefore, Internet-facing load balancers can route requests from clients over the Internet.</p> <p>The nodes of an internal load balancer have only private IP addresses. The DNS name of an internal load balancer is publicly resolvable to the private IP addresses of the nodes. Therefore, internal load balancers can only route requests from clients with access to the VPC for the load balancer.</p>"
       }
     },
     "LoadBalancerState": {
@@ -1023,48 +999,6 @@
         "TargetGroup$HealthCheckProtocol": "<p>The protocol to use to connect with the target.</p>"
       }
     },
-    "RedirectActionConfig": {
-      "base": "<p>Information about a redirect action.</p> <p>A URI consists of the following components: protocol://hostname:port/path?query. You must modify at least one of the following components to avoid a redirect loop: protocol, hostname, port, or path. Any components that you do not modify retain their original values.</p> <p>You can reuse URI components using the following reserved keywords:</p> <ul> <li> <p>#{protocol}</p> </li> <li> <p>#{host}</p> </li> <li> <p>#{port}</p> </li> <li> <p>#{path} (the leading \"/\" is removed)</p> </li> <li> <p>#{query}</p> </li> </ul> <p>For example, you can change the path to \"/new/#{path}\", the hostname to \"example.#{host}\", or the query to \"#{query}&amp;value=xyz\".</p>",
-      "refs": {
-        "Action$RedirectConfig": "<p>[Application Load Balancer] Information for creating a redirect action. Specify only when <code>Type</code> is <code>redirect</code>.</p>"
-      }
-    },
-    "RedirectActionHost": {
-      "base": null,
-      "refs": {
-        "RedirectActionConfig$Host": "<p>The hostname. This component is not percent-encoded. The hostname can contain #{host}.</p>"
-      }
-    },
-    "RedirectActionPath": {
-      "base": null,
-      "refs": {
-        "RedirectActionConfig$Path": "<p>The absolute path, starting with the leading \"/\". This component is not percent-encoded. The path can contain #{host}, #{path}, and #{port}.</p>"
-      }
-    },
-    "RedirectActionPort": {
-      "base": null,
-      "refs": {
-        "RedirectActionConfig$Port": "<p>The port. You can specify a value from 1 to 65535 or #{port}.</p>"
-      }
-    },
-    "RedirectActionProtocol": {
-      "base": null,
-      "refs": {
-        "RedirectActionConfig$Protocol": "<p>The protocol. You can specify HTTP, HTTPS, or #{protocol}. You can redirect HTTP to HTTP, HTTP to HTTPS, and HTTPS to HTTPS. You cannot redirect HTTPS to HTTP.</p>"
-      }
-    },
-    "RedirectActionQuery": {
-      "base": null,
-      "refs": {
-        "RedirectActionConfig$Query": "<p>The query parameters, URL-encoded when necessary, but not percent-encoded. Do not include the leading \"?\", as it is automatically added. You can specify any of the reserved keywords.</p>"
-      }
-    },
-    "RedirectActionStatusCodeEnum": {
-      "base": null,
-      "refs": {
-        "RedirectActionConfig$StatusCode": "<p>The HTTP redirect code. The redirect is either permanent (HTTP 301) or temporary (HTTP 302).</p>"
-      }
-    },
     "RegisterTargetsInput": {
       "base": null,
       "refs": {
@@ -1146,8 +1080,8 @@
     "RuleConditionList": {
       "base": null,
       "refs": {
-        "CreateRuleInput$Conditions": "<p>The conditions. Each condition specifies a field name and a single value.</p> <p>If the field name is <code>host-header</code>, you can specify a single host name (for example, my.example.com). A host name is case insensitive, can be up to 128 characters in length, and can contain any of the following characters. You can include up to three wildcard characters.</p> <ul> <li> <p>A-Z, a-z, 0-9</p> </li> <li> <p>- .</p> </li> <li> <p>* (matches 0 or more characters)</p> </li> <li> <p>? (matches exactly 1 character)</p> </li> </ul> <p>If the field name is <code>path-pattern</code>, you can specify a single path pattern. A path pattern is case-sensitive, can be up to 128 characters in length, and can contain any of the following characters. You can include up to three wildcard characters.</p> <ul> <li> <p>A-Z, a-z, 0-9</p> </li> <li> <p>_ - . $ / ~ \" ' @ : +</p> </li> <li> <p>&amp; (using &amp;amp;)</p> </li> <li> <p>* (matches 0 or more characters)</p> </li> <li> <p>? (matches exactly 1 character)</p> </li> </ul>",
-        "ModifyRuleInput$Conditions": "<p>The conditions. Each condition specifies a field name and a single value.</p> <p>If the field name is <code>host-header</code>, you can specify a single host name (for example, my.example.com). A host name is case insensitive, can be up to 128 characters in length, and can contain any of the following characters. You can include up to three wildcard characters.</p> <ul> <li> <p>A-Z, a-z, 0-9</p> </li> <li> <p>- .</p> </li> <li> <p>* (matches 0 or more characters)</p> </li> <li> <p>? (matches exactly 1 character)</p> </li> </ul> <p>If the field name is <code>path-pattern</code>, you can specify a single path pattern. A path pattern is case-sensitive, can be up to 128 characters in length, and can contain any of the following characters. You can include up to three wildcard characters.</p> <ul> <li> <p>A-Z, a-z, 0-9</p> </li> <li> <p>_ - . $ / ~ \" ' @ : +</p> </li> <li> <p>&amp; (using &amp;amp;)</p> </li> <li> <p>* (matches 0 or more characters)</p> </li> <li> <p>? (matches exactly 1 character)</p> </li> </ul>",
+        "CreateRuleInput$Conditions": "<p>The conditions. Each condition specifies a field name and a single value.</p> <p>If the field name is <code>host-header</code>, you can specify a single host name (for example, my.example.com). A host name is case insensitive, can be up to 128 characters in length, and can contain any of the following characters. Note that you can include up to three wildcard characters.</p> <ul> <li> <p>A-Z, a-z, 0-9</p> </li> <li> <p>- .</p> </li> <li> <p>* (matches 0 or more characters)</p> </li> <li> <p>? (matches exactly 1 character)</p> </li> </ul> <p>If the field name is <code>path-pattern</code>, you can specify a single path pattern. A path pattern is case sensitive, can be up to 128 characters in length, and can contain any of the following characters. Note that you can include up to three wildcard characters.</p> <ul> <li> <p>A-Z, a-z, 0-9</p> </li> <li> <p>_ - . $ / ~ \" ' @ : +</p> </li> <li> <p>&amp; (using &amp;amp;)</p> </li> <li> <p>* (matches 0 or more characters)</p> </li> <li> <p>? (matches exactly 1 character)</p> </li> </ul>",
+        "ModifyRuleInput$Conditions": "<p>The conditions. Each condition specifies a field name and a single value.</p> <p>If the field name is <code>host-header</code>, you can specify a single host name (for example, my.example.com). A host name is case insensitive, can be up to 128 characters in length, and can contain any of the following characters. Note that you can include up to three wildcard characters.</p> <ul> <li> <p>A-Z, a-z, 0-9</p> </li> <li> <p>- .</p> </li> <li> <p>* (matches 0 or more characters)</p> </li> <li> <p>? (matches exactly 1 character)</p> </li> </ul> <p>If the field name is <code>path-pattern</code>, you can specify a single path pattern. A path pattern is case sensitive, can be up to 128 characters in length, and can contain any of the following characters. Note that you can include up to three wildcard characters.</p> <ul> <li> <p>A-Z, a-z, 0-9</p> </li> <li> <p>_ - . $ / ~ \" ' @ : +</p> </li> <li> <p>&amp; (using &amp;amp;)</p> </li> <li> <p>* (matches 0 or more characters)</p> </li> <li> <p>? (matches exactly 1 character)</p> </li> </ul>",
         "Rule$Conditions": "<p>The conditions.</p>"
       }
     },
@@ -1404,7 +1338,7 @@
     "TargetGroupArn": {
       "base": null,
       "refs": {
-        "Action$TargetGroupArn": "<p>The Amazon Resource Name (ARN) of the target group. Specify only when <code>Type</code> is <code>forward</code>.</p>",
+        "Action$TargetGroupArn": "<p>The Amazon Resource Name (ARN) of the target group. Specify only when <code>Type</code> is <code>forward</code>.</p> <p>For a default rule, the protocol of the target group must be HTTP or HTTPS for an Application Load Balancer or TCP for a Network Load Balancer.</p>",
         "DeleteTargetGroupInput$TargetGroupArn": "<p>The Amazon Resource Name (ARN) of the target group.</p>",
         "DeregisterTargetsInput$TargetGroupArn": "<p>The Amazon Resource Name (ARN) of the target group.</p>",
         "DescribeTargetGroupAttributesInput$TargetGroupArn": "<p>The Amazon Resource Name (ARN) of the target group.</p>",
@@ -1519,7 +1453,7 @@
     "TargetTypeEnum": {
       "base": null,
       "refs": {
-        "CreateTargetGroupInput$TargetType": "<p>The type of target that you must specify when registering targets with this target group. The possible values are <code>instance</code> (targets are specified by instance ID) or <code>ip</code> (targets are specified by IP address). The default is <code>instance</code>. You can't specify targets for a target group using both instance IDs and IP addresses.</p> <p>If the target type is <code>ip</code>, specify IP addresses from the subnets of the virtual private cloud (VPC) for the target group, the RFC 1918 range (10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16), and the RFC 6598 range (100.64.0.0/10). You can't specify publicly routable IP addresses.</p>",
+        "CreateTargetGroupInput$TargetType": "<p>The type of target that you must specify when registering targets with this target group. The possible values are <code>instance</code> (targets are specified by instance ID) or <code>ip</code> (targets are specified by IP address). The default is <code>instance</code>. Note that you can't specify targets for a target group using both instance IDs and IP addresses.</p> <p>If the target type is <code>ip</code>, specify IP addresses from the subnets of the virtual private cloud (VPC) for the target group, the RFC 1918 range (10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16), and the RFC 6598 range (100.64.0.0/10). You can't specify publicly routable IP addresses.</p>",
         "TargetGroup$TargetType": "<p>The type of target that you must specify when registering targets with this target group. The possible values are <code>instance</code> (targets are specified by instance ID) or <code>ip</code> (targets are specified by IP address).</p>"
       }
     },

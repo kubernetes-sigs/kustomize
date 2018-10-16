@@ -538,8 +538,7 @@
         "serviceRoleArn":{"shape":"String"},
         "dynamodbConfig":{"shape":"DynamodbDataSourceConfig"},
         "lambdaConfig":{"shape":"LambdaDataSourceConfig"},
-        "elasticsearchConfig":{"shape":"ElasticsearchDataSourceConfig"},
-        "httpConfig":{"shape":"HttpDataSourceConfig"}
+        "elasticsearchConfig":{"shape":"ElasticsearchDataSourceConfig"}
       }
     },
     "CreateDataSourceResponse":{
@@ -633,8 +632,7 @@
         "serviceRoleArn":{"shape":"String"},
         "dynamodbConfig":{"shape":"DynamodbDataSourceConfig"},
         "lambdaConfig":{"shape":"LambdaDataSourceConfig"},
-        "elasticsearchConfig":{"shape":"ElasticsearchDataSourceConfig"},
-        "httpConfig":{"shape":"HttpDataSourceConfig"}
+        "elasticsearchConfig":{"shape":"ElasticsearchDataSourceConfig"}
       }
     },
     "DataSourceType":{
@@ -643,8 +641,7 @@
         "AWS_LAMBDA",
         "AMAZON_DYNAMODB",
         "AMAZON_ELASTICSEARCH",
-        "NONE",
-        "HTTP"
+        "NONE"
       ]
     },
     "DataSources":{
@@ -980,12 +977,6 @@
     "GraphqlApis":{
       "type":"list",
       "member":{"shape":"GraphqlApi"}
-    },
-    "HttpDataSourceConfig":{
-      "type":"structure",
-      "members":{
-        "endpoint":{"shape":"String"}
-      }
     },
     "InternalFailureException":{
       "type":"structure",
@@ -1345,8 +1336,7 @@
         "serviceRoleArn":{"shape":"String"},
         "dynamodbConfig":{"shape":"DynamodbDataSourceConfig"},
         "lambdaConfig":{"shape":"LambdaDataSourceConfig"},
-        "elasticsearchConfig":{"shape":"ElasticsearchDataSourceConfig"},
-        "httpConfig":{"shape":"HttpDataSourceConfig"}
+        "elasticsearchConfig":{"shape":"ElasticsearchDataSourceConfig"}
       }
     },
     "UpdateDataSourceResponse":{

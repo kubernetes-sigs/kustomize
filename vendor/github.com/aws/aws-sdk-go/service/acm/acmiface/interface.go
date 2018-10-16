@@ -110,9 +110,6 @@ type ACMAPI interface {
 	UpdateCertificateOptions(*acm.UpdateCertificateOptionsInput) (*acm.UpdateCertificateOptionsOutput, error)
 	UpdateCertificateOptionsWithContext(aws.Context, *acm.UpdateCertificateOptionsInput, ...request.Option) (*acm.UpdateCertificateOptionsOutput, error)
 	UpdateCertificateOptionsRequest(*acm.UpdateCertificateOptionsInput) (*request.Request, *acm.UpdateCertificateOptionsOutput)
-
-	WaitUntilCertificateValidated(*acm.DescribeCertificateInput) error
-	WaitUntilCertificateValidatedWithContext(aws.Context, *acm.DescribeCertificateInput, ...request.WaiterOption) error
 }
 
 var _ ACMAPI = (*acm.ACM)(nil)
