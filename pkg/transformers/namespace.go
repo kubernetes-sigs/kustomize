@@ -49,6 +49,12 @@ var namespaceFieldSpecsToSkip = []config.FieldSpec{
 			Kind: "CustomResourceDefinition",
 		},
 	},
+	{
+		// PersistentVolume is cluster resource. Its binds are exclusive.
+		Gvk: gvk.Gvk{
+			Kind: "PersistentVolume",
+		},
+	},
 }
 
 var _ Transformer = &namespaceTransformer{}
