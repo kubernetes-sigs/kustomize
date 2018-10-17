@@ -39,6 +39,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: winnie
+  namespace: hundred-acre-wood
 ---
 # some comment
 ---
