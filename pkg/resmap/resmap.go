@@ -123,7 +123,11 @@ func (m ResMap) DeepCopy(rf *resource.Factory) ResMap {
 
 // FilterBy returns a ResMap containing ResIds with the same namespace and nameprefix
 // with the inputId
+// If inputId is a cluster level resource, return the original resmap
 func (m ResMap) FilterBy(inputId resid.ResId) ResMap {
+	if inputId.Gvk().IsClusterKind() {
+		return m
+	}
 	result := ResMap{}
 	for id, res := range m {
 		if id.Namespace() == inputId.Namespace() && id.HasSameLeftmostPrefix(inputId) {
