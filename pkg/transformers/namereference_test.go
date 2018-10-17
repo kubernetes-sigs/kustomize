@@ -190,6 +190,30 @@ func TestNameReferenceRun(t *testing.T) {
 					},
 				},
 			}),
+		resid.NewResIdWithPrefixNamespace(sa, "sa", "", "test"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ServiceAccount",
+				"metadata": map[string]interface{}{
+					"name":      "someprefix-sa",
+					"namespace": "test",
+				},
+			}),
+		resid.NewResId(crb, "crb"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "rbac.authorization.k8s.io/v1",
+				"kind":       "ClusterRoleBinding",
+				"metadata": map[string]interface{}{
+					"name": "crb",
+				},
+				"subjects": []interface{}{
+					map[string]interface{}{
+						"kind":      "ServiceAccount",
+						"name":      "sa",
+						"namespace": "test",
+					},
+				},
+			}),
 	}
 
 	expected := resmap.ResMap{}
@@ -325,6 +349,21 @@ func TestNameReferenceRun(t *testing.T) {
 			},
 		},
 	)
+	expected[resid.NewResId(crb, "crb")] = rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "rbac.authorization.k8s.io/v1",
+			"kind":       "ClusterRoleBinding",
+			"metadata": map[string]interface{}{
+				"name": "crb",
+			},
+			"subjects": []interface{}{
+				map[string]interface{}{
+					"kind":      "ServiceAccount",
+					"name":      "someprefix-sa",
+					"namespace": "test",
+				},
+			},
+		})
 	nrt, err := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

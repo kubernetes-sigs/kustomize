@@ -160,6 +160,11 @@ func TestFilterBy(t *testing.T) {
 	if !reflect.DeepEqual(rm, ns1map) {
 		t.Fatalf("Expected %v but got back %v", rm, ns1map)
 	}
+
+	clmap := rm1.FilterBy(resid.NewResId(gvk.Gvk{Kind: "ClusterRoleBinding"}, "crb"))
+	if !reflect.DeepEqual(rm1, clmap) {
+		t.Fatalf("Expected %v but got back %v", rm1, clmap)
+	}
 }
 func TestDeepCopy(t *testing.T) {
 	rm1 := ResMap{
