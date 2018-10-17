@@ -58,7 +58,8 @@ func (r *Resource) IsGenerated() bool {
 
 // Id returns the ResId for the resource.
 func (r *Resource) Id() resid.ResId {
-	return resid.NewResId(r.GetGvk(), r.GetName())
+	namespace, _ := r.GetFieldValue("metadata.namespace")
+	return resid.NewResIdWithPrefixNamespace(r.GetGvk(), r.GetName(), "", namespace)
 }
 
 // Merge performs merge with other resource.

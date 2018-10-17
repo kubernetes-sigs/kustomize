@@ -45,6 +45,11 @@ metadata:
 ---
 # some comment
 ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dply2
+  namespace: test
 ---
 `
 
@@ -68,12 +73,21 @@ metadata:
 					"name": "dply2",
 				},
 			}),
+		resid.NewResIdWithPrefixNamespace(deploy, "dply2", "", "test"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name":      "dply2",
+					"namespace": "test",
+				},
+			}),
 	}
 
 	m, _ := rmF.FromFiles(
 		l, []string{"/home/seans/project/deployment.yaml"})
-	if len(m) != 2 {
-		t.Fatalf("%#v should contain 2 appResource, but got %d", m, len(m))
+	if len(m) != 3 {
+		t.Fatalf("%#v should contain 3 appResource, but got %d", m, len(m))
 	}
 
 	if err := expected.ErrorIfNotEqual(m); err != nil {
