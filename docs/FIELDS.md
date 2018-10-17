@@ -57,7 +57,7 @@ secretGenerator:
   type: Opaque
 ```
 
-## Input resources
+## Operands
 
 ### `resources`
 
@@ -128,7 +128,7 @@ crds:
 - crds/typeB.yaml
 ```
 
-## Patching
+## Operators
 
 ### `namespace`
 
