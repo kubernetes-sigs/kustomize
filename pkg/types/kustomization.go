@@ -34,6 +34,10 @@ type TypeMeta struct {
 type Kustomization struct {
 	TypeMeta `json:",inline" yaml:",inline"`
 
+	//
+	// Operators - what kustomize can do.
+	//
+
 	// NamePrefix will prefix the names of all resources mentioned in the kustomization
 	// file including generated configmaps and secrets.
 	NamePrefix string `json:"namePrefix,omitempty" yaml:"namePrefix,omitempty"`
@@ -41,61 +45,80 @@ type Kustomization struct {
 	// Namespace to add to all objects.
 	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 
-	// Labels to add to all objects and selectors.
-	// These labels would also be used to form the selector for apply --prune
-	// Named differently than “labels” to avoid confusion with metadata for
-	// this object
+	// CommonLabels to add to all objects and selectors.
 	CommonLabels map[string]string `json:"commonLabels,omitempty" yaml:"commonLabels,omitempty"`
 
-	// Annotations to add to all objects.
+	// CommonAnnotations to add to all objects.
 	CommonAnnotations map[string]string `json:"commonAnnotations,omitempty" yaml:"commonAnnotations,omitempty"`
 
-	// Each entry should be either a path to a directory containing kustomization.yaml
-	// Or a repo URL pointing to a remote directory containing kustomization.yaml
-	// The repo URL should follow hashicorp/go-getter URL format
-	// https://github.com/hashicorp/go-getter#url-format
-	Bases []string `json:"bases,omitempty" yaml:"bases,omitempty"`
-
-	// Resources specifies the relative paths for resource files within the package.
-	// URLs and globs are not supported
-	Resources []string `json:"resources,omitempty" yaml:"resources,omitempty"`
-
-	// Crds specifies relative paths to custom resource definition files.
-	Crds []string `json:"crds,omitempty" yaml:"crds,omitempty"`
-
-	// An Patch entry is very similar to an Resource entry.
-	// It specifies the relative paths for patch files within the package.
-	// URLs and globs are not supported.
-	// The patch files should be Strategic Merge Patch, the default patching behavior for kubectl.
+	// PatchesStrategicMerge specifies the relative path to a file
+	// containing a strategic merge patch.  Format documented at
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/strategic-merge-patch.md
-	Patches               []string               `json:"patches,omitempty" yaml:"patches,omitempty"`
+	// URLs and globs are not supported.
 	PatchesStrategicMerge []patch.StrategicMerge `json:"patchesStrategicMerge,omitempty" yaml:"patchesStrategicMerge,omitempty"`
 
 	// JSONPatches is a list of JSONPatch for applying JSON patch.
-	// The JSON patch is documented at https://tools.ietf.org/html/rfc6902
-	// and http://jsonpatch.com/.
+	// Format documented at https://tools.ietf.org/html/rfc6902
+	// and http://jsonpatch.com
 	PatchesJson6902 []patch.Json6902 `json:"patchesJson6902,omitempty" yaml:"patchesJson6902,omitempty"`
 
-	// List of configmaps to generate from configuration sources.
-	// Base/overlay concept doesn't apply to this field.
-	// If a configmap want to have a base and an overlay, it should go to Bases
-	// and Overlays fields.
-	ConfigMapGenerator []ConfigMapArgs `json:"configMapGenerator,omitempty" yaml:"configMapGenerator,omitempty"`
+	// ImageTags is a list of (image name, new tag) pairs for simply
+	// changing a an image tag.  This can also be achieved with a
+	// patch, but this operator is simpler to specify.
+	ImageTags []ImageTag `json:"imageTags,omitempty" yaml:"imageTags,omitempty"`
 
-	// List of secrets to generate from secret commands.
-	// Base/overlay concept doesn't apply to this field.
-	// If a secret want to have a base and an overlay, it should go to Bases and
-	// Overlays fields.
-	SecretGenerator []SecretArgs `json:"secretGenerator,omitempty" yaml:"secretGenerator,omitempty"`
-
-	// Variables which will be substituted at runtime
+	// Vars allow things modified by kustomize to be injected into a
+	// container specification. A var is a name (e.g. FOO) associated
+	// with a field in a specific resource instance.  The field must
+	// contain a value of type string, and defaults to the name field
+	// of the instance.  Any appearance of "$(FOO)" in the container
+	// spec will be replaced at kustomize build time, after the final
+	// value of the specified field has been determined.
 	Vars []Var `json:"vars,omitempty" yaml:"vars,omitempty"`
 
-	// If set to true, all images need to have tags
-	RequireTag bool `json:"requireTag,omitempty" yaml:"requireTag,omitempty"`
+	//
+	// Operands - what kustomize operates on.
+	//
 
-	// ImageTags is a list of ImageTag for changing image tags
-	ImageTags []ImageTag `json:"imageTags,omitempty" yaml:"imageTags,omitempty"`
+	// Resources specifies relative paths to files holding YAML representations
+	// of kubernetes API objects. URLs and globs not supported.
+	Resources []string `json:"resources,omitempty" yaml:"resources,omitempty"`
+
+	// Crds specifies relative paths to Custom Resource Definition files.
+	// This allows custom resources to be recognized as operands, making
+	// it possible to add them to the Resources list.
+	// CRDs themselves are not modified.
+	Crds []string `json:"crds,omitempty" yaml:"crds,omitempty"`
+
+	// Bases are relative paths or github repository URLs specifying a
+	// directory containing a kustomization.yaml file.
+	// URL format: https://github.com/hashicorp/go-getter#url-format
+	Bases []string `json:"bases,omitempty" yaml:"bases,omitempty"`
+
+	//
+	// Generators (operators that create operands)
+	//
+
+	// ConfigMapGenerator is a list of configmaps to generate from
+	// local data (one configMap per list item).
+	// The resulting resource is a normal operand, subject to
+	// name prefixing, patching, etc.  By default, the name of
+	// the map will have a suffix hash generated from its contents.
+	ConfigMapGenerator []ConfigMapArgs `json:"configMapGenerator,omitempty" yaml:"configMapGenerator,omitempty"`
+
+	// SecretGenerator is a list of secrets to generate from
+	// local data (one secret per list item).
+	// The resulting resource is a normal operand, subject to
+	// name prefixing, patching, etc.  By default, the name of
+	// the map will have a suffix hash generated from its contents.
+	SecretGenerator []SecretArgs `json:"secretGenerator,omitempty" yaml:"secretGenerator,omitempty"`
+
+	//
+	// Deprecated fields - See DealWithDeprecatedFields
+	//
+
+	// Deprecated.
+	Patches []string `json:"patches,omitempty" yaml:"patches,omitempty"`
 }
 
 // DealWithDeprecatedFields should be called immediately after

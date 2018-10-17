@@ -1,5 +1,6 @@
 # Glossary
-
+[CRD spec]: https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/
+[CRD]: #custom-resource-definition
 [DAM]: #declarative-application-management
 [Declarative Application Management]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md
 [JSON]: https://www.json.org/
@@ -23,13 +24,14 @@
 [patch]: #patch
 [patches]: #patch
 [patchJson6902]: #patchjson6902
+[patchExampleJson6902]: https://github.com/kubernetes-sigs/kustomize/blob/master/examples/jsonpatch.md
 [patchesJson6902]: #patchjson6902
 [proposal]: https://github.com/kubernetes/community/pull/1629
 [rebase]: https://git-scm.com/docs/git-rebase
 [resource]: #resource
 [resources]: #resource
 [rpm]: https://en.wikipedia.org/wiki/Rpm_(software)
-[strategic merge]: https://github.com/kubernetes/community/blob/master/contributors/devel/strategic-merge-patch.md
+[strategic-merge]: https://github.com/kubernetes/community/blob/master/contributors/devel/strategic-merge-patch.md
 [target]: #target
 [variant]: #variant
 [variants]: #variant
@@ -97,6 +99,19 @@ simpler than the workflow associated with an
 periodically capturing someone else's upgrades to the
 [off-the-shelf] config.
 
+## custom resource definition
+
+One can extend the k8s API by making a
+Custom Resource Definition ([CRD spec]).
+
+This defines a custom [resource] (CD), an entirely
+new resource that can be used alongside _native_
+resources like ConfigMaps, Deployments, etc.
+
+Kustomize can customize a CD, but to do so
+kustomize must also be given the corresponding CRD
+so that it can interpret the structure correctly.
+
 ## declarative application management
 
 Kustomize aspires to support [Declarative Application Management],
@@ -134,18 +149,23 @@ Here's an [example](kustomization.yaml).
 
 A kustomization contains fields falling into these categories:
 
- * Immediate customization declarations, e.g.
-   _namePrefix_, _commonLabels_, etc.
- * Resource _generators_ for configmaps and secrets.
- * References to _external files_ in these categories:
+ * _Customization operators_ for modifying operands, e.g.
+   _namePrefix_, _commonLabels_, _patches_, etc.
+
+ * _Customization operands_:
    * [resources] - completely specified k8s API objects,
       e.g. `deployment.yaml`, `configmap.yaml`, etc.
-   * [patches] - _partial_ resources that modify full
-     resources defined in a [base]
-     (only meaningful in an [overlay]).
-   * [bases] - path to a directory containing
-     a [kustomization] (only meaningful in an [overlay]).
- * (_TBD_) Standard k8s API kind-version fields.
+   * [bases] - paths or github URLs specifying directories
+     containing a [kustomization].  These bases may
+     be subjected to more customization, or merely
+     included in the output.
+   * [CRD]s - custom resource definition files, to allow use
+     of _custom_ resources in the _resources_ list.
+     Not an actual operand - but allows the use of new operands.
+
+ * Generators, for creating more resources
+   (configmaps and secrets) which can then be
+   customized.
 
 ## kubernetes
 
@@ -249,43 +269,66 @@ management tool in the tradition of, say, [apt] or
 
 ## patch
 
-A _patch_ is a partially defined k8s resource with a
-name that must match a resource already known per
-traversal rules built into [kustomize].
+General instructions to modify a resource.
 
-_Patch_ is a field in the kustomization, distinct from
-resources, because a patch file looks like a resource
-file, but has different semantics.  A patch depends on
-(modifies) a resource, whereas a resource has no
-dependencies.  Since any resource file can be used as a
-patch, one cannot reliably distinguish a resource from
-a patch just by looking at the file's [YAML].
+There are two alternative techniques with similar
+power but different notation - the
+[strategic merge patch](#patchstrategicmerge)
+and the [JSON patch](#patchjson6902).
+
+## patchStrategicMerge
+
+A _patchStrategicMerge_ is [strategic-merge]-style patch (SMP).
+
+An SMP looks like an incomplete YAML specification of
+a k8s resource.  The SMP includes `TypeMeta`
+fields to establish the group/version/kind/name of the
+[resource] to patch, then just enough remaining fields
+to step into a nested structure to specify a new field
+value, e.g. an image tag.
+
+By default, an SMP _replaces_ values.  This
+usually desired when the target value is a simple
+string, but may not be desired when the target 
+value is a list.
+
+To change this 
+default behavior, add a _directive_.  Recognized 
+directives include _replace_ (the default), _merge_
+(avoid replacing a list), _delete_ and a few more
+(see [these notes][strategic-merge]).
+
+Fun fact - any resource file can be used as
+an SMP, overwriting matching fields in another
+resource with the same group/version/kind/name,
+but leaving all other fields as they were.
+
+TODO(monopole): add ptr to example.
 
 ## patchJson6902
-A _patchJson6902_ refers to a kubernetes object and a [JSONPatch]
-that can patch the object. A [JSONPatch] contains a list of operations to change the object's field directly. 
-This is different from [patch], which is
-applied to a target kubernetes object by [strategic merge]. 
 
-_patchesJson6902_ is a field in kustomization. It contains a list of
-_patchJson6902_.
+A _patchJson6902_ refers to a kubernetes [resource] and
+a [JSONPatch] specifying how to change the resource.
+
+A _patchJson6902_ can do almost everything a
+_patchStrategicMerge_ can do, but with a briefer
+syntax.  See this [example][patchExampleJson6902].
 
 ## resource
 
-A _resource_, in the context of kustomize, is a path to
-a [YAML] or [JSON] file that completely defines a
-functional k8s API object, like a deployment or a
-configmap.
+A _resource_ in the context of a REST-ful API is the
+target object of an HTTP operation like _GET_, _PUT_ or
+_POST_.  k8s offers a REST-ful API surface to interact
+with clients.
+
+A _resource_, in the context of kustomization file,
+is a path to a [YAML] or [JSON] file describing
+a k8s API object, like a Deployment or a
+ConfigmMap.
 
 More generally, a resource can be any correct YAML file
 that [defines an object](https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/#required-fields)
 with a _kind_ and a _metadata/name_ field.
-
-
-A _resource_ in the content of a REST-ful API is the
-target of an HTTP operation like _GET_, _PUT_ or
-_POST_.  k8s offers a RESTful API surface to interact
-with clients.
 
 
 ## sub-target / sub-application / sub-package
