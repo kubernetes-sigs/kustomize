@@ -20,6 +20,8 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/internal/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/resid"
 )
 
 var factory = NewFactory(
@@ -30,11 +32,12 @@ var testConfigMap = factory.FromMap(
 		"apiVersion": "v1",
 		"kind":       "ConfigMap",
 		"metadata": map[string]interface{}{
-			"name": "winnie",
+			"name":      "winnie",
+			"namespace": "hundred-acre-wood",
 		},
 	})
 
-const testConfigMapString = `unspecified:{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"winnie"}}`
+const testConfigMapString = `unspecified:{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"winnie","namespace":"hundred-acre-wood"}}`
 
 var testDeployment = factory.FromMap(
 	map[string]interface{}{
@@ -64,6 +67,27 @@ func TestResourceString(t *testing.T) {
 	for _, test := range tests {
 		if test.in.String() != test.s {
 			t.Fatalf("Expected %s == %s", test.in.String(), test.s)
+		}
+	}
+}
+
+func TestResourceId(t *testing.T) {
+	tests := []struct {
+		in *Resource
+		id resid.ResId
+	}{
+		{
+			in: testConfigMap,
+			id: resid.NewResIdWithPrefixNamespace(gvk.Gvk{Version: "v1", Kind: "ConfigMap"}, "winnie", "", "hundred-acre-wood"),
+		},
+		{
+			in: testDeployment,
+			id: resid.NewResId(gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}, "pooh"),
+		},
+	}
+	for _, test := range tests {
+		if test.in.Id() != test.id {
+			t.Fatalf("Expected %v, but got %v\n", test.id, test.in.Id())
 		}
 	}
 }
