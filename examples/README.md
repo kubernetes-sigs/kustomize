@@ -42,3 +42,6 @@ go get sigs.k8s.io/kustomize
  * [remote target](remoteBuild.md) - Building a kustomization from a github URL
  
  * [json patch](jsonpatch.md) - Apply a json patch in a kustomization
+ 
+ * [transformer configs](transformerconfigs/README.md) - Customize transformer configurations
+ 
