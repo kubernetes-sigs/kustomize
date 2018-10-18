@@ -92,7 +92,7 @@ func (o *addMetadataOptions) runE(
 	if err != nil {
 		return err
 	}
-	kf, err := kustfile.NewKustomizationFile(constants.KustomizationFileName, fSys)
+	kf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		return err
 	}

@@ -23,7 +23,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
-	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 )
@@ -72,8 +71,8 @@ func (o *setNamespaceOptions) Validate(args []string) error {
 }
 
 // RunSetNamespace runs setNamespace command (does real work).
-func (o *setNamespaceOptions) RunSetNamespace(fsys fs.FileSystem) error {
-	mf, err := kustfile.NewKustomizationFile(constants.KustomizationFileName, fsys)
+func (o *setNamespaceOptions) RunSetNamespace(fSys fs.FileSystem) error {
+	mf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		return err
 	}
