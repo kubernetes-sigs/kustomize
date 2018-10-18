@@ -24,7 +24,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
-	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -99,8 +98,8 @@ func (o *setImageTagOptions) Validate(args []string) error {
 }
 
 // RunSetImageTags runs setImageTags command (does real work).
-func (o *setImageTagOptions) RunSetImageTags(fsys fs.FileSystem) error {
-	mf, err := kustfile.NewKustomizationFile(constants.KustomizationFileName, fsys)
+func (o *setImageTagOptions) RunSetImageTags(fSys fs.FileSystem) error {
+	mf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		return err
 	}

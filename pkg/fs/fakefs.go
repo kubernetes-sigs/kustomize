@@ -19,9 +19,8 @@ package fs
 import (
 	"fmt"
 	"path/filepath"
-	"sort"
-
 	"sigs.k8s.io/kustomize/pkg/constants"
+	"sort"
 )
 
 var _ FileSystem = &FakeFS{}
@@ -53,13 +52,6 @@ configMapGenerator: []
 # There could be secrets in Base, if just using a fork/rebase workflow
 secretGenerator: []
 `
-
-// WriteTestKustomization writes a standard test file.
-func (fs *FakeFS) WriteTestKustomization() {
-	fs.WriteFile(
-		constants.KustomizationFileName,
-		[]byte(kustomizationContent))
-}
 
 // Create assures a fake file appears in the in-memory file system.
 func (fs *FakeFS) Create(name string) (File, error) {
@@ -123,12 +115,26 @@ func (fs *FakeFS) ReadFile(name string) ([]byte, error) {
 	return nil, fmt.Errorf("cannot read file %q", name)
 }
 
+func (fs *FakeFS) ReadTestKustomization() ([]byte, error) {
+	return fs.ReadFile(constants.KustomizationFileName)
+}
+
 // WriteFile always succeeds and does nothing.
 func (fs *FakeFS) WriteFile(name string, c []byte) error {
 	ff := &FakeFile{}
 	ff.Write(c)
 	fs.m[name] = ff
 	return nil
+}
+
+// WriteTestKustomization writes a standard test file.
+func (fs *FakeFS) WriteTestKustomization() {
+	fs.WriteTestKustomizationWith([]byte(kustomizationContent))
+}
+
+// WriteTestKustomizationWith writes a standard test file.
+func (fs *FakeFS) WriteTestKustomizationWith(bytes []byte) {
+	fs.WriteFile(constants.KustomizationFileName, bytes)
 }
 
 func (fs *FakeFS) pathMatch(path, pattern string) bool {
