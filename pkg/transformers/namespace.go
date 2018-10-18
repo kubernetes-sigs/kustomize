@@ -28,29 +28,6 @@ type namespaceTransformer struct {
 	fieldSpecsToSkip []config.FieldSpec
 }
 
-var namespaceFieldSpecsToSkip = []config.FieldSpec{
-	{
-		Gvk: gvk.Gvk{
-			Kind: "Namespace",
-		},
-	},
-	{
-		Gvk: gvk.Gvk{
-			Kind: "ClusterRoleBinding",
-		},
-	},
-	{
-		Gvk: gvk.Gvk{
-			Kind: "ClusterRole",
-		},
-	},
-	{
-		Gvk: gvk.Gvk{
-			Kind: "CustomResourceDefinition",
-		},
-	},
-}
-
 var _ Transformer = &namespaceTransformer{}
 
 // NewNamespaceTransformer construct a namespaceTransformer.
@@ -58,11 +35,14 @@ func NewNamespaceTransformer(ns string, cf []config.FieldSpec) Transformer {
 	if len(ns) == 0 {
 		return NewNoOpTransformer()
 	}
-
+	var skip []config.FieldSpec
+	for _, g := range gvk.ClusterLevelGvks() {
+		skip = append(skip, config.FieldSpec{Gvk: g})
+	}
 	return &namespaceTransformer{
 		namespace:        ns,
 		fieldSpecsToUse:  cf,
-		fieldSpecsToSkip: namespaceFieldSpecsToSkip,
+		fieldSpecsToSkip: skip,
 	}
 }
 
