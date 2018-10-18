@@ -22,7 +22,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
-	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/patch"
 )
@@ -70,8 +69,8 @@ func (o *addPatchOptions) Complete(cmd *cobra.Command, args []string) error {
 }
 
 // RunAddPatch runs addPatch command (do real work).
-func (o *addPatchOptions) RunAddPatch(fsys fs.FileSystem) error {
-	patches, err := globPatterns(fsys, o.patchFilePaths)
+func (o *addPatchOptions) RunAddPatch(fSys fs.FileSystem) error {
+	patches, err := globPatterns(fSys, o.patchFilePaths)
 	if err != nil {
 		return err
 	}
@@ -79,7 +78,7 @@ func (o *addPatchOptions) RunAddPatch(fsys fs.FileSystem) error {
 		return nil
 	}
 
-	mf, err := kustfile.NewKustomizationFile(constants.KustomizationFileName, fsys)
+	mf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		return err
 	}
