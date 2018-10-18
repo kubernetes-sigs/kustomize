@@ -203,12 +203,12 @@ func TestResources1(t *testing.T) {
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
 			}).SetBehavior(ifc.BehaviorCreate),
-		resid.NewResIdWithPrefixNamespace(ns, "ns1", "foo-", ""): rf.RF().FromMap(
+		resid.NewResIdWithPrefixNamespace(ns, "ns1", "", ""): rf.RF().FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Namespace",
 				"metadata": map[string]interface{}{
-					"name": "foo-ns1",
+					"name": "ns1",
 					"labels": map[string]interface{}{
 						"app": "nginx",
 					},
