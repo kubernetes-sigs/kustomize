@@ -19,12 +19,9 @@ package error
 import (
 	"strings"
 	"testing"
-
-	"sigs.k8s.io/kustomize/pkg/constants"
 )
 
 func TestPatchError_Error(t *testing.T) {
-	filepath := "/path/to/" + constants.KustomizationFileName
 	patchfilepath := "/path/to/patch/patch.yaml"
 	errorMsg := "file not found"
 	me := PatchError{KustomizationPath: filepath, PatchFilepath: patchfilepath, ErrorMsg: errorMsg}

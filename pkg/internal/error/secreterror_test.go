@@ -22,7 +22,6 @@ import (
 )
 
 func TestSecretError_Error(t *testing.T) {
-	filepath := "/path/to/secret.yaml"
 	errorMsg := "missing a command"
 	me := SecretError{KustomizationPath: filepath, ErrorMsg: errorMsg}
 	if !strings.Contains(me.Error(), filepath) {

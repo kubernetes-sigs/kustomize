@@ -73,13 +73,13 @@ func squash(x [][]byte) []byte {
 
 type kustomizationFile struct {
 	path           string
-	fsys           fs.FileSystem
+	fSys           fs.FileSystem
 	originalFields []*commentedField
 }
 
 // NewKustomizationFile returns a new instance.
-func NewKustomizationFile(mPath string, fsys fs.FileSystem) (*kustomizationFile, error) { // nolint
-	mf := &kustomizationFile{path: mPath, fsys: fsys}
+func NewKustomizationFile(fSys fs.FileSystem) (*kustomizationFile, error) { // nolint
+	mf := &kustomizationFile{path: constants.KustomizationFileName, fSys: fSys}
 	err := mf.validate()
 	if err != nil {
 		return nil, err
@@ -88,12 +88,12 @@ func NewKustomizationFile(mPath string, fsys fs.FileSystem) (*kustomizationFile,
 }
 
 func (mf *kustomizationFile) validate() error {
-	if !mf.fsys.Exists(mf.path) {
+	if !mf.fSys.Exists(mf.path) {
 		return fmt.Errorf("Missing kustomization file '%s'.\n", mf.path)
 	}
-	if mf.fsys.IsDir(mf.path) {
+	if mf.fSys.IsDir(mf.path) {
 		mf.path = path.Join(mf.path, constants.KustomizationFileName)
-		if !mf.fsys.Exists(mf.path) {
+		if !mf.fSys.Exists(mf.path) {
 			return fmt.Errorf("Missing kustomization file '%s'.\n", mf.path)
 		}
 	} else {
@@ -106,7 +106,7 @@ func (mf *kustomizationFile) validate() error {
 }
 
 func (mf *kustomizationFile) Read() (*types.Kustomization, error) {
-	data, err := mf.fsys.ReadFile(mf.path)
+	data, err := mf.fSys.ReadFile(mf.path)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (mf *kustomizationFile) Write(kustomization *types.Kustomization) error {
 	if err != nil {
 		return err
 	}
-	return mf.fsys.WriteFile(mf.path, data)
+	return mf.fSys.WriteFile(mf.path, data)
 }
 
 // StringInSlice returns true if the string is in the slice.
