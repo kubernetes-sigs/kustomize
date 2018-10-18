@@ -37,7 +37,7 @@ func NewKustValidator() *KustValidator {
 func (v *KustValidator) MakeAnnotationValidator() func(map[string]string) error {
 	return func(x map[string]string) error {
 		errs := apivalidation.ValidateAnnotations(x, field.NewPath("field"))
-		if errs != nil {
+		if len(errs) > 0 {
 			return errors.New(errs.ToAggregate().Error())
 		}
 		return nil
@@ -48,7 +48,7 @@ func (v *KustValidator) MakeAnnotationValidator() func(map[string]string) error 
 func (v *KustValidator) MakeLabelValidator() func(map[string]string) error {
 	return func(x map[string]string) error {
 		errs := v1validation.ValidateLabels(x, field.NewPath("field"))
-		if errs != nil {
+		if len(errs) > 0 {
 			return errors.New(errs.ToAggregate().Error())
 		}
 		return nil
