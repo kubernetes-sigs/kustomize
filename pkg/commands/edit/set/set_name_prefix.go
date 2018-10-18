@@ -21,7 +21,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
-	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
@@ -73,8 +72,8 @@ func (o *setNamePrefixOptions) Complete(cmd *cobra.Command, args []string) error
 }
 
 // RunSetNamePrefix runs setNamePrefix command (does real work).
-func (o *setNamePrefixOptions) RunSetNamePrefix(fsys fs.FileSystem) error {
-	mf, err := kustfile.NewKustomizationFile(constants.KustomizationFileName, fsys)
+func (o *setNamePrefixOptions) RunSetNamePrefix(fSys fs.FileSystem) error {
+	mf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		return err
 	}

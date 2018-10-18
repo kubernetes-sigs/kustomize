@@ -20,7 +20,6 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
@@ -35,7 +34,7 @@ func TestSetImageTagsHappyPath(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	content, err := fakeFS.ReadFile(constants.KustomizationFileName)
+	content, err := fakeFS.ReadTestKustomization()
 	if err != nil {
 		t.Errorf("unexpected read error: %v", err)
 	}
@@ -70,7 +69,7 @@ func TestSetImageTagsOverride(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	content, err := fakeFS.ReadFile(constants.KustomizationFileName)
+	content, err := fakeFS.ReadTestKustomization()
 	if err != nil {
 		t.Errorf("unexpected read error: %v", err)
 	}

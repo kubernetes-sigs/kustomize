@@ -20,12 +20,9 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-
-	"sigs.k8s.io/kustomize/pkg/constants"
 )
 
 func TestKustomizationError_Error(t *testing.T) {
-	filepath := "/path/to/" + constants.KustomizationFileName
 	errorMsg := "Kustomization not found"
 
 	me := KustomizationError{KustomizationPath: filepath, ErrorMsg: errorMsg}
@@ -39,11 +36,9 @@ func TestKustomizationError_Error(t *testing.T) {
 		t.Errorf("Incorrect KustomizationError.Error() message \n")
 		t.Errorf("Expected errorMsg %s, but unfound\n", errorMsg)
 	}
-
 }
 
 func TestKustomizationErrors_Error(t *testing.T) {
-	filepath := "/path/to/kustomize"
 	me := KustomizationError{KustomizationPath: filepath, ErrorMsg: "Kustomization not found"}
 	ce := ConfigmapError{Path: filepath, ErrorMsg: "can't find configmap name"}
 	pe := PatchError{KustomizationPath: filepath, PatchFilepath: filepath, ErrorMsg: "can't find patch file"}

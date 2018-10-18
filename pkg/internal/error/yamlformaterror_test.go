@@ -19,13 +19,11 @@ package error
 import (
 	"fmt"
 	"testing"
-
-	"sigs.k8s.io/kustomize/pkg/constants"
 )
 
-var (
-	filepath = "/path/to/" + constants.KustomizationFileName
-	expected = "YAML file [/path/to/kustomization.yaml] encounters a format error.\n" +
+const (
+	filepath = "/path/to/whatever"
+	expected = "YAML file [/path/to/whatever] encounters a format error.\n" +
 		"error converting YAML to JSON: yaml: line 2: found character that cannot start any token\n"
 )
 
