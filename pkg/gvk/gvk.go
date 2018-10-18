@@ -136,3 +136,30 @@ func (x Gvk) IsSelected(selector *Gvk) bool {
 	}
 	return true
 }
+
+var clusterLevelKinds = []string{
+	"ClusterRoleBinding",
+	"ClusterRole",
+	"CustomResourceDefinition",
+	"Namespace",
+	"PersistentVolume",
+}
+
+// IsClusterKind returns true if x is a cluster-level Gvk
+func (x Gvk) IsClusterKind() bool {
+	for _, k := range clusterLevelKinds {
+		if k == x.Kind {
+			return true
+		}
+	}
+	return false
+}
+
+// ClusterLevelGvks returns a slice of cluster-level Gvks
+func ClusterLevelGvks() []Gvk {
+	var result []Gvk
+	for _, k := range clusterLevelKinds {
+		result = append(result, Gvk{Kind: k})
+	}
+	return result
+}

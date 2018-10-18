@@ -197,3 +197,60 @@ func TestNamespaceRun(t *testing.T) {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
+
+func TestNamespaceRunForClusterLevelKind(t *testing.T) {
+	rf := resource.NewFactory(
+		kunstruct.NewKunstructuredFactoryImpl())
+	m := resmap.ResMap{
+		resid.NewResId(ns, "ns1"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Namespace",
+				"metadata": map[string]interface{}{
+					"name": "ns1",
+				},
+			}),
+		resid.NewResId(crd, "crd1"): rf.FromMap(
+			map[string]interface{}{
+				"kind": "CustomResourceDefinition",
+				"metadata": map[string]interface{}{
+					"name": "crd1",
+				},
+			}),
+		resid.NewResId(pv, "pv1"): rf.FromMap(
+			map[string]interface{}{
+				"kind": "PersistentVolume",
+				"metadata": map[string]interface{}{
+					"name": "pv1",
+				},
+			}),
+		resid.NewResId(cr, "cr1"): rf.FromMap(
+			map[string]interface{}{
+				"kind": "ClusterRole",
+				"metadata": map[string]interface{}{
+					"name": "cr1",
+				},
+			}),
+		resid.NewResId(crb, "crb1"): rf.FromMap(
+			map[string]interface{}{
+				"kind": "ClusterRoleBinding",
+				"metadata": map[string]interface{}{
+					"name": "crb1",
+				},
+				"subjects": []interface{}{},
+			}),
+	}
+
+	expected := m.DeepCopy(rf)
+
+	nst := NewNamespaceTransformer("test", defaultTransformerConfig.NameSpace)
+
+	err := nst.Transform(m)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !reflect.DeepEqual(m, expected) {
+		err = expected.ErrorIfNotEqual(m)
+		t.Fatalf("actual doesn't match expected: %v", err)
+	}
+}
