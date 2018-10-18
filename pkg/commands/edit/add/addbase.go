@@ -23,7 +23,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
-	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
@@ -70,8 +69,8 @@ func (o *addBaseOptions) Complete(cmd *cobra.Command, args []string) error {
 }
 
 // RunAddBase runs addBase command (do real work).
-func (o *addBaseOptions) RunAddBase(fsys fs.FileSystem) error {
-	mf, err := kustfile.NewKustomizationFile(constants.KustomizationFileName, fsys)
+func (o *addBaseOptions) RunAddBase(fSys fs.FileSystem) error {
+	mf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		return err
 	}
@@ -84,7 +83,7 @@ func (o *addBaseOptions) RunAddBase(fsys fs.FileSystem) error {
 	// split directory paths
 	paths := strings.Split(o.baseDirectoryPaths, ",")
 	for _, path := range paths {
-		if !fsys.Exists(path) {
+		if !fSys.Exists(path) {
 			return errors.New(path + " does not exist")
 		}
 		if kustfile.StringInSlice(path, m.Bases) {

@@ -21,7 +21,6 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -31,9 +30,9 @@ func TestWriteAndRead(t *testing.T) {
 		NamePrefix: "prefix",
 	}
 
-	fsys := fs.MakeFakeFS()
-	fsys.Create(constants.KustomizationFileName)
-	mf, err := NewKustomizationFile(constants.KustomizationFileName, fsys)
+	fSys := fs.MakeFakeFS()
+	fSys.WriteTestKustomization()
+	mf, err := NewKustomizationFile(fSys)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
 	}
@@ -51,20 +50,9 @@ func TestWriteAndRead(t *testing.T) {
 	}
 }
 
-func TestEmptyFile(t *testing.T) {
-	fsys := fs.MakeFakeFS()
-	_, err := NewKustomizationFile("", fsys)
-	if err == nil {
-		t.Fatalf("Create kustomizationFile from empty filename should fail")
-	}
-}
-
 func TestNewNotExist(t *testing.T) {
-	badSuffix := "foo.bar"
 	fakeFS := fs.MakeFakeFS()
-	fakeFS.Mkdir(".")
-	fakeFS.Create(badSuffix)
-	_, err := NewKustomizationFile(constants.KustomizationFileName, fakeFS)
+	_, err := NewKustomizationFile(fakeFS)
 	if err == nil {
 		t.Fatalf("expect an error")
 	}
@@ -72,18 +60,10 @@ func TestNewNotExist(t *testing.T) {
 	if !strings.Contains(err.Error(), contained) {
 		t.Fatalf("expect an error contains %q, but got %v", contained, err)
 	}
-	_, err = NewKustomizationFile(constants.KustomizationFileName, fakeFS)
+	_, err = NewKustomizationFile(fakeFS)
 	if err == nil {
 		t.Fatalf("expect an error")
 	}
-	if !strings.Contains(err.Error(), contained) {
-		t.Fatalf("expect an error contains %q, but got %v", contained, err)
-	}
-	_, err = NewKustomizationFile(badSuffix, fakeFS)
-	if err == nil {
-		t.Fatalf("expect an error")
-	}
-	contained = "should have .yaml suffix"
 	if !strings.Contains(err.Error(), contained) {
 		t.Fatalf("expect an error contains %q, but got %v", contained, err)
 	}
@@ -113,10 +93,9 @@ patchesStrategicMerge:
 - service.yaml
 - pod.yaml
 `)
-	fsys := fs.MakeFakeFS()
-	fsys.Create(constants.KustomizationFileName)
-	fsys.WriteFile(constants.KustomizationFileName, kustomizationContentWithComments)
-	mf, err := NewKustomizationFile(constants.KustomizationFileName, fsys)
+	fSys := fs.MakeFakeFS()
+	fSys.WriteTestKustomizationWith(kustomizationContentWithComments)
+	mf, err := NewKustomizationFile(fSys)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
 	}
@@ -127,7 +106,7 @@ patchesStrategicMerge:
 	if err = mf.Write(kustomization); err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
 	}
-	bytes, _ := fsys.ReadFile(mf.path)
+	bytes, _ := fSys.ReadFile(mf.path)
 
 	if !reflect.DeepEqual(kustomizationContentWithComments, bytes) {
 		t.Fatal("written kustomization with comments is not the same as original one")
@@ -204,10 +183,9 @@ patchesStrategicMerge:
 - service.yaml
 - pod.yaml
 `)
-	fsys := fs.MakeFakeFS()
-	fsys.Create(constants.KustomizationFileName)
-	fsys.WriteFile(constants.KustomizationFileName, kustomizationContentWithComments)
-	mf, err := NewKustomizationFile(constants.KustomizationFileName, fsys)
+	fSys := fs.MakeFakeFS()
+	fSys.WriteTestKustomizationWith(kustomizationContentWithComments)
+	mf, err := NewKustomizationFile(fSys)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
 	}
@@ -219,7 +197,7 @@ patchesStrategicMerge:
 	if err = mf.Write(kustomization); err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
 	}
-	bytes, _ := fsys.ReadFile(mf.path)
+	bytes, _ := fSys.ReadFile(mf.path)
 
 	if !reflect.DeepEqual(expected, bytes) {
 		t.Fatal("written kustomization with comments is not the same as original one\n", string(bytes))
