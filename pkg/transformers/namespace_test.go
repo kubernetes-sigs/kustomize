@@ -47,12 +47,12 @@ func TestNamespaceRun(t *testing.T) {
 					"namespace": "foo",
 				},
 			}),
-		resid.NewResId(ns, "ns1"): rf.FromMap(
+		resid.NewResId(ns, "test"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Namespace",
 				"metadata": map[string]interface{}{
-					"name": "ns1",
+					"name": "test",
 				},
 			}),
 		resid.NewResId(sa, "default"): rf.FromMap(
@@ -108,12 +108,12 @@ func TestNamespaceRun(t *testing.T) {
 			}),
 	}
 	expected := resmap.ResMap{
-		resid.NewResIdWithPrefixNamespace(ns, "ns1", "", ""): rf.FromMap(
+		resid.NewResIdWithPrefixNamespace(ns, "test", "", ""): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Namespace",
 				"metadata": map[string]interface{}{
-					"name": "ns1",
+					"name": "test",
 				},
 			}),
 		resid.NewResIdWithPrefixNamespace(cmap, "cm1", "", "test"): rf.FromMap(
@@ -187,7 +187,7 @@ func TestNamespaceRun(t *testing.T) {
 			}),
 	}
 
-	nst := NewNamespaceTransformer("test", defaultTransformerConfig.NameSpace)
+	nst := NewNamespaceTransformer("test", defaultTransformerConfig.NameSpace, rf)
 	err := nst.Transform(m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -243,8 +243,35 @@ func TestNamespaceRunForClusterLevelKind(t *testing.T) {
 
 	expected := m.DeepCopy(rf)
 
-	nst := NewNamespaceTransformer("test", defaultTransformerConfig.NameSpace)
+	nst := NewNamespaceTransformer("ns1", defaultTransformerConfig.NameSpace, rf)
 
+	err := nst.Transform(m)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !reflect.DeepEqual(m, expected) {
+		err = expected.ErrorIfNotEqual(m)
+		t.Fatalf("actual doesn't match expected: %v", err)
+	}
+}
+
+func TestNamespaceNotFound(t *testing.T) {
+	rf := resource.NewFactory(
+		kunstruct.NewKunstructuredFactoryImpl())
+
+	m := resmap.ResMap{}
+	expected := resmap.ResMap{
+		resid.NewResId(ns, "test"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Namespace",
+				"metadata": map[string]interface{}{
+					"name": "test",
+				},
+			}),
+	}
+
+	nst := NewNamespaceTransformer("test", defaultTransformerConfig.NameSpace, rf)
 	err := nst.Transform(m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
