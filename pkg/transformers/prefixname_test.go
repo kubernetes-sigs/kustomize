@@ -54,6 +54,14 @@ func TestPrefixNameRun(t *testing.T) {
 					"name": "crd",
 				},
 			}),
+		resid.NewResId(ns, "ns"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Namespace",
+				"metadata": map[string]interface{}{
+					"name": "ns",
+				},
+			}),
 	}
 	expected := resmap.ResMap{
 		resid.NewResIdWithPrefix(cmap, "cm1", "someprefix-"): rf.FromMap(
@@ -78,6 +86,14 @@ func TestPrefixNameRun(t *testing.T) {
 				"kind":       "CustomResourceDefinition",
 				"metadata": map[string]interface{}{
 					"name": "crd",
+				},
+			}),
+		resid.NewResId(ns, "ns"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Namespace",
+				"metadata": map[string]interface{}{
+					"name": "ns",
 				},
 			}),
 	}

@@ -19,7 +19,6 @@ package transformers
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
@@ -40,11 +39,9 @@ var prefixFieldSpecsToSkip = []config.FieldSpec{
 	{
 		Gvk: gvk.Gvk{Kind: "CustomResourceDefinition"},
 	},
-}
-
-// deprecateNamePrefixFieldSpec will be moved into prefixFieldSpecsToSkip in next release
-var deprecateNamePrefixFieldSpec = config.FieldSpec{
-	Gvk: gvk.Gvk{Kind: "Namespace"},
+	{
+		Gvk: gvk.Gvk{Kind: "Namespace"},
+	},
 }
 
 // NewNamePrefixTransformer construct a namePrefixTransformer.
@@ -77,9 +74,6 @@ func (o *namePrefixTransformer) Transform(m resmap.ResMap) error {
 	}
 
 	for id := range mf {
-		if id.Gvk().IsSelected(&deprecateNamePrefixFieldSpec.Gvk) {
-			log.Println("Adding nameprefix to Namespace resource will be deprecated in next release.")
-		}
 		objMap := mf[id].Map()
 		for _, path := range o.fieldSpecsToUse {
 			if !id.Gvk().IsSelected(&path.Gvk) {
