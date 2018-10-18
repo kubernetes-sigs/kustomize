@@ -110,6 +110,11 @@ commonLabels:
   group: apps
   kind: StatefulSet
 
+- path: spec/volumeClaimTemplates/metadata/labels
+  create: true
+  group: apps
+  kind: StatefulSet
+
 - path: spec/selector/matchLabels
   create: false
   group: batch
