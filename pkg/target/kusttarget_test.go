@@ -33,6 +33,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 const (
@@ -257,5 +258,20 @@ func TestSecretTimeout(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "killed") {
 		t.Fatalf("unexpected error: %q", err)
+	}
+}
+
+func TestDisableHash(t *testing.T) {
+	kt := makeKustTarget(t, makeLoader1(t))
+	kt.kustomization.GeneratorOptions = &types.GeneratorOptions{DisableHash: true}
+	actual, err := kt.MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("unexpected Resources error %v", err)
+	}
+
+	for id, r := range actual {
+		if !strings.HasSuffix(r.GetName(), id.Name()) {
+			t.Fatalf("unexpected hash was added to %s: %s", id.Name(), r.GetName())
+		}
 	}
 }
