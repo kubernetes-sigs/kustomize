@@ -80,10 +80,10 @@ func (rmF *Factory) newResMapFromBytes(b []byte) (ResMap, error) {
 
 // NewResMapFromConfigMapArgs returns a Resource slice given
 // a configmap metadata slice from kustomization file.
-func (rmF *Factory) NewResMapFromConfigMapArgs(argList []types.ConfigMapArgs) (ResMap, error) {
+func (rmF *Factory) NewResMapFromConfigMapArgs(argList []types.ConfigMapArgs, options *types.GeneratorOptions) (ResMap, error) {
 	var resources []*resource.Resource
 	for _, args := range argList {
-		res, err := rmF.resF.MakeConfigMap(&args)
+		res, err := rmF.resF.MakeConfigMap(&args, options)
 		if err != nil {
 			return nil, errors.Wrap(err, "NewResMapFromConfigMapArgs")
 		}
@@ -94,10 +94,10 @@ func (rmF *Factory) NewResMapFromConfigMapArgs(argList []types.ConfigMapArgs) (R
 
 // NewResMapFromSecretArgs takes a SecretArgs slice, generates
 // secrets from each entry, and accumulates them in a ResMap.
-func (rmF *Factory) NewResMapFromSecretArgs(argsList []types.SecretArgs) (ResMap, error) {
+func (rmF *Factory) NewResMapFromSecretArgs(argsList []types.SecretArgs, options *types.GeneratorOptions) (ResMap, error) {
 	var resources []*resource.Resource
 	for _, args := range argsList {
-		res, err := rmF.resF.MakeSecret(&args)
+		res, err := rmF.resF.MakeSecret(&args, options)
 		if err != nil {
 			return nil, errors.Wrap(err, "NewResMapFromSecretArgs")
 		}

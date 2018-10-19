@@ -55,7 +55,7 @@ func (f *ConfigMapFactory) makeFreshConfigMap(
 
 // MakeConfigMap returns a new ConfigMap, or nil and an error.
 func (f *ConfigMapFactory) MakeConfigMap(
-	args *types.ConfigMapArgs) (*corev1.ConfigMap, error) {
+	args *types.ConfigMapArgs, options *types.GeneratorOptions) (*corev1.ConfigMap, error) {
 	var all []kvPair
 	var err error
 	cm := f.makeFreshConfigMap(args)
@@ -87,6 +87,10 @@ func (f *ConfigMapFactory) MakeConfigMap(
 		if err != nil {
 			return nil, err
 		}
+	}
+	if options != nil {
+		cm.SetLabels(options.Labels)
+		cm.SetAnnotations(options.Annotations)
 	}
 	return cm, nil
 }
