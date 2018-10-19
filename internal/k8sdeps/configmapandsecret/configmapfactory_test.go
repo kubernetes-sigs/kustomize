@@ -61,7 +61,7 @@ BAR=baz
 }
 
 func makeLiteralConfigMap(name string) *corev1.ConfigMap {
-	return &corev1.ConfigMap{
+	cm := &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
 			Kind:       "ConfigMap",
@@ -76,12 +76,15 @@ func makeLiteralConfigMap(name string) *corev1.ConfigMap {
 			"d": "true",
 		},
 	}
+	cm.SetLabels(map[string]string{"foo": "bar"})
+	return cm
 }
 
 func TestConstructConfigMap(t *testing.T) {
 	type testCase struct {
 		description string
 		input       types.ConfigMapArgs
+		options     *types.GeneratorOptions
 		expected    *corev1.ConfigMap
 	}
 
@@ -94,6 +97,7 @@ func TestConstructConfigMap(t *testing.T) {
 					EnvSource: "configmap/app.env",
 				},
 			},
+			options:  nil,
 			expected: makeEnvConfigMap("envConfigMap"),
 		},
 		{
@@ -104,6 +108,7 @@ func TestConstructConfigMap(t *testing.T) {
 					FileSources: []string{"configmap/app-init.ini"},
 				},
 			},
+			options:  nil,
 			expected: makeFileConfigMap("fileConfigMap"),
 		},
 		{
@@ -112,6 +117,11 @@ func TestConstructConfigMap(t *testing.T) {
 				Name: "literalConfigMap",
 				DataSources: types.DataSources{
 					LiteralSources: []string{"a=x", "b=y", "c=\"Hello World\"", "d='true'"},
+				},
+			},
+			options: &types.GeneratorOptions{
+				Labels: map[string]string{
+					"foo": "bar",
 				},
 			},
 			expected: makeLiteralConfigMap("literalConfigMap"),
@@ -123,7 +133,7 @@ func TestConstructConfigMap(t *testing.T) {
 	fSys.WriteFile("configmap/app-init.ini", []byte("FOO=bar\nBAR=baz\n"))
 	f := NewConfigMapFactory(fSys, loader.NewFileLoader(fSys))
 	for _, tc := range testCases {
-		cm, err := f.MakeConfigMap(&tc.input)
+		cm, err := f.MakeConfigMap(&tc.input, tc.options)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
