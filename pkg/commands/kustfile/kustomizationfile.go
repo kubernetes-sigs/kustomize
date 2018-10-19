@@ -110,16 +110,17 @@ func (mf *kustomizationFile) Read() (*types.Kustomization, error) {
 	if err != nil {
 		return nil, err
 	}
-	var kustomization types.Kustomization
-	err = yaml.Unmarshal(data, &kustomization)
+	var k types.Kustomization
+	err = yaml.Unmarshal(data, &k)
 	if err != nil {
 		return nil, err
 	}
+	k.DealWithDeprecatedFields()
 	err = mf.parseCommentedFields(data)
 	if err != nil {
 		return nil, err
 	}
-	return &kustomization, err
+	return &k, err
 }
 
 func (mf *kustomizationFile) Write(kustomization *types.Kustomization) error {
