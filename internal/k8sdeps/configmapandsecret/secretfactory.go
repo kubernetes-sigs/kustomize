@@ -60,7 +60,7 @@ func (f *SecretFactory) makeFreshSecret(args *types.SecretArgs) *corev1.Secret {
 }
 
 // MakeSecret returns a new secret.
-func (f *SecretFactory) MakeSecret(args *types.SecretArgs) (*corev1.Secret, error) {
+func (f *SecretFactory) MakeSecret(args *types.SecretArgs, options *types.GeneratorOptions) (*corev1.Secret, error) {
 	var all []kvPair
 	var err error
 	s := f.makeFreshSecret(args)
@@ -91,7 +91,10 @@ func (f *SecretFactory) MakeSecret(args *types.SecretArgs) (*corev1.Secret, erro
 			return nil, err
 		}
 	}
-
+	if options != nil {
+		s.SetLabels(options.Labels)
+		s.SetAnnotations(options.Annotations)
+	}
 	return s, nil
 }
 

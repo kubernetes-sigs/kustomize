@@ -186,11 +186,11 @@ func (kt *KustTarget) loadCustomizedResMap() (resmap.ResMap, error) {
 func (kt *KustTarget) generateConfigMapsAndSecrets(
 	errs *interror.KustomizationErrors) (resmap.ResMap, error) {
 	kt.rf.Set(kt.fSys, kt.ldr)
-	cms, err := kt.rf.NewResMapFromConfigMapArgs(kt.kustomization.ConfigMapGenerator)
+	cms, err := kt.rf.NewResMapFromConfigMapArgs(kt.kustomization.ConfigMapGenerator, kt.kustomization.GeneratorOptions)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromConfigMapArgs"))
 	}
-	secrets, err := kt.rf.NewResMapFromSecretArgs(kt.kustomization.SecretGenerator)
+	secrets, err := kt.rf.NewResMapFromSecretArgs(kt.kustomization.SecretGenerator, kt.kustomization.GeneratorOptions)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromSecretArgs"))
 	}
