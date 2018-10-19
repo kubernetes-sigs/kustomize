@@ -111,7 +111,7 @@ func addConfigMap(
 		return err
 	}
 	// Validate by trying to create corev1.configmap.
-	_, err = kf.MakeConfigMap(cmArgs)
+	_, err = kf.MakeConfigMap(cmArgs, k.GeneratorOptions)
 	if err != nil {
 		return err
 	}

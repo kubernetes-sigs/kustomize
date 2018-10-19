@@ -72,8 +72,8 @@ func (kf *KunstructurerFactoryImpl) FromMap(
 }
 
 // MakeConfigMap returns an instance of Kunstructured for ConfigMap
-func (kf *KunstructurerFactoryImpl) MakeConfigMap(args *types.ConfigMapArgs) (ifc.Kunstructured, error) {
-	cm, err := kf.cmfactory.MakeConfigMap(args)
+func (kf *KunstructurerFactoryImpl) MakeConfigMap(args *types.ConfigMapArgs, options *types.GeneratorOptions) (ifc.Kunstructured, error) {
+	cm, err := kf.cmfactory.MakeConfigMap(args, options)
 	if err != nil {
 		return nil, err
 	}
@@ -81,8 +81,8 @@ func (kf *KunstructurerFactoryImpl) MakeConfigMap(args *types.ConfigMapArgs) (if
 }
 
 // MakeSecret returns an instance of Kunstructured for Secret
-func (kf *KunstructurerFactoryImpl) MakeSecret(args *types.SecretArgs) (ifc.Kunstructured, error) {
-	sec, err := kf.secfactory.MakeSecret(args)
+func (kf *KunstructurerFactoryImpl) MakeSecret(args *types.SecretArgs, options *types.GeneratorOptions) (ifc.Kunstructured, error) {
+	sec, err := kf.secfactory.MakeSecret(args, options)
 	if err != nil {
 		return nil, err
 	}
