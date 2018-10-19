@@ -89,7 +89,7 @@ func (o *addPatchOptions) RunAddPatch(fSys fs.FileSystem) error {
 	}
 
 	for _, p := range patches {
-		if patch.Exist(m.PatchesStrategicMerge, p) || kustfile.StringInSlice(p, m.Patches) {
+		if patch.Exist(m.PatchesStrategicMerge, p) {
 			log.Printf("patch %s already in kustomization file", p)
 			continue
 		}
