@@ -113,6 +113,9 @@ type Kustomization struct {
 	// the map will have a suffix hash generated from its contents.
 	SecretGenerator []SecretArgs `json:"secretGenerator,omitempty" yaml:"secretGenerator,omitempty"`
 
+	// GeneratorOptions modify behavior of all ConfigMap and Secret generators.
+	GeneratorOptions *GeneratorOptions `json:"generatorOptions,omitempty" yaml:"generatorOptions,omitempty"`
+
 	//
 	// Deprecated fields - See DealWithDeprecatedFields
 	//
@@ -175,6 +178,8 @@ type SecretArgs struct {
 	// CommandSources for secret.
 	CommandSources `json:",inline,omitempty" yaml:",inline,omitempty"`
 
+	// Deprecated.
+	// Replaced by GeneratorOptions.TimeoutSeconds
 	// TimeoutSeconds specifies the timeout for commands.
 	TimeoutSeconds *int64 `json:"timeoutSeconds,omitempty" yaml:"timeoutSeconds,omitempty"`
 }
@@ -222,4 +227,27 @@ type ImageTag struct {
 	// Digest is the value used to replace the original image tag.
 	// If digest is present NewTag value is ignored.
 	Digest string `json:"digest,omitempty" yaml:"digest,omitempty"`
+}
+
+// GeneratorOptions modify behavior of all ConfigMap and Secret generators.
+type GeneratorOptions struct {
+	// Labels to add to all generated resources.
+	Labels map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+
+	// Annotations to add to all generated resources.
+	Annotations map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+
+	// TimeoutSeconds specifies the timeout for commands, if any,
+	// used in resource generation.  At time of writing, the default
+	// was specified in configmapandsecret.defaultCommandTimeout.
+	TimeoutSeconds *int64 `json:"timeoutSeconds,omitempty" yaml:"timeoutSeconds,omitempty"`
+
+	// Shell and arguments to use as a context for commands used in
+	// resource generation.  Default at time of writing:  {'sh', '-c'}.
+	Shell []string `json:"shell,omitempty" yaml:"shell,omitempty"`
+
+	// DisableNameHash if true disables the default behavior of adding a
+	// suffix to the names of generated resources that is a hash of the
+	// resource contents.
+	DisableHash bool `json:"disableHash,omitempty" yaml:"disableHash,omitempty"`
 }
