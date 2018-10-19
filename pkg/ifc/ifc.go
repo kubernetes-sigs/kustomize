@@ -65,8 +65,8 @@ type Kunstructured interface {
 type KunstructuredFactory interface {
 	SliceFromBytes([]byte) ([]Kunstructured, error)
 	FromMap(m map[string]interface{}) Kunstructured
-	MakeConfigMap(args *types.ConfigMapArgs) (Kunstructured, error)
-	MakeSecret(args *types.SecretArgs) (Kunstructured, error)
+	MakeConfigMap(args *types.ConfigMapArgs, options *types.GeneratorOptions) (Kunstructured, error)
+	MakeSecret(args *types.SecretArgs, options *types.GeneratorOptions) (Kunstructured, error)
 	Set(fs fs.FileSystem, ldr Loader)
 }
 

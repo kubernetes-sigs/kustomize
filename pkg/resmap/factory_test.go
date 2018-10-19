@@ -236,7 +236,7 @@ BAR=baz
 		if ferr := l.AddFile(tc.filepath, []byte(tc.content)); ferr != nil {
 			t.Fatalf("Error adding fake file: %v\n", ferr)
 		}
-		r, err := rmF.NewResMapFromConfigMapArgs(tc.input)
+		r, err := rmF.NewResMapFromConfigMapArgs(tc.input, nil)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -271,7 +271,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir(".")
 	rmF.Set(fakeFs, loader.NewFileLoader(fakeFs))
-	actual, err := rmF.NewResMapFromSecretArgs(secrets)
+	actual, err := rmF.NewResMapFromSecretArgs(secrets, nil)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -327,7 +327,7 @@ func TestSecretTimeout(t *testing.T) {
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir(".")
 	rmF.Set(fakeFs, loader.NewFileLoader(fakeFs))
-	_, err := rmF.NewResMapFromSecretArgs(secrets)
+	_, err := rmF.NewResMapFromSecretArgs(secrets, nil)
 
 	if err == nil {
 		t.Fatal("didn't get the expected timeout error", err)

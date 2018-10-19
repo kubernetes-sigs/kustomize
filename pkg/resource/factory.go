@@ -90,8 +90,8 @@ func (rf *Factory) Set(fs fs.FileSystem, ldr ifc.Loader) {
 }
 
 // MakeConfigMap makes an instance of Resource for ConfigMap
-func (rf *Factory) MakeConfigMap(args *types.ConfigMapArgs) (*Resource, error) {
-	u, err := rf.kf.MakeConfigMap(args)
+func (rf *Factory) MakeConfigMap(args *types.ConfigMapArgs, options *types.GeneratorOptions) (*Resource, error) {
+	u, err := rf.kf.MakeConfigMap(args, options)
 	if err != nil {
 		return nil, err
 	}
@@ -99,8 +99,8 @@ func (rf *Factory) MakeConfigMap(args *types.ConfigMapArgs) (*Resource, error) {
 }
 
 // MakeSecret makes an instance of Resource for Secret
-func (rf *Factory) MakeSecret(args *types.SecretArgs) (*Resource, error) {
-	u, err := rf.kf.MakeSecret(args)
+func (rf *Factory) MakeSecret(args *types.SecretArgs, options *types.GeneratorOptions) (*Resource, error) {
+	u, err := rf.kf.MakeSecret(args, options)
 	if err != nil {
 		return nil, err
 	}
