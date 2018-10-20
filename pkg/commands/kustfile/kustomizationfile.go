@@ -21,23 +21,37 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"path"
 	"reflect"
 	"regexp"
 	"strings"
 
 	"github.com/ghodss/yaml"
-
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
-var (
-	// These field names are the exact kustomization fields
-	kustomizationFields = []string{
-		"APIVersion",
-		"Kind",
+var fieldMarshallingOrder = determineFieldOrder()
+
+// determineFieldOrder returns a slice of Kustomization field
+// names in the preferred order for serialization to a file.
+// The field list is checked against the actual struct type
+// to confirm that all fields are present, and no unknown
+// fields are specified. Deprecated fields are removed from
+// the list, meaning they will drop to the bottom on output
+// (if present). The ordering and/or deprecation of fields
+// in nested structs is not determined or considered.
+func determineFieldOrder() []string {
+	m := make(map[string]bool)
+	s := reflect.ValueOf(&types.Kustomization{}).Elem()
+	typeOfT := s.Type()
+	for i := 0; i < s.NumField(); i++ {
+		m[string(typeOfT.Field(i).Name)] = false
+	}
+
+	ordered := []string{
 		"Resources",
 		"Bases",
 		"NamePrefix",
@@ -50,10 +64,41 @@ var (
 		"PatchesJson6902",
 		"ConfigMapGenerator",
 		"SecretGenerator",
+		// "GeneratorOptions",
 		"Vars",
 		"ImageTags",
 	}
-)
+
+	// Add deprecated fields here.
+	deprecated := map[string]bool{
+		"Patches": true,
+	}
+
+	// Account for the inlined TypeMeta fields.
+	var result []string
+	result = append(result, "APIVersion", "Kind")
+	m["TypeMeta"] = true
+
+	// Make sure all these fields are recognized.
+	for _, n := range ordered {
+		if _, ok := m[n]; ok {
+			m[n] = true
+		} else {
+			log.Fatalf("%s is not a recognized field.", n)
+		}
+		// Keep if not deprecated.
+		if _, f := deprecated[n]; !f {
+			result = append(result, n)
+		}
+	}
+	// TODO fix GeneratorOptions.
+	for k := range m {
+		if !m[k] && k != "GeneratorOptions" {
+			log.Fatalf("We're ignoring field '%s'", k)
+		}
+	}
+	return result
+}
 
 // commentedField records the comment associated with a kustomization field
 // field has to be a recognized kustomization field
@@ -171,6 +216,7 @@ func (mf *kustomizationFile) parseCommentedFields(content []byte) error {
 	return nil
 }
 
+// marshal converts a kustomization to a byte stream.
 func (mf *kustomizationFile) marshal(kustomization *types.Kustomization) ([]byte, error) {
 	var output []byte
 	for _, comment := range mf.originalFields {
@@ -181,7 +227,7 @@ func (mf *kustomizationFile) marshal(kustomization *types.Kustomization) ([]byte
 		}
 		output = append(output, content...)
 	}
-	for _, field := range kustomizationFields {
+	for _, field := range fieldMarshallingOrder {
 		if mf.hasField(field) {
 			continue
 		}
@@ -218,7 +264,7 @@ func isCommentOrBlankLine(line []byte) bool {
 }
 
 func findMatchedField(line []byte) (bool, string) {
-	for _, field := range kustomizationFields {
+	for _, field := range fieldMarshallingOrder {
 		// (?i) is for case insensitive regexp matching
 		r := regexp.MustCompile("^(" + "(?i)" + field + "):")
 		if r.Match(line) {

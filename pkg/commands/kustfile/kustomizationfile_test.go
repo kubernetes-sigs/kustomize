@@ -25,6 +25,36 @@ import (
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
+func TestFieldOrder(t *testing.T) {
+	expected := []string{
+		"APIVersion",
+		"Kind",
+		"Resources",
+		"Bases",
+		"NamePrefix",
+		"Namespace",
+		"Crds",
+		"CommonLabels",
+		"CommonAnnotations",
+		"PatchesStrategicMerge",
+		"PatchesJson6902",
+		"ConfigMapGenerator",
+		"SecretGenerator",
+		// "GeneratorOptions",
+		"Vars",
+		"ImageTags",
+	}
+	actual := determineFieldOrder()
+	if len(expected) != len(actual) {
+		t.Fatalf("Incorrect field count.")
+	}
+	for i, n := range expected {
+		if n != actual[i] {
+			t.Fatalf("Bad field order.")
+		}
+	}
+}
+
 func TestWriteAndRead(t *testing.T) {
 	kustomization := &types.Kustomization{
 		NamePrefix: "prefix",
