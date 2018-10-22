@@ -40,7 +40,7 @@ func TestFieldOrder(t *testing.T) {
 		"PatchesJson6902",
 		"ConfigMapGenerator",
 		"SecretGenerator",
-		// "GeneratorOptions",
+		"GeneratorOptions",
 		"Vars",
 		"ImageTags",
 	}
@@ -219,6 +219,9 @@ BASES:
 patchesStrategicMerge:
 - service.yaml
 - pod.yaml
+# generator options
+generatorOptions:
+  disableHash: true
 `)
 
 	expected := []byte(`
@@ -254,6 +257,9 @@ bases:
 patchesStrategicMerge:
 - service.yaml
 - pod.yaml
+# generator options
+generatorOptions:
+  disableHash: true
 `)
 	fSys := fs.MakeFakeFS()
 	fSys.WriteTestKustomizationWith(kustomizationContentWithComments)
