@@ -19,6 +19,7 @@ package configmapandsecret
 import (
 	"context"
 	"fmt"
+	"log"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -67,10 +68,11 @@ func (f *SecretFactory) MakeSecret(args *types.SecretArgs, options *types.Genera
 
 	timeout := defaultCommandTimeout
 	if args.TimeoutSeconds != nil {
+		log.Println("SecretArgs.TimeoutSeconds will be deprected in next release. Please use GeneratorOptions.TimeoutSeconds instread.")
 		timeout = time.Duration(*args.TimeoutSeconds) * time.Second
 	}
 
-	pairs, err := f.keyValuesFromEnvFileCommand(args.EnvCommand, timeout)
+	pairs, err := f.keyValuesFromEnvFileCommand(args.EnvCommand, timeout, options)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf(
 			"env source file: %s",
@@ -78,7 +80,7 @@ func (f *SecretFactory) MakeSecret(args *types.SecretArgs, options *types.Genera
 	}
 	all = append(all, pairs...)
 
-	pairs, err = f.keyValuesFromCommands(args.Commands, timeout)
+	pairs, err = f.keyValuesFromCommands(args.Commands, timeout, options)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf(
 			"commands %v", args.Commands))
@@ -110,18 +112,18 @@ func addKvToSecret(secret *corev1.Secret, keyName, data string) error {
 	return nil
 }
 
-func (f *SecretFactory) keyValuesFromEnvFileCommand(cmd string, timeout time.Duration) ([]kvPair, error) {
-	content, err := f.createSecretKey(cmd, timeout)
+func (f *SecretFactory) keyValuesFromEnvFileCommand(cmd string, timeout time.Duration, options *types.GeneratorOptions) ([]kvPair, error) {
+	content, err := f.createSecretKey(cmd, timeout, options)
 	if err != nil {
 		return nil, err
 	}
 	return keyValuesFromLines(content)
 }
 
-func (f *SecretFactory) keyValuesFromCommands(sources map[string]string, timeout time.Duration) ([]kvPair, error) {
+func (f *SecretFactory) keyValuesFromCommands(sources map[string]string, timeout time.Duration, options *types.GeneratorOptions) ([]kvPair, error) {
 	var kvs []kvPair
 	for k, cmd := range sources {
-		content, err := f.createSecretKey(cmd, timeout)
+		content, err := f.createSecretKey(cmd, timeout, options)
 		if err != nil {
 			return nil, err
 		}
@@ -131,16 +133,30 @@ func (f *SecretFactory) keyValuesFromCommands(sources map[string]string, timeout
 }
 
 // Run a command, return its output as the secret.
-func (f *SecretFactory) createSecretKey(command string, timeout time.Duration) ([]byte, error) {
+func (f *SecretFactory) createSecretKey(command string, timeout time.Duration, options *types.GeneratorOptions) ([]byte, error) {
 	if !f.fSys.IsDir(f.wd) {
 		f.wd = filepath.Dir(f.wd)
 		if !f.fSys.IsDir(f.wd) {
 			return nil, errors.New("not a directory: " + f.wd)
 		}
 	}
+
+	if options != nil && options.TimeoutSeconds != nil {
+		t := time.Duration(*options.TimeoutSeconds) * time.Second
+		if t > timeout {
+			timeout = t
+		}
+	}
+
+	var commands []string
+	if options == nil || len(options.Shell) == 0 {
+		commands = []string{"sh", "-c", command}
+	} else {
+		commands = append(options.Shell, command)
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "sh", "-c", command)
+	cmd := exec.CommandContext(ctx, commands[0], commands[1:]...)
 	cmd.Dir = f.wd
 	return cmd.Output()
 }
