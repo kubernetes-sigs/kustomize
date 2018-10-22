@@ -64,7 +64,7 @@ func determineFieldOrder() []string {
 		"PatchesJson6902",
 		"ConfigMapGenerator",
 		"SecretGenerator",
-		// "GeneratorOptions",
+		"GeneratorOptions",
 		"Vars",
 		"ImageTags",
 	}
@@ -89,12 +89,6 @@ func determineFieldOrder() []string {
 		// Keep if not deprecated.
 		if _, f := deprecated[n]; !f {
 			result = append(result, n)
-		}
-	}
-	// TODO fix GeneratorOptions.
-	for k := range m {
-		if !m[k] && k != "GeneratorOptions" {
-			log.Fatalf("We're ignoring field '%s'", k)
 		}
 	}
 	return result
@@ -281,7 +275,7 @@ func marshalField(field string, kustomization *types.Kustomization) ([]byte, err
 	r := reflect.ValueOf(*kustomization)
 	v := r.FieldByName(strings.Title(field))
 
-	if !v.IsValid() || v.Len() == 0 {
+	if !v.IsValid() || isEmpty(v) {
 		return []byte{}, nil
 	}
 
@@ -291,4 +285,12 @@ func marshalField(field string, kustomization *types.Kustomization) ([]byte, err
 	kv.Set(v)
 
 	return yaml.Marshal(k)
+}
+
+func isEmpty(v reflect.Value) bool {
+	// If v is a pointer type
+	if v.Type().Kind() == reflect.Ptr {
+		return v.IsNil()
+	}
+	return v.Len() == 0
 }
