@@ -29,6 +29,8 @@ go get sigs.k8s.io/kustomize
    
  * [configGenerations](configGeneration.md) -
    Rolling update when ConfigMapGenerator changes
+ 
+ * [generatorOptions](generatorOptions.md) - Modifying behavior of all ConfigMap and Secret generators.  
 
  * [breakfast](breakfast.md) - Customize breakfast for
    Alice and Bob.
