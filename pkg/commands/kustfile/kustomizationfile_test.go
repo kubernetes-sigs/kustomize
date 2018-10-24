@@ -21,6 +21,7 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -138,6 +139,25 @@ func TestNewNotExist(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), contained) {
 		t.Fatalf("expect an error contains %q, but got %v", contained, err)
+	}
+}
+
+func TestSecondarySuffix(t *testing.T) {
+	kcontent := `
+configMapGenerator:
+- literals:
+  - foo=bar
+  - baz=qux
+  name: my-configmap
+`
+	fakeFS := fs.MakeFakeFS()
+	fakeFS.WriteFile(constants.SecondaryKustomizationFileName, []byte(kcontent))
+	k, err := NewKustomizationFile(fakeFS)
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	if k.path != constants.SecondaryKustomizationFileName {
+		t.Fatalf("Load incorrect file path %s", k.path)
 	}
 }
 

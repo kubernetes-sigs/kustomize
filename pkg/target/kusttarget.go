@@ -21,17 +21,18 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/resid"
+	"strings"
 
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/ifc/transformer"
 	interror "sigs.k8s.io/kustomize/pkg/internal/error"
 	patchtransformer "sigs.k8s.io/kustomize/pkg/patch/transformer"
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
@@ -55,7 +56,7 @@ func NewKustTarget(
 	rf *resmap.Factory,
 	ptf transformer.Factory,
 	tcfg *config.TransformerConfig) (*KustTarget, error) {
-	content, err := ldr.Load(constants.KustomizationFileName)
+	content, err := loadKustFile(ldr)
 	if err != nil {
 		return nil, err
 	}
@@ -346,4 +347,17 @@ func (kt *KustTarget) getAllVars() ([]types.Var, error) {
 		return nil, errs
 	}
 	return result, nil
+}
+
+func loadKustFile(ldr ifc.Loader) ([]byte, error) {
+	for _, kf := range []string{constants.KustomizationFileName, constants.SecondaryKustomizationFileName} {
+		content, err := ldr.Load(kf)
+		if err == nil {
+			return content, nil
+		}
+		if !strings.Contains(err.Error(), "no such file or directory") {
+			return nil, err
+		}
+	}
+	return nil, fmt.Errorf("no kustomization.yaml file under %s", ldr.Root())
 }
