@@ -4,7 +4,7 @@ project_name: kustomize
 builds:
 - main: ./kustomize.go
   binary: kustomize
-  ldflags: -s -X sigs.k8s.io/kustomize/pkg/commands.kustomizeVersion={{.Version}} -X sigs.k8s.io/kustomize/pkg/commands.gitCommit={{.Commit}} -X sigs.k8s.io/kustomize/pkg/commands.buildDate={{.Date}}
+  ldflags: -s -X sigs.k8s.io/kustomize/pkg/commands/misc.kustomizeVersion={{.Version}} -X sigs.k8s.io/kustomize/pkg/commands/misc.gitCommit={{.Commit}} -X sigs.k8s.io/kustomize/pkg/commands/misc.buildDate={{.Date}}
   goos:
   - darwin
   - linux
