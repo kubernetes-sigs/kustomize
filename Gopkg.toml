@@ -20,6 +20,11 @@
 #  name = "github.com/x/y"
 #  version = "2.4.0"
 
+# prune out unused content from vendor
+[prune]
+  go-tests = true
+  non-go = true
+  unused-packages = true
 
 [[constraint]]
   name = "github.com/evanphx/json-patch"
