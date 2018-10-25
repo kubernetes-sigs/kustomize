@@ -26,7 +26,7 @@ import (
 	"testing"
 
 	"github.com/ghodss/yaml"
-	"sigs.k8s.io/kustomize/internal/k8sdeps"
+	"sigs.k8s.io/kustomize/k8sdeps"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
