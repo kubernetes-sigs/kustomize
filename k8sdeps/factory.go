@@ -18,9 +18,9 @@ limitations under the License.
 package k8sdeps
 
 import (
-	"sigs.k8s.io/kustomize/internal/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/internal/k8sdeps/transformer"
-	"sigs.k8s.io/kustomize/internal/k8sdeps/validator"
+	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/k8sdeps/transformer"
+	"sigs.k8s.io/kustomize/k8sdeps/validator"
 	"sigs.k8s.io/kustomize/pkg/factory"
 )
 
