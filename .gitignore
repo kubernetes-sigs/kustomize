@@ -14,3 +14,6 @@ kustomize
 
 # We use sed -i.bak when doing in-line replace, because it works better cross-platform
 .bak
+
+# macOS
+*.DS_store
