@@ -20,7 +20,7 @@ import (
 	"os"
 
 	"github.com/golang/glog"
-	"sigs.k8s.io/kustomize/internal/k8sdeps"
+	"sigs.k8s.io/kustomize/k8sdeps"
 	"sigs.k8s.io/kustomize/pkg/commands"
 )
 

@@ -18,8 +18,8 @@ limitations under the License.
 package transformer
 
 import (
-	"sigs.k8s.io/kustomize/internal/k8sdeps/transformer/hash"
-	"sigs.k8s.io/kustomize/internal/k8sdeps/transformer/patch"
+	"sigs.k8s.io/kustomize/k8sdeps/transformer/hash"
+	"sigs.k8s.io/kustomize/k8sdeps/transformer/patch"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
 )
