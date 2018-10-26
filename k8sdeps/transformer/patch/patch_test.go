@@ -21,7 +21,7 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/internal/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"

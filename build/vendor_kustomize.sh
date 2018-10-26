@@ -72,14 +72,14 @@ function getKustomizeDeps {
 function updateK8s {
   # Copy k8sdeps from Kustomize to kubectl
   mkdir -p $GOPATH/src/k8s.io/kubernetes/pkg/kubectl/kustomize
-  cp -r $GOPATH/src/sigs.k8s.io/kustomize/internal/k8sdeps \
+  cp -r $GOPATH/src/sigs.k8s.io/kustomize/k8sdeps \
     $GOPATH/src/k8s.io/kubernetes/pkg/kubectl/kustomize/k8sdeps
 
   # Change import path of k8sdeps
   find $GOPATH/src/k8s.io/kubernetes/pkg/kubectl/kustomize/k8sdeps \
     -type f -name "*.go" | \
     xargs sed -i \
-    's!sigs.k8s.io/kustomize/internal/k8sdeps!k8s.io/kubernetes/pkg/kubectl/kustomize/k8sdeps!'
+    's!sigs.k8s.io/kustomize/k8sdeps!k8s.io/kubernetes/pkg/kubectl/kustomize/k8sdeps!'
 
 
   # Add kustomize command to kubectl
