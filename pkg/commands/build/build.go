@@ -96,9 +96,9 @@ func (o *buildOptions) Validate(args []string, p string, fs fs.FileSystem) error
 	}
 	if len(args) == 0 {
 		o.kustomizationPath = "./"
-		return nil
+	} else {
+		o.kustomizationPath = args[0]
 	}
-	o.kustomizationPath = args[0]
 
 	if p == "" {
 		return nil
