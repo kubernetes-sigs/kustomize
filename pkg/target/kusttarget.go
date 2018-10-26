@@ -275,7 +275,7 @@ func (kt *KustTarget) newTransformer(patches []*resource.Resource) (transformers
 	}
 	r = append(r, t)
 	r = append(r, transformers.NewNamespaceTransformer(
-		string(kt.kustomization.Namespace), kt.tcfg.NameSpace, kt.rf.RF()))
+		string(kt.kustomization.Namespace), kt.tcfg.NameSpace))
 	t, err = transformers.NewNamePrefixTransformer(
 		string(kt.kustomization.NamePrefix), kt.tcfg.NamePrefix)
 	if err != nil {
