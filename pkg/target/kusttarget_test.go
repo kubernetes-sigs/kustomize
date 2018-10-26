@@ -22,8 +22,8 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/internal/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/internal/k8sdeps/transformer"
+	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/gvk"
