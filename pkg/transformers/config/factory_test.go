@@ -38,7 +38,7 @@ namePrefix:
   kind: SomeKind
 `
 	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile("transformerconfig/test/config.yaml", []byte(transformerConfig))
+	fakeFS.WriteFile("/transformerconfig/test/config.yaml", []byte(transformerConfig))
 	ldr := loader.NewFileLoader(fakeFS)
 	expected := &TransformerConfig{
 		NamePrefix: []FieldSpec{
@@ -53,9 +53,9 @@ namePrefix:
 
 func TestMakeTransformerConfigFromFiles(t *testing.T) {
 	ldr, expected, _ := makeFakeLoaderAndOutput()
-	tcfg, err := NewFactory(ldr).FromFiles([]string{"transformerconfig/test/config.yaml"})
+	tcfg, err := NewFactory(ldr).FromFiles([]string{"/transformerconfig/test/config.yaml"})
 	if err != nil {
-		t.Fatalf("unexpected error %v", err)
+		t.Fatalf("unexpected error: %v", err)
 	}
 
 	if !reflect.DeepEqual(tcfg, expected) {
