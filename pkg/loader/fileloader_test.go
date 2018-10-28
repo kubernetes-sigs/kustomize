@@ -17,102 +17,169 @@ limitations under the License.
 package loader
 
 import (
-	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
-func TestLoader_Root(t *testing.T) {
+type testData struct {
+	path            string
+	expectedContent string
+}
 
-	// Initialize the fake file system and the root loader.
-	fakefs := fs.MakeFakeFS()
-	fakefs.WriteFile("/home/seans/project/file.yaml", []byte("Unused"))
-	fakefs.WriteFile("/home/seans/project/subdir/file.yaml", []byte("Unused"))
-	fakefs.WriteFile("/home/seans/project2/file.yaml", []byte("Unused"))
-	rootLoader := NewFileLoader(fakefs)
+var testCases = []testData{
+	{
+		path:            "/foo/project/fileA.yaml",
+		expectedContent: "fileA content",
+	},
+	{
+		path:            "/foo/project/subdir1/fileB.yaml",
+		expectedContent: "fileB content",
+	},
+	{
+		path:            "/foo/project/subdir2/fileC.yaml",
+		expectedContent: "fileC content",
+	},
+	{
+		path:            "/foo/project2/fileD.yaml",
+		expectedContent: "fileD content",
+	},
+}
 
-	_, err := rootLoader.New("")
-	if err == nil {
-		t.Fatalf("Expected error for empty root location not returned")
+func MakeFakeFs(td []testData) fs.FileSystem {
+	fSys := fs.MakeFakeFS()
+	for _, x := range td {
+		fSys.WriteFile(x.path, []byte(x.expectedContent))
 	}
-	_, err = rootLoader.New("https://google.com/project")
-	if err == nil {
-		t.Fatalf("Expected error")
-	}
+	return fSys
+}
 
-	// Test with trailing slash in directory.
-	loader, err := rootLoader.New("/home/seans/project/")
+func TestLoaderLoad(t *testing.T) {
+	l1 := NewFileLoader(MakeFakeFs(testCases))
+	if "" != l1.Root() {
+		t.Fatalf("incorrect root: '%s'\n", l1.Root())
+	}
+	for _, x := range testCases {
+		b, err := l1.Load(x.path)
+		if err != nil {
+			t.Fatalf("unexpected load error %v", err)
+		}
+		if !reflect.DeepEqual([]byte(x.expectedContent), b) {
+			t.Fatalf("in load expected %s, but got %s", x.expectedContent, b)
+		}
+	}
+	l2, err := l1.New("/foo/project")
 	if err != nil {
-		t.Fatalf("Unexpected in New(): %v\n", err)
+		t.Fatalf("unexpected err: %v\n", err)
 	}
-	if "/home/seans/project" != loader.Root() {
-		t.Fatalf("Incorrect Loader Root: %s\n", loader.Root())
+	if "/foo/project" != l2.Root() {
+		t.Fatalf("incorrect root: %s\n", l2.Root())
 	}
-
-	subLoader, err := loader.New("subdir")
+	for _, x := range testCases {
+		b, err := l2.Load(strings.TrimPrefix(x.path, "/foo/project/"))
+		if err != nil {
+			t.Fatalf("unexpected load error %v", err)
+		}
+		if !reflect.DeepEqual([]byte(x.expectedContent), b) {
+			t.Fatalf("in load expected %s, but got %s", x.expectedContent, b)
+		}
+	}
+	l2, err = l1.New("/foo/project/") // Assure trailing slash stripped
 	if err != nil {
-		t.Fatalf("Unexpected in New(): %v\n", err)
+		t.Fatalf("unexpected err: %v\n", err)
 	}
-	if "/home/seans/project/subdir" != subLoader.Root() {
-		t.Fatalf("Incorrect Loader Root: %s\n", subLoader.Root())
-	}
-
-	// Test without trailing slash in directory.
-	anotherLoader, err := loader.New("/home/seans/project2")
-	if err != nil {
-		t.Fatalf("Unexpected in New(): %v\n", err)
-	}
-	if "/home/seans/project2" != anotherLoader.Root() {
-		t.Fatalf("Incorrect Loader Root: %s\n", anotherLoader.Root())
-	}
-
-	// Current directory should be expanded to a full absolute file path.
-	currentDirLoader, err := loader.New(".")
-	if err != nil {
-		t.Fatalf("Unexpected in New(): %v\n", err)
-	}
-	if !filepath.IsAbs(currentDirLoader.Root()) {
-		t.Fatalf("Incorrect Loader Root: %s\n", currentDirLoader.Root())
+	if "/foo/project" != l2.Root() {
+		t.Fatalf("incorrect root: %s\n", l2.Root())
 	}
 }
 
-func TestLoader_Load(t *testing.T) {
-
-	// Initialize the fake file system and the root loader.
-	fakefs := fs.MakeFakeFS()
-	fakefs.WriteFile("/home/seans/project/file.yaml", []byte("This is a yaml file"))
-	fakefs.WriteFile("/home/seans/project/subdir/file.yaml", []byte("Subdirectory file content"))
-	fakefs.WriteFile("/home/seans/project2/file.yaml", []byte("This is another yaml file"))
-	rootLoader := NewFileLoader(fakefs)
-
-	loader, err := rootLoader.New("/home/seans/project")
+func TestLoaderNewSubDir(t *testing.T) {
+	l1, err := NewFileLoader(MakeFakeFs(testCases)).New("/foo/project")
 	if err != nil {
-		t.Fatalf("Unexpected in New(): %v\n", err)
+		t.Fatalf("unexpected err: %v\n", err)
 	}
-	fileBytes, err := loader.Load("file.yaml") // Load relative to root location
+	l2, err := l1.New("subdir1")
 	if err != nil {
-		t.Fatalf("Unexpected error in Load(): %v", err)
+		t.Fatalf("unexpected err:  %v\n", err)
 	}
-	if !reflect.DeepEqual([]byte("This is a yaml file"), fileBytes) {
-		t.Fatalf("Load failed. Expected %s, but got %s", "This is a yaml file", fileBytes)
+	if "/foo/project/subdir1" != l2.Root() {
+		t.Fatalf("incorrect root: %s\n", l2.Root())
+	}
+	x := testCases[1]
+	b, err := l2.Load("fileB.yaml")
+	if err != nil {
+		t.Fatalf("unexpected load error %v", err)
+	}
+	if !reflect.DeepEqual([]byte(x.expectedContent), b) {
+		t.Fatalf("in load expected %s, but got %s", x.expectedContent, b)
+	}
+}
+
+func TestLoaderBadRelative(t *testing.T) {
+	l1, err := NewFileLoader(MakeFakeFs(testCases)).New("/foo/project/subdir1")
+	if err != nil {
+		t.Fatalf("unexpected err: %v\n", err)
+	}
+	if "/foo/project/subdir1" != l1.Root() {
+		t.Fatalf("incorrect root: %s\n", l1.Root())
 	}
 
-	fileBytes, err = loader.Load("subdir/file.yaml")
+	// Cannot cd into a file.
+	l2, err := l1.New("fileB.yaml")
+	// TODO: this should be an error.
 	if err != nil {
-		t.Fatalf("Unexpected error in Load(): %v", err)
-	}
-	if !reflect.DeepEqual([]byte("Subdirectory file content"), fileBytes) {
-		t.Fatalf("Load failed. Expected %s, but got %s", "Subdirectory file content", fileBytes)
+		t.Fatalf("unexpected err %v", err)
 	}
 
-	fileBytes, err = loader.Load("/home/seans/project2/file.yaml")
+	// It's not okay to stay put.
+	l2, err = l1.New(".")
+	// TODO: this should be an error.
 	if err != nil {
-		t.Fatalf("Unexpected error in Load(): %v", err)
-	}
-	if !reflect.DeepEqual([]byte("This is another yaml file"), fileBytes) {
-		t.Fatalf("Load failed. Expected %s, but got %s", "This is another yaml file", fileBytes)
+		t.Fatalf("unexpected err %v", err)
 	}
 
+	// It's not okay to go up and back down into same place.
+	l2, err = l1.New("../subdir1")
+	// TODO: this should be an error.
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	// It's not okay to go up.
+	l2, err = l1.New("..")
+	// TODO: this should be an error.
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	// It's okay to go up and down to a sibling.
+	l2, err = l1.New("../subdir2")
+	if err != nil {
+		t.Fatalf("unexpected new error %v", err)
+	}
+	if "/foo/project/subdir2" != l2.Root() {
+		t.Fatalf("incorrect root: %s\n", l2.Root())
+	}
+	x := testCases[2]
+	b, err := l2.Load("fileC.yaml")
+	if err != nil {
+		t.Fatalf("unexpected load error %v", err)
+	}
+	if !reflect.DeepEqual([]byte(x.expectedContent), b) {
+		t.Fatalf("in load expected %s, but got %s", x.expectedContent, b)
+	}
+}
+
+func TestLoaderMisc(t *testing.T) {
+	l := NewFileLoader(MakeFakeFs(testCases))
+	_, err := l.New("")
+	if err == nil {
+		t.Fatalf("Expected error for empty root location not returned")
+	}
+	_, err = l.New("https://google.com/project")
+	if err == nil {
+		t.Fatalf("Expected error")
+	}
 }
