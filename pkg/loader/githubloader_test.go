@@ -35,6 +35,10 @@ func TestIsRepoURL(t *testing.T) {
 			expected: true,
 		},
 		{
+			input:    "git::https://gitlab.com/org/repo",
+			expected: true,
+		},
+		{
 			input:    "/github.com/org/repo",
 			expected: false,
 		},
@@ -47,8 +51,16 @@ func TestIsRepoURL(t *testing.T) {
 			expected: false,
 		},
 		{
-			input:    "git::https://gitlab.com/org/repo",
-			expected: true,
+			input:    "foo",
+			expected: false,
+		},
+		{
+			input:    ".",
+			expected: false,
+		},
+		{
+			input:    "",
+			expected: false,
 		},
 	}
 	for _, tc := range testcases {
