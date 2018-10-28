@@ -57,8 +57,8 @@ func MakeFakeFs(td []testData) fs.FileSystem {
 }
 
 func TestLoaderLoad(t *testing.T) {
-	l1 := NewFileLoader(MakeFakeFs(testCases))
-	if "" != l1.Root() {
+	l1 := NewFileLoaderAtRoot(MakeFakeFs(testCases))
+	if "/" != l1.Root() {
 		t.Fatalf("incorrect root: '%s'\n", l1.Root())
 	}
 	for _, x := range testCases {
@@ -96,7 +96,7 @@ func TestLoaderLoad(t *testing.T) {
 }
 
 func TestLoaderNewSubDir(t *testing.T) {
-	l1, err := NewFileLoader(MakeFakeFs(testCases)).New("/foo/project")
+	l1, err := NewFileLoaderAtRoot(MakeFakeFs(testCases)).New("/foo/project")
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
 	}
@@ -118,7 +118,7 @@ func TestLoaderNewSubDir(t *testing.T) {
 }
 
 func TestLoaderBadRelative(t *testing.T) {
-	l1, err := NewFileLoader(MakeFakeFs(testCases)).New("/foo/project/subdir1")
+	l1, err := NewFileLoaderAtRoot(MakeFakeFs(testCases)).New("/foo/project/subdir1")
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
 	}
@@ -128,30 +128,38 @@ func TestLoaderBadRelative(t *testing.T) {
 
 	// Cannot cd into a file.
 	l2, err := l1.New("fileB.yaml")
-	// TODO: this should be an error.
-	if err != nil {
-		t.Fatalf("unexpected err %v", err)
+	if err == nil {
+		t.Fatalf("expected err, but got root %s", l2.Root())
 	}
 
-	// It's not okay to stay put.
+	// It's not okay to stay at the same place.
 	l2, err = l1.New(".")
-	// TODO: this should be an error.
-	if err != nil {
-		t.Fatalf("unexpected err %v", err)
+	if err == nil {
+		t.Fatalf("expected err, but got root %s", l2.Root())
 	}
 
 	// It's not okay to go up and back down into same place.
 	l2, err = l1.New("../subdir1")
-	// TODO: this should be an error.
-	if err != nil {
-		t.Fatalf("unexpected err %v", err)
+	if err == nil {
+		t.Fatalf("expected err, but got root %s", l2.Root())
 	}
 
-	// It's not okay to go up.
+	// It's not okay to go up via a relative path.
 	l2, err = l1.New("..")
-	// TODO: this should be an error.
-	if err != nil {
-		t.Fatalf("unexpected err %v", err)
+	if err == nil {
+		t.Fatalf("expected err, but got root %s", l2.Root())
+	}
+
+	// It's not okay to go up via an absolute path.
+	l2, err = l1.New("/foo/project")
+	if err == nil {
+		t.Fatalf("expected err, but got root %s", l2.Root())
+	}
+
+	// It's not okay to go to the root.
+	l2, err = l1.New("/")
+	if err == nil {
+		t.Fatalf("expected err, but got root %s", l2.Root())
 	}
 
 	// It's okay to go up and down to a sibling.
@@ -170,10 +178,17 @@ func TestLoaderBadRelative(t *testing.T) {
 	if !reflect.DeepEqual([]byte(x.expectedContent), b) {
 		t.Fatalf("in load expected %s, but got %s", x.expectedContent, b)
 	}
+
+	// It's not OK to go over to a previously visited directory.
+	// Must disallow going back and forth in a cycle.
+	l1, err = l2.New("../subdir1")
+	if err == nil {
+		t.Fatalf("expected err, but got root %s", l1.Root())
+	}
 }
 
 func TestLoaderMisc(t *testing.T) {
-	l := NewFileLoader(MakeFakeFs(testCases))
+	l := NewFileLoaderAtRoot(MakeFakeFs(testCases))
 	_, err := l.New("")
 	if err == nil {
 		t.Fatalf("Expected error for empty root location not returned")

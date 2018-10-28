@@ -270,7 +270,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	}
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir(".")
-	rmF.Set(fakeFs, loader.NewFileLoader(fakeFs))
+	rmF.Set(fakeFs, loader.NewFileLoaderAtRoot(fakeFs))
 	actual, err := rmF.NewResMapFromSecretArgs(secrets, nil)
 
 	if err != nil {
@@ -326,7 +326,7 @@ func TestSecretTimeout(t *testing.T) {
 	}
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir(".")
-	rmF.Set(fakeFs, loader.NewFileLoader(fakeFs))
+	rmF.Set(fakeFs, loader.NewFileLoaderAtRoot(fakeFs))
 	_, err := rmF.NewResMapFromSecretArgs(secrets, nil)
 
 	if err == nil {
