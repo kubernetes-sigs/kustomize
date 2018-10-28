@@ -27,6 +27,10 @@ func TestExists(t *testing.T) {
 	if x.Exists("foo") {
 		t.Fatalf("expected no foo")
 	}
+	x.Mkdir("/")
+	if !x.IsDir("/") {
+		t.Fatalf("expected dir at /")
+	}
 }
 
 func TestIsDir(t *testing.T) {
@@ -41,6 +45,27 @@ func TestIsDir(t *testing.T) {
 	}
 	if !x.IsDir(expectedName) {
 		t.Fatalf(expectedName + " should be a dir")
+	}
+}
+
+func TestIsDirDeeper(t *testing.T) {
+	x := MakeFakeFS()
+	x.WriteFile("/foo/project/file.yaml", []byte("Unused"))
+	x.WriteFile("/foo/project/subdir/file.yaml", []byte("Unused"))
+	if !x.IsDir("/") {
+		t.Fatalf("/ should be a dir")
+	}
+	if !x.IsDir("/foo") {
+		t.Fatalf("/foo should be a dir")
+	}
+	if !x.IsDir("/foo/project") {
+		t.Fatalf("/foo/project should be a dir")
+	}
+	if x.IsDir("/fo") {
+		t.Fatalf("/fo should not be a dir")
+	}
+	if x.IsDir("/x") {
+		t.Fatalf("/x should not be a dir")
 	}
 }
 
