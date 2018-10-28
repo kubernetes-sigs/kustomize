@@ -120,9 +120,8 @@ func (o *buildOptions) Validate(args []string, p string, fs fs.FileSystem) error
 // RunBuild runs build command.
 func (o *buildOptions) RunBuild(
 	out io.Writer, fSys fs.FileSystem,
-	rf *resmap.Factory,
-	ptf transformer.Factory) error {
-	rootLoader, err := loader.NewLoader(o.kustomizationPath, "", fSys)
+	rf *resmap.Factory, ptf transformer.Factory) error {
+	ldr, err := loader.NewLoader(o.kustomizationPath, fSys)
 	if err != nil {
 		return err
 	}
@@ -130,11 +129,8 @@ func (o *buildOptions) RunBuild(
 	if err != nil {
 		return err
 	}
-	defer rootLoader.Cleanup()
-	kt, err := target.NewKustTarget(
-		rootLoader, fSys,
-		rf,
-		ptf, tc)
+	defer ldr.Cleanup()
+	kt, err := target.NewKustTarget(ldr, fSys, rf, ptf, tc)
 	if err != nil {
 		return err
 	}
@@ -161,10 +157,5 @@ func makeTransformerconfig(
 	if paths == nil || len(paths) == 0 {
 		return config.NewFactory(nil).DefaultConfig(), nil
 	}
-	ldr, err := loader.NewLoader(".", "", fSys)
-	if err != nil {
-		return nil, errors.Wrap(
-			err, "cannot create transformer configuration loader")
-	}
-	return config.NewFactory(ldr).FromFiles(paths)
+	return config.NewFactory(loader.NewFileLoaderAtCwd(fSys)).FromFiles(paths)
 }
