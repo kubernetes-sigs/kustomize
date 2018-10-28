@@ -18,6 +18,7 @@ limitations under the License.
 package loadertest
 
 import (
+	"log"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/loader"
@@ -34,10 +35,13 @@ type FakeLoader struct {
 // must be an full, absolute directory (trailing slash doesn't matter).
 func NewFakeLoader(initialDir string) FakeLoader {
 	// Create fake filesystem and inject it into initial Loader.
-	fakefs := fs.MakeFakeFS()
-	rootLoader := loader.NewFileLoader(fakefs)
-	ldr, _ := rootLoader.New(initialDir)
-	return FakeLoader{fs: fakefs, delegate: ldr}
+	fSys := fs.MakeFakeFS()
+	fSys.Mkdir(initialDir)
+	ldr, err := loader.NewFileLoaderAtRoot(fSys).New(initialDir)
+	if err != nil {
+		log.Fatalf("Unable to make loader: %v", err)
+	}
+	return FakeLoader{fs: fSys, delegate: ldr}
 }
 
 // AddFile adds a fake file to the file system.
