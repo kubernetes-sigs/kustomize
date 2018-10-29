@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"path"
 	"reflect"
 	"regexp"
 	"strings"
@@ -118,7 +117,7 @@ type kustomizationFile struct {
 
 // NewKustomizationFile returns a new instance.
 func NewKustomizationFile(fSys fs.FileSystem) (*kustomizationFile, error) { // nolint
-	mf := &kustomizationFile{path: constants.KustomizationFileName, fSys: fSys}
+	mf := &kustomizationFile{fSys: fSys}
 	err := mf.validate()
 	if err != nil {
 		return nil, err
@@ -127,19 +126,16 @@ func NewKustomizationFile(fSys fs.FileSystem) (*kustomizationFile, error) { // n
 }
 
 func (mf *kustomizationFile) validate() error {
-	if !mf.fSys.Exists(mf.path) {
-		return fmt.Errorf("Missing kustomization file '%s'.\n", mf.path)
-	}
-	if mf.fSys.IsDir(mf.path) {
-		mf.path = path.Join(mf.path, constants.KustomizationFileName)
-		if !mf.fSys.Exists(mf.path) {
-			return fmt.Errorf("Missing kustomization file '%s'.\n", mf.path)
-		}
+	if mf.fSys.Exists(constants.KustomizationFileName) {
+		mf.path = constants.KustomizationFileName
+	} else if mf.fSys.Exists(constants.SecondaryKustomizationFileName) {
+		mf.path = constants.SecondaryKustomizationFileName
 	} else {
-		if !strings.HasSuffix(mf.path, constants.KustomizationFileName) {
-			return fmt.Errorf("Kustomization file path (%s) should have %s suffix\n",
-				mf.path, constants.KustomizationFileSuffix)
-		}
+		return fmt.Errorf("Missing kustomization file '%s'.\n", constants.KustomizationFileName)
+	}
+
+	if mf.fSys.IsDir(mf.path) {
+		return fmt.Errorf("%s should be a file", mf.path)
 	}
 	return nil
 }
