@@ -71,7 +71,7 @@ func newGithubLoader(repoUrl string, fs fs.FileSystem) (*githubLoader, error) {
 		return nil, err
 	}
 	target := filepath.Join(repodir, subdir)
-	l := newFileLoaderAtRoot(target, fs)
+	l, _ := newFileLoaderAt(fs, target)
 	return &githubLoader{
 		repo:        repoUrl,
 		targetDir:   target,
