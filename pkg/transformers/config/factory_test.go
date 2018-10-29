@@ -39,7 +39,7 @@ namePrefix:
 `
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile("/transformerconfig/test/config.yaml", []byte(transformerConfig))
-	ldr := loader.NewFileLoader(fakeFS)
+	ldr := loader.NewFileLoaderAtRoot(fakeFS)
 	expected := &TransformerConfig{
 		NamePrefix: []FieldSpec{
 			{
