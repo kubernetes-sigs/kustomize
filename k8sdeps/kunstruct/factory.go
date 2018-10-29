@@ -18,6 +18,7 @@ package kunstruct
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"strings"
 
@@ -52,6 +53,10 @@ func (kf *KunstructurerFactoryImpl) SliceFromBytes(
 		var out unstructured.Unstructured
 		err = decoder.Decode(&out)
 		if err == nil {
+			err = kf.validate(out)
+			if err != nil {
+				return nil, err
+			}
 			result = append(result, &UnstructAdapter{Unstructured: out})
 		}
 	}
@@ -93,4 +98,15 @@ func (kf *KunstructurerFactoryImpl) MakeSecret(args *types.SecretArgs, options *
 func (kf *KunstructurerFactoryImpl) Set(fs fs.FileSystem, ldr ifc.Loader) {
 	kf.cmfactory = configmapandsecret.NewConfigMapFactory(fs, ldr)
 	kf.secfactory = configmapandsecret.NewSecretFactory(fs, ldr.Root())
+}
+
+// validate validates that u has kind and name
+func (kf *KunstructurerFactoryImpl) validate(u unstructured.Unstructured) error {
+	if u.GetName() == "" {
+		return fmt.Errorf("Missing metadata.name in object %v", u)
+	}
+	if u.GetKind() == "" {
+		return fmt.Errorf("Missing kind in object %v", u)
+	}
+	return nil
 }
