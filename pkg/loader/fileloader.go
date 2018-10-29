@@ -18,90 +18,118 @@ package loader
 
 import (
 	"fmt"
-	"os"
+	"log"
 	"path/filepath"
+	"strings"
 
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
-const currentDir = "."
-
 // fileLoader loads files from a file system.
+// It has a notion of a current working directory, called 'root',
+// that is independent from the current working directory of the
+// process. When it loads a file from a relative path, the load
+// is done relative to this root, not the process CWD.
 type fileLoader struct {
-	root string
+	// Previously visited directories, tracked to avoid cycles.
+	// The last entry is the current root.
+	roots []string
+	// File system utilities.
 	fSys fs.FileSystem
 }
 
-// NewFileLoader returns a new fileLoader.
-func NewFileLoader(fSys fs.FileSystem) *fileLoader {
-	return newFileLoaderAtRoot("", fSys)
+// NewFileLoaderAtCwd returns a loader that loads from ".".
+func NewFileLoaderAtCwd(fSys fs.FileSystem) *fileLoader {
+	return newLoaderOrDie(fSys, ".")
 }
 
-// newFileLoaderAtRoot returns a new fileLoader with given root.
-func newFileLoaderAtRoot(root string, fs fs.FileSystem) *fileLoader {
-	return &fileLoader{root: root, fSys: fs}
+// NewFileLoaderAtRoot returns a loader that loads from "/".
+func NewFileLoaderAtRoot(fSys fs.FileSystem) *fileLoader {
+	return newLoaderOrDie(fSys, "/")
 }
 
-// Root returns the root location for this Loader.
+// Root returns the absolute path that is prepended to any relative paths
+// used in Load.
 func (l *fileLoader) Root() string {
-	return l.root
+	return l.roots[len(l.roots)-1]
 }
 
-// Returns a new Loader rooted at newRoot. "newRoot" MUST be
-// a directory (not a file). The directory can have a trailing
-// slash or not.
-// Example: "/home/seans/project" or "/home/seans/project/"
-// NOT "/home/seans/project/file.yaml".
-func (l *fileLoader) New(newRoot string) (ifc.Loader, error) {
-	return NewLoader(newRoot, l.root, l.fSys)
-}
-
-// IsAbsPath return true if the location calculated with the root
-// and location params a full file path.
-func (l *fileLoader) IsAbsPath(root string, location string) bool {
-	fullFilePath, err := l.fullLocation(root, location)
+func newLoaderOrDie(fSys fs.FileSystem, path string) *fileLoader {
+	l, err := newFileLoaderAt(fSys, path)
 	if err != nil {
-		return false
+		log.Fatalf("unable to make loader at '%s'; %v", path, err)
 	}
-	return filepath.IsAbs(fullFilePath)
+	return l
 }
 
-// fullLocation returns some notion of a full path.
-// If location is a full file path, then ignore root. If location is relative, then
-// join the root path with the location path. Either root or location can be empty,
-// but not both. Special case for ".": Expands to current working directory.
-// Example: "/home/seans/project", "subdir/bar" -> "/home/seans/project/subdir/bar".
-func (l *fileLoader) fullLocation(root string, location string) (string, error) {
-	// First, validate the parameters
-	if len(root) == 0 && len(location) == 0 {
-		return "", fmt.Errorf("unable to calculate full location: root and location empty")
-	}
-	// Special case current directory, expanding to full file path.
-	if location == currentDir {
-		currentDir, err := os.Getwd()
-		if err != nil {
-			return "", err
-		}
-		location = currentDir
-	}
-	// Assume the location is a full file path. If not, then join root with location.
-	fullLocation := location
-	if !filepath.IsAbs(location) {
-		fullLocation = filepath.Join(root, location)
-	}
-	return fullLocation, nil
-}
-
-// Load returns the bytes from reading a file at fullFilePath.
-// Implements the Loader interface.
-func (l *fileLoader) Load(location string) ([]byte, error) {
-	fullLocation, err := l.fullLocation(l.root, location)
+// newFileLoaderAt returns a new fileLoader with given root.
+func newFileLoaderAt(fSys fs.FileSystem, root string) (*fileLoader, error) {
+	root, err := filepath.Abs(root)
 	if err != nil {
-		fmt.Printf("Trouble in fulllocation: %v\n", err)
+		return nil, fmt.Errorf(
+			"no absolute path for '%s' : %v", root, err)
+	}
+	if !fSys.IsDir(root) {
+		return nil, fmt.Errorf("absolute root '%s' must exist", root)
+	}
+	return &fileLoader{roots: []string{root}, fSys: fSys}, nil
+}
+
+// Returns a new Loader, which might be rooted relative to current loader.
+func (l *fileLoader) New(root string) (ifc.Loader, error) {
+	if root == "" {
+		return nil, fmt.Errorf("new root cannot be empty")
+	}
+	if isRepoUrl(root) {
+		return newGithubLoader(root, l.fSys)
+	}
+	if filepath.IsAbs(root) {
+		return l.childLoaderAt(filepath.Clean(root))
+	}
+	// Get absolute path to squeeze out "..", ".", etc. to check for cycles.
+	absRoot, err := filepath.Abs(filepath.Join(l.Root(), root))
+	if err != nil {
+		return nil, fmt.Errorf(
+			"problem joining '%s' and '%s': %v", l.Root(), root, err)
+	}
+	return l.childLoaderAt(absRoot)
+}
+
+// childLoaderAt returns a new fileLoader with given root.
+func (l *fileLoader) childLoaderAt(root string) (*fileLoader, error) {
+	if !l.fSys.IsDir(root) {
+		return nil, fmt.Errorf("absolute root '%s' must exist", root)
+	}
+	if err := l.seenBefore(root); err != nil {
 		return nil, err
 	}
-	return l.fSys.ReadFile(fullLocation)
+	return &fileLoader{roots: append(l.roots, root), fSys: l.fSys}, nil
+}
+
+// seenBefore tests whether the current or any previously
+// visited root begins with the given path.
+// This disallows an overlay from depending on a base positioned
+// above it.  There's no good reason to allow this, and to disallow
+// it avoid cycles, especially if some future change re-introduces
+// globbing to resource and base specification.
+func (l *fileLoader) seenBefore(path string) error {
+	for _, r := range l.roots {
+		if strings.HasPrefix(r, path) {
+			return fmt.Errorf(
+				"cycle detected: new root '%s' contains previous root '%s'",
+				path, r)
+		}
+	}
+	return nil
+}
+
+// Load returns content of file at the given relative path.
+func (l *fileLoader) Load(path string) ([]byte, error) {
+	if !filepath.IsAbs(path) {
+		path = filepath.Join(l.Root(), path)
+	}
+	return l.fSys.ReadFile(path)
 }
 
 // Cleanup does nothing
