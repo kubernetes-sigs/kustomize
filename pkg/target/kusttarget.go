@@ -100,7 +100,7 @@ func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 
 // resolveRefsToGeneratedResources fixes all name references.
 func (kt *KustTarget) resolveRefsToGeneratedResources(m resmap.ResMap) (resmap.ResMap, error) {
-	if kt.kustomization.GeneratorOptions == nil || !kt.kustomization.GeneratorOptions.DisableHash {
+	if kt.kustomization.GeneratorOptions == nil || !kt.kustomization.GeneratorOptions.DisableNameSuffixHash {
 		err := kt.ptf.MakeHashTransformer().Transform(m)
 		if err != nil {
 			return nil, err

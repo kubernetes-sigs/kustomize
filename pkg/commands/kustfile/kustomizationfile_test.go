@@ -241,7 +241,7 @@ patchesStrategicMerge:
 - pod.yaml
 # generator options
 generatorOptions:
-  disableHash: true
+  disableNameSuffixHash: true
 `)
 
 	expected := []byte(`
@@ -279,7 +279,7 @@ patchesStrategicMerge:
 - pod.yaml
 # generator options
 generatorOptions:
-  disableHash: true
+  disableNameSuffixHash: true
 `)
 	fSys := fs.MakeFakeFS()
 	fSys.WriteTestKustomizationWith(kustomizationContentWithComments)
