@@ -249,8 +249,8 @@ type GeneratorOptions struct {
 	// resource generation.  Default at time of writing:  {'sh', '-c'}.
 	Shell []string `json:"shell,omitempty" yaml:"shell,omitempty"`
 
-	// DisableNameHash if true disables the default behavior of adding a
+	// DisableNameSuffixHash if true disables the default behavior of adding a
 	// suffix to the names of generated resources that is a hash of the
 	// resource contents.
-	DisableHash bool `json:"disableHash,omitempty" yaml:"disableHash,omitempty"`
+	DisableNameSuffixHash bool `json:"disableNameSuffixHash,omitempty" yaml:"disableNameSuffixHash,omitempty"`
 }
