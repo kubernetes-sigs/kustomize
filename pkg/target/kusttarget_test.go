@@ -261,9 +261,9 @@ func TestSecretTimeout(t *testing.T) {
 	}
 }
 
-func TestDisableHash(t *testing.T) {
+func TestDisableNameSuffixHash(t *testing.T) {
 	kt := makeKustTarget(t, makeLoader1(t))
-	kt.kustomization.GeneratorOptions = &types.GeneratorOptions{DisableHash: true}
+	kt.kustomization.GeneratorOptions = &types.GeneratorOptions{DisableNameSuffixHash: true}
 	actual, err := kt.MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("unexpected Resources error %v", err)
