@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
-	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
@@ -47,17 +46,21 @@ func NewNameReferenceTransformer(
 // associated with the key. e.g. if <k, v> is one of the key-value pair in the map,
 // then the old name is k.Name and the new name is v.GetName()
 func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
+	// TODO: Too much looping.
+	// Even more hidden loops in FilterBy,
+	// updateNameReference and FindByGVKN.
 	for id := range m {
-		objMap := m[id].Map()
 		for _, backRef := range o.backRefs {
 			for _, fSpec := range backRef.FieldSpecs {
-				if !id.Gvk().IsSelected(&fSpec.Gvk) {
-					continue
-				}
-				err := mutateField(objMap, fSpec.PathSlice(), fSpec.CreateIfNotPresent,
-					o.updateNameReference(backRef.Gvk, m.FilterBy(id)))
-				if err != nil {
-					return err
+				if id.Gvk().IsSelected(&fSpec.Gvk) {
+					err := mutateField(
+						m[id].Map(), fSpec.PathSlice(),
+						fSpec.CreateIfNotPresent,
+						o.updateNameReference(
+							backRef.Gvk, m.FilterBy(id)))
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -72,27 +75,20 @@ func (o *nameReferenceTransformer) updateNameReference(
 		if !ok {
 			return nil, fmt.Errorf("%#v is expectd to be %T", in, s)
 		}
-
 		for id, res := range m {
-			if !id.Gvk().IsSelected(&backRef) {
-				continue
-			}
-			if id.Name() == s {
-				err := o.detectConflict(id, m, s)
-				if err != nil {
-					return nil, err
+			if id.Gvk().IsSelected(&backRef) && id.Name() == s {
+				matchedIds := m.FindByGVKN(id)
+				// If there's more than one match, there's no way
+				// to know which one to pick, so emit error.
+				if len(matchedIds) > 1 {
+					return nil, fmt.Errorf(
+						"Multiple matches for name %s:\n  %v", id, matchedIds)
 				}
+				// Return transformed name of the object,
+				// complete with prefixes, hashes, etc.
 				return res.GetName(), nil
 			}
 		}
 		return in, nil
 	}
-}
-
-func (o *nameReferenceTransformer) detectConflict(id resid.ResId, m resmap.ResMap, name string) error {
-	matchedIds := m.FindByGVKN(id)
-	if len(matchedIds) > 1 {
-		return fmt.Errorf("detected conflicts when resolving name references %s:\n%v", name, matchedIds)
-	}
-	return nil
 }
