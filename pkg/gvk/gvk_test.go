@@ -48,12 +48,25 @@ var lessThanTests = []struct {
 		Gvk{Group: "a", Version: "b", Kind: "ClusterRole"}},
 	{Gvk{Group: "a", Version: "b", Kind: "a"},
 		Gvk{Group: "a", Version: "b", Kind: "b"}},
+	{Gvk{Group: "a", Version: "b", Kind: "Namespace"},
+		Gvk{Group: "a", Version: "c", Kind: "Namespace"}},
+	{Gvk{Group: "a", Version: "c", Kind: "Namespace"},
+		Gvk{Group: "b", Version: "c", Kind: "Namespace"}},
+	{Gvk{Group: "b", Version: "c", Kind: "Namespace"},
+		Gvk{Group: "a", Version: "c", Kind: "ClusterRole"}},
+	{Gvk{Group: "a", Version: "c", Kind: "Namespace"},
+		Gvk{Group: "a", Version: "b", Kind: "ClusterRole"}},
+	{Gvk{Group: "a", Version: "d", Kind: "Namespace"},
+		Gvk{Group: "b", Version: "c", Kind: "Namespace"}},
 }
 
 func TestIsLessThan1(t *testing.T) {
 	for _, hey := range lessThanTests {
 		if !hey.x1.IsLessThan(hey.x2) {
 			t.Fatalf("%v should be less than %v", hey.x1, hey.x2)
+		}
+		if hey.x2.IsLessThan(hey.x1) {
+			t.Fatalf("%v should not be less than %v", hey.x2, hey.x1)
 		}
 	}
 }
