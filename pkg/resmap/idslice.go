@@ -51,6 +51,9 @@ func gvkLess(i, j schema.GroupVersionKind) bool {
 	indexi, foundi := typeOrders[i.Kind]
 	indexj, foundj := typeOrders[j.Kind]
 	if foundi && foundj {
+		if indexi == indexj {
+			return i.String() < j.String()
+		}
 		return indexi < indexj
 	}
 	if foundi && !foundj {
