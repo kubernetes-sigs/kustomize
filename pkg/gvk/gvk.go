@@ -97,7 +97,9 @@ func (x Gvk) IsLessThan(o Gvk) bool {
 	indexI, foundI := typeOrders[x.Kind]
 	indexJ, foundJ := typeOrders[o.Kind]
 	if foundI && foundJ {
-		return indexI < indexJ
+		if indexI != indexJ {
+			return indexI < indexJ
+		}
 	}
 	if foundI && !foundJ {
 		return true
