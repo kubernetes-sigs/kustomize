@@ -216,7 +216,7 @@ crds:
 # the image field of container number 2 inside of a pod can currently not be done.
 #
 # Not every location of a variable is supported. To see a complete list of locations
-# see the file [refvars.go](https://github.com/kubernetes-sigs/kustomize/blob/master/pkg/transformers/refvars.go#L20).
+# see the file [varreference.go](https://github.com/kubernetes-sigs/kustomize/blob/master/pkg/transformers/config/defaultconfig/varreference.go#L20).
 #
 # An example of a situation where you'd not use vars is when you'd like to set a
 # pod's `serviceAccountName`. In that case you would just reference the ServiceAccount
