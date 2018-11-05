@@ -108,7 +108,7 @@ nameReference:
     kind: Job
   - path: spec/jobTemplate/spec/template/spec/volumes/configMap/name
     kind: CronJob
-  - path: spec/jobTemplate/spec/template/spec/containers/env/valueFrom/configmapKeyRef/name
+  - path: spec/jobTemplate/spec/template/spec/containers/env/valueFrom/configMapKeyRef/name
     kind: CronJob
   - path: spec/jobTemplate/spec/template/spec/initContainers/env/valueFrom/configMapKeyRef/name
     kind: CronJob
