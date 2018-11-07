@@ -64,6 +64,9 @@ func (t *TransformerConfig) AddNamereferenceFieldSpec(nbrs NameBackReferences) {
 
 // Merge merges two TransformerConfigs objects into a new TransformerConfig object
 func (t *TransformerConfig) Merge(input *TransformerConfig) *TransformerConfig {
+	if input == nil {
+		return t
+	}
 	merged := &TransformerConfig{}
 	merged.NamePrefix = append(t.NamePrefix, input.NamePrefix...)
 	merged.NameSpace = append(t.NameSpace, input.NameSpace...)

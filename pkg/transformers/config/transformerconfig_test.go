@@ -141,4 +141,9 @@ func TestMerge(t *testing.T) {
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("expected: %v\n but got: %v\n", expected, actual)
 	}
+
+	actual = cfga.Merge(nil)
+	if !reflect.DeepEqual(actual, cfga) {
+		t.Fatalf("expected: %v\n but got: %v\n", cfga, actual)
+	}
 }
