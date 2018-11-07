@@ -70,46 +70,128 @@ function getKustomizeDeps {
 }
 
 function updateK8s {
-  # Copy k8sdeps from Kustomize to kubectl
-  mkdir -p $GOPATH/src/k8s.io/kubernetes/pkg/kubectl/kustomize
+  # Copy k8sdeps from Kustomize to cli-runtime in staging
+  mkdir -p $GOPATH/src/k8s.io/kubernetes/staging/src/k8s.io/cli-runtime/pkg/kustomize
   cp -r $GOPATH/src/sigs.k8s.io/kustomize/k8sdeps \
-    $GOPATH/src/k8s.io/kubernetes/pkg/kubectl/kustomize/k8sdeps
+    $GOPATH/src/k8s.io/kubernetes/staging/src/k8s.io/cli-runtime/pkg/kustomize/k8sdeps
 
   # Change import path of k8sdeps
-  find $GOPATH/src/k8s.io/kubernetes/pkg/kubectl/kustomize/k8sdeps \
+  find $GOPATH/src/k8s.io/kubernetes/staging/src/k8s.io/cli-runtime/pkg/kustomize/k8sdeps \
     -type f -name "*.go" | \
     xargs sed -i \
-    's!sigs.k8s.io/kustomize/k8sdeps!k8s.io/kubernetes/pkg/kubectl/kustomize/k8sdeps!'
+    's!sigs.k8s.io/kustomize/k8sdeps!k8s.io/cli-runtime/pkg/kustomize/k8sdeps!'
 
 
   # Add kustomize command to kubectl
-  cat > $GOPATH/kubectl.diff << EOF
-diff --git a/pkg/kubectl/cmd/cmd.go b/pkg/kubectl/cmd/cmd.go
-index 43a541ecc9..2d23bfd27d 100644
---- a/pkg/kubectl/cmd/cmd.go
-+++ b/pkg/kubectl/cmd/cmd.go
-@@ -74,6 +74,8 @@ import (
-        "k8s.io/kubernetes/pkg/kubectl/util/templates"
+  cat > $GOPATH/visitor.diff << EOF
+diff --git a/staging/src/k8s.io/cli-runtime/pkg/genericclioptions/resource/visitor.go b/staging/src/k8s.io/cli-runtime/pkg/genericclioptions/resource/visitor.go
+index 32c1a691a5..d7a37e1cde 100644
+--- a/staging/src/k8s.io/cli-runtime/pkg/genericclioptions/resource/visitor.go
++++ b/staging/src/k8s.io/cli-runtime/pkg/genericclioptions/resource/visitor.go
+@@ -20,10 +20,12 @@ import (
+ 	"bytes"
+ 	"fmt"
+ 	"io"
++	"io/ioutil"
+ 	"net/http"
+ 	"net/url"
+ 	"os"
+ 	"path/filepath"
++	"strings"
+ 	"time"
 
-        "k8s.io/cli-runtime/pkg/genericclioptions"
-+       "k8s.io/kubernetes/pkg/kubectl/kustomize/k8sdeps"
-+       "sigs.k8s.io/kustomize/pkg/commands"
+ 	"golang.org/x/text/encoding/unicode"
+@@ -38,6 +40,9 @@ import (
+ 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
+ 	"k8s.io/apimachinery/pkg/util/yaml"
+ 	"k8s.io/apimachinery/pkg/watch"
++	"k8s.io/cli-runtime/pkg/kustomize/k8sdeps"
++	"sigs.k8s.io/kustomize/pkg/commands/build"
++	"sigs.k8s.io/kustomize/pkg/fs"
  )
 
  const (
-@@ -505,6 +507,7 @@ func NewKubectlCommand(in io.Reader, out, err io.Writer) *cobra.Command {
-                                replace.NewCmdReplace(f, ioStreams),
-                                wait.NewCmdWait(f, ioStreams),
-                                convert.NewCmdConvert(f, ioStreams),
-+                               templates.NormalizeAll(commands.NewDefaultCommand(k8sdeps.NewFactory())),
-                        },
-                },
-                {
+@@ -452,7 +457,10 @@ func ExpandPathsToFileVisitors(mapper *mapper, paths string, recursive bool, ext
+ 		if err != nil {
+ 			return err
+ 		}
+-
++		if isKustomizationDir(path) {
++			visitors = append(visitors, NewKustomizationVisitor(mapper, path, schema))
++			return filepath.SkipDir
++		}
+ 		if fi.IsDir() {
+ 			if path != paths && !recursive {
+ 				return filepath.SkipDir
+@@ -463,7 +471,10 @@ func ExpandPathsToFileVisitors(mapper *mapper, paths string, recursive bool, ext
+ 		if path != paths && ignoreFile(path, extensions) {
+ 			return nil
+ 		}
+-
++		if strings.HasSuffix(path, "kustomization.yaml") {
++			visitors = append(visitors, NewKustomizationVisitor(mapper, filepath.Dir(path), schema))
++			return nil
++		}
+ 		visitor := &FileVisitor{
+ 			Path:          path,
+ 			StreamVisitor: NewStreamVisitor(nil, mapper, path, schema),
+@@ -479,6 +490,14 @@ func ExpandPathsToFileVisitors(mapper *mapper, paths string, recursive bool, ext
+ 	return visitors, nil
+ }
 
++func isKustomizationDir(path string) bool {
++	if _, err := os.Stat(filepath.Join(path, "kustomization.yaml")); err == nil {
++		return true
++	}
++	return false
++}
++
++
+ // FileVisitor is wrapping around a StreamVisitor, to handle open/close files
+ type FileVisitor struct {
+ 	Path string
+@@ -507,6 +526,37 @@ func (v *FileVisitor) Visit(fn VisitorFunc) error {
+ 	return v.StreamVisitor.Visit(fn)
+ }
+
++// KustomizationVisitor prorvides the output of kustomization build
++type KustomizationVisitor struct {
++	Path string
++	*StreamVisitor
++}
++
++// Visit in a KustomizationVisitor build the kustomization output
++func (v *KustomizationVisitor) Visit(fn VisitorFunc) error {
++	fSys := fs.MakeRealFS()
++	f := k8sdeps.NewFactory()
++	var out bytes.Buffer
++	cmd := build.NewCmdBuild(&out, fSys, f.ResmapF, f.TransformerF)
++	cmd.SetArgs([]string{v.Path})
++	// we want to silence usage, error output, and any future output from cobra
++	// we will get error output as a golang error from execute
++	cmd.SetOutput(ioutil.Discard)
++	_, err := cmd.ExecuteC()
++	if err != nil {
++		return err
++	}
++	v.StreamVisitor.Reader = bytes.NewReader(out.Bytes())
++	return v.StreamVisitor.Visit(fn)
++}
++
++func NewKustomizationVisitor(mapper *mapper, path string, schema ContentValidator) *KustomizationVisitor {
++	return &KustomizationVisitor{
++		Path:          path,
++		StreamVisitor: NewStreamVisitor(nil, mapper, path, schema),
++	}
++}
++
+ // StreamVisitor reads objects from an io.Reader and walks them. A stream visitor can only be
+ // visited once.
+ // TODO: depends on objects being in JSON format before being passed to decode - need to implement
 EOF
 
   cd $GOPATH/src/k8s.io/kubernetes
-  git apply --ignore-space-change --ignore-whitespace $GOPATH/kubectl.diff
+  git apply --ignore-space-change --ignore-whitespace $GOPATH/visitor.diff
 }
 
 function godepSave {
