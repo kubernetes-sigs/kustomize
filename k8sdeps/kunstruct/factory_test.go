@@ -100,6 +100,18 @@ WOOOOOOOOOOOOOOOOOOOOOOOOT:  woot
 			expectedOut: []ifc.Kunstructured{},
 			expectedErr: true,
 		},
+		{
+			name: "Missing .metadata.name in object",
+			input: []byte(`
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    foo: bar
+`),
+			expectedOut: nil,
+			expectedErr: true,
+		},
 	}
 
 	for _, test := range tests {
