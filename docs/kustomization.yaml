@@ -102,6 +102,24 @@ secretGenerator:
   envCommand: printf \"DB_USERNAME=admin\nDB_PASSWORD=somepw\"
   type: Opaque
 
+# generatorOptions modify behavior of all ConfigMap and Secret generators
+generatorOptions:
+  # labels to add to all generated resources
+  labels:
+    kustomize.generated.resources: somevalue
+  # annotations to add to all generated resources
+  annotations:
+    kustomize.generated.resource: somevalue
+  # timeoutSeconds specifies the timeout for commands
+  timeoutSeconds: 30
+  # shell and arguments to use as a context for commands used in resource
+  # generation. Default at time of writing: ["sh", "-c"]
+  shell: ["sh", "-c"]
+  # disableNameSuffixHash is true disables the default behavior of adding a
+  # suffix to the names of generated resources that is a hash of
+  # the resource contents.
+  disableNameSuffixHash: true
+
 # Each entry in this list should resolve to a directory
 # containing a kustomization file, else the
 # customization fails.
