@@ -22,7 +22,11 @@ import (
 
 type mutateFunc func(interface{}) (interface{}, error)
 
-func mutateField(m map[string]interface{}, pathToField []string, createIfNotPresent bool, fns ...mutateFunc) error {
+func mutateField(
+	m map[string]interface{},
+	pathToField []string,
+	createIfNotPresent bool,
+	fns ...mutateFunc) error {
 	if len(pathToField) == 0 {
 		return nil
 	}
