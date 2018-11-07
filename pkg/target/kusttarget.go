@@ -82,7 +82,6 @@ func unmarshal(y []byte, o interface{}) error {
 	if err != nil {
 		return err
 	}
-
 	dec := json.NewDecoder(bytes.NewReader(j))
 	dec.DisallowUnknownFields()
 	return dec.Decode(o)
@@ -111,7 +110,6 @@ func (kt *KustTarget) resolveRefsToGeneratedResources(m resmap.ResMap) (resmap.R
 			return nil, err
 		}
 	}
-
 	var r []transformers.Transformer
 	t, err := transformers.NewNameReferenceTransformer(kt.tConfig.NameReference)
 	if err != nil {
@@ -159,7 +157,6 @@ func (kt *KustTarget) loadCustomizedResMap() (resmap.ResMap, error) {
 	if err != nil {
 		errs.Append(errors.Wrap(err, "SliceFromPatches"))
 	}
-
 	if len(errs.Get()) > 0 {
 		return nil, errs
 	}
