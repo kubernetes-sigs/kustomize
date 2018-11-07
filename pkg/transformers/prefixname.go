@@ -60,8 +60,10 @@ func NewNamePrefixTransformer(np string, pc []config.FieldSpec) (Transformer, er
 
 // Transform prepends the name prefix.
 func (o *namePrefixTransformer) Transform(m resmap.ResMap) error {
+	// Fill map "mf" with entries subject to name modification, and
+	// delete these entries from "m", so that for now m retains only
+	// the entries whose names will not be modified.
 	mf := resmap.ResMap{}
-
 	for id := range m {
 		found := false
 		for _, path := range o.fieldSpecsToSkip {

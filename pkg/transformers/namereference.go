@@ -42,7 +42,7 @@ func NewNameReferenceTransformer(
 	return &nameReferenceTransformer{backRefs: br}, nil
 }
 
-// Transform does the fields update according to fieldSpecs.
+// Transform does the field update according to fieldSpecs.
 // The old name is in the key in the map and the new name is in the object
 // associated with the key. e.g. if <k, v> is one of the key-value pair in the map,
 // then the old name is k.Name and the new name is v.GetName()
@@ -50,11 +50,11 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 	for id := range m {
 		objMap := m[id].Map()
 		for _, backRef := range o.backRefs {
-			for _, path := range backRef.FieldSpecs {
-				if !id.Gvk().IsSelected(&path.Gvk) {
+			for _, fSpec := range backRef.FieldSpecs {
+				if !id.Gvk().IsSelected(&fSpec.Gvk) {
 					continue
 				}
-				err := mutateField(objMap, path.PathSlice(), path.CreateIfNotPresent,
+				err := mutateField(objMap, fSpec.PathSlice(), fSpec.CreateIfNotPresent,
 					o.updateNameReference(backRef.Gvk, m.FilterBy(id)))
 				if err != nil {
 					return err
@@ -66,7 +66,7 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 }
 
 func (o *nameReferenceTransformer) updateNameReference(
-	k gvk.Gvk, m resmap.ResMap) func(in interface{}) (interface{}, error) {
+	backRef gvk.Gvk, m resmap.ResMap) func(in interface{}) (interface{}, error) {
 	return func(in interface{}) (interface{}, error) {
 		s, ok := in.(string)
 		if !ok {
@@ -74,7 +74,7 @@ func (o *nameReferenceTransformer) updateNameReference(
 		}
 
 		for id, res := range m {
-			if !id.Gvk().IsSelected(&k) {
+			if !id.Gvk().IsSelected(&backRef) {
 				continue
 			}
 			if id.Name() == s {
