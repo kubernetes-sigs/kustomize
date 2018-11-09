@@ -90,7 +90,7 @@ nameReference:
 ## cusotmizing transformer configurations
 
 Kustomize has a default set of configurations. They can be saved to local directory through `kustomize config save -d`. Kustomize allows modifying those configuration files and using them in `kustomize build` through `-t`.  This tutorial shows how to customize those configurations to
-- [support a crd type](crd/README.md)
+- support a crd type
 - disabling adding commonLabels to fields in some kind of resources
 - add extra fields for variable substitution
 - add extra fields for name reference
