@@ -60,7 +60,7 @@ func mutateField(
 			item := typedV[i]
 			typedItem, ok := item.(map[string]interface{})
 			if !ok {
-				return fmt.Errorf("%#v is expectd to be %T", item, typedItem)
+				return fmt.Errorf("%#v is expected to be %T", item, typedItem)
 			}
 			err := mutateField(typedItem, newPathToField, createIfNotPresent, fns...)
 			if err != nil {
