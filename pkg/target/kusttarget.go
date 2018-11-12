@@ -21,10 +21,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/ghodss/yaml"
-	"github.com/golang/glog"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
@@ -318,7 +318,7 @@ func (kt *KustTarget) resolveRefVars(m resmap.ResMap) (map[string]string, error)
 			}
 			result[v.Name] = s
 		} else {
-			glog.Infof("couldn't resolve v: %v", v)
+			log.Printf("couldn't resolve v: %v", v)
 		}
 	}
 	return result, nil

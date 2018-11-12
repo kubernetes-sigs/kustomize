@@ -40,7 +40,6 @@
     "aws/signer/v4",
     "internal/sdkio",
     "internal/sdkrand",
-    "internal/sdkuri",
     "internal/shareddefaults",
     "private/protocol",
     "private/protocol/eventstream",
@@ -493,7 +492,6 @@
   input-imports = [
     "github.com/evanphx/json-patch",
     "github.com/ghodss/yaml",
-    "github.com/golang/glog",
     "github.com/hashicorp/go-getter",
     "github.com/pkg/errors",
     "github.com/spf13/cobra",
