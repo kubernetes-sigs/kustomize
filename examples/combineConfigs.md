@@ -291,7 +291,7 @@ kustomize build $OVERLAYS/production
 ```
 
 A CICD process could apply this directly to
-the cluser using:
+the cluster using:
 
 > ```
 > kustomize build $OVERLAYS/production | kubectl apply -f -

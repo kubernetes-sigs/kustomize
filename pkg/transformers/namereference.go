@@ -73,7 +73,7 @@ func (o *nameReferenceTransformer) updateNameReference(
 	return func(in interface{}) (interface{}, error) {
 		s, ok := in.(string)
 		if !ok {
-			return nil, fmt.Errorf("%#v is expectd to be %T", in, s)
+			return nil, fmt.Errorf("%#v is expected to be %T", in, s)
 		}
 		for id, res := range m {
 			if id.Gvk().IsSelected(&backRef) && id.Name() == s {
