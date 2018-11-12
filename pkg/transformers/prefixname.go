@@ -101,7 +101,7 @@ func (o *namePrefixTransformer) Transform(m resmap.ResMap) error {
 func (o *namePrefixTransformer) addPrefix(in interface{}) (interface{}, error) {
 	s, ok := in.(string)
 	if !ok {
-		return nil, fmt.Errorf("%#v is expectd to be %T", in, s)
+		return nil, fmt.Errorf("%#v is expected to be %T", in, s)
 	}
 	return o.prefix + s, nil
 }
