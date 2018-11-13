@@ -1,6 +1,6 @@
 # Demo: Injecting k8s runtime data into containers
 
-In this tutorial, you will learn how to use `kustomize` to declare a variable reference and substitute it in container's command.
+In this tutorial, you will learn how to use `kustomize` to declare a variable reference and substitute it in container's command. Note that, the substitution is not for arbitrary fields, it is only applicable to container env, args and command. 
 
 To run WordPress, it's necessary to
 
