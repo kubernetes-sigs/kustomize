@@ -35,7 +35,7 @@ go get sigs.k8s.io/kustomize
  * [breakfast](breakfast.md) - Customize breakfast for
    Alice and Bob.
    
- * [container args](wordpress/README.md) - Injecting k8s runtime data into container arguments (e.g. to point wordpress to a SQL service).
+ * [vars](wordpress/README.md) - Injecting k8s runtime data into container arguments (e.g. to point wordpress to a SQL service) by vars.
  
  * [image tags](imageTags.md) - Updating image tags without applying a patch.
 
