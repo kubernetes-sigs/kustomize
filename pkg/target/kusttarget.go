@@ -54,8 +54,7 @@ type KustTarget struct {
 func NewKustTarget(
 	ldr ifc.Loader, fSys fs.FileSystem,
 	rFactory *resmap.Factory,
-	tFactory transformer.Factory,
-	tConfig *config.TransformerConfig) (*KustTarget, error) {
+	tFactory transformer.Factory) (*KustTarget, error) {
 	content, err := loadKustFile(ldr)
 	if err != nil {
 		return nil, err
@@ -67,6 +66,10 @@ func NewKustTarget(
 		return nil, err
 	}
 	k.DealWithDeprecatedFields()
+	tConfig, err := makeTransformerConfig(ldr, k.Configurations)
+	if err != nil {
+		return nil, err
+	}
 	return &KustTarget{
 		kustomization: &k,
 		ldr:           ldr,
@@ -85,6 +88,15 @@ func unmarshal(y []byte, o interface{}) error {
 	dec := json.NewDecoder(bytes.NewReader(j))
 	dec.DisallowUnknownFields()
 	return dec.Decode(o)
+}
+
+// makeTransformerConfig returns a complete TransformerConfig object from either files
+// or the default configs
+func makeTransformerConfig(ldr ifc.Loader, paths []string) (*config.TransformerConfig, error) {
+	if paths == nil || len(paths) == 0 {
+		return config.NewFactory(nil).DefaultConfig(), nil
+	}
+	return config.NewFactory(ldr).FromFiles(paths)
 }
 
 // MakeCustomizedResMap creates a ResMap per kustomization instructions.
@@ -229,7 +241,7 @@ func (kt *KustTarget) loadCustomizedBases() (resmap.ResMap, *interror.Kustomizat
 		}
 		target, err := NewKustTarget(
 			ldr, kt.fSys,
-			kt.rFactory, kt.tFactory, kt.tConfig)
+			kt.rFactory, kt.tFactory)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "couldn't make target for "+path))
 			continue
@@ -259,7 +271,7 @@ func (kt *KustTarget) loadBasesAsFlatList() ([]*KustTarget, error) {
 			continue
 		}
 		target, err := NewKustTarget(
-			ldr, kt.fSys, kt.rFactory, kt.tFactory, kt.tConfig)
+			ldr, kt.fSys, kt.rFactory, kt.tFactory)
 		if err != nil {
 			errs.Append(err)
 			continue
