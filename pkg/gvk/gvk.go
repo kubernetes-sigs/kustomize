@@ -70,6 +70,7 @@ func (x Gvk) Equals(o Gvk) bool {
 // In some cases order just specified to provide determinism.
 var order = []string{
 	"Namespace",
+	"StorageClass",
 	"CustomResourceDefinition",
 	"ServiceAccount",
 	"Role",
