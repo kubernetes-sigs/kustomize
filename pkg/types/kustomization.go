@@ -116,6 +116,9 @@ type Kustomization struct {
 	// GeneratorOptions modify behavior of all ConfigMap and Secret generators.
 	GeneratorOptions *GeneratorOptions `json:"generatorOptions,omitempty" yaml:"generatorOptions,omitempty"`
 
+	// Configurations is a list of transformer configuration files
+	Configurations []string `json:"configurations,omitempty" yaml:"configurations,omitempty"`
+
 	//
 	// Deprecated fields - See DealWithDeprecatedFields
 	//
