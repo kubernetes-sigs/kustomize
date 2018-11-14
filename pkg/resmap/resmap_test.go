@@ -125,7 +125,7 @@ func TestFilterBy(t *testing.T) {
 		expected ResMap
 	}{
 		"different namespace": {
-			resMap: ResMap{resid.NewResIdWithPrefixNamespace(cmap, "config-map", "prefix", "namespace1"): rf.FromMap(
+			resMap: ResMap{resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map", "prefix", "suffix", "namespace1"): rf.FromMap(
 				map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "ConfigMap",
@@ -134,11 +134,11 @@ func TestFilterBy(t *testing.T) {
 					},
 				}),
 			},
-			filter:   resid.NewResIdWithPrefixNamespace(cmap, "config-map", "prefix", "namespace2"),
+			filter:   resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map", "prefix", "suffix", "namespace2"),
 			expected: ResMap{},
 		},
 		"different prefix": {
-			resMap: ResMap{resid.NewResIdWithPrefixNamespace(cmap, "config-map", "prefix1", "namespace"): rf.FromMap(
+			resMap: ResMap{resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map", "prefix1", "suffix", "namespace"): rf.FromMap(
 				map[string]interface{}{
 					"apiVersion": "v1",
 					"kind":       "ConfigMap",
@@ -147,7 +147,20 @@ func TestFilterBy(t *testing.T) {
 					},
 				}),
 			},
-			filter:   resid.NewResIdWithPrefixNamespace(cmap, "config-map", "prefix2", "namespace"),
+			filter:   resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map", "prefix2", "suffix", "namespace"),
+			expected: ResMap{},
+		},
+		"different suffix": {
+			resMap: ResMap{resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map", "prefix", "suffix1", "namespace"): rf.FromMap(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata": map[string]interface{}{
+						"name": "config-map",
+					},
+				}),
+			},
+			filter:   resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map", "prefix", "suffix2", "namespace"),
 			expected: ResMap{},
 		},
 		"same namespace, same prefix": {
@@ -167,6 +180,48 @@ func TestFilterBy(t *testing.T) {
 					"kind":       "ConfigMap",
 					"metadata": map[string]interface{}{
 						"name": "config-map1",
+					},
+				}),
+			},
+		},
+		"same namespace, same suffix": {
+			resMap: ResMap{resid.NewResIdWithSuffixNamespace(cmap, "config-map1", "suffix", "namespace"): rf.FromMap(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata": map[string]interface{}{
+						"name": "config-map1",
+					},
+				}),
+			},
+			filter: resid.NewResIdWithSuffixNamespace(cmap, "config-map2", "suffix", "namespace"),
+			expected: ResMap{resid.NewResIdWithSuffixNamespace(cmap, "config-map1", "suffix", "namespace"): rf.FromMap(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata": map[string]interface{}{
+						"name": "config-map1",
+					},
+				}),
+			},
+		},
+		"same namespace, same prefix, same suffix": {
+			resMap: ResMap{resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map1", "prefix", "suffix", "namespace"): rf.FromMap(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata": map[string]interface{}{
+						"name": "config-map",
+					},
+				}),
+			},
+			filter: resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map2", "prefix", "suffix", "namespace"),
+			expected: ResMap{resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map1", "prefix", "suffix", "namespace"): rf.FromMap(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata": map[string]interface{}{
+						"name": "config-map",
 					},
 				}),
 			},
