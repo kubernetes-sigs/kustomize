@@ -26,7 +26,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
-func TestSuffixNameRun(t *testing.T) {
+func TestPrefixSuffixNameRun(t *testing.T) {
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
 	m := resmap.ResMap{
@@ -56,20 +56,20 @@ func TestSuffixNameRun(t *testing.T) {
 			}),
 	}
 	expected := resmap.ResMap{
-		resid.NewResIdWithSuffix(cmap, "cm1", "-somesuffix"): rf.FromMap(
+		resid.NewResIdWithPrefixSuffix(cmap, "cm1", "someprefix-", "-somesuffix"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
 				"metadata": map[string]interface{}{
-					"name": "cm1-somesuffix",
+					"name": "someprefix-cm1-somesuffix",
 				},
 			}),
-		resid.NewResIdWithSuffix(cmap, "cm2", "-somesuffix"): rf.FromMap(
+		resid.NewResIdWithPrefixSuffix(cmap, "cm2", "someprefix-", "-somesuffix"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
 				"metadata": map[string]interface{}{
-					"name": "cm2-somesuffix",
+					"name": "someprefix-cm2-somesuffix",
 				},
 			}),
 		resid.NewResId(crd, "crd"): rf.FromMap(
@@ -82,12 +82,12 @@ func TestSuffixNameRun(t *testing.T) {
 			}),
 	}
 
-	npt, err := NewNameSuffixTransformer(
-		"-somesuffix", defaultTransformerConfig.NameSuffix)
+	npst, err := NewNamePrefixSuffixTransformer(
+		"someprefix-", "-somesuffix", defaultTransformerConfig.NamePrefix)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	err = npt.Transform(m)
+	err = npst.Transform(m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
