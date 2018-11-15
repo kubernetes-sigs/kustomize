@@ -33,6 +33,7 @@ func TestFieldOrder(t *testing.T) {
 		"Resources",
 		"Bases",
 		"NamePrefix",
+		"NameSuffix",
 		"Namespace",
 		"Crds",
 		"CommonLabels",
@@ -85,6 +86,7 @@ func TestWriteAndRead(t *testing.T) {
 func TestDeprecationOfPatches(t *testing.T) {
 	hasDeprecatedFields := []byte(`
 namePrefix: acme
+nameSuffix: emca
 patches:
 - alice
 patchesStrategicMerge:
@@ -102,6 +104,9 @@ patchesStrategicMerge:
 	}
 	if k.NamePrefix != "acme" {
 		t.Fatalf("Unexpected name prefix")
+	}
+	if k.NameSuffix != "emca" {
+		t.Fatalf("Unexpected name suffix")
 	}
 	if len(k.Patches) > 0 {
 		t.Fatalf("Expected nothing in Patches.")
