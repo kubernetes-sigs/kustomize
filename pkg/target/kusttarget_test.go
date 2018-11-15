@@ -39,6 +39,7 @@ import (
 const (
 	kustomizationContent1 = `
 namePrefix: foo-
+nameSuffix: -bar
 namespace: ns1
 commonLabels:
   app: nginx
@@ -132,12 +133,12 @@ var ns = gvk.Gvk{Version: "v1", Kind: "Namespace"}
 
 func TestResources1(t *testing.T) {
 	expected := resmap.ResMap{
-		resid.NewResIdWithPrefixNamespace(deploy, "dply1", "foo-", "ns1"): rf.RF().FromMap(
+		resid.NewResIdWithPrefixSuffixNamespace(deploy, "dply1", "foo-", "-bar", "ns1"): rf.RF().FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
 				"metadata": map[string]interface{}{
-					"name":      "foo-dply1",
+					"name":      "foo-dply1-bar",
 					"namespace": "ns1",
 					"labels": map[string]interface{}{
 						"app": "nginx",
@@ -165,12 +166,12 @@ func TestResources1(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResIdWithPrefixNamespace(cmap, "literalConfigMap", "foo-", "ns1"): rf.RF().FromMap(
+		resid.NewResIdWithPrefixSuffixNamespace(cmap, "literalConfigMap", "foo-", "-bar", "ns1"): rf.RF().FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
 				"metadata": map[string]interface{}{
-					"name":      "foo-literalConfigMap-mc92bgcbh5",
+					"name":      "foo-literalConfigMap-bar-8d2dkb8k24",
 					"namespace": "ns1",
 					"labels": map[string]interface{}{
 						"app": "nginx",
@@ -184,12 +185,12 @@ func TestResources1(t *testing.T) {
 					"DB_PASSWORD": "somepw",
 				},
 			}).SetBehavior(ifc.BehaviorCreate),
-		resid.NewResIdWithPrefixNamespace(secret, "secret", "foo-", "ns1"): rf.RF().FromMap(
+		resid.NewResIdWithPrefixSuffixNamespace(secret, "secret", "foo-", "-bar", "ns1"): rf.RF().FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
 				"metadata": map[string]interface{}{
-					"name":      "foo-secret-877fcfhgt5",
+					"name":      "foo-secret-bar-9btc7bt4kb",
 					"namespace": "ns1",
 					"labels": map[string]interface{}{
 						"app": "nginx",
@@ -204,12 +205,12 @@ func TestResources1(t *testing.T) {
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
 			}).SetBehavior(ifc.BehaviorCreate),
-		resid.NewResIdWithPrefixNamespace(ns, "ns1", "foo-", ""): rf.RF().FromMap(
+		resid.NewResIdWithPrefixSuffixNamespace(ns, "ns1", "foo-", "-bar", ""): rf.RF().FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Namespace",
 				"metadata": map[string]interface{}{
-					"name": "foo-ns1",
+					"name": "foo-ns1-bar",
 					"labels": map[string]interface{}{
 						"app": "nginx",
 					},
@@ -270,8 +271,8 @@ func TestDisableNameSuffixHash(t *testing.T) {
 	}
 
 	for id, r := range actual {
-		if !strings.HasSuffix(r.GetName(), id.Name()) {
-			t.Fatalf("unexpected hash was added to %s: %s", id.Name(), r.GetName())
+		if r.GetName() != id.NameWithPrefixSuffix() {
+			t.Errorf("unexpected hash was added to %s: %s", id.NameWithPrefixSuffix(), r.GetName())
 		}
 	}
 }

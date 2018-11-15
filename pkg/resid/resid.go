@@ -17,6 +17,7 @@ limitations under the License.
 package resid
 
 import (
+	"fmt"
 	"strings"
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
@@ -132,6 +133,13 @@ func (n ResId) Gvk() gvk.Gvk {
 // Name returns resource name.
 func (n ResId) Name() string {
 	return n.name
+}
+
+// NameWithPrefixSuffix returns resource name with prefix and suffix.
+func (n ResId) NameWithPrefixSuffix() string {
+	prefix := strings.Join(n.prefixList(), "")
+	suffix := strings.Join(n.suffixList(), "")
+	return fmt.Sprintf("%s%s%s", prefix, n.name, suffix)
 }
 
 // Prefix returns name prefix.
