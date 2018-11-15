@@ -149,14 +149,17 @@ func (n ResId) Namespace() string {
 	return n.namespace
 }
 
-// CopyWithNewPrefix make a new copy from current ResId and append a new prefix
-func (n ResId) CopyWithNewPrefix(p string) ResId {
-	return ResId{gvKind: n.gvKind, name: n.name, prefix: n.concatPrefix(p), suffix: n.suffix, namespace: n.namespace}
-}
-
-// CopyWithNewSuffix make a new copy from current ResId and append a new suffix
-func (n ResId) CopyWithNewSuffix(p string) ResId {
-	return ResId{gvKind: n.gvKind, name: n.name, prefix: n.prefix, suffix: n.concatSuffix(p), namespace: n.namespace}
+// CopyWithNewPrefixSuffix make a new copy from current ResId and append a new prefix and suffix
+func (n ResId) CopyWithNewPrefixSuffix(p, s string) ResId {
+	prefix := n.prefix
+	if p != "" {
+		prefix = n.concatPrefix(p)
+	}
+	suffix := n.suffix
+	if s != "" {
+		suffix = n.concatSuffix(s)
+	}
+	return ResId{gvKind: n.gvKind, name: n.name, prefix: prefix, suffix: suffix, namespace: n.namespace}
 }
 
 // CopyWithNewNamespace make a new copy from current ResId and set a new namespace
