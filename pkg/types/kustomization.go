@@ -42,6 +42,10 @@ type Kustomization struct {
 	// file including generated configmaps and secrets.
 	NamePrefix string `json:"namePrefix,omitempty" yaml:"namePrefix,omitempty"`
 
+	// NameSuffix will suffix the names of all resources mentioned in the kustomization
+	// file including generated configmaps and secrets.
+	NameSuffix string `json:"nameSuffix,omitempty" yaml:"nameSuffix,omitempty"`
+
 	// Namespace to add to all objects.
 	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 
