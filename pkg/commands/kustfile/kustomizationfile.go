@@ -54,6 +54,7 @@ func determineFieldOrder() []string {
 		"Resources",
 		"Bases",
 		"NamePrefix",
+		"NameSuffix",
 		"Namespace",
 		"Crds",
 		"CommonLabels",
