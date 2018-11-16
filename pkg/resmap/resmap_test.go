@@ -119,53 +119,147 @@ func TestDemandOneMatchForId(t *testing.T) {
 }
 
 func TestFilterBy(t *testing.T) {
-	rm := ResMap{resid.NewResIdWithPrefixNamespace(cmap, "cm1", "prefix1", "ns1"): rf.FromMap(
-		map[string]interface{}{
-			"apiVersion": "v1",
-			"kind":       "ConfigMap",
-			"metadata": map[string]interface{}{
-				"name": "cm1",
+	tests := map[string]struct {
+		resMap   ResMap
+		filter   resid.ResId
+		expected ResMap
+	}{
+		"different namespace": {
+			resMap: ResMap{resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map", "prefix", "suffix", "namespace1"): rf.FromMap(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata": map[string]interface{}{
+						"name": "config-map",
+					},
+				}),
 			},
-		}),
-		resid.NewResIdWithPrefixNamespace(cmap, "cm2", "prefix1", "ns1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "cm2",
-				},
-			}),
-	}
-	rm1 := ResMap{
-		resid.NewResIdWithPrefixNamespace(cmap, "cm3", "prefix1", "ns2"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "cm2",
-				},
-			}),
+			filter:   resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map", "prefix", "suffix", "namespace2"),
+			expected: ResMap{},
+		},
+		"different prefix": {
+			resMap: ResMap{resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map", "prefix1", "suffix", "namespace"): rf.FromMap(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata": map[string]interface{}{
+						"name": "config-map",
+					},
+				}),
+			},
+			filter:   resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map", "prefix2", "suffix", "namespace"),
+			expected: ResMap{},
+		},
+		"different suffix": {
+			resMap: ResMap{resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map", "prefix", "suffix1", "namespace"): rf.FromMap(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata": map[string]interface{}{
+						"name": "config-map",
+					},
+				}),
+			},
+			filter:   resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map", "prefix", "suffix2", "namespace"),
+			expected: ResMap{},
+		},
+		"same namespace, same prefix": {
+			resMap: ResMap{resid.NewResIdWithPrefixNamespace(cmap, "config-map1", "prefix", "namespace"): rf.FromMap(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata": map[string]interface{}{
+						"name": "config-map1",
+					},
+				}),
+			},
+			filter: resid.NewResIdWithPrefixNamespace(cmap, "config-map2", "prefix", "namespace"),
+			expected: ResMap{resid.NewResIdWithPrefixNamespace(cmap, "config-map1", "prefix", "namespace"): rf.FromMap(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata": map[string]interface{}{
+						"name": "config-map1",
+					},
+				}),
+			},
+		},
+		"same namespace, same suffix": {
+			resMap: ResMap{resid.NewResIdWithSuffixNamespace(cmap, "config-map1", "suffix", "namespace"): rf.FromMap(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata": map[string]interface{}{
+						"name": "config-map1",
+					},
+				}),
+			},
+			filter: resid.NewResIdWithSuffixNamespace(cmap, "config-map2", "suffix", "namespace"),
+			expected: ResMap{resid.NewResIdWithSuffixNamespace(cmap, "config-map1", "suffix", "namespace"): rf.FromMap(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata": map[string]interface{}{
+						"name": "config-map1",
+					},
+				}),
+			},
+		},
+		"same namespace, same prefix, same suffix": {
+			resMap: ResMap{resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map1", "prefix", "suffix", "namespace"): rf.FromMap(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata": map[string]interface{}{
+						"name": "config-map",
+					},
+				}),
+			},
+			filter: resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map2", "prefix", "suffix", "namespace"),
+			expected: ResMap{resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map1", "prefix", "suffix", "namespace"): rf.FromMap(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata": map[string]interface{}{
+						"name": "config-map",
+					},
+				}),
+			},
+		},
+		"filter by cluster-level Gvk": {
+			resMap: ResMap{resid.NewResIdWithPrefixNamespace(cmap, "config-map", "prefix", "namespace"): rf.FromMap(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata": map[string]interface{}{
+						"name": "config-map",
+					},
+				}),
+			},
+			filter: resid.NewResId(gvk.Gvk{Kind: "ClusterRoleBinding"}, "cluster-role-binding"),
+			expected: ResMap{resid.NewResIdWithPrefixNamespace(cmap, "config-map", "prefix", "namespace"): rf.FromMap(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata": map[string]interface{}{
+						"name": "config-map",
+					},
+				}),
+			},
+		},
 	}
 
-	for k, v := range rm {
-		rm1[k] = v
-	}
-
-	empty := rm1.FilterBy(resid.NewResIdWithPrefixNamespace(cmap, "cm4", "prefix1", "ns3"))
-	if len(empty) != 0 {
-		t.Fatalf("Expected empty filtered map but got %v", empty)
-	}
-
-	ns1map := rm1.FilterBy(resid.NewResIdWithPrefixNamespace(cmap, "cm4", "prefix1", "ns1"))
-	if !reflect.DeepEqual(rm, ns1map) {
-		t.Fatalf("Expected %v but got back %v", rm, ns1map)
-	}
-
-	clmap := rm1.FilterBy(resid.NewResId(gvk.Gvk{Kind: "ClusterRoleBinding"}, "crb"))
-	if !reflect.DeepEqual(rm1, clmap) {
-		t.Fatalf("Expected %v but got back %v", rm1, clmap)
+	for name, test := range tests {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			got := test.resMap.FilterBy(test.filter)
+			if !reflect.DeepEqual(test.expected, got) {
+				t.Fatalf("Expected %v but got back %v", test.expected, got)
+			}
+		})
 	}
 }
+
 func TestDeepCopy(t *testing.T) {
 	rm1 := ResMap{
 		resid.NewResId(cmap, "cm1"): rf.FromMap(

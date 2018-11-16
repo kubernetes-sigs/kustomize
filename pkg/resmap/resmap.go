@@ -122,8 +122,8 @@ func (m ResMap) DeepCopy(rf *resource.Factory) ResMap {
 }
 
 // FilterBy returns a subset ResMap containing ResIds with
-// the same namespace and leftmost name prefix as the
-// inputId. If inputId is a cluster level resource, this
+// the same namespace and leftmost name prefix and rightmost name
+// as the inputId. If inputId is a cluster level resource, this
 // returns the original ResMap.
 func (m ResMap) FilterBy(inputId resid.ResId) ResMap {
 	if inputId.Gvk().IsClusterKind() {
@@ -131,7 +131,7 @@ func (m ResMap) FilterBy(inputId resid.ResId) ResMap {
 	}
 	result := ResMap{}
 	for id, res := range m {
-		if id.Namespace() == inputId.Namespace() && id.HasSameLeftmostPrefix(inputId) {
+		if id.Namespace() == inputId.Namespace() && id.HasSameLeftmostPrefix(inputId) && id.HasSameRightmostSuffix(inputId) {
 			result[id] = res
 		}
 	}
