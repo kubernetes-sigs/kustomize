@@ -25,6 +25,7 @@ import (
 // TransformerConfig holds the data needed to perform transformations.
 type TransformerConfig struct {
 	NamePrefix        fsSlice  `json:"namePrefix,omitempty" yaml:"namePrefix,omitempty"`
+	NameSuffix        fsSlice  `json:"nameSuffix,omitempty" yaml:"nameSuffix,omitempty"`
 	NameSpace         fsSlice  `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 	CommonLabels      fsSlice  `json:"commonLabels,omitempty" yaml:"commonLabels,omitempty"`
 	CommonAnnotations fsSlice  `json:"commonAnnotations,omitempty" yaml:"commonAnnotations,omitempty"`
@@ -45,6 +46,11 @@ func (t *TransformerConfig) sortFields() {
 // AddPrefixFieldSpec adds a FieldSpec to NamePrefix
 func (t *TransformerConfig) AddPrefixFieldSpec(fs FieldSpec) {
 	t.NamePrefix = append(t.NamePrefix, fs)
+}
+
+// AddSuffixFieldSpec adds a FieldSpec to NameSuffix
+func (t *TransformerConfig) AddSuffixFieldSpec(fs FieldSpec) {
+	t.NameSuffix = append([]FieldSpec{fs}, t.NameSuffix...)
 }
 
 // AddLabelFieldSpec adds a FieldSpec to CommonLabels
@@ -69,6 +75,7 @@ func (t *TransformerConfig) Merge(input *TransformerConfig) *TransformerConfig {
 	}
 	merged := &TransformerConfig{}
 	merged.NamePrefix = append(t.NamePrefix, input.NamePrefix...)
+	merged.NameSuffix = append(input.NameSuffix, t.NameSuffix...)
 	merged.NameSpace = append(t.NameSpace, input.NameSpace...)
 	merged.CommonAnnotations = append(t.CommonAnnotations, input.CommonAnnotations...)
 	merged.CommonLabels = append(t.CommonLabels, input.CommonLabels...)

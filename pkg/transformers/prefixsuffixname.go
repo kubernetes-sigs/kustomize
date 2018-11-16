@@ -26,40 +26,41 @@ import (
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
 
-// namePrefixTransformer contains the prefix and the FieldSpecs
-// for each field needing a name prefix.
-type namePrefixTransformer struct {
+// namePrefixSuffixTransformer contains the prefix, suffix, and the FieldSpecs
+// for each field needing a name prefix and suffix.
+type namePrefixSuffixTransformer struct {
 	prefix           string
+	suffix           string
 	fieldSpecsToUse  []config.FieldSpec
 	fieldSpecsToSkip []config.FieldSpec
 }
 
-var _ Transformer = &namePrefixTransformer{}
+var _ Transformer = &namePrefixSuffixTransformer{}
 
-var prefixFieldSpecsToSkip = []config.FieldSpec{
+var prefixSuffixFieldSpecsToSkip = []config.FieldSpec{
 	{
 		Gvk: gvk.Gvk{Kind: "CustomResourceDefinition"},
 	},
 }
 
-// deprecateNamePrefixFieldSpec will be moved into prefixFieldSpecsToSkip in next release
-var deprecateNamePrefixFieldSpec = config.FieldSpec{
+// deprecateNamePrefixSuffixFieldSpec will be moved into prefixSuffixFieldSpecsToSkip in next release
+var deprecateNamePrefixSuffixFieldSpec = config.FieldSpec{
 	Gvk: gvk.Gvk{Kind: "Namespace"},
 }
 
-// NewNamePrefixTransformer construct a namePrefixTransformer.
-func NewNamePrefixTransformer(np string, pc []config.FieldSpec) (Transformer, error) {
-	if len(np) == 0 {
+// NewNamePrefixSuffixTransformer construct a namePrefixSuffixTransformer.
+func NewNamePrefixSuffixTransformer(np, ns string, pc []config.FieldSpec) (Transformer, error) {
+	if len(np) == 0 && len(ns) == 0 {
 		return NewNoOpTransformer(), nil
 	}
 	if pc == nil {
 		return nil, errors.New("fieldSpecs is not expected to be nil")
 	}
-	return &namePrefixTransformer{fieldSpecsToUse: pc, prefix: np, fieldSpecsToSkip: prefixFieldSpecsToSkip}, nil
+	return &namePrefixSuffixTransformer{fieldSpecsToUse: pc, prefix: np, suffix: ns, fieldSpecsToSkip: prefixSuffixFieldSpecsToSkip}, nil
 }
 
-// Transform prepends the name prefix.
-func (o *namePrefixTransformer) Transform(m resmap.ResMap) error {
+// Transform prepends the name prefix and appends the name suffix.
+func (o *namePrefixSuffixTransformer) Transform(m resmap.ResMap) error {
 	// Fill map "mf" with entries subject to name modification, and
 	// delete these entries from "m", so that for now m retains only
 	// the entries whose names will not be modified.
@@ -79,29 +80,29 @@ func (o *namePrefixTransformer) Transform(m resmap.ResMap) error {
 	}
 
 	for id := range mf {
-		if id.Gvk().IsSelected(&deprecateNamePrefixFieldSpec.Gvk) {
-			log.Println("Adding nameprefix to Namespace resource will be deprecated in next release.")
+		if id.Gvk().IsSelected(&deprecateNamePrefixSuffixFieldSpec.Gvk) {
+			log.Println("Adding nameprefix and namesuffix to Namespace resource will be deprecated in next release.")
 		}
 		objMap := mf[id].Map()
 		for _, path := range o.fieldSpecsToUse {
 			if !id.Gvk().IsSelected(&path.Gvk) {
 				continue
 			}
-			err := mutateField(objMap, path.PathSlice(), path.CreateIfNotPresent, o.addPrefix)
+			err := mutateField(objMap, path.PathSlice(), path.CreateIfNotPresent, o.addPrefixSuffix)
 			if err != nil {
 				return err
 			}
-			newId := id.CopyWithNewPrefix(o.prefix)
+			newId := id.CopyWithNewPrefixSuffix(o.prefix, o.suffix)
 			m[newId] = mf[id]
 		}
 	}
 	return nil
 }
 
-func (o *namePrefixTransformer) addPrefix(in interface{}) (interface{}, error) {
+func (o *namePrefixSuffixTransformer) addPrefixSuffix(in interface{}) (interface{}, error) {
 	s, ok := in.(string)
 	if !ok {
 		return nil, fmt.Errorf("%#v is expected to be %T", in, s)
 	}
-	return o.prefix + s, nil
+	return fmt.Sprintf("%s%s%s", o.prefix, s, o.suffix), nil
 }
