@@ -31,12 +31,16 @@ func NewCmdSet(fsys fs.FileSystem, v ifc.Validator) *cobra.Command {
 		Example: `
 	# Sets the nameprefix field
 	kustomize edit set nameprefix <prefix-value>
+
+	# Sets the namesuffix field
+	kustomize edit set namesuffix <suffix-value>
 `,
 		Args: cobra.MinimumNArgs(1),
 	}
 
 	c.AddCommand(
 		newCmdSetNamePrefix(fsys),
+		newCmdSetNameSuffix(fsys),
 		newCmdSetNamespace(fsys, v),
 		newCmdSetImageTag(fsys),
 	)
