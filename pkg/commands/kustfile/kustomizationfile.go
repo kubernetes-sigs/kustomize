@@ -66,6 +66,7 @@ func determineFieldOrder() []string {
 		"GeneratorOptions",
 		"Vars",
 		"ImageTags",
+		"Configurations",
 	}
 
 	// Add deprecated fields here.

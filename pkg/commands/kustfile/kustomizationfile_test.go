@@ -44,6 +44,7 @@ func TestFieldOrder(t *testing.T) {
 		"GeneratorOptions",
 		"Vars",
 		"ImageTags",
+		"Configurations",
 	}
 	actual := determineFieldOrder()
 	if len(expected) != len(actual) {
