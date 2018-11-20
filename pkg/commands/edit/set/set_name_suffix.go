@@ -37,7 +37,7 @@ func newCmdSetNameSuffix(fsys fs.FileSystem) *cobra.Command {
 		Short: "Sets the value of the nameSuffix field in the kustomization file.",
 		Example: `
 The command
-  set namesuffix -acme
+  set namesuffix -- -acme
 will add the field "nameSuffix: -acme" to the kustomization file if it doesn't exist,
 and overwrite the value with "-acme" if the field does exist.
 `,
