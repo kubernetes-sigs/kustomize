@@ -36,6 +36,9 @@ func NewCmdEdit(fsys fs.FileSystem, v ifc.Validator, kf ifc.KunstructuredFactory
 
 	# Sets the nameprefix field
 	kustomize edit set nameprefix <prefix-value>
+
+	# Sets the namesuffix field
+	kustomize edit set namesuffix <suffix-value>
 `,
 		Args: cobra.MinimumNArgs(1),
 	}
