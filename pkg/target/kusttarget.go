@@ -296,7 +296,7 @@ func (kt *KustTarget) newTransformer(patches []*resource.Resource) (transformers
 		string(kt.kustomization.Namespace), kt.tConfig.NameSpace))
 	t, err = transformers.NewNamePrefixSuffixTransformer(
 		string(kt.kustomization.NamePrefix),
-		"", // TODO(zoncoen): pass the name suffix
+		string(kt.kustomization.NameSuffix),
 		kt.tConfig.NamePrefix,
 	)
 	if err != nil {
