@@ -26,14 +26,14 @@ import (
 
 func TestSliceFromPatches(t *testing.T) {
 
-	patchGood1 := patch.StrategicMerge("/foo/patch1.yaml")
+	patchGood1 := patch.StrategicMerge("patch1.yaml")
 	patch1 := `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: pooh
 `
-	patchGood2 := patch.StrategicMerge("/foo/patch2.yaml")
+	patchGood2 := patch.StrategicMerge("patch2.yaml")
 	patch2 := `
 apiVersion: v1
 kind: ConfigMap
@@ -45,14 +45,14 @@ metadata:
 ---
 ---
 `
-	patchBad := patch.StrategicMerge("/foo/patch3.yaml")
+	patchBad := patch.StrategicMerge("patch3.yaml")
 	patch3 := `
 WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOT: woot
 `
-	l := loadertest.NewFakeLoader("/foo")
-	l.AddFile(string(patchGood1), []byte(patch1))
-	l.AddFile(string(patchGood2), []byte(patch2))
-	l.AddFile(string(patchBad), []byte(patch3))
+	l := loadertest.NewFakeLoader("/")
+	l.AddFile("/"+string(patchGood1), []byte(patch1))
+	l.AddFile("/"+string(patchGood2), []byte(patch2))
+	l.AddFile("/"+string(patchBad), []byte(patch3))
 
 	tests := []struct {
 		name        string

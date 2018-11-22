@@ -31,19 +31,19 @@ type testData struct {
 
 var testCases = []testData{
 	{
-		path:            "/foo/project/fileA.yaml",
+		path:            "foo/project/fileA.yaml",
 		expectedContent: "fileA content",
 	},
 	{
-		path:            "/foo/project/subdir1/fileB.yaml",
+		path:            "foo/project/subdir1/fileB.yaml",
 		expectedContent: "fileB content",
 	},
 	{
-		path:            "/foo/project/subdir2/fileC.yaml",
+		path:            "foo/project/subdir2/fileC.yaml",
 		expectedContent: "fileC content",
 	},
 	{
-		path:            "/foo/project2/fileD.yaml",
+		path:            "foo/project/fileD.yaml",
 		expectedContent: "fileD content",
 	},
 }
@@ -51,7 +51,7 @@ var testCases = []testData{
 func MakeFakeFs(td []testData) fs.FileSystem {
 	fSys := fs.MakeFakeFS()
 	for _, x := range td {
-		fSys.WriteFile(x.path, []byte(x.expectedContent))
+		fSys.WriteFile("/"+x.path, []byte(x.expectedContent))
 	}
 	return fSys
 }
@@ -70,7 +70,7 @@ func TestLoaderLoad(t *testing.T) {
 			t.Fatalf("in load expected %s, but got %s", x.expectedContent, b)
 		}
 	}
-	l2, err := l1.New("/foo/project")
+	l2, err := l1.New("foo/project")
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
 	}
@@ -78,7 +78,7 @@ func TestLoaderLoad(t *testing.T) {
 		t.Fatalf("incorrect root: %s\n", l2.Root())
 	}
 	for _, x := range testCases {
-		b, err := l2.Load(strings.TrimPrefix(x.path, "/foo/project/"))
+		b, err := l2.Load(strings.TrimPrefix(x.path, "foo/project/"))
 		if err != nil {
 			t.Fatalf("unexpected load error %v", err)
 		}
@@ -86,7 +86,7 @@ func TestLoaderLoad(t *testing.T) {
 			t.Fatalf("in load expected %s, but got %s", x.expectedContent, b)
 		}
 	}
-	l2, err = l1.New("/foo/project/") // Assure trailing slash stripped
+	l2, err = l1.New("foo/project/") // Assure trailing slash stripped
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
 	}
@@ -96,7 +96,7 @@ func TestLoaderLoad(t *testing.T) {
 }
 
 func TestLoaderNewSubDir(t *testing.T) {
-	l1, err := NewFileLoaderAtRoot(MakeFakeFs(testCases)).New("/foo/project")
+	l1, err := NewFileLoaderAtRoot(MakeFakeFs(testCases)).New("foo/project")
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
 	}
@@ -118,7 +118,7 @@ func TestLoaderNewSubDir(t *testing.T) {
 }
 
 func TestLoaderBadRelative(t *testing.T) {
-	l1, err := NewFileLoaderAtRoot(MakeFakeFs(testCases)).New("/foo/project/subdir1")
+	l1, err := NewFileLoaderAtRoot(MakeFakeFs(testCases)).New("foo/project/subdir1")
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
 	}

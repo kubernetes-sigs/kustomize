@@ -182,9 +182,11 @@ func TestLoadCRDs(t *testing.T) {
 		NameReference: nbrs,
 	}
 
-	actualTc, _ := NewFactory(makeLoader(t)).LoadCRDs(
-		[]string{"/testpath/crd.json"})
-
+	actualTc, err := NewFactory(makeLoader(t)).LoadCRDs(
+		[]string{"crd.json"})
+	if err != nil {
+		t.Fatalf("unexpected error:%v", err)
+	}
 	if !reflect.DeepEqual(actualTc, expectedTc) {
 		t.Fatalf("expected\n %v\n but got\n %v\n", expectedTc, actualTc)
 	}
