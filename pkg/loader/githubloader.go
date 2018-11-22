@@ -20,64 +20,35 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"sigs.k8s.io/kustomize/pkg/ifc"
 	"strings"
 
 	"github.com/hashicorp/go-getter"
-
-	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
-// githubLoader loads files from a checkout github repo
-type githubLoader struct {
-	repo string
-	// targetDir will hold the local repo
-	targetDir string
-	// checkoutDir is for the whole repository
-	checkoutDir string
-	loader      *fileLoader
+// gitCloner is a function that can clone a git repo.
+type gitCloner func(url string) (
+	// Directory where the repo is cloned to.
+	checkoutDir string,
+	// Relative path in the checkoutDir to location
+	// of kustomization file.
+	pathInCoDir string,
+	// Any error encountered when cloning.
+	err error)
+
+func makeTmpDir() (string, error) {
+	return ioutil.TempDir("", "kustomize-")
 }
 
-// Root returns the root location for this Loader.
-func (l *githubLoader) Root() string {
-	return l.targetDir
-}
-
-// New delegates to fileLoader.New
-func (l *githubLoader) New(newRoot string) (ifc.Loader, error) {
-	return l.loader.New(newRoot)
-}
-
-// Load delegates to fileLoader.Load
-func (l *githubLoader) Load(location string) ([]byte, error) {
-	return l.loader.Load(location)
-}
-
-// Cleanup removes the checked out repo
-func (l *githubLoader) Cleanup() error {
-	return os.RemoveAll(l.checkoutDir)
-}
-
-// newGithubLoader returns a new fileLoader with given github Url.
-func newGithubLoader(repoUrl string, fs fs.FileSystem) (*githubLoader, error) {
-	dir, err := ioutil.TempDir("", "kustomize-")
+func hashicorpGitCloner(repoUrl string) (
+	checkoutDir string, pathInCoDir string, err error) {
+	dir, err := makeTmpDir()
 	if err != nil {
-		return nil, err
+		return
 	}
-	repodir := filepath.Join(dir, "repo")
-	src, subdir := getter.SourceDirSubdir(repoUrl)
-	err = checkout(src, repodir)
-	if err != nil {
-		return nil, err
-	}
-	target := filepath.Join(repodir, subdir)
-	l, _ := newFileLoaderAt(fs, target)
-	return &githubLoader{
-		repo:        repoUrl,
-		targetDir:   target,
-		checkoutDir: repodir,
-		loader:      l,
-	}, nil
+	checkoutDir = filepath.Join(dir, "repo")
+	url, pathInCoDir := getter.SourceDirSubdir(repoUrl)
+	err = checkout(url, checkoutDir)
+	return
 }
 
 // isRepoUrl checks if a string is a repo Url

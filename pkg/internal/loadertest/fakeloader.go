@@ -30,14 +30,13 @@ type FakeLoader struct {
 	delegate ifc.Loader
 }
 
-// NewFakeLoader returns a Loader that delegates calls, and encapsulates
-// a fake file system that the Loader reads from. "initialDir" parameter
-// must be an full, absolute directory (trailing slash doesn't matter).
+// NewFakeLoader returns a Loader that uses a fake filesystem.
+// The argument should be an absolute file path.
 func NewFakeLoader(initialDir string) FakeLoader {
 	// Create fake filesystem and inject it into initial Loader.
 	fSys := fs.MakeFakeFS()
 	fSys.Mkdir(initialDir)
-	ldr, err := loader.NewFileLoaderAtRoot(fSys).New(initialDir)
+	ldr, err := loader.NewLoader(initialDir, fSys)
 	if err != nil {
 		log.Fatalf("Unable to make loader: %v", err)
 	}
