@@ -82,7 +82,7 @@ func TestNewPatchJson6902FactoryJSON(t *testing.T) {
 target:
   kind: Deployment
   name: some-name
-path: /testpath/patch.json
+path: patch.json
 `)
 	p := patch.Json6902{}
 	err = yaml.Unmarshal(jsonPatch, &p)
@@ -120,7 +120,7 @@ func TestNewPatchJson6902FactoryYAML(t *testing.T) {
 target:
   name: some-name
   kind: Deployment
-path: /testpath/patch.yaml
+path: patch.yaml
 `)
 	p := patch.Json6902{}
 	err = yaml.Unmarshal(jsonPatch, &p)
@@ -162,12 +162,12 @@ func TestNewPatchJson6902FactoryMulti(t *testing.T) {
 - target:
     kind: foo
     name: some-name
-  path: /testpath/patch.json
+  path: patch.json
 
 - target:
     kind: foo
     name: some-name
-  path: /testpath/patch.yaml
+  path: patch.yaml
 `)
 	var p []patch.Json6902
 	err = yaml.Unmarshal(jsonPatches, &p)
@@ -276,12 +276,12 @@ func TestNewPatchJson6902FactoryMultiConflict(t *testing.T) {
 - target:
     kind: foo
     name: some-name
-  path: /testpath/patch.json
+  path: patch.json
 
 - target:
     kind: foo
     name: some-name
-  path: /testpath/patch.yaml
+  path: patch.yaml
 `)
 	var p []patch.Json6902
 	err = yaml.Unmarshal(jsonPatches, &p)

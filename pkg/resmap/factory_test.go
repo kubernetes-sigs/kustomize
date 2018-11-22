@@ -53,8 +53,8 @@ metadata:
 ---
 `
 
-	l := loadertest.NewFakeLoader("/home/seans/project")
-	if ferr := l.AddFile("/home/seans/project/deployment.yaml", []byte(resourceStr)); ferr != nil {
+	l := loadertest.NewFakeLoader("/whatever/project")
+	if ferr := l.AddFile("/whatever/project/deployment.yaml", []byte(resourceStr)); ferr != nil {
 		t.Fatalf("Error adding fake file: %v\n", ferr)
 	}
 	expected := ResMap{resid.NewResId(deploy, "dply1"): rf.FromMap(
@@ -85,7 +85,7 @@ metadata:
 	}
 
 	m, _ := rmF.FromFiles(
-		l, []string{"/home/seans/project/deployment.yaml"})
+		l, []string{"deployment.yaml"})
 	if len(m) != 3 {
 		t.Fatalf("%#v should contain 3 appResource, but got %d", m, len(m))
 	}
@@ -145,7 +145,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 		expected    ResMap
 	}
 
-	l := loadertest.NewFakeLoader("/home/seans/project/")
+	l := loadertest.NewFakeLoader("/whatever/project/")
 	testCases := []testCase{
 		{
 			description: "construct config map from env",
@@ -157,7 +157,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 					},
 				},
 			},
-			filepath: "/home/seans/project/app.env",
+			filepath: "/whatever/project/app.env",
 			content:  "DB_USERNAME=admin\nDB_PASSWORD=somepw",
 			expected: ResMap{
 				resid.NewResId(cmap, "envConfigMap"): rf.FromMap(
@@ -183,7 +183,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 				},
 			},
 			},
-			filepath: "/home/seans/project/app-init.ini",
+			filepath: "/whatever/project/app-init.ini",
 			content:  "FOO=bar\nBAR=baz\n",
 			expected: ResMap{
 				resid.NewResId(cmap, "fileConfigMap"): rf.FromMap(
