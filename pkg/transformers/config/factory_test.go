@@ -53,7 +53,7 @@ namePrefix:
 
 func TestMakeTransformerConfigFromFiles(t *testing.T) {
 	ldr, expected, _ := makeFakeLoaderAndOutput()
-	tcfg, err := NewFactory(ldr).FromFiles([]string{"/transformerconfig/test/config.yaml"})
+	tcfg, err := NewFactory(ldr).FromFiles([]string{"transformerconfig/test/config.yaml"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
