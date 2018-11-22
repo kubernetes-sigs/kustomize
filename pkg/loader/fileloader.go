@@ -26,7 +26,10 @@ import (
 	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
-const enforceRelocatable = false
+// TODO: 2018/Nov/20 remove this before next release.
+// Leave only the true path.  Retaining only for
+// quick revert.
+const enforceRelocatable = true
 
 // fileLoader loads files, returning an array of bytes.
 // It also enforces two kustomization requirements:
