@@ -25,7 +25,9 @@ import (
 // NewLoader returns a Loader.
 func NewLoader(root string, fSys fs.FileSystem) (ifc.Loader, error) {
 	if isRepoUrl(root) {
-		return newGithubLoader(root, fSys)
+		return newGitLoader(
+			root, fSys, []string{}, hashicorpGitCloner)
 	}
-	return newFileLoaderAt(fSys, root)
+	return newFileLoaderAt(
+		root, fSys, []string{}, hashicorpGitCloner)
 }
