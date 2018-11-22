@@ -22,7 +22,8 @@ import (
 	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
-const useHashiCorpCloner = true
+// TODO: delete the hashicorp cloner and all deps.
+const useHashiCorpCloner = false
 
 func clonerToUse() gitCloner {
 	if useHashiCorpCloner {
