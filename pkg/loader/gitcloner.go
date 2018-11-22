@@ -35,6 +35,18 @@ type gitCloner func(url string) (
 	// Any error encountered when cloning.
 	err error)
 
+// isRepoUrl checks if a string is a repo Url
+func isRepoUrl(s string) bool {
+	if strings.HasPrefix(s, "https://") {
+		return true
+	}
+	if strings.HasPrefix(s, "git::") {
+		return true
+	}
+	host := strings.SplitN(s, "/", 2)[0]
+	return strings.Contains(host, ".com") || strings.Contains(host, ".org")
+}
+
 func makeTmpDir() (string, error) {
 	return ioutil.TempDir("", "kustomize-")
 }
@@ -49,18 +61,6 @@ func hashicorpGitCloner(repoUrl string) (
 	url, pathInCoDir := getter.SourceDirSubdir(repoUrl)
 	err = checkout(url, checkoutDir)
 	return
-}
-
-// isRepoUrl checks if a string is a repo Url
-func isRepoUrl(s string) bool {
-	if strings.HasPrefix(s, "https://") {
-		return true
-	}
-	if strings.HasPrefix(s, "git::") {
-		return true
-	}
-	host := strings.SplitN(s, "/", 2)[0]
-	return strings.Contains(host, ".com") || strings.Contains(host, ".org")
 }
 
 // Checkout clones a github repo with specified commit/tag/branch
