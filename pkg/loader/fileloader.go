@@ -110,7 +110,7 @@ func (l *fileLoader) Root() string {
 
 func newLoaderOrDie(fSys fs.FileSystem, path string) *fileLoader {
 	l, err := newFileLoaderAt(
-		path, fSys, []string{}, hashicorpGitCloner)
+		path, fSys, []string{}, clonerToUse())
 	if err != nil {
 		log.Fatalf("unable to make loader at '%s'; %v", path, err)
 	}
