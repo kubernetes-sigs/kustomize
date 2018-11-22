@@ -40,12 +40,39 @@ func TestIsDir(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !x.Exists(expectedName) {
-		t.Fatalf(expectedName + " should exist")
-	}
+	shouldExist(t, x, expectedName)
 	if !x.IsDir(expectedName) {
 		t.Fatalf(expectedName + " should be a dir")
 	}
+}
+
+func shouldExist(t *testing.T, fs FileSystem, name string) {
+	if !fs.Exists(name) {
+		t.Fatalf(name + " should exist")
+	}
+}
+
+func shouldNotExist(t *testing.T, fs FileSystem, name string) {
+	if fs.Exists(name) {
+		t.Fatalf(name + " should not exist")
+	}
+}
+
+func TestRemoveAll(t *testing.T) {
+	x := MakeFakeFS()
+	x.WriteFile("/foo/project/file.yaml", []byte("Unused"))
+	x.WriteFile("/foo/project/subdir/file.yaml", []byte("Unused"))
+	x.WriteFile("/foo/apple/subdir/file.yaml", []byte("Unused"))
+	shouldExist(t, x, "/foo/project/file.yaml")
+	shouldExist(t, x, "/foo/project/subdir/file.yaml")
+	shouldExist(t, x, "/foo/apple/subdir/file.yaml")
+	err := x.RemoveAll("/foo/project")
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	shouldNotExist(t, x, "/foo/project/file.yaml")
+	shouldNotExist(t, x, "/foo/project/subdir/file.yaml")
+	shouldExist(t, x, "/foo/apple/subdir/file.yaml")
 }
 
 func TestIsDirDeeper(t *testing.T) {
@@ -78,9 +105,7 @@ func TestCreate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error")
 	}
-	if !x.Exists("foo") {
-		t.Fatalf("expected foo to exist")
-	}
+	shouldExist(t, x, "foo")
 }
 
 func TestReadFile(t *testing.T) {
