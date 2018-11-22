@@ -17,8 +17,11 @@ limitations under the License.
 package loader
 
 import (
+	"bytes"
+	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -35,20 +38,67 @@ type gitCloner func(url string) (
 	// Any error encountered when cloning.
 	err error)
 
-// isRepoUrl checks if a string is a repo Url
-func isRepoUrl(s string) bool {
-	if strings.HasPrefix(s, "https://") {
-		return true
-	}
-	if strings.HasPrefix(s, "git::") {
-		return true
-	}
-	host := strings.SplitN(s, "/", 2)[0]
-	return strings.Contains(host, ".com") || strings.Contains(host, ".org")
+// isRepoUrl checks if a string is likely a github repo Url.
+func isRepoUrl(arg string) bool {
+	arg = strings.ToLower(arg)
+	return !filepath.IsAbs(arg) &&
+		(strings.HasPrefix(arg, "git::") ||
+			strings.HasPrefix(arg, "gh:") ||
+			strings.HasPrefix(arg, "github.com") ||
+			strings.HasPrefix(arg, "git@github.com:") ||
+			strings.Index(arg, "github.com/") > -1)
 }
 
 func makeTmpDir() (string, error) {
 	return ioutil.TempDir("", "kustomize-")
+}
+
+func simpleGitCloner(spec string) (
+	checkoutDir string, pathInCoDir string, err error) {
+	gitProgram, err := exec.LookPath("git")
+	if err != nil {
+		return "", "", errors.Wrap(err, "no 'git' program on path")
+	}
+	checkoutDir, err = makeTmpDir()
+	if err != nil {
+		return
+	}
+	url, pathInCoDir, err := extractGithubRepoName(spec)
+	cmd := exec.Command(gitProgram, "clone", url, checkoutDir)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err = cmd.Run()
+	if err != nil {
+		return "", "", errors.Wrapf(err, "trouble cloning %s", spec)
+	}
+	return
+}
+
+// From strings like git@github.com:someOrg/someRepo.git or
+// https://github.com/someOrg/someRepo, extract path.
+func extractGithubRepoName(n string) (string, string, error) {
+	for _, p := range []string{
+		// Order matters here.
+		"git::", "gh:", "https://", "http://",
+		"git@", "github.com:", "github.com/", "gitlab.com/"} {
+		if strings.ToLower(n[:len(p)]) == p {
+			n = n[len(p):]
+		}
+	}
+	if strings.HasSuffix(n, ".git") {
+		n = n[0 : len(n)-len(".git")]
+	}
+	i := strings.Index(n, string(filepath.Separator))
+	if i < 1 {
+		return "", "", errors.New("no separator")
+	}
+	j := strings.Index(n[i+1:], string(filepath.Separator))
+	if j < 0 {
+		// No path, so show entire repo.
+		return n, "", nil
+	}
+	j += i + 1
+	return n[:j], n[j+1:], nil
 }
 
 func hashicorpGitCloner(repoUrl string) (
