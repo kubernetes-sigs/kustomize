@@ -31,8 +31,6 @@ func clonerToUse() gitCloner {
 	return simpleGitCloner
 }
 
-// var clonerToUse = simpleGitCloner
-
 // NewLoader returns a Loader.
 func NewLoader(root string, fSys fs.FileSystem) (ifc.Loader, error) {
 	if isRepoUrl(root) {
