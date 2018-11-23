@@ -22,21 +22,12 @@ import (
 	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
-const useHashiCorpCloner = false
-
-func clonerToUse() gitCloner {
-	if useHashiCorpCloner {
-		return hashicorpGitCloner
-	}
-	return simpleGitCloner
-}
-
 // NewLoader returns a Loader.
 func NewLoader(root string, fSys fs.FileSystem) (ifc.Loader, error) {
 	if isRepoUrl(root) {
 		return newGitLoader(
-			root, fSys, []string{}, clonerToUse())
+			root, fSys, []string{}, simpleGitCloner)
 	}
 	return newFileLoaderAt(
-		root, fSys, []string{}, clonerToUse())
+		root, fSys, []string{}, simpleGitCloner)
 }
