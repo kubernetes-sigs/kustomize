@@ -181,7 +181,9 @@ whatever
 
 var repoNames = []string{"someOrg/someRepo", "kubernetes/website"}
 
-var paths = []string{"", "README.md", "foo/index.md"}
+var paths = []string{"README.md", "foo/krusty.txt", ""}
+
+var hrefArgs = []string{"someBranch", ""}
 
 var extractFmts = []string{
 	"gh:%s",
@@ -190,38 +192,48 @@ var extractFmts = []string{
 	"https://github.com/%s",
 	"hTTps://github.com/%s",
 	"git::https://gitlab.com/%s",
-	"git@gitHUB.com:%s.git",
 	"github.com:%s",
 }
 
-func TestExtractGithubRepoName(t *testing.T) {
+func TestParseGithubUrl(t *testing.T) {
 	for _, repoName := range repoNames {
 		for _, pathName := range paths {
 			for _, extractFmt := range extractFmts {
-				spec := repoName
-				if len(pathName) > 0 {
-					spec = filepath.Join(spec, pathName)
-				}
-				input := fmt.Sprintf(extractFmt, spec)
-				if !isRepoUrl(input) {
-					t.Errorf("Should smell like github arg: %s\n", input)
-					continue
-				}
-				repo, path, err := extractGithubRepoName(input)
-				if err != nil {
-					t.Errorf("problem %v", err)
-				}
-				if repo != repoName {
-					t.Errorf("\n"+
-						"       from %s\n"+
-						"    gotRepo %s\n"+
-						"desiredRepo %s\n", input, repo, repoName)
-				}
-				if path != pathName {
-					t.Errorf("\n"+
-						"       from %s\n"+
-						"    gotPath %s\n"+
-						"desiredPath %s\n", input, path, pathName)
+				for _, hrefArg := range hrefArgs {
+					spec := repoName
+					if len(pathName) > 0 {
+						spec = filepath.Join(spec, pathName)
+					}
+					input := fmt.Sprintf(extractFmt, spec)
+					if hrefArg != "" {
+						input = input + refQuery + hrefArg
+					}
+					if !isRepoUrl(input) {
+						t.Errorf("Should smell like github arg: %s\n", input)
+						continue
+					}
+					repo, path, gitRef, err := parseGithubUrl(input)
+					if err != nil {
+						t.Errorf("problem %v", err)
+					}
+					if repo != repoName {
+						t.Errorf("\n"+
+							"         from %s\n"+
+							"  actual Repo %s\n"+
+							"expected Repo %s\n", input, repo, repoName)
+					}
+					if path != pathName {
+						t.Errorf("\n"+
+							"         from %s\n"+
+							"  actual Path %s\n"+
+							"expected Path %s\n", input, path, pathName)
+					}
+					if gitRef != hrefArg {
+						t.Errorf("\n"+
+							"         from %s\n"+
+							"  actual Href %s\n"+
+							"expected Href %s\n", input, gitRef, hrefArg)
+					}
 				}
 			}
 		}

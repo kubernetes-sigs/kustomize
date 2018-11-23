@@ -63,20 +63,42 @@ func simpleGitCloner(spec string) (
 	if err != nil {
 		return
 	}
-	url, pathInCoDir, err := extractGithubRepoName(spec)
-	cmd := exec.Command(gitProgram, "clone", url, checkoutDir)
+	repo, pathInCoDir, gitRef, err := parseGithubUrl(spec)
+	if err != nil {
+		return
+	}
+	cmd := exec.Command(
+		gitProgram,
+		"clone",
+		"https://github.com/"+repo+".git",
+		checkoutDir)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err = cmd.Run()
 	if err != nil {
-		return "", "", errors.Wrapf(err, "trouble cloning %s", spec)
+		return "", "",
+			errors.Wrapf(err, "trouble cloning %s", spec)
 	}
-	return
+	if gitRef == "" {
+		return
+	}
+	cmd = exec.Command(gitProgram, "checkout", gitRef)
+	cmd.Dir = checkoutDir
+	err = cmd.Run()
+	if err != nil {
+		return "", "",
+			errors.Wrapf(err, "trouble checking out href %s", gitRef)
+	}
+	return checkoutDir, pathInCoDir, nil
 }
 
+const refQuery = "?ref="
+
 // From strings like git@github.com:someOrg/someRepo.git or
-// https://github.com/someOrg/someRepo, extract path.
-func extractGithubRepoName(n string) (string, string, error) {
+// https://github.com/someOrg/someRepo?ref=someHash, extract
+// the parts.
+func parseGithubUrl(n string) (
+	repo string, path string, gitRef string, err error) {
 	for _, p := range []string{
 		// Order matters here.
 		"git::", "gh:", "https://", "http://",
@@ -90,15 +112,26 @@ func extractGithubRepoName(n string) (string, string, error) {
 	}
 	i := strings.Index(n, string(filepath.Separator))
 	if i < 1 {
-		return "", "", errors.New("no separator")
+		return "", "", "", errors.New("no separator")
 	}
 	j := strings.Index(n[i+1:], string(filepath.Separator))
-	if j < 0 {
-		// No path, so show entire repo.
-		return n, "", nil
+	if j >= 0 {
+		j += i + 1
+		repo = n[:j]
+		path, gitRef = peelQuery(n[j+1:])
+	} else {
+		path = ""
+		repo, gitRef = peelQuery(n)
 	}
-	j += i + 1
-	return n[:j], n[j+1:], nil
+	return
+}
+
+func peelQuery(arg string) (string, string) {
+	j := strings.Index(arg, refQuery)
+	if j >= 0 {
+		return arg[:j], arg[j+len(refQuery):]
+	}
+	return arg, ""
 }
 
 func hashicorpGitCloner(repoUrl string) (
