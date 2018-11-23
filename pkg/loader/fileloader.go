@@ -110,7 +110,7 @@ func (l *fileLoader) Root() string {
 
 func newLoaderOrDie(fSys fs.FileSystem, path string) *fileLoader {
 	l, err := newFileLoaderAt(
-		path, fSys, []string{}, clonerToUse())
+		path, fSys, []string{}, simpleGitCloner)
 	if err != nil {
 		log.Fatalf("unable to make loader at '%s'; %v", path, err)
 	}

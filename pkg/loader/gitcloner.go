@@ -18,14 +18,12 @@ package loader
 
 import (
 	"bytes"
-	"github.com/pkg/errors"
 	"io/ioutil"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
-	"github.com/hashicorp/go-getter"
+	"github.com/pkg/errors"
 )
 
 // gitCloner is a function that can clone a git repo.
@@ -132,31 +130,4 @@ func peelQuery(arg string) (string, string) {
 		return arg[:j], arg[j+len(refQuery):]
 	}
 	return arg, ""
-}
-
-func hashicorpGitCloner(repoUrl string) (
-	checkoutDir string, pathInCoDir string, err error) {
-	dir, err := makeTmpDir()
-	if err != nil {
-		return
-	}
-	checkoutDir = filepath.Join(dir, "repo")
-	url, pathInCoDir := getter.SourceDirSubdir(repoUrl)
-	err = checkout(url, checkoutDir)
-	return
-}
-
-// Checkout clones a github repo with specified commit/tag/branch
-func checkout(url, dir string) error {
-	pwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	client := &getter.Client{
-		Src:  url,
-		Dst:  dir,
-		Pwd:  pwd,
-		Mode: getter.ClientModeDir,
-	}
-	return client.Get()
 }
