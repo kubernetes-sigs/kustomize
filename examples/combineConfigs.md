@@ -194,6 +194,7 @@ cat <<EOF >$OVERLAYS/development/kustomization.yaml
 bases:
 - ../../base
 namePrefix: dev-
+nameSuffix: -v1
 configMapGenerator:
 - name: my-configmap
   behavior: merge
@@ -215,11 +216,12 @@ kustomize build $OVERLAYS/development
 The name of the generated `ConfigMap` is visible in this
 output.
 
-The name should be something like `dev-my-configmap-b5m75ck895`:
+The name should be something like `dev-my-configmap-v1-2gccmccgd5`:
 
  * `"dev-"` comes from the `namePrefix` field,
  * `"my-configmap"` comes from the `configMapGenerator/name` field,
- * `"-b5m75ck895"` comes from a deterministic hash that `kustomize`
+ * `"-v1"` comes from the `nameSuffix` field,
+ * `"-2gccmccgd5"` comes from a deterministic hash that `kustomize`
     computes from the contents of the configMap.
 
 The hash suffix is critical.  If the configMap content

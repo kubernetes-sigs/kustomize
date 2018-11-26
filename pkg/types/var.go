@@ -17,8 +17,9 @@ limitations under the License.
 package types
 
 import (
-	"sigs.k8s.io/kustomize/pkg/gvk"
 	"strings"
+
+	"sigs.k8s.io/kustomize/pkg/gvk"
 )
 
 // Var represents a variable whose value will be sourced
@@ -31,7 +32,7 @@ type Var struct {
 	// ObjRef must refer to a Kubernetes resource under the
 	// purview of this kustomization. ObjRef should use the
 	// raw name of the object (the name specified in its YAML,
-	// before addition of a namePrefix).
+	// before addition of a namePrefix and a nameSuffix).
 	ObjRef Target `json:"objref" yaml:"objref"`
 
 	// FieldRef refers to the field of the object referred to by
