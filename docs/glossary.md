@@ -150,7 +150,7 @@ Here's an [example](kustomization.yaml).
 A kustomization contains fields falling into these categories:
 
  * _Customization operators_ for modifying operands, e.g.
-   _namePrefix_, _commonLabels_, _patches_, etc.
+   _namePrefix_, _nameSuffix_, _commonLabels_, _patches_, etc.
 
  * _Customization operands_:
    * [resources] - completely specified k8s API objects,
