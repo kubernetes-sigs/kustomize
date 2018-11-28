@@ -1,6 +1,6 @@
-## Transformer Configurations - CRD
+## Supporting Custom Resources (defined by a CRD)
 
-This tutorial shows how to add transformer configurations to support a CRD type.
+This tutorial shows how to add transformer configurations to support a custom resource.
 
 Create a workspace by
 <!-- @createws @test -->
@@ -8,35 +8,47 @@ Create a workspace by
 DEMO_HOME=$(mktemp -d)
 ```
 
-### Get Default Config
-Get the default transformer configurations by
+### Get the native config as a starting point
+
+Get the default transformer configurations using this command:
 
 <!-- @saveConfig @test -->
 ```
 kustomize config save -d $DEMO_HOME/kustomizeconfig
 ```
-The default configurations are save in directory `$DEMO_HOME/kusotmizeconfig` as several files
+The default configurations are saved
+in the directory `$DEMO_HOME/kusotmizeconfig` as several files
 
 > ```
->  commonannotations.yaml  commonlabels.yaml  nameprefix.yaml  namereference.yaml  namespace.yaml  varreference.yaml
+> commonannotations.yaml
+> commonlabels.yaml
+> nameprefix.yaml
+> namereference.yaml
+> namespace.yaml
+> varreference.yaml
 > ```
 
-### Add Config for a CRD
-All transformers will be involved for a CRD type. The default configurations already include some common fieldSpec for all types:
+These files contain the field specifications for native resources
+that transformation directives like `namePrefix`, `commonLabels`, etc.
+need to do their work.
+
+These default configurations already include some common
+field specifictions for all types:
 
 - nameprefix is added to `.metadata.name`
 - namespace is added to `.metadata.namespace`
 - labels is added to `.metadata.labels`
 - annotations is added to `.metadata.annotations`
 
-Thus those fieldSpec don't need to be added to support a CRD type.
-Consider a CRD type `MyKind` with fields
+### Adding a custom resource
+
+Consider a CRD of kind `MyKind` with fields
 - `.spec.secretRef.name` reference a Secret
 - `.spec.beeRef.name` reference an instance of CRD `Bee`
 - `.spec.containers.command` as the list of container commands
 - `.spec.selectors` as the label selectors
 
-Add following file to configure the transformers for the above fields
+Add the following file to configure the transformers for the above fields
 <!-- @addConfig @test -->
 ```
 cat > $DEMO_HOME/kustomizeconfig/mykind.yaml << EOF
@@ -66,29 +78,12 @@ EOF
 ```
 
 ### Apply config
-Create a kustomization with a `MyKind` instance.
 
-<!-- @createKustomization @test -->
+Create a file with some resources that
+includes an instance of `MyKind`:
+
+<!-- @createResource @test -->
 ```
-cat > $DEMO_HOME/kustomization.yaml << EOF
-resources:
-- resources.yaml
-
-namePrefix: test-
-
-commonLabels:
-  foo: bar
-
-vars:
-- name: BEE_ACTION
-  objref:
-    kind: Bee
-    name: bee
-    apiVersion: v1beta1
-  fieldref:
-    fieldpath: spec.action
-EOF
-
 cat > $DEMO_HOME/resources.yaml << EOF
 apiVersion: v1
 kind: Secret
@@ -122,7 +117,32 @@ spec:
 EOF
 ```
 
-Use the cusotmized transformer configurations by adding those files in kustomization.yaml
+Create a kustomization referring to it:
+
+<!-- @createKustomization @test -->
+```
+cat > $DEMO_HOME/kustomization.yaml << EOF
+resources:
+- resources.yaml
+
+namePrefix: test-
+
+commonLabels:
+  foo: bar
+
+vars:
+- name: BEE_ACTION
+  objref:
+    kind: Bee
+    name: bee
+    apiVersion: v1beta1
+  fieldref:
+    fieldpath: spec.action
+EOF
+```
+
+Use the customized transformer configurations by specifying them
+in the kustomization file:
 <!-- @addTransformerConfigs @test -->
 ```
 cat >> $DEMO_HOME/kustomization.yaml << EOF
