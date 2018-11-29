@@ -81,5 +81,11 @@ varReference:
 
 - path: spec/containers/env/value
   kind: Pod
+
+- path: spec/rules/host
+  kind: Ingress
+
+- path: spec/tls/hosts
+  kind: Ingress
 `
 )
