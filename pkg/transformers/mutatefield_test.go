@@ -162,10 +162,7 @@ func TestWithNil(t *testing.T) {
 	m := &noopMutator{}
 	err := mutateField(
 		obj.Map(), []string{"spec", "template", "metadata", "labels", "vegetable"}, false, m.mutate)
-	if err == nil {
-		t.Fatalf("Expected error due to nil field.")
-	}
-	if err.Error() != "<nil> is not expected to be a primitive type" {
-		t.Fatalf("unexpected error: %v", err)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
 	}
 }
