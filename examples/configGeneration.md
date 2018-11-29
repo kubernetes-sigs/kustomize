@@ -60,6 +60,7 @@ mkdir -p $OVERLAYS/staging
 
 cat <<'EOF' >$OVERLAYS/staging/kustomization.yaml
 namePrefix: staging-
+nameSuffix: -v1
 commonLabels:
   variant: staging
   org: acmeCorporation
@@ -150,13 +151,17 @@ The configMap name is prefixed by _staging-_, per the
 `namePrefix` field in
 `$OVERLAYS/staging/kustomization.yaml`.
 
+The configMap name is suffixed by _-v1_, per the
+`nameSuffix` field in
+`$OVERLAYS/staging/kustomization.yaml`.
+
 The suffix to the configMap name is generated from a
 hash of the maps content - in this case the name suffix
-is _hhhhkfmgmk_:
+is _k25m8k5k5m_:
 
 <!-- @grepStagingHash @test -->
 ```
-kustomize build $OVERLAYS/staging | grep hhhhkfmgmk
+kustomize build $OVERLAYS/staging | grep k25m8k5k5m
 ```
 
 Now modify the map patch, to change the greeting
@@ -183,20 +188,20 @@ kustomize build $OVERLAYS/staging |\
 ```
 
 Confirm that the change in configMap content resulted
-in three new names ending in _khk45ktkd9_ - one in the
+in three new names ending in _cd7kdh48fd_ - one in the
 configMap name itself, and two in the deployment that
 uses the map:
 
 <!-- @countHashes @test -->
 ```
 test 3 == \
-  $(kustomize build $OVERLAYS/staging | grep khk45ktkd9 | wc -l); \
+  $(kustomize build $OVERLAYS/staging | grep cd7kdh48fd | wc -l); \
   echo $?
 ```
 
 Applying these resources to the cluster will result in
 a rolling update of the deployments pods, retargetting
-them from the _hhhhkfmgmk_ maps to the _khk45ktkd9_
+them from the _k25m8k5k5m_ maps to the _cd7kdh48fd_
 maps.  The system will later garbage collect the
 unused maps.
 
