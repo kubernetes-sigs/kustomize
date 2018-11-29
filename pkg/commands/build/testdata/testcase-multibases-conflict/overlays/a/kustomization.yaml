@@ -2,6 +2,7 @@ bases:
 - ../../base/
 
 namePrefix: a-
+nameSuffix: -suffixA
 
 resources:
 - serviceaccount.yaml
