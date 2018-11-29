@@ -18,6 +18,8 @@ package transformers
 
 import (
 	"fmt"
+	"log"
+	"strings"
 )
 
 type mutateFunc func(interface{}) (interface{}, error)
@@ -53,6 +55,11 @@ func mutateField(
 	v := m[pathToField[0]]
 	newPathToField := pathToField[1:]
 	switch typedV := v.(type) {
+	case nil:
+		log.Printf(
+			"nil value at `%s` ignored in mutation attempt",
+			strings.Join(pathToField, "."))
+		return nil
 	case map[string]interface{}:
 		return mutateField(typedV, newPathToField, createIfNotPresent, fns...)
 	case []interface{}:
