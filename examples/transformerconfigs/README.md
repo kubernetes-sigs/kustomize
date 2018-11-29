@@ -2,7 +2,7 @@
 
 Kustomize computes the resources by applying a series of transformers:
 - namespace transformer
-- prefix transformer
+- prefix/suffix transformer
 - label transformer
 - annotation transformer
 - name reference transformer
@@ -22,8 +22,8 @@ create: false
 ```
 If `create` is set to true, it indicates the transformer to create the path if it is not found in the resources. This is most useful for label and annotation transformers, where the path for labels or annotations may not be set before the transformation.
 
-## prefix transformer
-Name prefix transformer adds prefix to the `metadata/name` field for all resources with following configuration:
+## prefix/suffix transformer
+Name prefix suffix transformer adds prefix and suffix to the `metadata/name` field for all resources with following configuration:
 ```
 namePrefix:
 - path: metadata/name
