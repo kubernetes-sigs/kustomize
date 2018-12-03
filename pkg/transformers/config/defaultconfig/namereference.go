@@ -226,6 +226,10 @@ nameReference:
     kind: StorageClass
   - path: parameters/secretRef
     kind: StorageClass
+  - path: rules/resourceNames
+    kind: Role
+  - path: rules/resourceNames
+    kind: ClusterRole
 
 - kind: Service
   version: v1

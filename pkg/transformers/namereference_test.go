@@ -18,6 +18,7 @@ package transformers
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
@@ -26,7 +27,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
-func TestNameReferenceRun(t *testing.T) {
+func TestNameReferenceHappyRun(t *testing.T) {
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
 	m := resmap.ResMap{
@@ -214,6 +215,26 @@ func TestNameReferenceRun(t *testing.T) {
 					},
 				},
 			}),
+		resid.NewResId(cr, "cr"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "rbac.authorization.k8s.io/v1",
+				"kind":       "ClusterRole",
+				"metadata": map[string]interface{}{
+					"name": "cr",
+				},
+				"rules": []interface{}{
+					map[string]interface{}{
+						"resources": []interface{}{
+							"secrets",
+						},
+						"resourceNames": []interface{}{
+							"secret1",
+							"secret1",
+							"secret2",
+						},
+					},
+				},
+			}),
 	}
 
 	expected := resmap.ResMap{}
@@ -364,6 +385,26 @@ func TestNameReferenceRun(t *testing.T) {
 				},
 			},
 		})
+	expected[resid.NewResId(cr, "cr")] = rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "rbac.authorization.k8s.io/v1",
+			"kind":       "ClusterRole",
+			"metadata": map[string]interface{}{
+				"name": "cr",
+			},
+			"rules": []interface{}{
+				map[string]interface{}{
+					"resources": []interface{}{
+						"secrets",
+					},
+					"resourceNames": []interface{}{
+						"someprefix-secret1-somehash",
+						"someprefix-secret1-somehash",
+						"secret2",
+					},
+				},
+			},
+		})
 	nrt, err := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -375,5 +416,74 @@ func TestNameReferenceRun(t *testing.T) {
 	if !reflect.DeepEqual(m, expected) {
 		err = expected.ErrorIfNotEqual(m)
 		t.Fatalf("actual doesn't match expected: %v", err)
+	}
+}
+
+func TestNameReferenceUnhappyRun(t *testing.T) {
+	rf := resource.NewFactory(
+		kunstruct.NewKunstructuredFactoryImpl())
+	tests := []struct {
+		resMap      resmap.ResMap
+		expectedErr string
+	}{
+		{
+			resMap: resmap.ResMap{
+				resid.NewResId(cr, "cr"): rf.FromMap(
+					map[string]interface{}{
+						"apiVersion": "rbac.authorization.k8s.io/v1",
+						"kind":       "ClusterRole",
+						"metadata": map[string]interface{}{
+							"name": "cr",
+						},
+						"rules": []interface{}{
+							map[string]interface{}{
+								"resources": []interface{}{
+									"secrets",
+								},
+								"resourceNames": []interface{}{
+									[]interface{}{},
+								},
+							},
+						},
+					}),
+			},
+			expectedErr: "is expected to be string"},
+		{resMap: resmap.ResMap{
+			resid.NewResId(cr, "cr"): rf.FromMap(
+				map[string]interface{}{
+					"apiVersion": "rbac.authorization.k8s.io/v1",
+					"kind":       "ClusterRole",
+					"metadata": map[string]interface{}{
+						"name": "cr",
+					},
+					"rules": []interface{}{
+						map[string]interface{}{
+							"resources": []interface{}{
+								"secrets",
+							},
+							"resourceNames": map[string]interface{}{
+								"foo": "bar",
+							},
+						},
+					},
+				}),
+		},
+			expectedErr: "is expected to be either a string or a []interface{}"},
+	}
+
+	nrt, err := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	for _, test := range tests {
+		err = nrt.Transform(test.resMap)
+		if err == nil {
+			t.Fatalf("expected error to happen")
+		}
+
+		if !strings.Contains(err.Error(), test.expectedErr) {
+			t.Fatalf("Incorrect error.\nExpected: %s, but got %v", test.expectedErr, err)
+		}
 	}
 }
