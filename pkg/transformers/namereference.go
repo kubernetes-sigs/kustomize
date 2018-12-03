@@ -71,24 +71,61 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 func (o *nameReferenceTransformer) updateNameReference(
 	backRef gvk.Gvk, m resmap.ResMap) func(in interface{}) (interface{}, error) {
 	return func(in interface{}) (interface{}, error) {
-		s, ok := in.(string)
-		if !ok {
-			return nil, fmt.Errorf("%#v is expected to be %T", in, s)
-		}
-		for id, res := range m {
-			if id.Gvk().IsSelected(&backRef) && id.Name() == s {
-				matchedIds := m.FindByGVKN(id)
-				// If there's more than one match, there's no way
-				// to know which one to pick, so emit error.
-				if len(matchedIds) > 1 {
-					return nil, fmt.Errorf(
-						"Multiple matches for name %s:\n  %v", id, matchedIds)
+		switch in.(type) {
+		case string:
+			s, _ := in.(string)
+			for id, res := range m {
+				if id.Gvk().IsSelected(&backRef) && id.Name() == s {
+					matchedIds := m.FindByGVKN(id)
+					// If there's more than one match, there's no way
+					// to know which one to pick, so emit error.
+					if len(matchedIds) > 1 {
+						return nil, fmt.Errorf(
+							"Multiple matches for name %s:\n  %v", id, matchedIds)
+					}
+					// Return transformed name of the object,
+					// complete with prefixes, hashes, etc.
+					return res.GetName(), nil
 				}
-				// Return transformed name of the object,
-				// complete with prefixes, hashes, etc.
-				return res.GetName(), nil
 			}
+			return in, nil
+		case []interface{}:
+			l, _ := in.([]interface{})
+			var names []string
+			for _, item := range l {
+				name, ok := item.(string)
+				if !ok {
+					return nil, fmt.Errorf("%#v is expected to be %T", item, name)
+				}
+				names = append(names, name)
+			}
+			for id, res := range m {
+				indexes := indexOf(id.Name(), names)
+				if id.Gvk().IsSelected(&backRef) && len(indexes) > 0 {
+					matchedIds := m.FindByGVKN(id)
+					if len(matchedIds) > 1 {
+						return nil, fmt.Errorf(
+							"Multiple matches for name %s:\n %v", id, matchedIds)
+					}
+					for _, index := range indexes {
+						l[index] = res.GetName()
+					}
+					return l, nil
+				}
+			}
+			return in, nil
+		default:
+			return nil, fmt.Errorf("%#v is expected to be either a string or a []interface{}", in)
 		}
-		return in, nil
 	}
+}
+
+func indexOf(s string, slice []string) []int {
+	var index []int
+	for i, item := range slice {
+		if item == s {
+			index = append(index, i)
+		}
+	}
+	return index
 }
