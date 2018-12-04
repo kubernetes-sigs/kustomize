@@ -272,6 +272,6 @@ type OutputPostProcessing struct {
 
 // Represents single regex replace operation
 type RegexReplace struct {
-	Match string `json:"match" yaml:"match"`
+	Match   string `json:"match" yaml:"match"`
 	Replace string `json:"replace" yaml:"replace"`
 }
