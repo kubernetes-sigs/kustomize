@@ -109,7 +109,6 @@ func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 	return kt.resolveRefsToGeneratedResources(m)
 }
 
-
 // returns settings for output post processing from kustomization
 func (kt *KustTarget) GetOutputPostProcessingSettings() *types.OutputPostProcessing {
 	return kt.kustomization.OutputPostProcessing
