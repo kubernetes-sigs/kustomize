@@ -123,6 +123,9 @@ type Kustomization struct {
 	// Configurations is a list of transformer configuration files
 	Configurations []string `json:"configurations,omitempty" yaml:"configurations,omitempty"`
 
+	// OutputPostProcessing modifies output text generated after all transformations are completed.
+	OutputPostProcessing *OutputPostProcessing `json:"outputPostProcessing,omitempty" yaml:"outputPostProcessing,omitemtpy""`
+
 	//
 	// Deprecated fields - See DealWithDeprecatedFields
 	//
@@ -260,4 +263,15 @@ type GeneratorOptions struct {
 	// suffix to the names of generated resources that is a hash of the
 	// resource contents.
 	DisableNameSuffixHash bool `json:"disableNameSuffixHash,omitempty" yaml:"disableNameSuffixHash,omitempty"`
+}
+
+// OutputPostprocessing does transformations on string output that kustomize generates
+type OutputPostProcessing struct {
+	RegexReplace []RegexReplace `json:"regexReplace,omitempty" yaml:"regexReplace,omitempty"`
+}
+
+// Represents single regex replace operation
+type RegexReplace struct {
+	Match string `json:"match" yaml:"match"`
+	Replace string `json:"replace" yaml:"replace"`
 }

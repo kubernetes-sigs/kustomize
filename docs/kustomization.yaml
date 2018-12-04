@@ -286,3 +286,14 @@ imageTags:
     newTag: 1.8.0
   - name: alpine
     digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3
+
+# OutputPostProcessing modifies output text generated after all transformations.
+# It does not matter what type of resource was generated as post processing is performed at text level.
+# It's the most useful in cases when you need to modify some resource that's hard to patch, like ingress with hostnames
+# or some config map content.
+#
+# RegexReplace does simple regex replace when you can use capture groups to replace only parts of the output.
+outputPostProcessing:
+  regexReplace:
+  - match: original.(.*)
+    replace: replaced.$1

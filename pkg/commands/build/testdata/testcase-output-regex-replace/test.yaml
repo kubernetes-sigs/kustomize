@@ -1,0 +1,4 @@
+description: output regex replace
+args: []
+filename: testdata/testcase-output-regex-replace/in
+expectedStdout: testdata/testcase-output-regex-replace/expected.yaml

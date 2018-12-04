@@ -1,0 +1,12 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: test-output-regex-replace
+spec:
+  rules:
+  - host: original.example.com
+    http:
+      paths:
+      - backend:
+          serviceName: my-service
+          servicePort: 80

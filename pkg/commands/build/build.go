@@ -18,6 +18,8 @@ package build
 
 import (
 	"io"
+	"regexp"
+	"sigs.k8s.io/kustomize/pkg/types"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -112,9 +114,32 @@ func (o *buildOptions) RunBuild(
 	if err != nil {
 		return err
 	}
+
+	// Use post processing settings on output
+	outputPostProcessingSettings := kt.GetOutputPostProcessingSettings()
+	if outputPostProcessingSettings != nil {
+		res, err = regexReplaceOutput(res, outputPostProcessingSettings.RegexReplace)
+		if err != nil {
+			return err
+		}
+	}
+
 	if o.outputPath != "" {
 		return fSys.WriteFile(o.outputPath, res)
 	}
 	_, err = out.Write(res)
 	return err
+}
+
+// performs multiple regex replace operations on provided byte slice
+func regexReplaceOutput(in []byte, regexes []types.RegexReplace) ([]byte, error) {
+	for _, rr := range regexes {
+		re, err := regexp.Compile(rr.Match)
+		if err != nil {
+			return nil, err
+		}
+
+		in = re.ReplaceAll(in, []byte(rr.Replace))
+	}
+	return in, nil
 }
