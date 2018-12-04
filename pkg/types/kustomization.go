@@ -124,7 +124,7 @@ type Kustomization struct {
 	Configurations []string `json:"configurations,omitempty" yaml:"configurations,omitempty"`
 
 	// OutputPostProcessing modifies output text generated after all transformations are completed.
-	OutputPostProcessing *OutputPostProcessing `json:"outputPostProcessing,omitempty" yaml:"outputPostProcessing,omitemtpy""`
+	OutputPostProcessing *OutputPostProcessing `json:"outputPostProcessing,omitempty" yaml:"outputPostProcessing,omitempty"`
 
 	//
 	// Deprecated fields - See DealWithDeprecatedFields
