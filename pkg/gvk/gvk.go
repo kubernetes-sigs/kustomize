@@ -141,6 +141,7 @@ func (x Gvk) IsSelected(selector *Gvk) bool {
 }
 
 var clusterLevelKinds = []string{
+	"APIService",
 	"ClusterRoleBinding",
 	"ClusterRole",
 	"CustomResourceDefinition",
