@@ -94,6 +94,13 @@ secretGenerator:
     tls.crt: "cat secret/tls.cert"
     tls.key: "cat secret/tls.key"
   type: "kubernetes.io/tls"
+- name: app-tls-namespaced
+  # you can define a namespace to generate secret in, defaults to: "default"
+  namspace: apps
+  commands:
+    tls.crt: "cat secret/tls.cert"
+    tls.key: "cat secret/tls.key"
+  type: "kubernetes.io/tls"
 - name: downloaded_secret
   # timeoutSeconds specifies the number of seconds to
   # wait for the commands below. It defaults to 5 seconds.
