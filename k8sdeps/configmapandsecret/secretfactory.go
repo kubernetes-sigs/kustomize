@@ -52,6 +52,7 @@ func (f *SecretFactory) makeFreshSecret(args *types.SecretArgs) *corev1.Secret {
 	s.APIVersion = "v1"
 	s.Kind = "Secret"
 	s.Name = args.Name
+	s.Namespace = args.Namespace
 	s.Type = corev1.SecretType(args.Type)
 	if s.Type == "" {
 		s.Type = corev1.SecretTypeOpaque

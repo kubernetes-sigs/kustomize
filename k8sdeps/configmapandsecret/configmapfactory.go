@@ -49,6 +49,7 @@ func (f *ConfigMapFactory) makeFreshConfigMap(
 	cm.APIVersion = "v1"
 	cm.Kind = "ConfigMap"
 	cm.Name = args.Name
+	cm.Namespace = args.Namespace
 	cm.Data = map[string]string{}
 	return cm
 }
