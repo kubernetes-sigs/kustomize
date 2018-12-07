@@ -146,21 +146,27 @@ func (k *Kustomization) DealWithDeprecatedFields() {
 	}
 }
 
-// ConfigMapArgs contains the metadata of how to generate a configmap.
-type ConfigMapArgs struct {
-	// Name of the configmap.
-	// The full name should be Kustomization.NamePrefix + Configmap.Name +
-	// hash(content of configmap).
-	Name string `json:"name,omitempty" yaml:"name,omitempty"`
-
+// GeneratorArgs contains arguments common to generators.
+type GeneratorArgs struct {
 	// Namespace for the configmap, optional
 	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 
-	// behavior of configmap, must be one of create, merge and replace
-	// 'create': create a new one;
-	// 'replace': replace the existing one;
-	// 'merge': merge the existing one.
+	// Name - actually the partial name - of the generated resource.
+	// The full name ends up being something like
+	// NamePrefix + this.Name + hash(content of generated resource).
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+
+	// Behavior of generated resource, must be one of:
+	//   'create': create a new one
+	//   'replace': replace the existing one
+	//   'merge': merge with the existing one
 	Behavior string `json:"behavior,omitempty" yaml:"behavior,omitempty"`
+}
+
+// ConfigMapArgs contains the metadata of how to generate a configmap.
+type ConfigMapArgs struct {
+	// GeneratorArgs for the configmap.
+	GeneratorArgs `json:",inline,omitempty" yaml:",inline,omitempty"`
 
 	// DataSources for configmap.
 	DataSources `json:",inline,omitempty" yaml:",inline,omitempty"`
@@ -168,19 +174,8 @@ type ConfigMapArgs struct {
 
 // SecretArgs contains the metadata of how to generate a secret.
 type SecretArgs struct {
-	// Name of the secret.
-	// The full name should be Kustomization.NamePrefix + SecretGenerator.Name +
-	// hash(content of secret).
-	Name string `json:"name,omitempty" yaml:"name,omitempty"`
-
-	// Namespace for the secret, optional
-	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
-
-	// behavior of secretGenerator, must be one of create, merge and replace
-	// 'create': create a new one;
-	// 'replace': replace the existing one;
-	// 'merge': merge the existing one.
-	Behavior string `json:"behavior,omitempty" yaml:"behavior,omitempty"`
+	// GeneratorArgs for the secret.
+	GeneratorArgs `json:",inline,omitempty" yaml:",inline,omitempty"`
 
 	// Type of the secret.
 	//
