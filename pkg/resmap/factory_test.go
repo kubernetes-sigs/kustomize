@@ -151,7 +151,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 			description: "construct config map from env",
 			input: []types.ConfigMapArgs{
 				{
-					Name: "envConfigMap",
+					GeneratorArgs: types.GeneratorArgs{Name: "envConfigMap"},
 					DataSources: types.DataSources{
 						EnvSource: "app.env",
 					},
@@ -177,7 +177,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 		{
 			description: "construct config map from file",
 			input: []types.ConfigMapArgs{{
-				Name: "fileConfigMap",
+				GeneratorArgs: types.GeneratorArgs{Name: "fileConfigMap"},
 				DataSources: types.DataSources{
 					FileSources: []string{"app-init.ini"},
 				},
@@ -205,7 +205,7 @@ BAR=baz
 			description: "construct config map from literal",
 			input: []types.ConfigMapArgs{
 				{
-					Name: "literalConfigMap",
+					GeneratorArgs: types.GeneratorArgs{Name: "literalConfigMap"},
 					DataSources: types.DataSources{
 						LiteralSources: []string{"a=x", "b=y", "c=\"Good Morning\"", "d=\"false\""},
 					},
@@ -251,7 +251,7 @@ var secret = gvk.Gvk{Version: "v1", Kind: "Secret"}
 func TestNewResMapFromSecretArgs(t *testing.T) {
 	secrets := []types.SecretArgs{
 		{
-			Name: "apple",
+			GeneratorArgs: types.GeneratorArgs{Name: "apple"},
 			CommandSources: types.CommandSources{
 				Commands: map[string]string{
 					"DB_USERNAME": "printf admin",
@@ -261,7 +261,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 			Type: ifc.SecretTypeOpaque,
 		},
 		{
-			Name: "peanuts",
+			GeneratorArgs: types.GeneratorArgs{Name: "peanuts"},
 			CommandSources: types.CommandSources{
 				EnvCommand: "printf \"DB_USERNAME=admin\nDB_PASSWORD=somepw\"",
 			},
@@ -314,7 +314,7 @@ func TestSecretTimeout(t *testing.T) {
 	timeout := int64(1)
 	secrets := []types.SecretArgs{
 		{
-			Name:           "slow",
+			GeneratorArgs:  types.GeneratorArgs{Name: "slow"},
 			TimeoutSeconds: &timeout,
 			CommandSources: types.CommandSources{
 				Commands: map[string]string{

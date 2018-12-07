@@ -92,7 +92,7 @@ func TestConstructConfigMap(t *testing.T) {
 		{
 			description: "construct config map from env",
 			input: types.ConfigMapArgs{
-				Name: "envConfigMap",
+				GeneratorArgs: types.GeneratorArgs{Name: "envConfigMap"},
 				DataSources: types.DataSources{
 					EnvSource: "configmap/app.env",
 				},
@@ -103,7 +103,7 @@ func TestConstructConfigMap(t *testing.T) {
 		{
 			description: "construct config map from file",
 			input: types.ConfigMapArgs{
-				Name: "fileConfigMap",
+				GeneratorArgs: types.GeneratorArgs{Name: "fileConfigMap"},
 				DataSources: types.DataSources{
 					FileSources: []string{"configmap/app-init.ini"},
 				},
@@ -114,7 +114,7 @@ func TestConstructConfigMap(t *testing.T) {
 		{
 			description: "construct config map from literal",
 			input: types.ConfigMapArgs{
-				Name: "literalConfigMap",
+				GeneratorArgs: types.GeneratorArgs{Name: "literalConfigMap"},
 				DataSources: types.DataSources{
 					LiteralSources: []string{"a=x", "b=y", "c=\"Hello World\"", "d='true'"},
 				},
