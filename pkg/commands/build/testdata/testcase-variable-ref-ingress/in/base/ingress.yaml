@@ -1,0 +1,18 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nginx
+  labels:
+    app.kubernetes.io/component: nginx
+spec:
+  rules:
+  - host: $(DEPLOYMENT_NAME).example.com
+    http:
+      paths:
+      - backend:
+          serviceName: nginx
+          servicePort: 80
+        path: /
+  tls:
+  - hosts:
+    - $(DEPLOYMENT_NAME).example.com

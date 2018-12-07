@@ -1,0 +1,13 @@
+resources:
+- deployment.yaml
+- ingress.yaml
+- service.yaml
+
+vars:
+- name: DEPLOYMENT_NAME
+  objref:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx
+  fieldref:
+    fieldpath: metadata.name
