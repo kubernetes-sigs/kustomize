@@ -24,6 +24,11 @@ nameReference:
   - path: spec/scaleTargetRef/name
     kind: HorizontalPodAutoscaler
 
+- kind: HorizontalPodAutoscaler
+  fieldSpecs:
+  - path: spec/scaleTargetRef/name
+    kind: Deployment
+
 - kind: ReplicationController
   fieldSpecs:
   - path: spec/scaleTargetRef/name
