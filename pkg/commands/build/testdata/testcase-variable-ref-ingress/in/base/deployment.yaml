@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app.kubernetes.io/component: nginx
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: nginx
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.15.7-alpine
+        ports:
+        - name: http
+          containerPort: 80
