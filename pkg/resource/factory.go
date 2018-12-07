@@ -17,6 +17,8 @@ limitations under the License.
 package resource
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 
 	"sigs.k8s.io/kustomize/pkg/fs"
@@ -66,7 +68,31 @@ func (rf *Factory) SliceFromPatches(
 		if err != nil {
 			return nil, internal.Handler(err, string(path))
 		}
-		result = append(result, res...)
+		for len(res) > 0 {
+			r := res[0]
+			res = res[1:]
+			if r.GetKind() == "List" {
+				items := r.Map()["items"]
+				itemsSlice, ok := items.([]interface{})
+				if !ok {
+					return nil, fmt.Errorf("items in List is type %T, expected array.", items)
+				}
+				for _, item := range itemsSlice {
+					itemJSON, err := json.Marshal(item)
+					if err != nil {
+						return nil, err
+					}
+					innerRes, err := rf.SliceFromBytes(itemJSON)
+					if err != nil {
+						return nil, err
+					}
+					// append innerRes to res so nested Lists can be handled
+					res = append(res, innerRes...)
+				}
+			} else {
+				result = append(result, r)
+			}
+		}
 	}
 	return result, nil
 }
