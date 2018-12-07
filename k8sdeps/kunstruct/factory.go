@@ -103,10 +103,10 @@ func (kf *KunstructuredFactoryImpl) Set(fs fs.FileSystem, ldr ifc.Loader) {
 // validate validates that u has kind and name
 func (kf *KunstructuredFactoryImpl) validate(u unstructured.Unstructured) error {
 	if u.GetName() == "" {
-		return fmt.Errorf("Missing metadata.name in object %v", u)
+		return fmt.Errorf("missing metadata.name in object %v", u)
 	}
 	if u.GetKind() == "" {
-		return fmt.Errorf("Missing kind in object %v", u)
+		return fmt.Errorf("missing kind in object %v", u)
 	}
 	return nil
 }
