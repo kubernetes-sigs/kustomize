@@ -125,7 +125,7 @@ func makeConfigMapArgs(m *types.Kustomization, name string) *types.ConfigMapArgs
 		}
 	}
 	// config map not found, create new one and add it to the kustomization file.
-	cm := &types.ConfigMapArgs{Name: name}
+	cm := &types.ConfigMapArgs{GeneratorArgs: types.GeneratorArgs{Name: name}}
 	m.ConfigMapGenerator = append(m.ConfigMapGenerator, *cm)
 	return &m.ConfigMapGenerator[len(m.ConfigMapGenerator)-1]
 }
