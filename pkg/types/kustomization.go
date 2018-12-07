@@ -153,6 +153,9 @@ type ConfigMapArgs struct {
 	// hash(content of configmap).
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 
+	// Namespace for the configmap, optional
+	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+
 	// behavior of configmap, must be one of create, merge and replace
 	// 'create': create a new one;
 	// 'replace': replace the existing one;
@@ -169,6 +172,9 @@ type SecretArgs struct {
 	// The full name should be Kustomization.NamePrefix + SecretGenerator.Name +
 	// hash(content of secret).
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+
+	// Namespace for the secret, optional
+	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 
 	// behavior of secretGenerator, must be one of create, merge and replace
 	// 'create': create a new one;
