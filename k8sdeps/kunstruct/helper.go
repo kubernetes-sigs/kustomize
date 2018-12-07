@@ -55,7 +55,7 @@ func parseFields(path string) ([]string, error) {
 				start = i + 1
 				insideParentheses = false
 			} else {
-				return nil, fmt.Errorf("Invalid field path %s", path)
+				return nil, fmt.Errorf("invalid field path %s", path)
 			}
 		}
 	}

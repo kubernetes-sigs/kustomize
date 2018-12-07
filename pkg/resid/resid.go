@@ -63,16 +63,6 @@ func NewResIdWithPrefixSuffix(k gvk.Gvk, n, p, s string) ResId {
 	return ResId{gvKind: k, name: n, prefix: p, suffix: s}
 }
 
-// NewResIdWithPrefix creates new resource identifier with a prefix
-func NewResIdWithPrefix(k gvk.Gvk, n, p string) ResId {
-	return ResId{gvKind: k, name: n, prefix: p}
-}
-
-// NewResIdWithSuffix creates new resource identifier with a suffix
-func NewResIdWithSuffix(k gvk.Gvk, n, s string) ResId {
-	return ResId{gvKind: k, name: n, suffix: s}
-}
-
 // NewResId creates new resource identifier
 func NewResId(k gvk.Gvk, n string) ResId {
 	return ResId{gvKind: k, name: n}
