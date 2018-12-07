@@ -26,11 +26,6 @@ import (
 	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
-// TODO: 2018/Nov/20 remove this before next release.
-// Leave only the true path.  Retaining only for
-// quick revert.
-const enforceRelocatable = true
-
 // fileLoader loads files, returning an array of bytes.
 // It also enforces two kustomization requirements:
 //
@@ -153,7 +148,7 @@ func (l *fileLoader) New(root string) (ifc.Loader, error) {
 		}
 		return newGitLoader(root, l.fSys, l.roots, l.cloner)
 	}
-	if enforceRelocatable && filepath.IsAbs(root) {
+	if filepath.IsAbs(root) {
 		return nil, fmt.Errorf("new root '%s' cannot be absolute", root)
 	}
 	// Get absolute path to squeeze out "..", ".", etc.
@@ -208,14 +203,10 @@ func (l *fileLoader) seenBefore(path string) error {
 // Load returns content of file at the given relative path.
 func (l *fileLoader) Load(path string) ([]byte, error) {
 	if filepath.IsAbs(path) {
-		if enforceRelocatable {
-			return nil, fmt.Errorf(
-				"must use relative path; '%s' is absolute", path)
-		}
-	} else {
-		path = filepath.Join(l.Root(), path)
+		return nil, fmt.Errorf(
+			"must use relative path; '%s' is absolute", path)
 	}
-	return l.fSys.ReadFile(path)
+	return l.fSys.ReadFile(filepath.Join(l.Root(), path))
 }
 
 // Cleanup runs the cleaner.
