@@ -33,18 +33,20 @@ func mutateField(
 		return nil
 	}
 
-	_, found := m[pathToField[0]]
+	firstPathSegment, isArray := getFirstPathSegment(pathToField)
+
+	_, found := m[firstPathSegment]
 	if !found {
-		if !createIfNotPresent {
+		if !createIfNotPresent || isArray {
 			return nil
 		}
-		m[pathToField[0]] = map[string]interface{}{}
+		m[firstPathSegment] = map[string]interface{}{}
 	}
 
 	if len(pathToField) == 1 {
 		var err error
 		for _, fn := range fns {
-			m[pathToField[0]], err = fn(m[pathToField[0]])
+			m[firstPathSegment], err = fn(m[firstPathSegment])
 			if err != nil {
 				return err
 			}
@@ -52,7 +54,7 @@ func mutateField(
 		return nil
 	}
 
-	v := m[pathToField[0]]
+	v := m[firstPathSegment]
 	newPathToField := pathToField[1:]
 	switch typedV := v.(type) {
 	case nil:
@@ -78,4 +80,11 @@ func mutateField(
 	default:
 		return fmt.Errorf("%#v is not expected to be a primitive type", typedV)
 	}
+}
+
+func getFirstPathSegment(pathToField []string) (string, bool) {
+	if strings.HasSuffix(pathToField[0], "[]") {
+		return pathToField[0][:len(pathToField[0])-2], true
+	}
+	return pathToField[0], false
 }

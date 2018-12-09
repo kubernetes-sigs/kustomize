@@ -1,0 +1,29 @@
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: persisted-test
+  labels:
+    notIn: arrays
+spec:
+  serviceName: "test"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test
+  template:
+    metadata:
+      labels:
+        app: test
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+  volumeClaimTemplates:
+  - metadata:
+      name: www
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: my-storage-class
+      resources:
+        requests:
+          storage: 1Gi
