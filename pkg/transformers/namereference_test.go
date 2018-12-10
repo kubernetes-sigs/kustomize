@@ -148,6 +148,9 @@ func TestNameReferenceHappyRun(t *testing.T) {
 										"configMap": map[string]interface{}{
 											"name": "cm2",
 										},
+										"secret": map[string]interface{}{
+											"name": "secret1",
+										},
 									},
 								},
 								"secret": map[string]interface{}{
@@ -183,6 +186,9 @@ func TestNameReferenceHappyRun(t *testing.T) {
 									"sources": map[string]interface{}{
 										"configMap": map[string]interface{}{
 											"name": "cm2",
+										},
+										"secret": map[string]interface{}{
+											"name": "secret1",
 										},
 									},
 								},
@@ -307,6 +313,9 @@ func TestNameReferenceHappyRun(t *testing.T) {
 									"configMap": map[string]interface{}{
 										"name": "someprefix-cm2-somehash",
 									},
+									"secret": map[string]interface{}{
+										"name": "someprefix-secret1-somehash",
+									},
 								},
 							},
 							"secret": map[string]interface{}{
@@ -342,6 +351,9 @@ func TestNameReferenceHappyRun(t *testing.T) {
 								"sources": map[string]interface{}{
 									"configMap": map[string]interface{}{
 										"name": "someprefix-cm2-somehash",
+									},
+									"secret": map[string]interface{}{
+										"name": "someprefix-secret1-somehash",
 									},
 								},
 							},
