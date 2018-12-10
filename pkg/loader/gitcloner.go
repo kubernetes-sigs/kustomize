@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -44,7 +45,8 @@ func isRepoUrl(arg string) bool {
 			strings.HasPrefix(arg, "gh:") ||
 			strings.HasPrefix(arg, "github.com") ||
 			strings.HasPrefix(arg, "git@github.com:") ||
-			strings.Index(arg, "github.com/") > -1)
+			strings.Index(arg, "github.com/") > -1 ||
+			isAzureHost(arg) || isAWSHost(arg))
 }
 
 func makeTmpDir() (string, error) {
@@ -61,14 +63,14 @@ func simpleGitCloner(spec string) (
 	if err != nil {
 		return
 	}
-	repo, pathInCoDir, gitRef, err := parseGithubUrl(spec)
+	repo, pathInCoDir, gitRef, err := parseUrl(spec)
 	if err != nil {
 		return
 	}
 	cmd := exec.Command(
 		gitProgram,
 		"clone",
-		"https://github.com/"+repo+".git",
+		repo,
 		checkoutDir)
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -90,27 +92,36 @@ func simpleGitCloner(spec string) (
 	return checkoutDir, pathInCoDir, nil
 }
 
+func parseUrl(n string) (
+	repo string, path string, gitRef string, err error) {
+	host, repo, path, gitRef, err := parseGithubUrl(n)
+	if err != nil {
+		return
+	}
+	if isAzureHost(host) || isAWSHost(host) {
+		repo = host + repo
+		return
+	}
+	repo = host + repo + ".git"
+	return
+}
+
 const refQuery = "?ref="
 
 // From strings like git@github.com:someOrg/someRepo.git or
 // https://github.com/someOrg/someRepo?ref=someHash, extract
 // the parts.
 func parseGithubUrl(n string) (
-	repo string, path string, gitRef string, err error) {
-	for _, p := range []string{
-		// Order matters here.
-		"git::", "gh:", "https://", "http://",
-		"git@", "github.com:", "github.com/", "gitlab.com/"} {
-		if strings.ToLower(n[:len(p)]) == p {
-			n = n[len(p):]
-		}
-	}
+	host string, repo string, path string, gitRef string, err error) {
+	host, n = parseHostSpec(n)
+	host = normalizeGitHostSpec(host)
+
 	if strings.HasSuffix(n, ".git") {
 		n = n[0 : len(n)-len(".git")]
 	}
 	i := strings.Index(n, string(filepath.Separator))
 	if i < 1 {
-		return "", "", "", errors.New("no separator")
+		return "", "", "", "", errors.New("no separator")
 	}
 	j := strings.Index(n[i+1:], string(filepath.Separator))
 	if j >= 0 {
@@ -130,4 +141,58 @@ func peelQuery(arg string) (string, string) {
 		return arg[:j], arg[j+len(refQuery):]
 	}
 	return arg, ""
+}
+
+func parseHostSpec(n string) (string, string) {
+	var host string
+	for _, p := range []string{
+		// Order matters here.
+		"git::", "gh:", "ssh://", "https://", "http://",
+		"git@", "github.com:", "github.com/", "gitlab.com/"} {
+		if strings.ToLower(n[:len(p)]) == p {
+			n = n[len(p):]
+			host = host + p
+		}
+	}
+	for _, p := range []string{
+		"git-codecommit.[a-z0-9-]*.amazonaws.com/",
+		"dev.azure.com/",
+		".*visualstudio.com/"} {
+		index := regexp.MustCompile(p).FindStringIndex(n)
+		if len(index) > 0 {
+			host = host + n[0:index[len(index)-1]]
+			n = n[index[len(index)-1]:]
+		}
+	}
+	return host, n
+}
+
+func normalizeGitHostSpec(host string) string {
+	s := strings.ToLower(host)
+	if strings.Contains(s, "github.com") {
+		if strings.Contains(s, "git@") || strings.Contains(s, "ssh:") {
+			host = "git@github.com:"
+		} else {
+			host = "https://github.com/"
+		}
+	}
+	if strings.Contains(s, "gitlab") {
+		if strings.HasPrefix(s, "git::") {
+			host = strings.TrimLeft(s, "git::")
+		}
+	}
+	return host
+}
+
+// The format of Azure repo URL is documented
+// https://docs.microsoft.com/en-us/azure/devops/repos/git/clone?view=vsts&tabs=visual-studio#clone_url
+func isAzureHost(host string) bool {
+	return strings.Contains(host, "dev.azure.com") ||
+		strings.Contains(host, "visualstudio.com")
+}
+
+// The format of AWS repo URL is documented
+// https://docs.aws.amazon.com/codecommit/latest/userguide/regions.html
+func isAWSHost(host string) bool {
+	return strings.Contains(host, "amazonaws.com")
 }

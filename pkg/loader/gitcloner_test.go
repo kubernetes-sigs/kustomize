@@ -185,20 +185,20 @@ var paths = []string{"README.md", "foo/krusty.txt", ""}
 
 var hrefArgs = []string{"someBranch", ""}
 
-var extractFmts = []string{
-	"gh:%s",
-	"GH:%s",
-	"gitHub.com/%s",
-	"https://github.com/%s",
-	"hTTps://github.com/%s",
-	"git::https://gitlab.com/%s",
-	"github.com:%s",
+var extractFmts = map[string]string{
+	"gh:%s":                      "gh:",
+	"GH:%s":                      "gh:",
+	"gitHub.com/%s":              "https://github.com/",
+	"https://github.com/%s":      "https://github.com/",
+	"hTTps://github.com/%s":      "https://github.com/",
+	"git::https://gitlab.com/%s": "https://gitlab.com/",
+	"github.com:%s":              "https://github.com/",
 }
 
 func TestParseGithubUrl(t *testing.T) {
 	for _, repoName := range repoNames {
 		for _, pathName := range paths {
-			for _, extractFmt := range extractFmts {
+			for extractFmt, hostSpec := range extractFmts {
 				for _, hrefArg := range hrefArgs {
 					spec := repoName
 					if len(pathName) > 0 {
@@ -212,9 +212,15 @@ func TestParseGithubUrl(t *testing.T) {
 						t.Errorf("Should smell like github arg: %s\n", input)
 						continue
 					}
-					repo, path, gitRef, err := parseGithubUrl(input)
+					host, repo, path, gitRef, err := parseGithubUrl(input)
 					if err != nil {
 						t.Errorf("problem %v", err)
+					}
+					if host != hostSpec {
+						t.Errorf("\n"+
+							"         from %s\n"+
+							"  actual host %s\n"+
+							"expected host %s\n", input, host, hostSpec)
 					}
 					if repo != repoName {
 						t.Errorf("\n"+
@@ -236,6 +242,121 @@ func TestParseGithubUrl(t *testing.T) {
 					}
 				}
 			}
+		}
+	}
+}
+
+func TestParseUrl(t *testing.T) {
+	testcases := []struct {
+		input string
+		repo  string
+		path  string
+		ref   string
+	}{
+		{
+			input: "https://git-codecommit.us-east-2.amazonaws.com/someorg/somerepo/somedir",
+			repo:  "https://git-codecommit.us-east-2.amazonaws.com/someorg/somerepo",
+			path:  "somedir",
+			ref:   "",
+		},
+		{
+			input: "https://git-codecommit.us-east-2.amazonaws.com/someorg/somerepo/somedir?ref=testbranch",
+			repo:  "https://git-codecommit.us-east-2.amazonaws.com/someorg/somerepo",
+			path:  "somedir",
+			ref:   "testbranch",
+		},
+		{
+			input: "https://fabrikops2.visualstudio.com/someorg/somerepo?ref=master",
+			repo:  "https://fabrikops2.visualstudio.com/someorg/somerepo",
+			path:  "",
+			ref:   "master",
+		},
+		{
+			input: "http://github.com/someorg/somerepo/somedir",
+			repo:  "https://github.com/someorg/somerepo.git",
+			path:  "somedir",
+			ref:   "",
+		},
+		{
+			input: "git@github.com:someorg/somerepo/somedir",
+			repo:  "git@github.com:someorg/somerepo.git",
+			path:  "somedir",
+			ref:   "",
+		},
+	}
+	for _, testcase := range testcases {
+		repo, path, ref, err := parseUrl(testcase.input)
+		if err != nil {
+			t.Errorf("Unexpected error: %v", err)
+		}
+		if repo != testcase.repo {
+			t.Errorf("repo expected to be %v, but got %v on %s", testcase.repo, repo, testcase.input)
+		}
+		if path != testcase.path {
+			t.Errorf("path expected to be %v, but got %v on %s", testcase.path, path, testcase.input)
+		}
+		if ref != testcase.ref {
+			t.Errorf("ref expected to be %v, but got %v on %s", testcase.ref, ref, testcase.input)
+		}
+	}
+}
+
+func TestIsAzureHost(t *testing.T) {
+	testcases := []struct {
+		input  string
+		expect bool
+	}{
+		{
+			input:  "https://git-codecommit.us-east-2.amazonaws.com",
+			expect: false,
+		},
+		{
+			input:  "ssh://git-codecommit.us-east-2.amazonaws.com",
+			expect: false,
+		},
+		{
+			input:  "https://fabrikops2.visualstudio.com/",
+			expect: true,
+		},
+		{
+			input:  "https://dev.azure.com/myorg/myproject/",
+			expect: true,
+		},
+	}
+	for _, testcase := range testcases {
+		actual := isAzureHost(testcase.input)
+		if actual != testcase.expect {
+			t.Errorf("IsAzureHost: expected %v, but got %v on %s", testcase.expect, actual, testcase.input)
+		}
+	}
+}
+
+func TestIsAWSHost(t *testing.T) {
+	testcases := []struct {
+		input  string
+		expect bool
+	}{
+		{
+			input:  "https://git-codecommit.us-east-2.amazonaws.com",
+			expect: true,
+		},
+		{
+			input:  "ssh://git-codecommit.us-east-2.amazonaws.com",
+			expect: true,
+		},
+		{
+			input:  "git@github.com:",
+			expect: false,
+		},
+		{
+			input:  "http://github.com/",
+			expect: false,
+		},
+	}
+	for _, testcase := range testcases {
+		actual := isAWSHost(testcase.input)
+		if actual != testcase.expect {
+			t.Errorf("IsAWSHost: expected %v, but got %v on %s", testcase.expect, actual, testcase.input)
 		}
 	}
 }
