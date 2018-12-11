@@ -260,17 +260,41 @@ func TestSecretTimeout(t *testing.T) {
 	}
 }
 
+func findSecret(m resmap.ResMap) *resource.Resource {
+	for id, res := range m {
+		if id.Gvk().Kind == "Secret" {
+			return res
+		}
+	}
+	return nil
+}
+
 func TestDisableNameSuffixHash(t *testing.T) {
 	kt := makeKustTarget(t, makeLoader1(t))
-	kt.kustomization.GeneratorOptions = &types.GeneratorOptions{DisableNameSuffixHash: true}
-	actual, err := kt.MakeCustomizedResMap()
+
+	m, err := kt.MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("unexpected Resources error %v", err)
 	}
+	secret := findSecret(m)
+	if secret == nil {
+		t.Errorf("Expected to find a Secret")
+	}
+	if secret.GetName() != "foo-secret-bar-9btc7bt4kb" {
+		t.Errorf("unexpected secret resource name: %s", secret.GetName())
+	}
 
-	for id, r := range actual {
-		if r.GetName() != id.NameWithPrefixSuffix() {
-			t.Errorf("unexpected hash was added to %s: %s", id.NameWithPrefixSuffix(), r.GetName())
-		}
+	kt.kustomization.GeneratorOptions = &types.GeneratorOptions{
+		DisableNameSuffixHash: true}
+	m, err = kt.MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("unexpected Resources error %v", err)
+	}
+	secret = findSecret(m)
+	if secret == nil {
+		t.Errorf("Expected to find a Secret")
+	}
+	if secret.GetName() != "foo-secret-bar" { // No hash at end.
+		t.Errorf("unexpected secret resource name: %s", secret.GetName())
 	}
 }
