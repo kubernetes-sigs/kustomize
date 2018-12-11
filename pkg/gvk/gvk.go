@@ -35,6 +35,7 @@ func FromKind(k string) Gvk {
 	}
 }
 
+// Values that are brief but meaningful in logs.
 const (
 	noGroup   = "~G"
 	noVersion = "~V"
@@ -113,11 +114,19 @@ func (x Gvk) IsLessThan(o Gvk) bool {
 
 // IsSelected returns true if `selector` selects `x`; otherwise, false.
 // If `selector` and `x` are the same, return true.
-// If `selector` is nil, it is considered as a wildcard and always return true.
-// e.g. selector <Group: "", Version: "", Kind: "Deployment"> CAN select
-// <Group: "extensions", Version: "v1beta1", Kind: "Deployment">.
-// selector <Group: "apps", Version: "", Kind: "Deployment"> CANNOT select
-// <Group: "extensions", Version: "v1beta1", Kind: "Deployment">.
+// If `selector` is nil, it is considered a wildcard match, returning true.
+// If selector fields are empty, they are considered wildcards matching
+// anything in the corresponding fields, .g.
+//   selector
+//       <Group: "",           Version: "",        Kind: "Deployment">
+//   selects
+//       <Group: "extensions", Version: "v1beta1", Kind: "Deployment">.
+//
+//   while selector
+//       <Group: "apps",       Version: "",        Kind: "Deployment">
+//   rejects
+//       <Group: "extensions", Version: "v1beta1", Kind: "Deployment">.
+//
 func (x Gvk) IsSelected(selector *Gvk) bool {
 	if selector == nil {
 		return true

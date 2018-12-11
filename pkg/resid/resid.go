@@ -17,7 +17,6 @@ limitations under the License.
 package resid
 
 import (
-	"fmt"
 	"strings"
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
@@ -125,44 +124,29 @@ func (n ResId) Name() string {
 	return n.name
 }
 
-// NameWithPrefixSuffix returns resource name with prefix and suffix.
-func (n ResId) NameWithPrefixSuffix() string {
-	prefix := strings.Join(n.prefixList(), "")
-	suffix := strings.Join(n.suffixList(), "")
-	return fmt.Sprintf("%s%s%s", prefix, n.name, suffix)
-}
-
-// Prefix returns name prefix.
-func (n ResId) Prefix() string {
-	return n.prefix
-}
-
-// Suffix returns name suffix.
-func (n ResId) Suffix() string {
-	return n.suffix
-}
-
 // Namespace returns resource namespace.
 func (n ResId) Namespace() string {
 	return n.namespace
 }
 
-// CopyWithNewPrefixSuffix make a new copy from current ResId and append a new prefix and suffix
+// CopyWithNewPrefixSuffix make a new copy from current ResId
+// and append a new prefix and suffix
 func (n ResId) CopyWithNewPrefixSuffix(p, s string) ResId {
-	prefix := n.prefix
+	result := n
 	if p != "" {
-		prefix = n.concatPrefix(p)
+		result.prefix = n.concatPrefix(p)
 	}
-	suffix := n.suffix
 	if s != "" {
-		suffix = n.concatSuffix(s)
+		result.suffix = n.concatSuffix(s)
 	}
-	return ResId{gvKind: n.gvKind, name: n.name, prefix: prefix, suffix: suffix, namespace: n.namespace}
+	return result
 }
 
 // CopyWithNewNamespace make a new copy from current ResId and set a new namespace
 func (n ResId) CopyWithNewNamespace(ns string) ResId {
-	return ResId{gvKind: n.gvKind, name: n.name, prefix: n.prefix, suffix: n.suffix, namespace: ns}
+	result := n
+	result.namespace = ns
+	return result
 }
 
 // HasSameLeftmostPrefix check if two ResIds have the same
