@@ -21,6 +21,11 @@ import (
 	"sigs.k8s.io/kustomize/pkg/patch"
 )
 
+const (
+	KustomizationVersion = "v1"
+	KustomizationKind    = "Kustomization"
+)
+
 // TypeMeta copies apimachinery/pkg/apis/meta/v1.TypeMeta
 type TypeMeta struct {
 	// Kind copies apimachinery/pkg/apis/meta/v1.Typemeta.Kind
@@ -144,6 +149,21 @@ func (k *Kustomization) DealWithDeprecatedFields() {
 			k.PatchesStrategicMerge, k.Patches...)
 		k.Patches = []string{}
 	}
+}
+
+func (k *Kustomization) EnforceFields() ([]string, []string) {
+	var msgs, errs []string
+	if k.APIVersion == "" {
+		msgs = append(msgs, "apiVersion is not defined. This will not be allowed in the next release.\nPlease add apiVersion: "+KustomizationVersion)
+	} else if k.APIVersion != KustomizationVersion {
+		errs = append(errs, "apiVersion should be "+KustomizationVersion)
+	}
+	if k.Kind == "" {
+		msgs = append(msgs, "kind is not defined. This will not be allowed in the next release.\nPlease add kind: "+KustomizationKind)
+	} else if k.Kind != KustomizationKind {
+		errs = append(errs, "kind should be "+KustomizationKind)
+	}
+	return msgs, errs
 }
 
 // GeneratorArgs contains arguments common to generators.
