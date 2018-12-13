@@ -18,6 +18,7 @@ package target
 
 import (
 	"encoding/base64"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -296,5 +297,42 @@ func TestDisableNameSuffixHash(t *testing.T) {
 	}
 	if secret.GetName() != "foo-secret-bar" { // No hash at end.
 		t.Errorf("unexpected secret resource name: %s", secret.GetName())
+	}
+}
+
+func write(t *testing.T, ldr loadertest.FakeLoader, dir string, content string) {
+	err := ldr.AddFile(
+		filepath.Join(dir, constants.KustomizationFileName),
+		[]byte(`
+apiVersion: v1
+kind: Kustomization
+`+content))
+	if err != nil {
+		t.Fatalf("Failed to setup fake loader.")
+	}
+}
+
+func TestIssue596AllowDirectoriesThatAreSubstringsOfEachOther(t *testing.T) {
+	ldr := loadertest.NewFakeLoader(
+		"/app/overlays/aws-sandbox2.us-east-1")
+	write(t, ldr, "/app/base", "")
+	write(t, ldr, "/app/overlays/aws", `
+bases:
+- ../../base
+`)
+	write(t, ldr, "/app/overlays/aws-nonprod", `
+bases:
+- ../aws
+`)
+	write(t, ldr, "/app/overlays/aws-sandbox2.us-east-1", `
+bases:
+- ../aws-nonprod
+`)
+	m, err := makeKustTarget(t, ldr).MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	if m == nil {
+		t.Fatalf("Empty map.")
 	}
 }
