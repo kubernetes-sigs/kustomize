@@ -36,9 +36,9 @@ func FromKind(k string) Gvk {
 }
 
 const (
-	noGroup   = "noGroup"
-	noVersion = "noVersion"
-	noKind    = "noKind"
+	noGroup   = "~G"
+	noVersion = "~V"
+	noKind    = "~K"
 	separator = "_"
 )
 
