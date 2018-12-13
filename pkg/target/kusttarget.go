@@ -66,6 +66,13 @@ func NewKustTarget(
 		return nil, err
 	}
 	k.DealWithDeprecatedFields()
+	msgs, errs := k.EnforceFields()
+	if len(errs) > 0 {
+		return nil, fmt.Errorf(strings.Join(errs, "\n"))
+	}
+	if len(msgs) > 0 {
+		log.Printf(strings.Join(msgs, "\n"))
+	}
 	tConfig, err := makeTransformerConfig(ldr, k.Configurations)
 	if err != nil {
 		return nil, err
