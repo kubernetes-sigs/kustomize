@@ -151,15 +151,29 @@ func (k *Kustomization) DealWithDeprecatedFields() {
 	}
 }
 
+// DealWithMissingFields fills the missing fields
+func (k *Kustomization) DealWithMissingFields() []string {
+	var msgs []string
+	if k.APIVersion == "" {
+		k.APIVersion = KustomizationVersion
+		msgs = append(msgs, "Fixed the missing field by adding apiVersion: "+KustomizationVersion)
+	}
+	if k.Kind == "" {
+		k.Kind = KustomizationKind
+		msgs = append(msgs, "Fixed the missing field by adding apiKind: "+KustomizationKind)
+	}
+	return msgs
+}
+
 func (k *Kustomization) EnforceFields() ([]string, []string) {
 	var msgs, errs []string
 	if k.APIVersion == "" {
-		msgs = append(msgs, "apiVersion is not defined. This will not be allowed in the next release.\nPlease add apiVersion: "+KustomizationVersion)
+		msgs = append(msgs, "apiVersion is not defined. This will not be allowed in the next release.\nPlease run `kustomize edit fix`")
 	} else if k.APIVersion != KustomizationVersion {
 		errs = append(errs, "apiVersion should be "+KustomizationVersion)
 	}
 	if k.Kind == "" {
-		msgs = append(msgs, "kind is not defined. This will not be allowed in the next release.\nPlease add kind: "+KustomizationKind)
+		msgs = append(msgs, "kind is not defined. This will not be allowed in the next release.\nPlease run `kustomize edit fix`")
 	} else if k.Kind != KustomizationKind {
 		errs = append(errs, "kind should be "+KustomizationKind)
 	}
