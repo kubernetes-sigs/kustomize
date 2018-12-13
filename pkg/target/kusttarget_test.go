@@ -298,3 +298,51 @@ func TestDisableNameSuffixHash(t *testing.T) {
 		t.Errorf("unexpected secret resource name: %s", secret.GetName())
 	}
 }
+
+func check(t *testing.T, err error) {
+	if err != nil {
+		t.Fatalf("Failed to setup fake loader.")
+	}
+}
+
+func TestIssue596AllowDirectoriesThatAreSubstringsOfEachOther(t *testing.T) {
+	ldr := loadertest.NewFakeLoader(
+		"/app/overlays/aws-sandbox2.us-east-1")
+	check(t, ldr.AddFile(
+		"/app/base/"+constants.KustomizationFileName,
+		[]byte(`
+apiVersion: v1
+kind: Kustomization
+`)))
+	check(t, ldr.AddFile(
+		"/app/overlays/aws/"+constants.KustomizationFileName,
+		[]byte(`
+apiVersion: v1
+kind: Kustomization
+bases:
+- ../../base
+`)))
+	check(t, ldr.AddFile(
+		"/app/overlays/aws-nonprod/"+constants.KustomizationFileName,
+		[]byte(`
+apiVersion: v1
+kind: Kustomization
+bases:
+- ../aws
+`)))
+	check(t, ldr.AddFile(
+		"/app/overlays/aws-sandbox2.us-east-1/"+constants.KustomizationFileName,
+		[]byte(`
+apiVersion: v1
+kind: Kustomization
+bases:
+- ../aws-nonprod
+`)))
+	m, err := makeKustTarget(t, ldr).MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	if m == nil {
+		t.Fatalf("Empty map.")
+	}
+}
