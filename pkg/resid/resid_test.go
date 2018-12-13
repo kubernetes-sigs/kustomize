@@ -111,3 +111,41 @@ func TestEquals(t *testing.T) {
 		}
 	}
 }
+
+func TestCopyWithNewPrefixSuffix(t *testing.T) {
+	r1 := ResId{
+		gvKind:    gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+		name:      "nm",
+		prefix:    "a",
+		suffix:    "b",
+		namespace: "X"}
+	r2 := r1.CopyWithNewPrefixSuffix("p-", "-s")
+	expected := ResId{
+		gvKind:    gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+		name:      "nm",
+		prefix:    "p-a",
+		suffix:    "b-s",
+		namespace: "X"}
+	if !r2.GvknEquals(expected) {
+		t.Fatalf("%v should equal %v", r2, expected)
+	}
+}
+
+func TestCopyWithNewNamespace(t *testing.T) {
+	r1 := ResId{
+		gvKind:    gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+		name:      "nm",
+		prefix:    "a",
+		suffix:    "b",
+		namespace: "X"}
+	r2 := r1.CopyWithNewNamespace("zzz")
+	expected := ResId{
+		gvKind:    gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+		name:      "nm",
+		prefix:    "a",
+		suffix:    "b",
+		namespace: "zzz"}
+	if !r2.GvknEquals(expected) {
+		t.Fatalf("%v should equal %v", r2, expected)
+	}
+}
