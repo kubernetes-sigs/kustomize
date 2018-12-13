@@ -75,13 +75,13 @@ var stringTests = []struct {
 	x Gvk
 	s string
 }{
-	{Gvk{}, "noGroup_noVersion_noKind"},
-	{Gvk{Kind: "k"}, "noGroup_noVersion_k"},
-	{Gvk{Version: "v"}, "noGroup_v_noKind"},
-	{Gvk{Version: "v", Kind: "k"}, "noGroup_v_k"},
-	{Gvk{Group: "g"}, "g_noVersion_noKind"},
-	{Gvk{Group: "g", Kind: "k"}, "g_noVersion_k"},
-	{Gvk{Group: "g", Version: "v"}, "g_v_noKind"},
+	{Gvk{}, "~G_~V_~K"},
+	{Gvk{Kind: "k"}, "~G_~V_k"},
+	{Gvk{Version: "v"}, "~G_v_~K"},
+	{Gvk{Version: "v", Kind: "k"}, "~G_v_k"},
+	{Gvk{Group: "g"}, "g_~V_~K"},
+	{Gvk{Group: "g", Kind: "k"}, "g_~V_k"},
+	{Gvk{Group: "g", Version: "v"}, "g_v_~K"},
 	{Gvk{Group: "g", Version: "v", Kind: "k"}, "g_v_k"},
 }
 
