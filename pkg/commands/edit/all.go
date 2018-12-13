@@ -19,6 +19,7 @@ package edit
 import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/commands/edit/add"
+	"sigs.k8s.io/kustomize/pkg/commands/edit/fix"
 	"sigs.k8s.io/kustomize/pkg/commands/edit/set"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
@@ -45,6 +46,7 @@ func NewCmdEdit(fsys fs.FileSystem, v ifc.Validator, kf ifc.KunstructuredFactory
 	c.AddCommand(
 		add.NewCmdAdd(fsys, v, kf),
 		set.NewCmdSet(fsys, v),
+		fix.NewCmdFix(fsys),
 	)
 	return c
 }
