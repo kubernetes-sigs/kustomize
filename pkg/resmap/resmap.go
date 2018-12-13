@@ -131,7 +131,9 @@ func (m ResMap) FilterBy(inputId resid.ResId) ResMap {
 	}
 	result := ResMap{}
 	for id, res := range m {
-		if id.Namespace() == inputId.Namespace() && id.HasSameLeftmostPrefix(inputId) && id.HasSameRightmostSuffix(inputId) {
+		if id.Namespace() == inputId.Namespace() &&
+			id.HasSameLeftmostPrefix(inputId) &&
+			id.HasSameRightmostSuffix(inputId) {
 			result[id] = res
 		}
 	}
