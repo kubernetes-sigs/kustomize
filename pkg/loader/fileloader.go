@@ -190,8 +190,9 @@ func newGitLoader(
 // seenBefore tests whether the current or any previously
 // visited root begins with the given path.
 func (l *fileLoader) seenBefore(path string) error {
+	terminated := path + string(filepath.Separator)
 	for _, r := range l.roots {
-		if strings.HasPrefix(r, path) {
+		if r == path || strings.HasPrefix(r, terminated) {
 			return fmt.Errorf(
 				"cycle detected: new root '%s' contains previous root '%s'",
 				path, r)
