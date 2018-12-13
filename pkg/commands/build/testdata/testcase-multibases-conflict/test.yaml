@@ -1,4 +1,4 @@
 description: multibases with name reference
 args: []
 filename: testdata/testcase-multibases-conflict/combined
-expectedError: Multiple matches for name noGroup_v1_ServiceAccount
+expectedError: Multiple matches for name ~G_v1_ServiceAccount

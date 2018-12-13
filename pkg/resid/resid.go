@@ -74,10 +74,10 @@ func NewResIdKindOnly(k string, n string) ResId {
 }
 
 const (
-	noNamespace = "noNamespace"
-	noPrefix    = "noPrefix"
-	noName      = "noName"
-	noSuffix    = "noSuffix"
+	noNamespace = "~X"
+	noPrefix    = "~P"
+	noName      = "~N"
+	noSuffix    = "~S"
 	separator   = "|"
 )
 
