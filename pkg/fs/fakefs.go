@@ -40,7 +40,9 @@ func MakeFakeFS() *fakeFs {
 }
 
 // kustomizationContent is used in tests.
-const kustomizationContent = `namePrefix: some-prefix
+const kustomizationContent = `apiVersion: v1
+kind: Kustomization
+namePrefix: some-prefix
 nameSuffix: some-suffix
 # Labels to add to all objects and selectors.
 # These labels would also be used to form the selector for apply --prune
