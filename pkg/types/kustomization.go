@@ -160,7 +160,7 @@ func (k *Kustomization) DealWithMissingFields() []string {
 	}
 	if k.Kind == "" {
 		k.Kind = KustomizationKind
-		msgs = append(msgs, "Fixed the missing field by adding apiKind: "+KustomizationKind)
+		msgs = append(msgs, "Fixed the missing field by adding kind: "+KustomizationKind)
 	}
 	return msgs
 }
