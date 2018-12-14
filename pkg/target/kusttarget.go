@@ -243,7 +243,7 @@ func (kt *KustTarget) loadCustomizedBases() (resmap.ResMap, *interror.Kustomizat
 	for _, path := range kt.kustomization.Bases {
 		ldr, err := kt.ldr.New(path)
 		if err != nil {
-			errs.Append(errors.Wrap(err, "couldn't make ldr for "+path))
+			errs.Append(errors.Wrap(err, "couldn't make loader for "+path))
 			continue
 		}
 		target, err := NewKustTarget(
