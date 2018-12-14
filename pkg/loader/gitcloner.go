@@ -119,11 +119,11 @@ func parseGithubUrl(n string) (
 	if strings.HasSuffix(n, ".git") {
 		n = n[0 : len(n)-len(".git")]
 	}
-	i := strings.Index(n, string(filepath.Separator))
+	i := strings.Index(n, "/")
 	if i < 1 {
 		return "", "", "", "", errors.New("no separator")
 	}
-	j := strings.Index(n[i+1:], string(filepath.Separator))
+	j := strings.Index(n[i+1:], "/")
 	if j >= 0 {
 		j += i + 1
 		repo = n[:j]
