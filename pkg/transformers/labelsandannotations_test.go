@@ -355,6 +355,12 @@ func TestLabelsRun(t *testing.T) {
 				"spec": map[string]interface{}{
 					"schedule": "* 23 * * *",
 					"jobTemplate": map[string]interface{}{
+						"metadata": map[string]interface{}{
+							"labels": map[string]interface{}{
+								"label-key1": "label-value1",
+								"label-key2": "label-value2",
+							},
+						},
 						"spec": map[string]interface{}{
 							"template": map[string]interface{}{
 								"metadata": map[string]interface{}{
@@ -390,6 +396,12 @@ func TestLabelsRun(t *testing.T) {
 				"spec": map[string]interface{}{
 					"schedule": "* 23 * * *",
 					"jobTemplate": map[string]interface{}{
+						"metadata": map[string]interface{}{
+							"labels": map[string]interface{}{
+								"label-key1": "label-value1",
+								"label-key2": "label-value2",
+							},
+						},
 						"spec": map[string]interface{}{
 							"selector": map[string]interface{}{
 								"matchLabels": map[string]interface{}{
