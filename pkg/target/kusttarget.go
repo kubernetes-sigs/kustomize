@@ -218,7 +218,7 @@ func (kt *KustTarget) generateConfigMapsAndSecrets(
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromSecretArgs"))
 	}
-	return resmap.MergeWithoutOverride(cms, secrets)
+	return resmap.MergeWithErrorOnIdCollision(cms, secrets)
 }
 
 // Gets Bases and Resources as advertised.
@@ -232,7 +232,7 @@ func (kt *KustTarget) loadResMapFromBasesAndResources() (resmap.ResMap, error) {
 	if len(errs.Get()) > 0 {
 		return nil, errs
 	}
-	return resmap.MergeWithoutOverride(resources, bases)
+	return resmap.MergeWithErrorOnIdCollision(resources, bases)
 }
 
 // Loop through the Bases of this kustomization recursively loading resources.
@@ -261,7 +261,7 @@ func (kt *KustTarget) loadCustomizedBases() (resmap.ResMap, *interror.Kustomizat
 		ldr.Cleanup()
 		list = append(list, resMap)
 	}
-	result, err := resmap.MergeWithoutOverride(list...)
+	result, err := resmap.MergeWithErrorOnIdCollision(list...)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "Merge failed"))
 	}
