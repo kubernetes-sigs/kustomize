@@ -410,7 +410,7 @@ func TestMergeWithoutOverride(t *testing.T) {
 				},
 			}),
 	}
-	merged, err := MergeWithoutOverride(input...)
+	merged, err := MergeWithErrorOnIdCollision(input...)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -418,7 +418,7 @@ func TestMergeWithoutOverride(t *testing.T) {
 		t.Fatalf("%#v doesn't equal expected %#v", merged, expected)
 	}
 	input3 := []ResMap{merged, nil}
-	merged1, err := MergeWithoutOverride(input3...)
+	merged1, err := MergeWithErrorOnIdCollision(input3...)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -426,7 +426,7 @@ func TestMergeWithoutOverride(t *testing.T) {
 		t.Fatalf("%#v doesn't equal expected %#v", merged1, expected)
 	}
 	input4 := []ResMap{nil, merged}
-	merged2, err := MergeWithoutOverride(input4...)
+	merged2, err := MergeWithErrorOnIdCollision(input4...)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
