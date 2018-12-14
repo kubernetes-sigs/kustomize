@@ -350,3 +350,173 @@ bases:
 		t.Fatalf("Empty map.")
 	}
 }
+
+var someVars = []types.Var{
+	{
+		Name: "AWARD",
+		ObjRef: types.Target{
+			APIVersion: "v7",
+			Gvk:        gvk.Gvk{Kind: "Service"},
+			Name:       "nobelPrize"},
+		FieldRef: types.FieldSelector{FieldPath: "some.arbitrary.path"},
+	},
+	{
+		Name: "BIRD",
+		ObjRef: types.Target{
+			APIVersion: "v300",
+			Gvk:        gvk.Gvk{Kind: "Service"},
+			Name:       "heron"},
+		FieldRef: types.FieldSelector{FieldPath: "metadata.name"},
+	},
+	{
+		Name: "FRUIT",
+		ObjRef: types.Target{
+			Gvk:  gvk.Gvk{Kind: "Service"},
+			Name: "apple"},
+		FieldRef: types.FieldSelector{FieldPath: "metadata.name"},
+	},
+	{
+		Name: "VEGETABLE",
+		ObjRef: types.Target{
+			Gvk:  gvk.Gvk{Kind: "Leafy"},
+			Name: "kale"},
+		FieldRef: types.FieldSelector{FieldPath: "metadata.name"},
+	},
+}
+
+func TestGetAllVarsSimple(t *testing.T) {
+	ldr := loadertest.NewFakeLoader(
+		"/app")
+	write(t, ldr, "/app", `
+vars:
+  - name: AWARD
+    objref:
+      kind: Service
+      name: nobelPrize
+      apiVersion: v7
+    fieldref:
+      fieldpath: some.arbitrary.path
+  - name: BIRD
+    objref:
+      kind: Service
+      name: heron
+      apiVersion: v300
+`)
+	vars, err := makeKustTarget(t, ldr).getAllVars()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	if len(vars) != 2 {
+		t.Fatalf("unexpected size %d", len(vars))
+	}
+	for i, v := range someVars[:2] {
+		if !reflect.DeepEqual(vars[i], v) {
+			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[i], v)
+		}
+	}
+}
+
+func TestGetAllVarsNested(t *testing.T) {
+	ldr := loadertest.NewFakeLoader(
+		"/app/overlays/o2")
+	write(t, ldr, "/app/base", `
+vars:
+  - name: AWARD
+    objref:
+      kind: Service
+      name: nobelPrize
+      apiVersion: v7
+    fieldref:
+      fieldpath: some.arbitrary.path
+  - name: BIRD
+    objref:
+      kind: Service
+      name: heron
+      apiVersion: v300
+`)
+	write(t, ldr, "/app/overlays/o1", `
+vars:
+  - name: FRUIT
+    objref:
+      kind: Service
+      name: apple
+bases:
+- ../../base
+`)
+	write(t, ldr, "/app/overlays/o2", `
+vars:
+  - name: VEGETABLE
+    objref:
+      kind: Leafy
+      name: kale
+bases:
+- ../o1
+`)
+	vars, err := makeKustTarget(t, ldr).getAllVars()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	if len(vars) != 4 {
+		t.Fatalf("unexpected size %d", len(vars))
+	}
+	for i, v := range someVars {
+		if !reflect.DeepEqual(vars[i], v) {
+			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[i], v)
+		}
+	}
+}
+
+// TODO(monopole): Fix #634
+func TestGetAllVarsCollisionsOkay_ReproIssue634(t *testing.T) {
+	ldr := loadertest.NewFakeLoader(
+		"/app/overlays/o2")
+	write(t, ldr, "/app/base", `
+vars:
+  - name: AWARD
+    objref:
+      kind: Service
+      name: nobelPrize
+      apiVersion: v7
+    fieldref:
+      fieldpath: some.arbitrary.path
+  - name: BIRD
+    objref:
+      kind: Service
+      name: heron
+      apiVersion: v300
+`)
+	write(t, ldr, "/app/overlays/o1", `
+vars:
+  - name: AWARD
+    objref:
+      kind: Service
+      name: academy
+bases:
+- ../../base
+`)
+	write(t, ldr, "/app/overlays/o2", `
+vars:
+  - name: VEGETABLE
+    objref:
+      kind: Leafy
+      name: kale
+bases:
+- ../o1
+`)
+	vars, err := makeKustTarget(t, ldr).getAllVars()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	if len(vars) != 4 {
+		t.Fatalf("unexpected size %d", len(vars))
+	}
+	v2 := someVars[2]
+	v2.Name = "AWARD"
+	v2.ObjRef.Name = "academy"
+	expected := []types.Var{someVars[0], someVars[1], v2, someVars[3]}
+	for i, v := range expected {
+		if !reflect.DeepEqual(vars[i], v) {
+			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[i], v)
+		}
+	}
+}
