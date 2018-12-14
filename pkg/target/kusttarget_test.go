@@ -38,6 +38,8 @@ import (
 
 const (
 	kustomizationContent1 = `
+apiVersion: v1
+kind: Kustomization
 namePrefix: foo-
 nameSuffix: -bar
 namespace: ns1
@@ -68,6 +70,8 @@ patchesJson6902:
   path: jsonpatch.json
 `
 	kustomizationContent2 = `
+apiVersion: v1
+kind: Kustomization
 secretGenerator:
 - name: secret
   timeoutSeconds: 1
