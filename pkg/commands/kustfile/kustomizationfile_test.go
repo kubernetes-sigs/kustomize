@@ -78,6 +78,7 @@ func TestWriteAndRead(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Couldn't read kustomization file: %v\n", err)
 	}
+	kustomization.DealWithMissingFields()
 	if !reflect.DeepEqual(kustomization, content) {
 		t.Fatal("Read kustomization is different from written kustomization")
 	}
@@ -172,6 +173,8 @@ func TestPreserveComments(t *testing.T) {
 		`# shem qing some comments
 # This is some comment we should preserve
 # don't delete it
+apiVersion: v1
+kind: Kustomization
 resources:
 - pod.yaml
 - service.yaml
