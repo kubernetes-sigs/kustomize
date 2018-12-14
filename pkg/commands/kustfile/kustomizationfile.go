@@ -153,6 +153,10 @@ func (mf *kustomizationFile) Read() (*types.Kustomization, error) {
 		return nil, err
 	}
 	k.DealWithDeprecatedFields()
+	msgs := k.DealWithMissingFields()
+	if len(msgs) > 0 {
+		log.Printf(strings.Join(msgs, "\n"))
+	}
 	err = mf.parseCommentedFields(data)
 	if err != nil {
 		return nil, err
