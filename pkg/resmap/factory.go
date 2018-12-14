@@ -57,7 +57,7 @@ func (rmF *Factory) FromFiles(
 		}
 		result = append(result, res)
 	}
-	return MergeWithoutOverride(result...)
+	return MergeWithErrorOnIdCollision(result...)
 }
 
 // newResMapFromBytes decodes a list of objects in byte array format.
