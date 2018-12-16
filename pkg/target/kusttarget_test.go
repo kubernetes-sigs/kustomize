@@ -20,6 +20,7 @@ import (
 	"encoding/base64"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 
@@ -351,6 +352,7 @@ bases:
 	}
 }
 
+// To simplify tests, these vars specified in alphabetical order.
 var someVars = []types.Var{
 	{
 		Name: "AWARD",
@@ -387,7 +389,7 @@ var someVars = []types.Var{
 func TestGetAllVarsSimple(t *testing.T) {
 	ldr := loadertest.NewFakeLoader(
 		"/app")
-	write(t, ldr, "/app", `
+	writeK(t, ldr, "/app", `
 vars:
   - name: AWARD
     objref:
@@ -409,17 +411,25 @@ vars:
 	if len(vars) != 2 {
 		t.Fatalf("unexpected size %d", len(vars))
 	}
-	for i, v := range someVars[:2] {
-		if !reflect.DeepEqual(vars[i], v) {
-			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[i], v)
+	for i, k := range sortedKeys(vars)[:2] {
+		if !reflect.DeepEqual(vars[k], someVars[i]) {
+			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[k], someVars[i])
 		}
 	}
+}
+
+func sortedKeys(m map[string]types.Var) (result []string) {
+	for k := range m {
+		result = append(result, k)
+	}
+	sort.Strings(result)
+	return
 }
 
 func TestGetAllVarsNested(t *testing.T) {
 	ldr := loadertest.NewFakeLoader(
 		"/app/overlays/o2")
-	write(t, ldr, "/app/base", `
+	writeK(t, ldr, "/app/base", `
 vars:
   - name: AWARD
     objref:
@@ -434,7 +444,7 @@ vars:
       name: heron
       apiVersion: v300
 `)
-	write(t, ldr, "/app/overlays/o1", `
+	writeK(t, ldr, "/app/overlays/o1", `
 vars:
   - name: FRUIT
     objref:
@@ -443,7 +453,7 @@ vars:
 bases:
 - ../../base
 `)
-	write(t, ldr, "/app/overlays/o2", `
+	writeK(t, ldr, "/app/overlays/o2", `
 vars:
   - name: VEGETABLE
     objref:
@@ -459,18 +469,17 @@ bases:
 	if len(vars) != 4 {
 		t.Fatalf("unexpected size %d", len(vars))
 	}
-	for i, v := range someVars {
-		if !reflect.DeepEqual(vars[i], v) {
-			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[i], v)
+	for i, k := range sortedKeys(vars) {
+		if !reflect.DeepEqual(vars[k], someVars[i]) {
+			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[k], someVars[i])
 		}
 	}
 }
 
-// TODO(monopole): Fix #634
-func TestGetAllVarsCollisionsOkay_ReproIssue634(t *testing.T) {
+func TestVarCollisionsForbidden(t *testing.T) {
 	ldr := loadertest.NewFakeLoader(
 		"/app/overlays/o2")
-	write(t, ldr, "/app/base", `
+	writeK(t, ldr, "/app/base", `
 vars:
   - name: AWARD
     objref:
@@ -485,7 +494,7 @@ vars:
       name: heron
       apiVersion: v300
 `)
-	write(t, ldr, "/app/overlays/o1", `
+	writeK(t, ldr, "/app/overlays/o1", `
 vars:
   - name: AWARD
     objref:
@@ -494,7 +503,7 @@ vars:
 bases:
 - ../../base
 `)
-	write(t, ldr, "/app/overlays/o2", `
+	writeK(t, ldr, "/app/overlays/o2", `
 vars:
   - name: VEGETABLE
     objref:
@@ -503,20 +512,11 @@ vars:
 bases:
 - ../o1
 `)
-	vars, err := makeKustTarget(t, ldr).getAllVars()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
+	_, err := makeKustTarget(t, ldr).getAllVars()
+	if err == nil {
+		t.Fatalf("expected var collision")
 	}
-	if len(vars) != 4 {
-		t.Fatalf("unexpected size %d", len(vars))
-	}
-	v2 := someVars[2]
-	v2.Name = "AWARD"
-	v2.ObjRef.Name = "academy"
-	expected := []types.Var{someVars[0], someVars[1], v2, someVars[3]}
-	for i, v := range expected {
-		if !reflect.DeepEqual(vars[i], v) {
-			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[i], v)
-		}
+	if _, ok := err.(ErrVarCollision); !ok {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
