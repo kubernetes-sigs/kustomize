@@ -44,7 +44,7 @@ func isRepoUrl(arg string) bool {
 		(strings.HasPrefix(arg, "git::") ||
 			strings.HasPrefix(arg, "gh:") ||
 			strings.HasPrefix(arg, "github.com") ||
-			strings.HasPrefix(arg, "git@github.com:") ||
+			strings.HasPrefix(arg, "git@") ||
 			strings.Index(arg, "github.com/") > -1 ||
 			isAzureHost(arg) || isAWSHost(arg))
 }
@@ -106,7 +106,10 @@ func parseUrl(n string) (
 	return
 }
 
-const refQuery = "?ref="
+const (
+	refQuery  = "?ref="
+	gitSuffix = ".git"
+)
 
 // From strings like git@github.com:someOrg/someRepo.git or
 // https://github.com/someOrg/someRepo?ref=someHash, extract
@@ -116,8 +119,16 @@ func parseGithubUrl(n string) (
 	host, n = parseHostSpec(n)
 	host = normalizeGitHostSpec(host)
 
-	if strings.HasSuffix(n, ".git") {
-		n = n[0 : len(n)-len(".git")]
+	if strings.HasSuffix(n, gitSuffix) {
+		repo = n[0 : len(n)-len(gitSuffix)]
+		return
+	}
+	if strings.Contains(n, gitSuffix) {
+		index := strings.Index(n, gitSuffix)
+		repo = n[0:index]
+		n = n[index+len(gitSuffix):]
+		path, gitRef = peelQuery(n)
+		return
 	}
 	i := strings.Index(n, "/")
 	if i < 1 {
