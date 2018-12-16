@@ -221,9 +221,7 @@ spec:
 `)
 }
 
-// TODO: Test demonstrates bug #605.
-// The customization supplied in a base isn't available to the overlay.
-func TestBug605(t *testing.T) {
+func TestFixedBug605_BaseCustomizationAvailableInOverlay(t *testing.T) {
 	th := NewKustTestHarness(t, "/app/overlay")
 	makeBaseReferencingCustomConfig(th)
 	th.writeDefaultConfigs("/app/base/config/defaults.yaml")
@@ -274,13 +272,8 @@ spec:
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	// Problems in the expected result:
-	// - The variables are not replaced in the "food" fields.
-	// - The name of the AnimalPark should be x-o-sandiego, since
-	//   AnimalPark appears in the base.
-	// - The giraffe and gorilla name are incorrect in AnimalPark;
-	//   they should be o-x-april and o-ursus respectively.  The
-	//   Gorilla ursus doesn't get an x because it's not in the base.
+	// TODO(#669): The name of AnimalPark be x-o-sandiego,
+	// not o-sandiego, since AnimalPark appears in the base.
 	th.assertActualEqualsExpected(m, `
 kind: AnimalPark
 metadata:
@@ -290,12 +283,12 @@ metadata:
   name: o-sandiego
 spec:
   food:
-  - $(APRIL_DIET)
-  - $(KOKO_DIET)
+  - mimosa
+  - bambooshoots
   giraffeRef:
-    name: april
+    name: o-x-april
   gorillaRef:
-    name: ursus
+    name: o-ursus
 ---
 kind: Giraffe
 metadata:
