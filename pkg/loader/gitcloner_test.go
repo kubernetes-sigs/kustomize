@@ -53,6 +53,14 @@ func TestIsRepoURL(t *testing.T) {
 			expected: true,
 		},
 		{
+			input:    "git@gitlab2.sqtools.ru:10022/infra/kubernetes/thanos-base.git?ref=v0.1.0",
+			expected: true,
+		},
+		{
+			input:    "git@bitbucket.org:org/repo.git",
+			expected: true,
+		},
+		{
 			input:    "/github.com/org/repo",
 			expected: false,
 		},
@@ -282,6 +290,12 @@ func TestParseUrl(t *testing.T) {
 			repo:  "git@github.com:someorg/somerepo.git",
 			path:  "somedir",
 			ref:   "",
+		},
+		{
+			input: "git@gitlab2.sqtools.ru:10022/infra/kubernetes/thanos-base.git?ref=v0.1.0",
+			repo:  "git@gitlab2.sqtools.ru:10022/infra/kubernetes/thanos-base.git",
+			path:  "",
+			ref:   "v0.1.0",
 		},
 	}
 	for _, testcase := range testcases {
