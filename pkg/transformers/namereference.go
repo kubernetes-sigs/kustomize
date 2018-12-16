@@ -17,8 +17,8 @@ limitations under the License.
 package transformers
 
 import (
-	"errors"
 	"fmt"
+	"log"
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
@@ -33,18 +33,31 @@ var _ Transformer = &nameReferenceTransformer{}
 
 // NewNameReferenceTransformer constructs a nameReferenceTransformer
 // with a given slice of NameBackReferences.
-func NewNameReferenceTransformer(
-	br []config.NameBackReferences) (Transformer, error) {
+func NewNameReferenceTransformer(br []config.NameBackReferences) Transformer {
 	if br == nil {
-		return nil, errors.New("backrefs not expected to be nil")
+		log.Fatal("backrefs not expected to be nil")
 	}
-	return &nameReferenceTransformer{backRefs: br}, nil
+	return &nameReferenceTransformer{backRefs: br}
 }
 
-// Transform does the field update according to fieldSpecs.
-// The old name is in the key in the map and the new name is in the object
-// associated with the key. e.g. if <k, v> is one of the key-value pair in the map,
-// then the old name is k.Name and the new name is v.GetName()
+// Transform updates name references in resource A that refer to resource B,
+// given that B's name may have changed.
+//
+// For example, a HorizontalPodAutoscaler (HPA) necessarily refers to a
+// Deployment (the thing that the HPA scales). The Deployment name might change
+// (e.g. prefix added), and the reference in the HPA has to be fixed.
+//
+// In the outer loop below, we encounter an HPA.  In scanning backrefs, we
+// find that HPA refers to a Deployment.  So we find all resources in the same
+// namespace as the HPA (and with the same prefix and suffix), and look through
+// them to find all the Deployments with a resId that has a Name matching the
+// field in HPA.  For each match, we overwrite the HPA name field with the value
+// found in the Deployment's name field (the name in the raw object - the
+// modified name - not the unmodified name in the resId).
+//
+// This assumes that the name stored in a ResId (the ResMap key) isn't modified
+// by name transformers.  Name transformers should only modify the name in the
+// body of the resource object (the value in the ResMap).
 func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 	// TODO: Too much looping.
 	// Even more hidden loops in FilterBy,

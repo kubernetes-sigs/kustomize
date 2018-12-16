@@ -417,11 +417,8 @@ func TestNameReferenceHappyRun(t *testing.T) {
 				},
 			},
 		})
-	nrt, err := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	err = nrt.Transform(m)
+	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
+	err := nrt.Transform(m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -483,19 +480,16 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 			expectedErr: "is expected to be either a string or a []interface{}"},
 	}
 
-	nrt, err := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
+	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
 	for _, test := range tests {
-		err = nrt.Transform(test.resMap)
+		err := nrt.Transform(test.resMap)
 		if err == nil {
 			t.Fatalf("expected error to happen")
 		}
 
 		if !strings.Contains(err.Error(), test.expectedErr) {
-			t.Fatalf("Incorrect error.\nExpected: %s, but got %v", test.expectedErr, err)
+			t.Fatalf("Incorrect error.\nExpected: %s, but got %v",
+				test.expectedErr, err)
 		}
 	}
 }
