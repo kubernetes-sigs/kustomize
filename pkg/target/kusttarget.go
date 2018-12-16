@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package target implements state for the set of all resources being customized.
+// Package target implements state for the set of all resources to customize.
 package target
 
 import (
@@ -97,9 +97,10 @@ func unmarshal(y []byte, o interface{}) error {
 	return dec.Decode(o)
 }
 
-// makeTransformerConfig returns a complete TransformerConfig object from either files
-// or the default configs
-func makeTransformerConfig(ldr ifc.Loader, paths []string) (*config.TransformerConfig, error) {
+// makeTransformerConfig returns a complete TransformerConfig object
+// from either files or the default configs
+func makeTransformerConfig(
+	ldr ifc.Loader, paths []string) (*config.TransformerConfig, error) {
 	if paths == nil || len(paths) == 0 {
 		return config.NewFactory(nil).DefaultConfig(), nil
 	}
@@ -113,13 +114,7 @@ func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 	if err != nil {
 		return nil, err
 	}
-	return kt.resolveRefsToGeneratedResources(m)
-}
-
-// resolveRefsToGeneratedResources fixes all name references.
-func (kt *KustTarget) resolveRefsToGeneratedResources(m resmap.ResMap) (resmap.ResMap, error) {
-	if kt.kustomization.GeneratorOptions == nil ||
-		!kt.kustomization.GeneratorOptions.DisableNameSuffixHash {
+	if kt.shouldAddHashSuffixesToGeneratedResources() {
 		// This effects only generated resources.
 		// It changes only the Name field in the
 		// resource held in the ResMap's value, not
@@ -129,25 +124,28 @@ func (kt *KustTarget) resolveRefsToGeneratedResources(m resmap.ResMap) (resmap.R
 			return nil, err
 		}
 	}
-	var r []transformers.Transformer
-	t, err := transformers.NewNameReferenceTransformer(kt.tConfig.NameReference)
-	if err != nil {
-		return nil, err
-	}
-	r = append(r, t)
 
-	refVars, err := kt.resolveRefVars(m)
+	// Given that names have changed (prefixs/suffixes added),
+	// fix all the back references to those names.
+	err = transformers.NewNameReferenceTransformer(
+		kt.tConfig.NameReference).Transform(m)
 	if err != nil {
 		return nil, err
 	}
-	t = transformers.NewRefVarTransformer(refVars, kt.tConfig.VarReference)
-	r = append(r, t)
 
-	err = transformers.NewMultiTransformer(r).Transform(m)
+	// With all the back references fixed, it's OK to resolve Vars.
+	refVars, err := kt.resolveVars(m)
 	if err != nil {
 		return nil, err
 	}
-	return m, nil
+	err = transformers.NewRefVarTransformer(
+		refVars, kt.tConfig.VarReference).Transform(m)
+	return m, err
+}
+
+func (kt *KustTarget) shouldAddHashSuffixesToGeneratedResources() bool {
+	return kt.kustomization.GeneratorOptions == nil ||
+		!kt.kustomization.GeneratorOptions.DisableNameSuffixHash
 }
 
 // loadCustomizedResMap loads and customizes resources to build a ResMap.
@@ -268,7 +266,7 @@ func (kt *KustTarget) loadCustomizedBases() (resmap.ResMap, *interror.Kustomizat
 	return result, errs
 }
 
-func (kt *KustTarget) loadBasesAsFlatList() ([]*KustTarget, error) {
+func (kt *KustTarget) loadBasesAsKustTargets() ([]*KustTarget, error) {
 	var result []*KustTarget
 	errs := &interror.KustomizationErrors{}
 	for _, path := range kt.kustomization.Bases {
@@ -291,8 +289,10 @@ func (kt *KustTarget) loadBasesAsFlatList() ([]*KustTarget, error) {
 	return result, nil
 }
 
-// newTransformer makes a Transformer that does everything except resolve generated names.
-func (kt *KustTarget) newTransformer(patches []*resource.Resource) (transformers.Transformer, error) {
+// newTransformer makes a Transformer that does a collection
+// of object transformations.
+func (kt *KustTarget) newTransformer(
+	patches []*resource.Resource) (transformers.Transformer, error) {
 	var r []transformers.Transformer
 	t, err := kt.tFactory.MakePatchTransformer(patches, kt.rFactory.RF())
 	if err != nil {
@@ -325,7 +325,10 @@ func (kt *KustTarget) newTransformer(patches []*resource.Resource) (transformers
 	return transformers.NewMultiTransformer(r), nil
 }
 
-func (kt *KustTarget) resolveRefVars(m resmap.ResMap) (map[string]string, error) {
+// resolveVars returns a map of Var names to their final values.
+// The values are strings intended for substitution wherever
+// the $(var.Name) occurs.
+func (kt *KustTarget) resolveVars(m resmap.ResMap) (map[string]string, error) {
 	result := map[string]string{}
 	vars, err := kt.getAllVars()
 	if err != nil {
@@ -336,11 +339,11 @@ func (kt *KustTarget) resolveRefVars(m resmap.ResMap) (map[string]string, error)
 		if r, found := m.DemandOneMatchForId(id); found {
 			s, err := r.GetFieldValue(v.FieldRef.FieldPath)
 			if err != nil {
-				return nil, fmt.Errorf("failed to resolve referred var: %+v", v)
+				return nil, fmt.Errorf("field path err for var: %+v", v)
 			}
 			result[v.Name] = s
 		} else {
-			log.Printf("couldn't resolve v: %v", v)
+			log.Printf("couldn't resolve var: %v", v)
 		}
 	}
 	return result, nil
@@ -351,7 +354,7 @@ func (kt *KustTarget) getAllVars() ([]types.Var, error) {
 	var result []types.Var
 	errs := &interror.KustomizationErrors{}
 
-	bases, err := kt.loadBasesAsFlatList()
+	bases, err := kt.loadBasesAsKustTargets()
 	if err != nil {
 		return nil, err
 	}
@@ -377,7 +380,9 @@ func (kt *KustTarget) getAllVars() ([]types.Var, error) {
 }
 
 func loadKustFile(ldr ifc.Loader) ([]byte, error) {
-	for _, kf := range []string{constants.KustomizationFileName, constants.SecondaryKustomizationFileName} {
+	for _, kf := range []string{
+		constants.KustomizationFileName,
+		constants.SecondaryKustomizationFileName} {
 		content, err := ldr.Load(kf)
 		if err == nil {
 			return content, nil
