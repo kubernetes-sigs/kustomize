@@ -99,17 +99,15 @@ func TestBuild(t *testing.T) {
 		return nil
 	})
 	// sanity check that we found the right folder
-	if !kustfile.StringInSlice("simple", testcases) {
+	if !kustfile.StringInSlice("multiple-patches-noconflict", testcases) {
 		t.Fatalf("Error locating testcases")
 	}
-
 	for _, testcaseName := range testcases {
 		t.Run(testcaseName,
 			func(t *testing.T) {
 				runBuildTestCase(t, testcaseName, updateKustomizeExpected, fSys)
 			})
 	}
-
 }
 
 func runBuildTestCase(t *testing.T, testcaseName string, updateKustomizeExpected bool, fSys fs.FileSystem) {
