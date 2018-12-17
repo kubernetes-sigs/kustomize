@@ -20,6 +20,7 @@ import (
 	"encoding/base64"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 
@@ -348,5 +349,174 @@ bases:
 	}
 	if m == nil {
 		t.Fatalf("Empty map.")
+	}
+}
+
+// To simplify tests, these vars specified in alphabetical order.
+var someVars = []types.Var{
+	{
+		Name: "AWARD",
+		ObjRef: types.Target{
+			APIVersion: "v7",
+			Gvk:        gvk.Gvk{Kind: "Service"},
+			Name:       "nobelPrize"},
+		FieldRef: types.FieldSelector{FieldPath: "some.arbitrary.path"},
+	},
+	{
+		Name: "BIRD",
+		ObjRef: types.Target{
+			APIVersion: "v300",
+			Gvk:        gvk.Gvk{Kind: "Service"},
+			Name:       "heron"},
+		FieldRef: types.FieldSelector{FieldPath: "metadata.name"},
+	},
+	{
+		Name: "FRUIT",
+		ObjRef: types.Target{
+			Gvk:  gvk.Gvk{Kind: "Service"},
+			Name: "apple"},
+		FieldRef: types.FieldSelector{FieldPath: "metadata.name"},
+	},
+	{
+		Name: "VEGETABLE",
+		ObjRef: types.Target{
+			Gvk:  gvk.Gvk{Kind: "Leafy"},
+			Name: "kale"},
+		FieldRef: types.FieldSelector{FieldPath: "metadata.name"},
+	},
+}
+
+func TestGetAllVarsSimple(t *testing.T) {
+	ldr := loadertest.NewFakeLoader(
+		"/app")
+	writeK(t, ldr, "/app", `
+vars:
+  - name: AWARD
+    objref:
+      kind: Service
+      name: nobelPrize
+      apiVersion: v7
+    fieldref:
+      fieldpath: some.arbitrary.path
+  - name: BIRD
+    objref:
+      kind: Service
+      name: heron
+      apiVersion: v300
+`)
+	vars, err := makeKustTarget(t, ldr).getAllVars()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	if len(vars) != 2 {
+		t.Fatalf("unexpected size %d", len(vars))
+	}
+	for i, k := range sortedKeys(vars)[:2] {
+		if !reflect.DeepEqual(vars[k], someVars[i]) {
+			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[k], someVars[i])
+		}
+	}
+}
+
+func sortedKeys(m map[string]types.Var) (result []string) {
+	for k := range m {
+		result = append(result, k)
+	}
+	sort.Strings(result)
+	return
+}
+
+func TestGetAllVarsNested(t *testing.T) {
+	ldr := loadertest.NewFakeLoader(
+		"/app/overlays/o2")
+	writeK(t, ldr, "/app/base", `
+vars:
+  - name: AWARD
+    objref:
+      kind: Service
+      name: nobelPrize
+      apiVersion: v7
+    fieldref:
+      fieldpath: some.arbitrary.path
+  - name: BIRD
+    objref:
+      kind: Service
+      name: heron
+      apiVersion: v300
+`)
+	writeK(t, ldr, "/app/overlays/o1", `
+vars:
+  - name: FRUIT
+    objref:
+      kind: Service
+      name: apple
+bases:
+- ../../base
+`)
+	writeK(t, ldr, "/app/overlays/o2", `
+vars:
+  - name: VEGETABLE
+    objref:
+      kind: Leafy
+      name: kale
+bases:
+- ../o1
+`)
+	vars, err := makeKustTarget(t, ldr).getAllVars()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	if len(vars) != 4 {
+		t.Fatalf("unexpected size %d", len(vars))
+	}
+	for i, k := range sortedKeys(vars) {
+		if !reflect.DeepEqual(vars[k], someVars[i]) {
+			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[k], someVars[i])
+		}
+	}
+}
+
+func TestVarCollisionsForbidden(t *testing.T) {
+	ldr := loadertest.NewFakeLoader(
+		"/app/overlays/o2")
+	writeK(t, ldr, "/app/base", `
+vars:
+  - name: AWARD
+    objref:
+      kind: Service
+      name: nobelPrize
+      apiVersion: v7
+    fieldref:
+      fieldpath: some.arbitrary.path
+  - name: BIRD
+    objref:
+      kind: Service
+      name: heron
+      apiVersion: v300
+`)
+	writeK(t, ldr, "/app/overlays/o1", `
+vars:
+  - name: AWARD
+    objref:
+      kind: Service
+      name: academy
+bases:
+- ../../base
+`)
+	writeK(t, ldr, "/app/overlays/o2", `
+vars:
+  - name: VEGETABLE
+    objref:
+      kind: Leafy
+      name: kale
+bases:
+- ../o1
+`)
+	_, err := makeKustTarget(t, ldr).getAllVars()
+	if err == nil {
+		t.Fatalf("expected var collision")
+	}
+	if _, ok := err.(ErrVarCollision); !ok {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
