@@ -124,28 +124,36 @@ func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 			return nil, err
 		}
 	}
-
 	// Given that names have changed (prefixs/suffixes added),
 	// fix all the back references to those names.
-	err = transformers.NewNameReferenceTransformer(
-		kt.tConfig.NameReference).Transform(m)
-	if err != nil {
-		return nil, err
+	if kt.tConfig.NameReference != nil {
+		err = transformers.NewNameReferenceTransformer(
+			kt.tConfig.NameReference).Transform(m)
+		if err != nil {
+			return nil, err
+		}
 	}
-
 	// With all the back references fixed, it's OK to resolve Vars.
-	refVars, err := kt.resolveVars(m)
-	if err != nil {
-		return nil, err
-	}
-	err = transformers.NewRefVarTransformer(
-		refVars, kt.tConfig.VarReference).Transform(m)
+	err = kt.doVarReplacement(m)
 	return m, err
 }
 
 func (kt *KustTarget) shouldAddHashSuffixesToGeneratedResources() bool {
 	return kt.kustomization.GeneratorOptions == nil ||
 		!kt.kustomization.GeneratorOptions.DisableNameSuffixHash
+}
+
+func (kt *KustTarget) doVarReplacement(m resmap.ResMap) error {
+	vars, err := kt.getAllVars()
+	if err != nil {
+		return err
+	}
+	varMap, err := kt.resolveVars(m, vars)
+	if err != nil {
+		return err
+	}
+	return transformers.NewRefVarTransformer(
+		varMap, kt.tConfig.VarReference).Transform(m)
 }
 
 // loadCustomizedResMap loads and customizes resources to build a ResMap.
@@ -235,7 +243,8 @@ func (kt *KustTarget) loadResMapFromBasesAndResources() (resmap.ResMap, error) {
 
 // Loop through the Bases of this kustomization recursively loading resources.
 // Combine into one ResMap, demanding unique Ids for each resource.
-func (kt *KustTarget) loadCustomizedBases() (resmap.ResMap, *interror.KustomizationErrors) {
+func (kt *KustTarget) loadCustomizedBases() (
+	resmap.ResMap, *interror.KustomizationErrors) {
 	var list []resmap.ResMap
 	errs := &interror.KustomizationErrors{}
 	for _, path := range kt.kustomization.Bases {
@@ -268,23 +277,17 @@ func (kt *KustTarget) loadCustomizedBases() (resmap.ResMap, *interror.Kustomizat
 
 func (kt *KustTarget) loadBasesAsKustTargets() ([]*KustTarget, error) {
 	var result []*KustTarget
-	errs := &interror.KustomizationErrors{}
 	for _, path := range kt.kustomization.Bases {
 		ldr, err := kt.ldr.New(path)
 		if err != nil {
-			errs.Append(err)
-			continue
+			return nil, err
 		}
 		target, err := NewKustTarget(
 			ldr, kt.fSys, kt.rFactory, kt.tFactory)
 		if err != nil {
-			errs.Append(err)
-			continue
+			return nil, err
 		}
 		result = append(result, target)
-	}
-	if len(errs.Get()) > 0 {
-		return nil, errs
 	}
 	return result, nil
 }
@@ -328,12 +331,9 @@ func (kt *KustTarget) newTransformer(
 // resolveVars returns a map of Var names to their final values.
 // The values are strings intended for substitution wherever
 // the $(var.Name) occurs.
-func (kt *KustTarget) resolveVars(m resmap.ResMap) (map[string]string, error) {
+func (kt *KustTarget) resolveVars(
+	m resmap.ResMap, vars map[string]types.Var) (map[string]string, error) {
 	result := map[string]string{}
-	vars, err := kt.getAllVars()
-	if err != nil {
-		return result, err
-	}
 	for _, v := range vars {
 		id := resid.NewResId(v.ObjRef.GVK(), v.ObjRef.Name)
 		if r, found := m.DemandOneMatchForId(id); found {
@@ -349,32 +349,53 @@ func (kt *KustTarget) resolveVars(m resmap.ResMap) (map[string]string, error) {
 	return result, nil
 }
 
-// getAllVars returns all the "environment" style Var instances defined in the app.
-func (kt *KustTarget) getAllVars() ([]types.Var, error) {
-	var result []types.Var
-	errs := &interror.KustomizationErrors{}
+type ErrVarCollision struct {
+	name string
+	path string
+}
 
-	bases, err := kt.loadBasesAsKustTargets()
+func (e ErrVarCollision) Error() string {
+	return fmt.Sprintf(
+		"var %s in %s defined in some other kustomization",
+		e.name, e.path)
+}
+
+// getAllVars returns a map of Var names to Var instances, pulled from
+// this kustomization and the kustomizations it depends on.
+// An error is returned on Var name collision.
+func (kt *KustTarget) getAllVars() (map[string]types.Var, error) {
+	result, err := kt.getVarsFromBases()
 	if err != nil {
 		return nil, err
 	}
-
-	// TODO: computing vars and resources for bases can be combined
-	for _, b := range bases {
-		vars, err := b.getAllVars()
-		if err != nil {
-			errs.Append(err)
-			continue
-		}
-		b.ldr.Cleanup()
-		result = append(result, vars...)
-	}
 	for _, v := range kt.kustomization.Vars {
 		v.Defaulting()
-		result = append(result, v)
+		if _, oops := result[v.Name]; oops {
+			return nil, ErrVarCollision{v.Name, kt.ldr.Root()}
+		}
+		result[v.Name] = v
 	}
-	if len(errs.Get()) > 0 {
-		return nil, errs
+	return result, nil
+}
+
+func (kt *KustTarget) getVarsFromBases() (map[string]types.Var, error) {
+	targets, err := kt.loadBasesAsKustTargets()
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[string]types.Var)
+	for _, subKt := range targets {
+		vars, err := subKt.getAllVars()
+		if err != nil {
+			return nil, err
+		}
+		subKt.ldr.Cleanup()
+		for k, v := range vars {
+			if _, oops := result[k]; oops {
+				return nil, ErrVarCollision{v.Name, subKt.ldr.Root()}
+			}
+			result[k] = v
+		}
 	}
 	return result, nil
 }
