@@ -98,6 +98,13 @@ var rf = resmap.NewFactory(resource.NewFactory(
 	kunstruct.NewKunstructuredFactoryImpl()))
 
 func makeKustTarget(t *testing.T, l ifc.Loader) *KustTarget {
+	// Warning: the following filesystem - a fake - must be rooted at /.
+	// This fs root is used as the working directory for the shell spawned by
+	// the secretgenerator, and has nothing to do with the filesystem used
+	// to load relative paths from the fake filesystem.
+	// This trick only works for secret generator commands that don't actually
+	// try to read the file system, because these tests don't write to the
+	// real "/" directory.  See use of exec package in the secretfactory.
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
 	kt, err := NewKustTarget(
@@ -245,7 +252,7 @@ func TestResourceNotFound(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Didn't get the expected error for an unknown resource")
 	}
-	if !strings.Contains(err.Error(), `cannot read file "/testpath/deployment.yaml"`) {
+	if !strings.Contains(err.Error(), `cannot read file`) {
 		t.Fatalf("unexpected error: %q", err)
 	}
 }
@@ -304,31 +311,34 @@ func TestDisableNameSuffixHash(t *testing.T) {
 	}
 }
 
-func write(t *testing.T, ldr loadertest.FakeLoader, dir string, content string) {
-	err := ldr.AddFile(
-		filepath.Join(dir, constants.KustomizationFileName),
-		[]byte(`
+func writeF(t *testing.T, ldr loadertest.FakeLoader, dir string, content string) {
+	err := ldr.AddFile(dir, []byte(content))
+	if err != nil {
+		t.Fatalf("failed write to %s; %v", dir, err)
+	}
+}
+
+func writeK(
+	t *testing.T, ldr loadertest.FakeLoader, dir string, content string) {
+	writeF(t, ldr, filepath.Join(dir, constants.KustomizationFileName), `
 apiVersion: v1
 kind: Kustomization
-`+content))
-	if err != nil {
-		t.Fatalf("Failed to setup fake loader.")
-	}
+`+content)
 }
 
 func TestIssue596AllowDirectoriesThatAreSubstringsOfEachOther(t *testing.T) {
 	ldr := loadertest.NewFakeLoader(
 		"/app/overlays/aws-sandbox2.us-east-1")
-	write(t, ldr, "/app/base", "")
-	write(t, ldr, "/app/overlays/aws", `
+	writeK(t, ldr, "/app/base", "")
+	writeK(t, ldr, "/app/overlays/aws", `
 bases:
 - ../../base
 `)
-	write(t, ldr, "/app/overlays/aws-nonprod", `
+	writeK(t, ldr, "/app/overlays/aws-nonprod", `
 bases:
 - ../aws
 `)
-	write(t, ldr, "/app/overlays/aws-sandbox2.us-east-1", `
+	writeK(t, ldr, "/app/overlays/aws-sandbox2.us-east-1", `
 bases:
 - ../aws-nonprod
 `)
