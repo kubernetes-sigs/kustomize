@@ -72,22 +72,23 @@ func (f *SecretFactory) MakeSecret(args *types.SecretArgs, options *types.Genera
 		log.Println("SecretArgs.TimeoutSeconds will be deprected in next release. Please use GeneratorOptions.TimeoutSeconds instread.")
 		timeout = time.Duration(*args.TimeoutSeconds) * time.Second
 	}
-
-	pairs, err := f.keyValuesFromEnvFileCommand(args.EnvCommand, timeout, options)
-	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf(
-			"env source file: %s",
-			args.EnvCommand))
+	if args.EnvCommand != "" {
+		pairs, err := f.keyValuesFromEnvFileCommand(args.EnvCommand, timeout, options)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf(
+				"env source file: %s",
+				args.EnvCommand))
+		}
+		all = append(all, pairs...)
 	}
-	all = append(all, pairs...)
-
-	pairs, err = f.keyValuesFromCommands(args.Commands, timeout, options)
-	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf(
-			"commands %v", args.Commands))
+	if len(args.Commands) != 0 {
+		pairs, err := f.keyValuesFromCommands(args.Commands, timeout, options)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf(
+				"commands %v", args.Commands))
+		}
+		all = append(all, pairs...)
 	}
-	all = append(all, pairs...)
-
 	for _, kv := range all {
 		err = addKvToSecret(s, kv.key, kv.value)
 		if err != nil {

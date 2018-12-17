@@ -17,7 +17,6 @@ limitations under the License.
 package configmapandsecret
 
 import (
-	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/pkg/fs"
@@ -55,11 +54,8 @@ func TestMakeSecretNoCommandsBadDir(t *testing.T) {
 			EnvCommand: "",
 		}}
 	_, err := factory.MakeSecret(&args, nil)
-	if err == nil {
-		t.Fatalf("expected error: %v", err)
-	}
-	if !strings.Contains(err.Error(), "not a directory") {
-		t.Fatalf("unexpected error: %v", err)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
 	}
 }
 
