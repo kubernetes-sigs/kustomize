@@ -87,7 +87,7 @@ nameReference:
     (etc.)    
 ```
 
-## cusotmizing transformer configurations
+## customizing transformer configurations
 
 Kustomize has a default set of configurations. They can be saved to local directory through `kustomize config save -d`. Kustomize allows modifying those configuration files and using them in kustomization.yaml file. This tutorial shows how to customize those configurations to
 - [support a CRD type](crd/README.md)
