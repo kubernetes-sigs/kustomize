@@ -84,7 +84,6 @@ spec:
         ports:
         - containerPort: 80
 `)
-
 }
 
 func TestBigBase(t *testing.T) {
@@ -101,7 +100,7 @@ func TestBigBase(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	expected := `apiVersion: v1
+	assertExpectedEqualsActual(t, s, `apiVersion: v1
 kind: Service
 metadata:
   annotations:
@@ -147,11 +146,7 @@ spec:
         name: nginx
         ports:
         - containerPort: 80
-`
-	if string(s) != expected {
-		t.Fatalf("Actual results:\n%s\nnot equal to expected:\n%s\n",
-			s, expected)
-	}
+`)
 }
 
 func TestBigOverlay(t *testing.T) {
@@ -224,7 +219,118 @@ spec:
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	if m == nil {
-		t.Fatalf("Empty map.")
+	s, err := m.EncodeAsYaml()
+	if err != nil {
+		t.Fatalf("Unexpected err: %v", err)
 	}
+	assertExpectedEqualsActual(t, s, `apiVersion: v1
+data:
+  app-init.ini: |2
+
+    FOO=bar
+    BAR=baz
+kind: ConfigMap
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mungebot
+    org: kubernetes
+    repo: test-infra
+  name: test-infra-app-config-fd62mfc87h
+---
+apiVersion: v1
+data:
+  DB_PASSWORD: somepw
+  DB_USERNAME: admin
+kind: ConfigMap
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mungebot
+    org: kubernetes
+    repo: test-infra
+  name: test-infra-app-env-bh449c299k
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    baseAnno: This is a base annotation
+    note: This is a test annotation
+  labels:
+    app: mungebot
+    foo: bar
+    org: kubernetes
+    repo: test-infra
+  name: test-infra-baseprefix-mungebot-service
+spec:
+  ports:
+  - port: 7002
+  selector:
+    app: mungebot
+    foo: bar
+    org: kubernetes
+    repo: test-infra
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    baseAnno: This is a base annotation
+    note: This is a test annotation
+  labels:
+    app: mungebot
+    foo: bar
+    org: kubernetes
+    repo: test-infra
+  name: test-infra-baseprefix-mungebot
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mungebot
+      foo: bar
+      org: kubernetes
+      repo: test-infra
+  template:
+    metadata:
+      annotations:
+        baseAnno: This is a base annotation
+        note: This is a test annotation
+      labels:
+        app: mungebot
+        foo: bar
+        org: kubernetes
+        repo: test-infra
+    spec:
+      containers:
+      - env:
+        - name: FOO
+          valueFrom:
+            configMapKeyRef:
+              key: somekey
+              name: test-infra-app-env-bh449c299k
+        - name: foo
+          value: bar
+        image: nginx:1.8.0
+        name: nginx
+        ports:
+        - containerPort: 80
+      - envFrom:
+        - configMapRef:
+            name: someConfigMap
+        - configMapRef:
+            name: test-infra-app-env-bh449c299k
+        image: busybox
+        name: busybox
+        volumeMounts:
+        - mountPath: /tmp/env
+          name: app-env
+      volumes:
+      - configMap:
+          name: test-infra-app-env-bh449c299k
+        name: app-env
+`)
 }

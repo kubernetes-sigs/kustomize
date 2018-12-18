@@ -18,16 +18,12 @@ package target
 
 import (
 	"encoding/base64"
-	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/k8sdeps/transformer"
-	"sigs.k8s.io/kustomize/pkg/constants"
-	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
@@ -98,53 +94,24 @@ metadata:
 var rf = resmap.NewFactory(resource.NewFactory(
 	kunstruct.NewKunstructuredFactoryImpl()))
 
-func makeKustTarget(t *testing.T, l ifc.Loader) *KustTarget {
-	// Warning: the following filesystem - a fake - must be rooted at /.
-	// This fs root is used as the working directory for the shell spawned by
-	// the secretgenerator, and has nothing to do with the filesystem used
-	// to load relative paths from the fake filesystem.
-	// This trick only works for secret generator commands that don't actually
-	// try to read the file system, because these tests don't write to the
-	// real "/" directory.  See use of exec package in the secretfactory.
-	fakeFs := fs.MakeFakeFS()
-	fakeFs.Mkdir("/")
-	kt, err := NewKustTarget(
-		l, fakeFs, rf, transformer.NewFactoryImpl())
-	if err != nil {
-		t.Fatalf("Unexpected construction error %v", err)
-	}
-	return kt
-}
-
-func makeLoader1(t *testing.T) ifc.Loader {
-	ldr := loadertest.NewFakeLoader("/testpath")
-	err := ldr.AddFile("/testpath/"+constants.KustomizationFileName, []byte(kustomizationContent1))
-	if err != nil {
-		t.Fatalf("Failed to setup fake ldr.")
-	}
-	err = ldr.AddFile("/testpath/deployment.yaml", []byte(deploymentContent))
-	if err != nil {
-		t.Fatalf("Failed to setup fake ldr.")
-	}
-	err = ldr.AddFile("/testpath/namespace.yaml", []byte(namespaceContent))
-	if err != nil {
-		t.Fatalf("Failed to setup fake ldr.")
-	}
-	err = ldr.AddFile("/testpath/jsonpatch.json", []byte(jsonpatchContent))
-	if err != nil {
-		t.Fatalf("Failed to setup fake ldr.")
-	}
-	return ldr
-}
-
 var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
 var cmap = gvk.Gvk{Version: "v1", Kind: "ConfigMap"}
 var secret = gvk.Gvk{Version: "v1", Kind: "Secret"}
 var ns = gvk.Gvk{Version: "v1", Kind: "Namespace"}
 
+func makeALoader(t *testing.T) ifc.Loader {
+	ldr := loadertest.NewFakeLoader("/testpath")
+	writeK(t, ldr, "/testpath/", kustomizationContent1)
+	writeF(t, ldr, "/testpath/deployment.yaml", deploymentContent)
+	writeF(t, ldr, "/testpath/namespace.yaml", namespaceContent)
+	writeF(t, ldr, "/testpath/jsonpatch.json", jsonpatchContent)
+	return ldr
+}
+
 func TestResources1(t *testing.T) {
 	expected := resmap.ResMap{
-		resid.NewResIdWithPrefixSuffixNamespace(deploy, "dply1", "foo-", "-bar", "ns1"): rf.RF().FromMap(
+		resid.NewResIdWithPrefixSuffixNamespace(
+			deploy, "dply1", "foo-", "-bar", "ns1"): rf.RF().FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -177,7 +144,8 @@ func TestResources1(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResIdWithPrefixSuffixNamespace(cmap, "literalConfigMap", "foo-", "-bar", "ns1"): rf.RF().FromMap(
+		resid.NewResIdWithPrefixSuffixNamespace(
+			cmap, "literalConfigMap", "foo-", "-bar", "ns1"): rf.RF().FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -196,7 +164,8 @@ func TestResources1(t *testing.T) {
 					"DB_PASSWORD": "somepw",
 				},
 			}).SetBehavior(ifc.BehaviorCreate),
-		resid.NewResIdWithPrefixSuffixNamespace(secret, "secret", "foo-", "-bar", "ns1"): rf.RF().FromMap(
+		resid.NewResIdWithPrefixSuffixNamespace(
+			secret, "secret", "foo-", "-bar", "ns1"): rf.RF().FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -216,7 +185,8 @@ func TestResources1(t *testing.T) {
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
 			}).SetBehavior(ifc.BehaviorCreate),
-		resid.NewResIdWithPrefixSuffixNamespace(ns, "ns1", "foo-", "-bar", ""): rf.RF().FromMap(
+		resid.NewResIdWithPrefixSuffixNamespace(
+			ns, "ns1", "foo-", "-bar", ""): rf.RF().FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Namespace",
@@ -232,7 +202,7 @@ func TestResources1(t *testing.T) {
 			}),
 	}
 	actual, err := makeKustTarget(
-		t, makeLoader1(t)).MakeCustomizedResMap()
+		t, makeALoader(t)).MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("unexpected Resources error %v", err)
 	}
@@ -245,11 +215,8 @@ func TestResources1(t *testing.T) {
 
 func TestResourceNotFound(t *testing.T) {
 	l := loadertest.NewFakeLoader("/testpath")
-	err := l.AddFile("/testpath/"+constants.KustomizationFileName, []byte(kustomizationContent1))
-	if err != nil {
-		t.Fatalf("Failed to setup fake ldr.")
-	}
-	_, err = makeKustTarget(t, l).MakeCustomizedResMap()
+	writeK(t, l, "/testpath", kustomizationContent1)
+	_, err := makeKustTarget(t, l).MakeCustomizedResMap()
 	if err == nil {
 		t.Fatalf("Didn't get the expected error for an unknown resource")
 	}
@@ -260,11 +227,8 @@ func TestResourceNotFound(t *testing.T) {
 
 func TestSecretTimeout(t *testing.T) {
 	l := loadertest.NewFakeLoader("/testpath")
-	err := l.AddFile("/testpath/"+constants.KustomizationFileName, []byte(kustomizationContent2))
-	if err != nil {
-		t.Fatalf("Failed to setup fake ldr.")
-	}
-	_, err = makeKustTarget(t, l).MakeCustomizedResMap()
+	writeK(t, l, "/testpath", kustomizationContent2)
+	_, err := makeKustTarget(t, l).MakeCustomizedResMap()
 	if err == nil {
 		t.Fatalf("Didn't get the expected error for an unknown resource")
 	}
@@ -283,7 +247,7 @@ func findSecret(m resmap.ResMap) *resource.Resource {
 }
 
 func TestDisableNameSuffixHash(t *testing.T) {
-	kt := makeKustTarget(t, makeLoader1(t))
+	kt := makeKustTarget(t, makeALoader(t))
 
 	m, err := kt.MakeCustomizedResMap()
 	if err != nil {
@@ -310,21 +274,6 @@ func TestDisableNameSuffixHash(t *testing.T) {
 	if secret.GetName() != "foo-secret-bar" { // No hash at end.
 		t.Errorf("unexpected secret resource name: %s", secret.GetName())
 	}
-}
-
-func writeF(t *testing.T, ldr loadertest.FakeLoader, dir string, content string) {
-	err := ldr.AddFile(dir, []byte(content))
-	if err != nil {
-		t.Fatalf("failed write to %s; %v", dir, err)
-	}
-}
-
-func writeK(
-	t *testing.T, ldr loadertest.FakeLoader, dir string, content string) {
-	writeF(t, ldr, filepath.Join(dir, constants.KustomizationFileName), `
-apiVersion: v1
-kind: Kustomization
-`+content)
 }
 
 func TestIssue596AllowDirectoriesThatAreSubstringsOfEachOther(t *testing.T) {

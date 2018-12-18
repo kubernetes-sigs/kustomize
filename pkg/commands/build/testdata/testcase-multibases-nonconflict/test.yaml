@@ -1,4 +1,0 @@
-description: multibases with name reference
-args: []
-filename: testdata/testcase-multibases-nonconflict/combined
-expectedStdout: testdata/testcase-multibases-nonconflict/expected.yaml
