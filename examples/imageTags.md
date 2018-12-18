@@ -13,6 +13,8 @@ Make a `kustomization` containing a pod resource
 <!-- @createKustomization @test -->
 ```
 cat <<EOF >$DEMO_HOME/kustomization.yaml
+apiVersion: v1
+kind: Kustomization
 resources:
 - pod.yaml
 EOF

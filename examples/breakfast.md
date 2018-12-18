@@ -24,6 +24,8 @@ breakfast.  This breakfast has coffee and pancakes:
 <!-- @baseKustomization @test -->
 ```
 cat <<EOF >$DEMO_HOME/breakfast/base/kustomization.yaml
+apiVersion: v1
+kind: Kustomization
 resources:
 - coffee.yaml
 - pancakes.yaml
@@ -69,6 +71,8 @@ likes her coffee hot:
 mkdir -p $DEMO_HOME/breakfast/overlays/alice
 
 cat <<EOF >$DEMO_HOME/breakfast/overlays/alice/kustomization.yaml
+apiVersion: v1
+kind: Kustomization
 commonLabels:
   who: alice
 bases:
@@ -92,6 +96,8 @@ And likewise a [variant] for Bob, who wants _five_ pancakes, with strawberries:
 mkdir -p $DEMO_HOME/breakfast/overlays/bob
 
 cat <<EOF >$DEMO_HOME/breakfast/overlays/bob/kustomization.yaml
+apiVersion: v1
+kind: Kustomization
 commonLabels:
   who: bob
 bases:
