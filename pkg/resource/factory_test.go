@@ -49,10 +49,26 @@ metadata:
 	patch3 := `
 WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOT: woot
 `
+	patchList := patch.StrategicMerge("patch4.yaml")
+	patch4 := `
+apiVersion: v1
+kind: List
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: pooh
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: winnie
+    namespace: hundred-acre-wood
+`
 	l := loadertest.NewFakeLoader("/")
 	l.AddFile("/"+string(patchGood1), []byte(patch1))
 	l.AddFile("/"+string(patchGood2), []byte(patch2))
 	l.AddFile("/"+string(patchBad), []byte(patch3))
+	l.AddFile("/"+string(patchList), []byte(patch4))
 
 	tests := []struct {
 		name        string
@@ -77,6 +93,12 @@ WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOT: woot
 			input:       []patch.StrategicMerge{patchGood1, patchBad},
 			expectedOut: []*Resource{},
 			expectedErr: true,
+		},
+		{
+			name:        "listOfPatches",
+			input:       []patch.StrategicMerge{patchList},
+			expectedOut: []*Resource{testDeployment, testConfigMap},
+			expectedErr: false,
 		},
 	}
 	for _, test := range tests {
