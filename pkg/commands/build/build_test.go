@@ -55,7 +55,7 @@ func TestBuildValidate(t *testing.T) {
 			"", "specify one path to " + constants.KustomizationFileName},
 	}
 	for _, mycase := range cases {
-		opts := buildOptions{}
+		opts := BuildOptions{}
 		e := opts.Validate(mycase.args)
 		if len(mycase.erMsg) > 0 {
 			if e == nil {
@@ -122,9 +122,7 @@ func runBuildTestCase(t *testing.T, testcaseName string, updateKustomizeExpected
 		t.Fatalf("%s: %v", name, err)
 	}
 
-	ops := &buildOptions{
-		kustomizationPath: testcase.Filename,
-	}
+	ops := NewBuildOptions(testcase.Filename, "")
 	buf := bytes.NewBuffer([]byte{})
 	f := k8sdeps.NewFactory()
 	err = ops.RunBuild(

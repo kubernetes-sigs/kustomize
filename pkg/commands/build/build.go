@@ -29,9 +29,16 @@ import (
 	"sigs.k8s.io/kustomize/pkg/target"
 )
 
-type buildOptions struct {
+type BuildOptions struct {
 	kustomizationPath string
 	outputPath        string
+}
+
+func NewBuildOptions(p, o string) *BuildOptions {
+	return &BuildOptions{
+		kustomizationPath: p,
+		outputPath:        o,
+	}
 }
 
 var examples = `
@@ -54,7 +61,7 @@ func NewCmdBuild(
 	out io.Writer, fs fs.FileSystem,
 	rf *resmap.Factory,
 	ptf transformer.Factory) *cobra.Command {
-	var o buildOptions
+	var o BuildOptions
 
 	cmd := &cobra.Command{
 		Use:          "build [path]",
@@ -77,7 +84,7 @@ func NewCmdBuild(
 }
 
 // Validate validates build command.
-func (o *buildOptions) Validate(args []string) error {
+func (o *BuildOptions) Validate(args []string) error {
 	if len(args) > 1 {
 		return errors.New("specify one path to " + constants.KustomizationFileName)
 	}
@@ -91,7 +98,7 @@ func (o *buildOptions) Validate(args []string) error {
 }
 
 // RunBuild runs build command.
-func (o *buildOptions) RunBuild(
+func (o *BuildOptions) RunBuild(
 	out io.Writer, fSys fs.FileSystem,
 	rf *resmap.Factory, ptf transformer.Factory) error {
 	ldr, err := loader.NewLoader(o.kustomizationPath, fSys)
