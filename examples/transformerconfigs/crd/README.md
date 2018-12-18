@@ -17,7 +17,7 @@ Get the default transformer configurations using this command:
 kustomize config save -d $DEMO_HOME/kustomizeconfig
 ```
 The default configurations are saved
-in the directory `$DEMO_HOME/kusotmizeconfig` as several files
+in the directory `$DEMO_HOME/kustomizeconfig` as several files
 
 > ```
 > commonannotations.yaml
