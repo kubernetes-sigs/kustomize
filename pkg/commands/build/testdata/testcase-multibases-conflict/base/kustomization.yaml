@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: Kustomization
-resources:
-- serviceaccount.yaml
-- rolebinding.yaml
-namePrefix: base-
-nameSuffix: -suffix
