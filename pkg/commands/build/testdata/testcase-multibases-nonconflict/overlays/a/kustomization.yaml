@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: Kustomization
-bases:
-- ../../base/
-
-namePrefix: a-
-nameSuffix: -suffixA
