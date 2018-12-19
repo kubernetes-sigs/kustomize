@@ -18,6 +18,8 @@ Create a kustomization and add a ConfigMap generator to it.
 <!-- @createCMGenerator @test -->
 ```
 cat > $DEMO_HOME/kustomization.yaml << EOF
+apiVersion: v1
+kind: Kustomization
 configMapGenerator:
 - name: my-configmap
   literals:	
