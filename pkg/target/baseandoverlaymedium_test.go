@@ -37,7 +37,7 @@ import (
 // To eventually fix this, we could write the data to a real filesystem, and
 // clean up after, or use some other trick compatible with exec.
 
-func writeBase(t *testing.T, ldr loadertest.FakeLoader) {
+func writeMediumBase(t *testing.T, ldr loadertest.FakeLoader) {
 	writeK(t, ldr, "/app/base", `
 namePrefix: baseprefix-
 commonLabels:
@@ -86,9 +86,9 @@ spec:
 `)
 }
 
-func TestBigBase(t *testing.T) {
+func TestMediumBase(t *testing.T) {
 	ldr := loadertest.NewFakeLoader("/app/base")
-	writeBase(t, ldr)
+	writeMediumBase(t, ldr)
 	m, err := makeKustTarget(t, ldr).MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
@@ -149,9 +149,9 @@ spec:
 `)
 }
 
-func TestBigOverlay(t *testing.T) {
+func TestMediumOverlay(t *testing.T) {
 	ldr := loadertest.NewFakeLoader("/app/overlay")
-	writeBase(t, ldr)
+	writeMediumBase(t, ldr)
 	writeK(t, ldr, "/app/overlay", `
 namePrefix: test-infra-
 commonLabels:
