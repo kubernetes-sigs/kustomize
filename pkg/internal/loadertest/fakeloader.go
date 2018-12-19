@@ -19,6 +19,8 @@ package loadertest
 
 import (
 	"log"
+	"path/filepath"
+
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/loader"
@@ -56,6 +58,21 @@ func (f FakeLoader) AddDirectory(fullDirPath string) error {
 // Root returns root.
 func (f FakeLoader) Root() string {
 	return f.delegate.Root()
+}
+
+// Files returns list of files
+func (f FakeLoader) Files() ([]string, error) {
+	files, err := f.fs.Glob(filepath.Join(f.Root(), "*"))
+	if err != nil {
+		return nil, err
+	}
+	var result []string
+	for _, file := range files {
+		if !f.fs.IsDir(file) {
+			result = append(result, filepath.Base(f))
+		}
+	}
+	return result, nil
 }
 
 // New creates a new loader from a new root.

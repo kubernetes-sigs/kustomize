@@ -34,6 +34,8 @@ type Validator interface {
 type Loader interface {
 	// Root returns the root location for this Loader.
 	Root() string
+	// Files returns the list of file names contained in this loader.
+	Files() ([]string, error)
 	// New returns Loader located at newRoot.
 	New(newRoot string) (Loader, error)
 	// Load returns the bytes read from the location or an error.

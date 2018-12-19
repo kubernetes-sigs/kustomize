@@ -103,6 +103,21 @@ func (l *fileLoader) Root() string {
 	return l.roots[len(l.roots)-1]
 }
 
+// Files returns the list of files inside the file loader
+func (l *fileLoader) Files() ([]string, error) {
+	files, err := l.fSys.Glob(filepath.Join(l.Root(), "*"))
+	if err != nil {
+		return nil, err
+	}
+	var result []string
+	for _, f := range files {
+		if !l.fSys.IsDir(f) {
+			result = append(result, filepath.Base(f))
+		}
+	}
+	return result, nil
+}
+
 func newLoaderOrDie(fSys fs.FileSystem, path string) *fileLoader {
 	l, err := newFileLoaderAt(
 		path, fSys, []string{}, simpleGitCloner)
