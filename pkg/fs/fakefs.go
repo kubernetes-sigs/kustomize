@@ -40,7 +40,7 @@ func MakeFakeFS() *fakeFs {
 }
 
 // kustomizationContent is used in tests.
-const kustomizationContent = `apiVersion: v1
+const kustomizationContent = `apiVersion: v1beta1
 kind: Kustomization
 namePrefix: some-prefix
 nameSuffix: some-suffix

@@ -60,7 +60,7 @@ func writeF(
 func writeK(
 	t *testing.T, ldr loadertest.FakeLoader, dir string, content string) {
 	writeF(t, ldr, filepath.Join(dir, constants.KustomizationFileName), `
-apiVersion: v1
+apiVersion: v1beta1
 kind: Kustomization
 `+content)
 }
