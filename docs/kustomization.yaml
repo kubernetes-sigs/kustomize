@@ -32,10 +32,6 @@
 # visible in configuration reviews.
 # ----------------------------------------------------
 
-# apiVersion and Kind for current kustomization.yaml
-apiVersion: v1
-kind: Kustomization
-
 # Adds namespace to all resources.
 namespace: my-namespace
 

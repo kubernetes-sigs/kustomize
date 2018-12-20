@@ -1,4 +1,2 @@
-apiVersion: v1
-kind: Kustomization
 resources:
 - pod.yaml

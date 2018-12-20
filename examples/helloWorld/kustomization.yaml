@@ -1,7 +1,5 @@
 # Example configuration for the webserver
 # at https://github.com/monopole/hello
-apiVersion: v1
-kind: Kustomization
 commonLabels:
   app: hello
 
