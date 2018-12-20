@@ -79,7 +79,8 @@ func TestMultibasesNoConflict(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `apiVersion: v1
+	th.assertActualEqualsExpected(m, `
+apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: a-base-serviceaccount-suffix-suffixA
