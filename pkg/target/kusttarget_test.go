@@ -35,7 +35,7 @@ import (
 
 const (
 	kustomizationContent1 = `
-apiVersion: v1
+apiVersion: v1beta1
 kind: Kustomization
 namePrefix: foo-
 nameSuffix: -bar
@@ -67,7 +67,7 @@ patchesJson6902:
   path: jsonpatch.json
 `
 	kustomizationContent2 = `
-apiVersion: v1
+apiVersion: v1beta1
 kind: Kustomization
 secretGenerator:
 - name: secret
