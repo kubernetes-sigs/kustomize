@@ -17,9 +17,6 @@ limitations under the License.
 package fix
 
 import (
-	"log"
-	"strings"
-
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/pkg/fs"
@@ -52,10 +49,6 @@ func RunFix(fSys fs.FileSystem) error {
 	m, err := mf.Read()
 	if err != nil {
 		return err
-	}
-	msgs := m.DealWithMissingFields()
-	if len(msgs) > 0 {
-		log.Printf(strings.Join(msgs, "\n"))
 	}
 
 	return mf.Write(m)
