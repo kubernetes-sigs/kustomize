@@ -142,8 +142,6 @@ defining a new name prefix, and some different labels.
 <!-- @makeStagingKustomization @test -->
 ```
 cat <<'EOF' >$OVERLAYS/staging/kustomization.yaml
-apiVersion: v1
-kind: Kustomization
 namePrefix: staging-
 commonLabels:
   variant: staging
@@ -185,8 +183,6 @@ with a different name prefix and labels.
 <!-- @makeProductionKustomization @test -->
 ```
 cat <<EOF >$OVERLAYS/production/kustomization.yaml
-apiVersion: v1
-kind: Kustomization
 namePrefix: production-
 commonLabels:
   variant: production

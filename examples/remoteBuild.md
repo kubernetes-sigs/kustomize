@@ -34,8 +34,6 @@ A base can also be specified as a URL:
 DEMO_HOME=$(mktemp -d)
 
 cat <<EOF >$DEMO_HOME/kustomization.yaml
-apiVersion: v1
-kind: Kustomization
 bases:
 - github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6
 namePrefix: remote-

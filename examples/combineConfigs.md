@@ -158,8 +158,6 @@ height=10m
 EOF
 
 cat <<EOF >$DEMO_HOME/base/kustomization.yaml
-apiVersion: v1
-kind: Kustomization
 configMapGenerator:
 - name: my-configmap
   files:
@@ -193,8 +191,6 @@ dbpassword=mothersMaidenName
 EOF
 
 cat <<EOF >$OVERLAYS/development/kustomization.yaml
-apiVersion: v1
-kind: Kustomization
 bases:
 - ../../base
 namePrefix: dev-
@@ -277,8 +273,6 @@ dbpassword=thisShouldProbablyBeInASecretInstead
 EOF
 
 cat <<EOF >$OVERLAYS/production/kustomization.yaml
-apiVersion: v1
-kind: Kustomization
 bases:
 - ../../base
 namePrefix: prod-
