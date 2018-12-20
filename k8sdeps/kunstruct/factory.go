@@ -109,7 +109,9 @@ func (kf *KunstructuredFactoryImpl) validate(u unstructured.Unstructured) error 
 	} else if kind == "List" {
 		return nil
 	}
-	if u.GetName() == "" {
+
+	_, found, err := unstructured.NestedString(u.Object, "metadata", "name")
+	if !found || err != nil {
 		return fmt.Errorf("missing metadata.name in object %v", u)
 	}
 	return nil
