@@ -17,6 +17,8 @@ limitations under the License.
 package resource
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 
 	"sigs.k8s.io/kustomize/pkg/fs"
@@ -78,8 +80,30 @@ func (rf *Factory) SliceFromBytes(in []byte) ([]*Resource, error) {
 		return nil, err
 	}
 	var result []*Resource
-	for _, u := range kunStructs {
-		result = append(result, rf.FromKunstructured(u))
+	for len(kunStructs) > 0 {
+		u := kunStructs[0]
+		kunStructs = kunStructs[1:]
+		if u.GetKind() == "List" {
+			items := u.Map()["items"]
+			itemsSlice, ok := items.([]interface{})
+			if !ok {
+				return nil, fmt.Errorf("items in List is type %T, expected array.", items)
+			}
+			for _, item := range itemsSlice {
+				itemJSON, err := json.Marshal(item)
+				if err != nil {
+					return nil, err
+				}
+				innerU, err := rf.kf.SliceFromBytes(itemJSON)
+				if err != nil {
+					return nil, err
+				}
+				// append innerU to kunStructs so nested Lists can be handled
+				kunStructs = append(kunStructs, innerU...)
+			}
+		} else {
+			result = append(result, rf.FromKunstructured(u))
+		}
 	}
 	return result, nil
 }
