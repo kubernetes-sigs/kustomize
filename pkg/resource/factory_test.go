@@ -49,10 +49,82 @@ metadata:
 	patch3 := `
 WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOT: woot
 `
+	patchList := patch.StrategicMerge("patch4.yaml")
+	patch4 := `
+apiVersion: v1
+kind: List
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: pooh
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: winnie
+    namespace: hundred-acre-wood
+`
+	patchList2 := patch.StrategicMerge("patch5.yaml")
+	patch5 := `
+apiVersion: v1
+kind: List
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-a
+  spec: &hostAliases
+    template:
+      spec:
+        hostAliases:
+        - hostnames:
+          - a.example.com
+          ip: 8.8.8.8
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-b
+  spec:
+    <<: *hostAliases
+`
+	testDeploymentSpec := map[string]interface{}{
+		"template": map[string]interface{}{
+			"spec": map[string]interface{}{
+				"hostAliases": []interface{}{
+					map[string]interface{}{
+						"hostnames": []interface{}{
+							"a.example.com",
+						},
+						"ip": "8.8.8.8",
+					},
+				},
+			},
+		},
+	}
+	testDeploymentA := factory.FromMap(
+		map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "deployment-a",
+			},
+			"spec": testDeploymentSpec,
+		})
+	testDeploymentB := factory.FromMap(
+		map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "deployment-b",
+			},
+			"spec": testDeploymentSpec,
+		})
 	l := loadertest.NewFakeLoader("/")
 	l.AddFile("/"+string(patchGood1), []byte(patch1))
 	l.AddFile("/"+string(patchGood2), []byte(patch2))
 	l.AddFile("/"+string(patchBad), []byte(patch3))
+	l.AddFile("/"+string(patchList), []byte(patch4))
+	l.AddFile("/"+string(patchList2), []byte(patch5))
 
 	tests := []struct {
 		name        string
@@ -77,6 +149,18 @@ WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOT: woot
 			input:       []patch.StrategicMerge{patchGood1, patchBad},
 			expectedOut: []*Resource{},
 			expectedErr: true,
+		},
+		{
+			name:        "listOfPatches",
+			input:       []patch.StrategicMerge{patchList},
+			expectedOut: []*Resource{testDeployment, testConfigMap},
+			expectedErr: false,
+		},
+		{
+			name:        "listWithAnchorReference",
+			input:       []patch.StrategicMerge{patchList2},
+			expectedOut: []*Resource{testDeploymentA, testDeploymentB},
+			expectedErr: false,
 		},
 	}
 	for _, test := range tests {
