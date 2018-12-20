@@ -64,7 +64,8 @@ func TestSmallBase(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `apiVersion: v1
+	th.assertActualEqualsExpected(m, `
+apiVersion: v1
 kind: Service
 metadata:
   labels:
@@ -112,7 +113,8 @@ patchesStrategicMerge:
 - deployment/deployment.yaml
 imageTags:
 - name: whatever
-  newTag: 1.8.0`)
+  newTag: 1.8.0
+`)
 
 	th.writeF("/app/overlay/configmap/app.env", `
 DB_USERNAME=admin
@@ -134,7 +136,8 @@ spec:
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `apiVersion: v1
+	th.assertActualEqualsExpected(m, `
+apiVersion: v1
 kind: Service
 metadata:
   labels:

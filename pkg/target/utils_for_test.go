@@ -21,6 +21,7 @@ package target
 import (
 	"fmt"
 	"path/filepath"
+	"sigs.k8s.io/kustomize/pkg/transformers/config/defaultconfig"
 	"strings"
 	"testing"
 
@@ -83,6 +84,18 @@ func (th *KustTestHarness) fromMap(m map[string]interface{}) *resource.Resource 
 	return th.rf.RF().FromMap(m)
 }
 
+func (th *KustTestHarness) writeDefaultConfigs(fName string) {
+	m := defaultconfig.GetDefaultFieldSpecsAsMap()
+	var content []byte
+	for _, tCfg := range m {
+		content = append(content, []byte(tCfg)...)
+	}
+	err := th.ldr.AddFile(fName, content)
+	if err != nil {
+		th.t.Fatalf("unable to add file %s", fName)
+	}
+}
+
 func tabToSpace(input string) string {
 	var result []string
 	for _, i := range input {
@@ -115,11 +128,15 @@ func hint(a, b string) string {
 	return "X"
 }
 
-// Pretty printing of file differences.
 func (th *KustTestHarness) assertActualEqualsExpected(
 	m resmap.ResMap, expected string) {
 	if m == nil {
 		th.t.Fatalf("Map should not be nil.")
+	}
+	// Ignore leading linefeed in expected value
+	// to ease readability of tests.
+	if len(expected) > 0 && expected[0] == 10 {
+		expected = expected[1:]
 	}
 	actual, err := m.EncodeAsYaml()
 	if err != nil {
@@ -130,6 +147,7 @@ func (th *KustTestHarness) assertActualEqualsExpected(
 	}
 }
 
+// Pretty printing of file differences.
 func (th *KustTestHarness) reportDiffAndFail(actual []byte, expected string) {
 	sE, maxLen := convertToArray(expected)
 	sA, _ := convertToArray(string(actual))
