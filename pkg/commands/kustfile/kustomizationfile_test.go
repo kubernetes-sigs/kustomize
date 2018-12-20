@@ -173,7 +173,7 @@ func TestPreserveComments(t *testing.T) {
 		`# shem qing some comments
 # This is some comment we should preserve
 # don't delete it
-apiVersion: v1
+apiVersion: v1beta1
 kind: Kustomization
 resources:
 - pod.yaml
@@ -228,7 +228,7 @@ resources:
 - service.yaml
 
 APIVersion: v1beta1
-kind: kustomization.yaml
+kind: kustomization
 
 # something you may want to keep
 vars:
@@ -266,7 +266,7 @@ resources:
 - service.yaml
 
 apiVersion: v1beta1
-kind: kustomization.yaml
+kind: kustomization
 
 # something you may want to keep
 vars:

@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	KustomizationVersion = "v1"
+	KustomizationVersion = "v1beta1"
 	KustomizationKind    = "Kustomization"
 )
 
