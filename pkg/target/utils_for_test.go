@@ -24,14 +24,30 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
-	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
+	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
-func makeKustTarget(t *testing.T, l ifc.Loader) *KustTarget {
+type KustTestHarness struct {
+	t   *testing.T
+	rf  *resmap.Factory
+	ldr loadertest.FakeLoader
+}
+
+func NewKustTestHarness(t *testing.T, path string) *KustTestHarness {
+	return &KustTestHarness{
+		t: t,
+		rf: resmap.NewFactory(resource.NewFactory(
+			kunstruct.NewKunstructuredFactoryImpl())),
+		ldr: loadertest.NewFakeLoader(path)}
+}
+
+func (th *KustTestHarness) makeKustTarget() *KustTarget {
 	// Warning: the following filesystem - a fake - must be rooted at /.
 	// This fs root is used as the working directory for the shell spawned by
 	// the secretgenerator, and has nothing to do with the filesystem used
@@ -42,27 +58,29 @@ func makeKustTarget(t *testing.T, l ifc.Loader) *KustTarget {
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
 	kt, err := NewKustTarget(
-		l, fakeFs, rf, transformer.NewFactoryImpl())
+		th.ldr, fakeFs, th.rf, transformer.NewFactoryImpl())
 	if err != nil {
-		t.Fatalf("Unexpected construction error %v", err)
+		th.t.Fatalf("Unexpected construction error %v", err)
 	}
 	return kt
 }
 
-func writeF(
-	t *testing.T, ldr loadertest.FakeLoader, dir string, content string) {
-	err := ldr.AddFile(dir, []byte(content))
+func (th *KustTestHarness) writeF(dir string, content string) {
+	err := th.ldr.AddFile(dir, []byte(content))
 	if err != nil {
-		t.Fatalf("failed write to %s; %v", dir, err)
+		th.t.Fatalf("failed write to %s; %v", dir, err)
 	}
 }
 
-func writeK(
-	t *testing.T, ldr loadertest.FakeLoader, dir string, content string) {
-	writeF(t, ldr, filepath.Join(dir, constants.KustomizationFileName), `
+func (th *KustTestHarness) writeK(dir string, content string) {
+	th.writeF(filepath.Join(dir, constants.KustomizationFileName), `
 apiVersion: v1beta1
 kind: Kustomization
 `+content)
+}
+
+func (th *KustTestHarness) fromMap(m map[string]interface{}) *resource.Resource {
+	return th.rf.RF().FromMap(m)
 }
 
 func tabToSpace(input string) string {
@@ -98,21 +116,30 @@ func hint(a, b string) string {
 }
 
 // Pretty printing of file differences.
-func assertExpectedEqualsActual(t *testing.T, actual []byte, expected string) {
-	if expected == string(actual) {
-		return
+func (th *KustTestHarness) assertActualEqualsExpected(
+	m resmap.ResMap, expected string) {
+	if m == nil {
+		th.t.Fatalf("Map should not be nil.")
 	}
+	actual, err := m.EncodeAsYaml()
+	if err != nil {
+		th.t.Fatalf("Unexpected err: %v", err)
+	}
+	if string(actual) != expected {
+		th.reportDiffAndFail(actual, expected)
+	}
+}
+
+func (th *KustTestHarness) reportDiffAndFail(actual []byte, expected string) {
 	sE, maxLen := convertToArray(expected)
 	sA, _ := convertToArray(string(actual))
 	format := fmt.Sprintf("%%s  %%-%ds %%s\n", maxLen+4)
-
 	limit := 0
 	if len(sE) < len(sA) {
 		limit = len(sE)
 	} else {
 		limit = len(sA)
 	}
-
 	fmt.Printf(format, " ", "EXPECTED", "ACTUAL")
 	fmt.Printf(format, " ", "--------", "------")
 	for i := 0; i < limit; i++ {
@@ -127,5 +154,5 @@ func assertExpectedEqualsActual(t *testing.T, actual []byte, expected string) {
 			fmt.Printf(format, "X", sE[i], "")
 		}
 	}
-	t.Fatalf("Expected not equal to actual")
+	th.t.Fatalf("Expected not equal to actual")
 }
