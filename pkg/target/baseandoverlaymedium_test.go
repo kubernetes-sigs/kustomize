@@ -18,8 +18,6 @@ package target
 
 import (
 	"testing"
-
-	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 )
 
 // TODO(monopole): Add a feature test example covering secret generation.
@@ -37,8 +35,8 @@ import (
 // To eventually fix this, we could write the data to a real filesystem, and
 // clean up after, or use some other trick compatible with exec.
 
-func writeMediumBase(t *testing.T, ldr loadertest.FakeLoader) {
-	writeK(t, ldr, "/app/base", `
+func writeMediumBase(th *KustTestHarness) {
+	th.writeK("/app/base", `
 namePrefix: baseprefix-
 commonLabels:
   foo: bar
@@ -48,7 +46,7 @@ resources:
 - deployment/deployment.yaml
 - service/service.yaml
 `)
-	writeF(t, ldr, "/app/base/service/service.yaml", `
+	th.writeF("/app/base/service/service.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
@@ -61,7 +59,7 @@ spec:
   selector:
     app: mungebot
 `)
-	writeF(t, ldr, "/app/base/deployment/deployment.yaml", `
+	th.writeF("/app/base/deployment/deployment.yaml", `
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -87,20 +85,13 @@ spec:
 }
 
 func TestMediumBase(t *testing.T) {
-	ldr := loadertest.NewFakeLoader("/app/base")
-	writeMediumBase(t, ldr)
-	m, err := makeKustTarget(t, ldr).MakeCustomizedResMap()
+	th := NewKustTestHarness(t, "/app/base")
+	writeMediumBase(th)
+	m, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	if m == nil {
-		t.Fatalf("Empty map.")
-	}
-	s, err := m.EncodeAsYaml()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
-	assertExpectedEqualsActual(t, s, `apiVersion: v1
+	th.assertActualEqualsExpected(m, `apiVersion: v1
 kind: Service
 metadata:
   annotations:
@@ -150,9 +141,9 @@ spec:
 }
 
 func TestMediumOverlay(t *testing.T) {
-	ldr := loadertest.NewFakeLoader("/app/overlay")
-	writeMediumBase(t, ldr)
-	writeK(t, ldr, "/app/overlay", `
+	th := NewKustTestHarness(t, "/app/overlay")
+	writeMediumBase(th)
+	th.writeK("/app/overlay", `
 namePrefix: test-infra-
 commonLabels:
   app: mungebot
@@ -174,15 +165,15 @@ imageTags:
 - name: nginx
   newTag: 1.8.0`)
 
-	writeF(t, ldr, "/app/overlay/configmap/app.env", `
+	th.writeF("/app/overlay/configmap/app.env", `
 DB_USERNAME=admin
 DB_PASSWORD=somepw
 `)
-	writeF(t, ldr, "/app/overlay/configmap/app-init.ini", `
+	th.writeF("/app/overlay/configmap/app-init.ini", `
 FOO=bar
 BAR=baz
 `)
-	writeF(t, ldr, "/app/overlay/deployment/deployment.yaml", `
+	th.writeF("/app/overlay/deployment/deployment.yaml", `
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -215,15 +206,11 @@ spec:
           name: app-env
         name: app-env
 `)
-	m, err := makeKustTarget(t, ldr).MakeCustomizedResMap()
+	m, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	s, err := m.EncodeAsYaml()
-	if err != nil {
-		t.Fatalf("Unexpected err: %v", err)
-	}
-	assertExpectedEqualsActual(t, s, `apiVersion: v1
+	th.assertActualEqualsExpected(m, `apiVersion: v1
 data:
   app-init.ini: |2
 
