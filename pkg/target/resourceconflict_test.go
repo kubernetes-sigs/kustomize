@@ -19,20 +19,18 @@ package target
 import (
 	"strings"
 	"testing"
-
-	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 )
 
-func writeCombinedOverlays(t *testing.T, ldr loadertest.FakeLoader) {
+func writeCombinedOverlays(th *KustTestHarness) {
 	// Base
-	writeK(t, ldr, "/app/base", `
+	th.writeK("/app/base", `
 resources:
 - serviceaccount.yaml
 - rolebinding.yaml
 namePrefix: base-
 nameSuffix: -suffix
 `)
-	writeF(t, ldr, "/app/base/rolebinding.yaml", `
+	th.writeF("/app/base/rolebinding.yaml", `
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:
@@ -45,7 +43,7 @@ subjects:
 - kind: ServiceAccount
   name: serviceaccount
 `)
-	writeF(t, ldr, "/app/base/serviceaccount.yaml", `
+	th.writeF("/app/base/serviceaccount.yaml", `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -53,13 +51,13 @@ metadata:
 `)
 
 	// Mid-level overlays
-	writeK(t, ldr, "/app/overlays/a", `
+	th.writeK("/app/overlays/a", `
 bases:
 - ../../base
 namePrefix: a-
 nameSuffix: -suffixA
 `)
-	writeK(t, ldr, "/app/overlays/b", `
+	th.writeK("/app/overlays/b", `
 bases:
 - ../../base
 namePrefix: b-
@@ -67,7 +65,7 @@ nameSuffix: -suffixB
 `)
 
 	// Top overlay, combining the mid-level overlays
-	writeK(t, ldr, "/app/combined", `
+	th.writeK("/app/combined", `
 bases:
 - ../overlays/a
 - ../overlays/b
@@ -75,17 +73,13 @@ bases:
 }
 
 func TestMultibasesNoConflict(t *testing.T) {
-	ldr := loadertest.NewFakeLoader("/app/combined")
-	writeCombinedOverlays(t, ldr)
-	m, err := makeKustTarget(t, ldr).MakeCustomizedResMap()
+	th := NewKustTestHarness(t, "/app/combined")
+	writeCombinedOverlays(th)
+	m, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Unexpected err: %v", err)
 	}
-	s, err := m.EncodeAsYaml()
-	if err != nil {
-		t.Fatalf("Unexpected err: %v", err)
-	}
-	assertExpectedEqualsActual(t, s, `apiVersion: v1
+	th.assertActualEqualsExpected(m, `apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: a-base-serviceaccount-suffix-suffixA
@@ -122,10 +116,10 @@ subjects:
 }
 
 func TestMultibasesWithConflict(t *testing.T) {
-	ldr := loadertest.NewFakeLoader("/app/combined")
-	writeCombinedOverlays(t, ldr)
+	th := NewKustTestHarness(t, "/app/combined")
+	writeCombinedOverlays(th)
 
-	writeK(t, ldr, "/app/overlays/a", `
+	th.writeK("/app/overlays/a", `
 bases:
 - ../../base
 namePrefix: a-
@@ -135,14 +129,14 @@ resources:
 `)
 	// Expect an error because this resource in the overlay
 	// matches a resource in the base.
-	writeF(t, ldr, "/app/overlays/a/serviceaccount.yaml", `
+	th.writeF("/app/overlays/a/serviceaccount.yaml", `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: serviceaccount
 `)
 
-	_, err := makeKustTarget(t, ldr).MakeCustomizedResMap()
+	_, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err == nil {
 		t.Fatalf("Expected resource conflict.")
 	}

@@ -23,10 +23,8 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
@@ -91,27 +89,17 @@ metadata:
 ]`
 )
 
-var rf = resmap.NewFactory(resource.NewFactory(
-	kunstruct.NewKunstructuredFactoryImpl()))
-
-var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
-var cmap = gvk.Gvk{Version: "v1", Kind: "ConfigMap"}
-var secret = gvk.Gvk{Version: "v1", Kind: "Secret"}
-var ns = gvk.Gvk{Version: "v1", Kind: "Namespace"}
-
-func makeALoader(t *testing.T) ifc.Loader {
-	ldr := loadertest.NewFakeLoader("/testpath")
-	writeK(t, ldr, "/testpath/", kustomizationContent1)
-	writeF(t, ldr, "/testpath/deployment.yaml", deploymentContent)
-	writeF(t, ldr, "/testpath/namespace.yaml", namespaceContent)
-	writeF(t, ldr, "/testpath/jsonpatch.json", jsonpatchContent)
-	return ldr
-}
-
 func TestResources1(t *testing.T) {
+	th := NewKustTestHarness(t, "/whatever")
+	th.writeK("/whatever/", kustomizationContent1)
+	th.writeF("/whatever/deployment.yaml", deploymentContent)
+	th.writeF("/whatever/namespace.yaml", namespaceContent)
+	th.writeF("/whatever/jsonpatch.json", jsonpatchContent)
+
 	expected := resmap.ResMap{
 		resid.NewResIdWithPrefixSuffixNamespace(
-			deploy, "dply1", "foo-", "-bar", "ns1"): rf.RF().FromMap(
+			gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"},
+			"dply1", "foo-", "-bar", "ns1"): th.fromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -145,7 +133,8 @@ func TestResources1(t *testing.T) {
 				},
 			}),
 		resid.NewResIdWithPrefixSuffixNamespace(
-			cmap, "literalConfigMap", "foo-", "-bar", "ns1"): rf.RF().FromMap(
+			gvk.Gvk{Version: "v1", Kind: "ConfigMap"},
+			"literalConfigMap", "foo-", "-bar", "ns1"): th.fromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -165,7 +154,8 @@ func TestResources1(t *testing.T) {
 				},
 			}).SetBehavior(ifc.BehaviorCreate),
 		resid.NewResIdWithPrefixSuffixNamespace(
-			secret, "secret", "foo-", "-bar", "ns1"): rf.RF().FromMap(
+			gvk.Gvk{Version: "v1", Kind: "Secret"},
+			"secret", "foo-", "-bar", "ns1"): th.fromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -186,7 +176,8 @@ func TestResources1(t *testing.T) {
 				},
 			}).SetBehavior(ifc.BehaviorCreate),
 		resid.NewResIdWithPrefixSuffixNamespace(
-			ns, "ns1", "foo-", "-bar", ""): rf.RF().FromMap(
+			gvk.Gvk{Version: "v1", Kind: "Namespace"},
+			"ns1", "foo-", "-bar", ""): th.fromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Namespace",
@@ -201,8 +192,7 @@ func TestResources1(t *testing.T) {
 				},
 			}),
 	}
-	actual, err := makeKustTarget(
-		t, makeALoader(t)).MakeCustomizedResMap()
+	actual, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("unexpected Resources error %v", err)
 	}
@@ -214,9 +204,9 @@ func TestResources1(t *testing.T) {
 }
 
 func TestResourceNotFound(t *testing.T) {
-	l := loadertest.NewFakeLoader("/testpath")
-	writeK(t, l, "/testpath", kustomizationContent1)
-	_, err := makeKustTarget(t, l).MakeCustomizedResMap()
+	th := NewKustTestHarness(t, "/whatever")
+	th.writeK("/whatever", kustomizationContent1)
+	_, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err == nil {
 		t.Fatalf("Didn't get the expected error for an unknown resource")
 	}
@@ -226,9 +216,9 @@ func TestResourceNotFound(t *testing.T) {
 }
 
 func TestSecretTimeout(t *testing.T) {
-	l := loadertest.NewFakeLoader("/testpath")
-	writeK(t, l, "/testpath", kustomizationContent2)
-	_, err := makeKustTarget(t, l).MakeCustomizedResMap()
+	th := NewKustTestHarness(t, "/whatever")
+	th.writeK("/whatever", kustomizationContent2)
+	_, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err == nil {
 		t.Fatalf("Didn't get the expected error for an unknown resource")
 	}
@@ -247,8 +237,13 @@ func findSecret(m resmap.ResMap) *resource.Resource {
 }
 
 func TestDisableNameSuffixHash(t *testing.T) {
-	kt := makeKustTarget(t, makeALoader(t))
+	th := NewKustTestHarness(t, "/whatever")
+	th.writeK("/whatever/", kustomizationContent1)
+	th.writeF("/whatever/deployment.yaml", deploymentContent)
+	th.writeF("/whatever/namespace.yaml", namespaceContent)
+	th.writeF("/whatever/jsonpatch.json", jsonpatchContent)
 
+	kt := th.makeKustTarget()
 	m, err := kt.MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("unexpected Resources error %v", err)
@@ -277,28 +272,25 @@ func TestDisableNameSuffixHash(t *testing.T) {
 }
 
 func TestIssue596AllowDirectoriesThatAreSubstringsOfEachOther(t *testing.T) {
-	ldr := loadertest.NewFakeLoader(
-		"/app/overlays/aws-sandbox2.us-east-1")
-	writeK(t, ldr, "/app/base", "")
-	writeK(t, ldr, "/app/overlays/aws", `
+	th := NewKustTestHarness(t, "/app/overlays/aws-sandbox2.us-east-1")
+	th.writeK("/app/base", "")
+	th.writeK("/app/overlays/aws", `
 bases:
 - ../../base
 `)
-	writeK(t, ldr, "/app/overlays/aws-nonprod", `
+	th.writeK("/app/overlays/aws-nonprod", `
 bases:
 - ../aws
 `)
-	writeK(t, ldr, "/app/overlays/aws-sandbox2.us-east-1", `
+	th.writeK("/app/overlays/aws-sandbox2.us-east-1", `
 bases:
 - ../aws-nonprod
 `)
-	m, err := makeKustTarget(t, ldr).MakeCustomizedResMap()
+	m, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	if m == nil {
-		t.Fatalf("Empty map.")
-	}
+	th.assertActualEqualsExpected(m, "")
 }
 
 // To simplify tests, these vars specified in alphabetical order.
@@ -336,9 +328,8 @@ var someVars = []types.Var{
 }
 
 func TestGetAllVarsSimple(t *testing.T) {
-	ldr := loadertest.NewFakeLoader(
-		"/app")
-	writeK(t, ldr, "/app", `
+	th := NewKustTestHarness(t, "/app")
+	th.writeK("/app", `
 vars:
   - name: AWARD
     objref:
@@ -353,7 +344,7 @@ vars:
       name: heron
       apiVersion: v300
 `)
-	vars, err := makeKustTarget(t, ldr).getAllVars()
+	vars, err := th.makeKustTarget().getAllVars()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
@@ -376,9 +367,8 @@ func sortedKeys(m map[string]types.Var) (result []string) {
 }
 
 func TestGetAllVarsNested(t *testing.T) {
-	ldr := loadertest.NewFakeLoader(
-		"/app/overlays/o2")
-	writeK(t, ldr, "/app/base", `
+	th := NewKustTestHarness(t, "/app/overlays/o2")
+	th.writeK("/app/base", `
 vars:
   - name: AWARD
     objref:
@@ -393,7 +383,7 @@ vars:
       name: heron
       apiVersion: v300
 `)
-	writeK(t, ldr, "/app/overlays/o1", `
+	th.writeK("/app/overlays/o1", `
 vars:
   - name: FRUIT
     objref:
@@ -402,7 +392,7 @@ vars:
 bases:
 - ../../base
 `)
-	writeK(t, ldr, "/app/overlays/o2", `
+	th.writeK("/app/overlays/o2", `
 vars:
   - name: VEGETABLE
     objref:
@@ -411,7 +401,7 @@ vars:
 bases:
 - ../o1
 `)
-	vars, err := makeKustTarget(t, ldr).getAllVars()
+	vars, err := th.makeKustTarget().getAllVars()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
@@ -426,9 +416,8 @@ bases:
 }
 
 func TestVarCollisionsForbidden(t *testing.T) {
-	ldr := loadertest.NewFakeLoader(
-		"/app/overlays/o2")
-	writeK(t, ldr, "/app/base", `
+	th := NewKustTestHarness(t, "/app/overlays/o2")
+	th.writeK("/app/base", `
 vars:
   - name: AWARD
     objref:
@@ -443,7 +432,7 @@ vars:
       name: heron
       apiVersion: v300
 `)
-	writeK(t, ldr, "/app/overlays/o1", `
+	th.writeK("/app/overlays/o1", `
 vars:
   - name: AWARD
     objref:
@@ -452,7 +441,7 @@ vars:
 bases:
 - ../../base
 `)
-	writeK(t, ldr, "/app/overlays/o2", `
+	th.writeK("/app/overlays/o2", `
 vars:
   - name: VEGETABLE
     objref:
@@ -461,7 +450,7 @@ vars:
 bases:
 - ../o1
 `)
-	_, err := makeKustTarget(t, ldr).getAllVars()
+	_, err := th.makeKustTarget().getAllVars()
 	if err == nil {
 		t.Fatalf("expected var collision")
 	}
