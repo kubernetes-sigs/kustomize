@@ -1,5 +1,0 @@
-description: base only
-args: []
-filename: testdata/testcase-base-only/in
-expectedStdout: testdata/testcase-base-only/expected.yaml
-expectedDiff: testdata/testcase-base-only/expected.diff
