@@ -27,7 +27,6 @@ import (
 
 	"github.com/ghodss/yaml"
 	"sigs.k8s.io/kustomize/k8sdeps"
-	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 )
@@ -98,10 +97,6 @@ func TestBuild(t *testing.T) {
 		}
 		return nil
 	})
-	// sanity check that we found the right folder
-	if !kustfile.StringInSlice("multiple-patches-noconflict", testcases) {
-		t.Fatalf("Error locating testcases")
-	}
 	for _, testcaseName := range testcases {
 		t.Run(testcaseName,
 			func(t *testing.T) {
