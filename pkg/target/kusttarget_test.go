@@ -74,12 +74,14 @@ secretGenerator:
     USER: "sleep 2"
   type: Opaque
 `
-	deploymentContent = `apiVersion: apps/v1
+	deploymentContent = `
+apiVersion: apps/v1
 metadata:
   name: dply1
 kind: Deployment
 `
-	namespaceContent = `apiVersion: v1
+	namespaceContent = `
+apiVersion: v1
 kind: Namespace
 metadata:
   name: ns1
