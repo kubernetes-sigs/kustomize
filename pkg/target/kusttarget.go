@@ -97,14 +97,44 @@ func unmarshal(y []byte, o interface{}) error {
 	return dec.Decode(o)
 }
 
-// makeTransformerConfig returns a complete TransformerConfig object
-// from either files or the default configs
+// Maybe switch to the false path permanently (desired by #606),
+// or expose this as a CLI flag.
+const demandExplicitConfig = true
+
 func makeTransformerConfig(
+	ldr ifc.Loader, paths []string) (*config.TransformerConfig, error) {
+	if demandExplicitConfig {
+		return loadConfigFromDiskOrDefaults(ldr, paths)
+	}
+	return mergeCustomConfigWithDefaults(ldr, paths)
+}
+
+// loadConfigFromDiskOrDefaults returns a TransformerConfig object
+// built from either files or the hardcoded default configs.
+// There's no merging, it's one or the other.  This is preferred if one
+// wants all configuration to be explicit in version control, as
+// opposed to relying on a mix of files and hard coded config.
+func loadConfigFromDiskOrDefaults(
 	ldr ifc.Loader, paths []string) (*config.TransformerConfig, error) {
 	if paths == nil || len(paths) == 0 {
 		return config.NewFactory(nil).DefaultConfig(), nil
 	}
 	return config.NewFactory(ldr).FromFiles(paths)
+}
+
+// mergeCustomConfigWithDefaults returns a merger of custom config,
+// if any, with default config.
+func mergeCustomConfigWithDefaults(
+	ldr ifc.Loader, paths []string) (*config.TransformerConfig, error) {
+	t1 := config.NewFactory(nil).DefaultConfig()
+	if len(paths) == 0 {
+		return t1, nil
+	}
+	t2, err := config.NewFactory(ldr).FromFiles(paths)
+	if err != nil {
+		return nil, err
+	}
+	return t1.Merge(t2), nil
 }
 
 // MakeCustomizedResMap creates a ResMap per kustomization instructions.

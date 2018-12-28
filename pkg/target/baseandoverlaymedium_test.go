@@ -91,7 +91,8 @@ func TestMediumBase(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `apiVersion: v1
+	th.assertActualEqualsExpected(m, `
+apiVersion: v1
 kind: Service
 metadata:
   annotations:
@@ -210,7 +211,8 @@ spec:
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `apiVersion: v1
+	th.assertActualEqualsExpected(m, `
+apiVersion: v1
 data:
   app-init.ini: |2
 
