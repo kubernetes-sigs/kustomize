@@ -151,9 +151,9 @@ func (th *KustTestHarness) assertActualEqualsExpected(
 func (th *KustTestHarness) reportDiffAndFail(actual []byte, expected string) {
 	sE, maxLen := convertToArray(expected)
 	sA, _ := convertToArray(string(actual))
-	fmt.Println("-- ACTUAL -----------------")
-	fmt.Println(string(actual))
-	fmt.Println("---------------------------")
+	fmt.Println("===== ACTUAL BEGIN ========================================")
+	fmt.Print(string(actual))
+	fmt.Println("===== ACTUAL END ==========================================")
 	format := fmt.Sprintf("%%s  %%-%ds %%s\n", maxLen+4)
 	limit := 0
 	if len(sE) < len(sA) {
