@@ -1,5 +1,0 @@
-description: multiple patches no conflict
-args: []
-filename: testdata/testcase-multiple-patches-noconflict/in/overlay/
-expectedStdout: testdata/testcase-multiple-patches-noconflict/expected.yaml
-expectedDiff: testdata/testcase-multiple-patches-noconflict/expected.diff
