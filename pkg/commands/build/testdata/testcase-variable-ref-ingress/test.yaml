@@ -1,4 +1,0 @@
-description: variable reference and substitution for ingress resources
-args: []
-filename: testdata/testcase-variable-ref-ingress/in/overlay/
-expectedStdout: testdata/testcase-variable-ref-ingress/expected.yaml
