@@ -42,7 +42,10 @@ func TestAddNamereferenceFieldSpec(t *testing.T) {
 		},
 	}
 
-	cfg.AddNamereferenceFieldSpec(nbrs)
+	err := cfg.AddNamereferenceFieldSpec(nbrs)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
 	if len(cfg.NameReference) != 1 {
 		t.Fatal("failed to add namereference FieldSpec")
 	}
@@ -57,19 +60,31 @@ func TestAddFieldSpecs(t *testing.T) {
 		CreateIfNotPresent: true,
 	}
 
-	cfg.AddPrefixFieldSpec(fieldSpec)
+	err := cfg.AddPrefixFieldSpec(fieldSpec)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
 	if len(cfg.NamePrefix) != 1 {
 		t.Fatalf("failed to add nameprefix FieldSpec")
 	}
-	cfg.AddSuffixFieldSpec(fieldSpec)
+	err = cfg.AddSuffixFieldSpec(fieldSpec)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
 	if len(cfg.NameSuffix) != 1 {
 		t.Fatalf("failed to add namesuffix FieldSpec")
 	}
-	cfg.AddLabelFieldSpec(fieldSpec)
+	err = cfg.AddLabelFieldSpec(fieldSpec)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
 	if len(cfg.CommonLabels) != 1 {
 		t.Fatalf("failed to add nameprefix FieldSpec")
 	}
-	cfg.AddAnnotationFieldSpec(fieldSpec)
+	err = cfg.AddAnnotationFieldSpec(fieldSpec)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
 	if len(cfg.CommonAnnotations) != 1 {
 		t.Fatalf("failed to add nameprefix FieldSpec")
 	}
@@ -128,7 +143,10 @@ func TestMerge(t *testing.T) {
 	cfgb.AddPrefixFieldSpec(fieldSpecs[1])
 	cfga.AddSuffixFieldSpec(fieldSpecs[1])
 
-	actual := cfga.Merge(cfgb)
+	actual, err := cfga.Merge(cfgb)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
 
 	if len(actual.NamePrefix) != 2 {
 		t.Fatal("merge failed for namePrefix FieldSpec")
@@ -154,7 +172,10 @@ func TestMerge(t *testing.T) {
 		t.Fatalf("expected: %v\n but got: %v\n", expected, actual)
 	}
 
-	actual = cfga.Merge(nil)
+	actual, err = cfga.Merge(nil)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
 	if !reflect.DeepEqual(actual, cfga) {
 		t.Fatalf("expected: %v\n but got: %v\n", cfga, actual)
 	}

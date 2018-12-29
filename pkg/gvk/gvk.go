@@ -116,16 +116,16 @@ func (x Gvk) IsLessThan(o Gvk) bool {
 // If `selector` and `x` are the same, return true.
 // If `selector` is nil, it is considered a wildcard match, returning true.
 // If selector fields are empty, they are considered wildcards matching
-// anything in the corresponding fields, .g.
-//   selector
-//       <Group: "",           Version: "",        Kind: "Deployment">
-//   selects
-//       <Group: "extensions", Version: "v1beta1", Kind: "Deployment">.
+// anything in the corresponding fields, e.g.
 //
-//   while selector
+// this item:
+//       <Group: "extensions", Version: "v1beta1", Kind: "Deployment">
+//
+// is selected by
+//       <Group: "",           Version: "",        Kind: "Deployment">
+//
+// but rejected by
 //       <Group: "apps",       Version: "",        Kind: "Deployment">
-//   rejects
-//       <Group: "extensions", Version: "v1beta1", Kind: "Deployment">.
 //
 func (x Gvk) IsSelected(selector *Gvk) bool {
 	if selector == nil {

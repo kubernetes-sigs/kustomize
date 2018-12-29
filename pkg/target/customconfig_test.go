@@ -150,9 +150,6 @@ spec:
 `)
 }
 
-// TODO: this test demonstrates #658
-// The prefix "x-" is applied twice (search for x-x-sandiego), because the
-// config from the base isn't properly merged with the config in the overlay.
 func TestCustomConfigWithDefaultOverspecification(t *testing.T) {
 	th := NewKustTestHarness(t, "/app/base")
 	makeBaseReferencingCustomConfig(th)
@@ -184,21 +181,21 @@ kind: AnimalPark
 metadata:
   labels:
     app: myApp
-  name: x-x-sandiego
+  name: x-sandiego
 spec:
   food:
   - mimosa
   - bambooshoots
   giraffeRef:
-    name: x-x-april
+    name: x-april
   gorillaRef:
-    name: x-x-koko
+    name: x-koko
 ---
 kind: Giraffe
 metadata:
   labels:
     app: myApp
-  name: x-x-april
+  name: x-april
 spec:
   diet: mimosa
   location: NE
@@ -207,7 +204,7 @@ kind: Giraffe
 metadata:
   labels:
     app: myApp
-  name: x-x-may
+  name: x-may
 spec:
   diet: acacia
   location: SE
@@ -216,7 +213,7 @@ kind: Gorilla
 metadata:
   labels:
     app: myApp
-  name: x-x-koko
+  name: x-koko
 spec:
   diet: bambooshoots
   location: SW
