@@ -1,8 +1,0 @@
-apiVersion: v1beta1
-kind: Kustomization
-namePrefix: p1-
-configMapGenerator:
-- name: com1
-  behavior: create
-  literals:
-    - from=base
