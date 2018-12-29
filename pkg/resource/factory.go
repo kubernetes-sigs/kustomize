@@ -87,7 +87,7 @@ func (rf *Factory) SliceFromBytes(in []byte) ([]*Resource, error) {
 			items := u.Map()["items"]
 			itemsSlice, ok := items.([]interface{})
 			if !ok {
-				return nil, fmt.Errorf("items in List is type %T, expected array.", items)
+				return nil, fmt.Errorf("items in List is type %T, expected array", items)
 			}
 			for _, item := range itemsSlice {
 				itemJSON, err := json.Marshal(item)

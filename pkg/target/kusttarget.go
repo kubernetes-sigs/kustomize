@@ -134,7 +134,7 @@ func mergeCustomConfigWithDefaults(
 	if err != nil {
 		return nil, err
 	}
-	return t1.Merge(t2), nil
+	return t1.Merge(t2)
 }
 
 // MakeCustomizedResMap creates a ResMap per kustomization instructions.
@@ -194,9 +194,12 @@ func (kt *KustTarget) loadCustomizedResMap() (resmap.ResMap, error) {
 		errs.Append(errors.Wrap(err, "loadResMapFromBasesAndResources"))
 	}
 	crdTc, err := config.NewFactory(kt.ldr).LoadCRDs(kt.kustomization.Crds)
-	kt.tConfig = kt.tConfig.Merge(crdTc)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "LoadCRDs"))
+	}
+	kt.tConfig, err = kt.tConfig.Merge(crdTc)
+	if err != nil {
+		errs.Append(errors.Wrap(err, "merge CRDs"))
 	}
 	resMap, err := kt.generateConfigMapsAndSecrets(errs)
 	if err != nil {

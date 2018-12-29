@@ -17,8 +17,12 @@ limitations under the License.
 package config
 
 import (
+	"fmt"
 	"reflect"
+	"strings"
 	"testing"
+
+	"sigs.k8s.io/kustomize/pkg/gvk"
 )
 
 func TestPathSlice(t *testing.T) {
@@ -41,6 +45,136 @@ func TestPathSlice(t *testing.T) {
 		actual := fs.PathSlice()
 		if !reflect.DeepEqual(actual, p.parsed) {
 			t.Fatalf("expected %v, but got %v", p.parsed, actual)
+		}
+	}
+}
+
+var mergeTests = []struct {
+	name     string
+	original fsSlice
+	incoming fsSlice
+	err      error
+	result   fsSlice
+}{
+	{
+		"normal",
+		fsSlice{
+			{
+				Path:               "whatever",
+				Gvk:                gvk.Gvk{Group: "apple"},
+				CreateIfNotPresent: false,
+			},
+			{
+				Path:               "whatever",
+				Gvk:                gvk.Gvk{Group: "pear"},
+				CreateIfNotPresent: false,
+			},
+		},
+		fsSlice{
+			{
+				Path:               "home",
+				Gvk:                gvk.Gvk{Group: "beans"},
+				CreateIfNotPresent: false,
+			},
+		},
+		nil,
+		fsSlice{
+			{
+				Path:               "whatever",
+				Gvk:                gvk.Gvk{Group: "apple"},
+				CreateIfNotPresent: false,
+			},
+			{
+				Path:               "whatever",
+				Gvk:                gvk.Gvk{Group: "pear"},
+				CreateIfNotPresent: false,
+			},
+			{
+				Path:               "home",
+				Gvk:                gvk.Gvk{Group: "beans"},
+				CreateIfNotPresent: false,
+			},
+		},
+	},
+	{
+		"ignore copy",
+		fsSlice{
+			{
+				Path:               "whatever",
+				Gvk:                gvk.Gvk{Group: "apple"},
+				CreateIfNotPresent: false,
+			},
+			{
+				Path:               "whatever",
+				Gvk:                gvk.Gvk{Group: "pear"},
+				CreateIfNotPresent: false,
+			},
+		},
+		fsSlice{
+			{
+				Path:               "whatever",
+				Gvk:                gvk.Gvk{Group: "apple"},
+				CreateIfNotPresent: false,
+			},
+		},
+		nil,
+		fsSlice{
+			{
+				Path:               "whatever",
+				Gvk:                gvk.Gvk{Group: "apple"},
+				CreateIfNotPresent: false,
+			},
+			{
+				Path:               "whatever",
+				Gvk:                gvk.Gvk{Group: "pear"},
+				CreateIfNotPresent: false,
+			},
+		},
+	},
+	{
+		"error on conflict",
+		fsSlice{
+			{
+				Path:               "whatever",
+				Gvk:                gvk.Gvk{Group: "apple"},
+				CreateIfNotPresent: false,
+			},
+			{
+				Path:               "whatever",
+				Gvk:                gvk.Gvk{Group: "pear"},
+				CreateIfNotPresent: false,
+			},
+		},
+		fsSlice{
+			{
+				Path:               "whatever",
+				Gvk:                gvk.Gvk{Group: "apple"},
+				CreateIfNotPresent: true,
+			},
+		},
+		fmt.Errorf("hey"),
+		fsSlice{},
+	},
+}
+
+func TestFsSlice_MergeAll(t *testing.T) {
+	for _, item := range mergeTests {
+		result, err := item.original.mergeAll(item.incoming)
+		if item.err == nil {
+			if err != nil {
+				t.Fatalf("test %s: unexpected err %v", item.name, err)
+			}
+			if !reflect.DeepEqual(item.result, result) {
+				t.Fatalf("test %s: expected: %v\n but got: %v\n",
+					item.name, item.result, result)
+			}
+		} else {
+			if err == nil {
+				t.Fatalf("test %s: expected err: %v", item.name, err)
+			}
+			if !strings.Contains(err.Error(), "conflicting fieldspecs") {
+				t.Fatalf("test %s: unexpected err: %v", item.name, err)
+			}
 		}
 	}
 }
