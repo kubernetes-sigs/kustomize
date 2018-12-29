@@ -33,7 +33,10 @@ func (tf *Factory) LoadCRDs(paths []string) (*TransformerConfig, error) {
 		if err != nil {
 			return nil, err
 		}
-		tc = tc.Merge(otherTc)
+		tc, err = tc.Merge(otherTc)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return tc, nil
 }
@@ -63,7 +66,10 @@ func (tf *Factory) loadCRD(path string) (*TransformerConfig, error) {
 		if err != nil {
 			return result, err
 		}
-		result = result.Merge(tc)
+		result, err = result.Merge(tc)
+		if err != nil {
+			return result, err
+		}
 	}
 
 	return result, nil
@@ -92,7 +98,7 @@ func getCRDs(types map[string]common.OpenAPIDefinition) map[string]gvk.Gvk {
 func loadCrdIntoConfig(
 	types map[string]common.OpenAPIDefinition,
 	atype string, crd string, in gvk.Gvk,
-	path []string, config *TransformerConfig) error {
+	path []string, config *TransformerConfig) (err error) {
 	if _, ok := types[crd]; !ok {
 		return nil
 	}
@@ -100,33 +106,42 @@ func loadCrdIntoConfig(
 	for propname, property := range types[atype].Schema.SchemaProps.Properties {
 		_, annotate := property.Extensions.GetString(Annotation)
 		if annotate {
-			config.AddAnnotationFieldSpec(
+			err = config.AddAnnotationFieldSpec(
 				FieldSpec{
 					CreateIfNotPresent: false,
 					Gvk:                in,
 					Path:               strings.Join(append(path, propname), "/"),
 				},
 			)
+			if err != nil {
+				return err
+			}
 		}
 		_, label := property.Extensions.GetString(LabelSelector)
 		if label {
-			config.AddLabelFieldSpec(
+			err = config.AddLabelFieldSpec(
 				FieldSpec{
 					CreateIfNotPresent: false,
 					Gvk:                in,
 					Path:               strings.Join(append(path, propname), "/"),
 				},
 			)
+			if err != nil {
+				return err
+			}
 		}
 		_, identity := property.Extensions.GetString(Identity)
 		if identity {
-			config.AddPrefixFieldSpec(
+			err = config.AddPrefixFieldSpec(
 				FieldSpec{
 					CreateIfNotPresent: false,
 					Gvk:                in,
 					Path:               strings.Join(append(path, propname), "/"),
 				},
 			)
+			if err != nil {
+				return err
+			}
 		}
 		version, ok := property.Extensions.GetString(Version)
 		if ok {
@@ -136,7 +151,7 @@ func loadCrdIntoConfig(
 				if !ok {
 					nameKey = "name"
 				}
-				config.AddNamereferenceFieldSpec(NameBackReferences{
+				err = config.AddNamereferenceFieldSpec(NameBackReferences{
 					Gvk: gvk.Gvk{Kind: kind, Version: version},
 					FieldSpecs: []FieldSpec{
 						{
@@ -146,6 +161,9 @@ func loadCrdIntoConfig(
 						},
 					},
 				})
+				if err != nil {
+					return err
+				}
 			}
 		}
 

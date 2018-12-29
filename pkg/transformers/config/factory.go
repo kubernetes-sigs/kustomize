@@ -53,7 +53,10 @@ func (tf *Factory) FromFiles(
 		if err != nil {
 			return nil, err
 		}
-		result = result.Merge(t)
+		result, err = result.Merge(t)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return result, nil
 }
