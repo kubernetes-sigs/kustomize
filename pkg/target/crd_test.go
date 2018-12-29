@@ -1,14 +1,78 @@
+/*
+Copyright 2018 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package target
+
+import (
+	"testing"
+)
+
+func writeBaseWithCrd(th *KustTestHarness) {
+	th.writeK("/app/base", `
+apiVersion: v1beta1
+kind: Kustomization
+crds:
+- mycrd.json
+
+resources:
+- secret.yaml
+- mykind.yaml
+- bee.yaml
+
+namePrefix: x-
+`)
+	th.writeF("/app/base/bee.yaml", `
+apiVersion: v1beta1
+kind: Bee
+metadata:
+  name: bee
+spec:
+  action: fly
+`)
+	th.writeF("/app/base/mykind.yaml", `
+apiVersion: jingfang.example.com/v1beta1
+kind: MyKind
+metadata:
+  name: mykind
+spec:
+  secretRef:
+    name: crdsecret
+  beeRef:
+    name: bee
+`)
+	th.writeF("/app/base/secret.yaml", `
+apiVersion: v1
+kind: Secret
+metadata:
+  name: crdsecret
+data:
+  PATH: yellowBrickRoad
+`)
+	th.writeF("/app/base/mycrd.json", `
 {
   "github.com/example/pkg/apis/jingfang/v1beta1.Bee": {
     "Schema": {
       "description": "Bee",
       "properties": {
         "apiVersion": {
-          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+          "description": "APIVersion defines the versioned schema of this representation of an object.",
           "type": "string"
         },
         "kind": {
-          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+          "description": "Kind is a string value representing the REST resource this object represents.",
           "type": "string"
         },
         "metadata": {
@@ -35,7 +99,7 @@
       ],
       "properties": {
         "apiVersion": {
-          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+          "description": "APIVersion defines the versioned schema of this representation of an object.",
           "type": "string"
         },
         "items": {
@@ -45,7 +109,7 @@
           }
         },
         "kind": {
-          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+          "description": "Kind is a string value representing the REST resource this object represents.",
           "type": "string"
         },
         "metadata": {
@@ -85,11 +149,11 @@
       "description": "MyKind",
       "properties": {
         "apiVersion": {
-          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+          "description": "APIVersion defines the versioned schema of this representation of an object.",
           "type": "string"
         },
         "kind": {
-          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+          "description": "Kind is a string value representing the REST resource this object represents.",
           "type": "string"
         },
         "metadata": {
@@ -116,7 +180,7 @@
       ],
       "properties": {
         "apiVersion": {
-          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+          "description": "APIVersion defines the versioned schema of this representation of an object.",
           "type": "string"
         },
         "items": {
@@ -126,7 +190,7 @@
           }
         },
         "kind": {
-          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+          "description": "Kind is a string value representing the REST resource this object represents.",
           "type": "string"
         },
         "metadata": {
@@ -149,7 +213,7 @@
           "$ref": "github.com/example/pkg/apis/jingfang/v1beta1.BeeObjectReference"
         },
         "secretRef": {
-          "description": "If defined, we use this secret for configuring the MYSQL_ROOT_PASSWORD If it is not set we generate a secret dynamically",
+          "description": "If defined, use this secret for configuring the MYSQL_ROOT_PASSWORD",
           "x-kubernetes-object-ref-api-version": "v1",
           "x-kubernetes-object-ref-kind": "Secret",
           "$ref": "k8s.io/api/core/v1.LocalObjectReference"
@@ -167,4 +231,92 @@
     },
     "Dependencies": []
   }
+}
+`)
+}
+
+func TestCrdBase(t *testing.T) {
+	th := NewKustTestHarness(t, "/app/base")
+	writeBaseWithCrd(th)
+	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.assertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  PATH: yellowBrickRoad
+kind: Secret
+metadata:
+  name: x-crdsecret
+---
+apiVersion: jingfang.example.com/v1beta1
+kind: MyKind
+metadata:
+  name: x-mykind
+spec:
+  beeRef:
+    name: x-bee
+  secretRef:
+    name: x-crdsecret
+---
+apiVersion: v1beta1
+kind: Bee
+metadata:
+  name: x-bee
+spec:
+  action: fly
+`)
+}
+
+func TestCrdWithOverlay(t *testing.T) {
+	th := NewKustTestHarness(t, "/app/overlay")
+	writeBaseWithCrd(th)
+	th.writeK("/app/overlay", `
+apiVersion: v1beta1
+kind: Kustomization
+namePrefix: prod-
+bases:
+- ../base
+patchesStrategicMerge:
+- bee.yaml
+`)
+	th.writeF("/app/overlay/bee.yaml", `
+apiVersion: v1beta1
+kind: Bee
+metadata:
+  name: bee
+spec:
+  action: makehoney
+`)
+	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	// TODO(#605): Some output here is wrong due to #605
+	th.assertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  PATH: yellowBrickRoad
+kind: Secret
+metadata:
+  name: prod-x-crdsecret
+---
+apiVersion: jingfang.example.com/v1beta1
+kind: MyKind
+metadata:
+  name: prod-x-mykind
+spec:
+  beeRef:
+    name: bee
+  secretRef:
+    name: crdsecret
+---
+apiVersion: v1beta1
+kind: Bee
+metadata:
+  name: prod-bee
+spec:
+  action: makehoney
+`)
 }
