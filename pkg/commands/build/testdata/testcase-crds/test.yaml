@@ -1,5 +1,0 @@
-description: name reference in CRDs
-args: []
-filename: testdata/testcase-crds/crd
-expectedStdout: testdata/testcase-crds/expected.yaml
-expectedDiff: testdata/testcase-crds/expected.diff
