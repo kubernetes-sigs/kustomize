@@ -1,4 +1,0 @@
-description: generators-namespace
-args: []
-filename: testdata/testcase-generators-namespace/in
-expectedStdout: testdata/testcase-generators-namespace/expected.yaml
