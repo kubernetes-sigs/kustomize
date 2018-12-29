@@ -1,5 +1,0 @@
-description: configmap generator overlay
-args: []
-filename: testdata/testcase-configmaps/overlay/dev
-expectedStdout: testdata/testcase-configmaps/expected.yaml
-expectedDiff: testdata/testcase-configmaps/expected.diff
