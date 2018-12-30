@@ -155,7 +155,8 @@ func TestCustomConfigWithDefaultOverspecification(t *testing.T) {
 	makeBaseReferencingCustomConfig(th)
 	th.writeDefaultConfigs("/app/base/config/defaults.yaml")
 	// Specifying namePrefix here conflicts with (is the same as)
-	// the defaults written above.
+	// the defaults written above.  This is intentional in the
+	// test to assure duplicate config doesn't cause problems.
 	th.writeF("/app/base/config/custom.yaml", `
 namePrefix:
 - path: metadata/name
