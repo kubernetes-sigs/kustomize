@@ -56,6 +56,7 @@ type KustTarget struct {
 type CustomizedResMap struct {
 	resMap  resmap.ResMap
 	tConfig *config.TransformerConfig
+	varMap  map[string]types.Var
 }
 
 // NewKustTarget returns a new instance of KustTarget primed with a Loader.
@@ -178,11 +179,7 @@ func (kt *KustTarget) shouldAddHashSuffixesToGeneratedResources() bool {
 }
 
 func (kt *KustTarget) doVarReplacement(cr *CustomizedResMap) error {
-	vars, err := kt.getAllVars()
-	if err != nil {
-		return err
-	}
-	varMap, err := kt.resolveVars(cr.resMap, vars)
+	varMap, err := kt.resolveVars(cr.resMap, cr.varMap)
 	if err != nil {
 		return err
 	}
@@ -201,6 +198,9 @@ func (kt *KustTarget) loadCustomizedResMap() (
 	cr, err = kt.loadResMapFromBasesAndResources()
 	if err != nil {
 		errs.Append(errors.Wrap(err, "loadResMapFromBasesAndResources"))
+		if cr == nil {
+			return nil, errs
+		}
 	}
 	crdTc, err := config.NewFactory(kt.ldr).LoadCRDs(kt.kustomization.Crds)
 	if err != nil {
@@ -279,6 +279,8 @@ func (kt *KustTarget) generateConfigMapsAndSecrets(
 func (kt *KustTarget) loadResMapFromBasesAndResources() (
 	cr *CustomizedResMap, err error) {
 	cr, errs := kt.loadCustomizedBases()
+
+	// Merge resources.
 	resources, err := kt.rFactory.FromFiles(
 		kt.ldr, kt.kustomization.Resources)
 	if err != nil {
@@ -287,20 +289,29 @@ func (kt *KustTarget) loadResMapFromBasesAndResources() (
 	if len(errs.Get()) > 0 {
 		return cr, errs
 	}
-
 	cr.resMap, err = resmap.MergeWithErrorOnIdCollision(
 		resources, cr.resMap)
 	if err != nil {
 		return cr, err
 	}
 
+	// Merge config.
 	tConfig, err := makeTransformerConfig(
 		kt.ldr, kt.kustomization.Configurations)
 	if err != nil {
 		return cr, err
 	}
 	cr.tConfig, err = cr.tConfig.Merge(tConfig)
-	return
+
+	// Merge vars.
+	for _, v := range kt.kustomization.Vars {
+		v.Defaulting()
+		if _, oops := cr.varMap[v.Name]; oops {
+			return nil, ErrVarCollision{v.Name, kt.ldr.Root()}
+		}
+		cr.varMap[v.Name] = v
+	}
+	return cr, err
 }
 
 // loadCustomizedBases returns a new CustomizedResMap
@@ -313,6 +324,8 @@ func (kt *KustTarget) loadCustomizedBases() (
 	cr = &CustomizedResMap{}
 	cr.resMap = make(resmap.ResMap)
 	cr.tConfig = &config.TransformerConfig{}
+	cr.varMap = make(map[string]types.Var)
+
 	for _, path := range kt.kustomization.Bases {
 		ldr, err := kt.ldr.New(path)
 		if err != nil {
@@ -327,18 +340,28 @@ func (kt *KustTarget) loadCustomizedBases() (
 		}
 		subCr, err := target.loadCustomizedResMap()
 		if err != nil {
-			errs.Append(errors.Wrap(err, "SemiResources"))
+			errs.Append(errors.Wrap(err, "loadCustomizedResMap"))
 			continue
 		}
 		ldr.Cleanup()
+		// Merge resources.
 		cr.resMap, err = resmap.MergeWithErrorOnIdCollision(
 			cr.resMap, subCr.resMap)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "resource merge failed"))
 		}
+		// Merge config.
 		cr.tConfig, err = cr.tConfig.Merge(subCr.tConfig)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "config merge failed"))
+		}
+		// Merge vars.
+		for k, v := range subCr.varMap {
+			if _, oops := cr.varMap[k]; oops {
+				errs.Append(ErrVarCollision{v.Name, target.ldr.Root()})
+				continue
+			}
+			cr.varMap[k] = v
 		}
 	}
 	return cr, errs
@@ -428,46 +451,6 @@ func (e ErrVarCollision) Error() string {
 	return fmt.Sprintf(
 		"var %s in %s defined in some other kustomization",
 		e.name, e.path)
-}
-
-// getAllVars returns a map of Var names to Var instances, pulled from
-// this kustomization and the kustomizations it depends on.
-// An error is returned on Var name collision.
-func (kt *KustTarget) getAllVars() (map[string]types.Var, error) {
-	result, err := kt.getVarsFromBases()
-	if err != nil {
-		return nil, err
-	}
-	for _, v := range kt.kustomization.Vars {
-		v.Defaulting()
-		if _, oops := result[v.Name]; oops {
-			return nil, ErrVarCollision{v.Name, kt.ldr.Root()}
-		}
-		result[v.Name] = v
-	}
-	return result, nil
-}
-
-func (kt *KustTarget) getVarsFromBases() (map[string]types.Var, error) {
-	targets, err := kt.loadBasesAsKustTargets()
-	if err != nil {
-		return nil, err
-	}
-	result := make(map[string]types.Var)
-	for _, subKt := range targets {
-		vars, err := subKt.getAllVars()
-		if err != nil {
-			return nil, err
-		}
-		subKt.ldr.Cleanup()
-		for k, v := range vars {
-			if _, oops := result[k]; oops {
-				return nil, ErrVarCollision{v.Name, subKt.ldr.Root()}
-			}
-			result[k] = v
-		}
-	}
-	return result, nil
 }
 
 func loadKustFile(ldr ifc.Loader) ([]byte, error) {

@@ -346,10 +346,11 @@ vars:
       name: heron
       apiVersion: v300
 `)
-	vars, err := th.makeKustTarget().getAllVars()
+	cr, err := th.makeKustTarget().loadResMapFromBasesAndResources()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
+	vars := cr.varMap
 	if len(vars) != 2 {
 		t.Fatalf("unexpected size %d", len(vars))
 	}
@@ -403,10 +404,11 @@ vars:
 bases:
 - ../o1
 `)
-	vars, err := th.makeKustTarget().getAllVars()
+	cr, err := th.makeKustTarget().loadResMapFromBasesAndResources()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
+	vars := cr.varMap
 	if len(vars) != 4 {
 		t.Fatalf("unexpected size %d", len(vars))
 	}
@@ -452,11 +454,12 @@ vars:
 bases:
 - ../o1
 `)
-	_, err := th.makeKustTarget().getAllVars()
+	_, err := th.makeKustTarget().loadResMapFromBasesAndResources()
 	if err == nil {
 		t.Fatalf("expected var collision")
 	}
-	if _, ok := err.(ErrVarCollision); !ok {
+	if !strings.Contains(err.Error(),
+		"var AWARD in /app/overlays/o1 defined in some other kustomization") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
