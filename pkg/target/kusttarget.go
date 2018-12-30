@@ -97,8 +97,9 @@ func unmarshal(y []byte, o interface{}) error {
 	return dec.Decode(o)
 }
 
-// Maybe switch to the false path permanently (desired by #606),
-// or expose this as a CLI flag.
+// TODO(#6060) Maybe switch to the false path permanently
+// (desired by #606), or expose this as a new customization
+// directive.
 const demandExplicitConfig = true
 
 func makeTransformerConfig(

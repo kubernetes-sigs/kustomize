@@ -68,12 +68,14 @@ func (t *TransformerConfig) AddAnnotationFieldSpec(fs FieldSpec) (err error) {
 }
 
 // AddNamereferenceFieldSpec adds a NameBackReferences to NameReference
-func (t *TransformerConfig) AddNamereferenceFieldSpec(nbrs NameBackReferences) (err error) {
+func (t *TransformerConfig) AddNamereferenceFieldSpec(
+	nbrs NameBackReferences) (err error) {
 	t.NameReference, err = t.NameReference.mergeOne(nbrs)
 	return err
 }
 
-// Merge merges two TransformerConfigs objects into a new TransformerConfig object
+// Merge merges two TransformerConfigs objects into
+// a new TransformerConfig object
 func (t *TransformerConfig) Merge(input *TransformerConfig) (
 	merged *TransformerConfig, err error) {
 	if input == nil {
@@ -92,7 +94,8 @@ func (t *TransformerConfig) Merge(input *TransformerConfig) (
 	if err != nil {
 		return nil, err
 	}
-	merged.CommonAnnotations, err = t.CommonAnnotations.mergeAll(input.CommonAnnotations)
+	merged.CommonAnnotations, err = t.CommonAnnotations.mergeAll(
+		input.CommonAnnotations)
 	if err != nil {
 		return nil, err
 	}
