@@ -293,7 +293,7 @@ spec:
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	// TODO(#605): Some output here is wrong due to #605
+	// TODO(#669): Bee's name should be "prod-x-bee", not "prod-bee".
 	th.assertActualEqualsExpected(m, `
 apiVersion: v1
 data:
@@ -308,9 +308,9 @@ metadata:
   name: prod-x-mykind
 spec:
   beeRef:
-    name: bee
+    name: prod-bee
   secretRef:
-    name: crdsecret
+    name: prod-x-crdsecret
 ---
 apiVersion: v1beta1
 kind: Bee

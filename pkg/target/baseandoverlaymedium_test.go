@@ -211,6 +211,9 @@ spec:
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
+	// TODO(#669): The name of the patched Deployment is
+	// test-infra-baseprefix-mungebot, retaining the base
+	// prefix (example of correct behavior).
 	th.assertActualEqualsExpected(m, `
 apiVersion: v1
 data:
