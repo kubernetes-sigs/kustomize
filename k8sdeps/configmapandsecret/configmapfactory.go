@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"path"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
@@ -48,6 +49,7 @@ func (f *ConfigMapFactory) makeFreshConfigMap(
 	cm.Name = args.Name
 	cm.Namespace = args.Namespace
 	cm.Data = map[string]string{}
+	cm.BinaryData = map[string][]byte{}
 	return cm
 }
 
@@ -139,10 +141,22 @@ func addKvToConfigMap(configMap *v1.ConfigMap, keyName, data string) error {
 	if errs := validation.IsConfigMapKey(keyName); len(errs) != 0 {
 		return fmt.Errorf("%q is not a valid key name for a ConfigMap: %s", keyName, strings.Join(errs, ";"))
 	}
-	if _, entryExists := configMap.Data[keyName]; entryExists {
-		return fmt.Errorf("cannot add key %s, another key by that name already exists: %v", keyName, configMap.Data)
+
+	keyExistsErrorMsg := "cannot add key %s, another key by that name already exists: %v"
+
+	if utf8.Valid([]byte(data)) {
+		if _, entryExists := configMap.Data[keyName]; entryExists {
+			return fmt.Errorf(keyExistsErrorMsg, keyName, configMap.Data)
+		}
+		configMap.Data[keyName] = data
+		return nil
 	}
-	configMap.Data[keyName] = data
+
+	// binary data
+	if _, entryExists := configMap.BinaryData[keyName]; entryExists {
+		return fmt.Errorf(keyExistsErrorMsg, keyName, configMap.BinaryData)
+	}
+	configMap.BinaryData[keyName] = []byte(data)
 	return nil
 }
 

@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+		http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,6 +40,7 @@ func makeEnvConfigMap(name string) *corev1.ConfigMap {
 			"DB_USERNAME": "admin",
 			"DB_PASSWORD": "somepw",
 		},
+		BinaryData: map[string][]byte{},
 	}
 }
 
@@ -56,6 +57,9 @@ func makeFileConfigMap(name string) *corev1.ConfigMap {
 			"app-init.ini": `FOO=bar
 BAR=baz
 `,
+		},
+		BinaryData: map[string][]byte{
+			"app.bin": {0xff, 0xfd},
 		},
 	}
 }
@@ -75,6 +79,7 @@ func makeLiteralConfigMap(name string) *corev1.ConfigMap {
 			"c": "Hello World",
 			"d": "true",
 		},
+		BinaryData: map[string][]byte{},
 	}
 	cm.SetLabels(map[string]string{"foo": "bar"})
 	return cm
@@ -105,7 +110,7 @@ func TestConstructConfigMap(t *testing.T) {
 			input: types.ConfigMapArgs{
 				GeneratorArgs: types.GeneratorArgs{Name: "fileConfigMap"},
 				DataSources: types.DataSources{
-					FileSources: []string{"configmap/app-init.ini"},
+					FileSources: []string{"configmap/app-init.ini", "configmap/app.bin"},
 				},
 			},
 			options:  nil,
@@ -131,6 +136,7 @@ func TestConstructConfigMap(t *testing.T) {
 	fSys := fs.MakeFakeFS()
 	fSys.WriteFile("/configmap/app.env", []byte("DB_USERNAME=admin\nDB_PASSWORD=somepw\n"))
 	fSys.WriteFile("/configmap/app-init.ini", []byte("FOO=bar\nBAR=baz\n"))
+	fSys.WriteFile("/configmap/app.bin", []byte{0xff, 0xfd})
 	f := NewConfigMapFactory(loader.NewFileLoaderAtRoot(fSys))
 	for _, tc := range testCases {
 		cm, err := f.MakeConfigMap(&tc.input, tc.options)
