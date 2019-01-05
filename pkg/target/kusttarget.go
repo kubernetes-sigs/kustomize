@@ -32,7 +32,6 @@ import (
 	"sigs.k8s.io/kustomize/pkg/ifc/transformer"
 	interror "sigs.k8s.io/kustomize/pkg/internal/error"
 	patchtransformer "sigs.k8s.io/kustomize/pkg/patch/transformer"
-	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
@@ -46,7 +45,6 @@ type KustTarget struct {
 	ldr           ifc.Loader
 	fSys          fs.FileSystem
 	rFactory      *resmap.Factory
-	tConfig       *config.TransformerConfig
 	tFactory      transformer.Factory
 }
 
@@ -73,16 +71,11 @@ func NewKustTarget(
 	if len(msgs) > 0 {
 		log.Printf(strings.Join(msgs, "\n"))
 	}
-	tConfig, err := makeTransformerConfig(ldr, k.Configurations)
-	if err != nil {
-		return nil, err
-	}
 	return &KustTarget{
 		kustomization: &k,
 		ldr:           ldr,
 		fSys:          fSys,
 		rFactory:      rFactory,
-		tConfig:       tConfig,
 		tFactory:      tFactory,
 	}, nil
 }
@@ -141,7 +134,7 @@ func mergeCustomConfigWithDefaults(
 // MakeCustomizedResMap creates a ResMap per kustomization instructions.
 // The Resources in the returned ResMap are fully customized.
 func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
-	m, err := kt.loadCustomizedResMap()
+	ra, err := kt.accumulateTarget()
 	if err != nil {
 		return nil, err
 	}
@@ -150,23 +143,20 @@ func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 		// It changes only the Name field in the
 		// resource held in the ResMap's value, not
 		// the Name in the key in the ResMap.
-		err := kt.tFactory.MakeHashTransformer().Transform(m)
+		err := ra.Transform(kt.tFactory.MakeHashTransformer())
 		if err != nil {
 			return nil, err
 		}
 	}
 	// Given that names have changed (prefixs/suffixes added),
 	// fix all the back references to those names.
-	if kt.tConfig.NameReference != nil {
-		err = transformers.NewNameReferenceTransformer(
-			kt.tConfig.NameReference).Transform(m)
-		if err != nil {
-			return nil, err
-		}
+	err = ra.FixBackReferences()
+	if err != nil {
+		return nil, err
 	}
 	// With all the back references fixed, it's OK to resolve Vars.
-	err = kt.doVarReplacement(m)
-	return m, err
+	err = ra.ResolveVars()
+	return ra.ResMap(), err
 }
 
 func (kt *KustTarget) shouldAddHashSuffixesToGeneratedResources() bool {
@@ -174,31 +164,46 @@ func (kt *KustTarget) shouldAddHashSuffixesToGeneratedResources() bool {
 		!kt.kustomization.GeneratorOptions.DisableNameSuffixHash
 }
 
-func (kt *KustTarget) doVarReplacement(m resmap.ResMap) error {
-	vars, err := kt.getAllVars()
-	if err != nil {
-		return err
-	}
-	varMap, err := kt.resolveVars(m, vars)
-	if err != nil {
-		return err
-	}
-	return transformers.NewRefVarTransformer(
-		varMap, kt.tConfig.VarReference).Transform(m)
-}
-
-// loadCustomizedResMap loads and customizes resources to build a ResMap.
-func (kt *KustTarget) loadCustomizedResMap() (resmap.ResMap, error) {
+// accumulateTarget returns a new ResAccumulator,
+// holding customized resources and the data/rules used
+// to do so.  The name back references and vars are
+// not yet fixed.
+func (kt *KustTarget) accumulateTarget() (
+	ra *ResAccumulator, err error) {
+	// TODO(monopole): Get rid of the KustomizationErrors accumulator.
+	// It's not consistently used, and complicates tests.
 	errs := &interror.KustomizationErrors{}
-	result, err := kt.loadResMapFromBasesAndResources()
+	ra, errs = kt.accumulateBases()
+	resources, err := kt.rFactory.FromFiles(
+		kt.ldr, kt.kustomization.Resources)
 	if err != nil {
-		errs.Append(errors.Wrap(err, "loadResMapFromBasesAndResources"))
+		errs.Append(errors.Wrap(err, "rawResources failed to read Resources"))
+	}
+	if len(errs.Get()) > 0 {
+		return ra, errs
+	}
+	err = ra.MergeResourcesWithErrorOnIdCollision(resources)
+	if err != nil {
+		errs.Append(errors.Wrap(err, "MergeResourcesWithErrorOnIdCollision"))
+	}
+	tConfig, err := makeTransformerConfig(
+		kt.ldr, kt.kustomization.Configurations)
+	if err != nil {
+		return nil, err
+	}
+	err = ra.MergeConfig(tConfig)
+	if err != nil {
+		errs.Append(errors.Wrap(err, "MergeConfig"))
+	}
+	err = ra.MergeVars(kt.kustomization.Vars)
+	if err != nil {
+		errs.Append(errors.Wrap(err, "MergeVars"))
 	}
 	crdTc, err := config.NewFactory(kt.ldr).LoadCRDs(kt.kustomization.Crds)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "LoadCRDs"))
 	}
-	kt.tConfig, err = kt.tConfig.Merge(crdTc)
+	err = ra.MergeConfig(crdTc)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "merge CRDs"))
 	}
@@ -206,11 +211,10 @@ func (kt *KustTarget) loadCustomizedResMap() (resmap.ResMap, error) {
 	if err != nil {
 		errs.Append(errors.Wrap(err, "generateConfigMapsAndSecrets"))
 	}
-	result, err = resmap.MergeWithOverride(result, resMap)
+	err = ra.MergeResourcesWithOverride(resMap)
 	if err != nil {
 		return nil, err
 	}
-
 	patches, err := kt.rFactory.RF().SliceFromPatches(
 		kt.ldr, kt.kustomization.PatchesStrategicMerge)
 	if err != nil {
@@ -219,30 +223,15 @@ func (kt *KustTarget) loadCustomizedResMap() (resmap.ResMap, error) {
 	if len(errs.Get()) > 0 {
 		return nil, errs
 	}
-
-	var r []transformers.Transformer
-	t, err := kt.newTransformer(patches)
+	t, err := kt.newTransformer(patches, ra.tConfig)
 	if err != nil {
 		return nil, err
 	}
-	r = append(r, t)
-	t, err = patchtransformer.NewPatchJson6902Factory(kt.ldr).
-		MakePatchJson6902Transformer(kt.kustomization.PatchesJson6902)
+	err = ra.Transform(t)
 	if err != nil {
 		return nil, err
 	}
-	r = append(r, t)
-	t, err = transformers.NewImageTagTransformer(kt.kustomization.ImageTags)
-	if err != nil {
-		return nil, err
-	}
-	r = append(r, t)
-
-	err = transformers.NewMultiTransformer(r).Transform(result)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
+	return ra, nil
 }
 
 func (kt *KustTarget) generateConfigMapsAndSecrets(
@@ -261,75 +250,48 @@ func (kt *KustTarget) generateConfigMapsAndSecrets(
 	return resmap.MergeWithErrorOnIdCollision(cms, secrets)
 }
 
-// Gets Bases and Resources as advertised.
-func (kt *KustTarget) loadResMapFromBasesAndResources() (resmap.ResMap, error) {
-	bases, errs := kt.loadCustomizedBases()
-	resources, err := kt.rFactory.FromFiles(
-		kt.ldr, kt.kustomization.Resources)
-	if err != nil {
-		errs.Append(errors.Wrap(err, "rawResources failed to read Resources"))
-	}
-	if len(errs.Get()) > 0 {
-		return nil, errs
-	}
-	return resmap.MergeWithErrorOnIdCollision(resources, bases)
-}
+// accumulateBases returns a new ResAccumulator
+// holding customized resources and the data/rules
+// used to customized them from only the _bases_
+// of this KustTarget.
+func (kt *KustTarget) accumulateBases() (
+	ra *ResAccumulator, errs *interror.KustomizationErrors) {
+	errs = &interror.KustomizationErrors{}
+	ra = MakeEmptyAccumulator()
 
-// Loop through the Bases of this kustomization recursively loading resources.
-// Combine into one ResMap, demanding unique Ids for each resource.
-func (kt *KustTarget) loadCustomizedBases() (
-	resmap.ResMap, *interror.KustomizationErrors) {
-	var list []resmap.ResMap
-	errs := &interror.KustomizationErrors{}
 	for _, path := range kt.kustomization.Bases {
 		ldr, err := kt.ldr.New(path)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "couldn't make loader for "+path))
 			continue
 		}
-		target, err := NewKustTarget(
-			ldr, kt.fSys,
-			kt.rFactory, kt.tFactory)
-		if err != nil {
-			errs.Append(errors.Wrap(err, "couldn't make target for "+path))
-			continue
-		}
-		resMap, err := target.loadCustomizedResMap()
-		if err != nil {
-			errs.Append(errors.Wrap(err, "SemiResources"))
-			continue
-		}
-		ldr.Cleanup()
-		list = append(list, resMap)
-	}
-	result, err := resmap.MergeWithErrorOnIdCollision(list...)
-	if err != nil {
-		errs.Append(errors.Wrap(err, "Merge failed"))
-	}
-	return result, errs
-}
-
-func (kt *KustTarget) loadBasesAsKustTargets() ([]*KustTarget, error) {
-	var result []*KustTarget
-	for _, path := range kt.kustomization.Bases {
-		ldr, err := kt.ldr.New(path)
-		if err != nil {
-			return nil, err
-		}
-		target, err := NewKustTarget(
+		subKt, err := NewKustTarget(
 			ldr, kt.fSys, kt.rFactory, kt.tFactory)
 		if err != nil {
-			return nil, err
+			errs.Append(errors.Wrap(err, "couldn't make target for "+path))
+			ldr.Cleanup()
+			continue
 		}
-		result = append(result, target)
+		subRa, err := subKt.accumulateTarget()
+		if err != nil {
+			errs.Append(errors.Wrap(err, "accumulateTarget"))
+			ldr.Cleanup()
+			continue
+		}
+		err = ra.MergeAccumulator(subRa)
+		if err != nil {
+			errs.Append(errors.Wrap(err, path))
+		}
+		ldr.Cleanup()
 	}
-	return result, nil
+	return ra, errs
 }
 
 // newTransformer makes a Transformer that does a collection
 // of object transformations.
 func (kt *KustTarget) newTransformer(
-	patches []*resource.Resource) (transformers.Transformer, error) {
+	patches []*resource.Resource, tConfig *config.TransformerConfig) (
+	transformers.Transformer, error) {
 	var r []transformers.Transformer
 	t, err := kt.tFactory.MakePatchTransformer(patches, kt.rFactory.RF())
 	if err != nil {
@@ -337,101 +299,40 @@ func (kt *KustTarget) newTransformer(
 	}
 	r = append(r, t)
 	r = append(r, transformers.NewNamespaceTransformer(
-		string(kt.kustomization.Namespace), kt.tConfig.NameSpace))
+		string(kt.kustomization.Namespace), tConfig.NameSpace))
 	t, err = transformers.NewNamePrefixSuffixTransformer(
 		string(kt.kustomization.NamePrefix),
 		string(kt.kustomization.NameSuffix),
-		kt.tConfig.NamePrefix,
+		tConfig.NamePrefix,
 	)
 	if err != nil {
 		return nil, err
 	}
 	r = append(r, t)
 	t, err = transformers.NewLabelsMapTransformer(
-		kt.kustomization.CommonLabels, kt.tConfig.CommonLabels)
+		kt.kustomization.CommonLabels, tConfig.CommonLabels)
 	if err != nil {
 		return nil, err
 	}
 	r = append(r, t)
 	t, err = transformers.NewAnnotationsMapTransformer(
-		kt.kustomization.CommonAnnotations, kt.tConfig.CommonAnnotations)
+		kt.kustomization.CommonAnnotations, tConfig.CommonAnnotations)
+	if err != nil {
+		return nil, err
+	}
+	r = append(r, t)
+	t, err = patchtransformer.NewPatchJson6902Factory(kt.ldr).
+		MakePatchJson6902Transformer(kt.kustomization.PatchesJson6902)
+	if err != nil {
+		return nil, err
+	}
+	r = append(r, t)
+	t, err = transformers.NewImageTagTransformer(kt.kustomization.ImageTags)
 	if err != nil {
 		return nil, err
 	}
 	r = append(r, t)
 	return transformers.NewMultiTransformer(r), nil
-}
-
-// resolveVars returns a map of Var names to their final values.
-// The values are strings intended for substitution wherever
-// the $(var.Name) occurs.
-func (kt *KustTarget) resolveVars(
-	m resmap.ResMap, vars map[string]types.Var) (map[string]string, error) {
-	result := map[string]string{}
-	for _, v := range vars {
-		id := resid.NewResId(v.ObjRef.GVK(), v.ObjRef.Name)
-		if r, found := m.DemandOneMatchForId(id); found {
-			s, err := r.GetFieldValue(v.FieldRef.FieldPath)
-			if err != nil {
-				return nil, fmt.Errorf("field path err for var: %+v", v)
-			}
-			result[v.Name] = s
-		} else {
-			log.Printf("couldn't resolve var: %v", v)
-		}
-	}
-	return result, nil
-}
-
-type ErrVarCollision struct {
-	name string
-	path string
-}
-
-func (e ErrVarCollision) Error() string {
-	return fmt.Sprintf(
-		"var %s in %s defined in some other kustomization",
-		e.name, e.path)
-}
-
-// getAllVars returns a map of Var names to Var instances, pulled from
-// this kustomization and the kustomizations it depends on.
-// An error is returned on Var name collision.
-func (kt *KustTarget) getAllVars() (map[string]types.Var, error) {
-	result, err := kt.getVarsFromBases()
-	if err != nil {
-		return nil, err
-	}
-	for _, v := range kt.kustomization.Vars {
-		v.Defaulting()
-		if _, oops := result[v.Name]; oops {
-			return nil, ErrVarCollision{v.Name, kt.ldr.Root()}
-		}
-		result[v.Name] = v
-	}
-	return result, nil
-}
-
-func (kt *KustTarget) getVarsFromBases() (map[string]types.Var, error) {
-	targets, err := kt.loadBasesAsKustTargets()
-	if err != nil {
-		return nil, err
-	}
-	result := make(map[string]types.Var)
-	for _, subKt := range targets {
-		vars, err := subKt.getAllVars()
-		if err != nil {
-			return nil, err
-		}
-		subKt.ldr.Cleanup()
-		for k, v := range vars {
-			if _, oops := result[k]; oops {
-				return nil, ErrVarCollision{v.Name, subKt.ldr.Root()}
-			}
-			result[k] = v
-		}
-	}
-	return result, nil
 }
 
 func loadKustFile(ldr ifc.Loader) ([]byte, error) {
