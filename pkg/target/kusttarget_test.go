@@ -18,8 +18,8 @@ package target
 
 import (
 	"encoding/base64"
+	"fmt"
 	"reflect"
-	"sort"
 	"strings"
 	"testing"
 
@@ -346,26 +346,19 @@ vars:
       name: heron
       apiVersion: v300
 `)
-	vars, err := th.makeKustTarget().getAllVars()
+	ra, err := th.makeKustTarget().accumulateTarget()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
+	vars := ra.varSet.Set()
 	if len(vars) != 2 {
 		t.Fatalf("unexpected size %d", len(vars))
 	}
-	for i, k := range sortedKeys(vars)[:2] {
-		if !reflect.DeepEqual(vars[k], someVars[i]) {
-			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[k], someVars[i])
+	for i := range vars[:2] {
+		if !reflect.DeepEqual(vars[i], someVars[i]) {
+			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[i], someVars[i])
 		}
 	}
-}
-
-func sortedKeys(m map[string]types.Var) (result []string) {
-	for k := range m {
-		result = append(result, k)
-	}
-	sort.Strings(result)
-	return
 }
 
 func TestGetAllVarsNested(t *testing.T) {
@@ -403,16 +396,20 @@ vars:
 bases:
 - ../o1
 `)
-	vars, err := th.makeKustTarget().getAllVars()
+	ra, err := th.makeKustTarget().accumulateTarget()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
+	vars := ra.varSet.Set()
 	if len(vars) != 4 {
-		t.Fatalf("unexpected size %d", len(vars))
+		for i, v := range vars {
+			fmt.Printf("%v: %v\n", i, v)
+		}
+		t.Fatalf("expected 4 vars, got %d", len(vars))
 	}
-	for i, k := range sortedKeys(vars) {
-		if !reflect.DeepEqual(vars[k], someVars[i]) {
-			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[k], someVars[i])
+	for i := range vars {
+		if !reflect.DeepEqual(vars[i], someVars[i]) {
+			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[i], someVars[i])
 		}
 	}
 }
@@ -452,11 +449,12 @@ vars:
 bases:
 - ../o1
 `)
-	_, err := th.makeKustTarget().getAllVars()
+	_, err := th.makeKustTarget().accumulateTarget()
 	if err == nil {
 		t.Fatalf("expected var collision")
 	}
-	if _, ok := err.(ErrVarCollision); !ok {
+	if !strings.Contains(err.Error(),
+		"var AWARD already encountered") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
