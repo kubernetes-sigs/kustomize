@@ -25,21 +25,28 @@ import (
 	"testing"
 )
 
-func TestMakeDefaultTransformerConfig(t *testing.T) {
+func TestMakeDefaultConfig(t *testing.T) {
 	// Confirm default can be made without fatal error inside call.
-	l, _, _ := makeFakeLoaderAndOutput()
-	_ = NewFactory(l).DefaultConfig()
+	_ = MakeDefaultConfig()
 }
 
-func makeFakeLoaderAndOutput() (ifc.Loader, *TransformerConfig, *TransformerConfig) {
-	transformerConfig := `
+func makeTestLoader(path, content string) ifc.Loader {
+	fs := fs.MakeFakeFS()
+	fs.WriteFile(path, []byte(content))
+	return loader.NewFileLoaderAtRoot(fs)
+}
+
+func TestFromFiles(t *testing.T) {
+	path := "/transformerconfig/test/config.yaml"
+	ldr := makeTestLoader(path, `
 namePrefix:
 - path: nameprefix/path
   kind: SomeKind
-`
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile("/transformerconfig/test/config.yaml", []byte(transformerConfig))
-	ldr := loader.NewFileLoaderAtRoot(fakeFS)
+`)
+	tcfg, err := NewFactory(ldr).FromFiles([]string{"transformerconfig/test/config.yaml"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	expected := &TransformerConfig{
 		NamePrefix: []FieldSpec{
 			{
@@ -48,16 +55,6 @@ namePrefix:
 			},
 		},
 	}
-	return ldr, expected, NewFactory(ldr).DefaultConfig()
-}
-
-func TestMakeTransformerConfigFromFiles(t *testing.T) {
-	ldr, expected, _ := makeFakeLoaderAndOutput()
-	tcfg, err := NewFactory(ldr).FromFiles([]string{"transformerconfig/test/config.yaml"})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
 	if !reflect.DeepEqual(tcfg, expected) {
 		t.Fatalf("expected %v\n but go6t %v\n", expected, tcfg)
 	}

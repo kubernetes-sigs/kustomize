@@ -19,7 +19,10 @@ limitations under the License.
 package config
 
 import (
+	"log"
 	"sort"
+
+	"sigs.k8s.io/kustomize/pkg/transformers/config/defaultconfig"
 )
 
 // TransformerConfig holds the data needed to perform transformations.
@@ -31,6 +34,21 @@ type TransformerConfig struct {
 	CommonAnnotations fsSlice  `json:"commonAnnotations,omitempty" yaml:"commonAnnotations,omitempty"`
 	NameReference     nbrSlice `json:"nameReference,omitempty" yaml:"nameReference,omitempty"`
 	VarReference      fsSlice  `json:"varReference,omitempty" yaml:"varReference,omitempty"`
+}
+
+// MakeEmptyConfig returns an empty TransformerConfig object
+func MakeEmptyConfig() *TransformerConfig {
+	return &TransformerConfig{}
+}
+
+// MakeDefaultConfig returns a default TransformerConfig.
+func MakeDefaultConfig() *TransformerConfig {
+	c, err := makeTransformerConfigFromBytes(
+		defaultconfig.GetDefaultFieldSpecs())
+	if err != nil {
+		log.Fatalf("Unable to make default transformconfig: %v", err)
+	}
+	return c
 }
 
 // sortFields provides determinism in logging, tests, etc.
