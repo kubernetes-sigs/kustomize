@@ -21,12 +21,53 @@ import (
 
 	"github.com/ghodss/yaml"
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/transformers/config/defaultconfig"
 )
 
 // Factory makes instances of TransformerConfig.
 type Factory struct {
 	ldr ifc.Loader
+}
+
+// TODO(#6060) Maybe switch to the false path permanently
+// (desired by #606), or expose this as a new customization
+// directive.
+const demandExplicitConfig = true
+
+func MakeTransformerConfig(
+	ldr ifc.Loader, paths []string) (*TransformerConfig, error) {
+	if demandExplicitConfig {
+		return loadConfigFromDiskOrDefaults(ldr, paths)
+	}
+	return mergeCustomConfigWithDefaults(ldr, paths)
+}
+
+// loadConfigFromDiskOrDefaults returns a TransformerConfig object
+// built from either files or the hardcoded default configs.
+// There's no merging, it's one or the other.  This is preferred
+// if one wants all configuration to be explicit in version
+// control, as opposed to relying on a mix of files and
+// hard-coded config.
+func loadConfigFromDiskOrDefaults(
+	ldr ifc.Loader, paths []string) (*TransformerConfig, error) {
+	if paths == nil || len(paths) == 0 {
+		return MakeDefaultConfig(), nil
+	}
+	return NewFactory(ldr).FromFiles(paths)
+}
+
+// mergeCustomConfigWithDefaults returns a merger of custom config,
+// if any, with default config.
+func mergeCustomConfigWithDefaults(
+	ldr ifc.Loader, paths []string) (*TransformerConfig, error) {
+	t1 := MakeDefaultConfig()
+	if len(paths) == 0 {
+		return t1, nil
+	}
+	t2, err := NewFactory(ldr).FromFiles(paths)
+	if err != nil {
+		return nil, err
+	}
+	return t1.Merge(t2)
 }
 
 func NewFactory(l ifc.Loader) *Factory {
@@ -70,20 +111,4 @@ func makeTransformerConfigFromBytes(data []byte) (*TransformerConfig, error) {
 	}
 	t.sortFields()
 	return &t, nil
-}
-
-// EmptyConfig returns an empty TransformerConfig object
-func (tf *Factory) EmptyConfig() *TransformerConfig {
-	return &TransformerConfig{}
-}
-
-// DefaultConfig returns a default TransformerConfig.
-// This should never fail, hence the Fatal panic.
-func (tf *Factory) DefaultConfig() *TransformerConfig {
-	c, err := makeTransformerConfigFromBytes(
-		defaultconfig.GetDefaultFieldSpecs())
-	if err != nil {
-		log.Fatalf("Unable to make default transformconfig: %v", err)
-	}
-	return c
 }
