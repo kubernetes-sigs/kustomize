@@ -44,7 +44,7 @@ var crb = gvk.Gvk{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "Clus
 var sa = gvk.Gvk{Version: "v1", Kind: "ServiceAccount"}
 var ingress = gvk.Gvk{Kind: "Ingress"}
 var rf = resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
-var defaultTransformerConfig = config.NewFactory(nil).DefaultConfig()
+var defaultTransformerConfig = config.MakeDefaultConfig()
 
 func TestLabelsRun(t *testing.T) {
 	m := resmap.ResMap{
