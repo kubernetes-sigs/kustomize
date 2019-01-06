@@ -50,7 +50,8 @@ type KustTarget struct {
 
 // NewKustTarget returns a new instance of KustTarget primed with a Loader.
 func NewKustTarget(
-	ldr ifc.Loader, fSys fs.FileSystem,
+	ldr ifc.Loader,
+	fSys fs.FileSystem,
 	rFactory *resmap.Factory,
 	tFactory transformer.Factory) (*KustTarget, error) {
 	content, err := loadKustFile(ldr)
@@ -80,6 +81,21 @@ func NewKustTarget(
 	}, nil
 }
 
+func loadKustFile(ldr ifc.Loader) ([]byte, error) {
+	for _, kf := range []string{
+		constants.KustomizationFileName,
+		constants.SecondaryKustomizationFileName} {
+		content, err := ldr.Load(kf)
+		if err == nil {
+			return content, nil
+		}
+		if !strings.Contains(err.Error(), "no such file or directory") {
+			return nil, err
+		}
+	}
+	return nil, fmt.Errorf("no kustomization.yaml file under %s", ldr.Root())
+}
+
 func unmarshal(y []byte, o interface{}) error {
 	j, err := yaml.YAMLToJSON(y)
 	if err != nil {
@@ -88,47 +104,6 @@ func unmarshal(y []byte, o interface{}) error {
 	dec := json.NewDecoder(bytes.NewReader(j))
 	dec.DisallowUnknownFields()
 	return dec.Decode(o)
-}
-
-// TODO(#6060) Maybe switch to the false path permanently
-// (desired by #606), or expose this as a new customization
-// directive.
-const demandExplicitConfig = true
-
-func makeTransformerConfig(
-	ldr ifc.Loader, paths []string) (*config.TransformerConfig, error) {
-	if demandExplicitConfig {
-		return loadConfigFromDiskOrDefaults(ldr, paths)
-	}
-	return mergeCustomConfigWithDefaults(ldr, paths)
-}
-
-// loadConfigFromDiskOrDefaults returns a TransformerConfig object
-// built from either files or the hardcoded default configs.
-// There's no merging, it's one or the other.  This is preferred if one
-// wants all configuration to be explicit in version control, as
-// opposed to relying on a mix of files and hard coded config.
-func loadConfigFromDiskOrDefaults(
-	ldr ifc.Loader, paths []string) (*config.TransformerConfig, error) {
-	if paths == nil || len(paths) == 0 {
-		return config.NewFactory(nil).DefaultConfig(), nil
-	}
-	return config.NewFactory(ldr).FromFiles(paths)
-}
-
-// mergeCustomConfigWithDefaults returns a merger of custom config,
-// if any, with default config.
-func mergeCustomConfigWithDefaults(
-	ldr ifc.Loader, paths []string) (*config.TransformerConfig, error) {
-	t1 := config.NewFactory(nil).DefaultConfig()
-	if len(paths) == 0 {
-		return t1, nil
-	}
-	t2, err := config.NewFactory(ldr).FromFiles(paths)
-	if err != nil {
-		return nil, err
-	}
-	return t1.Merge(t2)
 }
 
 // MakeCustomizedResMap creates a ResMap per kustomization instructions.
@@ -186,7 +161,7 @@ func (kt *KustTarget) accumulateTarget() (
 	if err != nil {
 		errs.Append(errors.Wrap(err, "MergeResourcesWithErrorOnIdCollision"))
 	}
-	tConfig, err := makeTransformerConfig(
+	tConfig, err := config.MakeTransformerConfig(
 		kt.ldr, kt.kustomization.Configurations)
 	if err != nil {
 		return nil, err
@@ -199,7 +174,7 @@ func (kt *KustTarget) accumulateTarget() (
 	if err != nil {
 		errs.Append(errors.Wrap(err, "MergeVars"))
 	}
-	crdTc, err := config.NewFactory(kt.ldr).LoadCRDs(kt.kustomization.Crds)
+	crdTc, err := config.LoadConfigFromCRDs(kt.ldr, kt.kustomization.Crds)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "LoadCRDs"))
 	}
@@ -333,19 +308,4 @@ func (kt *KustTarget) newTransformer(
 	}
 	r = append(r, t)
 	return transformers.NewMultiTransformer(r), nil
-}
-
-func loadKustFile(ldr ifc.Loader) ([]byte, error) {
-	for _, kf := range []string{
-		constants.KustomizationFileName,
-		constants.SecondaryKustomizationFileName} {
-		content, err := ldr.Load(kf)
-		if err == nil {
-			return content, nil
-		}
-		if !strings.Contains(err.Error(), "no such file or directory") {
-			return nil, err
-		}
-	}
-	return nil, fmt.Errorf("no kustomization.yaml file under %s", ldr.Root())
 }
