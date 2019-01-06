@@ -182,8 +182,7 @@ func TestLoadCRDs(t *testing.T) {
 		NameReference: nbrs,
 	}
 
-	actualTc, err := NewFactory(makeLoader(t)).LoadCRDs(
-		[]string{"crd.json"})
+	actualTc, err := LoadConfigFromCRDs(makeLoader(t), []string{"crd.json"})
 	if err != nil {
 		t.Fatalf("unexpected error:%v", err)
 	}

@@ -31,7 +31,7 @@ import (
 
 func TestResolveVars(t *testing.T) {
 	ra := MakeEmptyAccumulator()
-	err := ra.MergeConfig(config.NewFactory(nil).DefaultConfig())
+	err := ra.MergeConfig(config.MakeDefaultConfig())
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
