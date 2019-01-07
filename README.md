@@ -128,7 +128,7 @@ You can reach the maintainers of this project at:
 
 Participation in the Kubernetes community is governed by the [Kubernetes Code of Conduct].
 
-[KEP]: https://github.com/kubernetes/community/blob/master/keps/sig-cli/0008-kustomize.md
+[KEP]: https://github.com/kubernetes/enhancements/blob/master/keps/sig-cli/0008-kustomize.md
 [`make`]: https://www.gnu.org/software/make
 [`sed`]: https://www.gnu.org/software/sed
 [applied]: docs/glossary.md#apply
