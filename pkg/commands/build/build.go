@@ -29,9 +29,19 @@ import (
 	"sigs.k8s.io/kustomize/pkg/target"
 )
 
-type buildOptions struct {
+type BuildOptions struct {
 	kustomizationPath string
 	outputPath        string
+	withDefaultKFile  bool
+}
+
+// NewBuildOptions creates a BuildOptions object
+func NewBuildOptions(p, o string, b bool) *BuildOptions {
+	return &BuildOptions{
+		kustomizationPath: p,
+		outputPath:        o,
+		withDefaultKFile:  b,
+	}
 }
 
 var examples = `
@@ -54,7 +64,8 @@ func NewCmdBuild(
 	out io.Writer, fs fs.FileSystem,
 	rf *resmap.Factory,
 	ptf transformer.Factory) *cobra.Command {
-	var o buildOptions
+	var o BuildOptions
+	o.withDefaultKFile = true
 
 	cmd := &cobra.Command{
 		Use:          "build [path]",
@@ -77,7 +88,7 @@ func NewCmdBuild(
 }
 
 // Validate validates build command.
-func (o *buildOptions) Validate(args []string) error {
+func (o *BuildOptions) Validate(args []string) error {
 	if len(args) > 1 {
 		return errors.New("specify one path to " + constants.KustomizationFileName)
 	}
@@ -91,7 +102,7 @@ func (o *buildOptions) Validate(args []string) error {
 }
 
 // RunBuild runs build command.
-func (o *buildOptions) RunBuild(
+func (o *BuildOptions) RunBuild(
 	out io.Writer, fSys fs.FileSystem,
 	rf *resmap.Factory, ptf transformer.Factory) error {
 	ldr, err := loader.NewLoader(o.kustomizationPath, fSys)
@@ -99,7 +110,7 @@ func (o *buildOptions) RunBuild(
 		return err
 	}
 	defer ldr.Cleanup()
-	kt, err := target.NewKustTarget(ldr, fSys, rf, ptf)
+	kt, err := target.NewKustTarget(ldr, fSys, rf, ptf, o.withDefaultKFile)
 	if err != nil {
 		return err
 	}

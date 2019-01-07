@@ -69,7 +69,7 @@ func (f FakeLoader) Files() ([]string, error) {
 	var result []string
 	for _, file := range files {
 		if !f.fs.IsDir(file) {
-			result = append(result, filepath.Base(f))
+			result = append(result, filepath.Base(file))
 		}
 	}
 	return result, nil

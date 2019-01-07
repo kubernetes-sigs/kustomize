@@ -59,7 +59,7 @@ func (th *KustTestHarness) makeKustTarget() *KustTarget {
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
 	kt, err := NewKustTarget(
-		th.ldr, fakeFs, th.rf, transformer.NewFactoryImpl())
+		th.ldr, fakeFs, th.rf, transformer.NewFactoryImpl(), true)
 	if err != nil {
 		th.t.Fatalf("Unexpected construction error %v", err)
 	}

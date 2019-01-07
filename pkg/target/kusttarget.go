@@ -26,7 +26,6 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/ifc/transformer"
@@ -41,11 +40,12 @@ import (
 
 // KustTarget encapsulates the entirety of a kustomization build.
 type KustTarget struct {
-	kustomization *types.Kustomization
-	ldr           ifc.Loader
-	fSys          fs.FileSystem
-	rFactory      *resmap.Factory
-	tFactory      transformer.Factory
+	kustomization    *types.Kustomization
+	withDefaultKFile bool
+	ldr              ifc.Loader
+	fSys             fs.FileSystem
+	rFactory         *resmap.Factory
+	tFactory         transformer.Factory
 }
 
 // NewKustTarget returns a new instance of KustTarget primed with a Loader.
@@ -53,8 +53,9 @@ func NewKustTarget(
 	ldr ifc.Loader,
 	fSys fs.FileSystem,
 	rFactory *resmap.Factory,
-	tFactory transformer.Factory) (*KustTarget, error) {
-	content, err := loadKustFile(ldr)
+	tFactory transformer.Factory,
+	withDefaultNames bool) (*KustTarget, error) {
+	content, err := loadKustFile(ldr, withDefaultNames)
 	if err != nil {
 		return nil, err
 	}
@@ -73,27 +74,13 @@ func NewKustTarget(
 		log.Printf(strings.Join(msgs, "\n"))
 	}
 	return &KustTarget{
-		kustomization: &k,
-		ldr:           ldr,
-		fSys:          fSys,
-		rFactory:      rFactory,
-		tFactory:      tFactory,
+		kustomization:    &k,
+		withDefaultKFile: withDefaultNames,
+		ldr:              ldr,
+		fSys:             fSys,
+		rFactory:         rFactory,
+		tFactory:         tFactory,
 	}, nil
-}
-
-func loadKustFile(ldr ifc.Loader) ([]byte, error) {
-	for _, kf := range []string{
-		constants.KustomizationFileName,
-		constants.SecondaryKustomizationFileName} {
-		content, err := ldr.Load(kf)
-		if err == nil {
-			return content, nil
-		}
-		if !strings.Contains(err.Error(), "no such file or directory") {
-			return nil, err
-		}
-	}
-	return nil, fmt.Errorf("no kustomization.yaml file under %s", ldr.Root())
 }
 
 func unmarshal(y []byte, o interface{}) error {
@@ -241,7 +228,8 @@ func (kt *KustTarget) accumulateBases() (
 			continue
 		}
 		subKt, err := NewKustTarget(
-			ldr, kt.fSys, kt.rFactory, kt.tFactory)
+			ldr, kt.fSys, kt.rFactory, kt.tFactory,
+			kt.withDefaultKFile)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "couldn't make target for "+path))
 			ldr.Cleanup()
