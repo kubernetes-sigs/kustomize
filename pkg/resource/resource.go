@@ -28,7 +28,8 @@ import (
 // paired with a GenerationBehavior.
 type Resource struct {
 	ifc.Kunstructured
-	b ifc.GenerationBehavior
+	b          ifc.GenerationBehavior
+	appendHash bool
 }
 
 // String returns resource as JSON.
@@ -51,9 +52,15 @@ func (r *Resource) SetBehavior(b ifc.GenerationBehavior) *Resource {
 	return r
 }
 
-// IsGenerated checks if the resource is generated from a generator
-func (r *Resource) IsGenerated() bool {
-	return r.b != ifc.BehaviorUnspecified
+// SetAppendHash set the appendHash bool field
+func (r *Resource) SetAppendHash(b bool) *Resource {
+	r.appendHash = b
+	return r
+}
+
+// NeedAppendHash checks if the resource need a hash suffix
+func (r *Resource) NeedAppendHash() bool {
+	return r.appendHash
 }
 
 // Id returns the ResId for the resource.

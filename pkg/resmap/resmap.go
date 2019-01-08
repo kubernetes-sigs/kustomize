@@ -116,6 +116,7 @@ func (m ResMap) DeepCopy(rf *resource.Factory) ResMap {
 	for id, obj := range m {
 		mcopy[id] = rf.FromKunstructured(obj.Copy())
 		mcopy[id].SetBehavior(obj.Behavior())
+		mcopy[id].SetAppendHash(obj.NeedAppendHash())
 	}
 	return mcopy
 }

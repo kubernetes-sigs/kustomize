@@ -113,16 +113,16 @@ func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 	if err != nil {
 		return nil, err
 	}
-	if kt.shouldAddHashSuffixesToGeneratedResources() {
-		// This effects only generated resources.
-		// It changes only the Name field in the
-		// resource held in the ResMap's value, not
-		// the Name in the key in the ResMap.
-		err := ra.Transform(kt.tFactory.MakeHashTransformer())
-		if err != nil {
-			return nil, err
-		}
+
+	// This effects only generated resources.
+	// It changes only the Name field in the
+	// resource held in the ResMap's value, not
+	// the Name in the key in the ResMap.
+	err = ra.Transform(kt.tFactory.MakeHashTransformer())
+	if err != nil {
+		return nil, err
 	}
+
 	// Given that names have changed (prefixs/suffixes added),
 	// fix all the back references to those names.
 	err = ra.FixBackReferences()
@@ -217,10 +217,24 @@ func (kt *KustTarget) generateConfigMapsAndSecrets(
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromConfigMapArgs"))
 	}
+	for _, cm := range cms {
+		if kt.kustomization.GeneratorOptions != nil && kt.kustomization.GeneratorOptions.DisableNameSuffixHash {
+			cm.SetAppendHash(false)
+		} else {
+			cm.SetAppendHash(true)
+		}
+	}
 	secrets, err := kt.rFactory.NewResMapFromSecretArgs(
 		kt.kustomization.SecretGenerator, kt.kustomization.GeneratorOptions)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromSecretArgs"))
+	}
+	for _, secret := range secrets {
+		if kt.kustomization.GeneratorOptions != nil && kt.kustomization.GeneratorOptions.DisableNameSuffixHash {
+			secret.SetAppendHash(false)
+		} else {
+			secret.SetAppendHash(true)
+		}
 	}
 	return resmap.MergeWithErrorOnIdCollision(cms, secrets)
 }

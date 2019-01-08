@@ -154,7 +154,7 @@ func TestResources1(t *testing.T) {
 					"DB_USERNAME": "admin",
 					"DB_PASSWORD": "somepw",
 				},
-			}).SetBehavior(ifc.BehaviorCreate),
+			}).SetBehavior(ifc.BehaviorCreate).SetAppendHash(true),
 		resid.NewResIdWithPrefixSuffixNamespace(
 			gvk.Gvk{Version: "v1", Kind: "Secret"},
 			"secret", "foo-", "-bar", "ns1"): th.fromMap(
@@ -176,7 +176,7 @@ func TestResources1(t *testing.T) {
 					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
-			}).SetBehavior(ifc.BehaviorCreate),
+			}).SetBehavior(ifc.BehaviorCreate).SetAppendHash(true),
 		resid.NewResIdWithPrefixSuffixNamespace(
 			gvk.Gvk{Version: "v1", Kind: "Namespace"},
 			"ns1", "foo-", "-bar", ""): th.fromMap(

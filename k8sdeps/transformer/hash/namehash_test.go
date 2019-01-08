@@ -88,7 +88,7 @@ func TestNameHashTransformer(t *testing.T) {
 				"metadata": map[string]interface{}{
 					"name": "secret1",
 				},
-			}).SetBehavior(ifc.BehaviorCreate),
+			}).SetBehavior(ifc.BehaviorCreate).SetAppendHash(true),
 	}
 
 	expected := resmap.ResMap{
@@ -149,7 +149,7 @@ func TestNameHashTransformer(t *testing.T) {
 				"metadata": map[string]interface{}{
 					"name": "secret1-7kc45hd5f7",
 				},
-			}).SetBehavior(ifc.BehaviorCreate),
+			}).SetBehavior(ifc.BehaviorCreate).SetAppendHash(true),
 	}
 
 	tran := NewNameHashTransformer()
