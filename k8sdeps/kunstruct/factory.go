@@ -95,9 +95,9 @@ func (kf *KunstructuredFactoryImpl) MakeSecret(args *types.SecretArgs, options *
 }
 
 // Set sets loader, filesystem and workdirectory
-func (kf *KunstructuredFactoryImpl) Set(fs fs.FileSystem, ldr ifc.Loader) {
+func (kf *KunstructuredFactoryImpl) Set(fs fs.FileSystem, ldr ifc.Loader, b bool) {
 	kf.cmFactory = configmapandsecret.NewConfigMapFactory(fs, ldr)
-	kf.secretFactory = configmapandsecret.NewSecretFactory(fs, ldr.Root())
+	kf.secretFactory = configmapandsecret.NewSecretFactory(fs, ldr.Root(), b)
 }
 
 // validate validates that u has kind and name

@@ -67,7 +67,7 @@ type KunstructuredFactory interface {
 	FromMap(m map[string]interface{}) Kunstructured
 	MakeConfigMap(args *types.ConfigMapArgs, options *types.GeneratorOptions) (Kunstructured, error)
 	MakeSecret(args *types.SecretArgs, options *types.GeneratorOptions) (Kunstructured, error)
-	Set(fs fs.FileSystem, ldr Loader)
+	Set(fs fs.FileSystem, ldr Loader, disableCommands bool)
 }
 
 // See core.v1.SecretTypeOpaque

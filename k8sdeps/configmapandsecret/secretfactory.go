@@ -38,13 +38,14 @@ const (
 
 // SecretFactory makes Secrets.
 type SecretFactory struct {
-	fSys fs.FileSystem
-	wd   string
+	fSys            fs.FileSystem
+	wd              string
+	disableCommands bool
 }
 
 // NewSecretFactory returns a new SecretFactory.
-func NewSecretFactory(fSys fs.FileSystem, wd string) *SecretFactory {
-	return &SecretFactory{fSys: fSys, wd: wd}
+func NewSecretFactory(fSys fs.FileSystem, wd string, b bool) *SecretFactory {
+	return &SecretFactory{fSys: fSys, wd: wd, disableCommands: b}
 }
 
 func (f *SecretFactory) makeFreshSecret(args *types.SecretArgs) *corev1.Secret {
@@ -80,6 +81,9 @@ func (f *SecretFactory) MakeSecret(args *types.SecretArgs, options *types.Genera
 				args.EnvCommand))
 		}
 		all = append(all, pairs...)
+	}
+	if f.disableCommands && len(args.Commands) != 0 {
+		return nil, fmt.Errorf("Executing commands %v in SecretGenerator is not enabled.", args.Commands)
 	}
 	if len(args.Commands) != 0 {
 		pairs, err := f.keyValuesFromCommands(args.Commands, timeout, options)

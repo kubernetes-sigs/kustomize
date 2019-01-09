@@ -107,8 +107,8 @@ func (rmF *Factory) NewResMapFromSecretArgs(argsList []types.SecretArgs, options
 }
 
 // Set sets the filesystem and loader for the underlying factory
-func (rmF *Factory) Set(fs fs.FileSystem, ldr ifc.Loader) {
-	rmF.resF.Set(fs, ldr)
+func (rmF *Factory) Set(fs fs.FileSystem, ldr ifc.Loader, b bool) {
+	rmF.resF.Set(fs, ldr, b)
 }
 
 func newResMapFromResourceSlice(resources []*resource.Resource) (ResMap, error) {

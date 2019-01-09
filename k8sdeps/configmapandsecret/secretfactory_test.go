@@ -24,7 +24,7 @@ import (
 )
 
 func TestMakeSecretNoCommands(t *testing.T) {
-	factory := NewSecretFactory(fs.MakeFakeFS(), "/")
+	factory := NewSecretFactory(fs.MakeFakeFS(), "/", false)
 	args := types.SecretArgs{
 		GeneratorArgs: types.GeneratorArgs{Name: "apple"},
 		Type:          "Opaque",
@@ -45,7 +45,7 @@ func TestMakeSecretNoCommands(t *testing.T) {
 }
 
 func TestMakeSecretNoCommandsBadDir(t *testing.T) {
-	factory := NewSecretFactory(fs.MakeFakeFS(), "/does/not/exist")
+	factory := NewSecretFactory(fs.MakeFakeFS(), "/does/not/exist", false)
 	args := types.SecretArgs{
 		GeneratorArgs: types.GeneratorArgs{Name: "envConfigMap"},
 		Type:          "Opaque",
@@ -60,7 +60,7 @@ func TestMakeSecretNoCommandsBadDir(t *testing.T) {
 }
 
 func TestMakeSecretEmptyCommandMap(t *testing.T) {
-	factory := NewSecretFactory(fs.MakeFakeFS(), "/")
+	factory := NewSecretFactory(fs.MakeFakeFS(), "/", false)
 	args := types.SecretArgs{
 		GeneratorArgs: types.GeneratorArgs{Name: "envConfigMap"},
 		Type:          "Opaque",
@@ -86,7 +86,7 @@ func TestMakeSecretEmptyCommandMap(t *testing.T) {
 }
 
 func TestMakeSecretWithCommandMap(t *testing.T) {
-	factory := NewSecretFactory(fs.MakeFakeFS(), "/")
+	factory := NewSecretFactory(fs.MakeFakeFS(), "/", false)
 	args := types.SecretArgs{
 		GeneratorArgs: types.GeneratorArgs{Name: "envConfigMap"},
 		Type:          "Opaque",

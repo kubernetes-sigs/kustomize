@@ -109,8 +109,8 @@ func (rf *Factory) SliceFromBytes(in []byte) ([]*Resource, error) {
 }
 
 // Set sets the filesystem and loader for the underlying factory
-func (rf *Factory) Set(fs fs.FileSystem, ldr ifc.Loader) {
-	rf.kf.Set(fs, ldr)
+func (rf *Factory) Set(fs fs.FileSystem, ldr ifc.Loader, b bool) {
+	rf.kf.Set(fs, ldr, b)
 }
 
 // MakeConfigMap makes an instance of Resource for ConfigMap

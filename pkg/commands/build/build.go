@@ -33,13 +33,15 @@ import (
 type BuildOptions struct {
 	kustomizationPath string
 	outputPath        string
+	disableCommands   bool
 }
 
 // NewBuildOptions creates a BuildOptions object
-func NewBuildOptions(p, o string) *BuildOptions {
+func NewBuildOptions(p, o string, b bool) *BuildOptions {
 	return &BuildOptions{
 		kustomizationPath: p,
 		outputPath:        o,
+		disableCommands:   b,
 	}
 }
 
@@ -95,7 +97,7 @@ func (o *BuildOptions) Validate(args []string) error {
 	} else {
 		o.kustomizationPath = args[0]
 	}
-
+	o.disableCommands = false
 	return nil
 }
 
@@ -108,7 +110,7 @@ func (o *BuildOptions) RunBuild(
 		return err
 	}
 	defer ldr.Cleanup()
-	kt, err := target.NewKustTarget(ldr, fSys, rf, ptf)
+	kt, err := target.NewKustTarget(ldr, fSys, rf, ptf, o.disableCommands)
 	if err != nil {
 		return err
 	}

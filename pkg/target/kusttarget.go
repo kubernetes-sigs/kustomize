@@ -41,11 +41,12 @@ import (
 
 // KustTarget encapsulates the entirety of a kustomization build.
 type KustTarget struct {
-	kustomization *types.Kustomization
-	ldr           ifc.Loader
-	fSys          fs.FileSystem
-	rFactory      *resmap.Factory
-	tFactory      transformer.Factory
+	kustomization   *types.Kustomization
+	ldr             ifc.Loader
+	fSys            fs.FileSystem
+	rFactory        *resmap.Factory
+	tFactory        transformer.Factory
+	disableCommands bool
 }
 
 // NewKustTarget returns a new instance of KustTarget primed with a Loader.
@@ -53,7 +54,8 @@ func NewKustTarget(
 	ldr ifc.Loader,
 	fSys fs.FileSystem,
 	rFactory *resmap.Factory,
-	tFactory transformer.Factory) (*KustTarget, error) {
+	tFactory transformer.Factory,
+	b bool) (*KustTarget, error) {
 	content, err := loadKustFile(ldr)
 	if err != nil {
 		return nil, err
@@ -73,11 +75,12 @@ func NewKustTarget(
 		log.Printf(strings.Join(msgs, "\n"))
 	}
 	return &KustTarget{
-		kustomization: &k,
-		ldr:           ldr,
-		fSys:          fSys,
-		rFactory:      rFactory,
-		tFactory:      tFactory,
+		kustomization:   &k,
+		ldr:             ldr,
+		fSys:            fSys,
+		rFactory:        rFactory,
+		tFactory:        tFactory,
+		disableCommands: b,
 	}, nil
 }
 
@@ -211,7 +214,7 @@ func (kt *KustTarget) accumulateTarget() (
 
 func (kt *KustTarget) generateConfigMapsAndSecrets(
 	errs *interror.KustomizationErrors) (resmap.ResMap, error) {
-	kt.rFactory.Set(kt.fSys, kt.ldr)
+	kt.rFactory.Set(kt.fSys, kt.ldr, kt.disableCommands)
 	cms, err := kt.rFactory.NewResMapFromConfigMapArgs(
 		kt.kustomization.ConfigMapGenerator, kt.kustomization.GeneratorOptions)
 	if err != nil {
@@ -241,7 +244,7 @@ func (kt *KustTarget) accumulateBases() (
 			continue
 		}
 		subKt, err := NewKustTarget(
-			ldr, kt.fSys, kt.rFactory, kt.tFactory)
+			ldr, kt.fSys, kt.rFactory, kt.tFactory, kt.disableCommands)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "couldn't make target for "+path))
 			ldr.Cleanup()
