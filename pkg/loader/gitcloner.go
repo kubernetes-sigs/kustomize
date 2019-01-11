@@ -187,10 +187,8 @@ func normalizeGitHostSpec(host string) string {
 			host = "https://github.com/"
 		}
 	}
-	if strings.Contains(s, "gitlab") {
-		if strings.HasPrefix(s, "git::") {
-			host = strings.TrimLeft(s, "git::")
-		}
+	if strings.HasPrefix(s, "git::") {
+		host = strings.TrimLeft(s, "git::")
 	}
 	return host
 }
