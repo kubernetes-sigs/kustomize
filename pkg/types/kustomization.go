@@ -115,13 +115,6 @@ type Kustomization struct {
 	// the map will have a suffix hash generated from its contents.
 	ConfigMapGenerator []ConfigMapArgs `json:"configMapGenerator,omitempty" yaml:"configMapGenerator,omitempty"`
 
-	// SecretGenerator is a list of secrets to generate from
-	// local data (one secret per list item).
-	// The resulting resource is a normal operand, subject to
-	// name prefixing, patching, etc.  By default, the name of
-	// the map will have a suffix hash generated from its contents.
-	SecretGenerator []SecretArgs `json:"secretGenerator,omitempty" yaml:"secretGenerator,omitempty"`
-
 	// GeneratorOptions modify behavior of all ConfigMap and Secret generators.
 	GeneratorOptions *GeneratorOptions `json:"generatorOptions,omitempty" yaml:"generatorOptions,omitempty"`
 

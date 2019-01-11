@@ -217,12 +217,8 @@ func (kt *KustTarget) generateConfigMapsAndSecrets(
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromConfigMapArgs"))
 	}
-	secrets, err := kt.rFactory.NewResMapFromSecretArgs(
-		kt.kustomization.SecretGenerator, kt.kustomization.GeneratorOptions)
-	if err != nil {
-		errs.Append(errors.Wrap(err, "NewResMapFromSecretArgs"))
-	}
-	return resmap.MergeWithErrorOnIdCollision(cms, secrets)
+
+	return resmap.MergeWithErrorOnIdCollision(cms)
 }
 
 // accumulateBases returns a new ResAccumulator

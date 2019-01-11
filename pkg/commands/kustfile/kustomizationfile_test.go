@@ -41,7 +41,6 @@ func TestFieldOrder(t *testing.T) {
 		"PatchesStrategicMerge",
 		"PatchesJson6902",
 		"ConfigMapGenerator",
-		"SecretGenerator",
 		"GeneratorOptions",
 		"Vars",
 		"ImageTags",

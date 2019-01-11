@@ -63,7 +63,6 @@ func determineFieldOrder() []string {
 		"PatchesStrategicMerge",
 		"PatchesJson6902",
 		"ConfigMapGenerator",
-		"SecretGenerator",
 		"GeneratorOptions",
 		"Vars",
 		"ImageTags",

@@ -17,7 +17,6 @@ limitations under the License.
 package target
 
 import (
-	"encoding/base64"
 	"fmt"
 	"reflect"
 	"strings"
@@ -50,12 +49,6 @@ configMapGenerator:
   literals:
   - DB_USERNAME=admin
   - DB_PASSWORD=somepw
-secretGenerator:
-- name: secret
-  commands:
-    DB_USERNAME: "printf admin"
-    DB_PASSWORD: "printf somepw"
-  type: Opaque
 patchesJson6902:
 - target:
     group: apps
@@ -63,16 +56,6 @@ patchesJson6902:
     kind: Deployment
     name: dply1
   path: jsonpatch.json
-`
-	kustomizationContent2 = `
-apiVersion: v1beta1
-kind: Kustomization
-secretGenerator:
-- name: secret
-  timeoutSeconds: 1
-  commands:
-    USER: "sleep 2"
-  type: Opaque
 `
 	deploymentContent = `
 apiVersion: apps/v1
@@ -156,28 +139,6 @@ func TestResources1(t *testing.T) {
 				},
 			}).SetBehavior(ifc.BehaviorCreate),
 		resid.NewResIdWithPrefixSuffixNamespace(
-			gvk.Gvk{Version: "v1", Kind: "Secret"},
-			"secret", "foo-", "-bar", "ns1"): th.fromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "Secret",
-				"metadata": map[string]interface{}{
-					"name":      "foo-secret-bar-9btc7bt4kb",
-					"namespace": "ns1",
-					"labels": map[string]interface{}{
-						"app": "nginx",
-					},
-					"annotations": map[string]interface{}{
-						"note": "This is a test annotation",
-					},
-				},
-				"type": ifc.SecretTypeOpaque,
-				"data": map[string]interface{}{
-					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
-					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
-				},
-			}).SetBehavior(ifc.BehaviorCreate),
-		resid.NewResIdWithPrefixSuffixNamespace(
 			gvk.Gvk{Version: "v1", Kind: "Namespace"},
 			"ns1", "foo-", "-bar", ""): th.fromMap(
 			map[string]interface{}{
@@ -217,21 +178,9 @@ func TestResourceNotFound(t *testing.T) {
 	}
 }
 
-func TestSecretTimeout(t *testing.T) {
-	th := NewKustTestHarness(t, "/whatever")
-	th.writeK("/whatever", kustomizationContent2)
-	_, err := th.makeKustTarget().MakeCustomizedResMap()
-	if err == nil {
-		t.Fatalf("Didn't get the expected error for an unknown resource")
-	}
-	if !strings.Contains(err.Error(), "killed") {
-		t.Fatalf("unexpected error: %q", err)
-	}
-}
-
-func findSecret(m resmap.ResMap) *resource.Resource {
+func findConfigMap(m resmap.ResMap) *resource.Resource {
 	for id, res := range m {
-		if id.Gvk().Kind == "Secret" {
+		if id.Gvk().Kind == "ConfigMap" {
 			return res
 		}
 	}
@@ -250,12 +199,12 @@ func TestDisableNameSuffixHash(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected Resources error %v", err)
 	}
-	secret := findSecret(m)
-	if secret == nil {
+	cm := findConfigMap(m)
+	if cm == nil {
 		t.Errorf("Expected to find a Secret")
 	}
-	if secret.GetName() != "foo-secret-bar-9btc7bt4kb" {
-		t.Errorf("unexpected secret resource name: %s", secret.GetName())
+	if cm.GetName() != "foo-literalConfigMap-bar-8d2dkb8k24" {
+		t.Errorf("unexpected configmap resource name: %s", cm.GetName())
 	}
 
 	kt.kustomization.GeneratorOptions = &types.GeneratorOptions{
@@ -264,12 +213,12 @@ func TestDisableNameSuffixHash(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected Resources error %v", err)
 	}
-	secret = findSecret(m)
-	if secret == nil {
+	cm = findConfigMap(m)
+	if cm == nil {
 		t.Errorf("Expected to find a Secret")
 	}
-	if secret.GetName() != "foo-secret-bar" { // No hash at end.
-		t.Errorf("unexpected secret resource name: %s", secret.GetName())
+	if cm.GetName() != "foo-literalConfigMap-bar" { // No hash at end.
+		t.Errorf("unexpected configmap resource name: %s", cm.GetName())
 	}
 }
 

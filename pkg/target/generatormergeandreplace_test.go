@@ -179,11 +179,6 @@ configMapGenerator:
   - name: configmap-in-base
     literals:
       - foo=bar
-secretGenerator:
-- name: secret-in-base
-  commands:
-    username: "printf admin"
-    password: "printf somepw"
 `)
 	th.writeF("/app/deployment.yaml", `
 apiVersion: apps/v1beta2
@@ -246,21 +241,6 @@ metadata:
     org: example.com
     team: foo
   name: team-foo-configmap-in-base-bbdmdh7m8t
----
-apiVersion: v1
-data:
-  password: c29tZXB3
-  username: YWRtaW4=
-kind: Secret
-metadata:
-  annotations:
-    note: This is a test annotation
-  labels:
-    app: mynginx
-    org: example.com
-    team: foo
-  name: team-foo-secret-in-base-tkm7hhtf8d
-type: Opaque
 ---
 apiVersion: v1
 kind: Service
@@ -359,11 +339,6 @@ configMapGenerator:
     behavior: replace
     literals:
       - foo=override-bar
-secretGenerator:
-- name: secret-in-base
-  behavior: merge
-  commands:
-    proxy: "printf haproxy"
 `)
 	m, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
@@ -393,23 +368,6 @@ metadata:
     env: staging
     team: override-foo
   name: staging-configmap-in-overlay-k7cbc75tg8
----
-apiVersion: v1
-data:
-  password: c29tZXB3
-  proxy: aGFwcm94eQ==
-  username: YWRtaW4=
-kind: Secret
-metadata:
-  annotations:
-    note: This is a test annotation
-  labels:
-    app: mynginx
-    env: staging
-    org: example.com
-    team: override-foo
-  name: staging-team-foo-secret-in-base-c8db7gk2m2
-type: Opaque
 ---
 apiVersion: v1
 kind: Service

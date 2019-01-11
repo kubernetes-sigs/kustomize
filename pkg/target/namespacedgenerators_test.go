@@ -35,15 +35,6 @@ configMapGenerator:
   literals:
   - altGreeting=Good Morning from default namespace!
   - enableRisky="false"
-
-secretGenerator:
-- name: the-non-default-namespace-secret
-  namespace: non-default
-  commands:
-    password.txt: "echo verySecret"
-- name: the-secret
-  commands:
-    password.txt: "echo anotherSecret"
 `)
 	m, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
@@ -66,22 +57,5 @@ data:
 kind: ConfigMap
 metadata:
   name: the-map-4959m5tm6c
----
-apiVersion: v1
-data:
-  password.txt: dmVyeVNlY3JldAo=
-kind: Secret
-metadata:
-  name: the-non-default-namespace-secret-9fgdmbbk5c
-  namespace: non-default
-type: Opaque
----
-apiVersion: v1
-data:
-  password.txt: YW5vdGhlclNlY3JldAo=
-kind: Secret
-metadata:
-  name: the-secret-7dd8hcgfhk
-type: Opaque
 `)
 }
