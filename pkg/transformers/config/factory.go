@@ -28,10 +28,10 @@ type Factory struct {
 	ldr ifc.Loader
 }
 
-// TODO(#6060) Maybe switch to the false path permanently
-// (desired by #606), or expose this as a new customization
-// directive.
-const demandExplicitConfig = true
+// TODO(#606): Setting this to false satisfies the feature
+// request in 606.  The todo is to delete the non-active
+// code path in a subsequent PR.
+const demandExplicitConfig = false
 
 func MakeTransformerConfig(
 	ldr ifc.Loader, paths []string) (*TransformerConfig, error) {
