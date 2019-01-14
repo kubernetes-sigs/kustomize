@@ -64,7 +64,7 @@ func TestLoaderLoad(t *testing.T) {
 	for _, x := range testCases {
 		b, err := l1.Load(x.path)
 		if err != nil {
-			t.Fatalf("unexpected load error %v", err)
+			t.Fatalf("unexpected load error: %v", err)
 		}
 		if !reflect.DeepEqual([]byte(x.expectedContent), b) {
 			t.Fatalf("in load expected %s, but got %s", x.expectedContent, b)
