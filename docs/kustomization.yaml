@@ -83,40 +83,7 @@ configMapGenerator:
   - JAVA_HOME=/opt/java/jdk
   - JAVA_TOOL_OPTIONS=-agentlib:hprof
 
-# Each entry in this list results in the creation of
-# one Secret resource (it's a generator of n secrets).
-# A command can do anything to get a secret,
-# e.g. prompt the user directly, start a webserver to
-# initate an oauth dance, etc.
-secretGenerator:
-- name: app-tls
-  commands:
-    tls.crt: "cat secret/tls.cert"
-    tls.key: "cat secret/tls.key"
-  type: "kubernetes.io/tls"
-- name: app-tls-namespaced
-  # you can define a namespace to generate secret in, defaults to: "default"
-  namespace: apps
-  commands:
-    tls.crt: "cat secret/tls.cert"
-    tls.key: "cat secret/tls.key"
-  type: "kubernetes.io/tls"
-- name: downloaded_secret
-  # timeoutSeconds specifies the number of seconds to
-  # wait for the commands below. It defaults to 5 seconds.
-  timeoutSeconds: 30
-  commands:
-    username: "curl -s https://path/to/secrets/username.yaml"
-    password: "curl -s https://path/to/secrets/password.yaml"
-  type: Opaque
-- name: env_file_secret
-  # envCommand is similar to command but outputs lines of key=val pairs
-  # i.e. a Docker .env file or a .ini file.
-  # you can only specify one envCommand per secret.
-  envCommand: printf \"DB_USERNAME=admin\nDB_PASSWORD=somepw\"
-  type: Opaque
-
-# generatorOptions modify behavior of all ConfigMap and Secret generators
+# generatorOptions modify behavior of all ConfigMap generators
 generatorOptions:
   # labels to add to all generated resources
   labels:

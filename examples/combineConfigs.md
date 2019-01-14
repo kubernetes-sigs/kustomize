@@ -65,40 +65,6 @@ Places these values in
  * `staging/plumbing.properties`
  * `production/plumbing.properties`
 
-
-### Secret properties
-
-E.g. location of actual user tables, database
-credentials, decryption keys, etc.
-
-_Things that are a subset of devops controls, that
-nobody else has (or should want) access to._
-
-Places these values in
-
- * `development/secret.properties`
- * `staging/secret.properties`
- * `production/secret.properties`
-
-[kubernetes secret]: https://kubernetes.io/docs/tasks/inject-data-application/distribute-credentials-secure/
-
-and control access to them with (for example) unix file
-owner and mode bits, or better yet, put them in
-a server dedicated to storing password protected
-secrets, and use a field called  `secretGenerator`
-in your _kustomization_ to create a kubernetes
-secret holding them (not covering that here).
-
-<!--
-secretGenerator:
-- name: app-tls
-  commands:
-    tls.crt: "cat tls.cert"
-    tls.key: "cat tls.key"
-  type: "kubernetes.io/tls"
-EOF
--->
-
 ## A mixin approach to management
 
 The way to create _n_ cluster environments that share
