@@ -76,8 +76,9 @@ import (
 //    the kustomization file.
 //
 type fileLoader struct {
-	// Previously visited directories, tracked to
-	// avoid cycles.  The last entry is the current root.
+	// Previously visited absolute directory paths.
+	// Tracked to avoid cycles.
+	// The last entry is the current root.
 	roots []string
 	// File system utilities.
 	fSys fs.FileSystem
@@ -94,7 +95,7 @@ func NewFileLoaderAtCwd(fSys fs.FileSystem) *fileLoader {
 
 // NewFileLoaderAtRoot returns a loader that loads from "/".
 func NewFileLoaderAtRoot(fSys fs.FileSystem) *fileLoader {
-	return newLoaderOrDie(fSys, "/")
+	return newLoaderOrDie(fSys, string(filepath.Separator))
 }
 
 // Root returns the absolute path that is prepended to any
@@ -120,16 +121,20 @@ func newFileLoaderAt(
 		return nil, fmt.Errorf(
 			"loader root cannot be empty")
 	}
-	root, err := filepath.Abs(root)
+	absRoot, err := filepath.Abs(root)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"absolute path error in '%s' : %v", root, err)
 	}
-	if !fSys.IsDir(root) {
-		return nil, fmt.Errorf("absolute root dir '%s' does not exist", root)
+	if err := isPathEqualToOrAbove(absRoot, roots); err != nil {
+		return nil, err
+	}
+	if !fSys.IsDir(absRoot) {
+		return nil, fmt.Errorf(
+			"absolute root dir '%s' does not exist", absRoot)
 	}
 	return &fileLoader{
-		roots:   append(roots, root),
+		roots:   append(roots, absRoot),
 		fSys:    fSys,
 		cloner:  cloner,
 		cleaner: func() error { return nil },
@@ -138,28 +143,25 @@ func newFileLoaderAt(
 
 // New returns a new Loader, rooted relative to current loader,
 // or rooted in a temp directory holding a git repo clone.
-func (l *fileLoader) New(root string) (ifc.Loader, error) {
-	if root == "" {
+func (l *fileLoader) New(path string) (ifc.Loader, error) {
+	if path == "" {
 		return nil, fmt.Errorf("new root cannot be empty")
 	}
-	if isRepoUrl(root) {
-		if err := l.seenBefore(root); err != nil {
+	if isRepoUrl(path) {
+		// This works well enough for purpose at hand to detect
+		// previously visited URLs and thus avoid cycles.
+		if err := isPathEqualToOrAbove(path, l.roots); err != nil {
 			return nil, err
 		}
-		return newGitLoader(root, l.fSys, l.roots, l.cloner)
+		return newGitLoader(path, l.fSys, l.roots, l.cloner)
 	}
-	if filepath.IsAbs(root) {
-		return nil, fmt.Errorf("new root '%s' cannot be absolute", root)
+	if filepath.IsAbs(path) {
+		return nil, fmt.Errorf("new root '%s' cannot be absolute", path)
 	}
-	// Get absolute path to squeeze out "..", ".", etc.
-	// to facilitate the seenBefore test.
-	absRoot, err := filepath.Abs(filepath.Join(l.Root(), root))
+	absRoot, err := filepath.Abs(filepath.Join(l.Root(), path))
 	if err != nil {
 		return nil, fmt.Errorf(
-			"problem joining '%s' to '%s': %v", l.Root(), root, err)
-	}
-	if err := l.seenBefore(absRoot); err != nil {
-		return nil, err
+			"problem joining '%s' to '%s': %v", l.Root(), path, err)
 	}
 	return newFileLoaderAt(absRoot, l.fSys, l.roots, l.cloner)
 }
@@ -187,11 +189,13 @@ func newGitLoader(
 	}, nil
 }
 
-// seenBefore tests whether the current or any previously
-// visited root begins with the given path.
-func (l *fileLoader) seenBefore(path string) error {
+// isPathEqualToOrAbove tests whether the 1st argument,
+// viewed as a path to a directory, is equal to or above
+// any of the paths in the 2nd argument.  It's assumed
+// that all paths are cleaned, delinkified and absolute.
+func isPathEqualToOrAbove(path string, roots []string) error {
 	terminated := path + string(filepath.Separator)
-	for _, r := range l.roots {
+	for _, r := range roots {
 		if r == path || strings.HasPrefix(r, terminated) {
 			return fmt.Errorf(
 				"cycle detected: new root '%s' contains previous root '%s'",
