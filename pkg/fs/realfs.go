@@ -53,6 +53,11 @@ func (realFS) RemoveAll(name string) error {
 // Open delegates to os.Open.
 func (realFS) Open(name string) (File, error) { return os.Open(name) }
 
+// EvalSymlinks delegates to filepath.EvalSymlinks.
+func (realFS) EvalSymlinks(path string) (string, error) {
+	return filepath.EvalSymlinks(path)
+}
+
 // Exists returns true if os.Stat succeeds.
 func (realFS) Exists(name string) bool {
 	_, err := os.Stat(name)
