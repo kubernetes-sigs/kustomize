@@ -91,11 +91,6 @@ generatorOptions:
   # annotations to add to all generated resources
   annotations:
     kustomize.generated.resource: somevalue
-  # timeoutSeconds specifies the timeout for commands
-  timeoutSeconds: 30
-  # shell and arguments to use as a context for commands used in resource
-  # generation. Default at time of writing: ["sh", "-c"]
-  shell: ["sh", "-c"]
   # disableNameSuffixHash is true disables the default behavior of adding a
   # suffix to the names of generated resources that is a hash of
   # the resource contents.

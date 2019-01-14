@@ -5,8 +5,6 @@ Kustomize provides options to modify the behavior of ConfigMap generators. These
  - disable appending a content hash suffix to the names of generated resources
  - adding labels to generated resources
  - adding annotations to generated resources
- - changing shell and arguments for getting data from commands
- - changing timeout for executing commands
  
 This demo shows how to use these options. First create a workspace.
 ```
