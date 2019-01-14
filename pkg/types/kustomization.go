@@ -115,7 +115,7 @@ type Kustomization struct {
 	// the map will have a suffix hash generated from its contents.
 	ConfigMapGenerator []ConfigMapArgs `json:"configMapGenerator,omitempty" yaml:"configMapGenerator,omitempty"`
 
-	// GeneratorOptions modify behavior of all ConfigMap and Secret generators.
+	// GeneratorOptions modify behavior of all ConfigMap generators.
 	GeneratorOptions *GeneratorOptions `json:"generatorOptions,omitempty" yaml:"generatorOptions,omitempty"`
 
 	// Configurations is a list of transformer configuration files
@@ -199,38 +199,6 @@ type ConfigMapArgs struct {
 	DataSources `json:",inline,omitempty" yaml:",inline,omitempty"`
 }
 
-// SecretArgs contains the metadata of how to generate a secret.
-type SecretArgs struct {
-	// GeneratorArgs for the secret.
-	GeneratorArgs `json:",inline,omitempty" yaml:",inline,omitempty"`
-
-	// Type of the secret.
-	//
-	// This is the same field as the secret type field in v1/Secret:
-	// It can be "Opaque" (default), or "kubernetes.io/tls".
-	//
-	// If type is "kubernetes.io/tls", then "Commands" must have exactly two
-	// keys: "tls.key" and "tls.crt"
-	Type string `json:"type,omitempty" yaml:"type,omitempty"`
-
-	// CommandSources for secret.
-	CommandSources `json:",inline,omitempty" yaml:",inline,omitempty"`
-
-	// Deprecated.
-	// Replaced by GeneratorOptions.TimeoutSeconds
-	// TimeoutSeconds specifies the timeout for commands.
-	TimeoutSeconds *int64 `json:"timeoutSeconds,omitempty" yaml:"timeoutSeconds,omitempty"`
-}
-
-// CommandSources contains some generic sources for secrets.
-type CommandSources struct {
-	// Map of keys to commands to generate the values
-	Commands map[string]string `json:"commands,omitempty" yaml:"commands,omitempty"`
-	// EnvCommand to output lines of key=val pairs to create a secret.
-	// i.e. a Docker .env file or a .ini file.
-	EnvCommand string `json:"envCommand,omitempty" yaml:"envCommand,omitempty"`
-}
-
 // DataSources contains some generic sources for configmaps.
 type DataSources struct {
 	// LiteralSources is a list of literal sources.
@@ -267,22 +235,13 @@ type ImageTag struct {
 	Digest string `json:"digest,omitempty" yaml:"digest,omitempty"`
 }
 
-// GeneratorOptions modify behavior of all ConfigMap and Secret generators.
+// GeneratorOptions modify behavior of all ConfigMap generators.
 type GeneratorOptions struct {
 	// Labels to add to all generated resources.
 	Labels map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
 
 	// Annotations to add to all generated resources.
 	Annotations map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
-
-	// TimeoutSeconds specifies the timeout for commands, if any,
-	// used in resource generation.  At time of writing, the default
-	// was specified in configmapandsecret.defaultCommandTimeout.
-	TimeoutSeconds *int64 `json:"timeoutSeconds,omitempty" yaml:"timeoutSeconds,omitempty"`
-
-	// Shell and arguments to use as a context for commands used in
-	// resource generation.  Default at time of writing:  {'sh', '-c'}.
-	Shell []string `json:"shell,omitempty" yaml:"shell,omitempty"`
 
 	// DisableNameSuffixHash if true disables the default behavior of adding a
 	// suffix to the names of generated resources that is a hash of the

@@ -32,8 +32,7 @@ import (
 
 // KunstructuredFactoryImpl hides construction using apimachinery types.
 type KunstructuredFactoryImpl struct {
-	cmFactory     *configmapandsecret.ConfigMapFactory
-	secretFactory *configmapandsecret.SecretFactory
+	cmFactory *configmapandsecret.ConfigMapFactory
 }
 
 var _ ifc.KunstructuredFactory = &KunstructuredFactoryImpl{}
@@ -85,19 +84,9 @@ func (kf *KunstructuredFactoryImpl) MakeConfigMap(args *types.ConfigMapArgs, opt
 	return NewKunstructuredFromObject(cm)
 }
 
-// MakeSecret returns an instance of Kunstructured for Secret
-func (kf *KunstructuredFactoryImpl) MakeSecret(args *types.SecretArgs, options *types.GeneratorOptions) (ifc.Kunstructured, error) {
-	sec, err := kf.secretFactory.MakeSecret(args, options)
-	if err != nil {
-		return nil, err
-	}
-	return NewKunstructuredFromObject(sec)
-}
-
 // Set sets loader, filesystem and workdirectory
 func (kf *KunstructuredFactoryImpl) Set(fs fs.FileSystem, ldr ifc.Loader) {
 	kf.cmFactory = configmapandsecret.NewConfigMapFactory(fs, ldr)
-	kf.secretFactory = configmapandsecret.NewSecretFactory(fs, ldr.Root())
 }
 
 // validate validates that u has kind and name

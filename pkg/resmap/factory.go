@@ -92,20 +92,6 @@ func (rmF *Factory) NewResMapFromConfigMapArgs(argList []types.ConfigMapArgs, op
 	return newResMapFromResourceSlice(resources)
 }
 
-// NewResMapFromSecretArgs takes a SecretArgs slice, generates
-// secrets from each entry, and accumulates them in a ResMap.
-func (rmF *Factory) NewResMapFromSecretArgs(argsList []types.SecretArgs, options *types.GeneratorOptions) (ResMap, error) {
-	var resources []*resource.Resource
-	for _, args := range argsList {
-		res, err := rmF.resF.MakeSecret(&args, options)
-		if err != nil {
-			return nil, errors.Wrap(err, "NewResMapFromSecretArgs")
-		}
-		resources = append(resources, res)
-	}
-	return newResMapFromResourceSlice(resources)
-}
-
 // Set sets the filesystem and loader for the underlying factory
 func (rmF *Factory) Set(fs fs.FileSystem, ldr ifc.Loader) {
 	rmF.resF.Set(fs, ldr)

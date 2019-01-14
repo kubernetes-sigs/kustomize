@@ -122,15 +122,6 @@ func (rf *Factory) MakeConfigMap(args *types.ConfigMapArgs, options *types.Gener
 	return &Resource{Kunstructured: u, b: fixBehavior(args.Behavior)}, nil
 }
 
-// MakeSecret makes an instance of Resource for Secret
-func (rf *Factory) MakeSecret(args *types.SecretArgs, options *types.GeneratorOptions) (*Resource, error) {
-	u, err := rf.kf.MakeSecret(args, options)
-	if err != nil {
-		return nil, err
-	}
-	return &Resource{Kunstructured: u, b: fixBehavior(args.Behavior)}, nil
-}
-
 func fixBehavior(s string) ifc.GenerationBehavior {
 	b := ifc.NewGenerationBehavior(s)
 	if b == ifc.BehaviorUnspecified {
