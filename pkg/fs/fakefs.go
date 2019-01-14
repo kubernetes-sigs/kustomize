@@ -102,6 +102,11 @@ func (fs *fakeFs) Open(name string) (File, error) {
 	return fs.m[name], nil
 }
 
+// EvalSymlinks does nothing and cannot fail.
+func (fs *fakeFs) EvalSymlinks(path string) (string, error) {
+	return path, nil
+}
+
 // Exists returns true if file is known.
 func (fs *fakeFs) Exists(name string) bool {
 	_, found := fs.m[name]
