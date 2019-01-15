@@ -43,6 +43,7 @@ func isRepoUrl(arg string) bool {
 	return !filepath.IsAbs(arg) &&
 		(strings.HasPrefix(arg, "git::") ||
 			strings.HasPrefix(arg, "gh:") ||
+			strings.HasPrefix(arg, "ssh:") ||
 			strings.HasPrefix(arg, "github.com") ||
 			strings.HasPrefix(arg, "git@") ||
 			strings.Index(arg, "github.com/") > -1 ||
@@ -159,20 +160,22 @@ func parseHostSpec(n string) (string, string) {
 	for _, p := range []string{
 		// Order matters here.
 		"git::", "gh:", "ssh://", "https://", "http://",
-		"git@", "github.com:", "github.com/", "gitlab.com/"} {
+		"git@", "github.com:", "github.com/"} {
 		if strings.ToLower(n[:len(p)]) == p {
 			n = n[len(p):]
 			host = host + p
 		}
 	}
+
+	// If host is a http(s) or ssh URL, grab the domain part.
 	for _, p := range []string{
-		"git-codecommit.[a-z0-9-]*.amazonaws.com/",
-		"dev.azure.com/",
-		".*visualstudio.com/"} {
-		index := regexp.MustCompile(p).FindStringIndex(n)
-		if len(index) > 0 {
-			host = host + n[0:index[len(index)-1]]
-			n = n[index[len(index)-1]:]
+		"ssh://", "https://", "http://"} {
+		if strings.HasSuffix(strings.ToLower(host), p) {
+			index := regexp.MustCompile("^(.*?)/").FindStringIndex(n)
+			if len(index) > 0 {
+				host = host + n[0:index[len(index)-1]]
+				n = n[index[len(index)-1]:]
+			}
 		}
 	}
 	return host, n
