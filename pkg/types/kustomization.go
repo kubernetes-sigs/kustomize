@@ -272,6 +272,9 @@ type ImageTag struct {
 	// Digest is the value used to replace the original image tag.
 	// If digest is present NewTag value is ignored.
 	Digest string `json:"digest,omitempty" yaml:"digest,omitempty"`
+
+	// LookupDigestTag...
+	LookupDigestTag string `json:"lookupDigestTag,omitempty" yaml:"lookupDigestTag,omitempty"`
 }
 
 // GeneratorOptions modify behavior of all ConfigMap and Secret generators.

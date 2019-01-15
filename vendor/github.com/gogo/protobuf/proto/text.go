@@ -522,17 +522,6 @@ func (tm *TextMarshaler) writeAny(w *textWriter, v reflect.Value, props *Propert
 				}
 				return nil
 			}
-		} else if len(props.CastType) > 0 {
-			if _, ok := v.Interface().(interface {
-				String() string
-			}); ok {
-				switch v.Kind() {
-				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-					reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-					_, err := fmt.Fprintf(w, "%d", v.Interface())
-					return err
-				}
-			}
 		} else if props.StdTime {
 			t, ok := v.Interface().(time.Time)
 			if !ok {

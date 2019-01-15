@@ -19,6 +19,7 @@ package transformers
 import (
 	"regexp"
 
+	"sigs.k8s.io/kustomize/pkg/digest"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -86,6 +87,14 @@ func (pt *imageTagTransformer) updateContainers(obj map[string]interface{}, path
 
 				if imagetag.Digest != "" {
 					container["image"] = imagetag.Name + "@" + imagetag.Digest
+				}
+
+				if imagetag.LookupDigestTag != "" {
+					digest, err := digest.Fetch(imagetag.Name, imagetag.LookupDigestTag)
+					if err != nil {
+						return err
+					}
+					container["image"] = imagetag.Name + "@" + digest
 				}
 
 				break
