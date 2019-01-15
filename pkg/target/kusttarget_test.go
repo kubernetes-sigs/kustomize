@@ -52,9 +52,9 @@ configMapGenerator:
   - DB_PASSWORD=somepw
 secretGenerator:
 - name: secret
-  commands:
-    DB_USERNAME: "printf admin"
-    DB_PASSWORD: "printf somepw"
+  literals:
+    - DB_USERNAME=admin
+    - DB_PASSWORD=somepw
   type: Opaque
 patchesJson6902:
 - target:
@@ -63,16 +63,6 @@ patchesJson6902:
     kind: Deployment
     name: dply1
   path: jsonpatch.json
-`
-	kustomizationContent2 = `
-apiVersion: v1beta1
-kind: Kustomization
-secretGenerator:
-- name: secret
-  timeoutSeconds: 1
-  commands:
-    USER: "sleep 2"
-  type: Opaque
 `
 	deploymentContent = `
 apiVersion: apps/v1
@@ -213,18 +203,6 @@ func TestResourceNotFound(t *testing.T) {
 		t.Fatalf("Didn't get the expected error for an unknown resource")
 	}
 	if !strings.Contains(err.Error(), `cannot read file`) {
-		t.Fatalf("unexpected error: %q", err)
-	}
-}
-
-func TestSecretTimeout(t *testing.T) {
-	th := NewKustTestHarness(t, "/whatever")
-	th.writeK("/whatever", kustomizationContent2)
-	_, err := th.makeKustTarget().MakeCustomizedResMap()
-	if err == nil {
-		t.Fatalf("Didn't get the expected error for an unknown resource")
-	}
-	if !strings.Contains(err.Error(), "killed") {
 		t.Fatalf("unexpected error: %q", err)
 	}
 }

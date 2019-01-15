@@ -181,9 +181,9 @@ configMapGenerator:
       - foo=bar
 secretGenerator:
 - name: secret-in-base
-  commands:
-    username: "printf admin"
-    password: "printf somepw"
+  literals:
+    - username=admin
+    - password=somepw
 `)
 	th.writeF("/app/deployment.yaml", `
 apiVersion: apps/v1beta2
@@ -362,8 +362,8 @@ configMapGenerator:
 secretGenerator:
 - name: secret-in-base
   behavior: merge
-  commands:
-    proxy: "printf haproxy"
+  literals:
+   - proxy=haproxy
 `)
 	m, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
