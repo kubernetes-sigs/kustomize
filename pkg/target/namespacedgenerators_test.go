@@ -39,11 +39,11 @@ configMapGenerator:
 secretGenerator:
 - name: the-non-default-namespace-secret
   namespace: non-default
-  commands:
-    password.txt: "echo verySecret"
+  literals:
+    - password.txt=verySecret
 - name: the-secret
-  commands:
-    password.txt: "echo anotherSecret"
+  literals:
+    - password.txt=anotherSecret
 `)
 	m, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
@@ -69,19 +69,19 @@ metadata:
 ---
 apiVersion: v1
 data:
-  password.txt: dmVyeVNlY3JldAo=
+  password.txt: dmVyeVNlY3JldA==
 kind: Secret
 metadata:
-  name: the-non-default-namespace-secret-9fgdmbbk5c
+  name: the-non-default-namespace-secret-h8d9hkgtb9
   namespace: non-default
 type: Opaque
 ---
 apiVersion: v1
 data:
-  password.txt: YW5vdGhlclNlY3JldAo=
+  password.txt: YW5vdGhlclNlY3JldA==
 kind: Secret
 metadata:
-  name: the-secret-7dd8hcgfhk
+  name: the-secret-fgb45h45bh
 type: Opaque
 `)
 }

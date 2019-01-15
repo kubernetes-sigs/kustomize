@@ -252,18 +252,11 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	secrets := []types.SecretArgs{
 		{
 			GeneratorArgs: types.GeneratorArgs{Name: "apple"},
-			CommandSources: types.CommandSources{
-				Commands: map[string]string{
-					"DB_USERNAME": "printf admin",
-					"DB_PASSWORD": "printf somepw",
+			DataSources: types.DataSources{
+				LiteralSources: []string{
+					"DB_USERNAME=admin",
+					"DB_PASSWORD=somepw",
 				},
-			},
-			Type: ifc.SecretTypeOpaque,
-		},
-		{
-			GeneratorArgs: types.GeneratorArgs{Name: "peanuts"},
-			CommandSources: types.CommandSources{
-				EnvCommand: "printf \"DB_USERNAME=admin\nDB_PASSWORD=somepw\"",
 			},
 			Type: ifc.SecretTypeOpaque,
 		},
@@ -291,45 +284,8 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
 			}).SetBehavior(ifc.BehaviorCreate),
-		resid.NewResId(secret, "peanuts"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "Secret",
-				"metadata": map[string]interface{}{
-					"name": "peanuts",
-				},
-				"type": ifc.SecretTypeOpaque,
-				"data": map[string]interface{}{
-					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
-					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
-				},
-			}).SetBehavior(ifc.BehaviorCreate),
 	}
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("%#v\ndoesn't match expected:\n%#v", actual, expected)
-	}
-}
-
-func TestSecretTimeout(t *testing.T) {
-	timeout := int64(1)
-	secrets := []types.SecretArgs{
-		{
-			GeneratorArgs:  types.GeneratorArgs{Name: "slow"},
-			TimeoutSeconds: &timeout,
-			CommandSources: types.CommandSources{
-				Commands: map[string]string{
-					"USER": "sleep 2",
-				},
-			},
-			Type: ifc.SecretTypeOpaque,
-		},
-	}
-	fakeFs := fs.MakeFakeFS()
-	fakeFs.Mkdir(".")
-	rmF.Set(fakeFs, loader.NewFileLoaderAtRoot(fakeFs))
-	_, err := rmF.NewResMapFromSecretArgs(secrets, nil)
-
-	if err == nil {
-		t.Fatal("didn't get the expected timeout error", err)
 	}
 }
