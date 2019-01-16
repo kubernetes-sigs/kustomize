@@ -49,7 +49,6 @@ func (f *ConfigMapFactory) makeFreshConfigMap(
 	cm.Name = args.Name
 	cm.Namespace = args.Namespace
 	cm.Data = map[string]string{}
-	cm.BinaryData = map[string][]byte{}
 	return cm
 }
 
@@ -144,6 +143,8 @@ func addKvToConfigMap(configMap *v1.ConfigMap, keyName, data string) error {
 
 	keyExistsErrorMsg := "cannot add key %s, another key by that name already exists: %v"
 
+	// If the configmap data contains byte sequences that are all in the UTF-8
+	// range, we will write it to .Data
 	if utf8.Valid([]byte(data)) {
 		if _, entryExists := configMap.Data[keyName]; entryExists {
 			return fmt.Errorf(keyExistsErrorMsg, keyName, configMap.Data)
@@ -152,7 +153,10 @@ func addKvToConfigMap(configMap *v1.ConfigMap, keyName, data string) error {
 		return nil
 	}
 
-	// binary data
+	// otherwise, it's BinaryData
+	if configMap.BinaryData == nil {
+		configMap.BinaryData = map[string][]byte{}
+	}
 	if _, entryExists := configMap.BinaryData[keyName]; entryExists {
 		return fmt.Errorf(keyExistsErrorMsg, keyName, configMap.BinaryData)
 	}

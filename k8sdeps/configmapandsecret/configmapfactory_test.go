@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-		http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,7 +40,6 @@ func makeEnvConfigMap(name string) *corev1.ConfigMap {
 			"DB_USERNAME": "admin",
 			"DB_PASSWORD": "somepw",
 		},
-		BinaryData: map[string][]byte{},
 	}
 }
 
@@ -79,7 +78,6 @@ func makeLiteralConfigMap(name string) *corev1.ConfigMap {
 			"c": "Hello World",
 			"d": "true",
 		},
-		BinaryData: map[string][]byte{},
 	}
 	cm.SetLabels(map[string]string{"foo": "bar"})
 	return cm
