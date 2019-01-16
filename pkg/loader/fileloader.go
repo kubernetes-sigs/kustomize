@@ -26,54 +26,56 @@ import (
 	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
-// fileLoader loads files, returning an array of bytes.
-// It also enforces two kustomization requirements:
+// fileLoader is a kustomization's interface to files.
 //
-//   1) relocatable
+// The directory in which a kustomization file sits
+// is referred to below as the kustomization's root.
 //
-//      A kustomization and the resources, bases,
-//      patches, etc. that it depends on should be
-//      relocatable, so all path specifications
-//      must be relative, not absolute.  The paths
-//      are taken relative to the location of the
-//      kusttomization file.
+// An instance of fileLoader has an immutable root,
+// and offers a `New` method returning a new loader
+// with a new root.
 //
-//   2) acyclic
+// A kustomization file refers to two kinds of files:
 //
-//      There should be no cycles in overlay to base
-//      relationships, including no cycles between
-//      git repositories.
+// * supplemental data paths
 //
-// The loader has a notion of a current working directory
-// (CWD), called 'root', that is independent of the CWD
-// of the process.  When `Load` is called with a file path
-// argument, the load is done relative to this root,
-// not relative to the process CWD.
+//   `Load` is used to visit these paths.
 //
-// The loader offers a `New` method returning a new loader
-// with a new root.  The new root can be one of two things,
-// a remote git repo URL, or a directory specified relative
-// to the current root.  In the former case, the remote
-// repository is locally cloned, and the new loader is
-// rooted on a path in that clone.
+//   They must terminate in or below the root.
 //
-// Crucially, a root history is used to so that New fails
-// if its argument either matches or is a parent of the
-// current or any previously used root.
+//   They hold things like resources, patches,
+//   data for ConfigMaps, etc.
 //
-// This disallows:
+// * bases; other kustomizations
 //
-//  * A base that is a git repository that, in turn,
-//    specifies a base repository seen previously
-//    in the loading process (a cycle).
+//   `New` is used to load bases.
 //
-//  * An overlay depending on a base positioned at or
-//    above it.  I.e. '../foo' is OK, but '.', '..',
-//    '../..', etc. are disallowed.  Allowing such a
-//    base has no advantages and encourage cycles,
-//    particularly if some future change were to
-//    introduce globbing to file specifications in
-//    the kustomization file.
+//   A base can be either a remote git repo URL, or
+//   a directory specified relative to the current
+//   root. In the former case, the repo is locally
+//   cloned, and the new loader is rooted on a path
+//   in that clone.
+//
+//   As loaders create new loaders, a root history
+//   is established, and used to disallow:
+//
+//   - A base that is a repository that, in turn,
+//     specifies a base repository seen previously
+//     in the loading stack (a cycle).
+//
+//   - An overlay depending on a base positioned at
+//     or above it.  I.e. '../foo' is OK, but '.',
+//     '..', '../..', etc. are disallowed.  Allowing
+//     such a base has no advantages and encourages
+//     cycles, particularly if some future change
+//     were to introduce globbing to file
+//     specifications in the kustomization file.
+//
+// These restrictions assure that kustomizations
+// are self-contained and relocatable, and impose
+// some safety when relying on remote kustomizations,
+// e.g. a ConfigMap generator specified to read
+// from /etc/passwd will fail.
 //
 type fileLoader struct {
 	// Previously visited absolute directory paths.
@@ -121,7 +123,7 @@ func newFileLoaderAt(
 		return nil, fmt.Errorf(
 			"loader root cannot be empty")
 	}
-	absRoot, err := filepath.Abs(root)
+	absRoot, err := cleanedAbs(root, fSys)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"absolute path error in '%s' : %v", root, err)
@@ -141,6 +143,22 @@ func newFileLoaderAt(
 	}, nil
 }
 
+// cleanedAbs returns a cleaned, absolute path
+// with no symbolic links.
+func cleanedAbs(path string, fSys fs.FileSystem) (string, error) {
+	absRoot, err := filepath.Abs(path)
+	if err != nil {
+		return "", fmt.Errorf(
+			"abs path error on '%s' : %v", path, err)
+	}
+	deLinked, err := fSys.EvalSymlinks(absRoot)
+	if err != nil {
+		return "", fmt.Errorf(
+			"evalsymlink failure on '%s' : %v", path, err)
+	}
+	return deLinked, nil
+}
+
 // New returns a new Loader, rooted relative to current loader,
 // or rooted in a temp directory holding a git repo clone.
 func (l *fileLoader) New(path string) (ifc.Loader, error) {
@@ -158,12 +176,8 @@ func (l *fileLoader) New(path string) (ifc.Loader, error) {
 	if filepath.IsAbs(path) {
 		return nil, fmt.Errorf("new root '%s' cannot be absolute", path)
 	}
-	absRoot, err := filepath.Abs(filepath.Join(l.Root(), path))
-	if err != nil {
-		return nil, fmt.Errorf(
-			"problem joining '%s' to '%s': %v", l.Root(), path, err)
-	}
-	return newFileLoaderAt(absRoot, l.fSys, l.roots, l.cloner)
+	return newFileLoaderAt(
+		filepath.Join(l.Root(), path), l.fSys, l.roots, l.cloner)
 }
 
 // newGitLoader returns a new Loader pinned to a temporary
@@ -205,13 +219,52 @@ func isPathEqualToOrAbove(path string, roots []string) error {
 	return nil
 }
 
-// Load returns content of file at the given relative path.
+// Load returns content of file at the given relative path,
+// else an error.  The path must refer to a file in or
+// below the current Root().
 func (l *fileLoader) Load(path string) ([]byte, error) {
 	if filepath.IsAbs(path) {
-		return nil, fmt.Errorf(
-			"must use relative path; '%s' is absolute", path)
+		return nil, l.loadOutOfBounds(path)
 	}
-	return l.fSys.ReadFile(filepath.Join(l.Root(), path))
+	path, err := cleanedAbs(
+		filepath.Join(l.Root(), path), l.fSys)
+	if err != nil {
+		return nil, err
+	}
+	if !l.isInOrBelowRoot(path) {
+		return nil, l.loadOutOfBounds(path)
+	}
+	return l.fSys.ReadFile(path)
+}
+
+// isInOrBelowRoot is true if the argument is in or
+// below Root() from purely a path perspective (no
+// check for actual file existence). For this to work,
+// both the given argument "path" and l.Root() must
+// be cleaned, absolute paths, and l.Root() must be
+// a directory.  Both conditions enforced elsewhere.
+//
+// This is tested on linux, but will have trouble
+// on other operating systems.  As soon as related
+// work is completed in the core filepath package,
+// this code should be refactored to use it.
+// See:
+//   https://github.com/golang/go/issues/18355
+//   https://github.com/golang/dep/issues/296
+//   https://github.com/golang/dep/blob/master/internal/fs/fs.go#L33
+//   https://codereview.appspot.com/5712045
+func (l *fileLoader) isInOrBelowRoot(path string) bool {
+	if l.Root() == string(filepath.Separator) {
+		return true
+	}
+	return strings.HasPrefix(
+		path, l.Root()+string(filepath.Separator))
+}
+
+func (l *fileLoader) loadOutOfBounds(path string) error {
+	return fmt.Errorf(
+		"security; file '%s' is not in or below '%s'",
+		path, l.Root())
 }
 
 // Cleanup runs the cleaner.
