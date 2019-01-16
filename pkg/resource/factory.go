@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"log"
 
-	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	internal "sigs.k8s.io/kustomize/pkg/internal/error"
 	"sigs.k8s.io/kustomize/pkg/patch"
@@ -108,9 +107,9 @@ func (rf *Factory) SliceFromBytes(in []byte) ([]*Resource, error) {
 	return result, nil
 }
 
-// Set sets the filesystem and loader for the underlying factory
-func (rf *Factory) Set(fs fs.FileSystem, ldr ifc.Loader) {
-	rf.kf.Set(fs, ldr)
+// Set sets the loader for the underlying factory
+func (rf *Factory) Set(ldr ifc.Loader) {
+	rf.kf.Set(ldr)
 }
 
 // MakeConfigMap makes an instance of Resource for ConfigMap

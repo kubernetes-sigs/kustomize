@@ -25,7 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/kustomize/k8sdeps/configmapandsecret"
-	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -94,10 +93,10 @@ func (kf *KunstructuredFactoryImpl) MakeSecret(args *types.SecretArgs, options *
 	return NewKunstructuredFromObject(sec)
 }
 
-// Set sets loader, filesystem and workdirectory
-func (kf *KunstructuredFactoryImpl) Set(fs fs.FileSystem, ldr ifc.Loader) {
-	kf.cmFactory = configmapandsecret.NewConfigMapFactory(fs, ldr)
-	kf.secretFactory = configmapandsecret.NewSecretFactory(fs, ldr)
+// Set sets loader
+func (kf *KunstructuredFactoryImpl) Set(ldr ifc.Loader) {
+	kf.cmFactory = configmapandsecret.NewConfigMapFactory(ldr)
+	kf.secretFactory = configmapandsecret.NewSecretFactory(ldr)
 }
 
 // validate validates that u has kind and name
