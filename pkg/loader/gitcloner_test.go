@@ -61,6 +61,18 @@ func TestIsRepoURL(t *testing.T) {
 			expected: true,
 		},
 		{
+			input:    "git::http://git.example.com/org/repo.git",
+			expected: true,
+		},
+		{
+			input:    "git::https://git.example.com/org/repo.git",
+			expected: true,
+		},
+		{
+			input:    "ssh://git.example.com:7999/org/repo.git",
+			expected: true,
+		},
+		{
 			input:    "/github.com/org/repo",
 			expected: false,
 		},
@@ -194,13 +206,16 @@ var paths = []string{"README.md", "foo/krusty.txt", ""}
 var hrefArgs = []string{"someBranch", ""}
 
 var extractFmts = map[string]string{
-	"gh:%s":                      "gh:",
-	"GH:%s":                      "gh:",
-	"gitHub.com/%s":              "https://github.com/",
-	"https://github.com/%s":      "https://github.com/",
-	"hTTps://github.com/%s":      "https://github.com/",
-	"git::https://gitlab.com/%s": "https://gitlab.com/",
-	"github.com:%s":              "https://github.com/",
+	"gh:%s":                           "gh:",
+	"GH:%s":                           "gh:",
+	"gitHub.com/%s":                   "https://github.com/",
+	"https://github.com/%s":           "https://github.com/",
+	"hTTps://github.com/%s":           "https://github.com/",
+	"git::https://gitlab.com/%s":      "https://gitlab.com/",
+	"github.com:%s":                   "https://github.com/",
+	"git::http://git.example.com/%s":  "http://git.example.com/",
+	"git::https://git.example.com/%s": "https://git.example.com/",
+	"ssh://git.example.com:7999/%s":   "ssh://git.example.com:7999/",
 }
 
 func TestParseGithubUrl(t *testing.T) {
