@@ -17,11 +17,16 @@ limitations under the License.
 package loader
 
 import (
+	"io/ioutil"
+	"os"
+	"path"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
 type testData struct {
@@ -196,5 +201,104 @@ func TestLoaderMisc(t *testing.T) {
 	_, err = l.New("https://google.com/project")
 	if err == nil {
 		t.Fatalf("Expected error")
+	}
+}
+
+func TestRestrictedLoadingInRealLoader(t *testing.T) {
+	// Create a structure like this
+	//
+	//   /tmp/kustomize-test-SZwCZYjySj
+	//   ├── base
+	//   │   ├── okayData
+	//   │   ├── symLinkToOkayData -> okayData
+	//   │   └── symLinkToForbiddenData -> ../forbiddenData
+	//   └── forbiddenData
+	//
+	dir, err := ioutil.TempDir("", "kustomize-test-")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer os.RemoveAll(dir)
+
+	fSys := fs.MakeRealFS()
+	fSys.Mkdir(filepath.Join(dir, "base"))
+
+	contentOk := "hi there, i'm OK data"
+	fSys.WriteFile(
+		filepath.Join(dir, "base", "okayData"), []byte(contentOk))
+
+	contentForbidden := "don't be looking at me"
+	fSys.WriteFile(
+		filepath.Join(dir, "forbiddenData"), []byte(contentForbidden))
+
+	os.Symlink(
+		filepath.Join(dir, "base", "okayData"),
+		filepath.Join(dir, "base", "symLinkToOkayData"))
+	os.Symlink(
+		filepath.Join(dir, "forbiddenData"),
+		filepath.Join(dir, "base", "symLinkToForbiddenData"))
+
+	var l ifc.Loader
+
+	l = newLoaderOrDie(fSys, dir)
+
+	// Sanity checks - loading from perspective of "dir".
+	// Everything works, including reading from a subdirectory.
+	data, err := l.Load(path.Join("base", "okayData"))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if string(data) != contentOk {
+		t.Fatalf("unexpected content: %v", data)
+	}
+	data, err = l.Load("forbiddenData")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if string(data) != contentForbidden {
+		t.Fatalf("unexpected content: %v", data)
+	}
+
+	// Drop in.
+	l, err = l.New("base")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Reading okayData works.
+	data, err = l.Load("okayData")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if string(data) != contentOk {
+		t.Fatalf("unexpected content: %v", data)
+	}
+
+	// Reading local symlink to okayData works.
+	data, err = l.Load("symLinkToOkayData")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if string(data) != contentOk {
+		t.Fatalf("unexpected content: %v", data)
+	}
+
+	// Reading symlink to forbiddenData fails.
+	_, err = l.Load("symLinkToForbiddenData")
+	if err == nil {
+		t.Fatalf("expected error")
+	}
+	if !strings.Contains(err.Error(), "is not in or below") {
+		t.Fatalf("unexpected err: %v", err)
+	}
+
+	// Attempt to read "up" fails, though earlier we were
+	// able to read this file when root was "..".
+	_, err = l.Load("../forbiddenData")
+	if err == nil {
+		t.Fatalf("expected error")
+	}
+	if !strings.Contains(err.Error(), "is not in or below") {
+		t.Fatalf("unexpected err: %v", err)
 	}
 }
