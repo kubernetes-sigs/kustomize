@@ -23,20 +23,18 @@ import (
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
-	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 // SecretFactory makes Secrets.
 type SecretFactory struct {
-	fSys fs.FileSystem
-	ldr  ifc.Loader
+	ldr ifc.Loader
 }
 
 // NewSecretFactory returns a new SecretFactory.
-func NewSecretFactory(fSys fs.FileSystem, ldr ifc.Loader) *SecretFactory {
-	return &SecretFactory{fSys: fSys, ldr: ldr}
+func NewSecretFactory(ldr ifc.Loader) *SecretFactory {
+	return &SecretFactory{ldr: ldr}
 }
 
 func (f *SecretFactory) makeFreshSecret(args *types.SecretArgs) *corev1.Secret {
