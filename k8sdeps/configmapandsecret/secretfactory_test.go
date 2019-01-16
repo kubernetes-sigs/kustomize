@@ -17,94 +17,129 @@ limitations under the License.
 package configmapandsecret
 
 import (
+	"reflect"
 	"testing"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
-func TestMakeSecretNoCommands(t *testing.T) {
-	factory := NewSecretFactory(fs.MakeFakeFS(), "/")
-	args := types.SecretArgs{
-		GeneratorArgs: types.GeneratorArgs{Name: "apple"},
-		Type:          "Opaque",
-		CommandSources: types.CommandSources{
-			Commands:   nil,
-			EnvCommand: "",
-		}}
-	s, err := factory.MakeSecret(&args, nil)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if s.ObjectMeta.Name != "apple" {
-		t.Fatalf("unexpected name: %v", s.ObjectMeta.Name)
-	}
-	if len(s.Data) > 0 || len(s.StringData) > 0 {
-		t.Fatalf("unexpected data: %v", s)
+func makeEnvSecret(name string) *corev1.Secret {
+	return &corev1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Secret",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Data: map[string][]byte{
+			"DB_PASSWORD": []byte("somepw"),
+			"DB_USERNAME": []byte("admin"),
+		},
+		Type: "Opaque",
 	}
 }
 
-func TestMakeSecretNoCommandsBadDir(t *testing.T) {
-	factory := NewSecretFactory(fs.MakeFakeFS(), "/does/not/exist")
-	args := types.SecretArgs{
-		GeneratorArgs: types.GeneratorArgs{Name: "envConfigMap"},
-		Type:          "Opaque",
-		CommandSources: types.CommandSources{
-			Commands:   nil,
-			EnvCommand: "",
-		}}
-	_, err := factory.MakeSecret(&args, nil)
-	if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
+func makeFileSecret(name string) *corev1.Secret {
+	return &corev1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Secret",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Data: map[string][]byte{
+			"app-init.ini": []byte(`FOO=bar
+BAR=baz
+`),
+		},
+		Type: "Opaque",
 	}
 }
 
-func TestMakeSecretEmptyCommandMap(t *testing.T) {
-	factory := NewSecretFactory(fs.MakeFakeFS(), "/")
-	args := types.SecretArgs{
-		GeneratorArgs: types.GeneratorArgs{Name: "envConfigMap"},
-		Type:          "Opaque",
-		CommandSources: types.CommandSources{
-			// TODO try: map[string]string{"commandName": "bogusCommand bogusArg"},
-			Commands:   nil,
-			EnvCommand: "echo beans",
-		}}
-	s, err := factory.MakeSecret(&args, nil)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+func makeLiteralSecret(name string) *corev1.Secret {
+	s := &corev1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Secret",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Data: map[string][]byte{
+			"a": []byte("x"),
+			"b": []byte("y"),
+		},
+		Type: "Opaque",
 	}
-	if s == nil {
-		t.Fatalf("nil result")
-	}
-	v, ok := s.Data["beans"]
-	if !ok {
-		t.Fatalf("expected beans")
-	}
-	if len(v) > 0 {
-		t.Fatalf("unexpected data")
-	}
+	s.SetLabels(map[string]string{"foo": "bar"})
+	return s
 }
 
-func TestMakeSecretWithCommandMap(t *testing.T) {
-	factory := NewSecretFactory(fs.MakeFakeFS(), "/")
-	args := types.SecretArgs{
-		GeneratorArgs: types.GeneratorArgs{Name: "envConfigMap"},
-		Type:          "Opaque",
-		CommandSources: types.CommandSources{
-			Commands: map[string]string{"commandName": "echo beans"},
-		}}
-	s, err := factory.MakeSecret(&args, nil)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+func TestConstructSecret(t *testing.T) {
+	type testCase struct {
+		description string
+		input       types.SecretArgs
+		options     *types.GeneratorOptions
+		expected    *corev1.Secret
 	}
-	if s == nil {
-		t.Fatalf("nil result")
+
+	testCases := []testCase{
+		{
+			description: "construct secret from env",
+			input: types.SecretArgs{
+				GeneratorArgs: types.GeneratorArgs{Name: "envSecret"},
+				DataSources: types.DataSources{
+					EnvSource: "secret/app.env",
+				},
+			},
+			options:  nil,
+			expected: makeEnvSecret("envSecret"),
+		},
+		{
+			description: "construct secret from file",
+			input: types.SecretArgs{
+				GeneratorArgs: types.GeneratorArgs{Name: "fileSecret"},
+				DataSources: types.DataSources{
+					FileSources: []string{"secret/app-init.ini"},
+				},
+			},
+			options:  nil,
+			expected: makeFileSecret("fileSecret"),
+		},
+		{
+			description: "construct secret from literal",
+			input: types.SecretArgs{
+				GeneratorArgs: types.GeneratorArgs{Name: "literalSecret"},
+				DataSources: types.DataSources{
+					LiteralSources: []string{"a=x", "b=y"},
+				},
+			},
+			options: &types.GeneratorOptions{
+				Labels: map[string]string{
+					"foo": "bar",
+				},
+			},
+			expected: makeLiteralSecret("literalSecret"),
+		},
 	}
-	v, ok := s.Data["commandName"]
-	if !ok {
-		t.Fatalf("expected something for commandName")
-	}
-	if string(v) != "beans\n" {
-		t.Fatalf("unexpected data: %s", string(v))
+
+	fSys := fs.MakeFakeFS()
+	fSys.WriteFile("/secret/app.env", []byte("DB_USERNAME=admin\nDB_PASSWORD=somepw\n"))
+	fSys.WriteFile("/secret/app-init.ini", []byte("FOO=bar\nBAR=baz\n"))
+	f := NewSecretFactory(loader.NewFileLoaderAtRoot(fSys))
+	for _, tc := range testCases {
+		cm, err := f.MakeSecret(&tc.input, tc.options)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !reflect.DeepEqual(*cm, *tc.expected) {
+			t.Fatalf("in testcase: %q updated:\n%#v\ndoesn't match expected:\n%#v\n", tc.description, *cm, tc.expected)
+		}
 	}
 }
