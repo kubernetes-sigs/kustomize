@@ -26,21 +26,18 @@ import (
 	"k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
-	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 // ConfigMapFactory makes ConfigMaps.
 type ConfigMapFactory struct {
-	fSys fs.FileSystem
-	ldr  ifc.Loader
+	ldr ifc.Loader
 }
 
 // NewConfigMapFactory returns a new ConfigMapFactory.
-func NewConfigMapFactory(
-	fSys fs.FileSystem, l ifc.Loader) *ConfigMapFactory {
-	return &ConfigMapFactory{fSys: fSys, ldr: l}
+func NewConfigMapFactory(l ifc.Loader) *ConfigMapFactory {
+	return &ConfigMapFactory{ldr: l}
 }
 
 func (f *ConfigMapFactory) makeFreshConfigMap(

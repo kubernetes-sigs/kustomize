@@ -92,9 +92,9 @@ secret holding them (not covering that here).
 <!--
 secretGenerator:
 - name: app-tls
-  commands:
-    tls.crt: "cat tls.cert"
-    tls.key: "cat tls.key"
+  files:
+    tls.crt=tls.cert
+    tls.key=tls.key
   type: "kubernetes.io/tls"
 EOF
 -->

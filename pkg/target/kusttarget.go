@@ -211,7 +211,7 @@ func (kt *KustTarget) accumulateTarget() (
 
 func (kt *KustTarget) generateConfigMapsAndSecrets(
 	errs *interror.KustomizationErrors) (resmap.ResMap, error) {
-	kt.rFactory.Set(kt.fSys, kt.ldr)
+	kt.rFactory.Set(kt.ldr)
 	cms, err := kt.rFactory.NewResMapFromConfigMapArgs(
 		kt.kustomization.ConfigMapGenerator, kt.kustomization.GeneratorOptions)
 	if err != nil {
