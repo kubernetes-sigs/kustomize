@@ -493,3 +493,64 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 		}
 	}
 }
+
+func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
+	rf := resource.NewFactory(
+		kunstruct.NewKunstructuredFactoryImpl())
+	m := resmap.ResMap{
+		resid.NewResId(pv, "volume1"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "PersistentVolume",
+				"metadata": map[string]interface{}{
+					"name": "someprefix-volume1",
+				},
+			}),
+
+		resid.NewResId(pvc, "claim1"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "PersistentVolumeClaim",
+				"metadata": map[string]interface{}{
+					"name":      "someprefix-claim1",
+					"namespace": "some-namespace",
+				},
+				"spec": map[string]interface{}{
+					"volumeName": "volume1",
+				},
+			}),
+	}
+
+	expected := resmap.ResMap{
+		resid.NewResId(pv, "volume1"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "PersistentVolume",
+				"metadata": map[string]interface{}{
+					"name": "someprefix-volume1",
+				},
+			}),
+
+		resid.NewResId(pvc, "claim1"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "PersistentVolumeClaim",
+				"metadata": map[string]interface{}{
+					"name":      "someprefix-claim1",
+					"namespace": "some-namespace",
+				},
+				"spec": map[string]interface{}{
+					"volumeName": "someprefix-volume1",
+				},
+			}),
+	}
+	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
+	err := nrt.Transform(m)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !reflect.DeepEqual(m, expected) {
+		err = expected.ErrorIfNotEqual(m)
+		t.Fatalf("actual doesn't match expected: %v", err)
+	}
+}
