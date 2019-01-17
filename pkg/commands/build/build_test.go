@@ -36,7 +36,7 @@ func TestBuildValidate(t *testing.T) {
 			"", "specify one path to " + constants.KustomizationFileName},
 	}
 	for _, mycase := range cases {
-		opts := buildOptions{}
+		opts := BuildOptions{}
 		e := opts.Validate(mycase.args)
 		if len(mycase.erMsg) > 0 {
 			if e == nil {
