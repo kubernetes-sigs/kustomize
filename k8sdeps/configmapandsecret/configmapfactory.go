@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"path"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
@@ -139,10 +140,27 @@ func addKvToConfigMap(configMap *v1.ConfigMap, keyName, data string) error {
 	if errs := validation.IsConfigMapKey(keyName); len(errs) != 0 {
 		return fmt.Errorf("%q is not a valid key name for a ConfigMap: %s", keyName, strings.Join(errs, ";"))
 	}
-	if _, entryExists := configMap.Data[keyName]; entryExists {
-		return fmt.Errorf("cannot add key %s, another key by that name already exists: %v", keyName, configMap.Data)
+
+	keyExistsErrorMsg := "cannot add key %s, another key by that name already exists: %v"
+
+	// If the configmap data contains byte sequences that are all in the UTF-8
+	// range, we will write it to .Data
+	if utf8.Valid([]byte(data)) {
+		if _, entryExists := configMap.Data[keyName]; entryExists {
+			return fmt.Errorf(keyExistsErrorMsg, keyName, configMap.Data)
+		}
+		configMap.Data[keyName] = data
+		return nil
 	}
-	configMap.Data[keyName] = data
+
+	// otherwise, it's BinaryData
+	if configMap.BinaryData == nil {
+		configMap.BinaryData = map[string][]byte{}
+	}
+	if _, entryExists := configMap.BinaryData[keyName]; entryExists {
+		return fmt.Errorf(keyExistsErrorMsg, keyName, configMap.BinaryData)
+	}
+	configMap.BinaryData[keyName] = []byte(data)
 	return nil
 }
 
