@@ -57,6 +57,9 @@ func makeFileConfigMap(name string) *corev1.ConfigMap {
 BAR=baz
 `,
 		},
+		BinaryData: map[string][]byte{
+			"app.bin": {0xff, 0xfd},
+		},
 	}
 }
 
@@ -105,7 +108,7 @@ func TestConstructConfigMap(t *testing.T) {
 			input: types.ConfigMapArgs{
 				GeneratorArgs: types.GeneratorArgs{Name: "fileConfigMap"},
 				DataSources: types.DataSources{
-					FileSources: []string{"configmap/app-init.ini"},
+					FileSources: []string{"configmap/app-init.ini", "configmap/app.bin"},
 				},
 			},
 			options:  nil,
@@ -131,6 +134,7 @@ func TestConstructConfigMap(t *testing.T) {
 	fSys := fs.MakeFakeFS()
 	fSys.WriteFile("/configmap/app.env", []byte("DB_USERNAME=admin\nDB_PASSWORD=somepw\n"))
 	fSys.WriteFile("/configmap/app-init.ini", []byte("FOO=bar\nBAR=baz\n"))
+	fSys.WriteFile("/configmap/app.bin", []byte{0xff, 0xfd})
 	f := NewConfigMapFactory(loader.NewFileLoaderAtRoot(fSys))
 	for _, tc := range testCases {
 		cm, err := f.MakeConfigMap(&tc.input, tc.options)
