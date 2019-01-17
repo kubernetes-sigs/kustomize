@@ -302,7 +302,7 @@ func (kt *KustTarget) newTransformer(
 		return nil, err
 	}
 	r = append(r, t)
-	t, err = transformers.NewImageTransformer(kt.kustomization.Image)
+	t, err = transformers.NewImageTransformer(kt.kustomization.Images)
 	if err != nil {
 		return nil, err
 	}
