@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@ limitations under the License.
 
 package image
 
-// Tag contains an image and a new tag, which will replace the original tag.
-// Tag usage is deprecated, instead use ImageTag.
-type Tag struct {
+// ImageTag contains an image and a new tag, which will replace the original tag.
+// Deprecated, instead use Image.
+type ImageTag struct {
 	// Name is a tag-less image name.
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 

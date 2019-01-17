@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,14 +17,14 @@ limitations under the License.
 package image
 
 // Append appends a slice of type Tag to slice of type Image
-func Append(images []Image, tags ...Tag) []Image {
+func Append(images []Image, tags ...ImageTag) []Image {
 	for _, tag := range tags {
 		images = append(images, toImage(tag))
 	}
 	return images
 }
 
-func toImage(tag Tag) Image {
+func toImage(tag ImageTag) Image {
 	return Image{
 		Name:   tag.Name,
 		NewTag: tag.NewTag,

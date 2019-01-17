@@ -72,10 +72,10 @@ type Kustomization struct {
 	// and http://jsonpatch.com
 	PatchesJson6902 []patch.Json6902 `json:"patchesJson6902,omitempty" yaml:"patchesJson6902,omitempty"`
 
-	// Image is a list of (image name, new name, new tag or digest)
+	// Images is a list of (image name, new name, new tag or digest)
 	// for changing image names, tags or digests. This can also be achieved with a
 	// patch, but this operator is simpler to specify.
-	Image []image.Image `json:"images,omitempty" yaml:"images,omitempty"`
+	Images []image.Image `json:"images,omitempty" yaml:"images,omitempty"`
 
 	// Vars allow things modified by kustomize to be injected into a
 	// container specification. A var is a name (e.g. FOO) associated
@@ -137,7 +137,7 @@ type Kustomization struct {
 	Patches []string `json:"patches,omitempty" yaml:"patches,omitempty"`
 
 	// Deprecated. Use `Image`
-	ImageTags []image.Tag `json:"imageTags,omitempty" yaml:"imageTags,omitempty"`
+	ImageTags []image.ImageTag `json:"imageTags,omitempty" yaml:"imageTags,omitempty"`
 }
 
 // DealWithDeprecatedFields should be called immediately after
@@ -157,8 +157,8 @@ func (k *Kustomization) DealWithDeprecatedFields() {
 	if len(k.ImageTags) > 0 {
 		// Transform `image.Tag` to `image.Image`
 		// for backwards compatibility
-		k.Image = image.Append(
-			k.Image, k.ImageTags...)
+		k.Images = image.Append(
+			k.Images, k.ImageTags...)
 	}
 }
 
