@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -82,10 +82,6 @@ func TestImageTransformer(t *testing.T) {
 									"name":  "nginx1",
 									"image": "nginx",
 								},
-								map[string]interface{}{
-									"name":  "myimage",
-									"image": "myprivaterepohostname:1234/my/image:latest",
-								},
 							},
 						},
 					},
@@ -117,6 +113,18 @@ func TestImageTransformer(t *testing.T) {
 								map[string]interface{}{
 									"name":  "init-docker",
 									"image": "docker:17-git",
+								},
+								map[string]interface{}{
+									"name":  "myimage",
+									"image": "myprivaterepohostname:1234/my/image:latest",
+								},
+								map[string]interface{}{
+									"name":  "my-app",
+									"image": "my-app-image:v1",
+								},
+								map[string]interface{}{
+									"name":  "my-cool-app",
+									"image": "gcr.io:8080/my-project/my-cool-app:latest",
 								},
 							},
 						},
@@ -174,10 +182,6 @@ func TestImageTransformer(t *testing.T) {
 									"name":  "nginx1",
 									"image": "nginx:v2",
 								},
-								map[string]interface{}{
-									"name":  "myimage",
-									"image": "myprivaterepohostname:1234/my/image:v1.0.1",
-								},
 							},
 						},
 					},
@@ -210,6 +214,18 @@ func TestImageTransformer(t *testing.T) {
 									"name":  "init-docker",
 									"image": "my-docker@sha256:25a0d4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3",
 								},
+								map[string]interface{}{
+									"name":  "myimage",
+									"image": "myprivaterepohostname:1234/my/image:v1.0.1",
+								},
+								map[string]interface{}{
+									"name":  "my-app",
+									"image": "gcr.io/my-project/my-app-image:v1",
+								},
+								map[string]interface{}{
+									"name":  "my-cool-app",
+									"image": "my-cool-app:latest",
+								},
 							},
 						},
 					},
@@ -223,6 +239,8 @@ func TestImageTransformer(t *testing.T) {
 		{Name: "myprivaterepohostname:1234/my/image", NewTag: "v1.0.1"},
 		{Name: "foobar", Digest: "sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3"},
 		{Name: "alpine", NewName: "myprivaterepohostname:1234/my/cool-alpine"},
+		{Name: "my-app-image", NewName: "gcr.io/my-project/my-app-image"},
+		{Name: "gcr.io:8080/my-project/my-cool-app", NewName: "my-cool-app"},
 		{Name: "postgres", NewName: "my-postgres", NewTag: "v3"},
 		{Name: "docker", NewName: "my-docker", Digest: "sha256:25a0d4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3"},
 	})
