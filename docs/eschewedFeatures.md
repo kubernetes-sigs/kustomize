@@ -31,6 +31,48 @@ what you don't want and commit it to your private fork, then use
 kustomize on your fork.  As often as desired, use _git rebase_ to
 capture improvements from the upstream base.
 
+## Unstructured edits
+
+_Structured edits_ are changes controlled by
+knowledge of the k8s API, and YAML or JSON syntax.
+
+Most edits performed by kustomize can be expressed as
+[JSON patches] or [SMP patches].  Common edits, like
+adding labels or adding a name prefix, get dedicated 
+shorthand commands.  Another class of edits take
+data from one specific object's field and use it in
+another (e.g. a service object's name found and
+copied into a container's command line).
+
+These edits are designed to create valid output
+given valid input, and can provide syntactically
+and semantically informed error messages if inputs
+are invalid.
+
+_Unstructured edits_, e.g. a templating approach,
+or a command to replace any target string in the
+character stream with some other string, aren't
+limited by any syntax or object structure.
+  
+Such powerful techniques are eschewed because
+- There would be no way to say that a kustomization
+  was correct without running it and checking
+  the output.
+- Errors in the output would be
+  disconnected from the edit that caused it.
+- They are toil to maintain by a rotating
+  staff of operators.
+    
+Kustomizations are meant to be sharable and stackable.
+Imagine tracing down a problem rooted in a
+clever set of stacked regexp replacements
+performed by various overlays on some remote base. 
+
+Other tools (sed, jinja, erb, envsubst, helm, ksonnet,
+etc.) provide varying degrees of unstructured editting
+and/or embedded languages, and can be used instead
+of, or in a pipe with, kustomize.
+
 ## Build-time side effects from CLI args or env variables
 
 `kustomize` supports the best practice of storing one's
@@ -39,7 +81,7 @@ entire configuration in a version control system.
 Changing `kustomize build` configuration output as a result
 of additional arguments or flags to `build`, or by
 consulting shell environment variable values in `build`
-code, would violate that goal.
+code, would frustrate that goal.
 
 `kustomize` insteads offers [kustomization] file `edit`
 commands.  Like any shell command, they can accept
@@ -74,12 +116,10 @@ commands that accept globbed arguments, expand them at _edit
 time_ relative to the local file system, and store the resulting
 explicit names into the kustomization file.
 
-In this way the resources, patches and bases used at _build time_
-remain explicitly declared in version control.
-
-
-[DAM]: glossary.md#declarative-application-management
 [base]: glossary.md#base
+[DAM]: glossary.md#declarative-application-management
+[java import]: https://www.codebyamir.com/blog/pitfalls-java-import-wildcards
+[JSON patches]: glossary.md#patchjson6902
 [kustomization]: glossary.md#kustomization
 [OTS workflow]: workflows.md#off-the-shelf-configuration
-[java import]: https://www.codebyamir.com/blog/pitfalls-java-import-wildcards
+[SMP patches]: glossary.md#patchstrategicmerge
