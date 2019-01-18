@@ -18,6 +18,7 @@ limitations under the License.
 package types
 
 import (
+	"sigs.k8s.io/kustomize/pkg/image"
 	"sigs.k8s.io/kustomize/pkg/patch"
 )
 
@@ -71,10 +72,10 @@ type Kustomization struct {
 	// and http://jsonpatch.com
 	PatchesJson6902 []patch.Json6902 `json:"patchesJson6902,omitempty" yaml:"patchesJson6902,omitempty"`
 
-	// ImageTags is a list of (image name, new tag) pairs for simply
-	// changing a an image tag.  This can also be achieved with a
+	// Images is a list of (image name, new name, new tag or digest)
+	// for changing image names, tags or digests. This can also be achieved with a
 	// patch, but this operator is simpler to specify.
-	ImageTags []ImageTag `json:"imageTags,omitempty" yaml:"imageTags,omitempty"`
+	Images []image.Image `json:"images,omitempty" yaml:"images,omitempty"`
 
 	// Vars allow things modified by kustomize to be injected into a
 	// container specification. A var is a name (e.g. FOO) associated
@@ -134,6 +135,9 @@ type Kustomization struct {
 
 	// Deprecated.
 	Patches []string `json:"patches,omitempty" yaml:"patches,omitempty"`
+
+	// Deprecated. Use `Image`
+	ImageTags []image.ImageTag `json:"imageTags,omitempty" yaml:"imageTags,omitempty"`
 }
 
 // DealWithDeprecatedFields should be called immediately after
@@ -148,6 +152,13 @@ func (k *Kustomization) DealWithDeprecatedFields() {
 		k.PatchesStrategicMerge = patch.Append(
 			k.PatchesStrategicMerge, k.Patches...)
 		k.Patches = []string{}
+	}
+
+	if len(k.ImageTags) > 0 {
+		// Transform `ImageTag` to `Image`
+		// for backwards compatibility
+		k.Images = image.Append(
+			k.Images, k.ImageTags...)
 	}
 }
 
@@ -245,19 +256,6 @@ type DataSources struct {
 	// pairs to create a configmap.
 	// i.e. a Docker .env file or a .ini file.
 	EnvSource string `json:"env,omitempty" yaml:"env,omitempty"`
-}
-
-// ImageTag contains an image and a new tag, which will replace the original tag.
-type ImageTag struct {
-	// Name is a tag-less image name.
-	Name string `json:"name,omitempty" yaml:"name,omitempty"`
-
-	// NewTag is the value to use in replacing the original tag.
-	NewTag string `json:"newTag,omitempty" yaml:"newTag,omitempty"`
-
-	// Digest is the value used to replace the original image tag.
-	// If digest is present NewTag value is ignored.
-	Digest string `json:"digest,omitempty" yaml:"digest,omitempty"`
 }
 
 // GeneratorOptions modify behavior of all ConfigMap and Secret generators.
