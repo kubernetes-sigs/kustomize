@@ -9,7 +9,9 @@ patch [kubernetes style] API objects.  It's like
 [`make`], in that what it does is declared in a file,
 and it's like [`sed`], in that it emits editted text.
 
-This tool is sponsored by [sig-cli] ([KEP]).
+This tool is sponsored by [sig-cli] ([KEP]), and
+inspired by [DAM].
+
 
 [![Build Status](https://travis-ci.org/kubernetes-sigs/kustomize.svg?branch=master)](https://travis-ci.org/kubernetes-sigs/kustomize)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes-sigs/kustomize)](https://goreportcard.com/report/github.com/kubernetes-sigs/kustomize)
@@ -128,6 +130,7 @@ You can reach the maintainers of this project at:
 
 Participation in the Kubernetes community is governed by the [Kubernetes Code of Conduct].
 
+[DAM]: docs/glossary.md#declarative-application-management
 [KEP]: https://github.com/kubernetes/enhancements/blob/master/keps/sig-cli/0008-kustomize.md
 [`make`]: https://www.gnu.org/software/make
 [`sed`]: https://www.gnu.org/software/sed
