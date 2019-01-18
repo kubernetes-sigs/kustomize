@@ -157,6 +157,8 @@ func (k *Kustomization) DealWithDeprecatedFields() {
 	if len(k.ImageTags) > 0 {
 		// Transform `ImageTag` to `Image`
 		// for backwards compatibility
+		// images are appended first to keep
+		// higher precedence
 		k.Images = image.Append(
 			k.Images, k.ImageTags...)
 	}
