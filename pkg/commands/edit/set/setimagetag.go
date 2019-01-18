@@ -25,11 +25,11 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/pkg/fs"
-	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/pkg/image"
 )
 
 type setImageTagOptions struct {
-	imageTagMap map[string]types.ImageTag
+	imageTagMap map[string]image.ImageTag
 }
 
 var pattern = regexp.MustCompile("^(.*):([a-zA-Z0-9._-]*)$")
@@ -74,11 +74,11 @@ func (o *setImageTagOptions) Validate(args []string) error {
 		return errors.New("no image specified")
 	}
 
-	o.imageTagMap = make(map[string]types.ImageTag)
+	o.imageTagMap = make(map[string]image.ImageTag)
 
 	for _, arg := range args {
 		if s := strings.Split(arg, "@"); len(s) > 1 {
-			o.imageTagMap[s[0]] = types.ImageTag{
+			o.imageTagMap[s[0]] = image.ImageTag{
 				Name:   s[0],
 				Digest: s[1],
 			}
@@ -89,7 +89,7 @@ func (o *setImageTagOptions) Validate(args []string) error {
 		if len(s) != 3 {
 			return errors.New("invalid format of imagetag, must specify it as <image>:<newtag> or <image>@<digest>")
 		}
-		o.imageTagMap[s[1]] = types.ImageTag{
+		o.imageTagMap[s[1]] = image.ImageTag{
 			Name:   s[1],
 			NewTag: s[2],
 		}
@@ -116,7 +116,7 @@ func (o *setImageTagOptions) RunSetImageTags(fSys fs.FileSystem) error {
 		o.imageTagMap[it.Name] = it
 	}
 
-	var imageTags []types.ImageTag
+	var imageTags []image.ImageTag
 	for _, v := range o.imageTagMap {
 		imageTags = append(imageTags, v)
 	}
