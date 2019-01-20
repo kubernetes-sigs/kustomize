@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,51 +23,53 @@ import (
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
-func TestNewAddConfigMapIsNotNil(t *testing.T) {
-	if newCmdAddConfigMap(fs.MakeFakeFS(), nil) == nil {
-		t.Fatal("newCmdAddConfigMap shouldn't be nil")
+func TestNewCmdAddSecretIsNotNil(t *testing.T) {
+	if newCmdAddSecret(fs.MakeFakeFS(), nil) == nil {
+		t.Fatal("newCmdAddSecret shouldn't be nil")
 	}
 }
 
-func TestMakeConfigMapArgs(t *testing.T) {
-	cmName := "test-config-name"
+func TestMakeSecretArgs(t *testing.T) {
+	secretName := "test-secret-name"
 
 	kustomization := &types.Kustomization{
 		NamePrefix: "test-name-prefix",
 	}
 
-	if len(kustomization.ConfigMapGenerator) != 0 {
-		t.Fatal("Initial kustomization should not have any configmaps")
+	secretType := "Opaque"
+
+	if len(kustomization.SecretGenerator) != 0 {
+		t.Fatal("Initial kustomization should not have any secrets")
 	}
-	args := makeConfigMapArgs(kustomization, cmName)
+	args := makeSecretArgs(kustomization, secretName, secretType)
 
 	if args == nil {
 		t.Fatalf("args should always be non-nil")
 	}
 
-	if len(kustomization.ConfigMapGenerator) != 1 {
-		t.Fatalf("Kustomization should have newly created configmap")
+	if len(kustomization.SecretGenerator) != 1 {
+		t.Fatalf("Kustomization should have newly created secret")
 	}
 
-	if &kustomization.ConfigMapGenerator[len(kustomization.ConfigMapGenerator)-1] != args {
-		t.Fatalf("Pointer address for newly inserted configmap generator should be same")
+	if &kustomization.SecretGenerator[len(kustomization.SecretGenerator)-1] != args {
+		t.Fatalf("Pointer address for newly inserted secret generator should be same")
 	}
 
-	args2 := makeConfigMapArgs(kustomization, cmName)
+	args2 := makeSecretArgs(kustomization, secretName, secretType)
 
 	if args2 != args {
-		t.Fatalf("should have returned an existing args with name: %v", cmName)
+		t.Fatalf("should have returned an existing args with name: %v", secretName)
 	}
 
-	if len(kustomization.ConfigMapGenerator) != 1 {
-		t.Fatalf("Should not insert configmap for an existing name: %v", cmName)
+	if len(kustomization.SecretGenerator) != 1 {
+		t.Fatalf("Should not insert secret for an existing name: %v", secretName)
 	}
 }
 
-func TestMergeFlagsIntoCmArgs_LiteralSources(t *testing.T) {
+func TestMergeFlagsIntoSecretArgs_LiteralSources(t *testing.T) {
 	ds := &types.DataSources{}
 
-	err := mergeFlagsIntoCmArgs(ds, flagsAndArgs{LiteralSources: []string{"k1=v1"}})
+	err := mergeFlagsIntoSecretArgs(ds, flagsAndArgs{LiteralSources: []string{"k1=v1"}})
 	if err != nil {
 		t.Fatalf("Merge initial literal source should not return error")
 	}
@@ -76,7 +78,7 @@ func TestMergeFlagsIntoCmArgs_LiteralSources(t *testing.T) {
 		t.Fatalf("Initial literal source should have been added")
 	}
 
-	err = mergeFlagsIntoCmArgs(ds, flagsAndArgs{LiteralSources: []string{"k2=v2"}})
+	err = mergeFlagsIntoSecretArgs(ds, flagsAndArgs{LiteralSources: []string{"k2=v2"}})
 	if err != nil {
 		t.Fatalf("Merge second literal source should not return error")
 	}
@@ -86,10 +88,10 @@ func TestMergeFlagsIntoCmArgs_LiteralSources(t *testing.T) {
 	}
 }
 
-func TestMergeFlagsIntoCmArgs_FileSources(t *testing.T) {
+func TestMergeFlagsIntoSecretArgs_FileSources(t *testing.T) {
 	ds := &types.DataSources{}
 
-	err := mergeFlagsIntoCmArgs(ds, flagsAndArgs{FileSources: []string{"file1"}})
+	err := mergeFlagsIntoSecretArgs(ds, flagsAndArgs{FileSources: []string{"file1"}})
 	if err != nil {
 		t.Fatalf("Merge initial file source should not return error")
 	}
@@ -98,7 +100,7 @@ func TestMergeFlagsIntoCmArgs_FileSources(t *testing.T) {
 		t.Fatalf("Initial file source should have been added")
 	}
 
-	err = mergeFlagsIntoCmArgs(ds, flagsAndArgs{FileSources: []string{"file2"}})
+	err = mergeFlagsIntoSecretArgs(ds, flagsAndArgs{FileSources: []string{"file2"}})
 	if err != nil {
 		t.Fatalf("Merge second file source should not return error")
 	}
@@ -108,12 +110,12 @@ func TestMergeFlagsIntoCmArgs_FileSources(t *testing.T) {
 	}
 }
 
-func TestMergeFlagsIntoCmArgs_EnvSource(t *testing.T) {
+func TestMergeFlagsIntoSecretArgs_EnvSource(t *testing.T) {
 	envFileName := "env1"
 	envFileName2 := "env2"
 	ds := &types.DataSources{}
 
-	err := mergeFlagsIntoCmArgs(ds, flagsAndArgs{EnvFileSource: envFileName})
+	err := mergeFlagsIntoSecretArgs(ds, flagsAndArgs{EnvFileSource: envFileName})
 	if err != nil {
 		t.Fatalf("Merge initial env source should not return error")
 	}
@@ -122,7 +124,7 @@ func TestMergeFlagsIntoCmArgs_EnvSource(t *testing.T) {
 		t.Fatalf("Initial env source filename should have been added")
 	}
 
-	err = mergeFlagsIntoCmArgs(ds, flagsAndArgs{EnvFileSource: envFileName2})
+	err = mergeFlagsIntoSecretArgs(ds, flagsAndArgs{EnvFileSource: envFileName2})
 	if err == nil {
 		t.Fatalf("Updating env source should return an error")
 	}
