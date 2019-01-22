@@ -1,5 +1,10 @@
 # Eschewed Features
 
+The maintainers established this list to
+place bounds on the kustomize feature
+set.  The bounds can be changed with
+a consensus on the risks.
+
 For a bigger picture about why kustomize
 does some things and not others, see the
 glossary entry for [DAM].
@@ -10,8 +15,8 @@ glossary entry for [DAM].
 _compositions_ or _mixins_ - concepts that are widely accepted as
 a best practice in various programming languages.
 
-To this end, `kustomize` offers various _addition_ directives.  One
-can add labels, annotations, patches, resources and bases.
+To this end, `kustomize` offers various _addition_ directives.
+One may add labels, annotations, patches, resources, bases, etc.
 Corresponding _removal_ directives are not offered.
 
 Removal semantics would introduce many possibilities for
