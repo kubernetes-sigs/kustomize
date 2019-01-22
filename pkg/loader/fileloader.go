@@ -133,7 +133,7 @@ func newFileLoaderAt(
 	}
 	if !fSys.IsDir(absRoot) {
 		return nil, fmt.Errorf(
-			"absolute root dir '%s' does not exist", absRoot)
+			"'%s' does not exist or is not a directory", absRoot)
 	}
 	return &fileLoader{
 		roots:   append(roots, absRoot),
