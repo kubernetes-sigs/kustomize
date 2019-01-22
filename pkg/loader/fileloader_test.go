@@ -61,6 +61,25 @@ func MakeFakeFs(td []testData) fs.FileSystem {
 	return fSys
 }
 
+func TestNewFileLoaderAt_DemandsDirectory(t *testing.T) {
+	fSys := MakeFakeFs(testCases)
+	_, err := newFileLoaderAt("/foo", fSys, []string{}, nil)
+	if err != nil {
+		t.Fatalf("Unexpected error - a directory should work.")
+	}
+	_, err = newFileLoaderAt("/foo/project", fSys, []string{}, nil)
+	if err != nil {
+		t.Fatalf("Unexpected error - a directory should work.")
+	}
+	_, err = newFileLoaderAt("/foo/project/fileA.yaml", fSys, []string{}, nil)
+	if err == nil {
+		t.Fatalf("Expected error - a file should not work.")
+	}
+	if !strings.Contains(err.Error(), "does not exist or is not a directory") {
+		t.Fatalf("unexpected err: %v", err)
+	}
+}
+
 func TestLoaderLoad(t *testing.T) {
 	l1 := NewFileLoaderAtRoot(MakeFakeFs(testCases))
 	if "/" != l1.Root() {
