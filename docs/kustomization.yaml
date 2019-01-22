@@ -28,9 +28,12 @@
 # don't exist.
 #
 # In practice, fields with no value should simply be
-# omitted from kustomize.yaml to reduce the content
+# omitted from kustomization.yaml to reduce the content
 # visible in configuration reviews.
 # ----------------------------------------------------
+# apiVersion and kind of Kustomization
+apiVersion: v1beta1
+kind: Kustomization
 
 # Adds namespace to all resources.
 namespace: my-namespace
