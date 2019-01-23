@@ -44,6 +44,7 @@ func TestFieldOrder(t *testing.T) {
 		"SecretGenerator",
 		"GeneratorOptions",
 		"Vars",
+		"Images",
 		"ImageTags",
 		"Configurations",
 	}
