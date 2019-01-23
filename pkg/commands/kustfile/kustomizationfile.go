@@ -66,6 +66,7 @@ func determineFieldOrder() []string {
 		"SecretGenerator",
 		"GeneratorOptions",
 		"Vars",
+		"Images",
 		"ImageTags",
 		"Configurations",
 	}
