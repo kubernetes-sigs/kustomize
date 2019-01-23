@@ -93,9 +93,11 @@ func TestConstructSecret(t *testing.T) {
 		{
 			description: "construct secret from env",
 			input: types.SecretArgs{
-				GeneratorArgs: types.GeneratorArgs{Name: "envSecret"},
-				DataSources: types.DataSources{
-					EnvSource: "secret/app.env",
+				GeneratorArgs: types.GeneratorArgs{
+					Name: "envSecret",
+					DataSources: types.DataSources{
+						EnvSource: "secret/app.env",
+					},
 				},
 			},
 			options:  nil,
@@ -104,9 +106,11 @@ func TestConstructSecret(t *testing.T) {
 		{
 			description: "construct secret from file",
 			input: types.SecretArgs{
-				GeneratorArgs: types.GeneratorArgs{Name: "fileSecret"},
-				DataSources: types.DataSources{
-					FileSources: []string{"secret/app-init.ini"},
+				GeneratorArgs: types.GeneratorArgs{
+					Name: "fileSecret",
+					DataSources: types.DataSources{
+						FileSources: []string{"secret/app-init.ini"},
+					},
 				},
 			},
 			options:  nil,
@@ -115,9 +119,11 @@ func TestConstructSecret(t *testing.T) {
 		{
 			description: "construct secret from literal",
 			input: types.SecretArgs{
-				GeneratorArgs: types.GeneratorArgs{Name: "literalSecret"},
-				DataSources: types.DataSources{
-					LiteralSources: []string{"a=x", "b=y"},
+				GeneratorArgs: types.GeneratorArgs{
+					Name: "literalSecret",
+					DataSources: types.DataSources{
+						LiteralSources: []string{"a=x", "b=y"},
+					},
 				},
 			},
 			options: &types.GeneratorOptions{
