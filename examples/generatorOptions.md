@@ -8,7 +8,7 @@ Kustomize provides options to modify the behavior of ConfigMap and Secret genera
  
 This demo shows how to use these options. First create a workspace.
 ```
-DEMO_HOME=$(mkdir -d)
+DEMO_HOME=$(mktemp -d)
 ```
 
 Create a kustomization and add a ConfigMap generator to it.
