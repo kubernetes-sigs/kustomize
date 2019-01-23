@@ -38,6 +38,7 @@ var (
 	errImageInvalidArgs = errors.New(`invalid format of image, use one of the following options:
 - <image>=<newimage>:<newtag>
 - <image>=<newimage>@<newtag>
+- <image>=<newimage>
 - <image>:<newtag>
 - <image>@<digest>`)
 )
@@ -53,23 +54,34 @@ func newCmdSetImage(fsys fs.FileSystem) *cobra.Command {
 		Short: `Sets images and their new names, new tags or digests in the kustomization file`,
 		Example: `
 The command
-  set image postgres=my-registry/postgres:latest nginx:1.8.0 my-app=my-registry/my-app alpine@sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3
-will add 
+  set image postgres=eu.gcr.io/my-project/postgres:latest my-app=my-registry/my-app@sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3
+will add
 
 image:
 - name: postgres
-  newName: my-registry/postgres
+  newName: eu.gcr.io/my-project/postgres
   newTag: latest
-- name: nginx
-  newTag: 1.8.0
-- name: my-app
+- digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3
+  name: my-app
   newName: my-registry/my-app
+
+to the kustomization file if it doesn't exist,
+and overwrite the previous ones if the image name exists.
+
+The command
+  set image node:8.15.0 mysql=mariadb alpine@sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3
+will add
+
+image:
+- name: node
+  newTag: 8.15.0
+- name: mysql
+  newName: mariadb
 - digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3
   name: alpine
 
 to the kustomization file if it doesn't exist,
 and overwrite the previous ones if the image name exists.
-
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := o.Validate(args)
