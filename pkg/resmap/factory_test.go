@@ -151,9 +151,11 @@ func TestNewFromConfigMaps(t *testing.T) {
 			description: "construct config map from env",
 			input: []types.ConfigMapArgs{
 				{
-					GeneratorArgs: types.GeneratorArgs{Name: "envConfigMap"},
-					DataSources: types.DataSources{
-						EnvSource: "app.env",
+					GeneratorArgs: types.GeneratorArgs{
+						Name: "envConfigMap",
+						DataSources: types.DataSources{
+							EnvSource: "app.env",
+						},
 					},
 				},
 			},
@@ -177,9 +179,11 @@ func TestNewFromConfigMaps(t *testing.T) {
 		{
 			description: "construct config map from file",
 			input: []types.ConfigMapArgs{{
-				GeneratorArgs: types.GeneratorArgs{Name: "fileConfigMap"},
-				DataSources: types.DataSources{
-					FileSources: []string{"app-init.ini"},
+				GeneratorArgs: types.GeneratorArgs{
+					Name: "fileConfigMap",
+					DataSources: types.DataSources{
+						FileSources: []string{"app-init.ini"},
+					},
 				},
 			},
 			},
@@ -205,9 +209,11 @@ BAR=baz
 			description: "construct config map from literal",
 			input: []types.ConfigMapArgs{
 				{
-					GeneratorArgs: types.GeneratorArgs{Name: "literalConfigMap"},
-					DataSources: types.DataSources{
-						LiteralSources: []string{"a=x", "b=y", "c=\"Good Morning\"", "d=\"false\""},
+					GeneratorArgs: types.GeneratorArgs{
+						Name: "literalConfigMap",
+						DataSources: types.DataSources{
+							LiteralSources: []string{"a=x", "b=y", "c=\"Good Morning\"", "d=\"false\""},
+						},
 					},
 				},
 			},
@@ -251,11 +257,13 @@ var secret = gvk.Gvk{Version: "v1", Kind: "Secret"}
 func TestNewResMapFromSecretArgs(t *testing.T) {
 	secrets := []types.SecretArgs{
 		{
-			GeneratorArgs: types.GeneratorArgs{Name: "apple"},
-			DataSources: types.DataSources{
-				LiteralSources: []string{
-					"DB_USERNAME=admin",
-					"DB_PASSWORD=somepw",
+			GeneratorArgs: types.GeneratorArgs{
+				Name: "apple",
+				DataSources: types.DataSources{
+					LiteralSources: []string{
+						"DB_USERNAME=admin",
+						"DB_PASSWORD=somepw",
+					},
 				},
 			},
 			Type: ifc.SecretTypeOpaque,
