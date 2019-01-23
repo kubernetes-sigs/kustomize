@@ -95,9 +95,11 @@ func TestConstructConfigMap(t *testing.T) {
 		{
 			description: "construct config map from env",
 			input: types.ConfigMapArgs{
-				GeneratorArgs: types.GeneratorArgs{Name: "envConfigMap"},
-				DataSources: types.DataSources{
-					EnvSource: "configmap/app.env",
+				GeneratorArgs: types.GeneratorArgs{
+					Name: "envConfigMap",
+					DataSources: types.DataSources{
+						EnvSource: "configmap/app.env",
+					},
 				},
 			},
 			options:  nil,
@@ -106,9 +108,11 @@ func TestConstructConfigMap(t *testing.T) {
 		{
 			description: "construct config map from file",
 			input: types.ConfigMapArgs{
-				GeneratorArgs: types.GeneratorArgs{Name: "fileConfigMap"},
-				DataSources: types.DataSources{
-					FileSources: []string{"configmap/app-init.ini", "configmap/app.bin"},
+				GeneratorArgs: types.GeneratorArgs{
+					Name: "fileConfigMap",
+					DataSources: types.DataSources{
+						FileSources: []string{"configmap/app-init.ini", "configmap/app.bin"},
+					},
 				},
 			},
 			options:  nil,
@@ -117,9 +121,11 @@ func TestConstructConfigMap(t *testing.T) {
 		{
 			description: "construct config map from literal",
 			input: types.ConfigMapArgs{
-				GeneratorArgs: types.GeneratorArgs{Name: "literalConfigMap"},
-				DataSources: types.DataSources{
-					LiteralSources: []string{"a=x", "b=y", "c=\"Hello World\"", "d='true'"},
+				GeneratorArgs: types.GeneratorArgs{
+					Name: "literalConfigMap",
+					DataSources: types.DataSources{
+						LiteralSources: []string{"a=x", "b=y", "c=\"Hello World\"", "d='true'"},
+					},
 				},
 			},
 			options: &types.GeneratorOptions{

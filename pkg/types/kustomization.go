@@ -206,15 +206,15 @@ type GeneratorArgs struct {
 	//   'replace': replace the existing one
 	//   'merge': merge with the existing one
 	Behavior string `json:"behavior,omitempty" yaml:"behavior,omitempty"`
+
+	// DataSources for the generator.
+	DataSources `json:",inline,omitempty" yaml:",inline,omitempty"`
 }
 
 // ConfigMapArgs contains the metadata of how to generate a configmap.
 type ConfigMapArgs struct {
 	// GeneratorArgs for the configmap.
 	GeneratorArgs `json:",inline,omitempty" yaml:",inline,omitempty"`
-
-	// DataSources for configmap.
-	DataSources `json:",inline,omitempty" yaml:",inline,omitempty"`
 }
 
 // SecretArgs contains the metadata of how to generate a secret.
@@ -230,9 +230,6 @@ type SecretArgs struct {
 	// If type is "kubernetes.io/tls", then "literals" or "files" must have exactly two
 	// keys: "tls.key" and "tls.crt"
 	Type string `json:"type,omitempty" yaml:"type,omitempty"`
-
-	// DataSources for secret.
-	DataSources `json:",inline,omitempty" yaml:",inline,omitempty"`
 }
 
 // DataSources contains some generic sources for configmaps.
