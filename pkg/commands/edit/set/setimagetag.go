@@ -18,6 +18,7 @@ package set
 
 import (
 	"errors"
+	"log"
 	"regexp"
 	"sort"
 	"strings"
@@ -40,7 +41,7 @@ func newCmdSetImageTag(fsys fs.FileSystem) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "imagetag",
-		Short: "Sets images and their new tags or digests in the kustomization file",
+		Short: "The `imagetag` command is deprecated, instead use `edit set image`.",
 		Example: `
 The command
   set imagetag nginx:1.8.0 my-app:latest alpine@sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3
@@ -58,6 +59,7 @@ to the kustomization file if it doesn't exist,
 and overwrite the previous ones if the image tag exists.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			log.Print(cmd.Short)
 			err := o.Validate(args)
 			if err != nil {
 				return err
