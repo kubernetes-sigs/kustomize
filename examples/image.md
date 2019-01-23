@@ -1,4 +1,4 @@
-# Demo: change image tags
+# Demo: change image names and tags
 
 
 Define a place to work:
@@ -42,21 +42,22 @@ EOF
 ```
 
 The `myapp-pod` resource declares an initContainer and a container, both use the image `busybox:1.29.0`.
-The tag `1.29.0` can be changed by adding `imageTags` in `kustomization.yaml`.
+The image `busybox` and tag `1.29.0` can be changed by adding `images` in `kustomization.yaml`.
 
 
-Add `imageTags`:
-<!-- @addImageTags @test -->
+Add `images`:
+<!-- @addImages @test -->
 ```
 cd $DEMO_HOME
-kustomize edit set imagetag busybox:1.29.1
+kustomize edit set image busybox=alpine:3.6
 ```
 
-The `kustomization.yaml` will be added following `imageTags`.
+The folowing `images` will be added to `kustomization.yaml`:
 > ```
-> imageTags:
+> images:
 > - name: busybox
->   newTag: 1.29.1
+>   newName: alpine
+>   newTag: 3.6
 > ```
 
 Now build this `kustomization`
@@ -65,11 +66,11 @@ Now build this `kustomization`
 kustomize build $DEMO_HOME
 ```
 
-Confirm that this replaces _both_ busybox tags:
+Confirm that this replaces _both_ busybox images and tags for `alpine:3.6`:
 
-<!-- @confirmTags @test -->
+<!-- @confirmImages @test -->
 ```
-test 2 == \
-  $(kustomize build $DEMO_HOME | grep busybox:1.29.1 | wc -l); \
+test 2 = \
+  $(kustomize build $DEMO_HOME | grep alpine:3.6 | wc -l); \
   echo $?
 ```
