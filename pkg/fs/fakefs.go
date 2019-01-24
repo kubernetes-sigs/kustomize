@@ -151,7 +151,7 @@ func (fs *fakeFs) ReadFile(name string) ([]byte, error) {
 }
 
 func (fs *fakeFs) ReadTestKustomization() ([]byte, error) {
-	return fs.ReadFile(constants.KustomizationFileName)
+	return fs.ReadFile(constants.KustomizationFileNames[0])
 }
 
 // WriteFile always succeeds and does nothing.
@@ -169,7 +169,7 @@ func (fs *fakeFs) WriteTestKustomization() {
 
 // WriteTestKustomizationWith writes a standard test file.
 func (fs *fakeFs) WriteTestKustomizationWith(bytes []byte) {
-	fs.WriteFile(constants.KustomizationFileName, bytes)
+	fs.WriteFile(constants.KustomizationFileNames[0], bytes)
 }
 
 func (fs *fakeFs) pathMatch(path, pattern string) bool {
