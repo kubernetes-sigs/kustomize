@@ -17,15 +17,12 @@ limitations under the License.
 // Package constants holds global constants for the kustomize tool.
 package constants
 
-// KustomizationFileSuffix is expected suffix for KustomizationFileName.
-const KustomizationFileSuffix = ".yaml"
-
-// SecondaryKustomizationFileSuffix is the second expected suffix when KustomizationFileSuffix is not found
-const SecondaryKustomizationFileSuffix = ".yml"
-
-// KustomizationFileName is the Well-Known File Name for a kustomize configuration file.
-const KustomizationFileName = "kustomization" + KustomizationFileSuffix
-
-// SecondaryKustomizationFileName is the secondary File Name for a kustomize configuration file when
-// KustomizationFileName is not found
-const SecondaryKustomizationFileName = "kustomization" + SecondaryKustomizationFileSuffix
+// KustomizationFileNames is a list of filenames that can be recognized and consumbed
+// by Kustomize.
+// In each directory, Kustomize searches for file with the name in this list.
+// Only one match is allowed.
+var KustomizationFileNames = [3]string{
+	"kustomization.yaml",
+	"kustomization.yml",
+	"Kustomization",
+}
