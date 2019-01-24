@@ -129,12 +129,22 @@ func NewKustomizationFile(fSys fs.FileSystem) (*kustomizationFile, error) { // n
 }
 
 func (mf *kustomizationFile) validate() error {
-	if mf.fSys.Exists(constants.KustomizationFileName) {
-		mf.path = constants.KustomizationFileName
-	} else if mf.fSys.Exists(constants.SecondaryKustomizationFileName) {
-		mf.path = constants.SecondaryKustomizationFileName
-	} else {
-		return fmt.Errorf("Missing kustomization file '%s'.\n", constants.KustomizationFileName)
+	match := 0
+	var path []string
+	for _, kfilename := range constants.KustomizationFileNames {
+		if mf.fSys.Exists(kfilename) {
+			match += 1
+			path = append(path, kfilename)
+		}
+	}
+
+	switch match {
+	case 0:
+		return fmt.Errorf("Missing kustomization file '%s'.\n", constants.KustomizationFileNames[0])
+	case 1:
+		mf.path = path[0]
+	default:
+		return fmt.Errorf("Found multiple kustomization file: %v\n", path)
 	}
 
 	if mf.fSys.IsDir(mf.path) {

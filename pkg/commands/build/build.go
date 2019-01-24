@@ -67,7 +67,7 @@ func NewCmdBuild(
 
 	cmd := &cobra.Command{
 		Use:          "build [path]",
-		Short:        "Print current configuration per contents of " + constants.KustomizationFileName,
+		Short:        "Print current configuration per contents of " + constants.KustomizationFileNames[0],
 		Example:      examples,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -88,7 +88,7 @@ func NewCmdBuild(
 // Validate validates build command.
 func (o *BuildOptions) Validate(args []string) error {
 	if len(args) > 1 {
-		return errors.New("specify one path to " + constants.KustomizationFileName)
+		return errors.New("specify one path to " + constants.KustomizationFileNames[0])
 	}
 	if len(args) == 0 {
 		o.kustomizationPath = "./"
