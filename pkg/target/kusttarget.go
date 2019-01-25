@@ -58,13 +58,12 @@ func NewKustTarget(
 	if err != nil {
 		return nil, err
 	}
-
+	content = types.DealWithDeprecatedFields(content)
 	var k types.Kustomization
 	err = unmarshal(content, &k)
 	if err != nil {
 		return nil, err
 	}
-	k.DealWithDeprecatedFields()
 	msgs, errs := k.EnforceFields()
 	if len(errs) > 0 {
 		return nil, fmt.Errorf(strings.Join(errs, "\n"))

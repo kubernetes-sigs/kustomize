@@ -59,7 +59,6 @@ func determineFieldOrder() []string {
 		"Crds",
 		"CommonLabels",
 		"CommonAnnotations",
-		"Patches",
 		"PatchesStrategicMerge",
 		"PatchesJson6902",
 		"ConfigMapGenerator",
@@ -67,7 +66,6 @@ func determineFieldOrder() []string {
 		"GeneratorOptions",
 		"Vars",
 		"Images",
-		"ImageTags",
 		"Configurations",
 	}
 
@@ -148,12 +146,12 @@ func (mf *kustomizationFile) Read() (*types.Kustomization, error) {
 	if err != nil {
 		return nil, err
 	}
+	data = types.DealWithDeprecatedFields(data)
 	var k types.Kustomization
 	err = yaml.Unmarshal(data, &k)
 	if err != nil {
 		return nil, err
 	}
-	k.DealWithDeprecatedFields()
 	msgs := k.DealWithMissingFields()
 	if len(msgs) > 0 {
 		log.Printf(strings.Join(msgs, "\n"))
