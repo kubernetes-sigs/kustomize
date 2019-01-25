@@ -75,7 +75,7 @@ func TestNewFileLoaderAt_DemandsDirectory(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Expected error - a file should not work.")
 	}
-	if !strings.Contains(err.Error(), "does not exist or is not a directory") {
+	if !strings.Contains(err.Error(), "must be a directory to be a root") {
 		t.Fatalf("unexpected err: %v", err)
 	}
 }
