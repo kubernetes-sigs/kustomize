@@ -18,6 +18,7 @@ package set
 
 import (
 	"errors"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -30,6 +31,8 @@ import (
 type setImageOptions struct {
 	imageMap map[string]image.Image
 }
+
+var pattern = regexp.MustCompile("^(.*):([a-zA-Z0-9._-]*)$")
 
 // errors
 
