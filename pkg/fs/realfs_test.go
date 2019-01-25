@@ -52,7 +52,7 @@ func TestCleanedAbs_1(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected err=%v", err)
 	}
-	if d != wd {
+	if d.String() != wd {
 		t.Fatalf("unexpected d=%s", d)
 	}
 	if f != "" {
@@ -90,7 +90,7 @@ func TestCleanedAbs_3(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected err=%v", err)
 	}
-	if d != testDir {
+	if d.String() != testDir {
 		t.Fatalf("unexpected d=%s", d)
 	}
 	if f != "foo" {
@@ -119,7 +119,7 @@ func TestCleanedAbs_4(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected err=%v", err)
 	}
-	if d != filepath.Join(testDir, "d1", "d2") {
+	if d.String() != filepath.Join(testDir, "d1", "d2") {
 		t.Fatalf("unexpected d=%s", d)
 	}
 	if f != "" {
@@ -131,7 +131,7 @@ func TestCleanedAbs_4(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected err=%v", err)
 	}
-	if d != filepath.Join(testDir, "d1", "d2") {
+	if d.String() != filepath.Join(testDir, "d1", "d2") {
 		t.Fatalf("unexpected d=%s", d)
 	}
 	if f != "bar" {
