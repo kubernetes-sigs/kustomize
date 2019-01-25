@@ -30,7 +30,7 @@ type FileSystem interface {
 	RemoveAll(name string) error
 	Open(name string) (File, error)
 	IsDir(name string) bool
-	EvalSymlinks(path string) (string, error)
+	CleanedAbs(path string) (string, string, error)
 	Exists(name string) bool
 	Glob(pattern string) ([]string, error)
 	ReadFile(name string) ([]byte, error)

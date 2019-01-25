@@ -102,9 +102,16 @@ func (fs *fakeFs) Open(name string) (File, error) {
 	return fs.m[name], nil
 }
 
-// EvalSymlinks does nothing and cannot fail.
-func (fs *fakeFs) EvalSymlinks(path string) (string, error) {
-	return path, nil
+// CleanedAbs does nothing and cannot fail.
+func (fs *fakeFs) CleanedAbs(path string) (string, string, error) {
+	if fs.IsDir(path) {
+		return path, "", nil
+	}
+	d := filepath.Dir(path)
+	if d == path {
+		return d, "", nil
+	}
+	return d, filepath.Base(path), nil
 }
 
 // Exists returns true if file is known.
