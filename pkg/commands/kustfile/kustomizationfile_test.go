@@ -45,7 +45,6 @@ func TestFieldOrder(t *testing.T) {
 		"GeneratorOptions",
 		"Vars",
 		"Images",
-		"ImageTags",
 		"Configurations",
 	}
 	actual := determineFieldOrder()
@@ -82,52 +81,6 @@ func TestWriteAndRead(t *testing.T) {
 	kustomization.DealWithMissingFields()
 	if !reflect.DeepEqual(kustomization, content) {
 		t.Fatal("Read kustomization is different from written kustomization")
-	}
-}
-
-// Deprecated fields should not survive being read.
-func TestDeprecationOfPatches(t *testing.T) {
-	hasDeprecatedFields := []byte(`
-namePrefix: acme
-nameSuffix: emca
-patches:
-- alice
-patchesStrategicMerge:
-- bob
-`)
-	fSys := fs.MakeFakeFS()
-	fSys.WriteTestKustomizationWith(hasDeprecatedFields)
-	mf, err := NewKustomizationFile(fSys)
-	if err != nil {
-		t.Fatalf("Unexpected Error: %v", err)
-	}
-	k, err := mf.Read()
-	if err != nil {
-		t.Fatalf("Couldn't read kustomization file: %v\n", err)
-	}
-	if k.NamePrefix != "acme" {
-		t.Fatalf("Unexpected name prefix")
-	}
-	if k.NameSuffix != "emca" {
-		t.Fatalf("Unexpected name suffix")
-	}
-	if len(k.Patches) > 0 {
-		t.Fatalf("Expected nothing in Patches.")
-	}
-	if len(k.PatchesStrategicMerge) != 2 {
-		t.Fatalf(
-			"Expected len(k.PatchesStrategicMerge) == 2, got %d",
-			len(k.PatchesStrategicMerge))
-	}
-	m := make(map[string]bool)
-	for _, v := range k.PatchesStrategicMerge {
-		m[string(v)] = true
-	}
-	if _, f := m["alice"]; !f {
-		t.Fatalf("Expected alice in PatchesStrategicMerge")
-	}
-	if _, f := m["bob"]; !f {
-		t.Fatalf("Expected bob in PatchesStrategicMerge")
 	}
 }
 

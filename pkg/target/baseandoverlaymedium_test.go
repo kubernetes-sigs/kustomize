@@ -162,7 +162,7 @@ configMapGenerator:
 - name: app-config
   files:
   - configmap/app-init.ini
-imageTags:
+images:
 - name: nginx
   newTag: 1.8.0`)
 
