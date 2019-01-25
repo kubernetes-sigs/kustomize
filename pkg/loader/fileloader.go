@@ -176,6 +176,9 @@ func (l *fileLoader) New(path string) (ifc.Loader, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err := l.errIfGitContainmentViolation(root); err != nil {
+		return nil, err
+	}
 	if err := l.errIfArgEqualOrHigher(root); err != nil {
 		return nil, err
 	}
@@ -213,6 +216,34 @@ func newLoaderAtGitClone(
 		cloner:   cloner,
 		cleaner:  repoSpec.Cleaner(fSys),
 	}, nil
+}
+
+func (l *fileLoader) errIfGitContainmentViolation(
+	base fs.ConfirmedDir) error {
+	containingRepo := l.containingRepo()
+	if containingRepo == nil {
+		return nil
+	}
+	if !base.HasPrefix(containingRepo.CloneDir()) {
+		return fmt.Errorf(
+			"security; bases in kustomizations found in "+
+				"cloned git repos must be within the repo, "+
+				"but base '%s' is outside '%s'",
+			base, containingRepo.CloneDir())
+	}
+	return nil
+}
+
+// Looks back through referrers for a git repo, returning nil
+// if none found.
+func (l *fileLoader) containingRepo() *git.RepoSpec {
+	if l.repoSpec != nil {
+		return l.repoSpec
+	}
+	if l.referrer == nil {
+		return nil
+	}
+	return l.referrer.containingRepo()
 }
 
 // errIfArgEqualOrHigher tests whether the argument,

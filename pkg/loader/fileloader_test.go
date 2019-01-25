@@ -386,3 +386,79 @@ whatever
 			coRoot+"/"+pathInRepo, l2.Root())
 	}
 }
+
+func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
+	// Define an overlay-base structure in the file system.
+	topDir := "/whatever"
+	cloneRoot := topDir + "/someClone"
+	fSys := fs.MakeFakeFS()
+	fSys.MkdirAll(topDir + "/highBase")
+	fSys.MkdirAll(cloneRoot + "/foo/base")
+	fSys.MkdirAll(cloneRoot + "/foo/overlay")
+
+	var l1 ifc.Loader
+
+	// Establish that a local overlay can navigate
+	// to the local bases.
+	l1 = newLoaderOrDie(fSys, cloneRoot+"/foo/overlay")
+	if l1.Root() != cloneRoot+"/foo/overlay" {
+		t.Fatalf("unexpected root %s", l1.Root())
+	}
+	l2, err := l1.New("../base")
+	if err != nil {
+		t.Fatalf("unexpected err:  %v\n", err)
+	}
+	if l2.Root() != cloneRoot+"/foo/base" {
+		t.Fatalf("unexpected root %s", l2.Root())
+	}
+	l3, err := l2.New("../../../highBase")
+	if err != nil {
+		t.Fatalf("unexpected err:  %v\n", err)
+	}
+	if l3.Root() != topDir+"/highBase" {
+		t.Fatalf("unexpected root %s", l3.Root())
+	}
+
+	// Establish that a Kustomization found in cloned
+	// repo can reach (non-remote) bases inside the clone
+	// but cannot reach a (non-remote) base outside the
+	// clone but legitimately on the local file system.
+	// This is to avoid a surprising interaction between
+	// a remote K and local files.  The remote K would be
+	// non-functional on its own since by definition it
+	// would refer to a non-remote base file that didn't
+	// exist in its own repository, so presumably the
+	// remote K would be deliberately designed to phish
+	// for local K's.
+	repoSpec, err := git.NewRepoSpecFromUrl(
+		"github.com/someOrg/someRepo/foo/overlay")
+	if err != nil {
+		t.Fatalf("unexpected err: %v\n", err)
+	}
+	l1, err = newLoaderAtGitClone(
+		repoSpec, fSys, nil,
+		git.DoNothingCloner(fs.ConfirmedDir(cloneRoot)))
+	if err != nil {
+		t.Fatalf("unexpected err: %v\n", err)
+	}
+	if l1.Root() != cloneRoot+"/foo/overlay" {
+		t.Fatalf("unexpected root %s", l1.Root())
+	}
+	// This is okay.
+	l2, err = l1.New("../base")
+	if err != nil {
+		t.Fatalf("unexpected err: %v\n", err)
+	}
+	if l2.Root() != cloneRoot+"/foo/base" {
+		t.Fatalf("unexpected root %s", l2.Root())
+	}
+	// This is not okay.
+	l3, err = l2.New("../../../highBase")
+	if err == nil {
+		t.Fatalf("expected err")
+	}
+	if !strings.Contains(err.Error(),
+		"base '/whatever/highBase' is outside '/whatever/someClone'") {
+		t.Fatalf("unexpected err: %v", err)
+	}
+}
