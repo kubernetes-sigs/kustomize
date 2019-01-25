@@ -63,15 +63,15 @@ func MakeFakeFs(td []testData) fs.FileSystem {
 
 func TestNewFileLoaderAt_DemandsDirectory(t *testing.T) {
 	fSys := MakeFakeFs(testCases)
-	_, err := newFileLoaderAt("/foo", fSys, []string{}, nil)
+	_, err := newFileLoaderAt("/foo", fSys, nil, nil)
 	if err != nil {
 		t.Fatalf("Unexpected error - a directory should work.")
 	}
-	_, err = newFileLoaderAt("/foo/project", fSys, []string{}, nil)
+	_, err = newFileLoaderAt("/foo/project", fSys, nil, nil)
 	if err != nil {
 		t.Fatalf("Unexpected error - a directory should work.")
 	}
-	_, err = newFileLoaderAt("/foo/project/fileA.yaml", fSys, []string{}, nil)
+	_, err = newFileLoaderAt("/foo/project/fileA.yaml", fSys, nil, nil)
 	if err == nil {
 		t.Fatalf("Expected error - a file should not work.")
 	}
