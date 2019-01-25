@@ -82,18 +82,23 @@ func NewKustTarget(
 }
 
 func loadKustFile(ldr ifc.Loader) ([]byte, error) {
-	for _, kf := range []string{
-		constants.KustomizationFileName,
-		constants.SecondaryKustomizationFileName} {
-		content, err := ldr.Load(kf)
+	var content []byte
+	match := 0
+	for _, kf := range constants.KustomizationFileNames {
+		c, err := ldr.Load(kf)
 		if err == nil {
-			return content, nil
-		}
-		if !strings.Contains(err.Error(), "no such file or directory") {
-			return nil, err
+			match += 1
+			content = c
 		}
 	}
-	return nil, fmt.Errorf("no kustomization.yaml file under %s", ldr.Root())
+	switch match {
+	case 0:
+		return nil, fmt.Errorf("no kustomization.yaml file under %s", ldr.Root())
+	case 1:
+		return content, nil
+	default:
+		return nil, fmt.Errorf("Found multiple kustomization file under: %s\n", ldr.Root())
+	}
 }
 
 func unmarshal(y []byte, o interface{}) error {
