@@ -33,7 +33,7 @@ func TestBuildValidate(t *testing.T) {
 		{"file", []string{"beans"}, "beans", ""},
 		{"path", []string{"a/b/c"}, "a/b/c", ""},
 		{"path", []string{"too", "many"},
-			"", "specify one path to " + constants.KustomizationFileName},
+			"", "specify one path to " + constants.KustomizationFileNames[0]},
 	}
 	for _, mycase := range cases {
 		opts := BuildOptions{}
