@@ -145,7 +145,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 		expected    ResMap
 	}
 
-	l := loadertest.NewFakeLoader("/whatever/project/")
+	l := loadertest.NewFakeLoader("/whatever/project")
 	testCases := []testCase{
 		{
 			description: "construct config map from env",

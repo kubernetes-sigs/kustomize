@@ -123,10 +123,15 @@ func newFileLoaderAt(
 		return nil, fmt.Errorf(
 			"loader root cannot be empty")
 	}
-	absRoot, err := cleanedAbs(root, fSys)
+	absRoot, f, err := fSys.CleanedAbs(root)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"absolute path error in '%s' : %v", root, err)
+	}
+	if f != "" {
+		return nil, fmt.Errorf(
+			"got file '%s', but '%s' must be a directory to be a root",
+			f, root)
 	}
 	if err := isPathEqualToOrAbove(absRoot, roots); err != nil {
 		return nil, err
@@ -141,22 +146,6 @@ func newFileLoaderAt(
 		cloner:  cloner,
 		cleaner: func() error { return nil },
 	}, nil
-}
-
-// cleanedAbs returns a cleaned, absolute path
-// with no symbolic links.
-func cleanedAbs(path string, fSys fs.FileSystem) (string, error) {
-	absRoot, err := filepath.Abs(path)
-	if err != nil {
-		return "", fmt.Errorf(
-			"abs path error on '%s' : %v", path, err)
-	}
-	deLinked, err := fSys.EvalSymlinks(absRoot)
-	if err != nil {
-		return "", fmt.Errorf(
-			"evalsymlink failure on '%s' : %v", path, err)
-	}
-	return deLinked, nil
 }
 
 // New returns a new Loader, rooted relative to current loader,
@@ -226,11 +215,16 @@ func (l *fileLoader) Load(path string) ([]byte, error) {
 	if filepath.IsAbs(path) {
 		return nil, l.loadOutOfBounds(path)
 	}
-	path, err := cleanedAbs(
-		filepath.Join(l.Root(), path), l.fSys)
+	d, f, err := l.fSys.CleanedAbs(
+		filepath.Join(l.Root(), path))
 	if err != nil {
 		return nil, err
 	}
+	if f == "" {
+		return nil, fmt.Errorf(
+			"'%s' must be a file (got d='%s')", path, d)
+	}
+	path = filepath.Join(d, f)
 	if !l.isInOrBelowRoot(path) {
 		return nil, l.loadOutOfBounds(path)
 	}
