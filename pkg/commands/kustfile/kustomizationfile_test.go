@@ -159,12 +159,12 @@ configMapGenerator:
   name: my-configmap
 `
 	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile(constants.SecondaryKustomizationFileName, []byte(kcontent))
+	fakeFS.WriteFile(constants.KustomizationFileNames[1], []byte(kcontent))
 	k, err := NewKustomizationFile(fakeFS)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
 	}
-	if k.path != constants.SecondaryKustomizationFileName {
+	if k.path != constants.KustomizationFileNames[1] {
 		t.Fatalf("Load incorrect file path %s", k.path)
 	}
 }

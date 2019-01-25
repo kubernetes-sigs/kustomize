@@ -162,7 +162,7 @@ func TestGitLoader(t *testing.T) {
 	fSys.MkdirAll(coRoot)
 	fSys.MkdirAll(coRoot + "/" + pathInRepo)
 	fSys.WriteFile(
-		coRoot+"/"+pathInRepo+"/"+constants.KustomizationFileName,
+		coRoot+"/"+pathInRepo+"/"+constants.KustomizationFileNames[0],
 		[]byte(`
 whatever
 `))
