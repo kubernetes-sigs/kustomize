@@ -18,6 +18,8 @@ limitations under the License.
 package types
 
 import (
+	"regexp"
+
 	"sigs.k8s.io/kustomize/pkg/image"
 	"sigs.k8s.io/kustomize/pkg/patch"
 )
@@ -128,40 +130,6 @@ type Kustomization struct {
 
 	// Configurations is a list of transformer configuration files
 	Configurations []string `json:"configurations,omitempty" yaml:"configurations,omitempty"`
-
-	//
-	// Deprecated fields - See DealWithDeprecatedFields
-	//
-
-	// Deprecated.
-	Patches []string `json:"patches,omitempty" yaml:"patches,omitempty"`
-
-	// Deprecated. Use `Image`
-	ImageTags []image.ImageTag `json:"imageTags,omitempty" yaml:"imageTags,omitempty"`
-}
-
-// DealWithDeprecatedFields should be called immediately after
-// loading from storage.
-func (k *Kustomization) DealWithDeprecatedFields() {
-	if len(k.Patches) > 0 {
-		// The Patches field, meant to hold strategic merge
-		// patches, is deprecated. Append anything found
-		// there to the PatchesStrategicMerge field.
-		// This happened when the PatchesJson6902 field
-		// was introduced.
-		k.PatchesStrategicMerge = patch.Append(
-			k.PatchesStrategicMerge, k.Patches...)
-		k.Patches = []string{}
-	}
-
-	if len(k.ImageTags) > 0 {
-		// Transform `ImageTag` to `Image`
-		// for backwards compatibility
-		// images are appended first to keep
-		// higher precedence
-		k.Images = image.Append(
-			k.Images, k.ImageTags...)
-	}
 }
 
 // DealWithMissingFields fills the missing fields
@@ -191,6 +159,20 @@ func (k *Kustomization) EnforceFields() ([]string, []string) {
 		errs = append(errs, "kind should be "+KustomizationKind)
 	}
 	return msgs, errs
+}
+
+// DealWithDeprecatedFields should be called immediately after
+// loading from storage.
+func DealWithDeprecatedFields(data []byte) []byte {
+	deprecateFieldsMap := map[string]string{
+		"patches:":   "patchesStrategicMerge:",
+		"imageTags:": "images:",
+	}
+	for oldname, newname := range deprecateFieldsMap {
+		pattern := regexp.MustCompile(oldname)
+		data = pattern.ReplaceAll(data, []byte(newname))
+	}
+	return data
 }
 
 // GeneratorArgs contains arguments common to generators.

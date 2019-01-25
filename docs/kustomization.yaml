@@ -156,7 +156,7 @@ bases:
 # a memory request/limit, change an env var in a
 # ConfigMap, etc.  Small patches are easy to review and
 # easy to mix together in overlays.
-patches:
+patchesStrategicMerge:
 - service_port_8888.yaml
 - deployment_increase_replicas.yaml
 - deployment_increase_memory.yaml
@@ -309,26 +309,5 @@ images:
     newTag: 1.8.0
   - name: my-demo-app
     newName: my-app
-  - name: alpine
-    digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3
-
-# ImageTags is deprecated, instead use Image.
-# ImageTags modify the tags for images without creating patches.
-# E.g. Given this fragment of a Deployment:
-# ```
-#  containers:
-#    - name: myapp
-#      image: mycontainerregistry/myimage:v0
-#    - name: nginxapp
-#      image: nginx:1.7.9
-#```
-# one can change the tag of myimage to v1 and the tag of nginx to 1.8.0 with the following:
-#
-# It also supports digests. If digest is present newTag is ignored.
-imageTags:
-  - name: mycontainerregistry/myimage
-    newTag: v1
-  - name: nginx
-    newTag: 1.8.0
   - name: alpine
     digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3

@@ -111,7 +111,7 @@ bases:
 - ../base
 patchesStrategicMerge:
 - deployment/deployment.yaml
-imageTags:
+images:
 - name: whatever
   newTag: 1.8.0
 `)
