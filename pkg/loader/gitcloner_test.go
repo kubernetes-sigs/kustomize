@@ -167,7 +167,7 @@ func TestGitLoader(t *testing.T) {
 whatever
 `))
 	l, err := newGitLoader(
-		url, fSys, []string{},
+		url, fSys, nil,
 		makeFakeGitCloner(t, fSys, coRoot))
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
@@ -177,10 +177,10 @@ whatever
 			coRoot+"/"+pathInRepo, l.Root())
 	}
 	if _, err = l.New(url); err == nil {
-		t.Fatalf("expected cycle error")
+		t.Fatalf("expected cycle error 1")
 	}
 	if _, err = l.New(rootUrl + "/" + "foo"); err == nil {
-		t.Fatalf("expected cycle error")
+		t.Fatalf("expected cycle error 2")
 	}
 
 	pathInRepo = "foo/overlay"
