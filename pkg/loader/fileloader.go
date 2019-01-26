@@ -216,6 +216,10 @@ func (l *fileLoader) errIfArgEqualOrHigher(
 	return l.referrer.errIfArgEqualOrHigher(candidateRoot)
 }
 
+// TODO(monopole): Distinguish branches?
+// I.e. Allow a distinction between git URI with
+// path foo and tag bar and a git URI with the same
+// path but a different tag?
 func (l *fileLoader) errIfPreviouslySeenUri(uri string) error {
 	if strings.HasPrefix(l.uri, uri) {
 		return fmt.Errorf(
