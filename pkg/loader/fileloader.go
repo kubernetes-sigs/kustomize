@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/git"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
@@ -91,7 +92,7 @@ type fileLoader struct {
 	// File system utilities.
 	fSys fs.FileSystem
 	// Used to clone repositories.
-	cloner gitCloner
+	cloner git.Cloner
 	// Used to clean up, as needed.
 	cleaner func() error
 }
@@ -113,18 +114,18 @@ func (l *fileLoader) Root() string {
 }
 
 func newLoaderOrDie(fSys fs.FileSystem, path string) *fileLoader {
-	l, err := newFileLoaderAt(
-		path, fSys, nil, simpleGitCloner)
+	l, err := newLoaderAtConfirmedDir(
+		path, fSys, nil, git.ClonerUsingGitExec)
 	if err != nil {
 		log.Fatalf("unable to make loader at '%s'; %v", path, err)
 	}
 	return l
 }
 
-// newFileLoaderAt returns a new fileLoader with given root.
-func newFileLoaderAt(
+// newLoaderAtConfirmedDir returns a new fileLoader with given root.
+func newLoaderAtConfirmedDir(
 	possibleRoot string, fSys fs.FileSystem,
-	referrer *fileLoader, cloner gitCloner) (*fileLoader, error) {
+	referrer *fileLoader, cloner git.Cloner) (*fileLoader, error) {
 	if possibleRoot == "" {
 		return nil, fmt.Errorf(
 			"loader root cannot be empty")
@@ -159,25 +160,25 @@ func (l *fileLoader) New(path string) (ifc.Loader, error) {
 	if path == "" {
 		return nil, fmt.Errorf("new root cannot be empty")
 	}
-	if isRepoUrl(path) {
+	if git.IsRepoUrl(path) {
 		// Avoid cycles.
 		if err := l.errIfPreviouslySeenUri(path); err != nil {
 			return nil, err
 		}
-		return newGitLoader(path, l.fSys, l.referrer, l.cloner)
+		return newLoaderAtGitClone(path, l.fSys, l.referrer, l.cloner)
 	}
 	if filepath.IsAbs(path) {
 		return nil, fmt.Errorf("new root '%s' cannot be absolute", path)
 	}
-	return newFileLoaderAt(
+	return newLoaderAtConfirmedDir(
 		l.root.Join(path), l.fSys, l, l.cloner)
 }
 
-// newGitLoader returns a new Loader pinned to a temporary
+// newLoaderAtGitClone returns a new Loader pinned to a temporary
 // directory holding a cloned git repo.
-func newGitLoader(
+func newLoaderAtGitClone(
 	uri string, fSys fs.FileSystem,
-	referrer *fileLoader, cloner gitCloner) (ifc.Loader, error) {
+	referrer *fileLoader, cloner git.Cloner) (ifc.Loader, error) {
 	tmpDirForRepo, pathInRepo, err := cloner(uri)
 	if err != nil {
 		return nil, err
