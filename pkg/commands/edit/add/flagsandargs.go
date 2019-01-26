@@ -22,8 +22,8 @@ import (
 	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
-// cMapFlagsAndArgs encapsulates the options for add configmap commands.
-type cMapFlagsAndArgs struct {
+// flagsAndArgs encapsulates the options for add secret/configmap commands.
+type flagsAndArgs struct {
 	// Name of configMap/Secret (required)
 	Name string
 	// FileSources to derive the configMap/Secret from (optional)
@@ -33,10 +33,12 @@ type cMapFlagsAndArgs struct {
 	// EnvFileSource to derive the configMap/Secret from (optional)
 	// TODO: Rationalize this name with Generic.EnvSource
 	EnvFileSource string
+	// Type of secret to create
+	Type string
 }
 
 // Validate validates required fields are set to support structured generation.
-func (a *cMapFlagsAndArgs) Validate(args []string) error {
+func (a *flagsAndArgs) Validate(args []string) error {
 	if len(args) != 1 {
 		return fmt.Errorf("name must be specified once")
 	}
@@ -51,7 +53,7 @@ func (a *cMapFlagsAndArgs) Validate(args []string) error {
 	return nil
 }
 
-func (a *cMapFlagsAndArgs) ExpandFileSource(fSys fs.FileSystem) error {
+func (a *flagsAndArgs) ExpandFileSource(fSys fs.FileSystem) error {
 	result, err := globPatterns(fSys, a.FileSources)
 	if err != nil {
 		return err

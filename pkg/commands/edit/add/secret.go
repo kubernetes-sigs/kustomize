@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,22 +27,22 @@ import (
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
-// newCmdAddConfigMap returns a new command.
-func newCmdAddConfigMap(fSys fs.FileSystem, kf ifc.KunstructuredFactory) *cobra.Command {
+// newCmdAddSecret returns a new command.
+func newCmdAddSecret(fSys fs.FileSystem, kf ifc.KunstructuredFactory) *cobra.Command {
 	var flags flagsAndArgs
 	cmd := &cobra.Command{
-		Use:   "configmap NAME [--from-file=[key=]source] [--from-literal=key1=value1]",
-		Short: "Adds a configmap to the kustomization file.",
+		Use:   "secret NAME [--from-file=[key=]source] [--from-literal=key1=value1] [--type=Opaque|kubernetes.io/tls]",
+		Short: "Adds a secret to the kustomization file.",
 		Long:  "",
 		Example: `
-	# Adds a configmap to the kustomization file (with a specified key)
-	kustomize edit add configmap my-configmap --from-file=my-key=file/path --from-literal=my-literal=12345
+	# Adds a secret to the kustomization file (with a specified key)
+	kustomize edit add secret my-secret --from-file=my-key=file/path --from-literal=my-literal=12345
 
-	# Adds a configmap to the kustomization file (key is the filename)
-	kustomize edit add configmap my-configmap --from-file=file/path
+	# Adds a secret to the kustomization file (key is the filename)
+	kustomize edit add secret my-secret --from-file=file/path
 
-	# Adds a configmap from env-file
-	kustomize edit add configmap my-configmap --from-env-file=env/path.env
+	# Adds a secret from env-file
+	kustomize edit add secret my-secret --from-env-file=env/path.env
 `,
 		RunE: func(_ *cobra.Command, args []string) error {
 			err := flags.ExpandFileSource(fSys)
@@ -68,12 +68,12 @@ func newCmdAddConfigMap(fSys fs.FileSystem, kf ifc.KunstructuredFactory) *cobra.
 
 			// Add the flagsAndArgs map to the kustomization file.
 			kf.Set(loader.NewFileLoaderAtCwd(fSys))
-			err = addConfigMap(kustomization, flags, kf)
+			err = addSecret(kustomization, flags, kf)
 			if err != nil {
 				return err
 			}
 
-			// Write out the kustomization file with added configmap.
+			// Write out the kustomization file with added secret.
 			return mf.Write(kustomization)
 		},
 	}
@@ -82,55 +82,60 @@ func newCmdAddConfigMap(fSys fs.FileSystem, kf ifc.KunstructuredFactory) *cobra.
 		&flags.FileSources,
 		"from-file",
 		[]string{},
-		"Key file can be specified using its file path, in which case file basename will be used as configmap "+
+		"Key file can be specified using its file path, in which case file basename will be used as secret "+
 			"key, or optionally with a key and file path, in which case the given key will be used.  Specifying a "+
-			"directory will iterate each named file in the directory whose basename is a valid configmap key.")
+			"directory will iterate each named file in the directory whose basename is a valid secret key.")
 	cmd.Flags().StringArrayVar(
 		&flags.LiteralSources,
 		"from-literal",
 		[]string{},
-		"Specify a key and literal value to insert in configmap (i.e. mykey=somevalue)")
+		"Specify a key and literal value to insert in secret (i.e. mykey=somevalue)")
 	cmd.Flags().StringVar(
 		&flags.EnvFileSource,
 		"from-env-file",
 		"",
-		"Specify the path to a file to read lines of key=val pairs to create a configmap (i.e. a Docker .env file).")
+		"Specify the path to a file to read lines of key=val pairs to create a secret (i.e. a Docker .env file).")
+	cmd.Flags().StringVar(
+		&flags.Type,
+		"type",
+		"Opaque",
+		"Specify the secret type this can be 'Opaque' (default), or 'kubernetes.io/tls'")
 
 	return cmd
 }
 
-// addConfigMap adds a configmap to a kustomization file.
+// addSecret adds a secret to a kustomization file.
 // Note: error may leave kustomization file in an undefined state.
 // Suggest passing a copy of kustomization file.
-func addConfigMap(
+func addSecret(
 	k *types.Kustomization,
 	flags flagsAndArgs, kf ifc.KunstructuredFactory) error {
-	cmArgs := makeConfigMapArgs(k, flags.Name)
-	err := mergeFlagsIntoCmArgs(&cmArgs.DataSources, flags)
+	secretArgs := makeSecretArgs(k, flags.Name, flags.Type)
+	err := mergeFlagsIntoSecretArgs(&secretArgs.DataSources, flags)
 	if err != nil {
 		return err
 	}
-	// Validate by trying to create corev1.configmap.
-	_, err = kf.MakeConfigMap(cmArgs, k.GeneratorOptions)
+	// Validate by trying to create corev1.secret.
+	_, err = kf.MakeSecret(secretArgs, k.GeneratorOptions)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func makeConfigMapArgs(m *types.Kustomization, name string) *types.ConfigMapArgs {
-	for i, v := range m.ConfigMapGenerator {
+func makeSecretArgs(m *types.Kustomization, name, secretType string) *types.SecretArgs {
+	for i, v := range m.SecretGenerator {
 		if name == v.Name {
-			return &m.ConfigMapGenerator[i]
+			return &m.SecretGenerator[i]
 		}
 	}
-	// config map not found, create new one and add it to the kustomization file.
-	cm := &types.ConfigMapArgs{GeneratorArgs: types.GeneratorArgs{Name: name}}
-	m.ConfigMapGenerator = append(m.ConfigMapGenerator, *cm)
-	return &m.ConfigMapGenerator[len(m.ConfigMapGenerator)-1]
+	// secret not found, create new one and add it to the kustomization file.
+	secret := &types.SecretArgs{GeneratorArgs: types.GeneratorArgs{Name: name}, Type: secretType}
+	m.SecretGenerator = append(m.SecretGenerator, *secret)
+	return &m.SecretGenerator[len(m.SecretGenerator)-1]
 }
 
-func mergeFlagsIntoCmArgs(src *types.DataSources, flags flagsAndArgs) error {
+func mergeFlagsIntoSecretArgs(src *types.DataSources, flags flagsAndArgs) error {
 	src.LiteralSources = append(src.LiteralSources, flags.LiteralSources...)
 	src.FileSources = append(src.FileSources, flags.FileSources...)
 	if src.EnvSource != "" && src.EnvSource != flags.EnvFileSource {
