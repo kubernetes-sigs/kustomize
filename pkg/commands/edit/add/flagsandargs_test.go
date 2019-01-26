@@ -23,18 +23,18 @@ import (
 	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
-func TestDataConfigValidation_NoName(t *testing.T) {
-	config := cMapFlagsAndArgs{}
+func TestDataValidation_NoName(t *testing.T) {
+	fa := flagsAndArgs{}
 
-	if config.Validate([]string{}) == nil {
+	if fa.Validate([]string{}) == nil {
 		t.Fatal("Validation should fail if no name is specified")
 	}
 }
 
-func TestDataConfigValidation_MoreThanOneName(t *testing.T) {
-	config := cMapFlagsAndArgs{}
+func TestDataValidation_MoreThanOneName(t *testing.T) {
+	fa := flagsAndArgs{}
 
-	if config.Validate([]string{"name", "othername"}) == nil {
+	if fa.Validate([]string{"name", "othername"}) == nil {
 		t.Fatal("Validation should fail if more than one name is specified")
 	}
 }
@@ -42,12 +42,12 @@ func TestDataConfigValidation_MoreThanOneName(t *testing.T) {
 func TestDataConfigValidation_Flags(t *testing.T) {
 	tests := []struct {
 		name       string
-		config     cMapFlagsAndArgs
+		fa         flagsAndArgs
 		shouldFail bool
 	}{
 		{
 			name: "env-file-source and literal are both set",
-			config: cMapFlagsAndArgs{
+			fa: flagsAndArgs{
 				LiteralSources: []string{"one", "two"},
 				EnvFileSource:  "three",
 			},
@@ -55,7 +55,7 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 		},
 		{
 			name: "env-file-source and from-file are both set",
-			config: cMapFlagsAndArgs{
+			fa: flagsAndArgs{
 				FileSources:   []string{"one", "two"},
 				EnvFileSource: "three",
 			},
@@ -63,12 +63,12 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 		},
 		{
 			name:       "we don't have any option set",
-			config:     cMapFlagsAndArgs{},
+			fa:         flagsAndArgs{},
 			shouldFail: true,
 		},
 		{
 			name: "we have from-file and literal ",
-			config: cMapFlagsAndArgs{
+			fa: flagsAndArgs{
 				LiteralSources: []string{"one", "two"},
 				FileSources:    []string{"three", "four"},
 			},
@@ -77,9 +77,9 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if test.config.Validate([]string{"name"}) == nil && test.shouldFail {
+		if test.fa.Validate([]string{"name"}) == nil && test.shouldFail {
 			t.Fatalf("Validation should fail if %s", test.name)
-		} else if test.config.Validate([]string{"name"}) != nil && !test.shouldFail {
+		} else if test.fa.Validate([]string{"name"}) != nil && !test.shouldFail {
 			t.Fatalf("Validation should succeed if %s", test.name)
 		}
 	}
@@ -87,18 +87,18 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 
 func TestExpandFileSource(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
-	fakeFS.Create("dir/config1")
-	fakeFS.Create("dir/config2")
+	fakeFS.Create("dir/fa1")
+	fakeFS.Create("dir/fa2")
 	fakeFS.Create("dir/reademe")
-	config := cMapFlagsAndArgs{
-		FileSources: []string{"dir/config*"},
+	fa := flagsAndArgs{
+		FileSources: []string{"dir/fa*"},
 	}
-	config.ExpandFileSource(fakeFS)
+	fa.ExpandFileSource(fakeFS)
 	expected := []string{
-		"dir/config1",
-		"dir/config2",
+		"dir/fa1",
+		"dir/fa2",
 	}
-	if !reflect.DeepEqual(config.FileSources, expected) {
-		t.Fatalf("FileSources is not correctly expanded: %v", config.FileSources)
+	if !reflect.DeepEqual(fa.FileSources, expected) {
+		t.Fatalf("FileSources is not correctly expanded: %v", fa.FileSources)
 	}
 }
