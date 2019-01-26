@@ -26,8 +26,8 @@ import (
 func NewLoader(root string, fSys fs.FileSystem) (ifc.Loader, error) {
 	if isRepoUrl(root) {
 		return newGitLoader(
-			root, fSys, []string{}, simpleGitCloner)
+			root, fSys, nil, simpleGitCloner)
 	}
 	return newFileLoaderAt(
-		root, fSys, []string{}, simpleGitCloner)
+		root, fSys, nil, simpleGitCloner)
 }

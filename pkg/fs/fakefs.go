@@ -102,16 +102,16 @@ func (fs *fakeFs) Open(name string) (File, error) {
 	return fs.m[name], nil
 }
 
-// CleanedAbs does nothing and cannot fail.
-func (fs *fakeFs) CleanedAbs(path string) (string, string, error) {
+// CleanedAbs cannot fail.
+func (fs *fakeFs) CleanedAbs(path string) (ConfirmedDir, string, error) {
 	if fs.IsDir(path) {
-		return path, "", nil
+		return ConfirmedDir(path), "", nil
 	}
 	d := filepath.Dir(path)
 	if d == path {
-		return d, "", nil
+		return ConfirmedDir(d), "", nil
 	}
-	return d, filepath.Base(path), nil
+	return ConfirmedDir(d), filepath.Base(path), nil
 }
 
 // Exists returns true if file is known.

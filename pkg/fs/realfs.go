@@ -60,7 +60,8 @@ func (realFS) Open(name string) (File, error) { return os.Open(name) }
 // and file components.  If the entire path is
 // a directory, the file component is an empty
 // string.
-func (x realFS) CleanedAbs(path string) (string, string, error) {
+func (x realFS) CleanedAbs(
+	path string) (ConfirmedDir, string, error) {
 	absRoot, err := filepath.Abs(path)
 	if err != nil {
 		return "", "", fmt.Errorf(
@@ -72,7 +73,7 @@ func (x realFS) CleanedAbs(path string) (string, string, error) {
 			"evalsymlink failure on '%s' : %v", path, err)
 	}
 	if x.IsDir(deLinked) {
-		return deLinked, "", nil
+		return ConfirmedDir(deLinked), "", nil
 	}
 	d := filepath.Dir(deLinked)
 	if !x.IsDir(d) {
@@ -89,7 +90,7 @@ func (x realFS) CleanedAbs(path string) (string, string, error) {
 		log.Fatalf("these should be equal: '%s', '%s'",
 			filepath.Join(d, f), deLinked)
 	}
-	return d, f, nil
+	return ConfirmedDir(d), f, nil
 }
 
 // Exists returns true if os.Stat succeeds.
