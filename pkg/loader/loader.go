@@ -19,15 +19,16 @@ package loader
 
 import (
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/git"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
 // NewLoader returns a Loader.
 func NewLoader(root string, fSys fs.FileSystem) (ifc.Loader, error) {
-	if isRepoUrl(root) {
-		return newGitLoader(
-			root, fSys, nil, simpleGitCloner)
+	if git.IsRepoUrl(root) {
+		return newLoaderAtGitClone(
+			root, fSys, nil, git.ClonerUsingGitExec)
 	}
-	return newFileLoaderAt(
-		root, fSys, nil, simpleGitCloner)
+	return newLoaderAtConfirmedDir(
+		root, fSys, nil, git.ClonerUsingGitExec)
 }
