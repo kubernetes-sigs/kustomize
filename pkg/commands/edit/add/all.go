@@ -26,9 +26,12 @@ import (
 func NewCmdAdd(fsys fs.FileSystem, v ifc.Validator, kf ifc.KunstructuredFactory) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "add",
-		Short: "Adds configmap/resource/patch/base to the kustomization file.",
+		Short: "Adds an item to the kustomization file.",
 		Long:  "",
 		Example: `
+	# Adds a secret to the kustomization file
+	kustomize edit add secret NAME --from-literal=k=v
+
 	# Adds a configmap to the kustomization file
 	kustomize edit add configmap NAME --from-literal=k=v
 
@@ -53,6 +56,7 @@ func NewCmdAdd(fsys fs.FileSystem, v ifc.Validator, kf ifc.KunstructuredFactory)
 	c.AddCommand(
 		newCmdAddResource(fsys),
 		newCmdAddPatch(fsys),
+		newCmdAddSecret(fsys, kf),
 		newCmdAddConfigMap(fsys, kf),
 		newCmdAddBase(fsys),
 		newCmdAddLabel(fsys, v.MakeLabelValidator()),
