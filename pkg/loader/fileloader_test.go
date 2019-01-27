@@ -358,14 +358,13 @@ func makeFakeGitCloner(t *testing.T, fSys fs.FileSystem, coRoot string) git.Clon
 	if !fSys.IsDir(coRoot) {
 		t.Fatalf("expecting a directory at '%s'", coRoot)
 	}
-	return func(url string) (
-		checkoutDir string, pathInCoDir string, err error) {
+	return func(url string) (*git.RepoSpec, error) {
 		_, path := splitOnNthSlash(url, 3)
 		if !fSys.IsDir(coRoot + "/" + path) {
 			t.Fatalf("expecting a directory at '%s'/'%s'",
 				coRoot, path)
 		}
-		return coRoot, path, nil
+		return git.NewRepoSpec(url, fs.ConfirmedDir(coRoot), path), nil
 	}
 }
 
