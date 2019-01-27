@@ -171,7 +171,7 @@ func TestParseGithubUrl(t *testing.T) {
 	}
 }
 
-func TestParseUrl(t *testing.T) {
+func TestNewRepoSpecFromUrl(t *testing.T) {
 	testcases := []struct {
 		input string
 		repo  string
@@ -216,18 +216,21 @@ func TestParseUrl(t *testing.T) {
 		},
 	}
 	for _, testcase := range testcases {
-		repo, path, ref, err := parseUrl(testcase.input)
+		rs, err := NewRepoSpecFromUrl(testcase.input)
 		if err != nil {
 			t.Errorf("Unexpected error: %v", err)
 		}
-		if repo != testcase.repo {
-			t.Errorf("repo expected to be %v, but got %v on %s", testcase.repo, repo, testcase.input)
+		if rs.repo != testcase.repo {
+			t.Errorf("repo expected to be %v, but got %v on %s",
+				testcase.repo, rs.repo, testcase.input)
 		}
-		if path != testcase.path {
-			t.Errorf("path expected to be %v, but got %v on %s", testcase.path, path, testcase.input)
+		if rs.path != testcase.path {
+			t.Errorf("path expected to be %v, but got %v on %s",
+				testcase.path, rs.path, testcase.input)
 		}
-		if ref != testcase.ref {
-			t.Errorf("ref expected to be %v, but got %v on %s", testcase.ref, ref, testcase.input)
+		if rs.ref != testcase.ref {
+			t.Errorf("ref expected to be %v, but got %v on %s",
+				testcase.ref, rs.ref, testcase.input)
 		}
 	}
 }

@@ -18,193 +18,51 @@ package git
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os/exec"
-	"path/filepath"
-	"regexp"
-	"strings"
 
 	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
 // Cloner is a function that can clone a git repo.
-type Cloner func(url string) (
-	// Directory where the repo is cloned to.
-	checkoutDir string,
-	// Relative path in the checkoutDir to location
-	// of kustomization file.
-	pathInCoDir string,
-	// Any error encountered when cloning.
-	err error)
+type Cloner func(url string) (*RepoSpec, error)
 
-// IsRepoUrl checks if a string is likely a github repo Url.
-func IsRepoUrl(arg string) bool {
-	arg = strings.ToLower(arg)
-	return !filepath.IsAbs(arg) &&
-		(strings.HasPrefix(arg, "git::") ||
-			strings.HasPrefix(arg, "gh:") ||
-			strings.HasPrefix(arg, "ssh:") ||
-			strings.HasPrefix(arg, "github.com") ||
-			strings.HasPrefix(arg, "git@") ||
-			strings.Index(arg, "github.com/") > -1 ||
-			isAzureHost(arg) || isAWSHost(arg))
-}
-
-func makeTmpDir() (string, error) {
-	return ioutil.TempDir("", "kustomize-")
-}
-
-func ClonerUsingGitExec(spec string) (
-	checkoutDir string, pathInCoDir string, err error) {
+// ClonerUsingGitExec uses a local git install, as opposed
+// to say, some remote API, to obtain a local clone of
+// a remote repo.
+func ClonerUsingGitExec(spec string) (*RepoSpec, error) {
 	gitProgram, err := exec.LookPath("git")
 	if err != nil {
-		return "", "", errors.Wrap(err, "no 'git' program on path")
+		return nil, errors.Wrap(err, "no 'git' program on path")
 	}
-	checkoutDir, err = makeTmpDir()
+	repoSpec, err := NewRepoSpecFromUrl(spec)
 	if err != nil {
-		return
+		return nil, err
 	}
-	repo, pathInCoDir, gitRef, err := parseUrl(spec)
+	repoSpec.cloneDir, err = fs.NewTmpConfirmedDir()
 	if err != nil {
-		return
+		return nil, err
 	}
 	cmd := exec.Command(
 		gitProgram,
 		"clone",
-		repo,
-		checkoutDir)
+		repoSpec.repo,
+		repoSpec.cloneDir.String())
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err = cmd.Run()
 	if err != nil {
-		return "", "",
-			errors.Wrapf(err, "trouble cloning %s", spec)
+		return nil, errors.Wrapf(err, "trouble cloning %s", spec)
 	}
-	if gitRef == "" {
-		return
+	if repoSpec.ref == "" {
+		return repoSpec, nil
 	}
-	cmd = exec.Command(gitProgram, "checkout", gitRef)
-	cmd.Dir = checkoutDir
+	cmd = exec.Command(gitProgram, "checkout", repoSpec.ref)
+	cmd.Dir = repoSpec.cloneDir.String()
 	err = cmd.Run()
 	if err != nil {
-		return "", "",
-			errors.Wrapf(err, "trouble checking out href %s", gitRef)
+		return nil, errors.Wrapf(
+			err, "trouble checking out href %s", repoSpec.ref)
 	}
-	return checkoutDir, pathInCoDir, nil
-}
-
-func parseUrl(n string) (
-	repo string, path string, gitRef string, err error) {
-	host, repo, path, gitRef, err := parseGithubUrl(n)
-	if err != nil {
-		return
-	}
-	if isAzureHost(host) || isAWSHost(host) {
-		repo = host + repo
-		return
-	}
-	repo = host + repo + ".git"
-	return
-}
-
-const (
-	refQuery  = "?ref="
-	gitSuffix = ".git"
-)
-
-// From strings like git@github.com:someOrg/someRepo.git or
-// https://github.com/someOrg/someRepo?ref=someHash, extract
-// the parts.
-func parseGithubUrl(n string) (
-	host string, repo string, path string, gitRef string, err error) {
-	host, n = parseHostSpec(n)
-	host = normalizeGitHostSpec(host)
-
-	if strings.HasSuffix(n, gitSuffix) {
-		repo = n[0 : len(n)-len(gitSuffix)]
-		return
-	}
-	if strings.Contains(n, gitSuffix) {
-		index := strings.Index(n, gitSuffix)
-		repo = n[0:index]
-		n = n[index+len(gitSuffix):]
-		path, gitRef = peelQuery(n)
-		return
-	}
-	i := strings.Index(n, "/")
-	if i < 1 {
-		return "", "", "", "", errors.New("no separator")
-	}
-	j := strings.Index(n[i+1:], "/")
-	if j >= 0 {
-		j += i + 1
-		repo = n[:j]
-		path, gitRef = peelQuery(n[j+1:])
-	} else {
-		path = ""
-		repo, gitRef = peelQuery(n)
-	}
-	return
-}
-
-func peelQuery(arg string) (string, string) {
-	j := strings.Index(arg, refQuery)
-	if j >= 0 {
-		return arg[:j], arg[j+len(refQuery):]
-	}
-	return arg, ""
-}
-
-func parseHostSpec(n string) (string, string) {
-	var host string
-	for _, p := range []string{
-		// Order matters here.
-		"git::", "gh:", "ssh://", "https://", "http://",
-		"git@", "github.com:", "github.com/"} {
-		if strings.ToLower(n[:len(p)]) == p {
-			n = n[len(p):]
-			host = host + p
-		}
-	}
-
-	// If host is a http(s) or ssh URL, grab the domain part.
-	for _, p := range []string{
-		"ssh://", "https://", "http://"} {
-		if strings.HasSuffix(strings.ToLower(host), p) {
-			index := regexp.MustCompile("^(.*?)/").FindStringIndex(n)
-			if len(index) > 0 {
-				host = host + n[0:index[len(index)-1]]
-				n = n[index[len(index)-1]:]
-			}
-		}
-	}
-	return host, n
-}
-
-func normalizeGitHostSpec(host string) string {
-	s := strings.ToLower(host)
-	if strings.Contains(s, "github.com") {
-		if strings.Contains(s, "git@") || strings.Contains(s, "ssh:") {
-			host = "git@github.com:"
-		} else {
-			host = "https://github.com/"
-		}
-	}
-	if strings.HasPrefix(s, "git::") {
-		host = strings.TrimLeft(s, "git::")
-	}
-	return host
-}
-
-// The format of Azure repo URL is documented
-// https://docs.microsoft.com/en-us/azure/devops/repos/git/clone?view=vsts&tabs=visual-studio#clone_url
-func isAzureHost(host string) bool {
-	return strings.Contains(host, "dev.azure.com") ||
-		strings.Contains(host, "visualstudio.com")
-}
-
-// The format of AWS repo URL is documented
-// https://docs.aws.amazon.com/codecommit/latest/userguide/regions.html
-func isAWSHost(host string) bool {
-	return strings.Contains(host, "amazonaws.com")
+	return repoSpec, nil
 }
