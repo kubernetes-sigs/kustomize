@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package loader
+package git
 
 import (
 	"bytes"
@@ -27,8 +27,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// gitCloner is a function that can clone a git repo.
-type gitCloner func(url string) (
+// Cloner is a function that can clone a git repo.
+type Cloner func(url string) (
 	// Directory where the repo is cloned to.
 	checkoutDir string,
 	// Relative path in the checkoutDir to location
@@ -37,8 +37,8 @@ type gitCloner func(url string) (
 	// Any error encountered when cloning.
 	err error)
 
-// isRepoUrl checks if a string is likely a github repo Url.
-func isRepoUrl(arg string) bool {
+// IsRepoUrl checks if a string is likely a github repo Url.
+func IsRepoUrl(arg string) bool {
 	arg = strings.ToLower(arg)
 	return !filepath.IsAbs(arg) &&
 		(strings.HasPrefix(arg, "git::") ||
@@ -54,7 +54,7 @@ func makeTmpDir() (string, error) {
 	return ioutil.TempDir("", "kustomize-")
 }
 
-func simpleGitCloner(spec string) (
+func ClonerUsingGitExec(spec string) (
 	checkoutDir string, pathInCoDir string, err error) {
 	gitProgram, err := exec.LookPath("git")
 	if err != nil {
