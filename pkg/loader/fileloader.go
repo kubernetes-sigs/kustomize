@@ -86,9 +86,9 @@ type fileLoader struct {
 	// The Load function reads from this directory,
 	// or directories below it.
 	root fs.ConfirmedDir
-	// URI, if any, used for a download into root.
-	// TODO(monopole): use non-string type.
-	uri string
+	// If this is non-nil, the files were
+	// obtained from the given repository.
+	repoSpec *git.RepoSpec
 	// File system utilities.
 	fSys fs.FileSystem
 	// Used to clone repositories.
@@ -179,26 +179,26 @@ func (l *fileLoader) New(path string) (ifc.Loader, error) {
 func newLoaderAtGitClone(
 	uri string, fSys fs.FileSystem,
 	referrer *fileLoader, cloner git.Cloner) (ifc.Loader, error) {
-	tmpDirForRepo, pathInRepo, err := cloner(uri)
+	repoSpec, err := cloner(uri)
 	if err != nil {
 		return nil, err
 	}
-	root, f, err := fSys.CleanedAbs(
-		filepath.Join(tmpDirForRepo, pathInRepo))
+	root, f, err := fSys.CleanedAbs(repoSpec.AbsPath())
 	if err != nil {
 		return nil, err
 	}
 	if f != "" {
 		return nil, fmt.Errorf(
-			"'%s' refers to file '%s'; expecting directory", pathInRepo, f)
+			"'%s' refers to file '%s'; expecting directory",
+			repoSpec.AbsPath(), f)
 	}
 	return &fileLoader{
 		root:     root,
 		referrer: referrer,
-		uri:      uri,
+		repoSpec: repoSpec,
 		fSys:     fSys,
 		cloner:   cloner,
-		cleaner:  func() error { return fSys.RemoveAll(tmpDirForRepo) },
+		cleaner:  repoSpec.Cleaner(fSys),
 	}, nil
 }
 
@@ -221,11 +221,12 @@ func (l *fileLoader) errIfArgEqualOrHigher(
 // I.e. Allow a distinction between git URI with
 // path foo and tag bar and a git URI with the same
 // path but a different tag?
+// TODO(monopole): Use parsed data instead of looking at Raw().
 func (l *fileLoader) errIfPreviouslySeenUri(uri string) error {
-	if strings.HasPrefix(l.uri, uri) {
+	if strings.HasPrefix(l.repoSpec.Raw(), uri) {
 		return fmt.Errorf(
 			"cycle detected: URI '%s' referenced by previous URI '%s'",
-			uri, l.uri)
+			uri, l.repoSpec.Raw())
 	}
 	if l.referrer == nil {
 		return nil

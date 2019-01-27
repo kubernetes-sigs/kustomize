@@ -17,6 +17,7 @@ limitations under the License.
 package fs
 
 import (
+	"io/ioutil"
 	"path/filepath"
 	"strings"
 )
@@ -24,6 +25,17 @@ import (
 // ConfirmedDir is a clean, absolute, delinkified path
 // that was confirmed to point to an existing directory.
 type ConfirmedDir string
+
+// Return a temporary dir, else error.
+// The directory is cleaned, no symlinks, etc. so its
+// returned as a ConfirmedDir.
+func NewTmpConfirmedDir() (ConfirmedDir, error) {
+	n, err := ioutil.TempDir("", "kustomize-")
+	if err != nil {
+		return "", err
+	}
+	return ConfirmedDir(n), nil
+}
 
 // HasPrefix returns true if the directory argument
 // is a prefix of self (d) from the point of view of
