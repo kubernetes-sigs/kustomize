@@ -17,25 +17,49 @@ limitations under the License.
 package git
 
 import (
-	"bytes"
-	"io/ioutil"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
-// Cloner is a function that can clone a git repo.
-type Cloner func(url string) (
-	// Directory where the repo is cloned to.
-	checkoutDir string,
-	// Relative path in the checkoutDir to location
-	// of kustomization file.
-	pathInCoDir string,
-	// Any error encountered when cloning.
-	err error)
+// RepoSpec specifies a git repo and a branch and path therein.
+type RepoSpec struct {
+	// Raw, original spec, used to look for cycles.
+	// TODO(monopole): Drop raw, use processed fields instead.
+	raw string
+
+	// Repo, e.g. github.com/kubernetes-sigs/kustomize
+	repo string
+
+	// ConfirmedDir where the repo is cloned to.
+	cloneDir fs.ConfirmedDir
+
+	// Relative path in the repo, and in the cloneDir,
+	// to a Kustomization.
+	path string
+
+	// Branch or tag reference.
+	ref string
+}
+
+func (x *RepoSpec) CloneDir() fs.ConfirmedDir {
+	return x.cloneDir
+}
+
+func (x *RepoSpec) Raw() string {
+	return x.raw
+}
+
+func (x *RepoSpec) AbsPath() string {
+	return x.cloneDir.Join(x.path)
+}
+
+func (x *RepoSpec) Cleaner(fSys fs.FileSystem) func() error {
+	return func() error { return fSys.RemoveAll(x.cloneDir.String()) }
+}
 
 // IsRepoUrl checks if a string is likely a github repo Url.
 func IsRepoUrl(arg string) bool {
@@ -50,61 +74,22 @@ func IsRepoUrl(arg string) bool {
 			isAzureHost(arg) || isAWSHost(arg))
 }
 
-func makeTmpDir() (string, error) {
-	return ioutil.TempDir("", "kustomize-")
-}
-
-func ClonerUsingGitExec(spec string) (
-	checkoutDir string, pathInCoDir string, err error) {
-	gitProgram, err := exec.LookPath("git")
-	if err != nil {
-		return "", "", errors.Wrap(err, "no 'git' program on path")
-	}
-	checkoutDir, err = makeTmpDir()
-	if err != nil {
-		return
-	}
-	repo, pathInCoDir, gitRef, err := parseUrl(spec)
-	if err != nil {
-		return
-	}
-	cmd := exec.Command(
-		gitProgram,
-		"clone",
-		repo,
-		checkoutDir)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err = cmd.Run()
-	if err != nil {
-		return "", "",
-			errors.Wrapf(err, "trouble cloning %s", spec)
-	}
-	if gitRef == "" {
-		return
-	}
-	cmd = exec.Command(gitProgram, "checkout", gitRef)
-	cmd.Dir = checkoutDir
-	err = cmd.Run()
-	if err != nil {
-		return "", "",
-			errors.Wrapf(err, "trouble checking out href %s", gitRef)
-	}
-	return checkoutDir, pathInCoDir, nil
-}
-
-func parseUrl(n string) (
-	repo string, path string, gitRef string, err error) {
+func NewRepoSpecFromUrl(n string) (*RepoSpec, error) {
 	host, repo, path, gitRef, err := parseGithubUrl(n)
 	if err != nil {
-		return
+		return nil, err
 	}
 	if isAzureHost(host) || isAWSHost(host) {
 		repo = host + repo
-		return
+	} else {
+		repo = host + repo + ".git"
 	}
-	repo = host + repo + ".git"
-	return
+	return &RepoSpec{raw: n, repo: repo, path: path, ref: gitRef}, nil
+}
+
+func NewRepoSpec(
+	raw string, cloneDir fs.ConfirmedDir, path string) *RepoSpec {
+	return &RepoSpec{raw: raw, cloneDir: cloneDir, path: path}
 }
 
 const (
