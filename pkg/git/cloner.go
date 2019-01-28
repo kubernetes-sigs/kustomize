@@ -46,7 +46,7 @@ func ClonerUsingGitExec(spec string) (*RepoSpec, error) {
 	cmd := exec.Command(
 		gitProgram,
 		"clone",
-		repoSpec.repo,
+		repoSpec.CloneSpec(),
 		repoSpec.cloneDir.String())
 	var out bytes.Buffer
 	cmd.Stdout = &out
