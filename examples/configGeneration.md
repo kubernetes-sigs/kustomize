@@ -39,6 +39,9 @@ curl -s -o "$BASE/#1.yaml" "https://raw.githubusercontent.com\
 /{deployment,service}.yaml"
 
 cat <<'EOF' >$BASE/kustomization.yaml
+apiVersion: v1beta1
+kind: Kustomization
+
 commonLabels:
   app: hello
 resources:
@@ -59,6 +62,9 @@ OVERLAYS=$DEMO_HOME/overlays
 mkdir -p $OVERLAYS/staging
 
 cat <<'EOF' >$OVERLAYS/staging/kustomization.yaml
+apiVersion: v1beta1
+kind: Kustomization
+
 namePrefix: staging-
 nameSuffix: -v1
 commonLabels:

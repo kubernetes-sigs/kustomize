@@ -11,6 +11,8 @@ Make a `kustomization` containing an ingress resource.
 DEMO_HOME=$(mktemp -d)
 
 cat <<EOF >$DEMO_HOME/kustomization.yaml
+apiVersion: v1beta1
+kind: Kustomization
 resources:
 - ingress.yaml
 EOF

@@ -122,6 +122,9 @@ Create a kustomization referring to it:
 <!-- @createKustomization @test -->
 ```
 cat > $DEMO_HOME/kustomization.yaml << EOF
+apiVersion: v1beta1
+kind: Kustomization
+
 resources:
 - resources.yaml
 

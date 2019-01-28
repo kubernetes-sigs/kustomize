@@ -22,6 +22,8 @@ BASE=$DEMO_HOME/base
 mkdir $BASE
 
 cat <<EOF >$BASE/kustomization.yaml
+apiVersion: v1beta1
+kind: Kustomization
 resources:
 - pod.yaml
 EOF
@@ -47,6 +49,8 @@ DEV=$DEMO_HOME/dev
 mkdir $DEV
 
 cat <<EOF >$DEV/kustomization.yaml
+apiVersion: v1beta1
+kind: Kustomization
 bases:
 - ./../base
 namePrefix: dev-
@@ -60,6 +64,8 @@ STAG=$DEMO_HOME/staging
 mkdir $STAG
 
 cat <<EOF >$STAG/kustomization.yaml
+apiVersion: v1beta1
+kind: Kustomization
 bases:
 - ./../base
 namePrefix: stag-
@@ -73,6 +79,8 @@ PROD=$DEMO_HOME/production
 mkdir $PROD
 
 cat <<EOF >$PROD/kustomization.yaml
+apiVersion: v1beta1
+kind: Kustomization
 bases:
 - ./../base
 namePrefix: prod-
@@ -83,6 +91,8 @@ Then define a _Kustomization_ composing three variants together:
 <!-- @makeTopLayer @test -->
 ```
 cat <<EOF >$DEMO_HOME/kustomization.yaml
+apiVersion: v1beta1
+kind: Kustomization
 bases:
 - ./dev
 - ./staging

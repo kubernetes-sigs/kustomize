@@ -49,6 +49,9 @@ Create a new kustomization with two bases:
 <!-- @createKustomization @test -->
 ```
 cat <<EOF >$DEMO_HOME/kustomization.yaml
+apiVersion: v1beta1
+kind: Kustomization
+
 bases:
   - wordpress
   - mysql
