@@ -24,11 +24,16 @@ import (
 )
 
 // NewLoader returns a Loader.
-func NewLoader(root string, fSys fs.FileSystem) (ifc.Loader, error) {
-	if git.IsRepoUrl(root) {
+func NewLoader(path string, fSys fs.FileSystem) (ifc.Loader, error) {
+	repoSpec, err := git.NewRepoSpecFromUrl(path)
+	if err == nil {
 		return newLoaderAtGitClone(
-			root, fSys, nil, git.ClonerUsingGitExec)
+			repoSpec, fSys, nil, git.ClonerUsingGitExec)
+	}
+	root, err := demandDirectoryRoot(fSys, path)
+	if err != nil {
+		return nil, err
 	}
 	return newLoaderAtConfirmedDir(
-		root, fSys, nil, git.ClonerUsingGitExec)
+		root, fSys, nil, git.ClonerUsingGitExec), nil
 }
