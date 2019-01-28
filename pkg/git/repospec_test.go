@@ -138,6 +138,7 @@ var hostNamesRawAndNormalized = [][]string{
 	{"git::http://git.example.com/", "http://git.example.com/"},
 	{"git::https://git.example.com/", "https://git.example.com/"},
 	{"git@github.com:", "git@github.com:"},
+	{"git@github.com/", "git@github.com:"},
 	{"git@gitlab2.sqtools.ru:10022/", "git@gitlab2.sqtools.ru:10022/"},
 }
 
