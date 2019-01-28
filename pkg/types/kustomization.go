@@ -18,6 +18,7 @@ limitations under the License.
 package types
 
 import (
+	"fmt"
 	"regexp"
 
 	"sigs.k8s.io/kustomize/pkg/image"
@@ -132,38 +133,28 @@ type Kustomization struct {
 	Configurations []string `json:"configurations,omitempty" yaml:"configurations,omitempty"`
 }
 
-// DealWithMissingFields fills the missing fields
-func (k *Kustomization) DealWithMissingFields() []string {
-	var msgs []string
+func (k *Kustomization) EnforceFields() []string {
+	var errs []string
 	if k.APIVersion == "" {
-		k.APIVersion = KustomizationVersion
-		msgs = append(msgs, "Fixed the missing field by adding apiVersion: "+KustomizationVersion)
-	}
-	if k.Kind == "" {
-		k.Kind = KustomizationKind
-		msgs = append(msgs, "Fixed the missing field by adding kind: "+KustomizationKind)
-	}
-	return msgs
-}
-
-func (k *Kustomization) EnforceFields() ([]string, []string) {
-	var msgs, errs []string
-	if k.APIVersion == "" {
-		msgs = append(msgs, "apiVersion is not defined. This will not be allowed in the next release.\nPlease run `kustomize edit fix`")
+		errs = append(errs, "apiVersion is not defined. Please add\n" +
+			"\tapiVersion: v1beta1\n" +
+			"to kustomization.yaml or run `kustomize edit fix`")
 	} else if k.APIVersion != KustomizationVersion {
 		errs = append(errs, "apiVersion should be "+KustomizationVersion)
 	}
 	if k.Kind == "" {
-		msgs = append(msgs, "kind is not defined. This will not be allowed in the next release.\nPlease run `kustomize edit fix`")
+		errs = append(errs, "kind is not defined. Please add\n" +
+			"\tkind: Kustomization\n" +
+			"to kustomization.yaml or run `kustomize edit fix`")
 	} else if k.Kind != KustomizationKind {
 		errs = append(errs, "kind should be "+KustomizationKind)
 	}
-	return msgs, errs
+	return errs
 }
 
 // DealWithDeprecatedFields should be called immediately after
 // loading from storage.
-func DealWithDeprecatedFields(data []byte) []byte {
+func DealWithDeprecatedAndMissingFields(data []byte) []byte {
 	deprecateFieldsMap := map[string]string{
 		"patches:":   "patchesStrategicMerge:",
 		"imageTags:": "images:",
@@ -171,6 +162,16 @@ func DealWithDeprecatedFields(data []byte) []byte {
 	for oldname, newname := range deprecateFieldsMap {
 		pattern := regexp.MustCompile(oldname)
 		data = pattern.ReplaceAll(data, []byte(newname))
+	}
+	missingFields := map[string]string{
+		"apiVersion": KustomizationVersion,
+		"kind":       KustomizationKind,
+	}
+	for key, value := range missingFields {
+		pattern := regexp.MustCompile(key)
+		if pattern.Find(data) == nil {
+			data = append(data, []byte(fmt.Sprintf("\n%s: %s\n", key, value))...)
+		}
 	}
 	return data
 }

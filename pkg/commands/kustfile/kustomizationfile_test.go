@@ -60,6 +60,10 @@ func TestFieldOrder(t *testing.T) {
 
 func TestWriteAndRead(t *testing.T) {
 	kustomization := &types.Kustomization{
+		TypeMeta: types.TypeMeta{
+			APIVersion: "v1beta1",
+			Kind:       "Kustomization",
+		},
 		NamePrefix: "prefix",
 	}
 
@@ -78,7 +82,6 @@ func TestWriteAndRead(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Couldn't read kustomization file: %v\n", err)
 	}
-	kustomization.DealWithMissingFields()
 	if !reflect.DeepEqual(kustomization, content) {
 		t.Fatal("Read kustomization is different from written kustomization")
 	}
