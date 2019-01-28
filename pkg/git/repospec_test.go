@@ -19,6 +19,7 @@ package git
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -101,15 +102,16 @@ func TestIsRepoURL(t *testing.T) {
 	}
 }
 
-var repoNames = []string{"someOrg/someRepo", "kubernetes/website"}
+var orgRepos = []string{"someOrg/someRepo", "kubernetes/website"}
 
-var paths = []string{"README.md", "foo/krusty.txt", ""}
+var pathNames = []string{"README.md", "foo/krusty.txt", ""}
 
-var hrefArgs = []string{"someBranch", ""}
+var hrefArgs = []string{"someBranch", "master", "v0.1.0", ""}
 
-var extractFmts = map[string]string{
+var hostNamesRawAndNormalizedOld = map[string]string{
 	"gh:%s":                           "gh:",
 	"GH:%s":                           "gh:",
+	"git@github.com:%s":               "git@github.com:",
 	"gitHub.com/%s":                   "https://github.com/",
 	"https://github.com/%s":           "https://github.com/",
 	"hTTps://github.com/%s":           "https://github.com/",
@@ -118,40 +120,132 @@ var extractFmts = map[string]string{
 	"git::http://git.example.com/%s":  "http://git.example.com/",
 	"git::https://git.example.com/%s": "https://git.example.com/",
 	"ssh://git.example.com:7999/%s":   "ssh://git.example.com:7999/",
+	"https://git-codecommit.us-east-2.amazonaws.com/%s": "https://git-codecommit.us-east-2.amazonaws.com/",
 }
 
-func TestParseGithubUrl(t *testing.T) {
-	for _, repoName := range repoNames {
-		for _, pathName := range paths {
-			for extractFmt, hostSpec := range extractFmts {
+var hostNamesRawAndNormalized = [][]string{
+	{"gh:", "gh:"},
+	{"GH:", "gh:"},
+	{"gitHub.com/", "https://github.com/"},
+	{"github.com:", "https://github.com/"},
+	{"http://github.com/", "https://github.com/"},
+	{"https://github.com/", "https://github.com/"},
+	{"hTTps://github.com/", "https://github.com/"},
+	{"https://git-codecommit.us-east-2.amazonaws.com/", "https://git-codecommit.us-east-2.amazonaws.com/"},
+	{"https://fabrikops2.visualstudio.com/", "https://fabrikops2.visualstudio.com/"},
+	{"ssh://git.example.com:7999/", "ssh://git.example.com:7999/"},
+	{"git::https://gitlab.com/", "https://gitlab.com/"},
+	{"git::http://git.example.com/", "http://git.example.com/"},
+	{"git::https://git.example.com/", "https://git.example.com/"},
+	{"git@github.com:", "git@github.com:"},
+	{"git@github.com/", "git@github.com:"},
+	{"git@gitlab2.sqtools.ru:10022/", "git@gitlab2.sqtools.ru:10022/"},
+}
+
+func makeUrlOld(hostFmt, orgRepo, path, href string) string {
+	if len(path) > 0 {
+		orgRepo = filepath.Join(orgRepo, path)
+	}
+	url := fmt.Sprintf(hostFmt, orgRepo)
+	if href != "" {
+		url += refQuery + href
+	}
+	return url
+}
+
+func makeUrl(hostFmt, orgRepo, path, href string) string {
+	if len(path) > 0 {
+		orgRepo = filepath.Join(orgRepo, path)
+	}
+	url := hostFmt + orgRepo
+	if href != "" {
+		url += refQuery + href
+	}
+	return url
+}
+
+func TestNewRepoSpecFromUrl(t *testing.T) {
+	var bad [][]string
+	for _, tuple := range hostNamesRawAndNormalized {
+		hostRaw := tuple[0]
+		hostSpec := tuple[1]
+		for _, orgRepo := range orgRepos {
+			for _, pathName := range pathNames {
 				for _, hrefArg := range hrefArgs {
-					spec := repoName
-					if len(pathName) > 0 {
-						spec = filepath.Join(spec, pathName)
-					}
-					input := fmt.Sprintf(extractFmt, spec)
-					if hrefArg != "" {
-						input = input + refQuery + hrefArg
-					}
-					if !IsRepoUrl(input) {
-						t.Errorf("Should smell like github arg: %s\n", input)
-						continue
-					}
-					host, repo, path, gitRef, err := parseGithubUrl(input)
+					uri := makeUrl(hostRaw, orgRepo, pathName, hrefArg)
+					rs, err := NewRepoSpecFromUrl(uri)
 					if err != nil {
 						t.Errorf("problem %v", err)
 					}
+					if rs.host != hostSpec {
+						bad = append(bad, []string{"host", uri, rs.host, hostSpec})
+					}
+					if rs.orgRepo != orgRepo {
+						bad = append(bad, []string{"orgRepo", uri, rs.orgRepo, orgRepo})
+					}
+					if rs.path != pathName {
+						bad = append(bad, []string{"path", uri, rs.path, pathName})
+					}
+					if rs.ref != hrefArg {
+						bad = append(bad, []string{"ref", uri, rs.ref, hrefArg})
+					}
+				}
+			}
+		}
+	}
+	if len(bad) > 0 {
+		for _, tuple := range bad {
+			fmt.Printf("\n"+
+				"     from uri: %s\n"+
+				"  actual %4s: %s\n"+
+				"expected %4s: %s\n",
+				tuple[1], tuple[0], tuple[2], tuple[0], tuple[3])
+		}
+		t.Fail()
+	}
+}
+
+var badData = [][]string{
+	{"/tmp", "uri looks like abs path"},
+	{"iauhsdiuashduas", "url lacks orgRepo"},
+	{"htxxxtp://github.com/", "url lacks host"},
+	{"ssh://git.example.com", "url lacks orgRepo"},
+	{"git::___", "url lacks orgRepo"},
+}
+
+func TestNewRepoSpecFromUrlErrors(t *testing.T) {
+	for _, tuple := range badData {
+		_, err := NewRepoSpecFromUrl(tuple[0])
+		if err == nil {
+			t.Error("expected error")
+		}
+		if !strings.Contains(err.Error(), tuple[1]) {
+			t.Errorf("unexpected error: %s", err)
+		}
+	}
+}
+
+func TestParseGithubUrl(t *testing.T) {
+	for hostRawFmt, hostSpec := range hostNamesRawAndNormalizedOld {
+		for _, orgRepo := range orgRepos {
+			for _, pathName := range pathNames {
+				for _, hrefArg := range hrefArgs {
+					input := makeUrlOld(hostRawFmt, orgRepo, pathName, hrefArg)
+					if !IsRepoUrl(input) {
+						t.Errorf("Should smell like github arg: %s\n", input)
+					}
+					host, repo, path, gitRef := parseGithubUrl(input)
 					if host != hostSpec {
 						t.Errorf("\n"+
 							"         from %s\n"+
 							"  actual host %s\n"+
 							"expected host %s\n", input, host, hostSpec)
 					}
-					if repo != repoName {
+					if repo != orgRepo {
 						t.Errorf("\n"+
 							"         from %s\n"+
 							"  actual Repo %s\n"+
-							"expected Repo %s\n", input, repo, repoName)
+							"expected Repo %s\n", input, repo, orgRepo)
 					}
 					if path != pathName {
 						t.Errorf("\n"+
@@ -171,7 +265,7 @@ func TestParseGithubUrl(t *testing.T) {
 	}
 }
 
-func TestNewRepoSpecFromUrl(t *testing.T) {
+func TestNewRepoSpecFromUrlOld(t *testing.T) {
 	testcases := []struct {
 		input string
 		repo  string
@@ -220,9 +314,9 @@ func TestNewRepoSpecFromUrl(t *testing.T) {
 		if err != nil {
 			t.Errorf("Unexpected error: %v", err)
 		}
-		if rs.repo != testcase.repo {
-			t.Errorf("repo expected to be %v, but got %v on %s",
-				testcase.repo, rs.repo, testcase.input)
+		if rs.CloneSpec() != testcase.repo {
+			t.Errorf("CloneSpec expected to be %v, but got %v on %s",
+				testcase.repo, rs.CloneSpec(), testcase.input)
 		}
 		if rs.path != testcase.path {
 			t.Errorf("path expected to be %v, but got %v on %s",
