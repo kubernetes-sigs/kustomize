@@ -114,44 +114,45 @@ func (l *fileLoader) Root() string {
 }
 
 func newLoaderOrDie(fSys fs.FileSystem, path string) *fileLoader {
-	l, err := newLoaderAtConfirmedDir(
-		path, fSys, nil, git.ClonerUsingGitExec)
+	root, err := demandDirectoryRoot(fSys, path)
 	if err != nil {
 		log.Fatalf("unable to make loader at '%s'; %v", path, err)
 	}
-	return l
+	return newLoaderAtConfirmedDir(
+		root, fSys, nil, git.ClonerUsingGitExec)
 }
 
 // newLoaderAtConfirmedDir returns a new fileLoader with given root.
 func newLoaderAtConfirmedDir(
-	possibleRoot string, fSys fs.FileSystem,
-	referrer *fileLoader, cloner git.Cloner) (*fileLoader, error) {
-	if possibleRoot == "" {
-		return nil, fmt.Errorf(
-			"loader root cannot be empty")
-	}
-	root, f, err := fSys.CleanedAbs(possibleRoot)
-	if err != nil {
-		return nil, fmt.Errorf(
-			"absolute path error in '%s' : %v", possibleRoot, err)
-	}
-	if f != "" {
-		return nil, fmt.Errorf(
-			"got file '%s', but '%s' must be a directory to be a root",
-			f, possibleRoot)
-	}
-	if referrer != nil {
-		if err := referrer.errIfArgEqualOrHigher(root); err != nil {
-			return nil, err
-		}
-	}
+	root fs.ConfirmedDir, fSys fs.FileSystem,
+	referrer *fileLoader, cloner git.Cloner) *fileLoader {
 	return &fileLoader{
 		root:     root,
 		referrer: referrer,
 		fSys:     fSys,
 		cloner:   cloner,
 		cleaner:  func() error { return nil },
-	}, nil
+	}
+}
+
+// Assure that the given path is in fact a directory.
+func demandDirectoryRoot(
+	fSys fs.FileSystem, path string) (fs.ConfirmedDir, error) {
+	if path == "" {
+		return "", fmt.Errorf(
+			"loader root cannot be empty")
+	}
+	d, f, err := fSys.CleanedAbs(path)
+	if err != nil {
+		return "", fmt.Errorf(
+			"absolute path error in '%s' : %v", path, err)
+	}
+	if f != "" {
+		return "", fmt.Errorf(
+			"got file '%s', but '%s' must be a directory to be a root",
+			f, path)
+	}
+	return d, nil
 }
 
 // New returns a new Loader, rooted relative to current loader,
@@ -160,26 +161,34 @@ func (l *fileLoader) New(path string) (ifc.Loader, error) {
 	if path == "" {
 		return nil, fmt.Errorf("new root cannot be empty")
 	}
-	if git.IsRepoUrl(path) {
-		// Avoid cycles.
-		if err := l.errIfPreviouslySeenUri(path); err != nil {
+	repoSpec, err := git.NewRepoSpecFromUrl(path)
+	if err == nil {
+		// Treat this as git repo clone request.
+		if err := l.errIfRepoCycle(repoSpec); err != nil {
 			return nil, err
 		}
-		return newLoaderAtGitClone(path, l.fSys, l.referrer, l.cloner)
+		return newLoaderAtGitClone(repoSpec, l.fSys, l.referrer, l.cloner)
 	}
 	if filepath.IsAbs(path) {
 		return nil, fmt.Errorf("new root '%s' cannot be absolute", path)
 	}
+	root, err := demandDirectoryRoot(l.fSys, l.root.Join(path))
+	if err != nil {
+		return nil, err
+	}
+	if err := l.errIfArgEqualOrHigher(root); err != nil {
+		return nil, err
+	}
 	return newLoaderAtConfirmedDir(
-		l.root.Join(path), l.fSys, l, l.cloner)
+		root, l.fSys, l, l.cloner), nil
 }
 
 // newLoaderAtGitClone returns a new Loader pinned to a temporary
 // directory holding a cloned git repo.
 func newLoaderAtGitClone(
-	uri string, fSys fs.FileSystem,
+	repoSpec *git.RepoSpec, fSys fs.FileSystem,
 	referrer *fileLoader, cloner git.Cloner) (ifc.Loader, error) {
-	repoSpec, err := cloner(uri)
+	err := cloner(repoSpec)
 	if err != nil {
 		return nil, err
 	}
@@ -187,6 +196,10 @@ func newLoaderAtGitClone(
 	if err != nil {
 		return nil, err
 	}
+	// We don't know that the path requested in repoSpec
+	// is a directory until we actually clone it and look
+	// inside.  That just happened, hence the error check
+	// is here.
 	if f != "" {
 		return nil, fmt.Errorf(
 			"'%s' refers to file '%s'; expecting directory",
@@ -221,17 +234,17 @@ func (l *fileLoader) errIfArgEqualOrHigher(
 // I.e. Allow a distinction between git URI with
 // path foo and tag bar and a git URI with the same
 // path but a different tag?
-// TODO(monopole): Use parsed data instead of looking at Raw().
-func (l *fileLoader) errIfPreviouslySeenUri(uri string) error {
-	if strings.HasPrefix(l.repoSpec.Raw(), uri) {
+func (l *fileLoader) errIfRepoCycle(newRepoSpec *git.RepoSpec) error {
+	// TODO(monopole): Use parsed data instead of Raw().
+	if strings.HasPrefix(l.repoSpec.Raw(), newRepoSpec.Raw()) {
 		return fmt.Errorf(
 			"cycle detected: URI '%s' referenced by previous URI '%s'",
-			uri, l.repoSpec.Raw())
+			newRepoSpec.Raw(), l.repoSpec.Raw())
 	}
 	if l.referrer == nil {
 		return nil
 	}
-	return l.referrer.errIfPreviouslySeenUri(uri)
+	return l.referrer.errIfRepoCycle(newRepoSpec)
 }
 
 // Load returns content of file at the given relative path,
