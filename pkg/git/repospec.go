@@ -17,32 +17,43 @@ limitations under the License.
 package git
 
 import (
+	"fmt"
 	"path/filepath"
-	"regexp"
 	"strings"
 
-	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
-// RepoSpec specifies a git repo and a branch and path therein.
+// RepoSpec specifies a git repository and a branch and path therein.
 type RepoSpec struct {
 	// Raw, original spec, used to look for cycles.
 	// TODO(monopole): Drop raw, use processed fields instead.
 	raw string
 
-	// Repo, e.g. github.com/kubernetes-sigs/kustomize
-	repo string
+	// Host, e.g. github.com
+	host string
 
-	// ConfirmedDir where the repo is cloned to.
+	// orgRepo name (organization/repoName),
+	// e.g. kubernetes-sigs/kustomize
+	orgRepo string
+
+	// ConfirmedDir where the orgRepo is cloned to.
 	cloneDir fs.ConfirmedDir
 
-	// Relative path in the repo, and in the cloneDir,
+	// Relative path in the repository, and in the cloneDir,
 	// to a Kustomization.
 	path string
 
 	// Branch or tag reference.
 	ref string
+}
+
+// CloneSpec returns a string suitable for "git clone {spec}".
+func (x *RepoSpec) CloneSpec() string {
+	if isAzureHost(x.host) || isAWSHost(x.host) {
+		return x.host + x.orgRepo
+	}
+	return x.host + x.orgRepo + gitSuffix
 }
 
 func (x *RepoSpec) CloneDir() fs.ConfirmedDir {
@@ -74,17 +85,23 @@ func IsRepoUrl(arg string) bool {
 			isAzureHost(arg) || isAWSHost(arg))
 }
 
+// From strings like git@github.com:someOrg/someRepo.git or
+// https://github.com/someOrg/someRepo?ref=someHash, extract
+// the parts.
 func NewRepoSpecFromUrl(n string) (*RepoSpec, error) {
-	host, repo, path, gitRef, err := parseGithubUrl(n)
-	if err != nil {
-		return nil, err
+	if filepath.IsAbs(n) {
+		return nil, fmt.Errorf("uri looks like abs path: %s", n)
 	}
-	if isAzureHost(host) || isAWSHost(host) {
-		repo = host + repo
-	} else {
-		repo = host + repo + ".git"
+	host, orgRepo, path, gitRef := parseGithubUrl(n)
+	if orgRepo == "" {
+		return nil, fmt.Errorf("url lacks orgRepo: %s", n)
 	}
-	return &RepoSpec{raw: n, repo: repo, path: path, ref: gitRef}, nil
+	if host == "" {
+		return nil, fmt.Errorf("url lacks host: %s", n)
+	}
+	return &RepoSpec{
+		raw: n, host: host, orgRepo: orgRepo,
+		path: path, ref: gitRef}, nil
 }
 
 func NewRepoSpec(
@@ -101,33 +118,29 @@ const (
 // https://github.com/someOrg/someRepo?ref=someHash, extract
 // the parts.
 func parseGithubUrl(n string) (
-	host string, repo string, path string, gitRef string, err error) {
+	host string, orgRepo string, path string, gitRef string) {
 	host, n = parseHostSpec(n)
-	host = normalizeGitHostSpec(host)
 
-	if strings.HasSuffix(n, gitSuffix) {
-		repo = n[0 : len(n)-len(gitSuffix)]
-		return
-	}
 	if strings.Contains(n, gitSuffix) {
 		index := strings.Index(n, gitSuffix)
-		repo = n[0:index]
+		orgRepo = n[0:index]
 		n = n[index+len(gitSuffix):]
 		path, gitRef = peelQuery(n)
 		return
 	}
+
 	i := strings.Index(n, "/")
 	if i < 1 {
-		return "", "", "", "", errors.New("no separator")
+		return "", "", "", ""
 	}
 	j := strings.Index(n[i+1:], "/")
 	if j >= 0 {
 		j += i + 1
-		repo = n[:j]
+		orgRepo = n[:j]
 		path, gitRef = peelQuery(n[j+1:])
 	} else {
 		path = ""
-		repo, gitRef = peelQuery(n)
+		orgRepo, gitRef = peelQuery(n)
 	}
 	return
 }
@@ -142,28 +155,45 @@ func peelQuery(arg string) (string, string) {
 
 func parseHostSpec(n string) (string, string) {
 	var host string
+	// Start accumulating the host part.
 	for _, p := range []string{
 		// Order matters here.
 		"git::", "gh:", "ssh://", "https://", "http://",
 		"git@", "github.com:", "github.com/"} {
-		if strings.ToLower(n[:len(p)]) == p {
+		if len(p) < len(n) && strings.ToLower(n[:len(p)]) == p {
 			n = n[len(p):]
-			host = host + p
+			host += p
 		}
+	}
+	if host == "git@" {
+		i := strings.Index(n, "/")
+		if i > -1 {
+			host += n[:i+1]
+			n = n[i+1:]
+		} else {
+			i = strings.Index(n, ":")
+			if i > -1 {
+				host += n[:i+1]
+				n = n[i+1:]
+			}
+		}
+		return host, n
 	}
 
 	// If host is a http(s) or ssh URL, grab the domain part.
 	for _, p := range []string{
 		"ssh://", "https://", "http://"} {
-		if strings.HasSuffix(strings.ToLower(host), p) {
-			index := regexp.MustCompile("^(.*?)/").FindStringIndex(n)
-			if len(index) > 0 {
-				host = host + n[0:index[len(index)-1]]
-				n = n[index[len(index)-1]:]
+		if strings.HasSuffix(host, p) {
+			i := strings.Index(n, "/")
+			if i > -1 {
+				host = host + n[0:i+1]
+				n = n[i+1:]
 			}
+			break
 		}
 	}
-	return host, n
+
+	return normalizeGitHostSpec(host), n
 }
 
 func normalizeGitHostSpec(host string) string {
