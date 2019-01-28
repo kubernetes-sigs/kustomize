@@ -33,7 +33,7 @@ func NewCmdConfig(fsys fs.FileSystem) *cobra.Command {
 		Short: "Config Kustomize transformers",
 		Long:  "",
 		Example: `
-	# Save the default transformer configrations to a local directory
+	# Save the default transformer configurations to a local directory
 	kustomize config save -d ~/.kustomize/config
 `,
 		Args: cobra.MinimumNArgs(1),
@@ -56,7 +56,7 @@ func newCmdSave(fsys fs.FileSystem) *cobra.Command {
 		Short: "Save default kustomize transformer configurations to a local directory",
 		Long:  "",
 		Example: `
-	# Save the default transformer configrations to a local directory
+	# Save the default transformer configurations to a local directory
 	save -d ~/.kustomize/config
 
 `,
