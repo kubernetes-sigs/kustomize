@@ -16,9 +16,10 @@ limitations under the License.
 
 package image
 
-// ImageTag contains an image and a new tag, which will replace the original tag.
+// DeprecatedImage contains an image and a new tag,
+// which will replace the original tag.
 // Deprecated, instead use Image.
-type ImageTag struct {
+type DeprecatedImage struct {
 	// Name is a tag-less image name.
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 
