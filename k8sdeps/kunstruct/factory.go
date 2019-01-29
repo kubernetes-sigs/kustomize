@@ -52,6 +52,9 @@ func (kf *KunstructuredFactoryImpl) SliceFromBytes(
 		var out unstructured.Unstructured
 		err = decoder.Decode(&out)
 		if err == nil {
+			if len(out.Object) == 0 {
+				continue
+			}
 			err = kf.validate(out)
 			if err != nil {
 				return nil, err
