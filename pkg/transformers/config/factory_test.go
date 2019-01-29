@@ -31,9 +31,9 @@ func TestMakeDefaultConfig(t *testing.T) {
 }
 
 func makeTestLoader(path, content string) ifc.Loader {
-	fs := fs.MakeFakeFS()
-	fs.WriteFile(path, []byte(content))
-	return loader.NewFileLoaderAtRoot(fs)
+	fSys := fs.MakeFakeFS()
+	fSys.WriteFile(path, []byte(content))
+	return loader.NewFileLoaderAtRoot(fSys)
 }
 
 func TestFromFiles(t *testing.T) {

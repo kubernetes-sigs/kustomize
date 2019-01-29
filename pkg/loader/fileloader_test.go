@@ -320,14 +320,14 @@ func splitOnNthSlash(v string, n int) (string, string) {
 }
 
 func TestSplit(t *testing.T) {
-	path := "a/b/c/d/e/f/g"
-	if left, right := splitOnNthSlash(path, 2); left != "a/b" || right != "c/d/e/f/g" {
+	p := "a/b/c/d/e/f/g"
+	if left, right := splitOnNthSlash(p, 2); left != "a/b" || right != "c/d/e/f/g" {
 		t.Fatalf("got left='%s', right='%s'", left, right)
 	}
-	if left, right := splitOnNthSlash(path, 3); left != "a/b/c" || right != "d/e/f/g" {
+	if left, right := splitOnNthSlash(p, 3); left != "a/b/c" || right != "d/e/f/g" {
 		t.Fatalf("got left='%s', right='%s'", left, right)
 	}
-	if left, right := splitOnNthSlash(path, 6); left != "a/b/c/d/e/f" || right != "g" {
+	if left, right := splitOnNthSlash(p, 6); left != "a/b/c/d/e/f" || right != "g" {
 		t.Fatalf("got left='%s', right='%s'", left, right)
 	}
 }
@@ -336,10 +336,6 @@ func TestNewLoaderAtGitClone(t *testing.T) {
 	rootUrl := "github.com/someOrg/someRepo"
 	pathInRepo := "foo/base"
 	url := rootUrl + "/" + pathInRepo
-	if !git.IsRepoUrl(url) {
-		t.Fatalf("'%s' should be accepted as a repo url", url)
-	}
-
 	coRoot := "/tmp"
 	fSys := fs.MakeFakeFS()
 	fSys.MkdirAll(coRoot)
@@ -374,9 +370,6 @@ whatever
 	pathInRepo = "foo/overlay"
 	fSys.MkdirAll(coRoot + "/" + pathInRepo)
 	url = rootUrl + "/" + pathInRepo
-	if !git.IsRepoUrl(url) {
-		t.Fatalf("'%s' should be accepted as a repo url", url)
-	}
 	l2, err := l.New(url)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
