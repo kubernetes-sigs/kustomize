@@ -72,19 +72,6 @@ func (x *RepoSpec) Cleaner(fSys fs.FileSystem) func() error {
 	return func() error { return fSys.RemoveAll(x.cloneDir.String()) }
 }
 
-// IsRepoUrl checks if a string is likely a github repo Url.
-func IsRepoUrl(arg string) bool {
-	arg = strings.ToLower(arg)
-	return !filepath.IsAbs(arg) &&
-		(strings.HasPrefix(arg, "git::") ||
-			strings.HasPrefix(arg, "gh:") ||
-			strings.HasPrefix(arg, "ssh:") ||
-			strings.HasPrefix(arg, "github.com") ||
-			strings.HasPrefix(arg, "git@") ||
-			strings.Index(arg, "github.com/") > -1 ||
-			isAzureHost(arg) || isAWSHost(arg))
-}
-
 // From strings like git@github.com:someOrg/someRepo.git or
 // https://github.com/someOrg/someRepo?ref=someHash, extract
 // the parts.
@@ -102,11 +89,6 @@ func NewRepoSpecFromUrl(n string) (*RepoSpec, error) {
 	return &RepoSpec{
 		raw: n, host: host, orgRepo: orgRepo,
 		path: path, ref: gitRef}, nil
-}
-
-func NewRepoSpec(
-	raw string, cloneDir fs.ConfirmedDir, path string) *RepoSpec {
-	return &RepoSpec{raw: raw, cloneDir: cloneDir, path: path}
 }
 
 const (
