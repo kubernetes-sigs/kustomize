@@ -28,36 +28,9 @@ type Factory struct {
 	ldr ifc.Loader
 }
 
-// TODO(#606): Setting this to false satisfies the feature
-// request in 606.  The todo is to delete the non-active
-// code path in a subsequent PR.
-const demandExplicitConfig = false
-
-func MakeTransformerConfig(
-	ldr ifc.Loader, paths []string) (*TransformerConfig, error) {
-	if demandExplicitConfig {
-		return loadConfigFromDiskOrDefaults(ldr, paths)
-	}
-	return mergeCustomConfigWithDefaults(ldr, paths)
-}
-
-// loadConfigFromDiskOrDefaults returns a TransformerConfig object
-// built from either files or the hardcoded default configs.
-// There's no merging, it's one or the other.  This is preferred
-// if one wants all configuration to be explicit in version
-// control, as opposed to relying on a mix of files and
-// hard-coded config.
-func loadConfigFromDiskOrDefaults(
-	ldr ifc.Loader, paths []string) (*TransformerConfig, error) {
-	if paths == nil || len(paths) == 0 {
-		return MakeDefaultConfig(), nil
-	}
-	return NewFactory(ldr).FromFiles(paths)
-}
-
-// mergeCustomConfigWithDefaults returns a merger of custom config,
+// MakeTransformerConfig returns a merger of custom config,
 // if any, with default config.
-func mergeCustomConfigWithDefaults(
+func MakeTransformerConfig(
 	ldr ifc.Loader, paths []string) (*TransformerConfig, error) {
 	t1 := MakeDefaultConfig()
 	if len(paths) == 0 {
