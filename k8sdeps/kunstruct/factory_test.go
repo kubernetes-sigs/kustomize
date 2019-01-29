@@ -110,6 +110,18 @@ WOOOOOOOOOOOOOOOOOOOOOOOOT:  woot
 			expectedErr: true,
 		},
 		{
+			name: "emptyObjects",
+			input: []byte(`
+---
+#a comment
+
+---
+
+`),
+			expectedOut: []ifc.Kunstructured{},
+			expectedErr: false,
+		},
+		{
 			name: "Missing .metadata.name in object",
 			input: []byte(`
 apiVersion: v1
