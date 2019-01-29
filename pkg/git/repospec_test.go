@@ -23,105 +23,11 @@ import (
 	"testing"
 )
 
-func TestIsRepoURL(t *testing.T) {
-
-	testcases := []struct {
-		input    string
-		expected bool
-	}{
-		{
-			input:    "https://github.com/org/repo",
-			expected: true,
-		},
-		{
-			input:    "github.com/org/repo",
-			expected: true,
-		},
-		{
-			input:    "git@github.com:org/repo",
-			expected: true,
-		},
-		{
-			input:    "gh:org/repo",
-			expected: true,
-		},
-		{
-			input:    "git::https://gitlab.com/org/repo",
-			expected: true,
-		},
-		{
-			input:    "git@gitlab2.sqtools.ru:10022/infra/kubernetes/thanos-base.git?ref=v0.1.0",
-			expected: true,
-		},
-		{
-			input:    "git@bitbucket.org:org/repo.git",
-			expected: true,
-		},
-		{
-			input:    "git::http://git.example.com/org/repo.git",
-			expected: true,
-		},
-		{
-			input:    "git::https://git.example.com/org/repo.git",
-			expected: true,
-		},
-		{
-			input:    "ssh://git.example.com:7999/org/repo.git",
-			expected: true,
-		},
-		{
-			input:    "/github.com/org/repo",
-			expected: false,
-		},
-		{
-			input:    "/abs/path/to/file",
-			expected: false,
-		},
-		{
-			input:    "../relative",
-			expected: false,
-		},
-		{
-			input:    "foo",
-			expected: false,
-		},
-		{
-			input:    ".",
-			expected: false,
-		},
-		{
-			input:    "",
-			expected: false,
-		},
-	}
-	for _, tc := range testcases {
-		actual := IsRepoUrl(tc.input)
-		if actual != tc.expected {
-			t.Errorf("unexpected error: unexpected result %t for input %s", actual, tc.input)
-		}
-	}
-}
-
 var orgRepos = []string{"someOrg/someRepo", "kubernetes/website"}
 
 var pathNames = []string{"README.md", "foo/krusty.txt", ""}
 
 var hrefArgs = []string{"someBranch", "master", "v0.1.0", ""}
-
-var hostNamesRawAndNormalizedOld = map[string]string{
-	"gh:%s":                           "gh:",
-	"GH:%s":                           "gh:",
-	"git@github.com:%s":               "git@github.com:",
-	"gitHub.com/%s":                   "https://github.com/",
-	"https://github.com/%s":           "https://github.com/",
-	"hTTps://github.com/%s":           "https://github.com/",
-	"git::https://gitlab.com/%s":      "https://gitlab.com/",
-	"github.com:%s":                   "https://github.com/",
-	"git::http://git.example.com/%s":  "http://git.example.com/",
-	"git::https://git.example.com/%s": "https://git.example.com/",
-	"ssh://git.example.com:7999/%s":   "ssh://git.example.com:7999/",
-	"https://git-codecommit.us-east-2.amazonaws.com/%s": "https://git-codecommit.us-east-2.amazonaws.com/",
-}
 
 var hostNamesRawAndNormalized = [][]string{
 	{"gh:", "gh:"},
@@ -140,17 +46,6 @@ var hostNamesRawAndNormalized = [][]string{
 	{"git@github.com:", "git@github.com:"},
 	{"git@github.com/", "git@github.com:"},
 	{"git@gitlab2.sqtools.ru:10022/", "git@gitlab2.sqtools.ru:10022/"},
-}
-
-func makeUrlOld(hostFmt, orgRepo, path, href string) string {
-	if len(path) > 0 {
-		orgRepo = filepath.Join(orgRepo, path)
-	}
-	url := fmt.Sprintf(hostFmt, orgRepo)
-	if href != "" {
-		url += refQuery + href
-	}
-	return url
 }
 
 func makeUrl(hostFmt, orgRepo, path, href string) string {
@@ -225,47 +120,7 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 	}
 }
 
-func TestParseGithubUrl(t *testing.T) {
-	for hostRawFmt, hostSpec := range hostNamesRawAndNormalizedOld {
-		for _, orgRepo := range orgRepos {
-			for _, pathName := range pathNames {
-				for _, hrefArg := range hrefArgs {
-					input := makeUrlOld(hostRawFmt, orgRepo, pathName, hrefArg)
-					if !IsRepoUrl(input) {
-						t.Errorf("Should smell like github arg: %s\n", input)
-					}
-					host, repo, path, gitRef := parseGithubUrl(input)
-					if host != hostSpec {
-						t.Errorf("\n"+
-							"         from %s\n"+
-							"  actual host %s\n"+
-							"expected host %s\n", input, host, hostSpec)
-					}
-					if repo != orgRepo {
-						t.Errorf("\n"+
-							"         from %s\n"+
-							"  actual Repo %s\n"+
-							"expected Repo %s\n", input, repo, orgRepo)
-					}
-					if path != pathName {
-						t.Errorf("\n"+
-							"         from %s\n"+
-							"  actual Path %s\n"+
-							"expected Path %s\n", input, path, pathName)
-					}
-					if gitRef != hrefArg {
-						t.Errorf("\n"+
-							"         from %s\n"+
-							"  actual Href %s\n"+
-							"expected Href %s\n", input, gitRef, hrefArg)
-					}
-				}
-			}
-		}
-	}
-}
-
-func TestNewRepoSpecFromUrlOld(t *testing.T) {
+func TestNewRepoSpecFromUrl_CloneSpecs(t *testing.T) {
 	testcases := []struct {
 		input string
 		repo  string
