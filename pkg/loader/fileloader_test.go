@@ -64,25 +64,6 @@ func MakeFakeFs(td []testData) fs.FileSystem {
 	return fSys
 }
 
-func TestNewLoaderAtConfirmedDir_DemandsDirectory(t *testing.T) {
-	fSys := MakeFakeFs(testCases)
-	_, err := newLoaderAtConfirmedDir("/foo", fSys, nil, nil)
-	if err != nil {
-		t.Fatalf("Unexpected error - a directory should work.")
-	}
-	_, err = newLoaderAtConfirmedDir("/foo/project", fSys, nil, nil)
-	if err != nil {
-		t.Fatalf("Unexpected error - a directory should work.")
-	}
-	_, err = newLoaderAtConfirmedDir("/foo/project/fileA.yaml", fSys, nil, nil)
-	if err == nil {
-		t.Fatalf("Expected error - a file should not work.")
-	}
-	if !strings.Contains(err.Error(), "must be a directory to be a root") {
-		t.Fatalf("unexpected err: %v", err)
-	}
-}
-
 func TestLoaderLoad(t *testing.T) {
 	l1 := NewFileLoaderAtRoot(MakeFakeFs(testCases))
 	if "/" != l1.Root() {
@@ -351,23 +332,6 @@ func TestSplit(t *testing.T) {
 	}
 }
 
-// makeFakeGitCloner returns a cloner that ignores the
-// URL argument and returns a path in a fake file system
-// that should already hold the 'repo' contents.
-func makeFakeGitCloner(t *testing.T, fSys fs.FileSystem, coRoot string) git.Cloner {
-	if !fSys.IsDir(coRoot) {
-		t.Fatalf("expecting a directory at '%s'", coRoot)
-	}
-	return func(url string) (*git.RepoSpec, error) {
-		_, path := splitOnNthSlash(url, 3)
-		if !fSys.IsDir(coRoot + "/" + path) {
-			t.Fatalf("expecting a directory at '%s'/'%s'",
-				coRoot, path)
-		}
-		return git.NewRepoSpec(url, fs.ConfirmedDir(coRoot), path), nil
-	}
-}
-
 func TestNewLoaderAtGitClone(t *testing.T) {
 	rootUrl := "github.com/someOrg/someRepo"
 	pathInRepo := "foo/base"
@@ -385,9 +349,14 @@ func TestNewLoaderAtGitClone(t *testing.T) {
 		[]byte(`
 whatever
 `))
+
+	repoSpec, err := git.NewRepoSpecFromUrl(url)
+	if err != nil {
+		t.Fatalf("unexpected err: %v\n", err)
+	}
 	l, err := newLoaderAtGitClone(
-		url, fSys, nil,
-		makeFakeGitCloner(t, fSys, coRoot))
+		repoSpec, fSys, nil,
+		git.DoNothingCloner(fs.ConfirmedDir(coRoot)))
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
 	}

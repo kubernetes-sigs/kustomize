@@ -25,23 +25,19 @@ import (
 )
 
 // Cloner is a function that can clone a git repo.
-type Cloner func(url string) (*RepoSpec, error)
+type Cloner func(repoSpec *RepoSpec) error
 
 // ClonerUsingGitExec uses a local git install, as opposed
 // to say, some remote API, to obtain a local clone of
 // a remote repo.
-func ClonerUsingGitExec(spec string) (*RepoSpec, error) {
+func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 	gitProgram, err := exec.LookPath("git")
 	if err != nil {
-		return nil, errors.Wrap(err, "no 'git' program on path")
-	}
-	repoSpec, err := NewRepoSpecFromUrl(spec)
-	if err != nil {
-		return nil, err
+		return errors.Wrap(err, "no 'git' program on path")
 	}
 	repoSpec.cloneDir, err = fs.NewTmpConfirmedDir()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	cmd := exec.Command(
 		gitProgram,
@@ -52,17 +48,28 @@ func ClonerUsingGitExec(spec string) (*RepoSpec, error) {
 	cmd.Stdout = &out
 	err = cmd.Run()
 	if err != nil {
-		return nil, errors.Wrapf(err, "trouble cloning %s", spec)
+		return errors.Wrapf(err, "trouble cloning %s", repoSpec.raw)
 	}
 	if repoSpec.ref == "" {
-		return repoSpec, nil
+		return nil
 	}
 	cmd = exec.Command(gitProgram, "checkout", repoSpec.ref)
 	cmd.Dir = repoSpec.cloneDir.String()
 	err = cmd.Run()
 	if err != nil {
-		return nil, errors.Wrapf(
+		return errors.Wrapf(
 			err, "trouble checking out href %s", repoSpec.ref)
 	}
-	return repoSpec, nil
+	return nil
+}
+
+// DoNothingCloner returns a cloner that only sets
+// cloneDir field in the repoSpec.  It's assumed that
+// the cloneDir is associated with some fake filesystem
+// used in a test.
+func DoNothingCloner(dir fs.ConfirmedDir) Cloner {
+	return func(rs *RepoSpec) error {
+		rs.cloneDir = dir
+		return nil
+	}
 }
