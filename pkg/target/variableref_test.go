@@ -23,7 +23,7 @@ import (
 func TestVariableRef(t *testing.T) {
 	th := NewKustTestHarness(t, "/app/overlay/staging")
 	th.writeK("/app/base", `
-apiVersion: v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: base-
 resources:
@@ -323,7 +323,7 @@ spec:
           storage: 1Gi
 `)
 	th.writeK("/app/overlay/staging", `
-apiVersion: v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: dev-
 bases:
@@ -583,7 +583,7 @@ spec:
 func TestVariableRefIngress(t *testing.T) {
 	th := NewKustTestHarness(t, "/app/overlay")
 	th.writeK("/app/base", `
-apiVersion: v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - deployment.yaml
@@ -657,7 +657,7 @@ spec:
     targetPort: http
 `)
 	th.writeK("/app/overlay", `
-apiVersion: v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 nameprefix: kustomized-
 bases:
