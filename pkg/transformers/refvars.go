@@ -42,6 +42,8 @@ func (rv *refvarTransformer) replaceVars(in interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("%#v is expected to be %T", in, s)
 		}
 		return expansion.Expand(s, rv.mappingFunc), nil
+	case nil:
+		return nil, nil
 	default:
 		return "", fmt.Errorf("invalid type encountered %T", vt)
 	}
