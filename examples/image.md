@@ -52,7 +52,7 @@ cd $DEMO_HOME
 kustomize edit set image busybox=alpine:3.6
 ```
 
-The folowing `images` will be added to `kustomization.yaml`:
+The following `images` will be added to `kustomization.yaml`:
 > ```
 > images:
 > - name: busybox
