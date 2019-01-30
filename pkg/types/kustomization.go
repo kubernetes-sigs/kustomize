@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	KustomizationVersion = "v1beta1"
+	KustomizationVersion = "kustomize.config.k8s.io/v1beta1"
 	KustomizationKind    = "Kustomization"
 )
 
