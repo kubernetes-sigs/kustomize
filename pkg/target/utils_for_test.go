@@ -75,7 +75,7 @@ func (th *KustTestHarness) writeF(dir string, content string) {
 
 func (th *KustTestHarness) writeK(dir string, content string) {
 	th.writeF(filepath.Join(dir, constants.KustomizationFileNames[0]), `
-apiVersion: v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 `+content)
 }
