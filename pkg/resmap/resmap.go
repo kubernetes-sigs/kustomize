@@ -24,9 +24,9 @@ import (
 	"sort"
 
 	"github.com/ghodss/yaml"
-	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 // ResMap is a map from ResId to Resource.
@@ -114,8 +114,7 @@ func (m ResMap) ErrorIfNotEqual(m2 ResMap) error {
 func (m ResMap) DeepCopy(rf *resource.Factory) ResMap {
 	mcopy := make(ResMap)
 	for id, obj := range m {
-		mcopy[id] = rf.FromKunstructured(obj.Copy())
-		mcopy[id].SetBehavior(obj.Behavior())
+		mcopy[id] = obj.DeepCopy()
 	}
 	return mcopy
 }
@@ -182,20 +181,18 @@ func MergeWithOverride(maps ...ResMap) (ResMap, error) {
 			if len(matchedId) == 1 {
 				id = matchedId[0]
 				switch r.Behavior() {
-				case ifc.BehaviorReplace:
+				case types.BehaviorReplace:
 					r.Replace(result[id])
 					result[id] = r
-					result[id].SetBehavior(ifc.BehaviorCreate)
-				case ifc.BehaviorMerge:
+				case types.BehaviorMerge:
 					r.Merge(result[id])
 					result[id] = r
-					result[id].SetBehavior(ifc.BehaviorCreate)
 				default:
 					return nil, fmt.Errorf("id %#v exists; must merge or replace", id)
 				}
 			} else if len(matchedId) == 0 {
 				switch r.Behavior() {
-				case ifc.BehaviorMerge, ifc.BehaviorReplace:
+				case types.BehaviorMerge, types.BehaviorReplace:
 					return nil, fmt.Errorf("id %#v does not exist; cannot merge or replace", id)
 				default:
 					result[id] = r
