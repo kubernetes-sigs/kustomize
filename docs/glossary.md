@@ -5,6 +5,7 @@
 [Declarative Application Management]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md
 [JSON]: https://www.json.org/
 [JSONPatch]: https://tools.ietf.org/html/rfc6902
+[JSONMergePatch]: https://tools.ietf.org/html/rfc7386
 [Resource]: #resource
 [YAML]: http://www.yaml.org/start.html
 [application]: #application
@@ -297,6 +298,9 @@ default behavior, add a _directive_.  Recognized
 directives include _replace_ (the default), _merge_
 (avoid replacing a list), _delete_ and a few more
 (see [these notes][strategic-merge]).
+
+Note that for custom resources, SMPs are treated as
+[json merge patches][JSONMergePatch].
 
 Fun fact - any resource file can be used as
 an SMP, overwriting matching fields in another
