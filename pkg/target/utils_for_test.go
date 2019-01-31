@@ -32,6 +32,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 type KustTestHarness struct {
@@ -82,6 +83,10 @@ kind: Kustomization
 
 func (th *KustTestHarness) fromMap(m map[string]interface{}) *resource.Resource {
 	return th.rf.RF().FromMap(m)
+}
+
+func (th *KustTestHarness) fromMapAndOption(m map[string]interface{}, args *types.GeneratorArgs, option *types.GeneratorOptions) *resource.Resource {
+	return th.rf.RF().FromMapAndOption(m, args, option)
 }
 
 func (th *KustTestHarness) writeDefaultConfigs(fName string) {

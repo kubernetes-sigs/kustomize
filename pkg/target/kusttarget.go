@@ -117,15 +117,9 @@ func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 	if err != nil {
 		return nil, err
 	}
-	if kt.shouldAddHashSuffixesToGeneratedResources() {
-		// This effects only generated resources.
-		// It changes only the Name field in the
-		// resource held in the ResMap's value, not
-		// the Name in the key in the ResMap.
-		err := ra.Transform(kt.tFactory.MakeHashTransformer())
-		if err != nil {
-			return nil, err
-		}
+	err = ra.Transform(kt.tFactory.MakeHashTransformer())
+	if err != nil {
+		return nil, err
 	}
 	// Given that names have changed (prefixs/suffixes added),
 	// fix all the back references to those names.

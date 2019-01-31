@@ -21,10 +21,10 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 func TestNameHashTransformer(t *testing.T) {
@@ -81,14 +81,14 @@ func TestNameHashTransformer(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(secret, "secret1"): rf.FromMap(
+		resid.NewResId(secret, "secret1"): rf.FromMapAndOption(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
 				"metadata": map[string]interface{}{
 					"name": "secret1",
 				},
-			}).SetBehavior(ifc.BehaviorCreate),
+			}, &types.GeneratorArgs{Behavior: "create"}, &types.GeneratorOptions{DisableNameSuffixHash: false}),
 	}
 
 	expected := resmap.ResMap{
@@ -142,14 +142,14 @@ func TestNameHashTransformer(t *testing.T) {
 					},
 				},
 			}),
-		resid.NewResId(secret, "secret1"): rf.FromMap(
+		resid.NewResId(secret, "secret1"): rf.FromMapAndOption(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
 				"metadata": map[string]interface{}{
 					"name": "secret1-7kc45hd5f7",
 				},
-			}).SetBehavior(ifc.BehaviorCreate),
+			}, &types.GeneratorArgs{Behavior: "create"}, &types.GeneratorOptions{DisableNameSuffixHash: false}),
 	}
 
 	tran := NewNameHashTransformer()
