@@ -41,7 +41,16 @@ func NewFactory(kf ifc.KunstructuredFactory) *Factory {
 func (rf *Factory) FromMap(m map[string]interface{}) *Resource {
 	return &Resource{
 		Kunstructured: rf.kf.FromMap(m),
-		b:             ifc.BehaviorUnspecified}
+		options:       types.NewGenArgs(nil, nil),
+	}
+}
+
+// FromMapAndOption returns a new instance of Resource with given options.
+func (rf *Factory) FromMapAndOption(m map[string]interface{}, args *types.GeneratorArgs, option *types.GeneratorOptions) *Resource {
+	return &Resource{
+		Kunstructured: rf.kf.FromMap(m),
+		options:       types.NewGenArgs(args, option),
+	}
 }
 
 // FromKunstructured returns a new instance of Resource.
@@ -50,7 +59,10 @@ func (rf *Factory) FromKunstructured(
 	if u == nil {
 		log.Fatal("unstruct ifc must not be null")
 	}
-	return &Resource{Kunstructured: u, b: ifc.BehaviorUnspecified}
+	return &Resource{
+		Kunstructured: u,
+		options:       types.NewGenArgs(nil, nil),
+	}
 }
 
 // SliceFromPatches returns a slice of resources given a patch path
@@ -118,7 +130,7 @@ func (rf *Factory) MakeConfigMap(args *types.ConfigMapArgs, options *types.Gener
 	if err != nil {
 		return nil, err
 	}
-	return &Resource{Kunstructured: u, b: fixBehavior(args.Behavior)}, nil
+	return &Resource{Kunstructured: u, options: types.NewGenArgs(&types.GeneratorArgs{Behavior: args.Behavior}, options)}, nil
 }
 
 // MakeSecret makes an instance of Resource for Secret
@@ -127,13 +139,5 @@ func (rf *Factory) MakeSecret(args *types.SecretArgs, options *types.GeneratorOp
 	if err != nil {
 		return nil, err
 	}
-	return &Resource{Kunstructured: u, b: fixBehavior(args.Behavior)}, nil
-}
-
-func fixBehavior(s string) ifc.GenerationBehavior {
-	b := ifc.NewGenerationBehavior(s)
-	if b == ifc.BehaviorUnspecified {
-		return ifc.BehaviorCreate
-	}
-	return b
+	return &Resource{Kunstructured: u, options: types.NewGenArgs(&types.GeneratorArgs{Behavior: args.Behavior}, options)}, nil
 }
