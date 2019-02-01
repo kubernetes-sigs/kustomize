@@ -23,7 +23,7 @@ import (
 
 func makeCommonFileForMultiplePatchTest(th *KustTestHarness) {
 	th.writeK("/app/base", `
-apiVersion: v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: team-foo-
 commonLabels:
@@ -80,7 +80,7 @@ spec:
     app: nginx
 `)
 	th.writeK("/app/overlay/staging", `
-apiVersion: v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: staging-
 commonLabels:

@@ -23,7 +23,7 @@ import (
 func TestNamespacedGenerator(t *testing.T) {
 	th := NewKustTestHarness(t, "/app")
 	th.writeK("/app", `
-apiVersion: v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 configMapGenerator:
 - name: the-non-default-namespace-map
