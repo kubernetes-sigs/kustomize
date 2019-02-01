@@ -22,9 +22,9 @@ import (
 
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/pkg/gvk"
-	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
@@ -435,10 +435,10 @@ func TestMergeWithoutOverride(t *testing.T) {
 	}
 }
 
-func generateMergeFixtures(b ifc.GenerationBehavior) []ResMap {
+func generateMergeFixtures(b types.GenerationBehavior) []ResMap {
 
 	input1 := ResMap{
-		resid.NewResId(cmap, "cmap"): rf.FromMap(
+		resid.NewResId(cmap, "cmap"): rf.FromMapAndOption(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "ConfigMap",
@@ -449,10 +449,12 @@ func generateMergeFixtures(b ifc.GenerationBehavior) []ResMap {
 					"a": "x",
 					"b": "y",
 				},
-			}),
+			}, &types.GeneratorArgs{
+				Behavior: "create",
+			}, nil),
 	}
 	input2 := ResMap{
-		resid.NewResId(cmap, "cmap"): rf.FromMap(
+		resid.NewResId(cmap, "cmap"): rf.FromMapAndOption(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "ConfigMap",
@@ -464,16 +466,16 @@ func generateMergeFixtures(b ifc.GenerationBehavior) []ResMap {
 					"b": "v",
 					"c": "w",
 				},
-			}),
+			}, &types.GeneratorArgs{
+				Behavior: b.String(),
+			}, nil),
 	}
-	input1[resid.NewResId(cmap, "cmap")].SetBehavior(ifc.BehaviorCreate)
-	input2[resid.NewResId(cmap, "cmap")].SetBehavior(b)
 	return []ResMap{input1, input2}
 }
 
 func TestMergeWithOverride(t *testing.T) {
 	expected := ResMap{
-		resid.NewResId(cmap, "cmap"): rf.FromMap(
+		resid.NewResId(cmap, "cmap"): rf.FromMapAndOption(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "ConfigMap",
@@ -487,10 +489,11 @@ func TestMergeWithOverride(t *testing.T) {
 					"b": "v",
 					"c": "w",
 				},
-			}),
+			}, &types.GeneratorArgs{
+				Behavior: "create",
+			}, nil),
 	}
-	expected[resid.NewResId(cmap, "cmap")].SetBehavior(ifc.BehaviorCreate)
-	merged, err := MergeWithOverride(generateMergeFixtures(ifc.BehaviorMerge)...)
+	merged, err := MergeWithOverride(generateMergeFixtures(types.BehaviorMerge)...)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -514,7 +517,7 @@ func TestMergeWithOverride(t *testing.T) {
 		t.Fatalf("%#v doesn't equal expected %#v", merged2, expected)
 	}
 
-	inputs := generateMergeFixtures(ifc.BehaviorReplace)
+	inputs := generateMergeFixtures(types.BehaviorReplace)
 	replaced, err := MergeWithOverride(inputs...)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -524,7 +527,7 @@ func TestMergeWithOverride(t *testing.T) {
 		t.Fatalf("%#v doesn't equal expected %#v", replaced, expectedReplaced)
 	}
 
-	_, err = MergeWithOverride(generateMergeFixtures(ifc.BehaviorUnspecified)...)
+	_, err = MergeWithOverride(generateMergeFixtures(types.BehaviorUnspecified)...)
 	if err == nil {
 		t.Fatal("Merging with GenerationBehavior BehaviorUnspecified should return an error but does not")
 	}
