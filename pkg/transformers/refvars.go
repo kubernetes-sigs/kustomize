@@ -18,6 +18,9 @@ type refvarTransformer struct {
 // The fieldSpecs are the places to look for occurrences of $(VAR).
 func NewRefVarTransformer(
 	varMap map[string]string, fs []config.FieldSpec) Transformer {
+	if len(varMap) == 0 {
+		return NewNoOpTransformer()
+	}
 	return &refvarTransformer{
 		fieldSpecs:  fs,
 		mappingFunc: expansion.MappingFuncFor(varMap),
