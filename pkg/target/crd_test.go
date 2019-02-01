@@ -22,7 +22,7 @@ import (
 
 func writeBaseWithCrd(th *KustTestHarness) {
 	th.writeK("/app/base", `
-apiVersion: v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 crds:
 - mycrd.json
@@ -273,7 +273,7 @@ func TestCrdWithOverlay(t *testing.T) {
 	th := NewKustTestHarness(t, "/app/overlay")
 	writeBaseWithCrd(th)
 	th.writeK("/app/overlay", `
-apiVersion: v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: prod-
 bases:
