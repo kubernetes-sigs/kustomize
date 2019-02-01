@@ -23,7 +23,7 @@ import (
 func TestSimpleBase(t *testing.T) {
 	th := NewKustTestHarness(t, "/app/base")
 	th.writeK("/app/base", `
-apiVersion: v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: team-foo-
 commonLabels:
@@ -163,7 +163,7 @@ spec:
 
 func makeBaseWithGenerators(th *KustTestHarness) {
 	th.writeK("/app", `
-apiVersion: v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: team-foo-
 commonLabels:
@@ -341,7 +341,7 @@ spec:
         name: configmap-in-overlay
 `)
 	th.writeK("/overlay", `
-apiVersion: v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: staging-
 commonLabels:

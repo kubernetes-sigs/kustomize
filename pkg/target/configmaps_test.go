@@ -23,7 +23,7 @@ import (
 func TestGenerator1(t *testing.T) {
 	th := NewKustTestHarness(t, "/app/overlay")
 	th.writeK("/app/base1", `
-apiVersion: v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: p1-
 configMapGenerator:
@@ -33,7 +33,7 @@ configMapGenerator:
     - from=base
 `)
 	th.writeK("/app/base2", `
-apiVersion: v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: p2-
 configMapGenerator:
@@ -43,7 +43,7 @@ configMapGenerator:
     - from=base
 `)
 	th.writeK("/app/overlay/o1", `
-apiVersion: v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 bases:
 - ../../base1
@@ -54,7 +54,7 @@ configMapGenerator:
     - from=overlay
 `)
 	th.writeK("/app/overlay/o2", `
-apiVersion: v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 bases:
 - ../../base2
@@ -65,7 +65,7 @@ configMapGenerator:
     - from=overlay
 `)
 	th.writeK("/app/overlay", `
-apiVersion: v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 bases:
 - o1
