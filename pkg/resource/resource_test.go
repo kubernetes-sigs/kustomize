@@ -37,7 +37,7 @@ var testConfigMap = factory.FromMap(
 		},
 	})
 
-const testConfigMapString = `unspecified:{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"winnie","namespace":"hundred-acre-wood"}}`
+const testConfigMapString = `{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"winnie","namespace":"hundred-acre-wood"}}`
 
 var testDeployment = factory.FromMap(
 	map[string]interface{}{
@@ -48,7 +48,7 @@ var testDeployment = factory.FromMap(
 		},
 	})
 
-const testDeploymentString = `unspecified:{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"name":"pooh"}}`
+const testDeploymentString = `{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"name":"pooh"}}`
 
 func TestResourceString(t *testing.T) {
 	tests := []struct {

@@ -35,7 +35,7 @@ func NewNameHashTransformer() transformers.Transformer {
 // Transform appends hash to generated resources.
 func (o *nameHashTransformer) Transform(m resmap.ResMap) error {
 	for _, res := range m {
-		if res.IsGenerated() {
+		if res.NeedHashSuffix() {
 			h, err := NewKustHash().Hash(res.Map())
 			if err != nil {
 				return err

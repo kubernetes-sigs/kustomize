@@ -126,7 +126,7 @@ func TestResources1(t *testing.T) {
 			}),
 		resid.NewResIdWithPrefixSuffixNamespace(
 			gvk.Gvk{Version: "v1", Kind: "ConfigMap"},
-			"literalConfigMap", "foo-", "-bar", "ns1"): th.fromMap(
+			"literalConfigMap", "foo-", "-bar", "ns1"): th.fromMapAndOption(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -144,10 +144,10 @@ func TestResources1(t *testing.T) {
 					"DB_USERNAME": "admin",
 					"DB_PASSWORD": "somepw",
 				},
-			}).SetBehavior(ifc.BehaviorCreate),
+			}, &types.GeneratorArgs{}, nil),
 		resid.NewResIdWithPrefixSuffixNamespace(
 			gvk.Gvk{Version: "v1", Kind: "Secret"},
-			"secret", "foo-", "-bar", "ns1"): th.fromMap(
+			"secret", "foo-", "-bar", "ns1"): th.fromMapAndOption(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -166,7 +166,7 @@ func TestResources1(t *testing.T) {
 					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
-			}).SetBehavior(ifc.BehaviorCreate),
+			}, &types.GeneratorArgs{}, nil),
 		resid.NewResIdWithPrefixSuffixNamespace(
 			gvk.Gvk{Version: "v1", Kind: "Namespace"},
 			"ns1", "foo-", "-bar", ""): th.fromMap(

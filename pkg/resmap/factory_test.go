@@ -162,7 +162,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 			filepath: "/whatever/project/app.env",
 			content:  "DB_USERNAME=admin\nDB_PASSWORD=somepw",
 			expected: ResMap{
-				resid.NewResId(cmap, "envConfigMap"): rf.FromMap(
+				resid.NewResId(cmap, "envConfigMap"): rf.FromMapAndOption(
 					map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -173,7 +173,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 							"DB_USERNAME": "admin",
 							"DB_PASSWORD": "somepw",
 						},
-					}).SetBehavior(ifc.BehaviorCreate),
+					}, &types.GeneratorArgs{}, nil),
 			},
 		},
 		{
@@ -190,7 +190,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 			filepath: "/whatever/project/app-init.ini",
 			content:  "FOO=bar\nBAR=baz\n",
 			expected: ResMap{
-				resid.NewResId(cmap, "fileConfigMap"): rf.FromMap(
+				resid.NewResId(cmap, "fileConfigMap"): rf.FromMapAndOption(
 					map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -202,7 +202,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 BAR=baz
 `,
 						},
-					}).SetBehavior(ifc.BehaviorCreate),
+					}, &types.GeneratorArgs{}, nil),
 			},
 		},
 		{
@@ -218,7 +218,7 @@ BAR=baz
 				},
 			},
 			expected: ResMap{
-				resid.NewResId(cmap, "literalConfigMap"): rf.FromMap(
+				resid.NewResId(cmap, "literalConfigMap"): rf.FromMapAndOption(
 					map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -231,7 +231,7 @@ BAR=baz
 							"c": "Good Morning",
 							"d": "false",
 						},
-					}).SetBehavior(ifc.BehaviorCreate),
+					}, &types.GeneratorArgs{}, nil),
 			},
 		},
 		// TODO: add testcase for data coming from multiple sources like
@@ -279,7 +279,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	}
 
 	expected := ResMap{
-		resid.NewResId(secret, "apple"): rf.FromMap(
+		resid.NewResId(secret, "apple"): rf.FromMapAndOption(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -291,7 +291,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
-			}).SetBehavior(ifc.BehaviorCreate),
+			}, &types.GeneratorArgs{}, nil),
 	}
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("%#v\ndoesn't match expected:\n%#v", actual, expected)
