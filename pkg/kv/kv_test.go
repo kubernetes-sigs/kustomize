@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package configmapandsecret
+package kv
 
 import (
 	"reflect"
@@ -25,7 +25,7 @@ func TestKeyValuesFromLines(t *testing.T) {
 	tests := []struct {
 		desc          string
 		content       string
-		expectedPairs []kvPair
+		expectedPairs []KVPair
 		expectedErr   bool
 	}{
 		{
@@ -34,9 +34,9 @@ func TestKeyValuesFromLines(t *testing.T) {
 		k1=v1
 		k2=v2
 		`,
-			expectedPairs: []kvPair{
-				{key: "k1", value: "v1"},
-				{key: "k2", value: "v2"},
+			expectedPairs: []KVPair{
+				{Key: "k1", Value: "v1"},
+				{Key: "k2", Value: "v2"},
 			},
 			expectedErr: false,
 		},
@@ -46,8 +46,8 @@ func TestKeyValuesFromLines(t *testing.T) {
 		k1=v1
 		#k2=v2
 		`,
-			expectedPairs: []kvPair{
-				{key: "k1", value: "v1"},
+			expectedPairs: []KVPair{
+				{Key: "k1", Value: "v1"},
 			},
 			expectedErr: false,
 		},
@@ -55,7 +55,7 @@ func TestKeyValuesFromLines(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		pairs, err := keyValuesFromLines([]byte(test.content))
+		pairs, err := KeyValuesFromLines([]byte(test.content))
 		if test.expectedErr && err == nil {
 			t.Fatalf("%s should not return error", test.desc)
 		}
