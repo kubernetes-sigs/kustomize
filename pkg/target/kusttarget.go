@@ -21,7 +21,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -64,12 +63,9 @@ func NewKustTarget(
 	if err != nil {
 		return nil, err
 	}
-	msgs, errs := k.EnforceFields()
+	errs := k.EnforceFields()
 	if len(errs) > 0 {
-		return nil, fmt.Errorf(strings.Join(errs, "\n"))
-	}
-	if len(msgs) > 0 {
-		log.Printf(strings.Join(msgs, "\n"))
+		return nil, fmt.Errorf("Failed to read kustomization file under %s:\n"+strings.Join(errs, "\n"), ldr.Root())
 	}
 	return &KustTarget{
 		kustomization: &k,
