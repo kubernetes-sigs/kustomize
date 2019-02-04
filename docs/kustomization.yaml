@@ -215,7 +215,7 @@ crds:
 # Vars are used to capture text from one resource's field
 # and insert that text elsewhere.
 #
-# For example, suppose one specify the name of a k8s Service
+# For example, suppose someone specifies the name of a k8s Service
 # object in a container's command line, and the name of a
 # k8s Secret object in a container's environment variable,
 # so that the following would work:
