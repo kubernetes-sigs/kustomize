@@ -6,6 +6,9 @@
    [kustomization](glossary.md#kustomization)
    with explanations of each field.
 
+ * [versioning policy](versioningPolicy.md) - How the code and the kustomization
+   file evolve in time.
+   
  * [workflow](workflows.md) - Some steps one might take in using
    bespoke and off-the-shelf configurations.
   
