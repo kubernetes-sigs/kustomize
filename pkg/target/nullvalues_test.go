@@ -44,7 +44,7 @@ spec:
         name: example
 `)
 	th.writeF("/app/kustomization.yaml", `
-apiVersion: v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - deployment.yaml
