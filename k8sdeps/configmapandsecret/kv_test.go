@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,50 +19,39 @@ package configmapandsecret
 import (
 	"reflect"
 	"testing"
+
+	"sigs.k8s.io/kustomize/k8sdeps/kv"
+	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/loader"
 )
 
-func TestKeyValuesFromLines(t *testing.T) {
+func TestKeyValuesFromFileSources(t *testing.T) {
 	tests := []struct {
-		desc          string
-		content       string
-		expectedPairs []kvPair
-		expectedErr   bool
+		description string
+		sources     []string
+		expected    []kv.KVPair
 	}{
 		{
-			desc: "valid kv content parse",
-			content: `
-		k1=v1
-		k2=v2
-		`,
-			expectedPairs: []kvPair{
-				{key: "k1", value: "v1"},
-				{key: "k2", value: "v2"},
+			description: "create kvs from file sources",
+			sources:     []string{"files/app-init.ini"},
+			expected: []kv.KVPair{
+				{
+					Key:   "app-init.ini",
+					Value: "FOO=bar",
+				},
 			},
-			expectedErr: false,
 		},
-		{
-			desc: "content with comments",
-			content: `
-		k1=v1
-		#k2=v2
-		`,
-			expectedPairs: []kvPair{
-				{key: "k1", value: "v1"},
-			},
-			expectedErr: false,
-		},
-		// TODO: add negative testcases
 	}
 
-	for _, test := range tests {
-		pairs, err := keyValuesFromLines([]byte(test.content))
-		if test.expectedErr && err == nil {
-			t.Fatalf("%s should not return error", test.desc)
+	fSys := fs.MakeFakeFS()
+	fSys.WriteFile("/files/app-init.ini", []byte("FOO=bar"))
+	for _, tc := range tests {
+		kvs, err := keyValuesFromFileSources(loader.NewFileLoaderAtRoot(fSys), tc.sources)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
 		}
-
-		if !reflect.DeepEqual(pairs, test.expectedPairs) {
-			t.Errorf("%s should succeed, got:%v exptected:%v", test.desc, pairs, test.expectedPairs)
+		if !reflect.DeepEqual(kvs, tc.expected) {
+			t.Fatalf("in testcase: %q updated:\n%#v\ndoesn't match expected:\n%#v\n", tc.description, kvs, tc.expected)
 		}
-
 	}
 }

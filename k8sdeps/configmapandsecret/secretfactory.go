@@ -23,6 +23,7 @@ import (
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
+	"sigs.k8s.io/kustomize/k8sdeps/kv"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -53,7 +54,7 @@ func (f *SecretFactory) makeFreshSecret(args *types.SecretArgs) *corev1.Secret {
 
 // MakeSecret returns a new secret.
 func (f *SecretFactory) MakeSecret(args *types.SecretArgs, options *types.GeneratorOptions) (*corev1.Secret, error) {
-	var all []kvPair
+	var all []kv.KVPair
 	var err error
 	s := f.makeFreshSecret(args)
 
@@ -80,7 +81,7 @@ func (f *SecretFactory) MakeSecret(args *types.SecretArgs, options *types.Genera
 	all = append(all, pairs...)
 
 	for _, kv := range all {
-		err = addKvToSecret(s, kv.key, kv.value)
+		err = addKvToSecret(s, kv.Key, kv.Value)
 		if err != nil {
 			return nil, err
 		}
