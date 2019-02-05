@@ -44,19 +44,19 @@ func newCmdAddConfigMap(fSys fs.FileSystem, kf ifc.KunstructuredFactory) *cobra.
 	# Adds a configmap from env-file
 	kustomize edit add configmap my-configmap --from-env-file=env/path.env
 `,
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			err := flagsAndArgs.ExpandFileSource(fSys)
 			if err != nil {
 				return err
 			}
 
-			err = flagsAndArgs.Validate(args)
+			err = flagsAndArgs.Validate(cmd, args)
 			if err != nil {
 				return err
 			}
 
 			// Load the kustomization file.
-			mf, err := kustfile.NewKustomizationFile(fSys)
+			mf, err := kustfile.NewKustomizationFile(flagsAndArgs.KustomizationDir, fSys)
 			if err != nil {
 				return err
 			}

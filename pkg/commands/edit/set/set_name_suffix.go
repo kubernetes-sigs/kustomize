@@ -20,11 +20,13 @@ import (
 	"errors"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/pkg/commands/edit/editopts"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
 type setNameSuffixOptions struct {
+	editopts.Options
 	suffix string
 }
 
@@ -42,7 +44,7 @@ will add the field "nameSuffix: -acme" to the kustomization file if it doesn't e
 and overwrite the value with "-acme" if the field does exist.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := o.Validate(args)
+			err := o.Validate(cmd, args)
 			if err != nil {
 				return err
 			}
@@ -57,9 +59,13 @@ and overwrite the value with "-acme" if the field does exist.
 }
 
 // Validate validates setNameSuffix command.
-func (o *setNameSuffixOptions) Validate(args []string) error {
+func (o *setNameSuffixOptions) Validate(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
 		return errors.New("must specify exactly one suffix value")
+	}
+	err := o.ValidateCommon(cmd, args)
+	if err != nil {
+		return err
 	}
 	// TODO: add further validation on the value.
 	o.suffix = args[0]
@@ -73,7 +79,7 @@ func (o *setNameSuffixOptions) Complete(cmd *cobra.Command, args []string) error
 
 // RunSetNameSuffix runs setNameSuffix command (does real work).
 func (o *setNameSuffixOptions) RunSetNameSuffix(fSys fs.FileSystem) error {
-	mf, err := kustfile.NewKustomizationFile(fSys)
+	mf, err := kustfile.NewKustomizationFile(o.KustomizationDir, fSys)
 	if err != nil {
 		return err
 	}

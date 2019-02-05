@@ -21,18 +21,20 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/pkg/commands/edit/editopts"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/patch"
 )
 
 type addPatchOptions struct {
+	editopts.Options
 	patchFilePaths []string
 }
 
 // newCmdAddPatch adds the name of a file containing a patch to the kustomization file.
 func newCmdAddPatch(fsys fs.FileSystem) *cobra.Command {
-	var o addPatchOptions
+	o := addPatchOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "patch",
@@ -40,7 +42,7 @@ func newCmdAddPatch(fsys fs.FileSystem) *cobra.Command {
 		Example: `
 		add patch {filepath}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := o.Validate(args)
+			err := o.Validate(cmd, args)
 			if err != nil {
 				return err
 			}
@@ -55,9 +57,13 @@ func newCmdAddPatch(fsys fs.FileSystem) *cobra.Command {
 }
 
 // Validate validates addPatch command.
-func (o *addPatchOptions) Validate(args []string) error {
+func (o *addPatchOptions) Validate(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return errors.New("must specify a patch file")
+	}
+	err := o.ValidateCommon(cmd, args)
+	if err != nil {
+		return err
 	}
 	o.patchFilePaths = args
 	return nil
@@ -78,7 +84,7 @@ func (o *addPatchOptions) RunAddPatch(fSys fs.FileSystem) error {
 		return nil
 	}
 
-	mf, err := kustfile.NewKustomizationFile(fSys)
+	mf, err := kustfile.NewKustomizationFile(o.KustomizationDir, fSys)
 	if err != nil {
 		return err
 	}

@@ -17,6 +17,7 @@ limitations under the License.
 package kustfile
 
 import (
+	"path"
 	"reflect"
 	"strings"
 	"testing"
@@ -24,6 +25,10 @@ import (
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/types"
+)
+
+const (
+	curDir = "./"
 )
 
 func TestFieldOrder(t *testing.T) {
@@ -58,30 +63,121 @@ func TestFieldOrder(t *testing.T) {
 	}
 }
 
-func TestWriteAndRead(t *testing.T) {
-	kustomization := &types.Kustomization{
-		NamePrefix: "prefix",
+func TestReadExisting(t *testing.T) {
+	readFromExistingFile := func(dir string, filename string) {
+		kustomizationContent := []byte(`
+apiVersion: v1beta1
+kind: Kustomization
+namespace: my-recognizable-namespace
+`)
+
+		fSys := fs.MakeFakeFS()
+
+		err := fSys.MkdirAll(dir)
+		if err != nil {
+			t.Fatalf("Test bench failure: Couldn't MkdirAll(): %v\n", err)
+		}
+
+		targetPath := path.Join(dir, filename)
+		err = fSys.WriteFile(targetPath, kustomizationContent)
+		if err != nil {
+			t.Fatalf("Test bench failure: Couldn't WriteFile() at %v: %v\n", targetPath, err)
+		}
+
+		mf, err := NewKustomizationFile(dir, fSys)
+		if err != nil {
+			t.Fatalf("Couldn't NewKustomizationFile() at %v: %v\n", targetPath, err)
+		}
+
+		content, err := mf.Read()
+		if err != nil {
+			t.Fatalf("Couldn't Read() at %v: %v\n", targetPath, err)
+		}
+
+		if content.Namespace != "my-recognizable-namespace" {
+			t.Fatalf(
+				"Read kustomization file at %v but it didn't contain the correct content\n",
+				targetPath,
+			)
+		}
 	}
 
-	fSys := fs.MakeFakeFS()
-	fSys.WriteTestKustomization()
-	mf, err := NewKustomizationFile(fSys)
-	if err != nil {
-		t.Fatalf("Unexpected Error: %v", err)
+	// Test preferred name
+	readFromExistingFile("./", "kustomization.yaml")
+	readFromExistingFile("../", "kustomization.yaml")
+	readFromExistingFile("/", "kustomization.yaml")
+	readFromExistingFile("subdir", "kustomization.yaml")
+	readFromExistingFile("subdir1/subdir2", "kustomization.yaml")
+
+	// Test fallback name
+	readFromExistingFile("./", "kustomization.yml")
+	readFromExistingFile("../", "kustomization.yml")
+	readFromExistingFile("/", "kustomization.yml")
+	readFromExistingFile("subdir", "kustomization.yml")
+	readFromExistingFile("subdir1/subdir2", "kustomization.yml")
+}
+
+func TestReadReflectsWrite(t *testing.T) {
+	readReflectsWrite := func(dir string, filename string) {
+		kustomizationContent := []byte(`
+apiVersion: v1beta1
+kind: Kustomization
+namespace: my-recognizable-namespace-1
+`)
+
+		newKustomization := &types.Kustomization{
+			Namespace: "my-recognizable-namespace-2",
+		}
+
+		fSys := fs.MakeFakeFS()
+
+		err := fSys.MkdirAll(dir)
+		if err != nil {
+			t.Fatalf("Test bench failure: Couldn't MkdirAll(): %v\n", err)
+		}
+
+		targetPath := path.Join(dir, filename)
+		err = fSys.WriteFile(targetPath, kustomizationContent)
+		if err != nil {
+			t.Fatalf("Test bench failure: Couldn't WriteFile() at %v: %v\n", targetPath, err)
+		}
+
+		mf, err := NewKustomizationFile(dir, fSys)
+		if err != nil {
+			t.Fatalf("Couldn't NewKustomizationFile() at %v: %v\n", targetPath, err)
+		}
+
+		err = mf.Write(newKustomization)
+		if err != nil {
+			t.Fatalf("Couldn't Write() at %v: %v\n", targetPath, err)
+		}
+
+		content, err := mf.Read()
+		if err != nil {
+			t.Fatalf("Couldn't Read() at %v: %v\n", targetPath, err)
+		}
+
+		if content.Namespace != "my-recognizable-namespace-2" {
+			t.Fatalf(
+				"Read kustomization file at %v but it didn't contain the correct content\n",
+				targetPath,
+			)
+		}
 	}
 
-	if err := mf.Write(kustomization); err != nil {
-		t.Fatalf("Couldn't write kustomization file: %v\n", err)
-	}
+	// Test preferred name
+	readReflectsWrite("./", "kustomization.yaml")
+	readReflectsWrite("../", "kustomization.yaml")
+	readReflectsWrite("/", "kustomization.yaml")
+	readReflectsWrite("subdir", "kustomization.yaml")
+	readReflectsWrite("subdir1/subdir2", "kustomization.yaml")
 
-	content, err := mf.Read()
-	if err != nil {
-		t.Fatalf("Couldn't read kustomization file: %v\n", err)
-	}
-	kustomization.DealWithMissingFields()
-	if !reflect.DeepEqual(kustomization, content) {
-		t.Fatal("Read kustomization is different from written kustomization")
-	}
+	// Test fallback name
+	readReflectsWrite("./", "kustomization.yml")
+	readReflectsWrite("../", "kustomization.yml")
+	readReflectsWrite("/", "kustomization.yml")
+	readReflectsWrite("subdir", "kustomization.yml")
+	readReflectsWrite("subdir1/subdir2", "kustomization.yml")
 }
 
 // Deprecated fields should not survive being read.
@@ -96,7 +192,7 @@ patchesStrategicMerge:
 `)
 	fSys := fs.MakeFakeFS()
 	fSys.WriteTestKustomizationWith(hasDeprecatedFields)
-	mf, err := NewKustomizationFile(fSys)
+	mf, err := NewKustomizationFile(curDir, fSys)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
 	}
@@ -132,7 +228,7 @@ patchesStrategicMerge:
 
 func TestNewNotExist(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
-	_, err := NewKustomizationFile(fakeFS)
+	_, err := NewKustomizationFile("./", fakeFS)
 	if err == nil {
 		t.Fatalf("expect an error")
 	}
@@ -140,7 +236,7 @@ func TestNewNotExist(t *testing.T) {
 	if !strings.Contains(err.Error(), contained) {
 		t.Fatalf("expect an error contains %q, but got %v", contained, err)
 	}
-	_, err = NewKustomizationFile(fakeFS)
+	_, err = NewKustomizationFile("./", fakeFS)
 	if err == nil {
 		t.Fatalf("expect an error")
 	}
@@ -159,7 +255,7 @@ configMapGenerator:
 `
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile(constants.SecondaryKustomizationFileName, []byte(kcontent))
-	k, err := NewKustomizationFile(fakeFS)
+	k, err := NewKustomizationFile("./", fakeFS)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
 	}
@@ -196,7 +292,7 @@ patchesStrategicMerge:
 `)
 	fSys := fs.MakeFakeFS()
 	fSys.WriteTestKustomizationWith(kustomizationContentWithComments)
-	mf, err := NewKustomizationFile(fSys)
+	mf, err := NewKustomizationFile("./", fSys)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
 	}
@@ -292,7 +388,7 @@ generatorOptions:
 `)
 	fSys := fs.MakeFakeFS()
 	fSys.WriteTestKustomizationWith(kustomizationContentWithComments)
-	mf, err := NewKustomizationFile(fSys)
+	mf, err := NewKustomizationFile("./", fSys)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
 	}

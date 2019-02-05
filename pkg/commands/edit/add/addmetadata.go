@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/pkg/commands/edit/editopts"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
@@ -47,6 +48,7 @@ func (k kindOfAdd) String() string {
 }
 
 type addMetadataOptions struct {
+	editopts.Options
 	metadata     map[string]string
 	mapValidator func(map[string]string) error
 	kind         kindOfAdd
@@ -63,7 +65,7 @@ func newCmdAddAnnotation(fSys fs.FileSystem, v func(map[string]string) error) *c
 		Example: `
 		add annotation {annotationKey1:annotationValue1},{annotationKey2:annotationValue2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return o.runE(args, fSys, o.addAnnotations)
+			return o.runE(cmd, args, fSys, o.addAnnotations)
 		},
 	}
 	return cmd
@@ -80,19 +82,23 @@ func newCmdAddLabel(fSys fs.FileSystem, v func(map[string]string) error) *cobra.
 		Example: `
 		add label {labelKey1:labelValue1},{labelKey2:labelValue2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return o.runE(args, fSys, o.addLabels)
+			return o.runE(cmd, args, fSys, o.addLabels)
 		},
 	}
 	return cmd
 }
 
 func (o *addMetadataOptions) runE(
-	args []string, fSys fs.FileSystem, adder func(*types.Kustomization) error) error {
-	err := o.validateAndParse(args)
+	cmd *cobra.Command,
+	args []string,
+	fSys fs.FileSystem,
+	adder func(*types.Kustomization) error,
+) error {
+	err := o.validateAndParse(cmd, args)
 	if err != nil {
 		return err
 	}
-	kf, err := kustfile.NewKustomizationFile(fSys)
+	kf, err := kustfile.NewKustomizationFile(o.KustomizationDir, fSys)
 	if err != nil {
 		return err
 	}
@@ -108,12 +114,16 @@ func (o *addMetadataOptions) runE(
 }
 
 // validateAndParse validates `add` commands and parses them into o.metadata
-func (o *addMetadataOptions) validateAndParse(args []string) error {
+func (o *addMetadataOptions) validateAndParse(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("must specify %s", o.kind)
 	}
 	if len(args) > 1 {
 		return fmt.Errorf("%ss must be comma-separated, with no spaces", o.kind)
+	}
+	err := o.ValidateCommon(cmd, args)
+	if err != nil {
+		return err
 	}
 	m, err := o.convertToMap(args[0])
 	if err != nil {

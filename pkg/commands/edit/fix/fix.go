@@ -18,12 +18,19 @@ package fix
 
 import (
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/pkg/commands/edit/editopts"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
+type fixOptions struct {
+	editopts.Options
+}
+
 // NewCmdFix returns an instance of 'fix' subcommand.
 func NewCmdFix(fSys fs.FileSystem) *cobra.Command {
+	o := fixOptions{}
+
 	cmd := &cobra.Command{
 		Use:   "fix",
 		Short: "Fix the missing fields in kustomization file",
@@ -34,14 +41,18 @@ func NewCmdFix(fSys fs.FileSystem) *cobra.Command {
 
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return RunFix(fSys)
+			err := o.ValidateCommon(cmd, args)
+			if err != nil {
+				return err
+			}
+			return o.RunFix(fSys)
 		},
 	}
 	return cmd
 }
 
-func RunFix(fSys fs.FileSystem) error {
-	mf, err := kustfile.NewKustomizationFile(fSys)
+func (o *fixOptions) RunFix(fSys fs.FileSystem) error {
+	mf, err := kustfile.NewKustomizationFile(o.KustomizationDir, fSys)
 	if err != nil {
 		return err
 	}

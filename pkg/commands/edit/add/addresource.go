@@ -21,17 +21,19 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/pkg/commands/edit/editopts"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
 type addResourceOptions struct {
+	editopts.Options
 	resourceFilePaths []string
 }
 
 // newCmdAddResource adds the name of a file containing a resource to the kustomization file.
 func newCmdAddResource(fsys fs.FileSystem) *cobra.Command {
-	var o addResourceOptions
+	o := addResourceOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "resource",
@@ -39,7 +41,7 @@ func newCmdAddResource(fsys fs.FileSystem) *cobra.Command {
 		Example: `
 		add resource {filepath}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := o.Validate(args)
+			err := o.Validate(cmd, args)
 			if err != nil {
 				return err
 			}
@@ -54,9 +56,13 @@ func newCmdAddResource(fsys fs.FileSystem) *cobra.Command {
 }
 
 // Validate validates addResource command.
-func (o *addResourceOptions) Validate(args []string) error {
+func (o *addResourceOptions) Validate(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return errors.New("must specify a resource file")
+	}
+	err := o.ValidateCommon(cmd, args)
+	if err != nil {
+		return err
 	}
 	o.resourceFilePaths = args
 	return nil
@@ -77,7 +83,7 @@ func (o *addResourceOptions) RunAddResource(fSys fs.FileSystem) error {
 		return nil
 	}
 
-	mf, err := kustfile.NewKustomizationFile(fSys)
+	mf, err := kustfile.NewKustomizationFile(o.KustomizationDir, fSys)
 	if err != nil {
 		return err
 	}

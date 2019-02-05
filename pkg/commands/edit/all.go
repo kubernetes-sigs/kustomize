@@ -43,6 +43,19 @@ func NewCmdEdit(fsys fs.FileSystem, v ifc.Validator, kf ifc.KunstructuredFactory
 `,
 		Args: cobra.MinimumNArgs(1),
 	}
+
+	// This isn't accessed directly --- we will instead look it up by name in
+	// `editopts.Options.ValidateCommon()`.
+	c.PersistentFlags().StringP(
+		"kustomization-dir",
+		"d",
+		"./",
+		"The directory containing the kustomization file to act upon",
+	)
+
+	// Help tab completion hooks know how to fill out this flag
+	c.MarkPersistentFlagFilename("kustomization-dir")
+
 	c.AddCommand(
 		add.NewCmdAdd(fsys, v, kf),
 		set.NewCmdSet(fsys, v),

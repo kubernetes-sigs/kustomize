@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"path"
 	"reflect"
 	"regexp"
 	"strings"
@@ -112,14 +113,15 @@ func squash(x [][]byte) []byte {
 }
 
 type kustomizationFile struct {
-	path           string
-	fSys           fs.FileSystem
-	originalFields []*commentedField
+	kustomizationDir string
+	path             string
+	fSys             fs.FileSystem
+	originalFields   []*commentedField
 }
 
 // NewKustomizationFile returns a new instance.
-func NewKustomizationFile(fSys fs.FileSystem) (*kustomizationFile, error) { // nolint
-	mf := &kustomizationFile{fSys: fSys}
+func NewKustomizationFile(kustomizationDir string, fSys fs.FileSystem) (*kustomizationFile, error) { // nolint
+	mf := &kustomizationFile{kustomizationDir: kustomizationDir, fSys: fSys}
 	err := mf.validate()
 	if err != nil {
 		return nil, err
@@ -128,17 +130,32 @@ func NewKustomizationFile(fSys fs.FileSystem) (*kustomizationFile, error) { // n
 }
 
 func (mf *kustomizationFile) validate() error {
-	if mf.fSys.Exists(constants.KustomizationFileName) {
-		mf.path = constants.KustomizationFileName
-	} else if mf.fSys.Exists(constants.SecondaryKustomizationFileName) {
-		mf.path = constants.SecondaryKustomizationFileName
-	} else {
-		return fmt.Errorf("Missing kustomization file '%s'.\n", constants.KustomizationFileName)
+
+	var tryPath string
+
+	tryPath = path.Join(mf.kustomizationDir, constants.KustomizationFileName)
+	if mf.fSys.Exists(tryPath) {
+		goto FileFound
 	}
 
-	if mf.fSys.IsDir(mf.path) {
-		return fmt.Errorf("%s should be a file", mf.path)
+	tryPath = path.Join(mf.kustomizationDir, constants.SecondaryKustomizationFileName)
+	if mf.fSys.Exists(tryPath) {
+		goto FileFound
 	}
+
+	return fmt.Errorf(
+		"Missing kustomization file '%s'.\n",
+		path.Join(mf.kustomizationDir, constants.KustomizationFileName),
+	)
+
+FileFound:
+
+	if mf.fSys.IsDir(tryPath) {
+		return fmt.Errorf("%s should be a file", tryPath)
+	}
+
+	mf.path = tryPath
+
 	return nil
 }
 

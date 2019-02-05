@@ -22,17 +22,19 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/pkg/commands/edit/editopts"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
 type addBaseOptions struct {
+	editopts.Options
 	baseDirectoryPaths string
 }
 
 // newCmdAddBase adds the file path of the kustomize base to the kustomization file.
 func newCmdAddBase(fsys fs.FileSystem) *cobra.Command {
-	var o addBaseOptions
+	o := addBaseOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "base",
@@ -40,7 +42,7 @@ func newCmdAddBase(fsys fs.FileSystem) *cobra.Command {
 		Example: `
 		add base {filepath1},{filepath2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := o.Validate(args)
+			err := o.Validate(cmd, args)
 			if err != nil {
 				return err
 			}
@@ -55,10 +57,16 @@ func newCmdAddBase(fsys fs.FileSystem) *cobra.Command {
 }
 
 // Validate validates addBase command.
-func (o *addBaseOptions) Validate(args []string) error {
+func (o *addBaseOptions) Validate(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
 		return errors.New("must specify a base directory")
 	}
+
+	err := o.ValidateCommon(cmd, args)
+	if err != nil {
+		return err
+	}
+
 	o.baseDirectoryPaths = args[0]
 	return nil
 }
@@ -70,7 +78,7 @@ func (o *addBaseOptions) Complete(cmd *cobra.Command, args []string) error {
 
 // RunAddBase runs addBase command (do real work).
 func (o *addBaseOptions) RunAddBase(fSys fs.FileSystem) error {
-	mf, err := kustfile.NewKustomizationFile(fSys)
+	mf, err := kustfile.NewKustomizationFile(o.KustomizationDir, fSys)
 	if err != nil {
 		return err
 	}

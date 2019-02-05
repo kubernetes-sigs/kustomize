@@ -19,6 +19,7 @@ package add
 import (
 	"testing"
 
+	"sigs.k8s.io/kustomize/pkg/commands/edit/editopts"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/types"
@@ -28,7 +29,8 @@ import (
 func makeKustomization(t *testing.T) *types.Kustomization {
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteTestKustomization()
-	kf, err := kustfile.NewKustomizationFile(fakeFS)
+
+	kf, err := kustfile.NewKustomizationFile("./", fakeFS)
 	if err != nil {
 		t.Errorf("unexpected new error %v", err)
 	}

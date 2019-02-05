@@ -22,12 +22,14 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/pkg/commands/edit/editopts"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
 type setNamespaceOptions struct {
+	editopts.Options
 	namespace string
 	validator ifc.Validator
 }
@@ -47,7 +49,7 @@ and overwrite the value with "staging" if the field does exist.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			o.validator = v
-			err := o.Validate(args)
+			err := o.Validate(cmd, args)
 			if err != nil {
 				return err
 			}
@@ -58,9 +60,13 @@ and overwrite the value with "staging" if the field does exist.
 }
 
 // Validate validates setNamespace command.
-func (o *setNamespaceOptions) Validate(args []string) error {
+func (o *setNamespaceOptions) Validate(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
 		return errors.New("must specify exactly one namespace value")
+	}
+	err := o.ValidateCommon(cmd, args)
+	if err != nil {
+		return err
 	}
 	ns := args[0]
 	if errs := o.validator.ValidateNamespace(ns); len(errs) != 0 {
@@ -72,7 +78,7 @@ func (o *setNamespaceOptions) Validate(args []string) error {
 
 // RunSetNamespace runs setNamespace command (does real work).
 func (o *setNamespaceOptions) RunSetNamespace(fSys fs.FileSystem) error {
-	mf, err := kustfile.NewKustomizationFile(fSys)
+	mf, err := kustfile.NewKustomizationFile(o.KustomizationDir, fSys)
 	if err != nil {
 		return err
 	}

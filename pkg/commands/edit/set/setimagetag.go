@@ -23,12 +23,14 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/pkg/commands/edit/editopts"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 type setImageTagOptions struct {
+	editopts.Options
 	imageTagMap map[string]types.ImageTag
 }
 
@@ -58,7 +60,7 @@ to the kustomization file if it doesn't exist,
 and overwrite the previous ones if the image tag exists.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := o.Validate(args)
+			err := o.Validate(cmd, args)
 			if err != nil {
 				return err
 			}
@@ -69,9 +71,14 @@ and overwrite the previous ones if the image tag exists.
 }
 
 // Validate validates setImageTag command.
-func (o *setImageTagOptions) Validate(args []string) error {
+func (o *setImageTagOptions) Validate(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return errors.New("no image specified")
+	}
+
+	err := o.ValidateCommon(cmd, args)
+	if err != nil {
+		return err
 	}
 
 	o.imageTagMap = make(map[string]types.ImageTag)
@@ -99,7 +106,7 @@ func (o *setImageTagOptions) Validate(args []string) error {
 
 // RunSetImageTags runs setImageTags command (does real work).
 func (o *setImageTagOptions) RunSetImageTags(fSys fs.FileSystem) error {
-	mf, err := kustfile.NewKustomizationFile(fSys)
+	mf, err := kustfile.NewKustomizationFile(o.KustomizationDir, fSys)
 	if err != nil {
 		return err
 	}

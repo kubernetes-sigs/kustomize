@@ -19,11 +19,15 @@ package add
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/pkg/commands/edit/editopts"
 	"sigs.k8s.io/kustomize/pkg/fs"
 )
 
 // cMapFlagsAndArgs encapsulates the options for add configmap commands.
 type cMapFlagsAndArgs struct {
+	editopts.Options
+
 	// Name of configMap/Secret (required)
 	Name string
 	// FileSources to derive the configMap/Secret from (optional)
@@ -36,9 +40,13 @@ type cMapFlagsAndArgs struct {
 }
 
 // Validate validates required fields are set to support structured generation.
-func (a *cMapFlagsAndArgs) Validate(args []string) error {
+func (a *cMapFlagsAndArgs) Validate(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
 		return fmt.Errorf("name must be specified once")
+	}
+	err := a.ValidateCommon(cmd, args)
+	if err != nil {
+		return err
 	}
 	a.Name = args[0]
 	if len(a.EnvFileSource) == 0 && len(a.FileSources) == 0 && len(a.LiteralSources) == 0 {
