@@ -26,8 +26,8 @@ import (
 	"k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
+	"sigs.k8s.io/kustomize/k8sdeps/kv"
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/kv"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
