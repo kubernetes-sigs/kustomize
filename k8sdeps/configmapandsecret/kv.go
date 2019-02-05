@@ -22,8 +22,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/k8sdeps/kv"
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/kv"
 )
 
 func keyValuesFromLiteralSources(sources []string) ([]kv.KVPair, error) {
