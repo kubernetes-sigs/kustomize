@@ -21,7 +21,7 @@ package constants
 // by Kustomize.
 // In each directory, Kustomize searches for file with the name in this list.
 // Only one match is allowed.
-var KustomizationFileNames = [3]string{
+var KustomizationFileNames = []string{
 	"kustomization.yaml",
 	"kustomization.yml",
 	"Kustomization",
