@@ -11,10 +11,9 @@ field version tag (e.g. `1.0.11`) that aspires to
 [semantic versioning].
 
 When enough changes have accumulated to
-(subjectively) warrant a new release,
-a [release process] is followed, and the
-fields in the version number are bumped
-per semver.
+warrant a new release, a [release process]
+is followed, and the fields in the version
+number are bumped per semver.
 
 ## Kustomization File Versioning
 
@@ -88,7 +87,7 @@ will no longer recognize these fields.
 ### Review of k8s API versioning
 
 The k8s API has specific [conventions] and a
-process for making a [changes].
+process for making [changes].
 
 The presence of an `apiVersion` field in a k8s
 native type signals:
