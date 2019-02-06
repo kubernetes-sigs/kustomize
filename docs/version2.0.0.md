@@ -1,6 +1,6 @@
 # Kustomize 2.0.0
 
-After security review, a field use in secret generation was removed from the definition of a kustomization file with no mechanism to convert it to a new form. Also, the set of paths one may specify in a kustomization file has been further constrained.
+After security review, a field used in secret generation (see below) was removed from the definition of a kustomization file with no mechanism to convert it to a new form. Also, the set of files accessible from a kustomization file has been further constrained.
 
 Per the [versioning policy](versioningPolicy.md), backward incompatible changes trigger an increment of the major version number, hence we go from 1.0.11 to 2.0.0. We're taking this major version increment opportunity to remove some already deprecated fields, and the code paths associated with them.
 
