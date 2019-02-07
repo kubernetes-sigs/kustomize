@@ -267,7 +267,8 @@ func (l *fileLoader) errIfArgEqualOrHigher(
 // path but a different tag?
 func (l *fileLoader) errIfRepoCycle(newRepoSpec *git.RepoSpec) error {
 	// TODO(monopole): Use parsed data instead of Raw().
-	if strings.HasPrefix(l.repoSpec.Raw(), newRepoSpec.Raw()) {
+	if l.repoSpec != nil &&
+		strings.HasPrefix(l.repoSpec.Raw(), newRepoSpec.Raw()) {
 		return fmt.Errorf(
 			"cycle detected: URI '%s' referenced by previous URI '%s'",
 			newRepoSpec.Raw(), l.repoSpec.Raw())
