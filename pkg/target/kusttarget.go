@@ -88,11 +88,12 @@ func loadKustFile(ldr ifc.Loader) ([]byte, error) {
 	}
 	switch match {
 	case 0:
-		return nil, fmt.Errorf("no kustomization.yaml file under %s", ldr.Root())
+		return nil, fmt.Errorf("No kustomization file found in %s. Kustomize supports the following kustomization files: %s",
+			ldr.Root(), strings.Join(constants.KustomizationFileNames, ", "))
 	case 1:
 		return content, nil
 	default:
-		return nil, fmt.Errorf("Found multiple kustomization file under: %s\n", ldr.Root())
+		return nil, fmt.Errorf("Found multiple kustomization files under: %s\n", ldr.Root())
 	}
 }
 
