@@ -25,7 +25,7 @@ func TestKeyValuesFromLines(t *testing.T) {
 	tests := []struct {
 		desc          string
 		content       string
-		expectedPairs []KVPair
+		expectedPairs []Pair
 		expectedErr   bool
 	}{
 		{
@@ -34,7 +34,7 @@ func TestKeyValuesFromLines(t *testing.T) {
 		k1=v1
 		k2=v2
 		`,
-			expectedPairs: []KVPair{
+			expectedPairs: []Pair{
 				{Key: "k1", Value: "v1"},
 				{Key: "k2", Value: "v2"},
 			},
@@ -46,7 +46,7 @@ func TestKeyValuesFromLines(t *testing.T) {
 		k1=v1
 		#k2=v2
 		`,
-			expectedPairs: []KVPair{
+			expectedPairs: []Pair{
 				{Key: "k1", Value: "v1"},
 			},
 			expectedErr: false,
