@@ -26,20 +26,20 @@ import (
 	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
-func keyValuesFromLiteralSources(sources []string) ([]kv.KVPair, error) {
-	var kvs []kv.KVPair
+func keyValuesFromLiteralSources(sources []string) ([]kv.Pair, error) {
+	var kvs []kv.Pair
 	for _, s := range sources {
 		k, v, err := parseLiteralSource(s)
 		if err != nil {
 			return nil, err
 		}
-		kvs = append(kvs, kv.KVPair{Key: k, Value: v})
+		kvs = append(kvs, kv.Pair{Key: k, Value: v})
 	}
 	return kvs, nil
 }
 
-func keyValuesFromFileSources(ldr ifc.Loader, sources []string) ([]kv.KVPair, error) {
-	var kvs []kv.KVPair
+func keyValuesFromFileSources(ldr ifc.Loader, sources []string) ([]kv.Pair, error) {
+	var kvs []kv.Pair
 	for _, s := range sources {
 		k, fPath, err := parseFileSource(s)
 		if err != nil {
@@ -49,12 +49,12 @@ func keyValuesFromFileSources(ldr ifc.Loader, sources []string) ([]kv.KVPair, er
 		if err != nil {
 			return nil, err
 		}
-		kvs = append(kvs, kv.KVPair{Key: k, Value: string(content)})
+		kvs = append(kvs, kv.Pair{Key: k, Value: string(content)})
 	}
 	return kvs, nil
 }
 
-func keyValuesFromEnvFile(l ifc.Loader, path string) ([]kv.KVPair, error) {
+func keyValuesFromEnvFile(l ifc.Loader, path string) ([]kv.Pair, error) {
 	if path == "" {
 		return nil, nil
 	}

@@ -28,7 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
-type KVPair struct {
+type Pair struct {
 	Key   string
 	Value string
 }
@@ -36,8 +36,8 @@ type KVPair struct {
 var utf8bom = []byte{0xEF, 0xBB, 0xBF}
 
 // KeyValuesFromLines parses given content in to a list of key-value pairs.
-func KeyValuesFromLines(content []byte) ([]KVPair, error) {
-	var kvs []KVPair
+func KeyValuesFromLines(content []byte) ([]Pair, error) {
+	var kvs []Pair
 
 	scanner := bufio.NewScanner(bytes.NewReader(content))
 	currentLine := 0
@@ -63,8 +63,8 @@ func KeyValuesFromLines(content []byte) ([]KVPair, error) {
 
 // KeyValuesFromLine returns a kv with blank key if the line is empty or a comment.
 // The value will be retrieved from the environment if necessary.
-func KeyValuesFromLine(line []byte, currentLine int) (KVPair, error) {
-	kv := KVPair{}
+func KeyValuesFromLine(line []byte, currentLine int) (Pair, error) {
+	kv := Pair{}
 
 	if !utf8.Valid(line) {
 		return kv, fmt.Errorf("line %d has invalid utf8 bytes : %v", line, string(line))
