@@ -122,46 +122,52 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 
 func TestNewRepoSpecFromUrl_CloneSpecs(t *testing.T) {
 	testcases := []struct {
-		input string
-		repo  string
-		path  string
-		ref   string
+		input     string
+		cloneSpec string
+		absPath   string
+		ref       string
 	}{
 		{
-			input: "https://git-codecommit.us-east-2.amazonaws.com/someorg/somerepo/somedir",
-			repo:  "https://git-codecommit.us-east-2.amazonaws.com/someorg/somerepo",
-			path:  "somedir",
-			ref:   "",
+			input:     "https://git-codecommit.us-east-2.amazonaws.com/someorg/somerepo/somedir",
+			cloneSpec: "https://git-codecommit.us-east-2.amazonaws.com/someorg/somerepo",
+			absPath:   notCloned.Join("somedir"),
+			ref:       "",
 		},
 		{
-			input: "https://git-codecommit.us-east-2.amazonaws.com/someorg/somerepo/somedir?ref=testbranch",
-			repo:  "https://git-codecommit.us-east-2.amazonaws.com/someorg/somerepo",
-			path:  "somedir",
-			ref:   "testbranch",
+			input:     "https://git-codecommit.us-east-2.amazonaws.com/someorg/somerepo/somedir?ref=testbranch",
+			cloneSpec: "https://git-codecommit.us-east-2.amazonaws.com/someorg/somerepo",
+			absPath:   notCloned.Join("somedir"),
+			ref:       "testbranch",
 		},
 		{
-			input: "https://fabrikops2.visualstudio.com/someorg/somerepo?ref=master",
-			repo:  "https://fabrikops2.visualstudio.com/someorg/somerepo",
-			path:  "",
-			ref:   "master",
+			input:     "https://fabrikops2.visualstudio.com/someorg/somerepo?ref=master",
+			cloneSpec: "https://fabrikops2.visualstudio.com/someorg/somerepo",
+			absPath:   notCloned.String(),
+			ref:       "master",
 		},
 		{
-			input: "http://github.com/someorg/somerepo/somedir",
-			repo:  "https://github.com/someorg/somerepo.git",
-			path:  "somedir",
-			ref:   "",
+			input:     "http://github.com/someorg/somerepo/somedir",
+			cloneSpec: "https://github.com/someorg/somerepo.git",
+			absPath:   notCloned.Join("somedir"),
+			ref:       "",
 		},
 		{
-			input: "git@github.com:someorg/somerepo/somedir",
-			repo:  "git@github.com:someorg/somerepo.git",
-			path:  "somedir",
-			ref:   "",
+			input:     "git@github.com:someorg/somerepo/somedir",
+			cloneSpec: "git@github.com:someorg/somerepo.git",
+			absPath:   notCloned.Join("somedir"),
+			ref:       "",
 		},
 		{
-			input: "git@gitlab2.sqtools.ru:10022/infra/kubernetes/thanos-base.git?ref=v0.1.0",
-			repo:  "git@gitlab2.sqtools.ru:10022/infra/kubernetes/thanos-base.git",
-			path:  "",
-			ref:   "v0.1.0",
+			input:     "git@gitlab2.sqtools.ru:10022/infra/kubernetes/thanos-base.git?ref=v0.1.0",
+			cloneSpec: "git@gitlab2.sqtools.ru:10022/infra/kubernetes/thanos-base.git",
+			absPath:   notCloned.String(),
+			ref:       "v0.1.0",
+		},
+		{
+			input:     "git@bitbucket.org:company/project.git//path?ref=branch",
+			cloneSpec: "git@bitbucket.org:company/project.git",
+			absPath:   notCloned.Join("path"),
+			ref:       "branch",
 		},
 	}
 	for _, testcase := range testcases {
@@ -169,13 +175,13 @@ func TestNewRepoSpecFromUrl_CloneSpecs(t *testing.T) {
 		if err != nil {
 			t.Errorf("Unexpected error: %v", err)
 		}
-		if rs.CloneSpec() != testcase.repo {
+		if rs.CloneSpec() != testcase.cloneSpec {
 			t.Errorf("CloneSpec expected to be %v, but got %v on %s",
-				testcase.repo, rs.CloneSpec(), testcase.input)
+				testcase.cloneSpec, rs.CloneSpec(), testcase.input)
 		}
-		if rs.path != testcase.path {
-			t.Errorf("path expected to be %v, but got %v on %s",
-				testcase.path, rs.path, testcase.input)
+		if rs.AbsPath() != testcase.absPath {
+			t.Errorf("AbsPath expected to be %v, but got %v on %s",
+				testcase.absPath, rs.AbsPath(), testcase.input)
 		}
 		if rs.ref != testcase.ref {
 			t.Errorf("ref expected to be %v, but got %v on %s",
