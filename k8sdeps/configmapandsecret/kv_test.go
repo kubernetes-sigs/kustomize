@@ -29,12 +29,12 @@ func TestKeyValuesFromFileSources(t *testing.T) {
 	tests := []struct {
 		description string
 		sources     []string
-		expected    []kv.KVPair
+		expected    []kv.Pair
 	}{
 		{
 			description: "create kvs from file sources",
 			sources:     []string{"files/app-init.ini"},
-			expected: []kv.KVPair{
+			expected: []kv.Pair{
 				{
 					Key:   "app-init.ini",
 					Value: "FOO=bar",
