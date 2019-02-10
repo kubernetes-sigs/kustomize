@@ -26,7 +26,6 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
@@ -59,8 +58,7 @@ func (th *KustTestHarness) makeKustTarget() *KustTarget {
 	// real "/" directory.  See use of exec package in the secretfactory.
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir("/")
-	kt, err := NewKustTarget(
-		th.ldr, fakeFs, th.rf, transformer.NewFactoryImpl())
+	kt, err := NewKustTarget(th.ldr, fakeFs, th.rf)
 	if err != nil {
 		th.t.Fatalf("Unexpected construction error %v", err)
 	}

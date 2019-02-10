@@ -14,18 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package transformer
+package transformers
 
 import (
 	"fmt"
-	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/resid"
 
 	"github.com/evanphx/json-patch"
 	"github.com/ghodss/yaml"
 	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/patch"
-	"sigs.k8s.io/kustomize/pkg/transformers"
+	"sigs.k8s.io/kustomize/pkg/resid"
 )
 
 // PatchJson6902Factory makes Json6902 transformers
@@ -39,8 +38,9 @@ func NewPatchJson6902Factory(l ifc.Loader) PatchJson6902Factory {
 }
 
 // MakePatchJson6902Transformer returns a transformer for applying Json6902 patch
-func (f PatchJson6902Factory) MakePatchJson6902Transformer(patches []patch.Json6902) (transformers.Transformer, error) {
-	var ts []transformers.Transformer
+func (f PatchJson6902Factory) MakePatchJson6902Transformer(
+	patches []patch.Json6902) (Transformer, error) {
+	var ts []Transformer
 	for _, p := range patches {
 		t, err := f.makeOnePatchJson6902Transformer(p)
 		if err != nil {
@@ -50,10 +50,11 @@ func (f PatchJson6902Factory) MakePatchJson6902Transformer(patches []patch.Json6
 			ts = append(ts, t)
 		}
 	}
-	return transformers.NewMultiTransformerWithConflictCheck(ts), nil
+	return NewMultiTransformerWithConflictCheck(ts), nil
 }
 
-func (f PatchJson6902Factory) makeOnePatchJson6902Transformer(p patch.Json6902) (transformers.Transformer, error) {
+func (f PatchJson6902Factory) makeOnePatchJson6902Transformer(
+	p patch.Json6902) (Transformer, error) {
 	if p.Target == nil {
 		return nil, fmt.Errorf("must specify the target field in patchesJson6902")
 	}

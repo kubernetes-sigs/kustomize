@@ -199,7 +199,7 @@ func TestResources1(t *testing.T) {
 
 func TestKustomizationNotFound(t *testing.T) {
 	_, err := NewKustTarget(
-		loadertest.NewFakeLoader("/foo"), fs.MakeFakeFS(), nil, nil)
+		loadertest.NewFakeLoader("/foo"), fs.MakeFakeFS(), nil)
 	if err == nil {
 		t.Fatalf("expected an error")
 	}

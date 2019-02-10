@@ -23,7 +23,6 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
-	"sigs.k8s.io/kustomize/pkg/ifc/transformer"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/target"
@@ -60,9 +59,7 @@ url examples:
 
 // NewCmdBuild creates a new build command.
 func NewCmdBuild(
-	out io.Writer, fs fs.FileSystem,
-	rf *resmap.Factory,
-	ptf transformer.Factory) *cobra.Command {
+	out io.Writer, fs fs.FileSystem, rf *resmap.Factory) *cobra.Command {
 	var o Options
 
 	cmd := &cobra.Command{
@@ -75,7 +72,7 @@ func NewCmdBuild(
 			if err != nil {
 				return err
 			}
-			return o.RunBuild(out, fs, rf, ptf)
+			return o.RunBuild(out, fs, rf)
 		},
 	}
 	cmd.Flags().StringVarP(
@@ -95,20 +92,18 @@ func (o *Options) Validate(args []string) error {
 	} else {
 		o.kustomizationPath = args[0]
 	}
-
 	return nil
 }
 
 // RunBuild runs build command.
 func (o *Options) RunBuild(
-	out io.Writer, fSys fs.FileSystem,
-	rf *resmap.Factory, ptf transformer.Factory) error {
+	out io.Writer, fSys fs.FileSystem, rf *resmap.Factory) error {
 	ldr, err := loader.NewLoader(o.kustomizationPath, fSys)
 	if err != nil {
 		return err
 	}
 	defer ldr.Cleanup()
-	kt, err := target.NewKustTarget(ldr, fSys, rf, ptf)
+	kt, err := target.NewKustTarget(ldr, fSys, rf)
 	if err != nil {
 		return err
 	}
@@ -116,7 +111,6 @@ func (o *Options) RunBuild(
 	if err != nil {
 		return err
 	}
-	// Output the objects.
 	res, err := allResources.EncodeAsYaml()
 	if err != nil {
 		return err

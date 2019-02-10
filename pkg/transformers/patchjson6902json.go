@@ -14,13 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package transformer
+package transformers
 
 import (
+	"fmt"
+
 	"github.com/evanphx/json-patch"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
-	"sigs.k8s.io/kustomize/pkg/transformers"
+	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
 // patchJson6902JSONTransformer applies patches.
@@ -29,12 +31,12 @@ type patchJson6902JSONTransformer struct {
 	patch  jsonpatch.Patch
 }
 
-var _ transformers.Transformer = &patchJson6902JSONTransformer{}
+var _ Transformer = &patchJson6902JSONTransformer{}
 
 // newPatchJson6902JSONTransformer constructs a PatchJson6902 transformer.
-func newPatchJson6902JSONTransformer(t resid.ResId, p jsonpatch.Patch) (transformers.Transformer, error) {
+func newPatchJson6902JSONTransformer(t resid.ResId, p jsonpatch.Patch) (Transformer, error) {
 	if len(p) == 0 {
-		return transformers.NewNoOpTransformer(), nil
+		return NewNoOpTransformer(), nil
 	}
 	return &patchJson6902JSONTransformer{target: t, patch: p}, nil
 }
@@ -58,4 +60,25 @@ func (t *patchJson6902JSONTransformer) Transform(baseResourceMap resmap.ResMap) 
 		return err
 	}
 	return nil
+}
+
+func findTargetObj(m resmap.ResMap, targetId resid.ResId) (*resource.Resource, error) {
+	matchedIds := m.FindByGVKN(targetId)
+	if targetId.Namespace() != "" {
+		var ids []resid.ResId
+		for _, id := range matchedIds {
+			if id.Namespace() == targetId.Namespace() {
+				ids = append(ids, id)
+			}
+		}
+		matchedIds = ids
+	}
+
+	if len(matchedIds) == 0 {
+		return nil, fmt.Errorf("couldn't find any object to apply the json patch %v", targetId)
+	}
+	if len(matchedIds) > 1 {
+		return nil, fmt.Errorf("found multiple objects that the patch can apply %v", matchedIds)
+	}
+	return m[matchedIds[0]], nil
 }

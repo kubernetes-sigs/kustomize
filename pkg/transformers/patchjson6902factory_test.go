@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package transformer
+package transformers
 
 import (
 	"reflect"
@@ -22,17 +22,12 @@ import (
 	"testing"
 
 	"gopkg.in/yaml.v2"
-	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/patch"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
-	"sigs.k8s.io/kustomize/pkg/resource"
 )
-
-var rf = resource.NewFactory(
-	kunstruct.NewKunstructuredFactoryImpl())
 
 func TestNewPatchJson6902FactoryNoTarget(t *testing.T) {
 	p := patch.Json6902{}

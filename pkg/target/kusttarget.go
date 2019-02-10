@@ -25,12 +25,12 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/k8sdeps/transformer/hash"
+	"sigs.k8s.io/kustomize/k8sdeps/transformer/patch"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/ifc/transformer"
 	interror "sigs.k8s.io/kustomize/pkg/internal/error"
-	patchtransformer "sigs.k8s.io/kustomize/pkg/patch/transformer"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
@@ -44,15 +44,13 @@ type KustTarget struct {
 	ldr           ifc.Loader
 	fSys          fs.FileSystem
 	rFactory      *resmap.Factory
-	tFactory      transformer.Factory
 }
 
 // NewKustTarget returns a new instance of KustTarget primed with a Loader.
 func NewKustTarget(
 	ldr ifc.Loader,
 	fSys fs.FileSystem,
-	rFactory *resmap.Factory,
-	tFactory transformer.Factory) (*KustTarget, error) {
+	rFactory *resmap.Factory) (*KustTarget, error) {
 	content, err := loadKustFile(ldr)
 	if err != nil {
 		return nil, err
@@ -72,7 +70,6 @@ func NewKustTarget(
 		ldr:           ldr,
 		fSys:          fSys,
 		rFactory:      rFactory,
-		tFactory:      tFactory,
 	}, nil
 }
 
@@ -127,7 +124,7 @@ func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = ra.Transform(kt.tFactory.MakeHashTransformer())
+	err = ra.Transform(hash.NewNameHashTransformer())
 	if err != nil {
 		return nil, err
 	}
@@ -248,8 +245,7 @@ func (kt *KustTarget) accumulateBases() (
 			errs.Append(errors.Wrap(err, "couldn't make loader for "+path))
 			continue
 		}
-		subKt, err := NewKustTarget(
-			ldr, kt.fSys, kt.rFactory, kt.tFactory)
+		subKt, err := NewKustTarget(ldr, kt.fSys, kt.rFactory)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "couldn't make target for "+path))
 			ldr.Cleanup()
@@ -276,7 +272,7 @@ func (kt *KustTarget) newTransformer(
 	patches []*resource.Resource, tConfig *config.TransformerConfig) (
 	transformers.Transformer, error) {
 	var r []transformers.Transformer
-	t, err := kt.tFactory.MakePatchTransformer(patches, kt.rFactory.RF())
+	t, err := patch.NewPatchTransformer(patches, kt.rFactory.RF())
 	if err != nil {
 		return nil, err
 	}
@@ -304,7 +300,7 @@ func (kt *KustTarget) newTransformer(
 		return nil, err
 	}
 	r = append(r, t)
-	t, err = patchtransformer.NewPatchJson6902Factory(kt.ldr).
+	t, err = transformers.NewPatchJson6902Factory(kt.ldr).
 		MakePatchJson6902Transformer(kt.kustomization.PatchesJson6902)
 	if err != nil {
 		return nil, err

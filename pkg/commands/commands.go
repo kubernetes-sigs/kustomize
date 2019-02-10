@@ -22,18 +22,18 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/k8sdeps/validator"
 	"sigs.k8s.io/kustomize/pkg/commands/build"
 	"sigs.k8s.io/kustomize/pkg/commands/edit"
 	"sigs.k8s.io/kustomize/pkg/commands/misc"
-	"sigs.k8s.io/kustomize/pkg/factory"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
 // NewDefaultCommand returns the default (aka root) command for kustomize command.
-func NewDefaultCommand(f *factory.KustFactory) *cobra.Command {
-	fsys := fs.MakeRealFS()
-	stdOut := os.Stdout
-
+func NewDefaultCommand() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "kustomize",
 		Short: "kustomize manages declarative configuration of Kubernetes",
@@ -43,13 +43,14 @@ kustomize manages declarative configuration of Kubernetes.
 See https://sigs.k8s.io/kustomize
 `,
 	}
-
+	fSys := fs.MakeRealFS()
+	uf := kunstruct.NewKunstructuredFactoryImpl()
+	rf := resmap.NewFactory(resource.NewFactory(uf))
 	c.AddCommand(
-		// TODO: Make consistent API for newCmd* functions.
-		build.NewCmdBuild(stdOut, fsys, f.ResmapF, f.TransformerF),
-		edit.NewCmdEdit(fsys, f.ValidatorF, f.UnstructF),
-		misc.NewCmdConfig(fsys),
-		misc.NewCmdVersion(stdOut),
+		build.NewCmdBuild(os.Stdout, fSys, rf),
+		edit.NewCmdEdit(fSys, validator.NewKustValidator(), uf),
+		misc.NewCmdConfig(fSys),
+		misc.NewCmdVersion(os.Stdout),
 	)
 	c.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 
