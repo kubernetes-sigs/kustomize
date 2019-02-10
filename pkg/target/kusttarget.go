@@ -76,6 +76,18 @@ func NewKustTarget(
 	}, nil
 }
 
+func quoted(l []string) []string {
+	r := make([]string, len(l))
+	for i, v := range l {
+		r[i] = "'" + v + "'"
+	}
+	return r
+}
+
+func commaOr(q []string) string {
+	return strings.Join(q[:len(q)-1], ", ") + " or " + q[len(q)-1]
+}
+
 func loadKustFile(ldr ifc.Loader) ([]byte, error) {
 	var content []byte
 	match := 0
@@ -88,8 +100,9 @@ func loadKustFile(ldr ifc.Loader) ([]byte, error) {
 	}
 	switch match {
 	case 0:
-		return nil, fmt.Errorf("No kustomization file found in %s. Kustomize supports the following kustomization files: %s",
-			ldr.Root(), strings.Join(constants.KustomizationFileNames, ", "))
+		return nil, fmt.Errorf(
+			"unable to find one of %v in directory '%s'",
+			commaOr(quoted(constants.KustomizationFileNames)), ldr.Root())
 	case 1:
 		return content, nil
 	default:
