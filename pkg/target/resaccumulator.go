@@ -55,6 +55,11 @@ func (ra *ResAccumulator) ResMap() resmap.ResMap {
 	return result
 }
 
+// Vars returns a copy of underlying vars.
+func (ra *ResAccumulator) Vars() []types.Var {
+	return ra.varSet.Set()
+}
+
 func (ra *ResAccumulator) MergeResourcesWithErrorOnIdCollision(
 	resources resmap.ResMap) (err error) {
 	ra.resMap, err = resmap.MergeWithErrorOnIdCollision(

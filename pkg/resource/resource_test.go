@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package resource
+package resource_test
 
 import (
 	"testing"
@@ -22,6 +22,7 @@ import (
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resid"
+	. "sigs.k8s.io/kustomize/pkg/resource"
 )
 
 var factory = NewFactory(
@@ -37,7 +38,9 @@ var testConfigMap = factory.FromMap(
 		},
 	})
 
-const testConfigMapString = `{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"winnie","namespace":"hundred-acre-wood"}}`
+const genArgOptions = "{nsfx:false,beh:unspecified}"
+
+const configMapAsString = `{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"winnie","namespace":"hundred-acre-wood"}}`
 
 var testDeployment = factory.FromMap(
 	map[string]interface{}{
@@ -48,7 +51,7 @@ var testDeployment = factory.FromMap(
 		},
 	})
 
-const testDeploymentString = `{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"name":"pooh"}}`
+const deploymentAsString = `{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"name":"pooh"}}`
 
 func TestResourceString(t *testing.T) {
 	tests := []struct {
@@ -57,11 +60,11 @@ func TestResourceString(t *testing.T) {
 	}{
 		{
 			in: testConfigMap,
-			s:  testConfigMapString,
+			s:  configMapAsString + genArgOptions,
 		},
 		{
 			in: testDeployment,
-			s:  testDeploymentString,
+			s:  deploymentAsString + genArgOptions,
 		},
 	}
 	for _, test := range tests {
