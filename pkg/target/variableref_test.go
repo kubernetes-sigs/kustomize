@@ -723,3 +723,80 @@ spec:
     - kustomized-nginx.example.com
 `)
 }
+
+func TestVariableRefMounthPath(t *testing.T) {
+	th := NewKustTestHarness(t, "/app/base")
+	th.writeK("/app/base", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- deployment.yaml
+- namespace.yaml
+
+vars:
+- name: NAMESPACE
+  objref:
+    apiVersion: v1
+    kind: Namespace
+    name: my-namespace
+
+`)
+	th.writeF("/app/base/deployment.yaml", `
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: my-deployment 
+  spec:
+    template:
+      spec:
+        containers:
+        - name: app
+          image: busybox
+          volumeMounts:
+          - name: my-volume
+            mountPath: "/$(NAMESPACE)"
+          env:
+          - name: NAMESPACE
+            value: $(NAMESPACE)
+        volumes:
+        - name: my-volume
+          emptyDir: {}
+`)
+	th.writeF("/app/base/namespace.yaml", `
+  apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: my-namespace
+`)
+
+	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.assertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: my-namespace
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: NAMESPACE
+          value: my-namespace
+        image: busybox
+        name: app
+        volumeMounts:
+        - mountPath: /my-namespace
+          name: my-volume
+      volumes:
+      - emptyDir: {}
+        name: my-volume
+`)
+}
