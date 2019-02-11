@@ -85,20 +85,21 @@ func (pt *imageTransformer) updateContainers(obj map[string]interface{}, path st
 
 		imageName := containerImage.(string)
 		for _, img := range pt.images {
-			if isImageMatched(imageName, img.Name) {
-				name, tag := split(imageName)
-				if img.NewName != "" {
-					name = img.NewName
-				}
-				if img.NewTag != "" {
-					tag = ":" + img.NewTag
-				}
-				if img.Digest != "" {
-					tag = "@" + img.Digest
-				}
-				container["image"] = name + tag
-				break
+			if !isImageMatched(imageName, img.Name) {
+				continue
 			}
+			name, tag := split(imageName)
+			if img.NewName != "" {
+				name = img.NewName
+			}
+			if img.NewTag != "" {
+				tag = ":" + img.NewTag
+			}
+			if img.Digest != "" {
+				tag = "@" + img.Digest
+			}
+			container["image"] = name + tag
+			break
 		}
 	}
 	return nil
