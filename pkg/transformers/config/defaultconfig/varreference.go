@@ -105,5 +105,47 @@ varReference:
 
 - path: spec/tls/hosts
   kind: Ingress
+
+- path: spec/template/spec/containers/volumeMounts/mountPath
+  kind: StatefulSet
+
+- path: spec/template/spec/initContainers/volumeMounts/mountPath
+  kind: StatefulSet
+
+- path: spec/containers/volumeMounts/mountPath
+  kind: Pod
+
+- path: spec/initContainers/volumeMounts/mountPath
+  kind: Pod
+
+- path: spec/template/spec/containers/volumeMounts/mountPath
+  kind: ReplicaSet
+
+- path: spec/template/spec/initContainers/volumeMounts/mountPath
+  kind: ReplicaSet
+
+- path: spec/template/spec/containers/volumeMounts/mountPath
+  kind: Job
+
+- path: spec/template/spec/initContainers/volumeMounts/mountPath
+  kind: Job
+
+- path: spec/template/spec/containers/volumeMounts/mountPath
+  kind: CronJob
+
+- path: spec/template/spec/initContainers/volumeMounts/mountPath
+  kind: CronJob
+
+- path: spec/template/spec/containers/volumeMounts/mountPath
+  kind: DaemonSet
+
+- path: spec/template/spec/initContainers/volumeMounts/mountPath
+  kind: DaemonSet
+
+- path: spec/template/spec/containers/volumeMounts/mountPath
+  kind: Deployment
+
+- path: spec/template/spec/initContainers/volumeMounts/mountPath
+  kind: Deployment
 `
 )
