@@ -23,8 +23,10 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
+	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
@@ -192,6 +194,18 @@ func TestResources1(t *testing.T) {
 	if !reflect.DeepEqual(actual, expected) {
 		err = expected.ErrorIfNotEqual(actual)
 		t.Fatalf("unexpected inequality: %v", err)
+	}
+}
+
+func TestKustomizationNotFound(t *testing.T) {
+	_, err := NewKustTarget(
+		loadertest.NewFakeLoader("/foo"), fs.MakeFakeFS(), nil, nil)
+	if err == nil {
+		t.Fatalf("expected an error")
+	}
+	if err.Error() !=
+		`unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization' in directory '/foo'` {
+		t.Fatalf("unexpected error: %q", err)
 	}
 }
 
