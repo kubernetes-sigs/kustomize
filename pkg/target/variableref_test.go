@@ -23,8 +23,6 @@ import (
 func TestVariableRef(t *testing.T) {
 	th := NewKustTestHarness(t, "/app/overlay/staging")
 	th.writeK("/app/base", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 namePrefix: base-
 resources:
  - cockroachdb-statefulset-secure.yaml
@@ -323,8 +321,6 @@ spec:
           storage: 1Gi
 `)
 	th.writeK("/app/overlay/staging", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 namePrefix: dev-
 bases:
 - ../../base
@@ -583,8 +579,6 @@ spec:
 func TestVariableRefIngress(t *testing.T) {
 	th := NewKustTestHarness(t, "/app/overlay")
 	th.writeK("/app/base", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 resources:
 - deployment.yaml
 - ingress.yaml
@@ -657,8 +651,6 @@ spec:
     targetPort: http
 `)
 	th.writeK("/app/overlay", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 nameprefix: kustomized-
 bases:
 - ../base
@@ -727,8 +719,6 @@ spec:
 func TestVariableRefMounthPath(t *testing.T) {
 	th := NewKustTestHarness(t, "/app/base")
 	th.writeK("/app/base", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 resources:
 - deployment.yaml
 - namespace.yaml
@@ -798,5 +788,64 @@ spec:
       volumes:
       - emptyDir: {}
         name: my-volume
+`)
+}
+
+func TestVariableRefMaps(t *testing.T) {
+	th := NewKustTestHarness(t, "/app/base")
+	th.writeK("/app/base", `
+resources:
+- deployment.yaml
+- namespace.yaml
+vars:
+- name: NAMESPACE
+  objref:
+    apiVersion: v1
+    kind: Namespace
+    name: my-namespace
+`)
+	th.writeF("/app/base/deployment.yaml", `
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: my-deployment
+    labels:
+      my-label: $(NAMESPACE)
+  spec:
+    template:
+      spec:
+        containers:
+        - name: app
+          image: busybox  
+`)
+	th.writeF("/app/base/namespace.yaml", `
+  apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: my-namespace
+`)
+
+	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.assertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: my-namespace
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    my-label: my-namespace
+  name: my-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: busybox
+        name: app
 `)
 }
