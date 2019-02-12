@@ -68,7 +68,7 @@ items:
 	patchList2 := patch.StrategicMerge("patch5.yaml")
 	patch5 := `
 apiVersion: v1
-kind: List
+kind: DeploymentList
 items:
 - apiVersion: apps/v1
   kind: Deployment
@@ -87,6 +87,17 @@ items:
     name: deployment-b
   spec:
     <<: *hostAliases
+`
+	patchList3 := patch.StrategicMerge("patch6.yaml")
+	patch6 := `
+apiVersion: v1
+kind: List
+items:
+`
+	patchList4 := patch.StrategicMerge("patch7.yaml")
+	patch7 := `
+apiVersion: v1
+kind: List
 `
 	testDeploymentSpec := map[string]interface{}{
 		"template": map[string]interface{}{
@@ -126,6 +137,8 @@ items:
 	l.AddFile("/"+string(patchBad), []byte(patch3))
 	l.AddFile("/"+string(patchList), []byte(patch4))
 	l.AddFile("/"+string(patchList2), []byte(patch5))
+	l.AddFile("/"+string(patchList3), []byte(patch6))
+	l.AddFile("/"+string(patchList4), []byte(patch7))
 
 	tests := []struct {
 		name        string
@@ -161,6 +174,18 @@ items:
 			name:        "listWithAnchorReference",
 			input:       []patch.StrategicMerge{patchList2},
 			expectedOut: []*Resource{testDeploymentA, testDeploymentB},
+			expectedErr: false,
+		},
+		{
+			name:        "listWithNoEntries",
+			input:       []patch.StrategicMerge{patchList3},
+			expectedOut: []*Resource{},
+			expectedErr: false,
+		},
+		{
+			name:        "listWithNo'items:'",
+			input:       []patch.StrategicMerge{patchList4},
+			expectedOut: []*Resource{},
 			expectedErr: false,
 		},
 	}
