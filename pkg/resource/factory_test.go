@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package resource
+package resource_test
 
 import (
 	"reflect"
@@ -22,6 +22,7 @@ import (
 
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/patch"
+	. "sigs.k8s.io/kustomize/pkg/resource"
 )
 
 func TestSliceFromPatches(t *testing.T) {

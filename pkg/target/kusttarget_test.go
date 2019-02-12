@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package target
+package target_test
 
 import (
 	"encoding/base64"
@@ -23,18 +23,18 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
+	. "sigs.k8s.io/kustomize/pkg/target"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 const (
-	kustomizationContent1 = `
+	kustomizationContent = `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: foo-
@@ -47,6 +47,8 @@ commonAnnotations:
 resources:
   - deployment.yaml
   - namespace.yaml
+generatorOptions:
+  disableNameSuffixHash: false
 configMapGenerator:
 - name: literalConfigMap
   literals:
@@ -83,9 +85,9 @@ metadata:
 ]`
 )
 
-func TestResources1(t *testing.T) {
+func TestResources(t *testing.T) {
 	th := NewKustTestHarness(t, "/whatever")
-	th.writeK("/whatever/", kustomizationContent1)
+	th.writeK("/whatever/", kustomizationContent)
 	th.writeF("/whatever/deployment.yaml", deploymentContent)
 	th.writeF("/whatever/namespace.yaml", namespaceContent)
 	th.writeF("/whatever/jsonpatch.json", jsonpatchContent)
@@ -146,7 +148,9 @@ func TestResources1(t *testing.T) {
 					"DB_USERNAME": "admin",
 					"DB_PASSWORD": "somepw",
 				},
-			}, &types.GeneratorArgs{}, nil),
+			},
+			&types.GeneratorArgs{},
+			&types.GeneratorOptions{}),
 		resid.NewResIdWithPrefixSuffixNamespace(
 			gvk.Gvk{Version: "v1", Kind: "Secret"},
 			"secret", "foo-", "-bar", "ns1"): th.fromMapAndOption(
@@ -168,7 +172,9 @@ func TestResources1(t *testing.T) {
 					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
-			}, &types.GeneratorArgs{}, nil),
+			},
+			&types.GeneratorArgs{},
+			&types.GeneratorOptions{}),
 		resid.NewResIdWithPrefixSuffixNamespace(
 			gvk.Gvk{Version: "v1", Kind: "Namespace"},
 			"ns1", "foo-", "-bar", ""): th.fromMap(
@@ -198,8 +204,7 @@ func TestResources1(t *testing.T) {
 }
 
 func TestKustomizationNotFound(t *testing.T) {
-	_, err := NewKustTarget(
-		loadertest.NewFakeLoader("/foo"), fs.MakeFakeFS(), nil, nil)
+	_, err := NewKustTarget(loadertest.NewFakeLoader("/foo"), nil, nil)
 	if err == nil {
 		t.Fatalf("expected an error")
 	}
@@ -211,7 +216,7 @@ func TestKustomizationNotFound(t *testing.T) {
 
 func TestResourceNotFound(t *testing.T) {
 	th := NewKustTestHarness(t, "/whatever")
-	th.writeK("/whatever", kustomizationContent1)
+	th.writeK("/whatever", kustomizationContent)
 	_, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err == nil {
 		t.Fatalf("Didn't get the expected error for an unknown resource")
@@ -232,13 +237,12 @@ func findSecret(m resmap.ResMap) *resource.Resource {
 
 func TestDisableNameSuffixHash(t *testing.T) {
 	th := NewKustTestHarness(t, "/whatever")
-	th.writeK("/whatever/", kustomizationContent1)
+	th.writeK("/whatever/", kustomizationContent)
 	th.writeF("/whatever/deployment.yaml", deploymentContent)
 	th.writeF("/whatever/namespace.yaml", namespaceContent)
 	th.writeF("/whatever/jsonpatch.json", jsonpatchContent)
 
-	kt := th.makeKustTarget()
-	m, err := kt.MakeCustomizedResMap()
+	m, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("unexpected Resources error %v", err)
 	}
@@ -250,9 +254,11 @@ func TestDisableNameSuffixHash(t *testing.T) {
 		t.Errorf("unexpected secret resource name: %s", secret.GetName())
 	}
 
-	kt.kustomization.GeneratorOptions = &types.GeneratorOptions{
-		DisableNameSuffixHash: true}
-	m, err = kt.MakeCustomizedResMap()
+	th.writeK("/whatever/",
+		strings.Replace(kustomizationContent,
+			"disableNameSuffixHash: false",
+			"disableNameSuffixHash: true", -1))
+	m, err = th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("unexpected Resources error %v", err)
 	}
@@ -338,11 +344,11 @@ vars:
       name: heron
       apiVersion: v300
 `)
-	ra, err := th.makeKustTarget().accumulateTarget()
+	ra, err := th.makeKustTarget().AccumulateTarget()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	vars := ra.varSet.Set()
+	vars := ra.Vars()
 	if len(vars) != 2 {
 		t.Fatalf("unexpected size %d", len(vars))
 	}
@@ -388,11 +394,11 @@ vars:
 bases:
 - ../o1
 `)
-	ra, err := th.makeKustTarget().accumulateTarget()
+	ra, err := th.makeKustTarget().AccumulateTarget()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	vars := ra.varSet.Set()
+	vars := ra.Vars()
 	if len(vars) != 4 {
 		for i, v := range vars {
 			fmt.Printf("%v: %v\n", i, v)
@@ -441,7 +447,7 @@ vars:
 bases:
 - ../o1
 `)
-	_, err := th.makeKustTarget().accumulateTarget()
+	_, err := th.makeKustTarget().AccumulateTarget()
 	if err == nil {
 		t.Fatalf("expected var collision")
 	}
