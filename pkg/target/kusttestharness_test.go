@@ -14,24 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package target
+package target_test
 
 // A collection of utilities used in target tests.
 
 import (
 	"fmt"
 	"path/filepath"
-	"sigs.k8s.io/kustomize/pkg/transformers/config/defaultconfig"
 	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/pkg/constants"
-	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
+	. "sigs.k8s.io/kustomize/pkg/target"
+	"sigs.k8s.io/kustomize/pkg/transformers/config/defaultconfig"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
@@ -50,17 +50,8 @@ func NewKustTestHarness(t *testing.T, path string) *KustTestHarness {
 }
 
 func (th *KustTestHarness) makeKustTarget() *KustTarget {
-	// Warning: the following filesystem - a fake - must be rooted at /.
-	// This fs root is used as the working directory for the shell spawned by
-	// the secretgenerator, and has nothing to do with the filesystem used
-	// to load relative paths from the fake filesystem.
-	// This trick only works for secret generator commands that don't actually
-	// try to read the file system, because these tests don't write to the
-	// real "/" directory.  See use of exec package in the secretfactory.
-	fakeFs := fs.MakeFakeFS()
-	fakeFs.Mkdir("/")
 	kt, err := NewKustTarget(
-		th.ldr, fakeFs, th.rf, transformer.NewFactoryImpl())
+		th.ldr, th.rf, transformer.NewFactoryImpl())
 	if err != nil {
 		th.t.Fatalf("Unexpected construction error %v", err)
 	}
