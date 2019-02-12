@@ -94,6 +94,11 @@ apiVersion: v1
 kind: List
 items:
 `
+	patchList4 := patch.StrategicMerge("patch7.yaml")
+	patch7 := `
+apiVersion: v1
+kind: List
+`
 	testDeploymentSpec := map[string]interface{}{
 		"template": map[string]interface{}{
 			"spec": map[string]interface{}{
@@ -133,6 +138,7 @@ items:
 	l.AddFile("/"+string(patchList), []byte(patch4))
 	l.AddFile("/"+string(patchList2), []byte(patch5))
 	l.AddFile("/"+string(patchList3), []byte(patch6))
+	l.AddFile("/"+string(patchList4), []byte(patch7))
 
 	tests := []struct {
 		name        string
@@ -173,6 +179,12 @@ items:
 		{
 			name:        "listWithNoEntries",
 			input:       []patch.StrategicMerge{patchList3},
+			expectedOut: []*Resource{},
+			expectedErr: false,
+		},
+		{
+			name:        "listWithNo'items:'",
+			input:       []patch.StrategicMerge{patchList4},
 			expectedOut: []*Resource{},
 			expectedErr: false,
 		},
