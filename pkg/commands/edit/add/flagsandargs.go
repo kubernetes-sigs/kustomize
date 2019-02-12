@@ -18,6 +18,7 @@ package add
 
 import (
 	"fmt"
+	"strings"
 
 	"sigs.k8s.io/kustomize/pkg/fs"
 )
@@ -54,10 +55,33 @@ func (a *flagsAndArgs) Validate(args []string) error {
 }
 
 func (a *flagsAndArgs) ExpandFileSource(fSys fs.FileSystem) error {
-	result, err := globPatterns(fSys, a.FileSources)
-	if err != nil {
-		return err
+	var results []string
+	var key string
+	for _, pattern := range a.FileSources {
+		var patterns []string
+		key = ""
+		s := strings.Split(pattern, "=")
+		if len(s) == 2 {
+			patterns = append(patterns, s[1])
+			key = s[0]
+		} else {
+			patterns = append(patterns, s[0])
+		}
+		result, err := globPatterns(fSys, patterns)
+		if err != nil {
+			return err
+		}
+		if key != "" {
+			if len(result) != 1 {
+				msg := fmt.Sprintf("%s pattern should not catch more than one file", pattern)
+				return fmt.Errorf(msg)
+			}
+			fileSource := fmt.Sprintf("%s=%s", key, result[0])
+			results = append(results, fileSource)
+		} else {
+			results = append(results, result...)
+		}
 	}
-	a.FileSources = result
+	a.FileSources = results
 	return nil
 }
