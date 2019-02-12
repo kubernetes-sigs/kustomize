@@ -102,3 +102,33 @@ func TestExpandFileSource(t *testing.T) {
 		t.Fatalf("FileSources is not correctly expanded: %v", fa.FileSources)
 	}
 }
+
+func TestExpandFileSourceWithKey(t *testing.T) {
+	fakeFS := fs.MakeFakeFS()
+	fakeFS.Create("dir/fa1")
+	fakeFS.Create("dir/reademe")
+	fa := flagsAndArgs{
+		FileSources: []string{"foo-key=dir/fa*"},
+	}
+	fa.ExpandFileSource(fakeFS)
+	expected := []string{
+		"foo-key=dir/fa1",
+	}
+	if !reflect.DeepEqual(fa.FileSources, expected) {
+		t.Fatalf("FileSources is not correctly expanded: %v", fa.FileSources)
+	}
+}
+
+func TestExpandFileSourceWithKeyAndError(t *testing.T) {
+	fakeFS := fs.MakeFakeFS()
+	fakeFS.Create("dir/fa1")
+	fakeFS.Create("dir/fa2")
+	fakeFS.Create("dir/reademe")
+	fa := flagsAndArgs{
+		FileSources: []string{"foo-key=dir/fa*"},
+	}
+	err := fa.ExpandFileSource(fakeFS)
+	if err == nil {
+		t.Fatalf("FileSources should not be correctly expanded: %v", fa.FileSources)
+	}
+}
