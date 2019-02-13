@@ -60,6 +60,8 @@ func (a *flagsAndArgs) ExpandFileSource(fSys fs.FileSystem) error {
 	for _, pattern := range a.FileSources {
 		var patterns []string
 		key = ""
+		// check if the pattern is in `--from-file=[key=]source` format
+		// and if so split it to send only the file-pattern to glob function
 		s := strings.Split(pattern, "=")
 		if len(s) == 2 {
 			patterns = append(patterns, s[1])
@@ -71,6 +73,8 @@ func (a *flagsAndArgs) ExpandFileSource(fSys fs.FileSystem) error {
 		if err != nil {
 			return err
 		}
+		// if the format is `--from-file=[key=]source` accept only one result
+		// and extend it with the `key=` prefix
 		if key != "" {
 			if len(result) != 1 {
 				msg := fmt.Sprintf("%s pattern should not catch more than one file", pattern)
