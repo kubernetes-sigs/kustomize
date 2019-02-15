@@ -147,5 +147,7 @@ varReference:
 
 - path: spec/template/spec/initContainers/volumeMounts/mountPath
   kind: Deployment
+
+- path: metadata/labels
 `
 )
