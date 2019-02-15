@@ -39,6 +39,17 @@ func (rv *refvarTransformer) replaceVars(in interface{}) (interface{}, error) {
 			xs = append(xs, expansion.Expand(a.(string), rv.mappingFunc))
 		}
 		return xs, nil
+	case map[string]interface{}:
+		inMap := in.(map[string]interface{})
+		xs := make(map[string]interface{}, len(inMap))
+		for k, v := range inMap {
+			s, ok := v.(string)
+			if !ok {
+				return nil, fmt.Errorf("%#v is expected to be %T", v, s)
+			}
+			xs[k] = expansion.Expand(s, rv.mappingFunc)
+		}
+		return xs, nil
 	case interface{}:
 		s, ok := in.(string)
 		if !ok {
