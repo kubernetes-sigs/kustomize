@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package resmap
+package resmap_test
 
 import (
 	"reflect"
@@ -23,6 +23,7 @@ import (
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resid"
+	. "sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -71,7 +72,7 @@ metadata:
 	}
 }
 
-func TestDemandOneMatchForId(t *testing.T) {
+func TestDemandOneGvknMatchForId(t *testing.T) {
 	rm1 := ResMap{
 		resid.NewResIdWithPrefixNamespace(cmap, "cm1", "prefix1", "ns1"): rf.FromMap(
 			map[string]interface{}{
@@ -91,19 +92,22 @@ func TestDemandOneMatchForId(t *testing.T) {
 			}),
 	}
 
-	_, ok := rm1.DemandOneMatchForId(resid.NewResIdWithPrefixNamespace(cmap, "cm2", "prefix1", "ns1"))
+	_, ok := rm1.DemandOneGvknMatchForId(
+		resid.NewResIdWithPrefixNamespace(cmap, "cm2", "prefix1", "ns1"))
 	if !ok {
 		t.Fatal("Expected single map entry but got none")
 	}
 
 	// confirm that ns and prefix are not included in match
-	_, ok = rm1.DemandOneMatchForId(resid.NewResIdWithPrefixNamespace(cmap, "cm2", "prefix", "ns"))
+	_, ok = rm1.DemandOneGvknMatchForId(
+		resid.NewResIdWithPrefixNamespace(cmap, "cm2", "prefix", "ns"))
 	if !ok {
 		t.Fatal("Expected single map entry but got none")
 	}
 
 	// confirm that name is matched correctly
-	result, ok := rm1.DemandOneMatchForId(resid.NewResIdWithPrefixNamespace(cmap, "cm3", "prefix1", "ns1"))
+	result, ok := rm1.DemandOneGvknMatchForId(
+		resid.NewResIdWithPrefixNamespace(cmap, "cm3", "prefix1", "ns1"))
 	if ok {
 		t.Fatalf("Expected no map entries but got %v", result)
 	}
@@ -111,7 +115,8 @@ func TestDemandOneMatchForId(t *testing.T) {
 	cmap2 := gvk.Gvk{Version: "v2", Kind: "ConfigMap"}
 
 	// confirm that gvk is matched correctly
-	result, ok = rm1.DemandOneMatchForId(resid.NewResIdWithPrefixNamespace(cmap2, "cm2", "prefix1", "ns1"))
+	result, ok = rm1.DemandOneGvknMatchForId(
+		resid.NewResIdWithPrefixNamespace(cmap2, "cm2", "prefix1", "ns1"))
 	if ok {
 		t.Fatalf("Expected no map entries but got %v", result)
 	}
@@ -291,8 +296,73 @@ func TestDeepCopy(t *testing.T) {
 	}
 }
 
-func TestErrorIfNotEqual(t *testing.T) {
+func TestGetMatchingIds(t *testing.T) {
+	// These ids used as map keys.
+	// They must be different to avoid overwriting
+	// map entries during construction.
+	ids := []resid.ResId{
+		resid.NewResId(
+			gvk.Gvk{Kind: "vegetable"},
+			"bedlam"),
+		resid.NewResId(
+			gvk.Gvk{Group: "g1", Version: "v1", Kind: "vegetable"},
+			"domino"),
+		resid.NewResIdWithPrefixNamespace(
+			gvk.Gvk{Kind: "vegetable"},
+			"peter", "p", "happy"),
+		resid.NewResIdWithPrefixNamespace(
+			gvk.Gvk{Version: "v1", Kind: "fruit"},
+			"shatterstar", "p", "happy"),
+	}
 
+	m := ResMap{}
+	for _, id := range ids {
+		// Resources values don't matter in this test.
+		m[id] = nil
+	}
+	if len(m) != len(ids) {
+		t.Fatalf("unexpected map len %d presumably due to duplicate keys", len(m))
+	}
+
+	tests := []struct {
+		name    string
+		matcher IdMatcher
+		count   int
+	}{
+		{
+			"match everything",
+			func(resid.ResId) bool { return true },
+			4,
+		},
+		{
+			"match nothing",
+			func(resid.ResId) bool { return false },
+			0,
+		},
+		{
+			"name is peter",
+			func(x resid.ResId) bool { return x.Name() == "peter" },
+			1,
+		},
+		{
+			"happy vegetable",
+			func(x resid.ResId) bool {
+				return x.Namespace() == "happy" &&
+					x.Gvk().Kind == "vegetable"
+			},
+			1,
+		},
+	}
+	for _, tst := range tests {
+		result := m.GetMatchingIds(tst.matcher)
+		if len(result) != tst.count {
+			t.Fatalf("test '%s';  actual: %d, expected: %d",
+				tst.name, len(result), tst.count)
+		}
+	}
+}
+
+func TestErrorIfNotEqual(t *testing.T) {
 	rm1 := ResMap{
 		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{
@@ -436,7 +506,6 @@ func TestMergeWithoutOverride(t *testing.T) {
 }
 
 func generateMergeFixtures(b types.GenerationBehavior) []ResMap {
-
 	input1 := ResMap{
 		resid.NewResId(cmap, "cmap"): rf.FromMapAndOption(
 			map[string]interface{}{
