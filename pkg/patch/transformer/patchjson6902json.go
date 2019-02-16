@@ -17,9 +17,12 @@ limitations under the License.
 package transformer
 
 import (
+	"fmt"
+
 	"github.com/evanphx/json-patch"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
 )
 
@@ -40,8 +43,8 @@ func newPatchJson6902JSONTransformer(t resid.ResId, p jsonpatch.Patch) (transfor
 }
 
 // Transform apply the json patches on top of the base resources.
-func (t *patchJson6902JSONTransformer) Transform(baseResourceMap resmap.ResMap) error {
-	obj, err := findTargetObj(baseResourceMap, t.target)
+func (t *patchJson6902JSONTransformer) Transform(m resmap.ResMap) error {
+	obj, err := t.findTargetObj(m)
 	if obj == nil {
 		return err
 	}
@@ -58,4 +61,28 @@ func (t *patchJson6902JSONTransformer) Transform(baseResourceMap resmap.ResMap) 
 		return err
 	}
 	return nil
+}
+
+func (t *patchJson6902JSONTransformer) findTargetObj(
+	m resmap.ResMap) (*resource.Resource, error) {
+	matched := m.FindByGVKN(t.target)
+	if t.target.Namespace() != "" {
+		var ids []resid.ResId
+		for _, id := range matched {
+			if id.Namespace() == t.target.Namespace() {
+				ids = append(ids, id)
+			}
+		}
+		matched = ids
+	}
+	if len(matched) == 0 {
+		return nil, fmt.Errorf(
+			"couldn't find target %v for json patch", t.target)
+	}
+	if len(matched) > 1 {
+		return nil, fmt.Errorf(
+			"found multiple targets %v matching %v for json patch",
+			matched, t.target)
+	}
+	return m[matched[0]], nil
 }
