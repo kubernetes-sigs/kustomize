@@ -1,6 +1,10 @@
 # Kustomize Fields
 
-You can find a list of examples [here](https://github.com/kubernetes-sigs/kustomize/tree/master/examples).
+- [Operators](#operators)
+- [Operands](#operands)
+- [Generators](#generators)
+
+You can find examples of how to use Kustomize [here](https://github.com/kubernetes-sigs/kustomize/tree/master/examples).
 
 ## Operators
 
