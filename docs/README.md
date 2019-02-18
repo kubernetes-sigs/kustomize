@@ -9,9 +9,8 @@ English | [简体中文](zh/README.md)
 
  * [Glossary](glossary.md) - the word of the day is [_root_](glossary.md#kustomization-root).
 
- * [kustomization.yaml](kustomization.yaml) - a
-   [kustomization](glossary.md#kustomization) file
-   with explanations of each field.
+ * [Kustomize Fields](fields.md) - explanations of the fields
+   in a  [kustomization](glossary.md#kustomization) file.
 
  * [Plugins](plugins.md) - extending kustomize with
    custom generators and transformers.
