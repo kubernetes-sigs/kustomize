@@ -8,6 +8,8 @@ You can find examples of how to use Kustomize [here](https://github.com/kubernet
 
 ## Operators
 
+For modifying operands, e.g. namePrefix, nameSuffix, commonLabels, patches, etc.
+
 ### Namespace
 
 Adds namespace to all resources
@@ -51,40 +53,6 @@ Adds annotions (non-identifying metadata) to add all resources. Like labls, thes
 ```
 commonAnnotations:
     oncallPager: 800-555-1212
-```
-
-### resources
-
-Each entry in this list must resolve to an existing
-resource definition in YAML.  These are the resource
-files that kustomize reads, modifies and emits as a
-YAML string, with resources separated by document
-markers ("---").
-
-```
-resource:
-- some-service.yaml
-- sub-dir/some-deployment.yaml
-```
-
-### crds
-
-Each entry in this list should be a relative path to
-a file for custom resource definition(CRD).
-
-The presence of this field is to allow kustomize be
-aware of CRDs and apply proper
-transformation for any objects in those types.
-
-Typical use case: A CRD object refers to a ConfigMap object.
-In kustomization, the ConfigMap object name may change by adding namePrefix, nameSuffix, or hashing
-The name reference for this ConfigMap object in CRD object need to be
-updated with namePrefix, nameSuffix, or hashing in the same way.
-
-```
-crds:
-- crds/typeA.yaml
-- crds/typeB.yaml
 ```
 
 ### vars
@@ -146,7 +114,136 @@ images:
 
 ```
 
+## Operands
+
+[resources](#resources) - completely specified k8s API objects, e.g. deployment.yaml, configmap.yaml, etc.
+
+[bases](#bases) - paths or github URLs specifying directories containing a kustomization. These bases may be subjected to more customization, or merely included in the output.
+
+[CRDs](#crds) - custom resource definition files, to allow use of custom resources in the resources list. Not an actual operand - but allows the use of new operands.
+
+### resources
+
+Each entry in this list must resolve to an existing
+resource definition in YAML.  These are the resource
+files that kustomize reads, modifies and emits as a
+YAML string, with resources separated by document
+markers ("---").
+
+```
+resource:
+- some-service.yaml
+- sub-dir/some-deployment.yaml
+```
+
+### bases
+
+Each entry in this list should resolve to a directory
+containing a kustomization file, else the
+customization fails.
+
+The entry could be a relative path pointing to a local directory
+or a url pointing to a directory in a remote repo.
+The url should follow hashicorp/go-getter URL format
+https://github.com/hashicorp/go-getter#url-format
+
+The presence of this field means this file (the file
+you a reading) is an _overlay_ that further
+customizes information coming from these _bases_.
+
+Typical use case: a dev, staging and production
+environment that are mostly identical but differing
+crucial ways (image tags, a few server arguments,
+etc. that differ from the common base).
+```
+bases:
+- ../../base
+- github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6
+- github.com/Liujingfang1/mysql
+- github.com/Liujingfang1/kustomize//examples/helloWorld?ref=test-branch
+```
+
+### crds
+
+Each entry in this list should be a relative path to
+a file for custom resource definition(CRD).
+
+The presence of this field is to allow kustomize be
+aware of CRDs and apply proper
+transformation for any objects in those types.
+
+Typical use case: A CRD object refers to a ConfigMap object.
+In kustomization, the ConfigMap object name may change by adding namePrefix, nameSuffix, or hashing
+The name reference for this ConfigMap object in CRD object need to be
+updated with namePrefix, nameSuffix, or hashing in the same way.
+
+```
+crds:
+- crds/typeA.yaml
+- crds/typeB.yaml
+```
+
+### patchesStrategicMerge
+
+Each entry in this list should resolve to
+a partial or complete resource definition file.
+
+The names in these (possibly partial) resource files
+must match names already loaded via the `resources`
+field or via `resources` loaded transitively via the
+`bases` entries.  These entries are used to _patch_
+(modify) the known resources.
+
+Small patches that do one thing are best, e.g. modify
+a memory request/limit, change an env var in a
+ConfigMap, etc.  Small patches are easy to review and
+easy to mix together in overlays.
+
+### patchesJson6902
+
+Each entry in this list should resolve to
+a kubernetes object and a JSON patch that will be applied
+to the object.
+The JSON patch is documented at https://tools.ietf.org/html/rfc6902
+
+target field points to a kubernetes object within the same kustomization
+by the object's group, version, kind, name and namespace.
+path field is a relative file path of a JSON patch file.
+The content in this patch file can be either in JSON format as
+
+```
+ [
+   {"op": "add", "path": "/some/new/path", "value": "value"},
+   {"op": "replace", "path": "/some/existing/path", "value": "new value"}
+ ]
+ ```
+
+or in YAML format as
+
+- op: add
+  path: /some/new/path
+  value: value
+- op:replace
+  path: /some/existing/path
+  value: new value
+
+```
+patchesJson6902:
+- target:
+    version: v1
+    kind: Deployment
+    name: my-deployment
+  path: add_init_container.yaml
+- target:
+    version: v1
+    kind: Service
+    name: my-service
+  path: add_service_annotation.yaml
+  ```
+
 ## Generators
+
+Generators, for creating more resources (configmaps and secrets) which can then be customized.
 
 ### configMapGenerator
 
@@ -214,89 +311,3 @@ annotations:
 # the resource contents.
 disableNameSuffixHash: true
 ```
-## Operands
-
-### bases
-
-Each entry in this list should resolve to a directory
-containing a kustomization file, else the
-customization fails.
-
-The entry could be a relative path pointing to a local directory
-or a url pointing to a directory in a remote repo.
-The url should follow hashicorp/go-getter URL format
-https://github.com/hashicorp/go-getter#url-format
-
-The presence of this field means this file (the file
-you a reading) is an _overlay_ that further
-customizes information coming from these _bases_.
-
-Typical use case: a dev, staging and production
-environment that are mostly identical but differing
-crucial ways (image tags, a few server arguments,
-etc. that differ from the common base).
-```
-bases:
-- ../../base
-- github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6
-- github.com/Liujingfang1/mysql
-- github.com/Liujingfang1/kustomize//examples/helloWorld?ref=test-branch
-```
-
-### patchesStrategicMerge
-
-Each entry in this list should resolve to
-a partial or complete resource definition file.
-
-The names in these (possibly partial) resource files
-must match names already loaded via the `resources`
-field or via `resources` loaded transitively via the
-`bases` entries.  These entries are used to _patch_
-(modify) the known resources.
-
-Small patches that do one thing are best, e.g. modify
-a memory request/limit, change an env var in a
-ConfigMap, etc.  Small patches are easy to review and
-easy to mix together in overlays.
-
-### patchesJson6902
-
-Each entry in this list should resolve to
-a kubernetes object and a JSON patch that will be applied
-to the object.
-The JSON patch is documented at https://tools.ietf.org/html/rfc6902
-
-target field points to a kubernetes object within the same kustomization
-by the object's group, version, kind, name and namespace.
-path field is a relative file path of a JSON patch file.
-The content in this patch file can be either in JSON format as
-
-```
- [
-   {"op": "add", "path": "/some/new/path", "value": "value"},
-   {"op": "replace", "path": "/some/existing/path", "value": "new value"}
- ]
- ```
-
-or in YAML format as
-
-- op: add
-  path: /some/new/path
-  value: value
-- op:replace
-  path: /some/existing/path
-  value: new value
-
-```
-patchesJson6902:
-- target:
-    version: v1
-    kind: Deployment
-    name: my-deployment
-  path: add_init_container.yaml
-- target:
-    version: v1
-    kind: Service
-    name: my-service
-  path: add_service_annotation.yaml
-  ```
