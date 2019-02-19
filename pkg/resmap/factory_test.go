@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package resmap
+package resmap_test
 
 import (
 	"encoding/base64"
@@ -28,6 +28,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/resid"
+	. "sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
@@ -124,7 +125,7 @@ metadata:
 				},
 			}),
 	}
-	m, err := rmF.newResMapFromBytes(encoded)
+	m, err := rmF.NewResMapFromBytes(encoded)
 	fmt.Printf("%v\n", m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

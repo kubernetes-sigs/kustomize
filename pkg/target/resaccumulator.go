@@ -103,7 +103,7 @@ func (ra *ResAccumulator) makeVarReplacementMap() (map[string]string, error) {
 	result := map[string]string{}
 	for _, v := range ra.varSet.Set() {
 		id := resid.NewResId(v.ObjRef.GVK(), v.ObjRef.Name)
-		if r, found := ra.resMap.DemandOneMatchForId(id); found {
+		if r, found := ra.resMap.DemandOneGvknMatchForId(id); found {
 			s, err := r.GetFieldValue(v.FieldRef.FieldPath)
 			if err != nil {
 				return nil, fmt.Errorf("field path err for var: %+v", v)
