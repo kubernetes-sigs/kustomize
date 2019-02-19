@@ -35,17 +35,18 @@ type patchJson6902JSONTransformer struct {
 var _ transformers.Transformer = &patchJson6902JSONTransformer{}
 
 // newPatchJson6902JSONTransformer constructs a PatchJson6902 transformer.
-func newPatchJson6902JSONTransformer(t resid.ResId, p jsonpatch.Patch) (transformers.Transformer, error) {
+func newPatchJson6902JSONTransformer(
+	id resid.ResId, p jsonpatch.Patch) (transformers.Transformer, error) {
 	if len(p) == 0 {
 		return transformers.NewNoOpTransformer(), nil
 	}
-	return &patchJson6902JSONTransformer{target: t, patch: p}, nil
+	return &patchJson6902JSONTransformer{target: id, patch: p}, nil
 }
 
 // Transform apply the json patches on top of the base resources.
 func (t *patchJson6902JSONTransformer) Transform(m resmap.ResMap) error {
 	obj, err := t.findTargetObj(m)
-	if obj == nil {
+	if err != nil {
 		return err
 	}
 	rawObj, err := obj.MarshalJSON()
@@ -65,15 +66,18 @@ func (t *patchJson6902JSONTransformer) Transform(m resmap.ResMap) error {
 
 func (t *patchJson6902JSONTransformer) findTargetObj(
 	m resmap.ResMap) (*resource.Resource, error) {
-	matched := m.FindByGVKN(t.target)
+	var matched []resid.ResId
+	// TODO(monopole): namespace bug in json patch?
+	// Since introduction in PR #300
+	// (see pkg/patch/transformer/util.go),
+	// this code has treated an empty namespace like a wildcard
+	// rather than like an additional restriction to match
+	// only the empty namespace.  No test coverage to confirm.
+	// Not sure if desired, keeping it for now.
 	if t.target.Namespace() != "" {
-		var ids []resid.ResId
-		for _, id := range matched {
-			if id.Namespace() == t.target.Namespace() {
-				ids = append(ids, id)
-			}
-		}
-		matched = ids
+		matched = m.GetMatchingIds(t.target.NsGvknEquals)
+	} else {
+		matched = m.GetMatchingIds(t.target.GvknEquals)
 	}
 	if len(matched) == 0 {
 		return nil, fmt.Errorf(
