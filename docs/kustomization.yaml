@@ -76,9 +76,12 @@ resources:
 # The example below creates two ConfigMaps. One with the
 # names and contents of the given files, the other with
 # key/value as data.
+<<<<<<< HEAD
 # Each configMapGenerator item accepts a parameter of
 # behavior: [create|replace|merge]. This allows an overlay to modify or
 # replace an existing configMap from the parent.
+=======
+>>>>>>> readded kustomization.yaml
 configMapGenerator:
 - name: myJavaServerProps
   files:
@@ -105,9 +108,15 @@ secretGenerator:
     - tls.key=secret/tls.key
   type: "kubernetes.io/tls"
 - name: env_file_secret
+<<<<<<< HEAD
   # paths to files with k=v pairs, one pair per line.
   envs:
     - env.txt
+=======
+  # env is a path to a file to read lines of key=val
+  # you can only specify one env file per secret.
+  env: env.txt
+>>>>>>> readded kustomization.yaml
   type: Opaque
 
 # generatorOptions modify behavior of all ConfigMap and Secret generators
@@ -142,9 +151,15 @@ generatorOptions:
 # etc. that differ from the common base).
 bases:
 - ../../base
+<<<<<<< HEAD
 - github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6
 - github.com/Liujingfang1/mysql
 - github.com/Liujingfang1/kustomize/examples/helloWorld?ref=test-branch
+=======
+- github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6
+- github.com/Liujingfang1/mysql
+- github.com/Liujingfang1/kustomize//examples/helloWorld?ref=test-branch
+>>>>>>> readded kustomization.yaml
 
 # Each entry in this list should resolve to
 # a partial or complete resource definition file.
@@ -201,7 +216,11 @@ patchesJson6902:
   path: add_service_annotation.yaml
 
 # Each entry in this list should be a relative path to
+<<<<<<< HEAD
 # a file for custom resource definition(CRD) in openAPI definition.
+=======
+# a file for custom resource definition(CRD).
+>>>>>>> readded kustomization.yaml
 #
 # The presence of this field is to allow kustomize be
 # aware of CRDs and apply proper
@@ -211,6 +230,7 @@ patchesJson6902:
 # In kustomization, the ConfigMap object name may change by adding namePrefix, nameSuffix, or hashing
 # The name reference for this ConfigMap object in CRD object need to be
 # updated with namePrefix, nameSuffix, or hashing in the same way.
+<<<<<<< HEAD
 #
 # The annotations can be put into openAPI definitions are:
 #   "x-kubernetes-annotation": ""
@@ -222,11 +242,20 @@ patchesJson6902:
 crds:
 - crds/typeA.json
 - crds/typeB.json
+=======
+crds:
+- crds/typeA.yaml
+- crds/typeB.yaml
+>>>>>>> readded kustomization.yaml
 
 # Vars are used to capture text from one resource's field
 # and insert that text elsewhere.
 #
+<<<<<<< HEAD
 # For example, suppose someone specifies the name of a k8s Service
+=======
+# For example, suppose one specify the name of a k8s Service
+>>>>>>> readded kustomization.yaml
 # object in a container's command line, and the name of a
 # k8s Secret object in a container's environment variable,
 # so that the following would work:
@@ -266,7 +295,11 @@ vars:
 # reference within that object.  That's where the text is found.
 #
 # The field reference is optional; it defaults to `metadata.name`,
+<<<<<<< HEAD
 # a normal default, since kustomize is used to generate or
+=======
+# a normal default, since kustomize is used to generates or
+>>>>>>> readded kustomization.yaml
 # modify the names of resources.
 #
 # At time of writing, only string type fields are supported.
