@@ -215,7 +215,7 @@ crds:
 # Vars are used to capture text from one resource's field
 # and insert that text elsewhere.
 #
-# For example, suppose one specify the name of a k8s Service
+# For example, suppose someone specifies the name of a k8s Service
 # object in a container's command line, and the name of a
 # k8s Secret object in a container's environment variable,
 # so that the following would work:
@@ -255,7 +255,7 @@ vars:
 # reference within that object.  That's where the text is found.
 #
 # The field reference is optional; it defaults to `metadata.name`,
-# a normal default, since kustomize is used to generates or
+# a normal default, since kustomize is used to generate or
 # modify the names of resources.
 #
 # At time of writing, only string type fields are supported.
