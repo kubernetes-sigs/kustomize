@@ -3,9 +3,9 @@ bases:
 namePrefix: staging-
 configMapGenerator:
 - name: demo-configmap
-  behavior: merge
   files:
     - application.properties
   literals:
     - foo=bar
   env: staging.env
+
