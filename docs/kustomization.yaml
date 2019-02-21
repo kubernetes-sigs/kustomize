@@ -76,6 +76,9 @@ resources:
 # The example below creates two ConfigMaps. One with the
 # names and contents of the given files, the other with
 # key/value as data.
+# Each configMapGenerator item accepts a parameter of
+# behavior: [create|replace|merge]. This allows an overlay to modify or
+# replace an existing configMap from the parent.
 configMapGenerator:
 - name: myJavaServerProps
   files:
