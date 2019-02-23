@@ -27,7 +27,11 @@ import (
 
 func makeTestDir(t *testing.T) (FileSystem, string) {
 	x := MakeRealFS()
-	testDir, err := ioutil.TempDir("", "kustomize_testing_dir")
+	td, err := ioutil.TempDir("", "kustomize_testing_dir")
+	if err != nil {
+		t.Fatalf("unexpected error %s", err)
+	}
+	testDir, err := filepath.EvalSymlinks(td)
 	if err != nil {
 		t.Fatalf("unexpected error %s", err)
 	}
