@@ -94,7 +94,7 @@ func (a *flagsAndArgs) ExpandFileSource(fSys fs.FileSystem) error {
 		if key != "" {
 			if len(result) != 1 {
 				return fmt.Errorf(
-					"'pattern '%s' catches files %v, should catch only one.", pattern, result)
+					"'pattern '%s' catches files %v, should catch only one", pattern, result)
 			}
 			fileSource := fmt.Sprintf("%s=%s", key, result[0])
 			results = append(results, fileSource)
