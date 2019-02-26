@@ -8,7 +8,7 @@ manager:
 
     brew install kustomize
 
-On windows, you can install kusztomize with Chocolatey package
+On windows, you can install kustomize with Chocolatey package
 manager:
 
     choco install kustomize
