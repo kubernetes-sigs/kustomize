@@ -92,35 +92,34 @@ func TestDemandOneGvknMatchForId(t *testing.T) {
 			}),
 	}
 
-	_, ok := rm1.DemandOneGvknMatchForId(
-		resid.NewResIdWithPrefixNamespace(cmap, "cm2", "prefix1", "ns1"))
-	if !ok {
-		t.Fatal("Expected single map entry but got none")
+	result := rm1.GetMatchingIds(
+		resid.NewResIdWithPrefixNamespace(cmap, "cm2", "prefix1", "ns1").GvknEquals)
+	if len(result) != 1 {
+		t.Fatalf("Expected single map entry but got %v", result)
 	}
 
 	// confirm that ns and prefix are not included in match
-	_, ok = rm1.DemandOneGvknMatchForId(
-		resid.NewResIdWithPrefixNamespace(cmap, "cm2", "prefix", "ns"))
-	if !ok {
-		t.Fatal("Expected single map entry but got none")
+	result = rm1.GetMatchingIds(
+		resid.NewResIdWithPrefixNamespace(cmap, "cm2", "prefix", "ns").GvknEquals)
+	if len(result) != 1 {
+		t.Fatalf("Expected single map entry but got %v", result)
 	}
 
 	// confirm that name is matched correctly
-	result, ok := rm1.DemandOneGvknMatchForId(
-		resid.NewResIdWithPrefixNamespace(cmap, "cm3", "prefix1", "ns1"))
-	if ok {
+	result = rm1.GetMatchingIds(
+		resid.NewResIdWithPrefixNamespace(cmap, "cm3", "prefix1", "ns1").GvknEquals)
+	if len(result) > 0 {
 		t.Fatalf("Expected no map entries but got %v", result)
 	}
 
 	cmap2 := gvk.Gvk{Version: "v2", Kind: "ConfigMap"}
 
 	// confirm that gvk is matched correctly
-	result, ok = rm1.DemandOneGvknMatchForId(
-		resid.NewResIdWithPrefixNamespace(cmap2, "cm2", "prefix1", "ns1"))
-	if ok {
+	result = rm1.GetMatchingIds(
+		resid.NewResIdWithPrefixNamespace(cmap2, "cm2", "prefix1", "ns1").GvknEquals)
+	if len(result) > 0 {
 		t.Fatalf("Expected no map entries but got %v", result)
 	}
-
 }
 
 func TestFilterBy(t *testing.T) {

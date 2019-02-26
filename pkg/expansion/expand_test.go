@@ -46,9 +46,7 @@ func TestMapReference(t *testing.T) {
 		"BLU": "$(ZOO)-2",
 	}
 
-	serviceEnv := map[string]string{}
-
-	mapping := MappingFuncFor(declaredEnv, serviceEnv)
+	mapping := MappingFuncFor(declaredEnv)
 
 	for _, env := range envs {
 		declaredEnv[env.Name] = Expand(env.Value, mapping)
