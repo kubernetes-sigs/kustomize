@@ -44,7 +44,6 @@ func MappingFuncFor(context ...map[string]string) func(string) string {
 				return val
 			}
 		}
-
 		return syntaxWrap(input)
 	}
 }
