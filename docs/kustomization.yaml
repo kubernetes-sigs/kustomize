@@ -201,7 +201,7 @@ patchesJson6902:
   path: add_service_annotation.yaml
 
 # Each entry in this list should be a relative path to
-# a file for custom resource definition(CRD).
+# a file for custom resource definition(CRD) in openAPI definition.
 #
 # The presence of this field is to allow kustomize be
 # aware of CRDs and apply proper
@@ -211,9 +211,17 @@ patchesJson6902:
 # In kustomization, the ConfigMap object name may change by adding namePrefix, nameSuffix, or hashing
 # The name reference for this ConfigMap object in CRD object need to be
 # updated with namePrefix, nameSuffix, or hashing in the same way.
+#
+# The annotations can be put into openAPI definitions are:
+#   "x-kubernetes-annotation": ""
+#   "x-kubernetes-label-selector": ""
+#   "x-kubernetes-identity": ""
+#   "x-kubernetes-object-ref-api-version": "v1",
+#   "x-kubernetes-object-ref-kind": "Secret",
+#   "x-kubernetes-object-ref-name-key": "name",
 crds:
-- crds/typeA.yaml
-- crds/typeB.yaml
+- crds/typeA.json
+- crds/typeB.json
 
 # Vars are used to capture text from one resource's field
 # and insert that text elsewhere.

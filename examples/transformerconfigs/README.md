@@ -91,6 +91,5 @@ nameReference:
 
 Kustomize has a default set of configurations. They can be saved to local directory through `kustomize config save -d`. Kustomize allows modifying those configuration files and using them in kustomization.yaml file. This tutorial shows how to customize those configurations to
 - [support a CRD type](crd/README.md)
-- disabling adding commonLabels to fields in some kind of resources
 - add extra fields for variable substitution
 - add extra fields for name reference
