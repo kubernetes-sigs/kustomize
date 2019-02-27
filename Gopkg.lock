@@ -207,16 +207,16 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d1a6ebe75268a41b6fbb1d43947cf8688d8580423b7484fa5ae608beef6df24d"
+  digest = "1:18108bc7e384e395b4805632a637405a3df71fa518e22f9b39b0c08b89a52b96"
   name = "golang.org/x/net"
   packages = [
+    "http/httpguts",
     "http2",
     "http2/hpack",
     "idna",
-    "lex/httplex",
   ]
   pruneopts = "NUT"
-  revision = "1c05540f6879653db88113bc4a2b70aec4bd491f"
+  revision = "fe579d43d83210096a79b46dcca0e3721058393a"
 
 [[projects]]
   digest = "1:e33513a825fcd765e97b5de639a2f7547542d1a8245df0cef18e1fd390b778a9"
@@ -366,6 +366,7 @@
   input-imports = [
     "github.com/evanphx/json-patch",
     "github.com/ghodss/yaml",
+    "github.com/go-openapi/spec",
     "github.com/pkg/errors",
     "github.com/spf13/cobra",
     "gopkg.in/yaml.v2",
