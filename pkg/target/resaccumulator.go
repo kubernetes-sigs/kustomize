@@ -18,6 +18,9 @@ package target
 
 import (
 	"fmt"
+	"log"
+	"strings"
+
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/transformers"
@@ -135,8 +138,18 @@ func (ra *ResAccumulator) ResolveVars() error {
 	if err != nil {
 		return err
 	}
-	return ra.Transform(transformers.NewRefVarTransformer(
-		replacementMap, ra.tConfig.VarReference))
+	if len(replacementMap) == 0 {
+		return nil
+	}
+	t := transformers.NewRefVarTransformer(
+		replacementMap, ra.tConfig.VarReference)
+	err = ra.Transform(t)
+	if len(t.UnusedVars()) > 0 {
+		log.Printf(
+			"well-defined vars that were never replaced: %s\n",
+			strings.Join(t.UnusedVars(), ","))
+	}
+	return err
 }
 
 func (ra *ResAccumulator) FixBackReferences() (err error) {
