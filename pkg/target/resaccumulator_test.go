@@ -17,6 +17,9 @@ limitations under the License.
 package target_test
 
 import (
+	"bytes"
+	"log"
+	"os"
 	"strings"
 	"testing"
 
@@ -117,6 +120,50 @@ func TestResolveVarsHappy(t *testing.T) {
 	c := getCommand(find("deploy1", ra.ResMap()))
 	if c != "myserver --somebackendService backendOne --yetAnother backendTwo" {
 		t.Fatalf("unexpected command: %s", c)
+	}
+}
+
+func TestResolveVarsOneUnused(t *testing.T) {
+	ra, _, err := makeResAccumulator()
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	err = ra.MergeVars([]types.Var{
+		{
+			Name: "SERVICE_ONE",
+			ObjRef: types.Target{
+				Gvk:  gvk.Gvk{Version: "v1", Kind: "Service"},
+				Name: "backendOne"},
+		},
+		{
+			Name: "SERVICE_UNUSED",
+			ObjRef: types.Target{
+				Gvk:  gvk.Gvk{Version: "v1", Kind: "Service"},
+				Name: "backendTwo"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	defer func() {
+		log.SetOutput(os.Stderr)
+	}()
+	err = ra.ResolveVars()
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	expectLog(t, buf, "well-defined vars that were never replaced: SERVICE_UNUSED")
+	c := getCommand(find("deploy1", ra.ResMap()))
+	if c != "myserver --somebackendService backendOne --yetAnother $(SERVICE_TWO)" {
+		t.Fatalf("unexpected command: %s", c)
+	}
+}
+
+func expectLog(t *testing.T, log bytes.Buffer, expect string) {
+	if !strings.Contains(log.String(), expect) {
+		t.Fatalf("expected log containing '%s', got '%s'", expect, log.String())
 	}
 }
 
