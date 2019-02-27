@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/pkg/resid"
-
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
@@ -17,7 +16,8 @@ func TestVarRef(t *testing.T) {
 		res    resmap.ResMap
 	}
 	type expected struct {
-		res resmap.ResMap
+		res    resmap.ResMap
+		unused []string
 	}
 	testCases := []struct {
 		description string
@@ -28,7 +28,8 @@ func TestVarRef(t *testing.T) {
 			description: "var replacement in map[string]",
 			given: given{
 				varMap: map[string]string{
-					"FOO": "BAR",
+					"FOO": "replacementForFoo",
+					"BAR": "replacementForBar",
 				},
 				fs: []config.FieldSpec{
 					{Gvk: cmap, Path: "data"},
@@ -58,11 +59,12 @@ func TestVarRef(t *testing.T) {
 								"name": "cm1",
 							},
 							"data": map[string]interface{}{
-								"item1": "BAR",
+								"item1": "replacementForFoo",
 								"item2": "bla",
 							},
 						}),
 				},
+				unused: []string{"BAR"},
 			},
 		},
 	}
