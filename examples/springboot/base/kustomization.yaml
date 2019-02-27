@@ -1,4 +1,7 @@
 resources:
 - deployment.yaml
 - service.yaml
-
+configMapGenerator:
+- files:
+    - application.properties
+  name: demo-configmap
