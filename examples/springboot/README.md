@@ -1,235 +1,136 @@
 # Demo: SpringBoot
 
-In this tutorial, you will learn - how to use `kustomize` to customize a basic Spring Boot application's
-k8s configuration for production use cases.
+This example illustrates the organization of K8s configuration files with
+environment-specific overlays to customize the configuration for a SpringBoot
+application.
 
-In the production environment we want to customize the following:
-
-- add application specific configuration for this Spring Boot application
-- configure prod DB access configuration
-- resource names to be prefixed by 'prod-'.
-- resources to have 'env: prod' labels.
-- JVM memory to be properly set.
-- health check and readiness check.
-
-First make a place to work:
-<!-- @makeDemoHome @test -->
-```
-DEMO_HOME=$(mktemp -d)
-```
-
-### Download resources
-
-To keep this document shorter, the base resources
-needed to run springboot on a k8s cluster are off in a
-supplemental data directory rather than declared here
-as HERE documents.
-
-Download them:
-
-<!-- @downloadResources @test -->
-```
-CONTENT="https://raw.githubusercontent.com\
-/kubernetes-sigs/kustomize\
-/master/examples/springboot"
-
-curl -s -o "$DEMO_HOME/#1.yaml" \
-  "$CONTENT/base/{deployment,service}.yaml"
-```
-
-### Initialize kustomization.yaml
-
-The `kustomize` program gets its instructions from
-a file called `kustomization.yaml`.
-
-Start this file:
-
-<!-- @kustomizeYaml @test -->
-```
-touch $DEMO_HOME/kustomization.yaml
-```
-
-### Add the resources
-
-<!-- @addResources @test -->
-```
-cd $DEMO_HOME
-
-kustomize edit add resource service.yaml
-kustomize edit add resource deployment.yaml
-
-cat kustomization.yaml
-```
-
-`kustomization.yaml`'s resources section should contain:
+In this example, we have organized the files as follows:
 
 > ```
-> resources:
-> - service.yaml
-> - deployment.yaml
+> ├── base                           # Base configs which will be further customized.
+> │   ├── application.properties     # Used by the configMapGenerator in kustomization.yaml.
+> │   ├── deployment.yaml            # K8s Deployment definition.
+> │   ├── kustomization.yaml
+> │   └── service.yaml               # K8s Service definition.
+> │
+> └── overlays
+>     │
+>     ├── staging                    # Staging variant of the base configs.
+>     │   ├── application.properties # Customization of the base ConfigMap for staging.
+>     │   ├── kustomization.yaml
+>     │   └── staging.env            # Additional ConfigMap items.
+>     │
+>     └── production                 # Production variant of the base configs.
+>         ├── application.properties
+>         ├── healthcheck_patch.yaml # Adds liveness and readiness probes to the deployment.
+>         ├── kustomization.yaml
+>         ├── memorylimit_patch.yaml # Memory limits for containers in the deployment.
+>         └── patch.yaml             # Customization of the base ConfigMap for production.
 > ```
 
-### Add configMap generator
 
-<!-- @addConfigMap @test -->
+## Base Configuration
+Note that the `configMapGenerator` element in `kustomization.yaml` allows externalizing the
+contents of a `ConfigMap` item in a separate file, in this case in `application.properties`.
+This capability makes it convenient to maintain the contents in a file format that is
+appropriate for the content rather than having to inline the contents in the YAML definition
+of the `ConfigMap`.
+
+To build the base K8s configuration from these files:
+<!-- @springBootBase @test -->
 ```
-echo "app.name=Kustomize Demo" >$DEMO_HOME/application.properties
+# Change current directory to the springboot example.
+[[ -d examples/springboot ]] && cd examples/springboot
 
-kustomize edit add configmap demo-configmap \
-  --from-file application.properties
-
-cat kustomization.yaml
+# Generate the K8s manifest.
+kustomize build base
 ```
+The output of `kustomize build base` can be piped to `kubectl apply -f -`
+to apply the final configuration to the K8s cluster.
 
-`kustomization.yaml`'s configMapGenerator section should contain:
+## Staging Variant
+In the staging environment we want to:
+- Customize the application configuration to allow accessing the staging database.
+- Add a `ConfigMap` property `environment=staging` based on definition in an external file.
+- Specify the K8s resource names to have `staging-` prefix.
 
-> ```
-> configMapGenerator:
-> - files:
->   - application.properties
->   name: demo-configmap
-> ```
-
-### Customize configMap
-
-We want to add database credentials for the prod environment. In general, these credentials can be put into the file `application.properties`.
-However, for some cases, we want to keep the credentials in a different file and keep application specific configs in `application.properties`.
- With this clear separation, the credentials and application specific things can be managed and maintained flexibly by different teams.
-For example, application developers only tune the application configs in `application.properties` and operation teams or SREs
-only care about the credentials.
-
-For Spring Boot application, we can set an active profile through the environment variable `spring.profiles.active`. Then
-the application will pick up an extra `application-<profile>.properties` file. With this, we can customize the configMap in two
-steps. Add an environment variable through the patch and add a file to the configMap.
-
-<!-- @customizeConfigMap @test -->
+To build the staging K8s configuration from these files:
+<!-- @springBootStaging @test -->
 ```
-cat <<EOF >$DEMO_HOME/patch.yaml
-apiVersion: apps/v1beta2
-kind: Deployment
-metadata:
-  name: sbdemo
-spec:
-  template:
-    spec:
-      containers:
-        - name: sbdemo
-          env:
-          - name: spring.profiles.active
-            value: prod
-EOF
+# Change current directory to the springboot example.
+[[ -d examples/springboot ]] && cd examples/springboot
 
-kustomize edit add patch patch.yaml
-
-cat <<EOF >$DEMO_HOME/application-prod.properties
-spring.jpa.hibernate.ddl-auto=update
-spring.datasource.url=jdbc:mysql://<prod_database_host>:3306/db_example
-spring.datasource.username=root
-spring.datasource.password=admin
-EOF
-
-kustomize edit add configmap \
-  demo-configmap --from-file application-prod.properties
-
-cat kustomization.yaml
+kustomize build overlays/staging
 ```
 
-`kustomization.yaml`'s configMapGenerator section should contain:
-> ```
-> configMapGenerator:
-> - files:
->   - application.properties
->   - application-prod.properties
->   name: demo-configmap
-> ```
+## Production Variant
+In the production environment we want to:
+- Customize the application configuration to allow accessing the production database.
+- Specify the K8s resource names to have `prod-` prefix and `env: prod` label.
+- Specify container memory limits in the K8s configuration.
+- Configure liveness and readiness probes.
 
-### Name Customization
 
-Arrange for the resources to begin with prefix
-_prod-_ (since they are meant for the _production_
-environment):
-
-<!-- @customizeLabel @test -->
+We can verify the final result of all the above configurations by generating the
+K8s manifest:
+<!-- @springBootProd @test -->
 ```
-cd $DEMO_HOME
-kustomize edit set nameprefix 'prod-'
+# Change current directory to the springboot example.
+[[ -d examples/springboot ]] && cd examples/springboot
+
+kustomize build overlays/production
 ```
 
-`kustomization.yaml` should have updated value of namePrefix field:
+The individual configuration customizations in the `production` overlay are 
+explained in further detail below.
 
-> ```
-> namePrefix: prod-
+### Customize ConfigMap
+We want to add database credentials for the prod environment. In general, these credentials
+can be put into the file `application.properties`.
+However, for some cases, we want to keep the credentials in a different file and keep
+application specific configs in `application.properties`. With this clear separation,
+the credentials and application specific things can be managed and maintained flexibly
+by different teams.
+For example, application developers only tune the application configs in `application.properties`
+and operation teams or SREs only care about the credentials.
+
+For Spring Boot application, we can set an active profile through the environment variable
+`spring.profiles.active`.
+Then the application will pick up an extra `application-<profile>.properties` file.
+With this, we can customize the configMap in two steps. Add an environment variable through
+the patch and add a file to the configMap.
+
+### Resource Name and Label Customization
+We want resources in production environment to have names prefixed with `prod-` as well as
+certain labels so that we can query them by label selector.
+This is specified by the following element in the `kustomization.yaml`:
+> ```yaml
+> commonLabels:
+>   env: prod
 > ```
 
-This `namePrefix` directive adds _prod-_ to all
-resource names, as can be seen by building the
-resources:
-
-<!-- @build1 @test -->
+To verify that the name-prefix was applied correctly to all the resources:
+<!-- @springBootProd @test -->
 ```
-kustomize build $DEMO_HOME | grep prod-
+kustomize build overlays/production | grep -C3 -E '^  name:'
 ```
 
-### Label Customization
-
-We want resources in production environment to have
-certain labels so that we can query them by label
-selector.
-
-`kustomize` does not have `edit set label` command to
-add a label, but one can always edit
-`kustomization.yaml` directly:
-
-<!-- @customizeLabels @test -->
+To verify that the `env: prod` label was applied correctly to all the resources:
+<!-- @springBootProd @test -->
 ```
-cat <<EOF >>$DEMO_HOME/kustomization.yaml
-commonLabels:
-  env: prod
-EOF
+kustomize build overlays/production | grep -C3 -E '^    env:'
 ```
 
-Confirm that the resources now all have names prefixed
-by `prod-` and the label tuple `env:prod`:
+### Configuring JVM Memory Limit
+When a Spring Boot application is deployed in a K8s cluster, the JVM is running inside a container.
+We want to set memory limit for the container and make sure the JVM is aware of that limit. In K8s
+deployment, we can set the resource limits for containers and inject these limits to some environment
+variables by downward API. When the container starts to run, it can pick up the environment variables
+and set JVM options accordingly.
 
-<!-- @build2 @test -->
-```
-kustomize build $DEMO_HOME | grep -C 3 env
-```
-
-### Download Patch for JVM memory
-
-When a Spring Boot application is deployed in a k8s cluster, the JVM is running inside a container. We want to set memory limit for the container and make sure
-the JVM is aware of that limit. In K8s deployment, we can set the resource limits for containers and inject these limits to
-some environment variables by downward API. When the container starts to run, it can pick up the environment variables and
-set JVM options accordingly.
-
-Download the patch `memorylimit_patch.yaml`. It contains the memory limits setup.
-
-<!-- @downloadPatch @test -->
-```
-curl -s  -o "$DEMO_HOME/#1.yaml" \
-  "$CONTENT/overlays/production/{memorylimit_patch}.yaml"
-
-cat $DEMO_HOME/memorylimit_patch.yaml
-```
-
-The output contains
-
-> ```
-> apiVersion: apps/v1beta2
-> kind: Deployment
-> metadata:
->   name: sbdemo
-> spec:
->   template:
->     spec:
->       containers:
->         - name: sbdemo
->           resources:
->             limits:
->               memory: 1250Mi
->             requests:
->               memory: 1250Mi
+The `memorylimit_patch.yaml` defines the container resource limits and then injects then into
+environment variable named `MEM_TOTAL_MB`:
+> ```yaml
 >           env:
 >           - name: MEM_TOTAL_MB
 >             valueFrom:
@@ -237,71 +138,7 @@ The output contains
 >                 resource: limits.memory
 > ```
 
-### Download Patch for health check
-We also want to add liveness check and readiness check in the production environment. Spring Boot application
-has end points such as `/actuator/health` for this. We can customize the k8s deployment resource to talk to Spring Boot end point.
-
-Download the patch `healthcheck_patch.yaml`. It contains the liveness probes and readyness probes.
-
-<!-- @downloadPatch @test -->
-```
-curl -s  -o "$DEMO_HOME/#1.yaml" \
-  "$CONTENT/overlays/production/{healthcheck_patch}.yaml"
-
-cat $DEMO_HOME/healthcheck_patch.yaml
-```
-
-The output contains
-
-> ```
-> apiVersion: apps/v1beta2
-> kind: Deployment
-> metadata:
->   name: sbdemo
-> spec:
->   template:
->     spec:
->       containers:
->         - name: sbdemo
->           livenessProbe:
->             httpGet:
->               path: /actuator/health
->               port: 8080
->             initialDelaySeconds: 10
->             periodSeconds: 3
->           readinessProbe:
->             initialDelaySeconds: 20
->             periodSeconds: 10
->             httpGet:
->               path: /actuator/info
->               port: 8080
-> ```
-
-### Add patches
-
-Add these patches to the kustomization:
-
-<!-- @addPatch @test -->
-```
-cd $DEMO_HOME
-kustomize edit add patch memorylimit_patch.yaml
-kustomize edit add patch healthcheck_patch.yaml
-```
-
-`kustomization.yaml` should have patches field:
-
-> ```
-> patchesStrategicMerge:
-> - patch.yaml
-> - memorylimit_patch.yaml
-> - healthcheck_patch.yaml
-> ```
-
-The output of the following command can now be applied
-to the cluster (i.e. piped to `kubectl apply`) to
-create the production environment.
-
-<!-- @finalBuild @test -->
-```
-kustomize build $DEMO_HOME  # | kubectl apply -f -
-```
+### Liveness and Readiness Probes
+We also want to add liveness check and readiness check in the production environment.
+Spring Boot application has end-points such as `/actuator/health` for this. We can
+customize the K8s deployment resource to talk to Spring Boot end point.

@@ -5,3 +5,11 @@ patchesStrategicMerge:
 - healthcheck_patch.yaml
 - memorylimit_patch.yaml
 namePrefix: production-
+commonLabels:
+  env: prod
+configMapGenerator:
+- name: demo-configmap
+  behavior: merge
+  files:
+  - application.properties
+  - application-prod.properties
