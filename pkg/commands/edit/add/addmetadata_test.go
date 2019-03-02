@@ -17,6 +17,7 @@ limitations under the License.
 package add
 
 import (
+	"reflect"
 	"testing"
 
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
@@ -103,6 +104,32 @@ func TestAddAnnotationManyArgs(t *testing.T) {
 	}
 }
 
+func TestAddAnnotationValueQuoted(t *testing.T) {
+	fakeFS := fs.MakeFakeFS()
+	fakeFS.WriteTestKustomization()
+	v := validators.MakeHappyMapValidator(t)
+	cmd := newCmdAddAnnotation(fakeFS, v.Validator)
+	args := []string{"k1:\"v1\""}
+	err := cmd.RunE(cmd, args)
+	v.VerifyCall()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err.Error())
+	}
+}
+
+func TestAddAnnotationValueWithColon(t *testing.T) {
+	fakeFS := fs.MakeFakeFS()
+	fakeFS.WriteTestKustomization()
+	v := validators.MakeHappyMapValidator(t)
+	cmd := newCmdAddAnnotation(fakeFS, v.Validator)
+	args := []string{"k1:\"v1:v2\""}
+	err := cmd.RunE(cmd, args)
+	v.VerifyCall()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err.Error())
+	}
+}
+
 func TestAddAnnotationNoKey(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	v := validators.MakeHappyMapValidator(t)
@@ -128,7 +155,7 @@ func TestAddAnnotationTooManyColons(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected an error")
 	}
-	if err.Error() != "invalid annotation: key:v1:v2 (too many colons)" {
+	if err.Error() != "invalid annotation: key:v1:v2 (too many colons, quote the values)" {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }
@@ -238,7 +265,7 @@ func TestAddLabelTooManyColons(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected an error")
 	}
-	if err.Error() != "invalid label: key:v1:v2 (too many colons)" {
+	if err.Error() != "invalid label: key:v1:v2 (too many colons, quote the values)" {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }
@@ -268,6 +295,38 @@ func TestAddLabelMultipleArgs(t *testing.T) {
 		t.Errorf("expected an error")
 	}
 	if err.Error() != "labels must be comma-separated, with no spaces" {
+		t.Errorf("incorrect error: %v", err.Error())
+	}
+}
+
+func TestConvertToMap(t *testing.T) {
+	var o addMetadataOptions
+	args := "a:b,c:\"d\",e:\"f:g\""
+	expected := make(map[string]string)
+	expected["a"] = "b"
+	expected["c"] = "d"
+	expected["e"] = "f:g"
+
+	result, err := o.convertToMap(args)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err.Error())
+	}
+
+	eq := reflect.DeepEqual(expected, result)
+	if !eq {
+		t.Errorf("Converted map does not match expected, expected: %v, result: %v\n", expected, result)
+	}
+}
+
+func TestConvertToMapError(t *testing.T) {
+	var o addMetadataOptions
+	args := "a:b,c:\"d\",e:f:g"
+
+	_, err := o.convertToMap(args)
+	if err == nil {
+		t.Errorf("expected an error")
+	}
+	if err.Error() != "invalid annotation: e:f:g (too many colons, quote the values)" {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }

@@ -135,12 +135,27 @@ func (o *addMetadataOptions) convertToMap(arg string) (map[string]string, error)
 			return nil, o.makeError(input, "empty key")
 		}
 		if len(kv) > 2 {
-			return nil, o.makeError(input, "too many colons")
-		}
-		if len(kv) > 1 {
+			// more than one colon found
+			// check if value is quoted
+			qc := strings.Index(input, ":\"")
+			if qc >= 1 && input[len(input)-1:] == "\"" {
+				//value is quoted
+				result[kv[0]] = input[qc+1:]
+			} else {
+				// value is not quoted, return error
+				return nil, o.makeError(input, "too many colons, quote the values")
+			}
+		} else if len(kv) == 2 {
 			result[kv[0]] = kv[1]
 		} else {
 			result[kv[0]] = ""
+		}
+
+		// remove quotes if value is quoted
+		if len(result[kv[0]]) > 0 &&
+			result[kv[0]][:1] == "\"" &&
+			result[kv[0]][len(result[kv[0]])-1:] == "\"" {
+			result[kv[0]] = result[kv[0]][1 : len(result[kv[0]])-1]
 		}
 	}
 	return result, nil
