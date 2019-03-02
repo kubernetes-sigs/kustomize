@@ -87,9 +87,23 @@ nameReference:
     (etc.)    
 ```
 
+## var reference transformer
+
+Var reference transformer substitute variables in specified fields to text captured from one resource's field.
+
+``` yaml
+varReference:
+- path: spec/template/spec/initContainers/command
+  kind: StatefulSet
+
+- path: spec/template/spec/containers/command
+  kind: StatefulSet
+```
+
 ## customizing transformer configurations
 
-Kustomize has a default set of configurations. They can be saved to local directory through `kustomize config save -d`. Kustomize allows modifying those configuration files and using them in kustomization.yaml file. This tutorial shows how to customize those configurations to
-- [support a CRD type](crd/README.md)
+Kustomize has a default set of configurations. They can be saved to local directory through `kustomize config save -d`. Kustomize allows modifying those configuration files and using them in `kustomization.yaml` file. This [tutorial](crd/README.md) shows how to customize those configurations to
+
+- support a CRD type
 - add extra fields for variable substitution
 - add extra fields for name reference
