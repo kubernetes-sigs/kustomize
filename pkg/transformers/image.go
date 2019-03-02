@@ -143,7 +143,18 @@ func isImageMatched(s, t string) bool {
 // from the image string using either colon `:` or at `@` separators.
 // Note that the returned tag keeps its separator.
 func split(imageName string) (name string, tag string) {
-	ic := strings.LastIndex(imageName, ":")
+	// check if image name contains a domain
+	// if domain is present, ignore domain and check for `:`
+	ic := -1
+	if slashIndex := strings.Index(imageName, "/"); slashIndex < 0 {
+		ic = strings.LastIndex(imageName, ":")
+	} else {
+		lastIc := strings.LastIndex(imageName[slashIndex:], ":")
+		// set ic only if `:` is present
+		if lastIc > 0 {
+			ic = slashIndex + lastIc
+		}
+	}
 	ia := strings.LastIndex(imageName, "@")
 	if ic < 0 && ia < 0 {
 		return imageName, ""
