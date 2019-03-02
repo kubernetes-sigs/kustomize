@@ -23,18 +23,20 @@ import (
 
 	"sigs.k8s.io/kustomize/pkg/image"
 	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
 
 // imageTransformer replace image names and tags
 type imageTransformer struct {
-	images []image.Image
+	images     []image.Image
+	fieldSpecs []config.FieldSpec
 }
 
 var _ Transformer = &imageTransformer{}
 
 // NewImageTransformer constructs an imageTransformer.
-func NewImageTransformer(slice []image.Image) (Transformer, error) {
-	return &imageTransformer{slice}, nil
+func NewImageTransformer(slice []image.Image, fs []config.FieldSpec) (Transformer, error) {
+	return &imageTransformer{slice, fs}, nil
 }
 
 // Transform finds the matching images and replaces name, tag and/or digest
@@ -58,9 +60,9 @@ func (pt *imageTransformer) Transform(resources resmap.ResMap) error {
  finds matched ones and update the image name and tag name
 */
 func (pt *imageTransformer) findAndReplaceImage(obj map[string]interface{}) error {
-	paths := []string{"containers", "initContainers"}
 	found := false
-	for _, path := range paths {
+	for _, fs := range pt.fieldSpecs {
+		path := fs.Path
 		_, found = obj[path]
 		if found {
 			err := pt.updateContainers(obj, path)
