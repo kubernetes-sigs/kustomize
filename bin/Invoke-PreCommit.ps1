@@ -4,7 +4,7 @@
 $ErrorActionPreference = 'Stop'
 
 
-# Ensure Pre-Req's are Installed
+# You can run this function if you need to - to install pre-reqs locally.
 function Register-Prereqs {
   try {
     # install Chocolatey    
@@ -27,9 +27,6 @@ function Register-Prereqs {
 #  Start of process
 #####################################################################################
 
-# You can run this function if you need to - to install pre-reqs locally.
-#Register-Prereqs
-
 Push-Location
 
 try{
@@ -43,11 +40,11 @@ try{
   $rc = $false
 
   function Test-GoLangCILint {
-    golangci-lint -v run ./...    
+    golangci-lint -v run ./...
   }
 
   function Test-GoTest {
-    go test -v ./...    
+    go test -v ./...
   }
 
   function Test-Examples {
@@ -59,7 +56,7 @@ try{
   # we have to call them in-line here instead of using a function
   
   Write-Host "============== begin Test-GoLangCILint"
-  Test-GoLangCILint  
+  Test-GoLangCILint
   if ($LASTEXITCODE -eq 0) {
     $lint = $true
     $result = "SUCCESS"
