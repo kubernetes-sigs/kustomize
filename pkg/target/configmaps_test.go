@@ -35,6 +35,9 @@ configMapGenerator:
   files:
     - passphrase=phrase.dat
     - forces.txt
+- name: json
+  literals:
+    - 'v2=[{"path": "var/druid/segment-cache"}]'
 secretGenerator:
 - name: bob
   literals:
@@ -85,6 +88,13 @@ data:
 kind: ConfigMap
 metadata:
   name: blah-bob-k772g5db55
+---
+apiVersion: v1
+data:
+  v2: '[{"path": "var/druid/segment-cache"}]'
+kind: ConfigMap
+metadata:
+  name: blah-json-tkh79m5tbc
 ---
 apiVersion: v1
 data:
