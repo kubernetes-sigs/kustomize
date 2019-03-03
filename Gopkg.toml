@@ -46,8 +46,8 @@
   name = "k8s.io/apimachinery"
 
 [[constraint]]
+  branch = "master"
   name = "k8s.io/client-go"
-  version = "7.0.0"
 
 [[override]]
   branch = "master"

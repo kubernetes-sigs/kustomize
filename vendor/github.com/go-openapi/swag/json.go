@@ -34,9 +34,13 @@ var DefaultJSONNameProvider = NewNameProvider()
 
 const comma = byte(',')
 
-var closers = map[byte]byte{
-	'{': '}',
-	'[': ']',
+var closers map[byte]byte
+
+func init() {
+	closers = map[byte]byte{
+		'{': '}',
+		'[': ']',
+	}
 }
 
 type ejMarshaler interface {
@@ -82,10 +86,7 @@ func DynamicJSONToStruct(data interface{}, target interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err := ReadJSON(b, target); err != nil {
-		return err
-	}
-	return nil
+	return ReadJSON(b, target)
 }
 
 // ConcatJSON concatenates multiple json objects efficiently
@@ -260,7 +261,7 @@ func (n *NameProvider) GetJSONNames(subject interface{}) []string {
 		names = n.makeNameIndex(tpe)
 	}
 
-	var res []string
+	res := make([]string, 0, len(names.jsonNames))
 	for k := range names.jsonNames {
 		res = append(res, k)
 	}
