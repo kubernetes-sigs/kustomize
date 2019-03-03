@@ -19,11 +19,18 @@ package configmapandsecret
 import (
 	"fmt"
 	"path"
+	"path/filepath"
 	"strings"
 
+	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/kustomize/k8sdeps/kv"
 	"sigs.k8s.io/kustomize/pkg/ifc"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 func keyValuesFromLiteralSources(sources []string) ([]kv.Pair, error) {
@@ -63,6 +70,86 @@ func keyValuesFromEnvFile(l ifc.Loader, path string) ([]kv.Pair, error) {
 		return nil, err
 	}
 	return kv.KeyValuesFromLines(content)
+}
+
+// keyValuesFromRemoteKubernetesSecretSource retrieves secrets from a Kubernetes cluster for use as values
+func keyValuesFromRemoteKubernetesSecretSource(source types.RemoteKubernetesSecretSource) ([]kv.Pair, error) {
+	if source.Name == "" {
+		return nil, nil
+	}
+
+	// default to "default" namespace if no namespace is provided
+	if source.Namespace == "" {
+		source.Namespace = "default"
+	}
+
+	// determine the location of the Kubernetes config file
+	var kubeconfig string
+	if source.Config != "" {
+		kubeconfig = source.Config
+
+		// expand tilde into homedir if applicable
+		if strings.HasPrefix(kubeconfig, "~/") {
+			home, err := homedir.Dir()
+			if err != nil {
+				return nil, err
+			}
+			kubeconfig = filepath.Join(home, strings.TrimPrefix(kubeconfig, "~/"))
+		}
+	} else {
+		// otherwise default to ~/.kube/config
+		home, err := homedir.Dir()
+		if err != nil {
+			return nil, err
+		}
+		kubeconfig = filepath.Join(home, ".kube", "config")
+	}
+
+	// use override context if provided, or else just use the default "current-context"
+	var config *rest.Config
+	var err error
+	if source.Context == "" {
+		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		config, err = clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+			&clientcmd.ClientConfigLoadingRules{
+				ExplicitPath: kubeconfig,
+			},
+			&clientcmd.ConfigOverrides{
+				CurrentContext: source.Context,
+			},
+		).ClientConfig()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// create the clientset
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
+	// get the secret from k8s
+	secret, err := clientset.CoreV1().Secrets(source.Namespace).Get(source.Name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	// retrieve the appropriate data
+	var pairs []kv.Pair
+	for _, k := range source.Data {
+		v := string(secret.Data[k])
+		if v == "" {
+			return nil, fmt.Errorf(`data value "%s" for Secret "%s" in namespace "%s" on host "%s" was empty`, k, source.Name, source.Namespace, config.Host)
+		}
+		pairs = append(pairs, kv.Pair{Key: k, Value: v})
+	}
+
+	return pairs, nil
 }
 
 // parseFileSource parses the source given.

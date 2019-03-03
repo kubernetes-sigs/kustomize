@@ -1,0 +1,11 @@
+secretGenerator:
+- name: "mysecret"
+  remoteKubernetesSecret:
+    name: "mysecret"
+    namespace: "mynamespace"
+    data:
+    - "mykey1"
+    - "mykey2"
+    context: "minikube"
+    config: "~/.kube/config"
+  type: Opaque

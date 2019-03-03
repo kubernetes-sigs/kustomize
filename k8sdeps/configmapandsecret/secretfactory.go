@@ -80,6 +80,13 @@ func (f *SecretFactory) MakeSecret(args *types.SecretArgs, options *types.Genera
 	}
 	all = append(all, pairs...)
 
+	pairs, err = keyValuesFromRemoteKubernetesSecretSource(args.RemoteKubernetesSecretSource)
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf(
+			"remote k8s sources: %v", args.RemoteKubernetesSecretSource))
+	}
+	all = append(all, pairs...)
+
 	for _, p := range all {
 		err = addKvToSecret(s, p.Key, p.Value)
 		if err != nil {

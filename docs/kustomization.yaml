@@ -109,6 +109,18 @@ secretGenerator:
   # you can only specify one env file per secret.
   env: env.txt
   type: Opaque
+- name: remote_secret
+  # remoteKubernetesSecret is a secret on an existing Kubernetes cluster that you
+  # can copy data from to use in build secrets.
+  remoteKubernetesSecret:
+    name: "mysecret"
+    namespace: "mynamespace"   # (optional: will default to "default")
+    config: "~/.kube/myconfig" # (optional: will default to "~/.kube/config")
+    context: "mycluster"       # (optional: will default to what "current-context" is set to in the configuration)
+    data:
+    - "mykey1"
+    - "mykey2"
+  type: Opaque
 
 # generatorOptions modify behavior of all ConfigMap and Secret generators
 generatorOptions:
