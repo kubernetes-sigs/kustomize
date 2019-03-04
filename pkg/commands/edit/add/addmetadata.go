@@ -152,11 +152,7 @@ func (o *addMetadataOptions) convertToMap(arg string) (map[string]string, error)
 		}
 
 		// remove quotes if value is quoted
-		if len(result[kv[0]]) > 0 &&
-			result[kv[0]][:1] == "\"" &&
-			result[kv[0]][len(result[kv[0]])-1:] == "\"" {
-			result[kv[0]] = result[kv[0]][1 : len(result[kv[0]])-1]
-		}
+		result[kv[0]] = trimQuotes(result[kv[0]])
 	}
 	return result, nil
 }
@@ -187,4 +183,13 @@ func (o *addMetadataOptions) writeToMap(m map[string]string, kind kindOfAdd) err
 
 func (o *addMetadataOptions) makeError(input string, message string) error {
 	return fmt.Errorf("invalid %s: %s (%s)", o.kind, input, message)
+}
+
+func trimQuotes(s string) string {
+	if len(s) >= 2 {
+		if s[0] == '"' && s[len(s)-1] == '"' {
+			return s[1 : len(s)-1]
+		}
+	}
+	return s
 }
