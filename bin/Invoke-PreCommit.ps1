@@ -1,31 +1,16 @@
+<#
 
-
-# stop on any error
-$ErrorActionPreference = 'Stop'
-
-
-# You can run this function if you need to - to install pre-reqs locally.
-function Register-Prereqs {
-  try {
-    # install Chocolatey    
-    Set-ExecutionPolicy Bypass -Scope Process -Force
-    iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-    refreshenv
-    choco install golang -y
-    refreshenv
-    go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
-    refreshenv
-    go get github.com/monopole/mdrip
-    refreshenv
-  } catch {
-    Write-Error "Could not install pre-reqs"
-  }
-}
-
+Please reference this document:
+  /docs/howtowindows.md
+ 
+#>
 
 #####################################################################################
 #  Start of process
 #####################################################################################
+# stop on any error
+$ErrorActionPreference = 'Stop'
+
 
 Push-Location
 
@@ -58,10 +43,10 @@ try{
   Write-Host "============== begin Test-GoLangCILint"
   Test-GoLangCILint
   if ($LASTEXITCODE -eq 0) {
-    $lint = $true
+    $lint = 0
     $result = "SUCCESS"
   } else {
-    $lint = $false
+    $lint = 1
     $result = "FAILURE"
   }
   Write-Host ("============== end Test-GoLangCILint : {0} code={1}`n`n`n" -f $result, $lint)
@@ -70,10 +55,10 @@ try{
   Write-Host "============== begin Test-GoTest"
   Test-GoTest
   if ($LASTEXITCODE -eq 0) {
-    $tests = $true
+    $tests = 0
     $result = "SUCCESS"
   } else {
-    $tests = $false
+    $tests = 1
     $result = "FAILURE"
   }
   Write-Host ("============== end Test-GoTest : {0} code={1}`n`n`n" -f $result, $tests)
@@ -82,10 +67,10 @@ try{
   Write-Host "============== begin Test-Examples"
   Test-Examples
   if ($LASTEXITCODE -eq 0) {
-    $examples = $true
+    $examples = 0
     $result = "SUCCESS"
   } else {
-    $examples = $false
+    $examples = 1
     $result = "FAILURE"
   }
   Write-Host ("============== end Test-Examples : {0} code={1}`n`n`n" -f $result, $examples)
