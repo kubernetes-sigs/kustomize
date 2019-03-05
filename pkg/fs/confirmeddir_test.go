@@ -17,7 +17,6 @@ limitations under the License.
 package fs
 
 import (
-	"path/filepath"
 	"testing"
 )
 
@@ -100,20 +99,5 @@ func TestHasPrefix_SlashFooBar(t *testing.T) {
 	}
 	if !d.HasPrefix("/") {
 		t.Fatalf("/foo/bar should have prefix /")
-	}
-}
-
-func TestNewTempConfirmDir(t *testing.T) {
-	tmp, err := NewTmpConfirmedDir()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	delinked, err := filepath.EvalSymlinks(string(tmp))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if string(tmp) != delinked {
-		t.Fatalf("unexpected path containing symlinks")
 	}
 }

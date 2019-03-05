@@ -119,10 +119,6 @@ func TestImageTransformer(t *testing.T) {
 									"image": "myprivaterepohostname:1234/my/image:latest",
 								},
 								map[string]interface{}{
-									"name":  "myimage2",
-									"image": "myprivaterepohostname:1234/my/image",
-								},
-								map[string]interface{}{
 									"name":  "my-app",
 									"image": "my-app-image:v1",
 								},
@@ -220,10 +216,6 @@ func TestImageTransformer(t *testing.T) {
 								},
 								map[string]interface{}{
 									"name":  "myimage",
-									"image": "myprivaterepohostname:1234/my/image:v1.0.1",
-								},
-								map[string]interface{}{
-									"name":  "myimage2",
 									"image": "myprivaterepohostname:1234/my/image:v1.0.1",
 								},
 								map[string]interface{}{

@@ -17,7 +17,6 @@ limitations under the License.
 package transformers
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -76,10 +75,7 @@ func (pt *imageTransformer) findAndReplaceImage(obj map[string]interface{}) erro
 }
 
 func (pt *imageTransformer) updateContainers(obj map[string]interface{}, path string) error {
-	containers, ok := obj[path].([]interface{})
-	if !ok {
-		return fmt.Errorf("containers path is not of type []interface{} but %T", obj[path])
-	}
+	containers := obj[path].([]interface{})
 	for i := range containers {
 		container := containers[i].(map[string]interface{})
 		containerImage, found := container["image"]
@@ -143,18 +139,7 @@ func isImageMatched(s, t string) bool {
 // from the image string using either colon `:` or at `@` separators.
 // Note that the returned tag keeps its separator.
 func split(imageName string) (name string, tag string) {
-	// check if image name contains a domain
-	// if domain is present, ignore domain and check for `:`
-	ic := -1
-	if slashIndex := strings.Index(imageName, "/"); slashIndex < 0 {
-		ic = strings.LastIndex(imageName, ":")
-	} else {
-		lastIc := strings.LastIndex(imageName[slashIndex:], ":")
-		// set ic only if `:` is present
-		if lastIc > 0 {
-			ic = slashIndex + lastIc
-		}
-	}
+	ic := strings.LastIndex(imageName, ":")
 	ia := strings.LastIndex(imageName, "@")
 	if ic < 0 && ia < 0 {
 		return imageName, ""

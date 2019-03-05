@@ -1,15 +1,3 @@
-os:
-# TODO: Enable this when we can get the tests to work
-#  - windows
-  - linux
-  - osx
-
-addons:
-  apt:
-    packages: tree
-  homebrew:
-    packages: tree
-
 language: go
 
 go:
@@ -29,6 +17,7 @@ env:
 
 before_install:
   - source ./bin/consider-early-travis-exit.sh
+  - sudo apt-get install tree
   - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $GOPATH/bin ${GOLANGCI_RELEASE}
   - go get -u github.com/monopole/mdrip
 

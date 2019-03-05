@@ -100,15 +100,6 @@ varReference:
 - path: spec/containers/env/value
   kind: Pod
 
-- path: spec/initContainers/command
-  kind: Pod
-
-- path: spec/initContainers/args
-  kind: Pod
-
-- path: spec/initContainers/env/value
-  kind: Pod
-
 - path: spec/rules/host
   kind: Ingress
 

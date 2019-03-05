@@ -73,8 +73,6 @@ var order = []string{
 	"Namespace",
 	"StorageClass",
 	"CustomResourceDefinition",
-	"MutatingWebhookConfiguration",
-	"ValidatingWebhookConfiguration",
 	"ServiceAccount",
 	"Role",
 	"ClusterRole",

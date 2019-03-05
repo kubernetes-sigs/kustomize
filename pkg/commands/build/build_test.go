@@ -22,12 +22,6 @@ import (
 	"sigs.k8s.io/kustomize/pkg/constants"
 )
 
-func TestNewOptionsToSilenceCodeInspectionError(t *testing.T) {
-	if NewOptions("foo", "bar") == nil {
-		t.Fatal("could not make new options")
-	}
-}
-
 func TestBuildValidate(t *testing.T) {
 	var cases = []struct {
 		name  string

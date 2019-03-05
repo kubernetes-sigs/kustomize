@@ -18,9 +18,9 @@ package transformer
 
 import (
 	"reflect"
-	"strings"
 	"testing"
 
+	"github.com/evanphx/json-patch"
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resid"
@@ -67,7 +67,10 @@ func TestJsonPatchJSONTransformer_Transform(t *testing.T) {
         {"op": "add", "path": "/spec/replica", "value": "3"},
         {"op": "add", "path": "/spec/template/spec/containers/0/command", "value": ["arg1", "arg2", "arg3"]}
 ]`)
-
+	patch, err := jsonpatch.DecodePatch(operations)
+	if err != nil {
+		t.Fatalf("unexpected error : %v", err)
+	}
 	expected := resmap.ResMap{
 		id: rf.FromMap(
 			map[string]interface{}{
@@ -101,7 +104,7 @@ func TestJsonPatchJSONTransformer_Transform(t *testing.T) {
 				},
 			}),
 	}
-	jpt, err := newPatchJson6902JSONTransformer(id, operations)
+	jpt, err := newPatchJson6902JSONTransformer(id, patch)
 	if err != nil {
 		t.Fatalf("unexpected error : %v", err)
 	}
@@ -112,54 +115,5 @@ func TestJsonPatchJSONTransformer_Transform(t *testing.T) {
 	if !reflect.DeepEqual(base, expected) {
 		err = expected.ErrorIfNotEqual(base)
 		t.Fatalf("actual doesn't match expected: %v", err)
-	}
-}
-
-func TestJsonPatchJSONTransformer_UnHappyTransform(t *testing.T) {
-	rf := resource.NewFactory(
-		kunstruct.NewKunstructuredFactoryImpl())
-	id := resid.NewResId(deploy, "deploy1")
-	base := resmap.ResMap{
-		id: rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "Deployment",
-				"metadata": map[string]interface{}{
-					"name": "deploy1",
-				},
-				"spec": map[string]interface{}{
-					"template": map[string]interface{}{
-						"metadata": map[string]interface{}{
-							"labels": map[string]interface{}{
-								"old-label": "old-value",
-							},
-						},
-						"spec": map[string]interface{}{
-							"containers": []interface{}{
-								map[string]interface{}{
-									"name":  "nginx",
-									"image": "nginx",
-								},
-							},
-						},
-					},
-				},
-			}),
-	}
-
-	operations := []byte(`[
-        {"op": "add", "path": "/spec/template/spec/containers/0/command/", "value": ["arg1", "arg2", "arg3"]}
-]`)
-
-	jpt, err := newPatchJson6902JSONTransformer(id, operations)
-	if err != nil {
-		t.Fatalf("unexpected error : %v", err)
-	}
-	err = jpt.Transform(base)
-	if err == nil {
-		t.Fatalf("expected error didn't happen")
-	}
-	if !strings.HasPrefix(err.Error(), "failed to apply json patch") || !strings.Contains(err.Error(), string(operations)) {
-		t.Fatalf("expected error didn't happen, but got %v", err)
 	}
 }

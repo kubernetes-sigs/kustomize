@@ -22,7 +22,6 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/go-openapi/spec"
-	"github.com/pkg/errors"
 	"k8s.io/kube-openapi/pkg/common"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
@@ -42,7 +41,7 @@ func LoadConfigFromCRDs(
 		}
 		m, err := makeNameToApiMap(content)
 		if err != nil {
-			return nil, errors.Wrapf(err, "unable to parse open API definition from '%s'", path)
+			return nil, err
 		}
 		otherTc, err := makeConfigFromApiMap(m)
 		if err != nil {

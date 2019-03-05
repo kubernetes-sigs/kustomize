@@ -46,6 +46,15 @@ func (m ResMap) GetMatchingIds(matches IdMatcher) []resid.ResId {
 	return result
 }
 
+// DemandOneGvknMatchForId find the matched resource by Group/Version/Kind and Name
+func (m ResMap) DemandOneGvknMatchForId(inputId resid.ResId) (*resource.Resource, bool) {
+	result := m.GetMatchingIds(inputId.GvknEquals)
+	if len(result) == 1 {
+		return m[result[0]], true
+	}
+	return nil, false
+}
+
 // EncodeAsYaml encodes a ResMap to YAML; encoded objects separated by `---`.
 func (m ResMap) EncodeAsYaml() ([]byte, error) {
 	var ids []resid.ResId

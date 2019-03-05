@@ -8,6 +8,38 @@ Create a workspace by
 DEMO_HOME=$(mktemp -d)
 ```
 
+### Get the native config as a starting point
+
+Get the default transformer configurations using this command:
+
+<!-- @saveConfig @test -->
+```
+kustomize config save -d $DEMO_HOME/kustomizeconfig
+```
+The default configurations are saved
+in the directory `$DEMO_HOME/kustomizeconfig` as several files
+
+> ```
+> commonannotations.yaml
+> commonlabels.yaml
+> nameprefix.yaml
+> namereference.yaml
+> namespace.yaml
+> varreference.yaml
+> ```
+
+These files contain the field specifications for native resources
+that transformation directives like `namePrefix`, `commonLabels`, etc.
+need to do their work.
+
+These default configurations already include some common
+field specifictions for all types:
+
+- nameprefix is added to `.metadata.name`
+- namespace is added to `.metadata.namespace`
+- labels is added to `.metadata.labels`
+- annotations is added to `.metadata.annotations`
+
 ### Adding a custom resource
 
 Consider a CRD of kind `MyKind` with fields
@@ -19,7 +51,6 @@ Consider a CRD of kind `MyKind` with fields
 Add the following file to configure the transformers for the above fields
 <!-- @addConfig @test -->
 ```
-mkdir $DEMO_HOME/kustomizeconfig
 cat > $DEMO_HOME/kustomizeconfig/mykind.yaml << EOF
 
 commonLabels:
@@ -117,6 +148,12 @@ in the kustomization file:
 cat >> $DEMO_HOME/kustomization.yaml << EOF
 configurations:
 - kustomizeconfig/mykind.yaml
+- kustomizeconfig/commonannotations.yaml
+- kustomizeconfig/commonlabels.yaml
+- kustomizeconfig/nameprefix.yaml
+- kustomizeconfig/namereference.yaml
+- kustomizeconfig/namespace.yaml
+- kustomizeconfig/varreference.yaml
 EOF
 ```
 
