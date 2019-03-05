@@ -130,17 +130,18 @@ func (o *addMetadataOptions) convertToMap(arg string) (map[string]string, error)
 	result := make(map[string]string)
 	inputs := strings.Split(arg, ",")
 	for _, input := range inputs {
-		kv := strings.Split(input, ":")
-		if len(kv[0]) < 1 {
-			return nil, o.makeError(input, "empty key")
-		}
-		if len(kv) > 2 {
-			return nil, o.makeError(input, "too many colons")
-		}
-		if len(kv) > 1 {
-			result[kv[0]] = kv[1]
+		c := strings.Index(input, ":")
+		if c == 0 {
+			// key is not passed
+			return nil, o.makeError(input, "need k:v pair where v may be quoted")
+		} else if c < 0 {
+			// only key passed
+			result[input] = ""
 		} else {
-			result[kv[0]] = ""
+			// both key and value passed
+			key := input[:c]
+			value := trimQuotes(input[c+1:])
+			result[key] = value
 		}
 	}
 	return result, nil
@@ -171,5 +172,14 @@ func (o *addMetadataOptions) writeToMap(m map[string]string, kind kindOfAdd) err
 }
 
 func (o *addMetadataOptions) makeError(input string, message string) error {
-	return fmt.Errorf("invalid %s: %s (%s)", o.kind, input, message)
+	return fmt.Errorf("invalid %s: '%s' (%s)", o.kind, input, message)
+}
+
+func trimQuotes(s string) string {
+	if len(s) >= 2 {
+		if s[0] == '"' && s[len(s)-1] == '"' {
+			return s[1 : len(s)-1]
+		}
+	}
+	return s
 }
