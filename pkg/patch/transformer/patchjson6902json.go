@@ -20,6 +20,8 @@ import (
 	"fmt"
 
 	"github.com/evanphx/json-patch"
+	"github.com/ghodss/yaml"
+	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
@@ -30,17 +32,31 @@ import (
 type patchJson6902JSONTransformer struct {
 	target resid.ResId
 	patch  jsonpatch.Patch
+	rawOp  []byte
 }
 
 var _ transformers.Transformer = &patchJson6902JSONTransformer{}
 
 // newPatchJson6902JSONTransformer constructs a PatchJson6902 transformer.
 func newPatchJson6902JSONTransformer(
-	id resid.ResId, p jsonpatch.Patch) (transformers.Transformer, error) {
-	if len(p) == 0 {
+	id resid.ResId, rawOp []byte) (transformers.Transformer, error) {
+	op := rawOp
+	var err error
+	if !isJsonFormat(op) {
+		// if it isn't JSON, try to parse it as YAML
+		op, err = yaml.YAMLToJSON(rawOp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	decodedPatch, err := jsonpatch.DecodePatch(op)
+	if err != nil {
+		return nil, err
+	}
+	if len(decodedPatch) == 0 {
 		return transformers.NewNoOpTransformer(), nil
 	}
-	return &patchJson6902JSONTransformer{target: id, patch: p}, nil
+	return &patchJson6902JSONTransformer{target: id, patch: decodedPatch, rawOp: rawOp}, nil
 }
 
 // Transform apply the json patches on top of the base resources.
@@ -55,7 +71,7 @@ func (t *patchJson6902JSONTransformer) Transform(m resmap.ResMap) error {
 	}
 	modifiedObj, err := t.patch.Apply(rawObj)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to apply json patch '%s'", string(t.rawOp))
 	}
 	err = obj.UnmarshalJSON(modifiedObj)
 	if err != nil {
