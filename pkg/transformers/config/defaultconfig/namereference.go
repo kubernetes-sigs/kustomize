@@ -114,7 +114,7 @@ nameReference:
     kind: CronJob
   - path: spec/jobTemplate/spec/template/spec/containers/envFrom/configMapRef/name
     kind: CronJob
-  - path: spec/jobTemplate/spec/template/spec/initContainers/envFrom/configmapRef/name
+  - path: spec/jobTemplate/spec/template/spec/initContainers/envFrom/configMapRef/name
     kind: CronJob
 
 - kind: Secret
