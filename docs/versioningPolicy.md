@@ -64,13 +64,13 @@ deprecations fixable via `edit fix`.
 With the 2.0.0 release, there were three field
 removals:
 
-- `imageTag` was deprecated when `image` was
+- `imageTag` was deprecated when `images` was
    introduced, because the latter offers more
    general features for image data manipulation.
    `imageTag` was removed in v2.0.0.
 
 - `patches` was deprecated and replaced by
-   `PatchesStrategicMerge` when `PatchesJson6902`
+   `patchesStrategicMerge` when `patchesJson6902`
    was introduced, to make a clearer
    distinction between patch specification formats.
    `patches` was removed in v2.0.0.
