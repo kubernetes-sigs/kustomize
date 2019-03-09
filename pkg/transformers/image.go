@@ -40,47 +40,30 @@ func NewImageTransformer(slice []image.Image, fs []config.FieldSpec) (Transforme
 }
 
 // Transform finds the matching images and replaces name, tag and/or digest
-func (pt *imageTransformer) Transform(resources resmap.ResMap) error {
+func (pt *imageTransformer) Transform(m resmap.ResMap) error {
 	if len(pt.images) == 0 {
 		return nil
 	}
-	for _, res := range resources {
-		err := pt.findAndReplaceImage(res.Map())
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-/*
- findAndReplaceImage replaces the image name and tags inside one object
- It searches the object for container session
- then loops though all images inside containers session,
- finds matched ones and update the image name and tag name
-*/
-func (pt *imageTransformer) findAndReplaceImage(obj map[string]interface{}) error {
-	found := false
-	for _, fs := range pt.fieldSpecs {
-		path := fs.Path
-		_, found = obj[path]
-		if found {
-			err := pt.updateContainers(obj, path)
+	for id := range m {
+		objMap := m[id].Map()
+		for _, path := range pt.fieldSpecs {
+			if !id.Gvk().IsSelected(&path.Gvk) {
+				continue
+			}
+			err := mutateField(objMap, path.PathSlice(), false, pt.updateContainers)
 			if err != nil {
 				return err
 			}
+
 		}
-	}
-	if !found {
-		return pt.findContainers(obj)
 	}
 	return nil
 }
 
-func (pt *imageTransformer) updateContainers(obj map[string]interface{}, path string) error {
-	containers, ok := obj[path].([]interface{})
+func (pt *imageTransformer) updateContainers(in interface{}) (interface{}, error) {
+	containers, ok := in.([]interface{})
 	if !ok {
-		return fmt.Errorf("containers path is not of type []interface{} but %T", obj[path])
+		return nil, fmt.Errorf("containers path is not of type []interface{} but %T", in)
 	}
 	for i := range containers {
 		container := containers[i].(map[string]interface{})
@@ -108,31 +91,7 @@ func (pt *imageTransformer) updateContainers(obj map[string]interface{}, path st
 			break
 		}
 	}
-	return nil
-}
-
-func (pt *imageTransformer) findContainers(obj map[string]interface{}) error {
-	for key := range obj {
-		switch typedV := obj[key].(type) {
-		case map[string]interface{}:
-			err := pt.findAndReplaceImage(typedV)
-			if err != nil {
-				return err
-			}
-		case []interface{}:
-			for i := range typedV {
-				item := typedV[i]
-				typedItem, ok := item.(map[string]interface{})
-				if ok {
-					err := pt.findAndReplaceImage(typedItem)
-					if err != nil {
-						return err
-					}
-				}
-			}
-		}
-	}
-	return nil
+	return containers, nil
 }
 
 func isImageMatched(s, t string) bool {
