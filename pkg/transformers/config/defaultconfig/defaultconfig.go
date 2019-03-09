@@ -31,7 +31,7 @@ func GetDefaultFieldSpecs() []byte {
 		[]byte(namespaceFieldSpecs),
 		[]byte(varReferenceFieldSpecs),
 		[]byte(nameReferenceFieldSpecs),
-		[]byte(imageFieldSpecs),
+		[]byte(imagesFieldSpecs),
 	}
 	return bytes.Join(configData, []byte("\n"))
 }
@@ -46,6 +46,6 @@ func GetDefaultFieldSpecsAsMap() map[string]string {
 	result["namespace"] = namespaceFieldSpecs
 	result["varreference"] = varReferenceFieldSpecs
 	result["namereference"] = nameReferenceFieldSpecs
-	result["image"] = imageFieldSpecs
+	result["images"] = imagesFieldSpecs
 	return result
 }

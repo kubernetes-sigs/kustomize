@@ -34,7 +34,7 @@ type TransformerConfig struct {
 	CommonAnnotations fsSlice  `json:"commonAnnotations,omitempty" yaml:"commonAnnotations,omitempty"`
 	NameReference     nbrSlice `json:"nameReference,omitempty" yaml:"nameReference,omitempty"`
 	VarReference      fsSlice  `json:"varReference,omitempty" yaml:"varReference,omitempty"`
-	Images            fsSlice  `json:"image,omitempty" yaml:"image,omitempty"`
+	Images            fsSlice  `json:"images,omitempty" yaml:"images,omitempty"`
 }
 
 // MakeEmptyConfig returns an empty TransformerConfig object
