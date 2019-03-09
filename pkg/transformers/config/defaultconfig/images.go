@@ -17,9 +17,15 @@ limitations under the License.
 package defaultconfig
 
 const (
-	imageFieldSpecs = `
-image:
-- path: containers
-- path: initContainers
+	imagesFieldSpecs = `
+images:
+- kind: Pod
+  path: spec/initContainers
+- kind: Pod
+  path: spec/containers
+- kind: Deployment
+  path: spec/template/spec/initContainers
+- kind: Deployment
+  path: spec/template/spec/containers
 `
 )
