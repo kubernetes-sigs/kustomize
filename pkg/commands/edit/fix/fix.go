@@ -30,7 +30,7 @@ func NewCmdFix(fSys fs.FileSystem) *cobra.Command {
 		Long:  "",
 		Example: `
 	# Fix the missing and deprecated fields in kustomization file
-	kustomize fix
+	kustomize edit fix
 
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -40,6 +40,7 @@ func NewCmdFix(fSys fs.FileSystem) *cobra.Command {
 	return cmd
 }
 
+// RunFix runs `fix` command
 func RunFix(fSys fs.FileSystem) error {
 	mf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
