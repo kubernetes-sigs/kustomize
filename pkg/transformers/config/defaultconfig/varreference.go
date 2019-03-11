@@ -88,6 +88,9 @@ varReference:
 - path: spec/template/spec/containers/env/value
   kind: Job
 
+- path: spec/template/spec/initContainers/env/value
+  kind: Job
+
 - path: spec/jobTemplate/spec/template/spec/containers/env/value
   kind: CronJob
 
