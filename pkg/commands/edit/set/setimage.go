@@ -60,7 +60,7 @@ The command
   set image postgres=eu.gcr.io/my-project/postgres:latest my-app=my-registry/my-app@sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3
 will add
 
-image:
+images:
 - name: postgres
   newName: eu.gcr.io/my-project/postgres
   newTag: latest
@@ -75,7 +75,7 @@ The command
   set image node:8.15.0 mysql=mariadb alpine@sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3
 will add
 
-image:
+images:
 - name: node
   newTag: 8.15.0
 - name: mysql
