@@ -54,8 +54,36 @@ func (pt *imageTransformer) Transform(m resmap.ResMap) error {
 			if err != nil {
 				return err
 			}
-
 		}
+		// Keep for backward compatibility
+		err := pt.findAndReplaceImage(objMap)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+/*
+ findAndReplaceImage replaces the image name and tags inside one object
+ It searches the object for container session
+ then loops though all images inside containers session,
+ finds matched ones and update the image name and tag name
+*/
+func (pt *imageTransformer) findAndReplaceImage(obj map[string]interface{}) error {
+	paths := []string{"containers", "initContainers"}
+	found := false
+	for _, path := range paths {
+		containers, found := obj[path]
+		if found {
+			_, err := pt.updateContainers(containers)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	if !found {
+		return pt.findContainers(obj)
 	}
 	return nil
 }
@@ -92,6 +120,30 @@ func (pt *imageTransformer) updateContainers(in interface{}) (interface{}, error
 		}
 	}
 	return containers, nil
+}
+
+func (pt *imageTransformer) findContainers(obj map[string]interface{}) error {
+	for key := range obj {
+		switch typedV := obj[key].(type) {
+		case map[string]interface{}:
+			err := pt.findAndReplaceImage(typedV)
+			if err != nil {
+				return err
+			}
+		case []interface{}:
+			for i := range typedV {
+				item := typedV[i]
+				typedItem, ok := item.(map[string]interface{})
+				if ok {
+					err := pt.findAndReplaceImage(typedItem)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+	return nil
 }
 
 func isImageMatched(s, t string) bool {
