@@ -45,8 +45,9 @@ func TestKeyValuesFromFileSources(t *testing.T) {
 
 	fSys := fs.MakeFakeFS()
 	fSys.WriteFile("/files/app-init.ini", []byte("FOO=bar"))
+	bf := baseFactory{loader.NewFileLoaderAtRoot(fSys), nil}
 	for _, tc := range tests {
-		kvs, err := keyValuesFromFileSources(loader.NewFileLoaderAtRoot(fSys), tc.sources)
+		kvs, err := bf.keyValuesFromFileSources(tc.sources)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
