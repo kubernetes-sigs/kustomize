@@ -67,8 +67,8 @@ func newCmdAddConfigMap(fSys fs.FileSystem, kf ifc.KunstructuredFactory) *cobra.
 			}
 
 			// Add the flagsAndArgs map to the kustomization file.
-			kf.Set(loader.NewFileLoaderAtCwd(fSys))
-			err = addConfigMap(kustomization, flags, kf)
+			err = addConfigMap(
+				loader.NewFileLoaderAtCwd(fSys), kustomization, flags, kf)
 			if err != nil {
 				return err
 			}
@@ -103,6 +103,7 @@ func newCmdAddConfigMap(fSys fs.FileSystem, kf ifc.KunstructuredFactory) *cobra.
 // Note: error may leave kustomization file in an undefined state.
 // Suggest passing a copy of kustomization file.
 func addConfigMap(
+	ldr ifc.Loader,
 	k *types.Kustomization,
 	flags flagsAndArgs, kf ifc.KunstructuredFactory) error {
 	cmArgs := makeConfigMapArgs(k, flags.Name)
@@ -111,7 +112,7 @@ func addConfigMap(
 		return err
 	}
 	// Validate by trying to create corev1.configmap.
-	_, err = kf.MakeConfigMap(cmArgs, k.GeneratorOptions)
+	_, err = kf.MakeConfigMap(ldr, k.GeneratorOptions, cmArgs)
 	if err != nil {
 		return err
 	}
