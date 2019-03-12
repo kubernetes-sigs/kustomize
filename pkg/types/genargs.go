@@ -47,7 +47,7 @@ func (g *GenArgs) String() string {
 		"}"
 }
 
-// NeedHashSuffix returns true if the hash suffix is needed.
+// NeedsHashSuffix returns true if the hash suffix is needed.
 // It is needed when the two conditions are both met
 //  1) GenArgs is not nil
 //  2) DisableNameSuffixHash in GeneratorOptions is not set to true
