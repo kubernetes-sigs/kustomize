@@ -19,14 +19,14 @@ number are bumped per semver.
 
 At the time of writing (circa release of v2.0.0):
 
- - A [kustomization] file is just a YAML file that
-   can be successfully parsed into a particular Go
-   struct defined in the `kustomize` binary.
+- A [kustomization] file is just a YAML file that
+  can be successfully parsed into a particular Go
+  struct defined in the `kustomize` binary.
 
- - This struct does not have a version number,
-   which is the same as saying that its version
-   number matches the program's version number,
-   since it's compiled in.
+- This struct does not have a version number,
+  which is the same as saying that its version
+  number matches the program's version number,
+  since it's compiled in.
 
 ### Field Change Policy
 
@@ -64,13 +64,13 @@ deprecations fixable via `edit fix`.
 With the 2.0.0 release, there were three field
 removals:
 
-- `imageTag` was deprecated when `image` was
+- `imageTag` was deprecated when `images` was
    introduced, because the latter offers more
    general features for image data manipulation.
    `imageTag` was removed in v2.0.0.
 
 - `patches` was deprecated and replaced by
-   `PatchesStrategicMerge` when `PatchesJson6902`
+   `patchesStrategicMerge` when `patchesJson6902`
    was introduced, to make a clearer
    distinction between patch specification formats.
    `patches` was removed in v2.0.0.
@@ -92,16 +92,16 @@ process for making [changes].
 The presence of an `apiVersion` field in a k8s
 native type signals:
 
- - its reliability level (alpha vs beta vs
-   generally available),
+- its reliability level (alpha vs beta vs
+  generally available),
 
- - the existence of code to provide default values
-   to fields not present in a serialization,
-   
- - the existence of code to provide both forward
-   and backward conversion between different
-   versions of types.
-   
+- the existence of code to provide default values
+  to fields not present in a serialization,
+  
+- the existence of code to provide both forward
+  and backward conversion between different
+  versions of types.
+
 The k8s API promises a lossless _conversion_
 between versions over a specific range.  This
 means that a recent client can write an object
@@ -124,13 +124,13 @@ defaulting and conversions).
 The critical difference between k8s API versioning
 and kustomization file versioning is
 
- - A k8s API server is able to go _forward_ and
-   _backward_ in versioning, to work with older
-   clients, over [some range].
+- A k8s API server is able to go _forward_ and
+  _backward_ in versioning, to work with older
+  clients, over [some range].
 
- - The `kustomize edit fix` command only moves
-   _forward_ within a _major_ program
-   version.
+- The `kustomize edit fix` command only moves
+  _forward_ within a _major_ program
+  version.
 
 At the time of writing, the YAML in a
 kustomization file does not represent a [k8s API]
@@ -160,7 +160,7 @@ a kustomization file: [`kind`] and [`apiVersion`].
 If either field is present, they both must be, and
 they must have the following values:
 
-```
+``` yaml
 kind: Kustomization
 apiVersion: kustomize.config.k8s.io/v1beta1
 ```
@@ -171,7 +171,7 @@ domain-squatting behavior for some future API.  A
 kustomize user gains nothing from adding these
 fields to a kustomization file.
 
-### Why not require `kind` and `apiVersion`?
+### Why not require `kind` and `apiVersion`
 
 #### Ease of use and setting proper expectations
 
@@ -202,7 +202,6 @@ whatever it looks like at that moment can be
 locked into `/v1beta1` or `/v1` and the `kind`
 and `apiVersion` fields can be required from that
 moment forward.
-
 
 [field change policy]: #field-change-policy
 [some range]: https://kubernetes.io/docs/reference/using-api/deprecation-policy
