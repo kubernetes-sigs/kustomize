@@ -79,10 +79,13 @@ func (rmF *Factory) NewResMapFromBytes(b []byte) (ResMap, error) {
 
 // NewResMapFromConfigMapArgs returns a Resource slice given
 // a configmap metadata slice from kustomization file.
-func (rmF *Factory) NewResMapFromConfigMapArgs(argList []types.ConfigMapArgs, options *types.GeneratorOptions) (ResMap, error) {
+func (rmF *Factory) NewResMapFromConfigMapArgs(
+	ldr ifc.Loader,
+	options *types.GeneratorOptions,
+	argList []types.ConfigMapArgs) (ResMap, error) {
 	var resources []*resource.Resource
 	for _, args := range argList {
-		res, err := rmF.resF.MakeConfigMap(&args, options)
+		res, err := rmF.resF.MakeConfigMap(ldr, options, &args)
 		if err != nil {
 			return nil, errors.Wrap(err, "NewResMapFromConfigMapArgs")
 		}
@@ -93,21 +96,19 @@ func (rmF *Factory) NewResMapFromConfigMapArgs(argList []types.ConfigMapArgs, op
 
 // NewResMapFromSecretArgs takes a SecretArgs slice, generates
 // secrets from each entry, and accumulates them in a ResMap.
-func (rmF *Factory) NewResMapFromSecretArgs(argsList []types.SecretArgs, options *types.GeneratorOptions) (ResMap, error) {
+func (rmF *Factory) NewResMapFromSecretArgs(
+	ldr ifc.Loader,
+	options *types.GeneratorOptions,
+	argsList []types.SecretArgs) (ResMap, error) {
 	var resources []*resource.Resource
 	for _, args := range argsList {
-		res, err := rmF.resF.MakeSecret(&args, options)
+		res, err := rmF.resF.MakeSecret(ldr, options, &args)
 		if err != nil {
 			return nil, errors.Wrap(err, "NewResMapFromSecretArgs")
 		}
 		resources = append(resources, res)
 	}
 	return newResMapFromResourceSlice(resources)
-}
-
-// Set sets the loader for the underlying factory
-func (rmF *Factory) Set(ldr ifc.Loader) {
-	rmF.resF.Set(ldr)
 }
 
 func newResMapFromResourceSlice(resources []*resource.Resource) (ResMap, error) {

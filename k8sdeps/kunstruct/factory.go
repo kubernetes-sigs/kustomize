@@ -31,8 +31,6 @@ import (
 
 // KunstructuredFactoryImpl hides construction using apimachinery types.
 type KunstructuredFactoryImpl struct {
-	cmFactory     *configmapandsecret.ConfigMapFactory
-	secretFactory *configmapandsecret.SecretFactory
 }
 
 var _ ifc.KunstructuredFactory = &KunstructuredFactoryImpl{}
@@ -79,27 +77,27 @@ func (kf *KunstructuredFactoryImpl) FromMap(
 }
 
 // MakeConfigMap returns an instance of Kunstructured for ConfigMap
-func (kf *KunstructuredFactoryImpl) MakeConfigMap(args *types.ConfigMapArgs, options *types.GeneratorOptions) (ifc.Kunstructured, error) {
-	cm, err := kf.cmFactory.MakeConfigMap(args, options)
+func (kf *KunstructuredFactoryImpl) MakeConfigMap(
+	ldr ifc.Loader,
+	options *types.GeneratorOptions,
+	args *types.ConfigMapArgs) (ifc.Kunstructured, error) {
+	o, err := configmapandsecret.NewFactory(ldr, options).MakeConfigMap(args)
 	if err != nil {
 		return nil, err
 	}
-	return NewKunstructuredFromObject(cm)
+	return NewKunstructuredFromObject(o)
 }
 
 // MakeSecret returns an instance of Kunstructured for Secret
-func (kf *KunstructuredFactoryImpl) MakeSecret(args *types.SecretArgs, options *types.GeneratorOptions) (ifc.Kunstructured, error) {
-	sec, err := kf.secretFactory.MakeSecret(args, options)
+func (kf *KunstructuredFactoryImpl) MakeSecret(
+	ldr ifc.Loader,
+	options *types.GeneratorOptions,
+	args *types.SecretArgs) (ifc.Kunstructured, error) {
+	o, err := configmapandsecret.NewFactory(ldr, options).MakeSecret(args)
 	if err != nil {
 		return nil, err
 	}
-	return NewKunstructuredFromObject(sec)
-}
-
-// Set sets loader
-func (kf *KunstructuredFactoryImpl) Set(ldr ifc.Loader) {
-	kf.cmFactory = configmapandsecret.NewConfigMapFactory(ldr)
-	kf.secretFactory = configmapandsecret.NewSecretFactory(ldr)
+	return NewKunstructuredFromObject(o)
 }
 
 // validate validates that u has kind and name

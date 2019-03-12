@@ -138,9 +138,9 @@ func TestConstructSecret(t *testing.T) {
 	fSys := fs.MakeFakeFS()
 	fSys.WriteFile("/secret/app.env", []byte("DB_USERNAME=admin\nDB_PASSWORD=somepw\n"))
 	fSys.WriteFile("/secret/app-init.ini", []byte("FOO=bar\nBAR=baz\n"))
-	f := NewSecretFactory(loader.NewFileLoaderAtRoot(fSys))
 	for _, tc := range testCases {
-		cm, err := f.MakeSecret(&tc.input, tc.options)
+		f := NewFactory(loader.NewFileLoaderAtRoot(fSys), tc.options)
+		cm, err := f.MakeSecret(&tc.input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}

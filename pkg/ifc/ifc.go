@@ -64,9 +64,14 @@ type Kunstructured interface {
 type KunstructuredFactory interface {
 	SliceFromBytes([]byte) ([]Kunstructured, error)
 	FromMap(m map[string]interface{}) Kunstructured
-	MakeConfigMap(args *types.ConfigMapArgs, options *types.GeneratorOptions) (Kunstructured, error)
-	MakeSecret(args *types.SecretArgs, options *types.GeneratorOptions) (Kunstructured, error)
-	Set(ldr Loader)
+	MakeConfigMap(
+		ldr Loader,
+		options *types.GeneratorOptions,
+		args *types.ConfigMapArgs) (Kunstructured, error)
+	MakeSecret(
+		ldr Loader,
+		options *types.GeneratorOptions,
+		args *types.SecretArgs) (Kunstructured, error)
 }
 
 // See core.v1.SecretTypeOpaque
