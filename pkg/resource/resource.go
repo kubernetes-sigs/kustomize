@@ -54,7 +54,7 @@ func (r *Resource) Behavior() types.GenerationBehavior {
 	return r.options.Behavior()
 }
 
-// NeedAppendHash checks if the resource need a hash suffix
+// NeedHashSuffix checks if the resource need a hash suffix
 func (r *Resource) NeedHashSuffix() bool {
 	return r.options != nil && r.options.NeedsHashSuffix()
 }
