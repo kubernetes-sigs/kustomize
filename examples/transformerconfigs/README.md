@@ -13,7 +13,7 @@ Each transformer takes a list of resources and modifies certain fields in the re
 
 ## FieldSpec
 
-FieldSpec is a type that represents a path to a field in a resource such as `Job`. Here is the `fieldSpec` format:
+FieldSpec is a type that represents a path to a field in one kind of resource, such as `Job`.
 
 ```yaml
 group: some-group
@@ -27,7 +27,7 @@ If `create` is set to `true`, the transformer creates the path to the field in t
 
 ## Prefix/suffix transformer
 
-The prefix/suffix transformer adds a prefix/suffix to the `metadata/name` field for all resources. Here is an example of a prefix transformer configuration:
+The prefix/suffix transformer adds a prefix/suffix to the `metadata/name` field for all resources. Here is the default prefix transformer configuration:
 
 ```yaml
 namePrefix:
@@ -51,7 +51,6 @@ commonLabels:
 - path: spec/selector/matchLabels
   create: true
   kind: Deployment
-# add additional paths to resource fields
 ```
 
 ## Name reference transformer
@@ -69,7 +68,6 @@ fieldSpecs:
   path: spec/template/spec/volumes/configMap/name
 - kind: Job
   path: spec/template/spec/volumes/configMap/name
-# add additional paths to resource fields
 ```
 
 Name reference transformer's configuration contains a list of `nameReferences` for resources such as ConfigMap, Secret, Service, Role, and ServiceAccount. Here is an example configuration:
@@ -95,13 +93,13 @@ nameReference:
   - path: spec/containers/env/valueFrom/secretKeyRef/name
     version: v1
     kind: Pod
-  # add additional paths to resource fields
 ```
 
 ## Customizing transformer configurations
 
-Kustomize has a default set of transformer configurations. You can save the default transformer configurations
-to a local directory by calling `kustomize config save -d`. Kustomize allows modifying those configuration files and using them in a kustomization.yaml file. This tutorial shows how to customize those configurations to:
+Kustomize has a default set of transformer configurations. You can view the default transformer configurations by saving them to a local directory by calling kustomize config save -d.
+
+Kustomize also supports adding extra transformer configurations by adding configuration files in the kustomization.yaml file. This tutorial shows how to customize those configurations to:
 
 - [support a CRD type](crd/README.md)
 - add extra fields for variable substitution
