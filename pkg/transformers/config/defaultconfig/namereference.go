@@ -286,7 +286,7 @@ nameReference:
   - path: spec/jobTemplate/spec/template/spec/serviceAccountName
     kind: CronJob
   - path: spec/template/spec/serviceAccountName
-    kind: job
+    kind: Job
   - path: spec/template/spec/serviceAccountName
     kind: DaemonSet
 
