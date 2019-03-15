@@ -1,19 +1,21 @@
 # Transformer Configurations
 
-Kustomize computes the configuration of a resource by applying a series of transformers:
+Kustomize creates new resources by applying a series of transformations to an original
+set of resources. Kustomize provides the following default transformers:
 
-- namespace transformer
-- prefix/suffix transformer
-- label transformer
-- annotation transformer
-- name reference transformer
-- variable reference transformer
+- namespace
+- prefix/suffix
+- label
+- annotation
+- name reference
+- variable reference
 
-Each transformer takes a list of resources and modifies certain fields in the resource based upon the transformer's configuration. A transformer's configuration is a list of `fieldSpec`, represented in YAML format.
+A `fieldSpec` list, in a transformer's configuration, determines which resource types and which fields
+within those types the transformer can modify.
 
 ## FieldSpec
 
-FieldSpec is a type that represents a path to a field in one kind of resource, such as `Job`.
+FieldSpec is a type that represents a path to a field in one kind of resource.
 
 ```yaml
 group: some-group
@@ -97,9 +99,7 @@ nameReference:
 
 ## Customizing transformer configurations
 
-Kustomize has a default set of transformer configurations. You can view the default transformer configurations by saving them to a local directory by calling kustomize config save -d.
-
-Kustomize also supports adding extra transformer configurations by adding configuration files in the kustomization.yaml file. This tutorial shows how to customize those configurations to:
+Kustomize has a default set of transformer configurations. You can save the default transformer configurations to a local directory by calling `kustomize config save -d`, and then modify and use these configurations. Kustomize also supports adding new transformer configurations to kustomization.yaml. This tutorial shows how to customize those configurations to:
 
 - [support a CRD type](crd/README.md)
 - add extra fields for variable substitution
