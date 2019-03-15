@@ -141,9 +141,9 @@ func TestConstructConfigMap(t *testing.T) {
 	fSys.WriteFile("/configmap/app.env", []byte("DB_USERNAME=admin\nDB_PASSWORD=somepw\n"))
 	fSys.WriteFile("/configmap/app-init.ini", []byte("FOO=bar\nBAR=baz\n"))
 	fSys.WriteFile("/configmap/app.bin", []byte{0xff, 0xfd})
-	f := NewConfigMapFactory(loader.NewFileLoaderAtRoot(fSys))
 	for _, tc := range testCases {
-		cm, err := f.MakeConfigMap(&tc.input, tc.options)
+		f := NewFactory(loader.NewFileLoaderAtRoot(fSys), tc.options)
+		cm, err := f.MakeConfigMap(&tc.input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}

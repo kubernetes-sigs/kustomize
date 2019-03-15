@@ -62,7 +62,9 @@ func NewKustTarget(
 	}
 	errs := k.EnforceFields()
 	if len(errs) > 0 {
-		return nil, fmt.Errorf("Failed to read kustomization file under %s:\n"+strings.Join(errs, "\n"), ldr.Root())
+		return nil, fmt.Errorf(
+			"Failed to read kustomization file under %s:\n"+
+				strings.Join(errs, "\n"), ldr.Root())
 	}
 	return &KustTarget{
 		kustomization: &k,
@@ -102,7 +104,8 @@ func loadKustFile(ldr ifc.Loader) ([]byte, error) {
 	case 1:
 		return content, nil
 	default:
-		return nil, fmt.Errorf("Found multiple kustomization files under: %s\n", ldr.Root())
+		return nil, fmt.Errorf(
+			"Found multiple kustomization files under: %s\n", ldr.Root())
 	}
 }
 
@@ -215,14 +218,17 @@ func (kt *KustTarget) AccumulateTarget() (
 
 func (kt *KustTarget) generateConfigMapsAndSecrets(
 	errs *interror.KustomizationErrors) (resmap.ResMap, error) {
-	kt.rFactory.Set(kt.ldr)
 	cms, err := kt.rFactory.NewResMapFromConfigMapArgs(
-		kt.kustomization.ConfigMapGenerator, kt.kustomization.GeneratorOptions)
+		kt.ldr,
+		kt.kustomization.GeneratorOptions,
+		kt.kustomization.ConfigMapGenerator)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromConfigMapArgs"))
 	}
 	secrets, err := kt.rFactory.NewResMapFromSecretArgs(
-		kt.kustomization.SecretGenerator, kt.kustomization.GeneratorOptions)
+		kt.ldr,
+		kt.kustomization.GeneratorOptions,
+		kt.kustomization.SecretGenerator)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromSecretArgs"))
 	}

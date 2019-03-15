@@ -22,9 +22,52 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"sigs.k8s.io/kustomize/k8sdeps/kv"
 	"sigs.k8s.io/kustomize/pkg/ifc"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
+
+// baseFactory holds code shared by Factory and SecretFactory.
+type baseFactory struct {
+	ldr     ifc.Loader
+	options *types.GeneratorOptions
+}
+
+func (bf baseFactory) loadKvPairs(
+	args types.GeneratorArgs) (all []kv.Pair, err error) {
+	pairs, err := bf.keyValuesFromEnvFile(args.EnvSource)
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf(
+			"env source file: %s",
+			args.EnvSource))
+	}
+	all = append(all, pairs...)
+
+	pairs, err = keyValuesFromLiteralSources(args.LiteralSources)
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf(
+			"literal sources %v", args.LiteralSources))
+	}
+	all = append(all, pairs...)
+
+	pairs, err = bf.keyValuesFromFileSources(args.FileSources)
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf(
+			"file sources: %v", args.FileSources))
+	}
+	return append(all, pairs...), nil
+}
+
+const keyExistsErrorMsg = "cannot add key %s, another key by that name already exists: %v"
+
+func errIfInvalidKey(keyName string) error {
+	if errs := validation.IsConfigMapKey(keyName); len(errs) != 0 {
+		return fmt.Errorf("%q is not a valid key name: %s",
+			keyName, strings.Join(errs, ";"))
+	}
+	return nil
+}
 
 func keyValuesFromLiteralSources(sources []string) ([]kv.Pair, error) {
 	var kvs []kv.Pair
@@ -38,14 +81,14 @@ func keyValuesFromLiteralSources(sources []string) ([]kv.Pair, error) {
 	return kvs, nil
 }
 
-func keyValuesFromFileSources(ldr ifc.Loader, sources []string) ([]kv.Pair, error) {
+func (bf baseFactory) keyValuesFromFileSources(sources []string) ([]kv.Pair, error) {
 	var kvs []kv.Pair
 	for _, s := range sources {
 		k, fPath, err := parseFileSource(s)
 		if err != nil {
 			return nil, err
 		}
-		content, err := ldr.Load(fPath)
+		content, err := bf.ldr.Load(fPath)
 		if err != nil {
 			return nil, err
 		}
@@ -54,11 +97,11 @@ func keyValuesFromFileSources(ldr ifc.Loader, sources []string) ([]kv.Pair, erro
 	return kvs, nil
 }
 
-func keyValuesFromEnvFile(l ifc.Loader, path string) ([]kv.Pair, error) {
+func (bf baseFactory) keyValuesFromEnvFile(path string) ([]kv.Pair, error) {
 	if path == "" {
 		return nil, nil
 	}
-	content, err := l.Load(path)
+	content, err := bf.ldr.Load(path)
 	if err != nil {
 		return nil, err
 	}
