@@ -67,8 +67,8 @@ func newCmdAddSecret(fSys fs.FileSystem, kf ifc.KunstructuredFactory) *cobra.Com
 			}
 
 			// Add the flagsAndArgs map to the kustomization file.
-			kf.Set(loader.NewFileLoaderAtCwd(fSys))
-			err = addSecret(kustomization, flags, kf)
+			err = addSecret(
+				loader.NewFileLoaderAtCwd(fSys), kustomization, flags, kf)
 			if err != nil {
 				return err
 			}
@@ -108,6 +108,7 @@ func newCmdAddSecret(fSys fs.FileSystem, kf ifc.KunstructuredFactory) *cobra.Com
 // Note: error may leave kustomization file in an undefined state.
 // Suggest passing a copy of kustomization file.
 func addSecret(
+	ldr ifc.Loader,
 	k *types.Kustomization,
 	flags flagsAndArgs, kf ifc.KunstructuredFactory) error {
 	secretArgs := makeSecretArgs(k, flags.Name, flags.Type)
@@ -116,7 +117,7 @@ func addSecret(
 		return err
 	}
 	// Validate by trying to create corev1.secret.
-	_, err = kf.MakeSecret(secretArgs, k.GeneratorOptions)
+	_, err = kf.MakeSecret(ldr, k.GeneratorOptions, secretArgs)
 	if err != nil {
 		return err
 	}

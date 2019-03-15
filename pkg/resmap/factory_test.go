@@ -238,12 +238,11 @@ BAR=baz
 		// TODO: add testcase for data coming from multiple sources like
 		// files/literal/env etc.
 	}
-	rmF.Set(l)
 	for _, tc := range testCases {
 		if ferr := l.AddFile(tc.filepath, []byte(tc.content)); ferr != nil {
 			t.Fatalf("Error adding fake file: %v\n", ferr)
 		}
-		r, err := rmF.NewResMapFromConfigMapArgs(tc.input, nil)
+		r, err := rmF.NewResMapFromConfigMapArgs(l, nil, tc.input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -272,9 +271,8 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	}
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir(".")
-	rmF.Set(loader.NewFileLoaderAtRoot(fakeFs))
-	actual, err := rmF.NewResMapFromSecretArgs(secrets, nil)
-
+	actual, err := rmF.NewResMapFromSecretArgs(
+		loader.NewFileLoaderAtRoot(fakeFs), nil, secrets)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
