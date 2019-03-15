@@ -24,6 +24,7 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"sigs.k8s.io/kustomize/k8sdeps/kv"
+	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -32,11 +33,20 @@ import (
 type baseFactory struct {
 	ldr     ifc.Loader
 	options *types.GeneratorOptions
+	reg     plugin.Registry
 }
 
 func (bf baseFactory) loadKvPairs(
 	args types.GeneratorArgs) (all []kv.Pair, err error) {
-	pairs, err := bf.keyValuesFromEnvFile(args.EnvSource)
+	pairs, err := bf.keyValuesFromPlugins(args.KVSources)
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf(
+			"plugins: %s",
+			args.EnvSource))
+	}
+	all = append(all, pairs...)
+
+	pairs, err = bf.keyValuesFromEnvFile(args.EnvSource)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf(
 			"env source file: %s",
@@ -79,6 +89,22 @@ func keyValuesFromLiteralSources(sources []string) ([]kv.Pair, error) {
 		kvs = append(kvs, kv.Pair{Key: k, Value: v})
 	}
 	return kvs, nil
+}
+
+func (bf baseFactory) keyValuesFromPlugins(sources []types.KVSource) ([]kv.Pair, error) {
+	var allKvs []kv.Pair
+	for _, s := range sources {
+		plug, err := bf.reg.Load(s.PluginType, s.Name)
+		if err != nil {
+			return nil, err
+		}
+		kvs, err := plug.Get(bf.reg.Root(), s.Args)
+		if err != nil {
+			return nil, err
+		}
+		allKvs = append(allKvs, kvs...)
+	}
+	return allKvs, nil
 }
 
 func (bf baseFactory) keyValuesFromFileSources(sources []string) ([]kv.Pair, error) {

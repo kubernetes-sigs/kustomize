@@ -21,8 +21,9 @@ import (
 	"fmt"
 	"unicode/utf8"
 
-	"k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -34,8 +35,8 @@ type Factory struct {
 
 // NewFactory returns a new Factory.
 func NewFactory(
-	l ifc.Loader, o *types.GeneratorOptions) *Factory {
-	return &Factory{baseFactory{ldr: l, options: o}}
+	l ifc.Loader, o *types.GeneratorOptions, reg plugin.Registry) *Factory {
+	return &Factory{baseFactory{ldr: l, options: o, reg: reg}}
 }
 
 func makeFreshConfigMap(
