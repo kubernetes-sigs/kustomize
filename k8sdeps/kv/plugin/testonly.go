@@ -38,6 +38,6 @@ func (p testonlyFactory) Get(_ string, args []string) ([]kv.Pair, error) {
 	return kvs, nil
 }
 
-func (p *testonlyFactory) load(name string) (KVSource, error) {
+func (p *testonlyFactory) load(_ string) (KVSource, error) {
 	return p, nil
 }
