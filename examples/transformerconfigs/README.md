@@ -57,7 +57,7 @@ commonLabels:
 
 ## Name reference transformer
 
-Name reference transformer's configuration is different from all other transformers. It contains a list of `nameReferences`, which represent all of the possible fields that a type could be used as a reference in other types of resources. A `nameReference` contains a type such as ConfigMap as well as a list of `fieldSpecs` where ConfigMap is referenced in other resources. Here is an example.
+Name reference transformer's configuration is different from all other transformers. It contains a list of `nameReferences`, which represent all of the possible fields that a type could be used as a reference in other types of resources. A `nameReference` contains a type such as ConfigMap as well as a list of `fieldSpecs` where ConfigMap is referenced in other resources. Here is an example:
 
 ```yaml
 kind: ConfigMap
@@ -85,7 +85,7 @@ nameReference:
   - path: spec/containers/env/valueFrom/configMapKeyRef/name
     version: v1
     kind: Pod
-  # add additional paths to resource fields
+  # ...
 - kind: Secret
   version: v1
   fieldSpecs:
@@ -99,7 +99,7 @@ nameReference:
 
 ## Customizing transformer configurations
 
-Kustomize has a default set of transformer configurations. You can save the default transformer configurations to a local directory by calling `kustomize config save -d`, and then modify and use these configurations. Kustomize also supports adding new transformer configurations to kustomization.yaml. This tutorial shows how to customize those configurations to:
+Kustomize has a default set of transformer configurations. You can save the default transformer configurations to a local directory by calling `kustomize config save -d`, and modify and use these configurations. Kustomize also supports adding new transformer configurations to kustomization.yaml. This tutorial shows how to customize those configurations to:
 
 - [support a CRD type](crd/README.md)
 - add extra fields for variable substitution
