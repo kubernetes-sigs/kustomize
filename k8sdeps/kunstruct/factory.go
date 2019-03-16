@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/kustomize/k8sdeps/configmapandsecret"
+	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -81,7 +82,7 @@ func (kf *KunstructuredFactoryImpl) MakeConfigMap(
 	ldr ifc.Loader,
 	options *types.GeneratorOptions,
 	args *types.ConfigMapArgs) (ifc.Kunstructured, error) {
-	o, err := configmapandsecret.NewFactory(ldr, options).MakeConfigMap(args)
+	o, err := configmapandsecret.NewFactory(ldr, options, plugin.NewRegistry(ldr)).MakeConfigMap(args)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +94,7 @@ func (kf *KunstructuredFactoryImpl) MakeSecret(
 	ldr ifc.Loader,
 	options *types.GeneratorOptions,
 	args *types.SecretArgs) (ifc.Kunstructured, error) {
-	o, err := configmapandsecret.NewFactory(ldr, options).MakeSecret(args)
+	o, err := configmapandsecret.NewFactory(ldr, options, plugin.NewRegistry(ldr)).MakeSecret(args)
 	if err != nil {
 		return nil, err
 	}
