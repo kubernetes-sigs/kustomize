@@ -21,8 +21,10 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kv"
+	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/loader"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 func TestKeyValuesFromFileSources(t *testing.T) {
@@ -45,9 +47,59 @@ func TestKeyValuesFromFileSources(t *testing.T) {
 
 	fSys := fs.MakeFakeFS()
 	fSys.WriteFile("/files/app-init.ini", []byte("FOO=bar"))
-	bf := baseFactory{loader.NewFileLoaderAtRoot(fSys), nil}
+	ldr := loader.NewFileLoaderAtRoot(fSys)
+	reg := plugin.NewRegistry(ldr)
+	bf := baseFactory{loader.NewFileLoaderAtRoot(fSys), nil, reg}
 	for _, tc := range tests {
 		kvs, err := bf.keyValuesFromFileSources(tc.sources)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !reflect.DeepEqual(kvs, tc.expected) {
+			t.Fatalf("in testcase: %q updated:\n%#v\ndoesn't match expected:\n%#v\n", tc.description, kvs, tc.expected)
+		}
+	}
+}
+
+func TestKeyValuesFromPlugins(t *testing.T) {
+	tests := []struct {
+		description string
+		sources     []types.KVSource
+		expected    []kv.Pair
+	}{
+		{
+			description: "Create kv.Pairs from plugin",
+			sources: []types.KVSource{
+				{
+					PluginType: "testonly",
+					Name:       "testonly",
+					Args:       []string{"FOO", "BAR", "BAZ"},
+				},
+			},
+			expected: []kv.Pair{
+				{
+					Key:   "k_FOO",
+					Value: "v_FOO",
+				},
+				{
+					Key:   "k_BAR",
+					Value: "v_BAR",
+				},
+				{
+					Key:   "k_BAZ",
+					Value: "v_BAZ",
+				},
+			},
+		},
+	}
+
+	fSys := fs.MakeFakeFS()
+	ldr := loader.NewFileLoaderAtRoot(fSys)
+	reg := plugin.NewRegistry(ldr)
+	bf := baseFactory{ldr, nil, reg}
+
+	for _, tc := range tests {
+		kvs, err := bf.keyValuesFromPlugins(tc.sources)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
