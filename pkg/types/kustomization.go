@@ -189,6 +189,9 @@ type GeneratorArgs struct {
 
 	// DataSources for the generator.
 	DataSources `json:",inline,omitempty" yaml:",inline,omitempty"`
+
+	// KVSources for the generator.
+	KVSources []KVSource `json:",inline,omitempty" yaml:",inline,omitempty"`
 }
 
 // ConfigMapArgs contains the metadata of how to generate a configmap.
@@ -247,4 +250,11 @@ type GeneratorOptions struct {
 	// suffix to the names of generated resources that is a hash of the
 	// resource contents.
 	DisableNameSuffixHash bool `json:"disableNameSuffixHash,omitempty" yaml:"disableNameSuffixHash,omitempty"`
+}
+
+// KVSource represents a KV plugin backend.
+type KVSource struct {
+	PluginType string   `json:"pluginType,omitempty" yaml:"pluginType,omitempty"`
+	Name       string   `json:"name,omitempty" yaml:"name,omitempty"`
+	Args       []string `json:"args,omitempty" yaml:"args,omitempty"`
 }
