@@ -28,10 +28,10 @@ varReference:
 - path: spec/jobTemplate/spec/template/spec/containers/env/value
   kind: CronJob
 
-- path: spec/template/spec/containers/volumeMounts/mountPath
+- path: spec/jobTemplate/spec/template/spec/containers/volumeMounts/mountPath
   kind: CronJob
 
-- path: spec/template/spec/initContainers/volumeMounts/mountPath
+- path: spec/jobTemplate/spec/template/spec/initContainers/volumeMounts/mountPath
   kind: CronJob
 
 - path: spec/template/spec/containers/args
