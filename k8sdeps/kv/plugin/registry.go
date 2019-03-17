@@ -18,8 +18,10 @@ package plugin
 
 import (
 	"fmt"
-
+	"path/filepath"
 	"sigs.k8s.io/kustomize/pkg/ifc"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 // Registry holds all the plugin factories.
@@ -28,15 +30,34 @@ type Registry struct {
 	ldr       ifc.Loader
 }
 
-// NewRegistry returns a new Registry loaded with all the factories.
-func NewRegistry(ldr ifc.Loader) Registry {
+const (
+	PluginsDir = "plugins"
+)
+
+func DefaultPluginConfig() types.PluginConfig {
+	return types.PluginConfig{
+		GoEnabled: false,
+		DirectoryPath: filepath.Join(
+			pgmconfig.ConfigRoot(), PluginsDir),
+	}
+}
+
+// NewConfiguredRegistry returns a new Registry loaded
+// with all the factories and a custom PluginConfig.
+func NewConfiguredRegistry(
+	ldr ifc.Loader, pc *types.PluginConfig) Registry {
 	return Registry{
 		ldr: ldr,
 		factories: map[string]Factory{
-			"go":      newGoFactory(),
+			"go":      newGoFactory(pc),
 			"builtin": newBuiltinFactory(ldr),
 		},
 	}
+}
+
+// NewRegistry returns a new Registry with default config.
+func NewRegistry(ldr ifc.Loader) Registry {
+	return NewConfiguredRegistry(ldr, &types.PluginConfig{})
 }
 
 // Load returns a plugin by type and name,
