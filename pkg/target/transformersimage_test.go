@@ -168,3 +168,118 @@ spec3:
         name: my-cool-app
 `)
 }
+
+func makeTransfomersImageCustomBase(th *KustTestHarness) {
+	th.writeK("/app/base", `
+resources:
+- custom.yaml
+configurations:
+- config/custom.yaml
+images:
+- name: nginx
+  newTag: v2
+- name: my-nginx
+  newTag: previous
+- name: myprivaterepohostname:1234/my/image
+  newTag: v1.0.1
+- name: foobar
+  digest: sha256:24a0c4b4
+- name: alpine
+  newName: myprivaterepohostname:1234/my/cool-alpine
+- name: gcr.io:8080/my-project/my-cool-app
+  newName: my-cool-app
+- name: postgres
+  newName: my-postgres
+  newTag: v3
+- name: docker
+  newName: my-docker
+  digest: sha256:25a0d4b4
+`)
+	th.writeF("/app/base/custom.yaml", `
+kind: customKind
+metadata:
+  name: custom
+spec:
+  template:
+    spec:
+      myContainers:
+      - name: ngnix1
+        image: nginx
+spec2:
+  template:
+    spec:
+      myContainers:
+      - name: nginx3
+        image: nginx:v1
+      - name: nginx4
+        image: my-nginx:latest
+spec3:
+  template:
+    spec:
+      myInitContainers:
+      - name: postgresdb
+        image: postgres:alpine-9
+      - name: init-docker
+        image: docker:17-git
+      - name: myImage
+        image: myprivaterepohostname:1234/my/image:latest
+      - name: myImage2
+        image: myprivaterepohostname:1234/my/image
+      - name: my-app
+        image: my-app-image:v1
+      - name: my-cool-app
+        image: gcr.io:8080/my-project/my-cool-app:latest
+`)
+	th.writeF("/app/base/config/custom.yaml", `
+images:
+- kind: Custom
+  path: spec/template/spec/myContainers
+- kind: Custom
+  path: spec2/template/spec/myContainers
+- kind: Custom
+  path: spec3/template/spec/myInitContainers
+`)
+}
+func TestTransfomersImageCustomConfig(t *testing.T) {
+	th := NewKustTestHarness(t, "/app/base")
+	makeTransfomersImageCustomBase(th)
+	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.assertActualEqualsExpected(m, `
+kind: customKind
+metadata:
+  name: custom
+spec:
+  template:
+    spec:
+      myContainers:
+      - image: nginx
+        name: ngnix1
+spec2:
+  template:
+    spec:
+      myContainers:
+      - image: nginx:v1
+        name: nginx3
+      - image: my-nginx:latest
+        name: nginx4
+spec3:
+  template:
+    spec:
+      myInitContainers:
+      - image: postgres:alpine-9
+        name: postgresdb
+      - image: docker:17-git
+        name: init-docker
+      - image: myprivaterepohostname:1234/my/image:latest
+        name: myImage
+      - image: myprivaterepohostname:1234/my/image
+        name: myImage2
+      - image: my-app-image:v1
+        name: my-app
+      - image: gcr.io:8080/my-project/my-cool-app:latest
+        name: my-cool-app
+`)
+}
