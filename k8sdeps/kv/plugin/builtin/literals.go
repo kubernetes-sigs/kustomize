@@ -17,43 +17,23 @@ limitations under the License.
 package builtin
 
 import (
-	"fmt"
-	"strings"
-
 	"sigs.k8s.io/kustomize/k8sdeps/kv"
 )
 
 // Literals takes a list of literals.
 // Each literal source should be a key and literal value,
 // e.g. `somekey=somevalue`
-// It will be similar to kubectl create configmap|secret --from-literal
 type Literals struct{}
 
 // Get implements the interface for kv plugins.
 func (p Literals) Get(root string, args []string) ([]kv.Pair, error) {
 	var kvs []kv.Pair
 	for _, s := range args {
-		k, v, err := parseLiteralSource(s)
+		k, v, err := kv.ParseLiteralSource(s)
 		if err != nil {
 			return nil, err
 		}
 		kvs = append(kvs, kv.Pair{Key: k, Value: v})
 	}
 	return kvs, nil
-}
-
-// parseLiteralSource parses the source key=val pair into its component pieces.
-// This functionality is distinguished from strings.SplitN(source, "=", 2) since
-// it returns an error in the case of empty keys, values, or a missing equals sign.
-func parseLiteralSource(source string) (keyName, value string, err error) {
-	// leading equal is invalid
-	if strings.Index(source, "=") == 0 {
-		return "", "", fmt.Errorf("invalid literal source %v, expected key=value", source)
-	}
-	// split after the first equal (so values can have the = character)
-	items := strings.SplitN(source, "=", 2)
-	if len(items) != 2 {
-		return "", "", fmt.Errorf("invalid literal source %v, expected key=value", source)
-	}
-	return items[0], strings.Trim(items[1], "\"'"), nil
 }
