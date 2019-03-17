@@ -27,8 +27,8 @@ import (
 	"strings"
 
 	"github.com/ghodss/yaml"
-	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
@@ -129,7 +129,7 @@ func NewKustomizationFile(fSys fs.FileSystem) (*kustomizationFile, error) { // n
 func (mf *kustomizationFile) validate() error {
 	match := 0
 	var path []string
-	for _, kfilename := range constants.KustomizationFileNames {
+	for _, kfilename := range pgmconfig.KustomizationFileNames {
 		if mf.fSys.Exists(kfilename) {
 			match += 1
 			path = append(path, kfilename)
@@ -138,7 +138,7 @@ func (mf *kustomizationFile) validate() error {
 
 	switch match {
 	case 0:
-		return fmt.Errorf("Missing kustomization file '%s'.\n", constants.KustomizationFileNames[0])
+		return fmt.Errorf("Missing kustomization file '%s'.\n", pgmconfig.KustomizationFileNames[0])
 	case 1:
 		mf.path = path[0]
 	default:
