@@ -194,6 +194,25 @@ type GeneratorArgs struct {
 	KVSources []KVSource `json:",inline,omitempty" yaml:",inline,omitempty"`
 }
 
+// GeneratorMetaArgs contains arguments common to generators
+// that come from somewhere other than a kustomization file.
+type GeneratorMetaArgs struct {
+	PluginConfig PluginConfig
+}
+
+// PluginConfig holds plugin configuration.
+type PluginConfig struct {
+	// DirectoryPath is an absolute path to a
+	// directory containing kustomize plugins.
+	// This directory may contain subdirectories
+	// further categorizing plugins.
+	DirectoryPath string
+
+	// GoEnabled is true if goplugins are enabled.
+	// See https://golang.org/pkg/plugin
+	GoEnabled bool
+}
+
 // ConfigMapArgs contains the metadata of how to generate a configmap.
 type ConfigMapArgs struct {
 	// GeneratorArgs for the configmap.
