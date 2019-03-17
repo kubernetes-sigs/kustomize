@@ -25,11 +25,11 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/ifc/transformer"
 	interror "sigs.k8s.io/kustomize/pkg/internal/error"
 	patchtransformer "sigs.k8s.io/kustomize/pkg/patch/transformer"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
@@ -89,7 +89,7 @@ func commaOr(q []string) string {
 func loadKustFile(ldr ifc.Loader) ([]byte, error) {
 	var content []byte
 	match := 0
-	for _, kf := range constants.KustomizationFileNames {
+	for _, kf := range pgmconfig.KustomizationFileNames {
 		c, err := ldr.Load(kf)
 		if err == nil {
 			match += 1
@@ -100,7 +100,7 @@ func loadKustFile(ldr ifc.Loader) ([]byte, error) {
 	case 0:
 		return nil, fmt.Errorf(
 			"unable to find one of %v in directory '%s'",
-			commaOr(quoted(constants.KustomizationFileNames)), ldr.Root())
+			commaOr(quoted(pgmconfig.KustomizationFileNames)), ldr.Root())
 	case 1:
 		return content, nil
 	default:

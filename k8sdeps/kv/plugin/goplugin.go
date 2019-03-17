@@ -18,32 +18,46 @@ package plugin
 
 import (
 	"fmt"
-	"os"
+	"path/filepath"
 	"plugin"
+
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 var _ Factory = &goFactory{}
 
 const (
-	pluginDir = "kustomize/plugins/kvsource"
+	kvSourcesDir            = "kvSources"
+	EnableGoPluginsFlagName = "enable_alpha_goplugins_accept_panic_risk"
+	EnableGoPluginsFlagHelp = `
+Warning: the main program may panic and exit on an
+attempt to use a goplugin that was compiled under
+conditions differing from the those in effect when
+main was compiled. It's safest to use this flag in
+the context of a container image holding both the
+main and the goplugins it needs, all built on the
+same machine, with the same transitive libs and
+the same compiler version.
+`
+	errorFmt = `
+enable go plugins by specifying flag
+  --%s
+Place .so files in
+  %s
+%s
+`
 )
 
-func newGoFactory() *goFactory {
+func newGoFactory(c *types.PluginConfig) *goFactory {
 	return &goFactory{
+		config:  c,
 		plugins: make(map[string]KVSource),
 	}
 }
 
 type goFactory struct {
+	config  *types.PluginConfig
 	plugins map[string]KVSource
-}
-
-func configDir() string {
-	xdghome := os.Getenv("XDG_CONFIG_HOME")
-	if len(xdghome) == 0 {
-		return os.ExpandEnv("$HOME/.config")
-	}
-	return xdghome
 }
 
 func (p *goFactory) load(name string) (KVSource, error) {
@@ -51,7 +65,19 @@ func (p *goFactory) load(name string) (KVSource, error) {
 		return plug, nil
 	}
 
-	goPlugin, err := plugin.Open(fmt.Sprintf("%s/%s/kustomize-%s.so", configDir(), pluginDir, name))
+	dir := filepath.Join(
+		p.config.DirectoryPath,
+		kvSourcesDir)
+	if !p.config.GoEnabled {
+		return nil, fmt.Errorf(
+			errorFmt,
+			EnableGoPluginsFlagName,
+			dir,
+			EnableGoPluginsFlagHelp)
+	}
+
+	goPlugin, err := plugin.Open(
+		filepath.Join(dir, name+".so"))
 	if err != nil {
 		return nil, err
 	}
