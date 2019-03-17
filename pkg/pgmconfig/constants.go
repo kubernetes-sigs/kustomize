@@ -15,14 +15,18 @@ limitations under the License.
 */
 
 // Package constants holds global constants for the kustomize tool.
-package constants
+package pgmconfig
 
-// KustomizationFileNames is a list of filenames that can be recognized and consumbed
-// by Kustomize.
-// In each directory, Kustomize searches for file with the name in this list.
-// Only one match is allowed.
+// KustomizationFileNames is a list of filenames
+// that kustomize recognizes.
+// To avoid ambiguity, a directory cannot contain
+// more than one match to this list.
 var KustomizationFileNames = []string{
 	"kustomization.yaml",
 	"kustomization.yml",
 	"Kustomization",
 }
+
+const (
+	PgmName = "kustomize"
+)

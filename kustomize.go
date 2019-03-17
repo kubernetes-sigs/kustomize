@@ -19,12 +19,11 @@ package main
 import (
 	"os"
 
-	"sigs.k8s.io/kustomize/k8sdeps"
 	"sigs.k8s.io/kustomize/pkg/commands"
 )
 
 func main() {
-	if err := commands.NewDefaultCommand(k8sdeps.NewFactory()).Execute(); err != nil {
+	if err := commands.NewDefaultCommand().Execute(); err != nil {
 		os.Exit(1)
 	}
 	os.Exit(0)

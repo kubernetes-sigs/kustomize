@@ -22,8 +22,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
-	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
@@ -59,7 +59,7 @@ func newCmdAddAnnotation(fSys fs.FileSystem, v func(map[string]string) error) *c
 	o.mapValidator = v
 	cmd := &cobra.Command{
 		Use:   "annotation",
-		Short: "Adds one or more commonAnnotations to " + constants.KustomizationFileNames[0],
+		Short: "Adds one or more commonAnnotations to " + pgmconfig.KustomizationFileNames[0],
 		Example: `
 		add annotation {annotationKey1:annotationValue1},{annotationKey2:annotationValue2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -76,7 +76,7 @@ func newCmdAddLabel(fSys fs.FileSystem, v func(map[string]string) error) *cobra.
 	o.mapValidator = v
 	cmd := &cobra.Command{
 		Use:   "label",
-		Short: "Adds one or more commonLabels to " + constants.KustomizationFileNames[0],
+		Short: "Adds one or more commonLabels to " + pgmconfig.KustomizationFileNames[0],
 		Example: `
 		add label {labelKey1:labelValue1},{labelKey2:labelValue2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {

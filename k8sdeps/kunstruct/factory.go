@@ -32,13 +32,21 @@ import (
 
 // KunstructuredFactoryImpl hides construction using apimachinery types.
 type KunstructuredFactoryImpl struct {
+	generatorMetaArgs *types.GeneratorMetaArgs
 }
 
 var _ ifc.KunstructuredFactory = &KunstructuredFactoryImpl{}
 
 // NewKunstructuredFactoryImpl returns a factory.
 func NewKunstructuredFactoryImpl() ifc.KunstructuredFactory {
-	return &KunstructuredFactoryImpl{}
+	return NewKunstructuredFactoryWithGeneratorArgs(
+		&types.GeneratorMetaArgs{})
+}
+
+// NewKunstructuredFactoryWithGeneratorArgs returns a factory.
+func NewKunstructuredFactoryWithGeneratorArgs(
+	gma *types.GeneratorMetaArgs) ifc.KunstructuredFactory {
+	return &KunstructuredFactoryImpl{gma}
 }
 
 // SliceFromBytes returns a slice of Kunstructured.
@@ -82,7 +90,10 @@ func (kf *KunstructuredFactoryImpl) MakeConfigMap(
 	ldr ifc.Loader,
 	options *types.GeneratorOptions,
 	args *types.ConfigMapArgs) (ifc.Kunstructured, error) {
-	o, err := configmapandsecret.NewFactory(ldr, options, plugin.NewRegistry(ldr)).MakeConfigMap(args)
+	o, err := configmapandsecret.NewFactory(
+		ldr, options,
+		plugin.NewConfiguredRegistry(
+			ldr, &kf.generatorMetaArgs.PluginConfig)).MakeConfigMap(args)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +105,10 @@ func (kf *KunstructuredFactoryImpl) MakeSecret(
 	ldr ifc.Loader,
 	options *types.GeneratorOptions,
 	args *types.SecretArgs) (ifc.Kunstructured, error) {
-	o, err := configmapandsecret.NewFactory(ldr, options, plugin.NewRegistry(ldr)).MakeSecret(args)
+	o, err := configmapandsecret.NewFactory(
+		ldr, options,
+		plugin.NewConfiguredRegistry(
+			ldr, &kf.generatorMetaArgs.PluginConfig)).MakeSecret(args)
 	if err != nil {
 		return nil, err
 	}

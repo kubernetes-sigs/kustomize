@@ -14,6 +14,9 @@ limitations under the License.
 package target_test
 
 import (
+	"path/filepath"
+	"sigs.k8s.io/kustomize/pkg/types"
+	"strings"
 	"testing"
 )
 
@@ -68,4 +71,48 @@ metadata:
     foo: bar
   name: shouldNotHaveHash
 `)
+}
+
+func TestGoPluginNotEnabled(t *testing.T) {
+	th := NewKustTestHarness(t, "/app")
+	th.writeK("/app", `
+secretGenerator:
+- name: attemptGoPlugin
+  kvSources:
+  - name: foo
+    pluginType: go
+    args:
+    - someArg
+    - someOtherArg
+`)
+	_, err := th.makeKustTarget().MakeCustomizedResMap()
+	if err == nil {
+		t.Fatalf("expected error")
+	}
+	if !strings.Contains(err.Error(), "enable go plugins by ") {
+		t.Fatalf("unexpected err: %v", err)
+	}
+}
+
+func TestGoPluginDoesNotExist(t *testing.T) {
+	th := NewKustTestHarnessWithPluginConfig(
+		t, "/app", types.PluginConfig{GoEnabled: true})
+	th.writeK("/app", `
+secretGenerator:
+- name: attemptGoPlugin
+  kvSources:
+  - name: foo
+    pluginType: go
+    args:
+    - someArg
+    - someOtherArg
+`)
+	_, err := th.makeKustTarget().MakeCustomizedResMap()
+	if err == nil {
+		t.Fatalf("expected error")
+	}
+	if !strings.Contains(err.Error(),
+		filepath.Join("kvSources", "foo.so")) {
+		t.Fatalf("unexpected err: %v", err)
+	}
 }
