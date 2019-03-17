@@ -14,30 +14,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// testonly is temporary until we have builtin plugins to use in the tests.
-
 package plugin
 
 import (
-	"sigs.k8s.io/kustomize/k8sdeps/kv"
+	"fmt"
+
+	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin/builtin"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
-var _ Factory = &testonlyFactory{}
+var _ Factory = &builtinFactory{}
 
-func newTestonlyFactory() *testonlyFactory {
-	return &testonlyFactory{}
+type builtinFactory struct {
+	plugins map[string]KVSource
 }
 
-type testonlyFactory struct{}
-
-func (p testonlyFactory) Get(_ string, args []string) ([]kv.Pair, error) {
-	var kvs []kv.Pair
-	for _, arg := range args {
-		kvs = append(kvs, kv.Pair{Key: "k_" + arg, Value: "v_" + arg})
+func newBuiltinFactory(_ ifc.Loader) *builtinFactory {
+	return &builtinFactory{
+		plugins: map[string]KVSource{
+			"literals": builtin.Literals{},
+		},
 	}
-	return kvs, nil
 }
 
-func (p *testonlyFactory) load(_ string) (KVSource, error) {
-	return p, nil
+func (p *builtinFactory) load(name string) (KVSource, error) {
+	if plug, ok := p.plugins[name]; ok {
+		return plug, nil
+	}
+	return nil, fmt.Errorf("plugin %s not found", name)
 }

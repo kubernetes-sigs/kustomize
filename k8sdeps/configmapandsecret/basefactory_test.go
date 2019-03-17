@@ -68,26 +68,22 @@ func TestKeyValuesFromPlugins(t *testing.T) {
 		expected    []kv.Pair
 	}{
 		{
-			description: "Create kv.Pairs from plugin",
+			description: "Create kv.Pairs from builtin literals plugin",
 			sources: []types.KVSource{
 				{
-					PluginType: "testonly",
-					Name:       "testonly",
-					Args:       []string{"FOO", "BAR", "BAZ"},
+					PluginType: "builtin",
+					Name:       "literals",
+					Args:       []string{"FOO=bar", "BAR=baz"},
 				},
 			},
 			expected: []kv.Pair{
 				{
-					Key:   "k_FOO",
-					Value: "v_FOO",
+					Key:   "FOO",
+					Value: "bar",
 				},
 				{
-					Key:   "k_BAR",
-					Value: "v_BAR",
-				},
-				{
-					Key:   "k_BAZ",
-					Value: "v_BAZ",
+					Key:   "BAR",
+					Value: "baz",
 				},
 			},
 		},
