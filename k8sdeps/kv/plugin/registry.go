@@ -49,8 +49,8 @@ func NewConfiguredRegistry(
 	return Registry{
 		ldr: ldr,
 		factories: map[string]Factory{
-			"go":       newGoFactory(pc),
-			"testonly": newTestonlyFactory(),
+			"go":      newGoFactory(pc),
+			"builtin": newBuiltinFactory(ldr),
 		},
 	}
 }
