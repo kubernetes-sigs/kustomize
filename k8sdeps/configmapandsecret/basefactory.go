@@ -18,7 +18,6 @@ package configmapandsecret
 
 import (
 	"fmt"
-	"path"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -82,7 +81,7 @@ func errIfInvalidKey(keyName string) error {
 func keyValuesFromLiteralSources(sources []string) ([]kv.Pair, error) {
 	var kvs []kv.Pair
 	for _, s := range sources {
-		k, v, err := parseLiteralSource(s)
+		k, v, err := kv.ParseLiteralSource(s)
 		if err != nil {
 			return nil, err
 		}
@@ -110,7 +109,7 @@ func (bf baseFactory) keyValuesFromPlugins(sources []types.KVSource) ([]kv.Pair,
 func (bf baseFactory) keyValuesFromFileSources(sources []string) ([]kv.Pair, error) {
 	var kvs []kv.Pair
 	for _, s := range sources {
-		k, fPath, err := parseFileSource(s)
+		k, fPath, err := kv.ParseFileSource(s)
 		if err != nil {
 			return nil, err
 		}
@@ -132,45 +131,4 @@ func (bf baseFactory) keyValuesFromEnvFile(path string) ([]kv.Pair, error) {
 		return nil, err
 	}
 	return kv.KeyValuesFromLines(content)
-}
-
-// parseFileSource parses the source given.
-//
-//  Acceptable formats include:
-//   1.  source-path: the basename will become the key name
-//   2.  source-name=source-path: the source-name will become the key name and
-//       source-path is the path to the key file.
-//
-// Key names cannot include '='.
-func parseFileSource(source string) (keyName, filePath string, err error) {
-	numSeparators := strings.Count(source, "=")
-	switch {
-	case numSeparators == 0:
-		return path.Base(source), source, nil
-	case numSeparators == 1 && strings.HasPrefix(source, "="):
-		return "", "", fmt.Errorf("key name for file path %v missing", strings.TrimPrefix(source, "="))
-	case numSeparators == 1 && strings.HasSuffix(source, "="):
-		return "", "", fmt.Errorf("file path for key name %v missing", strings.TrimSuffix(source, "="))
-	case numSeparators > 1:
-		return "", "", errors.New("key names or file paths cannot contain '='")
-	default:
-		components := strings.Split(source, "=")
-		return components[0], components[1], nil
-	}
-}
-
-// parseLiteralSource parses the source key=val pair into its component pieces.
-// This functionality is distinguished from strings.SplitN(source, "=", 2) since
-// it returns an error in the case of empty keys, values, or a missing equals sign.
-func parseLiteralSource(source string) (keyName, value string, err error) {
-	// leading equal is invalid
-	if strings.Index(source, "=") == 0 {
-		return "", "", fmt.Errorf("invalid literal source %v, expected key=value", source)
-	}
-	// split after the first equal (so values can have the = character)
-	items := strings.SplitN(source, "=", 2)
-	if len(items) != 2 {
-		return "", "", fmt.Errorf("invalid literal source %v, expected key=value", source)
-	}
-	return items[0], strings.Trim(items[1], "\"'"), nil
 }
