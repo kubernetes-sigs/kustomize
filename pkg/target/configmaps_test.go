@@ -247,11 +247,11 @@ func TestGeneratorPlugins(t *testing.T) {
 secretGenerator:
 - name: bob
   kvSources:
-  - pluginType: testonly
-    name: testonly
+  - pluginType: builtin
+    name: literals
     args:
-    - FRUIT
-    - VEGETABLE
+    - FRUIT=apple
+    - VEGETABLE=carrot
 `)
 	m, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
@@ -260,11 +260,11 @@ secretGenerator:
 	th.assertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  k_FRUIT: dl9GUlVJVA==
-  k_VEGETABLE: dl9WRUdFVEFCTEU=
+  FRUIT: YXBwbGU=
+  VEGETABLE: Y2Fycm90
 kind: Secret
 metadata:
-  name: bob-cb9mhbh9gg
+  name: bob-bgtct8h699
 type: Opaque
 `)
 }
