@@ -25,8 +25,8 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/git"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
@@ -341,7 +341,7 @@ func TestNewLoaderAtGitClone(t *testing.T) {
 	fSys.MkdirAll(coRoot)
 	fSys.MkdirAll(coRoot + "/" + pathInRepo)
 	fSys.WriteFile(
-		coRoot+"/"+pathInRepo+"/"+constants.KustomizationFileNames[0],
+		coRoot+"/"+pathInRepo+"/"+pgmconfig.KustomizationFileNames[0],
 		[]byte(`
 whatever
 `))
