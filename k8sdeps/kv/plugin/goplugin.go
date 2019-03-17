@@ -25,7 +25,7 @@ import (
 var _ Factory = &goFactory{}
 
 const (
-	dir = "$HOME/.config/kustomize/plugins/kvsource"
+	pluginDir = "kustomize/plugins/kvsource"
 )
 
 func newGoFactory() *goFactory {
@@ -38,12 +38,20 @@ type goFactory struct {
 	plugins map[string]KVSource
 }
 
+func configDir() string {
+	xdghome := os.Getenv("XDG_CONFIG_HOME")
+	if len(xdghome) == 0 {
+		return os.ExpandEnv("$HOME/.config")
+	}
+	return xdghome
+}
+
 func (p *goFactory) load(name string) (KVSource, error) {
 	if plug, ok := p.plugins[name]; ok {
 		return plug, nil
 	}
 
-	goPlugin, err := plugin.Open(fmt.Sprintf("%s/kustomize-%s.so", os.ExpandEnv(dir), name))
+	goPlugin, err := plugin.Open(fmt.Sprintf("%s/%s/kustomize-%s.so", configDir(), pluginDir, name))
 	if err != nil {
 		return nil, err
 	}
