@@ -21,10 +21,10 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc/transformer"
 	"sigs.k8s.io/kustomize/pkg/loader"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/target"
 )
@@ -67,7 +67,7 @@ func NewCmdBuild(
 
 	cmd := &cobra.Command{
 		Use:          "build [path]",
-		Short:        "Print current configuration per contents of " + constants.KustomizationFileNames[0],
+		Short:        "Print current configuration per contents of " + pgmconfig.KustomizationFileNames[0],
 		Example:      examples,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -88,7 +88,7 @@ func NewCmdBuild(
 // Validate validates build command.
 func (o *Options) Validate(args []string) error {
 	if len(args) > 1 {
-		return errors.New("specify one path to " + constants.KustomizationFileNames[0])
+		return errors.New("specify one path to " + pgmconfig.KustomizationFileNames[0])
 	}
 	if len(args) == 0 {
 		o.kustomizationPath = "./"
