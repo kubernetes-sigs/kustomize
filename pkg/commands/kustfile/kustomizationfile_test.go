@@ -21,8 +21,8 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
@@ -112,12 +112,12 @@ configMapGenerator:
   name: my-configmap
 `
 	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile(constants.KustomizationFileNames[1], []byte(kcontent))
+	fakeFS.WriteFile(pgmconfig.KustomizationFileNames[1], []byte(kcontent))
 	k, err := NewKustomizationFile(fakeFS)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
 	}
-	if k.path != constants.KustomizationFileNames[1] {
+	if k.path != pgmconfig.KustomizationFileNames[1] {
 		t.Fatalf("Load incorrect file path %s", k.path)
 	}
 }

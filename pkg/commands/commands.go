@@ -20,35 +20,57 @@ package commands
 import (
 	"flag"
 	"os"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
+	"sigs.k8s.io/kustomize/k8sdeps/transformer"
+	"sigs.k8s.io/kustomize/k8sdeps/validator"
 	"sigs.k8s.io/kustomize/pkg/commands/build"
 	"sigs.k8s.io/kustomize/pkg/commands/edit"
 	"sigs.k8s.io/kustomize/pkg/commands/misc"
-	"sigs.k8s.io/kustomize/pkg/factory"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 // NewDefaultCommand returns the default (aka root) command for kustomize command.
-func NewDefaultCommand(f *factory.KustFactory) *cobra.Command {
-	fsys := fs.MakeRealFS()
+func NewDefaultCommand() *cobra.Command {
+	fSys := fs.MakeRealFS()
 	stdOut := os.Stdout
 
 	c := &cobra.Command{
-		Use:   "kustomize",
-		Short: "kustomize manages declarative configuration of Kubernetes",
+		Use:   pgmconfig.PgmName,
+		Short: "Manages declarative configuration of Kubernetes",
 		Long: `
-kustomize manages declarative configuration of Kubernetes.
-
+Manages declarative configuration of Kubernetes.
 See https://sigs.k8s.io/kustomize
 `,
 	}
 
+	// Configuration for ConfigMap and Secret generators.
+	genMetaArgs := types.GeneratorMetaArgs{
+		PluginConfig: plugin.DefaultPluginConfig(),
+	}
+
+	c.Flags().BoolVar(
+		&genMetaArgs.PluginConfig.GoEnabled,
+		plugin.EnableGoPluginsFlagName,
+		false, plugin.EnableGoPluginsFlagHelp)
+	// Not advertising this alpha feature.
+	c.Flags().MarkHidden(plugin.EnableGoPluginsFlagName)
+
+	uf := kunstruct.NewKunstructuredFactoryWithGeneratorArgs(&genMetaArgs)
+
 	c.AddCommand(
-		// TODO: Make consistent API for newCmd* functions.
-		build.NewCmdBuild(stdOut, fsys, f.ResmapF, f.TransformerF),
-		edit.NewCmdEdit(fsys, f.ValidatorF, f.UnstructF),
-		misc.NewCmdConfig(fsys),
+		build.NewCmdBuild(
+			stdOut, fSys,
+			resmap.NewFactory(resource.NewFactory(uf)),
+			transformer.NewFactoryImpl()),
+		edit.NewCmdEdit(fSys, validator.NewKustValidator(), uf),
+		misc.NewCmdConfig(fSys),
 		misc.NewCmdVersion(stdOut),
 	)
 	c.PersistentFlags().AddGoFlagSet(flag.CommandLine)
