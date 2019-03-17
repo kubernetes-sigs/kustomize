@@ -31,6 +31,15 @@ varReference:
 - path: spec/jobTemplate/spec/template/spec/containers/volumeMounts/mountPath
   kind: CronJob
 
+- path: spec/jobTemplate/spec/template/spec/initContainers/args
+  kind: CronJob
+
+- path: spec/jobTemplate/spec/template/spec/initContainers/command
+  kind: CronJob
+
+- path: spec/jobTemplate/spec/template/spec/initContainers/env/value
+  kind: CronJob
+
 - path: spec/jobTemplate/spec/template/spec/initContainers/volumeMounts/mountPath
   kind: CronJob
 
@@ -100,6 +109,12 @@ varReference:
 - path: spec/template/spec/containers/volumeMounts/mountPath
   kind: Job
 
+- path: spec/template/spec/initContainers/args
+  kind: Job
+
+- path: spec/template/spec/initContainers/command
+  kind: Job
+
 - path: spec/template/spec/initContainers/env/value
   kind: Job
 
@@ -130,7 +145,25 @@ varReference:
 - path: spec/initContainers/volumeMounts/mountPath
   kind: Pod
 
+- path: spec/template/spec/containers/args
+  kind: ReplicaSet
+
+- path: spec/template/spec/containers/command
+  kind: ReplicaSet
+
+- path: spec/template/spec/containers/env/value
+  kind: ReplicaSet
+
 - path: spec/template/spec/containers/volumeMounts/mountPath
+  kind: ReplicaSet
+
+- path: spec/template/spec/initContainers/args
+  kind: ReplicaSet
+
+- path: spec/template/spec/initContainers/command
+  kind: ReplicaSet
+
+- path: spec/template/spec/initContainers/env/value
   kind: ReplicaSet
 
 - path: spec/template/spec/initContainers/volumeMounts/mountPath
