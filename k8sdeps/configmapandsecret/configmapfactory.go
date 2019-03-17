@@ -21,8 +21,7 @@ import (
 	"fmt"
 	"unicode/utf8"
 
-	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/types"
@@ -40,8 +39,8 @@ func NewFactory(
 }
 
 func makeFreshConfigMap(
-	args *types.ConfigMapArgs) *corev1.ConfigMap {
-	cm := &corev1.ConfigMap{}
+	args *types.ConfigMapArgs) *v1.ConfigMap {
+	cm := &v1.ConfigMap{}
 	cm.APIVersion = "v1"
 	cm.Kind = "ConfigMap"
 	cm.Name = args.Name
@@ -52,7 +51,7 @@ func makeFreshConfigMap(
 
 // MakeConfigMap returns a new ConfigMap, or nil and an error.
 func (f *Factory) MakeConfigMap(
-	args *types.ConfigMapArgs) (*corev1.ConfigMap, error) {
+	args *types.ConfigMapArgs) (*v1.ConfigMap, error) {
 	all, err := f.loadKvPairs(args.GeneratorArgs)
 	if err != nil {
 		return nil, err
