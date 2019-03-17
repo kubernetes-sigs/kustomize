@@ -33,8 +33,8 @@ func NewRegistry(ldr ifc.Loader) Registry {
 	return Registry{
 		ldr: ldr,
 		factories: map[string]Factory{
-			"go":       newGoFactory(),
-			"testonly": newTestonlyFactory(),
+			"go":      newGoFactory(),
+			"builtin": newBuiltinFactory(ldr),
 		},
 	}
 }
