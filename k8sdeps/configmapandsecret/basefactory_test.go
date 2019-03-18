@@ -103,6 +103,22 @@ func TestKeyValuesFromPlugins(t *testing.T) {
 				},
 			},
 		},
+		{
+			description: "Create kv.Pairs from builtin envfiles plugin",
+			sources: []types.KVSource{
+				{
+					PluginType: "builtin",
+					Name:       "envfiles",
+					Args:       []string{"files/app-init.ini"},
+				},
+			},
+			expected: []kv.Pair{
+				{
+					Key:   "FOO",
+					Value: "bar",
+				},
+			},
+		},
 	}
 
 	fSys := fs.MakeFakeFS()
