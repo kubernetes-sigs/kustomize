@@ -24,12 +24,14 @@ const result = `
 apiVersion: v1
 data:
   FRUIT: YXBwbGU=
+  MOUNTAIN: ZXZlcmVzdA==
+  OCEAN: cGFjaWZpYw==
   VEGETABLE: Y2Fycm90
   foo.env: Ck1PVU5UQUlOPWV2ZXJlc3QKT0NFQU49cGFjaWZpYwo=
   passphrase: ZGF0IHBocmFzZQ==
 kind: Secret
 metadata:
-  name: bob-t98kdk9767
+  name: bob-kf5c9fccbt
 type: Opaque
 `
 
@@ -57,6 +59,10 @@ secretGenerator:
     args:
     - foo.env
     - passphrase=phrase.dat
+  - pluginType: builtin
+    name: envfiles
+    args:
+    - foo.env
 `)
 	writeDataFiles(th)
 	m, err := th.makeKustTarget().MakeCustomizedResMap()
@@ -80,6 +86,9 @@ secretGenerator:
     args:
     - foo.env
     - passphrase=phrase.dat
+  - name: envfiles
+    args:
+    - foo.env
 `)
 	writeDataFiles(th)
 	m, err := th.makeKustTarget().MakeCustomizedResMap()
