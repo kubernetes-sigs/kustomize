@@ -26,12 +26,14 @@ import (
 
 // Registry holds all the plugin factories.
 type Registry struct {
-	factories map[string]Factory
+	factories map[types.PluginType]Factory
 	ldr       ifc.Loader
 }
 
 const (
-	PluginsDir = "plugins"
+	PluginsDir        = "plugins"
+	pluginTypeGo      = types.PluginType("go")
+	pluginTypeBuiltIn = types.PluginType("builtin")
 )
 
 func DefaultPluginConfig() types.PluginConfig {
@@ -48,9 +50,9 @@ func NewConfiguredRegistry(
 	ldr ifc.Loader, pc *types.PluginConfig) Registry {
 	return Registry{
 		ldr: ldr,
-		factories: map[string]Factory{
-			"go":      newGoFactory(pc),
-			"builtin": newBuiltinFactory(ldr),
+		factories: map[types.PluginType]Factory{
+			pluginTypeGo:      newGoFactory(pc),
+			pluginTypeBuiltIn: newBuiltinFactory(ldr),
 		},
 	}
 }
@@ -60,11 +62,15 @@ func NewRegistry(ldr ifc.Loader) Registry {
 	return NewConfiguredRegistry(ldr, &types.PluginConfig{})
 }
 
-// Load returns a plugin by type and name,
-func (r *Registry) Load(pluginType, name string) (KVSource, error) {
-	factory, exists := r.factories[pluginType]
+// Load returns a plugin by type and name.
+func (r *Registry) Load(
+	pt types.PluginType, name string) (KVSource, error) {
+	if pt.IsUndefined() {
+		pt = pluginTypeBuiltIn
+	}
+	factory, exists := r.factories[pt]
 	if !exists {
-		return nil, fmt.Errorf("%s is not a valid plugin type", pluginType)
+		return nil, fmt.Errorf("%s is not a valid plugin type", pt)
 	}
 	return factory.load(name)
 }

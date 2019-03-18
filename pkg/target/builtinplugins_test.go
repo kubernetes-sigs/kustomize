@@ -20,6 +20,27 @@ import (
 	"testing"
 )
 
+const result = `
+apiVersion: v1
+data:
+  FRUIT: YXBwbGU=
+  VEGETABLE: Y2Fycm90
+  foo.env: Ck1PVU5UQUlOPWV2ZXJlc3QKT0NFQU49cGFjaWZpYwo=
+  passphrase: ZGF0IHBocmFzZQ==
+kind: Secret
+metadata:
+  name: bob-t98kdk9767
+type: Opaque
+`
+
+func writeDataFiles(th *KustTestHarness) {
+	th.writeF("/app/foo.env", `
+MOUNTAIN=everest
+OCEAN=pacific
+`)
+	th.writeF("/app/phrase.dat", "dat phrase")
+}
+
 func TestBuiltinPlugins(t *testing.T) {
 	th := NewKustTestHarness(t, "/app")
 	th.writeK("/app", `
@@ -37,25 +58,33 @@ secretGenerator:
     - foo.env
     - passphrase=phrase.dat
 `)
-	th.writeF("/app/foo.env", `
-MOUNTAIN=everest
-OCEAN=pacific
-`)
-	th.writeF("/app/phrase.dat", "dat phrase")
+	writeDataFiles(th)
 	m, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
-apiVersion: v1
-data:
-  FRUIT: YXBwbGU=
-  VEGETABLE: Y2Fycm90
-  foo.env: Ck1PVU5UQUlOPWV2ZXJlc3QKT0NFQU49cGFjaWZpYwo=
-  passphrase: ZGF0IHBocmFzZQ==
-kind: Secret
-metadata:
-  name: bob-t98kdk9767
-type: Opaque
+	th.assertActualEqualsExpected(m, result)
+}
+
+func TestBuiltinIsTheDefault(t *testing.T) {
+	th := NewKustTestHarness(t, "/app")
+	th.writeK("/app", `
+secretGenerator:
+- name: bob
+  kvSources:
+  - name: literals
+    args:
+    - FRUIT=apple
+    - VEGETABLE=carrot
+  - name: files
+    args:
+    - foo.env
+    - passphrase=phrase.dat
 `)
+	writeDataFiles(th)
+	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.assertActualEqualsExpected(m, result)
 }
