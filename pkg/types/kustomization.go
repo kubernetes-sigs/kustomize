@@ -271,9 +271,15 @@ type GeneratorOptions struct {
 	DisableNameSuffixHash bool `json:"disableNameSuffixHash,omitempty" yaml:"disableNameSuffixHash,omitempty"`
 }
 
+type PluginType string
+
+func (p PluginType) IsUndefined() bool {
+	return p == PluginType("")
+}
+
 // KVSource represents a KV plugin backend.
 type KVSource struct {
-	PluginType string   `json:"pluginType,omitempty" yaml:"pluginType,omitempty"`
-	Name       string   `json:"name,omitempty" yaml:"name,omitempty"`
-	Args       []string `json:"args,omitempty" yaml:"args,omitempty"`
+	PluginType PluginType `json:"pluginType,omitempty" yaml:"pluginType,omitempty"`
+	Name       string     `json:"name,omitempty" yaml:"name,omitempty"`
+	Args       []string   `json:"args,omitempty" yaml:"args,omitempty"`
 }
