@@ -240,31 +240,3 @@ metadata:
   name: p2-com2-c4b8md75k9
 `)
 }
-
-func TestGeneratorPlugins(t *testing.T) {
-	th := NewKustTestHarness(t, "/app")
-	th.writeK("/app", `
-secretGenerator:
-- name: bob
-  kvSources:
-  - pluginType: builtin
-    name: literals
-    args:
-    - FRUIT=apple
-    - VEGETABLE=carrot
-`)
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
-	th.assertActualEqualsExpected(m, `
-apiVersion: v1
-data:
-  FRUIT: YXBwbGU=
-  VEGETABLE: Y2Fycm90
-kind: Secret
-metadata:
-  name: bob-bgtct8h699
-type: Opaque
-`)
-}

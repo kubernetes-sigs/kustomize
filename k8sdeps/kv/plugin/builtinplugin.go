@@ -29,10 +29,11 @@ type builtinFactory struct {
 	plugins map[string]KVSource
 }
 
-func newBuiltinFactory(_ ifc.Loader) *builtinFactory {
+func newBuiltinFactory(ldr ifc.Loader) *builtinFactory {
 	return &builtinFactory{
 		plugins: map[string]KVSource{
 			"literals": builtin.Literals{},
+			"files":    builtin.Files{Ldr: ldr},
 		},
 	}
 }

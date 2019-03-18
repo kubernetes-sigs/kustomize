@@ -87,9 +87,26 @@ func TestKeyValuesFromPlugins(t *testing.T) {
 				},
 			},
 		},
+		{
+			description: "Create kv.Pairs from builtin files plugin",
+			sources: []types.KVSource{
+				{
+					PluginType: "builtin",
+					Name:       "files",
+					Args:       []string{"files/app-init.ini"},
+				},
+			},
+			expected: []kv.Pair{
+				{
+					Key:   "app-init.ini",
+					Value: "FOO=bar",
+				},
+			},
+		},
 	}
 
 	fSys := fs.MakeFakeFS()
+	fSys.WriteFile("/files/app-init.ini", []byte("FOO=bar"))
 	ldr := loader.NewFileLoaderAtRoot(fSys)
 	reg := plugin.NewRegistry(ldr)
 	bf := baseFactory{ldr, nil, reg}
