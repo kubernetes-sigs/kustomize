@@ -35,11 +35,13 @@ secretGenerator:
     name: files
     args:
     - foo.env
+    - passphrase=phrase.dat
 `)
 	th.writeF("/app/foo.env", `
 MOUNTAIN=everest
 OCEAN=pacific
 `)
+	th.writeF("/app/phrase.dat", "dat phrase")
 	m, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
@@ -50,9 +52,10 @@ data:
   FRUIT: YXBwbGU=
   VEGETABLE: Y2Fycm90
   foo.env: Ck1PVU5UQUlOPWV2ZXJlc3QKT0NFQU49cGFjaWZpYwo=
+  passphrase: ZGF0IHBocmFzZQ==
 kind: Secret
 metadata:
-  name: bob-hhdkd5cbt9
+  name: bob-t98kdk9767
 type: Opaque
 `)
 }
