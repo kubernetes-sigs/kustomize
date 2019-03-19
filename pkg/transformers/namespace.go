@@ -70,12 +70,16 @@ func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
 			if !id.Gvk().IsSelected(&path.Gvk) {
 				continue
 			}
-
-			err := mutateField(objMap, path.PathSlice(), path.CreateIfNotPresent, func(_ interface{}) (interface{}, error) {
-				return o.namespace, nil
-			})
-			if err != nil {
-				return err
+			// make sure the object is non empty
+			if len(objMap) > 0 {
+				err := mutateField(
+					objMap, path.PathSlice(), path.CreateIfNotPresent,
+					func(_ interface{}) (interface{}, error) {
+						return o.namespace, nil
+					})
+				if err != nil {
+					return err
+				}
 			}
 			newid := id.CopyWithNewNamespace(o.namespace)
 			m[newid] = mf[id]
