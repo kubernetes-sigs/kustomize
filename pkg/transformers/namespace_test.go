@@ -47,6 +47,9 @@ func TestNamespaceRun(t *testing.T) {
 					"namespace": "foo",
 				},
 			}),
+		resid.NewResId(cmap, "cm3"): rf.FromMap(
+			map[string]interface{}{},
+		),
 		resid.NewResId(ns, "ns1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
@@ -134,6 +137,9 @@ func TestNamespaceRun(t *testing.T) {
 					"namespace": "test",
 				},
 			}),
+		resid.NewResIdWithPrefixNamespace(cmap, "cm3", "", "test"): rf.FromMap(
+			map[string]interface{}{},
+		),
 		resid.NewResIdWithPrefixNamespace(sa, "default", "", "test"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
