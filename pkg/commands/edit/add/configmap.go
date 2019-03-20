@@ -17,8 +17,6 @@ limitations under the License.
 package add
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/pkg/fs"
@@ -107,12 +105,9 @@ func addConfigMap(
 	k *types.Kustomization,
 	flags flagsAndArgs, kf ifc.KunstructuredFactory) error {
 	cmArgs := makeConfigMapArgs(k, flags.Name)
-	err := mergeFlagsIntoCmArgs(&cmArgs.DataSources, flags)
-	if err != nil {
-		return err
-	}
+	mergeFlagsIntoCmArgs(&cmArgs.KVSources, flags)
 	// Validate by trying to create corev1.configmap.
-	_, err = kf.MakeConfigMap(ldr, k.GeneratorOptions, cmArgs)
+	_, err := kf.MakeConfigMap(ldr, k.GeneratorOptions, cmArgs)
 	if err != nil {
 		return err
 	}
@@ -131,12 +126,17 @@ func makeConfigMapArgs(m *types.Kustomization, name string) *types.ConfigMapArgs
 	return &m.ConfigMapGenerator[len(m.ConfigMapGenerator)-1]
 }
 
-func mergeFlagsIntoCmArgs(src *types.DataSources, flags flagsAndArgs) error {
-	src.LiteralSources = append(src.LiteralSources, flags.LiteralSources...)
-	src.FileSources = append(src.FileSources, flags.FileSources...)
-	if src.EnvSource != "" && src.EnvSource != flags.EnvFileSource {
-		return fmt.Errorf("updating existing env source '%s' not allowed", src.EnvSource)
-	}
-	src.EnvSource = flags.EnvFileSource
-	return nil
+func mergeFlagsIntoCmArgs(src *[]types.KVSource, flags flagsAndArgs) {
+	*src = append(*src, types.KVSource{
+		Name: "literals",
+		Args: flags.LiteralSources,
+	})
+	*src = append(*src, types.KVSource{
+		Name: "files",
+		Args: flags.FileSources,
+	})
+	*src = append(*src, types.KVSource{
+		Name: "envfiles",
+		Args: []string{flags.EnvFileSource},
+	})
 }

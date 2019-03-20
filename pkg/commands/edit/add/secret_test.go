@@ -67,45 +67,33 @@ func TestMakeSecretArgs(t *testing.T) {
 }
 
 func TestMergeFlagsIntoSecretArgs_LiteralSources(t *testing.T) {
-	ds := &types.DataSources{}
+	kv := []types.KVSource{}
 
-	err := mergeFlagsIntoSecretArgs(ds, flagsAndArgs{LiteralSources: []string{"k1=v1"}})
-	if err != nil {
-		t.Fatalf("Merge initial literal source should not return error")
-	}
+	mergeFlagsIntoSecretArgs(&kv, flagsAndArgs{LiteralSources: []string{"k1=v1"}})
 
-	if len(ds.LiteralSources) != 1 {
+	if len(kv) != 1 {
 		t.Fatalf("Initial literal source should have been added")
 	}
 
-	err = mergeFlagsIntoSecretArgs(ds, flagsAndArgs{LiteralSources: []string{"k2=v2"}})
-	if err != nil {
-		t.Fatalf("Merge second literal source should not return error")
-	}
+	mergeFlagsIntoSecretArgs(&kv, flagsAndArgs{LiteralSources: []string{"k2=v2"}})
 
-	if len(ds.LiteralSources) != 2 {
+	if len(kv) != 2 {
 		t.Fatalf("Second literal source should have been added")
 	}
 }
 
 func TestMergeFlagsIntoSecretArgs_FileSources(t *testing.T) {
-	ds := &types.DataSources{}
+	kv := []types.KVSource{}
 
-	err := mergeFlagsIntoSecretArgs(ds, flagsAndArgs{FileSources: []string{"file1"}})
-	if err != nil {
-		t.Fatalf("Merge initial file source should not return error")
-	}
+	mergeFlagsIntoSecretArgs(&kv, flagsAndArgs{FileSources: []string{"file1"}})
 
-	if len(ds.FileSources) != 1 {
+	if len(kv) != 1 {
 		t.Fatalf("Initial file source should have been added")
 	}
 
-	err = mergeFlagsIntoSecretArgs(ds, flagsAndArgs{FileSources: []string{"file2"}})
-	if err != nil {
-		t.Fatalf("Merge second file source should not return error")
-	}
+	mergeFlagsIntoSecretArgs(&kv, flagsAndArgs{FileSources: []string{"file2"}})
 
-	if len(ds.FileSources) != 2 {
+	if len(kv) != 2 {
 		t.Fatalf("Second file source should have been added")
 	}
 }
@@ -113,19 +101,16 @@ func TestMergeFlagsIntoSecretArgs_FileSources(t *testing.T) {
 func TestMergeFlagsIntoSecretArgs_EnvSource(t *testing.T) {
 	envFileName := "env1"
 	envFileName2 := "env2"
-	ds := &types.DataSources{}
+	kv := []types.KVSource{}
 
-	err := mergeFlagsIntoSecretArgs(ds, flagsAndArgs{EnvFileSource: envFileName})
-	if err != nil {
-		t.Fatalf("Merge initial env source should not return error")
+	mergeFlagsIntoSecretArgs(&kv, flagsAndArgs{EnvFileSource: envFileName})
+
+	if len(kv) != 1 {
+		t.Fatalf("Initial env source should have been added")
 	}
 
-	if ds.EnvSource != envFileName {
-		t.Fatalf("Initial env source filename should have been added")
-	}
-
-	err = mergeFlagsIntoSecretArgs(ds, flagsAndArgs{EnvFileSource: envFileName2})
-	if err == nil {
-		t.Fatalf("Updating env source should return an error")
+	mergeFlagsIntoSecretArgs(&kv, flagsAndArgs{EnvFileSource: envFileName2})
+	if len(kv) != 2 {
+		t.Fatalf("Second env source should have been added")
 	}
 }
