@@ -132,16 +132,22 @@ func makeSecretArgs(m *types.Kustomization, name, secretType string) *types.Secr
 }
 
 func mergeFlagsIntoSecretArgs(src *[]types.KVSource, flags flagsAndArgs) {
-	*src = append(*src, types.KVSource{
-		Name: "literals",
-		Args: flags.LiteralSources,
-	})
-	*src = append(*src, types.KVSource{
-		Name: "files",
-		Args: flags.FileSources,
-	})
-	*src = append(*src, types.KVSource{
-		Name: "envfiles",
-		Args: []string{flags.EnvFileSource},
-	})
+	if len(flags.LiteralSources) > 0 {
+		*src = append(*src, types.KVSource{
+			Name: "literals",
+			Args: flags.LiteralSources,
+		})
+	}
+	if len(flags.FileSources) > 0 {
+		*src = append(*src, types.KVSource{
+			Name: "files",
+			Args: flags.FileSources,
+		})
+	}
+	if flags.EnvFileSource != "" {
+		*src = append(*src, types.KVSource{
+			Name: "envfiles",
+			Args: []string{flags.EnvFileSource},
+		})
+	}
 }
