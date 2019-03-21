@@ -82,6 +82,10 @@ func TestWriteAndRead(t *testing.T) {
 	if !reflect.DeepEqual(kustomization, content) {
 		t.Fatal("Read kustomization is different from written kustomization")
 	}
+	kustomization.DealWithLegacyKVGenerators()
+	if !reflect.DeepEqual(kustomization, content) {
+		t.Fatal("Read kustomization is different from written kustomization")
+	}
 }
 
 func TestNewNotExist(t *testing.T) {

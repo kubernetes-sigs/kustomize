@@ -166,6 +166,10 @@ func (mf *kustomizationFile) Read() (*types.Kustomization, error) {
 	if len(msgs) > 0 {
 		log.Printf(strings.Join(msgs, "\n"))
 	}
+	msgs = k.DealWithLegacyKVGenerators()
+	if len(msgs) > 0 {
+		log.Printf(strings.Join(msgs, "\n"))
+	}
 	err = mf.parseCommentedFields(data)
 	if err != nil {
 		return nil, err

@@ -18,6 +18,7 @@ limitations under the License.
 package types
 
 import (
+	"fmt"
 	"regexp"
 
 	"sigs.k8s.io/kustomize/pkg/image"
@@ -169,6 +170,50 @@ func DealWithDeprecatedFields(data []byte) []byte {
 		data = pattern.ReplaceAll(data, []byte(newname))
 	}
 	return data
+}
+
+func (k *Kustomization) DealWithLegacyKVGenerators() []string {
+	var msgs []string
+	var newSecretGenerator []SecretArgs
+	var newConfigMapGenerator []ConfigMapArgs
+	for _, args := range k.SecretGenerator {
+		args.KVSources = append(args.KVSources, convertToKVSource(args.DataSources)...)
+		args.DataSources = DataSources{}
+		newSecretGenerator = append(newSecretGenerator, args)
+		msgs = append(msgs, fmt.Sprintf("Converted secret %s to builtin plugins", args.Name))
+	}
+	for _, args := range k.ConfigMapGenerator {
+		args.KVSources = append(args.KVSources, convertToKVSource(args.DataSources)...)
+		args.DataSources = DataSources{}
+		newConfigMapGenerator = append(newConfigMapGenerator, args)
+		msgs = append(msgs, fmt.Sprintf("Converted configmap %s to builtin plugins", args.Name))
+	}
+	k.SecretGenerator = newSecretGenerator
+	k.ConfigMapGenerator = newConfigMapGenerator
+	return msgs
+}
+
+func convertToKVSource(sources DataSources) []KVSource {
+	kvSources := []KVSource{}
+	if len(sources.LiteralSources) > 0 {
+		kvSources = append(kvSources, KVSource{
+			Name: "literals",
+			Args: sources.LiteralSources,
+		})
+	}
+	if len(sources.FileSources) > 0 {
+		kvSources = append(kvSources, KVSource{
+			Name: "files",
+			Args: sources.FileSources,
+		})
+	}
+	if sources.EnvSource != "" {
+		kvSources = append(kvSources, KVSource{
+			Name: "envfiles",
+			Args: []string{sources.EnvSource},
+		})
+	}
+	return kvSources
 }
 
 // GeneratorArgs contains arguments common to generators.
