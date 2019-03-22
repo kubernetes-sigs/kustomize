@@ -74,8 +74,9 @@ func (pt *imageTransformer) findAndReplaceImage(obj map[string]interface{}) erro
 	paths := []string{"containers", "initContainers"}
 	found := false
 	for _, path := range paths {
-		containers, found := obj[path]
-		if found {
+		containers, foundHere := obj[path]
+		if foundHere {
+			found = true
 			_, err := pt.updateContainers(containers)
 			if err != nil {
 				return err
@@ -83,8 +84,9 @@ func (pt *imageTransformer) findAndReplaceImage(obj map[string]interface{}) erro
 		}
 	}
 	// Also support singleton container (as in KNative Service)
-	containers, found := obj["container"]
-	if found {
+	containers, foundHere := obj["container"]
+	if foundHere {
+		found = true
 		_, err := pt.updateContainers([]interface{}{containers})
 		if err != nil {
 			return err
