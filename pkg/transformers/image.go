@@ -17,7 +17,6 @@ limitations under the License.
 package transformers
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -91,7 +90,7 @@ func (pt *imageTransformer) findAndReplaceImage(obj map[string]interface{}) erro
 func (pt *imageTransformer) updateContainers(in interface{}) (interface{}, error) {
 	containers, ok := in.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("containers path is not of type []interface{} but %T", in)
+		return nil, nil
 	}
 	for i := range containers {
 		container := containers[i].(map[string]interface{})
