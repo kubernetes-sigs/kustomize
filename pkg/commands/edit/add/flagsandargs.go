@@ -48,28 +48,44 @@ type flagsAndArgs struct {
 
 // Validate validates required fields are set to support structured generation.
 func (a *flagsAndArgs) Validate(args []string) error {
+	if err := a.validateName(args); err != nil {
+		return err
+	}
+	if err := a.validateArgs(args); err != nil {
+		return err
+	}
+	if err := a.validateSources(); err != nil {
+		return err
+	}
+	// TODO: Should we check if the path exists? if it's valid, if it's within the same (sub-)directory?
+	return nil
+}
+
+func (a *flagsAndArgs) validateName(args []string) error {
 	if len(args) == 0 || (a.PluginName == "" && len(args) != 1) {
 		return fmt.Errorf("name must be specified once")
 	}
-
 	a.Name = args[0]
+	return nil
+}
 
+func (a *flagsAndArgs) validateArgs(args []string) error {
 	if a.PluginName != "" && len(args) < 2 {
 		return fmt.Errorf("at least one plugin arg must be set")
 	}
-
 	if a.PluginName != "" && len(args) >= 2 {
 		a.PluginArgs = args[1:]
 	}
+	return nil
+}
 
+func (a *flagsAndArgs) validateSources() error {
 	if a.EnvFileSource != "" && (len(a.FileSources) > 0 || len(a.LiteralSources) > 0 || a.PluginName != "") {
 		return fmt.Errorf("from-env-file cannot be combined with from-file or from-literal, or plugin-name")
 	}
-
 	if a.EnvFileSource == "" && a.PluginName == "" && len(a.FileSources) == 0 && len(a.LiteralSources) == 0 {
 		return fmt.Errorf("at least from-env-file, or plugin-name, or from-file, or from-literal must be set")
 	}
-	// TODO: Should we check if the path exists? if it's valid, if it's within the same (sub-)directory?
 	return nil
 }
 
