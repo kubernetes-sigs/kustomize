@@ -43,14 +43,38 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 	tests := []struct {
 		name       string
 		fa         flagsAndArgs
+		args       []string
 		shouldFail bool
 	}{
+		{
+			name: "too many args",
+			fa: flagsAndArgs{
+				LiteralSources: []string{"one", "two"},
+			},
+			args:       []string{"name", "othername"},
+			shouldFail: true,
+		},
+		{
+			name: "too few args",
+			fa: flagsAndArgs{
+				PluginName: "literals",
+			},
+			args:       []string{"name"},
+			shouldFail: true,
+		},
+		{
+			name:       "we don't have any option set",
+			fa:         flagsAndArgs{},
+			args:       []string{"name"},
+			shouldFail: true,
+		},
 		{
 			name: "env-file-source and literal are both set",
 			fa: flagsAndArgs{
 				LiteralSources: []string{"one", "two"},
 				EnvFileSource:  "three",
 			},
+			args:       []string{"name"},
 			shouldFail: true,
 		},
 		{
@@ -59,28 +83,36 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 				FileSources:   []string{"one", "two"},
 				EnvFileSource: "three",
 			},
+			args:       []string{"name"},
 			shouldFail: true,
 		},
 		{
-			name:       "we don't have any option set",
-			fa:         flagsAndArgs{},
+			name: "env-file-source and plugin-name are both set",
+			fa: flagsAndArgs{
+				PluginName:    "literals",
+				EnvFileSource: "three",
+			},
+			args:       []string{"name", "k=v"},
 			shouldFail: true,
 		},
 		{
-			name: "we have from-file and literal ",
+			name: "we have from-file and literal and plugin-name",
 			fa: flagsAndArgs{
 				LiteralSources: []string{"one", "two"},
 				FileSources:    []string{"three", "four"},
+				PluginName:     "literals",
 			},
+			args:       []string{"name", "five"},
 			shouldFail: false,
 		},
 	}
 
 	for _, test := range tests {
-		if test.fa.Validate([]string{"name"}) == nil && test.shouldFail {
+		err := test.fa.Validate(test.args)
+		if err == nil && test.shouldFail {
 			t.Fatalf("Validation should fail if %s", test.name)
-		} else if test.fa.Validate([]string{"name"}) != nil && !test.shouldFail {
-			t.Fatalf("Validation should succeed if %s", test.name)
+		} else if err != nil && !test.shouldFail {
+			t.Fatalf("Validation should succeed if %s\nFailed with %v", test.name, err)
 		}
 	}
 }

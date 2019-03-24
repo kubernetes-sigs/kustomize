@@ -41,6 +41,9 @@ func newCmdAddSecret(fSys fs.FileSystem, kf ifc.KunstructuredFactory) *cobra.Com
 
 	# Adds a secret from env-file
 	kustomize edit add secret my-secret --from-env-file=env/path.env
+
+	# Adds a secret from a kv plugin
+	kustomize edit add secret my-secret --plugin-name=literals k1=v1 k2=v2
 `,
 		RunE: func(_ *cobra.Command, args []string) error {
 			err := flags.ExpandFileSource(fSys)
@@ -75,7 +78,21 @@ func newCmdAddSecret(fSys fs.FileSystem, kf ifc.KunstructuredFactory) *cobra.Com
 			return mf.Write(kustomization)
 		},
 	}
-
+	cmd.Flags().StringVar(
+		&flags.PluginType,
+		"plugin-type",
+		"",
+		"plugin type (go|builtin)")
+	cmd.Flags().StringVar(
+		&flags.PluginName,
+		"plugin-name",
+		"",
+		"plugin name")
+	cmd.Flags().BoolVar(
+		&flags.ExpandFileArgs,
+		"expand",
+		false,
+		"expand file paths")
 	cmd.Flags().StringSliceVar(
 		&flags.FileSources,
 		"from-file",
@@ -148,6 +165,13 @@ func mergeFlagsIntoSecretArgs(src *[]types.KVSource, flags flagsAndArgs) {
 		*src = append(*src, types.KVSource{
 			Name: "envfiles",
 			Args: []string{flags.EnvFileSource},
+		})
+	}
+	if flags.PluginName != "" {
+		*src = append(*src, types.KVSource{
+			PluginType: types.PluginType(flags.PluginType),
+			Name:       flags.PluginName,
+			Args:       flags.PluginArgs,
 		})
 	}
 }

@@ -34,21 +34,40 @@ type flagsAndArgs struct {
 	// EnvFileSource to derive the configMap/Secret from (optional)
 	// TODO: Rationalize this name with Generic.EnvSource
 	EnvFileSource string
+	// PluginType (go|builtin)
+	PluginType string
+	// PluginName (required)
+	PluginName string
+	// PluginArgs (required)
+	PluginArgs []string
+	// ExpandFileArgs expands string lists containing file globs.
+	ExpandFileArgs bool
 	// Type of secret to create
 	Type string
 }
 
 // Validate validates required fields are set to support structured generation.
 func (a *flagsAndArgs) Validate(args []string) error {
-	if len(args) != 1 {
+	if len(args) == 0 || (a.PluginName == "" && len(args) != 1) {
 		return fmt.Errorf("name must be specified once")
 	}
+
 	a.Name = args[0]
-	if len(a.EnvFileSource) == 0 && len(a.FileSources) == 0 && len(a.LiteralSources) == 0 {
-		return fmt.Errorf("at least from-env-file, or from-file or from-literal must be set")
+
+	if a.PluginName != "" && len(args) < 2 {
+		return fmt.Errorf("at least one plugin arg must be set")
 	}
-	if len(a.EnvFileSource) > 0 && (len(a.FileSources) > 0 || len(a.LiteralSources) > 0) {
-		return fmt.Errorf("from-env-file cannot be combined with from-file or from-literal")
+
+	if a.PluginName != "" && len(args) >= 2 {
+		a.PluginArgs = args[1:]
+	}
+
+	if a.EnvFileSource != "" && (len(a.FileSources) > 0 || len(a.LiteralSources) > 0 || a.PluginName != "") {
+		return fmt.Errorf("from-env-file cannot be combined with from-file or from-literal, or plugin-name")
+	}
+
+	if a.EnvFileSource == "" && a.PluginName == "" && len(a.FileSources) == 0 && len(a.LiteralSources) == 0 {
+		return fmt.Errorf("at least from-env-file, or plugin-name, or from-file, or from-literal must be set")
 	}
 	// TODO: Should we check if the path exists? if it's valid, if it's within the same (sub-)directory?
 	return nil

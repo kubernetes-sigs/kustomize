@@ -64,6 +64,40 @@ func TestMakeConfigMapArgs(t *testing.T) {
 	}
 }
 
+func TestMergeFlagsIntoCmArgs_KVSources(t *testing.T) {
+	kv := []types.KVSource{}
+
+	mergeFlagsIntoCmArgs(&kv, flagsAndArgs{PluginName: "literals", PluginArgs: []string{"k1=v1"}})
+	if len(kv) != 1 {
+		t.Fatalf("Initial literals source should have been added")
+	}
+
+	mergeFlagsIntoCmArgs(&kv, flagsAndArgs{PluginName: "literals", PluginArgs: []string{"k2=v2"}})
+	if len(kv) != 2 {
+		t.Fatalf("Second literals source should have been added")
+	}
+
+	mergeFlagsIntoCmArgs(&kv, flagsAndArgs{PluginName: "files", PluginArgs: []string{"file1"}})
+	if len(kv) != 3 {
+		t.Fatalf("Initial files source should have been added")
+	}
+
+	mergeFlagsIntoCmArgs(&kv, flagsAndArgs{PluginName: "files", PluginArgs: []string{"file2"}})
+	if len(kv) != 4 {
+		t.Fatalf("Second files source should have been added")
+	}
+
+	mergeFlagsIntoCmArgs(&kv, flagsAndArgs{PluginName: "envfiles", PluginArgs: []string{"envfile1"}})
+	if len(kv) != 5 {
+		t.Fatalf("Initial envfiles source should have been added")
+	}
+
+	mergeFlagsIntoCmArgs(&kv, flagsAndArgs{PluginName: "envfiles", PluginArgs: []string{"envfile2"}})
+	if len(kv) != 6 {
+		t.Fatalf("Second envfiles source should have been added")
+	}
+}
+
 func TestMergeFlagsIntoCmArgs_LiteralSources(t *testing.T) {
 	kv := []types.KVSource{}
 
