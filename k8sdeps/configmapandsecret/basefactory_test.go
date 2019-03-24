@@ -119,6 +119,41 @@ func TestKeyValuesFromPlugins(t *testing.T) {
 				},
 			},
 		},
+		{
+			description: "Filter KV pairs",
+			sources: []types.KVSource{
+				{
+					PluginType:   "builtin",
+					Name:         "literals",
+					PrefixFilter: "MYPREFIX_",
+					Args:         []string{"MYPREFIX_FOO=bar", "BAR=baz"},
+				},
+			},
+			expected: []kv.Pair{
+				{
+					Key:   "MYPREFIX_FOO",
+					Value: "bar",
+				},
+			},
+		},
+		{
+			description: "Filter and Trim KV pairs",
+			sources: []types.KVSource{
+				{
+					PluginType:   "builtin",
+					Name:         "literals",
+					PrefixFilter: "MYPREFIX_",
+					TrimPrefix:   true,
+					Args:         []string{"MYPREFIX_FOO=bar", "BAR=baz"},
+				},
+			},
+			expected: []kv.Pair{
+				{
+					Key:   "FOO",
+					Value: "bar",
+				},
+			},
+		},
 	}
 
 	fSys := fs.MakeFakeFS()

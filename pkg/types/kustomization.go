@@ -279,7 +279,9 @@ func (p PluginType) IsUndefined() bool {
 
 // KVSource represents a KV plugin backend.
 type KVSource struct {
-	PluginType PluginType `json:"pluginType,omitempty" yaml:"pluginType,omitempty"`
-	Name       string     `json:"name,omitempty" yaml:"name,omitempty"`
-	Args       []string   `json:"args,omitempty" yaml:"args,omitempty"`
+	PluginType   PluginType `json:"pluginType,omitempty" yaml:"pluginType,omitempty"`
+	Name         string     `json:"name,omitempty" yaml:"name,omitempty"`
+	Args         []string   `json:"args,omitempty" yaml:"args,omitempty"`
+	PrefixFilter string     `json:"prefixFilter,omitempty" yaml:"prefixFilter,omitempty"`
+	TrimPrefix   bool       `json:"trimPrefix,omitempty" yaml:"trimPrefix,omitempty"`
 }

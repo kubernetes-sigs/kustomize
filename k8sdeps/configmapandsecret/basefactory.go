@@ -101,9 +101,32 @@ func (bf baseFactory) keyValuesFromPlugins(sources []types.KVSource) ([]kv.Pair,
 		if err != nil {
 			return nil, err
 		}
-		allKvs = append(allKvs, kvs...)
+		allKvs = append(allKvs, filterPrefix(s, kvs)...)
 	}
 	return allKvs, nil
+}
+
+func filterPrefix(source types.KVSource, pairs []kv.Pair) []kv.Pair {
+	var allKvs []kv.Pair
+	if source.PrefixFilter == "" {
+		return pairs
+	}
+	for _, pair := range pairs {
+		if strings.HasPrefix(pair.Key, source.PrefixFilter) {
+			allKvs = append(allKvs, trimPrefix(source, pair))
+		}
+	}
+	return allKvs
+}
+
+func trimPrefix(source types.KVSource, pair kv.Pair) kv.Pair {
+	if !source.TrimPrefix {
+		return pair
+	}
+	return kv.Pair{
+		Key:   strings.TrimPrefix(pair.Key, source.PrefixFilter),
+		Value: pair.Value,
+	}
 }
 
 func (bf baseFactory) keyValuesFromFileSources(sources []string) ([]kv.Pair, error) {

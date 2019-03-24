@@ -97,3 +97,47 @@ secretGenerator:
 	}
 	th.assertActualEqualsExpected(m, result)
 }
+
+func TestFilterAndTrim(t *testing.T) {
+	th := NewKustTestHarness(t, "/app")
+	th.writeK("/app", `
+secretGenerator:
+- name: filter
+  kvSources:
+  - name: literals
+    args:
+    - MYPREFIX_FRUIT=apple
+    - VEGETABLE=carrot
+    prefixFilter: MYPREFIX_
+- name: trim
+  kvSources:
+  - name: literals
+    args:
+    - MYPREFIX_FRUIT=apple
+    - VEGETABLE=carrot
+    prefixFilter: MYPREFIX_
+    trimPrefix: true
+`)
+	writeDataFiles(th)
+	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.assertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  MYPREFIX_FRUIT: YXBwbGU=
+kind: Secret
+metadata:
+  name: filter-48c9g4d876
+type: Opaque
+---
+apiVersion: v1
+data:
+  FRUIT: YXBwbGU=
+kind: Secret
+metadata:
+  name: trim-c5kkgkbk87
+type: Opaque
+`)
+}
