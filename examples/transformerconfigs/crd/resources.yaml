@@ -27,3 +27,15 @@ spec:
     - "echo"
     - "$(BEE_ACTION)"
     image: myapp
+---
+apiVersion: serving.dev/v1alpha1
+kind: MyService
+metadata:
+  name: echo
+spec:
+  runLatest:
+    configuration:
+      revisionTemplate:
+        spec:
+          container:
+            image: solsa-echo

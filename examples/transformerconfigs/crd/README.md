@@ -43,6 +43,10 @@ varReference:
 - path: spec/beeRef/action
   kind: MyKind
 
+images:
+- path: spec/runLatest/configuration/revisionTemplate/spec/container/image
+  kind: MyService
+
 EOF
 ```
 
@@ -83,13 +87,26 @@ spec:
     - "echo"
     - "\$(BEE_ACTION)"
     image: myapp
+---
+apiVersion: serving.dev/v1alpha1
+kind: MyService
+metadata:
+  name: echo
+spec:
+  runLatest:
+    configuration:
+      revisionTemplate:
+        spec:
+          container:
+            image: solsa-echo
 EOF
 ```
 
 Create a kustomization referring to it:
 
 <!-- @createKustomization @test -->
-```
+
+```yaml
 cat > $DEMO_HOME/kustomization.yaml << EOF
 resources:
 - resources.yaml
@@ -107,6 +124,11 @@ vars:
     apiVersion: v1beta1
   fieldref:
     fieldpath: spec.action
+
+images:
+- name: solsa-echo
+  newTag: foo
+
 EOF
 ```
 

@@ -14,3 +14,7 @@ vars:
     apiVersion: v1beta1
   fieldref:
     fieldpath: spec.action
+
+images:
+- name: solsa-echo
+  newTag: foo
