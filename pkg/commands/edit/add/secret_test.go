@@ -67,7 +67,7 @@ func TestMakeSecretArgs(t *testing.T) {
 }
 
 func TestMergeFlagsIntoSecretArgs_LiteralSources(t *testing.T) {
-	kv := []types.KVSource{}
+	var kv []types.KVSource
 
 	mergeFlagsIntoSecretArgs(&kv, flagsAndArgs{LiteralSources: []string{"k1=v1"}})
 
@@ -83,7 +83,7 @@ func TestMergeFlagsIntoSecretArgs_LiteralSources(t *testing.T) {
 }
 
 func TestMergeFlagsIntoSecretArgs_FileSources(t *testing.T) {
-	kv := []types.KVSource{}
+	var kv []types.KVSource
 
 	mergeFlagsIntoSecretArgs(&kv, flagsAndArgs{FileSources: []string{"file1"}})
 
@@ -101,7 +101,7 @@ func TestMergeFlagsIntoSecretArgs_FileSources(t *testing.T) {
 func TestMergeFlagsIntoSecretArgs_EnvSource(t *testing.T) {
 	envFileName := "env1"
 	envFileName2 := "env2"
-	kv := []types.KVSource{}
+	var kv []types.KVSource
 
 	mergeFlagsIntoSecretArgs(&kv, flagsAndArgs{EnvFileSource: envFileName})
 
