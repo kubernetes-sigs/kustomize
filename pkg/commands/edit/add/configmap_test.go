@@ -65,7 +65,7 @@ func TestMakeConfigMapArgs(t *testing.T) {
 }
 
 func TestMergeFlagsIntoCmArgs_LiteralSources(t *testing.T) {
-	kv := []types.KVSource{}
+	var kv []types.KVSource
 
 	mergeFlagsIntoCmArgs(&kv, flagsAndArgs{LiteralSources: []string{"k1=v1"}})
 
@@ -81,7 +81,7 @@ func TestMergeFlagsIntoCmArgs_LiteralSources(t *testing.T) {
 }
 
 func TestMergeFlagsIntoCmArgs_FileSources(t *testing.T) {
-	kv := []types.KVSource{}
+	var kv []types.KVSource
 
 	mergeFlagsIntoCmArgs(&kv, flagsAndArgs{FileSources: []string{"file1"}})
 
@@ -99,7 +99,7 @@ func TestMergeFlagsIntoCmArgs_FileSources(t *testing.T) {
 func TestMergeFlagsIntoCmArgs_EnvSource(t *testing.T) {
 	envFileName := "env1"
 	envFileName2 := "env2"
-	kv := []types.KVSource{}
+	var kv []types.KVSource
 
 	mergeFlagsIntoCmArgs(&kv, flagsAndArgs{EnvFileSource: envFileName})
 

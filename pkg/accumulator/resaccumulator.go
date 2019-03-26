@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package target
+package accumulator
 
 import (
 	"fmt"
@@ -30,10 +30,6 @@ import (
 
 // ResAccumulator accumulates resources and the rules
 // used to customize those resources.
-// TODO(monopole): Move to "accumulator" package and make members private.
-// This will make a better separation between KustTarget, which should
-// be mainly concerned with data loading, and this class, which could
-// become the home of all transformation data and logic.
 type ResAccumulator struct {
 	resMap  resmap.ResMap
 	tConfig *config.TransformerConfig
@@ -80,6 +76,10 @@ func (ra *ResAccumulator) MergeConfig(
 	tConfig *config.TransformerConfig) (err error) {
 	ra.tConfig, err = ra.tConfig.Merge(tConfig)
 	return err
+}
+
+func (ra *ResAccumulator) GetTransformerConfig() *config.TransformerConfig {
+	return ra.tConfig
 }
 
 func (ra *ResAccumulator) MergeVars(incoming []types.Var) error {
