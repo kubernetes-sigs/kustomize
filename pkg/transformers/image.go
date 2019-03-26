@@ -72,7 +72,7 @@ func (pt *imageTransformer) Transform(m resmap.ResMap) error {
 */
 func (pt *imageTransformer) findAndReplaceImage(obj map[string]interface{}) error {
 	paths := []string{"containers", "initContainers"}
-	found := false
+	updated := false
 	for _, path := range paths {
 		containers, found := obj[path]
 		if found {
@@ -80,9 +80,10 @@ func (pt *imageTransformer) findAndReplaceImage(obj map[string]interface{}) erro
 			if err != nil {
 				return err
 			}
+			updated = true
 		}
 	}
-	if !found {
+	if !updated {
 		return pt.findContainers(obj)
 	}
 	return nil
