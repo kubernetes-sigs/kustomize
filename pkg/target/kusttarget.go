@@ -25,6 +25,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/pkg/accumulator"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/ifc/transformer"
 	interror "sigs.k8s.io/kustomize/pkg/internal/error"
@@ -151,7 +152,7 @@ func (kt *KustTarget) shouldAddHashSuffixesToGeneratedResources() bool {
 // to do so.  The name back references and vars are
 // not yet fixed.
 func (kt *KustTarget) AccumulateTarget() (
-	ra *ResAccumulator, err error) {
+	ra *accumulator.ResAccumulator, err error) {
 	// TODO(monopole): Get rid of the KustomizationErrors accumulator.
 	// It's not consistently used, and complicates tests.
 	errs := &interror.KustomizationErrors{}
@@ -205,7 +206,7 @@ func (kt *KustTarget) AccumulateTarget() (
 	if len(errs.Get()) > 0 {
 		return nil, errs
 	}
-	t, err := kt.newTransformer(patches, ra.tConfig)
+	t, err := kt.newTransformer(patches, ra.GetTransformerConfig())
 	if err != nil {
 		return nil, err
 	}
@@ -240,9 +241,9 @@ func (kt *KustTarget) generateConfigMapsAndSecrets(
 // used to customized them from only the _bases_
 // of this KustTarget.
 func (kt *KustTarget) accumulateBases() (
-	ra *ResAccumulator, errs *interror.KustomizationErrors) {
+	ra *accumulator.ResAccumulator, errs *interror.KustomizationErrors) {
 	errs = &interror.KustomizationErrors{}
-	ra = MakeEmptyAccumulator()
+	ra = accumulator.MakeEmptyAccumulator()
 
 	for _, path := range kt.kustomization.Bases {
 		ldr, err := kt.ldr.New(path)
