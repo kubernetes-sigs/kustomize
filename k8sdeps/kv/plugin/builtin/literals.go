@@ -26,14 +26,14 @@ import (
 type Literals struct{}
 
 // Get implements the interface for kv plugins.
-func (p Literals) Get(root string, args []string) ([]kv.Pair, error) {
-	var kvs []kv.Pair
+func (p Literals) Get(root string, args []string) (map[string]string, error) {
+	kvs := make(map[string]string)
 	for _, s := range args {
 		k, v, err := kv.ParseLiteralSource(s)
 		if err != nil {
 			return nil, err
 		}
-		kvs = append(kvs, kv.Pair{Key: k, Value: v})
+		kvs[k] = v
 	}
 	return kvs, nil
 }

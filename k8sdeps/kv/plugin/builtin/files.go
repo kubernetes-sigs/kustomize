@@ -32,8 +32,8 @@ type Files struct {
 }
 
 // Get implements the interface for kv plugins.
-func (p Files) Get(root string, args []string) ([]kv.Pair, error) {
-	var kvs []kv.Pair
+func (p Files) Get(root string, args []string) (map[string]string, error) {
+	kvs := make(map[string]string)
 	for _, s := range args {
 		k, fPath, err := kv.ParseFileSource(s)
 		if err != nil {
@@ -43,7 +43,7 @@ func (p Files) Get(root string, args []string) ([]kv.Pair, error) {
 		if err != nil {
 			return nil, err
 		}
-		kvs = append(kvs, kv.Pair{Key: k, Value: string(content)})
+		kvs[k] = string(content)
 	}
 	return kvs, nil
 }
