@@ -58,23 +58,23 @@ metadata:
 	if ferr := l.AddFile("/whatever/project/deployment.yaml", []byte(resourceStr)); ferr != nil {
 		t.Fatalf("Error adding fake file: %v\n", ferr)
 	}
-	expected := ResMap{resid.NewResId(deploy, "dply1"): rf.FromMap(
+	expected := ResMap{resid.NewResId(deploy, "dply1"): rf.FromMapAndFileName(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
 			"metadata": map[string]interface{}{
 				"name": "dply1",
 			},
-		}),
-		resid.NewResId(deploy, "dply2"): rf.FromMap(
+		}, "deployment.yaml"),
+		resid.NewResId(deploy, "dply2"): rf.FromMapAndFileName(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
 				"metadata": map[string]interface{}{
 					"name": "dply2",
 				},
-			}),
-		resid.NewResIdWithPrefixNamespace(deploy, "dply2", "", "test"): rf.FromMap(
+			}, "deployment.yaml"),
+		resid.NewResIdWithPrefixNamespace(deploy, "dply2", "", "test"): rf.FromMapAndFileName(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -82,7 +82,7 @@ metadata:
 					"name":      "dply2",
 					"namespace": "test",
 				},
-			}),
+			}, "deployment.yaml"),
 	}
 
 	m, _ := rmF.FromFiles(
@@ -108,24 +108,24 @@ metadata:
   name: cm2
 `)
 	expected := ResMap{
-		resid.NewResId(cmap, "cm1"): rf.FromMap(
+		resid.NewResId(cmap, "cm1"): rf.FromMapAndFileName(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
 				"metadata": map[string]interface{}{
 					"name": "cm1",
 				},
-			}),
-		resid.NewResId(cmap, "cm2"): rf.FromMap(
+			}, "cm12.yaml"),
+		resid.NewResId(cmap, "cm2"): rf.FromMapAndFileName(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
 				"metadata": map[string]interface{}{
 					"name": "cm2",
 				},
-			}),
+			}, "cm12.yaml"),
 	}
-	m, err := rmF.NewResMapFromBytes(encoded)
+	m, err := rmF.NewResMapFromBytes(encoded, "cm12.yaml")
 	fmt.Printf("%v\n", m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -163,7 +163,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 			filepath: "/whatever/project/app.env",
 			content:  "DB_USERNAME=admin\nDB_PASSWORD=somepw",
 			expected: ResMap{
-				resid.NewResId(cmap, "envConfigMap"): rf.FromMapAndOption(
+				resid.NewResId(cmap, "envConfigMap"): rf.FromMapAndOptionAndFileName(
 					map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -174,7 +174,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 							"DB_USERNAME": "admin",
 							"DB_PASSWORD": "somepw",
 						},
-					}, &types.GeneratorArgs{}, nil),
+					}, &types.GeneratorArgs{}, nil, "envConfigMap.yaml"),
 			},
 		},
 		{
@@ -191,7 +191,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 			filepath: "/whatever/project/app-init.ini",
 			content:  "FOO=bar\nBAR=baz\n",
 			expected: ResMap{
-				resid.NewResId(cmap, "fileConfigMap"): rf.FromMapAndOption(
+				resid.NewResId(cmap, "fileConfigMap"): rf.FromMapAndOptionAndFileName(
 					map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -203,7 +203,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 BAR=baz
 `,
 						},
-					}, &types.GeneratorArgs{}, nil),
+					}, &types.GeneratorArgs{}, nil, "fileConfigMap.yaml"),
 			},
 		},
 		{
@@ -219,7 +219,7 @@ BAR=baz
 				},
 			},
 			expected: ResMap{
-				resid.NewResId(cmap, "literalConfigMap"): rf.FromMapAndOption(
+				resid.NewResId(cmap, "literalConfigMap"): rf.FromMapAndOptionAndFileName(
 					map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -232,7 +232,7 @@ BAR=baz
 							"c": "Good Morning",
 							"d": "false",
 						},
-					}, &types.GeneratorArgs{}, nil),
+					}, &types.GeneratorArgs{}, nil, "literalConfigMap.yaml"),
 			},
 		},
 		// TODO: add testcase for data coming from multiple sources like
@@ -278,7 +278,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	}
 
 	expected := ResMap{
-		resid.NewResId(secret, "apple"): rf.FromMapAndOption(
+		resid.NewResId(secret, "apple"): rf.FromMapAndOptionAndFileName(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -290,7 +290,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
-			}, &types.GeneratorArgs{}, nil),
+			}, &types.GeneratorArgs{}, nil, "apple.yaml"),
 	}
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("%#v\ndoesn't match expected:\n%#v", actual, expected)

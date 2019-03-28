@@ -85,8 +85,13 @@ func (th *KustTestHarness) fromMap(m map[string]interface{}) *resource.Resource 
 	return th.rf.RF().FromMap(m)
 }
 
-func (th *KustTestHarness) fromMapAndOption(m map[string]interface{}, args *types.GeneratorArgs, option *types.GeneratorOptions) *resource.Resource {
-	return th.rf.RF().FromMapAndOption(m, args, option)
+func (th *KustTestHarness) fromMapAndFilename(m map[string]interface{}, filename string) *resource.Resource {
+	return th.rf.RF().FromMapAndFileName(m, filename)
+}
+
+func (th *KustTestHarness) fromMapAndOptionAndFilename(m map[string]interface{}, args *types.GeneratorArgs,
+	option *types.GeneratorOptions, filename string) *resource.Resource {
+	return th.rf.RF().FromMapAndOptionAndFileName(m, args, option, filename)
 }
 
 func (th *KustTestHarness) writeDefaultConfigs(fName string) {
