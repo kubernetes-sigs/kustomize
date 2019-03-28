@@ -30,11 +30,10 @@ If `create` is set to `true`, the transformer creates the path to the field in t
 
 ## Images transformer
 
-The default images transformer updates the list of images in relation to paths that include
-`containers` and `initcontainer` sub-paths.
+The default images transformer updates the specified image key values found in paths that include
+`containers` and `initcontainers` sub-paths.
 If found, the `image` key value is customized by the values set in the `newName`, `newTag`, and `digest` fields.
-You can set either the `newTag` field or the `digest` field for a given image transformation. The `name` field identifies
-the `image` key value in a resource.
+The `name` field should match the `image` key value in a resource.
 
 Example kustomization.yaml:
 
@@ -72,8 +71,6 @@ namePrefix:
 nameSuffix:
   -v2
 ```
-
-All Resources with path, `metadata/name` will be updated with the prefix, `alices-`.
 
 ## Labels transformer
 

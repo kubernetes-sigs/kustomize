@@ -1,4 +1,4 @@
-apiVersion: mykind/config/v1
+apiVersion: config/v1
 kind: MyKind
 metadata:
   name: testSvc

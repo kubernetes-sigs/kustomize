@@ -34,7 +34,7 @@ Create a file with some resources that includes an instance of `MyKind`:
 ```
 cat > $DEMO_HOME/resources.yaml << EOF
 
-apiVersion: mykind/config/v1
+apiVersion: config/v1
 kind: MyKind
 metadata:
   name: testSvc
@@ -44,8 +44,7 @@ spec:
       revisionTemplate:
         spec:
           container:
-            - image: my-app
-              name: my-app-name
+            image: my-app
   containers:
     - image: docker
       name: ecosystem
@@ -68,16 +67,13 @@ spec:
 EOF
 ```
 
-Create a kustomization referring to it:
+Create a kustomization.yaml referring to it:
 
 <!-- @createKustomization @test -->
 ```
 cat > $DEMO_HOME/kustomization.yaml << EOF
 resources:
 - resources.yaml
-
-configurations:
-- mykind.yaml
 
 images:
 - name: my-app
@@ -102,11 +98,25 @@ configurations:
 EOF
 ```
 
-Run `kustomize build` and verify that the list of images have been updated.
+Run `kustomize build` and verify that the images have been updated.
 
-<!-- TODO, fixme, @build @test -->
+<!-- @build @test -->
 ```
-test 2 == \
+test 1 == \
 $(kustomize build $DEMO_HOME | grep -A 2 ".*image" | grep "bear1" | wc -l); \
 echo $?
 ```
+
+<!-- @build @test -->
+```
+test 2 == \
+$(kustomize build $DEMO_HOME | grep -A 2 ".*image" | grep "my-docker2@sha" | wc -l); \
+echo $?
+```
+<!-- @build @test -->
+```
+test 3 == \
+$(kustomize build $DEMO_HOME | grep -A 2 ".*image" | grep "prod-mysql:v3" | wc -l); \
+echo $?
+```
+
