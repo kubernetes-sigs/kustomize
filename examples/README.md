@@ -28,14 +28,18 @@ go get sigs.k8s.io/kustomize
    (e.g. devops/SRE and developers).
    
  * [configGenerations](configGeneration.md) -
-   Rolling update when ConfigMapGenerator changes
+   Rolling update when ConfigMapGenerator changes.
+
+ * [secret generation](kvSourceGoPlugin.md) - Generating secrets.
  
- * [generatorOptions](generatorOptions.md) - Modifying behavior of all ConfigMap and Secret generators.  
+ * [generatorOptions](generatorOptions.md) -
+   Modifying behavior of all ConfigMap and Secret generators.
 
  * [breakfast](breakfast.md) - Customize breakfast for
    Alice and Bob.
    
- * [vars](wordpress/README.md) - Injecting k8s runtime data into container arguments (e.g. to point wordpress to a SQL service) by vars.
+ * [vars](wordpress/README.md) - Injecting k8s runtime data into
+    container arguments (e.g. to point wordpress to a SQL service) by vars.
  
  * [image names and tags](image.md) - Updating image names and tags without applying a patch.
 

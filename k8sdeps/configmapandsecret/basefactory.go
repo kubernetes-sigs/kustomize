@@ -91,7 +91,7 @@ func keyValuesFromLiteralSources(sources []string) ([]kv.Pair, error) {
 }
 
 func (bf baseFactory) keyValuesFromPlugins(sources []types.KVSource) ([]kv.Pair, error) {
-	var allKvs []kv.Pair
+	var result []kv.Pair
 	for _, s := range sources {
 		plug, err := bf.reg.Load(s.PluginType, s.Name)
 		if err != nil {
@@ -101,9 +101,11 @@ func (bf baseFactory) keyValuesFromPlugins(sources []types.KVSource) ([]kv.Pair,
 		if err != nil {
 			return nil, err
 		}
-		allKvs = append(allKvs, kvs...)
+		for k, v := range kvs {
+			result = append(result, kv.Pair{Key: k, Value: v})
+		}
 	}
-	return allKvs, nil
+	return result, nil
 }
 
 func (bf baseFactory) keyValuesFromFileSources(sources []string) ([]kv.Pair, error) {
