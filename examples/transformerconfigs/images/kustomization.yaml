@@ -1,0 +1,16 @@
+resources:
+- resources.yaml
+
+configurations:
+- kustomizeconfig/mykind.yaml
+
+images:
+- name: my-app
+  newName: bear1
+  newTag: MYNEWTAG1
+- name: my-mysql
+  newName: prod-mysql
+  newTag: v3
+- name: docker
+  newName: my-docker2
+  digest: sha256:25a0d4
