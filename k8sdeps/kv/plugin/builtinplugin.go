@@ -34,7 +34,7 @@ func newBuiltinFactory(ldr ifc.Loader) *builtinFactory {
 		plugins: map[string]KVSource{
 			"literals": builtin.Literals{},
 			"files":    builtin.Files{Ldr: ldr},
-			"envfiles": builtin.Envfiles{Ldr: ldr},
+			"envfiles": builtin.EnvFiles{Ldr: ldr},
 		},
 	}
 }

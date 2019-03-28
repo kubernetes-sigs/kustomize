@@ -21,16 +21,16 @@ import (
 	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
-// Envfiles format should be a path to a file to read lines of key=val
+// EnvFiles format should be a path to a file to read lines of key=val
 // pairs to create a configmap.
 // i.e. a Docker .env file or a .ini file.
-type Envfiles struct {
+type EnvFiles struct {
 	Ldr ifc.Loader
 }
 
 // Get implements the interface for kv plugins.
-func (p Envfiles) Get(root string, args []string) ([]kv.Pair, error) {
-	var all []kv.Pair
+func (p EnvFiles) Get(root string, args []string) (map[string]string, error) {
+	all := make(map[string]string)
 	for _, path := range args {
 		if path == "" {
 			return nil, nil
@@ -43,7 +43,9 @@ func (p Envfiles) Get(root string, args []string) ([]kv.Pair, error) {
 		if err != nil {
 			return nil, err
 		}
-		all = append(all, kvs...)
+		for _, pair := range kvs {
+			all[pair.Key] = pair.Value
+		}
 	}
 	return all, nil
 }
