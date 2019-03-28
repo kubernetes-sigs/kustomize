@@ -55,12 +55,12 @@ See https://sigs.k8s.io/kustomize
 		PluginConfig: plugin.DefaultPluginConfig(),
 	}
 
-	c.Flags().BoolVar(
+	c.PersistentFlags().BoolVar(
 		&genMetaArgs.PluginConfig.GoEnabled,
 		plugin.EnableGoPluginsFlagName,
 		false, plugin.EnableGoPluginsFlagHelp)
 	// Not advertising this alpha feature.
-	c.Flags().MarkHidden(plugin.EnableGoPluginsFlagName)
+	c.PersistentFlags().MarkHidden(plugin.EnableGoPluginsFlagName)
 
 	uf := kunstruct.NewKunstructuredFactoryWithGeneratorArgs(&genMetaArgs)
 

@@ -29,23 +29,20 @@ var _ Factory = &goFactory{}
 const (
 	kvSourcesDir            = "kvSources"
 	EnableGoPluginsFlagName = "enable_alpha_goplugins_accept_panic_risk"
-	EnableGoPluginsFlagHelp = `
-Warning: the main program may panic and exit on an
-attempt to use a goplugin that was compiled under
-conditions differing from the those in effect when
-main was compiled. It's safest to use this flag in
-the context of a container image holding both the
-main and the goplugins it needs, all built on the
-same machine, with the same transitive libs and
-the same compiler version.
-`
+	EnableGoPluginsFlagHelp = `The main program may panic and exit on an attempt
+to use a goplugin that was compiled under conditions
+differing from the those in effect when main was
+compiled. It's safest to use this flag in the
+context of a container image holding both the main
+and the goplugins it needs, all built on the same
+machine, with the same transitive libs and the same
+compiler version.`
 	errorFmt = `
 enable go plugins by specifying flag
   --%s
 Place .so files in
   %s
-%s
-`
+%s`
 )
 
 func newGoFactory(c *types.PluginConfig) *goFactory {
@@ -82,7 +79,7 @@ func (p *goFactory) load(name string) (KVSource, error) {
 		return nil, err
 	}
 
-	symbol, err := goPlugin.Lookup("Plugin")
+	symbol, err := goPlugin.Lookup("KVSource")
 	if err != nil {
 		return nil, err
 	}
