@@ -50,7 +50,7 @@ func (rmF *Factory) FromFiles(
 		if err != nil {
 			return nil, errors.Wrap(err, "Load from path "+path+" failed")
 		}
-		res, err := rmF.NewResMapFromBytes(content)
+		res, err := rmF.NewResMapFromBytes(content, path)
 		if err != nil {
 			return nil, internal.Handler(err, path)
 		}
@@ -60,8 +60,8 @@ func (rmF *Factory) FromFiles(
 }
 
 // newResMapFromBytes decodes a list of objects in byte array format.
-func (rmF *Factory) NewResMapFromBytes(b []byte) (ResMap, error) {
-	resources, err := rmF.resF.SliceFromBytes(b)
+func (rmF *Factory) NewResMapFromBytes(b []byte, fileName string) (ResMap, error) {
+	resources, err := rmF.resF.SliceFromBytes(b, fileName)
 	if err != nil {
 		return nil, err
 	}

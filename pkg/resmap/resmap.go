@@ -132,6 +132,17 @@ func (m ResMap) FilterBy(inputId resid.ResId) ResMap {
 	return result
 }
 
+func (m ResMap) SplitByFileName() map[string]ResMap {
+	resByFileName := make(map[string]ResMap)
+	for k, v := range m {
+		if _, ok := resByFileName[v.FileName()]; !ok {
+			resByFileName[v.FileName()] = ResMap{}
+		}
+		resByFileName[v.FileName()][k] = v
+	}
+	return resByFileName
+}
+
 // MergeWithErrorOnIdCollision combines multiple ResMap instances, failing on
 // key collision and skipping nil maps.
 // If all of the maps are nil, an empty ResMap is returned.
