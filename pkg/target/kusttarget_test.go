@@ -95,7 +95,7 @@ func TestResources(t *testing.T) {
 	expected := resmap.ResMap{
 		resid.NewResIdWithPrefixSuffixNamespace(
 			gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"},
-			"dply1", "foo-", "-bar", "ns1"): th.fromMap(
+			"dply1", "foo-", "-bar", "ns1"): th.fromMapAndFilename(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -127,10 +127,11 @@ func TestResources(t *testing.T) {
 						},
 					},
 				},
-			}),
+			},
+			"deployment.yaml"),
 		resid.NewResIdWithPrefixSuffixNamespace(
 			gvk.Gvk{Version: "v1", Kind: "ConfigMap"},
-			"literalConfigMap", "foo-", "-bar", "ns1"): th.fromMapAndOption(
+			"literalConfigMap", "foo-", "-bar", "ns1"): th.fromMapAndOptionAndFilename(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -150,10 +151,11 @@ func TestResources(t *testing.T) {
 				},
 			},
 			&types.GeneratorArgs{},
-			&types.GeneratorOptions{}),
+			&types.GeneratorOptions{},
+			"literalConfigMap.yaml"),
 		resid.NewResIdWithPrefixSuffixNamespace(
 			gvk.Gvk{Version: "v1", Kind: "Secret"},
-			"secret", "foo-", "-bar", "ns1"): th.fromMapAndOption(
+			"secret", "foo-", "-bar", "ns1"): th.fromMapAndOptionAndFilename(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -174,10 +176,11 @@ func TestResources(t *testing.T) {
 				},
 			},
 			&types.GeneratorArgs{},
-			&types.GeneratorOptions{}),
+			&types.GeneratorOptions{},
+			"secret.yaml"),
 		resid.NewResIdWithPrefixSuffixNamespace(
 			gvk.Gvk{Version: "v1", Kind: "Namespace"},
-			"ns1", "foo-", "-bar", ""): th.fromMap(
+			"ns1", "foo-", "-bar", ""): th.fromMapAndFilename(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Namespace",
@@ -190,7 +193,8 @@ func TestResources(t *testing.T) {
 						"note": "This is a test annotation",
 					},
 				},
-			}),
+			},
+			"namespace.yaml"),
 	}
 	actual, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
