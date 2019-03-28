@@ -145,14 +145,12 @@ func (rf *Factory) SliceFromBytes(in []byte, filename string) ([]*Resource, erro
 	return result, nil
 }
 
-// Set sets the loader for the underlying factory
-func (rf *Factory) Set(ldr ifc.Loader) {
-	rf.kf.Set(ldr)
-}
-
 // MakeConfigMap makes an instance of Resource for ConfigMap
-func (rf *Factory) MakeConfigMap(args *types.ConfigMapArgs, options *types.GeneratorOptions) (*Resource, error) {
-	u, err := rf.kf.MakeConfigMap(args, options)
+func (rf *Factory) MakeConfigMap(
+	ldr ifc.Loader,
+	options *types.GeneratorOptions,
+	args *types.ConfigMapArgs) (*Resource, error) {
+	u, err := rf.kf.MakeConfigMap(ldr, options, args)
 	if err != nil {
 		return nil, err
 	}
@@ -164,8 +162,11 @@ func (rf *Factory) MakeConfigMap(args *types.ConfigMapArgs, options *types.Gener
 }
 
 // MakeSecret makes an instance of Resource for Secret
-func (rf *Factory) MakeSecret(args *types.SecretArgs, options *types.GeneratorOptions) (*Resource, error) {
-	u, err := rf.kf.MakeSecret(args, options)
+func (rf *Factory) MakeSecret(
+	ldr ifc.Loader,
+	options *types.GeneratorOptions,
+	args *types.SecretArgs) (*Resource, error) {
+	u, err := rf.kf.MakeSecret(ldr, options, args)
 	if err != nil {
 		return nil, err
 	}

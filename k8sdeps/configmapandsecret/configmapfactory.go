@@ -19,31 +19,28 @@ package configmapandsecret
 
 import (
 	"fmt"
-	"strings"
 	"unicode/utf8"
 
-	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/validation"
-	"sigs.k8s.io/kustomize/k8sdeps/kv"
+	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
-// ConfigMapFactory makes ConfigMaps.
-type ConfigMapFactory struct {
-	ldr ifc.Loader
+// Factory makes ConfigMaps and Secrets.
+type Factory struct {
+	baseFactory
 }
 
-// NewConfigMapFactory returns a new ConfigMapFactory.
-func NewConfigMapFactory(l ifc.Loader) *ConfigMapFactory {
-	return &ConfigMapFactory{ldr: l}
+// NewFactory returns a new Factory.
+func NewFactory(
+	l ifc.Loader, o *types.GeneratorOptions, reg plugin.Registry) *Factory {
+	return &Factory{baseFactory{ldr: l, options: o, reg: reg}}
 }
 
-func (f *ConfigMapFactory) makeFreshConfigMap(
-	args *types.ConfigMapArgs) *corev1.ConfigMap {
-	cm := &corev1.ConfigMap{}
+func makeFreshConfigMap(
+	args *types.ConfigMapArgs) *v1.ConfigMap {
+	cm := &v1.ConfigMap{}
 	cm.APIVersion = "v1"
 	cm.Kind = "ConfigMap"
 	cm.Name = args.Name
@@ -53,43 +50,22 @@ func (f *ConfigMapFactory) makeFreshConfigMap(
 }
 
 // MakeConfigMap returns a new ConfigMap, or nil and an error.
-func (f *ConfigMapFactory) MakeConfigMap(
-	args *types.ConfigMapArgs, options *types.GeneratorOptions) (*corev1.ConfigMap, error) {
-	var all []kv.Pair
-	var err error
-	cm := f.makeFreshConfigMap(args)
-
-	pairs, err := keyValuesFromEnvFile(f.ldr, args.EnvSource)
+func (f *Factory) MakeConfigMap(
+	args *types.ConfigMapArgs) (*v1.ConfigMap, error) {
+	all, err := f.loadKvPairs(args.GeneratorArgs)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf(
-			"env source file: %s",
-			args.EnvSource))
+		return nil, err
 	}
-	all = append(all, pairs...)
-
-	pairs, err = keyValuesFromLiteralSources(args.LiteralSources)
-	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf(
-			"literal sources %v", args.LiteralSources))
-	}
-	all = append(all, pairs...)
-
-	pairs, err = keyValuesFromFileSources(f.ldr, args.FileSources)
-	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf(
-			"file sources: %v", args.FileSources))
-	}
-	all = append(all, pairs...)
-
+	cm := makeFreshConfigMap(args)
 	for _, p := range all {
 		err = addKvToConfigMap(cm, p.Key, p.Value)
 		if err != nil {
 			return nil, err
 		}
 	}
-	if options != nil {
-		cm.SetLabels(options.Labels)
-		cm.SetAnnotations(options.Annotations)
+	if f.options != nil {
+		cm.SetLabels(f.options.Labels)
+		cm.SetAnnotations(f.options.Annotations)
 	}
 	return cm, nil
 }
@@ -97,13 +73,9 @@ func (f *ConfigMapFactory) MakeConfigMap(
 // addKvToConfigMap adds the given key and data to the given config map.
 // Error if key invalid, or already exists.
 func addKvToConfigMap(configMap *v1.ConfigMap, keyName, data string) error {
-	// Note, the rules for ConfigMap keys are the exact same as the ones for SecretKeys.
-	if errs := validation.IsConfigMapKey(keyName); len(errs) != 0 {
-		return fmt.Errorf("%q is not a valid key name for a ConfigMap: %s", keyName, strings.Join(errs, ";"))
+	if err := errIfInvalidKey(keyName); err != nil {
+		return err
 	}
-
-	keyExistsErrorMsg := "cannot add key %s, another key by that name already exists: %v"
-
 	// If the configmap data contains byte sequences that are all in the UTF-8
 	// range, we will write it to .Data
 	if utf8.Valid([]byte(data)) {
@@ -113,7 +85,6 @@ func addKvToConfigMap(configMap *v1.ConfigMap, keyName, data string) error {
 		configMap.Data[keyName] = data
 		return nil
 	}
-
 	// otherwise, it's BinaryData
 	if configMap.BinaryData == nil {
 		configMap.BinaryData = map[string][]byte{}

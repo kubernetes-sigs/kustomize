@@ -19,8 +19,14 @@ package build
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/constants"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 )
+
+func TestNewOptionsToSilenceCodeInspectionError(t *testing.T) {
+	if NewOptions("foo", "bar") == nil {
+		t.Fatal("could not make new options")
+	}
+}
 
 func TestBuildValidate(t *testing.T) {
 	var cases = []struct {
@@ -33,7 +39,7 @@ func TestBuildValidate(t *testing.T) {
 		{"file", []string{"beans"}, "beans", ""},
 		{"path", []string{"a/b/c"}, "a/b/c", ""},
 		{"path", []string{"too", "many"},
-			"", "specify one path to " + constants.KustomizationFileNames[0]},
+			"", "specify one path to " + pgmconfig.KustomizationFileNames[0]},
 	}
 	for _, mycase := range cases {
 		opts := Options{}

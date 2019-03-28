@@ -25,21 +25,28 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/kustomize/k8sdeps/configmapandsecret"
+	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 // KunstructuredFactoryImpl hides construction using apimachinery types.
 type KunstructuredFactoryImpl struct {
-	cmFactory     *configmapandsecret.ConfigMapFactory
-	secretFactory *configmapandsecret.SecretFactory
+	generatorMetaArgs *types.GeneratorMetaArgs
 }
 
 var _ ifc.KunstructuredFactory = &KunstructuredFactoryImpl{}
 
 // NewKunstructuredFactoryImpl returns a factory.
 func NewKunstructuredFactoryImpl() ifc.KunstructuredFactory {
-	return &KunstructuredFactoryImpl{}
+	return NewKunstructuredFactoryWithGeneratorArgs(
+		&types.GeneratorMetaArgs{})
+}
+
+// NewKunstructuredFactoryWithGeneratorArgs returns a factory.
+func NewKunstructuredFactoryWithGeneratorArgs(
+	gma *types.GeneratorMetaArgs) ifc.KunstructuredFactory {
+	return &KunstructuredFactoryImpl{gma}
 }
 
 // SliceFromBytes returns a slice of Kunstructured.
@@ -79,27 +86,33 @@ func (kf *KunstructuredFactoryImpl) FromMap(
 }
 
 // MakeConfigMap returns an instance of Kunstructured for ConfigMap
-func (kf *KunstructuredFactoryImpl) MakeConfigMap(args *types.ConfigMapArgs, options *types.GeneratorOptions) (ifc.Kunstructured, error) {
-	cm, err := kf.cmFactory.MakeConfigMap(args, options)
+func (kf *KunstructuredFactoryImpl) MakeConfigMap(
+	ldr ifc.Loader,
+	options *types.GeneratorOptions,
+	args *types.ConfigMapArgs) (ifc.Kunstructured, error) {
+	o, err := configmapandsecret.NewFactory(
+		ldr, options,
+		plugin.NewConfiguredRegistry(
+			ldr, &kf.generatorMetaArgs.PluginConfig)).MakeConfigMap(args)
 	if err != nil {
 		return nil, err
 	}
-	return NewKunstructuredFromObject(cm)
+	return NewKunstructuredFromObject(o)
 }
 
 // MakeSecret returns an instance of Kunstructured for Secret
-func (kf *KunstructuredFactoryImpl) MakeSecret(args *types.SecretArgs, options *types.GeneratorOptions) (ifc.Kunstructured, error) {
-	sec, err := kf.secretFactory.MakeSecret(args, options)
+func (kf *KunstructuredFactoryImpl) MakeSecret(
+	ldr ifc.Loader,
+	options *types.GeneratorOptions,
+	args *types.SecretArgs) (ifc.Kunstructured, error) {
+	o, err := configmapandsecret.NewFactory(
+		ldr, options,
+		plugin.NewConfiguredRegistry(
+			ldr, &kf.generatorMetaArgs.PluginConfig)).MakeSecret(args)
 	if err != nil {
 		return nil, err
 	}
-	return NewKunstructuredFromObject(sec)
-}
-
-// Set sets loader
-func (kf *KunstructuredFactoryImpl) Set(ldr ifc.Loader) {
-	kf.cmFactory = configmapandsecret.NewConfigMapFactory(ldr)
-	kf.secretFactory = configmapandsecret.NewSecretFactory(ldr)
+	return NewKunstructuredFromObject(o)
 }
 
 // validate validates that u has kind and name

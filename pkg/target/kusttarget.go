@@ -25,11 +25,12 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/pkg/constants"
+	"sigs.k8s.io/kustomize/pkg/accumulator"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/ifc/transformer"
 	interror "sigs.k8s.io/kustomize/pkg/internal/error"
 	patchtransformer "sigs.k8s.io/kustomize/pkg/patch/transformer"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
@@ -62,7 +63,9 @@ func NewKustTarget(
 	}
 	errs := k.EnforceFields()
 	if len(errs) > 0 {
-		return nil, fmt.Errorf("Failed to read kustomization file under %s:\n"+strings.Join(errs, "\n"), ldr.Root())
+		return nil, fmt.Errorf(
+			"Failed to read kustomization file under %s:\n"+
+				strings.Join(errs, "\n"), ldr.Root())
 	}
 	return &KustTarget{
 		kustomization: &k,
@@ -87,7 +90,7 @@ func commaOr(q []string) string {
 func loadKustFile(ldr ifc.Loader) ([]byte, error) {
 	var content []byte
 	match := 0
-	for _, kf := range constants.KustomizationFileNames {
+	for _, kf := range pgmconfig.KustomizationFileNames {
 		c, err := ldr.Load(kf)
 		if err == nil {
 			match += 1
@@ -98,11 +101,12 @@ func loadKustFile(ldr ifc.Loader) ([]byte, error) {
 	case 0:
 		return nil, fmt.Errorf(
 			"unable to find one of %v in directory '%s'",
-			commaOr(quoted(constants.KustomizationFileNames)), ldr.Root())
+			commaOr(quoted(pgmconfig.KustomizationFileNames)), ldr.Root())
 	case 1:
 		return content, nil
 	default:
-		return nil, fmt.Errorf("Found multiple kustomization files under: %s\n", ldr.Root())
+		return nil, fmt.Errorf(
+			"Found multiple kustomization files under: %s\n", ldr.Root())
 	}
 }
 
@@ -148,7 +152,7 @@ func (kt *KustTarget) shouldAddHashSuffixesToGeneratedResources() bool {
 // to do so.  The name back references and vars are
 // not yet fixed.
 func (kt *KustTarget) AccumulateTarget() (
-	ra *ResAccumulator, err error) {
+	ra *accumulator.ResAccumulator, err error) {
 	// TODO(monopole): Get rid of the KustomizationErrors accumulator.
 	// It's not consistently used, and complicates tests.
 	errs := &interror.KustomizationErrors{}
@@ -202,7 +206,7 @@ func (kt *KustTarget) AccumulateTarget() (
 	if len(errs.Get()) > 0 {
 		return nil, errs
 	}
-	t, err := kt.newTransformer(patches, ra.tConfig)
+	t, err := kt.newTransformer(patches, ra.GetTransformerConfig())
 	if err != nil {
 		return nil, err
 	}
@@ -215,14 +219,17 @@ func (kt *KustTarget) AccumulateTarget() (
 
 func (kt *KustTarget) generateConfigMapsAndSecrets(
 	errs *interror.KustomizationErrors) (resmap.ResMap, error) {
-	kt.rFactory.Set(kt.ldr)
 	cms, err := kt.rFactory.NewResMapFromConfigMapArgs(
-		kt.kustomization.ConfigMapGenerator, kt.kustomization.GeneratorOptions)
+		kt.ldr,
+		kt.kustomization.GeneratorOptions,
+		kt.kustomization.ConfigMapGenerator)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromConfigMapArgs"))
 	}
 	secrets, err := kt.rFactory.NewResMapFromSecretArgs(
-		kt.kustomization.SecretGenerator, kt.kustomization.GeneratorOptions)
+		kt.ldr,
+		kt.kustomization.GeneratorOptions,
+		kt.kustomization.SecretGenerator)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "NewResMapFromSecretArgs"))
 	}
@@ -234,9 +241,9 @@ func (kt *KustTarget) generateConfigMapsAndSecrets(
 // used to customized them from only the _bases_
 // of this KustTarget.
 func (kt *KustTarget) accumulateBases() (
-	ra *ResAccumulator, errs *interror.KustomizationErrors) {
+	ra *accumulator.ResAccumulator, errs *interror.KustomizationErrors) {
 	errs = &interror.KustomizationErrors{}
-	ra = MakeEmptyAccumulator()
+	ra = accumulator.MakeEmptyAccumulator()
 
 	for _, path := range kt.kustomization.Bases {
 		ldr, err := kt.ldr.New(path)
@@ -306,7 +313,7 @@ func (kt *KustTarget) newTransformer(
 		return nil, err
 	}
 	r = append(r, t)
-	t, err = transformers.NewImageTransformer(kt.kustomization.Images)
+	t, err = transformers.NewImageTransformer(kt.kustomization.Images, tConfig.Images)
 	if err != nil {
 		return nil, err
 	}

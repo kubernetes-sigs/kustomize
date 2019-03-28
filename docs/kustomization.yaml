@@ -76,6 +76,9 @@ resources:
 # The example below creates two ConfigMaps. One with the
 # names and contents of the given files, the other with
 # key/value as data.
+# Each configMapGenerator item accepts a parameter of
+# behavior: [create|replace|merge]. This allows an overlay to modify or
+# replace an existing configMap from the parent.
 configMapGenerator:
 - name: myJavaServerProps
   files:
@@ -198,7 +201,7 @@ patchesJson6902:
   path: add_service_annotation.yaml
 
 # Each entry in this list should be a relative path to
-# a file for custom resource definition(CRD).
+# a file for custom resource definition(CRD) in openAPI definition.
 #
 # The presence of this field is to allow kustomize be
 # aware of CRDs and apply proper
@@ -208,14 +211,22 @@ patchesJson6902:
 # In kustomization, the ConfigMap object name may change by adding namePrefix, nameSuffix, or hashing
 # The name reference for this ConfigMap object in CRD object need to be
 # updated with namePrefix, nameSuffix, or hashing in the same way.
+#
+# The annotations can be put into openAPI definitions are:
+#   "x-kubernetes-annotation": ""
+#   "x-kubernetes-label-selector": ""
+#   "x-kubernetes-identity": ""
+#   "x-kubernetes-object-ref-api-version": "v1",
+#   "x-kubernetes-object-ref-kind": "Secret",
+#   "x-kubernetes-object-ref-name-key": "name",
 crds:
-- crds/typeA.yaml
-- crds/typeB.yaml
+- crds/typeA.json
+- crds/typeB.json
 
 # Vars are used to capture text from one resource's field
 # and insert that text elsewhere.
 #
-# For example, suppose one specify the name of a k8s Service
+# For example, suppose someone specifies the name of a k8s Service
 # object in a container's command line, and the name of a
 # k8s Secret object in a container's environment variable,
 # so that the following would work:
@@ -255,7 +266,7 @@ vars:
 # reference within that object.  That's where the text is found.
 #
 # The field reference is optional; it defaults to `metadata.name`,
-# a normal default, since kustomize is used to generates or
+# a normal default, since kustomize is used to generate or
 # modify the names of resources.
 #
 # At time of writing, only string type fields are supported.

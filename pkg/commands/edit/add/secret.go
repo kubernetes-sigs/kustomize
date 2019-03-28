@@ -17,8 +17,6 @@ limitations under the License.
 package add
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/pkg/fs"
@@ -67,8 +65,8 @@ func newCmdAddSecret(fSys fs.FileSystem, kf ifc.KunstructuredFactory) *cobra.Com
 			}
 
 			// Add the flagsAndArgs map to the kustomization file.
-			kf.Set(loader.NewFileLoaderAtCwd(fSys))
-			err = addSecret(kustomization, flags, kf)
+			err = addSecret(
+				loader.NewFileLoaderAtCwd(fSys), kustomization, flags, kf)
 			if err != nil {
 				return err
 			}
@@ -108,15 +106,13 @@ func newCmdAddSecret(fSys fs.FileSystem, kf ifc.KunstructuredFactory) *cobra.Com
 // Note: error may leave kustomization file in an undefined state.
 // Suggest passing a copy of kustomization file.
 func addSecret(
+	ldr ifc.Loader,
 	k *types.Kustomization,
 	flags flagsAndArgs, kf ifc.KunstructuredFactory) error {
 	secretArgs := makeSecretArgs(k, flags.Name, flags.Type)
-	err := mergeFlagsIntoSecretArgs(&secretArgs.DataSources, flags)
-	if err != nil {
-		return err
-	}
+	mergeFlagsIntoSecretArgs(&secretArgs.KVSources, flags)
 	// Validate by trying to create corev1.secret.
-	_, err = kf.MakeSecret(secretArgs, k.GeneratorOptions)
+	_, err := kf.MakeSecret(ldr, k.GeneratorOptions, secretArgs)
 	if err != nil {
 		return err
 	}
@@ -135,12 +131,23 @@ func makeSecretArgs(m *types.Kustomization, name, secretType string) *types.Secr
 	return &m.SecretGenerator[len(m.SecretGenerator)-1]
 }
 
-func mergeFlagsIntoSecretArgs(src *types.DataSources, flags flagsAndArgs) error {
-	src.LiteralSources = append(src.LiteralSources, flags.LiteralSources...)
-	src.FileSources = append(src.FileSources, flags.FileSources...)
-	if src.EnvSource != "" && src.EnvSource != flags.EnvFileSource {
-		return fmt.Errorf("updating existing env source '%s' not allowed", src.EnvSource)
+func mergeFlagsIntoSecretArgs(src *[]types.KVSource, flags flagsAndArgs) {
+	if len(flags.LiteralSources) > 0 {
+		*src = append(*src, types.KVSource{
+			Name: "literals",
+			Args: flags.LiteralSources,
+		})
 	}
-	src.EnvSource = flags.EnvFileSource
-	return nil
+	if len(flags.FileSources) > 0 {
+		*src = append(*src, types.KVSource{
+			Name: "files",
+			Args: flags.FileSources,
+		})
+	}
+	if flags.EnvFileSource != "" {
+		*src = append(*src, types.KVSource{
+			Name: "envfiles",
+			Args: []string{flags.EnvFileSource},
+		})
+	}
 }

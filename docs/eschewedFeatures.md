@@ -96,7 +96,7 @@ For example, to set the tag used on an image to match an
 environment variable, run
 
 ```
-kustomize edit set imagetag nginx:$MY_NGINX_VERSION
+kustomize edit set image nginx:$MY_NGINX_VERSION
 ```
 
 as part of some encapsulating work flow executed before

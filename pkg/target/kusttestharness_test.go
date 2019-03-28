@@ -21,13 +21,14 @@ package target_test
 import (
 	"fmt"
 	"path/filepath"
+	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/k8sdeps/transformer"
-	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	. "sigs.k8s.io/kustomize/pkg/target"
@@ -42,10 +43,18 @@ type KustTestHarness struct {
 }
 
 func NewKustTestHarness(t *testing.T, path string) *KustTestHarness {
+	return NewKustTestHarnessWithPluginConfig(
+		t, path, plugin.DefaultPluginConfig())
+}
+
+func NewKustTestHarnessWithPluginConfig(
+	t *testing.T, path string,
+	config types.PluginConfig) *KustTestHarness {
 	return &KustTestHarness{
 		t: t,
 		rf: resmap.NewFactory(resource.NewFactory(
-			kunstruct.NewKunstructuredFactoryImpl())),
+			kunstruct.NewKunstructuredFactoryWithGeneratorArgs(
+				&types.GeneratorMetaArgs{PluginConfig: config}))),
 		ldr: loadertest.NewFakeLoader(path)}
 }
 
@@ -66,7 +75,7 @@ func (th *KustTestHarness) writeF(dir string, content string) {
 }
 
 func (th *KustTestHarness) writeK(dir string, content string) {
-	th.writeF(filepath.Join(dir, constants.KustomizationFileNames[0]), `
+	th.writeF(filepath.Join(dir, pgmconfig.KustomizationFileNames[0]), `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 `+content)

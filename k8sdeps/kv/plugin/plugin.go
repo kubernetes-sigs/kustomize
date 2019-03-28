@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,21 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package k8sdeps provides kustomize factory with k8s dependencies
-package k8sdeps
+// Package plugin provides a plugin abstraction layer.
+package plugin
 
 import (
-	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/k8sdeps/transformer"
-	"sigs.k8s.io/kustomize/k8sdeps/validator"
-	"sigs.k8s.io/kustomize/pkg/factory"
+	"sigs.k8s.io/kustomize/k8sdeps/kv"
 )
 
-// NewFactory creates an instance of KustFactory using k8sdeps factories
-func NewFactory() *factory.KustFactory {
-	return factory.NewKustFactory(
-		kunstruct.NewKunstructuredFactoryImpl(),
-		validator.NewKustValidator(),
-		transformer.NewFactoryImpl(),
-	)
+// KVSource is the interface for kv source plugins.
+type KVSource interface {
+	Get(root string, args []string) ([]kv.Pair, error)
+}
+
+// Factory is the interface for new kv source plugin implementations.
+type Factory interface {
+	load(string) (KVSource, error)
 }

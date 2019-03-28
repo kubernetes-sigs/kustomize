@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package resmap
+package resmap_test
 
 import (
 	"encoding/base64"
@@ -28,6 +28,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/resid"
+	. "sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
@@ -124,7 +125,7 @@ metadata:
 				},
 			}, "cm12.yaml"),
 	}
-	m, err := rmF.newResMapFromBytes(encoded, "cm12.yaml")
+	m, err := rmF.NewResMapFromBytes(encoded, "cm12.yaml")
 	fmt.Printf("%v\n", m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -237,12 +238,11 @@ BAR=baz
 		// TODO: add testcase for data coming from multiple sources like
 		// files/literal/env etc.
 	}
-	rmF.Set(l)
 	for _, tc := range testCases {
 		if ferr := l.AddFile(tc.filepath, []byte(tc.content)); ferr != nil {
 			t.Fatalf("Error adding fake file: %v\n", ferr)
 		}
-		r, err := rmF.NewResMapFromConfigMapArgs(tc.input, nil)
+		r, err := rmF.NewResMapFromConfigMapArgs(l, nil, tc.input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -271,9 +271,8 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	}
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir(".")
-	rmF.Set(loader.NewFileLoaderAtRoot(fakeFs))
-	actual, err := rmF.NewResMapFromSecretArgs(secrets, nil)
-
+	actual, err := rmF.NewResMapFromSecretArgs(
+		loader.NewFileLoaderAtRoot(fakeFs), nil, secrets)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

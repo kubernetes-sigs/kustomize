@@ -14,11 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package target
+package accumulator
 
 import (
 	"fmt"
 	"log"
+	"strings"
+
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/transformers"
@@ -28,10 +30,6 @@ import (
 
 // ResAccumulator accumulates resources and the rules
 // used to customize those resources.
-// TODO(monopole): Move to "accumulator" package and make members private.
-// This will make a better separation between KustTarget, which should
-// be mainly concerned with data loading, and this class, which could
-// become the home of all transformation data and logic.
 type ResAccumulator struct {
 	resMap  resmap.ResMap
 	tConfig *config.TransformerConfig
@@ -80,6 +78,10 @@ func (ra *ResAccumulator) MergeConfig(
 	return err
 }
 
+func (ra *ResAccumulator) GetTransformerConfig() *config.TransformerConfig {
+	return ra.tConfig
+}
+
 func (ra *ResAccumulator) MergeVars(incoming []types.Var) error {
 	return ra.varSet.MergeSlice(incoming)
 }
@@ -101,17 +103,27 @@ func (ra *ResAccumulator) MergeAccumulator(other *ResAccumulator) (err error) {
 // for substitution wherever the $(var.Name) occurs.
 func (ra *ResAccumulator) makeVarReplacementMap() (map[string]string, error) {
 	result := map[string]string{}
-	for _, v := range ra.varSet.Set() {
-		id := resid.NewResId(v.ObjRef.GVK(), v.ObjRef.Name)
-		if r, found := ra.resMap.DemandOneMatchForId(id); found {
-			s, err := r.GetFieldValue(v.FieldRef.FieldPath)
+	for _, v := range ra.Vars() {
+		matched := ra.resMap.GetMatchingIds(
+			resid.NewResId(v.ObjRef.GVK(), v.ObjRef.Name).GvknEquals)
+		if len(matched) > 1 {
+			return nil, fmt.Errorf(
+				"found %d resId matches for var %s "+
+					"(unable to disambiguate)",
+				len(matched), v)
+		}
+		if len(matched) == 1 {
+			s, err := ra.resMap[matched[0]].GetFieldValue(v.FieldRef.FieldPath)
 			if err != nil {
-				return nil, fmt.Errorf("field path err for var: %+v", v)
+				return nil, fmt.Errorf(
+					"field specified in var '%v' "+
+						"not found in corresponding resource", v)
 			}
 			result[v.Name] = s
 		} else {
-			// Should this be an error?
-			log.Printf("var %v defined but not used", v)
+			return nil, fmt.Errorf(
+				"var '%v' cannot be mapped to a field "+
+					"in the set of known resources", v)
 		}
 	}
 	return result, nil
@@ -126,8 +138,18 @@ func (ra *ResAccumulator) ResolveVars() error {
 	if err != nil {
 		return err
 	}
-	return ra.Transform(transformers.NewRefVarTransformer(
-		replacementMap, ra.tConfig.VarReference))
+	if len(replacementMap) == 0 {
+		return nil
+	}
+	t := transformers.NewRefVarTransformer(
+		replacementMap, ra.tConfig.VarReference)
+	err = ra.Transform(t)
+	if len(t.UnusedVars()) > 0 {
+		log.Printf(
+			"well-defined vars that were never replaced: %s\n",
+			strings.Join(t.UnusedVars(), ","))
+	}
+	return err
 }
 
 func (ra *ResAccumulator) FixBackReferences() (err error) {

@@ -17,32 +17,46 @@ limitations under the License.
 package transformers
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
 	"sigs.k8s.io/kustomize/pkg/image"
 	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
 
 // imageTransformer replace image names and tags
 type imageTransformer struct {
-	images []image.Image
+	images     []image.Image
+	fieldSpecs []config.FieldSpec
 }
 
 var _ Transformer = &imageTransformer{}
 
 // NewImageTransformer constructs an imageTransformer.
-func NewImageTransformer(slice []image.Image) (Transformer, error) {
-	return &imageTransformer{slice}, nil
+func NewImageTransformer(slice []image.Image, fs []config.FieldSpec) (Transformer, error) {
+	return &imageTransformer{slice, fs}, nil
 }
 
 // Transform finds the matching images and replaces name, tag and/or digest
-func (pt *imageTransformer) Transform(resources resmap.ResMap) error {
+func (pt *imageTransformer) Transform(m resmap.ResMap) error {
 	if len(pt.images) == 0 {
 		return nil
 	}
-	for _, res := range resources {
-		err := pt.findAndReplaceImage(res.Map())
+	for id := range m {
+		objMap := m[id].Map()
+		for _, path := range pt.fieldSpecs {
+			if !id.Gvk().IsSelected(&path.Gvk) {
+				continue
+			}
+			err := mutateField(objMap, path.PathSlice(), false, pt.updateContainers)
+			if err != nil {
+				return err
+			}
+		}
+		// Keep for backward compatibility
+		err := pt.findAndReplaceImage(objMap)
 		if err != nil {
 			return err
 		}
@@ -58,24 +72,28 @@ func (pt *imageTransformer) Transform(resources resmap.ResMap) error {
 */
 func (pt *imageTransformer) findAndReplaceImage(obj map[string]interface{}) error {
 	paths := []string{"containers", "initContainers"}
-	found := false
+	updated := false
 	for _, path := range paths {
-		_, found = obj[path]
+		containers, found := obj[path]
 		if found {
-			err := pt.updateContainers(obj, path)
+			_, err := pt.updateContainers(containers)
 			if err != nil {
 				return err
 			}
+			updated = true
 		}
 	}
-	if !found {
+	if !updated {
 		return pt.findContainers(obj)
 	}
 	return nil
 }
 
-func (pt *imageTransformer) updateContainers(obj map[string]interface{}, path string) error {
-	containers := obj[path].([]interface{})
+func (pt *imageTransformer) updateContainers(in interface{}) (interface{}, error) {
+	containers, ok := in.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("containers path is not of type []interface{} but %T", in)
+	}
 	for i := range containers {
 		container := containers[i].(map[string]interface{})
 		containerImage, found := container["image"]
@@ -102,7 +120,7 @@ func (pt *imageTransformer) updateContainers(obj map[string]interface{}, path st
 			break
 		}
 	}
-	return nil
+	return containers, nil
 }
 
 func (pt *imageTransformer) findContainers(obj map[string]interface{}) error {
@@ -139,7 +157,18 @@ func isImageMatched(s, t string) bool {
 // from the image string using either colon `:` or at `@` separators.
 // Note that the returned tag keeps its separator.
 func split(imageName string) (name string, tag string) {
-	ic := strings.LastIndex(imageName, ":")
+	// check if image name contains a domain
+	// if domain is present, ignore domain and check for `:`
+	ic := -1
+	if slashIndex := strings.Index(imageName, "/"); slashIndex < 0 {
+		ic = strings.LastIndex(imageName, ":")
+	} else {
+		lastIc := strings.LastIndex(imageName[slashIndex:], ":")
+		// set ic only if `:` is present
+		if lastIc > 0 {
+			ic = slashIndex + lastIc
+		}
+	}
 	ia := strings.LastIndex(imageName, "@")
 	if ic < 0 && ia < 0 {
 		return imageName, ""
