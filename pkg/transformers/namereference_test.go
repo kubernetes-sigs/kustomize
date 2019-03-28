@@ -241,6 +241,43 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					},
 				},
 			}),
+		resid.NewResId(cronjob, "cronjob1"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "batch/v1beta1",
+				"kind":       "CronJob",
+				"metadata": map[string]interface{}{
+					"name": "cronjob1",
+				},
+				"spec": map[string]interface{}{
+					"schedule": "0 14 * * *",
+					"jobTemplate": map[string]interface{}{
+						"spec": map[string]interface{}{
+							"template": map[string]interface{}{
+								"spec": map[string]interface{}{
+									"containers": []interface{}{
+										map[string]interface{}{
+											"name":  "main",
+											"image": "myimage",
+										},
+									},
+									"volumes": map[string]interface{}{
+										"projected": map[string]interface{}{
+											"sources": map[string]interface{}{
+												"configMap": map[string]interface{}{
+													"name": "cm2",
+												},
+												"secret": map[string]interface{}{
+													"name": "secret1",
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			}),
 	}
 
 	expected := resmap.ResMap{}
@@ -413,6 +450,43 @@ func TestNameReferenceHappyRun(t *testing.T) {
 						"someprefix-secret1-somehash",
 						"someprefix-secret1-somehash",
 						"secret2",
+					},
+				},
+			},
+		})
+	expected[resid.NewResId(cronjob, "cronjob1")] = rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "batch/v1beta1",
+			"kind":       "CronJob",
+			"metadata": map[string]interface{}{
+				"name": "cronjob1",
+			},
+			"spec": map[string]interface{}{
+				"schedule": "0 14 * * *",
+				"jobTemplate": map[string]interface{}{
+					"spec": map[string]interface{}{
+						"template": map[string]interface{}{
+							"spec": map[string]interface{}{
+								"containers": []interface{}{
+									map[string]interface{}{
+										"name":  "main",
+										"image": "myimage",
+									},
+								},
+								"volumes": map[string]interface{}{
+									"projected": map[string]interface{}{
+										"sources": map[string]interface{}{
+											"configMap": map[string]interface{}{
+												"name": "someprefix-cm2-somehash",
+											},
+											"secret": map[string]interface{}{
+												"name": "someprefix-secret1-somehash",
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
