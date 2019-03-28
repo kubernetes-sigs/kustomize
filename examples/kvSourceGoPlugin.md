@@ -118,6 +118,7 @@ Now generate the Secret:
 ```
 result=$(kustomize build $DEMO_HOME)
 echo "$result"
+# Spot check the result:
 test 1 == $(echo "$result" | grep -c "FRUIT: YXBwbGU=")
 ```
 
@@ -157,7 +158,7 @@ them, etc.
 > New _alpha_ behavior at HEAD, for v2.1+
 
 A general alternative is to enshrine secret
-value generation in a Go plugin.
+value generation in a [Go plugin].
 
 The values can then come in via, say, an
 authenticated and authorized RPC to a password
@@ -180,7 +181,8 @@ var database = map[string]string{
 
 type plugin struct{}
 var KVSource plugin
-func (p plugin) Get(root string, args []string) (map[string]string, error) {
+func (p plugin) Get(
+    root string, args []string) (map[string]string, error) {
   r := make(map[string]string)
   for _, k := range args {
     v, ok := database[k]
@@ -220,8 +222,7 @@ Compile and install the plugin:
 ```
 kvSources=$DEMO_HOME/kustomize/plugins/kvSources
 mkdir -p $kvSources
-GOPATH=$DEMO_HOME:$GOPATH go build \
-  -buildmode plugin \
+go build -buildmode plugin \
   -o $kvSources/kvMaker.so \
   $DEMO_HOME/kvMaker.go
 ```
@@ -248,18 +249,15 @@ Finally, generate the secret, setting
 
 <!-- @build2 @test -->
 ```
-result=$(XDG_CONFIG_HOME=$DEMO_HOME kustomize \
+result=$( \
+  XDG_CONFIG_HOME=$DEMO_HOME \
+  kustomize \
   --enable_alpha_goplugins_accept_panic_risk \
-  build $DEMO_HOME)
+  build $DEMO_HOME )
 echo "$result"
+# Spot check the result:
 test 1 == $(echo "$result" | grep -c "FRUIT: YXBwbGU=")
 ```
-
-Specify the `--enable_...` flag to enable Go
-plugins, which may fail if not compiled under
-the same conditions as the main program.  Try
-this command without the flag to see more
-explanation.
 
 This should emit something like:
 
@@ -276,4 +274,17 @@ This should emit something like:
 
 i.e. a subset of the same values as above.
 
+Go plugins work well, but their usage may
+fail (the program may crash) if there's
+too much skew between _main program_ and
+_plugin_ compilation conditions.  For
+this reason, their use is protected by an
+annoyingly long opt-in flag
+(`--enable_alpha_goplugins_accept_panic_risk`)
+intended to make the user aware of this risk.
 
+It's safest to use Go plugins in the
+context of a container image holding both
+the main and the Go plugins it needs, all built
+on the same machine, with the same transitive
+libs and the same compiler version.
