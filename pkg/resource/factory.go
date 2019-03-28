@@ -43,6 +43,16 @@ func (rf *Factory) FromMap(m map[string]interface{}) *Resource {
 	return &Resource{
 		Kunstructured: rf.kf.FromMap(m),
 		options:       types.NewGenArgs(nil, nil),
+		fileName:      "",
+	}
+}
+
+// FromMapAndFileName returns a new instance of Resource with given filename.
+func (rf *Factory) FromMapAndFileName(m map[string]interface{}, filename string) *Resource {
+	return &Resource{
+		Kunstructured: rf.kf.FromMap(m),
+		options:       types.NewGenArgs(nil, nil),
+		fileName:      filename,
 	}
 }
 
@@ -51,18 +61,29 @@ func (rf *Factory) FromMapAndOption(m map[string]interface{}, args *types.Genera
 	return &Resource{
 		Kunstructured: rf.kf.FromMap(m),
 		options:       types.NewGenArgs(args, option),
+		fileName:      "",
+	}
+}
+
+// FromMapAndOptionAndFileName returns a new instance of Resource with given options and filename.
+func (rf *Factory) FromMapAndOptionAndFileName(m map[string]interface{}, args *types.GeneratorArgs, option *types.GeneratorOptions, filename string) *Resource {
+	return &Resource{
+		Kunstructured: rf.kf.FromMap(m),
+		options:       types.NewGenArgs(args, option),
+		fileName:      filename,
 	}
 }
 
 // FromKunstructured returns a new instance of Resource.
 func (rf *Factory) FromKunstructured(
-	u ifc.Kunstructured) *Resource {
+	u ifc.Kunstructured, filename string) *Resource {
 	if u == nil {
 		log.Fatal("unstruct ifc must not be null")
 	}
 	return &Resource{
 		Kunstructured: u,
 		options:       types.NewGenArgs(nil, nil),
+		fileName:      filename,
 	}
 }
 
@@ -76,7 +97,7 @@ func (rf *Factory) SliceFromPatches(
 		if err != nil {
 			return nil, err
 		}
-		res, err := rf.SliceFromBytes(content)
+		res, err := rf.SliceFromBytes(content, "")
 		if err != nil {
 			return nil, internal.Handler(err, string(path))
 		}
@@ -86,7 +107,7 @@ func (rf *Factory) SliceFromPatches(
 }
 
 // SliceFromBytes unmarshalls bytes into a Resource slice.
-func (rf *Factory) SliceFromBytes(in []byte) ([]*Resource, error) {
+func (rf *Factory) SliceFromBytes(in []byte, filename string) ([]*Resource, error) {
 	kunStructs, err := rf.kf.SliceFromBytes(in)
 	if err != nil {
 		return nil, err
@@ -118,7 +139,7 @@ func (rf *Factory) SliceFromBytes(in []byte) ([]*Resource, error) {
 				kunStructs = append(kunStructs, innerU...)
 			}
 		} else {
-			result = append(result, rf.FromKunstructured(u))
+			result = append(result, rf.FromKunstructured(u, filename))
 		}
 	}
 	return result, nil
@@ -135,7 +156,11 @@ func (rf *Factory) MakeConfigMap(args *types.ConfigMapArgs, options *types.Gener
 	if err != nil {
 		return nil, err
 	}
-	return &Resource{Kunstructured: u, options: types.NewGenArgs(&types.GeneratorArgs{Behavior: args.Behavior}, options)}, nil
+	return &Resource{
+		Kunstructured: u,
+		options:       types.NewGenArgs(&types.GeneratorArgs{Behavior: args.Behavior}, options),
+		fileName:      args.Name + ".yaml",
+	}, nil
 }
 
 // MakeSecret makes an instance of Resource for Secret
@@ -144,5 +169,9 @@ func (rf *Factory) MakeSecret(args *types.SecretArgs, options *types.GeneratorOp
 	if err != nil {
 		return nil, err
 	}
-	return &Resource{Kunstructured: u, options: types.NewGenArgs(&types.GeneratorArgs{Behavior: args.Behavior}, options)}, nil
+	return &Resource{
+		Kunstructured: u,
+		options:       types.NewGenArgs(&types.GeneratorArgs{Behavior: args.Behavior}, options),
+		fileName:      args.Name + ".yaml",
+	}, nil
 }

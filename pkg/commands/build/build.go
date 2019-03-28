@@ -17,10 +17,11 @@ limitations under the License.
 package build
 
 import (
-	"io"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"io"
+	"os"
+	"path"
 	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc/transformer"
@@ -33,6 +34,7 @@ import (
 type Options struct {
 	kustomizationPath string
 	outputPath        string
+	outputDirPath     string
 }
 
 // NewOptions creates a Options object
@@ -82,6 +84,10 @@ func NewCmdBuild(
 		&o.outputPath,
 		"output", "o", "",
 		"If specified, write the build output to this path.")
+	cmd.Flags().StringVarP(
+		&o.outputDirPath,
+		"outputDir", "d", "",
+		"If specified, write the build output to this directory.")
 	return cmd
 }
 
@@ -123,6 +129,29 @@ func (o *Options) RunBuild(
 	}
 	if o.outputPath != "" {
 		return fSys.WriteFile(o.outputPath, res)
+	}
+	if o.outputDirPath != "" {
+		if !fSys.Exists(o.outputDirPath) {
+			err = fSys.MkdirAll(o.outputDirPath)
+			if err != nil {
+				return err
+			}
+		}
+		if _, err := os.Stat(o.outputDirPath); os.IsNotExist(err) {
+			// path/to/whatever does not exist
+		}
+		allResourcesByFileName := allResources.SplitByFileName()
+		for fileName, resources := range allResourcesByFileName {
+			res, err := resources.EncodeAsYaml()
+			if err != nil {
+				return err
+			}
+			err = fSys.WriteFile(path.Join(o.outputDirPath, fileName), res)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
 	}
 	_, err = out.Write(res)
 	return err

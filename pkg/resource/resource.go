@@ -18,6 +18,7 @@ limitations under the License.
 package resource
 
 import (
+	"github.com/ghodss/yaml"
 	"strings"
 
 	"sigs.k8s.io/kustomize/pkg/ifc"
@@ -29,7 +30,8 @@ import (
 // paired with a GenerationBehavior.
 type Resource struct {
 	ifc.Kunstructured
-	options *types.GenArgs
+	options  *types.GenArgs
+	fileName string
 }
 
 // String returns resource as JSON.
@@ -41,11 +43,24 @@ func (r *Resource) String() string {
 	return strings.TrimSpace(string(bs)) + r.options.String()
 }
 
+func (r *Resource) Yaml() []byte {
+	out, err := yaml.Marshal(r.Map())
+	if err != nil {
+		return nil
+	}
+	return out
+}
+
+func (r *Resource) FileName() string {
+	return r.fileName
+}
+
 // DeepCopy returns a new copy of resource
 func (r *Resource) DeepCopy() *Resource {
 	return &Resource{
 		Kunstructured: r.Kunstructured.Copy(),
 		options:       r.options,
+		fileName:      r.fileName,
 	}
 }
 
