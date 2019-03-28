@@ -6,14 +6,16 @@ os:
 
 addons:
   apt:
-    packages: tree
+    packages:
+    - tree
   homebrew:
-    packages: tree
+    packages:
+    - tree
 
 language: go
 
 go:
-  - 1.11.x
+  - 1.12.1
 
 go_import_path: sigs.k8s.io/kustomize
 
@@ -25,7 +27,7 @@ git:
   depth: 1
 
 env:
-- GOLANGCI_RELEASE="v1.10.2"
+- GOLANGCI_RELEASE="v1.12.1"
 
 before_install:
   - source ./bin/consider-early-travis-exit.sh

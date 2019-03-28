@@ -17,13 +17,9 @@ limitations under the License.
 // Package plugin provides a plugin abstraction layer.
 package plugin
 
-import (
-	"sigs.k8s.io/kustomize/k8sdeps/kv"
-)
-
 // KVSource is the interface for kv source plugins.
 type KVSource interface {
-	Get(root string, args []string) ([]kv.Pair, error)
+	Get(root string, args []string) (map[string]string, error)
 }
 
 // Factory is the interface for new kv source plugin implementations.
