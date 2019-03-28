@@ -10,7 +10,7 @@ Running `kustomize build` against the url gives the same output.
 
 <!-- @remoteBuild @test -->
 ```
-target=github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6
+target=github.com/kubernetes-sigs/kustomize//examples/multibases
 test 3 == \
   $(kustomize build $target | grep cluster-a-.*-myapp-pod | wc -l); \
   echo $?
