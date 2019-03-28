@@ -20,9 +20,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"io"
-	"os"
 	"path"
-	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc/transformer"
 	"sigs.k8s.io/kustomize/pkg/loader"
@@ -137,9 +135,6 @@ func (o *Options) RunBuild(
 			if err != nil {
 				return err
 			}
-		}
-		if _, err := os.Stat(o.outputDirPath); os.IsNotExist(err) {
-			// path/to/whatever does not exist
 		}
 		allResourcesByFileName := allResources.SplitByFileName()
 		for fileName, resources := range allResourcesByFileName {
