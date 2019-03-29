@@ -68,9 +68,8 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 			"trouble adding remote %s",
 			repoSpec.CloneSpec())
 	}
-
 	if repoSpec.ref == "" {
-		return nil
+		repoSpec.ref = "master"
 	}
 	cmd = exec.Command(
 		gitProgram,
