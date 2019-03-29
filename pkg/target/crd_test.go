@@ -320,3 +320,64 @@ spec:
   action: makehoney
 `)
 }
+
+func TestCrdWithContainers(t *testing.T) {
+	th := NewKustTestHarness(t, "/app/crd/containers")
+	th.writeK("/app/crd/containers", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - crd.yaml
+
+images:
+  - name: test/test
+    newName: registry.gitlab.com/test
+    newTag: latest
+`)
+	th.writeF("/app/crd/containers/crd.yaml", `
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: crontabs.stable.example.com
+spec:
+  group: stable.example.com
+  scope: Namespaced
+  names:
+    plural: crontabs
+    singular: crontab
+    kind: CronTab
+    shortNames:
+    - ct
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          containers:
+            description: Containers allows injecting additional containers
+  `)
+	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.assertActualEqualsExpected(m, `
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: crontabs.stable.example.com
+spec:
+  group: stable.example.com
+  names:
+    kind: CronTab
+    plural: crontabs
+    shortNames:
+    - ct
+    singular: crontab
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          containers:
+            description: Containers allows injecting additional containers
+`)
+}
