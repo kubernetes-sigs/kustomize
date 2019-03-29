@@ -50,18 +50,42 @@ func (pt *imageTransformer) Transform(m resmap.ResMap) error {
 			if !id.Gvk().IsSelected(&path.Gvk) {
 				continue
 			}
-			err := mutateField(objMap, path.PathSlice(), false, pt.updateContainers)
+			err := mutateField(objMap, path.PathSlice(), false, pt.mutateImage)
 			if err != nil {
 				return err
 			}
 		}
-		// Keep for backward compatibility
-		err := pt.findAndReplaceImage(objMap)
-		if err != nil {
+		// Kept for backward compatibility
+		if err := pt.findAndReplaceImage(objMap); err != nil && id.Gvk().Kind != `CustomResourceDefinition` {
 			return err
 		}
 	}
 	return nil
+}
+
+func (pt *imageTransformer) mutateImage(in interface{}) (interface{}, error) {
+	image, ok := in.(string)
+	if !ok {
+		return nil, fmt.Errorf("image path is not of type string but %T", in)
+	}
+
+	for _, img := range pt.images {
+		if !isImageMatched(image, img.Name) {
+			continue
+		}
+		name, tag := split(image)
+		if img.NewName != "" {
+			name = img.NewName
+		}
+		if img.NewTag != "" {
+			tag = ":" + img.NewTag
+		}
+		if img.Digest != "" {
+			tag = "@" + img.Digest
+		}
+		return name + tag, nil
+	}
+	return image, nil
 }
 
 /*
@@ -76,8 +100,7 @@ func (pt *imageTransformer) findAndReplaceImage(obj map[string]interface{}) erro
 	for _, path := range paths {
 		containers, found := obj[path]
 		if found {
-			_, err := pt.updateContainers(containers)
-			if err != nil {
+			if _, err := pt.updateContainers(containers); err != nil {
 				return err
 			}
 			updated = true
@@ -106,17 +129,11 @@ func (pt *imageTransformer) updateContainers(in interface{}) (interface{}, error
 			if !isImageMatched(imageName, img.Name) {
 				continue
 			}
-			name, tag := split(imageName)
-			if img.NewName != "" {
-				name = img.NewName
+			newImage, err := pt.mutateImage(imageName)
+			if err != nil {
+				return nil, err
 			}
-			if img.NewTag != "" {
-				tag = ":" + img.NewTag
-			}
-			if img.Digest != "" {
-				tag = "@" + img.Digest
-			}
-			container["image"] = name + tag
+			container["image"] = newImage
 			break
 		}
 	}
