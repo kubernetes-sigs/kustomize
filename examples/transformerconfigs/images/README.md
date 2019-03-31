@@ -109,20 +109,20 @@ echo $?
 
 <!-- @build @test -->
 ```
-test 2 == \
+test 1 == \
 $(kustomize build $DEMO_HOME | grep -A 2 ".*image" | grep "new-app-1:MYNEWTAG-1" | wc -l); \
 echo $?
 ```
 
 <!-- @build @test -->
 ```
-test 3 == \
+test 1 == \
 $(kustomize build $DEMO_HOME | grep -A 2 ".*image" | grep "my-docker2@sha" | wc -l); \
 echo $?
 ```
 <!-- @build @test -->
 ```
-test 4 == \
+test 1 == \
 $(kustomize build $DEMO_HOME | grep -A 2 ".*image" | grep "prod-mysql:v3" | wc -l); \
 echo $?
 ```
