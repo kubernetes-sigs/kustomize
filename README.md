@@ -20,6 +20,11 @@ inspired by [DAM].
 page], or see these [install] notes. Then try one of
 the tested [examples].
 
+**Note** Kustomize is now available on kubectl v1.14 and can be used by specifying a directory containing a `kustomization.yaml`:
+```shell
+kubectl apply -k dir/
+```
+
 ## Usage
 
 
