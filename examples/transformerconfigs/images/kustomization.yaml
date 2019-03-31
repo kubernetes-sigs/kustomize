@@ -5,9 +5,12 @@ configurations:
 - kustomizeconfig/mykind.yaml
 
 images:
+- name: crd-image
+  newName: new-crd-image
+  newTag: new-v1-tag
 - name: my-app
-  newName: bear1
-  newTag: MYNEWTAG1
+  newName: new-app-1
+  newTag: MYNEWTAG-1
 - name: my-mysql
   newName: prod-mysql
   newTag: v3

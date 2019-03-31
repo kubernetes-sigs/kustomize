@@ -4,17 +4,13 @@ metadata:
   name: testSvc
 spec:
   runLatest:
-    configuration:
-      revisionTemplate:
-        spec:
-          container:
-            - image: my-app
-              name: my-app-name
+    container:
+      image: crd-image
   containers:
     - image: docker
       name: ecosystem
     - image: my-mysql
-      name: solar
+      name: testing-1
 ---
 group: apps
 apiVersion: v1

@@ -47,6 +47,7 @@ images:
   - name: my-demo-app
     newName: my-app
   - name: alpine
+    digest: sha256:25a0d4
 ```
 
 Image transformer configurations can be customized by creating a list of `images` containing the `path` and `kind` fields.

@@ -1,6 +1,6 @@
 ## Images transformations
 
-This tutorial shows how to modify images in resources, and create custom images transformer configurations.
+This tutorial shows how to modify images in resources, and create a custom images transformer configuration.
 
 Create a workspace by
 <!-- @createws @test -->
@@ -11,7 +11,7 @@ DEMO_HOME=$(mktemp -d)
 ### Adding a custom resource
 
 Consider a Custom Resource Definition(CRD) of kind `MyKind` with field
-- `.spec.runLatest.configuration.revisionTemplate.spec.container.image` referencing an image
+- `.spec.runLatest.container.image` referencing an image
 
 Add the following file to configure the images transformer for the CRD:
 
@@ -21,7 +21,7 @@ mkdir $DEMO_HOME/kustomizeconfig
 cat > $DEMO_HOME/kustomizeconfig/mykind.yaml << EOF
 
 images:
-- path: spec/runLatest/configuration/revisionTemplate/spec/container/image
+- path: spec/runLatest/container/image
   kind: MyKind
 EOF
 ```
@@ -40,16 +40,13 @@ metadata:
   name: testSvc
 spec:
   runLatest:
-    configuration:
-      revisionTemplate:
-        spec:
-          container:
-            image: my-app
+    container:
+      image: crd-image
   containers:
     - image: docker
       name: ecosystem
     - image: my-mysql
-      name: solar
+      name: testing-1
 ---
 group: apps
 apiVersion: v1
@@ -76,9 +73,12 @@ resources:
 - resources.yaml
 
 images:
+- name: crd-image
+  newName: new-crd-image
+  newTag: new-v1-tag
 - name: my-app
-  newName: bear1
-  newTag: MYNEWTAG1
+  newName: new-app-1
+  newTag: MYNEWTAG-1
 - name: my-mysql
   newName: prod-mysql
   newTag: v3
@@ -103,20 +103,26 @@ Run `kustomize build` and verify that the images have been updated.
 <!-- @build @test -->
 ```
 test 1 == \
-$(kustomize build $DEMO_HOME | grep -A 2 ".*image" | grep "bear1" | wc -l); \
+$(kustomize build $DEMO_HOME | grep -A 2 ".*image" | grep "new-crd-image:new-v1-tag" | wc -l); \
 echo $?
 ```
 
 <!-- @build @test -->
 ```
 test 2 == \
+$(kustomize build $DEMO_HOME | grep -A 2 ".*image" | grep "new-app-1:MYNEWTAG-1" | wc -l); \
+echo $?
+```
+
+<!-- @build @test -->
+```
+test 3 == \
 $(kustomize build $DEMO_HOME | grep -A 2 ".*image" | grep "my-docker2@sha" | wc -l); \
 echo $?
 ```
 <!-- @build @test -->
 ```
-test 3 == \
+test 4 == \
 $(kustomize build $DEMO_HOME | grep -A 2 ".*image" | grep "prod-mysql:v3" | wc -l); \
 echo $?
 ```
-
