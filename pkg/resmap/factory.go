@@ -22,6 +22,7 @@ import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	internal "sigs.k8s.io/kustomize/pkg/internal/error"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -51,6 +52,24 @@ func (rmF *Factory) FromFiles(
 			return nil, errors.Wrap(err, "Load from path "+path+" failed")
 		}
 		res, err := rmF.NewResMapFromBytes(content)
+		if err != nil {
+			return nil, internal.Handler(err, path)
+		}
+		result = append(result, res)
+	}
+	return MergeWithErrorOnIdCollision(result...)
+}
+
+// FromGenerators returns a ResMap given a generator slice
+func (rmF *Factory) FromGenerators(
+	loader ifc.Loader, paths []string) (ResMap, error) {
+	var result []ResMap
+	for _, path := range paths {
+		content, err := loader.Load(path)
+		if err != nil {
+			return nil, errors.Wrap(err, "Load from path "+path+" failed")
+		}
+		res, err := rmF.NewResMapFromGenerator(loader, content)
 		if err != nil {
 			return nil, internal.Handler(err, path)
 		}
@@ -92,6 +111,20 @@ func (rmF *Factory) NewResMapFromConfigMapArgs(
 		resources = append(resources, res)
 	}
 	return newResMapFromResourceSlice(resources)
+}
+
+// NewResMapFromGenerator returns a ResMap given a generator
+func (rmF *Factory) NewResMapFromGenerator(
+	ldr ifc.Loader, content []byte) (ResMap, error) {
+	generator, err := pgmconfig.NewGenerator(content)
+	if err != nil {
+		return nil, err
+	}
+	output, err := generator.Run(ldr.Root())
+	if err != nil {
+		return nil, err
+	}
+	return rmF.NewResMapFromBytes(output)
 }
 
 // NewResMapFromSecretArgs takes a SecretArgs slice, generates
