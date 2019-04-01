@@ -1,8 +1,13 @@
-[Secrets]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#secret-v1-core
 [ConfigMaps]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#configmap-v1-core
-[base64]: https://tools.ietf.org/html/rfc4648#section-4
+[ELF]: https://en.wikipedia.org/wiki/Executable_and_Linkable_Format
 [Go plugin]: https://golang.org/pkg/plugin
+[Secrets]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#secret-v1-core
+[base64]: https://tools.ietf.org/html/rfc4648#section-4
+[configuration directory]: https://wiki.archlinux.org/index.php/XDG_Base_Directory#Specification
+[grpc]: https://grpc.io
+[tag]: https://github.com/kubernetes-sigs/kustomize/releases
 [v2.0.3]: https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.0.3
+[`exec.Command`]: https://golang.org/pkg/os/exec/#Command
 
 # Generating Secrets
 
@@ -44,7 +49,7 @@ from local files:
  * get them from so-called _env_ files (`NAME=VALUE`, one per line),
  * consume the entire contents of a file to make one secret value,
  * get literal values from the kustomization file itself.
- 
+
 Here's an example combining all three methods:
 
 Make an env file with some short secrets:
@@ -84,7 +89,7 @@ secretGenerator:
     args:
     - foo.env
   - name: files
-    pluginType: builtin 
+    pluginType: builtin
     args:
     - longsecret.txt
   - name: literals
@@ -209,12 +214,14 @@ must be installed at
 > ```
 
 `XDG_CONFIG_HOME` is an environment variable
-used by many programs as the root of a
-configuration directory.  If unspecified, the
-default `$HOME/.config` is used.  The rest of
-the required directory path establishes that
-the files found there are kustomize plugins
-for generating KV pairs.
+honored by many programs as the root of a
+[configuration directory].  If the variable is
+undefined, the convention is to fall back to
+`$HOME/.config`.
+
+The rest of the required directory path
+establishes that the files found there are
+kustomize plugins for generating KV pairs.
 
 Compile and install the plugin:
 
@@ -245,7 +252,8 @@ EOF
 ```
 
 Finally, generate the secret, setting
-`XDG_CONFIG_HOME` appropriately:
+`XDG_CONFIG_HOME` so that the plugin
+can be found under `$DEMO_HOME`:
 
 <!-- @build2 @test -->
 ```
@@ -274,17 +282,97 @@ This should emit something like:
 
 i.e. a subset of the same values as above.
 
-Go plugins work well, but their usage may
-fail (the program may crash) if there's
-too much skew between _main program_ and
-_plugin_ compilation conditions.  For
-this reason, their use is protected by an
-annoyingly long opt-in flag
-(`--enable_alpha_goplugins_accept_panic_risk`)
-intended to make the user aware of this risk.
+### Go Plugin Caveats
 
-It's safest to use Go plugins in the
-context of a container image holding both
-the main and the Go plugins it needs, all built
-on the same machine, with the same transitive
-libs and the same compiler version.
+Kustomize supports Go plugins to allow someone to
+extend kustomize in type-safe fashion against a
+documented Go interface type, without having to
+get their code merged into the kustomize
+repository, and without having to maintain a
+permanent fork.
+
+Go plugins work well, but fall short of what many
+people think of when they hear the word _plugin_.
+
+Go plugin compilation creates an [ELF] formatted
+`.so` file, which by definition has no information
+about the _provenance_ of the file.  One cannot
+know which version of Go was used, which packages
+were imported (and their version), what value of
+`GOOS` and `GOARCH` were used, etc. If the skew
+between the compilation conditions of the main
+program ELF and the plugin ELF are too great, the
+program will crash.  Also, there's no certificate
+to check in a `.so` file, so no way to know who
+wrote it or what it does.  A bare `.so` file, not
+packaged with provenance information, is not a
+suitable distrubution format.  It's not what
+people expect from decades of adding features
+IDEs, browsers, CAD tools, graphics tools, etc.
+via things called _plugins_.
+
+There's no reason why someone couldn't build a
+`.so` packaging mechanism into `go` to emit an ELF
+packaged with provenance allowing ELF
+compatibility checks, but this isn't supported in
+kustomize (or Go) at the time of writing.
+
+To avoid provenance issues simply compile your Go
+plugins and the main program at the same time.
+Bundle them into a container image for use by
+downstream users and/or your continuous delivery
+bot.  This is the intended usage idiom for Go
+plugins.
+
+A `kustomize build` attempt with Go plugins that omits
+the flag
+
+> `--enable_alpha_goplugins_accept_panic_risk`
+
+will fail with an error message about skew risks.
+Flag use is an opt-in acknowledging the absence of
+`.so` provenance, an absence that doesn't matter
+to someone building the code from source.
+
+
+### Leveraging Go plugins to run non-Go code
+
+
+#### external services
+
+For particular (user-created) transformations or
+generations, kustomize could prepare a request,
+send it to some service, and process a response.
+How to do this is a [solved problem][grpc].  The
+communication is struct-to-struct type safe - no
+need to write parsing code.
+
+If the service is written in Go, and one can
+vendor its code, it's simplest to write a small Go
+plugin that calls it like a library rather than
+running the service as an independent process.
+
+If the service is not written in Go, or if the
+source code is unavailable, one can use a small Go
+plugin to make the RPC.
+
+
+#### subprocesses (also known as `exec` plugins)
+
+In this approach one arranges for executable files
+to be identified by name or location, and runs
+them as a kustomize subprocess, sending a
+'request' to the subprocess its `stdin`, and
+obtaining a 'response' via its `stdout`.
+
+An immediate way to use an arbitrary executable
+with arbitrary i/o requirements is through a Go
+plugin that runs the executable via
+[`exec.Command`].  Each special purpose
+tranformation or generation - needed by `kustomize
+build` - will require it's own `stdin`/`stdout`
+processing to convert from/to the Go types that
+kustomize uses.
+
+The Go plugin provides this translation layer, and
+handles process exit codes.
