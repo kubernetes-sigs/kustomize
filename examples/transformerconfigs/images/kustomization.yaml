@@ -1,0 +1,19 @@
+resources:
+- resources.yaml
+
+configurations:
+- kustomizeconfig/mykind.yaml
+
+images:
+- name: crd-image
+  newName: new-crd-image
+  newTag: new-v1-tag
+- name: my-app
+  newName: new-app-1
+  newTag: MYNEWTAG-1
+- name: my-mysql
+  newName: prod-mysql
+  newTag: v3
+- name: docker
+  newName: my-docker2
+  digest: sha256:25a0d4
