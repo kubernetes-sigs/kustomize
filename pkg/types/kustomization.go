@@ -130,6 +130,12 @@ type Kustomization struct {
 
 	// Configurations is a list of transformer configuration files
 	Configurations []string `json:"configurations,omitempty" yaml:"configurations,omitempty"`
+
+	// Generators is a list of files containing custom generators
+	Generators []string `json:"generators,omitempty" yaml:"generators,omitempty"`
+
+	// Transformers is a list of files containing transformers
+	Transformers []string `json:"transformers,omitempty" yaml:"transformers,omitempty"`
 }
 
 // DealWithMissingFields fills the missing fields
