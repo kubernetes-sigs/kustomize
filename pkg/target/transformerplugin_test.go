@@ -14,8 +14,14 @@ limitations under the License.
 package target_test
 
 import (
-	"sigs.k8s.io/kustomize/pkg/types"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"testing"
+
+	"fmt"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 func writeDeployment(th *KustTestHarness, path string) {
@@ -55,7 +61,45 @@ metadata:
 `)
 }
 
+func buildGoPlugins(dir, filename string) error {
+	commands := []string{
+		"build",
+		"-buildmode",
+		"plugin",
+		"-tags=plugin",
+		"-o",
+		filename + ".so",
+		filename + ".go",
+	}
+	goBin := filepath.Join(os.Getenv("GOROOT"), "bin", "go")
+	if _, err := os.Stat(goBin); err != nil {
+		return fmt.Errorf("go binary not found %s", goBin)
+	}
+	cmd := exec.Command(goBin, commands...)
+	cmd.Env = os.Environ()
+	cmd.Dir = filepath.Join(dir, "kustomize", "plugins")
+
+	return cmd.Run()
+}
+
 func TestOrderedTransformers(t *testing.T) {
+	dir, err := filepath.Abs("../../..")
+	if err != nil {
+		t.Errorf("unexpected error %v", err)
+	}
+	os.Setenv(pgmconfig.XDG_CONFIG_HOME, dir)
+	defer os.Unsetenv(pgmconfig.XDG_CONFIG_HOME)
+
+	err = buildGoPlugins(dir, "StringPrefixer")
+	if err != nil {
+		t.Errorf("unexpected error %v", err)
+	}
+
+	err = buildGoPlugins(dir, "DatePrefixer")
+	if err != nil {
+		t.Errorf("unexpected error %v", err)
+	}
+
 	th := NewKustTestHarnessWithPluginConfig(
 		t, "/app", types.PluginConfig{GoEnabled: true})
 	th.writeK("/app", `

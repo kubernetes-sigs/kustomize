@@ -62,7 +62,8 @@ url examples:
 func NewCmdBuild(
 	out io.Writer, fs fs.FileSystem,
 	rf *resmap.Factory,
-	ptf transformer.Factory) *cobra.Command {
+	ptf transformer.Factory,
+	b bool) *cobra.Command {
 	var o Options
 
 	cmd := &cobra.Command{
@@ -75,7 +76,7 @@ func NewCmdBuild(
 			if err != nil {
 				return err
 			}
-			return o.RunBuild(out, fs, rf, ptf)
+			return o.RunBuild(out, fs, rf, ptf, b)
 		},
 	}
 	cmd.Flags().StringVarP(
@@ -102,13 +103,14 @@ func (o *Options) Validate(args []string) error {
 // RunBuild runs build command.
 func (o *Options) RunBuild(
 	out io.Writer, fSys fs.FileSystem,
-	rf *resmap.Factory, ptf transformer.Factory) error {
+	rf *resmap.Factory, ptf transformer.Factory,
+	b bool) error {
 	ldr, err := loader.NewLoader(o.kustomizationPath, fSys)
 	if err != nil {
 		return err
 	}
 	defer ldr.Cleanup()
-	kt, err := target.NewKustTarget(ldr, rf, ptf)
+	kt, err := target.NewKustTarget(ldr, rf, ptf, b)
 	if err != nil {
 		return err
 	}

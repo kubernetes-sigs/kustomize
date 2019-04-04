@@ -68,7 +68,7 @@ See https://sigs.k8s.io/kustomize
 		build.NewCmdBuild(
 			stdOut, fSys,
 			resmap.NewFactory(resource.NewFactory(uf)),
-			transformer.NewFactoryImpl()),
+			transformer.NewFactoryImpl(), genMetaArgs.PluginConfig.GoEnabled),
 		edit.NewCmdEdit(fSys, validator.NewKustValidator(), uf),
 		misc.NewCmdConfig(fSys),
 		misc.NewCmdVersion(stdOut),

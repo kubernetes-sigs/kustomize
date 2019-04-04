@@ -28,5 +28,6 @@ var KustomizationFileNames = []string{
 }
 
 const (
-	PgmName = "kustomize"
+	PgmName    = "kustomize"
+	PluginsDir = "plugins"
 )
