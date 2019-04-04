@@ -18,7 +18,6 @@ limitations under the License.
 package transformers
 
 import (
-	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 )
 
@@ -26,8 +25,4 @@ import (
 type Transformer interface {
 	// Transform modifies data in the argument, e.g. adding labels to resources that can be labelled.
 	Transform(m resmap.ResMap) error
-}
-
-type Configurable interface {
-	Config(k ifc.Kunstructured) error
 }
