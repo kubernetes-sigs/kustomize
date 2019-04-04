@@ -40,6 +40,7 @@ type KustTestHarness struct {
 	t   *testing.T
 	rf  *resmap.Factory
 	ldr loadertest.FakeLoader
+	b   bool
 }
 
 func NewKustTestHarness(t *testing.T, path string) *KustTestHarness {
@@ -55,12 +56,13 @@ func NewKustTestHarnessWithPluginConfig(
 		rf: resmap.NewFactory(resource.NewFactory(
 			kunstruct.NewKunstructuredFactoryWithGeneratorArgs(
 				&types.GeneratorMetaArgs{PluginConfig: config}))),
-		ldr: loadertest.NewFakeLoader(path)}
+		ldr: loadertest.NewFakeLoader(path),
+		b:   config.GoEnabled}
 }
 
 func (th *KustTestHarness) makeKustTarget() *KustTarget {
 	kt, err := NewKustTarget(
-		th.ldr, th.rf, transformer.NewFactoryImpl())
+		th.ldr, th.rf, transformer.NewFactoryImpl(), th.b)
 	if err != nil {
 		th.t.Fatalf("Unexpected construction error %v", err)
 	}

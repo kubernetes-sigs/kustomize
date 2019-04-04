@@ -21,9 +21,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
-	"plugin"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -34,6 +31,7 @@ import (
 	interror "sigs.k8s.io/kustomize/pkg/internal/error"
 	patchtransformer "sigs.k8s.io/kustomize/pkg/patch/transformer"
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/pkg/plugins"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
@@ -43,17 +41,19 @@ import (
 
 // KustTarget encapsulates the entirety of a kustomization build.
 type KustTarget struct {
-	kustomization *types.Kustomization
-	ldr           ifc.Loader
-	rFactory      *resmap.Factory
-	tFactory      transformer.Factory
+	kustomization   *types.Kustomization
+	ldr             ifc.Loader
+	rFactory        *resmap.Factory
+	tFactory        transformer.Factory
+	goPluginEnabled bool
 }
 
 // NewKustTarget returns a new instance of KustTarget primed with a Loader.
 func NewKustTarget(
 	ldr ifc.Loader,
 	rFactory *resmap.Factory,
-	tFactory transformer.Factory) (*KustTarget, error) {
+	tFactory transformer.Factory,
+	b bool) (*KustTarget, error) {
 	content, err := loadKustFile(ldr)
 	if err != nil {
 		return nil, err
@@ -71,10 +71,11 @@ func NewKustTarget(
 				strings.Join(errs, "\n"), ldr.Root())
 	}
 	return &KustTarget{
-		kustomization: &k,
-		ldr:           ldr,
-		rFactory:      rFactory,
-		tFactory:      tFactory,
+		kustomization:   &k,
+		ldr:             ldr,
+		rFactory:        rFactory,
+		tFactory:        tFactory,
+		goPluginEnabled: b,
 	}, nil
 }
 
@@ -255,7 +256,7 @@ func (kt *KustTarget) accumulateBases() (
 			continue
 		}
 		subKt, err := NewKustTarget(
-			ldr, kt.rFactory, kt.tFactory)
+			ldr, kt.rFactory, kt.tFactory, kt.goPluginEnabled)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "couldn't make target for "+path))
 			ldr.Cleanup()
@@ -331,48 +332,11 @@ func (kt *KustTarget) newTransformer(
 }
 
 func (kt *KustTarget) loadTransformerPlugins() ([]transformers.Transformer, error) {
-	var result []transformers.Transformer
-
-	pc := types.PluginConfig{
-		DirectoryPath: os.Getenv("GOPATH"),
-		GoEnabled:     true}
-
-	root := filepath.Join(
-		pc.DirectoryPath, "src", "sigs.k8s.io", "kustomize", "plugins")
-
-	if !pc.GoEnabled {
-		return nil, fmt.Errorf("plugins not enabled")
-	}
-
 	transformerPluginConfigs, err := kt.rFactory.FromFiles(
 		kt.ldr, kt.kustomization.Transformers)
-
-	for id, res := range transformerPluginConfigs {
-		fileName := filepath.Join(root, id.Gvk().Kind+".so")
-		goPlugin, err := plugin.Open(fileName)
-		if err != nil {
-			return nil, fmt.Errorf("plugin %s file not opened", fileName)
-		}
-		symbol, err := goPlugin.Lookup("Transformer")
-		if err != nil {
-			return nil, fmt.Errorf("plugin %s fails lookup", fileName)
-		}
-		c, ok := symbol.(transformers.Configurable)
-		if !ok {
-			return nil, fmt.Errorf("plugin %s not configurable", fileName)
-		}
-		err = c.Config(res)
-		if err != nil {
-			return nil, errors.Wrapf(err, "plugin %s fails configuration", fileName)
-		}
-		t, ok := c.(transformers.Transformer)
-		if !ok {
-			return nil, fmt.Errorf("plugin %s not a transformer", fileName)
-		}
-
-		result = append(result, t)
-		fmt.Printf("Added plugin %s\n", fileName)
-
+	if err != nil {
+		return nil, err
 	}
-	return result, err
+	tl := plugins.NewTransformerLoader(kt.goPluginEnabled)
+	return tl.Load(transformerPluginConfigs)
 }
