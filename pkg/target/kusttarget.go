@@ -21,6 +21,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
+	"plugin"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -318,5 +321,58 @@ func (kt *KustTarget) newTransformer(
 		return nil, err
 	}
 	r = append(r, t)
+
+	tp, err := kt.loadTransformerPlugins()
+	if err != nil {
+		return nil, err
+	}
+	r = append(r, tp...)
 	return transformers.NewMultiTransformer(r), nil
+}
+
+func (kt *KustTarget) loadTransformerPlugins() ([]transformers.Transformer, error) {
+	var result []transformers.Transformer
+
+	pc := types.PluginConfig{
+		DirectoryPath: os.Getenv("GOPATH"),
+		GoEnabled:     true}
+
+	root := filepath.Join(
+		pc.DirectoryPath, "src", "sigs.k8s.io", "kustomize", "plugins")
+
+	if !pc.GoEnabled {
+		return nil, fmt.Errorf("plugins not enabled")
+	}
+
+	transformerPluginConfigs, err := kt.rFactory.FromFiles(
+		kt.ldr, kt.kustomization.Transformers)
+
+	for id, res := range transformerPluginConfigs {
+		fileName := filepath.Join(root, id.Gvk().Kind+".so")
+		goPlugin, err := plugin.Open(fileName)
+		if err != nil {
+			return nil, fmt.Errorf("plugin %s file not opened", fileName)
+		}
+		symbol, err := goPlugin.Lookup("Transformer")
+		if err != nil {
+			return nil, fmt.Errorf("plugin %s fails lookup", fileName)
+		}
+		c, ok := symbol.(transformers.Configurable)
+		if !ok {
+			return nil, fmt.Errorf("plugin %s not configurable", fileName)
+		}
+		err = c.Config(res)
+		if err != nil {
+			return nil, errors.Wrapf(err, "plugin %s fails configuration", fileName)
+		}
+		t, ok := c.(transformers.Transformer)
+		if !ok {
+			return nil, fmt.Errorf("plugin %s not a transformer", fileName)
+		}
+
+		result = append(result, t)
+		fmt.Printf("Added plugin %s\n", fileName)
+
+	}
+	return result, err
 }
