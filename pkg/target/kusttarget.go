@@ -41,11 +41,11 @@ import (
 
 // KustTarget encapsulates the entirety of a kustomization build.
 type KustTarget struct {
-	kustomization   *types.Kustomization
-	ldr             ifc.Loader
-	rFactory        *resmap.Factory
-	tFactory        transformer.Factory
-	goPluginEnabled bool
+	kustomization *types.Kustomization
+	ldr           ifc.Loader
+	rFactory      *resmap.Factory
+	tFactory      transformer.Factory
+	pluginConfig  *types.PluginConfig
 }
 
 // NewKustTarget returns a new instance of KustTarget primed with a Loader.
@@ -53,7 +53,7 @@ func NewKustTarget(
 	ldr ifc.Loader,
 	rFactory *resmap.Factory,
 	tFactory transformer.Factory,
-	b bool) (*KustTarget, error) {
+	pc *types.PluginConfig) (*KustTarget, error) {
 	content, err := loadKustFile(ldr)
 	if err != nil {
 		return nil, err
@@ -71,11 +71,11 @@ func NewKustTarget(
 				strings.Join(errs, "\n"), ldr.Root())
 	}
 	return &KustTarget{
-		kustomization:   &k,
-		ldr:             ldr,
-		rFactory:        rFactory,
-		tFactory:        tFactory,
-		goPluginEnabled: b,
+		kustomization: &k,
+		ldr:           ldr,
+		rFactory:      rFactory,
+		tFactory:      tFactory,
+		pluginConfig:  pc,
 	}, nil
 }
 
@@ -256,7 +256,7 @@ func (kt *KustTarget) accumulateBases() (
 			continue
 		}
 		subKt, err := NewKustTarget(
-			ldr, kt.rFactory, kt.tFactory, kt.goPluginEnabled)
+			ldr, kt.rFactory, kt.tFactory, kt.pluginConfig)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "couldn't make target for "+path))
 			ldr.Cleanup()
@@ -323,11 +323,13 @@ func (kt *KustTarget) newTransformer(
 	}
 	r = append(r, t)
 
-	tp, err := kt.loadTransformerPlugins()
-	if err != nil {
-		return nil, err
+	if kt.pluginConfig.GoEnabled {
+		tp, err := kt.loadTransformerPlugins()
+		if err != nil {
+			return nil, err
+		}
+		r = append(r, tp...)
 	}
-	r = append(r, tp...)
 	return transformers.NewMultiTransformer(r), nil
 }
 
@@ -337,6 +339,5 @@ func (kt *KustTarget) loadTransformerPlugins() ([]transformers.Transformer, erro
 	if err != nil {
 		return nil, err
 	}
-	tl := plugins.NewTransformerLoader(kt.goPluginEnabled)
-	return tl.Load(transformerPluginConfigs)
+	return plugins.NewTransformerLoader(kt.pluginConfig).Load(transformerPluginConfigs)
 }
