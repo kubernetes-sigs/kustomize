@@ -187,6 +187,40 @@ func TestAddAnnotationMultipleArgs(t *testing.T) {
 	}
 }
 
+func TestAddAnnotationForce(t *testing.T) {
+	fakeFS := fs.MakeFakeFS()
+	fakeFS.WriteTestKustomization()
+	v := validators.MakeHappyMapValidator(t)
+	cmd := newCmdAddAnnotation(fakeFS, v.Validator)
+	args := []string{"key:foo"}
+	err := cmd.RunE(cmd, args)
+	v.VerifyCall()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err.Error())
+	}
+	// trying to add the same annotation again should not work
+	args = []string{"key:bar"}
+	v = validators.MakeHappyMapValidator(t)
+	cmd = newCmdAddAnnotation(fakeFS, v.Validator)
+	err = cmd.RunE(cmd, args)
+	v.VerifyCall()
+	if err == nil {
+		t.Errorf("expected an error")
+	}
+	if err.Error() != "annotation key already in kustomization file" {
+		t.Errorf("expected an error")
+	}
+	// but trying to add it with --force should
+	v = validators.MakeHappyMapValidator(t)
+	cmd = newCmdAddAnnotation(fakeFS, v.Validator)
+	cmd.Flag("force").Value.Set("true")
+	err = cmd.RunE(cmd, args)
+	v.VerifyCall()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err.Error())
+	}
+}
+
 func TestRunAddLabel(t *testing.T) {
 	var o addMetadataOptions
 	o.metadata = map[string]string{"owls": "cute", "otters": "adorable"}
@@ -292,6 +326,40 @@ func TestAddLabelMultipleArgs(t *testing.T) {
 	}
 	if err.Error() != "labels must be comma-separated, with no spaces" {
 		t.Errorf("incorrect error: %v", err.Error())
+	}
+}
+
+func TestAddLabelForce(t *testing.T) {
+	fakeFS := fs.MakeFakeFS()
+	fakeFS.WriteTestKustomization()
+	v := validators.MakeHappyMapValidator(t)
+	cmd := newCmdAddLabel(fakeFS, v.Validator)
+	args := []string{"key:foo"}
+	err := cmd.RunE(cmd, args)
+	v.VerifyCall()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err.Error())
+	}
+	// trying to add the same label again should not work
+	args = []string{"key:bar"}
+	v = validators.MakeHappyMapValidator(t)
+	cmd = newCmdAddLabel(fakeFS, v.Validator)
+	err = cmd.RunE(cmd, args)
+	v.VerifyCall()
+	if err == nil {
+		t.Errorf("expected an error")
+	}
+	if err.Error() != "label key already in kustomization file" {
+		t.Errorf("expected an error")
+	}
+	// but trying to add it with --force should
+	v = validators.MakeHappyMapValidator(t)
+	cmd = newCmdAddLabel(fakeFS, v.Validator)
+	cmd.Flag("force").Value.Set("true")
+	err = cmd.RunE(cmd, args)
+	v.VerifyCall()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err.Error())
 	}
 }
 
