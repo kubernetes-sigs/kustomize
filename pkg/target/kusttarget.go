@@ -143,7 +143,47 @@ func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 	}
 	// With all the back references fixed, it's OK to resolve Vars.
 	err = ra.ResolveVars()
-	return ra.ResMap(), err
+	if err != nil {
+		return nil, err
+	}
+
+	rm := ra.ResMap()
+	pt := kt.tFactory.MakePruneTransformer(kt.kustomization.Prune, kt.kustomization.Namespace, true)
+	err = pt.Transform(rm)
+	if err != nil {
+		return nil, err
+	}
+	return rm, nil
+}
+
+func (kt *KustTarget) MakePruneConfigMap() (resmap.ResMap, error) {
+	ra, err := kt.AccumulateTarget()
+	if err != nil {
+		return nil, err
+	}
+	err = ra.Transform(kt.tFactory.MakeHashTransformer())
+	if err != nil {
+		return nil, err
+	}
+	// Given that names have changed (prefixs/suffixes added),
+	// fix all the back references to those names.
+	err = ra.FixBackReferences()
+	if err != nil {
+		return nil, err
+	}
+	// With all the back references fixed, it's OK to resolve Vars.
+	err = ra.ResolveVars()
+	if err != nil {
+		return nil, err
+	}
+
+	rm := ra.ResMap()
+	pt := kt.tFactory.MakePruneTransformer(kt.kustomization.Prune, kt.kustomization.Namespace, false)
+	err = pt.Transform(rm)
+	if err != nil {
+		return nil, err
+	}
+	return rm, nil
 }
 
 func (kt *KustTarget) shouldAddHashSuffixesToGeneratedResources() bool {
