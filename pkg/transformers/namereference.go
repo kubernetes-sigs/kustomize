@@ -21,6 +21,7 @@ import (
 	"log"
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
@@ -70,7 +71,7 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 						m[id].Map(), fSpec.PathSlice(),
 						fSpec.CreateIfNotPresent,
 						o.updateNameReference(
-							backRef.Gvk, m.FilterBy(id)))
+							id, backRef.Gvk, m.FilterBy(id)))
 					if err != nil {
 						return err
 					}
@@ -82,7 +83,7 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 }
 
 func (o *nameReferenceTransformer) updateNameReference(
-	backRef gvk.Gvk, m resmap.ResMap) func(in interface{}) (interface{}, error) {
+	rid resid.ResId, backRef gvk.Gvk, m resmap.ResMap) func(in interface{}) (interface{}, error) {
 	return func(in interface{}) (interface{}, error) {
 		switch in.(type) {
 		case string:
@@ -98,6 +99,7 @@ func (o *nameReferenceTransformer) updateNameReference(
 					}
 					// Return transformed name of the object,
 					// complete with prefixes, hashes, etc.
+					res.AppendRefBy(rid)
 					return res.GetName(), nil
 				}
 			}
@@ -123,6 +125,7 @@ func (o *nameReferenceTransformer) updateNameReference(
 					for _, index := range indexes {
 						l[index] = res.GetName()
 					}
+					res.AppendRefBy(rid)
 					return l, nil
 				}
 			}
