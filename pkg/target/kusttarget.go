@@ -31,6 +31,7 @@ import (
 	interror "sigs.k8s.io/kustomize/pkg/internal/error"
 	patchtransformer "sigs.k8s.io/kustomize/pkg/patch/transformer"
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/pkg/plugins"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
@@ -40,17 +41,19 @@ import (
 
 // KustTarget encapsulates the entirety of a kustomization build.
 type KustTarget struct {
-	kustomization *types.Kustomization
-	ldr           ifc.Loader
-	rFactory      *resmap.Factory
-	tFactory      transformer.Factory
+	kustomization   *types.Kustomization
+	ldr             ifc.Loader
+	rFactory        *resmap.Factory
+	tFactory        transformer.Factory
+	goPluginEnabled bool
 }
 
 // NewKustTarget returns a new instance of KustTarget primed with a Loader.
 func NewKustTarget(
 	ldr ifc.Loader,
 	rFactory *resmap.Factory,
-	tFactory transformer.Factory) (*KustTarget, error) {
+	tFactory transformer.Factory,
+	b bool) (*KustTarget, error) {
 	content, err := loadKustFile(ldr)
 	if err != nil {
 		return nil, err
@@ -68,10 +71,11 @@ func NewKustTarget(
 				strings.Join(errs, "\n"), ldr.Root())
 	}
 	return &KustTarget{
-		kustomization: &k,
-		ldr:           ldr,
-		rFactory:      rFactory,
-		tFactory:      tFactory,
+		kustomization:   &k,
+		ldr:             ldr,
+		rFactory:        rFactory,
+		tFactory:        tFactory,
+		goPluginEnabled: b,
 	}, nil
 }
 
@@ -252,7 +256,7 @@ func (kt *KustTarget) accumulateBases() (
 			continue
 		}
 		subKt, err := NewKustTarget(
-			ldr, kt.rFactory, kt.tFactory)
+			ldr, kt.rFactory, kt.tFactory, kt.goPluginEnabled)
 		if err != nil {
 			errs.Append(errors.Wrap(err, "couldn't make target for "+path))
 			ldr.Cleanup()
@@ -318,5 +322,21 @@ func (kt *KustTarget) newTransformer(
 		return nil, err
 	}
 	r = append(r, t)
+
+	tp, err := kt.loadTransformerPlugins()
+	if err != nil {
+		return nil, err
+	}
+	r = append(r, tp...)
 	return transformers.NewMultiTransformer(r), nil
+}
+
+func (kt *KustTarget) loadTransformerPlugins() ([]transformers.Transformer, error) {
+	transformerPluginConfigs, err := kt.rFactory.FromFiles(
+		kt.ldr, kt.kustomization.Transformers)
+	if err != nil {
+		return nil, err
+	}
+	tl := plugins.NewTransformerLoader(kt.goPluginEnabled)
+	return tl.Load(transformerPluginConfigs)
 }
