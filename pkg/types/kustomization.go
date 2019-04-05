@@ -136,6 +136,9 @@ type Kustomization struct {
 
 	// Transformers is a list of files containing transformers
 	Transformers []string `json:"transformers,omitempty" yaml:"transformers,omitempty"`
+
+	// Name of the ConfigMap used in Prune
+	Prune *Prune `json:"prune,omitempty" yaml:"prune:omitempty"`
 }
 
 // DealWithMissingFields fills the missing fields
@@ -288,4 +291,14 @@ type KVSource struct {
 	PluginType PluginType `json:"pluginType,omitempty" yaml:"pluginType,omitempty"`
 	Name       string     `json:"name,omitempty" yaml:"name,omitempty"`
 	Args       []string   `json:"args,omitempty" yaml:"args,omitempty"`
+}
+
+type Prune struct {
+	Type           string   `json:"type,omitempty" yaml:"type,omitempty"`
+	AlphaConfigMap NameArgs `json:"alphaConfigMap,omitempty" yaml:"alphaConfigMap,omitempty"`
+}
+
+type NameArgs struct {
+	Name      string `json:"name,omitempty" yaml:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 }

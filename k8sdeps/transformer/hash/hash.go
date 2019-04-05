@@ -20,6 +20,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -80,6 +81,21 @@ func SecretHash(sec *v1.Secret) (string, error) {
 		return "", err
 	}
 	h, err := encodeHash(hash(encoded))
+	if err != nil {
+		return "", err
+	}
+	return h, nil
+}
+
+// SortArrayAndComputeHash sorts a string array and
+// returns a hash for it
+func SortArrayAndComputeHash(s []string) (string, error) {
+	sort.Strings(s)
+	data, err := json.Marshal(s)
+	if err != nil {
+		return "", err
+	}
+	h, err := encodeHash(hash(string(data)))
 	if err != nil {
 		return "", err
 	}

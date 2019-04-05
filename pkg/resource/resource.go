@@ -30,6 +30,7 @@ import (
 type Resource struct {
 	ifc.Kunstructured
 	options *types.GenArgs
+	refBy   []resid.ResId
 }
 
 // String returns resource as JSON.
@@ -43,10 +44,16 @@ func (r *Resource) String() string {
 
 // DeepCopy returns a new copy of resource
 func (r *Resource) DeepCopy() *Resource {
-	return &Resource{
+	rc := &Resource{
 		Kunstructured: r.Kunstructured.Copy(),
 		options:       r.options,
 	}
+	if len(r.refBy) > 0 {
+		refby := make([]resid.ResId, len(r.refBy))
+		copy(refby, r.refBy)
+		rc.refBy = refby
+	}
+	return rc
 }
 
 // Behavior returns the behavior for the resource.
@@ -65,10 +72,24 @@ func (r *Resource) Id() resid.ResId {
 	return resid.NewResIdWithPrefixNamespace(r.GetGvk(), r.GetName(), "", namespace)
 }
 
+// GetRefBy returns the ResIds that referred to current resource
+func (r *Resource) GetRefBy() []resid.ResId {
+	return r.refBy
+}
+
+// AppendRefBy appends a ResId into the refBy list
+func (r *Resource) AppendRefBy(id resid.ResId) {
+	r.refBy = append(r.refBy, id)
+}
+
 // Merge performs merge with other resource.
 func (r *Resource) Merge(other *Resource) {
 	r.Replace(other)
 	mergeConfigmap(r.Map(), other.Map(), r.Map())
+}
+
+func (r *Resource) PruneString() string {
+	return r.Id().PruneString()
 }
 
 // Replace performs replace with other resource.
