@@ -47,6 +47,7 @@ func (k kindOfAdd) String() string {
 }
 
 type addMetadataOptions struct {
+	force        bool
 	metadata     map[string]string
 	mapValidator func(map[string]string) error
 	kind         kindOfAdd
@@ -66,6 +67,9 @@ func newCmdAddAnnotation(fSys fs.FileSystem, v func(map[string]string) error) *c
 			return o.runE(args, fSys, o.addAnnotations)
 		},
 	}
+	cmd.Flags().BoolVarP(&o.force, "force", "f", false,
+		"overwrite commonAnnotation if it already exists",
+	)
 	return cmd
 }
 
@@ -83,6 +87,9 @@ func newCmdAddLabel(fSys fs.FileSystem, v func(map[string]string) error) *cobra.
 			return o.runE(args, fSys, o.addLabels)
 		},
 	}
+	cmd.Flags().BoolVarP(&o.force, "force", "f", false,
+		"overwrite commonLabel if it already exists",
+	)
 	return cmd
 }
 
@@ -163,7 +170,7 @@ func (o *addMetadataOptions) addLabels(m *types.Kustomization) error {
 
 func (o *addMetadataOptions) writeToMap(m map[string]string, kind kindOfAdd) error {
 	for k, v := range o.metadata {
-		if _, ok := m[k]; ok {
+		if _, ok := m[k]; ok && !o.force {
 			return fmt.Errorf("%s %s already in kustomization file", kind, k)
 		}
 		m[k] = v
