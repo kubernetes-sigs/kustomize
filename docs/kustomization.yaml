@@ -142,9 +142,9 @@ generatorOptions:
 # etc. that differ from the common base).
 bases:
 - ../../base
-- github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6
+- github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6
 - github.com/Liujingfang1/mysql
-- github.com/Liujingfang1/kustomize//examples/helloWorld?ref=test-branch
+- github.com/Liujingfang1/kustomize/examples/helloWorld?ref=test-branch
 
 # Each entry in this list should resolve to
 # a partial or complete resource definition file.
