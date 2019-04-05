@@ -17,7 +17,9 @@ limitations under the License.
 // Package transformers has implementations of resmap.ResMap transformers.
 package transformers
 
-import "sigs.k8s.io/kustomize/pkg/resmap"
+import (
+	"sigs.k8s.io/kustomize/pkg/resmap"
+)
 
 // A Transformer modifies an instance of resmap.ResMap.
 type Transformer interface {
