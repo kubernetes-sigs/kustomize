@@ -15,9 +15,10 @@ package target_test
 
 import (
 	"path/filepath"
-	"sigs.k8s.io/kustomize/pkg/types"
 	"strings"
 	"testing"
+
+	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 )
 
 func TestGeneratorOptionsWithBases(t *testing.T) {
@@ -96,7 +97,7 @@ secretGenerator:
 
 func TestGoPluginDoesNotExist(t *testing.T) {
 	th := NewKustTestHarnessWithPluginConfig(
-		t, "/app", types.PluginConfig{GoEnabled: true})
+		t, "/app", plugin.ActivePluginConfig())
 	th.writeK("/app", `
 secretGenerator:
 - name: attemptGoPlugin

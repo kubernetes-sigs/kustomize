@@ -203,7 +203,7 @@ type GeneratorArgs struct {
 // GeneratorMetaArgs contains arguments common to generators
 // that come from somewhere other than a kustomization file.
 type GeneratorMetaArgs struct {
-	PluginConfig PluginConfig
+	PluginConfig *PluginConfig
 }
 
 // PluginConfig holds plugin configuration.

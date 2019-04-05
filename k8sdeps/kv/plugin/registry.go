@@ -19,6 +19,7 @@ package plugin
 import (
 	"fmt"
 	"path/filepath"
+
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/types"
@@ -31,13 +32,20 @@ type Registry struct {
 }
 
 const (
+	TransformerSymbol = "Transformer"
 	PluginsDir        = "plugins"
 	pluginTypeGo      = types.PluginType("go")
 	pluginTypeBuiltIn = types.PluginType("builtin")
 )
 
-func DefaultPluginConfig() types.PluginConfig {
-	return types.PluginConfig{
+func ActivePluginConfig() *types.PluginConfig {
+	pc := DefaultPluginConfig()
+	pc.GoEnabled = true
+	return pc
+}
+
+func DefaultPluginConfig() *types.PluginConfig {
+	return &types.PluginConfig{
 		GoEnabled: false,
 		DirectoryPath: filepath.Join(
 			pgmconfig.ConfigRoot(), PluginsDir),

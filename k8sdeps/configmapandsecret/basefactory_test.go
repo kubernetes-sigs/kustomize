@@ -78,12 +78,12 @@ func TestKeyValuesFromPlugins(t *testing.T) {
 			},
 			expected: []kv.Pair{
 				{
-					Key:   "FOO",
-					Value: "bar",
-				},
-				{
 					Key:   "BAR",
 					Value: "baz",
+				},
+				{
+					Key:   "FOO",
+					Value: "bar",
 				},
 			},
 		},
