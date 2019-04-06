@@ -18,11 +18,11 @@ import (
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
 
-type plugin struct{
+type plugin struct {
 	prefix string
 }
 
-var Transformer plugin
+var KustomizePlugin plugin
 
 func (p *plugin) Config(k ifc.Kunstructured) error {
 	var err error

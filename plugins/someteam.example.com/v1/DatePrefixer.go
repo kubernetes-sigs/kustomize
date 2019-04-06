@@ -13,7 +13,7 @@ import (
 
 type plugin struct{}
 
-var Transformer plugin
+var KustomizePlugin plugin
 
 func (p *plugin) Config(k ifc.Kunstructured) error {
 	return nil
