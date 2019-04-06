@@ -22,38 +22,33 @@ import (
 	"plugin"
 
 	"github.com/pkg/errors"
+	kplugin "sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
-
-const transformerSymbol = "Transformer"
 
 type Configurable interface {
 	Config(k ifc.Kunstructured) error
 }
 
 type transformerLoader struct {
-	pluginDir string
-	enabled   bool
+	pc *types.PluginConfig
 }
 
-func NewTransformerLoader(b bool) transformerLoader {
-	return transformerLoader{
-		pluginDir: filepath.Join(pgmconfig.ConfigRoot(), pgmconfig.PluginsDir),
-		enabled:   b,
-	}
+func NewTransformerLoader(pc *types.PluginConfig) transformerLoader {
+	return transformerLoader{pc: pc}
 }
 
 func (l transformerLoader) Load(rm resmap.ResMap) ([]transformers.Transformer, error) {
 	if len(rm) == 0 {
 		return nil, nil
 	}
-	if !l.enabled {
-		return nil, fmt.Errorf("plugin is not enabled")
+	if !l.pc.GoEnabled {
+		return nil, fmt.Errorf("plugins not enabled")
 	}
 	var result []transformers.Transformer
 	for id, res := range rm {
@@ -66,14 +61,17 @@ func (l transformerLoader) Load(rm resmap.ResMap) ([]transformers.Transformer, e
 	return result, nil
 }
 
-func (l transformerLoader) load(id resid.ResId, res *resource.Resource) (transformers.Transformer, error) {
-	fileName := filepath.Join(l.pluginDir, id.Gvk().Kind+".so")
+func (l transformerLoader) load(
+	id resid.ResId, res *resource.Resource) (transformers.Transformer, error) {
+	fileName := filepath.Join(
+		l.pc.DirectoryPath,
+		id.Gvk().Group, id.Gvk().Version, id.Gvk().Kind+".so")
 	goPlugin, err := plugin.Open(fileName)
 	if err != nil {
 		return nil, fmt.Errorf("plugin %s file not opened", fileName)
 	}
 
-	symbol, err := goPlugin.Lookup(transformerSymbol)
+	symbol, err := goPlugin.Lookup(kplugin.TransformerSymbol)
 	if err != nil {
 		return nil, fmt.Errorf("plugin %s fails lookup", fileName)
 	}

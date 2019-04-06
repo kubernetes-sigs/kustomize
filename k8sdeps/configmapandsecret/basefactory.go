@@ -18,6 +18,7 @@ package configmapandsecret
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -101,11 +102,22 @@ func (bf baseFactory) keyValuesFromPlugins(sources []types.KVSource) ([]kv.Pair,
 		if err != nil {
 			return nil, err
 		}
-		for k, v := range kvs {
-			result = append(result, kv.Pair{Key: k, Value: v})
+		for _, k := range sortedKeys(kvs) {
+			result = append(result, kv.Pair{Key: k, Value: kvs[k]})
 		}
 	}
 	return result, nil
+}
+
+func sortedKeys(m map[string]string) []string {
+	keys := make([]string, len(m))
+	i := 0
+	for k := range m {
+		keys[i] = k
+		i++
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 func (bf baseFactory) keyValuesFromFileSources(sources []string) ([]kv.Pair, error) {

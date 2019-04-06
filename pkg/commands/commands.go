@@ -20,7 +20,6 @@ package commands
 import (
 	"flag"
 	"os"
-	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
@@ -31,6 +30,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/commands/edit"
 	"sigs.k8s.io/kustomize/pkg/commands/misc"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
@@ -50,25 +50,26 @@ See https://sigs.k8s.io/kustomize
 `,
 	}
 
-	// Configuration for ConfigMap and Secret generators.
-	genMetaArgs := types.GeneratorMetaArgs{
-		PluginConfig: plugin.DefaultPluginConfig(),
-	}
+	pluginConfig := plugin.DefaultPluginConfig()
 
 	c.PersistentFlags().BoolVar(
-		&genMetaArgs.PluginConfig.GoEnabled,
+		&pluginConfig.GoEnabled,
 		plugin.EnableGoPluginsFlagName,
 		false, plugin.EnableGoPluginsFlagHelp)
 	// Not advertising this alpha feature.
 	c.PersistentFlags().MarkHidden(plugin.EnableGoPluginsFlagName)
 
+	// Configuration for ConfigMap and Secret generators.
+	genMetaArgs := types.GeneratorMetaArgs{
+		PluginConfig: pluginConfig,
+	}
 	uf := kunstruct.NewKunstructuredFactoryWithGeneratorArgs(&genMetaArgs)
 
 	c.AddCommand(
 		build.NewCmdBuild(
 			stdOut, fSys,
 			resmap.NewFactory(resource.NewFactory(uf)),
-			transformer.NewFactoryImpl(), genMetaArgs.PluginConfig.GoEnabled),
+			transformer.NewFactoryImpl(), pluginConfig),
 		edit.NewCmdEdit(fSys, validator.NewKustValidator(), uf),
 		misc.NewCmdConfig(fSys),
 		misc.NewCmdVersion(stdOut),

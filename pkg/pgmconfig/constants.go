@@ -28,6 +28,6 @@ var KustomizationFileNames = []string{
 }
 
 const (
-	PgmName    = "kustomize"
-	PluginsDir = "plugins"
+	PgmName = "kustomize"
+	Repo    = "sigs.k8s.io"
 )
