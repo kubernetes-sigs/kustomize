@@ -155,7 +155,7 @@ func (kt *KustTarget) shouldAddHashSuffixesToGeneratedResources() bool {
 // holding customized resources and the data/rules used
 // to do so.  The name back references and vars are
 // not yet fixed.
-func (kt *KustTarget) AccumulateTarget() (
+func (kt *KustTarget) AccumulateTarget() ( // nolint: gocyclo
 	ra *accumulator.ResAccumulator, err error) {
 	// TODO(monopole): Get rid of the KustomizationErrors accumulator.
 	// It's not consistently used, and complicates tests.
@@ -170,6 +170,17 @@ func (kt *KustTarget) AccumulateTarget() (
 		return ra, errs
 	}
 	err = ra.MergeResourcesWithErrorOnIdCollision(resources)
+	if err != nil {
+		errs.Append(errors.Wrap(err, "MergeResourcesWithErrorOnIdCollision"))
+	}
+	resourceFromGenerators, err := kt.loadGeneratorPlugins()
+	if err != nil {
+		errs.Append(errors.Wrap(err, "failed to load resources from generators"))
+	}
+	if len(errs.Get()) > 0 {
+		return ra, errs
+	}
+	err = ra.MergeResourcesWithErrorOnIdCollision(resourceFromGenerators)
 	if err != nil {
 		errs.Append(errors.Wrap(err, "MergeResourcesWithErrorOnIdCollision"))
 	}
@@ -340,4 +351,14 @@ func (kt *KustTarget) loadTransformerPlugins() ([]transformers.Transformer, erro
 		return nil, err
 	}
 	return plugins.NewTransformerLoader(kt.pluginConfig).Load(transformerPluginConfigs)
+}
+
+func (kt *KustTarget) loadGeneratorPlugins() (resmap.ResMap, error) {
+	generatorPluginConfigs, err := kt.rFactory.FromFiles(
+		kt.ldr, kt.kustomization.Generators)
+	if err != nil {
+		return nil, err
+	}
+	gl := plugins.NewGeneratorLoader(kt.goPluginEnabled, kt.rFactory)
+	return gl.Load(generatorPluginConfigs)
 }
