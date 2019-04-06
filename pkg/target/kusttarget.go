@@ -173,17 +173,6 @@ func (kt *KustTarget) AccumulateTarget() ( // nolint: gocyclo
 	if err != nil {
 		errs.Append(errors.Wrap(err, "MergeResourcesWithErrorOnIdCollision"))
 	}
-	resourceFromGenerators, err := kt.loadGeneratorPlugins()
-	if err != nil {
-		errs.Append(errors.Wrap(err, "failed to load resources from generators"))
-	}
-	if len(errs.Get()) > 0 {
-		return ra, errs
-	}
-	err = ra.MergeResourcesWithErrorOnIdCollision(resourceFromGenerators)
-	if err != nil {
-		errs.Append(errors.Wrap(err, "MergeResourcesWithErrorOnIdCollision"))
-	}
 	tConfig, err := config.MakeTransformerConfig(
 		kt.ldr, kt.kustomization.Configurations)
 	if err != nil {
@@ -213,6 +202,12 @@ func (kt *KustTarget) AccumulateTarget() ( // nolint: gocyclo
 	if err != nil {
 		return nil, err
 	}
+	if kt.pluginConfig.GoEnabled {
+		kt.generateFromPlugins(ra, errs)
+		if len(errs.Get()) > 0 {
+			return ra, errs
+		}
+	}
 	patches, err := kt.rFactory.RF().SliceFromPatches(
 		kt.ldr, kt.kustomization.PatchesStrategicMerge)
 	if err != nil {
@@ -230,6 +225,26 @@ func (kt *KustTarget) AccumulateTarget() ( // nolint: gocyclo
 		return nil, err
 	}
 	return ra, nil
+}
+
+func (kt *KustTarget) generateFromPlugins(
+	ra *accumulator.ResAccumulator,
+	errs *interror.KustomizationErrors) {
+	generators, err := kt.loadGeneratorPlugins()
+	if err != nil {
+		errs.Append(err)
+	}
+	for _, g := range generators {
+		resMap, err := g.Generate()
+		if err != nil {
+			errs.Append(err)
+		} else {
+			err = ra.MergeResourcesWithErrorOnIdCollision(resMap)
+			if err != nil {
+				errs.Append(errors.Wrap(err, "from plugin"))
+			}
+		}
+	}
 }
 
 func (kt *KustTarget) generateConfigMapsAndSecrets(
@@ -345,20 +360,19 @@ func (kt *KustTarget) newTransformer(
 }
 
 func (kt *KustTarget) loadTransformerPlugins() ([]transformers.Transformer, error) {
-	transformerPluginConfigs, err := kt.rFactory.FromFiles(
+	configs, err := kt.rFactory.FromFiles(
 		kt.ldr, kt.kustomization.Transformers)
 	if err != nil {
 		return nil, err
 	}
-	return plugins.NewTransformerLoader(kt.pluginConfig).Load(transformerPluginConfigs)
+	return plugins.NewTransformerLoader(kt.pluginConfig).Load(configs)
 }
 
-func (kt *KustTarget) loadGeneratorPlugins() (resmap.ResMap, error) {
-	generatorPluginConfigs, err := kt.rFactory.FromFiles(
+func (kt *KustTarget) loadGeneratorPlugins() ([]transformers.Generator, error) {
+	configs, err := kt.rFactory.FromFiles(
 		kt.ldr, kt.kustomization.Generators)
 	if err != nil {
 		return nil, err
 	}
-	gl := plugins.NewGeneratorLoader(kt.goPluginEnabled, kt.rFactory)
-	return gl.Load(generatorPluginConfigs)
+	return plugins.NewGeneratorLoader(kt.pluginConfig).Load(configs)
 }
