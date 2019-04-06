@@ -93,7 +93,7 @@ func (kf *KunstructuredFactoryImpl) MakeConfigMap(
 	o, err := configmapandsecret.NewFactory(
 		ldr, options,
 		plugin.NewConfiguredRegistry(
-			ldr, &kf.generatorMetaArgs.PluginConfig)).MakeConfigMap(args)
+			ldr, kf.generatorMetaArgs.PluginConfig)).MakeConfigMap(args)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (kf *KunstructuredFactoryImpl) MakeSecret(
 	o, err := configmapandsecret.NewFactory(
 		ldr, options,
 		plugin.NewConfiguredRegistry(
-			ldr, &kf.generatorMetaArgs.PluginConfig)).MakeSecret(args)
+			ldr, kf.generatorMetaArgs.PluginConfig)).MakeSecret(args)
 	if err != nil {
 		return nil, err
 	}

@@ -14,14 +14,9 @@ limitations under the License.
 package target_test
 
 import (
-	"os"
-	"os/exec"
-	"path/filepath"
 	"testing"
 
-	"fmt"
-	"sigs.k8s.io/kustomize/pkg/pgmconfig"
-	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 )
 
 func writeDeployment(th *KustTestHarness, path string) {
@@ -44,7 +39,7 @@ spec:
 
 func writeStringPrefixer(th *KustTestHarness, path string) {
 	th.writeF(path, `
-apiVersion: strings.microwoosh.com/v1
+apiVersion: someteam.example.com/v1
 kind: StringPrefixer
 metadata:
   name: myStringPrefixer
@@ -54,54 +49,25 @@ prefix: apple-
 
 func writeDatePrefixer(th *KustTestHarness, path string) {
 	th.writeF(path, `
-apiVersion: team.dater.com/v1
+apiVersion: someteam.example.com/v1
 kind: DatePrefixer
 metadata:
   name: myDatePrefixer
 `)
 }
 
-func buildGoPlugins(dir, filename string) error {
-	commands := []string{
-		"build",
-		"-buildmode",
-		"plugin",
-		"-tags=plugin",
-		"-o",
-		filename + ".so",
-		filename + ".go",
-	}
-	goBin := filepath.Join(os.Getenv("GOROOT"), "bin", "go")
-	if _, err := os.Stat(goBin); err != nil {
-		return fmt.Errorf("go binary not found %s", goBin)
-	}
-	cmd := exec.Command(goBin, commands...)
-	cmd.Env = os.Environ()
-	cmd.Dir = filepath.Join(dir, "kustomize", "plugins")
-
-	return cmd.Run()
-}
-
 func TestOrderedTransformers(t *testing.T) {
-	dir, err := filepath.Abs("../../..")
-	if err != nil {
-		t.Errorf("unexpected error %v", err)
-	}
-	os.Setenv(pgmconfig.XDG_CONFIG_HOME, dir)
-	defer os.Unsetenv(pgmconfig.XDG_CONFIG_HOME)
+	tc := NewTestEnvController(t).Set()
+	defer tc.Reset()
 
-	err = buildGoPlugins(dir, "StringPrefixer")
-	if err != nil {
-		t.Errorf("unexpected error %v", err)
-	}
+	tc.BuildGoPlugin(
+		"someteam.example.com", "v1", "StringPrefixer")
 
-	err = buildGoPlugins(dir, "DatePrefixer")
-	if err != nil {
-		t.Errorf("unexpected error %v", err)
-	}
+	tc.BuildGoPlugin(
+		"someteam.example.com", "v1", "DatePrefixer")
 
 	th := NewKustTestHarnessWithPluginConfig(
-		t, "/app", types.PluginConfig{GoEnabled: true})
+		t, "/app", plugin.ActivePluginConfig())
 	th.writeK("/app", `
 resources:
 - deployment.yaml
@@ -134,7 +100,7 @@ spec:
 
 func xTestTransformedTransformers(t *testing.T) {
 	th := NewKustTestHarnessWithPluginConfig(
-		t, "/app/overlay", types.PluginConfig{GoEnabled: true})
+		t, "/app/overlay", plugin.ActivePluginConfig())
 
 	th.writeK("/app/base", `
 resources:

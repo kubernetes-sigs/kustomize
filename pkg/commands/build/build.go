@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/target"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 // Options contain the options for running a build
@@ -63,7 +64,7 @@ func NewCmdBuild(
 	out io.Writer, fs fs.FileSystem,
 	rf *resmap.Factory,
 	ptf transformer.Factory,
-	b bool) *cobra.Command {
+	pc *types.PluginConfig) *cobra.Command {
 	var o Options
 
 	cmd := &cobra.Command{
@@ -76,7 +77,7 @@ func NewCmdBuild(
 			if err != nil {
 				return err
 			}
-			return o.RunBuild(out, fs, rf, ptf, b)
+			return o.RunBuild(out, fs, rf, ptf, pc)
 		},
 	}
 	cmd.Flags().StringVarP(
@@ -104,13 +105,13 @@ func (o *Options) Validate(args []string) error {
 func (o *Options) RunBuild(
 	out io.Writer, fSys fs.FileSystem,
 	rf *resmap.Factory, ptf transformer.Factory,
-	b bool) error {
+	pc *types.PluginConfig) error {
 	ldr, err := loader.NewLoader(o.kustomizationPath, fSys)
 	if err != nil {
 		return err
 	}
 	defer ldr.Cleanup()
-	kt, err := target.NewKustTarget(ldr, rf, ptf, b)
+	kt, err := target.NewKustTarget(ldr, rf, ptf, pc)
 	if err != nil {
 		return err
 	}
