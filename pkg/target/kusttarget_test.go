@@ -23,6 +23,7 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
@@ -204,7 +205,9 @@ func TestResources(t *testing.T) {
 }
 
 func TestKustomizationNotFound(t *testing.T) {
-	_, err := NewKustTarget(loadertest.NewFakeLoader("/foo"), nil, nil, false)
+	_, err := NewKustTarget(
+		loadertest.NewFakeLoader("/foo"),
+		nil, nil, plugin.DefaultPluginConfig())
 	if err == nil {
 		t.Fatalf("expected an error")
 	}
