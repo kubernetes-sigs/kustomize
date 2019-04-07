@@ -18,81 +18,40 @@ package plugins
 
 import (
 	"fmt"
-	"path/filepath"
-	"plugin"
+	"sigs.k8s.io/kustomize/pkg/transformers"
+	"sigs.k8s.io/kustomize/pkg/types"
 
-	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/pkg/pgmconfig"
-	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
-	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
-const generatorSymbol = "Generator"
-
-type Generatable interface {
-	Generate() (resmap.ResMap, error)
-}
-
 type generatorLoader struct {
-	pluginDir string
-	enabled   bool
-	rf        *resmap.Factory
+	pc *types.PluginConfig
 }
 
-func NewGeneratorLoader(b bool, f *resmap.Factory) generatorLoader {
-	return generatorLoader{
-		pluginDir: filepath.Join(pgmconfig.ConfigRoot(), pgmconfig.PluginsDir),
-		enabled:   b,
-		rf:        f,
-	}
+func NewGeneratorLoader(pc *types.PluginConfig) generatorLoader {
+	return generatorLoader{pc: pc}
 }
 
-func (l generatorLoader) Load(rm resmap.ResMap) (resmap.ResMap, error) {
+func (l generatorLoader) Load(
+	rm resmap.ResMap) ([]transformers.Generator, error) {
 	if len(rm) == 0 {
 		return nil, nil
 	}
-	if !l.enabled {
-		return nil, fmt.Errorf("plugin is not enabled")
+	if !l.pc.GoEnabled {
+		return nil, fmt.Errorf("plugins not enabled")
 	}
-	var result resmap.ResMap
+	var result []transformers.Generator
 	for id, res := range rm {
-		r, err := l.load(id, res)
+		fileName := pluginFileName(l.pc, id)
+		c, err := loadAndConfigurePlugin(fileName, res)
 		if err != nil {
 			return nil, err
 		}
-		result, err = resmap.MergeWithErrorOnIdCollision(result, r)
-		if err != nil {
-			return nil, err
+		g, ok := c.(transformers.Generator)
+		if !ok {
+			return nil, fmt.Errorf("plugin %s not a generator", fileName)
 		}
+		result = append(result, g)
 	}
 	return result, nil
-}
-
-func (l generatorLoader) load(id resid.ResId, res *resource.Resource) (resmap.ResMap, error) {
-	fileName := filepath.Join(l.pluginDir, id.Gvk().Kind+".so")
-	goPlugin, err := plugin.Open(fileName)
-	if err != nil {
-		return nil, fmt.Errorf("plugin %s file not opened", fileName)
-	}
-
-	symbol, err := goPlugin.Lookup(generatorSymbol)
-	if err != nil {
-		return nil, fmt.Errorf("plugin %s fails lookup", fileName)
-	}
-
-	c, ok := symbol.(Configurable)
-	if !ok {
-		return nil, fmt.Errorf("plugin %s not configurable", fileName)
-	}
-	err = c.Config(res)
-	if err != nil {
-		return nil, errors.Wrapf(err, "plugin %s fails configuration", fileName)
-	}
-
-	g, ok := c.(Generatable)
-	if !ok {
-		return nil, fmt.Errorf("plugin %s not a transformer", fileName)
-	}
-	return g.Generate()
 }
