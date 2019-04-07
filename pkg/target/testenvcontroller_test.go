@@ -105,7 +105,7 @@ func (x *TestEnvController) BuildGoPlugin(plugin ...string) {
 // ObjectRoot is the objRoot dir for plugin object files.
 func (x *TestEnvController) ObjectRoot() string {
 	return filepath.Join(
-		x.xdgConfigHome, pgmconfig.PgmName, plugin.PluginsDir)
+		x.xdgConfigHome, pgmconfig.PgmName, plugin.PluginRoot)
 }
 
 // SrcRoot is a objRoot directory for plugin source code
@@ -120,7 +120,7 @@ func (x *TestEnvController) ObjectRoot() string {
 func (x *TestEnvController) SrcRoot() string {
 	dir := filepath.Join(
 		os.Getenv("GOPATH"), "src",
-		pgmconfig.Repo, pgmconfig.PgmName, plugin.PluginsDir)
+		pgmconfig.Repo, pgmconfig.PgmName, plugin.PluginRoot)
 	if _, err := os.Stat(dir); err != nil {
 		x.t.Errorf("plugin source objRoot '%s' not found", dir)
 	}

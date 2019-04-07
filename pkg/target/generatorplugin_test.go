@@ -14,17 +14,14 @@ limitations under the License.
 package target_test
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/pgmconfig"
-	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 )
 
 func writeGenerator(th *KustTestHarness, path string) {
 	th.writeF(path, `
-apiVersion: strings.microwoosh.com/v1
+apiVersion: someteam.example.com/v1
 kind: ServiceGenerator
 metadata:
   name: myServiceGenerator
@@ -34,20 +31,14 @@ port: "12345"
 }
 
 func TestGeneratorPlugin(t *testing.T) {
-	dir, err := filepath.Abs("../../..")
-	if err != nil {
-		t.Errorf("unexpected error %v", err)
-	}
-	os.Setenv(pgmconfig.XDG_CONFIG_HOME, dir)
-	defer os.Unsetenv(pgmconfig.XDG_CONFIG_HOME)
+	tc := NewTestEnvController(t).Set()
+	defer tc.Reset()
 
-	err = buildGoPlugins(dir, "ServiceGenerator")
-	if err != nil {
-		t.Errorf("unexpected error %v", err)
-	}
+	tc.BuildGoPlugin(
+		"someteam.example.com", "v1", "ServiceGenerator")
 
 	th := NewKustTestHarnessWithPluginConfig(
-		t, "/app", types.PluginConfig{GoEnabled: true})
+		t, "/app", plugin.ActivePluginConfig())
 	th.writeK("/app", `
 generators:
 - serviceGenerator.yaml

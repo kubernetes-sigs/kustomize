@@ -26,3 +26,8 @@ type Transformer interface {
 	// Transform modifies data in the argument, e.g. adding labels to resources that can be labelled.
 	Transform(m resmap.ResMap) error
 }
+
+// A Generator creates an instance of resmap.ResMap.
+type Generator interface {
+	Generate() (resmap.ResMap, error)
+}

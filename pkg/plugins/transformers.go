@@ -43,7 +43,8 @@ func NewTransformerLoader(pc *types.PluginConfig) transformerLoader {
 	return transformerLoader{pc: pc}
 }
 
-func (l transformerLoader) Load(rm resmap.ResMap) ([]transformers.Transformer, error) {
+func (l transformerLoader) Load(
+	rm resmap.ResMap) ([]transformers.Transformer, error) {
 	if len(rm) == 0 {
 		return nil, nil
 	}
@@ -52,30 +53,37 @@ func (l transformerLoader) Load(rm resmap.ResMap) ([]transformers.Transformer, e
 	}
 	var result []transformers.Transformer
 	for id, res := range rm {
-		t, err := l.load(id, res)
+		fileName := pluginFileName(l.pc, id)
+		c, err := loadAndConfigurePlugin(fileName, res)
 		if err != nil {
 			return nil, err
+		}
+		t, ok := c.(transformers.Transformer)
+		if !ok {
+			return nil, fmt.Errorf("plugin %s not a transformer", fileName)
 		}
 		result = append(result, t)
 	}
 	return result, nil
 }
 
-func (l transformerLoader) load(
-	id resid.ResId, res *resource.Resource) (transformers.Transformer, error) {
-	fileName := filepath.Join(
-		l.pc.DirectoryPath,
+func pluginFileName(pc *types.PluginConfig, id resid.ResId) string {
+	return filepath.Join(
+		pc.DirectoryPath,
 		id.Gvk().Group, id.Gvk().Version, id.Gvk().Kind+".so")
+}
+
+func loadAndConfigurePlugin(
+	fileName string, res *resource.Resource) (Configurable, error) {
 	goPlugin, err := plugin.Open(fileName)
 	if err != nil {
 		return nil, fmt.Errorf("plugin %s file not opened", fileName)
 	}
-
-	symbol, err := goPlugin.Lookup(kplugin.TransformerSymbol)
+	symbol, err := goPlugin.Lookup(kplugin.PluginSymbol)
 	if err != nil {
-		return nil, fmt.Errorf("plugin %s fails lookup", fileName)
+		return nil, fmt.Errorf(
+			"plugin %s doesn't have symbol %s", fileName, kplugin.PluginSymbol)
 	}
-
 	c, ok := symbol.(Configurable)
 	if !ok {
 		return nil, fmt.Errorf("plugin %s not configurable", fileName)
@@ -84,10 +92,5 @@ func (l transformerLoader) load(
 	if err != nil {
 		return nil, errors.Wrapf(err, "plugin %s fails configuration", fileName)
 	}
-
-	t, ok := c.(transformers.Transformer)
-	if !ok {
-		return nil, fmt.Errorf("plugin %s not a transformer", fileName)
-	}
-	return t, nil
+	return c, nil
 }

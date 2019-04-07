@@ -1,3 +1,5 @@
+// +build plugin
+
 package main
 
 import (
@@ -15,7 +17,7 @@ type plugin struct {
 	Port        string
 }
 
-var Generator plugin
+var KustomizePlugin plugin
 
 var manifest = `
 apiVersion: v1
