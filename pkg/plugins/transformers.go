@@ -32,15 +32,19 @@ import (
 )
 
 type Configurable interface {
-	Config(k ifc.Kunstructured) error
+	Config(ldr ifc.Loader, rf *resmap.Factory, k ifc.Kunstructured) error
 }
 
 type transformerLoader struct {
-	pc *types.PluginConfig
+	pc  *types.PluginConfig
+	ldr ifc.Loader
+	rf  *resmap.Factory
 }
 
-func NewTransformerLoader(pc *types.PluginConfig) transformerLoader {
-	return transformerLoader{pc: pc}
+func NewTransformerLoader(
+	pc *types.PluginConfig,
+	ldr ifc.Loader, rf *resmap.Factory) transformerLoader {
+	return transformerLoader{pc: pc, ldr: ldr, rf: rf}
 }
 
 func (l transformerLoader) Load(
@@ -54,7 +58,7 @@ func (l transformerLoader) Load(
 	var result []transformers.Transformer
 	for id, res := range rm {
 		fileName := pluginFileName(l.pc, id)
-		c, err := loadAndConfigurePlugin(fileName, res)
+		c, err := loadAndConfigurePlugin(fileName, l.ldr, l.rf, res)
 		if err != nil {
 			return nil, err
 		}
@@ -74,7 +78,8 @@ func pluginFileName(pc *types.PluginConfig, id resid.ResId) string {
 }
 
 func loadAndConfigurePlugin(
-	fileName string, res *resource.Resource) (Configurable, error) {
+	fileName string, ldr ifc.Loader,
+	rf *resmap.Factory, res *resource.Resource) (Configurable, error) {
 	goPlugin, err := plugin.Open(fileName)
 	if err != nil {
 		return nil, fmt.Errorf("plugin %s file not opened", fileName)
@@ -88,7 +93,7 @@ func loadAndConfigurePlugin(
 	if !ok {
 		return nil, fmt.Errorf("plugin %s not configurable", fileName)
 	}
-	err = c.Config(res)
+	err = c.Config(ldr, rf, res)
 	if err != nil {
 		return nil, errors.Wrapf(err, "plugin %s fails configuration", fileName)
 	}

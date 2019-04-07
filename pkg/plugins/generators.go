@@ -18,18 +18,23 @@ package plugins
 
 import (
 	"fmt"
+
+	"sigs.k8s.io/kustomize/pkg/ifc"
+	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/transformers"
 	"sigs.k8s.io/kustomize/pkg/types"
-
-	"sigs.k8s.io/kustomize/pkg/resmap"
 )
 
 type generatorLoader struct {
-	pc *types.PluginConfig
+	pc  *types.PluginConfig
+	ldr ifc.Loader
+	rf  *resmap.Factory
 }
 
-func NewGeneratorLoader(pc *types.PluginConfig) generatorLoader {
-	return generatorLoader{pc: pc}
+func NewGeneratorLoader(
+	pc *types.PluginConfig,
+	ldr ifc.Loader, rf *resmap.Factory) generatorLoader {
+	return generatorLoader{pc: pc, ldr: ldr, rf: rf}
 }
 
 func (l generatorLoader) Load(
@@ -43,7 +48,7 @@ func (l generatorLoader) Load(
 	var result []transformers.Generator
 	for id, res := range rm {
 		fileName := pluginFileName(l.pc, id)
-		c, err := loadAndConfigurePlugin(fileName, res)
+		c, err := loadAndConfigurePlugin(fileName, l.ldr, l.rf, res)
 		if err != nil {
 			return nil, err
 		}

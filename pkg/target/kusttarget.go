@@ -365,7 +365,8 @@ func (kt *KustTarget) loadTransformerPlugins() ([]transformers.Transformer, erro
 	if err != nil {
 		return nil, err
 	}
-	return plugins.NewTransformerLoader(kt.pluginConfig).Load(configs)
+	return plugins.NewTransformerLoader(
+		kt.pluginConfig, kt.ldr, kt.rFactory).Load(configs)
 }
 
 func (kt *KustTarget) loadGeneratorPlugins() ([]transformers.Generator, error) {
@@ -374,5 +375,6 @@ func (kt *KustTarget) loadGeneratorPlugins() ([]transformers.Generator, error) {
 	if err != nil {
 		return nil, err
 	}
-	return plugins.NewGeneratorLoader(kt.pluginConfig).Load(configs)
+	return plugins.NewGeneratorLoader(
+		kt.pluginConfig, kt.ldr, kt.rFactory).Load(configs)
 }
