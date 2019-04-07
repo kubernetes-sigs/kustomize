@@ -42,7 +42,7 @@ func NewDefaultCommand() *cobra.Command {
 	stdOut := os.Stdout
 
 	c := &cobra.Command{
-		Use:   pgmconfig.PgmName,
+		Use:   pgmconfig.ProgramName,
 		Short: "Manages declarative configuration of Kubernetes",
 		Long: `
 Manages declarative configuration of Kubernetes.

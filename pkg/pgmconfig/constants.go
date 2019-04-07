@@ -28,6 +28,9 @@ var KustomizationFileNames = []string{
 }
 
 const (
-	PgmName = "kustomize"
-	Repo    = "sigs.k8s.io"
+	// Program name, for help, finding the XDG_CONFIG_DIR, etc.
+	ProgramName = "kustomize"
+	// Domain from which kustomize code is imported, for locating
+	// plugin source code under $GOPATH.
+	DomainName = "sigs.k8s.io"
 )
