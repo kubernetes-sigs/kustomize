@@ -33,7 +33,8 @@ spec:
     app: dev
 `
 
-func (p *plugin) Config(k ifc.Kunstructured) error {
+func (p *plugin) Config(
+	ldr ifc.Loader, rf *resmap.Factory, k ifc.Kunstructured) error {
 	var err error
 	p.ServiceName, err = k.GetFieldValue("service")
 	if err != nil {

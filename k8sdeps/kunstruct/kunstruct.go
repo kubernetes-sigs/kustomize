@@ -90,3 +90,17 @@ func (fs *UnstructAdapter) GetFieldValue(path string) (string, error) {
 	}
 	return "", fmt.Errorf("no field named '%s'", path)
 }
+
+// GetStringSlice returns value at the given fieldpath.
+func (fs *UnstructAdapter) GetStringSlice(path string) ([]string, error) {
+	fields, err := parseFields(path)
+	if err != nil {
+		return []string{}, err
+	}
+	s, found, err := unstructured.NestedStringSlice(
+		fs.UnstructuredContent(), fields...)
+	if found || err != nil {
+		return s, err
+	}
+	return []string{}, fmt.Errorf("no field named '%s'", path)
+}
