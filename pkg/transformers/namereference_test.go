@@ -618,6 +618,7 @@ func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 				},
 			}),
 	}
+	expected[resid.NewResId(pv, "volume1")].AppendRefBy(resid.NewResId(pvc, "claim1"))
 	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
 	err := nrt.Transform(m)
 	if err != nil {
