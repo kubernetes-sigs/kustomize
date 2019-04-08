@@ -29,8 +29,8 @@ resources:
 - secret.yaml
 
 prune:
-  type: alphaConfigMap
-  alphaConfigMap:
+  type: ConfigMap
+  configMap:
     name: haha
     namespace: default
 

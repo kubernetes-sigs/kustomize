@@ -294,8 +294,8 @@ type KVSource struct {
 }
 
 type Prune struct {
-	Type           string   `json:"type,omitempty" yaml:"type,omitempty"`
-	AlphaConfigMap NameArgs `json:"alphaConfigMap,omitempty" yaml:"alphaConfigMap,omitempty"`
+	Type      string   `json:"type,omitempty" yaml:"type,omitempty"`
+	ConfigMap NameArgs `json:"configMap,omitempty" yaml:"configMap,omitempty"`
 }
 
 type NameArgs struct {

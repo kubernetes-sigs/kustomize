@@ -140,8 +140,8 @@ func TestPruneTransformer(t *testing.T) {
 	}
 
 	p := &types.Prune{
-		Type: "alphaConfigMap",
-		AlphaConfigMap: types.NameArgs{
+		Type: "ConfigMap",
+		ConfigMap: types.NameArgs{
 			Name:      "pruneCM",
 			Namespace: "default",
 		},
