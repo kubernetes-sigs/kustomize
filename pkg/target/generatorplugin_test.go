@@ -14,12 +14,13 @@ limitations under the License.
 package target_test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 )
 
-func writeGenerator(th *KustTestHarness, path string) {
+func writeServiceGenerator(th *KustTestHarness, path string) {
 	th.writeF(path, `
 apiVersion: someteam.example.com/v1
 kind: ServiceGenerator
@@ -30,7 +31,7 @@ port: "12345"
 `)
 }
 
-func TestGeneratorPlugin(t *testing.T) {
+func TestServiceGeneratorPlugin(t *testing.T) {
 	tc := NewTestEnvController(t).Set()
 	defer tc.Reset()
 
@@ -43,7 +44,7 @@ func TestGeneratorPlugin(t *testing.T) {
 generators:
 - serviceGenerator.yaml
 `)
-	writeGenerator(th, "/app/serviceGenerator.yaml")
+	writeServiceGenerator(th, "/app/serviceGenerator.yaml")
 	m, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
@@ -60,5 +61,69 @@ spec:
   - port: 12345
   selector:
     app: dev
+`)
+}
+
+func writeSecretGeneratorConfig(th *KustTestHarness, root string) {
+	th.writeF(filepath.Join(root, "secretGenerator.yaml"), `
+apiVersion: kustomize.config.k8s.io/v1
+kind: SecretGenerator
+metadata:
+  name: secretGenerator
+name: mySecret
+behavior: merge
+envFiles:
+- a.env
+- b.env
+valueFiles:
+- longsecret.txt
+literals:
+- FRUIT=apple
+- VEGETABLE=carrot
+`)
+	th.writeF(filepath.Join(root, "a.env"), `
+ROUTER_PASSWORD=admin
+`)
+	th.writeF(filepath.Join(root, "b.env"), `
+DB_PASSWORD=iloveyou
+`)
+	th.writeF(filepath.Join(root, "longsecret.txt"), `
+Lorem ipsum dolor sit amet,
+consectetur adipiscing elit,
+sed do eiusmod tempor incididunt
+ut labore et dolore magna aliqua.
+`)
+}
+
+// nolint:lll
+func TestSecretGenerator(t *testing.T) {
+	tc := NewTestEnvController(t).Set()
+	defer tc.Reset()
+
+	tc.BuildGoPlugin(
+		"kustomize.config.k8s.io", "v1", "SecretGenerator")
+
+	th := NewKustTestHarnessWithPluginConfig(
+		t, "/app", plugin.ActivePluginConfig())
+	th.writeK("/app", `
+generators:
+- secretGenerator.yaml
+`)
+	writeSecretGeneratorConfig(th, "/app")
+	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.assertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  FRUIT: YXBwbGU=
+  ROUTER_PASSWORD: YWRtaW4=
+  VEGETABLE: Y2Fycm90
+  longsecret.txt: CkxvcmVtIGlwc3VtIGRvbG9yIHNpdCBhbWV0LApjb25zZWN0ZXR1ciBhZGlwaXNjaW5nIGVsaXQsCnNlZCBkbyBlaXVzbW9kIHRlbXBvciBpbmNpZGlkdW50CnV0IGxhYm9yZSBldCBkb2xvcmUgbWFnbmEgYWxpcXVhLgo=
+kind: Secret
+metadata:
+  name: -2kt2h55789
+type: Opaque
 `)
 }

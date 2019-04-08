@@ -15,7 +15,8 @@ type plugin struct{}
 
 var KustomizePlugin plugin
 
-func (p *plugin) Config(k ifc.Kunstructured) error {
+func (p *plugin) Config(
+	ldr ifc.Loader, rf *resmap.Factory, k ifc.Kunstructured) error {
 	return nil
 }
 
