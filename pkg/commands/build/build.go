@@ -85,7 +85,7 @@ func NewCmdBuild(
 		"output", "o", "",
 		"If specified, write the build output to this path.")
 
-	cmd.AddCommand(NewCmdBuildPrune(out, fs, rf, ptf, b))
+	cmd.AddCommand(NewCmdBuildPrune(out, fs, rf, ptf, pc))
 	return cmd
 }
 
@@ -136,13 +136,13 @@ func (o *Options) RunBuild(
 func (o *Options) RunBuildPrune(
 	out io.Writer, fSys fs.FileSystem,
 	rf *resmap.Factory, ptf transformer.Factory,
-	b bool) error {
+	pc *types.PluginConfig) error {
 	ldr, err := loader.NewLoader(o.kustomizationPath, fSys)
 	if err != nil {
 		return err
 	}
 	defer ldr.Cleanup()
-	kt, err := target.NewKustTarget(ldr, rf, ptf, b)
+	kt, err := target.NewKustTarget(ldr, rf, ptf, pc)
 	if err != nil {
 		return err
 	}
@@ -166,11 +166,11 @@ func NewCmdBuildPrune(
 	out io.Writer, fs fs.FileSystem,
 	rf *resmap.Factory,
 	ptf transformer.Factory,
-	b bool) *cobra.Command {
+	pc *types.PluginConfig) *cobra.Command {
 	var o Options
 
 	cmd := &cobra.Command{
-		Use:          "prune [path]",
+		Use:          "alpha-prune [path]",
 		Short:        "Print configmap to prune previous applied objects",
 		Example:      examples,
 		SilenceUsage: true,
@@ -179,7 +179,7 @@ func NewCmdBuildPrune(
 			if err != nil {
 				return err
 			}
-			return o.RunBuildPrune(out, fs, rf, ptf, b)
+			return o.RunBuildPrune(out, fs, rf, ptf, pc)
 		},
 	}
 	return cmd

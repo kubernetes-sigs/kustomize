@@ -42,13 +42,13 @@ var _ transformers.Transformer = &pruneTransformer{}
 
 // NewPruneTransformer makes a pruneTransformer.
 func NewPruneTransformer(p *types.Prune, namespace string, append bool) transformers.Transformer {
-	if p == nil || p.Type != "alphaConfigMap" || p.AlphaConfigMap.Namespace != namespace {
+	if p == nil || p.Type != "ConfigMap" || p.ConfigMap.Namespace != namespace {
 		return transformers.NewNoOpTransformer()
 	}
 	return &pruneTransformer{
 		append:      append,
-		cmName:      p.AlphaConfigMap.Name,
-		cmNamespace: p.AlphaConfigMap.Namespace,
+		cmName:      p.ConfigMap.Name,
+		cmNamespace: p.ConfigMap.Namespace,
 	}
 }
 
