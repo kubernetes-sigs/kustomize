@@ -17,6 +17,7 @@ limitations under the License.
 package resource_test
 
 import (
+	"reflect"
 	"testing"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
@@ -92,5 +93,22 @@ func TestResourceId(t *testing.T) {
 		if test.in.Id() != test.id {
 			t.Fatalf("Expected %v, but got %v\n", test.id, test.in.Id())
 		}
+	}
+}
+
+func TestDeepCopy(t *testing.T) {
+	r := factory.FromMap(
+		map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "pooh",
+			},
+		})
+	r.AppendRefBy(resid.NewResId(gvk.Gvk{Group: "somegroup", Kind: "MyKind"}, "random"))
+
+	cr := r.DeepCopy()
+	if !reflect.DeepEqual(r, cr) {
+		t.Errorf("expected %v\nbut got%v", r, cr)
 	}
 }

@@ -20,10 +20,12 @@ package transformer
 import (
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 // Factory makes transformers
 type Factory interface {
 	MakePatchTransformer(slice []*resource.Resource, rf *resource.Factory) (transformers.Transformer, error)
 	MakeHashTransformer() transformers.Transformer
+	MakePruneTransformer(p *types.Prune, namespace string, append bool) transformers.Transformer
 }

@@ -205,3 +205,13 @@ func (n ResId) prefixList() []string {
 func (n ResId) suffixList() []string {
 	return strings.Split(n.suffix, ":")
 }
+
+// PruneString returns a string which can be used
+// as a key in a Prune ConfigMap
+func (n ResId) PruneString() string {
+	name := n.prefix + n.name + n.suffix
+	return n.gvKind.Group +
+		"_" + n.gvKind.Kind +
+		"_" + n.namespace +
+		"_" + name
+}
