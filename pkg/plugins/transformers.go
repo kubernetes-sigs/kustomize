@@ -18,8 +18,10 @@ package plugins
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"plugin"
+	"runtime"
 
 	"github.com/pkg/errors"
 	kplugin "sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
@@ -57,29 +59,50 @@ func (l transformerLoader) Load(
 	}
 	var result []transformers.Transformer
 	for id, res := range rm {
-		fileName := pluginFileName(l.pc, id)
-		c, err := loadAndConfigurePlugin(fileName, l.ldr, l.rf, res)
+		c, err := loadAndConfigurePlugin(l.pc.DirectoryPath, id, l.ldr, l.rf, res)
 		if err != nil {
 			return nil, err
 		}
 		t, ok := c.(transformers.Transformer)
 		if !ok {
-			return nil, fmt.Errorf("plugin %s not a transformer", fileName)
+			return nil, fmt.Errorf("plugin %s not a transformer", id.String())
 		}
 		result = append(result, t)
 	}
 	return result, nil
 }
 
-func pluginFileName(pc *types.PluginConfig, id resid.ResId) string {
+func goPluginFileName(dir string, id resid.ResId) string {
+	return execPluginFileName(dir, id) + ".so"
+}
+
+func execPluginFileName(dir string, id resid.ResId) string {
 	return filepath.Join(
-		pc.DirectoryPath,
-		id.Gvk().Group, id.Gvk().Version, id.Gvk().Kind+".so")
+		dir,
+		id.Gvk().Group, id.Gvk().Version, id.Gvk().Kind)
+}
+
+// isExecAvailable checks if an executable is available
+func isExecAvailable(name string) bool {
+	f, err := os.Stat(name)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return f.Mode()&0111 != 0000
 }
 
 func loadAndConfigurePlugin(
-	fileName string, ldr ifc.Loader,
+	dir string, id resid.ResId,
+	ldr ifc.Loader,
 	rf *resmap.Factory, res *resource.Resource) (Configurable, error) {
+	var fileName string
+	exec := execPluginFileName(dir, id)
+	if isExecAvailable(exec) {
+		_, f, _, _ := runtime.Caller(1)
+		fileName = filepath.Join(filepath.Dir(f), "builtin", "executable.so")
+	} else {
+		fileName = goPluginFileName(dir, id)
+	}
 	goPlugin, err := plugin.Open(fileName)
 	if err != nil {
 		return nil, errors.Wrapf(err, "plugin %s fails to load", fileName)
