@@ -127,3 +127,37 @@ metadata:
 type: Opaque
 `)
 }
+
+func TestConfigMapGenerator(t *testing.T) {
+	tc := NewTestEnvController(t).Set()
+	defer tc.Reset()
+
+	tc.BuildExecPlugin(
+		"someteam.example.com", "v1", "ConfigMapGenerator")
+
+	th := NewKustTestHarnessWithPluginConfig(
+		t, "/app", plugin.ActivePluginConfig())
+	th.writeK("/app", `
+generators:
+- configmapGenerator.yaml
+`)
+	th.writeF("/app/configmapGenerator.yaml", `
+apiVersion: someteam.example.com/v1
+kind: ConfigMapGenerator
+metadata:
+  name: some-random-name
+`)
+	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.assertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  password: secret
+  username: admin
+kind: ConfigMap
+metadata:
+  name: example-configmap-test
+`)
+}

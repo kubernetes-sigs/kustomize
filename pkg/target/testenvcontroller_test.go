@@ -16,6 +16,7 @@ package target_test
 import (
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"testing"
@@ -54,6 +55,28 @@ func (x *TestEnvController) BuildGoPlugin(g, v, k string) {
 	err := x.compiler.Compile(g, v, k)
 	if err != nil {
 		x.t.Errorf("compile failed: %v", err)
+	}
+}
+
+func (x *TestEnvController) BuildExecPlugin(name ...string) {
+	obj := filepath.Join(
+		append([]string{x.workDir, pgmconfig.ProgramName, plugin.PluginRoot}, name...)...)
+
+	srcRoot, err := plugins.DefaultSrcRoot()
+	if err != nil {
+		x.t.Error(err)
+	}
+
+	src := filepath.Join(
+		append([]string{srcRoot}, name...)...)
+
+	if err := os.MkdirAll(filepath.Dir(obj), 0755); err != nil {
+		x.t.Errorf("error making directory: %s", filepath.Dir(obj))
+	}
+	cmd := exec.Command("cp", src, obj)
+	cmd.Env = os.Environ()
+	if err := cmd.Run(); err != nil {
+		x.t.Errorf("error copying %s: %v", src, err)
 	}
 }
 

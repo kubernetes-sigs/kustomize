@@ -47,14 +47,13 @@ func (l generatorLoader) Load(
 	}
 	var result []transformers.Generator
 	for id, res := range rm {
-		fileName := pluginFileName(l.pc, id)
-		c, err := loadAndConfigurePlugin(fileName, l.ldr, l.rf, res)
+		c, err := loadAndConfigurePlugin(l.pc.DirectoryPath, id, l.ldr, l.rf, res)
 		if err != nil {
 			return nil, err
 		}
 		g, ok := c.(transformers.Generator)
 		if !ok {
-			return nil, fmt.Errorf("plugin %s not a generator", fileName)
+			return nil, fmt.Errorf("plugin %s not a generator", id.String())
 		}
 		result = append(result, g)
 	}
