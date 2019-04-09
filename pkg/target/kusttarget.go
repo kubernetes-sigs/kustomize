@@ -273,6 +273,7 @@ func (kt *KustTarget) generateFromPlugins(
 	generators, err := kt.loadGeneratorPlugins()
 	if err != nil {
 		errs.Append(err)
+		return
 	}
 	for _, g := range generators {
 		resMap, err := g.Generate()

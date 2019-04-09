@@ -34,7 +34,7 @@ func TestConfigDirNoXdg(t *testing.T) {
 	}
 	if !strings.HasSuffix(
 		s,
-		rootedPath(defaultConfigSubdir, PgmName)) {
+		rootedPath(defaultConfigSubdir, ProgramName)) {
 		t.Fatalf("unexpected config dir: %s", s)
 	}
 }
@@ -50,7 +50,7 @@ func TestConfigDirWithXdg(t *testing.T) {
 	if isSet {
 		os.Setenv(XDG_CONFIG_HOME, xdg)
 	}
-	if s != rootedPath("blah", PgmName) {
+	if s != rootedPath("blah", ProgramName) {
 		t.Fatalf("unexpected config dir: %s", s)
 	}
 }
