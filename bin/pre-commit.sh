@@ -11,6 +11,10 @@ cd "$base_dir" || {
 
 rc=0
 
+function buildPlugins {
+go build -buildmode plugin -tags=plugin -o ./pkg/plugins/builtin/executable.so ./pkg/plugins/builtin/executable.go
+}
+
 function runTest {
   local name=$1
   local result="SUCCESS"
@@ -36,6 +40,7 @@ function testExamples {
   mdrip --mode test --label test README.md ./examples
 }
 
+runTest buildPlugins
 runTest testGoLangCILint
 runTest testGoTest
 runTest testExamples
