@@ -88,10 +88,7 @@ func isExecAvailable(name string) bool {
 	if os.IsNotExist(err) {
 		return false
 	}
-	if f.Mode()&0111 != 0000 {
-		return true
-	}
-	return false
+	return f.Mode()&0111 != 0000
 }
 
 func loadAndConfigurePlugin(
