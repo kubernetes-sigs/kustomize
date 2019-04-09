@@ -34,12 +34,12 @@ func ConfigRoot() string {
 	dir := os.Getenv(XDG_CONFIG_HOME)
 	if len(dir) == 0 {
 		dir = filepath.Join(
-			homeDir(), defaultConfigSubdir)
+			HomeDir(), defaultConfigSubdir)
 	}
-	return filepath.Join(dir, PgmName)
+	return filepath.Join(dir, ProgramName)
 }
 
-func homeDir() string {
+func HomeDir() string {
 	home := os.Getenv(homeEnv())
 	if len(home) > 0 {
 		return home

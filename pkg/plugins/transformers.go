@@ -82,12 +82,13 @@ func loadAndConfigurePlugin(
 	rf *resmap.Factory, res *resource.Resource) (Configurable, error) {
 	goPlugin, err := plugin.Open(fileName)
 	if err != nil {
-		return nil, fmt.Errorf("plugin %s file not opened", fileName)
+		return nil, errors.Wrapf(err, "plugin %s fails to load", fileName)
 	}
 	symbol, err := goPlugin.Lookup(kplugin.PluginSymbol)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"plugin %s doesn't have symbol %s", fileName, kplugin.PluginSymbol)
+		return nil, errors.Wrapf(
+			err, "plugin %s doesn't have symbol %s",
+			fileName, kplugin.PluginSymbol)
 	}
 	c, ok := symbol.(Configurable)
 	if !ok {
