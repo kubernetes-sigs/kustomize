@@ -130,7 +130,7 @@ type: Opaque
 
 func TestConfigMapGenerator(t *testing.T) {
 	tc := NewTestEnvController(t).Set()
-	//defer tc.Reset()
+	defer tc.Reset()
 
 	tc.BuildExecPlugin(
 		"someteam.example.com", "v1", "ConfigMapGenerator")
