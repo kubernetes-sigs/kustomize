@@ -1,0 +1,9 @@
+#!/bin/bash
+
+args=""
+
+for arg in $@; do
+  args="$args -e $arg"
+done
+cat - | sed $args
+

@@ -98,6 +98,52 @@ spec:
 `)
 }
 
+func TestSedTransformer(t *testing.T) {
+	tc := NewTestEnvController(t).Set()
+	defer tc.Reset()
+
+	tc.BuildExecPlugin(
+		"someteam.example.com", "v1", "SedTransformer")
+
+	th := NewKustTestHarnessWithPluginConfig(
+		t, "/app", plugin.ActivePluginConfig())
+	th.writeK("/app", `
+transformers:
+- sed-transformer.yaml
+
+configMapGenerator:
+- name: test
+  literals:
+  - FOO=$FOO
+  - BAR=$BAR
+`)
+	th.writeF("/app/sed-transformer.yaml", `
+apiVersion: someteam.example.com/v1
+kind: SedTransformer
+metadata:
+  name: some-random-name
+file: sed-input.txt
+`)
+	th.writeF("/app/sed-input.txt", `
+s/$FOO/foo/g
+s/$BAR/bar/g
+`)
+
+	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.assertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  BAR: bar
+  FOO: foo
+kind: ConfigMap
+metadata:
+  name: test
+`)
+}
+
 func xTestTransformedTransformers(t *testing.T) {
 	th := NewKustTestHarnessWithPluginConfig(
 		t, "/app/overlay", plugin.ActivePluginConfig())

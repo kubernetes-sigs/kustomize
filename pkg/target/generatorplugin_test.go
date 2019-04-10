@@ -146,6 +146,7 @@ apiVersion: someteam.example.com/v1
 kind: ConfigMapGenerator
 metadata:
   name: some-random-name
+arg: "admin secret"
 `)
 	m, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
