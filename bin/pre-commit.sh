@@ -12,7 +12,10 @@ cd "$base_dir" || {
 rc=0
 
 function buildPlugins {
-go build -buildmode plugin -tags=plugin -o ./pkg/plugins/builtin/executable.so ./pkg/plugins/builtin/executable.go
+  go build -buildmode plugin \
+    -tags=plugin \
+    -o ./pkg/plugins/builtin/executable.so \
+    ./pkg/plugins/builtin/executable.go
 }
 
 function runTest {
@@ -39,6 +42,9 @@ function testGoTest {
 function testExamples {
   mdrip --mode test --label test README.md ./examples
 }
+
+unset GOPATH
+export GO111MODULE=on
 
 runTest buildPlugins
 runTest testGoLangCILint
