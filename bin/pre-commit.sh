@@ -12,7 +12,11 @@ cd "$base_dir" || {
 rc=0
 
 function buildPlugins {
-go build -buildmode plugin -tags=plugin -o ./pkg/plugins/builtin/executable.so ./pkg/plugins/builtin/executable.go
+  go build \
+     -buildmode plugin \
+     -tags=plugin \
+     -o ./pkg/plugins/builtin/executable.so \
+        ./pkg/plugins/builtin/executable.go
 }
 
 function runTest {
@@ -40,9 +44,55 @@ function testExamples {
   mdrip --mode test --label test README.md ./examples
 }
 
+# Use of GOPATH is optional if go modules are
+# used.  This script tries to work for people who
+# don't have GOPATH set, and work for travis.
+#
+# Upon entry, travis has GOPATH set, and used it
+# to install mdrip and the like.
+#
+# Use GOPATH to define XDG_CONFIG_HOME, then unset
+# GOPATH so that go.mod is unambiguously honored.
+echo "GOPATH=$GOPATH"
+
+if [ -z ${GOPATH+x} ]; then
+  echo GOPATH is unset
+  tmp=$HOME/gopath
+  if [ -d "$tmp" ]; then
+    oldGoPath=$tmp
+  else
+    tmp=$HOME/go
+    if [ -d "$tmp" ]; then
+      oldGoPath=$tmp
+    fi
+  fi
+else
+  oldGoPath=$GOPATH
+  unset GOPATH
+fi
+echo "oldGoPath=$oldGoPath"
+export XDG_CONFIG_HOME=$oldGoPath/src/sigs.k8s.io
+echo "XDG_CONFIG_HOME=$XDG_CONFIG_HOME"
+if [ ! -d "$XDG_CONFIG_HOME" ]; then
+  echo "$XDG_CONFIG_HOME is not a directory."
+	exit 1
+fi
+
+# Until go v1.13, set this explicitly.
+export GO111MODULE=on
+
+echo "HOME=$HOME"
+echo "GOPATH=$GOPATH"
+echo "GO111MODULE=$GO111MODULE"
+echo pwd=`pwd`
+echo " "
+echo "Beginning tests..."
+
 runTest buildPlugins
 runTest testGoLangCILint
 runTest testGoTest
+
+PATH=$HOME/go/bin:$PATH
 runTest testExamples
 
 if [ $rc -eq 0 ]; then
