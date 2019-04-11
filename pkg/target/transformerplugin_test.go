@@ -140,7 +140,7 @@ data:
   FOO: foo
 kind: ConfigMap
 metadata:
-  name: test
+  name: test-k4bkhftttd
 `)
 }
 
