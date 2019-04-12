@@ -17,7 +17,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
+	"runtime"
 	"time"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
@@ -46,6 +48,15 @@ func DefaultSrcRoot() (string, error) {
 		os.Getenv("GOPATH"), "src",
 		pgmconfig.DomainName,
 		pgmconfig.ProgramName, plugin.PluginRoot)
+	if FileExists(root) {
+		return root, nil
+	}
+	nope = append(nope, root)
+
+	// get the root kustomize source directory when
+	// GOPATH is not set
+	_, filename, _, _ := runtime.Caller(1)
+	root = path.Join(path.Dir(filename), "../..", plugin.PluginRoot)
 	if FileExists(root) {
 		return root, nil
 	}
