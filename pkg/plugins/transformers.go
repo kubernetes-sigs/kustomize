@@ -18,12 +18,10 @@ package plugins
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"os"
 	"path/filepath"
 	"plugin"
-	"runtime"
-
-	"github.com/pkg/errors"
 	kplugin "sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resid"
@@ -96,28 +94,30 @@ func loadAndConfigurePlugin(
 	ldr ifc.Loader,
 	rf *resmap.Factory, res *resource.Resource) (Configurable, error) {
 	var fileName string
+	var c Configurable
+
 	exec := execPluginFileName(dir, id)
 	if isExecAvailable(exec) {
-		_, f, _, _ := runtime.Caller(1)
-		fileName = filepath.Join(filepath.Dir(f), "builtin", "executable.so")
+		c = &ExecPlugin{}
 	} else {
 		fileName = goPluginFileName(dir, id)
+		goPlugin, err := plugin.Open(fileName)
+		if err != nil {
+			return nil, errors.Wrapf(err, "plugin %s fails to load", fileName)
+		}
+		symbol, err := goPlugin.Lookup(kplugin.PluginSymbol)
+		if err != nil {
+			return nil, errors.Wrapf(
+				err, "plugin %s doesn't have symbol %s",
+				fileName, kplugin.PluginSymbol)
+		}
+		var ok bool
+		c, ok = symbol.(Configurable)
+		if !ok {
+			return nil, fmt.Errorf("plugin %s not configurable", fileName)
+		}
 	}
-	goPlugin, err := plugin.Open(fileName)
-	if err != nil {
-		return nil, errors.Wrapf(err, "plugin %s fails to load", fileName)
-	}
-	symbol, err := goPlugin.Lookup(kplugin.PluginSymbol)
-	if err != nil {
-		return nil, errors.Wrapf(
-			err, "plugin %s doesn't have symbol %s",
-			fileName, kplugin.PluginSymbol)
-	}
-	c, ok := symbol.(Configurable)
-	if !ok {
-		return nil, fmt.Errorf("plugin %s not configurable", fileName)
-	}
-	err = c.Config(ldr, rf, res)
+	err := c.Config(ldr, rf, res)
 	if err != nil {
 		return nil, errors.Wrapf(err, "plugin %s fails configuration", fileName)
 	}
