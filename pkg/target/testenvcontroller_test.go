@@ -52,15 +52,15 @@ func (x *TestEnvController) Reset() {
 }
 
 func (x *TestEnvController) BuildGoPlugin(g, v, k string) {
-	err := x.compiler.Compile(g, v, k)
+	err := x.compiler.Compile(g)
 	if err != nil {
 		x.t.Errorf("compile failed: %v", err)
 	}
 }
 
-func (x *TestEnvController) BuildExecPlugin(name ...string) {
+func (x *TestEnvController) BuildExecPlugin(name string) {
 	obj := filepath.Join(
-		append([]string{x.workDir, pgmconfig.ProgramName, plugin.PluginRoot}, name...)...)
+		append([]string{x.workDir, pgmconfig.ProgramName, plugin.PluginRoot}, name)...)
 
 	srcRoot, err := plugins.DefaultSrcRoot()
 	if err != nil {
@@ -68,7 +68,7 @@ func (x *TestEnvController) BuildExecPlugin(name ...string) {
 	}
 
 	src := filepath.Join(
-		append([]string{srcRoot}, name...)...)
+		append([]string{srcRoot}, name)...)
 
 	if err := os.MkdirAll(filepath.Dir(obj), 0755); err != nil {
 		x.t.Errorf("error making directory: %s", filepath.Dir(obj))

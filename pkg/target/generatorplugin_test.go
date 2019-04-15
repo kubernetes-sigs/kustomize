@@ -31,39 +31,6 @@ port: "12345"
 `)
 }
 
-func TestServiceGeneratorPlugin(t *testing.T) {
-	tc := NewTestEnvController(t).Set()
-	defer tc.Reset()
-
-	tc.BuildGoPlugin(
-		"someteam.example.com", "v1", "ServiceGenerator")
-
-	th := NewKustTestHarnessWithPluginConfig(
-		t, "/app", plugin.ActivePluginConfig())
-	th.writeK("/app", `
-generators:
-- serviceGenerator.yaml
-`)
-	writeServiceGenerator(th, "/app/serviceGenerator.yaml")
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
-	th.assertActualEqualsExpected(m, `
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: dev
-  name: my-service
-spec:
-  ports:
-  - port: 12345
-  selector:
-    app: dev
-`)
-}
-
 func writeSecretGeneratorConfig(th *KustTestHarness, root string) {
 	th.writeF(filepath.Join(root, "secretGenerator.yaml"), `
 apiVersion: kustomize.config.k8s.io/v1
@@ -128,12 +95,11 @@ type: Opaque
 `)
 }
 
-func xTestConfigMapGenerator(t *testing.T) {
+func TestConfigMapGenerator(t *testing.T) {
 	tc := NewTestEnvController(t).Set()
 	defer tc.Reset()
 
-	tc.BuildExecPlugin(
-		"someteam.example.com", "v1", "ConfigMapGenerator")
+	tc.BuildExecPlugin("configmap.example.com")
 
 	th := NewKustTestHarnessWithPluginConfig(
 		t, "/app", plugin.ActivePluginConfig())
@@ -142,7 +108,7 @@ generators:
 - configmapGenerator.yaml
 `)
 	th.writeF("/app/configmapGenerator.yaml", `
-apiVersion: someteam.example.com/v1
+apiVersion: configmap.example.com/v1
 kind: ConfigMapGenerator
 metadata:
   name: some-random-name

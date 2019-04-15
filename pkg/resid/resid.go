@@ -17,6 +17,7 @@ limitations under the License.
 package resid
 
 import (
+	"fmt"
 	"strings"
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
@@ -77,6 +78,38 @@ func NewResId(k gvk.Gvk, n string) ResId {
 // NewResIdKindOnly creates new resource identifier
 func NewResIdKindOnly(k string, n string) ResId {
 	return ResId{gvKind: gvk.FromKind(k), name: n}
+}
+
+// NewResIdFromString creates a new resource identifier from a string
+func NewResIdFromString(s string) (*ResId, error) {
+	values := strings.Split(s, separator)
+	if len(values) != 5 {
+		return nil, fmt.Errorf("The input string %s doesn't represent a ResId", s)
+	}
+	g, err := gvk.FromString(values[0])
+	if err != nil {
+		return nil, err
+	}
+	n := ResId{
+		gvKind:    *g,
+		namespace: values[1],
+		prefix:    values[2],
+		name:      values[3],
+		suffix:    values[4],
+	}
+	if n.namespace == noNamespace {
+		n.namespace = ""
+	}
+	if n.prefix == noPrefix {
+		n.prefix = ""
+	}
+	if n.name == noName {
+		n.name = ""
+	}
+	if n.suffix == noSuffix {
+		n.suffix = ""
+	}
+	return &n, nil
 }
 
 const (

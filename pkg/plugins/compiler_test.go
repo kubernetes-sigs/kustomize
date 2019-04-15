@@ -38,11 +38,11 @@ func TestCompiler(t *testing.T) {
 	}
 	expectObj := filepath.Join(
 		c.ObjRoot(),
-		"someteam.example.com", "v1", "DatePrefixer.so")
+		"someteam.example.com.so")
 	if FileExists(expectObj) {
 		t.Errorf("obj file should not exist yet: %s", expectObj)
 	}
-	err = c.Compile("someteam.example.com", "v1", "DatePrefixer")
+	err = c.Compile("someteam.example.com")
 	if err != nil {
 		t.Error(err)
 	}

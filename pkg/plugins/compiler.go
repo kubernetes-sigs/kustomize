@@ -17,7 +17,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
+	"runtime"
 	"time"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
@@ -46,6 +48,13 @@ func DefaultSrcRoot() (string, error) {
 		os.Getenv("GOPATH"), "src",
 		pgmconfig.DomainName,
 		pgmconfig.ProgramName, plugin.PluginRoot)
+	if FileExists(root) {
+		return root, nil
+	}
+	nope = append(nope, root)
+
+	_, filename, _, _ := runtime.Caller(1)
+	root = path.Join(path.Dir(filename), "../..", plugin.PluginRoot)
 	if FileExists(root) {
 		return root, nil
 	}
@@ -84,11 +93,11 @@ func goBin() string {
 	return filepath.Join(os.Getenv("GOROOT"), "bin", "go")
 }
 
-// Compile reads ${srcRoot}/${g}/${v}/${k}.go
-//    and writes ${objRoot}/${g}/${v}/${k}.so
-func (b *Compiler) Compile(g, v, k string) error {
-	objDir := filepath.Join(b.objRoot, g, v)
-	objFile := filepath.Join(objDir, k) + ".so"
+// Compile reads ${srcRoot}/${g}.go
+//    and writes ${objRoot}/${g}.so
+func (b *Compiler) Compile(g string) error {
+	objDir := filepath.Join(b.objRoot)
+	objFile := filepath.Join(objDir, g) + ".so"
 	if RecentFileExists(objFile) {
 		// Skip rebuilding it.
 		return nil
@@ -97,7 +106,7 @@ func (b *Compiler) Compile(g, v, k string) error {
 	if err != nil {
 		return err
 	}
-	srcFile := filepath.Join(b.srcRoot, g, v, k) + ".go"
+	srcFile := filepath.Join(b.srcRoot, g) + ".go"
 	if !FileExists(srcFile) {
 		return fmt.Errorf(
 			"cannot find source %s", srcFile)

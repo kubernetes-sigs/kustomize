@@ -17,6 +17,7 @@ limitations under the License.
 package gvk
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -42,6 +43,29 @@ const (
 	noKind    = "~K"
 	separator = "_"
 )
+
+// FromString makes a Gvk with a string representing a Gvk
+func FromString(s string) (*Gvk, error) {
+	fields := strings.Split(s, separator)
+	if len(fields) != 3 {
+		return nil, fmt.Errorf("input string doesn't represent a Gvk")
+	}
+	g := Gvk{
+		Group:   fields[0],
+		Version: fields[1],
+		Kind:    fields[2],
+	}
+	if g.Group == noGroup {
+		g.Group = ""
+	}
+	if g.Version == noVersion {
+		g.Version = ""
+	}
+	if g.Kind == noKind {
+		g.Kind = ""
+	}
+	return &g, nil
+}
 
 // String returns a string representation of the GVK.
 func (x Gvk) String() string {

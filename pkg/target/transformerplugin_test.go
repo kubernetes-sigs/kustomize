@@ -63,9 +63,6 @@ func TestOrderedTransformers(t *testing.T) {
 	tc.BuildGoPlugin(
 		"someteam.example.com", "v1", "StringPrefixer")
 
-	tc.BuildGoPlugin(
-		"someteam.example.com", "v1", "DatePrefixer")
-
 	th := NewKustTestHarnessWithPluginConfig(
 		t, "/app", plugin.ActivePluginConfig())
 	th.writeK("/app", `
@@ -73,7 +70,10 @@ resources:
 - deployment.yaml
 transformers:
 - stringPrefixer.yaml
+generators:
+- serviceGenerator.yaml
 `)
+	writeServiceGenerator(th, "/app/serviceGenerator.yaml")
 	writeDeployment(th, "/app/deployment.yaml")
 	writeStringPrefixer(th, "/app/stringPrefixer.yaml")
 	writeDatePrefixer(th, "/app/datePrefixer.yaml")
@@ -82,6 +82,18 @@ transformers:
 		t.Fatalf("Err: %v", err)
 	}
 	th.assertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dev
+  name: apple-my-service
+spec:
+  ports:
+  - port: 12345
+  selector:
+    app: dev
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -95,6 +107,47 @@ spec:
       containers:
       - image: whatever
         name: whatever
+`)
+}
+
+func TestSedTransformer(t *testing.T) {
+	tc := NewTestEnvController(t).Set()
+	defer tc.Reset()
+
+	tc.BuildExecPlugin("sedder.example.com")
+
+	th := NewKustTestHarnessWithPluginConfig(
+		t, "/app", plugin.ActivePluginConfig())
+	th.writeK("/app", `
+transformers:
+- sed-transformer.yaml
+
+configMapGenerator:
+- name: test
+  literals:
+  - FOO=$FOO
+  - BAR=$BAR
+`)
+	th.writeF("/app/sed-transformer.yaml", `
+apiVersion: sedder.example.com/v1
+kind: SedTransformer
+metadata:
+  name: some-random-name
+`)
+
+	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.assertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  BAR: bar
+  FOO: foo
+kind: ConfigMap
+metadata:
+  annotations: {}
+  name: test-k4bkhftttd
 `)
 }
 
