@@ -122,7 +122,7 @@ apiVersion: someteam.example.com/v1
 kind: SedTransformer
 metadata:
   name: some-random-name
-file: sed-input.txt
+argsFromFile: sed-input.txt
 `)
 	th.writeF("/app/sed-input.txt", `
 s/$FOO/foo/g
