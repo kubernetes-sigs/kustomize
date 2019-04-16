@@ -44,6 +44,10 @@ type ExecPlugin struct {
 	// Each line of this file is treated as one argument
 	argsFromFile string
 
+	// cfg hold the unstructured data which can be used
+	// to configure the plugin
+	cfg string
+
 	// resmap Factory to make resources
 	rf *resmap.Factory
 
@@ -60,6 +64,12 @@ func (p *ExecPlugin) Config(
 	p.ldr = ldr
 
 	var err error
+	data, err := yaml.Marshal(k)
+	if err != nil {
+		return err
+	}
+	p.cfg = string(data)
+
 	p.argOneLiner, err = k.GetFieldValue("arg")
 	if err != nil && !isNoFieldError(err) {
 		return err
@@ -77,7 +87,7 @@ func (p *ExecPlugin) Generate() (resmap.ResMap, error) {
 		return nil, err
 	}
 	cmd := exec.Command(p.name, args...)
-	cmd.Env = os.Environ()
+	cmd.Env = p.getEnv()
 	cmd.Stderr = os.Stderr
 	output, err := cmd.Output()
 	if err != nil {
@@ -98,7 +108,7 @@ func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
 			return err
 		}
 		cmd := exec.Command(p.name, args...)
-		cmd.Env = os.Environ()
+		cmd.Env = p.getEnv()
 		cmd.Stdin = bytes.NewReader(content)
 		cmd.Stderr = os.Stderr
 		output, err := cmd.Output()
@@ -129,6 +139,12 @@ func (p *ExecPlugin) getArgs() ([]string, error) {
 		args = append(args, strings.Split(string(content), "\n")...)
 	}
 	return args, nil
+}
+
+func (p *ExecPlugin) getEnv() []string {
+	env := os.Environ()
+	env = append(env, "KUSTOMIZE_PLUGIN_CONFIG_STRING="+p.cfg)
+	return env
 }
 
 func isNoFieldError(e error) bool {
