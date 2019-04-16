@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Skip the config file name argument.
+shift
+
 echo "
 kind: ConfigMap
 apiVersion: v1

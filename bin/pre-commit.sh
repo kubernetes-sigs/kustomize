@@ -32,6 +32,11 @@ function testGoTest {
   go test -v ./...
 }
 
+function testNoTravisGoTest {
+  go test -v sigs.k8s.io/kustomize/pkg/target \
+      -run TestChartInflatorExecPlugin -tags=notravis
+}
+
 function testExamples {
   mdrip --mode test --label test README.md ./examples
 }
@@ -82,6 +87,11 @@ echo "Beginning tests..."
 
 runTest testGoLangCILint
 runTest testGoTest
+
+if [ -z ${TRAVIS+x} ]; then
+  echo Not on travis, so running the notravis tests
+  runTest testNoTravisGoTest
+fi
 
 PATH=$HOME/go/bin:$PATH
 runTest testExamples
