@@ -128,7 +128,7 @@ type: Opaque
 `)
 }
 
-func xTestConfigMapGenerator(t *testing.T) {
+func TestConfigMapGenerator(t *testing.T) {
 	tc := NewTestEnvController(t).Set()
 	defer tc.Reset()
 
@@ -146,6 +146,7 @@ apiVersion: someteam.example.com/v1
 kind: ConfigMapGenerator
 metadata:
   name: some-random-name
+arg: "admin secret"
 `)
 	m, err := th.makeKustTarget().MakeCustomizedResMap()
 	if err != nil {
