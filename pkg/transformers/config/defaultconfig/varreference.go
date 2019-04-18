@@ -96,6 +96,9 @@ varReference:
 
 - path: spec/tls/hosts
   kind: Ingress
+  
+- path: spec/tls/secretName
+  kind: Ingress
 
 - path: spec/template/spec/containers/args
   kind: Job
