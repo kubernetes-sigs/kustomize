@@ -59,11 +59,12 @@ func NewPruneTransformer(p *types.Prune, namespace string, append bool) transfor
 // which is proposed in https://github.com/kubernetes/enhancements/pull/810
 func (o *pruneTransformer) Transform(m resmap.ResMap) error {
 	keys := []string{}
-	for id, r := range m {
-		s := id.PruneString()
+	for _, r := range m {
+		s := r.PruneString()
 		keys = append(keys, s)
 		for _, refid := range r.GetRefBy() {
-			keys = append(keys, s+"---"+refid.PruneString())
+			ref := m[refid]
+			keys = append(keys, s+"---"+ref.PruneString())
 		}
 	}
 	h, err := hash.SortArrayAndComputeHash(keys)
