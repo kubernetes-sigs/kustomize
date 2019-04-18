@@ -180,3 +180,62 @@ spec:
         name: whatever
 `)
 }
+
+func TestSmallOverlayJSONPatch(t *testing.T) {
+	th := NewKustTestHarness(t, "/app/overlay")
+	writeSmallBase(th)
+	th.writeK("/app/overlay", `
+bases:
+- ../base
+patchesJson6902:
+- target:
+    version: v1
+    kind: Service
+    name: myService # BUG (https://github.com/kubernetes-sigs/kustomize/issues/972): this should be a-myService, because that is what the output for the base contains
+  path: service-patch.yaml
+`)
+
+	th.writeF("/app/overlay/service-patch.yaml", `
+- op: add
+  path: /spec/selector/backend
+  value: beagle
+`)
+	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.assertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: myApp
+  name: a-myService
+spec:
+  ports:
+  - port: 7002
+  selector:
+    app: myApp
+    backend: beagle
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: myApp
+  name: a-myDeployment
+spec:
+  selector:
+    matchLabels:
+      app: myApp
+  template:
+    metadata:
+      labels:
+        app: myApp
+        backend: awesome
+    spec:
+      containers:
+      - image: whatever
+        name: whatever
+`)
+}
