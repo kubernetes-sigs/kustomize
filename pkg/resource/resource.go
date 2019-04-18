@@ -89,7 +89,11 @@ func (r *Resource) Merge(other *Resource) {
 }
 
 func (r *Resource) PruneString() string {
-	return r.Id().PruneString()
+	namespace, _ := r.GetFieldValue("metadata.namespace")
+	return r.GetGvk().Group +
+		"_" + r.GetGvk().Kind +
+		"_" + namespace +
+		"_" + r.GetName()
 }
 
 // Replace performs replace with other resource.

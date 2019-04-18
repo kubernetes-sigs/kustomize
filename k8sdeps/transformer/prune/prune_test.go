@@ -54,8 +54,7 @@ func makeResMap() resmap.ResMap {
 			}),
 		resid.NewResId(deploy, "deploy1"): rf.FromMap(
 			map[string]interface{}{
-				"group":      "apps",
-				"apiVersion": "v1",
+				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
 				"metadata": map[string]interface{}{
 					"name": "deploy1",
