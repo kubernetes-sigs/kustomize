@@ -19,16 +19,23 @@ package plugins
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sigs.k8s.io/kustomize/pkg/types"
 	"strings"
+	"syscall"
 
 	"github.com/ghodss/yaml"
+	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/resmap"
+)
+
+const (
+	ArgsOneLiner = "argsOneLiner"
+	ArgsFromFile = "argsFromFile"
 )
 
 // ExecPlugin record the name and args of an executable
@@ -37,16 +44,13 @@ type ExecPlugin struct {
 	// name of the executable
 	name string
 
-	// one line of arguments for the executable
-	argOneLiner string
+	// Optional command line arguments to the executable
+	// pulled from specially named fields in cfg.
+	// This is for executables that don't want to parse YAML.
+	args []string
 
-	// relative file path to a file
-	// Each line of this file is treated as one argument
-	argsFromFile string
-
-	// cfg hold the unstructured data which can be used
-	// to configure the plugin
-	cfg string
+	// Plugin configuration data.
+	cfg []byte
 
 	// resmap Factory to make resources
 	rf *resmap.Factory
@@ -57,28 +61,64 @@ type ExecPlugin struct {
 
 func (p *ExecPlugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, k ifc.Kunstructured) error {
-	dir := filepath.Join(pgmconfig.ConfigRoot(), "plugins")
+	dir := filepath.Join(pgmconfig.ConfigRoot(), plugin.PluginRoot)
 	id := k.GetGvk()
 	p.name = filepath.Join(dir, id.Group, id.Version, id.Kind)
 	p.rf = rf
 	p.ldr = ldr
 
 	var err error
-	data, err := yaml.Marshal(k)
+	p.cfg, err = yaml.Marshal(k)
 	if err != nil {
 		return err
 	}
-	p.cfg = string(data)
-
-	p.argOneLiner, err = k.GetFieldValue("arg")
-	if err != nil && !isNoFieldError(err) {
-		return err
-	}
-	p.argsFromFile, err = k.GetFieldValue("file")
-	if err != nil && !isNoFieldError(err) {
+	err = p.processOptionalArgsFields(k)
+	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (p *ExecPlugin) processOptionalArgsFields(k ifc.Kunstructured) error {
+	args, err := k.GetFieldValue(ArgsOneLiner)
+	if err == nil && args != "" {
+		p.args = strings.Split(args, " ")
+	}
+	fileName, err := k.GetFieldValue(ArgsFromFile)
+	if err == nil && fileName != "" {
+		content, err := p.ldr.Load(fileName)
+		if err != nil {
+			return err
+		}
+		for _, x := range strings.Split(string(content), "\n") {
+			x := strings.TrimLeft(x, " ")
+			if x != "" {
+				p.args = append(p.args, x)
+			}
+		}
+	}
+	return nil
+}
+
+func (p *ExecPlugin) writeConfig() (string, error) {
+	tmpFile, err := ioutil.TempFile("", "kust-pipe")
+	if err != nil {
+		return "", err
+	}
+	syscall.Mkfifo(tmpFile.Name(), 0600)
+	stdout, err := os.OpenFile(tmpFile.Name(), os.O_RDWR, 0600)
+	if err != nil {
+		return "", err
+	}
+	_, err = stdout.Write(p.cfg)
+	if err != nil {
+		return "", err
+	}
+	err = stdout.Close()
+	if err != nil {
+		return "", err
+	}
+	return tmpFile.Name(), nil
 }
 
 func (p *ExecPlugin) Generate() (resmap.ResMap, error) {
@@ -101,7 +141,6 @@ func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
 	if err != nil {
 		return err
 	}
-
 	for id, r := range rm {
 		content, err := yaml.Marshal(r.Kunstructured)
 		if err != nil {
@@ -129,28 +168,18 @@ func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
 	return nil
 }
 
+// The first arg is always the absolute path to a temporary file
+// holding the YAML form of the plugin config.
 func (p *ExecPlugin) getArgs() ([]string, error) {
-	args := strings.Split(p.argOneLiner, " ")
-	if p.argsFromFile != "" {
-		content, err := p.ldr.Load(p.argsFromFile)
-		if err != nil {
-			return nil, err
-		}
-		args = append(args, strings.Split(string(content), "\n")...)
+	configFileName, err := p.writeConfig()
+	if err != nil {
+		return nil, err
 	}
-	return args, nil
+	return append([]string{configFileName}, p.args...), nil
 }
 
 func (p *ExecPlugin) getEnv() []string {
 	env := os.Environ()
-	env = append(env, "KUSTOMIZE_PLUGIN_CONFIG_STRING="+p.cfg)
+	env = append(env, "KUSTOMIZE_PLUGIN_CONFIG_STRING="+string(p.cfg))
 	return env
-}
-
-func isNoFieldError(e error) bool {
-	_, ok := e.(types.NoFieldError)
-	if ok {
-		return true
-	}
-	return false
 }
