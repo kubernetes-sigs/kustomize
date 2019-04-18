@@ -158,6 +158,8 @@ var clusterLevelKinds = []string{
 	"CustomResourceDefinition",
 	"Namespace",
 	"PersistentVolume",
+	"MutatingWebhookConfiguration",
+	"ValidatingWebhookConfiguration",
 }
 
 // IsClusterKind returns true if x is a cluster-level Gvk
