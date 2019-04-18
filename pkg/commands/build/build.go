@@ -19,7 +19,7 @@ package build
 import (
 	"fmt"
 	"io"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -121,23 +121,11 @@ func (o *Options) RunBuild(
 	if err != nil {
 		return err
 	}
-	allResources, err := kt.MakeCustomizedResMap()
+	m, err := kt.MakeCustomizedResMap()
 	if err != nil {
 		return err
 	}
-	// Output the objects.
-	res, err := allResources.EncodeAsYaml()
-	if err != nil {
-		return err
-	}
-	if o.outputPath != "" {
-		if fSys.IsDir(o.outputPath) {
-			return writeIndividualFiles(fSys, o.outputPath, allResources)
-		}
-		return fSys.WriteFile(o.outputPath, res)
-	}
-	_, err = out.Write(res)
-	return err
+	return o.emitResources(out, fSys, m)
 }
 
 func (o *Options) RunBuildPrune(
@@ -153,19 +141,23 @@ func (o *Options) RunBuildPrune(
 	if err != nil {
 		return err
 	}
-	allResources, err := kt.MakePruneConfigMap()
+	m, err := kt.MakePruneConfigMap()
 	if err != nil {
 		return err
 	}
-	// Output the objects.
-	res, err := allResources.EncodeAsYaml()
+	return o.emitResources(out, fSys, m)
+}
+
+func (o *Options) emitResources(
+	out io.Writer, fSys fs.FileSystem, m resmap.ResMap) error {
+	if o.outputPath != "" && fSys.IsDir(o.outputPath) {
+		return writeIndividualFiles(fSys, o.outputPath, m)
+	}
+	res, err := m.EncodeAsYaml()
 	if err != nil {
 		return err
 	}
 	if o.outputPath != "" {
-		if fSys.IsDir(o.outputPath) {
-			return writeIndividualFiles(fSys, o.outputPath, allResources)
-		}
 		return fSys.WriteFile(o.outputPath, res)
 	}
 	_, err = out.Write(res)
@@ -195,17 +187,18 @@ func NewCmdBuildPrune(
 	return cmd
 }
 
-func writeIndividualFiles(fSys fs.FileSystem, folderPath string, resources resmap.ResMap) error {
-	for _, obj := range resources {
-		filename := path.Join(
+func writeIndividualFiles(
+	fSys fs.FileSystem, folderPath string, m resmap.ResMap) error {
+	for _, res := range m {
+		filename := filepath.Join(
 			folderPath,
 			fmt.Sprintf(
 				"%s_%s.yaml",
-				strings.ToLower(obj.GetGvk().String()),
-				strings.ToLower(obj.GetName()),
+				strings.ToLower(res.GetGvk().String()),
+				strings.ToLower(res.GetName()),
 			),
 		)
-		out, err := yaml.Marshal(obj.Map())
+		out, err := yaml.Marshal(res.Map())
 		if err != nil {
 			return err
 		}
