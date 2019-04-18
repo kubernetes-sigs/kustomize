@@ -635,6 +635,7 @@ spec:
   tls:
   - hosts:
     - $(DEPLOYMENT_NAME).example.com
+    secretName: $(DEPLOYMENT_NAME).example.com-tls
 `)
 	th.writeF("/app/base/service.yaml", `
 apiVersion: v1
@@ -713,6 +714,7 @@ spec:
   tls:
   - hosts:
     - kustomized-nginx.example.com
+    secretName: kustomized-nginx.example.com-tls
 `)
 }
 
