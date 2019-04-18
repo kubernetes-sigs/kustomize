@@ -17,8 +17,12 @@ limitations under the License.
 package build
 
 import (
+	"fmt"
 	"io"
+	"path"
+	"strings"
 
+	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/fs"
@@ -127,6 +131,9 @@ func (o *Options) RunBuild(
 		return err
 	}
 	if o.outputPath != "" {
+		if fSys.IsDir(o.outputPath) {
+			return writeIndividualFiles(fSys, o.outputPath, allResources)
+		}
 		return fSys.WriteFile(o.outputPath, res)
 	}
 	_, err = out.Write(res)
@@ -156,6 +163,9 @@ func (o *Options) RunBuildPrune(
 		return err
 	}
 	if o.outputPath != "" {
+		if fSys.IsDir(o.outputPath) {
+			return writeIndividualFiles(fSys, o.outputPath, allResources)
+		}
 		return fSys.WriteFile(o.outputPath, res)
 	}
 	_, err = out.Write(res)
@@ -183,4 +193,26 @@ func NewCmdBuildPrune(
 		},
 	}
 	return cmd
+}
+
+func writeIndividualFiles(fSys fs.FileSystem, folderPath string, resources resmap.ResMap) error {
+	for _, obj := range resources {
+		filename := path.Join(
+			folderPath,
+			fmt.Sprintf(
+				"%s_%s.yaml",
+				strings.ToLower(obj.GetGvk().String()),
+				strings.ToLower(obj.GetName()),
+			),
+		)
+		out, err := yaml.Marshal(obj.Map())
+		if err != nil {
+			return err
+		}
+		err = fSys.WriteFile(filename, out)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
