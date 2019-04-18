@@ -1,8 +1,8 @@
 os:
-# TODO: Enable this when we can get the tests to work
-#  - windows
   - linux
   - osx
+# TODO: Uncomment when tests running on Windows.
+#  - windows
 
 addons:
   apt:
@@ -30,6 +30,10 @@ before_install:
   - source ./bin/consider-early-travis-exit.sh
   - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $GOPATH/bin ${GOLANGCI_RELEASE}
   - go get -u github.com/monopole/mdrip
+  # The following would install Helm if needed for some reason.
+  # - wget https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz
+  # - tar -xvzf helm-v2.13.1-linux-amd64.tar.gz
+  # - sudo mv linux-amd64/helm /usr/local/bin/helm
 
 # Skip the install process; let pre-commit.sh do it.
 install: true
