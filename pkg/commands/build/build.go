@@ -96,10 +96,11 @@ func NewCmdBuild(
 // Validate validates build command.
 func (o *Options) Validate(args []string) error {
 	if len(args) > 1 {
-		return errors.New("specify one path to " + pgmconfig.KustomizationFileNames[0])
+		return errors.New(
+			"specify one path to " + pgmconfig.KustomizationFileNames[0])
 	}
 	if len(args) == 0 {
-		o.kustomizationPath = "./"
+		o.kustomizationPath = loader.CWD
 	} else {
 		o.kustomizationPath = args[0]
 	}

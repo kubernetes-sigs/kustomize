@@ -58,7 +58,7 @@ func NewPruneTransformer(p *types.Prune, namespace string, append bool) transfor
 // The prune ConfigMap is used to support the pruning command in the client side tool,
 // which is proposed in https://github.com/kubernetes/enhancements/pull/810
 func (o *pruneTransformer) Transform(m resmap.ResMap) error {
-	keys := []string{}
+	var keys []string
 	for _, r := range m {
 		s := r.PruneString()
 		keys = append(keys, s)
