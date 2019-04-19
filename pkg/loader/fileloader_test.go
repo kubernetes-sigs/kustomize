@@ -288,7 +288,7 @@ func doSanityChecksAndDropIntoBase(
 	return l
 }
 
-func TestRestrictionRootInRealLoader(t *testing.T) {
+func TestRestrictionRootOnlyInRealLoader(t *testing.T) {
 	dir, fSys, err := commonSetupForLoaderRestrictionTest()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

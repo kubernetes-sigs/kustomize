@@ -28,6 +28,7 @@ import (
 	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
+	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
@@ -51,12 +52,18 @@ func NewKustTestHarness(t *testing.T, path string) *KustTestHarness {
 func NewKustTestHarnessWithPluginConfig(
 	t *testing.T, path string,
 	pc *types.PluginConfig) *KustTestHarness {
+	return NewKustTestHarnessFull(t, path, loader.RestrictionRootOnly, pc)
+}
+
+func NewKustTestHarnessFull(
+	t *testing.T, path string,
+	lr loader.LoadRestrictorFunc, pc *types.PluginConfig) *KustTestHarness {
 	return &KustTestHarness{
 		t: t,
 		rf: resmap.NewFactory(resource.NewFactory(
 			kunstruct.NewKunstructuredFactoryWithGeneratorArgs(
 				&types.GeneratorMetaArgs{PluginConfig: pc}))),
-		ldr: loadertest.NewFakeLoader(path),
+		ldr: loadertest.NewFakeLoaderWithRestrictor(lr, path),
 		pc:  pc}
 }
 

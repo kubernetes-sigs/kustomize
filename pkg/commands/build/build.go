@@ -38,6 +38,7 @@ import (
 type Options struct {
 	kustomizationPath string
 	outputPath        string
+	loadRestrictor    loader.LoadRestrictorFunc
 }
 
 // NewOptions creates a Options object
@@ -45,6 +46,7 @@ func NewOptions(p, o string) *Options {
 	return &Options{
 		kustomizationPath: p,
 		outputPath:        o,
+		loadRestrictor:    loader.RestrictionRootOnly,
 	}
 }
 
@@ -88,13 +90,14 @@ func NewCmdBuild(
 		&o.outputPath,
 		"output", "o", "",
 		"If specified, write the build output to this path.")
+	loader.AddLoadRestrictionsFlag(cmd.Flags())
 
 	cmd.AddCommand(NewCmdBuildPrune(out, fs, rf, ptf, pc))
 	return cmd
 }
 
 // Validate validates build command.
-func (o *Options) Validate(args []string) error {
+func (o *Options) Validate(args []string) (err error) {
 	if len(args) > 1 {
 		return errors.New(
 			"specify one path to " + pgmconfig.KustomizationFileNames[0])
@@ -104,8 +107,8 @@ func (o *Options) Validate(args []string) error {
 	} else {
 		o.kustomizationPath = args[0]
 	}
-
-	return nil
+	o.loadRestrictor, err = loader.ValidateLoadRestrictorFlag()
+	return
 }
 
 // RunBuild runs build command.
@@ -113,7 +116,8 @@ func (o *Options) RunBuild(
 	out io.Writer, fSys fs.FileSystem,
 	rf *resmap.Factory, ptf transformer.Factory,
 	pc *types.PluginConfig) error {
-	ldr, err := loader.NewLoader(o.kustomizationPath, fSys)
+	ldr, err := loader.NewLoader(
+		o.loadRestrictor, o.kustomizationPath, fSys)
 	if err != nil {
 		return err
 	}
@@ -133,7 +137,8 @@ func (o *Options) RunBuildPrune(
 	out io.Writer, fSys fs.FileSystem,
 	rf *resmap.Factory, ptf transformer.Factory,
 	pc *types.PluginConfig) error {
-	ldr, err := loader.NewLoader(o.kustomizationPath, fSys)
+	ldr, err := loader.NewLoader(
+		o.loadRestrictor, o.kustomizationPath, fSys)
 	if err != nil {
 		return err
 	}
