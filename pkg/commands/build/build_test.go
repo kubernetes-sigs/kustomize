@@ -35,7 +35,7 @@ func TestBuildValidate(t *testing.T) {
 		path  string
 		erMsg string
 	}{
-		{"noargs", []string{}, "./", ""},
+		{"noargs", []string{}, ".", ""},
 		{"file", []string{"beans"}, "beans", ""},
 		{"path", []string{"a/b/c"}, "a/b/c", ""},
 		{"path", []string{"too", "many"},
@@ -54,7 +54,7 @@ func TestBuildValidate(t *testing.T) {
 			continue
 		}
 		if e != nil {
-			t.Errorf("%s: unknown error %v", mycase.name, e)
+			t.Errorf("%s: unknown error: %v", mycase.name, e)
 			continue
 		}
 		if opts.kustomizationPath != mycase.path {
