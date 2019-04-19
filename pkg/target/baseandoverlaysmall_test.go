@@ -17,7 +17,6 @@ limitations under the License.
 package target_test
 
 import (
-	"strings"
 	"testing"
 )
 
@@ -182,7 +181,7 @@ spec:
 `)
 }
 
-func TestSharedPatchDisAllowed(t *testing.T) {
+func TestSharedPatchAllowed(t *testing.T) {
 	th := NewKustTestHarness(t, "/app/overlay")
 	writeSmallBase(th)
 	th.writeK("/app/overlay", `
@@ -201,15 +200,50 @@ metadata:
 spec:
   replicas: 1000
 `)
-	_, err := th.makeKustTarget().MakeCustomizedResMap()
-	if err == nil {
-		t.Fatalf("expected error")
+	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
 	}
-	if !strings.Contains(
-		err.Error(),
-		"security; file '../shared/deployment-patch.yaml' is not in or below '/app/overlay'") {
-		t.Fatalf("unexpected error: %s", err)
-	}
+	th.assertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: myApp
+    env: prod
+  name: a-myService
+spec:
+  ports:
+  - port: 7002
+  selector:
+    app: myApp
+    backend: bungie
+    env: prod
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: myApp
+    env: prod
+  name: a-myDeployment
+spec:
+  replicas: 1000
+  selector:
+    matchLabels:
+      app: myApp
+      env: prod
+  template:
+    metadata:
+      labels:
+        app: myApp
+        backend: awesome
+        env: prod
+    spec:
+      containers:
+      - image: whatever
+        name: whatever
+`)
 }
 
 func TestSmallOverlayJSONPatch(t *testing.T) {
