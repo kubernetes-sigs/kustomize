@@ -159,7 +159,7 @@ func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
 			return err
 		}
 		if len(tmpMap) != 1 {
-			return fmt.Errorf("Unable to put two resources into one")
+			return fmt.Errorf("unable to put two resources into one")
 		}
 		for _, v := range tmpMap {
 			rm[id].Kunstructured = v.Kunstructured
