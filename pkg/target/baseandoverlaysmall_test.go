@@ -17,6 +17,7 @@ limitations under the License.
 package target_test
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -179,6 +180,36 @@ spec:
       - image: whatever:1.8.0
         name: whatever
 `)
+}
+
+func TestSharedPatchDisAllowed(t *testing.T) {
+	th := NewKustTestHarness(t, "/app/overlay")
+	writeSmallBase(th)
+	th.writeK("/app/overlay", `
+commonLabels:
+  env: prod
+bases:
+- ../base
+patchesStrategicMerge:
+- ../shared/deployment-patch.yaml
+`)
+	th.writeF("/app/shared/deployment-patch.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeployment
+spec:
+  replicas: 1000
+`)
+	_, err := th.makeKustTarget().MakeCustomizedResMap()
+	if err == nil {
+		t.Fatalf("expected error")
+	}
+	if !strings.Contains(
+		err.Error(),
+		"security; file '../shared/deployment-patch.yaml' is not in or below '/app/overlay'") {
+		t.Fatalf("unexpected error: %s", err)
+	}
 }
 
 func TestSmallOverlayJSONPatch(t *testing.T) {
