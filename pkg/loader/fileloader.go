@@ -30,7 +30,7 @@ import (
 // fileLoader is a kustomization's interface to files.
 //
 // The directory in which a kustomization file sits
-// is referred to below as the kustomization's root.
+// is referred to below as the kustomization's _root_.
 //
 // An instance of fileLoader has an immutable root,
 // and offers a `New` method returning a new loader
@@ -42,12 +42,12 @@ import (
 //
 //   `Load` is used to visit these paths.
 //
+//   These paths refer to resources, patches,
+//   data for ConfigMaps and Secrets, etc.
+//
 //   They must terminate in or below the root.
 //
-//   They hold things like resources, patches,
-//   data for ConfigMaps, etc.
-//
-// * bases; other kustomizations
+// * bases (other kustomizations)
 //
 //   `New` is used to load bases.
 //
@@ -82,24 +82,31 @@ type fileLoader struct {
 	// Loader that spawned this loader.
 	// Used to avoid cycles.
 	referrer *fileLoader
+
 	// An absolute, cleaned path to a directory.
-	// The Load function reads from this directory,
-	// or directories below it.
+	// The Load function will read non-absolute
+	// paths relative to this directory.
 	root fs.ConfirmedDir
+
 	// If this is non-nil, the files were
 	// obtained from the given repository.
 	repoSpec *git.RepoSpec
+
 	// File system utilities.
 	fSys fs.FileSystem
+
 	// Used to clone repositories.
 	cloner git.Cloner
+
 	// Used to clean up, as needed.
 	cleaner func() error
 }
 
+const CWD = "."
+
 // NewFileLoaderAtCwd returns a loader that loads from ".".
 func NewFileLoaderAtCwd(fSys fs.FileSystem) *fileLoader {
-	return newLoaderOrDie(fSys, ".")
+	return newLoaderOrDie(fSys, CWD)
 }
 
 // NewFileLoaderAtRoot returns a loader that loads from "/".
@@ -279,9 +286,9 @@ func (l *fileLoader) errIfRepoCycle(newRepoSpec *git.RepoSpec) error {
 	return l.referrer.errIfRepoCycle(newRepoSpec)
 }
 
-// Load returns content of file at the given relative path,
-// else an error.  The path must refer to a file in or
-// below the current root.
+// Load returns the content of file at the given path,
+// else an error.  Relative paths are taken relative
+// relative to the root.
 func (l *fileLoader) Load(path string) ([]byte, error) {
 	if filepath.IsAbs(path) {
 		return nil, l.loadOutOfBounds(path)
