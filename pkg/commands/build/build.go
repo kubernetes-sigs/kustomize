@@ -88,13 +88,12 @@ func NewCmdBuild(
 		&o.outputPath,
 		"output", "o", "",
 		"If specified, write the build output to this path.")
-
 	cmd.AddCommand(NewCmdBuildPrune(out, fs, rf, ptf, pc))
 	return cmd
 }
 
 // Validate validates build command.
-func (o *Options) Validate(args []string) error {
+func (o *Options) Validate(args []string) (err error) {
 	if len(args) > 1 {
 		return errors.New(
 			"specify one path to " + pgmconfig.KustomizationFileNames[0])
@@ -104,7 +103,6 @@ func (o *Options) Validate(args []string) error {
 	} else {
 		o.kustomizationPath = args[0]
 	}
-
 	return nil
 }
 

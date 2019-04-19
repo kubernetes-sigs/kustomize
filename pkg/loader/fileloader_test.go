@@ -468,7 +468,7 @@ func TestLocalLoaderReferencingGitBase(t *testing.T) {
 		t.Fatalf("unexpected err:  %v\n", err)
 	}
 	l1 := newLoaderAtConfirmedDir(
-		root, fSys, nil,
+		root, RestrictionRootOnly, fSys, nil,
 		git.DoNothingCloner(fs.ConfirmedDir(cloneRoot)))
 	if l1.Root() != topDir {
 		t.Fatalf("unexpected root %s", l1.Root())

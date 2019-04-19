@@ -66,7 +66,8 @@ func newCmdAddConfigMap(fSys fs.FileSystem, kf ifc.KunstructuredFactory) *cobra.
 
 			// Add the flagsAndArgs map to the kustomization file.
 			err = addConfigMap(
-				loader.NewFileLoaderAtCwd(fSys), kustomization, flags, kf)
+				loader.NewFileLoaderAtCwd(fSys),
+				kustomization, flags, kf)
 			if err != nil {
 				return err
 			}

@@ -45,9 +45,10 @@ import (
 //   These paths refer to resources, patches,
 //   data for ConfigMaps and Secrets, etc.
 //
-//   They must terminate in or below the root.
+//   By default, one can only Load from locations
+//   in or below the root directory.
 //
-// * bases (other kustomizations)
+// * bases (other kustomizations).
 //
 //   `New` is used to load bases.
 //
@@ -76,7 +77,7 @@ import (
 // are self-contained and relocatable, and impose
 // some safety when relying on remote kustomizations,
 // e.g. a ConfigMap generator specified to read
-// from /etc/passwd will fail.
+// from /etc/passwd will fail on default settings.
 //
 type fileLoader struct {
 	// Loader that spawned this loader.
@@ -87,6 +88,9 @@ type fileLoader struct {
 	// The Load function will read non-absolute
 	// paths relative to this directory.
 	root fs.ConfirmedDir
+
+	// Restricts behavior of Load function.
+	loadRestrictor LoadRestrictorFunc
 
 	// If this is non-nil, the files were
 	// obtained from the given repository.
@@ -105,11 +109,13 @@ type fileLoader struct {
 const CWD = "."
 
 // NewFileLoaderAtCwd returns a loader that loads from ".".
+// A convenience for kustomize edit commands.
 func NewFileLoaderAtCwd(fSys fs.FileSystem) *fileLoader {
 	return newLoaderOrDie(fSys, CWD)
 }
 
 // NewFileLoaderAtRoot returns a loader that loads from "/".
+// A convenience for tests.
 func NewFileLoaderAtRoot(fSys fs.FileSystem) *fileLoader {
 	return newLoaderOrDie(fSys, string(filepath.Separator))
 }
@@ -126,19 +132,21 @@ func newLoaderOrDie(fSys fs.FileSystem, path string) *fileLoader {
 		log.Fatalf("unable to make loader at '%s'; %v", path, err)
 	}
 	return newLoaderAtConfirmedDir(
-		root, fSys, nil, git.ClonerUsingGitExec)
+		root, RestrictionRootOnly, fSys, nil, git.ClonerUsingGitExec)
 }
 
 // newLoaderAtConfirmedDir returns a new fileLoader with given root.
 func newLoaderAtConfirmedDir(
-	root fs.ConfirmedDir, fSys fs.FileSystem,
-	referrer *fileLoader, cloner git.Cloner) *fileLoader {
+	root fs.ConfirmedDir, lr LoadRestrictorFunc,
+	fSys fs.FileSystem, referrer *fileLoader,
+	cloner git.Cloner) *fileLoader {
 	return &fileLoader{
-		root:     root,
-		referrer: referrer,
-		fSys:     fSys,
-		cloner:   cloner,
-		cleaner:  func() error { return nil },
+		loadRestrictor: lr,
+		root:           root,
+		referrer:       referrer,
+		fSys:           fSys,
+		cloner:         cloner,
+		cleaner:        func() error { return nil },
 	}
 }
 
@@ -190,7 +198,7 @@ func (l *fileLoader) New(path string) (ifc.Loader, error) {
 		return nil, err
 	}
 	return newLoaderAtConfirmedDir(
-		root, l.fSys, l, l.cloner), nil
+		root, l.loadRestrictor, l.fSys, l, l.cloner), nil
 }
 
 // newLoaderAtGitClone returns a new Loader pinned to a temporary
@@ -216,12 +224,14 @@ func newLoaderAtGitClone(
 			repoSpec.AbsPath(), f)
 	}
 	return &fileLoader{
-		root:     root,
-		referrer: referrer,
-		repoSpec: repoSpec,
-		fSys:     fSys,
-		cloner:   cloner,
-		cleaner:  repoSpec.Cleaner(fSys),
+		// Clones never allowed to escape root.
+		loadRestrictor: RestrictionRootOnly,
+		root:           root,
+		referrer:       referrer,
+		repoSpec:       repoSpec,
+		fSys:           fSys,
+		cloner:         cloner,
+		cleaner:        repoSpec.Cleaner(fSys),
 	}, nil
 }
 
@@ -288,29 +298,16 @@ func (l *fileLoader) errIfRepoCycle(newRepoSpec *git.RepoSpec) error {
 
 // Load returns the content of file at the given path,
 // else an error.  Relative paths are taken relative
-// relative to the root.
+// to the root.
 func (l *fileLoader) Load(path string) ([]byte, error) {
-	if filepath.IsAbs(path) {
-		return nil, l.loadOutOfBounds(path)
+	if !filepath.IsAbs(path) {
+		path = l.root.Join(path)
 	}
-	d, f, err := l.fSys.CleanedAbs(l.root.Join(path))
+	path, err := l.loadRestrictor(l.fSys, l.root, path)
 	if err != nil {
 		return nil, err
 	}
-	if f == "" {
-		return nil, fmt.Errorf(
-			"'%s' must be a file (got d='%s')", path, d)
-	}
-	if !d.HasPrefix(l.root) {
-		return nil, l.loadOutOfBounds(path)
-	}
-	return l.fSys.ReadFile(d.Join(f))
-}
-
-func (l *fileLoader) loadOutOfBounds(path string) error {
-	return fmt.Errorf(
-		"security; file '%s' is not in or below '%s'",
-		path, l.root)
+	return l.fSys.ReadFile(path)
 }
 
 // Cleanup runs the cleaner.

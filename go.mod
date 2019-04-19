@@ -25,10 +25,11 @@ require (
 	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/pkg/errors v0.8.0
 	github.com/spf13/cobra v0.0.2
-	github.com/spf13/pflag v1.0.1 // indirect
+	github.com/spf13/pflag v1.0.1
 	github.com/stretchr/testify v1.3.0 // indirect
-	golang.org/x/net v0.0.0-20190225153610-fe579d43d832 // indirect
+	golang.org/x/net v0.0.0-20190419010253-1f3472d942ba // indirect
 	golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6 // indirect
+	golang.org/x/sys v0.0.0-20190418153312-f0ce4c0180be // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.2.1
 	k8s.io/api v0.0.0-20180510062335-53d615ae3f44

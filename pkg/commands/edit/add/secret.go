@@ -66,7 +66,8 @@ func newCmdAddSecret(fSys fs.FileSystem, kf ifc.KunstructuredFactory) *cobra.Com
 
 			// Add the flagsAndArgs map to the kustomization file.
 			err = addSecret(
-				loader.NewFileLoaderAtCwd(fSys), kustomization, flags, kf)
+				loader.NewFileLoaderAtCwd(fSys),
+				kustomization, flags, kf)
 			if err != nil {
 				return err
 			}

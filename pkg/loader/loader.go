@@ -23,17 +23,21 @@ import (
 	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
-// NewLoader returns a Loader.
-func NewLoader(path string, fSys fs.FileSystem) (ifc.Loader, error) {
-	repoSpec, err := git.NewRepoSpecFromUrl(path)
+// NewLoader returns a Loader pointed at the given target.
+// If the target is remote, the loader will be restricted
+// to rootOnly.  If the target is local, the loader will have
+// no restrictions.
+func NewLoader(
+	target string, fSys fs.FileSystem) (ifc.Loader, error) {
+	repoSpec, err := git.NewRepoSpecFromUrl(target)
 	if err == nil {
 		return newLoaderAtGitClone(
 			repoSpec, fSys, nil, git.ClonerUsingGitExec)
 	}
-	root, err := demandDirectoryRoot(fSys, path)
+	root, err := demandDirectoryRoot(fSys, target)
 	if err != nil {
 		return nil, err
 	}
 	return newLoaderAtConfirmedDir(
-		root, fSys, nil, git.ClonerUsingGitExec), nil
+		root, RestrictionNone, fSys, nil, git.ClonerUsingGitExec), nil
 }
