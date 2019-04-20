@@ -26,10 +26,11 @@ import (
 // NewLoader returns a Loader pointed at the given target.
 // If the target is remote, the loader will be restricted
 // to the root and below only.  If the target is local, the
-// loader will have no restrictions.  If the local target
-// attempts to transitively load remote bases, they will all
-// be root-only restricted.
+// loader will have the restrictions passed in.  Regardless,
+// if a local target attempts to transitively load remote bases,
+// the remote bases will all be root-only restricted.
 func NewLoader(
+	lr LoadRestrictorFunc,
 	target string, fSys fs.FileSystem) (ifc.Loader, error) {
 	repoSpec, err := git.NewRepoSpecFromUrl(target)
 	if err == nil {
@@ -42,5 +43,5 @@ func NewLoader(
 		return nil, err
 	}
 	return newLoaderAtConfirmedDir(
-		RestrictionNone, root, fSys, nil, git.ClonerUsingGitExec), nil
+		lr, root, fSys, nil, git.ClonerUsingGitExec), nil
 }
