@@ -31,12 +31,22 @@ type FakeLoader struct {
 }
 
 // NewFakeLoader returns a Loader that uses a fake filesystem.
-// The argument should be an absolute file path.
+// The loader will be restricted to root only.
+// The initialDir argument should be an absolute file path.
 func NewFakeLoader(initialDir string) FakeLoader {
+	return NewFakeLoaderWithRestrictor(
+		loader.RestrictionRootOnly, initialDir)
+}
+
+// NewFakeLoaderWithRestrictor returns a Loader that
+// uses a fake filesystem.
+// The initialDir argument should be an absolute file path.
+func NewFakeLoaderWithRestrictor(
+	lr loader.LoadRestrictorFunc, initialDir string) FakeLoader {
 	// Create fake filesystem and inject it into initial Loader.
 	fSys := fs.MakeFakeFS()
 	fSys.Mkdir(initialDir)
-	ldr, err := loader.NewLoader(initialDir, fSys)
+	ldr, err := loader.NewLoader(lr, initialDir, fSys)
 	if err != nil {
 		log.Fatalf("Unable to make loader: %v", err)
 	}
