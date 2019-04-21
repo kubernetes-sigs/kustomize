@@ -29,9 +29,9 @@ import (
 	"sigs.k8s.io/kustomize/pkg/ifc/transformer"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/pkg/plugins"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/target"
-	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 // Options contain the options for running a build
@@ -70,7 +70,7 @@ func NewCmdBuild(
 	out io.Writer, fs fs.FileSystem,
 	rf *resmap.Factory,
 	ptf transformer.Factory,
-	pc *types.PluginConfig) *cobra.Command {
+	pl *plugins.Loader) *cobra.Command {
 	var o Options
 
 	cmd := &cobra.Command{
@@ -83,7 +83,7 @@ func NewCmdBuild(
 			if err != nil {
 				return err
 			}
-			return o.RunBuild(out, fs, rf, ptf, pc)
+			return o.RunBuild(out, fs, rf, ptf, pl)
 		},
 	}
 	cmd.Flags().StringVarP(
@@ -92,7 +92,7 @@ func NewCmdBuild(
 		"If specified, write the build output to this path.")
 	loader.AddLoadRestrictionsFlag(cmd.Flags())
 
-	cmd.AddCommand(NewCmdBuildPrune(out, fs, rf, ptf, pc))
+	cmd.AddCommand(NewCmdBuildPrune(out, fs, rf, ptf, pl))
 	return cmd
 }
 
@@ -115,14 +115,14 @@ func (o *Options) Validate(args []string) (err error) {
 func (o *Options) RunBuild(
 	out io.Writer, fSys fs.FileSystem,
 	rf *resmap.Factory, ptf transformer.Factory,
-	pc *types.PluginConfig) error {
+	pl *plugins.Loader) error {
 	ldr, err := loader.NewLoader(
 		o.loadRestrictor, o.kustomizationPath, fSys)
 	if err != nil {
 		return err
 	}
 	defer ldr.Cleanup()
-	kt, err := target.NewKustTarget(ldr, rf, ptf, pc)
+	kt, err := target.NewKustTarget(ldr, rf, ptf, pl)
 	if err != nil {
 		return err
 	}
@@ -136,14 +136,14 @@ func (o *Options) RunBuild(
 func (o *Options) RunBuildPrune(
 	out io.Writer, fSys fs.FileSystem,
 	rf *resmap.Factory, ptf transformer.Factory,
-	pc *types.PluginConfig) error {
+	pl *plugins.Loader) error {
 	ldr, err := loader.NewLoader(
 		o.loadRestrictor, o.kustomizationPath, fSys)
 	if err != nil {
 		return err
 	}
 	defer ldr.Cleanup()
-	kt, err := target.NewKustTarget(ldr, rf, ptf, pc)
+	kt, err := target.NewKustTarget(ldr, rf, ptf, pl)
 	if err != nil {
 		return err
 	}
@@ -174,7 +174,7 @@ func NewCmdBuildPrune(
 	out io.Writer, fs fs.FileSystem,
 	rf *resmap.Factory,
 	ptf transformer.Factory,
-	pc *types.PluginConfig) *cobra.Command {
+	pl *plugins.Loader) *cobra.Command {
 	var o Options
 
 	cmd := &cobra.Command{
@@ -187,7 +187,7 @@ func NewCmdBuildPrune(
 			if err != nil {
 				return err
 			}
-			return o.RunBuildPrune(out, fs, rf, ptf, pc)
+			return o.RunBuildPrune(out, fs, rf, ptf, pl)
 		},
 	}
 	return cmd
