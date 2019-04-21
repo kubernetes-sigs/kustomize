@@ -41,22 +41,18 @@ func (rmF *Factory) RF() *resource.Factory {
 	return rmF.resF
 }
 
-// FromFiles returns a ResMap given a resource path slice.
-func (rmF *Factory) FromFiles(
-	loader ifc.Loader, paths []string) (ResMap, error) {
-	var result []ResMap
-	for _, path := range paths {
-		content, err := loader.Load(path)
-		if err != nil {
-			return nil, errors.Wrap(err, "Load from path "+path+" failed")
-		}
-		res, err := rmF.NewResMapFromBytes(content)
-		if err != nil {
-			return nil, internal.Handler(err, path)
-		}
-		result = append(result, res)
+// FromFile returns a ResMap given a resource path.
+func (rmF *Factory) FromFile(
+	loader ifc.Loader, path string) (ResMap, error) {
+	content, err := loader.Load(path)
+	if err != nil {
+		return nil, err
 	}
-	return MergeWithErrorOnIdCollision(result...)
+	res, err := rmF.NewResMapFromBytes(content)
+	if err != nil {
+		return nil, internal.Handler(err, path)
+	}
+	return res, nil
 }
 
 // newResMapFromBytes decodes a list of objects in byte array format.
@@ -65,7 +61,6 @@ func (rmF *Factory) NewResMapFromBytes(b []byte) (ResMap, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	result := ResMap{}
 	for _, res := range resources {
 		id := res.Id()
