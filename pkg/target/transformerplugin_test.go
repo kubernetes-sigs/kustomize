@@ -42,8 +42,7 @@ func writeStringPrefixer(th *KustTestHarness, path string) {
 apiVersion: someteam.example.com/v1
 kind: StringPrefixer
 metadata:
-  name: myStringPrefixer
-prefix: apple-
+  name: apple
 `)
 }
 
@@ -52,7 +51,7 @@ func writeDatePrefixer(th *KustTestHarness, path string) {
 apiVersion: someteam.example.com/v1
 kind: DatePrefixer
 metadata:
-  name: myDatePrefixer
+  name: irrelevant
 `)
 }
 
@@ -73,7 +72,11 @@ resources:
 - deployment.yaml
 transformers:
 - stringPrefixer.yaml
+# - datePrefixer.yaml
 `)
+	// TODO(monopole): assure ordering of loaded
+	// transformers and this will work - the trouble
+	// is we load into a map (ResMap), not a list.
 	writeDeployment(th, "/app/deployment.yaml")
 	writeStringPrefixer(th, "/app/stringPrefixer.yaml")
 	writeDatePrefixer(th, "/app/datePrefixer.yaml")
@@ -144,7 +147,16 @@ metadata:
 `)
 }
 
-func xTestTransformedTransformers(t *testing.T) {
+func TestTransformedTransformers(t *testing.T) {
+	tc := NewTestEnvController(t).Set()
+	defer tc.Reset()
+
+	tc.BuildGoPlugin(
+		"someteam.example.com", "v1", "StringPrefixer")
+
+	tc.BuildGoPlugin(
+		"someteam.example.com", "v1", "DatePrefixer")
+
 	th := NewKustTestHarnessWithPluginConfig(
 		t, "/app/overlay", plugin.ActivePluginConfig())
 
@@ -170,6 +182,18 @@ transformers:
 		t.Fatalf("Err: %v", err)
 	}
 	th.assertActualEqualsExpected(m, `
-HEY
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: 2018-05-11-apple-myDeployment
+spec:
+  template:
+    metadata:
+      labels:
+        backend: awesome
+    spec:
+      containers:
+      - image: whatever
+        name: whatever
 `)
 }

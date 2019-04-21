@@ -22,38 +22,19 @@ import (
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/transformers"
-	"sigs.k8s.io/kustomize/pkg/types"
 )
 
-type generatorLoader struct {
-	pc  *types.PluginConfig
-	ldr ifc.Loader
-	rf  *resmap.Factory
-}
-
-func NewGeneratorLoader(
-	pc *types.PluginConfig,
-	ldr ifc.Loader, rf *resmap.Factory) generatorLoader {
-	return generatorLoader{pc: pc, ldr: ldr, rf: rf}
-}
-
-func (l generatorLoader) Load(
-	rm resmap.ResMap) ([]transformers.Generator, error) {
-	if len(rm) == 0 {
-		return nil, nil
-	}
-	if !l.pc.GoEnabled {
-		return nil, fmt.Errorf("plugins not enabled")
-	}
+func (l *Loader) LoadGenerators(
+	ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Generator, error) {
 	var result []transformers.Generator
-	for id, res := range rm {
-		c, err := loadAndConfigurePlugin(l.pc.DirectoryPath, id, l.ldr, l.rf, res)
+	for _, res := range rm {
+		c, err := l.loadAndConfigurePlugin(ldr, res)
 		if err != nil {
 			return nil, err
 		}
 		g, ok := c.(transformers.Generator)
 		if !ok {
-			return nil, fmt.Errorf("plugin %s not a generator", id.String())
+			return nil, fmt.Errorf("plugin %s not a generator", res.Id())
 		}
 		result = append(result, g)
 	}
