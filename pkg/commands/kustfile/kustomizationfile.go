@@ -69,7 +69,7 @@ func determineFieldOrder() []string {
 		"Configurations",
 		"Generators",
 		"Transformers",
-		"Prune",
+		"Inventory",
 	}
 
 	// Add deprecated fields here.
