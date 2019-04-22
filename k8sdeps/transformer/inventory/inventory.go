@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package prune
+package inventory
 
 import (
 	"fmt"
@@ -31,33 +31,33 @@ import (
 //const PruneAnnotation = "kustomize.k8s.io/PruneRevision"
 const PruneAnnotation = "current"
 
-// pruneTransformer compute the ConfigMap used in prune
-type pruneTransformer struct {
+// inventoryTransformer compute the ConfigMap used in prune
+type inventoryTransformer struct {
 	append      bool
 	cmName      string
 	cmNamespace string
 }
 
-var _ transformers.Transformer = &pruneTransformer{}
+var _ transformers.Transformer = &inventoryTransformer{}
 
-// NewPruneTransformer makes a pruneTransformer.
-func NewPruneTransformer(p *types.Prune, namespace string, append bool) transformers.Transformer {
+// NewInventoryTransformer makes a inventoryTransformer.
+func NewInventoryTransformer(p *types.Inventory, namespace string, append bool) transformers.Transformer {
 	if p == nil || p.Type != "ConfigMap" || p.ConfigMap.Namespace != namespace {
 		return transformers.NewNoOpTransformer()
 	}
-	return &pruneTransformer{
+	return &inventoryTransformer{
 		append:      append,
 		cmName:      p.ConfigMap.Name,
 		cmNamespace: p.ConfigMap.Namespace,
 	}
 }
 
-// Transform generates a prune ConfigMap based on the input ResMap.
+// Transform generates an inventory ConfigMap based on the input ResMap.
 // this tranformer doesn't change existing resources -
 // it just visits resources and accumulates information to make a new ConfigMap.
 // The prune ConfigMap is used to support the pruning command in the client side tool,
 // which is proposed in https://github.com/kubernetes/enhancements/pull/810
-func (o *pruneTransformer) Transform(m resmap.ResMap) error {
+func (o *inventoryTransformer) Transform(m resmap.ResMap) error {
 	var keys []string
 	for _, r := range m {
 		s := r.PruneString()

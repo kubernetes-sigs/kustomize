@@ -137,8 +137,9 @@ type Kustomization struct {
 	// Transformers is a list of files containing transformers
 	Transformers []string `json:"transformers,omitempty" yaml:"transformers,omitempty"`
 
-	// Name of the ConfigMap used in Prune
-	Prune *Prune `json:"prune,omitempty" yaml:"prune:omitempty"`
+	// Inventory appends an object that contains the record
+	// of all other objects, which can be used in apply, prune and delete
+	Inventory *Inventory `json:"inventory,omitempty" yaml:"inventory:omitempty"`
 }
 
 // DealWithMissingFields fills the missing fields
@@ -293,7 +294,7 @@ type KVSource struct {
 	Args       []string   `json:"args,omitempty" yaml:"args,omitempty"`
 }
 
-type Prune struct {
+type Inventory struct {
 	Type      string   `json:"type,omitempty" yaml:"type,omitempty"`
 	ConfigMap NameArgs `json:"configMap,omitempty" yaml:"configMap,omitempty"`
 }
