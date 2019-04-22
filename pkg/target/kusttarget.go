@@ -28,7 +28,6 @@ import (
 	"sigs.k8s.io/kustomize/pkg/accumulator"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/ifc/transformer"
-	interror "sigs.k8s.io/kustomize/pkg/internal/error"
 	patchtransformer "sigs.k8s.io/kustomize/pkg/patch/transformer"
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/plugins"
@@ -195,23 +194,16 @@ func (kt *KustTarget) shouldAddHashSuffixesToGeneratedResources() bool {
 // holding customized resources and the data/rules used
 // to do so.  The name back references and vars are
 // not yet fixed.
-func (kt *KustTarget) AccumulateTarget() ( // nolint: gocyclo
+func (kt *KustTarget) AccumulateTarget() (
 	ra *accumulator.ResAccumulator, err error) {
-	// TODO(monopole): Get rid of the KustomizationErrors accumulator.
-	// It's not consistently used, and complicates tests.
-	errs := &interror.KustomizationErrors{}
-	ra, errs = kt.accumulateBases()
-	resources, err := kt.rFactory.FromFiles(
-		kt.ldr, kt.kustomization.Resources)
+	ra = accumulator.MakeEmptyAccumulator()
+	err = kt.accumulateResources(ra, kt.kustomization.Bases)
 	if err != nil {
-		errs.Append(errors.Wrap(err, "rawResources failed to read Resources"))
+		return nil, errors.Wrap(err, "accumulating bases")
 	}
-	if len(errs.Get()) > 0 {
-		return ra, errs
-	}
-	err = ra.MergeResourcesWithErrorOnIdCollision(resources)
+	err = kt.accumulateResources(ra, kt.kustomization.Resources)
 	if err != nil {
-		errs.Append(errors.Wrap(err, "MergeResourcesWithErrorOnIdCollision"))
+		return nil, errors.Wrap(err, "accumulating resources")
 	}
 	tConfig, err := config.MakeTransformerConfig(
 		kt.ldr, kt.kustomization.Configurations)
@@ -220,41 +212,46 @@ func (kt *KustTarget) AccumulateTarget() ( // nolint: gocyclo
 	}
 	err = ra.MergeConfig(tConfig)
 	if err != nil {
-		errs.Append(errors.Wrap(err, "MergeConfig"))
+		return nil, errors.Wrapf(
+			err, "merging config %v", tConfig)
 	}
 	err = ra.MergeVars(kt.kustomization.Vars)
 	if err != nil {
-		errs.Append(errors.Wrap(err, "MergeVars"))
+		return nil, errors.Wrapf(
+			err, "merging vars %v", kt.kustomization.Vars)
 	}
 	crdTc, err := config.LoadConfigFromCRDs(kt.ldr, kt.kustomization.Crds)
 	if err != nil {
-		errs.Append(errors.Wrap(err, "LoadCRDs"))
+		return nil, errors.Wrapf(
+			err, "loading CRDs %v", kt.kustomization.Crds)
 	}
 	err = ra.MergeConfig(crdTc)
 	if err != nil {
-		errs.Append(errors.Wrap(err, "merge CRDs"))
+		return nil, errors.Wrapf(
+			err, "merging CRDs %v", crdTc)
 	}
-	resMap, err := kt.generateConfigMapsAndSecrets(errs)
+	resMap, err := kt.generateConfigMapsAndSecrets()
 	if err != nil {
-		errs.Append(errors.Wrap(err, "generateConfigMapsAndSecrets"))
+		return nil, errors.Wrap(
+			err, "generating legacy configMaps and secrets")
 	}
 	err = ra.MergeResourcesWithOverride(resMap)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(
+			err, "merging legacy configMaps and secrets")
 	}
 	if kt.pluginConfig.GoEnabled {
-		kt.generateFromPlugins(ra, errs)
-		if len(errs.Get()) > 0 {
-			return ra, errs
+		err := kt.generateFromPlugins(ra)
+		if err != nil {
+			return nil, err
 		}
 	}
 	patches, err := kt.rFactory.RF().SliceFromPatches(
 		kt.ldr, kt.kustomization.PatchesStrategicMerge)
 	if err != nil {
-		errs.Append(errors.Wrap(err, "SliceFromPatches"))
-	}
-	if len(errs.Get()) > 0 {
-		return nil, errs
+		return nil, errors.Wrapf(
+			err, "reading strategic merge patches %v",
+			kt.kustomization.PatchesStrategicMerge)
 	}
 	t, err := kt.newTransformer(patches, ra.GetTransformerConfig())
 	if err != nil {
@@ -268,80 +265,97 @@ func (kt *KustTarget) AccumulateTarget() ( // nolint: gocyclo
 }
 
 func (kt *KustTarget) generateFromPlugins(
-	ra *accumulator.ResAccumulator,
-	errs *interror.KustomizationErrors) {
+	ra *accumulator.ResAccumulator) error {
 	generators, err := kt.loadGeneratorPlugins()
 	if err != nil {
-		errs.Append(err)
-		return
+		return errors.Wrap(err, "loading generator plugins")
 	}
 	for _, g := range generators {
 		resMap, err := g.Generate()
 		if err != nil {
-			errs.Append(err)
-		} else {
-			err = ra.MergeResourcesWithErrorOnIdCollision(resMap)
-			if err != nil {
-				errs.Append(errors.Wrap(err, "from plugin"))
-			}
+			return errors.Wrapf(err, "generating from %v", g)
+		}
+		err = ra.MergeResourcesWithErrorOnIdCollision(resMap)
+		if err != nil {
+			return errors.Wrapf(err, "merging from generator %v", g)
 		}
 	}
+	return nil
 }
 
-func (kt *KustTarget) generateConfigMapsAndSecrets(
-	errs *interror.KustomizationErrors) (resmap.ResMap, error) {
+func (kt *KustTarget) generateConfigMapsAndSecrets() (resmap.ResMap, error) {
 	cms, err := kt.rFactory.NewResMapFromConfigMapArgs(
 		kt.ldr,
 		kt.kustomization.GeneratorOptions,
 		kt.kustomization.ConfigMapGenerator)
 	if err != nil {
-		errs.Append(errors.Wrap(err, "NewResMapFromConfigMapArgs"))
+		return nil, errors.Wrapf(
+			err, "configmapgenerator: %v", kt.kustomization.ConfigMapGenerator)
 	}
 	secrets, err := kt.rFactory.NewResMapFromSecretArgs(
 		kt.ldr,
 		kt.kustomization.GeneratorOptions,
 		kt.kustomization.SecretGenerator)
 	if err != nil {
-		errs.Append(errors.Wrap(err, "NewResMapFromSecretArgs"))
+		return nil, errors.Wrapf(
+			err, "secretgenerator: %v", kt.kustomization.SecretGenerator)
 	}
 	return resmap.MergeWithErrorOnIdCollision(cms, secrets)
 }
 
-// accumulateBases returns a new ResAccumulator
-// holding customized resources and the data/rules
-// used to customized them from only the _bases_
-// of this KustTarget.
-func (kt *KustTarget) accumulateBases() (
-	ra *accumulator.ResAccumulator, errs *interror.KustomizationErrors) {
-	errs = &interror.KustomizationErrors{}
-	ra = accumulator.MakeEmptyAccumulator()
-
-	for _, path := range kt.kustomization.Bases {
+// accumulateResources fills the given resourceAccumulator
+// with resources read from the given list of paths.
+func (kt *KustTarget) accumulateResources(
+	ra *accumulator.ResAccumulator, paths []string) error {
+	for _, path := range paths {
 		ldr, err := kt.ldr.New(path)
-		if err != nil {
-			errs.Append(errors.Wrap(err, "couldn't make loader for "+path))
-			continue
+		if err == nil {
+			err = kt.accumulateDirectory(ra, ldr, path)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = kt.accumulateFile(ra, path)
+			if err != nil {
+				return err
+			}
 		}
-		subKt, err := NewKustTarget(
-			ldr, kt.rFactory, kt.tFactory, kt.pluginConfig)
-		if err != nil {
-			errs.Append(errors.Wrap(err, "couldn't make target for "+path))
-			ldr.Cleanup()
-			continue
-		}
-		subRa, err := subKt.AccumulateTarget()
-		if err != nil {
-			errs.Append(errors.Wrap(err, "AccumulateTarget"))
-			ldr.Cleanup()
-			continue
-		}
-		err = ra.MergeAccumulator(subRa)
-		if err != nil {
-			errs.Append(errors.Wrap(err, path))
-		}
-		ldr.Cleanup()
 	}
-	return ra, errs
+	return nil
+}
+
+func (kt *KustTarget) accumulateDirectory(
+	ra *accumulator.ResAccumulator, ldr ifc.Loader, path string) error {
+	defer ldr.Cleanup()
+	subKt, err := NewKustTarget(
+		ldr, kt.rFactory, kt.tFactory, kt.pluginConfig)
+	if err != nil {
+		return errors.Wrapf(err, "couldn't make target for path '%s'", path)
+	}
+	subRa, err := subKt.AccumulateTarget()
+	if err != nil {
+		return errors.Wrapf(
+			err, "recursed accumulation of path '%s'", path)
+	}
+	err = ra.MergeAccumulator(subRa)
+	if err != nil {
+		return errors.Wrapf(
+			err, "recursed merging from path '%s'", path)
+	}
+	return nil
+}
+
+func (kt *KustTarget) accumulateFile(
+	ra *accumulator.ResAccumulator, path string) error {
+	resources, err := kt.rFactory.FromFile(kt.ldr, path)
+	if err != nil {
+		return errors.Wrapf(err, "accumulating resources from '%s'", path)
+	}
+	err = ra.MergeResourcesWithErrorOnIdCollision(resources)
+	if err != nil {
+		return errors.Wrapf(err, "merging resources from '%s'", path)
+	}
+	return nil
 }
 
 // newTransformer makes a Transformer that does a collection
@@ -401,21 +415,21 @@ func (kt *KustTarget) newTransformer(
 }
 
 func (kt *KustTarget) loadTransformerPlugins() ([]transformers.Transformer, error) {
-	configs, err := kt.rFactory.FromFiles(
-		kt.ldr, kt.kustomization.Transformers)
+	ra := accumulator.MakeEmptyAccumulator()
+	err := kt.accumulateResources(ra, kt.kustomization.Transformers)
 	if err != nil {
 		return nil, err
 	}
 	return plugins.NewTransformerLoader(
-		kt.pluginConfig, kt.ldr, kt.rFactory).Load(configs)
+		kt.pluginConfig, kt.ldr, kt.rFactory).Load(ra.ResMap())
 }
 
 func (kt *KustTarget) loadGeneratorPlugins() ([]transformers.Generator, error) {
-	configs, err := kt.rFactory.FromFiles(
-		kt.ldr, kt.kustomization.Generators)
+	ra := accumulator.MakeEmptyAccumulator()
+	err := kt.accumulateResources(ra, kt.kustomization.Generators)
 	if err != nil {
 		return nil, err
 	}
 	return plugins.NewGeneratorLoader(
-		kt.pluginConfig, kt.ldr, kt.rFactory).Load(configs)
+		kt.pluginConfig, kt.ldr, kt.rFactory).Load(ra.ResMap())
 }
