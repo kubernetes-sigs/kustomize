@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
@@ -25,11 +26,11 @@ import (
 
 func TestExecPluginConfig(t *testing.T) {
 	path := "/app"
-	kFactory := kunstruct.NewKunstructuredFactoryImpl()
-	rf := resmap.NewFactory(resource.NewFactory(kFactory))
+	rf := resmap.NewFactory(
+		resource.NewFactory(
+			kunstruct.NewKunstructuredFactoryImpl()))
 	ldr := loadertest.NewFakeLoader(path)
-
-	pluginConfig := kFactory.FromMap(
+	pluginConfig := rf.RF().FromMap(
 		map[string]interface{}{
 			"apiVersion": "someteam.example.com/v1",
 			"kind":       "SedTransformer",
@@ -46,7 +47,9 @@ s/$BAR/bar/g
  \ \ \ 
 `))
 
-	p := &ExecPlugin{}
+	p := NewExecPlugin(
+		plugin.DefaultPluginConfig().DirectoryPath,
+		pluginConfig.Id())
 
 	p.Config(ldr, rf, pluginConfig)
 
