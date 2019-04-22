@@ -147,7 +147,7 @@ func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 	}
 
 	rm := ra.ResMap()
-	pt := kt.tFactory.MakePruneTransformer(kt.kustomization.Prune, kt.kustomization.Namespace, true)
+	pt := kt.tFactory.MakeInventoryTransformer(kt.kustomization.Inventory, kt.kustomization.Namespace, true)
 	err = pt.Transform(rm)
 	if err != nil {
 		return nil, err
@@ -177,7 +177,7 @@ func (kt *KustTarget) MakePruneConfigMap() (resmap.ResMap, error) {
 	}
 
 	rm := ra.ResMap()
-	pt := kt.tFactory.MakePruneTransformer(kt.kustomization.Prune, kt.kustomization.Namespace, false)
+	pt := kt.tFactory.MakeInventoryTransformer(kt.kustomization.Inventory, kt.kustomization.Namespace, false)
 	err = pt.Transform(rm)
 	if err != nil {
 		return nil, err
