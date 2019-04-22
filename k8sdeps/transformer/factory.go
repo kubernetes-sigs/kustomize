@@ -19,8 +19,8 @@ package transformer
 
 import (
 	"sigs.k8s.io/kustomize/k8sdeps/transformer/hash"
+	"sigs.k8s.io/kustomize/k8sdeps/transformer/inventory"
 	"sigs.k8s.io/kustomize/k8sdeps/transformer/patch"
-	"sigs.k8s.io/kustomize/k8sdeps/transformer/prune"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
 	"sigs.k8s.io/kustomize/pkg/types"
@@ -44,6 +44,6 @@ func (p *FactoryImpl) MakeHashTransformer() transformers.Transformer {
 	return hash.NewNameHashTransformer()
 }
 
-func (p *FactoryImpl) MakePruneTransformer(arg *types.Prune, namespace string, append bool) transformers.Transformer {
-	return prune.NewPruneTransformer(arg, namespace, append)
+func (p *FactoryImpl) MakeInventoryTransformer(arg *types.Inventory, namespace string, append bool) transformers.Transformer {
+	return inventory.NewInventoryTransformer(arg, namespace, append)
 }
