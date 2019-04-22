@@ -45,6 +45,23 @@ func NewLoader(
 	return &Loader{pc: pc, rf: rf}
 }
 
+func (l *Loader) LoadGenerators(
+	ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Generator, error) {
+	var result []transformers.Generator
+	for _, res := range rm {
+		c, err := l.loadAndConfigurePlugin(ldr, res)
+		if err != nil {
+			return nil, err
+		}
+		g, ok := c.(transformers.Generator)
+		if !ok {
+			return nil, fmt.Errorf("plugin %s not a generator", res.Id())
+		}
+		result = append(result, g)
+	}
+	return result, nil
+}
+
 func (l *Loader) LoadTransformers(
 	ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Transformer, error) {
 	var result []transformers.Transformer

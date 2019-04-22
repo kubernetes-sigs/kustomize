@@ -20,6 +20,7 @@ package target_test
 import (
 	"testing"
 
+	"sigs.k8s.io/kustomize/internal/plugintest"
 	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 )
 
@@ -33,7 +34,7 @@ import (
 // This test requires having the helm binary on the PATH.
 //
 func TestChartInflatorExecPlugin(t *testing.T) {
-	tc := NewTestEnvController(t).Set()
+	tc := plugintest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
