@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package prune
+package inventory
 
 import (
 	"reflect"
@@ -103,7 +103,7 @@ func makeResMap() resmap.ResMap {
 	return objs
 }
 
-func TestPruneTransformer(t *testing.T) {
+func TestInventoryTransformer(t *testing.T) {
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
 
@@ -138,7 +138,7 @@ func TestPruneTransformer(t *testing.T) {
 		resid.NewResIdWithPrefixNamespace(cmap, "pruneCM", "", "default"): pruneMap,
 	}
 
-	p := &types.Prune{
+	p := &types.Inventory{
 		Type: "ConfigMap",
 		ConfigMap: types.NameArgs{
 			Name:      "pruneCM",
@@ -148,7 +148,7 @@ func TestPruneTransformer(t *testing.T) {
 	objs := makeResMap()
 
 	// include the original resmap; only return the ConfigMap for pruning
-	tran := NewPruneTransformer(p, "default", false)
+	tran := NewInventoryTransformer(p, "default", false)
 	tran.Transform(objs)
 
 	if !reflect.DeepEqual(objs, expected) {
@@ -160,7 +160,7 @@ func TestPruneTransformer(t *testing.T) {
 	expected = objs.DeepCopy(rf)
 	expected[resid.NewResIdWithPrefixNamespace(cmap, "pruneCM", "", "default")] = pruneMap
 	// append the ConfigMap for pruning to the original resmap
-	tran = NewPruneTransformer(p, "default", true)
+	tran = NewInventoryTransformer(p, "default", true)
 	tran.Transform(objs)
 
 	if !reflect.DeepEqual(objs, expected) {

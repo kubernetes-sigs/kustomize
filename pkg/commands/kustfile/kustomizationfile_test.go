@@ -48,7 +48,7 @@ func TestFieldOrder(t *testing.T) {
 		"Configurations",
 		"Generators",
 		"Transformers",
-		"Prune",
+		"Inventory",
 	}
 	actual := determineFieldOrder()
 	if len(expected) != len(actual) {

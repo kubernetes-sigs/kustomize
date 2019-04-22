@@ -178,8 +178,8 @@ func NewCmdBuildPrune(
 	var o Options
 
 	cmd := &cobra.Command{
-		Use:          "alpha-prune [path]",
-		Short:        "Print configmap to prune previous applied objects",
+		Use:          "alpha-inventory [path]",
+		Short:        "Print the inventory object which contains a list of all other objects",
 		Example:      examples,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {

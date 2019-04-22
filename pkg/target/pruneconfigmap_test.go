@@ -28,7 +28,7 @@ resources:
 - service.yaml
 - secret.yaml
 
-prune:
+inventory:
   type: ConfigMap
   configMap:
     name: haha
