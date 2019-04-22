@@ -31,6 +31,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/commands/misc"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/pkg/plugins"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
@@ -64,12 +65,13 @@ See https://sigs.k8s.io/kustomize
 		PluginConfig: pluginConfig,
 	}
 	uf := kunstruct.NewKunstructuredFactoryWithGeneratorArgs(&genMetaArgs)
-
+	rf := resmap.NewFactory(resource.NewFactory(uf))
 	c.AddCommand(
 		build.NewCmdBuild(
 			stdOut, fSys,
-			resmap.NewFactory(resource.NewFactory(uf)),
-			transformer.NewFactoryImpl(), pluginConfig),
+			rf,
+			transformer.NewFactoryImpl(),
+			plugins.NewLoader(pluginConfig, rf)),
 		edit.NewCmdEdit(fSys, validator.NewKustValidator(), uf),
 		misc.NewCmdConfig(fSys),
 		misc.NewCmdVersion(stdOut),

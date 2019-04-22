@@ -18,10 +18,10 @@ package plugins
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
-	"os"
 	"path/filepath"
 	"plugin"
+
+	"github.com/pkg/errors"
 	kplugin "sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resid"
@@ -35,91 +35,86 @@ type Configurable interface {
 	Config(ldr ifc.Loader, rf *resmap.Factory, k ifc.Kunstructured) error
 }
 
-type transformerLoader struct {
-	pc  *types.PluginConfig
-	ldr ifc.Loader
-	rf  *resmap.Factory
+type Loader struct {
+	pc *types.PluginConfig
+	rf *resmap.Factory
 }
 
-func NewTransformerLoader(
-	pc *types.PluginConfig,
-	ldr ifc.Loader, rf *resmap.Factory) transformerLoader {
-	return transformerLoader{pc: pc, ldr: ldr, rf: rf}
+func NewLoader(
+	pc *types.PluginConfig, rf *resmap.Factory) *Loader {
+	return &Loader{pc: pc, rf: rf}
 }
 
-func (l transformerLoader) Load(
-	rm resmap.ResMap) ([]transformers.Transformer, error) {
-	if len(rm) == 0 {
-		return nil, nil
-	}
-	if !l.pc.GoEnabled {
-		return nil, fmt.Errorf("plugins not enabled")
-	}
+func (l *Loader) LoadTransformers(
+	ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Transformer, error) {
 	var result []transformers.Transformer
-	for id, res := range rm {
-		c, err := loadAndConfigurePlugin(l.pc.DirectoryPath, id, l.ldr, l.rf, res)
+	for _, res := range rm {
+		c, err := l.loadAndConfigurePlugin(ldr, res)
 		if err != nil {
 			return nil, err
 		}
 		t, ok := c.(transformers.Transformer)
 		if !ok {
-			return nil, fmt.Errorf("plugin %s not a transformer", id.String())
+			return nil, fmt.Errorf("plugin %s not a transformer", res.Id())
 		}
 		result = append(result, t)
 	}
 	return result, nil
 }
 
-func goPluginFileName(dir string, id resid.ResId) string {
-	return execPluginFileName(dir, id) + ".so"
+func pluginPath(id resid.ResId) string {
+	return filepath.Join(id.Gvk().Group, id.Gvk().Version, id.Gvk().Kind)
 }
 
-func execPluginFileName(dir string, id resid.ResId) string {
-	return filepath.Join(
-		dir,
-		id.Gvk().Group, id.Gvk().Version, id.Gvk().Kind)
-}
-
-// isExecAvailable checks if an executable is available
-func isExecAvailable(name string) bool {
-	f, err := os.Stat(name)
-	if os.IsNotExist(err) {
-		return false
+func (l *Loader) loadAndConfigurePlugin(
+	ldr ifc.Loader, res *resource.Resource) (c Configurable, err error) {
+	if !l.pc.GoEnabled {
+		return nil, errors.Errorf(
+			"plugins not enabled, but trying to load %s", res.Id())
 	}
-	return f.Mode()&0111 != 0000
-}
-
-func loadAndConfigurePlugin(
-	dir string, id resid.ResId,
-	ldr ifc.Loader,
-	rf *resmap.Factory, res *resource.Resource) (Configurable, error) {
-	var fileName string
-	var c Configurable
-
-	exec := execPluginFileName(dir, id)
-	if isExecAvailable(exec) {
-		c = &ExecPlugin{}
+	if p := NewExecPlugin(l.pc.DirectoryPath, res.Id()); p.isAvailable() {
+		c = p
 	} else {
-		fileName = goPluginFileName(dir, id)
-		goPlugin, err := plugin.Open(fileName)
+		c, err = l.loadGoPlugin(res.Id())
 		if err != nil {
-			return nil, errors.Wrapf(err, "plugin %s fails to load", fileName)
-		}
-		symbol, err := goPlugin.Lookup(kplugin.PluginSymbol)
-		if err != nil {
-			return nil, errors.Wrapf(
-				err, "plugin %s doesn't have symbol %s",
-				fileName, kplugin.PluginSymbol)
-		}
-		var ok bool
-		c, ok = symbol.(Configurable)
-		if !ok {
-			return nil, fmt.Errorf("plugin %s not configurable", fileName)
+			return nil, err
 		}
 	}
-	err := c.Config(ldr, rf, res)
+	err = c.Config(ldr, l.rf, res)
 	if err != nil {
-		return nil, errors.Wrapf(err, "plugin %s fails configuration", fileName)
+		return nil, errors.Wrapf(
+			err, "plugin %s fails configuration", res.Id())
 	}
 	return c, nil
+}
+
+// Each test makes its own loader, and tries to load its own plugins,
+// but the loaded .so files are in shared memory, so one will get
+// "this plugin already loaded" errors if the registry is maintained
+// as a Loader instance variable.  So make it a package variable.
+var registry = make(map[string]Configurable)
+
+func (l *Loader) loadGoPlugin(id resid.ResId) (c Configurable, err error) {
+	var ok bool
+	path := pluginPath(id)
+	if c, ok = registry[path]; ok {
+		return c, nil
+	}
+	name := filepath.Join(l.pc.DirectoryPath, path)
+	p, err := plugin.Open(name + ".so")
+	if err != nil {
+		return nil, errors.Wrapf(err, "plugin %s fails to load", name)
+	}
+	symbol, err := p.Lookup(kplugin.PluginSymbol)
+	if err != nil {
+		return nil, errors.Wrapf(
+			err, "plugin %s doesn't have symbol %s",
+			name, kplugin.PluginSymbol)
+	}
+	c, ok = symbol.(Configurable)
+	if !ok {
+		return nil, fmt.Errorf("plugin %s not configurable", name)
+	}
+	registry[path] = c
+	return
 }

@@ -44,7 +44,7 @@ type KustTarget struct {
 	ldr           ifc.Loader
 	rFactory      *resmap.Factory
 	tFactory      transformer.Factory
-	pluginConfig  *types.PluginConfig
+	pLdr          *plugins.Loader
 }
 
 // NewKustTarget returns a new instance of KustTarget primed with a Loader.
@@ -52,7 +52,7 @@ func NewKustTarget(
 	ldr ifc.Loader,
 	rFactory *resmap.Factory,
 	tFactory transformer.Factory,
-	pc *types.PluginConfig) (*KustTarget, error) {
+	pLdr *plugins.Loader) (*KustTarget, error) {
 	content, err := loadKustFile(ldr)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func NewKustTarget(
 		ldr:           ldr,
 		rFactory:      rFactory,
 		tFactory:      tFactory,
-		pluginConfig:  pc,
+		pLdr:          pLdr,
 	}, nil
 }
 
@@ -240,11 +240,9 @@ func (kt *KustTarget) AccumulateTarget() (
 		return nil, errors.Wrap(
 			err, "merging legacy configMaps and secrets")
 	}
-	if kt.pluginConfig.GoEnabled {
-		err := kt.generateFromPlugins(ra)
-		if err != nil {
-			return nil, err
-		}
+	err = kt.generateFromPlugins(ra)
+	if err != nil {
+		return nil, err
 	}
 	patches, err := kt.rFactory.RF().SliceFromPatches(
 		kt.ldr, kt.kustomization.PatchesStrategicMerge)
@@ -328,7 +326,7 @@ func (kt *KustTarget) accumulateDirectory(
 	ra *accumulator.ResAccumulator, ldr ifc.Loader, path string) error {
 	defer ldr.Cleanup()
 	subKt, err := NewKustTarget(
-		ldr, kt.rFactory, kt.tFactory, kt.pluginConfig)
+		ldr, kt.rFactory, kt.tFactory, kt.pLdr)
 	if err != nil {
 		return errors.Wrapf(err, "couldn't make target for path '%s'", path)
 	}
@@ -403,14 +401,11 @@ func (kt *KustTarget) newTransformer(
 		return nil, err
 	}
 	r = append(r, t)
-
-	if kt.pluginConfig.GoEnabled {
-		tp, err := kt.loadTransformerPlugins()
-		if err != nil {
-			return nil, err
-		}
-		r = append(r, tp...)
+	tp, err := kt.loadTransformerPlugins()
+	if err != nil {
+		return nil, err
 	}
+	r = append(r, tp...)
 	return transformers.NewMultiTransformer(r), nil
 }
 
@@ -420,8 +415,7 @@ func (kt *KustTarget) loadTransformerPlugins() ([]transformers.Transformer, erro
 	if err != nil {
 		return nil, err
 	}
-	return plugins.NewTransformerLoader(
-		kt.pluginConfig, kt.ldr, kt.rFactory).Load(ra.ResMap())
+	return kt.pLdr.LoadTransformers(kt.ldr, ra.ResMap())
 }
 
 func (kt *KustTarget) loadGeneratorPlugins() ([]transformers.Generator, error) {
@@ -430,6 +424,5 @@ func (kt *KustTarget) loadGeneratorPlugins() ([]transformers.Generator, error) {
 	if err != nil {
 		return nil, err
 	}
-	return plugins.NewGeneratorLoader(
-		kt.pluginConfig, kt.ldr, kt.rFactory).Load(ra.ResMap())
+	return kt.pLdr.LoadGenerators(kt.ldr, ra.ResMap())
 }

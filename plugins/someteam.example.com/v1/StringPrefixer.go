@@ -12,6 +12,7 @@
 package main
 
 import (
+	"fmt"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/transformers"
@@ -26,11 +27,11 @@ var KustomizePlugin plugin
 
 func (p *plugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, k ifc.Kunstructured) error {
-	var err error
-	p.prefix, err = k.GetFieldValue("prefix")
-	if err != nil {
-		return err
+	name := k.GetName()
+	if name == "" {
+		return fmt.Errorf("name cannot be empty")
 	}
+	p.prefix = name + "-"
 	return nil
 }
 

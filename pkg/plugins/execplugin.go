@@ -27,9 +27,8 @@ import (
 	"syscall"
 
 	"github.com/ghodss/yaml"
-	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 )
 
@@ -59,11 +58,23 @@ type ExecPlugin struct {
 	ldr ifc.Loader
 }
 
+func NewExecPlugin(root string, id resid.ResId) *ExecPlugin {
+	return &ExecPlugin{
+		name: filepath.Join(root, pluginPath(id)),
+	}
+}
+
+// isAvailable checks to see if the plugin is available
+func (p *ExecPlugin) isAvailable() bool {
+	f, err := os.Stat(p.name)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return f.Mode()&0111 != 0000
+}
+
 func (p *ExecPlugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, k ifc.Kunstructured) error {
-	dir := filepath.Join(pgmconfig.ConfigRoot(), plugin.PluginRoot)
-	id := k.GetGvk()
-	p.name = filepath.Join(dir, id.Group, id.Version, id.Kind)
 	p.rf = rf
 	p.ldr = ldr
 
