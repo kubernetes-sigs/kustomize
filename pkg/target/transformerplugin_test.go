@@ -16,6 +16,7 @@ package target_test
 import (
 	"testing"
 
+	"sigs.k8s.io/kustomize/internal/plugintest"
 	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 )
 
@@ -56,7 +57,7 @@ metadata:
 }
 
 func TestOrderedTransformers(t *testing.T) {
-	tc := NewTestEnvController(t).Set()
+	tc := plugintest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -102,7 +103,7 @@ spec:
 }
 
 func TestSedTransformer(t *testing.T) {
-	tc := NewTestEnvController(t).Set()
+	tc := plugintest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
@@ -148,7 +149,7 @@ metadata:
 }
 
 func TestTransformedTransformers(t *testing.T) {
-	tc := NewTestEnvController(t).Set()
+	tc := plugintest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
