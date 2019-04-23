@@ -14,23 +14,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package error
+package kusterr
 
 import (
 	"strings"
 	"testing"
 )
 
-func TestSecretError_Error(t *testing.T) {
-	errorMsg := "missing a command"
-	me := SecretError{KustomizationPath: filepath, ErrorMsg: errorMsg}
+func TestResourceError_Error(t *testing.T) {
+	resourcefilepath := "/path/to/resource/deployment.yaml"
+	errorMsg := "file not found"
+	me := ResourceError{KustomizationPath: filepath, ResourceFilepath: resourcefilepath, ErrorMsg: errorMsg}
 	if !strings.Contains(me.Error(), filepath) {
-		t.Errorf("Incorrect SecretError.Error() message \n")
+		t.Errorf("Incorrect ResourceError.Error() message \n")
 		t.Errorf("Expected filepath %s, but unfound\n", filepath)
 	}
-
+	if !strings.Contains(me.Error(), resourcefilepath) {
+		t.Errorf("Incorrect ResourceError.Error() message \n")
+		t.Errorf("Expected resourcefilepath %s, but unfound\n", resourcefilepath)
+	}
 	if !strings.Contains(me.Error(), errorMsg) {
-		t.Errorf("Incorrect SecretError.Error() message \n")
+		t.Errorf("Incorrect ResourceError.Error() message \n")
 		t.Errorf("Expected errorMsg %s, but unfound\n", errorMsg)
 	}
 }
