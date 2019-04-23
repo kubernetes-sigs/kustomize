@@ -14,24 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package error
+// Package error has contextual error types.
+package kusterr
 
-import (
-	"strings"
-	"testing"
-)
+import "fmt"
 
-func TestConfigmapError_Error(t *testing.T) {
-	errorMsg := "configmap name is missing"
-	me := ConfigmapError{Path: filepath, ErrorMsg: errorMsg}
+// ConfigmapError represents error with a configmap.
+type ConfigmapError struct {
+	Path     string
+	ErrorMsg string
+}
 
-	if !strings.Contains(me.Error(), filepath) {
-		t.Errorf("Incorrect ConfigmapError.Error() message \n")
-		t.Errorf("Expected filepath %s, but unfound\n", filepath)
-	}
-
-	if !strings.Contains(me.Error(), errorMsg) {
-		t.Errorf("Incorrect ConfigmapError.Error() message \n")
-		t.Errorf("Expected errorMsg %s, but unfound\n", errorMsg)
-	}
+func (e ConfigmapError) Error() string {
+	return fmt.Sprintf("Kustomization file [%s] encounters a configmap error: %s\n", e.Path, e.ErrorMsg)
 }
