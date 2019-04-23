@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
+	"sigs.k8s.io/kustomize/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/patch"
 	. "sigs.k8s.io/kustomize/pkg/resource"
 )

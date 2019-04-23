@@ -14,27 +14,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package error
+package kusterr
 
 import (
 	"strings"
 	"testing"
 )
 
-func TestResourceError_Error(t *testing.T) {
-	resourcefilepath := "/path/to/resource/deployment.yaml"
+func TestPatchError_Error(t *testing.T) {
+	patchfilepath := "/path/to/patch/patch.yaml"
 	errorMsg := "file not found"
-	me := ResourceError{KustomizationPath: filepath, ResourceFilepath: resourcefilepath, ErrorMsg: errorMsg}
+	me := PatchError{KustomizationPath: filepath, PatchFilepath: patchfilepath, ErrorMsg: errorMsg}
 	if !strings.Contains(me.Error(), filepath) {
-		t.Errorf("Incorrect ResourceError.Error() message \n")
+		t.Errorf("Incorrect PatchError.Error() message \n")
 		t.Errorf("Expected filepath %s, but unfound\n", filepath)
 	}
-	if !strings.Contains(me.Error(), resourcefilepath) {
-		t.Errorf("Incorrect ResourceError.Error() message \n")
-		t.Errorf("Expected resourcefilepath %s, but unfound\n", resourcefilepath)
+	if !strings.Contains(me.Error(), patchfilepath) {
+		t.Errorf("Incorrect PatchError.Error() message \n")
+		t.Errorf("Expected patchfilepath %s, but unfound\n", patchfilepath)
 	}
 	if !strings.Contains(me.Error(), errorMsg) {
-		t.Errorf("Incorrect ResourceError.Error() message \n")
+		t.Errorf("Incorrect PatchError.Error() message \n")
 		t.Errorf("Expected errorMsg %s, but unfound\n", errorMsg)
 	}
 }
