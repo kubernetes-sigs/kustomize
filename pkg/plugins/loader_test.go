@@ -19,10 +19,10 @@ package plugins_test
 import (
 	"testing"
 
+	"sigs.k8s.io/kustomize/internal/loadertest"
 	"sigs.k8s.io/kustomize/internal/plugintest"
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
-	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/plugins"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"

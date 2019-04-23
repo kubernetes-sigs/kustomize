@@ -20,8 +20,8 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/internal/kusterr"
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	internal "sigs.k8s.io/kustomize/pkg/internal/error"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -50,7 +50,7 @@ func (rmF *Factory) FromFile(
 	}
 	res, err := rmF.NewResMapFromBytes(content)
 	if err != nil {
-		return nil, internal.Handler(err, path)
+		return nil, kusterr.Handler(err, path)
 	}
 	return res, nil
 }

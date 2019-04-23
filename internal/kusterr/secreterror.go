@@ -14,17 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package error
+package kusterr
 
 import "fmt"
 
-// ResourceError represents error in a resource.
-type ResourceError struct {
+// SecretError represents error with a secret.
+type SecretError struct {
 	KustomizationPath string
-	ResourceFilepath  string
-	ErrorMsg          string
+	// ErrorMsg is an error message
+	ErrorMsg string
 }
 
-func (e ResourceError) Error() string {
-	return fmt.Sprintf("Kustomization file [%s] encounters a resource error for [%s]: %s\n", e.KustomizationPath, e.ResourceFilepath, e.ErrorMsg)
+func (e SecretError) Error() string {
+	return fmt.Sprintf("Kustomization file [%s] encounters a secret error: %s\n", e.KustomizationPath, e.ErrorMsg)
 }

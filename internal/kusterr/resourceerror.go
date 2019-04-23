@@ -14,19 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package error
+package kusterr
 
-import (
-	"fmt"
-)
+import "fmt"
 
-// PatchError represents error during Patch.
-type PatchError struct {
+// ResourceError represents error in a resource.
+type ResourceError struct {
 	KustomizationPath string
-	PatchFilepath     string
+	ResourceFilepath  string
 	ErrorMsg          string
 }
 
-func (e PatchError) Error() string {
-	return fmt.Sprintf("Kustomization file [%s] encounters a patch error for [%s]: %s\n", e.KustomizationPath, e.PatchFilepath, e.ErrorMsg)
+func (e ResourceError) Error() string {
+	return fmt.Sprintf("Kustomization file [%s] encounters a resource error for [%s]: %s\n", e.KustomizationPath, e.ResourceFilepath, e.ErrorMsg)
 }

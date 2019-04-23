@@ -14,17 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package error
+package kusterr
 
-import "fmt"
+import (
+	"fmt"
+)
 
-// SecretError represents error with a secret.
-type SecretError struct {
+// PatchError represents error during Patch.
+type PatchError struct {
 	KustomizationPath string
-	// ErrorMsg is an error message
-	ErrorMsg string
+	PatchFilepath     string
+	ErrorMsg          string
 }
 
-func (e SecretError) Error() string {
-	return fmt.Sprintf("Kustomization file [%s] encounters a secret error: %s\n", e.KustomizationPath, e.ErrorMsg)
+func (e PatchError) Error() string {
+	return fmt.Sprintf("Kustomization file [%s] encounters a patch error for [%s]: %s\n", e.KustomizationPath, e.PatchFilepath, e.ErrorMsg)
 }
