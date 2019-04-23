@@ -9,7 +9,11 @@ directory root.
 This was meant to help protect the person inclined to
 download kustomization directories from the web and use
 them without inspection to control their production
-cluster (see [#693](https://github.com/kubernetes-sigs/kustomize/issues/693)).
+cluster
+(see [#693](https://github.com/kubernetes-sigs/kustomize/issues/693),
+[#700](https://github.com/kubernetes-sigs/kustomize/pull/700),
+[#995](https://github.com/kubernetes-sigs/kustomize/pull/995) and
+[#998](https://github.com/kubernetes-sigs/kustomize/pull/998))
 
 Resources (including configmap and secret generators)
 can _still be shared_ via the recommended best practice
