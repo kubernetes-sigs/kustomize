@@ -35,6 +35,29 @@ func FromKind(k string) Gvk {
 	}
 }
 
+// FromString makes a Gvk with a string,
+// which is constructed by String() function
+func FromString(s string) Gvk {
+	values := strings.Split(s, separator)
+	g := values[0]
+	if g == noGroup {
+		g = ""
+	}
+	v := values[1]
+	if v == noVersion {
+		v = ""
+	}
+	k := values[2]
+	if k == noKind {
+		k = ""
+	}
+	return Gvk{
+		Group:   g,
+		Version: v,
+		Kind:    k,
+	}
+}
+
 // Values that are brief but meaningful in logs.
 const (
 	noGroup   = "~G"
