@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // Package error has contextual error types.
-package error
+package kusterr
 
 import (
 	"fmt"
