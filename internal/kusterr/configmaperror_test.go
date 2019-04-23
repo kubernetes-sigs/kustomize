@@ -14,27 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package error
+package kusterr
 
 import (
 	"strings"
 	"testing"
 )
 
-func TestPatchError_Error(t *testing.T) {
-	patchfilepath := "/path/to/patch/patch.yaml"
-	errorMsg := "file not found"
-	me := PatchError{KustomizationPath: filepath, PatchFilepath: patchfilepath, ErrorMsg: errorMsg}
+func TestConfigmapError_Error(t *testing.T) {
+	errorMsg := "configmap name is missing"
+	me := ConfigmapError{Path: filepath, ErrorMsg: errorMsg}
+
 	if !strings.Contains(me.Error(), filepath) {
-		t.Errorf("Incorrect PatchError.Error() message \n")
+		t.Errorf("Incorrect ConfigmapError.Error() message \n")
 		t.Errorf("Expected filepath %s, but unfound\n", filepath)
 	}
-	if !strings.Contains(me.Error(), patchfilepath) {
-		t.Errorf("Incorrect PatchError.Error() message \n")
-		t.Errorf("Expected patchfilepath %s, but unfound\n", patchfilepath)
-	}
+
 	if !strings.Contains(me.Error(), errorMsg) {
-		t.Errorf("Incorrect PatchError.Error() message \n")
+		t.Errorf("Incorrect ConfigmapError.Error() message \n")
 		t.Errorf("Expected errorMsg %s, but unfound\n", errorMsg)
 	}
 }
