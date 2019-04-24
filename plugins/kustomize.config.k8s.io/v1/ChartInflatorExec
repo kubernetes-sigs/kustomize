@@ -10,8 +10,8 @@ set -e
 #  metadata:
 #    name: notImportantHere
 #  chart: chartName
-#  values: path/to/values/file
-#  helmBin: path/to/helmBin
+#  values: /absolute/path/to/values/file
+#  helmBin: /absolute/path/to/helmBin
 #
 # fetches the given chart from stable/$chartName,
 # and inflates it to stdout, using the given values file.
