@@ -21,15 +21,13 @@ import (
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/k8sdeps/transformer/hash"
 	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/inventory"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
-
-//const PruneAnnotation = "kustomize.k8s.io/PruneRevision"
-const PruneAnnotation = "current"
 
 // inventoryTransformer compute the ConfigMap used in prune
 type inventoryTransformer struct {
@@ -58,14 +56,20 @@ func NewInventoryTransformer(p *types.Inventory, namespace string, append bool) 
 // The prune ConfigMap is used to support the pruning command in the client side tool,
 // which is proposed in https://github.com/kubernetes/enhancements/pull/810
 func (o *inventoryTransformer) Transform(m resmap.ResMap) error {
+	invty := inventory.NewInventory()
 	var keys []string
 	for _, r := range m {
-		s := r.PruneString()
-		keys = append(keys, s)
+		ns, _ := r.GetFieldValue("metadata.namespace")
+		item := resid.New(r.GetGvk(), ns, r.GetName())
+		var refs []resid.ItemId
+
 		for _, refid := range r.GetRefBy() {
 			ref := m[refid]
-			keys = append(keys, s+"---"+ref.PruneString())
+			ns, _ := ref.GetFieldValue("metadata.namespace")
+			refs = append(refs, resid.New(ref.GetGvk(), ns, ref.GetName()))
 		}
+		invty.Current[item.String()] = refs
+		keys = append(keys, item.String())
 	}
 	h, err := hash.SortArrayAndComputeHash(keys)
 	if err != nil {
@@ -75,14 +79,14 @@ func (o *inventoryTransformer) Transform(m resmap.ResMap) error {
 	args := &types.ConfigMapArgs{}
 	args.Name = o.cmName
 	args.Namespace = o.cmNamespace
-	for _, key := range keys {
-		args.LiteralSources = append(args.LiteralSources,
-			key+"="+h)
-	}
 	opts := &types.GeneratorOptions{
 		Annotations: make(map[string]string),
 	}
-	opts.Annotations[PruneAnnotation] = h
+	opts.Annotations[inventory.InventoryHashAnnotation] = h
+	err = invty.UpdateAnnotations(opts.Annotations)
+	if err != nil {
+		return err
+	}
 
 	kf := kunstruct.NewKunstructuredFactoryImpl()
 	k, err := kf.MakeConfigMap(nil, opts, args)
