@@ -24,15 +24,19 @@ import (
 	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 )
 
-// TODO: Make this test less brittle.
-//
-// To test ChartInflatorExec, it downloads the latest
-// stable minecraft chart, inflates it with default values,
-// and demands an exact match.
-// Maybe just grep for particular strings instead.
+// This is an example of using a helm chart as a base,
+// inflating it and then customizing it with a nameprefix
+// applied to all its resources.
+// 
+// The helm chart used is downloaded from
+//   https://github.com/helm/charts/tree/master/stable/minecraft
+// with each test run, so it's a bit brittle as that
+// chart could change obviously and break the test.
 //
 // This test requires having the helm binary on the PATH.
 //
+// TODO: Download and inflate the chart, and check that
+// in for the test. 
 func TestChartInflatorExecPlugin(t *testing.T) {
 	tc := plugintest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
