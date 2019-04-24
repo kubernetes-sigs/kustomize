@@ -103,17 +103,14 @@ data:
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
+	//nolint
 	th.assertActualEqualsExpected(m, `
 apiVersion: v1
-data:
-  _Secret_default_my-pass: 54f87m6fd6
-  _Secret_default_my-pass---apps_Deployment_default_my-mysql: 54f87m6fd6
-  _Service_default_my-mmmysql: 54f87m6fd6
-  apps_Deployment_default_my-mysql: 54f87m6fd6
 kind: ConfigMap
 metadata:
   annotations:
-    current: 54f87m6fd6
+    kustomize.config.k8s.io/Inventory: '{"current":{"apps_v1beta2_Deployment|default|my-mysql":null,"~G_v1_Secret|default|my-pass":[{"group":"apps","version":"v1beta2","kind":"Deployment","name":"my-mysql","namespace":"default"}],"~G_v1_Service|default|my-mmmysql":null}}'
+    kustomize.config.k8s.io/InventoryHash: kd67f7ht8t
   name: haha
   namespace: default
 ---
