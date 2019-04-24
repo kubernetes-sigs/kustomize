@@ -33,7 +33,7 @@ type Registry struct {
 
 const (
 	PluginSymbol      = "KustomizePlugin"
-	PluginRoot        = "plugins"
+	PluginRoot        = "plugin"
 	pluginTypeGo      = types.PluginType("go")
 	pluginTypeBuiltIn = types.PluginType("builtin")
 )

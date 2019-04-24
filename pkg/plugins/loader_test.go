@@ -29,7 +29,8 @@ import (
 )
 
 const (
-	secretGenerator = `apiVersion: kustomize.config.k8s.io/v1
+	secretGenerator = `
+apiVersion: builtin
 kind: SecretGenerator
 metadata:
   name: secretGenerator
@@ -59,7 +60,7 @@ func TestLoader(t *testing.T) {
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
-		"kustomize.config.k8s.io", "v1", "SecretGenerator")
+		"builtin", "", "SecretGenerator")
 	tc.BuildGoPlugin(
 		"someteam.example.com", "v1", "ServiceGenerator")
 

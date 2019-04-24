@@ -27,7 +27,7 @@ import (
 // This is an example of using a helm chart as a base,
 // inflating it and then customizing it with a nameprefix
 // applied to all its resources.
-// 
+//
 // The helm chart used is downloaded from
 //   https://github.com/helm/charts/tree/master/stable/minecraft
 // with each test run, so it's a bit brittle as that
@@ -36,13 +36,13 @@ import (
 // This test requires having the helm binary on the PATH.
 //
 // TODO: Download and inflate the chart, and check that
-// in for the test. 
+// in for the test.
 func TestChartInflatorExecPlugin(t *testing.T) {
 	tc := plugintest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
-		"kustomize.config.k8s.io", "v1", "ChartInflatorExec")
+		"builtin", "", "ChartInflatorExec")
 
 	th := NewKustTestHarnessWithPluginConfig(
 		t, "/app", plugin.ActivePluginConfig())
@@ -53,7 +53,7 @@ namePrefix: LOOOOOOOONG-
 `)
 
 	th.writeF("/app/chartInflatorExec.yaml", `
-apiVersion: kustomize.config.k8s.io/v1
+apiVersion: builtin
 kind: ChartInflatorExec
 metadata:
   name: notImportantHere

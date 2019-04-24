@@ -210,7 +210,7 @@ Plugins that generate KV pairs for kustomize
 must be installed at
 
 > ```
-> $XDG_CONFIG_HOME/kustomize/plugins/kvSource
+> $XDG_CONFIG_HOME/kustomize/plugin/kvSource
 > ```
 
 `XDG_CONFIG_HOME` is an environment variable
@@ -227,7 +227,7 @@ Compile and install the plugin:
 
 <!-- @compilePlugin @test -->
 ```
-kvSources=$DEMO_HOME/kustomize/plugins/kvSources
+kvSources=$DEMO_HOME/kustomize/plugin/kvSources
 mkdir -p $kvSources
 go build -buildmode plugin \
   -o $kvSources/kvMaker.so \
