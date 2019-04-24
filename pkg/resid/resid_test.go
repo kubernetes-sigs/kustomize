@@ -12,48 +12,58 @@ var stringTests = []struct {
 }{
 	{
 		ResId{
-			namespace: "ns",
-			gvKind:    gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
-			name:      "nm",
-			prefix:    "p",
-			suffix:    "s",
+			ItemId: ItemId{
+				Namespace: "ns",
+				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Name:      "nm",
+			},
+			prefix: "p",
+			suffix: "s",
 		},
 		"g_v_k|ns|p|nm|s",
 	},
 	{
 		ResId{
-			namespace: "ns",
-			gvKind:    gvk.Gvk{Version: "v", Kind: "k"},
-			name:      "nm",
-			prefix:    "p",
-			suffix:    "s",
+			ItemId: ItemId{
+				Namespace: "ns",
+				Gvk:       gvk.Gvk{Version: "v", Kind: "k"},
+				Name:      "nm",
+			},
+			prefix: "p",
+			suffix: "s",
 		},
 		"~G_v_k|ns|p|nm|s",
 	},
 	{
 		ResId{
-			namespace: "ns",
-			gvKind:    gvk.Gvk{Kind: "k"},
-			name:      "nm",
-			prefix:    "p",
-			suffix:    "s",
+			ItemId: ItemId{
+				Namespace: "ns",
+				Gvk:       gvk.Gvk{Kind: "k"},
+				Name:      "nm",
+			},
+			prefix: "p",
+			suffix: "s",
 		},
 		"~G_~V_k|ns|p|nm|s",
 	},
 	{
 		ResId{
-			namespace: "ns",
-			gvKind:    gvk.Gvk{},
-			name:      "nm",
-			prefix:    "p",
-			suffix:    "s",
+			ItemId: ItemId{
+				Namespace: "ns",
+				Gvk:       gvk.Gvk{},
+				Name:      "nm",
+			},
+			prefix: "p",
+			suffix: "s",
 		},
 		"~G_~V_~K|ns|p|nm|s",
 	},
 	{
 		ResId{
-			gvKind: gvk.Gvk{},
-			name:   "nm",
+			ItemId: ItemId{
+				Gvk:  gvk.Gvk{},
+				Name: "nm",
+			},
 			prefix: "p",
 			suffix: "s",
 		},
@@ -61,22 +71,28 @@ var stringTests = []struct {
 	},
 	{
 		ResId{
-			gvKind: gvk.Gvk{},
-			name:   "nm",
+			ItemId: ItemId{
+				Gvk:  gvk.Gvk{},
+				Name: "nm",
+			},
 			suffix: "s",
 		},
 		"~G_~V_~K|~X|~P|nm|s",
 	},
 	{
 		ResId{
-			gvKind: gvk.Gvk{},
+			ItemId: ItemId{
+				Gvk: gvk.Gvk{},
+			},
 			suffix: "s",
 		},
 		"~G_~V_~K|~X|~P|~N|s",
 	},
 	{
 		ResId{
-			gvKind: gvk.Gvk{},
+			ItemId: ItemId{
+				Gvk: gvk.Gvk{},
+			},
 		},
 		"~G_~V_~K|~X|~P|~N|~S",
 	},
@@ -100,48 +116,47 @@ var gvknStringTests = []struct {
 }{
 	{
 		ResId{
-			namespace: "ns",
-			gvKind:    gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
-			name:      "nm",
-			prefix:    "p",
-			suffix:    "s",
+			ItemId: ItemId{
+				Namespace: "ns",
+				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Name:      "nm",
+			},
+			prefix: "p",
+			suffix: "s",
 		},
 		"g_v_k|nm",
 	},
 	{
 		ResId{
-			namespace: "ns",
-			gvKind:    gvk.Gvk{Version: "v", Kind: "k"},
-			name:      "nm",
-			prefix:    "p",
-			suffix:    "s",
+			ItemId: ItemId{
+				Namespace: "ns",
+				Gvk:       gvk.Gvk{Version: "v", Kind: "k"},
+				Name:      "nm",
+			},
+			prefix: "p",
+			suffix: "s",
 		},
 		"~G_v_k|nm",
 	},
 	{
 		ResId{
-			namespace: "ns",
-			gvKind:    gvk.Gvk{Kind: "k"},
-			name:      "nm",
-			prefix:    "p",
-			suffix:    "s",
+			ItemId: ItemId{
+				Namespace: "ns",
+				Gvk:       gvk.Gvk{Kind: "k"},
+				Name:      "nm",
+			},
+			prefix: "p",
+			suffix: "s",
 		},
 		"~G_~V_k|nm",
 	},
 	{
 		ResId{
-			namespace: "ns",
-			gvKind:    gvk.Gvk{},
-			name:      "nm",
-			prefix:    "p",
-			suffix:    "s",
-		},
-		"~G_~V_~K|nm",
-	},
-	{
-		ResId{
-			gvKind: gvk.Gvk{},
-			name:   "nm",
+			ItemId: ItemId{
+				Namespace: "ns",
+				Gvk:       gvk.Gvk{},
+				Name:      "nm",
+			},
 			prefix: "p",
 			suffix: "s",
 		},
@@ -149,22 +164,39 @@ var gvknStringTests = []struct {
 	},
 	{
 		ResId{
-			gvKind: gvk.Gvk{},
-			name:   "nm",
+			ItemId: ItemId{
+				Gvk:  gvk.Gvk{},
+				Name: "nm",
+			},
+			prefix: "p",
 			suffix: "s",
 		},
 		"~G_~V_~K|nm",
 	},
 	{
 		ResId{
-			gvKind: gvk.Gvk{},
+			ItemId: ItemId{
+				Gvk:  gvk.Gvk{},
+				Name: "nm",
+			},
+			suffix: "s",
+		},
+		"~G_~V_~K|nm",
+	},
+	{
+		ResId{
+			ItemId: ItemId{
+				Gvk: gvk.Gvk{},
+			},
 			suffix: "s",
 		},
 		"~G_~V_~K|",
 	},
 	{
 		ResId{
-			gvKind: gvk.Gvk{},
+			ItemId: ItemId{
+				Gvk: gvk.Gvk{},
+			},
 		},
 		"~G_~V_~K|",
 	},
@@ -190,51 +222,42 @@ var GvknEqualsTest = []struct {
 }{
 	{
 		id1: ResId{
-			namespace: "X",
-			gvKind:    gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
-			name:      "nm",
-			prefix:    "AA",
-			suffix:    "aa",
+			ItemId: ItemId{
+				Namespace: "X",
+				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Name:      "nm",
+			},
+			prefix: "AA",
+			suffix: "aa",
 		},
 		id2: ResId{
-			namespace: "X",
-			gvKind:    gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
-			name:      "nm",
-			prefix:    "BB",
-			suffix:    "bb",
+			ItemId: ItemId{
+				Namespace: "X",
+				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Name:      "nm",
+			},
+			prefix: "BB",
+			suffix: "bb",
 		},
 		gVknResult:   true,
 		nSgVknResult: true,
 	},
 	{
 		id1: ResId{
-			namespace: "X",
-			gvKind:    gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
-			name:      "nm",
-			prefix:    "AA",
-			suffix:    "aa",
+			ItemId: ItemId{
+				Namespace: "X",
+				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Name:      "nm",
+			},
+			prefix: "AA",
+			suffix: "aa",
 		},
 		id2: ResId{
-			namespace: "Z",
-			gvKind:    gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
-			name:      "nm",
-			prefix:    "BB",
-			suffix:    "bb",
-		},
-		gVknResult:   true,
-		nSgVknResult: false,
-	},
-	{
-		id1: ResId{
-			namespace: "X",
-			gvKind:    gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
-			name:      "nm",
-			prefix:    "AA",
-			suffix:    "aa",
-		},
-		id2: ResId{
-			gvKind: gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
-			name:   "nm",
+			ItemId: ItemId{
+				Namespace: "Z",
+				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Name:      "nm",
+			},
 			prefix: "BB",
 			suffix: "bb",
 		},
@@ -243,52 +266,85 @@ var GvknEqualsTest = []struct {
 	},
 	{
 		id1: ResId{
-			namespace: "X",
-			gvKind:    gvk.Gvk{Version: "v", Kind: "k"},
-			name:      "nm",
-			prefix:    "AA",
-			suffix:    "aa",
+			ItemId: ItemId{
+				Namespace: "X",
+				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Name:      "nm",
+			},
+			prefix: "AA",
+			suffix: "aa",
 		},
 		id2: ResId{
-			namespace: "Z",
-			gvKind:    gvk.Gvk{Version: "v", Kind: "k"},
-			name:      "nm",
-			prefix:    "BB",
-			suffix:    "bb",
+			ItemId: ItemId{
+				Gvk:  gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Name: "nm",
+			},
+			prefix: "BB",
+			suffix: "bb",
 		},
 		gVknResult:   true,
 		nSgVknResult: false,
 	},
 	{
 		id1: ResId{
-			namespace: "X",
-			gvKind:    gvk.Gvk{Kind: "k"},
-			name:      "nm",
-			prefix:    "AA",
-			suffix:    "aa",
+			ItemId: ItemId{
+				Namespace: "X",
+				Gvk:       gvk.Gvk{Version: "v", Kind: "k"},
+				Name:      "nm",
+			},
+			prefix: "AA",
+			suffix: "aa",
 		},
 		id2: ResId{
-			namespace: "Z",
-			gvKind:    gvk.Gvk{Kind: "k"},
-			name:      "nm",
-			prefix:    "BB",
-			suffix:    "bb",
+			ItemId: ItemId{
+				Namespace: "Z",
+				Gvk:       gvk.Gvk{Version: "v", Kind: "k"},
+				Name:      "nm",
+			},
+			prefix: "BB",
+			suffix: "bb",
 		},
 		gVknResult:   true,
 		nSgVknResult: false,
 	},
 	{
 		id1: ResId{
-			namespace: "X",
-			name:      "nm",
-			prefix:    "AA",
-			suffix:    "aa",
+			ItemId: ItemId{
+				Namespace: "X",
+				Gvk:       gvk.Gvk{Kind: "k"},
+				Name:      "nm",
+			},
+			prefix: "AA",
+			suffix: "aa",
 		},
 		id2: ResId{
-			namespace: "Z",
-			name:      "nm",
-			prefix:    "BB",
-			suffix:    "bb",
+			ItemId: ItemId{
+				Namespace: "Z",
+				Gvk:       gvk.Gvk{Kind: "k"},
+				Name:      "nm",
+			},
+			prefix: "BB",
+			suffix: "bb",
+		},
+		gVknResult:   true,
+		nSgVknResult: false,
+	},
+	{
+		id1: ResId{
+			ItemId: ItemId{
+				Namespace: "X",
+				Name:      "nm",
+			},
+			prefix: "AA",
+			suffix: "aa",
+		},
+		id2: ResId{
+			ItemId: ItemId{
+				Namespace: "Z",
+				Name:      "nm",
+			},
+			prefix: "BB",
+			suffix: "bb",
 		},
 		gVknResult:   true,
 		nSgVknResult: false,
@@ -310,19 +366,23 @@ func TestEquals(t *testing.T) {
 
 func TestCopyWithNewPrefixSuffix(t *testing.T) {
 	r1 := ResId{
-		namespace: "X",
-		gvKind:    gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
-		name:      "nm",
-		prefix:    "a",
-		suffix:    "b",
+		ItemId: ItemId{
+			Namespace: "X",
+			Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+			Name:      "nm",
+		},
+		prefix: "a",
+		suffix: "b",
 	}
 	r2 := r1.CopyWithNewPrefixSuffix("p-", "-s")
 	expected := ResId{
-		namespace: "X",
-		gvKind:    gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
-		name:      "nm",
-		prefix:    "p-a",
-		suffix:    "b-s",
+		ItemId: ItemId{
+			Namespace: "X",
+			Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+			Name:      "nm",
+		},
+		prefix: "p-a",
+		suffix: "b-s",
 	}
 	if !r2.GvknEquals(expected) {
 		t.Fatalf("%v should equal %v", r2, expected)
@@ -331,19 +391,23 @@ func TestCopyWithNewPrefixSuffix(t *testing.T) {
 
 func TestCopyWithNewNamespace(t *testing.T) {
 	r1 := ResId{
-		namespace: "X",
-		gvKind:    gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
-		name:      "nm",
-		prefix:    "a",
-		suffix:    "b",
+		ItemId: ItemId{
+			Namespace: "X",
+			Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+			Name:      "nm",
+		},
+		prefix: "a",
+		suffix: "b",
 	}
 	r2 := r1.CopyWithNewNamespace("zzz")
 	expected := ResId{
-		namespace: "zzz",
-		gvKind:    gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
-		name:      "nm",
-		prefix:    "a",
-		suffix:    "b",
+		ItemId: ItemId{
+			Namespace: "zzz",
+			Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+			Name:      "nm",
+		},
+		prefix: "a",
+		suffix: "b",
 	}
 	if !r2.GvknEquals(expected) {
 		t.Fatalf("%v should equal %v", r2, expected)

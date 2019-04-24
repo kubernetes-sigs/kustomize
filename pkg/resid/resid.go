@@ -24,12 +24,7 @@ import (
 
 // ResId is an immutable identifier of a k8s resource object.
 type ResId struct {
-	// Gvk of the resource.
-	gvKind gvk.Gvk
-
-	// name of the resource before transformation.
-	name string
-
+	ItemId
 	// namePrefix of the resource.
 	// An untransformed resource has no prefix.
 	// A fully transformed resource has an arbitrary
@@ -41,42 +36,36 @@ type ResId struct {
 	// A fully transformed resource has an arbitrary
 	// number of suffixes concatenated together.
 	suffix string
-
-	// Namespace the resource belongs to.
-	// An untransformed resource has no namespace.
-	// A fully transformed resource has the namespace
-	// from the top most overlay.
-	namespace string
 }
 
 // NewResIdWithPrefixSuffixNamespace creates new resource identifier with a prefix, suffix and a namespace
 func NewResIdWithPrefixSuffixNamespace(k gvk.Gvk, n, p, s, ns string) ResId {
-	return ResId{gvKind: k, name: n, prefix: p, suffix: s, namespace: ns}
+	return ResId{ItemId: ItemId{Gvk: k, Name: n, Namespace: ns}, prefix: p, suffix: s}
 }
 
 // NewResIdWithPrefixNamespace creates new resource identifier with a prefix and a namespace
 func NewResIdWithPrefixNamespace(k gvk.Gvk, n, p, ns string) ResId {
-	return ResId{gvKind: k, name: n, prefix: p, namespace: ns}
+	return ResId{ItemId: ItemId{Gvk: k, Name: n, Namespace: ns}, prefix: p}
 }
 
 // NewResIdWithSuffixNamespace creates new resource identifier with a suffix and a namespace
 func NewResIdWithSuffixNamespace(k gvk.Gvk, n, s, ns string) ResId {
-	return ResId{gvKind: k, name: n, suffix: s, namespace: ns}
+	return ResId{ItemId: ItemId{Gvk: k, Name: n, Namespace: ns}, suffix: s}
 }
 
 // NewResIdWithPrefixSuffix creates new resource identifier with a prefix and suffix
 func NewResIdWithPrefixSuffix(k gvk.Gvk, n, p, s string) ResId {
-	return ResId{gvKind: k, name: n, prefix: p, suffix: s}
+	return ResId{ItemId: ItemId{Gvk: k, Name: n}, prefix: p, suffix: s}
 }
 
 // NewResId creates new resource identifier
 func NewResId(k gvk.Gvk, n string) ResId {
-	return ResId{gvKind: k, name: n}
+	return ResId{ItemId: ItemId{Gvk: k, Name: n}}
 }
 
 // NewResIdKindOnly creates new resource identifier
 func NewResIdKindOnly(k string, n string) ResId {
-	return ResId{gvKind: gvk.FromKind(k), name: n}
+	return ResId{ItemId: ItemId{Gvk: gvk.FromKind(k), Name: n}}
 }
 
 const (
@@ -89,7 +78,7 @@ const (
 
 // String of ResId based on GVK, name and prefix
 func (n ResId) String() string {
-	ns := n.namespace
+	ns := n.ItemId.Namespace
 	if ns == "" {
 		ns = noNamespace
 	}
@@ -97,7 +86,7 @@ func (n ResId) String() string {
 	if p == "" {
 		p = noPrefix
 	}
-	nm := n.name
+	nm := n.ItemId.Name
 	if nm == "" {
 		nm = noName
 	}
@@ -107,39 +96,39 @@ func (n ResId) String() string {
 	}
 
 	return strings.Join(
-		[]string{n.gvKind.String(), ns, p, nm, s}, separator)
+		[]string{n.ItemId.Gvk.String(), ns, p, nm, s}, separator)
 }
 
 // GvknString of ResId based on GVK and name
 func (n ResId) GvknString() string {
-	return n.gvKind.String() + separator + n.name
+	return n.ItemId.Gvk.String() + separator + n.ItemId.Name
 }
 
 // GvknEquals returns true if the other id matches
 // Group/Version/Kind/name.
 func (n ResId) GvknEquals(id ResId) bool {
-	return n.name == id.name && n.gvKind.Equals(id.gvKind)
+	return n.ItemId.Name == id.ItemId.Name && n.ItemId.Gvk.Equals(id.ItemId.Gvk)
 }
 
 // NsGvknEquals returns true if the other id matches
 // namespace/Group/Version/Kind/name.
 func (n ResId) NsGvknEquals(id ResId) bool {
-	return n.namespace == id.namespace && n.GvknEquals(id)
+	return n.ItemId.Namespace == id.ItemId.Namespace && n.GvknEquals(id)
 }
 
 // Gvk returns Group/Version/Kind of the resource.
 func (n ResId) Gvk() gvk.Gvk {
-	return n.gvKind
+	return n.ItemId.Gvk
 }
 
 // Name returns resource name.
 func (n ResId) Name() string {
-	return n.name
+	return n.ItemId.Name
 }
 
 // Namespace returns resource namespace.
 func (n ResId) Namespace() string {
-	return n.namespace
+	return n.ItemId.Namespace
 }
 
 // CopyWithNewPrefixSuffix make a new copy from current ResId
@@ -158,7 +147,7 @@ func (n ResId) CopyWithNewPrefixSuffix(p, s string) ResId {
 // CopyWithNewNamespace make a new copy from current ResId and set a new namespace
 func (n ResId) CopyWithNewNamespace(ns string) ResId {
 	result := n
-	result.namespace = ns
+	result.ItemId.Namespace = ns
 	return result
 }
 
