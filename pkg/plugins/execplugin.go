@@ -140,6 +140,9 @@ func (p *ExecPlugin) Generate() (resmap.ResMap, error) {
 	cmd := exec.Command(p.name, args...)
 	cmd.Env = p.getEnv()
 	cmd.Stderr = os.Stderr
+	if _, err := os.Stat(p.ldr.Root()); err == nil {
+		cmd.Dir = p.ldr.Root()
+	}
 	output, err := cmd.Output()
 	if err != nil {
 		return nil, err
@@ -161,6 +164,9 @@ func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
 		cmd.Env = p.getEnv()
 		cmd.Stdin = bytes.NewReader(content)
 		cmd.Stderr = os.Stderr
+		if _, err := os.Stat(p.ldr.Root()); err == nil {
+			cmd.Dir = p.ldr.Root()
+		}
 		output, err := cmd.Output()
 		if err != nil {
 			return err
@@ -191,6 +197,8 @@ func (p *ExecPlugin) getArgs() ([]string, error) {
 
 func (p *ExecPlugin) getEnv() []string {
 	env := os.Environ()
-	env = append(env, "KUSTOMIZE_PLUGIN_CONFIG_STRING="+string(p.cfg))
+	env = append(env,
+		"KUSTOMIZE_PLUGIN_CONFIG_STRING="+string(p.cfg),
+		"KUSTOMIZE_PLUGIN_CONFIG_ROOT="+p.ldr.Root())
 	return env
 }
