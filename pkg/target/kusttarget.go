@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/pkg/accumulator"
 	"sigs.k8s.io/kustomize/pkg/ifc"
@@ -36,6 +35,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/transformers"
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
 	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/yaml"
 )
 
 // KustTarget encapsulates the entirety of a kustomization build.

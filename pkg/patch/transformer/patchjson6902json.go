@@ -20,12 +20,12 @@ import (
 	"fmt"
 
 	"github.com/evanphx/json-patch"
-	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
+	"sigs.k8s.io/yaml"
 )
 
 // patchJson6902JSONTransformer applies patches.
