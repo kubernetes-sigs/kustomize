@@ -26,10 +26,10 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/ghodss/yaml"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/yaml"
 )
 
 const (
