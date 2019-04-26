@@ -23,10 +23,10 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/ghodss/yaml"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/yaml"
 )
 
 // ResMap is a map from ResId to Resource.

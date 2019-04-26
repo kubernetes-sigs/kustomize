@@ -7,7 +7,7 @@ require (
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/emicklei/go-restful v2.9.3+incompatible // indirect
 	github.com/evanphx/json-patch v3.0.0+incompatible
-	github.com/ghodss/yaml v1.0.0
+	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-openapi/jsonpointer v0.0.0-20180322222829-3a0015ad55fa // indirect
 	github.com/go-openapi/jsonreference v0.0.0-20180322222742-3fb327e6747d // indirect
 	github.com/go-openapi/spec v0.0.0-20180415031709-bcff419492ee
@@ -35,4 +35,5 @@ require (
 	k8s.io/apimachinery v0.0.0-20180510061931-13b73596e4b6
 	k8s.io/client-go v7.0.0+incompatible
 	k8s.io/kube-openapi v0.0.0-20180510204742-b3f03f553288
+	sigs.k8s.io/yaml v1.1.0
 )
