@@ -67,7 +67,7 @@ spec:
 
 func writeSecretGeneratorConfig(th *KustTestHarness, root string) {
 	th.writeF(filepath.Join(root, "secretGenerator.yaml"), `
-apiVersion: kustomize.config.k8s.io/v1
+apiVersion: builtin
 kind: SecretGenerator
 metadata:
   name: secretGenerator
@@ -102,7 +102,7 @@ func TestSecretGenerator(t *testing.T) {
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
-		"kustomize.config.k8s.io", "v1", "SecretGenerator")
+		"builtin", "", "SecretGenerator")
 
 	th := NewKustTestHarnessWithPluginConfig(
 		t, "/app", plugin.ActivePluginConfig())
