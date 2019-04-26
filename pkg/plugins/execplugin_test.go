@@ -53,7 +53,7 @@ s/$BAR/bar/g
 
 	p.Config(ldr, rf, pluginConfig)
 
-	expected := "/kustomize/plugins/someteam.example.com/v1/SedTransformer"
+	expected := "/kustomize/plugin/someteam.example.com/v1/SedTransformer"
 	if !strings.HasSuffix(p.name, expected) {
 		t.Fatalf("expected suffix '%s', got '%s'", expected, p.name)
 	}

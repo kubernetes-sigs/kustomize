@@ -36,6 +36,7 @@ func TestCompiler(t *testing.T) {
 	if configRoot != c.ObjRoot() {
 		t.Errorf("unexpected objRoot %s", c.ObjRoot())
 	}
+
 	expectObj := filepath.Join(
 		c.ObjRoot(),
 		"someteam.example.com", "v1", "DatePrefixer.so")
@@ -49,6 +50,21 @@ func TestCompiler(t *testing.T) {
 	if !RecentFileExists(expectObj) {
 		t.Errorf("didn't find expected obj file %s", expectObj)
 	}
+
+	expectObj = filepath.Join(
+		c.ObjRoot(),
+		"builtin", "", "SecretGenerator.so")
+	if FileExists(expectObj) {
+		t.Errorf("obj file should not exist yet: %s", expectObj)
+	}
+	err = c.Compile("builtin", "", "SecretGenerator")
+	if err != nil {
+		t.Error(err)
+	}
+	if !RecentFileExists(expectObj) {
+		t.Errorf("didn't find expected obj file %s", expectObj)
+	}
+
 	err = os.RemoveAll(c.ObjRoot())
 	if err != nil {
 		t.Errorf(
