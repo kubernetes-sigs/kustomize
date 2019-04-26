@@ -42,7 +42,7 @@ func TestChartInflatorExecPlugin(t *testing.T) {
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
-		"builtin", "", "ChartInflatorExec")
+		"someteam.example.com", "v1", "ChartInflatorExec")
 
 	th := NewKustTestHarnessWithPluginConfig(
 		t, "/app", plugin.ActivePluginConfig())
@@ -53,11 +53,11 @@ namePrefix: LOOOOOOOONG-
 `)
 
 	th.writeF("/app/chartInflatorExec.yaml", `
-apiVersion: builtin
+apiVersion: someteam.example.com/v1
 kind: ChartInflatorExec
 metadata:
   name: notImportantHere
-chart: minecraft
+chartName: minecraft
 `)
 
 	m, err := th.makeKustTarget().MakeCustomizedResMap()
