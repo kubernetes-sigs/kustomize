@@ -30,7 +30,7 @@ import (
 // fileLoader is a kustomization's interface to files.
 //
 // The directory in which a kustomization file sits
-// is referred to below as the kustomization's root.
+// is referred to below as the kustomization's _root_.
 //
 // An instance of fileLoader has an immutable root,
 // and offers a `New` method returning a new loader
@@ -42,12 +42,13 @@ import (
 //
 //   `Load` is used to visit these paths.
 //
-//   They must terminate in or below the root.
+//   These paths refer to resources, patches,
+//   data for ConfigMaps and Secrets, etc.
 //
-//   They hold things like resources, patches,
-//   data for ConfigMaps, etc.
+//   The loadRestrictor may disallow certain paths
+//   or classes of paths.
 //
-// * bases; other kustomizations
+// * bases (other kustomizations)
 //
 //   `New` is used to load bases.
 //
@@ -75,36 +76,50 @@ import (
 // These restrictions assure that kustomizations
 // are self-contained and relocatable, and impose
 // some safety when relying on remote kustomizations,
-// e.g. a ConfigMap generator specified to read
-// from /etc/passwd will fail.
+// e.g. a remotely loaded ConfigMap generator specified
+// to read from /etc/passwd will fail.
 //
 type fileLoader struct {
 	// Loader that spawned this loader.
 	// Used to avoid cycles.
 	referrer *fileLoader
+
 	// An absolute, cleaned path to a directory.
-	// The Load function reads from this directory,
-	// or directories below it.
+	// The Load function will read non-absolute
+	// paths relative to this directory.
 	root fs.ConfirmedDir
+
+	// Restricts behavior of Load function.
+	loadRestrictor LoadRestrictorFunc
+
 	// If this is non-nil, the files were
 	// obtained from the given repository.
 	repoSpec *git.RepoSpec
+
 	// File system utilities.
 	fSys fs.FileSystem
+
 	// Used to clone repositories.
 	cloner git.Cloner
+
 	// Used to clean up, as needed.
 	cleaner func() error
 }
 
+const CWD = "."
+
 // NewFileLoaderAtCwd returns a loader that loads from ".".
+// A convenience for kustomize edit commands.
 func NewFileLoaderAtCwd(fSys fs.FileSystem) *fileLoader {
-	return newLoaderOrDie(fSys, ".")
+	return newLoaderOrDie(
+		RestrictionRootOnly, fSys, CWD)
 }
 
 // NewFileLoaderAtRoot returns a loader that loads from "/".
+// A convenience for tests.
 func NewFileLoaderAtRoot(fSys fs.FileSystem) *fileLoader {
-	return newLoaderOrDie(fSys, string(filepath.Separator))
+	return newLoaderOrDie(
+		RestrictionRootOnly, fSys, string(filepath.Separator))
 }
 
 // Root returns the absolute path that is prepended to any
@@ -113,25 +128,28 @@ func (l *fileLoader) Root() string {
 	return l.root.String()
 }
 
-func newLoaderOrDie(fSys fs.FileSystem, path string) *fileLoader {
+func newLoaderOrDie(
+	lr LoadRestrictorFunc, fSys fs.FileSystem, path string) *fileLoader {
 	root, err := demandDirectoryRoot(fSys, path)
 	if err != nil {
 		log.Fatalf("unable to make loader at '%s'; %v", path, err)
 	}
 	return newLoaderAtConfirmedDir(
-		root, fSys, nil, git.ClonerUsingGitExec)
+		lr, root, fSys, nil, git.ClonerUsingGitExec)
 }
 
 // newLoaderAtConfirmedDir returns a new fileLoader with given root.
 func newLoaderAtConfirmedDir(
+	lr LoadRestrictorFunc,
 	root fs.ConfirmedDir, fSys fs.FileSystem,
 	referrer *fileLoader, cloner git.Cloner) *fileLoader {
 	return &fileLoader{
-		root:     root,
-		referrer: referrer,
-		fSys:     fSys,
-		cloner:   cloner,
-		cleaner:  func() error { return nil },
+		loadRestrictor: lr,
+		root:           root,
+		referrer:       referrer,
+		fSys:           fSys,
+		cloner:         cloner,
+		cleaner:        func() error { return nil },
 	}
 }
 
@@ -183,7 +201,7 @@ func (l *fileLoader) New(path string) (ifc.Loader, error) {
 		return nil, err
 	}
 	return newLoaderAtConfirmedDir(
-		root, l.fSys, l, l.cloner), nil
+		l.loadRestrictor, root, l.fSys, l, l.cloner), nil
 }
 
 // newLoaderAtGitClone returns a new Loader pinned to a temporary
@@ -209,12 +227,14 @@ func newLoaderAtGitClone(
 			repoSpec.AbsPath(), f)
 	}
 	return &fileLoader{
-		root:     root,
-		referrer: referrer,
-		repoSpec: repoSpec,
-		fSys:     fSys,
-		cloner:   cloner,
-		cleaner:  repoSpec.Cleaner(fSys),
+		// Clones never allowed to escape root.
+		loadRestrictor: RestrictionRootOnly,
+		root:           root,
+		referrer:       referrer,
+		repoSpec:       repoSpec,
+		fSys:           fSys,
+		cloner:         cloner,
+		cleaner:        repoSpec.Cleaner(fSys),
 	}, nil
 }
 
@@ -279,31 +299,18 @@ func (l *fileLoader) errIfRepoCycle(newRepoSpec *git.RepoSpec) error {
 	return l.referrer.errIfRepoCycle(newRepoSpec)
 }
 
-// Load returns content of file at the given relative path,
-// else an error.  The path must refer to a file in or
-// below the current root.
+// Load returns the content of file at the given path,
+// else an error.  Relative paths are taken relative
+// to the root.
 func (l *fileLoader) Load(path string) ([]byte, error) {
-	if filepath.IsAbs(path) {
-		return nil, l.loadOutOfBounds(path)
+	if !filepath.IsAbs(path) {
+		path = l.root.Join(path)
 	}
-	d, f, err := l.fSys.CleanedAbs(l.root.Join(path))
+	path, err := l.loadRestrictor(l.fSys, l.root, path)
 	if err != nil {
 		return nil, err
 	}
-	if f == "" {
-		return nil, fmt.Errorf(
-			"'%s' must be a file (got d='%s')", path, d)
-	}
-	if !d.HasPrefix(l.root) {
-		return nil, l.loadOutOfBounds(path)
-	}
-	return l.fSys.ReadFile(d.Join(f))
-}
-
-func (l *fileLoader) loadOutOfBounds(path string) error {
-	return fmt.Errorf(
-		"security; file '%s' is not in or below '%s'",
-		path, l.root)
+	return l.fSys.ReadFile(path)
 }
 
 // Cleanup runs the cleaner.

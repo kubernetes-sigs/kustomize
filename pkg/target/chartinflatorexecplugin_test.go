@@ -20,24 +20,29 @@ package target_test
 import (
 	"testing"
 
+	"sigs.k8s.io/kustomize/internal/plugintest"
 	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 )
 
-// TODO: Make this test less brittle.
+// This is an example of using a helm chart as a base,
+// inflating it and then customizing it with a nameprefix
+// applied to all its resources.
 //
-// To test ChartInflatorExec, it downloads the latest
-// stable minecraft chart, inflates it with default values,
-// and demands an exact match.
-// Maybe just grep for particular strings instead.
+// The helm chart used is downloaded from
+//   https://github.com/helm/charts/tree/master/stable/minecraft
+// with each test run, so it's a bit brittle as that
+// chart could change obviously and break the test.
 //
 // This test requires having the helm binary on the PATH.
 //
+// TODO: Download and inflate the chart, and check that
+// in for the test.
 func TestChartInflatorExecPlugin(t *testing.T) {
-	tc := NewTestEnvController(t).Set()
+	tc := plugintest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
-		"kustomize.config.k8s.io", "v1", "ChartInflatorExec")
+		"someteam.example.com", "v1", "ChartInflatorExec")
 
 	th := NewKustTestHarnessWithPluginConfig(
 		t, "/app", plugin.ActivePluginConfig())
@@ -48,11 +53,11 @@ namePrefix: LOOOOOOOONG-
 `)
 
 	th.writeF("/app/chartInflatorExec.yaml", `
-apiVersion: kustomize.config.k8s.io/v1
+apiVersion: someteam.example.com/v1
 kind: ChartInflatorExec
 metadata:
   name: notImportantHere
-chart: minecraft
+chartName: minecraft
 `)
 
 	m, err := th.makeKustTarget().MakeCustomizedResMap()

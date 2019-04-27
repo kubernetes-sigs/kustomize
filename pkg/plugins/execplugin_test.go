@@ -17,19 +17,20 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/internal/loadertest"
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
+	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
 func TestExecPluginConfig(t *testing.T) {
 	path := "/app"
-	kFactory := kunstruct.NewKunstructuredFactoryImpl()
-	rf := resmap.NewFactory(resource.NewFactory(kFactory))
+	rf := resmap.NewFactory(
+		resource.NewFactory(
+			kunstruct.NewKunstructuredFactoryImpl()))
 	ldr := loadertest.NewFakeLoader(path)
-
-	pluginConfig := kFactory.FromMap(
+	pluginConfig := rf.RF().FromMap(
 		map[string]interface{}{
 			"apiVersion": "someteam.example.com/v1",
 			"kind":       "SedTransformer",
@@ -46,11 +47,13 @@ s/$BAR/bar/g
  \ \ \ 
 `))
 
-	p := &ExecPlugin{}
+	p := NewExecPlugin(
+		plugin.DefaultPluginConfig().DirectoryPath,
+		pluginConfig.Id())
 
 	p.Config(ldr, rf, pluginConfig)
 
-	expected := "/kustomize/plugins/someteam.example.com/v1/SedTransformer"
+	expected := "/kustomize/plugin/someteam.example.com/v1/SedTransformer"
 	if !strings.HasSuffix(p.name, expected) {
 		t.Fatalf("expected suffix '%s', got '%s'", expected, p.name)
 	}

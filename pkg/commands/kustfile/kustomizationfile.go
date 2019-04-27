@@ -26,10 +26,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ghodss/yaml"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/yaml"
 )
 
 var fieldMarshallingOrder = determineFieldOrder()
@@ -69,7 +69,7 @@ func determineFieldOrder() []string {
 		"Configurations",
 		"Generators",
 		"Transformers",
-		"Prune",
+		"Inventory",
 	}
 
 	// Add deprecated fields here.

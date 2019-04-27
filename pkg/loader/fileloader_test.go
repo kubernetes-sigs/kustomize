@@ -25,11 +25,10 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/git"
-	"sigs.k8s.io/kustomize/pkg/pgmconfig"
-
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/git"
 	"sigs.k8s.io/kustomize/pkg/ifc"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 )
 
 type testData struct {
@@ -207,46 +206,47 @@ func TestLoaderMisc(t *testing.T) {
 	}
 }
 
-func TestRestrictedLoadingInRealLoader(t *testing.T) {
-	// Create a structure like this
-	//
-	//   /tmp/kustomize-test-SZwCZYjySj
-	//   ├── base
-	//   │   ├── okayData
-	//   │   ├── symLinkToOkayData -> okayData
-	//   │   └── symLinkToForbiddenData -> ../forbiddenData
-	//   └── forbiddenData
-	//
+const (
+	contentOk           = "hi there, i'm OK data"
+	contentExteriorData = "i am data from outside the root"
+)
+
+// Create a structure like this
+//
+//   /tmp/kustomize-test-random
+//   ├── base
+//   │   ├── okayData
+//   │   ├── symLinkToOkayData -> okayData
+//   │   └── symLinkToExteriorData -> ../exteriorData
+//   └── exteriorData
+//
+func commonSetupForLoaderRestrictionTest() (string, fs.FileSystem, error) {
 	dir, err := ioutil.TempDir("", "kustomize-test-")
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		return "", nil, err
 	}
-	defer os.RemoveAll(dir)
-
 	fSys := fs.MakeRealFS()
 	fSys.Mkdir(filepath.Join(dir, "base"))
 
-	contentOk := "hi there, i'm OK data"
 	fSys.WriteFile(
 		filepath.Join(dir, "base", "okayData"), []byte(contentOk))
 
-	contentForbidden := "don't be looking at me"
 	fSys.WriteFile(
-		filepath.Join(dir, "forbiddenData"), []byte(contentForbidden))
+		filepath.Join(dir, "exteriorData"), []byte(contentExteriorData))
 
 	os.Symlink(
 		filepath.Join(dir, "base", "okayData"),
 		filepath.Join(dir, "base", "symLinkToOkayData"))
 	os.Symlink(
-		filepath.Join(dir, "forbiddenData"),
-		filepath.Join(dir, "base", "symLinkToForbiddenData"))
+		filepath.Join(dir, "exteriorData"),
+		filepath.Join(dir, "base", "symLinkToExteriorData"))
+	return dir, fSys, nil
+}
 
-	var l ifc.Loader
-
-	l = newLoaderOrDie(fSys, dir)
-
-	// Sanity checks - loading from perspective of "dir".
-	// Everything works, including reading from a subdirectory.
+// Make sure everything works when loading files
+// in or below the loader root.
+func doSanityChecksAndDropIntoBase(
+	t *testing.T, l ifc.Loader) ifc.Loader {
 	data, err := l.Load(path.Join("base", "okayData"))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -254,11 +254,11 @@ func TestRestrictedLoadingInRealLoader(t *testing.T) {
 	if string(data) != contentOk {
 		t.Fatalf("unexpected content: %v", data)
 	}
-	data, err = l.Load("forbiddenData")
+	data, err = l.Load("exteriorData")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if string(data) != contentForbidden {
+	if string(data) != contentExteriorData {
 		t.Fatalf("unexpected content: %v", data)
 	}
 
@@ -285,9 +285,24 @@ func TestRestrictedLoadingInRealLoader(t *testing.T) {
 	if string(data) != contentOk {
 		t.Fatalf("unexpected content: %v", data)
 	}
+	return l
+}
 
-	// Reading symlink to forbiddenData fails.
-	_, err = l.Load("symLinkToForbiddenData")
+func TestRestrictionRootOnlyInRealLoader(t *testing.T) {
+	dir, fSys, err := commonSetupForLoaderRestrictionTest()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer os.RemoveAll(dir)
+
+	var l ifc.Loader
+
+	l = newLoaderOrDie(RestrictionRootOnly, fSys, dir)
+
+	l = doSanityChecksAndDropIntoBase(t, l)
+
+	// Reading symlink to exteriorData fails.
+	_, err = l.Load("symLinkToExteriorData")
 	if err == nil {
 		t.Fatalf("expected error")
 	}
@@ -297,12 +312,38 @@ func TestRestrictedLoadingInRealLoader(t *testing.T) {
 
 	// Attempt to read "up" fails, though earlier we were
 	// able to read this file when root was "..".
-	_, err = l.Load("../forbiddenData")
+	_, err = l.Load("../exteriorData")
 	if err == nil {
 		t.Fatalf("expected error")
 	}
 	if !strings.Contains(err.Error(), "is not in or below") {
 		t.Fatalf("unexpected err: %v", err)
+	}
+}
+
+func TestRestrictionNoneInRealLoader(t *testing.T) {
+	dir, fSys, err := commonSetupForLoaderRestrictionTest()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer os.RemoveAll(dir)
+
+	var l ifc.Loader
+
+	l = newLoaderOrDie(RestrictionNone, fSys, dir)
+
+	l = doSanityChecksAndDropIntoBase(t, l)
+
+	// Reading symlink to exteriorData works.
+	_, err = l.Load("symLinkToExteriorData")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Attempt to read "up" works.
+	_, err = l.Load("../exteriorData")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
@@ -393,7 +434,7 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 
 	// Establish that a local overlay can navigate
 	// to the local bases.
-	l1 = newLoaderOrDie(fSys, cloneRoot+"/foo/overlay")
+	l1 = newLoaderOrDie(RestrictionRootOnly, fSys, cloneRoot+"/foo/overlay")
 	if l1.Root() != cloneRoot+"/foo/overlay" {
 		t.Fatalf("unexpected root %s", l1.Root())
 	}
@@ -468,7 +509,7 @@ func TestLocalLoaderReferencingGitBase(t *testing.T) {
 		t.Fatalf("unexpected err:  %v\n", err)
 	}
 	l1 := newLoaderAtConfirmedDir(
-		root, fSys, nil,
+		RestrictionRootOnly, root, fSys, nil,
 		git.DoNothingCloner(fs.ConfirmedDir(cloneRoot)))
 	if l1.Root() != topDir {
 		t.Fatalf("unexpected root %s", l1.Root())

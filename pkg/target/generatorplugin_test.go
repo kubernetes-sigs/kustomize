@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"sigs.k8s.io/kustomize/internal/plugintest"
 	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 )
 
@@ -32,7 +33,7 @@ port: "12345"
 }
 
 func TestServiceGeneratorPlugin(t *testing.T) {
-	tc := NewTestEnvController(t).Set()
+	tc := plugintest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -66,7 +67,7 @@ spec:
 
 func writeSecretGeneratorConfig(th *KustTestHarness, root string) {
 	th.writeF(filepath.Join(root, "secretGenerator.yaml"), `
-apiVersion: kustomize.config.k8s.io/v1
+apiVersion: builtin
 kind: SecretGenerator
 metadata:
   name: secretGenerator
@@ -97,11 +98,11 @@ ut labore et dolore magna aliqua.
 
 // nolint:lll
 func TestSecretGenerator(t *testing.T) {
-	tc := NewTestEnvController(t).Set()
+	tc := plugintest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
-		"kustomize.config.k8s.io", "v1", "SecretGenerator")
+		"builtin", "", "SecretGenerator")
 
 	th := NewKustTestHarnessWithPluginConfig(
 		t, "/app", plugin.ActivePluginConfig())
@@ -129,7 +130,7 @@ type: Opaque
 }
 
 func TestConfigMapGenerator(t *testing.T) {
-	tc := NewTestEnvController(t).Set()
+	tc := plugintest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(

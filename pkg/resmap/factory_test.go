@@ -22,17 +22,17 @@ import (
 	"reflect"
 	"testing"
 
+	"sigs.k8s.io/kustomize/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	. "sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
-func TestFromFiles(t *testing.T) {
+func TestFromFile(t *testing.T) {
 
 	resourceStr := `apiVersion: apps/v1
 kind: Deployment
@@ -85,12 +85,10 @@ metadata:
 			}),
 	}
 
-	m, _ := rmF.FromFiles(
-		l, []string{"deployment.yaml"})
+	m, _ := rmF.FromFile(l, "deployment.yaml")
 	if len(m) != 3 {
 		t.Fatalf("%#v should contain 3 appResource, but got %d", m, len(m))
 	}
-
 	if err := expected.ErrorIfNotEqual(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}

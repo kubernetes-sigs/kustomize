@@ -24,11 +24,13 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/internal/loadertest"
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/k8sdeps/transformer"
-	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
+	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/pkg/plugins"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	. "sigs.k8s.io/kustomize/pkg/target"
@@ -40,7 +42,7 @@ type KustTestHarness struct {
 	t   *testing.T
 	rf  *resmap.Factory
 	ldr loadertest.FakeLoader
-	pc  *types.PluginConfig
+	pl  *plugins.Loader
 }
 
 func NewKustTestHarness(t *testing.T, path string) *KustTestHarness {
@@ -51,18 +53,25 @@ func NewKustTestHarness(t *testing.T, path string) *KustTestHarness {
 func NewKustTestHarnessWithPluginConfig(
 	t *testing.T, path string,
 	pc *types.PluginConfig) *KustTestHarness {
+	return NewKustTestHarnessFull(t, path, loader.RestrictionRootOnly, pc)
+}
+
+func NewKustTestHarnessFull(
+	t *testing.T, path string,
+	lr loader.LoadRestrictorFunc, pc *types.PluginConfig) *KustTestHarness {
+	rf := resmap.NewFactory(resource.NewFactory(
+		kunstruct.NewKunstructuredFactoryWithGeneratorArgs(
+			&types.GeneratorMetaArgs{PluginConfig: pc})))
 	return &KustTestHarness{
-		t: t,
-		rf: resmap.NewFactory(resource.NewFactory(
-			kunstruct.NewKunstructuredFactoryWithGeneratorArgs(
-				&types.GeneratorMetaArgs{PluginConfig: pc}))),
-		ldr: loadertest.NewFakeLoader(path),
-		pc:  pc}
+		t:   t,
+		rf:  rf,
+		ldr: loadertest.NewFakeLoaderWithRestrictor(lr, path),
+		pl:  plugins.NewLoader(pc, rf)}
 }
 
 func (th *KustTestHarness) makeKustTarget() *KustTarget {
 	kt, err := NewKustTarget(
-		th.ldr, th.rf, transformer.NewFactoryImpl(), th.pc)
+		th.ldr, th.rf, transformer.NewFactoryImpl(), th.pl)
 	if err != nil {
 		th.t.Fatalf("Unexpected construction error %v", err)
 	}

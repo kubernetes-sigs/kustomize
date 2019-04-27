@@ -17,7 +17,11 @@ limitations under the License.
 package target_test
 
 import (
+	"strings"
 	"testing"
+
+	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
+	"sigs.k8s.io/kustomize/pkg/loader"
 )
 
 func writeSmallBase(th *KustTestHarness) {
@@ -177,6 +181,105 @@ spec:
     spec:
       containers:
       - image: whatever:1.8.0
+        name: whatever
+`)
+}
+
+func TestSharedPatchDisAllowed(t *testing.T) {
+	th := NewKustTestHarnessFull(
+		t, "/app/overlay",
+		loader.RestrictionRootOnly, plugin.DefaultPluginConfig())
+	writeSmallBase(th)
+	th.writeK("/app/overlay", `
+commonLabels:
+  env: prod
+bases:
+- ../base
+patchesStrategicMerge:
+- ../shared/deployment-patch.yaml
+`)
+	th.writeF("/app/shared/deployment-patch.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeployment
+spec:
+  replicas: 1000
+`)
+	_, err := th.makeKustTarget().MakeCustomizedResMap()
+	if err == nil {
+		t.Fatalf("expected error")
+	}
+	if !strings.Contains(
+		err.Error(),
+		"security; file '/app/shared/deployment-patch.yaml' is not in or below '/app/overlay'") {
+		t.Fatalf("unexpected error: %s", err)
+	}
+}
+
+func TestSharedPatchAllowed(t *testing.T) {
+	th := NewKustTestHarnessFull(
+		t, "/app/overlay",
+		loader.RestrictionNone, plugin.DefaultPluginConfig())
+	writeSmallBase(th)
+	th.writeK("/app/overlay", `
+commonLabels:
+  env: prod
+bases:
+- ../base
+patchesStrategicMerge:
+- ../shared/deployment-patch.yaml
+`)
+	th.writeF("/app/shared/deployment-patch.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeployment
+spec:
+  replicas: 1000
+`)
+	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.assertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: myApp
+    env: prod
+  name: a-myService
+spec:
+  ports:
+  - port: 7002
+  selector:
+    app: myApp
+    backend: bungie
+    env: prod
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: myApp
+    env: prod
+  name: a-myDeployment
+spec:
+  replicas: 1000
+  selector:
+    matchLabels:
+      app: myApp
+      env: prod
+  template:
+    metadata:
+      labels:
+        app: myApp
+        backend: awesome
+        env: prod
+    spec:
+      containers:
+      - image: whatever
         name: whatever
 `)
 }

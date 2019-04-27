@@ -22,8 +22,8 @@ import (
 	"log"
 	"strings"
 
+	"sigs.k8s.io/kustomize/internal/kusterr"
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	internal "sigs.k8s.io/kustomize/pkg/internal/error"
 	"sigs.k8s.io/kustomize/pkg/patch"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -78,7 +78,7 @@ func (rf *Factory) SliceFromPatches(
 		}
 		res, err := rf.SliceFromBytes(content)
 		if err != nil {
-			return nil, internal.Handler(err, string(path))
+			return nil, kusterr.Handler(err, string(path))
 		}
 		result = append(result, res...)
 	}

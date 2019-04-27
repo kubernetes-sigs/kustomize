@@ -22,22 +22,23 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc/transformer"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/pkg/plugins"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/target"
-	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/yaml"
 )
 
 // Options contain the options for running a build
 type Options struct {
 	kustomizationPath string
 	outputPath        string
+	loadRestrictor    loader.LoadRestrictorFunc
 }
 
 // NewOptions creates a Options object
@@ -45,6 +46,7 @@ func NewOptions(p, o string) *Options {
 	return &Options{
 		kustomizationPath: p,
 		outputPath:        o,
+		loadRestrictor:    loader.RestrictionRootOnly,
 	}
 }
 
@@ -68,7 +70,7 @@ func NewCmdBuild(
 	out io.Writer, fs fs.FileSystem,
 	rf *resmap.Factory,
 	ptf transformer.Factory,
-	pc *types.PluginConfig) *cobra.Command {
+	pl *plugins.Loader) *cobra.Command {
 	var o Options
 
 	cmd := &cobra.Command{
@@ -81,43 +83,46 @@ func NewCmdBuild(
 			if err != nil {
 				return err
 			}
-			return o.RunBuild(out, fs, rf, ptf, pc)
+			return o.RunBuild(out, fs, rf, ptf, pl)
 		},
 	}
 	cmd.Flags().StringVarP(
 		&o.outputPath,
 		"output", "o", "",
 		"If specified, write the build output to this path.")
+	loader.AddLoadRestrictionsFlag(cmd.Flags())
 
-	cmd.AddCommand(NewCmdBuildPrune(out, fs, rf, ptf, pc))
+	cmd.AddCommand(NewCmdBuildPrune(out, fs, rf, ptf, pl))
 	return cmd
 }
 
 // Validate validates build command.
-func (o *Options) Validate(args []string) error {
+func (o *Options) Validate(args []string) (err error) {
 	if len(args) > 1 {
-		return errors.New("specify one path to " + pgmconfig.KustomizationFileNames[0])
+		return errors.New(
+			"specify one path to " + pgmconfig.KustomizationFileNames[0])
 	}
 	if len(args) == 0 {
-		o.kustomizationPath = "./"
+		o.kustomizationPath = loader.CWD
 	} else {
 		o.kustomizationPath = args[0]
 	}
-
-	return nil
+	o.loadRestrictor, err = loader.ValidateLoadRestrictorFlag()
+	return
 }
 
 // RunBuild runs build command.
 func (o *Options) RunBuild(
 	out io.Writer, fSys fs.FileSystem,
 	rf *resmap.Factory, ptf transformer.Factory,
-	pc *types.PluginConfig) error {
-	ldr, err := loader.NewLoader(o.kustomizationPath, fSys)
+	pl *plugins.Loader) error {
+	ldr, err := loader.NewLoader(
+		o.loadRestrictor, o.kustomizationPath, fSys)
 	if err != nil {
 		return err
 	}
 	defer ldr.Cleanup()
-	kt, err := target.NewKustTarget(ldr, rf, ptf, pc)
+	kt, err := target.NewKustTarget(ldr, rf, ptf, pl)
 	if err != nil {
 		return err
 	}
@@ -131,13 +136,14 @@ func (o *Options) RunBuild(
 func (o *Options) RunBuildPrune(
 	out io.Writer, fSys fs.FileSystem,
 	rf *resmap.Factory, ptf transformer.Factory,
-	pc *types.PluginConfig) error {
-	ldr, err := loader.NewLoader(o.kustomizationPath, fSys)
+	pl *plugins.Loader) error {
+	ldr, err := loader.NewLoader(
+		o.loadRestrictor, o.kustomizationPath, fSys)
 	if err != nil {
 		return err
 	}
 	defer ldr.Cleanup()
-	kt, err := target.NewKustTarget(ldr, rf, ptf, pc)
+	kt, err := target.NewKustTarget(ldr, rf, ptf, pl)
 	if err != nil {
 		return err
 	}
@@ -168,12 +174,12 @@ func NewCmdBuildPrune(
 	out io.Writer, fs fs.FileSystem,
 	rf *resmap.Factory,
 	ptf transformer.Factory,
-	pc *types.PluginConfig) *cobra.Command {
+	pl *plugins.Loader) *cobra.Command {
 	var o Options
 
 	cmd := &cobra.Command{
-		Use:          "alpha-prune [path]",
-		Short:        "Print configmap to prune previous applied objects",
+		Use:          "alpha-inventory [path]",
+		Short:        "Print the inventory object which contains a list of all other objects",
 		Example:      examples,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -181,7 +187,7 @@ func NewCmdBuildPrune(
 			if err != nil {
 				return err
 			}
-			return o.RunBuildPrune(out, fs, rf, ptf, pc)
+			return o.RunBuildPrune(out, fs, rf, ptf, pl)
 		},
 	}
 	return cmd

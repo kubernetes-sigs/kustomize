@@ -26,11 +26,10 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/ghodss/yaml"
-	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/yaml"
 )
 
 const (
@@ -59,11 +58,23 @@ type ExecPlugin struct {
 	ldr ifc.Loader
 }
 
+func NewExecPlugin(root string, id resid.ResId) *ExecPlugin {
+	return &ExecPlugin{
+		name: filepath.Join(root, pluginPath(id)),
+	}
+}
+
+// isAvailable checks to see if the plugin is available
+func (p *ExecPlugin) isAvailable() bool {
+	f, err := os.Stat(p.name)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return f.Mode()&0111 != 0000
+}
+
 func (p *ExecPlugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, k ifc.Kunstructured) error {
-	dir := filepath.Join(pgmconfig.ConfigRoot(), plugin.PluginRoot)
-	id := k.GetGvk()
-	p.name = filepath.Join(dir, id.Group, id.Version, id.Kind)
 	p.rf = rf
 	p.ldr = ldr
 
@@ -129,6 +140,9 @@ func (p *ExecPlugin) Generate() (resmap.ResMap, error) {
 	cmd := exec.Command(p.name, args...)
 	cmd.Env = p.getEnv()
 	cmd.Stderr = os.Stderr
+	if _, err := os.Stat(p.ldr.Root()); err == nil {
+		cmd.Dir = p.ldr.Root()
+	}
 	output, err := cmd.Output()
 	if err != nil {
 		return nil, err
@@ -150,6 +164,9 @@ func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
 		cmd.Env = p.getEnv()
 		cmd.Stdin = bytes.NewReader(content)
 		cmd.Stderr = os.Stderr
+		if _, err := os.Stat(p.ldr.Root()); err == nil {
+			cmd.Dir = p.ldr.Root()
+		}
 		output, err := cmd.Output()
 		if err != nil {
 			return err
@@ -159,7 +176,7 @@ func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
 			return err
 		}
 		if len(tmpMap) != 1 {
-			return fmt.Errorf("Unable to put two resources into one")
+			return fmt.Errorf("unable to put two resources into one")
 		}
 		for _, v := range tmpMap {
 			rm[id].Kunstructured = v.Kunstructured
@@ -180,6 +197,8 @@ func (p *ExecPlugin) getArgs() ([]string, error) {
 
 func (p *ExecPlugin) getEnv() []string {
 	env := os.Environ()
-	env = append(env, "KUSTOMIZE_PLUGIN_CONFIG_STRING="+string(p.cfg))
+	env = append(env,
+		"KUSTOMIZE_PLUGIN_CONFIG_STRING="+string(p.cfg),
+		"KUSTOMIZE_PLUGIN_CONFIG_ROOT="+p.ldr.Root())
 	return env
 }
