@@ -1,3 +1,5 @@
+English | [简体中文](zh/README.md)
+
 # Kustomize docs
 
  * [installation instructions](INSTALL.md)
