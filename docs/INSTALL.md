@@ -8,8 +8,19 @@ manager:
 
     brew install kustomize
 
+On windows, you can install kustomize with Chocolatey package
+manager.
+
+    choco install kustomize
+
+For support on the chocolatey package and prior releases, please reference the following links:
+- [Choco Package](https://chocolatey.org/packages/kustomize)
+- [Package Source](https://github.com/kenmaglio/choco-kustomize)
+
+
 For all operating systems, download a binary from the
 [release page].
+
 
 Or try this to grab the latest official release
 using the command line:
