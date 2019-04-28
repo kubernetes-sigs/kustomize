@@ -1,7 +1,7 @@
 [English](../README.md) | 简体中文
 # Kustomize 文档
 
- * [安装说明](../INSTALL.md)
+ * [安装说明](INSTALL.md)
 
  * [常见问题](../FAQ.md)
 
@@ -17,7 +17,7 @@
 
  * [术语表](../glossary.md) - 用于消除术语歧义。
 
- * [eschewed features](../eschewedFeatures.md) - 目前 Kustomize 不支持某些功能的原因。
+ * [规避功能](../eschewedFeatures.md) - 目前 Kustomize 不支持某些功能的原因。
 
  * [贡献指南](../../CONTRIBUTING.md) - 请在提交 PR 之前阅读。
 
