@@ -1,5 +1,6 @@
 [release 页面]: https://github.com/kubernetes-sigs/kustomize/releases
 [Go]: https://golang.org
+[golang.org]: https://golang.org
 
 ## 安装
 
@@ -22,7 +23,7 @@ mv kustomize_*_${opsys}_amd64 kustomize
 chmod u+x kustomize
 ```
 
-使用 [Go] v1.10.1 或更高版本安装：
+使用 [Go] v1.10.1 或更高版本安装（如果可以访问 [golang.org]）：
 
 <!-- @installkustomize @test -->
 ```
