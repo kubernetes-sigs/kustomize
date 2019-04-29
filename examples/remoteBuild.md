@@ -14,14 +14,15 @@ one pod in the output:
 <!-- @remoteOverlayBuild @test -->
 
 ```
-target=github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6
+target="github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6"
 test 1 == \
-  $(kustomize build $target | grep cluster-a-dev-myapp-pod | wc -l); \
+  $(kustomize build $target | grep dev-myapp-pod | wc -l); \
   echo $?
 ```
 
-Or run against the overlay that combines the dev, staging and prod bases
-in that example (you get three pods):
+Run against the overlay in that example to get three pods
+(the overlay combines the dev, staging and prod bases for
+someone who wants to send them all at the same time):
 
 <!-- @remoteBuild @test -->
 ```
@@ -44,7 +45,9 @@ namePrefix: remote-
 EOF
 ```
 
-Build this to confirm all three pods (from the base) have the `remote-` prefix.
+Build this to confirm that all three pods from the base
+have the `remote-` prefix.
+
 <!-- @remoteBases @test -->
 ```
 test 3 == \
