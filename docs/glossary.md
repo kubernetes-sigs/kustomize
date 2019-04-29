@@ -32,7 +32,7 @@
 [resource]: #resource
 [resources]: #resource
 [rpm]: https://en.wikipedia.org/wiki/Rpm_(software)
-[strategic-merge]: https://github.com/kubernetes/community/blob/master/contributors/devel/strategic-merge-patch.md
+[strategic-merge]: https://git.k8s.io/community/contributors/devel/sig-api-machinery/strategic-merge-patch.md
 [target]: #target
 [variant]: #variant
 [variants]: #variant
