@@ -94,9 +94,7 @@
 
 如配置定制方法一样，创建并完善 _overlays_ 目录中的内容。
 
-[overlays] 与其他的一致，都依赖于 [base]
-The [overlays] are siblings to each other and to the
-[base] they depend on.
+所有的 [overlays] 都依赖于 [base] 。
 
 > ```
 > mkdir -p ~/ldap/overlays/staging
