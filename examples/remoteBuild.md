@@ -1,22 +1,15 @@
 # remote targets
 
-`kustomize build` can be run against a url. The effect is the same as cloing the repo, checking out the specified ref,
-then running `kustomize build` against the desired directory in the local copy.
+`kustomize build` can be run on a URL.
 
-Take `github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6` as an example.
-According to [multibases](multibases/README.md) demo, this kustomization contains three Pod objects with names as
-`cluster-a-dev-myapp-pod`, `cluster-a-stag-myapp-pod`, `cluster-a-prod-myapp-pod`.
-Running `kustomize build` against the url gives the same output.
+The effect is the same as cloning the repo, checking out a particular
+_ref_ (commit hash, branch name, release tag, etc.),
+then running `kustomize build` against the desired
+directory in the local copy.
 
-<!-- @remoteBuild @test -->
-```
-target=github.com/kubernetes-sigs/kustomize//examples/multibases
-test 3 == \
-  $(kustomize build $target | grep cluster-a-.*-myapp-pod | wc -l); \
-  echo $?
-```
-
-Overlays can be remote as well:
+To try this immediately, run a build against the kustomization
+in the [multibases](multibases/README.md) example.  There's
+one pod in the output:
 
 <!-- @remoteOverlayBuild @test -->
 
@@ -27,7 +20,18 @@ test 1 == \
   echo $?
 ```
 
-A base can also be specified as a URL:
+Or run against the overlay that combines the dev, staging and prod bases
+in that example (you get three pods):
+
+<!-- @remoteBuild @test -->
+```
+target="https://github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6"
+test 3 == \
+  $(kustomize build $target | grep cluster-a-.*-myapp-pod | wc -l); \
+  echo $?
+```
+
+A base can be a URL:
 
 <!-- @createOverlay @test -->
 ```
@@ -39,7 +43,8 @@ bases:
 namePrefix: remote-
 EOF
 ```
-Running `kustomize build $DEMO_HOME` and confirm the output contains three Pods and all have `remote-` prefix.
+
+Build this to confirm all three pods (from the base) have the `remote-` prefix.
 <!-- @remoteBases @test -->
 ```
 test 3 == \
@@ -48,6 +53,7 @@ test 3 == \
 ```
 
 ## URL format
+
 The url should follow
 [hashicorp/go-getter URL format](https://github.com/hashicorp/go-getter#url-format).
 Here are some example urls pointing to Github repos following this convention.
