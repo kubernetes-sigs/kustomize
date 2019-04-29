@@ -13,7 +13,7 @@
 
  * [version 2.0.0](../version2.0.0.md) - Kustomize 2.0.0 发行说明。
 
- * [工作流](../workflows.md) - 使用定制及使用现成配置使用的一些步骤。
+ * [工作流](workflows.md) - 使用定制及使用现成配置使用的一些步骤。
 
  * [术语表](../glossary.md) - 用于消除术语歧义。
 
