@@ -158,13 +158,14 @@ A exec plugin is any executable that accepts a
 single argument on its command line - the name of
 a YAML file containing its configuration.
 
-> TODO: more restrictions on plugin to allow one exec
-> to be both a _g_ and a _t_ plugin.
-> - first arg could be `generate` or `transform`,
->   (the name of the configuration file move to be
+> TODO: more restrictions on plugin to allow the same exec
+> plugin to be specified in a config under both the
+> `generators` and `transformers` fields.
+> - first arg could be the fixed string
+>   `generate` or `transform`,
+>   (the name of the configuration file moves to 
 >   the 2nd arg), or
 > - by default an exec plugin behaves as a tranformer
->   (with one arg, the config file name)
 >   unless a flag `-g` is provided, switching the
 >   exec plugin to behave as a generator.
 
