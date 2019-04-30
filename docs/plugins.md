@@ -150,7 +150,9 @@ reminder.
 
 ### Exec plugins
 
-_TODO: Add ptr to example._
+[chartinflator]: ../plugin/someteam.example.com/v1/ChartInflatorExec
+
+See this example [helm chart inflator][chartInflator].
 
 A exec plugin is any executable that accepts a
 single argument on its command line - the name of
@@ -169,9 +171,10 @@ marshalled resources on `stdin` and capture
 
 ### Go plugins
 
-_TODO: Add ptr to example._
-
 [Go plugin]: https://golang.org/pkg/plugin/
+[secretgenerator]: ../plugin/builtin/SecretGenerator.go
+
+See this example [secret generator][secretGenerator].
 
 A [Go plugin] for kustomize looks like this:
 
