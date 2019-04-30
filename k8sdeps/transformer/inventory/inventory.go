@@ -29,7 +29,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
-// inventoryTransformer compute the ConfigMap used in prune
+// inventoryTransformer compute the inventory object used in prune
 type inventoryTransformer struct {
 	append      bool
 	cmName      string
@@ -50,25 +50,28 @@ func NewInventoryTransformer(p *types.Inventory, namespace string, append bool) 
 	}
 }
 
-// Transform generates an inventory ConfigMap based on the input ResMap.
-// this tranformer doesn't change existing resources -
+// Transform generates an inventory object based on the input ResMap.
+// this transformer doesn't change existing resources -
 // it just visits resources and accumulates information to make a new ConfigMap.
 // The prune ConfigMap is used to support the pruning command in the client side tool,
 // which is proposed in https://github.com/kubernetes/enhancements/pull/810
+// The inventory data is written to annotation since
+//   1. The key in data field is constrained and couldn't include arbitrary letters
+//   2. The annotation can be put into any kind of objects
 func (o *inventoryTransformer) Transform(m resmap.ResMap) error {
 	invty := inventory.NewInventory()
 	var keys []string
 	for _, r := range m {
 		ns, _ := r.GetFieldValue("metadata.namespace")
-		item := resid.New(r.GetGvk(), ns, r.GetName())
+		item := resid.NewItemId(r.GetGvk(), ns, r.GetName())
 		var refs []resid.ItemId
 
 		for _, refid := range r.GetRefBy() {
 			ref := m[refid]
 			ns, _ := ref.GetFieldValue("metadata.namespace")
-			refs = append(refs, resid.New(ref.GetGvk(), ns, ref.GetName()))
+			refs = append(refs, resid.NewItemId(ref.GetGvk(), ns, ref.GetName()))
 		}
-		invty.Current[item.String()] = refs
+		invty.Current[item] = refs
 		keys = append(keys, item.String())
 	}
 	h, err := hash.SortArrayAndComputeHash(keys)
