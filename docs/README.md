@@ -8,6 +8,8 @@
    [kustomization](glossary.md#kustomization)
    with explanations of each field.
 
+ * [plugins](plugins.md) Extending kustomize with custom generators and transformers.
+ 
  * [versioning policy](versioningPolicy.md) - How the code and the kustomization
    file evolve in time.
 
