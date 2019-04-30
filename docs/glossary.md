@@ -167,9 +167,9 @@ categories:
    Example fields: _resources_, _crds_.
 
  * _generators_ - what _new_ resources should be created.
-   Example fields: _configMapGenerator_ (legacy), 
+   Example fields: _configMapGenerator_ (legacy),
    _secretGenerator_ (legacy), _generators_ (v2.1).
-   
+
  * _transformers_ - what to _do_ to the aforementioned resources.
    Example fields: _namePrefix_, _nameSuffix_, _images_,
    _commonLabels_, _patchesJson6902_, etc. and the more
@@ -366,11 +366,11 @@ value, e.g. an image tag.
 
 By default, an SMP _replaces_ values.  This
 usually desired when the target value is a simple
-string, but may not be desired when the target 
+string, but may not be desired when the target
 value is a list.
 
-To change this 
-default behavior, add a _directive_.  Recognized 
+To change this
+default behavior, add a _directive_.  Recognized
 directives include _replace_ (the default), _merge_
 (avoid replacing a list), _delete_ and a few more
 (see [these notes][strategic-merge]).
@@ -400,7 +400,7 @@ A chunk of code used by kustomize, but not necessarily
 compiled into kustomize, to generate and/or transform a
 kubernetes resource as part of a kustomization.
 
-Details [here][plugins.md].
+Details [here](plugins.md).
 
 ## resource
 
