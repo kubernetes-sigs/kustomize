@@ -32,9 +32,11 @@ function testGoTest {
   go test -v ./...
 }
 
+# This is helm stuff.
 function testNoTravisGoTest {
   go test -v sigs.k8s.io/kustomize/pkg/target \
       -run TestChartInflatorExecPlugin -tags=notravis
+  mdrip --mode test --label helmtest README.md ./examples/chart.md
 }
 
 function testExamples {
