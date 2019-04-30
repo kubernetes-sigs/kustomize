@@ -22,9 +22,20 @@ import (
 	"sigs.k8s.io/kustomize/pkg/resid"
 )
 
-// A Refs is a map from an Item string to a list of Items
-// that it is referred
-type Refs map[string][]resid.ItemId
+//Refs is a reference map.  Each key is the id
+//of a k8s resource, and each value is a list of
+//object ids that refer back to the object in the
+//key.
+
+//For example, the key could correspond to a
+//ConfigMap, and the list of values might include
+//several different Deployments that get data from
+//that ConfigMap (and thus refer to it).
+
+//References are important in inventory management
+//because one may not delete an object before all
+//objects referencing it have been removed.
+type Refs map[resid.ItemId][]resid.ItemId
 
 func NewRefs() Refs {
 	return Refs{}
@@ -43,24 +54,36 @@ func (rf Refs) Merge(b Refs) Refs {
 	return rf
 }
 
-// RemoveIfContains removes the reference relationship
+// removeIfContains removes the reference relationship
 //  a --> b
 // from the Refs if it exists
-func (rf Refs) RemoveIfContains(a string, b resid.ItemId) {
+func (rf Refs) RemoveIfContains(a, b resid.ItemId) {
 	refs, ok := rf[a]
 	if !ok {
 		return
 	}
 	for i, ref := range refs {
-		if ref.String() == b.String() {
+		if ref.Equals(b) {
 			rf[a] = append(refs[:i], refs[i+1:]...)
 			break
 		}
 	}
 }
 
-// An Inventory contains current refs
-// and previous refs
+//Inventory is a an object intended for
+//serialization into the annotations of a so-called
+//apply-root object (a ConfigMap, an Application,
+//etc.) living in the cluster.  This apply-root
+//object is written as part of an apply operation as
+//a means to record overall cluster state changes.
+
+//At the end of a successful apply, the "current"
+//field in Inventory will be a map whose keys all
+//correspond to an object in the cluster, and
+//"previous" will be the previous such set (an empty
+//set on the first apply).
+
+//An Inventory allows the Prune method to work.
 type Inventory struct {
 	Current  Refs `json:"current,omitempty"`
 	Previous Refs `json:"previous,omitempty"`
@@ -88,43 +111,10 @@ func (a *Inventory) UpdateCurrent(curref Refs) *Inventory {
 	return a
 }
 
-// Prune returns a list of Items that can be pruned
-// as well as updates the Inventory
-func (a *Inventory) Prune() []resid.ItemId {
+func (a *Inventory) removeNewlyOrphanedItemsFromPrevious() []resid.ItemId {
 	var results []resid.ItemId
-	curref := a.Current
-
-	// Remove references that are already in Current refs
-	for item, refs := range curref {
-		for _, ref := range refs {
-			a.Previous.RemoveIfContains(item, ref)
-		}
-	}
-	// Remove items that are already in Current refs
 	for item, refs := range a.Previous {
-		if len(refs) == 0 {
-			if _, ok := curref[item]; ok {
-				delete(a.Previous, item)
-			}
-		}
-	}
-
-	// Remove items from the Previous refs
-	// that are not referred by others
-	for item, refs := range a.Previous {
-		if _, ok := curref[item]; ok {
-			continue
-		}
-		if len(refs) == 0 {
-			results = append(results, resid.FromString(item))
-			delete(a.Previous, item)
-		}
-	}
-
-	// Remove items from the Previous refs
-	// that are referred only by to be deleted items
-	for item, refs := range a.Previous {
-		if _, ok := curref[item]; ok {
+		if _, ok := a.Current[item]; ok {
 			delete(a.Previous, item)
 			continue
 		}
@@ -132,13 +122,13 @@ func (a *Inventory) Prune() []resid.ItemId {
 		var newRefs []resid.ItemId
 		toDelete := true
 		for _, ref := range refs {
-			if _, ok := curref[ref.String()]; ok {
+			if _, ok := a.Current[ref]; ok {
 				toDelete = false
 				newRefs = append(newRefs, ref)
 			}
 		}
 		if toDelete {
-			results = append(results, resid.FromString(item))
+			results = append(results, item)
 			delete(a.Previous, item)
 		} else {
 			a.Previous[item] = newRefs
@@ -147,14 +137,98 @@ func (a *Inventory) Prune() []resid.ItemId {
 	return results
 }
 
+func (a *Inventory) removeOrphanedItemsFromPreviousThatAreNotInCurrent() []resid.ItemId {
+	var results []resid.ItemId
+	for item, refs := range a.Previous {
+		if _, ok := a.Current[item]; ok {
+			continue
+		}
+		if len(refs) == 0 {
+			results = append(results, item)
+			delete(a.Previous, item)
+		}
+	}
+	return results
+}
+
+func (a *Inventory) removeOrphanedItemsFromPreviousThatAreInCurrent() {
+	//Remove references from Previous that are already in Current refs
+	for item, refs := range a.Current {
+		for _, ref := range refs {
+			a.Previous.RemoveIfContains(item, ref)
+		}
+	}
+	//Remove items from Previous that are already in Current refs
+	for item, refs := range a.Previous {
+		if len(refs) == 0 {
+			if _, ok := a.Current[item]; ok {
+				delete(a.Previous, item)
+			}
+		}
+	}
+}
+
+// Prune computes the diff of Current refs and Previous refs
+// and returns a list of Items that can be pruned.
+// An item that can be pruned shows up only in Previous refs.
+// Prune also updates the Previous refs with those items removed
+func (a *Inventory) Prune() []resid.ItemId {
+	a.removeOrphanedItemsFromPreviousThatAreInCurrent()
+
+	// These are candidates for deletion from the cluster.
+	removable1 := a.removeOrphanedItemsFromPreviousThatAreNotInCurrent()
+	removable2 := a.removeNewlyOrphanedItemsFromPrevious()
+	return append(removable1, removable2...)
+}
+
+// inventory is the internal type used for serialization
+type inventory struct {
+	Current  map[string][]resid.ItemId `json:"current,omitempty"`
+	Previous map[string][]resid.ItemId `json:"previous,omitempty"`
+}
+
+func (a *Inventory) toInternalType() inventory {
+	prev := map[string][]resid.ItemId{}
+	curr := map[string][]resid.ItemId{}
+	for id, refs := range a.Current {
+		curr[id.String()] = refs
+	}
+	for id, refs := range a.Previous {
+		prev[id.String()] = refs
+	}
+	return inventory{
+		Current:  curr,
+		Previous: prev,
+	}
+}
+
+func (a *Inventory) fromInternalType(i *inventory) {
+	for s, refs := range i.Previous {
+		a.Previous[resid.FromString(s)] = refs
+	}
+	for s, refs := range i.Current {
+		a.Current[resid.FromString(s)] = refs
+	}
+}
+
 func (a *Inventory) marshal() ([]byte, error) {
-	return json.Marshal(a)
+	return json.Marshal(a.toInternalType())
 }
 
 func (a *Inventory) unMarshal(data []byte) error {
-	return json.Unmarshal(data, a)
+	inv := &inventory{
+		Current:  map[string][]resid.ItemId{},
+		Previous: map[string][]resid.ItemId{},
+	}
+	err := json.Unmarshal(data, inv)
+	if err != nil {
+		return err
+	}
+	a.fromInternalType(inv)
+	return nil
 }
 
+// UpdateAnnotations update the annotation map
 func (a *Inventory) UpdateAnnotations(annot map[string]string) error {
 	data, err := a.marshal()
 	if err != nil {
@@ -164,6 +238,7 @@ func (a *Inventory) UpdateAnnotations(annot map[string]string) error {
 	return nil
 }
 
+// LoadFromAnnotation loads the Inventory date from the annotation map
 func (a *Inventory) LoadFromAnnotation(annot map[string]string) error {
 	value, ok := annot[InventoryAnnotation]
 	if ok {
