@@ -1,28 +1,43 @@
-# Kustomize docs
+# Documentation
 
- * [installation instructions](INSTALL.md)
+##  General
+
+ * [Installation instructions](INSTALL.md)
 
  * [FAQ](FAQ.md)
 
- * [kustomization.yaml](kustomization.yaml) - Example of a
-   [kustomization](glossary.md#kustomization)
+ * [Glossary](glossary.md)
+
+##  Examples
+
+ * [Examples](../examples) - detailed walkthroughs of various
+    workflows and concepts.
+
+ * [kustomization.yaml](kustomization.yaml) - a
+   [kustomization](glossary.md#kustomization) file
    with explanations of each field.
 
- * [plugins](plugins.md) Extending kustomize with custom generators and transformers.
- 
- * [versioning policy](versioningPolicy.md) - How the code and the kustomization
-   file evolve in time.
+ * [Plugins](plugins.md) - extending kustomize with
+   custom generators and transformers.
 
- * [version 2.0.0](version2.0.0.md) - Release notes for Kustomize 2.0.0.
+ * [Workflows](workflows.md) - steps one might take in
+   using bespoke and off-the-shelf configurations.
 
- * [workflow](workflows.md) - Some steps one might take in using
-   bespoke and off-the-shelf configurations.
+## Release notes
 
- * [glossary](glossary.md) - An attempt to disambiguiate terminology.
+ * [2.1](version2.1.0.md)
 
- * [eschewed features](eschewedFeatures.md) - Why certain features are (currently)
-   not supported in Kustomize.
+ * [2.0](version2.0.0.md)
 
- * [contributing guidelines](../CONTRIBUTING.md) - Please read before sending a PR.
+## Policies
 
- * [code of conduct](../code-of-conduct.md)
+ * [Versioning](versioningPolicy.md) - how the code and
+   the kustomization file evolve in time.
+
+ * [Eschewed features](eschewedFeatures.md) - why certain features
+   are (currently) not supported in kustomize.
+
+ * [Contributing guidelines](../CONTRIBUTING.md) - please read
+   before sending a PR.
+
+ * [Code of conduct](../code-of-conduct.md)

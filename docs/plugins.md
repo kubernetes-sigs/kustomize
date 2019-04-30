@@ -1,20 +1,20 @@
 # kustomize plugins
 
 Kustomize offers a plugin framework for people to
-write their own resource generators (e.g. a helm
+write their own resource _generators_ (e.g. a helm
 chart processor, a generator that automatically
 attaches a Service and Ingress object to each
-Deployment) and their own resource transformers
+Deployment) and their own resource _transformers_
 (e.g. a transformer that does some highly
 customized processing of the container command
 line).
 
 ## Specification in `kustomization.yaml`
 
-A kustomization file has two new fields in v2.1:
-_generators_ and _transformers_.
+Start by adding a `generators:` and/or `transformers:`
+field to your kustomization.
 
-Each accepts a list of strings as its arguments:
+Each field is a string array:
 
 > ```
 > generators:
@@ -24,13 +24,13 @@ Each accepts a list of strings as its arguments:
 > - https://github.com/org/repo/some/kustomization
 >
 > transformers:
-> - {as above} 
+> - {as above}
 > ```
 
 This is exactly like the syntax of the `resources` field.
 
 The value of each entry in a `resources`, `generators`
-or `transformers` list must be a relative path to a
+or `transformers` array must be a relative path to a
 YAML file, or a path or URL to a [kustomization].
 
 [kustomization]: glossary.md#kustomization
@@ -45,7 +45,7 @@ _Each_ object resulting from a `generators` or
 `transformers` field is now further interpreted by
 kustomize as a _plugin configuration_ object.
 
-## Configuration and execution
+## Configuration
 
 A kustomization file could have the following lines:
 
@@ -56,7 +56,7 @@ generators:
 
 Given this, the kustomization process would expect to
 find a file called `chartInflator.yaml` in the
-kustomization [root](glossary.md#root).
+kustomization [root](glossary.md#kustomization-root).
 
 The file `chartInflator.yaml` could contain:
 
@@ -90,6 +90,11 @@ The specified order of transformers in the
 `transformers` field is, however, respected, as
 transformers aren't expected to be commutative.
 
+## Execution
+
+Plugins are only used during a run of the
+`kustomize build` command.
+
 Generator plugins are run after processing the
 `resources` field (which _reads_ resources), to
 _create_ additional resources.
@@ -105,7 +110,7 @@ transformers run in the order specified.
 
 [k8s object]: glossary.md#kubernetes-style-object
 
-Given a configuration object (whick looks like any
+Given a plugin configuration object (it looks like any
 other [k8s object]), kustomize will first look for an
 _executable_ file called
 
@@ -126,31 +131,30 @@ kustomize build.
 A `kustomize build` attempt with plugins that
 omits the flag
 
-TODO: Change flag
-
 > `--enable_alpha_goplugins_accept_panic_risk`
 
 will fail with a warning about plugin use.
 
+_TODO: Change flag_
+
 Flag use is an opt-in acknowledging the absence of
-plugin provenance.  Its meant to give pause to
+plugin provenance.  It's meant to give pause to
 someone who blindly downloads a kustomization from
 the internet and attempts to run it, without
 realizing that it might attempt to run 3rd party
-code.
-
+code in plugin form.  The plugin would have to be
+installed already, but nevertheless the flag is a
+reminder.
 
 ## Writing plugins
 
 ### Exec plugins
 
-TODO: Add ptr to example.
+_TODO: Add ptr to example._
 
 A exec plugin is any executable that accepts a
-single argument on it's command line - the name of
-a YAML file containing its configuration (which it
-presumably reads if it needs additional
-configuration).
+single argument on its command line - the name of
+a YAML file containing its configuration.
 
 A generator plugin accepts nothing on `stdin`, but emits
 generated resources to `stdout`.
@@ -159,10 +163,13 @@ A transformer plugin accepts resource YAML on `stdin`,
 and emits those resources, possibly transformed, to
 `stdout`.
 
+kustomize uses an exec plugin adapter to provide
+marshalled resources on `stdin` and capture
+`stdout` for further processing.
 
 ### Go plugins
 
-TODO: Add ptr to example.
+_TODO: Add ptr to example._
 
 [Go plugin]: https://golang.org/pkg/plugin/
 
@@ -170,13 +177,16 @@ A [Go plugin] for kustomize looks like this:
 
 > ```
 > +build plugin
-> 
+>
 > package main
 >
-> import ...
+> import (
+>	"sigs.k8s.io/kustomize/pkg/ifc"
+>	"sigs.k8s.io/kustomize/pkg/resmap"
+>   ...
+> )
 >
-> // go:generate go run sigs.k8s.io/kustomize/cmd/pluginator
-> type plugin struct{...}
+> type plugin struct {...}
 >
 > var KustomizePlugin plugin
 >
@@ -196,8 +206,7 @@ shown is _required_.
 
 The plugin author should of course change the
 contents of the `plugin` struct, and the three
-method bodies, and the import statements, as
-desired.
+method bodies, and add imports as desired.
 
 Here's a build command, which assumes the plugin
 source code is sitting right next to where the
@@ -210,11 +219,6 @@ go build -buildmode plugin -tags=plugin \
     $dir/${kind}.go
 ```
 
-For the person willing to compile not just a
-plugin but all of kustomze as well, a code
-generator will be provided that will convert a Go
-plugin to statically linked code in your own
-compiled version of kustomize.
 
 #### Caveats
 
@@ -228,15 +232,14 @@ Go plugins allow kustomize extensions that
    subprocess and marshalling/unmarshalling data
    for each plugin run.
 
-Go plugins work as [defined][Go plugin], but
-fall short of what many people think of when they
-hear the word _plugin_.
-
 [ELF]: https://en.wikipedia.org/wiki/Executable_and_Linkable_Format
 
-Go plugin compilation creates an [ELF] formatted
-`.so` file, which by definition has no information
-about the _provenance_ of the file.
+Go plugins work as [defined][Go plugin], but fall
+short of what many people think of when they hear
+the word _plugin_.  Go plugin compilation creates
+an [ELF] formatted `.so` file, which by definition
+has no information about the _provenance_ of the
+file.
 
 One cannot know which version of Go was used,
 which packages were imported (and their version),
@@ -245,6 +248,5 @@ etc. Skew between the compilation conditions of
 the main program ELF and the plugin ELF will cause
 a failure at load time.
 
-Exec plugins also lack provenance - but they don't
+Exec plugins also lack provenance, but don't
 suffer from the skew problem.
-
