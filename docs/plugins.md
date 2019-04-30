@@ -11,7 +11,7 @@ line).
 
 ## Specification in `kustomization.yaml`
 
-Start by adding a `generators:` and/or `transformers:`
+Start by adding a `generators` and/or `transformers`
 field to your kustomization.
 
 Each field is a string array:
