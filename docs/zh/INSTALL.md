@@ -4,9 +4,17 @@
 
 ## 安装
 
-对于 macOS ，您可以使用软件包管理器 Homebrew 来安装 kustomize 。
+在 macOS ，您可以使用软件包管理器 Homebrew 来安装 kustomize 。
 
     brew install kustomize
+
+在 windows ，您可以使用软件包管理器 Chocolatey 来安装 kustomize 。
+
+    choco install kustomize
+
+有关软件包管理器 chocolatey 的使用以及对之前版本的支持，请参考以下链接：
+- [Choco Package](https://chocolatey.org/packages/kustomize)
+- [Package Source](https://github.com/kenmaglio/choco-kustomize)
 
 对于其他系统，请在 [release 页面] 下载相应系统的二进制文件。
 

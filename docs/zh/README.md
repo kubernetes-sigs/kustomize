@@ -1,24 +1,42 @@
 [English](../README.md) | 简体中文
-# Kustomize 文档
+
+# 文档
 
  * [安装说明](INSTALL.md)
 
- * [常见问题](../FAQ.md)
+ * [示例](../../examples.md) - 各种使用流程和概念的详细演示。
 
- * [kustomization.yaml](../kustomization.yaml) - 解释
-   [kustomization](../glossary.md#kustomization)
-   中各个字段的示例。
+ * [术语表](../glossary.md) - 用于消除术语歧义。
 
- * [版本控制策略](../versioningPolicy.md) - kustomization 文件和代码如何及时开发。 
+ * [kustomization.yaml](../../kustomization.yaml) - 包含 
+ [kustomization](../../glossary.md#kustomization) 所有字段的示例文件。
 
- * [version 2.0.0](../version2.0.0.md) - Kustomize 2.0.0 发行说明。
+ * [插件](../plugins.md) - 使用自定义的资源生成器和资源转换器来拓展 kustomize 功能。
 
  * [工作流](workflows.md) - 使用定制及使用现成配置使用的一些步骤。
 
- * [术语表](../glossary.md) - 用于消除术语歧义。
+ * [FAQ](FAQ.md)
+
+
+## 发行说明
+
+ * [2.1](v_2.1.0.md)
+
+ * [2.0](v_2.0.0.md) -
+   可以在 [kubectl v1.14][kubectl] 中使用 kustomize [v2.0.3] 。
+
+
+## 政策
+
+ * [版本控制](../versioningPolicy.md) - kustomize 代码及 kustomization 文件的版本控制策略。
 
  * [规避功能](../eschewedFeatures.md) - 目前 Kustomize 不支持某些功能的原因。
 
  * [贡献指南](../../CONTRIBUTING.md) - 请在提交 PR 之前阅读。
 
  * [行为准则](../../code-of-conduct.md)
+
+关于中文文档：部分文档可能稍微滞后于英文版本，同步工作持续进行中
+
+[v2.0.3]: https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.0.3
+[kubectl]: https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement
