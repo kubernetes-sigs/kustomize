@@ -53,7 +53,11 @@ func (i ItemId) String() string {
 		[]string{i.Gvk.String(), ns, nm}, separator)
 }
 
-func New(g gvk.Gvk, ns, nm string) ItemId {
+func (i ItemId) Equals(b ItemId) bool {
+	return i.String() == b.String()
+}
+
+func NewItemId(g gvk.Gvk, ns, nm string) ItemId {
 	return ItemId{
 		Gvk:       g,
 		Namespace: ns,

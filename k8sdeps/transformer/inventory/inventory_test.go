@@ -107,12 +107,18 @@ func TestInventoryTransformer(t *testing.T) {
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
 
-	// hash is derived based on all keys in the ConfigMap data field.
+	// hash is derived based on all keys in the Inventory
 	// It is added to annotations as
-	//   current: hash
+	//   kustomize.config.k8s.io/InventoryHash: hash
 	// When seeing the same annotation, prune binary assumes no
 	// clean up is needed
-	hash := "k777d7h45b"
+	hash := "h44788gt7g"
+
+	// inventory is the derived json string for an Inventory object
+	// It is added to annotations as
+	// kustomize.config.k8s.io/Inventory: inventory
+	inventory := "{\"current\":{\"apps_v1_Deployment|~X|deploy1\":null,\"~G_v1_ConfigMap|~X|cm1\":[{\"group\":\"apps\",\"version\":\"v1\",\"kind\":\"Deployment\",\"name\":\"deploy1\"}],\"~G_v1_Secret|~X|secret1\":[{\"group\":\"apps\",\"version\":\"v1\",\"kind\":\"Deployment\",\"name\":\"deploy1\"}]}}" // nolint
+
 	//  This is the root or inventory object which tracks all
 	// the applied resources - this is the thing we expect the transformer to create.
 	pruneMap := rf.FromMap(
@@ -123,15 +129,9 @@ func TestInventoryTransformer(t *testing.T) {
 				"name":      "pruneCM",
 				"namespace": "default",
 				"annotations": map[string]interface{}{
-					"current": hash,
+					"kustomize.config.k8s.io/Inventory":     inventory,
+					"kustomize.config.k8s.io/InventoryHash": hash,
 				},
-			},
-			"data": map[string]interface{}{
-				"_ConfigMap__cm1":                             hash,
-				"_Secret__secret1":                            hash,
-				"apps_Deployment__deploy1":                    hash,
-				"_ConfigMap__cm1---apps_Deployment__deploy1":  hash,
-				"_Secret__secret1---apps_Deployment__deploy1": hash,
 			},
 		})
 	expected := resmap.ResMap{
