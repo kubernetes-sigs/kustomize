@@ -14,6 +14,9 @@ go get sigs.k8s.io/kustomize
    (differently configured) variants of a simple Hello
    World server.
 
+ * [last mile helm](chart.md) - Make last mile modifications to
+   a helm chart.
+   
  * [LDAP](ldap/README.md) - Deploy multiple
    (differently configured) variants of a LDAP server.
 
