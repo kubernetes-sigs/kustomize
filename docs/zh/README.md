@@ -4,25 +4,25 @@
 
  * [安装说明](INSTALL.md)
 
- * [示例](../../examples.md) - 各种使用流程和概念的详细演示。
+ * [示例](../../examples) - 各种使用流程和概念的详细演示。
 
  * [术语表](../glossary.md) - 用于消除术语歧义。
 
- * [kustomization.yaml](../../kustomization.yaml) - 包含 
- [kustomization](../../glossary.md#kustomization) 所有字段的示例文件。
+ * [kustomization.yaml](../kustomization.yaml) - 包含 
+ [kustomization](../glossary.md#kustomization) 所有字段的示例文件。
 
  * [插件](../plugins.md) - 使用自定义的资源生成器和资源转换器来拓展 kustomize 功能。
 
  * [工作流](workflows.md) - 使用定制及使用现成配置使用的一些步骤。
 
- * [FAQ](FAQ.md)
+ * [FAQ](../FAQ.md)
 
 
 ## 发行说明
 
- * [2.1](v_2.1.0.md)
+ * [2.1](../v_2.1.0.md)
 
- * [2.0](v_2.0.0.md) -
+ * [2.0](../v_2.0.0.md) -
    可以在 [kubectl v1.14][kubectl] 中使用 kustomize [v2.0.3] 。
 
 
