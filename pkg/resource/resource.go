@@ -88,14 +88,6 @@ func (r *Resource) Merge(other *Resource) {
 	mergeConfigmap(r.Map(), other.Map(), r.Map())
 }
 
-func (r *Resource) PruneString() string {
-	namespace, _ := r.GetFieldValue("metadata.namespace")
-	return r.GetGvk().Group +
-		"_" + r.GetGvk().Kind +
-		"_" + namespace +
-		"_" + r.GetName()
-}
-
 // Replace performs replace with other resource.
 func (r *Resource) Replace(other *Resource) {
 	r.SetLabels(mergeStringMaps(other.GetLabels(), r.GetLabels()))
