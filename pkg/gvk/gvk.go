@@ -106,6 +106,7 @@ var order = []string{
 	"ConfigMap",
 	"Secret",
 	"Service",
+	"LimitRange",
 	"Deployment",
 	"StatefulSet",
 	"CronJob",
