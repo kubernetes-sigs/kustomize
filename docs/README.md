@@ -1,3 +1,5 @@
+English | [简体中文](zh/README.md)
+
 # Documentation
 
  * [Installation](INSTALL.md)
