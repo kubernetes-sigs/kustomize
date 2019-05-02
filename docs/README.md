@@ -1,10 +1,6 @@
-<<<<<<< HEAD
 English | [简体中文](zh/README.md)
 
-# Kustomize docs
-=======
 # Documentation
->>>>>>> 61cf67fb... start v2.1 release notes
 
  * [Installation](INSTALL.md)
 
