@@ -142,18 +142,32 @@ type Kustomization struct {
 	Inventory *Inventory `json:"inventory,omitempty" yaml:"inventory:omitempty"`
 }
 
-// DealWithMissingFields fills the missing fields
-func (k *Kustomization) DealWithMissingFields() []string {
-	var msgs []string
+// FixKustomizationPostUnmarshalling fixes things
+// like empty fields that should not be empty, or
+// moving content of deprecated fields to newer
+// fields.
+func (k *Kustomization) FixKustomizationPostUnmarshalling() {
 	if k.APIVersion == "" {
 		k.APIVersion = KustomizationVersion
-		msgs = append(msgs, "Fixed the missing field by adding apiVersion: "+KustomizationVersion)
 	}
 	if k.Kind == "" {
 		k.Kind = KustomizationKind
-		msgs = append(msgs, "Fixed the missing field by adding kind: "+KustomizationKind)
 	}
-	return msgs
+	// The EnvSource field is deprecated in favor of the list.
+	for i, g := range k.ConfigMapGenerator {
+		if g.EnvSource != "" {
+			k.ConfigMapGenerator[i].EnvSources =
+				append(g.EnvSources, g.EnvSource)
+			k.ConfigMapGenerator[i].EnvSource = ""
+		}
+	}
+	for i, g := range k.SecretGenerator {
+		if g.EnvSource != "" {
+			k.SecretGenerator[i].EnvSources =
+				append(g.EnvSources, g.EnvSource)
+			k.SecretGenerator[i].EnvSource = ""
+		}
+	}
 }
 
 func (k *Kustomization) EnforceFields() []string {
@@ -167,9 +181,10 @@ func (k *Kustomization) EnforceFields() []string {
 	return errs
 }
 
-// DealWithDeprecatedFields should be called immediately after
-// loading from storage.
-func DealWithDeprecatedFields(data []byte) []byte {
+// FixKustomizationPreUnmarshalling modies the raw data
+// before marshalling - e.g. changes old field names to
+// new field names.
+func FixKustomizationPreUnmarshalling(data []byte) []byte {
 	deprecateFieldsMap := map[string]string{
 		"patches:":   "patchesStrategicMerge:",
 		"imageTags:": "images:",
@@ -246,24 +261,31 @@ type SecretArgs struct {
 
 // DataSources contains some generic sources for configmaps.
 type DataSources struct {
-	// LiteralSources is a list of literal sources.
-	// Each literal source should be a key and literal value,
-	// e.g. `somekey=somevalue`
-	// It will be similar to kubectl create configmap|secret --from-literal
+	// LiteralSources is a list of literal
+	// pair sources. Each literal source should
+	// be a key and literal value, e.g. `key=value`
 	LiteralSources []string `json:"literals,omitempty" yaml:"literals,omitempty"`
 
-	// FileSources is a list of file sources.
-	// Each file source can be specified using its file path, in which case file
-	// basename will be used as configmap key, or optionally with a key and file
-	// path, in which case the given key will be used.
-	// Specifying a directory will iterate each named file in the directory
-	// whose basename is a valid configmap key.
-	// It will be similar to kubectl create configmap|secret --from-file
+	// FileSources is a list of file "sources" to
+	// use in creating a list of key, value pairs.
+	// A source takes the form:  [{key}=]{path}
+	// If the "key=" part is missing, the key is the
+	// path's basename. If they "key=" part is present,
+	// it becomes the key (replacing the basename).
+	// In either case, the value is the file contents.
+	// Specifying a directory will iterate each named
+	// file in the directory whose basename is a
+	// valid configmap key.
 	FileSources []string `json:"files,omitempty" yaml:"files,omitempty"`
 
-	// EnvSource format should be a path to a file to read lines of key=val
-	// pairs to create a configmap.
-	// i.e. a Docker .env file or a .ini file.
+	// EnvSources is a list of file paths.
+	// The contents of each file should be one
+	// key=value pair per line, e.g. a Docker
+	// or npm ".env" file or a ".ini" file
+	// (wikipedia.org/wiki/INI_file)
+	EnvSources []string `json:"envs,omitempty" yaml:"envs,omitempty"`
+
+	// Deprecated.  Use EnvSources instead.
 	EnvSource string `json:"env,omitempty" yaml:"env,omitempty"`
 }
 
