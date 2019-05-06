@@ -97,7 +97,7 @@ func TestConstructSecret(t *testing.T) {
 				GeneratorArgs: types.GeneratorArgs{
 					Name: "envSecret",
 					DataSources: types.DataSources{
-						EnvSource: "secret/app.env",
+						EnvSources: []string{"secret/app.env"},
 					},
 				},
 			},

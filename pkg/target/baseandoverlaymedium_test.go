@@ -158,21 +158,33 @@ patchesStrategicMerge:
 - deployment/deployment.yaml
 configMapGenerator:
 - name: app-env
-  env: configmap/app.env
+  env: configmap/db.env
+  envs:
+  - configmap/units.ini
+  - configmap/food.ini
 - name: app-config
   files:
-  - configmap/app-init.ini
+  - nonsense=configmap/dummy.txt
 images:
 - name: nginx
   newTag: 1.8.0`)
 
-	th.writeF("/app/overlay/configmap/app.env", `
+	th.writeF("/app/overlay/configmap/db.env", `
 DB_USERNAME=admin
 DB_PASSWORD=somepw
 `)
-	th.writeF("/app/overlay/configmap/app-init.ini", `
-FOO=bar
-BAR=baz
+	th.writeF("/app/overlay/configmap/units.ini", `
+LENGTH=kilometer
+ENERGY=electronvolt
+`)
+	th.writeF("/app/overlay/configmap/food.ini", `
+FRUIT=banana
+LEGUME=chickpea
+`)
+	th.writeF("/app/overlay/configmap/dummy.txt",
+		`Lorem ipsum dolor sit amet, consectetur
+adipiscing elit, sed do eiusmod tempor
+incididunt ut labore et dolore magna aliqua. 
 `)
 	th.writeF("/app/overlay/deployment/deployment.yaml", `
 apiVersion: extensions/v1beta1
@@ -217,10 +229,8 @@ spec:
 	th.assertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  app-init.ini: |2
-
-    FOO=bar
-    BAR=baz
+  nonsense: "Lorem ipsum dolor sit amet, consectetur\nadipiscing elit, sed do eiusmod
+    tempor\nincididunt ut labore et dolore magna aliqua. \n"
 kind: ConfigMap
 metadata:
   annotations:
@@ -229,12 +239,16 @@ metadata:
     app: mungebot
     org: kubernetes
     repo: test-infra
-  name: test-infra-app-config-fd62mfc87h
+  name: test-infra-app-config-f462h769f9
 ---
 apiVersion: v1
 data:
   DB_PASSWORD: somepw
   DB_USERNAME: admin
+  ENERGY: electronvolt
+  FRUIT: banana
+  LEGUME: chickpea
+  LENGTH: kilometer
 kind: ConfigMap
 metadata:
   annotations:
@@ -243,7 +257,7 @@ metadata:
     app: mungebot
     org: kubernetes
     repo: test-infra
-  name: test-infra-app-env-bh449c299k
+  name: test-infra-app-env-ffmd9b969m
 ---
 apiVersion: v1
 kind: Service
@@ -303,7 +317,7 @@ spec:
           valueFrom:
             configMapKeyRef:
               key: somekey
-              name: test-infra-app-env-bh449c299k
+              name: test-infra-app-env-ffmd9b969m
         - name: foo
           value: bar
         image: nginx:1.8.0
@@ -314,7 +328,7 @@ spec:
         - configMapRef:
             name: someConfigMap
         - configMapRef:
-            name: test-infra-app-env-bh449c299k
+            name: test-infra-app-env-ffmd9b969m
         image: busybox
         name: busybox
         volumeMounts:
@@ -322,7 +336,7 @@ spec:
           name: app-env
       volumes:
       - configMap:
-          name: test-infra-app-env-bh449c299k
+          name: test-infra-app-env-ffmd9b969m
         name: app-env
 `)
 }

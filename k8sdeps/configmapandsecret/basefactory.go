@@ -42,15 +42,14 @@ func (bf baseFactory) loadKvPairs(
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf(
 			"plugins: %s",
-			args.EnvSource))
+			args.KVSources))
 	}
 	all = append(all, pairs...)
-
-	pairs, err = bf.keyValuesFromEnvFile(args.EnvSource)
+	pairs, err = bf.keyValuesFromEnvFiles(args.EnvSources)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf(
-			"env source file: %s",
-			args.EnvSource))
+			"env source files: %v",
+			args.EnvSources))
 	}
 	all = append(all, pairs...)
 
@@ -136,13 +135,18 @@ func (bf baseFactory) keyValuesFromFileSources(sources []string) ([]kv.Pair, err
 	return kvs, nil
 }
 
-func (bf baseFactory) keyValuesFromEnvFile(path string) ([]kv.Pair, error) {
-	if path == "" {
-		return nil, nil
+func (bf baseFactory) keyValuesFromEnvFiles(paths []string) ([]kv.Pair, error) {
+	var kvs []kv.Pair
+	for _, path := range paths {
+		content, err := bf.ldr.Load(path)
+		if err != nil {
+			return nil, err
+		}
+		more, err := kv.KeyValuesFromLines(content)
+		if err != nil {
+			return nil, err
+		}
+		kvs = append(kvs, more...)
 	}
-	content, err := bf.ldr.Load(path)
-	if err != nil {
-		return nil, err
-	}
-	return kv.KeyValuesFromLines(content)
+	return kvs, nil
 }
