@@ -18,11 +18,13 @@ package target_test
 
 import (
 	"testing"
+
+	"sigs.k8s.io/kustomize/pkg/kusttest"
 )
 
 func TestVariableRef(t *testing.T) {
-	th := NewKustTestHarness(t, "/app/overlay/staging")
-	th.writeK("/app/base", `
+	th := kusttest_test.NewKustTestHarness(t, "/app/overlay/staging")
+	th.WriteK("/app/base", `
 namePrefix: base-
 resources:
  - cockroachdb-statefulset-secure.yaml
@@ -62,7 +64,7 @@ vars:
         apiVersion: v1
    fieldref:
         fieldpath: metadata.name`)
-	th.writeF("/app/base/cronjob.yaml", `
+	th.WriteF("/app/base/cronjob.yaml", `
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
@@ -85,7 +87,7 @@ spec:
               - name: CDB_PUBLIC_SVC
                 value: "$(CDB_PUBLIC_SVC)"
 `)
-	th.writeF("/app/base/cockroachdb-statefulset-secure.yaml", `
+	th.WriteF("/app/base/cockroachdb-statefulset-secure.yaml", `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -320,16 +322,16 @@ spec:
         requests:
           storage: 1Gi
 `)
-	th.writeK("/app/overlay/staging", `
+	th.WriteK("/app/overlay/staging", `
 namePrefix: dev-
 bases:
 - ../../base
 `)
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -577,8 +579,8 @@ spec:
 }
 
 func TestVariableRefIngress(t *testing.T) {
-	th := NewKustTestHarness(t, "/app/overlay")
-	th.writeK("/app/base", `
+	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
+	th.WriteK("/app/base", `
 resources:
 - deployment.yaml
 - ingress.yaml
@@ -593,7 +595,7 @@ vars:
   fieldref:
     fieldpath: metadata.name
 `)
-	th.writeF("/app/base/deployment.yaml", `
+	th.WriteF("/app/base/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -616,7 +618,7 @@ spec:
         - name: http
           containerPort: 80
 `)
-	th.writeF("/app/base/ingress.yaml", `
+	th.WriteF("/app/base/ingress.yaml", `
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -637,7 +639,7 @@ spec:
     - $(DEPLOYMENT_NAME).example.com
     secretName: $(DEPLOYMENT_NAME).example.com-tls
 `)
-	th.writeF("/app/base/service.yaml", `
+	th.WriteF("/app/base/service.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
@@ -651,16 +653,16 @@ spec:
     protocol: TCP
     targetPort: http
 `)
-	th.writeK("/app/overlay", `
+	th.WriteK("/app/overlay", `
 nameprefix: kustomized-
 bases:
 - ../base
 `)
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Service
 metadata:
@@ -719,8 +721,8 @@ spec:
 }
 
 func TestVariableRefMounthPath(t *testing.T) {
-	th := NewKustTestHarness(t, "/app/base")
-	th.writeK("/app/base", `
+	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th.WriteK("/app/base", `
 resources:
 - deployment.yaml
 - namespace.yaml
@@ -733,7 +735,7 @@ vars:
     name: my-namespace
 
 `)
-	th.writeF("/app/base/deployment.yaml", `
+	th.WriteF("/app/base/deployment.yaml", `
   apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -754,18 +756,18 @@ vars:
         - name: my-volume
           emptyDir: {}
 `)
-	th.writeF("/app/base/namespace.yaml", `
+	th.WriteF("/app/base/namespace.yaml", `
   apiVersion: v1
   kind: Namespace
   metadata:
     name: my-namespace
 `)
 
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -794,8 +796,8 @@ spec:
 }
 
 func TestVariableRefMaps(t *testing.T) {
-	th := NewKustTestHarness(t, "/app/base")
-	th.writeK("/app/base", `
+	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th.WriteK("/app/base", `
 resources:
 - deployment.yaml
 - namespace.yaml
@@ -806,7 +808,7 @@ vars:
     kind: Namespace
     name: my-namespace
 `)
-	th.writeF("/app/base/deployment.yaml", `
+	th.WriteF("/app/base/deployment.yaml", `
   apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -820,18 +822,18 @@ vars:
         - name: app
           image: busybox  
 `)
-	th.writeF("/app/base/namespace.yaml", `
+	th.WriteF("/app/base/namespace.yaml", `
   apiVersion: v1
   kind: Namespace
   metadata:
     name: my-namespace
 `)
 
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Namespace
 metadata:

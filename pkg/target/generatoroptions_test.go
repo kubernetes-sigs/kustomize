@@ -19,11 +19,12 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
+	"sigs.k8s.io/kustomize/pkg/kusttest"
 )
 
 func TestGeneratorOptionsWithBases(t *testing.T) {
-	th := NewKustTestHarness(t, "/app/overlay")
-	th.writeK("/app/base", `
+	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
+	th.WriteK("/app/base", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 generatorOptions:
@@ -35,7 +36,7 @@ configMapGenerator:
   literals:
   - foo=bar
 `)
-	th.writeK("/app/overlay", `
+	th.WriteK("/app/overlay", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 bases:
@@ -49,11 +50,11 @@ configMapGenerator:
   literals:
   - fruit=apple
 `)
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
   fruit: apple
@@ -75,8 +76,8 @@ metadata:
 }
 
 func TestGoPluginNotEnabled(t *testing.T) {
-	th := NewKustTestHarness(t, "/app")
-	th.writeK("/app", `
+	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th.WriteK("/app", `
 secretGenerator:
 - name: attemptGoPlugin
   kvSources:
@@ -86,7 +87,7 @@ secretGenerator:
     - someArg
     - someOtherArg
 `)
-	_, err := th.makeKustTarget().MakeCustomizedResMap()
+	_, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err == nil {
 		t.Fatalf("expected error")
 	}
@@ -96,9 +97,9 @@ secretGenerator:
 }
 
 func TestGoPluginDoesNotExist(t *testing.T) {
-	th := NewKustTestHarnessWithPluginConfig(
+	th := kusttest_test.NewKustTestHarnessWithPluginConfig(
 		t, "/app", plugin.ActivePluginConfig())
-	th.writeK("/app", `
+	th.WriteK("/app", `
 secretGenerator:
 - name: attemptGoPlugin
   kvSources:
@@ -108,7 +109,7 @@ secretGenerator:
     - someArg
     - someOtherArg
 `)
-	_, err := th.makeKustTarget().MakeCustomizedResMap()
+	_, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err == nil {
 		t.Fatalf("expected error")
 	}

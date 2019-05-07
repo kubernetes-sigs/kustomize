@@ -18,10 +18,11 @@ import (
 
 	"sigs.k8s.io/kustomize/internal/plugintest"
 	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
+	"sigs.k8s.io/kustomize/pkg/kusttest"
 )
 
-func writeDeployment(th *KustTestHarness, path string) {
-	th.writeF(path, `
+func writeDeployment(th *kusttest_test.KustTestHarness, path string) {
+	th.WriteF(path, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -38,8 +39,8 @@ spec:
 `)
 }
 
-func writeStringPrefixer(th *KustTestHarness, path string) {
-	th.writeF(path, `
+func writeStringPrefixer(th *kusttest_test.KustTestHarness, path string) {
+	th.WriteF(path, `
 apiVersion: someteam.example.com/v1
 kind: StringPrefixer
 metadata:
@@ -47,8 +48,8 @@ metadata:
 `)
 }
 
-func writeDatePrefixer(th *KustTestHarness, path string) {
-	th.writeF(path, `
+func writeDatePrefixer(th *kusttest_test.KustTestHarness, path string) {
+	th.WriteF(path, `
 apiVersion: someteam.example.com/v1
 kind: DatePrefixer
 metadata:
@@ -66,9 +67,9 @@ func TestOrderedTransformers(t *testing.T) {
 	tc.BuildGoPlugin(
 		"someteam.example.com", "v1", "DatePrefixer")
 
-	th := NewKustTestHarnessWithPluginConfig(
+	th := kusttest_test.NewKustTestHarnessWithPluginConfig(
 		t, "/app", plugin.ActivePluginConfig())
-	th.writeK("/app", `
+	th.WriteK("/app", `
 resources:
 - deployment.yaml
 transformers:
@@ -81,11 +82,11 @@ transformers:
 	writeDeployment(th, "/app/deployment.yaml")
 	writeStringPrefixer(th, "/app/stringPrefixer.yaml")
 	writeDatePrefixer(th, "/app/datePrefixer.yaml")
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -109,9 +110,9 @@ func TestSedTransformer(t *testing.T) {
 	tc.BuildExecPlugin(
 		"someteam.example.com", "v1", "SedTransformer")
 
-	th := NewKustTestHarnessWithPluginConfig(
+	th := kusttest_test.NewKustTestHarnessWithPluginConfig(
 		t, "/app", plugin.ActivePluginConfig())
-	th.writeK("/app", `
+	th.WriteK("/app", `
 transformers:
 - sed-transformer.yaml
 
@@ -121,23 +122,23 @@ configMapGenerator:
   - FOO=$FOO
   - BAR=$BAR
 `)
-	th.writeF("/app/sed-transformer.yaml", `
+	th.WriteF("/app/sed-transformer.yaml", `
 apiVersion: someteam.example.com/v1
 kind: SedTransformer
 metadata:
   name: some-random-name
 argsFromFile: sed-input.txt
 `)
-	th.writeF("/app/sed-input.txt", `
+	th.WriteF("/app/sed-input.txt", `
 s/$FOO/foo/g
 s/$BAR/bar/g
 `)
 
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
   BAR: bar
@@ -158,10 +159,10 @@ func TestTransformedTransformers(t *testing.T) {
 	tc.BuildGoPlugin(
 		"someteam.example.com", "v1", "DatePrefixer")
 
-	th := NewKustTestHarnessWithPluginConfig(
+	th := kusttest_test.NewKustTestHarnessWithPluginConfig(
 		t, "/app/overlay", plugin.ActivePluginConfig())
 
-	th.writeK("/app/base", `
+	th.WriteK("/app/base", `
 resources:
 - stringPrefixer.yaml
 transformers:
@@ -170,7 +171,7 @@ transformers:
 	writeStringPrefixer(th, "/app/base/stringPrefixer.yaml")
 	writeDatePrefixer(th, "/app/base/datePrefixer.yaml")
 
-	th.writeK("/app/overlay", `
+	th.WriteK("/app/overlay", `
 resources:
 - deployment.yaml
 transformers:
@@ -178,11 +179,11 @@ transformers:
 `)
 	writeDeployment(th, "/app/overlay/deployment.yaml")
 
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
