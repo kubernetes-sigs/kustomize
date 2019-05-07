@@ -47,7 +47,7 @@ type KustTarget struct {
 	pLdr          plugins.Loader
 }
 
-// NewKustTarget returns a new instance of KustTarget primed with a FileLoader.
+// NewKustTarget returns a new instance of KustTarget primed with a Loader.
 func NewKustTarget(
 	ldr ifc.Loader,
 	rFactory *resmap.Factory,
