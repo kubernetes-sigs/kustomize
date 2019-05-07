@@ -118,13 +118,14 @@ generators:
 	th.assertActualEqualsExpected(m, `
 apiVersion: v1
 data:
+  DB_PASSWORD: aWxvdmV5b3U=
   FRUIT: YXBwbGU=
   ROUTER_PASSWORD: YWRtaW4=
   VEGETABLE: Y2Fycm90
   longsecret.txt: CkxvcmVtIGlwc3VtIGRvbG9yIHNpdCBhbWV0LApjb25zZWN0ZXR1ciBhZGlwaXNjaW5nIGVsaXQsCnNlZCBkbyBlaXVzbW9kIHRlbXBvciBpbmNpZGlkdW50CnV0IGxhYm9yZSBldCBkb2xvcmUgbWFnbmEgYWxpcXVhLgo=
 kind: Secret
 metadata:
-  name: -2kt2h55789
+  name: -ktm999dkcc
 type: Opaque
 `)
 }

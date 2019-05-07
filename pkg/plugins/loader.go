@@ -22,7 +22,6 @@ import (
 	"plugin"
 
 	"github.com/pkg/errors"
-	kplugin "sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
@@ -122,11 +121,11 @@ func (l *Loader) loadGoPlugin(id resid.ResId) (c Configurable, err error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "plugin %s fails to load", name)
 	}
-	symbol, err := p.Lookup(kplugin.PluginSymbol)
+	symbol, err := p.Lookup(pluginSymbol)
 	if err != nil {
 		return nil, errors.Wrapf(
 			err, "plugin %s doesn't have symbol %s",
-			name, kplugin.PluginSymbol)
+			name, pluginSymbol)
 	}
 	c, ok = symbol.(Configurable)
 	if !ok {

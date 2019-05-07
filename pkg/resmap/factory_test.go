@@ -153,7 +153,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 					GeneratorArgs: types.GeneratorArgs{
 						Name: "envConfigMap",
 						DataSources: types.DataSources{
-							EnvSource: "app.env",
+							EnvSources: []string{"app.env"},
 						},
 					},
 				},
