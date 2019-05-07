@@ -105,9 +105,9 @@ secretGenerator:
     - tls.key=secret/tls.key
   type: "kubernetes.io/tls"
 - name: env_file_secret
-  # env is a path to a file to read lines of key=val
-  # you can only specify one env file per secret.
-  env: env.txt
+  # paths to files with k=v pairs, one pair per line.
+  envs:
+    - env.txt
   type: Opaque
 
 # generatorOptions modify behavior of all ConfigMap and Secret generators
