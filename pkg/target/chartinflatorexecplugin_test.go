@@ -22,6 +22,7 @@ import (
 
 	"sigs.k8s.io/kustomize/internal/plugintest"
 	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
+	"sigs.k8s.io/kustomize/pkg/kusttest"
 )
 
 // This is an example of using a helm chart as a base,
@@ -44,15 +45,15 @@ func TestChartInflatorExecPlugin(t *testing.T) {
 	tc.BuildExecPlugin(
 		"someteam.example.com", "v1", "ChartInflatorExec")
 
-	th := NewKustTestHarnessWithPluginConfig(
+	th := kusttest_test.NewKustTestHarnessWithPluginConfig(
 		t, "/app", plugin.ActivePluginConfig())
-	th.writeK("/app", `
+	th.WriteK("/app", `
 generators:
 - chartInflatorExec.yaml
 namePrefix: LOOOOOOOONG-
 `)
 
-	th.writeF("/app/chartInflatorExec.yaml", `
+	th.WriteF("/app/chartInflatorExec.yaml", `
 apiVersion: someteam.example.com/v1
 kind: ChartInflatorExec
 metadata:
@@ -60,11 +61,11 @@ metadata:
 chartName: minecraft
 `)
 
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
   rcon-password: Q0hBTkdFTUUh

@@ -18,11 +18,13 @@ package target_test
 
 import (
 	"testing"
+
+	"sigs.k8s.io/kustomize/pkg/kusttest"
 )
 
 func TestPruneConfigMap(t *testing.T) {
-	th := NewKustTestHarness(t, "/app/base")
-	th.writeK("/app/base", `
+	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th.WriteK("/app/base", `
 resources:
 - deployment.yaml
 - service.yaml
@@ -37,7 +39,7 @@ inventory:
 namePrefix: my-
 namespace: default
 `)
-	th.writeF("/app/base/deployment.yaml", `
+	th.WriteF("/app/base/deployment.yaml", `
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
@@ -74,7 +76,7 @@ spec:
       - name: mysql-persistent-storage
         emptyDir: {}
 `)
-	th.writeF("/app/base/service.yaml", `
+	th.WriteF("/app/base/service.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
@@ -87,7 +89,7 @@ spec:
   selector:
     app: mysql
 `)
-	th.writeF("/app/base/secret.yaml", `
+	th.WriteF("/app/base/secret.yaml", `
 apiVersion: v1
 kind: Secret
 metadata:
@@ -99,12 +101,12 @@ data:
   username: jingfang
 `)
 
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
 	//nolint
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ConfigMap
 metadata:
