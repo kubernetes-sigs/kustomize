@@ -71,7 +71,7 @@ See https://sigs.k8s.io/kustomize
 			stdOut, fSys,
 			rf,
 			transformer.NewFactoryImpl(),
-			plugins.NewLoader(pluginConfig, rf)),
+			plugins.NewFileLoader(pluginConfig, rf)),
 		edit.NewCmdEdit(fSys, validator.NewKustValidator(), uf),
 		misc.NewCmdConfig(fSys),
 		misc.NewCmdVersion(stdOut),

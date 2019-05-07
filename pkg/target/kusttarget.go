@@ -44,15 +44,15 @@ type KustTarget struct {
 	ldr           ifc.Loader
 	rFactory      *resmap.Factory
 	tFactory      transformer.Factory
-	pLdr          *plugins.Loader
+	pLdr          plugins.Loader
 }
 
-// NewKustTarget returns a new instance of KustTarget primed with a Loader.
+// NewKustTarget returns a new instance of KustTarget primed with a FileLoader.
 func NewKustTarget(
 	ldr ifc.Loader,
 	rFactory *resmap.Factory,
 	tFactory transformer.Factory,
-	pLdr *plugins.Loader) (*KustTarget, error) {
+	pLdr plugins.Loader) (*KustTarget, error) {
 	content, err := loadKustFile(ldr)
 	if err != nil {
 		return nil, err

@@ -75,7 +75,7 @@ metadata:
 		kunstruct.NewKunstructuredFactoryWithGeneratorArgs(
 			&types.GeneratorMetaArgs{PluginConfig: plugin.ActivePluginConfig()})))
 
-	pl := plugins.NewLoader(plugin.ActivePluginConfig(), rf)
+	pl := plugins.NewFileLoader(plugin.ActivePluginConfig(), rf)
 	tg, err := target.NewKustTarget(ldr, rf, transformer.NewFactoryImpl(), pl)
 	if err != nil {
 		t.Fatalf("err %v", err)

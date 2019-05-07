@@ -42,7 +42,7 @@ type KustTestHarness struct {
 	t   *testing.T
 	rf  *resmap.Factory
 	ldr loadertest.FakeLoader
-	pl  *plugins.Loader
+	pl  *plugins.FileLoader
 }
 
 func NewKustTestHarness(t *testing.T, path string) *KustTestHarness {
@@ -66,7 +66,7 @@ func NewKustTestHarnessFull(
 		t:   t,
 		rf:  rf,
 		ldr: loadertest.NewFakeLoaderWithRestrictor(lr, path),
-		pl:  plugins.NewLoader(pc, rf)}
+		pl:  plugins.NewFileLoader(pc, rf)}
 }
 
 func (th *KustTestHarness) makeKustTarget() *KustTarget {

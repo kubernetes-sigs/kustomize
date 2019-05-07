@@ -70,7 +70,7 @@ func NewCmdBuild(
 	out io.Writer, fs fs.FileSystem,
 	rf *resmap.Factory,
 	ptf transformer.Factory,
-	pl *plugins.Loader) *cobra.Command {
+	pl *plugins.FileLoader) *cobra.Command {
 	var o Options
 
 	cmd := &cobra.Command{
@@ -115,7 +115,7 @@ func (o *Options) Validate(args []string) (err error) {
 func (o *Options) RunBuild(
 	out io.Writer, fSys fs.FileSystem,
 	rf *resmap.Factory, ptf transformer.Factory,
-	pl *plugins.Loader) error {
+	pl plugins.Loader) error {
 	ldr, err := loader.NewLoader(
 		o.loadRestrictor, o.kustomizationPath, fSys)
 	if err != nil {
@@ -136,7 +136,7 @@ func (o *Options) RunBuild(
 func (o *Options) RunBuildPrune(
 	out io.Writer, fSys fs.FileSystem,
 	rf *resmap.Factory, ptf transformer.Factory,
-	pl *plugins.Loader) error {
+	pl *plugins.FileLoader) error {
 	ldr, err := loader.NewLoader(
 		o.loadRestrictor, o.kustomizationPath, fSys)
 	if err != nil {
@@ -174,7 +174,7 @@ func NewCmdBuildPrune(
 	out io.Writer, fs fs.FileSystem,
 	rf *resmap.Factory,
 	ptf transformer.Factory,
-	pl *plugins.Loader) *cobra.Command {
+	pl *plugins.FileLoader) *cobra.Command {
 	var o Options
 
 	cmd := &cobra.Command{

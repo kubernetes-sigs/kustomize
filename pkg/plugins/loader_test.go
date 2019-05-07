@@ -67,7 +67,7 @@ func TestLoader(t *testing.T) {
 	rmF := resmap.NewFactory(resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl()))
 
-	l := plugins.NewLoader(plugin.ActivePluginConfig(), rmF)
+	l := plugins.NewFileLoader(plugin.ActivePluginConfig(), rmF)
 	if l == nil {
 		t.Fatal("expect non-nil loader")
 	}

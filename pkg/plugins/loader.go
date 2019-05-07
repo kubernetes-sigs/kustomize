@@ -34,17 +34,24 @@ type Configurable interface {
 	Config(ldr ifc.Loader, rf *resmap.Factory, k ifc.Kunstructured) error
 }
 
-type Loader struct {
+type Loader interface {
+	LoadGenerators(ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Generator, error)
+	LoadTransformers(ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Transformer, error)
+}
+
+type FileLoader struct {
 	pc *types.PluginConfig
 	rf *resmap.Factory
 }
 
-func NewLoader(
-	pc *types.PluginConfig, rf *resmap.Factory) *Loader {
-	return &Loader{pc: pc, rf: rf}
+var _ Loader = &FileLoader{}
+
+func NewFileLoader(
+	pc *types.PluginConfig, rf *resmap.Factory) *FileLoader {
+	return &FileLoader{pc: pc, rf: rf}
 }
 
-func (l *Loader) LoadGenerators(
+func (l *FileLoader) LoadGenerators(
 	ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Generator, error) {
 	var result []transformers.Generator
 	for _, res := range rm {
@@ -61,7 +68,7 @@ func (l *Loader) LoadGenerators(
 	return result, nil
 }
 
-func (l *Loader) LoadTransformers(
+func (l *FileLoader) LoadTransformers(
 	ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Transformer, error) {
 	var result []transformers.Transformer
 	for _, res := range rm {
@@ -82,7 +89,7 @@ func pluginPath(id resid.ResId) string {
 	return filepath.Join(id.Gvk().Group, id.Gvk().Version, id.Gvk().Kind)
 }
 
-func (l *Loader) loadAndConfigurePlugin(
+func (l *FileLoader) loadAndConfigurePlugin(
 	ldr ifc.Loader, res *resource.Resource) (c Configurable, err error) {
 	if !l.pc.GoEnabled {
 		return nil, errors.Errorf(
@@ -107,10 +114,10 @@ func (l *Loader) loadAndConfigurePlugin(
 // Each test makes its own loader, and tries to load its own plugins,
 // but the loaded .so files are in shared memory, so one will get
 // "this plugin already loaded" errors if the registry is maintained
-// as a Loader instance variable.  So make it a package variable.
+// as a FileLoader instance variable.  So make it a package variable.
 var registry = make(map[string]Configurable)
 
-func (l *Loader) loadGoPlugin(id resid.ResId) (c Configurable, err error) {
+func (l *FileLoader) loadGoPlugin(id resid.ResId) (c Configurable, err error) {
 	var ok bool
 	path := pluginPath(id)
 	if c, ok = registry[path]; ok {
