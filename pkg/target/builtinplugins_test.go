@@ -18,6 +18,8 @@ package target_test
 
 import (
 	"testing"
+
+	"sigs.k8s.io/kustomize/pkg/kusttest"
 )
 
 const result = `
@@ -35,17 +37,17 @@ metadata:
 type: Opaque
 `
 
-func writeDataFiles(th *KustTestHarness) {
-	th.writeF("/app/foo.env", `
+func writeDataFiles(th *kusttest_test.KustTestHarness) {
+	th.WriteF("/app/foo.env", `
 MOUNTAIN=everest
 OCEAN=pacific
 `)
-	th.writeF("/app/phrase.dat", "dat phrase")
+	th.WriteF("/app/phrase.dat", "dat phrase")
 }
 
 func TestBuiltinPlugins(t *testing.T) {
-	th := NewKustTestHarness(t, "/app")
-	th.writeK("/app", `
+	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th.WriteK("/app", `
 secretGenerator:
 - name: bob
   kvSources:
@@ -65,16 +67,16 @@ secretGenerator:
     - foo.env
 `)
 	writeDataFiles(th)
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, result)
+	th.AssertActualEqualsExpected(m, result)
 }
 
 func TestBuiltinIsTheDefault(t *testing.T) {
-	th := NewKustTestHarness(t, "/app")
-	th.writeK("/app", `
+	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th.WriteK("/app", `
 secretGenerator:
 - name: bob
   kvSources:
@@ -91,9 +93,9 @@ secretGenerator:
     - foo.env
 `)
 	writeDataFiles(th)
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, result)
+	th.AssertActualEqualsExpected(m, result)
 }
