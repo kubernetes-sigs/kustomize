@@ -71,7 +71,7 @@ func writeSecretGeneratorConfig(th *kusttest_test.KustTestHarness, root string) 
 apiVersion: builtin
 kind: SecretGenerator
 metadata:
-  name: secretGenerator
+  name: mySecret
 behavior: merge
 envFiles:
 - a.env
@@ -90,13 +90,10 @@ DB_PASSWORD=iloveyou
 `)
 	th.WriteF(filepath.Join(root, "longsecret.txt"), `
 Lorem ipsum dolor sit amet,
-consectetur adipiscing elit,
-sed do eiusmod tempor incididunt
-ut labore et dolore magna aliqua.
+consectetur adipiscing elit.
 `)
 }
 
-// nolint:lll
 func TestSecretGenerator(t *testing.T) {
 	tc := plugintest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
@@ -122,10 +119,10 @@ data:
   FRUIT: YXBwbGU=
   ROUTER_PASSWORD: YWRtaW4=
   VEGETABLE: Y2Fycm90
-  longsecret.txt: CkxvcmVtIGlwc3VtIGRvbG9yIHNpdCBhbWV0LApjb25zZWN0ZXR1ciBhZGlwaXNjaW5nIGVsaXQsCnNlZCBkbyBlaXVzbW9kIHRlbXBvciBpbmNpZGlkdW50CnV0IGxhYm9yZSBldCBkb2xvcmUgbWFnbmEgYWxpcXVhLgo=
+  longsecret.txt: CkxvcmVtIGlwc3VtIGRvbG9yIHNpdCBhbWV0LApjb25zZWN0ZXR1ciBhZGlwaXNjaW5nIGVsaXQuCg==
 kind: Secret
 metadata:
-  name: -ktm999dkcc
+  name: mySecret-g4g4kh4f7t
 type: Opaque
 `)
 }
