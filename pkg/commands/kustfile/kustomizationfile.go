@@ -159,16 +159,13 @@ func (mf *kustomizationFile) Read() (*types.Kustomization, error) {
 	if err != nil {
 		return nil, err
 	}
-	data = types.DealWithDeprecatedFields(data)
+	data = types.FixKustomizationPreUnmarshalling(data)
 	var k types.Kustomization
 	err = yaml.Unmarshal(data, &k)
 	if err != nil {
 		return nil, err
 	}
-	msgs := k.DealWithMissingFields()
-	if len(msgs) > 0 {
-		log.Printf(strings.Join(msgs, "\n"))
-	}
+	k.FixKustomizationPostUnmarshalling()
 	err = mf.parseCommentedFields(data)
 	if err != nil {
 		return nil, err
