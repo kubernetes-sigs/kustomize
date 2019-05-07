@@ -18,13 +18,15 @@ package target_test
 
 import (
 	"testing"
+
+	"sigs.k8s.io/kustomize/pkg/kusttest"
 )
 
 // Generate a Secret and a ConfigMap from the same data
 // to compare the result.
 func TestGeneratorBasics(t *testing.T) {
-	th := NewKustTestHarness(t, "/app")
-	th.writeK("/app", `
+	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th.WriteK("/app", `
 namePrefix: blah-
 configMapGenerator:
 - name: bob
@@ -48,26 +50,26 @@ secretGenerator:
     - passphrase=phrase.dat
     - forces.txt
 `)
-	th.writeF("/app/foo.env", `
+	th.WriteF("/app/foo.env", `
 MOUNTAIN=everest
 OCEAN=pacific
 `)
-	th.writeF("/app/phrase.dat", `
+	th.WriteF("/app/phrase.dat", `
 Life is short.
 But the years are long.
 Not while the evil days come not.
 `)
-	th.writeF("/app/forces.txt", `
+	th.WriteF("/app/forces.txt", `
 gravitational
 electromagnetic
 strong nuclear
 weak nuclear
 `)
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
   MOUNTAIN: everest
@@ -113,8 +115,8 @@ type: Opaque
 
 // TODO: These should be errors instead.
 func TestGeneratorRepeatsInKustomization(t *testing.T) {
-	th := NewKustTestHarness(t, "/app")
-	th.writeK("/app", `
+	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th.WriteK("/app", `
 namePrefix: blah-
 configMapGenerator:
 - name: bob
@@ -130,13 +132,13 @@ configMapGenerator:
   files:
     - nobles=nobility.txt
 `)
-	th.writeF("/app/forces.txt", `
+	th.WriteF("/app/forces.txt", `
 gravitational
 electromagnetic
 strong nuclear
 weak nuclear
 `)
-	th.writeF("/app/nobility.txt", `
+	th.WriteF("/app/nobility.txt", `
 helium
 neon
 argon
@@ -144,11 +146,11 @@ krypton
 xenon
 radon
 `)
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
   fruit: apple
@@ -168,8 +170,8 @@ metadata:
 }
 
 func TestGeneratorOverlays(t *testing.T) {
-	th := NewKustTestHarness(t, "/app/overlay")
-	th.writeK("/app/base1", `
+	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
+	th.WriteK("/app/base1", `
 namePrefix: p1-
 configMapGenerator:
 - name: com1
@@ -177,7 +179,7 @@ configMapGenerator:
   literals:
     - from=base
 `)
-	th.writeK("/app/base2", `
+	th.WriteK("/app/base2", `
 namePrefix: p2-
 configMapGenerator:
 - name: com2
@@ -185,7 +187,7 @@ configMapGenerator:
   literals:
     - from=base
 `)
-	th.writeK("/app/overlay/o1", `
+	th.WriteK("/app/overlay/o1", `
 bases:
 - ../../base1
 configMapGenerator:
@@ -194,7 +196,7 @@ configMapGenerator:
   literals:
     - from=overlay
 `)
-	th.writeK("/app/overlay/o2", `
+	th.WriteK("/app/overlay/o2", `
 bases:
 - ../../base2
 configMapGenerator:
@@ -203,7 +205,7 @@ configMapGenerator:
   literals:
     - from=overlay
 `)
-	th.writeK("/app/overlay", `
+	th.WriteK("/app/overlay", `
 bases:
 - o1
 - o2
@@ -214,11 +216,11 @@ configMapGenerator:
     - foo=bar
     - baz=qux
 `)
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
   baz: qux

@@ -18,6 +18,8 @@ package target_test
 
 import (
 	"testing"
+
+	"sigs.k8s.io/kustomize/pkg/kusttest"
 )
 
 // TODO(monopole): Add a feature test example covering secret generation.
@@ -35,8 +37,8 @@ import (
 // To eventually fix this, we could write the data to a real filesystem, and
 // clean up after, or use some other trick compatible with exec.
 
-func writeMediumBase(th *KustTestHarness) {
-	th.writeK("/app/base", `
+func writeMediumBase(th *kusttest_test.KustTestHarness) {
+	th.WriteK("/app/base", `
 namePrefix: baseprefix-
 commonLabels:
   foo: bar
@@ -46,7 +48,7 @@ resources:
 - deployment/deployment.yaml
 - service/service.yaml
 `)
-	th.writeF("/app/base/service/service.yaml", `
+	th.WriteF("/app/base/service/service.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
@@ -59,7 +61,7 @@ spec:
   selector:
     app: mungebot
 `)
-	th.writeF("/app/base/deployment/deployment.yaml", `
+	th.WriteF("/app/base/deployment/deployment.yaml", `
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -85,13 +87,13 @@ spec:
 }
 
 func TestMediumBase(t *testing.T) {
-	th := NewKustTestHarness(t, "/app/base")
+	th := kusttest_test.NewKustTestHarness(t, "/app/base")
 	writeMediumBase(th)
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Service
 metadata:
@@ -142,9 +144,9 @@ spec:
 }
 
 func TestMediumOverlay(t *testing.T) {
-	th := NewKustTestHarness(t, "/app/overlay")
+	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
 	writeMediumBase(th)
-	th.writeK("/app/overlay", `
+	th.WriteK("/app/overlay", `
 namePrefix: test-infra-
 commonLabels:
   app: mungebot
@@ -169,24 +171,24 @@ images:
 - name: nginx
   newTag: 1.8.0`)
 
-	th.writeF("/app/overlay/configmap/db.env", `
+	th.WriteF("/app/overlay/configmap/db.env", `
 DB_USERNAME=admin
 DB_PASSWORD=somepw
 `)
-	th.writeF("/app/overlay/configmap/units.ini", `
+	th.WriteF("/app/overlay/configmap/units.ini", `
 LENGTH=kilometer
 ENERGY=electronvolt
 `)
-	th.writeF("/app/overlay/configmap/food.ini", `
+	th.WriteF("/app/overlay/configmap/food.ini", `
 FRUIT=banana
 LEGUME=chickpea
 `)
-	th.writeF("/app/overlay/configmap/dummy.txt",
+	th.WriteF("/app/overlay/configmap/dummy.txt",
 		`Lorem ipsum dolor sit amet, consectetur
 adipiscing elit, sed do eiusmod tempor
 incididunt ut labore et dolore magna aliqua. 
 `)
-	th.writeF("/app/overlay/deployment/deployment.yaml", `
+	th.WriteF("/app/overlay/deployment/deployment.yaml", `
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -219,14 +221,14 @@ spec:
           name: app-env
         name: app-env
 `)
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
 	// TODO(#669): The name of the patched Deployment is
 	// test-infra-baseprefix-mungebot, retaining the base
 	// prefix (example of correct behavior).
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
   nonsense: "Lorem ipsum dolor sit amet, consectetur\nadipiscing elit, sed do eiusmod
