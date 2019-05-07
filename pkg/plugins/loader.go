@@ -104,6 +104,8 @@ func (l *Loader) loadAndConfigurePlugin(
 	return c, nil
 }
 
+// registry is a means to avoid trying to load the same .so file
+// into memory more than once, which results in an error.
 // Each test makes its own loader, and tries to load its own plugins,
 // but the loaded .so files are in shared memory, so one will get
 // "this plugin already loaded" errors if the registry is maintained

@@ -18,10 +18,12 @@ package target_test
 
 import (
 	"testing"
+
+	"sigs.k8s.io/kustomize/pkg/kusttest"
 )
 
-func makeTransfomersImageBase(th *KustTestHarness) {
-	th.writeK("/app/base", `
+func makeTransfomersImageBase(th *kusttest_test.KustTestHarness) {
+	th.WriteK("/app/base", `
 resources:
 - deploy1.yaml
 - random.yaml
@@ -45,7 +47,7 @@ images:
   newName: my-docker
   digest: sha256:25a0d4b4
 `)
-	th.writeF("/app/base/deploy1.yaml", `
+	th.WriteF("/app/base/deploy1.yaml", `
 group: apps
 apiVersion: v1
 kind: Deployment
@@ -67,7 +69,7 @@ spec:
       - name: postgresdb
         image: postgres:1.8.0
 `)
-	th.writeF("/app/base/random.yaml", `
+	th.WriteF("/app/base/random.yaml", `
 kind: randomKind
 metadata:
   name: random
@@ -105,13 +107,13 @@ spec3:
 }
 
 func TestTransfomersImageDefaultConfig(t *testing.T) {
-	th := NewKustTestHarness(t, "/app/base")
+	th := kusttest_test.NewKustTestHarness(t, "/app/base")
 	makeTransfomersImageBase(th)
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 group: apps
 kind: Deployment
@@ -169,8 +171,8 @@ spec3:
 `)
 }
 
-func makeTransfomersImageCustomBase(th *KustTestHarness) {
-	th.writeK("/app/base", `
+func makeTransfomersImageCustomBase(th *kusttest_test.KustTestHarness) {
+	th.WriteK("/app/base", `
 resources:
 - custom.yaml
 configurations:
@@ -195,7 +197,7 @@ images:
   newName: my-docker
   digest: sha256:25a0d4b4
 `)
-	th.writeF("/app/base/custom.yaml", `
+	th.WriteF("/app/base/custom.yaml", `
 kind: customKind
 metadata:
   name: custom
@@ -230,7 +232,7 @@ spec3:
       - name: my-cool-app
         image: gcr.io:8080/my-project/my-cool-app:latest
 `)
-	th.writeF("/app/base/config/custom.yaml", `
+	th.WriteF("/app/base/config/custom.yaml", `
 images:
 - kind: Custom
   path: spec/template/spec/myContainers/image
@@ -241,13 +243,13 @@ images:
 `)
 }
 func TestTransfomersImageCustomConfig(t *testing.T) {
-	th := NewKustTestHarness(t, "/app/base")
+	th := kusttest_test.NewKustTestHarness(t, "/app/base")
 	makeTransfomersImageCustomBase(th)
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 kind: customKind
 metadata:
   name: custom
@@ -284,8 +286,8 @@ spec3:
 `)
 }
 
-func makeTransfomersImageKnativeBase(th *KustTestHarness) {
-	th.writeK("/app/base", `
+func makeTransfomersImageKnativeBase(th *kusttest_test.KustTestHarness) {
+	th.WriteK("/app/base", `
 resources:
 - knative.yaml
 configurations:
@@ -294,7 +296,7 @@ images:
 - name: solsa-echo
   newTag: foo
 `)
-	th.writeF("/app/base/knative.yaml", `
+	th.WriteF("/app/base/knative.yaml", `
 apiVersion: serving.knative.dev/v1alpha1
 kind: Service
 metadata:
@@ -307,7 +309,7 @@ spec:
           container:
             image: solsa-echo
 `)
-	th.writeF("/app/base/config/knative.yaml", `
+	th.WriteF("/app/base/config/knative.yaml", `
 images:
 - path: spec/runLatest/configuration/revisionTemplate/spec/container/image
   apiVersion: serving.knative.dev/v1alpha1
@@ -316,13 +318,13 @@ images:
 }
 
 func TestTransfomersImageKnativeConfig(t *testing.T) {
-	th := NewKustTestHarness(t, "/app/base")
+	th := kusttest_test.NewKustTestHarness(t, "/app/base")
 	makeTransfomersImageKnativeBase(th)
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: serving.knative.dev/v1alpha1
 kind: Service
 metadata:
