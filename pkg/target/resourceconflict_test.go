@@ -19,18 +19,20 @@ package target_test
 import (
 	"strings"
 	"testing"
+
+	"sigs.k8s.io/kustomize/pkg/kusttest"
 )
 
-func writeCombinedOverlays(th *KustTestHarness) {
+func writeCombinedOverlays(th *kusttest_test.KustTestHarness) {
 	// Base
-	th.writeK("/app/base", `
+	th.WriteK("/app/base", `
 resources:
 - serviceaccount.yaml
 - rolebinding.yaml
 namePrefix: base-
 nameSuffix: -suffix
 `)
-	th.writeF("/app/base/rolebinding.yaml", `
+	th.WriteF("/app/base/rolebinding.yaml", `
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:
@@ -43,7 +45,7 @@ subjects:
 - kind: ServiceAccount
   name: serviceaccount
 `)
-	th.writeF("/app/base/serviceaccount.yaml", `
+	th.WriteF("/app/base/serviceaccount.yaml", `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -51,13 +53,13 @@ metadata:
 `)
 
 	// Mid-level overlays
-	th.writeK("/app/overlays/a", `
+	th.WriteK("/app/overlays/a", `
 bases:
 - ../../base
 namePrefix: a-
 nameSuffix: -suffixA
 `)
-	th.writeK("/app/overlays/b", `
+	th.WriteK("/app/overlays/b", `
 bases:
 - ../../base
 namePrefix: b-
@@ -65,7 +67,7 @@ nameSuffix: -suffixB
 `)
 
 	// Top overlay, combining the mid-level overlays
-	th.writeK("/app/combined", `
+	th.WriteK("/app/combined", `
 bases:
 - ../overlays/a
 - ../overlays/b
@@ -73,13 +75,13 @@ bases:
 }
 
 func TestMultibasesNoConflict(t *testing.T) {
-	th := NewKustTestHarness(t, "/app/combined")
+	th := kusttest_test.NewKustTestHarness(t, "/app/combined")
 	writeCombinedOverlays(th)
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Unexpected err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -117,10 +119,10 @@ subjects:
 }
 
 func TestMultibasesWithConflict(t *testing.T) {
-	th := NewKustTestHarness(t, "/app/combined")
+	th := kusttest_test.NewKustTestHarness(t, "/app/combined")
 	writeCombinedOverlays(th)
 
-	th.writeK("/app/overlays/a", `
+	th.WriteK("/app/overlays/a", `
 bases:
 - ../../base
 namePrefix: a-
@@ -130,14 +132,14 @@ resources:
 `)
 	// Expect an error because this resource in the overlay
 	// matches a resource in the base.
-	th.writeF("/app/overlays/a/serviceaccount.yaml", `
+	th.WriteF("/app/overlays/a/serviceaccount.yaml", `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: serviceaccount
 `)
 
-	_, err := th.makeKustTarget().MakeCustomizedResMap()
+	_, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err == nil {
 		t.Fatalf("Expected resource conflict.")
 	}
