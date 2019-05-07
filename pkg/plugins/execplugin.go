@@ -35,6 +35,7 @@ import (
 const (
 	ArgsOneLiner = "argsOneLiner"
 	ArgsFromFile = "argsFromFile"
+	idAnnotation = "kustomize.config.k8s.io/id"
 )
 
 // ExecPlugin record the name and args of an executable
@@ -155,34 +156,26 @@ func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
 	if err != nil {
 		return err
 	}
-	for id, r := range rm {
-		content, err := yaml.Marshal(r.Kunstructured)
-		if err != nil {
-			return err
-		}
-		cmd := exec.Command(p.name, args...)
-		cmd.Env = p.getEnv()
-		cmd.Stdin = bytes.NewReader(content)
-		cmd.Stderr = os.Stderr
-		if _, err := os.Stat(p.ldr.Root()); err == nil {
-			cmd.Dir = p.ldr.Root()
-		}
-		output, err := cmd.Output()
-		if err != nil {
-			return err
-		}
-		tmpMap, err := p.rf.NewResMapFromBytes(output)
-		if err != nil {
-			return err
-		}
-		if len(tmpMap) != 1 {
-			return fmt.Errorf("unable to put two resources into one")
-		}
-		for _, v := range tmpMap {
-			rm[id].Kunstructured = v.Kunstructured
-		}
+
+	inputRM := p.getResMapWithIdAnnotation(rm)
+	resources, err := inputRM.EncodeAsYaml()
+	if err != nil {
+		return err
 	}
-	return nil
+
+	cmd := exec.Command(p.name, args...)
+	cmd.Env = p.getEnv()
+	cmd.Stdin = bytes.NewReader(resources)
+	cmd.Stderr = os.Stderr
+	if _, err := os.Stat(p.ldr.Root()); err == nil {
+		cmd.Dir = p.ldr.Root()
+	}
+	output, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+
+	return p.parseResMapFromOutput(output, rm)
 }
 
 // The first arg is always the absolute path to a temporary file
@@ -201,4 +194,44 @@ func (p *ExecPlugin) getEnv() []string {
 		"KUSTOMIZE_PLUGIN_CONFIG_STRING="+string(p.cfg),
 		"KUSTOMIZE_PLUGIN_CONFIG_ROOT="+p.ldr.Root())
 	return env
+}
+
+func (p *ExecPlugin) getResMapWithIdAnnotation(rm resmap.ResMap) resmap.ResMap {
+	inputRM := rm.DeepCopy(p.rf.RF())
+	for id, r := range inputRM {
+		annotations := r.GetAnnotations()
+		if annotations == nil {
+			annotations = make(map[string]string)
+		}
+		annotations[idAnnotation] = id.String()
+		r.SetAnnotations(annotations)
+	}
+	return inputRM
+}
+
+func (p *ExecPlugin) parseResMapFromOutput(output []byte, rm resmap.ResMap) error {
+	outputRM, err := p.rf.NewResMapFromBytes(output)
+	if err != nil {
+		return err
+	}
+	for _, r := range outputRM {
+		annotations := r.GetAnnotations()
+		idString, ok := annotations[idAnnotation]
+		if !ok {
+			return fmt.Errorf("the transformer %s should not remove annotation %s",
+				p.name, idAnnotation)
+		}
+		id, err := resid.NewResIdFromString(idString)
+		if err != nil {
+			return err
+		}
+		res, ok := rm[id]
+		if !ok {
+			return fmt.Errorf("unable to find id %s in resource map", id.String())
+		}
+		delete(annotations, idAnnotation)
+		r.SetAnnotations(annotations)
+		res.Kunstructured = r.Kunstructured
+	}
+	return nil
 }

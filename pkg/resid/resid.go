@@ -17,6 +17,7 @@ limitations under the License.
 package resid
 
 import (
+	"fmt"
 	"strings"
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
@@ -97,6 +98,38 @@ func (n ResId) String() string {
 
 	return strings.Join(
 		[]string{n.ItemId.Gvk.String(), ns, p, nm, s}, separator)
+}
+
+// NewResIdFromString makes a ResId from a string which represents a Resid
+func NewResIdFromString(s string) (ResId, error) {
+	values := strings.Split(s, separator)
+	if len(values) != 5 {
+		return ResId{}, fmt.Errorf("The input string %s doesn't represent a ResId", s)
+	}
+
+	g := gvk.FromString(values[0])
+	ns := values[1]
+	p := values[2]
+	nm := values[3]
+	su := values[4]
+	if ns == noNamespace {
+		ns = ""
+	}
+	if p == noPrefix {
+		p = ""
+	}
+	if nm == noName {
+		nm = ""
+	}
+	if su == noSuffix {
+		su = ""
+	}
+	return ResId{
+		ItemId: NewItemId(g, ns, nm),
+		prefix: p,
+		suffix: su,
+	}, nil
+
 }
 
 // GvknString of ResId based on GVK and name
