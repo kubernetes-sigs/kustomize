@@ -144,6 +144,7 @@ data:
   FOO: foo
 kind: ConfigMap
 metadata:
+  annotations: {}
   name: test-k4bkhftttd
 `)
 }
