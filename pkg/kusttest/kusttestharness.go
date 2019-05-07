@@ -111,6 +111,23 @@ func (th *KustTestHarness) WriteDefaultConfigs(fName string) {
 	}
 }
 
+func (th *KustTestHarness) LoadAndRunGenerator(
+	config string) resmap.ResMap {
+	res, err := th.rf.RF().FromBytes([]byte(config))
+	if err != nil {
+		th.t.Fatalf("Err: %v", err)
+	}
+	g, err := th.pl.LoadGenerator(th.ldr, res)
+	if err != nil {
+		th.t.Fatalf("Err: %v", err)
+	}
+	rm, err := g.Generate()
+	if err != nil {
+		th.t.Fatalf("Err: %v", err)
+	}
+	return rm
+}
+
 func tabToSpace(input string) string {
 	var result []string
 	for _, i := range input {

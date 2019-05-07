@@ -48,34 +48,52 @@ func (l *Loader) LoadGenerators(
 	ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Generator, error) {
 	var result []transformers.Generator
 	for _, res := range rm {
-		c, err := l.loadAndConfigurePlugin(ldr, res)
+		g, err := l.LoadGenerator(ldr, res)
 		if err != nil {
 			return nil, err
-		}
-		g, ok := c.(transformers.Generator)
-		if !ok {
-			return nil, fmt.Errorf("plugin %s not a generator", res.Id())
 		}
 		result = append(result, g)
 	}
 	return result, nil
 }
 
+func (l *Loader) LoadGenerator(
+	ldr ifc.Loader, res *resource.Resource) (transformers.Generator, error) {
+	c, err := l.loadAndConfigurePlugin(ldr, res)
+	if err != nil {
+		return nil, err
+	}
+	g, ok := c.(transformers.Generator)
+	if !ok {
+		return nil, fmt.Errorf("plugin %s not a generator", res.Id())
+	}
+	return g, nil
+}
+
 func (l *Loader) LoadTransformers(
 	ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Transformer, error) {
 	var result []transformers.Transformer
 	for _, res := range rm {
-		c, err := l.loadAndConfigurePlugin(ldr, res)
+		t, err := l.LoadTransformer(ldr, res)
 		if err != nil {
 			return nil, err
-		}
-		t, ok := c.(transformers.Transformer)
-		if !ok {
-			return nil, fmt.Errorf("plugin %s not a transformer", res.Id())
 		}
 		result = append(result, t)
 	}
 	return result, nil
+}
+
+func (l *Loader) LoadTransformer(
+	ldr ifc.Loader, res *resource.Resource) (transformers.Transformer, error) {
+	c, err := l.loadAndConfigurePlugin(ldr, res)
+	if err != nil {
+		return nil, err
+	}
+	t, ok := c.(transformers.Transformer)
+	if !ok {
+		return nil, fmt.Errorf("plugin %s not a transformer", res.Id())
+	}
+	return t, nil
 }
 
 func pluginPath(id resid.ResId) string {
