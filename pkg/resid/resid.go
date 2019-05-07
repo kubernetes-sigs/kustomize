@@ -17,7 +17,6 @@ limitations under the License.
 package resid
 
 import (
-	"fmt"
 	"strings"
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
@@ -30,33 +29,33 @@ type ResId struct {
 	// An untransformed resource has no prefix.
 	// A fully transformed resource has an arbitrary
 	// number of prefixes concatenated together.
-	prefix string
+	Prefix string `json:"prefix,omitempty"`
 
 	// nameSuffix of the resource.
 	// An untransformed resource has no suffix.
 	// A fully transformed resource has an arbitrary
 	// number of suffixes concatenated together.
-	suffix string
+	Suffix string `json:"suffix,omitempty"`
 }
 
 // NewResIdWithPrefixSuffixNamespace creates new resource identifier with a prefix, suffix and a namespace
 func NewResIdWithPrefixSuffixNamespace(k gvk.Gvk, n, p, s, ns string) ResId {
-	return ResId{ItemId: ItemId{Gvk: k, Name: n, Namespace: ns}, prefix: p, suffix: s}
+	return ResId{ItemId: ItemId{Gvk: k, Name: n, Namespace: ns}, Prefix: p, Suffix: s}
 }
 
 // NewResIdWithPrefixNamespace creates new resource identifier with a prefix and a namespace
 func NewResIdWithPrefixNamespace(k gvk.Gvk, n, p, ns string) ResId {
-	return ResId{ItemId: ItemId{Gvk: k, Name: n, Namespace: ns}, prefix: p}
+	return ResId{ItemId: ItemId{Gvk: k, Name: n, Namespace: ns}, Prefix: p}
 }
 
 // NewResIdWithSuffixNamespace creates new resource identifier with a suffix and a namespace
 func NewResIdWithSuffixNamespace(k gvk.Gvk, n, s, ns string) ResId {
-	return ResId{ItemId: ItemId{Gvk: k, Name: n, Namespace: ns}, suffix: s}
+	return ResId{ItemId: ItemId{Gvk: k, Name: n, Namespace: ns}, Suffix: s}
 }
 
 // NewResIdWithPrefixSuffix creates new resource identifier with a prefix and suffix
 func NewResIdWithPrefixSuffix(k gvk.Gvk, n, p, s string) ResId {
-	return ResId{ItemId: ItemId{Gvk: k, Name: n}, prefix: p, suffix: s}
+	return ResId{ItemId: ItemId{Gvk: k, Name: n}, Prefix: p, Suffix: s}
 }
 
 // NewResId creates new resource identifier
@@ -83,7 +82,7 @@ func (n ResId) String() string {
 	if ns == "" {
 		ns = noNamespace
 	}
-	p := n.prefix
+	p := n.Prefix
 	if p == "" {
 		p = noPrefix
 	}
@@ -91,45 +90,13 @@ func (n ResId) String() string {
 	if nm == "" {
 		nm = noName
 	}
-	s := n.suffix
+	s := n.Suffix
 	if s == "" {
 		s = noSuffix
 	}
 
 	return strings.Join(
 		[]string{n.ItemId.Gvk.String(), ns, p, nm, s}, separator)
-}
-
-// NewResIdFromString makes a ResId from a string which represents a Resid
-func NewResIdFromString(s string) (ResId, error) {
-	values := strings.Split(s, separator)
-	if len(values) != 5 {
-		return ResId{}, fmt.Errorf("The input string %s doesn't represent a ResId", s)
-	}
-
-	g := gvk.FromString(values[0])
-	ns := values[1]
-	p := values[2]
-	nm := values[3]
-	su := values[4]
-	if ns == noNamespace {
-		ns = ""
-	}
-	if p == noPrefix {
-		p = ""
-	}
-	if nm == noName {
-		nm = ""
-	}
-	if su == noSuffix {
-		su = ""
-	}
-	return ResId{
-		ItemId: NewItemId(g, ns, nm),
-		prefix: p,
-		suffix: su,
-	}, nil
-
 }
 
 // GvknString of ResId based on GVK and name
@@ -169,10 +136,10 @@ func (n ResId) Namespace() string {
 func (n ResId) CopyWithNewPrefixSuffix(p, s string) ResId {
 	result := n
 	if p != "" {
-		result.prefix = n.concatPrefix(p)
+		result.Prefix = n.concatPrefix(p)
 	}
 	if s != "" {
-		result.suffix = n.concatSuffix(s)
+		result.Suffix = n.concatSuffix(s)
 	}
 	return result
 }
@@ -202,28 +169,28 @@ func (n ResId) HasSameRightmostSuffix(id ResId) bool {
 
 func (n ResId) concatPrefix(p string) string {
 	if p == "" {
-		return n.prefix
+		return n.Prefix
 	}
-	if n.prefix == "" {
+	if n.Prefix == "" {
 		return p
 	}
-	return p + ":" + n.prefix
+	return p + ":" + n.Prefix
 }
 
 func (n ResId) concatSuffix(s string) string {
 	if s == "" {
-		return n.suffix
+		return n.Suffix
 	}
-	if n.suffix == "" {
+	if n.Suffix == "" {
 		return s
 	}
-	return n.suffix + ":" + s
+	return n.Suffix + ":" + s
 }
 
 func (n ResId) prefixList() []string {
-	return strings.Split(n.prefix, ":")
+	return strings.Split(n.Prefix, ":")
 }
 
 func (n ResId) suffixList() []string {
-	return strings.Split(n.suffix, ":")
+	return strings.Split(n.Suffix, ":")
 }
