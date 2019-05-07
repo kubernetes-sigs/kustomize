@@ -17,3 +17,7 @@ kustomize
 
 # macOS
 *.DS_store
+
+# IDEs
+.idea
+.vscode
