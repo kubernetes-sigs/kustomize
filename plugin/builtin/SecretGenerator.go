@@ -25,9 +25,11 @@ func (p *plugin) Config(
 	if err != nil {
 		return
 	}
-	// Ignore missing type - it defaults.
-	p.args.Type, _ = k.GetFieldValue("type")
-	return
+	p.args.Type, err = k.GetFieldValue("type")
+	if !resmap.IsAcceptableError(err) {
+		return
+	}
+	return nil
 }
 
 func (p *plugin) Generate() (resmap.ResMap, error) {
