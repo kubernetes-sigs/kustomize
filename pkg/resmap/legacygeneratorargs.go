@@ -1,6 +1,8 @@
 package resmap
 
 import (
+	"strings"
+
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -10,17 +12,26 @@ func GeneratorArgsFromKunstruct(k ifc.Kunstructured) (
 	result.Name = k.GetName()
 	// TODO: validate behavior values.
 	result.Behavior, err = k.GetFieldValue("behavior")
-	if err != nil {
+	if !isAcceptableError(err) {
 		return
 	}
 	result.EnvSources, err = k.GetStringSlice("envFiles")
-	if err != nil {
+	if !isAcceptableError(err) {
 		return
 	}
 	result.FileSources, err = k.GetStringSlice("valueFiles")
-	if err != nil {
+	if !isAcceptableError(err) {
 		return
 	}
 	result.LiteralSources, err = k.GetStringSlice("literals")
+	if !isAcceptableError(err) {
+		return
+	}
+	err = nil
 	return
+}
+
+func isAcceptableError(err error) bool {
+	return err == nil ||
+		strings.HasPrefix(err.Error(), "no field named")
 }
