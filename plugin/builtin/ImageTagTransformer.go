@@ -21,33 +21,36 @@ package main
 
 import (
 	"sigs.k8s.io/kustomize/pkg/ifc"
+	"sigs.k8s.io/kustomize/pkg/image"
 	"sigs.k8s.io/kustomize/pkg/resmap"
-	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/pkg/transformers"
+	"sigs.k8s.io/kustomize/pkg/transformers/config"
 	"sigs.k8s.io/yaml"
 )
 
+// Find matching image declarations and replace
+// the name, tag and/or digest.
 type plugin struct {
-	ldr ifc.Loader
-	rf  *resmap.Factory
-	types.GeneratorOptions
-	types.SecretArgs
+	ImageTag   image.Image        `json:"imageTag,omitempty" yaml:"imageTag,omitempty"`
+	FieldSpecs []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
 var KustomizePlugin plugin
 
 func (p *plugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, config []byte) (err error) {
-	p.GeneratorOptions = types.GeneratorOptions{}
-	p.SecretArgs = types.SecretArgs{}
-	err = yaml.Unmarshal(config, p)
-	p.ldr = ldr
-	p.rf = rf
-	return
+	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
+	p.ImageTag = image.Image{}
+	p.FieldSpecs = nil
+	return yaml.Unmarshal(c, p)
 }
 
-func (p *plugin) Generate() (resmap.ResMap, error) {
-	argsList := make([]types.SecretArgs, 1)
-	argsList[0] = p.SecretArgs
-	return p.rf.NewResMapFromSecretArgs(
-		p.ldr, &p.GeneratorOptions, argsList)
+func (p *plugin) Transform(m resmap.ResMap) error {
+	argsList := make([]image.Image, 1)
+    argsList[0] = p.ImageTag
+    t, err := transformers.NewImageTransformer(argsList, p.FieldSpecs)
+    if err != nil {
+    	return err
+	}
+    return t.Transform(m)
 }
+
