@@ -77,7 +77,6 @@ func (l *FileLoader) LoadGenerator(
 	return g, nil
 }
 
-
 func (l *FileLoader) LoadTransformers(
 	ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Transformer, error) {
 	var result []transformers.Transformer
