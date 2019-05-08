@@ -54,6 +54,21 @@ var testDeployment = factory.FromMap(
 
 const deploymentAsString = `{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"name":"pooh"}}`
 
+func TestAsYAML(t *testing.T) {
+	expected := `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pooh
+`
+	yaml, err := testDeployment.AsYAML()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(yaml) != expected {
+		t.Fatalf("--- expected\n%s\n--- got\n%s\n", expected, string(yaml))
+	}
+}
+
 func TestResourceString(t *testing.T) {
 	tests := []struct {
 		in *Resource
