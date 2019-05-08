@@ -208,12 +208,10 @@ func (p *ExecPlugin) getResMapWithIdAnnotation(rm resmap.ResMap) (resmap.ResMap,
 		}
 		annotations := r.GetAnnotations()
 		if annotations == nil {
-			annotations = map[string]string{
-				idAnnotation: string(idString),
-			}
-			r.SetAnnotations(annotations)
+			annotations = make(map[string]string)
 		}
 		annotations[idAnnotation] = string(idString)
+		r.SetAnnotations(annotations)
 	}
 	return inputRM, nil
 }

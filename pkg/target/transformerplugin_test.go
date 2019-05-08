@@ -113,6 +113,9 @@ func TestSedTransformer(t *testing.T) {
 	th := kusttest_test.NewKustTestHarnessWithPluginConfig(
 		t, "/app", plugin.ActivePluginConfig())
 	th.WriteK("/app", `
+resources:
+- configmap.yaml
+
 transformers:
 - sed-transformer.yaml
 
@@ -134,11 +137,31 @@ s/$FOO/foo/g
 s/$BAR/bar/g
 `)
 
+	th.WriteF("/app/configmap.yaml", `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap-a
+  annotations:
+    kustomize.k8s.io/Generated: "false"
+data:
+  foo: $FOO
+`)
+
 	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
 	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  foo: foo
+kind: ConfigMap
+metadata:
+  annotations:
+    kustomize.k8s.io/Generated: "false"
+  name: configmap-a
+---
 apiVersion: v1
 data:
   BAR: bar
