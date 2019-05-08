@@ -31,7 +31,7 @@
 # omitted from kustomization.yaml to reduce the content
 # visible in configuration reviews.
 # ----------------------------------------------------
-# apiVersion and kind of Kustomization
+# Kustomization 的 apiVersion 和 kind 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -39,27 +39,27 @@ kind: Kustomization
 namespace: my-namespace
 
 # 该字段的值将添加在所有资源的名称之前
-# 例如 将资源名称 “wordpress” 变为 “alices-wordpress” 。
+# 例如 将资源名称 “wordpress” 变为 “alices-wordpress” 
 namePrefix: alices-
 
 # 该字段的值将添加在所有资源的名称后面
 # 例如 将资源名称 “wordpress” 变为 “wordpress-v2”
-# 如果资源类型为 ConfigMap 或 Secret ，则在哈希值之前附加后缀。
+# 如果资源类型为 ConfigMap 或 Secret ，则在哈希值之前附加后缀
 nameSuffix: -v2
 
-# 为所有资源和 selectors 增加 Labels。
+# 为所有资源和 selectors 增加 Labels
 commonLabels:
   someName: someValue
   owner: alice
   app: bingo
 
 # 和 Labels 一样， 增加 Annotations
-# 为 key/value 键值对
+# 为 key:value 键值对
 commonAnnotations:
   oncallPager: 800-555-1212
 
-# 此列表中的每条必须是一个已经存在的 YAML 资源描述文件
-# 这些 YAML 资源描述文件用来提供给 kustomize 读取，修改和发布
+# 此列表中的每条记录都必须是一个存在的 YAML 资源描述文件
+# 这些 YAML 资源描述文件将被 kustomize 读取，修改和发布
 # 资源由文档标记（"---"）分隔
 resources:
 - some-service.yaml
@@ -67,9 +67,10 @@ resources:
 
 # 列表中的每个条目都将创建一个 ConfigMap （它是n个映射的生成器）
 # 下面的示例创建了两个 ConfigMaps
-# 一个具有给定文件的名称和内容，另一个包含 key/value 键值对数据
+# 一个具有给定文件的名称和内容
+# 另一个包含 key/value 键值对数据
 # 每个 configMapGenerator 项都可以使用 [create | replace | merge] 参数
-# 这允许 overlay 从父级修改或替换现有的 configMap
+# 允许 overlay 从父级修改或替换现有的 configMap
 configMapGenerator:
 - name: myJavaServerProps
   files:
@@ -111,39 +112,39 @@ generatorOptions:
   # disableNameSuffixHash 为 true 时将禁止默认的在名称后添加哈希值后缀的行为
   disableNameSuffixHash: true
 
-# 此列表中的每个条目都应解析为包含 kustomization 文件的目录，否则定制将失败。
+# 此列表中的每个条目都应解析为包含 kustomization 文件的目录，否则定制将失败
 #
 # 该条目可以是指向本地目录的相对路径
-# 也可以是指向远程仓库中的目录的URL
-# URL 应该遵循 hashicorp/go-getter 中的 URL 格式。
+# 也可以是指向远程仓库中的目录的 URL
+# URL 应该遵循 hashicorp/go-getter 中的 URL 格式
 # https://github.com/hashicorp/go-getter#url-format
 #
 # 此字段的存在意味着此文件（您正在阅读的文件）是 _overlay_
-# 它将进一步定制这些来自 _bases_ 文件中的信息。
+# 它将进一步定制这些来自 _bases_ 文件中的配置
 #
 # 典型用例：开发，演示和生产环境
-# 这些环境大部分相同但有些关键方式存在差异（镜像标签，一些服务器参数等，公共 base 不同的配置）。
+# 这些环境大部分相同但有些关键方式存在差异（镜像标签，一些服务器参数等，与公共 base 不同的配置）
 bases:
 - ../../base
 - github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6
 - github.com/Liujingfang1/mysql
 - github.com/Liujingfang1/kustomize/examples/helloWorld?ref=test-branch
 
-# 此列表中的每个条目都应可以解析为部分或完整的资源定义文件。
+# 此列表中的每个条目都应可以解析为部分或完整的资源定义文件
 #
-# 这些（也可能是部分的）资源文件中的名称必须匹配已经通过 `resources` 加载的名称字段
-# 或者通过 `bases` 条目传递加载的 `resources`
-# 这些条目用于 _patch_（修改）已知资源。
+# 这些（也可能是部分的）资源文件中的 name 必须与已经通过 `resources` 加载的 name 字段匹配
+# 或者通过 `bases` 中的 name 字段匹配
+# 这些条目将用于 _patch_（修改）已知资源
 #
 # 最好做一些小的 patches 
 # 例如：修改内存的 request/limit，更改 ConfigMap 中的 env 变量等
-# 小的 patches 易于维护和查看，并且易于在 overlays 中混合使用。
+# 小的 patches 易于维护和查看，并且易于在 overlays 中混合使用
 patchesStrategicMerge:
 - service_port_8888.yaml
 - deployment_increase_replicas.yaml
 - deployment_increase_memory.yaml
 
-# 此列表中的每个条目都应可以解析为 kubernetes 对象和将应用于该对象的 JSON patch。
+# patchesJson6902 列表中的每个条目都应可以解析为 kubernetes 对象和将应用于该对象的 JSON patch
 # JSON patch 的文档地址：https://tools.ietf.org/html/rfc6902
 #
 # 目标字段指向的 kubernetes 对象的 group、 version、 kind、 name 和 namespace 在同一 kustomization 内
@@ -199,8 +200,8 @@ crds:
 # Vars 用于从一个 resource 字段中获取文本
 # 并将该文本插入指定位置
 #
-# 例如，假设需要在容器的命令行中指定了 Service 对象的名称
-# 并在容器的环境变量中指定了 Secret 对象的名称
+# 例如，假设需要在容器的 command 中指定了 Service 对象的名称
+# 并在容器的 env 中指定了 Secret 对象的名称
 # 来确保以下内容可以正常工作：
 # ```
 #   containers:
@@ -211,7 +212,7 @@ crds:
 #           value: $(SOME_SECRET_NAME)
 # ```
 #
-# 为此，可以在 `vars：` 中添加如下内容：
+# 则可以在 `vars：` 中添加如下内容：
 #
 vars:
   - name: SOME_SECRET_NAME
@@ -234,15 +235,15 @@ vars:
     fieldref:
       fieldpath: spec.template.spec.restartPolicy
 #
-# var 是包含该对象的变量名、对象引用和字段引用的元组。
+# var 是包含该对象的变量名、对象引用和字段引用的元组
 #
 # 字段引用是可选的，默认为 `metadata.name`
-# 这是正常的默认值，因为 kustomize 用于生成或修改 resources 的名称。
+# 这是正常的默认值，因为 kustomize 用于生成或修改 resources 的名称
 #
 # 在撰写本文档时，仅支持字符串类型字段
 # 不支持 ints，bools，arrays 等
 #
-# 变量引用，即字符串 '$(FOO)' ，只能放在 kustomize 配置指定的特定对象的特定字段中。
+# 变量引用，即字符串 '$(FOO)' ，只能放在 kustomize 配置指定的特定对象的特定字段中
 #
 # 关于 vars 的默认配置数据可以查看：
 # https://github.com/kubernetes-sigs/kustomize/blob/master/pkg/transformers/config/defaultconfig/varreference.go
@@ -252,7 +253,7 @@ vars:
 # 例如， Deployment 可以通过 name 引用 ConfigMap 
 # 如果 kustomize 更改 ConfigMap 的名称，则知道更改 Deployment 中的引用的 name
 
-# 修改镜像的名称、tag或image digest，而无需使用patches。
+# 修改镜像的名称、tag 或 image digest ，而无需使用 patches
 # 例如，对于这种 kubernetes Deployment 片段：
 # ```
 #  containers:
