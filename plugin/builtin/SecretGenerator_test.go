@@ -50,12 +50,14 @@ consectetur adipiscing elit.
 apiVersion: builtin
 kind: SecretGenerator
 metadata:
-  name: mySecret
+  name: exampleSecGen
+name: mySecret
+namespace: whatever
 behavior: merge
-envFiles:
+envs:
 - a.env
 - b.env
-valueFiles:
+files:
 - obscure=longsecret.txt
 literals:
 - FRUIT=apple
@@ -73,6 +75,7 @@ data:
 kind: Secret
 metadata:
   name: mySecret
+  namespace: whatever
 type: Opaque
 `)
 }
