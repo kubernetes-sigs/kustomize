@@ -85,6 +85,19 @@ func (rf *Factory) SliceFromPatches(
 	return result, nil
 }
 
+// FromBytes unmarshalls bytes into one Resource.
+func (rf *Factory) FromBytes(in []byte) (*Resource, error) {
+	result, err := rf.SliceFromBytes(in)
+	if err != nil {
+		return nil, err
+	}
+	if len(result) != 1 {
+		return nil, fmt.Errorf(
+			"expected 1 resource, found %d in %v", len(result), in)
+	}
+	return result[0], nil
+}
+
 // SliceFromBytes unmarshalls bytes into a Resource slice.
 func (rf *Factory) SliceFromBytes(in []byte) ([]*Resource, error) {
 	kunStructs, err := rf.kf.SliceFromBytes(in)

@@ -24,10 +24,13 @@ English | [简体中文](zh/README.md)
 
 ## Release notes
 
- * [2.1](v_2.1.0.md)
+ * [2.1](v_2.1.0.md) - Date TBD, target late May 2019
 
- * [2.0](v_2.0.0.md) -
+ * [2.0](v_2.0.0.md) - Mar 2019.
    kustomize [v2.0.3] is available in [kubectl v1.14][kubectl].
+
+ * [1.0](v_1.0.1.md) - May 2018.  Initial release after development
+   in the [kubectl repository].
 
 
 ## Policies
@@ -45,3 +48,4 @@ English | [简体中文](zh/README.md)
 
 [v2.0.3]: https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.0.3
 [kubectl]: https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement
+[kubectl repository]: https://github.com/kubernetes/kubectl

@@ -14,9 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package target_test
-
-// A collection of utilities used in target tests.
+package kusttest_test
 
 import (
 	"fmt"
@@ -33,11 +31,12 @@ import (
 	"sigs.k8s.io/kustomize/pkg/plugins"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
-	. "sigs.k8s.io/kustomize/pkg/target"
+	"sigs.k8s.io/kustomize/pkg/target"
 	"sigs.k8s.io/kustomize/pkg/transformers/config/defaultconfig"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
+// KustTestHarness helps test kustomization generation and transformation.
 type KustTestHarness struct {
 	t   *testing.T
 	rf  *resmap.Factory
@@ -69,8 +68,8 @@ func NewKustTestHarnessFull(
 		pl:  plugins.NewFileLoader(pc, rf)}
 }
 
-func (th *KustTestHarness) makeKustTarget() *KustTarget {
-	kt, err := NewKustTarget(
+func (th *KustTestHarness) MakeKustTarget() *target.KustTarget {
+	kt, err := target.NewKustTarget(
 		th.ldr, th.rf, transformer.NewFactoryImpl(), th.pl)
 	if err != nil {
 		th.t.Fatalf("Unexpected construction error %v", err)
@@ -78,29 +77,29 @@ func (th *KustTestHarness) makeKustTarget() *KustTarget {
 	return kt
 }
 
-func (th *KustTestHarness) writeF(dir string, content string) {
+func (th *KustTestHarness) WriteF(dir string, content string) {
 	err := th.ldr.AddFile(dir, []byte(content))
 	if err != nil {
 		th.t.Fatalf("failed write to %s; %v", dir, err)
 	}
 }
 
-func (th *KustTestHarness) writeK(dir string, content string) {
-	th.writeF(filepath.Join(dir, pgmconfig.KustomizationFileNames[0]), `
+func (th *KustTestHarness) WriteK(dir string, content string) {
+	th.WriteF(filepath.Join(dir, pgmconfig.KustomizationFileNames[0]), `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 `+content)
 }
 
-func (th *KustTestHarness) fromMap(m map[string]interface{}) *resource.Resource {
+func (th *KustTestHarness) FromMap(m map[string]interface{}) *resource.Resource {
 	return th.rf.RF().FromMap(m)
 }
 
-func (th *KustTestHarness) fromMapAndOption(m map[string]interface{}, args *types.GeneratorArgs, option *types.GeneratorOptions) *resource.Resource {
+func (th *KustTestHarness) FromMapAndOption(m map[string]interface{}, args *types.GeneratorArgs, option *types.GeneratorOptions) *resource.Resource {
 	return th.rf.RF().FromMapAndOption(m, args, option)
 }
 
-func (th *KustTestHarness) writeDefaultConfigs(fName string) {
+func (th *KustTestHarness) WriteDefaultConfigs(fName string) {
 	m := defaultconfig.GetDefaultFieldSpecsAsMap()
 	var content []byte
 	for _, tCfg := range m {
@@ -110,6 +109,23 @@ func (th *KustTestHarness) writeDefaultConfigs(fName string) {
 	if err != nil {
 		th.t.Fatalf("unable to add file %s", fName)
 	}
+}
+
+func (th *KustTestHarness) LoadAndRunGenerator(
+	config string) resmap.ResMap {
+	res, err := th.rf.RF().FromBytes([]byte(config))
+	if err != nil {
+		th.t.Fatalf("Err: %v", err)
+	}
+	g, err := th.pl.LoadGenerator(th.ldr, res)
+	if err != nil {
+		th.t.Fatalf("Err: %v", err)
+	}
+	rm, err := g.Generate()
+	if err != nil {
+		th.t.Fatalf("Err: %v", err)
+	}
+	return rm
 }
 
 func tabToSpace(input string) string {
@@ -144,7 +160,7 @@ func hint(a, b string) string {
 	return "X"
 }
 
-func (th *KustTestHarness) assertActualEqualsExpected(
+func (th *KustTestHarness) AssertActualEqualsExpected(
 	m resmap.ResMap, expected string) {
 	if m == nil {
 		th.t.Fatalf("Map should not be nil.")

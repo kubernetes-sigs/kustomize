@@ -24,6 +24,7 @@ import (
 	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/kusttest"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/plugins"
 	"sigs.k8s.io/kustomize/pkg/resmap"
@@ -86,8 +87,8 @@ metadata:
 		t.Fatalf("Err: %v", err)
 	}
 
-	th := NewKustTestHarness(t, ".")
-	th.assertActualEqualsExpected(m, `
+	th := kusttest_test.NewKustTestHarness(t, ".")
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: WorkDir
 metadata:

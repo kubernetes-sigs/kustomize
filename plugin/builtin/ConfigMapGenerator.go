@@ -12,7 +12,7 @@ type plugin struct {
 	ldr     ifc.Loader
 	rf      *resmap.Factory
 	options types.GeneratorOptions
-	args    types.SecretArgs
+	args    types.ConfigMapArgs
 }
 
 var KustomizePlugin plugin
@@ -22,18 +22,11 @@ func (p *plugin) Config(
 	p.ldr = ldr
 	p.rf = rf
 	p.args.GeneratorArgs, err = resmap.GeneratorArgsFromKunstruct(k)
-	if err != nil {
-		return
-	}
-	p.args.Type, err = k.GetFieldValue("type")
-	if !resmap.IsAcceptableError(err) {
-		return
-	}
-	return nil
+	return
 }
 
 func (p *plugin) Generate() (resmap.ResMap, error) {
-	argsList := make([]types.SecretArgs, 1)
+	argsList := make([]types.ConfigMapArgs, 1)
 	argsList[0] = p.args
-	return p.rf.NewResMapFromSecretArgs(p.ldr, &p.options, argsList)
+	return p.rf.NewResMapFromConfigMapArgs(p.ldr, &p.options, argsList)
 }

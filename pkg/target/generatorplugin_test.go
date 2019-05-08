@@ -19,10 +19,11 @@ import (
 
 	"sigs.k8s.io/kustomize/internal/plugintest"
 	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
+	"sigs.k8s.io/kustomize/pkg/kusttest"
 )
 
-func writeServiceGenerator(th *KustTestHarness, path string) {
-	th.writeF(path, `
+func writeServiceGenerator(th *kusttest_test.KustTestHarness, path string) {
+	th.WriteF(path, `
 apiVersion: someteam.example.com/v1
 kind: ServiceGenerator
 metadata:
@@ -39,18 +40,18 @@ func TestServiceGeneratorPlugin(t *testing.T) {
 	tc.BuildGoPlugin(
 		"someteam.example.com", "v1", "ServiceGenerator")
 
-	th := NewKustTestHarnessWithPluginConfig(
+	th := kusttest_test.NewKustTestHarnessWithPluginConfig(
 		t, "/app", plugin.ActivePluginConfig())
-	th.writeK("/app", `
+	th.WriteK("/app", `
 generators:
 - serviceGenerator.yaml
 `)
 	writeServiceGenerator(th, "/app/serviceGenerator.yaml")
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Service
 metadata:
@@ -65,13 +66,12 @@ spec:
 `)
 }
 
-func writeSecretGeneratorConfig(th *KustTestHarness, root string) {
-	th.writeF(filepath.Join(root, "secretGenerator.yaml"), `
+func writeSecretGeneratorConfig(th *kusttest_test.KustTestHarness, root string) {
+	th.WriteF(filepath.Join(root, "secretGenerator.yaml"), `
 apiVersion: builtin
 kind: SecretGenerator
 metadata:
-  name: secretGenerator
-name: mySecret
+  name: mySecret
 behavior: merge
 envFiles:
 - a.env
@@ -82,21 +82,18 @@ literals:
 - FRUIT=apple
 - VEGETABLE=carrot
 `)
-	th.writeF(filepath.Join(root, "a.env"), `
+	th.WriteF(filepath.Join(root, "a.env"), `
 ROUTER_PASSWORD=admin
 `)
-	th.writeF(filepath.Join(root, "b.env"), `
+	th.WriteF(filepath.Join(root, "b.env"), `
 DB_PASSWORD=iloveyou
 `)
-	th.writeF(filepath.Join(root, "longsecret.txt"), `
+	th.WriteF(filepath.Join(root, "longsecret.txt"), `
 Lorem ipsum dolor sit amet,
-consectetur adipiscing elit,
-sed do eiusmod tempor incididunt
-ut labore et dolore magna aliqua.
+consectetur adipiscing elit.
 `)
 }
 
-// nolint:lll
 func TestSecretGenerator(t *testing.T) {
 	tc := plugintest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
@@ -104,28 +101,28 @@ func TestSecretGenerator(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "SecretGenerator")
 
-	th := NewKustTestHarnessWithPluginConfig(
+	th := kusttest_test.NewKustTestHarnessWithPluginConfig(
 		t, "/app", plugin.ActivePluginConfig())
-	th.writeK("/app", `
+	th.WriteK("/app", `
 generators:
 - secretGenerator.yaml
 `)
 	writeSecretGeneratorConfig(th, "/app")
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
   DB_PASSWORD: aWxvdmV5b3U=
   FRUIT: YXBwbGU=
   ROUTER_PASSWORD: YWRtaW4=
   VEGETABLE: Y2Fycm90
-  longsecret.txt: CkxvcmVtIGlwc3VtIGRvbG9yIHNpdCBhbWV0LApjb25zZWN0ZXR1ciBhZGlwaXNjaW5nIGVsaXQsCnNlZCBkbyBlaXVzbW9kIHRlbXBvciBpbmNpZGlkdW50CnV0IGxhYm9yZSBldCBkb2xvcmUgbWFnbmEgYWxpcXVhLgo=
+  longsecret.txt: CkxvcmVtIGlwc3VtIGRvbG9yIHNpdCBhbWV0LApjb25zZWN0ZXR1ciBhZGlwaXNjaW5nIGVsaXQuCg==
 kind: Secret
 metadata:
-  name: -ktm999dkcc
+  name: mySecret-g4g4kh4f7t
 type: Opaque
 `)
 }
@@ -137,24 +134,24 @@ func TestConfigMapGenerator(t *testing.T) {
 	tc.BuildExecPlugin(
 		"someteam.example.com", "v1", "ConfigMapGenerator")
 
-	th := NewKustTestHarnessWithPluginConfig(
+	th := kusttest_test.NewKustTestHarnessWithPluginConfig(
 		t, "/app", plugin.ActivePluginConfig())
-	th.writeK("/app", `
+	th.WriteK("/app", `
 generators:
 - configmapGenerator.yaml
 `)
-	th.writeF("/app/configmapGenerator.yaml", `
+	th.WriteF("/app/configmapGenerator.yaml", `
 apiVersion: someteam.example.com/v1
 kind: ConfigMapGenerator
 metadata:
   name: some-random-name
 argsOneLiner: "admin secret"
 `)
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
   password: secret
