@@ -8,7 +8,7 @@
 
  * [术语表](../glossary.md) - 用于消除术语歧义。
 
- * [kustomization.yaml](../kustomization.yaml) - 包含 
+ * [kustomization.yaml](kustomization.yaml) - 包含 
  [kustomization](../glossary.md#kustomization) 所有字段的示例文件。
 
  * [插件](../plugins.md) - 使用自定义的资源生成器和资源转换器来拓展 kustomize 功能。
@@ -36,7 +36,7 @@
 
  * [行为准则](../../code-of-conduct.md)
 
-关于中文文档：部分文档可能稍微滞后于英文版本，同步工作持续进行中
+>声明：部分文档可能稍微滞后于英文版本，同步工作持续进行中
 
 [v2.0.3]: https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.0.3
 [kubectl]: https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement
