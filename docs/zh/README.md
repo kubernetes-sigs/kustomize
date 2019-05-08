@@ -8,7 +8,7 @@
 
  * [术语表](../glossary.md) - 用于消除术语歧义。
 
- * [kustomization.yaml](../kustomization.yaml) - 包含 
+ * [kustomization.yaml](kustomization.yaml) - 包含 
  [kustomization](../glossary.md#kustomization) 所有字段的示例文件。
 
  * [插件](../plugins.md) - 使用自定义的资源生成器和资源转换器来拓展 kustomize 功能。
@@ -20,10 +20,13 @@
 
 ## 发行说明
 
- * [2.1](../v_2.1.0.md)
+ * [2.1](../v_2.1.0.md) - 日期待定，预计2019年5月下旬。
 
- * [2.0](../v_2.0.0.md) -
+ * [2.0](../v_2.0.0.md) - 2019年5月
    可以在 [kubectl v1.14][kubectl] 中使用 kustomize [v2.0.3] 。
+
+ * [1.0](../v_1.0.1.md) - 2018年5月
+   于 [kubectl repository] 开发后的首发版本。
 
 
 ## 政策
@@ -36,7 +39,8 @@
 
  * [行为准则](../../code-of-conduct.md)
 
-关于中文文档：部分文档可能稍微滞后于英文版本，同步工作持续进行中
+>声明：部分文档可能稍微滞后于英文版本，同步工作持续进行中
 
 [v2.0.3]: https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.0.3
 [kubectl]: https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement
+[kubectl repository]: https://github.com/kubernetes/kubectl
