@@ -19,10 +19,12 @@ package target_test
 import (
 	"strings"
 	"testing"
+
+	"sigs.k8s.io/kustomize/pkg/kusttest"
 )
 
-func makeCommonFileForMultiplePatchTest(th *KustTestHarness) {
-	th.writeK("/app/base", `
+func makeCommonFileForMultiplePatchTest(th *kusttest_test.KustTestHarness) {
+	th.WriteK("/app/base", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: team-foo-
@@ -40,7 +42,7 @@ configMapGenerator:
     literals:
       - foo=bar
 `)
-	th.writeF("/app/base/deployment.yaml", `
+	th.WriteF("/app/base/deployment.yaml", `
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
@@ -66,7 +68,7 @@ spec:
           name: configmap-in-base
         name: configmap-in-base
 `)
-	th.writeF("/app/base/service.yaml", `
+	th.WriteF("/app/base/service.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
@@ -79,7 +81,7 @@ spec:
   selector:
     app: nginx
 `)
-	th.writeK("/app/overlay/staging", `
+	th.WriteK("/app/overlay/staging", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: staging-
@@ -98,9 +100,9 @@ configMapGenerator:
 }
 
 func TestMultiplePatchesNoConflict(t *testing.T) {
-	th := NewKustTestHarness(t, "/app/overlay/staging")
+	th := kusttest_test.NewKustTestHarness(t, "/app/overlay/staging")
 	makeCommonFileForMultiplePatchTest(th)
-	th.writeF("/app/overlay/staging/deployment-patch1.yaml", `
+	th.WriteF("/app/overlay/staging/deployment-patch1.yaml", `
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
@@ -123,7 +125,7 @@ spec:
           name: configmap-in-overlay
         name: configmap-in-overlay
 `)
-	th.writeF("/app/overlay/staging/deployment-patch2.yaml", `
+	th.WriteF("/app/overlay/staging/deployment-patch2.yaml", `
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
@@ -141,11 +143,11 @@ spec:
       volumes:
       - name: nginx-persistent-storage
 `)
-	m, err := th.makeKustTarget().MakeCustomizedResMap()
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.assertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
   foo: bar
@@ -244,9 +246,9 @@ spec:
 }
 
 func TestMultiplePatchesWithConflict(t *testing.T) {
-	th := NewKustTestHarness(t, "/app/overlay/staging")
+	th := kusttest_test.NewKustTestHarness(t, "/app/overlay/staging")
 	makeCommonFileForMultiplePatchTest(th)
-	th.writeF("/app/overlay/staging/deployment-patch1.yaml", `
+	th.WriteF("/app/overlay/staging/deployment-patch1.yaml", `
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
@@ -268,7 +270,7 @@ spec:
           name: configmap-in-overlay
         name: configmap-in-overlay
 `)
-	th.writeF("/app/overlay/staging/deployment-patch2.yaml", `
+	th.WriteF("/app/overlay/staging/deployment-patch2.yaml", `
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
@@ -282,7 +284,7 @@ spec:
         - name: ENABLE_FEATURE_FOO
           value: FALSE
 `)
-	_, err := th.makeKustTarget().MakeCustomizedResMap()
+	_, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err == nil {
 		t.Fatalf("expected conflict")
 	}

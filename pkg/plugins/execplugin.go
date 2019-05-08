@@ -35,6 +35,7 @@ import (
 const (
 	ArgsOneLiner = "argsOneLiner"
 	ArgsFromFile = "argsFromFile"
+	idAnnotation = "kustomize.config.k8s.io/id"
 )
 
 // ExecPlugin record the name and args of an executable
@@ -133,17 +134,7 @@ func (p *ExecPlugin) writeConfig() (string, error) {
 }
 
 func (p *ExecPlugin) Generate() (resmap.ResMap, error) {
-	args, err := p.getArgs()
-	if err != nil {
-		return nil, err
-	}
-	cmd := exec.Command(p.name, args...)
-	cmd.Env = p.getEnv()
-	cmd.Stderr = os.Stderr
-	if _, err := os.Stat(p.ldr.Root()); err == nil {
-		cmd.Dir = p.ldr.Root()
-	}
-	output, err := cmd.Output()
+	output, err := p.invokePlugin(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -151,38 +142,42 @@ func (p *ExecPlugin) Generate() (resmap.ResMap, error) {
 }
 
 func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
-	args, err := p.getArgs()
+	// add ResIds as annotations to all objects so that we can add them back
+	inputRM, err := p.getResMapWithIdAnnotation(rm)
 	if err != nil {
 		return err
 	}
-	for id, r := range rm {
-		content, err := yaml.Marshal(r.Kunstructured)
-		if err != nil {
-			return err
-		}
-		cmd := exec.Command(p.name, args...)
-		cmd.Env = p.getEnv()
-		cmd.Stdin = bytes.NewReader(content)
-		cmd.Stderr = os.Stderr
-		if _, err := os.Stat(p.ldr.Root()); err == nil {
-			cmd.Dir = p.ldr.Root()
-		}
-		output, err := cmd.Output()
-		if err != nil {
-			return err
-		}
-		tmpMap, err := p.rf.NewResMapFromBytes(output)
-		if err != nil {
-			return err
-		}
-		if len(tmpMap) != 1 {
-			return fmt.Errorf("unable to put two resources into one")
-		}
-		for _, v := range tmpMap {
-			rm[id].Kunstructured = v.Kunstructured
-		}
+
+	// encode the ResMap so it can be fed to the plugin
+	resources, err := inputRM.EncodeAsYaml()
+	if err != nil {
+		return err
 	}
-	return nil
+
+	// invoke the plugin with resources as the input
+	output, err := p.invokePlugin(resources)
+	if err != nil {
+		return err
+	}
+
+	// update the original ResMap based on the output
+	return p.updateResMapValues(output, rm)
+}
+
+// invokePlugin invokes the plugin
+func (p *ExecPlugin) invokePlugin(input []byte) ([]byte, error) {
+	args, err := p.getArgs()
+	if err != nil {
+		return nil, err
+	}
+	cmd := exec.Command(p.name, args...)
+	cmd.Env = p.getEnv()
+	cmd.Stdin = bytes.NewReader(input)
+	cmd.Stderr = os.Stderr
+	if _, err := os.Stat(p.ldr.Root()); err == nil {
+		cmd.Dir = p.ldr.Root()
+	}
+	return cmd.Output()
 }
 
 // The first arg is always the absolute path to a temporary file
@@ -201,4 +196,62 @@ func (p *ExecPlugin) getEnv() []string {
 		"KUSTOMIZE_PLUGIN_CONFIG_STRING="+string(p.cfg),
 		"KUSTOMIZE_PLUGIN_CONFIG_ROOT="+p.ldr.Root())
 	return env
+}
+
+// Returns a new copy of the given ResMap with the ResIds annotated in each Resource
+func (p *ExecPlugin) getResMapWithIdAnnotation(rm resmap.ResMap) (resmap.ResMap, error) {
+	inputRM := rm.DeepCopy(p.rf.RF())
+	for id, r := range inputRM {
+		idString, err := yaml.Marshal(id)
+		if err != nil {
+			return nil, err
+		}
+		annotations := r.GetAnnotations()
+		if annotations == nil {
+			annotations = make(map[string]string)
+		}
+		annotations[idAnnotation] = string(idString)
+		r.SetAnnotations(annotations)
+	}
+	return inputRM, nil
+}
+
+/*
+updateResMapValues updates the Resource value in the given ResMap
+with the emitted Resource values in output.
+*/
+func (p *ExecPlugin) updateResMapValues(output []byte, rm resmap.ResMap) error {
+	outputRM, err := p.rf.NewResMapFromBytes(output)
+	if err != nil {
+		return err
+	}
+	for _, r := range outputRM {
+		// for each emitted Resource, find the matching Resource in the original ResMap
+		// using its id
+		annotations := r.GetAnnotations()
+		idString, ok := annotations[idAnnotation]
+		if !ok {
+			return fmt.Errorf("the transformer %s should not remove annotation %s",
+				p.name, idAnnotation)
+		}
+		id := resid.ResId{}
+		err := yaml.Unmarshal([]byte(idString), &id)
+		if err != nil {
+			return err
+		}
+		res, ok := rm[id]
+		if !ok {
+			return fmt.Errorf("unable to find id %s in resource map", id.String())
+		}
+		// remove the annotation set by Kustomize to track the resource
+		delete(annotations, idAnnotation)
+		if len(annotations) == 0 {
+			annotations = nil
+		}
+		r.SetAnnotations(annotations)
+
+		// update the ResMap resource value with the transformed object
+		res.Kunstructured = r.Kunstructured
+	}
+	return nil
 }
