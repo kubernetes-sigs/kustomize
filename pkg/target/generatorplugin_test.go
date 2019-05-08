@@ -31,7 +31,7 @@ apiVersion: someteam.example.com/v1
 kind: ServiceGenerator
 metadata:
   name: myServiceGenerator
-service: my-service
+name: my-service
 port: "12345"
 `)
 }
@@ -74,12 +74,13 @@ func writeSecretGeneratorConfig(th *kusttest_test.KustTestHarness, root string) 
 apiVersion: builtin
 kind: SecretGenerator
 metadata:
-  name: mySecret
+  name: mySecGen
+name: mySecret
 behavior: merge
-envFiles:
+envs:
 - a.env
 - b.env
-valueFiles:
+files:
 - longsecret.txt
 literals:
 - FRUIT=apple

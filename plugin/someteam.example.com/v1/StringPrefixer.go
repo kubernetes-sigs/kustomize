@@ -16,44 +16,34 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Assuming GOPATH is something like
-//   ~/gopath
-// and this source file is located at
-//   $GOPATH/src/sigs.k8s.io/kustomize/plugins/StringPrefixer.go,
-// build it like this:
-//   dir=$GOPATH/src/sigs.k8s.io/kustomize/plugins
-//   go build -buildmode plugin -tags=plugin \
-//     -o $dir/StringPrefixer.so $dir/StringPrefixer.go
-
 package main
 
 import (
-	"fmt"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/transformers"
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
+	"sigs.k8s.io/yaml"
 )
 
 type plugin struct {
-	prefix string
+	Metadata metaData `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+}
+
+type metaData struct {
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 }
 
 var KustomizePlugin plugin
 
 func (p *plugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, k ifc.Kunstructured) error {
-	name := k.GetName()
-	if name == "" {
-		return fmt.Errorf("name cannot be empty")
-	}
-	p.prefix = name + "-"
-	return nil
+	ldr ifc.Loader, rf *resmap.Factory, c []byte) error {
+	return yaml.Unmarshal(c, p)
 }
 
 func (p *plugin) Transform(m resmap.ResMap) error {
 	tr, err := transformers.NewNamePrefixSuffixTransformer(
-		p.prefix, "",
+		p.Metadata.Name + "-", "",
 		config.MakeDefaultConfig().NamePrefix)
 	if err != nil {
 		return err

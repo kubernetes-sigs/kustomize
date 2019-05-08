@@ -23,6 +23,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/yaml"
 )
 
 // Resource is map representation of a Kubernetes API resource object
@@ -54,6 +55,16 @@ func (r *Resource) DeepCopy() *Resource {
 		rc.refBy = refby
 	}
 	return rc
+}
+
+// AsYAML returns the resource in Yaml form.
+// Easier to read than JSON.
+func (r *Resource) AsYAML() ([]byte, error) {
+	json, err := r.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return yaml.JSONToYAML(json)
 }
 
 // Behavior returns the behavior for the resource.
