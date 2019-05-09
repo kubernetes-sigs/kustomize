@@ -137,16 +137,16 @@ func (pl *ExternalPluginLoader) LoadTransformer(ldr ifc.Loader, res *resource.Re
 	return t, nil
 }
 
-func (l *ExternalPluginLoader) loadAndConfigurePlugin(
+func (pl *ExternalPluginLoader) loadAndConfigurePlugin(
 	ldr ifc.Loader, res *resource.Resource) (c Configurable, err error) {
-	if !l.pc.GoEnabled {
+	if !pl.pc.GoEnabled {
 		return nil, errors.Errorf(
 			"plugins not enabled, but trying to load %s", res.Id())
 	}
-	if p := NewExecPlugin(l.pc.DirectoryPath, res.Id()); p.isAvailable() {
+	if p := NewExecPlugin(pl.pc.DirectoryPath, res.Id()); p.isAvailable() {
 		c = p
 	} else {
-		c, err = l.loadGoPlugin(res.Id())
+		c, err = pl.loadGoPlugin(res.Id())
 		if err != nil {
 			return nil, err
 		}
@@ -162,13 +162,13 @@ func (l *ExternalPluginLoader) loadAndConfigurePlugin(
 // as a Loader instance variable.  So make it a package variable.
 var registry = make(map[string]Configurable)
 
-func (l *ExternalPluginLoader) loadGoPlugin(id resid.ResId) (c Configurable, err error) {
+func (pl *ExternalPluginLoader) loadGoPlugin(id resid.ResId) (c Configurable, err error) {
 	var ok bool
 	path := pluginPath(id)
 	if c, ok = registry[path]; ok {
 		return c, nil
 	}
-	name := filepath.Join(l.pc.DirectoryPath, path)
+	name := filepath.Join(pl.pc.DirectoryPath, path)
 	p, err := plugin.Open(name + ".so")
 	if err != nil {
 		return nil, errors.Wrapf(err, "plugin %s fails to load", name)
