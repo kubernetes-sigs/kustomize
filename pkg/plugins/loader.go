@@ -34,11 +34,6 @@ type Configurable interface {
 	Config(ldr ifc.Loader, rf *resmap.Factory, k ifc.Kunstructured) error
 }
 
-// type Loader interface {
-// 	LoadGenerators(ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Generator, error)
-// 	LoadTransformers(ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Transformer, error)
-// }
-
 type LoaderFactory interface {
 	LoadGenerator(ldr ifc.Loader, res *resource.Resource) (transformers.Generator, error)
 	LoadTransformer(ldr ifc.Loader, res *resource.Resource) (transformers.Transformer, error)
@@ -57,7 +52,7 @@ func (l *Loader) LF() LoaderFactory {
 	return l.lf
 }
 
-func (l *Loader) LoadGenerators(
+func (l *Loader) LoadAndConfigureGenerators(
 	ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Generator, error) {
 	var result []transformers.Generator
 	for _, res := range rm {
@@ -79,7 +74,7 @@ func (l *Loader) LoadGenerators(
 	return result, nil
 }
 
-func (l *Loader) LoadTransformers(
+func (l *Loader) LoadAndCOnfigureTransformers(
 	ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Transformer, error) {
 	var result []transformers.Transformer
 	for _, res := range rm {

@@ -80,7 +80,7 @@ func TestLoader(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = l.LoadGenerators(ldr, m)
+	_, err = l.LoadAndConfigureGenerators(ldr, m)
 	if err != nil {
 		t.Fatal(err)
 	}
