@@ -174,7 +174,7 @@ func NewCmdBuildPrune(
 	out io.Writer, fs fs.FileSystem,
 	rf *resmap.Factory,
 	ptf transformer.Factory,
-	pl *plugins.FileLoader) *cobra.Command {
+	pl *plugins.Loader) *cobra.Command {
 	var o Options
 
 	cmd := &cobra.Command{
