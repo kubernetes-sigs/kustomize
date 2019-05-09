@@ -34,39 +34,87 @@ type Configurable interface {
 	Config(ldr ifc.Loader, rf *resmap.Factory, k ifc.Kunstructured) error
 }
 
-type Loader interface {
-	LoadGenerators(ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Generator, error)
-	LoadTransformers(ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Transformer, error)
+// type Loader interface {
+// 	LoadGenerators(ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Generator, error)
+// 	LoadTransformers(ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Transformer, error)
+// }
+
+type LoaderFactory interface {
+	LoadGenerator(ldr ifc.Loader, res *resource.Resource) (transformers.Generator, error)
+	LoadTransformer(ldr ifc.Loader, res *resource.Resource) (transformers.Transformer, error)
 }
 
-type FileLoader struct {
-	pc *types.PluginConfig
+type Loader struct {
 	rf *resmap.Factory
+	lf LoaderFactory
 }
 
-var _ Loader = &FileLoader{}
-
-func NewFileLoader(
-	pc *types.PluginConfig, rf *resmap.Factory) *FileLoader {
-	return &FileLoader{pc: pc, rf: rf}
+func NewLoader(rf *resmap.Factory, lf LoaderFactory) *Loader {
+	return &Loader{rf: rf, lf: lf}
 }
 
-func (l *FileLoader) LoadGenerators(
+func (l *Loader) LF() LoaderFactory {
+	return l.lf
+}
+
+func (l *Loader) LoadGenerators(
 	ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Generator, error) {
 	var result []transformers.Generator
 	for _, res := range rm {
-		g, err := l.LoadGenerator(ldr, res)
+		g, err := l.lf.LoadGenerator(ldr, res)
 		if err != nil {
 			return nil, err
+		}
+		c, ok := g.(Configurable)
+		if !ok {
+			return nil, fmt.Errorf("plugin %s not a Configurable", res.Id())
+		}
+		fmt.Printf("%T %v\n", c, ok)
+		err = c.Config(ldr, l.rf, res)
+		if err != nil {
+			return nil, errors.Wrapf(err, "plugin %s fails configuration", res.Id())
 		}
 		result = append(result, g)
 	}
 	return result, nil
 }
 
-func (l *FileLoader) LoadGenerator(
-	ldr ifc.Loader, res *resource.Resource) (transformers.Generator, error) {
-	c, err := l.loadAndConfigurePlugin(ldr, res)
+func (l *Loader) LoadTransformers(
+	ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Transformer, error) {
+	var result []transformers.Transformer
+	for _, res := range rm {
+		t, err := l.lf.LoadTransformer(ldr, res)
+		if err != nil {
+			return nil, err
+		}
+		c, ok := t.(Configurable)
+		if !ok {
+			return nil, fmt.Errorf("plugin %s not a Configurable", res.Id())
+		}
+		err = c.Config(ldr, l.rf, res)
+		if err != nil {
+			return nil, errors.Wrapf(err, "plugin %s fails configuration", res.Id())
+		}
+		result = append(result, t)
+	}
+	return result, nil
+}
+
+func pluginPath(id resid.ResId) string {
+	return filepath.Join(id.Gvk().Group, id.Gvk().Version, id.Gvk().Kind)
+}
+
+type ExternalPluginLoader struct {
+	pc *types.PluginConfig
+	rf *resmap.Factory
+}
+
+func NewExternalPluginLoader(pc *types.PluginConfig, rf *resmap.Factory) *ExternalPluginLoader {
+	return &ExternalPluginLoader{pc: pc, rf: rf}
+}
+
+func (pl *ExternalPluginLoader) LoadGenerator(ldr ifc.Loader, res *resource.Resource) (transformers.Generator, error) {
+	c, err := pl.loadAndConfigurePlugin(ldr, res)
 	if err != nil {
 		return nil, err
 	}
@@ -77,22 +125,8 @@ func (l *FileLoader) LoadGenerator(
 	return g, nil
 }
 
-func (l *FileLoader) LoadTransformers(
-	ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Transformer, error) {
-	var result []transformers.Transformer
-	for _, res := range rm {
-		t, err := l.LoadTransformer(ldr, res)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, t)
-	}
-	return result, nil
-}
-
-func (l *FileLoader) LoadTransformer(
-	ldr ifc.Loader, res *resource.Resource) (transformers.Transformer, error) {
-	c, err := l.loadAndConfigurePlugin(ldr, res)
+func (pl *ExternalPluginLoader) LoadTransformer(ldr ifc.Loader, res *resource.Resource) (transformers.Transformer, error) {
+	c, err := pl.loadAndConfigurePlugin(ldr, res)
 	if err != nil {
 		return nil, err
 	}
@@ -103,11 +137,7 @@ func (l *FileLoader) LoadTransformer(
 	return t, nil
 }
 
-func pluginPath(id resid.ResId) string {
-	return filepath.Join(id.Gvk().Group, id.Gvk().Version, id.Gvk().Kind)
-}
-
-func (l *FileLoader) loadAndConfigurePlugin(
+func (l *ExternalPluginLoader) loadAndConfigurePlugin(
 	ldr ifc.Loader, res *resource.Resource) (c Configurable, err error) {
 	if !l.pc.GoEnabled {
 		return nil, errors.Errorf(
@@ -121,11 +151,6 @@ func (l *FileLoader) loadAndConfigurePlugin(
 			return nil, err
 		}
 	}
-	err = c.Config(ldr, l.rf, res)
-	if err != nil {
-		return nil, errors.Wrapf(
-			err, "plugin %s fails configuration", res.Id())
-	}
 	return c, nil
 }
 
@@ -134,10 +159,10 @@ func (l *FileLoader) loadAndConfigurePlugin(
 // Each test makes its own loader, and tries to load its own plugins,
 // but the loaded .so files are in shared memory, so one will get
 // "this plugin already loaded" errors if the registry is maintained
-// as a FileLoader instance variable.  So make it a package variable.
+// as a Loader instance variable.  So make it a package variable.
 var registry = make(map[string]Configurable)
 
-func (l *FileLoader) loadGoPlugin(id resid.ResId) (c Configurable, err error) {
+func (l *ExternalPluginLoader) loadGoPlugin(id resid.ResId) (c Configurable, err error) {
 	var ok bool
 	path := pluginPath(id)
 	if c, ok = registry[path]; ok {

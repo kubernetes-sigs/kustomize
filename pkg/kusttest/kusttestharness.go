@@ -41,7 +41,7 @@ type KustTestHarness struct {
 	t   *testing.T
 	rf  *resmap.Factory
 	ldr loadertest.FakeLoader
-	pl  *plugins.FileLoader
+	pl  *plugins.Loader
 }
 
 func NewKustTestHarness(t *testing.T, path string) *KustTestHarness {
@@ -65,7 +65,7 @@ func NewKustTestHarnessFull(
 		t:   t,
 		rf:  rf,
 		ldr: loadertest.NewFakeLoaderWithRestrictor(lr, path),
-		pl:  plugins.NewFileLoader(pc, rf)}
+		pl:  plugins.NewLoader(rf, plugins.NewExternalPluginLoader(pc, rf))}
 }
 
 func (th *KustTestHarness) MakeKustTarget() *target.KustTarget {
@@ -117,7 +117,16 @@ func (th *KustTestHarness) LoadAndRunGenerator(
 	if err != nil {
 		th.t.Fatalf("Err: %v", err)
 	}
-	g, err := th.pl.LoadGenerator(th.ldr, res)
+	g, err := th.pl.LF().LoadGenerator(th.ldr, res)
+	if err != nil {
+		th.t.Fatalf("Err: %v", err)
+	}
+	c, ok := g.(plugins.Configurable)
+	if !ok {
+		err = fmt.Errorf("plugin %s not a Configurable", res.Id())
+		th.t.Fatalf("Err: %v", err)
+	}
+	err = c.Config(th.ldr, th.rf, res)
 	if err != nil {
 		th.t.Fatalf("Err: %v", err)
 	}

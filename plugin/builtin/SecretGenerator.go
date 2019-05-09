@@ -29,11 +29,13 @@ func (p *plugin) Config(
 	if !resmap.IsAcceptableError(err) {
 		return
 	}
+	// panic("hello")
 	return nil
 }
 
 func (p *plugin) Generate() (resmap.ResMap, error) {
 	argsList := make([]types.SecretArgs, 1)
 	argsList[0] = p.args
+	// panic("ello")
 	return p.rf.NewResMapFromSecretArgs(p.ldr, &p.options, argsList)
 }
