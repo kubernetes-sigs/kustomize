@@ -59,13 +59,14 @@ commonAnnotations:
   oncallPager: 800-555-1212
 
 # 此列表中的每条记录都必须是一个存在的 YAML 资源描述文件
-# 这些 YAML 资源描述文件将被 kustomize 读取，修改和发布
-# 资源由文档标记（"---"）分隔
+# 一个 YAML 资源描述文件可以含有多个由（“---”）分隔的资源。
+# kustomize 将读取这些YAML文件中的资源，对其进行修改并
+# 发布在 kustomize 的输出中。
 resources:
 - some-service.yaml
 - sub-dir/some-deployment.yaml
 
-# 列表中的每个条目都将创建一个 ConfigMap （它是n个映射的生成器）
+# 列表中的每个条目都将创建一个 ConfigMap （它是n个 ConfigMap 的生成器）
 # 下面的示例创建了两个 ConfigMaps
 # 一个具有给定文件的名称和内容
 # 另一个包含 key/value 键值对数据
@@ -101,7 +102,7 @@ secretGenerator:
     - env.txt
   type: Opaque
 
-# generatorOptions 修改所有 ConfigMap 和 Secret 的行为
+# generatorOptions 修改所有 ConfigMapGenerator 和 SecretGenerator 的行为
 generatorOptions:
   # 为所有生成的资源添加 labels
   labels:
@@ -136,7 +137,7 @@ bases:
 # 或者通过 `bases` 中的 name 字段匹配
 # 这些条目将用于 _patch_（修改）已知资源
 #
-# 最好做一些小的 patches 
+# 推荐使用小的 patches
 # 例如：修改内存的 request/limit，更改 ConfigMap 中的 env 变量等
 # 小的 patches 易于维护和查看，并且易于在 overlays 中混合使用
 patchesStrategicMerge:
