@@ -85,6 +85,18 @@ func TestSetImage(t *testing.T) {
 				}},
 		},
 		{
+			description: "<image>=<image>",
+			given: given{
+				args: []string{"ngnix=localhost:5000/my-project/ngnix"},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- name: ngnix",
+					"  newName: localhost:5000/my-project/ngnix",
+				}},
+		},
+		{
 			given: given{
 				args: []string{"ngnix=localhost:5000/my-project/ngnix:dev-01"},
 			},

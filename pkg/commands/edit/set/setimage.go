@@ -160,7 +160,7 @@ func parse(arg string) (image.Image, error) {
 	// matches if there is an image name to overwrite
 	// <image>=<new-image><:|@><new-tag>
 	if s := strings.Split(arg, separator); len(s) == 2 {
-		p, err := parseOverwrite(s[1])
+		p, err := parseOverwrite(s[1], true)
 		return image.Image{
 			Name:    s[0],
 			NewName: p.name,
@@ -171,7 +171,7 @@ func parse(arg string) (image.Image, error) {
 
 	// matches only for <tag|digest> overwrites
 	// <image><:|@><new-tag>
-	p, err := parseOverwrite(arg)
+	p, err := parseOverwrite(arg, false)
 	return image.Image{
 		Name:   p.name,
 		NewTag: p.tag,
@@ -181,7 +181,7 @@ func parse(arg string) (image.Image, error) {
 
 // parseOverwrite parses the overwrite parameters
 // from the given arg into a struct
-func parseOverwrite(arg string) (overwrite, error) {
+func parseOverwrite(arg string, overwriteImage bool) (overwrite, error) {
 	// match <image>@<digest>
 	if d := strings.Split(arg, "@"); len(d) > 1 {
 		return overwrite{
@@ -195,6 +195,13 @@ func parseOverwrite(arg string) (overwrite, error) {
 		return overwrite{
 			name: t[1],
 			tag:  t[2],
+		}, nil
+	}
+
+	// match <image>
+	if len(arg) > 0 && overwriteImage {
+		return overwrite{
+			name: arg,
 		}, nil
 	}
 	return overwrite{}, errImageInvalidArgs
