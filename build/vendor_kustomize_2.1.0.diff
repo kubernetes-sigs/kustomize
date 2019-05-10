@@ -1,0 +1,80 @@
+diff --git a/pkg/kubectl/cmd/kustomize/kustomize.go b/pkg/kubectl/cmd/kustomize/kustomize.go
+index dcd5a1c398..f9abe7afd3 100644
+--- a/pkg/kubectl/cmd/kustomize/kustomize.go
++++ b/pkg/kubectl/cmd/kustomize/kustomize.go
+@@ -22,9 +22,9 @@ import (
+ 
+ 	"k8s.io/cli-runtime/pkg/genericclioptions"
+ 	"k8s.io/cli-runtime/pkg/kustomize"
++	"k8s.io/cli-runtime/pkg/kustomize/pkg/fs"
+ 	"k8s.io/kubernetes/pkg/kubectl/util/i18n"
+ 	"k8s.io/kubernetes/pkg/kubectl/util/templates"
+-	"sigs.k8s.io/kustomize/pkg/fs"
+ )
+ 
+ type kustomizeOptions struct {
+diff --git a/staging/src/k8s.io/cli-runtime/pkg/kustomize/builder.go b/staging/src/k8s.io/cli-runtime/pkg/kustomize/builder.go
+index 6aace7ce53..948ebfb6d1 100644
+--- a/staging/src/k8s.io/cli-runtime/pkg/kustomize/builder.go
++++ b/staging/src/k8s.io/cli-runtime/pkg/kustomize/builder.go
+@@ -18,15 +18,28 @@ package kustomize
+ 
+ import (
+ 	"io"
+-
+-	"k8s.io/cli-runtime/pkg/kustomize/k8sdeps"
+-	"sigs.k8s.io/kustomize/pkg/commands/build"
+-	"sigs.k8s.io/kustomize/pkg/fs"
++	"k8s.io/cli-runtime/pkg/kustomize/k8sdeps/kunstruct"
++	"k8s.io/cli-runtime/pkg/kustomize/k8sdeps/kv/plugin"
++	"k8s.io/cli-runtime/pkg/kustomize/k8sdeps/transformer"
++	"k8s.io/cli-runtime/pkg/kustomize/pkg/commands/build"
++	"k8s.io/cli-runtime/pkg/kustomize/pkg/fs"
++	"k8s.io/cli-runtime/pkg/kustomize/pkg/plugins"
++	"k8s.io/cli-runtime/pkg/kustomize/pkg/resmap"
++	"k8s.io/cli-runtime/pkg/kustomize/pkg/resource"
++	"k8s.io/cli-runtime/pkg/kustomize/pkg/types"
+ )
+ 
+ // RunKustomizeBuild runs kustomize build given a filesystem and a path
+ func RunKustomizeBuild(out io.Writer, fSys fs.FileSystem, path string) error {
+-	f := k8sdeps.NewFactory()
++	pluginConfig := plugin.DefaultPluginConfig()
++
++	genMetaArgs := types.GeneratorMetaArgs{
++		PluginConfig: pluginConfig,
++	}
++
++	uf := kunstruct.NewKunstructuredFactoryWithGeneratorArgs(&genMetaArgs)
++	rf := resmap.NewFactory(resource.NewFactory(uf))
++
+ 	o := build.NewOptions(path, "")
+-	return o.RunBuild(out, fSys, f.ResmapF, f.TransformerF)
++	return o.RunBuild(out, fSys, rf, transformer.NewFactoryImpl(), plugins.NewLoader(pluginConfig, rf))
+ }
+diff --git a/staging/src/k8s.io/cli-runtime/pkg/kustomize/builder_test.go b/staging/src/k8s.io/cli-runtime/pkg/kustomize/builder_test.go
+index df17cae9d8..46b8926b11 100644
+--- a/staging/src/k8s.io/cli-runtime/pkg/kustomize/builder_test.go
++++ b/staging/src/k8s.io/cli-runtime/pkg/kustomize/builder_test.go
+@@ -20,7 +20,7 @@ import (
+ 	"bytes"
+ 	"testing"
+ 
+-	"sigs.k8s.io/kustomize/pkg/fs"
++	"k8s.io/cli-runtime/pkg/kustomize/pkg/fs"
+ )
+ 
+ const (
+diff --git a/staging/src/k8s.io/cli-runtime/pkg/resource/visitor.go b/staging/src/k8s.io/cli-runtime/pkg/resource/visitor.go
+index 99a2f1f753..c464530f33 100644
+--- a/staging/src/k8s.io/cli-runtime/pkg/resource/visitor.go
++++ b/staging/src/k8s.io/cli-runtime/pkg/resource/visitor.go
+@@ -40,7 +40,7 @@ import (
+ 	"k8s.io/apimachinery/pkg/util/yaml"
+ 	"k8s.io/apimachinery/pkg/watch"
+ 	"k8s.io/cli-runtime/pkg/kustomize"
+-	"sigs.k8s.io/kustomize/pkg/fs"
++	"k8s.io/cli-runtime/pkg/kustomize/pkg/fs"
+ )
+ 
+ const (
