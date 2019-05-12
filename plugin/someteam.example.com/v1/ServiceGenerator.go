@@ -26,22 +26,23 @@ import (
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/yaml"
 )
 
 type plugin struct {
-	ServiceName string
-	Port        string
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	Port string `json:"port,omitempty" yaml:"port,omitempty"`
 }
 
 var KustomizePlugin plugin
 
-var manifest = `
+const tmpl = `
 apiVersion: v1
 kind: Service
 metadata:
   labels:
     app: dev
-  name: {{.ServiceName}}
+  name: {{.Name}}
 spec:
   ports:
   - port: {{.Port}}
@@ -50,23 +51,13 @@ spec:
 `
 
 func (p *plugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, k ifc.Kunstructured) error {
-	var err error
-	p.ServiceName, err = k.GetFieldValue("service")
-	if err != nil {
-		return err
-	}
-	p.Port, err = k.GetFieldValue("port")
-	if err != nil {
-		return err
-	}
-	return nil
+	ldr ifc.Loader, rf *resmap.Factory, config []byte) error {
+	return yaml.Unmarshal(config, p)
 }
 
 func (p *plugin) Generate() (resmap.ResMap, error) {
 	var buf bytes.Buffer
-
-	temp := template.Must(template.New("manifest").Parse(manifest))
+	temp := template.Must(template.New("tmpl").Parse(tmpl))
 	err := temp.Execute(&buf, p)
 	if err != nil {
 		return nil, err

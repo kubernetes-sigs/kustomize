@@ -33,8 +33,6 @@ import (
 )
 
 const (
-	ArgsOneLiner = "argsOneLiner"
-	ArgsFromFile = "argsFromFile"
 	idAnnotation = "kustomize.config.k8s.io/id"
 )
 
@@ -75,30 +73,26 @@ func (p *ExecPlugin) isAvailable() bool {
 }
 
 func (p *ExecPlugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, k ifc.Kunstructured) error {
+	ldr ifc.Loader, rf *resmap.Factory, config []byte) error {
 	p.rf = rf
 	p.ldr = ldr
-
-	var err error
-	p.cfg, err = yaml.Marshal(k)
-	if err != nil {
-		return err
-	}
-	err = p.processOptionalArgsFields(k)
-	if err != nil {
-		return err
-	}
-	return nil
+	p.cfg = config
+	return p.processOptionalArgsFields()
 }
 
-func (p *ExecPlugin) processOptionalArgsFields(k ifc.Kunstructured) error {
-	args, err := k.GetFieldValue(ArgsOneLiner)
-	if err == nil && args != "" {
-		p.args = strings.Split(args, " ")
+type argsConfig struct {
+	ArgsOneLiner string `json:"argsOneLiner,omitempty" yaml:"argsOneLiner,omitempty"`
+	ArgsFromFile string `json:"argsFromFile,omitempty" yaml:"argsFromFile,omitempty"`
+}
+
+func (p *ExecPlugin) processOptionalArgsFields() error {
+	var c argsConfig
+	yaml.Unmarshal(p.cfg, &c)
+	if c.ArgsOneLiner != "" {
+		p.args = strings.Split(c.ArgsOneLiner, " ")
 	}
-	fileName, err := k.GetFieldValue(ArgsFromFile)
-	if err == nil && fileName != "" {
-		content, err := p.ldr.Load(fileName)
+	if c.ArgsFromFile != "" {
+		content, err := p.ldr.Load(c.ArgsFromFile)
 		if err != nil {
 			return err
 		}
