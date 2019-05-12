@@ -31,7 +31,7 @@ import (
 )
 
 type Configurable interface {
-	Config(ldr ifc.Loader, rf *resmap.Factory, k ifc.Kunstructured) error
+	Config(ldr ifc.Loader, rf *resmap.Factory, config []byte) error
 }
 
 type Loader struct {
@@ -114,7 +114,11 @@ func (l *Loader) loadAndConfigurePlugin(
 			return nil, err
 		}
 	}
-	err = c.Config(ldr, l.rf, res)
+	yaml, err := res.AsYAML()
+	if err != nil {
+		return nil, errors.Wrapf(err, "marshalling yaml from res %s", res.Id())
+	}
+	err = c.Config(ldr, l.rf, yaml)
 	if err != nil {
 		return nil, errors.Wrapf(
 			err, "plugin %s fails configuration", res.Id())

@@ -40,8 +40,8 @@ func TestExecPluginConfig(t *testing.T) {
 			"metadata": map[string]interface{}{
 				"name": "some-random-name",
 			},
-			ArgsOneLiner: "one two",
-			ArgsFromFile: "sed-input.txt",
+			"argsOneLiner": "one two",
+			"argsFromFile": "sed-input.txt",
 		})
 
 	ldr.AddFile("/app/sed-input.txt", []byte(`
@@ -54,7 +54,11 @@ s/$BAR/bar/g
 		plugin.DefaultPluginConfig().DirectoryPath,
 		pluginConfig.Id())
 
-	p.Config(ldr, rf, pluginConfig)
+	yaml, err := pluginConfig.AsYAML()
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	p.Config(ldr, rf, yaml)
 
 	expected := "/kustomize/plugin/someteam.example.com/v1/SedTransformer"
 	if !strings.HasSuffix(p.name, expected) {
