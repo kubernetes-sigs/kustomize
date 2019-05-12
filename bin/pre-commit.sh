@@ -11,7 +11,7 @@ cd "$base_dir" || {
 
 rc=0
 
-function runTest {
+function runFunc {
   local name=$1
   local result="SUCCESS"
   printf "============== begin %s\n" "$name"
@@ -85,18 +85,18 @@ echo "GOPATH=$GOPATH"
 echo "GO111MODULE=$GO111MODULE"
 echo pwd=`pwd`
 echo " "
-echo "Beginning tests..."
+echo "Working..."
 
-runTest testGoLangCILint
-runTest testGoTest
+runFunc testGoLangCILint
+runFunc testGoTest
 
 if [ -z ${TRAVIS+x} ]; then
   echo Not on travis, so running the notravis tests
-  runTest testNoTravisGoTest
+  runFunc testNoTravisGoTest
 fi
 
 PATH=$HOME/go/bin:$PATH
-runTest testExamples
+runFunc testExamples
 
 if [ $rc -eq 0 ]; then
   echo "SUCCESS!"

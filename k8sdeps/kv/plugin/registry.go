@@ -32,7 +32,6 @@ type Registry struct {
 }
 
 const (
-	PluginRoot        = "plugin"
 	pluginTypeGo      = types.PluginType("go")
 	pluginTypeBuiltIn = types.PluginType("builtin")
 )
@@ -47,7 +46,7 @@ func DefaultPluginConfig() *types.PluginConfig {
 	return &types.PluginConfig{
 		GoEnabled: false,
 		DirectoryPath: filepath.Join(
-			pgmconfig.ConfigRoot(), PluginRoot),
+			pgmconfig.ConfigRoot(), pgmconfig.PluginRoot),
 	}
 }
 

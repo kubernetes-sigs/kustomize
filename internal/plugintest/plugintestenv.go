@@ -23,7 +23,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/plugins"
 )
@@ -63,7 +62,7 @@ func (x *PluginTestEnv) BuildGoPlugin(g, v, k string) {
 
 func (x *PluginTestEnv) BuildExecPlugin(name ...string) {
 	obj := filepath.Join(
-		append([]string{x.workDir, pgmconfig.ProgramName, plugin.PluginRoot}, name...)...)
+		append([]string{x.workDir, pgmconfig.ProgramName, pgmconfig.PluginRoot}, name...)...)
 
 	srcRoot, err := plugins.DefaultSrcRoot()
 	if err != nil {
@@ -90,7 +89,7 @@ func (x *PluginTestEnv) makeCompiler() *plugins.Compiler {
 	//    $objRoot
 	// so set things up accordingly.
 	objRoot := filepath.Join(
-		x.workDir, pgmconfig.ProgramName, plugin.PluginRoot)
+		x.workDir, pgmconfig.ProgramName, pgmconfig.PluginRoot)
 	err := os.MkdirAll(objRoot, os.ModePerm)
 	if err != nil {
 		x.t.Error(err)
