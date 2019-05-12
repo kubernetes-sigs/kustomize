@@ -128,6 +128,27 @@ func (th *KustTestHarness) LoadAndRunGenerator(
 	return rm
 }
 
+func (th *KustTestHarness) LoadAndRunTransformer(
+	config, input string) resmap.ResMap {
+	transConfig, err := th.rf.RF().FromBytes([]byte(config))
+	if err != nil {
+		th.t.Fatalf("Err: %v", err)
+	}
+	resMap, err := th.rf.NewResMapFromBytes([]byte(input))
+	if err != nil {
+		th.t.Fatalf("Err: %v", err)
+	}
+	g, err := th.pl.LoadTransformer(th.ldr, transConfig)
+	if err != nil {
+		th.t.Fatalf("Err: %v", err)
+	}
+	err = g.Transform(resMap)
+	if err != nil {
+		th.t.Fatalf("Err: %v", err)
+	}
+	return resMap
+}
+
 func tabToSpace(input string) string {
 	var result []string
 	for _, i := range input {
