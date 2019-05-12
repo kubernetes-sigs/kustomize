@@ -16,4 +16,4 @@ limitations under the License.
 
 package plugins
 
-const pluginSymbol = "KustomizePlugin"
+const PluginSymbol = "KustomizePlugin"
