@@ -18,7 +18,6 @@ package resmap_test
 
 import (
 	"encoding/base64"
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -124,7 +123,6 @@ metadata:
 			}),
 	}
 	m, err := rmF.NewResMapFromBytes(encoded)
-	fmt.Printf("%v\n", m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
