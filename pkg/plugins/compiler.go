@@ -50,7 +50,7 @@ func DefaultSrcRoot() (string, error) {
 	root = filepath.Join(
 		os.Getenv("GOPATH"), "src",
 		pgmconfig.DomainName,
-		pgmconfig.ProgramName, plugin.PluginRoot)
+		pgmconfig.ProgramName, pgmconfig.PluginRoot)
 	if FileExists(root) {
 		return root, nil
 	}
@@ -59,7 +59,7 @@ func DefaultSrcRoot() (string, error) {
 	// get the root kustomize source directory when
 	// GOPATH is not set
 	_, filename, _, _ := runtime.Caller(1)
-	root = path.Join(path.Dir(filename), "../..", plugin.PluginRoot)
+	root = path.Join(path.Dir(filename), "../..", pgmconfig.PluginRoot)
 	if FileExists(root) {
 		return root, nil
 	}
@@ -73,7 +73,7 @@ func DefaultSrcRoot() (string, error) {
 
 	root = filepath.Join(
 		pgmconfig.HomeDir(),
-		pgmconfig.ProgramName, plugin.PluginRoot)
+		pgmconfig.ProgramName, pgmconfig.PluginRoot)
 	if FileExists(root) {
 		return root, nil
 	}

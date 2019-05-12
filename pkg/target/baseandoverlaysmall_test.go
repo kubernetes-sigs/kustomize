@@ -25,6 +25,42 @@ import (
 	"sigs.k8s.io/kustomize/pkg/loader"
 )
 
+func TestBaseInResourceList(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app/prod")
+	th.WriteK("/app/prod", `
+namePrefix: b-
+resources:
+- ../base
+`)
+	th.WriteK("/app/base", `
+namePrefix: a-
+resources:
+- service.yaml
+`)
+	th.WriteF("/app/base/service.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: myService
+spec:
+  selector:
+    backend: bungie
+`)
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Service
+metadata:
+  name: b-a-myService
+spec:
+  selector:
+    backend: bungie
+`)
+}
+
 func writeSmallBase(th *kusttest_test.KustTestHarness) {
 	th.WriteK("/app/base", `
 namePrefix: a-

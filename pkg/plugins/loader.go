@@ -141,11 +141,11 @@ func (l *Loader) loadGoPlugin(id resid.ResId) (c Configurable, err error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "plugin %s fails to load", name)
 	}
-	symbol, err := p.Lookup(pluginSymbol)
+	symbol, err := p.Lookup(PluginSymbol)
 	if err != nil {
 		return nil, errors.Wrapf(
 			err, "plugin %s doesn't have symbol %s",
-			name, pluginSymbol)
+			name, PluginSymbol)
 	}
 	c, ok = symbol.(Configurable)
 	if !ok {
