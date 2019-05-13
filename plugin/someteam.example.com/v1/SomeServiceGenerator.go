@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// A simple generator example.  Makes one service.
 type plugin struct {
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 	Port string `json:"port,omitempty" yaml:"port,omitempty"`
