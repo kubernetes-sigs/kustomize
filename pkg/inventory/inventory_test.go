@@ -30,10 +30,10 @@ func makeRefs() (Refs, Refs) {
 	current[a] = []resid.ItemId{b, c}
 	current[b] = []resid.ItemId{}
 	current[c] = []resid.ItemId{}
-	new := NewRefs()
-	new[a] = []resid.ItemId{b}
-	new[b] = []resid.ItemId{}
-	return current, new
+	newRefs := NewRefs()
+	newRefs[a] = []resid.ItemId{b}
+	newRefs[b] = []resid.ItemId{}
+	return current, newRefs
 }
 
 func TestInventory(t *testing.T) {
