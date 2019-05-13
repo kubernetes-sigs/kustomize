@@ -65,7 +65,7 @@ func (rmF *Factory) NewResMapFromBytes(b []byte) (ResMap, error) {
 	for _, res := range resources {
 		id := res.Id()
 		if _, found := result[id]; found {
-			return result, fmt.Errorf("GroupVersionKindName: %#v already exists b the map", id)
+			return result, fmt.Errorf("GroupVersionKindName: %#v already exists in the map", id)
 		}
 		result[id] = res
 	}
