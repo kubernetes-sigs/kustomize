@@ -32,10 +32,13 @@ function testGoTest {
   go test -v ./...
 }
 
-# This is helm stuff.
+# These tests require the helm program, and at the moment
+# we're not asking travis to install helm.
 function testNoTravisGoTest {
   go test -v sigs.k8s.io/kustomize/pkg/target \
-      -run TestChartInflatorExecPlugin -tags=notravis
+      -run TestChartInflatorPlugin -tags=notravis
+  go test -v sigs.k8s.io/kustomize/plugin/... \
+    -run TestChartInflator -tags=notravis
   mdrip --mode test --label helmtest README.md ./examples/chart.md
 }
 
