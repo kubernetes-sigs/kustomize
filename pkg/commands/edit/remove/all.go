@@ -25,10 +25,10 @@ import (
 func NewCmdRemove(fsys fs.FileSystem) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "remove",
-		Short: "Removes items to the kustomization file.",
+		Short: "Removes items from the kustomization file.",
 		Long:  "",
 		Example: `
-	# Removes resources to the kustomization file
+	# Removes resources from the kustomization file
 	kustomize edit remove resource {filepath} {filepath}
 	kustomize edit remove resource {pattern}
 `,
