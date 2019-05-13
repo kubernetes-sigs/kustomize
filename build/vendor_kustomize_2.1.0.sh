@@ -14,6 +14,35 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# This script does the following steps
+#
+#  0. make a workspace ~/kustomize_vendor
+#  1. clone Kubernetes repo
+#  2. clone Kustomize repo
+#  3. copy 4 directories in Kustomize reop
+#         internal
+#         k8sdeps
+#         pkg
+#         plugin
+#     into staging/src/k8s.io/cli-runtime/kustomize
+#   4. update the import path
+#   5. apply the patch
+#   6. update vendor and update bazel files
+#   7. verify that kubectl binary can be built
+#   8 verify that all tests pass
+#
+# The script will make 3 commits inside the Kubernetes repo:
+#    1. copy a Kustomize snapshot
+#    2. update cli-runtime and kubectl
+#    3. update vendor and bazel files
+#
+# Then one can open a PR in the remote kubernetes repo for this change.
+#
+# Copying a snapshot of Kustomize into kubectl doesn't new dependency(This can be confirmed by
+# viewing the change in go.mod.). When moving kubectl out from kubernetes, the
+# snapshot of Kustomize doesn't cause extra work.
+#
+
 set -e
 set -x
 
