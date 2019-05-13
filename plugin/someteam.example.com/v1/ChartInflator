@@ -6,7 +6,7 @@ set -e
 # Reads a file like this
 #
 #  apiVersion: kustomize.config.k8s.io/v1
-#  kind: ChartInflatorExec
+#  kind: ChartInflator
 #  metadata:
 #    name: notImportantHere
 #  chartName: nameOfStableChart
@@ -21,7 +21,7 @@ set -e
 # chartDir default: $TMP_DIR/charts
 #
 # Example execution:
-# ./plugin/someteam.example.com/v1/ChartInflatorExec configFile.yaml
+# ./plugin/someteam.example.com/v1/ChartInflator configFile.yaml
 
 
 # Yaml parsing is a ridiculous thing to do in bash,

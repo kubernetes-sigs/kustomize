@@ -90,7 +90,7 @@ the arbitrarily chosen chart name _minecraft_:
 ```
 cat <<'EOF' >$DEMO_HOME/base/chartInflator.yaml
 apiVersion: someteam.example.com/v1
-kind: ChartInflatorExec
+kind: ChartInflator
 metadata:
   name: notImportantHere
 chartName: minecraft
@@ -108,7 +108,7 @@ executable:
 
 <!-- @installPlugin @helmtest -->
 ```
-plugin=plugin/someteam.example.com/v1/ChartInflatorExec
+plugin=plugin/someteam.example.com/v1/ChartInflator
 curl -s --create-dirs -o \
 "$DEMO_HOME/kustomize/$plugin" \
 "https://raw.githubusercontent.com/\
@@ -137,7 +137,7 @@ Expect something like:
 > │   └── plugin
 > │       └── someteam.example.com
 > │           └── v1
-> │               └── ChartInflatorExec
+> │               └── ChartInflator
 > └── prod
 >    └── kustomization.yaml
 > ```
