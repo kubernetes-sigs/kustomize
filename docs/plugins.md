@@ -62,7 +62,7 @@ The file `chartInflator.yaml` could contain:
 
 ```
 apiVersion: someteam.example.com/v1
-kind: ChartInflatorExec
+kind: ChartInflator
 metadata:
   name: notImportantHere
 chartName: minecraft
@@ -150,7 +150,7 @@ reminder.
 
 ### Exec plugins
 
-[chartinflator]: ../plugin/someteam.example.com/v1/ChartInflatorExec
+[chartinflator]: ../plugin/someteam.example.com/v1/ChartInflator
 
 See this example [helm chart inflator][chartInflator].
 
