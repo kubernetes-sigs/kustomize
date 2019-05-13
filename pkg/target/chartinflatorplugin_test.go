@@ -41,24 +41,24 @@ import (
 //
 // TODO: Download and inflate the chart, and check that
 // in for the test.
-func TestChartInflatorExecPlugin(t *testing.T) {
+func TestChartInflatorPlugin(t *testing.T) {
 	tc := plugintest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
-		"someteam.example.com", "v1", "ChartInflatorExec")
+		"someteam.example.com", "v1", "ChartInflator")
 
 	th := kusttest_test.NewKustTestHarnessWithPluginConfig(
 		t, "/app", plugin.ActivePluginConfig())
 	th.WriteK("/app", `
 generators:
-- chartInflatorExec.yaml
+- chartInflator.yaml
 namePrefix: LOOOOOOOONG-
 `)
 
-	th.WriteF("/app/chartInflatorExec.yaml", `
+	th.WriteF("/app/chartInflator.yaml", `
 apiVersion: someteam.example.com/v1
-kind: ChartInflatorExec
+kind: ChartInflator
 metadata:
   name: notImportantHere
 chartName: minecraft
