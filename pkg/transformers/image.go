@@ -64,16 +64,16 @@ func (pt *imageTransformer) Transform(m resmap.ResMap) error {
 }
 
 func (pt *imageTransformer) mutateImage(in interface{}) (interface{}, error) {
-	image, ok := in.(string)
+	original, ok := in.(string)
 	if !ok {
 		return nil, fmt.Errorf("image path is not of type string but %T", in)
 	}
 
 	for _, img := range pt.images {
-		if !isImageMatched(image, img.Name) {
+		if !isImageMatched(original, img.Name) {
 			continue
 		}
-		name, tag := split(image)
+		name, tag := split(original)
 		if img.NewName != "" {
 			name = img.NewName
 		}
@@ -85,7 +85,7 @@ func (pt *imageTransformer) mutateImage(in interface{}) (interface{}, error) {
 		}
 		return name + tag, nil
 	}
-	return image, nil
+	return original, nil
 }
 
 /*
