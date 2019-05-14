@@ -19,7 +19,7 @@ package transformer
 import (
 	"fmt"
 
-	"github.com/evanphx/json-patch"
+	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
@@ -42,6 +42,11 @@ func newPatchJson6902JSONTransformer(
 	id resid.ResId, rawOp []byte) (transformers.Transformer, error) {
 	op := rawOp
 	var err error
+
+	if len(op) == 0 {
+		return nil, fmt.Errorf("json patch file is empty %v", id)
+	}
+
 	if !isJsonFormat(op) {
 		// if it isn't JSON, try to parse it as YAML
 		op, err = yaml.YAMLToJSON(rawOp)

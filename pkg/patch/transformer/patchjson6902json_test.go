@@ -163,3 +163,20 @@ func TestJsonPatchJSONTransformer_UnHappyTransform(t *testing.T) {
 		t.Fatalf("expected error didn't happen, but got %v", err)
 	}
 }
+
+func TestJsonPatchJSONTransformer_EmptyPatchFile(t *testing.T) {
+	id := resid.NewResId(deploy, "deploy1")
+	operations := []byte(``)
+
+	_, err := newPatchJson6902JSONTransformer(id, operations)
+
+	if err == nil {
+		t.Fatalf("expected an error")
+	}
+
+	if err != nil {
+		if !strings.HasPrefix(err.Error(), "json patch file is empty") {
+			t.Fatalf("expected %s, but got %v", "json patch file is empty", err)
+		}
+	}
+}
