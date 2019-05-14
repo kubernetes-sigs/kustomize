@@ -163,3 +163,40 @@ func TestJsonPatchJSONTransformer_UnHappyTransform(t *testing.T) {
 		t.Fatalf("expected error didn't happen, but got %v", err)
 	}
 }
+
+func TestJsonPatchJSONTransformer_EmptyPatchFile(t *testing.T) {
+	rf := resource.NewFactory(
+		kunstruct.NewKunstructuredFactoryImpl())
+	id := resid.NewResId(deploy, "deploy1")
+	base := resmap.ResMap{
+		id: rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "deploy1",
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{},
+				},
+			}),
+	}
+
+	operations := []byte(``)
+
+	jpt, err := newPatchJson6902JSONTransformer(id, operations)
+
+	if err == nil {
+		t.Fatalf("unexpected error : %v", err)
+
+		if jpt != nil {
+			err = jpt.Transform(base)
+		}
+	}
+
+	if err != nil {
+		if !strings.HasPrefix(err.Error(), "json patch file is empty") {
+			t.Fatalf("expected error didn't happen, but got %v", err)
+		}
+	}
+}
