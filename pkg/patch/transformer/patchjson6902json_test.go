@@ -171,7 +171,7 @@ func TestJsonPatchJSONTransformer_EmptyPatchFile(t *testing.T) {
 	_, err := newPatchJson6902JSONTransformer(id, operations)
 
 	if err == nil {
-		t.Fatalf("unexpected error : %v", err)
+		t.Fatalf("expected an error")
 	}
 
 	if err != nil {
