@@ -19,34 +19,50 @@ limitations under the License.
 package main
 
 import (
+	"bytes"
+	"text/template"
+
+	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resmap"
-	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/yaml"
 )
 
+// A simple generator example.  Makes one service.
 type plugin struct {
-	ldr ifc.Loader
-	rf  *resmap.Factory
-	types.GeneratorOptions
-	types.SecretArgs
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	Port string `json:"port,omitempty" yaml:"port,omitempty"`
 }
 
 var KustomizePlugin plugin
 
+const tmpl = `
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dev
+  name: {{.Name}}
+spec:
+  ports:
+  - port: {{.Port}}
+  selector:
+    app: dev
+`
+
 func (p *plugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, config []byte) (err error) {
-	p.GeneratorOptions = types.GeneratorOptions{}
-	p.SecretArgs = types.SecretArgs{}
-	err = yaml.Unmarshal(config, p)
-	p.ldr = ldr
-	p.rf = rf
-	return
+	ldr ifc.Loader, rf *resmap.Factory, config []byte) error {
+	return yaml.Unmarshal(config, p)
 }
 
 func (p *plugin) Generate() (resmap.ResMap, error) {
-	argsList := make([]types.SecretArgs, 1)
-	argsList[0] = p.SecretArgs
-	return p.rf.NewResMapFromSecretArgs(
-		p.ldr, &p.GeneratorOptions, argsList)
+	var buf bytes.Buffer
+	temp := template.Must(template.New("tmpl").Parse(tmpl))
+	err := temp.Execute(&buf, p)
+	if err != nil {
+		return nil, err
+	}
+	rf := resmap.NewFactory(resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()))
+	return rf.NewResMapFromBytes(buf.Bytes())
 }

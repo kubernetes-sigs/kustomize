@@ -11,7 +11,7 @@ cd "$base_dir" || {
 
 rc=0
 
-function runTest {
+function runFunc {
   local name=$1
   local result="SUCCESS"
   printf "============== begin %s\n" "$name"
@@ -32,10 +32,13 @@ function testGoTest {
   go test -v ./...
 }
 
-# This is helm stuff.
+# These tests require the helm program, and at the moment
+# we're not asking travis to install helm.
 function testNoTravisGoTest {
   go test -v sigs.k8s.io/kustomize/pkg/target \
-      -run TestChartInflatorExecPlugin -tags=notravis
+      -run TestChartInflatorPlugin -tags=notravis
+  go test -v sigs.k8s.io/kustomize/plugin/... \
+    -run TestChartInflator -tags=notravis
   mdrip --mode test --label helmtest README.md ./examples/chart.md
 }
 
@@ -85,18 +88,18 @@ echo "GOPATH=$GOPATH"
 echo "GO111MODULE=$GO111MODULE"
 echo pwd=`pwd`
 echo " "
-echo "Beginning tests..."
+echo "Working..."
 
-runTest testGoLangCILint
-runTest testGoTest
+runFunc testGoLangCILint
+runFunc testGoTest
 
 if [ -z ${TRAVIS+x} ]; then
   echo Not on travis, so running the notravis tests
-  runTest testNoTravisGoTest
+  runFunc testNoTravisGoTest
 fi
 
 PATH=$HOME/go/bin:$PATH
-runTest testExamples
+runFunc testExamples
 
 if [ $rc -eq 0 ]; then
   echo "SUCCESS!"

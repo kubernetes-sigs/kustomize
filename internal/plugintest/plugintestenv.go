@@ -1,10 +1,13 @@
 /*
 Copyright 2019 The Kubernetes Authors.
- Licensed under the Apache License, Version 2.0 (the "License");
+
+Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-     http://www.apache.org/licenses/LICENSE-2.0
- Unless required by applicable law or agreed to in writing, software
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
@@ -20,7 +23,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/plugins"
 )
@@ -60,7 +62,7 @@ func (x *PluginTestEnv) BuildGoPlugin(g, v, k string) {
 
 func (x *PluginTestEnv) BuildExecPlugin(name ...string) {
 	obj := filepath.Join(
-		append([]string{x.workDir, pgmconfig.ProgramName, plugin.PluginRoot}, name...)...)
+		append([]string{x.workDir, pgmconfig.ProgramName, pgmconfig.PluginRoot}, name...)...)
 
 	srcRoot, err := plugins.DefaultSrcRoot()
 	if err != nil {
@@ -87,7 +89,7 @@ func (x *PluginTestEnv) makeCompiler() *plugins.Compiler {
 	//    $objRoot
 	// so set things up accordingly.
 	objRoot := filepath.Join(
-		x.workDir, pgmconfig.ProgramName, plugin.PluginRoot)
+		x.workDir, pgmconfig.ProgramName, pgmconfig.PluginRoot)
 	err := os.MkdirAll(objRoot, os.ModePerm)
 	if err != nil {
 		x.t.Error(err)

@@ -14,12 +14,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package inventory
+package remove
 
-const (
-	// the annotation for inventory hash
-	InventoryHashAnnotation = "kustomize.config.k8s.io/InventoryHash"
-
-	// the annotation that contains the inventory information
-	InventoryAnnotation = "kustomize.config.k8s.io/Inventory"
+import (
+	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/pkg/fs"
 )
+
+// NewCmdRemove returns an instance of 'remove' subcommand.
+func NewCmdRemove(fsys fs.FileSystem) *cobra.Command {
+	c := &cobra.Command{
+		Use:   "remove",
+		Short: "Removes items from the kustomization file.",
+		Long:  "",
+		Example: `
+	# Removes resources from the kustomization file
+	kustomize edit remove resource {filepath} {filepath}
+	kustomize edit remove resource {pattern}
+`,
+		Args: cobra.MinimumNArgs(1),
+	}
+	c.AddCommand(
+		newCmdRemoveResource(fsys),
+	)
+	return c
+}

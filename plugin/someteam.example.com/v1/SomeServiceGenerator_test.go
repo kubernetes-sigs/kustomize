@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,49 +22,37 @@ import (
 	"sigs.k8s.io/kustomize/internal/plugintest"
 	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/kusttest"
-	"sigs.k8s.io/kustomize/pkg/loader"
 )
 
-func TestConfigMapGenerator(t *testing.T) {
+func TestSomeServiceGeneratorPlugin(t *testing.T) {
 	tc := plugintest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
-		"builtin", "", "ConfigMapGenerator")
+		"someteam.example.com", "v1", "SomeServiceGenerator")
 
-	th := kusttest_test.NewKustTestHarnessFull(
-		t, "/app", loader.RestrictionRootOnly, plugin.ActivePluginConfig())
+	th := kusttest_test.NewKustTestHarnessWithPluginConfig(
+		t, "/app", plugin.ActivePluginConfig())
 
-	th.WriteF("/app/devops.env", `
-SERVICE_PORT=32
-`)
-	th.WriteF("/app/uxteam.env", `
-COLOR=red
-`)
-
-	rm := th.LoadAndRunGenerator(`
-apiVersion: builtin
-kind: ConfigMapGenerator
+	m := th.LoadAndRunGenerator(`
+apiVersion: someteam.example.com/v1
+kind: SomeServiceGenerator
 metadata:
-  name: myMapGen
-name: myMap
-envs:
-- devops.env
-- uxteam.env
-literals:
-- FRUIT=apple
-- VEGETABLE=carrot
+  name: myGenerator
+name: my-service
+port: "12345"
 `)
-
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
-data:
-  COLOR: red
-  FRUIT: apple
-  SERVICE_PORT: "32"
-  VEGETABLE: carrot
-kind: ConfigMap
+kind: Service
 metadata:
-  name: myMap
+  labels:
+    app: dev
+  name: my-service
+spec:
+  ports:
+  - port: 12345
+  selector:
+    app: dev
 `)
 }

@@ -31,7 +31,7 @@ import (
 )
 
 type Configurable interface {
-	Config(ldr ifc.Loader, rf *resmap.Factory, k ifc.Kunstructured) error
+	Config(ldr ifc.Loader, rf *resmap.Factory, config []byte) error
 }
 
 type LoaderFactory interface {
@@ -64,8 +64,11 @@ func (l *Loader) LoadAndConfigureGenerators(
 		if !ok {
 			return nil, fmt.Errorf("plugin %s not a Configurable", res.Id())
 		}
-		fmt.Printf("%T %v\n", c, ok)
-		err = c.Config(ldr, l.rf, res)
+		byt, err := res.AsYAML()
+		if err != nil {
+			return nil, err
+		}
+		err = c.Config(ldr, l.rf, byt)
 		if err != nil {
 			return nil, errors.Wrapf(err, "plugin %s fails configuration", res.Id())
 		}
@@ -86,7 +89,11 @@ func (l *Loader) LoadAndCOnfigureTransformers(
 		if !ok {
 			return nil, fmt.Errorf("plugin %s not a Configurable", res.Id())
 		}
-		err = c.Config(ldr, l.rf, res)
+		byt, err := res.AsYAML()
+		if err != nil {
+			return nil, err
+		}
+		err = c.Config(ldr, l.rf, byt)
 		if err != nil {
 			return nil, errors.Wrapf(err, "plugin %s fails configuration", res.Id())
 		}
@@ -146,6 +153,15 @@ func (pl *ExternalPluginLoader) loadAndConfigurePlugin(
 			return nil, err
 		}
 	}
+	yaml, err := res.AsYAML()
+	if err != nil {
+		return nil, errors.Wrapf(err, "marshalling yaml from res %s", res.Id())
+	}
+	err = c.Config(ldr, pl.rf, yaml)
+	if err != nil {
+		return nil, errors.Wrapf(
+			err, "plugin %s fails configuration", res.Id())
+	}
 	return c, nil
 }
 
@@ -168,11 +184,11 @@ func (pl *ExternalPluginLoader) loadGoPlugin(id resid.ResId) (c Configurable, er
 	if err != nil {
 		return nil, errors.Wrapf(err, "plugin %s fails to load", name)
 	}
-	symbol, err := p.Lookup(pluginSymbol)
+	symbol, err := p.Lookup(PluginSymbol)
 	if err != nil {
 		return nil, errors.Wrapf(
 			err, "plugin %s doesn't have symbol %s",
-			name, pluginSymbol)
+			name, PluginSymbol)
 	}
 	c, ok = symbol.(Configurable)
 	if !ok {

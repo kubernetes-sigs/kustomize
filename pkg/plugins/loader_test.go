@@ -45,9 +45,9 @@ literals:
 - FRUIT=apple
 - VEGETABLE=carrot
 `
-	serviceGenerator = `
+	someServiceGenerator = `
 apiVersion: someteam.example.com/v1
-kind: ServiceGenerator
+kind: SomeServiceGenerator
 metadata:
   name: myServiceGenerator
 service: my-service
@@ -62,7 +62,7 @@ func TestLoader(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "SecretGenerator")
 	tc.BuildGoPlugin(
-		"someteam.example.com", "v1", "ServiceGenerator")
+		"someteam.example.com", "v1", "SomeServiceGenerator")
 
 	rmF := resmap.NewFactory(resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl()))
@@ -75,7 +75,7 @@ func TestLoader(t *testing.T) {
 	ldr := loadertest.NewFakeLoader("/foo")
 
 	m, err := rmF.NewResMapFromBytes([]byte(
-		serviceGenerator + "---\n" + secretGenerator))
+		someServiceGenerator + "---\n" + secretGenerator))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,10 +1,13 @@
 /*
 Copyright 2019 The Kubernetes Authors.
- Licensed under the Apache License, Version 2.0 (the "License");
+
+Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-     http://www.apache.org/licenses/LICENSE-2.0
- Unless required by applicable law or agreed to in writing, software
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
@@ -37,8 +40,8 @@ func TestExecPluginConfig(t *testing.T) {
 			"metadata": map[string]interface{}{
 				"name": "some-random-name",
 			},
-			ArgsOneLiner: "one two",
-			ArgsFromFile: "sed-input.txt",
+			"argsOneLiner": "one two",
+			"argsFromFile": "sed-input.txt",
 		})
 
 	ldr.AddFile("/app/sed-input.txt", []byte(`
@@ -51,7 +54,11 @@ s/$BAR/bar/g
 		plugin.DefaultPluginConfig().DirectoryPath,
 		pluginConfig.Id())
 
-	p.Config(ldr, rf, pluginConfig)
+	yaml, err := pluginConfig.AsYAML()
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	p.Config(ldr, rf, yaml)
 
 	expected := "/kustomize/plugin/someteam.example.com/v1/SedTransformer"
 	if !strings.HasSuffix(p.name, expected) {

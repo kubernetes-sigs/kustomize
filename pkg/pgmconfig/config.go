@@ -27,6 +27,7 @@ import (
 const (
 	XDG_CONFIG_HOME     = "XDG_CONFIG_HOME"
 	defaultConfigSubdir = ".config"
+	PluginRoot          = "plugin"
 )
 
 // Use https://github.com/kirsle/configdir instead?
