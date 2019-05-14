@@ -99,6 +99,7 @@ var order = []string{
 	"MutatingWebhookConfiguration",
 	"ValidatingWebhookConfiguration",
 	"ServiceAccount",
+	"PodSecurityPolicy",
 	"Role",
 	"ClusterRole",
 	"RoleBinding",
