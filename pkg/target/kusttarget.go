@@ -355,15 +355,6 @@ func (kt *KustTarget) newTransformer(
 	r = append(r, t)
 	r = append(r, transformers.NewNamespaceTransformer(
 		string(kt.kustomization.Namespace), tConfig.NameSpace))
-	t, err = transformers.NewNamePrefixSuffixTransformer(
-		string(kt.kustomization.NamePrefix),
-		string(kt.kustomization.NameSuffix),
-		tConfig.NamePrefix,
-	)
-	if err != nil {
-		return nil, err
-	}
-	r = append(r, t)
 	t, err = transformers.NewLabelsMapTransformer(
 		kt.kustomization.CommonLabels, tConfig.CommonLabels)
 	if err != nil {
