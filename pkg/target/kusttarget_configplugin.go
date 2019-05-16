@@ -76,10 +76,10 @@ func (kt *KustTarget) configureBuiltinTransformers(
 	//   with tests:
 	//   patch SMP
 	//   patch JSON
-	//   labels
 	//   annos
 	configurators := []transformerConfigurator{
 		kt.configureBuiltinNameTransformer,
+		kt.configureBuiltinLabelTransformer,
 		kt.configureBuiltinImageTagTransformer,
 	}
 	var result []transformers.Transformer
@@ -148,6 +148,24 @@ func (kt *KustTarget) configureBuiltinNameTransformer(
 	c.FieldSpecs = tConfig.NamePrefix
 	p := builtingen.NewNameTransformerPlugin()
 	err = kt.configureBuiltinPlugin(p, c, "name")
+	if err != nil {
+		return nil, err
+	}
+	result = append(result, p)
+	return
+}
+
+func (kt *KustTarget) configureBuiltinLabelTransformer(
+	tConfig *config.TransformerConfig) (
+	result []transformers.Transformer, err error) {
+	var c struct {
+		Labels     map[string]string
+		FieldSpecs []config.FieldSpec
+	}
+	c.Labels = kt.kustomization.CommonLabels
+	c.FieldSpecs = tConfig.CommonLabels
+	p := builtingen.NewLabelTransformerPlugin()
+	err = kt.configureBuiltinPlugin(p, c, "label")
 	if err != nil {
 		return nil, err
 	}

@@ -46,11 +46,10 @@ func (p *plugin) Config(
 
 func (p *plugin) Transform(m resmap.ResMap) error {
 	argsList := make([]image.Image, 1)
-    argsList[0] = p.ImageTag
-    t, err := transformers.NewImageTransformer(argsList, p.FieldSpecs)
-    if err != nil {
-    	return err
+	argsList[0] = p.ImageTag
+	t, err := transformers.NewImageTransformer(argsList, p.FieldSpecs)
+	if err != nil {
+		return err
 	}
-    return t.Transform(m)
+	return t.Transform(m)
 }
-

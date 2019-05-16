@@ -43,7 +43,7 @@ metadata:
 imageTag:
   name: nginx
   newTag: v2
-`,`
+`, `
 group: apps
 apiVersion: v1
 kind: Deployment

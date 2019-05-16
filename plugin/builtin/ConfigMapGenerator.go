@@ -27,8 +27,8 @@ import (
 )
 
 type plugin struct {
-	ldr     ifc.Loader
-	rf      *resmap.Factory
+	ldr ifc.Loader
+	rf  *resmap.Factory
 	types.GeneratorOptions
 	types.ConfigMapArgs
 }
