@@ -46,6 +46,10 @@ function testExamples {
   mdrip --mode test --label test README.md ./examples
 }
 
+function generateCode {
+  ./bin/pluginator.sh $oldGoPath
+}
+
 # Use of GOPATH is optional if go modules are
 # used.  This script tries to work for people who
 # don't have GOPATH set, and work for travis.
@@ -90,6 +94,7 @@ echo pwd=`pwd`
 echo " "
 echo "Working..."
 
+runFunc generateCode
 runFunc testGoLangCILint
 runFunc testGoTest
 

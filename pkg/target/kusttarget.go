@@ -231,16 +231,6 @@ func (kt *KustTarget) AccumulateTarget() (
 		return nil, errors.Wrapf(
 			err, "merging CRDs %v", crdTc)
 	}
-	resMap, err := kt.generateConfigMapsAndSecrets()
-	if err != nil {
-		return nil, errors.Wrap(
-			err, "generating legacy configMaps and secrets")
-	}
-	err = ra.MergeResourcesWithOverride(resMap)
-	if err != nil {
-		return nil, errors.Wrap(
-			err, "merging legacy configMaps and secrets")
-	}
 	err = kt.generateFromPlugins(ra)
 	if err != nil {
 		return nil, err
@@ -265,14 +255,29 @@ func (kt *KustTarget) AccumulateTarget() (
 
 func (kt *KustTarget) generateFromPlugins(
 	ra *accumulator.ResAccumulator) error {
-	generators, err := kt.loadGeneratorPlugins()
+	generators, err := kt.configureBuiltinGenerators()
+	if err != nil {
+		return err
+	}
+	for _, g := range generators {
+		resMap, err := g.Generate()
+		if err != nil {
+			return err
+		}
+		// The legacy generators allow override.
+		err = ra.MergeResourcesWithOverride(resMap)
+		if err != nil {
+			return errors.Wrapf(err, "merging from generator %v", g)
+		}
+	}
+	generators, err = kt.loadGeneratorPlugins()
 	if err != nil {
 		return errors.Wrap(err, "loading generator plugins")
 	}
 	for _, g := range generators {
 		resMap, err := g.Generate()
 		if err != nil {
-			return errors.Wrapf(err, "generating from %v", g)
+			return err
 		}
 		err = ra.MergeResourcesWithErrorOnIdCollision(resMap)
 		if err != nil {
@@ -280,26 +285,6 @@ func (kt *KustTarget) generateFromPlugins(
 		}
 	}
 	return nil
-}
-
-func (kt *KustTarget) generateConfigMapsAndSecrets() (resmap.ResMap, error) {
-	cms, err := kt.rFactory.NewResMapFromConfigMapArgs(
-		kt.ldr,
-		kt.kustomization.GeneratorOptions,
-		kt.kustomization.ConfigMapGenerator)
-	if err != nil {
-		return nil, errors.Wrapf(
-			err, "configmapgenerator: %v", kt.kustomization.ConfigMapGenerator)
-	}
-	secrets, err := kt.rFactory.NewResMapFromSecretArgs(
-		kt.ldr,
-		kt.kustomization.GeneratorOptions,
-		kt.kustomization.SecretGenerator)
-	if err != nil {
-		return nil, errors.Wrapf(
-			err, "secretgenerator: %v", kt.kustomization.SecretGenerator)
-	}
-	return resmap.MergeWithErrorOnIdCollision(cms, secrets)
 }
 
 // accumulateResources fills the given resourceAccumulator
@@ -397,11 +382,11 @@ func (kt *KustTarget) newTransformer(
 		return nil, err
 	}
 	r = append(r, t)
-	t, err = transformers.NewImageTransformer(kt.kustomization.Images, tConfig.Images)
+	lts, err := kt.configureBuiltinTransformers(tConfig)
 	if err != nil {
 		return nil, err
 	}
-	r = append(r, t)
+	r = append(r, lts...)
 	tp, err := kt.loadTransformerPlugins()
 	if err != nil {
 		return nil, err
