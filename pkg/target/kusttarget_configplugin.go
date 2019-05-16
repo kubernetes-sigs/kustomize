@@ -73,9 +73,13 @@ func (kt *KustTarget) configureBuiltinTransformers(
 	tConfig *config.TransformerConfig) (
 	[]transformers.Transformer, error) {
 	// TODO: Convert remaining legacy transformers to plugins
-	//     (patch SMP/JSON, name prefix/suffix, labels/annos).
-	//     with tests.
+	//   with tests:
+	//   patch SMP
+	//   patch JSON
+	//   labels
+	//   annos
 	configurators := []transformerConfigurator{
+		kt.configureBuiltinNameTransformer,
 		kt.configureBuiltinImageTagTransformer,
 	}
 	var result []transformers.Transformer
@@ -128,6 +132,26 @@ func (kt *KustTarget) configureBuiltinConfigMapGenerator() (
 		}
 		result = append(result, p)
 	}
+	return
+}
+
+func (kt *KustTarget) configureBuiltinNameTransformer(
+	tConfig *config.TransformerConfig) (
+	result []transformers.Transformer, err error) {
+	var c struct {
+		Prefix     string
+		Suffix     string
+		FieldSpecs []config.FieldSpec
+	}
+	c.Prefix = kt.kustomization.NamePrefix
+	c.Suffix = kt.kustomization.NameSuffix
+	c.FieldSpecs = tConfig.NamePrefix
+	p := builtingen.NewNameTransformerPlugin()
+	err = kt.configureBuiltinPlugin(p, c, "name")
+	if err != nil {
+		return nil, err
+	}
+	result = append(result, p)
 	return
 }
 
