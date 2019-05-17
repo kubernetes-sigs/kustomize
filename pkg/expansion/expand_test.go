@@ -30,7 +30,7 @@ type expected struct {
 func TestMapReference(t *testing.T) {
 	type env struct {
 		Name  string
-		Value string
+		Value interface{}
 	}
 	envs := []env{
 		{
@@ -47,7 +47,7 @@ func TestMapReference(t *testing.T) {
 		},
 	}
 
-	declaredEnv := map[string]string{
+	declaredEnv := map[string]interface{}{
 		"FOO": "bar",
 		"ZOO": "$(FOO)-1",
 		"BLU": "$(ZOO)-2",
@@ -57,7 +57,7 @@ func TestMapReference(t *testing.T) {
 	mapping := MappingFuncFor(counts, declaredEnv)
 
 	for _, env := range envs {
-		declaredEnv[env.Name] = Expand(env.Value, mapping)
+		declaredEnv[env.Name] = Expand(env.Value.(string), mapping)
 	}
 
 	expectedEnv := map[string]expected{
@@ -81,7 +81,7 @@ func TestMapReference(t *testing.T) {
 }
 
 func TestMapping(t *testing.T) {
-	context := map[string]string{
+	context := map[string]interface{}{
 		"VAR_A":     "A",
 		"VAR_B":     "B",
 		"VAR_C":     "C",
@@ -92,11 +92,11 @@ func TestMapping(t *testing.T) {
 }
 
 func TestMappingDual(t *testing.T) {
-	context := map[string]string{
+	context := map[string]interface{}{
 		"VAR_A":     "A",
 		"VAR_EMPTY": "",
 	}
-	context2 := map[string]string{
+	context2 := map[string]interface{}{
 		"VAR_B":   "B",
 		"VAR_C":   "C",
 		"VAR_REF": "$(VAR_A)",
@@ -105,7 +105,7 @@ func TestMappingDual(t *testing.T) {
 	doExpansionTest(t, context, context2)
 }
 
-func doExpansionTest(t *testing.T, context ...map[string]string) {
+func doExpansionTest(t *testing.T, context ...map[string]interface{}) {
 	cases := []struct {
 		name     string
 		input    string

@@ -141,6 +141,11 @@ func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 	if err != nil {
 		return nil, err
 	}
+	// With all the back references fixed, it's OK to resolve Inlines.
+	err = ra.ResolveInlines()
+	if err != nil {
+		return nil, err
+	}
 	// With all the back references fixed, it's OK to resolve Vars.
 	err = ra.ResolveVars()
 	if err != nil {
@@ -168,6 +173,11 @@ func (kt *KustTarget) MakePruneConfigMap() (resmap.ResMap, error) {
 	// Given that names have changed (prefixs/suffixes added),
 	// fix all the back references to those names.
 	err = ra.FixBackReferences()
+	if err != nil {
+		return nil, err
+	}
+	// With all the back references fixed, it's OK to resolve Inlines.
+	err = ra.ResolveInlines()
 	if err != nil {
 		return nil, err
 	}
@@ -220,6 +230,11 @@ func (kt *KustTarget) AccumulateTarget() (
 	if err != nil {
 		return nil, errors.Wrapf(
 			err, "merging vars %v", kt.kustomization.Vars)
+	}
+	err = ra.MergeInlines(kt.kustomization.Inlines)
+	if err != nil {
+		return nil, errors.Wrapf(
+			err, "merging substituions %v", kt.kustomization.Inlines)
 	}
 	crdTc, err := config.LoadConfigFromCRDs(kt.ldr, kt.kustomization.Crds)
 	if err != nil {

@@ -62,13 +62,13 @@ func (o *inventoryTransformer) Transform(m resmap.ResMap) error {
 	invty := inventory.NewInventory()
 	var keys []string
 	for _, r := range m {
-		ns, _ := r.GetFieldValue("metadata.namespace")
+		ns, _ := r.GetString("metadata.namespace")
 		item := resid.NewItemId(r.GetGvk(), ns, r.GetName())
 		var refs []resid.ItemId
 
 		for _, refid := range r.GetRefBy() {
 			ref := m[refid]
-			ns, _ := ref.GetFieldValue("metadata.namespace")
+			ns, _ := ref.GetString("metadata.namespace")
 			refs = append(refs, resid.NewItemId(ref.GetGvk(), ns, ref.GetName()))
 		}
 		invty.Current[item] = refs

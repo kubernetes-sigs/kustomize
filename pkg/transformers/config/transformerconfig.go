@@ -34,6 +34,7 @@ type TransformerConfig struct {
 	CommonAnnotations fsSlice  `json:"commonAnnotations,omitempty" yaml:"commonAnnotations,omitempty"`
 	NameReference     nbrSlice `json:"nameReference,omitempty" yaml:"nameReference,omitempty"`
 	VarReference      fsSlice  `json:"varReference,omitempty" yaml:"varReference,omitempty"`
+	InlineReference   fsSlice  `json:"inlineReference,omitempty" yaml:"inlineReference,omitempty"`
 	Images            fsSlice  `json:"images,omitempty" yaml:"images,omitempty"`
 }
 
@@ -60,6 +61,7 @@ func (t *TransformerConfig) sortFields() {
 	sort.Sort(t.CommonAnnotations)
 	sort.Sort(t.NameReference)
 	sort.Sort(t.VarReference)
+	sort.Sort(t.InlineReference)
 	sort.Sort(t.Images)
 }
 
@@ -124,6 +126,10 @@ func (t *TransformerConfig) Merge(input *TransformerConfig) (
 		return nil, err
 	}
 	merged.VarReference, err = t.VarReference.mergeAll(input.VarReference)
+	if err != nil {
+		return nil, err
+	}
+	merged.InlineReference, err = t.InlineReference.mergeAll(input.InlineReference)
 	if err != nil {
 		return nil, err
 	}

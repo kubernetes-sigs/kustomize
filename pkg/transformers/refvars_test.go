@@ -27,7 +27,7 @@ import (
 
 func TestVarRef(t *testing.T) {
 	type given struct {
-		varMap map[string]string
+		varMap map[string]interface{}
 		fs     []config.FieldSpec
 		res    resmap.ResMap
 	}
@@ -43,7 +43,7 @@ func TestVarRef(t *testing.T) {
 		{
 			description: "var replacement in map[string]",
 			given: given{
-				varMap: map[string]string{
+				varMap: map[string]interface{}{
 					"FOO": "replacementForFoo",
 					"BAR": "replacementForBar",
 				},

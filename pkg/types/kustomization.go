@@ -88,6 +88,15 @@ type Kustomization struct {
 	// value of the specified field has been determined.
 	Vars []Var `json:"vars,omitempty" yaml:"vars,omitempty"`
 
+	// Vars allow things modified by kustomize to be injected into a
+	// container specification. A var is a name (e.g. FOO) associated
+	// with a field in a specific resource instance.  The field must
+	// contain a value of type string, and defaults to the name field
+	// of the instance.  Any appearance of "$(FOO)" in the container
+	// spec will be replaced at kustomize build time, after the final
+	// value of the specified field has been determined.
+	Inlines []Var `json:"inlines,omitempty" yaml:"inlines,omitempty"`
+
 	//
 	// Operands - what kustomize operates on.
 	//

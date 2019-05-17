@@ -79,7 +79,7 @@ func makeTestDeployment() ifc.Kunstructured {
 }
 
 func getFieldValue(t *testing.T, obj ifc.Kunstructured, fieldName string) string {
-	v, err := obj.GetFieldValue(fieldName)
+	v, err := obj.GetString(fieldName)
 	if err != nil {
 		t.Fatalf("unexpected field error: %v", err)
 	}

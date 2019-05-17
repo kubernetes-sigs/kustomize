@@ -19,6 +19,7 @@ package expansion
 
 import (
 	"bytes"
+	"strconv"
 )
 
 const (
@@ -38,13 +39,24 @@ func syntaxWrap(input string) string {
 // for the input is found.
 func MappingFuncFor(
 	counts map[string]int,
-	context ...map[string]string) func(string) string {
+	context ...map[string]interface{}) func(string) string {
 	return func(input string) string {
 		for _, vars := range context {
 			val, ok := vars[input]
 			if ok {
 				counts[input]++
-				return val
+				switch typedV := val.(type) {
+				case string:
+					return typedV
+				case int64:
+					return strconv.FormatInt(typedV, 10)
+				case float64:
+					return strconv.FormatFloat(typedV, 'E', -1, 64)
+				case bool:
+					return strconv.FormatBool(typedV)
+				default:
+					return syntaxWrap(input)
+				}
 			}
 		}
 		return syntaxWrap(input)
