@@ -18,7 +18,7 @@ type ImageTagTransformerPlugin struct {
 }
 
 func NewImageTagTransformerPlugin() *ImageTagTransformerPlugin {
-  return &ImageTagTransformerPlugin{}
+	return &ImageTagTransformerPlugin{}
 }
 
 func (p *ImageTagTransformerPlugin) Config(
@@ -30,11 +30,10 @@ func (p *ImageTagTransformerPlugin) Config(
 
 func (p *ImageTagTransformerPlugin) Transform(m resmap.ResMap) error {
 	argsList := make([]image.Image, 1)
-    argsList[0] = p.ImageTag
-    t, err := transformers.NewImageTransformer(argsList, p.FieldSpecs)
-    if err != nil {
-    	return err
+	argsList[0] = p.ImageTag
+	t, err := transformers.NewImageTransformer(argsList, p.FieldSpecs)
+	if err != nil {
+		return err
 	}
-    return t.Transform(m)
+	return t.Transform(m)
 }
-
