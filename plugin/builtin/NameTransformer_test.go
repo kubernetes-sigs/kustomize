@@ -6,23 +6,18 @@ package main_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/internal/plugintest"
-	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/kusttest"
-	"sigs.k8s.io/kustomize/pkg/loader"
+	"sigs.k8s.io/kustomize/plugin"
 )
 
 func TestNameTransformer(t *testing.T) {
-	tc := plugintest_test.NewPluginTestEnv(t).Set()
+	tc := plugin.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "NameTransformer")
 
-	th := kusttest_test.NewKustTestHarnessFull(
-		t, "/app", loader.RestrictionRootOnly,
-		plugin.ActivePluginConfig())
-
+	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
 kind: NameTransformer
