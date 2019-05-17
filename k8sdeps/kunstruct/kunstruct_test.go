@@ -113,8 +113,9 @@ func TestGetFieldValue(t *testing.T) {
 		{
 			name:          "nilAsValue",
 			pathToField:   "this.is.aNilValue",
-			errorExpected: true,
+			errorExpected: false,
 			errorMsg:      ".this.is.aNilValue accessor error: <nil> is of the type <nil>, expected string",
+			expectedValue: map[string]interface{}{},
 		},
 		{
 			name:          "unrecognizable",
@@ -141,6 +142,7 @@ func TestGetFieldValue(t *testing.T) {
 			t.Fatalf("%q; path %q - unexpected error %v",
 				test.name, test.pathToField, err)
 		}
+		// TODO(jeb): Improve expectedValue, actualValue comparison
 		_, isString := test.expectedValue.(string)
 		if isString && test.expectedValue != s {
 			t.Fatalf("%q; Got: %s expected: %s",
