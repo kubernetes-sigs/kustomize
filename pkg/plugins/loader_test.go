@@ -1,18 +1,5 @@
-/*
-Copyright 2019 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package plugins_test
 
@@ -20,12 +7,12 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/internal/loadertest"
-	"sigs.k8s.io/kustomize/internal/plugintest"
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
+	kvplugin "sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/plugins"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/plugin"
 )
 
 const (
@@ -56,7 +43,7 @@ port: "12345"
 )
 
 func TestLoader(t *testing.T) {
-	tc := plugintest_test.NewPluginTestEnv(t).Set()
+	tc := plugin.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -67,7 +54,7 @@ func TestLoader(t *testing.T) {
 	rmF := resmap.NewFactory(resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl()))
 
-	l := plugins.NewLoader(plugin.ActivePluginConfig(), rmF)
+	l := plugins.NewLoader(kvplugin.ActivePluginConfig(), rmF)
 	if l == nil {
 		t.Fatal("expect non-nil loader")
 	}
