@@ -9,14 +9,14 @@ import (
 )
 
 type ConfigMapGeneratorPlugin struct {
-	ldr     ifc.Loader
-	rf      *resmap.Factory
+	ldr ifc.Loader
+	rf  *resmap.Factory
 	types.GeneratorOptions
 	types.ConfigMapArgs
 }
 
 func NewConfigMapGeneratorPlugin() *ConfigMapGeneratorPlugin {
-  return &ConfigMapGeneratorPlugin{}
+	return &ConfigMapGeneratorPlugin{}
 }
 
 func (p *ConfigMapGeneratorPlugin) Config(

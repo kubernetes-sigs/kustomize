@@ -16,7 +16,7 @@ type SecretGeneratorPlugin struct {
 }
 
 func NewSecretGeneratorPlugin() *SecretGeneratorPlugin {
-  return &SecretGeneratorPlugin{}
+	return &SecretGeneratorPlugin{}
 }
 
 func (p *SecretGeneratorPlugin) Config(
