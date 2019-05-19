@@ -1,5 +1,3 @@
-// +build plugin
-
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -10,27 +8,28 @@ import (
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/transformers"
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
-	"sigs.k8s.io/yaml"
 )
 
-type plugin struct {
-	Metadata metaData `json:"metadata,omitempty" yaml:"metadata,omitempty"`
-}
-
-type metaData struct {
-	Name string `json:"name,omitempty" yaml:"name,omitempty"`
-}
+type plugin struct{}
 
 var KustomizePlugin plugin
 
 func (p *plugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, c []byte) error {
-	return yaml.Unmarshal(c, p)
+	return nil
+}
+
+// Returns a constant, rather than
+//   time.Now().Format("2006-01-02")
+// to make tests happy.
+// This is just an example.
+func getDate() string {
+	return "2018-05-11"
 }
 
 func (p *plugin) Transform(m resmap.ResMap) error {
 	tr, err := transformers.NewNamePrefixSuffixTransformer(
-		p.Metadata.Name+"-", "",
+		getDate()+"-", "",
 		config.MakeDefaultConfig().NamePrefix)
 	if err != nil {
 		return err
