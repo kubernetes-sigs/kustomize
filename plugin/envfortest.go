@@ -8,15 +8,16 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/plugins"
 )
 
-// PluginTestEnv manages the plugin test environment.
+// EnvForTest manages the plugin test environment.
 // It sets/resets XDG_CONFIG_HOME, makes/removes a temp objRoot.
-type PluginTestEnv struct {
+type EnvForTest struct {
 	t        *testing.T
 	compiler *plugins.Compiler
 	workDir  string
@@ -24,34 +25,33 @@ type PluginTestEnv struct {
 	wasSet   bool
 }
 
-func NewPluginTestEnv(t *testing.T) *PluginTestEnv {
-	return &PluginTestEnv{t: t}
+func NewEnvForTest(t *testing.T) *EnvForTest {
+	return &EnvForTest{t: t}
 }
 
-func (x *PluginTestEnv) Set() *PluginTestEnv {
+func (x *EnvForTest) Set() *EnvForTest {
 	x.createWorkDir()
 	x.compiler = x.makeCompiler()
 	x.setEnv()
 	return x
 }
 
-func (x *PluginTestEnv) Reset() {
+func (x *EnvForTest) Reset() {
 	x.resetEnv()
 	x.removeWorkDir()
 }
 
-func (x *PluginTestEnv) BuildGoPlugin(g, v, k string) {
+func (x *EnvForTest) BuildGoPlugin(g, v, k string) {
 	err := x.compiler.Compile(g, v, k)
 	if err != nil {
 		x.t.Errorf("compile failed: %v", err)
 	}
 }
 
-func (x *PluginTestEnv) BuildExecPlugin(name ...string) {
-	obj := filepath.Join(
-		append([]string{x.compiler.ObjRoot()}, name...)...)
-	src := filepath.Join(
-		append([]string{x.compiler.SrcRoot()}, name...)...)
+func (x *EnvForTest) BuildExecPlugin(g, v, k string) {
+	lowK := strings.ToLower(k)
+	obj := filepath.Join(x.compiler.ObjRoot(), g, v, lowK, k)
+	src := filepath.Join(x.compiler.SrcRoot(), g, v, lowK, k)
 	if err := os.MkdirAll(filepath.Dir(obj), 0755); err != nil {
 		x.t.Errorf("error making directory: %s", filepath.Dir(obj))
 	}
@@ -62,7 +62,7 @@ func (x *PluginTestEnv) BuildExecPlugin(name ...string) {
 	}
 }
 
-func (x *PluginTestEnv) makeCompiler() *plugins.Compiler {
+func (x *EnvForTest) makeCompiler() *plugins.Compiler {
 	// The plugin loader wants to find object code under
 	//    $XDG_CONFIG_HOME/kustomize/plugins
 	// and the compiler writes object code to
@@ -81,7 +81,7 @@ func (x *PluginTestEnv) makeCompiler() *plugins.Compiler {
 	return plugins.NewCompiler(srcRoot, objRoot)
 }
 
-func (x *PluginTestEnv) createWorkDir() {
+func (x *EnvForTest) createWorkDir() {
 	var err error
 	x.workDir, err = ioutil.TempDir("", "kustomize-plugin-tests")
 	if err != nil {
@@ -89,7 +89,7 @@ func (x *PluginTestEnv) createWorkDir() {
 	}
 }
 
-func (x *PluginTestEnv) removeWorkDir() {
+func (x *EnvForTest) removeWorkDir() {
 	err := os.RemoveAll(x.workDir)
 	if err != nil {
 		x.t.Errorf(
@@ -97,12 +97,12 @@ func (x *PluginTestEnv) removeWorkDir() {
 	}
 }
 
-func (x *PluginTestEnv) setEnv() {
+func (x *EnvForTest) setEnv() {
 	x.oldXdg, x.wasSet = os.LookupEnv(pgmconfig.XDG_CONFIG_HOME)
 	os.Setenv(pgmconfig.XDG_CONFIG_HOME, x.workDir)
 }
 
-func (x *PluginTestEnv) resetEnv() {
+func (x *EnvForTest) resetEnv() {
 	if x.wasSet {
 		os.Setenv(pgmconfig.XDG_CONFIG_HOME, x.oldXdg)
 	} else {
