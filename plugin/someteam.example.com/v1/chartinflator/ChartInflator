@@ -1,8 +1,9 @@
 #!/bin/bash
-set -e
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
 
 # Helm chart inflator
-
+#
 # Reads a file like this
 #
 #  apiVersion: kustomize.config.k8s.io/v1
@@ -23,6 +24,7 @@ set -e
 # Example execution:
 # ./plugin/someteam.example.com/v1/ChartInflator configFile.yaml
 
+set -e
 
 # Yaml parsing is a ridiculous thing to do in bash,
 # but let's try:

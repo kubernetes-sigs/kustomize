@@ -11,7 +11,7 @@ import (
 )
 
 func TestSedTransformer(t *testing.T) {
-	tc := plugin.NewPluginTestEnv(t).Set()
+	tc := plugin.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin("someteam.example.com", "v1", "SedTransformer")

@@ -47,7 +47,7 @@ function testExamples {
 }
 
 function generateCode {
-  ./bin/pluginator.sh $oldGoPath
+  ./plugin/generateBuiltins.sh $oldGoPath
 }
 
 # Use of GOPATH is optional if go modules are

@@ -87,8 +87,8 @@ to a sea of objects that kustomize transforms and
 emits.
 
 The specified order of transformers in the
-`transformers` field is, however, respected, as
-transformers aren't expected to be commutative.
+`transformers` field should be respected, as
+transformers cannot be expected to be commutative.
 
 ## Execution
 
@@ -115,7 +115,8 @@ other [k8s object]), kustomize will first look for an
 _executable_ file called
 
 ```
-$XDG_CONFIG_HOME/kustomize/plugin/${apiVersion}/${kind}
+$XDG_CONFIG_HOME/kustomize/plugin
+    /${apiVersion}/LOWERCASE(${kind})/${kind}
 ```
 
 The default value of `XDG_CONFIG_HOME` is `$HOME/.config`.
@@ -150,7 +151,7 @@ reminder.
 
 ### Exec plugins
 
-[chartinflator]: ../plugin/someteam.example.com/v1/ChartInflator
+[chartinflator]: ../plugin/someteam.example.com/v1/chartinflator/ChartInflator
 
 See this example [helm chart inflator][chartInflator].
 
@@ -183,15 +184,13 @@ marshalled resources on `stdin` and capture
 ### Go plugins
 
 [Go plugin]: https://golang.org/pkg/plugin/
-[secretgenerator]: ../plugin/builtin/SecretGenerator.go
+[servicegenerator]: ../plugin/someteam.example.com/v1/someservicegenerator/SomeServiceGenerator.go
 
-See this example [secret generator][secretGenerator].
+See this example [service generator][serviceGenerator].
 
 A [Go plugin] for kustomize looks like this:
 
 > ```
-> +build plugin
->
 > package main
 >
 > import (
@@ -205,8 +204,9 @@ A [Go plugin] for kustomize looks like this:
 > var KustomizePlugin plugin
 >
 > func (p *plugin) Config(
->    ldr ifc.Loader, rf *resmap.Factory,
->    k ifc.Kunstructured) error {...}
+>    ldr ifc.Loader,
+>    rf *resmap.Factory,
+>    c []byte) error {...}
 >
 > func (p *plugin) Generate() (resmap.ResMap, error) {...}
 >
@@ -218,7 +218,7 @@ The use of the identifiers `plugin`,
 `Configurable`, `Generator`, `Transformer` as
 shown is _required_.
 
-The plugin author should of course change the
+The plugin author will change the
 contents of the `plugin` struct, and the three
 method bodies, and add imports as desired.
 
@@ -227,10 +227,8 @@ source code is sitting right next to where the
 shared object (`.so`) files are expected to be:
 
 ```
-dir=$XDG_CONFIG_HOME/kustomize/plugin/${apiVersion}
-go build -buildmode plugin -tags=plugin \
-    -o $dir/${kind}.so \
-    $dir/${kind}.go
+d=$XDG_CONFIG_HOME/kustomize/plugin/${apiVersion}/LOWERCASE(${kind})
+go build -buildmode plugin -o $d/${kind}.so $d/${kind}.go
 ```
 
 #### Caveats
@@ -241,9 +239,9 @@ Go plugins allow kustomize extensions that
    uses to test its _builtin_ generators and
    transformers,
 
- * run without the performance hit of firing up a
-   subprocess and marshalling/unmarshalling data
-   for each plugin run.
+ * run without the performance cost of firing up a
+   subprocess and marshalling/unmarshalling all
+   resource data for each plugin run.
 
 [ELF]: https://en.wikipedia.org/wiki/Executable_and_Linkable_Format
 
@@ -263,3 +261,12 @@ a failure at load time.
 
 Exec plugins also lack provenance, but don't
 suffer from the skew problem.
+
+In either case, at the time of writing the proper
+way to share a plugin is as a tar file of source code
+and associated data, developed and unpacked under
+`kustomize/plugin`. In the case of a Go plugin, the
+end user must compile it (described above), and may
+need to compile kustomize as well.  If people use
+Go plugins, more tooling will be built to make
+plugin sharing easier.
