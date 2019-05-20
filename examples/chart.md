@@ -108,7 +108,7 @@ executable:
 
 <!-- @installPlugin @helmtest -->
 ```
-plugin=plugin/someteam.example.com/v1/ChartInflator
+plugin=plugin/someteam.example.com/v1/chartinflator/ChartInflator
 curl -s --create-dirs -o \
 "$DEMO_HOME/kustomize/$plugin" \
 "https://raw.githubusercontent.com/\
@@ -137,7 +137,8 @@ Expect something like:
 > │   └── plugin
 > │       └── someteam.example.com
 > │           └── v1
-> │               └── ChartInflator
+> │               └── chartinflator
+> │                  └── ChartInflator
 > └── prod
 >    └── kustomization.yaml
 > ```
