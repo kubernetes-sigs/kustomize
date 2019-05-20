@@ -343,23 +343,17 @@ func (kt *KustTarget) newTransformer(
 	r = append(r, t)
 	r = append(r, transformers.NewNamespaceTransformer(
 		string(kt.kustomization.Namespace), tConfig.NameSpace))
-	t, err = transformers.NewAnnotationsMapTransformer(
-		kt.kustomization.CommonAnnotations, tConfig.CommonAnnotations)
+	lts, err := kt.configureBuiltinTransformers(tConfig)
 	if err != nil {
 		return nil, err
 	}
-	r = append(r, t)
+	r = append(r, lts...)
 	t, err = patchtransformer.NewPatchJson6902Factory(kt.ldr).
 		MakePatchJson6902Transformer(kt.kustomization.PatchesJson6902)
 	if err != nil {
 		return nil, err
 	}
 	r = append(r, t)
-	lts, err := kt.configureBuiltinTransformers(tConfig)
-	if err != nil {
-		return nil, err
-	}
-	r = append(r, lts...)
 	tp, err := kt.loadTransformerPlugins()
 	if err != nil {
 		return nil, err
