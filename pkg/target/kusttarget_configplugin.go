@@ -6,6 +6,7 @@ package target
 import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/pkg/image"
+	"sigs.k8s.io/kustomize/pkg/patch"
 	"sigs.k8s.io/kustomize/pkg/plugins"
 	"sigs.k8s.io/kustomize/pkg/transformers"
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
@@ -68,6 +69,7 @@ func (kt *KustTarget) configureBuiltinTransformers(
 		kt.configureBuiltinImageTagTransformer,
 		kt.configureBuiltinLabelTransformer,
 		kt.configureBuiltinAnnotationsTransformer,
+		kt.configureBuiltinPatchJson6902Transformer,
 	}
 	var result []transformers.Transformer
 	for _, f := range configurators {
@@ -119,6 +121,22 @@ func (kt *KustTarget) configureBuiltinConfigMapGenerator() (
 		}
 		result = append(result, p)
 	}
+	return
+}
+
+func (kt *KustTarget) configureBuiltinPatchJson6902Transformer(
+	tConfig *config.TransformerConfig) (
+	result []transformers.Transformer, err error) {
+	var c struct {
+		Patches []patch.Json6902
+	}
+	c.Patches = kt.kustomization.PatchesJson6902
+	p := builtin.NewPatchJson6902TransformerPlugin()
+	err = kt.configureBuiltinPlugin(p, c, "patchJson6902")
+	if err != nil {
+		return nil, err
+	}
+	result = append(result, p)
 	return
 }
 
