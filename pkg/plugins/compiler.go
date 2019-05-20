@@ -21,6 +21,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
@@ -95,7 +96,8 @@ func goBin() string {
 // Compile reads ${srcRoot}/${g}/${v}/${k}.go
 //    and writes ${objRoot}/${g}/${v}/${k}.so
 func (b *Compiler) Compile(g, v, k string) error {
-	objDir := filepath.Join(b.objRoot, g, v)
+	lowK := strings.ToLower(k)
+	objDir := filepath.Join(b.objRoot, g, v, lowK)
 	objFile := filepath.Join(objDir, k) + ".so"
 	if RecentFileExists(objFile) {
 		// Skip rebuilding it.
@@ -105,7 +107,7 @@ func (b *Compiler) Compile(g, v, k string) error {
 	if err != nil {
 		return err
 	}
-	srcFile := filepath.Join(b.srcRoot, g, v, k) + ".go"
+	srcFile := filepath.Join(b.srcRoot, g, v, lowK, k) + ".go"
 	if !FileExists(srcFile) {
 		return fmt.Errorf(
 			"cannot find source %s", srcFile)
@@ -114,7 +116,6 @@ func (b *Compiler) Compile(g, v, k string) error {
 		"build",
 		"-buildmode",
 		"plugin",
-		"-tags=plugin",
 		"-o", objFile, srcFile,
 	}
 	goBin := goBin()
