@@ -15,7 +15,6 @@ import (
 	"sigs.k8s.io/kustomize/pkg/accumulator"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/ifc/transformer"
-	patchtransformer "sigs.k8s.io/kustomize/pkg/patch/transformer"
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/plugins"
 	"sigs.k8s.io/kustomize/pkg/resmap"
@@ -348,12 +347,6 @@ func (kt *KustTarget) newTransformer(
 		return nil, err
 	}
 	r = append(r, lts...)
-	t, err = patchtransformer.NewPatchJson6902Factory(kt.ldr).
-		MakePatchJson6902Transformer(kt.kustomization.PatchesJson6902)
-	if err != nil {
-		return nil, err
-	}
-	r = append(r, t)
 	tp, err := kt.loadTransformerPlugins()
 	if err != nil {
 		return nil, err
