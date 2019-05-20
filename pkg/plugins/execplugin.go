@@ -22,7 +22,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -39,8 +38,8 @@ const (
 // ExecPlugin record the name and args of an executable
 // It triggers the executable generator and transformer
 type ExecPlugin struct {
-	// name of the executable
-	name string
+	// absolute path of the executable
+	path string
 
 	// Optional command line arguments to the executable
 	// pulled from specially named fields in cfg.
@@ -57,15 +56,13 @@ type ExecPlugin struct {
 	ldr ifc.Loader
 }
 
-func NewExecPlugin(root string, id resid.ResId) *ExecPlugin {
-	return &ExecPlugin{
-		name: filepath.Join(root, pluginPath(id)),
-	}
+func NewExecPlugin(p string) *ExecPlugin {
+	return &ExecPlugin{path: p}
 }
 
 // isAvailable checks to see if the plugin is available
 func (p *ExecPlugin) isAvailable() bool {
-	f, err := os.Stat(p.name)
+	f, err := os.Stat(p.path)
 	if os.IsNotExist(err) {
 		return false
 	}
@@ -164,7 +161,7 @@ func (p *ExecPlugin) invokePlugin(input []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	cmd := exec.Command(p.name, args...)
+	cmd := exec.Command(p.path, args...)
 	cmd.Env = p.getEnv()
 	cmd.Stdin = bytes.NewReader(input)
 	cmd.Stderr = os.Stderr
@@ -226,7 +223,7 @@ func (p *ExecPlugin) updateResMapValues(output []byte, rm resmap.ResMap) error {
 		idString, ok := annotations[idAnnotation]
 		if !ok {
 			return fmt.Errorf("the transformer %s should not remove annotation %s",
-				p.name, idAnnotation)
+				p.path, idAnnotation)
 		}
 		id := resid.ResId{}
 		err := yaml.Unmarshal([]byte(idString), &id)

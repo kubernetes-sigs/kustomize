@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"plugin"
+	"strings"
 
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/pkg/ifc"
@@ -96,8 +97,20 @@ func (l *Loader) LoadTransformer(
 	return t, nil
 }
 
-func pluginPath(id resid.ResId) string {
-	return filepath.Join(id.Gvk().Group, id.Gvk().Version, id.Gvk().Kind)
+func relativePluginPath(id resid.ResId) string {
+	return filepath.Join(
+		id.Gvk().Group,
+		id.Gvk().Version,
+		strings.ToLower(id.Gvk().Kind))
+}
+
+func AbsolutePluginPath(pc *types.PluginConfig, id resid.ResId) string {
+	return filepath.Join(
+		pc.DirectoryPath, relativePluginPath(id), id.Gvk().Kind)
+}
+
+func (l *Loader) absolutePluginPath(id resid.ResId) string {
+	return AbsolutePluginPath(l.pc, id)
 }
 
 func (l *Loader) loadAndConfigurePlugin(
@@ -106,7 +119,8 @@ func (l *Loader) loadAndConfigurePlugin(
 		return nil, errors.Errorf(
 			"plugins not enabled, but trying to load %s", res.Id())
 	}
-	if p := NewExecPlugin(l.pc.DirectoryPath, res.Id()); p.isAvailable() {
+	if p := NewExecPlugin(
+		l.absolutePluginPath(res.Id())); p.isAvailable() {
 		c = p
 	} else {
 		c, err = l.loadGoPlugin(res.Id())
@@ -135,26 +149,26 @@ func (l *Loader) loadAndConfigurePlugin(
 var registry = make(map[string]Configurable)
 
 func (l *Loader) loadGoPlugin(id resid.ResId) (c Configurable, err error) {
+	regId := relativePluginPath(id)
 	var ok bool
-	path := pluginPath(id)
-	if c, ok = registry[path]; ok {
+	if c, ok = registry[regId]; ok {
 		return c, nil
 	}
-	name := filepath.Join(l.pc.DirectoryPath, path)
-	p, err := plugin.Open(name + ".so")
+	absPath := l.absolutePluginPath(id)
+	p, err := plugin.Open(absPath + ".so")
 	if err != nil {
-		return nil, errors.Wrapf(err, "plugin %s fails to load", name)
+		return nil, errors.Wrapf(err, "plugin %s fails to load", absPath)
 	}
 	symbol, err := p.Lookup(PluginSymbol)
 	if err != nil {
 		return nil, errors.Wrapf(
 			err, "plugin %s doesn't have symbol %s",
-			name, PluginSymbol)
+			regId, PluginSymbol)
 	}
 	c, ok = symbol.(Configurable)
 	if !ok {
-		return nil, fmt.Errorf("plugin %s not configurable", name)
+		return nil, fmt.Errorf("plugin %s not configurable", regId)
 	}
-	registry[path] = c
+	registry[regId] = c
 	return
 }

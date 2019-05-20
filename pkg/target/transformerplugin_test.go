@@ -47,7 +47,7 @@ metadata:
 }
 
 func TestOrderedTransformers(t *testing.T) {
-	tc := plugin.NewPluginTestEnv(t).Set()
+	tc := plugin.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -92,7 +92,7 @@ spec:
 }
 
 func TestSedTransformer(t *testing.T) {
-	tc := plugin.NewPluginTestEnv(t).Set()
+	tc := plugin.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
@@ -161,7 +161,7 @@ metadata:
 }
 
 func TestTransformedTransformers(t *testing.T) {
-	tc := plugin.NewPluginTestEnv(t).Set()
+	tc := plugin.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(

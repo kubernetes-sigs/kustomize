@@ -28,7 +28,7 @@ import (
 // TODO: Download and inflate the chart, and check that
 // in for the test.
 func TestChartInflatorPlugin(t *testing.T) {
-	tc := plugin.NewPluginTestEnv(t).Set()
+	tc := plugin.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
