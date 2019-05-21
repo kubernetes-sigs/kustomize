@@ -16,7 +16,7 @@ type AnnotationsTransformerPlugin struct {
 }
 
 func NewAnnotationsTransformerPlugin() *AnnotationsTransformerPlugin {
-  return &AnnotationsTransformerPlugin{}
+	return &AnnotationsTransformerPlugin{}
 }
 
 func (p *AnnotationsTransformerPlugin) Config(

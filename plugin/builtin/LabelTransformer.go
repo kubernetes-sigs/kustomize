@@ -16,7 +16,7 @@ type LabelTransformerPlugin struct {
 }
 
 func NewLabelTransformerPlugin() *LabelTransformerPlugin {
-  return &LabelTransformerPlugin{}
+	return &LabelTransformerPlugin{}
 }
 
 func (p *LabelTransformerPlugin) Config(
