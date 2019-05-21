@@ -19,7 +19,7 @@ git:
 language: go
 
 go:
-  - 1.12
+  - "1.12"
 
 go_import_path: sigs.k8s.io/kustomize
 
