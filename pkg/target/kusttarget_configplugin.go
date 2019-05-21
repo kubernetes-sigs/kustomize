@@ -63,8 +63,8 @@ func (kt *KustTarget) configureBuiltinTransformers(
 	// TODO: Convert remaining legacy transformers to plugins
 	//   with tests:
 	//   - patch SMP
-	//   - namespace
 	configurators := []transformerConfigurator{
+		kt.configureBuiltinNamespaceTransformer,
 		kt.configureBuiltinNameTransformer,
 		kt.configureBuiltinImageTagTransformer,
 		kt.configureBuiltinLabelTransformer,
@@ -121,6 +121,24 @@ func (kt *KustTarget) configureBuiltinConfigMapGenerator() (
 		}
 		result = append(result, p)
 	}
+	return
+}
+
+func (kt *KustTarget) configureBuiltinNamespaceTransformer(
+	tConfig *config.TransformerConfig) (
+	result []transformers.Transformer, err error) {
+	var c struct {
+		Namespace  string
+		FieldSpecs []config.FieldSpec
+	}
+	c.Namespace = kt.kustomization.Namespace
+	c.FieldSpecs = tConfig.NameSpace
+	p := builtin.NewNamespaceTransformerPlugin()
+	err = kt.configureBuiltinPlugin(p, c, "namespace")
+	if err != nil {
+		return nil, err
+	}
+	result = append(result, p)
 	return
 }
 

@@ -265,8 +265,6 @@ func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator) error {
 	}
 	r = append(r, t)
 	tConfig := ra.GetTransformerConfig()
-	r = append(r, transformers.NewNamespaceTransformer(
-		string(kt.kustomization.Namespace), tConfig.NameSpace))
 	lts, err := kt.configureBuiltinTransformers(tConfig)
 	if err != nil {
 		return err
