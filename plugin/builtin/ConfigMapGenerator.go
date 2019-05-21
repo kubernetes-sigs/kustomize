@@ -16,7 +16,7 @@ type ConfigMapGeneratorPlugin struct {
 }
 
 func NewConfigMapGeneratorPlugin() *ConfigMapGeneratorPlugin {
-  return &ConfigMapGeneratorPlugin{}
+	return &ConfigMapGeneratorPlugin{}
 }
 
 func (p *ConfigMapGeneratorPlugin) Config(
