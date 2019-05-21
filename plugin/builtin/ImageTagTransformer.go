@@ -18,7 +18,7 @@ type ImageTagTransformerPlugin struct {
 }
 
 func NewImageTagTransformerPlugin() *ImageTagTransformerPlugin {
-  return &ImageTagTransformerPlugin{}
+	return &ImageTagTransformerPlugin{}
 }
 
 func (p *ImageTagTransformerPlugin) Config(

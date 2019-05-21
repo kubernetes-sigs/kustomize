@@ -15,7 +15,7 @@ type PatchJson6902TransformerPlugin struct {
 }
 
 func NewPatchJson6902TransformerPlugin() *PatchJson6902TransformerPlugin {
-  return &PatchJson6902TransformerPlugin{}
+	return &PatchJson6902TransformerPlugin{}
 }
 
 func (p *PatchJson6902TransformerPlugin) Config(
