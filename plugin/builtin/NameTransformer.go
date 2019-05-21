@@ -17,7 +17,7 @@ type NameTransformerPlugin struct {
 }
 
 func NewNameTransformerPlugin() *NameTransformerPlugin {
-  return &NameTransformerPlugin{}
+	return &NameTransformerPlugin{}
 }
 
 func (p *NameTransformerPlugin) Config(
