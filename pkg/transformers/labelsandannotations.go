@@ -76,7 +76,9 @@ func (o *mapTransformer) Transform(m resmap.ResMap) error {
 
 func (o *mapTransformer) addMap(in interface{}) (interface{}, error) {
 	m, ok := in.(map[string]interface{})
-	if !ok {
+	if in == nil {
+		m = map[string]interface{}{}
+	} else if !ok {
 		return nil, fmt.Errorf("%#v is expected to be %T", in, m)
 	}
 	for k, v := range o.m {
