@@ -62,8 +62,8 @@ func (kt *KustTarget) configureBuiltinTransformers(
 	[]transformers.Transformer, error) {
 	// TODO: Convert remaining legacy transformers to plugins
 	//   with tests:
-	//   patch SMP
-	//   patch JSON
+	//   - patch SMP
+	//   - namespace
 	configurators := []transformerConfigurator{
 		kt.configureBuiltinNameTransformer,
 		kt.configureBuiltinImageTagTransformer,
