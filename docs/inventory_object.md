@@ -42,7 +42,7 @@ The _inventory_ ConfigMap contains two special annotations:
               "version":"v1",
               "kind":"Deployment",
               "name":"mysql",
-              "namespace":"default",
+              "namespace":"default"
             }
           ],
         "~G_v1_Service|default|mysql":null
