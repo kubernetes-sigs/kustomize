@@ -130,7 +130,10 @@ func (o *namespaceTransformer) updateClusterRoleBinding(m resmap.ResMap) {
 			continue
 		}
 		objMap := m[id].Map()
-		subjects := objMap["subjects"].([]interface{})
+		subjects, ok := objMap["subjects"].([]interface{})
+		if subjects == nil || !ok {
+			continue
+		}
 		for i := range subjects {
 			subject := subjects[i].(map[string]interface{})
 			kind, foundk := subject["kind"]
