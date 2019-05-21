@@ -114,36 +114,15 @@ func unmarshal(y []byte, o interface{}) error {
 // MakeCustomizedResMap creates a ResMap per kustomization instructions.
 // The Resources in the returned ResMap are fully customized.
 func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
-	ra, err := kt.AccumulateTarget()
-	if err != nil {
-		return nil, err
-	}
-	err = ra.Transform(kt.tFactory.MakeHashTransformer())
-	if err != nil {
-		return nil, err
-	}
-	// Given that names have changed (prefixs/suffixes added),
-	// fix all the back references to those names.
-	err = ra.FixBackReferences()
-	if err != nil {
-		return nil, err
-	}
-	// With all the back references fixed, it's OK to resolve Vars.
-	err = ra.ResolveVars()
-	if err != nil {
-		return nil, err
-	}
-
-	rm := ra.ResMap()
-	pt := kt.tFactory.MakeInventoryTransformer(kt.kustomization.Inventory, kt.kustomization.Namespace, true)
-	err = pt.Transform(rm)
-	if err != nil {
-		return nil, err
-	}
-	return rm, nil
+	return kt.makeCustomizedResMap(types.GarbageIgnore)
 }
 
 func (kt *KustTarget) MakePruneConfigMap() (resmap.ResMap, error) {
+	return kt.makeCustomizedResMap(types.GarbageCollect)
+}
+
+func (kt *KustTarget) makeCustomizedResMap(
+	garbagePolicy types.GarbagePolicy) (resmap.ResMap, error) {
 	ra, err := kt.AccumulateTarget()
 	if err != nil {
 		return nil, err
@@ -165,7 +144,10 @@ func (kt *KustTarget) MakePruneConfigMap() (resmap.ResMap, error) {
 	}
 
 	rm := ra.ResMap()
-	pt := kt.tFactory.MakeInventoryTransformer(kt.kustomization.Inventory, kt.kustomization.Namespace, false)
+	pt := kt.tFactory.MakeInventoryTransformer(
+		kt.kustomization.Inventory,
+		kt.kustomization.Namespace,
+		garbagePolicy)
 	err = pt.Transform(rm)
 	if err != nil {
 		return nil, err

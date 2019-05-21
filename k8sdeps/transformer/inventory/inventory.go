@@ -18,22 +18,25 @@ import (
 
 // inventoryTransformer compute the inventory object used in prune
 type inventoryTransformer struct {
-	append      bool
-	cmName      string
-	cmNamespace string
+	garbagePolicy types.GarbagePolicy
+	cmName        string
+	cmNamespace   string
 }
 
 var _ transformers.Transformer = &inventoryTransformer{}
 
 // NewInventoryTransformer makes a inventoryTransformer.
-func NewInventoryTransformer(p *types.Inventory, namespace string, append bool) transformers.Transformer {
+func NewInventoryTransformer(
+	p *types.Inventory,
+	namespace string,
+	gp types.GarbagePolicy) transformers.Transformer {
 	if p == nil || p.Type != "ConfigMap" || p.ConfigMap.Namespace != namespace {
 		return transformers.NewNoOpTransformer()
 	}
 	return &inventoryTransformer{
-		append:      append,
-		cmName:      p.ConfigMap.Name,
-		cmNamespace: p.ConfigMap.Namespace,
+		garbagePolicy: gp,
+		cmName:        p.ConfigMap.Name,
+		cmNamespace:   p.ConfigMap.Namespace,
 	}
 }
 
@@ -84,7 +87,7 @@ func (o *inventoryTransformer) Transform(m resmap.ResMap) error {
 		return err
 	}
 
-	if !o.append {
+	if o.garbagePolicy == types.GarbageCollect {
 		for k := range m {
 			delete(m, k)
 		}

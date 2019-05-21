@@ -142,6 +142,14 @@ type Kustomization struct {
 	Inventory *Inventory `json:"inventory,omitempty" yaml:"inventory:omitempty"`
 }
 
+type GarbagePolicy int
+
+const (
+	GarbageUnknown GarbagePolicy = iota
+	GarbageIgnore
+	GarbageCollect
+)
+
 // FixKustomizationPostUnmarshalling fixes things
 // like empty fields that should not be empty, or
 // moving content of deprecated fields to newer

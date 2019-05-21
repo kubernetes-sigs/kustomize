@@ -35,7 +35,9 @@ func NewFactoryImpl() *FactoryImpl {
 }
 
 // MakePatchTransformer makes a new patch transformer
-func (p *FactoryImpl) MakePatchTransformer(slice []*resource.Resource, rf *resource.Factory) (transformers.Transformer, error) {
+func (p *FactoryImpl) MakePatchTransformer(
+	slice []*resource.Resource,
+	rf *resource.Factory) (transformers.Transformer, error) {
 	return patch.NewPatchTransformer(slice, rf)
 }
 
@@ -44,6 +46,9 @@ func (p *FactoryImpl) MakeHashTransformer() transformers.Transformer {
 	return hash.NewNameHashTransformer()
 }
 
-func (p *FactoryImpl) MakeInventoryTransformer(arg *types.Inventory, namespace string, append bool) transformers.Transformer {
-	return inventory.NewInventoryTransformer(arg, namespace, append)
+func (p *FactoryImpl) MakeInventoryTransformer(
+	arg *types.Inventory,
+	namespace string,
+	gp types.GarbagePolicy) transformers.Transformer {
+	return inventory.NewInventoryTransformer(arg, namespace, gp)
 }
