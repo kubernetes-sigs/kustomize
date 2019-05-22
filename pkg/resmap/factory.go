@@ -41,6 +41,13 @@ func (rmF *Factory) RF() *resource.Factory {
 	return rmF.resF
 }
 
+// FromResource returns a ResMap with one entry.
+func (rmF *Factory) FromResource(res *resource.Resource) ResMap {
+	result := ResMap{}
+	result[res.Id()] = res
+	return result
+}
+
 // FromFile returns a ResMap given a resource path.
 func (rmF *Factory) FromFile(
 	loader ifc.Loader, path string) (ResMap, error) {
@@ -89,6 +96,17 @@ func (rmF *Factory) NewResMapFromConfigMapArgs(
 	return newResMapFromResourceSlice(resources)
 }
 
+func (rmF *Factory) FromConfigMapArgs(
+	ldr ifc.Loader,
+	options *types.GeneratorOptions,
+	args types.ConfigMapArgs) (ResMap, error) {
+	res, err := rmF.resF.MakeConfigMap(ldr, options, &args)
+	if err != nil {
+		return nil, err
+	}
+	return rmF.FromResource(res), nil
+}
+
 // NewResMapFromSecretArgs takes a SecretArgs slice, generates
 // secrets from each entry, and accumulates them in a ResMap.
 func (rmF *Factory) NewResMapFromSecretArgs(
@@ -104,6 +122,17 @@ func (rmF *Factory) NewResMapFromSecretArgs(
 		resources = append(resources, res)
 	}
 	return newResMapFromResourceSlice(resources)
+}
+
+func (rmF *Factory) FromSecretArgs(
+	ldr ifc.Loader,
+	options *types.GeneratorOptions,
+	args types.SecretArgs) (ResMap, error) {
+	res, err := rmF.resF.MakeSecret(ldr, options, &args)
+	if err != nil {
+		return nil, err
+	}
+	return rmF.FromResource(res), nil
 }
 
 func newResMapFromResourceSlice(resources []*resource.Resource) (ResMap, error) {
