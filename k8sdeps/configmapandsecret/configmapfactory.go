@@ -22,21 +22,8 @@ import (
 	"unicode/utf8"
 
 	"k8s.io/api/core/v1"
-	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
-	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
-
-// Factory makes ConfigMaps and Secrets.
-type Factory struct {
-	baseFactory
-}
-
-// NewFactory returns a new Factory.
-func NewFactory(
-	l ifc.Loader, o *types.GeneratorOptions, reg plugin.Registry) *Factory {
-	return &Factory{baseFactory{ldr: l, options: o, reg: reg}}
-}
 
 func makeFreshConfigMap(
 	args *types.ConfigMapArgs) *v1.ConfigMap {
