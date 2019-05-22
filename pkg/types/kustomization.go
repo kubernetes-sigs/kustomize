@@ -20,8 +20,8 @@ package types
 import (
 	"regexp"
 
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/image"
-	"sigs.k8s.io/kustomize/pkg/patch"
 )
 
 const (
@@ -67,12 +67,12 @@ type Kustomization struct {
 	// containing a strategic merge patch.  Format documented at
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/strategic-merge-patch.md
 	// URLs and globs are not supported.
-	PatchesStrategicMerge []patch.StrategicMerge `json:"patchesStrategicMerge,omitempty" yaml:"patchesStrategicMerge,omitempty"`
+	PatchesStrategicMerge []PatchStrategicMerge `json:"patchesStrategicMerge,omitempty" yaml:"patchesStrategicMerge,omitempty"`
 
 	// JSONPatches is a list of JSONPatch for applying JSON patch.
 	// Format documented at https://tools.ietf.org/html/rfc6902
 	// and http://jsonpatch.com
-	PatchesJson6902 []patch.Json6902 `json:"patchesJson6902,omitempty" yaml:"patchesJson6902,omitempty"`
+	PatchesJson6902 []PatchJson6902 `json:"patchesJson6902,omitempty" yaml:"patchesJson6902,omitempty"`
 
 	// Images is a list of (image name, new name, new tag or digest)
 	// for changing image names, tags or digests. This can also be achieved with a
@@ -333,3 +333,29 @@ type NameArgs struct {
 	Name      string `json:"name,omitempty" yaml:"name,omitempty"`
 	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 }
+
+// PatchJson6902 represents a json patch for an object
+// with format documented https://tools.ietf.org/html/rfc6902.
+type PatchJson6902 struct {
+	// PatchTarget refers to a Kubernetes object that the json patch will be
+	// applied to. It must refer to a Kubernetes resource under the
+	// purview of this kustomization. PatchTarget should use the
+	// raw name of the object (the name specified in its YAML,
+	// before addition of a namePrefix and a nameSuffix).
+	Target *PatchTarget `json:"target" yaml:"target"`
+
+	// relative file path for a json patch file inside a kustomization
+	Path string `json:"path,omitempty" yaml:"path,omitempty"`
+}
+
+// PatchTarget represents the kubernetes object that the patch is applied to
+type PatchTarget struct {
+	gvk.Gvk   `json:",inline,omitempty" yaml:",inline,omitempty"`
+	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	Name      string `json:"name" yaml:"name"`
+}
+
+// PatchStrategicMerge represents a relative path to a
+// stategic merge patch with the format
+// https://github.com/kubernetes/community/blob/master/contributors/devel/strategic-merge-patch.md
+type PatchStrategicMerge string
