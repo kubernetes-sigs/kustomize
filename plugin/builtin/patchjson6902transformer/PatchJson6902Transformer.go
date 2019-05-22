@@ -6,15 +6,15 @@ package main
 
 import (
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/patch"
 	"sigs.k8s.io/kustomize/pkg/patch/transformer"
 	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/types"
 	"sigs.k8s.io/yaml"
 )
 
 type plugin struct {
 	ldr     ifc.Loader
-	Patches []patch.Json6902 `json:"patches,omitempty" yaml:"patches,omitempty"`
+	Patches []types.PatchJson6902 `json:"patches,omitempty" yaml:"patches,omitempty"`
 }
 
 var KustomizePlugin plugin
