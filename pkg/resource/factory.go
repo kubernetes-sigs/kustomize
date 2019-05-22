@@ -24,7 +24,6 @@ import (
 
 	"sigs.k8s.io/kustomize/internal/kusterr"
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/patch"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
@@ -69,7 +68,7 @@ func (rf *Factory) FromKunstructured(
 // SliceFromPatches returns a slice of resources given a patch path
 // slice from a kustomization file.
 func (rf *Factory) SliceFromPatches(
-	ldr ifc.Loader, paths []patch.StrategicMerge) ([]*Resource, error) {
+	ldr ifc.Loader, paths []types.PatchStrategicMerge) ([]*Resource, error) {
 	var result []*Resource
 	for _, path := range paths {
 		content, err := ldr.Load(string(path))
