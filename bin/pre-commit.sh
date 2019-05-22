@@ -37,7 +37,7 @@ function testGoTest {
 function testNoTravisGoTest {
   go test -v sigs.k8s.io/kustomize/pkg/target \
       -run TestChartInflatorPlugin -tags=notravis
-  go test -v sigs.k8s.io/kustomize/plugin/... \
+  go test -v sigs.k8s.io/kustomize/plugin/someteam.example.com/v1/chartinflator/... \
     -run TestChartInflator -tags=notravis
   mdrip --mode test --label helmtest README.md ./examples/chart.md
 }
@@ -47,7 +47,7 @@ function testExamples {
 }
 
 function generateCode {
-  ./bin/pluginator.sh $oldGoPath
+  ./plugin/generateBuiltins.sh $oldGoPath
 }
 
 # Use of GOPATH is optional if go modules are

@@ -583,3 +583,48 @@ func TestAnnotationsRun(t *testing.T) {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
+
+func TestAnnotaionsRunWithNullValue(t *testing.T) {
+	m := resmap.ResMap{
+		resid.NewResId(cmap, "cm1"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name":        "cm1",
+					"annotations": nil,
+				},
+			}),
+	}
+
+	expected := resmap.ResMap{
+		resid.NewResId(cmap, "cm1"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "cm1",
+					"annotations": map[string]interface{}{
+						"anno-key1": "anno-value1",
+						"anno-key2": "anno-value2",
+					},
+				},
+			}),
+	}
+
+	at, err := NewAnnotationsMapTransformer(
+		map[string]string{"anno-key1": "anno-value1", "anno-key2": "anno-value2"},
+		defaultTransformerConfig.CommonAnnotations)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	err = at.Transform(m)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !reflect.DeepEqual(m, expected) {
+		err = expected.ErrorIfNotEqual(m)
+		t.Fatalf("actual doesn't match expected: %v", err)
+	}
+
+}

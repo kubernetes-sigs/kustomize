@@ -51,8 +51,9 @@ s/$BAR/bar/g
 `))
 
 	p := NewExecPlugin(
-		plugin.DefaultPluginConfig().DirectoryPath,
-		pluginConfig.Id())
+		AbsolutePluginPath(
+			plugin.DefaultPluginConfig(),
+			pluginConfig.Id()))
 
 	yaml, err := pluginConfig.AsYAML()
 	if err != nil {
@@ -60,9 +61,9 @@ s/$BAR/bar/g
 	}
 	p.Config(ldr, rf, yaml)
 
-	expected := "/kustomize/plugin/someteam.example.com/v1/SedTransformer"
-	if !strings.HasSuffix(p.name, expected) {
-		t.Fatalf("expected suffix '%s', got '%s'", expected, p.name)
+	expected := "/kustomize/plugin/someteam.example.com/v1/sedtransformer/SedTransformer"
+	if !strings.HasSuffix(p.path, expected) {
+		t.Fatalf("expected suffix '%s', got '%s'", expected, p.path)
 	}
 
 	expected = `apiVersion: someteam.example.com/v1

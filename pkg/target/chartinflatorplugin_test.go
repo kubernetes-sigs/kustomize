@@ -1,20 +1,7 @@
 // +build notravis
 
-/*
-Copyright 2019 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 // Disabled on travis, because don't want to install helm on travis.
 
@@ -23,9 +10,8 @@ package target_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/internal/plugintest"
-	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/kusttest"
+	"sigs.k8s.io/kustomize/plugin"
 )
 
 // This is an example of using a helm chart as a base,
@@ -42,14 +28,13 @@ import (
 // TODO: Download and inflate the chart, and check that
 // in for the test.
 func TestChartInflatorPlugin(t *testing.T) {
-	tc := plugintest_test.NewPluginTestEnv(t).Set()
+	tc := plugin.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
 		"someteam.example.com", "v1", "ChartInflator")
 
-	th := kusttest_test.NewKustTestHarnessWithPluginConfig(
-		t, "/app", plugin.ActivePluginConfig())
+	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
 	th.WriteK("/app", `
 generators:
 - chartInflator.yaml

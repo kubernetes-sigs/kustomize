@@ -317,5 +317,14 @@ nameReference:
   fieldSpecs:
   - path: spec/volumeName
     kind: PersistentVolumeClaim
+
+- kind: StorageClass
+  version: v1
+  group: storage.k8s.io
+  fieldSpecs:
+  - path: spec/storageClassName
+    kind: PersistentVolume
+  - path: spec/storageClassName
+    kind: PersistentVolumeClaim
 `
 )

@@ -1,18 +1,5 @@
-/*
-Copyright 2019 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package inventory
 
@@ -31,22 +18,25 @@ import (
 
 // inventoryTransformer compute the inventory object used in prune
 type inventoryTransformer struct {
-	append      bool
-	cmName      string
-	cmNamespace string
+	garbagePolicy types.GarbagePolicy
+	cmName        string
+	cmNamespace   string
 }
 
 var _ transformers.Transformer = &inventoryTransformer{}
 
 // NewInventoryTransformer makes a inventoryTransformer.
-func NewInventoryTransformer(p *types.Inventory, namespace string, append bool) transformers.Transformer {
+func NewInventoryTransformer(
+	p *types.Inventory,
+	namespace string,
+	gp types.GarbagePolicy) transformers.Transformer {
 	if p == nil || p.Type != "ConfigMap" || p.ConfigMap.Namespace != namespace {
 		return transformers.NewNoOpTransformer()
 	}
 	return &inventoryTransformer{
-		append:      append,
-		cmName:      p.ConfigMap.Name,
-		cmNamespace: p.ConfigMap.Namespace,
+		garbagePolicy: gp,
+		cmName:        p.ConfigMap.Name,
+		cmNamespace:   p.ConfigMap.Namespace,
 	}
 }
 
@@ -85,7 +75,7 @@ func (o *inventoryTransformer) Transform(m resmap.ResMap) error {
 	opts := &types.GeneratorOptions{
 		Annotations: make(map[string]string),
 	}
-	opts.Annotations[inventory.InventoryHashAnnotation] = h
+	opts.Annotations[inventory.HashAnnotation] = h
 	err = invty.UpdateAnnotations(opts.Annotations)
 	if err != nil {
 		return err
@@ -97,7 +87,7 @@ func (o *inventoryTransformer) Transform(m resmap.ResMap) error {
 		return err
 	}
 
-	if !o.append {
+	if o.garbagePolicy == types.GarbageCollect {
 		for k := range m {
 			delete(m, k)
 		}

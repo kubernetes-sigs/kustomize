@@ -1,20 +1,8 @@
-/*
-Copyright 2018 The Kubernetes Authors.
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
-// Package target implements state for the set of all resources to customize.
+// Package target implements state for the set of all
+// resources to customize.
 package target
 
 import (
@@ -27,11 +15,9 @@ import (
 	"sigs.k8s.io/kustomize/pkg/accumulator"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/ifc/transformer"
-	patchtransformer "sigs.k8s.io/kustomize/pkg/patch/transformer"
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/plugins"
 	"sigs.k8s.io/kustomize/pkg/resmap"
-	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
 	"sigs.k8s.io/kustomize/pkg/types"
@@ -127,41 +113,15 @@ func unmarshal(y []byte, o interface{}) error {
 // MakeCustomizedResMap creates a ResMap per kustomization instructions.
 // The Resources in the returned ResMap are fully customized.
 func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
-	ra, err := kt.AccumulateTarget()
-	if err != nil {
-		return nil, err
-	}
-	err = ra.Transform(kt.tFactory.MakeHashTransformer())
-	if err != nil {
-		return nil, err
-	}
-	// Given that names have changed (prefixs/suffixes added),
-	// fix all the back references to those names.
-	err = ra.FixBackReferences()
-	if err != nil {
-		return nil, err
-	}
-	// With all the back references fixed, it's OK to resolve Inlines.
-	err = ra.ResolveInlines()
-	if err != nil {
-		return nil, err
-	}
-	// With all the back references fixed, it's OK to resolve Vars.
-	err = ra.ResolveVars()
-	if err != nil {
-		return nil, err
-	}
-
-	rm := ra.ResMap()
-	pt := kt.tFactory.MakeInventoryTransformer(kt.kustomization.Inventory, kt.kustomization.Namespace, true)
-	err = pt.Transform(rm)
-	if err != nil {
-		return nil, err
-	}
-	return rm, nil
+	return kt.makeCustomizedResMap(types.GarbageIgnore)
 }
 
 func (kt *KustTarget) MakePruneConfigMap() (resmap.ResMap, error) {
+	return kt.makeCustomizedResMap(types.GarbageCollect)
+}
+
+func (kt *KustTarget) makeCustomizedResMap(
+	garbagePolicy types.GarbagePolicy) (resmap.ResMap, error) {
 	ra, err := kt.AccumulateTarget()
 	if err != nil {
 		return nil, err
@@ -188,7 +148,10 @@ func (kt *KustTarget) MakePruneConfigMap() (resmap.ResMap, error) {
 	}
 
 	rm := ra.ResMap()
-	pt := kt.tFactory.MakeInventoryTransformer(kt.kustomization.Inventory, kt.kustomization.Namespace, false)
+	pt := kt.tFactory.MakeInventoryTransformer(
+		kt.kustomization.Inventory,
+		kt.kustomization.Namespace,
+		garbagePolicy)
 	err = pt.Transform(rm)
 	if err != nil {
 		return nil, err
@@ -234,7 +197,7 @@ func (kt *KustTarget) AccumulateTarget() (
 	err = ra.MergeInlines(kt.kustomization.Inlines)
 	if err != nil {
 		return nil, errors.Wrapf(
-			err, "merging substituions %v", kt.kustomization.Inlines)
+			err, "merging inlines %v", kt.kustomization.Inlines)
 	}
 	crdTc, err := config.LoadConfigFromCRDs(kt.ldr, kt.kustomization.Crds)
 	if err != nil {
@@ -246,29 +209,15 @@ func (kt *KustTarget) AccumulateTarget() (
 		return nil, errors.Wrapf(
 			err, "merging CRDs %v", crdTc)
 	}
-	err = kt.generateFromPlugins(ra)
+	err = kt.runGenerators(ra)
 	if err != nil {
 		return nil, err
 	}
-	patches, err := kt.rFactory.RF().SliceFromPatches(
-		kt.ldr, kt.kustomization.PatchesStrategicMerge)
-	if err != nil {
-		return nil, errors.Wrapf(
-			err, "reading strategic merge patches %v",
-			kt.kustomization.PatchesStrategicMerge)
-	}
-	t, err := kt.newTransformer(patches, ra.GetTransformerConfig())
-	if err != nil {
-		return nil, err
-	}
-	err = ra.Transform(t)
-	if err != nil {
-		return nil, err
-	}
-	return ra, nil
+	err = kt.runTransformers(ra)
+	return ra, err
 }
 
-func (kt *KustTarget) generateFromPlugins(
+func (kt *KustTarget) runGenerators(
 	ra *accumulator.ResAccumulator) error {
 	generators, err := kt.configureBuiltinGenerators()
 	if err != nil {
@@ -285,7 +234,7 @@ func (kt *KustTarget) generateFromPlugins(
 			return errors.Wrapf(err, "merging from generator %v", g)
 		}
 	}
-	generators, err = kt.loadGeneratorPlugins()
+	generators, err = kt.configureExternalGenerators()
 	if err != nil {
 		return errors.Wrap(err, "loading generator plugins")
 	}
@@ -300,6 +249,53 @@ func (kt *KustTarget) generateFromPlugins(
 		}
 	}
 	return nil
+}
+
+func (kt *KustTarget) configureExternalGenerators() ([]transformers.Generator, error) {
+	ra := accumulator.MakeEmptyAccumulator()
+	err := kt.accumulateResources(ra, kt.kustomization.Generators)
+	if err != nil {
+		return nil, err
+	}
+	return kt.pLdr.LoadGenerators(kt.ldr, ra.ResMap())
+}
+
+func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator) error {
+	patches, err := kt.rFactory.RF().SliceFromPatches(
+		kt.ldr, kt.kustomization.PatchesStrategicMerge)
+	if err != nil {
+		return errors.Wrapf(
+			err, "reading strategic merge patches %v",
+			kt.kustomization.PatchesStrategicMerge)
+	}
+	var r []transformers.Transformer
+	t, err := kt.tFactory.MakePatchTransformer(patches, kt.rFactory.RF())
+	if err != nil {
+		return err
+	}
+	r = append(r, t)
+	tConfig := ra.GetTransformerConfig()
+	lts, err := kt.configureBuiltinTransformers(tConfig)
+	if err != nil {
+		return err
+	}
+	r = append(r, lts...)
+	lts, err = kt.configureExternalTransformers()
+	if err != nil {
+		return err
+	}
+	r = append(r, lts...)
+	t = transformers.NewMultiTransformer(r)
+	return ra.Transform(t)
+}
+
+func (kt *KustTarget) configureExternalTransformers() ([]transformers.Transformer, error) {
+	ra := accumulator.MakeEmptyAccumulator()
+	err := kt.accumulateResources(ra, kt.kustomization.Transformers)
+	if err != nil {
+		return nil, err
+	}
+	return kt.pLdr.LoadTransformers(kt.ldr, ra.ResMap())
 }
 
 // accumulateResources fills the given resourceAccumulator
@@ -355,66 +351,4 @@ func (kt *KustTarget) accumulateFile(
 		return errors.Wrapf(err, "merging resources from '%s'", path)
 	}
 	return nil
-}
-
-// newTransformer makes a Transformer that does a collection
-// of object transformations.
-func (kt *KustTarget) newTransformer(
-	patches []*resource.Resource, tConfig *config.TransformerConfig) (
-	transformers.Transformer, error) {
-	var r []transformers.Transformer
-	t, err := kt.tFactory.MakePatchTransformer(patches, kt.rFactory.RF())
-	if err != nil {
-		return nil, err
-	}
-	r = append(r, t)
-	r = append(r, transformers.NewNamespaceTransformer(
-		string(kt.kustomization.Namespace), tConfig.NameSpace))
-	t, err = transformers.NewLabelsMapTransformer(
-		kt.kustomization.CommonLabels, tConfig.CommonLabels)
-	if err != nil {
-		return nil, err
-	}
-	r = append(r, t)
-	t, err = transformers.NewAnnotationsMapTransformer(
-		kt.kustomization.CommonAnnotations, tConfig.CommonAnnotations)
-	if err != nil {
-		return nil, err
-	}
-	r = append(r, t)
-	t, err = patchtransformer.NewPatchJson6902Factory(kt.ldr).
-		MakePatchJson6902Transformer(kt.kustomization.PatchesJson6902)
-	if err != nil {
-		return nil, err
-	}
-	r = append(r, t)
-	lts, err := kt.configureBuiltinTransformers(tConfig)
-	if err != nil {
-		return nil, err
-	}
-	r = append(r, lts...)
-	tp, err := kt.loadTransformerPlugins()
-	if err != nil {
-		return nil, err
-	}
-	r = append(r, tp...)
-	return transformers.NewMultiTransformer(r), nil
-}
-
-func (kt *KustTarget) loadTransformerPlugins() ([]transformers.Transformer, error) {
-	ra := accumulator.MakeEmptyAccumulator()
-	err := kt.accumulateResources(ra, kt.kustomization.Transformers)
-	if err != nil {
-		return nil, err
-	}
-	return kt.pLdr.LoadTransformers(kt.ldr, ra.ResMap())
-}
-
-func (kt *KustTarget) loadGeneratorPlugins() ([]transformers.Generator, error) {
-	ra := accumulator.MakeEmptyAccumulator()
-	err := kt.accumulateResources(ra, kt.kustomization.Generators)
-	if err != nil {
-		return nil, err
-	}
-	return kt.pLdr.LoadGenerators(kt.ldr, ra.ResMap())
 }

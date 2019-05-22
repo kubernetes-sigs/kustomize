@@ -1,18 +1,5 @@
-/*
-Copyright 2019 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package target_test
 
@@ -22,9 +9,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"sigs.k8s.io/kustomize/internal/plugintest"
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
+	kvplugin "sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/kusttest"
@@ -34,10 +20,11 @@ import (
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/target"
 	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/plugin"
 )
 
 func TestPluginDir(t *testing.T) {
-	tc := plugintest_test.NewPluginTestEnv(t).Set()
+	tc := plugin.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
@@ -77,9 +64,11 @@ metadata:
 	}
 	rf := resmap.NewFactory(resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryWithGeneratorArgs(
-			&types.GeneratorMetaArgs{PluginConfig: plugin.ActivePluginConfig()})))
+			&types.GeneratorMetaArgs{
+				PluginConfig: kvplugin.ActivePluginConfig(),
+			})))
 
-	pl := plugins.NewLoader(plugin.ActivePluginConfig(), rf)
+	pl := plugins.NewLoader(kvplugin.ActivePluginConfig(), rf)
 	tg, err := target.NewKustTarget(ldr, rf, transformer.NewFactoryImpl(), pl)
 	if err != nil {
 		t.Fatalf("err %v", err)
