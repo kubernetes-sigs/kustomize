@@ -21,20 +21,20 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/internal/loadertest"
-	"sigs.k8s.io/kustomize/pkg/patch"
 	. "sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 func TestSliceFromPatches(t *testing.T) {
 
-	patchGood1 := patch.StrategicMerge("patch1.yaml")
+	patchGood1 := types.PatchStrategicMerge("patch1.yaml")
 	patch1 := `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: pooh
 `
-	patchGood2 := patch.StrategicMerge("patch2.yaml")
+	patchGood2 := types.PatchStrategicMerge("patch2.yaml")
 	patch2 := `
 apiVersion: v1
 kind: ConfigMap
@@ -46,11 +46,11 @@ metadata:
 ---
 ---
 `
-	patchBad := patch.StrategicMerge("patch3.yaml")
+	patchBad := types.PatchStrategicMerge("patch3.yaml")
 	patch3 := `
 WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOT: woot
 `
-	patchList := patch.StrategicMerge("patch4.yaml")
+	patchList := types.PatchStrategicMerge("patch4.yaml")
 	patch4 := `
 apiVersion: v1
 kind: List
@@ -65,7 +65,7 @@ items:
     name: winnie
     namespace: hundred-acre-wood
 `
-	patchList2 := patch.StrategicMerge("patch5.yaml")
+	patchList2 := types.PatchStrategicMerge("patch5.yaml")
 	patch5 := `
 apiVersion: v1
 kind: DeploymentList
@@ -88,13 +88,13 @@ items:
   spec:
     <<: *hostAliases
 `
-	patchList3 := patch.StrategicMerge("patch6.yaml")
+	patchList3 := types.PatchStrategicMerge("patch6.yaml")
 	patch6 := `
 apiVersion: v1
 kind: List
 items:
 `
-	patchList4 := patch.StrategicMerge("patch7.yaml")
+	patchList4 := types.PatchStrategicMerge("patch7.yaml")
 	patch7 := `
 apiVersion: v1
 kind: List
@@ -142,49 +142,49 @@ kind: List
 
 	tests := []struct {
 		name        string
-		input       []patch.StrategicMerge
+		input       []types.PatchStrategicMerge
 		expectedOut []*Resource
 		expectedErr bool
 	}{
 		{
 			name:        "happy",
-			input:       []patch.StrategicMerge{patchGood1, patchGood2},
+			input:       []types.PatchStrategicMerge{patchGood1, patchGood2},
 			expectedOut: []*Resource{testDeployment, testConfigMap},
 			expectedErr: false,
 		},
 		{
 			name:        "badFileName",
-			input:       []patch.StrategicMerge{patchGood1, "doesNotExist"},
+			input:       []types.PatchStrategicMerge{patchGood1, "doesNotExist"},
 			expectedOut: []*Resource{},
 			expectedErr: true,
 		},
 		{
 			name:        "badData",
-			input:       []patch.StrategicMerge{patchGood1, patchBad},
+			input:       []types.PatchStrategicMerge{patchGood1, patchBad},
 			expectedOut: []*Resource{},
 			expectedErr: true,
 		},
 		{
 			name:        "listOfPatches",
-			input:       []patch.StrategicMerge{patchList},
+			input:       []types.PatchStrategicMerge{patchList},
 			expectedOut: []*Resource{testDeployment, testConfigMap},
 			expectedErr: false,
 		},
 		{
 			name:        "listWithAnchorReference",
-			input:       []patch.StrategicMerge{patchList2},
+			input:       []types.PatchStrategicMerge{patchList2},
 			expectedOut: []*Resource{testDeploymentA, testDeploymentB},
 			expectedErr: false,
 		},
 		{
 			name:        "listWithNoEntries",
-			input:       []patch.StrategicMerge{patchList3},
+			input:       []types.PatchStrategicMerge{patchList3},
 			expectedOut: []*Resource{},
 			expectedErr: false,
 		},
 		{
 			name:        "listWithNo'items:'",
-			input:       []patch.StrategicMerge{patchList4},
+			input:       []types.PatchStrategicMerge{patchList4},
 			expectedOut: []*Resource{},
 			expectedErr: false,
 		},
