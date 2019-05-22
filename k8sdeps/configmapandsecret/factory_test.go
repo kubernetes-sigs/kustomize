@@ -49,7 +49,7 @@ func TestKeyValuesFromFileSources(t *testing.T) {
 	fSys.WriteFile("/files/app-init.ini", []byte("FOO=bar"))
 	ldr := loader.NewFileLoaderAtRoot(fSys)
 	reg := plugin.NewRegistry(ldr)
-	bf := baseFactory{loader.NewFileLoaderAtRoot(fSys), nil, reg}
+	bf := NewFactory(loader.NewFileLoaderAtRoot(fSys), nil, reg)
 	for _, tc := range tests {
 		kvs, err := bf.keyValuesFromFileSources(tc.sources)
 		if err != nil {
@@ -125,7 +125,7 @@ func TestKeyValuesFromPlugins(t *testing.T) {
 	fSys.WriteFile("/files/app-init.ini", []byte("FOO=bar"))
 	ldr := loader.NewFileLoaderAtRoot(fSys)
 	reg := plugin.NewRegistry(ldr)
-	bf := baseFactory{ldr, nil, reg}
+	bf := NewFactory(ldr, nil, reg)
 
 	for _, tc := range tests {
 		kvs, err := bf.keyValuesFromPlugins(tc.sources)
