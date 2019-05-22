@@ -7,15 +7,14 @@ import (
 	"bytes"
 	"text/template"
 
-	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resmap"
-	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/yaml"
 )
 
 // A simple generator example.  Makes one service.
 type plugin struct {
+	rf   *resmap.Factory
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 	Port string `json:"port,omitempty" yaml:"port,omitempty"`
 }
@@ -38,6 +37,7 @@ spec:
 
 func (p *plugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, config []byte) error {
+	p.rf = rf
 	return yaml.Unmarshal(config, p)
 }
 
@@ -48,6 +48,5 @@ func (p *plugin) Generate() (resmap.ResMap, error) {
 	if err != nil {
 		return nil, err
 	}
-	rf := resmap.NewFactory(resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()))
-	return rf.NewResMapFromBytes(buf.Bytes())
+	return p.rf.NewResMapFromBytes(buf.Bytes())
 }
