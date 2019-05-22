@@ -30,8 +30,5 @@ func (p *SecretGeneratorPlugin) Config(
 }
 
 func (p *SecretGeneratorPlugin) Generate() (resmap.ResMap, error) {
-	argsList := make([]types.SecretArgs, 1)
-	argsList[0] = p.SecretArgs
-	return p.rf.NewResMapFromSecretArgs(
-		p.ldr, &p.GeneratorOptions, argsList)
+	return p.rf.FromSecretArgs(p.ldr, &p.GeneratorOptions, p.SecretArgs)
 }

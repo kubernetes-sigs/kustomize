@@ -30,8 +30,5 @@ func (p *ConfigMapGeneratorPlugin) Config(
 }
 
 func (p *ConfigMapGeneratorPlugin) Generate() (resmap.ResMap, error) {
-	argsList := make([]types.ConfigMapArgs, 1)
-	argsList[0] = p.ConfigMapArgs
-	return p.rf.NewResMapFromConfigMapArgs(
-		p.ldr, &p.GeneratorOptions, argsList)
+	return p.rf.FromConfigMapArgs(p.ldr, &p.GeneratorOptions, p.ConfigMapArgs)
 }
