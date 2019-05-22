@@ -29,23 +29,29 @@ import (
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
-// baseFactory holds code shared by Factory and SecretFactory.
-type baseFactory struct {
+// Factory makes ConfigMaps and Secrets.
+type Factory struct {
 	ldr     ifc.Loader
 	options *types.GeneratorOptions
 	reg     plugin.Registry
 }
 
-func (bf baseFactory) loadKvPairs(
+// NewFactory returns a new Factory.
+func NewFactory(
+	l ifc.Loader, o *types.GeneratorOptions, reg plugin.Registry) *Factory {
+	return &Factory{ldr: l, options: o, reg: reg}
+}
+
+func (f *Factory) loadKvPairs(
 	args types.GeneratorArgs) (all []kv.Pair, err error) {
-	pairs, err := bf.keyValuesFromPlugins(args.KVSources)
+	pairs, err := f.keyValuesFromPlugins(args.KVSources)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf(
 			"plugins: %s",
 			args.KVSources))
 	}
 	all = append(all, pairs...)
-	pairs, err = bf.keyValuesFromEnvFiles(args.EnvSources)
+	pairs, err = f.keyValuesFromEnvFiles(args.EnvSources)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf(
 			"env source files: %v",
@@ -60,7 +66,7 @@ func (bf baseFactory) loadKvPairs(
 	}
 	all = append(all, pairs...)
 
-	pairs, err = bf.keyValuesFromFileSources(args.FileSources)
+	pairs, err = f.keyValuesFromFileSources(args.FileSources)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf(
 			"file sources: %v", args.FileSources))
@@ -90,14 +96,14 @@ func keyValuesFromLiteralSources(sources []string) ([]kv.Pair, error) {
 	return kvs, nil
 }
 
-func (bf baseFactory) keyValuesFromPlugins(sources []types.KVSource) ([]kv.Pair, error) {
+func (f *Factory) keyValuesFromPlugins(sources []types.KVSource) ([]kv.Pair, error) {
 	var result []kv.Pair
 	for _, s := range sources {
-		plug, err := bf.reg.Load(s.PluginType, s.Name)
+		plug, err := f.reg.Load(s.PluginType, s.Name)
 		if err != nil {
 			return nil, err
 		}
-		kvs, err := plug.Get(bf.reg.Root(), s.Args)
+		kvs, err := plug.Get(f.reg.Root(), s.Args)
 		if err != nil {
 			return nil, err
 		}
@@ -119,14 +125,14 @@ func sortedKeys(m map[string]string) []string {
 	return keys
 }
 
-func (bf baseFactory) keyValuesFromFileSources(sources []string) ([]kv.Pair, error) {
+func (f *Factory) keyValuesFromFileSources(sources []string) ([]kv.Pair, error) {
 	var kvs []kv.Pair
 	for _, s := range sources {
 		k, fPath, err := kv.ParseFileSource(s)
 		if err != nil {
 			return nil, err
 		}
-		content, err := bf.ldr.Load(fPath)
+		content, err := f.ldr.Load(fPath)
 		if err != nil {
 			return nil, err
 		}
@@ -135,10 +141,10 @@ func (bf baseFactory) keyValuesFromFileSources(sources []string) ([]kv.Pair, err
 	return kvs, nil
 }
 
-func (bf baseFactory) keyValuesFromEnvFiles(paths []string) ([]kv.Pair, error) {
+func (f *Factory) keyValuesFromEnvFiles(paths []string) ([]kv.Pair, error) {
 	var kvs []kv.Pair
 	for _, path := range paths {
-		content, err := bf.ldr.Load(path)
+		content, err := f.ldr.Load(path)
 		if err != nil {
 			return nil, err
 		}
