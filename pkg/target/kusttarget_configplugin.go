@@ -6,7 +6,6 @@ package target
 import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/pkg/image"
-	"sigs.k8s.io/kustomize/pkg/patch"
 	"sigs.k8s.io/kustomize/pkg/plugins"
 	"sigs.k8s.io/kustomize/pkg/transformers"
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
@@ -128,7 +127,7 @@ func (kt *KustTarget) configureBuiltinPatchJson6902Transformer(
 	tConfig *config.TransformerConfig) (
 	result []transformers.Transformer, err error) {
 	var c struct {
-		Patches []patch.Json6902
+		Patches []types.PatchJson6902
 	}
 	c.Patches = kt.kustomization.PatchesJson6902
 	p := builtin.NewPatchJson6902TransformerPlugin()
