@@ -1,4 +1,4 @@
-English | [简体中文](README-CN.md)
+English | [简体中文](zh/README-CN.md)
 
 # Examples
 

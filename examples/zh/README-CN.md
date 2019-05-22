@@ -1,3 +1,5 @@
+[English](../README.md) | 简体中文
+
 # 示例
 
 这些示例默认 `kustomize` 在您的 `$PATH` 中。
@@ -9,7 +11,7 @@
 go get sigs.k8s.io/kustomize
 ```
 
- * [hello world](helloWorld/README.md) - 部署多个配置不同的 Hello World 服务。
+ * [hello world](helloWorld/README.md) - 部署多个不同配置的 Hello World 服务。
 
  * [last mile helm](chart.md) - 对 helm chart 进行 last mile 修改。
    
@@ -20,7 +22,7 @@ go get sigs.k8s.io/kustomize
  * [springboot](springboot/README.md) - 从头开始创建一个 Spring Boot 项目的生产配置。
 
  * [combineConfigs](combineConfigs.md) -
-   混合来自不同用户的配置数据（例如来自 devops/SRE 和 developers）。
+   融合来自不同用户的配置数据（例如来自 devops/SRE 和 developers）。
    
  * [configGenerations](configGeneration.md) - 当 ConfigMapGenerator 修改时进行滚动更新。
 
@@ -30,7 +32,7 @@ go get sigs.k8s.io/kustomize
 
  * [breakfast](breakfast.md) - 给 Alice 和 Bob 定制一顿早餐 :)
    
- * [vars](wordpress/README.md) - 通过 vars 将 k8s 运行时数据注入容器参数（例如，为 wordpress 指定 SQL 服务）。
+ * [vars](wordpress/README.md) - 通过 vars 将一个资源的数据注入另一个资源的容器参数 （例如，为 wordpress 指定 SQL 服务）。
  
  * [image names and tags](image.md) - 在不使用 patch 的情况下更新镜像名称和标签。
 
