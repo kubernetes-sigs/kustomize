@@ -92,12 +92,11 @@ func (x Gvk) Equals(o Gvk) bool {
 // a Service should come before things that refer to it.
 // Namespace should be first.
 // In some cases order just specified to provide determinism.
-var order = []string{
+var orderFirst = []string{
 	"Namespace",
 	"StorageClass",
 	"CustomResourceDefinition",
 	"MutatingWebhookConfiguration",
-	"ValidatingWebhookConfiguration",
 	"ServiceAccount",
 	"PodSecurityPolicy",
 	"Role",
@@ -113,28 +112,26 @@ var order = []string{
 	"CronJob",
 	"PodDisruptionBudget",
 }
+var orderLast = []string{
+	"ValidatingWebhookConfiguration",
+}
 var typeOrders = func() map[string]int {
 	m := map[string]int{}
-	for i, n := range order {
-		m[n] = i
+	for i, n := range orderFirst {
+		m[n] = -len(orderFirst) + i
+	}
+	for i, n := range orderLast {
+		m[n] = 1 + i
 	}
 	return m
 }()
 
 // IsLessThan returns true if self is less than the argument.
 func (x Gvk) IsLessThan(o Gvk) bool {
-	indexI, foundI := typeOrders[x.Kind]
-	indexJ, foundJ := typeOrders[o.Kind]
-	if foundI && foundJ {
-		if indexI != indexJ {
-			return indexI < indexJ
-		}
-	}
-	if foundI && !foundJ {
-		return true
-	}
-	if !foundI && foundJ {
-		return false
+	indexI := typeOrders[x.Kind]
+	indexJ := typeOrders[o.Kind]
+	if indexI != indexJ {
+		return indexI < indexJ
 	}
 	return x.String() < o.String()
 }
