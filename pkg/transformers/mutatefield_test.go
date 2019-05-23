@@ -71,6 +71,10 @@ func makeTestDeployment() ifc.Kunstructured {
 								"name":  "tangerine",
 								"image": originalValue,
 							},
+							map[string]interface{}{
+								"name":  "orange",
+								"image": originalValue,
+							},
 						},
 					},
 				},
@@ -137,6 +141,21 @@ func TestHappyPath(t *testing.T) {
 	if v != newValue {
 		t.Fatalf("unexpected new value: %v", v)
 	}
+
+	m = &noopMutator{}
+	err = mutateField(
+		obj.Map(), []string{"spec", "template", "spec", "containers", "_1_"}, false, m.mutate)
+	if !m.wasCalled {
+		t.Fatalf("mutator should have been called.")
+	}
+	if err != nil {
+		t.Fatalf("unexpected mutate error: %v", err)
+	}
+	// TODO(jeb) getFieldValue within array not implemented yet
+	// v = getFieldValue(t, obj, "spec.template.spec.containers._1_")
+	// if v != newValue {
+	// 	t.Fatalf("unexpected new value: %v", v)
+	// }
 }
 
 func TestWithError(t *testing.T) {
