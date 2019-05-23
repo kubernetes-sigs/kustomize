@@ -166,3 +166,13 @@ In addition to the default transformers, you can create custom transformer confi
 - [support a CRD type](crd/README.md)
 - add extra fields for variable substitution
 - add extra fields for name reference
+
+
+## Supporting escape characters in CRD path
+
+```yaml
+metadata:
+  annotations:
+    foo.k8s.io/bar: baz
+```
+Kustomize supports escaping special characters in path, e.g `matadata/annotations/foo.k8s.io\/bar`
