@@ -77,8 +77,22 @@ func (fs *UnstructAdapter) SetMap(m map[string]interface{}) {
 	fs.Object = m
 }
 
-// GetFieldValue returns value at the given fieldpath.
-func (fs *UnstructAdapter) GetFieldValue(path string) (string, error) {
+// GetFieldNoCopy returns value at the given fieldpath.
+func (fs *UnstructAdapter) GetFieldValue(path string) (interface{}, error) {
+	fields, err := parseFields(path)
+	if err != nil {
+		return nil, err
+	}
+	s, found, err := unstructured.NestedFieldNoCopy(
+		fs.UnstructuredContent(), fields...)
+	if found || err != nil {
+		return s, err
+	}
+	return nil, types.NoFieldError{Field: path}
+}
+
+// GetString returns value at the given fieldpath.
+func (fs *UnstructAdapter) GetString(path string) (string, error) {
 	fields, err := parseFields(path)
 	if err != nil {
 		return "", err
@@ -103,4 +117,88 @@ func (fs *UnstructAdapter) GetStringSlice(path string) ([]string, error) {
 		return s, err
 	}
 	return []string{}, types.NoFieldError{Field: path}
+}
+
+// GetBool returns value at the given fieldpath.
+func (fs *UnstructAdapter) GetBool(path string) (bool, error) {
+	fields, err := parseFields(path)
+	if err != nil {
+		return false, err
+	}
+	s, found, err := unstructured.NestedBool(
+		fs.UnstructuredContent(), fields...)
+	if found || err != nil {
+		return s, err
+	}
+	return false, types.NoFieldError{Field: path}
+}
+
+// GetFloat64 returns value at the given fieldpath.
+func (fs *UnstructAdapter) GetFloat64(path string) (float64, error) {
+	fields, err := parseFields(path)
+	if err != nil {
+		return 0, err
+	}
+	s, found, err := unstructured.NestedFloat64(
+		fs.UnstructuredContent(), fields...)
+	if found || err != nil {
+		return s, err
+	}
+	return 0, types.NoFieldError{Field: path}
+}
+
+// GetInt64 returns value at the given fieldpath.
+func (fs *UnstructAdapter) GetInt64(path string) (int64, error) {
+	fields, err := parseFields(path)
+	if err != nil {
+		return 0, err
+	}
+	s, found, err := unstructured.NestedInt64(
+		fs.UnstructuredContent(), fields...)
+	if found || err != nil {
+		return s, err
+	}
+	return 0, types.NoFieldError{Field: path}
+}
+
+// GetSlice returns value at the given fieldpath.
+func (fs *UnstructAdapter) GetSlice(path string) ([]interface{}, error) {
+	fields, err := parseFields(path)
+	if err != nil {
+		return nil, err
+	}
+	s, found, err := unstructured.NestedSlice(
+		fs.UnstructuredContent(), fields...)
+	if found || err != nil {
+		return s, err
+	}
+	return nil, types.NoFieldError{Field: path}
+}
+
+// GetStringMap returns value at the given fieldpath.
+func (fs *UnstructAdapter) GetStringMap(path string) (map[string]string, error) {
+	fields, err := parseFields(path)
+	if err != nil {
+		return nil, err
+	}
+	s, found, err := unstructured.NestedStringMap(
+		fs.UnstructuredContent(), fields...)
+	if found || err != nil {
+		return s, err
+	}
+	return nil, types.NoFieldError{Field: path}
+}
+
+// GetMap returns value at the given fieldpath.
+func (fs *UnstructAdapter) GetMap(path string) (map[string]interface{}, error) {
+	fields, err := parseFields(path)
+	if err != nil {
+		return nil, err
+	}
+	s, found, err := unstructured.NestedMap(
+		fs.UnstructuredContent(), fields...)
+	if found || err != nil {
+		return s, err
+	}
+	return nil, types.NoFieldError{Field: path}
 }

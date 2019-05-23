@@ -50,7 +50,7 @@ func TestGetFieldValue(t *testing.T) {
 	tests := []struct {
 		name          string
 		pathToField   string
-		expectedValue string
+		expectedValue interface{}
 		errorExpected bool
 		errorMsg      string
 	}{
@@ -99,20 +99,23 @@ func TestGetFieldValue(t *testing.T) {
 		{
 			name:          "emptyMap",
 			pathToField:   "this.is.anEmptyMap",
-			errorExpected: true,
+			errorExpected: false,
 			errorMsg:      ".this.is.anEmptyMap accessor error: map[] is of the type map[string]interface {}, expected string",
+			expectedValue: map[string]interface{}{},
 		},
 		{
 			name:          "numberAsValue",
 			pathToField:   "this.is.aNumber",
-			errorExpected: true,
+			errorExpected: false,
 			errorMsg:      ".this.is.aNumber accessor error: 1000 is of the type int, expected string",
+			expectedValue: 1000,
 		},
 		{
 			name:          "nilAsValue",
 			pathToField:   "this.is.aNilValue",
-			errorExpected: true,
+			errorExpected: false,
 			errorMsg:      ".this.is.aNilValue accessor error: <nil> is of the type <nil>, expected string",
+			expectedValue: map[string]interface{}{},
 		},
 		{
 			name:          "unrecognizable",
@@ -139,7 +142,9 @@ func TestGetFieldValue(t *testing.T) {
 			t.Fatalf("%q; path %q - unexpected error %v",
 				test.name, test.pathToField, err)
 		}
-		if test.expectedValue != s {
+		// TODO(jeb): Improve expectedValue, actualValue comparison
+		_, isString := test.expectedValue.(string)
+		if isString && test.expectedValue != s {
 			t.Fatalf("%q; Got: %s expected: %s",
 				test.name, s, test.expectedValue)
 		}

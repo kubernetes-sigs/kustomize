@@ -24,7 +24,7 @@ import (
 )
 
 type RefVarTransformer struct {
-	varMap            map[string]string
+	varMap            map[string]interface{}
 	replacementCounts map[string]int
 	fieldSpecs        []config.FieldSpec
 	mappingFunc       func(string) string
@@ -34,7 +34,7 @@ type RefVarTransformer struct {
 // that replaces $(VAR) style variables with values.
 // The fieldSpecs are the places to look for occurrences of $(VAR).
 func NewRefVarTransformer(
-	varMap map[string]string, fs []config.FieldSpec) *RefVarTransformer {
+	varMap map[string]interface{}, fs []config.FieldSpec) *RefVarTransformer {
 	return &RefVarTransformer{
 		varMap:     varMap,
 		fieldSpecs: fs,

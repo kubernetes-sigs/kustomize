@@ -31,9 +31,10 @@ import (
 // ResAccumulator accumulates resources and the rules
 // used to customize those resources.
 type ResAccumulator struct {
-	resMap  resmap.ResMap
-	tConfig *config.TransformerConfig
-	varSet  types.VarSet
+	resMap    resmap.ResMap
+	tConfig   *config.TransformerConfig
+	varSet    types.VarSet
+	inlineSet types.VarSet
 }
 
 func MakeEmptyAccumulator() *ResAccumulator {
@@ -41,6 +42,7 @@ func MakeEmptyAccumulator() *ResAccumulator {
 	ra.resMap = make(resmap.ResMap)
 	ra.tConfig = &config.TransformerConfig{}
 	ra.varSet = types.VarSet{}
+	ra.inlineSet = types.VarSet{}
 	return ra
 }
 
@@ -56,6 +58,11 @@ func (ra *ResAccumulator) ResMap() resmap.ResMap {
 // Vars returns a copy of underlying vars.
 func (ra *ResAccumulator) Vars() []types.Var {
 	return ra.varSet.Set()
+}
+
+// Inlines returns a copy of underlying vars.
+func (ra *ResAccumulator) Inlines() []types.Var {
+	return ra.inlineSet.Set()
 }
 
 func (ra *ResAccumulator) MergeResourcesWithErrorOnIdCollision(
@@ -86,6 +93,10 @@ func (ra *ResAccumulator) MergeVars(incoming []types.Var) error {
 	return ra.varSet.MergeSlice(incoming)
 }
 
+func (ra *ResAccumulator) MergeInlines(incoming []types.Var) error {
+	return ra.inlineSet.MergeSlice(incoming)
+}
+
 func (ra *ResAccumulator) MergeAccumulator(other *ResAccumulator) (err error) {
 	err = ra.MergeResourcesWithErrorOnIdCollision(other.resMap)
 	if err != nil {
@@ -95,15 +106,50 @@ func (ra *ResAccumulator) MergeAccumulator(other *ResAccumulator) (err error) {
 	if err != nil {
 		return err
 	}
-	return ra.varSet.MergeSet(&other.varSet)
+	err = ra.varSet.MergeSet(&other.varSet)
+	if err != nil {
+		return err
+	}
+	return ra.inlineSet.MergeSet(&other.inlineSet)
 }
 
 // makeVarReplacementMap returns a map of Var names to
 // their final values. The values are strings intended
 // for substitution wherever the $(var.Name) occurs.
-func (ra *ResAccumulator) makeVarReplacementMap() (map[string]string, error) {
-	result := map[string]string{}
+func (ra *ResAccumulator) makeVarReplacementMap() (map[string]interface{}, error) {
+	result := map[string]interface{}{}
 	for _, v := range ra.Vars() {
+		matched := ra.resMap.GetMatchingIds(
+			resid.NewResId(v.ObjRef.GVK(), v.ObjRef.Name).GvknEquals)
+		if len(matched) > 1 {
+			return nil, fmt.Errorf(
+				"found %d resId matches for var %s "+
+					"(unable to disambiguate)",
+				len(matched), v)
+		}
+		if len(matched) == 1 {
+			s, err := ra.resMap[matched[0]].GetFieldValue(v.FieldRef.FieldPath)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"field specified in var '%v' "+
+						"not found in corresponding resource", v)
+			}
+			result[v.Name] = s
+		} else {
+			return nil, fmt.Errorf(
+				"var '%v' cannot be mapped to a field "+
+					"in the set of known resources", v)
+		}
+	}
+	return result, nil
+}
+
+// makeInlineReplacementMap returns a map of Var names to
+// their final values. The values are strings intended
+// for substitution wherever the $(var.Name) occurs.
+func (ra *ResAccumulator) makeInlineReplacementMap() (map[string]interface{}, error) {
+	result := map[string]interface{}{}
+	for _, v := range ra.Inlines() {
 		matched := ra.resMap.GetMatchingIds(
 			resid.NewResId(v.ObjRef.GVK(), v.ObjRef.Name).GvknEquals)
 		if len(matched) > 1 {
@@ -147,7 +193,26 @@ func (ra *ResAccumulator) ResolveVars() error {
 	if len(t.UnusedVars()) > 0 {
 		log.Printf(
 			"well-defined vars that were never replaced: %s\n",
-			strings.Join(t.UnusedVars(), ","))
+			strings.Join(t.UnusedVars(), ",\n"))
+	}
+	return err
+}
+
+func (ra *ResAccumulator) ResolveInlines() error {
+	replacementMap, err := ra.makeInlineReplacementMap()
+	if err != nil {
+		return err
+	}
+	if len(replacementMap) == 0 {
+		return nil
+	}
+	t := transformers.NewRefInlineTransformer(
+		replacementMap, ra.tConfig.InlineReference)
+	err = ra.Transform(t)
+	if len(t.UnusedInlines()) > 0 {
+		log.Printf(
+			"well-defined inlines that were never replaced: %s\n",
+			strings.Join(t.UnusedInlines(), ",\n"))
 	}
 	return err
 }
