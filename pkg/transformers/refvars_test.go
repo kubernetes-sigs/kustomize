@@ -83,6 +83,75 @@ func TestVarRef(t *testing.T) {
 				unused: []string{"BAR"},
 			},
 		},
+		{
+			description: "var replacement in array using index",
+			given: given{
+				varMap: map[string]interface{}{
+					"FOO": "replacementForFoo",
+					"BAR": "replacementForBar",
+				},
+				fs: []config.FieldSpec{
+					{Gvk: cmap, Path: "data/item1/_1_/item2"},
+				},
+				res: resmap.ResMap{
+					resid.NewResId(cmap, "cm1"): rf.FromMap(
+						map[string]interface{}{
+							"apiVersion": "v1",
+							"kind":       "ConfigMap",
+							"metadata": map[string]interface{}{
+								"name": "cm1",
+							},
+							"data": map[string]interface{}{
+								"item1": []interface{}{
+									map[string]interface{}{
+										"item1": "idx0",
+										"item2": "bla",
+									},
+									map[string]interface{}{
+										"item1": "idx1",
+										"item2": "$(FOO)",
+									},
+									map[string]interface{}{
+										"item1": "idx2",
+										"item2": "bla",
+									},
+								},
+								"item2": "bla",
+							},
+						}),
+				},
+			},
+			expected: expected{
+				res: resmap.ResMap{
+					resid.NewResId(cmap, "cm1"): rf.FromMap(
+						map[string]interface{}{
+							"apiVersion": "v1",
+							"kind":       "ConfigMap",
+							"metadata": map[string]interface{}{
+								"name": "cm1",
+							},
+							"data": map[string]interface{}{
+								"item1": []interface{}{
+									map[string]interface{}{
+										"item1": "idx0",
+										"item2": "bla",
+									},
+									map[string]interface{}{
+										"item1": "idx1",
+										"item2": "replacementForFoo",
+									},
+									map[string]interface{}{
+										"item1": "idx2",
+										"item2": "bla",
+									},
+								},
+								"item2": "bla",
+							},
+						}),
+				},
+				unused: []string{"BAR"},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
