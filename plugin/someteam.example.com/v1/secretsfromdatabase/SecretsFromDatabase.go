@@ -50,5 +50,4 @@ func (p *plugin) Generate() (resmap.ResMap, error) {
 		}
 	}
 	return p.rf.FromSecretArgs(p.ldr, nil, args)
-
 }
