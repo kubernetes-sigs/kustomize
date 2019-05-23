@@ -19,6 +19,7 @@ package expansion
 
 import (
 	"bytes"
+	"fmt"
 )
 
 const (
@@ -38,13 +39,24 @@ func syntaxWrap(input string) string {
 // for the input is found.
 func MappingFuncFor(
 	counts map[string]int,
-	context ...map[string]string) func(string) string {
+	context ...map[string]interface{}) func(string) string {
 	return func(input string) string {
 		for _, vars := range context {
 			val, ok := vars[input]
 			if ok {
 				counts[input]++
-				return val
+				switch typedV := val.(type) {
+				case string:
+					return fmt.Sprintf("%v", typedV)
+				case int64:
+					return fmt.Sprintf("%v", typedV)
+				case float64:
+					return fmt.Sprintf("%v", typedV)
+				case bool:
+					return fmt.Sprintf("%v", typedV)
+				default:
+					return syntaxWrap(input)
+				}
 			}
 		}
 		return syntaxWrap(input)

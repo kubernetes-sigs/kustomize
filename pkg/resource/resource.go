@@ -79,7 +79,7 @@ func (r *Resource) NeedHashSuffix() bool {
 
 // Id returns the ResId for the resource.
 func (r *Resource) Id() resid.ResId {
-	namespace, _ := r.GetFieldValue("metadata.namespace")
+	namespace, _ := r.GetString("metadata.namespace")
 	return resid.NewResIdWithPrefixNamespace(r.GetGvk(), r.GetName(), "", namespace)
 }
 

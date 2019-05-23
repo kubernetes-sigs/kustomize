@@ -25,11 +25,11 @@ import (
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
 
-func TestVarRef(t *testing.T) {
+func TestInlineRef(t *testing.T) {
 	type given struct {
-		varMap map[string]interface{}
-		fs     []config.FieldSpec
-		res    resmap.ResMap
+		inlineMap map[string]interface{}
+		fs        []config.FieldSpec
+		res       resmap.ResMap
 	}
 	type expected struct {
 		res    resmap.ResMap
@@ -41,14 +41,17 @@ func TestVarRef(t *testing.T) {
 		expected    expected
 	}{
 		{
-			description: "var replacement in map[string]",
+			description: "inlining",
 			given: given{
-				varMap: map[string]interface{}{
-					"FOO": "replacementForFoo",
+				inlineMap: map[string]interface{}{
+					"FOO": map[string]interface{}{
+						"foofield1": "foovalue1",
+						"foofield2": "foovalue2",
+					},
 					"BAR": "replacementForBar",
 				},
 				fs: []config.FieldSpec{
-					{Gvk: cmap, Path: "data"},
+					{Gvk: cmap, Path: "data/item1"},
 				},
 				res: resmap.ResMap{
 					resid.NewResId(cmap, "cm1"): rf.FromMap(
@@ -75,7 +78,10 @@ func TestVarRef(t *testing.T) {
 								"name": "cm1",
 							},
 							"data": map[string]interface{}{
-								"item1": "replacementForFoo",
+								"item1": map[string]interface{}{
+									"foofield1": "foovalue1",
+									"foofield2": "foovalue2",
+								},
 								"item2": "bla",
 							},
 						}),
@@ -84,14 +90,19 @@ func TestVarRef(t *testing.T) {
 			},
 		},
 		{
-			description: "var replacement in array using index",
+			description: "parent-inlining",
 			given: given{
-				varMap: map[string]interface{}{
-					"FOO": "replacementForFoo",
+				inlineMap: map[string]interface{}{
+					"FOO": map[string]interface{}{
+						"foofield1": "foovalue1",
+						"foofield2": "foovalue2",
+						"foofield3": "foovalue3",
+						"foofield4": "foovalue4",
+					},
 					"BAR": "replacementForBar",
 				},
 				fs: []config.FieldSpec{
-					{Gvk: cmap, Path: "data/item1/_1_/item2"},
+					{Gvk: cmap, Path: "data"},
 				},
 				res: resmap.ResMap{
 					resid.NewResId(cmap, "cm1"): rf.FromMap(
@@ -102,21 +113,8 @@ func TestVarRef(t *testing.T) {
 								"name": "cm1",
 							},
 							"data": map[string]interface{}{
-								"item1": []interface{}{
-									map[string]interface{}{
-										"item1": "idx0",
-										"item2": "bla",
-									},
-									map[string]interface{}{
-										"item1": "idx1",
-										"item2": "$(FOO)",
-									},
-									map[string]interface{}{
-										"item1": "idx2",
-										"item2": "bla",
-									},
-								},
-								"item2": "bla",
+								"parent-inline": "$(FOO)",
+								"foofield3":     "bla",
 							},
 						}),
 				},
@@ -131,21 +129,10 @@ func TestVarRef(t *testing.T) {
 								"name": "cm1",
 							},
 							"data": map[string]interface{}{
-								"item1": []interface{}{
-									map[string]interface{}{
-										"item1": "idx0",
-										"item2": "bla",
-									},
-									map[string]interface{}{
-										"item1": "idx1",
-										"item2": "replacementForFoo",
-									},
-									map[string]interface{}{
-										"item1": "idx2",
-										"item2": "bla",
-									},
-								},
-								"item2": "bla",
+								"foofield1": "foovalue1",
+								"foofield2": "foovalue2",
+								"foofield3": "bla",
+								"foofield4": "foovalue4",
 							},
 						}),
 				},
@@ -157,7 +144,7 @@ func TestVarRef(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
 			// arrange
-			tr := NewRefVarTransformer(tc.given.varMap, tc.given.fs)
+			tr := NewRefInlineTransformer(tc.given.inlineMap, tc.given.fs)
 
 			// act
 			err := tr.Transform(tc.given.res)
