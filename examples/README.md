@@ -1,3 +1,5 @@
+English | [简体中文](zh/README-CN.md)
+
 # Examples
 
 These examples assume that `kustomize` is on your `$PATH`.
