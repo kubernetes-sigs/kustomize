@@ -80,21 +80,19 @@ type Kustomization struct {
 	Images []image.Image `json:"images,omitempty" yaml:"images,omitempty"`
 
 	// Vars allow things modified by kustomize to be injected into a
-	// container specification. A var is a name (e.g. FOO) associated
+	// container or CRD specification. A var is a name (e.g. FOO) associated
 	// with a field in a specific resource instance.  The field must
-	// contain a value of type string, and defaults to the name field
-	// of the instance.  Any appearance of "$(FOO)" in the container
+	// contain a value of type string/bool/int/float, and defaults to the name field
+	// of the instance.  Any appearance of "$(FOO)" in the container or CRD
 	// spec will be replaced at kustomize build time, after the final
 	// value of the specified field has been determined.
 	Vars []Var `json:"vars,omitempty" yaml:"vars,omitempty"`
 
-	// Vars allow things modified by kustomize to be injected into a
-	// container specification. A var is a name (e.g. FOO) associated
-	// with a field in a specific resource instance.  The field must
-	// contain a value of type string, and defaults to the name field
-	// of the instance.  Any appearance of "$(FOO)" in the container
-	// spec will be replaced at kustomize build time, after the final
-	// value of the specified field has been determined.
+	// Inlines allow things modified by kustomize to be injected into a
+	// container or CRD specification. An inline is a name (e.g. SourceCRD.name.spec)
+	// associated with a tree in a specific resource instance.
+	// Any appearance of "$(SourceCRD.name.spec)" in a container or CRD
+	// spec will be replaced at kustomize build time by the SourceCRD.name.spec tree.
 	Inlines []Var `json:"inlines,omitempty" yaml:"inlines,omitempty"`
 
 	//
