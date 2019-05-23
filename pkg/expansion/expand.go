@@ -19,7 +19,7 @@ package expansion
 
 import (
 	"bytes"
-	"strconv"
+	"fmt"
 )
 
 const (
@@ -47,13 +47,13 @@ func MappingFuncFor(
 				counts[input]++
 				switch typedV := val.(type) {
 				case string:
-					return typedV
+					return fmt.Sprintf("%v", typedV)
 				case int64:
-					return strconv.FormatInt(typedV, 10)
+					return fmt.Sprintf("%v", typedV)
 				case float64:
-					return strconv.FormatFloat(typedV, 'E', -1, 64)
+					return fmt.Sprintf("%v", typedV)
 				case bool:
-					return strconv.FormatBool(typedV)
+					return fmt.Sprintf("%v", typedV)
 				default:
 					return syntaxWrap(input)
 				}

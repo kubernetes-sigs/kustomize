@@ -23,12 +23,7 @@ import (
 	. "sigs.k8s.io/kustomize/pkg/expansion"
 )
 
-type expected struct {
-	count  int
-	edited string
-}
-
-func TestMapReference(t *testing.T) {
+func TestInlineMapReference(t *testing.T) {
 	type env struct {
 		Name  string
 		Value interface{}
@@ -40,55 +35,25 @@ func TestMapReference(t *testing.T) {
 		},
 		{
 			Name:  "ZOO",
-			Value: "$(FOO)-1",
-		},
-		{
-			Name:  "BLU",
-			Value: "$(ZOO)-2",
-		},
-		{
-			Name:  "INT",
-			Value: 2,
-		},
-		{
-			Name:  "ZINT",
-			Value: "$(INT)",
-		},
-		{
-			Name:  "BOOL",
-			Value: true,
-		},
-		{
-			Name:  "ZBOOL",
-			Value: "$(BOOL)",
+			Value: "$(FOO)",
 		},
 	}
 
 	declaredEnv := map[string]interface{}{
-		"FOO":   "bar",
-		"ZOO":   "$(FOO)-1",
-		"BLU":   "$(ZOO)-2",
-		"INT":   "2",
-		"ZINT":  "$(INT)",
-		"BOOL":  "true",
-		"ZBOOL": "$(BOOL)",
+		"FOO": "bar",
+		"ZOO": "$(FOO)",
 	}
 
 	counts := make(map[string]int)
-	mapping := MappingFuncFor(counts, declaredEnv)
+	mapping := InlineFuncFor(counts, declaredEnv)
 
 	for _, env := range envs {
-		declaredEnv[env.Name] = Expand(fmt.Sprintf("%v", env.Value), mapping)
+		declaredEnv[env.Name] = Inline(fmt.Sprintf("%v", env.Value), mapping)
 	}
 
 	expectedEnv := map[string]expected{
-		"FOO":   {count: 1, edited: "bar"},
-		"ZOO":   {count: 1, edited: "bar-1"},
-		"BLU":   {count: 0, edited: "bar-1-2"},
-		"INT":   {count: 1, edited: "2"},
-		"ZINT":  {count: 0, edited: "2"},
-		"BOOL":  {count: 1, edited: "true"},
-		"ZBOOL": {count: 0, edited: "true"},
+		"FOO": {count: 1, edited: "bar"},
+		"ZOO": {count: 0, edited: "bar"},
 	}
 
 	for k, v := range expectedEnv {
@@ -105,7 +70,7 @@ func TestMapReference(t *testing.T) {
 	}
 }
 
-func TestMapping(t *testing.T) {
+func TestInlineMapping(t *testing.T) {
 	context := map[string]interface{}{
 		"VAR_A":     "A",
 		"VAR_B":     "B",
@@ -113,10 +78,10 @@ func TestMapping(t *testing.T) {
 		"VAR_REF":   "$(VAR_A)",
 		"VAR_EMPTY": "",
 	}
-	doExpansionTest(t, context)
+	doInlineTest(t, context)
 }
 
-func TestMappingDual(t *testing.T) {
+func TestInlineMappingDual(t *testing.T) {
 	context := map[string]interface{}{
 		"VAR_A":     "A",
 		"VAR_EMPTY": "",
@@ -127,10 +92,10 @@ func TestMappingDual(t *testing.T) {
 		"VAR_REF": "$(VAR_A)",
 	}
 
-	doExpansionTest(t, context, context2)
+	doInlineTest(t, context, context2)
 }
 
-func doExpansionTest(t *testing.T, context ...map[string]interface{}) {
+func doInlineTest(t *testing.T, context ...map[string]interface{}) {
 	cases := []struct {
 		name     string
 		input    string
@@ -146,72 +111,62 @@ func doExpansionTest(t *testing.T, context ...map[string]interface{}) {
 		{
 			name:     "repeat",
 			input:    "$(VAR_A)-$(VAR_A)",
-			expected: "A-A",
-			counts:   map[string]int{"VAR_A": 2},
+			expected: "$(VAR_A)-$(VAR_A)",
 		},
 		{
 			name:     "multiple repeats",
 			input:    "$(VAR_A)-$(VAR_B)-$(VAR_B)-$(VAR_B)-$(VAR_A)",
-			expected: "A-B-B-B-A",
-			counts:   map[string]int{"VAR_A": 2, "VAR_B": 3},
+			expected: "$(VAR_A)-$(VAR_B)-$(VAR_B)-$(VAR_B)-$(VAR_A)",
 		},
 		{
 			name:     "beginning",
 			input:    "$(VAR_A)-1",
-			expected: "A-1",
-			counts:   map[string]int{"VAR_A": 1},
+			expected: "$(VAR_A)-1",
 		},
 		{
 			name:     "middle",
 			input:    "___$(VAR_B)___",
-			expected: "___B___",
-			counts:   map[string]int{"VAR_B": 1},
+			expected: "___$(VAR_B)___",
 		},
 		{
 			name:     "end",
 			input:    "___$(VAR_C)",
-			expected: "___C",
-			counts:   map[string]int{"VAR_C": 1},
+			expected: "___$(VAR_C)",
 		},
 		{
 			name:     "compound",
 			input:    "$(VAR_A)_$(VAR_B)_$(VAR_C)",
-			expected: "A_B_C",
-			counts:   map[string]int{"VAR_A": 1, "VAR_B": 1, "VAR_C": 1},
+			expected: "$(VAR_A)_$(VAR_B)_$(VAR_C)",
 		},
 		{
 			name:     "escape & expand",
 			input:    "$$(VAR_B)_$(VAR_A)",
-			expected: "$(VAR_B)_A",
-			counts:   map[string]int{"VAR_A": 1},
+			expected: "$$(VAR_B)_$(VAR_A)",
 		},
 		{
 			name:     "compound escape",
 			input:    "$$(VAR_A)_$$(VAR_B)",
-			expected: "$(VAR_A)_$(VAR_B)",
+			expected: "$$(VAR_A)_$$(VAR_B)",
 		},
 		{
 			name:     "mixed in escapes",
 			input:    "f000-$$VAR_A",
-			expected: "f000-$VAR_A",
+			expected: "f000-$$VAR_A",
 		},
 		{
 			name:     "backslash escape ignored",
 			input:    "foo\\$(VAR_C)bar",
-			expected: "foo\\Cbar",
-			counts:   map[string]int{"VAR_C": 1},
+			expected: "foo\\$(VAR_C)bar",
 		},
 		{
 			name:     "backslash escape ignored",
 			input:    "foo\\\\$(VAR_C)bar",
-			expected: "foo\\\\Cbar",
-			counts:   map[string]int{"VAR_C": 1},
+			expected: "foo\\\\$(VAR_C)bar",
 		},
 		{
 			name:     "lots of backslashes",
 			input:    "foo\\\\\\\\$(VAR_A)bar",
-			expected: "foo\\\\\\\\Abar",
-			counts:   map[string]int{"VAR_A": 1},
+			expected: "foo\\\\\\\\$(VAR_A)bar",
 		},
 		{
 			name:     "nested var references",
@@ -232,14 +187,12 @@ func doExpansionTest(t *testing.T, context ...map[string]interface{}) {
 		{
 			name:     "value is a reference x 2",
 			input:    "%%$(VAR_REF)--$(VAR_REF)%%",
-			expected: "%%$(VAR_A)--$(VAR_A)%%",
-			counts:   map[string]int{"VAR_REF": 2},
+			expected: "%%$(VAR_REF)--$(VAR_REF)%%",
 		},
 		{
 			name:     "empty var",
 			input:    "foo$(VAR_EMPTY)bar",
-			expected: "foobar",
-			counts:   map[string]int{"VAR_EMPTY": 1},
+			expected: "foo$(VAR_EMPTY)bar",
 		},
 		{
 			name:     "unterminated expression",
@@ -269,23 +222,22 @@ func doExpansionTest(t *testing.T, context ...map[string]interface{}) {
 		{
 			name:     "multiple (even) operators, var undefined",
 			input:    "$$$$$$(BIG_MONEY)",
-			expected: "$$$(BIG_MONEY)",
+			expected: "$$$$$$(BIG_MONEY)",
 		},
 		{
 			name:     "multiple (even) operators, var defined",
 			input:    "$$$$$$(VAR_A)",
-			expected: "$$$(VAR_A)",
+			expected: "$$$$$$(VAR_A)",
 		},
 		{
 			name:     "multiple (odd) operators, var undefined",
 			input:    "$$$$$$$(GOOD_ODDS)",
-			expected: "$$$$(GOOD_ODDS)",
+			expected: "$$$$$$$(GOOD_ODDS)",
 		},
 		{
 			name:     "multiple (odd) operators, var defined",
 			input:    "$$$$$$$(VAR_A)",
-			expected: "$$$A",
-			counts:   map[string]int{"VAR_A": 1},
+			expected: "$$$$$$$(VAR_A)",
 		},
 		{
 			name:     "missing open expression",
@@ -300,20 +252,17 @@ func doExpansionTest(t *testing.T, context ...map[string]interface{}) {
 		{
 			name:     "trailing incomplete expression not consumed",
 			input:    "$(VAR_B)_______$(A",
-			expected: "B_______$(A",
-			counts:   map[string]int{"VAR_B": 1},
+			expected: "$(VAR_B)_______$(A",
 		},
 		{
 			name:     "trailing incomplete expression, no content, is not consumed",
 			input:    "$(VAR_C)_______$(",
-			expected: "C_______$(",
-			counts:   map[string]int{"VAR_C": 1},
+			expected: "$(VAR_C)_______$(",
 		},
 		{
 			name:     "operator at end of input string is preserved",
 			input:    "$(VAR_A)foobarzab$",
-			expected: "Afoobarzab$",
-			counts:   map[string]int{"VAR_A": 1},
+			expected: "$(VAR_A)foobarzab$",
 		},
 		{
 			name:     "shell escaped incomplete expr",
@@ -341,7 +290,7 @@ func doExpansionTest(t *testing.T, context ...map[string]interface{}) {
 			expected: "$(foo$$var)",
 		},
 		{
-			name:     "newline not expanded",
+			name:     "newline not inlined",
 			input:    "\n",
 			expected: "\n",
 		},
@@ -349,9 +298,9 @@ func doExpansionTest(t *testing.T, context ...map[string]interface{}) {
 
 	for _, tc := range cases {
 		counts := make(map[string]int)
-		mapping := MappingFuncFor(counts, context...)
-		expanded := Expand(fmt.Sprintf("%v", tc.input), mapping)
-		if e, a := tc.expected, expanded; e != a {
+		mapping := InlineFuncFor(counts, context...)
+		inlined := Inline(tc.input, mapping)
+		if e, a := tc.expected, inlined; e != a {
 			t.Errorf("%v: expected %q, got %q", tc.name, e, a)
 		}
 		if len(counts) != len(tc.counts) {

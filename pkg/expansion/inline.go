@@ -43,12 +43,12 @@ func Inline(input string, inline func(string) interface{}) interface{} {
 
 	if input[0] != operator {
 		// This is not the right syntax for an inline
-		return nil
+		return input
 	}
 
 	read, isVar, _ := tryReadVariableName(input[1:])
 
-	if isVar {
+	if isVar && input == syntaxWrap(read) {
 		// We were able to read a variable name correctly;
 		// apply the mapping to the variable name and
 		// return the object.
@@ -56,5 +56,5 @@ func Inline(input string, inline func(string) interface{}) interface{} {
 	}
 
 	// This is not the right syntax for an inline
-	return nil
+	return input
 }
