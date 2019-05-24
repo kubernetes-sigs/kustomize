@@ -1,19 +1,53 @@
-/*
-Copyright 2019 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package plugins
 
-const PluginSymbol = "KustomizePlugin"
+import (
+	"fmt"
+	"github.com/spf13/pflag"
+	"path/filepath"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/pkg/types"
+)
+
+const (
+	PluginSymbol          = "KustomizePlugin"
+	flagEnablePluginsName = "enable_alpha_plugins"
+	flagEnablePluginsHelp = `enable plugins, an alpha feature.
+See https://github.com/kubernetes-sigs/kustomize/blob/master/docs/plugins.md
+`
+	flagErrorFmt = `
+unable to load plugin %s because plugins disabled
+specify the flag
+  --%s
+to %s`
+)
+
+func ActivePluginConfig() *types.PluginConfig {
+	pc := DefaultPluginConfig()
+	pc.Enabled = true
+	return pc
+}
+
+func DefaultPluginConfig() *types.PluginConfig {
+	return &types.PluginConfig{
+		Enabled: false,
+		DirectoryPath: filepath.Join(
+			pgmconfig.ConfigRoot(), pgmconfig.PluginRoot),
+	}
+}
+
+func PluginsNotEnabledErr(name string) error {
+	return fmt.Errorf(
+		flagErrorFmt,
+		name,
+		flagEnablePluginsName,
+		flagEnablePluginsHelp)
+}
+
+func AddEnablePluginsFlag(set *pflag.FlagSet, v *bool) {
+	set.BoolVar(
+		v, flagEnablePluginsName,
+		false, flagEnablePluginsHelp)
+}

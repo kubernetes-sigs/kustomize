@@ -11,7 +11,6 @@ import (
 
 	"sigs.k8s.io/kustomize/internal/loadertest"
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
@@ -33,12 +32,12 @@ type KustTestHarness struct {
 
 func NewKustTestHarness(t *testing.T, path string) *KustTestHarness {
 	return NewKustTestHarnessWithPluginConfig(
-		t, path, plugin.DefaultPluginConfig())
+		t, path, plugins.DefaultPluginConfig())
 }
 
 func NewKustTestPluginHarness(t *testing.T, path string) *KustTestHarness {
 	return NewKustTestHarnessWithPluginConfig(
-		t, path, plugin.ActivePluginConfig())
+		t, path, plugins.ActivePluginConfig())
 }
 
 func NewKustTestHarnessWithPluginConfig(
@@ -51,8 +50,7 @@ func NewKustTestHarnessFull(
 	t *testing.T, path string,
 	lr loader.LoadRestrictorFunc, pc *types.PluginConfig) *KustTestHarness {
 	rf := resmap.NewFactory(resource.NewFactory(
-		kunstruct.NewKunstructuredFactoryWithGeneratorArgs(
-			&types.GeneratorMetaArgs{PluginConfig: pc})))
+		kunstruct.NewKunstructuredFactoryImpl()))
 	return &KustTestHarness{
 		t:   t,
 		rf:  rf,

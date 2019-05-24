@@ -150,8 +150,7 @@ correct environment and flags for plugins:
 ```
 function kustomizeIt {
   XDG_CONFIG_HOME=$DEMO_HOME \
-  kustomize build \
-    --enable_alpha_goplugins_accept_panic_risk \
+  kustomize build --enable_alpha_plugins \
     $DEMO_HOME/$1
 }
 ```

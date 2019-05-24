@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	kvplugin "sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/kusttest"
@@ -19,7 +18,6 @@ import (
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/target"
-	"sigs.k8s.io/kustomize/pkg/types"
 	"sigs.k8s.io/kustomize/plugin"
 )
 
@@ -63,12 +61,9 @@ metadata:
 		t.Fatalf("Err: %v", err)
 	}
 	rf := resmap.NewFactory(resource.NewFactory(
-		kunstruct.NewKunstructuredFactoryWithGeneratorArgs(
-			&types.GeneratorMetaArgs{
-				PluginConfig: kvplugin.ActivePluginConfig(),
-			})))
+		kunstruct.NewKunstructuredFactoryImpl()))
 
-	pl := plugins.NewLoader(kvplugin.ActivePluginConfig(), rf)
+	pl := plugins.NewLoader(plugins.ActivePluginConfig(), rf)
 	tg, err := target.NewKustTarget(ldr, rf, transformer.NewFactoryImpl(), pl)
 	if err != nil {
 		t.Fatalf("err %v", err)
