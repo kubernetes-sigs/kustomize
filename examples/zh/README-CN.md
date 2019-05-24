@@ -11,7 +11,7 @@
 go get sigs.k8s.io/kustomize
 ```
 
- * [hello world](../helloWorld/README.md) - 部署多个不同配置的 Hello World 服务。
+ * [hello world](helloWorld.md) - 部署多个不同配置的 Hello World 服务。
 
  * [last mile helm](../chart.md) - 对 helm chart 进行 last mile 修改。
    
