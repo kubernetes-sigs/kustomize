@@ -8,8 +8,7 @@ import (
 
 	"sigs.k8s.io/kustomize/internal/loadertest"
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	kvplugin "sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
-	"sigs.k8s.io/kustomize/pkg/plugins"
+	. "sigs.k8s.io/kustomize/pkg/plugins"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/plugin"
@@ -54,7 +53,7 @@ func TestLoader(t *testing.T) {
 	rmF := resmap.NewFactory(resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl()))
 
-	l := plugins.NewLoader(kvplugin.ActivePluginConfig(), rmF)
+	l := NewLoader(ActivePluginConfig(), rmF)
 	if l == nil {
 		t.Fatal("expect non-nil loader")
 	}
