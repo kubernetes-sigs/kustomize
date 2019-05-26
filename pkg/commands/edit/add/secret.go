@@ -1,18 +1,5 @@
-/*
-Copyright 2019 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package add
 
@@ -109,45 +96,41 @@ func addSecret(
 	ldr ifc.Loader,
 	k *types.Kustomization,
 	flags flagsAndArgs, kf ifc.KunstructuredFactory) error {
-	secretArgs := makeSecretArgs(k, flags.Name, flags.Type)
-	mergeFlagsIntoSecretArgs(&secretArgs.KVSources, flags)
+	args := findOrMakeSecretArgs(k, flags.Name, flags.Type)
+	mergeFlagsIntoGeneratorArgs(&args.GeneratorArgs, flags)
 	// Validate by trying to create corev1.secret.
-	_, err := kf.MakeSecret(ldr, k.GeneratorOptions, secretArgs)
+	_, err := kf.MakeSecret(ldr, k.GeneratorOptions, args)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func makeSecretArgs(m *types.Kustomization, name, secretType string) *types.SecretArgs {
+func findOrMakeSecretArgs(m *types.Kustomization, name, secretType string) *types.SecretArgs {
 	for i, v := range m.SecretGenerator {
 		if name == v.Name {
 			return &m.SecretGenerator[i]
 		}
 	}
 	// secret not found, create new one and add it to the kustomization file.
-	secret := &types.SecretArgs{GeneratorArgs: types.GeneratorArgs{Name: name}, Type: secretType}
+	secret := &types.SecretArgs{
+		GeneratorArgs: types.GeneratorArgs{Name: name},
+		Type:          secretType}
 	m.SecretGenerator = append(m.SecretGenerator, *secret)
 	return &m.SecretGenerator[len(m.SecretGenerator)-1]
 }
 
-func mergeFlagsIntoSecretArgs(src *[]types.KVSource, flags flagsAndArgs) {
+func mergeFlagsIntoGeneratorArgs(args *types.GeneratorArgs, flags flagsAndArgs) {
 	if len(flags.LiteralSources) > 0 {
-		*src = append(*src, types.KVSource{
-			Name: "literals",
-			Args: flags.LiteralSources,
-		})
+		args.LiteralSources = append(
+			args.LiteralSources, flags.LiteralSources...)
 	}
 	if len(flags.FileSources) > 0 {
-		*src = append(*src, types.KVSource{
-			Name: "files",
-			Args: flags.FileSources,
-		})
+		args.FileSources = append(
+			args.FileSources, flags.FileSources...)
 	}
 	if flags.EnvFileSource != "" {
-		*src = append(*src, types.KVSource{
-			Name: "envfiles",
-			Args: []string{flags.EnvFileSource},
-		})
+		args.EnvSources = append(
+			args.EnvSources, flags.EnvFileSource)
 	}
 }

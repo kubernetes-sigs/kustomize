@@ -173,12 +173,9 @@ transformers cannot be expected to be commutative.
 A `kustomize build` that tries to use plugins but
 omits the flag
 
-_TODO: Change flag_
-
-> `--enable_alpha_goplugins_accept_panic_risk`
+> `--enable_alpha_plugins`
 
 will fail with a warning about plugin use.
-
 
 Flag use is an opt-in acknowledging the absence of
 plugin provenance.  It's meant to give pause to

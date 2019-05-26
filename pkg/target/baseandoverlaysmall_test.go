@@ -17,10 +17,10 @@ limitations under the License.
 package target_test
 
 import (
+	"sigs.k8s.io/kustomize/pkg/plugins"
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/kusttest"
 	"sigs.k8s.io/kustomize/pkg/loader"
 )
@@ -225,7 +225,7 @@ spec:
 func TestSharedPatchDisAllowed(t *testing.T) {
 	th := kusttest_test.NewKustTestHarnessFull(
 		t, "/app/overlay",
-		loader.RestrictionRootOnly, plugin.DefaultPluginConfig())
+		loader.RestrictionRootOnly, plugins.DefaultPluginConfig())
 	writeSmallBase(th)
 	th.WriteK("/app/overlay", `
 commonLabels:
@@ -257,7 +257,7 @@ spec:
 func TestSharedPatchAllowed(t *testing.T) {
 	th := kusttest_test.NewKustTestHarnessFull(
 		t, "/app/overlay",
-		loader.RestrictionNone, plugin.DefaultPluginConfig())
+		loader.RestrictionNone, plugins.DefaultPluginConfig())
 	writeSmallBase(th)
 	th.WriteK("/app/overlay", `
 commonLabels:

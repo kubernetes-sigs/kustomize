@@ -1,18 +1,5 @@
-/*
-Copyright 2017 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package add
 
@@ -104,17 +91,17 @@ func addConfigMap(
 	ldr ifc.Loader,
 	k *types.Kustomization,
 	flags flagsAndArgs, kf ifc.KunstructuredFactory) error {
-	cmArgs := makeConfigMapArgs(k, flags.Name)
-	mergeFlagsIntoCmArgs(&cmArgs.KVSources, flags)
+	args := findOrMakeConfigMapArgs(k, flags.Name)
+	mergeFlagsIntoCmArgs(args, flags)
 	// Validate by trying to create corev1.configmap.
-	_, err := kf.MakeConfigMap(ldr, k.GeneratorOptions, cmArgs)
+	_, err := kf.MakeConfigMap(ldr, k.GeneratorOptions, args)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func makeConfigMapArgs(m *types.Kustomization, name string) *types.ConfigMapArgs {
+func findOrMakeConfigMapArgs(m *types.Kustomization, name string) *types.ConfigMapArgs {
 	for i, v := range m.ConfigMapGenerator {
 		if name == v.Name {
 			return &m.ConfigMapGenerator[i]
@@ -126,23 +113,17 @@ func makeConfigMapArgs(m *types.Kustomization, name string) *types.ConfigMapArgs
 	return &m.ConfigMapGenerator[len(m.ConfigMapGenerator)-1]
 }
 
-func mergeFlagsIntoCmArgs(src *[]types.KVSource, flags flagsAndArgs) {
+func mergeFlagsIntoCmArgs(args *types.ConfigMapArgs, flags flagsAndArgs) {
 	if len(flags.LiteralSources) > 0 {
-		*src = append(*src, types.KVSource{
-			Name: "literals",
-			Args: flags.LiteralSources,
-		})
+		args.LiteralSources = append(
+			args.LiteralSources, flags.LiteralSources...)
 	}
 	if len(flags.FileSources) > 0 {
-		*src = append(*src, types.KVSource{
-			Name: "files",
-			Args: flags.FileSources,
-		})
+		args.FileSources = append(
+			args.FileSources, flags.FileSources...)
 	}
 	if flags.EnvFileSource != "" {
-		*src = append(*src, types.KVSource{
-			Name: "envfiles",
-			Args: []string{flags.EnvFileSource},
-		})
+		args.EnvSources = append(
+			args.EnvSources, flags.EnvFileSource)
 	}
 }

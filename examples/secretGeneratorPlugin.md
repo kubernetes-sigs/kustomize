@@ -201,9 +201,7 @@ can be found under `$DEMO_HOME`:
 ```
 result=$( \
   XDG_CONFIG_HOME=$DEMO_HOME \
-  kustomize \
-  --enable_alpha_goplugins_accept_panic_risk \
-  build $DEMO_HOME )
+  kustomize build --enable_alpha_plugins $DEMO_HOME )
 echo "$result"
 # Spot check the result:
 test 1 == $(echo "$result" | grep -c "FRUIT: YXBwbGU=")
