@@ -22,7 +22,6 @@ import (
 
 	"sigs.k8s.io/kustomize/internal/loadertest"
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
@@ -52,7 +51,7 @@ s/$BAR/bar/g
 
 	p := NewExecPlugin(
 		AbsolutePluginPath(
-			plugin.DefaultPluginConfig(),
+			DefaultPluginConfig(),
 			pluginConfig.Id()))
 
 	yaml, err := pluginConfig.AsYAML()
