@@ -144,7 +144,7 @@ func (kt *KustTarget) makeCustomizedResMap(
 
 	rm := ra.ResMap()
 	pt := kt.tFactory.MakeInventoryTransformer(
-		kt.kustomization.Inventory,
+		kt.kustomization.Inventory, kt.ldr,
 		kt.kustomization.Namespace,
 		garbagePolicy)
 	err = pt.Transform(rm)

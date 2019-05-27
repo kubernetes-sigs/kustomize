@@ -8,6 +8,7 @@ import (
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/k8sdeps/transformer/hash"
 	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/inventory"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
@@ -19,6 +20,7 @@ import (
 // inventoryTransformer compute the inventory object used in prune
 type inventoryTransformer struct {
 	garbagePolicy types.GarbagePolicy
+	ldr           ifc.Loader
 	cmName        string
 	cmNamespace   string
 }
@@ -28,6 +30,7 @@ var _ transformers.Transformer = &inventoryTransformer{}
 // NewInventoryTransformer makes a inventoryTransformer.
 func NewInventoryTransformer(
 	p *types.Inventory,
+	ldr ifc.Loader,
 	namespace string,
 	gp types.GarbagePolicy) transformers.Transformer {
 	if p == nil || p.Type != "ConfigMap" || p.ConfigMap.Namespace != namespace {
@@ -35,6 +38,7 @@ func NewInventoryTransformer(
 	}
 	return &inventoryTransformer{
 		garbagePolicy: gp,
+		ldr:           ldr,
 		cmName:        p.ConfigMap.Name,
 		cmNamespace:   p.ConfigMap.Namespace,
 	}
@@ -82,7 +86,7 @@ func (o *inventoryTransformer) Transform(m resmap.ResMap) error {
 	}
 
 	kf := kunstruct.NewKunstructuredFactoryImpl()
-	k, err := kf.MakeConfigMap(nil, opts, args)
+	k, err := kf.MakeConfigMap(o.ldr, opts, args)
 	if err != nil {
 		return err
 	}
