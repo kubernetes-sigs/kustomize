@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"sigs.k8s.io/kustomize/pkg/ifc"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/fs"
@@ -54,8 +56,8 @@ url examples:
 
 // NewCmdBuild creates a new build command.
 func NewCmdBuild(
-	out io.Writer, fs fs.FileSystem,
-	rf *resmap.Factory,
+	out io.Writer, fSys fs.FileSystem,
+	v ifc.Validator, rf *resmap.Factory,
 	ptf transformer.Factory) *cobra.Command {
 	var o Options
 
@@ -72,7 +74,7 @@ func NewCmdBuild(
 			if err != nil {
 				return err
 			}
-			return o.RunBuild(out, fs, rf, ptf, pl)
+			return o.RunBuild(out, v, fSys, rf, ptf, pl)
 		},
 	}
 
@@ -84,7 +86,7 @@ func NewCmdBuild(
 	plugins.AddEnablePluginsFlag(
 		cmd.Flags(), &pluginConfig.Enabled)
 
-	cmd.AddCommand(NewCmdBuildPrune(out, fs, rf, ptf, pl))
+	cmd.AddCommand(NewCmdBuildPrune(out, v, fSys, rf, ptf, pl))
 	return cmd
 }
 
@@ -105,11 +107,11 @@ func (o *Options) Validate(args []string) (err error) {
 
 // RunBuild runs build command.
 func (o *Options) RunBuild(
-	out io.Writer, fSys fs.FileSystem,
+	out io.Writer, v ifc.Validator, fSys fs.FileSystem,
 	rf *resmap.Factory, ptf transformer.Factory,
 	pl *plugins.Loader) error {
 	ldr, err := loader.NewLoader(
-		o.loadRestrictor, o.kustomizationPath, fSys)
+		o.loadRestrictor, v, o.kustomizationPath, fSys)
 	if err != nil {
 		return err
 	}
@@ -126,11 +128,11 @@ func (o *Options) RunBuild(
 }
 
 func (o *Options) RunBuildPrune(
-	out io.Writer, fSys fs.FileSystem,
+	out io.Writer, v ifc.Validator, fSys fs.FileSystem,
 	rf *resmap.Factory, ptf transformer.Factory,
 	pl *plugins.Loader) error {
 	ldr, err := loader.NewLoader(
-		o.loadRestrictor, o.kustomizationPath, fSys)
+		o.loadRestrictor, v, o.kustomizationPath, fSys)
 	if err != nil {
 		return err
 	}
@@ -163,9 +165,8 @@ func (o *Options) emitResources(
 }
 
 func NewCmdBuildPrune(
-	out io.Writer, fs fs.FileSystem,
-	rf *resmap.Factory,
-	ptf transformer.Factory,
+	out io.Writer, v ifc.Validator, fSys fs.FileSystem,
+	rf *resmap.Factory, ptf transformer.Factory,
 	pl *plugins.Loader) *cobra.Command {
 	var o Options
 
@@ -179,7 +180,7 @@ func NewCmdBuildPrune(
 			if err != nil {
 				return err
 			}
-			return o.RunBuildPrune(out, fs, rf, ptf, pl)
+			return o.RunBuildPrune(out, v, fSys, rf, ptf, pl)
 		},
 	}
 	return cmd

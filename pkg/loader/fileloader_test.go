@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/git"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/pkg/validators"
 )
 
 type testData struct {
@@ -63,8 +64,12 @@ func MakeFakeFs(td []testData) fs.FileSystem {
 	return fSys
 }
 
+func makeLoader() *fileLoader {
+	return NewFileLoaderAtRoot(validators.MakeFakeValidator(), MakeFakeFs(testCases))
+
+}
 func TestLoaderLoad(t *testing.T) {
-	l1 := NewFileLoaderAtRoot(MakeFakeFs(testCases))
+	l1 := makeLoader()
 	if "/" != l1.Root() {
 		t.Fatalf("incorrect root: '%s'\n", l1.Root())
 	}
@@ -103,7 +108,7 @@ func TestLoaderLoad(t *testing.T) {
 }
 
 func TestLoaderNewSubDir(t *testing.T) {
-	l1, err := NewFileLoaderAtRoot(MakeFakeFs(testCases)).New("foo/project")
+	l1, err := makeLoader().New("foo/project")
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
 	}
@@ -125,7 +130,7 @@ func TestLoaderNewSubDir(t *testing.T) {
 }
 
 func TestLoaderBadRelative(t *testing.T) {
-	l1, err := NewFileLoaderAtRoot(MakeFakeFs(testCases)).New("foo/project/subdir1")
+	l1, err := makeLoader().New("foo/project/subdir1")
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
 	}
@@ -195,7 +200,7 @@ func TestLoaderBadRelative(t *testing.T) {
 }
 
 func TestLoaderMisc(t *testing.T) {
-	l := NewFileLoaderAtRoot(MakeFakeFs(testCases))
+	l := makeLoader()
 	_, err := l.New("")
 	if err == nil {
 		t.Fatalf("Expected error for empty root location not returned")
@@ -297,7 +302,8 @@ func TestRestrictionRootOnlyInRealLoader(t *testing.T) {
 
 	var l ifc.Loader
 
-	l = newLoaderOrDie(RestrictionRootOnly, fSys, dir)
+	l = newLoaderOrDie(
+		RestrictionRootOnly, validators.MakeFakeValidator(), fSys, dir)
 
 	l = doSanityChecksAndDropIntoBase(t, l)
 
@@ -330,7 +336,8 @@ func TestRestrictionNoneInRealLoader(t *testing.T) {
 
 	var l ifc.Loader
 
-	l = newLoaderOrDie(RestrictionNone, fSys, dir)
+	l = newLoaderOrDie(
+		RestrictionNone, validators.MakeFakeValidator(), fSys, dir)
 
 	l = doSanityChecksAndDropIntoBase(t, l)
 
@@ -392,7 +399,7 @@ whatever
 		t.Fatalf("unexpected err: %v\n", err)
 	}
 	l, err := newLoaderAtGitClone(
-		repoSpec, fSys, nil,
+		repoSpec, validators.MakeFakeValidator(), fSys, nil,
 		git.DoNothingCloner(fs.ConfirmedDir(coRoot)))
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
@@ -434,7 +441,8 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 
 	// Establish that a local overlay can navigate
 	// to the local bases.
-	l1 = newLoaderOrDie(RestrictionRootOnly, fSys, cloneRoot+"/foo/overlay")
+	l1 = newLoaderOrDie(
+		RestrictionRootOnly, validators.MakeFakeValidator(), fSys, cloneRoot+"/foo/overlay")
 	if l1.Root() != cloneRoot+"/foo/overlay" {
 		t.Fatalf("unexpected root %s", l1.Root())
 	}
@@ -470,7 +478,7 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 		t.Fatalf("unexpected err: %v\n", err)
 	}
 	l1, err = newLoaderAtGitClone(
-		repoSpec, fSys, nil,
+		repoSpec, validators.MakeFakeValidator(), fSys, nil,
 		git.DoNothingCloner(fs.ConfirmedDir(cloneRoot)))
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
@@ -509,7 +517,7 @@ func TestLocalLoaderReferencingGitBase(t *testing.T) {
 		t.Fatalf("unexpected err:  %v\n", err)
 	}
 	l1 := newLoaderAtConfirmedDir(
-		RestrictionRootOnly, root, fSys, nil,
+		RestrictionRootOnly, validators.MakeFakeValidator(), root, fSys, nil,
 		git.DoNothingCloner(fs.ConfirmedDir(cloneRoot)))
 	if l1.Root() != topDir {
 		t.Fatalf("unexpected root %s", l1.Root())

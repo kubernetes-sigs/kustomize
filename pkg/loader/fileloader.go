@@ -1,18 +1,5 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package loader
 
@@ -92,6 +79,9 @@ type fileLoader struct {
 	// Restricts behavior of Load function.
 	loadRestrictor LoadRestrictorFunc
 
+	// Used to validate various k8s data fields.
+	validator ifc.Validator
+
 	// If this is non-nil, the files were
 	// obtained from the given repository.
 	repoSpec *git.RepoSpec
@@ -110,41 +100,44 @@ const CWD = "."
 
 // NewFileLoaderAtCwd returns a loader that loads from ".".
 // A convenience for kustomize edit commands.
-func NewFileLoaderAtCwd(fSys fs.FileSystem) *fileLoader {
+func NewFileLoaderAtCwd(v ifc.Validator, fSys fs.FileSystem) *fileLoader {
 	return newLoaderOrDie(
-		RestrictionRootOnly, fSys, CWD)
+		RestrictionRootOnly, v, fSys, CWD)
 }
 
 // NewFileLoaderAtRoot returns a loader that loads from "/".
 // A convenience for tests.
-func NewFileLoaderAtRoot(fSys fs.FileSystem) *fileLoader {
+func NewFileLoaderAtRoot(v ifc.Validator, fSys fs.FileSystem) *fileLoader {
 	return newLoaderOrDie(
-		RestrictionRootOnly, fSys, string(filepath.Separator))
+		RestrictionRootOnly, v, fSys, string(filepath.Separator))
 }
 
 // Root returns the absolute path that is prepended to any
 // relative paths used in Load.
-func (l *fileLoader) Root() string {
-	return l.root.String()
+func (fl *fileLoader) Root() string {
+	return fl.root.String()
 }
 
 func newLoaderOrDie(
-	lr LoadRestrictorFunc, fSys fs.FileSystem, path string) *fileLoader {
+	lr LoadRestrictorFunc, v ifc.Validator,
+	fSys fs.FileSystem, path string) *fileLoader {
 	root, err := demandDirectoryRoot(fSys, path)
 	if err != nil {
 		log.Fatalf("unable to make loader at '%s'; %v", path, err)
 	}
 	return newLoaderAtConfirmedDir(
-		lr, root, fSys, nil, git.ClonerUsingGitExec)
+		lr, v, root, fSys, nil, git.ClonerUsingGitExec)
 }
 
 // newLoaderAtConfirmedDir returns a new fileLoader with given root.
 func newLoaderAtConfirmedDir(
 	lr LoadRestrictorFunc,
+	v ifc.Validator,
 	root fs.ConfirmedDir, fSys fs.FileSystem,
 	referrer *fileLoader, cloner git.Cloner) *fileLoader {
 	return &fileLoader{
 		loadRestrictor: lr,
+		validator:      v,
 		root:           root,
 		referrer:       referrer,
 		fSys:           fSys,
@@ -175,39 +168,41 @@ func demandDirectoryRoot(
 
 // New returns a new Loader, rooted relative to current loader,
 // or rooted in a temp directory holding a git repo clone.
-func (l *fileLoader) New(path string) (ifc.Loader, error) {
+func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 	if path == "" {
 		return nil, fmt.Errorf("new root cannot be empty")
 	}
 	repoSpec, err := git.NewRepoSpecFromUrl(path)
 	if err == nil {
 		// Treat this as git repo clone request.
-		if err := l.errIfRepoCycle(repoSpec); err != nil {
+		if err := fl.errIfRepoCycle(repoSpec); err != nil {
 			return nil, err
 		}
-		return newLoaderAtGitClone(repoSpec, l.fSys, l.referrer, l.cloner)
+		return newLoaderAtGitClone(
+			repoSpec, fl.validator, fl.fSys, fl.referrer, fl.cloner)
 	}
 	if filepath.IsAbs(path) {
 		return nil, fmt.Errorf("new root '%s' cannot be absolute", path)
 	}
-	root, err := demandDirectoryRoot(l.fSys, l.root.Join(path))
+	root, err := demandDirectoryRoot(fl.fSys, fl.root.Join(path))
 	if err != nil {
 		return nil, err
 	}
-	if err := l.errIfGitContainmentViolation(root); err != nil {
+	if err := fl.errIfGitContainmentViolation(root); err != nil {
 		return nil, err
 	}
-	if err := l.errIfArgEqualOrHigher(root); err != nil {
+	if err := fl.errIfArgEqualOrHigher(root); err != nil {
 		return nil, err
 	}
 	return newLoaderAtConfirmedDir(
-		l.loadRestrictor, root, l.fSys, l, l.cloner), nil
+		fl.loadRestrictor, fl.validator, root, fl.fSys, fl, fl.cloner), nil
 }
 
 // newLoaderAtGitClone returns a new Loader pinned to a temporary
 // directory holding a cloned git repo.
 func newLoaderAtGitClone(
-	repoSpec *git.RepoSpec, fSys fs.FileSystem,
+	repoSpec *git.RepoSpec,
+	v ifc.Validator, fSys fs.FileSystem,
 	referrer *fileLoader, cloner git.Cloner) (ifc.Loader, error) {
 	err := cloner(repoSpec)
 	if err != nil {
@@ -229,6 +224,7 @@ func newLoaderAtGitClone(
 	return &fileLoader{
 		// Clones never allowed to escape root.
 		loadRestrictor: RestrictionRootOnly,
+		validator:      v,
 		root:           root,
 		referrer:       referrer,
 		repoSpec:       repoSpec,
@@ -238,9 +234,9 @@ func newLoaderAtGitClone(
 	}, nil
 }
 
-func (l *fileLoader) errIfGitContainmentViolation(
+func (fl *fileLoader) errIfGitContainmentViolation(
 	base fs.ConfirmedDir) error {
-	containingRepo := l.containingRepo()
+	containingRepo := fl.containingRepo()
 	if containingRepo == nil {
 		return nil
 	}
@@ -256,64 +252,64 @@ func (l *fileLoader) errIfGitContainmentViolation(
 
 // Looks back through referrers for a git repo, returning nil
 // if none found.
-func (l *fileLoader) containingRepo() *git.RepoSpec {
-	if l.repoSpec != nil {
-		return l.repoSpec
+func (fl *fileLoader) containingRepo() *git.RepoSpec {
+	if fl.repoSpec != nil {
+		return fl.repoSpec
 	}
-	if l.referrer == nil {
+	if fl.referrer == nil {
 		return nil
 	}
-	return l.referrer.containingRepo()
+	return fl.referrer.containingRepo()
 }
 
 // errIfArgEqualOrHigher tests whether the argument,
 // is equal to or above the root of any ancestor.
-func (l *fileLoader) errIfArgEqualOrHigher(
+func (fl *fileLoader) errIfArgEqualOrHigher(
 	candidateRoot fs.ConfirmedDir) error {
-	if l.root.HasPrefix(candidateRoot) {
+	if fl.root.HasPrefix(candidateRoot) {
 		return fmt.Errorf(
 			"cycle detected: candidate root '%s' contains visited root '%s'",
-			candidateRoot, l.root)
+			candidateRoot, fl.root)
 	}
-	if l.referrer == nil {
+	if fl.referrer == nil {
 		return nil
 	}
-	return l.referrer.errIfArgEqualOrHigher(candidateRoot)
+	return fl.referrer.errIfArgEqualOrHigher(candidateRoot)
 }
 
 // TODO(monopole): Distinguish branches?
 // I.e. Allow a distinction between git URI with
 // path foo and tag bar and a git URI with the same
 // path but a different tag?
-func (l *fileLoader) errIfRepoCycle(newRepoSpec *git.RepoSpec) error {
+func (fl *fileLoader) errIfRepoCycle(newRepoSpec *git.RepoSpec) error {
 	// TODO(monopole): Use parsed data instead of Raw().
-	if l.repoSpec != nil &&
-		strings.HasPrefix(l.repoSpec.Raw(), newRepoSpec.Raw()) {
+	if fl.repoSpec != nil &&
+		strings.HasPrefix(fl.repoSpec.Raw(), newRepoSpec.Raw()) {
 		return fmt.Errorf(
 			"cycle detected: URI '%s' referenced by previous URI '%s'",
-			newRepoSpec.Raw(), l.repoSpec.Raw())
+			newRepoSpec.Raw(), fl.repoSpec.Raw())
 	}
-	if l.referrer == nil {
+	if fl.referrer == nil {
 		return nil
 	}
-	return l.referrer.errIfRepoCycle(newRepoSpec)
+	return fl.referrer.errIfRepoCycle(newRepoSpec)
 }
 
 // Load returns the content of file at the given path,
 // else an error.  Relative paths are taken relative
 // to the root.
-func (l *fileLoader) Load(path string) ([]byte, error) {
+func (fl *fileLoader) Load(path string) ([]byte, error) {
 	if !filepath.IsAbs(path) {
-		path = l.root.Join(path)
+		path = fl.root.Join(path)
 	}
-	path, err := l.loadRestrictor(l.fSys, l.root, path)
+	path, err := fl.loadRestrictor(fl.fSys, fl.root, path)
 	if err != nil {
 		return nil, err
 	}
-	return l.fSys.ReadFile(path)
+	return fl.fSys.ReadFile(path)
 }
 
 // Cleanup runs the cleaner.
-func (l *fileLoader) Cleanup() error {
-	return l.cleaner()
+func (fl *fileLoader) Cleanup() error {
+	return fl.cleaner()
 }

@@ -6,7 +6,6 @@
 
 这些示例通过了 [pre-commit](../../bin/pre-commit.sh) 测试，并且应该与 HEAD 一起使用。
 
-<!-- @installkustomize @test -->
 ```
 go get sigs.k8s.io/kustomize
 ```
@@ -26,7 +25,7 @@ go get sigs.k8s.io/kustomize
    
  * [configGenerations](../configGeneration.md) - 当 ConfigMapGenerator 修改时进行滚动更新。
 
- * [secret generation](../kvSourceGoPlugin.md) - 生成 Secret。
+ * [secret generation](../secretGeneratorPlugin.md) - 生成 Secret。
  
  * [generatorOptions](../generatorOptions.md) -修改所有 ConfigMapGenerator 和 SecretGenerator 的行为。
 

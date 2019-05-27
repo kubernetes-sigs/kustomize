@@ -38,7 +38,7 @@ func DefaultPluginConfig() *types.PluginConfig {
 	}
 }
 
-func PluginsNotEnabledErr(name string) error {
+func NotEnabledErr(name string) error {
 	return fmt.Errorf(
 		flagErrorFmt,
 		name,

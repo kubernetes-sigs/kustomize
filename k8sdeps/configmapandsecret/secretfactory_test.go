@@ -12,6 +12,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/pkg/validators"
 )
 
 func makeEnvSecret(name string) *corev1.Secret {
@@ -125,7 +126,7 @@ func TestConstructSecret(t *testing.T) {
 	fSys := fs.MakeFakeFS()
 	fSys.WriteFile("/secret/app.env", []byte("DB_USERNAME=admin\nDB_PASSWORD=somepw\n"))
 	fSys.WriteFile("/secret/app-init.ini", []byte("FOO=bar\nBAR=baz\n"))
-	ldr := loader.NewFileLoaderAtRoot(fSys)
+	ldr := loader.NewFileLoaderAtRoot(validators.MakeFakeValidator(), fSys)
 	for _, tc := range testCases {
 		f := NewFactory(ldr, tc.options)
 		cm, err := f.MakeSecret(&tc.input)

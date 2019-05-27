@@ -103,7 +103,7 @@ func (l *Loader) absolutePluginPath(id resid.ResId) string {
 func (l *Loader) loadAndConfigurePlugin(
 	ldr ifc.Loader, res *resource.Resource) (c Configurable, err error) {
 	if !l.pc.Enabled {
-		return nil, PluginsNotEnabledErr(res.Id().Gvk().Kind)
+		return nil, NotEnabledErr(res.Id().Gvk().Kind)
 	}
 	if p := NewExecPlugin(
 		l.absolutePluginPath(res.Id())); p.isAvailable() {
