@@ -242,6 +242,12 @@ type ConfigMapArgs struct {
 	GeneratorArgs `json:",inline,omitempty" yaml:",inline,omitempty"`
 }
 
+// Pair is a key value pair.
+type Pair struct {
+	Key   string
+	Value string
+}
+
 // SecretArgs contains the metadata of how to generate a secret.
 type SecretArgs struct {
 	// GeneratorArgs for the secret.

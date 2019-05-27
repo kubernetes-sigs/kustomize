@@ -12,6 +12,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/pkg/validators"
 )
 
 func makeEnvConfigMap(name string) *corev1.ConfigMap {
@@ -128,7 +129,7 @@ func TestConstructConfigMap(t *testing.T) {
 	fSys.WriteFile("/configmap/app.env", []byte("DB_USERNAME=admin\nDB_PASSWORD=somepw\n"))
 	fSys.WriteFile("/configmap/app-init.ini", []byte("FOO=bar\nBAR=baz\n"))
 	fSys.WriteFile("/configmap/app.bin", []byte{0xff, 0xfd})
-	ldr := loader.NewFileLoaderAtRoot(fSys)
+	ldr := loader.NewFileLoaderAtRoot(validators.MakeFakeValidator(), fSys)
 	for _, tc := range testCases {
 		f := NewFactory(ldr, tc.options)
 		cm, err := f.MakeConfigMap(&tc.input)

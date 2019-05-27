@@ -18,6 +18,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/target"
+	"sigs.k8s.io/kustomize/pkg/validators"
 	"sigs.k8s.io/kustomize/plugin"
 )
 
@@ -56,7 +57,8 @@ metadata:
 		t.Fatalf("err %v", err)
 	}
 
-	ldr, err := loader.NewLoader(loader.RestrictionRootOnly, dir, fSys)
+	ldr, err := loader.NewLoader(
+		loader.RestrictionRootOnly, validators.MakeFakeValidator(), dir, fSys)
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}

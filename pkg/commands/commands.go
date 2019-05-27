@@ -37,11 +37,12 @@ See https://sigs.k8s.io/kustomize
 
 	uf := kunstruct.NewKunstructuredFactoryImpl()
 	rf := resmap.NewFactory(resource.NewFactory(uf))
+	v := validator.NewKustValidator()
 	c.AddCommand(
 		build.NewCmdBuild(
-			stdOut, fSys,
+			stdOut, fSys, v,
 			rf, transformer.NewFactoryImpl()),
-		edit.NewCmdEdit(fSys, validator.NewKustValidator(), uf),
+		edit.NewCmdEdit(fSys, v, uf),
 		misc.NewCmdConfig(fSys),
 		misc.NewCmdVersion(stdOut),
 	)

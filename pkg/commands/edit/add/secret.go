@@ -8,12 +8,14 @@ import (
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 // newCmdAddSecret returns a new command.
-func newCmdAddSecret(fSys fs.FileSystem, kf ifc.KunstructuredFactory) *cobra.Command {
+func newCmdAddSecret(
+	fSys fs.FileSystem,
+	ldr ifc.Loader,
+	kf ifc.KunstructuredFactory) *cobra.Command {
 	var flags flagsAndArgs
 	cmd := &cobra.Command{
 		Use:   "secret NAME [--from-file=[key=]source] [--from-literal=key1=value1] [--type=Opaque|kubernetes.io/tls]",
@@ -52,8 +54,7 @@ func newCmdAddSecret(fSys fs.FileSystem, kf ifc.KunstructuredFactory) *cobra.Com
 			}
 
 			// Add the flagsAndArgs map to the kustomization file.
-			err = addSecret(
-				loader.NewFileLoaderAtCwd(fSys), kustomization, flags, kf)
+			err = addSecret(ldr, kustomization, flags, kf)
 			if err != nil {
 				return err
 			}
