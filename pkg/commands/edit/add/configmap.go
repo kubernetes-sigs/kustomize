@@ -8,12 +8,14 @@ import (
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 // newCmdAddConfigMap returns a new command.
-func newCmdAddConfigMap(fSys fs.FileSystem, kf ifc.KunstructuredFactory) *cobra.Command {
+func newCmdAddConfigMap(
+	fSys fs.FileSystem,
+	ldr ifc.Loader,
+	kf ifc.KunstructuredFactory) *cobra.Command {
 	var flags flagsAndArgs
 	cmd := &cobra.Command{
 		Use:   "configmap NAME [--from-file=[key=]source] [--from-literal=key1=value1]",
@@ -52,8 +54,7 @@ func newCmdAddConfigMap(fSys fs.FileSystem, kf ifc.KunstructuredFactory) *cobra.
 			}
 
 			// Add the flagsAndArgs map to the kustomization file.
-			err = addConfigMap(
-				loader.NewFileLoaderAtCwd(fSys), kustomization, flags, kf)
+			err = addConfigMap(ldr, kustomization, flags, kf)
 			if err != nil {
 				return err
 			}

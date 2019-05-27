@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/resid"
 	. "sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/pkg/validators"
 )
 
 func TestFromFile(t *testing.T) {
@@ -52,7 +53,6 @@ metadata:
   namespace: test
 ---
 `
-
 	l := loadertest.NewFakeLoader("/whatever/project")
 	if ferr := l.AddFile("/whatever/project/deployment.yaml", []byte(resourceStr)); ferr != nil {
 		t.Fatalf("Error adding fake file: %v\n", ferr)
@@ -173,6 +173,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 					}, &types.GeneratorArgs{}, nil),
 			},
 		},
+
 		{
 			description: "construct config map from file",
 			input: []types.ConfigMapArgs{{
@@ -231,6 +232,7 @@ BAR=baz
 					}, &types.GeneratorArgs{}, nil),
 			},
 		},
+
 		// TODO: add testcase for data coming from multiple sources like
 		// files/literal/env etc.
 	}
@@ -268,7 +270,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir(".")
 	actual, err := rmF.NewResMapFromSecretArgs(
-		loader.NewFileLoaderAtRoot(fakeFs), nil, secrets)
+		loader.NewFileLoaderAtRoot(validators.MakeFakeValidator(), fakeFs), nil, secrets)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

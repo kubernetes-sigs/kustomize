@@ -1,18 +1,5 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 // Package transformer provides transformer factory
 package transformer
@@ -21,6 +8,7 @@ import (
 	"sigs.k8s.io/kustomize/k8sdeps/transformer/hash"
 	"sigs.k8s.io/kustomize/k8sdeps/transformer/inventory"
 	"sigs.k8s.io/kustomize/k8sdeps/transformer/patch"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
 	"sigs.k8s.io/kustomize/pkg/types"
@@ -48,7 +36,8 @@ func (p *FactoryImpl) MakeHashTransformer() transformers.Transformer {
 
 func (p *FactoryImpl) MakeInventoryTransformer(
 	arg *types.Inventory,
+	ldr ifc.Loader,
 	namespace string,
 	gp types.GarbagePolicy) transformers.Transformer {
-	return inventory.NewInventoryTransformer(arg, namespace, gp)
+	return inventory.NewInventoryTransformer(arg, ldr, namespace, gp)
 }

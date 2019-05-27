@@ -7,11 +7,15 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/pkg/validators"
 )
 
 func TestNewAddConfigMapIsNotNil(t *testing.T) {
-	if newCmdAddConfigMap(fs.MakeFakeFS(), nil) == nil {
+	fSys := fs.MakeFakeFS()
+	ldr := loader.NewFileLoaderAtCwd(validators.MakeFakeValidator(), fSys)
+	if newCmdAddConfigMap(fSys, ldr, nil) == nil {
 		t.Fatal("newCmdAddConfigMap shouldn't be nil")
 	}
 }
