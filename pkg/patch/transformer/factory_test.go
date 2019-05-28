@@ -22,20 +22,20 @@ import (
 	"testing"
 
 	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/kustomize/internal/loadertest"
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/pkg/gvk"
-	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
-	"sigs.k8s.io/kustomize/pkg/patch"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 var rf = resource.NewFactory(
 	kunstruct.NewKunstructuredFactoryImpl())
 
 func TestNewPatchJson6902FactoryNoTarget(t *testing.T) {
-	p := patch.Json6902{}
+	p := types.PatchJson6902{}
 	_, err := NewPatchJson6902Factory(nil).makeOnePatchJson6902Transformer(p)
 	if err == nil {
 		t.Fatal("expected error")
@@ -51,7 +51,7 @@ target:
   name: some-name
   kind: Deployment
 `)
-	p := patch.Json6902{}
+	p := types.PatchJson6902{}
 	err := yaml.Unmarshal(jsonPatch, &p)
 	if err != nil {
 		t.Fatalf("expected error %v", err)
@@ -84,7 +84,7 @@ target:
   name: some-name
 path: patch.json
 `)
-	p := patch.Json6902{}
+	p := types.PatchJson6902{}
 	err = yaml.Unmarshal(jsonPatch, &p)
 	if err != nil {
 		t.Fatal("expected error")
@@ -122,7 +122,7 @@ target:
   kind: Deployment
 path: patch.yaml
 `)
-	p := patch.Json6902{}
+	p := types.PatchJson6902{}
 	err = yaml.Unmarshal(jsonPatch, &p)
 	if err != nil {
 		t.Fatalf("unexpected error : %v", err)
@@ -169,7 +169,7 @@ func TestNewPatchJson6902FactoryMulti(t *testing.T) {
     name: some-name
   path: patch.yaml
 `)
-	var p []patch.Json6902
+	var p []types.PatchJson6902
 	err = yaml.Unmarshal(jsonPatches, &p)
 	if err != nil {
 		t.Fatalf("unexpected error : %v", err)
@@ -283,7 +283,7 @@ func TestNewPatchJson6902FactoryMultiConflict(t *testing.T) {
     name: some-name
   path: patch.yaml
 `)
-	var p []patch.Json6902
+	var p []types.PatchJson6902
 	err = yaml.Unmarshal(jsonPatches, &p)
 	if err != nil {
 		t.Fatalf("unexpected error : %v", err)

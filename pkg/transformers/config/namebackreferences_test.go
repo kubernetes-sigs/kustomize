@@ -89,17 +89,19 @@ func TestMergeAll(t *testing.T) {
 			Gvk: gvk.Gvk{
 				Kind: "ConfigMap",
 			},
-			// Current behavior allows repeats of FieldSpec
-			FieldSpecs: append(fsSlice1, fsSlice1...),
+			FieldSpecs: fsSlice1,
 		},
 		{
 			Gvk: gvk.Gvk{
 				Kind: "Secret",
 			},
-			FieldSpecs: append(fsSlice2, fsSlice2...),
+			FieldSpecs: fsSlice2,
 		},
 	}
-	actual := nbrsSlice1.mergeAll(nbrsSlice2)
+	actual, err := nbrsSlice1.mergeAll(nbrsSlice2)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("expected\n %v\n but got\n %v\n", expected, actual)
 	}

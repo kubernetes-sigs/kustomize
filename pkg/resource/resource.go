@@ -22,13 +22,16 @@ import (
 
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resid"
+	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/yaml"
 )
 
 // Resource is map representation of a Kubernetes API resource object
 // paired with a GenerationBehavior.
 type Resource struct {
 	ifc.Kunstructured
-	b ifc.GenerationBehavior
+	options *types.GenArgs
+	refBy   []resid.ResId
 }
 
 // String returns resource as JSON.
@@ -37,29 +40,57 @@ func (r *Resource) String() string {
 	if err != nil {
 		return "<" + err.Error() + ">"
 	}
-	return r.b.String() + ":" + strings.TrimSpace(string(bs))
+	return strings.TrimSpace(string(bs)) + r.options.String()
+}
+
+// DeepCopy returns a new copy of resource
+func (r *Resource) DeepCopy() *Resource {
+	rc := &Resource{
+		Kunstructured: r.Kunstructured.Copy(),
+		options:       r.options,
+	}
+	if len(r.refBy) > 0 {
+		refby := make([]resid.ResId, len(r.refBy))
+		copy(refby, r.refBy)
+		rc.refBy = refby
+	}
+	return rc
+}
+
+// AsYAML returns the resource in Yaml form.
+// Easier to read than JSON.
+func (r *Resource) AsYAML() ([]byte, error) {
+	json, err := r.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return yaml.JSONToYAML(json)
 }
 
 // Behavior returns the behavior for the resource.
-func (r *Resource) Behavior() ifc.GenerationBehavior {
-	return r.b
+func (r *Resource) Behavior() types.GenerationBehavior {
+	return r.options.Behavior()
 }
 
-// SetBehavior changes the resource to the new behavior
-func (r *Resource) SetBehavior(b ifc.GenerationBehavior) *Resource {
-	r.b = b
-	return r
-}
-
-// IsGenerated checks if the resource is generated from a generator
-func (r *Resource) IsGenerated() bool {
-	return r.b != ifc.BehaviorUnspecified
+// NeedHashSuffix checks if the resource need a hash suffix
+func (r *Resource) NeedHashSuffix() bool {
+	return r.options != nil && r.options.NeedsHashSuffix()
 }
 
 // Id returns the ResId for the resource.
 func (r *Resource) Id() resid.ResId {
 	namespace, _ := r.GetFieldValue("metadata.namespace")
 	return resid.NewResIdWithPrefixNamespace(r.GetGvk(), r.GetName(), "", namespace)
+}
+
+// GetRefBy returns the ResIds that referred to current resource
+func (r *Resource) GetRefBy() []resid.ResId {
+	return r.refBy
+}
+
+// AppendRefBy appends a ResId into the refBy list
+func (r *Resource) AppendRefBy(id resid.ResId) {
+	r.refBy = append(r.refBy, id)
 }
 
 // Merge performs merge with other resource.
@@ -74,6 +105,7 @@ func (r *Resource) Replace(other *Resource) {
 	r.SetAnnotations(
 		mergeStringMaps(other.GetAnnotations(), r.GetAnnotations()))
 	r.SetName(other.GetName())
+	r.options = other.options
 }
 
 // TODO: Add BinaryData once we sync to new k8s.io/api

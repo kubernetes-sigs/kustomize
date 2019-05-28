@@ -9,14 +9,21 @@ patch [kubernetes style] API objects.  It's like
 [`make`], in that what it does is declared in a file,
 and it's like [`sed`], in that it emits editted text.
 
-This tool is sponsored by [sig-cli] ([KEP]).
+This tool is sponsored by [sig-cli] ([KEP]), and
+inspired by [DAM].
+
 
 [![Build Status](https://travis-ci.org/kubernetes-sigs/kustomize.svg?branch=master)](https://travis-ci.org/kubernetes-sigs/kustomize)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes-sigs/kustomize)](https://goreportcard.com/report/github.com/kubernetes-sigs/kustomize)
 
-**Installation**: Download a binary from the [release
-page], or see these [install] notes. Then try one of
-the tested [examples].
+Download a binary from the [release page], or see
+these [instructions](docs/INSTALL.md).
+
+Browse the [docs](docs) or jump right into the
+tested [examples](examples).
+
+kustomize [v2.0.3] is available in [kubectl v1.14][kubectl].
+
 
 ## Usage
 
@@ -115,29 +122,44 @@ The YAML can be directly [applied] to a cluster:
 > kustomize build ~/someApp/overlays/production | kubectl apply -f -
 > ```
 
-## Community, discussion, contribution, and support
+## Community
 
-Learn how to engage with the Kubernetes community on the [community page].
+To file bugs please read [this](docs/bugs.md).
 
-You can reach the maintainers of this project at:
+Before working on an implementation, please
+
+ * Read the [eschewed feature list].
+ * File an issue describing
+   how the new feature would behave
+   and label it [kind/feature].
+
+### Other communication channels
 
 - [Slack]
 - [Mailing List]
+- General kubernetes [community page]
 
 ### Code of conduct
 
-Participation in the Kubernetes community is governed by the [Kubernetes Code of Conduct].
+Participation in the Kubernetes community
+is governed by the [Kubernetes Code of Conduct].
 
-[KEP]: https://github.com/kubernetes/community/blob/master/keps/sig-cli/0008-kustomize.md
 [`make`]: https://www.gnu.org/software/make
 [`sed`]: https://www.gnu.org/software/sed
+[DAM]: docs/glossary.md#declarative-application-management
+[KEP]: https://github.com/kubernetes/enhancements/blob/master/keps/sig-cli/0008-kustomize.md
+[Kubernetes Code of Conduct]: code-of-conduct.md
+[Mailing List]: https://groups.google.com/forum/#!forum/kubernetes-sig-cli
+[Slack]: https://kubernetes.slack.com/messages/sig-cli
 [applied]: docs/glossary.md#apply
 [base]: docs/glossary.md#base
+[community page]: http://kubernetes.io/community/
 [declarative configuration]: docs/glossary.md#declarative-application-management
-[examples]: examples/README.md
+[eschewed feature list]: docs/eschewedFeatures.md
 [imageBase]: docs/base.jpg
 [imageOverlay]: docs/overlay.jpg
-[install]: docs/INSTALL.md
+[kind/feature]: https://github.com/kubernetes-sigs/kustomize/labels/kind%2Ffeature
+[kubectl]: https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement
 [kubernetes style]: docs/glossary.md#kubernetes-style-object
 [kustomization]: docs/glossary.md#kustomization
 [overlay]: docs/glossary.md#overlay
@@ -148,8 +170,5 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 [sig-cli]: https://github.com/kubernetes/community/blob/master/sig-cli/README.md
 [variant]: docs/glossary.md#variant
 [variants]: docs/glossary.md#variant
+[v2.0.3]: https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.0.3
 [workflows]: docs/workflows.md
-[community page]: http://kubernetes.io/community/
-[Kubernetes Code of Conduct]: code-of-conduct.md
-[Slack]: https://kubernetes.slack.com/messages/sig-cli
-[Mailing List]: https://groups.google.com/forum/#!forum/kubernetes-sig-cli

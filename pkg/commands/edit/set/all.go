@@ -42,7 +42,7 @@ func NewCmdSet(fsys fs.FileSystem, v ifc.Validator) *cobra.Command {
 		newCmdSetNamePrefix(fsys),
 		newCmdSetNameSuffix(fsys),
 		newCmdSetNamespace(fsys, v),
-		newCmdSetImageTag(fsys),
+		newCmdSetImage(fsys),
 	)
 	return c
 }

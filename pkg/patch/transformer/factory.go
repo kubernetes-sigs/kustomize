@@ -18,17 +18,15 @@ package transformer
 
 import (
 	"fmt"
+
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resid"
-
-	"github.com/evanphx/json-patch"
-	"github.com/ghodss/yaml"
-	"sigs.k8s.io/kustomize/pkg/gvk"
-	"sigs.k8s.io/kustomize/pkg/patch"
 	"sigs.k8s.io/kustomize/pkg/transformers"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
-// PatchJson6902Factory makes Json6902 transformers
+// PatchJson6902Factory makes PatchJson6902 transformers
 type PatchJson6902Factory struct {
 	loader ifc.Loader
 }
@@ -38,8 +36,8 @@ func NewPatchJson6902Factory(l ifc.Loader) PatchJson6902Factory {
 	return PatchJson6902Factory{loader: l}
 }
 
-// MakePatchJson6902Transformer returns a transformer for applying Json6902 patch
-func (f PatchJson6902Factory) MakePatchJson6902Transformer(patches []patch.Json6902) (transformers.Transformer, error) {
+// MakePatchJson6902Transformer returns a transformer for applying PatchJson6902 patch
+func (f PatchJson6902Factory) MakePatchJson6902Transformer(patches []types.PatchJson6902) (transformers.Transformer, error) {
 	var ts []transformers.Transformer
 	for _, p := range patches {
 		t, err := f.makeOnePatchJson6902Transformer(p)
@@ -53,7 +51,7 @@ func (f PatchJson6902Factory) MakePatchJson6902Transformer(patches []patch.Json6
 	return transformers.NewMultiTransformerWithConflictCheck(ts), nil
 }
 
-func (f PatchJson6902Factory) makeOnePatchJson6902Transformer(p patch.Json6902) (transformers.Transformer, error) {
+func (f PatchJson6902Factory) makeOnePatchJson6902Transformer(p types.PatchJson6902) (transformers.Transformer, error) {
 	if p.Target == nil {
 		return nil, fmt.Errorf("must specify the target field in patchesJson6902")
 	}
@@ -77,19 +75,7 @@ func (f PatchJson6902Factory) makeOnePatchJson6902Transformer(p patch.Json6902) 
 		return nil, err
 	}
 
-	if !isJsonFormat(rawOp) {
-		// if it isn't JSON, try to parse it as YAML
-		rawOp, err = yaml.YAMLToJSON(rawOp)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	decodedPatch, err := jsonpatch.DecodePatch(rawOp)
-	if err != nil {
-		return nil, err
-	}
-	return newPatchJson6902JSONTransformer(targetId, decodedPatch)
+	return newPatchJson6902JSONTransformer(targetId, rawOp)
 }
 
 func isJsonFormat(data []byte) bool {

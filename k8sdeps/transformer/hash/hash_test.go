@@ -90,6 +90,28 @@ func TestSecretHash(t *testing.T) {
 	}
 }
 
+func TestArrayHash(t *testing.T) {
+	array1 := []string{"a", "b", "c"}
+	array2 := []string{"c", "b", "a"}
+	h1, err := SortArrayAndComputeHash(array1)
+	if err != nil {
+		t.Errorf("unexpected error %v", err)
+	}
+	if h1 == "" {
+		t.Errorf("failed to hash %v", array1)
+	}
+	h2, err := SortArrayAndComputeHash(array2)
+	if err != nil {
+		t.Errorf("unexpected error %v", err)
+	}
+	if h2 == "" {
+		t.Errorf("failed to hash %v", array2)
+	}
+	if h1 != h2 {
+		t.Errorf("hash is not consistent with reordered list: %s %s", h1, h2)
+	}
+}
+
 func TestEncodeConfigMap(t *testing.T) {
 	cases := []struct {
 		desc   string

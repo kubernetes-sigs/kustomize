@@ -20,9 +20,9 @@ import (
 	"reflect"
 	"testing"
 
+	"sigs.k8s.io/kustomize/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 )
 
 // This defines two CRD's:  Bee and MyKind.
@@ -182,8 +182,7 @@ func TestLoadCRDs(t *testing.T) {
 		NameReference: nbrs,
 	}
 
-	actualTc, err := NewFactory(makeLoader(t)).LoadCRDs(
-		[]string{"crd.json"})
+	actualTc, err := LoadConfigFromCRDs(makeLoader(t), []string{"crd.json"})
 	if err != nil {
 		t.Fatalf("unexpected error:%v", err)
 	}

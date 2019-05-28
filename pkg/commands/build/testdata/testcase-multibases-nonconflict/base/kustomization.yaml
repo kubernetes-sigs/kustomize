@@ -1,5 +1,0 @@
-resources:
-- serviceaccount.yaml
-- rolebinding.yaml
-namePrefix: base-
-nameSuffix: -suffix

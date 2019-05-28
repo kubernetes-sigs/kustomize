@@ -21,8 +21,8 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
@@ -44,8 +44,11 @@ func TestFieldOrder(t *testing.T) {
 		"SecretGenerator",
 		"GeneratorOptions",
 		"Vars",
-		"ImageTags",
+		"Images",
 		"Configurations",
+		"Generators",
+		"Transformers",
+		"Inventory",
 	}
 	actual := determineFieldOrder()
 	if len(expected) != len(actual) {
@@ -78,54 +81,9 @@ func TestWriteAndRead(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Couldn't read kustomization file: %v\n", err)
 	}
+	kustomization.FixKustomizationPostUnmarshalling()
 	if !reflect.DeepEqual(kustomization, content) {
 		t.Fatal("Read kustomization is different from written kustomization")
-	}
-}
-
-// Deprecated fields should not survive being read.
-func TestDeprecationOfPatches(t *testing.T) {
-	hasDeprecatedFields := []byte(`
-namePrefix: acme
-nameSuffix: emca
-patches:
-- alice
-patchesStrategicMerge:
-- bob
-`)
-	fSys := fs.MakeFakeFS()
-	fSys.WriteTestKustomizationWith(hasDeprecatedFields)
-	mf, err := NewKustomizationFile(fSys)
-	if err != nil {
-		t.Fatalf("Unexpected Error: %v", err)
-	}
-	k, err := mf.Read()
-	if err != nil {
-		t.Fatalf("Couldn't read kustomization file: %v\n", err)
-	}
-	if k.NamePrefix != "acme" {
-		t.Fatalf("Unexpected name prefix")
-	}
-	if k.NameSuffix != "emca" {
-		t.Fatalf("Unexpected name suffix")
-	}
-	if len(k.Patches) > 0 {
-		t.Fatalf("Expected nothing in Patches.")
-	}
-	if len(k.PatchesStrategicMerge) != 2 {
-		t.Fatalf(
-			"Expected len(k.PatchesStrategicMerge) == 2, got %d",
-			len(k.PatchesStrategicMerge))
-	}
-	m := make(map[string]bool)
-	for _, v := range k.PatchesStrategicMerge {
-		m[string(v)] = true
-	}
-	if _, f := m["alice"]; !f {
-		t.Fatalf("Expected alice in PatchesStrategicMerge")
-	}
-	if _, f := m["bob"]; !f {
-		t.Fatalf("Expected bob in PatchesStrategicMerge")
 	}
 }
 
@@ -157,12 +115,12 @@ configMapGenerator:
   name: my-configmap
 `
 	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile(constants.SecondaryKustomizationFileName, []byte(kcontent))
+	fakeFS.WriteFile(pgmconfig.KustomizationFileNames[1], []byte(kcontent))
 	k, err := NewKustomizationFile(fakeFS)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
 	}
-	if k.path != constants.SecondaryKustomizationFileName {
+	if k.path != pgmconfig.KustomizationFileNames[1] {
 		t.Fatalf("Load incorrect file path %s", k.path)
 	}
 }
@@ -172,6 +130,8 @@ func TestPreserveComments(t *testing.T) {
 		`# shem qing some comments
 # This is some comment we should preserve
 # don't delete it
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
 resources:
 - pod.yaml
 - service.yaml
@@ -224,8 +184,8 @@ resources:
   # See which field this comment goes into
 - service.yaml
 
-APIVersion: v1beta1
-kind: kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: kustomization
 
 # something you may want to keep
 vars:
@@ -262,8 +222,8 @@ resources:
 - pod.yaml
 - service.yaml
 
-apiVersion: v1beta1
-kind: kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: kustomization
 
 # something you may want to keep
 vars:

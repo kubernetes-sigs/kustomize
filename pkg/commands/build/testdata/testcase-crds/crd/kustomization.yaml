@@ -1,9 +1,0 @@
-crds:
-- mycrd.json
-
-resources:
-- secret.yaml
-- mykind.yaml
-- bee.yaml
-
-namePrefix: test-

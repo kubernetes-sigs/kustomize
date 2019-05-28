@@ -1,18 +1,5 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package kunstruct
 
@@ -25,15 +12,12 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/kustomize/k8sdeps/configmapandsecret"
-	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 // KunstructuredFactoryImpl hides construction using apimachinery types.
 type KunstructuredFactoryImpl struct {
-	cmFactory     *configmapandsecret.ConfigMapFactory
-	secretFactory *configmapandsecret.SecretFactory
 }
 
 var _ ifc.KunstructuredFactory = &KunstructuredFactoryImpl{}
@@ -53,6 +37,9 @@ func (kf *KunstructuredFactoryImpl) SliceFromBytes(
 		var out unstructured.Unstructured
 		err = decoder.Decode(&out)
 		if err == nil {
+			if len(out.Object) == 0 {
+				continue
+			}
 			err = kf.validate(out)
 			if err != nil {
 				return nil, err
@@ -77,36 +64,42 @@ func (kf *KunstructuredFactoryImpl) FromMap(
 }
 
 // MakeConfigMap returns an instance of Kunstructured for ConfigMap
-func (kf *KunstructuredFactoryImpl) MakeConfigMap(args *types.ConfigMapArgs, options *types.GeneratorOptions) (ifc.Kunstructured, error) {
-	cm, err := kf.cmFactory.MakeConfigMap(args, options)
+func (kf *KunstructuredFactoryImpl) MakeConfigMap(
+	ldr ifc.Loader,
+	options *types.GeneratorOptions,
+	args *types.ConfigMapArgs) (ifc.Kunstructured, error) {
+	o, err := configmapandsecret.NewFactory(
+		ldr, options).MakeConfigMap(args)
 	if err != nil {
 		return nil, err
 	}
-	return NewKunstructuredFromObject(cm)
+	return NewKunstructuredFromObject(o)
 }
 
 // MakeSecret returns an instance of Kunstructured for Secret
-func (kf *KunstructuredFactoryImpl) MakeSecret(args *types.SecretArgs, options *types.GeneratorOptions) (ifc.Kunstructured, error) {
-	sec, err := kf.secretFactory.MakeSecret(args, options)
+func (kf *KunstructuredFactoryImpl) MakeSecret(
+	ldr ifc.Loader,
+	options *types.GeneratorOptions,
+	args *types.SecretArgs) (ifc.Kunstructured, error) {
+	o, err := configmapandsecret.NewFactory(
+		ldr, options).MakeSecret(args)
 	if err != nil {
 		return nil, err
 	}
-	return NewKunstructuredFromObject(sec)
-}
-
-// Set sets loader, filesystem and workdirectory
-func (kf *KunstructuredFactoryImpl) Set(fs fs.FileSystem, ldr ifc.Loader) {
-	kf.cmFactory = configmapandsecret.NewConfigMapFactory(fs, ldr)
-	kf.secretFactory = configmapandsecret.NewSecretFactory(fs, ldr.Root())
+	return NewKunstructuredFromObject(o)
 }
 
 // validate validates that u has kind and name
+// except for kind `List`, which doesn't require a name
 func (kf *KunstructuredFactoryImpl) validate(u unstructured.Unstructured) error {
+	kind := u.GetKind()
+	if kind == "" {
+		return fmt.Errorf("missing kind in object %v", u)
+	} else if strings.HasSuffix(kind, "List") {
+		return nil
+	}
 	if u.GetName() == "" {
 		return fmt.Errorf("missing metadata.name in object %v", u)
-	}
-	if u.GetKind() == "" {
-		return fmt.Errorf("missing kind in object %v", u)
 	}
 	return nil
 }

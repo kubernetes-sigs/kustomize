@@ -28,9 +28,12 @@
 # don't exist.
 #
 # In practice, fields with no value should simply be
-# omitted from kustomize.yaml to reduce the content
+# omitted from kustomization.yaml to reduce the content
 # visible in configuration reviews.
 # ----------------------------------------------------
+# apiVersion and kind of Kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
 
 # Adds namespace to all resources.
 namespace: my-namespace
@@ -66,13 +69,16 @@ commonAnnotations:
 # markers ("---").
 resources:
 - some-service.yaml
-- ../some-dir/some-deployment.yaml
+- sub-dir/some-deployment.yaml
 
 # Each entry in this list results in the creation of
 # one ConfigMap resource (it's a generator of n maps).
 # The example below creates two ConfigMaps. One with the
 # names and contents of the given files, the other with
 # key/value as data.
+# Each configMapGenerator item accepts a parameter of
+# behavior: [create|replace|merge]. This allows an overlay to modify or
+# replace an existing configMap from the parent.
 configMapGenerator:
 - name: myJavaServerProps
   files:
@@ -85,35 +91,23 @@ configMapGenerator:
 
 # Each entry in this list results in the creation of
 # one Secret resource (it's a generator of n secrets).
-# A command can do anything to get a secret,
-# e.g. prompt the user directly, start a webserver to
-# initate an oauth dance, etc.
 secretGenerator:
 - name: app-tls
-  commands:
-    tls.crt: "cat secret/tls.cert"
-    tls.key: "cat secret/tls.key"
+  files:
+    - secret/tls.cert
+    - secret/tls.key
   type: "kubernetes.io/tls"
 - name: app-tls-namespaced
   # you can define a namespace to generate secret in, defaults to: "default"
-  namspace: apps
-  commands:
-    tls.crt: "cat secret/tls.cert"
-    tls.key: "cat secret/tls.key"
+  namespace: apps
+  files:
+    - tls.crt=catsecret/tls.cert
+    - tls.key=secret/tls.key
   type: "kubernetes.io/tls"
-- name: downloaded_secret
-  # timeoutSeconds specifies the number of seconds to
-  # wait for the commands below. It defaults to 5 seconds.
-  timeoutSeconds: 30
-  commands:
-    username: "curl -s https://path/to/secrets/username.yaml"
-    password: "curl -s https://path/to/secrets/password.yaml"
-  type: Opaque
 - name: env_file_secret
-  # envCommand is similar to command but outputs lines of key=val pairs
-  # i.e. a Docker .env file or a .ini file.
-  # you can only specify one envCommand per secret.
-  envCommand: printf \"DB_USERNAME=admin\nDB_PASSWORD=somepw\"
+  # paths to files with k=v pairs, one pair per line.
+  envs:
+    - env.txt
   type: Opaque
 
 # generatorOptions modify behavior of all ConfigMap and Secret generators
@@ -124,11 +118,6 @@ generatorOptions:
   # annotations to add to all generated resources
   annotations:
     kustomize.generated.resource: somevalue
-  # timeoutSeconds specifies the timeout for commands
-  timeoutSeconds: 30
-  # shell and arguments to use as a context for commands used in resource
-  # generation. Default at time of writing: ["sh", "-c"]
-  shell: ["sh", "-c"]
   # disableNameSuffixHash is true disables the default behavior of adding a
   # suffix to the names of generated resources that is a hash of
   # the resource contents.
@@ -153,9 +142,9 @@ generatorOptions:
 # etc. that differ from the common base).
 bases:
 - ../../base
-- github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6
+- github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6
 - github.com/Liujingfang1/mysql
-- github.com/Liujingfang1/kustomize//examples/helloWorld?ref=test-branch
+- github.com/Liujingfang1/kustomize/examples/helloWorld?ref=test-branch
 
 # Each entry in this list should resolve to
 # a partial or complete resource definition file.
@@ -170,7 +159,7 @@ bases:
 # a memory request/limit, change an env var in a
 # ConfigMap, etc.  Small patches are easy to review and
 # easy to mix together in overlays.
-patches:
+patchesStrategicMerge:
 - service_port_8888.yaml
 - deployment_increase_replicas.yaml
 - deployment_increase_memory.yaml
@@ -212,7 +201,7 @@ patchesJson6902:
   path: add_service_annotation.yaml
 
 # Each entry in this list should be a relative path to
-# a file for custom resource definition(CRD).
+# a file for custom resource definition(CRD) in openAPI definition.
 #
 # The presence of this field is to allow kustomize be
 # aware of CRDs and apply proper
@@ -222,15 +211,25 @@ patchesJson6902:
 # In kustomization, the ConfigMap object name may change by adding namePrefix, nameSuffix, or hashing
 # The name reference for this ConfigMap object in CRD object need to be
 # updated with namePrefix, nameSuffix, or hashing in the same way.
+#
+# The annotations can be put into openAPI definitions are:
+#   "x-kubernetes-annotation": ""
+#   "x-kubernetes-label-selector": ""
+#   "x-kubernetes-identity": ""
+#   "x-kubernetes-object-ref-api-version": "v1",
+#   "x-kubernetes-object-ref-kind": "Secret",
+#   "x-kubernetes-object-ref-name-key": "name",
 crds:
-- crds/typeA.yaml
-- crds/typeB.yaml
+- crds/typeA.json
+- crds/typeB.json
 
-# Vars are used to insert values from resources that cannot be referenced
-# otherwise. For example if you need to pass a Service's name to the arguments
-# or environment variables of a program but without hard coding the actual name
-# of the Service you'd insert `$(MY_SERVICE_NAME)` into the value field of the
-# env var or into the command or args of the container as shown here:
+# Vars are used to capture text from one resource's field
+# and insert that text elsewhere.
+#
+# For example, suppose someone specifies the name of a k8s Service
+# object in a container's command line, and the name of a
+# k8s Secret object in a container's environment variable,
+# so that the following would work:
 # ```
 #   containers:
 #     - image: myimage
@@ -240,19 +239,8 @@ crds:
 #           value: $(SOME_SECRET_NAME)
 # ```
 #
-# Then you'll add an entry to `vars:` like shown below with the same name
-# and a reference to the resource from which to pull the field's value.
-# The actual field's path is optional and by default it will use
-# `metadata.name`. Currently only string type fields are supported, no integers
-# or booleans, etc. Also array access is currently not possible. For example getting
-# the image field of container number 2 inside of a pod can currently not be done.
+# To do so, add an entry to `vars:` as follows:
 #
-# Not every location of a variable is supported. To see a complete list of locations
-# see the file [varreference.go](https://github.com/kubernetes-sigs/kustomize/blob/master/pkg/transformers/config/defaultconfig/varreference.go#L20).
-#
-# An example of a situation where you'd not use vars is when you'd like to set a
-# pod's `serviceAccountName`. In that case you would just reference the ServiceAccount
-# by name and Kustomize will resolve it to the eventual name while building the manifests.
 vars:
   - name: SOME_SECRET_NAME
     objref:
@@ -273,23 +261,64 @@ vars:
       apiVersion: apps/v1
     fieldref:
       fieldpath: spec.template.spec.restartPolicy
+#
+# A var is a tuple of variable name, object reference and field
+# reference within that object.  That's where the text is found.
+#
+# The field reference is optional; it defaults to `metadata.name`,
+# a normal default, since kustomize is used to generate or
+# modify the names of resources.
+#
+# At time of writing, only string type fields are supported.
+# No ints, bools, arrays etc.  It's not possible to, say,
+# extract the name of the image in container number 2 of
+# some pod template.
+#
+# A variable reference, i.e. the string '$(FOO)', can only
+# be placed in particular fields of particular objects as
+# specified by kustomize's configuration data.
+#
+# The default config data for vars is at
+# https://github.com/kubernetes-sigs/kustomize/blob/master/pkg/transformers/config/defaultconfig/varreference.go
+# Long story short, the default targets are all
+# container command args and env value fields.
+#
+# Vars should _not_ be used for inserting names in places
+# where kustomize is already handling that job.  E.g.,
+# a Deployment may reference a ConfigMap by name, and
+# if kustomize changes the name of a ConfigMap, it knows
+# to change the name reference in the Deployment.
 
-# ImageTags modify the tags for images without creating patches.
-# E.g. Given this fragment of a Deployment:
+
+# Images modify the name, tags and/or digest for images without creating patches.
+# E.g. Given this kubernetes Deployment fragment:
 # ```
 #  containers:
-#    - name: myapp
-#      image: mycontainerregistry/myimage:v0
+#    - name: mypostgresdb
+#      image: postgres:8
 #    - name: nginxapp
 #      image: nginx:1.7.9
+#    - name: myapp
+#      image: my-demo-app:latest
+#    - name: alpine-app
+#      image: alpine:3.7
 #```
-# one can change the tag of myimage to v1 and the tag of nginx to 1.8.0 with the following:
+# one can change the `image` in the following ways:
+# 
+# - `postgres:8` to `my-registry/my-postgres:v1`,
+# - nginx tag `1.7.9` to `1.8.0`,
+# - image name `my-demo-app` to `my-app`,
+# - alpine's tag `3.7` to a digest value
 #
-# It also supports digests. If digest is present newTag is ignored.
-imageTags:
-  - name: mycontainerregistry/myimage
+# all with the following *kustomization*:
+
+images:
+  - name: postgres
+    newName: my-registry/my-postgres
     newTag: v1
   - name: nginx
     newTag: 1.8.0
+  - name: my-demo-app
+    newName: my-app
   - name: alpine
     digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3

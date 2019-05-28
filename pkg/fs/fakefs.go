@@ -22,7 +22,7 @@ import (
 	"sort"
 	"strings"
 
-	"sigs.k8s.io/kustomize/pkg/constants"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 )
 
 var _ FileSystem = &fakeFs{}
@@ -40,7 +40,9 @@ func MakeFakeFS() *fakeFs {
 }
 
 // kustomizationContent is used in tests.
-const kustomizationContent = `namePrefix: some-prefix
+const kustomizationContent = `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namePrefix: some-prefix
 nameSuffix: some-suffix
 # Labels to add to all objects and selectors.
 # These labels would also be used to form the selector for apply --prune
@@ -100,6 +102,18 @@ func (fs *fakeFs) Open(name string) (File, error) {
 	return fs.m[name], nil
 }
 
+// CleanedAbs cannot fail.
+func (fs *fakeFs) CleanedAbs(path string) (ConfirmedDir, string, error) {
+	if fs.IsDir(path) {
+		return ConfirmedDir(path), "", nil
+	}
+	d := filepath.Dir(path)
+	if d == path {
+		return ConfirmedDir(d), "", nil
+	}
+	return ConfirmedDir(d), filepath.Base(path), nil
+}
+
 // Exists returns true if file is known.
 func (fs *fakeFs) Exists(name string) bool {
 	_, found := fs.m[name]
@@ -144,7 +158,7 @@ func (fs *fakeFs) ReadFile(name string) ([]byte, error) {
 }
 
 func (fs *fakeFs) ReadTestKustomization() ([]byte, error) {
-	return fs.ReadFile(constants.KustomizationFileName)
+	return fs.ReadFile(pgmconfig.KustomizationFileNames[0])
 }
 
 // WriteFile always succeeds and does nothing.
@@ -162,7 +176,7 @@ func (fs *fakeFs) WriteTestKustomization() {
 
 // WriteTestKustomizationWith writes a standard test file.
 func (fs *fakeFs) WriteTestKustomizationWith(bytes []byte) {
-	fs.WriteFile(constants.KustomizationFileName, bytes)
+	fs.WriteFile(pgmconfig.KustomizationFileNames[0], bytes)
 }
 
 func (fs *fakeFs) pathMatch(path, pattern string) bool {

@@ -48,14 +48,65 @@ func NewNamespaceTransformer(ns string, cf []config.FieldSpec) Transformer {
 
 // Transform adds the namespace.
 func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
-	mf := resmap.ResMap{}
+	mf := o.filterResmap(m)
 
+	for id := range mf {
+		objMap := mf[id].Map()
+		for _, path := range o.fieldSpecsToUse {
+			switch path.Path {
+			// Special casing .metadata.namespace since it is a common metadata field across all runtime.Object
+			// We should add namespace if it's namespaced resource; otherwise, we should not.
+			case "metadata/namespace":
+				if id.Gvk().IsSelected(&path.Gvk) && !id.Gvk().IsClusterKind() {
+					if len(objMap) > 0 {
+						err := mutateField(
+							objMap, path.PathSlice(), path.CreateIfNotPresent,
+							func(_ interface{}) (interface{}, error) {
+								return o.namespace, nil
+							})
+						if err != nil {
+							return err
+						}
+					}
+				}
+			default:
+				if !id.Gvk().IsSelected(&path.Gvk) {
+					continue
+				}
+				// make sure the object is non empty
+				if len(objMap) > 0 {
+					err := mutateField(
+						objMap, path.PathSlice(), path.CreateIfNotPresent,
+						func(_ interface{}) (interface{}, error) {
+							return o.namespace, nil
+						})
+					if err != nil {
+						return err
+					}
+				}
+			}
+
+			if !id.Gvk().IsClusterKind() {
+				newid := id.CopyWithNewNamespace(o.namespace)
+				m[newid] = mf[id]
+			} else {
+				m[id] = mf[id]
+			}
+		}
+	}
+	o.updateClusterRoleBinding(m)
+	return nil
+}
+
+func (o *namespaceTransformer) filterResmap(m resmap.ResMap) resmap.ResMap {
+	mf := resmap.ResMap{}
 	for id := range m {
 		found := false
 		for _, path := range o.fieldSpecsToSkip {
 			if id.Gvk().IsSelected(&path.Gvk) {
 				found = true
-				break
+				mf[id] = m[id]
+				delete(m, id)
 			}
 		}
 		if !found {
@@ -63,27 +114,7 @@ func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
 			delete(m, id)
 		}
 	}
-
-	for id := range mf {
-		objMap := mf[id].Map()
-		for _, path := range o.fieldSpecsToUse {
-			if !id.Gvk().IsSelected(&path.Gvk) {
-				continue
-			}
-
-			err := mutateField(objMap, path.PathSlice(), path.CreateIfNotPresent, func(_ interface{}) (interface{}, error) {
-				return o.namespace, nil
-			})
-			if err != nil {
-				return err
-			}
-			newid := id.CopyWithNewNamespace(o.namespace)
-			m[newid] = mf[id]
-		}
-
-	}
-	o.updateClusterRoleBinding(m)
-	return nil
+	return mf
 }
 
 func (o *namespaceTransformer) updateClusterRoleBinding(m resmap.ResMap) {
@@ -99,7 +130,10 @@ func (o *namespaceTransformer) updateClusterRoleBinding(m resmap.ResMap) {
 			continue
 		}
 		objMap := m[id].Map()
-		subjects := objMap["subjects"].([]interface{})
+		subjects, ok := objMap["subjects"].([]interface{})
+		if subjects == nil || !ok {
+			continue
+		}
 		for i := range subjects {
 			subject := subjects[i].(map[string]interface{})
 			kind, foundk := subject["kind"]

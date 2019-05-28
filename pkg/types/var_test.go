@@ -17,10 +17,12 @@ limitations under the License.
 package types
 
 import (
-	"gopkg.in/yaml.v2"
 	"reflect"
-	"sigs.k8s.io/kustomize/pkg/gvk"
+	"strings"
 	"testing"
+
+	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/kustomize/pkg/gvk"
 )
 
 func TestGVK(t *testing.T) {
@@ -79,8 +81,73 @@ func TestDefaulting(t *testing.T) {
 			Name: "my-secret",
 		},
 	}
-	v.Defaulting()
-	if v.FieldRef.FieldPath != "metadata.name" {
-		t.Fatalf("var defaulting doesn't behave correctly.\n expected metadata.name, but got %v", v.FieldRef.FieldPath)
+	v.defaulting()
+	if v.FieldRef.FieldPath != defaultFieldPath {
+		t.Fatalf("expected %s, got %v",
+			defaultFieldPath, v.FieldRef.FieldPath)
+	}
+}
+
+func TestVarSet(t *testing.T) {
+	set := &VarSet{}
+	vars := []Var{
+		{
+			Name: "SHELLVARS",
+			ObjRef: Target{
+				APIVersion: "v7",
+				Gvk:        gvk.Gvk{Kind: "ConfigMap"},
+				Name:       "bash"},
+		},
+		{
+			Name: "BACKEND",
+			ObjRef: Target{
+				APIVersion: "v7",
+				Gvk:        gvk.Gvk{Kind: "Deployment"},
+				Name:       "myTiredBackend"},
+		},
+		{
+			Name: "AWARD",
+			ObjRef: Target{
+				APIVersion: "v7",
+				Gvk:        gvk.Gvk{Kind: "Service"},
+				Name:       "nobelPrize"},
+			FieldRef: FieldSelector{FieldPath: "some.arbitrary.path"},
+		},
+	}
+	err := set.MergeSlice(vars)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	for _, v := range vars {
+		if !set.Contains(v) {
+			t.Fatalf("set %v should contain var %v", set.Set(), v)
+		}
+	}
+	set2 := &VarSet{}
+	err = set2.MergeSet(set)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	err = set2.MergeSlice(vars)
+	if err == nil {
+		t.Fatalf("expected err")
+	}
+	if !strings.Contains(err.Error(), "var SHELLVARS already encountered") {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	v := set2.Get("BACKEND")
+	if v == nil {
+		t.Fatalf("expected var")
+	}
+	// Confirm defaulting.
+	if v.FieldRef.FieldPath != defaultFieldPath {
+		t.Fatalf("unexpected field path: %v", v.FieldRef.FieldPath)
+	}
+	// Confirm sorting.
+	names := set2.Set()
+	if names[0].Name != "AWARD" ||
+		names[1].Name != "BACKEND" ||
+		names[2].Name != "SHELLVARS" {
+		t.Fatalf("unexpected order in : %v", names)
 	}
 }

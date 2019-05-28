@@ -35,10 +35,34 @@ func FromKind(k string) Gvk {
 	}
 }
 
+// FromString makes a Gvk with a string,
+// which is constructed by String() function
+func FromString(s string) Gvk {
+	values := strings.Split(s, separator)
+	g := values[0]
+	if g == noGroup {
+		g = ""
+	}
+	v := values[1]
+	if v == noVersion {
+		v = ""
+	}
+	k := values[2]
+	if k == noKind {
+		k = ""
+	}
+	return Gvk{
+		Group:   g,
+		Version: v,
+		Kind:    k,
+	}
+}
+
+// Values that are brief but meaningful in logs.
 const (
-	noGroup   = "noGroup"
-	noVersion = "noVersion"
-	noKind    = "noKind"
+	noGroup   = "~G"
+	noVersion = "~V"
+	noKind    = "~K"
 	separator = "_"
 )
 
@@ -68,11 +92,13 @@ func (x Gvk) Equals(o Gvk) bool {
 // a Service should come before things that refer to it.
 // Namespace should be first.
 // In some cases order just specified to provide determinism.
-var order = []string{
+var orderFirst = []string{
 	"Namespace",
 	"StorageClass",
 	"CustomResourceDefinition",
+	"MutatingWebhookConfiguration",
 	"ServiceAccount",
+	"PodSecurityPolicy",
 	"Role",
 	"ClusterRole",
 	"RoleBinding",
@@ -80,44 +106,51 @@ var order = []string{
 	"ConfigMap",
 	"Secret",
 	"Service",
+	"LimitRange",
 	"Deployment",
 	"StatefulSet",
 	"CronJob",
 	"PodDisruptionBudget",
 }
+var orderLast = []string{
+	"ValidatingWebhookConfiguration",
+}
 var typeOrders = func() map[string]int {
 	m := map[string]int{}
-	for i, n := range order {
-		m[n] = i
+	for i, n := range orderFirst {
+		m[n] = -len(orderFirst) + i
+	}
+	for i, n := range orderLast {
+		m[n] = 1 + i
 	}
 	return m
 }()
 
 // IsLessThan returns true if self is less than the argument.
 func (x Gvk) IsLessThan(o Gvk) bool {
-	indexI, foundI := typeOrders[x.Kind]
-	indexJ, foundJ := typeOrders[o.Kind]
-	if foundI && foundJ {
-		if indexI != indexJ {
-			return indexI < indexJ
-		}
-	}
-	if foundI && !foundJ {
-		return true
-	}
-	if !foundI && foundJ {
-		return false
+	indexI := typeOrders[x.Kind]
+	indexJ := typeOrders[o.Kind]
+	if indexI != indexJ {
+		return indexI < indexJ
 	}
 	return x.String() < o.String()
 }
 
 // IsSelected returns true if `selector` selects `x`; otherwise, false.
 // If `selector` and `x` are the same, return true.
-// If `selector` is nil, it is considered as a wildcard and always return true.
-// e.g. selector <Group: "", Version: "", Kind: "Deployment"> CAN select
-// <Group: "extensions", Version: "v1beta1", Kind: "Deployment">.
-// selector <Group: "apps", Version: "", Kind: "Deployment"> CANNOT select
-// <Group: "extensions", Version: "v1beta1", Kind: "Deployment">.
+// If `selector` is nil, it is considered a wildcard match, returning true.
+// If selector fields are empty, they are considered wildcards matching
+// anything in the corresponding fields, e.g.
+//
+// this item:
+//       <Group: "extensions", Version: "v1beta1", Kind: "Deployment">
+//
+// is selected by
+//       <Group: "",           Version: "",        Kind: "Deployment">
+//
+// but rejected by
+//       <Group: "apps",       Version: "",        Kind: "Deployment">
+//
 func (x Gvk) IsSelected(selector *Gvk) bool {
 	if selector == nil {
 		return true
@@ -147,6 +180,8 @@ var clusterLevelKinds = []string{
 	"CustomResourceDefinition",
 	"Namespace",
 	"PersistentVolume",
+	"MutatingWebhookConfiguration",
+	"ValidatingWebhookConfiguration",
 }
 
 // IsClusterKind returns true if x is a cluster-level Gvk

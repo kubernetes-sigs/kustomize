@@ -44,7 +44,7 @@ var crb = gvk.Gvk{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "Clus
 var sa = gvk.Gvk{Version: "v1", Kind: "ServiceAccount"}
 var ingress = gvk.Gvk{Kind: "Ingress"}
 var rf = resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
-var defaultTransformerConfig = config.NewFactory(nil).DefaultConfig()
+var defaultTransformerConfig = config.MakeDefaultConfig()
 
 func TestLabelsRun(t *testing.T) {
 	m := resmap.ResMap{
@@ -355,6 +355,12 @@ func TestLabelsRun(t *testing.T) {
 				"spec": map[string]interface{}{
 					"schedule": "* 23 * * *",
 					"jobTemplate": map[string]interface{}{
+						"metadata": map[string]interface{}{
+							"labels": map[string]interface{}{
+								"label-key1": "label-value1",
+								"label-key2": "label-value2",
+							},
+						},
 						"spec": map[string]interface{}{
 							"template": map[string]interface{}{
 								"metadata": map[string]interface{}{
@@ -390,6 +396,12 @@ func TestLabelsRun(t *testing.T) {
 				"spec": map[string]interface{}{
 					"schedule": "* 23 * * *",
 					"jobTemplate": map[string]interface{}{
+						"metadata": map[string]interface{}{
+							"labels": map[string]interface{}{
+								"label-key1": "label-value1",
+								"label-key2": "label-value2",
+							},
+						},
 						"spec": map[string]interface{}{
 							"selector": map[string]interface{}{
 								"matchLabels": map[string]interface{}{
@@ -570,4 +582,49 @@ func TestAnnotationsRun(t *testing.T) {
 		err = expected.ErrorIfNotEqual(m)
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
+}
+
+func TestAnnotaionsRunWithNullValue(t *testing.T) {
+	m := resmap.ResMap{
+		resid.NewResId(cmap, "cm1"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name":        "cm1",
+					"annotations": nil,
+				},
+			}),
+	}
+
+	expected := resmap.ResMap{
+		resid.NewResId(cmap, "cm1"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "cm1",
+					"annotations": map[string]interface{}{
+						"anno-key1": "anno-value1",
+						"anno-key2": "anno-value2",
+					},
+				},
+			}),
+	}
+
+	at, err := NewAnnotationsMapTransformer(
+		map[string]string{"anno-key1": "anno-value1", "anno-key2": "anno-value2"},
+		defaultTransformerConfig.CommonAnnotations)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	err = at.Transform(m)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !reflect.DeepEqual(m, expected) {
+		err = expected.ErrorIfNotEqual(m)
+		t.Fatalf("actual doesn't match expected: %v", err)
+	}
+
 }

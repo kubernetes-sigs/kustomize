@@ -1,18 +1,5 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package configmapandsecret
 
@@ -25,6 +12,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/pkg/validators"
 )
 
 func makeEnvConfigMap(name string) *corev1.ConfigMap {
@@ -56,6 +44,9 @@ func makeFileConfigMap(name string) *corev1.ConfigMap {
 			"app-init.ini": `FOO=bar
 BAR=baz
 `,
+		},
+		BinaryData: map[string][]byte{
+			"app.bin": {0xff, 0xfd},
 		},
 	}
 }
@@ -92,9 +83,11 @@ func TestConstructConfigMap(t *testing.T) {
 		{
 			description: "construct config map from env",
 			input: types.ConfigMapArgs{
-				GeneratorArgs: types.GeneratorArgs{Name: "envConfigMap"},
-				DataSources: types.DataSources{
-					EnvSource: "configmap/app.env",
+				GeneratorArgs: types.GeneratorArgs{
+					Name: "envConfigMap",
+					DataSources: types.DataSources{
+						EnvSources: []string{"configmap/app.env"},
+					},
 				},
 			},
 			options:  nil,
@@ -103,9 +96,11 @@ func TestConstructConfigMap(t *testing.T) {
 		{
 			description: "construct config map from file",
 			input: types.ConfigMapArgs{
-				GeneratorArgs: types.GeneratorArgs{Name: "fileConfigMap"},
-				DataSources: types.DataSources{
-					FileSources: []string{"configmap/app-init.ini"},
+				GeneratorArgs: types.GeneratorArgs{
+					Name: "fileConfigMap",
+					DataSources: types.DataSources{
+						FileSources: []string{"configmap/app-init.ini", "configmap/app.bin"},
+					},
 				},
 			},
 			options:  nil,
@@ -114,9 +109,11 @@ func TestConstructConfigMap(t *testing.T) {
 		{
 			description: "construct config map from literal",
 			input: types.ConfigMapArgs{
-				GeneratorArgs: types.GeneratorArgs{Name: "literalConfigMap"},
-				DataSources: types.DataSources{
-					LiteralSources: []string{"a=x", "b=y", "c=\"Hello World\"", "d='true'"},
+				GeneratorArgs: types.GeneratorArgs{
+					Name: "literalConfigMap",
+					DataSources: types.DataSources{
+						LiteralSources: []string{"a=x", "b=y", "c=\"Hello World\"", "d='true'"},
+					},
 				},
 			},
 			options: &types.GeneratorOptions{
@@ -131,9 +128,11 @@ func TestConstructConfigMap(t *testing.T) {
 	fSys := fs.MakeFakeFS()
 	fSys.WriteFile("/configmap/app.env", []byte("DB_USERNAME=admin\nDB_PASSWORD=somepw\n"))
 	fSys.WriteFile("/configmap/app-init.ini", []byte("FOO=bar\nBAR=baz\n"))
-	f := NewConfigMapFactory(fSys, loader.NewFileLoaderAtRoot(fSys))
+	fSys.WriteFile("/configmap/app.bin", []byte{0xff, 0xfd})
+	ldr := loader.NewFileLoaderAtRoot(validators.MakeFakeValidator(), fSys)
 	for _, tc := range testCases {
-		cm, err := f.MakeConfigMap(&tc.input, tc.options)
+		f := NewFactory(ldr, tc.options)
+		cm, err := f.MakeConfigMap(&tc.input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
