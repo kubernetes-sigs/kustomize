@@ -85,9 +85,11 @@ cat kustomization.yaml
 
 > ```
 > configMapGenerator:
-> - files:
->   - application.properties
->   name: demo-configmap
+> - KVSources:
+>  - args:
+>    - application.properties
+>    name: files
+>  name: demo-configmap
 > ```
 
 ### Customize configMap
@@ -137,10 +139,12 @@ cat kustomization.yaml
 `kustomization.yaml`'s configMapGenerator section should contain:
 > ```
 > configMapGenerator:
-> - files:
->   - application.properties
->   - application-prod.properties
->   name: demo-configmap
+> - KVSources:
+>  - args:
+>    - application.properties
+>    - application-prod.properties
+>    name: files
+>  name: demo-configmap
 > ```
 
 ### Name Customization
