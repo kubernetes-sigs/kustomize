@@ -1,4 +1,0 @@
-nameprefix: kustomized-
-
-bases:
-- ../base

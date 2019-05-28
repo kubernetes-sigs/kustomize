@@ -148,6 +148,9 @@ func TestNameReferenceHappyRun(t *testing.T) {
 										"configMap": map[string]interface{}{
 											"name": "cm2",
 										},
+										"secret": map[string]interface{}{
+											"name": "secret1",
+										},
 									},
 								},
 								"secret": map[string]interface{}{
@@ -183,6 +186,9 @@ func TestNameReferenceHappyRun(t *testing.T) {
 									"sources": map[string]interface{}{
 										"configMap": map[string]interface{}{
 											"name": "cm2",
+										},
+										"secret": map[string]interface{}{
+											"name": "secret1",
 										},
 									},
 								},
@@ -231,6 +237,43 @@ func TestNameReferenceHappyRun(t *testing.T) {
 							"secret1",
 							"secret1",
 							"secret2",
+						},
+					},
+				},
+			}),
+		resid.NewResId(cronjob, "cronjob1"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "batch/v1beta1",
+				"kind":       "CronJob",
+				"metadata": map[string]interface{}{
+					"name": "cronjob1",
+				},
+				"spec": map[string]interface{}{
+					"schedule": "0 14 * * *",
+					"jobTemplate": map[string]interface{}{
+						"spec": map[string]interface{}{
+							"template": map[string]interface{}{
+								"spec": map[string]interface{}{
+									"containers": []interface{}{
+										map[string]interface{}{
+											"name":  "main",
+											"image": "myimage",
+										},
+									},
+									"volumes": map[string]interface{}{
+										"projected": map[string]interface{}{
+											"sources": map[string]interface{}{
+												"configMap": map[string]interface{}{
+													"name": "cm2",
+												},
+												"secret": map[string]interface{}{
+													"name": "secret1",
+												},
+											},
+										},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -307,6 +350,9 @@ func TestNameReferenceHappyRun(t *testing.T) {
 									"configMap": map[string]interface{}{
 										"name": "someprefix-cm2-somehash",
 									},
+									"secret": map[string]interface{}{
+										"name": "someprefix-secret1-somehash",
+									},
 								},
 							},
 							"secret": map[string]interface{}{
@@ -342,6 +388,9 @@ func TestNameReferenceHappyRun(t *testing.T) {
 								"sources": map[string]interface{}{
 									"configMap": map[string]interface{}{
 										"name": "someprefix-cm2-somehash",
+									},
+									"secret": map[string]interface{}{
+										"name": "someprefix-secret1-somehash",
 									},
 								},
 							},
@@ -405,11 +454,45 @@ func TestNameReferenceHappyRun(t *testing.T) {
 				},
 			},
 		})
-	nrt, err := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	err = nrt.Transform(m)
+	expected[resid.NewResId(cronjob, "cronjob1")] = rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "batch/v1beta1",
+			"kind":       "CronJob",
+			"metadata": map[string]interface{}{
+				"name": "cronjob1",
+			},
+			"spec": map[string]interface{}{
+				"schedule": "0 14 * * *",
+				"jobTemplate": map[string]interface{}{
+					"spec": map[string]interface{}{
+						"template": map[string]interface{}{
+							"spec": map[string]interface{}{
+								"containers": []interface{}{
+									map[string]interface{}{
+										"name":  "main",
+										"image": "myimage",
+									},
+								},
+								"volumes": map[string]interface{}{
+									"projected": map[string]interface{}{
+										"sources": map[string]interface{}{
+											"configMap": map[string]interface{}{
+												"name": "someprefix-cm2-somehash",
+											},
+											"secret": map[string]interface{}{
+												"name": "someprefix-secret1-somehash",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		})
+	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
+	err := nrt.Transform(m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -471,19 +554,78 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 			expectedErr: "is expected to be either a string or a []interface{}"},
 	}
 
-	nrt, err := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
+	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
 	for _, test := range tests {
-		err = nrt.Transform(test.resMap)
+		err := nrt.Transform(test.resMap)
 		if err == nil {
 			t.Fatalf("expected error to happen")
 		}
 
 		if !strings.Contains(err.Error(), test.expectedErr) {
-			t.Fatalf("Incorrect error.\nExpected: %s, but got %v", test.expectedErr, err)
+			t.Fatalf("Incorrect error.\nExpected: %s, but got %v",
+				test.expectedErr, err)
 		}
+	}
+}
+
+func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
+	rf := resource.NewFactory(
+		kunstruct.NewKunstructuredFactoryImpl())
+	m := resmap.ResMap{
+		resid.NewResId(pv, "volume1"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "PersistentVolume",
+				"metadata": map[string]interface{}{
+					"name": "someprefix-volume1",
+				},
+			}),
+
+		resid.NewResId(pvc, "claim1"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "PersistentVolumeClaim",
+				"metadata": map[string]interface{}{
+					"name":      "someprefix-claim1",
+					"namespace": "some-namespace",
+				},
+				"spec": map[string]interface{}{
+					"volumeName": "volume1",
+				},
+			}),
+	}
+
+	expected := resmap.ResMap{
+		resid.NewResId(pv, "volume1"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "PersistentVolume",
+				"metadata": map[string]interface{}{
+					"name": "someprefix-volume1",
+				},
+			}),
+
+		resid.NewResId(pvc, "claim1"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "PersistentVolumeClaim",
+				"metadata": map[string]interface{}{
+					"name":      "someprefix-claim1",
+					"namespace": "some-namespace",
+				},
+				"spec": map[string]interface{}{
+					"volumeName": "someprefix-volume1",
+				},
+			}),
+	}
+	expected[resid.NewResId(pv, "volume1")].AppendRefBy(resid.NewResId(pvc, "claim1"))
+	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
+	err := nrt.Transform(m)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !reflect.DeepEqual(m, expected) {
+		err = expected.ErrorIfNotEqual(m)
+		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }

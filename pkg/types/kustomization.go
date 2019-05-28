@@ -18,7 +18,15 @@ limitations under the License.
 package types
 
 import (
-	"sigs.k8s.io/kustomize/pkg/patch"
+	"regexp"
+
+	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/image"
+)
+
+const (
+	KustomizationVersion = "kustomize.config.k8s.io/v1beta1"
+	KustomizationKind    = "Kustomization"
 )
 
 // TypeMeta copies apimachinery/pkg/apis/meta/v1.TypeMeta
@@ -59,17 +67,17 @@ type Kustomization struct {
 	// containing a strategic merge patch.  Format documented at
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/strategic-merge-patch.md
 	// URLs and globs are not supported.
-	PatchesStrategicMerge []patch.StrategicMerge `json:"patchesStrategicMerge,omitempty" yaml:"patchesStrategicMerge,omitempty"`
+	PatchesStrategicMerge []PatchStrategicMerge `json:"patchesStrategicMerge,omitempty" yaml:"patchesStrategicMerge,omitempty"`
 
 	// JSONPatches is a list of JSONPatch for applying JSON patch.
 	// Format documented at https://tools.ietf.org/html/rfc6902
 	// and http://jsonpatch.com
-	PatchesJson6902 []patch.Json6902 `json:"patchesJson6902,omitempty" yaml:"patchesJson6902,omitempty"`
+	PatchesJson6902 []PatchJson6902 `json:"patchesJson6902,omitempty" yaml:"patchesJson6902,omitempty"`
 
-	// ImageTags is a list of (image name, new tag) pairs for simply
-	// changing a an image tag.  This can also be achieved with a
+	// Images is a list of (image name, new name, new tag or digest)
+	// for changing image names, tags or digests. This can also be achieved with a
 	// patch, but this operator is simpler to specify.
-	ImageTags []ImageTag `json:"imageTags,omitempty" yaml:"imageTags,omitempty"`
+	Images []image.Image `json:"images,omitempty" yaml:"images,omitempty"`
 
 	// Vars allow things modified by kustomize to be injected into a
 	// container specification. A var is a name (e.g. FOO) associated
@@ -123,27 +131,77 @@ type Kustomization struct {
 	// Configurations is a list of transformer configuration files
 	Configurations []string `json:"configurations,omitempty" yaml:"configurations,omitempty"`
 
-	//
-	// Deprecated fields - See DealWithDeprecatedFields
-	//
+	// Generators is a list of files containing custom generators
+	Generators []string `json:"generators,omitempty" yaml:"generators,omitempty"`
 
-	// Deprecated.
-	Patches []string `json:"patches,omitempty" yaml:"patches,omitempty"`
+	// Transformers is a list of files containing transformers
+	Transformers []string `json:"transformers,omitempty" yaml:"transformers,omitempty"`
+
+	// Inventory appends an object that contains the record
+	// of all other objects, which can be used in apply, prune and delete
+	Inventory *Inventory `json:"inventory,omitempty" yaml:"inventory:omitempty"`
 }
 
-// DealWithDeprecatedFields should be called immediately after
-// loading from storage.
-func (k *Kustomization) DealWithDeprecatedFields() {
-	if len(k.Patches) > 0 {
-		// The Patches field, meant to hold strategic merge
-		// patches, is deprecated. Append anything found
-		// there to the PatchesStrategicMerge field.
-		// This happened when the PatchesJson6902 field
-		// was introduced.
-		k.PatchesStrategicMerge = patch.Append(
-			k.PatchesStrategicMerge, k.Patches...)
-		k.Patches = []string{}
+type GarbagePolicy int
+
+const (
+	GarbageUnknown GarbagePolicy = iota
+	GarbageIgnore
+	GarbageCollect
+)
+
+// FixKustomizationPostUnmarshalling fixes things
+// like empty fields that should not be empty, or
+// moving content of deprecated fields to newer
+// fields.
+func (k *Kustomization) FixKustomizationPostUnmarshalling() {
+	if k.APIVersion == "" {
+		k.APIVersion = KustomizationVersion
 	}
+	if k.Kind == "" {
+		k.Kind = KustomizationKind
+	}
+	// The EnvSource field is deprecated in favor of the list.
+	for i, g := range k.ConfigMapGenerator {
+		if g.EnvSource != "" {
+			k.ConfigMapGenerator[i].EnvSources =
+				append(g.EnvSources, g.EnvSource)
+			k.ConfigMapGenerator[i].EnvSource = ""
+		}
+	}
+	for i, g := range k.SecretGenerator {
+		if g.EnvSource != "" {
+			k.SecretGenerator[i].EnvSources =
+				append(g.EnvSources, g.EnvSource)
+			k.SecretGenerator[i].EnvSource = ""
+		}
+	}
+}
+
+func (k *Kustomization) EnforceFields() []string {
+	var errs []string
+	if k.APIVersion != "" && k.APIVersion != KustomizationVersion {
+		errs = append(errs, "apiVersion should be "+KustomizationVersion)
+	}
+	if k.Kind != "" && k.Kind != KustomizationKind {
+		errs = append(errs, "kind should be "+KustomizationKind)
+	}
+	return errs
+}
+
+// FixKustomizationPreUnmarshalling modies the raw data
+// before marshalling - e.g. changes old field names to
+// new field names.
+func FixKustomizationPreUnmarshalling(data []byte) []byte {
+	deprecateFieldsMap := map[string]string{
+		"patches:":   "patchesStrategicMerge:",
+		"imageTags:": "images:",
+	}
+	for oldname, newname := range deprecateFieldsMap {
+		pattern := regexp.MustCompile(oldname)
+		data = pattern.ReplaceAll(data, []byte(newname))
+	}
+	return data
 }
 
 // GeneratorArgs contains arguments common to generators.
@@ -161,15 +219,33 @@ type GeneratorArgs struct {
 	//   'replace': replace the existing one
 	//   'merge': merge with the existing one
 	Behavior string `json:"behavior,omitempty" yaml:"behavior,omitempty"`
+
+	// DataSources for the generator.
+	DataSources `json:",inline,omitempty" yaml:",inline,omitempty"`
+}
+
+// PluginConfig holds plugin configuration.
+type PluginConfig struct {
+	// DirectoryPath is an absolute path to a
+	// directory containing kustomize plugins.
+	// This directory may contain subdirectories
+	// further categorizing plugins.
+	DirectoryPath string
+
+	// Enabled is true if plugins are enabled.
+	Enabled bool
 }
 
 // ConfigMapArgs contains the metadata of how to generate a configmap.
 type ConfigMapArgs struct {
 	// GeneratorArgs for the configmap.
 	GeneratorArgs `json:",inline,omitempty" yaml:",inline,omitempty"`
+}
 
-	// DataSources for configmap.
-	DataSources `json:",inline,omitempty" yaml:",inline,omitempty"`
+// Pair is a key value pair.
+type Pair struct {
+	Key   string
+	Value string
 }
 
 // SecretArgs contains the metadata of how to generate a secret.
@@ -182,62 +258,39 @@ type SecretArgs struct {
 	// This is the same field as the secret type field in v1/Secret:
 	// It can be "Opaque" (default), or "kubernetes.io/tls".
 	//
-	// If type is "kubernetes.io/tls", then "Commands" must have exactly two
+	// If type is "kubernetes.io/tls", then "literals" or "files" must have exactly two
 	// keys: "tls.key" and "tls.crt"
 	Type string `json:"type,omitempty" yaml:"type,omitempty"`
-
-	// CommandSources for secret.
-	CommandSources `json:",inline,omitempty" yaml:",inline,omitempty"`
-
-	// Deprecated.
-	// Replaced by GeneratorOptions.TimeoutSeconds
-	// TimeoutSeconds specifies the timeout for commands.
-	TimeoutSeconds *int64 `json:"timeoutSeconds,omitempty" yaml:"timeoutSeconds,omitempty"`
-}
-
-// CommandSources contains some generic sources for secrets.
-type CommandSources struct {
-	// Map of keys to commands to generate the values
-	Commands map[string]string `json:"commands,omitempty" yaml:"commands,omitempty"`
-	// EnvCommand to output lines of key=val pairs to create a secret.
-	// i.e. a Docker .env file or a .ini file.
-	EnvCommand string `json:"envCommand,omitempty" yaml:"envCommand,omitempty"`
 }
 
 // DataSources contains some generic sources for configmaps.
 type DataSources struct {
-	// LiteralSources is a list of literal sources.
-	// Each literal source should be a key and literal value,
-	// e.g. `somekey=somevalue`
-	// It will be similar to kubectl create configmap|secret --from-literal
+	// LiteralSources is a list of literal
+	// pair sources. Each literal source should
+	// be a key and literal value, e.g. `key=value`
 	LiteralSources []string `json:"literals,omitempty" yaml:"literals,omitempty"`
 
-	// FileSources is a list of file sources.
-	// Each file source can be specified using its file path, in which case file
-	// basename will be used as configmap key, or optionally with a key and file
-	// path, in which case the given key will be used.
-	// Specifying a directory will iterate each named file in the directory
-	// whose basename is a valid configmap key.
-	// It will be similar to kubectl create configmap|secret --from-file
+	// FileSources is a list of file "sources" to
+	// use in creating a list of key, value pairs.
+	// A source takes the form:  [{key}=]{path}
+	// If the "key=" part is missing, the key is the
+	// path's basename. If they "key=" part is present,
+	// it becomes the key (replacing the basename).
+	// In either case, the value is the file contents.
+	// Specifying a directory will iterate each named
+	// file in the directory whose basename is a
+	// valid configmap key.
 	FileSources []string `json:"files,omitempty" yaml:"files,omitempty"`
 
-	// EnvSource format should be a path to a file to read lines of key=val
-	// pairs to create a configmap.
-	// i.e. a Docker .env file or a .ini file.
+	// EnvSources is a list of file paths.
+	// The contents of each file should be one
+	// key=value pair per line, e.g. a Docker
+	// or npm ".env" file or a ".ini" file
+	// (wikipedia.org/wiki/INI_file)
+	EnvSources []string `json:"envs,omitempty" yaml:"envs,omitempty"`
+
+	// Deprecated.  Use EnvSources instead.
 	EnvSource string `json:"env,omitempty" yaml:"env,omitempty"`
-}
-
-// ImageTag contains an image and a new tag, which will replace the original tag.
-type ImageTag struct {
-	// Name is a tag-less image name.
-	Name string `json:"name,omitempty" yaml:"name,omitempty"`
-
-	// NewTag is the value to use in replacing the original tag.
-	NewTag string `json:"newTag,omitempty" yaml:"newTag,omitempty"`
-
-	// Digest is the value used to replace the original image tag.
-	// If digest is present NewTag value is ignored.
-	Digest string `json:"digest,omitempty" yaml:"digest,omitempty"`
 }
 
 // GeneratorOptions modify behavior of all ConfigMap and Secret generators.
@@ -248,17 +301,57 @@ type GeneratorOptions struct {
 	// Annotations to add to all generated resources.
 	Annotations map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
 
-	// TimeoutSeconds specifies the timeout for commands, if any,
-	// used in resource generation.  At time of writing, the default
-	// was specified in configmapandsecret.defaultCommandTimeout.
-	TimeoutSeconds *int64 `json:"timeoutSeconds,omitempty" yaml:"timeoutSeconds,omitempty"`
-
-	// Shell and arguments to use as a context for commands used in
-	// resource generation.  Default at time of writing:  {'sh', '-c'}.
-	Shell []string `json:"shell,omitempty" yaml:"shell,omitempty"`
-
 	// DisableNameSuffixHash if true disables the default behavior of adding a
 	// suffix to the names of generated resources that is a hash of the
 	// resource contents.
 	DisableNameSuffixHash bool `json:"disableNameSuffixHash,omitempty" yaml:"disableNameSuffixHash,omitempty"`
 }
+
+type PluginType string
+
+func (p PluginType) IsUndefined() bool {
+	return p == PluginType("")
+}
+
+// KVSource represents a KV plugin backend.
+type KVSource struct {
+	PluginType PluginType `json:"pluginType,omitempty" yaml:"pluginType,omitempty"`
+	Name       string     `json:"name,omitempty" yaml:"name,omitempty"`
+	Args       []string   `json:"args,omitempty" yaml:"args,omitempty"`
+}
+
+type Inventory struct {
+	Type      string   `json:"type,omitempty" yaml:"type,omitempty"`
+	ConfigMap NameArgs `json:"configMap,omitempty" yaml:"configMap,omitempty"`
+}
+
+type NameArgs struct {
+	Name      string `json:"name,omitempty" yaml:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+}
+
+// PatchJson6902 represents a json patch for an object
+// with format documented https://tools.ietf.org/html/rfc6902.
+type PatchJson6902 struct {
+	// PatchTarget refers to a Kubernetes object that the json patch will be
+	// applied to. It must refer to a Kubernetes resource under the
+	// purview of this kustomization. PatchTarget should use the
+	// raw name of the object (the name specified in its YAML,
+	// before addition of a namePrefix and a nameSuffix).
+	Target *PatchTarget `json:"target" yaml:"target"`
+
+	// relative file path for a json patch file inside a kustomization
+	Path string `json:"path,omitempty" yaml:"path,omitempty"`
+}
+
+// PatchTarget represents the kubernetes object that the patch is applied to
+type PatchTarget struct {
+	gvk.Gvk   `json:",inline,omitempty" yaml:",inline,omitempty"`
+	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	Name      string `json:"name" yaml:"name"`
+}
+
+// PatchStrategicMerge represents a relative path to a
+// stategic merge patch with the format
+// https://github.com/kubernetes/community/blob/master/contributors/devel/strategic-merge-patch.md
+type PatchStrategicMerge string

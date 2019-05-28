@@ -58,6 +58,20 @@ var lessThanTests = []struct {
 		Gvk{Group: "a", Version: "b", Kind: "ClusterRole"}},
 	{Gvk{Group: "a", Version: "d", Kind: "Namespace"},
 		Gvk{Group: "b", Version: "c", Kind: "Namespace"}},
+	{Gvk{Group: "a", Version: "b", Kind: orderFirst[len(orderFirst)-1]},
+		Gvk{Group: "a", Version: "b", Kind: orderLast[0]}},
+	{Gvk{Group: "a", Version: "b", Kind: orderFirst[len(orderFirst)-1]},
+		Gvk{Group: "a", Version: "b", Kind: "CustomKindX"}},
+	{Gvk{Group: "a", Version: "b", Kind: "CustomKindX"},
+		Gvk{Group: "a", Version: "b", Kind: orderLast[0]}},
+	{Gvk{Group: "a", Version: "b", Kind: "CustomKindA"},
+		Gvk{Group: "a", Version: "b", Kind: "CustomKindB"}},
+	{Gvk{Group: "a", Version: "b", Kind: "CustomKindX"},
+		Gvk{Group: "a", Version: "b", Kind: "ValidatingWebhookConfiguration"}},
+	{Gvk{Group: "a", Version: "b", Kind: "APIService"},
+		Gvk{Group: "a", Version: "b", Kind: "ValidatingWebhookConfiguration"}},
+	{Gvk{Group: "a", Version: "b", Kind: "Service"},
+		Gvk{Group: "a", Version: "b", Kind: "APIService"}},
 }
 
 func TestIsLessThan1(t *testing.T) {
@@ -75,13 +89,13 @@ var stringTests = []struct {
 	x Gvk
 	s string
 }{
-	{Gvk{}, "noGroup_noVersion_noKind"},
-	{Gvk{Kind: "k"}, "noGroup_noVersion_k"},
-	{Gvk{Version: "v"}, "noGroup_v_noKind"},
-	{Gvk{Version: "v", Kind: "k"}, "noGroup_v_k"},
-	{Gvk{Group: "g"}, "g_noVersion_noKind"},
-	{Gvk{Group: "g", Kind: "k"}, "g_noVersion_k"},
-	{Gvk{Group: "g", Version: "v"}, "g_v_noKind"},
+	{Gvk{}, "~G_~V_~K"},
+	{Gvk{Kind: "k"}, "~G_~V_k"},
+	{Gvk{Version: "v"}, "~G_v_~K"},
+	{Gvk{Version: "v", Kind: "k"}, "~G_v_k"},
+	{Gvk{Group: "g"}, "g_~V_~K"},
+	{Gvk{Group: "g", Kind: "k"}, "g_~V_k"},
+	{Gvk{Group: "g", Version: "v"}, "g_v_~K"},
 	{Gvk{Group: "g", Version: "v", Kind: "k"}, "g_v_k"},
 }
 

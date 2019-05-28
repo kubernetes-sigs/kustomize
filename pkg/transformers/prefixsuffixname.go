@@ -19,7 +19,6 @@ package transformers
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resmap"
@@ -43,20 +42,20 @@ var prefixSuffixFieldSpecsToSkip = []config.FieldSpec{
 	},
 }
 
-// deprecateNamePrefixSuffixFieldSpec will be moved into prefixSuffixFieldSpecsToSkip in next release
-var deprecateNamePrefixSuffixFieldSpec = config.FieldSpec{
-	Gvk: gvk.Gvk{Kind: "Namespace"},
-}
-
-// NewNamePrefixSuffixTransformer construct a namePrefixSuffixTransformer.
-func NewNamePrefixSuffixTransformer(np, ns string, pc []config.FieldSpec) (Transformer, error) {
+// NewNamePrefixSuffixTransformer makes a namePrefixSuffixTransformer.
+func NewNamePrefixSuffixTransformer(
+	np, ns string, fieldSpecs []config.FieldSpec) (Transformer, error) {
 	if len(np) == 0 && len(ns) == 0 {
 		return NewNoOpTransformer(), nil
 	}
-	if pc == nil {
+	if fieldSpecs == nil {
 		return nil, errors.New("fieldSpecs is not expected to be nil")
 	}
-	return &namePrefixSuffixTransformer{fieldSpecsToUse: pc, prefix: np, suffix: ns, fieldSpecsToSkip: prefixSuffixFieldSpecsToSkip}, nil
+	return &namePrefixSuffixTransformer{
+		prefix:           np,
+		suffix:           ns,
+		fieldSpecsToUse:  fieldSpecs,
+		fieldSpecsToSkip: prefixSuffixFieldSpecsToSkip}, nil
 }
 
 // Transform prepends the name prefix and appends the name suffix.
@@ -80,15 +79,16 @@ func (o *namePrefixSuffixTransformer) Transform(m resmap.ResMap) error {
 	}
 
 	for id := range mf {
-		if id.Gvk().IsSelected(&deprecateNamePrefixSuffixFieldSpec.Gvk) {
-			log.Println("Adding nameprefix and namesuffix to Namespace resource will be deprecated in next release.")
-		}
 		objMap := mf[id].Map()
 		for _, path := range o.fieldSpecsToUse {
 			if !id.Gvk().IsSelected(&path.Gvk) {
 				continue
 			}
-			err := mutateField(objMap, path.PathSlice(), path.CreateIfNotPresent, o.addPrefixSuffix)
+			err := mutateField(
+				objMap,
+				path.PathSlice(),
+				path.CreateIfNotPresent,
+				o.addPrefixSuffix)
 			if err != nil {
 				return err
 			}
@@ -99,7 +99,8 @@ func (o *namePrefixSuffixTransformer) Transform(m resmap.ResMap) error {
 	return nil
 }
 
-func (o *namePrefixSuffixTransformer) addPrefixSuffix(in interface{}) (interface{}, error) {
+func (o *namePrefixSuffixTransformer) addPrefixSuffix(
+	in interface{}) (interface{}, error) {
 	s, ok := in.(string)
 	if !ok {
 		return nil, fmt.Errorf("%#v is expected to be %T", in, s)

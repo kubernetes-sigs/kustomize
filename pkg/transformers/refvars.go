@@ -1,66 +1,108 @@
+/*
+Copyright 2018 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package transformers
 
 import (
 	"fmt"
-
 	"sigs.k8s.io/kustomize/pkg/expansion"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
 
-type refvarTransformer struct {
-	fieldSpecs []config.FieldSpec
-	vars       map[string]string
+type RefVarTransformer struct {
+	varMap            map[string]string
+	replacementCounts map[string]int
+	fieldSpecs        []config.FieldSpec
+	mappingFunc       func(string) string
 }
 
-// NewRefVarTransformer returns a Trasformer that replaces $(VAR) style variables with values.
-func NewRefVarTransformer(vars map[string]string, p []config.FieldSpec) Transformer {
-	return &refvarTransformer{
-		vars:       vars,
-		fieldSpecs: p,
+// NewRefVarTransformer returns a new RefVarTransformer
+// that replaces $(VAR) style variables with values.
+// The fieldSpecs are the places to look for occurrences of $(VAR).
+func NewRefVarTransformer(
+	varMap map[string]string, fs []config.FieldSpec) *RefVarTransformer {
+	return &RefVarTransformer{
+		varMap:     varMap,
+		fieldSpecs: fs,
 	}
 }
 
-// Transform determines the final values of variables:
-//
-// 1.  Determine the final value of each variable:
-//     a.  If the variable's Value is set, expand the `$(var)` references to other
-//         variables in the .Value field; the sources of variables are the declared
-//         variables of the container and the service environment variables
-//     b.  If a source is defined for an environment variable, resolve the source
-// 2.  Create the container's environment in the order variables are declared
-// 3.  Add remaining service environment vars
-func (rv *refvarTransformer) Transform(resources resmap.ResMap) error {
-	for resId := range resources {
-		objMap := resources[resId].Map()
-		for _, pc := range rv.fieldSpecs {
-			if !resId.Gvk().IsSelected(&pc.Gvk) {
-				continue
+// replaceVars accepts as 'in' a string, or string array, which can have
+// embedded instances of $VAR style variables, e.g. a container command string.
+// The function returns the string with the variables expanded to their final
+// values.
+func (rv *RefVarTransformer) replaceVars(in interface{}) (interface{}, error) {
+	switch vt := in.(type) {
+	case []interface{}:
+		var xs []string
+		for _, a := range in.([]interface{}) {
+			xs = append(xs, expansion.Expand(a.(string), rv.mappingFunc))
+		}
+		return xs, nil
+	case map[string]interface{}:
+		inMap := in.(map[string]interface{})
+		xs := make(map[string]interface{}, len(inMap))
+		for k, v := range inMap {
+			s, ok := v.(string)
+			if !ok {
+				return nil, fmt.Errorf("%#v is expected to be %T", v, s)
 			}
-			err := mutateField(objMap, pc.PathSlice(), false, func(in interface{}) (interface{}, error) {
-				var (
-					mappingFunc = expansion.MappingFuncFor(rv.vars)
-				)
-				switch vt := in.(type) {
-				case []interface{}:
-					var xs []string
-					for _, a := range in.([]interface{}) {
-						xs = append(xs, expansion.Expand(a.(string), mappingFunc))
-					}
-					return xs, nil
-				case interface{}:
-					s, ok := in.(string)
-					if !ok {
-						return nil, fmt.Errorf("%#v is expected to be %T", in, s)
-					}
-					runtimeVal := expansion.Expand(s, mappingFunc)
-					return runtimeVal, nil
-				default:
-					return "", fmt.Errorf("invalid type encountered %T", vt)
+			xs[k] = expansion.Expand(s, rv.mappingFunc)
+		}
+		return xs, nil
+	case interface{}:
+		s, ok := in.(string)
+		if !ok {
+			return nil, fmt.Errorf("%#v is expected to be %T", in, s)
+		}
+		return expansion.Expand(s, rv.mappingFunc), nil
+	case nil:
+		return nil, nil
+	default:
+		return "", fmt.Errorf("invalid type encountered %T", vt)
+	}
+}
+
+// UnusedVars returns slice of Var names that were unused
+// after a Transform run.
+func (rv *RefVarTransformer) UnusedVars() []string {
+	var unused []string
+	for k := range rv.varMap {
+		_, ok := rv.replacementCounts[k]
+		if !ok {
+			unused = append(unused, k)
+		}
+	}
+	return unused
+}
+
+// Transform replaces $(VAR) style variables with values.
+func (rv *RefVarTransformer) Transform(m resmap.ResMap) error {
+	rv.replacementCounts = make(map[string]int)
+	rv.mappingFunc = expansion.MappingFuncFor(
+		rv.replacementCounts, rv.varMap)
+	for id, res := range m {
+		for _, fieldSpec := range rv.fieldSpecs {
+			if id.Gvk().IsSelected(&fieldSpec.Gvk) {
+				if err := mutateField(
+					res.Map(), fieldSpec.PathSlice(),
+					false, rv.replaceVars); err != nil {
+					return err
 				}
-			})
-			if err != nil {
-				return err
 			}
 		}
 	}

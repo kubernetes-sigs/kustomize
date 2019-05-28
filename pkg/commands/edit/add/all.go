@@ -1,18 +1,5 @@
-/*
-Copyright 2017 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package add
 
@@ -23,12 +10,18 @@ import (
 )
 
 // NewCmdAdd returns an instance of 'add' subcommand.
-func NewCmdAdd(fsys fs.FileSystem, v ifc.Validator, kf ifc.KunstructuredFactory) *cobra.Command {
+func NewCmdAdd(
+	fSys fs.FileSystem,
+	ldr ifc.Loader,
+	kf ifc.KunstructuredFactory) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "add",
-		Short: "Adds configmap/resource/patch/base to the kustomization file.",
+		Short: "Adds an item to the kustomization file.",
 		Long:  "",
 		Example: `
+	# Adds a secret to the kustomization file
+	kustomize edit add secret NAME --from-literal=k=v
+
 	# Adds a configmap to the kustomization file
 	kustomize edit add configmap NAME --from-literal=k=v
 
@@ -51,12 +44,13 @@ func NewCmdAdd(fsys fs.FileSystem, v ifc.Validator, kf ifc.KunstructuredFactory)
 		Args: cobra.MinimumNArgs(1),
 	}
 	c.AddCommand(
-		newCmdAddResource(fsys),
-		newCmdAddPatch(fsys),
-		newCmdAddConfigMap(fsys, kf),
-		newCmdAddBase(fsys),
-		newCmdAddLabel(fsys, v.MakeLabelValidator()),
-		newCmdAddAnnotation(fsys, v.MakeAnnotationValidator()),
+		newCmdAddResource(fSys),
+		newCmdAddPatch(fSys),
+		newCmdAddSecret(fSys, ldr, kf),
+		newCmdAddConfigMap(fSys, ldr, kf),
+		newCmdAddBase(fSys),
+		newCmdAddLabel(fSys, ldr.Validator().MakeLabelValidator()),
+		newCmdAddAnnotation(fSys, ldr.Validator().MakeAnnotationValidator()),
 	)
 	return c
 }

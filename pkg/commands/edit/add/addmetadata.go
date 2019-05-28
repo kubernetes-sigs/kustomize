@@ -22,8 +22,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
-	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
@@ -47,6 +47,7 @@ func (k kindOfAdd) String() string {
 }
 
 type addMetadataOptions struct {
+	force        bool
 	metadata     map[string]string
 	mapValidator func(map[string]string) error
 	kind         kindOfAdd
@@ -59,13 +60,16 @@ func newCmdAddAnnotation(fSys fs.FileSystem, v func(map[string]string) error) *c
 	o.mapValidator = v
 	cmd := &cobra.Command{
 		Use:   "annotation",
-		Short: "Adds one or more commonAnnotations to " + constants.KustomizationFileName,
+		Short: "Adds one or more commonAnnotations to " + pgmconfig.KustomizationFileNames[0],
 		Example: `
 		add annotation {annotationKey1:annotationValue1},{annotationKey2:annotationValue2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return o.runE(args, fSys, o.addAnnotations)
 		},
 	}
+	cmd.Flags().BoolVarP(&o.force, "force", "f", false,
+		"overwrite commonAnnotation if it already exists",
+	)
 	return cmd
 }
 
@@ -76,13 +80,16 @@ func newCmdAddLabel(fSys fs.FileSystem, v func(map[string]string) error) *cobra.
 	o.mapValidator = v
 	cmd := &cobra.Command{
 		Use:   "label",
-		Short: "Adds one or more commonLabels to " + constants.KustomizationFileName,
+		Short: "Adds one or more commonLabels to " + pgmconfig.KustomizationFileNames[0],
 		Example: `
 		add label {labelKey1:labelValue1},{labelKey2:labelValue2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return o.runE(args, fSys, o.addLabels)
 		},
 	}
+	cmd.Flags().BoolVarP(&o.force, "force", "f", false,
+		"overwrite commonLabel if it already exists",
+	)
 	return cmd
 }
 
@@ -130,17 +137,18 @@ func (o *addMetadataOptions) convertToMap(arg string) (map[string]string, error)
 	result := make(map[string]string)
 	inputs := strings.Split(arg, ",")
 	for _, input := range inputs {
-		kv := strings.Split(input, ":")
-		if len(kv[0]) < 1 {
-			return nil, o.makeError(input, "empty key")
-		}
-		if len(kv) > 2 {
-			return nil, o.makeError(input, "too many colons")
-		}
-		if len(kv) > 1 {
-			result[kv[0]] = kv[1]
+		c := strings.Index(input, ":")
+		if c == 0 {
+			// key is not passed
+			return nil, o.makeError(input, "need k:v pair where v may be quoted")
+		} else if c < 0 {
+			// only key passed
+			result[input] = ""
 		} else {
-			result[kv[0]] = ""
+			// both key and value passed
+			key := input[:c]
+			value := trimQuotes(input[c+1:])
+			result[key] = value
 		}
 	}
 	return result, nil
@@ -162,7 +170,7 @@ func (o *addMetadataOptions) addLabels(m *types.Kustomization) error {
 
 func (o *addMetadataOptions) writeToMap(m map[string]string, kind kindOfAdd) error {
 	for k, v := range o.metadata {
-		if _, ok := m[k]; ok {
+		if _, ok := m[k]; ok && !o.force {
 			return fmt.Errorf("%s %s already in kustomization file", kind, k)
 		}
 		m[k] = v
@@ -171,5 +179,14 @@ func (o *addMetadataOptions) writeToMap(m map[string]string, kind kindOfAdd) err
 }
 
 func (o *addMetadataOptions) makeError(input string, message string) error {
-	return fmt.Errorf("invalid %s: %s (%s)", o.kind, input, message)
+	return fmt.Errorf("invalid %s: '%s' (%s)", o.kind, input, message)
+}
+
+func trimQuotes(s string) string {
+	if len(s) >= 2 {
+		if s[0] == '"' && s[len(s)-1] == '"' {
+			return s[1 : len(s)-1]
+		}
+	}
+	return s
 }

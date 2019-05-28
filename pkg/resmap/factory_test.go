@@ -14,24 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package resmap
+package resmap_test
 
 import (
 	"encoding/base64"
-	"fmt"
 	"reflect"
 	"testing"
 
+	"sigs.k8s.io/kustomize/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/resid"
+	. "sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/pkg/validators"
 )
 
-func TestFromFiles(t *testing.T) {
+func TestFromFile(t *testing.T) {
 
 	resourceStr := `apiVersion: apps/v1
 kind: Deployment
@@ -52,7 +53,6 @@ metadata:
   namespace: test
 ---
 `
-
 	l := loadertest.NewFakeLoader("/whatever/project")
 	if ferr := l.AddFile("/whatever/project/deployment.yaml", []byte(resourceStr)); ferr != nil {
 		t.Fatalf("Error adding fake file: %v\n", ferr)
@@ -84,12 +84,10 @@ metadata:
 			}),
 	}
 
-	m, _ := rmF.FromFiles(
-		l, []string{"deployment.yaml"})
+	m, _ := rmF.FromFile(l, "deployment.yaml")
 	if len(m) != 3 {
 		t.Fatalf("%#v should contain 3 appResource, but got %d", m, len(m))
 	}
-
 	if err := expected.ErrorIfNotEqual(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
@@ -124,8 +122,7 @@ metadata:
 				},
 			}),
 	}
-	m, err := rmF.newResMapFromBytes(encoded)
-	fmt.Printf("%v\n", m)
+	m, err := rmF.NewResMapFromBytes(encoded)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -145,22 +142,24 @@ func TestNewFromConfigMaps(t *testing.T) {
 		expected    ResMap
 	}
 
-	l := loadertest.NewFakeLoader("/whatever/project/")
+	l := loadertest.NewFakeLoader("/whatever/project")
 	testCases := []testCase{
 		{
 			description: "construct config map from env",
 			input: []types.ConfigMapArgs{
 				{
-					GeneratorArgs: types.GeneratorArgs{Name: "envConfigMap"},
-					DataSources: types.DataSources{
-						EnvSource: "app.env",
+					GeneratorArgs: types.GeneratorArgs{
+						Name: "envConfigMap",
+						DataSources: types.DataSources{
+							EnvSources: []string{"app.env"},
+						},
 					},
 				},
 			},
 			filepath: "/whatever/project/app.env",
 			content:  "DB_USERNAME=admin\nDB_PASSWORD=somepw",
 			expected: ResMap{
-				resid.NewResId(cmap, "envConfigMap"): rf.FromMap(
+				resid.NewResId(cmap, "envConfigMap"): rf.FromMapAndOption(
 					map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -171,22 +170,25 @@ func TestNewFromConfigMaps(t *testing.T) {
 							"DB_USERNAME": "admin",
 							"DB_PASSWORD": "somepw",
 						},
-					}).SetBehavior(ifc.BehaviorCreate),
+					}, &types.GeneratorArgs{}, nil),
 			},
 		},
+
 		{
 			description: "construct config map from file",
 			input: []types.ConfigMapArgs{{
-				GeneratorArgs: types.GeneratorArgs{Name: "fileConfigMap"},
-				DataSources: types.DataSources{
-					FileSources: []string{"app-init.ini"},
+				GeneratorArgs: types.GeneratorArgs{
+					Name: "fileConfigMap",
+					DataSources: types.DataSources{
+						FileSources: []string{"app-init.ini"},
+					},
 				},
 			},
 			},
 			filepath: "/whatever/project/app-init.ini",
 			content:  "FOO=bar\nBAR=baz\n",
 			expected: ResMap{
-				resid.NewResId(cmap, "fileConfigMap"): rf.FromMap(
+				resid.NewResId(cmap, "fileConfigMap"): rf.FromMapAndOption(
 					map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -198,21 +200,23 @@ func TestNewFromConfigMaps(t *testing.T) {
 BAR=baz
 `,
 						},
-					}).SetBehavior(ifc.BehaviorCreate),
+					}, &types.GeneratorArgs{}, nil),
 			},
 		},
 		{
 			description: "construct config map from literal",
 			input: []types.ConfigMapArgs{
 				{
-					GeneratorArgs: types.GeneratorArgs{Name: "literalConfigMap"},
-					DataSources: types.DataSources{
-						LiteralSources: []string{"a=x", "b=y", "c=\"Good Morning\"", "d=\"false\""},
+					GeneratorArgs: types.GeneratorArgs{
+						Name: "literalConfigMap",
+						DataSources: types.DataSources{
+							LiteralSources: []string{"a=x", "b=y", "c=\"Good Morning\"", "d=\"false\""},
+						},
 					},
 				},
 			},
 			expected: ResMap{
-				resid.NewResId(cmap, "literalConfigMap"): rf.FromMap(
+				resid.NewResId(cmap, "literalConfigMap"): rf.FromMapAndOption(
 					map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -225,18 +229,18 @@ BAR=baz
 							"c": "Good Morning",
 							"d": "false",
 						},
-					}).SetBehavior(ifc.BehaviorCreate),
+					}, &types.GeneratorArgs{}, nil),
 			},
 		},
+
 		// TODO: add testcase for data coming from multiple sources like
 		// files/literal/env etc.
 	}
-	rmF.Set(fs.MakeFakeFS(), l)
 	for _, tc := range testCases {
 		if ferr := l.AddFile(tc.filepath, []byte(tc.content)); ferr != nil {
 			t.Fatalf("Error adding fake file: %v\n", ferr)
 		}
-		r, err := rmF.NewResMapFromConfigMapArgs(tc.input, nil)
+		r, err := rmF.NewResMapFromConfigMapArgs(l, nil, tc.input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -251,34 +255,28 @@ var secret = gvk.Gvk{Version: "v1", Kind: "Secret"}
 func TestNewResMapFromSecretArgs(t *testing.T) {
 	secrets := []types.SecretArgs{
 		{
-			GeneratorArgs: types.GeneratorArgs{Name: "apple"},
-			CommandSources: types.CommandSources{
-				Commands: map[string]string{
-					"DB_USERNAME": "printf admin",
-					"DB_PASSWORD": "printf somepw",
+			GeneratorArgs: types.GeneratorArgs{
+				Name: "apple",
+				DataSources: types.DataSources{
+					LiteralSources: []string{
+						"DB_USERNAME=admin",
+						"DB_PASSWORD=somepw",
+					},
 				},
-			},
-			Type: ifc.SecretTypeOpaque,
-		},
-		{
-			GeneratorArgs: types.GeneratorArgs{Name: "peanuts"},
-			CommandSources: types.CommandSources{
-				EnvCommand: "printf \"DB_USERNAME=admin\nDB_PASSWORD=somepw\"",
 			},
 			Type: ifc.SecretTypeOpaque,
 		},
 	}
 	fakeFs := fs.MakeFakeFS()
 	fakeFs.Mkdir(".")
-	rmF.Set(fakeFs, loader.NewFileLoaderAtRoot(fakeFs))
-	actual, err := rmF.NewResMapFromSecretArgs(secrets, nil)
-
+	actual, err := rmF.NewResMapFromSecretArgs(
+		loader.NewFileLoaderAtRoot(validators.MakeFakeValidator(), fakeFs), nil, secrets)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
 	expected := ResMap{
-		resid.NewResId(secret, "apple"): rf.FromMap(
+		resid.NewResId(secret, "apple"): rf.FromMapAndOption(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -290,46 +288,9 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
-			}).SetBehavior(ifc.BehaviorCreate),
-		resid.NewResId(secret, "peanuts"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "Secret",
-				"metadata": map[string]interface{}{
-					"name": "peanuts",
-				},
-				"type": ifc.SecretTypeOpaque,
-				"data": map[string]interface{}{
-					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
-					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
-				},
-			}).SetBehavior(ifc.BehaviorCreate),
+			}, &types.GeneratorArgs{}, nil),
 	}
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("%#v\ndoesn't match expected:\n%#v", actual, expected)
-	}
-}
-
-func TestSecretTimeout(t *testing.T) {
-	timeout := int64(1)
-	secrets := []types.SecretArgs{
-		{
-			GeneratorArgs:  types.GeneratorArgs{Name: "slow"},
-			TimeoutSeconds: &timeout,
-			CommandSources: types.CommandSources{
-				Commands: map[string]string{
-					"USER": "sleep 2",
-				},
-			},
-			Type: ifc.SecretTypeOpaque,
-		},
-	}
-	fakeFs := fs.MakeFakeFS()
-	fakeFs.Mkdir(".")
-	rmF.Set(fakeFs, loader.NewFileLoaderAtRoot(fakeFs))
-	_, err := rmF.NewResMapFromSecretArgs(secrets, nil)
-
-	if err == nil {
-		t.Fatal("didn't get the expected timeout error", err)
 	}
 }

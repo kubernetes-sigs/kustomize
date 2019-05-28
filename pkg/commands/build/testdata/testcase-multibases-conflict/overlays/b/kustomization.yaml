@@ -1,5 +1,0 @@
-bases:
-- ../../base/
-
-namePrefix: b-
-nameSuffix: -suffixB

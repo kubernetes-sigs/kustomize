@@ -5,12 +5,10 @@ Kustomize provides options to modify the behavior of ConfigMap and Secret genera
  - disable appending a content hash suffix to the names of generated resources
  - adding labels to generated resources
  - adding annotations to generated resources
- - changing shell and arguments for getting data from commands
- - changing timeout for executing commands
  
 This demo shows how to use these options. First create a workspace.
 ```
-DEMO_HOME=$(mkdir -d)
+DEMO_HOME=$(mktemp -d)
 ```
 
 Create a kustomization and add a ConfigMap generator to it.

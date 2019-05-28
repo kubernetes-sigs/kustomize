@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package resmap
+package resmap_test
 
 import (
 	"reflect"
@@ -22,9 +22,10 @@ import (
 
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/pkg/gvk"
-	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resid"
+	. "sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
@@ -71,7 +72,7 @@ metadata:
 	}
 }
 
-func TestDemandOneMatchForId(t *testing.T) {
+func TestDemandOneGvknMatchForId(t *testing.T) {
 	rm1 := ResMap{
 		resid.NewResIdWithPrefixNamespace(cmap, "cm1", "prefix1", "ns1"): rf.FromMap(
 			map[string]interface{}{
@@ -91,31 +92,34 @@ func TestDemandOneMatchForId(t *testing.T) {
 			}),
 	}
 
-	_, ok := rm1.DemandOneMatchForId(resid.NewResIdWithPrefixNamespace(cmap, "cm2", "prefix1", "ns1"))
-	if !ok {
-		t.Fatal("Expected single map entry but got none")
+	result := rm1.GetMatchingIds(
+		resid.NewResIdWithPrefixNamespace(cmap, "cm2", "prefix1", "ns1").GvknEquals)
+	if len(result) != 1 {
+		t.Fatalf("Expected single map entry but got %v", result)
 	}
 
 	// confirm that ns and prefix are not included in match
-	_, ok = rm1.DemandOneMatchForId(resid.NewResIdWithPrefixNamespace(cmap, "cm2", "prefix", "ns"))
-	if !ok {
-		t.Fatal("Expected single map entry but got none")
+	result = rm1.GetMatchingIds(
+		resid.NewResIdWithPrefixNamespace(cmap, "cm2", "prefix", "ns").GvknEquals)
+	if len(result) != 1 {
+		t.Fatalf("Expected single map entry but got %v", result)
 	}
 
 	// confirm that name is matched correctly
-	result, ok := rm1.DemandOneMatchForId(resid.NewResIdWithPrefixNamespace(cmap, "cm3", "prefix1", "ns1"))
-	if ok {
+	result = rm1.GetMatchingIds(
+		resid.NewResIdWithPrefixNamespace(cmap, "cm3", "prefix1", "ns1").GvknEquals)
+	if len(result) > 0 {
 		t.Fatalf("Expected no map entries but got %v", result)
 	}
 
 	cmap2 := gvk.Gvk{Version: "v2", Kind: "ConfigMap"}
 
 	// confirm that gvk is matched correctly
-	result, ok = rm1.DemandOneMatchForId(resid.NewResIdWithPrefixNamespace(cmap2, "cm2", "prefix1", "ns1"))
-	if ok {
+	result = rm1.GetMatchingIds(
+		resid.NewResIdWithPrefixNamespace(cmap2, "cm2", "prefix1", "ns1").GvknEquals)
+	if len(result) > 0 {
 		t.Fatalf("Expected no map entries but got %v", result)
 	}
-
 }
 
 func TestFilterBy(t *testing.T) {
@@ -291,8 +295,73 @@ func TestDeepCopy(t *testing.T) {
 	}
 }
 
-func TestErrorIfNotEqual(t *testing.T) {
+func TestGetMatchingIds(t *testing.T) {
+	// These ids used as map keys.
+	// They must be different to avoid overwriting
+	// map entries during construction.
+	ids := []resid.ResId{
+		resid.NewResId(
+			gvk.Gvk{Kind: "vegetable"},
+			"bedlam"),
+		resid.NewResId(
+			gvk.Gvk{Group: "g1", Version: "v1", Kind: "vegetable"},
+			"domino"),
+		resid.NewResIdWithPrefixNamespace(
+			gvk.Gvk{Kind: "vegetable"},
+			"peter", "p", "happy"),
+		resid.NewResIdWithPrefixNamespace(
+			gvk.Gvk{Version: "v1", Kind: "fruit"},
+			"shatterstar", "p", "happy"),
+	}
 
+	m := ResMap{}
+	for _, id := range ids {
+		// Resources values don't matter in this test.
+		m[id] = nil
+	}
+	if len(m) != len(ids) {
+		t.Fatalf("unexpected map len %d presumably due to duplicate keys", len(m))
+	}
+
+	tests := []struct {
+		name    string
+		matcher IdMatcher
+		count   int
+	}{
+		{
+			"match everything",
+			func(resid.ResId) bool { return true },
+			4,
+		},
+		{
+			"match nothing",
+			func(resid.ResId) bool { return false },
+			0,
+		},
+		{
+			"name is peter",
+			func(x resid.ResId) bool { return x.Name() == "peter" },
+			1,
+		},
+		{
+			"happy vegetable",
+			func(x resid.ResId) bool {
+				return x.Namespace() == "happy" &&
+					x.Gvk().Kind == "vegetable"
+			},
+			1,
+		},
+	}
+	for _, tst := range tests {
+		result := m.GetMatchingIds(tst.matcher)
+		if len(result) != tst.count {
+			t.Fatalf("test '%s';  actual: %d, expected: %d",
+				tst.name, len(result), tst.count)
+		}
+	}
+}
+
+func TestErrorIfNotEqual(t *testing.T) {
 	rm1 := ResMap{
 		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{
@@ -410,7 +479,7 @@ func TestMergeWithoutOverride(t *testing.T) {
 				},
 			}),
 	}
-	merged, err := MergeWithoutOverride(input...)
+	merged, err := MergeWithErrorOnIdCollision(input...)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -418,7 +487,7 @@ func TestMergeWithoutOverride(t *testing.T) {
 		t.Fatalf("%#v doesn't equal expected %#v", merged, expected)
 	}
 	input3 := []ResMap{merged, nil}
-	merged1, err := MergeWithoutOverride(input3...)
+	merged1, err := MergeWithErrorOnIdCollision(input3...)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -426,7 +495,7 @@ func TestMergeWithoutOverride(t *testing.T) {
 		t.Fatalf("%#v doesn't equal expected %#v", merged1, expected)
 	}
 	input4 := []ResMap{nil, merged}
-	merged2, err := MergeWithoutOverride(input4...)
+	merged2, err := MergeWithErrorOnIdCollision(input4...)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -435,10 +504,9 @@ func TestMergeWithoutOverride(t *testing.T) {
 	}
 }
 
-func generateMergeFixtures(b ifc.GenerationBehavior) []ResMap {
-
+func generateMergeFixtures(b types.GenerationBehavior) []ResMap {
 	input1 := ResMap{
-		resid.NewResId(cmap, "cmap"): rf.FromMap(
+		resid.NewResId(cmap, "cmap"): rf.FromMapAndOption(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "ConfigMap",
@@ -449,10 +517,12 @@ func generateMergeFixtures(b ifc.GenerationBehavior) []ResMap {
 					"a": "x",
 					"b": "y",
 				},
-			}),
+			}, &types.GeneratorArgs{
+				Behavior: "create",
+			}, nil),
 	}
 	input2 := ResMap{
-		resid.NewResId(cmap, "cmap"): rf.FromMap(
+		resid.NewResId(cmap, "cmap"): rf.FromMapAndOption(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "ConfigMap",
@@ -464,16 +534,16 @@ func generateMergeFixtures(b ifc.GenerationBehavior) []ResMap {
 					"b": "v",
 					"c": "w",
 				},
-			}),
+			}, &types.GeneratorArgs{
+				Behavior: b.String(),
+			}, nil),
 	}
-	input1[resid.NewResId(cmap, "cmap")].SetBehavior(ifc.BehaviorCreate)
-	input2[resid.NewResId(cmap, "cmap")].SetBehavior(b)
 	return []ResMap{input1, input2}
 }
 
 func TestMergeWithOverride(t *testing.T) {
 	expected := ResMap{
-		resid.NewResId(cmap, "cmap"): rf.FromMap(
+		resid.NewResId(cmap, "cmap"): rf.FromMapAndOption(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "ConfigMap",
@@ -487,10 +557,11 @@ func TestMergeWithOverride(t *testing.T) {
 					"b": "v",
 					"c": "w",
 				},
-			}),
+			}, &types.GeneratorArgs{
+				Behavior: "create",
+			}, nil),
 	}
-	expected[resid.NewResId(cmap, "cmap")].SetBehavior(ifc.BehaviorCreate)
-	merged, err := MergeWithOverride(generateMergeFixtures(ifc.BehaviorMerge)...)
+	merged, err := MergeWithOverride(generateMergeFixtures(types.BehaviorMerge)...)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -514,7 +585,7 @@ func TestMergeWithOverride(t *testing.T) {
 		t.Fatalf("%#v doesn't equal expected %#v", merged2, expected)
 	}
 
-	inputs := generateMergeFixtures(ifc.BehaviorReplace)
+	inputs := generateMergeFixtures(types.BehaviorReplace)
 	replaced, err := MergeWithOverride(inputs...)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -524,7 +595,7 @@ func TestMergeWithOverride(t *testing.T) {
 		t.Fatalf("%#v doesn't equal expected %#v", replaced, expectedReplaced)
 	}
 
-	_, err = MergeWithOverride(generateMergeFixtures(ifc.BehaviorUnspecified)...)
+	_, err = MergeWithOverride(generateMergeFixtures(types.BehaviorUnspecified)...)
 	if err == nil {
 		t.Fatal("Merging with GenerationBehavior BehaviorUnspecified should return an error but does not")
 	}

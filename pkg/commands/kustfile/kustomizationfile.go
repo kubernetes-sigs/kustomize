@@ -26,10 +26,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ghodss/yaml"
-	"sigs.k8s.io/kustomize/pkg/constants"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/yaml"
 )
 
 var fieldMarshallingOrder = determineFieldOrder()
@@ -59,15 +59,17 @@ func determineFieldOrder() []string {
 		"Crds",
 		"CommonLabels",
 		"CommonAnnotations",
-		"Patches",
 		"PatchesStrategicMerge",
 		"PatchesJson6902",
 		"ConfigMapGenerator",
 		"SecretGenerator",
 		"GeneratorOptions",
 		"Vars",
-		"ImageTags",
+		"Images",
 		"Configurations",
+		"Generators",
+		"Transformers",
+		"Inventory",
 	}
 
 	// Add deprecated fields here.
@@ -128,12 +130,22 @@ func NewKustomizationFile(fSys fs.FileSystem) (*kustomizationFile, error) { // n
 }
 
 func (mf *kustomizationFile) validate() error {
-	if mf.fSys.Exists(constants.KustomizationFileName) {
-		mf.path = constants.KustomizationFileName
-	} else if mf.fSys.Exists(constants.SecondaryKustomizationFileName) {
-		mf.path = constants.SecondaryKustomizationFileName
-	} else {
-		return fmt.Errorf("Missing kustomization file '%s'.\n", constants.KustomizationFileName)
+	match := 0
+	var path []string
+	for _, kfilename := range pgmconfig.KustomizationFileNames {
+		if mf.fSys.Exists(kfilename) {
+			match += 1
+			path = append(path, kfilename)
+		}
+	}
+
+	switch match {
+	case 0:
+		return fmt.Errorf("Missing kustomization file '%s'.\n", pgmconfig.KustomizationFileNames[0])
+	case 1:
+		mf.path = path[0]
+	default:
+		return fmt.Errorf("Found multiple kustomization file: %v\n", path)
 	}
 
 	if mf.fSys.IsDir(mf.path) {
@@ -147,12 +159,13 @@ func (mf *kustomizationFile) Read() (*types.Kustomization, error) {
 	if err != nil {
 		return nil, err
 	}
+	data = types.FixKustomizationPreUnmarshalling(data)
 	var k types.Kustomization
 	err = yaml.Unmarshal(data, &k)
 	if err != nil {
 		return nil, err
 	}
-	k.DealWithDeprecatedFields()
+	k.FixKustomizationPostUnmarshalling()
 	err = mf.parseCommentedFields(data)
 	if err != nil {
 		return nil, err

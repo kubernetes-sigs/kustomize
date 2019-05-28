@@ -19,7 +19,7 @@ package kunstruct
 
 import (
 	"encoding/json"
-	"fmt"
+	"sigs.k8s.io/kustomize/pkg/types"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -88,5 +88,19 @@ func (fs *UnstructAdapter) GetFieldValue(path string) (string, error) {
 	if found || err != nil {
 		return s, err
 	}
-	return "", fmt.Errorf("no field named '%s'", path)
+	return "", types.NoFieldError{Field: path}
+}
+
+// GetStringSlice returns value at the given fieldpath.
+func (fs *UnstructAdapter) GetStringSlice(path string) ([]string, error) {
+	fields, err := parseFields(path)
+	if err != nil {
+		return []string{}, err
+	}
+	s, found, err := unstructured.NestedStringSlice(
+		fs.UnstructuredContent(), fields...)
+	if found || err != nil {
+		return s, err
+	}
+	return []string{}, types.NoFieldError{Field: path}
 }
