@@ -1,4 +1,0 @@
-description: arrays are not autocreated by transformers
-args: []
-filename: testdata/testcase-transformer-no-create-arrays/in
-expectedStdout: testdata/testcase-transformer-no-create-arrays/expected.yaml

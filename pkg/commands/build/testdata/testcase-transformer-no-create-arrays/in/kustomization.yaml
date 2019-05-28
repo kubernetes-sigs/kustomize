@@ -1,6 +1,0 @@
-commonLabels:
-  notIn: arrays
-
-resources:
-- statefulset.yaml
-- statefulset-with-template.yaml
