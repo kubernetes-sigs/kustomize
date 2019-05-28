@@ -252,6 +252,12 @@ nameReference:
   - path: spec/service/name
     kind: APIService
     group: apiregistration.k8s.io
+  - path: webhooks/clientConfig/service/name
+    kind: ValidatingWebhookConfiguration
+    group: admissionregistration.k8s.io
+  - path: webhooks/clientConfig/service/name
+    kind: MutatingWebhookConfiguration
+    group: admissionregistration.k8s.io
 
 - kind: Role
   group: rbac.authorization.k8s.io
