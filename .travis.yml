@@ -27,7 +27,7 @@ env:
   - GOLANGCI_RELEASE="v1.12"
 
 before_install:
-  - source ./bin/consider-early-travis-exit.sh
+  - source ./travis/consider-early-travis-exit.sh
   - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $GOPATH/bin ${GOLANGCI_RELEASE}
   - go get -u github.com/monopole/mdrip
   # The following would install Helm if needed for some reason.
@@ -39,7 +39,7 @@ before_install:
 install: true
 
 script:
-  - ./bin/pre-commit.sh
+  - ./travis/pre-commit.sh
 
 # TBD. Suppressing for now.
 notifications:
