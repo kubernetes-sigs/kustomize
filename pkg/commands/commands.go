@@ -1,18 +1,5 @@
-/*
-Copyright 2017 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 // Package commands holds the CLI glue mapping textual commands/args to method calls.
 package commands
@@ -23,7 +10,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/k8sdeps/validator"
 	"sigs.k8s.io/kustomize/pkg/commands/build"
@@ -31,10 +17,8 @@ import (
 	"sigs.k8s.io/kustomize/pkg/commands/misc"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
-	"sigs.k8s.io/kustomize/pkg/plugins"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
-	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 // NewDefaultCommand returns the default (aka root) command for kustomize command.
@@ -51,28 +35,14 @@ See https://sigs.k8s.io/kustomize
 `,
 	}
 
-	pluginConfig := plugin.DefaultPluginConfig()
-
-	c.PersistentFlags().BoolVar(
-		&pluginConfig.GoEnabled,
-		plugin.EnableGoPluginsFlagName,
-		false, plugin.EnableGoPluginsFlagHelp)
-	// Not advertising this alpha feature.
-	c.PersistentFlags().MarkHidden(plugin.EnableGoPluginsFlagName)
-
-	// Configuration for ConfigMap and Secret generators.
-	genMetaArgs := types.GeneratorMetaArgs{
-		PluginConfig: pluginConfig,
-	}
-	uf := kunstruct.NewKunstructuredFactoryWithGeneratorArgs(&genMetaArgs)
+	uf := kunstruct.NewKunstructuredFactoryImpl()
 	rf := resmap.NewFactory(resource.NewFactory(uf))
+	v := validator.NewKustValidator()
 	c.AddCommand(
 		build.NewCmdBuild(
-			stdOut, fSys,
-			rf,
-			transformer.NewFactoryImpl(),
-			plugins.NewLoader(pluginConfig, rf)),
-		edit.NewCmdEdit(fSys, validator.NewKustValidator(), uf),
+			stdOut, fSys, v,
+			rf, transformer.NewFactoryImpl()),
+		edit.NewCmdEdit(fSys, v, uf),
 		misc.NewCmdConfig(fSys),
 		misc.NewCmdVersion(stdOut),
 	)

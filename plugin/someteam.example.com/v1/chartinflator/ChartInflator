@@ -24,6 +24,10 @@
 # Example execution:
 # ./plugin/someteam.example.com/v1/ChartInflator configFile.yaml
 
+# TODO: allow specification of a specific chart VERSION
+# so this test doesn't break every time minecraft is upgraded :P
+# See https://github.com/helm/helm/issues/4008
+
 set -e
 
 # Yaml parsing is a ridiculous thing to do in bash,

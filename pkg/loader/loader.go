@@ -31,17 +31,18 @@ import (
 // the remote bases will all be root-only restricted.
 func NewLoader(
 	lr LoadRestrictorFunc,
+	v ifc.Validator,
 	target string, fSys fs.FileSystem) (ifc.Loader, error) {
 	repoSpec, err := git.NewRepoSpecFromUrl(target)
 	if err == nil {
 		// The target qualifies as a remote git target.
 		return newLoaderAtGitClone(
-			repoSpec, fSys, nil, git.ClonerUsingGitExec)
+			repoSpec, v, fSys, nil, git.ClonerUsingGitExec)
 	}
 	root, err := demandDirectoryRoot(fSys, target)
 	if err != nil {
 		return nil, err
 	}
 	return newLoaderAtConfirmedDir(
-		lr, root, fSys, nil, git.ClonerUsingGitExec), nil
+		lr, v, root, fSys, nil, git.ClonerUsingGitExec), nil
 }

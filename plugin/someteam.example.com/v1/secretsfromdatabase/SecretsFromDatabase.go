@@ -34,6 +34,7 @@ var database = map[string]string{
 func (p *plugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, c []byte) error {
 	p.rf = rf
+	p.ldr = ldr
 	return yaml.Unmarshal(c, p)
 }
 

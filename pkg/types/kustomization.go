@@ -222,15 +222,6 @@ type GeneratorArgs struct {
 
 	// DataSources for the generator.
 	DataSources `json:",inline,omitempty" yaml:",inline,omitempty"`
-
-	// KVSources for the generator.
-	KVSources []KVSource `json:",inline,omitempty" yaml:",inline,omitempty"`
-}
-
-// GeneratorMetaArgs contains arguments common to generators
-// that come from somewhere other than a kustomization file.
-type GeneratorMetaArgs struct {
-	PluginConfig *PluginConfig
 }
 
 // PluginConfig holds plugin configuration.
@@ -241,15 +232,20 @@ type PluginConfig struct {
 	// further categorizing plugins.
 	DirectoryPath string
 
-	// GoEnabled is true if goplugins are enabled.
-	// See https://golang.org/pkg/plugin
-	GoEnabled bool
+	// Enabled is true if plugins are enabled.
+	Enabled bool
 }
 
 // ConfigMapArgs contains the metadata of how to generate a configmap.
 type ConfigMapArgs struct {
 	// GeneratorArgs for the configmap.
 	GeneratorArgs `json:",inline,omitempty" yaml:",inline,omitempty"`
+}
+
+// Pair is a key value pair.
+type Pair struct {
+	Key   string
+	Value string
 }
 
 // SecretArgs contains the metadata of how to generate a secret.

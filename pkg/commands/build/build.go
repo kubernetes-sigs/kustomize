@@ -1,18 +1,5 @@
-/*
-Copyright 2017 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+/// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package build
 
@@ -21,6 +8,8 @@ import (
 	"io"
 	"path/filepath"
 	"strings"
+
+	"sigs.k8s.io/kustomize/pkg/ifc"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -67,11 +56,13 @@ url examples:
 
 // NewCmdBuild creates a new build command.
 func NewCmdBuild(
-	out io.Writer, fs fs.FileSystem,
-	rf *resmap.Factory,
-	ptf transformer.Factory,
-	pl *plugins.Loader) *cobra.Command {
+	out io.Writer, fSys fs.FileSystem,
+	v ifc.Validator, rf *resmap.Factory,
+	ptf transformer.Factory) *cobra.Command {
 	var o Options
+
+	pluginConfig := plugins.DefaultPluginConfig()
+	pl := plugins.NewLoader(pluginConfig, rf)
 
 	cmd := &cobra.Command{
 		Use:          "build [path]",
@@ -83,16 +74,19 @@ func NewCmdBuild(
 			if err != nil {
 				return err
 			}
-			return o.RunBuild(out, fs, rf, ptf, pl)
+			return o.RunBuild(out, v, fSys, rf, ptf, pl)
 		},
 	}
+
 	cmd.Flags().StringVarP(
 		&o.outputPath,
 		"output", "o", "",
 		"If specified, write the build output to this path.")
 	loader.AddLoadRestrictionsFlag(cmd.Flags())
+	plugins.AddEnablePluginsFlag(
+		cmd.Flags(), &pluginConfig.Enabled)
 
-	cmd.AddCommand(NewCmdBuildPrune(out, fs, rf, ptf, pl))
+	cmd.AddCommand(NewCmdBuildPrune(out, v, fSys, rf, ptf, pl))
 	return cmd
 }
 
@@ -113,11 +107,11 @@ func (o *Options) Validate(args []string) (err error) {
 
 // RunBuild runs build command.
 func (o *Options) RunBuild(
-	out io.Writer, fSys fs.FileSystem,
+	out io.Writer, v ifc.Validator, fSys fs.FileSystem,
 	rf *resmap.Factory, ptf transformer.Factory,
 	pl *plugins.Loader) error {
 	ldr, err := loader.NewLoader(
-		o.loadRestrictor, o.kustomizationPath, fSys)
+		o.loadRestrictor, v, o.kustomizationPath, fSys)
 	if err != nil {
 		return err
 	}
@@ -134,11 +128,11 @@ func (o *Options) RunBuild(
 }
 
 func (o *Options) RunBuildPrune(
-	out io.Writer, fSys fs.FileSystem,
+	out io.Writer, v ifc.Validator, fSys fs.FileSystem,
 	rf *resmap.Factory, ptf transformer.Factory,
 	pl *plugins.Loader) error {
 	ldr, err := loader.NewLoader(
-		o.loadRestrictor, o.kustomizationPath, fSys)
+		o.loadRestrictor, v, o.kustomizationPath, fSys)
 	if err != nil {
 		return err
 	}
@@ -171,9 +165,8 @@ func (o *Options) emitResources(
 }
 
 func NewCmdBuildPrune(
-	out io.Writer, fs fs.FileSystem,
-	rf *resmap.Factory,
-	ptf transformer.Factory,
+	out io.Writer, v ifc.Validator, fSys fs.FileSystem,
+	rf *resmap.Factory, ptf transformer.Factory,
 	pl *plugins.Loader) *cobra.Command {
 	var o Options
 
@@ -187,7 +180,7 @@ func NewCmdBuildPrune(
 			if err != nil {
 				return err
 			}
-			return o.RunBuildPrune(out, fs, rf, ptf, pl)
+			return o.RunBuildPrune(out, v, fSys, rf, ptf, pl)
 		},
 	}
 	return cmd

@@ -1,18 +1,5 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 // Package loadertest holds a fake for the Loader interface.
 package loadertest
@@ -22,6 +9,8 @@ import (
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/loader"
+	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/pkg/validators"
 )
 
 // FakeLoader encapsulates the delegate Loader and the fake file system.
@@ -46,7 +35,8 @@ func NewFakeLoaderWithRestrictor(
 	// Create fake filesystem and inject it into initial Loader.
 	fSys := fs.MakeFakeFS()
 	fSys.Mkdir(initialDir)
-	ldr, err := loader.NewLoader(lr, initialDir, fSys)
+	ldr, err := loader.NewLoader(
+		lr, validators.MakeFakeValidator(), initialDir, fSys)
 	if err != nil {
 		log.Fatalf("Unable to make loader: %v", err)
 	}
@@ -63,7 +53,7 @@ func (f FakeLoader) AddDirectory(fullDirPath string) error {
 	return f.fs.Mkdir(fullDirPath)
 }
 
-// Root returns root.
+// Root delegates.
 func (f FakeLoader) Root() string {
 	return f.delegate.Root()
 }
@@ -77,12 +67,22 @@ func (f FakeLoader) New(newRoot string) (ifc.Loader, error) {
 	return FakeLoader{fs: f.fs, delegate: l}, nil
 }
 
-// Load performs load from a given location.
+// Load delegates.
 func (f FakeLoader) Load(location string) ([]byte, error) {
 	return f.delegate.Load(location)
 }
 
-// Cleanup does nothing
+// Cleanup delegates.
 func (f FakeLoader) Cleanup() error {
-	return nil
+	return f.delegate.Cleanup()
+}
+
+// Validator delegates.
+func (f FakeLoader) Validator() ifc.Validator {
+	return f.delegate.Validator()
+}
+
+// LoadKvPairs delegates.
+func (f FakeLoader) LoadKvPairs(args types.GeneratorArgs) ([]types.Pair, error) {
+	return f.delegate.LoadKvPairs(args)
 }

@@ -1,18 +1,5 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package patch
 
@@ -31,27 +18,27 @@ import (
 	"sigs.k8s.io/kustomize/pkg/transformers"
 )
 
-// patchTransformer applies patches.
-type patchTransformer struct {
+// transformer applies strategic merge patches.
+type transformer struct {
 	patches []*resource.Resource
 	rf      *resource.Factory
 }
 
-var _ transformers.Transformer = &patchTransformer{}
+var _ transformers.Transformer = &transformer{}
 
-// NewPatchTransformer constructs a patchTransformer.
-func NewPatchTransformer(
+// NewTransformer constructs a strategic merge patch transformer.
+func NewTransformer(
 	slice []*resource.Resource, rf *resource.Factory) (transformers.Transformer, error) {
 	if len(slice) == 0 {
 		return transformers.NewNoOpTransformer(), nil
 	}
-	return &patchTransformer{patches: slice, rf: rf}, nil
+	return &transformer{patches: slice, rf: rf}, nil
 }
 
 // Transform apply the patches on top of the base resources.
-func (pt *patchTransformer) Transform(baseResourceMap resmap.ResMap) error {
+func (tf *transformer) Transform(baseResourceMap resmap.ResMap) error {
 	// Merge and then index the patches by Id.
-	patches, err := pt.mergePatches()
+	patches, err := tf.mergePatches()
 	if err != nil {
 		return err
 	}
@@ -118,9 +105,9 @@ func (pt *patchTransformer) Transform(baseResourceMap resmap.ResMap) error {
 
 // mergePatches merge and index patches by Id.
 // It errors out if there is conflict between patches.
-func (pt *patchTransformer) mergePatches() (resmap.ResMap, error) {
+func (tf *transformer) mergePatches() (resmap.ResMap, error) {
 	rc := resmap.ResMap{}
-	for ix, patch := range pt.patches {
+	for ix, patch := range tf.patches {
 		id := patch.Id()
 		existing, found := rc[id]
 		if !found {
@@ -134,9 +121,9 @@ func (pt *patchTransformer) mergePatches() (resmap.ResMap, error) {
 		}
 		var cd conflictDetector
 		if err != nil {
-			cd = newJMPConflictDetector(pt.rf)
+			cd = newJMPConflictDetector(tf.rf)
 		} else {
-			cd, err = newSMPConflictDetector(versionedObj, pt.rf)
+			cd, err = newSMPConflictDetector(versionedObj, tf.rf)
 			if err != nil {
 				return nil, err
 			}
@@ -147,7 +134,7 @@ func (pt *patchTransformer) mergePatches() (resmap.ResMap, error) {
 			return nil, err
 		}
 		if conflict {
-			conflictingPatch, err := cd.findConflict(ix, pt.patches)
+			conflictingPatch, err := cd.findConflict(ix, tf.patches)
 			if err != nil {
 				return nil, err
 			}

@@ -24,7 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 )
 
@@ -56,7 +55,7 @@ func DefaultSrcRoot() (string, error) {
 	}
 	nope = append(nope, root)
 
-	root = plugin.DefaultPluginConfig().DirectoryPath
+	root = DefaultPluginConfig().DirectoryPath
 	if FileExists(root) {
 		return root, nil
 	}

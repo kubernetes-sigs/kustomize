@@ -1,18 +1,5 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package kunstruct
 
@@ -25,28 +12,19 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/kustomize/k8sdeps/configmapandsecret"
-	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 // KunstructuredFactoryImpl hides construction using apimachinery types.
 type KunstructuredFactoryImpl struct {
-	generatorMetaArgs *types.GeneratorMetaArgs
 }
 
 var _ ifc.KunstructuredFactory = &KunstructuredFactoryImpl{}
 
 // NewKunstructuredFactoryImpl returns a factory.
 func NewKunstructuredFactoryImpl() ifc.KunstructuredFactory {
-	return NewKunstructuredFactoryWithGeneratorArgs(
-		&types.GeneratorMetaArgs{})
-}
-
-// NewKunstructuredFactoryWithGeneratorArgs returns a factory.
-func NewKunstructuredFactoryWithGeneratorArgs(
-	gma *types.GeneratorMetaArgs) ifc.KunstructuredFactory {
-	return &KunstructuredFactoryImpl{gma}
+	return &KunstructuredFactoryImpl{}
 }
 
 // SliceFromBytes returns a slice of Kunstructured.
@@ -91,9 +69,7 @@ func (kf *KunstructuredFactoryImpl) MakeConfigMap(
 	options *types.GeneratorOptions,
 	args *types.ConfigMapArgs) (ifc.Kunstructured, error) {
 	o, err := configmapandsecret.NewFactory(
-		ldr, options,
-		plugin.NewConfiguredRegistry(
-			ldr, kf.generatorMetaArgs.PluginConfig)).MakeConfigMap(args)
+		ldr, options).MakeConfigMap(args)
 	if err != nil {
 		return nil, err
 	}
@@ -106,9 +82,7 @@ func (kf *KunstructuredFactoryImpl) MakeSecret(
 	options *types.GeneratorOptions,
 	args *types.SecretArgs) (ifc.Kunstructured, error) {
 	o, err := configmapandsecret.NewFactory(
-		ldr, options,
-		plugin.NewConfiguredRegistry(
-			ldr, kf.generatorMetaArgs.PluginConfig)).MakeSecret(args)
+		ldr, options).MakeSecret(args)
 	if err != nil {
 		return nil, err
 	}

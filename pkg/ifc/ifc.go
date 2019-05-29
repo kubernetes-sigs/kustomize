@@ -1,18 +1,5 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 // Package ifc holds miscellaneous interfaces used by kustomize.
 package ifc
@@ -27,6 +14,8 @@ type Validator interface {
 	MakeAnnotationValidator() func(map[string]string) error
 	MakeLabelValidator() func(map[string]string) error
 	ValidateNamespace(string) []string
+	ErrIfInvalidKey(string) error
+	IsEnvVarName(k string) error
 }
 
 // Loader interface exposes methods to read bytes.
@@ -39,6 +28,10 @@ type Loader interface {
 	Load(location string) ([]byte, error)
 	// Cleanup cleans the loader
 	Cleanup() error
+	// Validator validates data for use in various k8s fields.
+	Validator() Validator
+	// Loads pairs.
+	LoadKvPairs(args types.GeneratorArgs) ([]types.Pair, error)
 }
 
 // Kunstructured allows manipulation of k8s objects
