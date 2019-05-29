@@ -18,13 +18,20 @@ import (
 
 // KunstructuredFactoryImpl hides construction using apimachinery types.
 type KunstructuredFactoryImpl struct {
+	hasher *kustHash
 }
 
 var _ ifc.KunstructuredFactory = &KunstructuredFactoryImpl{}
 
 // NewKunstructuredFactoryImpl returns a factory.
 func NewKunstructuredFactoryImpl() ifc.KunstructuredFactory {
-	return &KunstructuredFactoryImpl{}
+	return &KunstructuredFactoryImpl{hasher: NewKustHash()}
+}
+
+// Hasher returns a kunstructured hasher
+// input: kunstructured; output: string hash.
+func (kf *KunstructuredFactoryImpl) Hasher() ifc.KunstructuredHasher {
+	return kf.hasher
 }
 
 // SliceFromBytes returns a slice of Kunstructured.

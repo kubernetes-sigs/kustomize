@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package hash
+package kunstruct
 
 import (
 	"encoding/json"
@@ -10,6 +10,7 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/kustomize/pkg/hasher"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
 // kustHash computes a hash of an unstructured object.
@@ -21,9 +22,9 @@ func NewKustHash() *kustHash {
 }
 
 // Hash returns a hash of either a ConfigMap or a Secret
-func (h *kustHash) Hash(m map[string]interface{}) (string, error) {
+func (h *kustHash) Hash(m ifc.Kunstructured) (string, error) {
 	u := unstructured.Unstructured{
-		Object: m,
+		Object: m.Map(),
 	}
 	kind := u.GetKind()
 	switch kind {
@@ -42,7 +43,8 @@ func (h *kustHash) Hash(m map[string]interface{}) (string, error) {
 		return secretHash(sec)
 	default:
 		return "", fmt.Errorf(
-			"type %s is not supported for hashing in %v", kind, m)
+			"type %s is not supported for hashing in %v",
+			kind, m.Map())
 	}
 }
 

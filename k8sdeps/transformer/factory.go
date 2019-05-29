@@ -5,7 +5,6 @@
 package transformer
 
 import (
-	"sigs.k8s.io/kustomize/k8sdeps/transformer/hash"
 	"sigs.k8s.io/kustomize/k8sdeps/transformer/inventory"
 	"sigs.k8s.io/kustomize/k8sdeps/transformer/patch"
 	"sigs.k8s.io/kustomize/pkg/ifc"
@@ -27,11 +26,6 @@ func (p *FactoryImpl) MakePatchTransformer(
 	slice []*resource.Resource,
 	rf *resource.Factory) (transformers.Transformer, error) {
 	return patch.NewTransformer(slice, rf)
-}
-
-// MakeHashTransformer makes a new name hash transformer
-func (p *FactoryImpl) MakeHashTransformer() transformers.Transformer {
-	return hash.NewTransformer()
 }
 
 func (p *FactoryImpl) MakeInventoryTransformer(

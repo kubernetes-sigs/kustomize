@@ -37,6 +37,10 @@ func NewFactory(kf ifc.KunstructuredFactory) *Factory {
 	return &Factory{kf: kf}
 }
 
+func (rf *Factory) Hasher() ifc.KunstructuredHasher {
+	return rf.kf.Hasher()
+}
+
 // FromMap returns a new instance of Resource.
 func (rf *Factory) FromMap(m map[string]interface{}) *Resource {
 	return &Resource{
