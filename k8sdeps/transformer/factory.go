@@ -26,12 +26,12 @@ func NewFactoryImpl() *FactoryImpl {
 func (p *FactoryImpl) MakePatchTransformer(
 	slice []*resource.Resource,
 	rf *resource.Factory) (transformers.Transformer, error) {
-	return patch.NewPatchTransformer(slice, rf)
+	return patch.NewTransformer(slice, rf)
 }
 
 // MakeHashTransformer makes a new name hash transformer
 func (p *FactoryImpl) MakeHashTransformer() transformers.Transformer {
-	return hash.NewNameHashTransformer()
+	return hash.NewTransformer()
 }
 
 func (p *FactoryImpl) MakeInventoryTransformer(
@@ -39,5 +39,5 @@ func (p *FactoryImpl) MakeInventoryTransformer(
 	ldr ifc.Loader,
 	namespace string,
 	gp types.GarbagePolicy) transformers.Transformer {
-	return inventory.NewInventoryTransformer(arg, ldr, namespace, gp)
+	return inventory.NewTransformer(arg, ldr, namespace, gp)
 }

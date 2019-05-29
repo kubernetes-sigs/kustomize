@@ -31,24 +31,26 @@ namePrefix: blah-
 configMapGenerator:
 - name: bob
   literals:
-    - fruit=apple
-    - vegetable=broccoli
-  env: foo.env
+  - fruit=apple
+  - vegetable=broccoli
+  envs:
+  - foo.env
   files:
-    - passphrase=phrase.dat
-    - forces.txt
+  - passphrase=phrase.dat
+  - forces.txt
 - name: json
   literals:
-    - 'v2=[{"path": "var/druid/segment-cache"}]'
+  - 'v2=[{"path": "var/druid/segment-cache"}]'
 secretGenerator:
 - name: bob
   literals:
-    - fruit=apple
-    - vegetable=broccoli
-  env: foo.env
+  - fruit=apple
+  - vegetable=broccoli
+  envs:
+  - foo.env
   files:
-    - passphrase=phrase.dat
-    - forces.txt
+  - passphrase=phrase.dat
+  - forces.txt
 `)
 	th.WriteF("/app/foo.env", `
 MOUNTAIN=everest
@@ -122,15 +124,15 @@ configMapGenerator:
 - name: bob
   behavior: create
   literals:
-    - bean=pinto
-    - star=wolf-rayet
+  - bean=pinto
+  - star=wolf-rayet
   literals:
-    - fruit=apple
-    - vegetable=broccoli
+  - fruit=apple
+  - vegetable=broccoli
   files:
-    - forces.txt
+  - forces.txt
   files:
-    - nobles=nobility.txt
+  - nobles=nobility.txt
 `)
 	th.WriteF("/app/forces.txt", `
 gravitational
@@ -177,7 +179,7 @@ configMapGenerator:
 - name: com1
   behavior: create
   literals:
-    - from=base
+  - from=base
 `)
 	th.WriteK("/app/base2", `
 namePrefix: p2-
@@ -185,7 +187,7 @@ configMapGenerator:
 - name: com2
   behavior: create
   literals:
-    - from=base
+  - from=base
 `)
 	th.WriteK("/app/overlay/o1", `
 bases:
@@ -194,7 +196,7 @@ configMapGenerator:
 - name: com1
   behavior: merge
   literals:
-    - from=overlay
+  - from=overlay
 `)
 	th.WriteK("/app/overlay/o2", `
 bases:
@@ -203,7 +205,7 @@ configMapGenerator:
 - name: com2
   behavior: merge
   literals:
-    - from=overlay
+  - from=overlay
 `)
 	th.WriteK("/app/overlay", `
 bases:
@@ -213,8 +215,8 @@ configMapGenerator:
 - name: com1
   behavior: merge
   literals:
-    - foo=bar
-    - baz=qux
+  - foo=bar
+  - baz=qux
 `)
 	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
