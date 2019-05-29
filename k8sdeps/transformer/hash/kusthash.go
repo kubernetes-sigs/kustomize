@@ -1,18 +1,5 @@
-/*
-Copyright 2017 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package hash
 
@@ -26,16 +13,16 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-// KustHash compute hash for unstructured objects
-type KustHash struct{}
+// kustHash computes a hash of an unstructured object.
+type kustHash struct{}
 
-// NewKustHash returns a KustHash object
-func NewKustHash() *KustHash {
-	return &KustHash{}
+// NewKustHash returns a kustHash object
+func NewKustHash() *kustHash {
+	return &kustHash{}
 }
 
 // Hash returns a hash of either a ConfigMap or a Secret
-func (h *KustHash) Hash(m map[string]interface{}) (string, error) {
+func (h *kustHash) Hash(m map[string]interface{}) (string, error) {
 	u := unstructured.Unstructured{
 		Object: m,
 	}
@@ -46,22 +33,23 @@ func (h *KustHash) Hash(m map[string]interface{}) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		return ConfigMapHash(cm)
+		return configMapHash(cm)
 	case "Secret":
 		sec, err := unstructuredToSecret(u)
 
 		if err != nil {
 			return "", err
 		}
-		return SecretHash(sec)
+		return secretHash(sec)
 	default:
-		return "", fmt.Errorf("type %s is supported for hashing in %v", kind, m)
+		return "", fmt.Errorf(
+			"type %s is not supported for hashing in %v", kind, m)
 	}
 }
 
-// ConfigMapHash returns a hash of the ConfigMap.
+// configMapHash returns a hash of the ConfigMap.
 // The Data, Kind, and Name are taken into account.
-func ConfigMapHash(cm *v1.ConfigMap) (string, error) {
+func configMapHash(cm *v1.ConfigMap) (string, error) {
 	encoded, err := encodeConfigMap(cm)
 	if err != nil {
 		return "", err
@@ -75,7 +63,7 @@ func ConfigMapHash(cm *v1.ConfigMap) (string, error) {
 
 // SecretHash returns a hash of the Secret.
 // The Data, Kind, Name, and Type are taken into account.
-func SecretHash(sec *v1.Secret) (string, error) {
+func secretHash(sec *v1.Secret) (string, error) {
 	encoded, err := encodeSecret(sec)
 	if err != nil {
 		return "", err

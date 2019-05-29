@@ -54,7 +54,7 @@ func TestConfigMapHash(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		h, err := ConfigMapHash(c.cm)
+		h, err := configMapHash(c.cm)
 		if SkipRest(t, c.desc, err, c.err) {
 			continue
 		}
@@ -80,7 +80,7 @@ func TestSecretHash(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		h, err := SecretHash(c.secret)
+		h, err := secretHash(c.secret)
 		if SkipRest(t, c.desc, err, c.err) {
 			continue
 		}
