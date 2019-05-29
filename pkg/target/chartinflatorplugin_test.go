@@ -61,7 +61,7 @@ kind: Secret
 metadata:
   labels:
     app: release-name-minecraft
-    chart: minecraft-1.0.0
+    chart: minecraft-1.0.1
     heritage: Tiller
     release: release-name
   name: LOOOOOOOONG-release-name-minecraft
@@ -72,7 +72,7 @@ kind: Service
 metadata:
   labels:
     app: release-name-minecraft
-    chart: minecraft-1.0.0
+    chart: minecraft-1.0.1
     heritage: Tiller
     release: release-name
   name: LOOOOOOOONG-release-name-minecraft
@@ -93,7 +93,7 @@ metadata:
     volume.alpha.kubernetes.io/storage-class: default
   labels:
     app: release-name-minecraft
-    chart: minecraft-1.0.0
+    chart: minecraft-1.0.1
     heritage: Tiller
     release: release-name
   name: LOOOOOOOONG-release-name-minecraft-datadir
