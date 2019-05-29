@@ -32,8 +32,8 @@ resources:
 configMapGenerator:
 - name: test-config-map
   literals:
-    - foo=bar
-    - baz=qux
+  - foo=bar
+  - baz=qux
 vars:
  - name: CDB_PUBLIC_SVC
    objref:

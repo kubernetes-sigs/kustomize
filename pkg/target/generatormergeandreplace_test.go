@@ -178,14 +178,14 @@ resources:
   - deployment.yaml
   - service.yaml
 configMapGenerator:
-  - name: configmap-in-base
-    literals:
-      - foo=bar
+- name: configmap-in-base
+  literals:
+  - foo=bar
 secretGenerator:
 - name: secret-in-base
   literals:
-    - username=admin
-    - password=somepw
+  - username=admin
+  - password=somepw
 `)
 	th.WriteF("/app/deployment.yaml", `
 apiVersion: apps/v1beta2
@@ -354,18 +354,18 @@ patchesStrategicMerge:
 bases:
   - ../app
 configMapGenerator:
-  - name: configmap-in-overlay
-    literals:
-      - hello=world
-  - name: configmap-in-base
-    behavior: replace
-    literals:
-      - foo=override-bar
+- name: configmap-in-overlay
+  literals:
+  - hello=world
+- name: configmap-in-base
+  behavior: replace
+  literals:
+  - foo=override-bar
 secretGenerator:
 - name: secret-in-base
   behavior: merge
   literals:
-   - proxy=haproxy
+  - proxy=haproxy
 `)
 	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {

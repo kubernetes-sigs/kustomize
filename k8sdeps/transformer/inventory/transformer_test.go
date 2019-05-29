@@ -139,7 +139,7 @@ func TestInventoryTransformer(t *testing.T) {
 	objs := makeResMap()
 
 	// include the original resmap; only return the ConfigMap for pruning
-	tran := NewInventoryTransformer(p, ldr, "default", types.GarbageCollect)
+	tran := NewTransformer(p, ldr, "default", types.GarbageCollect)
 	tran.Transform(objs)
 
 	if !reflect.DeepEqual(objs, expected) {
@@ -151,7 +151,7 @@ func TestInventoryTransformer(t *testing.T) {
 	expected = objs.DeepCopy(rf)
 	expected[resid.NewResIdWithPrefixNamespace(cmap, "pruneCM", "", "default")] = pruneMap
 	// append the ConfigMap for pruning to the original resmap
-	tran = NewInventoryTransformer(p, ldr, "default", types.GarbageIgnore)
+	tran = NewTransformer(p, ldr, "default", types.GarbageIgnore)
 	tran.Transform(objs)
 
 	if !reflect.DeepEqual(objs, expected) {
