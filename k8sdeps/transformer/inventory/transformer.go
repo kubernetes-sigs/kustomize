@@ -5,9 +5,10 @@ package inventory
 
 import (
 	"fmt"
+
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/k8sdeps/transformer/hash"
 	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/hasher"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/inventory"
 	"sigs.k8s.io/kustomize/pkg/resid"
@@ -68,7 +69,7 @@ func (tf *transformer) Transform(m resmap.ResMap) error {
 		invty.Current[item] = refs
 		keys = append(keys, item.String())
 	}
-	h, err := hash.SortArrayAndComputeHash(keys)
+	h, err := hasher.SortArrayAndComputeHash(keys)
 	if err != nil {
 		return err
 	}

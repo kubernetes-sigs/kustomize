@@ -1,18 +1,5 @@
-/*
-Copyright 2017 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package hash
 
@@ -90,28 +77,6 @@ func TestSecretHash(t *testing.T) {
 	}
 }
 
-func TestArrayHash(t *testing.T) {
-	array1 := []string{"a", "b", "c"}
-	array2 := []string{"c", "b", "a"}
-	h1, err := SortArrayAndComputeHash(array1)
-	if err != nil {
-		t.Errorf("unexpected error %v", err)
-	}
-	if h1 == "" {
-		t.Errorf("failed to hash %v", array1)
-	}
-	h2, err := SortArrayAndComputeHash(array2)
-	if err != nil {
-		t.Errorf("unexpected error %v", err)
-	}
-	if h2 == "" {
-		t.Errorf("failed to hash %v", array2)
-	}
-	if h1 != h2 {
-		t.Errorf("hash is not consistent with reordered list: %s %s", h1, h2)
-	}
-}
-
 func TestEncodeConfigMap(t *testing.T) {
 	cases := []struct {
 		desc   string
@@ -175,15 +140,6 @@ func TestEncodeSecret(t *testing.T) {
 		if s != c.expect {
 			t.Errorf("case %q, expect %q but got %q from encode %#v", c.desc, c.expect, s, c.secret)
 		}
-	}
-}
-
-func TestHash(t *testing.T) {
-	// hash the empty string to be sure that sha256 is being used
-	expect := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sum := hash("")
-	if expect != sum {
-		t.Errorf("expected hash %q but got %q", expect, sum)
 	}
 }
 
