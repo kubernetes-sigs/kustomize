@@ -7,6 +7,8 @@
 # The script attempts to use cloudbuild configuration
 # to create a release "locally".
 #
+# See https://cloud.google.com/cloud-build/docs/build-debug-locally
+#
 # At the time of writing,
 #
 #   https://pantheon.corp.google.com/cloud-build/triggers?project=kustomize-199618
@@ -25,23 +27,23 @@
 # analogous via docker tricks.
 
 set -e
-# set -x
 
 if [ -z ${GOPATH+x} ]; then
   echo GOPATH is unset; cannot proceed.
   exit 1
 fi
 
-WORK=$(mktemp -d)
-
 pushd $GOPATH/src/sigs.k8s.io/kustomize
 pwd
 
-echo "Building in $WORK"
+# The first "step" in the following uses a special
+# goreleaser container image that the kubebuilder folks made.
+# TODO: On a rainy day, switch to something more standard.
 
-cat <<EOF >/tmp/localbuild.yaml
+config=$(mktemp)
+cat <<EOF >$config
 steps:
-- name: "gcr.io/kustomize-199618/golang_with_goreleaser:1.10-stretch"
+- name: "gcr.io/kubebuilder/goreleaser_with_go_1.12.5:0.0.1"
   args: ["bash", "build/cloudbuild.sh", "--snapshot"]
   secretEnv: ['GITHUB_TOKEN']
 secrets:
@@ -50,18 +52,15 @@ secrets:
    GITHUB_TOKEN: CiQAyrREbPgXJOeT7M3t+WlxkhXwlMPudixBeiyWTjmLOMLqdK4SUQA0W+xUmDJKAhyfHCcwqSEzUn9OwKC7XAYcmwe0CCKTCbPbDgmioDK24q3LVapndXNvnnHvCjhOJNEr1o+P1DCF+LlzYV2YL8lP09rrKrslPg==
 EOF
 
-#  --substitutions=_GOOS=linux,_GOARCH=amd64
-
-config=build/cloudbuild.yaml
-config=/tmp/localbuild.yaml
-
-# See https://cloud.google.com/cloud-build/docs/build-debug-locally
 cloud-build-local \
   --config=$config \
+  --bind-mount-source \
   --dryrun=false \
-  --write-workspace=$WORK \
   .
 
-tree $WORK
+# Print results of local build, which went to ./dist
+echo "##########################################"
+tree ./dist
+echo "##########################################"
 
 popd

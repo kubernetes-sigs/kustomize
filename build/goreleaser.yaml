@@ -1,5 +1,9 @@
-# This is an example goreleaser.yaml file with some sane defaults.
-# Make sure to check the documentation at http://goreleaser.com
+# Documentation at http://goreleaser.com
+# By default, output sent to ./dist (see docs).
+#
+# 2019-may-29: windows removed because of error
+#              pkg/plugins/execplugin.go:111:2: undefined: syscall.Mkfifo
+#
 project_name: kustomize
 builds:
 - main: ./kustomize.go
@@ -8,11 +12,11 @@ builds:
   goos:
   - darwin
   - linux
-  - windows
   goarch:
    - amd64
   env:
   - CGO_ENABLED=0
+  - GO111MODULE=on
 checksum:
   name_template: 'checksums.txt'
 archive:

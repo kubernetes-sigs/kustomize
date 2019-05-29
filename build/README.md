@@ -10,12 +10,10 @@ Scripts and configuration files for publishing a
 Install [`cloud-build-local`], then run
 
 ```
-cloud-build-local \
-   --config=build/cloudbuild_local.yaml \
-   --dryrun=false --write-workspace=/tmp/w .
+./build/localbuild.sh
 ```
 
-to build artifacts under `/tmp/w/dist`.
+to build artifacts under `./dist`.
 
 ### Publish a Release
 
