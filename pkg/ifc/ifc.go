@@ -58,6 +58,7 @@ type Kunstructured interface {
 type KunstructuredFactory interface {
 	SliceFromBytes([]byte) ([]Kunstructured, error)
 	FromMap(m map[string]interface{}) Kunstructured
+	Hasher() KunstructuredHasher
 	MakeConfigMap(
 		ldr Loader,
 		options *types.GeneratorOptions,
@@ -66,6 +67,12 @@ type KunstructuredFactory interface {
 		ldr Loader,
 		options *types.GeneratorOptions,
 		args *types.SecretArgs) (Kunstructured, error)
+}
+
+// KunstructuredHasher returns a hash of the argument
+// or an error.
+type KunstructuredHasher interface {
+	Hash(Kunstructured) (string, error)
 }
 
 // See core.v1.SecretTypeOpaque

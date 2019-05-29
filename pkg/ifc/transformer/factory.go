@@ -14,7 +14,6 @@ import (
 // Factory makes transformers
 type Factory interface {
 	MakePatchTransformer(slice []*resource.Resource, rf *resource.Factory) (transformers.Transformer, error)
-	MakeHashTransformer() transformers.Transformer
 	MakeInventoryTransformer(
 		p *types.Inventory,
 		ldr ifc.Loader,
