@@ -14,10 +14,10 @@
 
 步骤：
 
- 1. 拉取已经存在的的 [base] 配置。
- 1. 进行定制。
- 1. 基于定制后的 base 新建2个不同的 [overlays] (_staging_ 和 _production_)。
- 1. 运行 kustomize 和 kubectl 来部署 staging 和 production 。
+ 1. 下载 [base] 配置。
+ 2. 进行定制。
+ 3. 基于定制后的 base 新建2个不同的 [overlays] (_staging_ 和 _production_)。
+ 4. 运行 kustomize 和 kubectl 来部署 staging 和 production 。
 
 首先创建一个工作空间：
 
@@ -33,8 +33,6 @@ DEMO_HOME=$(mktemp -d)
 > ```
 
 ## 创建 base
-
-让我们开始运行 [hello] 服务。
 
 如果要使用 [overlays] 创建 [variants] ，必须先创建一个共同的 [base] 。
 
@@ -87,7 +85,7 @@ tree $DEMO_HOME
 more $BASE/kustomization.yaml
 ```
 
-（可选）在 base 上运行 `kustomize` 将自定义 resources 输出到 `stdout` ：
+（可选）在 base 目录上运行 `kustomize` 将定制过的 resources 打印到标准输出：
 
 <!-- @buildBase @test -->
 ```
@@ -116,7 +114,7 @@ kustomize build $BASE | grep -C 3 app:
 
  * _Staging_ 包含生产环境中无法应用的带有风险的功能。
  * _Production_ 包含更多的副本数。
- * 来自这些集群 [variants] 的问候将与来自其他集群的不同。
+ * 来自这些集群 [variants] 的问候消息将与来自其他集群的不同。
 
 <!-- @overlayDirectories @test -->
 ```
@@ -127,7 +125,7 @@ mkdir -p $OVERLAYS/production
 
 #### Staging Kustomization
 
-在 `staging` 目录中创建一个 kustomization 文件，用来定义一个新的 name 前缀和一些不同的 labels 。
+在 `staging` 目录中创建一个 kustomization 文件，用来定义一个新的名称前缀和一些不同的 labels 。
 
 <!-- @makeStagingKustomization @test -->
 ```
@@ -147,7 +145,7 @@ EOF
 
 #### Staging Patch
 
-新增一个自定义的 configMap 将问候从 _Good Morning!_ 改为 _Have a pineapple!_ 。
+新增一个自定义的 configMap 将问候消息从 _Good Morning!_ 改为 _Have a pineapple!_ 。
 
 同时，将 _risky_ 标记设置为 true 。
 
@@ -166,7 +164,7 @@ EOF
 
 #### Production Kustomization
 
-在 `production` 目录中创建一个 kustomization 文件，用来定义一个新的 name 前缀和 labels 。
+在 `production` 目录中创建一个 kustomization 文件，用来定义一个新的名称前缀和 labels 。
 
 <!-- @makeProductionKustomization @test -->
 ```
