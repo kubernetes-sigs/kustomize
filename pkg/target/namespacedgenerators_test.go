@@ -42,10 +42,10 @@ secretGenerator:
 - name: the-non-default-namespace-secret
   namespace: non-default
   literals:
-    - password.txt=verySecret
+  - password.txt=verySecret
 - name: the-secret
   literals:
-    - password.txt=anotherSecret
+  - password.txt=anotherSecret
 `)
 	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
