@@ -21,6 +21,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/transformers"
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
 	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/plugin/builtin"
 	"sigs.k8s.io/yaml"
 )
 
@@ -126,10 +127,18 @@ func (kt *KustTarget) makeCustomizedResMap(
 	if err != nil {
 		return nil, err
 	}
-	err = ra.Transform(kt.tFactory.MakeHashTransformer())
+	// This must be done last, and not as part of
+	// the recursion implicit in AccumulateTarget.
+	p := builtin.NewHashTransformerPlugin()
+	err = kt.configureBuiltinPlugin(p, nil, "hash")
 	if err != nil {
 		return nil, err
 	}
+	err = ra.Transform(p)
+	if err != nil {
+		return nil, err
+	}
+
 	// Given that names have changed (prefixs/suffixes added),
 	// fix all the back references to those names.
 	err = ra.FixBackReferences()
