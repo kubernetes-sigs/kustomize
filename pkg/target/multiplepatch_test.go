@@ -38,9 +38,9 @@ resources:
   - deployment.yaml
   - service.yaml
 configMapGenerator:
-  - name: configmap-in-base
-    literals:
-      - foo=bar
+- name: configmap-in-base
+  literals:
+  - foo=bar
 `)
 	th.WriteF("/app/base/deployment.yaml", `
 apiVersion: apps/v1beta2
@@ -93,9 +93,9 @@ patchesStrategicMerge:
 bases:
   - ../../base
 configMapGenerator:
-  - name: configmap-in-overlay
-    literals:
-      - hello=world
+- name: configmap-in-overlay
+  literals:
+  - hello=world
 `)
 }
 
