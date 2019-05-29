@@ -4,13 +4,12 @@
 package hash
 
 import (
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"sort"
 
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"sigs.k8s.io/kustomize/pkg/hasher"
 )
 
 // kustHash computes a hash of an unstructured object.
@@ -54,7 +53,7 @@ func configMapHash(cm *v1.ConfigMap) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	h, err := encodeHash(hash(encoded))
+	h, err := hasher.Encode(hasher.Hash(encoded))
 	if err != nil {
 		return "", err
 	}
@@ -68,22 +67,7 @@ func secretHash(sec *v1.Secret) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	h, err := encodeHash(hash(encoded))
-	if err != nil {
-		return "", err
-	}
-	return h, nil
-}
-
-// SortArrayAndComputeHash sorts a string array and
-// returns a hash for it
-func SortArrayAndComputeHash(s []string) (string, error) {
-	sort.Strings(s)
-	data, err := json.Marshal(s)
-	if err != nil {
-		return "", err
-	}
-	h, err := encodeHash(hash(string(data)))
+	h, err := hasher.Encode(hasher.Hash(encoded))
 	if err != nil {
 		return "", err
 	}
@@ -114,41 +98,6 @@ func encodeSecret(sec *v1.Secret) (string, error) {
 		return "", err
 	}
 	return string(data), nil
-}
-
-// encodeHash extracts the first 40 bits of the hash from the hex string
-// (1 hex char represents 4 bits), and then maps vowels and vowel-like hex
-// characters to consonants to prevent bad words from being formed (the theory
-// is that no vowels makes it really hard to make bad words). Since the string
-// is hex, the only vowels it can contain are 'a' and 'e'.
-// We picked some arbitrary consonants to map to from the same character set as GenerateName.
-// See: https://github.com/kubernetes/apimachinery/blob/dc1f89aff9a7509782bde3b68824c8043a3e58cc/pkg/util/rand/rand.go#L75
-// If the hex string contains fewer than ten characters, returns an error.
-func encodeHash(hex string) (string, error) {
-	if len(hex) < 10 {
-		return "", fmt.Errorf("the hex string must contain at least 10 characters")
-	}
-	enc := []rune(hex[:10])
-	for i := range enc {
-		switch enc[i] {
-		case '0':
-			enc[i] = 'g'
-		case '1':
-			enc[i] = 'h'
-		case '3':
-			enc[i] = 'k'
-		case 'a':
-			enc[i] = 'm'
-		case 'e':
-			enc[i] = 't'
-		}
-	}
-	return string(enc), nil
-}
-
-// hash hashes `data` with sha256 and returns the hex string
-func hash(data string) string {
-	return fmt.Sprintf("%x", sha256.Sum256([]byte(data)))
 }
 
 func unstructuredToConfigmap(u unstructured.Unstructured) (*v1.ConfigMap, error) {
