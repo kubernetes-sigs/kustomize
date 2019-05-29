@@ -234,10 +234,14 @@ func (kt *KustTarget) configureBuiltinImageTagTransformer(
 }
 
 func (kt *KustTarget) configureBuiltinPlugin(
-	p plugins.Configurable, c interface{}, id string) error {
-	y, err := yaml.Marshal(c)
-	if err != nil {
-		return errors.Wrapf(err, "builtin %s marshal", id)
+	p plugins.Configurable, c interface{}, id string) (err error) {
+	var y []byte
+	if c != nil {
+		y, err = yaml.Marshal(c)
+		if err != nil {
+			return errors.Wrapf(
+				err, "builtin %s marshal", id)
+		}
 	}
 	err = p.Config(kt.ldr, kt.rFactory, y)
 	if err != nil {
