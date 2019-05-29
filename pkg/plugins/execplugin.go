@@ -148,7 +148,7 @@ func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
 	// invoke the plugin with resources as the input
 	output, err := p.invokePlugin(resources)
 	if err != nil {
-		return err
+		return fmt.Errorf("%v %s", err, string(output))
 	}
 
 	// update the original ResMap based on the output
