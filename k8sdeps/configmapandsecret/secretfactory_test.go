@@ -1,18 +1,5 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package configmapandsecret
 
@@ -22,10 +9,10 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/pkg/validators"
 )
 
 func makeEnvSecret(name string) *corev1.Secret {
@@ -139,10 +126,9 @@ func TestConstructSecret(t *testing.T) {
 	fSys := fs.MakeFakeFS()
 	fSys.WriteFile("/secret/app.env", []byte("DB_USERNAME=admin\nDB_PASSWORD=somepw\n"))
 	fSys.WriteFile("/secret/app-init.ini", []byte("FOO=bar\nBAR=baz\n"))
-	ldr := loader.NewFileLoaderAtRoot(fSys)
-	reg := plugin.NewRegistry(ldr)
+	ldr := loader.NewFileLoaderAtRoot(validators.MakeFakeValidator(), fSys)
 	for _, tc := range testCases {
-		f := NewFactory(ldr, tc.options, reg)
+		f := NewFactory(ldr, tc.options)
 		cm, err := f.MakeSecret(&tc.input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)

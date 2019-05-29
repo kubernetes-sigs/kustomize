@@ -1,18 +1,5 @@
-/*
-Copyright 2019 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package inventory
 
@@ -21,11 +8,14 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/pkg/validators"
 )
 
 var secret = gvk.Gvk{Version: "v1", Kind: "Secret"}
@@ -106,6 +96,7 @@ func makeResMap() resmap.ResMap {
 func TestInventoryTransformer(t *testing.T) {
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
+	ldr := loader.NewFileLoaderAtCwd(validators.MakeFakeValidator(), fs.MakeFakeFS())
 
 	// hash is derived based on all keys in the Inventory
 	// It is added to annotations as
@@ -148,7 +139,7 @@ func TestInventoryTransformer(t *testing.T) {
 	objs := makeResMap()
 
 	// include the original resmap; only return the ConfigMap for pruning
-	tran := NewInventoryTransformer(p, "default", types.GarbageCollect)
+	tran := NewTransformer(p, ldr, "default", types.GarbageCollect)
 	tran.Transform(objs)
 
 	if !reflect.DeepEqual(objs, expected) {
@@ -160,7 +151,7 @@ func TestInventoryTransformer(t *testing.T) {
 	expected = objs.DeepCopy(rf)
 	expected[resid.NewResIdWithPrefixNamespace(cmap, "pruneCM", "", "default")] = pruneMap
 	// append the ConfigMap for pruning to the original resmap
-	tran = NewInventoryTransformer(p, "default", types.GarbageIgnore)
+	tran = NewTransformer(p, ldr, "default", types.GarbageIgnore)
 	tran.Transform(objs)
 
 	if !reflect.DeepEqual(objs, expected) {

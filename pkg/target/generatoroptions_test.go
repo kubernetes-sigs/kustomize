@@ -17,13 +17,49 @@ limitations under the License.
 package target_test
 
 import (
-	"path/filepath"
-	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/k8sdeps/kv/plugin"
 	"sigs.k8s.io/kustomize/pkg/kusttest"
 )
+
+func TestSecretGenerator(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th.WriteK("/app", `
+secretGenerator:
+- name: bob
+  literals:
+  - FRUIT=apple
+  - VEGETABLE=carrot
+  files:
+  - foo.env
+  - passphrase=phrase.dat
+  envs:
+  - foo.env
+`)
+	th.WriteF("/app/foo.env", `
+MOUNTAIN=everest
+OCEAN=pacific
+`)
+	th.WriteF("/app/phrase.dat", "dat phrase")
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  FRUIT: YXBwbGU=
+  MOUNTAIN: ZXZlcmVzdA==
+  OCEAN: cGFjaWZpYw==
+  VEGETABLE: Y2Fycm90
+  foo.env: Ck1PVU5UQUlOPWV2ZXJlc3QKT0NFQU49cGFjaWZpYwo=
+  passphrase: ZGF0IHBocmFzZQ==
+kind: Secret
+metadata:
+  name: bob-kf5c9fccbt
+type: Opaque
+`)
+}
 
 func TestGeneratorOptionsWithBases(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
@@ -76,48 +112,4 @@ metadata:
     foo: bar
   name: shouldNotHaveHash
 `)
-}
-
-func TestGoPluginNotEnabled(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app")
-	th.WriteK("/app", `
-secretGenerator:
-- name: attemptGoPlugin
-  kvSources:
-  - name: foo
-    pluginType: go
-    args:
-    - someArg
-    - someOtherArg
-`)
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err == nil {
-		t.Fatalf("expected error")
-	}
-	if !strings.Contains(err.Error(), "enable go plugins by ") {
-		t.Fatalf("unexpected err: %v", err)
-	}
-}
-
-func TestGoPluginDoesNotExist(t *testing.T) {
-	th := kusttest_test.NewKustTestHarnessWithPluginConfig(
-		t, "/app", plugin.ActivePluginConfig())
-	th.WriteK("/app", `
-secretGenerator:
-- name: attemptGoPlugin
-  kvSources:
-  - name: foo
-    pluginType: go
-    args:
-    - someArg
-    - someOtherArg
-`)
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err == nil {
-		t.Fatalf("expected error")
-	}
-	if !strings.Contains(err.Error(),
-		filepath.Join("kvSources", "foo.so")) {
-		t.Fatalf("unexpected err: %v", err)
-	}
 }

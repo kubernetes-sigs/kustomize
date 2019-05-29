@@ -5,9 +5,11 @@ package inventory
 
 import (
 	"fmt"
+
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/k8sdeps/transformer/hash"
 	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/hasher"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/inventory"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
@@ -16,25 +18,28 @@ import (
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
-// inventoryTransformer compute the inventory object used in prune
-type inventoryTransformer struct {
+// transformer compute the inventory object used in prune
+type transformer struct {
 	garbagePolicy types.GarbagePolicy
+	ldr           ifc.Loader
 	cmName        string
 	cmNamespace   string
 }
 
-var _ transformers.Transformer = &inventoryTransformer{}
+var _ transformers.Transformer = &transformer{}
 
-// NewInventoryTransformer makes a inventoryTransformer.
-func NewInventoryTransformer(
+// NewTransformer makes a new inventory transformer.
+func NewTransformer(
 	p *types.Inventory,
+	ldr ifc.Loader,
 	namespace string,
 	gp types.GarbagePolicy) transformers.Transformer {
 	if p == nil || p.Type != "ConfigMap" || p.ConfigMap.Namespace != namespace {
 		return transformers.NewNoOpTransformer()
 	}
-	return &inventoryTransformer{
+	return &transformer{
 		garbagePolicy: gp,
+		ldr:           ldr,
 		cmName:        p.ConfigMap.Name,
 		cmNamespace:   p.ConfigMap.Namespace,
 	}
@@ -48,7 +53,7 @@ func NewInventoryTransformer(
 // The inventory data is written to annotation since
 //   1. The key in data field is constrained and couldn't include arbitrary letters
 //   2. The annotation can be put into any kind of objects
-func (o *inventoryTransformer) Transform(m resmap.ResMap) error {
+func (tf *transformer) Transform(m resmap.ResMap) error {
 	invty := inventory.NewInventory()
 	var keys []string
 	for _, r := range m {
@@ -64,14 +69,14 @@ func (o *inventoryTransformer) Transform(m resmap.ResMap) error {
 		invty.Current[item] = refs
 		keys = append(keys, item.String())
 	}
-	h, err := hash.SortArrayAndComputeHash(keys)
+	h, err := hasher.SortArrayAndComputeHash(keys)
 	if err != nil {
 		return err
 	}
 
 	args := &types.ConfigMapArgs{}
-	args.Name = o.cmName
-	args.Namespace = o.cmNamespace
+	args.Name = tf.cmName
+	args.Namespace = tf.cmNamespace
 	opts := &types.GeneratorOptions{
 		Annotations: make(map[string]string),
 	}
@@ -82,12 +87,12 @@ func (o *inventoryTransformer) Transform(m resmap.ResMap) error {
 	}
 
 	kf := kunstruct.NewKunstructuredFactoryImpl()
-	k, err := kf.MakeConfigMap(nil, opts, args)
+	k, err := kf.MakeConfigMap(tf.ldr, opts, args)
 	if err != nil {
 		return err
 	}
 
-	if o.garbagePolicy == types.GarbageCollect {
+	if tf.garbagePolicy == types.GarbageCollect {
 		for k := range m {
 			delete(m, k)
 		}
@@ -98,8 +103,8 @@ func (o *inventoryTransformer) Transform(m resmap.ResMap) error {
 			Version: "v1",
 			Kind:    "ConfigMap",
 		},
-		o.cmName,
-		"", o.cmNamespace)
+		tf.cmName,
+		"", tf.cmNamespace)
 	if _, ok := m[id]; ok {
 		return fmt.Errorf("id %v is already used, please use a different name in the prune field", id)
 	}

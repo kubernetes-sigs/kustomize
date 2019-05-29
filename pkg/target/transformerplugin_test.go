@@ -4,6 +4,7 @@
 package target_test
 
 import (
+	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/pkg/kusttest"
@@ -89,6 +90,29 @@ spec:
       - image: whatever
         name: whatever
 `)
+}
+
+func TestPluginsNotEnabled(t *testing.T) {
+	tc := plugin.NewEnvForTest(t).Set()
+	defer tc.Reset()
+
+	tc.BuildGoPlugin(
+		"someteam.example.com", "v1", "StringPrefixer")
+
+	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th.WriteK("/app", `
+transformers:
+- stringPrefixer.yaml
+`)
+	writeStringPrefixer(th, "/app/stringPrefixer.yaml")
+
+	_, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err == nil {
+		t.Fatalf("expected error")
+	}
+	if !strings.Contains(err.Error(), "unable to load plugin StringPrefixer") {
+		t.Fatalf("unexpected err: %v", err)
+	}
 }
 
 func TestSedTransformer(t *testing.T) {
