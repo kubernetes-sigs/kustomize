@@ -1,7 +1,7 @@
 steps:
 - name: "gcr.io/cloud-builders/git"
   args: [fetch, --tags, --depth=100]
-- name: "gcr.io/kustomize-199618/golang_with_goreleaser:1.10-stretch"
+- name: "gcr.io/kubebuilder/goreleaser_with_go_1.12.5:0.0.1"
   args: ["bash", "build/cloudbuild.sh"]
   secretEnv: ['GITHUB_TOKEN']
 secrets:
