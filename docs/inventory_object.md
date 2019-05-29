@@ -10,10 +10,12 @@ inventory:
 ```
 
 ### Motivation
-If present, `Kustomize build` will make an _inventory_ object,
-which  could be a ConfigMap, or an App(to be added),
- which can be consumed by a client such as those under development in
+
+If present, `kustomize build` will make an _inventory_ object,
+which  could be a ConfigMap, or an App (to be added),
+which can be consumed by a client such as those under development in
 [cli-experimental](https://github.com/kubernetes-sigs/cli-experimental).
+
 The client can recognize this object by name and use it to do a better job
 with actions like `apply`, `prune` and `delete`.
 
