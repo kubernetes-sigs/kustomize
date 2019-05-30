@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/pkg/image"
 	"sigs.k8s.io/kustomize/pkg/plugins"
+	"sigs.k8s.io/kustomize/pkg/replica"
 	"sigs.k8s.io/kustomize/pkg/transformers"
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
 	"sigs.k8s.io/kustomize/pkg/types"
@@ -69,6 +70,7 @@ func (kt *KustTarget) configureBuiltinTransformers(
 		kt.configureBuiltinLabelTransformer,
 		kt.configureBuiltinAnnotationsTransformer,
 		kt.configureBuiltinPatchJson6902Transformer,
+		kt.configureBuiltinReplicaCountTransformer,
 	}
 	var result []transformers.Transformer
 	for _, f := range configurators {
@@ -225,6 +227,26 @@ func (kt *KustTarget) configureBuiltinImageTagTransformer(
 		c.FieldSpecs = tConfig.Images
 		p := builtin.NewImageTagTransformerPlugin()
 		err = kt.configureBuiltinPlugin(p, c, "imageTag")
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, p)
+	}
+	return
+}
+
+func (kt *KustTarget) configureBuiltinReplicaCountTransformer(
+	tConfig *config.TransformerConfig) (
+	result []transformers.Transformer, err error) {
+	var c struct {
+		Replica    replica.Replica
+		FieldSpecs []config.FieldSpec
+	}
+	for _, args := range kt.kustomization.Replicas {
+		c.Replica = args
+		c.FieldSpecs = tConfig.Replicas
+		p := builtin.NewReplicaCountTransformerPlugin()
+		err = kt.configureBuiltinPlugin(p, c, "replica")
 		if err != nil {
 			return nil, err
 		}
