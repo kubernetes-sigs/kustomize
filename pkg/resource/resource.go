@@ -31,8 +31,9 @@ import (
 // paired with a GenerationBehavior.
 type Resource struct {
 	ifc.Kunstructured
-	options *types.GenArgs
-	refBy   []resid.ResId
+	options     *types.GenArgs
+	refBy       []resid.ResId
+	refVarNames []string
 }
 
 func (r *Resource) KunstructEqual(o *Resource) bool {
@@ -58,6 +59,11 @@ func (r *Resource) DeepCopy() *Resource {
 		refby := make([]resid.ResId, len(r.refBy))
 		copy(refby, r.refBy)
 		rc.refBy = refby
+	}
+	if len(r.refVarNames) > 0 {
+		refVarNames := make([]string, len(r.refVarNames))
+		copy(refVarNames, r.refVarNames)
+		rc.refVarNames = refVarNames
 	}
 	return rc
 }
@@ -96,6 +102,16 @@ func (r *Resource) GetRefBy() []resid.ResId {
 // AppendRefBy appends a ResId into the refBy list
 func (r *Resource) AppendRefBy(id resid.ResId) {
 	r.refBy = append(r.refBy, id)
+}
+
+// GetRefVarNames returns vars that refer to current resource
+func (r *Resource) GetRefVarNames() []string {
+	return r.refVarNames
+}
+
+// AppendRefVarName appends a name of a var into the refVar list
+func (r *Resource) AppendRefVarName(variable types.Var) {
+	r.refVarNames = append(r.refVarNames, variable.Name)
 }
 
 // Merge performs merge with other resource.
