@@ -22,6 +22,7 @@ import (
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/image"
+	"sigs.k8s.io/kustomize/pkg/replica"
 )
 
 const (
@@ -78,6 +79,10 @@ type Kustomization struct {
 	// for changing image names, tags or digests. This can also be achieved with a
 	// patch, but this operator is simpler to specify.
 	Images []image.Image `json:"images,omitempty" yaml:"images,omitempty"`
+
+	// Replicas is a list of {resourcename, count} that allows for simpler replica
+	// specification. This can also be done with a patch.
+	Replicas []replica.Replica `json:"replicas,omitempty" yaml:"replicas,omitempty"`
 
 	// Vars allow things modified by kustomize to be injected into a
 	// container specification. A var is a name (e.g. FOO) associated
