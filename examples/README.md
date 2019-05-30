@@ -4,7 +4,7 @@ English | [简体中文](zh/README.md)
 
 These examples assume that `kustomize` is on your `$PATH`.
 
-They are covered by [pre-commit](../bin/pre-commit.sh)
+They are covered by [pre-commit](../travis/pre-commit.sh)
 tests, and should work with HEAD
 
 <!-- @installkustomize @test -->
