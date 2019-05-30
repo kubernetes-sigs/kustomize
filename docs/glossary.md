@@ -19,6 +19,7 @@
 [kubernetes]: #kubernetes
 [kustomize]: #kustomize
 [kustomization]: #kustomization
+[kustomizations]: #kustomization
 [off-the-shelf]: #off-the-shelf-configuration
 [overlay]: #overlay
 [overlays]: #overlay
@@ -75,7 +76,8 @@ management in k8s.
 
 ## base
 
-A _base_ is a [kustomization] that some [overlay] modifies.
+A _base_ is a [kustomization] referred to
+by some other [kustomization].
 
 Any kustomization, including an [overlay], can be a base to
 another kustomization.
@@ -134,6 +136,12 @@ In brief, kustomize should
  * Eschew crossing the line into templating, domain
    specific languages, etc., frustrating the other
    goals.
+
+## generator
+
+A generator makes resources that can be used as is,
+or fed into a [transformer].
+
 
 ## gitops
 
@@ -301,14 +309,13 @@ own [overlays] to do further customization.
 
 ## overlay
 
-An _overlay_ is a kustomization that modifies (and thus
-depends on) another kustomization.
+An _overlay_ is a kustomization that depends on
+another kustomization.
 
-The [kustomization] in an overlay refers to (via file
-path, URI or other method) some other kustomization,
-known as its [base].
+The [kustomizations] an overlay refers to (via file
+path, URI or other method) are called [bases].
 
-An overlay is unusable without its base.
+An overlay is unusable without its bases.
 
 An overlay may act as a base to another overlay.
 
@@ -443,6 +450,12 @@ needed to create customized resources to send to the
 [apply] operation.
 
 A target can be a [base] or an [overlay].
+
+## transformer
+
+A transformer can modify a resource, or merely
+visit it and collect information about it in the
+course of a `kustomize build`.
 
 ## variant
 

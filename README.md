@@ -156,8 +156,8 @@ is governed by the [Kubernetes Code of Conduct].
 [community page]: http://kubernetes.io/community/
 [declarative configuration]: docs/glossary.md#declarative-application-management
 [eschewed feature list]: docs/eschewedFeatures.md
-[imageBase]: docs/base.jpg
-[imageOverlay]: docs/overlay.jpg
+[imageBase]: docs/images/base.jpg
+[imageOverlay]: docs/images/overlay.jpg
 [kind/feature]: https://github.com/kubernetes-sigs/kustomize/labels/kind%2Ffeature
 [kubectl]: https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement
 [kubernetes style]: docs/glossary.md#kubernetes-style-object
