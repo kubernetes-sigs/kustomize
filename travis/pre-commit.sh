@@ -40,6 +40,10 @@ function testNoTravisGoTest {
   go test -v sigs.k8s.io/kustomize/plugin/someteam.example.com/v1/chartinflator/... \
     -run TestChartInflator -tags=notravis
   mdrip --mode test --label helmtest README.md ./examples/chart.md
+  go test -v sigs.k8s.io/kustomize/plugin/someteam.example.com/v1/validator/... \
+       -run TestValidatorHappy -tags=notravis
+  go test -v sigs.k8s.io/kustomize/plugin/someteam.example.com/v1/validator/... \
+       -run TestValidatorUnHappy -tags=notravis
 }
 
 function testExamples {
