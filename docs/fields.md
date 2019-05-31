@@ -31,12 +31,14 @@ What transformations (customizations) should be applied?
 
 | Field  | Type  | Explanation |
 |---|---|---|
+| [commonLabels](#commonlabels) | string | Adds labels and some corresponding label selectors to all resources. |
+| [commonAnnotations](#commonannotations) | string | Adds annotions (non-identifying metadata) to add all resources. |
+| [images](#images) | list | Images modify the name, tags and/or digest for images without creating patches. |
+| [inventory](#inventory) | struct | Specify an object who's annotations will contain a build result summary. |
 | [namespace](#namespace)   | string | Adds namespace to all resources |
 | [namePrefix](#nameprefix) | string | Prepends value to the names of all resources |
 | [nameSuffix](#namesuffix) | string | The value is appended to the names of all resources. |
-| [commonLabels](#commonlabels) | string | Adds annotions (non-identifying metadata) to add all resources. Like labels, these are key value pairs. |
-| [images](#images) | list | Images modify the name, tags and/or digest for images without creating patches. |
-| [replicas](#replicas) | list | Replicas modify the number of replicas for a resource without creating patches. |
+| [replicas](#replicas) | list | Replicas modifies the number of replicas of a resource. |
 |[patchesStrategicMerge](#patchesstrategicmerge)| list |Each entry in this list should resolve to a partial or complete resource definition file.|
 |[patchesJson6902](#patchesjson6902)| list  |Each entry in this list should resolve to a kubernetes object and a JSON patch that will be applied to the object.|
 |[transformers](#transformers)|list|[plugin](plugins.md) configuration files|
@@ -237,24 +239,9 @@ images:
   digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3
 ```
 
-### replicas
+### inventory
 
-Replicas modify the number of replicas for a resource without creating patches.
-E.g. Given this kubernetes Deployment fragment:
-```
-metadata:
-  name: deployment-name
-spec:
-  replicas: 3
-```
-
-one can change the number of replicas to 5 with the following *kustomization*:
-```
-replicas:
-- name: deployment-name
-  count: 5
-```
-note that replicas is a list, so many replicas can be modified at the same time.
+See [inventory object](inventory_object.md).
 
 ### kind
 
@@ -360,6 +347,32 @@ patchesJson6902:
     name: my-service
   path: add_service_annotation.yaml
 ```
+
+### replicas
+
+Replicas modified the number of replicas for a resource.
+
+E.g. Given this kubernetes Deployment fragment:
+
+```
+metadata:
+  name: deployment-name
+spec:
+  replicas: 3
+```
+
+one can change the number of replicas to 5
+by adding the following to your kustomization:
+
+```
+replicas:
+- name: deployment-name
+  count: 5
+```
+
+This field accepts a list, so many resources can
+be modified at the same time.
+
 
 
 ### resources
