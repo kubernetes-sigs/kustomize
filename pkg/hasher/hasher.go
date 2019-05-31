@@ -26,7 +26,7 @@ func SortArrayAndComputeHash(s []string) (string, error) {
 func Encode(hex string) (string, error) {
 	if len(hex) < 10 {
 		return "", fmt.Errorf(
-			"input length must be at least 10.")
+			"input length must be at least 10")
 	}
 	enc := []rune(hex[:10])
 	for i := range enc {
