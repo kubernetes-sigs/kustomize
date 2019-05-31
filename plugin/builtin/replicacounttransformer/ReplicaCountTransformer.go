@@ -5,20 +5,24 @@
 package main
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
+
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/replica"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
-	"sigs.k8s.io/kustomize/pkg/transformers/config"
+	"sigs.k8s.io/kustomize/pkg/types"
 	"sigs.k8s.io/yaml"
+)
+
+const (
+	fldReplica = "replicas"
+	fldSpec    = "spec"
 )
 
 // Find matching replicas declarations and replace the count.
 // Eases the kustomization configuration of replica changes.
 type plugin struct {
-	Replica    replica.Replica    `json:"replica,omitempty" yaml:"replica,omitempty"`
-	FieldSpecs []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+	Replica types.Replica `json:"replica,omitempty" yaml:"replica,omitempty"`
 }
 
 var KustomizePlugin plugin
@@ -26,8 +30,7 @@ var KustomizePlugin plugin
 func (p *plugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
 
-	p.Replica = replica.Replica{}
-	p.FieldSpecs = nil
+	p.Replica = types.Replica{}
 	return yaml.Unmarshal(c, p)
 }
 
@@ -37,21 +40,20 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 	}
 
 	for _, r := range m.GetMatchingIds(matcher) {
-		kMap := m[r].Kunstructured.Map()
+		kMap := m[r].Map()
 
-		specInterface, ok := kMap["spec"]
+		specInterface, ok := kMap[fldSpec]
 		if !ok {
-			return errors.New("'spec' not specified, replicas cannot be modified")
+			return fmt.Errorf("object %s missing field %s, cannot update %s",
+				p.Replica.Name, fldSpec, fldReplica)
 		}
 
 		if spec, ok := specInterface.(map[string]interface{}); ok {
-			spec["replicas"] = p.Replica.Count
-			kMap["spec"] = spec
+			spec[fldReplica] = p.Replica.Count
+			kMap[fldSpec] = spec
 		} else {
-			return errors.New("'spec' not structured as expected")
+			return fmt.Errorf("object %s has a malformed %s", p.Replica.Name, fldSpec)
 		}
-
-		m[r].Kunstructured.SetMap(kMap)
 	}
 
 	return nil

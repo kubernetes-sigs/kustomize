@@ -35,7 +35,6 @@ type TransformerConfig struct {
 	NameReference     nbrSlice `json:"nameReference,omitempty" yaml:"nameReference,omitempty"`
 	VarReference      fsSlice  `json:"varReference,omitempty" yaml:"varReference,omitempty"`
 	Images            fsSlice  `json:"images,omitempty" yaml:"images,omitempty"`
-	Replicas          fsSlice  `json:"replicas,omitempty" yaml:"replicas,omitempty"`
 }
 
 // MakeEmptyConfig returns an empty TransformerConfig object
@@ -62,7 +61,6 @@ func (t *TransformerConfig) sortFields() {
 	sort.Sort(t.NameReference)
 	sort.Sort(t.VarReference)
 	sort.Sort(t.Images)
-	sort.Sort(t.Replicas)
 }
 
 // AddPrefixFieldSpec adds a FieldSpec to NamePrefix

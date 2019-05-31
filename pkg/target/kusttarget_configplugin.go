@@ -7,7 +7,6 @@ import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/pkg/image"
 	"sigs.k8s.io/kustomize/pkg/plugins"
-	"sigs.k8s.io/kustomize/pkg/replica"
 	"sigs.k8s.io/kustomize/pkg/transformers"
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
 	"sigs.k8s.io/kustomize/pkg/types"
@@ -80,6 +79,7 @@ func (kt *KustTarget) configureBuiltinTransformers(
 		}
 		result = append(result, r...)
 	}
+
 	return result, nil
 }
 
@@ -239,12 +239,10 @@ func (kt *KustTarget) configureBuiltinReplicaCountTransformer(
 	tConfig *config.TransformerConfig) (
 	result []transformers.Transformer, err error) {
 	var c struct {
-		Replica    replica.Replica
-		FieldSpecs []config.FieldSpec
+		Replica types.Replica
 	}
 	for _, args := range kt.kustomization.Replicas {
 		c.Replica = args
-		c.FieldSpecs = tConfig.Replicas
 		p := builtin.NewReplicaCountTransformerPlugin()
 		err = kt.configureBuiltinPlugin(p, c, "replica")
 		if err != nil {
