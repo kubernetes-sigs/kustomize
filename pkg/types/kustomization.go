@@ -146,11 +146,11 @@ type Kustomization struct {
 	Inventory *Inventory `json:"inventory,omitempty" yaml:"inventory:omitempty"`
 }
 
+//go:generate stringer -type=GarbagePolicy
 type GarbagePolicy int
 
 const (
-	GarbageUnknown GarbagePolicy = iota
-	GarbageIgnore
+	GarbageIgnore GarbagePolicy = iota + 1
 	GarbageCollect
 )
 
