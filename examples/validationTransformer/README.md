@@ -4,14 +4,13 @@
 [kubeval]: https://github.com/instrumenta/kubeval
 [plugin]: ../../docs/plugins.md
 
-Kustomize doesn't validate the resources that it loads
-from files or [bases], but kustomize has a [plugin]
-system that allows one to validate the
-loaded resources.
+kustomize doesn't validate either its input or
+output beyond the validation provided by the
+marshalling/unmarshalling packages it depends on.
 
-One way to validate Kubernetes resources is to run
-[kubeval] against the resource file. For example,
-an invalid resource file gives similar error:
+Another tool, [kubeval], goes beyond this to do
+k8s aware validation. Here's a usage example:
+
 ```shell
 $ kubeval my-invalid-rc.yaml
 The document my-invalid-rc.yaml contains an invalid ReplicationController
