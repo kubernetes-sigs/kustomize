@@ -36,6 +36,7 @@ What transformations (customizations) should be applied?
 | [nameSuffix](#namesuffix) | string | The value is appended to the names of all resources. |
 | [commonLabels](#commonlabels) | string | Adds annotions (non-identifying metadata) to add all resources. Like labels, these are key value pairs. |
 | [images](#images) | list | Images modify the name, tags and/or digest for images without creating patches. |
+| [replicas](#replicas) | list | Replicas modify the number of replicas for a resource without creating patches. |
 |[patchesStrategicMerge](#patchesstrategicmerge)| list |Each entry in this list should resolve to a partial or complete resource definition file.|
 |[patchesJson6902](#patchesjson6902)| list  |Each entry in this list should resolve to a kubernetes object and a JSON patch that will be applied to the object.|
 |[transformers](#transformers)|list|[plugin](plugins.md) configuration files|
@@ -236,6 +237,24 @@ images:
   digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3
 ```
 
+### replicas
+
+Replicas modify the number of replicas for a resource without creating patches.
+E.g. Given this kubernetes Deployment fragment:
+```
+metadata:
+  name: deployment-name
+spec:
+  replicas: 3
+```
+
+one can change the number of replicas to 5 with the following *kustomization*:
+```
+replicas:
+- name: deployment-name
+  count: 5
+```
+note that replicas is a list, so many replicas can be modified at the same time.
 
 ### kind
 

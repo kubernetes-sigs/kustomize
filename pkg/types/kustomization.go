@@ -79,6 +79,10 @@ type Kustomization struct {
 	// patch, but this operator is simpler to specify.
 	Images []image.Image `json:"images,omitempty" yaml:"images,omitempty"`
 
+	// Replicas is a list of {resourcename, count} that allows for simpler replica
+	// specification. This can also be done with a patch.
+	Replicas []Replica `json:"replicas,omitempty" yaml:"replicas,omitempty"`
+
 	// Vars allow things modified by kustomize to be injected into a
 	// container specification. A var is a name (e.g. FOO) associated
 	// with a field in a specific resource instance.  The field must
@@ -355,3 +359,15 @@ type PatchTarget struct {
 // stategic merge patch with the format
 // https://github.com/kubernetes/community/blob/master/contributors/devel/strategic-merge-patch.md
 type PatchStrategicMerge string
+
+// Replica specifies a modification to a replica config.
+// The number of replicas of a resource whose name matches will be set to count.
+// This struct is used by the ReplicaCountTransform, and is meant to supplement
+// the existing patch functionality with a simpler syntax for replica configuration.
+type Replica struct {
+	// The name of the resource to change the replica count
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+
+	// The number of replicas required.
+	Count uint `json:"count,omitempty" yaml:"count,omitempty"`
+}

@@ -69,6 +69,7 @@ func (kt *KustTarget) configureBuiltinTransformers(
 		kt.configureBuiltinLabelTransformer,
 		kt.configureBuiltinAnnotationsTransformer,
 		kt.configureBuiltinPatchJson6902Transformer,
+		kt.configureBuiltinReplicaCountTransformer,
 	}
 	var result []transformers.Transformer
 	for _, f := range configurators {
@@ -78,6 +79,7 @@ func (kt *KustTarget) configureBuiltinTransformers(
 		}
 		result = append(result, r...)
 	}
+
 	return result, nil
 }
 
@@ -225,6 +227,24 @@ func (kt *KustTarget) configureBuiltinImageTagTransformer(
 		c.FieldSpecs = tConfig.Images
 		p := builtin.NewImageTagTransformerPlugin()
 		err = kt.configureBuiltinPlugin(p, c, "imageTag")
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, p)
+	}
+	return
+}
+
+func (kt *KustTarget) configureBuiltinReplicaCountTransformer(
+	tConfig *config.TransformerConfig) (
+	result []transformers.Transformer, err error) {
+	var c struct {
+		Replica types.Replica
+	}
+	for _, args := range kt.kustomization.Replicas {
+		c.Replica = args
+		p := builtin.NewReplicaCountTransformerPlugin()
+		err = kt.configureBuiltinPlugin(p, c, "replica")
 		if err != nil {
 			return nil, err
 		}
