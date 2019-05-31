@@ -64,19 +64,24 @@ try{
   Write-Host ("============== end Test-GoTest : {0} code={1}`n`n`n" -f $result, $tests)
  
 
-  Write-Host "============== begin Test-Examples"
-  Test-Examples
-  if ($LASTEXITCODE -eq 0) {
-    $examples = 0
-    $result = "SUCCESS"
-  } else {
-    $examples = 1
-    $result = "FAILURE"
-  }
-  Write-Host ("============== end Test-Examples : {0} code={1}`n`n`n" -f $result, $examples)
+  Write-Host "============== skipping Test-Examples for Windows Testing "
+  
+  #Write-Host "============== begin Test-Examples"
+  #Test-Examples
+  #if ($LASTEXITCODE -eq 0) {
+  #  $examples = 0
+  #  $result = "SUCCESS"
+  #} else {
+  #  $examples = 1
+  #  $result = "FAILURE"
+  #}
+  #Write-Host ("============== end Test-Examples : {0} code={1}`n`n`n" -f $result, $examples)
 
   #calc final return code
-  $rc = $lint -AND $tests -AND $examples
+  #$rc = $lint -AND $tests -AND $examples
+  
+  #calc final return code - omit mdrip testing
+  $rc = $lint -AND $tests
 
   Pop-Location
 
