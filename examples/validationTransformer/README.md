@@ -1,6 +1,6 @@
 # a transformer plugin performing validation
 
-[base]: ../docs/glossary.md#bases
+[base]: ../../docs/glossary.md#base
 [kubeval]: https://github.com/instrumenta/kubeval
 [plugin]: ../../docs/plugins.md
 

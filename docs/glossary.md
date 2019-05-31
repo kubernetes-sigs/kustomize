@@ -166,10 +166,8 @@ with [kustomize], it could be in the form of
  * a git archive (ditto),
  * a URL to a git repo (ditto), etc.
 
-Here's an [example](kustomization.yaml) `kustomization.yaml`.
-
-A kustomization file contains fields falling into four
-categories:
+A kustomization file contains [fields](fields.md)
+falling into four categories:
 
  * _resources_ - what existing [resources] are to be customized.
    Example fields: _resources_, _crds_.
