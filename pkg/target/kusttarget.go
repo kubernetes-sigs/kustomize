@@ -127,14 +127,11 @@ func (kt *KustTarget) makeCustomizedResMap(
 	if err != nil {
 		return nil, err
 	}
-	// This must be done last, and not as part of
+
+	// The following steps must be done last, not as part of
 	// the recursion implicit in AccumulateTarget.
-	p := builtin.NewHashTransformerPlugin()
-	err = kt.configureBuiltinPlugin(p, nil, "hash")
-	if err != nil {
-		return nil, err
-	}
-	err = ra.Transform(p)
+
+	err = kt.addHashesToNames(ra)
 	if err != nil {
 		return nil, err
 	}
@@ -145,22 +142,60 @@ func (kt *KustTarget) makeCustomizedResMap(
 	if err != nil {
 		return nil, err
 	}
+
 	// With all the back references fixed, it's OK to resolve Vars.
 	err = ra.ResolveVars()
 	if err != nil {
 		return nil, err
 	}
 
-	rm := ra.ResMap()
-	pt := kt.tFactory.MakeInventoryTransformer(
-		kt.kustomization.Inventory, kt.ldr,
-		kt.kustomization.Namespace,
-		garbagePolicy)
-	err = pt.Transform(rm)
+	err = kt.computeInventory(ra, garbagePolicy)
 	if err != nil {
 		return nil, err
 	}
-	return rm, nil
+
+	return ra.ResMap(), nil
+}
+
+func (kt *KustTarget) addHashesToNames(
+	ra *accumulator.ResAccumulator) error {
+	p := builtin.NewHashTransformerPlugin()
+	err := kt.configureBuiltinPlugin(p, nil, "hash")
+	if err != nil {
+		return err
+	}
+	return ra.Transform(p)
+}
+
+func (kt *KustTarget) computeInventory(
+	ra *accumulator.ResAccumulator, garbagePolicy types.GarbagePolicy) error {
+	inv := kt.kustomization.Inventory
+	if inv == nil {
+		return nil
+	}
+	if inv.Type != "ConfigMap" {
+		return fmt.Errorf("don't know how to do that")
+	}
+
+	if inv.ConfigMap.Namespace != kt.kustomization.Namespace {
+		return fmt.Errorf("namespace mismatch")
+	}
+
+	p := builtin.NewInventoryTransformerPlugin()
+	var c struct {
+		Policy    string
+		Name      string
+		Namespace string
+	}
+	c.Name = inv.ConfigMap.Name
+	c.Namespace = inv.ConfigMap.Namespace
+	c.Policy = garbagePolicy.String()
+
+	err := kt.configureBuiltinPlugin(p, c, "inventory")
+	if err != nil {
+		return err
+	}
+	return ra.Transform(p)
 }
 
 func (kt *KustTarget) shouldAddHashSuffixesToGeneratedResources() bool {
