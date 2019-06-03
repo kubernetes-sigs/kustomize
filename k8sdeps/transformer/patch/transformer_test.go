@@ -21,7 +21,7 @@ var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
 var foo = gvk.Gvk{Group: "example.com", Version: "v1", Kind: "Foo"}
 
 func TestOverlayRun(t *testing.T) {
-	base := resmap.ResMap{
+	base := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(deploy, "deploy1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
@@ -47,7 +47,7 @@ func TestOverlayRun(t *testing.T) {
 					},
 				},
 			}),
-	}
+	})
 	patch := []*resource.Resource{
 		rf.FromMap(map[string]interface{}{
 			"apiVersion": "apps/v1",
@@ -81,7 +81,7 @@ func TestOverlayRun(t *testing.T) {
 		},
 		),
 	}
-	expected := resmap.ResMap{
+	expected := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(deploy, "deploy1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
@@ -114,7 +114,7 @@ func TestOverlayRun(t *testing.T) {
 					},
 				},
 			}),
-	}
+	})
 	lt, err := NewTransformer(patch, rf)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -130,7 +130,7 @@ func TestOverlayRun(t *testing.T) {
 }
 
 func TestMultiplePatches(t *testing.T) {
-	base := resmap.ResMap{
+	base := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(deploy, "deploy1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
@@ -151,7 +151,7 @@ func TestMultiplePatches(t *testing.T) {
 					},
 				},
 			}),
-	}
+	})
 	patch := []*resource.Resource{
 		rf.FromMap(map[string]interface{}{
 			"apiVersion": "apps/v1",
@@ -209,7 +209,7 @@ func TestMultiplePatches(t *testing.T) {
 		},
 		),
 	}
-	expected := resmap.ResMap{
+	expected := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(deploy, "deploy1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
@@ -244,7 +244,7 @@ func TestMultiplePatches(t *testing.T) {
 					},
 				},
 			}),
-	}
+	})
 	lt, err := NewTransformer(patch, rf)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -260,7 +260,7 @@ func TestMultiplePatches(t *testing.T) {
 }
 
 func TestMultiplePatchesWithConflict(t *testing.T) {
-	base := resmap.ResMap{
+	base := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(deploy, "deploy1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
@@ -281,7 +281,7 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 					},
 				},
 			}),
-	}
+	})
 	patch := []*resource.Resource{
 		rf.FromMap(map[string]interface{}{
 			"apiVersion": "apps/v1",
@@ -345,7 +345,7 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 }
 
 func TestNoSchemaOverlayRun(t *testing.T) {
-	base := resmap.ResMap{
+	base := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(foo, "my-foo"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "example.com/v1",
@@ -360,7 +360,7 @@ func TestNoSchemaOverlayRun(t *testing.T) {
 					},
 				},
 			}),
-	}
+	})
 	patch := []*resource.Resource{
 		rf.FromMap(map[string]interface{}{
 			"apiVersion": "example.com/v1",
@@ -377,7 +377,7 @@ func TestNoSchemaOverlayRun(t *testing.T) {
 		},
 		),
 	}
-	expected := resmap.ResMap{
+	expected := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(foo, "my-foo"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "example.com/v1",
@@ -392,7 +392,7 @@ func TestNoSchemaOverlayRun(t *testing.T) {
 					},
 				},
 			}),
-	}
+	})
 
 	lt, err := NewTransformer(patch, rf)
 	if err != nil {
@@ -408,7 +408,7 @@ func TestNoSchemaOverlayRun(t *testing.T) {
 }
 
 func TestNoSchemaMultiplePatches(t *testing.T) {
-	base := resmap.ResMap{
+	base := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(foo, "my-foo"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "example.com/v1",
@@ -423,7 +423,7 @@ func TestNoSchemaMultiplePatches(t *testing.T) {
 					},
 				},
 			}),
-	}
+	})
 	patch := []*resource.Resource{
 		rf.FromMap(map[string]interface{}{
 			"apiVersion": "example.com/v1",
@@ -457,7 +457,7 @@ func TestNoSchemaMultiplePatches(t *testing.T) {
 		},
 		),
 	}
-	expected := resmap.ResMap{
+	expected := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(foo, "my-foo"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "example.com/v1",
@@ -476,7 +476,7 @@ func TestNoSchemaMultiplePatches(t *testing.T) {
 					},
 				},
 			}),
-	}
+	})
 
 	lt, err := NewTransformer(patch, rf)
 	if err != nil {
@@ -492,7 +492,7 @@ func TestNoSchemaMultiplePatches(t *testing.T) {
 }
 
 func TestNoSchemaMultiplePatchesWithConflict(t *testing.T) {
-	base := resmap.ResMap{
+	base := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(foo, "my-foo"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "example.com/v1",
@@ -507,7 +507,7 @@ func TestNoSchemaMultiplePatchesWithConflict(t *testing.T) {
 					},
 				},
 			}),
-	}
+	})
 	patch := []*resource.Resource{
 		rf.FromMap(map[string]interface{}{
 			"apiVersion": "example.com/v1",

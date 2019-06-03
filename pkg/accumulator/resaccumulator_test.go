@@ -41,54 +41,55 @@ func makeResAccumulator() (*ResAccumulator, *resource.Factory, error) {
 	}
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
-	ra.MergeResourcesWithErrorOnIdCollision(resmap.ResMap{
-		resid.NewResId(
-			gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"},
-			"deploy1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "Deployment",
-				"metadata": map[string]interface{}{
-					"name": "deploy1",
-				},
-				"spec": map[string]interface{}{
-					"template": map[string]interface{}{
-						"spec": map[string]interface{}{
-							"containers": []interface{}{
-								map[string]interface{}{
-									"command": []interface{}{
-										"myserver",
-										"--somebackendService $(SERVICE_ONE)",
-										"--yetAnother $(SERVICE_TWO)",
+	err = ra.MergeResourcesWithErrorOnIdCollision(
+		resmap.FromMap(map[resid.ResId]*resource.Resource{
+			resid.NewResId(
+				gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"},
+				"deploy1"): rf.FromMap(
+				map[string]interface{}{
+					"apiVersion": "apps/v1",
+					"kind":       "Deployment",
+					"metadata": map[string]interface{}{
+						"name": "deploy1",
+					},
+					"spec": map[string]interface{}{
+						"template": map[string]interface{}{
+							"spec": map[string]interface{}{
+								"containers": []interface{}{
+									map[string]interface{}{
+										"command": []interface{}{
+											"myserver",
+											"--somebackendService $(SERVICE_ONE)",
+											"--yetAnother $(SERVICE_TWO)",
+										},
 									},
 								},
 							},
 						},
 					},
-				},
-			}),
-		resid.NewResId(
-			gvk.Gvk{Version: "v1", Kind: "Service"},
-			"backendOne"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "Service",
-				"metadata": map[string]interface{}{
-					"name": "backendOne",
-				},
-			}),
-		resid.NewResId(
-			gvk.Gvk{Version: "v1", Kind: "Service"},
-			"backendTwo"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "Service",
-				"metadata": map[string]interface{}{
-					"name": "backendTwo",
-				},
-			}),
-	})
-	return ra, rf, nil
+				}),
+			resid.NewResId(
+				gvk.Gvk{Version: "v1", Kind: "Service"},
+				"backendOne"): rf.FromMap(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "Service",
+					"metadata": map[string]interface{}{
+						"name": "backendOne",
+					},
+				}),
+			resid.NewResId(
+				gvk.Gvk{Version: "v1", Kind: "Service"},
+				"backendTwo"): rf.FromMap(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "Service",
+					"metadata": map[string]interface{}{
+						"name": "backendTwo",
+					},
+				}),
+		}))
+	return ra, rf, err
 }
 
 func TestResolveVarsHappy(t *testing.T) {
@@ -172,7 +173,8 @@ func TestResolveVarsVarNeedsDisambiguation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
-	ra.MergeResourcesWithErrorOnIdCollision(resmap.ResMap{
+
+	rm0 := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResIdWithPrefixNamespace(
 			gvk.Gvk{Version: "v1", Kind: "Service"},
 			"backendOne", "", "fooNamespace"): rf.FromMap(
@@ -180,10 +182,16 @@ func TestResolveVarsVarNeedsDisambiguation(t *testing.T) {
 				"apiVersion": "v1",
 				"kind":       "Service",
 				"metadata": map[string]interface{}{
-					"name": "backendOne",
+					"name":      "backendOne",
+					"namespace": "fooNamespace",
 				},
 			}),
 	})
+
+	err = ra.MergeResourcesWithErrorOnIdCollision(rm0)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
 
 	err = ra.MergeVars([]types.Var{
 		{
@@ -263,7 +271,7 @@ func TestResolveVarsUnmappableVar(t *testing.T) {
 }
 
 func find(name string, resMap resmap.ResMap) *resource.Resource {
-	for k, v := range resMap {
+	for k, v := range resMap.AsMap() {
 		if k.Name() == name {
 			return v
 		}

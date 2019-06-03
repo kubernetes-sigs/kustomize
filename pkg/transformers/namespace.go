@@ -50,8 +50,8 @@ func NewNamespaceTransformer(ns string, cf []config.FieldSpec) Transformer {
 func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
 	mf := o.filterResmap(m)
 
-	for id := range mf {
-		objMap := mf[id].Map()
+	for id, res := range mf.AsMap() {
+		objMap := res.Map()
 		for _, path := range o.fieldSpecsToUse {
 			switch path.Path {
 			// Special casing .metadata.namespace since it is a common metadata field across all runtime.Object
@@ -88,9 +88,9 @@ func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
 
 			if !id.Gvk().IsClusterKind() {
 				newid := id.CopyWithNewNamespace(o.namespace)
-				m[newid] = mf[id]
+				m.AppendWithId(newid, res)
 			} else {
-				m[id] = mf[id]
+				m.AppendWithId(id, res)
 			}
 		}
 	}
@@ -99,19 +99,19 @@ func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
 }
 
 func (o *namespaceTransformer) filterResmap(m resmap.ResMap) resmap.ResMap {
-	mf := resmap.ResMap{}
-	for id := range m {
+	mf := resmap.New()
+	for id, res := range m.AsMap() {
 		found := false
 		for _, path := range o.fieldSpecsToSkip {
 			if id.Gvk().IsSelected(&path.Gvk) {
 				found = true
-				mf[id] = m[id]
-				delete(m, id)
+				mf.AppendWithId(id, res)
+				m.Remove(id)
 			}
 		}
 		if !found {
-			mf[id] = m[id]
-			delete(m, id)
+			mf.AppendWithId(id, res)
+			m.Remove(id)
 		}
 	}
 	return mf
@@ -119,17 +119,17 @@ func (o *namespaceTransformer) filterResmap(m resmap.ResMap) resmap.ResMap {
 
 func (o *namespaceTransformer) updateClusterRoleBinding(m resmap.ResMap) {
 	saMap := map[string]bool{}
-	for id := range m {
+	for id := range m.AsMap() {
 		if id.Gvk().Equals(gvk.Gvk{Version: "v1", Kind: "ServiceAccount"}) {
 			saMap[id.Name()] = true
 		}
 	}
 
-	for id := range m {
+	for id, res := range m.AsMap() {
 		if id.Gvk().Kind != "ClusterRoleBinding" && id.Gvk().Kind != "RoleBinding" {
 			continue
 		}
-		objMap := m[id].Map()
+		objMap := res.Map()
 		subjects, ok := objMap["subjects"].([]interface{})
 		if subjects == nil || !ok {
 			continue

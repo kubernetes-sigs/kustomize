@@ -44,7 +44,7 @@ func (tf *transformer) Transform(baseResourceMap resmap.ResMap) error {
 	}
 
 	// Strategic merge the resources exist in both base and patches.
-	for _, patch := range patches {
+	for _, patch := range patches.Resources() {
 		// Merge patches with base resource.
 		id := patch.Id()
 		matchedIds := baseResourceMap.GetMatchingIds(id.GvknEquals)
@@ -55,7 +55,7 @@ func (tf *transformer) Transform(baseResourceMap resmap.ResMap) error {
 			return fmt.Errorf("found multiple objects %#v targeted by patch %#v (ambiguous)", matchedIds, id)
 		}
 		id = matchedIds[0]
-		base := baseResourceMap[id]
+		base := baseResourceMap.GetById(id)
 		merged := map[string]interface{}{}
 		versionedObj, err := scheme.Scheme.New(toSchemaGvk(id.Gvk()))
 		baseName := base.GetName()
@@ -97,7 +97,7 @@ func (tf *transformer) Transform(baseResourceMap resmap.ResMap) error {
 				return err
 			}
 		}
-		baseResourceMap[id].SetMap(merged)
+		baseResourceMap.GetById(id).SetMap(merged)
 		base.SetName(baseName)
 	}
 	return nil
@@ -106,12 +106,12 @@ func (tf *transformer) Transform(baseResourceMap resmap.ResMap) error {
 // mergePatches merge and index patches by Id.
 // It errors out if there is conflict between patches.
 func (tf *transformer) mergePatches() (resmap.ResMap, error) {
-	rc := resmap.ResMap{}
+	rc := resmap.New()
 	for ix, patch := range tf.patches {
 		id := patch.Id()
-		existing, found := rc[id]
-		if !found {
-			rc[id] = patch
+		existing := rc.GetById(id)
+		if existing == nil {
+			rc.AppendWithId(id, patch)
 			continue
 		}
 
@@ -146,7 +146,7 @@ func (tf *transformer) mergePatches() (resmap.ResMap, error) {
 		if err != nil {
 			return nil, err
 		}
-		rc[id] = merged
+		rc.ReplaceResource(id, merged)
 	}
 	return rc, nil
 }
