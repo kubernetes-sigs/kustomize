@@ -109,5 +109,5 @@ func (t *patchJson6902JSONTransformer) findTargetObj(
 			"found multiple targets %v matching %v for json patch",
 			matched, t.target)
 	}
-	return m[matched[0]], nil
+	return m.GetById(matched[0]), nil
 }

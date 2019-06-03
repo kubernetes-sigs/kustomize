@@ -93,7 +93,7 @@ func TestResources(t *testing.T) {
 	th.WriteF("/whatever/namespace.yaml", namespaceContent)
 	th.WriteF("/whatever/jsonpatch.json", jsonpatchContent)
 
-	expected := resmap.ResMap{
+	expected := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResIdWithPrefixSuffixNamespace(
 			gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"},
 			"dply1", "foo-", "-bar", "ns1"): th.FromMap(
@@ -192,14 +192,13 @@ func TestResources(t *testing.T) {
 					},
 				},
 			}),
-	}
+	})
 	actual, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("unexpected Resources error %v", err)
 	}
 
-	if !reflect.DeepEqual(actual, expected) {
-		err = expected.ErrorIfNotEqual(actual)
+	if err = expected.ErrorIfNotEqual(actual); err != nil {
 		t.Fatalf("unexpected inequality: %v", err)
 	}
 }
@@ -229,7 +228,7 @@ func TestResourceNotFound(t *testing.T) {
 }
 
 func findSecret(m resmap.ResMap) *resource.Resource {
-	for id, res := range m {
+	for id, res := range m.AsMap() {
 		if id.Gvk().Kind == "Secret" {
 			return res
 		}

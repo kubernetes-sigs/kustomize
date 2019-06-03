@@ -59,12 +59,14 @@ func NewNamePrefixSuffixTransformer(
 }
 
 // Transform prepends the name prefix and appends the name suffix.
+// TODO: this transformer breaks internal
+// ordering and depends on Id hackery.  Rewrite completely.
 func (o *namePrefixSuffixTransformer) Transform(m resmap.ResMap) error {
 	// Fill map "mf" with entries subject to name modification, and
 	// delete these entries from "m", so that for now m retains only
 	// the entries whose names will not be modified.
-	mf := resmap.ResMap{}
-	for id := range m {
+	mf := resmap.New()
+	for id, r := range m.AsMap() {
 		found := false
 		for _, path := range o.fieldSpecsToSkip {
 			if id.Gvk().IsSelected(&path.Gvk) {
@@ -73,13 +75,13 @@ func (o *namePrefixSuffixTransformer) Transform(m resmap.ResMap) error {
 			}
 		}
 		if !found {
-			mf[id] = m[id]
-			delete(m, id)
+			mf.AppendWithId(id, r)
+			m.Remove(id)
 		}
 	}
 
-	for id := range mf {
-		objMap := mf[id].Map()
+	for id, r := range mf.AsMap() {
+		objMap := r.Map()
 		for _, path := range o.fieldSpecsToUse {
 			if !id.Gvk().IsSelected(&path.Gvk) {
 				continue
@@ -93,7 +95,7 @@ func (o *namePrefixSuffixTransformer) Transform(m resmap.ResMap) error {
 				return err
 			}
 			newId := id.CopyWithNewPrefixSuffix(o.prefix, o.suffix)
-			m[newId] = mf[id]
+			m.AppendWithId(newId, r)
 		}
 	}
 	return nil

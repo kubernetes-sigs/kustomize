@@ -59,13 +59,14 @@ func NewMapTransformer(
 // Transform apply each <key, value> pair in the mapTransformer to the
 // fields specified in mapTransformer.
 func (o *mapTransformer) Transform(m resmap.ResMap) error {
-	for id := range m {
-		objMap := m[id].Map()
+	for _, r := range m.Resources() {
 		for _, path := range o.fieldSpecs {
-			if !id.Gvk().IsSelected(&path.Gvk) {
+			if !r.Id().Gvk().IsSelected(&path.Gvk) {
 				continue
 			}
-			err := mutateField(objMap, path.PathSlice(), path.CreateIfNotPresent, o.addMap)
+			err := mutateField(
+				r.Map(), path.PathSlice(),
+				path.CreateIfNotPresent, o.addMap)
 			if err != nil {
 				return err
 			}

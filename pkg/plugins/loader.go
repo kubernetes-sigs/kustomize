@@ -35,7 +35,7 @@ func NewLoader(
 func (l *Loader) LoadGenerators(
 	ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Generator, error) {
 	var result []transformers.Generator
-	for _, res := range rm {
+	for _, res := range rm.Resources() {
 		g, err := l.LoadGenerator(ldr, res)
 		if err != nil {
 			return nil, err
@@ -61,7 +61,7 @@ func (l *Loader) LoadGenerator(
 func (l *Loader) LoadTransformers(
 	ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Transformer, error) {
 	var result []transformers.Transformer
-	for _, res := range rm {
+	for _, res := range rm.Resources() {
 		t, err := l.LoadTransformer(ldr, res)
 		if err != nil {
 			return nil, err

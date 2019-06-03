@@ -86,25 +86,18 @@ func (p *InventoryTransformerPlugin) Transform(m resmap.ResMap) error {
 	}
 
 	if p.Policy == types.GarbageCollect.String() {
-		for byeBye := range m {
-			delete(m, byeBye)
+		for _, byeBye := range m.AllIds() {
+			m.Remove(byeBye)
 		}
 	}
-
-	id := cm.Id()
-	if _, ok := m[id]; ok {
-		return fmt.Errorf(
-			"id '%v' already used; use a different name", id)
-	}
-	m[id] = cm
-	return nil
+	return m.Append(cm)
 }
 
 func makeInventory(m resmap.ResMap) (
 	inv *inventory.Inventory, hash string, err error) {
 	inv = inventory.NewInventory()
 	var keys []string
-	for _, r := range m {
+	for _, r := range m.Resources() {
 		ns := getNamespace(r)
 		item := resid.NewItemId(r.GetGvk(), ns, r.GetName())
 		if _, ok := inv.Current[item]; ok {
@@ -128,7 +121,7 @@ func getNamespace(r *resource.Resource) string {
 
 func computeRefs(r *resource.Resource, m resmap.ResMap) (refs []resid.ItemId) {
 	for _, refid := range r.GetRefBy() {
-		ref := m[refid]
+		ref := m.GetById(refid)
 		ns := getNamespace(ref)
 		refs = append(refs, resid.NewItemId(ref.GetGvk(), ns, ref.GetName()))
 	}

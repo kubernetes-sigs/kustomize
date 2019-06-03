@@ -22,21 +22,6 @@ import (
 	"sigs.k8s.io/kustomize/pkg/kusttest"
 )
 
-// TODO(monopole): Add a feature test example covering secret generation.
-
-// WARNING: These tests use a fake file system, and any attempt to use a
-// feature that spawns shells will fail, because said shells expect a working
-// directory corresponding to a real directory on disk - see
-// these lines in secretfactory.go:
-//   cmd := exec.CommandContext(ctx, commands[0], commands[1:]...)
-//	 cmd.Dir = f.wd
-// Worse, the fake directory might match a real directory on the your system,
-// making the failure less obvious (and maybe hurting something if your secret
-// generation technique writes data to disk).  So no use of secret generation
-// in these particular tests.
-// To eventually fix this, we could write the data to a real filesystem, and
-// clean up after, or use some other trick compatible with exec.
-
 func writeMediumBase(th *kusttest_test.KustTestHarness) {
 	th.WriteK("/app/base", `
 namePrefix: baseprefix-

@@ -18,6 +18,7 @@ limitations under the License.
 package resource
 
 import (
+	"reflect"
 	"strings"
 
 	"sigs.k8s.io/kustomize/pkg/ifc"
@@ -32,6 +33,10 @@ type Resource struct {
 	ifc.Kunstructured
 	options *types.GenArgs
 	refBy   []resid.ResId
+}
+
+func (r *Resource) KunstructEqual(o *Resource) bool {
+	return reflect.DeepEqual(r.Kunstructured, o.Kunstructured)
 }
 
 // String returns resource as JSON.

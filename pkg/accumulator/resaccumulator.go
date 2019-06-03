@@ -26,7 +26,7 @@ type ResAccumulator struct {
 
 func MakeEmptyAccumulator() *ResAccumulator {
 	ra := &ResAccumulator{}
-	ra.resMap = make(resmap.ResMap)
+	ra.resMap = resmap.New()
 	ra.tConfig = &config.TransformerConfig{}
 	ra.varSet = types.VarSet{}
 	return ra
@@ -34,11 +34,7 @@ func MakeEmptyAccumulator() *ResAccumulator {
 
 // ResMap returns a copy of the internal resMap.
 func (ra *ResAccumulator) ResMap() resmap.ResMap {
-	result := make(resmap.ResMap)
-	for k, v := range ra.resMap {
-		result[k] = v
-	}
-	return result
+	return ra.resMap.ShallowCopy()
 }
 
 // Vars returns a copy of underlying vars.
@@ -101,7 +97,7 @@ func (ra *ResAccumulator) makeVarReplacementMap() (map[string]string, error) {
 				len(matched), v)
 		}
 		if len(matched) == 1 {
-			s, err := ra.resMap[matched[0]].GetFieldValue(v.FieldRef.FieldPath)
+			s, err := ra.resMap.GetById(matched[0]).GetFieldValue(v.FieldRef.FieldPath)
 			if err != nil {
 				return nil, fmt.Errorf(
 					"field specified in var '%v' "+

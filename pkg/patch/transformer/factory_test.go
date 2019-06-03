@@ -185,7 +185,7 @@ func TestNewPatchJson6902FactoryMulti(t *testing.T) {
 	}
 
 	id := resid.NewResId(gvk.FromKind("foo"), "some-name")
-	base := resmap.ResMap{
+	base := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		id: rf.FromMap(
 			map[string]interface{}{
 				"kind": "foo",
@@ -210,8 +210,8 @@ func TestNewPatchJson6902FactoryMulti(t *testing.T) {
 					},
 				},
 			}),
-	}
-	expected := resmap.ResMap{
+	})
+	expected := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		id: rf.FromMap(
 			map[string]interface{}{
 				"kind": "foo",
@@ -242,7 +242,7 @@ func TestNewPatchJson6902FactoryMulti(t *testing.T) {
 					},
 				},
 			}),
-	}
+	})
 	err = tr.Transform(base)
 	if err != nil {
 		t.Fatalf("unexpected error : %v", err)
@@ -299,7 +299,7 @@ func TestNewPatchJson6902FactoryMultiConflict(t *testing.T) {
 	}
 
 	id := resid.NewResId(gvk.FromKind("foo"), "some-name")
-	base := resmap.ResMap{
+	base := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		id: rf.FromMap(
 			map[string]interface{}{
 				"kind": "foo",
@@ -324,7 +324,7 @@ func TestNewPatchJson6902FactoryMultiConflict(t *testing.T) {
 					},
 				},
 			}),
-	}
+	})
 
 	err = tr.Transform(base)
 	if err == nil {

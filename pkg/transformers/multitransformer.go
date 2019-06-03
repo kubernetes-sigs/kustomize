@@ -18,8 +18,6 @@ package transformers
 
 import (
 	"fmt"
-	"sigs.k8s.io/kustomize/pkg/resource"
-
 	"sigs.k8s.io/kustomize/pkg/resmap"
 )
 
@@ -27,7 +25,6 @@ import (
 type multiTransformer struct {
 	transformers         []Transformer
 	checkConflictEnabled bool
-	rf                   *resource.Factory
 }
 
 var _ Transformer = &multiTransformer{}
@@ -71,7 +68,7 @@ func (o *multiTransformer) transform(m resmap.ResMap) error {
 // A spot check to perform when the transformations are supposed to be commutative.
 // Fail if there's a difference in the result.
 func (o *multiTransformer) transformWithCheckConflict(m resmap.ResMap) error {
-	mcopy := m.DeepCopy(o.rf)
+	mcopy := m.DeepCopy()
 	err := o.transform(m)
 	if err != nil {
 		return err
