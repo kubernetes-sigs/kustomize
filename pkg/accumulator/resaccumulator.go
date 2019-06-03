@@ -42,18 +42,14 @@ func (ra *ResAccumulator) Vars() []types.Var {
 	return ra.varSet.Set()
 }
 
-func (ra *ResAccumulator) MergeResourcesWithErrorOnIdCollision(
-	resources resmap.ResMap) (err error) {
-	ra.resMap, err = resmap.MergeWithErrorOnIdCollision(
-		resources, ra.resMap)
-	return err
+func (ra *ResAccumulator) AppendAll(
+	resources resmap.ResMap) error {
+	return ra.resMap.AppendAll(resources)
 }
 
-func (ra *ResAccumulator) MergeResourcesWithOverride(
-	resources resmap.ResMap) (err error) {
-	ra.resMap, err = resmap.MergeWithOverride(
-		ra.resMap, resources)
-	return err
+func (ra *ResAccumulator) AbsorbAll(
+	resources resmap.ResMap) error {
+	return ra.resMap.AbsorbAll(resources)
 }
 
 func (ra *ResAccumulator) MergeConfig(
@@ -71,7 +67,7 @@ func (ra *ResAccumulator) MergeVars(incoming []types.Var) error {
 }
 
 func (ra *ResAccumulator) MergeAccumulator(other *ResAccumulator) (err error) {
-	err = ra.MergeResourcesWithErrorOnIdCollision(other.resMap)
+	err = ra.AppendAll(other.resMap)
 	if err != nil {
 		return err
 	}

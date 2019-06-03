@@ -263,7 +263,7 @@ func (kt *KustTarget) runGenerators(
 			return err
 		}
 		// The legacy generators allow override.
-		err = ra.MergeResourcesWithOverride(resMap)
+		err = ra.AbsorbAll(resMap)
 		if err != nil {
 			return errors.Wrapf(err, "merging from generator %v", g)
 		}
@@ -277,7 +277,7 @@ func (kt *KustTarget) runGenerators(
 		if err != nil {
 			return err
 		}
-		err = ra.MergeResourcesWithErrorOnIdCollision(resMap)
+		err = ra.AppendAll(resMap)
 		if err != nil {
 			return errors.Wrapf(err, "merging from generator %v", g)
 		}
@@ -380,7 +380,7 @@ func (kt *KustTarget) accumulateFile(
 	if err != nil {
 		return errors.Wrapf(err, "accumulating resources from '%s'", path)
 	}
-	err = ra.MergeResourcesWithErrorOnIdCollision(resources)
+	err = ra.AppendAll(resources)
 	if err != nil {
 		return errors.Wrapf(err, "merging resources from '%s'", path)
 	}

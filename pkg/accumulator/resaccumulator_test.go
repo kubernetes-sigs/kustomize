@@ -41,7 +41,7 @@ func makeResAccumulator() (*ResAccumulator, *resource.Factory, error) {
 	}
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
-	err = ra.MergeResourcesWithErrorOnIdCollision(
+	err = ra.AppendAll(
 		resmap.FromMap(map[resid.ResId]*resource.Resource{
 			resid.NewResId(
 				gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"},
@@ -188,7 +188,7 @@ func TestResolveVarsVarNeedsDisambiguation(t *testing.T) {
 			}),
 	})
 
-	err = ra.MergeResourcesWithErrorOnIdCollision(rm0)
+	err = ra.AppendAll(rm0)
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}

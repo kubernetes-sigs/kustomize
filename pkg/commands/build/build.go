@@ -153,7 +153,7 @@ func (o *Options) emitResources(
 	if o.outputPath != "" && fSys.IsDir(o.outputPath) {
 		return writeIndividualFiles(fSys, o.outputPath, m)
 	}
-	res, err := m.EncodeAsYaml()
+	res, err := m.AsYaml(resmap.LegacySort)
 	if err != nil {
 		return err
 	}

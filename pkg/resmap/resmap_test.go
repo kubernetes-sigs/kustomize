@@ -17,7 +17,6 @@ import (
 )
 
 var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
-var statefulset = gvk.Gvk{Group: "apps", Version: "v1", Kind: "StatefulSet"}
 var rf = resource.NewFactory(
 	kunstruct.NewKunstructuredFactoryImpl())
 var rmF = NewFactory(rf)
@@ -161,25 +160,24 @@ kind: ConfigMap
 metadata:
   name: cm2
 `)
-	input := FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(cmap, "cm1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "cm1",
-				},
-			}),
-		resid.NewResId(cmap, "cm2"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "cm2",
-				},
-			}),
-	})
-	out, err := input.EncodeAsYaml()
+	input := New()
+	input.Append(rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "cm1",
+			},
+		}))
+	input.Append(rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "cm2",
+			},
+		}))
+	out, err := input.AsYaml(Identity)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -581,172 +579,127 @@ func TestErrorIfNotEqual(t *testing.T) {
 	if err == nil {
 		t.Fatalf("%v should not equal %v %v", rm1, rm2, err)
 	}
-
 }
 
-func TestMergeWithoutOverride(t *testing.T) {
-	input1 := FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(deploy, "deploy1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "Deployment",
-				"metadata": map[string]interface{}{
-					"name": "foo-deploy1",
-				},
-			}),
-	})
-	input2 := FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(statefulset, "stateful1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "StatefulSet",
-				"metadata": map[string]interface{}{
-					"name": "bar-stateful",
-				},
-			}),
-	})
-	input := []ResMap{input1, input2}
-	expected := FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(deploy, "deploy1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "Deployment",
-				"metadata": map[string]interface{}{
-					"name": "foo-deploy1",
-				},
-			}),
-		resid.NewResId(statefulset, "stateful1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "StatefulSet",
-				"metadata": map[string]interface{}{
-					"name": "bar-stateful",
-				},
-			}),
-	})
-	merged, err := MergeWithErrorOnIdCollision(input...)
-	if err != nil {
+func TestAppendAll(t *testing.T) {
+	r1 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "foo-deploy1",
+			},
+		})
+	input1 := rmF.FromResource(r1)
+	r2 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "StatefulSet",
+			"metadata": map[string]interface{}{
+				"name": "bar-stateful",
+			},
+		})
+	input2 := rmF.FromResource(r2)
+
+	expected := New()
+	expected.Append(r1)
+	expected.Append(r2)
+
+	if err := input1.AppendAll(input2); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	err = expected.ErrorIfNotEqual(merged)
-	if err != nil {
-		t.Fatalf("%#v doesn't equal expected %#v", merged, expected)
+	if err := expected.ErrorIfNotEqual(input1); err != nil {
+		input1.Debug("1")
+		expected.Debug("ex")
+		t.Fatalf("%#v doesn't equal expected %#v", input1, expected)
 	}
-	input3 := []ResMap{merged, nil}
-	merged1, err := MergeWithErrorOnIdCollision(input3...)
-	if err != nil {
+	if err := input1.AppendAll(nil); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	err = expected.ErrorIfNotEqual(merged1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	input4 := []ResMap{nil, merged}
-	merged2, err := MergeWithErrorOnIdCollision(input4...)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	err = expected.ErrorIfNotEqual(merged2)
-	if err != nil {
-		t.Fatal(err)
+	if err := expected.ErrorIfNotEqual(input1); err != nil {
+		t.Fatalf("%#v doesn't equal expected %#v", input1, expected)
 	}
 }
 
-func generateMergeFixtures(b types.GenerationBehavior) []ResMap {
-	input1 := FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(cmap, "cmap"): rf.FromMapAndOption(
-			map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "cmap",
-				},
-				"data": map[string]interface{}{
-					"a": "x",
-					"b": "y",
-				},
-			}, &types.GeneratorArgs{
-				Behavior: "create",
-			}, nil),
-	})
-	input2 := FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(cmap, "cmap"): rf.FromMapAndOption(
-			map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "cmap",
-				},
-				"data": map[string]interface{}{
-					"a": "u",
-					"b": "v",
-					"c": "w",
-				},
-			}, &types.GeneratorArgs{
-				Behavior: b.String(),
-			}, nil),
-	})
-	return []ResMap{input1, input2}
+func makeMap1() ResMap {
+	return rmF.FromResource(rf.FromMapAndOption(
+		map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "cmap",
+			},
+			"data": map[string]interface{}{
+				"a": "x",
+				"b": "y",
+			},
+		}, &types.GeneratorArgs{
+			Behavior: "create",
+		}, nil))
 }
 
-func TestMergeWithOverride(t *testing.T) {
-	expected := FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(cmap, "cmap"): rf.FromMapAndOption(
-			map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"annotations": map[string]interface{}{},
-					"labels":      map[string]interface{}{},
-					"name":        "cmap",
-				},
-				"data": map[string]interface{}{
-					"a": "u",
-					"b": "v",
-					"c": "w",
-				},
-			}, &types.GeneratorArgs{
-				Behavior: "create",
-			}, nil),
-	})
-	merged, err := MergeWithOverride(generateMergeFixtures(types.BehaviorMerge)...)
-	if err != nil {
+func makeMap2(b types.GenerationBehavior) ResMap {
+	return rmF.FromResource(rf.FromMapAndOption(
+		map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "cmap",
+			},
+			"data": map[string]interface{}{
+				"a": "u",
+				"b": "v",
+				"c": "w",
+			},
+		}, &types.GeneratorArgs{
+			Behavior: b.String(),
+		}, nil))
+}
+
+func TestAbsorbAll(t *testing.T) {
+	expected := rmF.FromResource(rf.FromMapAndOption(
+		map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"annotations": map[string]interface{}{},
+				"labels":      map[string]interface{}{},
+				"name":        "cmap",
+			},
+			"data": map[string]interface{}{
+				"a": "u",
+				"b": "v",
+				"c": "w",
+			},
+		}, &types.GeneratorArgs{
+			Behavior: "create",
+		}, nil))
+	w := makeMap1()
+	if err := w.AbsorbAll(makeMap2(types.BehaviorMerge)); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	err = expected.ErrorIfNotEqual(merged)
-	if err != nil {
+	if err := expected.ErrorIfNotEqual(w); err != nil {
 		t.Fatal(err)
 	}
-	input3 := []ResMap{merged, nil}
-	merged1, err := MergeWithOverride(input3...)
-	if err != nil {
+	w = makeMap1()
+	if err := w.AbsorbAll(nil); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	err = expected.ErrorIfNotEqual(merged1)
-	if err != nil {
+	if err := w.ErrorIfNotEqual(makeMap1()); err != nil {
 		t.Fatal(err)
 	}
-	input4 := []ResMap{nil, merged}
-	merged2, err := MergeWithOverride(input4...)
-	if err != nil {
+	w = makeMap1()
+	w2 := makeMap2(types.BehaviorReplace)
+	if err := w.AbsorbAll(w2); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	err = expected.ErrorIfNotEqual(merged2)
-	if err != nil {
+	if err := w2.ErrorIfNotEqual(w); err != nil {
 		t.Fatal(err)
 	}
-	inputs := generateMergeFixtures(types.BehaviorReplace)
-	replaced, err := MergeWithOverride(inputs...)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	expectedReplaced := inputs[1]
-	err = expectedReplaced.ErrorIfNotEqual(replaced)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = MergeWithOverride(generateMergeFixtures(types.BehaviorUnspecified)...)
+	w = makeMap1()
+	w2 = makeMap2(types.BehaviorUnspecified)
+	err := w.AbsorbAll(w2)
 	if err == nil {
-		t.Fatal("Merging with GenerationBehavior BehaviorUnspecified should return an error but does not")
+		t.Fatalf("expected error with unspecified behavior")
 	}
 }
