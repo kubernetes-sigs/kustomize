@@ -40,7 +40,11 @@ Advanced Usage
    * [last mile helm](chart.md) - Make last mile modifications to
      a helm chart.
      
-   * [secret generation](secretGeneratorPlugin.md) - Generating secrets from a plugin.  
+   * [secret generation](secretGeneratorPlugin.md) - Generating secrets from a plugin. 
+
+- transformer plugins:
+   * [validation transformer](validationTransformer/README.md) -
+   validate resources through a transformer
   
 - customize builtin transformer configurations
   
