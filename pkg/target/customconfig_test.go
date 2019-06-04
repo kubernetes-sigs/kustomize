@@ -274,15 +274,14 @@ spec:
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	// TODO(#669): The name of AnimalPark should be x-o-sandiego,
-	// not o-sandiego, since AnimalPark appears in the base.
+
 	th.AssertActualEqualsExpected(m, `
 kind: AnimalPark
 metadata:
   labels:
     app: myApp
     movie: planetOfTheApes
-  name: o-sandiego
+  name: o-x-sandiego
 spec:
   food:
   - mimosa
