@@ -97,8 +97,8 @@ func (tf *transformer) Transform(baseResourceMap resmap.ResMap) error {
 				return err
 			}
 		}
-		base.SetName(baseName)
 		baseResourceMap[id].SetMap(merged)
+		base.SetName(baseName)
 	}
 	return nil
 }
