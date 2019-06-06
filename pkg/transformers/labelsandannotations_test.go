@@ -17,7 +17,6 @@ limitations under the License.
 package transformers
 
 import (
-	"reflect"
 	"testing"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
@@ -34,7 +33,7 @@ var cmap = gvk.Gvk{Version: "v1", Kind: "ConfigMap"}
 var ns = gvk.Gvk{Version: "v1", Kind: "Namespace"}
 var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
 var statefulset = gvk.Gvk{Group: "apps", Version: "v1", Kind: "StatefulSet"}
-var crd = gvk.Gvk{Group: "apiwctensions.k8s.io", Version: "v1beta1", Kind: "CustomResourceDefinition"}
+var crd = gvk.Gvk{Group: "apiextensions.k8s.io", Version: "v1beta1", Kind: "CustomResourceDefinition"}
 var job = gvk.Gvk{Group: "batch", Version: "v1", Kind: "Job"}
 var cronjob = gvk.Gvk{Group: "batch", Version: "v1beta1", Kind: "CronJob"}
 var pv = gvk.Gvk{Version: "v1", Kind: "PersistentVolume"}
@@ -47,7 +46,7 @@ var rf = resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
 var defaultTransformerConfig = config.MakeDefaultConfig()
 
 func TestLabelsRun(t *testing.T) {
-	m := resmap.ResMap{
+	m := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
@@ -198,8 +197,8 @@ func TestLabelsRun(t *testing.T) {
 					},
 				},
 			}),
-	}
-	expected := resmap.ResMap{
+	})
+	expected := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
@@ -430,7 +429,7 @@ func TestLabelsRun(t *testing.T) {
 					},
 				},
 			}),
-	}
+	})
 	lt, err := NewLabelsMapTransformer(
 		map[string]string{"label-key1": "label-value1", "label-key2": "label-value2"},
 		defaultTransformerConfig.CommonLabels)
@@ -441,14 +440,13 @@ func TestLabelsRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !reflect.DeepEqual(m, expected) {
-		err = expected.ErrorIfNotEqual(m)
+	if err = expected.ErrorIfNotEqual(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
 
 func TestAnnotationsRun(t *testing.T) {
-	m := resmap.ResMap{
+	m := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
@@ -499,8 +497,8 @@ func TestAnnotationsRun(t *testing.T) {
 					},
 				},
 			}),
-	}
-	expected := resmap.ResMap{
+	})
+	expected := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
@@ -567,7 +565,7 @@ func TestAnnotationsRun(t *testing.T) {
 					},
 				},
 			}),
-	}
+	})
 	at, err := NewAnnotationsMapTransformer(
 		map[string]string{"anno-key1": "anno-value1", "anno-key2": "anno-value2"},
 		defaultTransformerConfig.CommonAnnotations)
@@ -578,14 +576,13 @@ func TestAnnotationsRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !reflect.DeepEqual(m, expected) {
-		err = expected.ErrorIfNotEqual(m)
+	if err = expected.ErrorIfNotEqual(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
 
 func TestAnnotaionsRunWithNullValue(t *testing.T) {
-	m := resmap.ResMap{
+	m := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
@@ -595,9 +592,9 @@ func TestAnnotaionsRunWithNullValue(t *testing.T) {
 					"annotations": nil,
 				},
 			}),
-	}
+	})
 
-	expected := resmap.ResMap{
+	expected := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
@@ -610,7 +607,7 @@ func TestAnnotaionsRunWithNullValue(t *testing.T) {
 					},
 				},
 			}),
-	}
+	})
 
 	at, err := NewAnnotationsMapTransformer(
 		map[string]string{"anno-key1": "anno-value1", "anno-key2": "anno-value2"},
@@ -622,8 +619,7 @@ func TestAnnotaionsRunWithNullValue(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !reflect.DeepEqual(m, expected) {
-		err = expected.ErrorIfNotEqual(m)
+	if err = expected.ErrorIfNotEqual(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 

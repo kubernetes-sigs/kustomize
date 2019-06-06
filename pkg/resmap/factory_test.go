@@ -1,18 +1,5 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package resmap_test
 
@@ -20,6 +7,8 @@ import (
 	"encoding/base64"
 	"reflect"
 	"testing"
+
+	"sigs.k8s.io/kustomize/pkg/resource"
 
 	"sigs.k8s.io/kustomize/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/fs"
@@ -57,14 +46,15 @@ metadata:
 	if ferr := l.AddFile("/whatever/project/deployment.yaml", []byte(resourceStr)); ferr != nil {
 		t.Fatalf("Error adding fake file: %v\n", ferr)
 	}
-	expected := ResMap{resid.NewResId(deploy, "dply1"): rf.FromMap(
-		map[string]interface{}{
-			"apiVersion": "apps/v1",
-			"kind":       "Deployment",
-			"metadata": map[string]interface{}{
-				"name": "dply1",
-			},
-		}),
+	expected := FromMap(map[resid.ResId]*resource.Resource{
+		resid.NewResId(deploy, "dply1"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "dply1",
+				},
+			}),
 		resid.NewResId(deploy, "dply2"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
@@ -82,11 +72,10 @@ metadata:
 					"namespace": "test",
 				},
 			}),
-	}
-
+	})
 	m, _ := rmF.FromFile(l, "deployment.yaml")
-	if len(m) != 3 {
-		t.Fatalf("%#v should contain 3 appResource, but got %d", m, len(m))
+	if m.Size() != 3 {
+		t.Fatalf("result should contain 3, but got %d", m.Size())
 	}
 	if err := expected.ErrorIfNotEqual(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
@@ -104,24 +93,23 @@ kind: ConfigMap
 metadata:
   name: cm2
 `)
-	expected := ResMap{
-		resid.NewResId(cmap, "cm1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "cm1",
-				},
-			}),
-		resid.NewResId(cmap, "cm2"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "cm2",
-				},
-			}),
-	}
+	expected := New()
+	expected.Append(rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "cm1",
+			},
+		}))
+	expected.Append(rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "cm2",
+			},
+		}))
 	m, err := rmF.NewResMapFromBytes(encoded)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -158,7 +146,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 			},
 			filepath: "/whatever/project/app.env",
 			content:  "DB_USERNAME=admin\nDB_PASSWORD=somepw",
-			expected: ResMap{
+			expected: FromMap(map[resid.ResId]*resource.Resource{
 				resid.NewResId(cmap, "envConfigMap"): rf.FromMapAndOption(
 					map[string]interface{}{
 						"apiVersion": "v1",
@@ -171,7 +159,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 							"DB_PASSWORD": "somepw",
 						},
 					}, &types.GeneratorArgs{}, nil),
-			},
+			}),
 		},
 
 		{
@@ -187,7 +175,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 			},
 			filepath: "/whatever/project/app-init.ini",
 			content:  "FOO=bar\nBAR=baz\n",
-			expected: ResMap{
+			expected: FromMap(map[resid.ResId]*resource.Resource{
 				resid.NewResId(cmap, "fileConfigMap"): rf.FromMapAndOption(
 					map[string]interface{}{
 						"apiVersion": "v1",
@@ -201,7 +189,7 @@ BAR=baz
 `,
 						},
 					}, &types.GeneratorArgs{}, nil),
-			},
+			}),
 		},
 		{
 			description: "construct config map from literal",
@@ -215,7 +203,7 @@ BAR=baz
 					},
 				},
 			},
-			expected: ResMap{
+			expected: FromMap(map[resid.ResId]*resource.Resource{
 				resid.NewResId(cmap, "literalConfigMap"): rf.FromMapAndOption(
 					map[string]interface{}{
 						"apiVersion": "v1",
@@ -230,7 +218,7 @@ BAR=baz
 							"d": "false",
 						},
 					}, &types.GeneratorArgs{}, nil),
-			},
+			}),
 		},
 
 		// TODO: add testcase for data coming from multiple sources like
@@ -275,7 +263,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	expected := ResMap{
+	expected := FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(secret, "apple"): rf.FromMapAndOption(
 			map[string]interface{}{
 				"apiVersion": "v1",
@@ -289,7 +277,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
 			}, &types.GeneratorArgs{}, nil),
-	}
+	})
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("%#v\ndoesn't match expected:\n%#v", actual, expected)
 	}

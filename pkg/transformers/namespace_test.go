@@ -17,7 +17,6 @@ limitations under the License.
 package transformers
 
 import (
-	"reflect"
 	"testing"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
@@ -29,7 +28,7 @@ import (
 func TestNamespaceRun(t *testing.T) {
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
-	m := resmap.ResMap{
+	m := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
@@ -109,8 +108,8 @@ func TestNamespaceRun(t *testing.T) {
 					"name": "crd",
 				},
 			}),
-	}
-	expected := resmap.ResMap{
+	})
+	expected := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResIdWithPrefixNamespace(ns, "ns1", "", ""): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
@@ -191,15 +190,14 @@ func TestNamespaceRun(t *testing.T) {
 					"name": "crd",
 				},
 			}),
-	}
+	})
 
 	nst := NewNamespaceTransformer("test", defaultTransformerConfig.NameSpace)
 	err := nst.Transform(m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !reflect.DeepEqual(m, expected) {
-		err = expected.ErrorIfNotEqual(m)
+	if err = expected.ErrorIfNotEqual(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
@@ -207,7 +205,7 @@ func TestNamespaceRun(t *testing.T) {
 func TestNamespaceRunForClusterLevelKind(t *testing.T) {
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
-	m := resmap.ResMap{
+	m := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(ns, "ns1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
@@ -245,9 +243,9 @@ func TestNamespaceRunForClusterLevelKind(t *testing.T) {
 				},
 				"subjects": []interface{}{},
 			}),
-	}
+	})
 
-	expected := m.DeepCopy(rf)
+	expected := m.DeepCopy()
 
 	nst := NewNamespaceTransformer("test", defaultTransformerConfig.NameSpace)
 
@@ -255,8 +253,7 @@ func TestNamespaceRunForClusterLevelKind(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !reflect.DeepEqual(m, expected) {
-		err = expected.ErrorIfNotEqual(m)
+	if err = expected.ErrorIfNotEqual(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }

@@ -113,6 +113,7 @@ func (n ResId) GvknEquals(id ResId) bool {
 // NsGvknEquals returns true if the other id matches
 // namespace/Group/Version/Kind/name.
 func (n ResId) NsGvknEquals(id ResId) bool {
+	// TODO: same a n.ItemId.Equals(id.ItemId)
 	return n.ItemId.Namespace == id.ItemId.Namespace && n.GvknEquals(id)
 }
 

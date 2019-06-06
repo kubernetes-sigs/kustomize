@@ -38,8 +38,8 @@ func (p *ReplicaCountTransformerPlugin) Transform(m resmap.ResMap) error {
 		return r.ItemId.Name == p.Replica.Name
 	}
 
-	for _, r := range m.GetMatchingIds(matcher) {
-		kMap := m[r].Map()
+	for _, id := range m.GetMatchingIds(matcher) {
+		kMap := m.GetById(id).Map()
 
 		specInterface, ok := kMap[fldSpec]
 		if !ok {

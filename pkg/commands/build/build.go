@@ -188,7 +188,7 @@ func NewCmdBuildPrune(
 
 func writeIndividualFiles(
 	fSys fs.FileSystem, folderPath string, m resmap.ResMap) error {
-	for _, res := range m {
+	for _, res := range m.Resources() {
 		filename := filepath.Join(
 			folderPath,
 			fmt.Sprintf(

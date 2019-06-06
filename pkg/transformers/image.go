@@ -44,19 +44,18 @@ func (pt *imageTransformer) Transform(m resmap.ResMap) error {
 	if len(pt.images) == 0 {
 		return nil
 	}
-	for id := range m {
-		objMap := m[id].Map()
+	for _, r := range m.Resources() {
 		for _, path := range pt.fieldSpecs {
-			if !id.Gvk().IsSelected(&path.Gvk) {
+			if !r.Id().Gvk().IsSelected(&path.Gvk) {
 				continue
 			}
-			err := mutateField(objMap, path.PathSlice(), false, pt.mutateImage)
+			err := mutateField(r.Map(), path.PathSlice(), false, pt.mutateImage)
 			if err != nil {
 				return err
 			}
 		}
 		// Kept for backward compatibility
-		if err := pt.findAndReplaceImage(objMap); err != nil && id.Gvk().Kind != `CustomResourceDefinition` {
+		if err := pt.findAndReplaceImage(r.Map()); err != nil && r.Id().Kind != `CustomResourceDefinition` {
 			return err
 		}
 	}

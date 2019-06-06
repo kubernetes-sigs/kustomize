@@ -61,17 +61,18 @@ func NewNameReferenceTransformer(br []config.NameBackReferences) Transformer {
 // body of the resource object (the value in the ResMap).
 func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 	// TODO: Too much looping.
-	// Even more hidden loops in FilterBy,
+	// Even more hidden loops in ResourcesThatCouldReference,
 	// updateNameReference and FindByGVKN.
-	for id := range m {
+	for id, r := range m.AsMap() {
 		for _, backRef := range o.backRefs {
 			for _, fSpec := range backRef.FieldSpecs {
 				if id.Gvk().IsSelected(&fSpec.Gvk) {
 					err := mutateField(
-						m[id].Map(), fSpec.PathSlice(),
+						r.Map(),
+						fSpec.PathSlice(),
 						fSpec.CreateIfNotPresent,
 						o.updateNameReference(
-							id, backRef.Gvk, m.FilterBy(id)))
+							id, backRef.Gvk, m.ResourcesThatCouldReference(id)))
 					if err != nil {
 						return err
 					}
@@ -88,7 +89,7 @@ func (o *nameReferenceTransformer) updateNameReference(
 		switch in.(type) {
 		case string:
 			s, _ := in.(string)
-			for id, res := range m {
+			for id, res := range m.AsMap() {
 				if id.Gvk().IsSelected(&backRef) && id.Name() == s {
 					matchedIds := m.GetMatchingIds(id.GvknEquals)
 					// If there's more than one match, there's no way
@@ -114,7 +115,7 @@ func (o *nameReferenceTransformer) updateNameReference(
 				}
 				names = append(names, name)
 			}
-			for id, res := range m {
+			for id, res := range m.AsMap() {
 				indexes := indexOf(id.Name(), names)
 				if id.Gvk().IsSelected(&backRef) && len(indexes) > 0 {
 					matchedIds := m.GetMatchingIds(id.GvknEquals)
