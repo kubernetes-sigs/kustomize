@@ -17,7 +17,6 @@ limitations under the License.
 package transformers
 
 import (
-	"reflect"
 	"strings"
 	"testing"
 
@@ -30,7 +29,7 @@ import (
 func TestNameReferenceHappyRun(t *testing.T) {
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
-	m := resmap.ResMap{
+	m := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(cmap, "cm1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
@@ -278,14 +277,11 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					},
 				},
 			}),
-	}
+	})
 
-	expected := resmap.ResMap{}
-	for k, v := range m {
-		expected[k] = v
-	}
+	expected := m.ShallowCopy()
 
-	expected[resid.NewResId(deploy, "deploy1")] = rf.FromMap(
+	expected.ReplaceResource(resid.NewResId(deploy, "deploy1"), rf.FromMap(
 		map[string]interface{}{
 			"group":      "apps",
 			"apiVersion": "v1",
@@ -365,8 +361,8 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					},
 				},
 			},
-		})
-	expected[resid.NewResId(statefulset, "statefulset1")] = rf.FromMap(
+		}))
+	expected.ReplaceResource(resid.NewResId(statefulset, "statefulset1"), rf.FromMap(
 		map[string]interface{}{
 			"group":      "apps",
 			"apiVersion": "v1",
@@ -398,8 +394,8 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					},
 				},
 			},
-		})
-	expected[resid.NewResId(ingress, "ingress1")] = rf.FromMap(
+		}))
+	expected.ReplaceResource(resid.NewResId(ingress, "ingress1"), rf.FromMap(
 		map[string]interface{}{
 			"group":      "extensions",
 			"apiVersion": "v1beta1",
@@ -418,8 +414,8 @@ func TestNameReferenceHappyRun(t *testing.T) {
 				},
 			},
 		},
-	)
-	expected[resid.NewResId(crb, "crb")] = rf.FromMap(
+	))
+	expected.ReplaceResource(resid.NewResId(crb, "crb"), rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "rbac.authorization.k8s.io/v1",
 			"kind":       "ClusterRoleBinding",
@@ -433,8 +429,8 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					"namespace": "test",
 				},
 			},
-		})
-	expected[resid.NewResId(cr, "cr")] = rf.FromMap(
+		}))
+	expected.ReplaceResource(resid.NewResId(cr, "cr"), rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "rbac.authorization.k8s.io/v1",
 			"kind":       "ClusterRole",
@@ -453,8 +449,8 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					},
 				},
 			},
-		})
-	expected[resid.NewResId(cronjob, "cronjob1")] = rf.FromMap(
+		}))
+	expected.ReplaceResource(resid.NewResId(cronjob, "cronjob1"), rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "batch/v1beta1",
 			"kind":       "CronJob",
@@ -490,14 +486,13 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					},
 				},
 			},
-		})
+		}))
 	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
 	err := nrt.Transform(m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !reflect.DeepEqual(m, expected) {
-		err = expected.ErrorIfNotEqual(m)
+	if err = expected.ErrorIfNotEqual(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
@@ -510,7 +505,7 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 		expectedErr string
 	}{
 		{
-			resMap: resmap.ResMap{
+			resMap: resmap.FromMap(map[resid.ResId]*resource.Resource{
 				resid.NewResId(cr, "cr"): rf.FromMap(
 					map[string]interface{}{
 						"apiVersion": "rbac.authorization.k8s.io/v1",
@@ -529,9 +524,9 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 							},
 						},
 					}),
-			},
+			}),
 			expectedErr: "is expected to be string"},
-		{resMap: resmap.ResMap{
+		{resMap: resmap.FromMap(map[resid.ResId]*resource.Resource{
 			resid.NewResId(cr, "cr"): rf.FromMap(
 				map[string]interface{}{
 					"apiVersion": "rbac.authorization.k8s.io/v1",
@@ -550,7 +545,7 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 						},
 					},
 				}),
-		},
+		}),
 			expectedErr: "is expected to be either a string or a []interface{}"},
 	}
 
@@ -571,7 +566,7 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
-	m := resmap.ResMap{
+	m := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(pv, "volume1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
@@ -593,9 +588,9 @@ func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 					"volumeName": "volume1",
 				},
 			}),
-	}
+	})
 
-	expected := resmap.ResMap{
+	expected := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		resid.NewResId(pv, "volume1"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
@@ -617,15 +612,14 @@ func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 					"volumeName": "someprefix-volume1",
 				},
 			}),
-	}
-	expected[resid.NewResId(pv, "volume1")].AppendRefBy(resid.NewResId(pvc, "claim1"))
+	})
+	expected.GetById(resid.NewResId(pv, "volume1")).AppendRefBy(resid.NewResId(pvc, "claim1"))
 	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
 	err := nrt.Transform(m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !reflect.DeepEqual(m, expected) {
-		err = expected.ErrorIfNotEqual(m)
+	if err = expected.ErrorIfNotEqual(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }

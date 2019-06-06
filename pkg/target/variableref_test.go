@@ -720,7 +720,7 @@ spec:
 `)
 }
 
-func TestVariableRefMounthPath(t *testing.T) {
+func TestVariableRefMountPath(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/app/base")
 	th.WriteK("/app/base", `
 resources:

@@ -34,7 +34,7 @@ func TestJsonPatchJSONTransformer_Transform(t *testing.T) {
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
 	id := resid.NewResId(deploy, "deploy1")
-	base := resmap.ResMap{
+	base := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		id: rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
@@ -60,7 +60,7 @@ func TestJsonPatchJSONTransformer_Transform(t *testing.T) {
 					},
 				},
 			}),
-	}
+	})
 
 	operations := []byte(`[
         {"op": "replace", "path": "/spec/template/spec/containers/0/name", "value": "my-nginx"},
@@ -68,7 +68,7 @@ func TestJsonPatchJSONTransformer_Transform(t *testing.T) {
         {"op": "add", "path": "/spec/template/spec/containers/0/command", "value": ["arg1", "arg2", "arg3"]}
 ]`)
 
-	expected := resmap.ResMap{
+	expected := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		id: rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
@@ -100,7 +100,7 @@ func TestJsonPatchJSONTransformer_Transform(t *testing.T) {
 					},
 				},
 			}),
-	}
+	})
 	jpt, err := newPatchJson6902JSONTransformer(id, operations)
 	if err != nil {
 		t.Fatalf("unexpected error : %v", err)
@@ -119,7 +119,7 @@ func TestJsonPatchJSONTransformer_UnHappyTransform(t *testing.T) {
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
 	id := resid.NewResId(deploy, "deploy1")
-	base := resmap.ResMap{
+	base := resmap.FromMap(map[resid.ResId]*resource.Resource{
 		id: rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
@@ -145,7 +145,7 @@ func TestJsonPatchJSONTransformer_UnHappyTransform(t *testing.T) {
 					},
 				},
 			}),
-	}
+	})
 
 	operations := []byte(`[
         {"op": "add", "path": "/spec/template/spec/containers/0/command/", "value": ["arg1", "arg2", "arg3"]}

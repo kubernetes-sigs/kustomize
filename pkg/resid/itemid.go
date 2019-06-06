@@ -17,7 +17,6 @@ limitations under the License.
 package resid
 
 import (
-	"fmt"
 	"strings"
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
@@ -54,8 +53,10 @@ func (i ItemId) String() string {
 		[]string{i.Gvk.String(), ns, nm}, separator)
 }
 
-func (i ItemId) Equals(b fmt.Stringer) bool {
-	return i.String() == b.String()
+func (i ItemId) Equals(o ItemId) bool {
+	return i.Name == o.Name &&
+		i.Namespace == o.Namespace &&
+		i.Gvk.Equals(o.Gvk)
 }
 
 func NewItemId(g gvk.Gvk, ns, nm string) ItemId {

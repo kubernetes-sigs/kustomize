@@ -22,6 +22,7 @@ import (
 
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
 
@@ -50,7 +51,7 @@ func TestVarRef(t *testing.T) {
 				fs: []config.FieldSpec{
 					{Gvk: cmap, Path: "data"},
 				},
-				res: resmap.ResMap{
+				res: resmap.FromMap(map[resid.ResId]*resource.Resource{
 					resid.NewResId(cmap, "cm1"): rf.FromMap(
 						map[string]interface{}{
 							"apiVersion": "v1",
@@ -63,10 +64,10 @@ func TestVarRef(t *testing.T) {
 								"item2": "bla",
 							},
 						}),
-				},
+				}),
 			},
 			expected: expected{
-				res: resmap.ResMap{
+				res: resmap.FromMap(map[resid.ResId]*resource.Resource{
 					resid.NewResId(cmap, "cm1"): rf.FromMap(
 						map[string]interface{}{
 							"apiVersion": "v1",
@@ -79,7 +80,7 @@ func TestVarRef(t *testing.T) {
 								"item2": "bla",
 							},
 						}),
-				},
+				}),
 				unused: []string{"BAR"},
 			},
 		},
