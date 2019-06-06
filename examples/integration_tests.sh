@@ -53,7 +53,7 @@ function setUpEnv {
     exitWith "Script must be run from $expectedRepo"
   fi
 
-  go install . || \
+  GO111MODULE=on go install . || \
     { exitWith "Failed to install kustomize."; }
 
   PATH=$GOPATH/bin:$PATH
