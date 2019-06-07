@@ -9,17 +9,17 @@ import (
 	"path/filepath"
 	"strings"
 
-	"sigs.k8s.io/kustomize/pkg/ifc"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/ifc/transformer"
 	"sigs.k8s.io/kustomize/pkg/loader"
 	"sigs.k8s.io/kustomize/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/pkg/plugins"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/target"
+	"sigs.k8s.io/kustomize/plugin/builtin"
 	"sigs.k8s.io/yaml"
 )
 
@@ -153,7 +153,12 @@ func (o *Options) emitResources(
 	if o.outputPath != "" && fSys.IsDir(o.outputPath) {
 		return writeIndividualFiles(fSys, o.outputPath, m)
 	}
-	res, err := m.AsYaml(resmap.LegacySort)
+	// Done this way just to prove that overall sorting
+	// can be performed by a plugin.  This particular
+	// plugin doesn't require configuration; just make
+	// it and call transform.
+	builtin.NewPreferredOrderTransformerPlugin().Transform(m)
+	res, err := m.AsYaml()
 	if err != nil {
 		return err
 	}

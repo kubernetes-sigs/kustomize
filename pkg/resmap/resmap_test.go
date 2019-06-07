@@ -177,7 +177,7 @@ metadata:
 				"name": "cm2",
 			},
 		}))
-	out, err := input.AsYaml(Identity)
+	out, err := input.AsYaml()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
