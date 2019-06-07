@@ -193,7 +193,7 @@ func (th *KustTestHarness) AssertActualEqualsExpected(
 	if len(expected) > 0 && expected[0] == 10 {
 		expected = expected[1:]
 	}
-	actual, err := m.EncodeAsYaml()
+	actual, err := m.AsYaml(resmap.LegacySort)
 	if err != nil {
 		th.t.Fatalf("Unexpected err: %v", err)
 	}
