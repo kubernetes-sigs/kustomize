@@ -39,7 +39,7 @@ func (ra *ResAccumulator) ResMap() resmap.ResMap {
 
 // Vars returns a copy of underlying vars.
 func (ra *ResAccumulator) Vars() []types.Var {
-	return ra.varSet.Set()
+	return ra.varSet.AsSlice()
 }
 
 func (ra *ResAccumulator) AppendAll(
@@ -75,7 +75,7 @@ func (ra *ResAccumulator) MergeAccumulator(other *ResAccumulator) (err error) {
 	if err != nil {
 		return err
 	}
-	return ra.varSet.MergeSet(&other.varSet)
+	return ra.varSet.MergeSet(other.varSet)
 }
 
 // makeVarReplacementMap returns a map of Var names to
