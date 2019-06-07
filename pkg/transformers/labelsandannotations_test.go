@@ -440,7 +440,7 @@ func TestLabelsRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err = expected.ErrorIfNotEqual(m); err != nil {
+	if err = expected.ErrorIfNotEqualSets(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
@@ -576,7 +576,7 @@ func TestAnnotationsRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err = expected.ErrorIfNotEqual(m); err != nil {
+	if err = expected.ErrorIfNotEqualSets(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
@@ -619,7 +619,7 @@ func TestAnnotaionsRunWithNullValue(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err = expected.ErrorIfNotEqual(m); err != nil {
+	if err = expected.ErrorIfNotEqualSets(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 

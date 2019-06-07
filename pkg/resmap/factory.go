@@ -66,7 +66,7 @@ func (rmF *Factory) NewResMapFromBytes(b []byte) (ResMap, error) {
 // Deprecated.
 // FromMap returns a ResMap with arbitrary internal ordering,
 // panicing on error.  For tests only.
-// See also ErrorIfNotEqual.
+// See also ErrorIfNotEqualSets.
 func FromMap(arg map[resid.ResId]*resource.Resource) ResMap {
 	result, err := fromMap(arg)
 	if err != nil {

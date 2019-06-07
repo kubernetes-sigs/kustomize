@@ -151,7 +151,7 @@ type ResMap interface {
 	// not the underlying resources.
 	ShallowCopy() ResMap
 
-	// ErrorIfNotEqual returns an error if the
+	// ErrorIfNotEqualSets returns an error if the
 	// argument doesn't have the same Ids and resource
 	// data as self. Ordering is _not_ taken into account,
 	// as this function was solely used in tests written
@@ -159,10 +159,9 @@ type ResMap interface {
 	// and those tests are initialized with maps which
 	// by definition have random ordering, and will
 	// fail spuriously.
-	// TODO: rename to ErrorIfNotEqualSets
 	// TODO: modify tests to not use resmap.FromMap,
 	// TODO: - and replace this with a stricter equals.
-	ErrorIfNotEqual(ResMap) error
+	ErrorIfNotEqualSets(ResMap) error
 
 	// Debug prints the ResMap.
 	Debug(title string)
@@ -409,8 +408,8 @@ func (m *resWrangler) AsYaml(twiddle ResTwiddler) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// ErrorIfNotEqual implements ResMap.
-func (m *resWrangler) ErrorIfNotEqual(other ResMap) error {
+// ErrorIfNotEqualSets implements ResMap.
+func (m *resWrangler) ErrorIfNotEqualSets(other ResMap) error {
 	m2, ok := other.(*resWrangler)
 	if !ok {
 		panic(fmt.Errorf("bad cast"))
