@@ -89,7 +89,7 @@ func TestDefaulting(t *testing.T) {
 }
 
 func TestVarSet(t *testing.T) {
-	set := &VarSet{}
+	set := VarSet{}
 	vars := []Var{
 		{
 			Name: "SHELLVARS",
@@ -120,10 +120,10 @@ func TestVarSet(t *testing.T) {
 	}
 	for _, v := range vars {
 		if !set.Contains(v) {
-			t.Fatalf("set %v should contain var %v", set.Set(), v)
+			t.Fatalf("set %v should contain var %v", set.AsSlice(), v)
 		}
 	}
-	set2 := &VarSet{}
+	set2 := VarSet{}
 	err = set2.MergeSet(set)
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
@@ -144,7 +144,7 @@ func TestVarSet(t *testing.T) {
 		t.Fatalf("unexpected field path: %v", v.FieldRef.FieldPath)
 	}
 	// Confirm sorting.
-	names := set2.Set()
+	names := set2.AsSlice()
 	if names[0].Name != "AWARD" ||
 		names[1].Name != "BACKEND" ||
 		names[2].Name != "SHELLVARS" {
