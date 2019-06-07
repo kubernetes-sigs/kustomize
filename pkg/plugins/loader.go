@@ -100,6 +100,7 @@ func (l *Loader) absolutePluginPath(id resid.ResId) string {
 	return AbsolutePluginPath(l.pc, id)
 }
 
+// TODO: https://github.com/kubernetes-sigs/kustomize/issues/1164
 func (l *Loader) loadAndConfigurePlugin(
 	ldr ifc.Loader, res *resource.Resource) (c Configurable, err error) {
 	if !l.pc.Enabled {

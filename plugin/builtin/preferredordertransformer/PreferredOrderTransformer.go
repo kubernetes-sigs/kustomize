@@ -16,7 +16,7 @@ import (
 // dependencies (like Namespace, StorageClass, etc.)
 // first, and resources with a high number of dependencies
 // (like ValidatingWebhookConfiguration) last.
-type plugin struct {}
+type plugin struct{}
 
 var KustomizePlugin plugin
 
