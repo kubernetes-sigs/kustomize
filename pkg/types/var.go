@@ -92,17 +92,26 @@ func (vs *VarSet) MergeSet(incoming VarSet) error {
 	return vs.MergeSlice(incoming.set)
 }
 
-// MergeSlice absorbs other vars with error on name collision.
+// MergeSlice absorbs a Var slice with error on name collision.
 // Empty fields in incoming vars are defaulted.
 func (vs *VarSet) MergeSlice(incoming []Var) error {
 	for _, v := range incoming {
-		if vs.Contains(v) {
-			return fmt.Errorf(
-				"var %s already encountered", v.Name)
+		if err := vs.Merge(v); err != nil {
+			return err
 		}
-		v.defaulting()
-		vs.insert(v)
 	}
+	return nil
+}
+
+// Merge absorbs another Var with error on name collision.
+// Empty fields in incoming Var is defaulted.
+func (vs *VarSet) Merge(v Var) error {
+	if vs.Contains(v) {
+		return fmt.Errorf(
+			"var '%s' already encountered", v.Name)
+	}
+	v.defaulting()
+	vs.insert(v)
 	return nil
 }
 
