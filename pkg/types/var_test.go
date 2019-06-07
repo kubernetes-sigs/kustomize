@@ -132,7 +132,7 @@ func TestVarSet(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected err")
 	}
-	if !strings.Contains(err.Error(), "var SHELLVARS already encountered") {
+	if !strings.Contains(err.Error(), "var 'SHELLVARS' already encountered") {
 		t.Fatalf("unexpected err: %v", err)
 	}
 	v := set2.Get("BACKEND")
