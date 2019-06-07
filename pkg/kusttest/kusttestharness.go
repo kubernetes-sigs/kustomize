@@ -20,6 +20,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/target"
 	"sigs.k8s.io/kustomize/pkg/transformers/config/defaultconfig"
 	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/plugin/builtin"
 )
 
 // KustTestHarness helps test kustomization generation and transformation.
@@ -193,7 +194,9 @@ func (th *KustTestHarness) AssertActualEqualsExpected(
 	if len(expected) > 0 && expected[0] == 10 {
 		expected = expected[1:]
 	}
-	actual, err := m.AsYaml(resmap.LegacySort)
+	// The tests currently expect a particular ordering.
+	builtin.NewPreferredOrderTransformerPlugin().Transform(m)
+	actual, err := m.AsYaml()
 	if err != nil {
 		th.t.Fatalf("Unexpected err: %v", err)
 	}
