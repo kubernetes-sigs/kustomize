@@ -78,7 +78,7 @@ func (o *multiTransformer) transformWithCheckConflict(m resmap.ResMap) error {
 	if err != nil {
 		return err
 	}
-	err = m.ErrorIfNotEqual(mcopy)
+	err = m.ErrorIfNotEqualSets(mcopy)
 	if err != nil {
 		return fmt.Errorf("found conflict between different patches\n%v", err)
 	}

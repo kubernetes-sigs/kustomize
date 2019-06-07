@@ -248,7 +248,7 @@ func TestNewPatchJson6902FactoryMulti(t *testing.T) {
 		t.Fatalf("unexpected error : %v", err)
 	}
 	if !reflect.DeepEqual(base, expected) {
-		err = expected.ErrorIfNotEqual(base)
+		err = expected.ErrorIfNotEqualSets(base)
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
