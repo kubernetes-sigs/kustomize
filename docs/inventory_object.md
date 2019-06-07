@@ -28,7 +28,7 @@ The _inventory_ ConfigMap contains two special annotations:
   The value of this annotation is the JSON blob
   for an Inventory object. The Inventory is a
   struct that contains following information
-  - all objects within this kusotmization target
+  - all objects within this kustomization target
   - all objects that reference within this kustomization target
   
   Here is an example of an Inventory object
