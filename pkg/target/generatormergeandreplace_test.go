@@ -17,6 +17,7 @@ limitations under the License.
 package target_test
 
 import (
+	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/pkg/kusttest"
@@ -478,4 +479,29 @@ spec:
           name: staging-team-foo-configmap-in-base-gh9d7t85gb
         name: configmap-in-base
 `)
+}
+
+func TestGeneratingIntoNamespaces(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th.WriteK("/app", `
+configMapGenerator:
+- name: test
+  namespace: bob
+  literals:
+  - key=value
+- name: test
+  namespace: kube-system
+  literals:
+  - key=value
+`)
+	_, err := th.MakeKustTarget().MakeCustomizedResMap()
+	// Document #1155
+	// This actually should be nil; it should work, and
+	// have some expected output.
+	if err == nil {
+		t.Fatalf("expected error")
+	}
+	if !strings.Contains(err.Error(), "must merge or replace") {
+		t.Fatalf("unexpected error %v", err)
+	}
 }
