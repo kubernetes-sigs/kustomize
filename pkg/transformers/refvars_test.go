@@ -101,7 +101,7 @@ func TestVarRef(t *testing.T) {
 
 			a, e := tc.given.res, tc.expected.res
 			if !reflect.DeepEqual(a, e) {
-				err = e.ErrorIfNotEqual(a)
+				err = e.ErrorIfNotEqualSets(a)
 				t.Fatalf("actual doesn't match expected: \nACTUAL:\n%v\nEXPECTED:\n%v\nERR: %v", a, e, err)
 			}
 

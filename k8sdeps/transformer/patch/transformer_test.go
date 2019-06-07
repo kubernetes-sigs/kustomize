@@ -124,7 +124,7 @@ func TestOverlayRun(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !reflect.DeepEqual(base, expected) {
-		err = expected.ErrorIfNotEqual(base)
+		err = expected.ErrorIfNotEqualSets(base)
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
@@ -254,7 +254,7 @@ func TestMultiplePatches(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !reflect.DeepEqual(base, expected) {
-		err = expected.ErrorIfNotEqual(base)
+		err = expected.ErrorIfNotEqualSets(base)
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
@@ -402,7 +402,7 @@ func TestNoSchemaOverlayRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err = expected.ErrorIfNotEqual(base); err != nil {
+	if err = expected.ErrorIfNotEqualSets(base); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
@@ -486,7 +486,7 @@ func TestNoSchemaMultiplePatches(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err = expected.ErrorIfNotEqual(base); err != nil {
+	if err = expected.ErrorIfNotEqualSets(base); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
