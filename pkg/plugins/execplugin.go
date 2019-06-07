@@ -140,7 +140,7 @@ func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
 	}
 
 	// encode the ResMap so it can be fed to the plugin
-	resources, err := inputRM.EncodeAsYaml()
+	resources, err := inputRM.AsYaml(resmap.Identity)
 	if err != nil {
 		return err
 	}

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/pkg/kusttest"
+	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/plugin"
 )
 
@@ -32,7 +33,7 @@ kind: PrintWorkDir
 metadata:
   name: whatever
 `)
-	a, err := m.EncodeAsYaml()
+	a, err := m.AsYaml(resmap.Identity)
 	if err != nil {
 		t.Error(err)
 	}

@@ -84,17 +84,34 @@ type ResMap interface {
 	// Error on Id collision.
 	AppendWithId(resid.ResId, *resource.Resource) error
 
-	// AsMap returns ResId, *Resource pairs in
-	// arbitrary order via a map.
+	// AppendAll appends another ResMap to self,
+	// failing on any Id collision.
+	AppendAll(ResMap) error
+
+	// AbsorbAll appends, replaces or merges the contents
+	// of another ResMap into self,
+	// allowing and sometimes demanding ID collisions.
+	// A collision would be demanded, say, when a generated
+	// ConfigMap has the "replace" option in its generation
+	// instructions, meaning it _must_ replace
+	// something in the known set of resources.
+	// If a resource id for resource X is found to already
+	// be in self, then the behavior field for X must
+	// be BehaviorMerge or BehaviorReplace. If X is not in
+	// self, then its behavior _cannot_ be merge or replace.
+	AbsorbAll(ResMap) error
+
+	// AsMap returns (ResId, *Resource) pairs in
+	// arbitrary order via a generated map.
 	// The map is discardable, and edits to map structure
 	// have no impact on the ResMap.
 	// The Ids are copies, but the resources are pointers,
 	// so the resources themselves can be modified.
 	AsMap() map[resid.ResId]*resource.Resource
 
-	// EncodeAsYaml emits the resources as YAML in a byte slice.
-	// Resources are separated by `---`.
-	EncodeAsYaml() ([]byte, error)
+	// AsYaml returns the yaml form of resources, after twiddling.
+	// Certainly nobody will abuse the twiddler.
+	AsYaml(f ResTwiddler) ([]byte, error)
 
 	// Gets the resource with the given Id, else nil.
 	GetById(resid.ResId) *resource.Resource
@@ -350,33 +367,42 @@ func (m *resWrangler) GetMatchingIds(matches IdMatcher) []resid.ResId {
 	return result
 }
 
-// EncodeAsYaml implements ResMap.
-func (m *resWrangler) EncodeAsYaml() ([]byte, error) {
-	// TODO: should be able to suppress this sort
-	//  and rely on ordering as specified in the ResMap
-	//  internal rList.
+// Identity returns Resources as is.
+func Identity(m ResMap) []*resource.Resource {
+	return m.Resources()
+}
+
+// LegacySort return Resources in a particular order.
+func LegacySort(m ResMap) []*resource.Resource {
+	resources := make([]*resource.Resource, m.Size())
 	ids := m.AllIds()
 	sort.Sort(IdSlice(ids))
+	for i, id := range ids {
+		resources[i] = m.GetById(id)
+	}
+	return resources
+}
 
+type ResTwiddler func(ResMap) []*resource.Resource
+
+// AsYaml implements ResMap.
+func (m *resWrangler) AsYaml(twiddle ResTwiddler) ([]byte, error) {
 	firstObj := true
 	var b []byte
 	buf := bytes.NewBuffer(b)
-	for _, id := range ids {
-		obj := m.GetById(id)
-		out, err := yaml.Marshal(obj.Map())
+	for _, res := range twiddle(m) {
+		out, err := yaml.Marshal(res.Map())
 		if err != nil {
 			return nil, err
 		}
 		if firstObj {
 			firstObj = false
 		} else {
-			_, err = buf.WriteString("---\n")
-			if err != nil {
+			if _, err = buf.WriteString("---\n"); err != nil {
 				return nil, err
 			}
 		}
-		_, err = buf.Write(out)
-		if err != nil {
+		if _, err = buf.Write(out); err != nil {
 			return nil, err
 		}
 	}
@@ -387,7 +413,7 @@ func (m *resWrangler) EncodeAsYaml() ([]byte, error) {
 func (m *resWrangler) ErrorIfNotEqual(other ResMap) error {
 	m2, ok := other.(*resWrangler)
 	if !ok {
-		panic(fmt.Errorf("bad cast to resmapImpl"))
+		panic(fmt.Errorf("bad cast"))
 	}
 	if m.Size() != m2.Size() {
 		return fmt.Errorf(
@@ -462,86 +488,93 @@ func (m *resWrangler) ResourcesThatCouldReference(inputId resid.ResId) ResMap {
 	return result
 }
 
-// MergeWithErrorOnIdCollision combines multiple ResMap instances, failing on
-// key collision and skipping nil maps.
-// If all of the maps are nil, an empty ResMap is returned.
-func MergeWithErrorOnIdCollision(maps ...ResMap) (ResMap, error) {
-	result := New()
-	for _, m := range maps {
-		if m == nil {
-			continue
+// AppendAll implements ResMap.
+func (m *resWrangler) AppendAll(other ResMap) error {
+	if other == nil {
+		return nil
+	}
+	w2, ok := other.(*resWrangler)
+	if !ok {
+		panic(fmt.Errorf("bad cast"))
+	}
+	for i, res := range w2.Resources() {
+		id, err := w2.idMappingToIndex(i)
+		if err != nil {
+			panic("map is unrecoverably corrupted; " + err.Error())
 		}
-		for id, res := range m.AsMap() {
-			err := result.AppendWithId(id, res)
-			if err != nil {
-				return nil, err
-			}
+		err = m.AppendWithId(id, res)
+		if err != nil {
+			return err
 		}
 	}
-	return result, nil
+	return nil
 }
 
-// MergeWithOverride combines multiple ResMap instances, allowing and sometimes
-// demanding certain collisions and skipping nil maps.
-// A collision would be demanded, say, when a generated ConfigMap has the
-// "replace" option in its generation instructions, meaning it is supposed
-// to replace something from the raw resources list.
-// If all of the maps are nil, an empty ResMap is returned.
-// When looping over the instances to combine them, if a resource id for
-// resource X is found to be already in the combined map, then the behavior
-// field for X must be BehaviorMerge or BehaviorReplace.  If X is not in the
-// map, then it's behavior cannot be merge or replace.
-// nolint: gocyclo
-func MergeWithOverride(maps ...ResMap) (ResMap, error) {
-	if len(maps) == 0 {
-		return New(), nil
+// AbsorbAll implements ResMap.
+func (m *resWrangler) AbsorbAll(other ResMap) error {
+	if other == nil {
+		return nil
 	}
-	result := maps[0]
-	if result == nil {
-		result = New()
+	w2, ok := other.(*resWrangler)
+	if !ok {
+		panic(fmt.Errorf("bad cast"))
 	}
-	for _, m := range maps[1:] {
-		if m == nil {
-			continue
+	for i, r := range w2.Resources() {
+		id, err := w2.idMappingToIndex(i)
+		if err != nil {
+			panic("map is unrecoverably corrupted; " + err.Error())
 		}
-		for id, r := range m.AsMap() {
-			matchedId := result.GetMatchingIds(id.GvknEquals)
-			if len(matchedId) == 1 {
-				id = matchedId[0]
-				old := result.GetById(id)
-				if old == nil {
-					return nil, fmt.Errorf("id lookup failure")
-				}
-				switch r.Behavior() {
-				case types.BehaviorReplace:
-					r.Replace(old)
-					err := result.ReplaceResource(id, r)
-					if err != nil {
-						return nil, err
-					}
-				case types.BehaviorMerge:
-					r.Merge(old)
-					err := result.ReplaceResource(id, r)
-					if err != nil {
-						return nil, err
-					}
-				default:
-					return nil, fmt.Errorf("id %#v exists; must merge or replace", id)
-				}
-			} else if len(matchedId) == 0 {
-				switch r.Behavior() {
-				case types.BehaviorMerge, types.BehaviorReplace:
-					return nil, fmt.Errorf("id %#v does not exist; cannot merge or replace", id)
-				default:
-					err := result.AppendWithId(id, r)
-					if err != nil {
-						return nil, err
-					}
-				}
-			} else {
-				return nil, fmt.Errorf("merge conflict, found multiple objects %v the Resmap %v can merge into", matchedId, id)
+		err = m.appendReplaceOrMerge(id, r)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (m *resWrangler) appendReplaceOrMerge(
+	idForRes resid.ResId, res *resource.Resource) error {
+	matchedId := m.GetMatchingIds(idForRes.GvknEquals)
+	switch len(matchedId) {
+	case 0:
+		switch res.Behavior() {
+		case types.BehaviorMerge, types.BehaviorReplace:
+			return fmt.Errorf(
+				"id %#v does not exist; cannot merge or replace", idForRes)
+		default:
+			// presumably types.BehaviorCreate
+			err := m.AppendWithId(idForRes, res)
+			if err != nil {
+				return err
 			}
 		}
+	case 1:
+		mId := matchedId[0]
+		old := m.GetById(mId)
+		if old == nil {
+			return fmt.Errorf("id lookup failure")
+		}
+		switch res.Behavior() {
+		case types.BehaviorReplace:
+			res.Replace(old)
+			err := m.ReplaceResource(mId, res)
+			if err != nil {
+				return err
+			}
+		case types.BehaviorMerge:
+			res.Merge(old)
+			err := m.ReplaceResource(mId, res)
+			if err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf(
+				"id %#v exists; must merge or replace", idForRes)
+		}
+	default:
+		return fmt.Errorf(
+			"found multiple objects %v that could accept merge of %v",
+			matchedId, idForRes)
 	}
-	return result, nil
+	return nil
 }
