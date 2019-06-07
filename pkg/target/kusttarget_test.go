@@ -198,7 +198,7 @@ func TestResources(t *testing.T) {
 		t.Fatalf("unexpected Resources error %v", err)
 	}
 
-	if err = expected.ErrorIfNotEqual(actual); err != nil {
+	if err = expected.ErrorIfNotEqualSets(actual); err != nil {
 		t.Fatalf("unexpected inequality: %v", err)
 	}
 }

@@ -492,7 +492,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err = expected.ErrorIfNotEqual(m); err != nil {
+	if err = expected.ErrorIfNotEqualSets(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
@@ -619,7 +619,7 @@ func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err = expected.ErrorIfNotEqual(m); err != nil {
+	if err = expected.ErrorIfNotEqualSets(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }

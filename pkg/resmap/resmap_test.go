@@ -382,7 +382,7 @@ func TestFilterBy(t *testing.T) {
 		test := test
 		t.Run(name, func(t *testing.T) {
 			got := test.resMap.ResourcesThatCouldReference(test.filter)
-			err := test.expected.ErrorIfNotEqual(got)
+			err := test.expected.ErrorIfNotEqualSets(got)
 			if err != nil {
 				t.Fatalf("Expected %v but got back %v", test.expected, got)
 			}
@@ -415,7 +415,7 @@ func TestDeepCopy(t *testing.T) {
 	if &rm1 == &rm2 {
 		t.Fatal("DeepCopy returned a reference to itself instead of a copy")
 	}
-	err := rm1.ErrorIfNotEqual(rm1)
+	err := rm1.ErrorIfNotEqualSets(rm1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -524,7 +524,7 @@ func TestErrorIfNotEqual(t *testing.T) {
 			}),
 	})
 
-	err := rm1.ErrorIfNotEqual(rm1)
+	err := rm1.ErrorIfNotEqualSets(rm1)
 	if err != nil {
 		t.Fatalf("%v should equal itself %v", rm1, err)
 	}
@@ -541,7 +541,7 @@ func TestErrorIfNotEqual(t *testing.T) {
 	})
 
 	// test the different number of keys path
-	err = rm1.ErrorIfNotEqual(rm2)
+	err = rm1.ErrorIfNotEqualSets(rm2)
 	if err == nil {
 		t.Fatalf("%v should not equal %v %v", rm1, rm2, err)
 	}
@@ -558,7 +558,7 @@ func TestErrorIfNotEqual(t *testing.T) {
 	})
 
 	// test the different key values path
-	err = rm2.ErrorIfNotEqual(rm3)
+	err = rm2.ErrorIfNotEqualSets(rm3)
 	if err == nil {
 		t.Fatalf("%v should not equal %v %v", rm1, rm2, err)
 	}
@@ -575,7 +575,7 @@ func TestErrorIfNotEqual(t *testing.T) {
 	})
 
 	// test the deepcopy path
-	err = rm2.ErrorIfNotEqual(rm4)
+	err = rm2.ErrorIfNotEqualSets(rm4)
 	if err == nil {
 		t.Fatalf("%v should not equal %v %v", rm1, rm2, err)
 	}
@@ -608,7 +608,7 @@ func TestAppendAll(t *testing.T) {
 	if err := input1.AppendAll(input2); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err := expected.ErrorIfNotEqual(input1); err != nil {
+	if err := expected.ErrorIfNotEqualSets(input1); err != nil {
 		input1.Debug("1")
 		expected.Debug("ex")
 		t.Fatalf("%#v doesn't equal expected %#v", input1, expected)
@@ -616,7 +616,7 @@ func TestAppendAll(t *testing.T) {
 	if err := input1.AppendAll(nil); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err := expected.ErrorIfNotEqual(input1); err != nil {
+	if err := expected.ErrorIfNotEqualSets(input1); err != nil {
 		t.Fatalf("%#v doesn't equal expected %#v", input1, expected)
 	}
 }
@@ -678,14 +678,14 @@ func TestAbsorbAll(t *testing.T) {
 	if err := w.AbsorbAll(makeMap2(types.BehaviorMerge)); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err := expected.ErrorIfNotEqual(w); err != nil {
+	if err := expected.ErrorIfNotEqualSets(w); err != nil {
 		t.Fatal(err)
 	}
 	w = makeMap1()
 	if err := w.AbsorbAll(nil); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err := w.ErrorIfNotEqual(makeMap1()); err != nil {
+	if err := w.ErrorIfNotEqualSets(makeMap1()); err != nil {
 		t.Fatal(err)
 	}
 	w = makeMap1()
@@ -693,7 +693,7 @@ func TestAbsorbAll(t *testing.T) {
 	if err := w.AbsorbAll(w2); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err := w2.ErrorIfNotEqual(w); err != nil {
+	if err := w2.ErrorIfNotEqualSets(w); err != nil {
 		t.Fatal(err)
 	}
 	w = makeMap1()
