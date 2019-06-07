@@ -453,7 +453,7 @@ bases:
 		t.Fatalf("expected var collision")
 	}
 	if !strings.Contains(err.Error(),
-		"var AWARD already encountered") {
+		"var 'AWARD' already encountered") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
