@@ -8,10 +8,8 @@ package resmap
 import (
 	"bytes"
 	"fmt"
-	"sort"
 
 	"github.com/pkg/errors"
-
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
@@ -109,9 +107,8 @@ type ResMap interface {
 	// so the resources themselves can be modified.
 	AsMap() map[resid.ResId]*resource.Resource
 
-	// AsYaml returns the yaml form of resources, after twiddling.
-	// Certainly nobody will abuse the twiddler.
-	AsYaml(f ResTwiddler) ([]byte, error)
+	// AsYaml returns the yaml form of resources.
+	AsYaml() ([]byte, error)
 
 	// Gets the resource with the given Id, else nil.
 	GetById(resid.ResId) *resource.Resource
@@ -133,6 +130,9 @@ type ResMap interface {
 
 	// Remove removes the Id and the resource it points to.
 	Remove(resid.ResId) error
+
+	// Clear removes all resources and Ids.
+	Clear()
 
 	// ResourcesThatCouldReference returns a new ResMap with
 	// resources that _might_ reference the resource represented
@@ -188,14 +188,20 @@ type resWrangler struct {
 
 func newOne() *resWrangler {
 	result := &resWrangler{}
-	result.rIndex = make(map[resid.ResId]int)
+	result.Clear()
 	return result
+}
+
+// Clear implements ResMap.
+func (m *resWrangler) Clear() {
+	m.rList = nil
+	m.rIndex = make(map[resid.ResId]int)
 }
 
 // Size implements ResMap.
 func (m *resWrangler) Size() int {
 	if len(m.rList) != len(m.rIndex) {
-		panic(errors.New("class invariant violation"))
+		panic("class size invariant violation")
 	}
 	return len(m.rList)
 }
@@ -366,30 +372,12 @@ func (m *resWrangler) GetMatchingIds(matches IdMatcher) []resid.ResId {
 	return result
 }
 
-// Identity returns Resources as is.
-func Identity(m ResMap) []*resource.Resource {
-	return m.Resources()
-}
-
-// LegacySort return Resources in a particular order.
-func LegacySort(m ResMap) []*resource.Resource {
-	resources := make([]*resource.Resource, m.Size())
-	ids := m.AllIds()
-	sort.Sort(IdSlice(ids))
-	for i, id := range ids {
-		resources[i] = m.GetById(id)
-	}
-	return resources
-}
-
-type ResTwiddler func(ResMap) []*resource.Resource
-
 // AsYaml implements ResMap.
-func (m *resWrangler) AsYaml(twiddle ResTwiddler) ([]byte, error) {
+func (m *resWrangler) AsYaml() ([]byte, error) {
 	firstObj := true
 	var b []byte
 	buf := bytes.NewBuffer(b)
-	for _, res := range twiddle(m) {
+	for _, res := range m.Resources() {
 		out, err := yaml.Marshal(res.Map())
 		if err != nil {
 			return nil, err
@@ -412,7 +400,7 @@ func (m *resWrangler) AsYaml(twiddle ResTwiddler) ([]byte, error) {
 func (m *resWrangler) ErrorIfNotEqualSets(other ResMap) error {
 	m2, ok := other.(*resWrangler)
 	if !ok {
-		panic(fmt.Errorf("bad cast"))
+		panic("bad cast")
 	}
 	if m.Size() != m2.Size() {
 		return fmt.Errorf(
@@ -461,7 +449,7 @@ func (m *resWrangler) makeCopy(copier resCopier) ResMap {
 		result.rList[i] = copier(r)
 		id, err := m.idMappingToIndex(i)
 		if err != nil {
-			panic(fmt.Errorf("corrupt index map"))
+			panic("corrupt index map")
 		}
 		result.rIndex[id] = i
 	}
@@ -494,12 +482,12 @@ func (m *resWrangler) AppendAll(other ResMap) error {
 	}
 	w2, ok := other.(*resWrangler)
 	if !ok {
-		panic(fmt.Errorf("bad cast"))
+		panic("bad cast")
 	}
 	for i, res := range w2.Resources() {
 		id, err := w2.idMappingToIndex(i)
 		if err != nil {
-			panic("map is unrecoverably corrupted; " + err.Error())
+			panic("map is irrecoverably corrupted; " + err.Error())
 		}
 		err = m.AppendWithId(id, res)
 		if err != nil {
@@ -516,12 +504,12 @@ func (m *resWrangler) AbsorbAll(other ResMap) error {
 	}
 	w2, ok := other.(*resWrangler)
 	if !ok {
-		panic(fmt.Errorf("bad cast"))
+		panic("bad cast")
 	}
 	for i, r := range w2.Resources() {
 		id, err := w2.idMappingToIndex(i)
 		if err != nil {
-			panic("map is unrecoverably corrupted; " + err.Error())
+			panic("map is irrecoverably corrupted; " + err.Error())
 		}
 		err = m.appendReplaceOrMerge(id, r)
 		if err != nil {
