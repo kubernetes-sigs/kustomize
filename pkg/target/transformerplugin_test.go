@@ -29,21 +29,23 @@ spec:
 `)
 }
 
-func writeStringPrefixer(th *kusttest_test.KustTestHarness, path string) {
+func writeStringPrefixer(
+	th *kusttest_test.KustTestHarness, path, name string) {
 	th.WriteF(path, `
 apiVersion: someteam.example.com/v1
 kind: StringPrefixer
 metadata:
-  name: apple
+  name: `+name+`
 `)
 }
 
-func writeDatePrefixer(th *kusttest_test.KustTestHarness, path string) {
+func writeDatePrefixer(
+	th *kusttest_test.KustTestHarness, path, name string) {
 	th.WriteF(path, `
 apiVersion: someteam.example.com/v1
 kind: DatePrefixer
 metadata:
-  name: irrelevant
+  name: `+name+`
 `)
 }
 
@@ -62,24 +64,27 @@ func TestOrderedTransformers(t *testing.T) {
 resources:
 - deployment.yaml
 transformers:
-- stringPrefixer.yaml
-# - datePrefixer.yaml
+- peachPrefixer.yaml
+- date1Prefixer.yaml
+- applePrefixer.yaml
+- date2Prefixer.yaml
 `)
-	// TODO(monopole): assure ordering of loaded
-	// transformers and this will work - the trouble
-	// is we load into a map (ResMap), not a list.
 	writeDeployment(th, "/app/deployment.yaml")
-	writeStringPrefixer(th, "/app/stringPrefixer.yaml")
-	writeDatePrefixer(th, "/app/datePrefixer.yaml")
+	writeStringPrefixer(th, "/app/applePrefixer.yaml", "apple")
+	writeStringPrefixer(th, "/app/peachPrefixer.yaml", "peach")
+	writeDatePrefixer(th, "/app/date1Prefixer.yaml", "date1")
+	writeDatePrefixer(th, "/app/date2Prefixer.yaml", "date2")
 	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
+	// TODO: Fix #1164; the value of the name: field below
+	// should be: 2018-05-11-peach-2018-05-11-apple-myDeployment
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: apple-myDeployment
+  name: 2018-05-11-apple-2018-05-11-apple-myDeployment
 spec:
   template:
     metadata:
@@ -104,7 +109,7 @@ func TestPluginsNotEnabled(t *testing.T) {
 transformers:
 - stringPrefixer.yaml
 `)
-	writeStringPrefixer(th, "/app/stringPrefixer.yaml")
+	writeStringPrefixer(th, "/app/stringPrefixer.yaml", "apple")
 
 	_, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err == nil {
@@ -202,8 +207,8 @@ resources:
 transformers:
 - datePrefixer.yaml
 `)
-	writeStringPrefixer(th, "/app/base/stringPrefixer.yaml")
-	writeDatePrefixer(th, "/app/base/datePrefixer.yaml")
+	writeStringPrefixer(th, "/app/base/stringPrefixer.yaml", "apple")
+	writeDatePrefixer(th, "/app/base/datePrefixer.yaml", "date")
 
 	th.WriteK("/app/overlay", `
 resources:

@@ -2,9 +2,9 @@
 package builtin
 
 import (
+	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
-	"sigs.k8s.io/kustomize/pkg/transformers/config"
 	"sort"
 )
 
@@ -13,22 +13,18 @@ import (
 // dependencies (like Namespace, StorageClass, etc.)
 // first, and resources with a high number of dependencies
 // (like ValidatingWebhookConfiguration) last.
-type PreferredOrderTransformerPlugin struct {
-	Prefix     string             `json:"prefix,omitempty" yaml:"prefix,omitempty"`
-	Suffix     string             `json:"suffix,omitempty" yaml:"suffix,omitempty"`
-	FieldSpecs []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
-}
+type PreferredOrderTransformerPlugin struct{}
 
 func NewPreferredOrderTransformerPlugin() *PreferredOrderTransformerPlugin {
 	return &PreferredOrderTransformerPlugin{}
 }
 
-/*
+// Nothing needed for configuration.
 func (p *PreferredOrderTransformerPlugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
 	return nil
 }
-*/
+
 func (p *PreferredOrderTransformerPlugin) Transform(m resmap.ResMap) error {
 	resources := make([]*resource.Resource, m.Size())
 	ids := m.AllIds()
