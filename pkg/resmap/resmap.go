@@ -134,15 +134,13 @@ type ResMap interface {
 	// Clear removes all resources and Ids.
 	Clear()
 
-	// ResourcesThatCouldReference returns a new ResMap with
-	// resources that _might_ reference the resource represented
-	// by the argument Id, excluding resources that should
-	// _never_ reference the Id.  E.g., if the Id
-	// refers to a ConfigMap, the returned set may include a
-	// Deployment from the same namespace and exclude Deployments
-	// from other namespaces.  Cluster wide objects are
-	// never excluded.
-	ResourcesThatCouldReference(resid.ResId) ResMap
+	// SubsetThatCouldBeReferencedBy returns a ResMap subset
+	// of self with resources that could be referenced by the
+	// resource represented by the argument Id.
+	// This is a filter; it excludes things that cannot be
+	// referenced by the Id's resource, e.g. objects in other
+	// namespaces. Cluster wide objects are never excluded.
+	SubsetThatCouldBeReferencedBy(resid.ResId) ResMap
 
 	// DeepCopy copies the ResMap and underlying resources.
 	DeepCopy() ResMap
@@ -456,8 +454,8 @@ func (m *resWrangler) makeCopy(copier resCopier) ResMap {
 	return result
 }
 
-// ResourcesThatCouldReference implements ResMap.
-func (m *resWrangler) ResourcesThatCouldReference(inputId resid.ResId) ResMap {
+// SubsetThatCouldBeReferencedBy implements ResMap.
+func (m *resWrangler) SubsetThatCouldBeReferencedBy(inputId resid.ResId) ResMap {
 	if inputId.Gvk().IsClusterKind() {
 		return m
 	}
