@@ -381,7 +381,7 @@ func TestFilterBy(t *testing.T) {
 	for name, test := range tests {
 		test := test
 		t.Run(name, func(t *testing.T) {
-			got := test.resMap.ResourcesThatCouldReference(test.filter)
+			got := test.resMap.SubsetThatCouldBeReferencedBy(test.filter)
 			err := test.expected.ErrorIfNotEqualSets(got)
 			if err != nil {
 				t.Fatalf("Expected %v but got back %v", test.expected, got)
