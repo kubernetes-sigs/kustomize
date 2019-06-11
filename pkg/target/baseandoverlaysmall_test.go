@@ -17,13 +17,78 @@ limitations under the License.
 package target_test
 
 import (
-	"sigs.k8s.io/kustomize/pkg/plugins"
 	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/pkg/kusttest"
 	"sigs.k8s.io/kustomize/pkg/loader"
+	"sigs.k8s.io/kustomize/pkg/plugins"
 )
+
+// TODO(monopole): Make prefixsuffixtransformer changes
+// needed to enable this test.
+func disabledTestOrderPreserved(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app/prod")
+	th.WriteK("/app/base", `
+namePrefix: b-
+resources:
+- namespace.yaml
+- role.yaml
+- service.yaml
+- deployment.yaml
+`)
+	th.WriteF("/app/base/service.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: myService
+`)
+	th.WriteF("/app/base/namespace.yaml", `
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: myNs
+`)
+	th.WriteF("/app/base/role.yaml", `
+apiVersion: v1
+kind: Role
+metadata:
+  name: myRole
+`)
+	th.WriteF("/app/base/deployment.yaml", `
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: myDep
+`)
+	th.WriteK("/app/prod", `
+namePrefix: p-
+resources:
+- ../base
+- service.yaml
+- namespace.yaml
+`)
+	th.WriteF("/app/prod/service.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: myService2
+`)
+	th.WriteF("/app/prod/namespace.yaml", `
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: myNs2
+`)
+
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpectedNoSort(m, `
+TBD
+./tr	`)
+}
 
 func TestBaseInResourceList(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/app/prod")

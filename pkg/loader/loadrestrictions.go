@@ -43,13 +43,13 @@ var (
 		"This does, however, break the relocatability of the kustomization."
 )
 
-func AddLoadRestrictionsFlag(set *pflag.FlagSet) {
+func AddFlagLoadRestrictor(set *pflag.FlagSet) {
 	set.StringVar(
 		&flagValue, flagName,
 		rootOnly.String(), flagHelp)
 }
 
-func ValidateLoadRestrictorFlag() (LoadRestrictorFunc, error) {
+func ValidateFlagLoadRestrictor() (LoadRestrictorFunc, error) {
 	switch flagValue {
 	case rootOnly.String():
 		return RestrictionRootOnly, nil
