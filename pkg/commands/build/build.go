@@ -1,4 +1,4 @@
-/// Copyright 2019 The Kubernetes Authors.
+// Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 package build
@@ -28,6 +28,7 @@ type Options struct {
 	kustomizationPath string
 	outputPath        string
 	loadRestrictor    loader.LoadRestrictorFunc
+	outOrder          reorderOutput
 }
 
 // NewOptions creates a Options object
@@ -40,18 +41,20 @@ func NewOptions(p, o string) *Options {
 }
 
 var examples = `
-Use the file somedir/kustomization.yaml to generate a set of api resources:
-    build somedir
+To generate the resources specified in 'someDir/kustomization.yaml', run
 
-Use a url pointing to a remote directory/kustomization.yaml to generate a set of api resources:
-    build url
-The url should follow hashicorp/go-getter URL format described in
+  kustomize build someDir
+
+The default argument to 'build' is '.' (the current working directory).
+
+The argument can be a URL resolving to a directory
+with a kustomization.yaml file, e.g.
+
+  kustomize build \
+    github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6
+
+The URL should be formulated as described at
 https://github.com/hashicorp/go-getter#url-format
-
-url examples:
-  sigs.k8s.io/kustomize//examples/multibases?ref=v1.0.6
-  github.com/Liujingfang1/mysql
-  github.com/Liujingfang1/kustomize//examples/helloWorld?ref=repoUrl2
 `
 
 // NewCmdBuild creates a new build command.
@@ -65,8 +68,8 @@ func NewCmdBuild(
 	pl := plugins.NewLoader(pluginConfig, rf)
 
 	cmd := &cobra.Command{
-		Use:          "build [path]",
-		Short:        "Print current configuration per contents of " + pgmconfig.KustomizationFileNames[0],
+		Use:          "build {path}",
+		Short:        "Print configuration per contents of " + pgmconfig.KustomizationFileNames[0],
 		Example:      examples,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -82,10 +85,10 @@ func NewCmdBuild(
 		&o.outputPath,
 		"output", "o", "",
 		"If specified, write the build output to this path.")
-	loader.AddLoadRestrictionsFlag(cmd.Flags())
-	plugins.AddEnablePluginsFlag(
+	loader.AddFlagLoadRestrictor(cmd.Flags())
+	plugins.AddFlagEnablePlugins(
 		cmd.Flags(), &pluginConfig.Enabled)
-
+	addFlagReorderOutput(cmd.Flags())
 	cmd.AddCommand(NewCmdBuildPrune(out, v, fSys, rf, ptf, pl))
 	return cmd
 }
@@ -101,7 +104,11 @@ func (o *Options) Validate(args []string) (err error) {
 	} else {
 		o.kustomizationPath = args[0]
 	}
-	o.loadRestrictor, err = loader.ValidateLoadRestrictorFlag()
+	o.loadRestrictor, err = loader.ValidateFlagLoadRestrictor()
+	if err != nil {
+		return err
+	}
+	o.outOrder, err = validateFlagReorderOutput()
 	return
 }
 
@@ -153,11 +160,13 @@ func (o *Options) emitResources(
 	if o.outputPath != "" && fSys.IsDir(o.outputPath) {
 		return writeIndividualFiles(fSys, o.outputPath, m)
 	}
-	// Done this way just to prove that overall sorting
-	// can be performed by a plugin.  This particular
-	// plugin doesn't require configuration; just make
-	// it and call transform.
-	builtin.NewPreferredOrderTransformerPlugin().Transform(m)
+	if o.outOrder == legacy {
+		// Done this way just to show how overall sorting
+		// can be performed by a plugin.  This particular
+		// plugin doesn't require configuration; just make
+		// it and call transform.
+		builtin.NewLegacyOrderTransformerPlugin().Transform(m)
+	}
 	res, err := m.AsYaml()
 	if err != nil {
 		return err

@@ -10,17 +10,17 @@ import (
 	"sigs.k8s.io/kustomize/plugin"
 )
 
-func TestPreferredOrderTransformer(t *testing.T) {
+func TestLegacyOrderTransformer(t *testing.T) {
 	tc := plugin.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
-		"builtin", "", "PreferredOrderTransformer")
+		"builtin", "", "LegacyOrderTransformer")
 
 	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
-kind: PreferredOrderTransformer
+kind: LegacyOrderTransformer
 metadata:
   name: notImportantHere
 `, `
