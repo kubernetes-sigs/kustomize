@@ -186,6 +186,16 @@ func hint(a, b string) string {
 
 func (th *KustTestHarness) AssertActualEqualsExpected(
 	m resmap.ResMap, expected string) {
+	th.assertActualEqualsExpected(m, expected, true)
+}
+
+func (th *KustTestHarness) AssertActualEqualsExpectedNoSort(
+	m resmap.ResMap, expected string) {
+	th.assertActualEqualsExpected(m, expected, false)
+}
+
+func (th *KustTestHarness) assertActualEqualsExpected(
+	m resmap.ResMap, expected string, doLegacySort bool) {
 	if m == nil {
 		th.t.Fatalf("Map should not be nil.")
 	}
@@ -194,8 +204,9 @@ func (th *KustTestHarness) AssertActualEqualsExpected(
 	if len(expected) > 0 && expected[0] == 10 {
 		expected = expected[1:]
 	}
-	// The tests currently expect a particular ordering.
-	builtin.NewPreferredOrderTransformerPlugin().Transform(m)
+	if doLegacySort {
+		builtin.NewLegacyOrderTransformerPlugin().Transform(m)
+	}
 	actual, err := m.AsYaml()
 	if err != nil {
 		th.t.Fatalf("Unexpected err: %v", err)

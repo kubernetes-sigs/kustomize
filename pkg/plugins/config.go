@@ -46,7 +46,7 @@ func NotEnabledErr(name string) error {
 		flagEnablePluginsHelp)
 }
 
-func AddEnablePluginsFlag(set *pflag.FlagSet, v *bool) {
+func AddFlagEnablePlugins(set *pflag.FlagSet, v *bool) {
 	set.BoolVar(
 		v, flagEnablePluginsName,
 		false, flagEnablePluginsHelp)
