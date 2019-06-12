@@ -28,7 +28,7 @@ func getDate() string {
 }
 
 func (p *plugin) Transform(m resmap.ResMap) error {
-	tr, err := transformers.NewNamePrefixSuffixTransformer(
+	tr, err := transformers.NewPrefixSuffixTransformer(
 		getDate()+"-", "",
 		config.MakeDefaultConfig().NamePrefix)
 	if err != nil {
