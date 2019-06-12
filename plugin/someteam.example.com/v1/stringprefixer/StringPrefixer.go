@@ -27,7 +27,7 @@ func (p *plugin) Config(
 }
 
 func (p *plugin) Transform(m resmap.ResMap) error {
-	tr, err := transformers.NewNamePrefixSuffixTransformer(
+	tr, err := transformers.NewPrefixSuffixTransformer(
 		p.Metadata.Name+"-", "",
 		config.MakeDefaultConfig().NamePrefix)
 	if err != nil {
