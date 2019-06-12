@@ -10,17 +10,17 @@ import (
 	"sigs.k8s.io/kustomize/plugin"
 )
 
-func TestNameTransformer(t *testing.T) {
+func TestPrefixSuffixTransformer(t *testing.T) {
 	tc := plugin.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
-		"builtin", "", "NameTransformer")
+		"builtin", "", "PrefixSuffixTransformer")
 
 	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
-kind: NameTransformer
+kind: PrefixSuffixTransformer
 metadata:
   name: notImportantHere
 prefix: baked-
@@ -35,9 +35,29 @@ metadata:
 spec:
   ports:
   - port: 7002
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: crd
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
 `)
 
 	th.AssertActualEqualsExpected(rm, `
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: crd
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: baked-cm-pie
+---
 apiVersion: v1
 kind: Service
 metadata:

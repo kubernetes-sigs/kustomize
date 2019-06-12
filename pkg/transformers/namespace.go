@@ -59,7 +59,7 @@ func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
 			case "metadata/namespace":
 				if id.Gvk().IsSelected(&path.Gvk) && !id.Gvk().IsClusterKind() {
 					if len(objMap) > 0 {
-						err := mutateField(
+						err := MutateField(
 							objMap, path.PathSlice(), path.CreateIfNotPresent,
 							func(_ interface{}) (interface{}, error) {
 								return o.namespace, nil
@@ -75,7 +75,7 @@ func (o *namespaceTransformer) Transform(m resmap.ResMap) error {
 				}
 				// make sure the object is non empty
 				if len(objMap) > 0 {
-					err := mutateField(
+					err := MutateField(
 						objMap, path.PathSlice(), path.CreateIfNotPresent,
 						func(_ interface{}) (interface{}, error) {
 							return o.namespace, nil
@@ -144,7 +144,7 @@ func (o *namespaceTransformer) updateClusterRoleBinding(m resmap.ResMap) {
 			// a ServiceAccount named “default” exists in every active namespace
 			if name.(string) == "default" || saMap[name.(string)] {
 				subject := subjects[i].(map[string]interface{})
-				mutateField(subject, []string{"namespace"}, true, func(_ interface{}) (interface{}, error) {
+				MutateField(subject, []string{"namespace"}, true, func(_ interface{}) (interface{}, error) {
 					return o.namespace, nil
 				})
 				subjects[i] = subject
