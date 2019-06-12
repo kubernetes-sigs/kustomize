@@ -46,24 +46,26 @@ metadata:
 	if ferr := l.AddFile("/whatever/project/deployment.yaml", []byte(resourceStr)); ferr != nil {
 		t.Fatalf("Error adding fake file: %v\n", ferr)
 	}
-	expected := FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(deploy, "dply1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "Deployment",
-				"metadata": map[string]interface{}{
-					"name": "dply1",
-				},
-			}),
-		resid.NewResId(deploy, "dply2"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "Deployment",
-				"metadata": map[string]interface{}{
-					"name": "dply2",
-				},
-			}),
-		resid.NewResIdWithPrefixNamespace(deploy, "dply2", "", "test"): rf.FromMap(
+	expected := New()
+	expected.Append(rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "dply1",
+			},
+		}))
+	expected.Append(rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "dply2",
+			},
+		}))
+	expected.AppendWithId(
+		resid.NewResIdWithNamespace(deploy, "dply2", "test"),
+		rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -71,8 +73,7 @@ metadata:
 					"name":      "dply2",
 					"namespace": "test",
 				},
-			}),
-	})
+			}))
 	m, _ := rmF.FromFile(l, "deployment.yaml")
 	if m.Size() != 3 {
 		t.Fatalf("result should contain 3, but got %d", m.Size())
