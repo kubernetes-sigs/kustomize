@@ -63,6 +63,19 @@ func (ra *ResAccumulator) GetTransformerConfig() *config.TransformerConfig {
 }
 
 func (ra *ResAccumulator) MergeVars(incoming []types.Var) error {
+	for _, v := range incoming {
+		matched := ra.resMap.GetMatchingIds(
+			resid.NewResId(v.ObjRef.GVK(), v.ObjRef.Name).GvknEquals)
+		if len(matched) > 1 {
+			return fmt.Errorf(
+				"found %d resId matches for var %s "+
+					"(unable to disambiguate)",
+				len(matched), v)
+		}
+		if len(matched) == 1 {
+			ra.resMap.GetById(matched[0]).AppendRefVarName(v)
+		}
+	}
 	return ra.varSet.MergeSlice(incoming)
 }
 
@@ -78,34 +91,41 @@ func (ra *ResAccumulator) MergeAccumulator(other *ResAccumulator) (err error) {
 	return ra.varSet.MergeSet(other.varSet)
 }
 
+func (ra *ResAccumulator) findValueFromResources(v types.Var) (string, error) {
+	for _, res := range ra.resMap.Resources() {
+		for _, varName := range res.GetRefVarNames() {
+			if varName == v.Name {
+				s, err := res.GetFieldValue(v.FieldRef.FieldPath)
+				if err != nil {
+					return "", fmt.Errorf(
+						"field specified in var '%v' "+
+							"not found in corresponding resource", v)
+				}
+
+				return s, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf(
+		"var '%v' cannot be mapped to a field "+
+			"in the set of known resources", v)
+}
+
 // makeVarReplacementMap returns a map of Var names to
 // their final values. The values are strings intended
 // for substitution wherever the $(var.Name) occurs.
 func (ra *ResAccumulator) makeVarReplacementMap() (map[string]string, error) {
 	result := map[string]string{}
 	for _, v := range ra.Vars() {
-		matched := ra.resMap.GetMatchingIds(
-			resid.NewResId(v.ObjRef.GVK(), v.ObjRef.Name).GvknEquals)
-		if len(matched) > 1 {
-			return nil, fmt.Errorf(
-				"found %d resId matches for var %s "+
-					"(unable to disambiguate)",
-				len(matched), v)
+		s, err := ra.findValueFromResources(v)
+		if err != nil {
+			return nil, err
 		}
-		if len(matched) == 1 {
-			s, err := ra.resMap.GetById(matched[0]).GetFieldValue(v.FieldRef.FieldPath)
-			if err != nil {
-				return nil, fmt.Errorf(
-					"field specified in var '%v' "+
-						"not found in corresponding resource", v)
-			}
-			result[v.Name] = s
-		} else {
-			return nil, fmt.Errorf(
-				"var '%v' cannot be mapped to a field "+
-					"in the set of known resources", v)
-		}
+
+		result[v.Name] = s
 	}
+
 	return result, nil
 }
 

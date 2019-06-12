@@ -24,6 +24,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	. "sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/pkg/types"
 )
 
 var factory = NewFactory(
@@ -121,6 +122,14 @@ func TestDeepCopy(t *testing.T) {
 			},
 		})
 	r.AppendRefBy(resid.NewResId(gvk.Gvk{Group: "somegroup", Kind: "MyKind"}, "random"))
+
+	var1 := types.Var{
+		Name: "SERVICE_ONE",
+		ObjRef: types.Target{
+			Gvk:  gvk.Gvk{Version: "v1", Kind: "Service"},
+			Name: "backendOne"},
+	}
+	r.AppendRefVarName(var1)
 
 	cr := r.DeepCopy()
 	if !reflect.DeepEqual(r, cr) {

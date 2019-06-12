@@ -739,7 +739,7 @@ vars:
   apiVersion: apps/v1
   kind: Deployment
   metadata:
-    name: my-deployment 
+    name: my-deployment
   spec:
     template:
       spec:
@@ -820,7 +820,7 @@ vars:
       spec:
         containers:
         - name: app
-          image: busybox  
+          image: busybox
 `)
 	th.WriteF("/app/base/namespace.yaml", `
   apiVersion: v1
@@ -851,5 +851,149 @@ spec:
       containers:
       - image: busybox
         name: app
+`)
+}
+
+func TestVaribaleRefDifferentPrefix(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th.WriteK("/app/base", `
+namePrefix: base-
+bases:
+- dev
+- test
+`)
+
+	th.WriteK("/app/base/dev", `
+namePrefix: dev-
+resources:
+- elasticsearch-dev-service.yml
+vars:
+- name: elasticsearch-dev-service-name
+  objref:
+    kind: Service
+    name: elasticsearch
+    apiVersion: v1
+  fieldref:
+    fieldpath: metadata.name
+
+`)
+	th.WriteF("/app/base/dev/elasticsearch-dev-service.yml", `
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+spec:
+  template:
+    spec:
+      containers:
+        - name: elasticsearch
+          env:
+            - name: DISCOVERY_SERVICE
+              value: "$(elasticsearch-dev-service-name).monitoring.svc.cluster.local"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+spec:
+  ports:
+    - name: transport
+      port: 9300
+      protocol: TCP
+  clusterIP: None
+`)
+
+	th.WriteK("/app/base/test", `
+namePrefix: test-
+resources:
+- elasticsearch-test-service.yml
+vars:
+- name: elasticsearch-test-service-name
+  objref:
+    kind: Service
+    name: elasticsearch
+    apiVersion: v1
+  fieldref:
+    fieldpath: metadata.name
+`)
+	th.WriteF("/app/base/test/elasticsearch-test-service.yml", `
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+spec:
+  template:
+    spec:
+      containers:
+        - name: elasticsearch
+          env:
+            - name: DISCOVERY_SERVICE
+              value: "$(elasticsearch-test-service-name).monitoring.svc.cluster.local"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+spec:
+  ports:
+    - name: transport
+      port: 9300
+      protocol: TCP
+  clusterIP: None
+`)
+
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Service
+metadata:
+  name: base-dev-elasticsearch
+spec:
+  clusterIP: None
+  ports:
+  - name: transport
+    port: 9300
+    protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: base-test-elasticsearch
+spec:
+  clusterIP: None
+  ports:
+  - name: transport
+    port: 9300
+    protocol: TCP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: base-dev-elasticsearch
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: DISCOVERY_SERVICE
+          value: base-dev-elasticsearch.monitoring.svc.cluster.local
+        name: elasticsearch
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: base-test-elasticsearch
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: DISCOVERY_SERVICE
+          value: base-test-elasticsearch.monitoring.svc.cluster.local
+        name: elasticsearch
 `)
 }
