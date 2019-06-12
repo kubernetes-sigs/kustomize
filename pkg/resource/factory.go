@@ -43,30 +43,39 @@ func (rf *Factory) Hasher() ifc.KunstructuredHasher {
 
 // FromMap returns a new instance of Resource.
 func (rf *Factory) FromMap(m map[string]interface{}) *Resource {
-	return &Resource{
-		Kunstructured: rf.kf.FromMap(m),
-		options:       types.NewGenArgs(nil, nil),
-	}
+	return rf.makeOne(rf.kf.FromMap(m), nil)
+}
+
+// FromMapWithName returns a new instance with the given "original" name.
+func (rf *Factory) FromMapWithName(n string, m map[string]interface{}) *Resource {
+	return rf.makeOne(rf.kf.FromMap(m), nil).setOriginalName(n)
 }
 
 // FromMapAndOption returns a new instance of Resource with given options.
-func (rf *Factory) FromMapAndOption(m map[string]interface{}, args *types.GeneratorArgs, option *types.GeneratorOptions) *Resource {
-	return &Resource{
-		Kunstructured: rf.kf.FromMap(m),
-		options:       types.NewGenArgs(args, option),
-	}
+func (rf *Factory) FromMapAndOption(
+	m map[string]interface{}, args *types.GeneratorArgs, option *types.GeneratorOptions) *Resource {
+	return rf.makeOne(rf.kf.FromMap(m), types.NewGenArgs(args, option))
 }
 
 // FromKunstructured returns a new instance of Resource.
-func (rf *Factory) FromKunstructured(
-	u ifc.Kunstructured) *Resource {
+func (rf *Factory) FromKunstructured(u ifc.Kunstructured) *Resource {
+	return rf.makeOne(u, nil)
+}
+
+// makeOne returns a new instance of Resource.
+func (rf *Factory) makeOne(
+	u ifc.Kunstructured, o *types.GenArgs) *Resource {
 	if u == nil {
 		log.Fatal("unstruct ifc must not be null")
 	}
-	return &Resource{
-		Kunstructured: u,
-		options:       types.NewGenArgs(nil, nil),
+	if o == nil {
+		o = types.NewGenArgs(nil, nil)
 	}
+	r := &Resource{
+		Kunstructured: u,
+		options:       o,
+	}
+	return r.setOriginalName(r.GetName())
 }
 
 // SliceFromPatches returns a slice of resources given a patch path
@@ -88,7 +97,7 @@ func (rf *Factory) SliceFromPatches(
 	return result, nil
 }
 
-// FromBytes unmarshalls bytes into one Resource.
+// FromBytes unmarshals bytes into one Resource.
 func (rf *Factory) FromBytes(in []byte) (*Resource, error) {
 	result, err := rf.SliceFromBytes(in)
 	if err != nil {
@@ -101,7 +110,7 @@ func (rf *Factory) FromBytes(in []byte) (*Resource, error) {
 	return result[0], nil
 }
 
-// SliceFromBytes unmarshalls bytes into a Resource slice.
+// SliceFromBytes unmarshals bytes into a Resource slice.
 func (rf *Factory) SliceFromBytes(in []byte) ([]*Resource, error) {
 	kunStructs, err := rf.kf.SliceFromBytes(in)
 	if err != nil {
@@ -149,12 +158,11 @@ func (rf *Factory) MakeConfigMap(
 	if err != nil {
 		return nil, err
 	}
-	return &Resource{
-		Kunstructured: u,
-		options: types.NewGenArgs(
+	return rf.makeOne(
+		u,
+		types.NewGenArgs(
 			&types.GeneratorArgs{Behavior: args.Behavior},
-			options),
-	}, nil
+			options)), nil
 }
 
 // MakeSecret makes an instance of Resource for Secret
@@ -166,10 +174,9 @@ func (rf *Factory) MakeSecret(
 	if err != nil {
 		return nil, err
 	}
-	return &Resource{
-		Kunstructured: u,
-		options: types.NewGenArgs(
+	return rf.makeOne(
+		u,
+		types.NewGenArgs(
 			&types.GeneratorArgs{Behavior: args.Behavior},
-			options),
-	}, nil
+			options)), nil
 }
