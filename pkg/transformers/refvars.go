@@ -98,7 +98,7 @@ func (rv *RefVarTransformer) Transform(m resmap.ResMap) error {
 	for _, res := range m.Resources() {
 		for _, fieldSpec := range rv.fieldSpecs {
 			if res.Id().Gvk().IsSelected(&fieldSpec.Gvk) {
-				if err := mutateField(
+				if err := MutateField(
 					res.Map(), fieldSpec.PathSlice(),
 					false, rv.replaceVars); err != nil {
 					return err

@@ -64,7 +64,7 @@ func (o *mapTransformer) Transform(m resmap.ResMap) error {
 			if !r.Id().Gvk().IsSelected(&path.Gvk) {
 				continue
 			}
-			err := mutateField(
+			err := MutateField(
 				r.Map(), path.PathSlice(),
 				path.CreateIfNotPresent, o.addMap)
 			if err != nil {
