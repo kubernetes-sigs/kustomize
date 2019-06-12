@@ -29,7 +29,7 @@ func (p *NameTransformerPlugin) Config(
 }
 
 func (p *NameTransformerPlugin) Transform(m resmap.ResMap) error {
-	t, err := transformers.NewNamePrefixSuffixTransformer(
+	t, err := transformers.NewPrefixSuffixTransformer(
 		p.Prefix,
 		p.Suffix,
 		p.FieldSpecs,

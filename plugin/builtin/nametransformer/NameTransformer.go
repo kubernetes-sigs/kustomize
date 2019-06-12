@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// Add the given prefix and suffix to the resource name.
+// Add the given prefix and suffix to the field.
 type plugin struct {
 	Prefix     string             `json:"prefix,omitempty" yaml:"prefix,omitempty"`
 	Suffix     string             `json:"suffix,omitempty" yaml:"suffix,omitempty"`
@@ -30,7 +30,7 @@ func (p *plugin) Config(
 }
 
 func (p *plugin) Transform(m resmap.ResMap) error {
-	t, err := transformers.NewNamePrefixSuffixTransformer(
+	t, err := transformers.NewPrefixSuffixTransformer(
 		p.Prefix,
 		p.Suffix,
 		p.FieldSpecs,
