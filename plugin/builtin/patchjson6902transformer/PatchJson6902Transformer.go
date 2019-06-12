@@ -17,6 +17,7 @@ type plugin struct {
 	Patches []types.PatchJson6902 `json:"patches,omitempty" yaml:"patches,omitempty"`
 }
 
+//noinspection GoUnusedGlobalVariable
 var KustomizePlugin plugin
 
 func (p *plugin) Config(

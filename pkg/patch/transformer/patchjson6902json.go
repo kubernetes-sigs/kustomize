@@ -87,7 +87,7 @@ func (t *patchJson6902JSONTransformer) Transform(m resmap.ResMap) error {
 
 func (t *patchJson6902JSONTransformer) findTargetObj(
 	m resmap.ResMap) (*resource.Resource, error) {
-	var matched []resid.ResId
+	var matched []*resource.Resource
 	// TODO(monopole): namespace bug in json patch?
 	// Since introduction in PR #300
 	// (see pkg/patch/transformer/util.go),
@@ -95,10 +95,10 @@ func (t *patchJson6902JSONTransformer) findTargetObj(
 	// rather than like an additional restriction to match
 	// only the empty namespace.  No test coverage to confirm.
 	// Not sure if desired, keeping it for now.
-	if t.target.Namespace() != "" {
-		matched = m.GetMatchingIds(t.target.NsGvknEquals)
+	if t.target.Namespace != "" {
+		matched = m.GetMatchingResourcesByOriginalId(t.target.Equals)
 	} else {
-		matched = m.GetMatchingIds(t.target.GvknEquals)
+		matched = m.GetMatchingResourcesByOriginalId(t.target.GvknEquals)
 	}
 	if len(matched) == 0 {
 		return nil, fmt.Errorf(
@@ -109,5 +109,5 @@ func (t *patchJson6902JSONTransformer) findTargetObj(
 			"found multiple targets %v matching %v for json patch",
 			matched, t.target)
 	}
-	return m.GetById(matched[0]), nil
+	return matched[0], nil
 }

@@ -27,7 +27,11 @@ func NewRmBuilder(t *testing.T, rf *resource.Factory) *rmBuilder {
 }
 
 func (rm *rmBuilder) Add(m map[string]interface{}) *rmBuilder {
-	err := rm.m.Append(rm.rf.FromMap(m))
+	return rm.AddR(rm.rf.FromMap(m))
+}
+
+func (rm *rmBuilder) AddR(r *resource.Resource) *rmBuilder {
+	err := rm.m.Append(r)
 	if err != nil {
 		rm.t.Fatalf("test setup failure: %v", err)
 	}
@@ -35,7 +39,7 @@ func (rm *rmBuilder) Add(m map[string]interface{}) *rmBuilder {
 }
 
 func (rm *rmBuilder) AddWithId(id resid.ResId, m map[string]interface{}) *rmBuilder {
-	err := rm.m.AppendWithId(id, rm.rf.FromMap(m))
+	err := rm.m.Append(rm.rf.FromMap(m))
 	if err != nil {
 		rm.t.Fatalf("test setup failure: %v", err)
 	}
@@ -60,7 +64,7 @@ func (rm *rmBuilder) AddWithNs(ns string, m map[string]interface{}) *rmBuilder {
 
 func (rm *rmBuilder) ReplaceResource(m map[string]interface{}) *rmBuilder {
 	r := rm.rf.FromMap(m)
-	err := rm.m.ReplaceResource(r.Id(), r)
+	_, err := rm.m.Replace(r)
 	if err != nil {
 		rm.t.Fatalf("test setup failure: %v", err)
 	}

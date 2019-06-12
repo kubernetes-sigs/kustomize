@@ -69,7 +69,7 @@ metadata:
 	if m.Size() != 3 {
 		t.Fatalf("result should contain 3, but got %d", m.Size())
 	}
-	if err := expected.ErrorIfNotEqualSets(m); err != nil {
+	if err := expected.ErrorIfNotEqualLists(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }

@@ -53,7 +53,7 @@ func (l *Loader) LoadGenerator(
 	}
 	g, ok := c.(transformers.Generator)
 	if !ok {
-		return nil, fmt.Errorf("plugin %s not a generator", res.Id())
+		return nil, fmt.Errorf("plugin %s not a generator", res.OrgId())
 	}
 	return g, nil
 }
@@ -79,21 +79,21 @@ func (l *Loader) LoadTransformer(
 	}
 	t, ok := c.(transformers.Transformer)
 	if !ok {
-		return nil, fmt.Errorf("plugin %s not a transformer", res.Id())
+		return nil, fmt.Errorf("plugin %s not a transformer", res.OrgId())
 	}
 	return t, nil
 }
 
 func relativePluginPath(id resid.ResId) string {
 	return filepath.Join(
-		id.Gvk().Group,
-		id.Gvk().Version,
-		strings.ToLower(id.Gvk().Kind))
+		id.Group,
+		id.Version,
+		strings.ToLower(id.Kind))
 }
 
 func AbsolutePluginPath(pc *types.PluginConfig, id resid.ResId) string {
 	return filepath.Join(
-		pc.DirectoryPath, relativePluginPath(id), id.Gvk().Kind)
+		pc.DirectoryPath, relativePluginPath(id), id.Kind)
 }
 
 func (l *Loader) absolutePluginPath(id resid.ResId) string {
@@ -104,25 +104,25 @@ func (l *Loader) absolutePluginPath(id resid.ResId) string {
 func (l *Loader) loadAndConfigurePlugin(
 	ldr ifc.Loader, res *resource.Resource) (c Configurable, err error) {
 	if !l.pc.Enabled {
-		return nil, NotEnabledErr(res.Id().Gvk().Kind)
+		return nil, NotEnabledErr(res.OrgId().Kind)
 	}
 	if p := NewExecPlugin(
-		l.absolutePluginPath(res.Id())); p.isAvailable() {
+		l.absolutePluginPath(res.OrgId())); p.isAvailable() {
 		c = p
 	} else {
-		c, err = l.loadGoPlugin(res.Id())
+		c, err = l.loadGoPlugin(res.OrgId())
 		if err != nil {
 			return nil, err
 		}
 	}
 	yaml, err := res.AsYAML()
 	if err != nil {
-		return nil, errors.Wrapf(err, "marshalling yaml from res %s", res.Id())
+		return nil, errors.Wrapf(err, "marshalling yaml from res %s", res.OrgId())
 	}
 	err = c.Config(ldr, l.rf, yaml)
 	if err != nil {
 		return nil, errors.Wrapf(
-			err, "plugin %s fails configuration", res.Id())
+			err, "plugin %s fails configuration", res.OrgId())
 	}
 	return c, nil
 }
