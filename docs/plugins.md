@@ -101,7 +101,7 @@ To get the plugin ready to generator or transform,
 it is given the entire contents of the
 configuration file.
 
-[NameTransformer]: ../plugin/builtin/nametransformer/NameTransformer_test.go
+[NameTransformer]: ../plugin/builtin/prefixsuffixtransformer/PrefixSuffixTransformer_test.go
 [ChartInflator]: ../plugin/someteam.example.com/v1/chartinflator/ChartInflator_test.go
 [plugins]: ../plugin/builtin
 

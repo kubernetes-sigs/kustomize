@@ -49,7 +49,7 @@ func (pt *imageTransformer) Transform(m resmap.ResMap) error {
 			if !r.Id().Gvk().IsSelected(&path.Gvk) {
 				continue
 			}
-			err := mutateField(r.Map(), path.PathSlice(), false, pt.mutateImage)
+			err := MutateField(r.Map(), path.PathSlice(), false, pt.mutateImage)
 			if err != nil {
 				return err
 			}

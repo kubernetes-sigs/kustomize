@@ -89,7 +89,7 @@ func getFieldValue(t *testing.T, obj ifc.Kunstructured, fieldName string) string
 func TestNoPath(t *testing.T) {
 	obj := makeTestDeployment()
 	m := &noopMutator{}
-	err := mutateField(
+	err := MutateField(
 		obj.Map(), []string{}, false, m.mutate)
 	if m.wasCalled {
 		t.Fatalf("mutator should not have been called.")
@@ -111,7 +111,7 @@ func TestHappyPath(t *testing.T) {
 	}
 
 	m := &noopMutator{}
-	err := mutateField(
+	err := MutateField(
 		obj.Map(), []string{"metadata", "name"}, false, m.mutate)
 	if !m.wasCalled {
 		t.Fatalf("mutator should have been called.")
@@ -125,7 +125,7 @@ func TestHappyPath(t *testing.T) {
 	}
 
 	m = &noopMutator{}
-	err = mutateField(
+	err = MutateField(
 		obj.Map(), []string{"spec", "template", "metadata", "labels", "vegetable"}, false, m.mutate)
 	if !m.wasCalled {
 		t.Fatalf("mutator should have been called.")
@@ -142,7 +142,7 @@ func TestHappyPath(t *testing.T) {
 func TestWithError(t *testing.T) {
 	obj := makeTestDeployment()
 	m := noopMutator{errorToReturn: errExpected}
-	err := mutateField(
+	err := MutateField(
 		obj.Map(), []string{"metadata", "name"}, false, m.mutate)
 	if !m.wasCalled {
 		t.Fatalf("mutator was not called!")
@@ -160,7 +160,7 @@ func TestWithNil(t *testing.T) {
 	foo.(map[string]interface{})["labels"] = nil
 
 	m := &noopMutator{}
-	err := mutateField(
+	err := MutateField(
 		obj.Map(), []string{"spec", "template", "metadata", "labels", "vegetable"}, false, m.mutate)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)

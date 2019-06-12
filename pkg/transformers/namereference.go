@@ -97,7 +97,7 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 					if candidates == nil {
 						candidates = m.SubsetThatCouldBeReferencedBy(referrer)
 					}
-					err := mutateField(
+					err := MutateField(
 						res.Map(),
 						fSpec.PathSlice(),
 						fSpec.CreateIfNotPresent,

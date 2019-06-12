@@ -24,7 +24,7 @@ import (
 
 type mutateFunc func(interface{}) (interface{}, error)
 
-func mutateField(
+func MutateField(
 	m map[string]interface{},
 	pathToField []string,
 	createIfNotPresent bool,
@@ -61,7 +61,7 @@ func mutateField(
 			strings.Join(pathToField, "."))
 		return nil
 	case map[string]interface{}:
-		return mutateField(typedV, newPathToField, createIfNotPresent, fns...)
+		return MutateField(typedV, newPathToField, createIfNotPresent, fns...)
 	case []interface{}:
 		for i := range typedV {
 			item := typedV[i]
@@ -69,7 +69,7 @@ func mutateField(
 			if !ok {
 				return fmt.Errorf("%#v is expected to be %T", item, typedItem)
 			}
-			err := mutateField(typedItem, newPathToField, createIfNotPresent, fns...)
+			err := MutateField(typedItem, newPathToField, createIfNotPresent, fns...)
 			if err != nil {
 				return err
 			}
