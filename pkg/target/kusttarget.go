@@ -228,11 +228,6 @@ func (kt *KustTarget) AccumulateTarget() (
 		return nil, errors.Wrapf(
 			err, "merging config %v", tConfig)
 	}
-	err = ra.MergeVars(kt.kustomization.Vars)
-	if err != nil {
-		return nil, errors.Wrapf(
-			err, "merging vars %v", kt.kustomization.Vars)
-	}
 	crdTc, err := config.LoadConfigFromCRDs(kt.ldr, kt.kustomization.Crds)
 	if err != nil {
 		return nil, errors.Wrapf(
@@ -248,7 +243,15 @@ func (kt *KustTarget) AccumulateTarget() (
 		return nil, err
 	}
 	err = kt.runTransformers(ra)
-	return ra, err
+	if err != nil {
+		return nil, err
+	}
+	err = ra.MergeVars(kt.kustomization.Vars)
+	if err != nil {
+		return nil, errors.Wrapf(
+			err, "merging vars %v", kt.kustomization.Vars)
+	}
+	return ra, nil
 }
 
 func (kt *KustTarget) runGenerators(

@@ -202,10 +202,6 @@ func TestResolveVarsVarNeedsDisambiguation(t *testing.T) {
 			},
 		},
 	})
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
-	err = ra.ResolveVars()
 	if err == nil {
 		t.Fatalf("expected error")
 	}
@@ -266,6 +262,87 @@ func TestResolveVarsUnmappableVar(t *testing.T) {
 	if !strings.Contains(
 		err.Error(),
 		"cannot be mapped to a field in the set of known resources") {
+		t.Fatalf("unexpected err: %v", err)
+	}
+}
+
+func TestResolveVarsWithNoambiguiation(t *testing.T) {
+	ra, rf, err := makeResAccumulator()
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+
+	err = ra.MergeVars([]types.Var{
+		{
+			Name: "SERVICE_ONE",
+			ObjRef: types.Target{
+				Gvk:  gvk.Gvk{Version: "v1", Kind: "Service"},
+				Name: "backendOne",
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+
+	// Create another accumulator having a resource with different prefix
+	ra1 := MakeEmptyAccumulator()
+	rm1 := resmap.FromMap(map[resid.ResId]*resource.Resource{
+		resid.NewResId(gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"},
+			"deploy2"): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "deploy2",
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"command": []interface{}{
+										"myserver",
+										"--somebackendService $(SUB_SERVICE_ONE)",
+									},
+								},
+							},
+						},
+					},
+				},
+			}),
+		resid.NewResIdWithPrefixNamespace(
+			gvk.Gvk{Version: "v1", Kind: "Service"},
+			"backendOne", "sub-", ""): rf.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Service",
+				"metadata": map[string]interface{}{
+					"name": "backendOne",
+				},
+			}),
+	})
+	ra1.AppendAll(rm1)
+
+	err = ra1.MergeVars([]types.Var{
+		{
+			Name: "SUB_SERVICE_ONE",
+			ObjRef: types.Target{
+				Gvk:  gvk.Gvk{Version: "v1", Kind: "Service"},
+				Name: "backendOne",
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	err = ra.MergeAccumulator(ra1)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+
+	err = ra.ResolveVars()
+	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
 }
