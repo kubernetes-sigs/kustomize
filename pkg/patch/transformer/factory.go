@@ -59,14 +59,13 @@ func (f PatchJson6902Factory) makeOnePatchJson6902Transformer(p types.PatchJson6
 		return nil, fmt.Errorf("must specify the path for a json patch file")
 	}
 
-	targetId := resid.NewResIdWithPrefixNamespace(
+	targetId := resid.NewResIdWithNamespace(
 		gvk.Gvk{
 			Group:   p.Target.Group,
 			Version: p.Target.Version,
 			Kind:    p.Target.Kind,
 		},
 		p.Target.Name,
-		"",
 		p.Target.Namespace,
 	)
 
