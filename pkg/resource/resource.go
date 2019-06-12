@@ -31,13 +31,67 @@ import (
 // paired with a GenerationBehavior.
 type Resource struct {
 	ifc.Kunstructured
-	options     *types.GenArgs
-	refBy       []resid.ResId
-	refVarNames []string
+	originalName string
+	options      *types.GenArgs
+	refBy        []resid.ResId
+	refVarNames  []string
+}
+
+// DeepCopy returns a new copy of resource
+func (r *Resource) DeepCopy() *Resource {
+	rc := &Resource{
+		Kunstructured: r.Kunstructured.Copy(),
+	}
+	rc.copyOtherFields(r)
+	return rc
+}
+
+// Replace performs replace with other resource.
+func (r *Resource) Replace(other *Resource) {
+	r.SetLabels(mergeStringMaps(other.GetLabels(), r.GetLabels()))
+	r.SetAnnotations(
+		mergeStringMaps(other.GetAnnotations(), r.GetAnnotations()))
+	r.SetName(other.GetName())
+	r.copyOtherFields(other)
+}
+
+func (r *Resource) copyOtherFields(other *Resource) {
+	r.originalName = other.originalName
+	r.options = other.options
+	r.refBy = other.copyRefBy()
+	r.refVarNames = other.copyRefVarNames()
+}
+
+// Merge performs merge with other resource.
+func (r *Resource) Merge(other *Resource) {
+	r.Replace(other)
+	mergeConfigmap(r.Map(), other.Map(), r.Map())
+}
+
+func (r *Resource) copyRefBy() []resid.ResId {
+	s := make([]resid.ResId, len(r.refBy))
+	copy(s, r.refBy)
+	return s
+}
+
+func (r *Resource) copyRefVarNames() []string {
+	s := make([]string, len(r.refVarNames))
+	copy(s, r.refVarNames)
+	return s
 }
 
 func (r *Resource) KunstructEqual(o *Resource) bool {
 	return reflect.DeepEqual(r.Kunstructured, o.Kunstructured)
+}
+
+func (r *Resource) GetOriginalName() string {
+	return r.originalName
+}
+
+// Making this public would be bad.
+func (r *Resource) setOriginalName(n string) *Resource {
+	r.originalName = n
+	return r
 }
 
 // String returns resource as JSON.
@@ -47,25 +101,6 @@ func (r *Resource) String() string {
 		return "<" + err.Error() + ">"
 	}
 	return strings.TrimSpace(string(bs)) + r.options.String()
-}
-
-// DeepCopy returns a new copy of resource
-func (r *Resource) DeepCopy() *Resource {
-	rc := &Resource{
-		Kunstructured: r.Kunstructured.Copy(),
-		options:       r.options,
-	}
-	if len(r.refBy) > 0 {
-		refby := make([]resid.ResId, len(r.refBy))
-		copy(refby, r.refBy)
-		rc.refBy = refby
-	}
-	if len(r.refVarNames) > 0 {
-		refVarNames := make([]string, len(r.refVarNames))
-		copy(refVarNames, r.refVarNames)
-		rc.refVarNames = refVarNames
-	}
-	return rc
 }
 
 // AsYAML returns the resource in Yaml form.
@@ -88,10 +123,17 @@ func (r *Resource) NeedHashSuffix() bool {
 	return r.options != nil && r.options.NeedsHashSuffix()
 }
 
+// GetNamespace returns the namespace the resource thinks it's in.
+func (r *Resource) GetNamespace() string {
+	namespace, _ := r.GetFieldValue("metadata.namespace")
+	// if err, namespace is empty, so no need to check.
+	return namespace
+}
+
 // Id returns the ResId for the resource.
 func (r *Resource) Id() resid.ResId {
-	namespace, _ := r.GetFieldValue("metadata.namespace")
-	return resid.NewResIdWithPrefixNamespace(r.GetGvk(), r.GetName(), "", namespace)
+	return resid.NewResIdWithPrefixNamespace(
+		r.GetGvk(), r.GetOriginalName(), "", r.GetNamespace())
 }
 
 // GetRefBy returns the ResIds that referred to current resource
@@ -112,21 +154,6 @@ func (r *Resource) GetRefVarNames() []string {
 // AppendRefVarName appends a name of a var into the refVar list
 func (r *Resource) AppendRefVarName(variable types.Var) {
 	r.refVarNames = append(r.refVarNames, variable.Name)
-}
-
-// Merge performs merge with other resource.
-func (r *Resource) Merge(other *Resource) {
-	r.Replace(other)
-	mergeConfigmap(r.Map(), other.Map(), r.Map())
-}
-
-// Replace performs replace with other resource.
-func (r *Resource) Replace(other *Resource) {
-	r.SetLabels(mergeStringMaps(other.GetLabels(), r.GetLabels()))
-	r.SetAnnotations(
-		mergeStringMaps(other.GetAnnotations(), r.GetAnnotations()))
-	r.SetName(other.GetName())
-	r.options = other.options
 }
 
 // TODO: Add BinaryData once we sync to new k8s.io/api

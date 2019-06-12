@@ -174,10 +174,9 @@ func TestResolveVarsVarNeedsDisambiguation(t *testing.T) {
 		t.Fatalf("unexpected err: %v", err)
 	}
 
-	rm0 := resmap.FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResIdWithPrefixNamespace(
-			gvk.Gvk{Version: "v1", Kind: "Service"},
-			"backendOne", "", "fooNamespace"): rf.FromMap(
+	rm0 := resmap.New()
+	rm0.Append(
+		rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Service",
@@ -185,9 +184,7 @@ func TestResolveVarsVarNeedsDisambiguation(t *testing.T) {
 					"name":      "backendOne",
 					"namespace": "fooNamespace",
 				},
-			}),
-	})
-
+			}))
 	err = ra.AppendAll(rm0)
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)

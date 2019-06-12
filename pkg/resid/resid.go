@@ -38,6 +38,12 @@ type ResId struct {
 	Suffix string `json:"suffix,omitempty"`
 }
 
+// NewResIdWithNamespace creates new resource identifier
+// in a given namespace.
+func NewResIdWithNamespace(k gvk.Gvk, n, ns string) ResId {
+	return ResId{ItemId: ItemId{Gvk: k, Name: n, Namespace: ns}}
+}
+
 // NewResIdWithPrefixSuffixNamespace creates new resource identifier with a prefix, suffix and a namespace
 func NewResIdWithPrefixSuffixNamespace(k gvk.Gvk, n, p, s, ns string) ResId {
 	return ResId{ItemId: ItemId{Gvk: k, Name: n, Namespace: ns}, Prefix: p, Suffix: s}

@@ -110,7 +110,7 @@ func TestNamespaceRun(t *testing.T) {
 			}),
 	})
 	expected := resmap.FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResIdWithPrefixNamespace(ns, "ns1", "", ""): rf.FromMap(
+		resid.NewResIdWithNamespace(ns, "ns1", ""): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Namespace",
@@ -118,7 +118,7 @@ func TestNamespaceRun(t *testing.T) {
 					"name": "ns1",
 				},
 			}),
-		resid.NewResIdWithPrefixNamespace(cmap, "cm1", "", "test"): rf.FromMap(
+		resid.NewResIdWithNamespace(cmap, "cm1", "test"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -127,7 +127,7 @@ func TestNamespaceRun(t *testing.T) {
 					"namespace": "test",
 				},
 			}),
-		resid.NewResIdWithPrefixNamespace(cmap, "cm2", "", "test"): rf.FromMap(
+		resid.NewResIdWithNamespace(cmap, "cm2", "test"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -136,10 +136,10 @@ func TestNamespaceRun(t *testing.T) {
 					"namespace": "test",
 				},
 			}),
-		resid.NewResIdWithPrefixNamespace(cmap, "cm3", "", "test"): rf.FromMap(
+		resid.NewResIdWithNamespace(cmap, "cm3", "test"): rf.FromMap(
 			map[string]interface{}{},
 		),
-		resid.NewResIdWithPrefixNamespace(sa, "default", "", "test"): rf.FromMap(
+		resid.NewResIdWithNamespace(sa, "default", "test"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ServiceAccount",
@@ -148,7 +148,7 @@ func TestNamespaceRun(t *testing.T) {
 					"namespace": "test",
 				},
 			}),
-		resid.NewResIdWithPrefixNamespace(sa, "service-account", "", "test"): rf.FromMap(
+		resid.NewResIdWithNamespace(sa, "service-account", "test"): rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ServiceAccount",

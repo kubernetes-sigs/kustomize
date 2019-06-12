@@ -98,7 +98,8 @@ func TestResourceId(t *testing.T) {
 	}{
 		{
 			in: testConfigMap,
-			id: resid.NewResIdWithPrefixNamespace(gvk.Gvk{Version: "v1", Kind: "ConfigMap"}, "winnie", "", "hundred-acre-wood"),
+			id: resid.NewResIdWithNamespace(
+				gvk.Gvk{Version: "v1", Kind: "ConfigMap"}, "winnie", "hundred-acre-wood"),
 		},
 		{
 			in: testDeployment,

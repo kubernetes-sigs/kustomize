@@ -1,22 +1,10 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package transformers
 
 import (
+	"sigs.k8s.io/kustomize/pkg/gvk"
 	"strings"
 	"testing"
 
@@ -26,248 +14,291 @@ import (
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
+type rmFactory struct {
+	t  *testing.T
+	m  resmap.ResMap
+	rf *resource.Factory
+}
+
+func NewSeededRmFactory(t *testing.T, rf *resource.Factory, m resmap.ResMap) *rmFactory {
+	return &rmFactory{t: t, rf: rf, m: m}
+}
+
+func NewRmFactory(t *testing.T, rf *resource.Factory) *rmFactory {
+	return NewSeededRmFactory(t, rf, resmap.New())
+}
+
+func (rm *rmFactory) add(m map[string]interface{}) *rmFactory {
+	err := rm.m.Append(rm.rf.FromMap(m))
+	if err != nil {
+		rm.t.Fatalf("test setup failure: %v", err)
+	}
+	return rm
+}
+
+func (rm *rmFactory) addWithId(id resid.ResId, m map[string]interface{}) *rmFactory {
+	err := rm.m.AppendWithId(id, rm.rf.FromMap(m))
+	if err != nil {
+		rm.t.Fatalf("test setup failure: %v", err)
+	}
+	return rm
+}
+
+func (rm *rmFactory) addWithName(n string, m map[string]interface{}) *rmFactory {
+	err := rm.m.Append(rm.rf.FromMapWithName(n, m))
+	if err != nil {
+		rm.t.Fatalf("test setup failure: %v", err)
+	}
+	return rm
+}
+
+func (rm *rmFactory) replaceResource(m map[string]interface{}) *rmFactory {
+	r := rm.rf.FromMap(m)
+	err := rm.m.ReplaceResource(r.Id(), r)
+	if err != nil {
+		rm.t.Fatalf("test setup failure: %v", err)
+	}
+	return rm
+}
+
+func (rm *rmFactory) resMap() resmap.ResMap {
+	return rm.m
+}
+
 func TestNameReferenceHappyRun(t *testing.T) {
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
-	m := resmap.FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(cmap, "cm1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "someprefix-cm1-somehash",
-				},
-			}),
-		resid.NewResId(cmap, "cm2"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "someprefix-cm2-somehash",
-				},
-			}),
-		resid.NewResId(secret, "secret1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "Secret",
-				"metadata": map[string]interface{}{
-					"name": "someprefix-secret1-somehash",
-				},
-			}),
-		resid.NewResId(pvc, "claim1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "PersistentVolumeClaim",
-				"metadata": map[string]interface{}{
-					"name": "someprefix-claim1",
-				},
-			}),
-		resid.NewResId(ingress, "ingress1"): rf.FromMap(
-			map[string]interface{}{
-				"group":      "extensions",
-				"apiVersion": "v1beta1",
-				"kind":       "Ingress",
-				"metadata": map[string]interface{}{
-					"name": "ingress1",
-					"annotations": map[string]interface{}{
-						"ingress.kubernetes.io/auth-secret":       "secret1",
-						"nginx.ingress.kubernetes.io/auth-secret": "secret1",
-					},
-				},
-				"spec": map[string]interface{}{
-					"backend": map[string]interface{}{
-						"serviceName": "testsvc",
-						"servicePort": "80",
-					},
+	m := NewRmFactory(t, rf).addWithName(
+		"cm1",
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "someprefix-cm1-somehash",
+			},
+		}).addWithName(
+		"cm2",
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "someprefix-cm2-somehash",
+			},
+		}).addWithName(
+		"secret1",
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Secret",
+			"metadata": map[string]interface{}{
+				"name": "someprefix-secret1-somehash",
+			},
+		}).addWithName(
+		"claim1",
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "PersistentVolumeClaim",
+			"metadata": map[string]interface{}{
+				"name": "someprefix-claim1",
+			},
+		}).add(
+		map[string]interface{}{
+			"group":      "extensions",
+			"apiVersion": "v1beta1",
+			"kind":       "Ingress",
+			"metadata": map[string]interface{}{
+				"name": "ingress1",
+				"annotations": map[string]interface{}{
+					"ingress.kubernetes.io/auth-secret":       "secret1",
+					"nginx.ingress.kubernetes.io/auth-secret": "secret1",
 				},
 			},
-		),
-		resid.NewResId(deploy, "deploy1"): rf.FromMap(
-			map[string]interface{}{
-				"group":      "apps",
-				"apiVersion": "v1",
-				"kind":       "Deployment",
-				"metadata": map[string]interface{}{
-					"name": "deploy1",
+			"spec": map[string]interface{}{
+				"backend": map[string]interface{}{
+					"serviceName": "testsvc",
+					"servicePort": "80",
 				},
-				"spec": map[string]interface{}{
-					"template": map[string]interface{}{
-						"spec": map[string]interface{}{
-							"containers": []interface{}{
-								map[string]interface{}{
-									"name":  "nginx",
-									"image": "nginx:1.7.9",
-									"env": []interface{}{
-										map[string]interface{}{
-											"name": "CM_FOO",
-											"valueFrom": map[string]interface{}{
-												"configMapKeyRef": map[string]interface{}{
-													"name": "cm1",
-													"key":  "somekey",
-												},
-											},
-										},
-										map[string]interface{}{
-											"name": "SECRET_FOO",
-											"valueFrom": map[string]interface{}{
-												"secretKeyRef": map[string]interface{}{
-													"name": "secret1",
-													"key":  "somekey",
-												},
-											},
-										},
-									},
-									"envFrom": []interface{}{
-										map[string]interface{}{
-											"configMapRef": map[string]interface{}{
+			},
+		},
+	).add(
+		map[string]interface{}{
+			"group":      "apps",
+			"apiVersion": "v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "deploy1",
+			},
+			"spec": map[string]interface{}{
+				"template": map[string]interface{}{
+					"spec": map[string]interface{}{
+						"containers": []interface{}{
+							map[string]interface{}{
+								"name":  "nginx",
+								"image": "nginx:1.7.9",
+								"env": []interface{}{
+									map[string]interface{}{
+										"name": "CM_FOO",
+										"valueFrom": map[string]interface{}{
+											"configMapKeyRef": map[string]interface{}{
 												"name": "cm1",
 												"key":  "somekey",
 											},
 										},
-										map[string]interface{}{
-											"secretRef": map[string]interface{}{
+									},
+									map[string]interface{}{
+										"name": "SECRET_FOO",
+										"valueFrom": map[string]interface{}{
+											"secretKeyRef": map[string]interface{}{
 												"name": "secret1",
 												"key":  "somekey",
 											},
 										},
 									},
 								},
-							},
-							"imagePullSecrets": []interface{}{
-								map[string]interface{}{
-									"name": "secret1",
-								},
-							},
-							"volumes": map[string]interface{}{
-								"configMap": map[string]interface{}{
-									"name": "cm1",
-								},
-								"projected": map[string]interface{}{
-									"sources": map[string]interface{}{
-										"configMap": map[string]interface{}{
-											"name": "cm2",
-										},
-										"secret": map[string]interface{}{
-											"name": "secret1",
+								"envFrom": []interface{}{
+									map[string]interface{}{
+										"configMapRef": map[string]interface{}{
+											"name": "cm1",
+											"key":  "somekey",
 										},
 									},
-								},
-								"secret": map[string]interface{}{
-									"secretName": "secret1",
-								},
-								"persistentVolumeClaim": map[string]interface{}{
-									"claimName": "claim1",
-								},
-							},
-						},
-					},
-				},
-			}),
-		resid.NewResId(statefulset, "statefulset1"): rf.FromMap(
-			map[string]interface{}{
-				"group":      "apps",
-				"apiVersion": "v1",
-				"kind":       "StatefulSet",
-				"metadata": map[string]interface{}{
-					"name": "statefulset1",
-				},
-				"spec": map[string]interface{}{
-					"template": map[string]interface{}{
-						"spec": map[string]interface{}{
-							"containers": []interface{}{
-								map[string]interface{}{
-									"name":  "nginx",
-									"image": "nginx:1.7.9",
-								},
-							},
-							"volumes": map[string]interface{}{
-								"projected": map[string]interface{}{
-									"sources": map[string]interface{}{
-										"configMap": map[string]interface{}{
-											"name": "cm2",
-										},
-										"secret": map[string]interface{}{
+									map[string]interface{}{
+										"secretRef": map[string]interface{}{
 											"name": "secret1",
+											"key":  "somekey",
 										},
 									},
 								},
 							},
 						},
+						"imagePullSecrets": []interface{}{
+							map[string]interface{}{
+								"name": "secret1",
+							},
+						},
+						"volumes": map[string]interface{}{
+							"configMap": map[string]interface{}{
+								"name": "cm1",
+							},
+							"projected": map[string]interface{}{
+								"sources": map[string]interface{}{
+									"configMap": map[string]interface{}{
+										"name": "cm2",
+									},
+									"secret": map[string]interface{}{
+										"name": "secret1",
+									},
+								},
+							},
+							"secret": map[string]interface{}{
+								"secretName": "secret1",
+							},
+							"persistentVolumeClaim": map[string]interface{}{
+								"claimName": "claim1",
+							},
+						},
 					},
 				},
-			}),
-		resid.NewResIdWithPrefixNamespace(sa, "sa", "", "test"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ServiceAccount",
-				"metadata": map[string]interface{}{
-					"name":      "someprefix-sa",
+			},
+		}).add(
+		map[string]interface{}{
+			"group":      "apps",
+			"apiVersion": "v1",
+			"kind":       "StatefulSet",
+			"metadata": map[string]interface{}{
+				"name": "statefulset1",
+			},
+			"spec": map[string]interface{}{
+				"template": map[string]interface{}{
+					"spec": map[string]interface{}{
+						"containers": []interface{}{
+							map[string]interface{}{
+								"name":  "nginx",
+								"image": "nginx:1.7.9",
+							},
+						},
+						"volumes": map[string]interface{}{
+							"projected": map[string]interface{}{
+								"sources": map[string]interface{}{
+									"configMap": map[string]interface{}{
+										"name": "cm2",
+									},
+									"secret": map[string]interface{}{
+										"name": "secret1",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}).addWithName("sa",
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ServiceAccount",
+			"metadata": map[string]interface{}{
+				"name":      "someprefix-sa",
+				"namespace": "test",
+			},
+		}).add(
+		map[string]interface{}{
+			"apiVersion": "rbac.authorization.k8s.io/v1",
+			"kind":       "ClusterRoleBinding",
+			"metadata": map[string]interface{}{
+				"name": "crb",
+			},
+			"subjects": []interface{}{
+				map[string]interface{}{
+					"kind":      "ServiceAccount",
+					"name":      "sa",
 					"namespace": "test",
 				},
-			}),
-		resid.NewResId(crb, "crb"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "rbac.authorization.k8s.io/v1",
-				"kind":       "ClusterRoleBinding",
-				"metadata": map[string]interface{}{
-					"name": "crb",
-				},
-				"subjects": []interface{}{
-					map[string]interface{}{
-						"kind":      "ServiceAccount",
-						"name":      "sa",
-						"namespace": "test",
+			},
+		}).add(
+		map[string]interface{}{
+			"apiVersion": "rbac.authorization.k8s.io/v1",
+			"kind":       "ClusterRole",
+			"metadata": map[string]interface{}{
+				"name": "cr",
+			},
+			"rules": []interface{}{
+				map[string]interface{}{
+					"resources": []interface{}{
+						"secrets",
+					},
+					"resourceNames": []interface{}{
+						"secret1",
+						"secret1",
+						"secret2",
 					},
 				},
-			}),
-		resid.NewResId(cr, "cr"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "rbac.authorization.k8s.io/v1",
-				"kind":       "ClusterRole",
-				"metadata": map[string]interface{}{
-					"name": "cr",
-				},
-				"rules": []interface{}{
-					map[string]interface{}{
-						"resources": []interface{}{
-							"secrets",
-						},
-						"resourceNames": []interface{}{
-							"secret1",
-							"secret1",
-							"secret2",
-						},
-					},
-				},
-			}),
-		resid.NewResId(cronjob, "cronjob1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "batch/v1beta1",
-				"kind":       "CronJob",
-				"metadata": map[string]interface{}{
-					"name": "cronjob1",
-				},
-				"spec": map[string]interface{}{
-					"schedule": "0 14 * * *",
-					"jobTemplate": map[string]interface{}{
-						"spec": map[string]interface{}{
-							"template": map[string]interface{}{
-								"spec": map[string]interface{}{
-									"containers": []interface{}{
-										map[string]interface{}{
-											"name":  "main",
-											"image": "myimage",
-										},
+			},
+		}).add(
+		map[string]interface{}{
+			"apiVersion": "batch/v1beta1",
+			"kind":       "CronJob",
+			"metadata": map[string]interface{}{
+				"name": "cronjob1",
+			},
+			"spec": map[string]interface{}{
+				"schedule": "0 14 * * *",
+				"jobTemplate": map[string]interface{}{
+					"spec": map[string]interface{}{
+						"template": map[string]interface{}{
+							"spec": map[string]interface{}{
+								"containers": []interface{}{
+									map[string]interface{}{
+										"name":  "main",
+										"image": "myimage",
 									},
-									"volumes": map[string]interface{}{
-										"projected": map[string]interface{}{
-											"sources": map[string]interface{}{
-												"configMap": map[string]interface{}{
-													"name": "cm2",
-												},
-												"secret": map[string]interface{}{
-													"name": "secret1",
-												},
+								},
+								"volumes": map[string]interface{}{
+									"projected": map[string]interface{}{
+										"sources": map[string]interface{}{
+											"configMap": map[string]interface{}{
+												"name": "cm2",
+											},
+											"secret": map[string]interface{}{
+												"name": "secret1",
 											},
 										},
 									},
@@ -276,12 +307,10 @@ func TestNameReferenceHappyRun(t *testing.T) {
 						},
 					},
 				},
-			}),
-	})
+			},
+		}).resMap()
 
-	expected := m.ShallowCopy()
-
-	expected.ReplaceResource(resid.NewResId(deploy, "deploy1"), rf.FromMap(
+	expected := NewSeededRmFactory(t, rf, m.ShallowCopy()).replaceResource(
 		map[string]interface{}{
 			"group":      "apps",
 			"apiVersion": "v1",
@@ -361,8 +390,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					},
 				},
 			},
-		}))
-	expected.ReplaceResource(resid.NewResId(statefulset, "statefulset1"), rf.FromMap(
+		}).replaceResource(
 		map[string]interface{}{
 			"group":      "apps",
 			"apiVersion": "v1",
@@ -394,8 +422,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					},
 				},
 			},
-		}))
-	expected.ReplaceResource(resid.NewResId(ingress, "ingress1"), rf.FromMap(
+		}).replaceResource(
 		map[string]interface{}{
 			"group":      "extensions",
 			"apiVersion": "v1beta1",
@@ -413,9 +440,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					"servicePort": "80",
 				},
 			},
-		},
-	))
-	expected.ReplaceResource(resid.NewResId(crb, "crb"), rf.FromMap(
+		}).replaceResource(
 		map[string]interface{}{
 			"apiVersion": "rbac.authorization.k8s.io/v1",
 			"kind":       "ClusterRoleBinding",
@@ -429,8 +454,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					"namespace": "test",
 				},
 			},
-		}))
-	expected.ReplaceResource(resid.NewResId(cr, "cr"), rf.FromMap(
+		}).replaceResource(
 		map[string]interface{}{
 			"apiVersion": "rbac.authorization.k8s.io/v1",
 			"kind":       "ClusterRole",
@@ -449,8 +473,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					},
 				},
 			},
-		}))
-	expected.ReplaceResource(resid.NewResId(cronjob, "cronjob1"), rf.FromMap(
+		}).replaceResource(
 		map[string]interface{}{
 			"apiVersion": "batch/v1beta1",
 			"kind":       "CronJob",
@@ -486,7 +509,8 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					},
 				},
 			},
-		}))
+		}).resMap()
+
 	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
 	err := nrt.Transform(m)
 	if err != nil {
@@ -505,29 +529,27 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 		expectedErr string
 	}{
 		{
-			resMap: resmap.FromMap(map[resid.ResId]*resource.Resource{
-				resid.NewResId(cr, "cr"): rf.FromMap(
-					map[string]interface{}{
-						"apiVersion": "rbac.authorization.k8s.io/v1",
-						"kind":       "ClusterRole",
-						"metadata": map[string]interface{}{
-							"name": "cr",
-						},
-						"rules": []interface{}{
-							map[string]interface{}{
-								"resources": []interface{}{
-									"secrets",
-								},
-								"resourceNames": []interface{}{
-									[]interface{}{},
-								},
+			resMap: NewRmFactory(t, rf).add(
+				map[string]interface{}{
+					"apiVersion": "rbac.authorization.k8s.io/v1",
+					"kind":       "ClusterRole",
+					"metadata": map[string]interface{}{
+						"name": "cr",
+					},
+					"rules": []interface{}{
+						map[string]interface{}{
+							"resources": []interface{}{
+								"secrets",
+							},
+							"resourceNames": []interface{}{
+								[]interface{}{},
 							},
 						},
-					}),
-			}),
+					},
+				}).resMap(),
 			expectedErr: "is expected to be string"},
-		{resMap: resmap.FromMap(map[resid.ResId]*resource.Resource{
-			resid.NewResId(cr, "cr"): rf.FromMap(
+		{
+			resMap: NewRmFactory(t, rf).add(
 				map[string]interface{}{
 					"apiVersion": "rbac.authorization.k8s.io/v1",
 					"kind":       "ClusterRole",
@@ -544,8 +566,7 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 							},
 						},
 					},
-				}),
-		}),
+				}).resMap(),
 			expectedErr: "is expected to be either a string or a []interface{}"},
 	}
 
@@ -566,54 +587,52 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
-	m := resmap.FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(pv, "volume1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "PersistentVolume",
-				"metadata": map[string]interface{}{
-					"name": "someprefix-volume1",
-				},
-			}),
+	m := NewRmFactory(t, rf).addWithName(
+		"volume1",
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "PersistentVolume",
+			"metadata": map[string]interface{}{
+				"name": "someprefix-volume1",
+			},
+		}).addWithName(
+		"claim1",
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "PersistentVolumeClaim",
+			"metadata": map[string]interface{}{
+				"name":      "someprefix-claim1",
+				"namespace": "some-namespace",
+			},
+			"spec": map[string]interface{}{
+				"volumeName": "volume1",
+			},
+		}).resMap()
 
-		resid.NewResId(pvc, "claim1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "PersistentVolumeClaim",
-				"metadata": map[string]interface{}{
-					"name":      "someprefix-claim1",
-					"namespace": "some-namespace",
-				},
-				"spec": map[string]interface{}{
-					"volumeName": "volume1",
-				},
-			}),
-	})
-
-	expected := resmap.FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(pv, "volume1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "PersistentVolume",
-				"metadata": map[string]interface{}{
-					"name": "someprefix-volume1",
-				},
-			}),
-
-		resid.NewResId(pvc, "claim1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "PersistentVolumeClaim",
-				"metadata": map[string]interface{}{
-					"name":      "someprefix-claim1",
-					"namespace": "some-namespace",
-				},
-				"spec": map[string]interface{}{
-					"volumeName": "someprefix-volume1",
-				},
-			}),
-	})
-	expected.GetById(resid.NewResId(pv, "volume1")).AppendRefBy(resid.NewResId(pvc, "claim1"))
+	expected := NewRmFactory(t, rf).addWithName(
+		"volume1",
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "PersistentVolume",
+			"metadata": map[string]interface{}{
+				"name": "someprefix-volume1",
+			},
+		}).addWithName(
+		"claim1",
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "PersistentVolumeClaim",
+			"metadata": map[string]interface{}{
+				"name":      "someprefix-claim1",
+				"namespace": "some-namespace",
+			},
+			"spec": map[string]interface{}{
+				"volumeName": "someprefix-volume1",
+			},
+		}).resMap()
+	expected.GetById(
+		resid.NewResId(gvk.Gvk{Version: "v1", Kind: "PersistentVolume"}, "volume1")).AppendRefBy(
+		resid.NewResId(gvk.Gvk{Version: "v1", Kind: "PersistentVolumeClaim"}, "claim1"))
 	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
 	err := nrt.Transform(m)
 	if err != nil {
