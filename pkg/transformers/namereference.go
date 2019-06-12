@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"log"
 
+	"sigs.k8s.io/kustomize/pkg/resource"
+
 	"sigs.k8s.io/kustomize/pkg/gvk"
-	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
 )
@@ -44,14 +45,15 @@ func NewNameReferenceTransformer(br []config.NameBackReferences) Transformer {
 //
 //   - kind: Deployment
 //     fieldSpecs:
-//     - path: spec/scaleTargetRef/name
-//       kind: HorizontalPodAutoscaler
+//     - kind: HorizontalPodAutoscaler
+//       path: spec/scaleTargetRef/name
 //
-// saying that an HPA, via its 'spec/scaleTargetRef/name'
-// field, may refer to a Deployment.  This match to HPA
-// means we may need to modify the value in its
-// 'spec/scaleTargetRef/name' field, by searching for
-// the thing it refers to, and getting its new name.
+// This entry says that an HPA, via its
+// 'spec/scaleTargetRef/name' field, may refer to a
+// Deployment.  This match to HPA means we may need to
+// modify the value in its 'spec/scaleTargetRef/name'
+// field, by searching for the thing it refers to,
+// and getting its new name.
 //
 // As a filter, and search optimization, we compute a
 // subset of all resources that the HPA could refer to,
@@ -76,19 +78,23 @@ func NewNameReferenceTransformer(br []config.NameBackReferences) Transformer {
 //
 func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 	// TODO: Too much looping, here and in transitive calls.
-	for referrer, res := range m.AsMap() {
+	for _, referrer := range m.Resources() {
 		var candidates resmap.ResMap
 		for _, target := range o.backRefs {
 			for _, fSpec := range target.FieldSpecs {
-				if referrer.Gvk().IsSelected(&fSpec.Gvk) {
+				if referrer.OrgId().IsSelected(&fSpec.Gvk) {
 					if candidates == nil {
-						candidates = m.SubsetThatCouldBeReferencedById(referrer)
+						candidates = m.SubsetThatCouldBeReferencedByResource(referrer)
 					}
 					err := MutateField(
-						res.Map(),
+						referrer.Map(),
 						fSpec.PathSlice(),
 						fSpec.CreateIfNotPresent,
-						o.getNewName(
+						o.getNewNameFunc(
+							// referrer could be an HPA instance,
+							// target could be Gvk for Deployment,
+							// candidate a list of resources "reachable"
+							// from the HPA.
 							referrer, target.Gvk, candidates))
 					if err != nil {
 						return err
@@ -100,26 +106,28 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 	return nil
 }
 
-func (o *nameReferenceTransformer) getNewName(
-	referrer resid.ResId,
+func (o *nameReferenceTransformer) getNewNameFunc(
+	referrer *resource.Resource,
 	target gvk.Gvk,
 	referralCandidates resmap.ResMap) func(in interface{}) (interface{}, error) {
 	return func(in interface{}) (interface{}, error) {
 		switch in.(type) {
 		case string:
 			oldName, _ := in.(string)
-			for id, res := range referralCandidates.AsMap() {
-				if id.Gvk().IsSelected(&target) && id.Name() == oldName {
-					matchedIds := referralCandidates.GetMatchingIds(id.GvknEquals)
+			for _, res := range referralCandidates.Resources() {
+				id := res.OrgId()
+				if id.IsSelected(&target) && res.GetOriginalName() == oldName {
+					matches := referralCandidates.GetMatchingResourcesByOriginalId(id.GvknEquals)
 					// If there's more than one match, there's no way
 					// to know which one to pick, so emit error.
-					if len(matchedIds) > 1 {
+					if len(matches) > 1 {
 						return nil, fmt.Errorf(
-							"Multiple matches for name %s:\n  %v", id, matchedIds)
+							"string case - multiple matches for %s:\n  %v",
+							id, getIds(matches))
 					}
 					// In the resource, note that it is referenced
 					// by the referrer.
-					res.AppendRefBy(referrer)
+					res.AppendRefBy(referrer.CurId())
 					// Return transformed name of the object,
 					// complete with prefixes, hashes, etc.
 					return res.GetName(), nil
@@ -137,18 +145,20 @@ func (o *nameReferenceTransformer) getNewName(
 				}
 				names = append(names, name)
 			}
-			for id, res := range referralCandidates.AsMap() {
-				indexes := indexOf(id.Name(), names)
-				if id.Gvk().IsSelected(&target) && len(indexes) > 0 {
-					matchedIds := referralCandidates.GetMatchingIds(id.GvknEquals)
-					if len(matchedIds) > 1 {
+			for _, res := range referralCandidates.Resources() {
+				indexes := indexOf(res.GetOriginalName(), names)
+				id := res.OrgId()
+				if id.IsSelected(&target) && len(indexes) > 0 {
+					matches := referralCandidates.GetMatchingResourcesByOriginalId(id.GvknEquals)
+					if len(matches) > 1 {
 						return nil, fmt.Errorf(
-							"Multiple matches for name %s:\n %v", id, matchedIds)
+							"slice case - multiple matches for %s:\n %v",
+							id, getIds(matches))
 					}
 					for _, index := range indexes {
 						l[index] = res.GetName()
 					}
-					res.AppendRefBy(referrer)
+					res.AppendRefBy(referrer.CurId())
 					return l, nil
 				}
 			}
@@ -168,4 +178,12 @@ func indexOf(s string, slice []string) []int {
 		}
 	}
 	return index
+}
+
+func getIds(rs []*resource.Resource) []string {
+	var result []string
+	for _, r := range rs {
+		result = append(result, r.CurId().String()+"\n")
+	}
+	return result
 }

@@ -82,6 +82,10 @@ kind: Kustomization
 `+content)
 }
 
+func (th *KustTestHarness) RF() *resource.Factory {
+	return th.rf.RF()
+}
+
 func (th *KustTestHarness) FromMap(m map[string]interface{}) *resource.Resource {
 	return th.rf.RF().FromMap(m)
 }

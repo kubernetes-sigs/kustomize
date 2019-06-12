@@ -15,6 +15,7 @@ type SecretGeneratorPlugin struct {
 	types.SecretArgs
 }
 
+//noinspection GoUnusedGlobalVariable
 func NewSecretGeneratorPlugin() *SecretGeneratorPlugin {
 	return &SecretGeneratorPlugin{}
 }

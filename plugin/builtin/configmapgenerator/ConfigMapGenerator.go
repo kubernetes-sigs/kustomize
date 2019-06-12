@@ -18,6 +18,7 @@ type plugin struct {
 	types.ConfigMapArgs
 }
 
+//noinspection GoUnusedGlobalVariable
 var KustomizePlugin plugin
 
 func (p *plugin) Config(

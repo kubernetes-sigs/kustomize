@@ -17,6 +17,7 @@ type ImageTagTransformerPlugin struct {
 	FieldSpecs []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
+//noinspection GoUnusedGlobalVariable
 func NewImageTagTransformerPlugin() *ImageTagTransformerPlugin {
 	return &ImageTagTransformerPlugin{}
 }

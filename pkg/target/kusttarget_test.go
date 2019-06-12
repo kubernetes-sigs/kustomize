@@ -14,7 +14,6 @@ import (
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/kusttest"
-	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	. "sigs.k8s.io/kustomize/pkg/target"
@@ -80,64 +79,53 @@ func TestResources(t *testing.T) {
 	th.WriteF("/whatever/namespace.yaml", namespaceContent)
 	th.WriteF("/whatever/jsonpatch.json", jsonpatchContent)
 
-	expected := resmap.New()
-	expected.AppendWithId(
-		resid.NewResIdWithPrefixSuffixNamespace(
-			gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"},
-			"dply1", "foo-", "-bar", "ns1"), th.FromMap(
-			map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "Deployment",
-				"metadata": map[string]interface{}{
-					"name":      "foo-dply1-bar",
-					"namespace": "ns1",
-					"labels": map[string]interface{}{
+	resources := []*resource.Resource{
+		th.RF().FromMapWithName("dply1", map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name":      "foo-dply1-bar",
+				"namespace": "ns1",
+				"labels": map[string]interface{}{
+					"app": "nginx",
+				},
+				"annotations": map[string]interface{}{
+					"note": "This is a test annotation",
+				},
+			},
+			"spec": map[string]interface{}{
+				"replica": "3",
+				"selector": map[string]interface{}{
+					"matchLabels": map[string]interface{}{
 						"app": "nginx",
 					},
-					"annotations": map[string]interface{}{
-						"note": "This is a test annotation",
-					},
 				},
-				"spec": map[string]interface{}{
-					"replica": "3",
-					"selector": map[string]interface{}{
-						"matchLabels": map[string]interface{}{
+				"template": map[string]interface{}{
+					"metadata": map[string]interface{}{
+						"annotations": map[string]interface{}{
+							"note": "This is a test annotation",
+						},
+						"labels": map[string]interface{}{
 							"app": "nginx",
 						},
 					},
-					"template": map[string]interface{}{
-						"metadata": map[string]interface{}{
-							"annotations": map[string]interface{}{
-								"note": "This is a test annotation",
-							},
-							"labels": map[string]interface{}{
-								"app": "nginx",
-							},
-						},
-					},
 				},
-			}))
-	expected.AppendWithId(
-		resid.NewResIdWithPrefixSuffixNamespace(
-			gvk.Gvk{Version: "v1", Kind: "Namespace"},
-			"ns1", "foo-", "-bar", ""), th.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "Namespace",
-				"metadata": map[string]interface{}{
-					"name": "foo-ns1-bar",
-					"labels": map[string]interface{}{
-						"app": "nginx",
-					},
-					"annotations": map[string]interface{}{
-						"note": "This is a test annotation",
-					},
+			},
+		}),
+		th.RF().FromMapWithName("ns1", map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Namespace",
+			"metadata": map[string]interface{}{
+				"name": "foo-ns1-bar",
+				"labels": map[string]interface{}{
+					"app": "nginx",
 				},
-			}))
-	expected.AppendWithId(
-		resid.NewResIdWithPrefixSuffixNamespace(
-			gvk.Gvk{Version: "v1", Kind: "ConfigMap"},
-			"literalConfigMap", "foo-", "-bar", "ns1"), th.FromMap(
+				"annotations": map[string]interface{}{
+					"note": "This is a test annotation",
+				},
+			},
+		}),
+		th.RF().FromMapWithName("literalConfigMap",
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -155,11 +143,8 @@ func TestResources(t *testing.T) {
 					"DB_USERNAME": "admin",
 					"DB_PASSWORD": "somepw",
 				},
-			}))
-	expected.AppendWithId(
-		resid.NewResIdWithPrefixSuffixNamespace(
-			gvk.Gvk{Version: "v1", Kind: "Secret"},
-			"secret", "foo-", "-bar", "ns1"), th.FromMap(
+			}),
+		th.RF().FromMapWithName("secret",
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -178,13 +163,22 @@ func TestResources(t *testing.T) {
 					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
-			}))
+			}),
+	}
+
+	expected := resmap.New()
+	for _, r := range resources {
+		if err := expected.Append(r); err != nil {
+			t.Fatalf("unexpected error %v", err)
+		}
+	}
+
 	actual, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("unexpected Resources error %v", err)
 	}
 
-	if err = expected.ErrorIfNotEqualSets(actual); err != nil {
+	if err = expected.ErrorIfNotEqualLists(actual); err != nil {
 		t.Fatalf("unexpected inequality: %v", err)
 	}
 }
@@ -215,7 +209,7 @@ func TestResourceNotFound(t *testing.T) {
 
 func findSecret(m resmap.ResMap) *resource.Resource {
 	for _, r := range m.Resources() {
-		if r.Id().Gvk().Kind == "Secret" {
+		if r.OrgId().Kind == "Secret" {
 			return r
 		}
 	}

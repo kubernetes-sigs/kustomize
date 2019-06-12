@@ -314,20 +314,20 @@ spec:
 kind: Gorilla
 metadata:
   labels:
+    movie: planetOfTheApes
+  name: o-ursus
+spec:
+  diet: heston
+  location: Arizona
+---
+kind: Gorilla
+metadata:
+  labels:
     app: myApp
     movie: planetOfTheApes
   name: o-x-koko
 spec:
   diet: bambooshoots
   location: SW
----
-kind: Gorilla
-metadata:
-  labels:
-    movie: planetOfTheApes
-  name: o-ursus
-spec:
-  diet: heston
-  location: Arizona
 `)
 }

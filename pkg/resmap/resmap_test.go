@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	. "sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resmaptest"
@@ -55,10 +54,10 @@ func TestAppendRemove(t *testing.T) {
 	doAppend(t, w1, makeCm(5))
 	doAppend(t, w1, makeCm(6))
 	doAppend(t, w1, makeCm(7))
-	doRemove(t, w1, makeCm(1).Id())
-	doRemove(t, w1, makeCm(3).Id())
-	doRemove(t, w1, makeCm(5).Id())
-	doRemove(t, w1, makeCm(7).Id())
+	doRemove(t, w1, makeCm(1).OrgId())
+	doRemove(t, w1, makeCm(3).OrgId())
+	doRemove(t, w1, makeCm(5).OrgId())
+	doRemove(t, w1, makeCm(7).OrgId())
 
 	w2 := New()
 	doAppend(t, w2, makeCm(2))
@@ -79,7 +78,7 @@ func TestAppendRemove(t *testing.T) {
 func TestRemove(t *testing.T) {
 	w := New()
 	r := makeCm(1)
-	err := w.Remove(r.Id())
+	err := w.Remove(r.OrgId())
 	if err == nil {
 		t.Fatalf("expected error")
 	}
@@ -87,20 +86,20 @@ func TestRemove(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	err = w.Remove(r.Id())
+	err = w.Remove(r.OrgId())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	err = w.Remove(r.Id())
+	err = w.Remove(r.OrgId())
 	if err == nil {
 		t.Fatalf("expected error")
 	}
 }
 
-func TestReplaceResource(t *testing.T) {
+func TestReplace(t *testing.T) {
 	cm5 := makeCm(5)
 	cm700 := makeCm(700)
-	cm888 := makeCm(888)
+	otherCm5 := makeCm(5)
 
 	w := New()
 	doAppend(t, w, makeCm(1))
@@ -112,40 +111,27 @@ func TestReplaceResource(t *testing.T) {
 	doAppend(t, w, makeCm(7))
 
 	oldSize := w.Size()
-	err := w.ReplaceResource(cm5.Id(), cm700)
+	_, err := w.Replace(otherCm5)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if w.Size() != oldSize {
 		t.Fatalf("unexpected size %d", w.Size())
 	}
-	if w.GetById(cm5.Id()) != cm700 {
-		t.Fatalf("unexpected result")
+	if r, err := w.GetByCurrentId(cm5.OrgId()); err != nil || r != otherCm5 {
+		t.Fatalf("unexpected result r=%s, err=%v", r.CurId(), err)
 	}
 	if err := w.Append(cm5); err == nil {
 		t.Fatalf("expected id already there error")
 	}
-	if err := w.AppendWithId(cm888.Id(), cm5); err != nil {
-		// Okay to add with some unused Id.
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if err := w.Append(cm700); err == nil {
-		t.Fatalf("expected resource already there error")
-	}
-	if err := w.Remove(cm5.Id()); err != nil {
+	if err := w.Remove(cm5.OrgId()); err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
 	if err := w.Append(cm700); err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
-	if err := w.Append(cm5); err == nil {
-		t.Fatalf("expected err; object is still there under id 888")
-	}
-	if err := w.Remove(cm888.Id()); err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
 	if err := w.Append(cm5); err != nil {
-		t.Fatalf("unexpected err; %v", err)
+		t.Fatalf("unexpected err: %v", err)
 	}
 }
 
@@ -184,205 +170,249 @@ metadata:
 	}
 }
 
-func TestDemandOneGvknMatchForId(t *testing.T) {
-	rm1 := FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResIdWithPrefixNamespace(cmap, "cm1", "prefix1", "ns1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "cm1",
-				},
-			}),
-		resid.NewResIdWithPrefixNamespace(cmap, "cm2", "prefix1", "ns1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "cm2",
-				},
-			}),
-	})
+func TestGetMatchingResourcesByCurrentId(t *testing.T) {
+	r1 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "alice",
+			},
+		})
+	r2 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "bob",
+			},
+		})
+	r3 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name":      "bob",
+				"namespace": "happy",
+			},
+		})
+	r4 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name":      "charlie",
+				"namespace": "happy",
+			},
+		})
+	r5 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name":      "charlie",
+				"namespace": "happy",
+			},
+		})
 
-	result := rm1.GetMatchingIds(
-		resid.NewResIdWithPrefixNamespace(cmap, "cm2", "prefix1", "ns1").GvknEquals)
+	m := resmaptest_test.NewRmBuilder(t, rf).
+		AddR(r1).AddR(r2).AddR(r3).AddR(r4).AddR(r5).ResMap()
+
+	result := m.GetMatchingResourcesByCurrentId(
+		resid.NewResId(cmap, "alice").GvknEquals)
+	if len(result) != 1 {
+		t.Fatalf("Expected single map entry but got %v", result)
+	}
+	result = m.GetMatchingResourcesByCurrentId(
+		resid.NewResId(cmap, "bob").GvknEquals)
+	if len(result) != 2 {
+		t.Fatalf("Expected two, got %v", result)
+	}
+	result = m.GetMatchingResourcesByCurrentId(
+		resid.NewResIdWithNamespace(cmap, "bob", "system").GvknEquals)
+	if len(result) != 2 {
+		t.Fatalf("Expected two but got %v", result)
+	}
+	result = m.GetMatchingResourcesByCurrentId(
+		resid.NewResIdWithNamespace(cmap, "bob", "happy").Equals)
+	if len(result) != 1 {
+		t.Fatalf("Expected single map entry but got %v", result)
+	}
+	result = m.GetMatchingResourcesByCurrentId(
+		resid.NewResId(cmap, "charlie").GvknEquals)
 	if len(result) != 1 {
 		t.Fatalf("Expected single map entry but got %v", result)
 	}
 
-	// confirm that ns and prefix are not included in match
-	result = rm1.GetMatchingIds(
-		resid.NewResIdWithPrefixNamespace(cmap, "cm2", "prefix", "ns").GvknEquals)
-	if len(result) != 1 {
-		t.Fatalf("Expected single map entry but got %v", result)
+	// nolint:goconst
+	tests := []struct {
+		name    string
+		matcher IdMatcher
+		count   int
+	}{
+		{
+			"match everything",
+			func(resid.ResId) bool { return true },
+			5,
+		},
+		{
+			"match nothing",
+			func(resid.ResId) bool { return false },
+			0,
+		},
+		{
+			"name is alice",
+			func(x resid.ResId) bool { return x.Name == "alice" },
+			1,
+		},
+		{
+			"name is charlie",
+			func(x resid.ResId) bool { return x.Name == "charlie" },
+			2,
+		},
+		{
+			"name is bob",
+			func(x resid.ResId) bool { return x.Name == "bob" },
+			2,
+		},
+		{
+			"happy namespace",
+			func(x resid.ResId) bool {
+				return x.Namespace == "happy"
+			},
+			3,
+		},
+		{
+			"happy deployment",
+			func(x resid.ResId) bool {
+				return x.Namespace == "happy" &&
+					x.Gvk.Kind == "Deployment"
+			},
+			1,
+		},
+		{
+			"happy ConfigMap",
+			func(x resid.ResId) bool {
+				return x.Namespace == "happy" &&
+					x.Gvk.Kind == "ConfigMap"
+			},
+			2,
+		},
 	}
-
-	// confirm that name is matched correctly
-	result = rm1.GetMatchingIds(
-		resid.NewResIdWithPrefixNamespace(cmap, "cm3", "prefix1", "ns1").GvknEquals)
-	if len(result) > 0 {
-		t.Fatalf("Expected no map entries but got %v", result)
-	}
-
-	cmap2 := gvk.Gvk{Version: "v2", Kind: "ConfigMap"}
-
-	// confirm that gvk is matched correctly
-	result = rm1.GetMatchingIds(
-		resid.NewResIdWithPrefixNamespace(cmap2, "cm2", "prefix1", "ns1").GvknEquals)
-	if len(result) > 0 {
-		t.Fatalf("Expected no map entries but got %v", result)
+	for _, tst := range tests {
+		result := m.GetMatchingResourcesByCurrentId(tst.matcher)
+		if len(result) != tst.count {
+			t.Fatalf("test '%s';  actual: %d, expected: %d",
+				tst.name, len(result), tst.count)
+		}
 	}
 }
 
-func TestFilterBy(t *testing.T) {
+func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
+	r1 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "alice",
+			},
+		})
+	r2 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "bob",
+			},
+		})
+	r3 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name":      "bob",
+				"namespace": "happy",
+			},
+		})
+	r4 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name":      "charlie",
+				"namespace": "happy",
+			},
+		})
+	r5 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name":      "charlie",
+				"namespace": "happy",
+			},
+		})
+	r5.AddNamePrefix("little-")
+	r6 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name":      "domino",
+				"namespace": "happy",
+			},
+		})
+	r6.AddNamePrefix("little-")
+	r7 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ClusterRoleBinding",
+			"metadata": map[string]interface{}{
+				"name": "meh",
+			},
+		})
+
 	tests := map[string]struct {
-		resMap   ResMap
-		filter   resid.ResId
+		filter   *resource.Resource
 		expected ResMap
 	}{
-		"different namespace": {
-			resMap: FromMap(map[resid.ResId]*resource.Resource{
-				resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map", "prefix", "suffix", "namespace1"): rf.FromMap(
-					map[string]interface{}{
-						"apiVersion": "v1",
-						"kind":       "ConfigMap",
-						"metadata": map[string]interface{}{
-							"name": "config-map",
-						},
-					}),
-			}),
-			filter:   resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map", "prefix", "suffix", "namespace2"),
-			expected: New(),
+		"default namespace 1": {
+			filter: r2,
+			expected: resmaptest_test.NewRmBuilder(t, rf).
+				AddR(r1).AddR(r2).AddR(r7).ResMap(),
 		},
-		"different prefix": {
-			resMap: FromMap(map[resid.ResId]*resource.Resource{
-				resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map", "prefix1", "suffix", "namespace"): rf.FromMap(
-					map[string]interface{}{
-						"apiVersion": "v1",
-						"kind":       "ConfigMap",
-						"metadata": map[string]interface{}{
-							"name": "config-map",
-						},
-					}),
-			}),
-			filter:   resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map", "prefix2", "suffix", "namespace"),
-			expected: New(),
+		"default namespace 2": {
+			filter: r1,
+			expected: resmaptest_test.NewRmBuilder(t, rf).
+				AddR(r1).AddR(r2).AddR(r7).ResMap(),
 		},
-		"different suffix": {
-			resMap: FromMap(map[resid.ResId]*resource.Resource{
-				resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map", "prefix", "suffix1", "namespace"): rf.FromMap(
-					map[string]interface{}{
-						"apiVersion": "v1",
-						"kind":       "ConfigMap",
-						"metadata": map[string]interface{}{
-							"name": "config-map",
-						},
-					}),
-			}),
-			filter:   resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map", "prefix", "suffix2", "namespace"),
-			expected: New(),
+		"happy namespace no prefix": {
+			filter: r3,
+			expected: resmaptest_test.NewRmBuilder(t, rf).
+				AddR(r3).AddR(r4).AddR(r7).ResMap(),
 		},
-		"same namespace, same prefix": {
-			resMap: FromMap(map[resid.ResId]*resource.Resource{
-				resid.NewResIdWithPrefixNamespace(cmap, "config-map1", "prefix", "namespace"): rf.FromMap(
-					map[string]interface{}{
-						"apiVersion": "v1",
-						"kind":       "ConfigMap",
-						"metadata": map[string]interface{}{
-							"name": "config-map1",
-						},
-					}),
-			}),
-			filter: resid.NewResIdWithPrefixNamespace(cmap, "config-map2", "prefix", "namespace"),
-			expected: FromMap(map[resid.ResId]*resource.Resource{
-				resid.NewResIdWithPrefixNamespace(cmap, "config-map1", "prefix", "namespace"): rf.FromMap(
-					map[string]interface{}{
-						"apiVersion": "v1",
-						"kind":       "ConfigMap",
-						"metadata": map[string]interface{}{
-							"name": "config-map1",
-						},
-					}),
-			}),
+		"happy namespace with prefix": {
+			filter: r5,
+			expected: resmaptest_test.NewRmBuilder(t, rf).
+				AddR(r5).AddR(r6).AddR(r7).ResMap(),
 		},
-		"same namespace, same suffix": {
-			resMap: FromMap(map[resid.ResId]*resource.Resource{
-				resid.NewResIdWithSuffixNamespace(cmap, "config-map1", "suffix", "namespace"): rf.FromMap(
-					map[string]interface{}{
-						"apiVersion": "v1",
-						"kind":       "ConfigMap",
-						"metadata": map[string]interface{}{
-							"name": "config-map1",
-						},
-					}),
-			}),
-			filter: resid.NewResIdWithSuffixNamespace(cmap, "config-map2", "suffix", "namespace"),
-			expected: FromMap(map[resid.ResId]*resource.Resource{
-				resid.NewResIdWithSuffixNamespace(cmap, "config-map1", "suffix", "namespace"): rf.FromMap(
-					map[string]interface{}{
-						"apiVersion": "v1",
-						"kind":       "ConfigMap",
-						"metadata": map[string]interface{}{
-							"name": "config-map1",
-						},
-					}),
-			}),
-		},
-		"same namespace, same prefix, same suffix": {
-			resMap: FromMap(map[resid.ResId]*resource.Resource{
-				resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map1", "prefix", "suffix", "namespace"): rf.FromMap(
-					map[string]interface{}{
-						"apiVersion": "v1",
-						"kind":       "ConfigMap",
-						"metadata": map[string]interface{}{
-							"name": "config-map",
-						},
-					}),
-			}),
-			filter: resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map2", "prefix", "suffix", "namespace"),
-			expected: FromMap(map[resid.ResId]*resource.Resource{
-				resid.NewResIdWithPrefixSuffixNamespace(cmap, "config-map1", "prefix", "suffix", "namespace"): rf.FromMap(
-					map[string]interface{}{
-						"apiVersion": "v1",
-						"kind":       "ConfigMap",
-						"metadata": map[string]interface{}{
-							"name": "config-map",
-						},
-					}),
-			}),
-		},
-		"filter by cluster-level Gvk": {
-			resMap: FromMap(map[resid.ResId]*resource.Resource{
-				resid.NewResIdWithPrefixNamespace(cmap, "config-map", "prefix", "namespace"): rf.FromMap(
-					map[string]interface{}{
-						"apiVersion": "v1",
-						"kind":       "ConfigMap",
-						"metadata": map[string]interface{}{
-							"name": "config-map",
-						},
-					}),
-			}),
-			filter: resid.NewResId(gvk.Gvk{Kind: "ClusterRoleBinding"}, "cluster-role-binding"),
-			expected: FromMap(map[resid.ResId]*resource.Resource{
-				resid.NewResIdWithPrefixNamespace(cmap, "config-map", "prefix", "namespace"): rf.FromMap(
-					map[string]interface{}{
-						"apiVersion": "v1",
-						"kind":       "ConfigMap",
-						"metadata": map[string]interface{}{
-							"name": "config-map",
-						},
-					}),
-			}),
+		"cluster level": {
+			filter: r7,
+			expected: resmaptest_test.NewRmBuilder(t, rf).
+				AddR(r1).AddR(r2).AddR(r3).AddR(r4).AddR(r5).AddR(r6).AddR(r7).ResMap(),
 		},
 	}
-
+	m := resmaptest_test.NewRmBuilder(t, rf).
+		AddR(r1).AddR(r2).AddR(r3).AddR(r4).AddR(r5).AddR(r6).AddR(r7).ResMap()
 	for name, test := range tests {
 		test := test
 		t.Run(name, func(t *testing.T) {
-			got := test.resMap.SubsetThatCouldBeReferencedById(test.filter)
-			err := test.expected.ErrorIfNotEqualSets(got)
+			got := m.SubsetThatCouldBeReferencedByResource(test.filter)
+			err := test.expected.ErrorIfNotEqualLists(got)
 			if err != nil {
-				t.Fatalf("Expected %v but got back %v", test.expected, got)
+				test.expected.Debug("expected")
+				got.Debug("actual")
+				t.Fatalf("Expected match")
 			}
 		})
 	}
@@ -410,163 +440,145 @@ func TestDeepCopy(t *testing.T) {
 	if &rm1 == &rm2 {
 		t.Fatal("DeepCopy returned a reference to itself instead of a copy")
 	}
-	err := rm1.ErrorIfNotEqualSets(rm1)
+	err := rm1.ErrorIfNotEqualLists(rm1)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
-func TestGetMatchingIds(t *testing.T) {
-
-	m := FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(
-			gvk.Gvk{Kind: "vegetable"},
-			"bedlam"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "whatever1",
-				},
-			}),
-		resid.NewResId(
-			gvk.Gvk{Group: "g1", Version: "v1", Kind: "vegetable"},
-			"domino"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "whatever2",
-				},
-			}),
-		resid.NewResIdWithPrefixNamespace(
-			gvk.Gvk{Kind: "vegetable"},
-			"peter", "p", "happy"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "whatever3",
-				},
-			}),
-		resid.NewResIdWithPrefixNamespace(
-			gvk.Gvk{Version: "v1", Kind: "fruit"},
-			"shatterstar", "p", "happy"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "whatever4",
-				},
-			}),
-	})
-
-	tests := []struct {
-		name    string
-		matcher IdMatcher
-		count   int
-	}{
-		{
-			"match everything",
-			func(resid.ResId) bool { return true },
-			4,
-		},
-		{
-			"match nothing",
-			func(resid.ResId) bool { return false },
-			0,
-		},
-		{
-			"name is peter",
-			func(x resid.ResId) bool { return x.Name() == "peter" },
-			1,
-		},
-		{
-			"happy vegetable",
-			func(x resid.ResId) bool {
-				return x.Namespace() == "happy" &&
-					x.Gvk().Kind == "vegetable"
+func TestErrorIfNotEqualSets(t *testing.T) {
+	r1 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "cm1",
 			},
-			1,
-		},
+		})
+	r2 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "cm2",
+			},
+		})
+	r3 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name":      "cm2",
+				"namespace": "system",
+			},
+		})
+
+	m1 := resmaptest_test.NewRmBuilder(t, rf).AddR(r1).AddR(r2).AddR(r3).ResMap()
+	if err := m1.ErrorIfNotEqualSets(m1); err != nil {
+		t.Fatalf("object should equal itself %v", err)
 	}
-	for _, tst := range tests {
-		result := m.GetMatchingIds(tst.matcher)
-		if len(result) != tst.count {
-			t.Fatalf("test '%s';  actual: %d, expected: %d",
-				tst.name, len(result), tst.count)
-		}
+
+	m2 := resmaptest_test.NewRmBuilder(t, rf).AddR(r1).ResMap()
+	if err := m1.ErrorIfNotEqualSets(m2); err == nil {
+		t.Fatalf("%v should not equal %v %v", m1, m2, err)
+	}
+
+	m3 := resmaptest_test.NewRmBuilder(t, rf).Add(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "cm1",
+			}}).ResMap()
+	if err := m2.ErrorIfNotEqualSets(m3); err != nil {
+		t.Fatalf("%v should equal %v %v", m2, m3, err)
+	}
+
+	m4 := resmaptest_test.NewRmBuilder(t, rf).AddR(r1).AddR(r2).AddR(r3).ResMap()
+	if err := m1.ErrorIfNotEqualSets(m4); err != nil {
+		t.Fatalf("expected equality between %v and %v, %v", m1, m4, err)
+	}
+
+	m4 = resmaptest_test.NewRmBuilder(t, rf).AddR(r3).AddR(r1).AddR(r2).ResMap()
+	if err := m1.ErrorIfNotEqualSets(m4); err != nil {
+		t.Fatalf("expected equality between %v and %v, %v", m1, m4, err)
+	}
+
+	m4 = m1.ShallowCopy()
+	if err := m1.ErrorIfNotEqualSets(m4); err != nil {
+		t.Fatalf("expected equality between %v and %v, %v", m1, m4, err)
+	}
+	m4 = m1.DeepCopy()
+	if err := m1.ErrorIfNotEqualSets(m4); err != nil {
+		t.Fatalf("expected equality between %v and %v, %v", m1, m4, err)
 	}
 }
 
-func TestErrorIfNotEqual(t *testing.T) {
-	rm1 := resmaptest_test.NewRmBuilder(t, rf).Add(
+func TestErrorIfNotEqualLists(t *testing.T) {
+	r1 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
 			"metadata": map[string]interface{}{
 				"name": "cm1",
 			},
-		}).Add(map[string]interface{}{
-		"apiVersion": "v1",
-		"kind":       "ConfigMap",
-		"metadata": map[string]interface{}{
-			"name": "cm2",
-		},
-	}).ResMap()
+		})
+	r2 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "cm2",
+			},
+		})
+	r3 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name":      "cm2",
+				"namespace": "system",
+			},
+		})
 
-	err := rm1.ErrorIfNotEqualSets(rm1)
-	if err != nil {
-		t.Fatalf("%v should equal itself %v", rm1, err)
+	m1 := resmaptest_test.NewRmBuilder(t, rf).AddR(r1).AddR(r2).AddR(r3).ResMap()
+	if err := m1.ErrorIfNotEqualLists(m1); err != nil {
+		t.Fatalf("object should equal itself %v", err)
 	}
 
-	rm2 := resmaptest_test.NewRmBuilder(t, rf).Add(
+	m2 := resmaptest_test.NewRmBuilder(t, rf).AddR(r1).ResMap()
+	if err := m1.ErrorIfNotEqualLists(m2); err == nil {
+		t.Fatalf("%v should not equal %v %v", m1, m2, err)
+	}
+
+	m3 := resmaptest_test.NewRmBuilder(t, rf).Add(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
 			"metadata": map[string]interface{}{
 				"name": "cm1",
-			},
-		}).ResMap()
-
-	// test the different number of keys path
-	err = rm1.ErrorIfNotEqualSets(rm2)
-	if err == nil {
-		t.Fatalf("%v should not equal %v %v", rm1, rm2, err)
+			}}).ResMap()
+	if err := m2.ErrorIfNotEqualLists(m3); err != nil {
+		t.Fatalf("%v should equal %v %v", m2, m3, err)
 	}
 
-	rm3 := FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(cmap, "cm2"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "cm1",
-				},
-			}),
-	})
-
-	// test the different key values path
-	err = rm2.ErrorIfNotEqualSets(rm3)
-	if err == nil {
-		t.Fatalf("%v should not equal %v %v", rm1, rm2, err)
+	m4 := resmaptest_test.NewRmBuilder(t, rf).AddR(r1).AddR(r2).AddR(r3).ResMap()
+	if err := m1.ErrorIfNotEqualLists(m4); err != nil {
+		t.Fatalf("expected equality between %v and %v, %v", m1, m4, err)
 	}
 
-	rm4 := FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(cmap, "cm1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "cm3",
-				},
-			}),
-	})
+	m4 = resmaptest_test.NewRmBuilder(t, rf).AddR(r3).AddR(r1).AddR(r2).ResMap()
+	if err := m1.ErrorIfNotEqualLists(m4); err == nil {
+		t.Fatalf("expected inequality between %v and %v, %v", m1, m4, err)
+	}
 
-	// test the deepcopy path
-	err = rm2.ErrorIfNotEqualSets(rm4)
-	if err == nil {
-		t.Fatalf("%v should not equal %v %v", rm1, rm2, err)
+	m4 = m1.ShallowCopy()
+	if err := m1.ErrorIfNotEqualLists(m4); err != nil {
+		t.Fatalf("expected equality between %v and %v, %v", m1, m4, err)
+	}
+	m4 = m1.DeepCopy()
+	if err := m1.ErrorIfNotEqualLists(m4); err != nil {
+		t.Fatalf("expected equality between %v and %v, %v", m1, m4, err)
 	}
 }
 
@@ -601,7 +613,7 @@ func TestAppendAll(t *testing.T) {
 	if err := input1.AppendAll(input2); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err := expected.ErrorIfNotEqualSets(input1); err != nil {
+	if err := expected.ErrorIfNotEqualLists(input1); err != nil {
 		input1.Debug("1")
 		expected.Debug("ex")
 		t.Fatalf("%#v doesn't equal expected %#v", input1, expected)
@@ -609,7 +621,7 @@ func TestAppendAll(t *testing.T) {
 	if err := input1.AppendAll(nil); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err := expected.ErrorIfNotEqualSets(input1); err != nil {
+	if err := expected.ErrorIfNotEqualLists(input1); err != nil {
 		t.Fatalf("%#v doesn't equal expected %#v", input1, expected)
 	}
 }
@@ -671,14 +683,14 @@ func TestAbsorbAll(t *testing.T) {
 	if err := w.AbsorbAll(makeMap2(types.BehaviorMerge)); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err := expected.ErrorIfNotEqualSets(w); err != nil {
+	if err := expected.ErrorIfNotEqualLists(w); err != nil {
 		t.Fatal(err)
 	}
 	w = makeMap1()
 	if err := w.AbsorbAll(nil); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err := w.ErrorIfNotEqualSets(makeMap1()); err != nil {
+	if err := w.ErrorIfNotEqualLists(makeMap1()); err != nil {
 		t.Fatal(err)
 	}
 	w = makeMap1()
@@ -686,7 +698,7 @@ func TestAbsorbAll(t *testing.T) {
 	if err := w.AbsorbAll(w2); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err := w2.ErrorIfNotEqualSets(w); err != nil {
+	if err := w2.ErrorIfNotEqualLists(w); err != nil {
 		t.Fatal(err)
 	}
 	w = makeMap1()

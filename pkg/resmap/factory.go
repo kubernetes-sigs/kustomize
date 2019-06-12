@@ -7,7 +7,6 @@ import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/internal/kusterr"
 	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -61,29 +60,6 @@ func (rmF *Factory) NewResMapFromBytes(b []byte) (ResMap, error) {
 		return nil, err
 	}
 	return newResMapFromResourceSlice(resources)
-}
-
-// Deprecated.
-// FromMap returns a ResMap with arbitrary internal ordering,
-// panicing on error.  For tests only.
-// See also ErrorIfNotEqualSets.
-func FromMap(arg map[resid.ResId]*resource.Resource) ResMap {
-	result, err := fromMap(arg)
-	if err != nil {
-		panic(err)
-	}
-	return result
-}
-
-func fromMap(arg map[resid.ResId]*resource.Resource) (ResMap, error) {
-	result := New()
-	for id, r := range arg {
-		err := result.AppendWithId(id, r)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return result, nil
 }
 
 // NewResMapFromConfigMapArgs returns a Resource slice given

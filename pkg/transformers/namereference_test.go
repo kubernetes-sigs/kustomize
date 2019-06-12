@@ -4,14 +4,12 @@
 package transformers
 
 import (
-	"sigs.k8s.io/kustomize/pkg/gvk"
-	"sigs.k8s.io/kustomize/pkg/resmaptest"
 	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resmaptest"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
@@ -466,7 +464,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err = expected.ErrorIfNotEqualSets(m); err != nil {
+	if err = expected.ErrorIfNotEqualLists(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
@@ -537,7 +535,8 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
-	m := resmaptest_test.NewRmBuilder(t, rf).AddWithName(
+
+	v1 := rf.FromMapWithName(
 		"volume1",
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -545,7 +544,8 @@ func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 			"metadata": map[string]interface{}{
 				"name": "someprefix-volume1",
 			},
-		}).AddWithName(
+		})
+	c1 := rf.FromMapWithName(
 		"claim1",
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -557,17 +557,10 @@ func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 			"spec": map[string]interface{}{
 				"volumeName": "volume1",
 			},
-		}).ResMap()
+		})
 
-	expected := resmaptest_test.NewRmBuilder(t, rf).AddWithName(
-		"volume1",
-		map[string]interface{}{
-			"apiVersion": "v1",
-			"kind":       "PersistentVolume",
-			"metadata": map[string]interface{}{
-				"name": "someprefix-volume1",
-			},
-		}).AddWithName(
+	v2 := v1.DeepCopy()
+	c2 := rf.FromMapWithName(
 		"claim1",
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -579,16 +572,19 @@ func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 			"spec": map[string]interface{}{
 				"volumeName": "someprefix-volume1",
 			},
-		}).ResMap()
-	expected.GetById(
-		resid.NewResId(gvk.Gvk{Version: "v1", Kind: "PersistentVolume"}, "volume1")).AppendRefBy(
-		resid.NewResId(gvk.Gvk{Version: "v1", Kind: "PersistentVolumeClaim"}, "claim1"))
+		})
+
+	m1 := resmaptest_test.NewRmBuilder(t, rf).AddR(v1).AddR(c1).ResMap()
+
 	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
-	err := nrt.Transform(m)
-	if err != nil {
+	if err := nrt.Transform(m1); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err = expected.ErrorIfNotEqualSets(m); err != nil {
+
+	m2 := resmaptest_test.NewRmBuilder(t, rf).AddR(v2).AddR(c2).ResMap()
+	v2.AppendRefBy(c2.CurId())
+
+	if err := m1.ErrorIfNotEqualLists(m2); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }

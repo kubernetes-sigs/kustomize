@@ -10,6 +10,7 @@ import (
 
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/transformers"
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
@@ -23,6 +24,7 @@ type plugin struct {
 	FieldSpecs []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
+//noinspection GoUnusedGlobalVariable
 var KustomizePlugin plugin
 
 // Not placed in a file yet due to lack of demand.
@@ -51,44 +53,52 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 	if len(p.Prefix) == 0 && len(p.Suffix) == 0 {
 		return nil
 	}
-
-	// Fill map "mf" with entries subject to name modification, and
-	// delete these entries from "m", so that for now m retains only
-	// the entries whose names will not be modified.
-	mf := resmap.New()
-	for id, r := range m.AsMap() {
-		found := false
-		for _, path := range prefixSuffixFieldSpecsToSkip {
-			if id.Gvk().IsSelected(&path.Gvk) {
-				found = true
-				break
-			}
+	for _, r := range m.Resources() {
+		if p.shouldSkip(r.OrgId()) {
+			continue
 		}
-		if !found {
-			mf.AppendWithId(id, r)
-			m.Remove(id)
+		fs, ok := p.shouldInclude(r.OrgId())
+		if !ok {
+			continue
 		}
-	}
-
-	for id, r := range mf.AsMap() {
-		objMap := r.Map()
-		for _, path := range p.FieldSpecs {
-			if !id.Gvk().IsSelected(&path.Gvk) {
-				continue
-			}
-			err := transformers.MutateField(
-				objMap,
-				path.PathSlice(),
-				path.CreateIfNotPresent,
-				p.addPrefixSuffix)
-			if err != nil {
-				return err
-			}
-			newId := id.CopyWithNewPrefixSuffix(p.Prefix, p.Suffix)
-			m.AppendWithId(newId, r)
+		if smellsLikeANameChange(fs) {
+			r.AddNamePrefix(p.Prefix)
+			r.AddNameSuffix(p.Suffix)
+		}
+		err := transformers.MutateField(
+			r.Map(),
+			fs.PathSlice(),
+			fs.CreateIfNotPresent,
+			p.addPrefixSuffix)
+		if err != nil {
+			return err
 		}
 	}
 	return nil
+}
+
+func smellsLikeANameChange(fs *config.FieldSpec) bool {
+	return fs.Path == "metadata/name"
+}
+
+func (p *plugin) shouldInclude(
+	id resid.ResId) (*config.FieldSpec, bool) {
+	for _, path := range p.FieldSpecs {
+		if id.IsSelected(&path.Gvk) {
+			return &path, true
+		}
+	}
+	return nil, false
+}
+
+func (p *plugin) shouldSkip(
+	id resid.ResId) bool {
+	for _, path := range prefixSuffixFieldSpecsToSkip {
+		if id.IsSelected(&path.Gvk) {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *plugin) addPrefixSuffix(

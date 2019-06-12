@@ -22,7 +22,7 @@ import (
 //References are important in inventory management
 //because one may not delete an object before all
 //objects referencing it have been removed.
-type Refs map[resid.ItemId][]resid.ItemId
+type Refs map[resid.ResId][]resid.ResId
 
 func NewRefs() Refs {
 	return Refs{}
@@ -44,7 +44,7 @@ func (rf Refs) Merge(b Refs) Refs {
 // removeIfContains removes the reference relationship
 //  a --> b
 // from the Refs if it exists
-func (rf Refs) RemoveIfContains(a, b resid.ItemId) {
+func (rf Refs) RemoveIfContains(a, b resid.ResId) {
 	refs, ok := rf[a]
 	if !ok {
 		return
@@ -98,15 +98,15 @@ func (a *Inventory) UpdateCurrent(curref Refs) *Inventory {
 	return a
 }
 
-func (a *Inventory) removeNewlyOrphanedItemsFromPrevious() []resid.ItemId {
-	var results []resid.ItemId
+func (a *Inventory) removeNewlyOrphanedItemsFromPrevious() []resid.ResId {
+	var results []resid.ResId
 	for item, refs := range a.Previous {
 		if _, ok := a.Current[item]; ok {
 			delete(a.Previous, item)
 			continue
 		}
 
-		var newRefs []resid.ItemId
+		var newRefs []resid.ResId
 		toDelete := true
 		for _, ref := range refs {
 			if _, ok := a.Current[ref]; ok {
@@ -124,8 +124,8 @@ func (a *Inventory) removeNewlyOrphanedItemsFromPrevious() []resid.ItemId {
 	return results
 }
 
-func (a *Inventory) removeOrphanedItemsFromPreviousThatAreNotInCurrent() []resid.ItemId {
-	var results []resid.ItemId
+func (a *Inventory) removeOrphanedItemsFromPreviousThatAreNotInCurrent() []resid.ResId {
+	var results []resid.ResId
 	for item, refs := range a.Previous {
 		if _, ok := a.Current[item]; ok {
 			continue
@@ -159,7 +159,7 @@ func (a *Inventory) removeOrphanedItemsFromPreviousThatAreInCurrent() {
 // and returns a list of Items that can be pruned.
 // An item that can be pruned shows up only in Previous refs.
 // Prune also updates the Previous refs with those items removed
-func (a *Inventory) Prune() []resid.ItemId {
+func (a *Inventory) Prune() []resid.ResId {
 	a.removeOrphanedItemsFromPreviousThatAreInCurrent()
 
 	// These are candidates for deletion from the cluster.
@@ -170,13 +170,13 @@ func (a *Inventory) Prune() []resid.ItemId {
 
 // inventory is the internal type used for serialization
 type inventory struct {
-	Current  map[string][]resid.ItemId `json:"current,omitempty"`
-	Previous map[string][]resid.ItemId `json:"previous,omitempty"`
+	Current  map[string][]resid.ResId `json:"current,omitempty"`
+	Previous map[string][]resid.ResId `json:"previous,omitempty"`
 }
 
 func (a *Inventory) toInternalType() inventory {
-	prev := map[string][]resid.ItemId{}
-	curr := map[string][]resid.ItemId{}
+	prev := map[string][]resid.ResId{}
+	curr := map[string][]resid.ResId{}
 	for id, refs := range a.Current {
 		curr[id.String()] = refs
 	}
@@ -204,8 +204,8 @@ func (a *Inventory) marshal() ([]byte, error) {
 
 func (a *Inventory) unMarshal(data []byte) error {
 	inv := &inventory{
-		Current:  map[string][]resid.ItemId{},
-		Previous: map[string][]resid.ItemId{},
+		Current:  map[string][]resid.ResId{},
+		Previous: map[string][]resid.ResId{},
 	}
 	err := json.Unmarshal(data, inv)
 	if err != nil {

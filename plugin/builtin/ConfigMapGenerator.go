@@ -15,6 +15,7 @@ type ConfigMapGeneratorPlugin struct {
 	types.ConfigMapArgs
 }
 
+//noinspection GoUnusedGlobalVariable
 func NewConfigMapGeneratorPlugin() *ConfigMapGeneratorPlugin {
 	return &ConfigMapGeneratorPlugin{}
 }

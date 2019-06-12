@@ -64,7 +64,7 @@ func (ra *ResAccumulator) GetTransformerConfig() *config.TransformerConfig {
 
 func (ra *ResAccumulator) MergeVars(incoming []types.Var) error {
 	for _, v := range incoming {
-		matched := ra.resMap.GetMatchingIds(
+		matched := ra.resMap.GetMatchingResourcesByOriginalId(
 			resid.NewResId(v.ObjRef.GVK(), v.ObjRef.Name).GvknEquals)
 		if len(matched) > 1 {
 			return fmt.Errorf(
@@ -73,7 +73,7 @@ func (ra *ResAccumulator) MergeVars(incoming []types.Var) error {
 				len(matched), v)
 		}
 		if len(matched) == 1 {
-			ra.resMap.GetById(matched[0]).AppendRefVarName(v)
+			matched[0].AppendRefVarName(v)
 		}
 	}
 	return ra.varSet.MergeSlice(incoming)
