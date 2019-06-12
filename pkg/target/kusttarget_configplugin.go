@@ -206,8 +206,8 @@ func (kt *KustTarget) configureBuiltinNameTransformer(
 	c.Prefix = kt.kustomization.NamePrefix
 	c.Suffix = kt.kustomization.NameSuffix
 	c.FieldSpecs = tConfig.NamePrefix
-	p := builtin.NewNameTransformerPlugin()
-	err = kt.configureBuiltinPlugin(p, c, "name")
+	p := builtin.NewPrefixSuffixTransformerPlugin()
+	err = kt.configureBuiltinPlugin(p, c, "prefixsuffix")
 	if err != nil {
 		return nil, err
 	}
