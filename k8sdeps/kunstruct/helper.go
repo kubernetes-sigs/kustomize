@@ -19,39 +19,66 @@ package kunstruct
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
-func parseFields(path string) ([]string, error) {
+// A PathSection contains a list of nested fields, which may end with an
+// indexable value. For instance, foo.bar resolves to a PathSection with 2
+// fields and no index, while foo[0].bar resolves to two path sections, the
+// first containing the field foo and the index 0, and the second containing
+// the field bar, with no index. The latter PathSection references the bar
+// field of the first item in the foo list
+type PathSection struct {
+	fields []string
+	idx    *int
+}
+
+func appendNonEmpty(section *PathSection, field string) {
+	if len(field) != 0 {
+		section.fields = append(section.fields, field)
+	}
+}
+
+func parseFields(path string) ([]PathSection, error) {
+	section := PathSection{}
+	sectionset := []PathSection{}
 	if !strings.Contains(path, "[") {
-		return strings.Split(path, "."), nil
+		section.fields = strings.Split(path, ".")
+		sectionset = append(sectionset, section)
+		return sectionset, nil
 	}
 
-	var fields []string
 	start := 0
 	insideParentheses := false
-	for i := range path {
-		switch path[i] {
+	for i, c := range path {
+		switch c {
 		case '.':
 			if !insideParentheses {
-				fields = append(fields, path[start:i])
+				appendNonEmpty(&section, path[start:i])
 				start = i + 1
 			}
 		case '[':
 			if !insideParentheses {
-				if i == start {
-					start = i + 1
-				} else {
-					fields = append(fields, path[start:i])
-					start = i + 1
-				}
+				appendNonEmpty(&section, path[start:i])
+				start = i + 1
 				insideParentheses = true
 			} else {
 				return nil, fmt.Errorf("nested parentheses are not allowed: %s", path)
 			}
 		case ']':
 			if insideParentheses {
-				fields = append(fields, path[start:i])
+				// Assign this index to the current
+				// PathSection, save it to the set, then begin
+				// a new PathSection
+				tmpIdx, err := strconv.Atoi(path[start:i])
+				if err != nil {
+					return nil, fmt.Errorf("invalid index %s", path)
+				}
+				section.idx = &tmpIdx
+				sectionset = append(sectionset, section)
+				section = PathSection{}
+
 				start = i + 1
 				insideParentheses = false
 			} else {
@@ -60,12 +87,16 @@ func parseFields(path string) ([]string, error) {
 		}
 	}
 	if start < len(path)-1 {
-		fields = append(fields, path[start:])
+		appendNonEmpty(&section, path[start:])
+		sectionset = append(sectionset, section)
 	}
-	for i, f := range fields {
-		if strings.HasPrefix(f, "\"") || strings.HasPrefix(f, "'") {
-			fields[i] = strings.Trim(f, "\"'")
+
+	for _, section := range sectionset {
+		for i, f := range section.fields {
+			if strings.HasPrefix(f, "\"") || strings.HasPrefix(f, "'") {
+				section.fields[i] = strings.Trim(f, "\"'")
+			}
 		}
 	}
-	return fields, nil
+	return sectionset, nil
 }
