@@ -80,6 +80,10 @@ func (r *Resource) copyRefVarNames() []string {
 	return s
 }
 
+func (r *Resource) InSameFuzzyNamespace(o *Resource) bool {
+	return r.GetNamespace() == o.GetNamespace()
+}
+
 func (r *Resource) KunstructEqual(o *Resource) bool {
 	return reflect.DeepEqual(r.Kunstructured, o.Kunstructured)
 }

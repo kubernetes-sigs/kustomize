@@ -82,7 +82,7 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 			for _, fSpec := range target.FieldSpecs {
 				if referrer.Gvk().IsSelected(&fSpec.Gvk) {
 					if candidates == nil {
-						candidates = m.SubsetThatCouldBeReferencedBy(referrer)
+						candidates = m.SubsetThatCouldBeReferencedById(referrer)
 					}
 					err := MutateField(
 						res.Map(),
