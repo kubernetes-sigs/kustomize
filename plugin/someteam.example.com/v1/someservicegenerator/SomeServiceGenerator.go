@@ -36,7 +36,7 @@ spec:
 `
 
 func (p *plugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, config []byte) error {
+	_ ifc.Loader, rf *resmap.Factory, config []byte) error {
 	p.rf = rf
 	return yaml.Unmarshal(config, p)
 }
