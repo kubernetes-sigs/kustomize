@@ -28,7 +28,7 @@ env:
 
 before_install:
   - source ./travis/consider-early-travis-exit.sh
-  - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $GOPATH/bin ${GOLANGCI_RELEASE}
+  - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh |  sh -s -- -b $GOPATH/bin ${GOLANGCI_RELEASE}
   - go get -u github.com/monopole/mdrip
   # The following would install Helm if needed for some reason.
   # - wget https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz
