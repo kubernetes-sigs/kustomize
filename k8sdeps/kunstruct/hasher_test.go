@@ -12,10 +12,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/gvk"
 )
 
-var service = gvk.Gvk{Version: "v1", Kind: "Service"}
 var secret = gvk.Gvk{Version: "v1", Kind: "Secret"}
-var cmap = gvk.Gvk{Version: "v1", Kind: "ConfigMap"}
-var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
 
 func TestConfigMapHash(t *testing.T) {
 	cases := []struct {
