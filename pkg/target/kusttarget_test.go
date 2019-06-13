@@ -214,9 +214,9 @@ func TestResourceNotFound(t *testing.T) {
 }
 
 func findSecret(m resmap.ResMap) *resource.Resource {
-	for id, res := range m.AsMap() {
-		if id.Gvk().Kind == "Secret" {
-			return res
+	for _, r := range m.Resources() {
+		if r.Id().Gvk().Kind == "Secret" {
+			return r
 		}
 	}
 	return nil

@@ -8,15 +8,13 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/resource"
-
 	"sigs.k8s.io/kustomize/internal/loadertest"
 	"sigs.k8s.io/kustomize/pkg/fs"
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/loader"
-	"sigs.k8s.io/kustomize/pkg/resid"
 	. "sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resmaptest"
 	"sigs.k8s.io/kustomize/pkg/types"
 	"sigs.k8s.io/kustomize/pkg/validators"
 )
@@ -46,34 +44,27 @@ metadata:
 	if ferr := l.AddFile("/whatever/project/deployment.yaml", []byte(resourceStr)); ferr != nil {
 		t.Fatalf("Error adding fake file: %v\n", ferr)
 	}
-	expected := New()
-	expected.Append(rf.FromMap(
-		map[string]interface{}{
+	expected := resmaptest_test.NewRmBuilder(t, rf).
+		Add(map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
 			"metadata": map[string]interface{}{
 				"name": "dply1",
-			},
-		}))
-	expected.Append(rf.FromMap(
-		map[string]interface{}{
+			}}).
+		Add(map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
 			"metadata": map[string]interface{}{
 				"name": "dply2",
-			},
-		}))
-	expected.AppendWithId(
-		resid.NewResIdWithNamespace(deploy, "dply2", "test"),
-		rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "Deployment",
-				"metadata": map[string]interface{}{
-					"name":      "dply2",
-					"namespace": "test",
-				},
-			}))
+			}}).
+		Add(map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name":      "dply2",
+				"namespace": "test",
+			}}).ResMap()
+
 	m, _ := rmF.FromFile(l, "deployment.yaml")
 	if m.Size() != 3 {
 		t.Fatalf("result should contain 3, but got %d", m.Size())
@@ -94,23 +85,19 @@ kind: ConfigMap
 metadata:
   name: cm2
 `)
-	expected := New()
-	expected.Append(rf.FromMap(
-		map[string]interface{}{
+	expected := resmaptest_test.NewRmBuilder(t, rf).
+		Add(map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
 			"metadata": map[string]interface{}{
 				"name": "cm1",
-			},
-		}))
-	expected.Append(rf.FromMap(
-		map[string]interface{}{
+			}}).
+		Add(map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
 			"metadata": map[string]interface{}{
 				"name": "cm2",
-			},
-		}))
+			}}).ResMap()
 	m, err := rmF.NewResMapFromBytes(encoded)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -147,20 +134,17 @@ func TestNewFromConfigMaps(t *testing.T) {
 			},
 			filepath: "/whatever/project/app.env",
 			content:  "DB_USERNAME=admin\nDB_PASSWORD=somepw",
-			expected: FromMap(map[resid.ResId]*resource.Resource{
-				resid.NewResId(cmap, "envConfigMap"): rf.FromMapAndOption(
-					map[string]interface{}{
-						"apiVersion": "v1",
-						"kind":       "ConfigMap",
-						"metadata": map[string]interface{}{
-							"name": "envConfigMap",
-						},
-						"data": map[string]interface{}{
-							"DB_USERNAME": "admin",
-							"DB_PASSWORD": "somepw",
-						},
-					}, &types.GeneratorArgs{}, nil),
-			}),
+			expected: resmaptest_test.NewRmBuilder(t, rf).Add(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata": map[string]interface{}{
+						"name": "envConfigMap",
+					},
+					"data": map[string]interface{}{
+						"DB_USERNAME": "admin",
+						"DB_PASSWORD": "somepw",
+					}}).ResMap(),
 		},
 
 		{
@@ -176,21 +160,19 @@ func TestNewFromConfigMaps(t *testing.T) {
 			},
 			filepath: "/whatever/project/app-init.ini",
 			content:  "FOO=bar\nBAR=baz\n",
-			expected: FromMap(map[resid.ResId]*resource.Resource{
-				resid.NewResId(cmap, "fileConfigMap"): rf.FromMapAndOption(
-					map[string]interface{}{
-						"apiVersion": "v1",
-						"kind":       "ConfigMap",
-						"metadata": map[string]interface{}{
-							"name": "fileConfigMap",
-						},
-						"data": map[string]interface{}{
-							"app-init.ini": `FOO=bar
+			expected: resmaptest_test.NewRmBuilder(t, rf).Add(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata": map[string]interface{}{
+						"name": "fileConfigMap",
+					},
+					"data": map[string]interface{}{
+						"app-init.ini": `FOO=bar
 BAR=baz
 `,
-						},
-					}, &types.GeneratorArgs{}, nil),
-			}),
+					},
+				}).ResMap(),
 		},
 		{
 			description: "construct config map from literal",
@@ -204,22 +186,20 @@ BAR=baz
 					},
 				},
 			},
-			expected: FromMap(map[resid.ResId]*resource.Resource{
-				resid.NewResId(cmap, "literalConfigMap"): rf.FromMapAndOption(
-					map[string]interface{}{
-						"apiVersion": "v1",
-						"kind":       "ConfigMap",
-						"metadata": map[string]interface{}{
-							"name": "literalConfigMap",
-						},
-						"data": map[string]interface{}{
-							"a": "x",
-							"b": "y",
-							"c": "Good Morning",
-							"d": "false",
-						},
-					}, &types.GeneratorArgs{}, nil),
-			}),
+			expected: resmaptest_test.NewRmBuilder(t, rf).Add(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata": map[string]interface{}{
+						"name": "literalConfigMap",
+					},
+					"data": map[string]interface{}{
+						"a": "x",
+						"b": "y",
+						"c": "Good Morning",
+						"d": "false",
+					},
+				}).ResMap(),
 		},
 
 		// TODO: add testcase for data coming from multiple sources like
@@ -233,13 +213,11 @@ BAR=baz
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if !reflect.DeepEqual(r, tc.expected) {
-			t.Fatalf("in testcase: %q got:\n%+v\n expected:\n%+v\n", tc.description, r, tc.expected)
+		if err = tc.expected.ErrorIfNotEqualLists(r); err != nil {
+			t.Fatalf("testcase: %q, err: %v", tc.description, err)
 		}
 	}
 }
-
-var secret = gvk.Gvk{Version: "v1", Kind: "Secret"}
 
 func TestNewResMapFromSecretArgs(t *testing.T) {
 	secrets := []types.SecretArgs{
@@ -264,22 +242,20 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	expected := FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(secret, "apple"): rf.FromMapAndOption(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "Secret",
-				"metadata": map[string]interface{}{
-					"name": "apple",
-				},
-				"type": ifc.SecretTypeOpaque,
-				"data": map[string]interface{}{
-					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
-					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
-				},
-			}, &types.GeneratorArgs{}, nil),
-	})
-	if !reflect.DeepEqual(actual, expected) {
-		t.Fatalf("%#v\ndoesn't match expected:\n%#v", actual, expected)
+	expected := resmaptest_test.NewRmBuilder(t, rf).Add(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Secret",
+			"metadata": map[string]interface{}{
+				"name": "apple",
+			},
+			"type": ifc.SecretTypeOpaque,
+			"data": map[string]interface{}{
+				"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
+				"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
+			},
+		}).ResMap()
+	if err = expected.ErrorIfNotEqualLists(actual); err != nil {
+		t.Fatalf("error: %s", err)
 	}
 }
