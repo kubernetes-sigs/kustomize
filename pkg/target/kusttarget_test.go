@@ -1,18 +1,5 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package target_test
 
@@ -93,10 +80,11 @@ func TestResources(t *testing.T) {
 	th.WriteF("/whatever/namespace.yaml", namespaceContent)
 	th.WriteF("/whatever/jsonpatch.json", jsonpatchContent)
 
-	expected := resmap.FromMap(map[resid.ResId]*resource.Resource{
+	expected := resmap.New()
+	expected.AppendWithId(
 		resid.NewResIdWithPrefixSuffixNamespace(
 			gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"},
-			"dply1", "foo-", "-bar", "ns1"): th.FromMap(
+			"dply1", "foo-", "-bar", "ns1"), th.FromMap(
 			map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -128,10 +116,28 @@ func TestResources(t *testing.T) {
 						},
 					},
 				},
-			}),
+			}))
+	expected.AppendWithId(
+		resid.NewResIdWithPrefixSuffixNamespace(
+			gvk.Gvk{Version: "v1", Kind: "Namespace"},
+			"ns1", "foo-", "-bar", ""), th.FromMap(
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Namespace",
+				"metadata": map[string]interface{}{
+					"name": "foo-ns1-bar",
+					"labels": map[string]interface{}{
+						"app": "nginx",
+					},
+					"annotations": map[string]interface{}{
+						"note": "This is a test annotation",
+					},
+				},
+			}))
+	expected.AppendWithId(
 		resid.NewResIdWithPrefixSuffixNamespace(
 			gvk.Gvk{Version: "v1", Kind: "ConfigMap"},
-			"literalConfigMap", "foo-", "-bar", "ns1"): th.FromMapAndOption(
+			"literalConfigMap", "foo-", "-bar", "ns1"), th.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -149,12 +155,11 @@ func TestResources(t *testing.T) {
 					"DB_USERNAME": "admin",
 					"DB_PASSWORD": "somepw",
 				},
-			},
-			&types.GeneratorArgs{},
-			&types.GeneratorOptions{}),
+			}))
+	expected.AppendWithId(
 		resid.NewResIdWithPrefixSuffixNamespace(
 			gvk.Gvk{Version: "v1", Kind: "Secret"},
-			"secret", "foo-", "-bar", "ns1"): th.FromMapAndOption(
+			"secret", "foo-", "-bar", "ns1"), th.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -173,26 +178,7 @@ func TestResources(t *testing.T) {
 					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
 					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 				},
-			},
-			&types.GeneratorArgs{},
-			&types.GeneratorOptions{}),
-		resid.NewResIdWithPrefixSuffixNamespace(
-			gvk.Gvk{Version: "v1", Kind: "Namespace"},
-			"ns1", "foo-", "-bar", ""): th.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "Namespace",
-				"metadata": map[string]interface{}{
-					"name": "foo-ns1-bar",
-					"labels": map[string]interface{}{
-						"app": "nginx",
-					},
-					"annotations": map[string]interface{}{
-						"note": "This is a test annotation",
-					},
-				},
-			}),
-	})
+			}))
 	actual, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("unexpected Resources error %v", err)
