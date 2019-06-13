@@ -35,7 +35,7 @@ func (p *plugin) makePrefixSuffixPluginConfig() ([]byte, error) {
 }
 
 func (p *plugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, c []byte) error {
+	ldr ifc.Loader, rf *resmap.Factory, _ []byte) error {
 	// Ignore the incoming c, compute new config.
 	c, err := p.makePrefixSuffixPluginConfig()
 	if err != nil {
