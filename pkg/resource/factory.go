@@ -1,18 +1,5 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package resource
 
@@ -51,6 +38,11 @@ func (rf *Factory) FromMapWithName(n string, m map[string]interface{}) *Resource
 	return rf.makeOne(rf.kf.FromMap(m), nil).setOriginalName(n)
 }
 
+// FromMapWithNamespace returns a new instance with the given "original" namespace.
+func (rf *Factory) FromMapWithNamespace(n string, m map[string]interface{}) *Resource {
+	return rf.makeOne(rf.kf.FromMap(m), nil).setOriginalNs(n)
+}
+
 // FromMapAndOption returns a new instance of Resource with given options.
 func (rf *Factory) FromMapAndOption(
 	m map[string]interface{}, args *types.GeneratorArgs, option *types.GeneratorOptions) *Resource {
@@ -75,7 +67,7 @@ func (rf *Factory) makeOne(
 		Kunstructured: u,
 		options:       o,
 	}
-	return r.setOriginalName(r.GetName())
+	return r.setOriginalName(r.GetName()).setOriginalNs(r.GetNamespace())
 }
 
 // SliceFromPatches returns a slice of resources given a patch path

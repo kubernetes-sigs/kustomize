@@ -345,9 +345,9 @@ func TestResolveVarsWithNoambiguiation(t *testing.T) {
 }
 
 func find(name string, resMap resmap.ResMap) *resource.Resource {
-	for k, v := range resMap.AsMap() {
-		if k.Name() == name {
-			return v
+	for _, r := range resMap.Resources() {
+		if r.GetName() == name {
+			return r
 		}
 	}
 	return nil

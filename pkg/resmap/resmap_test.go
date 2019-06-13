@@ -12,11 +12,11 @@ import (
 	"sigs.k8s.io/kustomize/pkg/gvk"
 	"sigs.k8s.io/kustomize/pkg/resid"
 	. "sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resmaptest"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
-var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
 var rf = resource.NewFactory(
 	kunstruct.NewKunstructuredFactoryImpl())
 var rmF = NewFactory(rf)
@@ -160,23 +160,21 @@ kind: ConfigMap
 metadata:
   name: cm2
 `)
-	input := New()
-	input.Append(rf.FromMap(
+	input := resmaptest_test.NewRmBuilder(t, rf).Add(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
 			"metadata": map[string]interface{}{
 				"name": "cm1",
 			},
-		}))
-	input.Append(rf.FromMap(
+		}).Add(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
 			"metadata": map[string]interface{}{
 				"name": "cm2",
 			},
-		}))
+		}).ResMap()
 	out, err := input.AsYaml()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -391,24 +389,21 @@ func TestFilterBy(t *testing.T) {
 }
 
 func TestDeepCopy(t *testing.T) {
-	rm1 := FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(cmap, "cm1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "cm1",
-				},
-			}),
-		resid.NewResId(cmap, "cm2"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "cm2",
-				},
-			}),
-	})
+	rm1 := resmaptest_test.NewRmBuilder(t, rf).Add(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "cm1",
+			},
+		}).Add(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "cm2",
+			},
+		}).ResMap()
 
 	rm2 := rm1.DeepCopy()
 
@@ -505,40 +500,34 @@ func TestGetMatchingIds(t *testing.T) {
 }
 
 func TestErrorIfNotEqual(t *testing.T) {
-	rm1 := FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(cmap, "cm1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "cm1",
-				},
-			}),
-		resid.NewResId(cmap, "cm2"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "cm2",
-				},
-			}),
-	})
+	rm1 := resmaptest_test.NewRmBuilder(t, rf).Add(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "cm1",
+			},
+		}).Add(map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata": map[string]interface{}{
+			"name": "cm2",
+		},
+	}).ResMap()
 
 	err := rm1.ErrorIfNotEqualSets(rm1)
 	if err != nil {
 		t.Fatalf("%v should equal itself %v", rm1, err)
 	}
 
-	rm2 := FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(cmap, "cm1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name": "cm1",
-				},
-			}),
-	})
+	rm2 := resmaptest_test.NewRmBuilder(t, rf).Add(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "cm1",
+			},
+		}).ResMap()
 
 	// test the different number of keys path
 	err = rm1.ErrorIfNotEqualSets(rm2)
@@ -602,8 +591,12 @@ func TestAppendAll(t *testing.T) {
 	input2 := rmF.FromResource(r2)
 
 	expected := New()
-	expected.Append(r1)
-	expected.Append(r2)
+	if err := expected.Append(r1); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if err := expected.Append(r2); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	if err := input1.AppendAll(input2); err != nil {
 		t.Fatalf("unexpected error: %v", err)
