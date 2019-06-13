@@ -134,13 +134,21 @@ type ResMap interface {
 	// Clear removes all resources and Ids.
 	Clear()
 
-	// SubsetThatCouldBeReferencedBy returns a ResMap subset
+	// SubsetThatCouldBeReferencedById returns a ResMap subset
 	// of self with resources that could be referenced by the
 	// resource represented by the argument Id.
 	// This is a filter; it excludes things that cannot be
 	// referenced by the Id's resource, e.g. objects in other
 	// namespaces. Cluster wide objects are never excluded.
-	SubsetThatCouldBeReferencedBy(resid.ResId) ResMap
+	SubsetThatCouldBeReferencedById(resid.ResId) ResMap
+
+	// SubsetThatCouldBeReferencedByResource returns a ResMap subset
+	// of self with resources that could be referenced by the
+	// resource argument.
+	// This is a filter; it excludes things that cannot be
+	// referenced by the resource, e.g. objects in other
+	// namespaces. Cluster wide objects are never excluded.
+	SubsetThatCouldBeReferencedByResource(*resource.Resource) ResMap
 
 	// DeepCopy copies the ResMap and underlying resources.
 	DeepCopy() ResMap
@@ -160,6 +168,14 @@ type ResMap interface {
 	// TODO: modify tests to not use resmap.FromMap,
 	// TODO: - and replace this with a stricter equals.
 	ErrorIfNotEqualSets(ResMap) error
+
+	// ErrorIfNotEqualLists returns an error if the
+	// argument doesn't have the resource objects
+	// data as self, in the same order.
+	// Meta information is ignored; this is similar
+	// to comparing the AsYaml() strings, but allows
+	// for printing pointers, etc.
+	ErrorIfNotEqualLists(ResMap) error
 
 	// Debug prints the ResMap.
 	Debug(title string)
@@ -420,6 +436,28 @@ func (m *resWrangler) ErrorIfNotEqualSets(other ResMap) error {
 	return nil
 }
 
+// ErrorIfNotEqualList implements ResMap.
+func (m *resWrangler) ErrorIfNotEqualLists(other ResMap) error {
+	m2, ok := other.(*resWrangler)
+	if !ok {
+		panic("bad cast")
+	}
+	if m.Size() != m2.Size() {
+		return fmt.Errorf(
+			"lists have different number of entries: %#v doesn't equal %#v",
+			m.rList, m2.rList)
+	}
+	for i, r1 := range m.rList {
+		r2 := m2.rList[i]
+		if !r1.KunstructEqual(r2) {
+			return fmt.Errorf(
+				"Item i=%d differs:\n n1 = %s\n n2 = %s\n",
+				i, r1.Id(), r2.Id())
+		}
+	}
+	return nil
+}
+
 type resCopier func(r *resource.Resource) *resource.Resource
 
 // ShallowCopy implements ResMap.
@@ -454,8 +492,8 @@ func (m *resWrangler) makeCopy(copier resCopier) ResMap {
 	return result
 }
 
-// SubsetThatCouldBeReferencedBy implements ResMap.
-func (m *resWrangler) SubsetThatCouldBeReferencedBy(inputId resid.ResId) ResMap {
+// SubsetThatCouldBeReferencedById implements ResMap.
+func (m *resWrangler) SubsetThatCouldBeReferencedById(inputId resid.ResId) ResMap {
 	if inputId.Gvk().IsClusterKind() {
 		return m
 	}
@@ -465,6 +503,25 @@ func (m *resWrangler) SubsetThatCouldBeReferencedBy(inputId resid.ResId) ResMap 
 			id.HasSameLeftmostPrefix(inputId) &&
 			id.HasSameRightmostSuffix(inputId) {
 			err := result.AppendWithId(id, m.rList[i])
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+	return result
+}
+
+// SubsetThatCouldBeReferencedByResource implements ResMap.
+func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
+	inputRes *resource.Resource) ResMap {
+	inputId := inputRes.Id()
+	if inputId.Gvk().IsClusterKind() {
+		return m
+	}
+	result := New()
+	for _, r := range m.Resources() {
+		if r.Id().Gvk().IsClusterKind() || inputRes.InSameFuzzyNamespace(r) {
+			err := result.Append(r)
 			if err != nil {
 				panic(err)
 			}
