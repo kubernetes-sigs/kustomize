@@ -32,6 +32,7 @@ import (
 type Resource struct {
 	ifc.Kunstructured
 	originalName string
+	originalNs   string
 	options      *types.GenArgs
 	refBy        []resid.ResId
 	refVarNames  []string
@@ -57,6 +58,7 @@ func (r *Resource) Replace(other *Resource) {
 
 func (r *Resource) copyOtherFields(other *Resource) {
 	r.originalName = other.originalName
+	r.originalNs = other.originalNs
 	r.options = other.options
 	r.refBy = other.copyRefBy()
 	r.refVarNames = other.copyRefVarNames()
@@ -98,6 +100,16 @@ func (r *Resource) setOriginalName(n string) *Resource {
 	return r
 }
 
+func (r *Resource) GetOriginalNs() string {
+	return r.originalNs
+}
+
+// Making this public would be bad.
+func (r *Resource) setOriginalNs(n string) *Resource {
+	r.originalNs = n
+	return r
+}
+
 // String returns resource as JSON.
 func (r *Resource) String() string {
 	bs, err := r.MarshalJSON()
@@ -134,10 +146,16 @@ func (r *Resource) GetNamespace() string {
 	return namespace
 }
 
-// Id returns the ResId for the resource.
+// Id returns the immutable ResId for the resource.
 func (r *Resource) Id() resid.ResId {
-	return resid.NewResIdWithPrefixNamespace(
-		r.GetGvk(), r.GetOriginalName(), "", r.GetNamespace())
+	return resid.NewResIdWithNamespace(
+		r.GetGvk(), r.GetOriginalName(), r.GetOriginalNs())
+}
+
+// FinalId returns a ResId for the resource using the mutable bits.
+func (r *Resource) FinalId() resid.ResId {
+	return resid.NewResIdWithNamespace(
+		r.GetGvk(), r.GetName(), r.GetNamespace())
 }
 
 // GetRefBy returns the ResIds that referred to current resource

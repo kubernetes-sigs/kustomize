@@ -5,6 +5,7 @@ package transformers
 
 import (
 	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/resmaptest"
 	"strings"
 	"testing"
 
@@ -14,61 +15,10 @@ import (
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
-type rmFactory struct {
-	t  *testing.T
-	m  resmap.ResMap
-	rf *resource.Factory
-}
-
-func NewSeededRmFactory(t *testing.T, rf *resource.Factory, m resmap.ResMap) *rmFactory {
-	return &rmFactory{t: t, rf: rf, m: m}
-}
-
-func NewRmFactory(t *testing.T, rf *resource.Factory) *rmFactory {
-	return NewSeededRmFactory(t, rf, resmap.New())
-}
-
-func (rm *rmFactory) add(m map[string]interface{}) *rmFactory {
-	err := rm.m.Append(rm.rf.FromMap(m))
-	if err != nil {
-		rm.t.Fatalf("test setup failure: %v", err)
-	}
-	return rm
-}
-
-func (rm *rmFactory) addWithId(id resid.ResId, m map[string]interface{}) *rmFactory {
-	err := rm.m.AppendWithId(id, rm.rf.FromMap(m))
-	if err != nil {
-		rm.t.Fatalf("test setup failure: %v", err)
-	}
-	return rm
-}
-
-func (rm *rmFactory) addWithName(n string, m map[string]interface{}) *rmFactory {
-	err := rm.m.Append(rm.rf.FromMapWithName(n, m))
-	if err != nil {
-		rm.t.Fatalf("test setup failure: %v", err)
-	}
-	return rm
-}
-
-func (rm *rmFactory) replaceResource(m map[string]interface{}) *rmFactory {
-	r := rm.rf.FromMap(m)
-	err := rm.m.ReplaceResource(r.Id(), r)
-	if err != nil {
-		rm.t.Fatalf("test setup failure: %v", err)
-	}
-	return rm
-}
-
-func (rm *rmFactory) resMap() resmap.ResMap {
-	return rm.m
-}
-
 func TestNameReferenceHappyRun(t *testing.T) {
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
-	m := NewRmFactory(t, rf).addWithName(
+	m := resmaptest_test.NewRmBuilder(t, rf).AddWithName(
 		"cm1",
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -76,7 +26,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 			"metadata": map[string]interface{}{
 				"name": "someprefix-cm1-somehash",
 			},
-		}).addWithName(
+		}).AddWithName(
 		"cm2",
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -84,7 +34,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 			"metadata": map[string]interface{}{
 				"name": "someprefix-cm2-somehash",
 			},
-		}).addWithName(
+		}).AddWithName(
 		"secret1",
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -92,7 +42,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 			"metadata": map[string]interface{}{
 				"name": "someprefix-secret1-somehash",
 			},
-		}).addWithName(
+		}).AddWithName(
 		"claim1",
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -100,7 +50,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 			"metadata": map[string]interface{}{
 				"name": "someprefix-claim1",
 			},
-		}).add(
+		}).Add(
 		map[string]interface{}{
 			"group":      "extensions",
 			"apiVersion": "v1beta1",
@@ -119,7 +69,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 				},
 			},
 		},
-	).add(
+	).Add(
 		map[string]interface{}{
 			"group":      "apps",
 			"apiVersion": "v1",
@@ -199,7 +149,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					},
 				},
 			},
-		}).add(
+		}).Add(
 		map[string]interface{}{
 			"group":      "apps",
 			"apiVersion": "v1",
@@ -231,7 +181,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					},
 				},
 			},
-		}).addWithName("sa",
+		}).AddWithName("sa",
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ServiceAccount",
@@ -239,7 +189,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 				"name":      "someprefix-sa",
 				"namespace": "test",
 			},
-		}).add(
+		}).Add(
 		map[string]interface{}{
 			"apiVersion": "rbac.authorization.k8s.io/v1",
 			"kind":       "ClusterRoleBinding",
@@ -253,7 +203,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					"namespace": "test",
 				},
 			},
-		}).add(
+		}).Add(
 		map[string]interface{}{
 			"apiVersion": "rbac.authorization.k8s.io/v1",
 			"kind":       "ClusterRole",
@@ -272,7 +222,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					},
 				},
 			},
-		}).add(
+		}).Add(
 		map[string]interface{}{
 			"apiVersion": "batch/v1beta1",
 			"kind":       "CronJob",
@@ -308,9 +258,9 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					},
 				},
 			},
-		}).resMap()
+		}).ResMap()
 
-	expected := NewSeededRmFactory(t, rf, m.ShallowCopy()).replaceResource(
+	expected := resmaptest_test.NewSeededRmBuilder(t, rf, m.ShallowCopy()).ReplaceResource(
 		map[string]interface{}{
 			"group":      "apps",
 			"apiVersion": "v1",
@@ -390,7 +340,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					},
 				},
 			},
-		}).replaceResource(
+		}).ReplaceResource(
 		map[string]interface{}{
 			"group":      "apps",
 			"apiVersion": "v1",
@@ -422,7 +372,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					},
 				},
 			},
-		}).replaceResource(
+		}).ReplaceResource(
 		map[string]interface{}{
 			"group":      "extensions",
 			"apiVersion": "v1beta1",
@@ -440,7 +390,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					"servicePort": "80",
 				},
 			},
-		}).replaceResource(
+		}).ReplaceResource(
 		map[string]interface{}{
 			"apiVersion": "rbac.authorization.k8s.io/v1",
 			"kind":       "ClusterRoleBinding",
@@ -454,7 +404,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					"namespace": "test",
 				},
 			},
-		}).replaceResource(
+		}).ReplaceResource(
 		map[string]interface{}{
 			"apiVersion": "rbac.authorization.k8s.io/v1",
 			"kind":       "ClusterRole",
@@ -473,7 +423,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					},
 				},
 			},
-		}).replaceResource(
+		}).ReplaceResource(
 		map[string]interface{}{
 			"apiVersion": "batch/v1beta1",
 			"kind":       "CronJob",
@@ -509,7 +459,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 					},
 				},
 			},
-		}).resMap()
+		}).ResMap()
 
 	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
 	err := nrt.Transform(m)
@@ -529,7 +479,7 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 		expectedErr string
 	}{
 		{
-			resMap: NewRmFactory(t, rf).add(
+			resMap: resmaptest_test.NewRmBuilder(t, rf).Add(
 				map[string]interface{}{
 					"apiVersion": "rbac.authorization.k8s.io/v1",
 					"kind":       "ClusterRole",
@@ -546,10 +496,10 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 							},
 						},
 					},
-				}).resMap(),
+				}).ResMap(),
 			expectedErr: "is expected to be string"},
 		{
-			resMap: NewRmFactory(t, rf).add(
+			resMap: resmaptest_test.NewRmBuilder(t, rf).Add(
 				map[string]interface{}{
 					"apiVersion": "rbac.authorization.k8s.io/v1",
 					"kind":       "ClusterRole",
@@ -566,7 +516,7 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 							},
 						},
 					},
-				}).resMap(),
+				}).ResMap(),
 			expectedErr: "is expected to be either a string or a []interface{}"},
 	}
 
@@ -587,7 +537,7 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
-	m := NewRmFactory(t, rf).addWithName(
+	m := resmaptest_test.NewRmBuilder(t, rf).AddWithName(
 		"volume1",
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -595,7 +545,7 @@ func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 			"metadata": map[string]interface{}{
 				"name": "someprefix-volume1",
 			},
-		}).addWithName(
+		}).AddWithName(
 		"claim1",
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -607,9 +557,9 @@ func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 			"spec": map[string]interface{}{
 				"volumeName": "volume1",
 			},
-		}).resMap()
+		}).ResMap()
 
-	expected := NewRmFactory(t, rf).addWithName(
+	expected := resmaptest_test.NewRmBuilder(t, rf).AddWithName(
 		"volume1",
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -617,7 +567,7 @@ func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 			"metadata": map[string]interface{}{
 				"name": "someprefix-volume1",
 			},
-		}).addWithName(
+		}).AddWithName(
 		"claim1",
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -629,7 +579,7 @@ func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 			"spec": map[string]interface{}{
 				"volumeName": "someprefix-volume1",
 			},
-		}).resMap()
+		}).ResMap()
 	expected.GetById(
 		resid.NewResId(gvk.Gvk{Version: "v1", Kind: "PersistentVolume"}, "volume1")).AppendRefBy(
 		resid.NewResId(gvk.Gvk{Version: "v1", Kind: "PersistentVolumeClaim"}, "claim1"))
