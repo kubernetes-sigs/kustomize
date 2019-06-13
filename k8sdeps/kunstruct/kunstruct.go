@@ -19,6 +19,7 @@ package kunstruct
 
 import (
 	"encoding/json"
+	"fmt"
 	"sigs.k8s.io/kustomize/pkg/types"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -77,14 +78,85 @@ func (fs *UnstructAdapter) SetMap(m map[string]interface{}) {
 	fs.Object = m
 }
 
-// GetFieldValue returns value at the given fieldpath.
-func (fs *UnstructAdapter) GetFieldValue(path string) (string, error) {
-	fields, err := parseFields(path)
-	if err != nil {
-		return "", err
+func (fs *UnstructAdapter) selectSubtree(path string) (map[string]interface{}, []string, bool, error) {
+	sections, err := parseFields(path)
+	if len(sections) == 0 || (err != nil) {
+		return nil, nil, false, err
 	}
+
+	content := fs.UnstructuredContent()
+	lastSectionIdx := len(sections)
+
+	// There are multiple sections to walk
+	for sectionIdx := 0; sectionIdx < lastSectionIdx; sectionIdx++ {
+		idx := sections[sectionIdx].idx
+		fields := sections[sectionIdx].fields
+
+		if idx == nil {
+			// This section has no index
+			return content, fields, true, nil
+		}
+
+		// This section is terminated by an indexed field.
+		// Let's extract the slice first
+		indexedField, found, err := unstructured.NestedFieldNoCopy(content, fields...)
+		if !found || err != nil {
+			return content, fields, found, err
+		}
+		s, ok := indexedField.([]interface{})
+		if !ok {
+			return content, fields, false, fmt.Errorf("%v is of the type %T, expected []interface{}", indexedField, indexedField)
+		}
+		if *idx >= len(s) {
+			return content, fields, false, fmt.Errorf("index %d is out of bounds", *idx)
+		}
+
+		if sectionIdx == lastSectionIdx-1 {
+			// This is the last section. Let's build a fake map
+			// to let the rest of the field extraction to work.
+			idxstring := fmt.Sprintf("[%v]", *idx)
+			newContent := map[string]interface{}{idxstring: s[*idx]}
+			newFields := []string{idxstring}
+			return newContent, newFields, true, nil
+		}
+
+		newContent, ok := s[*idx].(map[string]interface{})
+		if !ok {
+			// Only map are supported here
+			return content, fields, false,
+				fmt.Errorf("%#v is expected to be of type map[string]interface{}", s[*idx])
+		}
+		content = newContent
+	}
+
+	// It seems to be an invalid path
+	return nil, []string{}, false, nil
+}
+
+// GetFieldValue returns the value at the given fieldpath.
+func (fs *UnstructAdapter) GetFieldValue(path string) (interface{}, error) {
+	content, fields, found, err := fs.selectSubtree(path)
+	if !found || err != nil {
+		return nil, types.NoFieldError{Field: path}
+	}
+
+	s, found, err := unstructured.NestedFieldNoCopy(
+		content, fields...)
+	if found || err != nil {
+		return s, err
+	}
+	return nil, types.NoFieldError{Field: path}
+}
+
+// GetString returns value at the given fieldpath.
+func (fs *UnstructAdapter) GetString(path string) (string, error) {
+	content, fields, found, err := fs.selectSubtree(path)
+	if !found || err != nil {
+		return "", types.NoFieldError{Field: path}
+	}
+
 	s, found, err := unstructured.NestedString(
-		fs.UnstructuredContent(), fields...)
+		content, fields...)
 	if found || err != nil {
 		return s, err
 	}
@@ -93,14 +165,105 @@ func (fs *UnstructAdapter) GetFieldValue(path string) (string, error) {
 
 // GetStringSlice returns value at the given fieldpath.
 func (fs *UnstructAdapter) GetStringSlice(path string) ([]string, error) {
-	fields, err := parseFields(path)
-	if err != nil {
-		return []string{}, err
+	content, fields, found, err := fs.selectSubtree(path)
+	if !found || err != nil {
+		return []string{}, types.NoFieldError{Field: path}
 	}
+
 	s, found, err := unstructured.NestedStringSlice(
-		fs.UnstructuredContent(), fields...)
+		content, fields...)
 	if found || err != nil {
 		return s, err
 	}
 	return []string{}, types.NoFieldError{Field: path}
+}
+
+// GetBool returns value at the given fieldpath.
+func (fs *UnstructAdapter) GetBool(path string) (bool, error) {
+	content, fields, found, err := fs.selectSubtree(path)
+	if !found || err != nil {
+		return false, types.NoFieldError{Field: path}
+	}
+
+	s, found, err := unstructured.NestedBool(
+		content, fields...)
+	if found || err != nil {
+		return s, err
+	}
+	return false, types.NoFieldError{Field: path}
+}
+
+// GetFloat64 returns value at the given fieldpath.
+func (fs *UnstructAdapter) GetFloat64(path string) (float64, error) {
+	content, fields, found, err := fs.selectSubtree(path)
+	if !found || err != nil {
+		return 0, err
+	}
+
+	s, found, err := unstructured.NestedFloat64(
+		content, fields...)
+	if found || err != nil {
+		return s, err
+	}
+	return 0, types.NoFieldError{Field: path}
+}
+
+// GetInt64 returns value at the given fieldpath.
+func (fs *UnstructAdapter) GetInt64(path string) (int64, error) {
+	content, fields, found, err := fs.selectSubtree(path)
+	if !found || err != nil {
+		return 0, types.NoFieldError{Field: path}
+	}
+
+	s, found, err := unstructured.NestedInt64(
+		content, fields...)
+	if found || err != nil {
+		return s, err
+	}
+	return 0, types.NoFieldError{Field: path}
+}
+
+// GetSlice returns value at the given fieldpath.
+func (fs *UnstructAdapter) GetSlice(path string) ([]interface{}, error) {
+	content, fields, found, err := fs.selectSubtree(path)
+	if !found || err != nil {
+		return nil, types.NoFieldError{Field: path}
+	}
+
+	s, found, err := unstructured.NestedSlice(
+		content, fields...)
+	if found || err != nil {
+		return s, err
+	}
+	return nil, types.NoFieldError{Field: path}
+}
+
+// GetStringMap returns value at the given fieldpath.
+func (fs *UnstructAdapter) GetStringMap(path string) (map[string]string, error) {
+	content, fields, found, err := fs.selectSubtree(path)
+	if !found || err != nil {
+		return nil, types.NoFieldError{Field: path}
+	}
+
+	s, found, err := unstructured.NestedStringMap(
+		content, fields...)
+	if found || err != nil {
+		return s, err
+	}
+	return nil, types.NoFieldError{Field: path}
+}
+
+// GetMap returns value at the given fieldpath.
+func (fs *UnstructAdapter) GetMap(path string) (map[string]interface{}, error) {
+	content, fields, found, err := fs.selectSubtree(path)
+	if !found || err != nil {
+		return nil, types.NoFieldError{Field: path}
+	}
+
+	s, found, err := unstructured.NestedMap(
+		content, fields...)
+	if found || err != nil {
+		return s, err
+	}
+	return nil, types.NoFieldError{Field: path}
 }
