@@ -355,6 +355,7 @@ Replicas modified the number of replicas for a resource.
 E.g. Given this kubernetes Deployment fragment:
 
 ```
+kind: Deployment
 metadata:
   name: deployment-name
 spec:
@@ -373,6 +374,17 @@ replicas:
 This field accepts a list, so many resources can
 be modified at the same time.
 
+
+#### Limitation
+As this declaration does not take in a `kind:` nor a `group:`
+it will match any `group` and `kind` that has a matching name and
+that is one of:
+- `Deployment`
+- `ReplicationController`
+- `ReplicaSet`
+- `StatefulSet`
+
+For more complex use cases, revert to using a patch.
 
 
 ### resources
