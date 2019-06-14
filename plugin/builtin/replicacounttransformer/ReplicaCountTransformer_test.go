@@ -45,7 +45,7 @@ fieldSpecs:
   create: true
   kind: StatefulSet
 `, `
-apiVersion: builtin
+apiVersion: apps/v1
 kind: Service
 metadata:
   name: myapp
@@ -54,21 +54,21 @@ spec:
   - port: 1111
   targetport: 1111
 ---
-apiVersion: builtin
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: otherapp
 spec:
   replicas: 5
 ---
-apiVersion: builtin
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: myapp
 spec:
   replicas: 5
 ---
-apiVersion: builtin
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: myapp
@@ -77,7 +77,7 @@ spec:
     matchLabels:
       app: app
 ---
-apiVersion: builtin
+apiVersion: apps/v1
 kind: ReplicaSet
 metadata:
   name: myapp
@@ -86,7 +86,7 @@ spec:
     matchLabels:
       app: app
 ---
-apiVersion: builtin
+apiVersion: apps/v1
 kind: ReplicationController
 metadata:
   name: myapp
@@ -97,7 +97,7 @@ spec:
 `)
 
 	th.AssertActualEqualsExpected(rm, `
-apiVersion: builtin
+apiVersion: apps/v1
 kind: Service
 metadata:
   name: myapp
@@ -106,21 +106,21 @@ spec:
   - port: 1111
   targetport: 1111
 ---
-apiVersion: builtin
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: myapp
 spec:
   replicas: 23
 ---
-apiVersion: builtin
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: otherapp
 spec:
   replicas: 5
 ---
-apiVersion: builtin
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: myapp
@@ -130,7 +130,7 @@ spec:
     matchLabels:
       app: app
 ---
-apiVersion: builtin
+apiVersion: apps/v1
 kind: ReplicaSet
 metadata:
   name: myapp
@@ -140,7 +140,7 @@ spec:
     matchLabels:
       app: app
 ---
-apiVersion: builtin
+apiVersion: apps/v1
 kind: ReplicationController
 metadata:
   name: myapp
