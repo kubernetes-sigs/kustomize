@@ -5,6 +5,7 @@
 package main
 
 import (
+	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/pkg/ifc"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
@@ -18,6 +19,7 @@ import (
 // (like ValidatingWebhookConfiguration) last.
 type plugin struct{}
 
+//noinspection GoUnusedGlobalVariable
 var KustomizePlugin plugin
 
 // Nothing needed for configuration.
@@ -26,16 +28,19 @@ func (p *plugin) Config(
 	return nil
 }
 
-func (p *plugin) Transform(m resmap.ResMap) error {
+func (p *plugin) Transform(m resmap.ResMap) (err error) {
 	resources := make([]*resource.Resource, m.Size())
 	ids := m.AllIds()
 	sort.Sort(resmap.IdSlice(ids))
 	for i, id := range ids {
-		resources[i] = m.GetById(id)
+		resources[i], err = m.GetByCurrentId(id)
+		if err != nil {
+			return errors.Wrap(err, "expected match for sorting")
+		}
 	}
 	m.Clear()
-	for i, id := range ids {
-		m.AppendWithId(id, resources[i])
+	for _, r := range resources {
+		m.Append(r)
 	}
 	return nil
 }

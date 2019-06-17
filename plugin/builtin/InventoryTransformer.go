@@ -3,7 +3,6 @@ package builtin
 
 import (
 	"fmt"
-	"strings"
 
 	"sigs.k8s.io/kustomize/pkg/resource"
 
@@ -24,6 +23,7 @@ type InventoryTransformerPlugin struct {
 	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 }
 
+//noinspection GoUnusedGlobalVariable
 func NewInventoryTransformerPlugin() *InventoryTransformerPlugin {
 	return &InventoryTransformerPlugin{}
 }
@@ -98,32 +98,33 @@ func makeInventory(m resmap.ResMap) (
 	inv = inventory.NewInventory()
 	var keys []string
 	for _, r := range m.Resources() {
-		ns := getNamespace(r)
-		item := resid.NewItemId(r.GetGvk(), ns, r.GetName())
+		ns := r.GetNamespace()
+		item := resid.NewResIdWithNamespace(r.GetGvk(), r.GetName(), ns)
 		if _, ok := inv.Current[item]; ok {
 			return nil, "", fmt.Errorf(
 				"item '%v' already in inventory", item)
 		}
-		inv.Current[item] = computeRefs(r, m)
+		inv.Current[item], err = computeRefs(r, m)
+		if err != nil {
+			return nil, "", err
+		}
 		keys = append(keys, item.String())
 	}
 	h, err := hasher.SortArrayAndComputeHash(keys)
 	return inv, h, err
 }
 
-func getNamespace(r *resource.Resource) string {
-	ns, err := r.GetFieldValue("metadata.namespace")
-	if err != nil && !strings.Contains(err.Error(), "no field named") {
-		panic(err)
-	}
-	return ns
-}
-
-func computeRefs(r *resource.Resource, m resmap.ResMap) (refs []resid.ItemId) {
+func computeRefs(
+	r *resource.Resource, m resmap.ResMap) (refs []resid.ResId, err error) {
 	for _, refid := range r.GetRefBy() {
-		ref := m.GetById(refid)
-		ns := getNamespace(ref)
-		refs = append(refs, resid.NewItemId(ref.GetGvk(), ns, ref.GetName()))
+		ref, err := m.GetByCurrentId(refid)
+		if err != nil {
+			return nil, err
+		}
+		refs = append(
+			refs,
+			resid.NewResIdWithNamespace(
+				ref.GetGvk(), ref.GetName(), ref.GetNamespace()))
 	}
 	return
 }

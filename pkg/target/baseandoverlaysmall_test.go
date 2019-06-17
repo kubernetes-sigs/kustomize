@@ -25,9 +25,7 @@ import (
 	"sigs.k8s.io/kustomize/pkg/plugins"
 )
 
-// TODO(monopole): Make prefixsuffixtransformer changes
-// needed to enable this test.
-func disabledTestOrderPreserved(t *testing.T) {
+func TestOrderPreserved(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/app/prod")
 	th.WriteK("/app/base", `
 namePrefix: b-
@@ -86,8 +84,36 @@ metadata:
 		t.Fatalf("Err: %v", err)
 	}
 	th.AssertActualEqualsExpectedNoSort(m, `
-TBD
-./tr	`)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: p-b-myNs
+---
+apiVersion: v1
+kind: Role
+metadata:
+  name: p-b-myRole
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: p-b-myService
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: p-b-myDep
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: p-myService2
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: p-myNs2
+`)
 }
 
 func TestBaseInResourceList(t *testing.T) {

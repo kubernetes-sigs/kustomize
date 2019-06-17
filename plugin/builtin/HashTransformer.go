@@ -12,6 +12,7 @@ type HashTransformerPlugin struct {
 	hasher ifc.KunstructuredHasher
 }
 
+//noinspection GoUnusedGlobalVariable
 func NewHashTransformerPlugin() *HashTransformerPlugin {
 	return &HashTransformerPlugin{}
 }

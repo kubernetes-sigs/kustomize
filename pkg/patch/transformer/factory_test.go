@@ -24,9 +24,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"sigs.k8s.io/kustomize/internal/loadertest"
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/pkg/gvk"
-	"sigs.k8s.io/kustomize/pkg/resid"
-	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resmaptest"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
@@ -184,65 +182,60 @@ func TestNewPatchJson6902FactoryMulti(t *testing.T) {
 		t.Fatal("the returned transformer should not be nil")
 	}
 
-	id := resid.NewResId(gvk.FromKind("foo"), "some-name")
-	base := resmap.FromMap(map[resid.ResId]*resource.Resource{
-		id: rf.FromMap(
-			map[string]interface{}{
-				"kind": "foo",
-				"metadata": map[string]interface{}{
-					"name": "some-name",
-				},
-				"spec": map[string]interface{}{
-					"template": map[string]interface{}{
-						"metadata": map[string]interface{}{
-							"labels": map[string]interface{}{
-								"old-label": "old-value",
+	base := resmaptest_test.NewRmBuilder(t, rf).
+		Add(map[string]interface{}{
+			"kind": "foo",
+			"metadata": map[string]interface{}{
+				"name": "some-name",
+			},
+			"spec": map[string]interface{}{
+				"template": map[string]interface{}{
+					"metadata": map[string]interface{}{
+						"labels": map[string]interface{}{
+							"old-label": "old-value",
+						},
+					},
+					"spec": map[string]interface{}{
+						"containers": []interface{}{
+							map[string]interface{}{
+								"image": "nginx",
+								"name":  "nginx",
 							},
 						},
-						"spec": map[string]interface{}{
-							"containers": []interface{}{
-								map[string]interface{}{
-									"image": "nginx",
-									"name":  "nginx",
+					},
+				},
+			},
+		}).ResMap()
+	expected := resmaptest_test.NewRmBuilder(t, rf).
+		Add(map[string]interface{}{
+			"kind": "foo",
+			"metadata": map[string]interface{}{
+				"name": "some-name",
+			},
+			"spec": map[string]interface{}{
+				"replica": "3",
+				"template": map[string]interface{}{
+					"metadata": map[string]interface{}{
+						"labels": map[string]interface{}{
+							"old-label": "old-value",
+						},
+					},
+					"spec": map[string]interface{}{
+						"containers": []interface{}{
+							map[string]interface{}{
+								"image": "nginx",
+								"name":  "my-nginx",
+								"command": []interface{}{
+									"arg1",
+									"arg2",
+									"arg3",
 								},
 							},
 						},
 					},
 				},
-			}),
-	})
-	expected := resmap.FromMap(map[resid.ResId]*resource.Resource{
-		id: rf.FromMap(
-			map[string]interface{}{
-				"kind": "foo",
-				"metadata": map[string]interface{}{
-					"name": "some-name",
-				},
-				"spec": map[string]interface{}{
-					"replica": "3",
-					"template": map[string]interface{}{
-						"metadata": map[string]interface{}{
-							"labels": map[string]interface{}{
-								"old-label": "old-value",
-							},
-						},
-						"spec": map[string]interface{}{
-							"containers": []interface{}{
-								map[string]interface{}{
-									"image": "nginx",
-									"name":  "my-nginx",
-									"command": []interface{}{
-										"arg1",
-										"arg2",
-										"arg3",
-									},
-								},
-							},
-						},
-					},
-				},
-			}),
-	})
+			},
+		}).ResMap()
 	err = tr.Transform(base)
 	if err != nil {
 		t.Fatalf("unexpected error : %v", err)
@@ -275,12 +268,12 @@ func TestNewPatchJson6902FactoryMultiConflict(t *testing.T) {
 	jsonPatches := []byte(`
 - target:
     kind: foo
-    name: some-name
+    name: somename
   path: patch.json
 
 - target:
     kind: foo
-    name: some-name
+    name: somename
   path: patch.yaml
 `)
 	var p []types.PatchJson6902
@@ -298,35 +291,32 @@ func TestNewPatchJson6902FactoryMultiConflict(t *testing.T) {
 		t.Fatal("the returned transformer should not be nil")
 	}
 
-	id := resid.NewResId(gvk.FromKind("foo"), "some-name")
-	base := resmap.FromMap(map[resid.ResId]*resource.Resource{
-		id: rf.FromMap(
-			map[string]interface{}{
-				"kind": "foo",
-				"metadata": map[string]interface{}{
-					"name": "somename",
-				},
-				"spec": map[string]interface{}{
-					"template": map[string]interface{}{
-						"metadata": map[string]interface{}{
-							"labels": map[string]interface{}{
-								"old-label": "old-value",
-							},
+	m := resmaptest_test.NewRmBuilder(t, rf).
+		Add(map[string]interface{}{
+			"kind": "foo",
+			"metadata": map[string]interface{}{
+				"name": "somename",
+			},
+			"spec": map[string]interface{}{
+				"template": map[string]interface{}{
+					"metadata": map[string]interface{}{
+						"labels": map[string]interface{}{
+							"old-label": "old-value",
 						},
-						"spec": map[string]interface{}{
-							"containers": []interface{}{
-								map[string]interface{}{
-									"image": "nginx",
-									"name":  "nginx",
-								},
+					},
+					"spec": map[string]interface{}{
+						"containers": []interface{}{
+							map[string]interface{}{
+								"image": "nginx",
+								"name":  "nginx",
 							},
 						},
 					},
 				},
-			}),
-	})
+			},
+		}).ResMap()
 
-	err = tr.Transform(base)
+	err = tr.Transform(m)
 	if err == nil {
 		t.Fatal("expected conflict")
 	}

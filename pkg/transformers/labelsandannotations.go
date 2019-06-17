@@ -61,7 +61,7 @@ func NewMapTransformer(
 func (o *mapTransformer) Transform(m resmap.ResMap) error {
 	for _, r := range m.Resources() {
 		for _, path := range o.fieldSpecs {
-			if !r.Id().Gvk().IsSelected(&path.Gvk) {
+			if !r.OrgId().IsSelected(&path.Gvk) {
 				continue
 			}
 			err := MutateField(

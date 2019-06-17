@@ -15,6 +15,7 @@ type LabelTransformerPlugin struct {
 	FieldSpecs []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
+//noinspection GoUnusedGlobalVariable
 func NewLabelTransformerPlugin() *LabelTransformerPlugin {
 	return &LabelTransformerPlugin{}
 }

@@ -9,45 +9,39 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/pkg/gvk"
-	"sigs.k8s.io/kustomize/pkg/resid"
-	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resmaptest"
 	"sigs.k8s.io/kustomize/pkg/resource"
 )
 
 var rf = resource.NewFactory(
 	kunstruct.NewKunstructuredFactoryImpl())
-var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
-var foo = gvk.Gvk{Group: "example.com", Version: "v1", Kind: "Foo"}
 
 func TestOverlayRun(t *testing.T) {
-	base := resmap.FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(deploy, "deploy1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "Deployment",
-				"metadata": map[string]interface{}{
-					"name": "deploy1",
-				},
-				"spec": map[string]interface{}{
-					"template": map[string]interface{}{
-						"metadata": map[string]interface{}{
-							"labels": map[string]interface{}{
-								"old-label": "old-value",
-							},
+	base := resmaptest_test.NewRmBuilder(t, rf).
+		Add(map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "deploy1",
+			},
+			"spec": map[string]interface{}{
+				"template": map[string]interface{}{
+					"metadata": map[string]interface{}{
+						"labels": map[string]interface{}{
+							"old-label": "old-value",
 						},
-						"spec": map[string]interface{}{
-							"containers": []interface{}{
-								map[string]interface{}{
-									"name":  "nginx",
-									"image": "nginx",
-								},
+					},
+					"spec": map[string]interface{}{
+						"containers": []interface{}{
+							map[string]interface{}{
+								"name":  "nginx",
+								"image": "nginx",
 							},
 						},
 					},
 				},
-			}),
-	})
+			},
+		}).ResMap()
 	patch := []*resource.Resource{
 		rf.FromMap(map[string]interface{}{
 			"apiVersion": "apps/v1",
@@ -78,43 +72,40 @@ func TestOverlayRun(t *testing.T) {
 					},
 				},
 			},
-		},
-		),
+		}),
 	}
-	expected := resmap.FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(deploy, "deploy1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "Deployment",
-				"metadata": map[string]interface{}{
-					"name": "deploy1",
-				},
-				"spec": map[string]interface{}{
-					"template": map[string]interface{}{
-						"metadata": map[string]interface{}{
-							"labels": map[string]interface{}{
-								"old-label":     "old-value",
-								"another-label": "foo",
-							},
+	expected := resmaptest_test.NewRmBuilder(t, rf).
+		Add(map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "deploy1",
+			},
+			"spec": map[string]interface{}{
+				"template": map[string]interface{}{
+					"metadata": map[string]interface{}{
+						"labels": map[string]interface{}{
+							"old-label":     "old-value",
+							"another-label": "foo",
 						},
-						"spec": map[string]interface{}{
-							"containers": []interface{}{
-								map[string]interface{}{
-									"name":  "nginx",
-									"image": "nginx:latest",
-									"env": []interface{}{
-										map[string]interface{}{
-											"name":  "SOMEENV",
-											"value": "BAR",
-										},
+					},
+					"spec": map[string]interface{}{
+						"containers": []interface{}{
+							map[string]interface{}{
+								"name":  "nginx",
+								"image": "nginx:latest",
+								"env": []interface{}{
+									map[string]interface{}{
+										"name":  "SOMEENV",
+										"value": "BAR",
 									},
 								},
 							},
 						},
 					},
 				},
-			}),
-	})
+			},
+		}).ResMap()
 	lt, err := NewTransformer(patch, rf)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -124,34 +115,32 @@ func TestOverlayRun(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !reflect.DeepEqual(base, expected) {
-		err = expected.ErrorIfNotEqualSets(base)
+		err = expected.ErrorIfNotEqualLists(base)
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
 
 func TestMultiplePatches(t *testing.T) {
-	base := resmap.FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(deploy, "deploy1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "Deployment",
-				"metadata": map[string]interface{}{
-					"name": "deploy1",
-				},
-				"spec": map[string]interface{}{
-					"template": map[string]interface{}{
-						"spec": map[string]interface{}{
-							"containers": []interface{}{
-								map[string]interface{}{
-									"name":  "nginx",
-									"image": "nginx",
-								},
+	base := resmaptest_test.NewRmBuilder(t, rf).
+		Add(map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "deploy1",
+			},
+			"spec": map[string]interface{}{
+				"template": map[string]interface{}{
+					"spec": map[string]interface{}{
+						"containers": []interface{}{
+							map[string]interface{}{
+								"name":  "nginx",
+								"image": "nginx",
 							},
 						},
 					},
 				},
-			}),
-	})
+			},
+		}).ResMap()
 	patch := []*resource.Resource{
 		rf.FromMap(map[string]interface{}{
 			"apiVersion": "apps/v1",
@@ -177,8 +166,7 @@ func TestMultiplePatches(t *testing.T) {
 					},
 				},
 			},
-		},
-		),
+		}),
 		rf.FromMap(map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
@@ -206,45 +194,42 @@ func TestMultiplePatches(t *testing.T) {
 					},
 				},
 			},
-		},
-		),
+		}),
 	}
-	expected := resmap.FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(deploy, "deploy1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "Deployment",
-				"metadata": map[string]interface{}{
-					"name": "deploy1",
-				},
-				"spec": map[string]interface{}{
-					"template": map[string]interface{}{
-						"spec": map[string]interface{}{
-							"containers": []interface{}{
-								map[string]interface{}{
-									"name":  "nginx",
-									"image": "nginx:latest",
-									"env": []interface{}{
-										map[string]interface{}{
-											"name":  "ANOTHERENV",
-											"value": "HELLO",
-										},
-										map[string]interface{}{
-											"name":  "SOMEENV",
-											"value": "BAR",
-										},
+	expected := resmaptest_test.NewRmBuilder(t, rf).
+		Add(map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "deploy1",
+			},
+			"spec": map[string]interface{}{
+				"template": map[string]interface{}{
+					"spec": map[string]interface{}{
+						"containers": []interface{}{
+							map[string]interface{}{
+								"name":  "nginx",
+								"image": "nginx:latest",
+								"env": []interface{}{
+									map[string]interface{}{
+										"name":  "ANOTHERENV",
+										"value": "HELLO",
+									},
+									map[string]interface{}{
+										"name":  "SOMEENV",
+										"value": "BAR",
 									},
 								},
-								map[string]interface{}{
-									"name":  "busybox",
-									"image": "busybox",
-								},
+							},
+							map[string]interface{}{
+								"name":  "busybox",
+								"image": "busybox",
 							},
 						},
 					},
 				},
-			}),
-	})
+			},
+		}).ResMap()
 	lt, err := NewTransformer(patch, rf)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -254,34 +239,33 @@ func TestMultiplePatches(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !reflect.DeepEqual(base, expected) {
-		err = expected.ErrorIfNotEqualSets(base)
+		err = expected.ErrorIfNotEqualLists(base)
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
 
 func TestMultiplePatchesWithConflict(t *testing.T) {
-	base := resmap.FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(deploy, "deploy1"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "Deployment",
-				"metadata": map[string]interface{}{
-					"name": "deploy1",
-				},
-				"spec": map[string]interface{}{
-					"template": map[string]interface{}{
-						"spec": map[string]interface{}{
-							"containers": []interface{}{
-								map[string]interface{}{
-									"name":  "nginx",
-									"image": "nginx",
-								},
+	base := resmaptest_test.NewRmBuilder(t, rf).
+		Add(map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "deploy1",
+			},
+			"spec": map[string]interface{}{
+				"template": map[string]interface{}{
+					"spec": map[string]interface{}{
+						"containers": []interface{}{
+							map[string]interface{}{
+								"name":  "nginx",
+								"image": "nginx",
 							},
 						},
 					},
 				},
-			}),
-	})
+			},
+		}).ResMap()
+
 	patch := []*resource.Resource{
 		rf.FromMap(map[string]interface{}{
 			"apiVersion": "apps/v1",
@@ -307,8 +291,7 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 					},
 				},
 			},
-		},
-		),
+		}),
 		rf.FromMap(map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
@@ -327,8 +310,7 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 					},
 				},
 			},
-		},
-		),
+		}),
 	}
 
 	lt, err := NewTransformer(patch, rf)
@@ -345,22 +327,20 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 }
 
 func TestNoSchemaOverlayRun(t *testing.T) {
-	base := resmap.FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(foo, "my-foo"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "example.com/v1",
-				"kind":       "Foo",
-				"metadata": map[string]interface{}{
-					"name": "my-foo",
+	base := resmaptest_test.NewRmBuilder(t, rf).
+		Add(map[string]interface{}{
+			"apiVersion": "example.com/v1",
+			"kind":       "Foo",
+			"metadata": map[string]interface{}{
+				"name": "my-foo",
+			},
+			"spec": map[string]interface{}{
+				"bar": map[string]interface{}{
+					"A": "X",
+					"B": "Y",
 				},
-				"spec": map[string]interface{}{
-					"bar": map[string]interface{}{
-						"A": "X",
-						"B": "Y",
-					},
-				},
-			}),
-	})
+			},
+		}).ResMap()
 	patch := []*resource.Resource{
 		rf.FromMap(map[string]interface{}{
 			"apiVersion": "example.com/v1",
@@ -374,11 +354,10 @@ func TestNoSchemaOverlayRun(t *testing.T) {
 					"C": "Z",
 				},
 			},
-		},
-		),
+		}),
 	}
-	expected := resmap.FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(foo, "my-foo"): rf.FromMap(
+	expected := resmaptest_test.NewRmBuilder(t, rf).
+		Add(
 			map[string]interface{}{
 				"apiVersion": "example.com/v1",
 				"kind":       "Foo",
@@ -391,8 +370,7 @@ func TestNoSchemaOverlayRun(t *testing.T) {
 						"C": "Z",
 					},
 				},
-			}),
-	})
+			}).ResMap()
 
 	lt, err := NewTransformer(patch, rf)
 	if err != nil {
@@ -402,28 +380,26 @@ func TestNoSchemaOverlayRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err = expected.ErrorIfNotEqualSets(base); err != nil {
+	if err = expected.ErrorIfNotEqualLists(base); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
 
 func TestNoSchemaMultiplePatches(t *testing.T) {
-	base := resmap.FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(foo, "my-foo"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "example.com/v1",
-				"kind":       "Foo",
-				"metadata": map[string]interface{}{
-					"name": "my-foo",
+	base := resmaptest_test.NewRmBuilder(t, rf).
+		Add(map[string]interface{}{
+			"apiVersion": "example.com/v1",
+			"kind":       "Foo",
+			"metadata": map[string]interface{}{
+				"name": "my-foo",
+			},
+			"spec": map[string]interface{}{
+				"bar": map[string]interface{}{
+					"A": "X",
+					"B": "Y",
 				},
-				"spec": map[string]interface{}{
-					"bar": map[string]interface{}{
-						"A": "X",
-						"B": "Y",
-					},
-				},
-			}),
-	})
+			},
+		}).ResMap()
 	patch := []*resource.Resource{
 		rf.FromMap(map[string]interface{}{
 			"apiVersion": "example.com/v1",
@@ -437,8 +413,7 @@ func TestNoSchemaMultiplePatches(t *testing.T) {
 					"C": "Z",
 				},
 			},
-		},
-		),
+		}),
 		rf.FromMap(map[string]interface{}{
 			"apiVersion": "example.com/v1",
 			"kind":       "Foo",
@@ -454,29 +429,26 @@ func TestNoSchemaMultiplePatches(t *testing.T) {
 					"hello": "world",
 				},
 			},
-		},
-		),
+		}),
 	}
-	expected := resmap.FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(foo, "my-foo"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "example.com/v1",
-				"kind":       "Foo",
-				"metadata": map[string]interface{}{
-					"name": "my-foo",
+	expected := resmaptest_test.NewRmBuilder(t, rf).
+		Add(map[string]interface{}{
+			"apiVersion": "example.com/v1",
+			"kind":       "Foo",
+			"metadata": map[string]interface{}{
+				"name": "my-foo",
+			},
+			"spec": map[string]interface{}{
+				"bar": map[string]interface{}{
+					"A": "X",
+					"C": "Z",
+					"D": "W",
 				},
-				"spec": map[string]interface{}{
-					"bar": map[string]interface{}{
-						"A": "X",
-						"C": "Z",
-						"D": "W",
-					},
-					"baz": map[string]interface{}{
-						"hello": "world",
-					},
+				"baz": map[string]interface{}{
+					"hello": "world",
 				},
-			}),
-	})
+			},
+		}).ResMap()
 
 	lt, err := NewTransformer(patch, rf)
 	if err != nil {
@@ -486,28 +458,26 @@ func TestNoSchemaMultiplePatches(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if err = expected.ErrorIfNotEqualSets(base); err != nil {
+	if err = expected.ErrorIfNotEqualLists(base); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
 
 func TestNoSchemaMultiplePatchesWithConflict(t *testing.T) {
-	base := resmap.FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(foo, "my-foo"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "example.com/v1",
-				"kind":       "Foo",
-				"metadata": map[string]interface{}{
-					"name": "my-foo",
+	base := resmaptest_test.NewRmBuilder(t, rf).
+		Add(map[string]interface{}{
+			"apiVersion": "example.com/v1",
+			"kind":       "Foo",
+			"metadata": map[string]interface{}{
+				"name": "my-foo",
+			},
+			"spec": map[string]interface{}{
+				"bar": map[string]interface{}{
+					"A": "X",
+					"B": "Y",
 				},
-				"spec": map[string]interface{}{
-					"bar": map[string]interface{}{
-						"A": "X",
-						"B": "Y",
-					},
-				},
-			}),
-	})
+			},
+		}).ResMap()
 	patch := []*resource.Resource{
 		rf.FromMap(map[string]interface{}{
 			"apiVersion": "example.com/v1",

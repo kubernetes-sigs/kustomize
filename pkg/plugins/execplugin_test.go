@@ -52,7 +52,7 @@ s/$BAR/bar/g
 	p := NewExecPlugin(
 		AbsolutePluginPath(
 			DefaultPluginConfig(),
-			pluginConfig.Id()))
+			pluginConfig.OrgId()))
 
 	yaml, err := pluginConfig.AsYAML()
 	if err != nil {
