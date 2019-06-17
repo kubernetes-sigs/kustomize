@@ -83,7 +83,7 @@ metadata:
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.AssertActualEqualsExpectedNoSort(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -197,19 +197,6 @@ func TestSmallBase(t *testing.T) {
 		t.Fatalf("Err: %v", err)
 	}
 	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: myApp
-  name: a-myService
-spec:
-  ports:
-  - port: 7002
-  selector:
-    app: myApp
-    backend: bungie
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -229,6 +216,19 @@ spec:
       containers:
       - image: whatever
         name: whatever
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: myApp
+  name: a-myService
+spec:
+  ports:
+  - port: 7002
+  selector:
+    app: myApp
+    backend: bungie
 `)
 }
 
@@ -239,7 +239,7 @@ func TestSmallOverlay(t *testing.T) {
 namePrefix: b-
 commonLabels:
   env: prod
-bases:
+resources:
 - ../base
 patchesStrategicMerge:
 - deployment/deployment.yaml
@@ -268,25 +268,7 @@ spec:
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	// TODO(#669): The name of the patched Deployment is
-	// b-a-myDeployment, retaining the base prefix
-	// (example of correct behavior).
 	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: myApp
-    env: prod
-  name: b-a-myService
-spec:
-  ports:
-  - port: 7002
-  selector:
-    app: myApp
-    backend: bungie
-    env: prod
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -310,6 +292,21 @@ spec:
       containers:
       - image: whatever:1.8.0
         name: whatever
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: myApp
+    env: prod
+  name: b-a-myService
+spec:
+  ports:
+  - port: 7002
+  selector:
+    app: myApp
+    backend: bungie
+    env: prod
 `)
 }
 
@@ -321,7 +318,7 @@ func TestSharedPatchDisAllowed(t *testing.T) {
 	th.WriteK("/app/overlay", `
 commonLabels:
   env: prod
-bases:
+resources:
 - ../base
 patchesStrategicMerge:
 - ../shared/deployment-patch.yaml
@@ -353,7 +350,7 @@ func TestSharedPatchAllowed(t *testing.T) {
 	th.WriteK("/app/overlay", `
 commonLabels:
   env: prod
-bases:
+resources:
 - ../base
 patchesStrategicMerge:
 - ../shared/deployment-patch.yaml
@@ -371,21 +368,6 @@ spec:
 		t.Fatalf("Err: %v", err)
 	}
 	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: myApp
-    env: prod
-  name: a-myService
-spec:
-  ports:
-  - port: 7002
-  selector:
-    app: myApp
-    backend: bungie
-    env: prod
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -409,6 +391,21 @@ spec:
       containers:
       - image: whatever
         name: whatever
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: myApp
+    env: prod
+  name: a-myService
+spec:
+  ports:
+  - port: 7002
+  selector:
+    app: myApp
+    backend: bungie
+    env: prod
 `)
 }
 
@@ -416,7 +413,7 @@ func TestSmallOverlayJSONPatch(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
 	writeSmallBase(th)
 	th.WriteK("/app/overlay", `
-bases:
+resources:
 - ../base
 patchesJson6902:
 - target:
@@ -436,19 +433,6 @@ patchesJson6902:
 		t.Fatalf("Err: %v", err)
 	}
 	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: myApp
-  name: a-myService
-spec:
-  ports:
-  - port: 7002
-  selector:
-    app: myApp
-    backend: beagle
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -468,5 +452,18 @@ spec:
       containers:
       - image: whatever
         name: whatever
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: myApp
+  name: a-myService
+spec:
+  ports:
+  - port: 7002
+  selector:
+    app: myApp
+    backend: beagle
 `)
 }

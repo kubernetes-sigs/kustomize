@@ -78,7 +78,7 @@ configMapGenerator:
 	th.WriteK("/app/overlay", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-bases:
+resources:
 - ../base
 generatorOptions:
   disableNameSuffixHash: false
@@ -96,20 +96,20 @@ configMapGenerator:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  fruit: apple
-kind: ConfigMap
-metadata:
-  labels:
-    fruit: apple
-  name: shouldHaveHash-2k9hc848ff
----
-apiVersion: v1
-data:
   foo: bar
 kind: ConfigMap
 metadata:
   labels:
     foo: bar
   name: shouldNotHaveHash
+---
+apiVersion: v1
+data:
+  fruit: apple
+kind: ConfigMap
+metadata:
+  labels:
+    fruit: apple
+  name: shouldHaveHash-2k9hc848ff
 `)
 }

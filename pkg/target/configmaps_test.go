@@ -190,7 +190,7 @@ configMapGenerator:
   - from=base
 `)
 	th.WriteK("/app/overlay/o1", `
-bases:
+resources:
 - ../../base1
 configMapGenerator:
 - name: com1
@@ -199,7 +199,7 @@ configMapGenerator:
   - from=overlay
 `)
 	th.WriteK("/app/overlay/o2", `
-bases:
+resources:
 - ../../base2
 configMapGenerator:
 - name: com2
@@ -208,7 +208,7 @@ configMapGenerator:
   - from=overlay
 `)
 	th.WriteK("/app/overlay", `
-bases:
+resources:
 - o1
 - o2
 configMapGenerator:

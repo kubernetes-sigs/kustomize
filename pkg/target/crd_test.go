@@ -278,7 +278,7 @@ func TestCrdWithOverlay(t *testing.T) {
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: prod-
-bases:
+resources:
 - ../base
 patchesStrategicMerge:
 - bee.yaml
@@ -330,7 +330,6 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - crd.yaml
-
 images:
   - name: test/test
     newName: registry.gitlab.com/test

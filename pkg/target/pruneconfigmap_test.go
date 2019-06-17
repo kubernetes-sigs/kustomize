@@ -107,38 +107,6 @@ data:
 	}
 	//nolint
 	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  annotations:
-    kustomize.config.k8s.io/Inventory: '{"current":{"apps_v1beta2_Deployment|default|my-mysql":null,"~G_v1_Secret|default|my-pass":[{"group":"apps","version":"v1beta2","kind":"Deployment","name":"my-mysql","namespace":"default"}],"~G_v1_Service|default|my-mmmysql":null}}'
-    kustomize.config.k8s.io/InventoryHash: kd67f7ht8t
-  name: haha
-  namespace: default
----
-apiVersion: v1
-data:
-  password: YWRtaW4=
-  username: jingfang
-kind: Secret
-metadata:
-  name: my-pass
-  namespace: default
-type: Opaque
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: mysql
-  name: my-mmmysql
-  namespace: default
-spec:
-  ports:
-  - port: 3306
-  selector:
-    app: mysql
----
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
@@ -175,5 +143,37 @@ spec:
       volumes:
       - emptyDir: {}
         name: mysql-persistent-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: mysql
+  name: my-mmmysql
+  namespace: default
+spec:
+  ports:
+  - port: 3306
+  selector:
+    app: mysql
+---
+apiVersion: v1
+data:
+  password: YWRtaW4=
+  username: jingfang
+kind: Secret
+metadata:
+  name: my-pass
+  namespace: default
+type: Opaque
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    kustomize.config.k8s.io/Inventory: '{"current":{"apps_v1beta2_Deployment|default|my-mysql":null,"~G_v1_Secret|default|my-pass":[{"group":"apps","version":"v1beta2","kind":"Deployment","name":"my-mysql","namespace":"default"}],"~G_v1_Service|default|my-mmmysql":null}}'
+    kustomize.config.k8s.io/InventoryHash: kd67f7ht8t
+  name: haha
+  namespace: default
 `)
 }

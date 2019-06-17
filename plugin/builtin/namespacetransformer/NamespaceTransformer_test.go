@@ -80,14 +80,21 @@ metadata:
 
 	th.AssertActualEqualsExpected(rm, `
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm1
+  namespace: test
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm2
+  namespace: test
+---
+apiVersion: v1
 kind: Namespace
 metadata:
   name: ns1
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: crd
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -116,17 +123,10 @@ subjects:
   name: another
   namespace: random
 ---
-apiVersion: v1
-kind: ConfigMap
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
 metadata:
-  name: cm1
-  namespace: test
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: cm2
-  namespace: test
+  name: crd
 `)
 }
 
