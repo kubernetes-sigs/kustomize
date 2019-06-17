@@ -24,26 +24,130 @@ apiVersion: builtin
 kind: ReplicaCountTransformer
 metadata:
   name: notImportantHere
+
 replica:
-  name: deploy1
+  name: myapp
   count: 23
+fieldSpecs:
+- path: spec/replicas
+  create: true
+  kind: Deployment
+
+- path: spec/replicas
+  create: true
+  kind: ReplicationController
+
+- path: spec/replicas
+  create: true
+  kind: ReplicaSet
+
+- path: spec/replicas
+  create: true
+  kind: StatefulSet
 `, `
-group: apps
-apiVersion: v1
+apiVersion: apps/v1
+kind: Service
+metadata:
+  name: myapp
+spec:
+  ports:
+  - port: 1111
+  targetport: 1111
+---
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deploy1
+  name: otherapp
 spec:
-  replicas: 1
+  replicas: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  replicas: 5
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      app: app
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      app: app
+---
+apiVersion: apps/v1
+kind: ReplicationController
+metadata:
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      app: app
 `)
 
 	th.AssertActualEqualsExpected(rm, `
-apiVersion: v1
-group: apps
+apiVersion: apps/v1
+kind: Service
+metadata:
+  name: myapp
+spec:
+  ports:
+  - port: 1111
+  targetport: 1111
+---
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deploy1
+  name: myapp
 spec:
   replicas: 23
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otherapp
+spec:
+  replicas: 5
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: myapp
+spec:
+  replicas: 23
+  selector:
+    matchLabels:
+      app: app
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: myapp
+spec:
+  replicas: 23
+  selector:
+    matchLabels:
+      app: app
+---
+apiVersion: apps/v1
+kind: ReplicationController
+metadata:
+  name: myapp
+spec:
+  replicas: 23
+  selector:
+    matchLabels:
+      app: app
 `)
 }

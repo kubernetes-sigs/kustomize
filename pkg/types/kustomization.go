@@ -369,5 +369,5 @@ type Replica struct {
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 
 	// The number of replicas required.
-	Count uint `json:"count,omitempty" yaml:"count,omitempty"`
+	Count int64 `json:"count,omitempty" yaml:"count,omitempty"`
 }
