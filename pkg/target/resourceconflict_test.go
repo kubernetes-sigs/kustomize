@@ -42,13 +42,13 @@ subjects:
 func writeMidOverlays(th *kusttest_test.KustTestHarness) {
 	// Mid-level overlays
 	th.WriteK("/app/overlays/a", `
-bases:
+resources:
 - ../../base
 namePrefix: a-
 nameSuffix: -suffixA
 `)
 	th.WriteK("/app/overlays/b", `
-bases:
+resources:
 - ../../base
 namePrefix: b-
 nameSuffix: -suffixB
@@ -58,7 +58,7 @@ nameSuffix: -suffixB
 func writeTopOverlay(th *kusttest_test.KustTestHarness) {
 	// Top overlay, combining the mid-level overlays
 	th.WriteK("/app/combined", `
-bases:
+resources:
 - ../overlays/a
 - ../overlays/b
 `)
@@ -162,11 +162,6 @@ kind: ServiceAccount
 metadata:
   name: a-pfx-serviceaccount-sfx-suffixA
 ---
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: b-pfx-serviceaccount-sfx-suffixB
----
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:
@@ -178,6 +173,11 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: a-pfx-serviceaccount-sfx-suffixA
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: b-pfx-serviceaccount-sfx-suffixB
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
@@ -200,12 +200,11 @@ func TestMultibasesWithConflict(t *testing.T) {
 	writeTopOverlay(th)
 
 	th.WriteK("/app/overlays/a", `
-bases:
-- ../../base
 namePrefix: a-
 nameSuffix: -suffixA
 resources:
 - serviceaccount.yaml
+- ../../base
 `)
 	// Expect an error because this resource in the overlay
 	// matches a resource in the base.

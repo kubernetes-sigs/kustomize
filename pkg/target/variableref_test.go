@@ -27,8 +27,11 @@ func TestVariableRef(t *testing.T) {
 	th.WriteK("/app/base", `
 namePrefix: base-
 resources:
- - cockroachdb-statefulset-secure.yaml
- - cronjob.yaml
+- role-stuff.yaml
+- services.yaml
+- statefulset.yaml
+- cronjob.yaml
+- pdb.yaml
 configMapGenerator:
 - name: test-config-map
   literals:
@@ -87,7 +90,54 @@ spec:
               - name: CDB_PUBLIC_SVC
                 value: "$(CDB_PUBLIC_SVC)"
 `)
-	th.WriteF("/app/base/cockroachdb-statefulset-secure.yaml", `
+	th.WriteF("/app/base/services.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: cockroachdb
+  labels:
+    app: cockroachdb
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    # Enable automatic monitoring of all instances when Prometheus is running in the cluster.
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "_status/vars"
+    prometheus.io/port: "8080"
+spec:
+  ports:
+  - port: 26257
+    targetPort: 26257
+    name: grpc
+  - port: 8080
+    targetPort: 8080
+    name: http
+  clusterIP: None
+  selector:
+    app: cockroachdb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # This service is meant to be used by clients of the database. It exposes a ClusterIP that will
+  # automatically load balance connections to the different database pods.
+  name: cockroachdb-public
+  labels:
+    app: cockroachdb
+spec:
+  ports:
+  # The main port, served by gRPC, serves Postgres-flavor SQL, internode
+  # traffic and the cli.
+  - port: 26257
+    targetPort: 26257
+    name: grpc
+  # The secondary port serves the UI as well as health and debug endpoints.
+  - port: 8080
+    targetPort: 8080
+    name: http
+  selector:
+    app: cockroachdb
+`)
+	th.WriteF("/app/base/role-stuff.yaml", `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -155,53 +205,8 @@ subjects:
 - kind: ServiceAccount
   name: cockroachdb
   namespace: default
----
-apiVersion: v1
-kind: Service
-metadata:
-  # This service is meant to be used by clients of the database. It exposes a ClusterIP that will
-  # automatically load balance connections to the different database pods.
-  name: cockroachdb-public
-  labels:
-    app: cockroachdb
-spec:
-  ports:
-  # The main port, served by gRPC, serves Postgres-flavor SQL, internode
-  # traffic and the cli.
-  - port: 26257
-    targetPort: 26257
-    name: grpc
-  # The secondary port serves the UI as well as health and debug endpoints.
-  - port: 8080
-    targetPort: 8080
-    name: http
-  selector:
-    app: cockroachdb
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: cockroachdb
-  labels:
-    app: cockroachdb
-  annotations:
-    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
-    # Enable automatic monitoring of all instances when Prometheus is running in the cluster.
-    prometheus.io/scrape: "true"
-    prometheus.io/path: "_status/vars"
-    prometheus.io/port: "8080"
-spec:
-  ports:
-  - port: 26257
-    targetPort: 26257
-    name: grpc
-  - port: 8080
-    targetPort: 8080
-    name: http
-  clusterIP: None
-  selector:
-    app: cockroachdb
----
+`)
+	th.WriteF("/app/base/pdb.yaml", `
 apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
 metadata:
@@ -213,7 +218,8 @@ spec:
     matchLabels:
       app: cockroachdb
   maxUnavailable: 1
----
+`)
+	th.WriteF("/app/base/statefulset.yaml", `
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
@@ -324,7 +330,7 @@ spec:
 `)
 	th.WriteK("/app/overlay/staging", `
 namePrefix: dev-
-bases:
+resources:
 - ../../base
 `)
 	m, err := th.MakeKustTarget().MakeCustomizedResMap()
@@ -399,14 +405,6 @@ subjects:
 - kind: ServiceAccount
   name: dev-base-cockroachdb
   namespace: default
----
-apiVersion: v1
-data:
-  baz: qux
-  foo: bar
-kind: ConfigMap
-metadata:
-  name: dev-base-test-config-map-b2g2dmd64b
 ---
 apiVersion: v1
 kind: Service
@@ -575,6 +573,14 @@ spec:
   selector:
     matchLabels:
       app: cockroachdb
+---
+apiVersion: v1
+data:
+  baz: qux
+  foo: bar
+kind: ConfigMap
+metadata:
+  name: dev-base-test-config-map-b2g2dmd64b
 `)
 }
 
@@ -582,9 +588,9 @@ func TestVariableRefIngress(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
 	th.WriteK("/app/base", `
 resources:
+- service.yaml
 - deployment.yaml
 - ingress.yaml
-- service.yaml
 
 vars:
 - name: DEPLOYMENT_NAME
@@ -655,7 +661,7 @@ spec:
 `)
 	th.WriteK("/app/overlay", `
 nameprefix: kustomized-
-bases:
+resources:
 - ../base
 `)
 	m, err := th.MakeKustTarget().MakeCustomizedResMap()
@@ -768,11 +774,6 @@ vars:
 		t.Fatalf("Err: %v", err)
 	}
 	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: my-namespace
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -792,6 +793,11 @@ spec:
       volumes:
       - emptyDir: {}
         name: my-volume
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: my-namespace
 `)
 }
 
@@ -834,11 +840,6 @@ vars:
 		t.Fatalf("Err: %v", err)
 	}
 	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: my-namespace
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -851,6 +852,11 @@ spec:
       containers:
       - image: busybox
         name: app
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: my-namespace
 `)
 }
 
@@ -858,7 +864,7 @@ func TestVaribaleRefDifferentPrefix(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/app/base")
 	th.WriteK("/app/base", `
 namePrefix: base-
-bases:
+resources:
 - dev
 - test
 `)
@@ -948,28 +954,6 @@ spec:
 	}
 
 	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
-kind: Service
-metadata:
-  name: base-dev-elasticsearch
-spec:
-  clusterIP: None
-  ports:
-  - name: transport
-    port: 9300
-    protocol: TCP
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: base-test-elasticsearch
-spec:
-  clusterIP: None
-  ports:
-  - name: transport
-    port: 9300
-    protocol: TCP
----
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -983,6 +967,17 @@ spec:
           value: base-dev-elasticsearch.monitoring.svc.cluster.local
         name: elasticsearch
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: base-dev-elasticsearch
+spec:
+  clusterIP: None
+  ports:
+  - name: transport
+    port: 9300
+    protocol: TCP
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -995,5 +990,16 @@ spec:
         - name: DISCOVERY_SERVICE
           value: base-test-elasticsearch.monitoring.svc.cluster.local
         name: elasticsearch
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: base-test-elasticsearch
+spec:
+  clusterIP: None
+  ports:
+  - name: transport
+    port: 9300
+    protocol: TCP
 `)
 }
