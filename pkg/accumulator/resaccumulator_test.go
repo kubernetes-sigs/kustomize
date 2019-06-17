@@ -1,18 +1,5 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package accumulator_test
 
@@ -26,78 +13,65 @@ import (
 	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
 	. "sigs.k8s.io/kustomize/pkg/accumulator"
 	"sigs.k8s.io/kustomize/pkg/gvk"
-	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/pkg/resmaptest"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers/config"
 	"sigs.k8s.io/kustomize/pkg/types"
 )
 
-func makeResAccumulator() (*ResAccumulator, *resource.Factory, error) {
+func makeResAccumulator(t *testing.T) (*ResAccumulator, *resource.Factory) {
 	ra := MakeEmptyAccumulator()
 	err := ra.MergeConfig(config.MakeDefaultConfig())
 	if err != nil {
-		return nil, nil, err
+		t.Fatalf("unexpected err: %v", err)
 	}
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
 	err = ra.AppendAll(
-		resmap.FromMap(map[resid.ResId]*resource.Resource{
-			resid.NewResId(
-				gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"},
-				"deploy1"): rf.FromMap(
-				map[string]interface{}{
-					"apiVersion": "apps/v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name": "deploy1",
-					},
-					"spec": map[string]interface{}{
-						"template": map[string]interface{}{
-							"spec": map[string]interface{}{
-								"containers": []interface{}{
-									map[string]interface{}{
-										"command": []interface{}{
-											"myserver",
-											"--somebackendService $(SERVICE_ONE)",
-											"--yetAnother $(SERVICE_TWO)",
-										},
+		resmaptest_test.NewRmBuilder(t, rf).
+			Add(map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name": "deploy1",
+				},
+				"spec": map[string]interface{}{
+					"template": map[string]interface{}{
+						"spec": map[string]interface{}{
+							"containers": []interface{}{
+								map[string]interface{}{
+									"command": []interface{}{
+										"myserver",
+										"--somebackendService $(SERVICE_ONE)",
+										"--yetAnother $(SERVICE_TWO)",
 									},
 								},
 							},
 						},
 					},
-				}),
-			resid.NewResId(
-				gvk.Gvk{Version: "v1", Kind: "Service"},
-				"backendOne"): rf.FromMap(
-				map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "Service",
-					"metadata": map[string]interface{}{
-						"name": "backendOne",
-					},
-				}),
-			resid.NewResId(
-				gvk.Gvk{Version: "v1", Kind: "Service"},
-				"backendTwo"): rf.FromMap(
-				map[string]interface{}{
-					"apiVersion": "v1",
-					"kind":       "Service",
-					"metadata": map[string]interface{}{
-						"name": "backendTwo",
-					},
-				}),
-		}))
-	return ra, rf, err
-}
-
-func TestResolveVarsHappy(t *testing.T) {
-	ra, _, err := makeResAccumulator()
+				}}).
+			Add(map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Service",
+				"metadata": map[string]interface{}{
+					"name": "backendOne",
+				}}).
+			Add(map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Service",
+				"metadata": map[string]interface{}{
+					"name": "backendTwo",
+				}}).ResMap())
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
-	err = ra.MergeVars([]types.Var{
+	return ra, rf
+}
+
+func TestResolveVarsHappy(t *testing.T) {
+	ra, _ := makeResAccumulator(t)
+	err := ra.MergeVars([]types.Var{
 		{
 			Name: "SERVICE_ONE",
 			ObjRef: types.Target{
@@ -125,11 +99,8 @@ func TestResolveVarsHappy(t *testing.T) {
 }
 
 func TestResolveVarsOneUnused(t *testing.T) {
-	ra, _, err := makeResAccumulator()
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
-	err = ra.MergeVars([]types.Var{
+	ra, _ := makeResAccumulator(t)
+	err := ra.MergeVars([]types.Var{
 		{
 			Name: "SERVICE_ONE",
 			ObjRef: types.Target{
@@ -169,13 +140,10 @@ func expectLog(t *testing.T, log bytes.Buffer, expect string) {
 }
 
 func TestResolveVarsVarNeedsDisambiguation(t *testing.T) {
-	ra, rf, err := makeResAccumulator()
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
+	ra, rf := makeResAccumulator(t)
 
 	rm0 := resmap.New()
-	rm0.Append(
+	err := rm0.Append(
 		rf.FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
@@ -185,6 +153,9 @@ func TestResolveVarsVarNeedsDisambiguation(t *testing.T) {
 					"namespace": "fooNamespace",
 				},
 			}))
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
 	err = ra.AppendAll(rm0)
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
@@ -209,11 +180,8 @@ func TestResolveVarsVarNeedsDisambiguation(t *testing.T) {
 }
 
 func TestResolveVarsGoodResIdBadField(t *testing.T) {
-	ra, _, err := makeResAccumulator()
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
-	err = ra.MergeVars([]types.Var{
+	ra, _ := makeResAccumulator(t)
+	err := ra.MergeVars([]types.Var{
 		{
 			Name: "SERVICE_ONE",
 			ObjRef: types.Target{
@@ -237,11 +205,8 @@ func TestResolveVarsGoodResIdBadField(t *testing.T) {
 }
 
 func TestResolveVarsUnmappableVar(t *testing.T) {
-	ra, _, err := makeResAccumulator()
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
-	err = ra.MergeVars([]types.Var{
+	ra, _ := makeResAccumulator(t)
+	err := ra.MergeVars([]types.Var{
 		{
 			Name: "SERVICE_THREE",
 			ObjRef: types.Target{
@@ -263,13 +228,9 @@ func TestResolveVarsUnmappableVar(t *testing.T) {
 	}
 }
 
-func TestResolveVarsWithNoambiguiation(t *testing.T) {
-	ra, rf, err := makeResAccumulator()
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
-
-	err = ra.MergeVars([]types.Var{
+func TestResolveVarsWithNoambiguation(t *testing.T) {
+	ra1, rf := makeResAccumulator(t)
+	err := ra1.MergeVars([]types.Var{
 		{
 			Name: "SERVICE_ONE",
 			ObjRef: types.Target{
@@ -283,45 +244,48 @@ func TestResolveVarsWithNoambiguiation(t *testing.T) {
 	}
 
 	// Create another accumulator having a resource with different prefix
-	ra1 := MakeEmptyAccumulator()
-	rm1 := resmap.FromMap(map[resid.ResId]*resource.Resource{
-		resid.NewResId(gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"},
-			"deploy2"): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "Deployment",
-				"metadata": map[string]interface{}{
-					"name": "deploy2",
-				},
-				"spec": map[string]interface{}{
-					"template": map[string]interface{}{
-						"spec": map[string]interface{}{
-							"containers": []interface{}{
-								map[string]interface{}{
-									"command": []interface{}{
-										"myserver",
-										"--somebackendService $(SUB_SERVICE_ONE)",
-									},
+	ra2 := MakeEmptyAccumulator()
+
+	m := resmaptest_test.NewRmBuilder(t, rf).
+		Add(map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "deploy2",
+			},
+			"spec": map[string]interface{}{
+				"template": map[string]interface{}{
+					"spec": map[string]interface{}{
+						"containers": []interface{}{
+							map[string]interface{}{
+								"command": []interface{}{
+									"myserver",
+									"--somebackendService $(SUB_SERVICE_ONE)",
 								},
 							},
 						},
 					},
 				},
-			}),
-		resid.NewResIdWithPrefixNamespace(
-			gvk.Gvk{Version: "v1", Kind: "Service"},
-			"backendOne", "sub-", ""): rf.FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "Service",
-				"metadata": map[string]interface{}{
-					"name": "backendOne",
-				},
-			}),
-	})
-	ra1.AppendAll(rm1)
+			}}).
+		Add(map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Service",
+			"metadata": map[string]interface{}{
+				"name": "backendOne",
+			}}).ResMap()
 
-	err = ra1.MergeVars([]types.Var{
+	// Make it seem like this resource
+	// went through a prefix transformer.
+	r := m.GetByIndex(1)
+	r.AddNamePrefix("sub-")
+	r.SetName("sub-backendOne") // original name remains "backendOne"
+
+	err = ra2.AppendAll(m)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+
+	err = ra2.MergeVars([]types.Var{
 		{
 			Name: "SUB_SERVICE_ONE",
 			ObjRef: types.Target{
@@ -333,12 +297,12 @@ func TestResolveVarsWithNoambiguiation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
-	err = ra.MergeAccumulator(ra1)
+	err = ra1.MergeAccumulator(ra2)
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
 
-	err = ra.ResolveVars()
+	err = ra1.ResolveVars()
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}

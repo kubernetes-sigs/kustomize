@@ -8,8 +8,8 @@ package resmap
 import (
 	"bytes"
 	"fmt"
-
 	"github.com/pkg/errors"
+
 	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/types"
@@ -17,53 +17,17 @@ import (
 )
 
 // ResMap is an interface describing operations on the
-// core kustomize data structure.
+// core kustomize data structure, a list of Resources.
 //
-// TODO: delete the commentary below when/if the issues
-// discussed are addressed.
+// Every Resource has two ResIds: OriginalId and CurId.
 //
-// It's a temporary(?) interface used during a refactoring
-// from a bare map (map[resid.ResId]*resource.Resource) to a
-// pointer to struct (currently named *resWrangler).
-// Replacing it with a ptr to struct will ease click-thrus
-// to implementation during development.
-// OTOH, hackery in a PR might be easier to see if the
-// interface is left in place.
+// A ResId is a tuple of {Namespace, Group, Version, Kind, Name}.
 //
-// The old (bare map) ResMap had pervasive problems:
+// In a ResMap, no two resources may have the same CurId,
+// but they may have the same OriginalId.  The latter can happen
+// when mixing two or more different overlays apply different
+// transformations to a common base.
 //
-//  * It was mutated inside loops over itself.
-//
-//    Bugs introduced this way were hard to find since the
-//    bare map was recursively passed everywhere, sometimes
-//    mid loop.
-//
-//  * Its keys (ResId) aren't opaque, and are effectively
-//    mutated (via copy and replace) for data storage reasons
-//    as a hack.
-//
-//    ResId was modified a long time ago as a hack to
-//    store name transformation data (prefix and suffix),
-//    destabilizing the basic map concept and resulting
-//    in the need for silly ResId functions like
-//    NewResIdWithPrefixSuffixNamespace, NsGvknEquals,
-//    HasSameLeftmostPrefix, CopyWithNewPrefixSuffix, etc.
-//    plus logic to use them, and overly complex tests.
-//
-//    If this data were stored in the Resource object
-//    (not in Kunstructured, but as a sibling to it next to
-//    GenArgs, references, etc.) then much code could be
-//    deleted and the remainder simplified.
-//
-//  * It doesn't preserve (by definition) value order.
-//
-//    Preserving order is now needed to support
-//    transformer plugins (they aren't commutative).
-//
-// One way to fix this is deprecate use of ResId as the
-// key in favor of ItemId.  See use of the resmap.Remove
-// function to spot the places that need fixing to allow
-// this.
 type ResMap interface {
 	// Size reports the number of resources.
 	Size() int
@@ -73,17 +37,12 @@ type ResMap interface {
 	// as appended.
 	Resources() []*resource.Resource
 
-	// Append adds a Resource, automatically computing its
-	// associated Id.
-	// Error on Id collision.
+	// Append adds a Resource.
+	// Error on OrgId collision.
 	Append(*resource.Resource) error
 
-	// AppendWithId adds a Resource with the given Id.
-	// Error on Id collision.
-	AppendWithId(resid.ResId, *resource.Resource) error
-
 	// AppendAll appends another ResMap to self,
-	// failing on any Id collision.
+	// failing on any OrgId collision.
 	AppendAll(ResMap) error
 
 	// AbsorbAll appends, replaces or merges the contents
@@ -99,48 +58,55 @@ type ResMap interface {
 	// self, then its behavior _cannot_ be merge or replace.
 	AbsorbAll(ResMap) error
 
-	// AsMap returns (ResId, *Resource) pairs in
-	// arbitrary order via a generated map.
-	// The map is discardable, and edits to map structure
-	// have no impact on the ResMap.
-	// The Ids are copies, but the resources are pointers,
-	// so the resources themselves can be modified.
-	AsMap() map[resid.ResId]*resource.Resource
-
 	// AsYaml returns the yaml form of resources.
 	AsYaml() ([]byte, error)
 
-	// Gets the resource with the given Id, else nil.
-	GetById(resid.ResId) *resource.Resource
+	// GetByIndex returns a resource at the given index,
+	// nil if out of range.
+	GetByIndex(int) *resource.Resource
 
-	// ReplaceResource associates a new resource with
-	// an _existing_ Id.
-	// Error if Id unknown, or if some other Id points
-	// to the same resource object.
-	ReplaceResource(resid.ResId, *resource.Resource) error
+	// GetIndexOfCurrentId returns the index of the resource
+	// with the given CurId.
+	// Returns error if there is more than one match.
+	// Returns (-1, nil) if there is no match.
+	GetIndexOfCurrentId(id resid.ResId) (int, error)
 
-	// AllIds returns all known Ids.
-	// Result order is arbitrary.
+	// GetMatchingResourcesByCurrentId returns the resources
+	// who's CurId is matched by the argument.
+	GetMatchingResourcesByCurrentId(matches IdMatcher) []*resource.Resource
+
+	// GetMatchingResourcesByOriginalId returns the resources
+	// who's OriginalId is matched by the argument.
+	GetMatchingResourcesByOriginalId(matches IdMatcher) []*resource.Resource
+
+	// GetByCurrentId is shorthand for calling
+	// GetMatchingResourcesByCurrentId with a matcher requiring
+	// an exact match, returning an error on multiple or no matches.
+	GetByCurrentId(resid.ResId) (*resource.Resource, error)
+
+	// GetByOriginalId is shorthand for calling
+	// GetMatchingResourcesByOriginalId with a matcher requiring
+	// an exact match, returning an error on multiple or no matches.
+	GetByOriginalId(resid.ResId) (*resource.Resource, error)
+
+	// Deprecated.
+	// Same as GetByOriginalId.
+	GetById(resid.ResId) (*resource.Resource, error)
+
+	// AllIds returns all CurrentIds.
 	AllIds() []resid.ResId
 
-	// GetMatchingIds returns a slice of Ids that
-	// satisfy the given matcher function.
-	// Result order is arbitrary.
-	GetMatchingIds(IdMatcher) []resid.ResId
+	// Replace replaces the resource with the matching CurId.
+	// Error if there's no match or more than one match.
+	// Returns the index where the replacement happened.
+	Replace(*resource.Resource) (int, error)
 
-	// Remove removes the Id and the resource it points to.
+	// Remove removes the resource whose CurId matches the argument.
+	// Error if not found.
 	Remove(resid.ResId) error
 
 	// Clear removes all resources and Ids.
 	Clear()
-
-	// SubsetThatCouldBeReferencedById returns a ResMap subset
-	// of self with resources that could be referenced by the
-	// resource represented by the argument Id.
-	// This is a filter; it excludes things that cannot be
-	// referenced by the Id's resource, e.g. objects in other
-	// namespaces. Cluster wide objects are never excluded.
-	SubsetThatCouldBeReferencedById(resid.ResId) ResMap
 
 	// SubsetThatCouldBeReferencedByResource returns a ResMap subset
 	// of self with resources that could be referenced by the
@@ -158,8 +124,8 @@ type ResMap interface {
 	ShallowCopy() ResMap
 
 	// ErrorIfNotEqualSets returns an error if the
-	// argument doesn't have the same Ids and resource
-	// data as self. Ordering is _not_ taken into account,
+	// argument doesn't have the same resources as self.
+	// Ordering is _not_ taken into account,
 	// as this function was solely used in tests written
 	// before internal resource order was maintained,
 	// and those tests are initialized with maps which
@@ -174,7 +140,7 @@ type ResMap interface {
 	// data as self, in the same order.
 	// Meta information is ignored; this is similar
 	// to comparing the AsYaml() strings, but allows
-	// for printing pointers, etc.
+	// for more informed errors on not equals.
 	ErrorIfNotEqualLists(ResMap) error
 
 	// Debug prints the ResMap.
@@ -190,14 +156,6 @@ type resWrangler struct {
 	// specify in kustomizations to be maintained and
 	// available as an option for final YAML rendering.
 	rList []*resource.Resource
-
-	// A map from id to an index into rList.
-	// At the time of writing, the ids used as keys in
-	// this map cannot be assumed to match the id
-	// generated from the resource.Id() method pointed
-	// to by the map's value (via rList).  These keys
-	// have been hacked to store prefix/suffix data.
-	rIndex map[resid.ResId]int
 }
 
 func newOne() *resWrangler {
@@ -209,14 +167,10 @@ func newOne() *resWrangler {
 // Clear implements ResMap.
 func (m *resWrangler) Clear() {
 	m.rList = nil
-	m.rIndex = make(map[resid.ResId]int)
 }
 
 // Size implements ResMap.
 func (m *resWrangler) Size() int {
-	if len(m.rList) != len(m.rIndex) {
-		panic("class size invariant violation")
-	}
 	return len(m.rList)
 }
 
@@ -236,94 +190,51 @@ func (m *resWrangler) Resources() []*resource.Resource {
 	return tmp
 }
 
-// GetById implements ResMap.
-func (m *resWrangler) GetById(id resid.ResId) *resource.Resource {
-	if i, ok := m.rIndex[id]; ok {
-		return m.rList[i]
-	}
-	return nil
-}
-
 // Append implements ResMap.
 func (m *resWrangler) Append(res *resource.Resource) error {
-	return m.AppendWithId(res.Id(), res)
+	id := res.CurId()
+	if r := m.GetMatchingResourcesByCurrentId(id.Equals); len(r) > 0 {
+		return fmt.Errorf(
+			"may not add resource with an already registered id: %s", id)
+	}
+	m.rList = append(m.rList, res)
+	return nil
 }
 
 // Remove implements ResMap.
 func (m *resWrangler) Remove(adios resid.ResId) error {
 	tmp := newOne()
-	for i, r := range m.rList {
-		id, err := m.idMappingToIndex(i)
-		if err != nil {
-			return errors.Wrap(err, "assumption failure in remove")
-		}
-		if id != adios {
-			tmp.AppendWithId(id, r)
+	for _, r := range m.rList {
+		if r.CurId() != adios {
+			tmp.Append(r)
 		}
 	}
 	if tmp.Size() != m.Size()-1 {
 		return fmt.Errorf("id %s not found in removal", adios)
 	}
-	m.rIndex = tmp.rIndex
 	m.rList = tmp.rList
 	return nil
 }
 
-// AppendWithId implements ResMap.
-func (m *resWrangler) AppendWithId(id resid.ResId, res *resource.Resource) error {
-	if already, ok := m.rIndex[id]; ok {
-		return fmt.Errorf(
-			"attempt to add res %s at id %s; that id already maps to %d",
-			res, id, already)
+// Replace implements ResMap.
+func (m *resWrangler) Replace(res *resource.Resource) (int, error) {
+	id := res.CurId()
+	i, err := m.GetIndexOfCurrentId(id)
+	if err != nil {
+		return -1, errors.Wrap(err, "in Replace")
 	}
-	i := m.indexOfResource(res)
-	if i >= 0 {
-		return fmt.Errorf(
-			"attempt to add res %s that is already held",
-			res)
+	if i < 0 {
+		return -1, fmt.Errorf("cannot find resource with id %s to replace", id)
 	}
-	m.rList = append(m.rList, res)
-	m.rIndex[id] = len(m.rList) - 1
-	return nil
-}
-
-// ReplaceResource implements ResMap.
-func (m *resWrangler) ReplaceResource(
-	id resid.ResId, newGuy *resource.Resource) error {
-	insertAt, ok := m.rIndex[id]
-	if !ok {
-		return fmt.Errorf(
-			"attempt to reset resource at id %s; that id not used", id)
-	}
-	existingSpot := m.indexOfResource(newGuy)
-	if insertAt == existingSpot {
-		// Be idempotent.
-		return nil
-	}
-	if existingSpot >= 0 {
-		return fmt.Errorf(
-			"the new resource %s is already present", newGuy.Id())
-	}
-	m.rList[insertAt] = newGuy
-	return nil
-}
-
-// AsMap implements ResMap.
-func (m *resWrangler) AsMap() map[resid.ResId]*resource.Resource {
-	result := make(map[resid.ResId]*resource.Resource, m.Size())
-	for id, i := range m.rIndex {
-		result[id] = m.rList[i]
-	}
-	return result
+	m.rList[i] = res
+	return i, nil
 }
 
 // AllIds implements ResMap.
 func (m *resWrangler) AllIds() (ids []resid.ResId) {
 	ids = make([]resid.ResId, m.Size())
-	i := 0
-	for id := range m.rIndex {
-		ids[i] = id
-		i++
+	for i, r := range m.rList {
+		ids[i] = r.CurId()
 	}
 	return
 }
@@ -338,7 +249,7 @@ func (m *resWrangler) Debug(title string) {
 		} else {
 			fmt.Println("---")
 		}
-		fmt.Printf("# %d  %s\n", i, m.debugIdMappingToIndex(i))
+		fmt.Printf("# %d  %s\n", i, r.OrgId())
 		blob, err := yaml.Marshal(r.Map())
 		if err != nil {
 			panic(err)
@@ -347,43 +258,89 @@ func (m *resWrangler) Debug(title string) {
 	}
 }
 
-func (m *resWrangler) debugIdMappingToIndex(i int) string {
-	id, err := m.idMappingToIndex(i)
-	if err != nil {
-		return err.Error()
-	}
-	return id.String()
-}
-
-func (m *resWrangler) idMappingToIndex(i int) (resid.ResId, error) {
-	var foundId resid.ResId
-	found := false
-	for id, index := range m.rIndex {
-		if index == i {
-			if found {
-				return foundId, fmt.Errorf("found multiple")
-			}
-			found = true
-			foundId = id
-		}
-	}
-	if !found {
-		return foundId, fmt.Errorf("cannot find index %d", i)
-	}
-	return foundId, nil
-}
-
 type IdMatcher func(resid.ResId) bool
 
-// GetMatchingIds implements ResMap.
-func (m *resWrangler) GetMatchingIds(matches IdMatcher) []resid.ResId {
-	var result []resid.ResId
-	for id := range m.rIndex {
-		if matches(id) {
-			result = append(result, id)
+// GetByIndex implements ResMap.
+func (m *resWrangler) GetByIndex(i int) *resource.Resource {
+	if i < 0 || i >= m.Size() {
+		return nil
+	}
+	return m.rList[i]
+}
+
+// GetIndexOfCurrentId implements ResMap.
+func (m *resWrangler) GetIndexOfCurrentId(id resid.ResId) (int, error) {
+	count := 0
+	result := -1
+	for i, r := range m.rList {
+		if id.Equals(r.CurId()) {
+			count++
+			result = i
+		}
+	}
+	if count > 1 {
+		return -1, fmt.Errorf("id matched %d resources", count)
+	}
+	return result, nil
+}
+
+type IdFromResource func(r *resource.Resource) resid.ResId
+
+func GetOriginalId(r *resource.Resource) resid.ResId { return r.OrgId() }
+func GetCurrentId(r *resource.Resource) resid.ResId  { return r.CurId() }
+
+// GetMatchingResourcesByCurrentId implements ResMap.
+func (m *resWrangler) GetMatchingResourcesByCurrentId(
+	matches IdMatcher) []*resource.Resource {
+	return m.filteredById(matches, GetCurrentId)
+}
+
+// GetMatchingResourcesByOriginalId implements ResMap.
+func (m *resWrangler) GetMatchingResourcesByOriginalId(
+	matches IdMatcher) []*resource.Resource {
+	return m.filteredById(matches, GetOriginalId)
+}
+
+func (m *resWrangler) filteredById(
+	matches IdMatcher, idGetter IdFromResource) []*resource.Resource {
+	var result []*resource.Resource
+	for _, r := range m.rList {
+		if matches(idGetter(r)) {
+			result = append(result, r)
 		}
 	}
 	return result
+}
+
+// GetByCurrentId implements ResMap.
+func (m *resWrangler) GetByCurrentId(
+	id resid.ResId) (*resource.Resource, error) {
+	return demandOneMatch(m.GetMatchingResourcesByCurrentId, id, "Current")
+}
+
+// GetByOriginalId implements ResMap.
+func (m *resWrangler) GetByOriginalId(
+	id resid.ResId) (*resource.Resource, error) {
+	return demandOneMatch(m.GetMatchingResourcesByOriginalId, id, "Original")
+}
+
+type resFinder func(IdMatcher) []*resource.Resource
+
+func demandOneMatch(
+	f resFinder, id resid.ResId, s string) (*resource.Resource, error) {
+	r := f(id.Equals)
+	if len(r) == 1 {
+		return r[0], nil
+	}
+	if len(r) > 1 {
+		return nil, fmt.Errorf("multiple matches for %sId %s", s, id)
+	}
+	return nil, fmt.Errorf("no matches for %sId %s", s, id)
+}
+
+// GetById implements ResMap.
+func (m *resWrangler) GetById(id resid.ResId) (*resource.Resource, error) {
+	return m.GetByCurrentId(id)
 }
 
 // AsYaml implements ResMap.
@@ -421,17 +378,28 @@ func (m *resWrangler) ErrorIfNotEqualSets(other ResMap) error {
 			"lists have different number of entries: %#v doesn't equal %#v",
 			m.rList, m2.rList)
 	}
-	for id, i := range m.rIndex {
-		r1 := m.rList[i]
-		r2 := m2.GetById(id)
-		if r2 == nil {
-			return fmt.Errorf("id in self missing from other; id: %s", id)
+	seen := make(map[int]bool)
+	for _, r1 := range m.rList {
+		id := r1.CurId()
+		others := m2.GetMatchingResourcesByCurrentId(id.Equals)
+		if len(others) < 0 {
+			return fmt.Errorf(
+				"id in self missing from other; id: %s", id)
 		}
+		if len(others) > 1 {
+			return fmt.Errorf(
+				"id in self matches %d in other; id: %s", len(others), id)
+		}
+		r2 := others[0]
 		if !r1.KunstructEqual(r2) {
 			return fmt.Errorf(
-				"kuns equal mismatch: \n -- %s,\n -- %s\n\n--\n%#v\n------\n%#v\n",
+				"kunstruct not equal: \n -- %s,\n -- %s\n\n--\n%#v\n------\n%#v\n",
 				r1, r2, r1, r2)
 		}
+		seen[m2.indexOfResource(r2)] = true
+	}
+	if len(seen) != m.Size() {
+		return fmt.Errorf("counting problem %d != %d", len(seen), m.Size())
 	}
 	return nil
 }
@@ -449,10 +417,10 @@ func (m *resWrangler) ErrorIfNotEqualLists(other ResMap) error {
 	}
 	for i, r1 := range m.rList {
 		r2 := m2.rList[i]
-		if !r1.KunstructEqual(r2) {
+		if !r1.Equals(r2) {
 			return fmt.Errorf(
-				"Item i=%d differs:\n n1 = %s\n n2 = %s\n",
-				i, r1.Id(), r2.Id())
+				"Item i=%d differs:\n  n1 = %s\n  n2 = %s\n  o1 = %s\n  o2 = %s\n",
+				i, r1.OrgId(), r2.OrgId(), r1, r2)
 		}
 	}
 	return nil
@@ -479,34 +447,9 @@ func (m *resWrangler) DeepCopy() ResMap {
 // makeCopy copies the ResMap.
 func (m *resWrangler) makeCopy(copier resCopier) ResMap {
 	result := &resWrangler{}
-	result.rIndex = make(map[resid.ResId]int, m.Size())
 	result.rList = make([]*resource.Resource, m.Size())
 	for i, r := range m.rList {
 		result.rList[i] = copier(r)
-		id, err := m.idMappingToIndex(i)
-		if err != nil {
-			panic("corrupt index map")
-		}
-		result.rIndex[id] = i
-	}
-	return result
-}
-
-// SubsetThatCouldBeReferencedById implements ResMap.
-func (m *resWrangler) SubsetThatCouldBeReferencedById(inputId resid.ResId) ResMap {
-	if inputId.Gvk().IsClusterKind() {
-		return m
-	}
-	result := New()
-	for id, i := range m.rIndex {
-		if id.Gvk().IsClusterKind() || id.Namespace() == inputId.Namespace() &&
-			id.HasSameLeftmostPrefix(inputId) &&
-			id.HasSameRightmostSuffix(inputId) {
-			err := result.AppendWithId(id, m.rList[i])
-			if err != nil {
-				panic(err)
-			}
-		}
 	}
 	return result
 }
@@ -514,13 +457,13 @@ func (m *resWrangler) SubsetThatCouldBeReferencedById(inputId resid.ResId) ResMa
 // SubsetThatCouldBeReferencedByResource implements ResMap.
 func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
 	inputRes *resource.Resource) ResMap {
-	inputId := inputRes.Id()
-	if inputId.Gvk().IsClusterKind() {
+	inputId := inputRes.OrgId()
+	if inputId.IsClusterKind() {
 		return m
 	}
 	result := New()
 	for _, r := range m.Resources() {
-		if r.Id().Gvk().IsClusterKind() || inputRes.InSameFuzzyNamespace(r) {
+		if r.OrgId().IsClusterKind() || inputRes.InSameFuzzyNamespace(r) {
 			err := result.Append(r)
 			if err != nil {
 				panic(err)
@@ -535,17 +478,8 @@ func (m *resWrangler) AppendAll(other ResMap) error {
 	if other == nil {
 		return nil
 	}
-	w2, ok := other.(*resWrangler)
-	if !ok {
-		panic("bad cast")
-	}
-	for i, res := range w2.Resources() {
-		id, err := w2.idMappingToIndex(i)
-		if err != nil {
-			panic("map is irrecoverably corrupted; " + err.Error())
-		}
-		err = m.AppendWithId(id, res)
-		if err != nil {
+	for _, res := range other.Resources() {
+		if err := m.Append(res); err != nil {
 			return err
 		}
 	}
@@ -557,16 +491,8 @@ func (m *resWrangler) AbsorbAll(other ResMap) error {
 	if other == nil {
 		return nil
 	}
-	w2, ok := other.(*resWrangler)
-	if !ok {
-		panic("bad cast")
-	}
-	for i, r := range w2.Resources() {
-		id, err := w2.idMappingToIndex(i)
-		if err != nil {
-			panic("map is irrecoverably corrupted; " + err.Error())
-		}
-		err = m.appendReplaceOrMerge(id, r)
+	for _, r := range other.Resources() {
+		err := m.appendReplaceOrMerge(r)
 		if err != nil {
 			return err
 		}
@@ -575,48 +501,52 @@ func (m *resWrangler) AbsorbAll(other ResMap) error {
 }
 
 func (m *resWrangler) appendReplaceOrMerge(
-	idForRes resid.ResId, res *resource.Resource) error {
-	matchedId := m.GetMatchingIds(idForRes.GvknEquals)
-	switch len(matchedId) {
+	res *resource.Resource) error {
+	id := res.CurId()
+	// Maybe also try by current id if nothing matches?
+	matches := m.GetMatchingResourcesByOriginalId(id.GvknEquals)
+	switch len(matches) {
 	case 0:
 		switch res.Behavior() {
 		case types.BehaviorMerge, types.BehaviorReplace:
 			return fmt.Errorf(
-				"id %#v does not exist; cannot merge or replace", idForRes)
+				"id %#v does not exist; cannot merge or replace", id)
 		default:
 			// presumably types.BehaviorCreate
-			err := m.AppendWithId(idForRes, res)
+			err := m.Append(res)
 			if err != nil {
 				return err
 			}
 		}
 	case 1:
-		mId := matchedId[0]
-		old := m.GetById(mId)
+		old := matches[0]
 		if old == nil {
 			return fmt.Errorf("id lookup failure")
+		}
+		index := m.indexOfResource(old)
+		if index < 0 {
+			return fmt.Errorf("indexing problem")
 		}
 		switch res.Behavior() {
 		case types.BehaviorReplace:
 			res.Replace(old)
-			err := m.ReplaceResource(mId, res)
-			if err != nil {
-				return err
-			}
 		case types.BehaviorMerge:
 			res.Merge(old)
-			err := m.ReplaceResource(mId, res)
-			if err != nil {
-				return err
-			}
 		default:
 			return fmt.Errorf(
-				"id %#v exists; must merge or replace", idForRes)
+				"id %#v exists; must merge or replace", id)
+		}
+		i, err := m.Replace(res)
+		if err != nil {
+			return err
+		}
+		if i != index {
+			return fmt.Errorf("unexpected index in replacement")
 		}
 	default:
 		return fmt.Errorf(
 			"found multiple objects %v that could accept merge of %v",
-			matchedId, idForRes)
+			matches, id)
 	}
 	return nil
 }

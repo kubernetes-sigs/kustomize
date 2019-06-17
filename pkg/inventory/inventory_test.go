@@ -27,12 +27,12 @@ func makeRefs() (Refs, Refs) {
 	b := resid.FromString("G2_V2_K2|ns2|nm2")
 	c := resid.FromString("G3_V3_K3|ns3|nm3")
 	current := NewRefs()
-	current[a] = []resid.ItemId{b, c}
-	current[b] = []resid.ItemId{}
-	current[c] = []resid.ItemId{}
+	current[a] = []resid.ResId{b, c}
+	current[b] = []resid.ResId{}
+	current[c] = []resid.ResId{}
 	newRefs := NewRefs()
-	newRefs[a] = []resid.ItemId{b}
-	newRefs[b] = []resid.ItemId{}
+	newRefs[a] = []resid.ResId{b}
+	newRefs[b] = []resid.ResId{}
 	return current, newRefs
 }
 

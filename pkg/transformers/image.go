@@ -46,7 +46,7 @@ func (pt *imageTransformer) Transform(m resmap.ResMap) error {
 	}
 	for _, r := range m.Resources() {
 		for _, path := range pt.fieldSpecs {
-			if !r.Id().Gvk().IsSelected(&path.Gvk) {
+			if !r.OrgId().IsSelected(&path.Gvk) {
 				continue
 			}
 			err := MutateField(r.Map(), path.PathSlice(), false, pt.mutateImage)
@@ -55,7 +55,7 @@ func (pt *imageTransformer) Transform(m resmap.ResMap) error {
 			}
 		}
 		// Kept for backward compatibility
-		if err := pt.findAndReplaceImage(r.Map()); err != nil && r.Id().Kind != `CustomResourceDefinition` {
+		if err := pt.findAndReplaceImage(r.Map()); err != nil && r.OrgId().Kind != `CustomResourceDefinition` {
 			return err
 		}
 	}

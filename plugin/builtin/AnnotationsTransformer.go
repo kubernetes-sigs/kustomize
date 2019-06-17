@@ -15,6 +15,7 @@ type AnnotationsTransformerPlugin struct {
 	FieldSpecs  []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
+//noinspection GoUnusedGlobalVariable
 func NewAnnotationsTransformerPlugin() *AnnotationsTransformerPlugin {
 	return &AnnotationsTransformerPlugin{}
 }

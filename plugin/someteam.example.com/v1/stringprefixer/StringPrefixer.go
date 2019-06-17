@@ -24,6 +24,8 @@ type metaData struct {
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 }
 
+//noinspection GoUnusedGlobalVariable
+//nolint: golint
 var KustomizePlugin plugin
 
 func (p *plugin) makePrefixSuffixPluginConfig(n string) ([]byte, error) {

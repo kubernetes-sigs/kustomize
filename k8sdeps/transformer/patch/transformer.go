@@ -13,6 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/pkg/resid"
 	"sigs.k8s.io/kustomize/pkg/resmap"
 	"sigs.k8s.io/kustomize/pkg/resource"
 	"sigs.k8s.io/kustomize/pkg/transformers"
@@ -36,33 +37,22 @@ func NewTransformer(
 }
 
 // Transform apply the patches on top of the base resources.
-func (tf *transformer) Transform(baseResourceMap resmap.ResMap) error {
-	// Merge and then index the patches by Id.
+// nolint:ineffassign
+func (tf *transformer) Transform(m resmap.ResMap) error {
 	patches, err := tf.mergePatches()
 	if err != nil {
 		return err
 	}
-
-	// Strategic merge the resources exist in both base and patches.
 	for _, patch := range patches.Resources() {
-		// Merge patches with base resource.
-		id := patch.Id()
-		matchedIds := baseResourceMap.GetMatchingIds(id.GvknEquals)
-		if len(matchedIds) == 0 {
-			return fmt.Errorf("failed to find an object with %s to apply the patch", id.GvknString())
-		}
-		if len(matchedIds) > 1 {
-			return fmt.Errorf("found multiple objects %#v targeted by patch %#v (ambiguous)", matchedIds, id)
-		}
-		id = matchedIds[0]
-		base := baseResourceMap.GetById(id)
+		target, err := tf.findPatchTarget(m, patch.OrgId())
 		merged := map[string]interface{}{}
-		versionedObj, err := scheme.Scheme.New(toSchemaGvk(id.Gvk()))
-		baseName := base.GetName()
+		versionedObj, err := scheme.Scheme.New(
+			toSchemaGvk(patch.OrgId().Gvk))
+		saveName := target.GetName()
 		switch {
 		case runtime.IsNotRegisteredError(err):
 			// Use JSON merge patch to handle types w/o schema
-			baseBytes, err := json.Marshal(base.Map())
+			baseBytes, err := json.Marshal(target.Map())
 			if err != nil {
 				return err
 			}
@@ -83,39 +73,56 @@ func (tf *transformer) Transform(baseResourceMap resmap.ResMap) error {
 		default:
 			// Use Strategic-Merge-Patch to handle types w/ schema
 			// TODO: Change this to use the new Merge package.
-			// Store the name of the base object, because this name may have been munged.
+			// Store the name of the target object, because this name may have been munged.
 			// Apply this name to the patched object.
 			lookupPatchMeta, err := strategicpatch.NewPatchMetaFromStruct(versionedObj)
 			if err != nil {
 				return err
 			}
 			merged, err = strategicpatch.StrategicMergeMapPatchUsingLookupPatchMeta(
-				base.Map(),
+				target.Map(),
 				patch.Map(),
 				lookupPatchMeta)
 			if err != nil {
 				return err
 			}
 		}
-		baseResourceMap.GetById(id).SetMap(merged)
-		base.SetName(baseName)
+		target.SetMap(merged)
+		target.SetName(saveName)
 	}
 	return nil
 }
 
-// mergePatches merge and index patches by Id.
+func (tf *transformer) findPatchTarget(
+	m resmap.ResMap, id resid.ResId) (*resource.Resource, error) {
+	match, err := m.GetByOriginalId(id)
+	if err == nil {
+		return match, nil
+	}
+	match, err = m.GetByCurrentId(id)
+	if err == nil {
+		return match, nil
+	}
+	return nil, fmt.Errorf(
+		"failed to find target for patch %s", id.GvknString())
+}
+
+// mergePatches merge and index patches by OrgId.
 // It errors out if there is conflict between patches.
 func (tf *transformer) mergePatches() (resmap.ResMap, error) {
 	rc := resmap.New()
 	for ix, patch := range tf.patches {
-		id := patch.Id()
-		existing := rc.GetById(id)
-		if existing == nil {
-			rc.AppendWithId(id, patch)
+		id := patch.OrgId()
+		existing := rc.GetMatchingResourcesByOriginalId(id.GvknEquals)
+		if len(existing) == 0 {
+			rc.Append(patch)
 			continue
 		}
+		if len(existing) > 1 {
+			return nil, fmt.Errorf("self conflict in patches")
+		}
 
-		versionedObj, err := scheme.Scheme.New(toSchemaGvk(id.Gvk()))
+		versionedObj, err := scheme.Scheme.New(toSchemaGvk(id.Gvk))
 		if err != nil && !runtime.IsNotRegisteredError(err) {
 			return nil, err
 		}
@@ -129,7 +136,7 @@ func (tf *transformer) mergePatches() (resmap.ResMap, error) {
 			}
 		}
 
-		conflict, err := cd.hasConflict(existing, patch)
+		conflict, err := cd.hasConflict(existing[0], patch)
 		if err != nil {
 			return nil, err
 		}
@@ -142,11 +149,11 @@ func (tf *transformer) mergePatches() (resmap.ResMap, error) {
 				"conflict between %#v and %#v",
 				conflictingPatch.Map(), patch.Map())
 		}
-		merged, err := cd.mergePatches(existing, patch)
+		merged, err := cd.mergePatches(existing[0], patch)
 		if err != nil {
 			return nil, err
 		}
-		rc.ReplaceResource(id, merged)
+		rc.Replace(merged)
 	}
 	return rc, nil
 }

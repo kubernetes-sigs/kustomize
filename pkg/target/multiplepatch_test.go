@@ -150,6 +150,15 @@ spec:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
+  hello: world
+kind: ConfigMap
+metadata:
+  labels:
+    env: staging
+  name: staging-configmap-in-overlay-k7cbc75tg8
+---
+apiVersion: v1
+data:
   foo: bar
 kind: ConfigMap
 metadata:
@@ -161,15 +170,6 @@ metadata:
     org: example.com
     team: foo
   name: staging-team-foo-configmap-in-base-g7k6gt2889
----
-apiVersion: v1
-data:
-  hello: world
-kind: ConfigMap
-metadata:
-  labels:
-    env: staging
-  name: staging-configmap-in-overlay-k7cbc75tg8
 ---
 apiVersion: v1
 kind: Service

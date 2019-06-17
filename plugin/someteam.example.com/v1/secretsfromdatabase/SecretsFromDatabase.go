@@ -21,6 +21,8 @@ type plugin struct {
 	Keys []string `json:"keys,omitempty" yaml:"keys,omitempty"`
 }
 
+//noinspection GoUnusedGlobalVariable
+//nolint: golint
 var KustomizePlugin plugin
 
 var database = map[string]string{

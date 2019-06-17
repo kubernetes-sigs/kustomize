@@ -15,6 +15,7 @@ type plugin struct {
 	hasher ifc.KunstructuredHasher
 }
 
+//noinspection GoUnusedGlobalVariable
 var KustomizePlugin plugin
 
 func (p *plugin) Config(

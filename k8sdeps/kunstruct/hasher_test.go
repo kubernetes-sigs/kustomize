@@ -9,10 +9,7 @@ import (
 	"testing"
 
 	"k8s.io/api/core/v1"
-	"sigs.k8s.io/kustomize/pkg/gvk"
 )
-
-var secret = gvk.Gvk{Version: "v1", Kind: "Secret"}
 
 func TestConfigMapHash(t *testing.T) {
 	cases := []struct {

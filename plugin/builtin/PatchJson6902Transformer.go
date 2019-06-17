@@ -14,6 +14,7 @@ type PatchJson6902TransformerPlugin struct {
 	Patches []types.PatchJson6902 `json:"patches,omitempty" yaml:"patches,omitempty"`
 }
 
+//noinspection GoUnusedGlobalVariable
 func NewPatchJson6902TransformerPlugin() *PatchJson6902TransformerPlugin {
 	return &PatchJson6902TransformerPlugin{}
 }

@@ -15,6 +15,7 @@ type NamespaceTransformerPlugin struct {
 	FieldSpecs []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
+//noinspection GoUnusedGlobalVariable
 func NewNamespaceTransformerPlugin() *NamespaceTransformerPlugin {
 	return &NamespaceTransformerPlugin{}
 }

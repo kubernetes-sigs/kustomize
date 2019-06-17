@@ -22,6 +22,7 @@ type ReplicaCountTransformerPlugin struct {
 	Replica types.Replica `json:"replica,omitempty" yaml:"replica,omitempty"`
 }
 
+//noinspection GoUnusedGlobalVariable
 func NewReplicaCountTransformerPlugin() *ReplicaCountTransformerPlugin {
 	return &ReplicaCountTransformerPlugin{}
 }
@@ -35,11 +36,11 @@ func (p *ReplicaCountTransformerPlugin) Config(
 
 func (p *ReplicaCountTransformerPlugin) Transform(m resmap.ResMap) error {
 	matcher := func(r resid.ResId) bool {
-		return r.ItemId.Name == p.Replica.Name
+		return r.Name == p.Replica.Name
 	}
 
-	for _, id := range m.GetMatchingIds(matcher) {
-		kMap := m.GetById(id).Map()
+	for _, r := range m.GetMatchingResourcesByOriginalId(matcher) {
+		kMap := r.Map()
 
 		specInterface, ok := kMap[fldSpec]
 		if !ok {

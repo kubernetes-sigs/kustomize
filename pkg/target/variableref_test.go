@@ -411,10 +411,16 @@ metadata:
 apiVersion: v1
 kind: Service
 metadata:
+  annotations:
+    prometheus.io/path: _status/vars
+    prometheus.io/port: "8080"
+    prometheus.io/scrape: "true"
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
   labels:
     app: cockroachdb
-  name: dev-base-cockroachdb-public
+  name: dev-base-cockroachdb
 spec:
+  clusterIP: None
   ports:
   - name: grpc
     port: 26257
@@ -428,16 +434,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  annotations:
-    prometheus.io/path: _status/vars
-    prometheus.io/port: "8080"
-    prometheus.io/scrape: "true"
-    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
   labels:
     app: cockroachdb
-  name: dev-base-cockroachdb
+  name: dev-base-cockroachdb-public
 spec:
-  clusterIP: None
   ports:
   - name: grpc
     port: 26257

@@ -192,8 +192,8 @@ func (p *ExecPlugin) getEnv() []string {
 // Returns a new copy of the given ResMap with the ResIds annotated in each Resource
 func (p *ExecPlugin) getResMapWithIdAnnotation(rm resmap.ResMap) (resmap.ResMap, error) {
 	inputRM := rm.DeepCopy()
-	for id, r := range inputRM.AsMap() {
-		idString, err := yaml.Marshal(id)
+	for _, r := range inputRM.Resources() {
+		idString, err := yaml.Marshal(r.CurId())
 		if err != nil {
 			return nil, err
 		}
@@ -230,9 +230,9 @@ func (p *ExecPlugin) updateResMapValues(output []byte, rm resmap.ResMap) error {
 		if err != nil {
 			return err
 		}
-		res := rm.GetById(id)
-		if res == nil {
-			return fmt.Errorf("unable to find id %s in resource map", id.String())
+		res, err := rm.GetByCurrentId(id)
+		if err != nil {
+			return fmt.Errorf("unable to find unique match to %s", id.String())
 		}
 		// remove the annotation set by Kustomize to track the resource
 		delete(annotations, idAnnotation)

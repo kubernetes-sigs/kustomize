@@ -107,8 +107,8 @@ func TestResourceId(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		if test.in.Id() != test.id {
-			t.Fatalf("Expected %v, but got %v\n", test.id, test.in.Id())
+		if test.in.OrgId() != test.id {
+			t.Fatalf("Expected %v, but got %v\n", test.id, test.in.OrgId())
 		}
 	}
 }
