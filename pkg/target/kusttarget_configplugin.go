@@ -239,10 +239,12 @@ func (kt *KustTarget) configureBuiltinReplicaCountTransformer(
 	tConfig *config.TransformerConfig) (
 	result []transformers.Transformer, err error) {
 	var c struct {
-		Replica types.Replica
+		Replica    types.Replica
+		FieldSpecs []config.FieldSpec
 	}
 	for _, args := range kt.kustomization.Replicas {
 		c.Replica = args
+		c.FieldSpecs = tConfig.Replicas
 		p := builtin.NewReplicaCountTransformerPlugin()
 		err = kt.configureBuiltinPlugin(p, c, "replica")
 		if err != nil {
