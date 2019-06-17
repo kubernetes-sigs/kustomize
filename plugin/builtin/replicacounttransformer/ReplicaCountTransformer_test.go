@@ -109,16 +109,16 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: myapp
+  name: otherapp
 spec:
-  replicas: 23
+  replicas: 5
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: otherapp
+  name: myapp
 spec:
-  replicas: 5
+  replicas: 23
 ---
 apiVersion: apps/v1
 kind: StatefulSet

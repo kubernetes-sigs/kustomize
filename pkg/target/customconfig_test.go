@@ -41,9 +41,9 @@ vars:
   fieldref:
     fieldpath: spec.diet
 resources:
+- animalPark.yaml
 - giraffes.yaml
 - gorilla.yaml
-- animalPark.yaml
 configurations:
 - config/defaults.yaml
 - config/custom.yaml
@@ -51,17 +51,17 @@ configurations:
 	th.WriteF("/app/base/giraffes.yaml", `
 kind: Giraffe
 metadata:
-  name: may
-spec:
-  diet: acacia
-  location: SE
----
-kind: Giraffe
-metadata:
   name: april
 spec:
   diet: mimosa
   location: NE
+---
+kind: Giraffe
+metadata:
+  name: may
+spec:
+  diet: acacia
+  location: SE
 `)
 	th.WriteF("/app/base/gorilla.yaml", `
 kind: Gorilla
@@ -248,9 +248,8 @@ commonLabels:
 patchesStrategicMerge:
 - animalPark.yaml
 resources:
-- ursus.yaml
-bases:
 - ../base
+- ursus.yaml
 `)
 	th.WriteF("/app/overlay/ursus.yaml", `
 kind: Gorilla
@@ -314,20 +313,20 @@ spec:
 kind: Gorilla
 metadata:
   labels:
-    movie: planetOfTheApes
-  name: o-ursus
-spec:
-  diet: heston
-  location: Arizona
----
-kind: Gorilla
-metadata:
-  labels:
     app: myApp
     movie: planetOfTheApes
   name: o-x-koko
 spec:
   diet: bambooshoots
   location: SW
+---
+kind: Gorilla
+metadata:
+  labels:
+    movie: planetOfTheApes
+  name: o-ursus
+spec:
+  diet: heston
+  location: Arizona
 `)
 }

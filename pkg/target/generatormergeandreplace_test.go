@@ -36,9 +36,9 @@ commonLabels:
 commonAnnotations:
   note: This is a test annotation
 resources:
+  - service.yaml
   - deployment.yaml
   - networkpolicy.yaml
-  - service.yaml
 `)
 	th.WriteF("/app/base/service.yaml", `
 apiVersion: v1
@@ -237,52 +237,6 @@ func TestBaseWithGeneratorsAlone(t *testing.T) {
 		t.Fatalf("Err: %v", err)
 	}
 	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
-data:
-  foo: bar
-kind: ConfigMap
-metadata:
-  annotations:
-    note: This is a test annotation
-  labels:
-    app: mynginx
-    org: example.com
-    team: foo
-  name: team-foo-configmap-in-base-bbdmdh7m8t
----
-apiVersion: v1
-data:
-  password: c29tZXB3
-  username: YWRtaW4=
-kind: Secret
-metadata:
-  annotations:
-    note: This is a test annotation
-  labels:
-    app: mynginx
-    org: example.com
-    team: foo
-  name: team-foo-secret-in-base-tkm7hhtf8d
-type: Opaque
----
-apiVersion: v1
-kind: Service
-metadata:
-  annotations:
-    note: This is a test annotation
-  labels:
-    app: mynginx
-    org: example.com
-    team: foo
-  name: team-foo-nginx
-spec:
-  ports:
-  - port: 80
-  selector:
-    app: mynginx
-    org: example.com
-    team: foo
----
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
@@ -320,6 +274,52 @@ spec:
       - configMap:
           name: team-foo-configmap-in-base-bbdmdh7m8t
         name: configmap-in-base
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    org: example.com
+    team: foo
+  name: team-foo-nginx
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: mynginx
+    org: example.com
+    team: foo
+---
+apiVersion: v1
+data:
+  foo: bar
+kind: ConfigMap
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    org: example.com
+    team: foo
+  name: team-foo-configmap-in-base-bbdmdh7m8t
+---
+apiVersion: v1
+data:
+  password: c29tZXB3
+  username: YWRtaW4=
+kind: Secret
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    org: example.com
+    team: foo
+  name: team-foo-secret-in-base-tkm7hhtf8d
+type: Opaque
 `)
 }
 
@@ -351,9 +351,9 @@ commonLabels:
   env: staging
   team: override-foo
 patchesStrategicMerge:
-  - deployment.yaml
-bases:
-  - ../app
+- deployment.yaml
+resources:
+- ../app
 configMapGenerator:
 - name: configmap-in-overlay
   literals:
@@ -373,67 +373,6 @@ secretGenerator:
 		t.Fatalf("Err: %v", err)
 	}
 	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
-data:
-  hello: world
-kind: ConfigMap
-metadata:
-  labels:
-    env: staging
-    team: override-foo
-  name: staging-configmap-in-overlay-k7cbc75tg8
----
-apiVersion: v1
-data:
-  foo: override-bar
-kind: ConfigMap
-metadata:
-  annotations:
-    note: This is a test annotation
-  labels:
-    app: mynginx
-    env: staging
-    org: example.com
-    team: override-foo
-  name: staging-team-foo-configmap-in-base-gh9d7t85gb
----
-apiVersion: v1
-data:
-  password: c29tZXB3
-  proxy: aGFwcm94eQ==
-  username: YWRtaW4=
-kind: Secret
-metadata:
-  annotations:
-    note: This is a test annotation
-  labels:
-    app: mynginx
-    env: staging
-    org: example.com
-    team: override-foo
-  name: staging-team-foo-secret-in-base-c8db7gk2m2
-type: Opaque
----
-apiVersion: v1
-kind: Service
-metadata:
-  annotations:
-    note: This is a test annotation
-  labels:
-    app: mynginx
-    env: staging
-    org: example.com
-    team: override-foo
-  name: staging-team-foo-nginx
-spec:
-  ports:
-  - port: 80
-  selector:
-    app: mynginx
-    env: staging
-    org: example.com
-    team: override-foo
----
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
@@ -478,6 +417,67 @@ spec:
       - configMap:
           name: staging-team-foo-configmap-in-base-gh9d7t85gb
         name: configmap-in-base
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: override-foo
+  name: staging-team-foo-nginx
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: override-foo
+---
+apiVersion: v1
+data:
+  foo: override-bar
+kind: ConfigMap
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: override-foo
+  name: staging-team-foo-configmap-in-base-gh9d7t85gb
+---
+apiVersion: v1
+data:
+  password: c29tZXB3
+  proxy: aGFwcm94eQ==
+  username: YWRtaW4=
+kind: Secret
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: override-foo
+  name: staging-team-foo-secret-in-base-c8db7gk2m2
+type: Opaque
+---
+apiVersion: v1
+data:
+  hello: world
+kind: ConfigMap
+metadata:
+  labels:
+    env: staging
+    team: override-foo
+  name: staging-configmap-in-overlay-k7cbc75tg8
 `)
 }
 

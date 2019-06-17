@@ -48,6 +48,14 @@ metadata:
 `)
 
 	th.AssertActualEqualsExpected(rm, `
+apiVersion: v1
+kind: Service
+metadata:
+  name: baked-apple-pie
+spec:
+  ports:
+  - port: 7002
+---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
@@ -57,13 +65,5 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: baked-cm-pie
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: baked-apple-pie
-spec:
-  ports:
-  - port: 7002
 `)
 }

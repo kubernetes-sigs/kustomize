@@ -79,22 +79,6 @@ func TestMediumBase(t *testing.T) {
 		t.Fatalf("Err: %v", err)
 	}
 	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
-kind: Service
-metadata:
-  annotations:
-    baseAnno: This is a base annotation
-  labels:
-    app: mungebot
-    foo: bar
-  name: baseprefix-mungebot-service
-spec:
-  ports:
-  - port: 7002
-  selector:
-    app: mungebot
-    foo: bar
----
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -125,6 +109,22 @@ spec:
         name: nginx
         ports:
         - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    baseAnno: This is a base annotation
+  labels:
+    app: mungebot
+    foo: bar
+  name: baseprefix-mungebot-service
+spec:
+  ports:
+  - port: 7002
+  selector:
+    app: mungebot
+    foo: bar
 `)
 }
 
@@ -139,7 +139,7 @@ commonLabels:
   repo: test-infra
 commonAnnotations:
   note: This is a test annotation
-bases:
+resources:
 - ../base
 patchesStrategicMerge:
 - deployment/deployment.yaml
@@ -210,63 +210,7 @@ spec:
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	// TODO(#669): The name of the patched Deployment is
-	// test-infra-baseprefix-mungebot, retaining the base
-	// prefix (example of correct behavior).
 	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
-data:
-  nonsense: "Lorem ipsum dolor sit amet, consectetur\nadipiscing elit, sed do eiusmod
-    tempor\nincididunt ut labore et dolore magna aliqua. \n"
-kind: ConfigMap
-metadata:
-  annotations:
-    note: This is a test annotation
-  labels:
-    app: mungebot
-    org: kubernetes
-    repo: test-infra
-  name: test-infra-app-config-f462h769f9
----
-apiVersion: v1
-data:
-  DB_PASSWORD: somepw
-  DB_USERNAME: admin
-  ENERGY: electronvolt
-  FRUIT: banana
-  LEGUME: chickpea
-  LENGTH: kilometer
-kind: ConfigMap
-metadata:
-  annotations:
-    note: This is a test annotation
-  labels:
-    app: mungebot
-    org: kubernetes
-    repo: test-infra
-  name: test-infra-app-env-ffmd9b969m
----
-apiVersion: v1
-kind: Service
-metadata:
-  annotations:
-    baseAnno: This is a base annotation
-    note: This is a test annotation
-  labels:
-    app: mungebot
-    foo: bar
-    org: kubernetes
-    repo: test-infra
-  name: test-infra-baseprefix-mungebot-service
-spec:
-  ports:
-  - port: 7002
-  selector:
-    app: mungebot
-    foo: bar
-    org: kubernetes
-    repo: test-infra
----
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -325,5 +269,58 @@ spec:
       - configMap:
           name: test-infra-app-env-ffmd9b969m
         name: app-env
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    baseAnno: This is a base annotation
+    note: This is a test annotation
+  labels:
+    app: mungebot
+    foo: bar
+    org: kubernetes
+    repo: test-infra
+  name: test-infra-baseprefix-mungebot-service
+spec:
+  ports:
+  - port: 7002
+  selector:
+    app: mungebot
+    foo: bar
+    org: kubernetes
+    repo: test-infra
+---
+apiVersion: v1
+data:
+  DB_PASSWORD: somepw
+  DB_USERNAME: admin
+  ENERGY: electronvolt
+  FRUIT: banana
+  LEGUME: chickpea
+  LENGTH: kilometer
+kind: ConfigMap
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mungebot
+    org: kubernetes
+    repo: test-infra
+  name: test-infra-app-env-ffmd9b969m
+---
+apiVersion: v1
+data:
+  nonsense: "Lorem ipsum dolor sit amet, consectetur\nadipiscing elit, sed do eiusmod
+    tempor\nincididunt ut labore et dolore magna aliqua. \n"
+kind: ConfigMap
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mungebot
+    org: kubernetes
+    repo: test-infra
+  name: test-infra-app-config-f462h769f9
 `)
 }
