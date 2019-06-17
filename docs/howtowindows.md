@@ -46,8 +46,8 @@ Usage:  C:\_go\bin\mdrip.exe {fileName}...
 #### Step 3 - Get Source and Test
 - In your GoRoot src
   - ```Example: C:\_go\src```
-- Navigate to the Kustomize bin directory
-  - ```Example: C:\_go\src\sigs.k8s.io\kustomize\bin```
+- Navigate to the Kustomize `travis` directory
+  - ```Example: C:\_go\src\sigs.k8s.io\kustomize\travis```
 - Now Execute:
   - ```.\Invoke-PreCommit.ps1```
 
