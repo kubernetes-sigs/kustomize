@@ -90,7 +90,7 @@ commonLabels:
 patchesStrategicMerge:
   - deployment-patch1.yaml
   - deployment-patch2.yaml
-bases:
+resources:
   - ../../base
 configMapGenerator:
 - name: configmap-in-overlay
@@ -148,49 +148,6 @@ spec:
 		t.Fatalf("Err: %v", err)
 	}
 	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
-data:
-  hello: world
-kind: ConfigMap
-metadata:
-  labels:
-    env: staging
-  name: staging-configmap-in-overlay-k7cbc75tg8
----
-apiVersion: v1
-data:
-  foo: bar
-kind: ConfigMap
-metadata:
-  annotations:
-    note: This is a test annotation
-  labels:
-    app: mynginx
-    env: staging
-    org: example.com
-    team: foo
-  name: staging-team-foo-configmap-in-base-g7k6gt2889
----
-apiVersion: v1
-kind: Service
-metadata:
-  annotations:
-    note: This is a test annotation
-  labels:
-    app: mynginx
-    env: staging
-    org: example.com
-    team: foo
-  name: staging-team-foo-nginx
-spec:
-  ports:
-  - port: 80
-  selector:
-    app: mynginx
-    env: staging
-    org: example.com
-    team: foo
----
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
@@ -242,6 +199,49 @@ spec:
       - configMap:
           name: staging-team-foo-configmap-in-base-g7k6gt2889
         name: configmap-in-base
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: foo
+  name: staging-team-foo-nginx
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: foo
+---
+apiVersion: v1
+data:
+  foo: bar
+kind: ConfigMap
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: foo
+  name: staging-team-foo-configmap-in-base-g7k6gt2889
+---
+apiVersion: v1
+data:
+  hello: world
+kind: ConfigMap
+metadata:
+  labels:
+    env: staging
+  name: staging-configmap-in-overlay-k7cbc75tg8
 `)
 }
 

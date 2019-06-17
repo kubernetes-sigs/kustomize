@@ -49,6 +49,24 @@ metadata:
 type: Opaque
 ---
 apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    volume.alpha.kubernetes.io/storage-class: default
+  labels:
+    app: release-name-minecraft
+    chart: minecraft-1.0.3
+    heritage: Tiller
+    release: release-name
+  name: release-name-minecraft-datadir
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
 kind: Service
 metadata:
   labels:
@@ -66,23 +84,5 @@ spec:
   selector:
     app: release-name-minecraft
   type: LoadBalancer
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  annotations:
-    volume.alpha.kubernetes.io/storage-class: default
-  labels:
-    app: release-name-minecraft
-    chart: minecraft-1.0.3
-    heritage: Tiller
-    release: release-name
-  name: release-name-minecraft-datadir
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
 `)
 }

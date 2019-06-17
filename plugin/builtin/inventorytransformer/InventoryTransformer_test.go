@@ -99,7 +99,7 @@ name: pruneCM
 namespace: default
 `, content)
 
-	th.AssertActualEqualsExpected(rm, inv+"---"+content)
+	th.AssertActualEqualsExpected(rm, content+"---"+inv)
 }
 
 func TestInventoryTransformerDefaultPolicy(t *testing.T) {
@@ -120,5 +120,5 @@ name: pruneCM
 namespace: default
 `, content)
 
-	th.AssertActualEqualsExpected(rm, inv+"---"+content)
+	th.AssertActualEqualsExpected(rm, content+"---"+inv)
 }

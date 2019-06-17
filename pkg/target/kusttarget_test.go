@@ -256,15 +256,15 @@ func TestIssue596AllowDirectoriesThatAreSubstringsOfEachOther(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/app/overlays/aws-sandbox2.us-east-1")
 	th.WriteK("/app/base", "")
 	th.WriteK("/app/overlays/aws", `
-bases:
+resources:
 - ../../base
 `)
 	th.WriteK("/app/overlays/aws-nonprod", `
-bases:
+resources:
 - ../aws
 `)
 	th.WriteK("/app/overlays/aws-sandbox2.us-east-1", `
-bases:
+resources:
 - ../aws-nonprod
 `)
 	m, err := th.MakeKustTarget().MakeCustomizedResMap()
@@ -363,7 +363,7 @@ vars:
     objref:
       kind: Service
       name: apple
-bases:
+resources:
 - ../../base
 `)
 	th.WriteK("/app/overlays/o2", `
@@ -372,7 +372,7 @@ vars:
     objref:
       kind: Leafy
       name: kale
-bases:
+resources:
 - ../o1
 `)
 	ra, err := th.MakeKustTarget().AccumulateTarget()
@@ -416,7 +416,7 @@ vars:
     objref:
       kind: Service
       name: academy
-bases:
+resources:
 - ../../base
 `)
 	th.WriteK("/app/overlays/o2", `
@@ -425,7 +425,7 @@ vars:
     objref:
       kind: Leafy
       name: kale
-bases:
+resources:
 - ../o1
 `)
 	_, err := th.MakeKustTarget().AccumulateTarget()
