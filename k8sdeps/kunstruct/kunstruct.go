@@ -92,7 +92,7 @@ func (fs *UnstructAdapter) selectSubtree(path string) (map[string]interface{}, [
 		idx := sections[sectionIdx].idx
 		fields := sections[sectionIdx].fields
 
-		if idx == nil {
+		if idx == -1 {
 			// This section has no index
 			return content, fields, true, nil
 		}
@@ -107,24 +107,24 @@ func (fs *UnstructAdapter) selectSubtree(path string) (map[string]interface{}, [
 		if !ok {
 			return content, fields, false, fmt.Errorf("%v is of the type %T, expected []interface{}", indexedField, indexedField)
 		}
-		if *idx >= len(s) {
-			return content, fields, false, fmt.Errorf("index %d is out of bounds", *idx)
+		if idx >= len(s) {
+			return content, fields, false, fmt.Errorf("index %d is out of bounds", idx)
 		}
 
 		if sectionIdx == lastSectionIdx-1 {
 			// This is the last section. Let's build a fake map
 			// to let the rest of the field extraction to work.
-			idxstring := fmt.Sprintf("[%v]", *idx)
-			newContent := map[string]interface{}{idxstring: s[*idx]}
+			idxstring := fmt.Sprintf("[%v]", idx)
+			newContent := map[string]interface{}{idxstring: s[idx]}
 			newFields := []string{idxstring}
 			return newContent, newFields, true, nil
 		}
 
-		newContent, ok := s[*idx].(map[string]interface{})
+		newContent, ok := s[idx].(map[string]interface{})
 		if !ok {
 			// Only map are supported here
 			return content, fields, false,
-				fmt.Errorf("%#v is expected to be of type map[string]interface{}", s[*idx])
+				fmt.Errorf("%#v is expected to be of type map[string]interface{}", s[idx])
 		}
 		content = newContent
 	}
