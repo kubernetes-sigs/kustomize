@@ -1,10 +1,12 @@
 #!/bin/bash
 #
-# This script creates the generator and
+# Generate the Go code for the generator and
 # transformer factory functions in
+#
 #   sigs.k8s.io/kustomize/plugin/builtin
-# by generating code based on the plugins
-# found below that directory.
+#
+# from the raw plugin directories found _below_
+# that directory.
 
 set -e
 
