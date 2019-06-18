@@ -11,6 +11,7 @@ addons:
   homebrew:
     packages:
     - tree
+    update: true
 
 # Only clone the most recent commit.
 git:
