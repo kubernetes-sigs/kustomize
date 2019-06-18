@@ -41,6 +41,11 @@ configMapGenerator:
 - name: json
   literals:
   - 'v2=[{"path": "var/druid/segment-cache"}]'
+  - >- 
+    druid_segmentCache_locations=[{"path": 
+    "var/druid/segment-cache", 
+    "maxSize": 32000000000, 
+    "freeSpacePercent": 1.0}]
 secretGenerator:
 - name: bob
   literals:
@@ -95,10 +100,12 @@ metadata:
 ---
 apiVersion: v1
 data:
+  druid_segmentCache_locations: '[{"path":  "var/druid/segment-cache",  "maxSize":
+    32000000000,  "freeSpacePercent": 1.0}]'
   v2: '[{"path": "var/druid/segment-cache"}]'
 kind: ConfigMap
 metadata:
-  name: blah-json-tkh79m5tbc
+  name: blah-json-9gtcc2fgb4
 ---
 apiVersion: v1
 data:
