@@ -2,7 +2,9 @@
 
 `kustomize` supports defining multiple variants with different namespace, as overlays on a common base.
 
-It's possible to create an additional overlay to compose these variants together - just declare the overlays as the bases of a new kustomization. The following demonstrates this using a base that's just one pod.
+It's possible to create an additional overlay to compose these variants
+together - just declare the overlays as the bases of a new kustomization. The
+following demonstrates this using a base that's just one pod.
 
 Define a place to work:
 
@@ -43,10 +45,9 @@ NSA=$DEMO_HOME/namespace-a
 mkdir $NSA
 
 cat <<EOF >$NSA/kustomization.yaml
-bases:
-- ./../base
 resources:
 - namespace.yaml
+- ../base
 namespace: namespace-a
 EOF
 
@@ -65,10 +66,9 @@ NSB=$DEMO_HOME/namespace-b
 mkdir $NSB
 
 cat <<EOF >$NSB/kustomization.yaml
-bases:
-- ./../base
 resources:
 - namespace.yaml
+- ../base
 namespace: namespace-b
 EOF
 
@@ -84,9 +84,9 @@ Then define a _Kustomization_ composing two variants together:
 <!-- @makeTopLayer @test -->
 ```
 cat <<EOF >$DEMO_HOME/kustomization.yaml
-bases:
-- ./namespace-a
-- ./namespace-b
+resources:
+- namespace-a
+- namespace-b
 EOF
 ```
 
