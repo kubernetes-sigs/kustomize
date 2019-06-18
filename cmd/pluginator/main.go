@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// See plugin/doc.go for an explanation.
+// See /plugin/doc.go for an explanation.
 package main
 
 import (
