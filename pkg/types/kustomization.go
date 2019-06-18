@@ -84,10 +84,10 @@ type Kustomization struct {
 	Replicas []Replica `json:"replicas,omitempty" yaml:"replicas,omitempty"`
 
 	// Vars allow things modified by kustomize to be injected into a
-	// container specification. A var is a name (e.g. FOO) associated
+	// kubernetes object specification. A var is a name (e.g. FOO) associated
 	// with a field in a specific resource instance.  The field must
-	// contain a value of type string, and defaults to the name field
-	// of the instance.  Any appearance of "$(FOO)" in the container
+	// contain a value of type string/bool/int/float, and defaults to the name field
+	// of the instance.  Any appearance of "$(FOO)" in the object
 	// spec will be replaced at kustomize build time, after the final
 	// value of the specified field has been determined.
 	Vars []Var `json:"vars,omitempty" yaml:"vars,omitempty"`

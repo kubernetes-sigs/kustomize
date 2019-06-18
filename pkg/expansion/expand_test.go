@@ -17,6 +17,7 @@ limitations under the License.
 package expansion_test
 
 import (
+	"fmt"
 	"testing"
 
 	. "sigs.k8s.io/kustomize/pkg/expansion"
@@ -30,7 +31,7 @@ type expected struct {
 func TestMapReference(t *testing.T) {
 	type env struct {
 		Name  string
-		Value string
+		Value interface{}
 	}
 	envs := []env{
 		{
@@ -45,25 +46,49 @@ func TestMapReference(t *testing.T) {
 			Name:  "BLU",
 			Value: "$(ZOO)-2",
 		},
+		{
+			Name:  "INT",
+			Value: 2,
+		},
+		{
+			Name:  "ZINT",
+			Value: "$(INT)",
+		},
+		{
+			Name:  "BOOL",
+			Value: true,
+		},
+		{
+			Name:  "ZBOOL",
+			Value: "$(BOOL)",
+		},
 	}
 
-	declaredEnv := map[string]string{
-		"FOO": "bar",
-		"ZOO": "$(FOO)-1",
-		"BLU": "$(ZOO)-2",
+	declaredEnv := map[string]interface{}{
+		"FOO":   "bar",
+		"ZOO":   "$(FOO)-1",
+		"BLU":   "$(ZOO)-2",
+		"INT":   "2",
+		"ZINT":  "$(INT)",
+		"BOOL":  "true",
+		"ZBOOL": "$(BOOL)",
 	}
 
 	counts := make(map[string]int)
 	mapping := MappingFuncFor(counts, declaredEnv)
 
 	for _, env := range envs {
-		declaredEnv[env.Name] = Expand(env.Value, mapping)
+		declaredEnv[env.Name] = Expand(fmt.Sprintf("%v", env.Value), mapping)
 	}
 
 	expectedEnv := map[string]expected{
-		"FOO": {count: 1, edited: "bar"},
-		"ZOO": {count: 1, edited: "bar-1"},
-		"BLU": {count: 0, edited: "bar-1-2"},
+		"FOO":   {count: 1, edited: "bar"},
+		"ZOO":   {count: 1, edited: "bar-1"},
+		"BLU":   {count: 0, edited: "bar-1-2"},
+		"INT":   {count: 1, edited: "2"},
+		"ZINT":  {count: 0, edited: "2"},
+		"BOOL":  {count: 1, edited: "true"},
+		"ZBOOL": {count: 0, edited: "true"},
 	}
 
 	for k, v := range expectedEnv {
@@ -81,7 +106,7 @@ func TestMapReference(t *testing.T) {
 }
 
 func TestMapping(t *testing.T) {
-	context := map[string]string{
+	context := map[string]interface{}{
 		"VAR_A":     "A",
 		"VAR_B":     "B",
 		"VAR_C":     "C",
@@ -92,11 +117,11 @@ func TestMapping(t *testing.T) {
 }
 
 func TestMappingDual(t *testing.T) {
-	context := map[string]string{
+	context := map[string]interface{}{
 		"VAR_A":     "A",
 		"VAR_EMPTY": "",
 	}
-	context2 := map[string]string{
+	context2 := map[string]interface{}{
 		"VAR_B":   "B",
 		"VAR_C":   "C",
 		"VAR_REF": "$(VAR_A)",
@@ -105,7 +130,7 @@ func TestMappingDual(t *testing.T) {
 	doExpansionTest(t, context, context2)
 }
 
-func doExpansionTest(t *testing.T, context ...map[string]string) {
+func doExpansionTest(t *testing.T, context ...map[string]interface{}) {
 	cases := []struct {
 		name     string
 		input    string
@@ -325,7 +350,7 @@ func doExpansionTest(t *testing.T, context ...map[string]string) {
 	for _, tc := range cases {
 		counts := make(map[string]int)
 		mapping := MappingFuncFor(counts, context...)
-		expanded := Expand(tc.input, mapping)
+		expanded := Expand(fmt.Sprintf("%v", tc.input), mapping)
 		if e, a := tc.expected, expanded; e != a {
 			t.Errorf("%v: expected %q, got %q", tc.name, e, a)
 		}
