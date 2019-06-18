@@ -104,6 +104,32 @@ kind: StatefulSet
 metadata:
   labels:
     notIn: arrays
+  name: test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test
+      notIn: arrays
+  serviceName: test
+  template:
+    metadata:
+      labels:
+        app: test
+        notIn: arrays
+    spec:
+      containers:
+      - image: k8s.gcr.io/nginx-slim:0.8
+        name: nginx
+        ports:
+        - containerPort: 80
+          name: web
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    notIn: arrays
   name: persisted-test
 spec:
   replicas: 1
@@ -152,31 +178,5 @@ spec:
         requests:
           storage: 100Gi
       storageClassName: my-storage-class
----
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  labels:
-    notIn: arrays
-  name: test
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: test
-      notIn: arrays
-  serviceName: test
-  template:
-    metadata:
-      labels:
-        app: test
-        notIn: arrays
-    spec:
-      containers:
-      - image: k8s.gcr.io/nginx-slim:0.8
-        name: nginx
-        ports:
-        - containerPort: 80
-          name: web
 `)
 }
