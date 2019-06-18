@@ -1,6 +1,5 @@
-bases:
-- ./dev
-- ./staging
-- ./production
-
+resources:
+- dev
+- staging
+- production
 namePrefix: cluster-a-

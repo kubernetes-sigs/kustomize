@@ -97,7 +97,8 @@ type Kustomization struct {
 	//
 
 	// Resources specifies relative paths to files holding YAML representations
-	// of kubernetes API objects. URLs and globs not supported.
+	// of kubernetes API objects, or specifcations of other kustomizations
+	// via relative paths, absolute paths, or URLs.
 	Resources []string `json:"resources,omitempty" yaml:"resources,omitempty"`
 
 	// Crds specifies relative paths to Custom Resource Definition files.
@@ -106,9 +107,9 @@ type Kustomization struct {
 	// CRDs themselves are not modified.
 	Crds []string `json:"crds,omitempty" yaml:"crds,omitempty"`
 
-	// Bases are relative paths or github repository URLs specifying a
-	// directory containing a kustomization.yaml file.
-	// URL format: https://github.com/hashicorp/go-getter#url-format
+	// Deprecated.
+	// Anything that would have been specified here should
+	// be specified in the Resources field instead.
 	Bases []string `json:"bases,omitempty" yaml:"bases,omitempty"`
 
 	//
@@ -180,6 +181,10 @@ func (k *Kustomization) FixKustomizationPostUnmarshalling() {
 			k.SecretGenerator[i].EnvSource = ""
 		}
 	}
+	for _, b := range k.Bases {
+		k.Resources = append(k.Resources, b)
+	}
+	k.Bases = nil
 }
 
 func (k *Kustomization) EnforceFields() []string {

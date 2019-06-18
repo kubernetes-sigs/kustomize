@@ -39,7 +39,7 @@ A base can be a URL:
 DEMO_HOME=$(mktemp -d)
 
 cat <<EOF >$DEMO_HOME/kustomization.yaml
-bases:
+resources:
 - github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6
 namePrefix: remote-
 EOF
