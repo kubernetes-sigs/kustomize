@@ -91,7 +91,7 @@ func (ra *ResAccumulator) MergeAccumulator(other *ResAccumulator) (err error) {
 	return ra.varSet.MergeSet(other.varSet)
 }
 
-func (ra *ResAccumulator) findValueFromResources(v types.Var) (string, error) {
+func (ra *ResAccumulator) findVarValueFromResources(v types.Var) (interface{}, error) {
 	for _, res := range ra.resMap.Resources() {
 		for _, varName := range res.GetRefVarNames() {
 			if varName == v.Name {
@@ -115,10 +115,10 @@ func (ra *ResAccumulator) findValueFromResources(v types.Var) (string, error) {
 // makeVarReplacementMap returns a map of Var names to
 // their final values. The values are strings intended
 // for substitution wherever the $(var.Name) occurs.
-func (ra *ResAccumulator) makeVarReplacementMap() (map[string]string, error) {
-	result := map[string]string{}
+func (ra *ResAccumulator) makeVarReplacementMap() (map[string]interface{}, error) {
+	result := map[string]interface{}{}
 	for _, v := range ra.Vars() {
-		s, err := ra.findValueFromResources(v)
+		s, err := ra.findVarValueFromResources(v)
 		if err != nil {
 			return nil, err
 		}

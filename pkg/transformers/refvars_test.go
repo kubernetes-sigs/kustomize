@@ -15,7 +15,7 @@ import (
 
 func TestVarRef(t *testing.T) {
 	type given struct {
-		varMap map[string]string
+		varMap map[string]interface{}
 		fs     []config.FieldSpec
 		res    resmap.ResMap
 	}
@@ -31,9 +31,11 @@ func TestVarRef(t *testing.T) {
 		{
 			description: "var replacement in map[string]",
 			given: given{
-				varMap: map[string]string{
+				varMap: map[string]interface{}{
 					"FOO": "replacementForFoo",
 					"BAR": "replacementForBar",
+					"BAZ": int64(5),
+					"BOO": true,
 				},
 				fs: []config.FieldSpec{
 					{Gvk: gvk.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data"},
@@ -48,6 +50,10 @@ func TestVarRef(t *testing.T) {
 						"data": map[string]interface{}{
 							"item1": "$(FOO)",
 							"item2": "bla",
+							"item3": "$(BAZ)",
+							"item4": "$(BAZ)+$(BAZ)",
+							"item5": "$(BOO)",
+							"item6": "if $(BOO)",
 						},
 					}).ResMap(),
 			},
@@ -62,6 +68,10 @@ func TestVarRef(t *testing.T) {
 						"data": map[string]interface{}{
 							"item1": "replacementForFoo",
 							"item2": "bla",
+							"item3": int64(5),
+							"item4": "5+5",
+							"item5": true,
+							"item6": "if true",
 						}}).ResMap(),
 				unused: []string{"BAR"},
 			},

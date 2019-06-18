@@ -182,7 +182,7 @@ func (r *Resource) NeedHashSuffix() bool {
 
 // GetNamespace returns the namespace the resource thinks it's in.
 func (r *Resource) GetNamespace() string {
-	namespace, _ := r.GetFieldValue("metadata.namespace")
+	namespace, _ := r.GetString("metadata.namespace")
 	// if err, namespace is empty, so no need to check.
 	return namespace
 }

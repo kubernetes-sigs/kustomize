@@ -326,5 +326,11 @@ func getCommand(r *resource.Resource) string {
 	m, _ = m["spec"].(map[string]interface{})
 	c, _ = m["containers"].([]interface{})
 	m, _ = c[0].(map[string]interface{})
-	return strings.Join(m["command"].([]string), " ")
+
+	cmd, _ := m["command"].([]interface{})
+	n := make([]string, len(cmd))
+	for i, v := range cmd {
+		n[i] = v.(string)
+	}
+	return strings.Join(n, " ")
 }
