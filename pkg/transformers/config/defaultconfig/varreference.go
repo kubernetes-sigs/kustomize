@@ -172,6 +172,12 @@ varReference:
 - path: spec/template/spec/initContainers/volumeMounts/mountPath
   kind: ReplicaSet
 
+- path: spec/ports/port
+  kind: Service
+
+- path: spec/ports/targetPort
+  kind: Service
+
 - path: spec/template/spec/containers/args
   kind: StatefulSet
 
