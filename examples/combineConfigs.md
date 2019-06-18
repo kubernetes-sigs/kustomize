@@ -191,7 +191,7 @@ dbpassword=mothersMaidenName
 EOF
 
 cat <<EOF >$OVERLAYS/development/kustomization.yaml
-bases:
+resources:
 - ../../base
 namePrefix: dev-
 nameSuffix: -v1
@@ -273,7 +273,7 @@ dbpassword=thisShouldProbablyBeInASecretInstead
 EOF
 
 cat <<EOF >$OVERLAYS/production/kustomization.yaml
-bases:
+resources:
 - ../../base
 namePrefix: prod-
 configMapGenerator:

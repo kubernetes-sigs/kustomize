@@ -1,12 +1,22 @@
 # Demo: multibases with a common base
 
-`kustomize` encourages defining multiple variants - e.g. dev, staging and prod, as overlays on a common base.
+`kustomize` encourages defining multiple variants -
+e.g. dev, staging and prod,
+as overlays on a common base.
 
-It's possible to create an additional overlay to compose these variants together - just declare the overlays as the bases of a new kustomization.
+It's possible to create an additional overlay to
+compose these variants together - just declare the
+overlays as the bases of a new kustomization.
 
-This is also a means to apply a common label or annotation across the variants, if for some reason the base isn't under your control. It also allows one to define a left-most namePrefix across the variants - something that cannot be done by modifying the common base.
+This is also a means to apply a common label or
+annotation across the variants, if for some reason
+the base isn't under your control. It also allows
+one to define a left-most namePrefix across the
+variants - something that cannot be
+done by modifying the common base.
 
-The following demonstrates this using a base that's just one pod.
+The following demonstrates this using a base
+that is just a single pod.
 
 Define a place to work:
 
@@ -47,7 +57,7 @@ DEV=$DEMO_HOME/dev
 mkdir $DEV
 
 cat <<EOF >$DEV/kustomization.yaml
-bases:
+resources:
 - ./../base
 namePrefix: dev-
 EOF
@@ -60,7 +70,7 @@ STAG=$DEMO_HOME/staging
 mkdir $STAG
 
 cat <<EOF >$STAG/kustomization.yaml
-bases:
+resources:
 - ./../base
 namePrefix: stag-
 EOF
@@ -73,7 +83,7 @@ PROD=$DEMO_HOME/production
 mkdir $PROD
 
 cat <<EOF >$PROD/kustomization.yaml
-bases:
+resources:
 - ./../base
 namePrefix: prod-
 EOF
@@ -83,7 +93,7 @@ Then define a _Kustomization_ composing three variants together:
 <!-- @makeTopLayer @test -->
 ```
 cat <<EOF >$DEMO_HOME/kustomization.yaml
-bases:
+resources:
 - ./dev
 - ./staging
 - ./production

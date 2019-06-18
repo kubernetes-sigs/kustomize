@@ -1,4 +1,4 @@
-bases:
+resources:
   - ../../base
 patchesStrategicMerge:
   - deployment.yaml

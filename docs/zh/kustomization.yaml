@@ -62,9 +62,26 @@ commonAnnotations:
 # 一个 YAML 资源描述文件可以含有多个由（“---”）分隔的资源。
 # kustomize 将读取这些YAML文件中的资源，对其进行修改并
 # 发布在 kustomize 的输出中。
+#
+# 此列表中的每个条目都应解析为包含 kustomization 文件的目录，否则定制将失败
+#
+# 该条目可以是指向本地目录的相对路径
+# 也可以是指向远程仓库中的目录的 URL
+# URL 应该遵循 hashicorp/go-getter 中的 URL 格式
+# https://github.com/hashicorp/go-getter#url-format
+#
+# 此字段的存在意味着此文件（您正在阅读的文件）是 _overlay_
+# 它将进一步定制这些来自 _bases_ 文件中的配置
+#
+# 典型用例：开发，演示和生产环境
+# 这些环境大部分相同但有些关键方式存在差异（镜像标签，一些服务器参数等，与公共 base 不同的配置）
 resources:
 - some-service.yaml
 - sub-dir/some-deployment.yaml
+- ../../base
+- github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6
+- github.com/Liujingfang1/mysql
+- github.com/Liujingfang1/kustomize/examples/helloWorld?ref=test-branch
 
 # 列表中的每个条目都将创建一个 ConfigMap （它是n个 ConfigMap 的生成器）
 # 下面的示例创建了两个 ConfigMaps
@@ -112,24 +129,6 @@ generatorOptions:
     kustomize.generated.resource: somevalue
   # disableNameSuffixHash 为 true 时将禁止默认的在名称后添加哈希值后缀的行为
   disableNameSuffixHash: true
-
-# 此列表中的每个条目都应解析为包含 kustomization 文件的目录，否则定制将失败
-#
-# 该条目可以是指向本地目录的相对路径
-# 也可以是指向远程仓库中的目录的 URL
-# URL 应该遵循 hashicorp/go-getter 中的 URL 格式
-# https://github.com/hashicorp/go-getter#url-format
-#
-# 此字段的存在意味着此文件（您正在阅读的文件）是 _overlay_
-# 它将进一步定制这些来自 _bases_ 文件中的配置
-#
-# 典型用例：开发，演示和生产环境
-# 这些环境大部分相同但有些关键方式存在差异（镜像标签，一些服务器参数等，与公共 base 不同的配置）
-bases:
-- ../../base
-- github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6
-- github.com/Liujingfang1/mysql
-- github.com/Liujingfang1/kustomize/examples/helloWorld?ref=test-branch
 
 # 此列表中的每个条目都应可以解析为部分或完整的资源定义文件
 #

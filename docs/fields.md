@@ -9,9 +9,8 @@ What existing things should be customized.
 
 | Field  | Type  | Explanation |
 |---|---|---|
-|[resources](#resources) |  list  |completely specified k8s API objects, e.g. deployment.yaml, configmap.yaml, etc|
-|[bases](#bases)| list |paths or github URLs specifying directories containing a kustomization. These bases may be subjected to more customization, or merely included in the output.|
-|[CRDs](#crds)| list |custom resource definition files, to allow specification of the custom resources in the resources list. |
+|[resources](#resources) |  list  |Files containing k8s API objects, or directories containing other kustomizations. |
+|[CRDs](#crds)| list |Custom resource definition files, to allow specification of the custom resources in the resources list. |
 
 ## Generators
 
@@ -62,33 +61,15 @@ If missing, this field's value defaults to
 ```
 apiVersion: kustomize.config.k8s.io/v1beta1
 ```
+
 ### bases
 
-Each entry in this list should resolve to a directory
-containing a kustomization file, else the
-customization fails.
+The `bases` field was deprecated in v2.1.0.
 
-The entry could be a relative path pointing to a local directory
-or a url pointing to a directory in a remote repo.
-The url should follow hashicorp/go-getter URL format
-https://github.com/hashicorp/go-getter#url-format
-
-The presence of this field means this file (the file
-you a reading) is an _overlay_ that further
-customizes information coming from these _bases_.
-
-Typical use case: a dev, staging and production
-environment that are mostly identical but differing
-crucial ways (image tags, a few server arguments,
-etc. that differ from the common base).
-
-```
-bases:
-- ../../base
-- github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6
-- github.com/kubernets-sigs/kustomize//examples/helloWorld?ref=test-branch
-```
-
+Move entries into the [resources](#resources)
+field.  This allows bases - which are still a
+[central concept](glossary.md#base) - to be
+ordered relative to other input resources.
 
 ### commonLabels
 
@@ -288,11 +269,10 @@ Each entry in this list should be a relative path
 resolving to a partial or complete resource
 definition file.
 
-The names in these (possibly partial) resource files
-must match names already loaded via the `resources`
-field or via `resources` loaded transitively via the
-`bases` entries.  These entries are used to _patch_
-(modify) the known resources.
+The names in these (possibly partial) resource
+files must match names already loaded via the
+`resources` field.  These entries are used to
+_patch_ (modify) the known resources.
 
 Small patches that do one thing are best, e.g. modify
 a memory request/limit, change an env var in a
@@ -389,17 +369,36 @@ For more complex use cases, revert to using a patch.
 
 ### resources
 
-Each entry in this list must resolve to an existing
-resource definition in YAML.  These are the resource
-files that kustomize reads, modifies and emits as a
-YAML string, with resources separated by document
-markers ("---").
+Each entry in this list must be a path to a
+_file_, or a path (or URL) refering to another
+kustomization _directory_, e.g.
 
 ```
 resource:
-- some-service.yaml
+- myNamespace.yaml
 - sub-dir/some-deployment.yaml
+- ../../commonbase
+- github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6
+- deployment.yaml
+- github.com/kubernets-sigs/kustomize//examples/helloWorld?ref=test-branch
 ```
+
+Resources will be read and processed in
+depth-first order.
+
+Files should contain k8s resources in YAML form.
+A file may contain multiple resources separated by
+the document marker `---`.  File paths should be
+specified _relative_ to the directory holding the
+kustomization file containing the `resources`
+field.
+
+[hashicorp URL]: https://github.com/hashicorp/go-getter#url-format
+
+Directory specification can be relative, absolute,
+or part of a URL.  URL specifications should
+follow the [hashicorp URL] format.  The directory
+must contain a `kustomization.yaml` file.
 
 
 ### secretGenerator
