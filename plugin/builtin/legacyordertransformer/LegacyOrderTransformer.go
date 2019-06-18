@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-//go:generate go run sigs.k8s.io/kustomize/plugin/pluginator
+//go:generate go run sigs.k8s.io/kustomize/cmd/pluginator
 package main
 
 import (

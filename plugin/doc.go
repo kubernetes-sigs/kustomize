@@ -4,14 +4,12 @@
 /*
 
 Package plugin contains builtin and example
-plugins, tests and test libraries, and a code
-generator for converting a plugin to statically
-loadable code (see pluginator).
+plugins, tests and test libraries.
 
-See ../../docs/plugins.md for a description of
+See /docs/plugins.md for a description of
 writing and testing a plugin.  The information
 here is supplemental to that, and more oriented to
-how the builting plugins work.
+how the builtin plugins work.
 
 
 HOW PLUGINS RUN
