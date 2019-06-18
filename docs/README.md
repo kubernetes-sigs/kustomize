@@ -23,7 +23,7 @@ English | [简体中文](zh/README.md)
 
 ## Release notes
 
- * [2.1](v2.1.0.md) - Date TBD, target late May 2019
+ * [2.1](v2.1.0.md) - 18 June 2019.  Plugins, ordered resources, etc.
 
  * [2.0](v2.0.0.md) - Mar 2019.
    kustomize [v2.0.3] is available in [kubectl v1.14][kubectl].
