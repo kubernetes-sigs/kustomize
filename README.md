@@ -171,4 +171,5 @@ is governed by the [Kubernetes Code of Conduct].
 [variant]: docs/glossary.md#variant
 [variants]: docs/glossary.md#variant
 [v2.0.3]: https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.0.3
+[v2.1.0]: https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.1.0
 [workflows]: docs/workflows.md
