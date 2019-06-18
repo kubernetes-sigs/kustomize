@@ -3,28 +3,11 @@
 
 ## Installation
 
-On macOS, you can install kustomize with Homebrew package
-manager:
-
-    brew install kustomize
-
-On windows, you can install kustomize with Chocolatey package
-manager.
-
-    choco install kustomize
-
-For support on the chocolatey package and prior releases, please reference the following links:
-- [Choco Package](https://chocolatey.org/packages/kustomize)
-- [Package Source](https://github.com/kenmaglio/choco-kustomize)
-
-
-For all operating systems, download a binary from the
+For linux, macOs and Windows,
+download a binary from the
 [release page].
 
-
-Or try this to grab the latest official release
-using the command line:
-
+Or try this command:
 ```
 opsys=linux  # or darwin, or windows
 curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/latest |\
@@ -36,9 +19,29 @@ mv kustomize_*_${opsys}_amd64 kustomize
 chmod u+x kustomize
 ```
 
-To install from head with [Go] v1.10.1 or higher:
+To install from head with [Go] v1.12 or higher:
 
 <!-- @installkustomize @test -->
 ```
-go get sigs.k8s.io/kustomize
+go install sigs.k8s.io/kustomize/cmd/kustomize
 ```
+
+### Other methods
+
+#### macOS
+ 
+```
+brew install kustomize
+```
+
+#### windows
+
+```
+choco install kustomize
+```
+
+For support on the chocolatey package
+and prior releases, see:
+- [Choco Package](https://chocolatey.org/packages/kustomize)
+- [Package Source](https://github.com/kenmaglio/choco-kustomize)
+
