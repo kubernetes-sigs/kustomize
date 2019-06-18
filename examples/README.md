@@ -9,7 +9,7 @@ tests, and should work with HEAD
 
 <!-- @installkustomize @test -->
 ```
-go get sigs.k8s.io/kustomize
+go get sigs.k8s.io/kustomize/cmd/kustomize
 ```
 
 Basic Usage
