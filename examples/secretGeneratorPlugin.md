@@ -125,8 +125,6 @@ them, etc.
 
 ## Secret values from anywhere
 
-> New _alpha_ behavior at HEAD, for v2.1+
-
 A general alternative is to enshrine secret
 value generation in a [plugin](../docs/plugins.md).
 
