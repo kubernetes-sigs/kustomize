@@ -71,7 +71,7 @@ mkdir -p $DEMO_HOME/breakfast/overlays/alice
 cat <<EOF >$DEMO_HOME/breakfast/overlays/alice/kustomization.yaml
 commonLabels:
   who: alice
-bases:
+resources:
 - ../../base
 patchesStrategicMerge:
 - temperature.yaml
@@ -94,7 +94,7 @@ mkdir -p $DEMO_HOME/breakfast/overlays/bob
 cat <<EOF >$DEMO_HOME/breakfast/overlays/bob/kustomization.yaml
 commonLabels:
   who: bob
-bases:
+resources:
 - ../../base
 patchesStrategicMerge:
 - topping.yaml

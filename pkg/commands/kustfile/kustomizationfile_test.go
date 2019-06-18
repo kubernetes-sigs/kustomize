@@ -133,6 +133,7 @@ func TestPreserveComments(t *testing.T) {
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+- ../namespaces
 - pod.yaml
 - service.yaml
 # something you may want to keep
@@ -144,8 +145,6 @@ vars:
     apiVersion: v1
     kind: Service
     name: my-service
-bases:
-- ../namespaces
 # some descriptions for the patches
 patchesStrategicMerge:
 - service.yaml
@@ -176,10 +175,11 @@ func TestPreserveCommentsWithAdjust(t *testing.T) {
 
     
 
-# shem qing some comments
+# Some comments
 # This is some comment we should preserve
 # don't delete it
-resources:
+RESOURCES:
+- ../namespaces
 - pod.yaml
   # See which field this comment goes into
 - service.yaml
@@ -196,9 +196,6 @@ vars:
     apiVersion: v1
     kind: Service
     name: my-service
-
-BASES:
-- ../namespaces
 
 # some descriptions for the patches
 
@@ -214,11 +211,12 @@ generatorOptions:
 
     
 
-# shem qing some comments
+# Some comments
 # This is some comment we should preserve
 # don't delete it
   # See which field this comment goes into
 resources:
+- ../namespaces
 - pod.yaml
 - service.yaml
 
@@ -234,9 +232,6 @@ vars:
     apiVersion: v1
     kind: Service
     name: my-service
-
-bases:
-- ../namespaces
 
 # some descriptions for the patches
 
@@ -263,7 +258,9 @@ generatorOptions:
 	}
 	bytes, _ := fSys.ReadFile(mf.path)
 
-	if !reflect.DeepEqual(expected, bytes) {
-		t.Fatal("written kustomization with comments is not the same as original one\n", string(bytes))
+	if string(expected) != string(bytes) {
+		t.Fatalf(
+			"expected =\n%s\n\nactual =\n%s\n",
+			string(expected), string(bytes))
 	}
 }

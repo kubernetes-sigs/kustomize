@@ -210,10 +210,6 @@ func (kt *KustTarget) shouldAddHashSuffixesToGeneratedResources() bool {
 func (kt *KustTarget) AccumulateTarget() (
 	ra *accumulator.ResAccumulator, err error) {
 	ra = accumulator.MakeEmptyAccumulator()
-	err = kt.accumulateResources(ra, kt.kustomization.Bases)
-	if err != nil {
-		return nil, errors.Wrap(err, "accumulating bases")
-	}
 	err = kt.accumulateResources(ra, kt.kustomization.Resources)
 	if err != nil {
 		return nil, errors.Wrap(err, "accumulating resources")

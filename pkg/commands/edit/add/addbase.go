@@ -86,10 +86,10 @@ func (o *addBaseOptions) RunAddBase(fSys fs.FileSystem) error {
 		if !fSys.Exists(path) {
 			return errors.New(path + " does not exist")
 		}
-		if kustfile.StringInSlice(path, m.Bases) {
+		if kustfile.StringInSlice(path, m.Resources) {
 			return fmt.Errorf("base %s already in kustomization file", path)
 		}
-		m.Bases = append(m.Bases, path)
+		m.Resources = append(m.Resources, path)
 
 	}
 

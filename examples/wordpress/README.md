@@ -44,17 +44,19 @@ curl -s -o "$MYSQL_HOME/#1.yaml" \
 ```
 
 ### Create kustomization.yaml
-Create a new kustomization with two bases:
+
+Create a new kustomization with two bases,
+`wordpress` and `mysql`:
 
 <!-- @createKustomization @test -->
 ```
 cat <<EOF >$DEMO_HOME/kustomization.yaml
-bases:
-  - wordpress
-  - mysql
+resources:
+- wordpress
+- mysql
 namePrefix: demo-
 patchesStrategicMerge:
-  - patch.yaml
+- patch.yaml
 EOF
 ```
 
