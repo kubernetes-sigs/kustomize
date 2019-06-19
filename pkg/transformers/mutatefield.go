@@ -78,7 +78,12 @@ func MutateField(
 		}
 		return nil
 	default:
-		return fmt.Errorf("%#v is not expected to be a primitive type", typedV)
+		// If an inline could not be resolved, a field that was supposed to map or slice
+		// is still in the tree as a string, a.k.a "field: $(INLINE)"
+		// Hence we shoould not return an error and not attempt to mutate the field.
+
+		// return fmt.Errorf("%#v is not expected to be a primitive type", typedV)
+		return nil
 	}
 }
 

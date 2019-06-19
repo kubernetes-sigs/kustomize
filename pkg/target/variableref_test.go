@@ -389,6 +389,15 @@ vars:
         apiVersion: v1
    fieldref:
         fieldpath: metadata.name
+ # Variable name can follow naming convention
+ # for instance <Kind>.<name>.<fieldpath>
+ - name: Service.cockroachdb-public.spec
+   objref:
+        kind: Service
+        name: cockroachdb-public
+        apiVersion: v1
+   fieldref:
+        fieldpath: spec
  - name: CDB_STATEFULSET_NAME
    objref:
         kind: StatefulSet
@@ -455,16 +464,15 @@ metadata:
     prometheus.io/path: "_status/vars"
     prometheus.io/port: "8080"
 spec:
-  ports:
-  - port: 26257
-    targetPort: 26257
-    name: grpc
-  - port: $(CDB_HTTP_PORT)
-    targetPort: $(CDB_HTTP_PORT)
-    name: http
+  # The cockroadb service spec is identical to the cockroachdb-public except for one field: clusterIP
+  # is forced to None. Kustomize will inline first the content of the cockroachdb-public service
+  # spec field into the coackroachdb one. It will proceed normally.
+  # The current example inlines trees between objects of the same kind but this is not a requirement.
+  # The inlined variable could come for a user CRD/"catalog" which would allow sharing of complex trees.
+  # For instance sharing a PodTemplate between multiple StatefulSet and adjusting it slightly in each
+  # statefulset
+  parent-inline: $(Service.cockroachdb-public.spec)
   clusterIP: None
-  selector:
-    app: cockroachdb
 ---
 apiVersion: v1
 kind: Service

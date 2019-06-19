@@ -48,6 +48,8 @@ func MappingFuncFor(
 				switch typedV := val.(type) {
 				case string, int64, float64, bool:
 					return typedV
+				case []interface{}, map[string]interface{}:
+					return typedV
 				default:
 					return syntaxWrap(input)
 				}
