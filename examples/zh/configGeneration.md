@@ -19,9 +19,9 @@ Kustomize 提供了两种在一个 `kustomization` 中添加 ConfigMap 的方法
 >     - configs/another_configfile
 > ```
 
-声明为 [resource] 的 ConfigMaps 的处理方式与其他 resources 相同，Kustomize 不会将任何哈希值添加到 ConfigMap 的名称后。而在 ConfigMapGenerator 中声明 ConfigMap 的处理方式则与之前不同，将在名称后添加哈希值，ConfigMap 中的任何更改都将触发滚动更新。
+声明为 [resource] 的 ConfigMaps 的处理方式与其他 resource 相同，Kustomize 不会在为 ConfigMap 的名称添加哈希后缀。而在 ConfigMapGenerator 中声明 ConfigMap 的处理方式则与之前不同，默认将为名称添加哈希后缀，ConfigMap 中的任何更改都将触发滚动更新。
 
-在 [hello_world](helloWorld.md) 示例中，使用在 ConfigmapGenerator 中声明的 ConfigMap 的方法替换将 ConfigMap 声明为 [resources] 的方法。此 ConfigMap 中的更改将导致哈希值更改和滚动更新。
+在 [hello_world](helloWorld.md) 示例中，使用在 ConfigmapGenerator 中声明的 ConfigMap 的方法替换将 ConfigMap 声明为 [resource] 的方法。此 ConfigMap 中的更改将导致哈希值更改和滚动更新。
 
 ### 建立 base 和 staging
 
