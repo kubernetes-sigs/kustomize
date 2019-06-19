@@ -133,7 +133,7 @@ func (o *setImageOptions) RunSetImage(fSys fs.FileSystem) error {
 		return err
 	}
 
-	// append only new images from ksutomize file
+	// append only new images from kustomize file
 	for _, im := range m.Images {
 		if _, ok := o.imageMap[im.Name]; ok {
 			continue
