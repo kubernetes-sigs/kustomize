@@ -52,6 +52,13 @@ vars:
         apiVersion: apps/v1beta1
    fieldref:
         fieldpath: metadata.name
+ - name: CDB_HTTP_PORT
+   objref:
+        kind: StatefulSet
+        name: cockroachdb
+        apiVersion: apps/v1beta1
+   fieldref:
+        fieldpath: spec.template.spec.containers[0].ports[1].containerPort
  - name: CDB_STATEFULSET_SVC
    objref:
         kind: Service
@@ -108,8 +115,8 @@ spec:
   - port: 26257
     targetPort: 26257
     name: grpc
-  - port: 8080
-    targetPort: 8080
+  - port: $(CDB_HTTP_PORT)
+    targetPort: $(CDB_HTTP_PORT)
     name: http
   clusterIP: None
   selector:
@@ -131,8 +138,8 @@ spec:
     targetPort: 26257
     name: grpc
   # The secondary port serves the UI as well as health and debug endpoints.
-  - port: 8080
-    targetPort: 8080
+  - port: $(CDB_HTTP_PORT)
+    targetPort: $(CDB_HTTP_PORT)
     name: http
   selector:
     app: cockroachdb
