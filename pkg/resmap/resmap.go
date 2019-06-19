@@ -19,15 +19,15 @@ import (
 // ResMap is an interface describing operations on the
 // core kustomize data structure, a list of Resources.
 //
-// Every Resource has two ResIds: OriginalId and CurId.
-//
-// A ResId is a tuple of {Namespace, Group, Version, Kind, Name}.
+// Every Resource has two ResIds: OrgId and CurId.
 //
 // In a ResMap, no two resources may have the same CurId,
-// but they may have the same OriginalId.  The latter can happen
+// but they may have the same OrgId.  The latter can happen
 // when mixing two or more different overlays apply different
-// transformations to a common base.
-//
+// transformations to a common base.  When looking for a
+// resource to transform, try the OrgId first, and if this
+// fails or finds too many, it might make sense to then try
+// the CurrId.  Depends on the situation.
 type ResMap interface {
 	// Size reports the number of resources.
 	Size() int
