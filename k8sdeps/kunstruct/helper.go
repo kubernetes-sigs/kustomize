@@ -31,7 +31,11 @@ import (
 // field of the first item in the foo list
 type PathSection struct {
 	fields []string
-	idx    *int
+	idx    int
+}
+
+func newPathSection() PathSection {
+	return PathSection{idx: -1}
 }
 
 func appendNonEmpty(section *PathSection, field string) {
@@ -41,7 +45,7 @@ func appendNonEmpty(section *PathSection, field string) {
 }
 
 func parseFields(path string) ([]PathSection, error) {
-	section := PathSection{}
+	section := newPathSection()
 	sectionset := []PathSection{}
 	if !strings.Contains(path, "[") {
 		section.fields = strings.Split(path, ".")
@@ -75,9 +79,9 @@ func parseFields(path string) ([]PathSection, error) {
 				if err != nil {
 					return nil, fmt.Errorf("invalid index %s", path)
 				}
-				section.idx = &tmpIdx
+				section.idx = tmpIdx
 				sectionset = append(sectionset, section)
-				section = PathSection{}
+				section = newPathSection()
 
 				start = i + 1
 				insideParentheses = false
