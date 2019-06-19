@@ -300,6 +300,24 @@ func (r *Resource) AppendRefVarName(variable types.Var) {
 	r.refVarNames = append(r.refVarNames, variable.Name)
 }
 
+// AbsorbRefVarName appends a name of a var into the refVar list
+// if it is not already present
+func (r *Resource) AbsorbRefVarName(variable types.Var) {
+	if !contains(r.refVarNames, variable.Name) {
+		r.refVarNames = append(r.refVarNames, variable.Name)
+	}
+}
+
+// contains tells whether a contains x.
+func contains(a []string, x string) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+	return false
+}
+
 // TODO: Add BinaryData once we sync to new k8s.io/api
 func mergeConfigmap(
 	mergedTo map[string]interface{},

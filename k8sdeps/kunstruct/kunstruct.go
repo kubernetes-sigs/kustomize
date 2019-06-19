@@ -100,10 +100,10 @@ func (fs *UnstructAdapter) selectSubtree(path string) (map[string]interface{}, [
 
 	// There are multiple sections to walk
 	for sectionIdx := 0; sectionIdx < lastSectionIdx; sectionIdx++ {
-		idx := sections[sectionIdx].idx
-		fields := sections[sectionIdx].fields
+		pathSection := sections[sectionIdx]
+		fields := pathSection.fields
 
-		if idx == -1 {
+		if pathSection.NotIndexed() {
 			// This section has no index
 			return content, fields, true, nil
 		}
@@ -116,10 +116,14 @@ func (fs *UnstructAdapter) selectSubtree(path string) (map[string]interface{}, [
 		}
 		s, ok := indexedField.([]interface{})
 		if !ok {
-			return content, fields, false, fmt.Errorf("%v is of the type %T, expected []interface{}", indexedField, indexedField)
+			return content, fields, false,
+				fmt.Errorf("%v is of the type %T, expected []interface{}",
+					indexedField, indexedField)
 		}
-		if idx >= len(s) {
-			return content, fields, false, fmt.Errorf("index %d is out of bounds", idx)
+
+		idx, idxFound, err := pathSection.ResolveIndex(s)
+		if !idxFound || err != nil {
+			return content, fields, idxFound, err
 		}
 
 		if sectionIdx == lastSectionIdx-1 {

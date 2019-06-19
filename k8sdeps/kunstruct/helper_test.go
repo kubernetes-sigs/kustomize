@@ -14,6 +14,12 @@ func buildPath(idx int, fields ...string) PathSectionSlice {
 	return PathSectionSlice{PathSection{fields: fields, idx: idx}}
 }
 
+func (a PathSectionSlice) addSearchKey(name string, value string) PathSectionSlice {
+	a[len(a)-1].searchName = name
+	a[len(a)-1].searchValue = value
+	return a
+}
+
 func (a PathSectionSlice) addSection(idx int, fields ...string) PathSectionSlice {
 	return append(a, PathSection{fields: fields, idx: idx})
 }
@@ -102,6 +108,14 @@ func TestParseField(t *testing.T) {
 			name:          "validFieldsWithQuotes",
 			pathToField:   "'complextree'[1].field2[1].'stringsubfield'",
 			expectedValue: buildPath(1, "complextree").addSection(1, "field2").addSection(-1, "stringsubfield"),
+			errorExpected: false,
+		},
+		{
+			name:        "validStructDownwardAPI2",
+			pathToField: `spec.template.spec.containers[name=main].image`,
+			expectedValue: buildPath(-1, "spec", "template", "spec", "containers").
+				addSearchKey("name", "main").
+				addSection(-1, "image"),
 			errorExpected: false,
 		},
 	}

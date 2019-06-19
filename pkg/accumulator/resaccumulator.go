@@ -85,8 +85,26 @@ func (ra *ResAccumulator) MergeVars(incoming []types.Var) error {
 	return ra.varSet.MergeSlice(incoming)
 }
 
-func (ra *ResAccumulator) MergeAccumulator(other *ResAccumulator) (err error) {
-	err = ra.AppendAll(other.resMap)
+func (ra *ResAccumulator) MergeAutoConfig() error {
+	// Scan the resource. Passes the user provided vars and references
+	// to guide the detection algorithm.
+	scanner := config.NewResMapScanner(ra.varSet, ra.tConfig.VarReference)
+	scanner.BuildAutoConfig(ra.resMap)
+
+	// Automatically add the vars detected in the resources
+	discoveredVars := scanner.DiscoveredVars()
+	err := ra.varSet.AbsorbSet(discoveredVars)
+	if err != nil {
+		return err
+	}
+
+	// Automatically add the vars detected in the resources
+	discoveredConfig := scanner.DiscoveredConfig()
+	return ra.MergeConfig(discoveredConfig)
+}
+
+func (ra *ResAccumulator) MergeAccumulator(other *ResAccumulator) error {
+	err := ra.AppendAll(other.resMap)
 	if err != nil {
 		return err
 	}

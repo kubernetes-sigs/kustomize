@@ -17,18 +17,78 @@ import (
 // the field bar, with no index. The latter PathSection references the bar
 // field of the first item in the foo list
 type PathSection struct {
-	fields []string
-	idx    int
+	fields      []string
+	idx         int
+	searchName  string
+	searchValue string
 }
 
 func newPathSection() PathSection {
-	return PathSection{idx: -1}
+	return PathSection{idx: -1, searchName: "", searchValue: ""}
 }
 
-func appendNonEmpty(section *PathSection, field string) {
+func (ps *PathSection) appendNonEmpty(field string) {
 	if len(field) != 0 {
-		section.fields = append(section.fields, field)
+		ps.fields = append(ps.fields, field)
 	}
+}
+
+func (ps *PathSection) NotIndexed() bool {
+	return ps.idx == -1 && ps.searchName == ""
+}
+
+func (ps *PathSection) ResolveIndex(s []interface{}) (int, bool, error) {
+	if ps.idx >= len(s) {
+		return ps.idx, false, fmt.Errorf("index %d is out of bounds", ps.idx)
+	}
+
+	if ps.idx != -1 {
+		return ps.idx, true, nil
+	}
+
+	for curId, subField := range s {
+		subMap, ok1 := subField.(map[string]interface{})
+		if !ok1 {
+			return ps.idx, false,
+				fmt.Errorf("%v is of the type %T, expected map[string]interface{}",
+					subField, subField)
+		}
+		if foundValue, ok2 := subMap[ps.searchName]; ok2 {
+			if stringValue, ok3 := foundValue.(string); ok3 {
+				if stringValue == ps.searchValue {
+					return curId, true, nil
+				}
+			}
+		}
+
+	}
+
+	return ps.idx, false, nil
+}
+
+func (ps *PathSection) parseIndex(pathElement string) {
+	// Assign this index to the current
+	// PathSection, save it to the result, then begin
+	// a new PathSection
+	tmpIdx, err := strconv.Atoi(pathElement)
+	if err == nil {
+		// We have detected an integer so an array.
+		ps.idx = tmpIdx
+		ps.searchName = ""
+		ps.searchValue = ""
+		return
+	}
+
+	if strings.Contains(pathElement, "=") {
+		// We have detected an searchKey so an array
+		keyPart := strings.Split(pathElement, "=")
+		ps.searchName = keyPart[0]
+		ps.searchValue = keyPart[1]
+		return
+	}
+
+	// We have detected the downwardapi syntax
+	ps.appendNonEmpty(pathElement)
 }
 
 func parseFields(path string) (result []PathSection, err error) {
@@ -45,12 +105,12 @@ func parseFields(path string) (result []PathSection, err error) {
 		switch c {
 		case '.':
 			if !insideParentheses {
-				appendNonEmpty(&section, path[start:i])
+				section.appendNonEmpty(path[start:i])
 				start = i + 1
 			}
 		case '[':
 			if !insideParentheses {
-				appendNonEmpty(&section, path[start:i])
+				section.appendNonEmpty(path[start:i])
 				start = i + 1
 				insideParentheses = true
 			} else {
@@ -58,17 +118,7 @@ func parseFields(path string) (result []PathSection, err error) {
 			}
 		case ']':
 			if insideParentheses {
-				// Assign this index to the current
-				// PathSection, save it to the result, then begin
-				// a new PathSection
-				tmpIdx, err := strconv.Atoi(path[start:i])
-				if err == nil {
-					// We have detected an integer so an array.
-					section.idx = tmpIdx
-				} else {
-					// We have detected the downwardapi syntax
-					appendNonEmpty(&section, path[start:i])
-				}
+				section.parseIndex(path[start:i])
 				result = append(result, section)
 				section = newPathSection()
 
@@ -80,7 +130,7 @@ func parseFields(path string) (result []PathSection, err error) {
 		}
 	}
 	if start < len(path)-1 {
-		appendNonEmpty(&section, path[start:])
+		section.appendNonEmpty(path[start:])
 		result = append(result, section)
 	}
 

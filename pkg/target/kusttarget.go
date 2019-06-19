@@ -246,6 +246,11 @@ func (kt *KustTarget) AccumulateTarget() (
 		return nil, errors.Wrapf(
 			err, "merging vars %v", kt.kustomization.Vars)
 	}
+	err = ra.MergeAutoConfig()
+	if err != nil {
+		return nil, errors.Wrap(
+			err, "autodetecting vars")
+	}
 	return ra, nil
 }
 
