@@ -30,7 +30,7 @@ The _inventory_ ConfigMap contains two special annotations:
   struct that contains following information
   - all objects within this kustomization target
   - all objects that reference within this kustomization target
-  
+
   Here is an example of an Inventory object
   ```json
   {
@@ -49,11 +49,11 @@ The _inventory_ ConfigMap contains two special annotations:
           ],
         "~G_v1_Service|default|mysql":null
       }
-    }  
+    }
   ```
 
 - kustomize.config.k8s.io/InventoryHash
-  The value of this annotation is a hash that is 
+  The value of this annotation is a hash that is
   computed from the list of items in the Inventory
 
 Basically, this inventory object acts a record of objects that are applied as a group.
@@ -150,7 +150,7 @@ metadata:
   annotations:
     kustomize.config.k8s.io/Inventory: '{"current":{"apps_v1_Deployment|default|mysql":null,"~G_v1_Secret|default|pass-dfg7h97cf6":[{"group":"apps","version":"v1","kind":"Deployment","name":"mysql","namespace":"default"}],"~G_v1_Service|default|mysql":null}}'
     kustomize.config.k8s.io/InventoryHash: 7mgt867b75
-  name: haha
+  name: root-cm
   namespace: default
 ```
 
