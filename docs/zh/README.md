@@ -20,7 +20,8 @@
 
 ## 发行说明
 
- * [2.1](../v2.1.0.md) - 日期待定，预计2019年5月下旬。
+ * [2.1](../v2.1.0.md) - 2019年6月18日
+ 插件、有序资源等。
 
  * [2.0](../v2.0.0.md) - 2019年3月
    可以在 [kubectl v1.14][kubectl] 中使用 kustomize [v2.0.3] 。
@@ -29,7 +30,7 @@
    于 [kubectl repository] 开发后的首发版本。
 
 
-## 政策
+## 行为守则
 
  * [版本控制](../versioningPolicy.md) - kustomize 代码及 kustomization 文件的版本控制策略。
 
