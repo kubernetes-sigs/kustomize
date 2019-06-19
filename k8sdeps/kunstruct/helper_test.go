@@ -23,20 +23,15 @@ import (
 
 type PathSectionSlice []PathSection
 
-func buildPath(idx *int, fields ...string) PathSectionSlice {
+func buildPath(idx int, fields ...string) PathSectionSlice {
 	return PathSectionSlice{PathSection{fields: fields, idx: idx}}
 }
 
-func (a PathSectionSlice) addSection(idx *int, fields ...string) PathSectionSlice {
+func (a PathSectionSlice) addSection(idx int, fields ...string) PathSectionSlice {
 	return append(a, PathSection{fields: fields, idx: idx})
 }
 
 func TestParseField(t *testing.T) {
-	i := 1
-	var one *int = &i
-	j := 0
-	var zero *int = &j
-
 	tests := []struct {
 		name          string
 		pathToField   string
@@ -47,55 +42,55 @@ func TestParseField(t *testing.T) {
 		{
 			name:          "oneField",
 			pathToField:   "Kind",
-			expectedValue: buildPath(nil, "Kind"),
+			expectedValue: buildPath(-1, "Kind"),
 			errorExpected: false,
 		},
 		{
 			name:          "twoFields",
 			pathToField:   "metadata.name",
-			expectedValue: buildPath(nil, "metadata", "name"),
+			expectedValue: buildPath(-1, "metadata", "name"),
 			errorExpected: false,
 		},
 		{
 			name:          "threeFields",
 			pathToField:   "spec.ports.port",
-			expectedValue: buildPath(nil, "spec", "ports", "port"),
+			expectedValue: buildPath(-1, "spec", "ports", "port"),
 			errorExpected: false,
 		},
 		{
 			name:          "empty",
 			pathToField:   "",
-			expectedValue: buildPath(nil, ""),
+			expectedValue: buildPath(-1, ""),
 			errorExpected: false,
 		},
 		{
 			name:          "validStringIndex",
 			pathToField:   "that[1]",
-			expectedValue: buildPath(one, "that"),
+			expectedValue: buildPath(1, "that"),
 			errorExpected: false,
 		},
 		{
 			name:          "sliceInSlice",
 			pathToField:   "that[1][0]",
-			expectedValue: buildPath(one, "that").addSection(zero),
+			expectedValue: buildPath(1, "that").addSection(0),
 			errorExpected: false,
 		},
 		{
 			name:          "validStructSubField",
 			pathToField:   "those[1].field2",
-			expectedValue: buildPath(one, "those").addSection(nil, "field2"),
+			expectedValue: buildPath(1, "those").addSection(-1, "field2"),
 			errorExpected: false,
 		},
 		{
 			name:          "validStructSubFieldIndex",
 			pathToField:   "these[1].field2[0]",
-			expectedValue: buildPath(one, "these").addSection(zero, "field2"),
+			expectedValue: buildPath(1, "these").addSection(0, "field2"),
 			errorExpected: false,
 		},
 		{
 			name:          "validStructSubFieldIndexSubfield",
 			pathToField:   "complextree[1].field2[1].stringsubfield",
-			expectedValue: buildPath(one, "complextree").addSection(one, "field2").addSection(nil, "stringsubfield"),
+			expectedValue: buildPath(1, "complextree").addSection(1, "field2").addSection(-1, "stringsubfield"),
 			errorExpected: false,
 		},
 		{
@@ -119,7 +114,7 @@ func TestParseField(t *testing.T) {
 		{
 			name:          "validFieldsWithQuotes",
 			pathToField:   "'complextree'[1].field2[1].'stringsubfield'",
-			expectedValue: buildPath(one, "complextree").addSection(one, "field2").addSection(nil, "stringsubfield"),
+			expectedValue: buildPath(1, "complextree").addSection(1, "field2").addSection(-1, "stringsubfield"),
 			errorExpected: false,
 		},
 	}
