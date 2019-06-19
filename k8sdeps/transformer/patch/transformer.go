@@ -45,6 +45,9 @@ func (tf *transformer) Transform(m resmap.ResMap) error {
 	}
 	for _, patch := range patches.Resources() {
 		target, err := tf.findPatchTarget(m, patch.OrgId())
+		if err != nil {
+			return err
+		}
 		merged := map[string]interface{}{}
 		versionedObj, err := scheme.Scheme.New(
 			toSchemaGvk(patch.OrgId().Gvk))

@@ -326,6 +326,65 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 	}
 }
 
+func TestPatchesWithWrongNamespace(t *testing.T) {
+	base := resmaptest_test.NewRmBuilder(t, rf).
+		Add(map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name":      "deploy1",
+				"namespace": "namespace1",
+			},
+			"spec": map[string]interface{}{
+				"template": map[string]interface{}{
+					"spec": map[string]interface{}{
+						"containers": []interface{}{
+							map[string]interface{}{
+								"name":  "nginx",
+								"image": "nginx",
+							},
+						},
+					},
+				},
+			},
+		}).ResMap()
+
+	patch := []*resource.Resource{
+		rf.FromMap(map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name":      "deploy1",
+				"namespace": "namespace2",
+			},
+			"spec": map[string]interface{}{
+				"template": map[string]interface{}{
+					"spec": map[string]interface{}{
+						"containers": []interface{}{
+							map[string]interface{}{
+								"name":  "nginx",
+								"image": "nginx:1.7.9",
+							},
+						},
+					},
+				},
+			},
+		}),
+	}
+
+	lt, err := NewTransformer(patch, rf)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	err = lt.Transform(base)
+	if err == nil {
+		t.Fatalf("did not get expected error")
+	}
+	if !strings.Contains(err.Error(), "failed to find target for patch") {
+		t.Fatalf("expected error to contain %q but get %v", "failed to find target for patch", err)
+	}
+}
+
 func TestNoSchemaOverlayRun(t *testing.T) {
 	base := resmaptest_test.NewRmBuilder(t, rf).
 		Add(map[string]interface{}{
