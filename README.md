@@ -7,7 +7,7 @@ untouched and usable as is.
 `kustomize` targets kubernetes; it understands and can
 patch [kubernetes style] API objects.  It's like
 [`make`], in that what it does is declared in a file,
-and it's like [`sed`], in that it emits editted text.
+and it's like [`sed`], in that it emits edited text.
 
 This tool is sponsored by [sig-cli] ([KEP]), and
 inspired by [DAM].
