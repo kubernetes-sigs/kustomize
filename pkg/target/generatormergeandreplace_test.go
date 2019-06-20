@@ -486,18 +486,108 @@ func TestGeneratingIntoNamespaces(t *testing.T) {
 	th.WriteK("/app", `
 configMapGenerator:
 - name: test
-  namespace: bob
+  namespace: default
+  literals:
+    - key=value
+- name: test
+  namespace: kube-system
+  literals:
+    - key=value
+secretGenerator:
+- name: test
+  namespace: default
+  literals:
+  - username=admin
+  - password=somepw
+- name: test
+  namespace: kube-system
+  literals:
+  - username=admin
+  - password=somepw
+`)
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  key: value
+kind: ConfigMap
+metadata:
+  name: test-t5t4md8fdm
+  namespace: default
+---
+apiVersion: v1
+data:
+  key: value
+kind: ConfigMap
+metadata:
+  name: test-t5t4md8fdm
+  namespace: kube-system
+---
+apiVersion: v1
+data:
+  password: c29tZXB3
+  username: YWRtaW4=
+kind: Secret
+metadata:
+  name: test-h65t9hg6kc
+  namespace: default
+type: Opaque
+---
+apiVersion: v1
+data:
+  password: c29tZXB3
+  username: YWRtaW4=
+kind: Secret
+metadata:
+  name: test-h65t9hg6kc
+  namespace: kube-system
+type: Opaque
+`)
+}
+
+// Valid that conflict is detected is the name are identical
+// and namespace left to default
+func TestConfigMapGeneratingIntoSameNamespace(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th.WriteK("/app", `
+configMapGenerator:
+- name: test
+  namespace: default
   literals:
   - key=value
 - name: test
-  namespace: kube-system
   literals:
   - key=value
 `)
 	_, err := th.MakeKustTarget().MakeCustomizedResMap()
-	// Document #1155
-	// This actually should be nil; it should work, and
-	// have some expected output.
+	if err == nil {
+		t.Fatalf("expected error")
+	}
+	if !strings.Contains(err.Error(), "must merge or replace") {
+		t.Fatalf("unexpected error %v", err)
+	}
+}
+
+// Valid that conflict is detected is the name are identical
+// and namespace left to default
+func TestSecretGeneratingIntoSameNamespace(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th.WriteK("/app", `
+secretGenerator:
+- name: test
+  namespace: default
+  literals:
+  - username=admin
+  - password=somepw
+- name: test
+  literals:
+  - username=admin
+  - password=somepw
+`)
+	_, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err == nil {
 		t.Fatalf("expected error")
 	}

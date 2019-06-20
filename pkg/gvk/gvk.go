@@ -180,3 +180,40 @@ func (x Gvk) IsClusterKind() bool {
 	}
 	return false
 }
+
+var notNamespaceableKinds = []string{
+	"APIService",
+	"CSIDriver",
+	"CSINode",
+	"CertificateSigningRequest",
+	"ClusterRole",
+	"ClusterRoleBinding",
+	"ComponentStatus",
+	"CustomResourceDefinition",
+	"MutatingWebhookConfiguration",
+	"Namespace",
+	"Node",
+	"PersistentVolume",
+	"PodSecurityPolicy",
+	"PodSecurityPolicy",
+	"PriorityClass",
+	"RuntimeClass",
+	"SelfSubjectAccessReview",
+	"SelfSubjectRulesReview",
+	"StorageClass",
+	"SubjectAccessReview",
+	"TokenReview",
+	"ValidatingWebhookConfiguration",
+	"VolumeAttachment",
+}
+
+// IsNamespaceableKind returns true if x is a namespable Gvk
+// Implements https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/#not-all-objects-are-in-a-namespace
+func (x Gvk) IsNamespaceableKind() bool {
+	for _, k := range notNamespaceableKinds {
+		if k == x.Kind {
+			return false
+		}
+	}
+	return true
+}
