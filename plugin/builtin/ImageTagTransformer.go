@@ -59,30 +59,28 @@ func (p *ImageTagTransformerPlugin) mutateImage(in interface{}) (interface{}, er
 		return nil, fmt.Errorf("image path is not of type string but %T", in)
 	}
 
-	nTag := p.ImageTag
-	if !isImageMatched(original, nTag.Name) {
+	if !isImageMatched(original, p.ImageTag.Name) {
 		return original, nil
 	}
 	name, tag := split(original)
-	if nTag.NewName != "" {
-		name = nTag.NewName
+	if p.ImageTag.NewName != "" {
+		name = p.ImageTag.NewName
 	}
-	if nTag.NewTag != "" {
-		tag = ":" + nTag.NewTag
+	if p.ImageTag.NewTag != "" {
+		tag = ":" + p.ImageTag.NewTag
 	}
-	if nTag.Digest != "" {
-		tag = "@" + nTag.Digest
+	if p.ImageTag.Digest != "" {
+		tag = "@" + p.ImageTag.Digest
 	}
 	return name + tag, nil
-
 }
 
-/*
- findAndReplaceImage replaces the image name and tags inside one object
- It searches the object for container session
- then loops though all images inside containers session,
- finds matched ones and update the image name and tag name
-*/
+// findAndReplaceImage replaces the image name and
+// tags inside one object.
+// It searches the object for container session
+// then loops though all images inside containers
+// session, finds matched ones and update the
+// image name and tag name
 func (p *ImageTagTransformerPlugin) findAndReplaceImage(obj map[string]interface{}) error {
 	paths := []string{"containers", "initContainers"}
 	updated := false
@@ -104,7 +102,8 @@ func (p *ImageTagTransformerPlugin) findAndReplaceImage(obj map[string]interface
 func (p *ImageTagTransformerPlugin) updateContainers(in interface{}) (interface{}, error) {
 	containers, ok := in.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("containers path is not of type []interface{} but %T", in)
+		return nil, fmt.Errorf(
+			"containers path is not of type []interface{} but %T", in)
 	}
 	for i := range containers {
 		container := containers[i].(map[string]interface{})
@@ -112,7 +111,6 @@ func (p *ImageTagTransformerPlugin) updateContainers(in interface{}) (interface{
 		if !found {
 			continue
 		}
-
 		imageName := containerImage.(string)
 		if isImageMatched(imageName, p.ImageTag.Name) {
 			newImage, err := p.mutateImage(imageName)
