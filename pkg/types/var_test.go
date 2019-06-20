@@ -89,7 +89,7 @@ func TestDefaulting(t *testing.T) {
 }
 
 func TestVarSet(t *testing.T) {
-	set := VarSet{}
+	set := NewVarSet()
 	vars := []Var{
 		{
 			Name: "SHELLVARS",
@@ -123,7 +123,7 @@ func TestVarSet(t *testing.T) {
 			t.Fatalf("set %v should contain var %v", set.AsSlice(), v)
 		}
 	}
-	set2 := VarSet{}
+	set2 := NewVarSet()
 	err = set2.MergeSet(set)
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
@@ -149,5 +149,36 @@ func TestVarSet(t *testing.T) {
 		names[1].Name != "BACKEND" ||
 		names[2].Name != "SHELLVARS" {
 		t.Fatalf("unexpected order in : %v", names)
+	}
+}
+
+func TestVarSetCopy(t *testing.T) {
+	set1 := NewVarSet()
+	vars := []Var{
+		{Name: "First"},
+		{Name: "Second"},
+		{Name: "Third"},
+	}
+	err := set1.MergeSlice(vars)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	// Confirm copying
+	set2 := set1.Copy()
+	for _, varInSet1 := range set1.AsSlice() {
+		if v := set2.Get(varInSet1.Name); v == nil {
+			t.Fatalf("set %v should contain a Var named %s", set2.AsSlice(), varInSet1)
+		} else if !set2.Contains(*v) {
+			t.Fatalf("set %v should contain %v", set2.AsSlice(), v)
+		}
+	}
+	// Confirm that the copy is deep
+	w := Var{Name: "Only in set2"}
+	set2.Merge(w)
+	if !set2.Contains(w) {
+		t.Fatalf("set %v should contain %v", set2.AsSlice(), w)
+	}
+	if set1.Contains(w) {
+		t.Fatalf("set %v should not contain %v", set1.AsSlice(), w)
 	}
 }

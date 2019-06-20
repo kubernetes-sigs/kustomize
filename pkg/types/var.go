@@ -70,26 +70,45 @@ func (v *Var) defaulting() {
 	}
 }
 
-// VarSet is a slice of Vars where no var.Name is repeated.
+// VarSet is a set of Vars where no var.Name is repeated.
 type VarSet struct {
-	set []Var
+	set map[string]Var
+}
+
+// NewVarSet returns an initialized VarSet
+func NewVarSet() VarSet {
+	return VarSet{set: map[string]Var{}}
 }
 
 // AsSlice returns the vars as a slice.
 func (vs *VarSet) AsSlice() []Var {
 	s := make([]Var, len(vs.set))
-	copy(s, vs.set)
+	i := 0
+	for _, v := range vs.set {
+		s[i] = v
+		i++
+	}
+	sort.Sort(ByName(s))
 	return s
 }
 
 // Copy returns a copy of the var set.
 func (vs *VarSet) Copy() VarSet {
-	return VarSet{set: vs.AsSlice()}
+	newSet := make(map[string]Var, len(vs.set))
+	for k, v := range vs.set {
+		newSet[k] = v
+	}
+	return VarSet{set: newSet}
 }
 
 // MergeSet absorbs other vars with error on name collision.
 func (vs *VarSet) MergeSet(incoming VarSet) error {
-	return vs.MergeSlice(incoming.set)
+	for _, incomingVar := range incoming.set {
+		if err := vs.Merge(incomingVar); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // MergeSlice absorbs a Var slice with error on name collision.
@@ -111,20 +130,8 @@ func (vs *VarSet) Merge(v Var) error {
 			"var '%s' already encountered", v.Name)
 	}
 	v.defaulting()
-	vs.insert(v)
+	vs.set[v.Name] = v
 	return nil
-}
-
-func (vs *VarSet) insert(v Var) {
-	index := sort.Search(
-		len(vs.set),
-		func(i int) bool { return vs.set[i].Name > v.Name })
-	// make room
-	vs.set = append(vs.set, Var{})
-	// shift right at index.
-	// copy will not increase size of destination.
-	copy(vs.set[index+1:], vs.set[index:])
-	vs.set[index] = v
 }
 
 // Contains is true if the set has the other var.
@@ -134,10 +141,8 @@ func (vs *VarSet) Contains(other Var) bool {
 
 // Get returns the var with the given name, else nil.
 func (vs *VarSet) Get(name string) *Var {
-	for _, v := range vs.set {
-		if v.Name == name {
-			return &v
-		}
+	if v, found := vs.set[name]; found {
+		return &v
 	}
 	return nil
 }
@@ -157,3 +162,10 @@ func (t *Target) GVK() gvk.Gvk {
 	}
 	return t.Gvk
 }
+
+// ByName is a sort interface which sorts Vars by name alphabetically
+type ByName []Var
+
+func (v ByName) Len() int           { return len(v) }
+func (v ByName) Swap(i, j int)      { v[i], v[j] = v[j], v[i] }
+func (v ByName) Less(i, j int) bool { return v[i].Name < v[j].Name }

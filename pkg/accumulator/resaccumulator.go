@@ -28,7 +28,7 @@ func MakeEmptyAccumulator() *ResAccumulator {
 	ra := &ResAccumulator{}
 	ra.resMap = resmap.New()
 	ra.tConfig = &config.TransformerConfig{}
-	ra.varSet = types.VarSet{}
+	ra.varSet = types.NewVarSet()
 	return ra
 }
 
