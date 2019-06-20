@@ -1,5 +1,7 @@
 # kustomize plugins
 
+See also: [linux exec plugin in 30 sec](execPluginIn30sec.md)
+
 Kustomize offers a plugin framework allowing
 people to write their own resource _generators_
 and _transformers_.
