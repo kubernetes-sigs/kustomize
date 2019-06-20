@@ -24,14 +24,14 @@ import (
 var kunstructured = NewKunstructuredFactoryImpl().FromMap(map[string]interface{}{
 	"Kind": "Service",
 	"metadata": map[string]interface{}{
-		"labels": map[string]string{
+		"labels": map[string]interface{}{
 			"app": "application-name",
 		},
 		"name": "service-name",
 	},
 	"spec": map[string]interface{}{
 		"ports": map[string]interface{}{
-			"port": "80",
+			"port": int64(80),
 		},
 	},
 	"this": map[string]interface{}{
@@ -168,7 +168,7 @@ func TestGetFieldValue(t *testing.T) {
 		{
 			name:          "threeFields",
 			pathToField:   "spec.ports.port",
-			expectedValue: "80",
+			expectedValue: int64(80),
 			errorExpected: false,
 		},
 		{
@@ -250,6 +250,12 @@ func TestGetFieldValue(t *testing.T) {
 			errorExpected: true,
 		},
 		{
+			name:          "accessorError",
+			pathToField:   "that[downwardapi]",
+			errorMsg:      ".that.downwardapi accessor error: [idx0 idx1 idx2 idx3] is of the type []interface {}, expected map[string]interface{}",
+			errorExpected: true,
+		},
+		{
 			name:          "unknownSlice",
 			pathToField:   "unknown[0]",
 			errorMsg:      "no field named 'unknown[0]'",
@@ -298,16 +304,34 @@ func TestGetFieldValue(t *testing.T) {
 			errorMsg:      "no field named 'complextree[1].field2[1].invalidsubfield'",
 		},
 		{
-			name:          "validStructSubFieldNoneIntIndex",
-			pathToField:   "complextree[thisisnotanint]",
-			errorExpected: true,
-			errorMsg:      "no field named 'complextree[thisisnotanint]'",
+			name:          "validDownwardAPILabels",
+			pathToField:   `metadata.labels["app"]`,
+			errorExpected: false,
+			expectedValue: "application-name",
 		},
 		{
-			name:          "invalidNoneIntIndex",
-			pathToField:   "complextree[thisisnotanint]",
+			name:          "validDownwardAPISpecs",
+			pathToField:   `spec.ports['port']`,
+			errorExpected: false,
+			expectedValue: int64(80),
+		},
+		{
+			name:          "validDownwardAPIThis",
+			pathToField:   `this.is[aFloat]`,
+			errorExpected: false,
+			expectedValue: float64(1.001),
+		},
+		{
+			name:          "downwardAPIInvalidLabel",
+			pathToField:   `metadata.labels["theisnotanint"]`,
 			errorExpected: true,
-			errorMsg:      "no field named 'complextree[thisisnotanint]'",
+			errorMsg:      `no field named 'metadata.labels["theisnotanint"]'`,
+		},
+		{
+			name:          "downwardAPIInvalidLabel2",
+			pathToField:   `invalidfield.labels["app"]`,
+			errorExpected: true,
+			errorMsg:      `no field named 'invalidfield.labels["app"]'`,
 		},
 		{
 			name:          "invalidIndexInIndex",
@@ -360,12 +384,6 @@ func TestGetString(t *testing.T) {
 			name:          "twoFields",
 			pathToField:   "metadata.name",
 			expectedValue: "service-name",
-			errorExpected: false,
-		},
-		{
-			name:          "threeFields",
-			pathToField:   "spec.ports.port",
-			expectedValue: "80",
 			errorExpected: false,
 		},
 		{
@@ -440,6 +458,12 @@ func TestGetString(t *testing.T) {
 			errorExpected: true,
 			errorMsg:      "no field named 'this.is[1].aString'",
 		},
+		{
+			name:          "validDownwardAPIField",
+			pathToField:   `metadata.labels["app"]`,
+			errorExpected: false,
+			expectedValue: "application-name",
+		},
 	}
 
 	for _, test := range tests {
@@ -487,6 +511,12 @@ func TestGetInt64(t *testing.T) {
 			errorExpected: true,
 			errorMsg:      "no field named 'these[1].field2[99]'",
 		},
+		{
+			name:          "validDownwardAPISpecs",
+			pathToField:   `spec.ports['port']`,
+			errorExpected: false,
+			expectedValue: int64(80),
+		},
 	}
 
 	for _, test := range tests {
@@ -521,6 +551,12 @@ func TestGetFloat64(t *testing.T) {
 			pathToField:   "complextree[1].field2[1].floatsubfield",
 			errorExpected: false,
 			expectedValue: float64(1.1121),
+		},
+		{
+			name:          "validDownwardAPIThis",
+			pathToField:   `this.is[aFloat]`,
+			errorExpected: false,
+			expectedValue: float64(1.001),
 		},
 		{
 			name:          "twoFieldsOneMissing",
