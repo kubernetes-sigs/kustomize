@@ -94,10 +94,10 @@ func TestParseField(t *testing.T) {
 			errorExpected: false,
 		},
 		{
-			name:          "validStructSubFieldNoneIntIndex",
-			pathToField:   "complextree[thisisnotanint]",
-			errorExpected: true,
-			errorMsg:      "invalid index complextree[thisisnotanint]",
+			name:          "validStructDownwardAPI",
+			pathToField:   `metadata.labels["app.kubernetes.io/component"]`,
+			expectedValue: buildPath(-1, "metadata", "labels", "app.kubernetes.io/component"),
+			errorExpected: false,
 		},
 		{
 			name:          "invalidIndexInIndex",

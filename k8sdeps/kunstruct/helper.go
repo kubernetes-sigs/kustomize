@@ -76,10 +76,13 @@ func parseFields(path string) ([]PathSection, error) {
 				// PathSection, save it to the set, then begin
 				// a new PathSection
 				tmpIdx, err := strconv.Atoi(path[start:i])
-				if err != nil {
-					return nil, fmt.Errorf("invalid index %s", path)
+				if err == nil {
+					// We have detected an integer so an array.
+					section.idx = tmpIdx
+				} else {
+					// We have detected the downwardapi syntax
+					appendNonEmpty(&section, path[start:i])
 				}
-				section.idx = tmpIdx
 				sectionset = append(sectionset, section)
 				section = newPathSection()
 
