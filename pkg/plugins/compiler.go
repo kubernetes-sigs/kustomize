@@ -21,6 +21,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -89,7 +90,7 @@ func (b *Compiler) SrcRoot() string {
 }
 
 func goBin() string {
-	return filepath.Join(os.Getenv("GOROOT"), "bin", "go")
+	return filepath.Join(runtime.GOROOT(), "bin", "go")
 }
 
 // Compile reads ${srcRoot}/${g}/${v}/${k}.go
