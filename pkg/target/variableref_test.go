@@ -17,12 +17,367 @@ limitations under the License.
 package target_test
 
 import (
+	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/pkg/kusttest"
 )
 
-func TestVariableRef(t *testing.T) {
+func TestBasicVariableRef(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th.WriteK("/app", `
+namePrefix: base-
+resources:
+- pod.yaml
+vars:
+- name: POD_NAME
+  objref:
+    apiVersion: v1
+    kind: Pod
+    name: clown
+  fieldref:
+    fieldpath: metadata.name
+`)
+
+	th.WriteF("/app/pod.yaml", `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: clown
+spec:
+  containers:
+  - name: frown
+    image: frown
+    command:
+    - echo
+    - "$(POD_NAME)"
+    env:
+      - name: FOO
+        value: "$(POD_NAME)"
+`)
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: base-clown
+spec:
+  containers:
+  - command:
+    - echo
+    - base-clown
+    env:
+    - name: FOO
+      value: base-clown
+    image: frown
+    name: frown
+`)
+}
+
+func TestBasicVarCollision(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
+	th.WriteK("/app/base1", `
+namePrefix: base1-
+resources:
+- pod.yaml
+vars:
+- name: POD_NAME
+  objref:
+    apiVersion: v1
+    kind: Pod
+    name: kelley
+  fieldref:
+    fieldpath: metadata.name
+`)
+	th.WriteF("/app/base1/pod.yaml", `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kelley
+spec:
+  containers:
+  - name: smile
+    image: smile
+    command:
+    - echo
+    - "$(POD_NAME)"
+    env:
+      - name: FOO
+        value: "$(POD_NAME)"
+`)
+
+	th.WriteK("/app/base2", `
+namePrefix: base2-
+resources:
+- pod.yaml
+vars:
+- name: POD_NAME
+  objref:
+    apiVersion: v1
+    kind: Pod
+    name: grimaldi
+  fieldref:
+    fieldpath: metadata.name
+`)
+	th.WriteF("/app/base2/pod.yaml", `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: grimaldi
+spec:
+  containers:
+  - name: dance
+    image: dance
+    command:
+    - echo
+    - "$(POD_NAME)"
+    env:
+      - name: FOO
+        value: "$(POD_NAME)"
+`)
+
+	th.WriteK("/app/overlay", `
+resources:
+- ../base1
+- ../base2
+`)
+	_, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err == nil {
+		t.Fatalf("should have an error")
+	}
+	if !strings.Contains(err.Error(), "var 'POD_NAME' already encountered") {
+		t.Fatalf("unexpected err: %v", err)
+	}
+}
+
+func TestVarPropagatesUp(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
+	th.WriteK("/app/base1", `
+namePrefix: base1-
+resources:
+- pod.yaml
+vars:
+- name: POD_NAME1
+  objref:
+    apiVersion: v1
+    kind: Pod
+    name: kelley
+  fieldref:
+    fieldpath: metadata.name
+`)
+	th.WriteF("/app/base1/pod.yaml", `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kelley
+spec:
+  containers:
+  - name: smile
+    image: smile
+    command:
+    - echo
+    - "$(POD_NAME1)"
+    env:
+      - name: FOO
+        value: "$(POD_NAME1)"
+`)
+
+	th.WriteK("/app/base2", `
+namePrefix: base2-
+resources:
+- pod.yaml
+vars:
+- name: POD_NAME2
+  objref:
+    apiVersion: v1
+    kind: Pod
+    name: grimaldi
+  fieldref:
+    fieldpath: metadata.name
+`)
+	th.WriteF("/app/base2/pod.yaml", `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: grimaldi
+spec:
+  containers:
+  - name: dance
+    image: dance
+    command:
+    - echo
+    - "$(POD_NAME2)"
+    env:
+      - name: FOO
+        value: "$(POD_NAME2)"
+`)
+
+	th.WriteK("/app/overlay", `
+resources:
+- pod.yaml
+- ../base1
+- ../base2
+`)
+	th.WriteF("/app/overlay/pod.yaml", `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: circus
+spec:
+  containers:
+  - name: ring
+    image: ring
+    command:
+    - echo
+    - "$(POD_NAME1)"
+    - "$(POD_NAME2)"
+    env:
+      - name: P1
+        value: "$(POD_NAME1)"
+      - name: P2
+        value: "$(POD_NAME2)"
+`)
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: circus
+spec:
+  containers:
+  - command:
+    - echo
+    - base1-kelley
+    - base2-grimaldi
+    env:
+    - name: P1
+      value: base1-kelley
+    - name: P2
+      value: base2-grimaldi
+    image: ring
+    name: ring
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: base1-kelley
+spec:
+  containers:
+  - command:
+    - echo
+    - base1-kelley
+    env:
+    - name: FOO
+      value: base1-kelley
+    image: smile
+    name: smile
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: base2-grimaldi
+spec:
+  containers:
+  - command:
+    - echo
+    - base2-grimaldi
+    env:
+    - name: FOO
+      value: base2-grimaldi
+    image: dance
+    name: dance
+`)
+}
+
+// Not so much a bug as a desire for local variables
+// with less than global scope.  Currently all variables
+// are global.  So if a base with a variable is included
+// twice, it's a collision, so it's denied.
+func TestBug506(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app/top")
+	th.WriteK("/app/base", `
+namePrefix: base-
+resources:
+- pod.yaml
+vars:
+- name: POD_NAME
+  objref:
+    apiVersion: v1
+    kind: Pod
+    name: myServerPod
+  fieldref:
+    fieldpath: metadata.name
+`)
+	th.WriteF("/app/base/pod.yaml", `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myServerPod
+spec:
+  containers:
+    - name: myServer
+      image: whatever
+      env:
+        - name: POD_NAME
+          value: $(POD_NAME)
+`)
+	th.WriteK("/app/o1", `
+nameprefix: p1-
+resources:
+- ../base
+`)
+	th.WriteK("/app/o2", `
+nameprefix: p2-
+resources:
+- ../base
+`)
+	th.WriteK("/app/top", `
+resources:
+- ../o1
+- ../o2
+`)
+
+	const presumablyDesired = `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: p1-base-myServerPod
+spec:
+  containers:
+  - env:
+    - name: POD_NAME
+      value: p1-base-myServerPod
+    image: whatever
+    name: myServer
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: p2-base-myServerPod
+spec:
+  containers:
+  - env:
+    - name: POD_NAME
+      value: p2-base-myServerPod
+    image: whatever
+    name: myServer
+`
+	_, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err == nil {
+		t.Fatalf("should have an error")
+	}
+	if !strings.Contains(err.Error(), "var 'POD_NAME' already encountered") {
+		t.Fatalf("unexpected err: %v", err)
+	}
+}
+
+func TestVarRefBig(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/app/overlay/staging")
 	th.WriteK("/app/base", `
 namePrefix: base-
