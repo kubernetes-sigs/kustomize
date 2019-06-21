@@ -13,6 +13,7 @@ import (
 type Validator interface {
 	MakeAnnotationValidator() func(map[string]string) error
 	MakeLabelValidator() func(map[string]string) error
+	MakeLabelNameValidator() func([]string) error
 	ValidateNamespace(string) []string
 	ErrIfInvalidKey(string) error
 	IsEnvVarName(k string) error
