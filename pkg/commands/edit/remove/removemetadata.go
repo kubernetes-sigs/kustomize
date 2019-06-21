@@ -1,0 +1,151 @@
+/*
+Copyright 2019 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package remove
+
+import (
+	"fmt"
+	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
+	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/pkg/types"
+	"strings"
+)
+
+// kindOfAdd is the kind of metadata being added: label or annotation
+type kindOfAdd int
+
+const (
+	annotation kindOfAdd = iota
+	label
+)
+
+func (k kindOfAdd) String() string {
+	kinds := [...]string{
+		"annotation",
+		"label",
+	}
+	if k < 0 || k > 1 {
+		return "Unknown metadatakind"
+	}
+	return kinds[k]
+}
+
+type removeMetadataOptions struct {
+	ignore         bool
+	metadata       []string
+	arrayValidator func([]string) error
+	kind           kindOfAdd
+}
+
+// newCmdRemoveLabel removes one or more commonLabels from the kustomization file.
+func newCmdRemoveLabel(fSys fs.FileSystem, v func([]string) error) *cobra.Command {
+	var o removeMetadataOptions
+	o.kind = label
+	o.arrayValidator = v
+	cmd := &cobra.Command{
+		Use:   "label",
+		Short: "Removes one or more commonLabels from " + pgmconfig.KustomizationFileNames[0],
+		Example: `
+		remove label {labelKey1},{labelKey2}`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return o.runE(args, fSys, o.removeLabels)
+		},
+	}
+	cmd.Flags().BoolVarP(&o.ignore, "ignore-non-existence", "i", false,
+		"ignore error if the given label doesn't exist",
+	)
+	return cmd
+}
+
+func (o *removeMetadataOptions) runE(
+	args []string, fSys fs.FileSystem, remover func(*types.Kustomization) error) error {
+	err := o.validateAndParse(args)
+	if err != nil {
+		return err
+	}
+	kf, err := kustfile.NewKustomizationFile(fSys)
+	if err != nil {
+		return err
+	}
+	m, err := kf.Read()
+	if err != nil {
+		return err
+	}
+	err = remover(m)
+	if err != nil {
+		return err
+	}
+	return kf.Write(m)
+}
+
+// validateAndParse validates `remove` commands and parses them into o.metadata
+func (o *removeMetadataOptions) validateAndParse(args []string) error {
+	if len(args) < 1 {
+		return fmt.Errorf("must specify %s", o.kind)
+	}
+	if len(args) > 1 {
+		return fmt.Errorf("%ss must be comma-separated, with no spaces", o.kind)
+	}
+	m, err := o.convertToArray(args[0])
+	if err != nil {
+		return err
+	}
+	if err = o.arrayValidator(m); err != nil {
+		return err
+	}
+	o.metadata = m
+	return nil
+}
+
+func (o *removeMetadataOptions) convertToArray(arg string) ([]string, error) {
+	inputs := strings.Split(arg, ",")
+	result := make([]string, 0, len(inputs))
+
+	for _, input := range inputs {
+		result = append(result, input)
+	}
+	return result, nil
+}
+
+func (o *removeMetadataOptions) removeAnnotations(m *types.Kustomization) error {
+	if m.CommonAnnotations == nil && !o.ignore {
+		return fmt.Errorf("commonAnnotations is not defined in kustomization file")
+	}
+	return o.removeFromMap(m.CommonAnnotations, annotation)
+}
+
+func (o *removeMetadataOptions) removeLabels(m *types.Kustomization) error {
+	if m.CommonLabels == nil && !o.ignore {
+		return fmt.Errorf("commonLabels is not defined in kustomization file")
+	}
+	return o.removeFromMap(m.CommonLabels, label)
+}
+
+func (o *removeMetadataOptions) removeFromMap(m map[string]string, kind kindOfAdd) error {
+	for _, k := range o.metadata {
+		if _, ok := m[k]; !ok && !o.ignore {
+			return fmt.Errorf("%s %s is not defined in kustomization file", kind, k)
+		}
+		delete(m, k)
+	}
+	return nil
+}
+
+func (o *removeMetadataOptions) makeError(input string, message string) error {
+	return fmt.Errorf("invalid %s: '%s' (%s)", o.kind, input, message)
+}

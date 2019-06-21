@@ -64,6 +64,21 @@ func (v *KustValidator) MakeLabelValidator() func(map[string]string) error {
 	}
 }
 
+// MakeLabelNameValidator returns a ArrayValidatorFunc using apimachinery.
+func (v *KustValidator) MakeLabelNameValidator() func([]string) error {
+	return func(x []string) error {
+		errs := field.ErrorList{}
+		fldPath := field.NewPath("field")
+		for _, k := range x {
+			errs = append(errs, v1validation.ValidateLabelName(k, fldPath)...)
+		}
+		if len(errs) > 0 {
+			return errors.New(errs.ToAggregate().Error())
+		}
+		return nil
+	}
+}
+
 // ValidateNamespace validates a string is a valid namespace using apimachinery.
 func (v *KustValidator) ValidateNamespace(s string) []string {
 	return validation.IsDNS1123Label(s)

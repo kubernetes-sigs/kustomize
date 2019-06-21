@@ -55,6 +55,11 @@ func (v *FakeValidator) MakeLabelValidator() func(map[string]string) error {
 	return nil
 }
 
+// MakeLabelNameValidator returns a nil function
+func (v *FakeValidator) MakeLabelNameValidator() func([]string) error {
+	return nil
+}
+
 // ValidateNamespace validates namespace by regexp
 func (v *FakeValidator) ValidateNamespace(s string) []string {
 	pattern := regexp.MustCompile(`^[a-zA-Z].*`)
@@ -68,6 +73,14 @@ func (v *FakeValidator) ValidateNamespace(s string) []string {
 // Can be set to fail or succeed to test error handling.
 // Can confirm if run or not run by surrounding code.
 func (v *FakeValidator) Validator(_ map[string]string) error {
+	v.called = true
+	if v.happy {
+		return nil
+	}
+	return errors.New(SAD)
+}
+
+func (v *FakeValidator) ValidatorArray(_ []string) error {
 	v.called = true
 	if v.happy {
 		return nil
