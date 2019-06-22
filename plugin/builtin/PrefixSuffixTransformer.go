@@ -23,7 +23,7 @@ type PrefixSuffixTransformerPlugin struct {
 
 //noinspection GoUnusedGlobalVariable
 func NewPrefixSuffixTransformerPlugin() *PrefixSuffixTransformerPlugin {
-  return &PrefixSuffixTransformerPlugin{}
+	return &PrefixSuffixTransformerPlugin{}
 }
 
 // Not placed in a file yet due to lack of demand.
