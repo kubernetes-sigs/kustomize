@@ -114,6 +114,8 @@ patchesJson6902:
 EOF
 ```
 
+运行 `kustomize build $DEMO_HOME`, 在输出那里确认有 `/test` 这个路径.
+
 <!-- @confirmYamlPatch @test -->
 ```bash
 test 1 == \
