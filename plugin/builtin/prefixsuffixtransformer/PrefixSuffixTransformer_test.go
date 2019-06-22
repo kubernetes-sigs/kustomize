@@ -121,6 +121,6 @@ metadata:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: test-cm
+  name: cm
 `)
 }
