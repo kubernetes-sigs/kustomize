@@ -1,8 +1,8 @@
 # 例子: 应用 json patch（json补丁）
 
-kustomization文件支持诸如[JSON patches](https://tools.ietf.org/html/rfc6902)这种自定义资源.
+kustomization文件支持通过[JSON patches](https://tools.ietf.org/html/rfc6902)来修改已有的资源.
 
-下面的例子将会将会使用这个特性对`Ingress`加以修改.
+下面的例子将会使用这个功能对`Ingress`加以修改.
 
 首先，创建一个包含`ingress`的`kustomization`文件.
 
@@ -46,7 +46,7 @@ cat <<EOF >$DEMO_HOME/ingress_patch.json
 EOF
 ```
 
-你也可以使用`YAML`这种文件格式创建一个补丁(patch).该例子顺便展示了“添加”操作：
+JSON patch 也可以写成 YAML 的格式.该例子顺便展示了“添加”操作：
 
 <!-- @addYamlPatch @test -->
 ```bash
@@ -80,7 +80,7 @@ patchesJson6902:
 EOF
 ```
 
-运行 `kustomize build $DEMO_HOME`, 在输出那里可见 host 已经被正确更新.
+运行 `kustomize build $DEMO_HOME`, 在输出那里确认 host 已经被正确更新.
 
 <!-- @confirmHost @test -->
 ```bash
@@ -89,7 +89,7 @@ test 1 == \
   echo $?
 ```
 
-运行 `kustomize build $DEMO_HOME`, 在输出那里确认 servicePort 已经被正确修改.
+运行 `kustomize build $DEMO_HOME`, 在输出那里确认 servicePort 已经被正确更新.
 
 <!-- @confirmServicePort @test -->
 
