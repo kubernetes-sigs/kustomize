@@ -57,21 +57,23 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 		if p.shouldSkip(r.OrgId()) {
 			continue
 		}
-		fs, ok := p.shouldInclude(r.OrgId())
-		if !ok {
-			continue
-		}
-		if smellsLikeANameChange(fs) {
-			r.AddNamePrefix(p.Prefix)
-			r.AddNameSuffix(p.Suffix)
-		}
-		err := transformers.MutateField(
-			r.Map(),
-			fs.PathSlice(),
-			fs.CreateIfNotPresent,
-			p.addPrefixSuffix)
-		if err != nil {
-			return err
+		id := r.OrgId()
+		for _, path := range p.FieldSpecs {
+			if !id.IsSelected(&path.Gvk) {
+				continue
+			}
+			if smellsLikeANameChange(&path) {
+				r.AddNamePrefix(p.Prefix)
+				r.AddNameSuffix(p.Suffix)
+			}
+			err := transformers.MutateField(
+				r.Map(),
+				path.PathSlice(),
+				path.CreateIfNotPresent,
+				p.addPrefixSuffix)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -79,16 +81,6 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 
 func smellsLikeANameChange(fs *config.FieldSpec) bool {
 	return fs.Path == "metadata/name"
-}
-
-func (p *plugin) shouldInclude(
-	id resid.ResId) (*config.FieldSpec, bool) {
-	for _, path := range p.FieldSpecs {
-		if id.IsSelected(&path.Gvk) {
-			return &path, true
-		}
-	}
-	return nil, false
 }
 
 func (p *plugin) shouldSkip(
