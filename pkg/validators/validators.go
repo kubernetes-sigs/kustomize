@@ -50,6 +50,11 @@ func (v *FakeValidator) MakeAnnotationValidator() func(map[string]string) error 
 	return nil
 }
 
+// MakeAnnotationNameValidator returns a nil function
+func (v *FakeValidator) MakeAnnotationNameValidator() func([]string) error {
+	return nil
+}
+
 // MakeLabelValidator returns a nil function
 func (v *FakeValidator) MakeLabelValidator() func(map[string]string) error {
 	return nil
