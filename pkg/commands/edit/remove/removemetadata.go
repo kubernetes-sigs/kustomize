@@ -52,6 +52,26 @@ type removeMetadataOptions struct {
 	kind           kindOfAdd
 }
 
+// newCmdRemoveLabel removes one or more commonAnnotations from the kustomization file.
+func newCmdRemoveAnnotation(fSys fs.FileSystem, v func([]string) error) *cobra.Command {
+	var o removeMetadataOptions
+	o.kind = label
+	o.arrayValidator = v
+	cmd := &cobra.Command{
+		Use:   "annotation",
+		Short: "Removes one or more commonAnnotations from " + pgmconfig.KustomizationFileNames[0],
+		Example: `
+		remove annotation {annotationKey1},{annotationKey2}`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return o.runE(args, fSys, o.removeAnnotations)
+		},
+	}
+	cmd.Flags().BoolVarP(&o.ignore, "ignore-non-existence", "i", false,
+		"ignore error if the given label doesn't exist",
+	)
+	return cmd
+}
+
 // newCmdRemoveLabel removes one or more commonLabels from the kustomization file.
 func newCmdRemoveLabel(fSys fs.FileSystem, v func([]string) error) *cobra.Command {
 	var o removeMetadataOptions

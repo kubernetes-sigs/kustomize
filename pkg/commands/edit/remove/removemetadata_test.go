@@ -54,6 +54,154 @@ func makeKustomization(t *testing.T) *types.Kustomization {
 	return readKustomizationFS(t, fakeFS)
 }
 
+func TestRemoveAnnotation(t *testing.T) {
+	var o removeMetadataOptions
+	o.metadata = []string{"annotation1"}
+
+	m := makeKustomization(t)
+	err := o.removeAnnotations(m)
+	if err != nil {
+		t.Errorf("unexpected error: could not write to kustomization file")
+	}
+
+	// adding the same test input should not work
+	err = o.removeAnnotations(m)
+	if err == nil {
+		t.Errorf("expected not exist in kustomization file error")
+	}
+
+	_, exists := m.CommonAnnotations["annotation1"]
+	if exists {
+		t.Errorf("annotation1 must be deleted")
+	}
+
+	_, exists = m.CommonAnnotations["annotation2"]
+	if !exists {
+		t.Errorf("annotation2 must exist")
+	}
+}
+
+func TestRemoveAnnotationIgnore(t *testing.T) {
+	fakeFS := makeKustomizationFS()
+
+	v := validators.MakeHappyMapValidator(t)
+	cmd := newCmdRemoveAnnotation(fakeFS, v.ValidatorArray)
+	cmd.Flag("ignore-non-existence").Value.Set("true")
+	args := []string{"annotation3"}
+	err := cmd.RunE(cmd, args)
+	v.VerifyCall()
+
+	if err != nil {
+		t.Errorf("unexpected error %v", err)
+	}
+}
+
+func TestRemoveAnnotationNoDefinition(t *testing.T) {
+	fakeFS := fs.MakeFakeFS()
+	fakeFS.WriteTestKustomizationWith([]byte(""))
+
+	v := validators.MakeHappyMapValidator(t)
+	cmd := newCmdRemoveAnnotation(fakeFS, v.ValidatorArray)
+	args := []string{"annotation1,annotation2"}
+	err := cmd.RunE(cmd, args)
+	v.VerifyCall()
+
+	if err == nil {
+		t.Errorf("expected an error")
+	}
+	if err.Error() != "commonAnnotations is not defined in kustomization file" {
+		t.Errorf("incorrect error: %v", err.Error())
+	}
+}
+
+func TestRemoveAnnotationNoDefinitionIgnore(t *testing.T) {
+	fakeFS := fs.MakeFakeFS()
+	fakeFS.WriteTestKustomizationWith([]byte(""))
+
+	v := validators.MakeHappyMapValidator(t)
+	cmd := newCmdRemoveLabel(fakeFS, v.ValidatorArray)
+	cmd.Flag("ignore-non-existence").Value.Set("true")
+	args := []string{"annotation1,annotation2"}
+	err := cmd.RunE(cmd, args)
+	v.VerifyCall()
+
+	if err != nil {
+		t.Errorf("unexpected error %v", err)
+	}
+}
+
+func TestRemoveAnnotationNoArgs(t *testing.T) {
+	fakeFS := makeKustomizationFS()
+
+	v := validators.MakeHappyMapValidator(t)
+	cmd := newCmdRemoveAnnotation(fakeFS, v.ValidatorArray)
+	err := cmd.Execute()
+	v.VerifyNoCall()
+
+	if err == nil {
+		t.Errorf("expected an error")
+	}
+	if err.Error() != "must specify label" {
+		t.Errorf("incorrect error: %v", err.Error())
+	}
+}
+
+func TestRemoveAnnotationInvalidFormat(t *testing.T) {
+	fakeFS := makeKustomizationFS()
+
+	v := validators.MakeSadMapValidator(t)
+	cmd := newCmdRemoveAnnotation(fakeFS, v.ValidatorArray)
+	args := []string{"nospecialchars%^=@"}
+	err := cmd.RunE(cmd, args)
+	v.VerifyCall()
+
+	if err == nil {
+		t.Errorf("expected an error")
+	}
+	if err.Error() != validators.SAD {
+		t.Errorf("incorrect error: %v", err.Error())
+	}
+}
+
+func TestRemoveAnnotationMultipleArgs(t *testing.T) {
+	fakeFS := makeKustomizationFS()
+
+	v := validators.MakeHappyMapValidator(t)
+	cmd := newCmdRemoveAnnotation(fakeFS, v.ValidatorArray)
+	args := []string{"annotation1,annotation2"}
+	err := cmd.RunE(cmd, args)
+	v.VerifyCall()
+
+	if err != nil {
+		t.Errorf("unexpected error %v", err)
+	}
+
+	m := readKustomizationFS(t, fakeFS)
+	splitArgs := strings.Split(args[0], ",")
+	for _, k := range splitArgs {
+		if _, exist := m.CommonAnnotations[k]; exist {
+			t.Errorf("%s must be deleted", k)
+		}
+	}
+}
+
+func TestRemoveAnnotationMultipleArgsInvalidFormat(t *testing.T) {
+	fakeFS := makeKustomizationFS()
+
+	v := validators.MakeSadMapValidator(t)
+	cmd := newCmdRemoveAnnotation(fakeFS, v.ValidatorArray)
+	args := []string{"annotation1", "annotation2"}
+	err := cmd.RunE(cmd, args)
+	v.VerifyNoCall()
+
+	if err == nil {
+		t.Errorf("expected an error")
+	}
+	if err.Error() != "labels must be comma-separated, with no spaces" {
+		t.Errorf("incorrect error: %v", err.Error())
+	}
+}
+
 func TestRemoveLabel(t *testing.T) {
 	var o removeMetadataOptions
 	o.metadata = []string{"label1"}
