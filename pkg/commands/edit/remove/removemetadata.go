@@ -137,6 +137,9 @@ func (o *removeMetadataOptions) convertToArray(arg string) ([]string, error) {
 	result := make([]string, 0, len(inputs))
 
 	for _, input := range inputs {
+		if len(input) == 0 {
+			return nil, o.makeError(input, "name is empty")
+		}
 		result = append(result, input)
 	}
 	return result, nil
