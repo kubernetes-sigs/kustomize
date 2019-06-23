@@ -12,7 +12,9 @@ import (
 // Validator provides functions to validate annotations and labels
 type Validator interface {
 	MakeAnnotationValidator() func(map[string]string) error
+	MakeAnnotationNameValidator() func([]string) error
 	MakeLabelValidator() func(map[string]string) error
+	MakeLabelNameValidator() func([]string) error
 	ValidateNamespace(string) []string
 	ErrIfInvalidKey(string) error
 	IsEnvVarName(k string) error
