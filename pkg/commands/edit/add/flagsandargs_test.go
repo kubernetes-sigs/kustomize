@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/fs"
 )
 
 func TestDataValidation_NoName(t *testing.T) {

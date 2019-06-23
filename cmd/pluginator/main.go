@@ -12,8 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"sigs.k8s.io/kustomize/pkg/pgmconfig"
-	"sigs.k8s.io/kustomize/pkg/plugins"
+	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/v3/pkg/plugins"
 )
 
 func main() {

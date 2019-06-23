@@ -35,5 +35,5 @@ chmod u+x kustomize
 
 <!-- @installkustomize @test -->
 ```
-go get sigs.k8s.io/kustomize
+go install sigs.k8s.io/kustomize/v3/cmd/kustomize
 ```

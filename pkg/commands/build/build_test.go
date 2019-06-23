@@ -19,7 +19,7 @@ package build
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 )
 
 func TestNewOptionsToSilenceCodeInspectionError(t *testing.T) {

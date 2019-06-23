@@ -5,10 +5,10 @@ package resmap
 
 import (
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/internal/kusterr"
-	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/resource"
-	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/v3/internal/kusterr"
+	"sigs.k8s.io/kustomize/v3/pkg/ifc"
+	"sigs.k8s.io/kustomize/v3/pkg/resource"
+	"sigs.k8s.io/kustomize/v3/pkg/types"
 )
 
 // Factory makes instances of ResMap.

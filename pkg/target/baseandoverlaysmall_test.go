@@ -20,9 +20,9 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/kusttest"
-	"sigs.k8s.io/kustomize/pkg/loader"
-	"sigs.k8s.io/kustomize/pkg/plugins"
+	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	"sigs.k8s.io/kustomize/v3/pkg/loader"
+	"sigs.k8s.io/kustomize/v3/pkg/plugins"
 )
 
 func TestOrderPreserved(t *testing.T) {

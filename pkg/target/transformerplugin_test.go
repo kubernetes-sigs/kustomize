@@ -4,11 +4,11 @@
 package target_test
 
 import (
+	"sigs.k8s.io/kustomize/v3/pkg/plugins"
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/kusttest"
-	"sigs.k8s.io/kustomize/plugin"
+	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
 )
 
 func writeDeployment(th *kusttest_test.KustTestHarness, path string) {
@@ -50,7 +50,7 @@ metadata:
 }
 
 func TestOrderedTransformers(t *testing.T) {
-	tc := plugin.NewEnvForTest(t).Set()
+	tc := plugins.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -98,7 +98,7 @@ spec:
 }
 
 func TestPluginsNotEnabled(t *testing.T) {
-	tc := plugin.NewEnvForTest(t).Set()
+	tc := plugins.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -121,7 +121,7 @@ transformers:
 }
 
 func TestSedTransformer(t *testing.T) {
-	tc := plugin.NewEnvForTest(t).Set()
+	tc := plugins.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
@@ -189,7 +189,7 @@ metadata:
 }
 
 func TestTransformedTransformers(t *testing.T) {
-	tc := plugin.NewEnvForTest(t).Set()
+	tc := plugins.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(

@@ -6,7 +6,7 @@ package inventory
 import (
 	"encoding/json"
 
-	"sigs.k8s.io/kustomize/pkg/resid"
+	"sigs.k8s.io/kustomize/v3/pkg/resid"
 )
 
 //Refs is a reference map.  Each key is the id

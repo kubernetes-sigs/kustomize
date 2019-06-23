@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/kusttest"
+	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
 )
 
 func makeCommonFileForMultiplePatchTest(th *kusttest_test.KustTestHarness) {

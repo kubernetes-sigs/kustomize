@@ -6,12 +6,12 @@ package main_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/kusttest"
-	"sigs.k8s.io/kustomize/plugin"
+	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	"sigs.k8s.io/kustomize/v3/pkg/plugins"
 )
 
 func TestNamespaceTransformer1(t *testing.T) {
-	tc := plugin.NewEnvForTest(t).Set()
+	tc := plugins.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -131,7 +131,7 @@ metadata:
 }
 
 func TestNamespaceTransformerClusterLevelKinds(t *testing.T) {
-	tc := plugin.NewEnvForTest(t).Set()
+	tc := plugins.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(

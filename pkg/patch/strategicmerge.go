@@ -16,7 +16,7 @@ limitations under the License.
 
 package patch
 
-import "sigs.k8s.io/kustomize/pkg/types"
+import "sigs.k8s.io/kustomize/v3/pkg/types"
 
 // Append appends a slice of patch paths to a PatchStrategicMerge slice
 func Append(patches []types.PatchStrategicMerge, paths ...string) []types.PatchStrategicMerge {

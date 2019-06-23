@@ -19,7 +19,7 @@ package config
 import (
 	"strings"
 
-	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 )
 
 // NameBackReferences is an association between a gvk.GVK and a list

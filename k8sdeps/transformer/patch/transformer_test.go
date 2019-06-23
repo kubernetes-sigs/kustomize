@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/pkg/resmaptest"
-	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/v3/pkg/resmaptest"
+	"sigs.k8s.io/kustomize/v3/pkg/resource"
 )
 
 var rf = resource.NewFactory(

@@ -21,7 +21,7 @@ import (
 	"os/exec"
 
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/fs"
 )
 
 // Cloner is a function that can clone a git repo.
