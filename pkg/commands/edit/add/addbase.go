@@ -22,8 +22,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
-	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/commands/kustfile"
+	"sigs.k8s.io/kustomize/v3/pkg/fs"
 )
 
 type addBaseOptions struct {

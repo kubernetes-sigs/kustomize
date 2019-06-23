@@ -5,8 +5,8 @@
 package ifc
 
 import (
-	"sigs.k8s.io/kustomize/pkg/gvk"
-	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/v3/pkg/gvk"
+	"sigs.k8s.io/kustomize/v3/pkg/types"
 )
 
 // Validator provides functions to validate annotations and labels

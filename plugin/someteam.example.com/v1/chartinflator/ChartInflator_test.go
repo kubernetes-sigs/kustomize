@@ -10,8 +10,8 @@ package main_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/kusttest"
-	"sigs.k8s.io/kustomize/plugin"
+	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	"sigs.k8s.io/kustomize/v3/pkg/plugins"
 )
 
 // This test requires having the helm binary on the PATH.
@@ -19,7 +19,7 @@ import (
 // TODO: Download and inflate the chart, and check that
 // in for the test.
 func TestChartInflator(t *testing.T) {
-	tc := plugin.NewEnvForTest(t).Set()
+	tc := plugins.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(

@@ -18,7 +18,7 @@ limitations under the License.
 package transformers
 
 import (
-	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 )
 
 // A Transformer modifies an instance of resmap.ResMap.

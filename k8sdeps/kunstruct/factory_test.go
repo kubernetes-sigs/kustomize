@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/ifc"
+	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 )
 
 func TestSliceFromBytes(t *testing.T) {

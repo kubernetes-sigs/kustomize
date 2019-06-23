@@ -3,7 +3,7 @@
 # Generate the Go code for the generator and
 # transformer factory functions in
 #
-#   sigs.k8s.io/kustomize/plugin/builtin
+#   sigs.k8s.io/kustomize/v3/plugin/builtin
 #
 # from the raw plugin directories found _below_
 # that directory.
@@ -32,9 +32,9 @@ echo Generating linkable plugins...
 pushd $dir >& /dev/null
 
 GOPATH=$myGoPath go generate \
-    sigs.k8s.io/kustomize/plugin/builtin/...
+    sigs.k8s.io/kustomize/v3/plugin/builtin/...
 GOPATH=$myGoPath go fmt \
-    sigs.k8s.io/kustomize/plugin/builtin
+    sigs.k8s.io/kustomize/v3/plugin/builtin
 
 popd >& /dev/null
 

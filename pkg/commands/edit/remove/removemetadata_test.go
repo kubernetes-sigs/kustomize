@@ -18,10 +18,10 @@ package remove
 
 import (
 	"fmt"
-	"sigs.k8s.io/kustomize/pkg/commands/kustfile"
-	"sigs.k8s.io/kustomize/pkg/fs"
-	"sigs.k8s.io/kustomize/pkg/types"
-	"sigs.k8s.io/kustomize/pkg/validators"
+	"sigs.k8s.io/kustomize/v3/pkg/commands/kustfile"
+	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/types"
+	"sigs.k8s.io/kustomize/v3/pkg/validators"
 	"strings"
 	"testing"
 )

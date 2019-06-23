@@ -5,8 +5,8 @@
 package transformer
 
 import (
-	"sigs.k8s.io/kustomize/pkg/resource"
-	"sigs.k8s.io/kustomize/pkg/transformers"
+	"sigs.k8s.io/kustomize/v3/pkg/resource"
+	"sigs.k8s.io/kustomize/v3/pkg/transformers"
 )
 
 // Factory makes transformers that require k8sdeps.
