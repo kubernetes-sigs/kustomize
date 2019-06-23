@@ -38,7 +38,7 @@ func NewCmdEdit(
 		add.NewCmdAdd(fSys, loader.NewFileLoaderAtCwd(v, fSys), kf),
 		set.NewCmdSet(fSys, v),
 		fix.NewCmdFix(fSys),
-		remove.NewCmdRemove(fSys),
+		remove.NewCmdRemove(fSys, loader.NewFileLoaderAtCwd(v, fSys)),
 	)
 	return c
 }

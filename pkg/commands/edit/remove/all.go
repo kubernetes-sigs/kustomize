@@ -19,10 +19,13 @@ package remove
 import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/pkg/ifc"
 )
 
 // NewCmdRemove returns an instance of 'remove' subcommand.
-func NewCmdRemove(fsys fs.FileSystem) *cobra.Command {
+func NewCmdRemove(
+	fsys fs.FileSystem,
+	ldr ifc.Loader) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "remove",
 		Short: "Removes items from the kustomization file.",
@@ -31,11 +34,19 @@ func NewCmdRemove(fsys fs.FileSystem) *cobra.Command {
 	# Removes resources from the kustomization file
 	kustomize edit remove resource {filepath} {filepath}
 	kustomize edit remove resource {pattern}
+
+	# Removes one or more commonLabels from the kustomization file
+	kustomize edit remove label {labelKey1},{labelKey2}
+
+	# Removes one or more commonAnnotations from the kustomization file
+	kustomize edit remove annotation {annotationKey1},{annotationKey2}
 `,
 		Args: cobra.MinimumNArgs(1),
 	}
 	c.AddCommand(
 		newCmdRemoveResource(fsys),
+		newCmdRemoveLabel(fsys, ldr.Validator().MakeLabelNameValidator()),
+		newCmdRemoveAnnotation(fsys, ldr.Validator().MakeAnnotationNameValidator()),
 	)
 	return c
 }

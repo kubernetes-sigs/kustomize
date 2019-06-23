@@ -53,10 +53,42 @@ func (v *KustValidator) MakeAnnotationValidator() func(map[string]string) error 
 	}
 }
 
+// MakeAnnotationNameValidator returns a MapValidatorFunc using apimachinery.
+func (v *KustValidator) MakeAnnotationNameValidator() func([]string) error {
+	return func(x []string) error {
+		errs := field.ErrorList{}
+		fldPath := field.NewPath("field")
+		for _, k := range x {
+			for _, msg := range validation.IsQualifiedName(strings.ToLower(k)) {
+				errs = append(errs, field.Invalid(fldPath, k, msg))
+			}
+		}
+		if len(errs) > 0 {
+			return errors.New(errs.ToAggregate().Error())
+		}
+		return nil
+	}
+}
+
 // MakeLabelValidator returns a MapValidatorFunc using apimachinery.
 func (v *KustValidator) MakeLabelValidator() func(map[string]string) error {
 	return func(x map[string]string) error {
 		errs := v1validation.ValidateLabels(x, field.NewPath("field"))
+		if len(errs) > 0 {
+			return errors.New(errs.ToAggregate().Error())
+		}
+		return nil
+	}
+}
+
+// MakeLabelNameValidator returns a ArrayValidatorFunc using apimachinery.
+func (v *KustValidator) MakeLabelNameValidator() func([]string) error {
+	return func(x []string) error {
+		errs := field.ErrorList{}
+		fldPath := field.NewPath("field")
+		for _, k := range x {
+			errs = append(errs, v1validation.ValidateLabelName(k, fldPath)...)
+		}
 		if len(errs) > 0 {
 			return errors.New(errs.ToAggregate().Error())
 		}
