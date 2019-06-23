@@ -22,7 +22,7 @@ import (
 	"log"
 	"sort"
 
-	"sigs.k8s.io/kustomize/pkg/transformers/config/defaultconfig"
+	"sigs.k8s.io/kustomize/v3/pkg/transformers/config/defaultconfig"
 )
 
 // TransformerConfig holds the data needed to perform transformations.

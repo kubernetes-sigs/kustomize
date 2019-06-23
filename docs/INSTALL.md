@@ -23,13 +23,13 @@ To install from head with [Go] v1.12 or higher:
 
 <!-- @installkustomize @test -->
 ```
-go install sigs.k8s.io/kustomize/cmd/kustomize
+go install sigs.k8s.io/kustomize/v3/cmd/kustomize
 ```
 
 ### Other methods
 
 #### macOS
- 
+
 ```
 brew install kustomize
 ```
@@ -44,4 +44,3 @@ For support on the chocolatey package
 and prior releases, see:
 - [Choco Package](https://chocolatey.org/packages/kustomize)
 - [Package Source](https://github.com/kenmaglio/choco-kustomize)
-

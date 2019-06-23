@@ -35,14 +35,14 @@ function testGoTest {
 # These tests require the helm program, and at the moment
 # we're not asking travis to install helm.
 function testNoTravisGoTest {
-  go test -v sigs.k8s.io/kustomize/pkg/target \
+  go test -v sigs.k8s.io/kustomize/v3/pkg/target \
       -run TestChartInflatorPlugin -tags=notravis
-  go test -v sigs.k8s.io/kustomize/plugin/someteam.example.com/v1/chartinflator/... \
+  go test -v sigs.k8s.io/kustomize/v3/plugin/someteam.example.com/v1/chartinflator/... \
     -run TestChartInflator -tags=notravis
   mdrip --mode test --label helmtest README.md ./examples/chart.md
-  go test -v sigs.k8s.io/kustomize/plugin/someteam.example.com/v1/validator/... \
+  go test -v sigs.k8s.io/kustomize/v3/plugin/someteam.example.com/v1/validator/... \
        -run TestValidatorHappy -tags=notravis
-  go test -v sigs.k8s.io/kustomize/plugin/someteam.example.com/v1/validator/... \
+  go test -v sigs.k8s.io/kustomize/v3/plugin/someteam.example.com/v1/validator/... \
        -run TestValidatorUnHappy -tags=notravis
 }
 

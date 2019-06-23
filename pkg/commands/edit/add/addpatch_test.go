@@ -21,7 +21,7 @@ import (
 
 	"strings"
 
-	"sigs.k8s.io/kustomize/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/fs"
 )
 
 const (

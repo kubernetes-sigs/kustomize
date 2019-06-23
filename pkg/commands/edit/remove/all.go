@@ -18,8 +18,8 @@ package remove
 
 import (
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/pkg/fs"
-	"sigs.k8s.io/kustomize/pkg/ifc"
+	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 )
 
 // NewCmdRemove returns an instance of 'remove' subcommand.

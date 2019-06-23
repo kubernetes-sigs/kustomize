@@ -9,16 +9,16 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/k8sdeps/transformer"
-	"sigs.k8s.io/kustomize/k8sdeps/validator"
-	"sigs.k8s.io/kustomize/pkg/commands/build"
-	"sigs.k8s.io/kustomize/pkg/commands/edit"
-	"sigs.k8s.io/kustomize/pkg/commands/misc"
-	"sigs.k8s.io/kustomize/pkg/fs"
-	"sigs.k8s.io/kustomize/pkg/pgmconfig"
-	"sigs.k8s.io/kustomize/pkg/resmap"
-	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/v3/k8sdeps/transformer"
+	"sigs.k8s.io/kustomize/v3/k8sdeps/validator"
+	"sigs.k8s.io/kustomize/v3/pkg/commands/build"
+	"sigs.k8s.io/kustomize/v3/pkg/commands/edit"
+	"sigs.k8s.io/kustomize/v3/pkg/commands/misc"
+	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/v3/pkg/resmap"
+	"sigs.k8s.io/kustomize/v3/pkg/resource"
 )
 
 // NewDefaultCommand returns the default (aka root) command for kustomize command.

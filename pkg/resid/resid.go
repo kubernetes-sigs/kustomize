@@ -6,7 +6,7 @@ package resid
 import (
 	"strings"
 
-	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 )
 
 // ResId is an identifier of a k8s resource object.

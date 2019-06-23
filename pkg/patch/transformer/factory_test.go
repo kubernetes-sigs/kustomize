@@ -22,11 +22,11 @@ import (
 	"testing"
 
 	"gopkg.in/yaml.v2"
-	"sigs.k8s.io/kustomize/internal/loadertest"
-	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/pkg/resmaptest"
-	"sigs.k8s.io/kustomize/pkg/resource"
-	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/v3/internal/loadertest"
+	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/v3/pkg/resmaptest"
+	"sigs.k8s.io/kustomize/v3/pkg/resource"
+	"sigs.k8s.io/kustomize/v3/pkg/types"
 )
 
 var rf = resource.NewFactory(

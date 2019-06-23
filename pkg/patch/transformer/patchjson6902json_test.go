@@ -21,11 +21,11 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/pkg/gvk"
-	"sigs.k8s.io/kustomize/pkg/resid"
-	"sigs.k8s.io/kustomize/pkg/resmaptest"
-	"sigs.k8s.io/kustomize/pkg/resource"
+	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/v3/pkg/gvk"
+	"sigs.k8s.io/kustomize/v3/pkg/resid"
+	"sigs.k8s.io/kustomize/v3/pkg/resmaptest"
+	"sigs.k8s.io/kustomize/v3/pkg/resource"
 )
 
 var deploy = gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}

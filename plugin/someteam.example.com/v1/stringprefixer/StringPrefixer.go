@@ -5,11 +5,11 @@ package main
 
 import (
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/resmap"
-	"sigs.k8s.io/kustomize/pkg/transformers"
-	"sigs.k8s.io/kustomize/pkg/transformers/config"
-	"sigs.k8s.io/kustomize/plugin/builtin"
+	"sigs.k8s.io/kustomize/v3/pkg/ifc"
+	"sigs.k8s.io/kustomize/v3/pkg/resmap"
+	"sigs.k8s.io/kustomize/v3/pkg/transformers"
+	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
+	"sigs.k8s.io/kustomize/v3/plugin/builtin"
 	"sigs.k8s.io/yaml"
 )
 

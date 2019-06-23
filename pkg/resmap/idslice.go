@@ -19,7 +19,7 @@ package resmap
 import (
 	"sort"
 
-	"sigs.k8s.io/kustomize/pkg/resid"
+	"sigs.k8s.io/kustomize/v3/pkg/resid"
 )
 
 // IdSlice implements the sort interface.

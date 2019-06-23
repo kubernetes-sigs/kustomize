@@ -20,8 +20,8 @@ package types
 import (
 	"regexp"
 
-	"sigs.k8s.io/kustomize/pkg/gvk"
-	"sigs.k8s.io/kustomize/pkg/image"
+	"sigs.k8s.io/kustomize/v3/pkg/gvk"
+	"sigs.k8s.io/kustomize/v3/pkg/image"
 )
 
 const (

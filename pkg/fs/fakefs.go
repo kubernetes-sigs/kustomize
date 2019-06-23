@@ -22,7 +22,7 @@ import (
 	"sort"
 	"strings"
 
-	"sigs.k8s.io/kustomize/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 )
 
 var _ FileSystem = &fakeFs{}

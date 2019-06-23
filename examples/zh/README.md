@@ -7,7 +7,7 @@
 这些示例通过了 [pre-commit](../../travis/pre-commit.sh) 测试，并且应该与 HEAD 一起使用。
 
 ```
-go get sigs.k8s.io/kustomize
+go get sigs.k8s.io/kustomize/v3/cmd/kustomize
 ```
 
 基本用法

@@ -23,17 +23,8 @@ kustomization file, and refering to this directory as a
 wants to use it.  This encourages modularity and
 relocatability.
 
-At the moment (in v2.0.3), however, there's no
-(released) analogous way to share patch files and other
-transformer configuration data between kustomizations.
-
-As a stop-gap until we add base-like behavior for
-transformers, we've added a flag to disable the check:
-
+To disable this, use v3, and the `load_restrictor` flag:
 
 ```
 kustomize build --load_restrictor none $target
 ```
-
-This flag is not in v2.0.3, but is available from head
-(`go install sigs.k8s.io/kustomize`).
