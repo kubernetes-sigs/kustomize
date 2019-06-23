@@ -242,8 +242,8 @@ A [Go plugin] for kustomize looks like this:
 > package main
 >
 > import (
->	"sigs.k8s.io/kustomize/pkg/ifc"
->	"sigs.k8s.io/kustomize/pkg/resmap"
+>	"sigs.k8s.io/kustomize/v3/pkg/ifc"
+>	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 >   ...
 > )
 >

@@ -6,7 +6,7 @@ package resid
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 )
 
 var stringTests = []struct {

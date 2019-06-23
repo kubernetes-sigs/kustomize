@@ -18,7 +18,7 @@ package config
 
 import (
 	"reflect"
-	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"testing"
 )
 

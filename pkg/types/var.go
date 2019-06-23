@@ -21,7 +21,7 @@ import (
 	"sort"
 	"strings"
 
-	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 )
 
 const defaultFieldPath = "metadata.name"

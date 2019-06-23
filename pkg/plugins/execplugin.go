@@ -25,9 +25,9 @@ import (
 	"strings"
 	"syscall"
 
-	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/resid"
-	"sigs.k8s.io/kustomize/pkg/resmap"
+	"sigs.k8s.io/kustomize/v3/pkg/ifc"
+	"sigs.k8s.io/kustomize/v3/pkg/resid"
+	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/yaml"
 )
 

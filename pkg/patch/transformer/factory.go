@@ -19,11 +19,11 @@ package transformer
 import (
 	"fmt"
 
-	"sigs.k8s.io/kustomize/pkg/gvk"
-	"sigs.k8s.io/kustomize/pkg/ifc"
-	"sigs.k8s.io/kustomize/pkg/resid"
-	"sigs.k8s.io/kustomize/pkg/transformers"
-	"sigs.k8s.io/kustomize/pkg/types"
+	"sigs.k8s.io/kustomize/v3/pkg/gvk"
+	"sigs.k8s.io/kustomize/v3/pkg/ifc"
+	"sigs.k8s.io/kustomize/v3/pkg/resid"
+	"sigs.k8s.io/kustomize/v3/pkg/transformers"
+	"sigs.k8s.io/kustomize/v3/pkg/types"
 )
 
 // PatchJson6902Factory makes PatchJson6902 transformers

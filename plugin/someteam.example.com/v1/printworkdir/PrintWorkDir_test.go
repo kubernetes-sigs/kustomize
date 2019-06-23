@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pkg/kusttest"
-	"sigs.k8s.io/kustomize/plugin"
+	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	"sigs.k8s.io/kustomize/v3/pkg/plugins"
 )
 
 func shouldContain(t *testing.T, s []byte, x string) {
@@ -18,7 +18,7 @@ func shouldContain(t *testing.T, s []byte, x string) {
 }
 
 func TestPrintWorkDirPlugin(t *testing.T) {
-	tc := plugin.NewEnvForTest(t).Set()
+	tc := plugins.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
@@ -37,5 +37,5 @@ metadata:
 		t.Error(err)
 	}
 	shouldContain(t, a, "path: /theAppRoot")
-	shouldContain(t, a, "sigs.k8s.io/kustomize/plugin/someteam.example.com/v1/printworkdir")
+	shouldContain(t, a, "plugin/someteam.example.com/v1/printworkdir")
 }

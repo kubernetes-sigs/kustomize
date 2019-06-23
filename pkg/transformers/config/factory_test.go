@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/internal/loadertest"
-	"sigs.k8s.io/kustomize/pkg/gvk"
+	"sigs.k8s.io/kustomize/v3/internal/loadertest"
+	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 )
 
 func TestMakeDefaultConfig(t *testing.T) {
