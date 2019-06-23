@@ -45,7 +45,6 @@ beans: two two two two
 fruit: orange
 kind: MeatBall
 metadata:
-  annotations: {}
   name: notImportantHere
 vegetable: tomato
 `)
