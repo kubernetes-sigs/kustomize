@@ -37,12 +37,16 @@ func NewCmdRemove(
 
 	# Removes one or more commonLabels from the kustomization file
 	kustomize edit remove label {labelKey1},{labelKey2}
+
+	# Removes one or more commonAnnotations from the kustomization file
+	kustomize edit remove annotation {annotationKey1},{annotationKey2}
 `,
 		Args: cobra.MinimumNArgs(1),
 	}
 	c.AddCommand(
 		newCmdRemoveResource(fsys),
 		newCmdRemoveLabel(fsys, ldr.Validator().MakeLabelNameValidator()),
+		newCmdRemoveAnnotation(fsys, ldr.Validator().MakeAnnotationNameValidator()),
 	)
 	return c
 }
