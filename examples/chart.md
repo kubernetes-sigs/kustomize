@@ -4,7 +4,7 @@
 [stable chart]: https://github.com/helm/charts/tree/master/stable
 [Helm charts]: https://github.com/helm/charts
 [_minecraft_]: https://github.com/helm/charts/tree/master/stable/minecraft
-[plugin]: ../docs/plugins.md
+[plugin]: ../docs/plugins
 
 [Helm charts] aren't natively read by kustomize, but
 kustomize has a [plugin] system that allows one to

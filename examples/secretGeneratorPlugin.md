@@ -126,7 +126,7 @@ them, etc.
 ## Secret values from anywhere
 
 A general alternative is to enshrine secret
-value generation in a [plugin](../docs/plugins.md).
+value generation in a [plugin](../docs/plugins).
 
 The values can then come in via, say, an
 authenticated and authorized RPC to a password
