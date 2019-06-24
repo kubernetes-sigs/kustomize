@@ -1,19 +1,42 @@
 # Versioning
 
 Running `kustomize` means one is running a
-particular version of a program, reading a
-particular version of a [kustomization] file.
+particular version of a program, using a
+particular version of underlying packages, and
+reading a particular version of a [kustomization]
+file.
 
 ## Program Versioning
 
 The command `kustomize version` prints a three
-field version tag (e.g. `1.0.11`) that aspires to
+field version tag (e.g. `v3.0.0`) that aspires to
 [semantic versioning].
 
 When enough changes have accumulated to
 warrant a new release, a [release process]
 is followed, and the fields in the version
 number are bumped per semver.
+
+## Kustomize packages
+
+At the time of writing, the kustomize program and
+the packages it uses (and exports) are in the same
+Go module (see the top level `go.mod` file in the
+repo).
+
+[trailing major version indicator]: https://github.com/golang/go/wiki/Modules#releasing-modules-v2-or-higher
+
+Thus, they share the module's version number, per
+its git tag (e.g. `v3.0.0`), whose major verion
+number matches the [trailing major version
+indicator] in the module name (e.g. the `/v3` in
+`sigs.k8s.io/kustomize/v3`).
+
+The non-internal packages in the Go module
+`sigs.k8s.io/kustomize/v3`, introduced in
+[v3.0.0](v3.0.0.md), conform to [semantic
+versioning].
+
 
 ## Kustomization File Versioning
 
