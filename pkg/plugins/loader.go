@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"plugin"
+	"reflect"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -102,18 +103,13 @@ func (l *Loader) absolutePluginPath(id resid.ResId) string {
 
 // TODO: https://github.com/kubernetes-sigs/kustomize/issues/1164
 func (l *Loader) loadAndConfigurePlugin(
-	ldr ifc.Loader, res *resource.Resource) (c Configurable, err error) {
+	ldr ifc.Loader, res *resource.Resource) (Configurable, error) {
 	if !l.pc.Enabled {
 		return nil, NotEnabledErr(res.OrgId().Kind)
 	}
-	if p := NewExecPlugin(
-		l.absolutePluginPath(res.OrgId())); p.isAvailable() {
-		c = p
-	} else {
-		c, err = l.loadGoPlugin(res.OrgId())
-		if err != nil {
-			return nil, err
-		}
+	c, err := l.loadPlugin(res.OrgId())
+	if err != nil {
+		return nil, err
 	}
 	yaml, err := res.AsYAML()
 	if err != nil {
@@ -127,6 +123,18 @@ func (l *Loader) loadAndConfigurePlugin(
 	return c, nil
 }
 
+func (l *Loader) loadPlugin(resId resid.ResId) (Configurable, error) {
+	p := NewExecPlugin(l.absolutePluginPath(resId))
+	if p.isAvailable() {
+		return p, nil
+	}
+	c, err := l.loadGoPlugin(resId)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
 // registry is a means to avoid trying to load the same .so file
 // into memory more than once, which results in an error.
 // Each test makes its own loader, and tries to load its own plugins,
@@ -135,11 +143,10 @@ func (l *Loader) loadAndConfigurePlugin(
 // as a Loader instance variable.  So make it a package variable.
 var registry = make(map[string]Configurable)
 
-func (l *Loader) loadGoPlugin(id resid.ResId) (c Configurable, err error) {
+func (l *Loader) loadGoPlugin(id resid.ResId) (Configurable, error) {
 	regId := relativePluginPath(id)
-	var ok bool
-	if c, ok = registry[regId]; ok {
-		return c, nil
+	if c, ok := registry[regId]; ok {
+		return copy(c), nil
 	}
 	absPath := l.absolutePluginPath(id)
 	p, err := plugin.Open(absPath + ".so")
@@ -152,10 +159,18 @@ func (l *Loader) loadGoPlugin(id resid.ResId) (c Configurable, err error) {
 			err, "plugin %s doesn't have symbol %s",
 			regId, PluginSymbol)
 	}
-	c, ok = symbol.(Configurable)
+	c, ok := symbol.(Configurable)
 	if !ok {
 		return nil, fmt.Errorf("plugin %s not configurable", regId)
 	}
 	registry[regId] = c
-	return
+	return copy(c), nil
+}
+
+func copy(i interface{}) Configurable {
+	indirect := reflect.Indirect(reflect.ValueOf(i))
+	newIndirect := reflect.New(indirect.Type())
+	newIndirect.Elem().Set(reflect.ValueOf(indirect.Interface()))
+	newNamed := newIndirect.Interface()
+	return newNamed.(Configurable)
 }
