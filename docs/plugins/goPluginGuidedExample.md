@@ -160,13 +160,13 @@ dependency [skew].
 On load failure
 
  * be sure to build the plugin with the same
-   version of Go (`go1.12`) on the same `$GOOS`
-   (`linux`) and `$GOARCH` (`amd64`) used to build
+   version of Go (_go1.12_) on the same `$GOOS`
+   (_linux_) and `$GOARCH` (_amd64_) used to build
    the kustomize being [used in this demo].
    
- * change the plugin's dependencies in `go.mod` to
-   match those used to build kustomize (check the
-   `go.mod` used in the tagged commit).
+ * change the plugin's dependencies in its `go.mod`
+   to match the versions used by kustomize (check
+   kustomize's `go.mod` used in its tagged commit).
 
 Lacking tools and metadata to allow this to be
 automated, there won't be a Go plugin ecosystem.
