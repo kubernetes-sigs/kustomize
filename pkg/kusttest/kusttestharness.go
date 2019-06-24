@@ -31,16 +31,16 @@ type KustTestHarness struct {
 }
 
 func NewKustTestHarness(t *testing.T, path string) *KustTestHarness {
-	return NewKustTestHarnessWithPluginConfig(
+	return newHarness(
 		t, path, plugins.DefaultPluginConfig())
 }
 
 func NewKustTestPluginHarness(t *testing.T, path string) *KustTestHarness {
-	return NewKustTestHarnessWithPluginConfig(
+	return newHarness(
 		t, path, plugins.ActivePluginConfig())
 }
 
-func NewKustTestHarnessWithPluginConfig(
+func newHarness(
 	t *testing.T, path string,
 	pc *types.PluginConfig) *KustTestHarness {
 	return NewKustTestHarnessFull(t, path, loader.RestrictionRootOnly, pc)
