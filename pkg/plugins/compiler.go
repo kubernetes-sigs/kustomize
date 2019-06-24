@@ -41,7 +41,7 @@ type Compiler struct {
 }
 
 // DefaultSrcRoot guesses where the user
-// has her ${g}/${v}/${k}.go files.
+// has her ${g}/${v}/$lower(${k})/${k}.go files.
 func DefaultSrcRoot() (string, error) {
 	var nope []string
 	var root string
@@ -109,8 +109,14 @@ func (b *Compiler) Compile(g, v, k string) error {
 	}
 	srcFile := filepath.Join(b.srcRoot, g, v, lowK, k) + ".go"
 	if !FileExists(srcFile) {
-		return fmt.Errorf(
-			"cannot find source %s", srcFile)
+		// Handy for tests of lone plugins.
+		s := k + ".go"
+		if !FileExists(s) {
+			return fmt.Errorf(
+				"cannot find source at '%s' or '%s'", srcFile, s)
+
+		}
+		srcFile = s
 	}
 	commands := []string{
 		"build",
