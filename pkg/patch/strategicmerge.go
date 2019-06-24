@@ -35,3 +35,20 @@ func Exist(patches []types.PatchStrategicMerge, path string) bool {
 	}
 	return false
 }
+
+// Delete deletes patches from a PatchStrategicMerge slice
+func Delete(patches []types.PatchStrategicMerge, paths ...string) []types.PatchStrategicMerge {
+	// Convert paths into PatchStrategicMerge slice
+	convertedPath := make([]types.PatchStrategicMerge, len(paths))
+	for i, p := range paths {
+		convertedPath[i] = types.PatchStrategicMerge(p)
+	}
+
+	filteredPatches := make([]types.PatchStrategicMerge, 0, len(patches))
+	for _, containedPatch := range patches {
+		if !Exist(convertedPath, string(containedPatch)) {
+			filteredPatches = append(filteredPatches, containedPatch)
+		}
+	}
+	return filteredPatches
+}
