@@ -21,7 +21,7 @@ What things should be created (and optionally subsequently customized)?
 |[configMapGenerator](#configmapgenerator)| list  |Each entry in this list results in the creation of one ConfigMap resource (it's a generator of n maps).|
 |[secretGenerator](#secretgenerator)| list  |Each entry in this list results in the creation of one Secret resource (it's a generator of n secrets)|
 |[generatorOptions](#generatoroptions)|string|generatorOptions modify behavior of all ConfigMap and Secret generators|
-|[generators](#generators)|list|[plugin](plugins.md) configuration files|
+|[generators](#generators)|list|[plugin](plugins) configuration files|
 
 
 ## Transformers
@@ -40,7 +40,7 @@ What transformations (customizations) should be applied?
 | [replicas](#replicas) | list | Replicas modifies the number of replicas of a resource. |
 |[patchesStrategicMerge](#patchesstrategicmerge)| list |Each entry in this list should resolve to a partial or complete resource definition file.|
 |[patchesJson6902](#patchesjson6902)| list  |Each entry in this list should resolve to a kubernetes object and a JSON patch that will be applied to the object.|
-|[transformers](#transformers)|list|[plugin](plugins.md) configuration files|
+|[transformers](#transformers)|list|[plugin](plugins) configuration files|
 
 
 ## Meta
@@ -173,7 +173,7 @@ generatorOptions:
 
 ### generators
 
-A list of generator [plugin](plugins.md) configuration files.
+A list of generator [plugin](plugins) configuration files.
 
 ```
 generators:

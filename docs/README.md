@@ -12,7 +12,7 @@ English | [简体中文](zh/README.md)
  * [Kustomize Fields](fields.md) - explanations of the fields
    in a  [kustomization](glossary.md#kustomization) file.
 
- * [Plugins](plugins.md) - extending kustomize with
+ * [Plugins](plugins) - extending kustomize with
    custom generators and transformers.
 
  * [Workflows](workflows.md) - steps one might take in
@@ -22,6 +22,8 @@ English | [简体中文](zh/README.md)
 
 
 ## Release notes
+
+ * [3.0](v3.0.0.md) - Late June 2019.  Plugin developer release.
 
  * [2.1](v2.1.0.md) - 18 June 2019.  Plugins, ordered resources, etc.
 

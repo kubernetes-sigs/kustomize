@@ -1,13 +1,16 @@
 # kustomize plugins
 
-See also: [linux exec plugin in 30 sec](execPluginIn30sec.md)
+Quick guides:
+
+* [linux exec plugin in 60 sec](execPluginGuidedExample.md)
+* [linux Go plugin in 60 sec](goPluginGuidedExample.md)
 
 Kustomize offers a plugin framework allowing
 people to write their own resource _generators_
 and _transformers_.
 
-[generator options]: ../examples/generatorOptions.md
-[transformer configs]: ../examples/transformerconfigs
+[generator options]: ../../examples/generatorOptions.md
+[transformer configs]: ../../examples/transformerconfigs
 
 Write a plugin when changing [generator options]
 or [transformer configs] doesn't meet your needs.
@@ -53,7 +56,7 @@ The value of each entry in a `resources`,
 relative path to a YAML file, or a path or URL
 to a [kustomization].
 
-[kustomization]: glossary.md#kustomization
+[kustomization]: ../glossary.md#kustomization
 
 In the former case the YAML is read from disk directly,
 and in the latter case a kustomization is performed,
@@ -76,7 +79,7 @@ generators:
 
 Given this, the kustomization process would expect to
 find a file called `chartInflator.yaml` in the
-kustomization [root](glossary.md#kustomization-root).
+kustomization [root](../glossary.md#kustomization-root).
 
 This is the _plugin's configuration file_.
 
@@ -93,7 +96,7 @@ chartName: minecraft
 __The `apiVersion` and `kind` fields are
 used to locate the plugin.__
 
-[k8s object]: glossary.md#kubernetes-style-object
+[k8s object]: ../glossary.md#kubernetes-style-object
 
 > Thus, these fields are required.  They are also
 > required because a kustomize plugin
@@ -103,9 +106,9 @@ To get the plugin ready to generator or transform,
 it is given the entire contents of the
 configuration file.
 
-[NameTransformer]: ../plugin/builtin/prefixsuffixtransformer/PrefixSuffixTransformer_test.go
-[ChartInflator]: ../plugin/someteam.example.com/v1/chartinflator/ChartInflator_test.go
-[plugins]: ../plugin/builtin
+[NameTransformer]: ../../plugin/builtin/prefixsuffixtransformer/PrefixSuffixTransformer_test.go
+[ChartInflator]: ../../plugin/someteam.example.com/v1/chartinflator/ChartInflator_test.go
+[plugins]: ../../plugin/builtin
 
 For more examples of plugin configuration YAML,
 browse the unit tests below the [plugins] root,
@@ -209,9 +212,9 @@ provided in the kustomization file).
 >   unless a flag `-g` is provided, switching the
 >   exec plugin to behave as a generator.
 
-[helm chart inflator]: ../plugin/someteam.example.com/v1/chartinflator
-[bashed config map]: ../plugin/someteam.example.com/v1/bashedconfigmap
-[sed transformer]: ../plugin/someteam.example.com/v1/sedtransformer
+[helm chart inflator]: ../../plugin/someteam.example.com/v1/chartinflator
+[bashed config map]: ../../plugin/someteam.example.com/v1/bashedconfigmap
+[sed transformer]: ../../plugin/someteam.example.com/v1/sedtransformer
 
 #### Examples
 
@@ -271,10 +274,10 @@ file to be added to the `generators` or
 `transformers` field in the kustomization file.
 Do one or the other or both as desired.
 
-[secret generator]: ../plugin/someteam.example.com/v1/secretsfromdatabase
-[service generator]: ../plugin/someteam.example.com/v1/someservicegenerator
-[string prefixer]: ../plugin/someteam.example.com/v1/stringprefixer
-[date prefixer]: ../plugin/someteam.example.com/v1/dateprefixer
+[secret generator]: ../../plugin/someteam.example.com/v1/secretsfromdatabase
+[service generator]: ../../plugin/someteam.example.com/v1/someservicegenerator
+[string prefixer]: ../../plugin/someteam.example.com/v1/stringprefixer
+[date prefixer]: ../../plugin/someteam.example.com/v1/dateprefixer
 
 
 #### Examples
@@ -287,7 +290,7 @@ Do one or the other or both as desired.
    `TestTransformedTransformers` test in the `target` package.
  * [date prefixer] - prefix the current date to resource names, a simple
    example used to modify the string prefixer plugin just mentioned.
- * All the builtin plugins [here](../plugin/builtin).
+ * All the builtin plugins [here](../../plugin/builtin).
    User authored plugins are
    on the same footing as builtin operations.
 
