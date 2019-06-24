@@ -405,7 +405,7 @@ A chunk of code used by kustomize, but not necessarily
 compiled into kustomize, to generate and/or transform a
 kubernetes resource as part of a kustomization.
 
-Details [here](plugins.md).
+Details [here](plugins).
 
 ## resource
 
