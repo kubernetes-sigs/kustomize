@@ -35,6 +35,9 @@ func NewCmdRemove(
 	kustomize edit remove resource {filepath} {filepath}
 	kustomize edit remove resource {pattern}
 
+	# Removes one or more patches from the kustomization file
+	kustomize edit remove patch <filepath>
+
 	# Removes one or more commonLabels from the kustomization file
 	kustomize edit remove label {labelKey1},{labelKey2}
 
@@ -47,6 +50,7 @@ func NewCmdRemove(
 		newCmdRemoveResource(fsys),
 		newCmdRemoveLabel(fsys, ldr.Validator().MakeLabelNameValidator()),
 		newCmdRemoveAnnotation(fsys, ldr.Validator().MakeAnnotationNameValidator()),
+		newCmdRemovePatch(fsys),
 	)
 	return c
 }
