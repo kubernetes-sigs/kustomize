@@ -4,7 +4,6 @@
 package build
 
 import (
-	"fmt"
 	"io"
 	"path/filepath"
 	"strings"
@@ -18,6 +17,7 @@ import (
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/v3/pkg/plugins"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
+	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/target"
 	"sigs.k8s.io/kustomize/v3/plugin/builtin"
 	"sigs.k8s.io/yaml"
@@ -202,43 +202,38 @@ func NewCmdBuildPrune(
 
 func writeIndividualFiles(
 	fSys fs.FileSystem, folderPath string, m resmap.ResMap) error {
-
 	byNamespace := m.GroupedByNamespace()
-	nsNeeded := len(byNamespace) > 1
-	for namespace, nresources := range byNamespace {
-		for _, res := range nresources {
-			basename := fmt.Sprintf(
-				"%s_%s.yaml",
-				strings.ToLower(res.GetGvk().String()),
-				strings.ToLower(res.GetName()),
-			)
-
-			// Preserve backward compatibility with kustomize 2.1.0.
-			// No need to cluter filename with namespace if all the objects
-			// are in the same namespace. The not namespaceable objects
-			// are grouped in the "%no_namespace%" bucket.
-			if (nsNeeded) && (namespace != "%no_namespace%") {
-				basename = fmt.Sprintf(
-					"%s_%s",
-					strings.ToLower(namespace),
-					strings.ToLower(basename),
-				)
+	for namespace, resList := range byNamespace {
+		for _, res := range resList {
+			fName := fileName(res)
+			if len(byNamespace) > 1 {
+				fName = strings.ToLower(namespace) + "_" + fName
 			}
-
-			filename := filepath.Join(
-				folderPath,
-				basename,
-			)
-
-			out, err := yaml.Marshal(res.Map())
-			if err != nil {
-				return err
-			}
-			err = fSys.WriteFile(filename, out)
+			err := writeFile(fSys, folderPath, fName, res)
 			if err != nil {
 				return err
 			}
 		}
 	}
+	for _, res := range m.NonNamespaceable() {
+		err := writeFile(fSys, folderPath, fileName(res), res)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
+}
+
+func fileName(res *resource.Resource) string {
+	return strings.ToLower(res.GetGvk().String()) +
+		"_" + strings.ToLower(res.GetName()) + ".yaml"
+}
+
+func writeFile(
+	fSys fs.FileSystem, path, fName string, res *resource.Resource) error {
+	out, err := yaml.Marshal(res.Map())
+	if err != nil {
+		return err
+	}
+	return fSys.WriteFile(filepath.Join(path, fName), out)
 }

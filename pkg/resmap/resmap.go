@@ -93,12 +93,18 @@ type ResMap interface {
 	// Same as GetByOriginalId.
 	GetById(resid.ResId) (*resource.Resource, error)
 
-	// GroupedByNamespace provides map of discardable slice
-	// of resource pointer
-	// The not namespaceable resources are added to the "cluster-wide" key.
-	// The resources in the default namespace are added to the "default" key.
-	// The rest of the resources are grouped in their respectiv namespace.
+	// GroupedByNamespace returns a map of namespace
+	// to a slice of *Resource in that namespace.
+	// Resources for whom IsNamespaceableKind is false are
+	// are not included at all (see NonNamespaceable).
+	// Resources with an empty namespace are placed
+	// in the resid.DefaultNamespace entry.
 	GroupedByNamespace() map[string][]*resource.Resource
+
+	// NonNamespaceable returns a slice of resources that
+	// cannot be placed in a namespace, e.g.
+	// Node, ClusterRole, Namespace itself, etc.
+	NonNamespaceable() []*resource.Resource
 
 	// AllIds returns all CurrentIds.
 	AllIds() []resid.ResId
@@ -352,25 +358,25 @@ func (m *resWrangler) GetById(id resid.ResId) (*resource.Resource, error) {
 
 // GroupedByNamespace implements ResMap.GroupByNamespace
 func (m *resWrangler) GroupedByNamespace() map[string][]*resource.Resource {
+	items := m.groupedByNamespace()
+	delete(items, resid.TotallyNotANamespace)
+	return items
+}
+
+// NonNamespaceable implements ResMap.NonNamespaceable
+func (m *resWrangler) NonNamespaceable() []*resource.Resource {
+	return m.groupedByNamespace()[resid.TotallyNotANamespace]
+}
+
+func (m *resWrangler) groupedByNamespace() map[string][]*resource.Resource {
 	byNamespace := make(map[string][]*resource.Resource)
 	for _, res := range m.rList {
-		// Add to the notNamespaceable bucket by default.
-		namespace := "%no_namespace%"
-
-		if res.OrgId().IsNamespaceable() {
-			namespace = res.OrgId().Namespace
-			if res.OrgId().IsInDefaultNs() {
-				namespace = "default"
-			}
-		}
-
+		namespace := res.CurId().EffectiveNamespace()
 		if _, found := byNamespace[namespace]; !found {
-			byNamespace[namespace] = make([]*resource.Resource, 0)
+			byNamespace[namespace] = []*resource.Resource{}
 		}
-
 		byNamespace[namespace] = append(byNamespace[namespace], res)
 	}
-
 	return byNamespace
 }
 
