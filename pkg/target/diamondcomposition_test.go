@@ -62,6 +62,8 @@ func writeDeploymentBase(th *kusttest_test.KustTestHarness) {
 	th.WriteK("/app/base", `
 resources:
 - deployment.yaml
+patchesStrategicMerge:
+- dep-patch.yaml
 `)
 
 	th.WriteF("/app/base/deployment.yaml", `
@@ -72,7 +74,37 @@ metadata:
 spec:
   template:
     spec:
+      containers:
+      - name: my-deployment
+        image: my-image
+`)
+
+	th.WriteF("/app/base/dep-patch.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment
+spec:
+  template:
+    spec:
       dnsPolicy: "None"
+`)
+}
+
+func writeDeploymentBaseNoPatch(th *kusttest_test.KustTestHarness) {
+	th.WriteK("/app/base", `
+resources:
+- deployment.yaml
+`)
+
+	th.WriteF("/app/base/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment
+spec:
+  template:
+    spec:
       containers:
       - name: my-deployment
         image: my-image
@@ -122,7 +154,11 @@ patchesStrategicMerge:
 //          \     |     /
 //              base
 //
-func TestIssue1251_CompositeDiamond_Failure(t *testing.T) {
+
+// In the case, the DeploymentBase is setting the DnsPolicy to None.
+// Kustomize detects a merge conflict when merging probe, dns and restart
+// into composite.
+func TestIssue1251_CompositeDiamond_ProbeDnsRestart_MergeConflict(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/app/composite")
 	writeDeploymentBase(th)
 	writeProbeOverlay(th)
@@ -141,7 +177,55 @@ resources:
 		t.Fatalf("Expected resource accumulation error")
 	}
 	if !strings.Contains(
-		err.Error(), "already registered id: apps_v1_Deployment|~X|my-deployment") {
+		err.Error(), "conflict between") {
+		t.Fatalf("Unexpected err: %v", err)
+	}
+}
+
+func TestIssue1251_CompositeDiamond_ProbeRestartDns_MergeConflict(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app/composite")
+	writeDeploymentBase(th)
+	writeProbeOverlay(th)
+	writeDNSOverlay(th)
+	writeRestartOverlay(th)
+
+	th.WriteK("/app/composite", `
+resources:
+- ../probe
+- ../restart
+- ../dns
+`)
+
+	_, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err == nil {
+		t.Fatalf("Expected resource accumulation error")
+	}
+	if !strings.Contains(
+		err.Error(), "conflict between") {
+		t.Fatalf("Unexpected err: %v", err)
+	}
+}
+
+func TestIssue1251_CompositeDiamond_DnsProbeRestart_MergeConflict(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app/composite")
+	writeDeploymentBase(th)
+	writeProbeOverlay(th)
+	writeDNSOverlay(th)
+	writeRestartOverlay(th)
+
+	th.WriteK("/app/composite", `
+resources:
+- ../dns
+- ../probe
+- ../restart
+`)
+
+	_, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err == nil {
+		t.Fatalf("Expected resource accumulation error")
+	}
+	if !strings.Contains(
+		err.Error(), "conflict between") {
 		t.Fatalf("Unexpected err: %v", err)
 	}
 }
@@ -164,6 +248,51 @@ spec:
       dnsPolicy: ClusterFirst
       restartPolicy: Always
 `
+
+// Same test except that there no conflict to be detected in during
+// the merge
+func TestIssue1251_CompositeDiamond_ProbeRestartDns(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app/composite")
+	writeDeploymentBaseNoPatch(th)
+	writeProbeOverlay(th)
+	writeDNSOverlay(th)
+	writeRestartOverlay(th)
+
+	th.WriteK("/app/composite", `
+resources:
+- ../probe
+- ../dns
+- ../restart
+`)
+
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, expectedPatchedDeployment)
+}
+
+// Identical test. Validate that ordering of resources as no effect.
+func TestIssue1251_CompositeDiamond_ProbeDnsRestart(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app/composite")
+	writeDeploymentBaseNoPatch(th)
+	writeProbeOverlay(th)
+	writeDNSOverlay(th)
+	writeRestartOverlay(th)
+
+	th.WriteK("/app/composite", `
+resources:
+- ../probe
+- ../restart
+- ../dns
+`)
+
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, expectedPatchedDeployment)
+}
 
 // This test reuses some methods from TestIssue1251_CompositeDiamond,
 // but overwrites the kustomization files in the overlays.

@@ -14,7 +14,7 @@ import (
 	. "sigs.k8s.io/kustomize/v3/pkg/accumulator"
 	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/resmaptest"
+	resmaptest_test "sigs.k8s.io/kustomize/v3/pkg/resmaptest"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
@@ -170,13 +170,20 @@ func TestResolveVarsVarNeedsDisambiguation(t *testing.T) {
 			},
 		},
 	})
-	if err == nil {
+	if err != nil {
 		t.Fatalf("expected error")
 	}
-	if !strings.Contains(
-		err.Error(), "unable to disambiguate") {
-		t.Fatalf("unexpected err: %v", err)
-	}
+
+	// Behavior has been modified.
+	// Conflict detection moved to VarMap object
+	// =============================================
+	// if err == nil {
+	// 	t.Fatalf("expected error")
+	// }
+	// if !strings.Contains(
+	// 	err.Error(), "unable to disambiguate") {
+	// 	t.Fatalf("unexpected err: %v", err)
+	// }
 }
 
 func TestResolveVarsGoodResIdBadField(t *testing.T) {
@@ -306,6 +313,197 @@ func TestResolveVarsWithNoambiguation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
+}
+
+func makeResAccumulatorWithPod(t *testing.T, podName, containerName string) *ResAccumulator {
+	ra := MakeEmptyAccumulator()
+	rf := resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
+	err := ra.AppendAll(
+		resmaptest_test.NewRmBuilder(t, rf).
+			Add(map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Pod",
+				"metadata": map[string]interface{}{
+					"name": podName,
+				},
+				"spec": map[string]interface{}{
+					"containers": []interface{}{
+						map[string]interface{}{
+							"name": []interface{}{
+								containerName,
+							},
+						},
+					},
+				}}).ResMap())
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	return ra
+}
+
+func TestHandoverConflictingResourcesNoMatches(t *testing.T) {
+	ra := makeResAccumulatorWithPod(t, "pod1", "container1")
+	subRa := makeResAccumulatorWithPod(t, "pod2", "container2")
+	subRa.HandoverConflictingResources(ra)
+	if subRa.ResMap().Size() != 1 {
+		t.Errorf("subRa's ResMap should have 1 item, got %d", subRa.ResMap().Size())
+	}
+}
+
+func TestHandoverConflictingResourcesMatchesWithNoConflicts(t *testing.T) {
+	ra := makeResAccumulatorWithPod(t, "pod1", "container1")
+	subRa := makeResAccumulatorWithPod(t, "pod1", "container1")
+	subRa.HandoverConflictingResources(ra)
+	if subRa.ResMap().Size() != 0 {
+		t.Errorf("subRa's ResMap should have 0 items, got %d", subRa.ResMap().Size())
+	}
+}
+
+func TestHandoverConflictingResourcesMatchesWithConflicts(t *testing.T) {
+	ra := makeResAccumulatorWithPod(t, "pod1", "container1")
+	subRa := makeResAccumulatorWithPod(t, "pod1", "container2")
+	subRa.HandoverConflictingResources(ra)
+	if len(ra.PatchSet()) != 2 {
+		t.Errorf("ra's PatchSet should have 2 item, got %d", len(ra.PatchSet()))
+	}
+	if subRa.ResMap().Size() != 0 {
+		t.Errorf("subRa's ResMap should have 0 items, got %d", subRa.ResMap().Size())
+	}
+}
+
+func makeServiceVar(varName, serviceName string) types.Var {
+	return types.Var{
+		Name: varName,
+		ObjRef: types.Target{
+			Gvk: gvk.Gvk{
+				Version: "v1",
+				Kind:    "Service",
+			},
+			Name: serviceName,
+		},
+	}
+}
+
+func TestAppendResolvedVarsNoConflicts(t *testing.T) {
+	ra, _ := makeResAccumulator(t)
+	vars := types.NewVarSet()
+	vars.MergeSlice([]types.Var{makeServiceVar("SERVICE_ONE", "backendOne")})
+	vars.MergeSlice([]types.Var{makeServiceVar("SERVICE_TWO", "backendTwo")})
+
+	if err := ra.AppendResolvedVars(vars); err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	expectedLen := len(vars.AsSlice())
+	if len(ra.Vars()) != expectedLen {
+		t.Errorf("ra should have %d vars, got %d", expectedLen, len(ra.Vars()))
+	}
+}
+
+func TestAppendResolvedVarsWithConflicts(t *testing.T) {
+	ra, _ := makeResAccumulator(t)
+	vars1 := types.NewVarSet()
+	vars1.MergeSlice([]types.Var{makeServiceVar("SERVICE_ONE", "backendOne")})
+	vars2 := types.NewVarSet()
+	vars2.MergeSlice([]types.Var{makeServiceVar("SERVICE_ONE", "backendTwo")})
+
+	// The first call adds the variable
+	if err := ra.AppendResolvedVars(vars1); err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	// The second call adds a another variable with the same name, but a
+	// different value - this should elicit an error
+	expectedErrMsg := "var 'SERVICE_ONE' already encountered"
+	if err := ra.AppendResolvedVars(vars2); err == nil {
+		t.Fatalf("expected error, but none was received")
+	} else if err.Error() != expectedErrMsg {
+		t.Errorf("received the wrong error, expected `%s`, got `%s`",
+			expectedErrMsg, err.Error())
+	}
+}
+
+func TestAppendResolvedVarsDiamondNoConflicts(t *testing.T) {
+	ra, _ := makeResAccumulator(t)
+	vars := types.NewVarSet()
+	vars.MergeSlice([]types.Var{makeServiceVar("SERVICE_ONE", "backendOne")})
+
+	// The first call adds the variable
+	if err := ra.AppendResolvedVars(vars); err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	// The second call adds a another variable with the same name and value.
+	// Since the variables are the same, this call does nothing
+	if err := ra.AppendResolvedVars(vars); err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+
+	expectedLen := len(vars.AsSlice())
+	if len(ra.Vars()) != expectedLen {
+		t.Errorf("ra should have %d vars, got %d", expectedLen, len(ra.Vars()))
+	}
+}
+
+func TestAppendResolvedVarsDiamondWithConflicts(t *testing.T) {
+	ra := MakeEmptyAccumulator()
+	rf := resource.NewFactory(
+		kunstruct.NewKunstructuredFactoryImpl())
+	// Add some services with "prefixes"
+	err := ra.AppendAll(
+		resmaptest_test.NewRmBuilder(t, rf).
+			AddWithName("backend",
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "Service",
+					"metadata": map[string]interface{}{
+						"name": "app1-backend",
+					}}).
+			AddWithName("backend",
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "Service",
+					"metadata": map[string]interface{}{
+						"name": "app2-backend",
+					}}).ResMap())
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+
+	serviceVar := types.Var{
+		Name: "SERVICE_ONE",
+		ObjRef: types.Target{
+			Gvk: gvk.Gvk{
+				Version: "v1",
+				Kind:    "Service",
+			},
+			Name: "backend",
+		},
+		FieldRef: types.FieldSelector{
+			FieldPath: "metadata.name",
+		},
+	}
+	vars := types.NewVarSet()
+	vars.MergeSlice([]types.Var{serviceVar})
+
+	// The first call adds the variable without conflict
+	if err := ra.AppendResolvedVars(vars); err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+
+	// Behavior has been modified.
+	// Conflict detection moved to VarMap object
+	// =============================================
+	// // A second call will result in a conflicting variable name. Further,
+	// // it will be unclear whether this variable refers to app1-backend or
+	// // app2-backend. This is an error
+	// expectedErrMsg := fmt.Sprintf(
+	// 	"found %d resId matches for var %s "+
+	// 		"(unable to disambiguate)",
+	// 	ra.ResMap().Size(), serviceVar)
+	// if err := ra.AppendResolvedVars(vars); err == nil {
+	// 	t.Fatalf("expected error")
+	// } else if err.Error() != expectedErrMsg {
+	// 	t.Errorf("received the wrong error, expected `%s`, got `%s`",
+	// 		expectedErrMsg, err.Error())
+	// }
 }
 
 func find(name string, resMap resmap.ResMap) *resource.Resource {

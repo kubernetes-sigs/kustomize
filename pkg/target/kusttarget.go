@@ -32,6 +32,7 @@ type KustTarget struct {
 	rFactory      *resmap.Factory
 	tFactory      resmap.PatchFactory
 	pLdr          *plugins.Loader
+	dynamic       *types.Kustomization
 }
 
 // NewKustTarget returns a new instance of KustTarget primed with a Loader.
@@ -63,6 +64,7 @@ func NewKustTarget(
 		rFactory:      rFactory,
 		tFactory:      tFactory,
 		pLdr:          pLdr,
+		dynamic:       &types.Kustomization{},
 	}, nil
 }
 
@@ -208,6 +210,20 @@ func (kt *KustTarget) shouldAddHashSuffixesToGeneratedResources() bool {
 // not yet fixed.
 func (kt *KustTarget) AccumulateTarget() (
 	ra *accumulator.ResAccumulator, err error) {
+	ra, err = kt.accumulateTarget()
+	if err != nil {
+		return nil, err
+	}
+	err = ra.MergeVars(kt.kustomization.Vars)
+	if err != nil {
+		return nil, errors.Wrapf(
+			err, "merging vars %v", kt.kustomization.Vars)
+	}
+	return ra, nil
+}
+
+func (kt *KustTarget) accumulateTarget() (
+	ra *accumulator.ResAccumulator, err error) {
 	ra = accumulator.MakeEmptyAccumulator()
 	err = kt.accumulateResources(ra, kt.kustomization.Resources)
 	if err != nil {
@@ -240,11 +256,6 @@ func (kt *KustTarget) AccumulateTarget() (
 	err = kt.runTransformers(ra)
 	if err != nil {
 		return nil, err
-	}
-	err = ra.MergeVars(kt.kustomization.Vars)
-	if err != nil {
-		return nil, errors.Wrapf(
-			err, "merging vars %v", kt.kustomization.Vars)
 	}
 	return ra, nil
 }
@@ -284,7 +295,15 @@ func (kt *KustTarget) configureExternalGenerators() ([]resmap.Generator, error) 
 	return kt.pLdr.LoadGenerators(kt.ldr, ra.ResMap())
 }
 
+func (kt *KustTarget) absorbDynamicKustomization(ra *accumulator.ResAccumulator) {
+	orig := ra.PatchSet()
+	kt.dynamic.Patches = make([]types.Patch, len(orig))
+	copy(kt.dynamic.Patches, orig)
+}
+
 func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator) error {
+	kt.absorbDynamicKustomization(ra)
+
 	var r []resmap.Transformer
 	tConfig := ra.GetTransformerConfig()
 	lts, err := kt.configureBuiltinTransformers(tConfig)
@@ -341,11 +360,51 @@ func (kt *KustTarget) accumulateDirectory(
 	if err != nil {
 		return errors.Wrapf(err, "couldn't make target for path '%s'", path)
 	}
-	subRa, err := subKt.AccumulateTarget()
+
+	// Load the resources in the sub folders. Even if the subdirectory
+	// had already been visited by the kustomize, the subRa accumulator
+	// will contain its own copies of the resources.
+	subRa, err := subKt.accumulateTarget()
 	if err != nil {
 		return errors.Wrapf(
 			err, "recursed accumulation of path '%s'", path)
 	}
+
+	// Remove the conflicting resources from the local context (subRa)
+	// and add them to the conflict resources list in the global one (ra)
+	// Conflicting is defined as having same CurId but different value.
+	// The algorithm is basically moving the conflict resources from the
+	// "resources" section of the context into the "patchStrategicMerge" one.
+	err = subRa.HandoverConflictingResources(ra)
+	if err != nil {
+		return errors.Wrapf(
+			err, "recursed handing over conflicting resources from path '%s'", path)
+	}
+
+	// Verifies that each variable is targeting at most one resource
+	// in the local context.
+	// MergeVars will not only perform that operations using the variables of
+	// the current context (kustomization.Vars) but will also involve
+	// the "unresolved" variables declared but not resolved during the
+	// walk down the kustomize folder tree (in accumulateTarget).
+	err = subRa.MergeVars(subKt.kustomization.Vars)
+	if err != nil {
+		return errors.Wrapf(
+			err, "merging vars %v", subKt.kustomization.Vars)
+	}
+
+	// MergeAccumulator has three main tasks:
+	// 1. Append the subRa resources to its parent resources.
+	// It is supposed to be successful since potentially
+	// conflicting ones have been put aside in the parent context
+	// already. A resource loaded from a file may end up multiple
+	// time in the list, each entry in that list will have the same
+	// OriginalId but a different CurId (for instance different prefix)
+	// 2. Merge kustomize configuration. Easy
+	// 3. Accumulate the local vars into the global ones. Since the variable
+	// are declared using the OriginalId, MergeAccumulator needs to check
+	// no variable is now pointing two resources with the same OriginalId
+	// but different CurId.
 	err = ra.MergeAccumulator(subRa)
 	if err != nil {
 		return errors.Wrapf(
@@ -356,13 +415,31 @@ func (kt *KustTarget) accumulateDirectory(
 
 func (kt *KustTarget) accumulateFile(
 	ra *accumulator.ResAccumulator, path string) error {
+	subRa := accumulator.MakeEmptyAccumulator()
 	resources, err := kt.rFactory.FromFile(kt.ldr, path)
 	if err != nil {
 		return errors.Wrapf(err, "accumulating resources from '%s'", path)
 	}
-	err = ra.AppendAll(resources)
+	err = subRa.AppendAll(resources)
 	if err != nil {
-		return errors.Wrapf(err, "merging resources from '%s'", path)
+		return errors.Wrapf(err, "accumulating resources from '%s'", path)
+	}
+	// Also only one file has been loaded, it may contain resources
+	// which are conflicting with the current ones. As for the directory case,
+	// those resources are moved from the "resources" section into the "patches"
+	// section.
+	err = subRa.HandoverConflictingResources(ra)
+	if err != nil {
+		return errors.Wrapf(
+			err, "recursed handing over conflicting resources from path '%s'", path)
+	}
+	// Since local context only contains one file with potentially multiple
+	// resources, only the resources portion of MergeAccumulator will actually be
+	// used.
+	err = ra.MergeAccumulator(subRa)
+	if err != nil {
+		return errors.Wrapf(
+			err, "recursed merging from path '%s'", path)
 	}
 	return nil
 }

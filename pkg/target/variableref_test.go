@@ -282,6 +282,140 @@ spec:
 `)
 }
 
+func TestVarUnresolvedUp(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
+	th.WriteK("/app/base", `
+vars:
+- name: POD_NAME1
+  objref:
+    apiVersion: v1
+    kind: Pod
+    name: kelley
+  fieldref:
+    fieldpath: metadata.name
+- name: POD_NAME2
+  objref:
+    apiVersion: v1
+    kind: Pod
+    name: grimaldi
+  fieldref:
+    fieldpath: metadata.name
+`)
+
+	th.WriteK("/app/overlay", `
+resources:
+- pod1.yaml
+- pod2.yaml
+- composite.yaml
+- ../base
+`)
+
+	th.WriteF("/app/overlay/pod1.yaml", `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kelley
+spec:
+  containers:
+  - name: smile
+    image: smile
+    command:
+    - echo
+    - "$(POD_NAME1)"
+    env:
+      - name: FOO
+        value: "$(POD_NAME1)"
+`)
+	th.WriteF("/app/overlay/pod2.yaml", `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: grimaldi
+spec:
+  containers:
+  - name: dance
+    image: dance
+    command:
+    - echo
+    - "$(POD_NAME2)"
+    env:
+      - name: FOO
+        value: "$(POD_NAME2)"
+`)
+	th.WriteF("/app/overlay/composite.yaml", `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: circus
+spec:
+  containers:
+  - name: ring
+    image: ring
+    command:
+    - echo
+    - "$(POD_NAME1)"
+    - "$(POD_NAME2)"
+    env:
+      - name: P1
+        value: "$(POD_NAME1)"
+      - name: P2
+        value: "$(POD_NAME2)"
+`)
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kelley
+spec:
+  containers:
+  - command:
+    - echo
+    - kelley
+    env:
+    - name: FOO
+      value: kelley
+    image: smile
+    name: smile
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: grimaldi
+spec:
+  containers:
+  - command:
+    - echo
+    - grimaldi
+    env:
+    - name: FOO
+      value: grimaldi
+    image: dance
+    name: dance
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: circus
+spec:
+  containers:
+  - command:
+    - echo
+    - kelley
+    - grimaldi
+    env:
+    - name: P1
+      value: kelley
+    - name: P2
+      value: grimaldi
+    image: ring
+    name: ring
+`)
+}
+
 // Not so much a bug as a desire for local variables
 // with less than global scope.  Currently all variables
 // are global.  So if a base with a variable is included
@@ -330,40 +464,36 @@ resources:
 - ../o2
 `)
 
-	/*
-	   	const presumablyDesired = `
-	   apiVersion: v1
-	   kind: Pod
-	   metadata:
-	     name: p1-base-myServerPod
-	   spec:
-	     containers:
-	     - env:
-	       - name: POD_NAME
-	         value: p1-base-myServerPod
-	       image: whatever
-	       name: myServer
-	   ---
-	   apiVersion: v1
-	   kind: Pod
-	   metadata:
-	     name: p2-base-myServerPod
-	   spec:
-	     containers:
-	     - env:
-	       - name: POD_NAME
-	         value: p2-base-myServerPod
-	       image: whatever
-	       name: myServer
-	   `
-	*/
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err == nil {
-		t.Fatalf("should have an error")
+	const presumablyDesired = `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: p1-base-myServerPod
+spec:
+  containers:
+  - env:
+    - name: POD_NAME
+      value: p1-base-myServerPod
+    image: whatever
+    name: myServer
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: p2-base-myServerPod
+spec:
+  containers:
+  - env:
+    - name: POD_NAME
+      value: p2-base-myServerPod
+    image: whatever
+    name: myServer
+`
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
 	}
-	if !strings.Contains(err.Error(), "var 'POD_NAME' already encountered") {
-		t.Fatalf("unexpected err: %v", err)
-	}
+	th.AssertActualEqualsExpected(m, presumablyDesired)
 }
 
 func TestVarRefBig(t *testing.T) {

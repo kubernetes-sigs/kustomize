@@ -9,6 +9,7 @@ import (
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
+	"strings"
 )
 
 // Functions dedicated to configuring the builtin
@@ -115,6 +116,16 @@ var generatorConfigurators = map[plugins.BuiltinPluginType]func(
 	},
 }
 
+// Until Issue 1292 is implemented, use PathStrategicMerge to address
+// when possible diamond merge issues.
+func (kt *KustTarget) asString(patchSet []types.Patch) string {
+	res := []string{}
+	for _, patch := range patchSet {
+		res = append(res, patch.Patch)
+	}
+	return strings.Join(res, "---\n")
+}
+
 type tFactory func() resmap.TransformerPlugin
 
 var transformerConfigurators = map[plugins.BuiltinPluginType]func(
@@ -164,7 +175,7 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 	plugins.PatchStrategicMergeTransformer: func(
 		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, _ *config.TransformerConfig) (
 		result []resmap.Transformer, err error) {
-		if len(kt.kustomization.PatchesStrategicMerge) == 0 {
+		if len(kt.kustomization.PatchesStrategicMerge) == 0 && len(kt.dynamic.Patches) == 0 {
 			return
 		}
 		var c struct {
@@ -172,6 +183,7 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 			Patches string                      `json:"patches,omitempty" yaml:"patches,omitempty"`
 		}
 		c.Paths = kt.kustomization.PatchesStrategicMerge
+		c.Patches = kt.asString(kt.dynamic.Patches)
 		p := f()
 		err = kt.configureBuiltinPlugin(p, c, bpt)
 		if err != nil {

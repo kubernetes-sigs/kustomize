@@ -365,7 +365,7 @@ resources:
 		t.Fatalf("Expected resource accumulation error")
 	}
 	if !strings.Contains(
-		err.Error(), "already registered id: apps_v1_StatefulSet|~X|my-sts") {
+		err.Error(), "conflict between") {
 		t.Fatalf("Unexpected err: %v", err)
 	}
 }
@@ -458,7 +458,7 @@ resources:
 		t.Fatalf("Expected resource accumulation error")
 	}
 	if !strings.Contains(
-		err.Error(), "already registered id: apps_v1_StatefulSet|~X|my-sts") {
+		err.Error(), "conflict between") {
 		t.Fatalf("Unexpected err: %v", err)
 	}
 }
