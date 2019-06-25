@@ -160,27 +160,6 @@ func (x Gvk) IsSelected(selector *Gvk) bool {
 	return true
 }
 
-var clusterLevelKinds = []string{
-	"APIService",
-	"ClusterRoleBinding",
-	"ClusterRole",
-	"CustomResourceDefinition",
-	"Namespace",
-	"PersistentVolume",
-	"MutatingWebhookConfiguration",
-	"ValidatingWebhookConfiguration",
-}
-
-// IsClusterKind returns true if x is a cluster-level Gvk
-func (x Gvk) IsClusterKind() bool {
-	for _, k := range clusterLevelKinds {
-		if k == x.Kind {
-			return true
-		}
-	}
-	return false
-}
-
 var notNamespaceableKinds = []string{
 	"APIService",
 	"CSIDriver",
@@ -207,7 +186,7 @@ var notNamespaceableKinds = []string{
 	"VolumeAttachment",
 }
 
-// IsNamespaceableKind returns true if x is a namespable Gvk
+// IsNamespaceableKind returns true if x is a namespeable Gvk
 // Implements https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/#not-all-objects-are-in-a-namespace
 func (x Gvk) IsNamespaceableKind() bool {
 	for _, k := range notNamespaceableKinds {
