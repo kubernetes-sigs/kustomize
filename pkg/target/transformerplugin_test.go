@@ -4,11 +4,12 @@
 package target_test
 
 import (
-	"sigs.k8s.io/kustomize/v3/pkg/plugins"
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	"sigs.k8s.io/kustomize/v3/pkg/plugins"
+
+	kusttest_test "sigs.k8s.io/kustomize/v3/pkg/kusttest"
 )
 
 func writeDeployment(th *kusttest_test.KustTestHarness, path string) {
@@ -78,13 +79,11 @@ transformers:
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	// TODO: Fix #1164; the value of the name: field below
-	// should be: 2018-05-11-peach-2018-05-11-apple-myDeployment
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: 2018-05-11-apple-2018-05-11-apple-myDeployment
+  name: 2018-05-11-apple-2018-05-11-peach-myDeployment
 spec:
   template:
     metadata:
