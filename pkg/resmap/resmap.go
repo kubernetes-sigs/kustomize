@@ -488,12 +488,12 @@ func (m *resWrangler) makeCopy(copier resCopier) ResMap {
 func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
 	inputRes *resource.Resource) ResMap {
 	inputId := inputRes.OrgId()
-	if inputId.IsClusterKind() {
+	if !inputId.IsNamespaceableKind() {
 		return m
 	}
 	result := New()
 	for _, r := range m.Resources() {
-		if r.OrgId().IsClusterKind() || inputRes.InSameFuzzyNamespace(r) {
+		if !r.OrgId().IsNamespaceableKind() || inputRes.InSameFuzzyNamespace(r) {
 			err := result.Append(r)
 			if err != nil {
 				panic(err)

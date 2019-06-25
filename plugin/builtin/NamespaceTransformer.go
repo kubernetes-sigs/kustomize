@@ -62,7 +62,7 @@ const metaNamespace = "metadata/namespace"
 // object itself doesn't live in a namespace).
 func doIt(id resid.ResId, fs *config.FieldSpec) bool {
 	return fs.Path != metaNamespace ||
-		(fs.Path == metaNamespace && !id.IsClusterKind())
+		(fs.Path == metaNamespace && id.IsNamespaceableKind())
 }
 
 func (p *NamespaceTransformerPlugin) changeNamespace(
