@@ -202,22 +202,42 @@ func NewCmdBuildPrune(
 
 func writeIndividualFiles(
 	fSys fs.FileSystem, folderPath string, m resmap.ResMap) error {
-	for _, res := range m.Resources() {
-		filename := filepath.Join(
-			folderPath,
-			fmt.Sprintf(
+
+	byNamespace := m.GroupedByNamespace()
+	nsNeeded := len(byNamespace) > 1
+	for namespace, nresources := range byNamespace {
+		for _, res := range nresources {
+			basename := fmt.Sprintf(
 				"%s_%s.yaml",
 				strings.ToLower(res.GetGvk().String()),
 				strings.ToLower(res.GetName()),
-			),
-		)
-		out, err := yaml.Marshal(res.Map())
-		if err != nil {
-			return err
-		}
-		err = fSys.WriteFile(filename, out)
-		if err != nil {
-			return err
+			)
+
+			// Preserve backward compatibility with kustomize 2.1.0.
+			// No need to cluter filename with namespace if all the objects
+			// are in the same namespace. The not namespaceable objects
+			// are grouped in the "%no_namespace%" bucket.
+			if (nsNeeded) && (namespace != "%no_namespace%") {
+				basename = fmt.Sprintf(
+					"%s_%s",
+					strings.ToLower(namespace),
+					strings.ToLower(basename),
+				)
+			}
+
+			filename := filepath.Join(
+				folderPath,
+				basename,
+			)
+
+			out, err := yaml.Marshal(res.Map())
+			if err != nil {
+				return err
+			}
+			err = fSys.WriteFile(filename, out)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

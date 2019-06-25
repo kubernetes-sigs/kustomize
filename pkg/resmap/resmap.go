@@ -93,6 +93,13 @@ type ResMap interface {
 	// Same as GetByOriginalId.
 	GetById(resid.ResId) (*resource.Resource, error)
 
+	// GroupedByNamespace provides map of discardable slice
+	// of resource pointer
+	// The not namespaceable resources are added to the "cluster-wide" key.
+	// The resources in the default namespace are added to the "default" key.
+	// The rest of the resources are grouped in their respectiv namespace.
+	GroupedByNamespace() map[string][]*resource.Resource
+
 	// AllIds returns all CurrentIds.
 	AllIds() []resid.ResId
 
@@ -343,6 +350,30 @@ func (m *resWrangler) GetById(id resid.ResId) (*resource.Resource, error) {
 	return m.GetByCurrentId(id)
 }
 
+// GroupedByNamespace implements ResMap.GroupByNamespace
+func (m *resWrangler) GroupedByNamespace() map[string][]*resource.Resource {
+	byNamespace := make(map[string][]*resource.Resource)
+	for _, res := range m.rList {
+		// Add to the notNamespaceable bucket by default.
+		namespace := "%no_namespace%"
+
+		if res.OrgId().IsNamespaceable() {
+			namespace = res.OrgId().Namespace
+			if res.OrgId().IsInDefaultNs() {
+				namespace = "default"
+			}
+		}
+
+		if _, found := byNamespace[namespace]; !found {
+			byNamespace[namespace] = make([]*resource.Resource, 0)
+		}
+
+		byNamespace[namespace] = append(byNamespace[namespace], res)
+	}
+
+	return byNamespace
+}
+
 // AsYaml implements ResMap.
 func (m *resWrangler) AsYaml() ([]byte, error) {
 	firstObj := true
@@ -458,12 +489,12 @@ func (m *resWrangler) makeCopy(copier resCopier) ResMap {
 func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
 	inputRes *resource.Resource) ResMap {
 	inputId := inputRes.OrgId()
-	if inputId.IsClusterKind() {
+	if !inputId.IsNamespaceableKind() {
 		return m
 	}
 	result := New()
 	for _, r := range m.Resources() {
-		if r.OrgId().IsClusterKind() || inputRes.InSameFuzzyNamespace(r) {
+		if !r.OrgId().IsNamespaceableKind() || inputRes.InSameFuzzyNamespace(r) {
 			err := result.Append(r)
 			if err != nil {
 				panic(err)
@@ -504,7 +535,7 @@ func (m *resWrangler) appendReplaceOrMerge(
 	res *resource.Resource) error {
 	id := res.CurId()
 	// Maybe also try by current id if nothing matches?
-	matches := m.GetMatchingResourcesByOriginalId(id.GvknEquals)
+	matches := m.GetMatchingResourcesByOriginalId(id.Equals)
 	switch len(matches) {
 	case 0:
 		switch res.Behavior() {

@@ -93,5 +93,25 @@ func (id ResId) GvknEquals(o ResId) bool {
 // Equals returns true if the other id matches
 // namespace/Group/Version/Kind/name.
 func (id ResId) Equals(o ResId) bool {
-	return id.Namespace == o.Namespace && id.GvknEquals(o)
+	return id.IsNsEquals(o) && id.GvknEquals(o)
+}
+
+// IsNsEquals returns true if the other id matches namespace
+// or both are in the default namespace
+// or both are not namespaceable id.
+func (id ResId) IsNsEquals(o ResId) bool {
+	return id.Namespace == o.Namespace ||
+		(id.IsInDefaultNs() && o.IsInDefaultNs()) ||
+		(!id.IsNamespaceable() && !o.IsNamespaceable())
+}
+
+// IsInDefaultNs returns true if id is a namespable ResId and the Namespace
+// is either not set or set to "default"
+func (id ResId) IsInDefaultNs() bool {
+	return id.IsNamespaceable() && (id.Namespace == "" || id.Namespace == "default")
+}
+
+// IsNamespaceable returns true if id is a namespable ResId
+func (id ResId) IsNamespaceable() bool {
+	return id.IsNamespaceableKind()
 }
