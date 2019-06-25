@@ -24,7 +24,7 @@ go get sigs.k8s.io/kustomize/v3/cmd/kustomize
 
   * [remote target](../remoteBuild.md) - 通过 github URL 来构建 kustomization 。
 
-  * [json patch](../jsonpatch.md) -在 kustomization 中应用 json patch 。
+  * [json patch](jsonpatch.md) -在 kustomization 中应用 json patch 。
 
 高级用法
 
