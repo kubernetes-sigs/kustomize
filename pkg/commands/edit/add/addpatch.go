@@ -21,7 +21,7 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/v3/pkg/commands/edit"
+	"sigs.k8s.io/kustomize/v3/pkg/commands/edit/util"
 	"sigs.k8s.io/kustomize/v3/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 	"sigs.k8s.io/kustomize/v3/pkg/patch"
@@ -71,7 +71,7 @@ func (o *addPatchOptions) Complete(cmd *cobra.Command, args []string) error {
 
 // RunAddPatch runs addPatch command (do real work).
 func (o *addPatchOptions) RunAddPatch(fSys fs.FileSystem) error {
-	patches, err := edit.GlobPatterns(fSys, o.patchFilePaths)
+	patches, err := util.GlobPatterns(fSys, o.patchFilePaths)
 	if err != nil {
 		return err
 	}
