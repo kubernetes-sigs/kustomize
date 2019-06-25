@@ -354,7 +354,8 @@ func (m *resWrangler) GetById(id resid.ResId) (*resource.Resource, error) {
 func (m *resWrangler) GroupedByNamespace() map[string][]*resource.Resource {
 	byNamespace := make(map[string][]*resource.Resource)
 	for _, res := range m.rList {
-		namespace := "cluster-wide"
+		// Add to the notNamespaceable bucket by default.
+		namespace := "%no_namespace%"
 
 		if res.OrgId().IsNamespaceable() {
 			namespace = res.OrgId().Namespace

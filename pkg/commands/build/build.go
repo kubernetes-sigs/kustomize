@@ -215,8 +215,9 @@ func writeIndividualFiles(
 
 			// Preserve backward compatibility with kustomize 2.1.0.
 			// No need to cluter filename with namespace if all the objects
-			// are in the same namespace.
-			if (nsNeeded) && (namespace != "cluster-wide") {
+			// are in the same namespace. The not namespaceable objects
+			// are grouped in the "%no_namespace%" bucket.
+			if (nsNeeded) && (namespace != "%no_namespace%") {
 				basename = fmt.Sprintf(
 					"%s_%s",
 					strings.ToLower(namespace),
