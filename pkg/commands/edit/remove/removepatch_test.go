@@ -5,10 +5,11 @@ package remove
 
 import (
 	"fmt"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
-	"sigs.k8s.io/kustomize/v3/pkg/patch"
 	"strings"
 	"testing"
+
+	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/patch"
 )
 
 const (

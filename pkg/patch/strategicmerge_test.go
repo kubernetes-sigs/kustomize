@@ -4,8 +4,9 @@
 package patch
 
 import (
-	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"testing"
+
+	"sigs.k8s.io/kustomize/v3/pkg/types"
 )
 
 func buildPatchStrategicMergeSlice(patchStrings []string) []types.PatchStrategicMerge {
