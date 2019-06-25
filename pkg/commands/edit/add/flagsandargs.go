@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strings"
 
+	"sigs.k8s.io/kustomize/v3/pkg/commands/edit/util"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 )
 
@@ -85,7 +86,7 @@ func (a *flagsAndArgs) ExpandFileSource(fSys fs.FileSystem) error {
 		} else {
 			patterns = append(patterns, s[0])
 		}
-		result, err := globPatterns(fSys, patterns)
+		result, err := util.GlobPatterns(fSys, patterns)
 		if err != nil {
 			return err
 		}
