@@ -5,6 +5,7 @@ package remove
 
 import (
 	"log"
+	"sigs.k8s.io/kustomize/v3/pkg/commands/edit"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -58,7 +59,7 @@ func (o *removePatchOptions) Complete(cmd *cobra.Command, args []string) error {
 
 // RunRemovePatch runs removePatch command (do real work).
 func (o *removePatchOptions) RunRemovePatch(fSys fs.FileSystem) error {
-	patches, err := globPatternsFS(fSys, o.patchFilePaths)
+	patches, err := edit.GlobPatterns(fSys, o.patchFilePaths)
 	if err != nil {
 		return err
 	}
