@@ -21,6 +21,7 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/v3/pkg/commands/edit/util"
 	"sigs.k8s.io/kustomize/v3/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 )
@@ -69,7 +70,7 @@ func (o *addResourceOptions) Complete(cmd *cobra.Command, args []string) error {
 
 // RunAddResource runs addResource command (do real work).
 func (o *addResourceOptions) RunAddResource(fSys fs.FileSystem) error {
-	resources, err := globPatterns(fSys, o.resourceFilePaths)
+	resources, err := util.GlobPatterns(fSys, o.resourceFilePaths)
 	if err != nil {
 		return err
 	}
