@@ -45,6 +45,21 @@ func makeCm(i int) *resource.Resource {
 		})
 }
 
+// Make a resource with a predictable name and label.
+func makeCmWithLabel(i int, label string) *resource.Resource {
+	return rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": fmt.Sprintf("cm%03d", i),
+				"labels": map[string]interface{}{
+					"key1": label,
+				},
+			},
+		})
+}
+
 func TestAppendRemove(t *testing.T) {
 	w1 := New()
 	doAppend(t, w1, makeCm(1))
@@ -69,7 +84,7 @@ func TestAppendRemove(t *testing.T) {
 		t.Fatalf("mismatch")
 	}
 
-	err := w2.Append(makeCm(6))
+	err := w2.Append(makeCmWithLabel(6, "trigger-a-conflict"))
 	if err == nil {
 		t.Fatalf("expected error")
 	}
@@ -98,6 +113,7 @@ func TestRemove(t *testing.T) {
 
 func TestReplace(t *testing.T) {
 	cm5 := makeCm(5)
+	cm5WithLabel := makeCmWithLabel(5, "trigger-a-conflict")
 	cm700 := makeCm(700)
 	otherCm5 := makeCm(5)
 
@@ -121,7 +137,10 @@ func TestReplace(t *testing.T) {
 	if r, err := w.GetByCurrentId(cm5.OrgId()); err != nil || r != otherCm5 {
 		t.Fatalf("unexpected result r=%s, err=%v", r.CurId(), err)
 	}
-	if err := w.Append(cm5); err == nil {
+	if err := w.Append(cm5); err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	if err := w.Append(cm5WithLabel); err == nil {
 		t.Fatalf("expected id already there error")
 	}
 	if err := w.Remove(cm5.OrgId()); err != nil {

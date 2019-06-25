@@ -123,16 +123,16 @@ func TestVarSet(t *testing.T) {
 			t.Fatalf("set %v should contain var %v", set.AsSlice(), v)
 		}
 	}
+
 	set2 := NewVarSet()
 	err = set2.MergeSet(set)
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
+	// Attempt to merge variables that have already been imported
+	// This happens during diamond kustomize imports
 	err = set2.MergeSlice(vars)
-	if err == nil {
-		t.Fatalf("expected err")
-	}
-	if !strings.Contains(err.Error(), "var 'SHELLVARS' already encountered") {
+	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
 	v := set2.Get("BACKEND")
@@ -149,6 +149,87 @@ func TestVarSet(t *testing.T) {
 		names[1].Name != "BACKEND" ||
 		names[2].Name != "SHELLVARS" {
 		t.Fatalf("unexpected order in : %v", names)
+	}
+}
+
+func TestVarSetMergeConflicts(t *testing.T) {
+	set := NewVarSet()
+	vars := []Var{
+		{
+			Name: "SHELLVARS",
+			ObjRef: Target{
+				APIVersion: "v7",
+				Gvk:        gvk.Gvk{Kind: "ConfigMap"},
+				Name:       "bash"},
+		},
+		{
+			Name: "AWARD",
+			ObjRef: Target{
+				APIVersion: "v7",
+				Gvk:        gvk.Gvk{Kind: "Service"},
+				Name:       "nobelPrize"},
+			FieldRef: FieldSelector{FieldPath: "some.arbitrary.path"},
+		},
+	}
+	nodefault := []Var{
+		{
+			Name: "SHELLVARS",
+			ObjRef: Target{
+				APIVersion: "v7",
+				Gvk:        gvk.Gvk{Kind: "ConfigMap"},
+				Name:       "bash"},
+			FieldRef: FieldSelector{FieldPath: "metadata.name"},
+		},
+	}
+	conflict1 := []Var{
+		{
+			Name: "SHELLVARS",
+			ObjRef: Target{
+				APIVersion: "v7",
+				Gvk:        gvk.Gvk{Kind: "ConfigMap"},
+				Name:       "zsh"},
+		},
+	}
+	conflict2 := []Var{
+		{
+			Name: "AWARD",
+			ObjRef: Target{
+				APIVersion: "v7",
+				Gvk:        gvk.Gvk{Kind: "Deployment"},
+				Name:       "nobelPrize"},
+			FieldRef: FieldSelector{FieldPath: "some.arbitrary.path"},
+		},
+	}
+	err := set.MergeSlice(vars)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	set2 := NewVarSet()
+	err = set2.MergeSet(set)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	// Check that the defaulting for the FieldRef field during variable loading
+	// does not interfere with the Merging behavior
+	err = set2.MergeSlice(nodefault)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	// Attempt to merge a variable with different Target.Name and default FieldRef
+	err = set2.MergeSlice(conflict1)
+	if err == nil {
+		t.Fatalf("expected err")
+	}
+	if !strings.Contains(err.Error(), "var 'SHELLVARS' already encountered") {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	// Attempt to merge a variable with different Target.Name and a same FieldRef
+	err = set2.MergeSlice(conflict2)
+	if err == nil {
+		t.Fatalf("expected err")
+	}
+	if !strings.Contains(err.Error(), "var 'AWARD' already encountered") {
+		t.Fatalf("unexpected err: %v", err)
 	}
 }
 

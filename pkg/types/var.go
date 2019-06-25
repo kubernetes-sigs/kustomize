@@ -18,6 +18,7 @@ package types
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 	"strings"
 
@@ -125,11 +126,16 @@ func (vs *VarSet) MergeSlice(incoming []Var) error {
 // Merge absorbs another Var with error on name collision.
 // Empty fields in incoming Var is defaulted.
 func (vs *VarSet) Merge(v Var) error {
-	if vs.Contains(v) {
-		return fmt.Errorf(
-			"var '%s' already encountered", v.Name)
-	}
 	v.defaulting()
+	if vs.Contains(v) {
+		// Only return an error if a variable with the same
+		// name already exists
+		if !reflect.DeepEqual(v, vs.set[v.Name]) {
+			return fmt.Errorf(
+				"var '%s' already encountered", v.Name)
+		}
+		return nil
+	}
 	vs.set[v.Name] = v
 	return nil
 }

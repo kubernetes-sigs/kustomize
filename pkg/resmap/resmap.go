@@ -215,8 +215,14 @@ func (m *resWrangler) Resources() []*resource.Resource {
 func (m *resWrangler) Append(res *resource.Resource) error {
 	id := res.CurId()
 	if r := m.GetMatchingResourcesByCurrentId(id.Equals); len(r) > 0 {
-		return fmt.Errorf(
-			"may not add resource with an already registered id: %s", id)
+		// This allows diamond import of resources.
+		// Only errors if the resources are different because they have
+		// been loaded from a different source.
+		if !res.Equals(r[0]) {
+			return fmt.Errorf(
+				"may not add resource with an already registered id: %s", id)
+		}
+		return nil
 	}
 	m.rList = append(m.rList, res)
 	return nil
