@@ -74,6 +74,11 @@ type Kustomization struct {
 	// and http://jsonpatch.com
 	PatchesJson6902 []PatchJson6902 `json:"patchesJson6902,omitempty" yaml:"patchesJson6902,omitempty"`
 
+	// Patches is a list of patches, where each one can be either a
+	// Strategic Merge Patch or a JSON patch.
+	// Each patch can be applied to multiple target objects.
+	Patches []Patch `json:"patches,omitempty" yaml:"patches,omitempty"`
+
 	// Images is a list of (image name, new name, new tag or digest)
 	// for changing image names, tags or digests. This can also be achieved with a
 	// patch, but this operator is simpler to specify.
@@ -375,4 +380,38 @@ type Replica struct {
 
 	// The number of replicas required.
 	Count int64 `json:"count,omitempty" yaml:"count,omitempty"`
+}
+
+// Patch represent either a Strategic Merge Patch or a JSON patch
+// and its targets.
+// The content of the patch can either be from a file
+// or from an inline string.
+type Patch struct {
+	// Path is a relative file path to the patch file.
+	Path string `json:"path,omitempty" yaml:"path,omitempty"`
+
+	// Patch is the content of a patch.
+	Patch string `json:"patch,omitempty" yaml:"patch,omitempty"`
+
+	// Target points to the resources that the patch is applied to
+	Target Targets `json:"target,omitempty" yaml:"target,omitempty"`
+}
+
+// Targets specifies a set of resources.
+// Any resource that matches intersection of all conditions
+// is included in this set.
+type Targets struct {
+	gvk.Gvk   `json:",inline,omitempty" yaml:",inline,omitempty"`
+	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	Name      string `json:"name,omitempty" yaml:"name,omitempty"`
+
+	// AnnotationSelector is a string that follows the label selection expression
+	// https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#api
+	// It matches with the resource annotations.
+	AnnotationSelector string `json:"annotationSelector,omitempty" yaml:"annotationSelector,omitempty"`
+
+	// LabelSelector is a string that follows the label selection expression
+	// https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#api
+	// It matches with the resource labels.
+	LabelSelector string `json:"labelSelector,omitempty" yaml:"labelSelector,omitempty"`
 }
