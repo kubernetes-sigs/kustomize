@@ -1,12 +1,12 @@
 # Releasing
 
-[releases page]: https://github.com/kubernetes-sigs/kustomize/releases
+[release page]: https://github.com/kubernetes-sigs/kustomize/releases
 [`cloud-build-local`]: https://github.com/GoogleCloudPlatform/cloud-build-local
 [Google Cloud Build]: https://cloud.google.com/cloud-build
 [semver]: https://semver.org
 
 Scripts and configuration files for publishing a
-`kustomize` release on the [releases page].
+`kustomize` release on the [release page].
 
 ## Build a release locally
 
@@ -36,21 +36,23 @@ git ls-remote --tags upstream
 
 ### define the new tag
 
-Define the version per [semver] principlesl it must start with `v`:
+Define the version per [semver] principles; it must start with `v`:
 
 ```
 version=v3.0.0-pre
 ```
 
-### delete the tag if you wish to replace it upstream
+### if replacing a release...
 
-Local delete:
+Must delete the tag before re-pushing it.
+
+Delete the tag locally:
 
 ```
 git tag --delete $version
 ```
 
-Upstream delete:
+Delete it upstream:
 ```
 # Disable push protection:
 git remote set-url --push upstream git@github.com:kubernetes-sigs/kustomize.git
