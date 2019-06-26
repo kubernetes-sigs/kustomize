@@ -146,7 +146,7 @@ var registry = make(map[string]Configurable)
 func (l *Loader) loadGoPlugin(id resid.ResId) (Configurable, error) {
 	regId := relativePluginPath(id)
 	if c, ok := registry[regId]; ok {
-		return copy(c), nil
+		return copyPlugin(c), nil
 	}
 	absPath := l.absolutePluginPath(id)
 	p, err := plugin.Open(absPath + ".so")
@@ -164,11 +164,11 @@ func (l *Loader) loadGoPlugin(id resid.ResId) (Configurable, error) {
 		return nil, fmt.Errorf("plugin %s not configurable", regId)
 	}
 	registry[regId] = c
-	return copy(c), nil
+	return copyPlugin(c), nil
 }
 
-func copy(i interface{}) Configurable {
-	indirect := reflect.Indirect(reflect.ValueOf(i))
+func copyPlugin(c Configurable) Configurable {
+	indirect := reflect.Indirect(reflect.ValueOf(c))
 	newIndirect := reflect.New(indirect.Type())
 	newIndirect.Elem().Set(reflect.ValueOf(indirect.Interface()))
 	newNamed := newIndirect.Interface()
