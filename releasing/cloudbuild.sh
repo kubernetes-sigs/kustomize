@@ -54,6 +54,6 @@ done
 
 /goreleaser \
   release \
-  --config=build/goreleaser.yaml \
+  --config=releasing/goreleaser.yaml \
   --rm-dist \
   --skip-validate ${SNAPSHOT}

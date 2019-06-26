@@ -1,6 +1,6 @@
 # Exec plugin on linux in 60 seconds
 
-This is a (no reading) 60 second copy/paste guided
+This is a (no reading allowed!) 60 second copy/paste guided
 example.  Full plugin docs [here](README.md).
 
 This demo writes and uses a somewhat ridiculous
