@@ -3,75 +3,13 @@
 
 /*
 
-Package plugin contains builtin and example
-plugins, tests and test libraries.
-
-See /docs/plugins.md for a description of
-writing and testing a plugin.  The information
-here is supplemental to that, and more oriented to
-how the builtin plugins work.
-
-
-HOW PLUGINS RUN
-
-Assume a file 'secGen.yaml' containing
-
-   apiVersion: someteam.example.com/v1
-   kind: SecretGenerator
-   metadata:
-     name: makesecrets
-   name: mySecret
-   behavior: merge
-   envs:
-   - db.env
-   - fruit.env
-
-If this file were referenced by a kustomization
-file in its 'generators' field, kustomize would
-
-* Read 'secGen.yaml'.
-
-* Use the value of $XGD_CONFIG_HOME and
-  'apiversion' and to find an executable
-  named 'SecretGenerator' to use as
-  an exec plugin, or failing that,
-
-* use the same info to load a Go plugin
-  object file called 'SecretGenerator.so'.
-
-* Send either the file name 'secGen.yaml' as
-  the first arg to the exec plugin, or send its
-  contents to the go plugin's Config method.
-
-* Use the plugin to generate and/or transform.
-
-
-GO PLUGINS
-
-A .go file can be a Go plugin if it declares
-'main' as it's package, and exports a symbol to
-which useful functions are attached.
-
-It can further be used as a _kustomize_ plugin if
-the symbol is named 'KustomizePlugin' and the
-attached functions implement the `Configurable`,
-`Generator` and `Transformer` interfaces.
-
-A plugin won't load into some program `foo/main.go`
-if there is any package version mismatch in the
-dependencies of the plugin and the dependencies of
-foo/main.go.  Control this with matching
-declarations in `go.mod` files.  The versions of the
-builtin packages "fmt", "io", "os" (not normally
-listed in `go.mod`) etc have the same version as the
-compiler.
-
+See docs/plugins.md to learn about plugins.
 
 
 BUILTIN PLUGIN CONFIGURATION
 
-For performance reasons, all builting plugins are
-Go plugins (not exec plugins).
+For performance and semantic sanity reasons, all
+builtin plugins are Go plugins (not exec plugins).
 
 Using "SecretGenerator" as an example in what
 follows.
@@ -87,6 +25,7 @@ The plugin config file looks like
   ...
 
 The apiVersion must be 'builtin'.
+
 The kind is the CamelCase name of the plugin.
 
 The source for a builtin plugin must be at:
@@ -102,15 +41,9 @@ directory holding the plugin, its test, and any
 optional associated files (possibly a go.mod file).
 
 
-PLUGIN SOURCE
-
- See ../../docs/plugins.md
- for a description of writing and testing
- a plugin.
-
 BUILTIN PLUGIN GENERATION
 
-The pluginator program is a code generator that
+The `pluginator` program is a code generator that
 converts kustomize generator (G) and/or
 transformer (T) Go plugins to statically linkable
 code.
