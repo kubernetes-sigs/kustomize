@@ -48,7 +48,7 @@ unpackable under
 
 In the case of a Go plugin, an _end user_
 accepting a shared plugin _must compile both
-kustomize and the plugin.
+kustomize and the plugin_.
 
 This means a one-time run of
 ```
