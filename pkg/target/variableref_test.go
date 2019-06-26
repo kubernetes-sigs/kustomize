@@ -313,6 +313,13 @@ vars:
     name: myServerPod
   fieldref:
     fieldpath: metadata.name
+- name: IMAGE_NAME
+  objref:
+    apiVersion: v1
+    kind: Pod
+    name: myServerPod
+  fieldref:
+    fieldpath: spec.containers[0].image
 `)
 	th.WriteF("/app/base/pod.yaml", `
 apiVersion: v1
@@ -326,6 +333,8 @@ spec:
       env:
         - name: POD_NAME
           value: $(POD_NAME)
+        - name: IMAGE_NAME
+          value: $(IMAGE_NAME)
 `)
 	th.WriteK("/app/o1", `
 nameprefix: p1-
@@ -343,7 +352,7 @@ resources:
 - ../o2
 `)
 
-	const presumablyDesired = `
+	const pod2StillBoggus = `
 apiVersion: v1
 kind: Pod
 metadata:
@@ -353,6 +362,8 @@ spec:
   - env:
     - name: POD_NAME
       value: p1-base-myServerPod
+    - name: IMAGE_NAME
+      value: whatever
     image: whatever
     name: myServer
 ---
@@ -364,17 +375,17 @@ spec:
   containers:
   - env:
     - name: POD_NAME
-      value: p2-base-myServerPod
+      value: p1-base-myServerPod
+    - name: IMAGE_NAME
+      value: whatever
     image: whatever
     name: myServer
 `
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err == nil {
-		t.Fatalf("should have an error")
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
 	}
-	if !strings.Contains(err.Error(), "var 'POD_NAME' already encountered") {
-		t.Fatalf("unexpected err: %v", err)
-	}
+	th.AssertActualEqualsExpected(m, pod2StillBoggus)
 }
 
 func TestVarRefBig(t *testing.T) {
