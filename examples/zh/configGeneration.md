@@ -4,7 +4,11 @@
 
 ## ConfigMap 的生成和滚动更新
 
-Kustomize 提供了两种在一个 `kustomization` 中添加 ConfigMap 的方法，通过将 ConfigMap 声明为 [resource] 或在 ConfigMapGenerator 中声明 ConfigMap 的方法。在 `kustomization.yaml` 中的格式为：
+kustomize 提供了两种添加 ConfigMap 的方法：
+- 将 ConfigMap 声明为 [resource]
+- 通过 ConfigMapGenerator 声明 ConfigMap
+
+在 `kustomization.yaml` 中，这两种方法的格式分别如下：
 
 > ```
 > # 将 ConfigMap 声明为 resource
@@ -21,7 +25,7 @@ Kustomize 提供了两种在一个 `kustomization` 中添加 ConfigMap 的方法
 
 声明为 [resource] 的 ConfigMaps 的处理方式与其他 resource 相同，Kustomize 不会在为 ConfigMap 的名称添加哈希后缀。而在 ConfigMapGenerator 中声明 ConfigMap 的处理方式则与之前不同，默认将为名称添加哈希后缀，ConfigMap 中的任何更改都将触发滚动更新。
 
-在 [hello_world](helloWorld.md) 示例中，使用在 ConfigmapGenerator 中声明的 ConfigMap 的方法替换将 ConfigMap 声明为 [resource] 的方法。此 ConfigMap 中的更改将导致哈希值更改和滚动更新。
+在 [hello_world](helloWorld.md) 示例中，使用 ConfigmapGenerator 来替换将 ConfigMap 声明为 [resource] 的方法。由此生成的 ConfigMap 中的更改将导致哈希值更改和滚动更新。
 
 ### 建立 base 和 staging
 
@@ -87,14 +91,14 @@ EOF
 
 在集群中运行的 _hello-world_ 的 deployment 配置了来自 configMap 的数据。
 
-deployment 按照名称引用次 map ：
+deployment 按照名称引用此 ConfigMap ：
 
 <!-- @showDeployment @test -->
 ```
 grep -C 2 configMapKeyRef $BASE/deployment.yaml
 ```
 
-更改群集中的实时 configMap 的数据并不是一个好的做法。Deployment 无法知道其引用的 configMaps 已更改，因此这类更新是无效。
+当 ConfigMap 中的数据需要更新时，更改群集中的实时 ConfigMap 的数据并不是一个好的做法。 由于 Deployment 无法知道其引用的 ConfigMap 已更改，这类更新是无效。
 
 更改 Deployment 配置的推荐方法是：
 
@@ -164,7 +168,7 @@ kustomize build $OVERLAYS/staging |\
     grep -B 8 -A 1 staging-the-map
 ```
 
-确认 configMap 内容的更改将会生成以 _cd7kdh48fd_ 结尾的三个新名称 - 一个在 configMap 的名称中，另两个在使用该映射的 deployment 中：
+确认 configMap 内容的更改将会生成以 _cd7kdh48fd_ 结尾的三个新名称 - 一个在 configMap 的名称中，另两个在使用 ConfigMap 的 deployment 中：
 
 <!-- @countHashes @test -->
 ```
