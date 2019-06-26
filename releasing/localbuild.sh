@@ -2,7 +2,7 @@
 
 # Usage
 #
-#   ./build/localbuild.sh
+#   ./releasing/localbuild.sh
 #
 # The script attempts to use cloudbuild configuration
 # to create a release "locally".
@@ -17,11 +17,11 @@
 # applied to the kustomize repo, the cloud builder
 # reads the repository-relative file
 #
-#   build/cloudbuild.yaml
+#   releasing/cloudbuild.yaml
 #  
 # Inside this yaml file is a reference to the script
 #
-#   build/cloudbuild.sh
+#   releasing/cloudbuild.sh
 #
 # The script you are reading now does something
 # analogous via docker tricks.
@@ -44,7 +44,7 @@ config=$(mktemp)
 cat <<EOF >$config
 steps:
 - name: "gcr.io/kubebuilder/goreleaser_with_go_1.12.5:0.0.1"
-  args: ["bash", "build/cloudbuild.sh", "--snapshot"]
+  args: ["bash", "releasing/cloudbuild.sh", "--snapshot"]
   secretEnv: ['GITHUB_TOKEN']
 secrets:
 - kmsKeyName: projects/kustomize-199618/locations/global/keyRings/github-tokens/cryptoKeys/gh-release-token
