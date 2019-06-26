@@ -41,9 +41,11 @@ func NewResIdKindOnly(k string, n string) ResId {
 }
 
 const (
-	noNamespace = "~X"
-	noName      = "~N"
-	separator   = "|"
+	noNamespace          = "~X"
+	noName               = "~N"
+	separator            = "|"
+	TotallyNotANamespace = "_non_namespaceable_"
+	DefaultNamespace     = "default"
 )
 
 // String of ResId based on GVK, name and prefix
@@ -96,22 +98,32 @@ func (id ResId) Equals(o ResId) bool {
 	return id.IsNsEquals(o) && id.GvknEquals(o)
 }
 
-// IsNsEquals returns true if the other id matches namespace
-// or both are in the default namespace
-// or both are not namespaceable id.
+// IsNsEquals returns true if the id is in
+// the same effective namespace.
 func (id ResId) IsNsEquals(o ResId) bool {
-	return id.Namespace == o.Namespace ||
-		(id.IsInDefaultNs() && o.IsInDefaultNs()) ||
-		(!id.IsNamespaceable() && !o.IsNamespaceable())
+	return id.EffectiveNamespace() == o.EffectiveNamespace()
 }
 
-// IsInDefaultNs returns true if id is a namespable ResId and the Namespace
-// is either not set or set to "default"
+// IsInDefaultNs returns true if id is a namespaceable
+// ResId and the Namespace is either not set or set
+// to DefaultNamespace.
 func (id ResId) IsInDefaultNs() bool {
-	return id.IsNamespaceable() && (id.Namespace == "" || id.Namespace == "default")
+	return id.IsNamespaceableKind() && id.isPutativelyDefaultNs()
 }
 
-// IsNamespaceable returns true if id is a namespable ResId
-func (id ResId) IsNamespaceable() bool {
-	return id.IsNamespaceableKind()
+func (id ResId) isPutativelyDefaultNs() bool {
+	return id.Namespace == "" || id.Namespace == DefaultNamespace
+}
+
+// EffectiveNamespace returns a non-ambiguous, non-empty
+// namespace for use in reporting and equality tests.
+func (id ResId) EffectiveNamespace() string {
+	// The order of these checks matters.
+	if !id.IsNamespaceableKind() {
+		return TotallyNotANamespace
+	}
+	if id.isPutativelyDefaultNs() {
+		return DefaultNamespace
+	}
+	return id.Namespace
 }
