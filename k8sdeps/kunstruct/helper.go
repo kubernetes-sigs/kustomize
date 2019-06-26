@@ -1,18 +1,5 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 // Package kunstruct provides unstructured from api machinery and factory for creating unstructured
 package kunstruct
@@ -44,13 +31,12 @@ func appendNonEmpty(section *PathSection, field string) {
 	}
 }
 
-func parseFields(path string) ([]PathSection, error) {
+func parseFields(path string) (result []PathSection, err error) {
 	section := newPathSection()
-	sectionset := []PathSection{}
 	if !strings.Contains(path, "[") {
 		section.fields = strings.Split(path, ".")
-		sectionset = append(sectionset, section)
-		return sectionset, nil
+		result = append(result, section)
+		return result, nil
 	}
 
 	start := 0
@@ -73,7 +59,7 @@ func parseFields(path string) ([]PathSection, error) {
 		case ']':
 			if insideParentheses {
 				// Assign this index to the current
-				// PathSection, save it to the set, then begin
+				// PathSection, save it to the result, then begin
 				// a new PathSection
 				tmpIdx, err := strconv.Atoi(path[start:i])
 				if err == nil {
@@ -83,7 +69,7 @@ func parseFields(path string) ([]PathSection, error) {
 					// We have detected the downwardapi syntax
 					appendNonEmpty(&section, path[start:i])
 				}
-				sectionset = append(sectionset, section)
+				result = append(result, section)
 				section = newPathSection()
 
 				start = i + 1
@@ -95,15 +81,15 @@ func parseFields(path string) ([]PathSection, error) {
 	}
 	if start < len(path)-1 {
 		appendNonEmpty(&section, path[start:])
-		sectionset = append(sectionset, section)
+		result = append(result, section)
 	}
 
-	for _, section := range sectionset {
+	for _, section := range result {
 		for i, f := range section.fields {
 			if strings.HasPrefix(f, "\"") || strings.HasPrefix(f, "'") {
 				section.fields[i] = strings.Trim(f, "\"'")
 			}
 		}
 	}
-	return sectionset, nil
+	return result, nil
 }

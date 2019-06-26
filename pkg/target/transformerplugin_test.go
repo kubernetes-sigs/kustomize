@@ -7,9 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
 	"sigs.k8s.io/kustomize/v3/pkg/plugins"
-
-	kusttest_test "sigs.k8s.io/kustomize/v3/pkg/kusttest"
 )
 
 func writeDeployment(th *kusttest_test.KustTestHarness, path string) {

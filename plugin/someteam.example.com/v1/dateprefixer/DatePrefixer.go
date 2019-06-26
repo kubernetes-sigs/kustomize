@@ -19,8 +19,8 @@ type plugin struct {
 	t transformers.Transformer
 }
 
-//noinspection GoUnusedGlobalVariable
 //nolint: golint
+//noinspection GoUnusedGlobalVariable
 var KustomizePlugin plugin
 
 func (p *plugin) makePrefixSuffixPluginConfig() ([]byte, error) {
