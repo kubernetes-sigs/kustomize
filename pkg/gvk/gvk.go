@@ -186,7 +186,7 @@ var notNamespaceableKinds = []string{
 	"VolumeAttachment",
 }
 
-// IsNamespaceableKind returns true if x is a namespeable Gvk
+// IsNamespaceableKind returns true if x is a namespaceable Gvk
 // Implements https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/#not-all-objects-are-in-a-namespace
 func (x Gvk) IsNamespaceableKind() bool {
 	for _, k := range notNamespaceableKinds {

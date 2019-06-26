@@ -161,104 +161,169 @@ func TestGvknString(t *testing.T) {
 	}
 }
 
-var GvknEqualsTest = []struct {
-	id1          ResId
-	id2          ResId
-	gVknResult   bool
-	nSgVknResult bool
-}{
-	{
-		id1: ResId{
-			Namespace: "X",
-			Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
-			Name:      "nm",
-		},
-		id2: ResId{
-			Namespace: "X",
-			Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
-			Name:      "nm",
-		},
-		gVknResult:   true,
-		nSgVknResult: true,
-	},
-	{
-		id1: ResId{
-			Namespace: "X",
-			Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
-			Name:      "nm",
-		},
-		id2: ResId{
-			Namespace: "Z",
-			Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
-			Name:      "nm",
-		},
-		gVknResult:   true,
-		nSgVknResult: false,
-	},
-	{
-		id1: ResId{
-			Namespace: "X",
-			Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
-			Name:      "nm",
-		},
-		id2: ResId{
-			Gvk:  gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
-			Name: "nm",
-		},
-		gVknResult:   true,
-		nSgVknResult: false,
-	},
-	{
-		id1: ResId{
-			Namespace: "X",
-			Gvk:       gvk.Gvk{Version: "v", Kind: "k"},
-			Name:      "nm",
-		},
-		id2: ResId{
-			Namespace: "Z",
-			Gvk:       gvk.Gvk{Version: "v", Kind: "k"},
-			Name:      "nm",
-		},
-		gVknResult:   true,
-		nSgVknResult: false,
-	},
-	{
-		id1: ResId{
-			Namespace: "X",
-			Gvk:       gvk.Gvk{Kind: "k"},
-			Name:      "nm",
-		},
-		id2: ResId{
-			Namespace: "Z",
-			Gvk:       gvk.Gvk{Kind: "k"},
-			Name:      "nm",
-		},
-		gVknResult:   true,
-		nSgVknResult: false,
-	},
-	{
-		id1: ResId{
-			Namespace: "X",
-			Name:      "nm",
-		},
-		id2: ResId{
-			Namespace: "Z",
-			Name:      "nm",
-		},
-		gVknResult:   true,
-		nSgVknResult: false,
-	},
-}
-
 func TestEquals(t *testing.T) {
+
+	var GvknEqualsTest = []struct {
+		id1        ResId
+		id2        ResId
+		gVknResult bool
+		nsEquals   bool
+		equals     bool
+	}{
+		{
+			id1: ResId{
+				Namespace: "X",
+				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Name:      "nm",
+			},
+			id2: ResId{
+				Namespace: "X",
+				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Name:      "nm",
+			},
+			gVknResult: true,
+			nsEquals:   true,
+			equals:     true,
+		},
+		{
+			id1: ResId{
+				Namespace: "X",
+				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Name:      "nm",
+			},
+			id2: ResId{
+				Namespace: "Z",
+				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Name:      "nm",
+			},
+			gVknResult: true,
+			nsEquals:   false,
+			equals:     false,
+		},
+		{
+			id1: ResId{
+				Namespace: "X",
+				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Name:      "nm",
+			},
+			id2: ResId{
+				Gvk:  gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Name: "nm",
+			},
+			gVknResult: true,
+			nsEquals:   false,
+			equals:     false,
+		},
+		{
+			id1: ResId{
+				Namespace: "X",
+				Gvk:       gvk.Gvk{Version: "v", Kind: "k"},
+				Name:      "nm",
+			},
+			id2: ResId{
+				Namespace: "Z",
+				Gvk:       gvk.Gvk{Version: "v", Kind: "k"},
+				Name:      "nm",
+			},
+			gVknResult: true,
+			nsEquals:   false,
+			equals:     false,
+		},
+		{
+			id1: ResId{
+				Namespace: "X",
+				Gvk:       gvk.Gvk{Kind: "k"},
+				Name:      "nm",
+			},
+			id2: ResId{
+				Namespace: "Z",
+				Gvk:       gvk.Gvk{Kind: "k"},
+				Name:      "nm",
+			},
+			gVknResult: true,
+			nsEquals:   false,
+			equals:     false,
+		},
+		{
+			id1: ResId{
+				Gvk:  gvk.Gvk{Kind: "k"},
+				Name: "nm",
+			},
+			id2: ResId{
+				Gvk:  gvk.Gvk{Kind: "k"},
+				Name: "nm2",
+			},
+			gVknResult: false,
+			nsEquals:   true,
+			equals:     false,
+		},
+		{
+			id1: ResId{
+				Gvk:  gvk.Gvk{Kind: "k"},
+				Name: "nm",
+			},
+			id2: ResId{
+				Gvk:  gvk.Gvk{Kind: "Node"},
+				Name: "nm",
+			},
+			gVknResult: false,
+			nsEquals:   false,
+			equals:     false,
+		},
+		{
+			id1: ResId{
+				Gvk:  gvk.Gvk{Kind: "Node"},
+				Name: "nm1",
+			},
+			id2: ResId{
+				Gvk:  gvk.Gvk{Kind: "Node"},
+				Name: "nm2",
+			},
+			gVknResult: false,
+			nsEquals:   true,
+			equals:     false,
+		},
+		{
+			id1: ResId{
+				Namespace: "default",
+				Gvk:       gvk.Gvk{Kind: "k"},
+				Name:      "nm1",
+			},
+			id2: ResId{
+				Gvk:  gvk.Gvk{Kind: "k"},
+				Name: "nm2",
+			},
+			gVknResult: false,
+			nsEquals:   true,
+			equals:     false,
+		},
+		{
+			id1: ResId{
+				Namespace: "X",
+				Name:      "nm",
+			},
+			id2: ResId{
+				Namespace: "Z",
+				Name:      "nm",
+			},
+			gVknResult: true,
+			nsEquals:   false,
+			equals:     false,
+		},
+	}
+
 	for _, tst := range GvknEqualsTest {
 		if tst.id1.GvknEquals(tst.id2) != tst.gVknResult {
 			t.Fatalf("GvknEquals(\n%v,\n%v\n) should be %v",
 				tst.id1, tst.id2, tst.gVknResult)
 		}
-		if tst.id1.Equals(tst.id2) != tst.nSgVknResult {
-			t.Fatalf("NsGvknEquals(\n%v,\n%v\n) should be %v",
-				tst.id1, tst.id2, tst.nSgVknResult)
+		if tst.id1.IsNsEquals(tst.id2) != tst.nsEquals {
+			t.Fatalf("IsNsEquals(\n%v,\n%v\n) should be %v",
+				tst.id1, tst.id2, tst.equals)
+		}
+		if tst.id1.Equals(tst.id2) != tst.equals {
+			t.Fatalf("Equals(\n%v,\n%v\n) should be %v",
+				tst.id1, tst.id2, tst.equals)
 		}
 	}
 }
@@ -302,6 +367,59 @@ func TestFromString(t *testing.T) {
 		newId := FromString(id.String())
 		if newId != id {
 			t.Fatalf("Actual: %v,  Expected: '%s'", newId, id)
+		}
+	}
+}
+
+func TestEffectiveNamespace(t *testing.T) {
+	var test = []struct {
+		id       ResId
+		expected string
+	}{
+		{
+			id: ResId{
+				Gvk:  gvk.Gvk{Group: "g", Version: "v", Kind: "Node"},
+				Name: "nm",
+			},
+			expected: TotallyNotANamespace,
+		},
+		{
+			id: ResId{
+				Namespace: "foo",
+				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "Node"},
+				Name:      "nm",
+			},
+			expected: TotallyNotANamespace,
+		},
+		{
+			id: ResId{
+				Namespace: "foo",
+				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Name:      "nm",
+			},
+			expected: "foo",
+		},
+		{
+			id: ResId{
+				Namespace: "",
+				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Name:      "nm",
+			},
+			expected: DefaultNamespace,
+		},
+		{
+			id: ResId{
+				Gvk:  gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Name: "nm",
+			},
+			expected: DefaultNamespace,
+		},
+	}
+
+	for _, tst := range test {
+		if actual := tst.id.EffectiveNamespace(); actual != tst.expected {
+			t.Fatalf("EffectiveNamespace was %s, expected %s",
+				actual, tst.expected)
 		}
 	}
 }
