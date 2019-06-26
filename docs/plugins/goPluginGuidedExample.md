@@ -1,6 +1,6 @@
 # Go Plugin Guided Example for Linux
 
-This is a (no reading) 60 second copy/paste guided
+This is a (no reading allowed!) 60 second copy/paste guided
 example.  Full plugin docs [here](README.md).
 
 [SopsEncodedSecrets repository]: https://github.com/monopole/sopsencodedsecrets
