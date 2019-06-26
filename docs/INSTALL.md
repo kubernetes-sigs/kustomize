@@ -1,13 +1,15 @@
 [release page]: https://github.com/kubernetes-sigs/kustomize/releases
 [Go]: https://golang.org
 
-## Installation
+# Installation
 
-For linux, macOs and Windows,
-download a binary from the
-[release page].
+Binaries at various versions for linux, macOs and Windows
+are available on the [release page].
 
-Or try this command:
+Or...
+
+## Quickly curl the latest
+
 ```
 opsys=linux  # or darwin, or windows
 curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/latest |\
@@ -19,7 +21,9 @@ mv kustomize_*_${opsys}_amd64 kustomize
 chmod u+x kustomize
 ```
 
-To install from head with [Go] v1.12 or higher:
+## Install from the HEAD of master branch
+
+Requires [Go] v1.12 or higher:
 
 <!-- @installkustomize @test -->
 ```
