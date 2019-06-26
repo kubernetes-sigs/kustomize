@@ -48,25 +48,20 @@ Each field accepts a string list:
 > - {as above}
 > ```
 
-This is exactly like the syntax of the `resources`
-field.
-
-The value of each entry in a `resources`,
-`generators` or `transformers` list must be a
-relative path to a YAML file, or a path or URL
-to a [kustomization].
+The value of each entry in a `generators` or
+`transformers` list must be a relative path to a
+YAML file, or a path or URL to a [kustomization].
+This is the same format as demanded by the
+`resources` field.
 
 [kustomization]: ../glossary.md#kustomization
 
-In the former case the YAML is read from disk directly,
-and in the latter case a kustomization is performed,
-and its YAML output is merged with the YAML read
-directly from files.  The net result in all three cases
-is a set of YAML objects.
-
-Each object resulting from a `generators` or
-`transformers` field is now further interpreted by
+YAML files are read from disk directly.  Paths or
+URLs leading to kustomizations trigger an
+in-process kustomization run.  Each of the
+resulting objects is now further interpreted by
 kustomize as a _plugin configuration_ object.
+
 
 ## Configuration
 
@@ -77,8 +72,8 @@ generators:
 - chartInflator.yaml
 ```
 
-Given this, the kustomization process would expect to
-find a file called `chartInflator.yaml` in the
+Given this, the kustomization process would expect
+to find a file called `chartInflator.yaml` in the
 kustomization [root](../glossary.md#kustomization-root).
 
 This is the _plugin's configuration file_.
@@ -98,11 +93,11 @@ used to locate the plugin.__
 
 [k8s object]: ../glossary.md#kubernetes-style-object
 
-> Thus, these fields are required.  They are also
-> required because a kustomize plugin
-> configuration object is also a [k8s object].
+Thus, these fields are required.  They are also
+required because a kustomize plugin configuration
+object is also a [k8s object].
 
-To get the plugin ready to generator or transform,
+To get the plugin ready to generate or transform,
 it is given the entire contents of the
 configuration file.
 
@@ -129,7 +124,7 @@ The default value of `XDG_CONFIG_HOME` is
 `$HOME/.config`.
 
 The one-plugin-per-directory requirement eases
-creation of a plugin tarball (source, test, plugin
+creation of a plugin bundle (source, test, plugin
 data files, etc.) for sharing.
 
 In the case of a [Go plugin](#go-plugins), it also
@@ -159,9 +154,8 @@ Plugins are only used during a run of the
 `kustomize build` command.
 
 Generator plugins are run after processing the
-`resources` field (which itself is in some sense a
-generator in that it emits resources for further
-processing).
+`resources` field (which itself can be viewed as a
+generator, simply reading objects from disk).
 
 The full set of resources is then passed into the
 transformation pipeline, wherein builtin
@@ -171,9 +165,9 @@ in the kustomization file), followed by the
 user-specified transformers in the `transformers`
 field.
 
-The specified order of transformers in the
-`transformers` field should be respected, as
-transformers cannot be expected to be commutative.
+The order specified in the `transformers` field is
+respected, as transformers cannot be expected to
+be commutative.
 
 A `kustomize build` that tries to use plugins but
 omits the flag
@@ -182,7 +176,8 @@ omits the flag
 
 will fail with a warning about plugin use.
 
-Flag use is an opt-in acknowledging the absence of
+Flag use is an opt-in acknowledging both tthe
+unstable (alpha) plugin API, and the absence of
 plugin provenance.  It's meant to give pause to
 someone who blindly downloads a kustomization from
 the internet and attempts to run it, without
@@ -192,7 +187,9 @@ installed already, but nevertheless the flag is a
 reminder.
 
 
-## Writing plugins
+## Authoring
+
+There are two kinds of plugins, [exec](#exec-plugins) and [Go](#go-plugins).
 
 ### Exec plugins
 
@@ -201,14 +198,15 @@ single argument on its command line - the name of
 a YAML file containing its configuration (the file name
 provided in the kustomization file).
 
-> TODO: more restrictions on plugin to allow the same exec
-> plugin to be specified in a config under both the
+> TODO: restrictions on plugin to allow the _same exec
+> plugin_ to be targetted by  both the
 > `generators` and `transformers` fields.
+>
 > - first arg could be the fixed string
 >   `generate` or `transform`,
 >   (the name of the configuration file moves to
 >   the 2nd arg), or
-> - by default an exec plugin behaves as a tranformer
+> - or by default an exec plugin behaves as a tranformer
 >   unless a flag `-g` is provided, switching the
 >   exec plugin to behave as a generator.
 
@@ -237,9 +235,20 @@ marshalled resources on `stdin` and capture
 
 ### Go plugins
 
+Be sure to read [Go plugin caveats](goPluginCaveats.md).
+
 [Go plugin]: https://golang.org/pkg/plugin/
 
-A [Go plugin] for kustomize looks like this:
+A `.go` file can be a [Go plugin] if it declares
+'main' as it's package, and exports a symbol to
+which useful functions are attached.
+
+It can further be used as a _kustomize_ plugin if
+the symbol is named 'KustomizePlugin' and the
+attached functions implement the `Configurable`,
+`Generator` and `Transformer` interfaces.
+
+A Go plugin for kustomize looks like this:
 
 > ```
 > package main
@@ -278,23 +287,24 @@ Do one or the other or both as desired.
 [service generator]: ../../plugin/someteam.example.com/v1/someservicegenerator
 [string prefixer]: ../../plugin/someteam.example.com/v1/stringprefixer
 [date prefixer]: ../../plugin/someteam.example.com/v1/dateprefixer
-
+[sops encoded secrets]: https://github.com/monopole/sopsencodedsecrets
 
 #### Examples
 
- * [secret generator] - Generate secrets from a database.
- * [service generator] - Generate a service from a name and port argument.
+ * [service generator] - generate a service from a name and port argument.
  * [string prefixer] - uses the value in `metadata/name` as the prefix.
    This particular example exists to show how a plugin can
    transform the behavior of a plugin.  See the
    `TestTransformedTransformers` test in the `target` package.
  * [date prefixer] - prefix the current date to resource names, a simple
    example used to modify the string prefixer plugin just mentioned.
- * All the builtin plugins [here](../../plugin/builtin).
+ * [secret generator] - generate secrets from a toy database.
+ * [sops encoded secrets] - a more complex secret generator.
+ * [All the builtin plugins](../../plugin/builtin).
    User authored plugins are
    on the same footing as builtin operations.
 
-A plugin can be both a generator and a
+A Go plugin can be both a generator and a
 transformer.  The `Generate` method will run along
 with all the other generators before the
 `Transform` method runs.
@@ -311,43 +321,3 @@ go build -buildmode plugin \
    -o $d/${kind}.so $d/${kind}.go
 ```
 
-#### Caveats
-
-Go plugins allow kustomize extensions that run
-without the cost marshalling/unmarshalling all
-resource data to/from a subprocess for each plugin
-run.
-
-[ELF]: https://en.wikipedia.org/wiki/Executable_and_Linkable_Format
-
-Go plugins work as [defined][Go plugin], but fall
-short of common notions associated with the word
-_plugin_.  Go plugin compilation creates an [ELF]
-formatted `.so` file, which by definition has no
-information about the provenance of the object
-code.  Skew between the compilation conditions
-(versions of package dependencies, `GOOS`,
-`GOARCH`) of the main program ELF and the plugin
-ELF will cause plugin load failure.
-
-Exec plugins also lack provenance, but won't
-complain about compilation skew.
-
-In either case, a sensible way to share a plugin
-is as a tar file of source code, tests and
-associated data, unpackable under
-`$XDG_CONFIG_HOME/kustomize/plugin` (exactly where
-one would develop a plugin).
-
-[Go modules]: https://github.com/golang/go/wiki/Modules
-
-In the case of a Go plugin, an end user accepting
-a shared plugin must compile both kustomize and
-the plugin.  Tooling could be built to make Go
-_plugin sharing_ easier, but this requires some
-critical mass of _plugin authoring_, which in turn
-is hampered by confusion around sharing.
-[Go modules], once they are more widely adopted,
-will solve one of the biggest plugin sharing
-difficulties - ambiguous plugin vs host
-dependencies.
