@@ -1,4 +1,4 @@
-[Go plugin package]: https://golang.org/pkg/plugin
+[plugin package]: https://golang.org/pkg/plugin
 [Go modules]: https://github.com/golang/go/wiki/Modules
 [ELF]: https://en.wikipedia.org/wiki/Executable_and_Linkable_Format
 [tensorflow plugin]: https://www.tensorflow.org/guide/extend/op
@@ -6,8 +6,9 @@
 # Go plugin Caveats
 
 A _Go plugin_ is a compilation artifact described
-by the [Go plugin package].  It cannot run on its
-own; it must be loaded into a running Go program.
+by the Go [plugin package].  It is built with
+special flags and cannot run on its own.
+It must be loaded into a running Go program.
 
 > A normal program written in Go might be usable
 > as _exec plugin_, but is not a _Go plugin_.
@@ -52,7 +53,7 @@ kustomize and the plugin.
 This means a one-time run of
 ```
 GOPATH=${whatever} go get \
-    sigs.k8s.io/kustomize/cmd/kustomize@v3.0.0
+    sigs.k8s.io/kustomize/cmd/kustomize@${releaseVersion}
 
 ```
 
@@ -62,7 +63,8 @@ and then a normal development cycle using
 go build -buildmode plugin \
     -o ${wherever}/${kind}.so ${wherever}/${kind}.go
 ```
-with paths and the version tag adjusted as needed.
+with paths and the release version tag (e.g. `v3.0.0`)
+adjusted as needed.
 
 For comparison, consider what one
 must do to write a [tensorflow plugin].
@@ -75,7 +77,7 @@ The Go plugin developer sees the same API offered
 to native kustomize operations, assuring certain
 semantics, invariants, checks, etc.  An exec
 plugin sub-process dealing with this via
-stdin/stdout will have a much easier time screwing
+stdin/stdout will have an easier time screwing
 things up for downstream transformers and
 consumers.
 
@@ -87,10 +89,16 @@ elsewhere while running a plugin in feature tests.
 
 ### Unit of contribution 
 
-It's trivial for the kustomize maintainers to
-promote a contributed plugin to _builtin_ status,
-since all the builtin generators and transformers
-are themselves Go plugins.
+All the builtin generators and transformers
+are themselves Go plugins.  This means it's
+trivial for the kustomize maintainers to
+promote a contributed Go plugin to
+_builtin_ status.
+
+To get the best of both worlds (shareability and safety),
+a developer can write an `.go` program that functions
+as an _exec plugin_, but can be processed by `go generate`
+to emit a _Go plugin_ (or vice versa).
 
 ### Ecosystems grow through use
 
@@ -101,7 +109,3 @@ confusion around sharing.  [Go modules], once they
 are more widely adopted, will solve one of the
 biggest plugin sharing difficulties - ambiguous
 plugin vs host dependencies.
-
-   
- 
- 
