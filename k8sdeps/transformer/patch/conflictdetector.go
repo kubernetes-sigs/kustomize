@@ -40,7 +40,7 @@ func (jmp *jsonMergePatch) findConflict(
 		if i == conflictingPatchIdx {
 			continue
 		}
-		if !patches[conflictingPatchIdx].OrgId().GvknEquals(patch.OrgId()) {
+		if !patches[conflictingPatchIdx].OrgId().Equals(patch.OrgId()) {
 			continue
 		}
 		conflict, err := mergepatch.HasConflicts(
@@ -100,7 +100,7 @@ func (smp *strategicMergePatch) findConflict(
 		if i == conflictingPatchIdx {
 			continue
 		}
-		if !patches[conflictingPatchIdx].OrgId().GvknEquals(patch.OrgId()) {
+		if !patches[conflictingPatchIdx].OrgId().Equals(patch.OrgId()) {
 			continue
 		}
 		conflict, err := strategicpatch.MergingMapsHaveConflicts(

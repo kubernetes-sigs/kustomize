@@ -64,6 +64,8 @@ func (ra *ResAccumulator) GetTransformerConfig() *config.TransformerConfig {
 
 func (ra *ResAccumulator) MergeVars(incoming []types.Var) error {
 	for _, v := range incoming {
+		// TODO(jeb): Do not change GvknEquals to Equals until the
+		// namespace is part of the variable declaration.
 		matched := ra.resMap.GetMatchingResourcesByOriginalId(
 			resid.NewResId(v.ObjRef.GVK(), v.ObjRef.Name).GvknEquals)
 		if len(matched) > 1 {
