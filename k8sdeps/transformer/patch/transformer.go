@@ -101,7 +101,7 @@ func (tf *transformer) mergePatches() (resmap.ResMap, error) {
 	rc := resmap.New()
 	for ix, patch := range tf.patches {
 		id := patch.OrgId()
-		existing := rc.GetMatchingResourcesByOriginalId(id.GvknEquals)
+		existing := rc.GetMatchingResourcesByOriginalId(id.Equals)
 		if len(existing) == 0 {
 			rc.Append(patch)
 			continue
