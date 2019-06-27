@@ -8,8 +8,7 @@
 
  * [术语表](../glossary.md) - 用于消除术语歧义。
 
- * [kustomization.yaml](kustomization.yaml) - 包含 
- [kustomization](../glossary.md#kustomization) 所有字段的示例文件。
+ * [Kustomize 字段](fields.md) - 介绍 [kustomization](../glossary.md#kustomization) 文件中各字段的含义。
 
  * [插件](../plugins) - 使用自定义的资源生成器和资源转换器来拓展 kustomize 功能。
 
@@ -19,6 +18,8 @@
 
 
 ## 发行说明
+
+ * [3.0](../v3.0.0.md) - 2019年6月下旬，插件开发者发布。
 
  * [2.1](../v2.1.0.md) - 2019年6月18日
  插件、有序资源等。

@@ -307,12 +307,14 @@ The content in this patch file can be either in JSON format as
 
 or in YAML format as
 
+```
 - op: add
   path: /some/new/path
   value: value
-- op:replace
+- op: replace
   path: /some/existing/path
   value: new value
+```
 
 ```
 patchesJson6902:
@@ -356,6 +358,7 @@ be modified at the same time.
 
 
 #### Limitation
+
 As this declaration does not take in a `kind:` nor a `group:`
 it will match any `group` and `kind` that has a matching name and
 that is one of:
