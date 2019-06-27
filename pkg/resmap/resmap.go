@@ -89,10 +89,6 @@ type ResMap interface {
 	// an exact match, returning an error on multiple or no matches.
 	GetByOriginalId(resid.ResId) (*resource.Resource, error)
 
-	// Deprecated.
-	// Same as GetByOriginalId.
-	GetById(resid.ResId) (*resource.Resource, error)
-
 	// GroupedByNamespace returns a map of namespace
 	// to a slice of *Resource in that namespace.
 	// Resources for whom IsNamespaceableKind is false are
@@ -349,11 +345,6 @@ func demandOneMatch(
 		return nil, fmt.Errorf("multiple matches for %sId %s", s, id)
 	}
 	return nil, fmt.Errorf("no matches for %sId %s", s, id)
-}
-
-// GetById implements ResMap.
-func (m *resWrangler) GetById(id resid.ResId) (*resource.Resource, error) {
-	return m.GetByCurrentId(id)
 }
 
 // GroupedByNamespace implements ResMap.GroupByNamespace
