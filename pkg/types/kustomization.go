@@ -394,13 +394,13 @@ type Patch struct {
 	Patch string `json:"patch,omitempty" yaml:"patch,omitempty"`
 
 	// Target points to the resources that the patch is applied to
-	Target Targets `json:"target,omitempty" yaml:"target,omitempty"`
+	Target Selector `json:"target,omitempty" yaml:"target,omitempty"`
 }
 
-// Targets specifies a set of resources.
+// Selector specifies a set of resources.
 // Any resource that matches intersection of all conditions
 // is included in this set.
-type Targets struct {
+type Selector struct {
 	gvk.Gvk   `json:",inline,omitempty" yaml:",inline,omitempty"`
 	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 	Name      string `json:"name,omitempty" yaml:"name,omitempty"`
