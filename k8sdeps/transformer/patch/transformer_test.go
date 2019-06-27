@@ -380,7 +380,7 @@ func TestPatchesWithWrongNamespace(t *testing.T) {
 	if err == nil {
 		t.Fatalf("did not get expected error")
 	}
-	if !strings.Contains(err.Error(), "failed to find target for patch") {
+	if !strings.Contains(err.Error(), "failed to find unique target for patch") {
 		t.Fatalf("expected error to contain %q but get %v", "failed to find target for patch", err)
 	}
 }
