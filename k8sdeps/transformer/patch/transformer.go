@@ -98,16 +98,17 @@ func (tf *transformer) Transform(m resmap.ResMap) error {
 
 func (tf *transformer) findPatchTarget(
 	m resmap.ResMap, id resid.ResId) (*resource.Resource, error) {
-	match, err := m.GetByOriginalId(id)
-	if err == nil {
+	match, err1 := m.GetByOriginalId(id)
+	if err1 == nil {
 		return match, nil
 	}
-	match, err = m.GetByCurrentId(id)
-	if err == nil {
+	match, err2 := m.GetByCurrentId(id)
+	if err2 == nil {
 		return match, nil
 	}
 	return nil, fmt.Errorf(
-		"failed to find target for patch %s", id.GvknString())
+		"%s; %s; failed to find unique target for patch %s",
+		err1.Error(), err2.Error(), id.GvknString())
 }
 
 // mergePatches merge and index patches by OrgId.
