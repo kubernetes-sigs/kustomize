@@ -117,7 +117,7 @@ func (o *nameReferenceTransformer) getNewNameFunc(
 			for _, res := range referralCandidates.Resources() {
 				id := res.OrgId()
 				if id.IsSelected(&target) && res.GetOriginalName() == oldName {
-					matches := referralCandidates.GetMatchingResourcesByOriginalId(id.GvknEquals)
+					matches := referralCandidates.GetMatchingResourcesByOriginalId(id.Equals)
 					// If there's more than one match, there's no way
 					// to know which one to pick, so emit error.
 					if len(matches) > 1 {
@@ -149,7 +149,7 @@ func (o *nameReferenceTransformer) getNewNameFunc(
 				indexes := indexOf(res.GetOriginalName(), names)
 				id := res.OrgId()
 				if id.IsSelected(&target) && len(indexes) > 0 {
-					matches := referralCandidates.GetMatchingResourcesByOriginalId(id.GvknEquals)
+					matches := referralCandidates.GetMatchingResourcesByOriginalId(id.Equals)
 					if len(matches) > 1 {
 						return nil, fmt.Errorf(
 							"slice case - multiple matches for %s:\n %v",
