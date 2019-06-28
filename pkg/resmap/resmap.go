@@ -89,6 +89,12 @@ type ResMap interface {
 	// an exact match, returning an error on multiple or no matches.
 	GetByOriginalId(resid.ResId) (*resource.Resource, error)
 
+	// GetById is a helper function which first
+	// attempts GetByOriginalId, then GetByCurrentId,
+	// returning an error if both fail to find a single
+	// match.
+	GetById(resid.ResId) (*resource.Resource, error)
+
 	// GroupedByNamespace returns a map of namespace
 	// to a slice of *Resource in that namespace.
 	// Resources for whom IsNamespaceableKind is false are
@@ -331,6 +337,22 @@ func (m *resWrangler) GetByCurrentId(
 func (m *resWrangler) GetByOriginalId(
 	id resid.ResId) (*resource.Resource, error) {
 	return demandOneMatch(m.GetMatchingResourcesByOriginalId, id, "Original")
+}
+
+// GetById implements ResMap.
+func (m *resWrangler) GetById(
+	id resid.ResId) (*resource.Resource, error) {
+	match, err1 := m.GetByOriginalId(id)
+	if err1 == nil {
+		return match, nil
+	}
+	match, err2 := m.GetByCurrentId(id)
+	if err2 == nil {
+		return match, nil
+	}
+	return nil, fmt.Errorf(
+		"%s; %s; failed to find unique target for patch %s",
+		err1.Error(), err2.Error(), id.GvknString())
 }
 
 type resFinder func(IdMatcher) []*resource.Resource

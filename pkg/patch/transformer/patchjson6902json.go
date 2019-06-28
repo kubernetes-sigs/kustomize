@@ -23,7 +23,6 @@ import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers"
 	"sigs.k8s.io/yaml"
 )
@@ -66,7 +65,7 @@ func newPatchJson6902JSONTransformer(
 
 // Transform apply the json patches on top of the base resources.
 func (t *patchJson6902JSONTransformer) Transform(m resmap.ResMap) error {
-	obj, err := t.findTargetObj(m)
+	obj, err := m.GetById(t.target)
 	if err != nil {
 		return err
 	}
@@ -83,31 +82,4 @@ func (t *patchJson6902JSONTransformer) Transform(m resmap.ResMap) error {
 		return err
 	}
 	return nil
-}
-
-func (t *patchJson6902JSONTransformer) findTargetObj(
-	m resmap.ResMap) (*resource.Resource, error) {
-	var matched []*resource.Resource
-	// TODO(monopole): namespace bug in json patch?
-	// Since introduction in PR #300
-	// (see pkg/patch/transformer/util.go),
-	// this code has treated an empty namespace like a wildcard
-	// rather than like an additional restriction to match
-	// only the empty namespace.  No test coverage to confirm.
-	// Not sure if desired, keeping it for now.
-	if t.target.Namespace != "" {
-		matched = m.GetMatchingResourcesByOriginalId(t.target.Equals)
-	} else {
-		matched = m.GetMatchingResourcesByOriginalId(t.target.GvknEquals)
-	}
-	if len(matched) == 0 {
-		return nil, fmt.Errorf(
-			"couldn't find target %v for json patch", t.target)
-	}
-	if len(matched) > 1 {
-		return nil, fmt.Errorf(
-			"found multiple targets %v matching %v for json patch",
-			matched, t.target)
-	}
-	return matched[0], nil
 }
