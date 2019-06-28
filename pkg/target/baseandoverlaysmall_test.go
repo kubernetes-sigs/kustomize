@@ -419,7 +419,7 @@ patchesJson6902:
 - target:
     version: v1
     kind: Service
-    name: myService # BUG (https://github.com/kubernetes-sigs/kustomize/issues/972): this should be a-myService, because that is what the output for the base contains
+    name: a-myService
   path: service-patch.yaml
 `)
 
