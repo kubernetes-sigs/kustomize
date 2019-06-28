@@ -1,18 +1,5 @@
-/*
-Copyright 2017 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 // Package types holds struct definitions that should find a better home.
 package types
@@ -29,13 +16,18 @@ const (
 	KustomizationKind    = "Kustomization"
 )
 
-// TypeMeta copies apimachinery/pkg/apis/meta/v1.TypeMeta
+// TypeMeta partially copies apimachinery/pkg/apis/meta/v1.TypeMeta
+// No need for a direct dependence; the fields are stable.
 type TypeMeta struct {
-	// Kind copies apimachinery/pkg/apis/meta/v1.Typemeta.Kind
-	Kind string `json:"kind,omitempty" protobuf:"bytes,1,opt,name=kind"`
+	Kind       string `json:"kind,omitempty" yaml:"kind,omitempty"`
+	APIVersion string `json:"apiVersion,omitempty" yaml:"apiversion,omitempty"`
+}
 
-	// APIVersion copies apimachinery/pkg/apis/meta/v1.Typemeta.APIVersion
-	APIVersion string `json:"apiVersion,omitempty" protobuf:"bytes,2,opt,name=apiVersion"`
+// ObjectMeta partially copies apimachinery/pkg/apis/meta/v1.ObjectMeta
+// No need for a direct dependence; the fields are stable.
+type ObjectMeta struct {
+	Name      string `json:"name,omitempty" yaml:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 }
 
 // Kustomization holds the information needed to generate customized k8s api resources.
