@@ -20,6 +20,8 @@ package kunstruct
 import (
 	"encoding/json"
 	"fmt"
+
+	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -266,4 +268,20 @@ func (fs *UnstructAdapter) GetMap(path string) (map[string]interface{}, error) {
 		return s, err
 	}
 	return nil, types.NoFieldError{Field: path}
+}
+
+func (fs *UnstructAdapter) MatchesLabelSelector(selector string) (bool, error) {
+	s, err := labels.Parse(selector)
+	if err != nil {
+		return false, err
+	}
+	return s.Matches(labels.Set(fs.GetLabels())), nil
+}
+
+func (fs *UnstructAdapter) MatchesAnnotationSelector(selector string) (bool, error) {
+	s, err := labels.Parse(selector)
+	if err != nil {
+		return false, err
+	}
+	return s.Matches(labels.Set(fs.GetAnnotations())), nil
 }
