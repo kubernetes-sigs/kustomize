@@ -30,7 +30,7 @@ resources:
 `)
 
 	th.WriteF("/app/base/deployment.yaml", `
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: my-deployment
@@ -53,7 +53,7 @@ patchesStrategicMerge:
 `)
 
 	th.WriteF("/app/probe/dep-patch.yaml", `
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: my-deployment
@@ -79,7 +79,7 @@ patchesStrategicMerge:
 `)
 
 	th.WriteF("/app/dns/dep-patch.yaml", `
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: my-deployment
@@ -100,7 +100,7 @@ patchesStrategicMerge:
 `)
 
 	th.WriteF("/app/restart/dep-patch.yaml", `
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: my-deployment
@@ -133,26 +133,27 @@ func TestCompositeDiamond(t *testing.T) {
 		t.Fatalf("Expected resource accumulation error")
 	}
 	if !strings.Contains(
-		err.Error(), "already registered id: extensions_v1beta1_Deployment|~X|my-deployment") {
+		err.Error(), "already registered id: apps_v1_Deployment|~X|my-deployment") {
 		t.Fatalf("Unexpected err: %v", err)
 	}
 }
 
-// Expected output
-//
-// apiVersion: extensions/v1beta1
-// kind: Deployment
-// metadata:
-//   name: my-deployment
-// spec:
-//   template:
-//     spec:
-//       containers:
-//       - image: my-image
-//         livenessProbe:
-//           httpGet:
-//             path: /healthz
-//             port: 8080
-//         name: my-deployment
-//       dnsPolicy: ClusterFirst
-//       restartPolicy: Always
+//nolint: varcheck
+const expectedPatchedDeployment = `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: my-image
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+        name: my-deployment
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+`
