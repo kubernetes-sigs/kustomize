@@ -9,14 +9,15 @@ import (
 
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
+	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/yaml"
 )
 
 // A simple generator example.  Makes one service.
 type plugin struct {
-	rf   *resmap.Factory
-	Name string `json:"name,omitempty" yaml:"name,omitempty"`
-	Port string `json:"port,omitempty" yaml:"port,omitempty"`
+	rf               *resmap.Factory
+	types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	Port             string `json:"port,omitempty" yaml:"port,omitempty"`
 }
 
 //nolint: golint
@@ -30,6 +31,7 @@ metadata:
   labels:
     app: dev
   name: {{.Name}}
+  namespace: {{.Namespace}}
 spec:
   ports:
   - port: {{.Port}}

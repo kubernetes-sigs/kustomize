@@ -71,10 +71,9 @@ func TestInventoryTransformerCollect(t *testing.T) {
 apiVersion: builtin
 kind: InventoryTransformer
 metadata:
-  name: notImportantHere
+  name: pruneCM
+  namespace: default
 policy: GarbageCollect
-name: pruneCM
-namespace: default
 `, content)
 
 	th.AssertActualEqualsExpected(rm, inv)
@@ -93,10 +92,9 @@ func TestInventoryTransformerIgnore(t *testing.T) {
 apiVersion: builtin
 kind: InventoryTransformer
 metadata:
-  name: notImportantHere
+  name: pruneCM
+  namespace: default
 policy: GarbageIgnore
-name: pruneCM
-namespace: default
 `, content)
 
 	th.AssertActualEqualsExpected(rm, content+"---"+inv)
@@ -115,9 +113,8 @@ func TestInventoryTransformerDefaultPolicy(t *testing.T) {
 apiVersion: builtin
 kind: InventoryTransformer
 metadata:
-  name: notImportantHere
-name: pruneCM
-namespace: default
+  name: pruneCM
+  namespace: default
 `, content)
 
 	th.AssertActualEqualsExpected(rm, content+"---"+inv)

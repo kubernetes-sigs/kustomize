@@ -183,9 +183,8 @@ func (kt *KustTarget) computeInventory(
 
 	p := builtin.NewInventoryTransformerPlugin()
 	var c struct {
-		Policy    string
-		Name      string
-		Namespace string
+		Policy           string
+		types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty"`
 	}
 	c.Name = inv.ConfigMap.Name
 	c.Namespace = inv.ConfigMap.Namespace
