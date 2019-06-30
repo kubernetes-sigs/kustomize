@@ -34,9 +34,8 @@ consectetur adipiscing elit.
 apiVersion: builtin
 kind: SecretGenerator
 metadata:
-  name: exampleSecGen
-name: mySecret
-namespace: whatever
+  name: mySecret
+  namespace: whatever
 behavior: merge
 envs:
 - a.env

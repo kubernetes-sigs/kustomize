@@ -9,8 +9,9 @@ import (
 )
 
 type ConfigMapGeneratorPlugin struct {
-	ldr ifc.Loader
-	rf  *resmap.Factory
+	ldr              ifc.Loader
+	rf               *resmap.Factory
+	types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 	types.GeneratorOptions
 	types.ConfigMapArgs
 }
@@ -25,6 +26,12 @@ func (p *ConfigMapGeneratorPlugin) Config(
 	p.GeneratorOptions = types.GeneratorOptions{}
 	p.ConfigMapArgs = types.ConfigMapArgs{}
 	err = yaml.Unmarshal(config, p)
+	if p.ConfigMapArgs.Name == "" {
+		p.ConfigMapArgs.Name = p.Name
+	}
+	if p.ConfigMapArgs.Namespace == "" {
+		p.ConfigMapArgs.Namespace = p.Namespace
+	}
 	p.ldr = ldr
 	p.rf = rf
 	return

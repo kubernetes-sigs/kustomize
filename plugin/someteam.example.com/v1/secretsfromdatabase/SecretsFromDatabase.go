@@ -13,10 +13,9 @@ import (
 // A secret generator example that gets data
 // from a database (simulated by a hardcoded map).
 type plugin struct {
-	rf        *resmap.Factory
-	ldr       ifc.Loader
-	Name      string `json:"name,omitempty" yaml:"name,omitempty"`
-	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	rf               *resmap.Factory
+	ldr              ifc.Loader
+	types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 	// List of keys to use in database lookups
 	Keys []string `json:"keys,omitempty" yaml:"keys,omitempty"`
 }

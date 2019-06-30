@@ -12,8 +12,9 @@ import (
 )
 
 type plugin struct {
-	ldr ifc.Loader
-	rf  *resmap.Factory
+	ldr              ifc.Loader
+	rf               *resmap.Factory
+	types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 	types.GeneratorOptions
 	types.SecretArgs
 }
@@ -26,6 +27,12 @@ func (p *plugin) Config(
 	p.GeneratorOptions = types.GeneratorOptions{}
 	p.SecretArgs = types.SecretArgs{}
 	err = yaml.Unmarshal(config, p)
+	if p.SecretArgs.Name == "" {
+		p.SecretArgs.Name = p.Name
+	}
+	if p.SecretArgs.Namespace == "" {
+		p.SecretArgs.Namespace = p.Namespace
+	}
 	p.ldr = ldr
 	p.rf = rf
 	return
