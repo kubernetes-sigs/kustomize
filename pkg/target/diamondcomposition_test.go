@@ -135,7 +135,6 @@ resources:
 	}
 }
 
-//nolint: varcheck
 const expectedPatchedDeployment = `
 apiVersion: apps/v1
 kind: Deployment
@@ -154,3 +153,60 @@ spec:
       dnsPolicy: ClusterFirst
       restartPolicy: Always
 `
+
+// This test reuses some methods from TestCompositeDiamond,
+// but overwrites the kustomization files in the overlays.
+func TestStackedOverlays(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app/restart")
+	writeDiamondCompositionBase(th)
+
+	// probe overlays base.
+	writeProbeOverlay(th)
+
+	// dns overlays probe.
+	writeDNSOverlay(th)
+	th.WriteK("/app/dns", `
+resources:
+- ../probe
+patchesStrategicMerge:
+- dep-patch.yaml
+`)
+
+	// restart overlays dns.
+	writeRestartOverlay(th)
+	th.WriteK("/app/restart", `
+resources:
+- ../dns
+patchesStrategicMerge:
+- dep-patch.yaml
+`)
+
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, expectedPatchedDeployment)
+}
+
+func TestMultiPatch(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app/composite")
+	writeDiamondCompositionBase(th)
+
+	th.WriteK("/app/composite", `
+resources:
+- ../base
+patchesStrategicMerge:
+- patchAddProbe.yaml
+- patchDnsPolicy.yaml
+- patchRestartPolicy.yaml
+`)
+	th.WriteF("/app/composite/patchRestartPolicy.yaml", patchRestartPolicy)
+	th.WriteF("/app/composite/patchDnsPolicy.yaml", patchDnsPolicy)
+	th.WriteF("/app/composite/patchAddProbe.yaml", patchAddProbe)
+
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, expectedPatchedDeployment)
+}
