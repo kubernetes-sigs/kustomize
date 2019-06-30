@@ -6,7 +6,6 @@ package target_test
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
@@ -136,14 +135,11 @@ resources:
 - ../restart
 `)
 
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err == nil {
-		t.Fatalf("Expected resource accumulation error")
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
 	}
-	if !strings.Contains(
-		err.Error(), "already registered id: apps_v1_Deployment|~X|my-deployment") {
-		t.Fatalf("Unexpected err: %v", err)
-	}
+	th.AssertActualEqualsExpected(m, expectedPatchedDeployment)
 }
 
 const expectedPatchedDeployment = `

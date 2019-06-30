@@ -6,10 +6,12 @@ package accumulator
 import (
 	"fmt"
 	"log"
+	"reflect"
 	"strings"
 
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
+	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
@@ -41,6 +43,36 @@ func (ra *ResAccumulator) ResMap() resmap.ResMap {
 func (ra *ResAccumulator) Vars() []types.Var {
 	return ra.varSet.AsSlice()
 }
+
+// RemoveIds removes resources of the internal resMap which are member
+// of the resId slice past in parameter.
+// The removed Resources are returned by the method.
+func (ra *ResAccumulator) RemoveConflicts(rightResources []*resource.Resource) ([]*resource.Resource, error) {
+	conflicting := []*resource.Resource{}
+	for _, rightResource := range rightResources {
+		rightId := rightResource.CurId()
+		leftResources := ra.resMap.GetMatchingResourcesByCurrentId(rightId.Equals)
+
+		if len(leftResources) == 0 {
+			// no conflict
+			continue
+		}
+
+		if len(leftResources) != 1 || !reflect.DeepEqual(leftResources[0], rightResource) {
+			// conflict detected. More than one resource or left and right are different.
+			conflicting = append(conflicting, leftResources...)
+		}
+
+		// Remove the resource from that resMap
+		err := ra.resMap.Remove(rightId)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return conflicting, nil
+}
+
+// AllIds returns all CurrentIds.
 
 func (ra *ResAccumulator) AppendAll(
 	resources resmap.ResMap) error {

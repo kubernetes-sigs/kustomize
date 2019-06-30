@@ -330,6 +330,24 @@ func (kt *KustTarget) configureExternalTransformers() ([]transformers.Transforme
 	return kt.pLdr.LoadTransformers(kt.ldr, ra.ResMap())
 }
 
+func (kt *KustTarget) solveConflicts(ra *accumulator.ResAccumulator, subRa *accumulator.ResAccumulator) error {
+	conflicting, err := subRa.RemoveConflicts(ra.ResMap().Resources())
+	if err != nil {
+		return errors.Wrapf(
+			err, "converting diamond imported resources into patches %v",
+			subRa.ResMap().AllIds())
+	}
+
+	if len(conflicting) == 0 {
+		return nil
+	}
+	t, err := kt.tFactory.MakePatchTransformer((conflicting), kt.rFactory.RF())
+	if err != nil {
+		return err
+	}
+	return ra.Transform(t)
+}
+
 // accumulateResources fills the given resourceAccumulator
 // with resources read from the given list of paths.
 func (kt *KustTarget) accumulateResources(
@@ -363,6 +381,11 @@ func (kt *KustTarget) accumulateDirectory(
 	if err != nil {
 		return errors.Wrapf(
 			err, "recursed accumulation of path '%s'", path)
+	}
+	err = subKt.solveConflicts(ra, subRa)
+	if err != nil {
+		return errors.Wrapf(
+			err, "recursed merging from path '%s'", path)
 	}
 	err = ra.MergeAccumulator(subRa)
 	if err != nil {
