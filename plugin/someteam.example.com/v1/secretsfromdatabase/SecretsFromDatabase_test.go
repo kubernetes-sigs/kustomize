@@ -23,9 +23,8 @@ func TestSecretsFromDatabasePlugin(t *testing.T) {
 apiVersion: someteam.example.com/v1
 kind: SecretsFromDatabase
 metadata:
-  name: mySecretGenerator
-name: forbiddenValues
-namespace: production
+  name: forbiddenValues
+  namespace: production
 keys:
 - ROCKET
 - VEGETABLE

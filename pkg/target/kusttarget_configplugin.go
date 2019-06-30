@@ -129,8 +129,8 @@ func (kt *KustTarget) configureBuiltinNamespaceTransformer(
 	tConfig *config.TransformerConfig) (
 	result []transformers.Transformer, err error) {
 	var c struct {
-		Namespace  string
-		FieldSpecs []config.FieldSpec
+		types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+		FieldSpecs       []config.FieldSpec
 	}
 	c.Namespace = kt.kustomization.Namespace
 	c.FieldSpecs = tConfig.NameSpace
