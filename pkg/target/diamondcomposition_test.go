@@ -49,7 +49,7 @@ spec:
 `
 
 // Here's a composite kustomization, that combines multiple overlays
-// (replicas, dns and metadata) which patch the same base resource.
+// (probes, dns and restart policies) which patch the same base resource.
 //
 // The base resource is a deployment and the overlays patch aspects
 // of it, without using any of the `namePrefix`, `nameSuffix` or `namespace`
@@ -75,6 +75,7 @@ metadata:
 spec:
   template:
     spec:
+      dnsPolicy: "None"
       containers:
       - name: my-deployment
         image: my-image
