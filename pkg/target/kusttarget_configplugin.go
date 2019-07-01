@@ -147,15 +147,21 @@ func (kt *KustTarget) configureBuiltinPatchJson6902Transformer(
 	tConfig *config.TransformerConfig) (
 	result []transformers.Transformer, err error) {
 	var c struct {
-		Patches []types.PatchJson6902
+		Target types.PatchTarget `json:"target,omitempty" yaml:"target,omitempty"`
+		Path   string            `json:"path,omitempty" yaml:"path,omitempty"`
+		JsonOp string            `json:"jsonOp,omitempty" yaml:"jsonOp,omitempty"`
 	}
-	c.Patches = kt.kustomization.PatchesJson6902
-	p := builtin.NewPatchJson6902TransformerPlugin()
-	err = kt.configureBuiltinPlugin(p, c, "patchJson6902")
-	if err != nil {
-		return nil, err
+	for _, args := range kt.kustomization.PatchesJson6902 {
+		c.Target = *args.Target
+		c.Path = args.Path
+		c.JsonOp = "" // Not implemented for kustomization file yet.
+		p := builtin.NewPatchJson6902TransformerPlugin()
+		err = kt.configureBuiltinPlugin(p, c, "patchJson6902")
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, p)
 	}
-	result = append(result, p)
 	return
 }
 
