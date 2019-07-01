@@ -6,6 +6,7 @@ package resmap_test
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
@@ -43,6 +44,24 @@ func makeCm(i int) *resource.Resource {
 				"name": fmt.Sprintf("cm%03d", i),
 			},
 		})
+}
+
+// Maintain the class invariant that no two
+// resources can have the same CurId().
+func TestAppendRejectsDuplicateResId(t *testing.T) {
+	w := New()
+	if err := w.Append(makeCm(1)); err != nil {
+		t.Fatalf("append error: %v", err)
+	}
+	err := w.Append(makeCm(1))
+	if err == nil {
+		t.Fatalf("expected append error")
+	}
+	if !strings.Contains(
+		err.Error(),
+		"may not add resource with an already registered id") {
+		t.Fatalf("unexpected error: %v", err)
+	}
 }
 
 func TestAppendRemove(t *testing.T) {
