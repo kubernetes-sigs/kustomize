@@ -65,11 +65,11 @@ func (kt *KustTarget) configureBuiltinTransformers(
 	configurators := []transformerConfigurator{
 		kt.configureBuiltinNamespaceTransformer,
 		kt.configureBuiltinNameTransformer,
-		kt.configureBuiltinImageTagTransformer,
 		kt.configureBuiltinLabelTransformer,
 		kt.configureBuiltinAnnotationsTransformer,
 		kt.configureBuiltinPatchJson6902Transformer,
 		kt.configureBuiltinReplicaCountTransformer,
+		kt.configureBuiltinImageTagTransformer,
 	}
 	var result []transformers.Transformer
 	for _, f := range configurators {
