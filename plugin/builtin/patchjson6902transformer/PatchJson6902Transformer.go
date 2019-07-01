@@ -17,11 +17,11 @@ import (
 )
 
 type plugin struct {
-	ldr     ifc.Loader
+	ldr          ifc.Loader
 	decodedPatch jsonpatch.Patch
-	Target  types.PatchTarget `json:"target,omitempty" yaml:"target,omitempty"`
-	Path    string `json:"path,omitempty" yaml:"path,omitempty"`
-	JsonOp  string `json:"jsonOp,omitempty" yaml:"jsonOp,omitempty"`
+	Target       types.PatchTarget `json:"target,omitempty" yaml:"target,omitempty"`
+	Path         string            `json:"path,omitempty" yaml:"path,omitempty"`
+	JsonOp       string            `json:"jsonOp,omitempty" yaml:"jsonOp,omitempty"`
 }
 
 //noinspection GoUnusedGlobalVariable

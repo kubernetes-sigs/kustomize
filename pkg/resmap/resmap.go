@@ -39,8 +39,23 @@ type ResMap interface {
 	// as appended.
 	Resources() []*resource.Resource
 
-	// Append adds a Resource.
-	// Error on OrgId collision.
+	// Append adds a Resource. Error on CurId collision.
+	//
+	// A class invariant of ResMap is that all of its
+	// resources must differ in their value of
+	// CurId(), aka current Id.  The Id is the tuple
+	// of {namespace, group, version, kind, name}
+	// (see ResId).
+	//
+	// This invariant reflects the invariant of a
+	// kubernetes cluster, where if one tries to add
+	// a resource to the cluster whose Id matches
+	// that of a resource already in the cluster,
+	// only two outcomes are allowed.  Either the
+	// incoming resource is _merged_ into the existing
+	// one, or the incoming resource is rejected.
+	// One cannot end up with two resources
+	// in the cluster with the same Id.
 	Append(*resource.Resource) error
 
 	// AppendAll appends another ResMap to self,
