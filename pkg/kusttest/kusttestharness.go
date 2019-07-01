@@ -124,7 +124,7 @@ func (th *KustTestHarness) LoadAndRunGenerator(
 
 func (th *KustTestHarness) LoadAndRunTransformer(
 	config, input string) resmap.ResMap {
-	resMap, err := th.runTransformer(config, input)
+	resMap, err := th.RunTransformer(config, input)
 	if err != nil {
 		th.t.Fatalf("Err: %v", err)
 	}
@@ -133,11 +133,11 @@ func (th *KustTestHarness) LoadAndRunTransformer(
 
 func (th *KustTestHarness) ErrorFromLoadAndRunTransformer(
 	config, input string) error {
-	_, err := th.runTransformer(config, input)
+	_, err := th.RunTransformer(config, input)
 	return err
 }
 
-func (th *KustTestHarness) runTransformer(
+func (th *KustTestHarness) RunTransformer(
 	config, input string) (resmap.ResMap, error) {
 	transConfig, err := th.rf.RF().FromBytes([]byte(config))
 	if err != nil {
@@ -149,7 +149,7 @@ func (th *KustTestHarness) runTransformer(
 	}
 	g, err := th.pl.LoadTransformer(th.ldr, transConfig)
 	if err != nil {
-		th.t.Fatalf("Err: %v", err)
+		return nil, err
 	}
 	err = g.Transform(resMap)
 	return resMap, err
