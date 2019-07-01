@@ -6,6 +6,7 @@ package target_test
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
@@ -115,13 +116,19 @@ patchesStrategicMerge:
 // of it, without using any of the `namePrefix`, `nameSuffix` or `namespace`
 // kustomization keywords.
 //
-//            composite
-//          /     |     \
-//       probe   dns  restart
-//          \     |     /
-//              base
+//               composite
+//          /       |        \
+//     1.probe    2.dns   3.restart
+//          \       |        /
+//                 base
 //
-func TestIssue1251_CompositeDiamond_Failure(t *testing.T) {
+//
+// The generation flow relies on the order of the resources in the resources field
+// of the kustomization.yaml
+// 1. Customize base (no-op), customize probe deployment (patch) and add it to composite deployment
+// 2. Customise base again (no-op), customize dns deployment (patch) and merge it into composite deployment
+// 3. Customize base again (no-op), customize restart deployment (patch) and merge it into composite deployment
+func TestIssue1251_CompositeDiamond_ProbeRestartDns_Order(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/app/composite")
 	writeDeploymentBase(th)
 	writeProbeOverlay(th)
@@ -133,6 +140,54 @@ resources:
 - ../probe
 - ../dns
 - ../restart
+`)
+
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: my-image
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+        name: my-deployment
+      dnsPolicy: None
+      restartPolicy: Always
+`)
+}
+
+//
+//               composite
+//          /       |        \
+//     1.probe   2.restart  3.dns
+//          \       |        /
+//                 base
+//
+// 1. Customize base (no-op), customize probe deployment (patch) and add it to composite deployment
+// 2. Customise base again (no-op), customize dns deployment (patch) and merge it into composite deployment
+// 3. Customize base again (no-op), customize restart deployment (patch) and merge it into composite deployment
+func TestIssue1251_CompositeDiamond_ProbeDnsRestart_Order(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app/composite")
+	writeDeploymentBase(th)
+	writeProbeOverlay(th)
+	writeDNSOverlay(th)
+	writeRestartOverlay(th)
+
+	th.WriteK("/app/composite", `
+resources:
+- ../probe
+- ../restart
+- ../dns
 `)
 
 	m, err := th.MakeKustTarget().MakeCustomizedResMap()
