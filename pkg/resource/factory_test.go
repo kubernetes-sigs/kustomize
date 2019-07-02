@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"testing"
 
+	jsonpatch "github.com/evanphx/json-patch"
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
 	. "sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
@@ -206,6 +207,91 @@ kind: List
 				t.Fatalf("%s: Got: %v\nexpected:%v",
 					test.name, test.expectedOut[i], rs[i])
 			}
+		}
+	}
+}
+
+func TestPatchFromPatchArg(t *testing.T) {
+	expectedJsonPatch, err := jsonpatch.DecodePatch([]byte(`[
+{ "op": "replace", "path": "/spec/rules/0/host", "value": "foo.bar.io" }
+]
+`))
+	if err != nil {
+		t.Fatalf("unexpected error %v", err)
+	}
+
+	tests := []struct {
+		name          string
+		input         string
+		expectedSMP   *Resource
+		expectedJsonP jsonpatch.Patch
+		expectedErr   bool
+	}{
+		{
+			name: "random content expecting error",
+			input: `
+random content
+leads to error`,
+			expectedSMP:   nil,
+			expectedJsonP: nil,
+			expectedErr:   true,
+		},
+		{
+			name: "json patch",
+			input: `
+- op: replace
+  path: /spec/rules/0/host
+  value: foo.bar.io
+`,
+			expectedSMP:   nil,
+			expectedJsonP: expectedJsonPatch,
+			expectedErr:   false,
+		},
+		{
+			name: "strategic merge patch",
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+data:
+  favorite: honey
+`,
+			expectedSMP: factory.FromMap(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata": map[string]interface{}{
+						"name": "winnie",
+					},
+					"data": map[string]interface{}{
+						"favorite": "honey",
+					},
+				}),
+			expectedJsonP: nil,
+			expectedErr:   false,
+		},
+	}
+
+	l := loadertest.NewFakeLoader("/")
+
+	for _, test := range tests {
+		arg := types.Patch{
+			Patch: test.input,
+		}
+		patchSMP, patchJson, err := factory.PatchFromPatchArg(l, arg)
+		if test.expectedErr && err == nil {
+			t.Fatalf("%v: should return error", test.name)
+		}
+		if !test.expectedErr && err != nil {
+			t.Fatalf("%v: unexpected error: %s", test.name, err)
+		}
+		if !reflect.DeepEqual(patchSMP, test.expectedSMP) {
+			t.Fatalf("Strategic merge patch expected %v but got %v",
+				test.expectedSMP, patchSMP)
+		}
+		if !reflect.DeepEqual(patchJson, test.expectedJsonP) {
+			t.Fatalf("Json patch expected %v but got %v",
+				test.expectedJsonP, patchJson)
 		}
 	}
 }

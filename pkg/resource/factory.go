@@ -9,6 +9,9 @@ import (
 	"log"
 	"strings"
 
+	jsonpatch "github.com/evanphx/json-patch"
+	"sigs.k8s.io/yaml"
+
 	"sigs.k8s.io/kustomize/v3/internal/kusterr"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
@@ -87,6 +90,64 @@ func (rf *Factory) SliceFromPatches(
 		result = append(result, res...)
 	}
 	return result, nil
+}
+
+// PatchFromPatchArg returns a Strategic Merge Patch or a Json patch
+// from a Patch argument
+func (rf *Factory) PatchFromPatchArg(
+	ldr ifc.Loader, patchArg types.Patch) (*Resource, jsonpatch.Patch, error) {
+	if patchArg.Patch != "" && patchArg.Path != "" {
+		return nil, nil, fmt.Errorf(
+			"patch and path can't be set at the same time %v", patchArg)
+	}
+	var err error
+	var in []byte
+	if patchArg.Path != "" {
+		in, err = ldr.Load(patchArg.Path)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	if patchArg.Patch != "" {
+		in = []byte(patchArg.Patch)
+	}
+
+	patchSM, errSM := rf.FromBytes(in)
+	patchJson, errJson := rf.JsonPatchFromBytes(in)
+	if errSM != nil && errJson != nil {
+		return nil, nil, fmt.Errorf(
+			"unable to get either a Strategic Merge Patch or JSON patch 6902 from %v", patchArg)
+	}
+	if errSM == nil && errJson != nil {
+		return patchSM, nil, nil
+	}
+	if errJson == nil && errSM != nil {
+		return nil, patchJson, nil
+	}
+	if patchSM != nil && patchJson != nil {
+		return nil, nil, fmt.Errorf(
+			"a patch can't be both a Strategic Merge Patch and JSON patch 6902 %v", patchArg)
+	}
+	return nil, nil, nil
+}
+
+// JsonPatchFromBytes loads a Json 6902 patch from
+// a bytes input
+func (rf Factory) JsonPatchFromBytes(
+	in []byte) (jsonpatch.Patch, error) {
+	ops := string(in)
+	if ops == "" {
+		return nil, fmt.Errorf("empty json patch operations")
+	}
+
+	if ops[0] != '[' {
+		jsonOps, err := yaml.YAMLToJSON(in)
+		if err != nil {
+			return nil, err
+		}
+		ops = string(jsonOps)
+	}
+	return jsonpatch.DecodePatch([]byte(ops))
 }
 
 // FromBytes unmarshals bytes into one Resource.
