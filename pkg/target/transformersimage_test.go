@@ -106,6 +106,90 @@ spec3:
 `)
 }
 
+func TestIssue1281_JsonPatchAndImageTag(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app")
+
+	th.WriteK("/app", `
+resources:
+- deployment.yaml
+
+images:
+- name: abbott
+  newTag: v2
+- name: costello
+  newTag: v8
+
+patchesJson6902:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: ben
+  path: patch.json
+`)
+	th.WriteF("/app/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ben
+spec:
+  template:
+    spec:
+      dnsPolicy: "None"
+      containers:
+      - name: awesome
+        image: abbott
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alice
+spec:
+  template:
+    spec:
+      containers:
+      - name: tomato
+        image: abbott
+`)
+
+	th.WriteF("/app/patch.json", `
+[ {"op": "add",
+   "path": "/spec/replica", "value": "3"},
+  {"op": "replace",
+   "path": "/spec/template/spec/containers/0",
+   "value": { "image": "costello" } } ]
+`)
+
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ben
+spec:
+  replica: "3"
+  template:
+    spec:
+      containers:
+      - image: costello
+      dnsPolicy: None
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alice
+spec:
+  template:
+    spec:
+      containers:
+      - image: abbott:v2
+        name: tomato
+`)
+}
+
 func TestTransfomersImageDefaultConfig(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/app/base")
 	makeTransfomersImageBase(th)
