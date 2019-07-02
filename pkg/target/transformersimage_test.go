@@ -174,7 +174,7 @@ spec:
   template:
     spec:
       containers:
-      - image: costello
+      - image: costello:v8
       dnsPolicy: None
 ---
 apiVersion: apps/v1
