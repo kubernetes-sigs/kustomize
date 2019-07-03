@@ -1,10 +1,15 @@
 # Go Plugin Guided Example for Linux
 
-This is a (no reading allowed!) 60 second copy/paste guided
-example.  Full plugin docs [here](README.md).
-
 [SopsEncodedSecrets repository]: https://github.com/monopole/sopsencodedsecrets
 [Go plugin]: https://golang.org/pkg/plugin
+[Go plugin caveats]: goPluginCaveats.md
+
+This is a (no reading allowed!) 60 second copy/paste guided
+example. 
+
+Full plugin docs [here](README.md).
+Be sure to read the [Go plugin caveats].
+
 
 This demo uses a Go plugin, `SopsEncodedSecrets`,
 that lives in the [sopsencodedsecrets repository].
@@ -25,23 +30,18 @@ current setup.
 ## Make a place to work
 
 ```
+# Keeping these separate to avoid cluttering the DEMO dir.
 DEMO=$(mktemp -d)
+tmpGoPath=$(mktemp -d)
 ```
 
 ## Install kustomize
 
-Need v3.0.0 for what follows:
+Need v3.0.0 for what follows, and you must _compile_
+it (not download the binary from the release page):
 
 ```
-mkdir -p $DEMO/bin
-opsys=linux
-curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/latest |\
-  grep browser_download |\
-  grep $opsys |\
-  cut -d '"' -f 4 |\
-  xargs curl -O -L
-mv kustomize_*_${opsys}_amd64 $DEMO/bin/kustomize
-chmod u+x $DEMO/bin/kustomize
+GOPATH=$tmpGoPath go install sigs.k8s.io/kustomize/v3/cmd/kustomize
 ```
 
 ## Make a home for plugins
@@ -155,7 +155,7 @@ Build the object code for use by kustomize:
 
 ```
 cd $MY_PLUGIN_DIR
-go build -buildmode plugin -o ${kind}.so ${kind}.go
+GOPATH=$tmpGoPath go build -buildmode plugin -o ${kind}.so ${kind}.go
 ```
 
 This step may succeed, but kustomize might
@@ -265,7 +265,7 @@ echo $keyLocation
 ### Install `sops`
 
 ```
-GOBIN=$DEMO/bin go install go.mozilla.org/sops/cmd/sops
+GOPATH=$tmpGoPath go install go.mozilla.org/sops/cmd/sops
 ```
 
 ### Create data encrypted with your Google Cloud key
@@ -278,13 +278,12 @@ ROCKET: saturn-v
 FRUIT: apple
 CAR: dymaxion
 EOF
-
 ```
 
 Encrypt the data into file the plugin wants to read:
 
 ```
-$DEMO/bin/sops --encrypt \
+$tmpGoPath/bin/sops --encrypt \
   --gcp-kms $keyLocation \
   $MYAPP/myClearData.yaml >$MYAPP/myEncryptedData.yaml
 ```
@@ -295,11 +294,32 @@ Review the files
 tree $DEMO
 ```
 
+This should look something like:
+
+> ```
+> /tmp/tmp.0kIE9VclPt
+> ├── kustomize
+> │   └── plugin
+> │       └── mygenerators
+> │           └── sopsencodedsecrets
+> │               ├── go.mod
+> │               ├── go.sum
+> │               ├── LICENSE
+> │               ├── README.md
+> │               ├── SopsEncodedSecrets.go
+> │               ├── SopsEncodedSecrets.so
+> │               └── SopsEncodedSecrets_test.go
+> └── myapp
+>     ├── kustomization.yaml
+>     ├── myClearData.yaml
+>     ├── myEncryptedData.yaml
+>     └── secGenerator.yaml
+> ```
 
 ## Build your app, using the plugin:
 
 ```
-XDG_CONFIG_HOME=$DEMO $DEMO/bin/kustomize build --enable_alpha_plugins $MYAPP
+XDG_CONFIG_HOME=$DEMO $tmpGoPath/bin/kustomize build --enable_alpha_plugins $MYAPP
 ```
 
 This should emit a kubernetes secret, with
