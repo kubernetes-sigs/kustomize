@@ -13,7 +13,7 @@
 
 ## Generators
 
-当前及随后可以创建的对象。
+生成可定制的对象。
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
@@ -24,14 +24,14 @@
 
 ## Transformers
 
-What transformations (customizations) should be applied?
+可用的转换。
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
 | [commonLabels](#commonlabels) | string | 为所有资源和 selectors 增加 Labels 。 |
-| [commonAnnotations](#commonannotations) | string | 为所有资源增加 Annotions 。 |
+| [commonAnnotations](#commonannotations) | string | 为所有资源增加 Annotations 。 |
 | [images](#images) | list | 修改镜像的名称、tag 或 image digest ，而无需使用 patches 。 |
-| [inventory](#inventory) | struct | 指定注释将包含构建结果摘要的对象。Specify an object who's annotations will contain a build result summary. |
+| [inventory](#inventory) | struct | 用于生成一个包含清单信息的对象。 |
 | [namespace](#namespace)   | string | 为所有 resources 添加 namespace 。 |
 | [namePrefix](#nameprefix) | string | 该字段的值将添加在所有资源的名称之前。 |
 | [nameSuffix](#namesuffix) | string | 该字段的值将添加在所有资源的名称后面。 |
@@ -46,7 +46,7 @@ What transformations (customizations) should be applied?
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| [vars](#vars) | string | var 是包含该对象的变量名、对象引用和字段引用的元组。 |
+| [vars](#vars) | string | 获取一个对象中的字段并插入到另外的对象中。 |
 | [apiVersion](#apiversion) | string | [k8s metadata] 字段。 |
 | [kind](#kind) | string | [k8s metadata] 字段。 |
 
@@ -78,7 +78,7 @@ commonLabels:
 
 ### commonAnnotations
 
-为所有资源增加 Annotions ，和 labels 一样是 key:value 的键值对。
+为所有资源增加 Annotations ，和 labels 一样是 key:value 的键值对。
 
 ```
 commonAnnotations:
