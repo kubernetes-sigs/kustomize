@@ -13,7 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/kustomize/v3/pkg/gvk"
-	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers"
@@ -44,7 +43,7 @@ func (tf *transformer) Transform(m resmap.ResMap) error {
 		return err
 	}
 	for _, patch := range patches.Resources() {
-		target, err := tf.findPatchTarget(m, patch.OrgId())
+		target, err := m.GetById(patch.OrgId())
 		if err != nil {
 			return err
 		}
@@ -94,20 +93,6 @@ func (tf *transformer) Transform(m resmap.ResMap) error {
 		target.SetName(saveName)
 	}
 	return nil
-}
-
-func (tf *transformer) findPatchTarget(
-	m resmap.ResMap, id resid.ResId) (*resource.Resource, error) {
-	match, err := m.GetByOriginalId(id)
-	if err == nil {
-		return match, nil
-	}
-	match, err = m.GetByCurrentId(id)
-	if err == nil {
-		return match, nil
-	}
-	return nil, fmt.Errorf(
-		"failed to find target for patch %s", id.GvknString())
 }
 
 // mergePatches merge and index patches by OrgId.

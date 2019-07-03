@@ -19,6 +19,7 @@ package git
 import (
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
@@ -53,6 +54,9 @@ type RepoSpec struct {
 
 	// Branch or tag reference.
 	ref string
+
+	// e.g. .git or empty in case of _git is present
+	gitSuffix string
 }
 
 // CloneSpec returns a string suitable for "git clone {spec}".
@@ -60,7 +64,7 @@ func (x *RepoSpec) CloneSpec() string {
 	if isAzureHost(x.host) || isAWSHost(x.host) {
 		return x.host + x.orgRepo
 	}
-	return x.host + x.orgRepo + gitSuffix
+	return x.host + x.orgRepo + x.gitSuffix
 }
 
 func (x *RepoSpec) CloneDir() fs.ConfirmedDir {
@@ -86,7 +90,7 @@ func NewRepoSpecFromUrl(n string) (*RepoSpec, error) {
 	if filepath.IsAbs(n) {
 		return nil, fmt.Errorf("uri looks like abs path: %s", n)
 	}
-	host, orgRepo, path, gitRef := parseGithubUrl(n)
+	host, orgRepo, path, gitRef, gitSuffix := parseGithubUrl(n)
 	if orgRepo == "" {
 		return nil, fmt.Errorf("url lacks orgRepo: %s", n)
 	}
@@ -95,21 +99,32 @@ func NewRepoSpecFromUrl(n string) (*RepoSpec, error) {
 	}
 	return &RepoSpec{
 		raw: n, host: host, orgRepo: orgRepo,
-		cloneDir: notCloned, path: path, ref: gitRef}, nil
+		cloneDir: notCloned, path: path, ref: gitRef, gitSuffix: gitSuffix}, nil
 }
 
 const (
-	refQuery  = "?ref="
-	gitSuffix = ".git"
+	refQuery      = "?ref="
+	refQueryRegex = "\\?(version|ref)="
+	gitSuffix     = ".git"
+	gitDelimiter  = "_git/"
 )
 
 // From strings like git@github.com:someOrg/someRepo.git or
 // https://github.com/someOrg/someRepo?ref=someHash, extract
 // the parts.
 func parseGithubUrl(n string) (
-	host string, orgRepo string, path string, gitRef string) {
-	host, n = parseHostSpec(n)
+	host string, orgRepo string, path string, gitRef string, gitSuff string) {
 
+	if strings.Contains(n, gitDelimiter) {
+		index := strings.Index(n, gitDelimiter)
+		// Adding _git/ to host
+		host = n[:index+len(gitDelimiter)]
+		orgRepo = strings.Split(strings.Split(n[index+len(gitDelimiter):], "/")[0], "?")[0]
+		path, gitRef = peelQuery(n[index+len(gitDelimiter)+len(orgRepo):])
+		return
+	}
+	host, n = parseHostSpec(n)
+	gitSuff = gitSuffix
 	if strings.Contains(n, gitSuffix) {
 		index := strings.Index(n, gitSuffix)
 		orgRepo = n[0:index]
@@ -120,24 +135,27 @@ func parseGithubUrl(n string) (
 
 	i := strings.Index(n, "/")
 	if i < 1 {
-		return "", "", "", ""
+		return "", "", "", "", ""
 	}
 	j := strings.Index(n[i+1:], "/")
 	if j >= 0 {
 		j += i + 1
 		orgRepo = n[:j]
 		path, gitRef = peelQuery(n[j+1:])
-	} else {
-		path = ""
-		orgRepo, gitRef = peelQuery(n)
+		return
 	}
-	return
+	path = ""
+	orgRepo, gitRef = peelQuery(n)
+	return host, orgRepo, path, gitRef, gitSuff
 }
 
 func peelQuery(arg string) (string, string) {
-	j := strings.Index(arg, refQuery)
-	if j >= 0 {
-		return arg[:j], arg[j+len(refQuery):]
+
+	r, _ := regexp.Compile(refQueryRegex)
+	j := r.FindStringIndex(arg)
+
+	if len(j) > 0 {
+		return arg[:j[0]], arg[j[0]+len(r.FindString(arg)):]
 	}
 	return arg, ""
 }

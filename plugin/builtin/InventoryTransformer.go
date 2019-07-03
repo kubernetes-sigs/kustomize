@@ -16,11 +16,10 @@ import (
 )
 
 type InventoryTransformerPlugin struct {
-	ldr       ifc.Loader
-	rf        *resmap.Factory
-	Policy    string `json:"policy,omitempty" yaml:"policy,omitempty"`
-	Name      string `json:"name,omitempty" yaml:"name,omitempty"`
-	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	ldr              ifc.Loader
+	rf               *resmap.Factory
+	types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	Policy           string `json:"policy,omitempty" yaml:"policy,omitempty"`
 }
 
 //noinspection GoUnusedGlobalVariable

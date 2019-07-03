@@ -8,6 +8,8 @@ package resmap
 import (
 	"bytes"
 	"fmt"
+	"regexp"
+
 	"github.com/pkg/errors"
 
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
@@ -37,8 +39,23 @@ type ResMap interface {
 	// as appended.
 	Resources() []*resource.Resource
 
-	// Append adds a Resource.
-	// Error on OrgId collision.
+	// Append adds a Resource. Error on CurId collision.
+	//
+	// A class invariant of ResMap is that all of its
+	// resources must differ in their value of
+	// CurId(), aka current Id.  The Id is the tuple
+	// of {namespace, group, version, kind, name}
+	// (see ResId).
+	//
+	// This invariant reflects the invariant of a
+	// kubernetes cluster, where if one tries to add
+	// a resource to the cluster whose Id matches
+	// that of a resource already in the cluster,
+	// only two outcomes are allowed.  Either the
+	// incoming resource is _merged_ into the existing
+	// one, or the incoming resource is rejected.
+	// One cannot end up with two resources
+	// in the cluster with the same Id.
 	Append(*resource.Resource) error
 
 	// AppendAll appends another ResMap to self,
@@ -89,8 +106,10 @@ type ResMap interface {
 	// an exact match, returning an error on multiple or no matches.
 	GetByOriginalId(resid.ResId) (*resource.Resource, error)
 
-	// Deprecated.
-	// Same as GetByOriginalId.
+	// GetById is a helper function which first
+	// attempts GetByOriginalId, then GetByCurrentId,
+	// returning an error if both fail to find a single
+	// match.
 	GetById(resid.ResId) (*resource.Resource, error)
 
 	// GroupedByNamespace returns a map of namespace
@@ -158,6 +177,10 @@ type ResMap interface {
 
 	// Debug prints the ResMap.
 	Debug(title string)
+
+	// Select returns a list of resources that
+	// are selected by a Selector
+	Select(types.Selector) ([]*resource.Resource, error)
 }
 
 // resWrangler holds the content manipulated by kustomize.
@@ -337,6 +360,22 @@ func (m *resWrangler) GetByOriginalId(
 	return demandOneMatch(m.GetMatchingResourcesByOriginalId, id, "Original")
 }
 
+// GetById implements ResMap.
+func (m *resWrangler) GetById(
+	id resid.ResId) (*resource.Resource, error) {
+	match, err1 := m.GetByOriginalId(id)
+	if err1 == nil {
+		return match, nil
+	}
+	match, err2 := m.GetByCurrentId(id)
+	if err2 == nil {
+		return match, nil
+	}
+	return nil, fmt.Errorf(
+		"%s; %s; failed to find unique target for patch %s",
+		err1.Error(), err2.Error(), id.GvknString())
+}
+
 type resFinder func(IdMatcher) []*resource.Resource
 
 func demandOneMatch(
@@ -349,11 +388,6 @@ func demandOneMatch(
 		return nil, fmt.Errorf("multiple matches for %sId %s", s, id)
 	}
 	return nil, fmt.Errorf("no matches for %sId %s", s, id)
-}
-
-// GetById implements ResMap.
-func (m *resWrangler) GetById(id resid.ResId) (*resource.Resource, error) {
-	return m.GetByCurrentId(id)
 }
 
 // GroupedByNamespace implements ResMap.GroupByNamespace
@@ -586,4 +620,67 @@ func (m *resWrangler) appendReplaceOrMerge(
 			matches, id)
 	}
 	return nil
+}
+
+// Select returns a list of resources that
+// are selected by a Selector
+func (m *resWrangler) Select(s types.Selector) ([]*resource.Resource, error) {
+	ns := regexp.MustCompile(s.Namespace)
+	nm := regexp.MustCompile(s.Name)
+	var result []*resource.Resource
+	for _, r := range m.Resources() {
+		curId := r.CurId()
+		orgId := r.OrgId()
+
+		// matches the namespace when namespace is not empty in the selector
+		// It first tries to match with the original namespace
+		// then matches with the current namespace
+		if r.GetNamespace() != "" {
+			matched := ns.MatchString(orgId.EffectiveNamespace())
+			if !matched {
+				matched = ns.MatchString(curId.EffectiveNamespace())
+				if !matched {
+					continue
+				}
+			}
+		}
+
+		// matches the name when name is not empty in the selector
+		// It first tries to match with the original name
+		// then matches with the current name
+		if r.GetName() != "" {
+			matched := nm.MatchString(orgId.Name)
+			if !matched {
+				matched = nm.MatchString(curId.Name)
+				if !matched {
+					continue
+				}
+			}
+		}
+
+		// matches the GVK
+		if !r.GetGvk().IsSelected(&s.Gvk) {
+			continue
+		}
+
+		// matches the label selector
+		matched, err := r.MatchesLabelSelector(s.LabelSelector)
+		if err != nil {
+			return nil, err
+		}
+		if !matched {
+			continue
+		}
+
+		// matches the annotation selector
+		matched, err = r.MatchesAnnotationSelector(s.AnnotationSelector)
+		if err != nil {
+			return nil, err
+		}
+		if !matched {
+			continue
+		}
+		result = append(result, r)
+	}
+	return result, nil
 }

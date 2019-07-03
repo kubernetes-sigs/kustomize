@@ -26,9 +26,9 @@ or [transformer configs] doesn't meet your needs.
 
  * A _transformer_ plugin might perform special
    container command line edits, or any other
-   transformation that exceeds the power of the
-   builtin transformations (`namePrefix`,
-   `commonLabels`, etc.).
+   transformation beyond those provided by the
+   builtin (`namePrefix`, `commonLabels`, etc.)
+   transformers.
 
 ## Specification in `kustomization.yaml`
 
@@ -76,7 +76,8 @@ Given this, the kustomization process would expect
 to find a file called `chartInflator.yaml` in the
 kustomization [root](../glossary.md#kustomization-root).
 
-This is the _plugin's configuration file_.
+This is the plugin's configuration file;
+it contains a YAML configuration object.
 
 The file `chartInflator.yaml` could contain:
 
@@ -115,16 +116,18 @@ e.g. the tests for [ChartInflator] or
 
 Each plugin gets its own dedicated directory named
 
+[`XDG_CONFIG_HOME`]: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+
 ```
 $XDG_CONFIG_HOME/kustomize/plugin
     /${apiVersion}/LOWERCASE(${kind})
 ```
 
-The default value of `XDG_CONFIG_HOME` is
+The default value of [`XDG_CONFIG_HOME`] is
 `$HOME/.config`.
 
 The one-plugin-per-directory requirement eases
-creation of a plugin bundle (source, test, plugin
+creation of a plugin bundle (source, tests, plugin
 data files, etc.) for sharing.
 
 In the case of a [Go plugin](#go-plugins), it also
@@ -169,23 +172,30 @@ The order specified in the `transformers` field is
 respected, as transformers cannot be expected to
 be commutative.
 
+#### No Security
+
+Kustomize plugins do not run in any kind of
+kustomize-provided sandbox.  There's no notion
+of _"plugin security"_.
+
 A `kustomize build` that tries to use plugins but
 omits the flag
 
 > `--enable_alpha_plugins`
 
-will fail with a warning about plugin use.
+will not load plugins and will fail with a
+warning about plugin use.
 
-Flag use is an opt-in acknowledging both tthe
-unstable (alpha) plugin API, and the absence of
-plugin provenance.  It's meant to give pause to
-someone who blindly downloads a kustomization from
-the internet and attempts to run it, without
-realizing that it might attempt to run 3rd party
-code in plugin form.  The plugin would have to be
-installed already, but nevertheless the flag is a
-reminder.
+The use of this flag is an opt-in acknowledging
+the unstable (alpha) plugin API, the absence of
+plugin provenance, and the fact that a plugin
+is not part of kustomize.
 
+To be clear, some kustomize plugin downloaded
+from the internet might wonderfully transform
+k8s config in a desired manner, while also
+quietly doing anything the user could do to the
+system running `kustomize build`.
 
 ## Authoring
 

@@ -20,7 +20,10 @@ following to improve response time.
 kustomize has a simple test harness in the
 [target package] for specifying a kustomization's
 input and the expected output.
-See this [example of a target test].
+
+See this [example of a target test], and contribution
+[#971](https://github.com/kubernetes-sigs/kustomize/pull/971),
+which does exactly the right thing.
 
 The pattern is
  * call `NewKustTestHarness`

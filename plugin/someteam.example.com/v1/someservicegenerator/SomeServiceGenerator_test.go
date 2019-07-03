@@ -23,8 +23,8 @@ func TestSomeServiceGeneratorPlugin(t *testing.T) {
 apiVersion: someteam.example.com/v1
 kind: SomeServiceGenerator
 metadata:
-  name: myGenerator
-name: my-service
+  name: my-service
+  namespace: test
 port: "12345"
 `)
 	th.AssertActualEqualsExpected(m, `
@@ -34,6 +34,7 @@ metadata:
   labels:
     app: dev
   name: my-service
+  namespace: test
 spec:
   ports:
   - port: 12345
