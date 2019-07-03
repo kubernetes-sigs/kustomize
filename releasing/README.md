@@ -75,13 +75,13 @@ git tag -a $version -m "Release $version"
 ```
 
 ### trigger the cloud build
-
-Pushing the tag will trigger a job in [Google Cloud
-Build] to put a new release on the [releases page].
-
+Push the tag:
 ```
 git push upstream $version
 ```
+
+This triggers a job in [Google Cloud Build] to
+put a new release on the [release page].
 
 ###  Update release notes
 
