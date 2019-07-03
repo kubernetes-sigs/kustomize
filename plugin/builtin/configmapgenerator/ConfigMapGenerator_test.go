@@ -30,8 +30,7 @@ COLOR=red
 apiVersion: builtin
 kind: ConfigMapGenerator
 metadata:
-  name: myMapGen
-name: myMap
+  name: myMap
 envs:
 - devops.env
 - uxteam.env

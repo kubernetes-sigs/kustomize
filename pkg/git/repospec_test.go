@@ -169,6 +169,24 @@ func TestNewRepoSpecFromUrl_CloneSpecs(t *testing.T) {
 			absPath:   notCloned.Join("path"),
 			ref:       "branch",
 		},
+		{
+			input:     "https://itfs.mycompany.com/collection/project/_git/somerepos",
+			cloneSpec: "https://itfs.mycompany.com/collection/project/_git/somerepos",
+			absPath:   notCloned.String(),
+			ref:       "",
+		},
+		{
+			input:     "https://itfs.mycompany.com/collection/project/_git/somerepos?version=v1.0.0",
+			cloneSpec: "https://itfs.mycompany.com/collection/project/_git/somerepos",
+			absPath:   notCloned.String(),
+			ref:       "v1.0.0",
+		},
+		{
+			input:     "https://itfs.mycompany.com/collection/project/_git/somerepos/somedir?version=v1.0.0",
+			cloneSpec: "https://itfs.mycompany.com/collection/project/_git/somerepos",
+			absPath:   notCloned.Join("somedir"),
+			ref:       "v1.0.0",
+		},
 	}
 	for _, testcase := range testcases {
 		rs, err := NewRepoSpecFromUrl(testcase.input)
@@ -216,6 +234,32 @@ func TestIsAzureHost(t *testing.T) {
 		actual := isAzureHost(testcase.input)
 		if actual != testcase.expect {
 			t.Errorf("IsAzureHost: expected %v, but got %v on %s", testcase.expect, actual, testcase.input)
+		}
+	}
+}
+
+func TestPeelQuery(t *testing.T) {
+	testcases := []struct {
+		input  string
+		expect [2]string
+	}{
+		{
+			input:  "somerepos?ref=v1.0.0",
+			expect: [2]string{"somerepos", "v1.0.0"},
+		},
+		{
+			input:  "somerepos?version=master",
+			expect: [2]string{"somerepos", "master"},
+		},
+		{
+			input:  "somerepos",
+			expect: [2]string{"somerepos", ""},
+		},
+	}
+	for _, testcase := range testcases {
+		path, ref := peelQuery(testcase.input)
+		if path != testcase.expect[0] || ref != testcase.expect[1] {
+			t.Errorf("peelQuery: expected (%s, %s) got (%s, %s) on %s", testcase.expect[0], testcase.expect[1], path, ref, testcase.input)
 		}
 	}
 }

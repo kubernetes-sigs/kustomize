@@ -9,6 +9,7 @@ import (
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
+	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/kustomize/v3/plugin/builtin"
 	"sigs.k8s.io/yaml"
 )
@@ -16,12 +17,8 @@ import (
 // Add a string prefix to the name.
 // A plugin that adapts another plugin.
 type plugin struct {
-	Metadata metaData `json:"metadata,omitempty" yaml:"metadata,omitempty"`
-	t        transformers.Transformer
-}
-
-type metaData struct {
-	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	t                transformers.Transformer
 }
 
 //nolint: golint
@@ -47,7 +44,7 @@ func (p *plugin) Config(
 	if err != nil {
 		return err
 	}
-	c, err = p.makePrefixSuffixPluginConfig(p.Metadata.Name)
+	c, err = p.makePrefixSuffixPluginConfig(p.Name)
 	if err != nil {
 		return err
 	}

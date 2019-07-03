@@ -54,7 +54,6 @@ This means a one-time run of
 ```
 GOPATH=${whatever} go get \
     sigs.k8s.io/kustomize/cmd/kustomize@${releaseVersion}
-
 ```
 
 and then a normal development cycle using
@@ -75,11 +74,18 @@ must do to write a [tensorflow plugin].
  
 The Go plugin developer sees the same API offered
 to native kustomize operations, assuring certain
-semantics, invariants, checks, etc.  An exec
+semantics, invariants, checks, etc. An exec
 plugin sub-process dealing with this via
 stdin/stdout will have an easier time screwing
 things up for downstream transformers and
 consumers.
+
+Minor point: if the plugin reads files via
+the kustomize-provided file `Loader` interface, it
+will be constrained by kustomize file loading
+restrictions.  Of course, nothing but a code audit
+prevents a Go plugin from importing the `io` package
+and doing whatever it wants.
 
 ### Debugging
 
@@ -87,18 +93,18 @@ A Go plugin developer can debug the plugin _in
 situ_, setting breakpoints inside the plugin and
 elsewhere while running a plugin in feature tests.
 
-### Unit of contribution 
-
-All the builtin generators and transformers
-are themselves Go plugins.  This means it's
-trivial for the kustomize maintainers to
-promote a contributed Go plugin to
-_builtin_ status.
-
 To get the best of both worlds (shareability and safety),
 a developer can write an `.go` program that functions
 as an _exec plugin_, but can be processed by `go generate`
 to emit a _Go plugin_ (or vice versa).
+
+### Unit of contribution 
+
+All the builtin generators and transformers
+are themselves Go plugins.  This means that
+the kustomize maintainers can promote a contributed
+plugin to a builtin without needing code changes
+(beyond those mandated by normal code review).
 
 ### Ecosystems grow through use
 
@@ -106,6 +112,6 @@ Tooling could ease Go plugin _sharing_, but this
 requires some critical mass of Go plugin
 _authoring_, which in turn is hampered by
 confusion around sharing.  [Go modules], once they
-are more widely adopted, will solve one of the
-biggest plugin sharing difficulties - ambiguous
+are more widely adopted, will solve the
+biggest plugin sharing difficulty: ambiguous
 plugin vs host dependencies.

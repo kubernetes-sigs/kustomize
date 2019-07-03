@@ -24,7 +24,7 @@ apiVersion: builtin
 kind: NamespaceTransformer
 metadata:
   name: notImportantHere
-namespace: test
+  namespace: test
 fieldSpecs:
 - path: metadata/namespace
   create: true
@@ -166,7 +166,7 @@ apiVersion: builtin
 kind: NamespaceTransformer
 metadata:
   name: notImportantHere
-namespace: test
+  namespace: test
 fieldSpecs:
 - path: metadata/namespace
   create: true
