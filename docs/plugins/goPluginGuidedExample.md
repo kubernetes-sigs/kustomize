@@ -33,7 +33,15 @@ DEMO=$(mktemp -d)
 Need v3.0.0 for what follows:
 
 ```
-GOBIN=$DEMO/bin go get sigs.k8s.io/kustomize/v3/cmd/kustomize@v3.0.0-pre
+mkdir -p $DEMO/bin
+opsys=linux
+curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/latest |\
+  grep browser_download |\
+  grep $opsys |\
+  cut -d '"' -f 4 |\
+  xargs curl -O -L
+mv kustomize_*_${opsys}_amd64 $DEMO/bin/kustomize
+chmod u+x $DEMO/bin/kustomize
 ```
 
 ## Make a home for plugins
