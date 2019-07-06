@@ -66,22 +66,21 @@ type FieldSelector struct {
 }
 
 // defaulting sets reference to field used by default.
-func (v *Var) defaulting() {
+func (v *Var) Defaulting() {
 	if v.FieldRef.FieldPath == "" {
 		v.FieldRef.FieldPath = defaultFieldPath
 	}
+	v.ObjRef.GVK()
 }
 
-// VarEquals returns true if var a and b are Equals.
+// DeepEqual returns true if var a and b are Equals.
+// Note 1: The objects are unchanged by the VarEqual
+// Note 2: Should be normalize be FieldPath before doing
+// the DeepEqual. spec.a[b] is supposed to be the same
+// as spec.a.b
 func (v Var) DeepEqual(other Var) bool {
-	v.ObjRef.GVK()
-	if v.FieldRef.FieldPath == "" {
-		v.FieldRef.FieldPath = "metadata.name"
-	}
-	other.ObjRef.GVK()
-	if other.FieldRef.FieldPath == "" {
-		other.FieldRef.FieldPath = "metadata.name"
-	}
+	v.Defaulting()
+	other.Defaulting()
 	return reflect.DeepEqual(v, other)
 }
 
@@ -144,7 +143,7 @@ func (vs *VarSet) Merge(v Var) error {
 		return fmt.Errorf(
 			"var '%s' already encountered", v.Name)
 	}
-	v.defaulting()
+	v.Defaulting()
 	vs.set[v.Name] = v
 	return nil
 }
@@ -152,7 +151,9 @@ func (vs *VarSet) Merge(v Var) error {
 // AbsorbSet absorbs other vars with error on (name,value) collision.
 func (vs *VarSet) AbsorbSet(incoming VarSet) error {
 	for _, v := range incoming.set {
-		vs.Absorb(v)
+		if err := vs.Absorb(v); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -174,12 +175,12 @@ func (vs *VarSet) Absorb(v Var) error {
 	conflicting := vs.Get(v.Name)
 	if conflicting == nil {
 		// no conflict. The var is valid.
-		v.defaulting()
+		v.Defaulting()
 		vs.set[v.Name] = v
 		return nil
 	}
 
-	if !v.DeepEqual(*conflicting) {
+	if !reflect.DeepEqual(v, *conflicting) {
 		// two vars with the same name are pointing at two
 		// different resources.
 		return fmt.Errorf(
