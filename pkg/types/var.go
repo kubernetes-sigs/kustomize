@@ -18,6 +18,7 @@ package types
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 	"strings"
 
@@ -69,6 +70,19 @@ func (v *Var) defaulting() {
 	if v.FieldRef.FieldPath == "" {
 		v.FieldRef.FieldPath = defaultFieldPath
 	}
+}
+
+// VarEquals returns true if var a and b are Equals.
+func (v Var) DeepEqual(other Var) bool {
+	v.ObjRef.GVK()
+	if v.FieldRef.FieldPath == "" {
+		v.FieldRef.FieldPath = "metadata.name"
+	}
+	other.ObjRef.GVK()
+	if other.FieldRef.FieldPath == "" {
+		other.FieldRef.FieldPath = "metadata.name"
+	}
+	return reflect.DeepEqual(v, other)
 }
 
 // VarSet is a set of Vars where no var.Name is repeated.
@@ -132,6 +146,45 @@ func (vs *VarSet) Merge(v Var) error {
 	}
 	v.defaulting()
 	vs.set[v.Name] = v
+	return nil
+}
+
+// AbsorbSet absorbs other vars with error on (name,value) collision.
+func (vs *VarSet) AbsorbSet(incoming VarSet) error {
+	for _, v := range incoming.set {
+		vs.Absorb(v)
+	}
+	return nil
+}
+
+// AbsorbSlice absorbs a Var slice with error on (name,value) collision.
+// Empty fields in incoming vars are defaulted.
+func (vs *VarSet) AbsorbSlice(incoming []Var) error {
+	for _, v := range incoming {
+		if err := vs.Absorb(v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Absorb absorbs another Var with error on (name,value) collision.
+// Empty fields in incoming Var is defaulted.
+func (vs *VarSet) Absorb(v Var) error {
+	conflicting := vs.Get(v.Name)
+	if conflicting == nil {
+		// no conflict. The var is valid.
+		v.defaulting()
+		vs.set[v.Name] = v
+		return nil
+	}
+
+	if !v.DeepEqual(*conflicting) {
+		// two vars with the same name are pointing at two
+		// different resources.
+		return fmt.Errorf(
+			"var '%s' already encountered", v.Name)
+	}
 	return nil
 }
 
