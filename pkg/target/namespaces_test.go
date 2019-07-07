@@ -95,47 +95,7 @@ rules:
 `)
 }
 
-const recreate1298_dev string = `
-resources:
-- elasticsearch-dev-service.yaml
-vars:
-- name: elasticsearch-dev-service-name
-  objref:
-    kind: Service
-    name: elasticsearch
-    apiVersion: v1
-  fieldref:
-    fieldpath: metadata.name
-- name: elasticsearch-dev-protocol
-  objref:
-    kind: Service
-    name: elasticsearch
-    apiVersion: v1
-  fieldref:
-    fieldpath: spec.ports[0].protocol
-`
-
-const recreate1298_test string = `
-resources:
-- elasticsearch-test-service.yaml
-vars:
-- name: elasticsearch-test-service-name
-  objref:
-    kind: Service
-    name: elasticsearch
-    apiVersion: v1
-  fieldref:
-    fieldpath: metadata.name
-- name: elasticsearch-test-protocol
-  objref:
-    kind: Service
-    name: elasticsearch
-    apiVersion: v1
-  fieldref:
-    fieldpath: spec.ports[0].protocol
-`
-
-const recreate1298_onefolder string = `
+const ambiguousvarMyApp string = `
 resources:
 - elasticsearch-test-service.yaml
 - elasticsearch-dev-service.yaml
@@ -170,13 +130,7 @@ vars:
     fieldpath: spec.ports[0].protocol
 `
 
-const recreate1298_twofolders string = `
-resources:
-- ../dev
-- ../test
-`
-
-const recreate1298_devresources string = `
+const ambiguousvarDevResources string = `
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -206,7 +160,7 @@ spec:
   clusterIP: None
 `
 
-const recreate1298_testresources string = `
+const ambiguousvarTestResources string = `
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -236,7 +190,7 @@ spec:
   clusterIP: None
 `
 
-const expectedOutput string = `
+const ambiguousvarExpectedOutput string = `
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -294,34 +248,83 @@ spec:
     protocol: UDP
 `
 
-func TestVariablesInTwoFolder(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/recreate1298/twofolders")
-	th.WriteK("/recreate1298/twofolders", recreate1298_twofolders)
-	th.WriteK("/recreate1298/dev", recreate1298_dev)
-	th.WriteK("/recreate1298/test", recreate1298_test)
-	th.WriteF("/recreate1298/dev/elasticsearch-dev-service.yaml", recreate1298_devresources)
-	th.WriteF("/recreate1298/test/elasticsearch-test-service.yaml", recreate1298_testresources)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
-	th.AssertActualEqualsExpected(m, expectedOutput)
-}
-
-func TestVariablesInOneFolder(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/recreate1298/onefolder")
-	th.WriteK("/recreate1298/onefolder", recreate1298_onefolder)
-	th.WriteF("/recreate1298/onefolder/elasticsearch-dev-service.yaml", recreate1298_devresources)
-	th.WriteF("/recreate1298/onefolder/elasticsearch-test-service.yaml", recreate1298_testresources)
+// TestVariablesAmbiguous demonstrates how two variables pointing at two different resources
+// using the same name in different namespaces are treated as ambiguous
+// The fundamental reason is that objRef field in the variable does not contain a namespace
+// qualifier.
+// Once the namespace qualifer is added, as for the other resources lookup in the coder,
+// the ResId.GvknEquals method usage will have to be phased out and replaced by ResId.Equals.
+func TestVariablesAmbiguous(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/ambiguousvar/myapp")
+	th.WriteK("/ambiguousvar/myapp", ambiguousvarMyApp)
+	th.WriteF("/ambiguousvar/myapp/elasticsearch-dev-service.yaml", ambiguousvarDevResources)
+	th.WriteF("/ambiguousvar/myapp/elasticsearch-test-service.yaml", ambiguousvarTestResources)
 	_, err := th.MakeKustTarget().MakeCustomizedResMap()
-	// This requires the namespace to be added to the variable declaration.
-	// The expected output would then be identical regardless if the
-	// the files are in one or two folders.
 	if err == nil {
 		t.Fatalf("expected error")
 	}
 	if !strings.Contains(err.Error(), "unable to disambiguate") {
 		t.Fatalf("unexpected error %v", err)
 	}
+}
 
+const ambiguousvarDevFolder string = `
+resources:
+- elasticsearch-dev-service.yaml
+vars:
+- name: elasticsearch-dev-service-name
+  objref:
+    kind: Service
+    name: elasticsearch
+    apiVersion: v1
+  fieldref:
+    fieldpath: metadata.name
+- name: elasticsearch-dev-protocol
+  objref:
+    kind: Service
+    name: elasticsearch
+    apiVersion: v1
+  fieldref:
+    fieldpath: spec.ports[0].protocol
+`
+
+const ambiguousvarTestFolder string = `
+resources:
+- elasticsearch-test-service.yaml
+vars:
+- name: elasticsearch-test-service-name
+  objref:
+    kind: Service
+    name: elasticsearch
+    apiVersion: v1
+  fieldref:
+    fieldpath: metadata.name
+- name: elasticsearch-test-protocol
+  objref:
+    kind: Service
+    name: elasticsearch
+    apiVersion: v1
+  fieldref:
+    fieldpath: spec.ports[0].protocol
+`
+
+// TestVariablesAmbiguousWorkaround demonstrates a possible workaround
+// to TestVariablesAmbiguous problem. It requires to separate the variables
+// and resources into multiple kustomization context/folders instead of one.
+func TestVariablesAmbiguousWorkaround(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/ambiguousvar/workaround")
+	th.WriteK("/ambiguousvar/dev", ambiguousvarDevFolder)
+	th.WriteF("/ambiguousvar/dev/elasticsearch-dev-service.yaml", ambiguousvarDevResources)
+	th.WriteK("/ambiguousvar/test", ambiguousvarTestFolder)
+	th.WriteF("/ambiguousvar/test/elasticsearch-test-service.yaml", ambiguousvarTestResources)
+	th.WriteK("/ambiguousvar/workaround", `
+resources:
+- ../dev
+- ../test
+`)
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, ambiguousvarExpectedOutput)
 }
