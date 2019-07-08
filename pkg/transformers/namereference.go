@@ -106,6 +106,77 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 	return nil
 }
 
+// utility function to replace a simple string by the new name
+func (o *nameReferenceTransformer) mapSimpleNameField(
+	oldName string,
+	referrer *resource.Resource,
+	target gvk.Gvk,
+	referralCandidates resmap.ResMap,
+	referralCandidateSubset []*resource.Resource) (interface{}, error) {
+
+	for _, res := range referralCandidateSubset {
+		id := res.OrgId()
+		if id.IsSelected(&target) && res.GetOriginalName() == oldName {
+			matches := referralCandidates.GetMatchingResourcesByOriginalId(id.Equals)
+			// If there's more than one match, there's no way
+			// to know which one to pick, so emit error.
+			if len(matches) > 1 {
+				return nil, fmt.Errorf(
+					"string case - multiple matches for %s:\n  %v",
+					id, getIds(matches))
+			}
+			// In the resource, note that it is referenced
+			// by the referrer.
+			res.AppendRefBy(referrer.CurId())
+			// Return transformed name of the object,
+			// complete with prefixes, hashes, etc.
+			return res.GetName(), nil
+		}
+	}
+
+	return oldName, nil
+}
+
+// utility function to replace name field within a map[string]interface{}
+// and leverage the namespace field.
+func (o *nameReferenceTransformer) mapNameAndNsStruct(
+	inMap map[string]interface{},
+	referrer *resource.Resource,
+	target gvk.Gvk,
+	referralCandidates resmap.ResMap) (interface{}, error) {
+
+	// Example:
+	if _, ok := inMap["name"]; !ok {
+		return nil, fmt.Errorf(
+			"%#v is expected to contain a name field", inMap)
+	}
+	oldName, ok := inMap["name"].(string)
+	if !ok {
+		return nil, fmt.Errorf(
+			"%#v is expected to contain a name field of type string", oldName)
+	}
+
+	subset := referralCandidates.Resources()
+	if namespacevalue, ok := inMap["namespace"]; ok {
+		namespace := namespacevalue.(string)
+		bynamespace := referralCandidates.GroupedByNamespace()
+		if _, ok := bynamespace[namespace]; !ok {
+			return inMap, nil
+		}
+		subset = bynamespace[namespace]
+	}
+
+	newname, err := o.mapSimpleNameField(oldName, referrer, target,
+		referralCandidates, subset)
+	if err != nil {
+		return nil, err
+	}
+
+	inMap["name"] = newname
+	return inMap, nil
+
+}
+
 func (o *nameReferenceTransformer) getNewNameFunc(
 	referrer *resource.Resource,
 	target gvk.Gvk,
@@ -114,52 +185,35 @@ func (o *nameReferenceTransformer) getNewNameFunc(
 		switch in.(type) {
 		case string:
 			oldName, _ := in.(string)
-			for _, res := range referralCandidates.Resources() {
-				id := res.OrgId()
-				if id.IsSelected(&target) && res.GetOriginalName() == oldName {
-					matches := referralCandidates.GetMatchingResourcesByOriginalId(id.Equals)
-					// If there's more than one match, there's no way
-					// to know which one to pick, so emit error.
-					if len(matches) > 1 {
-						return nil, fmt.Errorf(
-							"string case - multiple matches for %s:\n  %v",
-							id, getIds(matches))
-					}
-					// In the resource, note that it is referenced
-					// by the referrer.
-					res.AppendRefBy(referrer.CurId())
-					// Return transformed name of the object,
-					// complete with prefixes, hashes, etc.
-					return res.GetName(), nil
-				}
-			}
-			return in, nil
+			return o.mapSimpleNameField(oldName, referrer, target,
+				referralCandidates, referralCandidates.Resources())
 		case []interface{}:
 			l, _ := in.([]interface{})
-			var names []string
-			for _, item := range l {
-				name, ok := item.(string)
-				if !ok {
+			for idx, item := range l {
+				switch item.(type) {
+				case string:
+					// Kind: Role/ClusterRole
+					// FieldSpec is rules.resourceNames
+					oldName, _ := item.(string)
+					newName, err := o.mapSimpleNameField(oldName, referrer, target,
+						referralCandidates, referralCandidates.Resources())
+					if err != nil {
+						return nil, err
+					}
+					l[idx] = newName
+				case map[string]interface{}:
+					// Kind: RoleBinding/ClusterRoleBinding
+					// FieldSpec is subjects
+					oldMap, _ := item.(map[string]interface{})
+					newMap, err := o.mapNameAndNsStruct(oldMap, referrer, target,
+						referralCandidates)
+					if err != nil {
+						return nil, err
+					}
+					l[idx] = newMap
+				default:
 					return nil, fmt.Errorf(
-						"%#v is expected to be %T", item, name)
-				}
-				names = append(names, name)
-			}
-			for _, res := range referralCandidates.Resources() {
-				indexes := indexOf(res.GetOriginalName(), names)
-				id := res.OrgId()
-				if id.IsSelected(&target) && len(indexes) > 0 {
-					matches := referralCandidates.GetMatchingResourcesByOriginalId(id.Equals)
-					if len(matches) > 1 {
-						return nil, fmt.Errorf(
-							"slice case - multiple matches for %s:\n %v",
-							id, getIds(matches))
-					}
-					for _, index := range indexes {
-						l[index] = res.GetName()
-					}
-					res.AppendRefBy(referrer.CurId())
-					return l, nil
+						"%#v is expected to be either a []string or a []map[string]interface{}", in)
 				}
 			}
 			return in, nil

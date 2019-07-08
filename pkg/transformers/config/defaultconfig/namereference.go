@@ -299,10 +299,10 @@ nameReference:
 - kind: ServiceAccount
   version: v1
   fieldSpecs:
-  - path: subjects/name
+  - path: subjects
     kind: RoleBinding
     group: rbac.authorization.k8s.io
-  - path: subjects/name
+  - path: subjects
     kind: ClusterRoleBinding
     group: rbac.authorization.k8s.io
   - path: spec/serviceAccountName
