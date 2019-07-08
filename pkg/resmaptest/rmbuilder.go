@@ -62,6 +62,14 @@ func (rm *rmBuilder) AddWithNs(ns string, m map[string]interface{}) *rmBuilder {
 	return rm
 }
 
+func (rm *rmBuilder) AddWithNsAndName(ns string, n string, m map[string]interface{}) *rmBuilder {
+	err := rm.m.Append(rm.rf.FromMapWithNamespaceAndName(ns, n, m))
+	if err != nil {
+		rm.t.Fatalf("test setup failure: %v", err)
+	}
+	return rm
+}
+
 func (rm *rmBuilder) ReplaceResource(m map[string]interface{}) *rmBuilder {
 	r := rm.rf.FromMap(m)
 	_, err := rm.m.Replace(r)
