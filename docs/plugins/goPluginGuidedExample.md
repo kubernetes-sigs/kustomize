@@ -207,7 +207,8 @@ cat <<EOF >$MYAPP/secGenerator.yaml
 apiVersion: ${apiVersion}
 kind: ${kind}
 metadata:
-  name: forbiddenValues
+  name: mySecretGenerator
+name: forbiddenValues
 namespace: production
 file: myEncryptedData.yaml
 keys:
