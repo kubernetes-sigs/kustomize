@@ -1,0 +1,14 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: "k8s-sidecar-injector-prod"
+spec:
+  template:
+    spec:
+      containers:
+      - name: "k8s-sidecar-injector"
+        env:
+        - name: "TLS_CERT_FILE"
+          value: "/var/lib/secrets/tls.crt"
+        - name: "TLS_KEY_FILE"
+          value: "/var/lib/secrets/tls.key"

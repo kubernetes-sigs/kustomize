@@ -1,0 +1,66 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: "k8s-sidecar-injector-prod"
+  namespace: "kube-system"
+  labels:
+    k8s-app: "k8s-sidecar-injector"
+    track: "prod"
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        k8s-app: "k8s-sidecar-injector"
+        track: "prod"
+    spec:
+      serviceAccountName: k8s-sidecar-injector
+      volumes:
+      - name: secrets
+        secret:
+          secretName: k8s-sidecar-injector
+      containers:
+      - name: "k8s-sidecar-injector"
+        imagePullPolicy: Always
+        image: tumblr/k8s-sidecar-injector:latest
+        command: ["entrypoint.sh"]
+        args: []
+        ports:
+        - name: https
+          containerPort: 9443
+        - name: http-metrics
+          containerPort: 9000
+        volumeMounts:
+        - name: secrets
+          mountPath: /var/lib/secrets
+        livenessProbe:
+          httpGet:
+            scheme: HTTPS
+            path: /health
+            port: https
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+        resources:
+          requests:
+            cpu: "0.5"
+            memory: 1Gi
+          limits:
+            cpu: "0.5"
+            memory: 2Gi
+        env:
+        - name: "TLS_CERT_FILE"
+          value: "/var/lib/secrets/sidecar-injector.crt"
+        - name: "TLS_KEY_FILE"
+          value: "/var/lib/secrets/sidecar-injector.key"
+        - name: "LOG_LEVEL"
+          value: "2"
+        - name: "CONFIG_DIR"
+          value: "conf/"
+        - name: "CONFIGMAP_LABELS"
+          value: "app=k8s-sidecar-injector"
