@@ -53,6 +53,7 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 		}
 	}
 	p.updateClusterRoleBinding(m)
+	p.updateServiceReference(m)
 	return nil
 }
 
@@ -124,5 +125,42 @@ func (p *plugin) updateClusterRoleBinding(m resmap.ResMap) {
 			}
 		}
 		objMap["subjects"] = subjects
+	}
+}
+
+func (p *plugin) updateServiceReference(m resmap.ResMap) {
+	svc := gvk.Gvk{Version: "v1", Kind: "Service"}
+	svcMap := map[string]bool{}
+	for _, id := range m.AllIds() {
+		if id.Gvk.Equals(svc) {
+			svcMap[id.Name] = true
+		}
+	}
+
+	for _, res := range m.Resources() {
+		if res.OrgId().Kind != "ValidatingWebhookConfiguration" &&
+			res.OrgId().Kind != "MutatingWebhookConfiguration" {
+			continue
+		}
+		objMap := res.Map()
+		webhooks, ok := objMap["webhooks"].([]interface{})
+		if webhooks == nil || !ok {
+			continue
+		}
+		for i := range webhooks {
+			webhook := webhooks[i].(map[string]interface{})
+			transformers.MutateField(
+				webhook, []string{"clientConfig", "service"},
+				false, func(obj interface{}) (interface{}, error) {
+					svc := obj.(map[string]interface{})
+					svcName, foundN := svc["name"]
+					if foundN && svcMap[svcName.(string)] {
+						svc["namespace"] = p.Namespace
+					}
+					return svc, nil
+				})
+			webhooks[i] = webhook
+		}
+		objMap["webhooks"] = webhooks
 	}
 }

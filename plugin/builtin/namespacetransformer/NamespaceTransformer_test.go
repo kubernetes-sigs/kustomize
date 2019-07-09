@@ -41,6 +41,11 @@ metadata:
   namespace: foo
 ---
 apiVersion: v1
+kind: Service
+metadata:
+  name: svc1
+---
+apiVersion: v1
 kind: Namespace
 metadata:
   name: ns1
@@ -71,6 +76,22 @@ subjects:
 - kind: ServiceAccount
   name: another
   namespace: random
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: example
+webhooks:
+  - name: example1
+    clientConfig:
+      service:
+        name: svc1
+        namespace: system
+  - name: example2
+    clientConfig:
+      service:
+        name: svc2
+        namespace: system
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -92,6 +113,12 @@ metadata:
   namespace: test
 ---
 apiVersion: v1
+kind: Service
+metadata:
+  name: svc1
+  namespace: test
+---
+apiVersion: v1
 kind: Namespace
 metadata:
   name: ns1
@@ -122,6 +149,22 @@ subjects:
 - kind: ServiceAccount
   name: another
   namespace: random
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: example
+webhooks:
+- clientConfig:
+    service:
+      name: svc1
+      namespace: test
+  name: example1
+- clientConfig:
+    service:
+      name: svc2
+      namespace: system
+  name: example2
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
