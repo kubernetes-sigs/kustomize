@@ -1,2 +1,2 @@
 resources:
-- pod.yaml
+  - pod.yaml

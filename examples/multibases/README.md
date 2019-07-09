@@ -33,7 +33,7 @@ mkdir $BASE
 
 cat <<EOF >$BASE/kustomization.yaml
 resources:
-- pod.yaml
+  - pod.yaml
 EOF
 
 cat <<EOF >$BASE/pod.yaml
@@ -45,8 +45,8 @@ metadata:
     app: myapp
 spec:
   containers:
-  - name: nginx
-    image: nginx:1.7.9
+    - name: nginx
+      image: nginx:1.7.9
 EOF
 ```
 
@@ -58,7 +58,7 @@ mkdir $DEV
 
 cat <<EOF >$DEV/kustomization.yaml
 resources:
-- ./../base
+  - ../base
 namePrefix: dev-
 EOF
 ```
@@ -71,7 +71,7 @@ mkdir $STAG
 
 cat <<EOF >$STAG/kustomization.yaml
 resources:
-- ./../base
+  - ../base
 namePrefix: stag-
 EOF
 ```
@@ -84,7 +84,7 @@ mkdir $PROD
 
 cat <<EOF >$PROD/kustomization.yaml
 resources:
-- ./../base
+  - ../base
 namePrefix: prod-
 EOF
 ```
@@ -94,9 +94,9 @@ Then define a _Kustomization_ composing three variants together:
 ```
 cat <<EOF >$DEMO_HOME/kustomization.yaml
 resources:
-- ./dev
-- ./staging
-- ./production
+  - dev
+  - staging
+  - production
 
 namePrefix: cluster-a-
 EOF
@@ -118,6 +118,10 @@ Now the workspace has following directories
 > ```
 
 Confirm that the `kustomize build` output contains three pod objects from dev, staging and production variants.
+
+```
+kustomize build
+```
 
 <!-- @confirmVariants @test -->
 ```
