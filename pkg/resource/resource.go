@@ -42,6 +42,7 @@ func (r *Resource) Replace(other *Resource) {
 	r.SetAnnotations(
 		mergeStringMaps(other.GetAnnotations(), r.GetAnnotations()))
 	r.SetName(other.GetName())
+	r.SetNamespace(other.GetNamespace())
 	r.copyOtherFields(other)
 }
 
