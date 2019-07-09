@@ -57,6 +57,7 @@ type Kunstructured interface {
 	GetKind() string
 	GetName() string
 	SetName(string)
+	SetNamespace(string)
 	GetLabels() map[string]string
 	SetLabels(map[string]string)
 	GetAnnotations() map[string]string

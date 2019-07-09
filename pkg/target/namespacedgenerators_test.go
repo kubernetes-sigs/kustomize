@@ -87,3 +87,43 @@ metadata:
 type: Opaque
 `)
 }
+
+func TestNamespacedGeneratorWithOverlays(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
+	th.WriteK("/app/base", `
+namespace: base
+
+configMapGenerator:
+- name: testCase
+  literals:
+    - base=true
+`)
+	th.WriteK("/app/overlay", `
+resources:
+  - ../base
+
+namespace: overlay
+
+configMapGenerator:
+  - name: testCase
+    behavior: merge
+    literals:
+      - overlay=true
+`)
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  base: "true"
+  overlay: "true"
+kind: ConfigMap
+metadata:
+  annotations: {}
+  labels: {}
+  name: testCase-4g75kbk6gm
+  namespace: overlay
+`)
+}
