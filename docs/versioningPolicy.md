@@ -232,11 +232,11 @@ moment forward.
 [beta-level rules]: https://github.com/kubernetes/community/blob/master/contributors/devel/api_changes.md#alpha-beta-and-stable-versions
 [changes]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api_changes.md
 [adapt]: https://github.com/kubernetes-sigs/kustomize/blob/master/pkg/types/kustomization.go#L166
-[special]: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#resources
+[special]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#resources
 [k8s API]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md
 [conventions]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md
 [release process]: ../releasing/README.md
 [kustomization]: glossary.md#kustomization
-[`kind`]: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#types-kinds
+[`kind`]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#types-kinds
 [`apiVersion`]: https://kubernetes.io/docs/concepts/overview/kubernetes-api/#api-versioning
 [semantic versioning]: https://semver.org
