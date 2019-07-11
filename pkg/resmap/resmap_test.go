@@ -19,7 +19,7 @@ import (
 
 var rf = resource.NewFactory(
 	kunstruct.NewKunstructuredFactoryImpl())
-var rmF = NewFactory(rf)
+var rmF = NewFactory(rf, nil)
 
 func doAppend(t *testing.T, w ResMap, r *resource.Resource) {
 	err := w.Append(r)

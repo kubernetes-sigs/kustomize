@@ -14,11 +14,12 @@ import (
 // Factory makes instances of ResMap.
 type Factory struct {
 	resF *resource.Factory
+	tf   PatchFactory
 }
 
 // NewFactory returns a new resmap.Factory.
-func NewFactory(rf *resource.Factory) *Factory {
-	return &Factory{resF: rf}
+func NewFactory(rf *resource.Factory, tf PatchFactory) *Factory {
+	return &Factory{resF: rf, tf: tf}
 }
 
 // RF returns a resource.Factory.
@@ -116,6 +117,11 @@ func (rmF *Factory) FromSecretArgs(
 		return nil, err
 	}
 	return rmF.FromResource(res), nil
+}
+
+func (rmF *Factory) MergePatches(patches []*resource.Resource) (
+	ResMap, error) {
+	return rmF.tf.MergePatches(patches, rmF.resF)
 }
 
 func newResMapFromResourceSlice(resources []*resource.Resource) (ResMap, error) {
