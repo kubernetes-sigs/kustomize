@@ -30,7 +30,7 @@ func TestExecPluginConfig(t *testing.T) {
 	path := "/app"
 	rf := resmap.NewFactory(
 		resource.NewFactory(
-			kunstruct.NewKunstructuredFactoryImpl()))
+			kunstruct.NewKunstructuredFactoryImpl()), nil)
 	ldr := loadertest.NewFakeLoader(path)
 	pluginConfig := rf.RF().FromMap(
 		map[string]interface{}{

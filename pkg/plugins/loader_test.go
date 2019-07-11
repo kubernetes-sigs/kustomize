@@ -50,7 +50,7 @@ func TestLoader(t *testing.T) {
 		"someteam.example.com", "v1", "SomeServiceGenerator")
 
 	rmF := resmap.NewFactory(resource.NewFactory(
-		kunstruct.NewKunstructuredFactoryImpl()))
+		kunstruct.NewKunstructuredFactoryImpl()), nil)
 
 	l := NewLoader(ActivePluginConfig(), rmF)
 	if l == nil {

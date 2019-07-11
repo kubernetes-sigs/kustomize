@@ -64,6 +64,7 @@ type Kunstructured interface {
 	SetAnnotations(map[string]string)
 	MatchesLabelSelector(selector string) (bool, error)
 	MatchesAnnotationSelector(selector string) (bool, error)
+	Patch(Kunstructured) error
 }
 
 // KunstructuredFactory makes instances of Kunstructured.

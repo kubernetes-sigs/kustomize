@@ -20,6 +20,10 @@ package kunstruct
 import (
 	"encoding/json"
 	"fmt"
+	jsonpatch "github.com/evanphx/json-patch"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/strategicpatch"
+	"k8s.io/client-go/kubernetes/scheme"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
@@ -284,4 +288,60 @@ func (fs *UnstructAdapter) MatchesAnnotationSelector(selector string) (bool, err
 		return false, err
 	}
 	return s.Matches(labels.Set(fs.GetAnnotations())), nil
+}
+
+func (fs *UnstructAdapter) Patch(patch ifc.Kunstructured) error {
+	versionedObj, err := scheme.Scheme.New(
+		toSchemaGvk(patch.GetGvk()))
+	merged := map[string]interface{}{}
+	saveName := fs.GetName()
+	switch {
+	case runtime.IsNotRegisteredError(err):
+		baseBytes, err := json.Marshal(fs.Map())
+		if err != nil {
+			return err
+		}
+		patchBytes, err := json.Marshal(patch.Map())
+		if err != nil {
+			return err
+		}
+		mergedBytes, err := jsonpatch.MergePatch(baseBytes, patchBytes)
+		if err != nil {
+			return err
+		}
+		err = json.Unmarshal(mergedBytes, &merged)
+		if err != nil {
+			return err
+		}
+	case err != nil:
+		return err
+	default:
+		// Use Strategic-Merge-Patch to handle types w/ schema
+		// TODO: Change this to use the new Merge package.
+		// Store the name of the target object, because this name may have been munged.
+		// Apply this name to the patched object.
+		lookupPatchMeta, err := strategicpatch.NewPatchMetaFromStruct(versionedObj)
+		if err != nil {
+			return err
+		}
+		merged, err = strategicpatch.StrategicMergeMapPatchUsingLookupPatchMeta(
+			fs.Map(),
+			patch.Map(),
+			lookupPatchMeta)
+		if err != nil {
+			return err
+		}
+	}
+	fs.SetMap(merged)
+	fs.SetName(saveName)
+	return nil
+}
+
+// toSchemaGvk converts to a schema.GroupVersionKind.
+func toSchemaGvk(x gvk.Gvk) schema.GroupVersionKind {
+	return schema.GroupVersionKind{
+		Group:   x.Group,
+		Version: x.Version,
+		Kind:    x.Kind,
+	}
 }
