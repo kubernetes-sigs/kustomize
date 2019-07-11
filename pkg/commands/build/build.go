@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
-	"sigs.k8s.io/kustomize/v3/pkg/ifc/transformer"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/v3/pkg/plugins"
@@ -61,7 +60,7 @@ https://github.com/hashicorp/go-getter#url-format
 func NewCmdBuild(
 	out io.Writer, fSys fs.FileSystem,
 	v ifc.Validator, rf *resmap.Factory,
-	ptf transformer.Factory) *cobra.Command {
+	ptf resmap.PatchFactory) *cobra.Command {
 	var o Options
 
 	pluginConfig := plugins.DefaultPluginConfig()
@@ -115,7 +114,7 @@ func (o *Options) Validate(args []string) (err error) {
 // RunBuild runs build command.
 func (o *Options) RunBuild(
 	out io.Writer, v ifc.Validator, fSys fs.FileSystem,
-	rf *resmap.Factory, ptf transformer.Factory,
+	rf *resmap.Factory, ptf resmap.PatchFactory,
 	pl *plugins.Loader) error {
 	ldr, err := loader.NewLoader(
 		o.loadRestrictor, v, o.kustomizationPath, fSys)
@@ -136,7 +135,7 @@ func (o *Options) RunBuild(
 
 func (o *Options) RunBuildPrune(
 	out io.Writer, v ifc.Validator, fSys fs.FileSystem,
-	rf *resmap.Factory, ptf transformer.Factory,
+	rf *resmap.Factory, ptf resmap.PatchFactory,
 	pl *plugins.Loader) error {
 	ldr, err := loader.NewLoader(
 		o.loadRestrictor, v, o.kustomizationPath, fSys)
@@ -180,7 +179,7 @@ func (o *Options) emitResources(
 
 func NewCmdBuildPrune(
 	out io.Writer, v ifc.Validator, fSys fs.FileSystem,
-	rf *resmap.Factory, ptf transformer.Factory,
+	rf *resmap.Factory, ptf resmap.PatchFactory,
 	pl *plugins.Loader) *cobra.Command {
 	var o Options
 

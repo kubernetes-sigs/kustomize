@@ -14,7 +14,6 @@ import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/v3/pkg/accumulator"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
-	"sigs.k8s.io/kustomize/v3/pkg/ifc/transformer"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/v3/pkg/plugins"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
@@ -30,7 +29,7 @@ type KustTarget struct {
 	kustomization *types.Kustomization
 	ldr           ifc.Loader
 	rFactory      *resmap.Factory
-	tFactory      transformer.Factory
+	tFactory      resmap.PatchFactory
 	pLdr          *plugins.Loader
 }
 
@@ -38,7 +37,7 @@ type KustTarget struct {
 func NewKustTarget(
 	ldr ifc.Loader,
 	rFactory *resmap.Factory,
-	tFactory transformer.Factory,
+	tFactory resmap.PatchFactory,
 	pLdr *plugins.Loader) (*KustTarget, error) {
 	content, err := loadKustFile(ldr)
 	if err != nil {
@@ -293,19 +292,7 @@ func (kt *KustTarget) configureExternalGenerators() ([]transformers.Generator, e
 }
 
 func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator) error {
-	patches, err := kt.rFactory.RF().SliceFromPatches(
-		kt.ldr, kt.kustomization.PatchesStrategicMerge)
-	if err != nil {
-		return errors.Wrapf(
-			err, "reading strategic merge patches %v",
-			kt.kustomization.PatchesStrategicMerge)
-	}
 	var r []transformers.Transformer
-	t, err := kt.tFactory.MakePatchTransformer(patches, kt.rFactory.RF())
-	if err != nil {
-		return err
-	}
-	r = append(r, t)
 	tConfig := ra.GetTransformerConfig()
 	lts, err := kt.configureBuiltinTransformers(tConfig)
 	if err != nil {
@@ -317,7 +304,7 @@ func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator) error {
 		return err
 	}
 	r = append(r, lts...)
-	t = transformers.NewMultiTransformer(r)
+	t := transformers.NewMultiTransformer(r)
 	return ra.Transform(t)
 }
 
