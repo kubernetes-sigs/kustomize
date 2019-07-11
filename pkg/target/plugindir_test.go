@@ -62,7 +62,7 @@ metadata:
 		t.Fatalf("Err: %v", err)
 	}
 	rf := resmap.NewFactory(resource.NewFactory(
-		kunstruct.NewKunstructuredFactoryImpl()))
+		kunstruct.NewKunstructuredFactoryImpl()), nil)
 
 	pl := plugins.NewLoader(plugins.ActivePluginConfig(), rf)
 	tg, err := target.NewKustTarget(ldr, rf, transformer.NewFactoryImpl(), pl)

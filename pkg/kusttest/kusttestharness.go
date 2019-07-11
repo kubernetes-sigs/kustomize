@@ -49,7 +49,7 @@ func NewKustTestHarnessFull(
 	t *testing.T, path string,
 	lr loader.LoadRestrictorFunc, pc *types.PluginConfig) *KustTestHarness {
 	rf := resmap.NewFactory(resource.NewFactory(
-		kunstruct.NewKunstructuredFactoryImpl()))
+		kunstruct.NewKunstructuredFactoryImpl()), nil)
 	return &KustTestHarness{
 		t:   t,
 		rf:  rf,
