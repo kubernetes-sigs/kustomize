@@ -45,13 +45,14 @@ func NewCrawler(
 func (gc githubCrawler) Crawl(
 	ctx context.Context, output chan<- *doc.KustomizationDocument) error {
 
-	// Range finding will be added in the next PR to make this one
-	// simpler/shorter. It would return multiple search queries for the
-	// Github API such that all documents can be retrieved. This is
-	// required since Github returns a max of 1000 results per query, so
-	// multiple queries that split the search space into chunks of 1000
-	// kustomization files is required.
-	ranges := []string{gc.query.String()}
+	// Since Github returns a max of 1000 results per query, we can use
+	// multiple queries that split the search space into chunks of at most
+	// 1000 files to get all of the data.
+	ranges, err := FindRangesForRepoSearch(newCache(gc.rc, gc.query))
+	if err != nil {
+		return fmt.Errorf("could not split search into ranges, %v\n",
+			err)
+	}
 
 	// Query each range for files.
 	errs := make(multiError, 0)
