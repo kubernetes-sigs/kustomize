@@ -12,9 +12,10 @@ import (
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
-	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	kusttest_test "sigs.k8s.io/kustomize/v3/pkg/kusttest"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
 	"sigs.k8s.io/kustomize/v3/pkg/plugins"
+	plugins_test "sigs.k8s.io/kustomize/v3/pkg/plugins/test"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/target"
@@ -22,7 +23,7 @@ import (
 )
 
 func TestPluginDir(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
