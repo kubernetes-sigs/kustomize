@@ -145,6 +145,10 @@ metadata:
   name: myDeploy
 kind: Deployment
 spec:
+  template:
+    metadata:
+      labels:
+        new-label: new-value
   replica: 3
 `)
 
@@ -167,6 +171,7 @@ spec:
   template:
     metadata:
       labels:
+        new-label: new-value
         old-label: old-value
     spec:
       containers:
