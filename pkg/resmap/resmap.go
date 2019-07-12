@@ -530,7 +530,20 @@ func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
 	inputRes *resource.Resource) ResMap {
 	inputId := inputRes.OrgId()
 	if !inputId.IsNamespaceableKind() {
-		return m
+		if inputRes.GetOutermostNamePrefix() == "" {
+			return m
+		}
+		result := New()
+		for _, r := range m.Resources() {
+			if r.GetOutermostNamePrefix() == inputRes.GetOutermostNamePrefix() &&
+				r.GetOutermostNameSuffix() == inputRes.GetOutermostNameSuffix() {
+				err := result.Append(r)
+				if err != nil {
+					panic(err)
+				}
+			}
+		}
+		return result
 	}
 	result := New()
 	for _, r := range m.Resources() {

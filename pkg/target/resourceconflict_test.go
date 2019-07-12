@@ -15,6 +15,7 @@ func writeBase(th *kusttest_test.KustTestHarness) {
 resources:
 - serviceaccount.yaml
 - rolebinding.yaml
+- clusterrolebinding.yaml
 namePrefix: pfx-
 nameSuffix: -sfx
 `)
@@ -27,6 +28,19 @@ metadata:
 	th.WriteF("/app/base/rolebinding.yaml", `
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
+metadata:
+  name: rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: role
+subjects:
+- kind: ServiceAccount
+  name: serviceaccount
+`)
+	th.WriteF("/app/base/clusterrolebinding.yaml", `
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
 metadata:
   name: rolebinding
 roleRef:
@@ -88,6 +102,18 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: pfx-serviceaccount-sfx
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: pfx-rolebinding-sfx
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: role
+subjects:
+- kind: ServiceAccount
+  name: pfx-serviceaccount-sfx
 `)
 }
 
@@ -116,6 +142,18 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: a-pfx-serviceaccount-sfx-suffixA
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: a-pfx-rolebinding-sfx-suffixA
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: role
+subjects:
+- kind: ServiceAccount
+  name: a-pfx-serviceaccount-sfx-suffixA
 `)
 }
 
@@ -135,6 +173,18 @@ metadata:
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
+metadata:
+  name: b-pfx-rolebinding-sfx-suffixB
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: role
+subjects:
+- kind: ServiceAccount
+  name: b-pfx-serviceaccount-sfx-suffixB
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
 metadata:
   name: b-pfx-rolebinding-sfx-suffixB
 roleRef:
@@ -174,6 +224,18 @@ subjects:
 - kind: ServiceAccount
   name: a-pfx-serviceaccount-sfx-suffixA
 ---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: a-pfx-rolebinding-sfx-suffixA
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: role
+subjects:
+- kind: ServiceAccount
+  name: a-pfx-serviceaccount-sfx-suffixA
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -181,6 +243,18 @@ metadata:
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
+metadata:
+  name: b-pfx-rolebinding-sfx-suffixB
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: role
+subjects:
+- kind: ServiceAccount
+  name: b-pfx-serviceaccount-sfx-suffixB
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
 metadata:
   name: b-pfx-rolebinding-sfx-suffixB
 roleRef:
