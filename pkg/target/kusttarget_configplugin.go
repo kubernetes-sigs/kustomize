@@ -63,6 +63,7 @@ func (kt *KustTarget) configureBuiltinTransformers(
 	//   with tests:
 	//   - patch SMP
 	configurators := []transformerConfigurator{
+		kt.configureBuiltinPatchStrategicMergeTransformer,
 		kt.configureBuiltinNamespaceTransformer,
 		kt.configureBuiltinNameTransformer,
 		kt.configureBuiltinLabelTransformer,
@@ -162,6 +163,28 @@ func (kt *KustTarget) configureBuiltinPatchJson6902Transformer(
 		}
 		result = append(result, p)
 	}
+	return
+}
+
+func (kt *KustTarget) configureBuiltinPatchStrategicMergeTransformer(
+	tConfig *config.TransformerConfig) (
+	result []transformers.Transformer, err error) {
+	if len(kt.kustomization.PatchesStrategicMerge) == 0 {
+		result = append(result, transformers.NewNoOpTransformer())
+		return
+	}
+	var c struct {
+		Paths   []types.PatchStrategicMerge `json:"paths,omitempty" yaml:"paths,omitempty"`
+		Patches string                      `json:"patches,omitempty" yaml:"patches,omitempty"`
+	}
+	c.Paths = kt.kustomization.PatchesStrategicMerge
+	c.Patches = "" // Not implemented for kustomization file yet
+	p := builtin.NewPatchStrategicMergeTransformerPlugin()
+	err = kt.configureBuiltinPlugin(p, c, "patchStrategicMerge")
+	if err != nil {
+		return nil, err
+	}
+	result = append(result, p)
 	return
 }
 
