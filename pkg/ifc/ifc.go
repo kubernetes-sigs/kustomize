@@ -54,6 +54,7 @@ type Kunstructured interface {
 	MarshalJSON() ([]byte, error)
 	UnmarshalJSON([]byte) error
 	GetGvk() gvk.Gvk
+	SetGvk(gvk.Gvk)
 	GetKind() string
 	GetName() string
 	SetName(string)
