@@ -24,7 +24,7 @@ these [instructions](docs/INSTALL.md).
 Browse the [docs](docs) or jump right into the
 tested [examples](examples).
 
-kustomize [v2.0.3] is available in [kubectl v1.15][kubectl].
+kustomize [v2.0.3] is available in [kubectl v1.14 and v1.15][kubectl].
 
 
 ## Usage
