@@ -28,3 +28,31 @@ To disable this, use v3, and the `load_restrictor` flag:
 ```
 kustomize build --load_restrictor none $target
 ```
+
+## Some field is not transformed by kustomize
+
+Example: [#1319](https://github.com/kubernetes-sigs/kustomize/issues/1319), [#1322](https://github.com/kubernetes-sigs/kustomize/issues/1322), [#1347](https://github.com/kubernetes-sigs/kustomize/issues/1347) and etc.
+
+The fields transformed by kustomize is configured explicitly in [defaultconfig](https://github.com/kubernetes-sigs/kustomize/tree/master/pkg/transformers/config/defaultconfig). The configuration itself can be customized by including `configurations` in `kustomization.yaml`, e.g.
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+configurations:
+- kustomizeconfig.yaml
+```
+
+The configuration directive allows customization of the following transformers:
+
+```yaml
+commonAnnotations: []
+commonLabels: []
+nameprefix: []
+namespace: []
+varreference: []
+namereference: []
+images: []
+replicas: []
+```
+
+To persist the changes to default configuration, submit a PR like [#1338](https://github.com/kubernetes-sigs/kustomize/pull/1338), [#1348](https://github.com/kubernetes-sigs/kustomize/pull/1348) and etc.
