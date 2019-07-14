@@ -343,6 +343,8 @@ nameReference:
   fieldSpecs:
   - path: spec/volumeName
     kind: PersistentVolumeClaim
+  - path: rules/resourceNames
+    kind: ClusterRole
 
 - kind: StorageClass
   version: v1

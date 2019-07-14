@@ -647,19 +647,22 @@ func deploymentMap(metadatanamespace string, metadataname string,
 	return deployment
 }
 
-// TestNameReferenceNamespace creates configmap, secret, deployment
-// serviceAccount and clusterRoleBinding object with the same original
-// names (uniquename) in different namespaces and with different current Id.
-func TestNameReferenceyNamespace(t *testing.T) {
-	defaultNs := "default"
-	ns1 := "ns1"
-	ns2 := "ns2"
+const (
+	defaultNs = "default"
+	ns1       = "ns1"
+	ns2       = "ns2"
+	ns3       = "ns3"
 
-	orgname := "uniquename"
-	prefixedname := "prefix-uniquename"
-	suffixedname := "uniquename-suffix"
-	modifiedname := "modifiedname"
+	orgname      = "uniquename"
+	prefixedname = "prefix-uniquename"
+	suffixedname = "uniquename-suffix"
+	modifiedname = "modifiedname"
+)
 
+// TestNameReferenceNamespace creates serviceAccount and clusterRoleBinding
+// object with the same original names (uniquename) in different namespaces
+// and with different current Id.
+func TestNameReferenceNamespace(t *testing.T) {
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
 	m := resmaptest_test.NewRmBuilder(t, rf).
@@ -709,7 +712,31 @@ func TestNameReferenceyNamespace(t *testing.T) {
 		// Add Deployment with the same org name in noNs, "ns1" and "ns2" namespaces
 		AddWithNsAndName(defaultNs, orgname, deploymentMap(defaultNs, modifiedname, modifiedname, modifiedname)).
 		AddWithNsAndName(ns1, orgname, deploymentMap(ns1, prefixedname, orgname, orgname)).
-		AddWithNsAndName(ns2, orgname, deploymentMap(ns2, suffixedname, orgname, orgname)).
+		AddWithNsAndName(ns2, orgname, deploymentMap(ns2, suffixedname, orgname, orgname)).ResMap()
+
+	expected := resmaptest_test.NewSeededRmBuilder(t, rf, m.ShallowCopy()).
+		ReplaceResource(deploymentMap(defaultNs, modifiedname, modifiedname, modifiedname)).
+		ReplaceResource(deploymentMap(ns1, prefixedname, prefixedname, prefixedname)).
+		ReplaceResource(deploymentMap(ns2, suffixedname, suffixedname, suffixedname)).ResMap()
+
+	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
+	err := nrt.Transform(m)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if err = expected.ErrorIfNotEqualLists(m); err != nil {
+		t.Fatalf("actual doesn't match expected: %v", err)
+	}
+}
+
+// TestNameReferenceNamespace creates serviceAccount and clusterRoleBinding
+// object with the same original names (uniquename) in different namespaces
+// and with different current Id.
+func TestNameReferenceClusterWide(t *testing.T) {
+	rf := resource.NewFactory(
+		kunstruct.NewKunstructuredFactoryImpl())
+	m := resmaptest_test.NewRmBuilder(t, rf).
 		// Add ServiceAccount with the same org name in noNs, "ns1" and "ns2" namespaces
 		AddWithName(orgname, map[string]interface{}{
 			"apiVersion": "v1",
@@ -731,7 +758,7 @@ func TestNameReferenceyNamespace(t *testing.T) {
 				"name":      suffixedname,
 				"namespace": ns2,
 			}}).
-		// Add a PersisitentVolume to have a clusterwide resources
+		// Add a PersistentVolume to have a clusterwide resource
 		AddWithName(orgname, map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "PersistentVolume",
@@ -784,9 +811,6 @@ func TestNameReferenceyNamespace(t *testing.T) {
 			}}).ResMap()
 
 	expected := resmaptest_test.NewSeededRmBuilder(t, rf, m.ShallowCopy()).
-		ReplaceResource(deploymentMap(defaultNs, modifiedname, modifiedname, modifiedname)).
-		ReplaceResource(deploymentMap(ns1, prefixedname, prefixedname, prefixedname)).
-		ReplaceResource(deploymentMap(ns2, suffixedname, suffixedname, suffixedname)).
 		ReplaceResource(
 			map[string]interface{}{
 				"apiVersion": "rbac.authorization.k8s.io/v1",
@@ -794,6 +818,9 @@ func TestNameReferenceyNamespace(t *testing.T) {
 				"metadata": map[string]interface{}{
 					"name": modifiedname,
 				},
+				// Behavior of the transformer is still imperfect
+				// It should use the (resources,apigroup,resourceNames) as
+				// combination to select the candidates.
 				"rules": []interface{}{
 					map[string]interface{}{
 						"resources": []interface{}{
@@ -825,6 +852,107 @@ func TestNameReferenceyNamespace(t *testing.T) {
 						"name":      modifiedname,
 						"namespace": defaultNs,
 					},
+					map[string]interface{}{
+						"kind":      "ServiceAccount",
+						"name":      prefixedname,
+						"namespace": ns1,
+					},
+					map[string]interface{}{
+						"kind":      "ServiceAccount",
+						"name":      suffixedname,
+						"namespace": ns2,
+					},
+				},
+			}).ResMap()
+
+	clusterRoleId := resid.NewResId(
+		gvk.Gvk{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRole"}, modifiedname)
+	clusterRoleBindingId := resid.NewResId(
+		gvk.Gvk{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRoleBinding"}, modifiedname)
+	clusterRole, _ := expected.GetByCurrentId(clusterRoleId)
+	clusterRole.AppendRefBy(clusterRoleBindingId)
+
+	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
+	err := nrt.Transform(m)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if err = expected.ErrorIfNotEqualLists(m); err != nil {
+		t.Fatalf("actual doesn't match expected: %v", err)
+	}
+}
+
+// TestNameReferenceNamespaceTransformation creates serviceAccount and clusterRoleBinding
+// object with the same original names (uniquename) in different namespaces
+// and with different current Id.
+func TestNameReferenceNamespaceTransformation(t *testing.T) {
+	rf := resource.NewFactory(
+		kunstruct.NewKunstructuredFactoryImpl())
+	m := resmaptest_test.NewRmBuilder(t, rf).
+		// Add ServiceAccount with the same org name in "ns1" namespaces
+		AddWithNsAndName(ns1, orgname, map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ServiceAccount",
+			"metadata": map[string]interface{}{
+				"name":      prefixedname,
+				"namespace": ns1,
+			}}).
+		// Simulate NamespaceTransformer effect (ns3 transformed in ns2)
+		AddWithNsAndName(ns3, orgname, map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ServiceAccount",
+			"metadata": map[string]interface{}{
+				"name":      suffixedname,
+				"namespace": ns2,
+			}}).
+		AddWithName(orgname, map[string]interface{}{
+			"apiVersion": "rbac.authorization.k8s.io/v1",
+			"kind":       "ClusterRole",
+			"metadata": map[string]interface{}{
+				"name": modifiedname,
+			}}).
+		AddWithName(orgname, map[string]interface{}{
+			"apiVersion": "rbac.authorization.k8s.io/v1",
+			"kind":       "ClusterRoleBinding",
+			"metadata": map[string]interface{}{
+				"name": modifiedname,
+			},
+			"roleRef": map[string]interface{}{
+				"apiVersion": "rbac.authorization.k8s.io/v1",
+				"kind":       "ClusterRole",
+				"name":       orgname,
+			},
+			"subjects": []interface{}{
+				map[string]interface{}{
+					"kind":      "ServiceAccount",
+					"name":      orgname,
+					"namespace": ns1,
+				},
+				map[string]interface{}{
+					"kind":      "ServiceAccount",
+					"name":      orgname,
+					"namespace": ns3,
+				},
+			}}).ResMap()
+
+	expected := resmaptest_test.NewSeededRmBuilder(t, rf, m.ShallowCopy()).
+		ReplaceResource(
+			map[string]interface{}{
+				"apiVersion": "rbac.authorization.k8s.io/v1",
+				"kind":       "ClusterRoleBinding",
+				"metadata": map[string]interface{}{
+					"name": modifiedname,
+				},
+				"roleRef": map[string]interface{}{
+					"apiVersion": "rbac.authorization.k8s.io/v1",
+					"kind":       "ClusterRole",
+					"name":       modifiedname,
+				},
+				// The following tests required a change in
+				// getNameFunc implementation in order to leverage
+				// the namespace field.
+				"subjects": []interface{}{
 					map[string]interface{}{
 						"kind":      "ServiceAccount",
 						"name":      prefixedname,

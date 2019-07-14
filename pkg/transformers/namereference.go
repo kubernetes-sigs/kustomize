@@ -107,12 +107,12 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 }
 
 // utility function to replace a simple string by the new name
-func (o *nameReferenceTransformer) mapSimpleNameField(
+func (o *nameReferenceTransformer) selectReferral(
 	oldName string,
 	referrer *resource.Resource,
 	target gvk.Gvk,
 	referralCandidates resmap.ResMap,
-	referralCandidateSubset []*resource.Resource) (interface{}, error) {
+	referralCandidateSubset []*resource.Resource) (interface{}, interface{}, error) {
 
 	for _, res := range referralCandidateSubset {
 		id := res.OrgId()
@@ -121,8 +121,8 @@ func (o *nameReferenceTransformer) mapSimpleNameField(
 			// If there's more than one match, there's no way
 			// to know which one to pick, so emit error.
 			if len(matches) > 1 {
-				return nil, fmt.Errorf(
-					"string case - multiple matches for %s:\n  %v",
+				return nil, nil, fmt.Errorf(
+					"multiple matches for %s:\n  %v",
 					id, getIds(matches))
 			}
 			// In the resource, note that it is referenced
@@ -130,11 +130,25 @@ func (o *nameReferenceTransformer) mapSimpleNameField(
 			res.AppendRefBy(referrer.CurId())
 			// Return transformed name of the object,
 			// complete with prefixes, hashes, etc.
-			return res.GetName(), nil
+			return res.GetName(), res.GetNamespace(), nil
 		}
 	}
 
-	return oldName, nil
+	return oldName, nil, nil
+}
+
+// utility function to replace a simple string by the new name
+func (o *nameReferenceTransformer) mapSimpleNameField(
+	oldName string,
+	referrer *resource.Resource,
+	target gvk.Gvk,
+	referralCandidates resmap.ResMap,
+	referralCandidateSubset []*resource.Resource) (interface{}, error) {
+
+	newName, _, err := o.selectReferral(oldName, referrer, target,
+		referralCandidates, referralCandidateSubset)
+
+	return newName, err
 }
 
 // utility function to replace name field within a map[string]interface{}
@@ -159,20 +173,26 @@ func (o *nameReferenceTransformer) mapNameAndNsStruct(
 	subset := referralCandidates.Resources()
 	if namespacevalue, ok := inMap["namespace"]; ok {
 		namespace := namespacevalue.(string)
-		bynamespace := referralCandidates.GroupedByNamespace()
+		bynamespace := referralCandidates.GroupedByOriginalNamespace()
 		if _, ok := bynamespace[namespace]; !ok {
 			return inMap, nil
 		}
 		subset = bynamespace[namespace]
 	}
 
-	newname, err := o.mapSimpleNameField(oldName, referrer, target,
+	newname, newnamespace, err := o.selectReferral(oldName, referrer, target,
 		referralCandidates, subset)
 	if err != nil {
 		return nil, err
 	}
 
 	inMap["name"] = newname
+	if newnamespace != "" {
+		// We don't want value "" to replace value "default" since
+		// the empty string is handled as a wild card here not default namespace
+		// by kubernetes.
+		inMap["namespace"] = newnamespace
+	}
 	return inMap, nil
 
 }
