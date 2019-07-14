@@ -5,11 +5,10 @@
 [Go plugin caveats]: goPluginCaveats.md
 
 This is a (no reading allowed!) 60 second copy/paste guided
-example. 
+example.
 
 Full plugin docs [here](README.md).
 Be sure to read the [Go plugin caveats].
-
 
 This demo uses a Go plugin, `SopsEncodedSecrets`,
 that lives in the [sopsencodedsecrets repository].
@@ -22,14 +21,12 @@ current setup.
 
 #### requirements
 
- * linux, git, curl, Go 1.12
- * Google cloud (gcloud) install
- * a Google account (will use Google kms -
-   volunteers needed to convert to a GPG example).
+* linux, git, curl, Go 1.12
+* gpg, sops
 
 ## Make a place to work
 
-```
+```shell
 # Keeping these separate to avoid cluttering the DEMO dir.
 DEMO=$(mktemp -d)
 tmpGoPath=$(mktemp -d)
@@ -40,7 +37,7 @@ tmpGoPath=$(mktemp -d)
 Need v3.0.0 for what follows, and you must _compile_
 it (not download the binary from the release page):
 
-```
+```shell
 GOPATH=$tmpGoPath go install sigs.k8s.io/kustomize/v3/cmd/kustomize
 ```
 
@@ -62,7 +59,7 @@ The kustomize program reads the config file
 kustomization file), then locates the Go plugin's
 object code at the following location:
 
-> ```
+> ```shell
 > $XGD_CONFIG_HOME/kustomize/plugin/$apiVersion/$lKind/$kind.so
 > ```
 
@@ -82,7 +79,7 @@ left to plugins to find their own config.
 This demo will house the plugin it uses at the
 ephemeral directory
 
-```
+```shell
 PLUGIN_ROOT=$DEMO/kustomize/plugin
 ```
 
@@ -105,10 +102,10 @@ to a plugin.
 This demo uses a plugin called _SopsEncodedSecrets_,
 and it lives in the [SopsEncodedSecrets repository].
 
-Somewhat arbitrarily, we'll chose to install 
+Somewhat arbitrarily, we'll chose to install
 this plugin with
 
-```
+```shell
 apiVersion=mygenerators
 kind=SopsEncodedSecrets
 ```
@@ -119,7 +116,7 @@ By convention, the ultimate home of the plugin
 code and supplemental data, tests, documentation,
 etc. is the lowercase form of its kind.
 
-```
+```shell
 lKind=$(echo $kind | awk '{print tolower($0)}')
 ```
 
@@ -129,7 +126,7 @@ In this case, the repo name matches the lowercase
 kind already, so we just clone the repo and get
 the proper directory name automatically:
 
-```
+```shell
 mkdir -p $PLUGIN_ROOT/${apiVersion}
 cd $PLUGIN_ROOT/${apiVersion}
 git clone git@github.com:monopole/sopsencodedsecrets.git
@@ -137,7 +134,7 @@ git clone git@github.com:monopole/sopsencodedsecrets.git
 
 Remember this directory:
 
-```
+```shell
 MY_PLUGIN_DIR=$PLUGIN_ROOT/${apiVersion}/${lKind}
 ```
 
@@ -146,14 +143,14 @@ MY_PLUGIN_DIR=$PLUGIN_ROOT/${apiVersion}/${lKind}
 Plugins may come with their own tests.
 This one does, and it hopefully passes:
 
-```
+```shell
 cd $MY_PLUGIN_DIR
 go test SopsEncodedSecrets_test.go
 ```
 
 Build the object code for use by kustomize:
 
-```
+```shell
 cd $MY_PLUGIN_DIR
 GOPATH=$tmpGoPath go build -buildmode plugin -o ${kind}.so ${kind}.go
 ```
@@ -171,7 +168,7 @@ On load failure
    version of Go (_go1.12_) on the same `$GOOS`
    (_linux_) and `$GOARCH` (_amd64_) used to build
    the kustomize being [used in this demo].
-   
+
  * change the plugin's dependencies in its `go.mod`
    to match the versions used by kustomize (check
    kustomize's `go.mod` used in its tagged commit).
@@ -188,11 +185,11 @@ reusable instead of bizarrely woven throughout the
 code as a individual special cases.
 
 ## Create a kustomization
-​
+
 Make a kustomization directory to
 hold all your config:
 
-```
+```shell
 MYAPP=$DEMO/myapp
 mkdir -p $MYAPP
 ```
@@ -202,7 +199,7 @@ Make a config file for the SopsEncodedSecrets plugin.
 Its `apiVersion` and `kind` allow the plugin to be
 found:
 
-```
+```shell
 cat <<EOF >$MYAPP/secGenerator.yaml
 apiVersion: ${apiVersion}
 kind: ${kind}
@@ -223,7 +220,7 @@ This plugin expects to find more data in
 Make a kustomization file referencing the plugin
 config:
 
-```
+```shell
 cat <<EOF >$MYAPP/kustomization.yaml
 commonLabels:
   app: hello
@@ -232,47 +229,36 @@ generators:
 EOF
 ```
 
-Now for the hard part.  Generate the real encrypted data.
+Now generate the real encrypted data.
 
-
-### Assure you have a Google Cloud sops key ring.
+### Assure you have a gpg installed
 
 We're going to use [sops](https://github.com/mozilla/sops) to encode a file.
 
 Try this:
 
-```
-gcloud kms keys list --location global --keyring sops
-```
-
-If it succeeds, presumably you've already
-created keys and placed them in a keyring called `sops`.
-If not, do this:
-
-```
-gcloud kms keyrings create sops --location global
-gcloud kms keys create sops-key --location global \
-    --keyring sops --purpose encryption
+```shell
+gpg --list-keys
 ```
 
-Extract your keyLocation for use below:
-```
-keyLocation=$(\
-    gcloud kms keys list --location global --keyring sops |\
-    grep GOOGLE | cut -d " " -f1)
-echo $keyLocation
+If it returns a list, presumably you've already created keys. If not, try import test keys from sops for dev.
+
+```shell
+curl https://raw.githubusercontent.com/mozilla/sops/master/pgp/sops_functional_tests_key.asc | gpg --import
+SOPS_PGP_FP="1022470DE3F0BC54BC6AB62DE05550BC07FB1A0A"
 ```
 
 ### Install `sops`
 
-```
+```shell
 GOPATH=$tmpGoPath go install go.mozilla.org/sops/cmd/sops
 ```
 
-### Create data encrypted with your Google Cloud key
+### Create data encrypted with your PGP key
 
 Create raw data to encrypt:
-```
+
+```shell
 cat <<EOF >$MYAPP/myClearData.yaml
 VEGETABLE: carrot
 ROCKET: saturn-v
@@ -283,21 +269,21 @@ EOF
 
 Encrypt the data into file the plugin wants to read:
 
-```
+```shell
 $tmpGoPath/bin/sops --encrypt \
-  --gcp-kms $keyLocation \
+  --pgp $SOPS_PGP_FP \
   $MYAPP/myClearData.yaml >$MYAPP/myEncryptedData.yaml
 ```
 
-
 Review the files
-```
+
+```shell
 tree $DEMO
 ```
 
 This should look something like:
 
-> ```
+> ```shell
 > /tmp/tmp.0kIE9VclPt
 > ├── kustomize
 > │   └── plugin
@@ -319,7 +305,7 @@ This should look something like:
 
 ## Build your app, using the plugin:
 
-```
+```shell
 XDG_CONFIG_HOME=$DEMO $tmpGoPath/bin/kustomize build --enable_alpha_plugins $MYAPP
 ```
 
@@ -328,10 +314,9 @@ encrypted data for the names `ROCKET` and `CAR`.
 
 Above, if you had set
 
-> ```
+> ```shell
 > PLUGIN_ROOT=$HOME/.config/kustomize/plugin
 > ```
 
 there would be no need to use `XDG_CONFIG_HOME` in the
 _kustomize_ command above.
-
