@@ -4,10 +4,11 @@
 package main_test
 
 import (
-	kusttest_test "sigs.k8s.io/kustomize/v3/pkg/kusttest"
-	"sigs.k8s.io/kustomize/v3/pkg/plugins"
 	"strings"
 	"testing"
+
+	kusttest_test "sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	plugins_test "sigs.k8s.io/kustomize/v3/pkg/plugins/test"
 )
 
 const (
@@ -65,7 +66,7 @@ spec:
 )
 
 func TestPatchTransformerMissingFile(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -89,7 +90,7 @@ path: patch.yaml
 }
 
 func TestPatchTransformerBadPatch(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -113,7 +114,7 @@ patch: "thisIsNotAPatch"
 }
 
 func TestPatchTransformerMissingSelector(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -137,7 +138,7 @@ patch: '[{"op": "add", "path": "/spec/template/spec/dnsPolicy", "value": "Cluste
 }
 
 func TestPatchTransformerBothEmptyPathAndPatch(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -160,7 +161,7 @@ metadata:
 }
 
 func TestPatchTransformerBothNonEmptyPathAndPatch(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -185,7 +186,7 @@ Patch: "something"
 }
 
 func TestPatchTransformerFromFiles(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -267,7 +268,7 @@ spec:
 }
 
 func TestPatchTransformerWithInline(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
