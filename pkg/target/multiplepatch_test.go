@@ -61,6 +61,8 @@ spec:
         volumeMounts:
         - name: nginx-persistent-storage
           mountPath: /tmp/ps
+      - name: sidecar
+        image: sidecar:latest
       volumes:
       - name: nginx-persistent-storage
         emptyDir: {}
@@ -138,8 +140,6 @@ spec:
         env:
         - name: ANOTHERENV
           value: FOO
-      - name: sidecar
-        image: sidecar
       volumes:
       - name: nginx-persistent-storage
 `)
@@ -187,7 +187,7 @@ spec:
         volumeMounts:
         - mountPath: /tmp/ps
           name: nginx-persistent-storage
-      - image: sidecar
+      - image: sidecar:latest
         name: sidecar
       volumes:
       - gcePersistentDisk:
@@ -292,4 +292,259 @@ spec:
 		err.Error(), "conflict between ") {
 		t.Fatalf("Unexpected err: %v", err)
 	}
+}
+
+// TestMultiplePatchesWithPatchDeleteIgnored demonstrates that if the
+// patch containing the $patch:delete directive is second in the list,
+// the behavior of kustomize is incorrect, and the sidecar container is
+// not removed from the final output. No conflict, nor error is reported
+// even so the patch is ignored. See issue #1354
+func TestMultiplePatchesWithPatchDeleteIgnored(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app/overlay/staging")
+	makeCommonFileForMultiplePatchTest(th)
+	th.WriteF("/app/overlay/staging/deployment-patch1.yaml", `
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        env:
+        - name: SOME_NAME
+          value: somevalue
+`)
+	th.WriteF("/app/overlay/staging/deployment-patch2.yaml", `
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - $patch: delete
+        name: sidecar
+`)
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, `apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: foo
+  name: staging-team-foo-nginx
+spec:
+  selector:
+    matchLabels:
+      app: mynginx
+      env: staging
+      org: example.com
+      team: foo
+  template:
+    metadata:
+      annotations:
+        note: This is a test annotation
+      labels:
+        app: mynginx
+        env: staging
+        org: example.com
+        team: foo
+    spec:
+      containers:
+      - env:
+        - name: SOME_NAME
+          value: somevalue
+        image: nginx
+        name: nginx
+        volumeMounts:
+        - mountPath: /tmp/ps
+          name: nginx-persistent-storage
+      - image: sidecar:latest
+        name: sidecar
+      volumes:
+      - emptyDir: {}
+        name: nginx-persistent-storage
+      - configMap:
+          name: staging-team-foo-configmap-in-base-g7k6gt2889
+        name: configmap-in-base
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: foo
+  name: staging-team-foo-nginx
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: foo
+---
+apiVersion: v1
+data:
+  foo: bar
+kind: ConfigMap
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: foo
+  name: staging-team-foo-configmap-in-base-g7k6gt2889
+---
+apiVersion: v1
+data:
+  hello: world
+kind: ConfigMap
+metadata:
+  labels:
+    env: staging
+  name: staging-configmap-in-overlay-k7cbc75tg8
+`)
+}
+
+// TestMultiplePatchesWithPatchDeleteApplied demonstrates that if the
+// patch containing the $patch:delete directive is first in the list,
+// the behavior of kustomize is correct, and the sidecar container
+// is removed from the final output. See issue #1354
+func TestMultiplePatchesWithPatchDeleteApplied(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app/overlay/staging")
+	makeCommonFileForMultiplePatchTest(th)
+	th.WriteF("/app/overlay/staging/deployment-patch1.yaml", `
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - $patch: delete
+        name: sidecar
+`)
+	th.WriteF("/app/overlay/staging/deployment-patch2.yaml", `
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        env:
+        - name: SOME_NAME
+          value: somevalue
+`)
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, `apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: foo
+  name: staging-team-foo-nginx
+spec:
+  selector:
+    matchLabels:
+      app: mynginx
+      env: staging
+      org: example.com
+      team: foo
+  template:
+    metadata:
+      annotations:
+        note: This is a test annotation
+      labels:
+        app: mynginx
+        env: staging
+        org: example.com
+        team: foo
+    spec:
+      containers:
+      - env:
+        - name: SOME_NAME
+          value: somevalue
+        image: nginx
+        name: nginx
+        volumeMounts:
+        - mountPath: /tmp/ps
+          name: nginx-persistent-storage
+      volumes:
+      - emptyDir: {}
+        name: nginx-persistent-storage
+      - configMap:
+          name: staging-team-foo-configmap-in-base-g7k6gt2889
+        name: configmap-in-base
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: foo
+  name: staging-team-foo-nginx
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: foo
+---
+apiVersion: v1
+data:
+  foo: bar
+kind: ConfigMap
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: foo
+  name: staging-team-foo-configmap-in-base-g7k6gt2889
+---
+apiVersion: v1
+data:
+  hello: world
+kind: ConfigMap
+metadata:
+  labels:
+    env: staging
+  name: staging-configmap-in-overlay-k7cbc75tg8
+`)
 }
