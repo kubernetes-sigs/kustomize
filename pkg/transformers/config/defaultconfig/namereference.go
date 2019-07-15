@@ -352,5 +352,7 @@ nameReference:
     kind: PersistentVolume
   - path: spec/storageClassName
     kind: PersistentVolumeClaim
+  - path: spec/volumeClaimTemplates/spec/storageClassName
+    kind: StatefulSet
 `
 )
