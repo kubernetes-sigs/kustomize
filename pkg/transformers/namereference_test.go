@@ -883,6 +883,48 @@ func TestNameReferenceClusterWide(t *testing.T) {
 	}
 }
 
+// TestNameReferenceClusterWideUnhappy creates serviceAccount and clusterRoleBinding
+func TestNameReferenceClusterWideUnhappy(t *testing.T) {
+	rf := resource.NewFactory(
+		kunstruct.NewKunstructuredFactoryImpl())
+	m := resmaptest_test.NewRmBuilder(t, rf).
+		// Add a PersistentVolume to have a clusterwide resource
+		AddWithName(orgname, map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "PersistentVolume",
+			"metadata": map[string]interface{}{
+				"name": prefixedname,
+			}}).
+		AddWithName(orgname, map[string]interface{}{
+			"apiVersion": "storage.k8s.io/v1",
+			"kind":       "StorageClass",
+			"metadata": map[string]interface{}{
+				"name": suffixedname,
+			}}).
+		AddWithName(orgname, map[string]interface{}{
+			"apiVersion": "rbac.authorization.k8s.io/v1",
+			"kind":       "ClusterRole",
+			"metadata": map[string]interface{}{
+				"name": modifiedname,
+			},
+			"rules": []interface{}{
+				map[string]interface{}{
+					"resources": []interface{}{
+						"persistentvolumes",
+					},
+					"resourceNames": []interface{}{
+						orgname,
+					},
+				},
+			}}).ResMap()
+
+	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
+	err := nrt.Transform(m)
+	if err == nil {
+		// This should actually fail.
+	}
+}
+
 // TestNameReferenceNamespaceTransformation creates serviceAccount and clusterRoleBinding
 // object with the same original names (uniquename) in different namespaces
 // and with different current Id.

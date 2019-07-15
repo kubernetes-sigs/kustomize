@@ -356,5 +356,7 @@ nameReference:
     kind: PersistentVolumeClaim
   - path: spec/volumeClaimTemplates/spec/storageClassName
     kind: StatefulSet
+  - path: rules/resourceNames
+    kind: ClusterRole
 `
 )
