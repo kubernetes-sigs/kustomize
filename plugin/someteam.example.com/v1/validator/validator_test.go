@@ -10,11 +10,11 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
-	"sigs.k8s.io/kustomize/v3/pkg/plugins"
+	plugins_test "sigs.k8s.io/kustomize/v3/pkg/plugins/test"
 )
 
 func TestValidatorHappy(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin("someteam.example.com", "v1", "Validator")
@@ -49,7 +49,7 @@ metadata:
 }
 
 func TestValidatorUnHappy(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin("someteam.example.com", "v1", "Validator")
