@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package plugins
+package test
 
 import (
 	"io/ioutil"
@@ -12,13 +12,14 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/v3/pkg/plugins"
 )
 
 // EnvForTest manages the plugin test environment.
 // It sets/resets XDG_CONFIG_HOME, makes/removes a temp objRoot.
 type EnvForTest struct {
 	t        *testing.T
-	compiler *Compiler
+	compiler *plugins.Compiler
 	workDir  string
 	oldXdg   string
 	wasSet   bool
@@ -61,7 +62,7 @@ func (x *EnvForTest) BuildExecPlugin(g, v, k string) {
 	}
 }
 
-func (x *EnvForTest) makeCompiler() *Compiler {
+func (x *EnvForTest) makeCompiler() *plugins.Compiler {
 	// The plugin loader wants to find object code under
 	//    $XDG_CONFIG_HOME/kustomize/plugins
 	// and the compiler writes object code to
@@ -73,11 +74,11 @@ func (x *EnvForTest) makeCompiler() *Compiler {
 	if err != nil {
 		x.t.Error(err)
 	}
-	srcRoot, err := DefaultSrcRoot()
+	srcRoot, err := plugins.DefaultSrcRoot()
 	if err != nil {
 		x.t.Error(err)
 	}
-	return NewCompiler(srcRoot, objRoot)
+	return plugins.NewCompiler(srcRoot, objRoot)
 }
 
 func (x *EnvForTest) createWorkDir() {
