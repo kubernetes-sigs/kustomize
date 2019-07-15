@@ -200,7 +200,6 @@ func (k *Kustomization) EnforceFields() []string {
 // new field names.
 func FixKustomizationPreUnmarshalling(data []byte) []byte {
 	deprecateFieldsMap := map[string]string{
-		"patches:":   "patchesStrategicMerge:",
 		"imageTags:": "images:",
 	}
 	for oldname, newname := range deprecateFieldsMap {
