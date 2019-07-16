@@ -22,7 +22,15 @@ current setup.
 #### requirements
 
 * linux, git, curl, Go 1.12
-* gpg, sops
+
+For encryption
+
+* gpg
+
+Or
+
+* Google cloud (gcloud) install
+* a Google account with KMS permission
 
 ## Make a place to work
 
@@ -231,9 +239,11 @@ EOF
 
 Now generate the real encrypted data.
 
-### Assure you have a gpg installed
+### Assure you have an encrytion tools installed
 
-We're going to use [sops](https://github.com/mozilla/sops) to encode a file.
+We're going to use [sops](https://github.com/mozilla/sops) to encode a file. Choose either GPG or Google Cloud KMS as the secret provider to continue.
+
+#### GPG
 
 Try this:
 
@@ -248,13 +258,38 @@ curl https://raw.githubusercontent.com/mozilla/sops/master/pgp/sops_functional_t
 SOPS_PGP_FP="1022470DE3F0BC54BC6AB62DE05550BC07FB1A0A"
 ```
 
+#### Google Cloude KMS
+
+Try this:
+
+```shell
+gcloud kms keys list --location global --keyring sops
+```
+
+If it succeeds, presumably you've already created keys and placed them in a keyring called sops. If not, do this:
+
+```shell
+gcloud kms keyrings create sops --location global
+gcloud kms keys create sops-key --location global \
+    --keyring sops --purpose encryption
+```
+
+Extract your keyLocation for use below:
+
+```shell
+keyLocation=$(\
+    gcloud kms keys list --location global --keyring sops |\
+    grep GOOGLE | cut -d " " -f1)
+echo $keyLocation
+```
+
 ### Install `sops`
 
 ```shell
 GOPATH=$tmpGoPath go install go.mozilla.org/sops/cmd/sops
 ```
 
-### Create data encrypted with your PGP key
+### Create data encrypted with your private key
 
 Create raw data to encrypt:
 
@@ -269,9 +304,19 @@ EOF
 
 Encrypt the data into file the plugin wants to read:
 
+With PGP
+
 ```shell
 $tmpGoPath/bin/sops --encrypt \
   --pgp $SOPS_PGP_FP \
+  $MYAPP/myClearData.yaml >$MYAPP/myEncryptedData.yaml
+```
+
+Or GCP KMS
+
+```shell
+$tmpGoPath/bin/sops --encrypt \
+  --gcp-kms $keyLocation \
   $MYAPP/myClearData.yaml >$MYAPP/myEncryptedData.yaml
 ```
 
