@@ -64,6 +64,7 @@ func (kt *KustTarget) configureBuiltinTransformers(
 	//   - patch SMP
 	configurators := []transformerConfigurator{
 		kt.configureBuiltinPatchStrategicMergeTransformer,
+		kt.configureBuiltinPatchTransformer,
 		kt.configureBuiltinNamespaceTransformer,
 		kt.configureBuiltinNameTransformer,
 		kt.configureBuiltinLabelTransformer,
@@ -170,7 +171,6 @@ func (kt *KustTarget) configureBuiltinPatchStrategicMergeTransformer(
 	tConfig *config.TransformerConfig) (
 	result []transformers.Transformer, err error) {
 	if len(kt.kustomization.PatchesStrategicMerge) == 0 {
-		result = append(result, transformers.NewNoOpTransformer())
 		return
 	}
 	var c struct {
@@ -185,6 +185,31 @@ func (kt *KustTarget) configureBuiltinPatchStrategicMergeTransformer(
 		return nil, err
 	}
 	result = append(result, p)
+	return
+}
+
+func (kt *KustTarget) configureBuiltinPatchTransformer(
+	tConfig *config.TransformerConfig) (
+	result []transformers.Transformer, err error) {
+	if len(kt.kustomization.Patches) == 0 {
+		return
+	}
+	var c struct {
+		Path   string          `json:"path,omitempty" yaml:"path,omitempty"`
+		Patch  string          `json:"patch,omitempty" yaml:"patch,omitempty"`
+		Target *types.Selector `json:"target,omitempty" yaml:"target,omitempty"`
+	}
+	for _, patch := range kt.kustomization.Patches {
+		c.Target = &patch.Target
+		c.Patch = patch.Patch
+		c.Path = patch.Path
+		p := builtin.NewPatchTransformerPlugin()
+		err = kt.configureBuiltinPlugin(p, c, "patch")
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, p)
+	}
 	return
 }
 
