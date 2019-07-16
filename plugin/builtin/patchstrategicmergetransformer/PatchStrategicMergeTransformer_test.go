@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
-	"sigs.k8s.io/kustomize/v3/pkg/plugins"
+	plugins_test "sigs.k8s.io/kustomize/v3/pkg/plugins/test"
 )
 
 const (
@@ -58,7 +58,7 @@ spec:
 )
 
 func TestPatchStrategicMergeTransformerMissingFile(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -83,7 +83,7 @@ paths:
 }
 
 func TestBadPatchStrategicMergeTransformer(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -108,7 +108,7 @@ patches: 'thisIsNotAPatch'
 }
 
 func TestBothEmptyPatchStrategicMergeTransformer(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -131,7 +131,7 @@ metadata:
 }
 
 func TestPatchStrategicMergeTransformerFromFiles(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -181,7 +181,7 @@ spec:
 }
 
 func TestPatchStrategicMergeTransformerWithInline(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -216,7 +216,7 @@ spec:
 }
 
 func TestPatchStrategicMergeTransformerMultiplePatches(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -293,7 +293,7 @@ spec:
 }
 
 func TestStrategicMergeTransformerMultiplePatchesWithConflicts(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -354,7 +354,7 @@ paths:
 }
 
 func TestStrategicMergeTransformerWrongNamespace(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -397,7 +397,7 @@ paths:
 }
 
 func TestStrategicMergeTransformerNoSchema(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -437,7 +437,7 @@ spec:
 }
 
 func TestStrategicMergeTransformerNoSchemaMultiPatches(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -493,7 +493,7 @@ spec:
 }
 
 func TestStrategicMergeTransformerNoSchemaMultiPatchesWithConflict(t *testing.T) {
-	tc := plugins.NewEnvForTest(t).Set()
+	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
