@@ -114,10 +114,11 @@ func (p *PatchTransformerPlugin) Transform(m resmap.ResMap) error {
 			}
 		}
 		if p.loadedPatch != nil {
-			p.loadedPatch.SetName(resource.GetName())
-			p.loadedPatch.SetNamespace(resource.GetNamespace())
-			p.loadedPatch.SetGvk(resource.GetGvk())
-			err = resource.Patch(p.loadedPatch.Kunstructured)
+			patchCopy := p.loadedPatch.DeepCopy()
+			patchCopy.SetName(resource.GetName())
+			patchCopy.SetNamespace(resource.GetNamespace())
+			patchCopy.SetGvk(resource.GetGvk())
+			err = resource.Patch(patchCopy.Kunstructured)
 			if err != nil {
 				return err
 			}
