@@ -150,7 +150,7 @@ func (p *plugin) findContainers(obj map[string]interface{}) error {
 
 func isImageMatched(s, t string) bool {
 	// Tag values are limited to [a-zA-Z0-9_.-].
-	pattern, _ := regexp.Compile("^" + t + "(:[a-zA-Z0-9_.-]*)?$")
+	pattern, _ := regexp.Compile("^" + t + "(@sha256)?(:[a-zA-Z0-9_.-]*)?$")
 	return pattern.MatchString(s)
 }
 
@@ -176,7 +176,7 @@ func split(imageName string) (name string, tag string) {
 	}
 
 	i := ic
-	if ic < 0 {
+	if ia > 0 {
 		i = ia
 	}
 
