@@ -201,7 +201,7 @@ func NewCmdBuildPrune(
 
 func writeIndividualFiles(
 	fSys fs.FileSystem, folderPath string, m resmap.ResMap) error {
-	byNamespace := m.GroupedByNamespace()
+	byNamespace := m.GroupedByCurrentNamespace()
 	for namespace, resList := range byNamespace {
 		for _, res := range resList {
 			fName := fileName(res)

@@ -43,6 +43,11 @@ func (rf *Factory) FromMapWithNamespace(n string, m map[string]interface{}) *Res
 	return rf.makeOne(rf.kf.FromMap(m), nil).setOriginalNs(n)
 }
 
+// FromMapWithNamespaceAndName returns a new instance with the given "original" namespace.
+func (rf *Factory) FromMapWithNamespaceAndName(ns string, n string, m map[string]interface{}) *Resource {
+	return rf.makeOne(rf.kf.FromMap(m), nil).setOriginalNs(ns).setOriginalName(n)
+}
+
 // FromMapAndOption returns a new instance of Resource with given options.
 func (rf *Factory) FromMapAndOption(
 	m map[string]interface{}, args *types.GeneratorArgs, option *types.GeneratorOptions) *Resource {
