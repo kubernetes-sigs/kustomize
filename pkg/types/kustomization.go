@@ -5,8 +5,6 @@
 package types
 
 import (
-	"regexp"
-
 	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"sigs.k8s.io/kustomize/v3/pkg/image"
 )
@@ -195,20 +193,6 @@ func (k *Kustomization) EnforceFields() []string {
 	return errs
 }
 
-// FixKustomizationPreUnmarshalling modies the raw data
-// before marshalling - e.g. changes old field names to
-// new field names.
-func FixKustomizationPreUnmarshalling(data []byte) []byte {
-	deprecateFieldsMap := map[string]string{
-		"imageTags:": "images:",
-	}
-	for oldname, newname := range deprecateFieldsMap {
-		pattern := regexp.MustCompile(oldname)
-		data = pattern.ReplaceAll(data, []byte(newname))
-	}
-	return data
-}
-
 // GeneratorArgs contains arguments common to generators.
 type GeneratorArgs struct {
 	// Namespace for the configmap, optional
@@ -385,7 +369,7 @@ type Patch struct {
 	Patch string `json:"patch,omitempty" yaml:"patch,omitempty"`
 
 	// Target points to the resources that the patch is applied to
-	Target Selector `json:"target,omitempty" yaml:"target,omitempty"`
+	Target *Selector `json:"target,omitempty" yaml:"target,omitempty"`
 }
 
 // Selector specifies a set of resources.
