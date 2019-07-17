@@ -88,6 +88,7 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 		if err != nil {
 			return err
 		}
+		return nil
 	}
 
 	if p.Target == nil {
