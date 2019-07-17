@@ -106,7 +106,12 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 	return nil
 }
 
-// utility function to replace a simple string by the new name
+// selectReferral picks the referral among a subset of candidates.
+// It returns the current name and namespace of the selected candidate.
+// Note that the content of the referricalCandidateSubset slice is most of the time
+// identical to the referralCandidates resmap. Still in some cases, such
+// as ClusterRoleBinding, the subset only contains the resources of a specific
+// namespace.
 func (o *nameReferenceTransformer) selectReferral(
 	oldName string,
 	referrer *resource.Resource,
@@ -138,7 +143,7 @@ func (o *nameReferenceTransformer) selectReferral(
 }
 
 // utility function to replace a simple string by the new name
-func (o *nameReferenceTransformer) mapSimpleNameField(
+func (o *nameReferenceTransformer) getSimpleNameField(
 	oldName string,
 	referrer *resource.Resource,
 	target gvk.Gvk,
@@ -153,7 +158,7 @@ func (o *nameReferenceTransformer) mapSimpleNameField(
 
 // utility function to replace name field within a map[string]interface{}
 // and leverage the namespace field.
-func (o *nameReferenceTransformer) mapNameAndNsStruct(
+func (o *nameReferenceTransformer) getNameAndNsStruct(
 	inMap map[string]interface{},
 	referrer *resource.Resource,
 	target gvk.Gvk,
@@ -205,7 +210,7 @@ func (o *nameReferenceTransformer) getNewNameFunc(
 		switch in.(type) {
 		case string:
 			oldName, _ := in.(string)
-			return o.mapSimpleNameField(oldName, referrer, target,
+			return o.getSimpleNameField(oldName, referrer, target,
 				referralCandidates, referralCandidates.Resources())
 		case []interface{}:
 			l, _ := in.([]interface{})
@@ -215,7 +220,7 @@ func (o *nameReferenceTransformer) getNewNameFunc(
 					// Kind: Role/ClusterRole
 					// FieldSpec is rules.resourceNames
 					oldName, _ := item.(string)
-					newName, err := o.mapSimpleNameField(oldName, referrer, target,
+					newName, err := o.getSimpleNameField(oldName, referrer, target,
 						referralCandidates, referralCandidates.Resources())
 					if err != nil {
 						return nil, err
@@ -224,8 +229,13 @@ func (o *nameReferenceTransformer) getNewNameFunc(
 				case map[string]interface{}:
 					// Kind: RoleBinding/ClusterRoleBinding
 					// FieldSpec is subjects
+					// Note: The corresponding fieldSpec had been changed from
+					// from path: subjects/name to just path: subjects. This is
+					// what get mutatefield to request the mapping of the whole
+					// map containing namespace and name instead of just a simple
+					// string field containing the name
 					oldMap, _ := item.(map[string]interface{})
-					newMap, err := o.mapNameAndNsStruct(oldMap, referrer, target,
+					newMap, err := o.getNameAndNsStruct(oldMap, referrer, target,
 						referralCandidates)
 					if err != nil {
 						return nil, err
