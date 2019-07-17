@@ -239,7 +239,7 @@ EOF
 
 Now generate the real encrypted data.
 
-### Assure you have an encrytion tools installed
+### Assure you have an encryption tool installed
 
 We're going to use [sops](https://github.com/mozilla/sops) to encode a file. Choose either GPG or Google Cloud KMS as the secret provider to continue.
 
