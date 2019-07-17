@@ -5,7 +5,6 @@ package target_test
 
 import (
 	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
-	"strings"
 	"testing"
 )
 
@@ -51,19 +50,46 @@ resources:
 - role.yaml
 `)
 
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
-	// TODO: Fix #1044
-	// This should not be an error -
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	// This validates Fix #1444. This should not be an error anymore -
 	// the secrets have the same name but are in different namespaces.
 	// The ClusterRole (by def) is not in a namespace,
 	// an in this case applies to *any* Secret resource
 	// named "dummy"
-	if err == nil {
-		t.Fatalf("unexpected lack of error")
+	if err != nil {
+		t.Fatalf("Err: %v", err)
 	}
-	if !strings.Contains(
-		err.Error(),
-		"slice case - multiple matches for ~G_v1_Secret|default|dummy") {
-		t.Fatalf("unexpected error: %s", err)
-	}
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  dummy: ""
+kind: Secret
+metadata:
+  name: dummy
+  namespace: default
+type: Opaque
+---
+apiVersion: v1
+data:
+  dummy: ""
+kind: Secret
+metadata:
+  name: dummy
+  namespace: kube-system
+type: Opaque
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dummy
+rules:
+- apiGroups:
+  - ""
+  resourceNames:
+  - dummy
+  resources:
+  - secrets
+  verbs:
+  - get
+`)
 }

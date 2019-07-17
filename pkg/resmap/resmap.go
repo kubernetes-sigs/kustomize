@@ -112,13 +112,18 @@ type ResMap interface {
 	// match.
 	GetById(resid.ResId) (*resource.Resource, error)
 
-	// GroupedByNamespace returns a map of namespace
+	// GroupedByCurrentNamespace returns a map of namespace
 	// to a slice of *Resource in that namespace.
 	// Resources for whom IsNamespaceableKind is false are
 	// are not included at all (see NonNamespaceable).
 	// Resources with an empty namespace are placed
 	// in the resid.DefaultNamespace entry.
-	GroupedByNamespace() map[string][]*resource.Resource
+	GroupedByCurrentNamespace() map[string][]*resource.Resource
+
+	// GroupByOrginalNamespace performs as GroupByNamespace
+	// but use the original namespace instead of the current
+	// one to perform the grouping.
+	GroupedByOriginalNamespace() map[string][]*resource.Resource
 
 	// NonNamespaceable returns a slice of resources that
 	// cannot be placed in a namespace, e.g.
@@ -390,22 +395,41 @@ func demandOneMatch(
 	return nil, fmt.Errorf("no matches for %sId %s", s, id)
 }
 
-// GroupedByNamespace implements ResMap.GroupByNamespace
-func (m *resWrangler) GroupedByNamespace() map[string][]*resource.Resource {
-	items := m.groupedByNamespace()
+// GroupedByCurrentNamespace implements ResMap.GroupByCurrentNamespace
+func (m *resWrangler) GroupedByCurrentNamespace() map[string][]*resource.Resource {
+	items := m.groupedByCurrentNamespace()
 	delete(items, resid.TotallyNotANamespace)
 	return items
 }
 
 // NonNamespaceable implements ResMap.NonNamespaceable
 func (m *resWrangler) NonNamespaceable() []*resource.Resource {
-	return m.groupedByNamespace()[resid.TotallyNotANamespace]
+	return m.groupedByCurrentNamespace()[resid.TotallyNotANamespace]
 }
 
-func (m *resWrangler) groupedByNamespace() map[string][]*resource.Resource {
+func (m *resWrangler) groupedByCurrentNamespace() map[string][]*resource.Resource {
 	byNamespace := make(map[string][]*resource.Resource)
 	for _, res := range m.rList {
 		namespace := res.CurId().EffectiveNamespace()
+		if _, found := byNamespace[namespace]; !found {
+			byNamespace[namespace] = []*resource.Resource{}
+		}
+		byNamespace[namespace] = append(byNamespace[namespace], res)
+	}
+	return byNamespace
+}
+
+// GroupedByNamespace implements ResMap.GroupByOrginalNamespace
+func (m *resWrangler) GroupedByOriginalNamespace() map[string][]*resource.Resource {
+	items := m.groupedByOriginalNamespace()
+	delete(items, resid.TotallyNotANamespace)
+	return items
+}
+
+func (m *resWrangler) groupedByOriginalNamespace() map[string][]*resource.Resource {
+	byNamespace := make(map[string][]*resource.Resource)
+	for _, res := range m.rList {
+		namespace := res.OrgId().EffectiveNamespace()
 		if _, found := byNamespace[namespace]; !found {
 			byNamespace[namespace] = []*resource.Resource{}
 		}

@@ -127,7 +127,7 @@ func (r *Resource) GetOutermostNameSuffix() string {
 }
 
 func (r *Resource) InSameFuzzyNamespace(o *Resource) bool {
-	return r.GetNamespace() == o.GetNamespace() &&
+	return r.CurId().IsNsEquals(o.CurId()) &&
 		r.GetOutermostNamePrefix() == o.GetOutermostNamePrefix() &&
 		r.GetOutermostNameSuffix() == o.GetOutermostNameSuffix()
 }
