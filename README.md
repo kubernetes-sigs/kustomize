@@ -1,6 +1,6 @@
 # kustomize
 
-_[v3.0.0](https://github.com/kubernetes-sigs/kustomize/releases/tag/v3.0.0) is the latest release._
+_[v3.0.2](https://github.com/kubernetes-sigs/kustomize/releases/tag/v3.0.2) is the latest release._
 
 `kustomize` lets you customize raw, template-free YAML
 files for multiple purposes, leaving the original YAML
