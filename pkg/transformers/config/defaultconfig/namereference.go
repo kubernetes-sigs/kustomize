@@ -81,6 +81,8 @@ nameReference:
     kind: ReplicaSet
   - path: spec/template/spec/volumes/configMap/name
     kind: DaemonSet
+  - path: spec/template/spec/volumes/projected/sources/configMap/name
+    kind: DaemonSet
   - path: spec/template/spec/containers/env/valueFrom/configMapKeyRef/name
     kind: DaemonSet
   - path: spec/template/spec/initContainers/env/valueFrom/configMapKeyRef/name
@@ -93,6 +95,8 @@ nameReference:
     kind: DaemonSet
   - path: spec/template/spec/volumes/configMap/name
     kind: StatefulSet
+  - path: spec/template/spec/volumes/projected/sources/configMap/name
+    kind: StatefulSet
   - path: spec/template/spec/containers/env/valueFrom/configMapKeyRef/name
     kind: StatefulSet
   - path: spec/template/spec/initContainers/env/valueFrom/configMapKeyRef/name
@@ -104,6 +108,8 @@ nameReference:
   - path: spec/template/spec/volumes/projected/sources/configMap/name
     kind: StatefulSet
   - path: spec/template/spec/volumes/configMap/name
+    kind: Job
+  - path: spec/template/spec/volumes/projected/sources/configMap/name
     kind: Job
   - path: spec/template/spec/containers/env/valueFrom/configMapKeyRef/name
     kind: Job
