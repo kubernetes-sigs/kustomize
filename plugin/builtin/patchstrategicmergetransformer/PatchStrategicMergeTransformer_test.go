@@ -688,8 +688,9 @@ spec:
 }
 
 // utility method building the expected output of a JMP.
-// TODO(jeb): imagename parameter is only here to deal with what
-// seems to be a bug in conflictdetector and JMP.
+// imagename parameter allows to build a result consistent
+// with the JMP behavior which basically overrides the
+// entire "containers" list.
 func expectedResultJMP(imagename string) string {
 
 	res := `apiVersion: apps/v1
@@ -710,8 +711,6 @@ spec:
         name: nginx
 `
 
-	// This piece of code is only here to deal
-	// a bug in conflictdetector
 	if imagename == "" {
 		return res
 	}
@@ -808,10 +807,10 @@ paths:
 	return config
 }
 
-// TestOverlayRun validates the single patch use cases
+// TestSinglePatch validates the single patch use cases
 // regarless of the schema availibility, which in turns
 // relies on StrategicMergePatch or simple JSON Patch.
-func TestOverlayRun(t *testing.T) {
+func TestSinglePatch(t *testing.T) {
 	tests := []struct {
 		name          string
 		base          string
@@ -1038,7 +1037,9 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 				changeImagePatch(MyCRD, "nginx:1.7.9"),
 			},
 			errorExpected: false,
-			//TODO(jeb): Why is there no conflict detected ?
+			// There is no conflict detected. It should
+			// be but the JMPConflictDector ignores it.
+			// See https://github.com/kubernetes-sigs/kustomize/issues/1370
 			expected: expectedResultJMP("nginx:1.7.9"),
 		},
 		{
@@ -1050,7 +1051,9 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 				changeImagePatch(MyCRD, "nginx:latest"),
 			},
 			errorExpected: false,
-			//TODO(jeb): Why is there no conflict detected ?
+			// There is no conflict detected. It should
+			// be but the JMPConflictDector ignores it.
+			// See https://github.com/kubernetes-sigs/kustomize/issues/1370
 			expected: expectedResultJMP("nginx:latest"),
 		},
 		{
