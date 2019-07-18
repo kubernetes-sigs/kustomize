@@ -95,7 +95,14 @@ rules:
 `)
 }
 
-const ambiguousvarMyApp string = `
+// This serie of constants is used to prove the need of
+// the namespace field in the objref field of the var declaration.
+// The following tests demonstrate that it creates umbiguous variable
+// declaration if two entities of the kind with the same name
+// but in different namespaces are declared.
+// This is tracking the following issue:
+// https://github.com/kubernetes-sigs/kustomize/issues/1298
+const namespaceNeedInVarMyApp string = `
 resources:
 - elasticsearch-test-service.yaml
 - elasticsearch-dev-service.yaml
@@ -130,7 +137,7 @@ vars:
     fieldpath: spec.ports[0].protocol
 `
 
-const ambiguousvarDevResources string = `
+const namespaceNeedInVarDevResources string = `
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -160,7 +167,7 @@ spec:
   clusterIP: None
 `
 
-const ambiguousvarTestResources string = `
+const namespaceNeedInVarTestResources string = `
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -190,7 +197,7 @@ spec:
   clusterIP: None
 `
 
-const ambiguousvarExpectedOutput string = `
+const namespaceNeedInVarExpectedOutput string = `
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -255,10 +262,10 @@ spec:
 // Once the namespace qualifer is added, as for the other resources lookup in the coder,
 // the ResId.GvknEquals method usage will have to be phased out and replaced by ResId.Equals.
 func TestVariablesAmbiguous(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/ambiguousvar/myapp")
-	th.WriteK("/ambiguousvar/myapp", ambiguousvarMyApp)
-	th.WriteF("/ambiguousvar/myapp/elasticsearch-dev-service.yaml", ambiguousvarDevResources)
-	th.WriteF("/ambiguousvar/myapp/elasticsearch-test-service.yaml", ambiguousvarTestResources)
+	th := kusttest_test.NewKustTestHarness(t, "/namespaceNeedInVar/myapp")
+	th.WriteK("/namespaceNeedInVar/myapp", namespaceNeedInVarMyApp)
+	th.WriteF("/namespaceNeedInVar/myapp/elasticsearch-dev-service.yaml", namespaceNeedInVarDevResources)
+	th.WriteF("/namespaceNeedInVar/myapp/elasticsearch-test-service.yaml", namespaceNeedInVarTestResources)
 	_, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err == nil {
 		t.Fatalf("expected error")
@@ -268,7 +275,7 @@ func TestVariablesAmbiguous(t *testing.T) {
 	}
 }
 
-const ambiguousvarDevFolder string = `
+const namespaceNeedInVarDevFolder string = `
 resources:
 - elasticsearch-dev-service.yaml
 vars:
@@ -288,7 +295,7 @@ vars:
     fieldpath: spec.ports[0].protocol
 `
 
-const ambiguousvarTestFolder string = `
+const namespaceNeedInVarTestFolder string = `
 resources:
 - elasticsearch-test-service.yaml
 vars:
@@ -312,12 +319,12 @@ vars:
 // to TestVariablesAmbiguous problem. It requires to separate the variables
 // and resources into multiple kustomization context/folders instead of one.
 func TestVariablesAmbiguousWorkaround(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/ambiguousvar/workaround")
-	th.WriteK("/ambiguousvar/dev", ambiguousvarDevFolder)
-	th.WriteF("/ambiguousvar/dev/elasticsearch-dev-service.yaml", ambiguousvarDevResources)
-	th.WriteK("/ambiguousvar/test", ambiguousvarTestFolder)
-	th.WriteF("/ambiguousvar/test/elasticsearch-test-service.yaml", ambiguousvarTestResources)
-	th.WriteK("/ambiguousvar/workaround", `
+	th := kusttest_test.NewKustTestHarness(t, "/namespaceNeedInVar/workaround")
+	th.WriteK("/namespaceNeedInVar/dev", namespaceNeedInVarDevFolder)
+	th.WriteF("/namespaceNeedInVar/dev/elasticsearch-dev-service.yaml", namespaceNeedInVarDevResources)
+	th.WriteK("/namespaceNeedInVar/test", namespaceNeedInVarTestFolder)
+	th.WriteF("/namespaceNeedInVar/test/elasticsearch-test-service.yaml", namespaceNeedInVarTestResources)
+	th.WriteK("/namespaceNeedInVar/workaround", `
 resources:
 - ../dev
 - ../test
@@ -326,5 +333,5 @@ resources:
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.AssertActualEqualsExpected(m, ambiguousvarExpectedOutput)
+	th.AssertActualEqualsExpected(m, namespaceNeedInVarExpectedOutput)
 }

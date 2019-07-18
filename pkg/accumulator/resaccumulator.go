@@ -64,8 +64,18 @@ func (ra *ResAccumulator) GetTransformerConfig() *config.TransformerConfig {
 
 func (ra *ResAccumulator) MergeVars(incoming []types.Var) error {
 	for _, v := range incoming {
-		// TODO(jeb): Do not change GvknEquals to Equals until the
+		// Warning: Do not change GvknEquals to Equals until the
 		// namespace is part of the variable declaration.
+		// The namespace will eventually be added to the variable
+		// declaration to solve the following issue:
+		// https://github.com/kubernetes-sigs/kustomize/issues/1298
+		// If two resources of the same kind with the same name but
+		// in different namespaces, any variable aiming to put at one
+		// of those resources will fail since it is not possible to
+		// specify the namespace and use Id.Equals instead of Id.GvknEquals
+		// The change will also need to be backward compatible, i.e.
+		// no namespace specified means wildcard namespace not "default"
+		// namespace.
 		matched := ra.resMap.GetMatchingResourcesByOriginalId(
 			resid.NewResId(v.ObjRef.GVK(), v.ObjRef.Name).GvknEquals)
 		if len(matched) > 1 {
