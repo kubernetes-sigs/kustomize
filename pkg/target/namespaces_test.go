@@ -104,8 +104,8 @@ rules:
 // https://github.com/kubernetes-sigs/kustomize/issues/1298
 const namespaceNeedInVarMyApp string = `
 resources:
-- elasticsearch-test-service.yaml
 - elasticsearch-dev-service.yaml
+- elasticsearch-test-service.yaml
 vars:
 - name: elasticsearch-test-service-name
   objref:
@@ -256,11 +256,8 @@ spec:
 `
 
 // TestVariablesAmbiguous demonstrates how two variables pointing at two different resources
-// using the same name in different namespaces are treated as ambiguous
-// The fundamental reason is that objRef field in the variable does not contain a namespace
-// qualifier.
-// Once the namespace qualifer is added, as for the other resources lookup in the coder,
-// the ResId.GvknEquals method usage will have to be phased out and replaced by ResId.Equals.
+// using the same name in different namespaces are treated as ambiguous if the namespace is
+// not specified
 func TestVariablesAmbiguous(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/namespaceNeedInVar/myapp")
 	th.WriteK("/namespaceNeedInVar/myapp", namespaceNeedInVarMyApp)
@@ -329,6 +326,59 @@ resources:
 - ../dev
 - ../test
 `)
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, namespaceNeedInVarExpectedOutput)
+}
+
+const namespaceNeedInVarMyAppWithNamespace string = `
+resources:
+- elasticsearch-dev-service.yaml
+- elasticsearch-test-service.yaml
+vars:
+- name: elasticsearch-test-service-name
+  objref:
+    kind: Service
+    name: elasticsearch
+    namespace: test
+    apiVersion: v1
+  fieldref:
+    fieldpath: metadata.name
+- name: elasticsearch-test-protocol
+  objref:
+    kind: Service
+    name: elasticsearch
+    namespace: test
+    apiVersion: v1
+  fieldref:
+    fieldpath: spec.ports[0].protocol
+- name: elasticsearch-dev-service-name
+  objref:
+    kind: Service
+    name: elasticsearch
+    namespace: dev
+    apiVersion: v1
+  fieldref:
+    fieldpath: metadata.name
+- name: elasticsearch-dev-protocol
+  objref:
+    kind: Service
+    name: elasticsearch
+    namespace: dev
+    apiVersion: v1
+  fieldref:
+    fieldpath: spec.ports[0].protocol
+`
+
+// TestVariablesDisambiguatedWithNamespace demonstrates that adding the namespace
+// to the variable declarations allows to disambiguate the variables.
+func TestVariablesDisambiguatedWithNamespace(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/namespaceNeedInVar/myapp")
+	th.WriteK("/namespaceNeedInVar/myapp", namespaceNeedInVarMyAppWithNamespace)
+	th.WriteF("/namespaceNeedInVar/myapp/elasticsearch-dev-service.yaml", namespaceNeedInVarDevResources)
+	th.WriteF("/namespaceNeedInVar/myapp/elasticsearch-test-service.yaml", namespaceNeedInVarTestResources)
 	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
