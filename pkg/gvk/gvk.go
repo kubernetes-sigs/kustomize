@@ -81,6 +81,7 @@ func (x Gvk) Equals(o Gvk) bool {
 // In some cases order just specified to provide determinism.
 var orderFirst = []string{
 	"Namespace",
+	"ResourceQuota",
 	"StorageClass",
 	"CustomResourceDefinition",
 	"MutatingWebhookConfiguration",
