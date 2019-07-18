@@ -45,7 +45,7 @@ func (jmp *jsonMergePatch) findConflict(
 		if i == conflictingPatchIdx {
 			continue
 		}
-		if !patches[conflictingPatchIdx].OrgId().GvknEquals(patch.OrgId()) {
+		if !patches[conflictingPatchIdx].OrgId().Equals(patch.OrgId()) {
 			continue
 		}
 		conflict, err := mergepatch.HasConflicts(
@@ -105,7 +105,7 @@ func (smp *strategicMergePatch) findConflict(
 		if i == conflictingPatchIdx {
 			continue
 		}
-		if !patches[conflictingPatchIdx].OrgId().GvknEquals(patch.OrgId()) {
+		if !patches[conflictingPatchIdx].OrgId().Equals(patch.OrgId()) {
 			continue
 		}
 		conflict, err := strategicpatch.MergingMapsHaveConflicts(
@@ -135,7 +135,7 @@ func MergePatches(patches []*resource.Resource,
 	rc := resmap.New()
 	for ix, patch := range patches {
 		id := patch.OrgId()
-		existing := rc.GetMatchingResourcesByOriginalId(id.GvknEquals)
+		existing := rc.GetMatchingResourcesByOriginalId(id.Equals)
 		if len(existing) == 0 {
 			rc.Append(patch)
 			continue
