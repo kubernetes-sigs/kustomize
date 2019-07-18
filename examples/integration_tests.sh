@@ -28,7 +28,7 @@
 # before running it.
 #
 # At time of writing, its 'call point' was in
-# https://github.com/kubernetes/test-infra/blob/master/jobs/config.json
+# https://github.com/kubernetes/test-infra/blob/master/config/jobs/kubernetes-sigs/kustomize/kustomize-config.yaml
 
 function exitWith {
   local msg=$1
@@ -53,7 +53,7 @@ function setUpEnv {
     exitWith "Script must be run from $expectedRepo"
   fi
 
-  GO111MODULE=on go install . || \
+  GO111MODULE=on go install ./cmd/kustomize || \
     { exitWith "Failed to install kustomize."; }
 
   PATH=$GOPATH/bin:$PATH
