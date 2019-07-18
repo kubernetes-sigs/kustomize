@@ -121,7 +121,15 @@ func (o *nameReferenceTransformer) selectReferral(
 
 	for _, res := range referralCandidateSubset {
 		id := res.OrgId()
-		if id.IsSelected(&target) && res.GetOriginalName() == oldName {
+
+		// NGINX ingress auth-tls-secret annotations can be prefixed with a
+		// namespace so that must used in the comparison and also preserved in the
+		// return value.
+		namespacedOriginalName := fmt.Sprintf("%s/%s", res.GetOriginalNs(),
+			res.GetOriginalName())
+		namespacedMatch := oldName == namespacedOriginalName
+
+		if id.IsSelected(&target) && (res.GetOriginalName() == oldName || namespacedMatch) {
 			matches := referralCandidates.GetMatchingResourcesByOriginalId(id.Equals)
 			// If there's more than one match, there's no way
 			// to know which one to pick, so emit error.
@@ -133,6 +141,9 @@ func (o *nameReferenceTransformer) selectReferral(
 			// In the resource, note that it is referenced
 			// by the referrer.
 			res.AppendRefBy(referrer.CurId())
+			if namespacedMatch {
+				return fmt.Sprintf("%s/%s", res.GetOriginalNs(), res.GetName()), res.GetNamespace(), nil
+			}
 			// Return transformed name of the object,
 			// complete with prefixes, hashes, etc.
 			return res.GetName(), res.GetNamespace(), nil

@@ -43,6 +43,15 @@ func TestNameReferenceHappyRun(t *testing.T) {
 				"name": "someprefix-secret1-somehash",
 			},
 		}).AddWithName(
+		"auth-tls-secret",
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Secret",
+			"metadata": map[string]interface{}{
+				"name":      "someprefix-auth-tls-secret-somehash",
+				"namespace": "ns1",
+			},
+		}).AddWithName(
 		"claim1",
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -60,7 +69,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 				"annotations": map[string]interface{}{
 					"ingress.kubernetes.io/auth-secret":           "secret1",
 					"nginx.ingress.kubernetes.io/auth-secret":     "secret1",
-					"nginx.ingress.kubernetes.io/auth-tls-secret": "secret1",
+					"nginx.ingress.kubernetes.io/auth-tls-secret": "ns1/auth-tls-secret",
 				},
 			},
 			"spec": map[string]interface{}{
@@ -383,7 +392,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 				"annotations": map[string]interface{}{
 					"ingress.kubernetes.io/auth-secret":           "someprefix-secret1-somehash",
 					"nginx.ingress.kubernetes.io/auth-secret":     "someprefix-secret1-somehash",
-					"nginx.ingress.kubernetes.io/auth-tls-secret": "someprefix-secret1-somehash",
+					"nginx.ingress.kubernetes.io/auth-tls-secret": "ns1/someprefix-auth-tls-secret-somehash",
 				},
 			},
 			"spec": map[string]interface{}{

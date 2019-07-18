@@ -570,8 +570,13 @@ func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
 		return result
 	}
 	result := New()
+	// NGINX ingress auth-tls-secret annotations can references a secret in any
+	// namespace by prefixing the secret name with "namespace/". In this case
+	// consider all secrets to be candidates.
+	includeAllSecrets := inputRes.OrgId().Kind == "Ingress" &&
+		inputRes.GetAnnotations()["nginx.ingress.kubernetes.io/auth-tls-secret"] != ""
 	for _, r := range m.Resources() {
-		if !r.OrgId().IsNamespaceableKind() || inputRes.InSameFuzzyNamespace(r) {
+		if !r.OrgId().IsNamespaceableKind() || inputRes.InSameFuzzyNamespace(r) || (includeAllSecrets && r.OrgId().Kind == "Secret") {
 			err := result.Append(r)
 			if err != nil {
 				panic(err)
