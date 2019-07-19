@@ -23,7 +23,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"syscall"
 
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
@@ -108,7 +107,7 @@ func (p *ExecPlugin) writeConfig() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	syscall.Mkfifo(tmpFile.Name(), 0600)
+
 	stdout, err := os.OpenFile(tmpFile.Name(), os.O_RDWR, 0600)
 	if err != nil {
 		return "", err
