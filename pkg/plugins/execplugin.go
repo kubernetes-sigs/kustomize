@@ -160,6 +160,9 @@ func (p *ExecPlugin) invokePlugin(input []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Cleanup plugin config file after execution
+	defer os.Remove(args[0])
+
 	cmd := exec.Command(p.path, args...)
 	cmd.Env = p.getEnv()
 	cmd.Stdin = bytes.NewReader(input)
