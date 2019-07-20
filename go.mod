@@ -5,6 +5,7 @@ go 1.12
 require (
 	github.com/emicklei/go-restful v2.9.6+incompatible // indirect
 	github.com/evanphx/json-patch v4.5.0+incompatible
+	github.com/ghodss/yaml v1.0.0
 	github.com/go-openapi/spec v0.19.2
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/protobuf v1.3.1 // indirect
