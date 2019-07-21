@@ -890,16 +890,16 @@ func TestNameReferenceClusterWideUnhappy(t *testing.T) {
 	m := resmaptest_test.NewRmBuilder(t, rf).
 		// Add a PersistentVolume to have a clusterwide resource
 		AddWithName(orgname, map[string]interface{}{
-			"apiVersion": "v1",
-			"kind":       "PersistentVolume",
-			"metadata": map[string]interface{}{
-				"name": prefixedname,
-			}}).
-		AddWithName(orgname, map[string]interface{}{
 			"apiVersion": "storage.k8s.io/v1",
 			"kind":       "StorageClass",
 			"metadata": map[string]interface{}{
 				"name": suffixedname,
+			}}).
+		AddWithName(orgname, map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "PersistentVolume",
+			"metadata": map[string]interface{}{
+				"name": prefixedname,
 			}}).
 		AddWithName(orgname, map[string]interface{}{
 			"apiVersion": "rbac.authorization.k8s.io/v1",
@@ -918,10 +918,36 @@ func TestNameReferenceClusterWideUnhappy(t *testing.T) {
 				},
 			}}).ResMap()
 
+	expected := resmaptest_test.NewSeededRmBuilder(t, rf, m.ShallowCopy()).
+		ReplaceResource(
+			map[string]interface{}{
+				"apiVersion": "rbac.authorization.k8s.io/v1",
+				"kind":       "ClusterRole",
+				"metadata": map[string]interface{}{
+					"name": modifiedname,
+				},
+				// Behavior of the transformer is still imperfect
+				// It should use the (resources,apigroup,resourceNames) as
+				// combination to select the candidates.
+				"rules": []interface{}{
+					map[string]interface{}{
+						"resources": []interface{}{
+							"persistentvolumes",
+						},
+						"resourceNames": []interface{}{
+							orgname,
+						},
+					},
+				}}).ResMap()
+
 	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
 	err := nrt.Transform(m)
-	if err == nil {
-		// This should actually fail.
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if err = expected.ErrorIfNotEqualLists(m); err != nil {
+		t.Fatalf("actual doesn't match expected: %v", err)
 	}
 }
 
