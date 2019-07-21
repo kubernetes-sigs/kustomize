@@ -114,9 +114,7 @@ func (realFS) IsDir(name string) bool {
 }
 
 // ReadFile delegates to ioutil.ReadFile.
-func (realFS) ReadFile(name string) ([]byte, error) {
-	return ioutil.ReadFile(name)
-}
+func (realFS) ReadFile(name string) ([]byte, error) { return ioutil.ReadFile(name) }
 
 // WriteFile delegates to ioutil.WriteFile with read/write permissions.
 func (realFS) WriteFile(name string, c []byte) error {
