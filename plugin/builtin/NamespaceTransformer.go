@@ -2,7 +2,6 @@
 package builtin
 
 import (
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
@@ -51,8 +50,6 @@ func (p *NamespaceTransformerPlugin) Transform(m resmap.ResMap) error {
 			}
 		}
 	}
-	p.updateClusterRoleBinding(m)
-	p.updateServiceReference(m)
 	return nil
 }
 
@@ -84,82 +81,4 @@ func (p *NamespaceTransformerPlugin) isSelected(
 		}
 	}
 	return nil, false
-}
-
-func (p *NamespaceTransformerPlugin) updateClusterRoleBinding(m resmap.ResMap) {
-	srvAccount := gvk.Gvk{Version: "v1", Kind: "ServiceAccount"}
-	saMap := map[string]bool{}
-	for _, id := range m.AllIds() {
-		if id.Gvk.Equals(srvAccount) {
-			saMap[id.Name] = true
-		}
-	}
-
-	for _, res := range m.Resources() {
-		if res.OrgId().Kind != "ClusterRoleBinding" &&
-			res.OrgId().Kind != "RoleBinding" {
-			continue
-		}
-		objMap := res.Map()
-		subjects, ok := objMap["subjects"].([]interface{})
-		if subjects == nil || !ok {
-			continue
-		}
-		for i := range subjects {
-			subject := subjects[i].(map[string]interface{})
-			kind, foundK := subject["kind"]
-			name, foundN := subject["name"]
-			if !foundK || !foundN || kind.(string) != srvAccount.Kind {
-				continue
-			}
-			// a ServiceAccount named “default” exists in every active namespace
-			if name.(string) == "default" || saMap[name.(string)] {
-				subject := subjects[i].(map[string]interface{})
-				transformers.MutateField(
-					subject, []string{"namespace"},
-					true, func(_ interface{}) (interface{}, error) {
-						return p.Namespace, nil
-					})
-				subjects[i] = subject
-			}
-		}
-		objMap["subjects"] = subjects
-	}
-}
-
-func (p *NamespaceTransformerPlugin) updateServiceReference(m resmap.ResMap) {
-	svc := gvk.Gvk{Version: "v1", Kind: "Service"}
-	svcMap := map[string]bool{}
-	for _, id := range m.AllIds() {
-		if id.Gvk.Equals(svc) {
-			svcMap[id.Name] = true
-		}
-	}
-
-	for _, res := range m.Resources() {
-		if res.OrgId().Kind != "ValidatingWebhookConfiguration" &&
-			res.OrgId().Kind != "MutatingWebhookConfiguration" {
-			continue
-		}
-		objMap := res.Map()
-		webhooks, ok := objMap["webhooks"].([]interface{})
-		if webhooks == nil || !ok {
-			continue
-		}
-		for i := range webhooks {
-			webhook := webhooks[i].(map[string]interface{})
-			transformers.MutateField(
-				webhook, []string{"clientConfig", "service"},
-				false, func(obj interface{}) (interface{}, error) {
-					svc := obj.(map[string]interface{})
-					svcName, foundN := svc["name"]
-					if foundN && svcMap[svcName.(string)] {
-						svc["namespace"] = p.Namespace
-					}
-					return svc, nil
-				})
-			webhooks[i] = webhook
-		}
-		objMap["webhooks"] = webhooks
-	}
 }

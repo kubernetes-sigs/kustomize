@@ -99,6 +99,15 @@ metadata:
   name: crd
 `)
 
+	// Import note: The namespace transformer is in charge of
+	// the metadata.namespace field. The namespace transformer SHOULD
+	// NOT modify neither the "namespace" subfield within the
+	// ClusterRoleBinding.subjects field nor the "namespace"
+	// subfield in the ValidatingWebhookConfiguration.webhooks field.
+	// This is the role of the namereference Transformer to handle
+	// object reference changes (prefix/suffix and namespace).
+	// For use cases involving simultaneous change of name and namespace,
+	// refer to namespaces tests in pkg/target test suites.
 	th.AssertActualEqualsExpected(rm, `
 apiVersion: v1
 kind: ConfigMap
@@ -142,10 +151,10 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: default
-  namespace: test
+  namespace: system
 - kind: ServiceAccount
   name: service-account
-  namespace: test
+  namespace: system
 - kind: ServiceAccount
   name: another
   namespace: random
@@ -158,7 +167,7 @@ webhooks:
 - clientConfig:
     service:
       name: svc1
-      namespace: test
+      namespace: system
   name: example1
 - clientConfig:
     service:
