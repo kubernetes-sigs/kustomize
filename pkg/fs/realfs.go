@@ -22,8 +22,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-
-	"github.com/ghodss/yaml"
 )
 
 var _ FileSystem = realFS{}
@@ -117,11 +115,7 @@ func (realFS) IsDir(name string) bool {
 
 // ReadFile delegates to ioutil.ReadFile.
 func (realFS) ReadFile(name string) ([]byte, error) {
-	file, err := ioutil.ReadFile(name)
-	if filepath.Ext(name) == "json" {
-		file, err = yaml.JSONToYAML(file)
-	}
-	return file, err
+	return ioutil.ReadFile(name)
 }
 
 // WriteFile delegates to ioutil.WriteFile with read/write permissions.
