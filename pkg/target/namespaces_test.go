@@ -95,6 +95,206 @@ rules:
 `)
 }
 
+// TestNameAndNsTransformation validates that NamespaceTransformer,
+// PrefixSuffixTransformer and namereference transformers are
+// able to deal with simultaneous change of namespace and name.
+func TestNameAndNsTransformation(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/nameandns")
+
+	th.WriteK("/nameandns", `
+namePrefix: p1-
+nameSuffix: -s1
+namespace: newnamespace
+resources:
+- resources.yaml
+`)
+
+	th.WriteF("/nameandns/resources.yaml", `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm1
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm2
+  namespace: ns1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc1
+  namespace: ns1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc2
+  namespace: ns1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa1
+  namespace: ns1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa2
+  namespace: ns1
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: manager-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: sa1
+  namespace: ns1
+- kind: ServiceAccount
+  name: sa2
+  namespace: ns1
+- kind: ServiceAccount
+  name: sa3
+  namespace: random
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: example
+webhooks:
+  - name: example1
+    clientConfig:
+      service:
+        name: svc1
+        namespace: ns1
+  - name: example2
+    clientConfig:
+      service:
+        name: svc2
+        namespace: ns1
+  - name: example3
+    clientConfig:
+      service:
+        name: svc3
+        namespace: random
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: crds.my.org
+---
+kind: ClusterRole
+metadata:
+  name: cr1
+---
+kind: ClusterRoleBinding
+metadata:
+  name: crb1
+---
+kind: PersistentVolume
+metadata:
+  name: pv1
+`)
+
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: p1-cm1-s1
+  namespace: newnamespace
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: p1-cm2-s1
+  namespace: newnamespace
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: p1-svc1-s1
+  namespace: newnamespace
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: p1-svc2-s1
+  namespace: newnamespace
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: p1-sa1-s1
+  namespace: newnamespace
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: p1-sa2-s1
+  namespace: newnamespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: p1-manager-rolebinding-s1
+subjects:
+- kind: ServiceAccount
+  name: p1-sa1-s1
+  namespace: newnamespace
+- kind: ServiceAccount
+  name: p1-sa2-s1
+  namespace: newnamespace
+- kind: ServiceAccount
+  name: sa3
+  namespace: random
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: p1-example-s1
+webhooks:
+- clientConfig:
+    service:
+      name: p1-svc1-s1
+      namespace: newnamespace
+  name: example1
+- clientConfig:
+    service:
+      name: p1-svc2-s1
+      namespace: newnamespace
+  name: example2
+- clientConfig:
+    service:
+      name: svc3
+      namespace: random
+  name: example3
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: crds.my.org
+---
+kind: ClusterRole
+metadata:
+  name: p1-cr1-s1
+---
+kind: ClusterRoleBinding
+metadata:
+  name: p1-crb1-s1
+---
+kind: PersistentVolume
+metadata:
+  name: p1-pv1-s1
+`)
+}
+
 // This serie of constants is used to prove the need of
 // the namespace field in the objref field of the var declaration.
 // The following tests demonstrate that it creates umbiguous variable
