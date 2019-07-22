@@ -339,6 +339,11 @@ patchesStrategicMerge:
             image: nignx:latest
 ```
 
+Note that kustomize does not support more than one patch
+for the same object that contain a _delete_ directive. To remove
+several fields / slice elements from an object create a single
+patch that performs all the needed deletions.
+
 ### patchesJson6902
 
 Each entry in this list should resolve to
