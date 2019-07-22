@@ -6,12 +6,13 @@ package patch
 import (
 	"encoding/json"
 	"fmt"
+
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 
-	"github.com/evanphx/json-patch"
+	jsonpatch "github.com/evanphx/json-patch"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/mergepatch"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
@@ -123,12 +124,18 @@ func (smp *strategicMergePatch) findConflict(
 }
 
 func (smp *strategicMergePatch) mergePatches(patch1, patch2 *resource.Resource) (*resource.Resource, error) {
+	if hasDeleteDirectiveMarker(patch2.Map()) {
+		if hasDeleteDirectiveMarker(patch1.Map()) {
+			return nil, fmt.Errorf("cannot merge patches both containing '$patch: delete' directives")
+		}
+		patch1, patch2 = patch2, patch1
+	}
 	mergeJSONMap, err := strategicpatch.MergeStrategicMergeMapPatchUsingLookupPatchMeta(
 		smp.lookupPatchMeta, patch1.Map(), patch2.Map())
 	return smp.rf.FromMap(mergeJSONMap), err
 }
 
-// mergePatches merge and index patches by OrgId.
+// MergePatches merge and index patches by OrgId.
 // It errors out if there is conflict between patches.
 func MergePatches(patches []*resource.Resource,
 	rf *resource.Factory) (resmap.ResMap, error) {
@@ -187,4 +194,29 @@ func toSchemaGvk(x gvk.Gvk) schema.GroupVersionKind {
 		Version: x.Version,
 		Kind:    x.Kind,
 	}
+}
+
+func hasDeleteDirectiveMarker(patch map[string]interface{}) bool {
+	if v, ok := patch["$patch"]; ok && v == "delete" {
+		return true
+	}
+	for _, v := range patch {
+		switch typedV := v.(type) {
+		case map[string]interface{}:
+			if hasDeleteDirectiveMarker(typedV) {
+				return true
+			}
+		case []interface{}:
+			for _, sv := range typedV {
+				typedE, ok := sv.(map[string]interface{})
+				if !ok {
+					break
+				}
+				if hasDeleteDirectiveMarker(typedE) {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
