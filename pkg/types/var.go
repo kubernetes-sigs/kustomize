@@ -54,6 +54,7 @@ type Target struct {
 	APIVersion string `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty"`
 	gvk.Gvk    `json:",inline,omitempty" yaml:",inline,omitempty"`
 	Name       string `json:"name" yaml:"name"`
+	Namespace  string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 }
 
 // FieldSelector contains the fieldPath to an object field.
