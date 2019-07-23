@@ -35,14 +35,14 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 	if err != nil {
 		return errors.Wrap(err, "no 'git' program on path")
 	}
-	repoSpec.cloneDir, err = fs.NewTmpConfirmedDir()
+	repoSpec.Dir, err = fs.NewTmpConfirmedDir()
 	if err != nil {
 		return err
 	}
 	cmd := exec.Command(
 		gitProgram,
 		"init",
-		repoSpec.cloneDir.String())
+		repoSpec.Dir.String())
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err = cmd.Run()
@@ -50,7 +50,7 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 		return errors.Wrapf(
 			err,
 			"trouble initializing empty git repo in %s",
-			repoSpec.cloneDir.String())
+			repoSpec.Dir.String())
 	}
 
 	cmd = exec.Command(
@@ -60,7 +60,7 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 		"origin",
 		repoSpec.CloneSpec())
 	cmd.Stdout = &out
-	cmd.Dir = repoSpec.cloneDir.String()
+	cmd.Dir = repoSpec.Dir.String()
 	err = cmd.Run()
 	if err != nil {
 		return errors.Wrapf(
@@ -68,20 +68,20 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 			"trouble adding remote %s",
 			repoSpec.CloneSpec())
 	}
-	if repoSpec.ref == "" {
-		repoSpec.ref = "master"
+	if repoSpec.Ref == "" {
+		repoSpec.Ref = "master"
 	}
 	cmd = exec.Command(
 		gitProgram,
 		"fetch",
 		"--depth=1",
 		"origin",
-		repoSpec.ref)
+		repoSpec.Ref)
 	cmd.Stdout = &out
-	cmd.Dir = repoSpec.cloneDir.String()
+	cmd.Dir = repoSpec.Dir.String()
 	err = cmd.Run()
 	if err != nil {
-		return errors.Wrapf(err, "trouble fetching %s", repoSpec.ref)
+		return errors.Wrapf(err, "trouble fetching %s", repoSpec.Ref)
 	}
 
 	cmd = exec.Command(
@@ -90,11 +90,11 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 		"--hard",
 		"FETCH_HEAD")
 	cmd.Stdout = &out
-	cmd.Dir = repoSpec.cloneDir.String()
+	cmd.Dir = repoSpec.Dir.String()
 	err = cmd.Run()
 	if err != nil {
 		return errors.Wrapf(
-			err, "trouble hard resetting empty repository to %s", repoSpec.ref)
+			err, "trouble hard resetting empty repository to %s", repoSpec.Ref)
 	}
 	return nil
 }
@@ -105,7 +105,7 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 // used in a test.
 func DoNothingCloner(dir fs.ConfirmedDir) Cloner {
 	return func(rs *RepoSpec) error {
-		rs.cloneDir = dir
+		rs.Dir = dir
 		return nil
 	}
 }

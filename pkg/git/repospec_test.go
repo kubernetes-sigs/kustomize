@@ -72,17 +72,17 @@ func TestNewRepoSpecFromUrl(t *testing.T) {
 					if err != nil {
 						t.Errorf("problem %v", err)
 					}
-					if rs.host != hostSpec {
-						bad = append(bad, []string{"host", uri, rs.host, hostSpec})
+					if rs.Host != hostSpec {
+						bad = append(bad, []string{"host", uri, rs.Host, hostSpec})
 					}
-					if rs.orgRepo != orgRepo {
-						bad = append(bad, []string{"orgRepo", uri, rs.orgRepo, orgRepo})
+					if rs.OrgRepo != orgRepo {
+						bad = append(bad, []string{"orgRepo", uri, rs.OrgRepo, orgRepo})
 					}
-					if rs.path != pathName {
-						bad = append(bad, []string{"path", uri, rs.path, pathName})
+					if rs.Path != pathName {
+						bad = append(bad, []string{"path", uri, rs.Path, pathName})
 					}
-					if rs.ref != hrefArg {
-						bad = append(bad, []string{"ref", uri, rs.ref, hrefArg})
+					if rs.Ref != hrefArg {
+						bad = append(bad, []string{"ref", uri, rs.Ref, hrefArg})
 					}
 				}
 			}
@@ -201,9 +201,9 @@ func TestNewRepoSpecFromUrl_CloneSpecs(t *testing.T) {
 			t.Errorf("AbsPath expected to be %v, but got %v on %s",
 				testcase.absPath, rs.AbsPath(), testcase.input)
 		}
-		if rs.ref != testcase.ref {
+		if rs.Ref != testcase.ref {
 			t.Errorf("ref expected to be %v, but got %v on %s",
-				testcase.ref, rs.ref, testcase.input)
+				testcase.ref, rs.Ref, testcase.input)
 		}
 	}
 }
