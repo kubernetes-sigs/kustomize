@@ -33,6 +33,8 @@ Basic Usage
  
   * [json patch](jsonpatch.md) - Apply a json patch in a kustomization    
 
+  * [patch multiple objects](patchMultipleObjects.md) - Apply a patch to multiple objects
+
 Advanced Usage
   
 - generator plugins:
