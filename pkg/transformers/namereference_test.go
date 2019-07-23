@@ -520,7 +520,7 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 						},
 					},
 				}).ResMap(),
-			expectedErr: "is expected to be"},
+			expectedErr: "is expected to contain a name field"},
 	}
 
 	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
@@ -652,6 +652,7 @@ const (
 	ns1       = "ns1"
 	ns2       = "ns2"
 	ns3       = "ns3"
+	ns4       = "ns4"
 
 	orgname      = "uniquename"
 	prefixedname = "prefix-uniquename"
@@ -808,6 +809,11 @@ func TestNameReferenceClusterWide(t *testing.T) {
 					"name":      orgname,
 					"namespace": ns2,
 				},
+				map[string]interface{}{
+					"kind":      "ServiceAccount",
+					"name":      orgname,
+					"namespace": "random",
+				},
 			}}).ResMap()
 
 	expected := resmaptest_test.NewSeededRmBuilder(t, rf, m.ShallowCopy()).
@@ -862,6 +868,11 @@ func TestNameReferenceClusterWide(t *testing.T) {
 						"name":      suffixedname,
 						"namespace": ns2,
 					},
+					map[string]interface{}{
+						"kind":      "ServiceAccount",
+						"name":      orgname,
+						"namespace": "random",
+					},
 				},
 			}).ResMap()
 
@@ -890,6 +901,13 @@ func TestNameReferenceNamespaceTransformation(t *testing.T) {
 	rf := resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl())
 	m := resmaptest_test.NewRmBuilder(t, rf).
+		AddWithNsAndName(ns4, orgname, map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Secret",
+			"metadata": map[string]interface{}{
+				"name":      orgname,
+				"namespace": ns4,
+			}}).
 		// Add ServiceAccount with the same org name in "ns1" namespaces
 		AddWithNsAndName(ns1, orgname, map[string]interface{}{
 			"apiVersion": "v1",
@@ -934,6 +952,16 @@ func TestNameReferenceNamespaceTransformation(t *testing.T) {
 					"name":      orgname,
 					"namespace": ns3,
 				},
+				map[string]interface{}{
+					"kind":      "ServiceAccount",
+					"name":      orgname,
+					"namespace": "random",
+				},
+				map[string]interface{}{
+					"kind":      "ServiceAccount",
+					"name":      orgname,
+					"namespace": ns4,
+				},
 			}}).ResMap()
 
 	expected := resmaptest_test.NewSeededRmBuilder(t, rf, m.ShallowCopy()).
@@ -962,6 +990,16 @@ func TestNameReferenceNamespaceTransformation(t *testing.T) {
 						"kind":      "ServiceAccount",
 						"name":      suffixedname,
 						"namespace": ns2,
+					},
+					map[string]interface{}{
+						"kind":      "ServiceAccount",
+						"name":      orgname,
+						"namespace": "random",
+					},
+					map[string]interface{}{
+						"kind":      "ServiceAccount",
+						"name":      orgname,
+						"namespace": ns4,
 					},
 				},
 			}).ResMap()

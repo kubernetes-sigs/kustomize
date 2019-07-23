@@ -191,6 +191,11 @@ func (o *nameReferenceTransformer) getNameAndNsStruct(
 		return nil, err
 	}
 
+	if (newname == oldName) && (newnamespace == nil) {
+		// no candidate found.
+		return inMap, nil
+	}
+
 	inMap["name"] = newname
 	if newnamespace != "" {
 		// We don't want value "" to replace value "default" since
@@ -212,6 +217,12 @@ func (o *nameReferenceTransformer) getNewNameFunc(
 			oldName, _ := in.(string)
 			return o.getSimpleNameField(oldName, referrer, target,
 				referralCandidates, referralCandidates.Resources())
+		case map[string]interface{}:
+			// Kind: ValidatingWebhookConfiguration
+			// FieldSpec is webhooks/clientConfig/service
+			oldMap, _ := in.(map[string]interface{})
+			return o.getNameAndNsStruct(oldMap, referrer, target,
+				referralCandidates)
 		case []interface{}:
 			l, _ := in.([]interface{})
 			for idx, item := range l {
