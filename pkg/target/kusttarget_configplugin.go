@@ -200,7 +200,7 @@ func (kt *KustTarget) configureBuiltinPatchTransformer(
 		Target *types.Selector `json:"target,omitempty" yaml:"target,omitempty"`
 	}
 	for _, patch := range kt.kustomization.Patches {
-		c.Target = &patch.Target
+		c.Target = patch.Target
 		c.Patch = patch.Patch
 		c.Path = patch.Path
 		p := builtin.NewPatchTransformerPlugin()
