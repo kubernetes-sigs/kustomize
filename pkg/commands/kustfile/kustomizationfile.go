@@ -61,6 +61,7 @@ func determineFieldOrder() []string {
 		"CommonAnnotations",
 		"PatchesStrategicMerge",
 		"PatchesJson6902",
+		"Patches",
 		"ConfigMapGenerator",
 		"SecretGenerator",
 		"GeneratorOptions",
@@ -73,9 +74,7 @@ func determineFieldOrder() []string {
 	}
 
 	// Add deprecated fields here.
-	deprecated := map[string]bool{
-		"Patches": true,
-	}
+	deprecated := map[string]bool{}
 
 	// Account for the inlined TypeMeta fields.
 	var result []string

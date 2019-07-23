@@ -40,6 +40,7 @@ func TestFieldOrder(t *testing.T) {
 		"CommonAnnotations",
 		"PatchesStrategicMerge",
 		"PatchesJson6902",
+		"Patches",
 		"ConfigMapGenerator",
 		"SecretGenerator",
 		"GeneratorOptions",
@@ -241,6 +242,88 @@ patchesStrategicMerge:
 # generator options
 generatorOptions:
   disableNameSuffixHash: true
+`)
+	fSys := fs.MakeFakeFS()
+	fSys.WriteTestKustomizationWith(kustomizationContentWithComments)
+	mf, err := NewKustomizationFile(fSys)
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+
+	kustomization, err := mf.Read()
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	if err = mf.Write(kustomization); err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	bytes, _ := fSys.ReadFile(mf.path)
+
+	if string(expected) != string(bytes) {
+		t.Fatalf(
+			"expected =\n%s\n\nactual =\n%s\n",
+			string(expected), string(bytes))
+	}
+}
+
+func TestFixPatchesField(t *testing.T) {
+	kustomizationContentWithComments := []byte(`
+patches:
+- patch1.yaml
+- patch2.yaml
+`)
+
+	expected := []byte(`
+patchesStrategicMerge:
+- patch1.yaml
+- patch2.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+`)
+	fSys := fs.MakeFakeFS()
+	fSys.WriteTestKustomizationWith(kustomizationContentWithComments)
+	mf, err := NewKustomizationFile(fSys)
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+
+	kustomization, err := mf.Read()
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	if err = mf.Write(kustomization); err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	bytes, _ := fSys.ReadFile(mf.path)
+
+	if string(expected) != string(bytes) {
+		t.Fatalf(
+			"expected =\n%s\n\nactual =\n%s\n",
+			string(expected), string(bytes))
+	}
+}
+
+func TestFixPatchesFieldForExtendedPatch(t *testing.T) {
+	kustomizationContentWithComments := []byte(`
+patches:
+- path: patch1.yaml
+  target:
+    kind: Deployment
+- path: patch2.yaml
+  target:
+    kind: Service
+`)
+
+	expected := []byte(`
+patches:
+- path: patch1.yaml
+  target:
+    kind: Deployment
+- path: patch2.yaml
+  target:
+    kind: Service
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
 `)
 	fSys := fs.MakeFakeFS()
 	fSys.WriteTestKustomizationWith(kustomizationContentWithComments)
