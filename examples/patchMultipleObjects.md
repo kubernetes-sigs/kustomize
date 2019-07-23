@@ -9,8 +9,7 @@ A kustomization file supports customizing resources via both
 [Strategic Merge Patch] and [JSON patches]. Now one patch can be
 applied to multiple resources.
 
-The format of doing this is by specifying a patch and a target selector.
-It is as the following:
+This can be done by specifying a patch and a target selector as follows:
 ```
 patches:
 - path: <PatchFile>
@@ -113,6 +112,51 @@ Running `kustomize build $DEMO_HOME`, in the output confirm that both Deployment
 test 2 == \
   $(kustomize build $DEMO_HOME | grep "image: docker.io/istio/proxyv2" | wc -l); \
   echo $?
+```
+
+The output is as follows:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - args:
+        - proxy
+        - sidecar
+        image: docker.io/istio/proxyv2
+        name: istio-proxy
+      - args:
+        - one
+        - two
+        image: nginx
+        name: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    metadata:
+      labels:
+        key: value
+    spec:
+      containers:
+      - args:
+        - proxy
+        - sidecar
+        image: docker.io/istio/proxyv2
+        name: istio-proxy
+      - image: busybox
+        name: busybox
 ```
 
 ## Target selector
