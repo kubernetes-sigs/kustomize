@@ -552,26 +552,17 @@ func (m *resWrangler) makeCopy(copier resCopier) ResMap {
 // SubsetThatCouldBeReferencedByResource implements ResMap.
 func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
 	inputRes *resource.Resource) ResMap {
-	inputId := inputRes.OrgId()
-	if !inputId.IsNamespaceableKind() {
-		if inputRes.GetOutermostNamePrefix() == "" {
-			return m
-		}
-		result := New()
-		for _, r := range m.Resources() {
-			if r.GetOutermostNamePrefix() == inputRes.GetOutermostNamePrefix() &&
-				r.GetOutermostNameSuffix() == inputRes.GetOutermostNameSuffix() {
-				err := result.Append(r)
-				if err != nil {
-					panic(err)
-				}
-			}
-		}
-		return result
-	}
 	result := New()
+	inputId := inputRes.CurId()
+	isInputIdNamespaceable := inputId.IsNamespaceableKind()
+	rctxm := inputRes.PrefixesSuffixesEquals
 	for _, r := range m.Resources() {
-		if !r.OrgId().IsNamespaceableKind() || inputRes.InSameFuzzyNamespace(r) {
+		// Need to match more accuratly both at the time of selection and transformation.
+		// OutmostPrefixSuffixEquals is not accurate enough since it is only using
+		// the outer most suffix and the last prefix. Use PrefixedSuffixesEquals instead.
+		resId := r.CurId()
+		if (!isInputIdNamespaceable || !resId.IsNamespaceableKind() || resId.IsNsEquals(inputId)) &&
+			r.InSameKustomizeCtx(rctxm) {
 			err := result.Append(r)
 			if err != nil {
 				panic(err)
