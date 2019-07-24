@@ -24,6 +24,7 @@ package pgmconfig
 var KustomizationFileNames = []string{
 	"kustomization.yaml",
 	"kustomization.yml",
+	"kustomization.json",
 	"Kustomization",
 }
 

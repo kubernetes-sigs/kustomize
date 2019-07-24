@@ -18,10 +18,12 @@ package kustfile
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"strings"
@@ -176,10 +178,31 @@ func (mf *kustomizationFile) Write(kustomization *types.Kustomization) error {
 	if kustomization == nil {
 		return errors.New("util: kustomization file arg is nil")
 	}
+
 	data, err := mf.marshal(kustomization)
 	if err != nil {
 		return err
 	}
+
+	if filepath.Ext(mf.path) == ".json" {
+
+		// Unmarshal the YAML instead of directly marshaling to JSON to support future changes of kustomizationFile::marshal method:
+		k := make(map[string]interface{})
+		err := yaml.Unmarshal(data, &k)
+		if err != nil {
+			return err
+		}
+
+		// Remove `kind` and `apiVersion` so as make minimal changes to original source file:
+		delete(k, "kind")
+		delete(k, "apiVersion")
+
+		data, err = json.MarshalIndent(k, "", "  ")
+		if err != nil {
+			return err
+		}
+	}
+
 	return mf.fSys.WriteFile(mf.path, data)
 }
 
@@ -223,6 +246,7 @@ func (mf *kustomizationFile) parseCommentedFields(content []byte) error {
 // marshal converts a kustomization to a byte stream.
 func (mf *kustomizationFile) marshal(kustomization *types.Kustomization) ([]byte, error) {
 	var output []byte
+
 	for _, comment := range mf.originalFields {
 		output = append(output, comment.comment...)
 		content, err := marshalField(comment.field, kustomization)
