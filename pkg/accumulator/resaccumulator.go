@@ -6,6 +6,7 @@ package accumulator
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
@@ -98,6 +99,10 @@ func (ra *ResAccumulator) MergeAccumulator(other *ResAccumulator) (err error) {
 }
 
 func (ra *ResAccumulator) findVarValueFromResources(v types.Var) (interface{}, error) {
+	if v.EnvRef.Name != "" {
+		value := os.Getenv(v.EnvRef.Name)
+		return value, nil
+	}
 	for _, res := range ra.resMap.Resources() {
 		for _, varName := range res.GetRefVarNames() {
 			if varName == v.Name {

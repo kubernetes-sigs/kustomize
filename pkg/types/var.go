@@ -45,6 +45,15 @@ type Var struct {
 	// replacing $(FOO).
 	// If unspecified, this defaults to fieldPath: $defaultFieldPath
 	FieldRef FieldSelector `json:"fieldref,omitempty" yaml:"fieldref,omitempty"`
+
+	// EnvRef refers to a variable from the process environment whose value will be extracted for use in
+	// replacing $(FOO).
+	EnvRef EnvVar `json:"envref" yaml:"envref"`
+}
+
+// EnvVar refers to a variable from the process environment identifiable by name.
+type EnvVar struct {
+	Name string `json:"name" yaml:"name"`
 }
 
 // Target refers to a kubernetes object by Group, Version, Kind and Name
