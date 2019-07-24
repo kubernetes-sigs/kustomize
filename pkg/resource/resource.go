@@ -27,6 +27,22 @@ type Resource struct {
 	nameSuffixes []string
 }
 
+// ResCtx is an interface describing the contextual added
+// kept kustomize in the context of each Resource object.
+// Currently mainly the name prefix and name suffix are added.
+type ResCtx interface {
+	AddNamePrefix(p string)
+	AddNameSuffix(s string)
+	GetOutermostNamePrefix() string
+	GetOutermostNameSuffix() string
+	GetNamePrefixes() []string
+	GetNameSuffixes() []string
+}
+
+// ResCtxMatcher returns true if two Resources are being
+// modified in the same kustomize context.
+type ResCtxMatcher func(ResCtx) bool
+
 // DeepCopy returns a new copy of resource
 func (r *Resource) DeepCopy() *Resource {
 	rc := &Resource{
@@ -104,14 +120,17 @@ func copyStringSlice(s []string) []string {
 	return c
 }
 
+// Implements ResCtx AddNamePrefix
 func (r *Resource) AddNamePrefix(p string) {
 	r.namePrefixes = append(r.namePrefixes, p)
 }
 
+// Implements ResCtx AddNameSuffix
 func (r *Resource) AddNameSuffix(s string) {
 	r.nameSuffixes = append(r.nameSuffixes, s)
 }
 
+// Implements ResCtx GetOutermostNamePrefix
 func (r *Resource) GetOutermostNamePrefix() string {
 	if len(r.namePrefixes) == 0 {
 		return ""
@@ -119,6 +138,7 @@ func (r *Resource) GetOutermostNamePrefix() string {
 	return r.namePrefixes[len(r.namePrefixes)-1]
 }
 
+// Implements ResCtx GetOutermostNameSuffix
 func (r *Resource) GetOutermostNameSuffix() string {
 	if len(r.nameSuffixes) == 0 {
 		return ""
@@ -126,10 +146,51 @@ func (r *Resource) GetOutermostNameSuffix() string {
 	return r.nameSuffixes[len(r.nameSuffixes)-1]
 }
 
-func (r *Resource) InSameFuzzyNamespace(o *Resource) bool {
-	return r.CurId().IsNsEquals(o.CurId()) &&
-		r.GetOutermostNamePrefix() == o.GetOutermostNamePrefix() &&
-		r.GetOutermostNameSuffix() == o.GetOutermostNameSuffix()
+func sameBeginningSubarray(a, b []string) bool {
+	maxlen := len(b)
+	if len(a) < len(b) {
+		maxlen = len(a)
+	}
+
+	if maxlen == 0 {
+		return true
+	}
+
+	for i, v := range a[0 : maxlen-1] {
+		if v != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+// Implements ResCtx GetNamePrefixes
+func (r *Resource) GetNamePrefixes() []string {
+	return r.namePrefixes
+}
+
+// Implements ResCtx GetNameSuffixes
+func (r *Resource) GetNameSuffixes() []string {
+	return r.nameSuffixes
+}
+
+// OutermostPrefixSuffixEquals returns true if both resources
+// outer suffix and prefix matches.
+func (r *Resource) OutermostPrefixSuffixEquals(o ResCtx) bool {
+	return (r.GetOutermostNamePrefix() == o.GetOutermostNamePrefix()) && (r.GetOutermostNameSuffix() == o.GetOutermostNameSuffix())
+}
+
+// PrefixesSuffixesEquals is conceptually doing the same task
+// as OutermostPrefixSuffix but performs a deeper comparison
+// of the the list of suffix and prefix.
+func (r *Resource) PrefixesSuffixesEquals(o ResCtx) bool {
+	return sameBeginningSubarray(r.GetNamePrefixes(), o.GetNamePrefixes()) && sameBeginningSubarray(r.GetNameSuffixes(), o.GetNameSuffixes())
+}
+
+// This is used to compute if a referrer could potentially be impacted
+// by the change of name of a referral.
+func (r *Resource) InSameKustomizeCtx(rctxm ResCtxMatcher) bool {
+	return rctxm(r)
 }
 
 func (r *Resource) GetOriginalName() string {

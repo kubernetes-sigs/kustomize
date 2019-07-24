@@ -49,22 +49,40 @@ func (p *PrefixSuffixTransformerPlugin) Config(
 }
 
 func (p *PrefixSuffixTransformerPlugin) Transform(m resmap.ResMap) error {
-	if len(p.Prefix) == 0 && len(p.Suffix) == 0 {
-		return nil
-	}
+
+	// Even if both the Prefix and Suffix are empty we want
+	// to proceed with the transformation. This allows to add contextual
+	// information to the resources (AddNamePrefix and AddNameSuffix).
+
 	for _, r := range m.Resources() {
 		if p.shouldSkip(r.OrgId()) {
+			// Don't change the actual definition
+			// of a CRD.
 			continue
 		}
 		id := r.OrgId()
+		// current default configuration contains
+		// only one entry: "metadata/name" with no GVK
 		for _, path := range p.FieldSpecs {
 			if !id.IsSelected(&path.Gvk) {
+				// With the currrent default configuration,
+				// because no Gvk is specified, so a wild
+				// card
 				continue
 			}
+
 			if smellsLikeANameChange(&path) {
+				// "metadata/name" is the only field.
+				// this will add a prefix and a suffix
+				// to the resource even if those are
+				// empty
 				r.AddNamePrefix(p.Prefix)
 				r.AddNameSuffix(p.Suffix)
 			}
+
+			// the addPrefixSuffix method will not
+			// change the name if both the prefix and suffix
+			// are empty.
 			err := transformers.MutateField(
 				r.Map(),
 				path.PathSlice(),

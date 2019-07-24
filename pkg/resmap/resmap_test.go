@@ -356,7 +356,7 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 	r4 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
-			"kind":       "ConfigMap",
+			"kind":       "Deployment",
 			"metadata": map[string]interface{}{
 				"name":      "charlie",
 				"namespace": "happy",
@@ -365,7 +365,7 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 	r5 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
-			"kind":       "Deployment",
+			"kind":       "ConfigMap",
 			"metadata": map[string]interface{}{
 				"name":      "charlie",
 				"namespace": "happy",
@@ -408,12 +408,12 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 		"happy namespace no prefix": {
 			filter: r3,
 			expected: resmaptest_test.NewRmBuilder(t, rf).
-				AddR(r3).AddR(r4).AddR(r7).ResMap(),
+				AddR(r3).AddR(r4).AddR(r5).AddR(r6).AddR(r7).ResMap(),
 		},
 		"happy namespace with prefix": {
 			filter: r5,
 			expected: resmaptest_test.NewRmBuilder(t, rf).
-				AddR(r5).AddR(r6).AddR(r7).ResMap(),
+				AddR(r3).AddR(r4).AddR(r5).AddR(r6).AddR(r7).ResMap(),
 		},
 		"cluster level": {
 			filter: r7,
