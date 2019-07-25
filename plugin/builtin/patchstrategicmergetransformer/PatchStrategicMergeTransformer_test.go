@@ -1198,3 +1198,32 @@ func TestMultipleNamespaces(t *testing.T) {
 		}
 	}
 }
+
+func TestPatchStrategicMergeTransformerPatchDelete(t *testing.T) {
+	tc := plugins_test.NewEnvForTest(t).Set()
+	defer tc.Reset()
+
+	tc.BuildGoPlugin(
+		"builtin", "", "PatchStrategicMergeTransformer")
+
+	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+
+	th.WriteF("/app/patch.yaml", `
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+$patch: delete
+`)
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: builtin
+kind: PatchStrategicMergeTransformer
+metadata:
+  name: notImportantHere
+paths:
+- patch.yaml
+`, target)
+
+	th.AssertActualEqualsExpected(rm, ``)
+}

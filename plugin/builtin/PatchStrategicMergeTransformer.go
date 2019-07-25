@@ -70,6 +70,14 @@ func (p *PatchStrategicMergeTransformerPlugin) Transform(m resmap.ResMap) error 
 		if err != nil {
 			return err
 		}
+		// remove the resource from resmap
+		// when the patch is to $patch: delete that target
+		if len(target.Map()) == 0 {
+			err = m.Remove(target.CurId())
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
