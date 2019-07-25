@@ -6,7 +6,6 @@ package target_test
 import (
 	"encoding/base64"
 	"fmt"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -334,7 +333,10 @@ vars:
 		t.Fatalf("unexpected size %d", len(vars))
 	}
 	for i := range vars[:2] {
-		if !reflect.DeepEqual(vars[i], someVars[i]) {
+		// By using Var.DeepEqual, we are protecting the code
+		// from a potential invocation of vars[i].ObjRef.GVK()
+		// during AccumulateTarget
+		if !vars[i].DeepEqual(someVars[i]) {
 			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[i], someVars[i])
 		}
 	}
@@ -387,7 +389,10 @@ resources:
 		t.Fatalf("expected 4 vars, got %d", len(vars))
 	}
 	for i := range vars {
-		if !reflect.DeepEqual(vars[i], someVars[i]) {
+		// By using Var.DeepEqual, we are protecting the code
+		// from a potential invocation of vars[i].ObjRef.GVK()
+		// during AccumulateTarget
+		if !vars[i].DeepEqual(someVars[i]) {
 			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[i], someVars[i])
 		}
 	}
