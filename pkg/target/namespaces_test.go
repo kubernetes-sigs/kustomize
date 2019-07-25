@@ -159,6 +159,9 @@ subjects:
 - kind: ServiceAccount
   name: sa3
   namespace: random
+- kind: ServiceAccount
+  name: default
+  namespace: irrelevant
 ---
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: ValidatingWebhookConfiguration
@@ -193,6 +196,10 @@ metadata:
 kind: ClusterRoleBinding
 metadata:
   name: crb1
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: irrelevant
 ---
 kind: PersistentVolume
 metadata:
@@ -254,6 +261,9 @@ subjects:
 - kind: ServiceAccount
   name: sa3
   namespace: random
+- kind: ServiceAccount
+  name: default
+  namespace: newnamespace
 ---
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: ValidatingWebhookConfiguration
@@ -288,6 +298,10 @@ metadata:
 kind: ClusterRoleBinding
 metadata:
   name: p1-crb1-s1
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: newnamespace
 ---
 kind: PersistentVolume
 metadata:
