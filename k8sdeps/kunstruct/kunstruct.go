@@ -338,7 +338,11 @@ func (fs *UnstructAdapter) Patch(patch ifc.Kunstructured) error {
 		}
 	}
 	fs.SetMap(merged)
-	fs.SetName(saveName)
+	if len(fs.Map()) != 0 {
+		// if the patch deletes the object
+		// don't reset the name
+		fs.SetName(saveName)
+	}
 	return nil
 }
 
