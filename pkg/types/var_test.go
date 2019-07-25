@@ -81,7 +81,7 @@ func TestDefaulting(t *testing.T) {
 			Name: "my-secret",
 		},
 	}
-	v.defaulting()
+	v.Defaulting()
 	if v.FieldRef.FieldPath != defaultFieldPath {
 		t.Fatalf("expected %s, got %v",
 			defaultFieldPath, v.FieldRef.FieldPath)

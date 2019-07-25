@@ -18,6 +18,7 @@ package types
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 	"strings"
 
@@ -65,10 +66,22 @@ type FieldSelector struct {
 }
 
 // defaulting sets reference to field used by default.
-func (v *Var) defaulting() {
+func (v *Var) Defaulting() {
 	if v.FieldRef.FieldPath == "" {
 		v.FieldRef.FieldPath = defaultFieldPath
 	}
+	v.ObjRef.GVK()
+}
+
+// DeepEqual returns true if var a and b are Equals.
+// Note 1: The objects are unchanged by the VarEqual
+// Note 2: Should be normalize be FieldPath before doing
+// the DeepEqual. spec.a[b] is supposed to be the same
+// as spec.a.b
+func (v Var) DeepEqual(other Var) bool {
+	v.Defaulting()
+	other.Defaulting()
+	return reflect.DeepEqual(v, other)
 }
 
 // VarSet is a set of Vars where no var.Name is repeated.
@@ -130,8 +143,49 @@ func (vs *VarSet) Merge(v Var) error {
 		return fmt.Errorf(
 			"var '%s' already encountered", v.Name)
 	}
-	v.defaulting()
+	v.Defaulting()
 	vs.set[v.Name] = v
+	return nil
+}
+
+// AbsorbSet absorbs other vars with error on (name,value) collision.
+func (vs *VarSet) AbsorbSet(incoming VarSet) error {
+	for _, v := range incoming.set {
+		if err := vs.Absorb(v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// AbsorbSlice absorbs a Var slice with error on (name,value) collision.
+// Empty fields in incoming vars are defaulted.
+func (vs *VarSet) AbsorbSlice(incoming []Var) error {
+	for _, v := range incoming {
+		if err := vs.Absorb(v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Absorb absorbs another Var with error on (name,value) collision.
+// Empty fields in incoming Var is defaulted.
+func (vs *VarSet) Absorb(v Var) error {
+	conflicting := vs.Get(v.Name)
+	if conflicting == nil {
+		// no conflict. The var is valid.
+		v.Defaulting()
+		vs.set[v.Name] = v
+		return nil
+	}
+
+	if !reflect.DeepEqual(v, *conflicting) {
+		// two vars with the same name are pointing at two
+		// different resources.
+		return fmt.Errorf(
+			"var '%s' already encountered", v.Name)
+	}
 	return nil
 }
 
