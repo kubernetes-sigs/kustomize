@@ -28,6 +28,12 @@ metadata:
 fieldSpecs:
 - path: metadata/namespace
   create: true
+- path: subjects
+  kind: RoleBinding
+  group: rbac.authorization.k8s.io
+- path: subjects
+  kind: ClusterRoleBinding
+  group: rbac.authorization.k8s.io
 `, `
 apiVersion: v1
 kind: ConfigMap
@@ -54,7 +60,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: default
-  namespace: system
+  namespace: test
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -151,7 +157,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: default
-  namespace: system
+  namespace: test
 - kind: ServiceAccount
   name: service-account
   namespace: system
@@ -222,6 +228,12 @@ metadata:
 fieldSpecs:
 - path: metadata/namespace
   create: true
+- path: subjects
+  kind: RoleBinding
+  group: rbac.authorization.k8s.io
+- path: subjects
+  kind: ClusterRoleBinding
+  group: rbac.authorization.k8s.io
 `, noChangeExpected)
 
 	th.AssertActualEqualsExpected(rm, noChangeExpected)
