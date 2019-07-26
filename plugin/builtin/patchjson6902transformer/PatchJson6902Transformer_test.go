@@ -250,7 +250,7 @@ spec:
 `)
 }
 
-func TestPatchJson6902TransformerWithInline(t *testing.T) {
+func TestPatchJson6902TransformerWithInlineJSON(t *testing.T) {
 	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
@@ -270,6 +270,50 @@ target:
   kind: Deployment
   name: myDeploy
 jsonOp: '[{"op": "add", "path": "/spec/template/spec/dnsPolicy", "value": "ClusterFirst"}]'
+`, target)
+
+	th.AssertActualEqualsExpected(rm, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  replica: 2
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+      dnsPolicy: ClusterFirst
+`)
+}
+
+func TestPatchJson6902TransformerWithInlineYAML(t *testing.T) {
+	tc := plugins_test.NewEnvForTest(t).Set()
+	defer tc.Reset()
+
+	tc.BuildGoPlugin(
+		"builtin", "", "PatchJson6902Transformer")
+
+	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: builtin
+kind: PatchJson6902Transformer
+metadata:
+  name: notImportantHere
+target:
+  group: apps
+  version: v1
+  kind: Deployment
+  name: myDeploy
+jsonOp: |-
+  - op: add
+    path: /spec/template/spec/dnsPolicy
+    value: ClusterFirst
 `, target)
 
 	th.AssertActualEqualsExpected(rm, `
