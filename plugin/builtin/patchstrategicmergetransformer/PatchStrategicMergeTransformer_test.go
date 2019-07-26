@@ -181,7 +181,7 @@ spec:
 `)
 }
 
-func TestPatchStrategicMergeTransformerWithInline(t *testing.T) {
+func TestPatchStrategicMergeTransformerWithInlineJSON(t *testing.T) {
 	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
@@ -212,6 +212,58 @@ spec:
     spec:
       containers:
       - image: nginx
+        name: nginx
+`)
+}
+
+func TestPatchStrategicMergeTransformerWithInlineYAML(t *testing.T) {
+	tc := plugins_test.NewEnvForTest(t).Set()
+	defer tc.Reset()
+
+	tc.BuildGoPlugin(
+		"builtin", "", "PatchStrategicMergeTransformer")
+
+	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: builtin
+kind: PatchStrategicMergeTransformer
+metadata:
+  name: notImportantHere
+patches: |-
+  apiVersion: apps/v1
+  metadata:
+    name: myDeploy
+  kind: Deployment
+  spec:
+    replica: 3
+  ---
+  apiVersion: apps/v1
+  metadata:
+    name: myDeploy
+  kind: Deployment
+  spec:
+    template:
+      spec:
+        containers:
+        - name: nginx
+          image: nginx:latest
+`, target)
+
+	th.AssertActualEqualsExpected(rm, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  replica: 3
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - image: nginx:latest
         name: nginx
 `)
 }
