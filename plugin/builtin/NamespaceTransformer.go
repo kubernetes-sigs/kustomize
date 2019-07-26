@@ -35,17 +35,19 @@ func (p *NamespaceTransformerPlugin) Transform(m resmap.ResMap) error {
 		return nil
 	}
 	for _, r := range m.Resources() {
-		id := r.OrgId()
-		fs, ok := p.isSelected(id)
-		if !ok {
-			continue
-		}
 		if len(r.Map()) == 0 {
 			// Don't mutate empty objects?
 			continue
 		}
-		if doIt(id, fs) {
-			if err := p.changeNamespace(r, fs); err != nil {
+
+		id := r.OrgId()
+		applicableFs := p.applicableFieldSpecs(id)
+
+		for _, fs := range applicableFs {
+			err := transformers.MutateField(
+				r.Map(), fs.PathSlice(), fs.CreateIfNotPresent,
+				p.changeNamespace(r))
+			if err != nil {
 				return err
 			}
 		}
@@ -59,26 +61,64 @@ const metaNamespace = "metadata/namespace"
 // all objects have it, even "ClusterKind" objects
 // that don't exist in a namespace (the Namespace
 // object itself doesn't live in a namespace).
-func doIt(id resid.ResId, fs *config.FieldSpec) bool {
-	return fs.Path != metaNamespace ||
-		(fs.Path == metaNamespace && id.IsNamespaceableKind())
-}
-
-func (p *NamespaceTransformerPlugin) changeNamespace(
-	r *resource.Resource, fs *config.FieldSpec) error {
-	return transformers.MutateField(
-		r.Map(), fs.PathSlice(), fs.CreateIfNotPresent,
-		func(_ interface{}) (interface{}, error) {
-			return p.Namespace, nil
-		})
-}
-
-func (p *NamespaceTransformerPlugin) isSelected(
-	id resid.ResId) (*config.FieldSpec, bool) {
+func (p *NamespaceTransformerPlugin) applicableFieldSpecs(id resid.ResId) []config.FieldSpec {
+	res := []config.FieldSpec{}
 	for _, fs := range p.FieldSpecs {
-		if id.IsSelected(&fs.Gvk) {
-			return &fs, true
+		if id.IsSelected(&fs.Gvk) && (fs.Path != metaNamespace || (fs.Path == metaNamespace && id.IsNamespaceableKind())) {
+			res = append(res, fs)
 		}
 	}
-	return nil, false
+	return res
+}
+
+func (o *NamespaceTransformerPlugin) changeNamespace(
+	referrer *resource.Resource) func(in interface{}) (interface{}, error) {
+	return func(in interface{}) (interface{}, error) {
+		switch in.(type) {
+		case string:
+			// will happen when the metadata/namespace
+			// value is replaced
+			return o.Namespace, nil
+		case []interface{}:
+			l, _ := in.([]interface{})
+			for idx, item := range l {
+				switch item.(type) {
+				case map[string]interface{}:
+					// Will happen when mutating the subjects
+					// field of ClusterRoleBinding and RoleBinding
+					inMap, _ := item.(map[string]interface{})
+					if _, ok := inMap["name"]; !ok {
+						continue
+					}
+					name, ok := inMap["name"].(string)
+					if !ok {
+						continue
+					}
+					// The only case we need to force the namespace
+					// if for the "service account". "default" is
+					// kind of hardcoded here for right now.
+					if name != "default" {
+						continue
+					}
+					inMap["namespace"] = o.Namespace
+					l[idx] = inMap
+				default:
+					// nothing to do for right now
+				}
+			}
+			return in, nil
+		case map[string]interface{}:
+			// Will happen if the createField=true
+			// when the namespace is added to the
+			// object
+			inMap := in.(map[string]interface{})
+			if len(inMap) == 0 {
+				return o.Namespace, nil
+			} else {
+				return in, nil
+			}
+		default:
+			return in, nil
+		}
+	}
 }
