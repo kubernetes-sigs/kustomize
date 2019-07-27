@@ -331,6 +331,9 @@ type PatchJson6902 struct {
 
 	// relative file path for a json patch file inside a kustomization
 	Path string `json:"path,omitempty" yaml:"path,omitempty"`
+
+	// inline patch string
+	Patch string `json:"patch,omitempty" yaml:"patch,omitempty"`
 }
 
 // PatchTarget represents the kubernetes object that the patch is applied to
