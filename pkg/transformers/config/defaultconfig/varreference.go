@@ -19,6 +19,9 @@ package defaultconfig
 const (
 	varReferenceFieldSpecs = `
 varReference:
+- path: spec/jobTemplate/spec/template/spec/containers/image
+  kind: CronJob
+
 - path: spec/jobTemplate/spec/template/spec/containers/args
   kind: CronJob
 
@@ -43,6 +46,9 @@ varReference:
 - path: spec/jobTemplate/spec/template/spec/initContainers/volumeMounts/mountPath
   kind: CronJob
 
+- path: spec/template/spec/containers/image
+  kind: DaemonSet
+
 - path: spec/template/spec/containers/args
   kind: DaemonSet
 
@@ -66,6 +72,9 @@ varReference:
 
 - path: spec/template/spec/initContainers/volumeMounts/mountPath
   kind: DaemonSet
+
+- path: spec/template/spec/containers/image
+  kind: Deployment
 
 - path: spec/template/spec/containers/args
   kind: Deployment
@@ -96,9 +105,12 @@ varReference:
 
 - path: spec/tls/hosts
   kind: Ingress
-  
+
 - path: spec/tls/secretName
   kind: Ingress
+
+- path: spec/template/spec/containers/image
+  kind: Job
 
 - path: spec/template/spec/containers/args
   kind: Job
@@ -148,6 +160,9 @@ varReference:
 - path: spec/initContainers/volumeMounts/mountPath
   kind: Pod
 
+- path: spec/template/spec/containers/image
+  kind: ReplicaSet
+
 - path: spec/template/spec/containers/args
   kind: ReplicaSet
 
@@ -177,6 +192,9 @@ varReference:
 
 - path: spec/ports/targetPort
   kind: Service
+
+- path: spec/template/spec/containers/image
+  kind: StatefulSet
 
 - path: spec/template/spec/containers/args
   kind: StatefulSet
