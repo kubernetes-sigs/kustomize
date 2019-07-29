@@ -187,6 +187,12 @@ func TestNewRepoSpecFromUrl_CloneSpecs(t *testing.T) {
 			absPath:   notCloned.Join("somedir"),
 			ref:       "v1.0.0",
 		},
+		{
+			input:     "git::https://itfs.mycompany.com/collection/project/_git/somerepos",
+			cloneSpec: "https://itfs.mycompany.com/collection/project/_git/somerepos",
+			absPath:   notCloned.String(),
+			ref:       "",
+		},
 	}
 	for _, testcase := range testcases {
 		rs, err := NewRepoSpecFromUrl(testcase.input)
