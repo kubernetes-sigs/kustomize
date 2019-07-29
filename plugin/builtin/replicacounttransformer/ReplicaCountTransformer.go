@@ -35,8 +35,15 @@ func (p *plugin) Config(
 }
 
 func (p *plugin) Transform(m resmap.ResMap) error {
+
+	found := false
 	for i, replicaSpec := range p.FieldSpecs {
-		for _, res := range m.GetMatchingResourcesByOriginalId(p.createMatcher(i)) {
+		matcher := p.createMatcher(i)
+		matchOriginal := m.GetMatchingResourcesByOriginalId(matcher)
+		matchCurrent := m.GetMatchingResourcesByCurrentId(matcher)
+
+		for _, res := range append(matchOriginal, matchCurrent...) {
+			found = true
 			err := transformers.MutateField(
 				res.Map(), replicaSpec.PathSlice(),
 				replicaSpec.CreateIfNotPresent, p.addReplicas)
@@ -44,6 +51,15 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 				return err
 			}
 		}
+	}
+
+	if !found {
+		gvks := make([]string, len(p.FieldSpecs))
+		for i, replicaSpec := range p.FieldSpecs {
+			gvks[i] = replicaSpec.Gvk.String()
+		}
+		return fmt.Errorf("Resource with name %s does not match a config with the following GVK %v",
+			p.Replica.Name, gvks)
 	}
 
 	return nil
