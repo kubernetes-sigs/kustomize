@@ -38,6 +38,7 @@ What transformations (customizations) should be applied?
 | [namePrefix](#nameprefix) | string | Prepends value to the names of all resources |
 | [nameSuffix](#namesuffix) | string | The value is appended to the names of all resources. |
 | [replicas](#replicas) | list | Replicas modifies the number of replicas of a resource. |
+| [patches](#patches) | list | Each entry should resolve to a patch that can be applied to multiple targets. |
 |[patchesStrategicMerge](#patchesstrategicmerge)| list |Each entry in this list should resolve to a partial or complete resource definition file.|
 |[patchesJson6902](#patchesjson6902)| list  |Each entry in this list should resolve to a kubernetes object and a JSON patch that will be applied to the object.|
 |[transformers](#transformers)|list|[plugin](plugins) configuration files|
@@ -263,11 +264,43 @@ resource type is ConfigMap or Secret.
 nameSuffix: -v2
 ```
 
+### patches
+
+Each entry in this list should resolve to an Patch object,
+which includes a patch and a target selector. 
+The patch can be either a strategic merge patch or a JSON patch.
+it can be either a patch file or an inline string.
+The target selects
+resources by group, version, kind, name, namespace,
+labelSelector and annotationSelector. A resource
+which matches all the specified fields is selected
+to apply the patch.
+
+```
+patches:
+- path: patch.yaml
+  target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: deploy
+    labelSelector: "env=dev"
+    annotationSelector: "zone=west"
+- patch: |-
+    - op: replace
+      path: some/existing/path
+      value: new value
+  target:
+    kind: MyKind
+    labelSelector: "env=dev"        
+```
+
 ### patchesStrategicMerge
 
-Each entry in this list should be a relative path
+Each entry in this list should be either a relative
+file path or an inline content
 resolving to a partial or complete resource
-definition file.
+definition.
 
 The names in these (possibly partial) resource
 files must match names already loaded via the
@@ -284,6 +317,22 @@ patchesStrategicMerge:
 - service_port_8888.yaml
 - deployment_increase_replicas.yaml
 - deployment_increase_memory.yaml
+```
+
+The patch content can be a inline string as well.
+```
+patchesStrategicMerge:
+- |-
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx
+  spec:
+    template:
+      spec:
+        containers:
+          - name: nginx
+            image: nignx:latest
 ```
 
 ### patchesJson6902
@@ -328,6 +377,23 @@ patchesJson6902:
     kind: Service
     name: my-service
   path: add_service_annotation.yaml
+```
+
+The patch content can be an inline string as well:
+
+```
+patchesJson6902:
+- target:
+    version: v1
+    kind: Deployment
+    name: my-deployment
+  patch: |-
+    - op: add
+      path: /some/new/path
+      value: value
+    - op: replace
+      path: /some/existing/path
+      value: "new value"
 ```
 
 ### replicas
