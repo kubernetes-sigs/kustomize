@@ -78,7 +78,9 @@ paths:
 		t.Fatalf("expected error")
 	}
 	if !strings.Contains(err.Error(),
-		"cannot read file \"/app/patch.yaml\"") {
+		"cannot read file \"/app/patch.yaml\"") &&
+		!strings.Contains(err.Error(),
+			"cannot unmarshal string") {
 		t.Fatalf("unexpected err: %v", err)
 	}
 }
