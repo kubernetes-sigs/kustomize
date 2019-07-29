@@ -156,7 +156,7 @@ func (kt *KustTarget) configureBuiltinPatchJson6902Transformer(
 	for _, args := range kt.kustomization.PatchesJson6902 {
 		c.Target = *args.Target
 		c.Path = args.Path
-		c.JsonOp = "" // Not implemented for kustomization file yet.
+		c.JsonOp = args.Patch
 		p := builtin.NewPatchJson6902TransformerPlugin()
 		err = kt.configureBuiltinPlugin(p, c, "patchJson6902")
 		if err != nil {
@@ -178,7 +178,6 @@ func (kt *KustTarget) configureBuiltinPatchStrategicMergeTransformer(
 		Patches string                      `json:"patches,omitempty" yaml:"patches,omitempty"`
 	}
 	c.Paths = kt.kustomization.PatchesStrategicMerge
-	c.Patches = "" // Not implemented for kustomization file yet
 	p := builtin.NewPatchStrategicMergeTransformerPlugin()
 	err = kt.configureBuiltinPlugin(p, c, "patchStrategicMerge")
 	if err != nil {
