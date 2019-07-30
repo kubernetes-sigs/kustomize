@@ -283,7 +283,7 @@ patches:
     group: apps
     version: v1
     kind: Deployment
-    name: deploy
+    name: deploy.*
     labelSelector: "env=dev"
     annotationSelector: "zone=west"
 - patch: |-
@@ -294,6 +294,10 @@ patches:
     kind: MyKind
     labelSelector: "env=dev"        
 ```
+
+The `name` and `namespace` fields of the patch target selector are
+automatically anchored regular expressions. This means that the value `myapp`
+is equivalent to `^myapp$`. 
 
 ### patchesStrategicMerge
 

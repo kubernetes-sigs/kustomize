@@ -41,6 +41,12 @@ metadata:
     app: name3
   annotations:
     bar: baz
+---
+apiVersion: group1/v1
+kind: Kind2
+metadata:
+  name: x-name1
+  namespace: x-default
 `))
 	if err != nil {
 		t.Fatalf("unexpected error %v", err)
@@ -56,13 +62,13 @@ func TestFindPatchTargets(t *testing.T) {
 	}{
 		{
 			target: types.Selector{
-				Name: "name*",
+				Name: "name.*",
 			},
 			count: 3,
 		},
 		{
 			target: types.Selector{
-				Name:               "name*",
+				Name:               "name.*",
 				AnnotationSelector: "foo=bar",
 			},
 			count: 2,
@@ -78,7 +84,7 @@ func TestFindPatchTargets(t *testing.T) {
 				Gvk: gvk.Gvk{
 					Kind: "Kind1",
 				},
-				Name: "name*",
+				Name: "name.*",
 			},
 			count: 2,
 		},
@@ -92,7 +98,7 @@ func TestFindPatchTargets(t *testing.T) {
 			target: types.Selector{
 				Name: "",
 			},
-			count: 3,
+			count: 4,
 		},
 		{
 			target: types.Selector{
@@ -104,17 +110,59 @@ func TestFindPatchTargets(t *testing.T) {
 			target: types.Selector{
 				Namespace: "",
 			},
-			count: 3,
+			count: 4,
 		},
 		{
 			target: types.Selector{
 				Namespace: "default",
-				Name:      "name*",
+				Name:      "name.*",
 				Gvk: gvk.Gvk{
 					Kind: "Kind1",
 				},
 			},
 			count: 1,
+		},
+		{
+			target: types.Selector{
+				Name: "^name.*",
+			},
+			count: 3,
+		},
+		{
+			target: types.Selector{
+				Name: "name.*$",
+			},
+			count: 3,
+		},
+		{
+			target: types.Selector{
+				Name: "^name.*$",
+			},
+			count: 3,
+		},
+		{
+			target: types.Selector{
+				Namespace: "^def.*",
+			},
+			count: 2,
+		},
+		{
+			target: types.Selector{
+				Namespace: "def.*$",
+			},
+			count: 2,
+		},
+		{
+			target: types.Selector{
+				Namespace: "^def.*$",
+			},
+			count: 2,
+		},
+		{
+			target: types.Selector{
+				Namespace: "default",
+			},
+			count: 2,
 		},
 	}
 	for _, testcase := range testcases {
