@@ -43,17 +43,17 @@ type cachedSearch interface {
 //    over cached values.
 type githubCachedSearch struct {
 	cache       map[uint64]uint64
-	retryCount  uint64
+	gcl         GitHubClient
 	baseRequest request
 }
 
-func newCache(rc RequestConfig, query Query) githubCachedSearch {
+func newCache(client GitHubClient, query Query) githubCachedSearch {
 	return githubCachedSearch{
 		cache: map[uint64]uint64{
 			0: 0,
 		},
-		retryCount:  rc.RetryCount(),
-		baseRequest: rc.CodeSearchRequestWith(query),
+		gcl:         client,
+		baseRequest: client.CodeSearchRequestWith(query),
 	}
 }
 
@@ -66,7 +66,7 @@ func (c githubCachedSearch) CountResults(upperBound uint64) (uint64, error) {
 	sizeRange := RangeWithin{0, upperBound}
 	rangeRequest := c.RequestString(sizeRange)
 
-	result := parseGithubResponse(rangeRequest, c.retryCount)
+	result := c.gcl.parseGithubResponse(rangeRequest)
 	if result.Error != nil {
 		return count, result.Error
 	}
@@ -100,7 +100,7 @@ func (c githubCachedSearch) CountResults(upperBound uint64) (uint64, error) {
 			"Retrying query... current lower bound: %d, got: %d\n",
 			c.cache[prev], result.Parsed.TotalCount)
 
-		result = parseGithubResponse(rangeRequest, c.retryCount)
+		result = c.gcl.parseGithubResponse(rangeRequest)
 		if result.Error != nil {
 			return count, result.Error
 		}

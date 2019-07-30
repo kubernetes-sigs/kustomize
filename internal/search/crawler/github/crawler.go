@@ -24,18 +24,27 @@ var logger = log.New(os.Stdout, "Github Crawler: ",
 
 // Implements crawler.Crawler.
 type githubCrawler struct {
-	rc    RequestConfig
-	query Query
+	client GitHubClient
+	query  Query
 }
 
-func NewCrawler(
-	accessToken string, retryCount uint64, query Query) githubCrawler {
+type GitHubClient struct {
+	RequestConfig
+	retryCount uint64
+	client     *http.Client
+}
+
+func NewCrawler(accessToken string, retryCount uint64, client *http.Client,
+	query Query) githubCrawler {
 
 	return githubCrawler{
-		rc: RequestConfig{
-			perPage:     githubMaxPageSize,
-			retryCount:  retryCount,
-			accessToken: accessToken,
+		client: GitHubClient{
+			retryCount: retryCount,
+			client:     client,
+			RequestConfig: RequestConfig{
+				perPage:     githubMaxPageSize,
+				accessToken: accessToken,
+			},
 		},
 		query: query,
 	}
@@ -45,19 +54,27 @@ func NewCrawler(
 func (gc githubCrawler) Crawl(
 	ctx context.Context, output chan<- *doc.KustomizationDocument) error {
 
+	noETagClient := GitHubClient{
+		RequestConfig: gc.client.RequestConfig,
+		client:        &http.Client{Timeout: gc.client.client.Timeout},
+		retryCount:    gc.client.retryCount,
+	}
+
 	// Since Github returns a max of 1000 results per query, we can use
 	// multiple queries that split the search space into chunks of at most
 	// 1000 files to get all of the data.
-	ranges, err := FindRangesForRepoSearch(newCache(gc.rc, gc.query))
+	ranges, err := FindRangesForRepoSearch(newCache(noETagClient, gc.query))
 	if err != nil {
-		return fmt.Errorf("could not split search into ranges, %v\n",
-			err)
+		return fmt.Errorf("could not split %v into ranges, %v\n",
+			gc.query, err)
 	}
+
+	logger.Println("ranges: ", ranges)
 
 	// Query each range for files.
 	errs := make(multiError, 0)
 	for _, query := range ranges {
-		err := processQuery(ctx, gc.rc, query, output)
+		err := processQuery(ctx, gc.client, query, output)
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -68,7 +85,7 @@ func (gc githubCrawler) Crawl(
 
 // processQuery follows all of the pages in a query, and updates/adds the
 // documents from the crawl to the datastore/index.
-func processQuery(ctx context.Context, rc RequestConfig, query string,
+func processQuery(ctx context.Context, gcl GitHubClient, query string,
 	output chan<- *doc.KustomizationDocument) error {
 
 	queryPages := make(chan GithubResponseInfo)
@@ -77,8 +94,7 @@ func processQuery(ctx context.Context, rc RequestConfig, query string,
 		// Forward the document metadata to the retrieval channel.
 		// This separation allows for concurrent requests for the code
 		// search, and the retrieval portions of the API.
-		err := ForwardPaginatedQuery(
-			ctx, query, rc.retryCount, queryPages)
+		err := gcl.ForwardPaginatedQuery(ctx, query, queryPages)
 		if err != nil {
 			// TODO(damienr74) handle this error with redis?
 			logger.Println(err)
@@ -87,6 +103,8 @@ func processQuery(ctx context.Context, rc RequestConfig, query string,
 	}()
 
 	errs := make(multiError, 0)
+	errorCnt := 0
+	totalCnt := 0
 	for page := range queryPages {
 		if page.Error != nil {
 			errs = append(errs, page.Error)
@@ -101,35 +119,40 @@ func processQuery(ctx context.Context, rc RequestConfig, query string,
 			// search when we find a file that has been seen, or we
 			// can choose to selectively update files.
 
-			k, err := kustomizationResultAdapter(rc, file)
+			k, err := kustomizationResultAdapter(gcl, file)
 			if err != nil {
 				errs = append(errs, err)
+				errorCnt++
 				continue
 			}
 			output <- k
+			totalCnt++
 		}
+
+		logger.Printf("got %d files out of %d from API. %d of %d had errors\n",
+			totalCnt, page.Parsed.TotalCount, errorCnt, totalCnt)
 	}
 
 	return errs
 }
 
-func kustomizationResultAdapter(rc RequestConfig, k GithubFileSpec) (
+func kustomizationResultAdapter(gcl GitHubClient, k GithubFileSpec) (
 	*doc.KustomizationDocument, error) {
 
-	data, err := GetFileData(rc, k)
+	data, err := gcl.GetFileData(k)
 	if err != nil {
 		return nil, err
 	}
 
-	creationTime, err := GetFileCreationTime(rc, k)
+	creationTime, err := gcl.GetFileCreationTime(k)
 	if err != nil {
-		logger.Printf("(Error: %v) initializing to current time.", err)
+		logger.Printf("(error: %v) initializing to current time.", err)
 	}
 
 	doc := doc.KustomizationDocument{
 		DocumentData:  string(data),
-		FilePath:      doc.Atom(k.Path),
-		RepositoryURL: doc.Atom(k.Repository.URL),
+		FilePath:      k.Path,
+		RepositoryURL: k.Repository.URL,
 		CreationTime:  creationTime,
 	}
 
@@ -139,10 +162,12 @@ func kustomizationResultAdapter(rc RequestConfig, k GithubFileSpec) (
 // ForwardPaginatedQuery follows the links to the next pages and performs all of
 // the queries for a given search query, relaying the data from each request
 // back to an output channel.
-func ForwardPaginatedQuery(ctx context.Context, query string, retryCount uint64,
+func (gcl GitHubClient) ForwardPaginatedQuery(ctx context.Context, query string,
 	output chan<- GithubResponseInfo) error {
 
-	response := parseGithubResponse(query, retryCount)
+	logger.Println("querying: ", query)
+	response := gcl.parseGithubResponse(query)
+
 	if response.Error != nil {
 		return response.Error
 	}
@@ -154,7 +179,7 @@ func ForwardPaginatedQuery(ctx context.Context, query string, retryCount uint64,
 		case <-ctx.Done():
 			return nil
 		default:
-			response = parseGithubResponse(response.NextURL, retryCount)
+			response = gcl.parseGithubResponse(response.NextURL)
 			if response.Error != nil {
 				return response.Error
 			}
@@ -167,20 +192,22 @@ func ForwardPaginatedQuery(ctx context.Context, query string, retryCount uint64,
 }
 
 // GetFileData gets the bytes from a file.
-func GetFileData(rc RequestConfig, k GithubFileSpec) ([]byte, error) {
+func (gcl GitHubClient) GetFileData(k GithubFileSpec) ([]byte, error) {
 
-	url := rc.ContentsRequest(k.Repository.FullName, k.Path)
+	url := gcl.ContentsRequest(k.Repository.FullName, k.Path)
 
-	logger.Println("content-url ", url)
-	resp, err := GetReposData(url, rc.RetryCount())
+	resp, err := gcl.GetReposData(url)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%+v: could not get '%s' metadata: %v",
+			k, url, err)
 	}
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%+v: could not read '%s' metadata: %v",
+			k, url, err)
 	}
+	resp.Body.Close()
 
 	type githubContentRawURL struct {
 		DownloadURL string `json:"download_url,omitempty"`
@@ -188,30 +215,33 @@ func GetFileData(rc RequestConfig, k GithubFileSpec) ([]byte, error) {
 	var rawURL githubContentRawURL
 	err = json.Unmarshal(data, &rawURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(
+			"%+v: could not get 'download_url' from '%s' response: %v",
+			k, data, err)
 	}
 
-	logger.Println("raw-data-url", rawURL.DownloadURL)
-	resp, err = GetReposData(rawURL.DownloadURL, rc.RetryCount())
+	resp, err = gcl.GetRawUserContent(rawURL.DownloadURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%+v: could not fetch file raw data '%s': %v",
+			k, rawURL.DownloadURL, err)
 	}
 
+	defer resp.Body.Close()
 	return ioutil.ReadAll(resp.Body)
 }
 
 // GetFileCreationTime gets the earliest date of a file.
-func GetFileCreationTime(
-	rc RequestConfig, k GithubFileSpec) (time.Time, error) {
+func (gcl GitHubClient) GetFileCreationTime(
+	k GithubFileSpec) (time.Time, error) {
 
-	url := rc.CommitsRequest(k.Repository.FullName, k.Path)
+	url := gcl.CommitsRequest(k.Repository.FullName, k.Path)
 
 	defaultTime := time.Now()
 
-	logger.Println("commits-url", url)
-	resp, err := GetReposData(url, rc.RetryCount())
+	resp, err := gcl.GetReposData(url)
 	if err != nil {
-		return defaultTime, err
+		return defaultTime, fmt.Errorf(
+			"%+v: '%s' could not get metadata: %v", k, url, err)
 	}
 
 	type DateSpec struct {
@@ -224,18 +254,27 @@ func GetFileCreationTime(
 
 	_, lastURL := parseGithubLinkFormat(resp.Header.Get("link"))
 	if lastURL != "" {
-		resp, err = GetReposData(lastURL, rc.RetryCount())
+		resp, err = gcl.GetReposData(lastURL)
 		if err != nil {
-			return defaultTime, err
+			return defaultTime, fmt.Errorf(
+				"%+v: '%s' could not get metadata: %v",
+				k, lastURL, err)
 		}
 	}
 
+	defer resp.Body.Close()
 	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return defaultTime, fmt.Errorf(
+			"%+v: failed to read metadata: %v", k, err)
+	}
 	earliestDate := []DateSpec{}
 	err = json.Unmarshal(data, &earliestDate)
 	size := len(earliestDate)
 	if err != nil || size == 0 {
-		return defaultTime, err
+		return defaultTime, fmt.Errorf(
+			"%+v: server response '%s' not in expected format: %v",
+			k, data, err)
 	}
 
 	return time.Parse(time.RFC3339, earliestDate[size-1].Commit.Author.Date)
@@ -244,6 +283,9 @@ func GetFileCreationTime(
 // TODO(damienr74) change the tickers to actually check api rate limits, reset
 // times, and throttle requests dynamically based off of current utilization,
 // instead of hardcoding the documented values, these calls are not quota'd.
+// This is now especially important, since caching the API requests will reduce
+// API quota use (so we can actually make more requests in the allotted time
+// period).
 //
 // See https://developer.github.com/v3/rate_limit/ for details.
 var (
@@ -334,8 +376,8 @@ func parseGithubLinkFormat(links string) (string, string) {
 	return next, last
 }
 
-func parseGithubResponse(getRequest string, retryCount uint64) GithubResponseInfo {
-	resp, err := SearchGithubAPI(getRequest, retryCount)
+func (gcl GitHubClient) parseGithubResponse(getRequest string) GithubResponseInfo {
+	resp, err := gcl.SearchGithubAPI(getRequest)
 	requestInfo := GithubResponseInfo{
 		Response: resp,
 		Error:    err,
@@ -347,17 +389,18 @@ func parseGithubResponse(getRequest string, retryCount uint64) GithubResponseInf
 	}
 
 	var data []byte
+	defer resp.Body.Close()
 	data, requestInfo.Error = ioutil.ReadAll(resp.Body)
 	if requestInfo.Error != nil {
 		return requestInfo
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		logger.Println("Query: ", getRequest)
-		logger.Println("Status not OK at the source")
-		logger.Println("Header Dump", resp.Header)
-		logger.Println("Body Dump", string(data))
-		requestInfo.Error = fmt.Errorf("Request Rejected, Status '%s'",
+		logger.Println("query: ", getRequest)
+		logger.Println("status not OK at the source")
+		logger.Println("header dump", resp.Header)
+		logger.Println("body dump", string(data))
+		requestInfo.Error = fmt.Errorf("request rejected, status '%s'",
 			resp.Status)
 		return requestInfo
 	}
@@ -382,23 +425,30 @@ func parseGithubResponse(getRequest string, retryCount uint64) GithubResponseInf
 // SearchGithubAPI performs a search query and handles rate limitting for
 // the 'code/search?' endpoint as well as timed retries in the case of abuse
 // prevention.
-func SearchGithubAPI(query string, retryCount uint64) (*http.Response, error) {
+func (gcl GitHubClient) SearchGithubAPI(query string) (*http.Response, error) {
 	throttleSearchAPI()
-	return getWithRetry(query, retryCount)
+	return gcl.getWithRetry(query)
 }
 
 // GetReposData performs a search query and handles rate limitting for
 // the '/repos' endpoint as well as timed retries in the case of abuse
 // prevention.
-func GetReposData(query string, retryCount uint64) (*http.Response, error) {
+func (gcl GitHubClient) GetReposData(query string) (*http.Response, error) {
 	throttleRepoAPI()
-	return getWithRetry(query, retryCount)
+	return gcl.getWithRetry(query)
 }
 
-func getWithRetry(
-	query string, retryCount uint64) (resp *http.Response, err error) {
+// User content (file contents) is not API rate limited, so there's no use in
+// throttling this call.
+func (gcl GitHubClient) GetRawUserContent(query string) (*http.Response, error) {
+	return gcl.getWithRetry(query)
+}
 
-	resp, err = http.Get(query)
+func (gcl GitHubClient) getWithRetry(
+	query string) (resp *http.Response, err error) {
+
+	resp, err = gcl.client.Get(query)
+	retryCount := gcl.retryCount
 
 	for err == nil &&
 		resp.StatusCode == http.StatusForbidden &&
@@ -407,15 +457,21 @@ func getWithRetry(
 		retryTime := resp.Header.Get("Retry-After")
 		i, err := strconv.Atoi(retryTime)
 		if err != nil {
-			return resp, fmt.Errorf("Forbidden without 'Retry-After'")
+			return resp, fmt.Errorf(
+				"query '%s' forbidden without 'Retry-After'", query)
 		}
 		logger.Printf(
-			"Status Forbidden, retring %d more times\n", retryCount)
+			"status forbidden, retring %d more times\n", retryCount)
 
-		logger.Printf("Waiting %d seconds before retrying\n", i)
+		logger.Printf("waiting %d seconds before retrying\n", i)
 		time.Sleep(time.Second * time.Duration(i))
 		retryCount--
-		resp, err = http.Get(query)
+		resp, err = gcl.client.Get(query)
+	}
+
+	if err != nil {
+		return resp, fmt.Errorf("query '%s' could not be processed, %v",
+			query, err)
 	}
 
 	return resp, err

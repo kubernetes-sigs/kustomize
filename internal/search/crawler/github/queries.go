@@ -99,16 +99,12 @@ func Path(p string) queryField {
 // determine the date of a file.
 type RequestConfig struct {
 	perPage     uint64
-	retryCount  uint64
 	accessToken string
 }
 
-func NewRequestConfig(
-	perPage, retryCount uint64, accessToken string) RequestConfig {
-
+func NewRequestConfig(perPage uint64, accessToken string) RequestConfig {
 	return RequestConfig{
 		perPage:     perPage,
-		retryCount:  retryCount,
 		accessToken: accessToken,
 	}
 }
@@ -136,12 +132,6 @@ func (rc RequestConfig) ContentsRequest(fullRepoName, path string) string {
 func (rc RequestConfig) CommitsRequest(fullRepoName, path string) string {
 	uri := fmt.Sprintf("repos/%s/commits", fullRepoName)
 	return rc.makeRequest(uri, Query{Path(path)}).URL()
-}
-
-// How many times to retry the queries before giving up (used by the crawler,
-// not Github).
-func (rc RequestConfig) RetryCount() uint64 {
-	return rc.retryCount
 }
 
 func (rc RequestConfig) makeRequest(path string, query Query) request {
