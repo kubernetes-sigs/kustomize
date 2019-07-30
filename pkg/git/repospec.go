@@ -39,36 +39,36 @@ type RepoSpec struct {
 	raw string
 
 	// Host, e.g. github.com
-	host string
+	Host string
 
 	// orgRepo name (organization/repoName),
 	// e.g. kubernetes-sigs/kustomize
-	orgRepo string
+	OrgRepo string
 
-	// ConfirmedDir where the orgRepo is cloned to.
-	cloneDir fs.ConfirmedDir
+	// Dir where the orgRepo is cloned to.
+	Dir fs.ConfirmedDir
 
 	// Relative path in the repository, and in the cloneDir,
 	// to a Kustomization.
-	path string
+	Path string
 
 	// Branch or tag reference.
-	ref string
+	Ref string
 
 	// e.g. .git or empty in case of _git is present
-	gitSuffix string
+	GitSuffix string
 }
 
 // CloneSpec returns a string suitable for "git clone {spec}".
 func (x *RepoSpec) CloneSpec() string {
-	if isAzureHost(x.host) || isAWSHost(x.host) {
-		return x.host + x.orgRepo
+	if isAzureHost(x.Host) || isAWSHost(x.Host) {
+		return x.Host + x.OrgRepo
 	}
-	return x.host + x.orgRepo + x.gitSuffix
+	return x.Host + x.OrgRepo + x.GitSuffix
 }
 
 func (x *RepoSpec) CloneDir() fs.ConfirmedDir {
-	return x.cloneDir
+	return x.Dir
 }
 
 func (x *RepoSpec) Raw() string {
@@ -76,11 +76,11 @@ func (x *RepoSpec) Raw() string {
 }
 
 func (x *RepoSpec) AbsPath() string {
-	return x.cloneDir.Join(x.path)
+	return x.Dir.Join(x.Path)
 }
 
 func (x *RepoSpec) Cleaner(fSys fs.FileSystem) func() error {
-	return func() error { return fSys.RemoveAll(x.cloneDir.String()) }
+	return func() error { return fSys.RemoveAll(x.Dir.String()) }
 }
 
 // From strings like git@github.com:someOrg/someRepo.git or
@@ -98,8 +98,8 @@ func NewRepoSpecFromUrl(n string) (*RepoSpec, error) {
 		return nil, fmt.Errorf("url lacks host: %s", n)
 	}
 	return &RepoSpec{
-		raw: n, host: host, orgRepo: orgRepo,
-		cloneDir: notCloned, path: path, ref: gitRef, gitSuffix: gitSuffix}, nil
+		raw: n, Host: host, OrgRepo: orgRepo,
+		Dir: notCloned, Path: path, Ref: gitRef, GitSuffix: gitSuffix}, nil
 }
 
 const (
