@@ -18,7 +18,7 @@ type plugin struct {
 	rf            *resmap.Factory
 	loadedPatches []*resource.Resource
 	Paths         []types.PatchStrategicMerge `json:"paths,omitempty" yaml:"paths,omitempty"`
-	Patches       string                      `json:patches,omitempty" yaml:"patches,omitempty"`
+	Patches       string                      `json:"patches,omitempty" yaml:"patches,omitempty"`
 }
 
 //noinspection GoUnusedGlobalVariable
