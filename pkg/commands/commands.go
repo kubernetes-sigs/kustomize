@@ -13,6 +13,7 @@ import (
 	"sigs.k8s.io/kustomize/v3/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/validator"
 	"sigs.k8s.io/kustomize/v3/pkg/commands/build"
+	"sigs.k8s.io/kustomize/v3/pkg/commands/create"
 	"sigs.k8s.io/kustomize/v3/pkg/commands/edit"
 	"sigs.k8s.io/kustomize/v3/pkg/commands/misc"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
@@ -44,6 +45,7 @@ See https://sigs.k8s.io/kustomize
 			stdOut, fSys, v,
 			rf, pf),
 		edit.NewCmdEdit(fSys, v, uf),
+		create.NewCmdCreate(fSys),
 		misc.NewCmdConfig(fSys),
 		misc.NewCmdVersion(stdOut),
 	)
