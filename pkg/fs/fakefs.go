@@ -18,6 +18,7 @@ package fs
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -179,7 +180,87 @@ func (fs *fakeFs) WriteTestKustomizationWith(bytes []byte) {
 	fs.WriteFile(pgmconfig.KustomizationFileNames[0], bytes)
 }
 
+// Walk implements filepath.Walk using the fake filesystem.
+func (fs *fakeFs) Walk(path string, walkFn filepath.WalkFunc) error {
+	info, err := fs.lstat(path)
+	if err != nil {
+		err = walkFn(path, info, err)
+	} else {
+		err = fs.walk(path, info, walkFn)
+	}
+	if err == filepath.SkipDir {
+		return nil
+	}
+	return err
+}
+
 func (fs *fakeFs) pathMatch(path, pattern string) bool {
 	match, _ := filepath.Match(pattern, path)
 	return match
+}
+
+func (fs *fakeFs) lstat(path string) (*Fakefileinfo, error) {
+	f, found := fs.m[path]
+	if !found {
+		return nil, os.ErrNotExist
+	}
+	return &Fakefileinfo{f}, nil
+}
+
+func (fs *fakeFs) join(elem ...string) string {
+	for i, e := range elem {
+		if e != "" {
+			return strings.Replace(strings.Join(elem[i:], "/"), "//", "/", -1)
+		}
+	}
+	return ""
+}
+
+func (fs *fakeFs) readDirNames(path string) []string {
+	var names []string
+	if !strings.HasSuffix(path, "/") {
+		path += "/"
+	}
+	pathSegments := strings.Count(path, "/")
+	for name := range fs.m {
+		if name == path {
+			continue
+		}
+		if strings.Count(name, "/") > pathSegments {
+			continue
+		}
+		if strings.HasPrefix(name, path) {
+			names = append(names, filepath.Base(name))
+		}
+	}
+	sort.Strings(names)
+	return names
+}
+
+func (fs *fakeFs) walk(path string, info os.FileInfo, walkFn filepath.WalkFunc) error {
+	if !info.IsDir() {
+		return walkFn(path, info, nil)
+	}
+
+	names := fs.readDirNames(path)
+	if err := walkFn(path, info, nil); err != nil {
+		return err
+	}
+	for _, name := range names {
+		filename := fs.join(path, name)
+		fileInfo, err := fs.lstat(filename)
+		if err != nil {
+			if err := walkFn(filename, fileInfo, os.ErrNotExist); err != nil && err != filepath.SkipDir {
+				return err
+			}
+		} else {
+			err = fs.walk(filename, fileInfo, walkFn)
+			if err != nil {
+				if !fileInfo.IsDir() || err != filepath.SkipDir {
+					return err
+				}
+			}
+		}
+	}
+	return nil
 }
