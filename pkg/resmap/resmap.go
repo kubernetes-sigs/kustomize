@@ -650,11 +650,18 @@ func (m *resWrangler) appendReplaceOrMerge(
 	return nil
 }
 
+func anchorRegex(pattern string) string {
+	if pattern == "" {
+		return pattern
+	}
+	return "^" + pattern + "$"
+}
+
 // Select returns a list of resources that
 // are selected by a Selector
 func (m *resWrangler) Select(s types.Selector) ([]*resource.Resource, error) {
-	ns := regexp.MustCompile(s.Namespace)
-	nm := regexp.MustCompile(s.Name)
+	ns := regexp.MustCompile(anchorRegex(s.Namespace))
+	nm := regexp.MustCompile(anchorRegex(s.Name))
 	var result []*resource.Resource
 	for _, r := range m.Resources() {
 		curId := r.CurId()
