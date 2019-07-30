@@ -8,8 +8,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/v3/pkg/commands/edit/util"
 	"sigs.k8s.io/kustomize/v3/pkg/commands/kustfile"
+	"sigs.k8s.io/kustomize/v3/pkg/commands/util"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 	"sigs.k8s.io/kustomize/v3/pkg/patch"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
