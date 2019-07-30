@@ -1,81 +1,29 @@
 package doc
 
 import (
-	"fmt"
 	"reflect"
 	"sort"
 	"strings"
 	"testing"
-	"time"
-
-	"google.golang.org/appengine/search"
 )
-
-func TestLoadFailures(t *testing.T) {
-	type sentinelType struct{}
-	sentinel := sentinelType{}
-
-	testCases := [][]search.Field{
-		{{Name: identifierStr, Value: sentinel}},
-		{{Name: documentStr, Value: sentinel}},
-		{{Name: repoURLStr, Value: sentinel}},
-		{{Name: filePathStr, Value: sentinel}},
-		{{Name: creationTimeStr, Value: sentinel}},
-	}
-
-	for _, test := range testCases {
-		var k KustomizationDocument
-		err := k.Load(test, nil)
-		if err == nil {
-			t.Errorf("Type missmatch %#v should not be loadable", test)
-		}
-	}
-}
-
-func TestFieldLoadSaver(t *testing.T) {
-
-	commonTestCases := []KustomizationDocument{
-		{
-			identifiers:   []Atom{"namePrefix", "metadata.name", "kind"},
-			FilePath:      "some/path/kustomization.yaml",
-			RepositoryURL: "https://example.com/kustomize",
-			CreationTime:  time.Now(),
-			DocumentData: `
-namePrefix: dev-
-metadata:
-  name: app
-kind: Deployment
-`,
-		},
-	}
-
-	for _, test := range commonTestCases {
-		fields, metadata, err := test.Save()
-		if err != nil {
-			t.Errorf("Error calling Save(): %s\n", err)
-		}
-		doc := KustomizationDocument{}
-		err = doc.Load(fields, metadata)
-		if err != nil {
-			t.Errorf("Doc failed to load: %s\n", err)
-		}
-		if !reflect.DeepEqual(test, doc) {
-			t.Errorf("Expected loaded document (%+v) to be equal to (%+v)\n", doc, test)
-		}
-	}
-}
 
 func TestParseYAML(t *testing.T) {
 	testCases := []struct {
-		identifiers []Atom
+		identifiers []string
+		values      []string
 		yaml        string
 	}{
 		{
-			identifiers: []Atom{
+			identifiers: []string{
 				"namePrefix",
 				"metadata",
-				"metadata name",
+				"metadata:name",
 				"kind",
+			},
+			values: []string{
+				"namePrefix=dev-",
+				"metadata:name=app",
+				"kind=Deployment",
 			},
 			yaml: `
 namePrefix: dev-
@@ -85,17 +33,28 @@ kind: Deployment
 `,
 		},
 		{
-			identifiers: []Atom{
+			identifiers: []string{
 				"namePrefix",
 				"metadata",
-				"metadata name",
-				"metadata spec",
-				"metadata spec replicas",
+				"metadata:name",
+				"metadata:spec",
+				"metadata:spec:replicas",
 				"kind",
 				"replicas",
-				"replicas name",
-				"replicas count",
+				"replicas:name",
+				"replicas:count",
 				"resource",
+			},
+			values: []string{
+				"namePrefix=dev-",
+				"metadata:name=n1",
+				"metadata:spec:replicas=3",
+				"kind=Deployment",
+				"replicas:name=n1",
+				"replicas:name=n2",
+				"replicas:count=3",
+				"resource=file1.yaml",
+				"resource=file2.yaml",
 			},
 			yaml: `
 namePrefix: dev-
@@ -121,14 +80,6 @@ resource:
 		},
 	}
 
-	atomStrs := func(atoms []Atom) []string {
-		strs := make([]string, 0, len(atoms))
-		for _, val := range atoms {
-			strs = append(strs, fmt.Sprintf("%v", val))
-		}
-		return strs
-	}
-
 	for _, test := range testCases {
 		doc := KustomizationDocument{
 			DocumentData: test.yaml,
@@ -140,14 +91,20 @@ resource:
 			t.Errorf("Document error error: %s", err)
 		}
 
-		docIDs := atomStrs(doc.identifiers)
-		expectedIDs := atomStrs(test.identifiers)
-		sort.Strings(docIDs)
-		sort.Strings(expectedIDs)
+		cmpStrings := func(got, expected []string, label string) {
+			sort.Strings(got)
+			sort.Strings(expected)
 
-		if !reflect.DeepEqual(docIDs, expectedIDs) {
-			t.Errorf("Expected loaded document (%v) to be equal to (%v)\n",
-				strings.Join(docIDs, ","), strings.Join(expectedIDs, ","))
+			if !reflect.DeepEqual(got, expected) {
+				t.Errorf("Expected %s (%v) to be equal to (%v)\n",
+					label,
+					strings.Join(got, ","),
+					strings.Join(expected, ","))
+			}
+
 		}
+
+		cmpStrings(doc.Identifiers, test.identifiers, "identifiers")
+		cmpStrings(doc.Values, test.values, "values")
 	}
 }
