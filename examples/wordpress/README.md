@@ -51,7 +51,7 @@ Create a new kustomization with two bases,
 <!-- @createKustomization @test -->
 ```
 cat <<EOF >$DEMO_HOME/kustomization.yaml
-resources:
+bases:
 - wordpress
 - mysql
 namePrefix: demo-

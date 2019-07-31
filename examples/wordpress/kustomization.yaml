@@ -1,4 +1,4 @@
-resources:
+bases:
 - wordpress
 - mysql
 patchesStrategicMerge:
