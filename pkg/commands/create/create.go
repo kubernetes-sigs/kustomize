@@ -7,18 +7,19 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
-	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/v3/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/v3/pkg/commands/util"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 )
 
 type createFlags struct {
-	resources       []string
+	resources       string
 	namespace       string
 	annotations     string
 	labels          string
@@ -30,7 +31,7 @@ type createFlags struct {
 }
 
 // NewCmdCreate returns an instance of 'create' subcommand.
-func NewCmdCreate(fSys fs.FileSystem) *cobra.Command {
+func NewCmdCreate(fSys fs.FileSystem, uf ifc.KunstructuredFactory) *cobra.Command {
 	opts := createFlags{path: "."}
 	c := &cobra.Command{
 		Use:   "create",
@@ -38,22 +39,22 @@ func NewCmdCreate(fSys fs.FileSystem) *cobra.Command {
 		Long:  "",
 		Example: `
 	# Create a new overlay from the base '../base".
-	kustomize create --resource ../base
+	kustomize create --resources ../base
 
 	# Create a new kustomization detecting resources in the current directory.
 	kustomize create --autodetect
 
 	# Create a new kustomization with multiple resources and fields set.
-	kustomize create --resource depoyment.yaml --resource service.yaml --namespace staging --nameprefix acme-
+	kustomize create --resources deployment.yaml,service.yaml,../base --namespace staging --nameprefix acme-
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runCreate(opts, fSys)
+			return runCreate(opts, fSys, uf)
 		},
 	}
-	c.Flags().StringSliceVar(
+	c.Flags().StringVar(
 		&opts.resources,
-		"resource",
-		[]string{},
+		"resources",
+		"",
 		"Name of a file containing a file to add to the kustomization file.")
 	c.Flags().StringVar(
 		&opts.namespace,
@@ -93,8 +94,8 @@ func NewCmdCreate(fSys fs.FileSystem) *cobra.Command {
 	return c
 }
 
-func runCreate(opts createFlags, fSys fs.FileSystem) error {
-	resources, err := util.GlobPatterns(fSys, opts.resources)
+func runCreate(opts createFlags, fSys fs.FileSystem, uf ifc.KunstructuredFactory) error {
+	resources, err := util.GlobPatterns(fSys, strings.Split(opts.resources, ","))
 	if err != nil {
 		return err
 	}
@@ -102,7 +103,7 @@ func runCreate(opts createFlags, fSys fs.FileSystem) error {
 		return fmt.Errorf("kustomization file already exists")
 	}
 	if opts.detectResources {
-		detected, err := detectResources(fSys, opts.path, opts.detectRecursive)
+		detected, err := detectResources(fSys, uf, opts.path, opts.detectRecursive)
 		if err != nil {
 			return err
 		}
@@ -143,9 +144,8 @@ func runCreate(opts createFlags, fSys fs.FileSystem) error {
 	return mf.Write(m)
 }
 
-func detectResources(fSys fs.FileSystem, base string, recursive bool) ([]string, error) {
+func detectResources(fSys fs.FileSystem, uf ifc.KunstructuredFactory, base string, recursive bool) ([]string, error) {
 	var paths []string
-	factory := kunstruct.NewKunstructuredFactoryImpl()
 	err := fSys.Walk(base, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -171,7 +171,7 @@ func detectResources(fSys fs.FileSystem, base string, recursive bool) ([]string,
 		if err != nil {
 			return err
 		}
-		if _, err := factory.SliceFromBytes(fContents); err != nil {
+		if _, err := uf.SliceFromBytes(fContents); err != nil {
 			return nil
 		}
 		paths = append(paths, path)
