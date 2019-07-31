@@ -552,7 +552,7 @@ func (m *resWrangler) makeCopy(copier resCopier) ResMap {
 // SubsetThatCouldBeReferencedByResource implements ResMap.
 func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
 	inputRes *resource.Resource) ResMap {
-	result := New()
+	result := newOne()
 	inputId := inputRes.CurId()
 	isInputIdNamespaceable := inputId.IsNamespaceableKind()
 	rctxm := inputRes.PrefixesSuffixesEquals
@@ -563,13 +563,14 @@ func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
 		resId := r.CurId()
 		if (!isInputIdNamespaceable || !resId.IsNamespaceableKind() || resId.IsNsEquals(inputId)) &&
 			r.InSameKustomizeCtx(rctxm) {
-			err := result.Append(r)
-			if err != nil {
-				panic(err)
-			}
+			result.append(r)
 		}
 	}
 	return result
+}
+
+func (m *resWrangler) append(res *resource.Resource) {
+	m.rList = append(m.rList, res)
 }
 
 // AppendAll implements ResMap.
