@@ -45,7 +45,7 @@ See https://sigs.k8s.io/kustomize
 			stdOut, fSys, v,
 			rf, pf),
 		edit.NewCmdEdit(fSys, v, uf),
-		create.NewCmdCreate(fSys),
+		create.NewCmdCreate(fSys, uf),
 		misc.NewCmdConfig(fSys),
 		misc.NewCmdVersion(stdOut),
 	)

@@ -7,10 +7,13 @@ import (
 	"reflect"
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/v3/pkg/commands/kustfile"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 )
+
+var factory = kunstruct.NewKunstructuredFactoryImpl()
 
 func readKustomizationFS(t *testing.T, fakeFS fs.FileSystem) *types.Kustomization {
 	kf, err := kustfile.NewKustomizationFile(fakeFS)
@@ -25,7 +28,7 @@ func readKustomizationFS(t *testing.T, fakeFS fs.FileSystem) *types.Kustomizatio
 }
 func TestCreateNoArgs(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
-	cmd := NewCmdCreate(fakeFS)
+	cmd := NewCmdCreate(fakeFS, factory)
 	err := cmd.RunE(cmd, []string{})
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
@@ -36,13 +39,14 @@ func TestCreateNoArgs(t *testing.T) {
 func TestCreateWithResources(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	fakeFS.WriteFile("foo.yaml", []byte(""))
-	opts := createFlags{resources: []string{"foo.yaml"}}
-	err := runCreate(opts, fakeFS)
+	fakeFS.WriteFile("bar.yaml", []byte(""))
+	opts := createFlags{resources: "foo.yaml,bar.yaml"}
+	err := runCreate(opts, fakeFS, factory)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
 	m := readKustomizationFS(t, fakeFS)
-	expected := []string{"foo.yaml"}
+	expected := []string{"foo.yaml", "bar.yaml"}
 	if !reflect.DeepEqual(m.Resources, expected) {
 		t.Fatalf("expected %+v but got %+v", expected, m.Resources)
 	}
@@ -52,7 +56,7 @@ func TestCreateWithNamespace(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	want := "foo"
 	opts := createFlags{namespace: want}
-	err := runCreate(opts, fakeFS)
+	err := runCreate(opts, fakeFS, factory)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
@@ -66,7 +70,7 @@ func TestCreateWithNamespace(t *testing.T) {
 func TestCreateWithLabels(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	opts := createFlags{labels: "foo:bar"}
-	err := runCreate(opts, fakeFS)
+	err := runCreate(opts, fakeFS, factory)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
@@ -80,7 +84,7 @@ func TestCreateWithLabels(t *testing.T) {
 func TestCreateWithAnnotations(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	opts := createFlags{annotations: "foo:bar"}
-	err := runCreate(opts, fakeFS)
+	err := runCreate(opts, fakeFS, factory)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
@@ -95,7 +99,7 @@ func TestCreateWithNamePrefix(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	want := "foo-"
 	opts := createFlags{prefix: want}
-	err := runCreate(opts, fakeFS)
+	err := runCreate(opts, fakeFS, factory)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
@@ -109,7 +113,7 @@ func TestCreateWithNamePrefix(t *testing.T) {
 func TestCreateWithNameSuffix(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	opts := createFlags{suffix: "-foo"}
-	err := runCreate(opts, fakeFS)
+	err := runCreate(opts, fakeFS, factory)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
@@ -152,7 +156,7 @@ func TestCreateWithDetect(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	writeDetectContent(fakeFS)
 	opts := createFlags{path: "/", detectResources: true}
-	err := runCreate(opts, fakeFS)
+	err := runCreate(opts, fakeFS, factory)
 	if err != nil {
 		t.Fatalf("unexpected cmd error: %v", err)
 	}
@@ -167,7 +171,7 @@ func TestCreateWithDetectRecursive(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
 	writeDetectContent(fakeFS)
 	opts := createFlags{path: "/", detectResources: true, detectRecursive: true}
-	err := runCreate(opts, fakeFS)
+	err := runCreate(opts, fakeFS, factory)
 	if err != nil {
 		t.Fatalf("unexpected cmd error: %v", err)
 	}
