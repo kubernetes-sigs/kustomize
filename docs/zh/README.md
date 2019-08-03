@@ -6,7 +6,7 @@
 
  * [示例](../../examples) - 各种使用流程和概念的详细演示。
 
- * [术语表](../glossary.md) - 用于消除术语歧义。
+ * [术语表](glossary.md) - 用于消除术语歧义。
 
  * [Kustomize 字段](fields.md) - 介绍 [kustomization](../glossary.md#kustomization) 文件中各字段的含义。
 
