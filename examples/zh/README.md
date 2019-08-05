@@ -14,7 +14,7 @@ go get sigs.k8s.io/kustomize/v3/cmd/kustomize
 
   * [configGenerations](configGeneration.md) - 当 ConfigMapGenerator 修改时进行滚动更新。
 
-  * [combineConfigs](../combineConfigs.md) - 融合来自不同用户的配置数据（例如来自 devops/SRE 和 developers）。
+  * [combineConfigs](combineConfigs.md) - 融合来自不同用户的配置数据（例如来自 devops/SRE 和 developers）。
 
   * [generatorOptions](../generatorOptions.md) -修改所有 ConfigMapGenerator 和 SecretGenerator 的行为。
 
