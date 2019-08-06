@@ -67,6 +67,7 @@ func determineFieldOrder() []string {
 		"GeneratorOptions",
 		"Vars",
 		"Images",
+		"Replicas",
 		"Configurations",
 		"Generators",
 		"Transformers",
