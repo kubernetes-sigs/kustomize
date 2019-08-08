@@ -16,7 +16,7 @@ go get sigs.k8s.io/kustomize/v3/cmd/kustomize
 
   * [combineConfigs](combineConfigs.md) - 融合来自不同用户的配置数据（例如来自 devops/SRE 和 developers）。
 
-  * [generatorOptions](../generatorOptions.md) -修改所有 ConfigMapGenerator 和 SecretGenerator 的行为。
+  * [generatorOptions](generatorOptions.md) -修改所有 ConfigMapGenerator 和 SecretGenerator 的行为。
 
   * [vars](../wordpress/README.md) - 通过 vars 将一个资源的数据注入另一个资源的容器参数 （例如，为 wordpress 指定 SQL 服务）。
 

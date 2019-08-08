@@ -34,7 +34,7 @@ func TestSortArrayAndComputeHash(t *testing.T) {
 func TestHash(t *testing.T) {
 	// hash the empty string to be sure that sha256 is being used
 	expect := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sum := Hash("")
+	sum,_ := Encode(Hash("dashdkahdkajhdkjahdkajhdkasjlhdakjhdakjh"))
 	if expect != sum {
 		t.Errorf("expected hash %q but got %q", expect, sum)
 	}
