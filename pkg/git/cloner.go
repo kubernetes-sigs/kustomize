@@ -96,6 +96,20 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 		return errors.Wrapf(
 			err, "trouble hard resetting empty repository to %s", repoSpec.Ref)
 	}
+
+	cmd = exec.Command(
+		gitProgram,
+		"submodule",
+		"update",
+		"--init",
+		"--recursive")
+	cmd.Stdout = &out
+	cmd.Dir = repoSpec.Dir.String()
+	err = cmd.Run()
+	if err != nil {
+		return errors.Wrapf(err, "trouble fetching submodules for %s", repoSpec.Ref)
+	}
+
 	return nil
 }
 
