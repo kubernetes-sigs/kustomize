@@ -95,6 +95,7 @@ var orderFirst = []string{
 	"Secret",
 	"Service",
 	"LimitRange",
+	"PriorityClass",
 	"Deployment",
 	"StatefulSet",
 	"CronJob",
