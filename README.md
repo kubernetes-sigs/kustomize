@@ -24,8 +24,16 @@ these [instructions](docs/INSTALL.md).
 Browse the [docs](docs) or jump right into the
 tested [examples](examples).
 
-kustomize [v2.0.3] is available in [kubectl v1.14 and v1.15][kubectl].
+## kubectl integration
 
+Since [v1.14][kubectl announcement] the kustomize build system has been included in kubectl.
+
+| kubectl version | kustomize version |
+|---------|--------|
+| v1.15.x | [v2.0.3](https://github.com/kubernetes-sigs/kustomize/tree/v2.0.3) |
+| v1.14.x | [v2.0.3](https://github.com/kubernetes-sigs/kustomize/tree/v2.0.3) |
+
+For examples and guides for using the kubectl integration please see the [kubectl book] or the [kubernetes documentation].
 
 ## Usage
 
@@ -161,7 +169,9 @@ is governed by the [Kubernetes Code of Conduct].
 [imageBase]: docs/images/base.jpg
 [imageOverlay]: docs/images/overlay.jpg
 [kind/feature]: https://github.com/kubernetes-sigs/kustomize/labels/kind%2Ffeature
-[kubectl]: https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement
+[kubectl announcement]: https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement
+[kubectl book]: https://kubectl.docs.kubernetes.io/pages/app_customization/introduction.html
+[kubernetes documentation]: https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/
 [kubernetes style]: docs/glossary.md#kubernetes-style-object
 [kustomization]: docs/glossary.md#kustomization
 [overlay]: docs/glossary.md#overlay
