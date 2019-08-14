@@ -156,8 +156,28 @@ func sameBeginningSubarray(a, b []string) bool {
 		return true
 	}
 
-	for i, v := range a[0 : maxlen-1] {
-		if v != b[i] {
+	for i := 0; i <= maxlen-1; i++ {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func sameEndingSubarray(a, b []string) bool {
+	maxlen := len(b)
+	if len(a) < len(b) {
+		maxlen = len(a)
+	}
+
+	if maxlen == 0 {
+		return true
+	}
+
+	alen := len(a) - 1
+	blen := len(b) - 1
+	for i := 0; i <= maxlen-1; i++ {
+		if a[alen-i] != b[blen-i] {
 			return false
 		}
 	}
@@ -184,7 +204,8 @@ func (r *Resource) OutermostPrefixSuffixEquals(o ResCtx) bool {
 // as OutermostPrefixSuffix but performs a deeper comparison
 // of the the list of suffix and prefix.
 func (r *Resource) PrefixesSuffixesEquals(o ResCtx) bool {
-	return sameBeginningSubarray(r.GetNamePrefixes(), o.GetNamePrefixes()) && sameBeginningSubarray(r.GetNameSuffixes(), o.GetNameSuffixes())
+	return sameEndingSubarray(r.GetNamePrefixes(), o.GetNamePrefixes()) && sameEndingSubarray(r.GetNameSuffixes(), o.GetNameSuffixes())
+	// return sameBeginningSubarray(r.GetNamePrefixes(), o.GetNamePrefixes()) && sameBeginningSubarray(r.GetNameSuffixes(), o.GetNameSuffixes())
 }
 
 // This is used to compute if a referrer could potentially be impacted
