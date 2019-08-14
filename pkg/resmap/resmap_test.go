@@ -437,6 +437,173 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 	}
 }
 
+func addPfxSfx(r *resource.Resource, prefixes []string, suffixes []string) {
+	for _, pfx := range prefixes {
+		r.AddNamePrefix(pfx)
+	}
+
+	for _, sfx := range suffixes {
+		r.AddNameSuffix(sfx)
+	}
+}
+
+func TestSubsetThatCouldBeReferencedByResourceMultiLevel(t *testing.T) {
+	// Simulates ConfigMap and Deployment defined at level 1
+	// No prefix nor suffix added at that level
+	cm1 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "level1",
+			},
+		})
+	addPfxSfx(cm1, []string{""}, []string{""})
+	dep1 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "level1",
+			},
+		})
+	addPfxSfx(dep1, []string{""}, []string{""})
+
+	// Simulates ConfigMap and Deployment defined at level 1
+	// and prefix added in level 2 of kustomization
+	cm2p := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "level2p",
+			},
+		})
+	addPfxSfx(cm2p, []string{"", "level2p-"}, []string{"", ""})
+
+	dep2p := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "level2p",
+			},
+		})
+	addPfxSfx(dep2p, []string{"", "level2p-"}, []string{"", ""})
+
+	// Simulates ConfigMap and Deployment defined at level 1
+	// and suffix added in level 2 of kustomization
+	cm2s := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "level2s",
+			},
+		})
+	addPfxSfx(cm2s, []string{"", ""}, []string{"", "-level2s"})
+
+	dep2s := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "level2s",
+			},
+		})
+	addPfxSfx(dep2s, []string{"", ""}, []string{"", "-level2s"})
+
+	// Simulates ConfigMap and Deployment defined at level 1,
+	// prefix added in levels 2 and 3 of kustomization.
+	cm3e := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "level3e",
+			},
+		})
+	addPfxSfx(cm3e, []string{"", "level2p-", "level3e-"}, []string{"", "", ""})
+
+	dep3e := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "level3e",
+			},
+		})
+	addPfxSfx(dep3e, []string{"", "level2p-", "level3e-"}, []string{"", "", ""})
+
+	// Simulates Deployment defined at level 1, ConfigMap defined at level 2,
+	// prefix added in levels 2 and 3 of kustomization.
+	// This reproduce issue 1440.
+	cm3i := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "level3i",
+			},
+		})
+	addPfxSfx(cm3i, []string{"level2p-", "level3i-"}, []string{"", ""})
+
+	dep3i := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "level3i",
+			},
+		})
+	addPfxSfx(dep3i, []string{"", "level2p-", "level3i-"}, []string{"", "", ""})
+
+	tests := map[string]struct {
+		filter   *resource.Resource
+		expected ResMap
+	}{
+		"level1": {
+			filter: dep1,
+			expected: resmaptest_test.NewRmBuilder(t, rf).
+				AddR(cm1).AddR(dep1).ResMap(),
+		},
+		"level2p": {
+			filter: dep2p,
+			expected: resmaptest_test.NewRmBuilder(t, rf).
+				AddR(cm2p).AddR(dep2p).ResMap(),
+		},
+		"level2s": {
+			filter: dep2s,
+			expected: resmaptest_test.NewRmBuilder(t, rf).
+				AddR(cm2s).AddR(dep2s).ResMap(),
+		},
+		"level3p": {
+			filter: dep3e,
+			expected: resmaptest_test.NewRmBuilder(t, rf).
+				AddR(cm3e).AddR(dep3e).ResMap(),
+		},
+		"level3i": {
+			filter: dep3i,
+			expected: resmaptest_test.NewRmBuilder(t, rf).
+				AddR(cm3i).AddR(dep3i).ResMap(),
+		},
+	}
+	m := resmaptest_test.NewRmBuilder(t, rf).
+		AddR(cm1).AddR(dep1).AddR(cm2s).AddR(dep2s).AddR(cm2p).AddR(dep2p).AddR(cm3e).AddR(dep3e).AddR(cm3i).AddR(dep3i).ResMap()
+	for name, test := range tests {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			got := m.SubsetThatCouldBeReferencedByResource(test.filter)
+			err := test.expected.ErrorIfNotEqualLists(got)
+			if err != nil {
+				test.expected.Debug("expected")
+				got.Debug("actual")
+				t.Fatalf("Expected match")
+			}
+		})
+	}
+}
+
 func TestDeepCopy(t *testing.T) {
 	rm1 := resmaptest_test.NewRmBuilder(t, rf).Add(
 		map[string]interface{}{
