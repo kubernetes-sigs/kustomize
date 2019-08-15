@@ -18,6 +18,7 @@ package git
 
 import (
 	"bytes"
+	"log"
 	"os/exec"
 
 	"github.com/pkg/errors"
@@ -45,8 +46,10 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 		repoSpec.Dir.String())
 	var out bytes.Buffer
 	cmd.Stdout = &out
+	cmd.Stderr = &out
 	err = cmd.Run()
 	if err != nil {
+		log.Printf("Error initializing empty git repo: %s", out.String())
 		return errors.Wrapf(
 			err,
 			"trouble initializing empty git repo in %s",
@@ -60,9 +63,11 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 		"origin",
 		repoSpec.CloneSpec())
 	cmd.Stdout = &out
+	cmd.Stderr = &out
 	cmd.Dir = repoSpec.Dir.String()
 	err = cmd.Run()
 	if err != nil {
+		log.Printf("Error setting git remote: %s", out.String())
 		return errors.Wrapf(
 			err,
 			"trouble adding remote %s",
@@ -78,9 +83,11 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 		"origin",
 		repoSpec.Ref)
 	cmd.Stdout = &out
+	cmd.Stderr = &out
 	cmd.Dir = repoSpec.Dir.String()
 	err = cmd.Run()
 	if err != nil {
+		log.Printf("Error performing git fetch: %s", out.String())
 		return errors.Wrapf(err, "trouble fetching %s", repoSpec.Ref)
 	}
 
@@ -90,9 +97,11 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 		"--hard",
 		"FETCH_HEAD")
 	cmd.Stdout = &out
+	cmd.Stderr = &out
 	cmd.Dir = repoSpec.Dir.String()
 	err = cmd.Run()
 	if err != nil {
+		log.Printf("Error performing git reset: %s", out.String())
 		return errors.Wrapf(
 			err, "trouble hard resetting empty repository to %s", repoSpec.Ref)
 	}
