@@ -530,3 +530,67 @@ func TestLocalLoaderReferencingGitBase(t *testing.T) {
 		t.Fatalf("unexpected root %s", l2.Root())
 	}
 }
+
+func TestRepoDirectCycleDetection(t *testing.T) {
+	topDir := "/cycles"
+	cloneRoot := topDir + "/someClone"
+	fSys := fs.MakeFakeFS()
+	fSys.MkdirAll(topDir)
+	fSys.MkdirAll(cloneRoot)
+
+	root, err := demandDirectoryRoot(fSys, topDir)
+	if err != nil {
+		t.Fatalf("unexpected err: %v\n", err)
+	}
+	l1 := newLoaderAtConfirmedDir(
+		RestrictionRootOnly, validators.MakeFakeValidator(), root, fSys, nil,
+		git.DoNothingCloner(fs.ConfirmedDir(cloneRoot)))
+	p1 := "github.com/someOrg/someRepo/foo"
+	rs1, err := git.NewRepoSpecFromUrl(p1)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	l1.repoSpec = rs1
+	_, err = l1.New(p1)
+	if err == nil {
+		t.Fatalf("expected error")
+	}
+	if !strings.Contains(err.Error(), "cycle detected") {
+		t.Fatalf("unexpected err: %v", err)
+	}
+}
+
+func TestRepoIndirectCycleDetection(t *testing.T) {
+	topDir := "/cycles"
+	cloneRoot := topDir + "/someClone"
+	fSys := fs.MakeFakeFS()
+	fSys.MkdirAll(topDir)
+	fSys.MkdirAll(cloneRoot)
+
+	root, err := demandDirectoryRoot(fSys, topDir)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	l0 := newLoaderAtConfirmedDir(
+		RestrictionRootOnly, validators.MakeFakeValidator(), root, fSys, nil,
+		git.DoNothingCloner(fs.ConfirmedDir(cloneRoot)))
+
+	p1 := "github.com/someOrg/someRepo1"
+	p2 := "github.com/someOrg/someRepo2"
+
+	l1, err := l0.New(p1)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	l2, err := l1.New(p2)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	_, err = l2.New(p1)
+	if err == nil {
+		t.Fatalf("expected error")
+	}
+	if !strings.Contains(err.Error(), "cycle detected") {
+		t.Fatalf("unexpected err: %v", err)
+	}
+}
