@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	"sigs.k8s.io/kustomize/internal/search/doc"
+	"sigs.k8s.io/kustomize/internal/tools/doc"
 )
 
 // Simple crawler that forwards it's list of documents to a provided channel and
