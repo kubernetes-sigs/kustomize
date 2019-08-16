@@ -159,12 +159,18 @@ func (o *Options) emitResources(
 	if o.outputPath != "" && fSys.IsDir(o.outputPath) {
 		return writeIndividualFiles(fSys, o.outputPath, m)
 	}
-	if o.outOrder == legacy {
+	switch o.outOrder {
+	case legacy:
 		// Done this way just to show how overall sorting
 		// can be performed by a plugin.  This particular
 		// plugin doesn't require configuration; just make
 		// it and call transform.
 		builtin.NewLegacyOrderTransformerPlugin().Transform(m)
+	case kubectlapply:
+		builtin.NewKubectlApplyOrderTransformerPlugin().Transform(m)
+	case kubectldelete:
+		builtin.NewKubectlDeleteOrderTransformerPlugin().Transform(m)
+	default:
 	}
 	res, err := m.AsYaml()
 	if err != nil {

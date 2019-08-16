@@ -16,6 +16,8 @@ const (
 	unspecified reorderOutput = iota
 	none
 	legacy
+	kubectlapply
+	kubectldelete
 )
 
 const (
@@ -26,6 +28,8 @@ var (
 	flagReorderOutputValue = legacy.String()
 	flagReorderOutputHelp  = "Reorder the resources just before output. " +
 		"Use '" + legacy.String() + "' to apply a legacy reordering (Namespaces first, Webhooks last, etc). " +
+		"Use '" + kubectlapply.String() + "' to apply a kubectl apply friendly reordering (Namespaces first, etc). " +
+		"Use '" + kubectldelete.String() + "' to apply a kubetl delete friendy reordering (Namespaces last, etc). " +
 		"Use '" + none.String() + "' to suppress a final reordering."
 )
 
@@ -41,10 +45,14 @@ func validateFlagReorderOutput() (reorderOutput, error) {
 		return none, nil
 	case legacy.String():
 		return legacy, nil
+	case kubectlapply.String():
+		return kubectlapply, nil
+	case kubectldelete.String():
+		return kubectldelete, nil
 	default:
 		return unspecified, fmt.Errorf(
 			"illegal flag value --%s %s; legal values: %v",
 			flagReorderOutputName, flagReorderOutputValue,
-			[]string{legacy.String(), none.String()})
+			[]string{legacy.String(), kubectlapply.String(), kubectldelete.String(), none.String()})
 	}
 }

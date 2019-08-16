@@ -11,11 +11,13 @@ func _() {
 	_ = x[unspecified-0]
 	_ = x[none-1]
 	_ = x[legacy-2]
+	_ = x[kubectlapply-3]
+	_ = x[kubectldelete-4]
 }
 
-const _reorderOutput_name = "unspecifiednonelegacy"
+const _reorderOutput_name = "unspecifiednonelegacykubectlapplykubectldelete"
 
-var _reorderOutput_index = [...]uint8{0, 11, 15, 21}
+var _reorderOutput_index = [...]uint8{0, 11, 15, 21, 33, 46}
 
 func (i reorderOutput) String() string {
 	if i < 0 || i >= reorderOutput(len(_reorderOutput_index)-1) {
