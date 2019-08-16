@@ -30,7 +30,6 @@ function testGoLangCILint {
 
 function testGoTest {
   go test -v ./...
-  (cd ./internal/search; go test -v ./...)
 }
 
 # These tests require the helm program, and at the moment

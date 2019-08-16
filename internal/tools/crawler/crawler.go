@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"sync"
 
-	"sigs.k8s.io/kustomize/internal/search/doc"
+	"sigs.k8s.io/kustomize/internal/tools/doc"
 )
 
 // Crawler forwards documents from source repositories to index and store them

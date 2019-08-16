@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"sigs.k8s.io/kustomize/internal/search/doc"
+	"sigs.k8s.io/kustomize/internal/tools/doc"
 )
 
 var logger = log.New(os.Stdout, "Github Crawler: ",

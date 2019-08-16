@@ -1,4 +1,4 @@
-module sigs.k8s.io/kustomize/internal/search
+module sigs.k8s.io/kustomize/internal/tools
 
 go 1.12
 
