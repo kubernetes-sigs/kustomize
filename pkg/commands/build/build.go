@@ -167,8 +167,14 @@ func (o *Options) emitResources(
 		// it and call transform.
 		builtin.NewLegacyOrderTransformerPlugin().Transform(m)
 	case kubectlapply:
+		// The next improvment could be to read the kubectl apply
+		// order from the kustomization.yaml and pass it to the
+		// builtin plugin. This would help to deal with CRDs.
+		// Such a list would also help to be provide kustomize with
+		// the list of cluster-wide CRD (check gvk.IsNamespaceableKind())
 		builtin.NewKubectlApplyOrderTransformerPlugin().Transform(m)
 	case kubectldelete:
+		// Same note as kubectlapply
 		builtin.NewKubectlDeleteOrderTransformerPlugin().Transform(m)
 	default:
 	}
