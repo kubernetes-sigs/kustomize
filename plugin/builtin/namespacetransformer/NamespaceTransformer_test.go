@@ -4,9 +4,10 @@
 package main_test
 
 import (
+	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	kusttest_test "sigs.k8s.io/kustomize/v3/pkg/kusttest"
 	plugins_test "sigs.k8s.io/kustomize/v3/pkg/plugins/test"
 )
 
@@ -237,4 +238,44 @@ fieldSpecs:
 `, noChangeExpected)
 
 	th.AssertActualEqualsExpected(rm, noChangeExpected)
+}
+
+func TestNamespaceTransformerObjectConflict(t *testing.T) {
+	tc := plugins_test.NewEnvForTest(t).Set()
+	defer tc.Reset()
+
+	tc.BuildGoPlugin(
+		"builtin", "", "NamespaceTransformer")
+
+	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+
+	err := th.ErrorFromLoadAndRunTransformer(`
+apiVersion: builtin
+kind: NamespaceTransformer
+metadata:
+  name: notImportantHere
+  namespace: test
+fieldSpecs:
+- path: metadata/namespace
+  create: true
+`, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+  namespace: foo
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+  namespace: bar
+`)
+
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !strings.Contains(err.Error(), "ID conflict") {
+		t.Fatalf("unexpected error: %s", err.Error())
+	}
 }
