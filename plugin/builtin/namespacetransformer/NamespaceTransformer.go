@@ -5,6 +5,8 @@
 package main
 
 import (
+	"fmt"
+
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
@@ -51,6 +53,11 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 			if err != nil {
 				return err
 			}
+		}
+
+		matches := m.GetMatchingResourcesByCurrentId(r.CurId().Equals)
+		if len(matches) != 1 {
+			return fmt.Errorf("namespace tranformation produces ID conflict: %#v", matches)
 		}
 	}
 	return nil
