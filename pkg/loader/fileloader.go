@@ -204,7 +204,7 @@ func newLoaderAtGitClone(
 	repoSpec *git.RepoSpec,
 	v ifc.Validator, fSys fs.FileSystem,
 	referrer *fileLoader, cloner git.Cloner) (ifc.Loader, error) {
-	err := cloner(repoSpec)
+	err := cloner(repoSpec, fSys)
 	if err != nil {
 		return nil, err
 	}

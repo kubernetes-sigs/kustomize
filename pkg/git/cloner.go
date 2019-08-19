@@ -25,12 +25,12 @@ import (
 )
 
 // Cloner is a function that can clone a git repo.
-type Cloner func(repoSpec *RepoSpec) error
+type Cloner func(repoSpec *RepoSpec, fSys fs.FileSystem) error
 
 // ClonerUsingGitExec uses a local git install, as opposed
 // to say, some remote API, to obtain a local clone of
 // a remote repo.
-func ClonerUsingGitExec(repoSpec *RepoSpec) error {
+func ClonerUsingGitExec(repoSpec *RepoSpec, fSys fs.FileSystem) error {
 	gitProgram, err := exec.LookPath("git")
 	if err != nil {
 		return errors.Wrap(err, "no 'git' program on path")
@@ -47,6 +47,7 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 	cmd.Stdout = &out
 	err = cmd.Run()
 	if err != nil {
+		fSys.RemoveAll(repoSpec.Dir.String())
 		return errors.Wrapf(
 			err,
 			"trouble initializing empty git repo in %s",
@@ -63,6 +64,7 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 	cmd.Dir = repoSpec.Dir.String()
 	err = cmd.Run()
 	if err != nil {
+		fSys.RemoveAll(repoSpec.Dir.String())
 		return errors.Wrapf(
 			err,
 			"trouble adding remote %s",
@@ -81,6 +83,7 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 	cmd.Dir = repoSpec.Dir.String()
 	err = cmd.Run()
 	if err != nil {
+		fSys.RemoveAll(repoSpec.Dir.String())
 		return errors.Wrapf(err, "trouble fetching %s", repoSpec.Ref)
 	}
 
@@ -93,6 +96,7 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 	cmd.Dir = repoSpec.Dir.String()
 	err = cmd.Run()
 	if err != nil {
+		fSys.RemoveAll(repoSpec.Dir.String())
 		return errors.Wrapf(
 			err, "trouble hard resetting empty repository to %s", repoSpec.Ref)
 	}
@@ -104,7 +108,7 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 // the cloneDir is associated with some fake filesystem
 // used in a test.
 func DoNothingCloner(dir fs.ConfirmedDir) Cloner {
-	return func(rs *RepoSpec) error {
+	return func(rs *RepoSpec, fSys fs.FileSystem) error {
 		rs.Dir = dir
 		return nil
 	}
