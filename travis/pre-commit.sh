@@ -21,33 +21,64 @@ function runFunc {
   if [ $code -ne 0 ]; then
     result="FAILURE"
   fi
-  printf "============== end %s : %s code=%d\n\n\n" "$name" "$result" $code
+  printf "============== end %s : %s; exit code=%d\n\n\n" "$name" "$result" $code
 }
 
 function testGoLangCILint {
   golangci-lint run ./...
 }
 
-function testGoTest {
+function testGoTests {
   go test -v ./...
-}
 
-# These tests require the helm program, and at the moment
-# we're not asking travis to install helm.
-function testNoTravisGoTest {
-  go test -v sigs.k8s.io/kustomize/v3/pkg/target \
+  if [ -z ${TRAVIS+x} ]; then
+    echo " "
+    echo Not on travis, so running the notravis Go tests
+    echo " "
+    
+    # Requires helm.
+    # At the moment not asking travis to install it.
+    go test -v sigs.k8s.io/kustomize/v3/pkg/target \
       -run TestChartInflatorPlugin -tags=notravis
-  go test -v sigs.k8s.io/kustomize/v3/plugin/someteam.example.com/v1/chartinflator/... \
-    -run TestChartInflator -tags=notravis
-  mdrip --mode test --label helmtest README.md ./examples/chart.md
-  go test -v sigs.k8s.io/kustomize/v3/plugin/someteam.example.com/v1/validator/... \
+    go test -v sigs.k8s.io/kustomize/v3/plugin/someteam.example.com/v1/chartinflator/... \
+      -run TestChartInflator -tags=notravis
+
+    # Requires kubeeval.
+    # At the moment not asking travis to install it.
+    go test -v sigs.k8s.io/kustomize/v3/plugin/someteam.example.com/v1/validator/... \
        -run TestValidatorHappy -tags=notravis
-  go test -v sigs.k8s.io/kustomize/v3/plugin/someteam.example.com/v1/validator/... \
+    go test -v sigs.k8s.io/kustomize/v3/plugin/someteam.example.com/v1/validator/... \
        -run TestValidatorUnHappy -tags=notravis
+  fi
 }
 
-function testExamples {
-  mdrip --mode test --label test README.md ./examples
+function testExamplesAgainstLatestRelease {
+  /bin/rm -f $HOME/go/bin/kustomize
+  # Install latest release.
+  go get sigs.k8s.io/kustomize/v3/cmd/kustomize
+  PATH=$HOME/go/bin:$PATH \
+    mdrip --mode test --label testAgainstLatestRelease ./examples
+
+  if [ -z ${TRAVIS+x} ]; then
+    echo " "
+    echo Not on travis, so running the notravis example tests
+    echo " "
+
+    # Requires helm.  At the moment not asking travis to install it.
+    PATH=$HOME/go/bin:$PATH \
+      mdrip --mode test --label helmtest README.md ./examples/chart.md
+  fi
+}
+
+function testExamplesAgainstHead {
+  /bin/rm -f $HOME/go/bin/kustomize
+  # Install from head.
+  go install sigs.k8s.io/kustomize/v3/cmd/kustomize
+  # To test examples of unreleased features, add
+  # examples with code blocks annotated with some
+  # label _other than_ @testAgainstLatestRelease.
+  PATH=$HOME/go/bin:$PATH \
+    mdrip --mode test --label testAgainstLatestRelease ./examples
 }
 
 function generateCode {
@@ -100,15 +131,9 @@ echo "Working..."
 
 runFunc generateCode
 runFunc testGoLangCILint
-runFunc testGoTest
-
-if [ -z ${TRAVIS+x} ]; then
-  echo Not on travis, so running the notravis tests
-  runFunc testNoTravisGoTest
-fi
-
-PATH=$HOME/go/bin:$PATH
-runFunc testExamples
+runFunc testGoTests
+runFunc testExamplesAgainstLatestRelease
+runFunc testExamplesAgainstHead
 
 if [ $rc -eq 0 ]; then
   echo "SUCCESS!"

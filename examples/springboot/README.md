@@ -13,7 +13,7 @@ In the production environment we want to customize the following:
 - health check and readiness check.
 
 First make a place to work:
-<!-- @makeDemoHome @test -->
+<!-- @makeDemoHome @testAgainstLatestRelease -->
 ```
 DEMO_HOME=$(mktemp -d)
 ```
@@ -27,7 +27,7 @@ as HERE documents.
 
 Download them:
 
-<!-- @downloadResources @test -->
+<!-- @downloadResources @testAgainstLatestRelease -->
 ```
 CONTENT="https://raw.githubusercontent.com\
 /kubernetes-sigs/kustomize\
@@ -44,14 +44,14 @@ a file called `kustomization.yaml`.
 
 Start this file:
 
-<!-- @kustomizeYaml @test -->
+<!-- @kustomizeYaml @testAgainstLatestRelease -->
 ```
 touch $DEMO_HOME/kustomization.yaml
 ```
 
 ### Add the resources
 
-<!-- @addResources @test -->
+<!-- @addResources @testAgainstLatestRelease -->
 ```
 cd $DEMO_HOME
 
@@ -71,7 +71,7 @@ cat kustomization.yaml
 
 ### Add configMap generator
 
-<!-- @addConfigMap @test -->
+<!-- @addConfigMap @testAgainstLatestRelease -->
 ```
 echo "app.name=Kustomize Demo" >$DEMO_HOME/application.properties
 
@@ -102,7 +102,7 @@ For Spring Boot application, we can set an active profile through the environmen
 the application will pick up an extra `application-<profile>.properties` file. With this, we can customize the configMap in two
 steps. Add an environment variable through the patch and add a file to the configMap.
 
-<!-- @customizeConfigMap @test -->
+<!-- @customizeConfigMap @testAgainstLatestRelease -->
 ```
 cat <<EOF >$DEMO_HOME/patch.yaml
 apiVersion: apps/v1beta2
@@ -149,7 +149,7 @@ Arrange for the resources to begin with prefix
 _prod-_ (since they are meant for the _production_
 environment):
 
-<!-- @customizeLabel @test -->
+<!-- @customizeLabel @testAgainstLatestRelease -->
 ```
 cd $DEMO_HOME
 kustomize edit set nameprefix 'prod-'
@@ -165,7 +165,7 @@ This `namePrefix` directive adds _prod-_ to all
 resource names, as can be seen by building the
 resources:
 
-<!-- @build1 @test -->
+<!-- @build1 @testAgainstLatestRelease -->
 ```
 kustomize build $DEMO_HOME | grep prod-
 ```
@@ -180,7 +180,7 @@ selector.
 add a label, but one can always edit
 `kustomization.yaml` directly:
 
-<!-- @customizeLabels @test -->
+<!-- @customizeLabels @testAgainstLatestRelease -->
 ```
 cat <<EOF >>$DEMO_HOME/kustomization.yaml
 commonLabels:
@@ -191,7 +191,7 @@ EOF
 Confirm that the resources now all have names prefixed
 by `prod-` and the label tuple `env:prod`:
 
-<!-- @build2 @test -->
+<!-- @build2 @testAgainstLatestRelease -->
 ```
 kustomize build $DEMO_HOME | grep -C 3 env
 ```
@@ -205,7 +205,7 @@ set JVM options accordingly.
 
 Download the patch `memorylimit_patch.yaml`. It contains the memory limits setup.
 
-<!-- @downloadPatch @test -->
+<!-- @downloadPatch @testAgainstLatestRelease -->
 ```
 curl -s  -o "$DEMO_HOME/#1.yaml" \
   "$CONTENT/overlays/production/{memorylimit_patch}.yaml"
@@ -243,7 +243,7 @@ has end points such as `/actuator/health` for this. We can customize the k8s dep
 
 Download the patch `healthcheck_patch.yaml`. It contains the liveness probes and readyness probes.
 
-<!-- @downloadPatch @test -->
+<!-- @downloadPatch @testAgainstLatestRelease -->
 ```
 curl -s  -o "$DEMO_HOME/#1.yaml" \
   "$CONTENT/overlays/production/{healthcheck_patch}.yaml"
@@ -281,7 +281,7 @@ The output contains
 
 Add these patches to the kustomization:
 
-<!-- @addPatch @test -->
+<!-- @addPatch @testAgainstLatestRelease -->
 ```
 cd $DEMO_HOME
 kustomize edit add patch memorylimit_patch.yaml
@@ -301,7 +301,7 @@ The output of the following command can now be applied
 to the cluster (i.e. piped to `kubectl apply`) to
 create the production environment.
 
-<!-- @finalBuild @test -->
+<!-- @finalBuild @testAgainstLatestRelease -->
 ```
 kustomize build $DEMO_HOME  # | kubectl apply -f -
 ```
