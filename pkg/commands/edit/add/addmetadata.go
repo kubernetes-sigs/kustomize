@@ -18,10 +18,10 @@ package add
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/v3/pkg/commands/kustfile"
+	"sigs.k8s.io/kustomize/v3/pkg/commands/util"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
@@ -122,7 +122,7 @@ func (o *addMetadataOptions) validateAndParse(args []string) error {
 	if len(args) > 1 {
 		return fmt.Errorf("%ss must be comma-separated, with no spaces", o.kind)
 	}
-	m, err := o.convertToMap(args[0])
+	m, err := util.ConvertToMap(args[0], o.kind.String())
 	if err != nil {
 		return err
 	}
@@ -131,27 +131,6 @@ func (o *addMetadataOptions) validateAndParse(args []string) error {
 	}
 	o.metadata = m
 	return nil
-}
-
-func (o *addMetadataOptions) convertToMap(arg string) (map[string]string, error) {
-	result := make(map[string]string)
-	inputs := strings.Split(arg, ",")
-	for _, input := range inputs {
-		c := strings.Index(input, ":")
-		if c == 0 {
-			// key is not passed
-			return nil, o.makeError(input, "need k:v pair where v may be quoted")
-		} else if c < 0 {
-			// only key passed
-			result[input] = ""
-		} else {
-			// both key and value passed
-			key := input[:c]
-			value := trimQuotes(input[c+1:])
-			result[key] = value
-		}
-	}
-	return result, nil
 }
 
 func (o *addMetadataOptions) addAnnotations(m *types.Kustomization) error {
@@ -176,17 +155,4 @@ func (o *addMetadataOptions) writeToMap(m map[string]string, kind kindOfAdd) err
 		m[k] = v
 	}
 	return nil
-}
-
-func (o *addMetadataOptions) makeError(input string, message string) error {
-	return fmt.Errorf("invalid %s: '%s' (%s)", o.kind, input, message)
-}
-
-func trimQuotes(s string) string {
-	if len(s) >= 2 {
-		if s[0] == '"' && s[len(s)-1] == '"' {
-			return s[1 : len(s)-1]
-		}
-	}
-	return s
 }

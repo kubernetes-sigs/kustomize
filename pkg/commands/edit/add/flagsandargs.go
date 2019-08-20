@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	"sigs.k8s.io/kustomize/v3/pkg/commands/edit/util"
+	"sigs.k8s.io/kustomize/v3/pkg/commands/util"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 )
 
