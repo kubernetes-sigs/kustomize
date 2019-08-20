@@ -21,7 +21,7 @@
 
 首先创建一个工作空间：
 
-<!-- @makeWorkplace @test -->
+<!-- @makeWorkplace @testAgainstLatestRelease -->
 ```
 DEMO_HOME=$(mktemp -d)
 ```
@@ -38,7 +38,7 @@ DEMO_HOME=$(mktemp -d)
 
 为了使本文档保持简洁，base 的资源位于补充目录中，并不在此处，请按照下面的方法下载它们：
 
-<!-- @downloadBase @test -->
+<!-- @downloadBase @testAgainstLatestRelease -->
 ```
 BASE=$DEMO_HOME/base
 mkdir -p $BASE
@@ -51,7 +51,7 @@ curl -s -o "$BASE/#1.yaml" "https://raw.githubusercontent.com\
 
 观察该目录：
 
-<!-- @runTree @test -->
+<!-- @runTree @testAgainstLatestRelease -->
 ```
 tree $DEMO_HOME
 ```
@@ -80,14 +80,14 @@ tree $DEMO_HOME
 
 `base` 目录中包含一个 [kustomization] 文件：
 
-<!-- @showKustomization @test -->
+<!-- @showKustomization @testAgainstLatestRelease -->
 ```
 more $BASE/kustomization.yaml
 ```
 
 （可选）在 base 目录上运行 `kustomize` 将定制过的 resources 打印到标准输出：
 
-<!-- @buildBase @test -->
+<!-- @buildBase @testAgainstLatestRelease -->
 ```
 kustomize build $BASE
 ```
@@ -96,14 +96,14 @@ kustomize build $BASE
 
 定制 _app label_ 并应用于所有的 resources ：
 
-<!-- @addLabel @test -->
+<!-- @addLabel @testAgainstLatestRelease -->
 ```
 sed -i.bak 's/app: hello/app: my-hello/' \
     $BASE/kustomization.yaml
 ```
 
 查看效果：
-<!-- @checkLabel @test -->
+<!-- @checkLabel @testAgainstLatestRelease -->
 ```
 kustomize build $BASE | grep -C 3 app:
 ```
@@ -116,7 +116,7 @@ kustomize build $BASE | grep -C 3 app:
  * _Production_ 包含更多的副本数。
  * 来自这些集群 [variants] 的问候消息将与来自其他集群的不同。
 
-<!-- @overlayDirectories @test -->
+<!-- @overlayDirectories @testAgainstLatestRelease -->
 ```
 OVERLAYS=$DEMO_HOME/overlays
 mkdir -p $OVERLAYS/staging
@@ -127,7 +127,7 @@ mkdir -p $OVERLAYS/production
 
 在 `staging` 目录中创建一个 kustomization 文件，用来定义一个新的名称前缀和一些不同的 labels 。
 
-<!-- @makeStagingKustomization @test -->
+<!-- @makeStagingKustomization @testAgainstLatestRelease -->
 ```
 cat <<'EOF' >$OVERLAYS/staging/kustomization.yaml
 namePrefix: staging-
@@ -149,7 +149,7 @@ EOF
 
 同时，将 _risky_ 标记设置为 true 。
 
-<!-- @stagingMap @test -->
+<!-- @stagingMap @testAgainstLatestRelease -->
 ```
 cat <<EOF >$OVERLAYS/staging/map.yaml
 apiVersion: v1
@@ -166,7 +166,7 @@ EOF
 
 在 `production` 目录中创建一个 kustomization 文件，用来定义一个新的名称前缀和 labels 。
 
-<!-- @makeProductionKustomization @test -->
+<!-- @makeProductionKustomization @testAgainstLatestRelease -->
 ```
 cat <<EOF >$OVERLAYS/production/kustomization.yaml
 namePrefix: production-
@@ -187,7 +187,7 @@ EOF
 
 因为生产环境需要处理更多的流量，新建一个 production patch 来增加副本数。
 
-<!-- @productionDeployment @test -->
+<!-- @productionDeployment @testAgainstLatestRelease -->
 ```
 cat <<EOF >$OVERLAYS/production/deployment.yaml
 apiVersion: apps/v1
@@ -210,7 +210,7 @@ EOF
 
 查看目录结构和差异：
 
-<!-- @listFiles @test -->
+<!-- @listFiles @testAgainstLatestRelease -->
 ```
 tree $DEMO_HOME
 ```
@@ -268,12 +268,12 @@ diff \
 
 输出不同 _overlys_ 的配置：
 
-<!-- @buildStaging @test -->
+<!-- @buildStaging @testAgainstLatestRelease -->
 ```
 kustomize build $OVERLAYS/staging
 ```
 
-<!-- @buildProduction @test -->
+<!-- @buildProduction @testAgainstLatestRelease -->
 ```
 kustomize build $OVERLAYS/production
 ```

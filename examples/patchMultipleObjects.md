@@ -29,7 +29,7 @@ The example below shows how to inject a sidecar container for all deployment res
 
 Make a `kustomization` containing a Deployment resource.
 
-<!-- @createDeployment @test -->
+<!-- @createDeployment @testAgainstLatestRelease -->
 ```
 DEMO_HOME=$(mktemp -d)
 
@@ -74,7 +74,7 @@ EOF
 
 Declare a Strategic Merge Patch file to inject a sidecar container:
 
-<!-- @addPatch @test -->
+<!-- @addPatch @testAgainstLatestRelease -->
 ```
 cat <<EOF >$DEMO_HOME/patch.yaml
 apiVersion: apps/v1
@@ -95,7 +95,7 @@ EOF
 
 Apply the patch by adding _patches_ field in kustomization.yaml
 
-<!-- @applyPatch @test -->
+<!-- @applyPatch @testAgainstLatestRelease -->
 ```
 cat <<EOF >>$DEMO_HOME/kustomization.yaml
 patches:
@@ -107,7 +107,7 @@ EOF
 
 Running `kustomize build $DEMO_HOME`, in the output confirm that both Deployment resources are patched correctly.
 
-<!-- @confirmPatch @test -->
+<!-- @confirmPatch @testAgainstLatestRelease -->
 ```
 test 2 == \
   $(kustomize build $DEMO_HOME | grep "image: docker.io/istio/proxyv2" | wc -l); \

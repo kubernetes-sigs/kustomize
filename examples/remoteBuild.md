@@ -11,7 +11,7 @@ To try this immediately, run a build against the kustomization
 in the [multibases](multibases/README.md) example.  There's
 one pod in the output:
 
-<!-- @remoteOverlayBuild @test -->
+<!-- @remoteOverlayBuild @testAgainstLatestRelease -->
 
 ```
 target="github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6"
@@ -24,7 +24,7 @@ Run against the overlay in that example to get three pods
 (the overlay combines the dev, staging and prod bases for
 someone who wants to send them all at the same time):
 
-<!-- @remoteBuild @test -->
+<!-- @remoteBuild @testAgainstLatestRelease -->
 ```
 target="https://github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6"
 test 3 == \
@@ -34,7 +34,7 @@ test 3 == \
 
 A base can be a URL:
 
-<!-- @createOverlay @test -->
+<!-- @createOverlay @testAgainstLatestRelease -->
 ```
 DEMO_HOME=$(mktemp -d)
 
@@ -48,7 +48,7 @@ EOF
 Build this to confirm that all three pods from the base
 have the `remote-` prefix.
 
-<!-- @remoteBases @test -->
+<!-- @remoteBases @testAgainstLatestRelease -->
 ```
 test 3 == \
   $(kustomize build $DEMO_HOME | grep remote-.*-myapp-pod | wc -l); \

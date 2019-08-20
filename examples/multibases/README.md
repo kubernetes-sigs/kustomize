@@ -20,13 +20,13 @@ that is just a single pod.
 
 Define a place to work:
 
-<!-- @makeWorkplace @test -->
+<!-- @makeWorkplace @testAgainstLatestRelease -->
 ```
 DEMO_HOME=$(mktemp -d)
 ```
 
 Define a common base:
-<!-- @makeBase @test -->
+<!-- @makeBase @testAgainstLatestRelease -->
 ```
 BASE=$DEMO_HOME/base
 mkdir $BASE
@@ -51,7 +51,7 @@ EOF
 ```
 
 Define a dev variant overlaying base:
-<!-- @makeDev @test -->
+<!-- @makeDev @testAgainstLatestRelease -->
 ```
 DEV=$DEMO_HOME/dev
 mkdir $DEV
@@ -64,7 +64,7 @@ EOF
 ```
 
 Define a staging variant overlaying base:
-<!-- @makeStaging @test -->
+<!-- @makeStaging @testAgainstLatestRelease -->
 ```
 STAG=$DEMO_HOME/staging
 mkdir $STAG
@@ -77,7 +77,7 @@ EOF
 ```
 
 Define a production variant overlaying base:
-<!-- @makeProd @test -->
+<!-- @makeProd @testAgainstLatestRelease -->
 ```
 PROD=$DEMO_HOME/production
 mkdir $PROD
@@ -90,7 +90,7 @@ EOF
 ```
 
 Then define a _Kustomization_ composing three variants together:
-<!-- @makeTopLayer @test -->
+<!-- @makeTopLayer @testAgainstLatestRelease -->
 ```
 cat <<EOF >$DEMO_HOME/kustomization.yaml
 resources:
@@ -119,7 +119,7 @@ Now the workspace has following directories
 
 Confirm that the `kustomize build` output contains three pod objects from dev, staging and production variants.
 
-<!-- @confirmVariants @test -->
+<!-- @confirmVariants @testAgainstLatestRelease -->
 ```
 test 1 == \
   $(kustomize build $DEMO_HOME | grep cluster-a-dev-myapp-pod | wc -l); \

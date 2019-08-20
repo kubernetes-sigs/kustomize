@@ -3,7 +3,7 @@
 This tutorial shows how to modify images in resources, and create a custom images transformer configuration.
 
 Create a workspace by
-<!-- @createws @test -->
+<!-- @createws @testAgainstLatestRelease -->
 ```
 DEMO_HOME=$(mktemp -d)
 ```
@@ -15,7 +15,7 @@ Consider a Custom Resource Definition(CRD) of kind `MyKind` with field
 
 Add the following file to configure the images transformer for the CRD:
 
-<!-- @addConfig @test -->
+<!-- @addConfig @testAgainstLatestRelease -->
 ```
 mkdir $DEMO_HOME/kustomizeconfig
 cat > $DEMO_HOME/kustomizeconfig/mykind.yaml << EOF
@@ -30,7 +30,7 @@ EOF
 
 Create a file with some resources that includes an instance of `MyKind`:
 
-<!-- @createResource @test -->
+<!-- @createResource @testAgainstLatestRelease -->
 ```
 cat > $DEMO_HOME/resources.yaml << EOF
 
@@ -66,7 +66,7 @@ EOF
 
 Create a kustomization.yaml referring to it:
 
-<!-- @createKustomization @test -->
+<!-- @createKustomization @testAgainstLatestRelease -->
 ```
 cat > $DEMO_HOME/kustomization.yaml << EOF
 resources:
@@ -90,7 +90,7 @@ EOF
 
 Use the customized transformer configurations by specifying them
 in the kustomization file:
-<!-- @addTransformerConfigs @test -->
+<!-- @addTransformerConfigs @testAgainstLatestRelease -->
 ```
 cat >> $DEMO_HOME/kustomization.yaml << EOF
 configurations:
@@ -100,27 +100,27 @@ EOF
 
 Run `kustomize build` and verify that the images have been updated.
 
-<!-- @build @test -->
+<!-- @build @testAgainstLatestRelease -->
 ```
 test 1 == \
 $(kustomize build $DEMO_HOME | grep -A 2 ".*image" | grep "new-crd-image:new-v1-tag" | wc -l); \
 echo $?
 ```
 
-<!-- @build @test -->
+<!-- @build @testAgainstLatestRelease -->
 ```
 test 1 == \
 $(kustomize build $DEMO_HOME | grep -A 2 ".*image" | grep "new-app-1:MYNEWTAG-1" | wc -l); \
 echo $?
 ```
 
-<!-- @build @test -->
+<!-- @build @testAgainstLatestRelease -->
 ```
 test 1 == \
 $(kustomize build $DEMO_HOME | grep -A 2 ".*image" | grep "my-docker2@sha" | wc -l); \
 echo $?
 ```
-<!-- @build @test -->
+<!-- @build @testAgainstLatestRelease -->
 ```
 test 1 == \
 $(kustomize build $DEMO_HOME | grep -A 2 ".*image" | grep "prod-mysql:v3" | wc -l); \

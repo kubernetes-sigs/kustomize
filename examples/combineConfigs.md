@@ -128,7 +128,7 @@ defined in the [helloworld] demo.
 
 It will all live in this work directory:
 
-<!-- @makeWorkplace @test -->
+<!-- @makeWorkplace @testAgainstLatestRelease -->
 ```
 DEMO_HOME=$(mktemp -d)
 ```
@@ -139,7 +139,7 @@ DEMO_HOME=$(mktemp -d)
 
 Make a place to put the base configuration:
 
-<!-- @baseDir @test -->
+<!-- @baseDir @testAgainstLatestRelease -->
 ```
 mkdir -p $DEMO_HOME/base
 ```
@@ -150,7 +150,7 @@ environments. Here we're only defining a java
 properties file, and a `kustomization` file that
 references it.
 
-<!-- @baseKustomization @test -->
+<!-- @baseKustomization @testAgainstLatestRelease -->
 ```
 cat <<EOF >$DEMO_HOME/base/common.properties
 color=blue
@@ -171,14 +171,14 @@ EOF
 Make an abbreviation for the parent of the overlay
 directories:
 
-<!-- @overlays @test -->
+<!-- @overlays @testAgainstLatestRelease -->
 ```
 OVERLAYS=$DEMO_HOME/overlays
 ```
 
 Create the files that define the _development_ overlay:
 
-<!-- @developmentFiles @test -->
+<!-- @developmentFiles @testAgainstLatestRelease -->
 ```
 mkdir -p $OVERLAYS/development
 
@@ -206,7 +206,7 @@ EOF
 
 One can now generate the configMaps for development:
 
-<!-- @runDev @test -->
+<!-- @runDev @testAgainstLatestRelease -->
 ```
 kustomize build $OVERLAYS/development
 ```
@@ -260,7 +260,7 @@ deletes unused configMaps.
 Next, create the files for the _production_ overlay:
 
 
-<!-- @productionFiles @test -->
+<!-- @productionFiles @testAgainstLatestRelease -->
 ```
 mkdir -p $OVERLAYS/production
 
@@ -287,7 +287,7 @@ EOF
 
 One can now generate the configMaps for production:
 
-<!-- @runProd @test -->
+<!-- @runProd @testAgainstLatestRelease -->
 ```
 kustomize build $OVERLAYS/production
 ```
