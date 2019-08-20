@@ -33,7 +33,7 @@ chmod u+x kustomize
 
 使用 [Go] v1.10.1 或更高版本安装（如果可以访问 [golang.org]）：
 
-<!-- @installkustomize @test -->
+<!-- @installkustomize @testAgainstLatestRelease -->
 ```
 go install sigs.k8s.io/kustomize/v3/cmd/kustomize
 ```

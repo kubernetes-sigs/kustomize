@@ -11,7 +11,7 @@ In the production environment we want:
 - MySQL to use persistent disk for storing data.
 
 First make a place to work:
-<!-- @makeDemoHome @test -->
+<!-- @makeDemoHome @testAgainstLatestRelease -->
 ```
 DEMO_HOME=$(mktemp -d)
 ```
@@ -25,7 +25,7 @@ as HERE documents.
 
 Download them:
 
-<!-- @downloadResources @test -->
+<!-- @downloadResources @testAgainstLatestRelease -->
 ```
 curl -s  -o "$DEMO_HOME/#1.yaml" "https://raw.githubusercontent.com\
 /kubernetes-sigs/kustomize\
@@ -40,14 +40,14 @@ a file called `kustomization.yaml`.
 
 Start this file:
 
-<!-- @kustomizeYaml @test -->
+<!-- @kustomizeYaml @testAgainstLatestRelease -->
 ```
 touch $DEMO_HOME/kustomization.yaml
 ```
 
 ### Add the resources
 
-<!-- @addResources @test -->
+<!-- @addResources @testAgainstLatestRelease -->
 ```
 cd $DEMO_HOME
 
@@ -73,7 +73,7 @@ Arrange for the MySQL resources to begin with prefix
 _prod-_ (since they are meant for the _production_
 environment):
 
-<!-- @customizeLabel @test -->
+<!-- @customizeLabel @testAgainstLatestRelease -->
 ```
 cd $DEMO_HOME
 
@@ -91,7 +91,7 @@ cat kustomization.yaml
 This `namePrefix` directive adds _prod-_ to all
 resource names.
 
-<!-- @genNamePrefixConfig @test -->
+<!-- @genNamePrefixConfig @testAgainstLatestRelease -->
 ```
 kustomize build $DEMO_HOME
 ```
@@ -134,7 +134,7 @@ selector.
 `kustomize` does not have `edit set label` command to add
 a label, but one can always edit `kustomization.yaml` directly:
 
-<!-- @customizeLabels @test -->
+<!-- @customizeLabels @testAgainstLatestRelease -->
 ```
 sed -i.bak 's/app: helloworld/app: prod/' \
     $DEMO_HOME/kustomization.yaml
@@ -153,7 +153,7 @@ environment. So we want to use Persistent Disk in
 production. kustomize lets you apply `patchesStrategicMerge` to the
 resources.
 
-<!-- @createPatchFile @test -->
+<!-- @createPatchFile @testAgainstLatestRelease -->
 ```
 cat <<'EOF' > $DEMO_HOME/persistent-disk.yaml
 apiVersion: apps/v1beta2 # for versions before 1.9.0 use apps/v1beta2
@@ -173,7 +173,7 @@ EOF
 
 Add the patch file to `kustomization.yaml`:
 
-<!-- @specifyPatch @test -->
+<!-- @specifyPatch @testAgainstLatestRelease -->
 ```
 cat <<'EOF' >> $DEMO_HOME/kustomization.yaml
 patchesStrategicMerge:
@@ -199,7 +199,7 @@ The output of the following command can now be applied
 to the cluster (i.e. piped to `kubectl apply`) to
 create the production environment.
 
-<!-- @finalInflation @test -->
+<!-- @finalInflation @testAgainstLatestRelease -->
 ```
 kustomize build $DEMO_HOME  # | kubectl apply -f -
 ```

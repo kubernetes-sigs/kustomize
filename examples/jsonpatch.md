@@ -6,7 +6,7 @@ The example below modifies an `Ingress` object with such a patch.
 
 Make a `kustomization` containing an ingress resource.
 
-<!-- @createIngress @test -->
+<!-- @createIngress @testAgainstLatestRelease -->
 ```
 DEMO_HOME=$(mktemp -d)
 
@@ -36,7 +36,7 @@ Declare a JSON patch file to update two fields of the Ingress object:
 - change host from `foo.bar.com` to `foo.bar.io`
 - change servicePort from `80` to `8080`
 
-<!-- @addJsonPatch @test -->
+<!-- @addJsonPatch @testAgainstLatestRelease -->
 ```
 cat <<EOF >$DEMO_HOME/ingress_patch.json
 [
@@ -48,7 +48,7 @@ EOF
 
 You can also write the patch in YAML format. This example also shows the "add" operation:
 
-<!-- @addYamlPatch @test -->
+<!-- @addYamlPatch @testAgainstLatestRelease -->
 ```
 cat <<EOF >$DEMO_HOME/ingress_patch.yaml
 - op: replace
@@ -67,7 +67,7 @@ EOF
 
 Apply the patch by adding _patchesJson6902_ field in kustomization.yaml
 
-<!-- @applyJsonPatch @test -->
+<!-- @applyJsonPatch @testAgainstLatestRelease -->
 ```
 cat <<EOF >>$DEMO_HOME/kustomization.yaml
 patchesJson6902:
@@ -81,14 +81,14 @@ EOF
 ```
 
 Running `kustomize build $DEMO_HOME`, in the output confirm that host has been updated correctly.
-<!-- @confirmHost @test -->
+<!-- @confirmHost @testAgainstLatestRelease -->
 ```
 test 1 == \
   $(kustomize build $DEMO_HOME | grep "host: foo.bar.io" | wc -l); \
   echo $?
 ```
 Running `kustomize build $DEMO_HOME`, in the output confirm that the servicePort has been updated correctly.
-<!-- @confirmServicePort @test -->
+<!-- @confirmServicePort @testAgainstLatestRelease -->
 ```
 test 1 == \
   $(kustomize build $DEMO_HOME | grep "servicePort: 8080" | wc -l); \
@@ -97,7 +97,7 @@ test 1 == \
 
 If the patch is YAML-formatted, it will be parsed correctly:
 
-<!-- @applyYamlPatch @test -->
+<!-- @applyYamlPatch @testAgainstLatestRelease -->
 ```
 cat <<EOF >>$DEMO_HOME/kustomization.yaml
 patchesJson6902:
@@ -110,7 +110,7 @@ patchesJson6902:
 EOF
 ```
 
-<!-- @confirmYamlPatch @test -->
+<!-- @confirmYamlPatch @testAgainstLatestRelease -->
 ```
 test 1 == \
   $(kustomize build $DEMO_HOME | grep "path: /test" | wc -l); \

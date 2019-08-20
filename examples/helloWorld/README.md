@@ -22,7 +22,7 @@ Steps:
 
 First define a place to work:
 
-<!-- @makeWorkplace @test -->
+<!-- @makeWorkplace @testAgainstLatestRelease -->
 ```
 DEMO_HOME=$(mktemp -d)
 ```
@@ -44,7 +44,7 @@ To keep this document shorter, the base resources are
 off in a supplemental data directory rather than
 declared here as HERE documents.  Download them:
 
-<!-- @downloadBase @test -->
+<!-- @downloadBase @testAgainstLatestRelease -->
 ```
 BASE=$DEMO_HOME/base
 mkdir -p $BASE
@@ -57,7 +57,7 @@ curl -s -o "$BASE/#1.yaml" "https://raw.githubusercontent.com\
 
 Look at the directory:
 
-<!-- @runTree @test -->
+<!-- @runTree @testAgainstLatestRelease -->
 ```
 tree $DEMO_HOME
 ```
@@ -88,7 +88,7 @@ would only recognize the resource files.
 
 The `base` directory has a [kustomization] file:
 
-<!-- @showKustomization @test -->
+<!-- @showKustomization @testAgainstLatestRelease -->
 ```
 more $BASE/kustomization.yaml
 ```
@@ -96,7 +96,7 @@ more $BASE/kustomization.yaml
 Optionally, run `kustomize` on the base to emit
 customized resources to `stdout`:
 
-<!-- @buildBase @test -->
+<!-- @buildBase @testAgainstLatestRelease -->
 ```
 kustomize build $BASE
 ```
@@ -106,14 +106,14 @@ kustomize build $BASE
 A first customization step could be to change the _app
 label_ applied to all resources:
 
-<!-- @addLabel @test -->
+<!-- @addLabel @testAgainstLatestRelease -->
 ```
 sed -i.bak 's/app: hello/app: my-hello/' \
     $BASE/kustomization.yaml
 ```
 
 See the effect:
-<!-- @checkLabel @test -->
+<!-- @checkLabel @testAgainstLatestRelease -->
 ```
 kustomize build $BASE | grep -C 3 app:
 ```
@@ -127,7 +127,7 @@ Create a _staging_ and _production_ [overlay]:
  * Web server greetings from these cluster
    [variants] will differ from each other.
 
-<!-- @overlayDirectories @test -->
+<!-- @overlayDirectories @testAgainstLatestRelease -->
 ```
 OVERLAYS=$DEMO_HOME/overlays
 mkdir -p $OVERLAYS/staging
@@ -139,7 +139,7 @@ mkdir -p $OVERLAYS/production
 In the `staging` directory, make a kustomization
 defining a new name prefix, and some different labels.
 
-<!-- @makeStagingKustomization @test -->
+<!-- @makeStagingKustomization @testAgainstLatestRelease -->
 ```
 cat <<'EOF' >$OVERLAYS/staging/kustomization.yaml
 namePrefix: staging-
@@ -162,7 +162,7 @@ greeting from _Good Morning!_ to _Have a pineapple!_
 
 Also, enable the _risky_ flag.
 
-<!-- @stagingMap @test -->
+<!-- @stagingMap @testAgainstLatestRelease -->
 ```
 cat <<EOF >$OVERLAYS/staging/map.yaml
 apiVersion: v1
@@ -180,7 +180,7 @@ EOF
 In the production directory, make a kustomization
 with a different name prefix and labels.
 
-<!-- @makeProductionKustomization @test -->
+<!-- @makeProductionKustomization @testAgainstLatestRelease -->
 ```
 cat <<EOF >$OVERLAYS/production/kustomization.yaml
 namePrefix: production-
@@ -202,7 +202,7 @@ EOF
 Make a production patch that increases the replica
 count (because production takes more traffic).
 
-<!-- @productionDeployment @test -->
+<!-- @productionDeployment @testAgainstLatestRelease -->
 ```
 cat <<EOF >$OVERLAYS/production/deployment.yaml
 apiVersion: apps/v1
@@ -228,7 +228,7 @@ EOF
 
 Review the directory structure and differences:
 
-<!-- @listFiles @test -->
+<!-- @listFiles @testAgainstLatestRelease -->
 ```
 tree $DEMO_HOME
 ```
@@ -288,12 +288,12 @@ something like
 
 The individual resource sets are:
 
-<!-- @buildStaging @test -->
+<!-- @buildStaging @testAgainstLatestRelease -->
 ```
 kustomize build $OVERLAYS/staging
 ```
 
-<!-- @buildProduction @test -->
+<!-- @buildProduction @testAgainstLatestRelease -->
 ```
 kustomize build $OVERLAYS/production
 ```

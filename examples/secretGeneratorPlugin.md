@@ -25,7 +25,7 @@ etc.
 
 ## Make a place to work
 
-<!-- @establishBase @test -->
+<!-- @establishBase @testAgainstLatestRelease -->
 ```
 DEMO_HOME=$(mktemp -d)
 ```
@@ -43,7 +43,7 @@ Here's an example combining all three methods:
 
 Make an env file with some short secrets:
 
-<!-- @makeEnvFile @test -->
+<!-- @makeEnvFile @testAgainstLatestRelease -->
 ```
 cat <<'EOF' >$DEMO_HOME/foo.env
 ROUTER_PASSWORD=admin
@@ -53,7 +53,7 @@ EOF
 
 Make a text file with a long secret:
 
-<!-- @makeLongSecretFile @test -->
+<!-- @makeLongSecretFile @testAgainstLatestRelease -->
 ```
 cat <<'EOF' >$DEMO_HOME/longsecret.txt
 Lorem ipsum dolor sit amet,
@@ -67,7 +67,7 @@ And make a kustomization file referring to the
 above and _additionally_ defining some literal KV
 pairs in line:
 
-<!-- @makeKustomization1 @test -->
+<!-- @makeKustomization1 @testAgainstLatestRelease -->
 ```
 cat <<'EOF' >$DEMO_HOME/kustomization.yaml
 secretGenerator:
@@ -84,7 +84,7 @@ EOF
 
 Now generate the Secret:
 
-<!-- @build1 @test -->
+<!-- @build1 @testAgainstLatestRelease -->
 ```
 result=$(kustomize build $DEMO_HOME)
 echo "$result"
@@ -141,7 +141,7 @@ from a database.
 
 Download it
 
-<!-- @copyPlugin @test -->
+<!-- @copyPlugin @testAgainstLatestRelease -->
 ```
 repo=https://raw.githubusercontent.com/kubernetes-sigs/kustomize
 pPath=plugin/someteam.example.com/v1/secretsfromdatabase
@@ -165,7 +165,7 @@ go build -buildmode plugin \
 
 Create a configuration file for it:
 
-<!-- @makeConfiguration @test -->
+<!-- @makeConfiguration @testAgainstLatestRelease -->
 ```
 cat <<'EOF' >$DEMO_HOME/secretFromDb.yaml
 apiVersion: someteam.example.com/v1
@@ -183,7 +183,7 @@ EOF
 Create a new kustomization file
 referencing this plugin:
 
-<!-- @makeKustomization2 @test -->
+<!-- @makeKustomization2 @testAgainstLatestRelease -->
 ```
 cat <<'EOF' >$DEMO_HOME/kustomization.yaml
 generators:
