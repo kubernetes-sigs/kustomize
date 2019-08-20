@@ -288,7 +288,7 @@ patches:
     annotationSelector: "zone=west"
 - patch: |-
     - op: replace
-      path: some/existing/path
+      path: /some/existing/path
       value: new value
   target:
     kind: MyKind
