@@ -120,3 +120,8 @@ func (realFS) ReadFile(name string) ([]byte, error) { return ioutil.ReadFile(nam
 func (realFS) WriteFile(name string, c []byte) error {
 	return ioutil.WriteFile(name, c, 0666)
 }
+
+// Walk delegates to filepath.Walk.
+func (realFS) Walk(path string, walkFn filepath.WalkFunc) error {
+	return filepath.Walk(path, walkFn)
+}

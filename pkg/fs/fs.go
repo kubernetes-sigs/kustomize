@@ -20,6 +20,7 @@ package fs
 import (
 	"io"
 	"os"
+	"path/filepath"
 )
 
 // FileSystem groups basic os filesystem methods.
@@ -35,6 +36,7 @@ type FileSystem interface {
 	Glob(pattern string) ([]string, error)
 	ReadFile(name string) ([]byte, error)
 	WriteFile(name string, data []byte) error
+	Walk(path string, walkFn filepath.WalkFunc) error
 }
 
 // File groups the basic os.File methods.
