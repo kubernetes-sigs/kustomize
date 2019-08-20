@@ -179,7 +179,7 @@ func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 			return nil, err
 		}
 		return newLoaderAtGitClone(
-			repoSpec, fl.validator, fl.fSys, fl.referrer, fl.cloner)
+			repoSpec, fl.validator, fl.fSys, fl, fl.cloner)
 	}
 	if filepath.IsAbs(path) {
 		return nil, fmt.Errorf("new root '%s' cannot be absolute", path)

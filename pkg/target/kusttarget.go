@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -329,9 +330,11 @@ func (kt *KustTarget) accumulateResources(
 				return err
 			}
 		} else {
-			err = kt.accumulateFile(ra, path)
-			if err != nil {
-				return err
+			err2 := kt.accumulateFile(ra, path)
+			if err2 != nil {
+				// Log ldr.New() error to highlight git failures.
+				log.Print(err.Error())
+				return err2
 			}
 		}
 	}
