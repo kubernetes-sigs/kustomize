@@ -13,7 +13,7 @@ DEMO_HOME=$(mktemp -d)
 
 Create a kustomization and add a ConfigMap generator to it.
 
-<!-- @createCMGenerator @test -->
+<!-- @createCMGenerator @testAgainstLatestRelease -->
 ```
 cat > $DEMO_HOME/kustomization.yaml << EOF
 configMapGenerator:
@@ -25,7 +25,7 @@ EOF
 ```
 
 Add following generatorOptions
-<!-- @addGeneratorOptions @test -->
+<!-- @addGeneratorOptions @testAgainstLatestRelease -->
 ```
 cat >> $DEMO_HOME/kustomization.yaml << EOF
 generatorOptions:
@@ -39,7 +39,7 @@ EOF
 Run `kustomize build` and make sure that the generated ConfigMap
  
  - doesn't have name suffix
-    <!-- @verify @test -->
+    <!-- @verify @testAgainstLatestRelease -->
     ```
     test 1 == \
     $(kustomize build $DEMO_HOME | grep "name: my-configmap$" | wc -l); \

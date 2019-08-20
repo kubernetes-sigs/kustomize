@@ -3,7 +3,7 @@
 This tutorial shows how to add transformer configurations to support a custom resource.
 
 Create a workspace by
-<!-- @createws @test -->
+<!-- @createws @testAgainstLatestRelease -->
 ```
 DEMO_HOME=$(mktemp -d)
 ```
@@ -17,7 +17,7 @@ Consider a CRD of kind `MyKind` with fields
 - `.spec.selectors` as the label selectors
 
 Add the following file to configure the transformers for the above fields
-<!-- @addConfig @test -->
+<!-- @addConfig @testAgainstLatestRelease -->
 ```
 mkdir $DEMO_HOME/kustomizeconfig
 cat > $DEMO_HOME/kustomizeconfig/mykind.yaml << EOF
@@ -51,7 +51,7 @@ EOF
 Create a file with some resources that
 includes an instance of `MyKind`:
 
-<!-- @createResource @test -->
+<!-- @createResource @testAgainstLatestRelease -->
 ```
 cat > $DEMO_HOME/resources.yaml << EOF
 apiVersion: v1
@@ -88,7 +88,7 @@ EOF
 
 Create a kustomization referring to it:
 
-<!-- @createKustomization @test -->
+<!-- @createKustomization @testAgainstLatestRelease -->
 ```
 cat > $DEMO_HOME/kustomization.yaml << EOF
 resources:
@@ -112,7 +112,7 @@ EOF
 
 Use the customized transformer configurations by specifying them
 in the kustomization file:
-<!-- @addTransformerConfigs @test -->
+<!-- @addTransformerConfigs @testAgainstLatestRelease -->
 ```
 cat >> $DEMO_HOME/kustomization.yaml << EOF
 configurations:
@@ -122,7 +122,7 @@ EOF
 
 Run `kustomize build` and verify that the namereference is correctly resolved.
 
-<!-- @build @test -->
+<!-- @build @testAgainstLatestRelease -->
 ```
 test 2 == \
 $(kustomize build $DEMO_HOME | grep -A 2 ".*Ref" | grep "test-" | wc -l); \
@@ -131,7 +131,7 @@ echo $?
 
 Run `kustomize build` and verify that the vars correctly resolved.
 
-<!-- @verify @test -->
+<!-- @verify @testAgainstLatestRelease -->
 ```
 test 0 == \
 $(kustomize build $DEMO_HOME | grep "BEE_ACTION" | wc -l); \

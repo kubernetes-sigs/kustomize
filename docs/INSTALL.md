@@ -25,7 +25,7 @@ chmod u+x kustomize
 
 Requires [Go] v1.12 or higher:
 
-<!-- @installkustomize @test -->
+<!-- @installkustomize @testAgainstLatestRelease -->
 ```
 go install sigs.k8s.io/kustomize/v3/cmd/kustomize
 ```

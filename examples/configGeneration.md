@@ -26,7 +26,7 @@ In this demo, the same [hello_world](helloWorld/README.md) is used while the Con
 ### Establish base and staging
 
 Establish the base with a configMapGenerator
-<!-- @establishBase @test -->
+<!-- @establishBase @testAgainstLatestRelease -->
 ```
 DEMO_HOME=$(mktemp -d)
 
@@ -53,7 +53,7 @@ EOF
 ```
 
 Establish the staging with a patch applied to the ConfigMap
-<!-- @establishStaging @test -->
+<!-- @establishStaging @testAgainstLatestRelease -->
 ```
 OVERLAYS=$DEMO_HOME/overlays
 mkdir -p $OVERLAYS/staging
@@ -91,7 +91,7 @@ configured with data from a configMap.
 The deployment refers to this map by name:
 
 
-<!-- @showDeployment @test -->
+<!-- @showDeployment @testAgainstLatestRelease -->
 ```
 grep -C 2 configMapKeyRef $BASE/deployment.yaml
 ```
@@ -117,7 +117,7 @@ collected](https://github.com/kubernetes-sigs/kustomize/issues/242).
 
 The _staging_ [variant] here has a configMap [patch]:
 
-<!-- @showMapPatch @test -->
+<!-- @showMapPatch @testAgainstLatestRelease -->
 ```
 cat $OVERLAYS/staging/map.yaml
 ```
@@ -128,7 +128,7 @@ resource spec.
 
 The ConfigMap it modifies is declared from a configMapGenerator.
 
-<!-- @showMapBase @test -->
+<!-- @showMapBase @testAgainstLatestRelease -->
 ```
 grep -C 4 configMapGenerator $BASE/kustomization.yaml
 ```
@@ -141,7 +141,7 @@ _not_ what gets used in the cluster.  By design,
 kustomize modifies names of ConfigMaps declared from ConfigMapGenerator.  To see the names
 ultimately used in the cluster, just run kustomize:
 
-<!-- @grepStagingName @test -->
+<!-- @grepStagingName @testAgainstLatestRelease -->
 ```
 kustomize build $OVERLAYS/staging |\
     grep -B 8 -A 1 staging-the-map
@@ -159,7 +159,7 @@ The suffix to the configMap name is generated from a
 hash of the maps content - in this case the name suffix
 is _k25m8k5k5m_:
 
-<!-- @grepStagingHash @test -->
+<!-- @grepStagingHash @testAgainstLatestRelease -->
 ```
 kustomize build $OVERLAYS/staging | grep k25m8k5k5m
 ```
@@ -167,7 +167,7 @@ kustomize build $OVERLAYS/staging | grep k25m8k5k5m
 Now modify the map patch, to change the greeting
 the server will use:
 
-<!-- @changeMap @test -->
+<!-- @changeMap @testAgainstLatestRelease -->
 ```
 sed -i.bak 's/pineapple/kiwi/' $OVERLAYS/staging/map.yaml
 ```
@@ -181,7 +181,7 @@ kustomize build $OVERLAYS/staging |\
 
 Run kustomize again to see the new configMap names:
 
-<!-- @grepStagingName @test -->
+<!-- @grepStagingName @testAgainstLatestRelease -->
 ```
 kustomize build $OVERLAYS/staging |\
     grep -B 8 -A 1 staging-the-map
@@ -192,7 +192,7 @@ in three new names ending in _cd7kdh48fd_ - one in the
 configMap name itself, and two in the deployment that
 uses the map:
 
-<!-- @countHashes @test -->
+<!-- @countHashes @testAgainstLatestRelease -->
 ```
 test 3 == \
   $(kustomize build $OVERLAYS/staging | grep cd7kdh48fd | wc -l); \

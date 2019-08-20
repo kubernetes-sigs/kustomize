@@ -30,7 +30,7 @@ kustomize 提供了两种添加 ConfigMap 的方法：
 ### 建立 base 和 staging
 
 使用 configMapGenerator 建立 base
-<!-- @establishBase @test -->
+<!-- @establishBase @testAgainstLatestRelease -->
 ```
 DEMO_HOME=$(mktemp -d)
 
@@ -57,7 +57,7 @@ EOF
 ```
 
 通过应用 ConfigMap patch 的方式建立 staging
-<!-- @establishStaging @test -->
+<!-- @establishStaging @testAgainstLatestRelease -->
 ```
 OVERLAYS=$DEMO_HOME/overlays
 mkdir -p $OVERLAYS/staging
@@ -93,7 +93,7 @@ EOF
 
 deployment 按照名称引用此 ConfigMap ：
 
-<!-- @showDeployment @test -->
+<!-- @showDeployment @testAgainstLatestRelease -->
 ```
 grep -C 2 configMapKeyRef $BASE/deployment.yaml
 ```
@@ -111,7 +111,7 @@ grep -C 2 configMapKeyRef $BASE/deployment.yaml
 
 _staging_ 的 [variant] 包含一个 configMap 的 [patch]：
 
-<!-- @showMapPatch @test -->
+<!-- @showMapPatch @testAgainstLatestRelease -->
 ```
 cat $OVERLAYS/staging/map.yaml
 ```
@@ -120,7 +120,7 @@ cat $OVERLAYS/staging/map.yaml
 
 在 ConfigMapGenerator 中声明 ConfigMap 的修改。
 
-<!-- @showMapBase @test -->
+<!-- @showMapBase @testAgainstLatestRelease -->
 ```
 grep -C 4 configMapGenerator $BASE/kustomization.yaml
 ```
@@ -129,7 +129,7 @@ grep -C 4 configMapGenerator $BASE/kustomization.yaml
 
 但是，文件中指定的名称值不是群集中使用的名称值。根据设计，kustomize 修改从 ConfigMapGenerator 声明的 ConfigMaps 的名称。要查看最终在群集中使用的名称，只需运行 kustomize：
 
-<!-- @grepStagingName @test -->
+<!-- @grepStagingName @testAgainstLatestRelease -->
 ```
 kustomize build $OVERLAYS/staging |\
     grep -B 8 -A 1 staging-the-map
@@ -141,14 +141,14 @@ kustomize build $OVERLAYS/staging |\
 
 configMap 名称的后缀是由 map 内容的哈希生成的 - 在这种情况下，名称后缀是 _k25m8k5k5m_ ：
 
-<!-- @grepStagingHash @test -->
+<!-- @grepStagingHash @testAgainstLatestRelease -->
 ```
 kustomize build $OVERLAYS/staging | grep k25m8k5k5m
 ```
 
 现在修改 map patch ，更改该服务将使用的问候消息：
 
-<!-- @changeMap @test -->
+<!-- @changeMap @testAgainstLatestRelease -->
 ```
 sed -i.bak 's/pineapple/kiwi/' $OVERLAYS/staging/map.yaml
 ```
@@ -162,7 +162,7 @@ kustomize build $OVERLAYS/staging |\
 
 再次运行 kustomize 查看新的 configMap 名称：
 
-<!-- @grepStagingName @test -->
+<!-- @grepStagingName @testAgainstLatestRelease -->
 ```
 kustomize build $OVERLAYS/staging |\
     grep -B 8 -A 1 staging-the-map
@@ -170,7 +170,7 @@ kustomize build $OVERLAYS/staging |\
 
 确认 configMap 内容的更改将会生成以 _cd7kdh48fd_ 结尾的三个新名称 - 一个在 configMap 的名称中，另两个在使用 ConfigMap 的 deployment 中：
 
-<!-- @countHashes @test -->
+<!-- @countHashes @testAgainstLatestRelease -->
 ```
 test 3 == \
   $(kustomize build $OVERLAYS/staging | grep cd7kdh48fd | wc -l); \

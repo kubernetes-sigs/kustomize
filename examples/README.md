@@ -2,15 +2,11 @@ English | [简体中文](zh/README.md)
 
 # Examples
 
-These examples assume that `kustomize` is on your `$PATH`.
+To run these examples, your `$PATH` must contain `kustomize`.
+See the [installation instructions](../docs/INSTALL.md).
 
-They are covered by [pre-commit](../travis/pre-commit.sh)
-tests, and should work with HEAD
-
-<!-- @installkustomize @test -->
-```
-go get sigs.k8s.io/kustomize/v3/cmd/kustomize
-```
+These examples are [tested](../travis/pre-commit.sh)
+to work with the latest _released_ version of kustomize.
 
 Basic Usage
 

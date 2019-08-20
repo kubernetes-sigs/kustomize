@@ -6,7 +6,7 @@ kustomization文件支持通过[JSON patches](https://tools.ietf.org/html/rfc690
 
 首先，创建一个包含`ingress`的`kustomization`文件.
 
-<!-- @createIngress @test -->
+<!-- @createIngress @testAgainstLatestRelease -->
 ```bash
 DEMO_HOME=$(mktemp -d)
 
@@ -36,7 +36,7 @@ EOF
 - 把 host 从 `foo.bar.com` 改为 `foo.bar.io`
 - 把 servicePort 从 `80` 改为 `8080`
 
-<!-- @addJsonPatch @test -->
+<!-- @addJsonPatch @testAgainstLatestRelease -->
 ```bash
 cat <<EOF >$DEMO_HOME/ingress_patch.json
 [
@@ -48,7 +48,7 @@ EOF
 
 JSON patch 也可以写成 YAML 的格式.该例子顺便展示了“添加”操作：
 
-<!-- @addYamlPatch @test -->
+<!-- @addYamlPatch @testAgainstLatestRelease -->
 ```bash
 cat <<EOF >$DEMO_HOME/ingress_patch.yaml
 - op: replace
@@ -67,7 +67,7 @@ EOF
 
 在kustomization.yaml文件中增加 _patchesJson6902_ 字段，以应用该补丁
 
-<!-- @applyJsonPatch @test -->
+<!-- @applyJsonPatch @testAgainstLatestRelease -->
 ```bash
 cat <<EOF >>$DEMO_HOME/kustomization.yaml
 patchesJson6902:
@@ -82,7 +82,7 @@ EOF
 
 运行 `kustomize build $DEMO_HOME`, 在输出那里确认 host 已经被正确更新.
 
-<!-- @confirmHost @test -->
+<!-- @confirmHost @testAgainstLatestRelease -->
 ```bash
 test 1 == \
   $(kustomize build $DEMO_HOME | grep "host: foo.bar.io" | wc -l); \
@@ -91,7 +91,7 @@ test 1 == \
 
 运行 `kustomize build $DEMO_HOME`, 在输出那里确认 servicePort 已经被正确更新.
 
-<!-- @confirmServicePort @test -->
+<!-- @confirmServicePort @testAgainstLatestRelease -->
 
 ```bash
 test 1 == \
@@ -101,7 +101,7 @@ test 1 == \
 
 如果 patch 是YAML格式的，就能正确解析:
 
-<!-- @applyYamlPatch @test -->
+<!-- @applyYamlPatch @testAgainstLatestRelease -->
 ```bash
 cat <<EOF >>$DEMO_HOME/kustomization.yaml
 patchesJson6902:
@@ -116,7 +116,7 @@ EOF
 
 运行 `kustomize build $DEMO_HOME`, 在输出那里确认有 `/test` 这个路径.
 
-<!-- @confirmYamlPatch @test -->
+<!-- @confirmYamlPatch @testAgainstLatestRelease -->
 ```bash
 test 1 == \
   $(kustomize build $DEMO_HOME | grep "path: /test" | wc -l); \
