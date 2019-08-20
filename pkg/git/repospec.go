@@ -90,7 +90,7 @@ func NewRepoSpecFromUrl(n string) (*RepoSpec, error) {
 	if filepath.IsAbs(n) {
 		return nil, fmt.Errorf("uri looks like abs path: %s", n)
 	}
-	host, orgRepo, path, gitRef, gitSuffix := parseGithubUrl(n)
+	host, orgRepo, path, gitRef, gitSuffix := parseGitUrl(n)
 	if orgRepo == "" {
 		return nil, fmt.Errorf("url lacks orgRepo: %s", n)
 	}
@@ -112,13 +112,13 @@ const (
 // From strings like git@github.com:someOrg/someRepo.git or
 // https://github.com/someOrg/someRepo?ref=someHash, extract
 // the parts.
-func parseGithubUrl(n string) (
+func parseGitUrl(n string) (
 	host string, orgRepo string, path string, gitRef string, gitSuff string) {
 
 	if strings.Contains(n, gitDelimiter) {
 		index := strings.Index(n, gitDelimiter)
 		// Adding _git/ to host
-		host = n[:index+len(gitDelimiter)]
+		host = normalizeGitHostSpec(n[:index+len(gitDelimiter)])
 		orgRepo = strings.Split(strings.Split(n[index+len(gitDelimiter):], "/")[0], "?")[0]
 		path, gitRef = peelQuery(n[index+len(gitDelimiter)+len(orgRepo):])
 		return
