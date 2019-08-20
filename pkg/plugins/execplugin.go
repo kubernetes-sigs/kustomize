@@ -1,18 +1,5 @@
-/*
-Copyright 2019 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package plugins
 
@@ -24,6 +11,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
@@ -31,7 +19,8 @@ import (
 )
 
 const (
-	idAnnotation = "kustomize.config.k8s.io/id"
+	idAnnotation        = "kustomize.config.k8s.io/id"
+	tmpConfigFilePrefix = "kust-plugin-config-"
 )
 
 // ExecPlugin record the name and args of an executable
@@ -102,27 +91,6 @@ func (p *ExecPlugin) processOptionalArgsFields() error {
 	return nil
 }
 
-func (p *ExecPlugin) writeConfig() (string, error) {
-	tmpFile, err := ioutil.TempFile("", "kust-pipe")
-	if err != nil {
-		return "", err
-	}
-
-	stdout, err := os.OpenFile(tmpFile.Name(), os.O_RDWR, 0600)
-	if err != nil {
-		return "", err
-	}
-	_, err = stdout.Write(p.cfg)
-	if err != nil {
-		return "", err
-	}
-	err = stdout.Close()
-	if err != nil {
-		return "", err
-	}
-	return tmpFile.Name(), nil
-}
-
 func (p *ExecPlugin) Generate() (resmap.ResMap, error) {
 	output, err := p.invokePlugin(nil)
 	if err != nil {
@@ -154,33 +122,40 @@ func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
 	return p.updateResMapValues(output, rm)
 }
 
-// invokePlugin invokes the plugin
+// invokePlugin writes plugin config to a temp file, then
+// passes the full temp file path as the first arg to a process
+// running the plugin binary.  Process output is returned.
 func (p *ExecPlugin) invokePlugin(input []byte) ([]byte, error) {
-	args, err := p.getArgs()
+	f, err := ioutil.TempFile("", tmpConfigFilePrefix)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(
+			err, "creating tmp plugin config file")
 	}
-	// Cleanup plugin config file after execution
-	defer os.Remove(args[0])
-
-	cmd := exec.Command(p.path, args...)
+	_, err = f.Write(p.cfg)
+	if err != nil {
+		return nil, errors.Wrap(
+			err, "writing plugin config to "+f.Name())
+	}
+	err = f.Close()
+	if err != nil {
+		return nil, errors.Wrap(
+			err, "closing plugin config file "+f.Name())
+	}
+	cmd := exec.Command(
+		p.path, append([]string{f.Name()}, p.args...)...)
 	cmd.Env = p.getEnv()
 	cmd.Stdin = bytes.NewReader(input)
 	cmd.Stderr = os.Stderr
 	if _, err := os.Stat(p.ldr.Root()); err == nil {
 		cmd.Dir = p.ldr.Root()
 	}
-	return cmd.Output()
-}
-
-// The first arg is always the absolute path to a temporary file
-// holding the YAML form of the plugin config.
-func (p *ExecPlugin) getArgs() ([]string, error) {
-	configFileName, err := p.writeConfig()
+	result, err := cmd.Output()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(
+			err, "failure in plugin configured via %s; %v",
+			f.Name(), err.Error())
 	}
-	return append([]string{configFileName}, p.args...), nil
+	return result, os.Remove(f.Name())
 }
 
 func (p *ExecPlugin) getEnv() []string {

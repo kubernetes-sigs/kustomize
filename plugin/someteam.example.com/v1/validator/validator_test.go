@@ -72,7 +72,7 @@ data:
 	if err == nil {
 		t.Fatalf("expected an error")
 	}
-	if !strings.Contains(err.Error(), "data: Invalid type.") {
-		t.Fatalf("incorrect error %v", err)
+	if !strings.Contains(err.Error(), "failure in plugin configured via") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
