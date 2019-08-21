@@ -1,0 +1,6 @@
+configmapGenerator:
+- name: elasticsearch-config
+  literals:
+  - es-url="http://esbasic-master:9200"
+  - kustomize-index-name="kustomize"
+  - plugin-index-name="plugin"
