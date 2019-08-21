@@ -1,7 +1,5 @@
 # kustomize
 
-_[v3.1.0](https://github.com/kubernetes-sigs/kustomize/releases/tag/v3.1.0) is the latest release._
-
 `kustomize` lets you customize raw, template-free YAML
 files for multiple purposes, leaving the original YAML
 untouched and usable as is.
