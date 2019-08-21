@@ -26,7 +26,7 @@ go get sigs.k8s.io/kustomize/v3/cmd/kustomize
 
   * [json patch](jsonpatch.md) -在 kustomization 中应用 json patch 。
 
-  * [patch multiple objects](patchMultipleObjects.md) - 通过一个patch来修改多个资源。
+  * [patch multiple objects](../patchMultipleObjects.md) - 通过一个patch来修改多个资源。
 
 高级用法
 
