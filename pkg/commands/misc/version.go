@@ -59,18 +59,28 @@ func getVersion() version {
 }
 
 // Print prints version.
-func (v version) Print(w io.Writer) {
-	fmt.Fprintf(w, "Version: %+v\n", v)
+func (v version) Print(w io.Writer, short bool) {
+	if short {
+		fmt.Fprintf(w, "%s\n", v.KustomizeVersion)
+	} else {
+		fmt.Fprintf(w, "Version: %+v\n", v)
+	}
+
 }
 
 // NewCmdVersion makes version command.
 func NewCmdVersion(w io.Writer) *cobra.Command {
-	return &cobra.Command{
+	var short bool
+
+	versionCmd := cobra.Command{
 		Use:     "version",
 		Short:   "Prints the kustomize version",
 		Example: `kustomize version`,
 		Run: func(cmd *cobra.Command, args []string) {
-			getVersion().Print(w)
+			getVersion().Print(w, short)
 		},
 	}
+
+	versionCmd.Flags().BoolVar(&short, "short", false, "print just the version number")
+	return &versionCmd
 }
