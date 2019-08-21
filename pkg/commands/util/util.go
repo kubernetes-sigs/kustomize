@@ -33,6 +33,9 @@ func GlobPatterns(fsys fs.FileSystem, patterns []string) ([]string, error) {
 // `key:value` into a map.
 func ConvertToMap(input string, kind string) (map[string]string, error) {
 	result := make(map[string]string)
+	if input == "" {
+		return result, nil
+	}
 	inputs := strings.Split(input, ",")
 	for _, input := range inputs {
 		c := strings.Index(input, ":")

@@ -132,6 +132,12 @@ metadata:
 	fakeFS.WriteFile("/README.md", []byte(`
 # Not a k8s resource
 This file is not a valid kubernetes object.`))
+	fakeFS.WriteFile("/non-k8s.yaml", []byte(`
+# Not a k8s resource
+other: yaml
+foo:
+- bar
+- baz`))
 	fakeFS.Mkdir("/sub")
 	fakeFS.WriteFile("/sub/test.yaml", []byte(`
 apiVersion: v1
@@ -141,6 +147,12 @@ metadata:
 	fakeFS.WriteFile("/sub/README.md", []byte(`
 # Not a k8s resource
 This file in a subdirectory is not a valid kubernetes object.`))
+	fakeFS.WriteFile("/sub/non-k8s.yaml", []byte(`
+# Not a k8s resource
+other: yaml
+foo:
+- bar
+- baz`))
 	fakeFS.Mkdir("/overlay")
 	fakeFS.WriteFile("/overlay/test.yaml", []byte(`
 apiVersion: v1

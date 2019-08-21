@@ -63,12 +63,12 @@ func NewCmdCreate(fSys fs.FileSystem, uf ifc.KunstructuredFactory) *cobra.Comman
 		"Set the value of the namespace field in the customization file.")
 	c.Flags().StringVar(
 		&opts.annotations,
-		"annotation",
+		"annotations",
 		"",
 		"Add one or more common annotations.")
 	c.Flags().StringVar(
 		&opts.labels,
-		"label",
+		"labels",
 		"",
 		"Add one or more common labels.")
 	c.Flags().StringVar(
@@ -95,11 +95,15 @@ func NewCmdCreate(fSys fs.FileSystem, uf ifc.KunstructuredFactory) *cobra.Comman
 }
 
 func runCreate(opts createFlags, fSys fs.FileSystem, uf ifc.KunstructuredFactory) error {
-	resources, err := util.GlobPatterns(fSys, strings.Split(opts.resources, ","))
-	if err != nil {
-		return err
+	var resources []string
+	var err error
+	if opts.resources != "" {
+		resources, err = util.GlobPatterns(fSys, strings.Split(opts.resources, ","))
+		if err != nil {
+			return err
+		}
 	}
-	if _, err := kustfile.NewKustomizationFile(fSys); err == nil {
+	if _, err = kustfile.NewKustomizationFile(fSys); err == nil {
 		return fmt.Errorf("kustomization file already exists")
 	}
 	if opts.detectResources {
