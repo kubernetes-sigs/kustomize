@@ -1,0 +1,4 @@
+resources:
+- ../../base
+- deployment.yaml
+- service.yaml
