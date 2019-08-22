@@ -1,5 +1,7 @@
 BIN_NAME=kustomize
 
+COVER_FILE=coverage.out
+
 export GO111MODULE=on
 
 all: test build
@@ -21,8 +23,15 @@ build:
 install:
 	go install $(PWD)/cmd/kustomize
 
+cover:
+	# The plugin directory eludes coverage, and is therefore omitted
+	go test ./pkg/... ./k8sdeps/... ./internal/... -coverprofile=$(COVER_FILE) && \
+	go tool cover -html=$(COVER_FILE)
+
+
 clean:
 	go clean
 	rm -f $(BIN_NAME)
+	rm -f $(COVER_FILE)
 
-.PHONY: test build install clean generate-code test-go test-lint
+.PHONY: test build install clean generate-code test-go test-lint cover
