@@ -376,9 +376,8 @@ value is a list.
 
 To change this
 default behavior, add a _directive_.  Recognized
-directives include _replace_ (the default), _merge_
-(avoid replacing a list), _delete_ and a few more
-(see [these notes][strategic-merge]).
+directives in YAML patches are _replace_ (the default)
+and _delete_ (see [these notes][strategic-merge]).
 
 Note that for custom resources, SMPs are treated as
 [json merge patches][JSONMergePatch].
