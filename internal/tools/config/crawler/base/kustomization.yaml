@@ -1,0 +1,13 @@
+resources:
+- ../../base
+
+configmapGenerator:
+- name: crawler-http-cache
+  literals:
+  - redis-cache-url="redis://redis-http-cache:6379"
+
+
+secretGenerator:
+- name: github-access-token
+  files:
+  - token=github_api_secret.txt
