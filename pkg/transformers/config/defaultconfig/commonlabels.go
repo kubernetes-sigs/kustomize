@@ -26,19 +26,10 @@ commonLabels:
   version: v1
   kind: Service
 
-- path: spec/selector
-  create: true
-  version: v1
-  kind: ReplicationController
-
 - path: spec/template/metadata/labels
   create: true
   version: v1
   kind: ReplicationController
-
-- path: spec/selector/matchLabels
-  create: true
-  kind: Deployment
 
 - path: spec/template/metadata/labels
   create: true
@@ -49,41 +40,19 @@ commonLabels:
   group: apps
   kind: Deployment
 
-- path: spec/template/spec/affinity/podAffinity/requiredDuringSchedulingIgnoredDuringExecution/labelSelector/matchLabels
-  create: false
-  group: apps
-  kind: Deployment
 
 - path: spec/template/spec/affinity/podAntiAffinity/preferredDuringSchedulingIgnoredDuringExecution/podAffinityTerm/labelSelector/matchLabels
   create: false
   group: apps
   kind: Deployment
 
-- path: spec/template/spec/affinity/podAntiAffinity/requiredDuringSchedulingIgnoredDuringExecution/labelSelector/matchLabels
-  create: false
-  group: apps
-  kind: Deployment
-
-- path: spec/selector/matchLabels
+- path: spec/template/metadata/labels
   create: true
   kind: ReplicaSet
 
 - path: spec/template/metadata/labels
   create: true
-  kind: ReplicaSet
-
-- path: spec/selector/matchLabels
-  create: true
   kind: DaemonSet
-
-- path: spec/template/metadata/labels
-  create: true
-  kind: DaemonSet
-
-- path: spec/selector/matchLabels
-  create: true
-  group: apps
-  kind: StatefulSet
 
 - path: spec/template/metadata/labels
   create: true
@@ -95,17 +64,7 @@ commonLabels:
   group: apps
   kind: StatefulSet
 
-- path: spec/template/spec/affinity/podAffinity/requiredDuringSchedulingIgnoredDuringExecution/labelSelector/matchLabels
-  create: false
-  group: apps
-  kind: StatefulSet
-
 - path: spec/template/spec/affinity/podAntiAffinity/preferredDuringSchedulingIgnoredDuringExecution/podAffinityTerm/labelSelector/matchLabels
-  create: false
-  group: apps
-  kind: StatefulSet
-
-- path: spec/template/spec/affinity/podAntiAffinity/requiredDuringSchedulingIgnoredDuringExecution/labelSelector/matchLabels
   create: false
   group: apps
   kind: StatefulSet
@@ -115,20 +74,10 @@ commonLabels:
   group: apps
   kind: StatefulSet
 
-- path: spec/selector/matchLabels
-  create: false
-  group: batch
-  kind: Job
-
 - path: spec/template/metadata/labels
   create: true
   group: batch
   kind: Job
-
-- path: spec/jobTemplate/spec/selector/matchLabels
-  create: false
-  group: batch
-  kind: CronJob
 
 - path: spec/jobTemplate/metadata/labels
   create: true
@@ -139,24 +88,4 @@ commonLabels:
   create: true
   group: batch
   kind: CronJob
-
-- path: spec/selector/matchLabels
-  create: false
-  group: policy
-  kind: PodDisruptionBudget
-
-- path: spec/podSelector/matchLabels
-  create: false
-  group: networking.k8s.io
-  kind: NetworkPolicy
-
-- path: spec/ingress/from/podSelector/matchLabels
-  create: false
-  group: networking.k8s.io
-  kind: NetworkPolicy
-
-- path: spec/egress/to/podSelector/matchLabels
-  create: false
-  group: networking.k8s.io
-  kind: NetworkPolicy
 `
