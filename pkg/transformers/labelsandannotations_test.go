@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/v3/pkg/resmaptest"
+	resmaptest_test "sigs.k8s.io/kustomize/v3/pkg/resmaptest"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 )
@@ -185,12 +185,6 @@ func TestLabelsRun(t *testing.T) {
 				},
 			},
 			"spec": map[string]interface{}{
-				"selector": map[string]interface{}{
-					"matchLabels": map[string]interface{}{
-						"label-key1": "label-value1",
-						"label-key2": "label-value2",
-					},
-				},
 				"template": map[string]interface{}{
 					"metadata": map[string]interface{}{
 						"labels": map[string]interface{}{
@@ -226,10 +220,6 @@ func TestLabelsRun(t *testing.T) {
 						"name": "port1",
 						"port": "12345",
 					},
-				},
-				"selector": map[string]interface{}{
-					"label-key1": "label-value1",
-					"label-key2": "label-value2",
 				},
 			},
 		}).
@@ -267,17 +257,11 @@ func TestLabelsRun(t *testing.T) {
 			"kind":       "Job",
 			"metadata": map[string]interface{}{
 				"name": "job2",
-				"labels": map[string]interface{}{
-					"label-key1": "label-value1",
-					"label-key2": "label-value2",
-				},
 			},
 			"spec": map[string]interface{}{
 				"selector": map[string]interface{}{
 					"matchLabels": map[string]interface{}{
-						"label-key1": "label-value1",
-						"label-key2": "label-value2",
-						"old-label":  "old-value",
+						"old-label": "old-value",
 					},
 				},
 				"template": map[string]interface{}{
@@ -360,9 +344,7 @@ func TestLabelsRun(t *testing.T) {
 					"spec": map[string]interface{}{
 						"selector": map[string]interface{}{
 							"matchLabels": map[string]interface{}{
-								"old-label":  "old-value",
-								"label-key1": "label-value1",
-								"label-key2": "label-value2",
+								"old-label": "old-value",
 							},
 						},
 						"template": map[string]interface{}{
