@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: crawler
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: crawler
+        image: gcr.io/kustomize-search/crawler:latest
+        env:
+        - name: GITHUB_ACCESS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: github-access-token
+              key: token
+        - name: ELASTICSEARCH_URL
+          valueFrom:
+            configMapKeyRef:
+              name: elasticsearch-config
+              key: es-url
+        - name: REDIS_CACHE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: crawler-http-cache
+              key: redis-cache-url
+        - name: REDIS_KEY_URL
+          valueFrom:
+            configMapKeyRef:
+              name: redis-keystore
+              key: keystore-url

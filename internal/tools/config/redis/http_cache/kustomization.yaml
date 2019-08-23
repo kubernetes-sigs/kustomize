@@ -1,0 +1,7 @@
+resources:
+- redis.yaml
+- service.yaml
+
+commonLabels:
+  app: redis
+  tier: http-cache

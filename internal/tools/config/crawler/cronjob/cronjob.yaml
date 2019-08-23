@@ -1,0 +1,30 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: crawler
+spec:
+  schedule: "5 0 * * */1"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: crawler
+            image: gcr.io/kustomize-search/crawler:latest
+            env:
+            - name: GITHUB_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: github-access-token
+                  key: token
+            - name: ELASTICSEARCH_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: elasticsearch-config
+                  key: es-url
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: crawler-http-cache
+                  key: redis-cache-url
