@@ -3,11 +3,11 @@
 
 # 示例：devops和开发配合管理配置数据
 
-场景：你在生产环境中有一个基于 Java 由多个内部开发团队（注册、结账和搜索等）开发的商店。
+场景：在生产环境中有一个基于 Java 由多个内部团队（注册、结账和搜索等）共同开发的商店服务。
 
 这个服务在不同的环境中运行：_development_、 _testing_、 _staging_ 和 _production_，从 Java 的 properties 文件中读取配置。
 
-为每个环境维护一个大的 properties 文件时很困难的。这个文件需要频繁的修改，并且这些修改都需要由 devops 工程师来进行，因为：
+为每个环境维护一个大的 properties 文件是很困难的。这个文件需要频繁的修改，并且这些修改都需要由 devops 工程师来进行，因为：
 
   1. 这个文件包含 devops 工程师需要知道，而开发人员不必知道的值
   2. 比如生产环境的 properties 包含敏感数据，比如生产数据库的登录凭据。
@@ -179,13 +179,13 @@ kustomize build $OVERLAYS/development
 > kustomize build $OVERLAYS/development | kubectl apply -f -
 > ```
 
-Deployment 无法自动感知 configMap 是否发生改变。
+Deployment 无法自动检测 ConfigMap 是否发生改变。
 
-如果更改 configMap 而不更改其名称以及对该名称的所有引用，则必须重新启动以获取更改。
+如果更改 configMap 的数据, 而不更改其名称以及对该名称的所有引用, 则必须重新启动Deployment中的那些Pods以获取更改。
 
 最佳的做法就是将 configMap 视为不变的。
 
-不去编辑 configMap ，而是使用 _新_ 的名称的 _新_ configMap，并在 Deployment 中引用新的 configMap 。而 `kustomize` 使用 `configMapGenerator` 指令和相关的命名控件使这很容易。k8s master 中的 GC 则会回收并且删除未使用的 configMap 。
+不去编辑 configMap ，而是使用 _新_ 的名称的 _新_ configMap，并在 Deployment 中引用新的 configMap 。而 `kustomize` 使用 `configMapGenerator` 指令和相关的命名控件使这很容易。
 
 ### 创建并且使用 overlay 用于 _生产_
 

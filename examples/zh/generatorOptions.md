@@ -2,7 +2,7 @@
 
 Kustomize 提供了修改 ConfigMapGenerator 和 SecretGenerator 行为的选项，这些选项包括：
  
- - 不再将内容生成的哈希后缀添加到资源名称后
+ - 不再将基于内容生成的哈希后缀添加到资源名称后
  - 为生成的资源添加 labels
  - 为生成的资源添加 annotations
  
