@@ -3,10 +3,15 @@ package doc
 import (
 	"fmt"
 	"strings"
-	"time"
 
+	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/v3/pkg/ifc"
+	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/yaml"
 )
+
+var fileReader ifc.KunstructuredFactory = kunstruct.NewKunstructuredFactoryImpl()
 
 // This document is meant to be used at the elasticsearch document type.
 // Fields are serialized as-is to elasticsearch, where indices are built
@@ -31,25 +36,122 @@ import (
 // facilitates the use of complex text search features from elasticsearch such
 // as fuzzy searching, regex, wildcards, etc.
 type KustomizationDocument struct {
-	DocumentData  string    `json:"document,omitempty"`
-	Kinds         []string  `json:"kinds,omitempty"`
-	Identifiers   []string  `json:"identifiers,omitempty"`
-	Values        []string  `json:"values,omitempty"`
-	FilePath      string    `json:"filePath,omitempty"`
-	RepositoryURL string    `json:"repositoryUrl,omitempty"`
-	CreationTime  time.Time `json:"creationTime,omitempty"`
+	Document
+	Kinds       []string `json:"kinds,omitempty"`
+	Identifiers []string `json:"identifiers,omitempty"`
+	Values      []string `json:"values,omitempty"`
+}
+
+type set map[string]struct{}
+
+// Implements the CrawlerDocument interface.
+func (doc *KustomizationDocument) GetResources() ([]*Document, error) {
+	isResource := true
+	for _, suffix := range pgmconfig.KustomizationFileNames {
+		if strings.HasSuffix(doc.FilePath, "/"+suffix) {
+			isResource = false
+		}
+	}
+	if isResource {
+		return []*Document{}, nil
+	}
+
+	content := []byte(doc.DocumentData)
+	content, err := FixKustomizationPreUnmarshallingNonFatal(content)
+	if err != nil {
+		return nil, fmt.Errorf("could not fix kustomize file: %v", err)
+	}
+
+	var k types.Kustomization
+	err = yaml.Unmarshal(content, &k)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"could not parse kustomization: %v", err)
+	}
+	k.FixKustomizationPostUnmarshalling()
+
+	res := make([]*Document, 0, len(k.Resources))
+	for _, r := range k.Resources {
+		next, err := doc.Document.FromRelativePath(r)
+		if err != nil {
+			fmt.Printf("GetResources error: %v\n", err)
+			continue
+		}
+		res = append(res, &next)
+	}
+
+	return res, nil
+}
+
+func (doc *KustomizationDocument) readBytes() ([]map[string]interface{}, error) {
+	data := []byte(doc.DocumentData)
+
+	for _, suffix := range pgmconfig.KustomizationFileNames {
+		if !strings.HasSuffix(doc.FilePath, "/"+suffix) {
+			continue
+		}
+		var config map[string]interface{}
+		err := yaml.Unmarshal(data, &config)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"unable to parse kustomization: %v", err)
+		}
+		return []map[string]interface{}{config}, nil
+	}
+
+	configs := make([]map[string]interface{}, 0)
+	ks, err := fileReader.SliceFromBytes(data)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse resource: %v", err)
+	}
+	for _, k := range ks {
+		configs = append(configs, k.Map())
+	}
+
+	return configs, nil
 }
 
 func (doc *KustomizationDocument) ParseYAML() error {
 	doc.Identifiers = make([]string, 0)
 	doc.Values = make([]string, 0)
+	doc.Kinds = make([]string, 0, 1)
 
-	var kustomization map[string]interface{}
-	err := yaml.Unmarshal([]byte(doc.DocumentData), &kustomization)
-	if err != nil {
-		return fmt.Errorf("unable to parse kustomization file: %s", err)
+	identifierSet := make(set)
+	valueSet := make(set)
+	getKind := func(m map[string]interface{}) string {
+		const defaultStr = "Kustomization"
+		kind, ok := m["kind"]
+		if !ok {
+			return defaultStr
+		}
+		if str, ok := kind.(string); ok && str != "" {
+			return str
+		}
+		return defaultStr
 	}
 
+	ks, err := doc.readBytes()
+	if err != nil {
+		return err
+	}
+
+	for _, contents := range ks {
+		doc.Kinds = append(doc.Kinds, getKind(contents))
+		createFlatStructure(identifierSet, valueSet, contents)
+	}
+
+	for val := range valueSet {
+		doc.Values = append(doc.Values, val)
+	}
+
+	for key := range identifierSet {
+		doc.Identifiers = append(doc.Identifiers, key)
+	}
+
+	return nil
+}
+
+func createFlatStructure(identifierSet set, valueSet set, contents map[string]interface{}) {
 	type Map struct {
 		data   map[string]interface{}
 		prefix string
@@ -57,18 +159,15 @@ func (doc *KustomizationDocument) ParseYAML() error {
 
 	toVisit := []Map{
 		{
-			data:   kustomization,
+			data:   contents,
 			prefix: "",
 		},
 	}
 
-	identifierSet := make(map[string]struct{})
-	valueSet := make(map[string]struct{})
 	for i := 0; i < len(toVisit); i++ {
 		visiting := toVisit[i]
 		for k, v := range visiting.data {
-			identifier := fmt.Sprintf("%s:%s", visiting.prefix,
-				strings.Replace(k, ":", "%3A", -1))
+			identifier := fmt.Sprintf("%s:%s", visiting.prefix, k)
 			// noop after the first iteration.
 			identifier = strings.TrimLeft(identifier, ":")
 
@@ -88,8 +187,7 @@ func (doc *KustomizationDocument) ParseYAML() error {
 						traverseStructure(val)
 					}
 				case interface{}:
-					esc := strings.Replace(fmt.Sprintf("%v",
-						value), ":", "%3A", -1)
+					esc := fmt.Sprintf("%v", value)
 
 					valuePath := fmt.Sprintf("%s=%v",
 						identifier, esc)
@@ -99,17 +197,6 @@ func (doc *KustomizationDocument) ParseYAML() error {
 			traverseStructure(v)
 
 			identifierSet[identifier] = struct{}{}
-
 		}
 	}
-
-	for val := range valueSet {
-		doc.Values = append(doc.Values, val)
-	}
-
-	for key := range identifierSet {
-		doc.Identifiers = append(doc.Identifiers, key)
-	}
-
-	return nil
 }

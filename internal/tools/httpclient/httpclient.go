@@ -9,6 +9,10 @@ import (
 	redis_cache "github.com/gregjones/httpcache/redis"
 )
 
+func FromCache(header http.Header) bool {
+	return header.Get(httpcache.XFromCache) != ""
+}
+
 func NewClient(conn redis.Conn) *http.Client {
 	etagCache := redis_cache.NewWithClient(conn)
 	tr := httpcache.NewTransport(etagCache)
