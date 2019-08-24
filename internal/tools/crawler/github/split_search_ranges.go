@@ -1,5 +1,102 @@
 package github
 
+// GitHub only returns at most 1000 results per search query,
+// this is problematic if you want to retrieve all the results for a given
+// search query. However, GitHub allows you to specify as much as you want per
+// query to make things more specific. Specifically for files, GitHub allows
+// you to specify their sizes with range queries. This is very convenient
+// since it allows us to split the search into disjoint sets/shards of results
+// from the different file size ranges.
+//
+// Some important factors to consider:
+//
+// -  These queries are rate limited by the API to roughly once query every two
+//    seconds.
+//
+// -  The search space for file sizes is in bytes, from 0B to < 512KiB (this is
+//    a huge search space that cannot be probed linearly in a timely manner if
+//    granularity is to be expected).
+//
+// -  If you have K files there will likely be ~K/1000 sets that you have find
+//    from this search space in order to get all of the results.
+//
+// -  If you have O(K) sets it is unlikely that they are all of the same size,
+//    since (most files are power law distributed). That means that the range
+//    might be significantly smaller for 1000 small files, than it is for
+//    1000 large files.
+//
+// -  This method is a best effort approach. There are some limitations to what
+//    it can and can't do, so please note the following:
+//
+//    +  There may very well be a filesize that has more than 1000 results.
+//       this method cannot help in this case. However, requerying over time
+//       (days/weeks/months) while sorting by last indexed values may be
+//       sufficient to eventually get all of the results.
+//
+//    +  It's possible that the github API returns inconsistent counts. This
+//       is problematic in most cases, since it can cause many issues if the
+//       case is not handled properly. For instance, if you requested the
+//       number of files of an interval from size:0..64 and get that there
+//       are 900 results, you may query at size:0..96 and get that there
+//       are 800 results. To guarantee that this approach completes and does
+//       not get into a query loop over the same intervals, it will retry a few
+//       times and take the largest of the results or the largest previously
+//       queried value from another range (in this case, the implementation
+//       could decide that size:0..96 must have 900) results. This makes the
+//       approach best effort even if there are no single file sizes of over
+//       1000 results.
+//
+//
+// The approach that was taken to solve this problem is the following:
+//
+// 1. Determine the total number of results by querying from the lower bound
+//    to the upper bound (size:0..max). If there are less than 1000 files,
+//    return a single range of values (size:0..max) since all results can be
+//    retrieved.
+//
+// 2. Otherwise, set a target number of files to be 1000.
+//
+// 3. Binary search for the range from 0..r that provides a file count that is
+//    less than or equal to the target. Once this value is found, store the
+//    upper bound of range (r). If r is the same as the previous value, (or 0)
+//    increase r by one (this guarantees progress, but will miss out on some
+//    results).
+//
+// 4. Increase the target by 1000.
+//
+// 5. Repeat steps 3 and 4 until the target is at or exceeds the total number
+//    of files.
+//
+//
+// In general there are other ways to get all of the files from GitHub. In
+// some cases it would be sufficient to just get the files that are being
+// updated/indexed by github periodically to update the corpus, so this
+// complicated approach does not have to be run every time. However, for
+// some searches, there may be too many results on a time interval to do
+// this simple update search limited to only 1000 results.
+//
+// There is also a more sophisticated approach that may yield better
+// performance:
+// -  Perform this search once and create a prior distribution of file sizes.
+//    Each time you want to retrieve the results of the query, scale the
+//    prior of expected ranges to the current number of files. From each
+//    expected range of 1000 files, perform a exponential search to find the
+//    lower bound of the range. This would likely reduce the total number
+//    of queries by a significant amount since it would only have to search
+//    for a small set of values around each likely range boundary.
+//
+// However, actually retrieving the files will be the bottleneck operation
+// since the number of queries to find the ranges will be close to:
+//   log2(maxFileSize) * totalResults / 1000 ~= totalResults / 50
+// whereas the number of queries to actually get all of the search results
+// are close to:
+//   apiCallsPerResult * 10(pages) * 100(resultsPerPage) * totalResults / 1000
+//   = apiCallsPerResult * totalResults.
+//
+// So it could very well take apiCallsPerResult * 50 times longer to acutally
+// fetch the results (assuming the quotas for the API calls are the same as the
+// search API), than it does to perform these range searches.
+
 import (
 	"fmt"
 	"math/bits"
@@ -12,14 +109,20 @@ const (
 	githubMaxResultsPerQuery = uint64(1000)
 )
 
-// Interface for testing purposes. Not expecting to have multiple
-// implementations.
+// Interface instead of struct for testing purposes.
+// Not expecting to have multiple implementations.
 type cachedSearch interface {
 	CountResults(uint64) (uint64, error)
 	RequestString(filesize rangeFormatter) string
 }
 
-// Cache uses bit tricks to be more efficient in detecting
+// cachedSearch is a simple data structure that maps the upper bound (r) of a
+// range from 0 to r to the number of files that have between 0 and r files
+// (inclusive). It also guarantees that the counts are monotonically increasing
+// (not strict) as the value for r increases, by looking at the maximal
+// previous file count for the value that precedes r in the cache.
+//
+// It uses a bit trick to be more efficient in detecting
 // inconsistencies in the returned data from the Github API.
 // Therefore, the cache expects a search to always start at 0, and
 // it expects the max file size to be a power of 2. If this is to be changed
@@ -36,11 +139,12 @@ type cachedSearch interface {
 //    problematic). The current cache implementation looks at the
 //    predecessor entry to find out if the current value is monotonic.
 //    This is where the bit trick is used, since each step in the binary
-//    search is adding or ommiting to add a decreasing of 2 to the query value,
-//    we can remove the least significant set bit to find the predecessor in
-//    constant time. Ultimately since the search is rate limited, we could also
-//    easily afford to compute this in linear time by iterating
-//    over cached values.
+//    search is adding or ommiting to add a decreasing power of 2 to the query
+//    value, we can remove the least significant set bit to find the
+//    predecessor in constant time. Ultimately since the search is rate
+//    limited, we could also easily afford to compute this in linear time
+//    by iterating over cached values. So this trick is not crucial to the
+//    cache's performance.
 type githubCachedSearch struct {
 	cache       map[uint64]uint64
 	gcl         GitHubClient
@@ -160,7 +264,7 @@ func FindRangesForRepoSearch(cache cachedSearch) ([]string, error) {
 	//
 	// My intuition is that this approach is competitive to a perfectly
 	// optimal solution, but I didn't actually take the time to do a
-	// rigurous proof. Intuitively, since files sizes are typically power
+	// rigorous proof. Intuitively, since files sizes are typically power
 	// law distibuted the binary search will be very skewed towards the
 	// smaller file ranges. This means that in practice this approach will
 	// make fewer than (#files/1000)*(log(n) = 19) queries for

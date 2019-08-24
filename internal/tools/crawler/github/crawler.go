@@ -16,7 +16,11 @@ import (
 	"strings"
 	"time"
 
+	"sigs.k8s.io/kustomize/internal/tools/crawler"
 	"sigs.k8s.io/kustomize/internal/tools/doc"
+	"sigs.k8s.io/kustomize/internal/tools/httpclient"
+	"sigs.k8s.io/kustomize/v3/pkg/git"
+	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 )
 
 var logger = log.New(os.Stdout, "Github Crawler: ",
@@ -32,6 +36,17 @@ type GitHubClient struct {
 	RequestConfig
 	retryCount uint64
 	client     *http.Client
+}
+
+func NewClient(accessToken string, retryCount uint64, client *http.Client) GitHubClient {
+	return GitHubClient{
+		retryCount: retryCount,
+		client:     client,
+		RequestConfig: RequestConfig{
+			perPage:     githubMaxPageSize,
+			accessToken: accessToken,
+		},
+	}
 }
 
 func NewCrawler(accessToken string, retryCount uint64, client *http.Client,
@@ -52,7 +67,7 @@ func NewCrawler(accessToken string, retryCount uint64, client *http.Client,
 
 // Implements crawler.Crawler.
 func (gc githubCrawler) Crawl(
-	ctx context.Context, output chan<- *doc.KustomizationDocument) error {
+	ctx context.Context, output chan<- crawler.CrawlerDocument) error {
 
 	noETagClient := GitHubClient{
 		RequestConfig: gc.client.RequestConfig,
@@ -80,13 +95,78 @@ func (gc githubCrawler) Crawl(
 		}
 	}
 
-	return errs
+	if len(errs) > 0 {
+		return errs
+	}
+
+	return nil
+}
+
+func (gc githubCrawler) FetchDocument(ctx context.Context, d *doc.Document) error {
+	repoURL := d.RepositoryURL + "/" + d.FilePath + "?ref=" + d.DefaultBranch
+	repoSpec, err := git.NewRepoSpecFromUrl(repoURL)
+	if err != nil {
+		return fmt.Errorf("invalid repospec: %v", err)
+	}
+
+	url := "https://raw.githubusercontent.com/" + repoSpec.OrgRepo +
+		"/" + repoSpec.Ref + "/" + repoSpec.Path
+
+	handle := func(resp *http.Response, err error, path string) error {
+		if err == nil && resp.StatusCode == http.StatusOK {
+			d.IsSame = httpclient.FromCache(resp.Header)
+			defer resp.Body.Close()
+			data, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return err
+			}
+			d.DocumentData = string(data)
+			d.FilePath = d.FilePath + path
+			return nil
+		}
+		return err
+	}
+	resp, err := gc.client.GetRawUserContent(url)
+	if err := handle(resp, err, ""); err == nil {
+		return nil
+	}
+
+	for _, file := range pgmconfig.KustomizationFileNames {
+		resp, err = gc.client.GetRawUserContent(url + "/" + file)
+		err := handle(resp, err, "/"+file)
+		if err != nil {
+			continue
+		}
+	}
+	return fmt.Errorf("File Not Found: %s", url)
+}
+
+func (gc githubCrawler) SetCreated(ctx context.Context, d *doc.Document) error {
+	fs := GithubFileSpec{}
+	fs.Repository.FullName = d.RepositoryURL + "/" + d.FilePath
+	creationTime, err := gc.client.GetFileCreationTime(fs)
+	if err != nil {
+		return err
+	}
+	d.CreationTime = &creationTime
+	return nil
+}
+
+func (gc githubCrawler) Match(d *doc.Document) bool {
+	url := d.RepositoryURL + "/" + d.FilePath + "?ref=" + "/" +
+		d.DefaultBranch
+	repoSpec, err := git.NewRepoSpecFromUrl(url)
+	if err != nil {
+		return false
+	}
+
+	return strings.Contains(repoSpec.Host, "github.com")
 }
 
 // processQuery follows all of the pages in a query, and updates/adds the
 // documents from the crawl to the datastore/index.
 func processQuery(ctx context.Context, gcl GitHubClient, query string,
-	output chan<- *doc.KustomizationDocument) error {
+	output chan<- crawler.CrawlerDocument) error {
 
 	queryPages := make(chan GithubResponseInfo)
 
@@ -112,13 +192,6 @@ func processQuery(ctx context.Context, gcl GitHubClient, query string,
 		}
 
 		for _, file := range page.Parsed.Items {
-			// TODO(damienr74) This is where we'd need to
-			// communicate with redis. Currently always doing a full
-			// reindex of the documents. Since the documents are in
-			// sorted order in each bucket, we can short circuit the
-			// search when we find a file that has been seen, or we
-			// can choose to selectively update files.
-
 			k, err := kustomizationResultAdapter(gcl, file)
 			if err != nil {
 				errs = append(errs, err)
@@ -137,23 +210,33 @@ func processQuery(ctx context.Context, gcl GitHubClient, query string,
 }
 
 func kustomizationResultAdapter(gcl GitHubClient, k GithubFileSpec) (
-	*doc.KustomizationDocument, error) {
+	crawler.CrawlerDocument, error) {
 
 	data, err := gcl.GetFileData(k)
 	if err != nil {
 		return nil, err
 	}
 
-	creationTime, err := gcl.GetFileCreationTime(k)
 	if err != nil {
-		logger.Printf("(error: %v) initializing to current time.", err)
+		logger.Printf(
+			"(error: %v) initializing to current time.\n", err)
+	}
+
+	url := gcl.ReposRequest(k.Repository.FullName)
+	defaultBranch, err := gcl.GetDefaultBranch(url)
+	if err != nil {
+		logger.Printf(
+			"(error: %v) setting default_branch to master\n", err)
+		defaultBranch = "master"
 	}
 
 	doc := doc.KustomizationDocument{
-		DocumentData:  string(data),
-		FilePath:      k.Path,
-		RepositoryURL: k.Repository.URL,
-		CreationTime:  creationTime,
+		Document: doc.Document{
+			DocumentData:  string(data),
+			FilePath:      k.Path,
+			DefaultBranch: defaultBranch,
+			RepositoryURL: k.Repository.URL,
+		},
 	}
 
 	return &doc, nil
@@ -227,7 +310,34 @@ func (gcl GitHubClient) GetFileData(k GithubFileSpec) ([]byte, error) {
 	}
 
 	defer resp.Body.Close()
-	return ioutil.ReadAll(resp.Body)
+	data, err = ioutil.ReadAll(resp.Body)
+	return data, err
+}
+
+func (gcl GitHubClient) GetDefaultBranch(url string) (string, error) {
+	resp, err := gcl.GetReposData(url)
+	if err != nil {
+		return "", fmt.Errorf(
+			"'%s' could not get default_branch: %v", url, err)
+	}
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf(
+			"could not read default_branch: %v", err)
+	}
+
+	type defaultBranch struct {
+		DefaultBranch string `json:"default_branch,omitempty"`
+	}
+	var branch defaultBranch
+	err = json.Unmarshal(data, &branch)
+	if err != nil {
+		return "", fmt.Errorf(
+			"default_branch json malformed: %v", err)
+	}
+
+	return branch.DefaultBranch, nil
 }
 
 // GetFileCreationTime gets the earliest date of a file.
@@ -301,29 +411,23 @@ func throttleRepoAPI() {
 	<-contentRateTicker.C
 }
 
-const (
-	accessTokenKeyword = "access_token="
-	perPageKeyword     = "per_page="
-	contentSearchURL   = "https://api.github.com/repos"
-	contentKeyword     = "contents"
-)
-
 type multiError []error
 
 func (me multiError) Error() string {
 	size := len(me) + 2
 	strs := make([]string, size)
-	strs[0] = "Errors [\n\t"
+	strs[0] = "Errors ["
 	for i, err := range me {
-		strs[i+1] = err.Error()
+		strs[i+1] = "\t" + err.Error()
 	}
-	strs[size-1] = "\n]"
-	return strings.Join(strs, "\n\t")
+	strs[size-1] = "]"
+	return strings.Join(strs, "\n")
 }
 
 type GithubFileSpec struct {
 	Path       string `json:"path,omitempty"`
 	Repository struct {
+		API      string `json:"url,omitempty"`
 		URL      string `json:"html_url,omitempty"`
 		FullName string `json:"full_name,omitempty"`
 	} `json:"repository,omitempty"`
