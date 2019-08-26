@@ -14,11 +14,11 @@ go get sigs.k8s.io/kustomize/v3/cmd/kustomize
 
   * [configGenerations](configGeneration.md) - 当 ConfigMapGenerator 修改时进行滚动更新。
 
-  * [combineConfigs](../combineConfigs.md) - 融合来自不同用户的配置数据（例如来自 devops/SRE 和 developers）。
+  * [combineConfigs](combineConfigs.md) - 融合来自不同用户的配置数据（例如来自 devops/SRE 和 developers）。
 
-  * [generatorOptions](../generatorOptions.md) -修改所有 ConfigMapGenerator 和 SecretGenerator 的行为。
+  * [generatorOptions](generatorOptions.md) -修改所有 ConfigMapGenerator 和 SecretGenerator 的行为。
 
-  * [vars](../wordpress/README.md) - 通过 vars 将一个资源的数据注入另一个资源的容器参数 （例如，为 wordpress 指定 SQL 服务）。
+  * [vars](vars.md) - 通过 vars 将一个资源的数据注入另一个资源的容器参数 （例如，为 wordpress 指定 SQL 服务）。
 
   * [image names and tags](../image.md) - 在不使用 patch 的情况下更新镜像名称和标签。
 
