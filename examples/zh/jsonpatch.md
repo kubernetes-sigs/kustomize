@@ -1,4 +1,4 @@
-# 例子: 应用 json patch（json补丁）
+# 示例: 应用 json patch（json补丁）
 
 kustomization文件支持通过[JSON patches](https://tools.ietf.org/html/rfc6902)来修改已有的资源.
 
