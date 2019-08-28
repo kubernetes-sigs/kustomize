@@ -26,6 +26,7 @@ import (
 func GetDefaultFieldSpecs() []byte {
 	configData := [][]byte{
 		[]byte(namePrefixFieldSpecs),
+		[]byte(namePrefixSuffixSkipSpecs),
 		[]byte(commonLabelFieldSpecs),
 		[]byte(commonAnnotationFieldSpecs),
 		[]byte(namespaceFieldSpecs),
@@ -42,6 +43,7 @@ func GetDefaultFieldSpecs() []byte {
 func GetDefaultFieldSpecsAsMap() map[string]string {
 	result := make(map[string]string)
 	result["nameprefix"] = namePrefixFieldSpecs
+	result["prefixsuffixskip"] = namePrefixSuffixSkipSpecs
 	result["commonlabels"] = commonLabelFieldSpecs
 	result["commonannotations"] = commonAnnotationFieldSpecs
 	result["namespace"] = namespaceFieldSpecs

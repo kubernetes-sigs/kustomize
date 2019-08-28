@@ -19,18 +19,13 @@ type PrefixSuffixTransformerPlugin struct {
 	Prefix     string             `json:"prefix,omitempty" yaml:"prefix,omitempty"`
 	Suffix     string             `json:"suffix,omitempty" yaml:"suffix,omitempty"`
 	FieldSpecs []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+
+	PrefixSuffixKindsToSkip []gvk.Gvk `json:"prefixSuffixKindsToSkip,omitempty" yaml:"prefixSuffixKindsToSkip,omitempty"`
 }
 
 //noinspection GoUnusedGlobalVariable
 func NewPrefixSuffixTransformerPlugin() *PrefixSuffixTransformerPlugin {
-	return &PrefixSuffixTransformerPlugin{}
-}
-
-// Not placed in a file yet due to lack of demand.
-var prefixSuffixFieldSpecsToSkip = []config.FieldSpec{
-	{
-		Gvk: gvk.Gvk{Kind: "CustomResourceDefinition"},
-	},
+  return &PrefixSuffixTransformerPlugin{}
 }
 
 func (p *PrefixSuffixTransformerPlugin) Config(
@@ -102,8 +97,8 @@ func smellsLikeANameChange(fs *config.FieldSpec) bool {
 
 func (p *PrefixSuffixTransformerPlugin) shouldSkip(
 	id resid.ResId) bool {
-	for _, path := range prefixSuffixFieldSpecsToSkip {
-		if id.IsSelected(&path.Gvk) {
+	for _, gvk := range p.PrefixSuffixKindsToSkip {
+		if id.IsSelected(&gvk) {
 			return true
 		}
 	}

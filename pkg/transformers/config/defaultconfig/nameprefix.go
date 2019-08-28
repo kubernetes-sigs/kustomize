@@ -22,3 +22,8 @@ namePrefix:
 - path: metadata/name
 `
 )
+
+const namePrefixSuffixSkipSpecs = `
+namePrefixSuffixSkip:
+- kind: CustomResourceDefinition
+`
