@@ -68,7 +68,7 @@ kustomization file), then locates the Go plugin's
 object code at the following location:
 
 > ```shell
-> $XGD_CONFIG_HOME/kustomize/plugin/$apiVersion/$lKind/$kind.so
+> $XDG_CONFIG_HOME/kustomize/plugin/$apiVersion/$lKind/$kind.so
 > ```
 
 where `lKind` holds the lowercased kind.  The
@@ -91,7 +91,7 @@ ephemeral directory
 PLUGIN_ROOT=$DEMO/kustomize/plugin
 ```
 
-and ephemerally set `XGD_CONFIG_HOME` on a command
+and ephemerally set `XDG_CONFIG_HOME` on a command
 line below.
 
 ### What apiVersion and kind?
