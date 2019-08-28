@@ -38,6 +38,8 @@ type TransformerConfig struct {
 	VarReference      fsSlice  `json:"varReference,omitempty" yaml:"varReference,omitempty"`
 	Images            fsSlice  `json:"images,omitempty" yaml:"images,omitempty"`
 	Replicas          fsSlice  `json:"replicas,omitempty" yaml:"replicas,omitempty"`
+
+	PrefixSuffixKindsToSkip gvkSlice `json:"namePrefixSuffixSkip,omitempty" yaml:"namePrefixSuffixSkip,omitempty"`
 }
 
 // MakeEmptyConfig returns an empty TransformerConfig object
@@ -58,6 +60,7 @@ func MakeDefaultConfig() *TransformerConfig {
 // sortFields provides determinism in logging, tests, etc.
 func (t *TransformerConfig) sortFields() {
 	sort.Sort(t.NamePrefix)
+	sort.Sort(t.NameSuffix)
 	sort.Sort(t.NameSpace)
 	sort.Sort(t.CommonLabels)
 	sort.Sort(t.CommonAnnotations)
@@ -65,6 +68,8 @@ func (t *TransformerConfig) sortFields() {
 	sort.Sort(t.VarReference)
 	sort.Sort(t.Images)
 	sort.Sort(t.Replicas)
+
+	sort.Sort(t.PrefixSuffixKindsToSkip)
 }
 
 // AddPrefixFieldSpec adds a FieldSpec to NamePrefix
@@ -143,6 +148,9 @@ func (t *TransformerConfig) Merge(input *TransformerConfig) (
 	if err != nil {
 		return nil, errors.Wrap(err, "Replicas`")
 	}
+
+	merged.PrefixSuffixKindsToSkip = t.PrefixSuffixKindsToSkip.merge(input.PrefixSuffixKindsToSkip)
+
 	merged.sortFields()
 	return merged, nil
 }

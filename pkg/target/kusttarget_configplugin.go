@@ -4,6 +4,7 @@
 package target
 
 import (
+	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"sigs.k8s.io/kustomize/v3/pkg/image"
 	"sigs.k8s.io/kustomize/v3/pkg/plugins"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
@@ -178,6 +179,7 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 			return nil, err
 		}
 		result = append(result, p)
+<<<<<<< 73ca4fd118da878cca0c7f941030ab8e91fd0494
 		return
 	},
 	plugins.PatchTransformer: func(
@@ -215,6 +217,83 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 		c.FieldSpecs = tc.CommonLabelsFieldSpecs()
 		p := f()
 		err = kt.configureBuiltinPlugin(p, c, bpt)
+=======
+	}
+	return
+}
+
+func (kt *KustTarget) configureBuiltinLabelTransformer(
+	tConfig *config.TransformerConfig) (
+	result []transformers.Transformer, err error) {
+	var c struct {
+		Labels     map[string]string
+		FieldSpecs []config.FieldSpec
+	}
+	c.Labels = kt.kustomization.CommonLabels
+	c.FieldSpecs = tConfig.CommonLabelsFieldSpecs()
+	p := builtin.NewLabelTransformerPlugin()
+	err = kt.configureBuiltinPlugin(p, c, "label")
+	if err != nil {
+		return nil, err
+	}
+	result = append(result, p)
+	return
+}
+
+func (kt *KustTarget) configureBuiltinAnnotationsTransformer(
+	tConfig *config.TransformerConfig) (
+	result []transformers.Transformer, err error) {
+	var c struct {
+		Annotations map[string]string
+		FieldSpecs  []config.FieldSpec
+	}
+	c.Annotations = kt.kustomization.CommonAnnotations
+	c.FieldSpecs = tConfig.CommonAnnotationsFieldSpecs()
+	p := builtin.NewAnnotationsTransformerPlugin()
+	err = kt.configureBuiltinPlugin(p, c, "annotations")
+	if err != nil {
+		return nil, err
+	}
+	result = append(result, p)
+	return
+}
+
+func (kt *KustTarget) configureBuiltinNameTransformer(
+	tConfig *config.TransformerConfig) (
+	result []transformers.Transformer, err error) {
+	var c struct {
+		Prefix     string
+		Suffix     string
+		FieldSpecs []config.FieldSpec
+
+		PrefixSuffixKindsToSkip []gvk.Gvk
+	}
+	c.Prefix = kt.kustomization.NamePrefix
+	c.Suffix = kt.kustomization.NameSuffix
+	c.FieldSpecs = tConfig.NamePrefixFieldSpecs()
+	c.PrefixSuffixKindsToSkip = tConfig.PrefixSuffixKindsToSkip
+	p := builtin.NewPrefixSuffixTransformerPlugin()
+	err = kt.configureBuiltinPlugin(p, c, "prefixsuffix")
+	if err != nil {
+		return nil, err
+	}
+	result = append(result, p)
+	return
+}
+
+func (kt *KustTarget) configureBuiltinImageTagTransformer(
+	tConfig *config.TransformerConfig) (
+	result []transformers.Transformer, err error) {
+	var c struct {
+		ImageTag   image.Image
+		FieldSpecs []config.FieldSpec
+	}
+	for _, args := range kt.kustomization.Images {
+		c.ImageTag = args
+		c.FieldSpecs = tConfig.ImagesFieldSpecs()
+		p := builtin.NewImageTagTransformerPlugin()
+		err = kt.configureBuiltinPlugin(p, c, "imageTag")
+>>>>>>> feat: skip name prefix/suffix by kind
 		if err != nil {
 			return nil, err
 		}
