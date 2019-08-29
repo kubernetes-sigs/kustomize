@@ -146,18 +146,20 @@ func (r *Resource) GetOutermostNameSuffix() string {
 	return r.nameSuffixes[len(r.nameSuffixes)-1]
 }
 
-func sameBeginningSubarray(a, b []string) bool {
-	maxlen := len(b)
+func sameEndingSubarray(a, b []string) bool {
+	compareLen := len(b)
 	if len(a) < len(b) {
-		maxlen = len(a)
+		compareLen = len(a)
 	}
 
-	if maxlen == 0 {
+	if compareLen == 0 {
 		return true
 	}
 
-	for i, v := range a[0 : maxlen-1] {
-		if v != b[i] {
+	alen := len(a) - 1
+	blen := len(b) - 1
+	for i := 0; i <= compareLen-1; i++ {
+		if a[alen-i] != b[blen-i] {
 			return false
 		}
 	}
@@ -182,9 +184,17 @@ func (r *Resource) OutermostPrefixSuffixEquals(o ResCtx) bool {
 
 // PrefixesSuffixesEquals is conceptually doing the same task
 // as OutermostPrefixSuffix but performs a deeper comparison
-// of the the list of suffix and prefix.
+// of the suffix and prefix slices.
+//
+// Important note: The PrefixSuffixTransformer is stacking the
+// prefix values in the reverse order of appearance in
+// the transformed name. For this reason the sameEndingSubarray
+// method is used (as opposed to the sameBeginningSubarray)
+// to compare the prefix slice. In the same spirit, the
+// GetOutermostNamePrefix is using the last element of the
+// nameprefix slice and not the first.
 func (r *Resource) PrefixesSuffixesEquals(o ResCtx) bool {
-	return sameBeginningSubarray(r.GetNamePrefixes(), o.GetNamePrefixes()) && sameBeginningSubarray(r.GetNameSuffixes(), o.GetNameSuffixes())
+	return sameEndingSubarray(r.GetNamePrefixes(), o.GetNamePrefixes()) && sameEndingSubarray(r.GetNameSuffixes(), o.GetNameSuffixes())
 }
 
 // This is used to compute if a referrer could potentially be impacted
