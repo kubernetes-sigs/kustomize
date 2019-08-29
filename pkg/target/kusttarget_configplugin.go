@@ -5,7 +5,6 @@ package target
 
 import (
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"sigs.k8s.io/kustomize/v3/pkg/image"
 	"sigs.k8s.io/kustomize/v3/pkg/plugins"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers"
@@ -257,7 +256,7 @@ func (kt *KustTarget) configureBuiltinNameTransformer(
 		Suffix     string
 		FieldSpecs []config.FieldSpec
 
-		PrefixSuffixKindsToSkip []gvk.Gvk
+		PrefixSuffixKindsToSkip []config.FieldSpec
 	}
 	c.Prefix = kt.kustomization.NamePrefix
 	c.Suffix = kt.kustomization.NameSuffix

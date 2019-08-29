@@ -37,7 +37,7 @@ type TransformerConfig struct {
 	Images            fsSlice  `json:"images,omitempty" yaml:"images,omitempty"`
 	Replicas          fsSlice  `json:"replicas,omitempty" yaml:"replicas,omitempty"`
 
-	PrefixSuffixKindsToSkip gvkSlice `json:"namePrefixSuffixSkip,omitempty" yaml:"namePrefixSuffixSkip,omitempty"`
+	PrefixSuffixKindsToSkip fsSlice `json:"namePrefixSuffixSkip,omitempty" yaml:"namePrefixSuffixSkip,omitempty"`
 }
 
 // MakeEmptyConfig returns an empty TransformerConfig object
@@ -147,7 +147,10 @@ func (t *TransformerConfig) Merge(input *TransformerConfig) (
 		return nil, err
 	}
 
-	merged.PrefixSuffixKindsToSkip = t.PrefixSuffixKindsToSkip.merge(input.PrefixSuffixKindsToSkip)
+	merged.PrefixSuffixKindsToSkip, err = t.PrefixSuffixKindsToSkip.mergeAll(input.PrefixSuffixKindsToSkip)
+	if err != nil {
+		return nil, err
+	}
 
 	merged.sortFields()
 	return merged, nil
