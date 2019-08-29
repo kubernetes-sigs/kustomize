@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
@@ -20,7 +19,7 @@ type PrefixSuffixTransformerPlugin struct {
 	Suffix     string             `json:"suffix,omitempty" yaml:"suffix,omitempty"`
 	FieldSpecs []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 
-	PrefixSuffixKindsToSkip []gvk.Gvk `json:"prefixSuffixKindsToSkip,omitempty" yaml:"prefixSuffixKindsToSkip,omitempty"`
+	PrefixSuffixKindsToSkip []config.FieldSpec `json:"prefixSuffixKindsToSkip,omitempty" yaml:"prefixSuffixKindsToSkip,omitempty"`
 }
 
 //noinspection GoUnusedGlobalVariable
@@ -97,8 +96,8 @@ func smellsLikeANameChange(fs *config.FieldSpec) bool {
 
 func (p *PrefixSuffixTransformerPlugin) shouldSkip(
 	id resid.ResId) bool {
-	for _, gvk := range p.PrefixSuffixKindsToSkip {
-		if id.IsSelected(&gvk) {
+	for _, f := range p.PrefixSuffixKindsToSkip {
+		if id.IsSelected(&f.Gvk) {
 			return true
 		}
 	}
