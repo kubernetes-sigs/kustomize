@@ -1,0 +1,46 @@
+#!/bin/bash
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+# HashiCorp go-getter
+#
+# Reads a file like this
+#
+#  apiVersion: someteam.example.com/v1
+#  kind: GoGetter
+#  metadata:
+#    name: example
+#  url: github.com/kustless/kustomize-examples.git
+#  # overlay: base  # (optional) relative path in the package
+#
+# download kustomize layes and build it to stdout
+#
+# Example execution:
+# ./plugin/someteam.example.com/v1/gogetter/GoGetter configFile.yaml
+#
+# TODO: cache downloads
+
+set -e
+
+# YAML parsing function borrowed from ChartInflator
+function parseYaml {
+  local file=$1
+  while read -r line
+  do
+    local k=${line%:*}
+    local v=${line#*:}
+    local t=${v#"${v%%[![:space:]]*}"}  # trim leading space
+
+    if [ "$k" == "url" ]; then url=$t
+    elif [ "$k" == "overlay" ]; then overlay=$t
+    fi
+  done <"$file"
+}
+
+TMP_DIR=$(mktemp -d)
+
+parseYaml $1
+go-getter $url $TMP_DIR/got 2> /dev/null
+kustomize build $TMP_DIR/got/$overlay
+
+/bin/rm -rf $TMP_DIR
