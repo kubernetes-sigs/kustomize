@@ -73,12 +73,6 @@ func (t *TransformerConfig) AddPrefixFieldSpec(fs FieldSpec) (err error) {
 	return err
 }
 
-// AddSuffixFieldSpec adds a FieldSpec to NameSuffix
-func (t *TransformerConfig) AddSuffixFieldSpec(fs FieldSpec) (err error) {
-	t.NameSuffix, err = t.NameSuffix.mergeOne(FieldSpecConfig{FieldSpec: fs, Behavior: "add"})
-	return err
-}
-
 // AddLabelFieldSpec adds a FieldSpec to CommonLabels
 func (t *TransformerConfig) AddLabelFieldSpec(fs FieldSpec) (err error) {
 	t.CommonLabels, err = t.CommonLabels.mergeOne(FieldSpecConfig{FieldSpec: fs, Behavior: "add"})
@@ -109,10 +103,6 @@ func (t *TransformerConfig) Merge(input *TransformerConfig) (
 	merged.NamePrefix, err = t.NamePrefix.mergeAll(input.NamePrefix)
 	if err != nil {
 		return nil, errors.Wrap(err, "NamePrefix")
-	}
-	merged.NameSuffix, err = t.NameSuffix.mergeAll(input.NameSuffix)
-	if err != nil {
-		return nil, errors.Wrap(err, "NameSuffix")
 	}
 	merged.NameSpace, err = t.NameSpace.mergeAll(input.NameSpace)
 	if err != nil {

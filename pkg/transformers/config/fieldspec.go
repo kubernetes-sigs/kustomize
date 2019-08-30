@@ -104,7 +104,7 @@ const (
 
 func (fs FieldSpec) String() string {
 	return fmt.Sprintf(
-		"%s:%v:%s", fs.Gvk.String(), fs.CreateIfNotPresent, fs.Path)
+		"%s:%v:%v:%s", fs.Gvk.String(), fs.CreateIfNotPresent, fs.SkipTransformation, fs.Path)
 }
 
 // TODO(jeb): Method needs to be improve deal with multiple
@@ -180,7 +180,7 @@ func (s fsSlice) mergeOne(x FieldSpecConfig) (fsSlice, error) {
 	case BehaviorAdd, BehaviorUnspecified:
 		if i > -1 {
 			// It's already there.
-			if s[i].CreateIfNotPresent != x.CreateIfNotPresent {
+			if (s[i].SkipTransformation == x.SkipTransformation) && (s[i].CreateIfNotPresent != x.CreateIfNotPresent) {
 				return nil, fmt.Errorf("conflicting fieldspecs exist %v and %v", x, s[i])
 			}
 			return s, nil
@@ -188,7 +188,7 @@ func (s fsSlice) mergeOne(x FieldSpecConfig) (fsSlice, error) {
 		return append(s, x), nil
 	case BehaviorRemove:
 		if i == -1 {
-			return nil, fmt.Errorf("fieldspec does not exist %v", x)
+			return nil, fmt.Errorf("remove behavior: fieldspec does not exist %v", x)
 		}
 		copy(s[i:], s[i+1:])
 		s[len(s)-1] = FieldSpecConfig{}
@@ -196,8 +196,9 @@ func (s fsSlice) mergeOne(x FieldSpecConfig) (fsSlice, error) {
 		return s, nil
 	case BehaviorReplace:
 		if i == -1 {
-			return nil, fmt.Errorf("fieldspec does not exist %v", x)
+			return nil, fmt.Errorf("replace behavior: fieldspec does not exist %v", x)
 		}
+		s[i] = x
 		return s, nil
 	default:
 		return nil, fmt.Errorf("unsupported behavior [%s]", x.Behavior)
@@ -313,12 +314,13 @@ func (s FieldSpecs) pruneFieldSpecs(fs FieldSpec) FieldSpecs {
 func (s FieldSpecs) ApplicableFieldSpecs(x gvk.Gvk) FieldSpecs {
 	selected := FieldSpecs{}
 	for _, fs := range s {
-		if x.IsSelected(&fs.Gvk) {
-			if !fs.SkipTransformation {
-				selected = selected.squashFieldSpecs(fs)
-			} else {
-				selected = selected.pruneFieldSpecs(fs)
-			}
+		if !fs.SkipTransformation && x.IsSelected(&fs.Gvk) {
+			selected = selected.squashFieldSpecs(fs)
+		}
+	}
+	for _, fs := range s {
+		if fs.SkipTransformation && x.IsSelected(&fs.Gvk) {
+			selected = selected.pruneFieldSpecs(fs)
 		}
 	}
 	return selected

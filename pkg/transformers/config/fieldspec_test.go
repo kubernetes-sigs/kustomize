@@ -172,7 +172,9 @@ var mergeTests = []struct {
 					Path:               "whatever",
 					Gvk:                gvk.Gvk{Group: "apple"},
 					CreateIfNotPresent: false,
-				}},
+				},
+				Behavior: "add",
+			},
 			{
 				FieldSpec: FieldSpec{
 					Path:               "whatever",
@@ -194,6 +196,148 @@ var mergeTests = []struct {
 		},
 		fmt.Errorf("hey"),
 		fsSlice{},
+	},
+	{
+		"remove",
+		fsSlice{
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/field1",
+					Gvk:                gvk.Gvk{Kind: "MyCRD"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "",
+			},
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/field2",
+					Gvk:                gvk.Gvk{Kind: "MyCRD"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
+			},
+		},
+		fsSlice{
+			{
+				FieldSpec: FieldSpec{
+					Path: "spec/field1",
+					Gvk:  gvk.Gvk{Kind: "MyCRD"},
+				},
+				Behavior: "remove",
+			},
+		},
+		nil,
+		fsSlice{
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/field2",
+					Gvk:                gvk.Gvk{Kind: "MyCRD"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
+			},
+		},
+	},
+	{
+		"remove2",
+		fsSlice{
+			{
+				FieldSpec: FieldSpec{
+					Path:               "metadata/labels",
+					CreateIfNotPresent: true,
+				},
+			},
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/template/spec/affinity/podAffinity/preferredDuringSchedulingIgnoredDuringExecution/podAffinityTerm/labelSelector/matchLabels",
+					Gvk:                gvk.Gvk{Kind: "Deployment", Group: "apps"},
+					CreateIfNotPresent: false,
+				},
+			},
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/template/spec/affinity/podAffinity/requiredDuringSchedulingIgnoredDuringExecution/labelSelector/matchLabels",
+					Gvk:                gvk.Gvk{Kind: "Deployment", Group: "apps"},
+					CreateIfNotPresent: false,
+				},
+			},
+		},
+		fsSlice{
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/template/spec/affinity/podAffinity/preferredDuringSchedulingIgnoredDuringExecution/podAffinityTerm/labelSelector/matchLabels",
+					Gvk:                gvk.Gvk{Kind: "Deployment", Group: "apps"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "remove",
+			},
+		},
+		nil,
+		fsSlice{
+			{
+				FieldSpec: FieldSpec{
+					Path:               "metadata/labels",
+					CreateIfNotPresent: true,
+				},
+			},
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/template/spec/affinity/podAffinity/requiredDuringSchedulingIgnoredDuringExecution/labelSelector/matchLabels",
+					Gvk:                gvk.Gvk{Kind: "Deployment", Group: "apps"},
+					CreateIfNotPresent: false,
+				},
+			},
+		},
+	},
+	{
+		"replace",
+		fsSlice{
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/field1",
+					Gvk:                gvk.Gvk{Kind: "MyCRD"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "",
+			},
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/field2",
+					Gvk:                gvk.Gvk{Kind: "MyCRD"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
+			},
+		},
+		fsSlice{
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/field2",
+					Gvk:                gvk.Gvk{Kind: "MyCRD"},
+					CreateIfNotPresent: true,
+				},
+				Behavior: "replace",
+			},
+		},
+		nil,
+		fsSlice{
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/field1",
+					Gvk:                gvk.Gvk{Kind: "MyCRD"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "",
+			},
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/field2",
+					Gvk:                gvk.Gvk{Kind: "MyCRD"},
+					CreateIfNotPresent: true,
+				},
+				Behavior: "replace",
+			},
+		},
 	},
 }
 
