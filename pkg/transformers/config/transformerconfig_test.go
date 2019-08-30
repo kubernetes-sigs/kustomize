@@ -31,14 +31,14 @@ func TestAddNamereferenceFieldSpec(t *testing.T) {
 		Gvk: gvk.Gvk{
 			Kind: "KindA",
 		},
-		FieldSpecs: []FieldSpec{
-			{
+		FieldSpecs: []FieldSpecConfig{
+			{FieldSpec: FieldSpec{
 				Gvk: gvk.Gvk{
 					Kind: "KindB",
 				},
 				Path:               "path/to/a/field",
 				CreateIfNotPresent: false,
-			},
+			}},
 		},
 	}
 
@@ -96,28 +96,28 @@ func TestMerge(t *testing.T) {
 			Gvk: gvk.Gvk{
 				Kind: "KindA",
 			},
-			FieldSpecs: []FieldSpec{
-				{
+			FieldSpecs: []FieldSpecConfig{
+				{FieldSpec: FieldSpec{
 					Gvk: gvk.Gvk{
 						Kind: "KindB",
 					},
 					Path:               "path/to/a/field",
 					CreateIfNotPresent: false,
-				},
+				}},
 			},
 		},
 		{
 			Gvk: gvk.Gvk{
 				Kind: "KindA",
 			},
-			FieldSpecs: []FieldSpec{
-				{
+			FieldSpecs: []FieldSpecConfig{
+				{FieldSpec: FieldSpec{
 					Gvk: gvk.Gvk{
 						Kind: "KindC",
 					},
 					Path:               "path/to/a/field",
 					CreateIfNotPresent: false,
-				},
+				}},
 			},
 		},
 	}

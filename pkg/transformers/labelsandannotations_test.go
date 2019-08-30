@@ -388,7 +388,7 @@ func TestLabelsRun(t *testing.T) {
 
 	lt, err := NewLabelsMapTransformer(
 		map[string]string{"label-key1": "label-value1", "label-key2": "label-value2"},
-		defaultTransformerConfig.CommonLabels)
+		defaultTransformerConfig.CommonLabelsFieldSpecs())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -517,7 +517,7 @@ func TestAnnotationsRun(t *testing.T) {
 		}).ResMap()
 	at, err := NewAnnotationsMapTransformer(
 		map[string]string{"anno-key1": "anno-value1", "anno-key2": "anno-value2"},
-		defaultTransformerConfig.CommonAnnotations)
+		defaultTransformerConfig.CommonAnnotationsFieldSpecs())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -556,7 +556,7 @@ func TestAnnotationsRunWithNullValue(t *testing.T) {
 
 	at, err := NewAnnotationsMapTransformer(
 		map[string]string{"anno-key1": "anno-value1", "anno-key2": "anno-value2"},
-		defaultTransformerConfig.CommonAnnotations)
+		defaultTransformerConfig.CommonAnnotationsFieldSpecs())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

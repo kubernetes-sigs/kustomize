@@ -60,39 +60,57 @@ var mergeTests = []struct {
 		"normal",
 		fsSlice{
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "apple"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "apple"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
 			},
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "pear"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "pear"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
 			},
 		},
 		fsSlice{
 			{
-				Path:               "home",
-				Gvk:                gvk.Gvk{Group: "beans"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "home",
+					Gvk:                gvk.Gvk{Group: "beans"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
 			},
 		},
 		nil,
 		fsSlice{
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "apple"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "apple"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
 			},
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "pear"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "pear"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
 			},
 			{
-				Path:               "home",
-				Gvk:                gvk.Gvk{Group: "beans"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "home",
+					Gvk:                gvk.Gvk{Group: "beans"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
 			},
 		},
 	},
@@ -100,34 +118,49 @@ var mergeTests = []struct {
 		"ignore copy",
 		fsSlice{
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "apple"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "apple"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
 			},
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "pear"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "pear"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
 			},
 		},
 		fsSlice{
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "apple"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "apple"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
 			},
 		},
 		nil,
 		fsSlice{
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "apple"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "apple"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
 			},
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "pear"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "pear"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
 			},
 		},
 	},
@@ -135,21 +168,28 @@ var mergeTests = []struct {
 		"error on conflict",
 		fsSlice{
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "apple"},
-				CreateIfNotPresent: false,
-			},
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "apple"},
+					CreateIfNotPresent: false,
+				}},
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "pear"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "pear"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
 			},
 		},
 		fsSlice{
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "apple"},
-				CreateIfNotPresent: true,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "apple"},
+					CreateIfNotPresent: true,
+				},
+				Behavior: "add",
 			},
 		},
 		fmt.Errorf("hey"),

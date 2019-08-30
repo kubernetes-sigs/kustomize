@@ -158,23 +158,25 @@ func TestLoadCRDs(t *testing.T) {
 	nbrs := []NameBackReferences{
 		{
 			Gvk: gvk.Gvk{Kind: "Secret", Version: "v1"},
-			FieldSpecs: []FieldSpec{
-				{
+			FieldSpecs: []FieldSpecConfig{{
+				FieldSpec: FieldSpec{
 					CreateIfNotPresent: false,
 					Gvk:                gvk.Gvk{Kind: "MyKind"},
 					Path:               "spec/secretRef/name",
 				},
-			},
+				Behavior: "add",
+			}},
 		},
 		{
 			Gvk: gvk.Gvk{Kind: "Bee", Version: "v1beta1"},
-			FieldSpecs: []FieldSpec{
-				{
+			FieldSpecs: []FieldSpecConfig{{
+				FieldSpec: FieldSpec{
 					CreateIfNotPresent: false,
 					Gvk:                gvk.Gvk{Kind: "MyKind"},
 					Path:               "spec/beeRef/name",
 				},
-			},
+				Behavior: "add",
+			}},
 		},
 	}
 

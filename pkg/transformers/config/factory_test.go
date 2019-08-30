@@ -29,12 +29,12 @@ namePrefix:
 		t.Fatalf("unexpected error: %v", err)
 	}
 	expected := &TransformerConfig{
-		NamePrefix: []FieldSpec{
-			{
+		NamePrefix: []FieldSpecConfig{{
+			FieldSpec: FieldSpec{
 				Gvk:  gvk.Gvk{Kind: "SomeKind"},
 				Path: "nameprefix/path",
 			},
-		},
+		}},
 	}
 	if !reflect.DeepEqual(tcfg, expected) {
 		t.Fatalf("expected %v\n but go6t %v\n", expected, tcfg)

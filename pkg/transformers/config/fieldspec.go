@@ -40,11 +40,60 @@ import (
 //   kind: Deployment
 //   path: spec/template/metadata/labels
 //   create: true
+//   behavior: ""|add|replace|remove
 // }
+
+// FieldSpecMergeBehavior specifies generation behavior of configmaps, secrets and maybe other resources.
+type FieldSpecMergeBehavior int
+
+const (
+	// BehaviorUnspecified is an Unspecified behavior; typically treated as a Add.
+	BehaviorUnspecified FieldSpecMergeBehavior = iota
+	// BehaviorCreate add a new fieldspec.
+	BehaviorAdd
+	// BehaviorReplace replaces a fieldspec.
+	BehaviorReplace
+	// BehaviorRemove removes the fieldspec
+	BehaviorRemove
+)
+
+// String converts a FieldSpecMergeBehavior to a string.
+func (b FieldSpecMergeBehavior) String() string {
+	switch b {
+	case BehaviorReplace:
+		return "replace"
+	case BehaviorRemove:
+		return "remove"
+	case BehaviorAdd:
+		return "add"
+	default:
+		return "unspecified"
+	}
+}
+
+// NewGenerationBehavior converts a string to a FieldSpecMergeBehavior.
+func NewFieldSpecMergeBehavior(s string) FieldSpecMergeBehavior {
+	switch s {
+	case "replace":
+		return BehaviorReplace
+	case "remove":
+		return BehaviorRemove
+	case "add":
+		return BehaviorAdd
+	default:
+		return BehaviorUnspecified
+	}
+}
+
 type FieldSpec struct {
 	gvk.Gvk            `json:",inline,omitempty" yaml:",inline,omitempty"`
 	Path               string `json:"path,omitempty" yaml:"path,omitempty"`
 	CreateIfNotPresent bool   `json:"create,omitempty" yaml:"create,omitempty"`
+}
+
+type FieldSpecConfig struct {
+	FieldSpec `json:",inline,omitempty" yaml:",inline,omitempty"`
+	Behavior  string `json:"behavior,omitempty" yaml:"behavior,omitempty"`
 }
 
 const (
@@ -58,7 +107,9 @@ func (fs FieldSpec) String() string {
 }
 
 // If true, the primary key is the same, but other fields might not be.
-func (fs FieldSpec) effectivelyEquals(other FieldSpec) bool {
+// TODO(jeb): method does not seems to be able to deal with multiple
+// formats of a path: foo.bar is equivalent to foo[bar]
+func (fs FieldSpec) effectivelyEquals(other FieldSpecConfig) bool {
 	return fs.IsSelected(&other.Gvk) && fs.Path == other.Path
 }
 
@@ -90,7 +141,7 @@ func (fs FieldSpec) PathSlice() []string {
 	return result
 }
 
-type fsSlice []FieldSpec
+type fsSlice []FieldSpecConfig
 
 func (s fsSlice) Len() int      { return len(s) }
 func (s fsSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
@@ -117,23 +168,92 @@ func (s fsSlice) mergeAll(incoming fsSlice) (result fsSlice, err error) {
 // If the item's primary key is already present, and there are no
 // conflicts, it is ignored (we don't want duplicates).
 // If there is a conflict, the merge fails.
-func (s fsSlice) mergeOne(x FieldSpec) (fsSlice, error) {
+func (s fsSlice) mergeOne(x FieldSpecConfig) (fsSlice, error) {
 	i := s.index(x)
-	if i > -1 {
-		// It's already there.
-		if s[i].CreateIfNotPresent != x.CreateIfNotPresent {
-			return nil, fmt.Errorf("conflicting fieldspecs")
+	behavior := NewFieldSpecMergeBehavior(x.Behavior)
+	switch behavior {
+	case BehaviorAdd, BehaviorUnspecified:
+		if i > -1 {
+			// It's already there.
+			if s[i].CreateIfNotPresent != x.CreateIfNotPresent {
+				return nil, fmt.Errorf("conflicting fieldspecs exist %v and %v", x, s[i])
+			}
+			return s, nil
+		}
+		return append(s, x), nil
+	case BehaviorRemove:
+		if i == -1 {
+			return nil, fmt.Errorf("fieldspec does not exist %v", x)
+		}
+		copy(s[i:], s[i+1:])
+		s[len(s)-1] = FieldSpecConfig{}
+		s = s[:len(s)-1]
+		return s, nil
+	case BehaviorReplace:
+		if i == -1 {
+			return nil, fmt.Errorf("fieldspec does not exist %v", x)
 		}
 		return s, nil
+	default:
+		return nil, fmt.Errorf("unsupported behavior [%s]", x.Behavior)
 	}
-	return append(s, x), nil
 }
 
-func (s fsSlice) index(fs FieldSpec) int {
+func (s fsSlice) index(fs FieldSpecConfig) int {
 	for i, x := range s {
 		if x.effectivelyEquals(fs) {
 			return i
 		}
 	}
 	return -1
+}
+
+func (s fsSlice) intersect(fs FieldSpecConfig) int {
+	for i, x := range s {
+		if (x.Gvk.Kind == fs.Gvk.Kind) && x.effectivelyEquals(fs) {
+			return i
+		}
+	}
+	return -1
+}
+
+type FieldSpecs []FieldSpec
+
+func NewFieldSpecs(selected fsSlice) FieldSpecs {
+	s := FieldSpecs{}
+	for _, x := range selected {
+		s = append(s, x.FieldSpec)
+	}
+	return s
+}
+
+func (s FieldSpecs) squashFieldSpecs(selected FieldSpecs, fs FieldSpec) FieldSpecs {
+	appendFs := true
+	for idx, already := range selected {
+		if fs.Path == already.Path {
+			if already.Gvk.Kind == "" {
+				selected[idx] = fs
+				appendFs = false
+				continue
+			} else if fs.Gvk.Kind == "" {
+				appendFs = false
+				continue
+			}
+		}
+	}
+	if appendFs {
+		selected = append(selected, fs)
+	}
+
+	return selected
+}
+
+func (s FieldSpecs) ApplicableFieldSpecs(x gvk.Gvk) FieldSpecs {
+	selected := []FieldSpec{}
+	for _, fs := range s {
+		if x.IsSelected(&fs.Gvk) {
+			selected = s.squashFieldSpecs(selected, fs)
+		}
+	}
+	return selected
 }
