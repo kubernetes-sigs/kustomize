@@ -4,7 +4,6 @@
 package target_test
 
 import (
-	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
@@ -370,11 +369,101 @@ metadata:
   name: serviceaccount
 `)
 
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err == nil {
-		t.Fatalf("expected error")
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Unexpected err: %v", err)
 	}
-	if !strings.Contains(err.Error(), "multiple matches for ~G_v1_ServiceAccount|~X|serviceaccount") {
-		t.Fatalf("unexpected error %v", err)
-	}
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: a-serviceaccount-suffixA
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: a-pfx-serviceaccount-sfx-suffixA
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: a-pfx-rolebinding-sfx-suffixA
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: a-pfx-role-sfx-suffixA
+subjects:
+- kind: ServiceAccount
+  name: a-serviceaccount-suffixA
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: a-pfx-rolebinding-sfx-suffixA
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: a-pfx-role-sfx-suffixA
+subjects:
+- kind: ServiceAccount
+  name: a-serviceaccount-suffixA
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: a-pfx-role-sfx-suffixA
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - watch
+  - list
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: b-pfx-serviceaccount-sfx-suffixB
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: b-pfx-rolebinding-sfx-suffixB
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: b-pfx-role-sfx-suffixB
+subjects:
+- kind: ServiceAccount
+  name: b-pfx-serviceaccount-sfx-suffixB
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: b-pfx-rolebinding-sfx-suffixB
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: b-pfx-role-sfx-suffixB
+subjects:
+- kind: ServiceAccount
+  name: b-pfx-serviceaccount-sfx-suffixB
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: b-pfx-role-sfx-suffixB
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - watch
+  - list
+`)
+
 }

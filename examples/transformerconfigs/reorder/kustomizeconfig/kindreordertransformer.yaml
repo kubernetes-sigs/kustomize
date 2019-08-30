@@ -1,0 +1,33 @@
+apiVersion: builtin
+kind: KindOrderTransformer
+metadata:
+  name: kubectlapply
+
+kindorder:
+- Namespace
+- ResourceQuota
+- LimitRange
+- PodSecurityPolicy
+- Secret
+- ConfigMap
+- StorageClass
+- PersistentVolume
+- PersistentVolumeClaim
+- ServiceAccount
+- CustomResourceDefinition
+- ClusterRole
+- ClusterRoleBinding
+- Role
+- RoleBinding
+- Service
+- DaemonSet
+- Pod
+- ReplicationController
+- ReplicaSet
+- Values
+- Deployment
+- StatefulSet
+- Job
+- CronJob
+- Ingress
+- APIService

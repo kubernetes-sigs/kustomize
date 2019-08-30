@@ -60,39 +60,57 @@ var mergeTests = []struct {
 		"normal",
 		fsSlice{
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "apple"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "apple"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
 			},
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "pear"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "pear"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
 			},
 		},
 		fsSlice{
 			{
-				Path:               "home",
-				Gvk:                gvk.Gvk{Group: "beans"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "home",
+					Gvk:                gvk.Gvk{Group: "beans"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
 			},
 		},
 		nil,
 		fsSlice{
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "apple"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "apple"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "",
 			},
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "pear"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "pear"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "",
 			},
 			{
-				Path:               "home",
-				Gvk:                gvk.Gvk{Group: "beans"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "home",
+					Gvk:                gvk.Gvk{Group: "beans"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "",
 			},
 		},
 	},
@@ -100,34 +118,49 @@ var mergeTests = []struct {
 		"ignore copy",
 		fsSlice{
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "apple"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "apple"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
 			},
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "pear"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "pear"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
 			},
 		},
 		fsSlice{
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "apple"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "apple"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
 			},
 		},
 		nil,
 		fsSlice{
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "apple"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "apple"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "",
 			},
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "pear"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "pear"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "",
 			},
 		},
 	},
@@ -135,31 +168,191 @@ var mergeTests = []struct {
 		"error on conflict",
 		fsSlice{
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "apple"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "apple"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
 			},
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "pear"},
-				CreateIfNotPresent: false,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "pear"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
 			},
 		},
 		fsSlice{
 			{
-				Path:               "whatever",
-				Gvk:                gvk.Gvk{Group: "apple"},
-				CreateIfNotPresent: true,
+				FieldSpec: FieldSpec{
+					Path:               "whatever",
+					Gvk:                gvk.Gvk{Group: "apple"},
+					CreateIfNotPresent: true,
+				},
+				Behavior: "add",
 			},
 		},
 		fmt.Errorf("hey"),
 		fsSlice{},
 	},
+	{
+		"remove",
+		fsSlice{
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/field1",
+					Gvk:                gvk.Gvk{Kind: "MyCRD"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "",
+			},
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/field2",
+					Gvk:                gvk.Gvk{Kind: "MyCRD"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
+			},
+		},
+		fsSlice{
+			{
+				FieldSpec: FieldSpec{
+					Path: "spec/field1",
+					Gvk:  gvk.Gvk{Kind: "MyCRD"},
+				},
+				Behavior: "remove",
+			},
+		},
+		nil,
+		fsSlice{
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/field2",
+					Gvk:                gvk.Gvk{Kind: "MyCRD"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "",
+			},
+		},
+	},
+	{
+		"remove2",
+		fsSlice{
+			{
+				FieldSpec: FieldSpec{
+					Path:               "metadata/labels",
+					CreateIfNotPresent: true,
+				},
+			},
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/template/spec/affinity/podAffinity/preferredDuringSchedulingIgnoredDuringExecution/podAffinityTerm/labelSelector/matchLabels",
+					Gvk:                gvk.Gvk{Kind: "Deployment", Group: "apps"},
+					CreateIfNotPresent: false,
+				},
+			},
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/template/spec/affinity/podAffinity/requiredDuringSchedulingIgnoredDuringExecution/labelSelector/matchLabels",
+					Gvk:                gvk.Gvk{Kind: "Deployment", Group: "apps"},
+					CreateIfNotPresent: false,
+				},
+			},
+		},
+		fsSlice{
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/template/spec/affinity/podAffinity/preferredDuringSchedulingIgnoredDuringExecution/podAffinityTerm/labelSelector/matchLabels",
+					Gvk:                gvk.Gvk{Kind: "Deployment", Group: "apps"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "remove",
+			},
+		},
+		nil,
+		fsSlice{
+			{
+				FieldSpec: FieldSpec{
+					Path:               "metadata/labels",
+					CreateIfNotPresent: true,
+				},
+				Behavior: "",
+			},
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/template/spec/affinity/podAffinity/requiredDuringSchedulingIgnoredDuringExecution/labelSelector/matchLabels",
+					Gvk:                gvk.Gvk{Kind: "Deployment", Group: "apps"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "",
+			},
+		},
+	},
+	{
+		"replace",
+		fsSlice{
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/field1",
+					Gvk:                gvk.Gvk{Kind: "MyCRD"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "",
+			},
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/field2",
+					Gvk:                gvk.Gvk{Kind: "MyCRD"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "add",
+			},
+		},
+		fsSlice{
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/field2",
+					Gvk:                gvk.Gvk{Kind: "MyCRD"},
+					CreateIfNotPresent: true,
+				},
+				Behavior: "replace",
+			},
+		},
+		nil,
+		fsSlice{
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/field1",
+					Gvk:                gvk.Gvk{Kind: "MyCRD"},
+					CreateIfNotPresent: false,
+				},
+				Behavior: "",
+			},
+			{
+				FieldSpec: FieldSpec{
+					Path:               "spec/field2",
+					Gvk:                gvk.Gvk{Kind: "MyCRD"},
+					CreateIfNotPresent: true,
+				},
+				Behavior: "",
+			},
+		},
+	},
 }
 
 func TestFsSlice_MergeAll(t *testing.T) {
 	for _, item := range mergeTests {
-		result, err := item.original.mergeAll(item.incoming)
+		result := fsSlice{}
+		var err error
+
+		// Normalize and merge original fsSlice
+		result, err = result.mergeAll(item.original)
+
+		// Normalize and merge incoming fsSlice
+		result, err = result.mergeAll(item.incoming)
 		if item.err == nil {
 			if err != nil {
 				t.Fatalf("test %s: unexpected err %v", item.name, err)

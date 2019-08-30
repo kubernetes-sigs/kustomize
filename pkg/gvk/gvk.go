@@ -125,6 +125,25 @@ func (x Gvk) IsLessThan(o Gvk) bool {
 	return x.String() < o.String()
 }
 
+// IsLessThan2 returns true if self is less than the argument.
+func (x Gvk) IsLessThan2(o Gvk) bool {
+	if x.Kind != o.Kind {
+		indexI := typeOrders[x.Kind]
+		indexJ := typeOrders[o.Kind]
+		if indexI != indexJ {
+			return indexI < indexJ
+		}
+		return x.Kind < o.Kind
+	}
+	if x.Group != o.Group {
+		return x.Group != "" && (o.Group == "" || x.Group < o.Group)
+	}
+	if x.Version != o.Version {
+		return x.Version != "" && (o.Version == "" || x.Version < o.Version)
+	}
+	return false
+}
+
 // IsSelected returns true if `selector` selects `x`; otherwise, false.
 // If `selector` and `x` are the same, return true.
 // If `selector` is nil, it is considered a wildcard match, returning true.
@@ -176,7 +195,6 @@ var notNamespaceableKinds = []string{
 	"Node",
 	"PersistentVolume",
 	"PodSecurityPolicy",
-	"PodSecurityPolicy",
 	"PriorityClass",
 	"RuntimeClass",
 	"SelfSubjectAccessReview",
@@ -197,4 +215,13 @@ func (x Gvk) IsNamespaceableKind() bool {
 		}
 	}
 	return true
+}
+
+// GvkSlice wraps slice of Gvk
+type GvkSlice []Gvk
+
+func (s GvkSlice) Len() int      { return len(s) }
+func (s GvkSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s GvkSlice) Less(i, j int) bool {
+	return s[i].IsLessThan(s[j])
 }

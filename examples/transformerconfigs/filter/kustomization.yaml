@@ -1,0 +1,7 @@
+resources:
+- service.yaml
+- deployment.yaml
+- values.yaml
+
+transformers:
+- kustomizeconfig/kindfiltertransformer.yaml

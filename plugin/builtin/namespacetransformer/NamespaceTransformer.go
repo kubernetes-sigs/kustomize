@@ -69,13 +69,9 @@ const metaNamespace = "metadata/namespace"
 // all objects have it, even "ClusterKind" objects
 // that don't exist in a namespace (the Namespace
 // object itself doesn't live in a namespace).
-func (p *plugin) applicableFieldSpecs(id resid.ResId) []config.FieldSpec {
-	var res []config.FieldSpec
-	for _, fs := range p.FieldSpecs {
-		if id.IsSelected(&fs.Gvk) && (fs.Path != metaNamespace || (fs.Path == metaNamespace && id.IsNamespaceableKind())) {
-			res = append(res, fs)
-		}
-	}
+func (p *plugin) applicableFieldSpecs(id resid.ResId) config.FieldSpecs {
+	res := config.NewFieldSpecsFromSlice(p.FieldSpecs)
+	res = res.ApplicableFieldSpecs(id.Gvk)
 	return res
 }
 

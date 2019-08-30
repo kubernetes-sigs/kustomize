@@ -5,6 +5,7 @@ package build
 
 import (
 	"io"
+	"log"
 	"path/filepath"
 	"strings"
 
@@ -132,6 +133,16 @@ func (o *Options) RunBuild(
 	if err != nil {
 		return err
 	}
+
+	if (o.outputPath == "") || (o.outputPath != "" && !fSys.IsDir(o.outputPath)) {
+		t, err := o.loadSortTransformerPlugin(kt)
+		if err != nil {
+			log.Printf("reorder transformer could not be loaded: %s\n", err)
+		} else if t != nil {
+			t.Transform(m)
+		}
+	}
+
 	return o.emitResources(out, fSys, m)
 }
 
@@ -153,20 +164,47 @@ func (o *Options) RunBuildPrune(
 	if err != nil {
 		return err
 	}
+
+	if (o.outputPath == "") || (o.outputPath != "" && !fSys.IsDir(o.outputPath)) {
+		t, err := o.loadSortTransformerPlugin(kt)
+		if err != nil {
+			log.Printf("reorder transformer could not be loaded: %s\n", err)
+		} else if t != nil {
+			t.Transform(m)
+		}
+	}
+
 	return o.emitResources(out, fSys, m)
+}
+
+// Ovverall sorting is be performed by a plugin.
+func (o *Options) loadSortTransformerPlugin(kt *target.KustTarget) (resmap.Transformer, error) {
+
+	// The overall sorting is performed by a plugin.
+	switch o.outOrder {
+	case legacy:
+		// --reorder=legacy or no --reorder option specify
+		// This particular plugin doesn't require configuration;
+		// Just make it and call transform.
+		return builtin.NewLegacyOrderTransformerPlugin(), nil
+	case kubectlapply:
+		// --reorder=kubectlapply option.
+		sortingtransformers := []string{"kubectlapplyordertransformer.yaml"}
+		return kt.LoadExternalTransformers(sortingtransformers)
+	case kubectldelete:
+		// --reorder=kubectldelete option.
+		sortingtransformers := []string{"kubectldeleteordertransformer.yaml"}
+		return kt.LoadExternalTransformers(sortingtransformers)
+	default:
+		// --reorder=none option.
+		return nil, nil
+	}
 }
 
 func (o *Options) emitResources(
 	out io.Writer, fSys filesys.FileSystem, m resmap.ResMap) error {
 	if o.outputPath != "" && fSys.IsDir(o.outputPath) {
 		return writeIndividualFiles(fSys, o.outputPath, m)
-	}
-	if o.outOrder == legacy {
-		// Done this way just to show how overall sorting
-		// can be performed by a plugin.  This particular
-		// plugin doesn't require configuration; just make
-		// it and call transform.
-		builtin.NewLegacyOrderTransformerPlugin().Transform(m)
 	}
 	res, err := m.AsYaml()
 	if err != nil {

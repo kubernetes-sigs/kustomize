@@ -27,6 +27,8 @@ const (
 	HashTransformer
 	InventoryTransformer
 	LegacyOrderTransformer
+	KindOrderTransformer
+	KindFilterTransformer
 )
 
 var stringToBuiltinPluginTypeMap map[string]BuiltinPluginType
@@ -72,4 +74,6 @@ var TransformerFactories = map[BuiltinPluginType]func() resmap.TransformerPlugin
 	HashTransformer:                builtin.NewHashTransformerPlugin,
 	InventoryTransformer:           builtin.NewInventoryTransformerPlugin,
 	LegacyOrderTransformer:         builtin.NewLegacyOrderTransformerPlugin,
+	KindOrderTransformer:           builtin.NewKindOrderTransformerPlugin,
+	KindFilterTransformer:          builtin.NewKindFilterTransformerPlugin,
 }

@@ -32,15 +32,26 @@ type Factory struct {
 // if any, with default config.
 func MakeTransformerConfig(
 	ldr ifc.Loader, paths []string) (*TransformerConfig, error) {
-	t1 := MakeDefaultConfig()
-	if len(paths) == 0 {
-		return t1, nil
-	}
-	t2, err := NewFactory(ldr).FromFiles(paths)
+
+	result := &TransformerConfig{}
+	var err error
+
+	//  merge and normalize Default Config
+	defaultcfg := MakeDefaultConfig()
+	result, err = result.Merge(defaultcfg)
 	if err != nil {
 		return nil, err
 	}
-	return t1.Merge(t2)
+	if len(paths) == 0 {
+		return defaultcfg, nil
+	}
+
+	//  merge and normalize user provided configurations
+	result, err = NewFactory(ldr).FromFiles(result, paths)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func NewFactory(l ifc.Loader) *Factory {
@@ -56,8 +67,8 @@ func (tf *Factory) loader() ifc.Loader {
 
 // FromFiles returns a TranformerConfig object from a list of files
 func (tf *Factory) FromFiles(
+	result *TransformerConfig,
 	paths []string) (*TransformerConfig, error) {
-	result := &TransformerConfig{}
 	for _, path := range paths {
 		data, err := tf.loader().Load(path)
 		if err != nil {

@@ -79,27 +79,41 @@ func NewNameReferenceTransformer(br []config.NameBackReferences) resmap.Transfor
 func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 	// TODO: Too much looping, here and in transitive calls.
 	for _, referrer := range m.Resources() {
-		var candidates resmap.ResMap
-		for _, target := range o.backRefs {
-			for _, fSpec := range target.FieldSpecs {
-				if referrer.OrgId().IsSelected(&fSpec.Gvk) {
-					if candidates == nil {
-						candidates = m.SubsetThatCouldBeReferencedByResource(referrer)
-					}
-					err := MutateField(
-						referrer.Map(),
-						fSpec.PathSlice(),
-						fSpec.CreateIfNotPresent,
-						o.getNewNameFunc(
-							// referrer could be an HPA instance,
-							// target could be Gvk for Deployment,
-							// candidate a list of resources "reachable"
-							// from the HPA.
-							referrer, target.Gvk, candidates))
-					if err != nil {
-						return err
-					}
-				}
+		// Let's select the fields that contain names
+		byFieldPath := config.NewFieldPathMapFromSlice(o.backRefs, referrer.OrgId().Gvk)
+		if len(byFieldPath) == 0 {
+			continue
+		}
+
+		candidates := m.SubsetThatCouldBeReferencedByResource(referrer)
+
+		// The original code was doing something like this
+		// for _, target := range o.backRefs {
+		//   for _, fSpec := range target.FieldSpecs {
+		//   ...
+		//   }
+		// }
+		// The issue is if the same fieldPath can be used for refer objects of
+		// different kind (for instance ClusterRoleBinding/roleRef/name)
+		// the first potential referee in list (which is controlled by Gvk.Sort) will
+		// always be picked, the field in the referrer transformed
+		// and the second referee silently ignore because fieldPath has already been
+		// mutated because the value has now changed.
+
+		for fieldPath, targets := range byFieldPath {
+			pathSlice := config.FieldSpec{Path: fieldPath}.PathSlice()
+			err := MutateField(
+				referrer.Map(),
+				pathSlice,
+				false,
+				o.getNewNameFunc(
+					// referrer could be an HPA instance,
+					// target could be Gvk for Deployment,
+					// candidate a list of resources "reachable"
+					// from the HPA.
+					referrer, targets, candidates))
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -115,28 +129,45 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 func (o *nameReferenceTransformer) selectReferral(
 	oldName string,
 	referrer *resource.Resource,
-	target gvk.Gvk,
+	targets []gvk.Gvk,
 	referralCandidates resmap.ResMap,
 	referralCandidateSubset []*resource.Resource) (interface{}, interface{}, error) {
 
+	matches := []*resource.Resource{}
 	for _, res := range referralCandidateSubset {
 		id := res.OrgId()
-		if id.IsSelected(&target) && res.GetOriginalName() == oldName {
-			matches := referralCandidates.GetMatchingResourcesByOriginalId(id.Equals)
-			// If there's more than one match, there's no way
-			// to know which one to pick, so emit error.
-			if len(matches) > 1 {
-				return nil, nil, fmt.Errorf(
-					"multiple matches for %s:\n  %v",
-					id, getIds(matches))
+
+		for _, target := range targets {
+			if id.IsSelected(&target) && res.GetOriginalName() == oldName {
+				matches = append(matches, referralCandidates.GetMatchingResourcesByOriginalId(id.Equals)...)
 			}
-			// In the resource, note that it is referenced
-			// by the referrer.
-			res.AppendRefBy(referrer.CurId())
-			// Return transformed name of the object,
-			// complete with prefixes, hashes, etc.
-			return res.GetName(), res.GetNamespace(), nil
 		}
+	}
+
+	// We are now really able to detect conflict (unlike in the previous
+	// version of the code).
+	// Instead of silently ignoring it, output a warning.
+	if len(matches) > 1 {
+		log.Printf("Warning; multiple matches for name %s in %s:\nSelecting first element of\n%v",
+			oldName, referrer.CurId(), getIds(matches))
+	}
+
+	// todo(jeb): The 99 is a hack to pass the linter and
+	// not have to change the signature of the function until
+	// we know how to change the behavior.
+	if len(matches) > 99 {
+		return nil, nil, fmt.Errorf("multiple matches for %s:\n%v",
+			referrer.CurId(), getIds(matches))
+	}
+
+	if len(matches) >= 1 {
+		// In the resource, note that it is referenced
+		// by the referrer.
+		matches[0].AppendRefBy(referrer.CurId())
+
+		// Return transformed name of the object,
+		// complete with prefixes, hashes, etc.
+		return matches[0].GetName(), matches[0].GetNamespace(), nil
 	}
 
 	return oldName, nil, nil
@@ -146,11 +177,11 @@ func (o *nameReferenceTransformer) selectReferral(
 func (o *nameReferenceTransformer) getSimpleNameField(
 	oldName string,
 	referrer *resource.Resource,
-	target gvk.Gvk,
+	targets []gvk.Gvk,
 	referralCandidates resmap.ResMap,
 	referralCandidateSubset []*resource.Resource) (interface{}, error) {
 
-	newName, _, err := o.selectReferral(oldName, referrer, target,
+	newName, _, err := o.selectReferral(oldName, referrer, targets,
 		referralCandidates, referralCandidateSubset)
 
 	return newName, err
@@ -161,7 +192,7 @@ func (o *nameReferenceTransformer) getSimpleNameField(
 func (o *nameReferenceTransformer) getNameAndNsStruct(
 	inMap map[string]interface{},
 	referrer *resource.Resource,
-	target gvk.Gvk,
+	targets []gvk.Gvk,
 	referralCandidates resmap.ResMap) (interface{}, error) {
 
 	// Example:
@@ -185,7 +216,7 @@ func (o *nameReferenceTransformer) getNameAndNsStruct(
 		subset = bynamespace[namespace]
 	}
 
-	newname, newnamespace, err := o.selectReferral(oldName, referrer, target,
+	newname, newnamespace, err := o.selectReferral(oldName, referrer, targets,
 		referralCandidates, subset)
 	if err != nil {
 		return nil, err
@@ -209,19 +240,19 @@ func (o *nameReferenceTransformer) getNameAndNsStruct(
 
 func (o *nameReferenceTransformer) getNewNameFunc(
 	referrer *resource.Resource,
-	target gvk.Gvk,
+	targets []gvk.Gvk,
 	referralCandidates resmap.ResMap) func(in interface{}) (interface{}, error) {
 	return func(in interface{}) (interface{}, error) {
 		switch in.(type) {
 		case string:
 			oldName, _ := in.(string)
-			return o.getSimpleNameField(oldName, referrer, target,
+			return o.getSimpleNameField(oldName, referrer, targets,
 				referralCandidates, referralCandidates.Resources())
 		case map[string]interface{}:
 			// Kind: ValidatingWebhookConfiguration
 			// FieldSpec is webhooks/clientConfig/service
 			oldMap, _ := in.(map[string]interface{})
-			return o.getNameAndNsStruct(oldMap, referrer, target,
+			return o.getNameAndNsStruct(oldMap, referrer, targets,
 				referralCandidates)
 		case []interface{}:
 			l, _ := in.([]interface{})
@@ -231,7 +262,7 @@ func (o *nameReferenceTransformer) getNewNameFunc(
 					// Kind: Role/ClusterRole
 					// FieldSpec is rules.resourceNames
 					oldName, _ := item.(string)
-					newName, err := o.getSimpleNameField(oldName, referrer, target,
+					newName, err := o.getSimpleNameField(oldName, referrer, targets,
 						referralCandidates, referralCandidates.Resources())
 					if err != nil {
 						return nil, err
@@ -246,7 +277,7 @@ func (o *nameReferenceTransformer) getNewNameFunc(
 					// map containing namespace and name instead of just a simple
 					// string field containing the name
 					oldMap, _ := item.(map[string]interface{})
-					newMap, err := o.getNameAndNsStruct(oldMap, referrer, target,
+					newMap, err := o.getNameAndNsStruct(oldMap, referrer, targets,
 						referralCandidates)
 					if err != nil {
 						return nil, err

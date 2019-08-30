@@ -1,0 +1,7 @@
+apiVersion: builtin
+kind: KindFilterTransformer
+metadata:
+  name: value-filter
+
+excludes:
+- Values

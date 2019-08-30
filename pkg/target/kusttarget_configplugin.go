@@ -130,7 +130,7 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 			FieldSpecs       []config.FieldSpec
 		}
 		c.Namespace = kt.kustomization.Namespace
-		c.FieldSpecs = tc.NameSpace
+		c.FieldSpecs = tc.NameSpaceFieldSpecs()
 		p := f()
 		err = kt.configureBuiltinPlugin(p, c, bpt)
 		if err != nil {
@@ -212,7 +212,7 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 			FieldSpecs []config.FieldSpec
 		}
 		c.Labels = kt.kustomization.CommonLabels
-		c.FieldSpecs = tc.CommonLabels
+		c.FieldSpecs = tc.CommonLabelsFieldSpecs()
 		p := f()
 		err = kt.configureBuiltinPlugin(p, c, bpt)
 		if err != nil {
@@ -229,7 +229,7 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 			FieldSpecs  []config.FieldSpec
 		}
 		c.Annotations = kt.kustomization.CommonAnnotations
-		c.FieldSpecs = tc.CommonAnnotations
+		c.FieldSpecs = tc.CommonAnnotationsFieldSpecs()
 		p := f()
 		err = kt.configureBuiltinPlugin(p, c, bpt)
 		if err != nil {
@@ -248,7 +248,7 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 		}
 		c.Prefix = kt.kustomization.NamePrefix
 		c.Suffix = kt.kustomization.NameSuffix
-		c.FieldSpecs = tc.NamePrefix
+		c.FieldSpecs = tc.NamePrefixFieldSpecs()
 		p := f()
 		err = kt.configureBuiltinPlugin(p, c, bpt)
 		if err != nil {
@@ -266,7 +266,7 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 		}
 		for _, args := range kt.kustomization.Images {
 			c.ImageTag = args
-			c.FieldSpecs = tc.Images
+			c.FieldSpecs = tc.ImagesFieldSpecs()
 			p := f()
 			err = kt.configureBuiltinPlugin(p, c, bpt)
 			if err != nil {
@@ -285,7 +285,7 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 		}
 		for _, args := range kt.kustomization.Replicas {
 			c.Replica = args
-			c.FieldSpecs = tc.Replicas
+			c.FieldSpecs = tc.ReplicasFieldSpecs()
 			p := f()
 			err = kt.configureBuiltinPlugin(p, c, bpt)
 			if err != nil {

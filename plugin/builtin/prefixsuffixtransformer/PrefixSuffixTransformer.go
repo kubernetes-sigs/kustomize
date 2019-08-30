@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
@@ -26,16 +25,6 @@ type plugin struct {
 
 //noinspection GoUnusedGlobalVariable
 var KustomizePlugin plugin
-
-// Not placed in a file yet due to lack of demand.
-var prefixSuffixFieldSpecsToSkip = []config.FieldSpec{
-	{
-		Gvk: gvk.Gvk{Kind: "CustomResourceDefinition"},
-	},
-	{
-		Gvk: gvk.Gvk{Group: "apiregistration.k8s.io", Kind: "APIService"},
-	},
-}
 
 func (p *plugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
@@ -59,21 +48,12 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 	// information to the resources (AddNamePrefix and AddNameSuffix).
 
 	for _, r := range m.Resources() {
-		if p.shouldSkip(r.OrgId()) {
-			// Don't change the actual definition
-			// of a CRD.
-			continue
-		}
 		id := r.OrgId()
+		applicableFs := p.applicableFieldSpecs(id)
+
 		// current default configuration contains
 		// only one entry: "metadata/name" with no GVK
-		for _, path := range p.FieldSpecs {
-			if !id.IsSelected(&path.Gvk) {
-				// With the currrent default configuration,
-				// because no Gvk is specified, so a wild
-				// card
-				continue
-			}
+		for _, path := range applicableFs {
 
 			if smellsLikeANameChange(&path) {
 				// "metadata/name" is the only field.
@@ -104,14 +84,10 @@ func smellsLikeANameChange(fs *config.FieldSpec) bool {
 	return fs.Path == "metadata/name"
 }
 
-func (p *plugin) shouldSkip(
-	id resid.ResId) bool {
-	for _, path := range prefixSuffixFieldSpecsToSkip {
-		if id.IsSelected(&path.Gvk) {
-			return true
-		}
-	}
-	return false
+func (p *plugin) applicableFieldSpecs(id resid.ResId) config.FieldSpecs {
+	res := config.NewFieldSpecsFromSlice(p.FieldSpecs)
+	res = res.ApplicableFieldSpecs(id.Gvk)
+	return res
 }
 
 func (p *plugin) addPrefixSuffix(
