@@ -238,8 +238,7 @@ func NewFieldSpecs(selected fsSlice) FieldSpecs {
 }
 
 func NewFieldSpecsFromSlice(other []FieldSpec) FieldSpecs {
-	s := FieldSpecs{}
-	s = make([]FieldSpec, len(other))
+	s := make([]FieldSpec, len(other))
 	copy(s, other)
 	return s
 }

@@ -20,10 +20,8 @@ const (
 	namePrefixFieldSpecs = `
 namePrefix:
 - path: metadata/name
+- path: metadata/name
+  kind: CustomResourceDefinition
+  skip: true
 `
 )
-
-const namePrefixSuffixSkipSpecs = `
-namePrefixSuffixSkip:
-- kind: CustomResourceDefinition
-`

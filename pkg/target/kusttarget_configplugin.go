@@ -265,13 +265,10 @@ func (kt *KustTarget) configureBuiltinNameTransformer(
 		Prefix     string
 		Suffix     string
 		FieldSpecs []config.FieldSpec
-
-		PrefixSuffixKindsToSkip []config.FieldSpec
 	}
 	c.Prefix = kt.kustomization.NamePrefix
 	c.Suffix = kt.kustomization.NameSuffix
 	c.FieldSpecs = tConfig.NamePrefixFieldSpecs()
-	c.PrefixSuffixKindsToSkip = tConfig.PrefixSuffixKindsToSkip
 	p := builtin.NewPrefixSuffixTransformerPlugin()
 	err = kt.configureBuiltinPlugin(p, c, "prefixsuffix")
 	if err != nil {

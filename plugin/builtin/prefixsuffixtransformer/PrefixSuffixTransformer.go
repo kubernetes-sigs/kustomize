@@ -21,8 +21,6 @@ type plugin struct {
 	Prefix     string             `json:"prefix,omitempty" yaml:"prefix,omitempty"`
 	Suffix     string             `json:"suffix,omitempty" yaml:"suffix,omitempty"`
 	FieldSpecs []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
-
-	PrefixSuffixKindsToSkip []config.FieldSpec `json:"prefixSuffixKindsToSkip,omitempty" yaml:"prefixSuffixKindsToSkip,omitempty"`
 }
 
 //noinspection GoUnusedGlobalVariable
@@ -60,21 +58,12 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 	// information to the resources (AddNamePrefix and AddNameSuffix).
 
 	for _, r := range m.Resources() {
-		if p.shouldSkip(r.OrgId()) {
-			// Don't change the actual definition
-			// of a CRD.
-			continue
-		}
 		id := r.OrgId()
+		applicableFs := p.applicableFieldSpecs(id)
+
 		// current default configuration contains
 		// only one entry: "metadata/name" with no GVK
-		for _, path := range p.FieldSpecs {
-			if !id.IsSelected(&path.Gvk) {
-				// With the currrent default configuration,
-				// because no Gvk is specified, so a wild
-				// card
-				continue
-			}
+		for _, path := range applicableFs {
 
 			if smellsLikeANameChange(&path) {
 				// "metadata/name" is the only field.
@@ -105,14 +94,10 @@ func smellsLikeANameChange(fs *config.FieldSpec) bool {
 	return fs.Path == "metadata/name"
 }
 
-func (p *plugin) shouldSkip(
-	id resid.ResId) bool {
-	for _, f := range p.PrefixSuffixKindsToSkip {
-		if id.IsSelected(&f.Gvk) {
-			return true
-		}
-	}
-	return false
+func (p *plugin) applicableFieldSpecs(id resid.ResId) config.FieldSpecs {
+	res := config.NewFieldSpecsFromSlice(p.FieldSpecs)
+	res = res.ApplicableFieldSpecs(id.Gvk)
+	return res
 }
 
 func (p *plugin) addPrefixSuffix(

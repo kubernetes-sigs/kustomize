@@ -35,16 +35,17 @@ kind: Secret
 metadata:
   name: secret
 ---
-apiVersion: foobar
 kind: CustomResourceDefinition
 metadata:
   name: my-crd
 `)
 
 	th.WriteF("/nameandconfig/skip-secrets-prefix.yaml", `
-namePrefixSuffixSkip:
-- apiVersion: v1
+namePrefix:
+- path: metadata/name
+  apiVersion: v1
   kind: Secret
+  skip: true
 `)
 
 	m, err := th.MakeKustTarget().MakeCustomizedResMap()
@@ -62,7 +63,6 @@ kind: Secret
 metadata:
   name: secret
 ---
-apiVersion: foobar
 kind: CustomResourceDefinition
 metadata:
   name: my-crd
