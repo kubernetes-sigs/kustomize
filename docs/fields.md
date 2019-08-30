@@ -119,6 +119,17 @@ configMapGenerator:
   - JAVA_TOOL_OPTIONS=-agentlib:hprof
 ```
 
+It is also possible to [define a key](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#define-the-key-to-use-when-creating-a-configmap-from-a-file) to set a name different than the filename.
+
+The example below creates a ConfigMap with the name of file as `myFileName.ini` while the _actual_ filename from which the configmap is created is `whatever.ini`.
+
+```
+configMapGenerator:
+- name: app-whatever
+  files:
+  - myFileName.ini=whatever.ini
+```
+
 ### crds
 
 Each entry in this list should be a relative path to
