@@ -89,6 +89,7 @@ type FieldSpec struct {
 	gvk.Gvk            `json:",inline,omitempty" yaml:",inline,omitempty"`
 	Path               string `json:"path,omitempty" yaml:"path,omitempty"`
 	CreateIfNotPresent bool   `json:"create,omitempty" yaml:"create,omitempty"`
+	SkipTransformation bool   `json:"skip,omitempty" yaml:"skip,omitempty"`
 }
 
 type FieldSpecConfig struct {
@@ -106,11 +107,15 @@ func (fs FieldSpec) String() string {
 		"%s:%v:%s", fs.Gvk.String(), fs.CreateIfNotPresent, fs.Path)
 }
 
-// If true, the primary key is the same, but other fields might not be.
-// TODO(jeb): method does not seems to be able to deal with multiple
+// TODO(jeb): Method needs to be improve deal with multiple
 // formats of a path: foo.bar is equivalent to foo[bar]
+func (fs FieldSpec) ArePathEquals(other FieldSpec) bool {
+	return fs.Path == other.Path
+}
+
+// If true, the primary key is the same, but other fields might not be.
 func (fs FieldSpec) effectivelyEquals(other FieldSpecConfig) bool {
-	return fs.IsSelected(&other.Gvk) && fs.Path == other.Path
+	return fs.IsSelected(&other.Gvk) && fs.ArePathEquals(other.FieldSpec)
 }
 
 // PathSlice converts the path string to a slice of strings,
@@ -169,7 +174,7 @@ func (s fsSlice) mergeAll(incoming fsSlice) (result fsSlice, err error) {
 // conflicts, it is ignored (we don't want duplicates).
 // If there is a conflict, the merge fails.
 func (s fsSlice) mergeOne(x FieldSpecConfig) (fsSlice, error) {
-	i := s.index(x)
+	i := s.intersect(x)
 	behavior := NewFieldSpecMergeBehavior(x.Behavior)
 	switch behavior {
 	case BehaviorAdd, BehaviorUnspecified:
@@ -208,6 +213,8 @@ func (s fsSlice) index(fs FieldSpecConfig) int {
 	return -1
 }
 
+// todo(jeb): This should most likely be updated to return
+// an array instead of just an index.
 func (s fsSlice) intersect(fs FieldSpecConfig) int {
 	for i, x := range s {
 		if (x.Gvk.Kind == fs.Gvk.Kind) && x.effectivelyEquals(fs) {
@@ -217,8 +224,11 @@ func (s fsSlice) intersect(fs FieldSpecConfig) int {
 	return -1
 }
 
+// FieldSpecs wraps a FieldSpec slice in order to add
+// utility method.
 type FieldSpecs []FieldSpec
 
+// Create a new FieldSpecs out of []FieldSpecConfig
 func NewFieldSpecs(selected fsSlice) FieldSpecs {
 	s := FieldSpecs{}
 	for _, x := range selected {
@@ -227,32 +237,89 @@ func NewFieldSpecs(selected fsSlice) FieldSpecs {
 	return s
 }
 
-func (s FieldSpecs) squashFieldSpecs(selected FieldSpecs, fs FieldSpec) FieldSpecs {
+func NewFieldSpecsFromSlice(other []FieldSpec) FieldSpecs {
+	s := FieldSpecs{}
+	s = make([]FieldSpec, len(other))
+	copy(s, other)
+	return s
+}
+
+// Normalize detects the conflict in the FieldSpec Slice
+// and compress the slice a much as possible
+// todo(jeb): Implement the function
+func (s FieldSpecs) Normalize() FieldSpecs {
+	return s
+}
+
+// This method either adds a new FieldSpec to the list
+// or remove a global/generic one with one which is more specific
+// because the Kind is specified.
+// todo(jeb): Check if we can not reuse fsSlice.mergeOne(add)
+// todo(jeb): This method should deals with version and apiGroup.
+func (s FieldSpecs) squashFieldSpecs(fs FieldSpec) FieldSpecs {
 	appendFs := true
-	for idx, already := range selected {
-		if fs.Path == already.Path {
+	for idx, already := range s {
+		if fs.ArePathEquals(already) {
+			// todo(jeb): Can we use IsSelected here instead ?
 			if already.Gvk.Kind == "" {
-				selected[idx] = fs
+				// There is already a more global fieldspec definition
+				// Let's replace it with a more narrow one
+				s[idx] = fs
 				appendFs = false
 				continue
 			} else if fs.Gvk.Kind == "" {
+				// This new FieldSpec is more global than the existing
+				// one. Let's ignore it.
 				appendFs = false
 				continue
 			}
 		}
 	}
 	if appendFs {
-		selected = append(selected, fs)
+		s = append(s, fs)
 	}
 
-	return selected
+	return s
 }
 
+// This method remove from the FieldSpecs the existing FieldSpec
+// which are matching the Gvk. Mainly used to trim the FieldSpec
+// slice in order to prevent a transformation from behing applied
+// on a specific Gvk.
+// todo(jeb): Check if we can not reuse fsSlice.mergeOne(remove)
+// todo(jeb): This method can only remove one element at the time.
+func (s FieldSpecs) pruneFieldSpecs(fs FieldSpec) FieldSpecs {
+	for idx, already := range s {
+		if fs.ArePathEquals(already) {
+			if already.Gvk.Kind == "" {
+				// There is already a more global fieldspec definition
+				// Let's replace it with a more narrow one
+				copy(s[idx:], s[idx+1:])
+				s[len(s)-1] = FieldSpec{}
+				s = s[:len(s)-1]
+				return s
+			} else if fs.Gvk.Kind == "" {
+				// This new FieldSpec is more global than the existing
+				// one. Let's ignore it.
+				continue
+			}
+		}
+	}
+
+	return s
+}
+
+// ApplicableFieldsSpecs extract out of the Transformer Config
+// the FieldSpec which are applicable for that particular Gvk
 func (s FieldSpecs) ApplicableFieldSpecs(x gvk.Gvk) FieldSpecs {
-	selected := []FieldSpec{}
+	selected := FieldSpecs{}
 	for _, fs := range s {
 		if x.IsSelected(&fs.Gvk) {
-			selected = s.squashFieldSpecs(selected, fs)
+			if !fs.SkipTransformation {
+				selected = selected.squashFieldSpecs(fs)
+			} else {
+				selected = selected.pruneFieldSpecs(fs)
+			}
 		}
 	}
 	return selected
