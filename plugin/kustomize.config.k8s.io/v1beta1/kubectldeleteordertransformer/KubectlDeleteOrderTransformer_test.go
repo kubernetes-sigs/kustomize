@@ -15,11 +15,11 @@ func TestKubectlDeleteOrderTransformer(t *testing.T) {
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
-		"builtin", "", "KubectlDeleteOrderTransformer")
+		"kustomize.config.k8s.io", "v1beta1", "KubectlDeleteOrderTransformer")
 
 	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
 	rm := th.LoadAndRunTransformer(`
-apiVersion: builtin
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: KubectlDeleteOrderTransformer
 metadata:
   name: notImportantHere
@@ -143,12 +143,12 @@ func TestKubectlDeleteOrderTransformerCustomOrder(t *testing.T) {
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
-		"builtin", "", "KubectlApplyOrderTransformer")
+		"kustomize.config.k8s.io", "v1beta1", "KubectlDeleteOrderTransformer")
 
 	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
 	rm := th.LoadAndRunTransformer(`
-apiVersion: builtin
-kind: KubectlApplyOrderTransformer
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: KubectlDeleteOrderTransformer
 metadata:
   name: notImportantHere
 kindorder:

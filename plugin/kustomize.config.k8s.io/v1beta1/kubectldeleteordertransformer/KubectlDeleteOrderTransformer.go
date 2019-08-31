@@ -21,49 +21,50 @@ type plugin struct {
 	KindOrder []string `json:"kindorder,omitempty" yaml:"kindorder,omitempty"`
 }
 
+//nolint: golint
 //noinspection GoUnusedGlobalVariable
 var KustomizePlugin plugin
 
 // Nothing needed for configuration.
 func (p *plugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
+	_ ifc.Loader, _ *resmap.Factory, c []byte) (err error) {
 	p.KindOrder = []string{}
 	return yaml.Unmarshal(c, p)
 }
 
 //
 func (p *plugin) GetSortOrder() []string {
-	if p.KindOrder != nil && len(p.KindOrder) != 0 {
+	if len(p.KindOrder) != 0 {
 		return p.KindOrder
 	}
 
 	return []string{
-		"Namespace",
-		"ResourceQuota",
-		"LimitRange",
-		"PodSecurityPolicy",
-		"Secret",
-		"ConfigMap",
-		"StorageClass",
-		"PersistentVolume",
-		"PersistentVolumeClaim",
-		"ServiceAccount",
-		"CustomResourceDefinition",
-		"ClusterRole",
-		"ClusterRoleBinding",
-		"Role",
-		"RoleBinding",
-		"Service",
-		"DaemonSet",
-		"Pod",
-		"ReplicationController",
-		"ReplicaSet",
-		"Deployment",
-		"StatefulSet",
-		"Job",
-		"CronJob",
-		"Ingress",
 		"APIService",
+		"Ingress",
+		"Service",
+		"CronJob",
+		"Job",
+		"StatefulSet",
+		"Deployment",
+		"ReplicaSet",
+		"ReplicationController",
+		"Pod",
+		"DaemonSet",
+		"RoleBinding",
+		"Role",
+		"ClusterRoleBinding",
+		"ClusterRole",
+		"CustomResourceDefinition",
+		"ServiceAccount",
+		"PersistentVolumeClaim",
+		"PersistentVolume",
+		"StorageClass",
+		"ConfigMap",
+		"Secret",
+		"PodSecurityPolicy",
+		"LimitRange",
+		"ResourceQuota",
+		"Namespace",
 	}
 }
 
@@ -71,7 +72,7 @@ func (p *plugin) Transform(m resmap.ResMap) (err error) {
 	resources := make([]*resource.Resource, m.Size())
 
 	ids := m.AllIds()
-	ks := newKubectlApplySorter(ids, p.GetSortOrder())
+	ks := newKubectlDeleteSorter(ids, p.GetSortOrder())
 	sort.Sort(ks)
 
 	for i, id := range ks.resids {
@@ -87,28 +88,28 @@ func (p *plugin) Transform(m resmap.ResMap) (err error) {
 	return nil
 }
 
-type kubectlapplySorter struct {
+type kubectldeleteSorter struct {
 	ordering map[string]int
 	resids   []resid.ResId
 }
 
-func newKubectlApplySorter(m []resid.ResId, s []string) *kubectlapplySorter {
+func newKubectlDeleteSorter(m []resid.ResId, s []string) *kubectldeleteSorter {
 	o := make(map[string]int, len(s))
 	for v, k := range s {
 		o[k] = v + 1
 	}
 
-	return &kubectlapplySorter{
+	return &kubectldeleteSorter{
 		resids:   m,
 		ordering: o,
 	}
 }
 
-func (k *kubectlapplySorter) Len() int { return len(k.resids) }
+func (k *kubectldeleteSorter) Len() int { return len(k.resids) }
 
-func (k *kubectlapplySorter) Swap(i, j int) { k.resids[i], k.resids[j] = k.resids[j], k.resids[i] }
+func (k *kubectldeleteSorter) Swap(i, j int) { k.resids[i], k.resids[j] = k.resids[j], k.resids[i] }
 
-func (k *kubectlapplySorter) Less(i, j int) bool {
+func (k *kubectldeleteSorter) Less(i, j int) bool {
 	a := k.resids[i]
 	b := k.resids[j]
 	first, aok := k.ordering[a.Kind]
@@ -117,16 +118,16 @@ func (k *kubectlapplySorter) Less(i, j int) bool {
 	if first == second {
 		// if both are unknown and of different kind sort by kind alphabetically
 		if !aok && !bok && a.Kind != b.Kind {
-			return a.Kind < b.Kind
+			return a.Kind > b.Kind
 		}
-		return a.String() < b.String()
+		return a.String() > b.String()
 	}
-	// unknown kind is last
+	// unknown kind is first
 	if !aok {
-		return false
+		return true
 	}
 	if !bok {
-		return true
+		return false
 	}
 	// sort different kinds
 	return first < second

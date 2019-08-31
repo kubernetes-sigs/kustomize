@@ -317,6 +317,23 @@ func (kt *KustTarget) configureExternalTransformers() ([]resmap.Transformer, err
 	return kt.pLdr.LoadTransformers(kt.ldr, ra.ResMap())
 }
 
+func (kt *KustTarget) LoadExternalTransformers(transformernames []string) (transformers.Transformer, error) {
+	// Load the corresponding transformer as an external transformer
+	ra := accumulator.MakeEmptyAccumulator()
+	err := kt.accumulateResources(ra, transformernames)
+	if err != nil {
+		return nil, err
+	}
+	lts, err := kt.pLdr.LoadTransformers(kt.ldr, ra.ResMap())
+	if err != nil {
+		return nil, err
+	}
+
+	// Apply the transformation
+	t := transformers.NewMultiTransformer(lts)
+	return t, err
+}
+
 // accumulateResources fills the given resourceAccumulator
 // with resources read from the given list of paths.
 func (kt *KustTarget) accumulateResources(

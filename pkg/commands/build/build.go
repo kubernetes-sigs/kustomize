@@ -5,6 +5,7 @@ package build
 
 import (
 	"io"
+	"log"
 	"path/filepath"
 	"strings"
 
@@ -18,6 +19,7 @@ import (
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/target"
+	"sigs.k8s.io/kustomize/v3/pkg/transformers"
 	"sigs.k8s.io/kustomize/v3/plugin/builtin"
 	"sigs.k8s.io/yaml"
 )
@@ -130,6 +132,17 @@ func (o *Options) RunBuild(
 	if err != nil {
 		return err
 	}
+
+	if (o.outputPath == "") || (o.outputPath != "" && !fSys.IsDir(o.outputPath)) {
+		t, err := o.loadSortTransformerPlugin(kt)
+		if err != nil {
+			log.Printf("reorder transformer could not be loaded: %v\n", err)
+		}
+		if t != nil && err == nil {
+			t.Transform(m)
+		}
+	}
+
 	return o.emitResources(out, fSys, m)
 }
 
@@ -151,32 +164,48 @@ func (o *Options) RunBuildPrune(
 	if err != nil {
 		return err
 	}
+
+	if (o.outputPath == "") || (o.outputPath != "" && !fSys.IsDir(o.outputPath)) {
+		t, err := o.loadSortTransformerPlugin(kt)
+		if err != nil {
+			log.Printf("reorder transformer could not be loaded: %v\n", err)
+		}
+		if t != nil && err == nil {
+			t.Transform(m)
+		}
+	}
+
 	return o.emitResources(out, fSys, m)
+}
+
+// Ovverall sorting is be performed by a plugin.
+func (o *Options) loadSortTransformerPlugin(kt *target.KustTarget) (transformers.Transformer, error) {
+
+	// The overall sorting is performed by a plugin.
+	switch o.outOrder {
+	case legacy:
+		// --reorder=legacy or no --reorder option specify
+		// This particular plugin doesn't require configuration;
+		// Just make it and call transform.
+		return builtin.NewLegacyOrderTransformerPlugin(), nil
+	case kubectlapply:
+		// --reorder=kubectlapply option.
+		sortingtransformers := []string{"kubectlapplyordertransformer.yaml"}
+		return kt.LoadExternalTransformers(sortingtransformers)
+	case kubectldelete:
+		// --reorder=kubectldelete option.
+		sortingtransformers := []string{"kubectldeleteordertransformer.yaml"}
+		return kt.LoadExternalTransformers(sortingtransformers)
+	default:
+		// --reorder=none option.
+		return nil, nil
+	}
 }
 
 func (o *Options) emitResources(
 	out io.Writer, fSys fs.FileSystem, m resmap.ResMap) error {
 	if o.outputPath != "" && fSys.IsDir(o.outputPath) {
 		return writeIndividualFiles(fSys, o.outputPath, m)
-	}
-	switch o.outOrder {
-	case legacy:
-		// Done this way just to show how overall sorting
-		// can be performed by a plugin.  This particular
-		// plugin doesn't require configuration; just make
-		// it and call transform.
-		builtin.NewLegacyOrderTransformerPlugin().Transform(m)
-	case kubectlapply:
-		// The next improvment could be to read the kubectl apply
-		// order from the kustomization.yaml and pass it to the
-		// builtin plugin. This would help to deal with CRDs.
-		// Such a list would also help to be provide kustomize with
-		// the list of cluster-wide CRD (check gvk.IsNamespaceableKind())
-		builtin.NewKubectlApplyOrderTransformerPlugin().Transform(m)
-	case kubectldelete:
-		// Same note as kubectlapply
-		builtin.NewKubectlDeleteOrderTransformerPlugin().Transform(m)
-	default:
 	}
 	res, err := m.AsYaml()
 	if err != nil {
