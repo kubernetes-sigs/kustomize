@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 
+	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 )
@@ -60,10 +61,10 @@ func NewMapTransformer(
 // fields specified in mapTransformer.
 func (o *mapTransformer) Transform(m resmap.ResMap) error {
 	for _, r := range m.Resources() {
-		for _, path := range o.fieldSpecs {
-			if !r.OrgId().IsSelected(&path.Gvk) {
-				continue
-			}
+		id := r.OrgId()
+		applicableFs := o.applicableFieldSpecs(id)
+
+		for _, path := range applicableFs {
 			err := MutateField(
 				r.Map(), path.PathSlice(),
 				path.CreateIfNotPresent, o.addMap)
@@ -73,6 +74,12 @@ func (o *mapTransformer) Transform(m resmap.ResMap) error {
 		}
 	}
 	return nil
+}
+
+func (o *mapTransformer) applicableFieldSpecs(id resid.ResId) config.FieldSpecs {
+	res := config.NewFieldSpecsFromSlice(o.fieldSpecs)
+	res = res.ApplicableFieldSpecs(id.Gvk)
+	return res
 }
 
 func (o *mapTransformer) addMap(in interface{}) (interface{}, error) {
