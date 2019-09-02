@@ -30,7 +30,7 @@ apiVersion: someteam.example.com/v1
 kind: GoGetter
 metadata:
   name: example
-url: github.com/kustless/kustomize-examples.git
+url: github.com/kustless/kustomize-examples.git?ref=adef0a8
 `)
 
 	th.AssertActualEqualsExpected(m, `
@@ -40,6 +40,66 @@ data:
   enableRisky: "false"
 kind: ConfigMap
 metadata:
-  name: the-map
+  name: remote-cm
+`)
+}
+
+func TestGoGetterCommand(t *testing.T) {
+	tc := plugins_test.NewEnvForTest(t).Set()
+	defer tc.Reset()
+
+	tc.BuildExecPlugin(
+		"someteam.example.com", "v1", "GoGetter")
+
+	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+
+	m := th.LoadAndRunGenerator(`
+apiVersion: someteam.example.com/v1
+kind: GoGetter
+metadata:
+  name: example
+url: github.com/kustless/kustomize-examples.git?ref=adef0a8
+command: cat resources.yaml
+`)
+
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  altGreeting: Good Morning!
+  enableRisky: "false"
+kind: ConfigMap
+metadata:
+  name: cm
+`)
+}
+
+
+func TestGoGetterSubPath(t *testing.T) {
+	tc := plugins_test.NewEnvForTest(t).Set()
+	defer tc.Reset()
+
+	tc.BuildExecPlugin(
+		"someteam.example.com", "v1", "GoGetter")
+
+	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+
+	m := th.LoadAndRunGenerator(`
+apiVersion: someteam.example.com/v1
+kind: GoGetter
+metadata:
+  name: example
+url: github.com/kustless/kustomize-examples.git?ref=9ca07d2
+subPath: dev
+command: kustomize build --enable_alpha_plugins
+`)
+
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  altGreeting: Good Morning!
+  enableRisky: "false"
+kind: ConfigMap
+metadata:
+  name: dev-remote-cm
 `)
 }

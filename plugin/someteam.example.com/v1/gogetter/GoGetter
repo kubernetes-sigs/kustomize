@@ -11,7 +11,8 @@
 #  metadata:
 #    name: example
 #  url: github.com/kustless/kustomize-examples.git
-#  # overlay: base  # (optional) relative path in the package
+#  # subPath: base # (optional) relative path in the package
+#  # command: cat *.yaml # (optional) build command, default `kustomize build $subPath`
 #
 # download kustomize layes and build it to stdout
 #
@@ -20,7 +21,7 @@
 #
 # TODO: cache downloads
 
-set -e
+set -ex
 
 # YAML parsing function borrowed from ChartInflator
 function parseYaml {
@@ -32,7 +33,8 @@ function parseYaml {
     local t=${v#"${v%%[![:space:]]*}"}  # trim leading space
 
     if [ "$k" == "url" ]; then url=$t
-    elif [ "$k" == "overlay" ]; then overlay=$t
+    elif [ "$k" == "subPath" ]; then subPath=$t
+    elif [ "$k" == "command" ]; then command=$t
     fi
   done <"$file"
 }
@@ -40,7 +42,13 @@ function parseYaml {
 TMP_DIR=$(mktemp -d)
 
 parseYaml $1
+
+if [ -z "$command" ]; then
+  command="kustomize build"
+fi
+
 go-getter $url $TMP_DIR/got 2> /dev/null
-kustomize build $TMP_DIR/got/$overlay
+
+(cd $TMP_DIR/got/$subPath; $command)
 
 /bin/rm -rf $TMP_DIR
