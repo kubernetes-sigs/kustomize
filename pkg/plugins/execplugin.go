@@ -192,10 +192,8 @@ func (p *ExecPlugin) getResMapWithIdAnnotation(rm resmap.ResMap) (resmap.ResMap,
 	return inputRM, nil
 }
 
-/*
-updateResMapValues updates the Resource value in the given ResMap
-with the emitted Resource values in output.
-*/
+// updateResMapValues updates the Resource value in the given ResMap
+// with the emitted Resource values in output.
 func (p *ExecPlugin) updateResMapValues(output []byte, rm resmap.ResMap) error {
 	outputRM, err := p.rf.NewResMapFromBytes(output)
 	if err != nil {

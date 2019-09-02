@@ -3,12 +3,14 @@
 # Skip the config file name argument.
 shift
 
-echo "
+cat <<EOF
 kind: ConfigMap
 apiVersion: v1
 metadata:
   name: example-configmap-test
+  annotations:
+    kustomize.config.k8s.io/needs-hash: ""
 data:
   username: $1
   password: $2
-"
+EOF
