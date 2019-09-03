@@ -1,8 +1,18 @@
-os:
-  - linux
-  - osx
-# TODO: Uncomment when tests running on Windows.
-#  - windows
+# os:
+#   - linux
+#   - osx
+#   - windows
+
+matrix:
+  include:
+    - os: linux
+      script: ./travis/pre-commit.sh
+    - os: osx
+      script: ./travis/pre-commit.sh  
+    - os: windows
+      script:
+        - powershell -Command 'Set-ExecutionPolicy RemoteSigned'
+        - powershell -File './travis/Invoke-PreCommit.ps1'
 
 addons:
   apt:
@@ -26,6 +36,13 @@ go_import_path: sigs.k8s.io/kustomize
 
 before_install:
   - source ./travis/consider-early-travis-exit.sh
+  - export GO111MODULE=on
+  - go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.17.1
+  - go get -u github.com/monopole/mdrip
+  # The following would install Helm if needed for some reason.
+  # - wget https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz
+  # - tar -xvzf helm-v2.13.1-linux-amd64.tar.gz
+  # - sudo mv linux-amd64/helm /usr/local/bin/helm
 
 # Skip the install process; let pre-commit.sh do it.
 install: true
