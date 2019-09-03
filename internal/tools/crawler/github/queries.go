@@ -127,6 +127,11 @@ func (rc RequestConfig) ContentsRequest(fullRepoName, path string) string {
 	return rc.makeRequest(uri, Query{}).URL()
 }
 
+func (rc RequestConfig) ReposRequest(fullRepoName string) string {
+	uri := fmt.Sprintf("repos/%s", fullRepoName)
+	return rc.makeRequest(uri, Query{}).URL()
+}
+
 // CommitsRequest given the repo name, and a filepath returns a formatted query
 // for the Github API to find the commits that affect this file.
 func (rc RequestConfig) CommitsRequest(fullRepoName, path string) string {
