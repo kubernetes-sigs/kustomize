@@ -21,7 +21,7 @@
 #
 # TODO: cache downloads
 
-set -ex
+set -e
 
 # YAML parsing function borrowed from ChartInflator
 function parseYaml {
