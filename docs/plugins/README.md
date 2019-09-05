@@ -223,6 +223,7 @@ provided in the kustomization file).
 [helm chart inflator]: ../../plugin/someteam.example.com/v1/chartinflator
 [bashed config map]: ../../plugin/someteam.example.com/v1/bashedconfigmap
 [sed transformer]: ../../plugin/someteam.example.com/v1/sedtransformer
+[hashicorp go-getter]: ../../plugin/someteam.example.com/v1/gogetter
 
 #### Examples
 
@@ -230,7 +231,7 @@ provided in the kustomization file).
  * [bashed config map] -  Super simple configMap generation from bash.
  * [sed transformer] - Define your unstructured edits using a
    plugin like this one.
-
+ * [hashicorp go-getter] - Download kustomize layes and build it to generate resources
 
 A generator plugin accepts nothing on `stdin`, but emits
 generated resources to `stdout`.
