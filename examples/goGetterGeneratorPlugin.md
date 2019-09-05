@@ -11,9 +11,10 @@ To extend the supported format, Kustomize has a [plugin] system that allows one 
 
 ## Make a place to work
 
-<!-- @makeWorkplace @goGetterTest -->
+<!-- @makeWorkplace @test -->
 ```sh
 DEMO_HOME=$(mktemp -d)
+mkdir -p $DEMO_HOME/base
 ```
 
 ## Use a remote kustomize layer
@@ -22,18 +23,18 @@ Define a kustomization representing your _local_ variant (aka environment).
 
 This could involve any number of kustomizations (see other examples), but in this case just add the name prefix `my-` to all resources:
 
-<!-- @writeKustLocal @goGetterTest -->
+<!-- @writeKustLocal @test -->
 ```sh
-cat <<'EOF' >$DEMO_HOME/my/kustomization.yaml
+cat <<'EOF' >$DEMO_HOME/kustomization.yaml
 namePrefix:  my-
 resources:
-- ../base
+- base/
 EOF
 ```
 
 It refer a remote base defined as below:
 
-<!-- @writeKustLocal @goGetterTest -->
+<!-- @writeKustLocal @test -->
 ```sh
 cat <<'EOF' >$DEMO_HOME/base/kustomization.yaml
 generators:
@@ -47,7 +48,7 @@ This file lets one specify the source URL, and other things like sub path in the
 
 Create the config file `goGetter.yaml`, specifying the arbitrarily chosen name _example_:
 
-<!-- @writeGeneratorConfig @goGetterTest -->
+<!-- @writeGeneratorConfig @test -->
 ```sh
 cat <<'EOF' >$DEMO_HOME/base/goGetter.yaml
 apiVersion: someteam.example.com/v1
@@ -62,7 +63,7 @@ Because this particular YAML file is listed in the `generators:` stanza of a kus
 
 Download the plugin to your `DEMO_HOME` and make it executable:
 
-<!-- @installPlugin @goGetterTest -->
+<!-- @installPlugin @test -->
 ```sh
 plugin=plugin/someteam.example.com/v1/gogetter/GoGetter
 curl -s --create-dirs -o \
@@ -75,7 +76,7 @@ chmod a+x $DEMO_HOME/kustomize/$plugin
 
 Define a helper function to run kustomize with the correct environment and flags for plugins:
 
-<!-- @defineKustomizeIt @goGetterTest -->
+<!-- @defineKustomizeIt @test -->
 ```sh
 function kustomizeIt {
   XDG_CONFIG_HOME=$DEMO_HOME \
@@ -87,22 +88,27 @@ function kustomizeIt {
 Finally, build the local variant.  Notice that all
 resource  names now have the `my-` prefix:
 
-<!-- @doLocal @goGetterTest -->
+<!-- @doLocal @test -->
 ```sh
 clear
-kustomizeIt my
+kustomizeIt
 ```
 
 Compare local variant to remote base:
 
-<!-- @doCompare @goGetterTest-->
+<!-- @doCompare @test-->
 ```sh
-diff <(kustomizeIt my) <(kustomizeIt base) | more
+diff <(kustomizeIt) <(kustomizeIt base) | more
+
+...
+<   name: my-remote-cm
+---
+>   name: remote-cm
 ```
 
-To see the unmodified but extracted sources, run kustomize on the base.  Every invocation here is re-downloading and re-build the package.
+To see the unmodified but extracted sources, run kustomize on the base.  Every invocation here is re-downloading and re-building the package.
 
-<!-- @showBase @goGetterTest -->
+<!-- @showBase @test -->
 ```sh
 kustomizeIt base
 ```
@@ -111,16 +117,16 @@ kustomizeIt base
 
 Sometimes the remote sources does not include `kustomization.yaml`. To use that in the plugin, set command to override the default build.
 
-<!-- @setCommand @goGetterTest -->
+<!-- @setCommand @test -->
 ```sh
 echo "command: cat resources.yaml" >>$DEMO_HOME/base/goGetter.yaml
 ```
 
 Finally, built it
 
-<!-- @finalLocal @goGetterTest -->
+<!-- @finalLocal @test -->
 ```sh
-kustomizeIt my
+kustomizeIt
 ```
 
-and observe the transformation from remote kustomization.yaml is not included.
+and observe the output includes raw `resources.yaml` instead of building result of remote `kustomization.yaml`.
