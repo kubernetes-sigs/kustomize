@@ -78,7 +78,7 @@ One could immediately apply these resources to a
 cluster:
 
 > ```
-> kubectl apply -f $DEMO_HOME/base
+> kubectl apply -k $DEMO_HOME/base
 > ```
 
 to instantiate the _hello_ service.  `kubectl`
