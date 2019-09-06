@@ -3,6 +3,7 @@ package builtin
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
@@ -70,7 +71,7 @@ func (p *PatchStrategicMergeTransformerPlugin) Transform(m resmap.ResMap) error 
 		}
 		err = target.Patch(patch.Kunstructured)
 		if err != nil {
-			return err
+			return errors.Wrap(err, fmt.Sprintf("target.Patch %v", patch.OrgId()))
 		}
 		// remove the resource from resmap
 		// when the patch is to $patch: delete that target

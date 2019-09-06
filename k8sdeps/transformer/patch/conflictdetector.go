@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/pkg/errors"
+
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/kustomize/v3/pkg/gvk"
@@ -96,8 +98,12 @@ func newSMPConflictDetector(
 }
 
 func (smp *strategicMergePatch) hasConflict(p1, p2 *resource.Resource) (bool, error) {
-	return strategicpatch.MergingMapsHaveConflicts(
+	conflict, err := strategicpatch.MergingMapsHaveConflicts(
 		p1.Map(), p2.Map(), smp.lookupPatchMeta)
+	if err != nil {
+		return conflict, errors.Wrap(err, fmt.Sprintf("hasConflict %v", p1.OrgId()))
+	}
+	return conflict, err
 }
 
 func (smp *strategicMergePatch) findConflict(
@@ -114,7 +120,7 @@ func (smp *strategicMergePatch) findConflict(
 			patches[conflictingPatchIdx].Map(),
 			smp.lookupPatchMeta)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, fmt.Sprintf("findConflict %v", patch.OrgId()))
 		}
 		if conflict {
 			return patch, nil
@@ -132,7 +138,7 @@ func (smp *strategicMergePatch) mergePatches(patch1, patch2 *resource.Resource) 
 	}
 	mergeJSONMap, err := strategicpatch.MergeStrategicMergeMapPatchUsingLookupPatchMeta(
 		smp.lookupPatchMeta, patch1.Map(), patch2.Map())
-	return smp.rf.FromMap(mergeJSONMap), err
+	return smp.rf.FromMap(mergeJSONMap), errors.Wrap(err, fmt.Sprintf("mergePatches %v", patch1.OrgId()))
 }
 
 // MergePatches merge and index patches by OrgId.

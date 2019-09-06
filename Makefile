@@ -17,6 +17,9 @@ test-lint:
 generate-code:
 	./plugin/generateBuiltins.sh $(GOPATH)
 
+build-plugins:
+	./plugin/buildPlugins.sh $(GOPATH)
+
 build:
 	cd kustomize && go build -o $(BIN_NAME) ./main.go
 
