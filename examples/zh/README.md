@@ -20,9 +20,9 @@ go get sigs.k8s.io/kustomize/v3/cmd/kustomize
 
   * [vars](vars.md) - 通过 vars 将一个资源的数据注入另一个资源的容器参数 （例如，为 wordpress 指定 SQL 服务）。
 
-  * [image names and tags](../image.md) - 在不使用 patch 的情况下更新镜像名称和标签。
+  * [image names and tags](image.md) - 在不使用 patch 的情况下更新镜像名称和标签。
 
-  * [remote target](../remoteBuild.md) - 通过 github URL 来构建 kustomization 。
+  * [remote target](remoteBuild.md) - 通过 github URL 来构建 kustomization 。
 
   * [json patch](jsonpatch.md) -在 kustomization 中应用 json patch 。
 
