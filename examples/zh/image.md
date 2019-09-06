@@ -9,7 +9,7 @@ DEMO_HOME=$(mktemp -d)
 
 创建包含pod资源的 `kustomization`
 
-<!-- @createKustomization @testAgainstLatestRelease -->
+<!-- @testAgainstLatestRelease to @test -->
 ```bash
 cat <<EOF >$DEMO_HOME/kustomization.yaml
 resources:
@@ -17,9 +17,9 @@ resources:
 EOF
 ```
 
-创建pod资源声明
+创建 pod 资源pod.yaml
 
-<!-- @createDeployment @testAgainstLatestRelease -->
+<!-- @createDeployment @test -->
 ```bash
 cat <<EOF >$DEMO_HOME/pod.yaml
 apiVersion: v1
@@ -45,7 +45,7 @@ EOF
 在 `kustomization.yaml` 中添加 `images` 字段来更改镜像 `busybox` 和标签 `1.29.0` 。
 
 - 通过 `kustomize` 添加 `images`：
-    <!-- @addImages @testAgainstLatestRelease -->
+    <!-- @addImages @test -->
     ```bash
     cd $DEMO_HOME
     kustomize edit set image busybox=alpine:3.6

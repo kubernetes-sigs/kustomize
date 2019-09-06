@@ -5,9 +5,9 @@
 
 # 示例：通过一个 patch 来修改多个资源
 
-kustomization 文件支持通过 [Strategic Merge Patch] 和 [JSON patch] 来自定义资源。 现在，一个 patch 可以应用于多个资源。
+kustomization.yaml 支持通过 [Strategic Merge Patch] 和 [JSON patch] 来自定义资源。自 3.1.0 起，一个 patch 可以修改多个资源。
 
-可以通过指定 patch 和 target 选择器来完成，如下所示：
+这可以通过指定 patch 和它所修改的 target 来完成，如下所示：
 ```yaml
 patches:
 - path: <PatchFile>
@@ -26,7 +26,7 @@ patches:
 
 创建一个包含 Deployment 资源的 `kustomization` 。
 
-<!-- @createDeployment @testAgainstLatestRelease -->
+<!-- @createDeployment @test -->
 ```bash
 DEMO_HOME=$(mktemp -d)
 
@@ -71,7 +71,7 @@ EOF
 
 声明 [Strategic Merge Patch] 文件以注入 sidecar 容器：
 
-<!-- @addPatch @testAgainstLatestRelease -->
+<!-- @addPatch @test -->
 ```bash
 cat <<EOF >$DEMO_HOME/patch.yaml
 apiVersion: apps/v1
@@ -104,7 +104,7 @@ EOF
 
 运行 `kustomize build $DEMO_HOME`，可以在输出中确认两个 Deployment 资源都已正确应用。
 
-<!-- @confirmPatch @testAgainstLatestRelease -->
+<!-- @confirmPatch @test -->
 ```bash
 test 2 == \
   $(kustomize build $DEMO_HOME | grep "image: docker.io/istio/proxyv2" | wc -l); \
@@ -156,7 +156,7 @@ spec:
         name: busybox
 ```
 
-## Target selector
+## Target 选择
 
 - 选择名称与 `name*` 匹配的资源
   ```yaml

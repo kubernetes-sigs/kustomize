@@ -2,11 +2,11 @@
 
 `kustomize build` 可以将 URL 作为参数传入并运行.
 
-运行效果与 clone repo，checkout 特定的 _ref_（commit hash, branch 名称, release tag 等），然后针对所需的目录运行 `kustomize build`。
+运行效果与如下操作相同:
 
 如果想要要立即尝试此操作，可以按照 [multibases](../multibases/README.md) 示例运行 kustomization 运行构建。然后查看输出中的pod：
 
-<!-- @remoteOverlayBuild @testAgainstLatestRelease -->
+<!-- @remoteOverlayBuild @test -->
 
 ```bash
 target="github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6"
@@ -17,7 +17,7 @@ test 1 == \
 
 在该示例中运行 overlay 将获得三个 pod（在此 overlay 结合了dev、staging 和 prod 的 bases，以便同时将它们全部发送给所有人）：
 
-<!-- @remoteBuild @testAgainstLatestRelease -->
+<!-- @remoteBuild @test -->
 ```bash
 target="https://github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6"
 test 3 == \
@@ -27,7 +27,7 @@ test 3 == \
 
 将 URL 作为 base ：
 
-<!-- @createOverlay @testAgainstLatestRelease -->
+<!-- @createOverlay @test -->
 ```bash
 DEMO_HOME=$(mktemp -d)
 
