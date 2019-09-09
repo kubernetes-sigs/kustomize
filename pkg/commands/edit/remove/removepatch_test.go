@@ -46,7 +46,7 @@ func TestRemovePatch(t *testing.T) {
 
 	m := readKustomizationFS(t, fakeFS)
 	for _, k := range args {
-		if patch.Exist(m.PatchesStrategicMerge, k) {
+		if patch.Exist(m.Patches, k) {
 			t.Errorf("%s must be deleted", k)
 		}
 	}
@@ -64,7 +64,7 @@ func TestRemovePatchMultipleArgs(t *testing.T) {
 
 	m := readKustomizationFS(t, fakeFS)
 	for _, k := range args {
-		if patch.Exist(m.PatchesStrategicMerge, k) {
+		if patch.Exist(m.Patches, k) {
 			t.Errorf("%s must be deleted", k)
 		}
 	}
@@ -98,7 +98,7 @@ func TestRemovePatchNotDefinedInKustomization(t *testing.T) {
 
 	m := readKustomizationFS(t, fakeFS)
 	for _, k := range []string{"patch1.yaml", "patch2.yaml"} {
-		if !patch.Exist(m.PatchesStrategicMerge, k) {
+		if !patch.Exist(m.Patches, k) {
 			t.Errorf("%s must exist", k)
 		}
 	}
@@ -116,7 +116,7 @@ func TestRemovePatchNotExist(t *testing.T) {
 
 	m := readKustomizationFS(t, fakeFS)
 	for _, k := range []string{"patch1.yaml", "patch2.yaml"} {
-		if !patch.Exist(m.PatchesStrategicMerge, k) {
+		if !patch.Exist(m.Patches, k) {
 			t.Errorf("%s must exist", k)
 		}
 	}

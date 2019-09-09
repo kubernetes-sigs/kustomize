@@ -152,6 +152,30 @@ patchesStrategicMerge:
 - service.yaml
 - pod.yaml
 `)
+	expected := []byte(
+		`# shem qing some comments
+# This is some comment we should preserve
+# don't delete it
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../namespaces
+- pod.yaml
+- service.yaml
+# something you may want to keep
+vars:
+- fieldref:
+    fieldPath: metadata.name
+  name: MY_SERVICE_NAME
+  objref:
+    apiVersion: v1
+    kind: Service
+    name: my-service
+# some descriptions for the patches
+patches:
+- path: service.yaml
+- path: pod.yaml
+`)
 	fSys := fs.MakeFakeFS()
 	fSys.WriteTestKustomizationWith(kustomizationContentWithComments)
 	mf, err := NewKustomizationFile(fSys)
@@ -167,7 +191,7 @@ patchesStrategicMerge:
 	}
 	bytes, _ := fSys.ReadFile(mf.path)
 
-	if !reflect.DeepEqual(kustomizationContentWithComments, bytes) {
+	if !reflect.DeepEqual(bytes, expected) {
 		t.Fatal("written kustomization with comments is not the same as original one")
 	}
 }
@@ -237,12 +261,12 @@ vars:
 
 # some descriptions for the patches
 
-patchesStrategicMerge:
-- service.yaml
-- pod.yaml
 # generator options
 generatorOptions:
   disableNameSuffixHash: true
+patches:
+- path: service.yaml
+- path: pod.yaml
 `)
 	fSys := fs.MakeFakeFS()
 	fSys.WriteTestKustomizationWith(kustomizationContentWithComments)
@@ -275,11 +299,11 @@ patches:
 `)
 
 	expected := []byte(`
-patchesStrategicMerge:
-- patch1.yaml
-- patch2.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+patches:
+- path: patch1.yaml
+- path: patch2.yaml
 `)
 	fSys := fs.MakeFakeFS()
 	fSys.WriteTestKustomizationWith(kustomizationContentWithComments)

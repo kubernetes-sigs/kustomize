@@ -148,26 +148,30 @@ func TestBasicDiamond(t *testing.T) {
 namePrefix: prod-
 resources:
 - ../tenants
-patchesStrategicMerge:
-- patches.yaml
+patches:
+- path: patch1.yaml
+- path: patch2.yaml
+- path: patch3.yaml
 `)
 	// The patch only has to be specific enough
 	// to match the item.
-	th.WriteF("/app/prod/patches.yaml", `
+	th.WriteF("/app/prod/patch1.yaml", `
 apiVersion: v1
 kind: Deployment
 metadata:
   name: t-kirk-storefront
 spec:
   numReplicas: 10000
----
+`)
+	th.WriteF("/app/prod/patch2.yaml", `
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: federation
 data:
   guardian: ofTheGalaxy
----
+`)
+	th.WriteF("/app/prod/patch3.yaml", `
 apiVersion: v1
 kind: ConfigMap
 metadata:

@@ -25,7 +25,20 @@ import (
 
 func TestFix(t *testing.T) {
 	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteTestKustomizationWith([]byte(`nameprefix: some-prefix-`))
+	fakeFS.WriteTestKustomizationWith([]byte(
+		`nameprefix: some-prefix-
+patchesStrategicMerge:
+- patch1.yaml
+- patch2.yaml
+
+patchesJson6902:
+- path: patch1.json
+  target:
+    name: obj1
+    group: g1
+    version: v1
+    kind: Kind1
+`))
 
 	cmd := NewCmdFix(fakeFS)
 	err := cmd.RunE(cmd, nil)
@@ -41,5 +54,18 @@ func TestFix(t *testing.T) {
 	}
 	if !strings.Contains(string(content), "kind: Kustomization") {
 		t.Errorf("expected kind in kustomization")
+	}
+	if !strings.Contains(string(content), `
+patches:
+- path: patch1.yaml
+- path: patch2.yaml
+- path: patch1.json
+  target:
+    group: g1
+    kind: Kind1
+    name: obj1
+    version: v1
+`) {
+		t.Errorf("expected patches in kustomization\n%s", string(content))
 	}
 }

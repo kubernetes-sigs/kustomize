@@ -79,13 +79,20 @@ func (o *removePatchOptions) RunRemovePatch(fSys fs.FileSystem) error {
 
 	var removePatches []string
 	for _, p := range patches {
-		if !patch.Exist(m.PatchesStrategicMerge, p) {
+		for _, patch := range m.Patches {
+			if patch.Path == p {
+				removePatches = append(removePatches)
+			}
+		}
+	}
+	for _, p := range patches {
+		if !patch.Exist(m.Patches, p) {
 			log.Printf("patch %s doesn't exist in kustomization file", p)
 			continue
 		}
 		removePatches = append(removePatches, p)
 	}
-	m.PatchesStrategicMerge = patch.Delete(m.PatchesStrategicMerge, removePatches...)
+	m.Patches = patch.Delete(m.Patches, removePatches...)
 
 	return mf.Write(m)
 }

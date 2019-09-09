@@ -7,6 +7,7 @@ package types
 import (
 	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"sigs.k8s.io/kustomize/v3/pkg/image"
+	"strings"
 )
 
 const (
@@ -53,12 +54,14 @@ type Kustomization struct {
 	// CommonAnnotations to add to all objects.
 	CommonAnnotations map[string]string `json:"commonAnnotations,omitempty" yaml:"commonAnnotations,omitempty"`
 
+	// Deprecated.
 	// PatchesStrategicMerge specifies the relative path to a file
 	// containing a strategic merge patch.  Format documented at
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/strategic-merge-patch.md
 	// URLs and globs are not supported.
 	PatchesStrategicMerge []PatchStrategicMerge `json:"patchesStrategicMerge,omitempty" yaml:"patchesStrategicMerge,omitempty"`
 
+	// Deprecated.
 	// JSONPatches is a list of JSONPatch for applying JSON patch.
 	// Format documented at https://tools.ietf.org/html/rfc6902
 	// and http://jsonpatch.com
@@ -180,6 +183,27 @@ func (k *Kustomization) FixKustomizationPostUnmarshalling() {
 		k.Resources = append(k.Resources, b)
 	}
 	k.Bases = nil
+
+	for _, p := range k.PatchesStrategicMerge {
+		if strings.Contains(string(p), "apiVersion") {
+			k.Patches = append(k.Patches, Patch{Patch: string(p)})
+		} else {
+			k.Patches = append(k.Patches, Patch{Path: string(p)})
+		}
+	}
+	k.PatchesStrategicMerge = nil
+
+	for _, p := range k.PatchesJson6902 {
+		k.Patches = append(k.Patches, Patch{
+			Path:  p.Path,
+			Patch: p.Patch,
+			Target: &Selector{
+				Name:      p.Target.Name,
+				Namespace: p.Target.Namespace,
+				Gvk:       p.Target.Gvk,
+			}})
+	}
+	k.PatchesJson6902 = nil
 }
 
 func (k *Kustomization) EnforceFields() []string {

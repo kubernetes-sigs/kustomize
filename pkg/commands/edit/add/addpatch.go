@@ -90,11 +90,11 @@ func (o *addPatchOptions) RunAddPatch(fSys fs.FileSystem) error {
 	}
 
 	for _, p := range patches {
-		if patch.Exist(m.PatchesStrategicMerge, p) {
+		if patch.Exist(m.Patches, p) {
 			log.Printf("patch %s already in kustomization file", p)
 			continue
 		}
-		m.PatchesStrategicMerge = patch.Append(m.PatchesStrategicMerge, p)
+		m.Patches = patch.Append(m.Patches, p)
 	}
 
 	return mf.Write(m)

@@ -9,10 +9,10 @@ import (
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 )
 
-func buildPatchStrategicMergeSlice(patchStrings []string) []types.PatchStrategicMerge {
-	var patches []types.PatchStrategicMerge
+func buildPatchStrategicMergeSlice(patchStrings []string) []types.Patch {
+	var patches []types.Patch
 	for _, patchString := range patchStrings {
-		patches = append(patches, types.PatchStrategicMerge(patchString))
+		patches = append(patches, types.Patch{Path: patchString})
 	}
 	return patches
 }
@@ -24,7 +24,7 @@ func TestAppend(t *testing.T) {
 	patches = Append(patches, "patch3.yaml")
 
 	for i, k := range []string{"patch1.yaml", "patch2.yaml", "patch3.yaml"} {
-		if patches[i] != types.PatchStrategicMerge(k) {
+		if patches[i].Path != k {
 			t.Fatalf("patches[%d] must be %s, got %s", i, k, patches[i])
 		}
 	}

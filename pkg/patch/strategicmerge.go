@@ -19,34 +19,34 @@ package patch
 import "sigs.k8s.io/kustomize/v3/pkg/types"
 
 // Append appends a slice of patch paths to a PatchStrategicMerge slice
-func Append(patches []types.PatchStrategicMerge, paths ...string) []types.PatchStrategicMerge {
+func Append(patches []types.Patch, paths ...string) []types.Patch {
 	for _, p := range paths {
-		patches = append(patches, types.PatchStrategicMerge(p))
+		patches = append(patches, types.Patch{Path: p})
 	}
 	return patches
 }
 
-// Exist determines if a patch path exists in a slice of PatchStrategicMerge
-func Exist(patches []types.PatchStrategicMerge, path string) bool {
+// Exist determines if a patch path exists in a slice of Patches
+func Exist(patches []types.Patch, path string) bool {
 	for _, p := range patches {
-		if p == types.PatchStrategicMerge(path) {
+		if p.Path == path {
 			return true
 		}
 	}
 	return false
 }
 
-// Delete deletes patches from a PatchStrategicMerge slice
-func Delete(patches []types.PatchStrategicMerge, paths ...string) []types.PatchStrategicMerge {
-	// Convert paths into PatchStrategicMerge slice
-	convertedPath := make([]types.PatchStrategicMerge, len(paths))
+// Delete deletes patches from a Patch slice
+func Delete(patches []types.Patch, paths ...string) []types.Patch {
+	// Convert paths into Patch slice
+	convertedPath := make([]types.Patch, len(paths))
 	for i, p := range paths {
-		convertedPath[i] = types.PatchStrategicMerge(p)
+		convertedPath[i] = types.Patch{Path: p}
 	}
 
-	filteredPatches := make([]types.PatchStrategicMerge, 0, len(patches))
+	filteredPatches := make([]types.Patch, 0, len(patches))
 	for _, containedPatch := range patches {
-		if !Exist(convertedPath, string(containedPatch)) {
+		if !Exist(convertedPath, containedPatch.Path) {
 			filteredPatches = append(filteredPatches, containedPatch)
 		}
 	}

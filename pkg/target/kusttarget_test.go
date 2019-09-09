@@ -59,6 +59,7 @@ apiVersion: apps/v1
 metadata:
   name: dply1
 kind: Deployment
+spec: {}
 `
 	namespaceContent = `
 apiVersion: v1
