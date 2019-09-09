@@ -28,7 +28,7 @@ function parseYaml {
   local file=$1
   while read -r line
   do
-    local k=${line%:*}
+    local k=${line%%:*}
     local v=${line#*:}
     local t=${v#"${v%%[![:space:]]*}"}  # trim leading space
 
