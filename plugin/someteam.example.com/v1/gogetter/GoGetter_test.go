@@ -44,6 +44,36 @@ metadata:
 `)
 }
 
+
+func TestGoGetterUrl(t *testing.T) {
+	tc := plugins_test.NewEnvForTest(t).Set()
+	defer tc.Reset()
+
+	tc.BuildExecPlugin(
+		"someteam.example.com", "v1", "GoGetter")
+
+	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+
+	m := th.LoadAndRunGenerator(`
+apiVersion: someteam.example.com/v1
+kind: GoGetter
+metadata:
+  name: example
+url: https://github.com/kustless/kustomize-examples/archive/master.zip
+subPath: kustomize-examples-master
+`)
+
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  altGreeting: Good Morning!
+  enableRisky: "false"
+kind: ConfigMap
+metadata:
+  name: remote-cm
+`)
+}
+
 func TestGoGetterCommand(t *testing.T) {
 	tc := plugins_test.NewEnvForTest(t).Set()
 	defer tc.Reset()
