@@ -136,9 +136,8 @@ func (o *Options) RunBuild(
 	if (o.outputPath == "") || (o.outputPath != "" && !fSys.IsDir(o.outputPath)) {
 		t, err := o.loadSortTransformerPlugin(kt)
 		if err != nil {
-			log.Printf("reorder transformer could not be loaded: %v\n", err)
-		}
-		if t != nil && err == nil {
+			log.Printf("reorder transformer could not be loaded: %s\n", err)
+		} else if t != nil {
 			t.Transform(m)
 		}
 	}
@@ -168,9 +167,8 @@ func (o *Options) RunBuildPrune(
 	if (o.outputPath == "") || (o.outputPath != "" && !fSys.IsDir(o.outputPath)) {
 		t, err := o.loadSortTransformerPlugin(kt)
 		if err != nil {
-			log.Printf("reorder transformer could not be loaded: %v\n", err)
-		}
-		if t != nil && err == nil {
+			log.Printf("reorder transformer could not be loaded: %s\n", err)
+		} else if t != nil {
 			t.Transform(m)
 		}
 	}

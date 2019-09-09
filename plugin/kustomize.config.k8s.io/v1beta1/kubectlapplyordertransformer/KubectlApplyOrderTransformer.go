@@ -5,13 +5,15 @@
 package main
 
 import (
+	"sort"
+
 	"github.com/pkg/errors"
+	"sigs.k8s.io/yaml"
+
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
-	"sigs.k8s.io/yaml"
-	"sort"
 )
 
 // Sort the resmap using an ordering defined in the KindOrder parameter.
