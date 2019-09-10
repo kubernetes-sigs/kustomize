@@ -251,3 +251,63 @@ metadata:
   name: p2-com2-c4b8md75k9
 `)
 }
+
+func TestConfigMapGeneratorMergeNamePrefix(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th.WriteK("/app/base", `
+configMapGenerator:
+- name: cm
+  behavior: create
+  literals:
+  - foo=bar
+`)
+	th.WriteK("/app/o1", `
+resources:
+- ../base
+namePrefix: o1-
+`)
+	th.WriteK("/app/o2", `
+resources:
+- ../base
+nameSuffix: -o2
+`)
+	th.WriteK("/app", `
+resources:
+- o1
+- o2
+configMapGenerator:
+- name: o1-cm
+  behavior: merge
+  literals:
+  - big=bang
+- name: cm-o2
+  behavior: merge
+  literals:
+  - big=crunch
+`)
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  big: bang
+  foo: bar
+kind: ConfigMap
+metadata:
+  annotations: {}
+  labels: {}
+  name: o1-cm-28g596k77k
+---
+apiVersion: v1
+data:
+  big: crunch
+  foo: bar
+kind: ConfigMap
+metadata:
+  annotations: {}
+  labels: {}
+  name: cm-o2-gfcc59fg5m
+`)
+}
