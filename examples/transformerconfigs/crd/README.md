@@ -77,11 +77,11 @@ spec:
     name: crdsecret
   beeRef:
     name: bee
-    action: \$(BEE_ACTION)
+    action: $(BEE_ACTION)
   containers:
   - command:
     - "echo"
-    - "\$(BEE_ACTION)"
+    - "$(BEE_ACTION)"
     image: myapp
 EOF
 ```
