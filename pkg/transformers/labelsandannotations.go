@@ -30,23 +30,23 @@ type mapTransformer struct {
 	fieldSpecs []config.FieldSpec
 }
 
-var _ Transformer = &mapTransformer{}
+var _ resmap.Transformer = &mapTransformer{}
 
 // NewLabelsMapTransformer constructs a mapTransformer.
 func NewLabelsMapTransformer(
-	m map[string]string, fs []config.FieldSpec) (Transformer, error) {
+	m map[string]string, fs []config.FieldSpec) (resmap.Transformer, error) {
 	return NewMapTransformer(fs, m)
 }
 
 // NewAnnotationsMapTransformer construct a mapTransformer.
 func NewAnnotationsMapTransformer(
-	m map[string]string, fs []config.FieldSpec) (Transformer, error) {
+	m map[string]string, fs []config.FieldSpec) (resmap.Transformer, error) {
 	return NewMapTransformer(fs, m)
 }
 
 // NewMapTransformer construct a mapTransformer.
 func NewMapTransformer(
-	pc []config.FieldSpec, m map[string]string) (Transformer, error) {
+	pc []config.FieldSpec, m map[string]string) (resmap.Transformer, error) {
 	if m == nil {
 		return NewNoOpTransformer(), nil
 	}

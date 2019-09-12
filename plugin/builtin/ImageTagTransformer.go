@@ -21,11 +21,6 @@ type ImageTagTransformerPlugin struct {
 	FieldSpecs []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
-//noinspection GoUnusedGlobalVariable
-func NewImageTagTransformerPlugin() *ImageTagTransformerPlugin {
-	return &ImageTagTransformerPlugin{}
-}
-
 func (p *ImageTagTransformerPlugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
 	p.ImageTag = image.Image{}
@@ -182,4 +177,8 @@ func split(imageName string) (name string, tag string) {
 	name = imageName[:i]
 	tag = imageName[i:]
 	return
+}
+
+func NewImageTagTransformerPlugin() resmap.TransformerPlugin {
+	return &ImageTagTransformerPlugin{}
 }

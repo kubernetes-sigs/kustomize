@@ -7,7 +7,6 @@ import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 	"sigs.k8s.io/kustomize/v3/plugin/builtin"
 	"sigs.k8s.io/yaml"
@@ -16,7 +15,7 @@ import (
 // Add a date prefix to the name.
 // A plugin that adapts another plugin.
 type plugin struct {
-	t transformers.Transformer
+	t resmap.Transformer
 }
 
 //nolint: golint

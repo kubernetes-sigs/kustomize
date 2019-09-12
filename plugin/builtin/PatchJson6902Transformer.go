@@ -21,11 +21,6 @@ type PatchJson6902TransformerPlugin struct {
 	JsonOp       string            `json:"jsonOp,omitempty" yaml:"jsonOp,omitempty"`
 }
 
-//noinspection GoUnusedGlobalVariable
-func NewPatchJson6902TransformerPlugin() *PatchJson6902TransformerPlugin {
-	return &PatchJson6902TransformerPlugin{}
-}
-
 func (p *PatchJson6902TransformerPlugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
 	p.ldr = ldr
@@ -96,4 +91,8 @@ func (p *PatchJson6902TransformerPlugin) Transform(m resmap.ResMap) error {
 			err, "failed to apply json patch '%s'", p.JsonOp)
 	}
 	return obj.UnmarshalJSON(modifiedObj)
+}
+
+func NewPatchJson6902TransformerPlugin() resmap.TransformerPlugin {
+	return &PatchJson6902TransformerPlugin{}
 }

@@ -22,11 +22,6 @@ type PatchTransformerPlugin struct {
 	Target       *types.Selector `json:"target,omitempty", yaml:"target,omitempty"`
 }
 
-//noinspection GoUnusedGlobalVariable
-func NewPatchTransformerPlugin() *PatchTransformerPlugin {
-	return &PatchTransformerPlugin{}
-}
-
 func (p *PatchTransformerPlugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
 	p.ldr = ldr
@@ -145,4 +140,8 @@ func jsonPatchFromBytes(
 		ops = string(jsonOps)
 	}
 	return jsonpatch.DecodePatch([]byte(ops))
+}
+
+func NewPatchTransformerPlugin() resmap.TransformerPlugin {
+	return &PatchTransformerPlugin{}
 }
