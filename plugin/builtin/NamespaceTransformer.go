@@ -20,11 +20,6 @@ type NamespaceTransformerPlugin struct {
 	FieldSpecs       []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
-//noinspection GoUnusedGlobalVariable
-func NewNamespaceTransformerPlugin() *NamespaceTransformerPlugin {
-	return &NamespaceTransformerPlugin{}
-}
-
 func (p *NamespaceTransformerPlugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
 	p.Namespace = ""
@@ -128,4 +123,8 @@ func (o *NamespaceTransformerPlugin) changeNamespace(
 			return in, nil
 		}
 	}
+}
+
+func NewNamespaceTransformerPlugin() resmap.TransformerPlugin {
+	return &NamespaceTransformerPlugin{}
 }

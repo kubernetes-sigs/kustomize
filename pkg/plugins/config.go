@@ -12,13 +12,15 @@ import (
 )
 
 const (
-	PluginSymbol          = "KustomizePlugin"
-	flagEnablePluginsName = "enable_alpha_plugins"
-	flagEnablePluginsHelp = `enable plugins, an alpha feature.
+	PluginSymbol            = "KustomizePlugin"
+	BuiltinPluginPackage    = "builtin"
+	BuiltinPluginApiVersion = BuiltinPluginPackage
+	flagEnablePluginsName   = "enable_alpha_plugins"
+	flagEnablePluginsHelp   = `enable plugins, an alpha feature.
 See https://github.com/kubernetes-sigs/kustomize/blob/master/docs/plugins.md
 `
 	flagErrorFmt = `
-unable to load plugin %s because plugins disabled
+unable to load external plugin %s because plugins disabled
 specify the flag
   --%s
 to %s`

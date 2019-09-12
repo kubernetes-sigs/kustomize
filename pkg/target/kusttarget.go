@@ -160,7 +160,7 @@ func (kt *KustTarget) makeCustomizedResMap(
 func (kt *KustTarget) addHashesToNames(
 	ra *accumulator.ResAccumulator) error {
 	p := builtin.NewHashTransformerPlugin()
-	err := kt.configureBuiltinPlugin(p, nil, "hash")
+	err := kt.configureBuiltinPlugin(p, nil, plugins.HashTransformer)
 	if err != nil {
 		return err
 	}
@@ -181,7 +181,6 @@ func (kt *KustTarget) computeInventory(
 		return fmt.Errorf("namespace mismatch")
 	}
 
-	p := builtin.NewInventoryTransformerPlugin()
 	var c struct {
 		Policy           string
 		types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty"`
@@ -189,8 +188,8 @@ func (kt *KustTarget) computeInventory(
 	c.Name = inv.ConfigMap.Name
 	c.Namespace = inv.ConfigMap.Namespace
 	c.Policy = garbagePolicy.String()
-
-	err := kt.configureBuiltinPlugin(p, c, "inventory")
+	p := builtin.NewInventoryTransformerPlugin()
+	err := kt.configureBuiltinPlugin(p, c, plugins.InventoryTransformer)
 	if err != nil {
 		return err
 	}
@@ -283,7 +282,7 @@ func (kt *KustTarget) runGenerators(
 	return nil
 }
 
-func (kt *KustTarget) configureExternalGenerators() ([]transformers.Generator, error) {
+func (kt *KustTarget) configureExternalGenerators() ([]resmap.Generator, error) {
 	ra := accumulator.MakeEmptyAccumulator()
 	err := kt.accumulateResources(ra, kt.kustomization.Generators)
 	if err != nil {
@@ -293,7 +292,7 @@ func (kt *KustTarget) configureExternalGenerators() ([]transformers.Generator, e
 }
 
 func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator) error {
-	var r []transformers.Transformer
+	var r []resmap.Transformer
 	tConfig := ra.GetTransformerConfig()
 	lts, err := kt.configureBuiltinTransformers(tConfig)
 	if err != nil {
@@ -309,7 +308,7 @@ func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator) error {
 	return ra.Transform(t)
 }
 
-func (kt *KustTarget) configureExternalTransformers() ([]transformers.Transformer, error) {
+func (kt *KustTarget) configureExternalTransformers() ([]resmap.Transformer, error) {
 	ra := accumulator.MakeEmptyAccumulator()
 	err := kt.accumulateResources(ra, kt.kustomization.Transformers)
 	if err != nil {
@@ -371,6 +370,23 @@ func (kt *KustTarget) accumulateFile(
 	err = ra.AppendAll(resources)
 	if err != nil {
 		return errors.Wrapf(err, "merging resources from '%s'", path)
+	}
+	return nil
+}
+
+func (kt *KustTarget) configureBuiltinPlugin(
+	p resmap.Configurable, c interface{}, bpt plugins.BuiltinPluginType) (err error) {
+	var y []byte
+	if c != nil {
+		y, err = yaml.Marshal(c)
+		if err != nil {
+			return errors.Wrapf(
+				err, "builtin %s marshal", bpt)
+		}
+	}
+	err = p.Config(kt.ldr, kt.rFactory, y)
+	if err != nil {
+		return errors.Wrapf(err, "builtin %s config: %v", bpt, y)
 	}
 	return nil
 }

@@ -12,11 +12,6 @@ type HashTransformerPlugin struct {
 	hasher ifc.KunstructuredHasher
 }
 
-//noinspection GoUnusedGlobalVariable
-func NewHashTransformerPlugin() *HashTransformerPlugin {
-	return &HashTransformerPlugin{}
-}
-
 func (p *HashTransformerPlugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, config []byte) (err error) {
 	p.hasher = rf.RF().Hasher()
@@ -35,4 +30,8 @@ func (p *HashTransformerPlugin) Transform(m resmap.ResMap) error {
 		}
 	}
 	return nil
+}
+
+func NewHashTransformerPlugin() resmap.TransformerPlugin {
+	return &HashTransformerPlugin{}
 }

@@ -4,50 +4,36 @@
 package target
 
 import (
-	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/v3/pkg/image"
 	"sigs.k8s.io/kustomize/v3/pkg/plugins"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers"
+	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
-	"sigs.k8s.io/kustomize/v3/plugin/builtin"
-	"sigs.k8s.io/yaml"
 )
 
 // Functions dedicated to configuring the builtin
 // transformer and generator plugins using config data
-// read from a kustomization file.
+// read from a kustomization file and from the
+// config.TransformerConfig, whose data may be a
+// mix of hardcoded values and data read from file.
 //
 // Non-builtin plugins will get their configuration
-// from their own dedicated structs and yaml files.
+// from their own dedicated structs and YAML files.
 //
 // There are some loops in the functions below because
-// the kustomization file would, say, allow one to
+// the kustomization file would, say, allow someone to
 // request multiple secrets be made, or run multiple
-// image tag transforms, so we need to run the plugins
-// N times (plugins are easier to write, configure and
-// test if they do just one thing).
-//
-// TODO: Push code down into the plugins, as the first pass
-//     at this writes plugins as thin layers over calls
-//     into existing packages.  The builtin plugins should
-//     be viewed as examples, and the packages they access
-//     directory should be public, while everything else
-//     should go into internal.
-
-type generatorConfigurator func() ([]transformers.Generator, error)
-type transformerConfigurator func(
-	tConfig *config.TransformerConfig) ([]transformers.Transformer, error)
+// image tag transforms.  In these cases, we'll need
+// N plugin instances with differing configurations.
 
 func (kt *KustTarget) configureBuiltinGenerators() (
-	[]transformers.Generator, error) {
-	configurators := []generatorConfigurator{
-		kt.configureBuiltinConfigMapGenerator,
-		kt.configureBuiltinSecretGenerator,
-	}
-	var result []transformers.Generator
-	for _, f := range configurators {
-		r, err := f()
+	result []resmap.Generator, err error) {
+	for _, bpt := range []plugins.BuiltinPluginType{
+		plugins.ConfigMapGenerator,
+		plugins.SecretGenerator,
+	} {
+		r, err := generatorConfigurators[bpt](
+			kt, bpt, plugins.GeneratorFactories[bpt])
 		if err != nil {
 			return nil, err
 		}
@@ -57,270 +43,256 @@ func (kt *KustTarget) configureBuiltinGenerators() (
 }
 
 func (kt *KustTarget) configureBuiltinTransformers(
-	tConfig *config.TransformerConfig) (
-	[]transformers.Transformer, error) {
-	// TODO: Convert remaining legacy transformers to plugins
-	//   with tests:
-	//   - patch SMP
-	configurators := []transformerConfigurator{
-		kt.configureBuiltinPatchStrategicMergeTransformer,
-		kt.configureBuiltinPatchTransformer,
-		kt.configureBuiltinNamespaceTransformer,
-		kt.configureBuiltinNameTransformer,
-		kt.configureBuiltinLabelTransformer,
-		kt.configureBuiltinAnnotationsTransformer,
-		kt.configureBuiltinPatchJson6902Transformer,
-		kt.configureBuiltinReplicaCountTransformer,
-		kt.configureBuiltinImageTagTransformer,
-	}
-	var result []transformers.Transformer
-	for _, f := range configurators {
-		r, err := f(tConfig)
+	tc *config.TransformerConfig) (
+	result []resmap.Transformer, err error) {
+	for _, bpt := range []plugins.BuiltinPluginType{
+		plugins.PatchStrategicMergeTransformer,
+		plugins.PatchTransformer,
+		plugins.NamespaceTransformer,
+		plugins.PrefixSuffixTransformer,
+		plugins.LabelTransformer,
+		plugins.AnnotationsTransformer,
+		plugins.PatchJson6902Transformer,
+		plugins.ReplicaCountTransformer,
+		plugins.ImageTagTransformer,
+	} {
+		r, err := transformerConfigurators[bpt](
+			kt, bpt, plugins.TransformerFactories[bpt], tc)
 		if err != nil {
 			return nil, err
 		}
 		result = append(result, r...)
 	}
-
 	return result, nil
 }
 
-func (kt *KustTarget) configureBuiltinSecretGenerator() (
-	result []transformers.Generator, err error) {
-	var c struct {
-		types.GeneratorOptions
-		types.SecretArgs
-	}
-	if kt.kustomization.GeneratorOptions != nil {
-		c.GeneratorOptions = *kt.kustomization.GeneratorOptions
-	}
-	for _, args := range kt.kustomization.SecretGenerator {
-		c.SecretArgs = args
-		p := builtin.NewSecretGeneratorPlugin()
-		err = kt.configureBuiltinPlugin(p, c, "secret")
-		if err != nil {
-			return nil, err
+type gFactory func() resmap.GeneratorPlugin
+
+var generatorConfigurators = map[plugins.BuiltinPluginType]func(
+	kt *KustTarget,
+	bpt plugins.BuiltinPluginType,
+	factory gFactory) (result []resmap.Generator, err error){
+	plugins.SecretGenerator: func(kt *KustTarget, bpt plugins.BuiltinPluginType, f gFactory) (
+		result []resmap.Generator, err error) {
+		var c struct {
+			types.GeneratorOptions
+			types.SecretArgs
 		}
-		result = append(result, p)
-	}
-	return
-}
-
-func (kt *KustTarget) configureBuiltinConfigMapGenerator() (
-	result []transformers.Generator, err error) {
-	var c struct {
-		types.GeneratorOptions
-		types.ConfigMapArgs
-	}
-	if kt.kustomization.GeneratorOptions != nil {
-		c.GeneratorOptions = *kt.kustomization.GeneratorOptions
-	}
-	for _, args := range kt.kustomization.ConfigMapGenerator {
-		c.ConfigMapArgs = args
-		p := builtin.NewConfigMapGeneratorPlugin()
-		err = kt.configureBuiltinPlugin(p, c, "configmap")
-		if err != nil {
-			return nil, err
+		if kt.kustomization.GeneratorOptions != nil {
+			c.GeneratorOptions = *kt.kustomization.GeneratorOptions
 		}
-		result = append(result, p)
-	}
-	return
-}
-
-func (kt *KustTarget) configureBuiltinNamespaceTransformer(
-	tConfig *config.TransformerConfig) (
-	result []transformers.Transformer, err error) {
-	var c struct {
-		types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty"`
-		FieldSpecs       []config.FieldSpec
-	}
-	c.Namespace = kt.kustomization.Namespace
-	c.FieldSpecs = tConfig.NameSpace
-	p := builtin.NewNamespaceTransformerPlugin()
-	err = kt.configureBuiltinPlugin(p, c, "namespace")
-	if err != nil {
-		return nil, err
-	}
-	result = append(result, p)
-	return
-}
-
-func (kt *KustTarget) configureBuiltinPatchJson6902Transformer(
-	tConfig *config.TransformerConfig) (
-	result []transformers.Transformer, err error) {
-	var c struct {
-		Target types.PatchTarget `json:"target,omitempty" yaml:"target,omitempty"`
-		Path   string            `json:"path,omitempty" yaml:"path,omitempty"`
-		JsonOp string            `json:"jsonOp,omitempty" yaml:"jsonOp,omitempty"`
-	}
-	for _, args := range kt.kustomization.PatchesJson6902 {
-		c.Target = *args.Target
-		c.Path = args.Path
-		c.JsonOp = args.Patch
-		p := builtin.NewPatchJson6902TransformerPlugin()
-		err = kt.configureBuiltinPlugin(p, c, "patchJson6902")
-		if err != nil {
-			return nil, err
+		for _, args := range kt.kustomization.SecretGenerator {
+			c.SecretArgs = args
+			p := f()
+			err := kt.configureBuiltinPlugin(p, c, bpt)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, p)
 		}
-		result = append(result, p)
-	}
-	return
-}
-
-func (kt *KustTarget) configureBuiltinPatchStrategicMergeTransformer(
-	tConfig *config.TransformerConfig) (
-	result []transformers.Transformer, err error) {
-	if len(kt.kustomization.PatchesStrategicMerge) == 0 {
 		return
-	}
-	var c struct {
-		Paths   []types.PatchStrategicMerge `json:"paths,omitempty" yaml:"paths,omitempty"`
-		Patches string                      `json:"patches,omitempty" yaml:"patches,omitempty"`
-	}
-	c.Paths = kt.kustomization.PatchesStrategicMerge
-	p := builtin.NewPatchStrategicMergeTransformerPlugin()
-	err = kt.configureBuiltinPlugin(p, c, "patchStrategicMerge")
-	if err != nil {
-		return nil, err
-	}
-	result = append(result, p)
-	return
-}
+	},
 
-func (kt *KustTarget) configureBuiltinPatchTransformer(
-	tConfig *config.TransformerConfig) (
-	result []transformers.Transformer, err error) {
-	if len(kt.kustomization.Patches) == 0 {
+	plugins.ConfigMapGenerator: func(kt *KustTarget, bpt plugins.BuiltinPluginType, f gFactory) (
+		result []resmap.Generator, err error) {
+		var c struct {
+			types.GeneratorOptions
+			types.ConfigMapArgs
+		}
+		if kt.kustomization.GeneratorOptions != nil {
+			c.GeneratorOptions = *kt.kustomization.GeneratorOptions
+		}
+		for _, args := range kt.kustomization.ConfigMapGenerator {
+			c.ConfigMapArgs = args
+			p := f()
+			err := kt.configureBuiltinPlugin(p, c, bpt)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, p)
+		}
 		return
-	}
-	var c struct {
-		Path   string          `json:"path,omitempty" yaml:"path,omitempty"`
-		Patch  string          `json:"patch,omitempty" yaml:"patch,omitempty"`
-		Target *types.Selector `json:"target,omitempty" yaml:"target,omitempty"`
-	}
-	for _, patch := range kt.kustomization.Patches {
-		c.Target = patch.Target
-		c.Patch = patch.Patch
-		c.Path = patch.Path
-		p := builtin.NewPatchTransformerPlugin()
-		err = kt.configureBuiltinPlugin(p, c, "patch")
+	},
+}
+
+type tFactory func() resmap.TransformerPlugin
+
+var transformerConfigurators = map[plugins.BuiltinPluginType]func(
+	kt *KustTarget,
+	bpt plugins.BuiltinPluginType,
+	f tFactory,
+	tc *config.TransformerConfig) (result []resmap.Transformer, err error){
+	plugins.NamespaceTransformer: func(
+		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, tc *config.TransformerConfig) (
+		result []resmap.Transformer, err error) {
+		var c struct {
+			types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+			FieldSpecs       []config.FieldSpec
+		}
+		c.Namespace = kt.kustomization.Namespace
+		c.FieldSpecs = tc.NameSpace
+		p := f()
+		err = kt.configureBuiltinPlugin(p, c, bpt)
 		if err != nil {
 			return nil, err
 		}
 		result = append(result, p)
-	}
-	return
-}
+		return
+	},
 
-func (kt *KustTarget) configureBuiltinLabelTransformer(
-	tConfig *config.TransformerConfig) (
-	result []transformers.Transformer, err error) {
-	var c struct {
-		Labels     map[string]string
-		FieldSpecs []config.FieldSpec
-	}
-	c.Labels = kt.kustomization.CommonLabels
-	c.FieldSpecs = tConfig.CommonLabels
-	p := builtin.NewLabelTransformerPlugin()
-	err = kt.configureBuiltinPlugin(p, c, "label")
-	if err != nil {
-		return nil, err
-	}
-	result = append(result, p)
-	return
-}
-
-func (kt *KustTarget) configureBuiltinAnnotationsTransformer(
-	tConfig *config.TransformerConfig) (
-	result []transformers.Transformer, err error) {
-	var c struct {
-		Annotations map[string]string
-		FieldSpecs  []config.FieldSpec
-	}
-	c.Annotations = kt.kustomization.CommonAnnotations
-	c.FieldSpecs = tConfig.CommonAnnotations
-	p := builtin.NewAnnotationsTransformerPlugin()
-	err = kt.configureBuiltinPlugin(p, c, "annotations")
-	if err != nil {
-		return nil, err
-	}
-	result = append(result, p)
-	return
-}
-
-func (kt *KustTarget) configureBuiltinNameTransformer(
-	tConfig *config.TransformerConfig) (
-	result []transformers.Transformer, err error) {
-	var c struct {
-		Prefix     string
-		Suffix     string
-		FieldSpecs []config.FieldSpec
-	}
-	c.Prefix = kt.kustomization.NamePrefix
-	c.Suffix = kt.kustomization.NameSuffix
-	c.FieldSpecs = tConfig.NamePrefix
-	p := builtin.NewPrefixSuffixTransformerPlugin()
-	err = kt.configureBuiltinPlugin(p, c, "prefixsuffix")
-	if err != nil {
-		return nil, err
-	}
-	result = append(result, p)
-	return
-}
-
-func (kt *KustTarget) configureBuiltinImageTagTransformer(
-	tConfig *config.TransformerConfig) (
-	result []transformers.Transformer, err error) {
-	var c struct {
-		ImageTag   image.Image
-		FieldSpecs []config.FieldSpec
-	}
-	for _, args := range kt.kustomization.Images {
-		c.ImageTag = args
-		c.FieldSpecs = tConfig.Images
-		p := builtin.NewImageTagTransformerPlugin()
-		err = kt.configureBuiltinPlugin(p, c, "imageTag")
+	plugins.PatchJson6902Transformer: func(
+		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, _ *config.TransformerConfig) (
+		result []resmap.Transformer, err error) {
+		var c struct {
+			Target types.PatchTarget `json:"target,omitempty" yaml:"target,omitempty"`
+			Path   string            `json:"path,omitempty" yaml:"path,omitempty"`
+			JsonOp string            `json:"jsonOp,omitempty" yaml:"jsonOp,omitempty"`
+		}
+		for _, args := range kt.kustomization.PatchesJson6902 {
+			c.Target = *args.Target
+			c.Path = args.Path
+			c.JsonOp = args.Patch
+			p := f()
+			err = kt.configureBuiltinPlugin(p, c, bpt)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, p)
+		}
+		return
+	},
+	plugins.PatchStrategicMergeTransformer: func(
+		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, _ *config.TransformerConfig) (
+		result []resmap.Transformer, err error) {
+		if len(kt.kustomization.PatchesStrategicMerge) == 0 {
+			return
+		}
+		var c struct {
+			Paths   []types.PatchStrategicMerge `json:"paths,omitempty" yaml:"paths,omitempty"`
+			Patches string                      `json:"patches,omitempty" yaml:"patches,omitempty"`
+		}
+		c.Paths = kt.kustomization.PatchesStrategicMerge
+		p := f()
+		err = kt.configureBuiltinPlugin(p, c, bpt)
 		if err != nil {
 			return nil, err
 		}
 		result = append(result, p)
-	}
-	return
-}
-
-func (kt *KustTarget) configureBuiltinReplicaCountTransformer(
-	tConfig *config.TransformerConfig) (
-	result []transformers.Transformer, err error) {
-	var c struct {
-		Replica    types.Replica
-		FieldSpecs []config.FieldSpec
-	}
-	for _, args := range kt.kustomization.Replicas {
-		c.Replica = args
-		c.FieldSpecs = tConfig.Replicas
-		p := builtin.NewReplicaCountTransformerPlugin()
-		err = kt.configureBuiltinPlugin(p, c, "replica")
+		return
+	},
+	plugins.PatchTransformer: func(
+		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, _ *config.TransformerConfig) (
+		result []resmap.Transformer, err error) {
+		if len(kt.kustomization.Patches) == 0 {
+			return
+		}
+		var c struct {
+			Path   string          `json:"path,omitempty" yaml:"path,omitempty"`
+			Patch  string          `json:"patch,omitempty" yaml:"patch,omitempty"`
+			Target *types.Selector `json:"target,omitempty" yaml:"target,omitempty"`
+		}
+		for _, pc := range kt.kustomization.Patches {
+			c.Target = pc.Target
+			c.Patch = pc.Patch
+			c.Path = pc.Path
+			p := f()
+			err = kt.configureBuiltinPlugin(p, c, bpt)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, p)
+		}
+		return
+	},
+	plugins.LabelTransformer: func(
+		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, tc *config.TransformerConfig) (
+		result []resmap.Transformer, err error) {
+		var c struct {
+			Labels     map[string]string
+			FieldSpecs []config.FieldSpec
+		}
+		c.Labels = kt.kustomization.CommonLabels
+		c.FieldSpecs = tc.CommonLabels
+		p := f()
+		err = kt.configureBuiltinPlugin(p, c, bpt)
 		if err != nil {
 			return nil, err
 		}
 		result = append(result, p)
-	}
-	return
-}
-
-func (kt *KustTarget) configureBuiltinPlugin(
-	p plugins.Configurable, c interface{}, id string) (err error) {
-	var y []byte
-	if c != nil {
-		y, err = yaml.Marshal(c)
-		if err != nil {
-			return errors.Wrapf(
-				err, "builtin %s marshal", id)
+		return
+	},
+	plugins.AnnotationsTransformer: func(
+		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, tc *config.TransformerConfig) (
+		result []resmap.Transformer, err error) {
+		var c struct {
+			Annotations map[string]string
+			FieldSpecs  []config.FieldSpec
 		}
-	}
-	err = p.Config(kt.ldr, kt.rFactory, y)
-	if err != nil {
-		return errors.Wrapf(err, "builtin %s config: %v", id, y)
-	}
-	return nil
+		c.Annotations = kt.kustomization.CommonAnnotations
+		c.FieldSpecs = tc.CommonAnnotations
+		p := f()
+		err = kt.configureBuiltinPlugin(p, c, bpt)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, p)
+		return
+	},
+	plugins.PrefixSuffixTransformer: func(
+		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, tc *config.TransformerConfig) (
+		result []resmap.Transformer, err error) {
+		var c struct {
+			Prefix     string
+			Suffix     string
+			FieldSpecs []config.FieldSpec
+		}
+		c.Prefix = kt.kustomization.NamePrefix
+		c.Suffix = kt.kustomization.NameSuffix
+		c.FieldSpecs = tc.NamePrefix
+		p := f()
+		err = kt.configureBuiltinPlugin(p, c, bpt)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, p)
+		return
+	},
+	plugins.ImageTagTransformer: func(
+		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, tc *config.TransformerConfig) (
+		result []resmap.Transformer, err error) {
+		var c struct {
+			ImageTag   image.Image
+			FieldSpecs []config.FieldSpec
+		}
+		for _, args := range kt.kustomization.Images {
+			c.ImageTag = args
+			c.FieldSpecs = tc.Images
+			p := f()
+			err = kt.configureBuiltinPlugin(p, c, bpt)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, p)
+		}
+		return
+	},
+	plugins.ReplicaCountTransformer: func(
+		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, tc *config.TransformerConfig) (
+		result []resmap.Transformer, err error) {
+		var c struct {
+			Replica    types.Replica
+			FieldSpecs []config.FieldSpec
+		}
+		for _, args := range kt.kustomization.Replicas {
+			c.Replica = args
+			c.FieldSpecs = tc.Replicas
+			p := f()
+			err = kt.configureBuiltinPlugin(p, c, bpt)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, p)
+		}
+		return
+	},
 }

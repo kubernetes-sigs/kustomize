@@ -22,11 +22,6 @@ type InventoryTransformerPlugin struct {
 	Policy           string `json:"policy,omitempty" yaml:"policy,omitempty"`
 }
 
-//noinspection GoUnusedGlobalVariable
-func NewInventoryTransformerPlugin() *InventoryTransformerPlugin {
-	return &InventoryTransformerPlugin{}
-}
-
 func (p *InventoryTransformerPlugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
 	p.ldr = ldr
@@ -126,4 +121,8 @@ func computeRefs(
 				ref.GetGvk(), ref.GetName(), ref.GetNamespace()))
 	}
 	return
+}
+
+func NewInventoryTransformerPlugin() resmap.TransformerPlugin {
+	return &InventoryTransformerPlugin{}
 }

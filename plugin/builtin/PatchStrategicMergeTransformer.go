@@ -18,11 +18,6 @@ type PatchStrategicMergeTransformerPlugin struct {
 	Patches       string                      `json:"patches,omitempty" yaml:"patches,omitempty"`
 }
 
-//noinspection GoUnusedGlobalVariable
-func NewPatchStrategicMergeTransformerPlugin() *PatchStrategicMergeTransformerPlugin {
-	return &PatchStrategicMergeTransformerPlugin{}
-}
-
 func (p *PatchStrategicMergeTransformerPlugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
 	p.ldr = ldr
@@ -87,4 +82,8 @@ func (p *PatchStrategicMergeTransformerPlugin) Transform(m resmap.ResMap) error 
 		}
 	}
 	return nil
+}
+
+func NewPatchStrategicMergeTransformerPlugin() resmap.TransformerPlugin {
+	return &PatchStrategicMergeTransformerPlugin{}
 }
