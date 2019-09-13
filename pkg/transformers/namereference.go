@@ -18,11 +18,11 @@ type nameReferenceTransformer struct {
 	backRefs []config.NameBackReferences
 }
 
-var _ Transformer = &nameReferenceTransformer{}
+var _ resmap.Transformer = &nameReferenceTransformer{}
 
 // NewNameReferenceTransformer constructs a nameReferenceTransformer
 // with a given slice of NameBackReferences.
-func NewNameReferenceTransformer(br []config.NameBackReferences) Transformer {
+func NewNameReferenceTransformer(br []config.NameBackReferences) resmap.Transformer {
 	if br == nil {
 		log.Fatal("backrefs not expected to be nil")
 	}

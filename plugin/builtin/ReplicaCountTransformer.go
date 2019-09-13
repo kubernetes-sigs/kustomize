@@ -20,11 +20,6 @@ type ReplicaCountTransformerPlugin struct {
 	FieldSpecs []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
-//noinspection GoUnusedGlobalVariable
-func NewReplicaCountTransformerPlugin() *ReplicaCountTransformerPlugin {
-	return &ReplicaCountTransformerPlugin{}
-}
-
 func (p *ReplicaCountTransformerPlugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
 
@@ -87,4 +82,8 @@ func (p *ReplicaCountTransformerPlugin) addReplicas(in interface{}) (interface{}
 		return nil, fmt.Errorf("%#v is expected to be %T", in, m)
 	}
 	return p.Replica.Count, nil
+}
+
+func NewReplicaCountTransformerPlugin() resmap.TransformerPlugin {
+	return &ReplicaCountTransformerPlugin{}
 }

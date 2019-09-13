@@ -16,11 +16,6 @@ import (
 // (like ValidatingWebhookConfiguration) last.
 type LegacyOrderTransformerPlugin struct{}
 
-//noinspection GoUnusedGlobalVariable
-func NewLegacyOrderTransformerPlugin() *LegacyOrderTransformerPlugin {
-	return &LegacyOrderTransformerPlugin{}
-}
-
 // Nothing needed for configuration.
 func (p *LegacyOrderTransformerPlugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
@@ -42,4 +37,8 @@ func (p *LegacyOrderTransformerPlugin) Transform(m resmap.ResMap) (err error) {
 		m.Append(r)
 	}
 	return nil
+}
+
+func NewLegacyOrderTransformerPlugin() resmap.TransformerPlugin {
+	return &LegacyOrderTransformerPlugin{}
 }

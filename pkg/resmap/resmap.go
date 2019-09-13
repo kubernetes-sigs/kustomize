@@ -11,12 +11,44 @@ import (
 	"regexp"
 
 	"github.com/pkg/errors"
-
+	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/yaml"
 )
+
+// A Transformer modifies an instance of ResMap.
+type Transformer interface {
+	// Transform modifies data in the argument,
+	// e.g. adding labels to resources that can be labelled.
+	Transform(m ResMap) error
+}
+
+// A Generator creates an instance of ResMap.
+type Generator interface {
+	Generate() (ResMap, error)
+}
+
+// Something that's configurable accepts a config
+// object (typically YAML in []byte form), and an
+// ifc.Loader to possible read more configuration
+// from the file system (e.g. patch files) and
+// a resource factory to build any type-sensitive
+// parts.  The factory could probably be factored out.
+type Configurable interface {
+	Config(ldr ifc.Loader, rf *Factory, config []byte) error
+}
+
+type GeneratorPlugin interface {
+	Generator
+	Configurable
+}
+
+type TransformerPlugin interface {
+	Transformer
+	Configurable
+}
 
 // ResMap is an interface describing operations on the
 // core kustomize data structure, a list of Resources.

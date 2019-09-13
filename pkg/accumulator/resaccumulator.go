@@ -135,7 +135,7 @@ func (ra *ResAccumulator) makeVarReplacementMap() (map[string]interface{}, error
 	return result, nil
 }
 
-func (ra *ResAccumulator) Transform(t transformers.Transformer) error {
+func (ra *ResAccumulator) Transform(t resmap.Transformer) error {
 	return t.Transform(ra.resMap)
 }
 

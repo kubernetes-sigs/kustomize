@@ -16,11 +16,6 @@ type ConfigMapGeneratorPlugin struct {
 	types.ConfigMapArgs
 }
 
-//noinspection GoUnusedGlobalVariable
-func NewConfigMapGeneratorPlugin() *ConfigMapGeneratorPlugin {
-	return &ConfigMapGeneratorPlugin{}
-}
-
 func (p *ConfigMapGeneratorPlugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, config []byte) (err error) {
 	p.GeneratorOptions = types.GeneratorOptions{}
@@ -39,4 +34,8 @@ func (p *ConfigMapGeneratorPlugin) Config(
 
 func (p *ConfigMapGeneratorPlugin) Generate() (resmap.ResMap, error) {
 	return p.rf.FromConfigMapArgs(p.ldr, &p.GeneratorOptions, p.ConfigMapArgs)
+}
+
+func NewConfigMapGeneratorPlugin() resmap.GeneratorPlugin {
+	return &ConfigMapGeneratorPlugin{}
 }

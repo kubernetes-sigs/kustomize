@@ -15,11 +15,6 @@ type LabelTransformerPlugin struct {
 	FieldSpecs []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
-//noinspection GoUnusedGlobalVariable
-func NewLabelTransformerPlugin() *LabelTransformerPlugin {
-	return &LabelTransformerPlugin{}
-}
-
 func (p *LabelTransformerPlugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
 	p.Labels = nil
@@ -36,4 +31,8 @@ func (p *LabelTransformerPlugin) Transform(m resmap.ResMap) error {
 		return err
 	}
 	return t.Transform(m)
+}
+
+func NewLabelTransformerPlugin() resmap.TransformerPlugin {
+	return &LabelTransformerPlugin{}
 }

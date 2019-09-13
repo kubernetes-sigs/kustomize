@@ -21,10 +21,10 @@ import "sigs.k8s.io/kustomize/v3/pkg/resmap"
 // noOpTransformer contains a no-op transformer.
 type noOpTransformer struct{}
 
-var _ Transformer = &noOpTransformer{}
+var _ resmap.Transformer = &noOpTransformer{}
 
 // NewNoOpTransformer constructs a noOpTransformer.
-func NewNoOpTransformer() Transformer {
+func NewNoOpTransformer() resmap.Transformer {
 	return &noOpTransformer{}
 }
 

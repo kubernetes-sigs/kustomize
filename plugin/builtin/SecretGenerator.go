@@ -16,11 +16,6 @@ type SecretGeneratorPlugin struct {
 	types.SecretArgs
 }
 
-//noinspection GoUnusedGlobalVariable
-func NewSecretGeneratorPlugin() *SecretGeneratorPlugin {
-	return &SecretGeneratorPlugin{}
-}
-
 func (p *SecretGeneratorPlugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, config []byte) (err error) {
 	p.GeneratorOptions = types.GeneratorOptions{}
@@ -39,4 +34,8 @@ func (p *SecretGeneratorPlugin) Config(
 
 func (p *SecretGeneratorPlugin) Generate() (resmap.ResMap, error) {
 	return p.rf.FromSecretArgs(p.ldr, &p.GeneratorOptions, p.SecretArgs)
+}
+
+func NewSecretGeneratorPlugin() resmap.GeneratorPlugin {
+	return &SecretGeneratorPlugin{}
 }

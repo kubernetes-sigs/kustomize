@@ -24,25 +24,25 @@ import (
 
 // multiTransformer contains a list of transformers.
 type multiTransformer struct {
-	transformers         []Transformer
+	transformers         []resmap.Transformer
 	checkConflictEnabled bool
 }
 
-var _ Transformer = &multiTransformer{}
+var _ resmap.Transformer = &multiTransformer{}
 
 // NewMultiTransformer constructs a multiTransformer.
-func NewMultiTransformer(t []Transformer) Transformer {
+func NewMultiTransformer(t []resmap.Transformer) resmap.Transformer {
 	r := &multiTransformer{
-		transformers:         make([]Transformer, len(t)),
+		transformers:         make([]resmap.Transformer, len(t)),
 		checkConflictEnabled: false}
 	copy(r.transformers, t)
 	return r
 }
 
 // NewMultiTransformerWithConflictCheck constructs a multiTransformer with checking of conflicts.
-func NewMultiTransformerWithConflictCheck(t []Transformer) Transformer {
+func NewMultiTransformerWithConflictCheck(t []resmap.Transformer) resmap.Transformer {
 	r := &multiTransformer{
-		transformers:         make([]Transformer, len(t)),
+		transformers:         make([]resmap.Transformer, len(t)),
 		checkConflictEnabled: true}
 	copy(r.transformers, t)
 	return r
