@@ -603,8 +603,10 @@ func (m *resWrangler) AbsorbAll(other ResMap) error {
 func (m *resWrangler) appendReplaceOrMerge(
 	res *resource.Resource) error {
 	id := res.CurId()
-	// Maybe also try by current id if nothing matches?
 	matches := m.GetMatchingResourcesByOriginalId(id.Equals)
+	if len(matches) == 0 {
+		matches = m.GetMatchingResourcesByCurrentId(id.Equals)
+	}
 	switch len(matches) {
 	case 0:
 		switch res.Behavior() {
