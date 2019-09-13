@@ -26,6 +26,9 @@ var prefixSuffixFieldSpecsToSkip = []config.FieldSpec{
 	{
 		Gvk: gvk.Gvk{Kind: "CustomResourceDefinition"},
 	},
+	{
+		Gvk: gvk.Gvk{Group: "apiregistration.k8s.io", Kind: "APIService"},
+	},
 }
 
 func (p *PrefixSuffixTransformerPlugin) Config(
