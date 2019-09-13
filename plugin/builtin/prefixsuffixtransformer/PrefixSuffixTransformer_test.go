@@ -41,6 +41,11 @@ kind: CustomResourceDefinition
 metadata:
   name: crd
 ---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: apiservice
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -60,6 +65,11 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: crd
+---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: apiservice
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -95,6 +105,11 @@ kind: CustomResourceDefinition
 metadata:
   name: crd
 ---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: apiservice
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -117,6 +132,11 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: crd
+---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: apiservice
 ---
 apiVersion: v1
 kind: ConfigMap
