@@ -32,15 +32,26 @@ type Factory struct {
 // if any, with default config.
 func MakeTransformerConfig(
 	ldr ifc.Loader, paths []string) (*TransformerConfig, error) {
+
+	result := &TransformerConfig{}
+	var err error
+
+	//  merge and normalize Default Config
 	defaultcfg := MakeDefaultConfig()
-	if len(paths) == 0 {
-		return defaultcfg, nil
-	}
-	t2, err := NewFactory(ldr).FromFiles(defaultcfg, paths)
+	result, err = result.Merge(defaultcfg)
 	if err != nil {
 		return nil, err
 	}
-	return t2, nil
+	if len(paths) == 0 {
+		return defaultcfg, nil
+	}
+
+	//  merge and normalize user provided configurations
+	result, err = NewFactory(ldr).FromFiles(result, paths)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func NewFactory(l ifc.Loader) *Factory {

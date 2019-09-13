@@ -30,51 +30,14 @@ namePrefix:
 		t.Fatalf("unexpected error: %v", err)
 	}
 	expected := &TransformerConfig{
-		NamePrefix: []FieldSpecConfig{{
-			FieldSpec: FieldSpec{
+		NamePrefix: []FieldSpec{
+			{
 				Gvk:  gvk.Gvk{Kind: "SomeKind"},
 				Path: "nameprefix/path",
 			},
-		}},
-	}
-	if !reflect.DeepEqual(tcfg, expected) {
-		t.Fatalf("expected %v\n but got %v\n", expected, tcfg)
-	}
-}
-
-func TestMakeTransformerConfig(t *testing.T) {
-
-	ldr := loadertest.NewFakeLoader("/app")
-	ldr.AddFile("/app/mycrdonly.yaml", []byte(`
-namePrefix:
-- path: metadata/name
-  behavior: remove
-- path: metadata/name
-  kind: MyCRD
-  behavior: add
-`))
-	tcfg, err := MakeTransformerConfig(ldr, []string{"/app/mycrdonly.yaml"})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	expected := &TransformerConfig{
-		NamePrefix: []FieldSpecConfig{
-			{
-				FieldSpec: FieldSpec{
-					Gvk:                gvk.Gvk{Kind: "CustomResourceDefinition"},
-					Path:               "metadata/name",
-					SkipTransformation: true,
-				},
-			},
-			{
-				FieldSpec: FieldSpec{
-					Gvk:  gvk.Gvk{Kind: "MyCRD"},
-					Path: "metadata/name",
-				},
-			},
 		},
 	}
-	if !reflect.DeepEqual(tcfg.NamePrefixFieldSpecs(), expected.NamePrefixFieldSpecs()) {
-		t.Fatalf("expected %v\n but got %v\n", expected.NamePrefixFieldSpecs(), tcfg.NamePrefixFieldSpecs())
+	if !reflect.DeepEqual(tcfg, expected) {
+		t.Fatalf("expected %v\n but go6t %v\n", expected, tcfg)
 	}
 }

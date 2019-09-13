@@ -40,61 +40,12 @@ import (
 //   kind: Deployment
 //   path: spec/template/metadata/labels
 //   create: true
-//   behavior: ""|add|replace|remove
 // }
-
-// FieldSpecMergeBehavior specifies generation behavior of configmaps, secrets and maybe other resources.
-type FieldSpecMergeBehavior int
-
-const (
-	// BehaviorUnspecified is an Unspecified behavior; typically treated as a Add.
-	BehaviorUnspecified FieldSpecMergeBehavior = iota
-	// BehaviorCreate add a new fieldspec.
-	BehaviorAdd
-	// BehaviorReplace replaces a fieldspec.
-	BehaviorReplace
-	// BehaviorRemove removes the fieldspec
-	BehaviorRemove
-)
-
-// String converts a FieldSpecMergeBehavior to a string.
-func (b FieldSpecMergeBehavior) String() string {
-	switch b {
-	case BehaviorReplace:
-		return "replace"
-	case BehaviorRemove:
-		return "remove"
-	case BehaviorAdd:
-		return "add"
-	default:
-		return "unspecified"
-	}
-}
-
-// NewGenerationBehavior converts a string to a FieldSpecMergeBehavior.
-func NewFieldSpecMergeBehavior(s string) FieldSpecMergeBehavior {
-	switch s {
-	case "replace":
-		return BehaviorReplace
-	case "remove":
-		return BehaviorRemove
-	case "add":
-		return BehaviorAdd
-	default:
-		return BehaviorUnspecified
-	}
-}
-
 type FieldSpec struct {
 	gvk.Gvk            `json:",inline,omitempty" yaml:",inline,omitempty"`
 	Path               string `json:"path,omitempty" yaml:"path,omitempty"`
 	CreateIfNotPresent bool   `json:"create,omitempty" yaml:"create,omitempty"`
 	SkipTransformation bool   `json:"skip,omitempty" yaml:"skip,omitempty"`
-}
-
-type FieldSpecConfig struct {
-	FieldSpec `json:",inline,omitempty" yaml:",inline,omitempty"`
-	Behavior  string `json:"behavior,omitempty" yaml:"behavior,omitempty"`
 }
 
 const (
@@ -104,7 +55,7 @@ const (
 
 func (fs FieldSpec) String() string {
 	return fmt.Sprintf(
-		"%s:%v:%v:%s", fs.Gvk.String(), fs.CreateIfNotPresent, fs.SkipTransformation, fs.Path)
+		"%s:%v:%s", fs.Gvk.String(), fs.CreateIfNotPresent, fs.Path)
 }
 
 // TODO(jeb): Method needs to be improve deal with multiple
@@ -114,8 +65,8 @@ func (fs FieldSpec) ArePathEquals(other FieldSpec) bool {
 }
 
 // If true, the primary key is the same, but other fields might not be.
-func (fs FieldSpec) effectivelyEquals(other FieldSpecConfig) bool {
-	return fs.IsSelected(&other.Gvk) && fs.ArePathEquals(other.FieldSpec)
+func (fs FieldSpec) effectivelyEquals(other FieldSpec) bool {
+	return fs.IsSelected(&other.Gvk) && fs.ArePathEquals(other)
 }
 
 // PathSlice converts the path string to a slice of strings,
@@ -146,7 +97,7 @@ func (fs FieldSpec) PathSlice() []string {
 	return result
 }
 
-type fsSlice []FieldSpecConfig
+type fsSlice []FieldSpec
 
 func (s fsSlice) Len() int      { return len(s) }
 func (s fsSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
@@ -173,39 +124,19 @@ func (s fsSlice) mergeAll(incoming fsSlice) (result fsSlice, err error) {
 // If the item's primary key is already present, and there are no
 // conflicts, it is ignored (we don't want duplicates).
 // If there is a conflict, the merge fails.
-func (s fsSlice) mergeOne(x FieldSpecConfig) (fsSlice, error) {
+func (s fsSlice) mergeOne(x FieldSpec) (fsSlice, error) {
 	i := s.intersect(x)
-	behavior := NewFieldSpecMergeBehavior(x.Behavior)
-	switch behavior {
-	case BehaviorAdd, BehaviorUnspecified:
-		if i > -1 {
-			// It's already there.
-			if (s[i].SkipTransformation == x.SkipTransformation) && (s[i].CreateIfNotPresent != x.CreateIfNotPresent) {
-				return nil, fmt.Errorf("conflicting fieldspecs exist %v and %v", x, s[i])
-			}
-			return s, nil
+	if i > -1 {
+		// It's already there.
+		if (s[i].SkipTransformation == x.SkipTransformation) && (s[i].CreateIfNotPresent != x.CreateIfNotPresent) {
+			return nil, fmt.Errorf("conflicting fieldspecs")
 		}
-		return append(s, x), nil
-	case BehaviorRemove:
-		if i == -1 {
-			return nil, fmt.Errorf("remove behavior: fieldspec does not exist %v", x)
-		}
-		copy(s[i:], s[i+1:])
-		s[len(s)-1] = FieldSpecConfig{}
-		s = s[:len(s)-1]
 		return s, nil
-	case BehaviorReplace:
-		if i == -1 {
-			return nil, fmt.Errorf("replace behavior: fieldspec does not exist %v", x)
-		}
-		s[i] = x
-		return s, nil
-	default:
-		return nil, fmt.Errorf("unsupported behavior [%s]", x.Behavior)
 	}
+	return append(s, x), nil
 }
 
-func (s fsSlice) index(fs FieldSpecConfig) int {
+func (s fsSlice) index(fs FieldSpec) int {
 	for i, x := range s {
 		if x.effectivelyEquals(fs) {
 			return i
@@ -216,7 +147,7 @@ func (s fsSlice) index(fs FieldSpecConfig) int {
 
 // todo(jeb): This should most likely be updated to return
 // an array instead of just an index.
-func (s fsSlice) intersect(fs FieldSpecConfig) int {
+func (s fsSlice) intersect(fs FieldSpec) int {
 	for i, x := range s {
 		if (x.Gvk.Kind == fs.Gvk.Kind) && x.effectivelyEquals(fs) {
 			return i
@@ -229,11 +160,11 @@ func (s fsSlice) intersect(fs FieldSpecConfig) int {
 // utility method.
 type FieldSpecs []FieldSpec
 
-// Create a new FieldSpecs out of []FieldSpecConfig
+// Create a new FieldSpecs out of []FieldSpec
 func NewFieldSpecs(selected fsSlice) FieldSpecs {
 	s := FieldSpecs{}
 	for _, x := range selected {
-		s = append(s, x.FieldSpec)
+		s = append(s, x)
 	}
 	return s
 }

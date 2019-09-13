@@ -26,16 +26,6 @@ type plugin struct {
 //noinspection GoUnusedGlobalVariable
 var KustomizePlugin plugin
 
-// Not placed in a file yet due to lack of demand.
-var prefixSuffixFieldSpecsToSkip = []config.FieldSpec{
-	{
-		Gvk: gvk.Gvk{Kind: "CustomResourceDefinition"},
-	},
-	{
-		Gvk: gvk.Gvk{Group: "apiregistration.k8s.io", Kind: "APIService"},
-	},
-}
-
 func (p *plugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
 	p.Prefix = ""

@@ -20,11 +20,6 @@ type PrefixSuffixTransformerPlugin struct {
 	FieldSpecs []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
-//noinspection GoUnusedGlobalVariable
-func NewPrefixSuffixTransformerPlugin() *PrefixSuffixTransformerPlugin {
-	return &PrefixSuffixTransformerPlugin{}
-}
-
 func (p *PrefixSuffixTransformerPlugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
 	p.Prefix = ""

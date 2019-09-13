@@ -30,6 +30,10 @@ fieldSpecs:
   - path: metadata/name
     kind: CustomResourceDefinition
     skip: true
+  - path: metadata/name
+    kind: APIService
+    group: apiregistration.k8s.io
+    skip: true
 `, `
 apiVersion: v1
 kind: Service

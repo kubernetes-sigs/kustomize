@@ -22,8 +22,6 @@ import (
 	"log"
 	"sort"
 
-	"github.com/pkg/errors"
-
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config/defaultconfig"
 )
 
@@ -69,19 +67,25 @@ func (t *TransformerConfig) sortFields() {
 
 // AddPrefixFieldSpec adds a FieldSpec to NamePrefix
 func (t *TransformerConfig) AddPrefixFieldSpec(fs FieldSpec) (err error) {
-	t.NamePrefix, err = t.NamePrefix.mergeOne(FieldSpecConfig{FieldSpec: fs, Behavior: "add"})
+	t.NamePrefix, err = t.NamePrefix.mergeOne(fs)
+	return err
+}
+
+// AddSuffixFieldSpec adds a FieldSpec to NameSuffix
+func (t *TransformerConfig) AddSuffixFieldSpec(fs FieldSpec) (err error) {
+	t.NameSuffix, err = t.NameSuffix.mergeOne(fs)
 	return err
 }
 
 // AddLabelFieldSpec adds a FieldSpec to CommonLabels
 func (t *TransformerConfig) AddLabelFieldSpec(fs FieldSpec) (err error) {
-	t.CommonLabels, err = t.CommonLabels.mergeOne(FieldSpecConfig{FieldSpec: fs, Behavior: "add"})
+	t.CommonLabels, err = t.CommonLabels.mergeOne(fs)
 	return err
 }
 
 // AddAnnotationFieldSpec adds a FieldSpec to CommonAnnotations
 func (t *TransformerConfig) AddAnnotationFieldSpec(fs FieldSpec) (err error) {
-	t.CommonAnnotations, err = t.CommonAnnotations.mergeOne(FieldSpecConfig{FieldSpec: fs, Behavior: "add"})
+	t.CommonAnnotations, err = t.CommonAnnotations.mergeOne(fs)
 	return err
 }
 
@@ -102,62 +106,41 @@ func (t *TransformerConfig) Merge(input *TransformerConfig) (
 	merged = &TransformerConfig{}
 	merged.NamePrefix, err = t.NamePrefix.mergeAll(input.NamePrefix)
 	if err != nil {
-		return nil, errors.Wrap(err, "NamePrefix")
+		return nil, err
+	}
+	merged.NameSuffix, err = t.NameSuffix.mergeAll(input.NameSuffix)
+	if err != nil {
+		return nil, err
 	}
 	merged.NameSpace, err = t.NameSpace.mergeAll(input.NameSpace)
 	if err != nil {
-		return nil, errors.Wrap(err, "NameSpace")
+		return nil, err
 	}
 	merged.CommonAnnotations, err = t.CommonAnnotations.mergeAll(
 		input.CommonAnnotations)
 	if err != nil {
-		return nil, errors.Wrap(err, "CommonAnnotations")
+		return nil, err
 	}
 	merged.CommonLabels, err = t.CommonLabels.mergeAll(input.CommonLabels)
 	if err != nil {
-		return nil, errors.Wrap(err, "CommonLabels")
+		return nil, err
 	}
 	merged.VarReference, err = t.VarReference.mergeAll(input.VarReference)
 	if err != nil {
-		return nil, errors.Wrap(err, "VarReference")
+		return nil, err
 	}
 	merged.NameReference, err = t.NameReference.mergeAll(input.NameReference)
 	if err != nil {
-		return nil, errors.Wrap(err, "NameReference")
+		return nil, err
 	}
 	merged.Images, err = t.Images.mergeAll(input.Images)
 	if err != nil {
-		return nil, errors.Wrap(err, "Images")
+		return nil, err
 	}
 	merged.Replicas, err = t.Replicas.mergeAll(input.Replicas)
 	if err != nil {
-		return nil, errors.Wrap(err, "Replicas`")
+		return nil, err
 	}
 	merged.sortFields()
 	return merged, nil
-}
-
-func (t *TransformerConfig) NamePrefixFieldSpecs() FieldSpecs {
-	return NewFieldSpecs(t.NamePrefix)
-}
-func (t *TransformerConfig) NameSuffixFieldSpecs() FieldSpecs {
-	return NewFieldSpecs(t.NameSuffix)
-}
-func (t *TransformerConfig) NameSpaceFieldSpecs() FieldSpecs {
-	return NewFieldSpecs(t.NameSpace)
-}
-func (t *TransformerConfig) CommonLabelsFieldSpecs() FieldSpecs {
-	return NewFieldSpecs(t.CommonLabels)
-}
-func (t *TransformerConfig) CommonAnnotationsFieldSpecs() FieldSpecs {
-	return NewFieldSpecs(t.CommonAnnotations)
-}
-func (t *TransformerConfig) VarReferenceFieldSpecs() FieldSpecs {
-	return NewFieldSpecs(t.VarReference)
-}
-func (t *TransformerConfig) ImagesFieldSpecs() FieldSpecs {
-	return NewFieldSpecs(t.Images)
-}
-func (t *TransformerConfig) ReplicasFieldSpecs() FieldSpecs {
-	return NewFieldSpecs(t.Replicas)
 }

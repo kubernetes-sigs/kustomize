@@ -31,6 +31,12 @@ namespace:
 - path: subjects
   kind: ClusterRoleBinding
 
+# Would make sense to skip those
+# by default but would break backward
+# compatility. 
+# - path: metadata/name
+#   kind: Namespace
+
 # skip those ClusterWide entities
 - path: metadata/namespace
   kind: APIService
