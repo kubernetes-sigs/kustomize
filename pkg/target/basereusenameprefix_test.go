@@ -42,26 +42,26 @@ import (
 func TestBaseReuseNameConflict(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/app")
 	th.WriteK("/app/component1/base", `
-bases:
+resources:
   - ../../shared
 
 namePrefix: component1-
 `)
 	th.WriteK("/app/component1/overlay", `
-bases:
+resources:
   - ../base
 
 namePrefix: overlay-
 `)
 
 	th.WriteK("/app/component2/base", `
-bases:
+resources:
   - ../../shared
 
 namePrefix: component2-
 `)
 	th.WriteK("/app/component2/overlay", `
-bases:
+resources:
   - ../base
 
 namePrefix: overlay-
@@ -112,7 +112,7 @@ spec:
 `)
 
 	th.WriteK("/app", `
-bases:
+resources:
   - component1/overlay
   - component2/overlay
 `)
