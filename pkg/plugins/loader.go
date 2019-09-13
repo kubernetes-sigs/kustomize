@@ -11,17 +11,13 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 )
-
-type Configurable interface {
-	Config(ldr ifc.Loader, rf *resmap.Factory, config []byte) error
-}
 
 type Loader struct {
 	pc *types.PluginConfig
@@ -34,8 +30,8 @@ func NewLoader(
 }
 
 func (l *Loader) LoadGenerators(
-	ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Generator, error) {
-	var result []transformers.Generator
+	ldr ifc.Loader, rm resmap.ResMap) ([]resmap.Generator, error) {
+	var result []resmap.Generator
 	for _, res := range rm.Resources() {
 		g, err := l.LoadGenerator(ldr, res)
 		if err != nil {
@@ -47,12 +43,12 @@ func (l *Loader) LoadGenerators(
 }
 
 func (l *Loader) LoadGenerator(
-	ldr ifc.Loader, res *resource.Resource) (transformers.Generator, error) {
+	ldr ifc.Loader, res *resource.Resource) (resmap.Generator, error) {
 	c, err := l.loadAndConfigurePlugin(ldr, res)
 	if err != nil {
 		return nil, err
 	}
-	g, ok := c.(transformers.Generator)
+	g, ok := c.(resmap.Generator)
 	if !ok {
 		return nil, fmt.Errorf("plugin %s not a generator", res.OrgId())
 	}
@@ -60,8 +56,8 @@ func (l *Loader) LoadGenerator(
 }
 
 func (l *Loader) LoadTransformers(
-	ldr ifc.Loader, rm resmap.ResMap) ([]transformers.Transformer, error) {
-	var result []transformers.Transformer
+	ldr ifc.Loader, rm resmap.ResMap) ([]resmap.Transformer, error) {
+	var result []resmap.Transformer
 	for _, res := range rm.Resources() {
 		t, err := l.LoadTransformer(ldr, res)
 		if err != nil {
@@ -73,12 +69,12 @@ func (l *Loader) LoadTransformers(
 }
 
 func (l *Loader) LoadTransformer(
-	ldr ifc.Loader, res *resource.Resource) (transformers.Transformer, error) {
+	ldr ifc.Loader, res *resource.Resource) (resmap.Transformer, error) {
 	c, err := l.loadAndConfigurePlugin(ldr, res)
 	if err != nil {
 		return nil, err
 	}
-	t, ok := c.(transformers.Transformer)
+	t, ok := c.(resmap.Transformer)
 	if !ok {
 		return nil, fmt.Errorf("plugin %s not a transformer", res.OrgId())
 	}
@@ -101,13 +97,25 @@ func (l *Loader) absolutePluginPath(id resid.ResId) string {
 	return AbsolutePluginPath(l.pc, id)
 }
 
-// TODO: https://github.com/kubernetes-sigs/kustomize/issues/1164
+func isBuiltinPlugin(res *resource.Resource) bool {
+	// TODO: the special string should appear in Group, not Version.
+	return res.GetGvk().Group == "" &&
+		res.GetGvk().Version == BuiltinPluginApiVersion
+}
+
 func (l *Loader) loadAndConfigurePlugin(
-	ldr ifc.Loader, res *resource.Resource) (Configurable, error) {
-	if !l.pc.Enabled {
-		return nil, NotEnabledErr(res.OrgId().Kind)
+	ldr ifc.Loader, res *resource.Resource) (c resmap.Configurable, err error) {
+	if isBuiltinPlugin(res) {
+		// Instead of looking for and loading a .so file, just
+		// instantiate the plugin from a generated factory
+		// function (see "pluginator").  Being able to do this
+		// is what makes a plugin "builtin".
+		c, err = l.makeBuiltinPlugin(res.GetGvk())
+	} else if l.pc.Enabled {
+		c, err = l.loadPlugin(res.OrgId())
+	} else {
+		err = NotEnabledErr(res.OrgId().Kind)
 	}
-	c, err := l.loadPlugin(res.OrgId())
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +131,18 @@ func (l *Loader) loadAndConfigurePlugin(
 	return c, nil
 }
 
-func (l *Loader) loadPlugin(resId resid.ResId) (Configurable, error) {
+func (l *Loader) makeBuiltinPlugin(r gvk.Gvk) (resmap.Configurable, error) {
+	bpt := GetBuiltinPluginType(r.Kind)
+	if f, ok := GeneratorFactories[bpt]; ok {
+		return f(), nil
+	}
+	if f, ok := TransformerFactories[bpt]; ok {
+		return f(), nil
+	}
+	return nil, errors.Errorf("unable to load builtin %s", r)
+}
+
+func (l *Loader) loadPlugin(resId resid.ResId) (resmap.Configurable, error) {
 	p := NewExecPlugin(l.absolutePluginPath(resId))
 	if p.isAvailable() {
 		return p, nil
@@ -141,9 +160,9 @@ func (l *Loader) loadPlugin(resId resid.ResId) (Configurable, error) {
 // but the loaded .so files are in shared memory, so one will get
 // "this plugin already loaded" errors if the registry is maintained
 // as a Loader instance variable.  So make it a package variable.
-var registry = make(map[string]Configurable)
+var registry = make(map[string]resmap.Configurable)
 
-func (l *Loader) loadGoPlugin(id resid.ResId) (Configurable, error) {
+func (l *Loader) loadGoPlugin(id resid.ResId) (resmap.Configurable, error) {
 	regId := relativePluginPath(id)
 	if c, ok := registry[regId]; ok {
 		return copyPlugin(c), nil
@@ -159,7 +178,7 @@ func (l *Loader) loadGoPlugin(id resid.ResId) (Configurable, error) {
 			err, "plugin %s doesn't have symbol %s",
 			regId, PluginSymbol)
 	}
-	c, ok := symbol.(Configurable)
+	c, ok := symbol.(resmap.Configurable)
 	if !ok {
 		return nil, fmt.Errorf("plugin %s not configurable", regId)
 	}
@@ -167,10 +186,10 @@ func (l *Loader) loadGoPlugin(id resid.ResId) (Configurable, error) {
 	return copyPlugin(c), nil
 }
 
-func copyPlugin(c Configurable) Configurable {
+func copyPlugin(c resmap.Configurable) resmap.Configurable {
 	indirect := reflect.Indirect(reflect.ValueOf(c))
 	newIndirect := reflect.New(indirect.Type())
 	newIndirect.Elem().Set(reflect.ValueOf(indirect.Interface()))
 	newNamed := newIndirect.Interface()
-	return newNamed.(Configurable)
+	return newNamed.(resmap.Configurable)
 }

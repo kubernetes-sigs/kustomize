@@ -113,7 +113,7 @@ transformers:
 	if err == nil {
 		t.Fatalf("expected error")
 	}
-	if !strings.Contains(err.Error(), "unable to load plugin StringPrefixer") {
+	if !strings.Contains(err.Error(), "unable to load external plugin StringPrefixer") {
 		t.Fatalf("unexpected err: %v", err)
 	}
 }
