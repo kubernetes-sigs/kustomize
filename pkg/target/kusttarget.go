@@ -317,7 +317,7 @@ func (kt *KustTarget) configureExternalTransformers() ([]resmap.Transformer, err
 	return kt.pLdr.LoadTransformers(kt.ldr, ra.ResMap())
 }
 
-func (kt *KustTarget) LoadExternalTransformers(transformernames []string) (transformers.Transformer, error) {
+func (kt *KustTarget) LoadExternalTransformers(transformernames []string) (resmap.Transformer, error) {
 	// Load the corresponding transformer as an external transformer
 	ra := accumulator.MakeEmptyAccumulator()
 	err := kt.accumulateResources(ra, transformernames)

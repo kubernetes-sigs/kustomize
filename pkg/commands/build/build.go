@@ -19,7 +19,6 @@ import (
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/target"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers"
 	"sigs.k8s.io/kustomize/v3/plugin/builtin"
 	"sigs.k8s.io/yaml"
 )
@@ -177,7 +176,7 @@ func (o *Options) RunBuildPrune(
 }
 
 // Ovverall sorting is be performed by a plugin.
-func (o *Options) loadSortTransformerPlugin(kt *target.KustTarget) (transformers.Transformer, error) {
+func (o *Options) loadSortTransformerPlugin(kt *target.KustTarget) (resmap.Transformer, error) {
 
 	// The overall sorting is performed by a plugin.
 	switch o.outOrder {
