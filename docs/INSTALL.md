@@ -30,6 +30,9 @@ Requires [Go] v1.12 or higher:
 go install sigs.k8s.io/kustomize/v3/cmd/kustomize
 ```
 
+**NOTE**: The above uses a versioned import path. You will need to run the
+above with `GO111MODULE=on`.
+
 ### Other methods
 
 #### macOS
