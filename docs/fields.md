@@ -38,9 +38,7 @@ What transformations (customizations) should be applied?
 | [namePrefix](#nameprefix) | string | Prepends value to the names of all resources |
 | [nameSuffix](#namesuffix) | string | The value is appended to the names of all resources. |
 | [replicas](#replicas) | list | Replicas modifies the number of replicas of a resource. |
-| [patches](#patches) | list | Each entry should resolve to a patch that can be applied to multiple targets. |
-|[patchesStrategicMerge](#patchesstrategicmerge)| list |Each entry in this list should resolve to a partial or complete resource definition file.|
-|[patchesJson6902](#patchesjson6902)| list  |Each entry in this list should resolve to a kubernetes object and a JSON patch that will be applied to the object.|
+| [patches](#patches) | list | Each entry should resolve to a patch that can be applied to one or more targets. |
 |[transformers](#transformers)|list|[plugin](plugins) configuration files|
 
 
@@ -312,6 +310,15 @@ is equivalent to `^myapp$`.
 
 ### patchesStrategicMerge
 
+The `patchesStrategicMerge` field was deprecated in v3.2.0.
+
+Move entries into the [patches](#resources)
+field by running `kustomize edit fix`.
+Currently `patches` [don't detect validation](https://github.com/kubernetes-sigs/kustomize/issues/1518) among
+different patches,
+please make sure there is no conflict among patches after running
+fix. 
+
 Each entry in this list should be either a relative
 file path or an inline content
 resolving to a partial or complete resource
@@ -356,6 +363,15 @@ several fields / slice elements from an object create a single
 patch that performs all the needed deletions.
 
 ### patchesJson6902
+
+The `patchesJson6902` field was deprecated in v3.2.0.
+
+Move entries into the [patches](#resources)
+field by running `kustomize edit fix`.
+Currently `patches` [don't detect validation](https://github.com/kubernetes-sigs/kustomize/issues/1518) among
+different patches,
+please make sure there is no conflict among patches after running
+fix. 
 
 Each entry in this list should resolve to
 a kubernetes object and a JSON patch that will be applied
