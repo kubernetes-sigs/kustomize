@@ -110,26 +110,29 @@ func (kf *KunstructuredFactoryImpl) validate(u unstructured.Unstructured) error 
 		return fmt.Errorf("missing metadata.name in object %v", u)
 	}
 
-	if result, path := checkItemNil(u.Object); result {
+	if result, path := checkListItemNil(u.Object); result {
 		return fmt.Errorf("empty item at %v in object %v", path, u)
 	}
 	return nil
 }
 
-func checkItemNil(in interface{}) (bool, string) {
-	if in == nil {
-		return true, ""
-	}
+func checkListItemNil(in interface{}) (bool, string) {
+	//if in == nil {
+	//	return true, ""
+	//}
 	switch v := in.(type) {
 	case map[string]interface{}:
 		for key, s := range v {
-			if result, path := checkItemNil(s); result {
+			if result, path := checkListItemNil(s); result {
 				return result, key + "/" + path
 			}
 		}
 	case []interface{}:
 		for index, s := range v {
-			if result, path := checkItemNil(s); result {
+			if s == nil {
+				return true, ""
+			}
+			if result, path := checkListItemNil(s); result {
 				return result, "[" + strconv.Itoa(index) + "]/" + path
 			}
 		}
