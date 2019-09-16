@@ -117,9 +117,6 @@ func (kf *KunstructuredFactoryImpl) validate(u unstructured.Unstructured) error 
 }
 
 func checkListItemNil(in interface{}) (bool, string) {
-	//if in == nil {
-	//	return true, ""
-	//}
 	switch v := in.(type) {
 	case map[string]interface{}:
 		for key, s := range v {
