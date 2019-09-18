@@ -36,12 +36,15 @@ type fakeFs struct {
 // MakeFakeFS returns an instance of fakeFs with no files in it.
 func MakeFakeFS() *fakeFs {
 	result := &fakeFs{m: map[string]*FakeFile{}}
-	result.Mkdir("/")
+	result.Mkdir(separator)
 	return result
 }
 
-// kustomizationContent is used in tests.
-const kustomizationContent = `apiVersion: kustomize.config.k8s.io/v1beta1
+const (
+	separator = string(filepath.Separator)
+	doubleSep = separator + separator
+	// kustomizationContent is used in tests.
+	kustomizationContent = `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: some-prefix
 nameSuffix: some-suffix
@@ -60,6 +63,7 @@ configMapGenerator: []
 # There could be secrets in Base, if just using a fork/rebase workflow
 secretGenerator: []
 `
+)
 
 // Create assures a fake file appears in the in-memory file system.
 func (fs *fakeFs) Create(name string) (File, error) {
@@ -67,6 +71,11 @@ func (fs *fakeFs) Create(name string) (File, error) {
 	f.open = true
 	fs.m[name] = f
 	return fs.m[name], nil
+}
+
+// RPath returns a rooted path, e.g. "/hey/foo" as opposed to "hey/foo".
+func (fs *fakeFs) RPath(elem ...string) string {
+	return separator + filepath.Join(elem...)
 }
 
 // Mkdir assures a fake directory appears in the in-memory file system.
@@ -139,8 +148,8 @@ func (fs *fakeFs) IsDir(name string) bool {
 	if found && f.dir {
 		return true
 	}
-	if !strings.HasSuffix(name, "/") {
-		name = name + "/"
+	if !strings.HasSuffix(name, separator) {
+		name = name + separator
 	}
 	for k := range fs.m {
 		if strings.HasPrefix(k, name) {
@@ -210,7 +219,8 @@ func (fs *fakeFs) lstat(path string) (*Fakefileinfo, error) {
 func (fs *fakeFs) join(elem ...string) string {
 	for i, e := range elem {
 		if e != "" {
-			return strings.Replace(strings.Join(elem[i:], "/"), "//", "/", -1)
+			return strings.Replace(
+				strings.Join(elem[i:], separator), doubleSep, separator, -1)
 		}
 	}
 	return ""
@@ -218,15 +228,15 @@ func (fs *fakeFs) join(elem ...string) string {
 
 func (fs *fakeFs) readDirNames(path string) []string {
 	var names []string
-	if !strings.HasSuffix(path, "/") {
-		path += "/"
+	if !strings.HasSuffix(path, separator) {
+		path += separator
 	}
-	pathSegments := strings.Count(path, "/")
+	pathSegments := strings.Count(path, separator)
 	for name := range fs.m {
 		if name == path {
 			continue
 		}
-		if strings.Count(name, "/") > pathSegments {
+		if strings.Count(name, separator) > pathSegments {
 			continue
 		}
 		if strings.HasPrefix(name, path) {
