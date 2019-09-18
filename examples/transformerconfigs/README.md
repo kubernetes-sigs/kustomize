@@ -175,4 +175,4 @@ metadata:
   annotations:
     foo.k8s.io/bar: baz
 ```
-Kustomize supports escaping special characters in path, e.g `matadata/annotations/foo.k8s.io\/bar`
+Kustomize supports escaping special characters in path, e.g `metadata/annotations/foo.k8s.io\/bar`
