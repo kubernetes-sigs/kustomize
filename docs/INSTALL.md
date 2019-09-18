@@ -30,8 +30,11 @@ Requires [Go] v1.12 or higher:
 go install sigs.k8s.io/kustomize/v3/cmd/kustomize
 ```
 
-**NOTE**: The above uses a versioned import path. You will need to run the
-above with `GO111MODULE=on`.
+> With [Go v1.12](https://golang.org/doc/go1.12#modules), prefix the above command with `GO111MODULE=on`, e.g.
+> ```
+> GO111MODULE=on go install sigs.k8s.io/kustomize/v3/cmd/kustomize
+> ```
+> This shouldn't be necessary with [Go v1.13](https://golang.org/doc/go1.13#modules).
 
 ### Other methods
 
