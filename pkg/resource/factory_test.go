@@ -99,21 +99,6 @@ items:
 apiVersion: v1
 kind: List
 `
-	patchList5 := types.PatchStrategicMerge("patch8.yaml")
-	patch8 := `
-apiVersion: builtin
-kind: ConfigMapGenerator
-metadata:
-  name: kube100-site
-  labels:
-    app: web
-    testList:
-      - testA
-      - 
-literals:
-- FRUIT=apple
-- VEGETABLE=carrot
-`
 	testDeploymentSpec := map[string]interface{}{
 		"template": map[string]interface{}{
 			"spec": map[string]interface{}{
@@ -154,7 +139,6 @@ literals:
 	l.AddFile("/"+string(patchList2), []byte(patch5))
 	l.AddFile("/"+string(patchList3), []byte(patch6))
 	l.AddFile("/"+string(patchList4), []byte(patch7))
-	l.AddFile("/"+string(patchList5), []byte(patch8))
 
 	tests := []struct {
 		name        string
@@ -203,12 +187,6 @@ literals:
 			input:       []types.PatchStrategicMerge{patchList4},
 			expectedOut: []*Resource{},
 			expectedErr: false,
-		},
-		{
-			name:        "listWithEmptyList",
-			input:       []types.PatchStrategicMerge{patchList5},
-			expectedOut: []*Resource{},
-			expectedErr: true,
 		},
 	}
 	for _, test := range tests {
