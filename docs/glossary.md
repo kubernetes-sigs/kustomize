@@ -36,6 +36,7 @@
 [rpm]: https://en.wikipedia.org/wiki/Rpm_(software)
 [strategic-merge]: https://git.k8s.io/community/contributors/devel/sig-api-machinery/strategic-merge-patch.md
 [target]: #target
+[transformer]: #transformer
 [variant]: #variant
 [variants]: #variant
 [workflow]: workflows.md
