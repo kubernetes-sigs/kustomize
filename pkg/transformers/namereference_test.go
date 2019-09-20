@@ -52,7 +52,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 			},
 		}).Add(
 		map[string]interface{}{
-			"group":      "extensions",
+			"group":      "networking.k8s.io",
 			"apiVersion": "v1beta1",
 			"kind":       "Ingress",
 			"metadata": map[string]interface{}{
@@ -375,7 +375,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 			},
 		}).ReplaceResource(
 		map[string]interface{}{
-			"group":      "extensions",
+			"group":      "networking.k8s.io",
 			"apiVersion": "v1beta1",
 			"kind":       "Ingress",
 			"metadata": map[string]interface{}{
