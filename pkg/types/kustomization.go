@@ -17,7 +17,7 @@ const (
 // No need for a direct dependence; the fields are stable.
 type TypeMeta struct {
 	Kind       string `json:"kind,omitempty" yaml:"kind,omitempty"`
-	APIVersion string `json:"apiVersion,omitempty" yaml:"apiversion,omitempty"`
+	APIVersion string `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty"`
 }
 
 // Kustomization holds the information needed to generate customized k8s api resources.
