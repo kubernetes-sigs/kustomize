@@ -244,6 +244,46 @@ kustomize uses an exec plugin adapter to provide
 marshalled resources on `stdin` and capture
 `stdout` for further processing.
 
+#### Generator Options
+
+A generator exec plugin can adjust the generator options for the resources it emits by setting one of the following internal annotations. 
+
+> NOTE: These annotations are local to kustomize and will not be included in the final output.
+
+**`kustomize.config.k8s.io/needs-hash`**
+
+Resources can be marked as needing to be processed by the internal hash transformer by including the `needs-hash` annotation. When set valid values for the annotation are `"true"` and `"false"` which respectively enable or disable hash suffixing for the resource. Omitting the annotation is equivalent to setting the value `"false"`.
+
+If this annotation is set on a resource not supported by the hash transformer the build will fail.
+
+Example:
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm-test
+  annotations:
+    kustomize.config.k8s.io/needs-hash: "true"
+data:
+  foo: bar   
+```
+
+**`kustomize.config.k8s.io/behavior`**
+
+The `behavior` annotation will influence how conflicts are handled for resources emitted by the plugin. Valid values include "create", "merge", and "replace" with "create" being the default. 
+
+Example:
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm-test
+  annotations:
+    kustomize.config.k8s.io/behavior: "merge"
+data:
+  foo: bar   
+```
+
 ### Go plugins
 
 Be sure to read [Go plugin caveats](goPluginCaveats.md).
