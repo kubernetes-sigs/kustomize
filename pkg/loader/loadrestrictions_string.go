@@ -29,13 +29,13 @@ func _() {
 	_ = x[none-2]
 }
 
-const _loadRestrictions_name = "unknownrootOnlynone"
+const _loadRestrictionsName = "unknownrootOnlynone"
 
-var _loadRestrictions_index = [...]uint8{0, 7, 15, 19}
+var _loadRestrictionsIndex = [...]uint8{0, 7, 15, 19}
 
 func (i loadRestrictions) String() string {
-	if i < 0 || i >= loadRestrictions(len(_loadRestrictions_index)-1) {
+	if i < 0 || i >= loadRestrictions(len(_loadRestrictionsIndex)-1) {
 		return "loadRestrictions(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _loadRestrictions_name[_loadRestrictions_index[i]:_loadRestrictions_index[i+1]]
+	return _loadRestrictionsName[_loadRestrictionsIndex[i]:_loadRestrictionsIndex[i+1]]
 }

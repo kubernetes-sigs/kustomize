@@ -15,7 +15,9 @@ function installHelm {
 }
 
 function installTools {
-  go install sigs.k8s.io/kustomize/pluginator
+  (cd internal/tools; go install github.com/monopole/mdrip)
+  (cd internal/tools; go install github.com/golangci/golangci-lint/cmd/golangci-lint)
+  (cd internal/tools; go install sigs.k8s.io/kustomize/pluginator)
 }
 
 function runFunc {
@@ -32,7 +34,7 @@ function runFunc {
 }
 
 function testGoLangCILint {
-  go run "github.com/golangci/golangci-lint/cmd/golangci-lint" run ./...
+  golangci-lint run ./...
 }
 
 function testGoTests {
@@ -64,7 +66,7 @@ function testExamplesAgainstLatestRelease {
   # Install latest release.
   (cd ~; go get sigs.k8s.io/kustomize/v3/cmd/kustomize@v3.2.0)
 
-  go run "github.com/monopole/mdrip" --mode test --label testAgainstLatestRelease ./examples
+  $(go env GOPATH)/bin/mdrip --mode test --label testAgainstLatestRelease ./examples
 
   if [ -z ${TRAVIS+x} ]; then
     echo " "
@@ -73,7 +75,7 @@ function testExamplesAgainstLatestRelease {
 
     # The following requires helm.
     # At the moment not asking travis to install it.
-    go run "github.com/monopole/mdrip" --mode test --label helmtest README.md ./examples/chart.md
+    $(go env GOPATH)/bin/mdrip --mode test --label helmtest README.md ./examples/chart.md
   fi
 }
 
@@ -84,7 +86,7 @@ function testExamplesAgainstHead {
   # To test examples of unreleased features, add
   # examples with code blocks annotated with some
   # label _other than_ @testAgainstLatestRelease.
-  go run "github.com/monopole/mdrip" --mode test --label testAgainstLatestRelease ./examples
+  $(go env GOPATH)/bin/mdrip --mode test --label testAgainstLatestRelease ./examples
 }
 
 function generateCode {
