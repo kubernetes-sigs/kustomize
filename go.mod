@@ -7,15 +7,16 @@ require (
 	github.com/go-openapi/spec v0.19.2
 	github.com/gogo/protobuf v1.3.0 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
+	github.com/golangci/golangci-lint v1.17.1
 	github.com/gorilla/mux v1.7.3 // indirect
 	github.com/gorilla/sessions v1.2.0 // indirect
 	github.com/gorilla/websocket v1.4.1 // indirect
-	github.com/monopole/mdrip v0.2.48 // indirect
+	github.com/monopole/mdrip v0.2.48
 	github.com/pkg/errors v0.8.1
 	github.com/russross/blackfriday v2.0.0+incompatible // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
-	github.com/spf13/cobra v0.0.2
-	github.com/spf13/pflag v1.0.3
+	github.com/spf13/cobra v0.0.5
+	github.com/spf13/pflag v1.0.5
 	gopkg.in/yaml.v2 v2.2.2
 	k8s.io/api v0.0.0-20190313235455-40a48860b5ab
 	k8s.io/apimachinery v0.0.0-20190313205120-d7deff9243b1
