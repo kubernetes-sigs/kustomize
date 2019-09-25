@@ -14,24 +14,8 @@ function installHelm {
   sudo mv linux-amd64/helm /usr/local/bin/helm
 }
 
-function doInstall {
-  local tool=$1
-  shift
-  if hash $tool 2>/dev/null; then
-    echo "$tool available."
-  else
-    echo "Installing ${tool}..."
-    eval $@
-  fi
-}
-
 function installTools {
-  doInstall mdrip \
-    'go get -u github.com/monopole/mdrip'
-  doInstall golangci-lint \
-    'curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.17.1'
-  doInstall pluginator \
-    'go install sigs.k8s.io/kustomize/pluginator'
+  go install sigs.k8s.io/kustomize/pluginator
 }
 
 function runFunc {
@@ -48,7 +32,7 @@ function runFunc {
 }
 
 function testGoLangCILint {
-  golangci-lint run ./...
+  go run "github.com/golangci/golangci-lint/cmd/golangci-lint" run ./...
 }
 
 function testGoTests {
@@ -80,7 +64,7 @@ function testExamplesAgainstLatestRelease {
   # Install latest release.
   go get sigs.k8s.io/kustomize/v3/cmd/kustomize
 
-  mdrip --mode test --label testAgainstLatestRelease ./examples
+  go run "github.com/monopole/mdrip" --mode test --label testAgainstLatestRelease ./examples
 
   if [ -z ${TRAVIS+x} ]; then
     echo " "
@@ -89,7 +73,7 @@ function testExamplesAgainstLatestRelease {
 
     # The following requires helm.
     # At the moment not asking travis to install it.
-    mdrip --mode test --label helmtest README.md ./examples/chart.md
+    go run "github.com/monopole/mdrip" --mode test --label helmtest README.md ./examples/chart.md
   fi
 }
 
@@ -100,7 +84,7 @@ function testExamplesAgainstHead {
   # To test examples of unreleased features, add
   # examples with code blocks annotated with some
   # label _other than_ @testAgainstLatestRelease.
-  mdrip --mode test --label testAgainstLatestRelease ./examples
+  go run "github.com/monopole/mdrip" --mode test --label testAgainstLatestRelease ./examples
 }
 
 function generateCode {
