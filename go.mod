@@ -6,7 +6,14 @@ require (
 	github.com/evanphx/json-patch v4.5.0+incompatible
 	github.com/go-openapi/spec v0.19.2
 	github.com/gogo/protobuf v1.3.0 // indirect
+	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
+	github.com/gorilla/mux v1.7.3 // indirect
+	github.com/gorilla/sessions v1.2.0 // indirect
+	github.com/gorilla/websocket v1.4.1 // indirect
+	github.com/monopole/mdrip v0.2.48 // indirect
 	github.com/pkg/errors v0.8.1
+	github.com/russross/blackfriday v2.0.0+incompatible // indirect
+	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/spf13/cobra v0.0.2
 	github.com/spf13/pflag v1.0.3
 	gopkg.in/yaml.v2 v2.2.2
