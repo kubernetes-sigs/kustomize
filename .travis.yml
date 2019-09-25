@@ -27,6 +27,7 @@ go_import_path: sigs.k8s.io/kustomize
 before_install:
   - source ./travis/consider-early-travis-exit.sh
   - curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.17.1
+  - GO111MODULE=on go get sigs.k8s.io/kustomize/pluginator@v1
   - go get -u github.com/monopole/mdrip
   # The following would install Helm if needed for some reason.
   # - wget https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz
@@ -37,7 +38,7 @@ before_install:
 install: true
 
 script:
-  - ./travis/pre-commit.sh
+  - env GO111MODULE=on ./travis/pre-commit.sh
 
 # TBD. Suppressing for now.
 notifications:
