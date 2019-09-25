@@ -1,4 +1,5 @@
-BIN_NAME=kustomize
+KUSTOMIZE_NAME=kustomize
+PLUGINATOR_NAME=pluginator
 
 COVER_FILE=coverage.out
 
@@ -18,10 +19,12 @@ generate-code:
 	./plugin/generateBuiltins.sh $(GOPATH)
 
 build:
-	go build -o $(BIN_NAME) cmd/kustomize/main.go
+	cd pluginator && go build -o $(PLUGINATOR_NAME) .
+	cd kustomize && go build -o $(KUSTOMIZE_NAME) ./main.go
 
 install:
-	go install $(PWD)/cmd/kustomize
+	cd pluginator && go install $(PWD)/pluginator
+	cd kustomize && go install $(PWD)/kustomize
 
 cover:
 	# The plugin directory eludes coverage, and is therefore omitted
@@ -30,8 +33,7 @@ cover:
 
 
 clean:
-	go clean
-	rm -f $(BIN_NAME)
+	cd kustomize && go clean && rm -f $(KUSTOMIZE_NAME)
 	rm -f $(COVER_FILE)
 
 .PHONY: test build install clean generate-code test-go test-lint cover
