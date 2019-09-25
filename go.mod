@@ -12,7 +12,6 @@ require (
 	// github.com/kubeflow/kubeflow/bootstrap/v3 v3.0.0-20190924054925-7a74c8752315
 	github.com/openshift/api v3.9.1-0.20190911180052-9f80b7806f58+incompatible
 	github.com/pkg/errors v0.8.1
-	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3
 	gopkg.in/yaml.v2 v2.2.2
 	istio.io/api v0.0.0-20190913194855-8920ca438254 // indirect

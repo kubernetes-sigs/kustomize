@@ -1,3 +1,4 @@
+// +build ignore
 // +build tools
 
 package tools

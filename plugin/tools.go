@@ -1,6 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// +build ignore
 // +build tools
 
 // This file exists to declare that package
