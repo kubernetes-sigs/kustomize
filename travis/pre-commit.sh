@@ -62,7 +62,7 @@ function testGoTests {
 function testExamplesAgainstLatestRelease {
   /bin/rm -f $(go env GOPATH)/bin/kustomize
   # Install latest release.
-  go get sigs.k8s.io/kustomize/v3/cmd/kustomize
+  (cd ~; go get sigs.k8s.io/kustomize/v3/cmd/kustomize@v3.2.0)
 
   go run "github.com/monopole/mdrip" --mode test --label testAgainstLatestRelease ./examples
 
@@ -80,7 +80,7 @@ function testExamplesAgainstLatestRelease {
 function testExamplesAgainstHead {
   /bin/rm -f $(go env GOPATH)/bin/kustomize
   # Install from head.
-  go install sigs.k8s.io/kustomize/v3/cmd/kustomize
+  (cd kustomize; go install .)
   # To test examples of unreleased features, add
   # examples with code blocks annotated with some
   # label _other than_ @testAgainstLatestRelease.
@@ -159,7 +159,6 @@ echo " "
 echo "Working..."
 
 runFunc installTools
-
 runFunc generateCode
 runFunc testGoLangCILint
 runFunc testGoTests
