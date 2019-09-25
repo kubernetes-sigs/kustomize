@@ -28,6 +28,7 @@ Since [v1.14][kubectl announcement] the kustomize build system has been included
 
 | kubectl version | kustomize version |
 |---------|--------|
+| v1.16.0 | [v2.0.3](https://github.com/kubernetes-sigs/kustomize/tree/v2.0.3) |
 | v1.15.x | [v2.0.3](https://github.com/kubernetes-sigs/kustomize/tree/v2.0.3) |
 | v1.14.x | [v2.0.3](https://github.com/kubernetes-sigs/kustomize/tree/v2.0.3) |
 
