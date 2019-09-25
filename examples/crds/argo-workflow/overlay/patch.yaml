@@ -1,0 +1,9 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: nginx
+spec:
+  templates:
+  - name: nginx-server
+    container:
+      image: nginx:latest

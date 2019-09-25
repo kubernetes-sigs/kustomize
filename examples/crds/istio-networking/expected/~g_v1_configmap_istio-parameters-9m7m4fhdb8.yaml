@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  clusterRbacConfig: "ON"
+kind: ConfigMap
+metadata:
+  name: istio-parameters-9m7m4fhdb8
+  namespace: kubeflow

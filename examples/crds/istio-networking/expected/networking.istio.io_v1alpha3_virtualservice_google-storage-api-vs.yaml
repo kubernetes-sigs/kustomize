@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: google-storage-api-vs
+  namespace: kubeflow
+spec:
+  hosts:
+  - storage.googleapis.com
+  tls:
+  - match:
+    - port: 443
+      sni_hosts:
+      - storage.googleapis.com
+    route:
+    - destination:
+        host: storage.googleapis.com
+        port:
+          number: 443
+      weight: 100

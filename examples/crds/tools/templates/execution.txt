@@ -1,0 +1,7 @@
+
+<!-- @build @test -->
+```bash
+mkdir ${DEMO_HOME}/actual
+kustomize build ${DEMO_HOME}/overlay -o ${DEMO_HOME}/actual --enable_alpha_plugins
+```
+

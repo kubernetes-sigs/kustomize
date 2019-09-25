@@ -1,0 +1,7 @@
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaChart
+metadata:
+  name: blog-1
+spec:
+  source:
+    type: foobar

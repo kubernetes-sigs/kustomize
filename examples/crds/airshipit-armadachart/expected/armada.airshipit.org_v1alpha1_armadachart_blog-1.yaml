@@ -1,0 +1,20 @@
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaChart
+metadata:
+  name: blog-1
+spec:
+  chart_name: blog-1
+  dependencies: []
+  install:
+    no_hooks: false
+  namespace: default
+  release: blog-1
+  source:
+    location: /opt/armada/helm-charts/testchart
+    reference: 87aad18f7d8c6a1a08f3adc8866efd33bee6aa52
+    subpath: .
+    type: foobar
+  target_state: uninitialized
+  upgrade:
+    no_hooks: false
+  values: {}

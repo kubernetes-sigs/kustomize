@@ -1,0 +1,7 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: kubeflow-gateway
+spec:
+  selector:
+    foo: bar

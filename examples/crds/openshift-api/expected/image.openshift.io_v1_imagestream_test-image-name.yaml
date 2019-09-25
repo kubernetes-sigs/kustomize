@@ -1,0 +1,17 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  labels:
+    app: app
+  name: test-image-name
+  namespace: test-namespace-name
+spec:
+  lookupPolicy:
+    local: false
+  tags:
+  - from:
+      kind: DockerImage
+      name: docker.io/hello-world
+    name: image-name
+    referencePolicy:
+      type: Source

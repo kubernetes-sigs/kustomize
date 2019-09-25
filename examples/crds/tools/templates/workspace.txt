@@ -1,0 +1,12 @@
+
+This folder the DEMONUMBER Kustomize CRD Register
+
+## Setup the workspace
+
+First, define a place to work:
+
+<!-- @makeWorkplace @test -->
+```bash
+DEMO_HOME=$(mktemp -d)
+```
+

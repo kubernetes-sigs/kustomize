@@ -1,0 +1,4 @@
+apiVersion: argo.argoproj.io/v1alpha1
+kind: WorkflowCRDRegister
+metadata:
+  name: workflowcrdregister

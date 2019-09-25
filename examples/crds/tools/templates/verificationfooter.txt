@@ -1,0 +1,8 @@
+
+<!-- @compareActualToExpected @test -->
+```bash
+test 0 == \
+$(diff -r $DEMO_HOME/actual $DEMO_HOME/expected | wc -l); \
+echo $?
+```
+

@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kubeflow
+
+resources:
+- ./resources.yaml
+
+transformers:
+- ./transformer.yaml
+
+configurations:
+- ./kustomizeconfig.yaml
+
+configMapGenerator:
+- name: istio-parameters
+  env: params.env
+
+vars:
+- name: clusterRbacConfig
+  objref:
+    kind: ConfigMap
+    name: istio-parameters
+    apiVersion: v1
+  fieldref:
+    fieldpath: data.clusterRbacConfig

@@ -1,0 +1,27 @@
+apiVersion: kfdef.apps.kubeflow.org/v1beta1
+kind: KfDef
+metadata:
+  name: k8s-istio
+  namespace: kubeflow
+spec:
+  applications:
+  - kustomizeConfig:
+      parameters:
+      - name: namespace
+        value: patchednamespace
+    name: istio-install
+  - kustomizeConfig:
+      repoRef:
+        name: patchedname
+        path: patchedpath
+    name: metacontroller
+  - kustomizeConfig:
+      overlays:
+      - addbeforeistio
+      - istio
+    name: centraldashboard
+  - kustomizeConfig:
+      overlays:
+      - patchedoverlay1
+      - patchedoverlay2
+    name: webhook

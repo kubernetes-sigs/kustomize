@@ -1,0 +1,6 @@
+
+<!-- @createExpectedDir @test -->
+```bash
+mkdir ${DEMO_HOME}/expected
+```
+

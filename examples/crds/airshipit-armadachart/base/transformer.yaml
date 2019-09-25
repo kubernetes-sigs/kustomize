@@ -1,0 +1,4 @@
+apiVersion: armada.airshipit.org/v1alpha1
+kind: ArmadaCRDRegister
+metadata:
+  name: armadacrdregister

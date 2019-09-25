@@ -1,0 +1,3 @@
+varReference:
+- path: spec/mode
+  kind: ClusterRbacConfig

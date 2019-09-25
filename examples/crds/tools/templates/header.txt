@@ -1,0 +1,6 @@
+
+### Preparation Step STEP
+
+<!-- @createSTEP @test -->
+```bash
+cat <<'EOF' >${DEMO_HOME}/FOOBAR

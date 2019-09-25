@@ -1,0 +1,4 @@
+apiVersion: rollouts.argoproj.io/v1alpha1
+kind: RolloutCRDRegister
+metadata:
+  name: rolloutcrdregister

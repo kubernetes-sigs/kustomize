@@ -1,0 +1,4 @@
+apiVersion: kfdef.kubeflow.org/v1beta1
+kind: KfDefCRDRegister
+metadata:
+  name: kfdefcrdregister

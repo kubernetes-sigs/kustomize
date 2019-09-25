@@ -1,0 +1,12 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: rollout
+spec:
+  template:
+    spec:
+      containers:
+      - name: guestbook
+        env:
+        - name: test
+          value: bar

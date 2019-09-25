@@ -1,0 +1,13 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: rollout
+spec:
+  template:
+    spec:
+      containers:
+      - name: guestbook
+        image: gcr.io/heptio-images/ks-guestbook-demo:0.1
+        env:
+        - name: test
+          value: foo
