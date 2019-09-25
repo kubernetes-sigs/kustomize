@@ -3,4 +3,4 @@ plugin/rollouts.argoproj.io/v1alpha1/rolloutcrdregister/RolloutCRDRegister
 plugin/api.openshift.io/v1/openshiftcrdregister/OpenShiftCRDRegister
 plugin/argo.argoproj.io/v1alpha1/workflowcrdregister/WorkflowCRDRegister
 plugin/networking.istio.io/v1alpha3/networkingcrdregister/NetworkingCRDRegister
-plugin/kfdef.kubeflow.org/v1beta1/kfdefcrdregister/KfDefCRDRegister
+# plugin/kfdef.kubeflow.org/v1beta1/kfdefcrdregister/KfDefCRDRegister
