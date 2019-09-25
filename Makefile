@@ -18,10 +18,10 @@ generate-code:
 	./plugin/generateBuiltins.sh $(GOPATH)
 
 build:
-	go build -o $(BIN_NAME) cmd/kustomize/main.go
+	cd kustomize && go build -o $(BIN_NAME) ./main.go
 
 install:
-	go install $(PWD)/cmd/kustomize
+	cd kustomize && go install $(PWD)/kustomize
 
 cover:
 	# The plugin directory eludes coverage, and is therefore omitted
@@ -30,8 +30,7 @@ cover:
 
 
 clean:
-	go clean
-	rm -f $(BIN_NAME)
+	cd kustomize && go clean && rm -f $(BIN_NAME)
 	rm -f $(COVER_FILE)
 
 .PHONY: test build install clean generate-code test-go test-lint cover
