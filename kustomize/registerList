@@ -1,0 +1,6 @@
+armada.airshipit.org/v1alpha1/armadacrdregister/ArmadaCRDRegister
+rollouts.argoproj.io/v1alpha1/rolloutcrdregister/RolloutCRDRegister
+api.openshift.io/v1/openshiftcrdregister/OpenShiftCRDRegister
+argo.argoproj.io/v1alpha1/workflowcrdregister/WorkflowCRDRegister
+networking.istio.io/v1alpha3/networkingcrdregister/NetworkingCRDRegister
+# kfdef.kubeflow.org/v1beta1/kfdefcrdregister/KfDefCRDRegister

@@ -17,14 +17,17 @@ test-lint:
 generate-code:
 	./plugin/generateBuiltins.sh $(GOPATH)
 
+build-pluginator:
+	cd pluginator && go build -o pluginator ./main.go
+
 build-plugins:
 	./plugin/buildPlugins.sh $(GOPATH)
 
 build:
-	cd kustomize && go build -o $(BIN_NAME) ./main.go
+	cd kustomize && go build -o $(BIN_NAME) ./main.go && ./buildRegister.sh
 
 install:
-	cd kustomize && go install $(PWD)/kustomize
+	cd kustomize && go install $(PWD)/kustomize && ./buildRegister.sh
 
 cover:
 	# The plugin directory eludes coverage, and is therefore omitted
