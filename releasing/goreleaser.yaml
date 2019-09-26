@@ -6,12 +6,13 @@
 #
 project_name: kustomize
 builds:
-- main: ./cmd/kustomize/main.go
+- main: ./main.go
   binary: kustomize
-  ldflags: -s -X sigs.k8s.io/kustomize/v3/pkg/commands/misc.kustomizeVersion={{.Version}} -X sigs.k8s.io/kustomize/v3/pkg/commands/misc.gitCommit={{.Commit}} -X sigs.k8s.io/kustomize/v3/pkg/commands/misc.buildDate={{.Date}}
+  ldflags: -s -X sigs.k8s.io/kustomize/kustomize/v3/provenance.version={{.Version}} -X sigs.k8s.io/kustomize/kustomize/v3/provenance.gitCommit={{.Commit}} -X sigs.k8s.io/kustomize/kustomize/v3/provenance.buildDate={{.Date}}
   goos:
-  - darwin
   - linux
+  - darwin
+  - windows
   goarch:
    - amd64
   env:

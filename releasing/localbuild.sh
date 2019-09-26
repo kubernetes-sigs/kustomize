@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage
+# Usage - from the repository root, enter
 #
 #   ./releasing/localbuild.sh
 #
@@ -23,44 +23,27 @@
 #
 #   releasing/cloudbuild.sh
 #
+# which runs goreleaser from the proper directory.
+#
 # The script you are reading now does something
 # analogous via docker tricks.
 
 set -e
 
-if [ -z ${GOPATH+x} ]; then
-  echo GOPATH is unset; cannot proceed.
-  exit 1
-fi
-
-pushd $GOPATH/src/sigs.k8s.io/kustomize
-pwd
-
-# The first "step" in the following uses a special
-# goreleaser container image that the kubebuilder folks made.
-# TODO: On a rainy day, switch to something more standard.
-
+# Modify cloudbuild.yaml to add the --snapshot flag.
+# This suppresses the github release, and leaves
+# the build output in the kustomize/dist directory.
 config=$(mktemp)
-cat <<EOF >$config
-steps:
-- name: "gcr.io/kubebuilder/goreleaser_with_go_1.12.5:0.0.1"
-  args: ["bash", "releasing/cloudbuild.sh", "--snapshot"]
-  secretEnv: ['GITHUB_TOKEN']
-secrets:
-- kmsKeyName: projects/kustomize-199618/locations/global/keyRings/github-tokens/cryptoKeys/gh-release-token
-  secretEnv:
-   GITHUB_TOKEN: CiQAyrREbPgXJOeT7M3t+WlxkhXwlMPudixBeiyWTjmLOMLqdK4SUQA0W+xUmDJKAhyfHCcwqSEzUn9OwKC7XAYcmwe0CCKTCbPbDgmioDK24q3LVapndXNvnnHvCjhOJNEr1o+P1DCF+LlzYV2YL8lP09rrKrslPg==
-EOF
+sed 's|\["releasing/cloudbuild.sh"\]|["releasing/cloudbuild.sh", "--snapshot"]|' \
+    releasing/cloudbuild.yaml > $config
 
 cloud-build-local \
-  --config=$config \
-  --bind-mount-source \
-  --dryrun=false \
-  .
+    --config=$config \
+    --bind-mount-source \
+    --dryrun=false \
+    .
 
-# Print results of local build, which went to ./dist
+# Print results of local build
 echo "##########################################"
-tree ./dist
+tree ./kustomize/dist
 echo "##########################################"
-
-popd
