@@ -10,9 +10,10 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/build"
+	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/config"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/create"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit"
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/misc"
+	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/version"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/validator"
@@ -46,8 +47,8 @@ See https://sigs.k8s.io/kustomize
 			rf, pf),
 		edit.NewCmdEdit(fSys, v, uf),
 		create.NewCmdCreate(fSys, uf),
-		misc.NewCmdConfig(fSys),
-		misc.NewCmdVersion(stdOut),
+		config.NewCmdConfig(fSys),
+		version.NewCmdVersion(stdOut),
 	)
 	c.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 
