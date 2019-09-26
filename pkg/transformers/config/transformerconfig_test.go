@@ -132,6 +132,10 @@ func TestMerge(t *testing.T) {
 			Path:               "path/to/a/field",
 			CreateIfNotPresent: true,
 		},
+		{
+			Gvk:  gvk.Gvk{Group: "GroupA", Version: "Version1", Kind: "KindC"},
+			Path: "path/to/a/field",
+		},
 	}
 	cfga := &TransformerConfig{}
 	cfga.AddNamereferenceFieldSpec(nameReference[0])
@@ -142,6 +146,7 @@ func TestMerge(t *testing.T) {
 	cfgb.AddNamereferenceFieldSpec(nameReference[1])
 	cfgb.AddPrefixFieldSpec(fieldSpecs[1])
 	cfgb.AddSuffixFieldSpec(fieldSpecs[1])
+	cfgb.AddSuffixFieldSpec(fieldSpecs[2])
 
 	actual, err := cfga.Merge(cfgb)
 	if err != nil {
@@ -152,7 +157,7 @@ func TestMerge(t *testing.T) {
 		t.Fatal("merge failed for namePrefix FieldSpec")
 	}
 
-	if len(actual.NameSuffix) != 2 {
+	if len(actual.NameSuffix) != 3 {
 		t.Fatal("merge failed for nameSuffix FieldSpec")
 	}
 
@@ -166,6 +171,7 @@ func TestMerge(t *testing.T) {
 	expected.AddPrefixFieldSpec(fieldSpecs[0])
 	expected.AddPrefixFieldSpec(fieldSpecs[1])
 	expected.AddSuffixFieldSpec(fieldSpecs[0])
+	expected.AddSuffixFieldSpec(fieldSpecs[2])
 	expected.AddSuffixFieldSpec(fieldSpecs[1])
 
 	if !reflect.DeepEqual(actual, expected) {

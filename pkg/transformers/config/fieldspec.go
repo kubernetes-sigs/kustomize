@@ -138,7 +138,8 @@ func (s fsSlice) mergeOne(x FieldSpec) (fsSlice, error) {
 
 func (s fsSlice) index(fs FieldSpec) int {
 	for i, x := range s {
-		if x.effectivelyEquals(fs) {
+		// Allow more specific versions to coexist
+		if x.effectivelyEquals(fs) && (x.Version == "" || fs.Version != "") {
 			return i
 		}
 	}
