@@ -27,7 +27,7 @@ commonLabels:
   kind: Service
 
 - path: spec/selector
-  create: true
+  create: false
   version: v1
   kind: ReplicationController
 
