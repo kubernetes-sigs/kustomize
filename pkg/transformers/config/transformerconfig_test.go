@@ -141,7 +141,7 @@ func TestMerge(t *testing.T) {
 	cfgb := &TransformerConfig{}
 	cfgb.AddNamereferenceFieldSpec(nameReference[1])
 	cfgb.AddPrefixFieldSpec(fieldSpecs[1])
-	cfga.AddSuffixFieldSpec(fieldSpecs[1])
+	cfgb.AddSuffixFieldSpec(fieldSpecs[1])
 
 	actual, err := cfga.Merge(cfgb)
 	if err != nil {
