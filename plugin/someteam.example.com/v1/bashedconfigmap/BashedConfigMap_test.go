@@ -6,7 +6,7 @@ package main_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	kusttest_test "sigs.k8s.io/kustomize/v3/pkg/kusttest"
 	plugins_test "sigs.k8s.io/kustomize/v3/pkg/plugins/test"
 )
 
@@ -35,4 +35,7 @@ kind: ConfigMap
 metadata:
   name: example-configmap-test
 `)
+	if m.Resources()[0].NeedHashSuffix() != true {
+		t.Errorf("expected resource to need hashing")
+	}
 }
