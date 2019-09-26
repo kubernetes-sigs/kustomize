@@ -16,8 +16,6 @@ Install [`cloud-build-local`], then run
 ./releasing/localbuild.sh
 ```
 
-to build artifacts under `./dist`.
-
 ## Do a real (cloud) release
 
 Get on an up-to-date master branch:
@@ -39,7 +37,11 @@ git ls-remote --tags upstream
 Define the version per [semver] principles; it must start with `v`:
 
 ```
-version=v3.0.0-pre
+# To push a kustomize binary
+version=kustomize/v3.2.1
+
+# To push a pluginator binary - triggers a different script
+version=pluginator/v1.0.1
 ```
 
 ### if replacing a release...
@@ -77,7 +79,9 @@ git tag -a $version -m "Release $version"
 ### trigger the cloud build
 Push the tag:
 ```
+git remote set-url --push upstream git@github.com:kubernetes-sigs/kustomize.git
 git push upstream $version
+git remote set-url --push upstream no_push
 ```
 
 This triggers a job in [Google Cloud Build] to
@@ -86,4 +90,3 @@ put a new release on the [release page].
 ###  Update release notes
 
 Visit the [release page] and edit the release notes as desired.
-
