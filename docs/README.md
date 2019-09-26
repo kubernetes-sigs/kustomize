@@ -23,6 +23,13 @@ English | [简体中文](zh/README.md)
 
 ## Release notes
 
+ * 3.2.1 - Patch release of kustomize in its own module.  No change in function
+   from v3.2.0.
+
+ * [3.2.0](v3.2.0.md) - TODO(jingfang)
+
+ * [3.1.1](v3.1.0.md) - TODO(jingfang)
+
  * [3.1](v3.1.0.md) - Late July 2019. Extended patches and improved resource matching.
 
  * [3.0](v3.0.0.md) - Late June 2019. Plugin developer release.
