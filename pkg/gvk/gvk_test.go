@@ -72,6 +72,10 @@ var lessThanTests = []struct {
 		Gvk{Group: "a", Version: "b", Kind: "ValidatingWebhookConfiguration"}},
 	{Gvk{Group: "a", Version: "b", Kind: "Service"},
 		Gvk{Group: "a", Version: "b", Kind: "APIService"}},
+	{Gvk{Group: "a", Version: "b", Kind: "c"},
+		Gvk{Group: "", Version: "b", Kind: "c"}},
+	{Gvk{Group: "a", Version: "b", Kind: "c"},
+		Gvk{Group: "a", Version: "", Kind: "c"}},
 }
 
 func TestIsLessThan1(t *testing.T) {
