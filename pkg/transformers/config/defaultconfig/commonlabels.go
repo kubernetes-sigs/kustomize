@@ -65,6 +65,12 @@ commonLabels:
   kind: Deployment
 
 - path: spec/selector/matchLabels
+  create: false
+  group: extensions
+  version: v1beta1
+  kind: ReplicaSet
+
+- path: spec/selector/matchLabels
   create: true
   kind: ReplicaSet
 
@@ -73,12 +79,24 @@ commonLabels:
   kind: ReplicaSet
 
 - path: spec/selector/matchLabels
+  create: false
+  group: extensions
+  version: v1beta1
+  kind: DaemonSet
+
+- path: spec/selector/matchLabels
   create: true
   kind: DaemonSet
 
 - path: spec/template/metadata/labels
   create: true
   kind: DaemonSet
+
+- path: spec/selector/matchLabels
+  create: false
+  group: apps
+  version: v1beta1
+  kind: StatefulSet
 
 - path: spec/selector/matchLabels
   create: true
