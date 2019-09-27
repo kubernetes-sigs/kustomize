@@ -52,8 +52,7 @@ kustomize and the plugin_.
 
 This means a one-time run of
 ```
-GOPATH=${whatever} GO111MODULE=on go get \
-    sigs.k8s.io/kustomize/v3/cmd/kustomize@${releaseVersion}
+GOPATH=${whatever} GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3
 ```
 
 and then a normal development cycle using
