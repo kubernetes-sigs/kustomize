@@ -148,7 +148,7 @@ commonLabels:
   org: acmeCorporation
 commonAnnotations:
   note: Hello, I am staging!
-resources:
+bases:
 - ../../base
 patchesStrategicMerge:
 - map.yaml
@@ -189,7 +189,7 @@ commonLabels:
   org: acmeCorporation
 commonAnnotations:
   note: Hello, I am production!
-resources:
+bases:
 - ../../base
 patchesStrategicMerge:
 - deployment.yaml
