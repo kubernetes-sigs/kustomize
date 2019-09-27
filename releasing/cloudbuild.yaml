@@ -1,4 +1,6 @@
 steps:
+- name: "gcr.io/cloud-builders/git"
+  args: [fetch, --tags, --depth=100]
 - name: goreleaser/goreleaser
   entrypoint: /bin/sh
   args: ["releasing/cloudbuild.sh"]
