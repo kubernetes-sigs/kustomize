@@ -72,12 +72,6 @@ func (t *TransformerConfig) AddPrefixFieldSpec(fs FieldSpec) (err error) {
 	return err
 }
 
-// AddSuffixFieldSpec adds a FieldSpec to NameSuffix
-func (t *TransformerConfig) AddSuffixFieldSpec(fs FieldSpec) (err error) {
-	t.NameSuffix, err = t.NameSuffix.mergeOne(fs)
-	return err
-}
-
 // AddLabelFieldSpec adds a FieldSpec to CommonLabels
 func (t *TransformerConfig) AddLabelFieldSpec(fs FieldSpec) (err error) {
 	t.CommonLabels, err = t.CommonLabels.mergeOne(fs)

@@ -18,6 +18,7 @@ package config
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"sigs.k8s.io/kustomize/v3/pkg/gvk"
@@ -102,7 +103,10 @@ type fsSlice []FieldSpec
 func (s fsSlice) Len() int      { return len(s) }
 func (s fsSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 func (s fsSlice) Less(i, j int) bool {
-	return s[i].Gvk.IsLessThan(s[j].Gvk)
+	if !s[i].Gvk.Equals(s[j].Gvk) {
+		return s[i].Gvk.IsLessThan2(s[j].Gvk)
+	}
+	return s[i].Path < s[j].Path
 }
 
 // mergeAll merges the argument into this, returning the result.
@@ -150,7 +154,9 @@ func (s fsSlice) index(fs FieldSpec) int {
 // an array instead of just an index.
 func (s fsSlice) intersect(fs FieldSpec) int {
 	for i, x := range s {
-		if (x.Gvk.Kind == fs.Gvk.Kind) && x.effectivelyEquals(fs) {
+		if (x.Gvk.Kind == fs.Gvk.Kind) &&
+			x.effectivelyEquals(fs) &&
+			(x.Version == "" || fs.Version != "") {
 			return i
 		}
 	}
@@ -160,6 +166,17 @@ func (s fsSlice) intersect(fs FieldSpec) int {
 // FieldSpecs wraps a FieldSpec slice in order to add
 // utility method.
 type FieldSpecs []FieldSpec
+
+var _ sort.Interface = FieldSpecs{}
+
+func (s FieldSpecs) Len() int      { return len(s) }
+func (s FieldSpecs) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s FieldSpecs) Less(i, j int) bool {
+	if !s[i].Gvk.Equals(s[j].Gvk) {
+		return s[i].Gvk.IsLessThan2(s[j].Gvk)
+	}
+	return s[i].Path < s[j].Path
+}
 
 // Create a new FieldSpecs out of []FieldSpec
 func NewFieldSpecs(selected fsSlice) FieldSpecs {
@@ -171,8 +188,10 @@ func NewFieldSpecs(selected fsSlice) FieldSpecs {
 }
 
 func NewFieldSpecsFromSlice(other []FieldSpec) FieldSpecs {
-	s := make([]FieldSpec, len(other))
-	copy(s, other)
+	s := FieldSpecs{}
+	for _, x := range other {
+		s = append(s, x)
+	}
 	return s
 }
 
@@ -189,28 +208,21 @@ func (s FieldSpecs) Normalize() FieldSpecs {
 // todo(jeb): Check if we can not reuse fsSlice.mergeOne(add)
 // todo(jeb): This method should deals with version and apiGroup.
 func (s FieldSpecs) squashFieldSpecs(fs FieldSpec) FieldSpecs {
-	appendFs := true
 	for idx, already := range s {
-		if fs.ArePathEquals(already) {
-			// todo(jeb): Can we use IsSelected here instead ?
-			if already.Gvk.Kind == "" {
-				// There is already a more global fieldspec definition
-				// Let's replace it with a more narrow one
-				s[idx] = fs
-				appendFs = false
-				continue
-			} else if fs.Gvk.Kind == "" {
-				// This new FieldSpec is more global than the existing
-				// one. Let's ignore it.
-				appendFs = false
-				continue
-			}
+		if !fs.ArePathEquals(already) {
+			continue
 		}
-	}
-	if appendFs {
-		s = append(s, fs)
+
+		if fs.IsSelected(&already.Gvk) {
+			// There is already a more global fieldspec definition
+			// Let's replace it with a more narrow one
+			s[idx] = fs
+		}
+
+		return s
 	}
 
+	s = append(s, fs)
 	return s
 }
 
@@ -222,20 +234,19 @@ func (s FieldSpecs) squashFieldSpecs(fs FieldSpec) FieldSpecs {
 // todo(jeb): This method can only remove one element at the time.
 func (s FieldSpecs) pruneFieldSpecs(fs FieldSpec) FieldSpecs {
 	for idx, already := range s {
-		if fs.ArePathEquals(already) {
-			if already.Gvk.Kind == "" {
-				// There is already a more global fieldspec definition
-				// Let's replace it with a more narrow one
-				copy(s[idx:], s[idx+1:])
-				s[len(s)-1] = FieldSpec{}
-				s = s[:len(s)-1]
-				return s
-			} else if fs.Gvk.Kind == "" {
-				// This new FieldSpec is more global than the existing
-				// one. Let's ignore it.
-				continue
-			}
+		if !fs.ArePathEquals(already) {
+			continue
 		}
+
+		if fs.IsSelected(&already.Gvk) {
+			// There is already a more global fieldspec definition
+			// Let's remove it
+			copy(s[idx:], s[idx+1:])
+			s[len(s)-1] = FieldSpec{}
+			s = s[:len(s)-1]
+		}
+
+		return s
 	}
 
 	return s
@@ -255,5 +266,6 @@ func (s FieldSpecs) ApplicableFieldSpecs(x gvk.Gvk) FieldSpecs {
 			selected = selected.pruneFieldSpecs(fs)
 		}
 	}
+	sort.Sort(selected)
 	return selected
 }

@@ -89,6 +89,17 @@ func TestIsLessThan1(t *testing.T) {
 	}
 }
 
+func TestIsLessThan2(t *testing.T) {
+	for _, hey := range lessThanTests {
+		if !hey.x1.IsLessThan2(hey.x2) {
+			t.Fatalf("%v should be less than %v", hey.x1, hey.x2)
+		}
+		if hey.x2.IsLessThan2(hey.x1) {
+			t.Fatalf("%v should not be less than %v", hey.x2, hey.x1)
+		}
+	}
+}
+
 var stringTests = []struct {
 	x Gvk
 	s string

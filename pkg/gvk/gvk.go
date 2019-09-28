@@ -117,6 +117,16 @@ var typeOrders = func() map[string]int {
 
 // IsLessThan returns true if self is less than the argument.
 func (x Gvk) IsLessThan(o Gvk) bool {
+	indexI := typeOrders[x.Kind]
+	indexJ := typeOrders[o.Kind]
+	if indexI != indexJ {
+		return indexI < indexJ
+	}
+	return x.String() < o.String()
+}
+
+// IsLessThan2 returns true if self is less than the argument.
+func (x Gvk) IsLessThan2(o Gvk) bool {
 	if x.Kind != o.Kind {
 		indexI := typeOrders[x.Kind]
 		indexJ := typeOrders[o.Kind]
