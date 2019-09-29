@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/internal/tools
 
-go 1.12
+go 1.13
 
 require (
 	github.com/elastic/go-elasticsearch/v6 v6.8.2

@@ -21,7 +21,7 @@ current setup.
 
 #### requirements
 
-* linux, git, curl, Go 1.12
+* linux, git, curl, Go 1.13
 
 For encryption
 
@@ -173,7 +173,7 @@ dependency [skew].
 On load failure
 
  * be sure to build the plugin with the same
-   version of Go (_go1.12_) on the same `$GOOS`
+   version of Go (_go1.13_) on the same `$GOOS`
    (_linux_) and `$GOARCH` (_amd64_) used to build
    the kustomize being [used in this demo].
 
