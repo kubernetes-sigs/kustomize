@@ -24,7 +24,7 @@ import (
 )
 
 func TestRestrictionNone(t *testing.T) {
-	fSys := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	root := fs.ConfirmedDir("irrelevant")
 	path := "whatever"
 	p, err := RestrictionNone(fSys, root, path)
@@ -37,7 +37,7 @@ func TestRestrictionNone(t *testing.T) {
 }
 
 func TestRestrictionRootOnly(t *testing.T) {
-	fSys := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	root := fs.ConfirmedDir("/tmp/foo")
 
 	path := "/tmp/foo/whatever/beans"
