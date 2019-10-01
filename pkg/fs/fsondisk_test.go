@@ -1,18 +1,5 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package fs
 
@@ -26,7 +13,7 @@ import (
 )
 
 func makeTestDir(t *testing.T) (FileSystem, string) {
-	x := MakeRealFS()
+	x := MakeFsOnDisk()
 	td, err := ioutil.TempDir("", "kustomize_testing_dir")
 	if err != nil {
 		t.Fatalf("unexpected error %s", err)
@@ -100,7 +87,6 @@ func TestCleanedAbs_3(t *testing.T) {
 	if f != "foo" {
 		t.Fatalf("unexpected f=%s", f)
 	}
-
 }
 
 func TestCleanedAbs_4(t *testing.T) {

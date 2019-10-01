@@ -1,18 +1,5 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package fs
 
@@ -23,7 +10,7 @@ import (
 )
 
 func TestExists(t *testing.T) {
-	x := MakeFakeFS()
+	x := MakeFsInMemory()
 	if x.Exists("foo") {
 		t.Fatalf("expected no foo")
 	}
@@ -34,7 +21,7 @@ func TestExists(t *testing.T) {
 }
 
 func TestIsDir(t *testing.T) {
-	x := MakeFakeFS()
+	x := MakeFsInMemory()
 	expectedName := "my-dir"
 	err := x.Mkdir(expectedName)
 	if err != nil {
@@ -59,7 +46,7 @@ func shouldNotExist(t *testing.T, fs FileSystem, name string) {
 }
 
 func TestRemoveAll(t *testing.T) {
-	x := MakeFakeFS()
+	x := MakeFsInMemory()
 	x.WriteFile("/foo/project/file.yaml", []byte("Unused"))
 	x.WriteFile("/foo/project/subdir/file.yaml", []byte("Unused"))
 	x.WriteFile("/foo/apple/subdir/file.yaml", []byte("Unused"))
@@ -76,7 +63,7 @@ func TestRemoveAll(t *testing.T) {
 }
 
 func TestIsDirDeeper(t *testing.T) {
-	x := MakeFakeFS()
+	x := MakeFsInMemory()
 	x.WriteFile("/foo/project/file.yaml", []byte("Unused"))
 	x.WriteFile("/foo/project/subdir/file.yaml", []byte("Unused"))
 	if !x.IsDir("/") {
@@ -97,7 +84,7 @@ func TestIsDirDeeper(t *testing.T) {
 }
 
 func TestCreate(t *testing.T) {
-	x := MakeFakeFS()
+	x := MakeFsInMemory()
 	f, err := x.Create("foo")
 	if f == nil {
 		t.Fatalf("expected file")
@@ -109,7 +96,7 @@ func TestCreate(t *testing.T) {
 }
 
 func TestReadFile(t *testing.T) {
-	x := MakeFakeFS()
+	x := MakeFsInMemory()
 	f, err := x.Create("foo")
 	if f == nil {
 		t.Fatalf("expected file")
@@ -127,7 +114,7 @@ func TestReadFile(t *testing.T) {
 }
 
 func TestWriteFile(t *testing.T) {
-	x := MakeFakeFS()
+	x := MakeFsInMemory()
 	c := []byte("heybuddy")
 	err := x.WriteFile("foo", c)
 	if err != nil {
@@ -143,7 +130,7 @@ func TestWriteFile(t *testing.T) {
 }
 
 func TestGlob(t *testing.T) {
-	x := MakeFakeFS()
+	x := MakeFsInMemory()
 	x.Create("dir/foo")
 	x.Create("dir/bar")
 	files, err := x.Glob("dir/*")

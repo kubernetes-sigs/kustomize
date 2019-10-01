@@ -39,7 +39,7 @@ func TestPluginDir(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 
-	fSys := fs.MakeRealFS()
+	fSys := fs.MakeFsOnDisk()
 	err = fSys.WriteFile(filepath.Join(dir, "kustomization.yaml"), []byte(`
 generators:
 - config.yaml
