@@ -5,10 +5,10 @@ package edit
 
 import (
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/add"
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/fix"
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/remove"
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/set"
+	"sigs.k8s.io/kustomize/kustomize/v3/commands/edit/add"
+	"sigs.k8s.io/kustomize/kustomize/v3/commands/edit/fix"
+	"sigs.k8s.io/kustomize/kustomize/v3/commands/edit/remove"
+	"sigs.k8s.io/kustomize/kustomize/v3/commands/edit/set"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"

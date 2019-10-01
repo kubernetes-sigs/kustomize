@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
+	"sigs.k8s.io/kustomize/kustomize/v3/commands/kustfile"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
