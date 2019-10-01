@@ -143,6 +143,22 @@ metadata:
 			expectedErr: true,
 		},
 		{
+			name: "nil value in list",
+			input: []byte(`
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: kube100-site
+  labels:
+    app: web
+    testList:
+      - testA
+      - 
+`),
+			expectedOut: nil,
+			expectedErr: true,
+		},
+		{
 			name: "List",
 			input: []byte(`
 apiVersion: v1
