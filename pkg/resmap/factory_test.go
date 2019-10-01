@@ -234,7 +234,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 			Type: ifc.SecretTypeOpaque,
 		},
 	}
-	fakeFs := fs.MakeFakeFS()
+	fakeFs := fs.MakeFsInMemory()
 	fakeFs.Mkdir(".")
 	actual, err := rmF.NewResMapFromSecretArgs(
 		loader.NewFileLoaderAtRoot(validators.MakeFakeValidator(), fakeFs), nil, secrets)
