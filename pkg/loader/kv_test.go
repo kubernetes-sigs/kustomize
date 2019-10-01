@@ -46,7 +46,7 @@ func TestKeyValuesFromLines(t *testing.T) {
 	}
 
 	l := NewFileLoaderAtRoot(
-		validators.MakeFakeValidator(), fs.MakeFakeFS())
+		validators.MakeFakeValidator(), fs.MakeFsInMemory())
 	for _, test := range tests {
 		pairs, err := l.keyValuesFromLines([]byte(test.content))
 		if test.expectedErr && err == nil {
@@ -76,7 +76,7 @@ func TestKeyValuesFromFileSources(t *testing.T) {
 		},
 	}
 
-	fSys := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	fSys.WriteFile("/files/app-init.ini", []byte("FOO=bar"))
 	l := NewFileLoaderAtRoot(validators.MakeFakeValidator(), fSys)
 	for _, tc := range tests {
