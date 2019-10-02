@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 )
 
@@ -124,9 +125,12 @@ func TestRemoveResources(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			fakeFS := fs.MakeFakeFS()
-			fakeFS.WriteTestKustomizationWith([]byte(fmt.Sprintf("resources:\n  - %s", strings.Join(tc.given.resources, "\n  - "))))
-			cmd := newCmdRemoveResource(fakeFS)
+			fSys := fs.MakeFsInMemory()
+			testutils.WriteTestKustomizationWith(
+				fSys,
+				[]byte(fmt.Sprintf(
+					"resources:\n  - %s", strings.Join(tc.given.resources, "\n  - "))))
+			cmd := newCmdRemoveResource(fSys)
 			err := cmd.RunE(cmd, tc.given.removeArgs)
 			if err != nil && tc.expected.err == nil {
 
@@ -137,7 +141,7 @@ func TestRemoveResources(t *testing.T) {
 				}
 				return
 			}
-			content, err := fakeFS.ReadTestKustomization()
+			content, err := testutils.ReadTestKustomization(fSys)
 			if err != nil {
 				t.Errorf("unexpected read error: %v", err)
 			}

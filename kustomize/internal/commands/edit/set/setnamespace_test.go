@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
@@ -17,16 +18,16 @@ const (
 )
 
 func TestSetNamespaceHappyPath(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteTestKustomization()
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomization(fSys)
 
-	cmd := newCmdSetNamespace(fakeFS, validators.MakeFakeValidator())
+	cmd := newCmdSetNamespace(fSys, validators.MakeFakeValidator())
 	args := []string{goodNamespaceValue}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	content, err := fakeFS.ReadTestKustomization()
+	content, err := testutils.ReadTestKustomization(fSys)
 	if err != nil {
 		t.Errorf("unexpected read error: %v", err)
 	}
@@ -37,10 +38,10 @@ func TestSetNamespaceHappyPath(t *testing.T) {
 }
 
 func TestSetNamespaceOverride(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteTestKustomization()
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomization(fSys)
 
-	cmd := newCmdSetNamespace(fakeFS, validators.MakeFakeValidator())
+	cmd := newCmdSetNamespace(fSys, validators.MakeFakeValidator())
 	args := []string{goodNamespaceValue}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
@@ -51,7 +52,7 @@ func TestSetNamespaceOverride(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	content, err := fakeFS.ReadTestKustomization()
+	content, err := testutils.ReadTestKustomization(fSys)
 	if err != nil {
 		t.Errorf("unexpected read error: %v", err)
 	}
@@ -62,9 +63,9 @@ func TestSetNamespaceOverride(t *testing.T) {
 }
 
 func TestSetNamespaceNoArgs(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 
-	cmd := newCmdSetNamespace(fakeFS, validators.MakeFakeValidator())
+	cmd := newCmdSetNamespace(fSys, validators.MakeFakeValidator())
 	err := cmd.Execute()
 	if err == nil {
 		t.Errorf("expected error: %v", err)
@@ -75,9 +76,9 @@ func TestSetNamespaceNoArgs(t *testing.T) {
 }
 
 func TestSetNamespaceInvalid(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 
-	cmd := newCmdSetNamespace(fakeFS, validators.MakeFakeValidator())
+	cmd := newCmdSetNamespace(fSys, validators.MakeFakeValidator())
 	args := []string{"/badnamespace/"}
 	err := cmd.RunE(cmd, args)
 	if err == nil {

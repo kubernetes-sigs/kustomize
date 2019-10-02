@@ -5,27 +5,29 @@ package remove
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
+	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
-	"strings"
-	"testing"
 )
 
 func makeKustomizationFS() fs.FileSystem {
-	fakeFS := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	commonLabels := []string{"label1: val1", "label2: val2"}
 	commonAnnotations := []string{"annotation1: val1", "annotation2: val2"}
 
-	fakeFS.WriteTestKustomizationWith([]byte(
+	testutils.WriteTestKustomizationWith(fSys, []byte(
 		fmt.Sprintf("commonLabels:\n  %s\ncommonAnnotations:\n  %s",
 			strings.Join(commonLabels, "\n  "), strings.Join(commonAnnotations, "\n  "))))
-	return fakeFS
+	return fSys
 }
 
-func readKustomizationFS(t *testing.T, fakeFS fs.FileSystem) *types.Kustomization {
-	kf, err := kustfile.NewKustomizationFile(fakeFS)
+func readKustomizationFS(t *testing.T, fSys fs.FileSystem) *types.Kustomization {
+	kf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		t.Errorf("unexpected new error %v", err)
 	}
@@ -37,8 +39,8 @@ func readKustomizationFS(t *testing.T, fakeFS fs.FileSystem) *types.Kustomizatio
 }
 
 func makeKustomization(t *testing.T) *types.Kustomization {
-	fakeFS := makeKustomizationFS()
-	return readKustomizationFS(t, fakeFS)
+	fSys := makeKustomizationFS()
+	return readKustomizationFS(t, fSys)
 }
 
 func TestRemoveAnnotation(t *testing.T) {
@@ -69,10 +71,10 @@ func TestRemoveAnnotation(t *testing.T) {
 }
 
 func TestRemoveAnnotationIgnore(t *testing.T) {
-	fakeFS := makeKustomizationFS()
+	fSys := makeKustomizationFS()
 
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdRemoveAnnotation(fakeFS, v.ValidatorArray)
+	cmd := newCmdRemoveAnnotation(fSys, v.ValidatorArray)
 	cmd.Flag("ignore-non-existence").Value.Set("true")
 	args := []string{"annotation3"}
 	err := cmd.RunE(cmd, args)
@@ -84,11 +86,11 @@ func TestRemoveAnnotationIgnore(t *testing.T) {
 }
 
 func TestRemoveAnnotationNoDefinition(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteTestKustomizationWith([]byte(""))
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomizationWith(fSys, []byte(""))
 
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdRemoveAnnotation(fakeFS, v.ValidatorArray)
+	cmd := newCmdRemoveAnnotation(fSys, v.ValidatorArray)
 	args := []string{"annotation1,annotation2"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
@@ -102,11 +104,11 @@ func TestRemoveAnnotationNoDefinition(t *testing.T) {
 }
 
 func TestRemoveAnnotationNoDefinitionIgnore(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteTestKustomizationWith([]byte(""))
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomizationWith(fSys, []byte(""))
 
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdRemoveLabel(fakeFS, v.ValidatorArray)
+	cmd := newCmdRemoveLabel(fSys, v.ValidatorArray)
 	cmd.Flag("ignore-non-existence").Value.Set("true")
 	args := []string{"annotation1,annotation2"}
 	err := cmd.RunE(cmd, args)
@@ -118,10 +120,10 @@ func TestRemoveAnnotationNoDefinitionIgnore(t *testing.T) {
 }
 
 func TestRemoveAnnotationNoArgs(t *testing.T) {
-	fakeFS := makeKustomizationFS()
+	fSys := makeKustomizationFS()
 
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdRemoveAnnotation(fakeFS, v.ValidatorArray)
+	cmd := newCmdRemoveAnnotation(fSys, v.ValidatorArray)
 	err := cmd.Execute()
 	v.VerifyNoCall()
 
@@ -134,10 +136,10 @@ func TestRemoveAnnotationNoArgs(t *testing.T) {
 }
 
 func TestRemoveAnnotationInvalidFormat(t *testing.T) {
-	fakeFS := makeKustomizationFS()
+	fSys := makeKustomizationFS()
 
 	v := validators.MakeSadMapValidator(t)
-	cmd := newCmdRemoveAnnotation(fakeFS, v.ValidatorArray)
+	cmd := newCmdRemoveAnnotation(fSys, v.ValidatorArray)
 	args := []string{"nospecialchars%^=@"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
@@ -151,10 +153,10 @@ func TestRemoveAnnotationInvalidFormat(t *testing.T) {
 }
 
 func TestRemoveAnnotationMultipleArgs(t *testing.T) {
-	fakeFS := makeKustomizationFS()
+	fSys := makeKustomizationFS()
 
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdRemoveAnnotation(fakeFS, v.ValidatorArray)
+	cmd := newCmdRemoveAnnotation(fSys, v.ValidatorArray)
 	args := []string{"annotation1,annotation2"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
@@ -163,7 +165,7 @@ func TestRemoveAnnotationMultipleArgs(t *testing.T) {
 		t.Errorf("unexpected error %v", err)
 	}
 
-	m := readKustomizationFS(t, fakeFS)
+	m := readKustomizationFS(t, fSys)
 	splitArgs := strings.Split(args[0], ",")
 	for _, k := range splitArgs {
 		if _, exist := m.CommonAnnotations[k]; exist {
@@ -173,10 +175,10 @@ func TestRemoveAnnotationMultipleArgs(t *testing.T) {
 }
 
 func TestRemoveAnnotationMultipleArgsInvalidFormat(t *testing.T) {
-	fakeFS := makeKustomizationFS()
+	fSys := makeKustomizationFS()
 
 	v := validators.MakeSadMapValidator(t)
-	cmd := newCmdRemoveAnnotation(fakeFS, v.ValidatorArray)
+	cmd := newCmdRemoveAnnotation(fSys, v.ValidatorArray)
 	args := []string{"annotation1", "annotation2"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyNoCall()
@@ -217,10 +219,10 @@ func TestRemoveLabel(t *testing.T) {
 }
 
 func TestRemoveLabelIgnore(t *testing.T) {
-	fakeFS := makeKustomizationFS()
+	fSys := makeKustomizationFS()
 
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdRemoveLabel(fakeFS, v.ValidatorArray)
+	cmd := newCmdRemoveLabel(fSys, v.ValidatorArray)
 	cmd.Flag("ignore-non-existence").Value.Set("true")
 	args := []string{"label3"}
 	err := cmd.RunE(cmd, args)
@@ -232,11 +234,11 @@ func TestRemoveLabelIgnore(t *testing.T) {
 }
 
 func TestRemoveLabelNoDefinition(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteTestKustomizationWith([]byte(""))
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomizationWith(fSys, []byte(""))
 
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdRemoveLabel(fakeFS, v.ValidatorArray)
+	cmd := newCmdRemoveLabel(fSys, v.ValidatorArray)
 	args := []string{"label1,label2"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
@@ -250,11 +252,11 @@ func TestRemoveLabelNoDefinition(t *testing.T) {
 }
 
 func TestRemoveLabelNoDefinitionIgnore(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteTestKustomizationWith([]byte(""))
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomizationWith(fSys, []byte(""))
 
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdRemoveLabel(fakeFS, v.ValidatorArray)
+	cmd := newCmdRemoveLabel(fSys, v.ValidatorArray)
 	cmd.Flag("ignore-non-existence").Value.Set("true")
 	args := []string{"label1,label2"}
 	err := cmd.RunE(cmd, args)
@@ -266,10 +268,10 @@ func TestRemoveLabelNoDefinitionIgnore(t *testing.T) {
 }
 
 func TestRemoveLabelNoArgs(t *testing.T) {
-	fakeFS := makeKustomizationFS()
+	fSys := makeKustomizationFS()
 
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdRemoveLabel(fakeFS, v.ValidatorArray)
+	cmd := newCmdRemoveLabel(fSys, v.ValidatorArray)
 	err := cmd.Execute()
 	v.VerifyNoCall()
 
@@ -282,10 +284,10 @@ func TestRemoveLabelNoArgs(t *testing.T) {
 }
 
 func TestRemoveLabelInvalidFormat(t *testing.T) {
-	fakeFS := makeKustomizationFS()
+	fSys := makeKustomizationFS()
 
 	v := validators.MakeSadMapValidator(t)
-	cmd := newCmdRemoveLabel(fakeFS, v.ValidatorArray)
+	cmd := newCmdRemoveLabel(fSys, v.ValidatorArray)
 	args := []string{"exclamation!"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
@@ -299,10 +301,10 @@ func TestRemoveLabelInvalidFormat(t *testing.T) {
 }
 
 func TestRemoveLabelMultipleArgs(t *testing.T) {
-	fakeFS := makeKustomizationFS()
+	fSys := makeKustomizationFS()
 
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdRemoveLabel(fakeFS, v.ValidatorArray)
+	cmd := newCmdRemoveLabel(fSys, v.ValidatorArray)
 	args := []string{"label1,label2"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
@@ -311,7 +313,7 @@ func TestRemoveLabelMultipleArgs(t *testing.T) {
 		t.Errorf("unexpected error %v", err)
 	}
 
-	m := readKustomizationFS(t, fakeFS)
+	m := readKustomizationFS(t, fSys)
 	splitArgs := strings.Split(args[0], ",")
 	for _, k := range splitArgs {
 		if _, exist := m.CommonLabels[k]; exist {
@@ -321,10 +323,10 @@ func TestRemoveLabelMultipleArgs(t *testing.T) {
 }
 
 func TestRemoveLabelMultipleArgsInvalidFormat(t *testing.T) {
-	fakeFS := makeKustomizationFS()
+	fSys := makeKustomizationFS()
 
 	v := validators.MakeSadMapValidator(t)
-	cmd := newCmdRemoveLabel(fakeFS, v.ValidatorArray)
+	cmd := newCmdRemoveLabel(fSys, v.ValidatorArray)
 	args := []string{"label1", "label2"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyNoCall()

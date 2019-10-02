@@ -25,7 +25,7 @@ func newCmdRemovePatch(fsys fs.FileSystem) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "patch",
-		Short: "Removes one or more patches from " + pgmconfig.KustomizationFileNames[0],
+		Short: "Removes one or more patches from " + pgmconfig.KustomizationFileName0,
 		Example: `
 		remove patch {filepath}`,
 		RunE: func(cmd *cobra.Command, args []string) error {

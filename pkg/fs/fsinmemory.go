@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-
-	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 )
 
 var _ FileSystem = &fsInMemory{}
@@ -31,26 +29,6 @@ func MakeFsInMemory() FileSystem {
 const (
 	separator = string(filepath.Separator)
 	doubleSep = separator + separator
-	// kustomizationContent is used in tests.
-	kustomizationContent = `apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-namePrefix: some-prefix
-nameSuffix: some-suffix
-# Labels to add to all objects and selectors.
-# These labels would also be used to form the selector for apply --prune
-# Named differently than “labels” to avoid confusion with metadata for this object
-commonLabels:
-  app: helloworld
-commonAnnotations:
-  note: This is an example annotation
-resources: []
-#- service.yaml
-#- ../some-dir/
-# There could also be configmaps in Base, which would make these overlays
-configMapGenerator: []
-# There could be secrets in Base, if just using a fork/rebase workflow
-secretGenerator: []
-`
 )
 
 // Create assures a fake file appears in the in-memory file system.
@@ -150,26 +128,12 @@ func (fs *fsInMemory) ReadFile(name string) ([]byte, error) {
 	return nil, fmt.Errorf("cannot read file %q", name)
 }
 
-func (fs *fsInMemory) ReadTestKustomization() ([]byte, error) {
-	return fs.ReadFile(pgmconfig.KustomizationFileNames[0])
-}
-
 // WriteFile always succeeds and does nothing.
 func (fs *fsInMemory) WriteFile(name string, c []byte) error {
 	ff := &fileInMemory{}
 	ff.Write(c)
 	fs.m[name] = ff
 	return nil
-}
-
-// WriteTestKustomization writes a standard test file.
-func (fs *fsInMemory) WriteTestKustomization() {
-	fs.WriteTestKustomizationWith([]byte(kustomizationContent))
-}
-
-// WriteTestKustomizationWith writes a standard test file.
-func (fs *fsInMemory) WriteTestKustomizationWith(bytes []byte) {
-	fs.WriteFile(pgmconfig.KustomizationFileNames[0], bytes)
 }
 
 // Walk implements filepath.Walk using the fake filesystem.
