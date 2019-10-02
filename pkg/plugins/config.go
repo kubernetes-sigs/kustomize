@@ -17,7 +17,7 @@ const (
 	BuiltinPluginApiVersion = BuiltinPluginPackage
 	flagEnablePluginsName   = "enable_alpha_plugins"
 	flagEnablePluginsHelp   = `enable plugins, an alpha feature.
-See https://github.com/kubernetes-sigs/kustomize/blob/master/docs/plugins.md
+See https://github.com/kubernetes-sigs/kustomize/blob/master/docs/plugins/README.md
 `
 	flagErrorFmt = `
 unable to load external plugin %s because plugins disabled
