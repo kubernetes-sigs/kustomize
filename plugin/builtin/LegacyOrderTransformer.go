@@ -2,11 +2,12 @@
 package builtin
 
 import (
+	"sort"
+
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
-	"sort"
 )
 
 // Sort the resources using an ordering defined in the Gvk class.

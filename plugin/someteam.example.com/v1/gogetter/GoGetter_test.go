@@ -11,13 +11,13 @@ import (
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/v3/pkg/kusttest"
-	plugins_test "sigs.k8s.io/kustomize/v3/pkg/plugins/test"
+	"sigs.k8s.io/kustomize/v3/pkg/plugins/testenv"
 )
 
 // This test requires having the go-getter binary on the PATH.
 //
 func TestGoGetter(t *testing.T) {
-	tc := plugins_test.NewEnvForTest(t).Set()
+	tc := testenv.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
@@ -44,9 +44,8 @@ metadata:
 `)
 }
 
-
 func TestGoGetterUrl(t *testing.T) {
-	tc := plugins_test.NewEnvForTest(t).Set()
+	tc := testenv.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
@@ -75,7 +74,7 @@ metadata:
 }
 
 func TestGoGetterCommand(t *testing.T) {
-	tc := plugins_test.NewEnvForTest(t).Set()
+	tc := testenv.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
@@ -103,9 +102,8 @@ metadata:
 `)
 }
 
-
 func TestGoGetterSubPath(t *testing.T) {
-	tc := plugins_test.NewEnvForTest(t).Set()
+	tc := testenv.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(

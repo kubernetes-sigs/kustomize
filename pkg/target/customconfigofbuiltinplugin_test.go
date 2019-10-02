@@ -6,15 +6,15 @@ package target_test
 import (
 	"testing"
 
-	kusttest_test "sigs.k8s.io/kustomize/v3/pkg/kusttest"
-	plugins_test "sigs.k8s.io/kustomize/v3/pkg/plugins/test"
+	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	"sigs.k8s.io/kustomize/v3/pkg/plugins/testenv"
 )
 
 // Demo custom configuration of a builtin transformation.
 // This is a NamePrefixer that only touches Deployments
 // and Services.
 func TestCustomNamePrefixer(t *testing.T) {
-	tc := plugins_test.NewEnvForTest(t).Set()
+	tc := testenv.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -103,7 +103,7 @@ metadata:
 
 // Demo custom configuration as a base.
 func TestReusableCustomNamePrefixer(t *testing.T) {
-	tc := plugins_test.NewEnvForTest(t).Set()
+	tc := testenv.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(

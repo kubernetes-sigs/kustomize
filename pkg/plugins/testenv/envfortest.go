@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package test
+package testenv
 
 import (
 	"io/ioutil"
@@ -98,14 +98,14 @@ func (x *EnvForTest) removeWorkDir() {
 }
 
 func (x *EnvForTest) setEnv() {
-	x.oldXdg, x.wasSet = os.LookupEnv(pgmconfig.XDG_CONFIG_HOME)
-	os.Setenv(pgmconfig.XDG_CONFIG_HOME, x.workDir)
+	x.oldXdg, x.wasSet = os.LookupEnv(pgmconfig.XdgConfigHome)
+	os.Setenv(pgmconfig.XdgConfigHome, x.workDir)
 }
 
 func (x *EnvForTest) resetEnv() {
 	if x.wasSet {
-		os.Setenv(pgmconfig.XDG_CONFIG_HOME, x.oldXdg)
+		os.Setenv(pgmconfig.XdgConfigHome, x.oldXdg)
 	} else {
-		os.Unsetenv(pgmconfig.XDG_CONFIG_HOME)
+		os.Unsetenv(pgmconfig.XdgConfigHome)
 	}
 }
