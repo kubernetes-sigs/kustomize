@@ -600,11 +600,6 @@ func addNamespace(namespace string, base string) string {
 	return res
 }
 
-// unExpectedError function handles unexpected error
-func unExpectedError(t *testing.T, name string, err error) {
-	t.Fatalf("%q; - unexpected error %v", name, err)
-}
-
 // compareExpectedError compares the expectedError and the actualError return by GetFieldValue
 func compareExpectedError(t *testing.T, name string, err error, errorMsg string) {
 	if err == nil {
@@ -854,7 +849,7 @@ metadata:
   name: notImportantHere
 paths:
 `
-	for idx, _ := range patches {
+	for idx := range patches {
 		config = fmt.Sprintf("%s\n- ./patch%d.yaml", config, idx)
 	}
 

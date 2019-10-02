@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 )
 
@@ -189,16 +190,16 @@ func TestSetImage(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("%s%v", tc.description, tc.given.args), func(t *testing.T) {
-			// arrange
-			fakeFS := fs.MakeFakeFS()
-			cmd := newCmdSetImage(fakeFS)
+			fSys := fs.MakeFsInMemory()
+			cmd := newCmdSetImage(fSys)
 
 			if len(tc.given.infileImages) > 0 {
 				// write file with infileImages
-				fakeFS.WriteTestKustomizationWith([]byte(strings.Join(tc.given.infileImages, "\n")))
+				testutils.WriteTestKustomizationWith(
+					fSys,
+					[]byte(strings.Join(tc.given.infileImages, "\n")))
 			} else {
-				// writes default kustomization file
-				fakeFS.WriteTestKustomization()
+				testutils.WriteTestKustomization(fSys)
 			}
 
 			// act
@@ -210,7 +211,7 @@ func TestSetImage(t *testing.T) {
 				t.FailNow()
 			}
 
-			content, err := fakeFS.ReadTestKustomization()
+			content, err := testutils.ReadTestKustomization(fSys)
 			if err != nil {
 				t.Errorf("unexpected read error: %v", err)
 				t.FailNow()

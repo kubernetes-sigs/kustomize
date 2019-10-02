@@ -29,9 +29,9 @@ func TestValidate(t *testing.T) {
 }
 
 func TestComplete(t *testing.T) {
-	fsys := fs.MakeFakeFS()
-	fsys.Mkdir("/some/dir")
-	fsys.WriteFile("/some/file", []byte(`some file`))
+	fSys := fs.MakeFsInMemory()
+	fSys.Mkdir("/some/dir")
+	fSys.WriteFile("/some/file", []byte(`some file`))
 
 	type testcase struct {
 		dir    string
@@ -54,7 +54,7 @@ func TestComplete(t *testing.T) {
 
 	for _, tcase := range testcases {
 		o := saveOptions{saveDirectory: tcase.dir}
-		actual := o.Complete(fsys)
+		actual := o.Complete(fSys)
 		if !reflect.DeepEqual(actual, tcase.expect) {
 			t.Fatalf("Expected %v\n but bot %v\n", tcase.expect, actual)
 		}
@@ -62,13 +62,13 @@ func TestComplete(t *testing.T) {
 }
 
 func TestRunSave(t *testing.T) {
-	fsys := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	o := saveOptions{saveDirectory: "/some/dir"}
-	err := o.RunSave(fsys)
+	err := o.RunSave(fSys)
 	if err != nil {
 		t.Fatalf("Unexpected error %v", err)
 	}
-	if !fsys.Exists("/some/dir/nameprefix.yaml") {
+	if !fSys.Exists("/some/dir/nameprefix.yaml") {
 		t.Fatal("default configurations are not successfully save.")
 	}
 }

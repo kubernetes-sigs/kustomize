@@ -25,7 +25,7 @@ import (
 
 // NewDefaultCommand returns the default (aka root) command for kustomize command.
 func NewDefaultCommand() *cobra.Command {
-	fSys := fs.MakeRealFS()
+	fSys := fs.MakeFsOnDisk()
 	stdOut := os.Stdout
 
 	c := &cobra.Command{

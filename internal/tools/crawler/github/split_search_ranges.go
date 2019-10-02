@@ -303,7 +303,7 @@ func FindRangesForRepoSearch(cache cachedSearch) ([]string, error) {
 		}
 		if nextAccessible < filesAccessible {
 			return nil, fmt.Errorf(
-				"Number of results dropped from %d to %d within range search",
+				"number of results dropped from %d to %d within range search",
 				filesAccessible, nextAccessible)
 		}
 
