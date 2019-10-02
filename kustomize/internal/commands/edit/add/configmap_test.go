@@ -13,7 +13,7 @@ import (
 )
 
 func TestNewAddConfigMapIsNotNil(t *testing.T) {
-	fSys := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	ldr := loader.NewFileLoaderAtCwd(validators.MakeFakeValidator(), fSys)
 	if newCmdAddConfigMap(fSys, ldr, nil) == nil {
 		t.Fatal("newCmdAddConfigMap shouldn't be nil")

@@ -68,7 +68,7 @@ func NewCmdBuild(
 
 	cmd := &cobra.Command{
 		Use:          "build {path}",
-		Short:        "Print configuration per contents of " + pgmconfig.KustomizationFileNames[0],
+		Short:        "Print configuration per contents of " + pgmconfig.KustomizationFileName0,
 		Example:      examples,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -96,7 +96,7 @@ func NewCmdBuild(
 func (o *Options) Validate(args []string) (err error) {
 	if len(args) > 1 {
 		return errors.New(
-			"specify one path to " + pgmconfig.KustomizationFileNames[0])
+			"specify one path to " + pgmconfig.KustomizationFileName0)
 	}
 	if len(args) == 0 {
 		o.kustomizationPath = loader.CWD

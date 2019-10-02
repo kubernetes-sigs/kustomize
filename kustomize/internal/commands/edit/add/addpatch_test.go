@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 )
 
@@ -19,18 +20,18 @@ sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 )
 
 func TestAddPatchHappyPath(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile(patchFileName, []byte(patchFileContent))
-	fakeFS.WriteFile(patchFileName+"another", []byte(patchFileContent))
-	fakeFS.WriteTestKustomization()
+	fSys := fs.MakeFsInMemory()
+	fSys.WriteFile(patchFileName, []byte(patchFileContent))
+	fSys.WriteFile(patchFileName+"another", []byte(patchFileContent))
+	testutils.WriteTestKustomization(fSys)
 
-	cmd := newCmdAddPatch(fakeFS)
+	cmd := newCmdAddPatch(fSys)
 	args := []string{patchFileName + "*"}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	content, err := fakeFS.ReadTestKustomization()
+	content, err := testutils.ReadTestKustomization(fSys)
 	if err != nil {
 		t.Errorf("unexpected read error: %v", err)
 	}
@@ -43,11 +44,11 @@ func TestAddPatchHappyPath(t *testing.T) {
 }
 
 func TestAddPatchAlreadyThere(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile(patchFileName, []byte(patchFileContent))
-	fakeFS.WriteTestKustomization()
+	fSys := fs.MakeFsInMemory()
+	fSys.WriteFile(patchFileName, []byte(patchFileContent))
+	testutils.WriteTestKustomization(fSys)
 
-	cmd := newCmdAddPatch(fakeFS)
+	cmd := newCmdAddPatch(fSys)
 	args := []string{patchFileName}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
@@ -62,9 +63,9 @@ func TestAddPatchAlreadyThere(t *testing.T) {
 }
 
 func TestAddPatchNoArgs(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 
-	cmd := newCmdAddPatch(fakeFS)
+	cmd := newCmdAddPatch(fSys)
 	err := cmd.Execute()
 	if err == nil {
 		t.Errorf("expected error: %v", err)

@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
+
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
@@ -55,8 +57,8 @@ func TestWriteAndRead(t *testing.T) {
 		NamePrefix: "prefix",
 	}
 
-	fSys := fs.MakeFakeFS()
-	fSys.WriteTestKustomization()
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomization(fSys)
 	mf, err := NewKustomizationFile(fSys)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
@@ -77,8 +79,8 @@ func TestWriteAndRead(t *testing.T) {
 }
 
 func TestNewNotExist(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	_, err := NewKustomizationFile(fakeFS)
+	fSys := fs.MakeFsInMemory()
+	_, err := NewKustomizationFile(fSys)
 	if err == nil {
 		t.Fatalf("expect an error")
 	}
@@ -86,7 +88,7 @@ func TestNewNotExist(t *testing.T) {
 	if !strings.Contains(err.Error(), contained) {
 		t.Fatalf("expect an error contains %q, but got %v", contained, err)
 	}
-	_, err = NewKustomizationFile(fakeFS)
+	_, err = NewKustomizationFile(fSys)
 	if err == nil {
 		t.Fatalf("expect an error")
 	}
@@ -103,13 +105,13 @@ configMapGenerator:
   - baz=qux
   name: my-configmap
 `
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile(pgmconfig.KustomizationFileNames[1], []byte(kcontent))
-	k, err := NewKustomizationFile(fakeFS)
+	fSys := fs.MakeFsInMemory()
+	fSys.WriteFile(pgmconfig.KustomizationFileName1, []byte(kcontent))
+	k, err := NewKustomizationFile(fSys)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
 	}
-	if k.path != pgmconfig.KustomizationFileNames[1] {
+	if k.path != pgmconfig.KustomizationFileName1 {
 		t.Fatalf("Load incorrect file path %s", k.path)
 	}
 }
@@ -139,8 +141,8 @@ patchesStrategicMerge:
 - service.yaml
 - pod.yaml
 `)
-	fSys := fs.MakeFakeFS()
-	fSys.WriteTestKustomizationWith(kustomizationContentWithComments)
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomizationWith(fSys, kustomizationContentWithComments)
 	mf, err := NewKustomizationFile(fSys)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
@@ -231,8 +233,9 @@ patchesStrategicMerge:
 generatorOptions:
   disableNameSuffixHash: true
 `)
-	fSys := fs.MakeFakeFS()
-	fSys.WriteTestKustomizationWith(kustomizationContentWithComments)
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomizationWith(
+		fSys, kustomizationContentWithComments)
 	mf, err := NewKustomizationFile(fSys)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
@@ -268,8 +271,9 @@ patchesStrategicMerge:
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 `)
-	fSys := fs.MakeFakeFS()
-	fSys.WriteTestKustomizationWith(kustomizationContentWithComments)
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomizationWith(
+		fSys, kustomizationContentWithComments)
 	mf, err := NewKustomizationFile(fSys)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
@@ -313,8 +317,8 @@ patches:
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 `)
-	fSys := fs.MakeFakeFS()
-	fSys.WriteTestKustomizationWith(kustomizationContentWithComments)
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomizationWith(fSys, kustomizationContentWithComments)
 	mf, err := NewKustomizationFile(fSys)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)

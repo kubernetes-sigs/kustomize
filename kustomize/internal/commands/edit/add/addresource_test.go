@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 )
 
@@ -19,18 +20,18 @@ sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 )
 
 func TestAddResourceHappyPath(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile(resourceFileName, []byte(resourceFileContent))
-	fakeFS.WriteFile(resourceFileName+"another", []byte(resourceFileContent))
-	fakeFS.WriteTestKustomization()
+	fSys := fs.MakeFsInMemory()
+	fSys.WriteFile(resourceFileName, []byte(resourceFileContent))
+	fSys.WriteFile(resourceFileName+"another", []byte(resourceFileContent))
+	testutils.WriteTestKustomization(fSys)
 
-	cmd := newCmdAddResource(fakeFS)
+	cmd := newCmdAddResource(fSys)
 	args := []string{resourceFileName + "*"}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	content, err := fakeFS.ReadTestKustomization()
+	content, err := testutils.ReadTestKustomization(fSys)
 	if err != nil {
 		t.Errorf("unexpected read error: %v", err)
 	}
@@ -43,11 +44,11 @@ func TestAddResourceHappyPath(t *testing.T) {
 }
 
 func TestAddResourceAlreadyThere(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile(resourceFileName, []byte(resourceFileContent))
-	fakeFS.WriteTestKustomization()
+	fSys := fs.MakeFsInMemory()
+	fSys.WriteFile(resourceFileName, []byte(resourceFileContent))
+	testutils.WriteTestKustomization(fSys)
 
-	cmd := newCmdAddResource(fakeFS)
+	cmd := newCmdAddResource(fSys)
 	args := []string{resourceFileName}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
@@ -62,9 +63,9 @@ func TestAddResourceAlreadyThere(t *testing.T) {
 }
 
 func TestAddResourceNoArgs(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 
-	cmd := newCmdAddResource(fakeFS)
+	cmd := newCmdAddResource(fSys)
 	err := cmd.Execute()
 	if err == nil {
 		t.Errorf("expected error: %v", err)
