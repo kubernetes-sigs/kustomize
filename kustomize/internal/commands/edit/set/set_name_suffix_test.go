@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 )
 
@@ -15,16 +16,16 @@ const (
 )
 
 func TestSetNameSuffixHappyPath(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteTestKustomization()
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomization(fSys)
 
-	cmd := newCmdSetNameSuffix(fakeFS)
+	cmd := newCmdSetNameSuffix(fSys)
 	args := []string{goodSuffixValue}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	content, err := fakeFS.ReadTestKustomization()
+	content, err := testutils.ReadTestKustomization(fSys)
 	if err != nil {
 		t.Errorf("unexpected read error: %v", err)
 	}
@@ -34,9 +35,8 @@ func TestSetNameSuffixHappyPath(t *testing.T) {
 }
 
 func TestSetNameSuffixNoArgs(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-
-	cmd := newCmdSetNameSuffix(fakeFS)
+	fSys := fs.MakeFsInMemory()
+	cmd := newCmdSetNameSuffix(fSys)
 	err := cmd.Execute()
 	if err == nil {
 		t.Errorf("expected error: %v", err)

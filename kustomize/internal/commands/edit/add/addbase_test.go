@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
+	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 )
 
@@ -16,20 +17,20 @@ const (
 )
 
 func TestAddBaseHappyPath(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	bases := strings.Split(baseDirectoryPaths, ",")
 	for _, base := range bases {
-		fakeFS.Mkdir(base)
+		fSys.Mkdir(base)
 	}
-	fakeFS.WriteTestKustomization()
+	testutils.WriteTestKustomization(fSys)
 
-	cmd := newCmdAddBase(fakeFS)
+	cmd := newCmdAddBase(fSys)
 	args := []string{baseDirectoryPaths}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	content, err := fakeFS.ReadTestKustomization()
+	content, err := testutils.ReadTestKustomization(fSys)
 	if err != nil {
 		t.Errorf("unexpected read error: %v", err)
 	}
@@ -42,15 +43,15 @@ func TestAddBaseHappyPath(t *testing.T) {
 }
 
 func TestAddBaseAlreadyThere(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	// Create fake directories
 	bases := strings.Split(baseDirectoryPaths, ",")
 	for _, base := range bases {
-		fakeFS.Mkdir(base)
+		fSys.Mkdir(base)
 	}
-	fakeFS.WriteTestKustomization()
+	testutils.WriteTestKustomization(fSys)
 
-	cmd := newCmdAddBase(fakeFS)
+	cmd := newCmdAddBase(fSys)
 	args := []string{baseDirectoryPaths}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
@@ -69,13 +70,12 @@ func TestAddBaseAlreadyThere(t *testing.T) {
 			t.Errorf("unexpected error %v", err)
 		}
 	}
-
 }
 
 func TestAddBaseNoArgs(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 
-	cmd := newCmdAddBase(fakeFS)
+	cmd := newCmdAddBase(fSys)
 	err := cmd.Execute()
 	if err == nil {
 		t.Errorf("expected error: %v", err)

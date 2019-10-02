@@ -15,8 +15,8 @@ import (
 
 var factory = kunstruct.NewKunstructuredFactoryImpl()
 
-func readKustomizationFS(t *testing.T, fakeFS fs.FileSystem) *types.Kustomization {
-	kf, err := kustfile.NewKustomizationFile(fakeFS)
+func readKustomizationFS(t *testing.T, fSys fs.FileSystem) *types.Kustomization {
+	kf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		t.Errorf("unexpected new error %v", err)
 	}
@@ -27,25 +27,25 @@ func readKustomizationFS(t *testing.T, fakeFS fs.FileSystem) *types.Kustomizatio
 	return m
 }
 func TestCreateNoArgs(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	cmd := NewCmdCreate(fakeFS, factory)
+	fSys := fs.MakeFsInMemory()
+	cmd := NewCmdCreate(fSys, factory)
 	err := cmd.RunE(cmd, []string{})
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	readKustomizationFS(t, fakeFS)
+	readKustomizationFS(t, fSys)
 }
 
 func TestCreateWithResources(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteFile("foo.yaml", []byte(""))
-	fakeFS.WriteFile("bar.yaml", []byte(""))
+	fSys := fs.MakeFsInMemory()
+	fSys.WriteFile("foo.yaml", []byte(""))
+	fSys.WriteFile("bar.yaml", []byte(""))
 	opts := createFlags{resources: "foo.yaml,bar.yaml"}
-	err := runCreate(opts, fakeFS, factory)
+	err := runCreate(opts, fSys, factory)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	m := readKustomizationFS(t, fakeFS)
+	m := readKustomizationFS(t, fSys)
 	expected := []string{"foo.yaml", "bar.yaml"}
 	if !reflect.DeepEqual(m.Resources, expected) {
 		t.Fatalf("expected %+v but got %+v", expected, m.Resources)
@@ -53,14 +53,14 @@ func TestCreateWithResources(t *testing.T) {
 }
 
 func TestCreateWithNamespace(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	want := "foo"
 	opts := createFlags{namespace: want}
-	err := runCreate(opts, fakeFS, factory)
+	err := runCreate(opts, fSys, factory)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	m := readKustomizationFS(t, fakeFS)
+	m := readKustomizationFS(t, fSys)
 	got := m.Namespace
 	if got != want {
 		t.Errorf("want: %s, got: %s", want, got)
@@ -68,13 +68,13 @@ func TestCreateWithNamespace(t *testing.T) {
 }
 
 func TestCreateWithLabels(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	opts := createFlags{labels: "foo:bar"}
-	err := runCreate(opts, fakeFS, factory)
+	err := runCreate(opts, fSys, factory)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	m := readKustomizationFS(t, fakeFS)
+	m := readKustomizationFS(t, fSys)
 	expected := map[string]string{"foo": "bar"}
 	if !reflect.DeepEqual(m.CommonLabels, expected) {
 		t.Fatalf("expected %+v but got %+v", expected, m.CommonLabels)
@@ -82,13 +82,13 @@ func TestCreateWithLabels(t *testing.T) {
 }
 
 func TestCreateWithAnnotations(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	opts := createFlags{annotations: "foo:bar"}
-	err := runCreate(opts, fakeFS, factory)
+	err := runCreate(opts, fSys, factory)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	m := readKustomizationFS(t, fakeFS)
+	m := readKustomizationFS(t, fSys)
 	expected := map[string]string{"foo": "bar"}
 	if !reflect.DeepEqual(m.CommonAnnotations, expected) {
 		t.Fatalf("expected %+v but got %+v", expected, m.CommonAnnotations)
@@ -96,14 +96,14 @@ func TestCreateWithAnnotations(t *testing.T) {
 }
 
 func TestCreateWithNamePrefix(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	want := "foo-"
 	opts := createFlags{prefix: want}
-	err := runCreate(opts, fakeFS, factory)
+	err := runCreate(opts, fSys, factory)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	m := readKustomizationFS(t, fakeFS)
+	m := readKustomizationFS(t, fSys)
 	got := m.NamePrefix
 	if got != want {
 		t.Errorf("want: %s, got: %s", want, got)
@@ -111,68 +111,68 @@ func TestCreateWithNamePrefix(t *testing.T) {
 }
 
 func TestCreateWithNameSuffix(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	opts := createFlags{suffix: "-foo"}
-	err := runCreate(opts, fakeFS, factory)
+	err := runCreate(opts, fSys, factory)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	m := readKustomizationFS(t, fakeFS)
+	m := readKustomizationFS(t, fSys)
 	if m.NameSuffix != "-foo" {
 		t.Errorf("want: -foo, got: %s", m.NameSuffix)
 	}
 }
 
-func writeDetectContent(fakeFS fs.FileSystem) {
-	fakeFS.WriteFile("/test.yaml", []byte(`
+func writeDetectContent(fSys fs.FileSystem) {
+	fSys.WriteFile("/test.yaml", []byte(`
 apiVersion: v1
 kind: Service
 metadata:
   name: test`))
-	fakeFS.WriteFile("/README.md", []byte(`
+	fSys.WriteFile("/README.md", []byte(`
 # Not a k8s resource
 This file is not a valid kubernetes object.`))
-	fakeFS.WriteFile("/non-k8s.yaml", []byte(`
+	fSys.WriteFile("/non-k8s.yaml", []byte(`
 # Not a k8s resource
 other: yaml
 foo:
 - bar
 - baz`))
-	fakeFS.Mkdir("/sub")
-	fakeFS.WriteFile("/sub/test.yaml", []byte(`
+	fSys.Mkdir("/sub")
+	fSys.WriteFile("/sub/test.yaml", []byte(`
 apiVersion: v1
 kind: Service
 metadata:
   name: test2`))
-	fakeFS.WriteFile("/sub/README.md", []byte(`
+	fSys.WriteFile("/sub/README.md", []byte(`
 # Not a k8s resource
 This file in a subdirectory is not a valid kubernetes object.`))
-	fakeFS.WriteFile("/sub/non-k8s.yaml", []byte(`
+	fSys.WriteFile("/sub/non-k8s.yaml", []byte(`
 # Not a k8s resource
 other: yaml
 foo:
 - bar
 - baz`))
-	fakeFS.Mkdir("/overlay")
-	fakeFS.WriteFile("/overlay/test.yaml", []byte(`
+	fSys.Mkdir("/overlay")
+	fSys.WriteFile("/overlay/test.yaml", []byte(`
 apiVersion: v1
 kind: Service
 metadata:
   name: test3`))
-	fakeFS.WriteFile("/overlay/kustomization.yaml", []byte(`
+	fSys.WriteFile("/overlay/kustomization.yaml", []byte(`
 resources:
 - test.yaml`))
 }
 
 func TestCreateWithDetect(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	writeDetectContent(fakeFS)
+	fSys := fs.MakeFsInMemory()
+	writeDetectContent(fSys)
 	opts := createFlags{path: "/", detectResources: true}
-	err := runCreate(opts, fakeFS, factory)
+	err := runCreate(opts, fSys, factory)
 	if err != nil {
 		t.Fatalf("unexpected cmd error: %v", err)
 	}
-	m := readKustomizationFS(t, fakeFS)
+	m := readKustomizationFS(t, fSys)
 	expected := []string{"/test.yaml"}
 	if !reflect.DeepEqual(m.Resources, expected) {
 		t.Fatalf("expected %+v but got %+v", expected, m.Resources)
@@ -180,14 +180,14 @@ func TestCreateWithDetect(t *testing.T) {
 }
 
 func TestCreateWithDetectRecursive(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	writeDetectContent(fakeFS)
+	fSys := fs.MakeFsInMemory()
+	writeDetectContent(fSys)
 	opts := createFlags{path: "/", detectResources: true, detectRecursive: true}
-	err := runCreate(opts, fakeFS, factory)
+	err := runCreate(opts, fSys, factory)
 	if err != nil {
 		t.Fatalf("unexpected cmd error: %v", err)
 	}
-	m := readKustomizationFS(t, fakeFS)
+	m := readKustomizationFS(t, fSys)
 	expected := []string{"/overlay", "/sub/test.yaml", "/test.yaml"}
 	if !reflect.DeepEqual(m.Resources, expected) {
 		t.Fatalf("expected %+v but got %+v", expected, m.Resources)
