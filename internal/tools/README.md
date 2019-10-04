@@ -367,10 +367,10 @@ the following flattened structure would look like:
     "patchesJson6902:path",
   ],
   "values": [
-    "resources=service.yaml"
-    "resources=deployment.yaml"
-    "configmapGenerator:name=app-configuration"
-    "configmapGenerator:files=config.yaml"
+    "resources=service.yaml",
+    "resources=deployment.yaml",
+    "configmapGenerator:name=app-configuration",
+    "configmapGenerator:files=config.yaml",
     "patchesJson6902:target:version=v1",
     "patchesJson6902:target:kind=StatefulSet",
     "patchesJson6902:target:name=ss-name",

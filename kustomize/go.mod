@@ -11,7 +11,7 @@ require (
 	sigs.k8s.io/yaml v1.1.0
 )
 
-// Temporarily drop this replacement, and select a specific
-// version of sig.k8s.io/kustomize (the API module) before
-// tagging and releasing this module (the kustomize CLI).
-replace sigs.k8s.io/kustomize/v3 v3.2.0 => ../../kustomize
+// When tagging and releasing this module (the kustomize CLI),
+// be sure to require a specific version of sig.k8s.io/kustomize
+// above, and drop the following replace directive.
+replace sigs.k8s.io/kustomize/v3 v3.2.0 => ../

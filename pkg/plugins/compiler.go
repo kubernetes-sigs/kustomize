@@ -63,7 +63,7 @@ func DefaultSrcRoot() (string, error) {
 	nope = append(nope, root)
 
 	root = filepath.Join(
-		pgmconfig.HomeDir(),
+		homeDir(),
 		pgmconfig.ProgramName, pgmconfig.PluginRoot)
 	if FileExists(root) {
 		return root, nil
