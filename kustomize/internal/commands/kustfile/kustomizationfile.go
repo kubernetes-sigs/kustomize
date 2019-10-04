@@ -119,7 +119,7 @@ func NewKustomizationFile(fSys fs.FileSystem) (*kustomizationFile, error) { // n
 func (mf *kustomizationFile) validate() error {
 	match := 0
 	var path []string
-	for _, kfilename := range pgmconfig.KustomizationFileNames() {
+	for _, kfilename := range pgmconfig.RecognizedKustomizationFileNames() {
 		if mf.fSys.Exists(kfilename) {
 			match += 1
 			path = append(path, kfilename)
@@ -128,7 +128,9 @@ func (mf *kustomizationFile) validate() error {
 
 	switch match {
 	case 0:
-		return fmt.Errorf("Missing kustomization file '%s'.\n", pgmconfig.KustomizationFileName0)
+		return fmt.Errorf(
+			"Missing kustomization file '%s'.\n",
+			pgmconfig.DefaultKustomizationFileName())
 	case 1:
 		mf.path = path[0]
 	default:
@@ -228,7 +230,6 @@ func (mf *kustomizationFile) marshal(kustomization *types.Kustomization) ([]byte
 			return content, nil
 		}
 		output = append(output, content...)
-
 	}
 	return output, nil
 }

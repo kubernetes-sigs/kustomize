@@ -389,7 +389,8 @@ func TestNewLoaderAtGitClone(t *testing.T) {
 	fSys.MkdirAll(coRoot)
 	fSys.MkdirAll(coRoot + "/" + pathInRepo)
 	fSys.WriteFile(
-		coRoot+"/"+pathInRepo+"/"+pgmconfig.KustomizationFileName0,
+		coRoot+"/"+pathInRepo+"/"+
+			pgmconfig.DefaultKustomizationFileName(),
 		[]byte(`
 whatever
 `))

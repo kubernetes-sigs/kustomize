@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/v3/pkg/kusttest"
- "sigs.k8s.io/kustomize/v3/pkg/plugins/testenv"
+	"sigs.k8s.io/kustomize/v3/pkg/plugins/testenv"
 )
 
 // This is an example of using a helm chart as a base,

@@ -38,10 +38,10 @@ func WriteTestKustomization(fSys fs.FileSystem) {
 
 // WriteTestKustomizationWith writes content to a well known file name.
 func WriteTestKustomizationWith(fSys fs.FileSystem, bytes []byte) {
-	fSys.WriteFile(pgmconfig.KustomizationFileName0, bytes)
+	fSys.WriteFile(pgmconfig.DefaultKustomizationFileName(), bytes)
 }
 
 // ReadTestKustomization reads content from a well known file name.
 func ReadTestKustomization(fSys fs.FileSystem) ([]byte, error) {
-	return fSys.ReadFile(pgmconfig.KustomizationFileName0)
+	return fSys.ReadFile(pgmconfig.DefaultKustomizationFileName())
 }

@@ -67,8 +67,9 @@ func NewCmdBuild(
 	pl := plugins.NewLoader(pluginConfig, rf)
 
 	cmd := &cobra.Command{
-		Use:          "build {path}",
-		Short:        "Print configuration per contents of " + pgmconfig.KustomizationFileName0,
+		Use: "build {path}",
+		Short: "Print configuration per contents of " +
+			pgmconfig.DefaultKustomizationFileName(),
 		Example:      examples,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -96,7 +97,8 @@ func NewCmdBuild(
 func (o *Options) Validate(args []string) (err error) {
 	if len(args) > 1 {
 		return errors.New(
-			"specify one path to " + pgmconfig.KustomizationFileName0)
+			"specify one path to " +
+				pgmconfig.DefaultKustomizationFileName())
 	}
 	if len(args) == 0 {
 		o.kustomizationPath = loader.CWD

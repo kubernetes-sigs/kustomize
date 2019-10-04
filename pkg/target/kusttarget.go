@@ -81,7 +81,7 @@ func commaOr(q []string) string {
 func loadKustFile(ldr ifc.Loader) ([]byte, error) {
 	var content []byte
 	match := 0
-	for _, kf := range pgmconfig.KustomizationFileNames() {
+	for _, kf := range pgmconfig.RecognizedKustomizationFileNames() {
 		c, err := ldr.Load(kf)
 		if err == nil {
 			match += 1
@@ -92,7 +92,7 @@ func loadKustFile(ldr ifc.Loader) ([]byte, error) {
 	case 0:
 		return nil, fmt.Errorf(
 			"unable to find one of %v in directory '%s'",
-			commaOr(quoted(pgmconfig.KustomizationFileNames())),
+			commaOr(quoted(pgmconfig.RecognizedKustomizationFileNames())),
 			ldr.Root())
 	case 1:
 		return content, nil
