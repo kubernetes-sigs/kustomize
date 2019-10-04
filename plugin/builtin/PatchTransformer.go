@@ -3,6 +3,7 @@ package builtin
 
 import (
 	"fmt"
+
 	"github.com/evanphx/json-patch"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
@@ -19,7 +20,7 @@ type PatchTransformerPlugin struct {
 	decodedPatch jsonpatch.Patch
 	Path         string          `json:"path,omitempty" yaml:"path,omitempty"`
 	Patch        string          `json:"patch,omitempty" yaml:"patch,omitempty"`
-	Target       *types.Selector `json:"target,omitempty", yaml:"target,omitempty"`
+	Target       *types.Selector `json:"target,omitempty" yaml:"target,omitempty"`
 }
 
 func (p *PatchTransformerPlugin) Config(
@@ -93,9 +94,9 @@ func (p *PatchTransformerPlugin) Transform(m resmap.ResMap) error {
 	if err != nil {
 		return err
 	}
-	for _, resource := range resources {
+	for _, res := range resources {
 		if p.decodedPatch != nil {
-			rawObj, err := resource.MarshalJSON()
+			rawObj, err := res.MarshalJSON()
 			if err != nil {
 				return err
 			}
@@ -104,17 +105,17 @@ func (p *PatchTransformerPlugin) Transform(m resmap.ResMap) error {
 				return errors.Wrapf(
 					err, "failed to apply json patch '%s'", p.Patch)
 			}
-			err = resource.UnmarshalJSON(modifiedObj)
+			err = res.UnmarshalJSON(modifiedObj)
 			if err != nil {
 				return err
 			}
 		}
 		if p.loadedPatch != nil {
 			patchCopy := p.loadedPatch.DeepCopy()
-			patchCopy.SetName(resource.GetName())
-			patchCopy.SetNamespace(resource.GetNamespace())
-			patchCopy.SetGvk(resource.GetGvk())
-			err = resource.Patch(patchCopy.Kunstructured)
+			patchCopy.SetName(res.GetName())
+			patchCopy.SetNamespace(res.GetNamespace())
+			patchCopy.SetGvk(res.GetGvk())
+			err = res.Patch(patchCopy.Kunstructured)
 			if err != nil {
 				return err
 			}
