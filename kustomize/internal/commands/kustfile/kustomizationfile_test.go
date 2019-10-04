@@ -97,7 +97,7 @@ func TestNewNotExist(t *testing.T) {
 	}
 }
 
-func TestSecondarySuffix(t *testing.T) {
+func TestAllKustomizationFileNames(t *testing.T) {
 	kcontent := `
 configMapGenerator:
 - literals:
@@ -105,14 +105,16 @@ configMapGenerator:
   - baz=qux
   name: my-configmap
 `
-	fSys := fs.MakeFsInMemory()
-	fSys.WriteFile(pgmconfig.KustomizationFileName1, []byte(kcontent))
-	k, err := NewKustomizationFile(fSys)
-	if err != nil {
-		t.Fatalf("Unexpected Error: %v", err)
-	}
-	if k.path != pgmconfig.KustomizationFileName1 {
-		t.Fatalf("Load incorrect file path %s", k.path)
+	for _, n := range pgmconfig.RecognizedKustomizationFileNames() {
+		fSys := fs.MakeFsInMemory()
+		fSys.WriteFile(n, []byte(kcontent))
+		k, err := NewKustomizationFile(fSys)
+		if err != nil {
+			t.Fatalf("Unexpected Error: %v", err)
+		}
+		if k.path != n {
+			t.Fatalf("Load incorrect file path %s", k.path)
+		}
 	}
 }
 

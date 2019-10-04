@@ -4,22 +4,23 @@
 // Package pgmconfig holds global constants for the kustomize tool.
 package pgmconfig
 
-// KustomizationFileNames is a list of filenames
+// RecognizedKustomizationFileNames is a list of file names
 // that kustomize recognizes.
-// To avoid ambiguity, a directory cannot contain
-// more than one match to this list.
-func KustomizationFileNames() []string {
+// To avoid ambiguity, a kustomization directory may not
+// contain more than one match to this list.
+func RecognizedKustomizationFileNames() []string {
 	return []string{
-		KustomizationFileName0,
-		KustomizationFileName1,
-		KustomizationFileName2}
+		"kustomization.yaml",
+		"kustomization.yml",
+		"Kustomization",
+	}
+}
+
+func DefaultKustomizationFileName() string {
+	return RecognizedKustomizationFileNames()[0]
 }
 
 const (
-	KustomizationFileName0 = "kustomization.yaml"
-	KustomizationFileName1 = "kustomization.yml"
-	KustomizationFileName2 = "Kustomization"
-
 	// An environment variable to consult for kustomization
 	// configuration data.  See:
 	// https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html

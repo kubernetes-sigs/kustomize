@@ -23,7 +23,8 @@ func newCmdRemoveResource(fsys fs.FileSystem) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "resource",
-		Short: "Removes one or more resource file paths from " + pgmconfig.KustomizationFileName0,
+		Short: "Removes one or more resource file paths from " +
+			pgmconfig.DefaultKustomizationFileName(),
 		Example: `
 		remove resource my-resource.yml
 		remove resource resource1.yml resource2.yml resource3.yml
