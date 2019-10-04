@@ -162,7 +162,7 @@ func detectResources(fSys fs.FileSystem, uf ifc.KunstructuredFactory, base strin
 			}
 			// If a sub-directory contains an existing kustomization file add the
 			// directory as a resource and do not decend into it.
-			for _, kfilename := range pgmconfig.KustomizationFileNames() {
+			for _, kfilename := range pgmconfig.RecognizedKustomizationFileNames() {
 				if fSys.Exists(filepath.Join(path, kfilename)) {
 					paths = append(paths, path)
 					return filepath.SkipDir
