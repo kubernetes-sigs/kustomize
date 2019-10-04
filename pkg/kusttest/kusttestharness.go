@@ -74,7 +74,10 @@ func (th *KustTestHarness) WriteF(dir string, content string) {
 }
 
 func (th *KustTestHarness) WriteK(dir string, content string) {
-	th.WriteF(filepath.Join(dir, pgmconfig.KustomizationFileName0), `
+	th.WriteF(
+		filepath.Join(
+			dir,
+			pgmconfig.DefaultKustomizationFileName()), `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 `+content)
