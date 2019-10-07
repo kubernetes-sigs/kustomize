@@ -190,9 +190,9 @@ requires.
 # Update the following as needed, obviously.
 
 if [ "$module" != "api" ]; then
-  go mod edit -dropreplace=sigs.k8s.io/kustomize/v3    $module/go.mod
-  go mod edit -require=sigs.k8s.io/kustomize/v4@v4.0.1 $module/go.mod
-  git commit -a -m "Drop API module replacement"
+  # go mod edit -dropreplace=sigs.k8s.io/kustomize/v3    $module/go.mod
+  # go mod edit -require=sigs.k8s.io/kustomize/v4@v4.0.1 $module/go.mod
+  # git commit -a -m "Drop API module replacement"
 fi
 ```
 
@@ -222,7 +222,7 @@ git ls-remote --tags upstream
 ### define the release tag
 
 ```
-tag="v${major}.v${minor}.${patch}"
+tag="v${major}.${minor}.${patch}"
 if [ "$module" != "api" ]; then
   # must prefix the tag with submodule name
   tag="${module}/${tag}"
