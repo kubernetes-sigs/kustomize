@@ -79,6 +79,11 @@ type Kustomization struct {
 	// value of the specified field has been determined.
 	Vars []Var `json:"vars,omitempty" yaml:"vars,omitempty"`
 
+	// Replacements defines substitutions including source and destinations.
+	// It is used to inject a field from one Kubernetes resource into another Kubernetes
+	// resources. It can also inject a literal string into a Kubernetes resources.
+	Replacements []Replacement `json:"replacements,omitempty" yaml:"replacements,omitempty"`
+
 	//
 	// Operands - what kustomize operates on.
 	//
