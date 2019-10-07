@@ -74,5 +74,5 @@ cloud-build-local \
 echo " "
 echo "Result of local build:"
 echo "##########################################"
-tree ./kustomize/dist
+tree ./$module/dist
 echo "##########################################"

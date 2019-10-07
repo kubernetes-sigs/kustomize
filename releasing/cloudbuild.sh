@@ -56,16 +56,13 @@ EOF
   pluginator)
     cat <<EOF >>$config
 builds:
-- main: ./main.go
-  binary: pluginator
+- binary: pluginator
   goos:
   - linux
   - darwin
   - windows
   goarch:
    - amd64
-archive:
-  format: binary
 EOF
     ;;
   *)
