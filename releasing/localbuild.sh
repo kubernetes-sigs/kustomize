@@ -2,7 +2,7 @@
 
 # Usage - from the repository root, enter
 #
-#   ./releasing/localbuild.sh
+#   ./releasing/localbuild.sh (kustomize|pluginator)
 #
 # The script attempts to use cloudbuild configuration
 # to create a release "locally".
@@ -17,25 +17,53 @@
 # applied to the kustomize repo, the cloud builder
 # reads the repository-relative file
 #
-#   releasing/cloudbuild.yaml
+#   releasing/cloudbuild_(kustomize|pluginator).yaml
 #  
 # Inside this yaml file is a reference to the script
 #
 #   releasing/cloudbuild.sh
 #
-# which runs goreleaser from the proper directory.
+# which runs goreleaser from the proper directory, with the
+# proper config.
 #
 # The script you are reading now does something
 # analogous via docker tricks.
 
 set -e
 
-# Modify cloudbuild.yaml to add the --snapshot flag.
-# This suppresses the github release, and leaves
-# the build output in the kustomize/dist directory.
+module=$1
+case "$module" in
+  api)
+    echo "goreleaser only releases 'main' packages (executables)"
+    echo "See https://github.com/goreleaser/goreleaser/issues/981"
+    exit 1
+  ;;
+  kustomize)
+  ;;
+  pluginator)
+  ;;
+  *)
+    echo "Don't recognize module=$module"
+    exit 1
+  ;;
+esac
+
 config=$(mktemp)
-sed 's|\["releasing/cloudbuild.sh"\]|["releasing/cloudbuild.sh", "--snapshot"]|' \
-    releasing/cloudbuild.yaml > $config
+cp releasing/cloudbuild_${module}.yaml $config
+
+# Delete the cloud-builders/git step.
+sed -i '2,3d'  $config
+
+# Add the --snapshot flag to suppress the
+# github release and leave the build output
+# in the kustomize/dist directory.
+sed -i 's|"\]$|", "--snapshot"]|' \
+    $config
+
+echo "Executing cloud-build-local with:"
+echo "========================="
+cat $config
+echo "========================="
 
 cloud-build-local \
     --config=$config \
@@ -43,7 +71,8 @@ cloud-build-local \
     --dryrun=false \
     .
 
-# Print results of local build
+echo " "
+echo "Result of local build:"
 echo "##########################################"
 tree ./kustomize/dist
 echo "##########################################"
