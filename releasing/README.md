@@ -152,7 +152,8 @@ since the branch accumulates patch releases.
 > release branch that already exists.
 
 ```
-branch="release-${module}-v${major}.${minor}
+branch="release-${module}-v${major}.${minor}"
+echo "branch=$branch"
 git checkout -b $branch
 ```
 
@@ -210,11 +211,12 @@ git ls-remote --tags upstream
 ### define the release tag
 
 ```
-tag="v${major}.v${minor}.${patch}
+tag="v${major}.v${minor}.${patch}"
 if [ "$module" != "api" ]; then
   # must prefix the tag with submodule name
   tag="${module}/${tag}"
 fi
+echo "tag=$tag"
 ```
 
 ### if replacing a release...
