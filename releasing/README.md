@@ -70,19 +70,15 @@ require sigs.k8s.io/kustomize/v4 v4.0.1
 
 #### Release artifacts
 
+This is a Go library only release, so the only
+artifact per se is the repo tag, in the form `v4.3.2`,
+that API clients can `require` from their `go.mod` file.
+
 Release notes should appear on the [release page].
 
-[release notes generator]: https://github.com/kubernetes-sigs/controller-runtime/blob/master/hack/release/release-notes.sh
-
-> TODO: install a decent library [release notes generator].
-> Until then, just run something like
-> ```
-> git log --pretty="%h - %s (%aN)" v3.1.0..v3.2.0
-> ```
-> and summarize the results via the [release page] UX.
-
-There's no binary, just a repo tag in the form `v4.3.2`
-that others can `require` from their `go.mod` files.
+There's an executable called `kustapiversion`, which, if
+run, prints the API release provenance data, but it's of
+no practical use to an API client.
 
 ### sigs.k8s.io/kustomize/pluginator
 
@@ -201,7 +197,7 @@ fi
 Install [`cloud-build-local`], then run
 
 ```
-./releasing/localbuild.sh (kustomize|pluginator)
+./releasing/localbuild.sh (kustomize|pluginator|api)
 ```
 
 This should create release artifacts in a local directory.
