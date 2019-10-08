@@ -7,16 +7,21 @@ set -x
 module=$1
 shift
 
+executable=$module
 if [ "$module" == "api" ]; then
-  echo "goreleaser only releases 'main' packages (executables)"
-  echo "See https://github.com/goreleaser/goreleaser/issues/981"
-  exit 1
+  # For this module, there's no correspondingly named
+  # sub-directory, since the module is at the repo root.
+  # There is, however, a dummy executable in a sub-directory.
+  # Build that executable, primarily to give goreleaser
+  # something to coordinate it release process around.
+  executable=kustapiversion
 fi
 
-config=$(mktemp)
+cd $executable
 
-cat <<EOF >$config
-project_name: $module
+configFile=$(mktemp)
+cat <<EOF >$configFile
+project_name: $executable
 env:
 - CGO_ENABLED=0
 - GO111MODULE=on
@@ -34,29 +39,14 @@ release:
   github:
     owner: kubernetes-sigs
     name: kustomize
-EOF
+builds:
+- binary: $executable
+  ldflags: >
+    -s
+    -X sigs.k8s.io/kustomize/v3/provenance.version={{.Version}}
+    -X sigs.k8s.io/kustomize/v3/provenance.gitCommit={{.Commit}}
+    -X sigs.k8s.io/kustomize/v3/provenance.buildDate={{.Date}}
 
-case "$module" in
-  kustomize)
-    cat <<EOF >>$config
-builds:
-- main: ./main.go
-  binary: kustomize
-  ldflags: -s -X sigs.k8s.io/kustomize/kustomize/v3/provenance.version={{.Version}} -X sigs.k8s.io/kustomize/kustomize/v3/provenance.gitCommit={{.Commit}} -X sigs.k8s.io/kustomize/kustomize/v3/provenance.buildDate={{.Date}}
-  goos:
-  - linux
-  - darwin
-  - windows
-  goarch:
-   - amd64
-archive:
-  format: binary
-EOF
-    ;;
-  pluginator)
-    cat <<EOF >>$config
-builds:
-- binary: pluginator
   goos:
   - linux
   - darwin
@@ -64,20 +54,9 @@ builds:
   goarch:
    - amd64
 EOF
-    ;;
-  *)
-    echo "Don't recognize module $module"
-    exit 1
-    ;;  
-esac
 
-cat $config
+cat $configFile
 
-if [ "$module" != "api" ]; then
-  # goreleaser must be run from the _module_ being released.
-  cd $module
-fi
-
-/bin/goreleaser release --config=$config --rm-dist --skip-validate $@
+/bin/goreleaser release --config=$configFile --rm-dist --skip-validate $@
 
 

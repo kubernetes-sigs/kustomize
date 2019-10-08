@@ -17,8 +17,8 @@
 # applied to the kustomize repo, the cloud builder
 # reads the repository-relative file
 #
-#   releasing/cloudbuild_(kustomize|pluginator).yaml
-#  
+#   releasing/cloudbuild_(kustomize|pluginator|api).yaml
+#
 # Inside this yaml file is a reference to the script
 #
 #   releasing/cloudbuild.sh
@@ -34,9 +34,6 @@ set -e
 module=$1
 case "$module" in
   api)
-    echo "goreleaser only releases 'main' packages (executables)"
-    echo "See https://github.com/goreleaser/goreleaser/issues/981"
-    exit 1
   ;;
   kustomize)
   ;;
@@ -51,7 +48,8 @@ esac
 config=$(mktemp)
 cp releasing/cloudbuild_${module}.yaml $config
 
-# Delete the cloud-builders/git step.
+# Delete the cloud-builders/git step, which isn't needed
+# for a local run.
 sed -i '2,3d'  $config
 
 # Add the --snapshot flag to suppress the
@@ -74,5 +72,9 @@ cloud-build-local \
 echo " "
 echo "Result of local build:"
 echo "##########################################"
-tree ./$module/dist
+if [ "$module" == "api" ]; then
+  tree ./kustapiversion/dist
+else
+  tree ./$module/dist
+fi
 echo "##########################################"
