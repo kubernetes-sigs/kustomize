@@ -23,8 +23,16 @@ English | [简体中文](zh/README.md)
 
 ## Release notes
 
- * 3.2.1 - Patch release of kustomize in its own module.  No change in function
-   from v3.2.0.
+ * [kustomize/3.2.2](https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2Fv3.2.2) - kustomize CLI
+   moved to depend on kustomize Go API [3.3.0](v3.3.0.md).
+
+ * [API 3.3.0](v3.3.0.md) - First release of the kustomize Go API
+   in a module excluding the `kustomize` CLI.  From here on,
+   the CLI and API will release independently.
+ 
+ * [kustomize/3.2.1](https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2Fv3.2.1) - Patch release
+   of `kustomize` CLI in its own module,
+   depending on Go API release [3.2.0](v3.2.0.md).
 
  * [3.2.0](v3.2.0.md) - TODO(jingfang)
 
