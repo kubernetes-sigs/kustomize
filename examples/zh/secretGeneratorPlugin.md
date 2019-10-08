@@ -15,11 +15,11 @@
 
 Kubernetes 的 [ConfigMaps] 和 [Secrets] 都是key:value map，但 [Secrets] 的内容更为敏感，比如：密码或者 ssh 秘钥。
 
-Kubernetes 开发者以各种方式工作，Secrets 保存的信息相比 ConfigMaps、Deployments 等的配置信息需要更谨慎的隐藏。
+Kubernetes 开发者以各种方式工作，Secrets 保存的信息相比 ConfigMaps,Deployments 等的配置信息需要更谨慎的隐藏。
 
 ## 创建一个工作空间
 
-<!-- @establishBase @testAgainstLatestRelease -->
+<!-- @establishBase @test -->
 ```bash
 DEMO_HOME=$(mktemp -d)
 ```
@@ -36,7 +36,7 @@ kustomize 可以通过三种不同的方式生成来自本地文件的 Secret �
 
 创建一个包含一些短密码的 env 文件：
 
-<!-- @makeEnvFile @testAgainstLatestRelease -->
+<!-- @makeEnvFile @test -->
 ```bash
 cat <<'EOF' >$DEMO_HOME/foo.env
 ROUTER_PASSWORD=admin
@@ -46,7 +46,7 @@ EOF
 
 创建一个长密码的文本文件：
 
-<!-- @makeLongSecretFile @testAgainstLatestRelease -->
+<!-- @makeLongSecretFile @test -->
 ```bash
 cat <<'EOF' >$DEMO_HOME/longsecret.txt
 Lorem ipsum dolor sit amet,
@@ -56,9 +56,9 @@ ut labore et dolore magna aliqua.
 EOF
 ```
 
-并创建一个参考上面的 kustomization.yaml 文件，并且另外定义一些文字 KV 对：
+创建一个kustomization.yaml 文件, 其中包含引用上面文件的 secretGenerator, 并且另外定义一些文字 KV 对：
 
-<!-- @makeKustomization1 @testAgainstLatestRelease -->
+<!-- @makeKustomization1 @test -->
 ```bash
 cat <<'EOF' >$DEMO_HOME/kustomization.yaml
 secretGenerator:
@@ -75,7 +75,7 @@ EOF
 
 生成 Secret ：
 
-<!-- @build1 @testAgainstLatestRelease -->
+<!-- @build1 @test -->
 ```bash
 result=$(kustomize build $DEMO_HOME)
 echo "$result"
@@ -103,23 +103,23 @@ test 1 == $(echo "$result" | grep -c "FRUIT: YXBwbGU=")
 
 使用 base64 解码器确认这些值的原始版本。
 
-这三种方法共同的问题是声明的 secrets 必须保存磁盘上。
+这三种方法共同的问题是创建 Secret 所使用的敏感数据必须保存磁盘上。
 
-这会增加额外的安全问题：对本地存储的 secrets 文件的查看、安装和删除权限的控制等。
+这会增加额外的安全问题：对本地存储的敏感文件的查看、安装和删除权限的控制等。
 
 ## 来自任何地方的 Secret
 
-一般的替代方案是在[插件](../docs/plugins)中生成 secrets 。
+一般的替代方案是在[generator](../../docs/plugins)中生成 secrets 。
 
 然后，这些值可以通过经过身份验证和授权的 RPC 进入密码保险库服务。
 
-[sgp]: ../plugin/someteam.example.com/v1/secretsfromdatabase
+[sgp]: ../../plugin/someteam.example.com/v1/secretsfromdatabase
 
-这里有一个[secret 生成插件][sgp]，它假装从数据库中拉取 map 中的值。
+这里有一个[secret 生成器][sgp]，它模拟从数据库中拉取 map 中的值。
 
 下载
 
-<!-- @copyPlugin @testAgainstLatestRelease -->
+<!-- @copyPlugin @test -->
 ```bash
 repo=https://raw.githubusercontent.com/kubernetes-sigs/kustomize
 pPath=plugin/someteam.example.com/v1/secretsfromdatabase
@@ -131,7 +131,7 @@ curl -s -o $dir/SecretsFromDatabase.go \
   ${repo}/master/$pPath/SecretsFromDatabase.go
 ```
 
-进行构建
+运行 kustomize build 生成结果
 
 <!-- @compilePlugin @xtest -->
 ```bash
@@ -142,7 +142,7 @@ go build -buildmode plugin \
 
 创建一个配置文件：
 
-<!-- @makeConfiguration @testAgainstLatestRelease -->
+<!-- @makeConfiguration @test -->
 ```bash
 cat <<'EOF' >$DEMO_HOME/secretFromDb.yaml
 apiVersion: someteam.example.com/v1
@@ -157,9 +157,9 @@ keys:
 EOF
 ```
 
-创建一个引用此插件的新 kustomization.yaml 文件：
+创建一个引用此生成器的新 kustomization.yaml 文件：
 
-<!-- @makeKustomization2 @testAgainstLatestRelease -->
+<!-- @makeKustomization2 @test -->
 ```bash
 cat <<'EOF' >$DEMO_HOME/kustomization.yaml
 generators:
@@ -167,7 +167,7 @@ generators:
 EOF
 ```
 
-最终生成 secret ，设置 `XDG_CONFIG_HOME` 以便可以在 `$DEMO_HOME` 中找到该插件：
+最终生成 secret ，设置 `XDG_CONFIG_HOME` 以便可以在 `$DEMO_HOME` 中找到该生成器：
 
 <!-- @build2 @xtest -->
 ```bash
