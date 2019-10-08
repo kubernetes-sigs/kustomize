@@ -32,13 +32,13 @@ go get sigs.k8s.io/kustomize/v3/cmd/kustomize
 
   - generator 插件:
 
-    * [last mile helm](../chart.md) - 对 helm chart 进行 last mile 修改。
+    * [last mile helm](chart.md) - 对 helm chart 进行 last mile 修改。
 
-    * [secret generation](../secretGeneratorPlugin.md) - 生成 Secret。
+    * [secret generation](secretGeneratorPlugin.md) - 生成 Secret。
 
   - transformer 插件:
 
-   * [validation transformer](../validationTransformer/README.md) - 通过 transformer 验证资源。
+    * [validation transformer](../validationTransformer/README.md) - 通过 transformer 验证资源。
 
   - 定制内建 transformer 配置
 
