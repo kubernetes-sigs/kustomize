@@ -1,4 +1,4 @@
-# 使用 kustomize 定义 helm chart
+# 使用 kustomize 对 helm chart s进行修改
 
 [last mile]: https://testingclouds.wordpress.com/2018/07/20/844/
 [stable chart]: https://github.com/helm/charts/tree/master/stable
@@ -6,15 +6,15 @@
 [_minecraft_]: https://github.com/helm/charts/tree/master/stable/minecraft
 [插件]: ../../docs/plugins
 
-kustomize 并不会读取 [Helm charts] ，但可以使用[插件]来访问 [Helm charts] 。
+kustomize 并不会读取 [Helm charts] ，但可以使用 generator ß来访问 [Helm charts] 。
 
 使用 [last mile] 模式来结合 kustomize 和 helm ，使用一个 inflated chart 作为基础，然后使用 kustomize 在部署到集群的途中进行修改。
 
-以下示例中使用的插件编码仅适用于 [stable chart] 仓库中的 chart。该示例虽然使用 [_minecraft_] ，但可以应用于任何 chart。
+以下示例中使用的 generator 仅适用于 [stable chart] 仓库中的 chart。该示例虽然使用 [_minecraft_] ，但可以应用于任何 chart。
 
 假设 `helm` 已在你的 `$PATH` 中，建立一个工作空间：
 
-<!-- @makeWorkplace @helmtest -->
+<!-- @makeWorkplace @test -->
 ```bash
 DEMO_HOME=$(mktemp -d)
 mkdir -p $DEMO_HOME/base
@@ -28,7 +28,7 @@ mkdir -p $DEMO_HOME/prod
 
 这可能涉及许多 kustomizations（参见其他示例），但在本示例中，将 `dev-` 名称前缀添加到所有资源：
 
-<!-- @writeKustDev @helmtest -->
+<!-- @writeKustDev @test -->
 ```bash
 cat <<'EOF' >$DEMO_HOME/dev/kustomization.yaml
 namePrefix:  dev-
@@ -39,7 +39,7 @@ EOF
 
 同上，使用 `namePrefix: prod-` 定义生产 variant ：
 
-<!-- @writeKustProd @helmtest -->
+<!-- @writeKustProd @test -->
 ```bash
 cat <<'EOF' >$DEMO_HOME/prod/kustomization.yaml
 namePrefix:  prod-
@@ -52,7 +52,7 @@ EOF
 
 定义这个 base：
 
-<!-- @writeKustDev @helmtest -->
+<!-- @writeKustDev @test -->
 ```bash
 cat <<'EOF' >$DEMO_HOME/base/kustomization.yaml
 generators:
@@ -66,7 +66,7 @@ base 指向一个名为 `chartInflator.yaml` 的生成配置文件。
 
 创建配置文件 `chartInflator.yaml`，指定 chart 名称为 _minecraft_：
 
-<!-- @writeGeneratorConfig @helmtest -->
+<!-- @writeGeneratorConfig @test -->
 ```bash
 cat <<'EOF' >$DEMO_HOME/base/chartInflator.yaml
 apiVersion: someteam.example.com/v1
@@ -81,7 +81,7 @@ EOF
 
 将插件下载到 `DEMO_HOME` 并赋予其执行权限：
 
-<!-- @installPlugin @helmtest -->
+<!-- @installPlugin @test -->
 ```bash
 plugin=plugin/someteam.example.com/v1/chartinflator/ChartInflator
 curl -s --create-dirs -o \
@@ -99,7 +99,7 @@ chmod a+x $DEMO_HOME/kustomize/$plugin
 tree $DEMO_HOME
 ```
 
-将会得到类似的东西：
+将会得倒类似的目录及文件：
 
 > ```bash
 > /tmp/whatever
@@ -120,7 +120,7 @@ tree $DEMO_HOME
 
 运行 kustomize 定义一个 helper function 来传入正确的环境和常见标志：
 
-<!-- @defineKustomizeIt @helmtest -->
+<!-- @defineKustomizeIt @test -->
 ```
 function kustomizeIt {
   XDG_CONFIG_HOME=$DEMO_HOME \
@@ -131,7 +131,7 @@ function kustomizeIt {
 
 最终构建 `prod` variant。这里要注意的是，所有资源名称现在都具有 `prod-` 前缀：
 
-<!-- @doProd @helmtest -->
+<!-- @doProd @test -->
 ```bash
 clear
 kustomizeIt prod
@@ -144,22 +144,23 @@ kustomizeIt prod
 diff <(kustomizeIt dev) <(kustomizeIt prod) | more
 ```
 
-在 base上 运行 kustomize 查看未修改但已 inflated 的 chart。这里的每次调用都是重新下载并 re-inflating chart。
+在 base上 运行 kustomize 查看未修改但已展开的 chart。
+这里的每次调用都是重新下载并重新展开 chart。
 
-<!-- @showBase @helmtest -->
+<!-- @showBase @test -->
 ```bash
 kustomizeIt base
 ```
 
 ## 使用本地 chart
 
-上面的示例由于未在配置中指定本地 chart 的主目录，则使用 kustomize 构建将 chart 的新副本 fetche 到临时目录。
+上面的示例由于未在配置中指定本地 chart 的主目录，所以kustomize会取得远程chart的副本并存在临时目录中。
 
-要禁止 fetche ，请明确指定 chart home ，并确保图表已存在。
+要禁止 fetch，请明确指定 `charHome` ，并确保chart 已经被保存在该目录下
 
 要进行演示，并且不会干扰您现有的 helm 环境，请执行以下操作：
 
-<!-- @helmInit @helmtest -->
+<!-- @helmInit @test -->
 ```bash
 helmHome=$DEMO_HOME/dothelm
 chartHome=$DEMO_HOME/base/charts
@@ -175,14 +176,14 @@ doHelm init --client-only >& /dev/null
 
 现在下载 chart ； 可以再次使用的 [_minecraft_] （也可以使用其他的 chart ）：
 
-<!-- @fetchChart @helmtest -->
+<!-- @fetchChart @test -->
 ```bash
 doHelm fetch --untar \
     --untardir $chartHome \
     stable/minecraft
 ```
 
-使用 tree 查看更多信息；helm 配置数据和完成的 chart 副本：
+使用 tree 查看更多信息；helm 配置数据和完整的 chart 副本：
 
 <!-- @tree -->
 ```bash
@@ -191,14 +192,14 @@ tree $DEMO_HOME
 
 将 `chartHome` 字段添加到生成器的配置文件中，以便可以查找本地 chart：
 
-<!-- @modifyGenConfig @helmtest -->
+<!-- @modifyGenConfig @test -->
 ```bash
 echo "chartHome: $chartHome" >>$DEMO_HOME/base/chartInflator.yaml
 ```
 
 更改 values 文件，用来展示本地 chart 的更改：
 
-<!-- @valueChange @helmtest -->
+<!-- @valueChange @test -->
 ```
 sed -i 's/CHANGEME!/SOMETHINGELSE/' $chartHome/minecraft/values.yaml
 sed -i 's/LoadBalancer/NodePort/' $chartHome/minecraft/values.yaml
@@ -206,9 +207,9 @@ sed -i 's/LoadBalancer/NodePort/' $chartHome/minecraft/values.yaml
 
 最后进行构建：
 
-<!-- @finalProd @helmtest -->
+<!-- @finalProd @test -->
 ```bash
 kustomizeIt prod
 ```
 
-观察从变化 `LoadBalancer` 到 `NodePort`，并更改编码的密码。
+观察结果中 `LoadBalancer` 变为 `NodePort`，并且加密的密码也有所不同。
