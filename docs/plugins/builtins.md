@@ -421,7 +421,7 @@ patchesStrategicMerge:
       spec:
         containers:
           - name: nginx
-            image: nignx:latest
+            image: nginx:latest
 ```
 
 Note that kustomize does not support more than one patch
