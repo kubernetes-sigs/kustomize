@@ -10,15 +10,12 @@ Or...
 
 ## Quickly curl the latest
 
-
-https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv3.2.3/kustomize_kustomize.v3.2.3_linux_amd64
-
-
 ```
 # pick one
 opsys=darwin
 opsys=windows
 opsys=linux
+
 curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/latest |\
   grep browser_download |\
   grep $opsys |\
