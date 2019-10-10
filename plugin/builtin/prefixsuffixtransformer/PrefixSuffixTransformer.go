@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-//go:generate go run sigs.k8s.io/kustomize/v3/cmd/pluginator
+//go:generate pluginator
 package main
 
 import (
@@ -31,6 +31,9 @@ var KustomizePlugin plugin
 var prefixSuffixFieldSpecsToSkip = []config.FieldSpec{
 	{
 		Gvk: gvk.Gvk{Kind: "CustomResourceDefinition"},
+	},
+	{
+		Gvk: gvk.Gvk{Group: "apiregistration.k8s.io", Kind: "APIService"},
 	},
 }
 

@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-//go:generate go run sigs.k8s.io/kustomize/v3/cmd/pluginator
+//go:generate pluginator
 package main
 
 import (
@@ -70,7 +70,7 @@ const metaNamespace = "metadata/namespace"
 // that don't exist in a namespace (the Namespace
 // object itself doesn't live in a namespace).
 func (p *plugin) applicableFieldSpecs(id resid.ResId) []config.FieldSpec {
-	res := []config.FieldSpec{}
+	var res []config.FieldSpec
 	for _, fs := range p.FieldSpecs {
 		if id.IsSelected(&fs.Gvk) && (fs.Path != metaNamespace || (fs.Path == metaNamespace && id.IsNamespaceableKind())) {
 			res = append(res, fs)
@@ -79,14 +79,14 @@ func (p *plugin) applicableFieldSpecs(id resid.ResId) []config.FieldSpec {
 	return res
 }
 
-func (o *plugin) changeNamespace(
+func (p *plugin) changeNamespace(
 	referrer *resource.Resource) func(in interface{}) (interface{}, error) {
 	return func(in interface{}) (interface{}, error) {
 		switch in.(type) {
 		case string:
 			// will happen when the metadata/namespace
 			// value is replaced
-			return o.Namespace, nil
+			return p.Namespace, nil
 		case []interface{}:
 			l, _ := in.([]interface{})
 			for idx, item := range l {
@@ -108,7 +108,7 @@ func (o *plugin) changeNamespace(
 					if name != "default" {
 						continue
 					}
-					inMap["namespace"] = o.Namespace
+					inMap["namespace"] = p.Namespace
 					l[idx] = inMap
 				default:
 					// nothing to do for right now
@@ -121,7 +121,7 @@ func (o *plugin) changeNamespace(
 			// object
 			inMap := in.(map[string]interface{})
 			if len(inMap) == 0 {
-				return o.Namespace, nil
+				return p.Namespace, nil
 			} else {
 				return in, nil
 			}

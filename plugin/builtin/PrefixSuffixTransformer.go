@@ -21,15 +21,13 @@ type PrefixSuffixTransformerPlugin struct {
 	FieldSpecs []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
-//noinspection GoUnusedGlobalVariable
-func NewPrefixSuffixTransformerPlugin() *PrefixSuffixTransformerPlugin {
-	return &PrefixSuffixTransformerPlugin{}
-}
-
 // Not placed in a file yet due to lack of demand.
 var prefixSuffixFieldSpecsToSkip = []config.FieldSpec{
 	{
 		Gvk: gvk.Gvk{Kind: "CustomResourceDefinition"},
+	},
+	{
+		Gvk: gvk.Gvk{Group: "apiregistration.k8s.io", Kind: "APIService"},
 	},
 }
 
@@ -117,4 +115,8 @@ func (p *PrefixSuffixTransformerPlugin) addPrefixSuffix(
 		return nil, fmt.Errorf("%#v is expected to be %T", in, s)
 	}
 	return fmt.Sprintf("%s%s%s", p.Prefix, s, p.Suffix), nil
+}
+
+func NewPrefixSuffixTransformerPlugin() resmap.TransformerPlugin {
+	return &PrefixSuffixTransformerPlugin{}
 }

@@ -1,59 +1,62 @@
 #!/bin/bash
-
 set -e
 set -x
 
-# Google Container Builder automatically checks
-# out all the code under the /workspace directory,
-# but we actually want it to under the correct
-# expected package in the GOPATH (/go)
-#
-# - Create the directory to host the code that
-#   matches the expected GOPATH package locations
-#
-# - Use /go as the default GOPATH because this is
-#   what the image uses
-#
-# - Link our current directory (containing the
-#   source code) to the package location in the
-#   GOPATH
+# Script to run http://goreleaser.com
 
-OWNER="sigs.k8s.io"
-REPO="kustomize"
+module=$1
+shift
 
-GO_PKG_OWNER=$GOPATH/src/$OWNER
-GO_PKG_PATH=$GO_PKG_OWNER/$REPO
+executable=$module
+if [ "$module" == "api" ]; then
+  # For this module, there's no correspondingly named
+  # sub-directory, since the module is at the repo root.
+  # There is, however, a dummy executable in a sub-directory.
+  # Build that executable, primarily to give goreleaser
+  # something to coordinate it release process around.
+  executable=kustapiversion
+fi
 
-mkdir -p $GO_PKG_OWNER
-ln -sf $(pwd) $GO_PKG_PATH
+cd $executable
 
-# When invoked in container builder, this script runs under /workspace which is
-# not under $GOPATH, so we need to `cd` to repo under GOPATH for it to build
-cd $GO_PKG_PATH
+configFile=$(mktemp)
+cat <<EOF >$configFile
+project_name: $executable
+env:
+- CGO_ENABLED=0
+- GO111MODULE=on
+checksum:
+  name_template: 'checksums.txt'
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+    - Merge pull request
+    - Merge branch
+release:
+  github:
+    owner: kubernetes-sigs
+    name: kustomize
+builds:
+- binary: $executable
+  ldflags: >
+    -s
+    -X sigs.k8s.io/kustomize/v3/provenance.version={{.Version}}
+    -X sigs.k8s.io/kustomize/v3/provenance.gitCommit={{.Commit}}
+    -X sigs.k8s.io/kustomize/v3/provenance.buildDate={{.Date}}
+
+  goos:
+  - linux
+  - darwin
+  - windows
+  goarch:
+   - amd64
+EOF
+
+cat $configFile
+
+/bin/goreleaser release --config=$configFile --rm-dist --skip-validate $@
 
 
-# If snapshot is enabled, release is not published
-# to GitHub and the build is available under
-# workspace/dist directory.
-
-SNAPSHOT=""
-
-# parse commandline args copied from the link below
-# https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
-while [[ $# -gt 0 ]]
-do
-key="$1"
-
-case $key in
-    --snapshot)
-    SNAPSHOT="--snapshot"
-    shift # past argument
-    ;;
-esac
-done
-
-/goreleaser \
-  release \
-  --config=releasing/goreleaser.yaml \
-  --rm-dist \
-  --skip-validate ${SNAPSHOT}

@@ -6,6 +6,7 @@ package loadertest
 
 import (
 	"log"
+
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
@@ -33,7 +34,7 @@ func NewFakeLoader(initialDir string) FakeLoader {
 func NewFakeLoaderWithRestrictor(
 	lr loader.LoadRestrictorFunc, initialDir string) FakeLoader {
 	// Create fake filesystem and inject it into initial Loader.
-	fSys := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	fSys.Mkdir(initialDir)
 	ldr, err := loader.NewLoader(
 		lr, validators.MakeFakeValidator(), initialDir, fSys)

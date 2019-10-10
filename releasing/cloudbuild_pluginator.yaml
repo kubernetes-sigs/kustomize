@@ -1,0 +1,11 @@
+steps:
+- name: "gcr.io/cloud-builders/git"
+  args: [fetch, --tags, --depth=100]
+- name: goreleaser/goreleaser
+  entrypoint: /bin/sh
+  args: ["releasing/cloudbuild.sh", "pluginator"]
+  secretEnv: ['GITHUB_TOKEN']
+secrets:
+- kmsKeyName: projects/kustomize-199618/locations/global/keyRings/github-tokens/cryptoKeys/gh-release-token
+  secretEnv:
+    GITHUB_TOKEN: CiQAyrREbPgXJOeT7M3t+WlxkhXwlMPudixBeiyWTjmLOMLqdK4SUQA0W+xUmDJKAhyfHCcwqSEzUn9OwKC7XAYcmwe0CCKTCbPbDgmioDK24q3LVapndXNvnnHvCjhOJNEr1o+P1DCF+LlzYV2YL8lP09rrKrslPg==

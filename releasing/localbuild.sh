@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Usage
+# Usage - from the repository root, enter
 #
-#   ./releasing/localbuild.sh
+#   ./releasing/localbuild.sh (kustomize|pluginator)
 #
 # The script attempts to use cloudbuild configuration
 # to create a release "locally".
@@ -17,50 +17,64 @@
 # applied to the kustomize repo, the cloud builder
 # reads the repository-relative file
 #
-#   releasing/cloudbuild.yaml
-#  
+#   releasing/cloudbuild_(kustomize|pluginator|api).yaml
+#
 # Inside this yaml file is a reference to the script
 #
 #   releasing/cloudbuild.sh
+#
+# which runs goreleaser from the proper directory, with the
+# proper config.
 #
 # The script you are reading now does something
 # analogous via docker tricks.
 
 set -e
 
-if [ -z ${GOPATH+x} ]; then
-  echo GOPATH is unset; cannot proceed.
-  exit 1
-fi
-
-pushd $GOPATH/src/sigs.k8s.io/kustomize
-pwd
-
-# The first "step" in the following uses a special
-# goreleaser container image that the kubebuilder folks made.
-# TODO: On a rainy day, switch to something more standard.
+module=$1
+case "$module" in
+  api)
+  ;;
+  kustomize)
+  ;;
+  pluginator)
+  ;;
+  *)
+    echo "Don't recognize module=$module"
+    exit 1
+  ;;
+esac
 
 config=$(mktemp)
-cat <<EOF >$config
-steps:
-- name: "gcr.io/kubebuilder/goreleaser_with_go_1.12.5:0.0.1"
-  args: ["bash", "releasing/cloudbuild.sh", "--snapshot"]
-  secretEnv: ['GITHUB_TOKEN']
-secrets:
-- kmsKeyName: projects/kustomize-199618/locations/global/keyRings/github-tokens/cryptoKeys/gh-release-token
-  secretEnv:
-   GITHUB_TOKEN: CiQAyrREbPgXJOeT7M3t+WlxkhXwlMPudixBeiyWTjmLOMLqdK4SUQA0W+xUmDJKAhyfHCcwqSEzUn9OwKC7XAYcmwe0CCKTCbPbDgmioDK24q3LVapndXNvnnHvCjhOJNEr1o+P1DCF+LlzYV2YL8lP09rrKrslPg==
-EOF
+cp releasing/cloudbuild_${module}.yaml $config
+
+# Delete the cloud-builders/git step, which isn't needed
+# for a local run.
+sed -i '2,3d'  $config
+
+# Add the --snapshot flag to suppress the
+# github release and leave the build output
+# in the kustomize/dist directory.
+sed -i 's|"\]$|", "--snapshot"]|' \
+    $config
+
+echo "Executing cloud-build-local with:"
+echo "========================="
+cat $config
+echo "========================="
 
 cloud-build-local \
-  --config=$config \
-  --bind-mount-source \
-  --dryrun=false \
-  .
+    --config=$config \
+    --bind-mount-source \
+    --dryrun=false \
+    .
 
-# Print results of local build, which went to ./dist
+echo " "
+echo "Result of local build:"
 echo "##########################################"
-tree ./dist
+if [ "$module" == "api" ]; then
+  tree ./kustapiversion/dist
+else
+  tree ./$module/dist
+fi
 echo "##########################################"
-
-popd

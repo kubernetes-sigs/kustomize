@@ -4,8 +4,9 @@
 package target_test
 
 import (
-	kusttest_test "sigs.k8s.io/kustomize/v3/pkg/kusttest"
 	"testing"
+
+	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
 )
 
 // Here's a structure of two kustomizations,

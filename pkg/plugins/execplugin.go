@@ -9,17 +9,21 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
+	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/yaml"
 )
 
 const (
 	idAnnotation        = "kustomize.config.k8s.io/id"
+	hashAnnotation      = "kustomize.config.k8s.io/needs-hash"
+	behaviorAnnotation  = "kustomize.config.k8s.io/behavior"
 	tmpConfigFilePrefix = "kust-plugin-config-"
 )
 
@@ -96,7 +100,11 @@ func (p *ExecPlugin) Generate() (resmap.ResMap, error) {
 	if err != nil {
 		return nil, err
 	}
-	return p.rf.NewResMapFromBytes(output)
+	rm, err := p.rf.NewResMapFromBytes(output)
+	if err != nil {
+		return nil, err
+	}
+	return p.updateResourceOptions(rm)
 }
 
 func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
@@ -184,10 +192,8 @@ func (p *ExecPlugin) getResMapWithIdAnnotation(rm resmap.ResMap) (resmap.ResMap,
 	return inputRM, nil
 }
 
-/*
-updateResMapValues updates the Resource value in the given ResMap
-with the emitted Resource values in output.
-*/
+// updateResMapValues updates the Resource value in the given ResMap
+// with the emitted Resource values in output.
 func (p *ExecPlugin) updateResMapValues(output []byte, rm resmap.ResMap) error {
 	outputRM, err := p.rf.NewResMapFromBytes(output)
 	if err != nil {
@@ -222,4 +228,33 @@ func (p *ExecPlugin) updateResMapValues(output []byte, rm resmap.ResMap) error {
 		res.Kunstructured = r.Kunstructured
 	}
 	return nil
+}
+
+// updateResourceOptions updates the generator options for each resource in the
+// given ResMap based on plugin provided annotations.
+func (p *ExecPlugin) updateResourceOptions(rm resmap.ResMap) (resmap.ResMap, error) {
+	for _, r := range rm.Resources() {
+		// Disable name hashing by default and require plugin to explicitly
+		// request it for each resource.
+		annotations := r.GetAnnotations()
+		behavior := annotations[behaviorAnnotation]
+		var needsHash bool
+		if val, ok := annotations[hashAnnotation]; ok {
+			b, err := strconv.ParseBool(val)
+			if err != nil {
+				return nil, fmt.Errorf("the annotation %q contains an invalid value (%q)", hashAnnotation, val)
+			}
+			needsHash = b
+		}
+		delete(annotations, hashAnnotation)
+		delete(annotations, behaviorAnnotation)
+		if len(annotations) == 0 {
+			annotations = nil
+		}
+		r.SetAnnotations(annotations)
+		r.SetOptions(types.NewGenArgs(
+			&types.GeneratorArgs{Behavior: behavior},
+			&types.GeneratorOptions{DisableNameSuffixHash: !needsHash}))
+	}
+	return rm, nil
 }

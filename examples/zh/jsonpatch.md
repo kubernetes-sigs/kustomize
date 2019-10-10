@@ -16,7 +16,7 @@ resources:
 EOF
 
 cat <<EOF >$DEMO_HOME/ingress.yaml
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   name: my-ingress
@@ -72,7 +72,7 @@ EOF
 cat <<EOF >>$DEMO_HOME/kustomization.yaml
 patchesJson6902:
 - target:
-    group: extensions
+    group: networking.k8s.io
     version: v1beta1
     kind: Ingress
     name: my-ingress
@@ -106,7 +106,7 @@ test 1 == \
 cat <<EOF >>$DEMO_HOME/kustomization.yaml
 patchesJson6902:
 - target:
-    group: extensions
+    group: networking.k8s.io
     version: v1beta1
     kind: Ingress
     name: my-ingress

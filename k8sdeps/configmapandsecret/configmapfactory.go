@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"unicode/utf8"
 
+	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 )
@@ -28,13 +29,13 @@ func (f *Factory) MakeConfigMap(
 	args *types.ConfigMapArgs) (*v1.ConfigMap, error) {
 	all, err := f.ldr.LoadKvPairs(args.GeneratorArgs)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "loading KV pairs")
 	}
 	cm := makeFreshConfigMap(args)
 	for _, p := range all {
 		err = f.addKvToConfigMap(cm, p)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "trouble mapping")
 		}
 	}
 	if f.options != nil {

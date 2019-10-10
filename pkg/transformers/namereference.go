@@ -18,11 +18,11 @@ type nameReferenceTransformer struct {
 	backRefs []config.NameBackReferences
 }
 
-var _ Transformer = &nameReferenceTransformer{}
+var _ resmap.Transformer = &nameReferenceTransformer{}
 
 // NewNameReferenceTransformer constructs a nameReferenceTransformer
 // with a given slice of NameBackReferences.
-func NewNameReferenceTransformer(br []config.NameBackReferences) Transformer {
+func NewNameReferenceTransformer(br []config.NameBackReferences) resmap.Transformer {
 	if br == nil {
 		log.Fatal("backrefs not expected to be nil")
 	}
@@ -263,16 +263,6 @@ func (o *nameReferenceTransformer) getNewNameFunc(
 				"%#v is expected to be either a string or a []interface{}", in)
 		}
 	}
-}
-
-func indexOf(s string, slice []string) []int {
-	var index []int
-	for i, item := range slice {
-		if item == s {
-			index = append(index, i)
-		}
-	}
-	return index
 }
 
 func getIds(rs []*resource.Resource) []string {

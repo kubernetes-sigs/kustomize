@@ -15,11 +15,6 @@ type AnnotationsTransformerPlugin struct {
 	FieldSpecs  []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
-//noinspection GoUnusedGlobalVariable
-func NewAnnotationsTransformerPlugin() *AnnotationsTransformerPlugin {
-	return &AnnotationsTransformerPlugin{}
-}
-
 func (p *AnnotationsTransformerPlugin) Config(
 	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
 	p.Annotations = nil
@@ -36,4 +31,8 @@ func (p *AnnotationsTransformerPlugin) Transform(m resmap.ResMap) error {
 		return err
 	}
 	return t.Transform(m)
+}
+
+func NewAnnotationsTransformerPlugin() resmap.TransformerPlugin {
+	return &AnnotationsTransformerPlugin{}
 }

@@ -2,11 +2,12 @@
 package builtin
 
 import (
+	"sort"
+
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
-	"sort"
 )
 
 // Sort the resources using an ordering defined in the Gvk class.
@@ -15,11 +16,6 @@ import (
 // first, and resources with a high number of dependencies
 // (like ValidatingWebhookConfiguration) last.
 type LegacyOrderTransformerPlugin struct{}
-
-//noinspection GoUnusedGlobalVariable
-func NewLegacyOrderTransformerPlugin() *LegacyOrderTransformerPlugin {
-	return &LegacyOrderTransformerPlugin{}
-}
 
 // Nothing needed for configuration.
 func (p *LegacyOrderTransformerPlugin) Config(
@@ -42,4 +38,8 @@ func (p *LegacyOrderTransformerPlugin) Transform(m resmap.ResMap) (err error) {
 		m.Append(r)
 	}
 	return nil
+}
+
+func NewLegacyOrderTransformerPlugin() resmap.TransformerPlugin {
+	return &LegacyOrderTransformerPlugin{}
 }

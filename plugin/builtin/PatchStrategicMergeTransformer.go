@@ -3,6 +3,7 @@ package builtin
 
 import (
 	"fmt"
+
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
@@ -16,11 +17,6 @@ type PatchStrategicMergeTransformerPlugin struct {
 	loadedPatches []*resource.Resource
 	Paths         []types.PatchStrategicMerge `json:"paths,omitempty" yaml:"paths,omitempty"`
 	Patches       string                      `json:"patches,omitempty" yaml:"patches,omitempty"`
-}
-
-//noinspection GoUnusedGlobalVariable
-func NewPatchStrategicMergeTransformerPlugin() *PatchStrategicMergeTransformerPlugin {
-	return &PatchStrategicMergeTransformerPlugin{}
 }
 
 func (p *PatchStrategicMergeTransformerPlugin) Config(
@@ -87,4 +83,8 @@ func (p *PatchStrategicMergeTransformerPlugin) Transform(m resmap.ResMap) error 
 		}
 	}
 	return nil
+}
+
+func NewPatchStrategicMergeTransformerPlugin() resmap.TransformerPlugin {
+	return &PatchStrategicMergeTransformerPlugin{}
 }

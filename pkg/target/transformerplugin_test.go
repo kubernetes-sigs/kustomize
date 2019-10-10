@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	kusttest_test "sigs.k8s.io/kustomize/v3/pkg/kusttest"
-	plugins_test "sigs.k8s.io/kustomize/v3/pkg/plugins/test"
+	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	"sigs.k8s.io/kustomize/v3/pkg/plugins/testenv"
 )
 
 func writeDeployment(th *kusttest_test.KustTestHarness, path string) {
@@ -50,7 +50,7 @@ metadata:
 }
 
 func TestOrderedTransformers(t *testing.T) {
-	tc := plugins_test.NewEnvForTest(t).Set()
+	tc := testenv.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -96,7 +96,7 @@ spec:
 }
 
 func TestPluginsNotEnabled(t *testing.T) {
-	tc := plugins_test.NewEnvForTest(t).Set()
+	tc := testenv.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -113,13 +113,13 @@ transformers:
 	if err == nil {
 		t.Fatalf("expected error")
 	}
-	if !strings.Contains(err.Error(), "unable to load plugin StringPrefixer") {
+	if !strings.Contains(err.Error(), "unable to load external plugin StringPrefixer") {
 		t.Fatalf("unexpected err: %v", err)
 	}
 }
 
 func TestSedTransformer(t *testing.T) {
-	tc := plugins_test.NewEnvForTest(t).Set()
+	tc := testenv.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
@@ -187,7 +187,7 @@ metadata:
 }
 
 func TestTransformedTransformers(t *testing.T) {
-	tc := plugins_test.NewEnvForTest(t).Set()
+	tc := testenv.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(

@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-//go:generate go run sigs.k8s.io/kustomize/v3/cmd/pluginator
+//go:generate pluginator
 package main
 
 import (
@@ -58,7 +58,7 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 		for i, replicaSpec := range p.FieldSpecs {
 			gvks[i] = replicaSpec.Gvk.String()
 		}
-		return fmt.Errorf("Resource with name %s does not match a config with the following GVK %v",
+		return fmt.Errorf("resource with name %s does not match a config with the following GVK %v",
 			p.Replica.Name, gvks)
 	}
 

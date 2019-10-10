@@ -987,7 +987,7 @@ spec:
           containerPort: 80
 `)
 	th.WriteF("/app/base/ingress.yaml", `
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   name: nginx
@@ -1066,7 +1066,7 @@ spec:
         - containerPort: 80
           name: http
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   labels:

@@ -4,6 +4,7 @@
 package configmapandsecret
 
 import (
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -86,7 +87,9 @@ func TestConstructConfigMap(t *testing.T) {
 				GeneratorArgs: types.GeneratorArgs{
 					Name: "envConfigMap",
 					DataSources: types.DataSources{
-						EnvSources: []string{"configmap/app.env"},
+						EnvSources: []string{
+							filepath.Join("configmap", "app.env"),
+						},
 					},
 				},
 			},
@@ -99,7 +102,10 @@ func TestConstructConfigMap(t *testing.T) {
 				GeneratorArgs: types.GeneratorArgs{
 					Name: "fileConfigMap",
 					DataSources: types.DataSources{
-						FileSources: []string{"configmap/app-init.ini", "configmap/app.bin"},
+						FileSources: []string{
+							filepath.Join("configmap", "app-init.ini"),
+							filepath.Join("configmap", "app.bin"),
+						},
 					},
 				},
 			},
@@ -125,10 +131,16 @@ func TestConstructConfigMap(t *testing.T) {
 		},
 	}
 
-	fSys := fs.MakeFakeFS()
-	fSys.WriteFile("/configmap/app.env", []byte("DB_USERNAME=admin\nDB_PASSWORD=somepw\n"))
-	fSys.WriteFile("/configmap/app-init.ini", []byte("FOO=bar\nBAR=baz\n"))
-	fSys.WriteFile("/configmap/app.bin", []byte{0xff, 0xfd})
+	fSys := fs.MakeFsInMemory()
+	fSys.WriteFile(
+		fs.RPath("configmap", "app.env"),
+		[]byte("DB_USERNAME=admin\nDB_PASSWORD=somepw\n"))
+	fSys.WriteFile(
+		fs.RPath("configmap", "app-init.ini"),
+		[]byte("FOO=bar\nBAR=baz\n"))
+	fSys.WriteFile(
+		fs.RPath("configmap", "app.bin"),
+		[]byte{0xff, 0xfd})
 	ldr := loader.NewFileLoaderAtRoot(validators.MakeFakeValidator(), fSys)
 	for _, tc := range testCases {
 		f := NewFactory(ldr, tc.options)
