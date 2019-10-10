@@ -72,7 +72,7 @@ spec:
 `)
 }
 
-func writeConfigOverlay(th *kusttest_test.KustTestHarness) {
+func writeConfigFromEnvOverlay(th *kusttest_test.KustTestHarness) {
 	th.WriteK("/app/config", `
 resources:
 - ../base
@@ -140,9 +140,9 @@ patchesJson6902:
 `)
 }
 
-func writePatchConfig(th *kusttest_test.KustTestHarness) {
+func writePatchingOverlays(th *kusttest_test.KustTestHarness) {
 	writeStorageOverlay(th)
-	writeConfigOverlay(th)
+	writeConfigFromEnvOverlay(th)
 	writeTolerationsOverlay(th)
 	writeHTTPSOverlay(th)
 }
@@ -185,7 +185,7 @@ func writePatchConfig(th *kusttest_test.KustTestHarness) {
 func TestComplexComposition_Dev_Failure(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/app/dev")
 	writeStatefulSetBase(th)
-	writePatchConfig(th)
+	writePatchingOverlays(th)
 	th.WriteK("/app/dev", `
 resources:
 - ../storage
@@ -239,7 +239,7 @@ spec:
 func TestComplexComposition_Prod_Failure(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/app/prod")
 	writeStatefulSetBase(th)
-	writePatchConfig(th)
+	writePatchingOverlays(th)
 
 	th.WriteK("/app/prod", `
 resources:
