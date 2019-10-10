@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	kusttest_test "sigs.k8s.io/kustomize/v3/pkg/kusttest"
 )
 
 const httpsService = `
@@ -72,6 +72,40 @@ spec:
 `)
 }
 
+func writeHTTPSTransformerRaw(th *kusttest_test.KustTestHarness) {
+	th.WriteF("/app/https/service/https-svc.yaml", httpsService)
+	th.WriteF("/app/https/transformer/transformer.yaml", `
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: svcNameTran
+target: 
+  group: apps
+  version: v1
+  kind: StatefulSet
+  name: my-sts
+patch: |-
+  apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    name: my-sts
+  spec:
+    serviceName: my-https-svc
+`)
+}
+
+func writeHTTPSTransformerBase(th *kusttest_test.KustTestHarness) {
+	th.WriteK("/app/https/service", `
+resources:
+- https-svc.yaml
+`)
+	th.WriteK("/app/https/transformer", `
+resources:
+- transformer.yaml
+`)
+	writeHTTPSTransformerRaw(th)
+}
+
 func writeConfigFromEnvOverlay(th *kusttest_test.KustTestHarness) {
 	th.WriteK("/app/config", `
 resources:
@@ -101,6 +135,53 @@ spec:
 `)
 }
 
+func writeConfigFromEnvTransformerRaw(th *kusttest_test.KustTestHarness) {
+	th.WriteF("/app/config/map/generator.yaml", `
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: my-config
+disableNameSuffixHash: true
+literals:
+- MY_ENV=foo
+`)
+	th.WriteF("/app/config/transformer/transformer.yaml", `
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: envFromConfigTrans
+target: 
+  group: apps
+  version: v1
+  kind: StatefulSet
+  name: my-sts
+patch: |-
+  apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    name: my-sts
+  spec:
+    template:
+      spec:
+        containers:
+        - name: app
+          envFrom:
+          - configMapRef:
+              name: my-config
+`)
+}
+func writeConfigFromEnvTransformerBase(th *kusttest_test.KustTestHarness) {
+	th.WriteK("/app/config/map", `
+resources:
+- generator.yaml
+`)
+	th.WriteK("/app/config/transformer", `
+resources:
+- transformer.yaml
+`)
+	writeConfigFromEnvTransformerRaw(th)
+}
+
 func writeTolerationsOverlay(th *kusttest_test.KustTestHarness) {
 	th.WriteK("/app/tolerations", `
 resources:
@@ -123,6 +204,40 @@ spec:
 `)
 }
 
+func writeTolerationsTransformerRaw(th *kusttest_test.KustTestHarness) {
+	th.WriteF("/app/tolerations/transformer.yaml", `
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: tolTrans
+target: 
+  group: apps
+  version: v1
+  kind: StatefulSet
+  name: my-sts
+patch: |-
+  apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    name: my-sts
+  spec:
+    template:
+      spec:
+        tolerations:
+        - effect: NoExecute
+          key: node.kubernetes.io/not-ready
+          tolerationSeconds: 30
+`)
+}
+
+func writeTolerationsTransformerBase(th *kusttest_test.KustTestHarness) {
+	th.WriteK("/app/tolerations", `
+resources:
+- transformer.yaml
+`)
+	writeTolerationsTransformerRaw(th)
+}
+
 func writeStorageOverlay(th *kusttest_test.KustTestHarness) {
 	th.WriteK("/app/storage", `
 resources:
@@ -140,11 +255,65 @@ patchesJson6902:
 `)
 }
 
+func writeStorageTransformerRaw(th *kusttest_test.KustTestHarness) {
+	th.WriteF("/app/storage/transformer.yaml", `
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: storageTrans
+target: 
+  group: apps
+  version: v1
+  kind: StatefulSet
+  name: my-sts
+patch: |-
+  [{"op": "replace", "path": "/spec/volumeClaimTemplates/0/spec/storageClassName", "value": "my-sc"}]
+`)
+}
+
+func writeStorageTransformerBase(th *kusttest_test.KustTestHarness) {
+	th.WriteK("/app/storage", `
+resources:
+- transformer.yaml
+`)
+	writeStorageTransformerRaw(th)
+}
+
 func writePatchingOverlays(th *kusttest_test.KustTestHarness) {
 	writeStorageOverlay(th)
 	writeConfigFromEnvOverlay(th)
 	writeTolerationsOverlay(th)
 	writeHTTPSOverlay(th)
+}
+
+func writePatchingTransformersRaw(th *kusttest_test.KustTestHarness) {
+	writeStorageTransformerRaw(th)
+	writeConfigFromEnvTransformerRaw(th)
+	writeTolerationsTransformerRaw(th)
+	writeHTTPSTransformerRaw(th)
+}
+
+// Similar to writePatchingTransformersRaw, except here the
+// transformers and related artifacts are addressable as _bases_.
+// They are listed in a kustomization file, and consumers of
+// the plugin refer to the kustomization instead of to the local
+// file in the "transformers:" field.
+//
+// Using bases makes the set of files relocatable with
+// respect to the overlays, and avoids the need to relax load
+// restrictions on file paths reaching outside the `dev` and
+// `prod` kustomization roots.  I.e. with bases tests can use
+// NewKustTestHarness instead of NewKustTestNoLoadRestrictorHarness.
+//
+// Using transformer plugins from _bases_ means the plugin config
+// must be self-contained, i.e. the config may not have fields that
+// refer to local files, since those files won't be present when
+// the plugin is instantiated and used.
+func writePatchingTransformerBases(th *kusttest_test.KustTestHarness) {
+	writeStorageTransformerBase(th)
+	writeConfigFromEnvTransformerBase(th)
+	writeTolerationsTransformerBase(th)
+	writeHTTPSTransformerBase(th)
 }
 
 // Here's a complex kustomization scenario that combines multiple overlays
@@ -191,7 +360,6 @@ resources:
 - ../storage
 - ../config
 `)
-
 	_, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err == nil {
 		t.Fatalf("Expected resource accumulation error")
@@ -200,54 +368,91 @@ resources:
 		err.Error(), "already registered id: apps_v1_StatefulSet|~X|my-sts") {
 		t.Fatalf("Unexpected err: %v", err)
 	}
+}
 
-	// Expected Output
-	const devMergeResult = `
-apiVersion: v1
-data:
-  MY_ENV: foo
-kind: ConfigMap
-metadata:
-  name: my-config
----
+const devDesiredResult = `
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: my-sts
 spec:
-  serviceName: my-svc
   selector:
     matchLabels:
-    app: my-app
+      app: my-app
+  serviceName: my-svc
   template:
     metadata:
       labels:
         app: my-app
     spec:
       containers:
-      - name: app
-        image: my-image
-        envFrom:
+      - envFrom:
         - configMapRef:
             name: my-config
+        image: my-image
+        name: app
   volumeClaimTemplates:
   - spec:
       storageClassName: my-sc
-  `
+---
+apiVersion: v1
+data:
+  MY_ENV: foo
+kind: ConfigMap
+metadata:
+  name: my-config
+`
+
+func TestComplexComposition_Dev_SuccessWithRawTransformers(t *testing.T) {
+	th := kusttest_test.NewKustTestNoLoadRestrictorHarness(t, "/app/dev")
+	writeStatefulSetBase(th)
+	writePatchingTransformersRaw(th)
+	th.WriteK("/app/dev", `
+resources:
+- ../base
+generators:
+- ../config/map/generator.yaml
+transformers:
+- ../config/transformer/transformer.yaml
+- ../storage/transformer.yaml
+`)
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Unexpected err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, devDesiredResult)
+}
+
+func TestComplexComposition_Dev_SuccessWithBaseTransformers(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app/dev")
+	writeStatefulSetBase(th)
+	writePatchingTransformerBases(th)
+	th.WriteK("/app/dev", `
+resources:
+- ../base
+generators:
+- ../config/map
+transformers:
+- ../config/transformer
+- ../storage
+`)
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Unexpected err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, devDesiredResult)
 }
 
 func TestComplexComposition_Prod_Failure(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/app/prod")
 	writeStatefulSetBase(th)
 	writePatchingOverlays(th)
-
 	th.WriteK("/app/prod", `
 resources:
 - ../config
 - ../tolerations
 - ../https
 `)
-
 	_, err := th.MakeKustTarget().MakeCustomizedResMap()
 	if err == nil {
 		t.Fatalf("Expected resource accumulation error")
@@ -256,15 +461,36 @@ resources:
 		err.Error(), "already registered id: apps_v1_StatefulSet|~X|my-sts") {
 		t.Fatalf("Unexpected err: %v", err)
 	}
+}
 
-	// Expected Output
-	const prodMergeResult = `
-apiVersion: v1
-data:
-  MY_ENV: foo
-kind: ConfigMap
+const prodDesiredResult = `
+apiVersion: apps/v1
+kind: StatefulSet
 metadata:
-  name: my-config
+  name: my-sts
+spec:
+  selector:
+    matchLabels:
+      app: my-app
+  serviceName: my-https-svc
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: my-config
+        image: my-image
+        name: app
+      tolerations:
+      - effect: NoExecute
+        key: node.kubernetes.io/not-ready
+        tolerationSeconds: 30
+  volumeClaimTemplates:
+  - spec:
+      storageClassName: default
 ---
 apiVersion: v1
 kind: Service
@@ -278,32 +504,54 @@ spec:
   selector:
     app: my-app
 ---
-apiVersion: apps/v1
-kind: StatefulSet
+apiVersion: v1
+data:
+  MY_ENV: foo
+kind: ConfigMap
 metadata:
-  name: my-sts
-spec:
-  serviceName: my-https-svc
-  selector:
-    matchLabels:
-    app: my-app
-  template:
-    metadata:
-      labels:
-        app: my-app
-    spec:
-      containers:
-      - image: my-image
-        envFrom:
-        - configMapRef:
-            name: my-config
-        name: app
-      tolerations:
-      - effect: NoExecute
-        key: node.kubernetes.io/not-ready
-        tolerationSeconds: 30
-  volumeClaimTemplates:
-  - spec:
-      storageClassName: default
-  `
+  name: my-config
+`
+
+func TestComplexComposition_Prod_SuccessWithRawTransformers(t *testing.T) {
+	th := kusttest_test.NewKustTestNoLoadRestrictorHarness(t, "/app/prod")
+	writeStatefulSetBase(th)
+	writePatchingTransformersRaw(th)
+	th.WriteK("/app/prod", `
+resources:
+- ../base
+- ../https/service/https-svc.yaml
+generators:
+- ../config/map/generator.yaml
+transformers:
+- ../config/transformer/transformer.yaml
+- ../https/transformer/transformer.yaml
+- ../tolerations/transformer.yaml
+`)
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Unexpected err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, prodDesiredResult)
+}
+
+func TestComplexComposition_Prod_SuccessWithBaseTransformers(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/app/prod")
+	writeStatefulSetBase(th)
+	writePatchingTransformerBases(th)
+	th.WriteK("/app/prod", `
+resources:
+- ../base
+- ../https/service
+generators:
+- ../config/map
+transformers:
+- ../config/transformer
+- ../https/transformer
+- ../tolerations
+`)
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Unexpected err: %v", err)
+	}
+	th.AssertActualEqualsExpected(m, prodDesiredResult)
 }
