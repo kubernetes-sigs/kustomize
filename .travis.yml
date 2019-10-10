@@ -1,8 +1,3 @@
-# os:
-#   - linux
-#   - osx
-#   - windows
-
 matrix:
   include:
     - os: linux
