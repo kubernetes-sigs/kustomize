@@ -10,14 +10,26 @@ import (
 	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
 )
 
-// Base
-// ----
-const baseKustomization = `
-resources:
-- statefulset.yaml
+const httpsService = `
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-https-svc
+spec:
+  ports:
+  - port: 443
+    protocol: TCP
+    name: https
+  selector:
+    app: my-app
 `
 
-const baseStatefulSet = `
+func writeStatefulSetBase(th *kusttest_test.KustTestHarness) {
+	th.WriteK("/app/base", `
+resources:
+- statefulset.yaml
+`)
+	th.WriteF("/app/base/statefulset.yaml", `
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -38,29 +50,30 @@ spec:
   volumeClaimTemplates:
   - spec:
       storageClassName: default
-`
+`)
+}
 
-// Storage overlay
-// ---------------
-const storageKustomization = `
+func writeHTTPSOverlay1(th *kusttest_test.KustTestHarness) {
+	th.WriteK("/app/https", `
 resources:
 - ../base
-patchesJson6902:
-- target:
-    group: apps
-    version: v1
-    kind: StatefulSet
-    name: my-sts
-  path: sts-patch.json
-`
+- https-svc.yaml
+patchesStrategicMerge:
+- sts-patch.yaml
+`)
+	th.WriteF("/app/https/https-svc.yaml", httpsService)
+	th.WriteF("/app/https/sts-patch.yaml", `
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: my-sts
+spec:
+  serviceName: my-https-svc
+`)
+}
 
-const patchJsonPVCTemplate = `
-[{"op": "replace", "path": "/spec/volumeClaimTemplates/0/spec/storageClassName", "value": "my-sc"}]
-`
-
-// Config overlay
-// --------------
-const configKustomization = `
+func writeConfigOverlay1(th *kusttest_test.KustTestHarness) {
+	th.WriteK("/app/config", `
 resources:
 - ../base
 configMapGenerator:
@@ -71,9 +84,8 @@ generatorOptions:
   disableNameSuffixHash: true
 patchesStrategicMerge:
 - sts-patch.yaml
-`
-
-const patchEnvFromConfig = `
+`)
+	th.WriteF("/app/config/sts-patch.yaml", `
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -86,18 +98,17 @@ spec:
         envFrom:
         - configMapRef:
             name: my-config
-`
+`)
+}
 
-// Tolerations overlay
-// -------------------
-const tolerationsKustomization = `
+func writeTolerationsOverlay1(th *kusttest_test.KustTestHarness) {
+	th.WriteK("/app/tolerations", `
 resources:
 - ../base
 patchesStrategicMerge:
 - sts-patch.yaml
-`
-
-const patchTolerations = `
+`)
+	th.WriteF("/app/tolerations/sts-patch.yaml", `
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -109,65 +120,31 @@ spec:
       - effect: NoExecute
         key: node.kubernetes.io/not-ready
         tolerationSeconds: 30
-`
+`)
+}
 
-// HTTPS overlay
-// -------------
-const httpsKustomization = `
+func writeStorageOverlay1(th *kusttest_test.KustTestHarness) {
+	th.WriteK("/app/storage", `
 resources:
 - ../base
-- https-svc.yaml
-patchesStrategicMerge:
-- sts-patch.yaml
-`
-
-const patchService = `
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: my-sts
-spec:
-  serviceName: my-https-svc
-`
-
-const httpsService = `
-apiVersion: v1
-kind: Service
-metadata:
-  name: my-https-svc
-spec:
-  ports:
-  - port: 443
-    protocol: TCP
-    name: https
-  selector:
-    app: my-app
-`
-
-func writeStatefulSetBase(th *kusttest_test.KustTestHarness) {
-	th.WriteK("/app/base", baseKustomization)
-	th.WriteF("/app/base/statefulset.yaml", baseStatefulSet)
+patchesJson6902:
+- target:
+    group: apps
+    version: v1
+    kind: StatefulSet
+    name: my-sts
+  path: sts-patch.json
+`)
+	th.WriteF("/app/storage/sts-patch.json", `
+[{"op": "replace", "path": "/spec/volumeClaimTemplates/0/spec/storageClassName", "value": "my-sc"}]
+`)
 }
 
-func writeHTTPSOverlay(th *kusttest_test.KustTestHarness) {
-	th.WriteK("/app/https", httpsKustomization)
-	th.WriteF("/app/https/https-svc.yaml", httpsService)
-	th.WriteF("/app/https/sts-patch.yaml", patchService)
-}
-
-func writeConfigOverlay(th *kusttest_test.KustTestHarness) {
-	th.WriteK("/app/config", configKustomization)
-	th.WriteF("/app/config/sts-patch.yaml", patchEnvFromConfig)
-}
-
-func writeTolerationsOverlay(th *kusttest_test.KustTestHarness) {
-	th.WriteK("/app/tolerations", tolerationsKustomization)
-	th.WriteF("/app/tolerations/sts-patch.yaml", patchTolerations)
-}
-
-func writeStorageOverlay(th *kusttest_test.KustTestHarness) {
-	th.WriteK("/app/storage", storageKustomization)
-	th.WriteF("/app/storage/sts-patch.json", patchJsonPVCTemplate)
+func writePatchConfig1(th *kusttest_test.KustTestHarness) {
+	writeStorageOverlay1(th)
+	writeConfigOverlay1(th)
+	writeTolerationsOverlay1(th)
+	writeHTTPSOverlay1(th)
 }
 
 // Here's a complex kustomization scenario that combines multiple overlays
@@ -208,11 +185,7 @@ func writeStorageOverlay(th *kusttest_test.KustTestHarness) {
 func TestComplexComposition_Dev_Failure(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/app/dev")
 	writeStatefulSetBase(th)
-	writeStorageOverlay(th)
-	writeConfigOverlay(th)
-	writeTolerationsOverlay(th)
-	writeHTTPSOverlay(th)
-
+	writePatchConfig1(th)
 	th.WriteK("/app/dev", `
 resources:
 - ../storage
@@ -266,10 +239,7 @@ spec:
 func TestComplexComposition_Prod_Failure(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/app/prod")
 	writeStatefulSetBase(th)
-	writeStorageOverlay(th)
-	writeConfigOverlay(th)
-	writeTolerationsOverlay(th)
-	writeHTTPSOverlay(th)
+	writePatchConfig1(th)
 
 	th.WriteK("/app/prod", `
 resources:
