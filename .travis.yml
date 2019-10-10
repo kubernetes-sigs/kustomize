@@ -42,9 +42,6 @@ before_install:
 # Skip the install process; let pre-commit.sh do it.
 install: true
 
-script:
-  - ./travis/pre-commit.sh
-
 # TBD. Suppressing for now.
 notifications:
   email: false
