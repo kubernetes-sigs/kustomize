@@ -15,8 +15,10 @@ Kustomize provides two ways of adding ConfigMap in one `kustomization`, either b
 > configMapGenerator:
 > - name: a-configmap
 >   files:
+>     # configfile is used as key
 >     - configs/configfile
->     - configs/another_configfile
+>     # configkey is used as key
+>     - configkey=configs/another_configfile
 > ```
 
 The ConfigMaps declared as [resource] are treated the same way as other resources. Kustomize doesn't append any hash to the ConfigMap name. The ConfigMap declared from a ConfigMapGenerator is treated differently. A hash is appended to the name and any change in the ConfigMap will trigger a rolling update.
