@@ -53,7 +53,7 @@ spec:
 `)
 }
 
-func writeHTTPSOverlay1(th *kusttest_test.KustTestHarness) {
+func writeHTTPSOverlay(th *kusttest_test.KustTestHarness) {
 	th.WriteK("/app/https", `
 resources:
 - ../base
@@ -72,7 +72,7 @@ spec:
 `)
 }
 
-func writeConfigOverlay1(th *kusttest_test.KustTestHarness) {
+func writeConfigOverlay(th *kusttest_test.KustTestHarness) {
 	th.WriteK("/app/config", `
 resources:
 - ../base
@@ -101,7 +101,7 @@ spec:
 `)
 }
 
-func writeTolerationsOverlay1(th *kusttest_test.KustTestHarness) {
+func writeTolerationsOverlay(th *kusttest_test.KustTestHarness) {
 	th.WriteK("/app/tolerations", `
 resources:
 - ../base
@@ -123,7 +123,7 @@ spec:
 `)
 }
 
-func writeStorageOverlay1(th *kusttest_test.KustTestHarness) {
+func writeStorageOverlay(th *kusttest_test.KustTestHarness) {
 	th.WriteK("/app/storage", `
 resources:
 - ../base
@@ -140,11 +140,11 @@ patchesJson6902:
 `)
 }
 
-func writePatchConfig1(th *kusttest_test.KustTestHarness) {
-	writeStorageOverlay1(th)
-	writeConfigOverlay1(th)
-	writeTolerationsOverlay1(th)
-	writeHTTPSOverlay1(th)
+func writePatchConfig(th *kusttest_test.KustTestHarness) {
+	writeStorageOverlay(th)
+	writeConfigOverlay(th)
+	writeTolerationsOverlay(th)
+	writeHTTPSOverlay(th)
 }
 
 // Here's a complex kustomization scenario that combines multiple overlays
@@ -185,7 +185,7 @@ func writePatchConfig1(th *kusttest_test.KustTestHarness) {
 func TestComplexComposition_Dev_Failure(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/app/dev")
 	writeStatefulSetBase(th)
-	writePatchConfig1(th)
+	writePatchConfig(th)
 	th.WriteK("/app/dev", `
 resources:
 - ../storage
@@ -239,7 +239,7 @@ spec:
 func TestComplexComposition_Prod_Failure(t *testing.T) {
 	th := kusttest_test.NewKustTestHarness(t, "/app/prod")
 	writeStatefulSetBase(th)
-	writePatchConfig1(th)
+	writePatchConfig(th)
 
 	th.WriteK("/app/prod", `
 resources:
