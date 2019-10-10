@@ -2,8 +2,6 @@
 
 In order to load images from a private image registry you will need to setup a kubernetes secret with token and user info for that registry and then refer to it in your deployment `imagePullSecrets`
 
-
-<!-- @createIngress @testAgainstLatestRelease -->
 ```
 DEMO_HOME=$(mktemp -d)
 
