@@ -12,7 +12,7 @@ current setup.
 
 #### requirements
 
- * linux, git, curl, Go 1.12
+ * linux, git, curl, Go 1.13
 
 
 ## Make a place to work
@@ -226,4 +226,3 @@ Above, if you had set
 
 there would be no need to use `XDG_CONFIG_HOME` in the
 _kustomize_ command above.
-
