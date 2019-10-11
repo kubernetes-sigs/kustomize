@@ -12,10 +12,10 @@ import (
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
-	kusttest_test "sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
 	"sigs.k8s.io/kustomize/v3/pkg/plugins"
-	plugins_test "sigs.k8s.io/kustomize/v3/pkg/plugins/test"
+	"sigs.k8s.io/kustomize/v3/pkg/plugins/testenv"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/target"
@@ -23,7 +23,7 @@ import (
 )
 
 func TestPluginDir(t *testing.T) {
-	tc := plugins_test.NewEnvForTest(t).Set()
+	tc := testenv.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
@@ -39,7 +39,7 @@ func TestPluginDir(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 
-	fSys := fs.MakeRealFS()
+	fSys := fs.MakeFsOnDisk()
 	err = fSys.WriteFile(filepath.Join(dir, "kustomization.yaml"), []byte(`
 generators:
 - config.yaml

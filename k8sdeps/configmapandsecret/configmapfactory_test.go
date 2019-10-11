@@ -131,15 +131,15 @@ func TestConstructConfigMap(t *testing.T) {
 		},
 	}
 
-	fSys := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	fSys.WriteFile(
-		fSys.RPath("configmap", "app.env"),
+		fs.RPath("configmap", "app.env"),
 		[]byte("DB_USERNAME=admin\nDB_PASSWORD=somepw\n"))
 	fSys.WriteFile(
-		fSys.RPath("configmap", "app-init.ini"),
+		fs.RPath("configmap", "app-init.ini"),
 		[]byte("FOO=bar\nBAR=baz\n"))
 	fSys.WriteFile(
-		fSys.RPath("configmap", "app.bin"),
+		fs.RPath("configmap", "app.bin"),
 		[]byte{0xff, 0xfd})
 	ldr := loader.NewFileLoaderAtRoot(validators.MakeFakeValidator(), fSys)
 	for _, tc := range testCases {

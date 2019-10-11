@@ -13,7 +13,7 @@ import (
 )
 
 func TestNewCmdAddSecretIsNotNil(t *testing.T) {
-	fSys := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	ldr := loader.NewFileLoaderAtCwd(validators.MakeFakeValidator(), fSys)
 	if newCmdAddSecret(fSys, ldr, nil) == nil {
 		t.Fatal("newCmdAddSecret shouldn't be nil")

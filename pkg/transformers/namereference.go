@@ -265,16 +265,6 @@ func (o *nameReferenceTransformer) getNewNameFunc(
 	}
 }
 
-func indexOf(s string, slice []string) []int {
-	var index []int
-	for i, item := range slice {
-		if item == s {
-			index = append(index, i)
-		}
-	}
-	return index
-}
-
 func getIds(rs []*resource.Resource) []string {
 	var result []string
 	for _, r := range rs {

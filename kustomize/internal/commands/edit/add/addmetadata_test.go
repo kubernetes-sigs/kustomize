@@ -7,15 +7,16 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
+	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
 
 func makeKustomization(t *testing.T) *types.Kustomization {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteTestKustomization()
-	kf, err := kustfile.NewKustomizationFile(fakeFS)
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomization(fSys)
+	kf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		t.Errorf("unexpected new error %v", err)
 	}
@@ -49,9 +50,9 @@ func TestRunAddAnnotation(t *testing.T) {
 }
 
 func TestAddAnnotationNoArgs(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdAddAnnotation(fakeFS, v.Validator)
+	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	err := cmd.Execute()
 	v.VerifyNoCall()
 	if err == nil {
@@ -63,9 +64,9 @@ func TestAddAnnotationNoArgs(t *testing.T) {
 }
 
 func TestAddAnnotationInvalidFormat(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	v := validators.MakeSadMapValidator(t)
-	cmd := newCmdAddAnnotation(fakeFS, v.Validator)
+	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	args := []string{"whatever:whatever"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
@@ -78,10 +79,10 @@ func TestAddAnnotationInvalidFormat(t *testing.T) {
 }
 
 func TestAddAnnotationManyArgs(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteTestKustomization()
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdAddAnnotation(fakeFS, v.Validator)
+	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	args := []string{"k1:v1,k2:v2,k3:v3,k4:v5"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
@@ -91,10 +92,10 @@ func TestAddAnnotationManyArgs(t *testing.T) {
 }
 
 func TestAddAnnotationValueQuoted(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteTestKustomization()
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdAddAnnotation(fakeFS, v.Validator)
+	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	args := []string{"k1:\"v1\""}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
@@ -104,10 +105,10 @@ func TestAddAnnotationValueQuoted(t *testing.T) {
 }
 
 func TestAddAnnotationValueWithColon(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteTestKustomization()
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdAddAnnotation(fakeFS, v.Validator)
+	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	args := []string{"k1:\"v1:v2\""}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
@@ -117,9 +118,9 @@ func TestAddAnnotationValueWithColon(t *testing.T) {
 }
 
 func TestAddAnnotationNoKey(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdAddAnnotation(fakeFS, v.Validator)
+	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	args := []string{":nokey"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyNoCall()
@@ -132,10 +133,10 @@ func TestAddAnnotationNoKey(t *testing.T) {
 }
 
 func TestAddAnnotationTooManyColons(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteTestKustomization()
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdAddAnnotation(fakeFS, v.Validator)
+	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	args := []string{"key:v1:v2"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
@@ -145,10 +146,10 @@ func TestAddAnnotationTooManyColons(t *testing.T) {
 }
 
 func TestAddAnnotationNoValue(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteTestKustomization()
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdAddAnnotation(fakeFS, v.Validator)
+	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	args := []string{"no:,value"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
@@ -158,10 +159,10 @@ func TestAddAnnotationNoValue(t *testing.T) {
 }
 
 func TestAddAnnotationMultipleArgs(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteTestKustomization()
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdAddAnnotation(fakeFS, v.Validator)
+	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	args := []string{"this:annotation", "has:spaces"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyNoCall()
@@ -174,10 +175,10 @@ func TestAddAnnotationMultipleArgs(t *testing.T) {
 }
 
 func TestAddAnnotationForce(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteTestKustomization()
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdAddAnnotation(fakeFS, v.Validator)
+	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	args := []string{"key:foo"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
@@ -187,7 +188,7 @@ func TestAddAnnotationForce(t *testing.T) {
 	// trying to add the same annotation again should not work
 	args = []string{"key:bar"}
 	v = validators.MakeHappyMapValidator(t)
-	cmd = newCmdAddAnnotation(fakeFS, v.Validator)
+	cmd = newCmdAddAnnotation(fSys, v.Validator)
 	err = cmd.RunE(cmd, args)
 	v.VerifyCall()
 	if err == nil {
@@ -198,7 +199,7 @@ func TestAddAnnotationForce(t *testing.T) {
 	}
 	// but trying to add it with --force should
 	v = validators.MakeHappyMapValidator(t)
-	cmd = newCmdAddAnnotation(fakeFS, v.Validator)
+	cmd = newCmdAddAnnotation(fSys, v.Validator)
 	cmd.Flag("force").Value.Set("true")
 	err = cmd.RunE(cmd, args)
 	v.VerifyCall()
@@ -230,9 +231,9 @@ func TestRunAddLabel(t *testing.T) {
 }
 
 func TestAddLabelNoArgs(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdAddLabel(fakeFS, v.Validator)
+	cmd := newCmdAddLabel(fSys, v.Validator)
 	err := cmd.Execute()
 	v.VerifyNoCall()
 	if err == nil {
@@ -244,9 +245,9 @@ func TestAddLabelNoArgs(t *testing.T) {
 }
 
 func TestAddLabelInvalidFormat(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	v := validators.MakeSadMapValidator(t)
-	cmd := newCmdAddLabel(fakeFS, v.Validator)
+	cmd := newCmdAddLabel(fSys, v.Validator)
 	args := []string{"exclamation!:point"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
@@ -259,9 +260,9 @@ func TestAddLabelInvalidFormat(t *testing.T) {
 }
 
 func TestAddLabelNoKey(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdAddLabel(fakeFS, v.Validator)
+	cmd := newCmdAddLabel(fSys, v.Validator)
 	args := []string{":nokey"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyNoCall()
@@ -274,10 +275,10 @@ func TestAddLabelNoKey(t *testing.T) {
 }
 
 func TestAddLabelTooManyColons(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteTestKustomization()
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdAddLabel(fakeFS, v.Validator)
+	cmd := newCmdAddLabel(fSys, v.Validator)
 	args := []string{"key:v1:v2"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
@@ -287,10 +288,10 @@ func TestAddLabelTooManyColons(t *testing.T) {
 }
 
 func TestAddLabelNoValue(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteTestKustomization()
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdAddLabel(fakeFS, v.Validator)
+	cmd := newCmdAddLabel(fSys, v.Validator)
 	args := []string{"no,value:"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
@@ -300,10 +301,10 @@ func TestAddLabelNoValue(t *testing.T) {
 }
 
 func TestAddLabelMultipleArgs(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteTestKustomization()
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdAddLabel(fakeFS, v.Validator)
+	cmd := newCmdAddLabel(fSys, v.Validator)
 	args := []string{"this:input", "has:spaces"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyNoCall()
@@ -316,10 +317,10 @@ func TestAddLabelMultipleArgs(t *testing.T) {
 }
 
 func TestAddLabelForce(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.WriteTestKustomization()
+	fSys := fs.MakeFsInMemory()
+	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
-	cmd := newCmdAddLabel(fakeFS, v.Validator)
+	cmd := newCmdAddLabel(fSys, v.Validator)
 	args := []string{"key:foo"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
@@ -329,7 +330,7 @@ func TestAddLabelForce(t *testing.T) {
 	// trying to add the same label again should not work
 	args = []string{"key:bar"}
 	v = validators.MakeHappyMapValidator(t)
-	cmd = newCmdAddLabel(fakeFS, v.Validator)
+	cmd = newCmdAddLabel(fSys, v.Validator)
 	err = cmd.RunE(cmd, args)
 	v.VerifyCall()
 	if err == nil {
@@ -340,7 +341,7 @@ func TestAddLabelForce(t *testing.T) {
 	}
 	// but trying to add it with --force should
 	v = validators.MakeHappyMapValidator(t)
-	cmd = newCmdAddLabel(fakeFS, v.Validator)
+	cmd = newCmdAddLabel(fSys, v.Validator)
 	cmd.Flag("force").Value.Set("true")
 	err = cmd.RunE(cmd, args)
 	v.VerifyCall()

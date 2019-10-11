@@ -47,7 +47,8 @@ func newCmdRemoveAnnotation(fSys fs.FileSystem, v func([]string) error) *cobra.C
 	o.arrayValidator = v
 	cmd := &cobra.Command{
 		Use:   "annotation",
-		Short: "Removes one or more commonAnnotations from " + pgmconfig.KustomizationFileNames[0],
+		Short: "Removes one or more commonAnnotations from " +
+			pgmconfig.DefaultKustomizationFileName(),
 		Example: `
 		remove annotation {annotationKey1},{annotationKey2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -67,7 +68,8 @@ func newCmdRemoveLabel(fSys fs.FileSystem, v func([]string) error) *cobra.Comman
 	o.arrayValidator = v
 	cmd := &cobra.Command{
 		Use:   "label",
-		Short: "Removes one or more commonLabels from " + pgmconfig.KustomizationFileNames[0],
+		Short: "Removes one or more commonLabels from " +
+			pgmconfig.DefaultKustomizationFileName(),
 		Example: `
 		remove label {labelKey1},{labelKey2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {

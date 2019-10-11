@@ -1,70 +1,151 @@
 # Versioning
 
 Running `kustomize` means one is running a
-particular version of a program, using a
-particular version of underlying packages, and
-reading a particular version of a [kustomization]
-file.
+particular version of a program (a CLI), using a
+particular version of underlying packages (a Go
+API), and reading a particular version of a
+[kustomization] file.
 
-## Program Versioning
+## CLI Program Versioning
 
 The command `kustomize version` prints a three
 field version tag (e.g. `v3.0.0`) that aspires to
 [semantic versioning].
 
-When enough changes have accumulated to
-warrant a new release, a [release process]
-is followed, and the fields in the version
-number are bumped per semver.
+This notion of semver applies only to the CLI.
 
-## Kustomize packages
+The major version changes when some backward
+incompatibility appears in how the commands
+behave.
 
-At the time of writing, the kustomize program and
-the packages it uses (and exports) are in the same
-Go module (see the top level `go.mod` file in the
-repo).
 
-[trailing major version indicator]: https://github.com/golang/go/wiki/Modules#releasing-modules-v2-or-higher
+### Installation
 
-Thus, they share the module's version number, per
-its git tag (e.g. `v3.0.0`), whose major verion
-number matches the [trailing major version
-indicator] in the module name (e.g. the `/v3` in
-`sigs.k8s.io/kustomize/v3`).
+The best method to install kustomize is to
+download a binary from the [release page].
 
-The non-internal packages in the Go module
-`sigs.k8s.io/kustomize/v3`, introduced in
-[v3.0.0](v3.0.0.md), conform to [semantic
-versioning].
+If you want to try minor and patch upgrades in
+dependencies via `go get -u` (see `help go
+get`), try something like this:
+
+```
+GO111MODULE=on go get -u sigs.k8s.io/kustomize/kustomize/v3@v3.2.1
+```
+
+## Go API Versioning
+
+The public methods in the public packages
+of module `sigs.k8s.io/kusomize` constitue
+the _kustomize Go API_.
+
+#### Version v3 and earlier
+
+
+[import path]: https://github.com/golang/go/wiki/Modules#releasing-modules-v2-or-higher
+
+In `v3` (and preceeding major versions), the
+kustomize program and the API live the same Go
+module at `sigs.k8s.io/kustomize`, at [import path]
+`sigs.k8s.io/kustomize/v3`.
+
+This has been fine for the CLI, but it presents a
+problem for the Go API.
+
+[minimal version selection]: https://research.swtch.com/vgo-mvs
+
+The process around Go modules, in particular the
+notion of [minimal version selection], demands
+that the module respect semver.
+
+Almost all the code in module
+`sigs.k8s.io/kustomize/v3` is exposed (not in a
+directory named `internal`).  Even a minor
+refactor changing a method name or argument type
+in some deeply buried (but still public) method is
+a backward incompatible change.  As a result, Go
+API semver hasn't been followed (or we'd be at a much
+higher version number by now).
+
+Some options are
+
+- continue to ignore Go API semver and stick to
+  CLI semver (eliminating the usefullness of
+  minimal version selection),
+
+- obey semver, and increment the module's major
+  version number with every release (drastically
+  reducing the usefullness of minimal version
+  selection - since virtually all releases will
+  be major),
+
+- slow down change in the huge API in favor of
+  stability, yet somehow continue to deliver
+  features,
+
+- drastically reduce the API surface, stabilize on
+  semver there, and refactor as needed inside
+  `internal`.
+
+The last option seems the most appealing.
+
+Projects using the Go API directly only use about
+a dozen public methods in ~ten packages. These
+methods could likely be combined to one or two
+public packages intentionally designed for general
+use, analogous to, say,
+[regexp](https://golang.org/pkg/regexp) or
+[go-yaml](https://github.com/go-yaml/yaml),
+reducing the API surface.
+
+#### Version v4
+
+With `v4` (i.e. the module dependency path
+`sigs.k8s.io/kustomize/v4`)
+two things will happen.
+
+First, the _kustomize_ program itself (`main.go`
+and CLI specific code) will have moved out of
+`sigs.k8s.io/kustomize` and into the new module
+`sigs.k8s.io/kustomize/kustomize`.  This is a
+submodule in the same repo, and it will retain its
+current notion of semver (e.g. a backward
+incompatible change in command behavior will
+trigger a major version bump).  This module will
+not export packages; it's just home to a `main`
+package.
+
+Second, `sigs.k8s.io/kustomize/v4` will start to
+obey semver with a substantially reduced public
+surface, informed by current usage.  Clients
+should import packages from this module, i.e.
+from import paths prefixed by
+`sigs.k8s.io/kustomize/v4`.  The kustomize binary
+itself is an API client requiring this module.
+
+The clients and API will evolve independently.
 
 
 ## Kustomization File Versioning
 
-At the time of writing (circa release of v2.0.0):
 
-- A [kustomization] file is just a YAML file that
-  can be successfully parsed into a particular Go
-  struct defined in the `kustomize` binary.
-
-- This struct does not have a version number,
-  which is the same as saying that its version
-  number matches the program's version number,
-  since it's compiled in.
+The kustomization file is a struct that is part of
+the kustomize Go API (the `sigs.k8s.io/kustomize`
+module), but it also evolves as a k8s API object -
+it has an `apiVersion` field containing its
+own version number.
 
 ### Field Change Policy
 
 - A field's meaning cannot be changed.
-
 - A field may be deprecated, then removed.
-
 - Deprecation means triggering a _minor_ (semver)
-  version bump in the program, and
-  defining a migration path in a non-fatal
-  error message.
-
+  version bump in the kustomize Go API, and
+  defining a migration path in a non-fatal error
+  message.
 - Removal means triggering a _major_ (semver)
-  version bump, and fatal error if field encountered
-  (as with any unknown field).
+  version bump in the kustomize Go API, and fatal
+  error if field encountered (as with any unknown
+  field).  Likewise a change in `apiVersion`.
 
 ### The `edit fix` Command
 
@@ -74,15 +155,11 @@ fields, and writes it out again in the latest
 format.
 
 This is a type version upgrade mechanism that
-works within _major_ program revisions.  There is
-no downgrade capability, as there's no use case
-for it (see discussion below).
+works within _major_ API revisions.  There is no
+downgrade capability, as there's no use case for
+it (see discussion below).
 
 ### Examples
-
-At the time of writing, in v1.0.x, there were 12
-minor releases, with backward compatible
-deprecations fixable via `edit fix`.
 
 With the 2.0.0 release, there were three field
 removals:
@@ -91,13 +168,11 @@ removals:
    introduced, because the latter offers more
    general features for image data manipulation.
    `imageTag` was removed in v2.0.0.
-
 - `patches` was deprecated and replaced by
    `patchesStrategicMerge` when `patchesJson6902`
    was introduced, to make a clearer
    distinction between patch specification formats.
    `patches` was removed in v2.0.0.
-
 - `secretGenerator/commands` was removed
    due to security concerns in v2.0.0
    with no deprecation period.
@@ -117,10 +192,8 @@ native type signals:
 
 - its reliability level (alpha vs beta vs
   generally available),
-
 - the existence of code to provide default values
   to fields not present in a serialization,
-  
 - the existence of code to provide both forward
   and backward conversion between different
   versions of types.
@@ -142,17 +215,13 @@ For CRDs, there's a [proposal] on how to manage
 versioning (e.g. a remote service can offer type
 defaulting and conversions).
 
-### Kustomization file versioning
-
-The critical difference between k8s API versioning
-and kustomization file versioning is
+### Differences
 
 - A k8s API server is able to go _forward_ and
   _backward_ in versioning, to work with older
   clients, over [some range].
-
 - The `kustomize edit fix` command only moves
-  _forward_ within a _major_ program
+  _forward_ within a _major_ API
   version.
 
 At the time of writing, the YAML in a
@@ -171,60 +240,26 @@ the following rules.
 
 Field names with dedicated meaning in k8s
 (`metadata`, `spec`, `status`, etc.)  aren't used.
-
 This is enforced via code review.
 
-#### Optional use of k8s `kind` and `apiVersion`
+#### Default values for k8s `kind` and `apiVersion`
 
-At the time of writing two [special] k8s
-resource fields are allowed, but not required, in
-a kustomization file: [`kind`] and [`apiVersion`].
+In `v3` or below, the two [special] k8s
+resource fields [`kind`] and [`apiVersion`] may
+be omitted from the kustomization file.
 
-If either field is present, they both must be, and
-they must have the following values:
+If either field is present, they both must be.
+If present, the value of `kind` must be:
 
-``` yaml
-kind: Kustomization
-apiVersion: kustomize.config.k8s.io/v1beta1
-```
+> ```
+> kind: Kustomization
+> ```
 
-They are allowed to exist and have specific values
-in a kustomization file only as a sort of
-domain-squatting behavior for some future API.  A
-kustomize user gains nothing from adding these
-fields to a kustomization file.
+If missing, the value of `apiVersion` defaults to
 
-### Why not require `kind` and `apiVersion`
-
-#### Ease of use and setting proper expectations
-
-Use cases for a kustomization file don't include a
-server storing muliple k8s kinds and offering
-version downgrades.
-
-The kustomization file is more akin to a
-`Makefile`.  A kustomize command can either read a
-kustomization file, or it cannot, and in the later
-case will complain as specifically as possible
-about why (e.g. `unknown field Foo`).
-
-So requiring a `kind` and `apiVersion` would just
-be boilerplate in a user's files, and in all the
-examples and tests.
-
-Nevertheless, _a user still benefits from a
-versioning policy_ and has a `fix` command to
-upgrade files as needed.
-
-#### We can change our minds
-
-When/if the kustomization struct graduates to some
-kind of API status, with an expectation of
-"versionless" storage and downgrade capability,
-whatever it looks like at that moment can be
-locked into `/v1beta1` or `/v1` and the `kind`
-and `apiVersion` fields can be required from that
-moment forward.
+> ```
+> apiVersion: kustomize.config.k8s.io/v1beta1
+> ```
 
 [field change policy]: #field-change-policy
 [some range]: https://kubernetes.io/docs/reference/using-api/deprecation-policy
@@ -235,6 +270,7 @@ moment forward.
 [special]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#resources
 [k8s API]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md
 [conventions]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md
+[release page]: https://github.com/kubernetes-sigs/kustomize/releases
 [release process]: ../releasing/README.md
 [kustomization]: glossary.md#kustomization
 [`kind`]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#types-kinds

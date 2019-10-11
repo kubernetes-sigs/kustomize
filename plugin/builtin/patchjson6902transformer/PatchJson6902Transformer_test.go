@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
-	plugins_test "sigs.k8s.io/kustomize/v3/pkg/plugins/test"
+	"sigs.k8s.io/kustomize/v3/pkg/plugins/testenv"
 )
 
 const target = `
@@ -29,7 +29,7 @@ spec:
 `
 
 func TestPatchJson6902TransformerMissingFile(t *testing.T) {
-	tc := plugins_test.NewEnvForTest(t).Set()
+	tc := testenv.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -58,7 +58,7 @@ path: jsonpatch.json
 }
 
 func TestBadPatchJson6902Transformer(t *testing.T) {
-	tc := plugins_test.NewEnvForTest(t).Set()
+	tc := testenv.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -87,7 +87,7 @@ jsonOp: 'thisIsNotAPatch'
 }
 
 func TestBothEmptyJson6902Transformer(t *testing.T) {
-	tc := plugins_test.NewEnvForTest(t).Set()
+	tc := testenv.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -115,7 +115,7 @@ target:
 }
 
 func TestBothSpecifiedJson6902Transformer(t *testing.T) {
-	tc := plugins_test.NewEnvForTest(t).Set()
+	tc := testenv.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -151,7 +151,7 @@ jsonOp: '[{"op": "add", "path": "/spec/template/spec/dnsPolicy", "value": "Clust
 }
 
 func TestPatchJson6902TransformerFromJsonFile(t *testing.T) {
-	tc := plugins_test.NewEnvForTest(t).Set()
+	tc := testenv.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -201,7 +201,7 @@ spec:
 }
 
 func TestPatchJson6902TransformerFromYamlFile(t *testing.T) {
-	tc := plugins_test.NewEnvForTest(t).Set()
+	tc := testenv.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -251,7 +251,7 @@ spec:
 }
 
 func TestPatchJson6902TransformerWithInlineJSON(t *testing.T) {
-	tc := plugins_test.NewEnvForTest(t).Set()
+	tc := testenv.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -292,7 +292,7 @@ spec:
 }
 
 func TestPatchJson6902TransformerWithInlineYAML(t *testing.T) {
-	tc := plugins_test.NewEnvForTest(t).Set()
+	tc := testenv.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(

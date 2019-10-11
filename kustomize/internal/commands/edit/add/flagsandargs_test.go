@@ -73,14 +73,14 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 }
 
 func TestExpandFileSource(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.Create("dir/fa1")
-	fakeFS.Create("dir/fa2")
-	fakeFS.Create("dir/readme")
+	fSys := fs.MakeFsInMemory()
+	fSys.Create("dir/fa1")
+	fSys.Create("dir/fa2")
+	fSys.Create("dir/readme")
 	fa := flagsAndArgs{
 		FileSources: []string{"dir/fa*"},
 	}
-	fa.ExpandFileSource(fakeFS)
+	fa.ExpandFileSource(fSys)
 	expected := []string{
 		"dir/fa1",
 		"dir/fa2",
@@ -91,15 +91,15 @@ func TestExpandFileSource(t *testing.T) {
 }
 
 func TestExpandFileSourceWithKey(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.Create("dir/faaaaaaaaaabbbbbbbbbccccccccccccccccc")
-	fakeFS.Create("dir/foobar")
-	fakeFS.Create("dir/simplebar")
-	fakeFS.Create("dir/readme")
+	fSys := fs.MakeFsInMemory()
+	fSys.Create("dir/faaaaaaaaaabbbbbbbbbccccccccccccccccc")
+	fSys.Create("dir/foobar")
+	fSys.Create("dir/simplebar")
+	fSys.Create("dir/readme")
 	fa := flagsAndArgs{
 		FileSources: []string{"foo-key=dir/fa*", "bar-key=dir/foobar", "dir/simplebar"},
 	}
-	fa.ExpandFileSource(fakeFS)
+	fa.ExpandFileSource(fSys)
 	expected := []string{
 		"foo-key=dir/faaaaaaaaaabbbbbbbbbccccccccccccccccc",
 		"bar-key=dir/foobar",
@@ -111,14 +111,14 @@ func TestExpandFileSourceWithKey(t *testing.T) {
 }
 
 func TestExpandFileSourceWithKeyAndError(t *testing.T) {
-	fakeFS := fs.MakeFakeFS()
-	fakeFS.Create("dir/fa1")
-	fakeFS.Create("dir/fa2")
-	fakeFS.Create("dir/readme")
+	fSys := fs.MakeFsInMemory()
+	fSys.Create("dir/fa1")
+	fSys.Create("dir/fa2")
+	fSys.Create("dir/readme")
 	fa := flagsAndArgs{
 		FileSources: []string{"foo-key=dir/fa*"},
 	}
-	err := fa.ExpandFileSource(fakeFS)
+	err := fa.ExpandFileSource(fSys)
 	if err == nil {
 		t.Fatalf("FileSources should not be correctly expanded: %v", fa.FileSources)
 	}

@@ -114,7 +114,7 @@ func (l *Loader) loadAndConfigurePlugin(
 	} else if l.pc.Enabled {
 		c, err = l.loadPlugin(res.OrgId())
 	} else {
-		err = NotEnabledErr(res.OrgId().Kind)
+		err = notEnabledErr(res.OrgId().Kind)
 	}
 	if err != nil {
 		return nil, err
