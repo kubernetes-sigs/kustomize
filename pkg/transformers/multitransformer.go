@@ -39,15 +39,6 @@ func NewMultiTransformer(t []resmap.Transformer) resmap.Transformer {
 	return r
 }
 
-// NewMultiTransformerWithConflictCheck constructs a multiTransformer with checking of conflicts.
-func NewMultiTransformerWithConflictCheck(t []resmap.Transformer) resmap.Transformer {
-	r := &multiTransformer{
-		transformers:         make([]resmap.Transformer, len(t)),
-		checkConflictEnabled: true}
-	copy(r.transformers, t)
-	return r
-}
-
 // Transform prepends the name prefix.
 func (o *multiTransformer) Transform(m resmap.ResMap) error {
 	if o.checkConflictEnabled {

@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -108,5 +109,30 @@ func (kf *KunstructuredFactoryImpl) validate(u unstructured.Unstructured) error 
 	if u.GetName() == "" {
 		return fmt.Errorf("missing metadata.name in object %v", u)
 	}
+
+	if result, path := checkListItemNil(u.Object); result {
+		return fmt.Errorf("empty item at %v in object %v", path, u)
+	}
 	return nil
+}
+
+func checkListItemNil(in interface{}) (bool, string) {
+	switch v := in.(type) {
+	case map[string]interface{}:
+		for key, s := range v {
+			if result, path := checkListItemNil(s); result {
+				return result, key + "/" + path
+			}
+		}
+	case []interface{}:
+		for index, s := range v {
+			if s == nil {
+				return true, ""
+			}
+			if result, path := checkListItemNil(s); result {
+				return result, "[" + strconv.Itoa(index) + "]/" + path
+			}
+		}
+	}
+	return false, ""
 }

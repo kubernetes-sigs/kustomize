@@ -11,13 +11,17 @@ Or...
 ## Quickly curl the latest
 
 ```
-opsys=linux  # or darwin, or windows
+# pick one
+opsys=darwin
+opsys=windows
+opsys=linux
+
 curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/latest |\
   grep browser_download |\
   grep $opsys |\
   cut -d '"' -f 4 |\
   xargs curl -O -L
-mv kustomize_*_${opsys}_amd64 kustomize
+mv kustomize_kustomize\.v*_${opsys}_amd64 kustomize
 chmod u+x kustomize
 ```
 
@@ -25,8 +29,8 @@ chmod u+x kustomize
 
 For example
 ```
-# Omit the @v3.2.1 to get the default for major version 3
-GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3@v3.2.1
+# Omit the @v3.2.3 to get the default for major version 3
+GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3@v3.2.3
 ```
 
 Use of `GO111MODULE=on` shouldn't be necessary

@@ -7,7 +7,7 @@ import (
 	"io"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/kustomize/v3/provenance"
+	"sigs.k8s.io/kustomize/v3/provenance"
 )
 
 // NewCmdVersion makes a new version command.

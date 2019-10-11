@@ -6,7 +6,7 @@ import (
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/gregjones/httpcache"
-	redis_cache "github.com/gregjones/httpcache/redis"
+	rediscache "github.com/gregjones/httpcache/redis"
 )
 
 func FromCache(header http.Header) bool {
@@ -14,7 +14,7 @@ func FromCache(header http.Header) bool {
 }
 
 func NewClient(conn redis.Conn) *http.Client {
-	etagCache := redis_cache.NewWithClient(conn)
+	etagCache := rediscache.NewWithClient(conn)
 	tr := httpcache.NewTransport(etagCache)
 	return &http.Client{
 		Transport: tr,

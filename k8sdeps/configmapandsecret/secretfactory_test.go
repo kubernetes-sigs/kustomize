@@ -123,7 +123,7 @@ func TestConstructSecret(t *testing.T) {
 		},
 	}
 
-	fSys := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	fSys.WriteFile("/secret/app.env", []byte("DB_USERNAME=admin\nDB_PASSWORD=somepw\n"))
 	fSys.WriteFile("/secret/app-init.ini", []byte("FOO=bar\nBAR=baz\n"))
 	ldr := loader.NewFileLoaderAtRoot(validators.MakeFakeValidator(), fSys)

@@ -57,7 +57,7 @@ var testCases = []testData{
 }
 
 func MakeFakeFs(td []testData) fs.FileSystem {
-	fSys := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	for _, x := range td {
 		fSys.WriteFile("/"+x.path, []byte(x.expectedContent))
 	}
@@ -230,7 +230,7 @@ func commonSetupForLoaderRestrictionTest() (string, fs.FileSystem, error) {
 	if err != nil {
 		return "", nil, err
 	}
-	fSys := fs.MakeRealFS()
+	fSys := fs.MakeFsOnDisk()
 	fSys.Mkdir(filepath.Join(dir, "base"))
 
 	fSys.WriteFile(
@@ -385,11 +385,12 @@ func TestNewLoaderAtGitClone(t *testing.T) {
 	pathInRepo := "foo/base"
 	url := rootUrl + "/" + pathInRepo
 	coRoot := "/tmp"
-	fSys := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	fSys.MkdirAll(coRoot)
 	fSys.MkdirAll(coRoot + "/" + pathInRepo)
 	fSys.WriteFile(
-		coRoot+"/"+pathInRepo+"/"+pgmconfig.KustomizationFileNames[0],
+		coRoot+"/"+pathInRepo+"/"+
+			pgmconfig.DefaultKustomizationFileName(),
 		[]byte(`
 whatever
 `))
@@ -432,7 +433,7 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 	// Define an overlay-base structure in the file system.
 	topDir := "/whatever"
 	cloneRoot := topDir + "/someClone"
-	fSys := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	fSys.MkdirAll(topDir + "/highBase")
 	fSys.MkdirAll(cloneRoot + "/foo/base")
 	fSys.MkdirAll(cloneRoot + "/foo/overlay")
@@ -508,7 +509,7 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 func TestLocalLoaderReferencingGitBase(t *testing.T) {
 	topDir := "/whatever"
 	cloneRoot := topDir + "/someClone"
-	fSys := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	fSys.MkdirAll(topDir)
 	fSys.MkdirAll(cloneRoot + "/foo/base")
 
@@ -534,7 +535,7 @@ func TestLocalLoaderReferencingGitBase(t *testing.T) {
 func TestRepoDirectCycleDetection(t *testing.T) {
 	topDir := "/cycles"
 	cloneRoot := topDir + "/someClone"
-	fSys := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	fSys.MkdirAll(topDir)
 	fSys.MkdirAll(cloneRoot)
 
@@ -563,7 +564,7 @@ func TestRepoDirectCycleDetection(t *testing.T) {
 func TestRepoIndirectCycleDetection(t *testing.T) {
 	topDir := "/cycles"
 	cloneRoot := topDir + "/someClone"
-	fSys := fs.MakeFakeFS()
+	fSys := fs.MakeFsInMemory()
 	fSys.MkdirAll(topDir)
 	fSys.MkdirAll(cloneRoot)
 

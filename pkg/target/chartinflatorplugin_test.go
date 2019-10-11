@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/v3/pkg/kusttest"
-	plugins_test "sigs.k8s.io/kustomize/v3/pkg/plugins/test"
+	"sigs.k8s.io/kustomize/v3/pkg/plugins/testenv"
 )
 
 // This is an example of using a helm chart as a base,
@@ -28,7 +28,7 @@ import (
 // TODO: Download and inflate the chart, and check that
 // in for the test.
 func TestChartInflatorPlugin(t *testing.T) {
-	tc := plugins_test.NewEnvForTest(t).Set()
+	tc := testenv.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
@@ -61,7 +61,7 @@ kind: Secret
 metadata:
   labels:
     app: release-name-minecraft
-    chart: minecraft-1.1.0
+    chart: minecraft-1.1.1
     heritage: Tiller
     release: release-name
   name: LOOOOOOOONG-release-name-minecraft
@@ -74,7 +74,7 @@ metadata:
     volume.alpha.kubernetes.io/storage-class: default
   labels:
     app: release-name-minecraft
-    chart: minecraft-1.1.0
+    chart: minecraft-1.1.1
     heritage: Tiller
     release: release-name
   name: LOOOOOOOONG-release-name-minecraft-datadir
@@ -90,7 +90,7 @@ kind: Service
 metadata:
   labels:
     app: release-name-minecraft
-    chart: minecraft-1.1.0
+    chart: minecraft-1.1.1
     heritage: Tiller
     release: release-name
   name: LOOOOOOOONG-release-name-minecraft
