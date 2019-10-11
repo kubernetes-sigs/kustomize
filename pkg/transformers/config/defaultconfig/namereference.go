@@ -269,7 +269,7 @@ nameReference:
     kind: Ingress
   - path: spec/backend/serviceName
     kind: Ingress
-  - path: spec/service/name
+  - path: spec/service
     kind: APIService
     group: apiregistration.k8s.io
   - path: webhooks/clientConfig/service
