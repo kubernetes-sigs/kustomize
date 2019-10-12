@@ -201,7 +201,7 @@ chmod a+x $MY_PLUGIN_DIR/SillyConfigMapGenerator
 ```
 mkdir -p $DEMO/bin
 gh=https://github.com/kubernetes-sigs/kustomize/releases/download
-url=$gh/v3.0.0-pre/kustomize_3.0.0-pre_linux_amd64
+url=$gh/v3.0.0/kustomize_3.0.0_linux_amd64
 curl -o $DEMO/bin/kustomize -L $url
 chmod u+x $DEMO/bin/kustomize
 ```
