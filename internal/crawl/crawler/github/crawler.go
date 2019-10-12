@@ -28,32 +28,22 @@ var logger = log.New(os.Stdout, "Github Crawler: ",
 
 // Implements crawler.Crawler.
 type githubCrawler struct {
-	client GitHubClient
+	client GhClient
 	query  Query
 }
 
-type GitHubClient struct {
+type GhClient struct {
 	RequestConfig
 	retryCount uint64
 	client     *http.Client
 }
 
-func NewClient(accessToken string, retryCount uint64, client *http.Client) GitHubClient {
-	return GitHubClient{
-		retryCount: retryCount,
-		client:     client,
-		RequestConfig: RequestConfig{
-			perPage:     githubMaxPageSize,
-			accessToken: accessToken,
-		},
-	}
-}
-
+/*
 func NewCrawler(accessToken string, retryCount uint64, client *http.Client,
 	query Query) githubCrawler {
 
 	return githubCrawler{
-		client: GitHubClient{
+		client: GhClient{
 			retryCount: retryCount,
 			client:     client,
 			RequestConfig: RequestConfig{
@@ -64,12 +54,13 @@ func NewCrawler(accessToken string, retryCount uint64, client *http.Client,
 		query: query,
 	}
 }
+*/
 
 // Implements crawler.Crawler.
 func (gc githubCrawler) Crawl(
-	ctx context.Context, output chan<- crawler.CrawlerDocument) error {
+	ctx context.Context, output chan<- crawler.CrawledDocument) error {
 
-	noETagClient := GitHubClient{
+	noETagClient := GhClient{
 		RequestConfig: gc.client.RequestConfig,
 		client:        &http.Client{Timeout: gc.client.client.Timeout},
 		retryCount:    gc.client.retryCount,
@@ -138,11 +129,11 @@ func (gc githubCrawler) FetchDocument(ctx context.Context, d *doc.Document) erro
 			continue
 		}
 	}
-	return fmt.Errorf("File Not Found: %s", url)
+	return fmt.Errorf("file not found: %s", url)
 }
 
 func (gc githubCrawler) SetCreated(ctx context.Context, d *doc.Document) error {
-	fs := GithubFileSpec{}
+	fs := GhFileSpec{}
 	fs.Repository.FullName = d.RepositoryURL + "/" + d.FilePath
 	creationTime, err := gc.client.GetFileCreationTime(fs)
 	if err != nil {
@@ -165,10 +156,10 @@ func (gc githubCrawler) Match(d *doc.Document) bool {
 
 // processQuery follows all of the pages in a query, and updates/adds the
 // documents from the crawl to the datastore/index.
-func processQuery(ctx context.Context, gcl GitHubClient, query string,
-	output chan<- crawler.CrawlerDocument) error {
+func processQuery(ctx context.Context, gcl GhClient, query string,
+	output chan<- crawler.CrawledDocument) error {
 
-	queryPages := make(chan GithubResponseInfo)
+	queryPages := make(chan GhResponseInfo)
 
 	go func() {
 		// Forward the document metadata to the retrieval channel.
@@ -209,8 +200,8 @@ func processQuery(ctx context.Context, gcl GitHubClient, query string,
 	return errs
 }
 
-func kustomizationResultAdapter(gcl GitHubClient, k GithubFileSpec) (
-	crawler.CrawlerDocument, error) {
+func kustomizationResultAdapter(gcl GhClient, k GhFileSpec) (
+	crawler.CrawledDocument, error) {
 
 	data, err := gcl.GetFileData(k)
 	if err != nil {
@@ -245,8 +236,8 @@ func kustomizationResultAdapter(gcl GitHubClient, k GithubFileSpec) (
 // ForwardPaginatedQuery follows the links to the next pages and performs all of
 // the queries for a given search query, relaying the data from each request
 // back to an output channel.
-func (gcl GitHubClient) ForwardPaginatedQuery(ctx context.Context, query string,
-	output chan<- GithubResponseInfo) error {
+func (gcl GhClient) ForwardPaginatedQuery(ctx context.Context, query string,
+	output chan<- GhResponseInfo) error {
 
 	logger.Println("querying: ", query)
 	response := gcl.parseGithubResponse(query)
@@ -275,7 +266,7 @@ func (gcl GitHubClient) ForwardPaginatedQuery(ctx context.Context, query string,
 }
 
 // GetFileData gets the bytes from a file.
-func (gcl GitHubClient) GetFileData(k GithubFileSpec) ([]byte, error) {
+func (gcl GhClient) GetFileData(k GhFileSpec) ([]byte, error) {
 
 	url := gcl.ContentsRequest(k.Repository.FullName, k.Path)
 
@@ -314,7 +305,7 @@ func (gcl GitHubClient) GetFileData(k GithubFileSpec) ([]byte, error) {
 	return data, err
 }
 
-func (gcl GitHubClient) GetDefaultBranch(url string) (string, error) {
+func (gcl GhClient) GetDefaultBranch(url string) (string, error) {
 	resp, err := gcl.GetReposData(url)
 	if err != nil {
 		return "", fmt.Errorf(
@@ -341,8 +332,8 @@ func (gcl GitHubClient) GetDefaultBranch(url string) (string, error) {
 }
 
 // GetFileCreationTime gets the earliest date of a file.
-func (gcl GitHubClient) GetFileCreationTime(
-	k GithubFileSpec) (time.Time, error) {
+func (gcl GhClient) GetFileCreationTime(
+	k GhFileSpec) (time.Time, error) {
 
 	url := gcl.CommitsRequest(k.Repository.FullName, k.Path)
 
@@ -378,7 +369,7 @@ func (gcl GitHubClient) GetFileCreationTime(
 		return defaultTime, fmt.Errorf(
 			"%+v: failed to read metadata: %v", k, err)
 	}
-	earliestDate := []DateSpec{}
+	var earliestDate []DateSpec
 	err = json.Unmarshal(data, &earliestDate)
 	size := len(earliestDate)
 	if err != nil || size == 0 {
@@ -413,18 +404,18 @@ func throttleRepoAPI() {
 
 type multiError []error
 
-func (me multiError) Error() string {
-	size := len(me) + 2
+func (e multiError) Error() string {
+	size := len(e) + 2
 	strs := make([]string, size)
 	strs[0] = "Errors ["
-	for i, err := range me {
+	for i, err := range e {
 		strs[i+1] = "\t" + err.Error()
 	}
 	strs[size-1] = "]"
 	return strings.Join(strs, "\n")
 }
 
-type GithubFileSpec struct {
+type GhFileSpec struct {
 	Path       string `json:"path,omitempty"`
 	Repository struct {
 		API      string `json:"url,omitempty"`
@@ -439,10 +430,10 @@ type githubResponse struct {
 	TotalCount uint64 `json:"total_count,omitempty"`
 
 	// Github representation of a file.
-	Items []GithubFileSpec `json:"items,omitempty"`
+	Items []GhFileSpec `json:"items,omitempty"`
 }
 
-type GithubResponseInfo struct {
+type GhResponseInfo struct {
 	*http.Response
 	Parsed  *githubResponse
 	Error   error
@@ -480,9 +471,9 @@ func parseGithubLinkFormat(links string) (string, string) {
 	return next, last
 }
 
-func (gcl GitHubClient) parseGithubResponse(getRequest string) GithubResponseInfo {
+func (gcl GhClient) parseGithubResponse(getRequest string) GhResponseInfo {
 	resp, err := gcl.SearchGithubAPI(getRequest)
-	requestInfo := GithubResponseInfo{
+	requestInfo := GhResponseInfo{
 		Response: resp,
 		Error:    err,
 		Parsed:   nil,
@@ -529,7 +520,7 @@ func (gcl GitHubClient) parseGithubResponse(getRequest string) GithubResponseInf
 // SearchGithubAPI performs a search query and handles rate limitting for
 // the 'code/search?' endpoint as well as timed retries in the case of abuse
 // prevention.
-func (gcl GitHubClient) SearchGithubAPI(query string) (*http.Response, error) {
+func (gcl GhClient) SearchGithubAPI(query string) (*http.Response, error) {
 	throttleSearchAPI()
 	return gcl.getWithRetry(query)
 }
@@ -537,18 +528,18 @@ func (gcl GitHubClient) SearchGithubAPI(query string) (*http.Response, error) {
 // GetReposData performs a search query and handles rate limitting for
 // the '/repos' endpoint as well as timed retries in the case of abuse
 // prevention.
-func (gcl GitHubClient) GetReposData(query string) (*http.Response, error) {
+func (gcl GhClient) GetReposData(query string) (*http.Response, error) {
 	throttleRepoAPI()
 	return gcl.getWithRetry(query)
 }
 
 // User content (file contents) is not API rate limited, so there's no use in
 // throttling this call.
-func (gcl GitHubClient) GetRawUserContent(query string) (*http.Response, error) {
+func (gcl GhClient) GetRawUserContent(query string) (*http.Response, error) {
 	return gcl.getWithRetry(query)
 }
 
-func (gcl GitHubClient) getWithRetry(
+func (gcl GhClient) getWithRetry(
 	query string) (resp *http.Response, err error) {
 
 	resp, err = gcl.client.Get(query)

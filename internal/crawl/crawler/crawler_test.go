@@ -47,7 +47,7 @@ func (c testCrawler) FetchDocument(ctx context.Context, d *doc.Document) error {
 		d.DocumentData = c.docs[i].DocumentData
 		return nil
 	}
-	return fmt.Errorf("Document %v does not exist for matcher: %s",
+	return fmt.Errorf("document %v does not exist for matcher: %s",
 		d, c.matchPrefix)
 }
 
@@ -72,7 +72,7 @@ func newCrawler(matchPrefix string, err error,
 
 // Crawl implements the Crawler interface for testing.
 func (c testCrawler) Crawl(ctx context.Context,
-	output chan<- CrawlerDocument) error {
+	output chan<- CrawledDocument) error {
 
 	for i, d := range c.docs {
 		isResource := true
@@ -107,7 +107,7 @@ func (s sortableDocs) Len() int {
 }
 
 func TestCrawlerRunner(t *testing.T) {
-	fmt.Println("testing CrawlerRunner")
+	fmt.Println("testing CRunner")
 	tests := []struct {
 		tc   []Crawler
 		errs []error
@@ -169,7 +169,7 @@ func TestCrawlerRunner(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		output := make(chan CrawlerDocument)
+		output := make(chan CrawledDocument)
 		wg := sync.WaitGroup{}
 		wg.Add(1)
 
@@ -178,7 +178,7 @@ func TestCrawlerRunner(t *testing.T) {
 			defer close(output)
 			defer wg.Done()
 
-			errs := CrawlerRunner(context.Background(),
+			errs := CRunner(context.Background(),
 				output, test.tc)
 
 			// Check that errors are returned as they should be.
@@ -215,12 +215,12 @@ func TestCrawlFromSeed(t *testing.T) {
 	fmt.Println("testing CrawlFromSeed")
 
 	tests := []struct {
-		seed    CrawlerSeed
+		seed    CrawlSeed
 		matcher string
 		corpus  []doc.KustomizationDocument
 	}{
 		{
-			seed: CrawlerSeed{
+			seed: CrawlSeed{
 				{
 					RepositoryURL: kustomizeRepo,
 					FilePath:      "examples/helloWorld/kustomization.yaml",
@@ -333,12 +333,12 @@ resources:
 		cr := newCrawler(tc.matcher, nil, tc.corpus)
 		visited := make(map[string]int)
 		CrawlFromSeed(context.Background(), tc.seed, []Crawler{cr},
-			func(d *doc.Document) (CrawlerDocument, error) {
+			func(d *doc.Document) (CrawledDocument, error) {
 				return &doc.KustomizationDocument{
 					Document: *d,
 				}, nil
 			},
-			func(d CrawlerDocument, cr Crawler) error {
+			func(d CrawledDocument, cr Crawler) error {
 				visited[d.ID()]++
 				return nil
 			},
