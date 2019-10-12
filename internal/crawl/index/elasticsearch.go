@@ -35,7 +35,7 @@ func newIndex(ctx context.Context, name string) (*index, error) {
 
 type readerFunc func(io.Reader) error
 
-func ignoreResponseBody(reader io.Reader) error {
+func ignoreResponseBody(_ io.Reader) error {
 	return nil
 }
 

@@ -27,7 +27,7 @@ type Crawler interface {
 	// Crawl returns when it is done processing. This method does not take
 	// ownership of the channel. The channel is write only, and it
 	// designates where the crawler should forward the documents.
-	Crawl(ctx context.Context, output chan<- CrawlerDocument) error
+	Crawl(ctx context.Context, output chan<- CrawledDocument) error
 
 	// Get the document data given the FilePath, Repo, and Ref/Tag/Branch.
 	FetchDocument(context.Context, *doc.Document) error
@@ -37,21 +37,21 @@ type Crawler interface {
 	Match(*doc.Document) bool
 }
 
-type CrawlerDocument interface {
+type CrawledDocument interface {
 	ID() string
 	GetDocument() *doc.Document
 	GetResources() ([]*doc.Document, error)
 	WasCached() bool
 }
 
-type CrawlerSeed []*doc.Document
+type CrawlSeed []*doc.Document
 
-type IndexFunc func(CrawlerDocument, Crawler) error
-type Converter func(*doc.Document) (CrawlerDocument, error)
+type IndexFunc func(CrawledDocument, Crawler) error
+type Converter func(*doc.Document) (CrawledDocument, error)
 
 // Cleaner, more efficient, and more extensible crawler implementation.
 // The seed must include the ids of each document in the index.
-func CrawlFromSeed(ctx context.Context, seed CrawlerSeed,
+func CrawlFromSeed(ctx context.Context, seed CrawlSeed,
 	crawlers []Crawler, conv Converter, indx IndexFunc) {
 
 	seen := make(map[string]struct{})
@@ -63,7 +63,7 @@ func CrawlFromSeed(ctx context.Context, seed CrawlerSeed,
 		logger.Println("error: ", err)
 	}
 
-	stack := make(CrawlerSeed, 0)
+	stack := make(CrawlSeed, 0)
 
 	findMatch := func(d *doc.Document) Crawler {
 		for _, crawl := range crawlers {
@@ -75,7 +75,7 @@ func CrawlFromSeed(ctx context.Context, seed CrawlerSeed,
 		return nil
 	}
 
-	addBranches := func(cdoc CrawlerDocument, match Crawler) {
+	addBranches := func(cdoc CrawledDocument, match Crawler) {
 		if _, ok := seen[cdoc.ID()]; ok {
 			return
 		}
@@ -101,7 +101,7 @@ func CrawlFromSeed(ctx context.Context, seed CrawlerSeed,
 		}
 	}
 
-	doCrawl := func(docsPtr *CrawlerSeed) {
+	doCrawl := func(docsPtr *CrawlSeed) {
 		for len(*docsPtr) > 0 {
 			back := len(*docsPtr) - 1
 			next := (*docsPtr)[back]
@@ -139,7 +139,7 @@ func CrawlFromSeed(ctx context.Context, seed CrawlerSeed,
 	logger.Printf("crawling %d new documents found in the seed\n", len(stack))
 	doCrawl(&stack)
 
-	ch := make(chan CrawlerDocument, 1<<10)
+	ch := make(chan CrawledDocument, 1<<10)
 	wg := sync.WaitGroup{}
 
 	wg.Add(1)
@@ -160,7 +160,7 @@ func CrawlFromSeed(ctx context.Context, seed CrawlerSeed,
 	}()
 
 	// Exploration through APIs.
-	errs := CrawlerRunner(ctx, ch, crawlers)
+	errs := CRunner(ctx, ch, crawlers)
 	if errs != nil {
 		for _, err := range errs {
 			logIfErr(err)
@@ -175,7 +175,7 @@ func CrawlFromSeed(ctx context.Context, seed CrawlerSeed,
 	doCrawl(&stack)
 }
 
-// CrawlerRunner is a blocking function and only returns once all of the
+// CRunner is a blocking function and only returns once all of the
 // crawlers are finished with execution.
 //
 // This function uses the output channel to forward kustomization documents
@@ -186,14 +186,14 @@ func CrawlFromSeed(ctx context.Context, seed CrawlerSeed,
 // index of the crawler that emitted the error. Although the errors themselves
 // can be nil, the array will always be exactly the size of the crawlers array.
 //
-// Crawler Runner takes in a seed, which represents the documents stored in an
+// CRunner takes in a seed, which represents the documents stored in an
 // index somewhere. The document data is not required to be populated. If there
 // are many documents, this is preferable. The order of iteration over the seed
-// is not garanteed, but the CrawlerRunner does guarantee that every element
+// is not garanteed, but the CRunner does guarantee that every element
 // from the seed will be processed before any other documents from the
 // crawlers.
-func CrawlerRunner(ctx context.Context,
-	output chan<- CrawlerDocument, crawlers []Crawler) []error {
+func CRunner(ctx context.Context,
+	output chan<- CrawledDocument, crawlers []Crawler) []error {
 
 	errs := make([]error, len(crawlers))
 	wg := sync.WaitGroup{}
@@ -201,12 +201,12 @@ func CrawlerRunner(ctx context.Context,
 	for i, crawler := range crawlers {
 		// Crawler implementations get their own channels to prevent a
 		// crawler from closing the main output channel.
-		docs := make(chan CrawlerDocument)
+		docs := make(chan CrawledDocument)
 		wg.Add(2)
 
 		// Forward all of the documents from this crawler's channel to
 		// the main output channel.
-		go func(docs <-chan CrawlerDocument) {
+		go func(docs <-chan CrawledDocument) {
 			defer wg.Done()
 			for doc := range docs {
 				output <- doc
@@ -215,7 +215,7 @@ func CrawlerRunner(ctx context.Context,
 
 		// Run this crawler and capture its returned error.
 		go func(idx int, crawler Crawler,
-			docs chan<- CrawlerDocument) {
+			docs chan<- CrawledDocument) {
 
 			defer func() {
 				wg.Done()
