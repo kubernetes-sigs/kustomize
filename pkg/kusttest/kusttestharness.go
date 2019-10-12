@@ -196,6 +196,11 @@ func hint(a, b string) string {
 
 func (th *KustTestHarness) AssertActualEqualsExpected(
 	m resmap.ResMap, expected string) {
+	th.AssertActualEqualsExpectedWithTweak(m, nil, expected)
+}
+
+func (th *KustTestHarness) AssertActualEqualsExpectedWithTweak(
+	m resmap.ResMap, tweaker func([]byte) []byte, expected string) {
 	if m == nil {
 		th.t.Fatalf("Map should not be nil.")
 	}
@@ -207,6 +212,9 @@ func (th *KustTestHarness) AssertActualEqualsExpected(
 	actual, err := m.AsYaml()
 	if err != nil {
 		th.t.Fatalf("Unexpected err: %v", err)
+	}
+	if tweaker != nil {
+		actual = tweaker(actual)
 	}
 	if string(actual) != expected {
 		th.reportDiffAndFail(actual, expected)
