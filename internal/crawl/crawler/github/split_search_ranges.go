@@ -147,11 +147,11 @@ type cachedSearch interface {
 //    cache's performance.
 type githubCachedSearch struct {
 	cache       map[uint64]uint64
-	gcl         GitHubClient
+	gcl         GhClient
 	baseRequest request
 }
 
-func newCache(client GitHubClient, query Query) githubCachedSearch {
+func newCache(client GhClient, query Query) githubCachedSearch {
 	return githubCachedSearch{
 		cache: map[uint64]uint64{
 			0: 0,

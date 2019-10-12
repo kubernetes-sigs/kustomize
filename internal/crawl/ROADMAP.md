@@ -82,13 +82,13 @@ following:
         "docID45",
         ...
       ],
-    }
+    },
     {
       "identifier": "another:k8s:feature",
       "documents": [
         ...
       ],
-    }
+    },
     ...
   ]
 

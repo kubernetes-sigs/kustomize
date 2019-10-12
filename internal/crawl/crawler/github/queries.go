@@ -51,7 +51,7 @@ func (qf queryField) String() string {
 type Query []queryField
 
 func QueryWith(qfs ...queryField) Query {
-	return Query(qfs)
+	return qfs
 }
 
 func (q Query) String() string {
