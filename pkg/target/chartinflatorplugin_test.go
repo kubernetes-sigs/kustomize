@@ -8,9 +8,10 @@
 package target_test
 
 import (
+	"regexp"
 	"testing"
 
-	kusttest_test "sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
 	"sigs.k8s.io/kustomize/v3/pkg/plugins/testenv"
 )
 
@@ -53,7 +54,11 @@ chartName: minecraft
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
-	th.AssertActualEqualsExpected(m, `
+	chartName := regexp.MustCompile("chart: minecraft-[0-9.]+")
+	th.AssertActualEqualsExpectedWithTweak(m,
+		func(x []byte) []byte {
+			return chartName.ReplaceAll(x, []byte("chart: minecraft-SOMEVERSION"))
+		}, `
 apiVersion: v1
 data:
   rcon-password: Q0hBTkdFTUUh
@@ -61,7 +66,7 @@ kind: Secret
 metadata:
   labels:
     app: release-name-minecraft
-    chart: minecraft-1.1.2
+    chart: minecraft-SOMEVERSION
     heritage: Tiller
     release: release-name
   name: LOOOOOOOONG-release-name-minecraft
@@ -74,7 +79,7 @@ metadata:
     volume.alpha.kubernetes.io/storage-class: default
   labels:
     app: release-name-minecraft
-    chart: minecraft-1.1.2
+    chart: minecraft-SOMEVERSION
     heritage: Tiller
     release: release-name
   name: LOOOOOOOONG-release-name-minecraft-datadir
@@ -90,7 +95,7 @@ kind: Service
 metadata:
   labels:
     app: release-name-minecraft
-    chart: minecraft-1.1.2
+    chart: minecraft-SOMEVERSION
     heritage: Tiller
     release: release-name
   name: LOOOOOOOONG-release-name-minecraft
