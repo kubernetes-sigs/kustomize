@@ -5,8 +5,6 @@
 package filesys
 
 import (
-	"io"
-	"os"
 	"path/filepath"
 )
 
@@ -40,10 +38,4 @@ type FileSystem interface {
 	WriteFile(path string, data []byte) error
 	// Walk walks the file system with the given WalkFunc.
 	Walk(path string, walkFn filepath.WalkFunc) error
-}
-
-// File groups the basic os.File methods.
-type File interface {
-	io.ReadWriteCloser
-	Stat() (os.FileInfo, error)
 }

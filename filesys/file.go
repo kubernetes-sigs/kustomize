@@ -4,6 +4,7 @@
 package filesys
 
 import (
+	"io"
 	"os"
 	"time"
 )
@@ -32,3 +33,9 @@ func (fi *fileInfo) IsDir() bool { return fi.dir }
 
 // Sys should return underlying data source, but it now returns nil
 func (fi *fileInfo) Sys() interface{} { return nil }
+
+// File groups the basic os.File methods.
+type File interface {
+	io.ReadWriteCloser
+	Stat() (os.FileInfo, error)
+}

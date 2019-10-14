@@ -10,7 +10,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/kustomize/v3/pkg/filesys"
+	"sigs.k8s.io/kustomize/v3/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
@@ -133,13 +133,13 @@ func TestConstructConfigMap(t *testing.T) {
 
 	fSys := filesys.MakeFsInMemory()
 	fSys.WriteFile(
-		filesys.RPath("configmap", "app.env"),
+		filesys.RootedPath("configmap", "app.env"),
 		[]byte("DB_USERNAME=admin\nDB_PASSWORD=somepw\n"))
 	fSys.WriteFile(
-		filesys.RPath("configmap", "app-init.ini"),
+		filesys.RootedPath("configmap", "app-init.ini"),
 		[]byte("FOO=bar\nBAR=baz\n"))
 	fSys.WriteFile(
-		filesys.RPath("configmap", "app.bin"),
+		filesys.RootedPath("configmap", "app.bin"),
 		[]byte{0xff, 0xfd})
 	ldr := loader.NewFileLoaderAtRoot(validators.MakeFakeValidator(), fSys)
 	for _, tc := range testCases {
