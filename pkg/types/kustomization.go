@@ -182,12 +182,6 @@ type PluginConfig struct {
 	Enabled bool
 }
 
-// Pair is a key value pair.
-type Pair struct {
-	Key   string
-	Value string
-}
-
 type PluginType string
 
 func (p PluginType) IsUndefined() bool {

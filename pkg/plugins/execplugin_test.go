@@ -13,6 +13,7 @@ import (
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
+	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
 
 func TestExecPluginConfig(t *testing.T) {
@@ -21,6 +22,7 @@ func TestExecPluginConfig(t *testing.T) {
 		resource.NewFactory(
 			kunstruct.NewKunstructuredFactoryImpl()), nil)
 	ldr := loadertest.NewFakeLoader(path)
+	v := validators.MakeFakeValidator()
 	pluginConfig := rf.RF().FromMap(
 		map[string]interface{}{
 			"apiVersion": "someteam.example.com/v1",
@@ -47,7 +49,7 @@ s/$BAR/bar/g
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
-	p.Config(resmap.NewPluginHelpers(ldr, rf), yaml)
+	p.Config(resmap.NewPluginHelpers(ldr, v, rf), yaml)
 
 	expected := "/kustomize/plugin/someteam.example.com/v1/sedtransformer/SedTransformer"
 	if !strings.HasSuffix(p.path, expected) {

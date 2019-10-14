@@ -119,12 +119,12 @@ func (o *Options) RunBuild(
 	rf *resmap.Factory, ptf resmap.PatchFactory,
 	pl *plugins.Loader) error {
 	ldr, err := loader.NewLoader(
-		o.loadRestrictor, v, o.kustomizationPath, fSys)
+		o.loadRestrictor, o.kustomizationPath, fSys)
 	if err != nil {
 		return err
 	}
 	defer ldr.Cleanup()
-	kt, err := target.NewKustTarget(ldr, rf, ptf, pl)
+	kt, err := target.NewKustTarget(ldr, v, rf, ptf, pl)
 	if err != nil {
 		return err
 	}
@@ -140,12 +140,12 @@ func (o *Options) RunBuildPrune(
 	rf *resmap.Factory, ptf resmap.PatchFactory,
 	pl *plugins.Loader) error {
 	ldr, err := loader.NewLoader(
-		o.loadRestrictor, v, o.kustomizationPath, fSys)
+		o.loadRestrictor, o.kustomizationPath, fSys)
 	if err != nil {
 		return err
 	}
 	defer ldr.Cleanup()
-	kt, err := target.NewKustTarget(ldr, rf, ptf, pl)
+	kt, err := target.NewKustTarget(ldr, v, rf, ptf, pl)
 	if err != nil {
 		return err
 	}

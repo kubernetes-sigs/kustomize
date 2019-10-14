@@ -148,10 +148,10 @@ func (rf *Factory) SliceFromBytes(in []byte) ([]*Resource, error) {
 
 // MakeConfigMap makes an instance of Resource for ConfigMap
 func (rf *Factory) MakeConfigMap(
-	ldr ifc.Loader,
+	kvLdr ifc.KvLoader,
 	options *types.GeneratorOptions,
 	args *types.ConfigMapArgs) (*Resource, error) {
-	u, err := rf.kf.MakeConfigMap(ldr, options, args)
+	u, err := rf.kf.MakeConfigMap(kvLdr, options, args)
 	if err != nil {
 		return nil, err
 	}
@@ -164,10 +164,10 @@ func (rf *Factory) MakeConfigMap(
 
 // MakeSecret makes an instance of Resource for Secret
 func (rf *Factory) MakeSecret(
-	ldr ifc.Loader,
+	kvLdr ifc.KvLoader,
 	options *types.GeneratorOptions,
 	args *types.SecretArgs) (*Resource, error) {
-	u, err := rf.kf.MakeSecret(ldr, options, args)
+	u, err := rf.kf.MakeSecret(kvLdr, options, args)
 	if err != nil {
 		return nil, err
 	}

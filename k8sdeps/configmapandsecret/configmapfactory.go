@@ -27,7 +27,7 @@ func makeFreshConfigMap(
 // MakeConfigMap returns a new ConfigMap, or nil and an error.
 func (f *Factory) MakeConfigMap(
 	args *types.ConfigMapArgs) (*v1.ConfigMap, error) {
-	all, err := f.ldr.LoadKvPairs(args.GeneratorArgs)
+	all, err := f.kvLdr.Load(args.KvPairSources)
 	if err != nil {
 		return nil, errors.Wrap(err, "loading KV pairs")
 	}
@@ -48,7 +48,7 @@ func (f *Factory) MakeConfigMap(
 // addKvToConfigMap adds the given key and data to the given config map.
 // Error if key invalid, or already exists.
 func (f *Factory) addKvToConfigMap(configMap *v1.ConfigMap, p types.Pair) error {
-	if err := f.ldr.Validator().ErrIfInvalidKey(p.Key); err != nil {
+	if err := f.kvLdr.Validator().ErrIfInvalidKey(p.Key); err != nil {
 		return err
 	}
 	// If the configmap data contains byte sequences that are all in the UTF-8

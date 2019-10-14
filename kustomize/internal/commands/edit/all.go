@@ -10,6 +10,7 @@ import (
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/remove"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/set"
 	"sigs.k8s.io/kustomize/v3/filesys"
+	"sigs.k8s.io/kustomize/v3/kv"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
 )
@@ -35,10 +36,13 @@ func NewCmdEdit(
 	}
 
 	c.AddCommand(
-		add.NewCmdAdd(fSys, loader.NewFileLoaderAtCwd(v, fSys), kf),
+		add.NewCmdAdd(
+			fSys,
+			kv.NewLoader(loader.NewFileLoaderAtCwd(fSys), v),
+			kf),
 		set.NewCmdSet(fSys, v),
 		fix.NewCmdFix(fSys),
-		remove.NewCmdRemove(fSys, loader.NewFileLoaderAtCwd(v, fSys)),
+		remove.NewCmdRemove(fSys, v),
 	)
 	return c
 }

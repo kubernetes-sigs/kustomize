@@ -14,7 +14,7 @@ import (
 // newCmdAddSecret returns a new command.
 func newCmdAddSecret(
 	fSys filesys.FileSystem,
-	ldr ifc.Loader,
+	ldr ifc.KvLoader,
 	kf ifc.KunstructuredFactory) *cobra.Command {
 	var flags flagsAndArgs
 	cmd := &cobra.Command{
@@ -94,7 +94,7 @@ func newCmdAddSecret(
 // Note: error may leave kustomization file in an undefined state.
 // Suggest passing a copy of kustomization file.
 func addSecret(
-	ldr ifc.Loader,
+	ldr ifc.KvLoader,
 	k *types.Kustomization,
 	flags flagsAndArgs, kf ifc.KunstructuredFactory) error {
 	args := findOrMakeSecretArgs(k, flags.Name, flags.Type)

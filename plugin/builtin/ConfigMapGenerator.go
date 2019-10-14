@@ -2,6 +2,7 @@
 package builtin
 
 import (
+	"sigs.k8s.io/kustomize/v3/kv"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/yaml"
@@ -31,7 +32,8 @@ func (p *ConfigMapGeneratorPlugin) Config(
 
 func (p *ConfigMapGeneratorPlugin) Generate() (resmap.ResMap, error) {
 	return p.h.ResmapFactory().FromConfigMapArgs(
-		p.h.Loader(), &p.GeneratorOptions, p.ConfigMapArgs)
+		kv.NewLoader(p.h.Loader(), p.h.Validator()),
+		&p.GeneratorOptions, p.ConfigMapArgs)
 }
 
 func NewConfigMapGeneratorPlugin() resmap.GeneratorPlugin {

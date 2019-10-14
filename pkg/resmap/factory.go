@@ -66,12 +66,12 @@ func (rmF *Factory) NewResMapFromBytes(b []byte) (ResMap, error) {
 // NewResMapFromConfigMapArgs returns a Resource slice given
 // a configmap metadata slice from kustomization file.
 func (rmF *Factory) NewResMapFromConfigMapArgs(
-	ldr ifc.Loader,
+	kvLdr ifc.KvLoader,
 	options *types.GeneratorOptions,
 	argList []types.ConfigMapArgs) (ResMap, error) {
 	var resources []*resource.Resource
 	for _, args := range argList {
-		res, err := rmF.resF.MakeConfigMap(ldr, options, &args)
+		res, err := rmF.resF.MakeConfigMap(kvLdr, options, &args)
 		if err != nil {
 			return nil, errors.Wrap(err, "NewResMapFromConfigMapArgs")
 		}
@@ -81,10 +81,10 @@ func (rmF *Factory) NewResMapFromConfigMapArgs(
 }
 
 func (rmF *Factory) FromConfigMapArgs(
-	ldr ifc.Loader,
+	kvLdr ifc.KvLoader,
 	options *types.GeneratorOptions,
 	args types.ConfigMapArgs) (ResMap, error) {
-	res, err := rmF.resF.MakeConfigMap(ldr, options, &args)
+	res, err := rmF.resF.MakeConfigMap(kvLdr, options, &args)
 	if err != nil {
 		return nil, err
 	}
@@ -94,12 +94,12 @@ func (rmF *Factory) FromConfigMapArgs(
 // NewResMapFromSecretArgs takes a SecretArgs slice, generates
 // secrets from each entry, and accumulates them in a ResMap.
 func (rmF *Factory) NewResMapFromSecretArgs(
-	ldr ifc.Loader,
+	kvLdr ifc.KvLoader,
 	options *types.GeneratorOptions,
 	argsList []types.SecretArgs) (ResMap, error) {
 	var resources []*resource.Resource
 	for _, args := range argsList {
-		res, err := rmF.resF.MakeSecret(ldr, options, &args)
+		res, err := rmF.resF.MakeSecret(kvLdr, options, &args)
 		if err != nil {
 			return nil, errors.Wrap(err, "NewResMapFromSecretArgs")
 		}
@@ -109,10 +109,10 @@ func (rmF *Factory) NewResMapFromSecretArgs(
 }
 
 func (rmF *Factory) FromSecretArgs(
-	ldr ifc.Loader,
+	kvLdr ifc.KvLoader,
 	options *types.GeneratorOptions,
 	args types.SecretArgs) (ResMap, error) {
-	res, err := rmF.resF.MakeSecret(ldr, options, &args)
+	res, err := rmF.resF.MakeSecret(kvLdr, options, &args)
 	if err != nil {
 		return nil, err
 	}
