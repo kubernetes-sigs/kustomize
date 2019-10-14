@@ -11,7 +11,7 @@ import (
 
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/transformer"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
 	"sigs.k8s.io/kustomize/v3/pkg/plugins"
@@ -39,7 +39,7 @@ func TestPluginDir(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 
-	fSys := fs.MakeFsOnDisk()
+	fSys := filesys.MakeFsOnDisk()
 	err = fSys.WriteFile(filepath.Join(dir, "kustomization.yaml"), []byte(`
 generators:
 - config.yaml

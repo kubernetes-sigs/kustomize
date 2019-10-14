@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 )
 
 func TestValidate(t *testing.T) {
@@ -29,7 +29,7 @@ func TestValidate(t *testing.T) {
 }
 
 func TestComplete(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	fSys.Mkdir("/some/dir")
 	fSys.WriteFile("/some/file", []byte(`some file`))
 
@@ -62,7 +62,7 @@ func TestComplete(t *testing.T) {
 }
 
 func TestRunSave(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	o := saveOptions{saveDirectory: "/some/dir"}
 	err := o.RunSave(fSys)
 	if err != nil {

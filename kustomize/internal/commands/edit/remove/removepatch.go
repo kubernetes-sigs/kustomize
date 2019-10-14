@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/util"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/patch"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 )
@@ -20,7 +20,7 @@ type removePatchOptions struct {
 }
 
 // newCmdRemovePatch removes the name of a file containing a patch from the kustomization file.
-func newCmdRemovePatch(fsys fs.FileSystem) *cobra.Command {
+func newCmdRemovePatch(fSys filesys.FileSystem) *cobra.Command {
 	var o removePatchOptions
 
 	cmd := &cobra.Command{
@@ -38,7 +38,7 @@ func newCmdRemovePatch(fsys fs.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return o.RunRemovePatch(fsys)
+			return o.RunRemovePatch(fSys)
 		},
 	}
 	return cmd
@@ -59,7 +59,7 @@ func (o *removePatchOptions) Complete(cmd *cobra.Command, args []string) error {
 }
 
 // RunRemovePatch runs removePatch command (do real work).
-func (o *removePatchOptions) RunRemovePatch(fSys fs.FileSystem) error {
+func (o *removePatchOptions) RunRemovePatch(fSys filesys.FileSystem) error {
 	patches, err := util.GlobPatterns(fSys, o.patchFilePaths)
 	if err != nil {
 		return err

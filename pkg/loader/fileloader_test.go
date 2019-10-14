@@ -25,7 +25,7 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/git"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
@@ -56,8 +56,8 @@ var testCases = []testData{
 	},
 }
 
-func MakeFakeFs(td []testData) fs.FileSystem {
-	fSys := fs.MakeFsInMemory()
+func MakeFakeFs(td []testData) filesys.FileSystem {
+	fSys := filesys.MakeFsInMemory()
 	for _, x := range td {
 		fSys.WriteFile("/"+x.path, []byte(x.expectedContent))
 	}
@@ -225,12 +225,12 @@ const (
 //   │   └── symLinkToExteriorData -> ../exteriorData
 //   └── exteriorData
 //
-func commonSetupForLoaderRestrictionTest() (string, fs.FileSystem, error) {
+func commonSetupForLoaderRestrictionTest() (string, filesys.FileSystem, error) {
 	dir, err := ioutil.TempDir("", "kustomize-test-")
 	if err != nil {
 		return "", nil, err
 	}
-	fSys := fs.MakeFsOnDisk()
+	fSys := filesys.MakeFsOnDisk()
 	fSys.Mkdir(filepath.Join(dir, "base"))
 
 	fSys.WriteFile(
@@ -385,7 +385,7 @@ func TestNewLoaderAtGitClone(t *testing.T) {
 	pathInRepo := "foo/base"
 	url := rootUrl + "/" + pathInRepo
 	coRoot := "/tmp"
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	fSys.MkdirAll(coRoot)
 	fSys.MkdirAll(coRoot + "/" + pathInRepo)
 	fSys.WriteFile(
@@ -401,7 +401,7 @@ whatever
 	}
 	l, err := newLoaderAtGitClone(
 		repoSpec, validators.MakeFakeValidator(), fSys, nil,
-		git.DoNothingCloner(fs.ConfirmedDir(coRoot)))
+		git.DoNothingCloner(filesys.ConfirmedDir(coRoot)))
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
 	}
@@ -433,7 +433,7 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 	// Define an overlay-base structure in the file system.
 	topDir := "/whatever"
 	cloneRoot := topDir + "/someClone"
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	fSys.MkdirAll(topDir + "/highBase")
 	fSys.MkdirAll(cloneRoot + "/foo/base")
 	fSys.MkdirAll(cloneRoot + "/foo/overlay")
@@ -480,7 +480,7 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 	}
 	l1, err = newLoaderAtGitClone(
 		repoSpec, validators.MakeFakeValidator(), fSys, nil,
-		git.DoNothingCloner(fs.ConfirmedDir(cloneRoot)))
+		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
 	}
@@ -509,7 +509,7 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 func TestLocalLoaderReferencingGitBase(t *testing.T) {
 	topDir := "/whatever"
 	cloneRoot := topDir + "/someClone"
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	fSys.MkdirAll(topDir)
 	fSys.MkdirAll(cloneRoot + "/foo/base")
 
@@ -519,7 +519,7 @@ func TestLocalLoaderReferencingGitBase(t *testing.T) {
 	}
 	l1 := newLoaderAtConfirmedDir(
 		RestrictionRootOnly, validators.MakeFakeValidator(), root, fSys, nil,
-		git.DoNothingCloner(fs.ConfirmedDir(cloneRoot)))
+		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
 	if l1.Root() != topDir {
 		t.Fatalf("unexpected root %s", l1.Root())
 	}
@@ -535,7 +535,7 @@ func TestLocalLoaderReferencingGitBase(t *testing.T) {
 func TestRepoDirectCycleDetection(t *testing.T) {
 	topDir := "/cycles"
 	cloneRoot := topDir + "/someClone"
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	fSys.MkdirAll(topDir)
 	fSys.MkdirAll(cloneRoot)
 
@@ -545,7 +545,7 @@ func TestRepoDirectCycleDetection(t *testing.T) {
 	}
 	l1 := newLoaderAtConfirmedDir(
 		RestrictionRootOnly, validators.MakeFakeValidator(), root, fSys, nil,
-		git.DoNothingCloner(fs.ConfirmedDir(cloneRoot)))
+		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
 	p1 := "github.com/someOrg/someRepo/foo"
 	rs1, err := git.NewRepoSpecFromUrl(p1)
 	if err != nil {
@@ -564,7 +564,7 @@ func TestRepoDirectCycleDetection(t *testing.T) {
 func TestRepoIndirectCycleDetection(t *testing.T) {
 	topDir := "/cycles"
 	cloneRoot := topDir + "/someClone"
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	fSys.MkdirAll(topDir)
 	fSys.MkdirAll(cloneRoot)
 
@@ -574,7 +574,7 @@ func TestRepoIndirectCycleDetection(t *testing.T) {
 	}
 	l0 := newLoaderAtConfirmedDir(
 		RestrictionRootOnly, validators.MakeFakeValidator(), root, fSys, nil,
-		git.DoNothingCloner(fs.ConfirmedDir(cloneRoot)))
+		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
 
 	p1 := "github.com/someOrg/someRepo1"
 	p2 := "github.com/someOrg/someRepo2"

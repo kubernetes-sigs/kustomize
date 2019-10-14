@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/util"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 )
 
 // flagsAndArgs encapsulates the options for add secret/configmap commands.
@@ -59,7 +59,7 @@ func (a *flagsAndArgs) Validate(args []string) error {
 // and the key, if missing, is the same as the value.
 // In the case where the key is explicitly declared,
 // the globbing, if present, must have exactly one match.
-func (a *flagsAndArgs) ExpandFileSource(fSys fs.FileSystem) error {
+func (a *flagsAndArgs) ExpandFileSource(fSys filesys.FileSystem) error {
 	var results []string
 	for _, pattern := range a.FileSources {
 		var patterns []string

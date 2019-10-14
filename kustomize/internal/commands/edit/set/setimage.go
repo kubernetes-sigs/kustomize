@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/image"
 )
 
@@ -36,7 +36,7 @@ var (
 const separator = "="
 
 // newCmdSetImage sets the new names, tags or digests for images in the kustomization.
-func newCmdSetImage(fsys fs.FileSystem) *cobra.Command {
+func newCmdSetImage(fSys filesys.FileSystem) *cobra.Command {
 	var o setImageOptions
 
 	cmd := &cobra.Command{
@@ -78,7 +78,7 @@ and overwrite the previous ones if the image name exists.
 			if err != nil {
 				return err
 			}
-			return o.RunSetImage(fsys)
+			return o.RunSetImage(fSys)
 		},
 	}
 	return cmd
@@ -110,7 +110,7 @@ func (o *setImageOptions) Validate(args []string) error {
 }
 
 // RunSetImage runs setImage command.
-func (o *setImageOptions) RunSetImage(fSys fs.FileSystem) error {
+func (o *setImageOptions) RunSetImage(fSys filesys.FileSystem) error {
 	mf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		return err

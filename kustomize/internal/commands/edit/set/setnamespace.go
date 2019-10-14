@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 )
 
@@ -20,7 +20,7 @@ type setNamespaceOptions struct {
 }
 
 // newCmdSetNamespace sets the value of the namespace field in the kustomization.
-func newCmdSetNamespace(fsys fs.FileSystem, v ifc.Validator) *cobra.Command {
+func newCmdSetNamespace(fSys filesys.FileSystem, v ifc.Validator) *cobra.Command {
 	var o setNamespaceOptions
 
 	cmd := &cobra.Command{
@@ -38,7 +38,7 @@ and overwrite the value with "staging" if the field does exist.
 			if err != nil {
 				return err
 			}
-			return o.RunSetNamespace(fsys)
+			return o.RunSetNamespace(fSys)
 		},
 	}
 	return cmd
@@ -58,7 +58,7 @@ func (o *setNamespaceOptions) Validate(args []string) error {
 }
 
 // RunSetNamespace runs setNamespace command (does real work).
-func (o *setNamespaceOptions) RunSetNamespace(fSys fs.FileSystem) error {
+func (o *setNamespaceOptions) RunSetNamespace(fSys filesys.FileSystem) error {
 	mf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		return err

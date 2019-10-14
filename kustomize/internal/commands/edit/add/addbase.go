@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 )
 
 type addBaseOptions struct {
@@ -18,7 +18,7 @@ type addBaseOptions struct {
 }
 
 // newCmdAddBase adds the file path of the kustomize base to the kustomization file.
-func newCmdAddBase(fsys fs.FileSystem) *cobra.Command {
+func newCmdAddBase(fSys filesys.FileSystem) *cobra.Command {
 	var o addBaseOptions
 
 	cmd := &cobra.Command{
@@ -35,7 +35,7 @@ func newCmdAddBase(fsys fs.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return o.RunAddBase(fsys)
+			return o.RunAddBase(fSys)
 		},
 	}
 	return cmd
@@ -56,7 +56,7 @@ func (o *addBaseOptions) Complete(cmd *cobra.Command, args []string) error {
 }
 
 // RunAddBase runs addBase command (do real work).
-func (o *addBaseOptions) RunAddBase(fSys fs.FileSystem) error {
+func (o *addBaseOptions) RunAddBase(fSys filesys.FileSystem) error {
 	mf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		return err

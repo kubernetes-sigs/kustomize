@@ -10,13 +10,13 @@ import (
 
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
 
-func makeKustomizationFS() fs.FileSystem {
-	fSys := fs.MakeFsInMemory()
+func makeKustomizationFS() filesys.FileSystem {
+	fSys := filesys.MakeFsInMemory()
 	commonLabels := []string{"label1: val1", "label2: val2"}
 	commonAnnotations := []string{"annotation1: val1", "annotation2: val2"}
 
@@ -26,7 +26,7 @@ func makeKustomizationFS() fs.FileSystem {
 	return fSys
 }
 
-func readKustomizationFS(t *testing.T, fSys fs.FileSystem) *types.Kustomization {
+func readKustomizationFS(t *testing.T, fSys filesys.FileSystem) *types.Kustomization {
 	kf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		t.Errorf("unexpected new error %v", err)
@@ -86,7 +86,7 @@ func TestRemoveAnnotationIgnore(t *testing.T) {
 }
 
 func TestRemoveAnnotationNoDefinition(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomizationWith(fSys, []byte(""))
 
 	v := validators.MakeHappyMapValidator(t)
@@ -104,7 +104,7 @@ func TestRemoveAnnotationNoDefinition(t *testing.T) {
 }
 
 func TestRemoveAnnotationNoDefinitionIgnore(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomizationWith(fSys, []byte(""))
 
 	v := validators.MakeHappyMapValidator(t)
@@ -234,7 +234,7 @@ func TestRemoveLabelIgnore(t *testing.T) {
 }
 
 func TestRemoveLabelNoDefinition(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomizationWith(fSys, []byte(""))
 
 	v := validators.MakeHappyMapValidator(t)
@@ -252,7 +252,7 @@ func TestRemoveLabelNoDefinition(t *testing.T) {
 }
 
 func TestRemoveLabelNoDefinitionIgnore(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomizationWith(fSys, []byte(""))
 
 	v := validators.MakeHappyMapValidator(t)

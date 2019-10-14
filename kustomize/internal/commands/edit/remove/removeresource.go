@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 )
 
@@ -18,7 +18,7 @@ type removeResourceOptions struct {
 }
 
 // newCmdRemoveResource remove the name of a file containing a resource to the kustomization file.
-func newCmdRemoveResource(fsys fs.FileSystem) *cobra.Command {
+func newCmdRemoveResource(fSys filesys.FileSystem) *cobra.Command {
 	var o removeResourceOptions
 
 	cmd := &cobra.Command{
@@ -39,7 +39,7 @@ func newCmdRemoveResource(fsys fs.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return o.RunRemoveResource(fsys)
+			return o.RunRemoveResource(fSys)
 		},
 	}
 	return cmd
@@ -60,7 +60,7 @@ func (o *removeResourceOptions) Complete(cmd *cobra.Command, args []string) erro
 }
 
 // RunRemoveResource runs Resource command (do real work).
-func (o *removeResourceOptions) RunRemoveResource(fSys fs.FileSystem) error {
+func (o *removeResourceOptions) RunRemoveResource(fSys filesys.FileSystem) error {
 
 	mf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {

@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 )
 
 type setNameSuffixOptions struct {
@@ -16,7 +16,7 @@ type setNameSuffixOptions struct {
 }
 
 // newCmdSetNameSuffix sets the value of the nameSuffix field in the kustomization.
-func newCmdSetNameSuffix(fsys fs.FileSystem) *cobra.Command {
+func newCmdSetNameSuffix(fSys filesys.FileSystem) *cobra.Command {
 	var o setNameSuffixOptions
 
 	cmd := &cobra.Command{
@@ -37,7 +37,7 @@ and overwrite the value with "-acme" if the field does exist.
 			if err != nil {
 				return err
 			}
-			return o.RunSetNameSuffix(fsys)
+			return o.RunSetNameSuffix(fSys)
 		},
 	}
 	return cmd
@@ -59,7 +59,7 @@ func (o *setNameSuffixOptions) Complete(cmd *cobra.Command, args []string) error
 }
 
 // RunSetNameSuffix runs setNameSuffix command (does real work).
-func (o *setNameSuffixOptions) RunSetNameSuffix(fSys fs.FileSystem) error {
+func (o *setNameSuffixOptions) RunSetNameSuffix(fSys filesys.FileSystem) error {
 	mf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		return err

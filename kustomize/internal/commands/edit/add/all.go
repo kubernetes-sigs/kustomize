@@ -5,13 +5,13 @@ package add
 
 import (
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 )
 
 // NewCmdAdd returns an instance of 'add' subcommand.
 func NewCmdAdd(
-	fSys fs.FileSystem,
+	fSys filesys.FileSystem,
 	ldr ifc.Loader,
 	kf ifc.KunstructuredFactory) *cobra.Command {
 	c := &cobra.Command{

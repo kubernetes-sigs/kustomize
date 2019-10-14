@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 )
 
 const (
@@ -20,7 +20,7 @@ sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 )
 
 func TestAddPatchHappyPath(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	fSys.WriteFile(patchFileName, []byte(patchFileContent))
 	fSys.WriteFile(patchFileName+"another", []byte(patchFileContent))
 	testutils.WriteTestKustomization(fSys)
@@ -44,7 +44,7 @@ func TestAddPatchHappyPath(t *testing.T) {
 }
 
 func TestAddPatchAlreadyThere(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	fSys.WriteFile(patchFileName, []byte(patchFileContent))
 	testutils.WriteTestKustomization(fSys)
 
@@ -63,7 +63,7 @@ func TestAddPatchAlreadyThere(t *testing.T) {
 }
 
 func TestAddPatchNoArgs(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 
 	cmd := newCmdAddPatch(fSys)
 	err := cmd.Execute()

@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
 
@@ -18,7 +18,7 @@ const (
 )
 
 func TestSetNamespaceHappyPath(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomization(fSys)
 
 	cmd := newCmdSetNamespace(fSys, validators.MakeFakeValidator())
@@ -38,7 +38,7 @@ func TestSetNamespaceHappyPath(t *testing.T) {
 }
 
 func TestSetNamespaceOverride(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomization(fSys)
 
 	cmd := newCmdSetNamespace(fSys, validators.MakeFakeValidator())
@@ -63,7 +63,7 @@ func TestSetNamespaceOverride(t *testing.T) {
 }
 
 func TestSetNamespaceNoArgs(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 
 	cmd := newCmdSetNamespace(fSys, validators.MakeFakeValidator())
 	err := cmd.Execute()
@@ -76,7 +76,7 @@ func TestSetNamespaceNoArgs(t *testing.T) {
 }
 
 func TestSetNamespaceInvalid(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 
 	cmd := newCmdSetNamespace(fSys, validators.MakeFakeValidator())
 	args := []string{"/badnamespace/"}

@@ -10,7 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
@@ -58,7 +58,7 @@ https://github.com/hashicorp/go-getter#url-format
 
 // NewCmdBuild creates a new build command.
 func NewCmdBuild(
-	out io.Writer, fSys fs.FileSystem,
+	out io.Writer, fSys filesys.FileSystem,
 	v ifc.Validator, rf *resmap.Factory,
 	ptf resmap.PatchFactory) *cobra.Command {
 	var o Options
@@ -115,7 +115,7 @@ func (o *Options) Validate(args []string) (err error) {
 
 // RunBuild runs build command.
 func (o *Options) RunBuild(
-	out io.Writer, v ifc.Validator, fSys fs.FileSystem,
+	out io.Writer, v ifc.Validator, fSys filesys.FileSystem,
 	rf *resmap.Factory, ptf resmap.PatchFactory,
 	pl *plugins.Loader) error {
 	ldr, err := loader.NewLoader(
@@ -136,7 +136,7 @@ func (o *Options) RunBuild(
 }
 
 func (o *Options) RunBuildPrune(
-	out io.Writer, v ifc.Validator, fSys fs.FileSystem,
+	out io.Writer, v ifc.Validator, fSys filesys.FileSystem,
 	rf *resmap.Factory, ptf resmap.PatchFactory,
 	pl *plugins.Loader) error {
 	ldr, err := loader.NewLoader(
@@ -157,7 +157,7 @@ func (o *Options) RunBuildPrune(
 }
 
 func (o *Options) emitResources(
-	out io.Writer, fSys fs.FileSystem, m resmap.ResMap) error {
+	out io.Writer, fSys filesys.FileSystem, m resmap.ResMap) error {
 	if o.outputPath != "" && fSys.IsDir(o.outputPath) {
 		return writeIndividualFiles(fSys, o.outputPath, m)
 	}
@@ -180,7 +180,7 @@ func (o *Options) emitResources(
 }
 
 func NewCmdBuildPrune(
-	out io.Writer, v ifc.Validator, fSys fs.FileSystem,
+	out io.Writer, v ifc.Validator, fSys filesys.FileSystem,
 	rf *resmap.Factory, ptf resmap.PatchFactory,
 	pl *plugins.Loader) *cobra.Command {
 	var o Options
@@ -202,7 +202,7 @@ func NewCmdBuildPrune(
 }
 
 func writeIndividualFiles(
-	fSys fs.FileSystem, folderPath string, m resmap.ResMap) error {
+	fSys filesys.FileSystem, folderPath string, m resmap.ResMap) error {
 	byNamespace := m.GroupedByCurrentNamespace()
 	for namespace, resList := range byNamespace {
 		for _, res := range resList {
@@ -231,7 +231,7 @@ func fileName(res *resource.Resource) string {
 }
 
 func writeFile(
-	fSys fs.FileSystem, path, fName string, res *resource.Resource) error {
+	fSys filesys.FileSystem, path, fName string, res *resource.Resource) error {
 	out, err := yaml.Marshal(res.Map())
 	if err != nil {
 		return err

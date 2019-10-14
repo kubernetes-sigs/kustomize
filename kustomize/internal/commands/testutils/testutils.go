@@ -4,7 +4,7 @@
 package testutils
 
 import (
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 )
 
@@ -32,16 +32,16 @@ secretGenerator: []
 )
 
 // WriteTestKustomization writes a standard test file.
-func WriteTestKustomization(fSys fs.FileSystem) {
+func WriteTestKustomization(fSys filesys.FileSystem) {
 	WriteTestKustomizationWith(fSys, []byte(kustomizationContent))
 }
 
 // WriteTestKustomizationWith writes content to a well known file name.
-func WriteTestKustomizationWith(fSys fs.FileSystem, bytes []byte) {
+func WriteTestKustomizationWith(fSys filesys.FileSystem, bytes []byte) {
 	fSys.WriteFile(pgmconfig.DefaultKustomizationFileName(), bytes)
 }
 
 // ReadTestKustomization reads content from a well known file name.
-func ReadTestKustomization(fSys fs.FileSystem) ([]byte, error) {
+func ReadTestKustomization(fSys filesys.FileSystem) ([]byte, error) {
 	return fSys.ReadFile(pgmconfig.DefaultKustomizationFileName())
 }
