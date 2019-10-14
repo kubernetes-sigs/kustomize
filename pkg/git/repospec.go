@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"sigs.k8s.io/kustomize/v3/pkg/filesys"
+	"sigs.k8s.io/kustomize/v3/filesys"
 )
 
 // Used as a temporary non-empty occupant of the cloneDir
