@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 )
 
 func TestDataValidation_NoName(t *testing.T) {
@@ -73,7 +73,7 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 }
 
 func TestExpandFileSource(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	fSys.Create("dir/fa1")
 	fSys.Create("dir/fa2")
 	fSys.Create("dir/readme")
@@ -91,7 +91,7 @@ func TestExpandFileSource(t *testing.T) {
 }
 
 func TestExpandFileSourceWithKey(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	fSys.Create("dir/faaaaaaaaaabbbbbbbbbccccccccccccccccc")
 	fSys.Create("dir/foobar")
 	fSys.Create("dir/simplebar")
@@ -111,7 +111,7 @@ func TestExpandFileSourceWithKey(t *testing.T) {
 }
 
 func TestExpandFileSourceWithKeyAndError(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	fSys.Create("dir/fa1")
 	fSys.Create("dir/fa2")
 	fSys.Create("dir/readme")

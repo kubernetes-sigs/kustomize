@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 )
 
 const (
@@ -16,7 +16,7 @@ const (
 )
 
 func TestSetNamePrefixHappyPath(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomization(fSys)
 
 	cmd := newCmdSetNamePrefix(fSys)
@@ -35,7 +35,7 @@ func TestSetNamePrefixHappyPath(t *testing.T) {
 }
 
 func TestSetNamePrefixNoArgs(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 
 	cmd := newCmdSetNamePrefix(fSys)
 	err := cmd.Execute()

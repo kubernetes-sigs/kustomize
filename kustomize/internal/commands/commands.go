@@ -17,7 +17,7 @@ import (
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/validator"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
@@ -25,7 +25,7 @@ import (
 
 // NewDefaultCommand returns the default (aka root) command for kustomize command.
 func NewDefaultCommand() *cobra.Command {
-	fSys := fs.MakeFsOnDisk()
+	fSys := filesys.MakeFsOnDisk()
 	stdOut := os.Stdout
 
 	c := &cobra.Command{

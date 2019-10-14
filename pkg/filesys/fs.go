@@ -1,8 +1,8 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// Package fs provides a file system abstraction layer.
-package fs
+// Package filesys provides a file system abstraction layer.
+package filesys
 
 import (
 	"io"

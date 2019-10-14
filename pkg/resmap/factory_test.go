@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
@@ -234,7 +234,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 			Type: ifc.SecretTypeOpaque,
 		},
 	}
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	fSys.Mkdir(".")
 	actual, err := rmF.NewResMapFromSecretArgs(
 		loader.NewFileLoaderAtRoot(validators.MakeFakeValidator(), fSys), nil, secrets)

@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 )
@@ -41,7 +41,7 @@ type removeMetadataOptions struct {
 }
 
 // newCmdRemoveLabel removes one or more commonAnnotations from the kustomization file.
-func newCmdRemoveAnnotation(fSys fs.FileSystem, v func([]string) error) *cobra.Command {
+func newCmdRemoveAnnotation(fSys filesys.FileSystem, v func([]string) error) *cobra.Command {
 	var o removeMetadataOptions
 	o.kind = label
 	o.arrayValidator = v
@@ -62,7 +62,7 @@ func newCmdRemoveAnnotation(fSys fs.FileSystem, v func([]string) error) *cobra.C
 }
 
 // newCmdRemoveLabel removes one or more commonLabels from the kustomization file.
-func newCmdRemoveLabel(fSys fs.FileSystem, v func([]string) error) *cobra.Command {
+func newCmdRemoveLabel(fSys filesys.FileSystem, v func([]string) error) *cobra.Command {
 	var o removeMetadataOptions
 	o.kind = label
 	o.arrayValidator = v
@@ -83,7 +83,7 @@ func newCmdRemoveLabel(fSys fs.FileSystem, v func([]string) error) *cobra.Comman
 }
 
 func (o *removeMetadataOptions) runE(
-	args []string, fSys fs.FileSystem, remover func(*types.Kustomization) error) error {
+	args []string, fSys filesys.FileSystem, remover func(*types.Kustomization) error) error {
 	err := o.validateAndParse(args)
 	if err != nil {
 		return err

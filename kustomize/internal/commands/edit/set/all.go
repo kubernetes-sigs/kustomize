@@ -5,12 +5,12 @@ package set
 
 import (
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 )
 
 // NewCmdSet returns an instance of 'set' subcommand.
-func NewCmdSet(fsys fs.FileSystem, v ifc.Validator) *cobra.Command {
+func NewCmdSet(fSys filesys.FileSystem, v ifc.Validator) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "set",
 		Short: "Sets the value of different fields in kustomization file.",
@@ -26,10 +26,10 @@ func NewCmdSet(fsys fs.FileSystem, v ifc.Validator) *cobra.Command {
 	}
 
 	c.AddCommand(
-		newCmdSetNamePrefix(fsys),
-		newCmdSetNameSuffix(fsys),
-		newCmdSetNamespace(fsys, v),
-		newCmdSetImage(fsys),
+		newCmdSetNamePrefix(fSys),
+		newCmdSetNameSuffix(fSys),
+		newCmdSetNamespace(fSys, v),
+		newCmdSetImage(fSys),
 	)
 	return c
 }

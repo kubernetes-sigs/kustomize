@@ -6,14 +6,14 @@ package add
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
 
 func TestNewCmdAddSecretIsNotNil(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	ldr := loader.NewFileLoaderAtCwd(validators.MakeFakeValidator(), fSys)
 	if newCmdAddSecret(fSys, ldr, nil) == nil {
 		t.Fatal("newCmdAddSecret shouldn't be nil")

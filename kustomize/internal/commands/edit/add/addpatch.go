@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/util"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/patch"
 )
 
@@ -19,7 +19,7 @@ type addPatchOptions struct {
 }
 
 // newCmdAddPatch adds the name of a file containing a patch to the kustomization file.
-func newCmdAddPatch(fsys fs.FileSystem) *cobra.Command {
+func newCmdAddPatch(fSys filesys.FileSystem) *cobra.Command {
 	var o addPatchOptions
 
 	cmd := &cobra.Command{
@@ -36,7 +36,7 @@ func newCmdAddPatch(fsys fs.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return o.RunAddPatch(fsys)
+			return o.RunAddPatch(fSys)
 		},
 	}
 	return cmd
@@ -57,7 +57,7 @@ func (o *addPatchOptions) Complete(cmd *cobra.Command, args []string) error {
 }
 
 // RunAddPatch runs addPatch command (do real work).
-func (o *addPatchOptions) RunAddPatch(fSys fs.FileSystem) error {
+func (o *addPatchOptions) RunAddPatch(fSys filesys.FileSystem) error {
 	patches, err := util.GlobPatterns(fSys, o.patchFilePaths)
 	if err != nil {
 		return err

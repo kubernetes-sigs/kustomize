@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 )
 
 type setNamePrefixOptions struct {
@@ -16,7 +16,7 @@ type setNamePrefixOptions struct {
 }
 
 // newCmdSetNamePrefix sets the value of the namePrefix field in the kustomization.
-func newCmdSetNamePrefix(fsys fs.FileSystem) *cobra.Command {
+func newCmdSetNamePrefix(fSys filesys.FileSystem) *cobra.Command {
 	var o setNamePrefixOptions
 
 	cmd := &cobra.Command{
@@ -37,7 +37,7 @@ and overwrite the value with "acme-" if the field does exist.
 			if err != nil {
 				return err
 			}
-			return o.RunSetNamePrefix(fsys)
+			return o.RunSetNamePrefix(fSys)
 		},
 	}
 	return cmd
@@ -59,7 +59,7 @@ func (o *setNamePrefixOptions) Complete(cmd *cobra.Command, args []string) error
 }
 
 // RunSetNamePrefix runs setNamePrefix command (does real work).
-func (o *setNamePrefixOptions) RunSetNamePrefix(fSys fs.FileSystem) error {
+func (o *setNamePrefixOptions) RunSetNamePrefix(fSys filesys.FileSystem) error {
 	mf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		return err
