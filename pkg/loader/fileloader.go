@@ -79,9 +79,6 @@ type fileLoader struct {
 	// Restricts behavior of Load function.
 	loadRestrictor LoadRestrictorFunc
 
-	// Used to validate various k8s data fields.
-	validator ifc.Validator
-
 	// If this is non-nil, the files were
 	// obtained from the given repository.
 	repoSpec *git.RepoSpec
@@ -100,16 +97,16 @@ const CWD = "."
 
 // NewFileLoaderAtCwd returns a loader that loads from ".".
 // A convenience for kustomize edit commands.
-func NewFileLoaderAtCwd(v ifc.Validator, fSys filesys.FileSystem) *fileLoader {
+func NewFileLoaderAtCwd(fSys filesys.FileSystem) *fileLoader {
 	return newLoaderOrDie(
-		RestrictionRootOnly, v, fSys, CWD)
+		RestrictionRootOnly, fSys, CWD)
 }
 
 // NewFileLoaderAtRoot returns a loader that loads from "/".
 // A convenience for tests.
-func NewFileLoaderAtRoot(v ifc.Validator, fSys filesys.FileSystem) *fileLoader {
+func NewFileLoaderAtRoot(fSys filesys.FileSystem) *fileLoader {
 	return newLoaderOrDie(
-		RestrictionRootOnly, v, fSys, string(filepath.Separator))
+		RestrictionRootOnly, fSys, string(filepath.Separator))
 }
 
 // Root returns the absolute path that is prepended to any
@@ -119,25 +116,23 @@ func (fl *fileLoader) Root() string {
 }
 
 func newLoaderOrDie(
-	lr LoadRestrictorFunc, v ifc.Validator,
+	lr LoadRestrictorFunc,
 	fSys filesys.FileSystem, path string) *fileLoader {
 	root, err := demandDirectoryRoot(fSys, path)
 	if err != nil {
 		log.Fatalf("unable to make loader at '%s'; %v", path, err)
 	}
 	return newLoaderAtConfirmedDir(
-		lr, v, root, fSys, nil, git.ClonerUsingGitExec)
+		lr, root, fSys, nil, git.ClonerUsingGitExec)
 }
 
 // newLoaderAtConfirmedDir returns a new fileLoader with given root.
 func newLoaderAtConfirmedDir(
 	lr LoadRestrictorFunc,
-	v ifc.Validator,
 	root filesys.ConfirmedDir, fSys filesys.FileSystem,
 	referrer *fileLoader, cloner git.Cloner) *fileLoader {
 	return &fileLoader{
 		loadRestrictor: lr,
-		validator:      v,
 		root:           root,
 		referrer:       referrer,
 		fSys:           fSys,
@@ -179,7 +174,7 @@ func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 			return nil, err
 		}
 		return newLoaderAtGitClone(
-			repoSpec, fl.validator, fl.fSys, fl, fl.cloner)
+			repoSpec, fl.fSys, fl, fl.cloner)
 	}
 	if filepath.IsAbs(path) {
 		return nil, fmt.Errorf("new root '%s' cannot be absolute", path)
@@ -195,14 +190,13 @@ func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 		return nil, err
 	}
 	return newLoaderAtConfirmedDir(
-		fl.loadRestrictor, fl.validator, root, fl.fSys, fl, fl.cloner), nil
+		fl.loadRestrictor, root, fl.fSys, fl, fl.cloner), nil
 }
 
 // newLoaderAtGitClone returns a new Loader pinned to a temporary
 // directory holding a cloned git repo.
 func newLoaderAtGitClone(
-	repoSpec *git.RepoSpec,
-	v ifc.Validator, fSys filesys.FileSystem,
+	repoSpec *git.RepoSpec, fSys filesys.FileSystem,
 	referrer *fileLoader, cloner git.Cloner) (ifc.Loader, error) {
 	cleaner := repoSpec.Cleaner(fSys)
 	err := cloner(repoSpec)
@@ -228,7 +222,6 @@ func newLoaderAtGitClone(
 	return &fileLoader{
 		// Clones never allowed to escape root.
 		loadRestrictor: RestrictionRootOnly,
-		validator:      v,
 		root:           root,
 		referrer:       referrer,
 		repoSpec:       repoSpec,

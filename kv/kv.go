@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package loader
+package kv
 
 import (
 	"bufio"
@@ -20,13 +20,26 @@ import (
 
 var utf8bom = []byte{0xEF, 0xBB, 0xBF}
 
-func (fl *fileLoader) Validator() ifc.Validator {
-	return fl.validator
+// loader reads and validates KV pairs.
+type loader struct {
+	// Used to read the filesystem.
+	ldr ifc.Loader
+
+	// Used to validate various k8s data fields.
+	validator ifc.Validator
 }
 
-func (fl *fileLoader) LoadKvPairs(
-	args types.GeneratorArgs) (all []types.Pair, err error) {
-	pairs, err := fl.keyValuesFromEnvFiles(args.EnvSources)
+func NewLoader(ldr ifc.Loader, v ifc.Validator) ifc.KvLoader {
+	return &loader{ldr: ldr, validator: v}
+}
+
+func (kvl *loader) Validator() ifc.Validator {
+	return kvl.validator
+}
+
+func (kvl *loader) Load(
+	args types.KvPairSources) (all []types.Pair, err error) {
+	pairs, err := kvl.keyValuesFromEnvFiles(args.EnvSources)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf(
 			"env source files: %v",
@@ -41,7 +54,7 @@ func (fl *fileLoader) LoadKvPairs(
 	}
 	all = append(all, pairs...)
 
-	pairs, err = fl.keyValuesFromFileSources(args.FileSources)
+	pairs, err = kvl.keyValuesFromFileSources(args.FileSources)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf(
 			"file sources: %v", args.FileSources))
@@ -61,14 +74,14 @@ func keyValuesFromLiteralSources(sources []string) ([]types.Pair, error) {
 	return kvs, nil
 }
 
-func (fl *fileLoader) keyValuesFromFileSources(sources []string) ([]types.Pair, error) {
+func (kvl *loader) keyValuesFromFileSources(sources []string) ([]types.Pair, error) {
 	var kvs []types.Pair
 	for _, s := range sources {
 		k, fPath, err := parseFileSource(s)
 		if err != nil {
 			return nil, err
 		}
-		content, err := fl.Load(fPath)
+		content, err := kvl.ldr.Load(fPath)
 		if err != nil {
 			return nil, err
 		}
@@ -77,14 +90,14 @@ func (fl *fileLoader) keyValuesFromFileSources(sources []string) ([]types.Pair, 
 	return kvs, nil
 }
 
-func (fl *fileLoader) keyValuesFromEnvFiles(paths []string) ([]types.Pair, error) {
+func (kvl *loader) keyValuesFromEnvFiles(paths []string) ([]types.Pair, error) {
 	var kvs []types.Pair
 	for _, p := range paths {
-		content, err := fl.Load(p)
+		content, err := kvl.ldr.Load(p)
 		if err != nil {
 			return nil, err
 		}
-		more, err := fl.keyValuesFromLines(content)
+		more, err := kvl.keyValuesFromLines(content)
 		if err != nil {
 			return nil, err
 		}
@@ -94,7 +107,7 @@ func (fl *fileLoader) keyValuesFromEnvFiles(paths []string) ([]types.Pair, error
 }
 
 // keyValuesFromLines parses given content in to a list of key-value pairs.
-func (fl *fileLoader) keyValuesFromLines(content []byte) ([]types.Pair, error) {
+func (kvl *loader) keyValuesFromLines(content []byte) ([]types.Pair, error) {
 	var kvs []types.Pair
 
 	scanner := bufio.NewScanner(bytes.NewReader(content))
@@ -103,7 +116,7 @@ func (fl *fileLoader) keyValuesFromLines(content []byte) ([]types.Pair, error) {
 		// Process the current line, retrieving a key/value pair if
 		// possible.
 		scannedBytes := scanner.Bytes()
-		kv, err := fl.keyValuesFromLine(scannedBytes, currentLine)
+		kv, err := kvl.keyValuesFromLine(scannedBytes, currentLine)
 		if err != nil {
 			return nil, err
 		}
@@ -121,7 +134,7 @@ func (fl *fileLoader) keyValuesFromLines(content []byte) ([]types.Pair, error) {
 
 // KeyValuesFromLine returns a kv with blank key if the line is empty or a comment.
 // The value will be retrieved from the environment if necessary.
-func (fl *fileLoader) keyValuesFromLine(line []byte, currentLine int) (types.Pair, error) {
+func (kvl *loader) keyValuesFromLine(line []byte, currentLine int) (types.Pair, error) {
 	kv := types.Pair{}
 
 	if !utf8.Valid(line) {
@@ -143,7 +156,7 @@ func (fl *fileLoader) keyValuesFromLine(line []byte, currentLine int) (types.Pai
 
 	data := strings.SplitN(string(line), "=", 2)
 	key := data[0]
-	if err := fl.validator.IsEnvVarName(key); err != nil {
+	if err := kvl.validator.IsEnvVarName(key); err != nil {
 		return kv, err
 	}
 

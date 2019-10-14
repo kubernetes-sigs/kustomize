@@ -6,13 +6,13 @@ package plugins_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pluglib"
-
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 	. "sigs.k8s.io/kustomize/v3/pkg/plugins"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
+	"sigs.k8s.io/kustomize/v3/pkg/validators"
+	"sigs.k8s.io/kustomize/v3/pluglib"
 )
 
 const (
@@ -54,12 +54,12 @@ func TestLoader(t *testing.T) {
 	rmF := resmap.NewFactory(resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl()), nil)
 
-	l := NewLoader(ActivePluginConfig(), rmF)
-	if l == nil {
+	ldr := loadertest.NewFakeLoader("/foo")
+
+	pLdr := NewLoader(ActivePluginConfig(), rmF)
+	if pLdr == nil {
 		t.Fatal("expect non-nil loader")
 	}
-
-	ldr := loadertest.NewFakeLoader("/foo")
 
 	m, err := rmF.NewResMapFromBytes([]byte(
 		someServiceGenerator + "---\n" + secretGenerator))
@@ -67,7 +67,7 @@ func TestLoader(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = l.LoadGenerators(ldr, m)
+	_, err = pLdr.LoadGenerators(ldr, validators.MakeFakeValidator(), m)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -11,6 +11,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/kustomize/v3/filesys"
+	"sigs.k8s.io/kustomize/v3/kv"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
@@ -141,9 +142,11 @@ func TestConstructConfigMap(t *testing.T) {
 	fSys.WriteFile(
 		filesys.RootedPath("configmap", "app.bin"),
 		[]byte{0xff, 0xfd})
-	ldr := loader.NewFileLoaderAtRoot(validators.MakeFakeValidator(), fSys)
+	kvLdr := kv.NewLoader(
+		loader.NewFileLoaderAtRoot(fSys),
+		validators.MakeFakeValidator())
 	for _, tc := range testCases {
-		f := NewFactory(ldr, tc.options)
+		f := NewFactory(kvLdr, tc.options)
 		cm, err := f.MakeConfigMap(&tc.input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)

@@ -17,6 +17,7 @@ import (
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	. "sigs.k8s.io/kustomize/v3/pkg/target"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
+	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
 
 const (
@@ -184,7 +185,8 @@ func TestResources(t *testing.T) {
 
 func TestKustomizationNotFound(t *testing.T) {
 	_, err := NewKustTarget(
-		loadertest.NewFakeLoader("/foo"), nil, nil, nil)
+		loadertest.NewFakeLoader("/foo"),
+		validators.MakeFakeValidator(), nil, nil, nil)
 	if err == nil {
 		t.Fatalf("expected an error")
 	}

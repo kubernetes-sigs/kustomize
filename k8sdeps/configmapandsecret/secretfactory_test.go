@@ -10,6 +10,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/kustomize/v3/filesys"
+	"sigs.k8s.io/kustomize/v3/kv"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
@@ -126,9 +127,11 @@ func TestConstructSecret(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	fSys.WriteFile("/secret/app.env", []byte("DB_USERNAME=admin\nDB_PASSWORD=somepw\n"))
 	fSys.WriteFile("/secret/app-init.ini", []byte("FOO=bar\nBAR=baz\n"))
-	ldr := loader.NewFileLoaderAtRoot(validators.MakeFakeValidator(), fSys)
+	kvLdr := kv.NewLoader(
+		loader.NewFileLoaderAtRoot(fSys),
+		validators.MakeFakeValidator())
 	for _, tc := range testCases {
-		f := NewFactory(ldr, tc.options)
+		f := NewFactory(kvLdr, tc.options)
 		cm, err := f.MakeSecret(&tc.input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)

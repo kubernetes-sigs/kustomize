@@ -1,16 +1,23 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package loader
+package kv
 
 import (
 	"reflect"
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/filesys"
+	ldr "sigs.k8s.io/kustomize/v3/pkg/loader"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
+
+func makeKvLoader(fSys filesys.FileSystem) *loader {
+	return &loader{
+		ldr:       ldr.NewFileLoaderAtRoot(fSys),
+		validator: validators.MakeFakeValidator()}
+}
 
 func TestKeyValuesFromLines(t *testing.T) {
 	tests := []struct {
@@ -45,10 +52,9 @@ func TestKeyValuesFromLines(t *testing.T) {
 		// TODO: add negative testcases
 	}
 
-	l := NewFileLoaderAtRoot(
-		validators.MakeFakeValidator(), filesys.MakeFsInMemory())
+	kvl := makeKvLoader(filesys.MakeFsInMemory())
 	for _, test := range tests {
-		pairs, err := l.keyValuesFromLines([]byte(test.content))
+		pairs, err := kvl.keyValuesFromLines([]byte(test.content))
 		if test.expectedErr && err == nil {
 			t.Fatalf("%s should not return error", test.desc)
 		}
@@ -78,9 +84,9 @@ func TestKeyValuesFromFileSources(t *testing.T) {
 
 	fSys := filesys.MakeFsInMemory()
 	fSys.WriteFile("/files/app-init.ini", []byte("FOO=bar"))
-	l := NewFileLoaderAtRoot(validators.MakeFakeValidator(), fSys)
+	kvl := makeKvLoader(fSys)
 	for _, tc := range tests {
-		kvs, err := l.keyValuesFromFileSources(tc.sources)
+		kvs, err := kvl.keyValuesFromFileSources(tc.sources)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
