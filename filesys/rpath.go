@@ -5,8 +5,8 @@ package filesys
 
 import "path/filepath"
 
-// RPath returns a rooted path, e.g. "/hey/foo" as
-// opposed to "hey/foo".
-func RPath(elem ...string) string {
+// RootedPath returns a rooted path, e.g. "/foo/bar" as
+// opposed to "foo/bar".
+func RootedPath(elem ...string) string {
 	return separator + filepath.Join(elem...)
 }

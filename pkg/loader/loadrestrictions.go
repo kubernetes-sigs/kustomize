@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/pflag"
-	"sigs.k8s.io/kustomize/v3/pkg/filesys"
+	"sigs.k8s.io/kustomize/v3/filesys"
 )
 
 //go:generate stringer -type=loadRestrictions
