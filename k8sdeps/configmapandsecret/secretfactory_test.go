@@ -9,7 +9,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
@@ -123,7 +123,7 @@ func TestConstructSecret(t *testing.T) {
 		},
 	}
 
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	fSys.WriteFile("/secret/app.env", []byte("DB_USERNAME=admin\nDB_PASSWORD=somepw\n"))
 	fSys.WriteFile("/secret/app-init.ini", []byte("FOO=bar\nBAR=baz\n"))
 	ldr := loader.NewFileLoaderAtRoot(validators.MakeFakeValidator(), fSys)

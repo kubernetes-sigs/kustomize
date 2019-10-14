@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/util"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 )
@@ -41,7 +41,7 @@ type addMetadataOptions struct {
 }
 
 // newCmdAddAnnotation adds one or more commonAnnotations to the kustomization file.
-func newCmdAddAnnotation(fSys fs.FileSystem, v func(map[string]string) error) *cobra.Command {
+func newCmdAddAnnotation(fSys filesys.FileSystem, v func(map[string]string) error) *cobra.Command {
 	var o addMetadataOptions
 	o.kind = annotation
 	o.mapValidator = v
@@ -62,7 +62,7 @@ func newCmdAddAnnotation(fSys fs.FileSystem, v func(map[string]string) error) *c
 }
 
 // newCmdAddLabel adds one or more commonLabels to the kustomization file.
-func newCmdAddLabel(fSys fs.FileSystem, v func(map[string]string) error) *cobra.Command {
+func newCmdAddLabel(fSys filesys.FileSystem, v func(map[string]string) error) *cobra.Command {
 	var o addMetadataOptions
 	o.kind = label
 	o.mapValidator = v
@@ -83,7 +83,7 @@ func newCmdAddLabel(fSys fs.FileSystem, v func(map[string]string) error) *cobra.
 }
 
 func (o *addMetadataOptions) runE(
-	args []string, fSys fs.FileSystem, adder func(*types.Kustomization) error) error {
+	args []string, fSys filesys.FileSystem, adder func(*types.Kustomization) error) error {
 	err := o.validateAndParse(args)
 	if err != nil {
 		return err

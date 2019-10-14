@@ -10,7 +10,7 @@ import (
 
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
 
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 )
@@ -57,7 +57,7 @@ func TestWriteAndRead(t *testing.T) {
 		NamePrefix: "prefix",
 	}
 
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomization(fSys)
 	mf, err := NewKustomizationFile(fSys)
 	if err != nil {
@@ -79,7 +79,7 @@ func TestWriteAndRead(t *testing.T) {
 }
 
 func TestNewNotExist(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	_, err := NewKustomizationFile(fSys)
 	if err == nil {
 		t.Fatalf("expect an error")
@@ -106,7 +106,7 @@ configMapGenerator:
   name: my-configmap
 `
 	for _, n := range pgmconfig.RecognizedKustomizationFileNames() {
-		fSys := fs.MakeFsInMemory()
+		fSys := filesys.MakeFsInMemory()
 		fSys.WriteFile(n, []byte(kcontent))
 		k, err := NewKustomizationFile(fSys)
 		if err != nil {
@@ -143,7 +143,7 @@ patchesStrategicMerge:
 - service.yaml
 - pod.yaml
 `)
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomizationWith(fSys, kustomizationContentWithComments)
 	mf, err := NewKustomizationFile(fSys)
 	if err != nil {
@@ -235,7 +235,7 @@ patchesStrategicMerge:
 generatorOptions:
   disableNameSuffixHash: true
 `)
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomizationWith(
 		fSys, kustomizationContentWithComments)
 	mf, err := NewKustomizationFile(fSys)
@@ -273,7 +273,7 @@ patchesStrategicMerge:
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 `)
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomizationWith(
 		fSys, kustomizationContentWithComments)
 	mf, err := NewKustomizationFile(fSys)
@@ -319,7 +319,7 @@ patches:
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 `)
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomizationWith(fSys, kustomizationContentWithComments)
 	mf, err := NewKustomizationFile(fSys)
 	if err != nil {

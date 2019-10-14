@@ -1,24 +1,11 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 // Package loader has a data loading interface and various implementations.
 package loader
 
 import (
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/git"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 )
@@ -32,7 +19,7 @@ import (
 func NewLoader(
 	lr LoadRestrictorFunc,
 	v ifc.Validator,
-	target string, fSys fs.FileSystem) (ifc.Loader, error) {
+	target string, fSys filesys.FileSystem) (ifc.Loader, error) {
 	repoSpec, err := git.NewRepoSpecFromUrl(target)
 	if err == nil {
 		// The target qualifies as a remote git target.

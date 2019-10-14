@@ -13,7 +13,7 @@ import (
 	"regexp"
 	"strings"
 
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/yaml"
@@ -102,12 +102,12 @@ func squash(x [][]byte) []byte {
 
 type kustomizationFile struct {
 	path           string
-	fSys           fs.FileSystem
+	fSys           filesys.FileSystem
 	originalFields []*commentedField
 }
 
 // NewKustomizationFile returns a new instance.
-func NewKustomizationFile(fSys fs.FileSystem) (*kustomizationFile, error) { // nolint
+func NewKustomizationFile(fSys filesys.FileSystem) (*kustomizationFile, error) { // nolint
 	mf := &kustomizationFile{fSys: fSys}
 	err := mf.validate()
 	if err != nil {

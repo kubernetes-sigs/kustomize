@@ -20,12 +20,12 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 )
 
 func TestRestrictionNone(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
-	root := fs.ConfirmedDir("irrelevant")
+	fSys := filesys.MakeFsInMemory()
+	root := filesys.ConfirmedDir("irrelevant")
 	path := "whatever"
 	p, err := RestrictionNone(fSys, root, path)
 	if err != nil {
@@ -37,8 +37,8 @@ func TestRestrictionNone(t *testing.T) {
 }
 
 func TestRestrictionRootOnly(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
-	root := fs.ConfirmedDir("/tmp/foo")
+	fSys := filesys.MakeFsInMemory()
+	root := filesys.ConfirmedDir("/tmp/foo")
 
 	path := "/tmp/foo/whatever/beans"
 	p, err := RestrictionRootOnly(fSys, root, path)

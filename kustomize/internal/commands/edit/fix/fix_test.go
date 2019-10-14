@@ -8,11 +8,11 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 )
 
 func TestFix(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomizationWith(fSys, []byte(`nameprefix: some-prefix-`))
 
 	cmd := NewCmdFix(fSys)

@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 )
 
 func TestSetImage(t *testing.T) {
@@ -190,7 +190,7 @@ func TestSetImage(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("%s%v", tc.description, tc.given.args), func(t *testing.T) {
-			fSys := fs.MakeFsInMemory()
+			fSys := filesys.MakeFsInMemory()
 			cmd := newCmdSetImage(fSys)
 
 			if len(tc.given.infileImages) > 0 {

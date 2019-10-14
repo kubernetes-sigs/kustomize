@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/patch"
 )
 
@@ -20,8 +20,8 @@ sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 `
 )
 
-func makeKustomizationPatchFS() fs.FileSystem {
-	fSys := fs.MakeFsInMemory()
+func makeKustomizationPatchFS() filesys.FileSystem {
+	fSys := filesys.MakeFsInMemory()
 	patches := []string{"patch1.yaml", "patch2.yaml"}
 
 	testutils.WriteTestKustomizationWith(fSys, []byte(

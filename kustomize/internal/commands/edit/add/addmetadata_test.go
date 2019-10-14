@@ -8,13 +8,13 @@ import (
 
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
 
 func makeKustomization(t *testing.T) *types.Kustomization {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomization(fSys)
 	kf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
@@ -50,7 +50,7 @@ func TestRunAddAnnotation(t *testing.T) {
 }
 
 func TestAddAnnotationNoArgs(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	v := validators.MakeHappyMapValidator(t)
 	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	err := cmd.Execute()
@@ -64,7 +64,7 @@ func TestAddAnnotationNoArgs(t *testing.T) {
 }
 
 func TestAddAnnotationInvalidFormat(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	v := validators.MakeSadMapValidator(t)
 	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	args := []string{"whatever:whatever"}
@@ -79,7 +79,7 @@ func TestAddAnnotationInvalidFormat(t *testing.T) {
 }
 
 func TestAddAnnotationManyArgs(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
 	cmd := newCmdAddAnnotation(fSys, v.Validator)
@@ -92,7 +92,7 @@ func TestAddAnnotationManyArgs(t *testing.T) {
 }
 
 func TestAddAnnotationValueQuoted(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
 	cmd := newCmdAddAnnotation(fSys, v.Validator)
@@ -105,7 +105,7 @@ func TestAddAnnotationValueQuoted(t *testing.T) {
 }
 
 func TestAddAnnotationValueWithColon(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
 	cmd := newCmdAddAnnotation(fSys, v.Validator)
@@ -118,7 +118,7 @@ func TestAddAnnotationValueWithColon(t *testing.T) {
 }
 
 func TestAddAnnotationNoKey(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	v := validators.MakeHappyMapValidator(t)
 	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	args := []string{":nokey"}
@@ -133,7 +133,7 @@ func TestAddAnnotationNoKey(t *testing.T) {
 }
 
 func TestAddAnnotationTooManyColons(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
 	cmd := newCmdAddAnnotation(fSys, v.Validator)
@@ -146,7 +146,7 @@ func TestAddAnnotationTooManyColons(t *testing.T) {
 }
 
 func TestAddAnnotationNoValue(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
 	cmd := newCmdAddAnnotation(fSys, v.Validator)
@@ -159,7 +159,7 @@ func TestAddAnnotationNoValue(t *testing.T) {
 }
 
 func TestAddAnnotationMultipleArgs(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
 	cmd := newCmdAddAnnotation(fSys, v.Validator)
@@ -175,7 +175,7 @@ func TestAddAnnotationMultipleArgs(t *testing.T) {
 }
 
 func TestAddAnnotationForce(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
 	cmd := newCmdAddAnnotation(fSys, v.Validator)
@@ -231,7 +231,7 @@ func TestRunAddLabel(t *testing.T) {
 }
 
 func TestAddLabelNoArgs(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	v := validators.MakeHappyMapValidator(t)
 	cmd := newCmdAddLabel(fSys, v.Validator)
 	err := cmd.Execute()
@@ -245,7 +245,7 @@ func TestAddLabelNoArgs(t *testing.T) {
 }
 
 func TestAddLabelInvalidFormat(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	v := validators.MakeSadMapValidator(t)
 	cmd := newCmdAddLabel(fSys, v.Validator)
 	args := []string{"exclamation!:point"}
@@ -260,7 +260,7 @@ func TestAddLabelInvalidFormat(t *testing.T) {
 }
 
 func TestAddLabelNoKey(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	v := validators.MakeHappyMapValidator(t)
 	cmd := newCmdAddLabel(fSys, v.Validator)
 	args := []string{":nokey"}
@@ -275,7 +275,7 @@ func TestAddLabelNoKey(t *testing.T) {
 }
 
 func TestAddLabelTooManyColons(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
 	cmd := newCmdAddLabel(fSys, v.Validator)
@@ -288,7 +288,7 @@ func TestAddLabelTooManyColons(t *testing.T) {
 }
 
 func TestAddLabelNoValue(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
 	cmd := newCmdAddLabel(fSys, v.Validator)
@@ -301,7 +301,7 @@ func TestAddLabelNoValue(t *testing.T) {
 }
 
 func TestAddLabelMultipleArgs(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
 	cmd := newCmdAddLabel(fSys, v.Validator)
@@ -317,7 +317,7 @@ func TestAddLabelMultipleArgs(t *testing.T) {
 }
 
 func TestAddLabelForce(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	testutils.WriteTestKustomization(fSys)
 	v := validators.MakeHappyMapValidator(t)
 	cmd := newCmdAddLabel(fSys, v.Validator)

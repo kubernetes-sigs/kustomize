@@ -9,7 +9,7 @@ import (
 
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 )
 
 const (
@@ -17,7 +17,7 @@ const (
 )
 
 func TestAddBaseHappyPath(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	bases := strings.Split(baseDirectoryPaths, ",")
 	for _, base := range bases {
 		fSys.Mkdir(base)
@@ -43,7 +43,7 @@ func TestAddBaseHappyPath(t *testing.T) {
 }
 
 func TestAddBaseAlreadyThere(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	// Create fake directories
 	bases := strings.Split(baseDirectoryPaths, ",")
 	for _, base := range bases {
@@ -73,7 +73,7 @@ func TestAddBaseAlreadyThere(t *testing.T) {
 }
 
 func TestAddBaseNoArgs(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 
 	cmd := newCmdAddBase(fSys)
 	err := cmd.Execute()

@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/util"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 )
@@ -30,7 +30,7 @@ type createFlags struct {
 }
 
 // NewCmdCreate returns an instance of 'create' subcommand.
-func NewCmdCreate(fSys fs.FileSystem, uf ifc.KunstructuredFactory) *cobra.Command {
+func NewCmdCreate(fSys filesys.FileSystem, uf ifc.KunstructuredFactory) *cobra.Command {
 	opts := createFlags{path: "."}
 	c := &cobra.Command{
 		Use:   "create",
@@ -93,7 +93,7 @@ func NewCmdCreate(fSys fs.FileSystem, uf ifc.KunstructuredFactory) *cobra.Comman
 	return c
 }
 
-func runCreate(opts createFlags, fSys fs.FileSystem, uf ifc.KunstructuredFactory) error {
+func runCreate(opts createFlags, fSys filesys.FileSystem, uf ifc.KunstructuredFactory) error {
 	var resources []string
 	var err error
 	if opts.resources != "" {
@@ -147,7 +147,7 @@ func runCreate(opts createFlags, fSys fs.FileSystem, uf ifc.KunstructuredFactory
 	return mf.Write(m)
 }
 
-func detectResources(fSys fs.FileSystem, uf ifc.KunstructuredFactory, base string, recursive bool) ([]string, error) {
+func detectResources(fSys filesys.FileSystem, uf ifc.KunstructuredFactory, base string, recursive bool) ([]string, error) {
 	var paths []string
 	err := fSys.Walk(base, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
