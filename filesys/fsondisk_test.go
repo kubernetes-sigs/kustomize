@@ -13,7 +13,7 @@ import (
 )
 
 func makeTestDir(t *testing.T) (FileSystem, string) {
-	x := MakeFsOnDisk()
+	fSys := MakeFsOnDisk()
 	td, err := ioutil.TempDir("", "kustomize_testing_dir")
 	if err != nil {
 		t.Fatalf("unexpected error %s", err)
@@ -22,20 +22,20 @@ func makeTestDir(t *testing.T) (FileSystem, string) {
 	if err != nil {
 		t.Fatalf("unexpected error %s", err)
 	}
-	if !x.Exists(testDir) {
+	if !fSys.Exists(testDir) {
 		t.Fatalf("expected existence")
 	}
-	if !x.IsDir(testDir) {
+	if !fSys.IsDir(testDir) {
 		t.Fatalf("expected directory")
 	}
-	return x, testDir
+	return fSys, testDir
 }
 
 func TestCleanedAbs_1(t *testing.T) {
-	x, testDir := makeTestDir(t)
+	fSys, testDir := makeTestDir(t)
 	defer os.RemoveAll(testDir)
 
-	d, f, err := x.CleanedAbs("")
+	d, f, err := fSys.CleanedAbs("")
 	if err != nil {
 		t.Fatalf("unexpected err=%v", err)
 	}
@@ -52,10 +52,10 @@ func TestCleanedAbs_1(t *testing.T) {
 }
 
 func TestCleanedAbs_2(t *testing.T) {
-	x, testDir := makeTestDir(t)
+	fSys, testDir := makeTestDir(t)
 	defer os.RemoveAll(testDir)
 
-	d, f, err := x.CleanedAbs("/")
+	d, f, err := fSys.CleanedAbs("/")
 	if err != nil {
 		t.Fatalf("unexpected err=%v", err)
 	}
@@ -68,16 +68,16 @@ func TestCleanedAbs_2(t *testing.T) {
 }
 
 func TestCleanedAbs_3(t *testing.T) {
-	x, testDir := makeTestDir(t)
+	fSys, testDir := makeTestDir(t)
 	defer os.RemoveAll(testDir)
 
-	err := x.WriteFile(
+	err := fSys.WriteFile(
 		filepath.Join(testDir, "foo"), []byte(`foo`))
 	if err != nil {
 		t.Fatalf("unexpected err=%v", err)
 	}
 
-	d, f, err := x.CleanedAbs(filepath.Join(testDir, "foo"))
+	d, f, err := fSys.CleanedAbs(filepath.Join(testDir, "foo"))
 	if err != nil {
 		t.Fatalf("unexpected err=%v", err)
 	}
@@ -90,21 +90,21 @@ func TestCleanedAbs_3(t *testing.T) {
 }
 
 func TestCleanedAbs_4(t *testing.T) {
-	x, testDir := makeTestDir(t)
+	fSys, testDir := makeTestDir(t)
 	defer os.RemoveAll(testDir)
 
-	err := x.MkdirAll(filepath.Join(testDir, "d1", "d2"))
+	err := fSys.MkdirAll(filepath.Join(testDir, "d1", "d2"))
 	if err != nil {
 		t.Fatalf("unexpected err=%v", err)
 	}
-	err = x.WriteFile(
+	err = fSys.WriteFile(
 		filepath.Join(testDir, "d1", "d2", "bar"),
 		[]byte(`bar`))
 	if err != nil {
 		t.Fatalf("unexpected err=%v", err)
 	}
 
-	d, f, err := x.CleanedAbs(
+	d, f, err := fSys.CleanedAbs(
 		filepath.Join(testDir, "d1", "d2"))
 	if err != nil {
 		t.Fatalf("unexpected err=%v", err)
@@ -116,7 +116,7 @@ func TestCleanedAbs_4(t *testing.T) {
 		t.Fatalf("unexpected f=%s", f)
 	}
 
-	d, f, err = x.CleanedAbs(
+	d, f, err = fSys.CleanedAbs(
 		filepath.Join(testDir, "d1", "d2", "bar"))
 	if err != nil {
 		t.Fatalf("unexpected err=%v", err)
@@ -130,26 +130,26 @@ func TestCleanedAbs_4(t *testing.T) {
 }
 
 func TestReadFilesRealFS(t *testing.T) {
-	x, testDir := makeTestDir(t)
+	fSys, testDir := makeTestDir(t)
 	defer os.RemoveAll(testDir)
 
-	err := x.WriteFile(path.Join(testDir, "foo"), []byte(`foo`))
+	err := fSys.WriteFile(path.Join(testDir, "foo"), []byte(`foo`))
 	if err != nil {
 		t.Fatalf("unexpected error %s", err)
 	}
-	if !x.Exists(path.Join(testDir, "foo")) {
+	if !fSys.Exists(path.Join(testDir, "foo")) {
 		t.Fatalf("expected foo")
 	}
-	if x.IsDir(path.Join(testDir, "foo")) {
+	if fSys.IsDir(path.Join(testDir, "foo")) {
 		t.Fatalf("expected foo not to be a directory")
 	}
 
-	err = x.WriteFile(path.Join(testDir, "bar"), []byte(`bar`))
+	err = fSys.WriteFile(path.Join(testDir, "bar"), []byte(`bar`))
 	if err != nil {
 		t.Fatalf("unexpected error %s", err)
 	}
 
-	files, err := x.Glob(path.Join("testDir", "*"))
+	files, err := fSys.Glob(path.Join("testDir", "*"))
 	expected := []string{
 		path.Join(testDir, "bar"),
 		path.Join(testDir, "foo"),
