@@ -1,18 +1,5 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package git
 
@@ -22,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 )
 
 // Used as a temporary non-empty occupant of the cloneDir
@@ -30,7 +17,7 @@ import (
 // in various outputs (especially tests). Not using an
 // actual directory name here, as that's a temporary directory
 // with a unique name that isn't created until clone time.
-const notCloned = fs.ConfirmedDir("/notCloned")
+const notCloned = filesys.ConfirmedDir("/notCloned")
 
 // RepoSpec specifies a git repository and a branch and path therein.
 type RepoSpec struct {
@@ -46,7 +33,7 @@ type RepoSpec struct {
 	OrgRepo string
 
 	// Dir where the orgRepo is cloned to.
-	Dir fs.ConfirmedDir
+	Dir filesys.ConfirmedDir
 
 	// Relative path in the repository, and in the cloneDir,
 	// to a Kustomization.
@@ -67,7 +54,7 @@ func (x *RepoSpec) CloneSpec() string {
 	return x.Host + x.OrgRepo + x.GitSuffix
 }
 
-func (x *RepoSpec) CloneDir() fs.ConfirmedDir {
+func (x *RepoSpec) CloneDir() filesys.ConfirmedDir {
 	return x.Dir
 }
 
@@ -79,7 +66,7 @@ func (x *RepoSpec) AbsPath() string {
 	return x.Dir.Join(x.Path)
 }
 
-func (x *RepoSpec) Cleaner(fSys fs.FileSystem) func() error {
+func (x *RepoSpec) Cleaner(fSys filesys.FileSystem) func() error {
 	return func() error { return fSys.RemoveAll(x.Dir.String()) }
 }
 

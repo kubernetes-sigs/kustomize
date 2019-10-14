@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/git"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 )
@@ -74,7 +74,7 @@ type fileLoader struct {
 	// An absolute, cleaned path to a directory.
 	// The Load function will read non-absolute
 	// paths relative to this directory.
-	root fs.ConfirmedDir
+	root filesys.ConfirmedDir
 
 	// Restricts behavior of Load function.
 	loadRestrictor LoadRestrictorFunc
@@ -87,7 +87,7 @@ type fileLoader struct {
 	repoSpec *git.RepoSpec
 
 	// File system utilities.
-	fSys fs.FileSystem
+	fSys filesys.FileSystem
 
 	// Used to clone repositories.
 	cloner git.Cloner
@@ -100,14 +100,14 @@ const CWD = "."
 
 // NewFileLoaderAtCwd returns a loader that loads from ".".
 // A convenience for kustomize edit commands.
-func NewFileLoaderAtCwd(v ifc.Validator, fSys fs.FileSystem) *fileLoader {
+func NewFileLoaderAtCwd(v ifc.Validator, fSys filesys.FileSystem) *fileLoader {
 	return newLoaderOrDie(
 		RestrictionRootOnly, v, fSys, CWD)
 }
 
 // NewFileLoaderAtRoot returns a loader that loads from "/".
 // A convenience for tests.
-func NewFileLoaderAtRoot(v ifc.Validator, fSys fs.FileSystem) *fileLoader {
+func NewFileLoaderAtRoot(v ifc.Validator, fSys filesys.FileSystem) *fileLoader {
 	return newLoaderOrDie(
 		RestrictionRootOnly, v, fSys, string(filepath.Separator))
 }
@@ -120,7 +120,7 @@ func (fl *fileLoader) Root() string {
 
 func newLoaderOrDie(
 	lr LoadRestrictorFunc, v ifc.Validator,
-	fSys fs.FileSystem, path string) *fileLoader {
+	fSys filesys.FileSystem, path string) *fileLoader {
 	root, err := demandDirectoryRoot(fSys, path)
 	if err != nil {
 		log.Fatalf("unable to make loader at '%s'; %v", path, err)
@@ -133,7 +133,7 @@ func newLoaderOrDie(
 func newLoaderAtConfirmedDir(
 	lr LoadRestrictorFunc,
 	v ifc.Validator,
-	root fs.ConfirmedDir, fSys fs.FileSystem,
+	root filesys.ConfirmedDir, fSys filesys.FileSystem,
 	referrer *fileLoader, cloner git.Cloner) *fileLoader {
 	return &fileLoader{
 		loadRestrictor: lr,
@@ -148,7 +148,7 @@ func newLoaderAtConfirmedDir(
 
 // Assure that the given path is in fact a directory.
 func demandDirectoryRoot(
-	fSys fs.FileSystem, path string) (fs.ConfirmedDir, error) {
+	fSys filesys.FileSystem, path string) (filesys.ConfirmedDir, error) {
 	if path == "" {
 		return "", fmt.Errorf(
 			"loader root cannot be empty")
@@ -202,7 +202,7 @@ func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 // directory holding a cloned git repo.
 func newLoaderAtGitClone(
 	repoSpec *git.RepoSpec,
-	v ifc.Validator, fSys fs.FileSystem,
+	v ifc.Validator, fSys filesys.FileSystem,
 	referrer *fileLoader, cloner git.Cloner) (ifc.Loader, error) {
 	cleaner := repoSpec.Cleaner(fSys)
 	err := cloner(repoSpec)
@@ -239,7 +239,7 @@ func newLoaderAtGitClone(
 }
 
 func (fl *fileLoader) errIfGitContainmentViolation(
-	base fs.ConfirmedDir) error {
+	base filesys.ConfirmedDir) error {
 	containingRepo := fl.containingRepo()
 	if containingRepo == nil {
 		return nil
@@ -269,7 +269,7 @@ func (fl *fileLoader) containingRepo() *git.RepoSpec {
 // errIfArgEqualOrHigher tests whether the argument,
 // is equal to or above the root of any ancestor.
 func (fl *fileLoader) errIfArgEqualOrHigher(
-	candidateRoot fs.ConfirmedDir) error {
+	candidateRoot filesys.ConfirmedDir) error {
 	if fl.root.HasPrefix(candidateRoot) {
 		return fmt.Errorf(
 			"cycle detected: candidate root '%s' contains visited root '%s'",

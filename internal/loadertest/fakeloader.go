@@ -7,7 +7,7 @@ package loadertest
 import (
 	"log"
 
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
@@ -16,7 +16,7 @@ import (
 
 // FakeLoader encapsulates the delegate Loader and the fake file system.
 type FakeLoader struct {
-	fs       fs.FileSystem
+	fs       filesys.FileSystem
 	delegate ifc.Loader
 }
 
@@ -34,7 +34,7 @@ func NewFakeLoader(initialDir string) FakeLoader {
 func NewFakeLoaderWithRestrictor(
 	lr loader.LoadRestrictorFunc, initialDir string) FakeLoader {
 	// Create fake filesystem and inject it into initial Loader.
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	fSys.Mkdir(initialDir)
 	ldr, err := loader.NewLoader(
 		lr, validators.MakeFakeValidator(), initialDir, fSys)

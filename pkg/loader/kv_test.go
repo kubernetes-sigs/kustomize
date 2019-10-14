@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
@@ -46,7 +46,7 @@ func TestKeyValuesFromLines(t *testing.T) {
 	}
 
 	l := NewFileLoaderAtRoot(
-		validators.MakeFakeValidator(), fs.MakeFsInMemory())
+		validators.MakeFakeValidator(), filesys.MakeFsInMemory())
 	for _, test := range tests {
 		pairs, err := l.keyValuesFromLines([]byte(test.content))
 		if test.expectedErr && err == nil {
@@ -76,7 +76,7 @@ func TestKeyValuesFromFileSources(t *testing.T) {
 		},
 	}
 
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	fSys.WriteFile("/files/app-init.ini", []byte("FOO=bar"))
 	l := NewFileLoaderAtRoot(validators.MakeFakeValidator(), fSys)
 	for _, tc := range tests {

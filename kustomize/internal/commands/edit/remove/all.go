@@ -5,13 +5,13 @@ package remove
 
 import (
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 )
 
 // NewCmdRemove returns an instance of 'remove' subcommand.
 func NewCmdRemove(
-	fsys fs.FileSystem,
+	fSys filesys.FileSystem,
 	ldr ifc.Loader) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "remove",
@@ -34,10 +34,10 @@ func NewCmdRemove(
 		Args: cobra.MinimumNArgs(1),
 	}
 	c.AddCommand(
-		newCmdRemoveResource(fsys),
-		newCmdRemoveLabel(fsys, ldr.Validator().MakeLabelNameValidator()),
-		newCmdRemoveAnnotation(fsys, ldr.Validator().MakeAnnotationNameValidator()),
-		newCmdRemovePatch(fsys),
+		newCmdRemoveResource(fSys),
+		newCmdRemoveLabel(fSys, ldr.Validator().MakeLabelNameValidator()),
+		newCmdRemoveAnnotation(fSys, ldr.Validator().MakeAnnotationNameValidator()),
+		newCmdRemovePatch(fSys),
 	)
 	return c
 }

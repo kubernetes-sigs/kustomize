@@ -9,13 +9,13 @@ import (
 
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 )
 
 var factory = kunstruct.NewKunstructuredFactoryImpl()
 
-func readKustomizationFS(t *testing.T, fSys fs.FileSystem) *types.Kustomization {
+func readKustomizationFS(t *testing.T, fSys filesys.FileSystem) *types.Kustomization {
 	kf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		t.Errorf("unexpected new error %v", err)
@@ -27,7 +27,7 @@ func readKustomizationFS(t *testing.T, fSys fs.FileSystem) *types.Kustomization 
 	return m
 }
 func TestCreateNoArgs(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	cmd := NewCmdCreate(fSys, factory)
 	err := cmd.RunE(cmd, []string{})
 	if err != nil {
@@ -37,7 +37,7 @@ func TestCreateNoArgs(t *testing.T) {
 }
 
 func TestCreateWithResources(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	fSys.WriteFile("foo.yaml", []byte(""))
 	fSys.WriteFile("bar.yaml", []byte(""))
 	opts := createFlags{resources: "foo.yaml,bar.yaml"}
@@ -53,7 +53,7 @@ func TestCreateWithResources(t *testing.T) {
 }
 
 func TestCreateWithNamespace(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	want := "foo"
 	opts := createFlags{namespace: want}
 	err := runCreate(opts, fSys, factory)
@@ -68,7 +68,7 @@ func TestCreateWithNamespace(t *testing.T) {
 }
 
 func TestCreateWithLabels(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	opts := createFlags{labels: "foo:bar"}
 	err := runCreate(opts, fSys, factory)
 	if err != nil {
@@ -82,7 +82,7 @@ func TestCreateWithLabels(t *testing.T) {
 }
 
 func TestCreateWithAnnotations(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	opts := createFlags{annotations: "foo:bar"}
 	err := runCreate(opts, fSys, factory)
 	if err != nil {
@@ -96,7 +96,7 @@ func TestCreateWithAnnotations(t *testing.T) {
 }
 
 func TestCreateWithNamePrefix(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	want := "foo-"
 	opts := createFlags{prefix: want}
 	err := runCreate(opts, fSys, factory)
@@ -111,7 +111,7 @@ func TestCreateWithNamePrefix(t *testing.T) {
 }
 
 func TestCreateWithNameSuffix(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	opts := createFlags{suffix: "-foo"}
 	err := runCreate(opts, fSys, factory)
 	if err != nil {
@@ -123,7 +123,7 @@ func TestCreateWithNameSuffix(t *testing.T) {
 	}
 }
 
-func writeDetectContent(fSys fs.FileSystem) {
+func writeDetectContent(fSys filesys.FileSystem) {
 	fSys.WriteFile("/test.yaml", []byte(`
 apiVersion: v1
 kind: Service
@@ -165,7 +165,7 @@ resources:
 }
 
 func TestCreateWithDetect(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	writeDetectContent(fSys)
 	opts := createFlags{path: "/", detectResources: true}
 	err := runCreate(opts, fSys, factory)
@@ -180,7 +180,7 @@ func TestCreateWithDetect(t *testing.T) {
 }
 
 func TestCreateWithDetectRecursive(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	writeDetectContent(fSys)
 	opts := createFlags{path: "/", detectResources: true, detectRecursive: true}
 	err := runCreate(opts, fSys, factory)

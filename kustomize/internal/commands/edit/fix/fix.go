@@ -6,11 +6,11 @@ package fix
 import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 )
 
 // NewCmdFix returns an instance of 'fix' subcommand.
-func NewCmdFix(fSys fs.FileSystem) *cobra.Command {
+func NewCmdFix(fSys filesys.FileSystem) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fix",
 		Short: "Fix the missing fields in kustomization file",
@@ -28,7 +28,7 @@ func NewCmdFix(fSys fs.FileSystem) *cobra.Command {
 }
 
 // RunFix runs `fix` command
-func RunFix(fSys fs.FileSystem) error {
+func RunFix(fSys filesys.FileSystem) error {
 	mf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		return err

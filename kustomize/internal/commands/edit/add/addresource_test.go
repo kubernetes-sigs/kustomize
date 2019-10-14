@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 )
 
 const (
@@ -20,7 +20,7 @@ sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 )
 
 func TestAddResourceHappyPath(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	fSys.WriteFile(resourceFileName, []byte(resourceFileContent))
 	fSys.WriteFile(resourceFileName+"another", []byte(resourceFileContent))
 	testutils.WriteTestKustomization(fSys)
@@ -44,7 +44,7 @@ func TestAddResourceHappyPath(t *testing.T) {
 }
 
 func TestAddResourceAlreadyThere(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 	fSys.WriteFile(resourceFileName, []byte(resourceFileContent))
 	testutils.WriteTestKustomization(fSys)
 
@@ -63,7 +63,7 @@ func TestAddResourceAlreadyThere(t *testing.T) {
 }
 
 func TestAddResourceNoArgs(t *testing.T) {
-	fSys := fs.MakeFsInMemory()
+	fSys := filesys.MakeFsInMemory()
 
 	cmd := newCmdAddResource(fSys)
 	err := cmd.Execute()

@@ -9,14 +9,14 @@ import (
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/fix"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/remove"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/set"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
 )
 
 // NewCmdEdit returns an instance of 'edit' subcommand.
 func NewCmdEdit(
-	fSys fs.FileSystem, v ifc.Validator, kf ifc.KunstructuredFactory) *cobra.Command {
+	fSys filesys.FileSystem, v ifc.Validator, kf ifc.KunstructuredFactory) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "edit",
 		Short: "Edits a kustomization file",

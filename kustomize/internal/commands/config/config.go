@@ -9,12 +9,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config/defaultconfig"
 )
 
 // NewCmdConfig returns an instance of 'config' subcommand.
-func NewCmdConfig(fsys fs.FileSystem) *cobra.Command {
+func NewCmdConfig(fSys filesys.FileSystem) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "config",
 		Short: "Config Kustomize transformers",
@@ -26,7 +26,7 @@ func NewCmdConfig(fsys fs.FileSystem) *cobra.Command {
 		Args: cobra.MinimumNArgs(1),
 	}
 	c.AddCommand(
-		newCmdSave(fsys),
+		newCmdSave(fSys),
 	)
 	return c
 }
@@ -35,7 +35,7 @@ type saveOptions struct {
 	saveDirectory string
 }
 
-func newCmdSave(fsys fs.FileSystem) *cobra.Command {
+func newCmdSave(fSys filesys.FileSystem) *cobra.Command {
 	var o saveOptions
 
 	c := &cobra.Command{
@@ -52,11 +52,11 @@ func newCmdSave(fsys fs.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			err = o.Complete(fsys)
+			err = o.Complete(fSys)
 			if err != nil {
 				return err
 			}
-			return o.RunSave(fsys)
+			return o.RunSave(fSys)
 		},
 	}
 	c.Flags().StringVarP(
@@ -77,22 +77,22 @@ func (o *saveOptions) Validate() error {
 }
 
 // Complete creates the save directory when the directory doesn't exist
-func (o *saveOptions) Complete(fsys fs.FileSystem) error {
-	if !fsys.Exists(o.saveDirectory) {
-		return fsys.MkdirAll(o.saveDirectory)
+func (o *saveOptions) Complete(fSys filesys.FileSystem) error {
+	if !fSys.Exists(o.saveDirectory) {
+		return fSys.MkdirAll(o.saveDirectory)
 	}
-	if fsys.IsDir(o.saveDirectory) {
+	if fSys.IsDir(o.saveDirectory) {
 		return nil
 	}
 	return fmt.Errorf("%s is not a directory", o.saveDirectory)
 }
 
 // RunSave saves the default transformer configurations local directory
-func (o *saveOptions) RunSave(fsys fs.FileSystem) error {
+func (o *saveOptions) RunSave(fSys filesys.FileSystem) error {
 	m := defaultconfig.GetDefaultFieldSpecsAsMap()
 	for tname, tcfg := range m {
 		filename := filepath.Join(o.saveDirectory, tname+".yaml")
-		err := fsys.WriteFile(filename, []byte(tcfg))
+		err := fSys.WriteFile(filename, []byte(tcfg))
 		if err != nil {
 			return err
 		}

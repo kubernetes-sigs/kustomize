@@ -1,18 +1,5 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package git
 
@@ -22,7 +9,7 @@ import (
 	"os/exec"
 
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 )
 
 // Cloner is a function that can clone a git repo.
@@ -36,7 +23,7 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 	if err != nil {
 		return errors.Wrap(err, "no 'git' program on path")
 	}
-	repoSpec.Dir, err = fs.NewTmpConfirmedDir()
+	repoSpec.Dir, err = filesys.NewTmpConfirmedDir()
 	if err != nil {
 		return err
 	}
@@ -126,7 +113,7 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 // cloneDir field in the repoSpec.  It's assumed that
 // the cloneDir is associated with some fake filesystem
 // used in a test.
-func DoNothingCloner(dir fs.ConfirmedDir) Cloner {
+func DoNothingCloner(dir filesys.ConfirmedDir) Cloner {
 	return func(rs *RepoSpec) error {
 		rs.Dir = dir
 		return nil

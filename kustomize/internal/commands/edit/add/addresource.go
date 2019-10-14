@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/util"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/v3/pkg/filesys"
 )
 
 type addResourceOptions struct {
@@ -18,7 +18,7 @@ type addResourceOptions struct {
 }
 
 // newCmdAddResource adds the name of a file containing a resource to the kustomization file.
-func newCmdAddResource(fsys fs.FileSystem) *cobra.Command {
+func newCmdAddResource(fSys filesys.FileSystem) *cobra.Command {
 	var o addResourceOptions
 
 	cmd := &cobra.Command{
@@ -35,7 +35,7 @@ func newCmdAddResource(fsys fs.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return o.RunAddResource(fsys)
+			return o.RunAddResource(fSys)
 		},
 	}
 	return cmd
@@ -56,7 +56,7 @@ func (o *addResourceOptions) Complete(cmd *cobra.Command, args []string) error {
 }
 
 // RunAddResource runs addResource command (do real work).
-func (o *addResourceOptions) RunAddResource(fSys fs.FileSystem) error {
+func (o *addResourceOptions) RunAddResource(fSys filesys.FileSystem) error {
 	resources, err := util.GlobPatterns(fSys, o.resourceFilePaths)
 	if err != nil {
 		return err
