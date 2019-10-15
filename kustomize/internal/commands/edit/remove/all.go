@@ -12,7 +12,7 @@ import (
 // NewCmdRemove returns an instance of 'remove' subcommand.
 func NewCmdRemove(
 	fSys filesys.FileSystem,
-	ldr ifc.Loader) *cobra.Command {
+	v ifc.Validator) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "remove",
 		Short: "Removes items from the kustomization file.",
@@ -35,8 +35,8 @@ func NewCmdRemove(
 	}
 	c.AddCommand(
 		newCmdRemoveResource(fSys),
-		newCmdRemoveLabel(fSys, ldr.Validator().MakeLabelNameValidator()),
-		newCmdRemoveAnnotation(fSys, ldr.Validator().MakeAnnotationNameValidator()),
+		newCmdRemoveLabel(fSys, v.MakeLabelNameValidator()),
+		newCmdRemoveAnnotation(fSys, v.MakeAnnotationNameValidator()),
 		newCmdRemovePatch(fSys),
 	)
 	return c

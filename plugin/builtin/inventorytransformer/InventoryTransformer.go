@@ -7,6 +7,7 @@ package main
 import (
 	"fmt"
 
+	"sigs.k8s.io/kustomize/v3/kv"
 	"sigs.k8s.io/kustomize/v3/pkg/hasher"
 	"sigs.k8s.io/kustomize/v3/pkg/inventory"
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
@@ -77,7 +78,7 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 	}
 
 	cm, err := p.h.ResmapFactory().RF().MakeConfigMap(
-		p.h.Loader(), opts, &args)
+		kv.NewLoader(p.h.Loader(), p.h.Validator()), opts, &args)
 	if err != nil {
 		return err
 	}

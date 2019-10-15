@@ -29,6 +29,7 @@ import (
 type KustTarget struct {
 	kustomization *types.Kustomization
 	ldr           ifc.Loader
+	validator     ifc.Validator
 	rFactory      *resmap.Factory
 	tFactory      resmap.PatchFactory
 	pLdr          *plugins.Loader
@@ -37,6 +38,7 @@ type KustTarget struct {
 // NewKustTarget returns a new instance of KustTarget primed with a Loader.
 func NewKustTarget(
 	ldr ifc.Loader,
+	validator ifc.Validator,
 	rFactory *resmap.Factory,
 	tFactory resmap.PatchFactory,
 	pLdr *plugins.Loader) (*KustTarget, error) {
@@ -60,6 +62,7 @@ func NewKustTarget(
 	return &KustTarget{
 		kustomization: &k,
 		ldr:           ldr,
+		validator:     validator,
 		rFactory:      rFactory,
 		tFactory:      tFactory,
 		pLdr:          pLdr,
@@ -281,7 +284,7 @@ func (kt *KustTarget) configureExternalGenerators() ([]resmap.Generator, error) 
 	if err != nil {
 		return nil, err
 	}
-	return kt.pLdr.LoadGenerators(kt.ldr, ra.ResMap())
+	return kt.pLdr.LoadGenerators(kt.ldr, kt.validator, ra.ResMap())
 }
 
 func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator) error {
@@ -307,7 +310,7 @@ func (kt *KustTarget) configureExternalTransformers() ([]resmap.Transformer, err
 	if err != nil {
 		return nil, err
 	}
-	return kt.pLdr.LoadTransformers(kt.ldr, ra.ResMap())
+	return kt.pLdr.LoadTransformers(kt.ldr, kt.validator, ra.ResMap())
 }
 
 // accumulateResources fills the given resourceAccumulator
@@ -337,7 +340,7 @@ func (kt *KustTarget) accumulateDirectory(
 	ra *accumulator.ResAccumulator, ldr ifc.Loader, path string) error {
 	defer ldr.Cleanup()
 	subKt, err := NewKustTarget(
-		ldr, kt.rFactory, kt.tFactory, kt.pLdr)
+		ldr, kt.validator, kt.rFactory, kt.tFactory, kt.pLdr)
 	if err != nil {
 		return errors.Wrapf(err, "couldn't make target for path '%s'", path)
 	}
@@ -377,7 +380,7 @@ func (kt *KustTarget) configureBuiltinPlugin(
 				err, "builtin %s marshal", bpt)
 		}
 	}
-	err = p.Config(resmap.NewPluginHelpers(kt.ldr, kt.rFactory), y)
+	err = p.Config(resmap.NewPluginHelpers(kt.ldr, kt.validator, kt.rFactory), y)
 	if err != nil {
 		return errors.Wrapf(err, "builtin %s config: %v", bpt, y)
 	}

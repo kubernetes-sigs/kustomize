@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/filesys"
+	"sigs.k8s.io/kustomize/v3/kv"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
@@ -14,8 +15,12 @@ import (
 
 func TestNewAddConfigMapIsNotNil(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	ldr := loader.NewFileLoaderAtCwd(validators.MakeFakeValidator(), fSys)
-	if newCmdAddConfigMap(fSys, ldr, nil) == nil {
+	if newCmdAddConfigMap(
+		fSys,
+		kv.NewLoader(
+			loader.NewFileLoaderAtCwd(fSys),
+			validators.MakeFakeValidator()),
+			nil) == nil {
 		t.Fatal("newCmdAddConfigMap shouldn't be nil")
 	}
 }

@@ -2,6 +2,7 @@
 package builtin
 
 import (
+	"sigs.k8s.io/kustomize/v3/kv"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/yaml"
@@ -30,7 +31,8 @@ func (p *SecretGeneratorPlugin) Config(h *resmap.PluginHelpers, config []byte) (
 
 func (p *SecretGeneratorPlugin) Generate() (resmap.ResMap, error) {
 	return p.h.ResmapFactory().FromSecretArgs(
-		p.h.Loader(), &p.GeneratorOptions, p.SecretArgs)
+		kv.NewLoader(p.h.Loader(), p.h.Validator()),
+		&p.GeneratorOptions, p.SecretArgs)
 }
 
 func NewSecretGeneratorPlugin() resmap.GeneratorPlugin {

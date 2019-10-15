@@ -10,8 +10,6 @@ import (
 	"sigs.k8s.io/kustomize/v3/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
-	"sigs.k8s.io/kustomize/v3/pkg/types"
-	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
 
 // FakeLoader encapsulates the delegate Loader and the fake file system.
@@ -36,8 +34,7 @@ func NewFakeLoaderWithRestrictor(
 	// Create fake filesystem and inject it into initial Loader.
 	fSys := filesys.MakeFsInMemory()
 	fSys.Mkdir(initialDir)
-	ldr, err := loader.NewLoader(
-		lr, validators.MakeFakeValidator(), initialDir, fSys)
+	ldr, err := loader.NewLoader(lr, initialDir, fSys)
 	if err != nil {
 		log.Fatalf("Unable to make loader: %v", err)
 	}
@@ -76,14 +73,4 @@ func (f FakeLoader) Load(location string) ([]byte, error) {
 // Cleanup delegates.
 func (f FakeLoader) Cleanup() error {
 	return f.delegate.Cleanup()
-}
-
-// Validator delegates.
-func (f FakeLoader) Validator() ifc.Validator {
-	return f.delegate.Validator()
-}
-
-// LoadKvPairs delegates.
-func (f FakeLoader) LoadKvPairs(args types.GeneratorArgs) ([]types.Pair, error) {
-	return f.delegate.LoadKvPairs(args)
 }

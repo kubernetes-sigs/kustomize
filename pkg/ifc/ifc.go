@@ -20,6 +20,12 @@ type Validator interface {
 	IsEnvVarName(k string) error
 }
 
+// KvLoader reads and validates KV pairs.
+type KvLoader interface {
+	Validator() Validator
+	Load(args types.KvPairSources) (all []types.Pair, err error)
+}
+
 // Loader interface exposes methods to read bytes.
 type Loader interface {
 	// Root returns the root location for this Loader.
@@ -30,10 +36,6 @@ type Loader interface {
 	Load(location string) ([]byte, error)
 	// Cleanup cleans the loader
 	Cleanup() error
-	// Validator validates data for use in various k8s fields.
-	Validator() Validator
-	// Loads pairs.
-	LoadKvPairs(args types.GeneratorArgs) ([]types.Pair, error)
 }
 
 // Kunstructured allows manipulation of k8s objects
@@ -74,11 +76,11 @@ type KunstructuredFactory interface {
 	FromMap(m map[string]interface{}) Kunstructured
 	Hasher() KunstructuredHasher
 	MakeConfigMap(
-		ldr Loader,
+		kvLdr KvLoader,
 		options *types.GeneratorOptions,
 		args *types.ConfigMapArgs) (Kunstructured, error)
 	MakeSecret(
-		ldr Loader,
+		kvLdr KvLoader,
 		options *types.GeneratorOptions,
 		args *types.SecretArgs) (Kunstructured, error)
 }

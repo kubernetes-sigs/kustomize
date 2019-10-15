@@ -28,7 +28,7 @@ func makeFreshSecret(
 // MakeSecret returns a new secret.
 func (f *Factory) MakeSecret(
 	args *types.SecretArgs) (*corev1.Secret, error) {
-	all, err := f.ldr.LoadKvPairs(args.GeneratorArgs)
+	all, err := f.kvLdr.Load(args.KvPairSources)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (f *Factory) MakeSecret(
 }
 
 func (f *Factory) addKvToSecret(secret *corev1.Secret, keyName, data string) error {
-	if err := f.ldr.Validator().ErrIfInvalidKey(keyName); err != nil {
+	if err := f.kvLdr.Validator().ErrIfInvalidKey(keyName); err != nil {
 		return err
 	}
 	if _, entryExists := secret.Data[keyName]; entryExists {

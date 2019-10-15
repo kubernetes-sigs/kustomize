@@ -3,7 +3,7 @@
 
 package types
 
-// KvPairSources contains some generic sources for generators.
+// KvPairSources defines places to obtain key value pairs.
 type KvPairSources struct {
 	// LiteralSources is a list of literal
 	// pair sources. Each literal source should

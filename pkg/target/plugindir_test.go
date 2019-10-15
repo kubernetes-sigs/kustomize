@@ -59,7 +59,7 @@ metadata:
 	}
 
 	ldr, err := loader.NewLoader(
-		loader.RestrictionRootOnly, validators.MakeFakeValidator(), dir, fSys)
+		loader.RestrictionRootOnly, dir, fSys)
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
@@ -67,7 +67,8 @@ metadata:
 		kunstruct.NewKunstructuredFactoryImpl()), nil)
 
 	pl := plugins.NewLoader(plugins.ActivePluginConfig(), rf)
-	tg, err := target.NewKustTarget(ldr, rf, transformer.NewFactoryImpl(), pl)
+	tg, err := target.NewKustTarget(
+		ldr, validators.MakeFakeValidator(), rf, transformer.NewFactoryImpl(), pl)
 	if err != nil {
 		t.Fatalf("err %v", err)
 	}
