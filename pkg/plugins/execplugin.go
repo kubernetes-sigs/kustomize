@@ -13,7 +13,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
@@ -41,11 +40,8 @@ type ExecPlugin struct {
 	// Plugin configuration data.
 	cfg []byte
 
-	// resmap Factory to make resources
-	rf *resmap.Factory
-
-	// loader to load files
-	ldr ifc.Loader
+	// PluginHelpers
+	h *resmap.PluginHelpers
 }
 
 func NewExecPlugin(p string) *ExecPlugin {
@@ -61,10 +57,8 @@ func (p *ExecPlugin) isAvailable() bool {
 	return f.Mode()&0111 != 0000
 }
 
-func (p *ExecPlugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, config []byte) error {
-	p.rf = rf
-	p.ldr = ldr
+func (p *ExecPlugin) Config(h *resmap.PluginHelpers, config []byte) error {
+	p.h = h
 	p.cfg = config
 	return p.processOptionalArgsFields()
 }
@@ -81,7 +75,7 @@ func (p *ExecPlugin) processOptionalArgsFields() error {
 		p.args = strings.Split(c.ArgsOneLiner, " ")
 	}
 	if c.ArgsFromFile != "" {
-		content, err := p.ldr.Load(c.ArgsFromFile)
+		content, err := p.h.Loader().Load(c.ArgsFromFile)
 		if err != nil {
 			return err
 		}
@@ -100,7 +94,7 @@ func (p *ExecPlugin) Generate() (resmap.ResMap, error) {
 	if err != nil {
 		return nil, err
 	}
-	rm, err := p.rf.NewResMapFromBytes(output)
+	rm, err := p.h.ResmapFactory().NewResMapFromBytes(output)
 	if err != nil {
 		return nil, err
 	}
@@ -154,8 +148,8 @@ func (p *ExecPlugin) invokePlugin(input []byte) ([]byte, error) {
 	cmd.Env = p.getEnv()
 	cmd.Stdin = bytes.NewReader(input)
 	cmd.Stderr = os.Stderr
-	if _, err := os.Stat(p.ldr.Root()); err == nil {
-		cmd.Dir = p.ldr.Root()
+	if _, err := os.Stat(p.h.Loader().Root()); err == nil {
+		cmd.Dir = p.h.Loader().Root()
 	}
 	result, err := cmd.Output()
 	if err != nil {
@@ -170,7 +164,7 @@ func (p *ExecPlugin) getEnv() []string {
 	env := os.Environ()
 	env = append(env,
 		"KUSTOMIZE_PLUGIN_CONFIG_STRING="+string(p.cfg),
-		"KUSTOMIZE_PLUGIN_CONFIG_ROOT="+p.ldr.Root())
+		"KUSTOMIZE_PLUGIN_CONFIG_ROOT="+p.h.Loader().Root())
 	return env
 }
 
@@ -195,7 +189,7 @@ func (p *ExecPlugin) getResMapWithIdAnnotation(rm resmap.ResMap) (resmap.ResMap,
 // updateResMapValues updates the Resource value in the given ResMap
 // with the emitted Resource values in output.
 func (p *ExecPlugin) updateResMapValues(output []byte, rm resmap.ResMap) error {
-	outputRM, err := p.rf.NewResMapFromBytes(output)
+	outputRM, err := p.h.ResmapFactory().NewResMapFromBytes(output)
 	if err != nil {
 		return err
 	}

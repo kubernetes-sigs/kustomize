@@ -6,8 +6,9 @@ package main_test
 import (
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/pluglib"
+
 	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
-	"sigs.k8s.io/kustomize/v3/pkg/plugins/testenv"
 )
 
 const (
@@ -59,7 +60,7 @@ metadata:
 )
 
 func TestInventoryTransformerCollect(t *testing.T) {
-	tc := testenv.NewEnvForTest(t).Set()
+	tc := pluglib.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -80,7 +81,7 @@ policy: GarbageCollect
 }
 
 func TestInventoryTransformerIgnore(t *testing.T) {
-	tc := testenv.NewEnvForTest(t).Set()
+	tc := pluglib.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -101,7 +102,7 @@ policy: GarbageIgnore
 }
 
 func TestInventoryTransformerDefaultPolicy(t *testing.T) {
-	tc := testenv.NewEnvForTest(t).Set()
+	tc := pluglib.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(

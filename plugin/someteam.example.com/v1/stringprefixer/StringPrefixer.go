@@ -5,7 +5,6 @@ package main
 
 import (
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
@@ -37,8 +36,7 @@ func (p *plugin) makePrefixSuffixPluginConfig(n string) ([]byte, error) {
 	return yaml.Marshal(s)
 }
 
-func (p *plugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, c []byte) error {
+func (p *plugin) Config(h *resmap.PluginHelpers, c []byte) error {
 	err := yaml.Unmarshal(c, p)
 	if err != nil {
 		return err
@@ -48,7 +46,7 @@ func (p *plugin) Config(
 		return err
 	}
 	prefixer := builtin.NewPrefixSuffixTransformerPlugin()
-	err = prefixer.Config(ldr, rf, c)
+	err = prefixer.Config(h, c)
 	if err != nil {
 		return errors.Wrapf(
 			err, "stringprefixer configure")

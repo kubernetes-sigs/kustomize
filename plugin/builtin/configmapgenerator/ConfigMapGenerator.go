@@ -5,15 +5,13 @@
 package main
 
 import (
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/yaml"
 )
 
 type plugin struct {
-	ldr              ifc.Loader
-	rf               *resmap.Factory
+	h                *resmap.PluginHelpers
 	types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 	types.GeneratorOptions
 	types.ConfigMapArgs
@@ -23,7 +21,7 @@ type plugin struct {
 var KustomizePlugin plugin
 
 func (p *plugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, config []byte) (err error) {
+	h *resmap.PluginHelpers, config []byte) (err error) {
 	p.GeneratorOptions = types.GeneratorOptions{}
 	p.ConfigMapArgs = types.ConfigMapArgs{}
 	err = yaml.Unmarshal(config, p)
@@ -33,11 +31,11 @@ func (p *plugin) Config(
 	if p.ConfigMapArgs.Namespace == "" {
 		p.ConfigMapArgs.Namespace = p.Namespace
 	}
-	p.ldr = ldr
-	p.rf = rf
+	p.h = h
 	return
 }
 
 func (p *plugin) Generate() (resmap.ResMap, error) {
-	return p.rf.FromConfigMapArgs(p.ldr, &p.GeneratorOptions, p.ConfigMapArgs)
+	return p.h.ResmapFactory().FromConfigMapArgs(
+		p.h.Loader(), &p.GeneratorOptions, p.ConfigMapArgs)
 }

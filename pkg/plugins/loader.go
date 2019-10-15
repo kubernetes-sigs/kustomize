@@ -123,7 +123,7 @@ func (l *Loader) loadAndConfigurePlugin(
 	if err != nil {
 		return nil, errors.Wrapf(err, "marshalling yaml from res %s", res.OrgId())
 	}
-	err = c.Config(ldr, l.rf, yaml)
+	err = c.Config(resmap.NewPluginHelpers(ldr, l.rf), yaml)
 	if err != nil {
 		return nil, errors.Wrapf(
 			err, "plugin %s fails configuration", res.OrgId())

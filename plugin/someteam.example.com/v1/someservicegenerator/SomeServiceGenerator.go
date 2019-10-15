@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"text/template"
 
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/yaml"
@@ -39,9 +38,8 @@ spec:
     app: dev
 `
 
-func (p *plugin) Config(
-	_ ifc.Loader, rf *resmap.Factory, config []byte) error {
-	p.rf = rf
+func (p *plugin) Config(h *resmap.PluginHelpers, config []byte) error {
+	p.rf = h.ResmapFactory()
 	return yaml.Unmarshal(config, p)
 }
 

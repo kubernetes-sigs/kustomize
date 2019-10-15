@@ -104,7 +104,7 @@ Generated plugins are used in kustomize via
   import "sigs.k8s.io/kustomize/v3/plugin/builtin
   ...
   g := builtin.NewSecretGenerator()
-  g.Config(l, rf, k)
+  g.Config(h, k)
   resources, err := g.Generate()
   err = g.Transform(resources)
   // Eventually emit resources.
