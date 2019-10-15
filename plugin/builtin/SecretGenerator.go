@@ -2,22 +2,19 @@
 package builtin
 
 import (
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/yaml"
 )
 
 type SecretGeneratorPlugin struct {
-	ldr              ifc.Loader
-	rf               *resmap.Factory
+	h                *resmap.PluginHelpers
 	types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 	types.GeneratorOptions
 	types.SecretArgs
 }
 
-func (p *SecretGeneratorPlugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, config []byte) (err error) {
+func (p *SecretGeneratorPlugin) Config(h *resmap.PluginHelpers, config []byte) (err error) {
 	p.GeneratorOptions = types.GeneratorOptions{}
 	p.SecretArgs = types.SecretArgs{}
 	err = yaml.Unmarshal(config, p)
@@ -27,13 +24,13 @@ func (p *SecretGeneratorPlugin) Config(
 	if p.SecretArgs.Namespace == "" {
 		p.SecretArgs.Namespace = p.Namespace
 	}
-	p.ldr = ldr
-	p.rf = rf
+	p.h = h
 	return
 }
 
 func (p *SecretGeneratorPlugin) Generate() (resmap.ResMap, error) {
-	return p.rf.FromSecretArgs(p.ldr, &p.GeneratorOptions, p.SecretArgs)
+	return p.h.ResmapFactory().FromSecretArgs(
+		p.h.Loader(), &p.GeneratorOptions, p.SecretArgs)
 }
 
 func NewSecretGeneratorPlugin() resmap.GeneratorPlugin {

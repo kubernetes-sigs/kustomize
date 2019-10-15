@@ -5,7 +5,6 @@
 package main
 
 import (
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
@@ -22,7 +21,7 @@ type plugin struct {
 var KustomizePlugin plugin
 
 func (p *plugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
+	h *resmap.PluginHelpers, c []byte) (err error) {
 	p.Labels = nil
 	p.FieldSpecs = nil
 	return yaml.Unmarshal(c, p)

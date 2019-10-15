@@ -7,7 +7,7 @@ package main
 import (
 	"fmt"
 
-	jsonpatch "github.com/evanphx/json-patch"
+	"github.com/evanphx/json-patch"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
@@ -29,8 +29,8 @@ type plugin struct {
 var KustomizePlugin plugin
 
 func (p *plugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
-	p.ldr = ldr
+	h *resmap.PluginHelpers, c []byte) (err error) {
+	p.ldr = h.Loader()
 	err = yaml.Unmarshal(c, p)
 	if err != nil {
 		return err

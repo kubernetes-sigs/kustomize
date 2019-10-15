@@ -6,12 +6,13 @@ package main_test
 import (
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/pluglib"
+
 	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
-	"sigs.k8s.io/kustomize/v3/pkg/plugins/testenv"
 )
 
 func TestImageTagTransformerNewTag(t *testing.T) {
-	tc := testenv.NewEnvForTest(t).Set()
+	tc := pluglib.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -82,7 +83,7 @@ spec:
 `)
 }
 func TestImageTagTransformerNewImage(t *testing.T) {
-	tc := testenv.NewEnvForTest(t).Set()
+	tc := pluglib.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -154,7 +155,7 @@ spec:
 }
 
 func TestImageTagTransformerNewImageAndTag(t *testing.T) {
-	tc := testenv.NewEnvForTest(t).Set()
+	tc := pluglib.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -227,7 +228,7 @@ spec:
 }
 
 func TestImageTagTransformerNewDigest(t *testing.T) {
-	tc := testenv.NewEnvForTest(t).Set()
+	tc := pluglib.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -299,7 +300,7 @@ spec:
 }
 
 func TestImageTagTransformerNewImageAndDigest(t *testing.T) {
-	tc := testenv.NewEnvForTest(t).Set()
+	tc := pluglib.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(

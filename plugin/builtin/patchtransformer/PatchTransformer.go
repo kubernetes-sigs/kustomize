@@ -9,7 +9,6 @@ import (
 
 	"github.com/evanphx/json-patch"
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
@@ -17,8 +16,6 @@ import (
 )
 
 type plugin struct {
-	ldr          ifc.Loader
-	rf           *resmap.Factory
 	loadedPatch  *resource.Resource
 	decodedPatch jsonpatch.Patch
 	Path         string          `json:"path,omitempty" yaml:"path,omitempty"`
@@ -30,9 +27,7 @@ type plugin struct {
 var KustomizePlugin plugin
 
 func (p *plugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
-	p.ldr = ldr
-	p.rf = rf
+	h *resmap.PluginHelpers, c []byte) (err error) {
 	err = yaml.Unmarshal(c, p)
 	if err != nil {
 		return err
@@ -49,7 +44,7 @@ func (p *plugin) Config(
 	}
 	var in []byte
 	if p.Path != "" {
-		in, err = ldr.Load(p.Path)
+		in, err = h.Loader().Load(p.Path)
 		if err != nil {
 			return
 		}
@@ -58,7 +53,7 @@ func (p *plugin) Config(
 		in = []byte(p.Patch)
 	}
 
-	patchSM, errSM := p.rf.RF().FromBytes(in)
+	patchSM, errSM := h.ResmapFactory().RF().FromBytes(in)
 	patchJson, errJson := jsonPatchFromBytes(in)
 	if errSM != nil && errJson != nil {
 		err = fmt.Errorf(

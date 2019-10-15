@@ -30,14 +30,32 @@ type Generator interface {
 	Generate() (ResMap, error)
 }
 
-// Something that's configurable accepts a config
-// object (typically YAML in []byte form), and an
-// ifc.Loader to possible read more configuration
-// from the file system (e.g. patch files) and
-// a resource factory to build any type-sensitive
-// parts.  The factory could probably be factored out.
+// Something that's configurable accepts an
+// instance of PluginHelpers and a raw config
+// object (YAML in []byte form).
 type Configurable interface {
-	Config(ldr ifc.Loader, rf *Factory, config []byte) error
+	Config(h *PluginHelpers, config []byte) error
+}
+
+// NewPluginHelpers makes an instance of PluginHelpers.
+func NewPluginHelpers(ldr ifc.Loader, rf *Factory) *PluginHelpers {
+	return &PluginHelpers{ldr: ldr, rf: rf}
+}
+
+// PluginHelpers holds things that any or all plugins might need.
+// This should be available to each plugin, in addition to
+// any plugin-specific configuration.
+type PluginHelpers struct {
+	ldr ifc.Loader
+	rf  *Factory
+}
+
+func (c *PluginHelpers) Loader() ifc.Loader {
+	return c.ldr
+}
+
+func (c *PluginHelpers) ResmapFactory() *Factory {
+	return c.rf
 }
 
 type GeneratorPlugin interface {

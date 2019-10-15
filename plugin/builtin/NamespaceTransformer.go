@@ -4,7 +4,6 @@ package builtin
 import (
 	"fmt"
 
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
@@ -21,7 +20,7 @@ type NamespaceTransformerPlugin struct {
 }
 
 func (p *NamespaceTransformerPlugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
+	h *resmap.PluginHelpers, c []byte) (err error) {
 	p.Namespace = ""
 	p.FieldSpecs = nil
 	return yaml.Unmarshal(c, p)

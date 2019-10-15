@@ -19,8 +19,8 @@ type plugin struct {
 var KustomizePlugin plugin
 
 func (p *plugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, config []byte) (err error) {
-	p.hasher = rf.RF().Hasher()
+	h *resmap.PluginHelpers, config []byte) (err error) {
+	p.hasher = h.ResmapFactory().RF().Hasher()
 	return nil
 }
 
