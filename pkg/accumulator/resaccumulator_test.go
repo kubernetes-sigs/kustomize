@@ -179,6 +179,86 @@ func TestResolveVarsVarNeedsDisambiguation(t *testing.T) {
 	}
 }
 
+func makeNamespacedConfigMapWithDataProviderValue(
+	namespace string,
+	value string,
+) map[string]interface{} {
+	return map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata": map[string]interface{}{
+			"name":      "environment",
+			"namespace": namespace,
+		},
+		"data": map[string]interface{}{
+			"provider": value,
+		},
+	}
+}
+
+func makeVarToNamepaceAndPath(
+	name string,
+	namespace string,
+	path string,
+) types.Var {
+	return types.Var{
+		Name: name,
+		ObjRef: types.Target{
+			Gvk:  gvk.Gvk{Version: "v1", Kind: "ConfigMap"},
+			Name: "environment",
+		},
+		FieldRef: types.FieldSelector{FieldPath: path},
+	}
+}
+
+func TestResolveVarConflicts(t *testing.T) {
+	rf := resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
+
+	// create configmaps in foo and bar namespaces with `data.provider` values.
+	fooAws := makeNamespacedConfigMapWithDataProviderValue("foo", "aws")
+	barAws := makeNamespacedConfigMapWithDataProviderValue("bar", "aws")
+	barGcp := makeNamespacedConfigMapWithDataProviderValue("bar", "gcp")
+
+	// create two variables with (apparently) conflicting names that point to
+	// fieldpaths that could be generalized.
+	varFoo := makeVarToNamepaceAndPath("PROVIDER", "foo", "data.provider")
+	varBar := makeVarToNamepaceAndPath("PROVIDER", "bar", "data.provider")
+
+	// create accumulators holding apparently conflicting vars that are not
+	// actually in conflict because they point to the same concrete value.
+	rm0 := resmap.New()
+	rm0.Append(rf.FromMap(fooAws))
+	ac0 := MakeEmptyAccumulator()
+	ac0.AppendAll(rm0)
+	ac0.MergeVars([]types.Var{varFoo})
+
+	rm1 := resmap.New()
+	rm1.Append(rf.FromMap(barAws))
+	ac1 := MakeEmptyAccumulator()
+	ac1.AppendAll(rm1)
+	ac1.MergeVars([]types.Var{varBar})
+
+	// validate that two vars of the same name which reference the same concrete
+	// value do not produce a conflict.
+	err := ac0.MergeAccumulator(ac1)
+	if err != nil {
+		t.Fatalf("dupe var names w/ same concrete val should not conflict: %v", err)
+	}
+
+	// create an accumulator will have an actually conflicting value with the
+	// two above (because it contains a variable whose name is used in the other
+	// accumulators AND whose concrete values are different).
+	rm2 := resmap.New()
+	rm2.Append(rf.FromMap(barGcp))
+	ac2 := MakeEmptyAccumulator()
+	ac2.AppendAll(rm2)
+	ac2.MergeVars([]types.Var{varBar})
+	err = ac1.MergeAccumulator(ac2)
+	if err == nil {
+		t.Fatalf("dupe vars w/ different concrete values should conflict")
+	}
+}
+
 func TestResolveVarsGoodResIdBadField(t *testing.T) {
 	ra, _ := makeResAccumulator(t)
 	err := ra.MergeVars([]types.Var{
