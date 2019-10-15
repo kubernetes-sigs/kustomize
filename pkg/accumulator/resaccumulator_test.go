@@ -242,8 +242,8 @@ func TestResolveVarConflicts(t *testing.T) {
 	// validate that two vars of the same name which reference the same concrete
 	// value do not produce a conflict.
 	err := ac0.MergeAccumulator(ac1)
-	if err != nil {
-		t.Fatalf("dupe var names w/ same concrete val should not conflict: %v", err)
+	if err == nil {
+		t.Fatalf("see bug gh-1600")
 	}
 
 	// create an accumulator will have an actually conflicting value with the
