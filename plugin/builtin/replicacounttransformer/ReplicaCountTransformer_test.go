@@ -6,12 +6,13 @@ package main_test
 import (
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/pluglib"
+
 	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
-	"sigs.k8s.io/kustomize/v3/pkg/plugins/testenv"
 )
 
 func TestReplicaCountTransformer(t *testing.T) {
-	tc := testenv.NewEnvForTest(t).Set()
+	tc := pluglib.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -153,7 +154,7 @@ spec:
 }
 
 func TestMatchesCurrentID(t *testing.T) {
-	tc := testenv.NewEnvForTest(t).Set()
+	tc := pluglib.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin("builtin", "", "PrefixSuffixTransformer")
@@ -199,7 +200,7 @@ spec:
 }
 
 func TestNoMatch(t *testing.T) {
-	tc := testenv.NewEnvForTest(t).Set()
+	tc := pluglib.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin("builtin", "", "ReplicaCountTransformer")

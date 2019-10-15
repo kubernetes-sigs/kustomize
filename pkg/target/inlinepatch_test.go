@@ -4,8 +4,9 @@
 package target_test
 
 import (
-	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
 	"testing"
+
+	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
 )
 
 func makeResourcesForPatchTest(th *kusttest_test.KustTestHarness) {

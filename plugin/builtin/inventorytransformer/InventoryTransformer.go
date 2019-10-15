@@ -7,20 +7,17 @@ package main
 import (
 	"fmt"
 
-	"sigs.k8s.io/kustomize/v3/pkg/resource"
-
 	"sigs.k8s.io/kustomize/v3/pkg/hasher"
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/inventory"
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
+	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/yaml"
 )
 
 type plugin struct {
-	ldr              ifc.Loader
-	rf               *resmap.Factory
+	h                *resmap.PluginHelpers
 	types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 	Policy           string `json:"policy,omitempty" yaml:"policy,omitempty"`
 }
@@ -29,9 +26,8 @@ type plugin struct {
 var KustomizePlugin plugin
 
 func (p *plugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
-	p.ldr = ldr
-	p.rf = rf
+	h *resmap.PluginHelpers, c []byte) (err error) {
+	p.h = h
 	err = yaml.Unmarshal(c, p)
 	if err != nil {
 		return err
@@ -80,7 +76,8 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 		return err
 	}
 
-	cm, err := p.rf.RF().MakeConfigMap(p.ldr, opts, &args)
+	cm, err := p.h.ResmapFactory().RF().MakeConfigMap(
+		p.h.Loader(), opts, &args)
 	if err != nil {
 		return err
 	}

@@ -4,7 +4,6 @@ package builtin
 import (
 	"fmt"
 
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
@@ -12,17 +11,15 @@ import (
 )
 
 type PatchStrategicMergeTransformerPlugin struct {
-	ldr           ifc.Loader
-	rf            *resmap.Factory
+	h             *resmap.PluginHelpers
 	loadedPatches []*resource.Resource
 	Paths         []types.PatchStrategicMerge `json:"paths,omitempty" yaml:"paths,omitempty"`
 	Patches       string                      `json:"patches,omitempty" yaml:"patches,omitempty"`
 }
 
 func (p *PatchStrategicMergeTransformerPlugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
-	p.ldr = ldr
-	p.rf = rf
+	h *resmap.PluginHelpers, c []byte) (err error) {
+	p.h = h
 	err = yaml.Unmarshal(c, p)
 	if err != nil {
 		return err
@@ -32,12 +29,13 @@ func (p *PatchStrategicMergeTransformerPlugin) Config(
 	}
 	if len(p.Paths) != 0 {
 		for _, onePath := range p.Paths {
-			res, err := p.rf.RF().SliceFromBytes([]byte(onePath))
+			res, err := p.h.ResmapFactory().RF().SliceFromBytes([]byte(onePath))
 			if err == nil {
 				p.loadedPatches = append(p.loadedPatches, res...)
 				continue
 			}
-			res, err = p.rf.RF().SliceFromPatches(ldr, []types.PatchStrategicMerge{onePath})
+			res, err = p.h.ResmapFactory().RF().SliceFromPatches(
+				p.h.Loader(), []types.PatchStrategicMerge{onePath})
 			if err != nil {
 				return err
 			}
@@ -45,7 +43,7 @@ func (p *PatchStrategicMergeTransformerPlugin) Config(
 		}
 	}
 	if p.Patches != "" {
-		res, err := p.rf.RF().SliceFromBytes([]byte(p.Patches))
+		res, err := p.h.ResmapFactory().RF().SliceFromBytes([]byte(p.Patches))
 		if err != nil {
 			return err
 		}
@@ -60,7 +58,7 @@ func (p *PatchStrategicMergeTransformerPlugin) Config(
 }
 
 func (p *PatchStrategicMergeTransformerPlugin) Transform(m resmap.ResMap) error {
-	patches, err := p.rf.MergePatches(p.loadedPatches)
+	patches, err := p.h.ResmapFactory().MergePatches(p.loadedPatches)
 	if err != nil {
 		return err
 	}

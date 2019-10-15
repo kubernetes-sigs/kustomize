@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/image"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers"
@@ -22,7 +21,7 @@ type ImageTagTransformerPlugin struct {
 }
 
 func (p *ImageTagTransformerPlugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
+	h *resmap.PluginHelpers, c []byte) (err error) {
 	p.ImageTag = image.Image{}
 	p.FieldSpecs = nil
 	return yaml.Unmarshal(c, p)

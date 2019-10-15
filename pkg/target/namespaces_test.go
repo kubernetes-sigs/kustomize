@@ -4,9 +4,10 @@
 package target_test
 
 import (
-	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
 	"strings"
 	"testing"
+
+	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
 )
 
 func TestNamespacedSecrets(t *testing.T) {
