@@ -83,7 +83,7 @@ func TestConstructSecret(t *testing.T) {
 			input: types.SecretArgs{
 				GeneratorArgs: types.GeneratorArgs{
 					Name: "envSecret",
-					DataSources: types.DataSources{
+					KvPairSources: types.KvPairSources{
 						EnvSources: []string{"secret/app.env"},
 					},
 				},
@@ -96,7 +96,7 @@ func TestConstructSecret(t *testing.T) {
 			input: types.SecretArgs{
 				GeneratorArgs: types.GeneratorArgs{
 					Name: "fileSecret",
-					DataSources: types.DataSources{
+					KvPairSources: types.KvPairSources{
 						FileSources: []string{"secret/app-init.ini"},
 					},
 				},
@@ -109,7 +109,7 @@ func TestConstructSecret(t *testing.T) {
 			input: types.SecretArgs{
 				GeneratorArgs: types.GeneratorArgs{
 					Name: "literalSecret",
-					DataSources: types.DataSources{
+					KvPairSources: types.KvPairSources{
 						LiteralSources: []string{"a=x", "b=y"},
 					},
 				},
