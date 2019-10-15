@@ -377,7 +377,7 @@ func (kt *KustTarget) configureBuiltinPlugin(
 				err, "builtin %s marshal", bpt)
 		}
 	}
-	err = p.Config(kt.ldr, kt.rFactory, y)
+	err = p.Config(resmap.NewPluginHelpers(kt.ldr, kt.rFactory), y)
 	if err != nil {
 		return errors.Wrapf(err, "builtin %s config: %v", bpt, y)
 	}

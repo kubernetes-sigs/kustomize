@@ -4,7 +4,6 @@
 package main
 
 import (
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/yaml"
@@ -13,8 +12,7 @@ import (
 // A secret generator example that gets data
 // from a database (simulated by a hardcoded map).
 type plugin struct {
-	rf               *resmap.Factory
-	ldr              ifc.Loader
+	h                *resmap.PluginHelpers
 	types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 	// List of keys to use in database lookups
 	Keys []string `json:"keys,omitempty" yaml:"keys,omitempty"`
@@ -32,10 +30,8 @@ var database = map[string]string{
 	"SIMPSON":   "homer",
 }
 
-func (p *plugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, c []byte) error {
-	p.rf = rf
-	p.ldr = ldr
+func (p *plugin) Config(h *resmap.PluginHelpers, c []byte) error {
+	p.h = h
 	return yaml.Unmarshal(c, p)
 }
 
@@ -51,5 +47,5 @@ func (p *plugin) Generate() (resmap.ResMap, error) {
 				args.LiteralSources, k+"="+v)
 		}
 	}
-	return p.rf.FromSecretArgs(p.ldr, nil, args)
+	return p.h.ResmapFactory().FromSecretArgs(p.h.Loader(), nil, args)
 }

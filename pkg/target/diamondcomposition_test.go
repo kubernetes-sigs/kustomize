@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
-	"sigs.k8s.io/kustomize/v3/pkg/plugins/testenv"
+	"sigs.k8s.io/kustomize/v3/pluglib"
 )
 
 const patchAddProbe = `
@@ -340,7 +340,7 @@ patchesStrategicMerge:
 }
 
 func TestIssue1251_Plugins_ProdVsDev(t *testing.T) {
-	tc := testenv.NewEnvForTest(t).Set()
+	tc := pluglib.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -380,7 +380,7 @@ transformers:
 }
 
 func TestIssue1251_Plugins_Local(t *testing.T) {
-	tc := testenv.NewEnvForTest(t).Set()
+	tc := pluglib.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -430,7 +430,7 @@ jsonOp: '%s'
 
 // Remote in the sense that they are bundled in a different kustomization.
 func TestIssue1251_Plugins_Bundled(t *testing.T) {
-	tc := testenv.NewEnvForTest(t).Set()
+	tc := pluglib.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(

@@ -7,7 +7,6 @@ package main
 import (
 	"fmt"
 
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
@@ -27,7 +26,7 @@ type plugin struct {
 var KustomizePlugin plugin
 
 func (p *plugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
+	h *resmap.PluginHelpers, c []byte) (err error) {
 	p.Namespace = ""
 	p.FieldSpecs = nil
 	return yaml.Unmarshal(c, p)

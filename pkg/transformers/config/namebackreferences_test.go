@@ -18,8 +18,9 @@ package config
 
 import (
 	"reflect"
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"testing"
+
+	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 )
 
 func TestMergeAll(t *testing.T) {

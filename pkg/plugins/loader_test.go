@@ -6,10 +6,11 @@ package plugins_test
 import (
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/pluglib"
+
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 	. "sigs.k8s.io/kustomize/v3/pkg/plugins"
-	"sigs.k8s.io/kustomize/v3/pkg/plugins/testenv"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 )
@@ -42,7 +43,7 @@ port: "12345"
 )
 
 func TestLoader(t *testing.T) {
-	tc := testenv.NewEnvForTest(t).Set()
+	tc := pluglib.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(

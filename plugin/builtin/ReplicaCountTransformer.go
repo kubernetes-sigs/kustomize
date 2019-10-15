@@ -4,7 +4,6 @@ package builtin
 import (
 	"fmt"
 
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers"
@@ -21,7 +20,7 @@ type ReplicaCountTransformerPlugin struct {
 }
 
 func (p *ReplicaCountTransformerPlugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
+	h *resmap.PluginHelpers, c []byte) (err error) {
 
 	p.Replica = types.Replica{}
 	p.FieldSpecs = nil
@@ -29,7 +28,6 @@ func (p *ReplicaCountTransformerPlugin) Config(
 }
 
 func (p *ReplicaCountTransformerPlugin) Transform(m resmap.ResMap) error {
-
 	found := false
 	for i, replicaSpec := range p.FieldSpecs {
 		matcher := p.createMatcher(i)

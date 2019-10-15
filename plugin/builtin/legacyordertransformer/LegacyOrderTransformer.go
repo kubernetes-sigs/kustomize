@@ -8,7 +8,6 @@ import (
 	"sort"
 
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 )
@@ -25,7 +24,7 @@ var KustomizePlugin plugin
 
 // Nothing needed for configuration.
 func (p *plugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
+	h *resmap.PluginHelpers, c []byte) (err error) {
 	return nil
 }
 

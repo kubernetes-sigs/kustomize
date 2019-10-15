@@ -7,12 +7,13 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/pluglib"
+
 	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
-	"sigs.k8s.io/kustomize/v3/pkg/plugins/testenv"
 )
 
 func TestNamespaceTransformer1(t *testing.T) {
-	tc := testenv.NewEnvForTest(t).Set()
+	tc := pluglib.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -190,7 +191,7 @@ metadata:
 }
 
 func TestNamespaceTransformerClusterLevelKinds(t *testing.T) {
-	tc := testenv.NewEnvForTest(t).Set()
+	tc := pluglib.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -241,7 +242,7 @@ fieldSpecs:
 }
 
 func TestNamespaceTransformerObjectConflict(t *testing.T) {
-	tc := testenv.NewEnvForTest(t).Set()
+	tc := pluglib.NewEnvForTest(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(

@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"sigs.k8s.io/kustomize/v3/pkg/gvk"
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers"
@@ -32,7 +31,7 @@ var prefixSuffixFieldSpecsToSkip = []config.FieldSpec{
 }
 
 func (p *PrefixSuffixTransformerPlugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, c []byte) (err error) {
+	h *resmap.PluginHelpers, c []byte) (err error) {
 	p.Prefix = ""
 	p.Suffix = ""
 	p.FieldSpecs = nil

@@ -5,7 +5,6 @@ package main
 
 import (
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 	"sigs.k8s.io/kustomize/v3/plugin/builtin"
@@ -35,8 +34,7 @@ func (p *plugin) makePrefixSuffixPluginConfig() ([]byte, error) {
 	return yaml.Marshal(s)
 }
 
-func (p *plugin) Config(
-	ldr ifc.Loader, rf *resmap.Factory, _ []byte) error {
+func (p *plugin) Config(h *resmap.PluginHelpers, _ []byte) error {
 	// Ignore the incoming c, compute new config.
 	c, err := p.makePrefixSuffixPluginConfig()
 	if err != nil {
@@ -44,7 +42,7 @@ func (p *plugin) Config(
 			err, "dateprefixer makeconfig")
 	}
 	prefixer := builtin.NewPrefixSuffixTransformerPlugin()
-	err = prefixer.Config(ldr, rf, c)
+	err = prefixer.Config(h, c)
 	if err != nil {
 		return errors.Wrapf(
 			err, "prefixsuffix configure")
