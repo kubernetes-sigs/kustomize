@@ -204,8 +204,9 @@ func makeVarToNamepaceAndPath(
 	return types.Var{
 		Name: name,
 		ObjRef: types.Target{
-			Gvk:  gvk.Gvk{Version: "v1", Kind: "ConfigMap"},
-			Name: "environment",
+			Gvk:       gvk.Gvk{Version: "v1", Kind: "ConfigMap"},
+			Name:      "environment",
+			Namespace: namespace,
 		},
 		FieldRef: types.FieldSelector{FieldPath: path},
 	}
