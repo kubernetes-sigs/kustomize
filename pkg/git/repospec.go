@@ -200,7 +200,7 @@ func normalizeGitHostSpec(host string) string {
 		}
 	}
 	if strings.HasPrefix(s, "git::") {
-		host = strings.TrimLeft(s, "git::")
+		host = strings.TrimPrefix(s, "git::")
 	}
 	return host
 }
