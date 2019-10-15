@@ -29,7 +29,6 @@ import (
 	"sigs.k8s.io/kustomize/v3/pkg/git"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
-	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
 
 type testData struct {
@@ -65,7 +64,7 @@ func MakeFakeFs(td []testData) filesys.FileSystem {
 }
 
 func makeLoader() *fileLoader {
-	return NewFileLoaderAtRoot(validators.MakeFakeValidator(), MakeFakeFs(testCases))
+	return NewFileLoaderAtRoot(MakeFakeFs(testCases))
 
 }
 func TestLoaderLoad(t *testing.T) {
@@ -302,8 +301,7 @@ func TestRestrictionRootOnlyInRealLoader(t *testing.T) {
 
 	var l ifc.Loader
 
-	l = newLoaderOrDie(
-		RestrictionRootOnly, validators.MakeFakeValidator(), fSys, dir)
+	l = newLoaderOrDie(RestrictionRootOnly, fSys, dir)
 
 	l = doSanityChecksAndDropIntoBase(t, l)
 
@@ -336,8 +334,7 @@ func TestRestrictionNoneInRealLoader(t *testing.T) {
 
 	var l ifc.Loader
 
-	l = newLoaderOrDie(
-		RestrictionNone, validators.MakeFakeValidator(), fSys, dir)
+	l = newLoaderOrDie(RestrictionNone, fSys, dir)
 
 	l = doSanityChecksAndDropIntoBase(t, l)
 
@@ -400,7 +397,7 @@ whatever
 		t.Fatalf("unexpected err: %v\n", err)
 	}
 	l, err := newLoaderAtGitClone(
-		repoSpec, validators.MakeFakeValidator(), fSys, nil,
+		repoSpec, fSys, nil,
 		git.DoNothingCloner(filesys.ConfirmedDir(coRoot)))
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
@@ -443,7 +440,7 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 	// Establish that a local overlay can navigate
 	// to the local bases.
 	l1 = newLoaderOrDie(
-		RestrictionRootOnly, validators.MakeFakeValidator(), fSys, cloneRoot+"/foo/overlay")
+		RestrictionRootOnly, fSys, cloneRoot+"/foo/overlay")
 	if l1.Root() != cloneRoot+"/foo/overlay" {
 		t.Fatalf("unexpected root %s", l1.Root())
 	}
@@ -479,7 +476,7 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 		t.Fatalf("unexpected err: %v\n", err)
 	}
 	l1, err = newLoaderAtGitClone(
-		repoSpec, validators.MakeFakeValidator(), fSys, nil,
+		repoSpec, fSys, nil,
 		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
@@ -518,7 +515,7 @@ func TestLocalLoaderReferencingGitBase(t *testing.T) {
 		t.Fatalf("unexpected err:  %v\n", err)
 	}
 	l1 := newLoaderAtConfirmedDir(
-		RestrictionRootOnly, validators.MakeFakeValidator(), root, fSys, nil,
+		RestrictionRootOnly, root, fSys, nil,
 		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
 	if l1.Root() != topDir {
 		t.Fatalf("unexpected root %s", l1.Root())
@@ -544,7 +541,7 @@ func TestRepoDirectCycleDetection(t *testing.T) {
 		t.Fatalf("unexpected err: %v\n", err)
 	}
 	l1 := newLoaderAtConfirmedDir(
-		RestrictionRootOnly, validators.MakeFakeValidator(), root, fSys, nil,
+		RestrictionRootOnly, root, fSys, nil,
 		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
 	p1 := "github.com/someOrg/someRepo/foo"
 	rs1, err := git.NewRepoSpecFromUrl(p1)
@@ -573,7 +570,7 @@ func TestRepoIndirectCycleDetection(t *testing.T) {
 		t.Fatalf("unexpected err: %v", err)
 	}
 	l0 := newLoaderAtConfirmedDir(
-		RestrictionRootOnly, validators.MakeFakeValidator(), root, fSys, nil,
+		RestrictionRootOnly, root, fSys, nil,
 		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
 
 	p1 := "github.com/someOrg/someRepo1"

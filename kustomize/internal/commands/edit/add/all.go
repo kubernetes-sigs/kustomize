@@ -12,7 +12,7 @@ import (
 // NewCmdAdd returns an instance of 'add' subcommand.
 func NewCmdAdd(
 	fSys filesys.FileSystem,
-	ldr ifc.Loader,
+	ldr ifc.KvLoader,
 	kf ifc.KunstructuredFactory) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "add",

@@ -30,10 +30,10 @@ func NewLoader(
 }
 
 func (l *Loader) LoadGenerators(
-	ldr ifc.Loader, rm resmap.ResMap) ([]resmap.Generator, error) {
+	ldr ifc.Loader, v ifc.Validator, rm resmap.ResMap) ([]resmap.Generator, error) {
 	var result []resmap.Generator
 	for _, res := range rm.Resources() {
-		g, err := l.LoadGenerator(ldr, res)
+		g, err := l.LoadGenerator(ldr, v, res)
 		if err != nil {
 			return nil, err
 		}
@@ -43,8 +43,8 @@ func (l *Loader) LoadGenerators(
 }
 
 func (l *Loader) LoadGenerator(
-	ldr ifc.Loader, res *resource.Resource) (resmap.Generator, error) {
-	c, err := l.loadAndConfigurePlugin(ldr, res)
+	ldr ifc.Loader, v ifc.Validator, res *resource.Resource) (resmap.Generator, error) {
+	c, err := l.loadAndConfigurePlugin(ldr, v, res)
 	if err != nil {
 		return nil, err
 	}
@@ -56,10 +56,10 @@ func (l *Loader) LoadGenerator(
 }
 
 func (l *Loader) LoadTransformers(
-	ldr ifc.Loader, rm resmap.ResMap) ([]resmap.Transformer, error) {
+	ldr ifc.Loader, v ifc.Validator, rm resmap.ResMap) ([]resmap.Transformer, error) {
 	var result []resmap.Transformer
 	for _, res := range rm.Resources() {
-		t, err := l.LoadTransformer(ldr, res)
+		t, err := l.LoadTransformer(ldr, v, res)
 		if err != nil {
 			return nil, err
 		}
@@ -69,8 +69,8 @@ func (l *Loader) LoadTransformers(
 }
 
 func (l *Loader) LoadTransformer(
-	ldr ifc.Loader, res *resource.Resource) (resmap.Transformer, error) {
-	c, err := l.loadAndConfigurePlugin(ldr, res)
+	ldr ifc.Loader, v ifc.Validator, res *resource.Resource) (resmap.Transformer, error) {
+	c, err := l.loadAndConfigurePlugin(ldr, v, res)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func isBuiltinPlugin(res *resource.Resource) bool {
 }
 
 func (l *Loader) loadAndConfigurePlugin(
-	ldr ifc.Loader, res *resource.Resource) (c resmap.Configurable, err error) {
+	ldr ifc.Loader, v ifc.Validator, res *resource.Resource) (c resmap.Configurable, err error) {
 	if isBuiltinPlugin(res) {
 		// Instead of looking for and loading a .so file, just
 		// instantiate the plugin from a generated factory
@@ -123,7 +123,7 @@ func (l *Loader) loadAndConfigurePlugin(
 	if err != nil {
 		return nil, errors.Wrapf(err, "marshalling yaml from res %s", res.OrgId())
 	}
-	err = c.Config(resmap.NewPluginHelpers(ldr, l.rf), yaml)
+	err = c.Config(resmap.NewPluginHelpers(ldr, v, l.rf), yaml)
 	if err != nil {
 		return nil, errors.Wrapf(
 			err, "plugin %s fails configuration", res.OrgId())

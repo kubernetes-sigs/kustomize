@@ -4,6 +4,7 @@
 package main
 
 import (
+	"sigs.k8s.io/kustomize/v3/kv"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/yaml"
@@ -47,5 +48,6 @@ func (p *plugin) Generate() (resmap.ResMap, error) {
 				args.LiteralSources, k+"="+v)
 		}
 	}
-	return p.h.ResmapFactory().FromSecretArgs(p.h.Loader(), nil, args)
+	return p.h.ResmapFactory().FromSecretArgs(
+		kv.NewLoader(p.h.Loader(), p.h.Validator()), nil, args)
 }

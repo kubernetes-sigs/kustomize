@@ -20,6 +20,7 @@ import (
 	"sigs.k8s.io/kustomize/v3/pkg/target"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config/defaultconfig"
 	"sigs.k8s.io/kustomize/v3/pkg/types"
+	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
 
 // KustTestHarness helps test kustomization generation and transformation.
@@ -59,7 +60,8 @@ func NewKustTestHarnessFull(
 
 func (th *KustTestHarness) MakeKustTarget() *target.KustTarget {
 	kt, err := target.NewKustTarget(
-		th.ldr, th.rf, transformer.NewFactoryImpl(), th.pl)
+		th.ldr, validators.MakeFakeValidator(), th.rf,
+		transformer.NewFactoryImpl(), th.pl)
 	if err != nil {
 		th.t.Fatalf("Unexpected construction error %v", err)
 	}
@@ -113,7 +115,8 @@ func (th *KustTestHarness) LoadAndRunGenerator(
 	if err != nil {
 		th.t.Fatalf("Err: %v", err)
 	}
-	g, err := th.pl.LoadGenerator(th.ldr, res)
+	g, err := th.pl.LoadGenerator(
+		th.ldr, validators.MakeFakeValidator(), res)
 	if err != nil {
 		th.t.Fatalf("Err: %v", err)
 	}
@@ -154,7 +157,8 @@ func (th *KustTestHarness) RunTransformerFromResMap(
 	if err != nil {
 		th.t.Fatalf("Err: %v", err)
 	}
-	g, err := th.pl.LoadTransformer(th.ldr, transConfig)
+	g, err := th.pl.LoadTransformer(
+		th.ldr, validators.MakeFakeValidator(), transConfig)
 	if err != nil {
 		return nil, err
 	}

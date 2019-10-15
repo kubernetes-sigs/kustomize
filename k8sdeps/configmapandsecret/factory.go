@@ -10,14 +10,14 @@ import (
 
 // Factory makes ConfigMaps and Secrets.
 type Factory struct {
-	ldr     ifc.Loader
+	kvLdr   ifc.KvLoader
 	options *types.GeneratorOptions
 }
 
 // NewFactory returns a new factory that makes ConfigMaps and Secrets.
 func NewFactory(
-	ldr ifc.Loader, o *types.GeneratorOptions) *Factory {
-	return &Factory{ldr: ldr, options: o}
+	kvLdr ifc.KvLoader, o *types.GeneratorOptions) *Factory {
+	return &Factory{kvLdr: kvLdr, options: o}
 }
 
 const keyExistsErrorMsg = "cannot add key %s, another key by that name already exists: %v"
