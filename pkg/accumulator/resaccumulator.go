@@ -94,7 +94,36 @@ func (ra *ResAccumulator) MergeAccumulator(other *ResAccumulator) (err error) {
 	if err != nil {
 		return err
 	}
-	return ra.varSet.MergeSet(other.varSet)
+	err = ra.varSet.MergeSet(other.varSet)
+	if errs, ok := err.(types.MergeSetError); ok {
+		return ra.resolveVarConflicts(other, errs)
+	}
+	return nil
+}
+
+// resolveVarConflicts iterates over all variable name conflicts found while
+// merging VarSets from two ResAccumulator instances. Some apparent conflicts
+// can be ignored, such as variables that appear more than once but which
+// reference the same concrete value.
+func (ra *ResAccumulator) resolveVarConflicts(other *ResAccumulator, conflict types.MergeSetError) error {
+	var badVars []string
+	for _, mergeErr := range conflict.Errs {
+		incomingValue, ierr := ra.findVarValueFromResources(mergeErr.Incoming)
+		if ierr != nil {
+			return ierr
+		}
+		conflictValue, cerr := other.findVarValueFromResources(mergeErr.Conflict)
+		if cerr != nil {
+			return cerr
+		}
+		if incomingValue != conflictValue {
+			badVars = append(badVars, mergeErr.Incoming.Name)
+		}
+	}
+	if len(badVars) == 0 {
+		return nil
+	}
+	return fmt.Errorf("found conflicting variable(s) named: %s", strings.Join(badVars, ", "))
 }
 
 func (ra *ResAccumulator) findVarValueFromResources(v types.Var) (interface{}, error) {

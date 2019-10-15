@@ -65,7 +65,34 @@ type FieldSelector struct {
 	FieldPath string `json:"fieldPath,omitempty" yaml:"fieldPath,omitempty"`
 }
 
-// defaulting sets reference to field used by default.
+// VarMergeError annotates a variable merge conflict with a reference to the
+// variable that encountered the conflict. This is used at higher levels of the
+// API to determine if the conflict can be ignored (e.g. two sets of resources
+// using the same variable name are not in conflict if the concrete values they
+// reference are the same).
+type VarMergeError struct {
+	msg      string
+	Incoming Var
+	Conflict Var
+}
+
+func (vme VarMergeError) Error() string { return vme.msg }
+
+// MergeSetError contains the aggregation of all errors encountered while
+// trying to merge two VarSets.
+type MergeSetError struct {
+	Errs []VarMergeError
+}
+
+func (mse MergeSetError) Error() string {
+	var result []string
+	for _, err := range mse.Errs {
+		result = append(result, err.Error())
+	}
+	return strings.Join(result, "\n")
+}
+
+// Defaulting sets reference to field used by default.
 func (v *Var) Defaulting() {
 	if v.FieldRef.FieldPath == "" {
 		v.FieldRef.FieldPath = defaultFieldPath
@@ -117,10 +144,14 @@ func (vs *VarSet) Copy() VarSet {
 
 // MergeSet absorbs other vars with error on name collision.
 func (vs *VarSet) MergeSet(incoming VarSet) error {
+	var errs []VarMergeError
 	for _, incomingVar := range incoming.set {
-		if err := vs.Merge(incomingVar); err != nil {
-			return err
+		if mergeErr, ok := vs.Merge(incomingVar).(VarMergeError); ok {
+			errs = append(errs, mergeErr)
 		}
+	}
+	if len(errs) != 0 {
+		return MergeSetError{errs}
 	}
 	return nil
 }
@@ -140,8 +171,11 @@ func (vs *VarSet) MergeSlice(incoming []Var) error {
 // Empty fields in incoming Var is defaulted.
 func (vs *VarSet) Merge(v Var) error {
 	if vs.Contains(v) {
-		return fmt.Errorf(
-			"var '%s' already encountered", v.Name)
+		return VarMergeError{
+			msg:      fmt.Sprintf("var '%s' already encountered", v.Name),
+			Incoming: v,
+			Conflict: *vs.Get(v.Name),
+		}
 	}
 	v.Defaulting()
 	vs.set[v.Name] = v
