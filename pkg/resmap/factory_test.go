@@ -126,7 +126,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 				{
 					GeneratorArgs: types.GeneratorArgs{
 						Name: "envConfigMap",
-						DataSources: types.DataSources{
+						KvPairSources: types.KvPairSources{
 							EnvSources: []string{"app.env"},
 						},
 					},
@@ -152,7 +152,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 			input: []types.ConfigMapArgs{{
 				GeneratorArgs: types.GeneratorArgs{
 					Name: "fileConfigMap",
-					DataSources: types.DataSources{
+					KvPairSources: types.KvPairSources{
 						FileSources: []string{"app-init.ini"},
 					},
 				},
@@ -180,7 +180,7 @@ BAR=baz
 				{
 					GeneratorArgs: types.GeneratorArgs{
 						Name: "literalConfigMap",
-						DataSources: types.DataSources{
+						KvPairSources: types.KvPairSources{
 							LiteralSources: []string{"a=x", "b=y", "c=\"Good Morning\"", "d=\"false\""},
 						},
 					},
@@ -224,7 +224,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 		{
 			GeneratorArgs: types.GeneratorArgs{
 				Name: "apple",
-				DataSources: types.DataSources{
+				KvPairSources: types.KvPairSources{
 					LiteralSources: []string{
 						"DB_USERNAME=admin",
 						"DB_PASSWORD=somepw",

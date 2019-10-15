@@ -86,7 +86,7 @@ func TestConstructConfigMap(t *testing.T) {
 			input: types.ConfigMapArgs{
 				GeneratorArgs: types.GeneratorArgs{
 					Name: "envConfigMap",
-					DataSources: types.DataSources{
+					KvPairSources: types.KvPairSources{
 						EnvSources: []string{
 							filepath.Join("configmap", "app.env"),
 						},
@@ -101,7 +101,7 @@ func TestConstructConfigMap(t *testing.T) {
 			input: types.ConfigMapArgs{
 				GeneratorArgs: types.GeneratorArgs{
 					Name: "fileConfigMap",
-					DataSources: types.DataSources{
+					KvPairSources: types.KvPairSources{
 						FileSources: []string{
 							filepath.Join("configmap", "app-init.ini"),
 							filepath.Join("configmap", "app.bin"),
@@ -117,7 +117,7 @@ func TestConstructConfigMap(t *testing.T) {
 			input: types.ConfigMapArgs{
 				GeneratorArgs: types.GeneratorArgs{
 					Name: "literalConfigMap",
-					DataSources: types.DataSources{
+					KvPairSources: types.KvPairSources{
 						LiteralSources: []string{"a=x", "b=y", "c=\"Hello World\"", "d='true'"},
 					},
 				},

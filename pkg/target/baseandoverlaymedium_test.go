@@ -132,8 +132,8 @@ patchesStrategicMerge:
 - deployment/deployment.yaml
 configMapGenerator:
 - name: app-env
-  env: configmap/db.env
   envs:
+  - configmap/db.env
   - configmap/units.ini
   - configmap/food.ini
 - name: app-config
