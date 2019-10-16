@@ -6,17 +6,17 @@ package set
 import (
 	"errors"
 	"regexp"
+	"sigs.k8s.io/kustomize/v3/types"
 	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 	"sigs.k8s.io/kustomize/v3/filesys"
-	"sigs.k8s.io/kustomize/v3/pkg/image"
 )
 
 type setImageOptions struct {
-	imageMap map[string]image.Image
+	imageMap map[string]types.Image
 }
 
 var pattern = regexp.MustCompile("^(.*):([a-zA-Z0-9._-]*)$")
@@ -96,7 +96,7 @@ func (o *setImageOptions) Validate(args []string) error {
 		return errImageNoArgs
 	}
 
-	o.imageMap = make(map[string]image.Image)
+	o.imageMap = make(map[string]types.Image)
 
 	for _, arg := range args {
 
@@ -129,7 +129,7 @@ func (o *setImageOptions) RunSetImage(fSys filesys.FileSystem) error {
 		o.imageMap[im.Name] = im
 	}
 
-	var images []image.Image
+	var images []types.Image
 	for _, v := range o.imageMap {
 		images = append(images, v)
 	}
@@ -142,13 +142,13 @@ func (o *setImageOptions) RunSetImage(fSys filesys.FileSystem) error {
 	return mf.Write(m)
 }
 
-func parse(arg string) (image.Image, error) {
+func parse(arg string) (types.Image, error) {
 
 	// matches if there is an image name to overwrite
 	// <image>=<new-image><:|@><new-tag>
 	if s := strings.Split(arg, separator); len(s) == 2 {
 		p, err := parseOverwrite(s[1], true)
-		return image.Image{
+		return types.Image{
 			Name:    s[0],
 			NewName: p.name,
 			NewTag:  p.tag,
@@ -159,7 +159,7 @@ func parse(arg string) (image.Image, error) {
 	// matches only for <tag|digest> overwrites
 	// <image><:|@><new-tag>
 	p, err := parseOverwrite(arg, false)
-	return image.Image{
+	return types.Image{
 		Name:   p.name,
 		NewTag: p.tag,
 		Digest: p.digest,

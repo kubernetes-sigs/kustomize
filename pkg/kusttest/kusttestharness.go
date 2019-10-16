@@ -19,8 +19,8 @@ import (
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/target"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config/defaultconfig"
-	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
+	"sigs.k8s.io/kustomize/v3/types"
 )
 
 // KustTestHarness helps test kustomization generation and transformation.

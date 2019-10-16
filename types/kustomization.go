@@ -4,10 +4,6 @@
 // Package types holds struct definitions that should find a better home.
 package types
 
-import (
-	"sigs.k8s.io/kustomize/v3/pkg/image"
-)
-
 const (
 	KustomizationVersion = "kustomize.config.k8s.io/v1beta1"
 	KustomizationKind    = "Kustomization"
@@ -57,7 +53,7 @@ type Kustomization struct {
 	// Images is a list of (image name, new name, new tag or digest)
 	// for changing image names, tags or digests. This can also be achieved with a
 	// patch, but this operator is simpler to specify.
-	Images []image.Image `json:"images,omitempty" yaml:"images,omitempty"`
+	Images []Image `json:"images,omitempty" yaml:"images,omitempty"`
 
 	// Replicas is a list of {resourcename, count} that allows for simpler replica
 	// specification. This can also be done with a patch.
