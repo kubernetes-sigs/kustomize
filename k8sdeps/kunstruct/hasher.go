@@ -9,7 +9,7 @@ import (
 
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"sigs.k8s.io/kustomize/v3/pkg/hasher"
+	"sigs.k8s.io/kustomize/v3/hasher"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 )
 
