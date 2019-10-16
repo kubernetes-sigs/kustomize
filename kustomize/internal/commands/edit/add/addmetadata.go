@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/util"
 	"sigs.k8s.io/kustomize/v3/filesys"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
-	"sigs.k8s.io/kustomize/v3/pkg/types"
+	"sigs.k8s.io/kustomize/v3/types"
 )
 
 // kindOfAdd is the kind of metadata being added: label or annotation
