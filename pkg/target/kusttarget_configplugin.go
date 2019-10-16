@@ -4,11 +4,10 @@
 package target
 
 import (
-	"sigs.k8s.io/kustomize/v3/pkg/image"
 	"sigs.k8s.io/kustomize/v3/pkg/plugins"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
-	"sigs.k8s.io/kustomize/v3/pkg/types"
+	"sigs.k8s.io/kustomize/v3/types"
 )
 
 // Functions dedicated to configuring the builtin
@@ -261,7 +260,7 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, tc *config.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		var c struct {
-			ImageTag   image.Image
+			ImageTag   types.Image
 			FieldSpecs []config.FieldSpec
 		}
 		for _, args := range kt.kustomization.Images {

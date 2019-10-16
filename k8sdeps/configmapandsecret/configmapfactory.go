@@ -10,7 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
-	"sigs.k8s.io/kustomize/v3/pkg/types"
+	"sigs.k8s.io/kustomize/v3/types"
 )
 
 func makeFreshConfigMap(

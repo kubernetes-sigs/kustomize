@@ -22,7 +22,7 @@ import (
 
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
 	. "sigs.k8s.io/kustomize/v3/pkg/resource"
-	"sigs.k8s.io/kustomize/v3/pkg/types"
+	"sigs.k8s.io/kustomize/v3/types"
 )
 
 func TestSliceFromPatches(t *testing.T) {

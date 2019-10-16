@@ -14,7 +14,7 @@ import (
 	. "sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resmaptest"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
-	"sigs.k8s.io/kustomize/v3/pkg/types"
+	"sigs.k8s.io/kustomize/v3/types"
 )
 
 var rf = resource.NewFactory(

@@ -12,8 +12,8 @@ import (
 	"sigs.k8s.io/kustomize/v3/filesys"
 	"sigs.k8s.io/kustomize/v3/kv"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
-	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
+	"sigs.k8s.io/kustomize/v3/types"
 )
 
 func makeEnvSecret(name string) *corev1.Secret {

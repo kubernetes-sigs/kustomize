@@ -7,8 +7,8 @@ import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
-	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/kustomize/v3/plugin/builtin"
+	"sigs.k8s.io/kustomize/v3/types"
 	"sigs.k8s.io/yaml"
 )
 

@@ -4,9 +4,9 @@ package builtin
 import (
 	"fmt"
 	"regexp"
+	"sigs.k8s.io/kustomize/v3/types"
 	"strings"
 
-	"sigs.k8s.io/kustomize/v3/pkg/image"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
@@ -16,13 +16,13 @@ import (
 // Find matching image declarations and replace
 // the name, tag and/or digest.
 type ImageTagTransformerPlugin struct {
-	ImageTag   image.Image        `json:"imageTag,omitempty" yaml:"imageTag,omitempty"`
+	ImageTag   types.Image        `json:"imageTag,omitempty" yaml:"imageTag,omitempty"`
 	FieldSpecs []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
 func (p *ImageTagTransformerPlugin) Config(
 	h *resmap.PluginHelpers, c []byte) (err error) {
-	p.ImageTag = image.Image{}
+	p.ImageTag = types.Image{}
 	p.FieldSpecs = nil
 	return yaml.Unmarshal(c, p)
 }
