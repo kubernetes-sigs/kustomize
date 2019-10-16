@@ -16,8 +16,8 @@ import (
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
 	. "sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resmaptest"
-	"sigs.k8s.io/kustomize/v3/pkg/types"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
+	"sigs.k8s.io/kustomize/v3/types"
 )
 
 func TestFromFile(t *testing.T) {

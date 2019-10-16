@@ -1,9 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// Package image provides struct definitions and libraries
-// for image overwriting of names, tags and digest.
-package image
+package types
 
 // Image contains an image name, a new name, a new tag or digest,
 // which will replace the original name and tag.
