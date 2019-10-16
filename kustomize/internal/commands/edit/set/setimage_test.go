@@ -207,7 +207,7 @@ func TestSetImage(t *testing.T) {
 
 			// assert
 			if err != tc.expected.err {
-				t.Errorf("Unexpedted error from set image command. Actual: %v\nExpected: %v", err, tc.expected.err)
+				t.Errorf("Unexpected error from set image command. Actual: %v\nExpected: %v", err, tc.expected.err)
 				t.FailNow()
 			}
 
