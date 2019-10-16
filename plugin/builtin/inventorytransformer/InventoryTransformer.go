@@ -7,8 +7,8 @@ package main
 import (
 	"fmt"
 
+	"sigs.k8s.io/kustomize/v3/hasher"
 	"sigs.k8s.io/kustomize/v3/kv"
-	"sigs.k8s.io/kustomize/v3/pkg/hasher"
 	"sigs.k8s.io/kustomize/v3/pkg/inventory"
 	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
