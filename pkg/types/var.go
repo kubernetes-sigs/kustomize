@@ -1,18 +1,5 @@
-/*
-Copyright 2017 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package types
 
@@ -56,6 +43,22 @@ type Target struct {
 	gvk.Gvk    `json:",inline,omitempty" yaml:",inline,omitempty"`
 	Name       string `json:"name" yaml:"name"`
 	Namespace  string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+}
+
+// GVK returns the Gvk object in Target
+func (t *Target) GVK() gvk.Gvk {
+	if t.APIVersion == "" {
+		return t.Gvk
+	}
+	versions := strings.Split(t.APIVersion, "/")
+	if len(versions) == 2 {
+		t.Group = versions[0]
+		t.Version = versions[1]
+	}
+	if len(versions) == 1 {
+		t.Version = versions[0]
+	}
+	return t.Gvk
 }
 
 // FieldSelector contains the fieldPath to an object field.
@@ -102,7 +105,7 @@ func (vs *VarSet) AsSlice() []Var {
 		s[i] = v
 		i++
 	}
-	sort.Sort(ByName(s))
+	sort.Sort(byName(s))
 	return s
 }
 
@@ -202,25 +205,9 @@ func (vs *VarSet) Get(name string) *Var {
 	return nil
 }
 
-// GVK returns the Gvk object in Target
-func (t *Target) GVK() gvk.Gvk {
-	if t.APIVersion == "" {
-		return t.Gvk
-	}
-	versions := strings.Split(t.APIVersion, "/")
-	if len(versions) == 2 {
-		t.Group = versions[0]
-		t.Version = versions[1]
-	}
-	if len(versions) == 1 {
-		t.Version = versions[0]
-	}
-	return t.Gvk
-}
+// byName is a sort interface which sorts Vars by name alphabetically
+type byName []Var
 
-// ByName is a sort interface which sorts Vars by name alphabetically
-type ByName []Var
-
-func (v ByName) Len() int           { return len(v) }
-func (v ByName) Swap(i, j int)      { v[i], v[j] = v[j], v[i] }
-func (v ByName) Less(i, j int) bool { return v[i].Name < v[j].Name }
+func (v byName) Len() int           { return len(v) }
+func (v byName) Swap(i, j int)      { v[i], v[j] = v[j], v[i] }
+func (v byName) Less(i, j int) bool { return v[i].Name < v[j].Name }

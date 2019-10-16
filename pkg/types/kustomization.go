@@ -13,13 +13,6 @@ const (
 	KustomizationKind    = "Kustomization"
 )
 
-// TypeMeta partially copies apimachinery/pkg/apis/meta/v1.TypeMeta
-// No need for a direct dependence; the fields are stable.
-type TypeMeta struct {
-	Kind       string `json:"kind,omitempty" yaml:"kind,omitempty"`
-	APIVersion string `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty"`
-}
-
 // Kustomization holds the information needed to generate customized k8s api resources.
 type Kustomization struct {
 	TypeMeta `json:",inline" yaml:",inline"`
@@ -134,14 +127,6 @@ type Kustomization struct {
 	Inventory *Inventory `json:"inventory,omitempty" yaml:"inventory,omitempty"`
 }
 
-//go:generate stringer -type=GarbagePolicy
-type GarbagePolicy int
-
-const (
-	GarbageIgnore GarbagePolicy = iota + 1
-	GarbageCollect
-)
-
 // FixKustomizationPostUnmarshalling fixes things
 // like empty fields that should not be empty, or
 // moving content of deprecated fields to newer
@@ -168,71 +153,4 @@ func (k *Kustomization) EnforceFields() []string {
 		errs = append(errs, "kind should be "+KustomizationKind)
 	}
 	return errs
-}
-
-// PluginConfig holds plugin configuration.
-type PluginConfig struct {
-	// DirectoryPath is an absolute path to a
-	// directory containing kustomize plugins.
-	// This directory may contain subdirectories
-	// further categorizing plugins.
-	DirectoryPath string
-
-	// Enabled is true if plugins are enabled.
-	Enabled bool
-}
-
-type PluginType string
-
-func (p PluginType) IsUndefined() bool {
-	return p == PluginType("")
-}
-
-// KVSource represents a KV plugin backend.
-type KVSource struct {
-	PluginType PluginType `json:"pluginType,omitempty" yaml:"pluginType,omitempty"`
-	Name       string     `json:"name,omitempty" yaml:"name,omitempty"`
-	Args       []string   `json:"args,omitempty" yaml:"args,omitempty"`
-}
-
-type Inventory struct {
-	Type      string   `json:"type,omitempty" yaml:"type,omitempty"`
-	ConfigMap NameArgs `json:"configMap,omitempty" yaml:"configMap,omitempty"`
-}
-
-type NameArgs struct {
-	Name      string `json:"name,omitempty" yaml:"name,omitempty"`
-	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
-}
-
-// PatchJson6902 represents a json patch for an object
-// with format documented https://tools.ietf.org/html/rfc6902.
-type PatchJson6902 struct {
-	// PatchTarget refers to a Kubernetes object that the json patch will be
-	// applied to. It must refer to a Kubernetes resource under the
-	// purview of this kustomization. PatchTarget should use the
-	// raw name of the object (the name specified in its YAML,
-	// before addition of a namePrefix and a nameSuffix).
-	Target *PatchTarget `json:"target" yaml:"target"`
-
-	// relative file path for a json patch file inside a kustomization
-	Path string `json:"path,omitempty" yaml:"path,omitempty"`
-
-	// inline patch string
-	Patch string `json:"patch,omitempty" yaml:"patch,omitempty"`
-}
-
-// Patch represent either a Strategic Merge Patch or a JSON patch
-// and its targets.
-// The content of the patch can either be from a file
-// or from an inline string.
-type Patch struct {
-	// Path is a relative file path to the patch file.
-	Path string `json:"path,omitempty" yaml:"path,omitempty"`
-
-	// Patch is the content of a patch.
-	Patch string `json:"patch,omitempty" yaml:"patch,omitempty"`
-
-	// Target points to the resources that the patch is applied to
-	Target *Selector `json:"target,omitempty" yaml:"target,omitempty"`
 }
