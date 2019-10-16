@@ -70,7 +70,7 @@ Each day, when the crawler finds and indexes these structured documents,
 it should insert aggregate data to a separate index. This data could look like the
 following:
 
-```json
+```
 {
   "kind": "kustomization",
   "added_identifiers": [

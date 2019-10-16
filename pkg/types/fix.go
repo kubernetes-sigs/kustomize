@@ -22,18 +22,15 @@ func FixKustomizationPreUnmarshalling(data []byte) []byte {
 		pattern := regexp.MustCompile(oldname)
 		data = pattern.ReplaceAll(data, []byte(newname))
 	}
-
 	if useLegacyPatch(data) {
 		pattern := regexp.MustCompile("patches:")
 		data = pattern.ReplaceAll(data, []byte("patchesStrategicMerge:"))
 	}
-
 	return data
 }
 
 func useLegacyPatch(data []byte) bool {
 	found := false
-
 	var object map[string]interface{}
 	err := yaml.Unmarshal(data, &object)
 	if err != nil {
