@@ -1,18 +1,5 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 // Package kunstruct provides unstructured from api machinery and factory for creating unstructured
 package kunstruct
@@ -20,17 +7,15 @@ package kunstruct
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/evanphx/json-patch"
+
+	jsonpatch "github.com/evanphx/json-patch"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/kubernetes/scheme"
-
-	"k8s.io/apimachinery/pkg/labels"
-	"sigs.k8s.io/kustomize/v3/pkg/types"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 )
@@ -148,7 +133,7 @@ func (fs *UnstructAdapter) selectSubtree(path string) (map[string]interface{}, [
 func (fs *UnstructAdapter) GetFieldValue(path string) (interface{}, error) {
 	content, fields, found, err := fs.selectSubtree(path)
 	if !found || err != nil {
-		return nil, types.NoFieldError{Field: path}
+		return nil, noFieldError{Field: path}
 	}
 
 	s, found, err := unstructured.NestedFieldNoCopy(
@@ -156,14 +141,14 @@ func (fs *UnstructAdapter) GetFieldValue(path string) (interface{}, error) {
 	if found || err != nil {
 		return s, err
 	}
-	return nil, types.NoFieldError{Field: path}
+	return nil, noFieldError{Field: path}
 }
 
 // GetString returns value at the given fieldpath.
 func (fs *UnstructAdapter) GetString(path string) (string, error) {
 	content, fields, found, err := fs.selectSubtree(path)
 	if !found || err != nil {
-		return "", types.NoFieldError{Field: path}
+		return "", noFieldError{Field: path}
 	}
 
 	s, found, err := unstructured.NestedString(
@@ -171,14 +156,14 @@ func (fs *UnstructAdapter) GetString(path string) (string, error) {
 	if found || err != nil {
 		return s, err
 	}
-	return "", types.NoFieldError{Field: path}
+	return "", noFieldError{Field: path}
 }
 
 // GetStringSlice returns value at the given fieldpath.
 func (fs *UnstructAdapter) GetStringSlice(path string) ([]string, error) {
 	content, fields, found, err := fs.selectSubtree(path)
 	if !found || err != nil {
-		return []string{}, types.NoFieldError{Field: path}
+		return []string{}, noFieldError{Field: path}
 	}
 
 	s, found, err := unstructured.NestedStringSlice(
@@ -186,14 +171,14 @@ func (fs *UnstructAdapter) GetStringSlice(path string) ([]string, error) {
 	if found || err != nil {
 		return s, err
 	}
-	return []string{}, types.NoFieldError{Field: path}
+	return []string{}, noFieldError{Field: path}
 }
 
 // GetBool returns value at the given fieldpath.
 func (fs *UnstructAdapter) GetBool(path string) (bool, error) {
 	content, fields, found, err := fs.selectSubtree(path)
 	if !found || err != nil {
-		return false, types.NoFieldError{Field: path}
+		return false, noFieldError{Field: path}
 	}
 
 	s, found, err := unstructured.NestedBool(
@@ -201,7 +186,7 @@ func (fs *UnstructAdapter) GetBool(path string) (bool, error) {
 	if found || err != nil {
 		return s, err
 	}
-	return false, types.NoFieldError{Field: path}
+	return false, noFieldError{Field: path}
 }
 
 // GetFloat64 returns value at the given fieldpath.
@@ -216,14 +201,14 @@ func (fs *UnstructAdapter) GetFloat64(path string) (float64, error) {
 	if found || err != nil {
 		return s, err
 	}
-	return 0, types.NoFieldError{Field: path}
+	return 0, noFieldError{Field: path}
 }
 
 // GetInt64 returns value at the given fieldpath.
 func (fs *UnstructAdapter) GetInt64(path string) (int64, error) {
 	content, fields, found, err := fs.selectSubtree(path)
 	if !found || err != nil {
-		return 0, types.NoFieldError{Field: path}
+		return 0, noFieldError{Field: path}
 	}
 
 	s, found, err := unstructured.NestedInt64(
@@ -231,14 +216,14 @@ func (fs *UnstructAdapter) GetInt64(path string) (int64, error) {
 	if found || err != nil {
 		return s, err
 	}
-	return 0, types.NoFieldError{Field: path}
+	return 0, noFieldError{Field: path}
 }
 
 // GetSlice returns value at the given fieldpath.
 func (fs *UnstructAdapter) GetSlice(path string) ([]interface{}, error) {
 	content, fields, found, err := fs.selectSubtree(path)
 	if !found || err != nil {
-		return nil, types.NoFieldError{Field: path}
+		return nil, noFieldError{Field: path}
 	}
 
 	s, found, err := unstructured.NestedSlice(
@@ -246,14 +231,14 @@ func (fs *UnstructAdapter) GetSlice(path string) ([]interface{}, error) {
 	if found || err != nil {
 		return s, err
 	}
-	return nil, types.NoFieldError{Field: path}
+	return nil, noFieldError{Field: path}
 }
 
 // GetStringMap returns value at the given fieldpath.
 func (fs *UnstructAdapter) GetStringMap(path string) (map[string]string, error) {
 	content, fields, found, err := fs.selectSubtree(path)
 	if !found || err != nil {
-		return nil, types.NoFieldError{Field: path}
+		return nil, noFieldError{Field: path}
 	}
 
 	s, found, err := unstructured.NestedStringMap(
@@ -261,14 +246,14 @@ func (fs *UnstructAdapter) GetStringMap(path string) (map[string]string, error) 
 	if found || err != nil {
 		return s, err
 	}
-	return nil, types.NoFieldError{Field: path}
+	return nil, noFieldError{Field: path}
 }
 
 // GetMap returns value at the given fieldpath.
 func (fs *UnstructAdapter) GetMap(path string) (map[string]interface{}, error) {
 	content, fields, found, err := fs.selectSubtree(path)
 	if !found || err != nil {
-		return nil, types.NoFieldError{Field: path}
+		return nil, noFieldError{Field: path}
 	}
 
 	s, found, err := unstructured.NestedMap(
@@ -276,7 +261,7 @@ func (fs *UnstructAdapter) GetMap(path string) (map[string]interface{}, error) {
 	if found || err != nil {
 		return s, err
 	}
-	return nil, types.NoFieldError{Field: path}
+	return nil, noFieldError{Field: path}
 }
 
 func (fs *UnstructAdapter) MatchesLabelSelector(selector string) (bool, error) {
@@ -353,4 +338,13 @@ func toSchemaGvk(x gvk.Gvk) schema.GroupVersionKind {
 		Version: x.Version,
 		Kind:    x.Kind,
 	}
+}
+
+// noFieldError is returned when a field is expected, but missing.
+type noFieldError struct {
+	Field string
+}
+
+func (e noFieldError) Error() string {
+	return fmt.Sprintf("no field named '%s'", e.Field)
 }
