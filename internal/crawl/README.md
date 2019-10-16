@@ -352,7 +352,7 @@ patchesJson6902:
 ```
 
 the following flattened structure would look like:
-```json
+```
 {
   "identifiers": [
     "resources",
