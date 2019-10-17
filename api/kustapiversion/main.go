@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"os"
 
-	"sigs.k8s.io/kustomize/v3/provenance"
+	"sigs.k8s.io/kustomize/v3/api/provenance"
 )
 
 // TODO: delete this when we find a better way to generate release notes.

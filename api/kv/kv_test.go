@@ -7,10 +7,10 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/filesys"
+	"sigs.k8s.io/kustomize/v3/api/filesys"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	ldr "sigs.k8s.io/kustomize/v3/pkg/loader"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
-	"sigs.k8s.io/kustomize/v3/types"
 )
 
 func makeKvLoader(fSys filesys.FileSystem) *loader {

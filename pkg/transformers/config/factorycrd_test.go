@@ -18,10 +18,10 @@ package config
 
 import (
 	"reflect"
+	"sigs.k8s.io/kustomize/v3/api/resid"
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 )
 
@@ -157,21 +157,21 @@ func makeLoader(t *testing.T) ifc.Loader {
 func TestLoadCRDs(t *testing.T) {
 	nbrs := []NameBackReferences{
 		{
-			Gvk: gvk.Gvk{Kind: "Secret", Version: "v1"},
+			Gvk: resid.Gvk{Kind: "Secret", Version: "v1"},
 			FieldSpecs: []FieldSpec{
 				{
 					CreateIfNotPresent: false,
-					Gvk:                gvk.Gvk{Kind: "MyKind"},
+					Gvk:                resid.Gvk{Kind: "MyKind"},
 					Path:               "spec/secretRef/name",
 				},
 			},
 		},
 		{
-			Gvk: gvk.Gvk{Kind: "Bee", Version: "v1beta1"},
+			Gvk: resid.Gvk{Kind: "Bee", Version: "v1beta1"},
 			FieldSpecs: []FieldSpec{
 				{
 					CreateIfNotPresent: false,
-					Gvk:                gvk.Gvk{Kind: "MyKind"},
+					Gvk:                resid.Gvk{Kind: "MyKind"},
 					Path:               "spec/beeRef/name",
 				},
 			},

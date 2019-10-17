@@ -7,8 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
-	"sigs.k8s.io/kustomize/v3/pluglib"
+	"sigs.k8s.io/kustomize/v3/api/kusttest"
 )
 
 func writeDeployment(th *kusttest_test.KustTestHarness, path string) {
@@ -50,7 +49,7 @@ metadata:
 }
 
 func TestOrderedTransformers(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -59,7 +58,7 @@ func TestOrderedTransformers(t *testing.T) {
 	tc.BuildGoPlugin(
 		"someteam.example.com", "v1", "DatePrefixer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 	th.WriteK("/app", `
 resources:
 - deployment.yaml
@@ -96,7 +95,7 @@ spec:
 }
 
 func TestPluginsNotEnabled(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -119,13 +118,13 @@ transformers:
 }
 
 func TestSedTransformer(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
 		"someteam.example.com", "v1", "SedTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 	th.WriteK("/app", `
 resources:
 - configmap.yaml
@@ -187,7 +186,7 @@ metadata:
 }
 
 func TestTransformedTransformers(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -196,7 +195,7 @@ func TestTransformedTransformers(t *testing.T) {
 	tc.BuildGoPlugin(
 		"someteam.example.com", "v1", "DatePrefixer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app/overlay")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app/overlay")
 
 	th.WriteK("/app/base", `
 resources:

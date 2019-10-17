@@ -10,14 +10,14 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 	. "sigs.k8s.io/kustomize/v3/pkg/accumulator"
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resmaptest"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
-	"sigs.k8s.io/kustomize/v3/types"
 )
 
 func makeResAccumulator(t *testing.T) (*ResAccumulator, *resource.Factory) {
@@ -75,13 +75,13 @@ func TestResolveVarsHappy(t *testing.T) {
 		{
 			Name: "SERVICE_ONE",
 			ObjRef: types.Target{
-				Gvk:  gvk.Gvk{Version: "v1", Kind: "Service"},
+				Gvk:  resid.Gvk{Version: "v1", Kind: "Service"},
 				Name: "backendOne"},
 		},
 		{
 			Name: "SERVICE_TWO",
 			ObjRef: types.Target{
-				Gvk:  gvk.Gvk{Version: "v1", Kind: "Service"},
+				Gvk:  resid.Gvk{Version: "v1", Kind: "Service"},
 				Name: "backendTwo"},
 		},
 	})
@@ -104,13 +104,13 @@ func TestResolveVarsOneUnused(t *testing.T) {
 		{
 			Name: "SERVICE_ONE",
 			ObjRef: types.Target{
-				Gvk:  gvk.Gvk{Version: "v1", Kind: "Service"},
+				Gvk:  resid.Gvk{Version: "v1", Kind: "Service"},
 				Name: "backendOne"},
 		},
 		{
 			Name: "SERVICE_UNUSED",
 			ObjRef: types.Target{
-				Gvk:  gvk.Gvk{Version: "v1", Kind: "Service"},
+				Gvk:  resid.Gvk{Version: "v1", Kind: "Service"},
 				Name: "backendTwo"},
 		},
 	})
@@ -165,7 +165,7 @@ func TestResolveVarsVarNeedsDisambiguation(t *testing.T) {
 		{
 			Name: "SERVICE_ONE",
 			ObjRef: types.Target{
-				Gvk:  gvk.Gvk{Version: "v1", Kind: "Service"},
+				Gvk:  resid.Gvk{Version: "v1", Kind: "Service"},
 				Name: "backendOne",
 			},
 		},
@@ -204,7 +204,7 @@ func makeVarToNamepaceAndPath(
 	return types.Var{
 		Name: name,
 		ObjRef: types.Target{
-			Gvk:       gvk.Gvk{Version: "v1", Kind: "ConfigMap"},
+			Gvk:       resid.Gvk{Version: "v1", Kind: "ConfigMap"},
 			Name:      "environment",
 			Namespace: namespace,
 		},
@@ -266,7 +266,7 @@ func TestResolveVarsGoodResIdBadField(t *testing.T) {
 		{
 			Name: "SERVICE_ONE",
 			ObjRef: types.Target{
-				Gvk:  gvk.Gvk{Version: "v1", Kind: "Service"},
+				Gvk:  resid.Gvk{Version: "v1", Kind: "Service"},
 				Name: "backendOne"},
 			FieldRef: types.FieldSelector{FieldPath: "nope_nope_nope"},
 		},
@@ -291,7 +291,7 @@ func TestResolveVarsUnmappableVar(t *testing.T) {
 		{
 			Name: "SERVICE_THREE",
 			ObjRef: types.Target{
-				Gvk:  gvk.Gvk{Version: "v1", Kind: "Service"},
+				Gvk:  resid.Gvk{Version: "v1", Kind: "Service"},
 				Name: "doesNotExist"},
 		},
 	})
@@ -315,7 +315,7 @@ func TestResolveVarsWithNoambiguation(t *testing.T) {
 		{
 			Name: "SERVICE_ONE",
 			ObjRef: types.Target{
-				Gvk:  gvk.Gvk{Version: "v1", Kind: "Service"},
+				Gvk:  resid.Gvk{Version: "v1", Kind: "Service"},
 				Name: "backendOne",
 			},
 		},
@@ -370,7 +370,7 @@ func TestResolveVarsWithNoambiguation(t *testing.T) {
 		{
 			Name: "SUB_SERVICE_ONE",
 			ObjRef: types.Target{
-				Gvk:  gvk.Gvk{Version: "v1", Kind: "Service"},
+				Gvk:  resid.Gvk{Version: "v1", Kind: "Service"},
 				Name: "backendOne",
 			},
 		},

@@ -7,8 +7,8 @@ import (
 	"bytes"
 	"text/template"
 
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/types"
 	"sigs.k8s.io/yaml"
 )
 

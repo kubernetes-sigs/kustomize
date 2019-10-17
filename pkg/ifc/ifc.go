@@ -5,8 +5,8 @@
 package ifc
 
 import (
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
-	"sigs.k8s.io/kustomize/v3/types"
+	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/api/types"
 )
 
 // Validator provides functions to validate annotations and labels
@@ -55,8 +55,8 @@ type Kunstructured interface {
 	GetMap(path string) (map[string]interface{}, error)
 	MarshalJSON() ([]byte, error)
 	UnmarshalJSON([]byte) error
-	GetGvk() gvk.Gvk
-	SetGvk(gvk.Gvk)
+	GetGvk() resid.Gvk
+	SetGvk(resid.Gvk)
 	GetKind() string
 	GetName() string
 	SetName(string)

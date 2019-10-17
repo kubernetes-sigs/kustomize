@@ -1,11 +1,13 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package filesys
+package filesys_test
 
 import (
 	"path/filepath"
 	"testing"
+
+	. "sigs.k8s.io/kustomize/v3/api/filesys"
 )
 
 func TestJoin(t *testing.T) {
@@ -27,7 +29,8 @@ func TestJoin(t *testing.T) {
 }
 
 func TestHasPrefix_Slash(t *testing.T) {
-	d, f, err := MakeFsInMemory().CleanedAbs("/")
+	fSys := MakeFsInMemory()
+	d, f, err := fSys.CleanedAbs("/")
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}

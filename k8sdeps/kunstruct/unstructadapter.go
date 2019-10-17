@@ -16,7 +16,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/kubernetes/scheme"
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
+	"sigs.k8s.io/kustomize/v3/api/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 )
 
@@ -45,9 +45,9 @@ func NewKunstructuredFromObject(obj runtime.Object) (ifc.Kunstructured, error) {
 }
 
 // GetGvk returns the Gvk name of the object.
-func (fs *UnstructAdapter) GetGvk() gvk.Gvk {
+func (fs *UnstructAdapter) GetGvk() resid.Gvk {
 	x := fs.GroupVersionKind()
-	return gvk.Gvk{
+	return resid.Gvk{
 		Group:   x.Group,
 		Version: x.Version,
 		Kind:    x.Kind,
@@ -55,7 +55,7 @@ func (fs *UnstructAdapter) GetGvk() gvk.Gvk {
 }
 
 // SetGvk set the Gvk of the object to the input Gvk
-func (fs *UnstructAdapter) SetGvk(g gvk.Gvk) {
+func (fs *UnstructAdapter) SetGvk(g resid.Gvk) {
 	fs.SetGroupVersionKind(toSchemaGvk(g))
 }
 
@@ -332,7 +332,7 @@ func (fs *UnstructAdapter) Patch(patch ifc.Kunstructured) error {
 }
 
 // toSchemaGvk converts to a schema.GroupVersionKind.
-func toSchemaGvk(x gvk.Gvk) schema.GroupVersionKind {
+func toSchemaGvk(x resid.Gvk) schema.GroupVersionKind {
 	return schema.GroupVersionKind{
 		Group:   x.Group,
 		Version: x.Version,

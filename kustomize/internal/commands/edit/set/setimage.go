@@ -6,13 +6,13 @@ package set
 import (
 	"errors"
 	"regexp"
-	"sigs.k8s.io/kustomize/v3/types"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
-	"sigs.k8s.io/kustomize/v3/filesys"
+	"sigs.k8s.io/kustomize/v3/api/filesys"
 )
 
 type setImageOptions struct {

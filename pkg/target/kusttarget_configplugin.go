@@ -4,10 +4,10 @@
 package target
 
 import (
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/plugins"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
-	"sigs.k8s.io/kustomize/v3/types"
 )
 
 // Functions dedicated to configuring the builtin

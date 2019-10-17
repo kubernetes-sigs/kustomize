@@ -4,6 +4,7 @@
 package plugins_test
 
 import (
+	"sigs.k8s.io/kustomize/v3/api/kusttest"
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
@@ -12,7 +13,6 @@ import (
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
-	"sigs.k8s.io/kustomize/v3/pluglib"
 )
 
 const (
@@ -43,7 +43,7 @@ port: "12345"
 )
 
 func TestLoader(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(

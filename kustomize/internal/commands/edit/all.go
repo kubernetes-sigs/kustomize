@@ -9,8 +9,8 @@ import (
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/fix"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/remove"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/set"
-	"sigs.k8s.io/kustomize/v3/filesys"
-	"sigs.k8s.io/kustomize/v3/kv"
+	"sigs.k8s.io/kustomize/v3/api/filesys"
+	"sigs.k8s.io/kustomize/v3/api/kv"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
 )

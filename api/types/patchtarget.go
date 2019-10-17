@@ -3,11 +3,13 @@
 
 package types
 
-import "sigs.k8s.io/kustomize/v3/pkg/gvk"
+import (
+	"sigs.k8s.io/kustomize/v3/api/resid"
+)
 
 // PatchTarget represents the kubernetes object that the patch is applied to
 type PatchTarget struct {
-	gvk.Gvk   `json:",inline,omitempty" yaml:",inline,omitempty"`
+	resid.Gvk `json:",inline,omitempty" yaml:",inline,omitempty"`
 	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 	Name      string `json:"name" yaml:"name"`
 }

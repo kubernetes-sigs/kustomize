@@ -6,10 +6,10 @@ package transformers
 import (
 	"fmt"
 	"log"
+	"sigs.k8s.io/kustomize/v3/api/resid"
 
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 )
@@ -115,7 +115,7 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 func (o *nameReferenceTransformer) selectReferral(
 	oldName string,
 	referrer *resource.Resource,
-	target gvk.Gvk,
+	target resid.Gvk,
 	referralCandidates resmap.ResMap,
 	referralCandidateSubset []*resource.Resource) (interface{}, interface{}, error) {
 
@@ -146,7 +146,7 @@ func (o *nameReferenceTransformer) selectReferral(
 func (o *nameReferenceTransformer) getSimpleNameField(
 	oldName string,
 	referrer *resource.Resource,
-	target gvk.Gvk,
+	target resid.Gvk,
 	referralCandidates resmap.ResMap,
 	referralCandidateSubset []*resource.Resource) (interface{}, error) {
 
@@ -161,7 +161,7 @@ func (o *nameReferenceTransformer) getSimpleNameField(
 func (o *nameReferenceTransformer) getNameAndNsStruct(
 	inMap map[string]interface{},
 	referrer *resource.Resource,
-	target gvk.Gvk,
+	target resid.Gvk,
 	referralCandidates resmap.ResMap) (interface{}, error) {
 
 	// Example:
@@ -209,7 +209,7 @@ func (o *nameReferenceTransformer) getNameAndNsStruct(
 
 func (o *nameReferenceTransformer) getNewNameFunc(
 	referrer *resource.Resource,
-	target gvk.Gvk,
+	target resid.Gvk,
 	referralCandidates resmap.ResMap) func(in interface{}) (interface{}, error) {
 	return func(in interface{}) (interface{}, error) {
 		switch in.(type) {

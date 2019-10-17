@@ -5,18 +5,16 @@ package resid
 
 import (
 	"testing"
-
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 )
 
-var stringTests = []struct {
+var resIdStringTests = []struct {
 	x ResId
 	s string
 }{
 	{
 		ResId{
 			Namespace: "ns",
-			Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+			Gvk:       Gvk{Group: "g", Version: "v", Kind: "k"},
 			Name:      "nm",
 		},
 		"g_v_k|ns|nm",
@@ -24,7 +22,7 @@ var stringTests = []struct {
 	{
 		ResId{
 			Namespace: "ns",
-			Gvk:       gvk.Gvk{Version: "v", Kind: "k"},
+			Gvk:       Gvk{Version: "v", Kind: "k"},
 			Name:      "nm",
 		},
 		"~G_v_k|ns|nm",
@@ -32,7 +30,7 @@ var stringTests = []struct {
 	{
 		ResId{
 			Namespace: "ns",
-			Gvk:       gvk.Gvk{Kind: "k"},
+			Gvk:       Gvk{Kind: "k"},
 			Name:      "nm",
 		},
 		"~G_~V_k|ns|nm",
@@ -40,34 +38,34 @@ var stringTests = []struct {
 	{
 		ResId{
 			Namespace: "ns",
-			Gvk:       gvk.Gvk{},
+			Gvk:       Gvk{},
 			Name:      "nm",
 		},
 		"~G_~V_~K|ns|nm",
 	},
 	{
 		ResId{
-			Gvk:  gvk.Gvk{},
+			Gvk:  Gvk{},
 			Name: "nm",
 		},
 		"~G_~V_~K|~X|nm",
 	},
 	{
 		ResId{
-			Gvk:  gvk.Gvk{},
+			Gvk:  Gvk{},
 			Name: "nm",
 		},
 		"~G_~V_~K|~X|nm",
 	},
 	{
 		ResId{
-			Gvk: gvk.Gvk{},
+			Gvk: Gvk{},
 		},
 		"~G_~V_~K|~X|~N",
 	},
 	{
 		ResId{
-			Gvk: gvk.Gvk{},
+			Gvk: Gvk{},
 		},
 		"~G_~V_~K|~X|~N",
 	},
@@ -77,8 +75,8 @@ var stringTests = []struct {
 	},
 }
 
-func TestString(t *testing.T) {
-	for _, hey := range stringTests {
+func TestResIdString(t *testing.T) {
+	for _, hey := range resIdStringTests {
 		if hey.x.String() != hey.s {
 			t.Fatalf("Actual: %v,  Expected: '%s'", hey.x, hey.s)
 		}
@@ -92,7 +90,7 @@ var gvknStringTests = []struct {
 	{
 		ResId{
 			Namespace: "ns",
-			Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+			Gvk:       Gvk{Group: "g", Version: "v", Kind: "k"},
 			Name:      "nm",
 		},
 		"g_v_k|nm",
@@ -100,7 +98,7 @@ var gvknStringTests = []struct {
 	{
 		ResId{
 			Namespace: "ns",
-			Gvk:       gvk.Gvk{Version: "v", Kind: "k"},
+			Gvk:       Gvk{Version: "v", Kind: "k"},
 			Name:      "nm",
 		},
 		"~G_v_k|nm",
@@ -108,7 +106,7 @@ var gvknStringTests = []struct {
 	{
 		ResId{
 			Namespace: "ns",
-			Gvk:       gvk.Gvk{Kind: "k"},
+			Gvk:       Gvk{Kind: "k"},
 			Name:      "nm",
 		},
 		"~G_~V_k|nm",
@@ -116,34 +114,34 @@ var gvknStringTests = []struct {
 	{
 		ResId{
 			Namespace: "ns",
-			Gvk:       gvk.Gvk{},
+			Gvk:       Gvk{},
 			Name:      "nm",
 		},
 		"~G_~V_~K|nm",
 	},
 	{
 		ResId{
-			Gvk:  gvk.Gvk{},
+			Gvk:  Gvk{},
 			Name: "nm",
 		},
 		"~G_~V_~K|nm",
 	},
 	{
 		ResId{
-			Gvk:  gvk.Gvk{},
+			Gvk:  Gvk{},
 			Name: "nm",
 		},
 		"~G_~V_~K|nm",
 	},
 	{
 		ResId{
-			Gvk: gvk.Gvk{},
+			Gvk: Gvk{},
 		},
 		"~G_~V_~K|",
 	},
 	{
 		ResId{
-			Gvk: gvk.Gvk{},
+			Gvk: Gvk{},
 		},
 		"~G_~V_~K|",
 	},
@@ -161,7 +159,7 @@ func TestGvknString(t *testing.T) {
 	}
 }
 
-func TestEquals(t *testing.T) {
+func TestResIdEquals(t *testing.T) {
 
 	var GvknEqualsTest = []struct {
 		id1        ResId
@@ -173,12 +171,12 @@ func TestEquals(t *testing.T) {
 		{
 			id1: ResId{
 				Namespace: "X",
-				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Gvk:       Gvk{Group: "g", Version: "v", Kind: "k"},
 				Name:      "nm",
 			},
 			id2: ResId{
 				Namespace: "X",
-				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Gvk:       Gvk{Group: "g", Version: "v", Kind: "k"},
 				Name:      "nm",
 			},
 			gVknResult: true,
@@ -188,12 +186,12 @@ func TestEquals(t *testing.T) {
 		{
 			id1: ResId{
 				Namespace: "X",
-				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Gvk:       Gvk{Group: "g", Version: "v", Kind: "k"},
 				Name:      "nm",
 			},
 			id2: ResId{
 				Namespace: "Z",
-				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Gvk:       Gvk{Group: "g", Version: "v", Kind: "k"},
 				Name:      "nm",
 			},
 			gVknResult: true,
@@ -203,11 +201,11 @@ func TestEquals(t *testing.T) {
 		{
 			id1: ResId{
 				Namespace: "X",
-				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Gvk:       Gvk{Group: "g", Version: "v", Kind: "k"},
 				Name:      "nm",
 			},
 			id2: ResId{
-				Gvk:  gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Gvk:  Gvk{Group: "g", Version: "v", Kind: "k"},
 				Name: "nm",
 			},
 			gVknResult: true,
@@ -217,12 +215,12 @@ func TestEquals(t *testing.T) {
 		{
 			id1: ResId{
 				Namespace: "X",
-				Gvk:       gvk.Gvk{Version: "v", Kind: "k"},
+				Gvk:       Gvk{Version: "v", Kind: "k"},
 				Name:      "nm",
 			},
 			id2: ResId{
 				Namespace: "Z",
-				Gvk:       gvk.Gvk{Version: "v", Kind: "k"},
+				Gvk:       Gvk{Version: "v", Kind: "k"},
 				Name:      "nm",
 			},
 			gVknResult: true,
@@ -232,12 +230,12 @@ func TestEquals(t *testing.T) {
 		{
 			id1: ResId{
 				Namespace: "X",
-				Gvk:       gvk.Gvk{Kind: "k"},
+				Gvk:       Gvk{Kind: "k"},
 				Name:      "nm",
 			},
 			id2: ResId{
 				Namespace: "Z",
-				Gvk:       gvk.Gvk{Kind: "k"},
+				Gvk:       Gvk{Kind: "k"},
 				Name:      "nm",
 			},
 			gVknResult: true,
@@ -246,11 +244,11 @@ func TestEquals(t *testing.T) {
 		},
 		{
 			id1: ResId{
-				Gvk:  gvk.Gvk{Kind: "k"},
+				Gvk:  Gvk{Kind: "k"},
 				Name: "nm",
 			},
 			id2: ResId{
-				Gvk:  gvk.Gvk{Kind: "k"},
+				Gvk:  Gvk{Kind: "k"},
 				Name: "nm2",
 			},
 			gVknResult: false,
@@ -259,11 +257,11 @@ func TestEquals(t *testing.T) {
 		},
 		{
 			id1: ResId{
-				Gvk:  gvk.Gvk{Kind: "k"},
+				Gvk:  Gvk{Kind: "k"},
 				Name: "nm",
 			},
 			id2: ResId{
-				Gvk:  gvk.Gvk{Kind: "Node"},
+				Gvk:  Gvk{Kind: "Node"},
 				Name: "nm",
 			},
 			gVknResult: false,
@@ -272,11 +270,11 @@ func TestEquals(t *testing.T) {
 		},
 		{
 			id1: ResId{
-				Gvk:  gvk.Gvk{Kind: "Node"},
+				Gvk:  Gvk{Kind: "Node"},
 				Name: "nm1",
 			},
 			id2: ResId{
-				Gvk:  gvk.Gvk{Kind: "Node"},
+				Gvk:  Gvk{Kind: "Node"},
 				Name: "nm2",
 			},
 			gVknResult: false,
@@ -286,11 +284,11 @@ func TestEquals(t *testing.T) {
 		{
 			id1: ResId{
 				Namespace: "default",
-				Gvk:       gvk.Gvk{Kind: "k"},
+				Gvk:       Gvk{Kind: "k"},
 				Name:      "nm1",
 			},
 			id2: ResId{
-				Gvk:  gvk.Gvk{Kind: "k"},
+				Gvk:  Gvk{Kind: "k"},
 				Name: "nm2",
 			},
 			gVknResult: false,
@@ -331,34 +329,34 @@ func TestEquals(t *testing.T) {
 var ids = []ResId{
 	{
 		Namespace: "ns",
-		Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+		Gvk:       Gvk{Group: "g", Version: "v", Kind: "k"},
 		Name:      "nm",
 	},
 	{
 		Namespace: "ns",
-		Gvk:       gvk.Gvk{Version: "v", Kind: "k"},
+		Gvk:       Gvk{Version: "v", Kind: "k"},
 		Name:      "nm",
 	},
 	{
 		Namespace: "ns",
-		Gvk:       gvk.Gvk{Kind: "k"},
+		Gvk:       Gvk{Kind: "k"},
 		Name:      "nm",
 	},
 	{
 		Namespace: "ns",
-		Gvk:       gvk.Gvk{},
+		Gvk:       Gvk{},
 		Name:      "nm",
 	},
 	{
-		Gvk:  gvk.Gvk{},
+		Gvk:  Gvk{},
 		Name: "nm",
 	},
 	{
-		Gvk:  gvk.Gvk{},
+		Gvk:  Gvk{},
 		Name: "nm",
 	},
 	{
-		Gvk: gvk.Gvk{},
+		Gvk: Gvk{},
 	},
 }
 
@@ -378,7 +376,7 @@ func TestEffectiveNamespace(t *testing.T) {
 	}{
 		{
 			id: ResId{
-				Gvk:  gvk.Gvk{Group: "g", Version: "v", Kind: "Node"},
+				Gvk:  Gvk{Group: "g", Version: "v", Kind: "Node"},
 				Name: "nm",
 			},
 			expected: TotallyNotANamespace,
@@ -386,7 +384,7 @@ func TestEffectiveNamespace(t *testing.T) {
 		{
 			id: ResId{
 				Namespace: "foo",
-				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "Node"},
+				Gvk:       Gvk{Group: "g", Version: "v", Kind: "Node"},
 				Name:      "nm",
 			},
 			expected: TotallyNotANamespace,
@@ -394,7 +392,7 @@ func TestEffectiveNamespace(t *testing.T) {
 		{
 			id: ResId{
 				Namespace: "foo",
-				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Gvk:       Gvk{Group: "g", Version: "v", Kind: "k"},
 				Name:      "nm",
 			},
 			expected: "foo",
@@ -402,14 +400,14 @@ func TestEffectiveNamespace(t *testing.T) {
 		{
 			id: ResId{
 				Namespace: "",
-				Gvk:       gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Gvk:       Gvk{Group: "g", Version: "v", Kind: "k"},
 				Name:      "nm",
 			},
 			expected: DefaultNamespace,
 		},
 		{
 			id: ResId{
-				Gvk:  gvk.Gvk{Group: "g", Version: "v", Kind: "k"},
+				Gvk:  Gvk{Group: "g", Version: "v", Kind: "k"},
 				Name: "nm",
 			},
 			expected: DefaultNamespace,

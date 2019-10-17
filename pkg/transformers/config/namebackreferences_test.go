@@ -18,22 +18,21 @@ package config
 
 import (
 	"reflect"
+	"sigs.k8s.io/kustomize/v3/api/resid"
 	"testing"
-
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 )
 
 func TestMergeAll(t *testing.T) {
 	fsSlice1 := []FieldSpec{
 		{
-			Gvk: gvk.Gvk{
+			Gvk: resid.Gvk{
 				Kind: "Pod",
 			},
 			Path:               "path/to/a/name",
 			CreateIfNotPresent: false,
 		},
 		{
-			Gvk: gvk.Gvk{
+			Gvk: resid.Gvk{
 				Kind: "Deployment",
 			},
 			Path:               "another/path/to/some/name",
@@ -42,14 +41,14 @@ func TestMergeAll(t *testing.T) {
 	}
 	fsSlice2 := []FieldSpec{
 		{
-			Gvk: gvk.Gvk{
+			Gvk: resid.Gvk{
 				Kind: "Job",
 			},
 			Path:               "morepath/to/name",
 			CreateIfNotPresent: false,
 		},
 		{
-			Gvk: gvk.Gvk{
+			Gvk: resid.Gvk{
 				Kind: "StatefulSet",
 			},
 			Path:               "yet/another/path/to/a/name",
@@ -59,13 +58,13 @@ func TestMergeAll(t *testing.T) {
 
 	nbrsSlice1 := nbrSlice{
 		{
-			Gvk: gvk.Gvk{
+			Gvk: resid.Gvk{
 				Kind: "ConfigMap",
 			},
 			FieldSpecs: fsSlice1,
 		},
 		{
-			Gvk: gvk.Gvk{
+			Gvk: resid.Gvk{
 				Kind: "Secret",
 			},
 			FieldSpecs: fsSlice2,
@@ -73,13 +72,13 @@ func TestMergeAll(t *testing.T) {
 	}
 	nbrsSlice2 := nbrSlice{
 		{
-			Gvk: gvk.Gvk{
+			Gvk: resid.Gvk{
 				Kind: "ConfigMap",
 			},
 			FieldSpecs: fsSlice1,
 		},
 		{
-			Gvk: gvk.Gvk{
+			Gvk: resid.Gvk{
 				Kind: "Secret",
 			},
 			FieldSpecs: fsSlice2,
@@ -87,13 +86,13 @@ func TestMergeAll(t *testing.T) {
 	}
 	expected := nbrSlice{
 		{
-			Gvk: gvk.Gvk{
+			Gvk: resid.Gvk{
 				Kind: "ConfigMap",
 			},
 			FieldSpecs: fsSlice1,
 		},
 		{
-			Gvk: gvk.Gvk{
+			Gvk: resid.Gvk{
 				Kind: "Secret",
 			},
 			FieldSpecs: fsSlice2,

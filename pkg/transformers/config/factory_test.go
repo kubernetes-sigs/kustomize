@@ -5,10 +5,10 @@ package config
 
 import (
 	"reflect"
+	"sigs.k8s.io/kustomize/v3/api/resid"
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 )
 
 func TestMakeDefaultConfig(t *testing.T) {
@@ -31,7 +31,7 @@ namePrefix:
 	expected := &TransformerConfig{
 		NamePrefix: []FieldSpec{
 			{
-				Gvk:  gvk.Gvk{Kind: "SomeKind"},
+				Gvk:  resid.Gvk{Kind: "SomeKind"},
 				Path: "nameprefix/path",
 			},
 		},

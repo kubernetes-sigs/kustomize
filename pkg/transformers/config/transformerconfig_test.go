@@ -17,23 +17,22 @@ limitations under the License.
 package config
 
 import (
+	"sigs.k8s.io/kustomize/v3/api/resid"
 	"testing"
 
 	"reflect"
-
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 )
 
 func TestAddNamereferenceFieldSpec(t *testing.T) {
 	cfg := &TransformerConfig{}
 
 	nbrs := NameBackReferences{
-		Gvk: gvk.Gvk{
+		Gvk: resid.Gvk{
 			Kind: "KindA",
 		},
 		FieldSpecs: []FieldSpec{
 			{
-				Gvk: gvk.Gvk{
+				Gvk: resid.Gvk{
 					Kind: "KindB",
 				},
 				Path:               "path/to/a/field",
@@ -55,7 +54,7 @@ func TestAddFieldSpecs(t *testing.T) {
 	cfg := &TransformerConfig{}
 
 	fieldSpec := FieldSpec{
-		Gvk:                gvk.Gvk{Group: "GroupA", Kind: "KindB"},
+		Gvk:                resid.Gvk{Group: "GroupA", Kind: "KindB"},
 		Path:               "path/to/a/field",
 		CreateIfNotPresent: true,
 	}
@@ -93,12 +92,12 @@ func TestAddFieldSpecs(t *testing.T) {
 func TestMerge(t *testing.T) {
 	nameReference := []NameBackReferences{
 		{
-			Gvk: gvk.Gvk{
+			Gvk: resid.Gvk{
 				Kind: "KindA",
 			},
 			FieldSpecs: []FieldSpec{
 				{
-					Gvk: gvk.Gvk{
+					Gvk: resid.Gvk{
 						Kind: "KindB",
 					},
 					Path:               "path/to/a/field",
@@ -107,12 +106,12 @@ func TestMerge(t *testing.T) {
 			},
 		},
 		{
-			Gvk: gvk.Gvk{
+			Gvk: resid.Gvk{
 				Kind: "KindA",
 			},
 			FieldSpecs: []FieldSpec{
 				{
-					Gvk: gvk.Gvk{
+					Gvk: resid.Gvk{
 						Kind: "KindC",
 					},
 					Path:               "path/to/a/field",
@@ -123,12 +122,12 @@ func TestMerge(t *testing.T) {
 	}
 	fieldSpecs := []FieldSpec{
 		{
-			Gvk:                gvk.Gvk{Group: "GroupA", Kind: "KindB"},
+			Gvk:                resid.Gvk{Group: "GroupA", Kind: "KindB"},
 			Path:               "path/to/a/field",
 			CreateIfNotPresent: true,
 		},
 		{
-			Gvk:                gvk.Gvk{Group: "GroupA", Kind: "KindC"},
+			Gvk:                resid.Gvk{Group: "GroupA", Kind: "KindC"},
 			Path:               "path/to/a/field",
 			CreateIfNotPresent: true,
 		},
