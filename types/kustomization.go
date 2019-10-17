@@ -1,7 +1,6 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// Package types holds struct definitions that should find a better home.
 package types
 
 const (
