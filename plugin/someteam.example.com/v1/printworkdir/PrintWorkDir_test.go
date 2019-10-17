@@ -7,9 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pluglib"
-
-	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	"sigs.k8s.io/kustomize/v3/api/kusttest"
 )
 
 func shouldContain(t *testing.T, s []byte, x string) {
@@ -19,13 +17,13 @@ func shouldContain(t *testing.T, s []byte, x string) {
 }
 
 func TestPrintWorkDirPlugin(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
 		"someteam.example.com", "v1", "PrintWorkDir")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/theAppRoot")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/theAppRoot")
 
 	m := th.LoadAndRunGenerator(`
 apiVersion: someteam.example.com/v1

@@ -8,12 +8,12 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
-	"sigs.k8s.io/kustomize/v3/types"
 )
 
 func TestExecPluginConfig(t *testing.T) {

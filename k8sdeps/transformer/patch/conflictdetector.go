@@ -7,15 +7,14 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/kubernetes/scheme"
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
-	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-
-	"github.com/evanphx/json-patch"
+	jsonpatch "github.com/evanphx/json-patch"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/mergepatch"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
+	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 )
 
@@ -188,7 +187,7 @@ func MergePatches(patches []*resource.Resource,
 }
 
 // toSchemaGvk converts to a schema.GroupVersionKind.
-func toSchemaGvk(x gvk.Gvk) schema.GroupVersionKind {
+func toSchemaGvk(x resid.Gvk) schema.GroupVersionKind {
 	return schema.GroupVersionKind{
 		Group:   x.Group,
 		Version: x.Version,

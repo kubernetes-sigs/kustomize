@@ -10,8 +10,8 @@ import (
 	"runtime"
 
 	"github.com/spf13/pflag"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
-	"sigs.k8s.io/kustomize/v3/types"
 )
 
 const (

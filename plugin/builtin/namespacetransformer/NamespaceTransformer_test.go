@@ -7,19 +7,17 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pluglib"
-
-	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	"sigs.k8s.io/kustomize/v3/api/kusttest"
 )
 
 func TestNamespaceTransformer1(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "NamespaceTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
@@ -191,13 +189,13 @@ metadata:
 }
 
 func TestNamespaceTransformerClusterLevelKinds(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "NamespaceTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	const noChangeExpected = `
 apiVersion: v1
@@ -242,13 +240,13 @@ fieldSpecs:
 }
 
 func TestNamespaceTransformerObjectConflict(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "NamespaceTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	err := th.ErrorFromLoadAndRunTransformer(`
 apiVersion: builtin

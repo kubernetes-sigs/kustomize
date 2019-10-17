@@ -9,11 +9,10 @@ import (
 
 	"github.com/evanphx/json-patch"
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
+	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
-	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/types"
 	"sigs.k8s.io/yaml"
 )
 
@@ -76,7 +75,7 @@ func (p *plugin) Config(
 
 func (p *plugin) Transform(m resmap.ResMap) error {
 	id := resid.NewResIdWithNamespace(
-		gvk.Gvk{
+		resid.Gvk{
 			Group:   p.Target.Group,
 			Version: p.Target.Version,
 			Kind:    p.Target.Kind,

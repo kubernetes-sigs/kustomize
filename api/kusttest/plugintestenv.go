@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package pluglib
+package kusttest_test
 
 import (
 	"io/ioutil"
@@ -15,9 +15,10 @@ import (
 	"sigs.k8s.io/kustomize/v3/pkg/plugins"
 )
 
-// EnvForTest manages the plugin test environment.
-// It sets/resets XDG_CONFIG_HOME, makes/removes a temp objRoot.
-type EnvForTest struct {
+// PluginTestEnv manages the plugin test environment.
+// It sets/resets XDG_CONFIG_HOME, makes/removes a temp objRoot,
+// manages a plugin compiler, etc.
+type PluginTestEnv struct {
 	t        *testing.T
 	compiler *plugins.Compiler
 	workDir  string
@@ -25,30 +26,30 @@ type EnvForTest struct {
 	wasSet   bool
 }
 
-func NewEnvForTest(t *testing.T) *EnvForTest {
-	return &EnvForTest{t: t}
+func NewPluginTestEnv(t *testing.T) *PluginTestEnv {
+	return &PluginTestEnv{t: t}
 }
 
-func (x *EnvForTest) Set() *EnvForTest {
+func (x *PluginTestEnv) Set() *PluginTestEnv {
 	x.createWorkDir()
 	x.compiler = x.makeCompiler()
 	x.setEnv()
 	return x
 }
 
-func (x *EnvForTest) Reset() {
+func (x *PluginTestEnv) Reset() {
 	x.resetEnv()
 	x.removeWorkDir()
 }
 
-func (x *EnvForTest) BuildGoPlugin(g, v, k string) {
+func (x *PluginTestEnv) BuildGoPlugin(g, v, k string) {
 	err := x.compiler.Compile(g, v, k)
 	if err != nil {
 		x.t.Errorf("compile failed: %v", err)
 	}
 }
 
-func (x *EnvForTest) BuildExecPlugin(g, v, k string) {
+func (x *PluginTestEnv) BuildExecPlugin(g, v, k string) {
 	lowK := strings.ToLower(k)
 	obj := filepath.Join(x.compiler.ObjRoot(), g, v, lowK, k)
 	src := filepath.Join(x.compiler.SrcRoot(), g, v, lowK, k)
@@ -62,7 +63,7 @@ func (x *EnvForTest) BuildExecPlugin(g, v, k string) {
 	}
 }
 
-func (x *EnvForTest) makeCompiler() *plugins.Compiler {
+func (x *PluginTestEnv) makeCompiler() *plugins.Compiler {
 	// The plugin loader wants to find object code under
 	//    $XDG_CONFIG_HOME/kustomize/plugins
 	// and the compiler writes object code to
@@ -81,7 +82,7 @@ func (x *EnvForTest) makeCompiler() *plugins.Compiler {
 	return plugins.NewCompiler(srcRoot, objRoot)
 }
 
-func (x *EnvForTest) createWorkDir() {
+func (x *PluginTestEnv) createWorkDir() {
 	var err error
 	x.workDir, err = ioutil.TempDir("", "kustomize-plugin-tests")
 	if err != nil {
@@ -89,7 +90,7 @@ func (x *EnvForTest) createWorkDir() {
 	}
 }
 
-func (x *EnvForTest) removeWorkDir() {
+func (x *PluginTestEnv) removeWorkDir() {
 	err := os.RemoveAll(x.workDir)
 	if err != nil {
 		x.t.Errorf(
@@ -97,12 +98,12 @@ func (x *EnvForTest) removeWorkDir() {
 	}
 }
 
-func (x *EnvForTest) setEnv() {
+func (x *PluginTestEnv) setEnv() {
 	x.oldXdg, x.wasSet = os.LookupEnv(pgmconfig.XdgConfigHome)
 	os.Setenv(pgmconfig.XdgConfigHome, x.workDir)
 }
 
-func (x *EnvForTest) resetEnv() {
+func (x *PluginTestEnv) resetEnv() {
 	if x.wasSet {
 		os.Setenv(pgmconfig.XdgConfigHome, x.oldXdg)
 	} else {

@@ -9,13 +9,13 @@ import (
 	"testing"
 
 	"gopkg.in/yaml.v2"
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
+	"sigs.k8s.io/kustomize/v3/api/resid"
 )
 
 func TestGVK(t *testing.T) {
 	type testcase struct {
 		data     string
-		expected gvk.Gvk
+		expected resid.Gvk
 	}
 
 	testcases := []testcase{
@@ -25,7 +25,7 @@ apiVersion: v1
 kind: Secret
 name: my-secret
 `,
-			expected: gvk.Gvk{Group: "", Version: "v1", Kind: "Secret"},
+			expected: resid.Gvk{Group: "", Version: "v1", Kind: "Secret"},
 		},
 		{
 			data: `
@@ -33,7 +33,7 @@ apiVersion: myapps/v1
 kind: MyKind
 name: my-kind
 `,
-			expected: gvk.Gvk{Group: "myapps", Version: "v1", Kind: "MyKind"},
+			expected: resid.Gvk{Group: "myapps", Version: "v1", Kind: "MyKind"},
 		},
 		{
 			data: `
@@ -41,7 +41,7 @@ version: v2
 kind: MyKind
 name: my-kind
 `,
-			expected: gvk.Gvk{Version: "v2", Kind: "MyKind"},
+			expected: resid.Gvk{Version: "v2", Kind: "MyKind"},
 		},
 	}
 
@@ -61,7 +61,7 @@ func TestDefaulting(t *testing.T) {
 	v := &Var{
 		Name: "SOME_VARIABLE_NAME",
 		ObjRef: Target{
-			Gvk: gvk.Gvk{
+			Gvk: resid.Gvk{
 				Version: "v1",
 				Kind:    "Secret",
 			},
@@ -82,21 +82,21 @@ func TestVarSet(t *testing.T) {
 			Name: "SHELLVARS",
 			ObjRef: Target{
 				APIVersion: "v7",
-				Gvk:        gvk.Gvk{Kind: "ConfigMap"},
+				Gvk:        resid.Gvk{Kind: "ConfigMap"},
 				Name:       "bash"},
 		},
 		{
 			Name: "BACKEND",
 			ObjRef: Target{
 				APIVersion: "v7",
-				Gvk:        gvk.Gvk{Kind: "Deployment"},
+				Gvk:        resid.Gvk{Kind: "Deployment"},
 				Name:       "myTiredBackend"},
 		},
 		{
 			Name: "AWARD",
 			ObjRef: Target{
 				APIVersion: "v7",
-				Gvk:        gvk.Gvk{Kind: "Service"},
+				Gvk:        resid.Gvk{Kind: "Service"},
 				Name:       "nobelPrize"},
 			FieldRef: FieldSelector{FieldPath: "some.arbitrary.path"},
 		},

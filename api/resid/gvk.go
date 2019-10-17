@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package gvk
+package resid
 
 import (
 	"strings"
@@ -22,10 +22,10 @@ func FromKind(k string) Gvk {
 	}
 }
 
-// FromString makes a Gvk with a string,
+// GvkFromString makes a Gvk with a string,
 // which is constructed by String() function
-func FromString(s string) Gvk {
-	values := strings.Split(s, separator)
+func GvkFromString(s string) Gvk {
+	values := strings.Split(s, fieldSep)
 	g := values[0]
 	if g == noGroup {
 		g = ""
@@ -50,7 +50,7 @@ const (
 	noGroup   = "~G"
 	noVersion = "~V"
 	noKind    = "~K"
-	separator = "_"
+	fieldSep  = "_"
 )
 
 // String returns a string representation of the GVK.
@@ -67,7 +67,7 @@ func (x Gvk) String() string {
 	if k == "" {
 		k = noKind
 	}
-	return strings.Join([]string{g, v, k}, separator)
+	return strings.Join([]string{g, v, k}, fieldSep)
 }
 
 // Equals returns true if the Gvk's have equal fields.

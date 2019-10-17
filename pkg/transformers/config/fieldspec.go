@@ -18,9 +18,8 @@ package config
 
 import (
 	"fmt"
+	"sigs.k8s.io/kustomize/v3/api/resid"
 	"strings"
-
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 )
 
 // FieldSpec completely specifies a kustomizable field in
@@ -42,7 +41,7 @@ import (
 //   create: true
 // }
 type FieldSpec struct {
-	gvk.Gvk            `json:",inline,omitempty" yaml:",inline,omitempty"`
+	resid.Gvk          `json:",inline,omitempty" yaml:",inline,omitempty"`
 	Path               string `json:"path,omitempty" yaml:"path,omitempty"`
 	CreateIfNotPresent bool   `json:"create,omitempty" yaml:"create,omitempty"`
 }

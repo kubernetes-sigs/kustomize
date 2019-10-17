@@ -9,8 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
-	"sigs.k8s.io/kustomize/v3/pluglib"
+	"sigs.k8s.io/kustomize/v3/api/kusttest"
 )
 
 const patchAddProbe = `
@@ -232,7 +231,7 @@ func definePatchDirStructure(th *kusttest_test.KustTestHarness) {
 
 // Fails due to file load restrictor.
 func TestIssue1251_Patches_ProdVsDev_Failure(t *testing.T) {
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app/prod")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app/prod")
 	definePatchDirStructure(th)
 
 	th.WriteK("/app/prod", `
@@ -305,7 +304,7 @@ spec:
 // the kustomization root), opening the user to whatever
 // threat the load restrictor was meant to address.
 func TestIssue1251_Patches_ProdVsDev(t *testing.T) {
-	th := kusttest_test.NewKustTestNoLoadRestrictorHarness(t, "/app/prod")
+	th := kusttest_test.NewKustTestHarnessNoLoadRestrictor(t, "/app/prod")
 	definePatchDirStructure(th)
 
 	th.WriteK("/app/prod", `
@@ -321,7 +320,7 @@ patchesStrategicMerge:
 	}
 	th.AssertActualEqualsExpected(m, prodDevMergeResult1)
 
-	th = kusttest_test.NewKustTestNoLoadRestrictorHarness(t, "/app/dev")
+	th = kusttest_test.NewKustTestHarnessNoLoadRestrictor(t, "/app/dev")
 	definePatchDirStructure(th)
 
 	th.WriteK("/app/dev", `
@@ -340,13 +339,13 @@ patchesStrategicMerge:
 }
 
 func TestIssue1251_Plugins_ProdVsDev(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchJson6902Transformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app/prod")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app/prod")
 	defineTransformerDirStructure(th)
 	th.WriteK("/app/prod", `
 resources:
@@ -362,7 +361,7 @@ transformers:
 	}
 	th.AssertActualEqualsExpected(m, prodDevMergeResult1)
 
-	th = kusttest_test.NewKustTestPluginHarness(t, "/app/dev")
+	th = kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app/dev")
 	defineTransformerDirStructure(th)
 	th.WriteK("/app/dev", `
 resources:
@@ -380,13 +379,13 @@ transformers:
 }
 
 func TestIssue1251_Plugins_Local(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchJson6902Transformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app/composite")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app/composite")
 	writeDeploymentBase(th)
 
 	writeJsonTransformerPluginConfig(
@@ -430,13 +429,13 @@ jsonOp: '%s'
 
 // Remote in the sense that they are bundled in a different kustomization.
 func TestIssue1251_Plugins_Bundled(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchJson6902Transformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app/composite")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app/composite")
 	writeDeploymentBase(th)
 
 	th.WriteK("/app/patches", `

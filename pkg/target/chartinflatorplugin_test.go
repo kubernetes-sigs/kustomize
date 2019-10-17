@@ -11,9 +11,7 @@ import (
 	"regexp"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pluglib"
-
-	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	"sigs.k8s.io/kustomize/v3/api/kusttest"
 )
 
 // This is an example of using a helm chart as a base,
@@ -30,13 +28,13 @@ import (
 // TODO: Download and inflate the chart, and check that
 // in for the test.
 func TestChartInflatorPlugin(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
 		"someteam.example.com", "v1", "ChartInflator")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 	th.WriteK("/app", `
 generators:
 - chartInflator.yaml

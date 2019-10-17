@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/transformer"
@@ -20,10 +21,12 @@ import (
 	"sigs.k8s.io/kustomize/v3/pkg/target"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config/defaultconfig"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
-	"sigs.k8s.io/kustomize/v3/types"
 )
 
-// KustTestHarness helps test kustomization generation and transformation.
+// KustTestHarness is an environment for running a kustomize build,
+// aka a run of MakeCustomizedResMap.  It holds a file loader
+// presumably primed with an in-memory file system, a plugin
+// loader, factories to make what it needs, etc.
 type KustTestHarness struct {
 	t   *testing.T
 	rf  *resmap.Factory
@@ -36,12 +39,12 @@ func NewKustTestHarness(t *testing.T, path string) *KustTestHarness {
 		t, path, loader.RestrictionRootOnly, plugins.DefaultPluginConfig())
 }
 
-func NewKustTestPluginHarness(t *testing.T, path string) *KustTestHarness {
+func NewKustTestHarnessAllowPlugins(t *testing.T, path string) *KustTestHarness {
 	return NewKustTestHarnessFull(
 		t, path, loader.RestrictionRootOnly, plugins.ActivePluginConfig())
 }
 
-func NewKustTestNoLoadRestrictorHarness(t *testing.T, path string) *KustTestHarness {
+func NewKustTestHarnessNoLoadRestrictor(t *testing.T, path string) *KustTestHarness {
 	return NewKustTestHarnessFull(
 		t, path, loader.RestrictionNone, plugins.DefaultPluginConfig())
 }

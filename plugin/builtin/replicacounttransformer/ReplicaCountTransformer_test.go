@@ -6,19 +6,17 @@ package main_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pluglib"
-
-	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	"sigs.k8s.io/kustomize/v3/api/kusttest"
 )
 
 func TestReplicaCountTransformer(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "ReplicaCountTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
@@ -154,13 +152,13 @@ spec:
 }
 
 func TestMatchesCurrentID(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin("builtin", "", "PrefixSuffixTransformer")
 	tc.BuildGoPlugin("builtin", "", "ReplicaCountTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
@@ -200,12 +198,12 @@ spec:
 }
 
 func TestNoMatch(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin("builtin", "", "ReplicaCountTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	err := th.ErrorFromLoadAndRunTransformer(`
 apiVersion: builtin
