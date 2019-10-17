@@ -17,9 +17,8 @@ limitations under the License.
 package config
 
 import (
+	"sigs.k8s.io/kustomize/v3/api/resid"
 	"strings"
-
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 )
 
 // NameBackReferences is an association between a gvk.GVK and a list
@@ -51,7 +50,7 @@ import (
 //       (etc.)
 //   }
 type NameBackReferences struct {
-	gvk.Gvk    `json:",inline,omitempty" yaml:",inline,omitempty"`
+	resid.Gvk  `json:",inline,omitempty" yaml:",inline,omitempty"`
 	FieldSpecs fsSlice `json:"FieldSpecs,omitempty" yaml:"FieldSpecs,omitempty"`
 }
 

@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
+	"sigs.k8s.io/kustomize/v3/api/resid"
 )
 
 const defaultFieldPath = "metadata.name"
@@ -40,13 +40,13 @@ type Var struct {
 // for Var.ObjRef
 type Target struct {
 	APIVersion string `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty"`
-	gvk.Gvk    `json:",inline,omitempty" yaml:",inline,omitempty"`
+	resid.Gvk  `json:",inline,omitempty" yaml:",inline,omitempty"`
 	Name       string `json:"name" yaml:"name"`
 	Namespace  string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 }
 
 // GVK returns the Gvk object in Target
-func (t *Target) GVK() gvk.Gvk {
+func (t *Target) GVK() resid.Gvk {
 	if t.APIVersion == "" {
 		return t.Gvk
 	}

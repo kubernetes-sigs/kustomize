@@ -6,21 +6,20 @@ package target_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
-	"sigs.k8s.io/kustomize/v3/pluglib"
+	"sigs.k8s.io/kustomize/v3/api/kusttest"
 )
 
 // Demo custom configuration of a builtin transformation.
 // This is a NamePrefixer that only touches Deployments
 // and Services.
 func TestCustomNamePrefixer(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "PrefixSuffixTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	th.WriteK("/app", `
 resources:
@@ -103,7 +102,7 @@ metadata:
 
 // Demo custom configuration as a base.
 func TestReusableCustomNamePrefixer(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
@@ -111,7 +110,7 @@ func TestReusableCustomNamePrefixer(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "LabelTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app/foo")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app/foo")
 
 	// This kustomization file contains resources that
 	// all happen to be plugin configurations. This makes

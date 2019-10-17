@@ -11,12 +11,11 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
+	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
-	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
-	"sigs.k8s.io/kustomize/v3/types"
 )
 
 type Loader struct {
@@ -131,7 +130,7 @@ func (l *Loader) loadAndConfigurePlugin(
 	return c, nil
 }
 
-func (l *Loader) makeBuiltinPlugin(r gvk.Gvk) (resmap.Configurable, error) {
+func (l *Loader) makeBuiltinPlugin(r resid.Gvk) (resmap.Configurable, error) {
 	bpt := GetBuiltinPluginType(r.Kind)
 	if f, ok := GeneratorFactories[bpt]; ok {
 		return f(), nil

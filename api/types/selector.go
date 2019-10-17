@@ -3,13 +3,15 @@
 
 package types
 
-import "sigs.k8s.io/kustomize/v3/pkg/gvk"
+import (
+	"sigs.k8s.io/kustomize/v3/api/resid"
+)
 
 // Selector specifies a set of resources.
 // Any resource that matches intersection of all conditions
 // is included in this set.
 type Selector struct {
-	gvk.Gvk   `json:",inline,omitempty" yaml:",inline,omitempty"`
+	resid.Gvk `json:",inline,omitempty" yaml:",inline,omitempty"`
 	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 	Name      string `json:"name,omitempty" yaml:"name,omitempty"`
 

@@ -9,15 +9,15 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/api/kusttest"
+	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
-	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	. "sigs.k8s.io/kustomize/v3/pkg/target"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
-	"sigs.k8s.io/kustomize/v3/types"
 )
 
 const (
@@ -281,7 +281,7 @@ var someVars = []types.Var{
 		Name: "AWARD",
 		ObjRef: types.Target{
 			APIVersion: "v7",
-			Gvk:        gvk.Gvk{Kind: "Service"},
+			Gvk:        resid.Gvk{Kind: "Service"},
 			Name:       "nobelPrize"},
 		FieldRef: types.FieldSelector{FieldPath: "some.arbitrary.path"},
 	},
@@ -289,21 +289,21 @@ var someVars = []types.Var{
 		Name: "BIRD",
 		ObjRef: types.Target{
 			APIVersion: "v300",
-			Gvk:        gvk.Gvk{Kind: "Service"},
+			Gvk:        resid.Gvk{Kind: "Service"},
 			Name:       "heron"},
 		FieldRef: types.FieldSelector{FieldPath: "metadata.name"},
 	},
 	{
 		Name: "FRUIT",
 		ObjRef: types.Target{
-			Gvk:  gvk.Gvk{Kind: "Service"},
+			Gvk:  resid.Gvk{Kind: "Service"},
 			Name: "apple"},
 		FieldRef: types.FieldSelector{FieldPath: "metadata.name"},
 	},
 	{
 		Name: "VEGETABLE",
 		ObjRef: types.Target{
-			Gvk:  gvk.Gvk{Kind: "Leafy"},
+			Gvk:  resid.Gvk{Kind: "Leafy"},
 			Name: "kale"},
 		FieldRef: types.FieldSelector{FieldPath: "metadata.name"},
 	},

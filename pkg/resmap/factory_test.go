@@ -6,18 +6,18 @@ package resmap_test
 import (
 	"encoding/base64"
 	"reflect"
+	"sigs.k8s.io/kustomize/v3/api/resid"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/filesys"
+	"sigs.k8s.io/kustomize/v3/api/filesys"
+	"sigs.k8s.io/kustomize/v3/api/kv"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
-	"sigs.k8s.io/kustomize/v3/kv"
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/loader"
 	. "sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resmaptest"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
-	"sigs.k8s.io/kustomize/v3/types"
 )
 
 func TestFromFile(t *testing.T) {
@@ -108,7 +108,7 @@ metadata:
 	}
 }
 
-var cmap = gvk.Gvk{Version: "v1", Kind: "ConfigMap"}
+var cmap = resid.Gvk{Version: "v1", Kind: "ConfigMap"}
 
 func TestNewFromConfigMaps(t *testing.T) {
 	type testCase struct {

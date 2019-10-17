@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	"sigs.k8s.io/kustomize/v3/api/kusttest"
 )
 
 const httpsService = `
@@ -303,7 +303,7 @@ func writePatchingTransformersRaw(th *kusttest_test.KustTestHarness) {
 // respect to the overlays, and avoids the need to relax load
 // restrictions on file paths reaching outside the `dev` and
 // `prod` kustomization roots.  I.e. with bases tests can use
-// NewKustTestHarness instead of NewKustTestNoLoadRestrictorHarness.
+// NewKustTestHarness instead of NewKustTestHarnessNoLoadRestrictor.
 //
 // Using transformer plugins from _bases_ means the plugin config
 // must be self-contained, i.e. the config may not have fields that
@@ -404,7 +404,7 @@ metadata:
 `
 
 func TestComplexComposition_Dev_SuccessWithRawTransformers(t *testing.T) {
-	th := kusttest_test.NewKustTestNoLoadRestrictorHarness(t, "/app/dev")
+	th := kusttest_test.NewKustTestHarnessNoLoadRestrictor(t, "/app/dev")
 	writeStatefulSetBase(th)
 	writePatchingTransformersRaw(th)
 	th.WriteK("/app/dev", `
@@ -513,7 +513,7 @@ metadata:
 `
 
 func TestComplexComposition_Prod_SuccessWithRawTransformers(t *testing.T) {
-	th := kusttest_test.NewKustTestNoLoadRestrictorHarness(t, "/app/prod")
+	th := kusttest_test.NewKustTestHarnessNoLoadRestrictor(t, "/app/prod")
 	writeStatefulSetBase(th)
 	writePatchingTransformersRaw(th)
 	th.WriteK("/app/prod", `

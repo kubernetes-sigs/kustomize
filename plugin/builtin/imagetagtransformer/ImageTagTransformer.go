@@ -7,7 +7,7 @@ package main
 import (
 	"fmt"
 	"regexp"
-	"sigs.k8s.io/kustomize/v3/types"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"strings"
 
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"

@@ -6,7 +6,7 @@ package target_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	"sigs.k8s.io/kustomize/v3/api/kusttest"
 )
 
 // Here's a structure of two kustomizations,
