@@ -4,11 +4,11 @@
 package resmap_test
 
 import (
+	"sigs.k8s.io/kustomize/v3/api/resid"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/types"
 )
 
 func setupRMForPatchTargets(t *testing.T) resmap.ResMap {
@@ -81,7 +81,7 @@ func TestFindPatchTargets(t *testing.T) {
 		},
 		{
 			target: types.Selector{
-				Gvk: gvk.Gvk{
+				Gvk: resid.Gvk{
 					Kind: "Kind1",
 				},
 				Name: "name.*",
@@ -116,7 +116,7 @@ func TestFindPatchTargets(t *testing.T) {
 			target: types.Selector{
 				Namespace: "default",
 				Name:      "name.*",
-				Gvk: gvk.Gvk{
+				Gvk: resid.Gvk{
 					Kind: "Kind1",
 				},
 			},

@@ -13,9 +13,9 @@ import (
 	"regexp"
 	"strings"
 
-	"sigs.k8s.io/kustomize/v3/filesys"
+	"sigs.k8s.io/kustomize/v3/api/filesys"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
-	"sigs.k8s.io/kustomize/v3/types"
 	"sigs.k8s.io/yaml"
 )
 

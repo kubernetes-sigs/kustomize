@@ -11,9 +11,7 @@ import (
 	"regexp"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pluglib"
-
-	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	"sigs.k8s.io/kustomize/v3/api/kusttest"
 )
 
 // This test requires having the helm binary on the PATH.
@@ -21,13 +19,13 @@ import (
 // TODO: Download and inflate the chart, and check that
 // in for the test.
 func TestChartInflator(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildExecPlugin(
 		"someteam.example.com", "v1", "ChartInflator")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	m := th.LoadAndRunGenerator(`
 apiVersion: someteam.example.com/v1

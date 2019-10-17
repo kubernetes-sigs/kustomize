@@ -5,14 +5,12 @@ package resid
 
 import (
 	"strings"
-
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 )
 
 // ResId is an identifier of a k8s resource object.
 type ResId struct {
 	// Gvk of the resource.
-	gvk.Gvk `json:",inline,omitempty" yaml:",inline,omitempty"`
+	Gvk `json:",inline,omitempty" yaml:",inline,omitempty"`
 
 	// Name of the resource before transformation.
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
@@ -26,18 +24,18 @@ type ResId struct {
 
 // NewResIdWithNamespace creates new ResId
 // in a given namespace.
-func NewResIdWithNamespace(k gvk.Gvk, n, ns string) ResId {
+func NewResIdWithNamespace(k Gvk, n, ns string) ResId {
 	return ResId{Gvk: k, Name: n, Namespace: ns}
 }
 
 // NewResId creates new ResId.
-func NewResId(k gvk.Gvk, n string) ResId {
+func NewResId(k Gvk, n string) ResId {
 	return ResId{Gvk: k, Name: n}
 }
 
 // NewResIdKindOnly creates a new ResId.
 func NewResIdKindOnly(k string, n string) ResId {
-	return ResId{Gvk: gvk.FromKind(k), Name: n}
+	return ResId{Gvk: FromKind(k), Name: n}
 }
 
 const (
@@ -64,7 +62,7 @@ func (id ResId) String() string {
 
 func FromString(s string) ResId {
 	values := strings.Split(s, separator)
-	g := gvk.FromString(values[0])
+	g := GvkFromString(values[0])
 
 	ns := values[1]
 	if ns == noNamespace {

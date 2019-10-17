@@ -20,11 +20,10 @@ import (
 	"reflect"
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
-	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	. "sigs.k8s.io/kustomize/v3/pkg/resource"
-	"sigs.k8s.io/kustomize/v3/types"
 )
 
 var factory = NewFactory(
@@ -99,11 +98,11 @@ func TestResourceId(t *testing.T) {
 		{
 			in: testConfigMap,
 			id: resid.NewResIdWithNamespace(
-				gvk.Gvk{Version: "v1", Kind: "ConfigMap"}, "winnie", "hundred-acre-wood"),
+				resid.Gvk{Version: "v1", Kind: "ConfigMap"}, "winnie", "hundred-acre-wood"),
 		},
 		{
 			in: testDeployment,
-			id: resid.NewResId(gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}, "pooh"),
+			id: resid.NewResId(resid.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}, "pooh"),
 		},
 	}
 	for _, test := range tests {
@@ -122,12 +121,12 @@ func TestDeepCopy(t *testing.T) {
 				"name": "pooh",
 			},
 		})
-	r.AppendRefBy(resid.NewResId(gvk.Gvk{Group: "somegroup", Kind: "MyKind"}, "random"))
+	r.AppendRefBy(resid.NewResId(resid.Gvk{Group: "somegroup", Kind: "MyKind"}, "random"))
 
 	var1 := types.Var{
 		Name: "SERVICE_ONE",
 		ObjRef: types.Target{
-			Gvk:  gvk.Gvk{Version: "v1", Kind: "Service"},
+			Gvk:  resid.Gvk{Version: "v1", Kind: "Service"},
 			Name: "backendOne"},
 	}
 	r.AppendRefVarName(var1)

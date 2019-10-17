@@ -9,9 +9,9 @@ import (
 	"log"
 	"strings"
 
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/internal/kusterr"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
-	"sigs.k8s.io/kustomize/v3/types"
 )
 
 // Factory makes instances of Resource.

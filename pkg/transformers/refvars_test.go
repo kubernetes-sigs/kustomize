@@ -5,9 +5,9 @@ package transformers
 
 import (
 	"reflect"
+	"sigs.k8s.io/kustomize/v3/api/resid"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resmaptest"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
@@ -38,11 +38,11 @@ func TestVarRef(t *testing.T) {
 					"BOO": true,
 				},
 				fs: []config.FieldSpec{
-					{Gvk: gvk.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/map"},
-					{Gvk: gvk.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/slice"},
-					{Gvk: gvk.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/interface"},
-					{Gvk: gvk.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/nil"},
-					{Gvk: gvk.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/num"},
+					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/map"},
+					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/slice"},
+					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/interface"},
+					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/nil"},
+					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/num"},
 				},
 				res: resmaptest_test.NewRmBuilder(t, rf).
 					Add(map[string]interface{}{

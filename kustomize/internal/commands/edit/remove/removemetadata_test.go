@@ -10,9 +10,9 @@ import (
 
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
-	"sigs.k8s.io/kustomize/v3/filesys"
+	"sigs.k8s.io/kustomize/v3/api/filesys"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
-	"sigs.k8s.io/kustomize/v3/types"
 )
 
 func makeKustomizationFS() filesys.FileSystem {

@@ -8,9 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/pluglib"
-
-	"sigs.k8s.io/kustomize/v3/pkg/kusttest"
+	"sigs.k8s.io/kustomize/v3/api/kusttest"
 )
 
 const (
@@ -60,12 +58,12 @@ spec:
 )
 
 func TestPatchStrategicMergeTransformerMissingFile(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchStrategicMergeTransformer")
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	_, err := th.RunTransformer(`
 apiVersion: builtin
@@ -87,13 +85,13 @@ paths:
 }
 
 func TestBadPatchStrategicMergeTransformer(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchStrategicMergeTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	_, err := th.RunTransformer(`
 apiVersion: builtin
@@ -112,13 +110,13 @@ patches: 'thisIsNotAPatch'
 }
 
 func TestBothEmptyPatchStrategicMergeTransformer(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchStrategicMergeTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	_, err := th.RunTransformer(`
 apiVersion: builtin
@@ -135,13 +133,13 @@ metadata:
 }
 
 func TestPatchStrategicMergeTransformerFromFiles(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchStrategicMergeTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	th.WriteF("/app/patch.yaml", `
 apiVersion: apps/v1
@@ -185,13 +183,13 @@ spec:
 }
 
 func TestPatchStrategicMergeTransformerWithInlineJSON(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchStrategicMergeTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
@@ -220,13 +218,13 @@ spec:
 }
 
 func TestPatchStrategicMergeTransformerWithInlineYAML(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchStrategicMergeTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
@@ -272,13 +270,13 @@ spec:
 }
 
 func TestPatchStrategicMergeTransformerMultiplePatches(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchStrategicMergeTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	th.WriteF("/app/patch1.yaml", `
 apiVersion: apps/v1
@@ -349,13 +347,13 @@ spec:
 }
 
 func TestStrategicMergeTransformerMultiplePatchesWithConflicts(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchStrategicMergeTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	th.WriteF("/app/patch1.yaml", `
 apiVersion: apps/v1
@@ -410,13 +408,13 @@ paths:
 }
 
 func TestStrategicMergeTransformerWrongNamespace(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchStrategicMergeTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	th.WriteF("/app/patch.yaml", `
 apiVersion: apps/v1
@@ -453,13 +451,13 @@ paths:
 }
 
 func TestStrategicMergeTransformerNoSchema(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchStrategicMergeTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	th.WriteF("/app/patch.yaml", `
 apiVersion: example.com/v1
@@ -493,13 +491,13 @@ spec:
 }
 
 func TestStrategicMergeTransformerNoSchemaMultiPatches(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchStrategicMergeTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	th.WriteF("/app/patch1.yaml", `
 apiVersion: example.com/v1
@@ -549,13 +547,13 @@ spec:
 }
 
 func TestStrategicMergeTransformerNoSchemaMultiPatchesWithConflict(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchStrategicMergeTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	th.WriteF("/app/patch1.yaml", `
 apiVersion: example.com/v1
@@ -885,13 +883,13 @@ func TestSinglePatch(t *testing.T) {
 		},
 	}
 
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchStrategicMergeTransformer")
 
 	for _, test := range tests {
-		th := kusttest_test.NewKustTestPluginHarness(t, fmt.Sprintf("/%s", test.name))
+		th := kusttest_test.NewKustTestHarnessAllowPlugins(t, fmt.Sprintf("/%s", test.name))
 		th.WriteF(fmt.Sprintf("/%s/patch%d.yaml", test.name, 0), test.patch)
 
 		if test.errorExpected {
@@ -988,13 +986,13 @@ func TestMultiplePatches(t *testing.T) {
 		},
 	}
 
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchStrategicMergeTransformer")
 
 	for _, test := range tests {
-		th := kusttest_test.NewKustTestPluginHarness(t, fmt.Sprintf("/%s", test.name))
+		th := kusttest_test.NewKustTestHarnessAllowPlugins(t, fmt.Sprintf("/%s", test.name))
 		for idx, patch := range test.patch {
 			th.WriteF(fmt.Sprintf("/%s/patch%d.yaml", test.name, idx), patch)
 		}
@@ -1119,13 +1117,13 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 		},
 	}
 
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchStrategicMergeTransformer")
 
 	for _, test := range tests {
-		th := kusttest_test.NewKustTestPluginHarness(t, fmt.Sprintf("/%s", test.name))
+		th := kusttest_test.NewKustTestHarnessAllowPlugins(t, fmt.Sprintf("/%s", test.name))
 		for idx, patch := range test.patch {
 			th.WriteF(fmt.Sprintf("/%s/patch%d.yaml", test.name, idx), patch)
 		}
@@ -1228,13 +1226,13 @@ func TestMultipleNamespaces(t *testing.T) {
 		},
 	}
 
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchStrategicMergeTransformer")
 
 	for _, test := range tests {
-		th := kusttest_test.NewKustTestPluginHarness(t, fmt.Sprintf("/%s", test.name))
+		th := kusttest_test.NewKustTestHarnessAllowPlugins(t, fmt.Sprintf("/%s", test.name))
 		for idx, patch := range test.patch {
 			th.WriteF(fmt.Sprintf("/%s/patch%d.yaml", test.name, idx), patch)
 		}
@@ -1250,13 +1248,13 @@ func TestMultipleNamespaces(t *testing.T) {
 }
 
 func TestPatchStrategicMergeTransformerPatchDelete(t *testing.T) {
-	tc := pluglib.NewEnvForTest(t).Set()
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchStrategicMergeTransformer")
 
-	th := kusttest_test.NewKustTestPluginHarness(t, "/app")
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
 	th.WriteF("/app/patch.yaml", `
 apiVersion: apps/v1

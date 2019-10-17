@@ -33,16 +33,16 @@ be defaulted.  The latter method allows for
 complete plugin argument specification.
 
 
-[types.GeneratorOptions]: ../../types/generatoroptions.go
-[types.SecretArgs]: ../../types/secretargs.go
-[types.ConfigMapArgs]: ../../types/configmapargs.go
+[types.GeneratorOptions]: ../../api/types/generatoroptions.go
+[types.SecretArgs]: ../../api/types/secretargs.go
+[types.ConfigMapArgs]: ../../api/types/configmapargs.go
 [config.FieldSpec]: ../../pkg/transformers/config/fieldspec.go
-[types.ObjectMeta]: ../../types/objectmeta.go
-[types.Selector]: ../../types/selector.go
-[types.Replica]: ../../types/replica.go
-[types.PatchStrategicMerge]: ../../types/patchstrategicmerge.go
-[types.PatchTarget]: ../../types/patchtarget.go
-[image.Image]: ../../types/image.go
+[types.ObjectMeta]: ../../api/types/objectmeta.go
+[types.Selector]: ../../api/types/selector.go
+[types.Replica]: ../../api/types/replica.go
+[types.PatchStrategicMerge]: ../../api/types/patchstrategicmerge.go
+[types.PatchTarget]: ../../api/types/patchtarget.go
+[image.Image]: ../../api/types/image.go
 
 ## _AnnotationTransformer_
 ### Usage via `kustomization.yaml`

@@ -8,7 +8,7 @@ import (
 	"log"
 	"strings"
 
-	"sigs.k8s.io/kustomize/v3/filesys"
+	"sigs.k8s.io/kustomize/v3/api/filesys"
 )
 
 // GlobPatterns accepts a slice of glob strings and returns the set of

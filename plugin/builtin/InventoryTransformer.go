@@ -4,13 +4,13 @@ package builtin
 import (
 	"fmt"
 
-	"sigs.k8s.io/kustomize/v3/hasher"
-	"sigs.k8s.io/kustomize/v3/kv"
+	"sigs.k8s.io/kustomize/v3/api/hasher"
+	"sigs.k8s.io/kustomize/v3/api/kv"
+	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/inventory"
-	"sigs.k8s.io/kustomize/v3/pkg/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
-	"sigs.k8s.io/kustomize/v3/types"
 	"sigs.k8s.io/yaml"
 )
 

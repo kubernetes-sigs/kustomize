@@ -8,8 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
-	"sigs.k8s.io/kustomize/v3/pkg/resid"
+	"sigs.k8s.io/kustomize/v3/api/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
@@ -29,10 +28,10 @@ var KustomizePlugin plugin
 // Not placed in a file yet due to lack of demand.
 var prefixSuffixFieldSpecsToSkip = []config.FieldSpec{
 	{
-		Gvk: gvk.Gvk{Kind: "CustomResourceDefinition"},
+		Gvk: resid.Gvk{Kind: "CustomResourceDefinition"},
 	},
 	{
-		Gvk: gvk.Gvk{Group: "apiregistration.k8s.io", Kind: "APIService"},
+		Gvk: resid.Gvk{Group: "apiregistration.k8s.io", Kind: "APIService"},
 	},
 }
 

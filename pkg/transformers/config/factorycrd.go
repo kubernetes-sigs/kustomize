@@ -18,12 +18,12 @@ package config
 
 import (
 	"encoding/json"
+	"sigs.k8s.io/kustomize/v3/api/resid"
 	"strings"
 
 	"github.com/go-openapi/spec"
 	"github.com/pkg/errors"
 	"k8s.io/kube-openapi/pkg/common"
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/yaml"
 )
@@ -88,10 +88,10 @@ func makeConfigFromApiMap(m nameToApiMap) (*TransformerConfig, error) {
 // TODO: Get Group and Version for CRD from the
 // openAPI definition once
 // "x-kubernetes-group-version-kind" is available in CRD
-func makeGvkFromTypeName(n string) gvk.Gvk {
+func makeGvkFromTypeName(n string) resid.Gvk {
 	names := strings.Split(n, ".")
 	kind := names[len(names)-1]
-	return gvk.Gvk{Kind: kind}
+	return resid.Gvk{Kind: kind}
 }
 
 func looksLikeAk8sType(properties myProperties) bool {
@@ -133,7 +133,7 @@ const (
 
 // loadCrdIntoConfig loads a CRD spec into a TransformerConfig
 func loadCrdIntoConfig(
-	theConfig *TransformerConfig, theGvk gvk.Gvk, theMap nameToApiMap,
+	theConfig *TransformerConfig, theGvk resid.Gvk, theMap nameToApiMap,
 	typeName string, path []string) (err error) {
 	api, ok := theMap[typeName]
 	if !ok {
@@ -174,7 +174,7 @@ func loadCrdIntoConfig(
 				}
 				err = theConfig.AddNamereferenceFieldSpec(
 					NameBackReferences{
-						Gvk: gvk.Gvk{Kind: kind, Version: version},
+						Gvk: resid.Gvk{Kind: kind, Version: version},
 						FieldSpecs: []FieldSpec{
 							makeFs(theGvk, append(path, propName, nameKey))},
 					})
@@ -192,7 +192,7 @@ func loadCrdIntoConfig(
 	return nil
 }
 
-func makeFs(in gvk.Gvk, path []string) FieldSpec {
+func makeFs(in resid.Gvk, path []string) FieldSpec {
 	return FieldSpec{
 		CreateIfNotPresent: false,
 		Gvk:                in,
