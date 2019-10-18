@@ -8,7 +8,7 @@ are available on the [release page].
 
 Or...
 
-## Quickly curl the latest
+## Quickly curl the latest binary
 
 ```
 # pick one
@@ -25,16 +25,28 @@ mv kustomize_kustomize\.v*_${opsys}_amd64 kustomize
 chmod u+x kustomize
 ```
 
-## Get and install source for a particular release
-
-For example
+## Build the kustomize CLI from local source
 ```
-# Omit the @v3.2.3 to get the default for major version 3
-GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3@v3.2.3
-```
+# Need go 1.13 or higher
+unset GOPATH
+# see https://golang.org/doc/go1.13#modules
+unset GO111MODULES
 
-Use of `GO111MODULE=on` shouldn't be necessary
-with [Go v1.13](https://golang.org/doc/go1.13#modules).
+# clone the repo
+git clone git@github.com:kubernetes-sigs/kustomize.git
+# get into the repo root
+cd kustomize
+
+# Optionally checkout a particular tag if you don't
+# want to build at head
+git checkout kustomize/v3.2.3
+
+# build the binary
+(cd kustomize; go install .)
+
+# run it
+~/go/bin/kustomize version
+```
 
 ### Other methods
 
