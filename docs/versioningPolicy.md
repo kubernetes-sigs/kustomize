@@ -6,40 +6,34 @@ particular version of underlying packages (a Go
 API), and reading a particular version of a
 [kustomization] file.
 
+> If you're having trouble with `go get`, please
+> read  [Go API Versioning](#go-api-versioning)
+> and be patient.
+
 ## CLI Program Versioning
 
 The command `kustomize version` prints a three
 field version tag (e.g. `v3.0.0`) that aspires to
 [semantic versioning].
 
-This notion of semver applies only to the CLI.
+This notion of semver applies only to the CLI;
+the command names, their arguments and their flags.
 
 The major version changes when some backward
 incompatibility appears in how the commands
 behave.
 
-
 ### Installation
 
-The best method to install kustomize is to
-download a binary from the [release page].
-
-If you want to try minor and patch upgrades in
-dependencies via `go get -u` (see `help go
-get`), try something like this:
-
-```
-GO111MODULE=on go get -u sigs.k8s.io/kustomize/kustomize/v3@v3.2.1
-```
+See the [installation docs](INSTALL.md).
 
 ## Go API Versioning
 
 The public methods in the public packages
-of module `sigs.k8s.io/kusomize` constitue
+of module `sigs.k8s.io/kusomize` constitute
 the _kustomize Go API_.
 
-#### Version v3 and earlier
-
+#### Version sigs.k8s.io/kustomize/v3 and earlier
 
 [import path]: https://github.com/golang/go/wiki/Modules#releasing-modules-v2-or-higher
 
@@ -63,8 +57,7 @@ directory named `internal`).  Even a minor
 refactor changing a method name or argument type
 in some deeply buried (but still public) method is
 a backward incompatible change.  As a result, Go
-API semver hasn't been followed (or we'd be at a much
-higher version number by now).
+API semver hasn't been followed.  This was a mistake.
 
 Some options are
 
@@ -88,22 +81,15 @@ Some options are
 
 The last option seems the most appealing.
 
-Projects using the Go API directly only use about
-a dozen public methods in ~ten packages. These
-methods could likely be combined to one or two
-public packages intentionally designed for general
-use, analogous to, say,
-[regexp](https://golang.org/pkg/regexp) or
-[go-yaml](https://github.com/go-yaml/yaml),
-reducing the API surface.
+#### The first stable API version is coming
 
-#### Version v4
+The first stable API version will launch at
 
-With `v4` (i.e. the module dependency path
-`sigs.k8s.io/kustomize/v4`)
-two things will happen.
+```
+sigs.k8s.io/kustomize/api/v1
+```
 
-First, the _kustomize_ program itself (`main.go`
+The _kustomize_ program itself (`main.go`
 and CLI specific code) will have moved out of
 `sigs.k8s.io/kustomize` and into the new module
 `sigs.k8s.io/kustomize/kustomize`.  This is a
@@ -114,12 +100,12 @@ trigger a major version bump).  This module will
 not export packages; it's just home to a `main`
 package.
 
-Second, `sigs.k8s.io/kustomize/v4` will start to
-obey semver with a substantially reduced public
+The `sigs.k8s.io/kustomize/api` module will
+obey semver with a sustainable public
 surface, informed by current usage.  Clients
 should import packages from this module, i.e.
 from import paths prefixed by
-`sigs.k8s.io/kustomize/v4`.  The kustomize binary
+`sigs.k8s.io/kustomize/api/v1`.  The kustomize binary
 itself is an API client requiring this module.
 
 The clients and API will evolve independently.
