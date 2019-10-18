@@ -50,6 +50,15 @@ git checkout kustomize/v3.2.3
 
 ### Other methods
 
+#### Use go get
+
+This works poorly with existing `Go` package installations at the
+moment, since kustomize switched over to Go modules but hasn't
+historically followed semver with respect to its API.
+
+This is being [fixed](versioningPolicy.md), after which
+`go get` should work correctly.
+
 #### macOS
 
 ```
