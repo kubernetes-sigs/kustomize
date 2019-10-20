@@ -58,7 +58,7 @@ func TestWriteAndRead(t *testing.T) {
 	}
 
 	fSys := filesys.MakeFsInMemory()
-	testutils.WriteTestKustomization(fSys)
+	testutils_test.WriteTestKustomization(fSys)
 	mf, err := NewKustomizationFile(fSys)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
@@ -144,7 +144,7 @@ patchesStrategicMerge:
 - pod.yaml
 `)
 	fSys := filesys.MakeFsInMemory()
-	testutils.WriteTestKustomizationWith(fSys, kustomizationContentWithComments)
+	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithComments)
 	mf, err := NewKustomizationFile(fSys)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)
@@ -236,7 +236,7 @@ generatorOptions:
   disableNameSuffixHash: true
 `)
 	fSys := filesys.MakeFsInMemory()
-	testutils.WriteTestKustomizationWith(
+	testutils_test.WriteTestKustomizationWith(
 		fSys, kustomizationContentWithComments)
 	mf, err := NewKustomizationFile(fSys)
 	if err != nil {
@@ -274,7 +274,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 `)
 	fSys := filesys.MakeFsInMemory()
-	testutils.WriteTestKustomizationWith(
+	testutils_test.WriteTestKustomizationWith(
 		fSys, kustomizationContentWithComments)
 	mf, err := NewKustomizationFile(fSys)
 	if err != nil {
@@ -320,7 +320,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 `)
 	fSys := filesys.MakeFsInMemory()
-	testutils.WriteTestKustomizationWith(fSys, kustomizationContentWithComments)
+	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithComments)
 	mf, err := NewKustomizationFile(fSys)
 	if err != nil {
 		t.Fatalf("Unexpected Error: %v", err)

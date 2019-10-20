@@ -126,7 +126,7 @@ func TestRemoveResources(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
 			fSys := filesys.MakeFsInMemory()
-			testutils.WriteTestKustomizationWith(
+			testutils_test.WriteTestKustomizationWith(
 				fSys,
 				[]byte(fmt.Sprintf(
 					"resources:\n  - %s", strings.Join(tc.given.resources, "\n  - "))))
@@ -141,7 +141,7 @@ func TestRemoveResources(t *testing.T) {
 				}
 				return
 			}
-			content, err := testutils.ReadTestKustomization(fSys)
+			content, err := testutils_test.ReadTestKustomization(fSys)
 			if err != nil {
 				t.Errorf("unexpected read error: %v", err)
 			}

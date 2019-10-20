@@ -9,9 +9,9 @@ import (
 
 	"sigs.k8s.io/kustomize/v3/api/builtinconfig"
 	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/api/resmap"
+	"sigs.k8s.io/kustomize/v3/api/resource"
 	"sigs.k8s.io/kustomize/v3/api/transform"
-	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/resource"
 )
 
 type nameReferenceTransformer struct {

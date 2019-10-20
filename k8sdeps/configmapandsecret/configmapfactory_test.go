@@ -12,9 +12,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/kustomize/v3/api/filesys"
 	"sigs.k8s.io/kustomize/v3/api/kv"
+	"sigs.k8s.io/kustomize/v3/api/loader"
+	"sigs.k8s.io/kustomize/v3/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/v3/api/types"
-	"sigs.k8s.io/kustomize/v3/pkg/loader"
-	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
 
 func makeEnvConfigMap(name string) *corev1.ConfigMap {
@@ -144,7 +144,7 @@ func TestConstructConfigMap(t *testing.T) {
 		[]byte{0xff, 0xfd})
 	kvLdr := kv.NewLoader(
 		loader.NewFileLoaderAtRoot(fSys),
-		validators.MakeFakeValidator())
+		valtest_test.MakeFakeValidator())
 	for _, tc := range testCases {
 		f := NewFactory(kvLdr, tc.options)
 		cm, err := f.MakeConfigMap(&tc.input)

@@ -6,10 +6,10 @@ package accumulator
 import (
 	"fmt"
 
+	"sigs.k8s.io/kustomize/v3/api/resmap"
 	"sigs.k8s.io/kustomize/v3/api/transform"
 	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/expansion"
-	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 )
 
 type refVarTransformer struct {

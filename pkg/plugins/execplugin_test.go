@@ -8,12 +8,12 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/api/resmap"
+	"sigs.k8s.io/kustomize/v3/api/resource"
+	"sigs.k8s.io/kustomize/v3/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/resource"
-	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
 
 func TestExecPluginConfig(t *testing.T) {
@@ -22,7 +22,7 @@ func TestExecPluginConfig(t *testing.T) {
 		resource.NewFactory(
 			kunstruct.NewKunstructuredFactoryImpl()), nil)
 	ldr := loadertest.NewFakeLoader(path)
-	v := validators.MakeFakeValidator()
+	v := valtest_test.MakeFakeValidator()
 	pluginConfig := rf.RF().FromMap(
 		map[string]interface{}{
 			"apiVersion": "someteam.example.com/v1",

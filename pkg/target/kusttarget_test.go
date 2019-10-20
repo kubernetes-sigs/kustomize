@@ -9,15 +9,15 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/api/ifc"
 	"sigs.k8s.io/kustomize/v3/api/kusttest"
 	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/api/resmap"
+	"sigs.k8s.io/kustomize/v3/api/resource"
+	"sigs.k8s.io/kustomize/v3/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
-	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	. "sigs.k8s.io/kustomize/v3/pkg/target"
-	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
 
 const (
@@ -186,7 +186,7 @@ func TestResources(t *testing.T) {
 func TestKustomizationNotFound(t *testing.T) {
 	_, err := NewKustTarget(
 		loadertest.NewFakeLoader("/foo"),
-		validators.MakeFakeValidator(), nil, nil, nil)
+		valtest_test.MakeFakeValidator(), nil, nil, nil)
 	if err == nil {
 		t.Fatalf("expected an error")
 	}

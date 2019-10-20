@@ -24,7 +24,7 @@ func makeKustomizationPatchFS() filesys.FileSystem {
 	fSys := filesys.MakeFsInMemory()
 	patches := []string{"patch1.yaml", "patch2.yaml"}
 
-	testutils.WriteTestKustomizationWith(fSys, []byte(
+	testutils_test.WriteTestKustomizationWith(fSys, []byte(
 		fmt.Sprintf("patchesStrategicMerge:\n  - %s",
 			strings.Join(patches, "\n  - "))))
 

@@ -1,8 +1,8 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// Package validators defines a FakeValidator that can be used in tests
-package validators
+// Package valtest_test defines a fakeValidator that can be used in tests
+package valtest_test
 
 import (
 	"errors"
@@ -10,8 +10,8 @@ import (
 	"testing"
 )
 
-// FakeValidator can be used in tests.
-type FakeValidator struct {
+// fakeValidator can be used in tests.
+type fakeValidator struct {
 	happy  bool
 	called bool
 	t      *testing.T
@@ -20,53 +20,53 @@ type FakeValidator struct {
 // SAD is an error string.
 const SAD = "i'm not happy Bob, NOT HAPPY"
 
-// MakeHappyMapValidator makes a FakeValidator that always passes.
-func MakeHappyMapValidator(t *testing.T) *FakeValidator {
-	return &FakeValidator{happy: true, t: t}
+// MakeHappyMapValidator makes a fakeValidator that always passes.
+func MakeHappyMapValidator(t *testing.T) *fakeValidator {
+	return &fakeValidator{happy: true, t: t}
 }
 
-// MakeSadMapValidator makes a FakeValidator that always fails.
-func MakeSadMapValidator(t *testing.T) *FakeValidator {
-	return &FakeValidator{happy: false, t: t}
+// MakeSadMapValidator makes a fakeValidator that always fails.
+func MakeSadMapValidator(t *testing.T) *fakeValidator {
+	return &fakeValidator{happy: false, t: t}
 }
 
 // MakeFakeValidator makes an empty Fake Validator.
-func MakeFakeValidator() *FakeValidator {
-	return &FakeValidator{}
+func MakeFakeValidator() *fakeValidator {
+	return &fakeValidator{}
 }
 
 // ErrIfInvalidKey returns nil
-func (v *FakeValidator) ErrIfInvalidKey(k string) error {
+func (v *fakeValidator) ErrIfInvalidKey(k string) error {
 	return nil
 }
 
 // IsEnvVarName returns nil
-func (v *FakeValidator) IsEnvVarName(k string) error {
+func (v *fakeValidator) IsEnvVarName(k string) error {
 	return nil
 }
 
 // MakeAnnotationValidator returns a nil function
-func (v *FakeValidator) MakeAnnotationValidator() func(map[string]string) error {
+func (v *fakeValidator) MakeAnnotationValidator() func(map[string]string) error {
 	return nil
 }
 
 // MakeAnnotationNameValidator returns a nil function
-func (v *FakeValidator) MakeAnnotationNameValidator() func([]string) error {
+func (v *fakeValidator) MakeAnnotationNameValidator() func([]string) error {
 	return nil
 }
 
 // MakeLabelValidator returns a nil function
-func (v *FakeValidator) MakeLabelValidator() func(map[string]string) error {
+func (v *fakeValidator) MakeLabelValidator() func(map[string]string) error {
 	return nil
 }
 
 // MakeLabelNameValidator returns a nil function
-func (v *FakeValidator) MakeLabelNameValidator() func([]string) error {
+func (v *fakeValidator) MakeLabelNameValidator() func([]string) error {
 	return nil
 }
 
 // ValidateNamespace validates namespace by regexp
-func (v *FakeValidator) ValidateNamespace(s string) []string {
+func (v *fakeValidator) ValidateNamespace(s string) []string {
 	pattern := regexp.MustCompile(`^[a-zA-Z].*`)
 	if pattern.MatchString(s) {
 		return nil
@@ -77,7 +77,7 @@ func (v *FakeValidator) ValidateNamespace(s string) []string {
 // Validator replaces apimachinery validation in tests.
 // Can be set to fail or succeed to test error handling.
 // Can confirm if run or not run by surrounding code.
-func (v *FakeValidator) Validator(_ map[string]string) error {
+func (v *fakeValidator) Validator(_ map[string]string) error {
 	v.called = true
 	if v.happy {
 		return nil
@@ -85,7 +85,7 @@ func (v *FakeValidator) Validator(_ map[string]string) error {
 	return errors.New(SAD)
 }
 
-func (v *FakeValidator) ValidatorArray(_ []string) error {
+func (v *fakeValidator) ValidatorArray(_ []string) error {
 	v.called = true
 	if v.happy {
 		return nil
@@ -94,14 +94,14 @@ func (v *FakeValidator) ValidatorArray(_ []string) error {
 }
 
 // VerifyCall returns true if Validator was used.
-func (v *FakeValidator) VerifyCall() {
+func (v *fakeValidator) VerifyCall() {
 	if !v.called {
 		v.t.Errorf("should have called Validator")
 	}
 }
 
 // VerifyNoCall returns true if Validator was not used.
-func (v *FakeValidator) VerifyNoCall() {
+func (v *fakeValidator) VerifyNoCall() {
 	if v.called {
 		v.t.Errorf("should not have called Validator")
 	}

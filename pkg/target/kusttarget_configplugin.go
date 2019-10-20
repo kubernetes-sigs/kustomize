@@ -5,9 +5,9 @@ package target
 
 import (
 	"sigs.k8s.io/kustomize/v3/api/builtinconfig"
+	"sigs.k8s.io/kustomize/v3/api/resmap"
 	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/plugins"
-	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 )
 
 // Functions dedicated to configuring the builtin

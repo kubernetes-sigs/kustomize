@@ -11,14 +11,14 @@ import (
 
 	"sigs.k8s.io/kustomize/v3/api/filesys"
 	"sigs.k8s.io/kustomize/v3/api/kusttest"
+	"sigs.k8s.io/kustomize/v3/api/loader"
+	"sigs.k8s.io/kustomize/v3/api/resmap"
+	"sigs.k8s.io/kustomize/v3/api/resource"
+	"sigs.k8s.io/kustomize/v3/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/transformer"
-	"sigs.k8s.io/kustomize/v3/pkg/loader"
 	"sigs.k8s.io/kustomize/v3/pkg/plugins"
-	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/target"
-	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
 
 func TestPluginDir(t *testing.T) {
@@ -66,7 +66,7 @@ metadata:
 
 	pl := plugins.NewLoader(plugins.ActivePluginConfig(), rf)
 	tg, err := target.NewKustTarget(
-		ldr, validators.MakeFakeValidator(), rf, transformer.NewFactoryImpl(), pl)
+		ldr, valtest_test.MakeFakeValidator(), rf, transformer.NewFactoryImpl(), pl)
 	if err != nil {
 		t.Fatalf("err %v", err)
 	}
