@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/api/ifc"
+	"sigs.k8s.io/kustomize/v3/api/k8sdeps/kunstruct"
 	. "sigs.k8s.io/kustomize/v3/api/transform"
-	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 )
 
 type noopMutator struct {

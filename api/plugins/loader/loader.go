@@ -10,17 +10,15 @@ import (
 	"reflect"
 	"strings"
 
-	"sigs.k8s.io/kustomize/v3/api/plugins/builtins"
-
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/v3/api/ifc"
+	"sigs.k8s.io/kustomize/v3/api/plugins/builtins"
 	"sigs.k8s.io/kustomize/v3/api/plugins/config"
 	"sigs.k8s.io/kustomize/v3/api/plugins/execplugin"
 	"sigs.k8s.io/kustomize/v3/api/resid"
 	"sigs.k8s.io/kustomize/v3/api/resmap"
 	"sigs.k8s.io/kustomize/v3/api/resource"
 	"sigs.k8s.io/kustomize/v3/api/types"
-	"sigs.k8s.io/kustomize/v3/pkg/plugins"
 )
 
 type Loader struct {
@@ -176,11 +174,11 @@ func (l *Loader) loadGoPlugin(id resid.ResId) (resmap.Configurable, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "plugin %s fails to load", absPath)
 	}
-	symbol, err := p.Lookup(plugins.PluginSymbol)
+	symbol, err := p.Lookup(config.PluginSymbol)
 	if err != nil {
 		return nil, errors.Wrapf(
 			err, "plugin %s doesn't have symbol %s",
-			regId, plugins.PluginSymbol)
+			regId, config.PluginSymbol)
 	}
 	c, ok := symbol.(resmap.Configurable)
 	if !ok {

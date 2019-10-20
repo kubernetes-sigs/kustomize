@@ -11,6 +11,8 @@ import (
 
 	"sigs.k8s.io/kustomize/v3/api/builtinconfig/consts"
 	"sigs.k8s.io/kustomize/v3/api/internal/loadertest"
+	"sigs.k8s.io/kustomize/v3/api/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/v3/api/k8sdeps/transformer"
 	fLdr "sigs.k8s.io/kustomize/v3/api/loader"
 	"sigs.k8s.io/kustomize/v3/api/pgmconfig"
 	"sigs.k8s.io/kustomize/v3/api/plugins/config"
@@ -20,8 +22,6 @@ import (
 	"sigs.k8s.io/kustomize/v3/api/target"
 	"sigs.k8s.io/kustomize/v3/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/v3/api/types"
-	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/v3/k8sdeps/transformer"
 )
 
 // KustTestHarness is an environment for running a kustomize build,
