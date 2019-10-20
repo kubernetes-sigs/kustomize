@@ -1,25 +1,13 @@
-/*
-Copyright 2018 The Kubernetes Authors.
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
-package config
+package types
 
 import (
 	"fmt"
-	"sigs.k8s.io/kustomize/v3/api/resid"
 	"strings"
+
+	"sigs.k8s.io/kustomize/v3/api/resid"
 )
 
 // FieldSpec completely specifies a kustomizable field in
@@ -89,22 +77,22 @@ func (fs FieldSpec) PathSlice() []string {
 	return result
 }
 
-type fsSlice []FieldSpec
+type FsSlice []FieldSpec
 
-func (s fsSlice) Len() int      { return len(s) }
-func (s fsSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
-func (s fsSlice) Less(i, j int) bool {
+func (s FsSlice) Len() int      { return len(s) }
+func (s FsSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s FsSlice) Less(i, j int) bool {
 	return s[i].Gvk.IsLessThan(s[j].Gvk)
 }
 
-// mergeAll merges the argument into this, returning the result.
+// MergeAll merges the argument into this, returning the result.
 // Items already present are ignored.
 // Items that conflict (primary key matches, but remain data differs)
 // result in an error.
-func (s fsSlice) mergeAll(incoming fsSlice) (result fsSlice, err error) {
+func (s FsSlice) MergeAll(incoming FsSlice) (result FsSlice, err error) {
 	result = s
 	for _, x := range incoming {
-		result, err = result.mergeOne(x)
+		result, err = result.MergeOne(x)
 		if err != nil {
 			return nil, err
 		}
@@ -112,11 +100,11 @@ func (s fsSlice) mergeAll(incoming fsSlice) (result fsSlice, err error) {
 	return result, nil
 }
 
-// mergeOne merges the argument into this, returning the result.
+// MergeOne merges the argument into this, returning the result.
 // If the item's primary key is already present, and there are no
 // conflicts, it is ignored (we don't want duplicates).
 // If there is a conflict, the merge fails.
-func (s fsSlice) mergeOne(x FieldSpec) (fsSlice, error) {
+func (s FsSlice) MergeOne(x FieldSpec) (FsSlice, error) {
 	i := s.index(x)
 	if i > -1 {
 		// It's already there.
@@ -128,7 +116,7 @@ func (s fsSlice) mergeOne(x FieldSpec) (fsSlice, error) {
 	return append(s, x), nil
 }
 
-func (s fsSlice) index(fs FieldSpec) int {
+func (s FsSlice) index(fs FieldSpec) int {
 	for i, x := range s {
 		if x.effectivelyEquals(fs) {
 			return i

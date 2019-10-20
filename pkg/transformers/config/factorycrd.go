@@ -19,6 +19,7 @@ package config
 import (
 	"encoding/json"
 	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"strings"
 
 	"github.com/go-openapi/spec"
@@ -175,7 +176,7 @@ func loadCrdIntoConfig(
 				err = theConfig.AddNamereferenceFieldSpec(
 					NameBackReferences{
 						Gvk: resid.Gvk{Kind: kind, Version: version},
-						FieldSpecs: []FieldSpec{
+						FieldSpecs: []types.FieldSpec{
 							makeFs(theGvk, append(path, propName, nameKey))},
 					})
 				if err != nil {
@@ -192,8 +193,8 @@ func loadCrdIntoConfig(
 	return nil
 }
 
-func makeFs(in resid.Gvk, path []string) FieldSpec {
-	return FieldSpec{
+func makeFs(in resid.Gvk, path []string) types.FieldSpec {
+	return types.FieldSpec{
 		CreateIfNotPresent: false,
 		Gvk:                in,
 		Path:               strings.Join(path, "/"),

@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package config
+package types
 
 import (
 	"fmt"
@@ -38,14 +38,14 @@ func TestPathSlice(t *testing.T) {
 
 var mergeTests = []struct {
 	name     string
-	original fsSlice
-	incoming fsSlice
+	original FsSlice
+	incoming FsSlice
 	err      error
-	result   fsSlice
+	result   FsSlice
 }{
 	{
 		"normal",
-		fsSlice{
+		FsSlice{
 			{
 				Path:               "whatever",
 				Gvk:                resid.Gvk{Group: "apple"},
@@ -57,7 +57,7 @@ var mergeTests = []struct {
 				CreateIfNotPresent: false,
 			},
 		},
-		fsSlice{
+		FsSlice{
 			{
 				Path:               "home",
 				Gvk:                resid.Gvk{Group: "beans"},
@@ -65,7 +65,7 @@ var mergeTests = []struct {
 			},
 		},
 		nil,
-		fsSlice{
+		FsSlice{
 			{
 				Path:               "whatever",
 				Gvk:                resid.Gvk{Group: "apple"},
@@ -85,7 +85,7 @@ var mergeTests = []struct {
 	},
 	{
 		"ignore copy",
-		fsSlice{
+		FsSlice{
 			{
 				Path:               "whatever",
 				Gvk:                resid.Gvk{Group: "apple"},
@@ -97,7 +97,7 @@ var mergeTests = []struct {
 				CreateIfNotPresent: false,
 			},
 		},
-		fsSlice{
+		FsSlice{
 			{
 				Path:               "whatever",
 				Gvk:                resid.Gvk{Group: "apple"},
@@ -105,7 +105,7 @@ var mergeTests = []struct {
 			},
 		},
 		nil,
-		fsSlice{
+		FsSlice{
 			{
 				Path:               "whatever",
 				Gvk:                resid.Gvk{Group: "apple"},
@@ -120,7 +120,7 @@ var mergeTests = []struct {
 	},
 	{
 		"error on conflict",
-		fsSlice{
+		FsSlice{
 			{
 				Path:               "whatever",
 				Gvk:                resid.Gvk{Group: "apple"},
@@ -132,7 +132,7 @@ var mergeTests = []struct {
 				CreateIfNotPresent: false,
 			},
 		},
-		fsSlice{
+		FsSlice{
 			{
 				Path:               "whatever",
 				Gvk:                resid.Gvk{Group: "apple"},
@@ -140,13 +140,13 @@ var mergeTests = []struct {
 			},
 		},
 		fmt.Errorf("hey"),
-		fsSlice{},
+		FsSlice{},
 	},
 }
 
 func TestFsSlice_MergeAll(t *testing.T) {
 	for _, item := range mergeTests {
-		result, err := item.original.mergeAll(item.incoming)
+		result, err := item.original.MergeAll(item.incoming)
 		if item.err == nil {
 			if err != nil {
 				t.Fatalf("test %s: unexpected err %v", item.name, err)

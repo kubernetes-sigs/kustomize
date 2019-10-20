@@ -20,6 +20,7 @@ package config
 
 import (
 	"log"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sort"
 
 	"sigs.k8s.io/kustomize/v3/pkg/transformers/config/defaultconfig"
@@ -27,15 +28,15 @@ import (
 
 // TransformerConfig holds the data needed to perform transformations.
 type TransformerConfig struct {
-	NamePrefix        fsSlice  `json:"namePrefix,omitempty" yaml:"namePrefix,omitempty"`
-	NameSuffix        fsSlice  `json:"nameSuffix,omitempty" yaml:"nameSuffix,omitempty"`
-	NameSpace         fsSlice  `json:"namespace,omitempty" yaml:"namespace,omitempty"`
-	CommonLabels      fsSlice  `json:"commonLabels,omitempty" yaml:"commonLabels,omitempty"`
-	CommonAnnotations fsSlice  `json:"commonAnnotations,omitempty" yaml:"commonAnnotations,omitempty"`
-	NameReference     nbrSlice `json:"nameReference,omitempty" yaml:"nameReference,omitempty"`
-	VarReference      fsSlice  `json:"varReference,omitempty" yaml:"varReference,omitempty"`
-	Images            fsSlice  `json:"images,omitempty" yaml:"images,omitempty"`
-	Replicas          fsSlice  `json:"replicas,omitempty" yaml:"replicas,omitempty"`
+	NamePrefix        types.FsSlice `json:"namePrefix,omitempty" yaml:"namePrefix,omitempty"`
+	NameSuffix        types.FsSlice `json:"nameSuffix,omitempty" yaml:"nameSuffix,omitempty"`
+	NameSpace         types.FsSlice `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	CommonLabels      types.FsSlice `json:"commonLabels,omitempty" yaml:"commonLabels,omitempty"`
+	CommonAnnotations types.FsSlice `json:"commonAnnotations,omitempty" yaml:"commonAnnotations,omitempty"`
+	NameReference     nbrSlice      `json:"nameReference,omitempty" yaml:"nameReference,omitempty"`
+	VarReference      types.FsSlice `json:"varReference,omitempty" yaml:"varReference,omitempty"`
+	Images            types.FsSlice `json:"images,omitempty" yaml:"images,omitempty"`
+	Replicas          types.FsSlice `json:"replicas,omitempty" yaml:"replicas,omitempty"`
 }
 
 // MakeEmptyConfig returns an empty TransformerConfig object
@@ -66,26 +67,26 @@ func (t *TransformerConfig) sortFields() {
 }
 
 // AddPrefixFieldSpec adds a FieldSpec to NamePrefix
-func (t *TransformerConfig) AddPrefixFieldSpec(fs FieldSpec) (err error) {
-	t.NamePrefix, err = t.NamePrefix.mergeOne(fs)
+func (t *TransformerConfig) AddPrefixFieldSpec(fs types.FieldSpec) (err error) {
+	t.NamePrefix, err = t.NamePrefix.MergeOne(fs)
 	return err
 }
 
 // AddSuffixFieldSpec adds a FieldSpec to NameSuffix
-func (t *TransformerConfig) AddSuffixFieldSpec(fs FieldSpec) (err error) {
-	t.NameSuffix, err = t.NameSuffix.mergeOne(fs)
+func (t *TransformerConfig) AddSuffixFieldSpec(fs types.FieldSpec) (err error) {
+	t.NameSuffix, err = t.NameSuffix.MergeOne(fs)
 	return err
 }
 
 // AddLabelFieldSpec adds a FieldSpec to CommonLabels
-func (t *TransformerConfig) AddLabelFieldSpec(fs FieldSpec) (err error) {
-	t.CommonLabels, err = t.CommonLabels.mergeOne(fs)
+func (t *TransformerConfig) AddLabelFieldSpec(fs types.FieldSpec) (err error) {
+	t.CommonLabels, err = t.CommonLabels.MergeOne(fs)
 	return err
 }
 
 // AddAnnotationFieldSpec adds a FieldSpec to CommonAnnotations
-func (t *TransformerConfig) AddAnnotationFieldSpec(fs FieldSpec) (err error) {
-	t.CommonAnnotations, err = t.CommonAnnotations.mergeOne(fs)
+func (t *TransformerConfig) AddAnnotationFieldSpec(fs types.FieldSpec) (err error) {
+	t.CommonAnnotations, err = t.CommonAnnotations.MergeOne(fs)
 	return err
 }
 
@@ -104,28 +105,28 @@ func (t *TransformerConfig) Merge(input *TransformerConfig) (
 		return t, nil
 	}
 	merged = &TransformerConfig{}
-	merged.NamePrefix, err = t.NamePrefix.mergeAll(input.NamePrefix)
+	merged.NamePrefix, err = t.NamePrefix.MergeAll(input.NamePrefix)
 	if err != nil {
 		return nil, err
 	}
-	merged.NameSuffix, err = t.NameSuffix.mergeAll(input.NameSuffix)
+	merged.NameSuffix, err = t.NameSuffix.MergeAll(input.NameSuffix)
 	if err != nil {
 		return nil, err
 	}
-	merged.NameSpace, err = t.NameSpace.mergeAll(input.NameSpace)
+	merged.NameSpace, err = t.NameSpace.MergeAll(input.NameSpace)
 	if err != nil {
 		return nil, err
 	}
-	merged.CommonAnnotations, err = t.CommonAnnotations.mergeAll(
+	merged.CommonAnnotations, err = t.CommonAnnotations.MergeAll(
 		input.CommonAnnotations)
 	if err != nil {
 		return nil, err
 	}
-	merged.CommonLabels, err = t.CommonLabels.mergeAll(input.CommonLabels)
+	merged.CommonLabels, err = t.CommonLabels.MergeAll(input.CommonLabels)
 	if err != nil {
 		return nil, err
 	}
-	merged.VarReference, err = t.VarReference.mergeAll(input.VarReference)
+	merged.VarReference, err = t.VarReference.MergeAll(input.VarReference)
 	if err != nil {
 		return nil, err
 	}
@@ -133,11 +134,11 @@ func (t *TransformerConfig) Merge(input *TransformerConfig) (
 	if err != nil {
 		return nil, err
 	}
-	merged.Images, err = t.Images.mergeAll(input.Images)
+	merged.Images, err = t.Images.MergeAll(input.Images)
 	if err != nil {
 		return nil, err
 	}
-	merged.Replicas, err = t.Replicas.mergeAll(input.Replicas)
+	merged.Replicas, err = t.Replicas.MergeAll(input.Replicas)
 	if err != nil {
 		return nil, err
 	}

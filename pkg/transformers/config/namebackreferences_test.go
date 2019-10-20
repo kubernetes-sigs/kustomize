@@ -19,11 +19,12 @@ package config
 import (
 	"reflect"
 	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"testing"
 )
 
 func TestMergeAll(t *testing.T) {
-	fsSlice1 := []FieldSpec{
+	fsSlice1 := []types.FieldSpec{
 		{
 			Gvk: resid.Gvk{
 				Kind: "Pod",
@@ -39,7 +40,7 @@ func TestMergeAll(t *testing.T) {
 			CreateIfNotPresent: false,
 		},
 	}
-	fsSlice2 := []FieldSpec{
+	fsSlice2 := []types.FieldSpec{
 		{
 			Gvk: resid.Gvk{
 				Kind: "Job",

@@ -18,16 +18,16 @@ package transformers
 
 import (
 	"fmt"
+	"sigs.k8s.io/kustomize/v3/api/types"
 
 	"sigs.k8s.io/kustomize/v3/pkg/expansion"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 )
 
 type RefVarTransformer struct {
 	varMap            map[string]interface{}
 	replacementCounts map[string]int
-	fieldSpecs        []config.FieldSpec
+	fieldSpecs        []types.FieldSpec
 	mappingFunc       func(string) interface{}
 }
 
@@ -35,7 +35,7 @@ type RefVarTransformer struct {
 // that replaces $(VAR) style variables with values.
 // The fieldSpecs are the places to look for occurrences of $(VAR).
 func NewRefVarTransformer(
-	varMap map[string]interface{}, fs []config.FieldSpec) *RefVarTransformer {
+	varMap map[string]interface{}, fs []types.FieldSpec) *RefVarTransformer {
 	return &RefVarTransformer{
 		varMap:     varMap,
 		fieldSpecs: fs,

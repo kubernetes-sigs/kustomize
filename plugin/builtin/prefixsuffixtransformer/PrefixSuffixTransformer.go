@@ -7,26 +7,26 @@ package main
 import (
 	"errors"
 	"fmt"
+	"sigs.k8s.io/kustomize/v3/api/types"
 
 	"sigs.k8s.io/kustomize/v3/api/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 	"sigs.k8s.io/yaml"
 )
 
 // Add the given prefix and suffix to the field.
 type plugin struct {
-	Prefix     string             `json:"prefix,omitempty" yaml:"prefix,omitempty"`
-	Suffix     string             `json:"suffix,omitempty" yaml:"suffix,omitempty"`
-	FieldSpecs []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+	Prefix     string            `json:"prefix,omitempty" yaml:"prefix,omitempty"`
+	Suffix     string            `json:"suffix,omitempty" yaml:"suffix,omitempty"`
+	FieldSpecs []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
 //noinspection GoUnusedGlobalVariable
 var KustomizePlugin plugin
 
 // Not placed in a file yet due to lack of demand.
-var prefixSuffixFieldSpecsToSkip = []config.FieldSpec{
+var prefixSuffixFieldSpecsToSkip = []types.FieldSpec{
 	{
 		Gvk: resid.Gvk{Kind: "CustomResourceDefinition"},
 	},
@@ -98,7 +98,7 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 	return nil
 }
 
-func smellsLikeANameChange(fs *config.FieldSpec) bool {
+func smellsLikeANameChange(fs *types.FieldSpec) bool {
 	return fs.Path == "metadata/name"
 }
 

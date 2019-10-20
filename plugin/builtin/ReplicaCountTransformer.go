@@ -8,15 +8,14 @@ import (
 	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 	"sigs.k8s.io/yaml"
 )
 
 // Find matching replicas declarations and replace the count.
 // Eases the kustomization configuration of replica changes.
 type ReplicaCountTransformerPlugin struct {
-	Replica    types.Replica      `json:"replica,omitempty" yaml:"replica,omitempty"`
-	FieldSpecs []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+	Replica    types.Replica     `json:"replica,omitempty" yaml:"replica,omitempty"`
+	FieldSpecs []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
 func (p *ReplicaCountTransformerPlugin) Config(

@@ -2,16 +2,16 @@
 package builtin
 
 import (
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 	"sigs.k8s.io/yaml"
 )
 
 // Add the given annotations to the given field specifications.
 type AnnotationsTransformerPlugin struct {
-	Annotations map[string]string  `json:"annotations,omitempty" yaml:"annotations,omitempty"`
-	FieldSpecs  []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+	FieldSpecs  []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
 func (p *AnnotationsTransformerPlugin) Config(
