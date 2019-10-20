@@ -17,7 +17,7 @@ const (
 
 func TestSetNamePrefixHappyPath(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	testutils.WriteTestKustomization(fSys)
+	testutils_test.WriteTestKustomization(fSys)
 
 	cmd := newCmdSetNamePrefix(fSys)
 	args := []string{goodPrefixValue}
@@ -25,7 +25,7 @@ func TestSetNamePrefixHappyPath(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	content, err := testutils.ReadTestKustomization(fSys)
+	content, err := testutils_test.ReadTestKustomization(fSys)
 	if err != nil {
 		t.Errorf("unexpected read error: %v", err)
 	}

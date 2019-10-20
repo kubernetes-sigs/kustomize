@@ -7,12 +7,12 @@ import (
 	"sigs.k8s.io/kustomize/v3/api/kusttest"
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/api/resmap"
+	"sigs.k8s.io/kustomize/v3/api/resource"
+	"sigs.k8s.io/kustomize/v3/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 	. "sigs.k8s.io/kustomize/v3/pkg/plugins"
-	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/resource"
-	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
 
 const (
@@ -67,7 +67,7 @@ func TestLoader(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = pLdr.LoadGenerators(ldr, validators.MakeFakeValidator(), m)
+	_, err = pLdr.LoadGenerators(ldr, valtest_test.MakeFakeValidator(), m)
 	if err != nil {
 		t.Fatal(err)
 	}

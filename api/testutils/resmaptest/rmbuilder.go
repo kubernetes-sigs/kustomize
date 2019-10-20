@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/api/resid"
-	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/resource"
+	"sigs.k8s.io/kustomize/v3/api/resmap"
+	"sigs.k8s.io/kustomize/v3/api/resource"
 )
 
 // Builds ResMaps for tests, with test-aware error handling.

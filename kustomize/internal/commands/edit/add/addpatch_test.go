@@ -23,7 +23,7 @@ func TestAddPatchHappyPath(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	fSys.WriteFile(patchFileName, []byte(patchFileContent))
 	fSys.WriteFile(patchFileName+"another", []byte(patchFileContent))
-	testutils.WriteTestKustomization(fSys)
+	testutils_test.WriteTestKustomization(fSys)
 
 	cmd := newCmdAddPatch(fSys)
 	args := []string{patchFileName + "*"}
@@ -31,7 +31,7 @@ func TestAddPatchHappyPath(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	content, err := testutils.ReadTestKustomization(fSys)
+	content, err := testutils_test.ReadTestKustomization(fSys)
 	if err != nil {
 		t.Errorf("unexpected read error: %v", err)
 	}
@@ -46,7 +46,7 @@ func TestAddPatchHappyPath(t *testing.T) {
 func TestAddPatchAlreadyThere(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	fSys.WriteFile(patchFileName, []byte(patchFileContent))
-	testutils.WriteTestKustomization(fSys)
+	testutils_test.WriteTestKustomization(fSys)
 
 	cmd := newCmdAddPatch(fSys)
 	args := []string{patchFileName}

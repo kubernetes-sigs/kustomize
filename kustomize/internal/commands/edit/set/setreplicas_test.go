@@ -115,11 +115,11 @@ func TestSetReplicas(t *testing.T) {
 
 			if len(tc.given.infileReplicas) > 0 {
 				// write file with infileReplicas
-				testutils.WriteTestKustomizationWith(
+				testutils_test.WriteTestKustomizationWith(
 					fSys,
 					[]byte(strings.Join(tc.given.infileReplicas, "\n")))
 			} else {
-				testutils.WriteTestKustomization(fSys)
+				testutils_test.WriteTestKustomization(fSys)
 			}
 
 			// act
@@ -131,7 +131,7 @@ func TestSetReplicas(t *testing.T) {
 				t.FailNow()
 			}
 
-			content, err := testutils.ReadTestKustomization(fSys)
+			content, err := testutils_test.ReadTestKustomization(fSys)
 			if err != nil {
 				t.Errorf("unexpected read error: %v", err)
 				t.FailNow()

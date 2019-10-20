@@ -11,10 +11,10 @@ import (
 	"regexp"
 
 	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/v3/api/ifc"
 	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/api/resource"
 	"sigs.k8s.io/kustomize/v3/api/types"
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
-	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/yaml"
 )
 

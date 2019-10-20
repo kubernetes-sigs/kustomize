@@ -13,14 +13,14 @@ import (
 
 func TestFix(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	testutils.WriteTestKustomizationWith(fSys, []byte(`nameprefix: some-prefix-`))
+	testutils_test.WriteTestKustomizationWith(fSys, []byte(`nameprefix: some-prefix-`))
 
 	cmd := NewCmdFix(fSys)
 	err := cmd.RunE(cmd, nil)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	content, err := testutils.ReadTestKustomization(fSys)
+	content, err := testutils_test.ReadTestKustomization(fSys)
 	if err != nil {
 		t.Errorf("unexpected read error: %v", err)
 	}

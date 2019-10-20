@@ -10,17 +10,17 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/api/builtinconfig/consts"
+	"sigs.k8s.io/kustomize/v3/api/loader"
+	"sigs.k8s.io/kustomize/v3/api/resmap"
+	"sigs.k8s.io/kustomize/v3/api/resource"
+	"sigs.k8s.io/kustomize/v3/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/transformer"
-	"sigs.k8s.io/kustomize/v3/pkg/loader"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/v3/pkg/plugins"
-	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/target"
-	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
 
 // KustTestHarness is an environment for running a kustomize build,
@@ -63,7 +63,7 @@ func NewKustTestHarnessFull(
 
 func (th *KustTestHarness) MakeKustTarget() *target.KustTarget {
 	kt, err := target.NewKustTarget(
-		th.ldr, validators.MakeFakeValidator(), th.rf,
+		th.ldr, valtest_test.MakeFakeValidator(), th.rf,
 		transformer.NewFactoryImpl(), th.pl)
 	if err != nil {
 		th.t.Fatalf("Unexpected construction error %v", err)
@@ -119,7 +119,7 @@ func (th *KustTestHarness) LoadAndRunGenerator(
 		th.t.Fatalf("Err: %v", err)
 	}
 	g, err := th.pl.LoadGenerator(
-		th.ldr, validators.MakeFakeValidator(), res)
+		th.ldr, valtest_test.MakeFakeValidator(), res)
 	if err != nil {
 		th.t.Fatalf("Err: %v", err)
 	}
@@ -161,7 +161,7 @@ func (th *KustTestHarness) RunTransformerFromResMap(
 		th.t.Fatalf("Err: %v", err)
 	}
 	g, err := th.pl.LoadTransformer(
-		th.ldr, validators.MakeFakeValidator(), transConfig)
+		th.ldr, valtest_test.MakeFakeValidator(), transConfig)
 	if err != nil {
 		return nil, err
 	}

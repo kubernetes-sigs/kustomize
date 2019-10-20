@@ -8,8 +8,8 @@ import (
 	"sort"
 
 	"sigs.k8s.io/kustomize/v3/api/builtinconfig/consts"
+	"sigs.k8s.io/kustomize/v3/api/ifc"
 	"sigs.k8s.io/kustomize/v3/api/types"
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 )
 
 // TransformerConfig holds the data needed to perform transformations.

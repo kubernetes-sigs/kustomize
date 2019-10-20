@@ -4,14 +4,14 @@
 package resmap_test
 
 import (
-	"sigs.k8s.io/kustomize/v3/api/resid"
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/api/resid"
+	. "sigs.k8s.io/kustomize/v3/api/resmap"
 	"sigs.k8s.io/kustomize/v3/api/types"
-	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 )
 
-func setupRMForPatchTargets(t *testing.T) resmap.ResMap {
+func setupRMForPatchTargets(t *testing.T) ResMap {
 	result, err := rmF.NewResMapFromBytes([]byte(`
 apiVersion: group1/v1
 kind: Kind1
