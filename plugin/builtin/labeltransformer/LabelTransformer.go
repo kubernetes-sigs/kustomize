@@ -5,16 +5,16 @@
 package main
 
 import (
+	"sigs.k8s.io/kustomize/v3/api/transform"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 	"sigs.k8s.io/yaml"
 )
 
 // Add the given labels to the given field specifications.
 type plugin struct {
-	Labels     map[string]string  `json:"labels,omitempty" yaml:"labels,omitempty"`
-	FieldSpecs []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+	Labels     map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	FieldSpecs []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
 //noinspection GoUnusedGlobalVariable
@@ -28,7 +28,7 @@ func (p *plugin) Config(
 }
 
 func (p *plugin) Transform(m resmap.ResMap) error {
-	t, err := transformers.NewMapTransformer(
+	t, err := transform.NewMapTransformer(
 		p.FieldSpecs,
 		p.Labels,
 	)

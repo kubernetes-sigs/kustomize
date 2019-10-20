@@ -6,20 +6,19 @@ package main
 
 import (
 	"fmt"
+	"sigs.k8s.io/kustomize/v3/api/transform"
 
 	"sigs.k8s.io/kustomize/v3/api/resid"
 	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 	"sigs.k8s.io/yaml"
 )
 
 // Change or set the namespace of non-cluster level resources.
 type plugin struct {
 	types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
-	FieldSpecs       []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+	FieldSpecs       []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
 //noinspection GoUnusedGlobalVariable
@@ -46,7 +45,7 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 		applicableFs := p.applicableFieldSpecs(id)
 
 		for _, fs := range applicableFs {
-			err := transformers.MutateField(
+			err := transform.MutateField(
 				r.Map(), fs.PathSlice(), fs.CreateIfNotPresent,
 				p.changeNamespace(r))
 			if err != nil {
@@ -68,8 +67,8 @@ const metaNamespace = "metadata/namespace"
 // all objects have it, even "ClusterKind" objects
 // that don't exist in a namespace (the Namespace
 // object itself doesn't live in a namespace).
-func (p *plugin) applicableFieldSpecs(id resid.ResId) []config.FieldSpec {
-	var res []config.FieldSpec
+func (p *plugin) applicableFieldSpecs(id resid.ResId) []types.FieldSpec {
+	var res []types.FieldSpec
 	for _, fs := range p.FieldSpecs {
 		if id.IsSelected(&fs.Gvk) && (fs.Path != metaNamespace || (fs.Path == metaNamespace && id.IsNamespaceableKind())) {
 			res = append(res, fs)

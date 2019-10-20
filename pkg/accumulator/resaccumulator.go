@@ -8,11 +8,10 @@ import (
 	"log"
 	"strings"
 
+	"sigs.k8s.io/kustomize/v3/api/builtinconfig"
 	"sigs.k8s.io/kustomize/v3/api/resid"
 	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 )
 
 // ResAccumulator accumulates resources and the rules
@@ -20,14 +19,14 @@ import (
 // plus stuff needed to modify the ResMap.
 type ResAccumulator struct {
 	resMap  resmap.ResMap
-	tConfig *config.TransformerConfig
+	tConfig *builtinconfig.TransformerConfig
 	varSet  types.VarSet
 }
 
 func MakeEmptyAccumulator() *ResAccumulator {
 	ra := &ResAccumulator{}
 	ra.resMap = resmap.New()
-	ra.tConfig = &config.TransformerConfig{}
+	ra.tConfig = &builtinconfig.TransformerConfig{}
 	ra.varSet = types.NewVarSet()
 	return ra
 }
@@ -53,12 +52,12 @@ func (ra *ResAccumulator) AbsorbAll(
 }
 
 func (ra *ResAccumulator) MergeConfig(
-	tConfig *config.TransformerConfig) (err error) {
+	tConfig *builtinconfig.TransformerConfig) (err error) {
 	ra.tConfig, err = ra.tConfig.Merge(tConfig)
 	return err
 }
 
-func (ra *ResAccumulator) GetTransformerConfig() *config.TransformerConfig {
+func (ra *ResAccumulator) GetTransformerConfig() *builtinconfig.TransformerConfig {
 	return ra.tConfig
 }
 
@@ -147,7 +146,7 @@ func (ra *ResAccumulator) ResolveVars() error {
 	if len(replacementMap) == 0 {
 		return nil
 	}
-	t := transformers.NewRefVarTransformer(
+	t := newRefVarTransformer(
 		replacementMap, ra.tConfig.VarReference)
 	err = ra.Transform(t)
 	if len(t.UnusedVars()) > 0 {
@@ -162,6 +161,6 @@ func (ra *ResAccumulator) FixBackReferences() (err error) {
 	if ra.tConfig.NameReference == nil {
 		return nil
 	}
-	return ra.Transform(transformers.NewNameReferenceTransformer(
+	return ra.Transform(newNameReferenceTransformer(
 		ra.tConfig.NameReference))
 }

@@ -101,7 +101,7 @@ etc.
 Generated plugins are used in kustomize via
 
   package whatever
-  import "sigs.k8s.io/kustomize/v3/plugin/builtin
+  import sigs.k8s.io/kustomize/v3/plugin/builtin
   ...
   g := builtin.NewSecretGenerator()
   g.Config(h, k)
