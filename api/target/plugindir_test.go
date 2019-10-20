@@ -10,6 +10,8 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/api/filesys"
+	"sigs.k8s.io/kustomize/v3/api/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/v3/api/k8sdeps/transformer"
 	fLdr "sigs.k8s.io/kustomize/v3/api/loader"
 	"sigs.k8s.io/kustomize/v3/api/plugins/config"
 	pLdr "sigs.k8s.io/kustomize/v3/api/plugins/loader"
@@ -18,8 +20,6 @@ import (
 	"sigs.k8s.io/kustomize/v3/api/target"
 	"sigs.k8s.io/kustomize/v3/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/v3/api/testutils/valtest"
-	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/v3/k8sdeps/transformer"
 )
 
 func TestPluginDir(t *testing.T) {

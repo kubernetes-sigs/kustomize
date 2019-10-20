@@ -9,8 +9,8 @@ import (
 
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 	"sigs.k8s.io/kustomize/v3/api/filesys"
+	"sigs.k8s.io/kustomize/v3/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/v3/api/types"
-	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 )
 
 var factory = kunstruct.NewKunstructuredFactoryImpl()
