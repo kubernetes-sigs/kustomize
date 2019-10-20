@@ -6,7 +6,7 @@ package main_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/api/kusttest"
+	"sigs.k8s.io/kustomize/v3/api/testutils/kusttest"
 )
 
 func TestConfigMapGenerator(t *testing.T) {

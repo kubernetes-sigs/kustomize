@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 	"sigs.k8s.io/kustomize/v3/api/filesys"
-	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/v3/api/pgmconfig"
 )
 
 type removeResourceOptions struct {
@@ -22,7 +22,7 @@ func newCmdRemoveResource(fSys filesys.FileSystem) *cobra.Command {
 	var o removeResourceOptions
 
 	cmd := &cobra.Command{
-		Use:   "resource",
+		Use: "resource",
 		Short: "Removes one or more resource file paths from " +
 			pgmconfig.DefaultKustomizationFileName(),
 		Example: `

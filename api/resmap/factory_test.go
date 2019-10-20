@@ -6,8 +6,9 @@ package resmap_test
 import (
 	"encoding/base64"
 	"reflect"
-	"sigs.k8s.io/kustomize/v3/api/resid"
 	"testing"
+
+	"sigs.k8s.io/kustomize/v3/api/resid"
 
 	"sigs.k8s.io/kustomize/v3/api/filesys"
 	"sigs.k8s.io/kustomize/v3/api/ifc"

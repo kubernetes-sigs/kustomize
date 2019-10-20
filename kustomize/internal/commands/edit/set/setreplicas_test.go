@@ -14,7 +14,7 @@ import (
 
 func TestSetReplicas(t *testing.T) {
 	type given struct {
-		args         []string
+		args           []string
 		infileReplicas []string
 	}
 	type expected struct {

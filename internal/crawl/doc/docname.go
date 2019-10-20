@@ -4,7 +4,7 @@ import (
 	"path"
 	"time"
 
-	"sigs.k8s.io/kustomize/v3/pkg/git"
+	"sigs.k8s.io/kustomize/v3/api/internal/git"
 )
 
 type Document struct {
