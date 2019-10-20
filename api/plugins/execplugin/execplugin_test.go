@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/api/internal/loadertest"
 	"sigs.k8s.io/kustomize/v3/api/plugins/config"
 	. "sigs.k8s.io/kustomize/v3/api/plugins/execplugin"
 	"sigs.k8s.io/kustomize/v3/api/plugins/loader"
@@ -15,7 +16,6 @@ import (
 	"sigs.k8s.io/kustomize/v3/api/resource"
 	"sigs.k8s.io/kustomize/v3/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/v3/api/types"
-	"sigs.k8s.io/kustomize/v3/internal/loadertest"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 )
 

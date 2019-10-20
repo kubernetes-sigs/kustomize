@@ -47,7 +47,7 @@ type set map[string]struct{}
 // Implements the CrawlerDocument interface.
 func (doc *KustomizationDocument) GetResources() ([]*Document, error) {
 	isResource := true
-	for _, suffix := range pgmconfig.KustomizationFileNames {
+	for _, suffix := range pgmconfig.RecognizedKustomizationFileNames() {
 		if strings.HasSuffix(doc.FilePath, "/"+suffix) {
 			isResource = false
 		}
@@ -86,7 +86,7 @@ func (doc *KustomizationDocument) GetResources() ([]*Document, error) {
 func (doc *KustomizationDocument) readBytes() ([]map[string]interface{}, error) {
 	data := []byte(doc.DocumentData)
 
-	for _, suffix := range pgmconfig.KustomizationFileNames {
+	for _, suffix := range pgmconfig.RecognizedKustomizationFileNames() {
 		if !strings.HasSuffix(doc.FilePath, "/"+suffix) {
 			continue
 		}

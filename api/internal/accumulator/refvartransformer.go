@@ -6,7 +6,8 @@ package accumulator
 import (
 	"fmt"
 
-	"sigs.k8s.io/kustomize/v3/api/accumulator/expansion"
+	expansion2 "sigs.k8s.io/kustomize/v3/api/internal/accumulator/expansion"
+
 	"sigs.k8s.io/kustomize/v3/api/resmap"
 	"sigs.k8s.io/kustomize/v3/api/transform"
 	"sigs.k8s.io/kustomize/v3/api/types"
@@ -39,7 +40,7 @@ func (rv *refVarTransformer) replaceVars(in interface{}) (interface{}, error) {
 	case []interface{}:
 		var xs []interface{}
 		for _, a := range in.([]interface{}) {
-			xs = append(xs, expansion.Expand(a.(string), rv.mappingFunc))
+			xs = append(xs, expansion2.Expand(a.(string), rv.mappingFunc))
 		}
 		return xs, nil
 	case map[string]interface{}:
@@ -56,7 +57,7 @@ func (rv *refVarTransformer) replaceVars(in interface{}) (interface{}, error) {
 				// This field can potentially contains a $(VAR) since it is
 				// of string type. For instance .spec.replicas: $(REPLICAS)
 				// in a Deployment object
-				xs[k] = expansion.Expand(s, rv.mappingFunc)
+				xs[k] = expansion2.Expand(s, rv.mappingFunc)
 			}
 		}
 		return xs, nil
@@ -68,7 +69,7 @@ func (rv *refVarTransformer) replaceVars(in interface{}) (interface{}, error) {
 		}
 		// This field can potentially contain a $(VAR) since it is
 		// of string type.
-		return expansion.Expand(s, rv.mappingFunc), nil
+		return expansion2.Expand(s, rv.mappingFunc), nil
 	case nil:
 		return nil, nil
 	default:
@@ -92,7 +93,7 @@ func (rv *refVarTransformer) UnusedVars() []string {
 // Transform replaces $(VAR) style variables with values.
 func (rv *refVarTransformer) Transform(m resmap.ResMap) error {
 	rv.replacementCounts = make(map[string]int)
-	rv.mappingFunc = expansion.MappingFuncFor(
+	rv.mappingFunc = expansion2.MappingFuncFor(
 		rv.replacementCounts, rv.varMap)
 	for _, res := range m.Resources() {
 		for _, fieldSpec := range rv.fieldSpecs {
