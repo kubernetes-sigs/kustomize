@@ -12,12 +12,13 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/v3/api/filesys"
 	"sigs.k8s.io/kustomize/v3/api/ifc"
-	"sigs.k8s.io/kustomize/v3/api/loader"
+	fLdr "sigs.k8s.io/kustomize/v3/api/loader"
+	"sigs.k8s.io/kustomize/v3/api/pgmconfig"
+	"sigs.k8s.io/kustomize/v3/api/plugins/config"
+	pLdr "sigs.k8s.io/kustomize/v3/api/plugins/loader"
 	"sigs.k8s.io/kustomize/v3/api/resmap"
 	"sigs.k8s.io/kustomize/v3/api/resource"
-	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
-	"sigs.k8s.io/kustomize/v3/pkg/plugins"
-	"sigs.k8s.io/kustomize/v3/pkg/target"
+	"sigs.k8s.io/kustomize/v3/api/target"
 	"sigs.k8s.io/kustomize/v3/plugin/builtin"
 	"sigs.k8s.io/yaml"
 )
@@ -26,7 +27,7 @@ import (
 type Options struct {
 	kustomizationPath string
 	outputPath        string
-	loadRestrictor    loader.LoadRestrictorFunc
+	loadRestrictor    fLdr.LoadRestrictorFunc
 	outOrder          reorderOutput
 }
 
@@ -35,7 +36,7 @@ func NewOptions(p, o string) *Options {
 	return &Options{
 		kustomizationPath: p,
 		outputPath:        o,
-		loadRestrictor:    loader.RestrictionRootOnly,
+		loadRestrictor:    fLdr.RestrictionRootOnly,
 	}
 }
 
@@ -63,8 +64,8 @@ func NewCmdBuild(
 	ptf resmap.PatchFactory) *cobra.Command {
 	var o Options
 
-	pluginConfig := plugins.DefaultPluginConfig()
-	pl := plugins.NewLoader(pluginConfig, rf)
+	pluginConfig := config.DefaultPluginConfig()
+	pl := pLdr.NewLoader(pluginConfig, rf)
 
 	cmd := &cobra.Command{
 		Use: "build {path}",
@@ -85,8 +86,8 @@ func NewCmdBuild(
 		&o.outputPath,
 		"output", "o", "",
 		"If specified, write the build output to this path.")
-	loader.AddFlagLoadRestrictor(cmd.Flags())
-	plugins.AddFlagEnablePlugins(
+	fLdr.AddFlagLoadRestrictor(cmd.Flags())
+	config.AddFlagEnablePlugins(
 		cmd.Flags(), &pluginConfig.Enabled)
 	addFlagReorderOutput(cmd.Flags())
 	cmd.AddCommand(NewCmdBuildPrune(out, v, fSys, rf, ptf, pl))
@@ -101,11 +102,11 @@ func (o *Options) Validate(args []string) (err error) {
 				pgmconfig.DefaultKustomizationFileName())
 	}
 	if len(args) == 0 {
-		o.kustomizationPath = loader.CWD
+		o.kustomizationPath = fLdr.CWD
 	} else {
 		o.kustomizationPath = args[0]
 	}
-	o.loadRestrictor, err = loader.ValidateFlagLoadRestrictor()
+	o.loadRestrictor, err = fLdr.ValidateFlagLoadRestrictor()
 	if err != nil {
 		return err
 	}
@@ -117,8 +118,8 @@ func (o *Options) Validate(args []string) (err error) {
 func (o *Options) RunBuild(
 	out io.Writer, v ifc.Validator, fSys filesys.FileSystem,
 	rf *resmap.Factory, ptf resmap.PatchFactory,
-	pl *plugins.Loader) error {
-	ldr, err := loader.NewLoader(
+	pl *pLdr.Loader) error {
+	ldr, err := fLdr.NewLoader(
 		o.loadRestrictor, o.kustomizationPath, fSys)
 	if err != nil {
 		return err
@@ -138,8 +139,8 @@ func (o *Options) RunBuild(
 func (o *Options) RunBuildPrune(
 	out io.Writer, v ifc.Validator, fSys filesys.FileSystem,
 	rf *resmap.Factory, ptf resmap.PatchFactory,
-	pl *plugins.Loader) error {
-	ldr, err := loader.NewLoader(
+	pl *pLdr.Loader) error {
+	ldr, err := fLdr.NewLoader(
 		o.loadRestrictor, o.kustomizationPath, fSys)
 	if err != nil {
 		return err
@@ -182,7 +183,7 @@ func (o *Options) emitResources(
 func NewCmdBuildPrune(
 	out io.Writer, v ifc.Validator, fSys filesys.FileSystem,
 	rf *resmap.Factory, ptf resmap.PatchFactory,
-	pl *plugins.Loader) *cobra.Command {
+	pl *pLdr.Loader) *cobra.Command {
 	var o Options
 
 	cmd := &cobra.Command{

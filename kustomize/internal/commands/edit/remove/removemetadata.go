@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 	"sigs.k8s.io/kustomize/v3/api/filesys"
+	"sigs.k8s.io/kustomize/v3/api/pgmconfig"
 	"sigs.k8s.io/kustomize/v3/api/types"
-	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 )
 
 // kindOfAdd is the kind of metadata being added: label or annotation
@@ -46,7 +46,7 @@ func newCmdRemoveAnnotation(fSys filesys.FileSystem, v func([]string) error) *co
 	o.kind = label
 	o.arrayValidator = v
 	cmd := &cobra.Command{
-		Use:   "annotation",
+		Use: "annotation",
 		Short: "Removes one or more commonAnnotations from " +
 			pgmconfig.DefaultKustomizationFileName(),
 		Example: `
@@ -67,7 +67,7 @@ func newCmdRemoveLabel(fSys filesys.FileSystem, v func([]string) error) *cobra.C
 	o.kind = label
 	o.arrayValidator = v
 	cmd := &cobra.Command{
-		Use:   "label",
+		Use: "label",
 		Short: "Removes one or more commonLabels from " +
 			pgmconfig.DefaultKustomizationFileName(),
 		Example: `

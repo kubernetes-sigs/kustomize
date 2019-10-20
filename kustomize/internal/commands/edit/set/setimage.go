@@ -6,9 +6,10 @@ package set
 import (
 	"errors"
 	"regexp"
-	"sigs.k8s.io/kustomize/v3/api/types"
 	"sort"
 	"strings"
+
+	"sigs.k8s.io/kustomize/v3/api/types"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"

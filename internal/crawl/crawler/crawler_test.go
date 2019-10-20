@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"sigs.k8s.io/kustomize/internal/tools/doc"
-	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/v3/api/pgmconfig"
 )
 
 const (

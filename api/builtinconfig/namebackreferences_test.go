@@ -5,9 +5,10 @@ package builtinconfig
 
 import (
 	"reflect"
+	"testing"
+
 	"sigs.k8s.io/kustomize/v3/api/resid"
 	"sigs.k8s.io/kustomize/v3/api/types"
-	"testing"
 )
 
 func TestMergeAll(t *testing.T) {
