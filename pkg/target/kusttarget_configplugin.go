@@ -4,10 +4,10 @@
 package target
 
 import (
+	"sigs.k8s.io/kustomize/v3/api/builtinconfig"
 	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/plugins"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 )
 
 // Functions dedicated to configuring the builtin
@@ -42,7 +42,7 @@ func (kt *KustTarget) configureBuiltinGenerators() (
 }
 
 func (kt *KustTarget) configureBuiltinTransformers(
-	tc *config.TransformerConfig) (
+	tc *builtinconfig.TransformerConfig) (
 	result []resmap.Transformer, err error) {
 	for _, bpt := range []plugins.BuiltinPluginType{
 		plugins.PatchStrategicMergeTransformer,
@@ -120,13 +120,13 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 	kt *KustTarget,
 	bpt plugins.BuiltinPluginType,
 	f tFactory,
-	tc *config.TransformerConfig) (result []resmap.Transformer, err error){
+	tc *builtinconfig.TransformerConfig) (result []resmap.Transformer, err error){
 	plugins.NamespaceTransformer: func(
-		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, tc *config.TransformerConfig) (
+		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		var c struct {
 			types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty"`
-			FieldSpecs       []config.FieldSpec
+			FieldSpecs       []types.FieldSpec
 		}
 		c.Namespace = kt.kustomization.Namespace
 		c.FieldSpecs = tc.NameSpace
@@ -140,7 +140,7 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 	},
 
 	plugins.PatchJson6902Transformer: func(
-		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, _ *config.TransformerConfig) (
+		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, _ *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		var c struct {
 			Target types.PatchTarget `json:"target,omitempty" yaml:"target,omitempty"`
@@ -161,7 +161,7 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 		return
 	},
 	plugins.PatchStrategicMergeTransformer: func(
-		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, _ *config.TransformerConfig) (
+		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, _ *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		if len(kt.kustomization.PatchesStrategicMerge) == 0 {
 			return
@@ -180,7 +180,7 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 		return
 	},
 	plugins.PatchTransformer: func(
-		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, _ *config.TransformerConfig) (
+		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, _ *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		if len(kt.kustomization.Patches) == 0 {
 			return
@@ -204,11 +204,11 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 		return
 	},
 	plugins.LabelTransformer: func(
-		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, tc *config.TransformerConfig) (
+		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		var c struct {
 			Labels     map[string]string
-			FieldSpecs []config.FieldSpec
+			FieldSpecs []types.FieldSpec
 		}
 		c.Labels = kt.kustomization.CommonLabels
 		c.FieldSpecs = tc.CommonLabels
@@ -221,11 +221,11 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 		return
 	},
 	plugins.AnnotationsTransformer: func(
-		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, tc *config.TransformerConfig) (
+		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		var c struct {
 			Annotations map[string]string
-			FieldSpecs  []config.FieldSpec
+			FieldSpecs  []types.FieldSpec
 		}
 		c.Annotations = kt.kustomization.CommonAnnotations
 		c.FieldSpecs = tc.CommonAnnotations
@@ -238,12 +238,12 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 		return
 	},
 	plugins.PrefixSuffixTransformer: func(
-		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, tc *config.TransformerConfig) (
+		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		var c struct {
 			Prefix     string
 			Suffix     string
-			FieldSpecs []config.FieldSpec
+			FieldSpecs []types.FieldSpec
 		}
 		c.Prefix = kt.kustomization.NamePrefix
 		c.Suffix = kt.kustomization.NameSuffix
@@ -257,11 +257,11 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 		return
 	},
 	plugins.ImageTagTransformer: func(
-		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, tc *config.TransformerConfig) (
+		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		var c struct {
 			ImageTag   types.Image
-			FieldSpecs []config.FieldSpec
+			FieldSpecs []types.FieldSpec
 		}
 		for _, args := range kt.kustomization.Images {
 			c.ImageTag = args
@@ -276,11 +276,11 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 		return
 	},
 	plugins.ReplicaCountTransformer: func(
-		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, tc *config.TransformerConfig) (
+		kt *KustTarget, bpt plugins.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		var c struct {
 			Replica    types.Replica
-			FieldSpecs []config.FieldSpec
+			FieldSpecs []types.FieldSpec
 		}
 		for _, args := range kt.kustomization.Replicas {
 			c.Replica = args

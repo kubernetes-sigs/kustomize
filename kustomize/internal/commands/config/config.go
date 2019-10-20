@@ -9,8 +9,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"sigs.k8s.io/kustomize/v3/api/builtinconfig/consts"
 	"sigs.k8s.io/kustomize/v3/api/filesys"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers/config/defaultconfig"
 )
 
 // NewCmdConfig returns an instance of 'config' subcommand.
@@ -89,7 +89,7 @@ func (o *saveOptions) Complete(fSys filesys.FileSystem) error {
 
 // RunSave saves the default transformer configurations local directory
 func (o *saveOptions) RunSave(fSys filesys.FileSystem) error {
-	m := defaultconfig.GetDefaultFieldSpecsAsMap()
+	m := consts.GetDefaultFieldSpecsAsMap()
 	for tname, tcfg := range m {
 		filename := filepath.Join(o.saveDirectory, tname+".yaml")
 		err := fSys.WriteFile(filename, []byte(tcfg))

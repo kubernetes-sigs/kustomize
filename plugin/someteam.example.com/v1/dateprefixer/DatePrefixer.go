@@ -5,8 +5,8 @@ package main
 
 import (
 	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 	"sigs.k8s.io/kustomize/v3/plugin/builtin"
 	"sigs.k8s.io/yaml"
 )
@@ -25,10 +25,10 @@ func (p *plugin) makePrefixSuffixPluginConfig() ([]byte, error) {
 	var s struct {
 		Prefix     string
 		Suffix     string
-		FieldSpecs []config.FieldSpec
+		FieldSpecs []types.FieldSpec
 	}
 	s.Prefix = getDate() + "-"
-	s.FieldSpecs = []config.FieldSpec{
+	s.FieldSpecs = []types.FieldSpec{
 		{Path: "metadata/name"},
 	}
 	return yaml.Marshal(s)

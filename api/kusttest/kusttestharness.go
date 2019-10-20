@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/api/builtinconfig/consts"
 	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
@@ -19,7 +20,6 @@ import (
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
 	"sigs.k8s.io/kustomize/v3/pkg/target"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers/config/defaultconfig"
 	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
 
@@ -101,7 +101,7 @@ func (th *KustTestHarness) FromMapAndOption(m map[string]interface{}, args *type
 }
 
 func (th *KustTestHarness) WriteDefaultConfigs(fName string) {
-	m := defaultconfig.GetDefaultFieldSpecsAsMap()
+	m := consts.GetDefaultFieldSpecsAsMap()
 	var content []byte
 	for _, tCfg := range m {
 		content = append(content, []byte(tCfg)...)

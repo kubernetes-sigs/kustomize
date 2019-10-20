@@ -10,17 +10,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sigs.k8s.io/kustomize/v3/api/transform"
 	"strings"
 
 	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/v3/api/builtinconfig"
 	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/accumulator"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/v3/pkg/plugins"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 	"sigs.k8s.io/kustomize/v3/plugin/builtin"
 	"sigs.k8s.io/yaml"
 )
@@ -216,7 +216,7 @@ func (kt *KustTarget) AccumulateTarget() (
 	if err != nil {
 		return nil, errors.Wrap(err, "accumulating resources")
 	}
-	tConfig, err := config.MakeTransformerConfig(
+	tConfig, err := builtinconfig.MakeTransformerConfig(
 		kt.ldr, kt.kustomization.Configurations)
 	if err != nil {
 		return nil, err
@@ -226,7 +226,7 @@ func (kt *KustTarget) AccumulateTarget() (
 		return nil, errors.Wrapf(
 			err, "merging config %v", tConfig)
 	}
-	crdTc, err := config.LoadConfigFromCRDs(kt.ldr, kt.kustomization.Crds)
+	crdTc, err := accumulator.LoadConfigFromCRDs(kt.ldr, kt.kustomization.Crds)
 	if err != nil {
 		return nil, errors.Wrapf(
 			err, "loading CRDs %v", kt.kustomization.Crds)
@@ -300,7 +300,7 @@ func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator) error {
 		return err
 	}
 	r = append(r, lts...)
-	t := transformers.NewMultiTransformer(r)
+	t := transform.NewMultiTransformer(r)
 	return ra.Transform(t)
 }
 

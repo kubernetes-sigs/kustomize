@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/api/builtinconfig"
 	"sigs.k8s.io/kustomize/v3/api/resid"
 	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
@@ -17,12 +18,11 @@ import (
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resmaptest"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 )
 
 func makeResAccumulator(t *testing.T) (*ResAccumulator, *resource.Factory) {
 	ra := MakeEmptyAccumulator()
-	err := ra.MergeConfig(config.MakeDefaultConfig())
+	err := ra.MergeConfig(builtinconfig.MakeDefaultConfig())
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
