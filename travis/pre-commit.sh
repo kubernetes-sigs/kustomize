@@ -45,7 +45,7 @@ function testGoTests {
 
     # Requires helm.
     # At the moment not asking travis to install it.
-    go test -v sigs.k8s.io/kustomize/v3/pkg/target \
+    go test -v sigs.k8s.io/kustomize/v3/api/target \
       -run TestChartInflatorPlugin -tags=notravis
     go test -v sigs.k8s.io/kustomize/v3/plugin/someteam.example.com/v1/chartinflator/... \
       -run TestChartInflator -tags=notravis

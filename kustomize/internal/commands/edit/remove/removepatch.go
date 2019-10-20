@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/util"
 	"sigs.k8s.io/kustomize/v3/api/filesys"
-	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
+	"sigs.k8s.io/kustomize/v3/api/pgmconfig"
 )
 
 type removePatchOptions struct {
@@ -24,7 +24,7 @@ func newCmdRemovePatch(fSys filesys.FileSystem) *cobra.Command {
 	var o removePatchOptions
 
 	cmd := &cobra.Command{
-		Use:   "patch",
+		Use: "patch",
 		Short: "Removes one or more patches from " +
 			pgmconfig.DefaultKustomizationFileName(),
 		Example: `
