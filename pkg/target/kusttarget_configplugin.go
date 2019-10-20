@@ -126,7 +126,7 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 		result []resmap.Transformer, err error) {
 		var c struct {
 			types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty"`
-			FieldSpecs       []config.FieldSpec
+			FieldSpecs       []types.FieldSpec
 		}
 		c.Namespace = kt.kustomization.Namespace
 		c.FieldSpecs = tc.NameSpace
@@ -208,7 +208,7 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 		result []resmap.Transformer, err error) {
 		var c struct {
 			Labels     map[string]string
-			FieldSpecs []config.FieldSpec
+			FieldSpecs []types.FieldSpec
 		}
 		c.Labels = kt.kustomization.CommonLabels
 		c.FieldSpecs = tc.CommonLabels
@@ -225,7 +225,7 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 		result []resmap.Transformer, err error) {
 		var c struct {
 			Annotations map[string]string
-			FieldSpecs  []config.FieldSpec
+			FieldSpecs  []types.FieldSpec
 		}
 		c.Annotations = kt.kustomization.CommonAnnotations
 		c.FieldSpecs = tc.CommonAnnotations
@@ -243,7 +243,7 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 		var c struct {
 			Prefix     string
 			Suffix     string
-			FieldSpecs []config.FieldSpec
+			FieldSpecs []types.FieldSpec
 		}
 		c.Prefix = kt.kustomization.NamePrefix
 		c.Suffix = kt.kustomization.NameSuffix
@@ -261,7 +261,7 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 		result []resmap.Transformer, err error) {
 		var c struct {
 			ImageTag   types.Image
-			FieldSpecs []config.FieldSpec
+			FieldSpecs []types.FieldSpec
 		}
 		for _, args := range kt.kustomization.Images {
 			c.ImageTag = args
@@ -280,7 +280,7 @@ var transformerConfigurators = map[plugins.BuiltinPluginType]func(
 		result []resmap.Transformer, err error) {
 		var c struct {
 			Replica    types.Replica
-			FieldSpecs []config.FieldSpec
+			FieldSpecs []types.FieldSpec
 		}
 		for _, args := range kt.kustomization.Replicas {
 			c.Replica = args

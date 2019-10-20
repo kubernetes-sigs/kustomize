@@ -18,6 +18,7 @@ package config
 
 import (
 	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"strings"
 )
 
@@ -51,7 +52,7 @@ import (
 //   }
 type NameBackReferences struct {
 	resid.Gvk  `json:",inline,omitempty" yaml:",inline,omitempty"`
-	FieldSpecs fsSlice `json:"FieldSpecs,omitempty" yaml:"FieldSpecs,omitempty"`
+	FieldSpecs types.FsSlice `json:"FieldSpecs,omitempty" yaml:"FieldSpecs,omitempty"`
 }
 
 func (n NameBackReferences) String() string {
@@ -88,7 +89,7 @@ func (s nbrSlice) mergeOne(other NameBackReferences) (nbrSlice, error) {
 	found := false
 	for _, c := range s {
 		if c.Gvk.Equals(other.Gvk) {
-			c.FieldSpecs, err = c.FieldSpecs.mergeAll(other.FieldSpecs)
+			c.FieldSpecs, err = c.FieldSpecs.MergeAll(other.FieldSpecs)
 			if err != nil {
 				return nil, err
 			}

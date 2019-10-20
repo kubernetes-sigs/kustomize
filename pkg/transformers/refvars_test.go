@@ -6,17 +6,17 @@ package transformers
 import (
 	"reflect"
 	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resmaptest"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 )
 
 func TestVarRef(t *testing.T) {
 	type given struct {
 		varMap map[string]interface{}
-		fs     []config.FieldSpec
+		fs     []types.FieldSpec
 		res    resmap.ResMap
 	}
 	type expected struct {
@@ -37,7 +37,7 @@ func TestVarRef(t *testing.T) {
 					"BAZ": int64(5),
 					"BOO": true,
 				},
-				fs: []config.FieldSpec{
+				fs: []types.FieldSpec{
 					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/map"},
 					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/slice"},
 					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/interface"},

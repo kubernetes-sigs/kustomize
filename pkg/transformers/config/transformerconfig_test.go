@@ -18,6 +18,7 @@ package config
 
 import (
 	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"testing"
 
 	"reflect"
@@ -30,7 +31,7 @@ func TestAddNamereferenceFieldSpec(t *testing.T) {
 		Gvk: resid.Gvk{
 			Kind: "KindA",
 		},
-		FieldSpecs: []FieldSpec{
+		FieldSpecs: []types.FieldSpec{
 			{
 				Gvk: resid.Gvk{
 					Kind: "KindB",
@@ -53,7 +54,7 @@ func TestAddNamereferenceFieldSpec(t *testing.T) {
 func TestAddFieldSpecs(t *testing.T) {
 	cfg := &TransformerConfig{}
 
-	fieldSpec := FieldSpec{
+	fieldSpec := types.FieldSpec{
 		Gvk:                resid.Gvk{Group: "GroupA", Kind: "KindB"},
 		Path:               "path/to/a/field",
 		CreateIfNotPresent: true,
@@ -95,7 +96,7 @@ func TestMerge(t *testing.T) {
 			Gvk: resid.Gvk{
 				Kind: "KindA",
 			},
-			FieldSpecs: []FieldSpec{
+			FieldSpecs: []types.FieldSpec{
 				{
 					Gvk: resid.Gvk{
 						Kind: "KindB",
@@ -109,7 +110,7 @@ func TestMerge(t *testing.T) {
 			Gvk: resid.Gvk{
 				Kind: "KindA",
 			},
-			FieldSpecs: []FieldSpec{
+			FieldSpecs: []types.FieldSpec{
 				{
 					Gvk: resid.Gvk{
 						Kind: "KindC",
@@ -120,7 +121,7 @@ func TestMerge(t *testing.T) {
 			},
 		},
 	}
-	fieldSpecs := []FieldSpec{
+	fieldSpecs := []types.FieldSpec{
 		{
 			Gvk:                resid.Gvk{Group: "GroupA", Kind: "KindB"},
 			Path:               "path/to/a/field",

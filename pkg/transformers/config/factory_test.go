@@ -6,6 +6,7 @@ package config
 import (
 	"reflect"
 	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
@@ -29,7 +30,7 @@ namePrefix:
 		t.Fatalf("unexpected error: %v", err)
 	}
 	expected := &TransformerConfig{
-		NamePrefix: []FieldSpec{
+		NamePrefix: []types.FieldSpec{
 			{
 				Gvk:  resid.Gvk{Kind: "SomeKind"},
 				Path: "nameprefix/path",

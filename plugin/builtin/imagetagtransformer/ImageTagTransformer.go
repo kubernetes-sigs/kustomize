@@ -12,15 +12,14 @@ import (
 
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/transformers"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 	"sigs.k8s.io/yaml"
 )
 
 // Find matching image declarations and replace
 // the name, tag and/or digest.
 type plugin struct {
-	ImageTag   types.Image        `json:"imageTag,omitempty" yaml:"imageTag,omitempty"`
-	FieldSpecs []config.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+	ImageTag   types.Image       `json:"imageTag,omitempty" yaml:"imageTag,omitempty"`
+	FieldSpecs []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
 //noinspection GoUnusedGlobalVariable

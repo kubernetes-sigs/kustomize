@@ -19,6 +19,7 @@ package config
 import (
 	"reflect"
 	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
@@ -158,7 +159,7 @@ func TestLoadCRDs(t *testing.T) {
 	nbrs := []NameBackReferences{
 		{
 			Gvk: resid.Gvk{Kind: "Secret", Version: "v1"},
-			FieldSpecs: []FieldSpec{
+			FieldSpecs: []types.FieldSpec{
 				{
 					CreateIfNotPresent: false,
 					Gvk:                resid.Gvk{Kind: "MyKind"},
@@ -168,7 +169,7 @@ func TestLoadCRDs(t *testing.T) {
 		},
 		{
 			Gvk: resid.Gvk{Kind: "Bee", Version: "v1beta1"},
-			FieldSpecs: []FieldSpec{
+			FieldSpecs: []types.FieldSpec{
 				{
 					CreateIfNotPresent: false,
 					Gvk:                resid.Gvk{Kind: "MyKind"},
