@@ -122,7 +122,7 @@ func (gc githubCrawler) FetchDocument(ctx context.Context, d *doc.Document) erro
 		return nil
 	}
 
-	for _, file := range pgmconfig.KustomizationFileNames {
+	for _, file := range pgmconfig.RecognizedKustomizationFileNames() {
 		resp, err = gc.client.GetRawUserContent(url + "/" + file)
 		err := handle(resp, err, "/"+file)
 		if err != nil {

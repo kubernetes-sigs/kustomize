@@ -20,7 +20,7 @@ func (c testCachedSearch) CountResults(upperBound uint64) (uint64, error) {
 }
 
 func (c testCachedSearch) RequestString(filesize rangeFormatter) string {
-	return filesize.RangeString()
+	return RangeString()
 }
 
 // TODO(damienr74) make tests easier to write.. I'm thinking I can make the test

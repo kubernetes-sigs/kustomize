@@ -339,7 +339,7 @@ resources:
 				}, nil
 			},
 			func(d CrawledDocument, cr Crawler) error {
-				visited[d.ID()]++
+				visited[ID()]++
 				return nil
 			},
 		)

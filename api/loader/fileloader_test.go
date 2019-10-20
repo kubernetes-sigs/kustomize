@@ -13,8 +13,8 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/api/filesys"
+	"sigs.k8s.io/kustomize/v3/api/git"
 	"sigs.k8s.io/kustomize/v3/api/ifc"
-	"sigs.k8s.io/kustomize/v3/api/internal/git"
 	"sigs.k8s.io/kustomize/v3/api/pgmconfig"
 )
 

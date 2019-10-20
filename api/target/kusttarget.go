@@ -13,9 +13,9 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/v3/api/accumulator"
 	"sigs.k8s.io/kustomize/v3/api/builtinconfig"
 	"sigs.k8s.io/kustomize/v3/api/ifc"
+	"sigs.k8s.io/kustomize/v3/api/internal/accumulator"
 	"sigs.k8s.io/kustomize/v3/api/pgmconfig"
 	"sigs.k8s.io/kustomize/v3/api/plugins/builtins"
 	"sigs.k8s.io/kustomize/v3/api/plugins/loader"

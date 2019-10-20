@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	. "sigs.k8s.io/kustomize/v3/api/accumulator/expansion"
+	. "sigs.k8s.io/kustomize/v3/api/internal/accumulator/expansion"
 )
 
 type expected struct {

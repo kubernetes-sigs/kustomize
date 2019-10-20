@@ -7,12 +7,12 @@ import (
 	"reflect"
 	"testing"
 
-	. "sigs.k8s.io/kustomize/v3/api/accumulator"
 	"sigs.k8s.io/kustomize/v3/api/builtinconfig"
 	"sigs.k8s.io/kustomize/v3/api/ifc"
+	. "sigs.k8s.io/kustomize/v3/api/internal/accumulator"
+	"sigs.k8s.io/kustomize/v3/api/internal/loadertest"
 	"sigs.k8s.io/kustomize/v3/api/resid"
 	"sigs.k8s.io/kustomize/v3/api/types"
-	"sigs.k8s.io/kustomize/v3/internal/loadertest"
 )
 
 // This defines two CRD's:  Bee and MyKind.

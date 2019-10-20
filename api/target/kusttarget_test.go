@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/api/ifc"
+	"sigs.k8s.io/kustomize/v3/api/internal/loadertest"
 	"sigs.k8s.io/kustomize/v3/api/resid"
 	"sigs.k8s.io/kustomize/v3/api/resmap"
 	"sigs.k8s.io/kustomize/v3/api/resource"
@@ -17,7 +18,6 @@ import (
 	"sigs.k8s.io/kustomize/v3/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/v3/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/v3/api/types"
-	"sigs.k8s.io/kustomize/v3/internal/loadertest"
 )
 
 const (
