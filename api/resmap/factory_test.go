@@ -10,14 +10,14 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/api/filesys"
+	"sigs.k8s.io/kustomize/v3/api/ifc"
 	"sigs.k8s.io/kustomize/v3/api/kv"
+	"sigs.k8s.io/kustomize/v3/api/loader"
+	. "sigs.k8s.io/kustomize/v3/api/resmap"
+	"sigs.k8s.io/kustomize/v3/api/testutils/resmaptest"
+	"sigs.k8s.io/kustomize/v3/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
-	"sigs.k8s.io/kustomize/v3/pkg/loader"
-	. "sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/resmaptest"
-	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
 
 func TestFromFile(t *testing.T) {
@@ -120,7 +120,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 	}
 
 	l := loadertest.NewFakeLoader("/whatever/project")
-	kvLdr := kv.NewLoader(l, validators.MakeFakeValidator())
+	kvLdr := kv.NewLoader(l, valtest_test.MakeFakeValidator())
 	testCases := []testCase{
 		{
 			description: "construct config map from env",
@@ -242,7 +242,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	actual, err := rmF.NewResMapFromSecretArgs(
 		kv.NewLoader(
 			loader.NewFileLoaderAtRoot(fSys),
-			validators.MakeFakeValidator()), nil, secrets)
+			valtest_test.MakeFakeValidator()), nil, secrets)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

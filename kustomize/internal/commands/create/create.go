@@ -13,7 +13,7 @@ import (
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/util"
 	"sigs.k8s.io/kustomize/v3/api/filesys"
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
+	"sigs.k8s.io/kustomize/v3/api/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 )
 

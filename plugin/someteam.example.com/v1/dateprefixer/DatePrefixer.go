@@ -5,8 +5,8 @@ package main
 
 import (
 	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/v3/api/resmap"
 	"sigs.k8s.io/kustomize/v3/api/types"
-	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/plugin/builtin"
 	"sigs.k8s.io/yaml"
 )

@@ -14,8 +14,8 @@ import (
 	"unicode/utf8"
 
 	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/v3/api/ifc"
 	"sigs.k8s.io/kustomize/v3/api/types"
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 )
 
 var utf8bom = []byte{0xEF, 0xBB, 0xBF}

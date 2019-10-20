@@ -14,8 +14,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/kustomize/v3/api/resid"
-	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/resource"
+	"sigs.k8s.io/kustomize/v3/api/resmap"
+	"sigs.k8s.io/kustomize/v3/api/resource"
 )
 
 type conflictDetector interface {

@@ -4,8 +4,8 @@
 package configmapandsecret
 
 import (
+	"sigs.k8s.io/kustomize/v3/api/ifc"
 	"sigs.k8s.io/kustomize/v3/api/types"
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 )
 
 // Factory makes ConfigMaps and Secrets.

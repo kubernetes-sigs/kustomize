@@ -8,15 +8,15 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/api/filesys"
+	ldr "sigs.k8s.io/kustomize/v3/api/loader"
+	"sigs.k8s.io/kustomize/v3/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/v3/api/types"
-	ldr "sigs.k8s.io/kustomize/v3/pkg/loader"
-	"sigs.k8s.io/kustomize/v3/pkg/validators"
 )
 
 func makeKvLoader(fSys filesys.FileSystem) *loader {
 	return &loader{
 		ldr:       ldr.NewFileLoaderAtRoot(fSys),
-		validator: validators.MakeFakeValidator()}
+		validator: valtest_test.MakeFakeValidator()}
 }
 
 func TestKeyValuesFromLines(t *testing.T) {

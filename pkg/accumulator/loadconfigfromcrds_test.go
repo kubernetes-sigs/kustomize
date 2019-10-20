@@ -8,11 +8,11 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/api/builtinconfig"
+	"sigs.k8s.io/kustomize/v3/api/ifc"
 	"sigs.k8s.io/kustomize/v3/api/resid"
 	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
 	. "sigs.k8s.io/kustomize/v3/pkg/accumulator"
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 )
 
 // This defines two CRD's:  Bee and MyKind.

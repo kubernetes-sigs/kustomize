@@ -15,12 +15,12 @@ import (
 
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/v3/api/builtinconfig"
+	"sigs.k8s.io/kustomize/v3/api/ifc"
+	"sigs.k8s.io/kustomize/v3/api/resmap"
 	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/accumulator"
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
 	"sigs.k8s.io/kustomize/v3/pkg/plugins"
-	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/plugin/builtin"
 	"sigs.k8s.io/yaml"
 )
