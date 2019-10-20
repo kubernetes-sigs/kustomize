@@ -195,11 +195,11 @@ func TestSetImage(t *testing.T) {
 
 			if len(tc.given.infileImages) > 0 {
 				// write file with infileImages
-				testutils.WriteTestKustomizationWith(
+				testutils_test.WriteTestKustomizationWith(
 					fSys,
 					[]byte(strings.Join(tc.given.infileImages, "\n")))
 			} else {
-				testutils.WriteTestKustomization(fSys)
+				testutils_test.WriteTestKustomization(fSys)
 			}
 
 			// act
@@ -211,7 +211,7 @@ func TestSetImage(t *testing.T) {
 				t.FailNow()
 			}
 
-			content, err := testutils.ReadTestKustomization(fSys)
+			content, err := testutils_test.ReadTestKustomization(fSys)
 			if err != nil {
 				t.Errorf("unexpected read error: %v", err)
 				t.FailNow()

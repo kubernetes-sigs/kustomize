@@ -22,7 +22,7 @@ func TestAddBaseHappyPath(t *testing.T) {
 	for _, base := range bases {
 		fSys.Mkdir(base)
 	}
-	testutils.WriteTestKustomization(fSys)
+	testutils_test.WriteTestKustomization(fSys)
 
 	cmd := newCmdAddBase(fSys)
 	args := []string{baseDirectoryPaths}
@@ -30,7 +30,7 @@ func TestAddBaseHappyPath(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	content, err := testutils.ReadTestKustomization(fSys)
+	content, err := testutils_test.ReadTestKustomization(fSys)
 	if err != nil {
 		t.Errorf("unexpected read error: %v", err)
 	}
@@ -49,7 +49,7 @@ func TestAddBaseAlreadyThere(t *testing.T) {
 	for _, base := range bases {
 		fSys.Mkdir(base)
 	}
-	testutils.WriteTestKustomization(fSys)
+	testutils_test.WriteTestKustomization(fSys)
 
 	cmd := newCmdAddBase(fSys)
 	args := []string{baseDirectoryPaths}
