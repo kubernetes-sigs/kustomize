@@ -5,10 +5,11 @@ package transform_test
 
 import (
 	"fmt"
+	"testing"
+
 	"sigs.k8s.io/kustomize/v3/api/ifc"
 	. "sigs.k8s.io/kustomize/v3/api/transform"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
-	"testing"
 )
 
 type noopMutator struct {

@@ -20,7 +20,7 @@ func TestNewAddConfigMapIsNotNil(t *testing.T) {
 		kv.NewLoader(
 			loader.NewFileLoaderAtCwd(fSys),
 			valtest_test.MakeFakeValidator()),
-			nil) == nil {
+		nil) == nil {
 		t.Fatal("newCmdAddConfigMap shouldn't be nil")
 	}
 }
