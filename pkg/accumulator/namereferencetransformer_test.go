@@ -1,12 +1,13 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package transformers
+package accumulator
 
 import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/api/builtinconfig"
 	"sigs.k8s.io/kustomize/v3/api/resid"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
@@ -462,7 +463,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 			},
 		}).ResMap()
 
-	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
+	nrt := newNameReferenceTransformer(builtinconfig.MakeDefaultConfig().NameReference)
 	err := nrt.Transform(m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -522,7 +523,7 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 			expectedErr: "is expected to contain a name field"},
 	}
 
-	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
+	nrt := newNameReferenceTransformer(builtinconfig.MakeDefaultConfig().NameReference)
 	for _, test := range tests {
 		err := nrt.Transform(test.resMap)
 		if err == nil {
@@ -580,7 +581,7 @@ func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 
 	m1 := resmaptest_test.NewRmBuilder(t, rf).AddR(v1).AddR(c1).ResMap()
 
-	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
+	nrt := newNameReferenceTransformer(builtinconfig.MakeDefaultConfig().NameReference)
 	if err := nrt.Transform(m1); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -719,7 +720,7 @@ func TestNameReferenceNamespace(t *testing.T) {
 		ReplaceResource(deploymentMap(ns1, prefixedname, prefixedname, prefixedname)).
 		ReplaceResource(deploymentMap(ns2, suffixedname, suffixedname, suffixedname)).ResMap()
 
-	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
+	nrt := newNameReferenceTransformer(builtinconfig.MakeDefaultConfig().NameReference)
 	err := nrt.Transform(m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -882,7 +883,7 @@ func TestNameReferenceClusterWide(t *testing.T) {
 	clusterRole, _ := expected.GetByCurrentId(clusterRoleId)
 	clusterRole.AppendRefBy(clusterRoleBindingId)
 
-	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
+	nrt := newNameReferenceTransformer(builtinconfig.MakeDefaultConfig().NameReference)
 	err := nrt.Transform(m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -1010,7 +1011,7 @@ func TestNameReferenceNamespaceTransformation(t *testing.T) {
 	clusterRole, _ := expected.GetByCurrentId(clusterRoleId)
 	clusterRole.AppendRefBy(clusterRoleBindingId)
 
-	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
+	nrt := newNameReferenceTransformer(builtinconfig.MakeDefaultConfig().NameReference)
 	err := nrt.Transform(m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -1048,7 +1049,7 @@ func TestNameReferenceCandidateSelection(t *testing.T) {
 		ReplaceResource(deploymentMap("", "p1-deploy1", "p1-cm1-hash", "p1-secret1-hash")).
 		ResMap()
 
-	nrt := NewNameReferenceTransformer(defaultTransformerConfig.NameReference)
+	nrt := newNameReferenceTransformer(builtinconfig.MakeDefaultConfig().NameReference)
 	err := nrt.Transform(m)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

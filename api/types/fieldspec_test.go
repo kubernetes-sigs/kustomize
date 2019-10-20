@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package types
+package types_test
 
 import (
 	"fmt"
@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/v3/api/resid"
+	. "sigs.k8s.io/kustomize/v3/api/types"
 )
 
 func TestPathSlice(t *testing.T) {

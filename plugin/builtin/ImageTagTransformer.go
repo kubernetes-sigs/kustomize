@@ -4,11 +4,11 @@ package builtin
 import (
 	"fmt"
 	"regexp"
+	"sigs.k8s.io/kustomize/v3/api/transform"
 	"sigs.k8s.io/kustomize/v3/api/types"
 	"strings"
 
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers"
 	"sigs.k8s.io/yaml"
 )
 
@@ -32,7 +32,7 @@ func (p *ImageTagTransformerPlugin) Transform(m resmap.ResMap) error {
 			if !r.OrgId().IsSelected(&path.Gvk) {
 				continue
 			}
-			err := transformers.MutateField(
+			err := transform.MutateField(
 				r.Map(), path.PathSlice(), false, p.mutateImage)
 			if err != nil {
 				return err

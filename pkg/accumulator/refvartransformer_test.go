@@ -1,19 +1,21 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package transformers
+package accumulator
 
 import (
 	"reflect"
-	"sigs.k8s.io/kustomize/v3/api/resid"
-	"sigs.k8s.io/kustomize/v3/api/types"
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/api/types"
+	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resmaptest"
+	"sigs.k8s.io/kustomize/v3/pkg/resource"
 )
 
-func TestVarRef(t *testing.T) {
+func TestRefVarTransformer(t *testing.T) {
 	type given struct {
 		varMap map[string]interface{}
 		fs     []types.FieldSpec
@@ -44,7 +46,8 @@ func TestVarRef(t *testing.T) {
 					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/nil"},
 					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/num"},
 				},
-				res: resmaptest_test.NewRmBuilder(t, rf).
+				res: resmaptest_test.NewRmBuilder(
+					t, resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())).
 					Add(map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -75,7 +78,8 @@ func TestVarRef(t *testing.T) {
 						}}).ResMap(),
 			},
 			expected: expected{
-				res: resmaptest_test.NewRmBuilder(t, rf).
+				res: resmaptest_test.NewRmBuilder(
+					t, resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())).
 					Add(map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -112,7 +116,7 @@ func TestVarRef(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
 			// arrange
-			tr := NewRefVarTransformer(tc.given.varMap, tc.given.fs)
+			tr := newRefVarTransformer(tc.given.varMap, tc.given.fs)
 
 			// act
 			err := tr.Transform(tc.given.res)

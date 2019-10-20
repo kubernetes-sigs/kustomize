@@ -1,30 +1,18 @@
-/*
-Copyright 2018 The Kubernetes Authors.
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
-package config
+package accumulator
 
 import (
 	"encoding/json"
-	"sigs.k8s.io/kustomize/v3/api/resid"
-	"sigs.k8s.io/kustomize/v3/api/types"
 	"strings"
 
 	"github.com/go-openapi/spec"
 	"github.com/pkg/errors"
 	"k8s.io/kube-openapi/pkg/common"
+	"sigs.k8s.io/kustomize/v3/api/builtinconfig"
+	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 	"sigs.k8s.io/yaml"
 )
@@ -34,8 +22,8 @@ type nameToApiMap map[string]common.OpenAPIDefinition
 
 // LoadConfigFromCRDs parse CRD schemas from paths into a TransformerConfig
 func LoadConfigFromCRDs(
-	ldr ifc.Loader, paths []string) (*TransformerConfig, error) {
-	tc := MakeEmptyConfig()
+	ldr ifc.Loader, paths []string) (*builtinconfig.TransformerConfig, error) {
+	tc := builtinconfig.MakeEmptyConfig()
 	for _, path := range paths {
 		content, err := ldr.Load(path)
 		if err != nil {
@@ -66,13 +54,13 @@ func makeNameToApiMap(content []byte) (result nameToApiMap, err error) {
 	return
 }
 
-func makeConfigFromApiMap(m nameToApiMap) (*TransformerConfig, error) {
-	result := MakeEmptyConfig()
+func makeConfigFromApiMap(m nameToApiMap) (*builtinconfig.TransformerConfig, error) {
+	result := builtinconfig.MakeEmptyConfig()
 	for name, api := range m {
 		if !looksLikeAk8sType(api.Schema.SchemaProps.Properties) {
 			continue
 		}
-		tc := MakeEmptyConfig()
+		tc := builtinconfig.MakeEmptyConfig()
 		err := loadCrdIntoConfig(
 			tc, makeGvkFromTypeName(name), m, name, []string{})
 		if err != nil {
@@ -134,7 +122,7 @@ const (
 
 // loadCrdIntoConfig loads a CRD spec into a TransformerConfig
 func loadCrdIntoConfig(
-	theConfig *TransformerConfig, theGvk resid.Gvk, theMap nameToApiMap,
+	theConfig *builtinconfig.TransformerConfig, theGvk resid.Gvk, theMap nameToApiMap,
 	typeName string, path []string) (err error) {
 	api, ok := theMap[typeName]
 	if !ok {
@@ -174,7 +162,7 @@ func loadCrdIntoConfig(
 					nameKey = "name"
 				}
 				err = theConfig.AddNamereferenceFieldSpec(
-					NameBackReferences{
+					builtinconfig.NameBackReferences{
 						Gvk: resid.Gvk{Kind: kind, Version: version},
 						FieldSpecs: []types.FieldSpec{
 							makeFs(theGvk, append(path, propName, nameKey))},

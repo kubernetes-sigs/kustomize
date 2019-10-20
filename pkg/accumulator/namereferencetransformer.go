@@ -1,28 +1,28 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package transformers
+package accumulator
 
 import (
 	"fmt"
 	"log"
+
+	"sigs.k8s.io/kustomize/v3/api/builtinconfig"
 	"sigs.k8s.io/kustomize/v3/api/resid"
-
-	"sigs.k8s.io/kustomize/v3/pkg/resource"
-
+	"sigs.k8s.io/kustomize/v3/api/transform"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
+	"sigs.k8s.io/kustomize/v3/pkg/resource"
 )
 
 type nameReferenceTransformer struct {
-	backRefs []config.NameBackReferences
+	backRefs []builtinconfig.NameBackReferences
 }
 
 var _ resmap.Transformer = &nameReferenceTransformer{}
 
-// NewNameReferenceTransformer constructs a nameReferenceTransformer
+// newNameReferenceTransformer constructs a nameReferenceTransformer
 // with a given slice of NameBackReferences.
-func NewNameReferenceTransformer(br []config.NameBackReferences) resmap.Transformer {
+func newNameReferenceTransformer(br []builtinconfig.NameBackReferences) resmap.Transformer {
 	if br == nil {
 		log.Fatal("backrefs not expected to be nil")
 	}
@@ -86,7 +86,7 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 					if candidates == nil {
 						candidates = m.SubsetThatCouldBeReferencedByResource(referrer)
 					}
-					err := MutateField(
+					err := transform.MutateField(
 						referrer.Map(),
 						fSpec.PathSlice(),
 						fSpec.CreateIfNotPresent,

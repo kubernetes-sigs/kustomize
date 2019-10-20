@@ -1,22 +1,22 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package transformers
+package transform_test
 
 import (
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/api/builtinconfig"
+	. "sigs.k8s.io/kustomize/v3/api/transform"
 	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/v3/pkg/resmaptest"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers/config"
 )
 
-var rf = resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
-var defaultTransformerConfig = config.MakeDefaultConfig()
+var resourceFactory = resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
 
 func TestLabelsRun(t *testing.T) {
-	m := resmaptest_test.NewRmBuilder(t, rf).
+	m := resmaptest_test.NewRmBuilder(t, resourceFactory).
 		Add(map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -161,7 +161,7 @@ func TestLabelsRun(t *testing.T) {
 			},
 		}).ResMap()
 
-	expected := resmaptest_test.NewRmBuilder(t, rf).
+	expected := resmaptest_test.NewRmBuilder(t, resourceFactory).
 		Add(map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -386,9 +386,9 @@ func TestLabelsRun(t *testing.T) {
 			},
 		}).ResMap()
 
-	lt, err := NewLabelsMapTransformer(
-		map[string]string{"label-key1": "label-value1", "label-key2": "label-value2"},
-		defaultTransformerConfig.CommonLabels)
+	lt, err := NewMapTransformer(
+		builtinconfig.MakeDefaultConfig().CommonLabels,
+		map[string]string{"label-key1": "label-value1", "label-key2": "label-value2"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -402,7 +402,7 @@ func TestLabelsRun(t *testing.T) {
 }
 
 func TestAnnotationsRun(t *testing.T) {
-	m := resmaptest_test.NewRmBuilder(t, rf).
+	m := resmaptest_test.NewRmBuilder(t, resourceFactory).
 		Add(map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -451,7 +451,7 @@ func TestAnnotationsRun(t *testing.T) {
 			},
 		}).ResMap()
 
-	expected := resmaptest_test.NewRmBuilder(t, rf).
+	expected := resmaptest_test.NewRmBuilder(t, resourceFactory).
 		Add(map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -515,9 +515,9 @@ func TestAnnotationsRun(t *testing.T) {
 				},
 			},
 		}).ResMap()
-	at, err := NewAnnotationsMapTransformer(
-		map[string]string{"anno-key1": "anno-value1", "anno-key2": "anno-value2"},
-		defaultTransformerConfig.CommonAnnotations)
+	at, err := NewMapTransformer(
+		builtinconfig.MakeDefaultConfig().CommonAnnotations,
+		map[string]string{"anno-key1": "anno-value1", "anno-key2": "anno-value2"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -531,7 +531,7 @@ func TestAnnotationsRun(t *testing.T) {
 }
 
 func TestAnnotationsRunWithNullValue(t *testing.T) {
-	m := resmaptest_test.NewRmBuilder(t, rf).
+	m := resmaptest_test.NewRmBuilder(t, resourceFactory).
 		Add(map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -541,7 +541,7 @@ func TestAnnotationsRunWithNullValue(t *testing.T) {
 			},
 		}).ResMap()
 
-	expected := resmaptest_test.NewRmBuilder(t, rf).
+	expected := resmaptest_test.NewRmBuilder(t, resourceFactory).
 		Add(map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -554,9 +554,9 @@ func TestAnnotationsRunWithNullValue(t *testing.T) {
 			},
 		}).ResMap()
 
-	at, err := NewAnnotationsMapTransformer(
-		map[string]string{"anno-key1": "anno-value1", "anno-key2": "anno-value2"},
-		defaultTransformerConfig.CommonAnnotations)
+	at, err := NewMapTransformer(
+		builtinconfig.MakeDefaultConfig().CommonAnnotations,
+		map[string]string{"anno-key1": "anno-value1", "anno-key2": "anno-value2"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
