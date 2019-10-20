@@ -1,42 +1,30 @@
-/*
-Copyright 2018 The Kubernetes Authors.
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
-package transformers
+package accumulator
 
 import (
 	"fmt"
-	"sigs.k8s.io/kustomize/v3/api/types"
 
+	"sigs.k8s.io/kustomize/v3/api/transform"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/expansion"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 )
 
-type RefVarTransformer struct {
+type refVarTransformer struct {
 	varMap            map[string]interface{}
 	replacementCounts map[string]int
 	fieldSpecs        []types.FieldSpec
 	mappingFunc       func(string) interface{}
 }
 
-// NewRefVarTransformer returns a new RefVarTransformer
+// newRefVarTransformer returns a new refVarTransformer
 // that replaces $(VAR) style variables with values.
 // The fieldSpecs are the places to look for occurrences of $(VAR).
-func NewRefVarTransformer(
-	varMap map[string]interface{}, fs []types.FieldSpec) *RefVarTransformer {
-	return &RefVarTransformer{
+func newRefVarTransformer(
+	varMap map[string]interface{}, fs []types.FieldSpec) *refVarTransformer {
+	return &refVarTransformer{
 		varMap:     varMap,
 		fieldSpecs: fs,
 	}
@@ -46,7 +34,7 @@ func NewRefVarTransformer(
 // embedded instances of $VAR style variables, e.g. a container command string.
 // The function returns the string with the variables expanded to their final
 // values.
-func (rv *RefVarTransformer) replaceVars(in interface{}) (interface{}, error) {
+func (rv *refVarTransformer) replaceVars(in interface{}) (interface{}, error) {
 	switch vt := in.(type) {
 	case []interface{}:
 		var xs []interface{}
@@ -90,7 +78,7 @@ func (rv *RefVarTransformer) replaceVars(in interface{}) (interface{}, error) {
 
 // UnusedVars returns slice of Var names that were unused
 // after a Transform run.
-func (rv *RefVarTransformer) UnusedVars() []string {
+func (rv *refVarTransformer) UnusedVars() []string {
 	var unused []string
 	for k := range rv.varMap {
 		_, ok := rv.replacementCounts[k]
@@ -102,14 +90,14 @@ func (rv *RefVarTransformer) UnusedVars() []string {
 }
 
 // Transform replaces $(VAR) style variables with values.
-func (rv *RefVarTransformer) Transform(m resmap.ResMap) error {
+func (rv *refVarTransformer) Transform(m resmap.ResMap) error {
 	rv.replacementCounts = make(map[string]int)
 	rv.mappingFunc = expansion.MappingFuncFor(
 		rv.replacementCounts, rv.varMap)
 	for _, res := range m.Resources() {
 		for _, fieldSpec := range rv.fieldSpecs {
 			if res.OrgId().IsSelected(&fieldSpec.Gvk) {
-				if err := MutateField(
+				if err := transform.MutateField(
 					res.Map(), fieldSpec.PathSlice(),
 					false, rv.replaceVars); err != nil {
 					return err

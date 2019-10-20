@@ -2,9 +2,9 @@
 package builtin
 
 import (
+	"sigs.k8s.io/kustomize/v3/api/transform"
 	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers"
 	"sigs.k8s.io/yaml"
 )
 
@@ -22,7 +22,7 @@ func (p *LabelTransformerPlugin) Config(
 }
 
 func (p *LabelTransformerPlugin) Transform(m resmap.ResMap) error {
-	t, err := transformers.NewMapTransformer(
+	t, err := transform.NewMapTransformer(
 		p.FieldSpecs,
 		p.Labels,
 	)

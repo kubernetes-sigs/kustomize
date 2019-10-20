@@ -1,26 +1,12 @@
-/*
-Copyright 2018 The Kubernetes Authors.
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
-package transformers
+package transform
 
 import (
 	"errors"
 	"fmt"
 	"sigs.k8s.io/kustomize/v3/api/types"
-
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 )
 
@@ -32,23 +18,11 @@ type mapTransformer struct {
 
 var _ resmap.Transformer = &mapTransformer{}
 
-// NewLabelsMapTransformer constructs a mapTransformer.
-func NewLabelsMapTransformer(
-	m map[string]string, fs []types.FieldSpec) (resmap.Transformer, error) {
-	return NewMapTransformer(fs, m)
-}
-
-// NewAnnotationsMapTransformer construct a mapTransformer.
-func NewAnnotationsMapTransformer(
-	m map[string]string, fs []types.FieldSpec) (resmap.Transformer, error) {
-	return NewMapTransformer(fs, m)
-}
-
 // NewMapTransformer construct a mapTransformer.
 func NewMapTransformer(
 	pc []types.FieldSpec, m map[string]string) (resmap.Transformer, error) {
 	if m == nil {
-		return NewNoOpTransformer(), nil
+		return newNoOpTransformer(), nil
 	}
 	if pc == nil {
 		return nil, errors.New("fieldSpecs is not expected to be nil")

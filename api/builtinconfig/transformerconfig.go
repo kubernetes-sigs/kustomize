@@ -1,29 +1,15 @@
-/*
-Copyright 2018 The Kubernetes Authors.
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
-// Package config provides the functions to load default or user provided configurations
-// for different transformers
-package config
+package builtinconfig
 
 import (
 	"log"
-	"sigs.k8s.io/kustomize/v3/api/types"
 	"sort"
 
-	"sigs.k8s.io/kustomize/v3/pkg/transformers/config/defaultconfig"
+	"sigs.k8s.io/kustomize/v3/api/builtinconfig/consts"
+	"sigs.k8s.io/kustomize/v3/api/types"
+	"sigs.k8s.io/kustomize/v3/pkg/ifc"
 )
 
 // TransformerConfig holds the data needed to perform transformations.
@@ -47,11 +33,26 @@ func MakeEmptyConfig() *TransformerConfig {
 // MakeDefaultConfig returns a default TransformerConfig.
 func MakeDefaultConfig() *TransformerConfig {
 	c, err := makeTransformerConfigFromBytes(
-		defaultconfig.GetDefaultFieldSpecs())
+		consts.GetDefaultFieldSpecs())
 	if err != nil {
 		log.Fatalf("Unable to make default transformconfig: %v", err)
 	}
 	return c
+}
+
+// MakeTransformerConfig returns a merger of custom config,
+// if any, with default config.
+func MakeTransformerConfig(
+	ldr ifc.Loader, paths []string) (*TransformerConfig, error) {
+	t1 := MakeDefaultConfig()
+	if len(paths) == 0 {
+		return t1, nil
+	}
+	t2, err := loadDefaultConfig(ldr, paths)
+	if err != nil {
+		return nil, err
+	}
+	return t1.Merge(t2)
 }
 
 // sortFields provides determinism in logging, tests, etc.

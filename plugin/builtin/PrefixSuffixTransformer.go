@@ -4,11 +4,11 @@ package builtin
 import (
 	"errors"
 	"fmt"
+	"sigs.k8s.io/kustomize/v3/api/transform"
 	"sigs.k8s.io/kustomize/v3/api/types"
 
 	"sigs.k8s.io/kustomize/v3/api/resid"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers"
 	"sigs.k8s.io/yaml"
 )
 
@@ -79,7 +79,7 @@ func (p *PrefixSuffixTransformerPlugin) Transform(m resmap.ResMap) error {
 			// the addPrefixSuffix method will not
 			// change the name if both the prefix and suffix
 			// are empty.
-			err := transformers.MutateField(
+			err := transform.MutateField(
 				r.Map(),
 				path.PathSlice(),
 				path.CreateIfNotPresent,

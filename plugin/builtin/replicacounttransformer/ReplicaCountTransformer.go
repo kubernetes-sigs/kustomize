@@ -6,11 +6,11 @@ package main
 
 import (
 	"fmt"
+	"sigs.k8s.io/kustomize/v3/api/transform"
 
 	"sigs.k8s.io/kustomize/v3/api/resid"
 	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers"
 	"sigs.k8s.io/yaml"
 )
 
@@ -41,7 +41,7 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 
 		for _, res := range append(matchOriginal, matchCurrent...) {
 			found = true
-			err := transformers.MutateField(
+			err := transform.MutateField(
 				res.Map(), replicaSpec.PathSlice(),
 				replicaSpec.CreateIfNotPresent, p.addReplicas)
 			if err != nil {

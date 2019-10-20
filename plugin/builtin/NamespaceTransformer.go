@@ -3,12 +3,12 @@ package builtin
 
 import (
 	"fmt"
+	"sigs.k8s.io/kustomize/v3/api/transform"
 
 	"sigs.k8s.io/kustomize/v3/api/resid"
 	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/pkg/resmap"
 	"sigs.k8s.io/kustomize/v3/pkg/resource"
-	"sigs.k8s.io/kustomize/v3/pkg/transformers"
 	"sigs.k8s.io/yaml"
 )
 
@@ -39,7 +39,7 @@ func (p *NamespaceTransformerPlugin) Transform(m resmap.ResMap) error {
 		applicableFs := p.applicableFieldSpecs(id)
 
 		for _, fs := range applicableFs {
-			err := transformers.MutateField(
+			err := transform.MutateField(
 				r.Map(), fs.PathSlice(), fs.CreateIfNotPresent,
 				p.changeNamespace(r))
 			if err != nil {

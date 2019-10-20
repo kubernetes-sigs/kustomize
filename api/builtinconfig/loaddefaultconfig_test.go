@@ -1,31 +1,25 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package config
+package builtinconfig
 
 import (
 	"reflect"
-	"sigs.k8s.io/kustomize/v3/api/resid"
-	"sigs.k8s.io/kustomize/v3/api/types"
 	"testing"
 
+	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/v3/api/types"
 	"sigs.k8s.io/kustomize/v3/internal/loadertest"
 )
 
-func TestMakeDefaultConfig(t *testing.T) {
-	// Confirm default can be made without fatal error inside call.
-	_ = MakeDefaultConfig()
-}
-
-func TestFromFiles(t *testing.T) {
-
+func TestLoadDefaultConfigsFromFiles(t *testing.T) {
 	ldr := loadertest.NewFakeLoader("/app")
 	ldr.AddFile("/app/config.yaml", []byte(`
 namePrefix:
 - path: nameprefix/path
   kind: SomeKind
 `))
-	tcfg, err := NewFactory(ldr).FromFiles([]string{"/app/config.yaml"})
+	tcfg, err := loadDefaultConfig(ldr, []string{"/app/config.yaml"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
