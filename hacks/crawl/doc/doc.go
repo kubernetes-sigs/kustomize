@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"sigs.k8s.io/kustomize/v3/api/ifc"
-	"sigs.k8s.io/kustomize/v3/api/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/v3/api/pgmconfig"
-	"sigs.k8s.io/kustomize/v3/api/types"
+	"sigs.k8s.io/kustomize/api/ifc"
+	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 )
 

@@ -19,7 +19,7 @@ package target_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/api/testutils/kusttest"
+	"sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 // Generate a Secret and a ConfigMap from the same data

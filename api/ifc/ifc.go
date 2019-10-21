@@ -5,8 +5,8 @@
 package ifc
 
 import (
-	"sigs.k8s.io/kustomize/v3/api/resid"
-	"sigs.k8s.io/kustomize/v3/api/types"
+	"sigs.k8s.io/kustomize/api/resid"
+	"sigs.k8s.io/kustomize/api/types"
 )
 
 // Validator provides functions to validate annotations and labels

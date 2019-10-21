@@ -12,9 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"sigs.k8s.io/kustomize/v3/pkg/pgmconfig"
-	"sigs.k8s.io/kustomize/v3/pkg/plugins"
-	"sigs.k8s.io/kustomize/v3/provenance"
+	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/plugins/config"
+	"sigs.k8s.io/kustomize/api/provenance"
 )
 
 //go:generate stringer -type=pluginType
@@ -61,7 +61,7 @@ func main() {
 		if strings.HasPrefix(l, "//noinspection") {
 			continue
 		}
-		if l == "var "+plugins.PluginSymbol+" plugin" {
+		if l == "var "+config.PluginSymbol+" plugin" {
 			continue
 		}
 		if strings.Contains(l, " Transform(") {

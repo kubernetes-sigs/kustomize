@@ -30,14 +30,14 @@ See the [installation docs](INSTALL.md).
 ## Go API Versioning
 
 The public methods in the public packages
-of module `sigs.k8s.io/kusomize` constitute
+of module `sigs.k8s.io/kustomize/api` constitute
 the _kustomize Go API_.
 
 #### Version sigs.k8s.io/kustomize/v3 and earlier
 
 [import path]: https://github.com/golang/go/wiki/Modules#releasing-modules-v2-or-higher
 
-In `v3` (and preceeding major versions), the
+In `kustomize/v3` (and preceeding major versions), the
 kustomize program and the API live the same Go
 module at `sigs.k8s.io/kustomize`, at [import path]
 `sigs.k8s.io/kustomize/v3`.
@@ -83,10 +83,11 @@ The last option seems the most appealing.
 
 #### The first stable API version is coming
 
-The first stable API version will launch at
+The first stable API version will launch
+as the Go module
 
 ```
-sigs.k8s.io/kustomize/api/v1
+sigs.k8s.io/kustomize/api
 ```
 
 The _kustomize_ program itself (`main.go`
@@ -105,7 +106,9 @@ obey semver with a sustainable public
 surface, informed by current usage.  Clients
 should import packages from this module, i.e.
 from import paths prefixed by
-`sigs.k8s.io/kustomize/api/v1`.  The kustomize binary
+`sigs.k8s.io/kustomize/api/` at first,
+and later by `sigs.k8s.io/kustomize/api/v2/`.
+The kustomize binary
 itself is an API client requiring this module.
 
 The clients and API will evolve independently.

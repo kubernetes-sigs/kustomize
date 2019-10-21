@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/api/testutils/kusttest"
+	"sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestSimpleBase(t *testing.T) {

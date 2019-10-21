@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
-	"sigs.k8s.io/kustomize/v3/api/filesys"
-	"sigs.k8s.io/kustomize/v3/api/pgmconfig"
-	"sigs.k8s.io/kustomize/v3/api/types"
 )
 
 func TestFieldOrder(t *testing.T) {

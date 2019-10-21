@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/api/filesys"
+	"sigs.k8s.io/kustomize/api/filesys"
 )
 
 func TestValidate(t *testing.T) {

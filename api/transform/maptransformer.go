@@ -7,8 +7,8 @@ import (
 	"errors"
 	"fmt"
 
-	"sigs.k8s.io/kustomize/v3/api/resmap"
-	"sigs.k8s.io/kustomize/v3/api/types"
+	"sigs.k8s.io/kustomize/api/resmap"
+	"sigs.k8s.io/kustomize/api/types"
 )
 
 // mapTransformer applies a string->string map to fieldSpecs.

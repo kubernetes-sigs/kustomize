@@ -11,7 +11,7 @@ import (
 	"regexp"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/api/testutils/kusttest"
+	"sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 // This is an example of using a helm chart as a base,
