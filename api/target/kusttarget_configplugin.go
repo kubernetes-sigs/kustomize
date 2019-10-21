@@ -4,8 +4,8 @@
 package target
 
 import (
-	"sigs.k8s.io/kustomize/v3/api/builtinconfig"
-	"sigs.k8s.io/kustomize/v3/api/plugins/builtins"
+	"sigs.k8s.io/kustomize/v3/api/plugins/builtinconfig"
+	"sigs.k8s.io/kustomize/v3/api/plugins/builtinhelpers"
 	"sigs.k8s.io/kustomize/v3/api/resmap"
 	"sigs.k8s.io/kustomize/v3/api/types"
 )
@@ -27,12 +27,12 @@ import (
 
 func (kt *KustTarget) configureBuiltinGenerators() (
 	result []resmap.Generator, err error) {
-	for _, bpt := range []builtins.BuiltinPluginType{
-		builtins.ConfigMapGenerator,
-		builtins.SecretGenerator,
+	for _, bpt := range []builtinhelpers.BuiltinPluginType{
+		builtinhelpers.ConfigMapGenerator,
+		builtinhelpers.SecretGenerator,
 	} {
 		r, err := generatorConfigurators[bpt](
-			kt, bpt, builtins.GeneratorFactories[bpt])
+			kt, bpt, builtinhelpers.GeneratorFactories[bpt])
 		if err != nil {
 			return nil, err
 		}
@@ -44,19 +44,19 @@ func (kt *KustTarget) configureBuiltinGenerators() (
 func (kt *KustTarget) configureBuiltinTransformers(
 	tc *builtinconfig.TransformerConfig) (
 	result []resmap.Transformer, err error) {
-	for _, bpt := range []builtins.BuiltinPluginType{
-		builtins.PatchStrategicMergeTransformer,
-		builtins.PatchTransformer,
-		builtins.NamespaceTransformer,
-		builtins.PrefixSuffixTransformer,
-		builtins.LabelTransformer,
-		builtins.AnnotationsTransformer,
-		builtins.PatchJson6902Transformer,
-		builtins.ReplicaCountTransformer,
-		builtins.ImageTagTransformer,
+	for _, bpt := range []builtinhelpers.BuiltinPluginType{
+		builtinhelpers.PatchStrategicMergeTransformer,
+		builtinhelpers.PatchTransformer,
+		builtinhelpers.NamespaceTransformer,
+		builtinhelpers.PrefixSuffixTransformer,
+		builtinhelpers.LabelTransformer,
+		builtinhelpers.AnnotationsTransformer,
+		builtinhelpers.PatchJson6902Transformer,
+		builtinhelpers.ReplicaCountTransformer,
+		builtinhelpers.ImageTagTransformer,
 	} {
 		r, err := transformerConfigurators[bpt](
-			kt, bpt, builtins.TransformerFactories[bpt], tc)
+			kt, bpt, builtinhelpers.TransformerFactories[bpt], tc)
 		if err != nil {
 			return nil, err
 		}
@@ -67,11 +67,11 @@ func (kt *KustTarget) configureBuiltinTransformers(
 
 type gFactory func() resmap.GeneratorPlugin
 
-var generatorConfigurators = map[builtins.BuiltinPluginType]func(
+var generatorConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 	kt *KustTarget,
-	bpt builtins.BuiltinPluginType,
+	bpt builtinhelpers.BuiltinPluginType,
 	factory gFactory) (result []resmap.Generator, err error){
-	builtins.SecretGenerator: func(kt *KustTarget, bpt builtins.BuiltinPluginType, f gFactory) (
+	builtinhelpers.SecretGenerator: func(kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f gFactory) (
 		result []resmap.Generator, err error) {
 		var c struct {
 			types.GeneratorOptions
@@ -92,7 +92,7 @@ var generatorConfigurators = map[builtins.BuiltinPluginType]func(
 		return
 	},
 
-	builtins.ConfigMapGenerator: func(kt *KustTarget, bpt builtins.BuiltinPluginType, f gFactory) (
+	builtinhelpers.ConfigMapGenerator: func(kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f gFactory) (
 		result []resmap.Generator, err error) {
 		var c struct {
 			types.GeneratorOptions
@@ -116,13 +116,13 @@ var generatorConfigurators = map[builtins.BuiltinPluginType]func(
 
 type tFactory func() resmap.TransformerPlugin
 
-var transformerConfigurators = map[builtins.BuiltinPluginType]func(
+var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 	kt *KustTarget,
-	bpt builtins.BuiltinPluginType,
+	bpt builtinhelpers.BuiltinPluginType,
 	f tFactory,
 	tc *builtinconfig.TransformerConfig) (result []resmap.Transformer, err error){
-	builtins.NamespaceTransformer: func(
-		kt *KustTarget, bpt builtins.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
+	builtinhelpers.NamespaceTransformer: func(
+		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		var c struct {
 			types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty"`
@@ -139,8 +139,8 @@ var transformerConfigurators = map[builtins.BuiltinPluginType]func(
 		return
 	},
 
-	builtins.PatchJson6902Transformer: func(
-		kt *KustTarget, bpt builtins.BuiltinPluginType, f tFactory, _ *builtinconfig.TransformerConfig) (
+	builtinhelpers.PatchJson6902Transformer: func(
+		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, _ *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		var c struct {
 			Target types.PatchTarget `json:"target,omitempty" yaml:"target,omitempty"`
@@ -160,8 +160,8 @@ var transformerConfigurators = map[builtins.BuiltinPluginType]func(
 		}
 		return
 	},
-	builtins.PatchStrategicMergeTransformer: func(
-		kt *KustTarget, bpt builtins.BuiltinPluginType, f tFactory, _ *builtinconfig.TransformerConfig) (
+	builtinhelpers.PatchStrategicMergeTransformer: func(
+		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, _ *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		if len(kt.kustomization.PatchesStrategicMerge) == 0 {
 			return
@@ -179,8 +179,8 @@ var transformerConfigurators = map[builtins.BuiltinPluginType]func(
 		result = append(result, p)
 		return
 	},
-	builtins.PatchTransformer: func(
-		kt *KustTarget, bpt builtins.BuiltinPluginType, f tFactory, _ *builtinconfig.TransformerConfig) (
+	builtinhelpers.PatchTransformer: func(
+		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, _ *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		if len(kt.kustomization.Patches) == 0 {
 			return
@@ -203,8 +203,8 @@ var transformerConfigurators = map[builtins.BuiltinPluginType]func(
 		}
 		return
 	},
-	builtins.LabelTransformer: func(
-		kt *KustTarget, bpt builtins.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
+	builtinhelpers.LabelTransformer: func(
+		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		var c struct {
 			Labels     map[string]string
@@ -220,8 +220,8 @@ var transformerConfigurators = map[builtins.BuiltinPluginType]func(
 		result = append(result, p)
 		return
 	},
-	builtins.AnnotationsTransformer: func(
-		kt *KustTarget, bpt builtins.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
+	builtinhelpers.AnnotationsTransformer: func(
+		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		var c struct {
 			Annotations map[string]string
@@ -237,8 +237,8 @@ var transformerConfigurators = map[builtins.BuiltinPluginType]func(
 		result = append(result, p)
 		return
 	},
-	builtins.PrefixSuffixTransformer: func(
-		kt *KustTarget, bpt builtins.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
+	builtinhelpers.PrefixSuffixTransformer: func(
+		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		var c struct {
 			Prefix     string
@@ -256,8 +256,8 @@ var transformerConfigurators = map[builtins.BuiltinPluginType]func(
 		result = append(result, p)
 		return
 	},
-	builtins.ImageTagTransformer: func(
-		kt *KustTarget, bpt builtins.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
+	builtinhelpers.ImageTagTransformer: func(
+		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		var c struct {
 			ImageTag   types.Image
@@ -275,8 +275,8 @@ var transformerConfigurators = map[builtins.BuiltinPluginType]func(
 		}
 		return
 	},
-	builtins.ReplicaCountTransformer: func(
-		kt *KustTarget, bpt builtins.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
+	builtinhelpers.ReplicaCountTransformer: func(
+		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		var c struct {
 			Replica    types.Replica

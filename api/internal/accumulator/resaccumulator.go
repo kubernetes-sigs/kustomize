@@ -8,7 +8,7 @@ import (
 	"log"
 	"strings"
 
-	"sigs.k8s.io/kustomize/v3/api/builtinconfig"
+	"sigs.k8s.io/kustomize/v3/api/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/v3/api/resid"
 	"sigs.k8s.io/kustomize/v3/api/resmap"
 	"sigs.k8s.io/kustomize/v3/api/types"

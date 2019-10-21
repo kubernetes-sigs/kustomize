@@ -9,12 +9,12 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/api/builtinconfig/consts"
 	"sigs.k8s.io/kustomize/v3/api/internal/loadertest"
 	"sigs.k8s.io/kustomize/v3/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/v3/api/k8sdeps/transformer"
 	fLdr "sigs.k8s.io/kustomize/v3/api/loader"
 	"sigs.k8s.io/kustomize/v3/api/pgmconfig"
+	"sigs.k8s.io/kustomize/v3/api/plugins/builtinconfig/consts"
 	"sigs.k8s.io/kustomize/v3/api/plugins/config"
 	pLdr "sigs.k8s.io/kustomize/v3/api/plugins/loader"
 	"sigs.k8s.io/kustomize/v3/api/resmap"

@@ -9,8 +9,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"sigs.k8s.io/kustomize/v3/api/builtinconfig/consts"
 	"sigs.k8s.io/kustomize/v3/api/filesys"
+	"sigs.k8s.io/kustomize/v3/api/plugins/builtinconfig/consts"
 )
 
 // NewCmdConfig returns an instance of 'config' subcommand.
