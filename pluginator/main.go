@@ -26,6 +26,8 @@ const (
 	Generator
 )
 
+const packageForGeneratedCode = "builtins"
+
 func main() {
 	root := inputFileRoot()
 	file, err := os.Open(root + ".go")
@@ -48,8 +50,7 @@ func main() {
 		fmt.Sprintf(
 			"// pluginator %+v\n", provenance.GetProvenance()))
 	w.write("\n")
-	// TODO: `builtins` should be a const?
-	w.write("package builtins")
+	w.write("package " + packageForGeneratedCode)
 
 	pType := unknown
 
@@ -125,7 +126,7 @@ func makeOutputFileName(root string) string {
 		"src",
 		pgmconfig.DomainName,
 		pgmconfig.ProgramName,
-		"api", "plugins", "builtins",
+		"api", "plugins", packageForGeneratedCode,
 		root+".go")
 }
 

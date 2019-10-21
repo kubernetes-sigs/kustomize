@@ -46,11 +46,11 @@ function installTools {
   removeBin golangci-lint
   GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.19.1
   CILINT=$(go env GOPATH)/bin/golangci-lint
-  
+
   removeBin mdrip
   GO111MODULE=on go get github.com/monopole/mdrip@v1.0.0
   MDRIP=$(go env GOPATH)/bin/mdrip
-  
+
   ls -l $(go env GOPATH)/bin
 }
 
@@ -75,7 +75,7 @@ function testGoLangCILint {
 
 function runApiModuleGoTests {
   (cd api; go test ./...)
-  
+
   if [ -z ${TRAVIS+x} ]; then
     echo " "
     echo Not on travis, so running the notravis Go tests
@@ -100,7 +100,7 @@ function runApiModuleGoTests {
 function testExamplesAgainstLatestKustomizeRelease {
   removeBin kustomize
   # Install latest release.
-  
+
   (cd ~; GO111MODULE=on go get sigs.k8s.io/kustomize/v3/cmd/kustomize@v3.2.0)
 
   (cd api;
@@ -133,6 +133,7 @@ function testExamplesAgainstHead {
 }
 
 function generateCode {
+  echo "preferredGoPath = $preferredGoPath"
   ./api/plugins/builtinhelpers/generateBuiltins.sh $preferredGoPath
 }
 
