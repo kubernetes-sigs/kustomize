@@ -14,7 +14,7 @@ These modules release independently.
 ## Module summaries
 
 [`sigs.k8s.io/kustomize/kustomize`]: #sigsk8siokustomizekustomize
-[`sigs.k8s.io/kustomize`]: #sigsk8siokustomize
+[`sigs.k8s.io/kustomize/api`]: #sigsk8siokustomizeapi
 [`sigs.k8s.io/kustomize/pluginator`]: #sigsk8siokustomizepluginator
 [kustomize/v3.2.1]: https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2Fv3.2.1
 [pluginator/v1.0.0]: https://github.com/kubernetes-sigs/kustomize/releases/tag/pluginator%2Fv1.0.0
