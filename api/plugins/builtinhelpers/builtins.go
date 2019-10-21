@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package builtins
+package builtinhelpers
 
 import (
 	"sigs.k8s.io/kustomize/v3/api/resmap"
@@ -13,20 +13,20 @@ type BuiltinPluginType int
 
 const (
 	Unknown BuiltinPluginType = iota
-	SecretGenerator
+	AnnotationsTransformer
 	ConfigMapGenerator
-	ReplicaCountTransformer
+	HashTransformer
+	ImageTagTransformer
+	InventoryTransformer
+	LabelTransformer
+	LegacyOrderTransformer
 	NamespaceTransformer
 	PatchJson6902Transformer
 	PatchStrategicMergeTransformer
 	PatchTransformer
-	LabelTransformer
-	AnnotationsTransformer
 	PrefixSuffixTransformer
-	ImageTagTransformer
-	HashTransformer
-	InventoryTransformer
-	LegacyOrderTransformer
+	ReplicaCountTransformer
+	SecretGenerator
 )
 
 var stringToBuiltinPluginTypeMap map[string]BuiltinPluginType
@@ -55,21 +55,21 @@ func GetBuiltinPluginType(n string) BuiltinPluginType {
 }
 
 var GeneratorFactories = map[BuiltinPluginType]func() resmap.GeneratorPlugin{
-	SecretGenerator:    builtin.NewSecretGeneratorPlugin,
 	ConfigMapGenerator: builtin.NewConfigMapGeneratorPlugin,
+	SecretGenerator:    builtin.NewSecretGeneratorPlugin,
 }
 
 var TransformerFactories = map[BuiltinPluginType]func() resmap.TransformerPlugin{
+	AnnotationsTransformer:         builtin.NewAnnotationsTransformerPlugin,
+	HashTransformer:                builtin.NewHashTransformerPlugin,
+	ImageTagTransformer:            builtin.NewImageTagTransformerPlugin,
+	InventoryTransformer:           builtin.NewInventoryTransformerPlugin,
+	LabelTransformer:               builtin.NewLabelTransformerPlugin,
+	LegacyOrderTransformer:         builtin.NewLegacyOrderTransformerPlugin,
 	NamespaceTransformer:           builtin.NewNamespaceTransformerPlugin,
-	ReplicaCountTransformer:        builtin.NewReplicaCountTransformerPlugin,
 	PatchJson6902Transformer:       builtin.NewPatchJson6902TransformerPlugin,
 	PatchStrategicMergeTransformer: builtin.NewPatchStrategicMergeTransformerPlugin,
 	PatchTransformer:               builtin.NewPatchTransformerPlugin,
-	LabelTransformer:               builtin.NewLabelTransformerPlugin,
-	AnnotationsTransformer:         builtin.NewAnnotationsTransformerPlugin,
 	PrefixSuffixTransformer:        builtin.NewPrefixSuffixTransformerPlugin,
-	ImageTagTransformer:            builtin.NewImageTagTransformerPlugin,
-	HashTransformer:                builtin.NewHashTransformerPlugin,
-	InventoryTransformer:           builtin.NewInventoryTransformerPlugin,
-	LegacyOrderTransformer:         builtin.NewLegacyOrderTransformerPlugin,
+	ReplicaCountTransformer:        builtin.NewReplicaCountTransformerPlugin,
 }

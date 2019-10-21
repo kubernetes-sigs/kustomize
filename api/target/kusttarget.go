@@ -13,11 +13,11 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/v3/api/builtinconfig"
 	"sigs.k8s.io/kustomize/v3/api/ifc"
 	"sigs.k8s.io/kustomize/v3/api/internal/accumulator"
 	"sigs.k8s.io/kustomize/v3/api/pgmconfig"
-	"sigs.k8s.io/kustomize/v3/api/plugins/builtins"
+	"sigs.k8s.io/kustomize/v3/api/plugins/builtinconfig"
+	"sigs.k8s.io/kustomize/v3/api/plugins/builtinhelpers"
 	"sigs.k8s.io/kustomize/v3/api/plugins/loader"
 	"sigs.k8s.io/kustomize/v3/api/resmap"
 	"sigs.k8s.io/kustomize/v3/api/transform"
@@ -165,7 +165,7 @@ func (kt *KustTarget) makeCustomizedResMap(
 func (kt *KustTarget) addHashesToNames(
 	ra *accumulator.ResAccumulator) error {
 	p := builtin.NewHashTransformerPlugin()
-	err := kt.configureBuiltinPlugin(p, nil, builtins.HashTransformer)
+	err := kt.configureBuiltinPlugin(p, nil, builtinhelpers.HashTransformer)
 	if err != nil {
 		return err
 	}
@@ -194,7 +194,7 @@ func (kt *KustTarget) computeInventory(
 	c.Namespace = inv.ConfigMap.Namespace
 	c.Policy = garbagePolicy.String()
 	p := builtin.NewInventoryTransformerPlugin()
-	err := kt.configureBuiltinPlugin(p, c, builtins.InventoryTransformer)
+	err := kt.configureBuiltinPlugin(p, c, builtinhelpers.InventoryTransformer)
 	if err != nil {
 		return err
 	}
@@ -372,7 +372,7 @@ func (kt *KustTarget) accumulateFile(
 }
 
 func (kt *KustTarget) configureBuiltinPlugin(
-	p resmap.Configurable, c interface{}, bpt builtins.BuiltinPluginType) (err error) {
+	p resmap.Configurable, c interface{}, bpt builtinhelpers.BuiltinPluginType) (err error) {
 	var y []byte
 	if c != nil {
 		y, err = yaml.Marshal(c)
