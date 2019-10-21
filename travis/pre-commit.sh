@@ -14,8 +14,25 @@ function installHelm {
   sudo mv linux-amd64/helm /usr/local/bin/helm
 }
 
+function removeBin {
+  local d=$(go env GOPATH)/bin/$1
+  echo "Removing binary $d"
+  /bin/rm -f $d
+}
+
 function installTools {
-  go install sigs.k8s.io/kustomize/pluginator
+  # TODO(19Oct2019): After the API is in place, and
+  # there's a new pluginator compiled against that API,
+  # switch back to this:
+  #  go install sigs.k8s.io/kustomize/pluginator
+  # in the meantime, use the local copy.
+  # go module rules, and the existing violations of
+  # semver mean that simply using the replace directive
+  # in the go.mod won't work.
+
+  removeBin pluginator
+  # Install from whatever code is on disk.
+  (cd pluginator; go install .)
 }
 
 function runFunc {
@@ -60,7 +77,7 @@ function testGoTests {
 }
 
 function testExamplesAgainstLatestRelease {
-  /bin/rm -f $(go env GOPATH)/bin/kustomize
+  removeBin kustomize
   # Install latest release.
   (cd ~; go get sigs.k8s.io/kustomize/v3/cmd/kustomize@v3.2.0)
 
@@ -78,7 +95,7 @@ function testExamplesAgainstLatestRelease {
 }
 
 function testExamplesAgainstHead {
-  /bin/rm -f $(go env GOPATH)/bin/kustomize
+  removeBin kustomize
   # Install from head.
   (cd kustomize; go install .)
   # To test examples of unreleased features, add
