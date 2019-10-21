@@ -6,8 +6,8 @@ package inventory_test
 import (
 	"testing"
 
-	. "sigs.k8s.io/kustomize/v3/api/inventory"
-	"sigs.k8s.io/kustomize/v3/api/resid"
+	. "sigs.k8s.io/kustomize/api/inventory"
+	"sigs.k8s.io/kustomize/api/resid"
 )
 
 func makeRefs() (Refs, Refs) {

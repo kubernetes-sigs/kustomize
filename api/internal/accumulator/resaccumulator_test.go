@@ -10,14 +10,14 @@ import (
 	"strings"
 	"testing"
 
-	. "sigs.k8s.io/kustomize/v3/api/internal/accumulator"
-	"sigs.k8s.io/kustomize/v3/api/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/v3/api/plugins/builtinconfig"
-	"sigs.k8s.io/kustomize/v3/api/resid"
-	"sigs.k8s.io/kustomize/v3/api/resmap"
-	"sigs.k8s.io/kustomize/v3/api/resource"
-	"sigs.k8s.io/kustomize/v3/api/testutils/resmaptest"
-	"sigs.k8s.io/kustomize/v3/api/types"
+	. "sigs.k8s.io/kustomize/api/internal/accumulator"
+	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/api/plugins/builtinconfig"
+	"sigs.k8s.io/kustomize/api/resid"
+	"sigs.k8s.io/kustomize/api/resmap"
+	"sigs.k8s.io/kustomize/api/resource"
+	"sigs.k8s.io/kustomize/api/testutils/resmaptest"
+	"sigs.k8s.io/kustomize/api/types"
 )
 
 func makeResAccumulator(t *testing.T) (*ResAccumulator, *resource.Factory) {

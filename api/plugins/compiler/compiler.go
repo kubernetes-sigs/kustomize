@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"sigs.k8s.io/kustomize/v3/api/pgmconfig"
-	"sigs.k8s.io/kustomize/v3/api/plugins/config"
+	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/plugins/config"
 )
 
 // Compiler creates Go plugin object files.

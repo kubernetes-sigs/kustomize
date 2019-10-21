@@ -11,14 +11,14 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/v3/api/ifc"
-	"sigs.k8s.io/kustomize/v3/api/plugins/builtinhelpers"
-	"sigs.k8s.io/kustomize/v3/api/plugins/config"
-	"sigs.k8s.io/kustomize/v3/api/plugins/execplugin"
-	"sigs.k8s.io/kustomize/v3/api/resid"
-	"sigs.k8s.io/kustomize/v3/api/resmap"
-	"sigs.k8s.io/kustomize/v3/api/resource"
-	"sigs.k8s.io/kustomize/v3/api/types"
+	"sigs.k8s.io/kustomize/api/ifc"
+	"sigs.k8s.io/kustomize/api/plugins/builtinhelpers"
+	"sigs.k8s.io/kustomize/api/plugins/config"
+	"sigs.k8s.io/kustomize/api/plugins/execplugin"
+	"sigs.k8s.io/kustomize/api/resid"
+	"sigs.k8s.io/kustomize/api/resmap"
+	"sigs.k8s.io/kustomize/api/resource"
+	"sigs.k8s.io/kustomize/api/types"
 )
 
 type Loader struct {

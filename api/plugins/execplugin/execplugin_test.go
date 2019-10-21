@@ -8,15 +8,15 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/api/internal/loadertest"
-	"sigs.k8s.io/kustomize/v3/api/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/v3/api/plugins/config"
-	. "sigs.k8s.io/kustomize/v3/api/plugins/execplugin"
-	"sigs.k8s.io/kustomize/v3/api/plugins/loader"
-	"sigs.k8s.io/kustomize/v3/api/resmap"
-	"sigs.k8s.io/kustomize/v3/api/resource"
-	"sigs.k8s.io/kustomize/v3/api/testutils/valtest"
-	"sigs.k8s.io/kustomize/v3/api/types"
+	"sigs.k8s.io/kustomize/api/internal/loadertest"
+	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/api/plugins/config"
+	. "sigs.k8s.io/kustomize/api/plugins/execplugin"
+	"sigs.k8s.io/kustomize/api/plugins/loader"
+	"sigs.k8s.io/kustomize/api/resmap"
+	"sigs.k8s.io/kustomize/api/resource"
+	"sigs.k8s.io/kustomize/api/testutils/valtest"
+	"sigs.k8s.io/kustomize/api/types"
 )
 
 func TestExecPluginConfig(t *testing.T) {

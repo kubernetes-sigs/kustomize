@@ -33,7 +33,7 @@ The kind is the CamelCase name of the plugin.
 The source for a builtin plugin must be at:
 
   repo=$GOPATH/src/sigs.k8s.io/kustomize
-  ${repo}/v3/plugin/builtin/LOWERCASE(${kind})/${kind}
+  ${repo}/plugin/builtin/LOWERCASE(${kind})/${kind}
 
 k8s wants 'kind' values to follow CamelCase, while
 Go style doesn't like but does allow such names.
@@ -91,7 +91,7 @@ code, hence this program.
 TO GENERATE CODE
 
   repo=$GOPATH/src/sigs.k8s.io/kustomize
-  cd $repo/v3/plugin/builtin
+  cd $repo/plugin/builtin
   go generate ./...
 
 See travis/pre-commit.sh for canonical way
@@ -106,7 +106,7 @@ etc.
 Generated plugins are used in kustomize via
 
   package whatever
-  import sigs.k8s.io/kustomize/v3/plugins/builtins
+  import sigs.k8s.io/kustomize/api/plugins/builtins
   ...
   g := builtin.NewSecretGenerator()
   g.Config(h, k)

@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/api/loader"
-	"sigs.k8s.io/kustomize/v3/api/plugins/config"
-	"sigs.k8s.io/kustomize/v3/api/testutils/kusttest"
+	"sigs.k8s.io/kustomize/api/loader"
+	"sigs.k8s.io/kustomize/api/plugins/config"
+	"sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestOrderPreserved(t *testing.T) {

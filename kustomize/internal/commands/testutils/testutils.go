@@ -4,8 +4,8 @@
 package testutils_test
 
 import (
-	"sigs.k8s.io/kustomize/v3/api/filesys"
-	"sigs.k8s.io/kustomize/v3/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/pgmconfig"
 )
 
 const (
