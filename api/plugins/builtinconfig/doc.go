@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package builtinconfig provides legacy methods for
-// configuring builting plugins from a common config file.
-// It's better to configure them individually if using
-// a custom configuration.
+// configuring builtin plugins from a common config file.
+// As a user, its best to configure plugins individually
+// with plugin config files specified in the `transformers:`
+// or `generators:` field, than to use this legacy
+// configuration technique.
 package builtinconfig

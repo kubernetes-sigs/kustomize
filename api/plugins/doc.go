@@ -3,12 +3,14 @@
 
 /*
 
-See docs/plugins.md to learn about plugins.
+Read docs/plugins.md first for an overview of kustomize plugins.
 
 
 BUILTIN PLUGIN CONFIGURATION
 
-For performance and semantic sanity reasons, all
+There are two kinds of plugins, Go plugins (shared
+object library) and exec plugins (independent binary).
+For performance and standardized testing reasons, all
 builtin plugins are Go plugins (not exec plugins).
 
 Using "SecretGenerator" as an example in what
@@ -67,8 +69,8 @@ It arises from following requirements:
   `go get` and should run where Go
      programs are expected to run.
 
-The extension requirement led to the creation
-of a framework that accommodates writing a
+The extension requirement led to building
+a framework that accommodates writing a
 G or T as either
 
 * an 'exec' plugin (any executable file
@@ -92,16 +94,19 @@ TO GENERATE CODE
   cd $repo/v3/plugin/builtin
   go generate ./...
 
+See travis/pre-commit.sh for canonical way
+to execute the above.
+
 This creates
 
-  $repo/plugin/builtin/SecretGenerator.go
+  $repo/api/plugins/builtins/SecretGenerator.go
 
 etc.
 
 Generated plugins are used in kustomize via
 
   package whatever
-  import sigs.k8s.io/kustomize/v3/plugin/builtin
+  import sigs.k8s.io/kustomize/v3/plugins/builtins
   ...
   g := builtin.NewSecretGenerator()
   g.Config(h, k)
@@ -110,4 +115,4 @@ Generated plugins are used in kustomize via
   // Eventually emit resources.
 
 */
-package plugin
+package plugins
