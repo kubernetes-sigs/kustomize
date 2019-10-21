@@ -5,6 +5,7 @@ package loader
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"plugin"
 	"reflect"
@@ -145,9 +146,12 @@ func (l *Loader) makeBuiltinPlugin(r resid.Gvk) (resmap.Configurable, error) {
 }
 
 func (l *Loader) loadPlugin(resId resid.ResId) (resmap.Configurable, error) {
-	p := execplugin.NewExecPlugin(l.absolutePluginPath(resId))
-	if p.IsAvailable() {
+	p, err := execplugin.NewExecPlugin(l.absolutePluginPath(resId))
+	if err == nil {
 		return p, nil
+	}
+	if err != nil && !os.IsNotExist(err) {
+		return nil, err
 	}
 	c, err := l.loadGoPlugin(resId)
 	if err != nil {
