@@ -8,8 +8,8 @@ import (
 	"sort"
 
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/v3/api/resmap"
-	"sigs.k8s.io/kustomize/v3/api/resource"
+	"sigs.k8s.io/kustomize/api/resmap"
+	"sigs.k8s.io/kustomize/api/resource"
 )
 
 // Sort the resources using an ordering defined in the Gvk class.

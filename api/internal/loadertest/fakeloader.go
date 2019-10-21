@@ -7,9 +7,9 @@ package loadertest
 import (
 	"log"
 
-	"sigs.k8s.io/kustomize/v3/api/filesys"
-	"sigs.k8s.io/kustomize/v3/api/ifc"
-	"sigs.k8s.io/kustomize/v3/api/loader"
+	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/ifc"
+	"sigs.k8s.io/kustomize/api/loader"
 )
 
 // FakeLoader encapsulates the delegate Loader and the fake file system.

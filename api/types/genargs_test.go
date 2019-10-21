@@ -6,7 +6,7 @@ package types_test
 import (
 	"testing"
 
-	. "sigs.k8s.io/kustomize/v3/api/types"
+	. "sigs.k8s.io/kustomize/api/types"
 )
 
 func TestGenArgs_String(t *testing.T) {

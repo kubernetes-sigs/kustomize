@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
-	"sigs.k8s.io/kustomize/v3/api/filesys"
-	"sigs.k8s.io/kustomize/v3/api/testutils/valtest"
 )
 
 const (

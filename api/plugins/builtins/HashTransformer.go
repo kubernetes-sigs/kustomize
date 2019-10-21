@@ -6,8 +6,8 @@ package builtins
 import (
 	"fmt"
 
-	"sigs.k8s.io/kustomize/v3/api/ifc"
-	"sigs.k8s.io/kustomize/v3/api/resmap"
+	"sigs.k8s.io/kustomize/api/ifc"
+	"sigs.k8s.io/kustomize/api/resmap"
 )
 
 type HashTransformerPlugin struct {

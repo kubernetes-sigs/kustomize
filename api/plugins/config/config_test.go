@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/pgmconfig"
 )
 
 func TestConfigDirNoXdg(t *testing.T) {

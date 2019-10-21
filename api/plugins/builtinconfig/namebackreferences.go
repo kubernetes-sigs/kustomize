@@ -6,8 +6,8 @@ package builtinconfig
 import (
 	"strings"
 
-	"sigs.k8s.io/kustomize/v3/api/resid"
-	"sigs.k8s.io/kustomize/v3/api/types"
+	"sigs.k8s.io/kustomize/api/resid"
+	"sigs.k8s.io/kustomize/api/types"
 )
 
 // NameBackReferences is an association between a gvk.GVK and a list

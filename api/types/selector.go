@@ -4,7 +4,7 @@
 package types
 
 import (
-	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/api/resid"
 )
 
 // Selector specifies a set of resources.

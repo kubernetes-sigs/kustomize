@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	. "sigs.k8s.io/kustomize/v3/api/plugins/compiler"
+	. "sigs.k8s.io/kustomize/api/plugins/compiler"
 )
 
 // Regression coverage over compiler behavior.
