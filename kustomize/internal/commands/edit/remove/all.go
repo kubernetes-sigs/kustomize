@@ -5,8 +5,8 @@ package remove
 
 import (
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/v3/api/filesys"
-	"sigs.k8s.io/kustomize/v3/api/ifc"
+	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/ifc"
 )
 
 // NewCmdRemove returns an instance of 'remove' subcommand.

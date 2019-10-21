@@ -43,9 +43,9 @@ builds:
 - binary: $executable
   ldflags: >
     -s
-    -X sigs.k8s.io/kustomize/v3/provenance.version={{.Version}}
-    -X sigs.k8s.io/kustomize/v3/provenance.gitCommit={{.Commit}}
-    -X sigs.k8s.io/kustomize/v3/provenance.buildDate={{.Date}}
+    -X sigs.k8s.io/kustomize/api/provenance.version={{.Version}}
+    -X sigs.k8s.io/kustomize/api/provenance.gitCommit={{.Commit}}
+    -X sigs.k8s.io/kustomize/api/provenance.buildDate={{.Date}}
 
   goos:
   - linux

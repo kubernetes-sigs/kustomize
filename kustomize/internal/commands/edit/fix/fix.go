@@ -5,8 +5,8 @@ package fix
 
 import (
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
-	"sigs.k8s.io/kustomize/v3/api/filesys"
 )
 
 // NewCmdFix returns an instance of 'fix' subcommand.

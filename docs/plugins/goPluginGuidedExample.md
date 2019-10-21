@@ -46,7 +46,7 @@ Need v3.0.0 for what follows, and you must _compile_
 it (not download the binary from the release page):
 
 ```shell
-GOPATH=$tmpGoPath go install sigs.k8s.io/kustomize/v3/cmd/kustomize
+GOPATH=$tmpGoPath go install sigs.k8s.io/kustomize/kustomize
 ```
 
 ## Make a home for plugins

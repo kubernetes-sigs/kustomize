@@ -4,8 +4,8 @@
 package builtinhelpers
 
 import (
-	"sigs.k8s.io/kustomize/v3/api/plugins/builtins"
-	"sigs.k8s.io/kustomize/v3/api/resmap"
+	"sigs.k8s.io/kustomize/api/plugins/builtins"
+	"sigs.k8s.io/kustomize/api/resmap"
 )
 
 //go:generate stringer -type=BuiltinPluginType

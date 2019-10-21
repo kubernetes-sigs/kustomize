@@ -4,7 +4,7 @@
 package builtinconfig
 
 import (
-	"sigs.k8s.io/kustomize/v3/api/ifc"
+	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/yaml"
 )
 

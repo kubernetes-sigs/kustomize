@@ -9,8 +9,8 @@ import (
 
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"sigs.k8s.io/kustomize/v3/api/hasher"
-	"sigs.k8s.io/kustomize/v3/api/ifc"
+	"sigs.k8s.io/kustomize/api/hasher"
+	"sigs.k8s.io/kustomize/api/ifc"
 )
 
 // kustHash computes a hash of an unstructured object.

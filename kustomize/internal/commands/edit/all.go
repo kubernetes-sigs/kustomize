@@ -5,14 +5,14 @@ package edit
 
 import (
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/ifc"
+	"sigs.k8s.io/kustomize/api/kv"
+	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/add"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/fix"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/remove"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/set"
-	"sigs.k8s.io/kustomize/v3/api/filesys"
-	"sigs.k8s.io/kustomize/v3/api/ifc"
-	"sigs.k8s.io/kustomize/v3/api/kv"
-	"sigs.k8s.io/kustomize/v3/api/loader"
 )
 
 // NewCmdEdit returns an instance of 'edit' subcommand.

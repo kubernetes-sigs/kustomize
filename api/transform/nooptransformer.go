@@ -3,7 +3,7 @@
 
 package transform
 
-import "sigs.k8s.io/kustomize/v3/api/resmap"
+import "sigs.k8s.io/kustomize/api/resmap"
 
 // noOpTransformer contains a no-op transformer.
 type noOpTransformer struct{}

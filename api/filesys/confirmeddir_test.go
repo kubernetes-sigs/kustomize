@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	. "sigs.k8s.io/kustomize/v3/api/filesys"
+	. "sigs.k8s.io/kustomize/api/filesys"
 )
 
 func TestJoin(t *testing.T) {

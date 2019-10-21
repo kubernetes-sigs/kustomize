@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/v3/api/pgmconfig"
-	"sigs.k8s.io/kustomize/v3/api/plugins/compiler"
-	"sigs.k8s.io/kustomize/v3/api/plugins/config"
+	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/plugins/compiler"
+	"sigs.k8s.io/kustomize/api/plugins/config"
 )
 
 // PluginTestEnv manages the plugin test environment.

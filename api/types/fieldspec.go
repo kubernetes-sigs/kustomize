@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/api/resid"
 )
 
 // FieldSpec completely specifies a kustomizable field in

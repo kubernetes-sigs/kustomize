@@ -186,8 +186,8 @@ requires.
 # Update the following as needed, obviously.
 
 if [ "$module" != "api" ]; then
-  # go mod edit -dropreplace=sigs.k8s.io/kustomize/v3    $module/go.mod
-  # go mod edit -require=sigs.k8s.io/kustomize/v4@v4.0.1 $module/go.mod
+  # go mod edit -dropreplace=sigs.k8s.io/kustomize/api    $module/go.mod
+  # go mod edit -require=sigs.k8s.io/kustomize/api@v?.0.1 $module/go.mod
   # git commit -a -m "Drop API module replacement"
 fi
 ```

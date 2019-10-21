@@ -21,7 +21,7 @@ function removeBin {
 }
 
 function installTools {
-  # TODO(2018/Oct/19): After the API is in place, and
+  # TODO(2019/Oct/19): After the API is in place, and
   # there's a new pluginator compiled against that API,
   # switch back to this:
   #  go install sigs.k8s.io/kustomize/pluginator
@@ -35,8 +35,23 @@ function installTools {
   (cd pluginator; go install .)
   echo "Installed pluginator."
 
-
+  # TODO figure out how to express this dependence in the three
+  # modules (kustomize/api, kustomize/pluginator, kustomize/kustomize).
+  # Maybe make a top level module with an internal/tools/tools.go with
+  # import _ "github.com/golangci/golangci-lint/cmd/golangci-lint" etc?
+  # but it will be a kustomize module, and that will be confusing
+  # to people accustomied to the old one-module scheme.  Will
+  # require setting the module to at least v4, because it is
+  # incompatible with v3.
+  removeBin golangci-lint
+  GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.19.1
+  CILINT=$(go env GOPATH)/bin/golangci-lint
   
+  removeBin mdrip
+  GO111MODULE=on go get github.com/monopole/mdrip@v1.0.0
+  MDRIP=$(go env GOPATH)/bin/mdrip
+  
+  ls -l $(go env GOPATH)/bin
 }
 
 function runFunc {
@@ -53,16 +68,14 @@ function runFunc {
 }
 
 function testGoLangCILint {
-  # TODO(2018/Oct/19): After the API is in place, reinstate this
-  # The flux in go.mod files causing troubles possibly related to
-  # https://github.com/golangci/golangci-lint/issues/761
-  # go run "github.com/golangci/golangci-lint/cmd/golangci-lint" run ./...
-  echo "Skipping linting for now."
+  (cd api; $CILINT run ./...)
+  (cd kustomize; $CILINT run ./...)
+  (cd pluginator; $CILINT run ./...)
 }
 
-function testGoTests {
-  go test -v ./...
-
+function runApiModuleGoTests {
+  (cd api; go test ./...)
+  
   if [ -z ${TRAVIS+x} ]; then
     echo " "
     echo Not on travis, so running the notravis Go tests
@@ -70,27 +83,29 @@ function testGoTests {
 
     # Requires helm.
     # At the moment not asking travis to install it.
-    go test -v sigs.k8s.io/kustomize/v3/api/target \
-      -run TestChartInflatorPlugin -tags=notravis
-    go test -v sigs.k8s.io/kustomize/v3/plugin/someteam.example.com/v1/chartinflator/... \
-      -run TestChartInflator -tags=notravis
+    (cd api; go test -v sigs.k8s.io/kustomize/api/target \
+      -run TestChartInflatorPlugin -tags=notravis)
+    (cd plugin/someteam.example.com/v1/chartinflator;
+     go test -v . -run TestChartInflator -tags=notravis)
 
     # Requires kubeeval.
     # At the moment not asking travis to install it.
-    go test -v sigs.k8s.io/kustomize/v3/plugin/someteam.example.com/v1/validator/... \
-       -run TestValidatorHappy -tags=notravis
-    go test -v sigs.k8s.io/kustomize/v3/plugin/someteam.example.com/v1/validator/... \
-       -run TestValidatorUnHappy -tags=notravis
+    (cd plugin/someteam.example.com/v1/validator;
+     go test -v . -run TestValidatorHappy -tags=notravis)
+    (cd plugin/someteam.example.com/v1/validator;
+     go test -v . -run TestValidatorUnHappy -tags=notravis)
   fi
 }
 
-function testExamplesAgainstLatestRelease {
+function testExamplesAgainstLatestKustomizeRelease {
   removeBin kustomize
   # Install latest release.
   
   (cd ~; GO111MODULE=on go get sigs.k8s.io/kustomize/v3/cmd/kustomize@v3.2.0)
 
-  go run "github.com/monopole/mdrip" --mode test --label testAgainstLatestRelease ./examples
+  (cd api;
+   $MDRIP --mode test \
+     --label testAgainstLatestRelease ../examples)
 
   if [ -z ${TRAVIS+x} ]; then
     echo " "
@@ -99,7 +114,9 @@ function testExamplesAgainstLatestRelease {
 
     # The following requires helm.
     # At the moment not asking travis to install it.
-    go run "github.com/monopole/mdrip" --mode test --label helmtest README.md ./examples/chart.md
+    (cd api;
+     $MDRIP --mode test \
+       --label helmtest README.md ../examples/chart.md)
   fi
 }
 
@@ -110,7 +127,9 @@ function testExamplesAgainstHead {
   # To test examples of unreleased features, add
   # examples with code blocks annotated with some
   # label _other than_ @testAgainstLatestRelease.
-  go run "github.com/monopole/mdrip" --mode test --label testAgainstLatestRelease ./examples
+  (cd api;
+   $MDRIP --mode test \
+     --label testAgainstLatestRelease ../examples)
 }
 
 function generateCode {
@@ -123,7 +142,7 @@ function generateCode {
 #
 # Use GOPATH to define XDG_CONFIG_HOME, then unset
 # GOPATH so that go.mod is unambiguously honored.
-
+#
 function setPreferredGoPathAndUnsetGoPath {
   preferredGoPath=$GOPATH
   if [ -z ${GOPATH+x} ]; then
@@ -184,8 +203,8 @@ echo "Working..."
 runFunc installTools
 runFunc generateCode
 runFunc testGoLangCILint
-runFunc testGoTests
-runFunc testExamplesAgainstLatestRelease
+runFunc runApiModuleGoTests
+runFunc testExamplesAgainstLatestKustomizeRelease
 runFunc testExamplesAgainstHead
 
 if [ $rcAccumulator -eq 0 ]; then

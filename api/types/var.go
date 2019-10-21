@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"sigs.k8s.io/kustomize/v3/api/resid"
+	"sigs.k8s.io/kustomize/api/resid"
 )
 
 const defaultFieldPath = "metadata.name"
