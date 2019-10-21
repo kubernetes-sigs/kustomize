@@ -34,7 +34,7 @@ pushd $dir >& /dev/null
 GOPATH=$myGoPath go generate \
     sigs.k8s.io/kustomize/v3/plugin/builtin/...
 GOPATH=$myGoPath go fmt \
-    sigs.k8s.io/kustomize/v3/plugin/builtin
+    sigs.k8s.io/kustomize/v3/api/plugins/builtins
 
 popd >& /dev/null
 

@@ -4,8 +4,8 @@
 package builtinhelpers
 
 import (
+	"sigs.k8s.io/kustomize/v3/api/plugins/builtins"
 	"sigs.k8s.io/kustomize/v3/api/resmap"
-	"sigs.k8s.io/kustomize/v3/plugin/builtin"
 )
 
 //go:generate stringer -type=BuiltinPluginType
@@ -55,21 +55,21 @@ func GetBuiltinPluginType(n string) BuiltinPluginType {
 }
 
 var GeneratorFactories = map[BuiltinPluginType]func() resmap.GeneratorPlugin{
-	ConfigMapGenerator: builtin.NewConfigMapGeneratorPlugin,
-	SecretGenerator:    builtin.NewSecretGeneratorPlugin,
+	ConfigMapGenerator: builtins.NewConfigMapGeneratorPlugin,
+	SecretGenerator:    builtins.NewSecretGeneratorPlugin,
 }
 
 var TransformerFactories = map[BuiltinPluginType]func() resmap.TransformerPlugin{
-	AnnotationsTransformer:         builtin.NewAnnotationsTransformerPlugin,
-	HashTransformer:                builtin.NewHashTransformerPlugin,
-	ImageTagTransformer:            builtin.NewImageTagTransformerPlugin,
-	InventoryTransformer:           builtin.NewInventoryTransformerPlugin,
-	LabelTransformer:               builtin.NewLabelTransformerPlugin,
-	LegacyOrderTransformer:         builtin.NewLegacyOrderTransformerPlugin,
-	NamespaceTransformer:           builtin.NewNamespaceTransformerPlugin,
-	PatchJson6902Transformer:       builtin.NewPatchJson6902TransformerPlugin,
-	PatchStrategicMergeTransformer: builtin.NewPatchStrategicMergeTransformerPlugin,
-	PatchTransformer:               builtin.NewPatchTransformerPlugin,
-	PrefixSuffixTransformer:        builtin.NewPrefixSuffixTransformerPlugin,
-	ReplicaCountTransformer:        builtin.NewReplicaCountTransformerPlugin,
+	AnnotationsTransformer:         builtins.NewAnnotationsTransformerPlugin,
+	HashTransformer:                builtins.NewHashTransformerPlugin,
+	ImageTagTransformer:            builtins.NewImageTagTransformerPlugin,
+	InventoryTransformer:           builtins.NewInventoryTransformerPlugin,
+	LabelTransformer:               builtins.NewLabelTransformerPlugin,
+	LegacyOrderTransformer:         builtins.NewLegacyOrderTransformerPlugin,
+	NamespaceTransformer:           builtins.NewNamespaceTransformerPlugin,
+	PatchJson6902Transformer:       builtins.NewPatchJson6902TransformerPlugin,
+	PatchStrategicMergeTransformer: builtins.NewPatchStrategicMergeTransformerPlugin,
+	PatchTransformer:               builtins.NewPatchTransformerPlugin,
+	PrefixSuffixTransformer:        builtins.NewPrefixSuffixTransformerPlugin,
+	ReplicaCountTransformer:        builtins.NewReplicaCountTransformerPlugin,
 }
