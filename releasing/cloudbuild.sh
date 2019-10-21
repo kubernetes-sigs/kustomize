@@ -8,16 +8,8 @@ module=$1
 shift
 
 executable=$module
-if [ "$module" == "api" ]; then
-  # For this module, there's no correspondingly named
-  # sub-directory, since the module is at the repo root.
-  # There is, however, a dummy executable in a sub-directory.
-  # Build that executable, primarily to give goreleaser
-  # something to coordinate it release process around.
-  executable=kustapiversion
-fi
 
-cd $executable
+cd $module
 
 configFile=$(mktemp)
 cat <<EOF >$configFile
