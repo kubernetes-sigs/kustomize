@@ -48,7 +48,8 @@ func main() {
 		fmt.Sprintf(
 			"// pluginator %+v\n", provenance.GetProvenance()))
 	w.write("\n")
-	w.write("package " + plugins.BuiltinPluginPackage)
+	// TODO: `builtins` should be a const?
+	w.write("package builtins")
 
 	pType := unknown
 
@@ -124,8 +125,7 @@ func makeOutputFileName(root string) string {
 		"src",
 		pgmconfig.DomainName,
 		pgmconfig.ProgramName,
-		pgmconfig.PluginRoot,
-		plugins.BuiltinPluginPackage,
+		"api", "plugins", "builtins",
 		root+".go")
 }
 

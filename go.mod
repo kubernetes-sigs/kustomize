@@ -13,11 +13,17 @@ require (
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/net v0.0.0-20191011234655-491137f69257 // indirect
 	golang.org/x/tools v0.0.0-20191014141550-5fa5b1782b2c // indirect
+	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.2.2
 	k8s.io/api v0.0.0-20190313235455-40a48860b5ab
 	k8s.io/apimachinery v0.0.0-20190313205120-d7deff9243b1
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/kube-openapi v0.0.0-20190603182131-db7b694dc208
-	sigs.k8s.io/kustomize/pluginator v1.0.0
 	sigs.k8s.io/yaml v1.1.0
 )
+
+// TODO: replace this in the above requirements,
+// with the appropriate version once the API is launched,
+// and a new pluginator binary has been compiled against
+// it and released.
+//	sigs.k8s.io/kustomize/pluginator v1.0.0

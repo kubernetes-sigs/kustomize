@@ -5,9 +5,9 @@ package main
 
 import (
 	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/v3/api/plugins/builtins"
 	"sigs.k8s.io/kustomize/v3/api/resmap"
 	"sigs.k8s.io/kustomize/v3/api/types"
-	"sigs.k8s.io/kustomize/v3/plugin/builtin"
 	"sigs.k8s.io/yaml"
 )
 
@@ -41,7 +41,7 @@ func (p *plugin) Config(h *resmap.PluginHelpers, _ []byte) error {
 		return errors.Wrapf(
 			err, "dateprefixer makeconfig")
 	}
-	prefixer := builtin.NewPrefixSuffixTransformerPlugin()
+	prefixer := builtins.NewPrefixSuffixTransformerPlugin()
 	err = prefixer.Config(h, c)
 	if err != nil {
 		return errors.Wrapf(
