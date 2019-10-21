@@ -28,15 +28,11 @@ if [ ! -d "$dir" ]; then
   exit 1
 fi
 
-echo Generating linkable plugins...
-
-pushd $dir >& /dev/null
-
-GOPATH=$myGoPath go generate \
-    sigs.k8s.io/kustomize/plugin/builtin/...
-GOPATH=$myGoPath go fmt \
-    sigs.k8s.io/kustomize/api/plugins/builtins
-
-popd >& /dev/null
+for goMod in $(find ./plugin/builtin -name 'go.mod'); do
+  dir=$(dirname "${goMod}")
+  (cd $dir; GOPATH=$myGoPath go generate ./...)
+  echo "Formatting $dir"
+  (cd $dir; GOPATH=$myGoPath go fmt ./...)
+done
 
 echo All done.
