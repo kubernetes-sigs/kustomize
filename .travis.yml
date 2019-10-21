@@ -1,7 +1,11 @@
 os:
   - linux
-  - osx
-# TODO: Uncomment when tests running on Windows.
+# TODO: Uncomment this when someone figures out how
+# to speed up the slowness of homebrew installation on
+# oxs; presumably cache images?
+#  - osx
+#
+# TODO: Uncomment when some gets the tests running on Windows.
 #  - windows
 
 addons:

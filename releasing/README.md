@@ -22,7 +22,7 @@ These modules release independently.
 | Module Description | Module Prefix | Tag | Branch Name | 
 | ---                | ------        | --- | ---         |
 | kustomize executable  | [`sigs.k8s.io/kustomize/kustomize`]  | _kustomize/v{major}.{minor}.{patch}_  | _release-kustomize-v{major}.{minor}_  |
-| kustomize Go API      | [`sigs.k8s.io/kustomize`]            | _v{major}.{minor}.{patch}_            | _release-api-v{major}.{minor}_        |
+| kustomize Go API      | [`sigs.k8s.io/kustomize/api`]        | _api/v{major}.{minor}.{patch}_        | _release-api-v{major}.{minor}_        |
 | pluginator executable | [`sigs.k8s.io/kustomize/pluginator`] | _pluginator/v{major}.{minor}.{patch}_ | _release-pluginator-v{major}.{minor}_ |
 
 
@@ -48,7 +48,7 @@ See the [installation instructions](../docs/INSTALL.md)
 to perform an install.
 
 
-### sigs.k8s.io/kustomize
+### sigs.k8s.io/kustomize/api
 
 This is the kustomize Go API.
 
@@ -62,10 +62,10 @@ They include methods to read, edit and emit
 modified YAML.
 
 Go consumers of this API will have a `go.mod` file
-_requiring_ this module at a particular tag, e.g.
+requiring this module at a particular tag, e.g.
 
 ```
-require sigs.k8s.io/kustomize/v4 v4.0.1
+require sigs.k8s.io/kustomize/api v0.0.1
 ```
 
 #### Release artifacts
@@ -76,7 +76,7 @@ that API clients can `require` from their `go.mod` file.
 
 Release notes should appear on the [release page].
 
-There's an executable called `kustapiversion`, which, if
+There's an executable called `api`, which, if
 run, prints the API release provenance data, but it's of
 no practical use to an API client.
 
@@ -218,11 +218,7 @@ git ls-remote --tags upstream
 ### define the release tag
 
 ```
-tag="v${major}.${minor}.${patch}"
-if [ "$module" != "api" ]; then
-  # must prefix the tag with submodule name
-  tag="${module}/${tag}"
-fi
+tag="${module}/v${major}.${minor}.${patch}"
 echo "tag=$tag"
 ```
 

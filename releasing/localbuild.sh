@@ -2,7 +2,7 @@
 
 # Usage - from the repository root, enter
 #
-#   ./releasing/localbuild.sh (kustomize|pluginator)
+#   ./releasing/localbuild.sh (kustomize|pluginator|api)
 #
 # The script attempts to use cloudbuild configuration
 # to create a release "locally".
@@ -72,9 +72,5 @@ cloud-build-local \
 echo " "
 echo "Result of local build:"
 echo "##########################################"
-if [ "$module" == "api" ]; then
-  tree ./kustapiversion/dist
-else
-  tree ./$module/dist
-fi
+tree ./$module/dist
 echo "##########################################"
