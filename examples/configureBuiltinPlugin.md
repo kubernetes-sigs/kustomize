@@ -4,7 +4,7 @@
 [plugin]: ../docs/plugins
 [fields]: ../docs/fields.md
 [fields in a kustomization file]: ../docs/fields.md
-[TransformerConfig]: ../api/builtinconfig/transformerconfig.go
+[TransformerConfig]: ../api/plugins/builtinconfig/transformerconfig.go
 [kustomization]: ../docs/glossary.md#kustomization
 
 # Customizing kustomize
