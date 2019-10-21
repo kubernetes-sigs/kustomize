@@ -12,7 +12,7 @@ import (
 
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/v3/api/ifc"
-	"sigs.k8s.io/kustomize/v3/api/plugins/builtins"
+	"sigs.k8s.io/kustomize/v3/api/plugins/builtinhelpers"
 	"sigs.k8s.io/kustomize/v3/api/plugins/config"
 	"sigs.k8s.io/kustomize/v3/api/plugins/execplugin"
 	"sigs.k8s.io/kustomize/v3/api/resid"
@@ -134,11 +134,11 @@ func (l *Loader) loadAndConfigurePlugin(
 }
 
 func (l *Loader) makeBuiltinPlugin(r resid.Gvk) (resmap.Configurable, error) {
-	bpt := builtins.GetBuiltinPluginType(r.Kind)
-	if f, ok := builtins.GeneratorFactories[bpt]; ok {
+	bpt := builtinhelpers.GetBuiltinPluginType(r.Kind)
+	if f, ok := builtinhelpers.GeneratorFactories[bpt]; ok {
 		return f(), nil
 	}
-	if f, ok := builtins.TransformerFactories[bpt]; ok {
+	if f, ok := builtinhelpers.TransformerFactories[bpt]; ok {
 		return f(), nil
 	}
 	return nil, errors.Errorf("unable to load builtin %s", r)
