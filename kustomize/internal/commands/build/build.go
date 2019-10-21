@@ -14,12 +14,12 @@ import (
 	"sigs.k8s.io/kustomize/v3/api/ifc"
 	fLdr "sigs.k8s.io/kustomize/v3/api/loader"
 	"sigs.k8s.io/kustomize/v3/api/pgmconfig"
+	"sigs.k8s.io/kustomize/v3/api/plugins/builtins"
 	"sigs.k8s.io/kustomize/v3/api/plugins/config"
 	pLdr "sigs.k8s.io/kustomize/v3/api/plugins/loader"
 	"sigs.k8s.io/kustomize/v3/api/resmap"
 	"sigs.k8s.io/kustomize/v3/api/resource"
 	"sigs.k8s.io/kustomize/v3/api/target"
-	"sigs.k8s.io/kustomize/v3/plugin/builtin"
 	"sigs.k8s.io/yaml"
 )
 
@@ -167,7 +167,7 @@ func (o *Options) emitResources(
 		// can be performed by a plugin.  This particular
 		// plugin doesn't require configuration; just make
 		// it and call transform.
-		builtin.NewLegacyOrderTransformerPlugin().Transform(m)
+		builtins.NewLegacyOrderTransformerPlugin().Transform(m)
 	}
 	res, err := m.AsYaml()
 	if err != nil {
