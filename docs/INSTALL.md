@@ -8,15 +8,18 @@ are available on the [release page].
 
 Or...
 
-## Quickly curl the latest binary
+## Quickly curl a tagged release from GitHub
 
 ```
+# Kustomize release tag
+tag=v3.2.3
+
 # pick one
 opsys=darwin
 opsys=windows
 opsys=linux
 
-curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/latest |\
+curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/tags/kustomize/$tag |\
   grep browser_download |\
   grep $opsys |\
   cut -d '"' -f 4 |\
