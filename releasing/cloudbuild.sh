@@ -7,6 +7,8 @@ set -x
 module=$1
 shift
 
+cd $module
+
 configFile=$(mktemp)
 cat <<EOF >$configFile
 project_name: $module

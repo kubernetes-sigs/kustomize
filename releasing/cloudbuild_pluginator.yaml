@@ -3,7 +3,7 @@ steps:
   args: [fetch, --tags, --depth=100]
 - name: goreleaser/goreleaser
   entrypoint: /bin/sh
-  args: ["../releasing/cloudbuild.sh", "kustomize"]
+  args: ["releasing/cloudbuild.sh", "pluginator"]
   secretEnv: ['GITHUB_TOKEN']
 secrets:
 - kmsKeyName: projects/kustomize-199618/locations/global/keyRings/github-tokens/cryptoKeys/gh-release-token
