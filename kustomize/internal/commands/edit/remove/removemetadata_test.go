@@ -8,11 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/testutils/valtest"
+	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kustomize/internal/commands/kustfile"
+	testutils_test "sigs.k8s.io/kustomize/kustomize/internal/commands/testutils"
 )
 
 func makeKustomizationFS() filesys.FileSystem {
@@ -147,7 +147,7 @@ func TestRemoveAnnotationInvalidFormat(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected an error")
 	}
-	if err.Error() != validators.SAD {
+	if err.Error() != valtest_test.SAD {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }
@@ -295,7 +295,7 @@ func TestRemoveLabelInvalidFormat(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected an error")
 	}
-	if err.Error() != validators.SAD {
+	if err.Error() != valtest_test.SAD {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }
