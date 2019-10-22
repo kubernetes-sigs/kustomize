@@ -60,9 +60,9 @@ builds:
   - darwin
   - windows
   goarch:
-   - amd64
-archive:
-  name_template: "{{ .ProjectName }}_${tSemver}_{{ .Os }}_{{ .Arch }}"
+  - amd64
+archives:
+-  name_template: "${module}_${tSemver}_{{ .Os }}_{{ .Arch }}"
 EOF
 
 cat $configFile
