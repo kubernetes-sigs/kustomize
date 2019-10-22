@@ -7,13 +7,9 @@ set -x
 module=$1
 shift
 
-executable=$module
-
-cd $module
-
 configFile=$(mktemp)
 cat <<EOF >$configFile
-project_name: $executable
+project_name: $module
 env:
 - CGO_ENABLED=0
 - GO111MODULE=on
@@ -32,7 +28,7 @@ release:
     owner: kubernetes-sigs
     name: kustomize
 builds:
-- binary: $executable
+- binary: $module
   ldflags: >
     -s
     -X sigs.k8s.io/kustomize/api/provenance.version={{.Version}}
@@ -50,5 +46,3 @@ EOF
 cat $configFile
 
 /bin/goreleaser release --config=$configFile --rm-dist --skip-validate $@
-
-
