@@ -123,9 +123,9 @@ git rebase upstream/master
 ### select a module to release
 
 ```
-module="api" # The API
-module="kustomize" # The kustomize executable
-module="pluginator" # The pluginator executable
+module=pluginator  # The pluginator executable
+module=kustomize   # The kustomize executable
+module=api         # The API
 ```
 
 ### determine the version
@@ -201,7 +201,7 @@ fi
 Install [`cloud-build-local`], then run
 
 ```
-./releasing/localbuild.sh (kustomize|pluginator|api)
+./releasing/localbuild.sh $module
 ```
 
 This should create release artifacts in a local directory.
@@ -214,8 +214,14 @@ git push -f upstream $branch
 
 ### optionally review tags
 
+
+Local:
 ```
 git tag -l
+```
+
+Remote:
+```
 git ls-remote --tags upstream
 ```
 
