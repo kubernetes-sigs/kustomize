@@ -4,10 +4,11 @@ set -x
 
 # Script to run http://goreleaser.com
 
+# Removed from `build` stanza
+# binary: $module
+
 module=$1
 shift
-
-cd $module
 
 configFile=$(mktemp)
 cat <<EOF >$configFile
@@ -30,7 +31,7 @@ release:
     owner: kubernetes-sigs
     name: kustomize
 builds:
-- binary: $module
+- main: ./$module/main.go
   ldflags: >
     -s
     -X sigs.k8s.io/kustomize/api/provenance.version={{.Version}}
