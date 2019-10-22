@@ -50,8 +50,7 @@ release:
     owner: kubernetes-sigs
     name: kustomize
 builds:
-- main: ./main.go
-  ldflags: >
+- ldflags: >
     -s
     -X sigs.k8s.io/kustomize/api/provenance.version={{.Version}}
     -X sigs.k8s.io/kustomize/api/provenance.gitCommit={{.Commit}}
