@@ -27,6 +27,8 @@ if [ "$module" != "$tModule" ]; then
   exit 1
 fi
 
+cd $module
+
 configFile=$(mktemp)
 cat <<EOF >$configFile
 project_name: $module
@@ -48,8 +50,7 @@ release:
     owner: kubernetes-sigs
     name: kustomize
 builds:
-- main: ./$module/main.go
-  ldflags: >
+- ldflags: >
     -s
     -X sigs.k8s.io/kustomize/api/provenance.version={{.Version}}
     -X sigs.k8s.io/kustomize/api/provenance.gitCommit={{.Commit}}

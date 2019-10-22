@@ -132,6 +132,18 @@ module=kustomize   # The kustomize executable
 module=api         # The API
 ```
 
+### review tags to help determine new tag
+
+Local:
+```
+git tag -l | grep $module
+```
+
+Remote:
+```
+git ls-remote --tags upstream | grep $module
+```
+
 ### determine the version
 
 Go's [semver]-compatible version tags take the form `v{major}.{minor}.{patch}`:
@@ -172,10 +184,17 @@ Create it:
 git checkout -b $branch
 ```
 
+### define the release tag
 
-### remove API replacements from go.mod
+```
+tag="${module}/v${major}.${minor}.${patch}"
+echo "tag=$tag"
+```
 
-Only do this if releasing one of the executables.
+### pin the executable to a particular API version
+
+Only do this if releasing one of the
+executables (kustomize or pluginator).
 
 In this repository, an executable in development
 on the master branch typically depends on the API
@@ -193,47 +212,17 @@ requires.
 ```
 # Update the following as needed, obviously.
 
-if [ "$module" != "api" ]; then
-  # go mod edit -dropreplace=sigs.k8s.io/kustomize/api    $module/go.mod
-  # go mod edit -require=sigs.k8s.io/kustomize/api@v?.0.1 $module/go.mod
-  # git commit -a -m "Drop API module replacement"
-fi
-```
-
-### optionally build a release locally
-
-Install [`cloud-build-local`], then run
+# git checkout -b pinTheRelease
+# go mod edit -dropreplace=sigs.k8s.io/kustomize/api    $module/go.mod
+# go mod edit -require=sigs.k8s.io/kustomize/api@v0.1.1 $module/go.mod
+# git commit -a -m "Drop API module replacement"
 
 ```
-./releasing/localbuild.sh $module
-```
-
-This should create release artifacts in a local directory.
 
 ### push the release branch
 
 ```
 git push -f upstream $branch
-```
-
-### optionally review tags
-
-
-Local:
-```
-git tag -l
-```
-
-Remote:
-```
-git ls-remote --tags upstream
-```
-
-### define the release tag
-
-```
-tag="${module}/v${major}.${minor}.${patch}"
-echo "tag=$tag"
 ```
 
 ### if replacing a release...
@@ -267,6 +256,16 @@ version.
 ```
 git tag -a $tag -m "Release $tag on branch $branch"
 ```
+
+### optionally build a release locally
+
+Install [`cloud-build-local`], then run
+
+```
+./releasing/localbuild.sh $module
+```
+
+This should create release artifacts in a local directory.
 
 ### trigger the cloud build by pushing the tag
 
