@@ -1,8 +1,10 @@
 #!/bin/bash
 
-# Usage - from the repository root, enter
+# Usage - from the module (kustomize|pluginator|api) of
+# your choice, enterthe repository root, enter
 #
-#   ./releasing/localbuild.sh (kustomize|pluginator|api)
+#  cd module
+#  ../releasing/localbuild.sh 
 #
 # The script attempts to use cloudbuild configuration
 # to create a release "locally".
@@ -17,7 +19,9 @@
 # applied to the kustomize repo, the cloud builder
 # reads the repository-relative file
 #
-#   releasing/cloudbuild_(kustomize|pluginator|api).yaml
+#   ${module}/cloudbuild.yaml
+#
+# where module is one of kustomize, pluginator or api.
 #
 # Inside this yaml file is a reference to the script
 #
@@ -46,7 +50,7 @@ case "$module" in
 esac
 
 config=$(mktemp)
-cp releasing/cloudbuild_${module}.yaml $config
+cp cloudbuild.yaml $config
 
 # Delete the cloud-builders/git step, which isn't needed
 # for a local run.
@@ -72,5 +76,5 @@ cloud-build-local \
 echo " "
 echo "Result of local build:"
 echo "##########################################"
-tree ./$module/dist
+tree ./dist
 echo "##########################################"

@@ -19,11 +19,11 @@ These modules release independently.
 [kustomize/v3.2.1]: https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2Fv3.2.1
 [pluginator/v1.0.0]: https://github.com/kubernetes-sigs/kustomize/releases/tag/pluginator%2Fv1.0.0
 
-| Module Description | Module Prefix | Tag | Branch Name | 
+| Module Description | Module Prefix | Ex. Tag  | Ex. Branch Name | 
 | ---                | ------        | --- | ---         |
-| kustomize executable  | [`sigs.k8s.io/kustomize/kustomize`]  | _kustomize/v{major}.{minor}.{patch}_  | _release-kustomize-v{major}.{minor}_  |
-| kustomize Go API      | [`sigs.k8s.io/kustomize/api`]        | _api/v{major}.{minor}.{patch}_        | _release-api-v{major}.{minor}_        |
-| pluginator executable | [`sigs.k8s.io/kustomize/pluginator`] | _pluginator/v{major}.{minor}.{patch}_ | _release-pluginator-v{major}.{minor}_ |
+| kustomize executable  | [`sigs.k8s.io/kustomize/kustomize`]  | _kustomize/v3.2.2_  | _release-kustomize-v3.2.2_ |
+| kustomize Go API      | [`sigs.k8s.io/kustomize/api`]        | _api/v0.1.0_        | _release-api-v0.1_         |
+| pluginator executable | [`sigs.k8s.io/kustomize/pluginator`] | _pluginator/v1.0.0_ | _release-pluginator-v1.0_  |
 
 
 ### sigs.k8s.io/kustomize/kustomize
@@ -143,9 +143,7 @@ Go's [semver]-compatible version tags take the form `v{major}.{minor}.{patch}`:
    with respect to CLI arguments and flags), increment `major`.
 
 ```
-major=1
-minor=2
-patch=3
+major=0; minor=1; patch=0
 ```
 
 ### create the release branch
@@ -158,9 +156,15 @@ since the branch accumulates patch releases.
 > TODO: define procedure for doing a cherrypick (committing a patch) to a
 > release branch that already exists.
 
+Name the branch:
+
 ```
 branch="release-${module}-v${major}.${minor}"
 echo "branch=$branch"
+```
+
+Create it:
+```
 git checkout -b $branch
 ```
 
