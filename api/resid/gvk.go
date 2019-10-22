@@ -176,7 +176,6 @@ var notNamespaceableKinds = []string{
 	"Node",
 	"PersistentVolume",
 	"PodSecurityPolicy",
-	"PodSecurityPolicy",
 	"PriorityClass",
 	"RuntimeClass",
 	"SelfSubjectAccessReview",
