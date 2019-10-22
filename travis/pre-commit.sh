@@ -5,13 +5,27 @@ set -e
 # 0==success, any other value is a failure.
 rcAccumulator=0
 
-# Not used, and not cross platform,
-# but kept because I don't want to have to
-# look it up again.
+# Not used here, and not cross platform, but kept because
+# I don't want to have to look it up again.
 function installHelm {
+  local d=$(mktemp -d)
+  pushd $d
   wget https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz
   tar -xvzf helm-v2.13.1-linux-amd64.tar.gz
   sudo mv linux-amd64/helm /usr/local/bin/helm
+  popd
+}
+
+# Not used here, and not cross platform, but kept because
+# I don't want to have to look it up again.
+# Per https://kubeval.instrumenta.dev/installation
+function installKubeval {
+  local d=$(mktemp -d)
+  pushd $d
+  wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+  tar xf kubeval-linux-amd64.tar.gz
+  sudo cp kubeval /usr/local/bin
+  popd
 }
 
 function removeBin {
