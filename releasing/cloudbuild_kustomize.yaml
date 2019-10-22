@@ -1,7 +1,7 @@
 steps:
-- name: "gcr.io/cloud-builders/git"
+- name: "gcr.io/cloud-builders/git@sha256:477015d9bb2bc4780f505a4497f10ee581a28fccfa553821cc540cc64bdc37b9"
   args: [fetch, --tags, --depth=100]
-- name: goreleaser/goreleaser
+- name: "goreleaser/goreleaser:v0.120.3"
   entrypoint: /bin/sh
   args: ["releasing/cloudbuild.sh", "kustomize"]
   secretEnv: ['GITHUB_TOKEN']

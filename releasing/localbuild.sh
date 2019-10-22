@@ -1,12 +1,17 @@
 #!/bin/bash
-
-# Usage - from repo root, enter:
 #
-# module=(kustomize|pluginator|api)
-# ./releasing/localbuild.sh $module
+# To test the release process, this script attempts to
+# use Google cloudbuild configuration to create a release
+# locally.
 #
-# The script attempts to use cloudbuild configuration
-# to create a release "locally".
+# Usage: from the repo root, enter:
+#
+#     module=kustomize
+#     module=pluginator  # pick one
+#     module=api
+#
+#     ./releasing/localbuild.sh $module
+#
 #
 # See https://cloud.google.com/cloud-build/docs/build-debug-locally
 #
@@ -58,8 +63,7 @@ sed -i '2,3d'  $config
 # Add the --snapshot flag to suppress the
 # github release and leave the build output
 # in the kustomize/dist directory.
-sed -i 's|"\]$|", "--snapshot"]|' \
-    $config
+sed -i 's|"\]$|", "--snapshot"]|' $config
 
 echo "Executing cloud-build-local with:"
 echo "========================="
@@ -75,5 +79,5 @@ cloud-build-local \
 echo " "
 echo "Result of local build:"
 echo "##########################################"
-tree ./$module/dist
+tree ./dist
 echo "##########################################"
