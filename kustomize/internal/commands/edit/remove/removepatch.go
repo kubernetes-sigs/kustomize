@@ -8,11 +8,11 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/patch"
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/util"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/kustomize/internal/commands/edit/patch"
+	"sigs.k8s.io/kustomize/kustomize/internal/commands/kustfile"
+	"sigs.k8s.io/kustomize/kustomize/internal/commands/util"
 )
 
 type removePatchOptions struct {

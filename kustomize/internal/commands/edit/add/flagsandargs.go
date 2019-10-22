@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strings"
 
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/util"
 	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/kustomize/internal/commands/util"
 )
 
 // flagsAndArgs encapsulates the options for add secret/configmap commands.
