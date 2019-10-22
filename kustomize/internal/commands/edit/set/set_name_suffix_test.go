@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
+	testutils_test "sigs.k8s.io/kustomize/kustomize/internal/commands/testutils"
 )
 
 const (

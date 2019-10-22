@@ -7,10 +7,10 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/kv"
+	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/loader"
-	"sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
 )
 

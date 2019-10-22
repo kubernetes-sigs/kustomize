@@ -7,7 +7,7 @@ package main
 import (
 	"os"
 
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands"
+	"sigs.k8s.io/kustomize/kustomize/internal/commands"
 )
 
 func main() {

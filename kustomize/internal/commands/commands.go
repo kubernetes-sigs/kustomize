@@ -16,11 +16,11 @@ import (
 	"sigs.k8s.io/kustomize/api/pgmconfig"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/build"
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/config"
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/create"
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit"
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/version"
+	"sigs.k8s.io/kustomize/kustomize/internal/commands/build"
+	"sigs.k8s.io/kustomize/kustomize/internal/commands/config"
+	"sigs.k8s.io/kustomize/kustomize/internal/commands/create"
+	"sigs.k8s.io/kustomize/kustomize/internal/commands/edit"
+	"sigs.k8s.io/kustomize/kustomize/internal/commands/version"
 )
 
 // NewDefaultCommand returns the default (aka root) command for kustomize command.
