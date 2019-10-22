@@ -5,11 +5,15 @@
 [Google Cloud Build]: https://cloud.google.com/cloud-build
 [semver]: https://semver.org
 [Go modules]: https://github.com/golang/go/wiki/Modules
+[multi-module repo]: https://github.com/go-modules-by-example/index/blob/master/009_submodules/README.md
 
 This document describes how to perform a [semver] release
 of one of the [Go modules] in this repository.
 
 These modules release independently.
+
+See this [multi-module repo] tagging discussion 
+for an explanation of the `foo/v2.3.0` tags applied below.
 
 ## Module summaries
 
