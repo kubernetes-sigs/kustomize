@@ -1,4 +1,4 @@
-module sigs.k8s.io/kustomize/plugin/builtin/prefixsuffixtransformer
+module sigs.k8s.io/kustomize/plugin/someteam.example.com/v1/secretsfromdatabase
 
 go 1.13
 
