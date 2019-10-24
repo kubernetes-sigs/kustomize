@@ -9,8 +9,8 @@ import (
 	"sigs.k8s.io/kustomize/api/filesys"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/kustomize/kustomize/internal/commands/kustfile"
-	testutils_test "sigs.k8s.io/kustomize/kustomize/internal/commands/testutils"
+	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
+	testutils_test "sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
 )
 
 func makeKustomization(t *testing.T) *types.Kustomization {

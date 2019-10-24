@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
-	testutils_test "sigs.k8s.io/kustomize/kustomize/internal/commands/testutils"
+	testutils_test "sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
 )
 
 func TestSetImage(t *testing.T) {
