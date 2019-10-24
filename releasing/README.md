@@ -38,8 +38,8 @@ files.
 
 #### Packages
 
-There's only one package in this module.  It's called `main`,
-and it holds the _kustomize_ executable.
+There's only one public package in this module.
+It's called `main`, and it holds the _kustomize_ executable.
 
 
 #### Release artifacts
@@ -113,6 +113,10 @@ The tag appears in the URL, e.g. [pluginator/v1.0.0].
 
 ## Release procedure
 
+> TODO: script this, e.g. `go run ./releasing/release.go kustomize minor`
+> would look at the tags, bump the minor version, and
+> create the right branch, tag, etc.  No more bash please.
+
 At any given moment, the repository's master branch is
 passing all its tests and contains code one could release.
 
@@ -151,7 +155,7 @@ Go's [semver]-compatible version tags take the form `v{major}.{minor}.{patch}`:
 | major | minor | patch |
 | :---:   | :---:  | :---: |
 | API change | enhancements | bug fixes |
-| manual update | OK to auto-update | OK to auto-update |
+| manual update | maybe auto-update | auto-update encouraged |
 
  - If there are only bug fixes or refactors, increment `patch` from whatever it is now.
  - If there are new features, increment  `minor`.
