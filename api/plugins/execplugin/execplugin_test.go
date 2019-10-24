@@ -5,6 +5,7 @@ package execplugin_test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -15,7 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/api/plugins/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
-	"sigs.k8s.io/kustomize/api/testutils/valtest"
+	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
@@ -43,10 +44,13 @@ s/$BAR/bar/g
  \ \ \ 
 `))
 
-	p := NewExecPlugin(
+	p, err := NewExecPlugin(
 		loader.AbsolutePluginPath(
 			config.DefaultPluginConfig(),
 			pluginConfig.OrgId()))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err.Error())
+	}
 
 	yaml, err := pluginConfig.AsYAML()
 	if err != nil {
@@ -114,7 +118,10 @@ func strptr(s string) *string {
 }
 
 func TestUpdateResourceOptions(t *testing.T) {
-	p := NewExecPlugin("")
+	p, err := NewExecPlugin("")
+	if !os.IsNotExist(err) {
+		t.Fatalf("unexpected error: %v", err.Error())
+	}
 	rf := resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
 	in := resmap.New()
 	expected := resmap.New()
@@ -159,7 +166,10 @@ func TestUpdateResourceOptions(t *testing.T) {
 }
 
 func TestUpdateResourceOptionsWithInvalidHashAnnotationValues(t *testing.T) {
-	p := NewExecPlugin("")
+	p, err := NewExecPlugin("")
+	if !os.IsNotExist(err) {
+		t.Fatalf("unexpected error: %v", err.Error())
+	}
 	rf := resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
 	cases := []string{
 		"",
