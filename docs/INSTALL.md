@@ -21,8 +21,8 @@ curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/latest |
   grep $opsys |\
   cut -d '"' -f 4 |\
   xargs curl -O -L
-mv kustomize_kustomize\.v*_${opsys}_amd64 kustomize
-chmod u+x kustomize
+tar xzf ./kustomize_v*_${opsys}_amd64.tar.gz
+./kustomize version
 ```
 ## Try `go`
 
