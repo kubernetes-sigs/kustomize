@@ -49,6 +49,7 @@ release:
   github:
     owner: kubernetes-sigs
     name: kustomize
+  draft: true
 builds:
 - ldflags: >
     -s
