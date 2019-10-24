@@ -24,6 +24,23 @@ curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/latest |
 mv kustomize_kustomize\.v*_${opsys}_amd64 kustomize
 chmod u+x kustomize
 ```
+## Try `go`
+
+This method is more to show off how the `go` tool works,
+than for any practical purpose.  A kustomize developer should
+clone the repo (see next section), and CI/CD scripts should 
+download a specific ready-to-run executable rather than
+rely on the `go` tool.
+
+Install the latest kustomize binary in the v3 series to `$GOPATH/bin`:
+```
+go install sigs.k8s.io/kustomize/kustomize/v3
+```
+
+Install a specific version:
+```
+go get sigs.k8s.io/kustomize/kustomize/v3@v3.3.0
+```
 
 ## Build the kustomize CLI from local source
 ```
