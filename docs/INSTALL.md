@@ -16,12 +16,14 @@ opsys=darwin
 opsys=windows
 opsys=linux
 
-curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/latest |\
-  grep browser_download |\
-  grep $opsys |\
-  cut -d '"' -f 4 |\
-  xargs curl -O -L
-mv kustomize_kustomize\.v*_${opsys}_amd64 kustomize
+curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases |\
+    grep browser_download |\
+    grep $opsys |\
+    grep kustomize_kustomize |\
+    head -n1 |\
+    cut -d '"' -f 4 |\
+    xargs curl -O -L && \
+mv kustomize_kustomize\.v*_${opsys}_amd64 kustomize && \
 chmod u+x kustomize
 ```
 
