@@ -113,18 +113,17 @@ function runApiModuleGoTests {
 
 function testExamplesAgainstLatestKustomizeRelease {
   removeBin kustomize
-  # Install latest release.
 
-  (cd ~; GO111MODULE=on go get sigs.k8s.io/kustomize/v3/cmd/kustomize@v3.2.0)
+  local latest=sigs.k8s.io/kustomize/kustomize/v3
+  echo "Installing latest kustomize from $latest"
+  (cd ~; GO111MODULE=on go install $latest)
 
   (cd api;
    $MDRIP --mode test \
      --label testAgainstLatestRelease ../examples)
 
   if [ -z ${TRAVIS+x} ]; then
-    echo " "
-    echo Not on travis, so running the notravis example tests
-    echo " "
+    echo "Not on travis, so running the notravis example tests."
 
     # The following requires helm.
     # At the moment not asking travis to install it.
@@ -132,11 +131,13 @@ function testExamplesAgainstLatestKustomizeRelease {
      $MDRIP --mode test \
        --label helmtest README.md ../examples/chart.md)
   fi
+  echo "Example tests passed against $latest"
 }
 
-function testExamplesAgainstHead {
+function testExamplesAgainstLocalHead {
   removeBin kustomize
-  # Install from head.
+
+  echo "Installing kustomize from HEAD"
   (cd kustomize; go install .)
   # To test examples of unreleased features, add
   # examples with code blocks annotated with some
@@ -144,6 +145,7 @@ function testExamplesAgainstHead {
   (cd api;
    $MDRIP --mode test \
      --label testAgainstLatestRelease ../examples)
+  echo "Example tests passed against HEAD"
 }
 
 function generateCode {
@@ -220,7 +222,7 @@ runFunc generateCode
 runFunc testGoLangCILint
 runFunc runApiModuleGoTests
 runFunc testExamplesAgainstLatestKustomizeRelease
-runFunc testExamplesAgainstHead
+runFunc testExamplesAgainstLocalHead
 
 if [ $rcAccumulator -eq 0 ]; then
   echo "SUCCESS!"
