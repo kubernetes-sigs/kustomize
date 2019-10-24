@@ -10,7 +10,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/filesys"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
-	testutils_test "sigs.k8s.io/kustomize/kustomize/internal/commands/testutils"
+	testutils_test "sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
 )
 
 const (
