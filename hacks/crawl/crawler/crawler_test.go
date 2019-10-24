@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"sigs.k8s.io/kustomize/internal/tools/doc"
 	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/hacks/crawl/doc"
 )
 
 const (
@@ -37,7 +37,7 @@ func (c testCrawler) FetchDocument(ctx context.Context, d *doc.Document) error {
 		d.DocumentData = c.docs[i].DocumentData
 		return nil
 	}
-	for _, suffix := range pgmconfig.KustomizationFileNames {
+	for _, suffix := range pgmconfig.RecognizedKustomizationFileNames() {
 		fmt.Println(d.ID(), "/", suffix)
 		i, ok := c.lukp[d.ID()+"/"+suffix]
 		if !ok {
@@ -76,7 +76,7 @@ func (c testCrawler) Crawl(ctx context.Context,
 
 	for i, d := range c.docs {
 		isResource := true
-		for _, suffix := range pgmconfig.KustomizationFileNames {
+		for _, suffix := range pgmconfig.RecognizedKustomizationFileNames() {
 			if strings.HasSuffix(d.FilePath, suffix) {
 				isResource = false
 				break
