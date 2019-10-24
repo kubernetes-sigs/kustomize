@@ -39,7 +39,8 @@ files.
 #### Packages
 
 There's only one public package in this module.
-It's called `main`, and it holds the _kustomize_ executable.
+It's called `main`, it's therefore unimportable,
+and it holds the _kustomize_ executable.
 
 
 #### Release artifacts
@@ -69,18 +70,18 @@ Go consumers of this API will have a `go.mod` file
 requiring this module at a particular tag, e.g.
 
 ```
-require sigs.k8s.io/kustomize/api v0.0.1
+require sigs.k8s.io/kustomize/api v0.1.0
 ```
 
 #### Release artifacts
 
-This is a Go library only release, so the only
-artifact per se is the repo tag, in the form `v4.3.2`,
+This is a Go library-only release, so the only
+artifact per se is the repo tag, in the form `api/v1.2.3`,
 that API clients can `require` from their `go.mod` file.
 
 Release notes should appear on the [release page].
 
-There's an executable called `api`, which, if
+There's a toy executable called `api`, which, if
 run, prints the API release provenance data, but it's of
 no practical use to an API client.
 
@@ -92,14 +93,14 @@ linkable library code.
 
 #### Packages
 
-There's only one package in this module.  It's called `main`,
+There's only one package in this module.
+It's called `main`, it's therefore unimportable,
 and it holds the _pluginator_ executable.
 
 At the time of writing this binary is only of
 interest to someone writing a new builtin
 transformer or generator.  See the [plugin
 documentation](../docs/plugins).
-
 Its dependence on the API is primarily for
 plugin-related constants, not logic, and will
 only change if there's some change in how
@@ -113,9 +114,17 @@ The tag appears in the URL, e.g. [pluginator/v1.0.0].
 
 ## Release procedure
 
-> TODO: script this, e.g. `go run ./releasing/release.go kustomize minor`
-> would look at the tags, bump the minor version, and
-> create the right branch, tag, etc.  No more bash please.
+> TODO: script what follows, so someone can enter
+> ```
+> go run ./releasing/release.go kustomize minor
+> # or:
+> # go run ./releasing/release.go api patch
+> # go run ./releasing/release.go pluginator minor
+> ```
+> The program would look at the existing remote tags,
+> confirm sanity and increment the appropriate major/minor/patch
+> component, create the right branch and tag, etc.
+> No more bash please.
 
 At any given moment, the repository's master branch is
 passing all its tests and contains code one could release.
