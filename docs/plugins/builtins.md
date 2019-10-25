@@ -36,7 +36,7 @@ complete plugin argument specification.
 [types.GeneratorOptions]: ../../api/types/generatoroptions.go
 [types.SecretArgs]: ../../api/types/secretargs.go
 [types.ConfigMapArgs]: ../../api/types/configmapargs.go
-[config.FieldSpec]: ../../api/plugins/builtinconfig/fieldspec.go
+[config.FieldSpec]: ../../api/types/fieldspec.go
 [types.ObjectMeta]: ../../api/types/objectmeta.go
 [types.Selector]: ../../api/types/selector.go
 [types.Replica]: ../../api/types/replica.go
