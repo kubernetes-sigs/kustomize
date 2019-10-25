@@ -57,7 +57,7 @@ func (p *plugin) Config(
 	patchJson, errJson := jsonPatchFromBytes(in)
 	if errSM != nil && errJson != nil {
 		err = fmt.Errorf(
-			"Strategic Merge Patch strategy is failing with: %v, JSON patch 6902 strategy is failing with: %v", p.Path, errSM, errJson)
+			"Strategic Merge Patch strategy is failing with: %v, JSON patch 6902 strategy is failing with: %v", errSM, errJson)
 		return
 	}
 	if errSM == nil && errJson != nil {
