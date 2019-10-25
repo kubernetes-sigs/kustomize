@@ -377,13 +377,12 @@ func (kt *KustTarget) configureBuiltinPlugin(
 	if c != nil {
 		y, err = yaml.Marshal(c)
 		if err != nil {
-			return errors.Wrapf(
-				err, "builtin %s marshal", bpt)
+			return fmt.Errorf("unable to marshal builtin plugin %s configuration: %v", bpt, err)
 		}
 	}
 	err = p.Config(resmap.NewPluginHelpers(kt.ldr, kt.validator, kt.rFactory), y)
 	if err != nil {
-		return errors.Wrapf(err, "builtin %s config: %v", bpt, y)
+		return fmt.Errorf("unable to process %s with builtin plugin %s: %v", y, bpt, err)
 	}
 	return nil
 }
