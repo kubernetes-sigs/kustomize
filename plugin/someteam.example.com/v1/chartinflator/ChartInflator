@@ -15,6 +15,8 @@
 #  chartHome: /abs/path/local/chart/storage
 #  helmHome: /abs/path/to/helm/config
 #  helmBin: /abs/path/to/helmBin
+#  releaseNam: nameOfHelmRelease
+#  releaseNamespace: namespaceWhereHelmWouldApply
 #
 # fetches the given chart from stable/$chartName,
 # and inflates it to stdout, using the given values file.
@@ -44,6 +46,8 @@ function parseYaml {
     [ "$k" == "values" ] && valuesFile=$v
     [ "$k" == "helmHome" ] && helmHome=$v
     [ "$k" == "helmBin" ] && helmBin=$v
+    [ "$k" == "releaseName" ] && releaseName=$v
+    [ "$k" == "releaseNamespace" ] && releaseNamespace=$v
   done <"$file"
 
   # Trim leading space
@@ -51,6 +55,8 @@ function parseYaml {
   chartHome="${chartHome#"${chartHome%%[![:space:]]*}"}"
   valuesFile="${valuesFile#"${valuesFile%%[![:space:]]*}"}"
   helmBin="${helmBin#"${helmBin%%[![:space:]]*}"}"
+  releaseName="${releaseName#"${releaseName%%[![:space:]]*}"}"
+  releaseNamespace="${releaseNamespace#"${releaseNamespace%%[![:space:]]*}"}"
 }
 
 TMP_DIR=$(mktemp -d)
@@ -75,6 +81,14 @@ if [ -z "$valuesFile" ]; then
   valuesFile=$chartHome/$chartName/values.yaml
 fi
 
+if [ -z "$releaseName" ]; then
+  releaseName=release-name
+fi
+
+if [ -z "$releaseNamespace" ]; then
+  releaseNamespace=default
+fi
+
 function doHelm {
   $helmBin --home $helmHome $@
 }
@@ -89,6 +103,8 @@ if [ ! -d "$chartHome/$chartName" ]; then
 fi
 
 doHelm template \
+    --name $releaseName \
+    --namespace $releaseNamespace \
     --values $valuesFile \
     $chartHome/$chartName
 
