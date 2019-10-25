@@ -57,7 +57,7 @@ func (p *plugin) Config(
 	patchJson, errJson := jsonPatchFromBytes(in)
 	if errSM != nil && errJson != nil {
 		err = fmt.Errorf(
-			"unable to get either a Strategic Merge Patch or JSON patch 6902 from %s", p.Patch)
+			"Strategic Merge Patch strategy is failing with: %v, JSON patch 6902 strategy is failing with: %v", p.Path, errSM, errJson)
 		return
 	}
 	if errSM == nil && errJson != nil {
@@ -68,7 +68,7 @@ func (p *plugin) Config(
 	}
 	if patchSM != nil && patchJson != nil {
 		err = fmt.Errorf(
-			"a patch can't be both a Strategic Merge Patch and JSON patch 6902 %s", p.Patch)
+			"a patch can't be both a Strategic Merge Patch and JSON patch 6902 %s", p.Path)
 	}
 
 	return nil
