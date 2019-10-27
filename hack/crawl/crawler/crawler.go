@@ -12,7 +12,7 @@ import (
 
 	_ "github.com/gomodule/redigo/redis"
 
-	"sigs.k8s.io/kustomize/hacks/crawl/doc"
+	"sigs.k8s.io/kustomize/hack/crawl/doc"
 )
 
 var (
@@ -208,8 +208,8 @@ func CRunner(ctx context.Context,
 		// the main output channel.
 		go func(docs <-chan CrawledDocument) {
 			defer wg.Done()
-			for doc := range docs {
-				output <- doc
+			for d := range docs {
+				output <- d
 			}
 		}(docs)
 

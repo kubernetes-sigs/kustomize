@@ -1,4 +1,4 @@
-module sigs.k8s.io/kustomize/hacks/crawl
+module sigs.k8s.io/kustomize/hack/crawl
 
 go 1.13
 
