@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"sigs.k8s.io/kustomize/hacks/crawl/doc"
+	"sigs.k8s.io/kustomize/hack/crawl/doc"
 )
 
 const (

@@ -150,7 +150,7 @@ func (l *Loader) loadPlugin(resId resid.ResId) (resmap.Configurable, error) {
 	if err == nil {
 		return p, nil
 	}
-	if err != nil && !os.IsNotExist(err) {
+	if !os.IsNotExist(err) {
 		return nil, err
 	}
 	c, err := l.loadGoPlugin(resId)

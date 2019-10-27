@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"sigs.k8s.io/kustomize/api/pgmconfig"
-	"sigs.k8s.io/kustomize/hacks/crawl/doc"
+	"sigs.k8s.io/kustomize/hack/crawl/doc"
 )
 
 const (
