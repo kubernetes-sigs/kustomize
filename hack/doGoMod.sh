@@ -1,6 +1,6 @@
 # Usage:  From repo root:
-#  ./hacks/doGoMod.sh tidy
-#  ./hacks/doGoMod.sh verify
+#  ./hack/doGoMod.sh tidy
+#  ./hack/doGoMod.sh verify
 
 operation=$1
 for f in $(find ./ -name 'go.mod'); do

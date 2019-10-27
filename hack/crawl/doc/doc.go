@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"strings"
 
-	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/pgmconfig"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 )
 
-var fileReader ifc.KunstructuredFactory = kunstruct.NewKunstructuredFactoryImpl()
+var fileReader = kunstruct.NewKunstructuredFactoryImpl()
 
 // This document is meant to be used at the elasticsearch document type.
 // Fields are serialized as-is to elasticsearch, where indices are built

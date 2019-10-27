@@ -9,8 +9,6 @@ import (
 const (
 	perPageArg     = "per_page"
 	accessTokenArg = "access_token"
-
-	githubMaxPageSize = 100
 )
 
 // Implementation detail, not important to external API.

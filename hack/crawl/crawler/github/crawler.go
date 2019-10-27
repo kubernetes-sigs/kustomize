@@ -18,9 +18,9 @@ import (
 
 	"sigs.k8s.io/kustomize/api/git"
 	"sigs.k8s.io/kustomize/api/pgmconfig"
-	"sigs.k8s.io/kustomize/hacks/crawl/crawler"
-	"sigs.k8s.io/kustomize/hacks/crawl/doc"
-	"sigs.k8s.io/kustomize/hacks/crawl/httpclient"
+	"sigs.k8s.io/kustomize/hack/crawl/crawler"
+	"sigs.k8s.io/kustomize/hack/crawl/doc"
+	"sigs.k8s.io/kustomize/hack/crawl/httpclient"
 )
 
 var logger = log.New(os.Stdout, "Github Crawler: ",
@@ -208,11 +208,6 @@ func kustomizationResultAdapter(gcl GhClient, k GhFileSpec) (
 		return nil, err
 	}
 
-	if err != nil {
-		logger.Printf(
-			"(error: %v) initializing to current time.\n", err)
-	}
-
 	url := gcl.ReposRequest(k.Repository.FullName)
 	defaultBranch, err := gcl.GetDefaultBranch(url)
 	if err != nil {
@@ -221,7 +216,7 @@ func kustomizationResultAdapter(gcl GhClient, k GhFileSpec) (
 		defaultBranch = "master"
 	}
 
-	doc := doc.KustomizationDocument{
+	d := doc.KustomizationDocument{
 		Document: doc.Document{
 			DocumentData:  string(data),
 			FilePath:      k.Path,
@@ -230,7 +225,7 @@ func kustomizationResultAdapter(gcl GhClient, k GhFileSpec) (
 		},
 	}
 
-	return &doc, nil
+	return &d, nil
 }
 
 // ForwardPaginatedQuery follows the links to the next pages and performs all of
