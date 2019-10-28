@@ -6,49 +6,8 @@ package loader
 import (
 	"fmt"
 
-	"github.com/spf13/pflag"
 	"sigs.k8s.io/kustomize/api/filesys"
 )
-
-//go:generate stringer -type=loadRestrictions
-type loadRestrictions int
-
-const (
-	unknown loadRestrictions = iota
-	rootOnly
-	none
-)
-
-const (
-	flagName = "load_restrictor"
-)
-
-var (
-	flagValue = rootOnly.String()
-	flagHelp  = "if set to '" + none.String() +
-		"', local kustomizations may load files from outside their root. " +
-		"This does, however, break the relocatability of the kustomization."
-)
-
-func AddFlagLoadRestrictor(set *pflag.FlagSet) {
-	set.StringVar(
-		&flagValue, flagName,
-		rootOnly.String(), flagHelp)
-}
-
-func ValidateFlagLoadRestrictor() (LoadRestrictorFunc, error) {
-	switch flagValue {
-	case rootOnly.String():
-		return RestrictionRootOnly, nil
-	case none.String():
-		return RestrictionNone, nil
-	default:
-		return nil, fmt.Errorf(
-			"illegal flag value --%s %s; legal values: %v",
-			flagName, flagValue,
-			[]string{rootOnly.String(), none.String()})
-	}
-}
 
 type LoadRestrictorFunc func(
 	filesys.FileSystem, filesys.ConfirmedDir, string) (string, error)
