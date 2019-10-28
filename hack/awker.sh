@@ -1,3 +1,7 @@
+# Usage:
+#   ./hack/showDeps ./plugin
+#   ./hack/showDeps ./kustomize
+
 function showDeps {
   echo "==== begin $1 =================================="
   find $1 -name "*.go" |\
@@ -10,5 +14,4 @@ function showDeps {
   echo "==== end $1 =================================="
 }
 
-showDeps ./plugin
-#showDeps ./kustomize
+showDeps $1
