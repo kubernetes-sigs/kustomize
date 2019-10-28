@@ -11,15 +11,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/ifc"
-	fLdr "sigs.k8s.io/kustomize/api/loader"
+	"sigs.k8s.io/kustomize/api/krusty"
 	"sigs.k8s.io/kustomize/api/pgmconfig"
-	"sigs.k8s.io/kustomize/api/plugins/builtins"
 	"sigs.k8s.io/kustomize/api/plugins/config"
-	pLdr "sigs.k8s.io/kustomize/api/plugins/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
-	"sigs.k8s.io/kustomize/api/target"
 	"sigs.k8s.io/yaml"
 )
 
@@ -27,8 +23,8 @@ import (
 type Options struct {
 	kustomizationPath string
 	outputPath        string
-	loadRestrictor    fLdr.LoadRestrictorFunc
 	outOrder          reorderOutput
+	pluginsEnabled    bool
 }
 
 // NewOptions creates a Options object
@@ -36,7 +32,6 @@ func NewOptions(p, o string) *Options {
 	return &Options{
 		kustomizationPath: p,
 		outputPath:        o,
-		loadRestrictor:    fLdr.RestrictionRootOnly,
 	}
 }
 
@@ -58,15 +53,8 @@ https://github.com/hashicorp/go-getter#url-format
 `
 
 // NewCmdBuild creates a new build command.
-func NewCmdBuild(
-	out io.Writer, fSys filesys.FileSystem,
-	v ifc.Validator, rf *resmap.Factory,
-	ptf resmap.PatchFactory) *cobra.Command {
+func NewCmdBuild(out io.Writer) *cobra.Command {
 	var o Options
-
-	pluginConfig := config.DefaultPluginConfig()
-	pl := pLdr.NewLoader(pluginConfig, rf)
-
 	cmd := &cobra.Command{
 		Use: "build {path}",
 		Short: "Print configuration per contents of " +
@@ -78,7 +66,7 @@ func NewCmdBuild(
 			if err != nil {
 				return err
 			}
-			return o.RunBuild(out, v, fSys, rf, ptf, pl)
+			return o.RunBuild(out)
 		},
 	}
 
@@ -86,13 +74,15 @@ func NewCmdBuild(
 		&o.outputPath,
 		"output", "o", "",
 		"If specified, write the build output to this path.")
-	fLdr.AddFlagLoadRestrictor(cmd.Flags())
+	krusty.AddFlagLoadRestrictor(cmd.Flags())
 	config.AddFlagEnablePlugins(
-		cmd.Flags(), &pluginConfig.Enabled)
+		cmd.Flags(), &o.pluginsEnabled)
 	addFlagReorderOutput(cmd.Flags())
-	cmd.AddCommand(NewCmdBuildPrune(out, v, fSys, rf, ptf, pl))
+	cmd.AddCommand(NewCmdBuildPrune(out))
 	return cmd
 }
+
+const CWD = "."
 
 // Validate validates build command.
 func (o *Options) Validate(args []string) (err error) {
@@ -102,11 +92,11 @@ func (o *Options) Validate(args []string) (err error) {
 				pgmconfig.DefaultKustomizationFileName())
 	}
 	if len(args) == 0 {
-		o.kustomizationPath = fLdr.CWD
+		o.kustomizationPath = CWD
 	} else {
 		o.kustomizationPath = args[0]
 	}
-	o.loadRestrictor, err = fLdr.ValidateFlagLoadRestrictor()
+	err = krusty.ValidateFlagLoadRestrictor()
 	if err != nil {
 		return err
 	}
@@ -114,43 +104,30 @@ func (o *Options) Validate(args []string) (err error) {
 	return
 }
 
-// RunBuild runs build command.
-func (o *Options) RunBuild(
-	out io.Writer, v ifc.Validator, fSys filesys.FileSystem,
-	rf *resmap.Factory, ptf resmap.PatchFactory,
-	pl *pLdr.Loader) error {
-	ldr, err := fLdr.NewLoader(
-		o.loadRestrictor, o.kustomizationPath, fSys)
-	if err != nil {
-		return err
-	}
-	defer ldr.Cleanup()
-	kt, err := target.NewKustTarget(ldr, v, rf, ptf, pl)
-	if err != nil {
-		return err
-	}
-	m, err := kt.MakeCustomizedResMap()
+func (o *Options) makeOptions() *krusty.Options {
+	opts := krusty.MakeDefaultOptions()
+	opts.LoadRestrictions = krusty.GetFlagLoadRestrictorValue()
+	opts.DoLegacyResourceSort = o.outOrder == legacy
+	opts.PluginConfig.Enabled = o.pluginsEnabled
+	return opts
+}
+
+func (o *Options) RunBuild(out io.Writer) error {
+	fSys := filesys.MakeFsOnDisk()
+	k := krusty.MakeKustomizer(fSys, o.makeOptions())
+	m, err := k.Run(o.kustomizationPath)
 	if err != nil {
 		return err
 	}
 	return o.emitResources(out, fSys, m)
 }
 
-func (o *Options) RunBuildPrune(
-	out io.Writer, v ifc.Validator, fSys filesys.FileSystem,
-	rf *resmap.Factory, ptf resmap.PatchFactory,
-	pl *pLdr.Loader) error {
-	ldr, err := fLdr.NewLoader(
-		o.loadRestrictor, o.kustomizationPath, fSys)
-	if err != nil {
-		return err
-	}
-	defer ldr.Cleanup()
-	kt, err := target.NewKustTarget(ldr, v, rf, ptf, pl)
-	if err != nil {
-		return err
-	}
-	m, err := kt.MakePruneConfigMap()
+func (o *Options) RunBuildPrune(out io.Writer) error {
+	fSys := filesys.MakeFsOnDisk()
+	opts := o.makeOptions()
+	opts.DoPrune = true
+	k := krusty.MakeKustomizer(fSys, opts)
+	m, err := k.Run(o.kustomizationPath)
 	if err != nil {
 		return err
 	}
@@ -161,13 +138,6 @@ func (o *Options) emitResources(
 	out io.Writer, fSys filesys.FileSystem, m resmap.ResMap) error {
 	if o.outputPath != "" && fSys.IsDir(o.outputPath) {
 		return writeIndividualFiles(fSys, o.outputPath, m)
-	}
-	if o.outOrder == legacy {
-		// Done this way just to show how overall sorting
-		// can be performed by a plugin.  This particular
-		// plugin doesn't require configuration; just make
-		// it and call transform.
-		builtins.NewLegacyOrderTransformerPlugin().Transform(m)
 	}
 	res, err := m.AsYaml()
 	if err != nil {
@@ -180,12 +150,8 @@ func (o *Options) emitResources(
 	return err
 }
 
-func NewCmdBuildPrune(
-	out io.Writer, v ifc.Validator, fSys filesys.FileSystem,
-	rf *resmap.Factory, ptf resmap.PatchFactory,
-	pl *pLdr.Loader) *cobra.Command {
+func NewCmdBuildPrune(out io.Writer) *cobra.Command {
 	var o Options
-
 	cmd := &cobra.Command{
 		Use:          "alpha-inventory [path]",
 		Short:        "Print the inventory object which contains a list of all other objects",
@@ -196,7 +162,7 @@ func NewCmdBuildPrune(
 			if err != nil {
 				return err
 			}
-			return o.RunBuildPrune(out, v, fSys, rf, ptf, pl)
+			return o.RunBuildPrune(out)
 		},
 	}
 	return cmd
