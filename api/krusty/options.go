@@ -3,27 +3,38 @@
 
 package krusty
 
-// Options holds high-level configuration options, e.g.
-// are plugins enabled, should the loader be restricted to
-// the kustomization root, etc.
+import (
+	"sigs.k8s.io/kustomize/api/plugins/config"
+	"sigs.k8s.io/kustomize/api/types"
+)
+
+// Options holds high-level kustomize configuration options,
+// e.g. are plugins enabled, should the loader be restricted
+// to the kustomization root, etc.
 type Options struct {
 	// When true, sort the resources before emitting them,
 	// per a particular sort order.  When false, don't do the
 	// sort, and instead respect the depth-first resource input
 	// order as specified by the kustomization file(s).
 	DoLegacyResourceSort bool
-	// When true, the files referenced by a kustomization file
-	// must be in or under the directory holding the kustomization
-	// file itself.  When false, the kustomization file may specify
-	// absolute or relative paths to patch or resources files outside
-	// its own tree.
-	RestrictToRootOnly bool
+
+	// Restrictions on what can be loaded from the file system.
+	// See type definition.
+	LoadRestrictions loadRestrictions
+
+	// Create an inventory object for pruning.
+	DoPrune bool
+
+	// Options related to kustomize plugins.
+	PluginConfig *types.PluginConfig
 }
 
 // MakeDefaultOptions returns a default instance of Options.
 func MakeDefaultOptions() *Options {
 	return &Options{
 		DoLegacyResourceSort: true,
-		RestrictToRootOnly:   true,
+		LoadRestrictions:     rootOnly,
+		DoPrune:              false,
+		PluginConfig:         config.DefaultPluginConfig(),
 	}
 }

@@ -10,7 +10,6 @@ import (
 	"sigs.k8s.io/kustomize/api/k8sdeps/validator"
 	fLdr "sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/plugins/builtins"
-	"sigs.k8s.io/kustomize/api/plugins/config"
 	pLdr "sigs.k8s.io/kustomize/api/plugins/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -43,20 +42,20 @@ func MakeKustomizer(fSys filesys.FileSystem, o *Options) *Kustomizer {
 // It uses its internal filesystem reference to read the file at
 // the given path argument, interpret it as a kustomization.yaml
 // file, perform the kustomization it represents, and return the
-// resulting YAML as bytes.
+// resulting resources.
 //
 // Any files referenced by the kustomization must be present in the
 // internal filesystem.  One may call Run any number of times,
 // on any number of internal paths (e.g. the filesystem may contain
 // multiple overlays, and Run can be called on each of them).
-func (b *Kustomizer) Run(path string) ([]byte, error) {
+func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
 	pf := transformer.NewFactoryImpl()
 	rf := resmap.NewFactory(
 		resource.NewFactory(
 			kunstruct.NewKunstructuredFactoryImpl()),
 		pf)
 	lr := fLdr.RestrictionNone
-	if b.options.RestrictToRootOnly {
+	if b.options.LoadRestrictions == rootOnly {
 		lr = fLdr.RestrictionRootOnly
 	}
 	ldr, err := fLdr.NewLoader(lr, path, b.fSys)
@@ -69,17 +68,22 @@ func (b *Kustomizer) Run(path string) ([]byte, error) {
 		validator.NewKustValidator(),
 		rf,
 		pf,
-		pLdr.NewLoader(config.DefaultPluginConfig(), rf),
+		pLdr.NewLoader(b.options.PluginConfig, rf),
 	)
 	if err != nil {
 		return nil, err
 	}
-	m, err := kt.MakeCustomizedResMap()
+	var m resmap.ResMap
+	if b.options.DoPrune {
+		m, err = kt.MakePruneConfigMap()
+	} else {
+		m, err = kt.MakeCustomizedResMap()
+	}
 	if err != nil {
 		return nil, err
 	}
 	if b.options.DoLegacyResourceSort {
 		builtins.NewLegacyOrderTransformerPlugin().Transform(m)
 	}
-	return m.AsYaml()
+	return m, nil
 }
