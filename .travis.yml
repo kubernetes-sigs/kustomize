@@ -1,9 +1,8 @@
 os:
   - linux
-# TODO: Uncomment this when someone figures out how
-# to speed up the slowness of homebrew installation on
-# oxs; presumably cache images?
-#  - osx
+  - osx
+# TODO: Speed up the slowness of the osx travis runs
+# Maybe cache brew installs?
 #
 # TODO: Uncomment when some gets the tests running on Windows.
 #  - windows
