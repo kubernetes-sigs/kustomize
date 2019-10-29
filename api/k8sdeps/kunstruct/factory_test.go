@@ -106,6 +106,25 @@ metadata:
 			expectedErr: false,
 		},
 		{
+			name: "localConfigYaml",
+			input: []byte(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie-skip
+  annotations:
+    # this annotation causes the Resource to be ignored by kustomize
+    config.kubernetes.io/local-config: ""
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie 
+`),
+			expectedOut: []ifc.Kunstructured{testConfigMap},
+			expectedErr: false,
+		},
+		{
 			name: "garbageInOneOfTwoObjects",
 			input: []byte(`
 apiVersion: v1
