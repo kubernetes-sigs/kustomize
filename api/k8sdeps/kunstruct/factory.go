@@ -52,7 +52,9 @@ func (kf *KunstructuredFactoryImpl) SliceFromBytes(
 			if err != nil {
 				return nil, err
 			}
-			result = append(result, &UnstructAdapter{Unstructured: out})
+			if !kf.skipResource(out) {
+				result = append(result, &UnstructAdapter{Unstructured: out})
+			}
 		}
 	}
 	if err != io.EOF {
@@ -114,6 +116,22 @@ func (kf *KunstructuredFactoryImpl) validate(u unstructured.Unstructured) error 
 		return fmt.Errorf("empty item at %v in object %v", path, u)
 	}
 	return nil
+}
+
+// nonKustomizableResourceAnnotation if set on a Resource will cause Kustomize to
+// ignore the Resource rather than Kustomize it.
+const ignoredByKustomizeResourceAnnotation = "config.kubernetes.io/local-config"
+
+// skipResource returns true if the Resource should not be accumulated
+func (kf *KunstructuredFactoryImpl) skipResource(u unstructured.Unstructured) bool {
+	an := u.GetAnnotations()
+	if an == nil {
+		// annotation unset
+		return false
+	}
+	// check if the Resource has opt-ed out of kustomize
+	_, found := an[ignoredByKustomizeResourceAnnotation]
+	return found
 }
 
 func checkListItemNil(in interface{}) (bool, string) {
