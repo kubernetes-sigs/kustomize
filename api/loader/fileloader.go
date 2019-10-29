@@ -12,6 +12,7 @@ import (
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/git"
 	"sigs.k8s.io/kustomize/api/ifc"
+	"sigs.k8s.io/kustomize/api/pgmconfig"
 )
 
 // fileLoader is a kustomization's interface to files.
@@ -309,4 +310,33 @@ func (fl *fileLoader) Load(path string) ([]byte, error) {
 // Cleanup runs the cleaner.
 func (fl *fileLoader) Cleanup() error {
 	return fl.cleaner()
+}
+
+func (fl *fileLoader) Walk(path string, walkFn filepath.WalkFunc) error {
+	return fl.fSys.Walk(path, walkFn)
+}
+
+// IsKustomizeBaseDirectory returns true if the directory pointed to be path contains
+// at least 1 recognized kustomization filename which may be used as a base.
+func (fl *fileLoader) IsKustomizeBaseDirectory(path string) bool {
+	// join the path with the root if it is relative
+	if !filepath.IsAbs(path) {
+		path = filepath.Join(fl.Root(), path)
+	}
+
+	// if the directory doesn't exist or is not found, fall back to the original
+	// behavior to preserve the original behavior
+	if !fl.fSys.IsDir(path) {
+		return true
+	}
+
+	// if any Kustomization files are found, return true -- the directory is kustomizable
+	for _, n := range pgmconfig.RecognizedKustomizationFileNames() {
+		if fl.fSys.Exists(filepath.Join(path, n)) {
+			return true
+		}
+	}
+
+	// no Kustomization files found -- treat directory as containing raw Resources
+	return false
 }

@@ -6,7 +6,9 @@ package loadertest
 
 import (
 	"log"
+	"path/filepath"
 
+	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/loader"
@@ -41,6 +43,17 @@ func NewFakeLoaderWithRestrictor(
 	return FakeLoader{fs: fSys, delegate: ldr}
 }
 
+// NewFakeLoaderWithFS creates a FakeLoader backed by the provided FileSystem.
+func NewFakeLoaderWithFS(
+	fSys filesys.FileSystem,
+	lr loader.LoadRestrictorFunc, initialDir string) (FakeLoader, error) {
+	ldr, err := loader.NewLoader(lr, initialDir, fSys)
+	if err != nil {
+		return FakeLoader{}, errors.Wrap(err, "Unable to make loader")
+	}
+	return FakeLoader{fs: fSys, delegate: ldr}, nil
+}
+
 // AddFile adds a fake file to the file system.
 func (f FakeLoader) AddFile(fullFilePath string, content []byte) error {
 	return f.fs.WriteFile(fullFilePath, content)
@@ -73,4 +86,12 @@ func (f FakeLoader) Load(location string) ([]byte, error) {
 // Cleanup delegates.
 func (f FakeLoader) Cleanup() error {
 	return f.delegate.Cleanup()
+}
+
+func (f FakeLoader) Walk(path string, walkFn filepath.WalkFunc) error {
+	return f.delegate.Walk(path, walkFn)
+}
+
+func (f FakeLoader) IsKustomizeBaseDirectory(path string) bool {
+	return f.delegate.IsKustomizeBaseDirectory(path)
 }

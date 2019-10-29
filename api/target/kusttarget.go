@@ -10,6 +10,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -316,16 +318,27 @@ func (kt *KustTarget) configureExternalTransformers() ([]resmap.Transformer, err
 
 // accumulateResources fills the given resourceAccumulator
 // with resources read from the given list of paths.
+//
+// For each path:
+// - If the path is a directory containing a Kustomization file, accumulate by running Kustomize
+// - If the path is a directory without a Kustomization file, accumulate the individual files
+//   as raw Resource files
+// - If the path is a file, accumulate the file as a raw Resource file
 func (kt *KustTarget) accumulateResources(
 	ra *accumulator.ResAccumulator, paths []string) error {
 	for _, path := range paths {
 		ldr, err := kt.ldr.New(path)
-		if err == nil {
-			err = kt.accumulateDirectory(ra, ldr, path)
-			if err != nil {
-				return err
+		if err == nil { // directory
+			if kt.ldr.IsKustomizeBaseDirectory(path) { // kustomizable directory, kustomize it
+				if err = kt.accumulateDirectory(ra, ldr, path); err != nil {
+					return err
+				}
+			} else { // non-kustomizable directory, process the raw config
+				if err = kt.accumulateRawDirectory(ra, path); err != nil {
+					return err
+				}
 			}
-		} else {
+		} else { // file, process the raw config
 			err2 := kt.accumulateFile(ra, path)
 			if err2 != nil {
 				// Log ldr.New() error to highlight git failures.
@@ -335,6 +348,84 @@ func (kt *KustTarget) accumulateResources(
 		}
 	}
 	return nil
+}
+
+// supportedResourceFileExtensions is the set of file extensions that will be considered
+// when looking for raw Resource configuration.
+var supportedResourceFileExtensions = []string{".yaml", ".yml", ".json"}
+
+// isRawConfigurationFile returns true if the file contains at least 1 Resource which should
+// be processed as configuration.
+// To be considered as a Resource configuration file, the file must:
+// - have a supported file extension
+// - contain at least 1 Resource
+func (kt *KustTarget) isRawConfigurationFile(path string) (bool, error) {
+	f := kt.rFactory.RF()
+	ext := filepath.Ext(path)
+	foundExt := false
+	for _, e := range supportedResourceFileExtensions {
+		if e == ext {
+			foundExt = true
+			break
+		}
+	}
+	if !foundExt {
+		// not a Resource file type
+		return false, nil
+	}
+
+	// check that the file contains at least 1 Resource
+	b, err := kt.ldr.Load(path)
+	if err != nil {
+		return false, errors.Wrapf(err, "reading configuration file %s", path)
+	}
+	resources, err := f.SliceFromBytes(b)
+
+	// Resources cannot be parsed -- not a raw Resource file
+	if err != nil {
+		return false, nil
+	}
+
+	// return true if resources were found
+	isNonEmpty := len(resources) > 0
+	return isNonEmpty, nil
+}
+
+// accumulateRawDirectory accumlates Resources from a directory of Raw Resource configuration
+func (kt *KustTarget) accumulateRawDirectory(
+	ra *accumulator.ResAccumulator, root string) error {
+	if !filepath.IsAbs(root) {
+		root = filepath.Join(kt.ldr.Root(), root)
+	}
+
+	// walk the directory and accumulate any files containing raw Resource configuration
+	return kt.ldr.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			// will get this error if root does not exist
+			return errors.Wrapf(err, "reading configuration directory under path %s", path)
+		}
+
+		// don't allow walking a raw configuration directory if it has subdirectories
+		// with kustomizaiton.yaml files
+		if info.IsDir() {
+			if kt.ldr.IsKustomizeBaseDirectory(path) {
+				return fmt.Errorf(
+					"resource directories may only contain "+
+						"kustomization.yaml files at the root, found %s", path)
+			}
+			// walk this directory
+			return nil
+		}
+
+		// process the file
+		if isRawFile, err := kt.isRawConfigurationFile(path); err != nil {
+			return err
+		} else if isRawFile {
+			// contains raw Resource configuration -- accumulate the Resources
+			return kt.accumulateFile(ra, path)
+		}
+		return nil
+	})
 }
 
 func (kt *KustTarget) accumulateDirectory(

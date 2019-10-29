@@ -5,6 +5,8 @@
 package ifc
 
 import (
+	"path/filepath"
+
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/types"
 )
@@ -36,6 +38,10 @@ type Loader interface {
 	Load(location string) ([]byte, error)
 	// Cleanup cleans the loader
 	Cleanup() error
+	// Walk walks a directory
+	Walk(path string, walkFn filepath.WalkFunc) error
+	// IsKustomizeBaseDirectory returns true if the directory is kustomizable
+	IsKustomizeBaseDirectory(path string) bool
 }
 
 // Kunstructured allows manipulation of k8s objects

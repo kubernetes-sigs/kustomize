@@ -5,10 +5,14 @@ package kusttest_test
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/internal/loadertest"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/k8sdeps/transformer"
@@ -20,7 +24,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/target"
-	"sigs.k8s.io/kustomize/api/testutils/valtest"
+	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
@@ -33,6 +37,10 @@ type KustTestHarness struct {
 	rf  *resmap.Factory
 	ldr loadertest.FakeLoader
 	pl  *pLdr.Loader
+
+	// tempDir is the temporary on-disk directory used by the test.  Only set
+	// if a DiskFS is used.
+	tempDir string
 }
 
 func NewKustTestHarness(t *testing.T, path string) *KustTestHarness {
@@ -60,6 +68,54 @@ func NewKustTestHarnessFull(
 		rf:  rf,
 		ldr: loadertest.NewFakeLoaderWithRestrictor(lr, path),
 		pl:  pLdr.NewLoader(pc, rf)}
+}
+
+// NewKustTestHarnessDiskFS returns a new test harness backed by a disk FS.
+func NewKustTestHarnessDiskFS(t *testing.T, path string) *KustTestHarness {
+	// create the temp directory backed by a real fs -- cleaned up by calling Cleanup()
+	fSys := filesys.MakeFsOnDisk()
+	dir, err := ioutil.TempDir("", "kustomize-test-harness")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	path = filepath.Join(dir, path)
+	if !assert.NoError(t, fSys.Mkdir(path)) {
+		_ = os.RemoveAll(dir)
+		t.FailNow()
+	}
+
+	// create the loader
+	ldr, err := loadertest.NewFakeLoaderWithFS(fSys, fLdr.RestrictionRootOnly, path)
+	if !assert.NoError(t, err) {
+		_ = os.RemoveAll(dir)
+		t.FailNow()
+	}
+
+	// create the resource map
+	rf := resmap.NewFactory(resource.NewFactory(
+		kunstruct.NewKunstructuredFactoryImpl()), transformer.NewFactoryImpl())
+
+	// create the test harness
+	return &KustTestHarness{
+		tempDir: dir, // save the directory so it can be cleaned up at the end of the test
+		t:       t,
+		rf:      rf,
+		ldr:     ldr,
+		pl:      pLdr.NewLoader(config.DefaultPluginConfig(), rf)}
+}
+
+// FromRoot returns the path from the test harness root directory
+func (th *KustTestHarness) FromRoot(path string) string {
+	return filepath.Join(th.ldr.Root(), path)
+}
+
+// Cleanup cleans up any temporary files created by the test harness
+func (th *KustTestHarness) Cleanup() error {
+	if strings.HasPrefix(th.tempDir, os.TempDir()) {
+		// clean up the temps directory if it was initialized
+		return os.RemoveAll(th.tempDir)
+	}
+	return nil
 }
 
 func (th *KustTestHarness) MakeKustTarget() *target.KustTarget {

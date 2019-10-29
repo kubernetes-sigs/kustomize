@@ -6,17 +6,20 @@ package target_test
 import (
 	"encoding/base64"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/loadertest"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	. "sigs.k8s.io/kustomize/api/target"
-	"sigs.k8s.io/kustomize/api/testutils/kusttest"
-	"sigs.k8s.io/kustomize/api/testutils/valtest"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
@@ -78,6 +81,157 @@ func TestResources(t *testing.T) {
 	th.WriteF("/whatever/deployment.yaml", deploymentContent)
 	th.WriteF("/whatever/namespace.yaml", namespaceContent)
 	th.WriteF("/whatever/jsonpatch.json", jsonpatchContent)
+
+	resources := []*resource.Resource{
+		th.RF().FromMapWithName("dply1", map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name":      "foo-dply1-bar",
+				"namespace": "ns1",
+				"labels": map[string]interface{}{
+					"app": "nginx",
+				},
+				"annotations": map[string]interface{}{
+					"note": "This is a test annotation",
+				},
+			},
+			"spec": map[string]interface{}{
+				"replica": "3",
+				"selector": map[string]interface{}{
+					"matchLabels": map[string]interface{}{
+						"app": "nginx",
+					},
+				},
+				"template": map[string]interface{}{
+					"metadata": map[string]interface{}{
+						"annotations": map[string]interface{}{
+							"note": "This is a test annotation",
+						},
+						"labels": map[string]interface{}{
+							"app": "nginx",
+						},
+					},
+				},
+			},
+		}),
+		th.RF().FromMapWithName("ns1", map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Namespace",
+			"metadata": map[string]interface{}{
+				"name": "foo-ns1-bar",
+				"labels": map[string]interface{}{
+					"app": "nginx",
+				},
+				"annotations": map[string]interface{}{
+					"note": "This is a test annotation",
+				},
+			},
+		}),
+		th.RF().FromMapWithName("literalConfigMap",
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name":      "foo-literalConfigMap-bar-8d2dkb8k24",
+					"namespace": "ns1",
+					"labels": map[string]interface{}{
+						"app": "nginx",
+					},
+					"annotations": map[string]interface{}{
+						"note": "This is a test annotation",
+					},
+				},
+				"data": map[string]interface{}{
+					"DB_USERNAME": "admin",
+					"DB_PASSWORD": "somepw",
+				},
+			}),
+		th.RF().FromMapWithName("secret",
+			map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Secret",
+				"metadata": map[string]interface{}{
+					"name":      "foo-secret-bar-9btc7bt4kb",
+					"namespace": "ns1",
+					"labels": map[string]interface{}{
+						"app": "nginx",
+					},
+					"annotations": map[string]interface{}{
+						"note": "This is a test annotation",
+					},
+				},
+				"type": ifc.SecretTypeOpaque,
+				"data": map[string]interface{}{
+					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
+					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
+				},
+			}),
+	}
+
+	expected := resmap.New()
+	for _, r := range resources {
+		if err := expected.Append(r); err != nil {
+			t.Fatalf("unexpected error %v", err)
+		}
+	}
+
+	actual, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("unexpected Resources error %v", err)
+	}
+
+	if err = expected.ErrorIfNotEqualLists(actual); err != nil {
+		t.Fatalf("unexpected inequality: %v", err)
+	}
+}
+
+// TestRawResources tests that if a directory of raw Resources is given, the Resources
+// will be parsed
+func TestRawResources(t *testing.T) {
+	// use a real FS -- walk doesn't work on in-memory FS, and in-memory FS doesn't
+	// test windows specific behaviors
+	th := kusttest_test.NewKustTestHarnessDiskFS(t, "/whatever")
+	defer th.Cleanup()
+	th.WriteK(th.FromRoot(""), `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namePrefix: foo-
+nameSuffix: -bar
+namespace: ns1
+commonLabels:
+  app: nginx
+commonAnnotations:
+  note: This is a test annotation
+resources:
+  # raw configuration directory
+  - resources
+generatorOptions:
+  disableNameSuffixHash: false
+configMapGenerator:
+- name: literalConfigMap
+  literals:
+  - DB_USERNAME=admin
+  - DB_PASSWORD=somepw
+secretGenerator:
+- name: secret
+  literals:
+    - DB_USERNAME=admin
+    - DB_PASSWORD=somepw
+  type: Opaque
+patchesJson6902:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: dply1
+  path: jsonpatch.json
+`)
+	if !assert.NoError(t, os.MkdirAll(th.FromRoot("resources"), 0700)) {
+		t.FailNow()
+	}
+	th.WriteF(th.FromRoot(filepath.Join("resources", "deployment.yaml")), deploymentContent)
+	th.WriteF(th.FromRoot(filepath.Join("resources", "namespace.yaml")), namespaceContent)
+	th.WriteF(th.FromRoot("jsonpatch.json"), jsonpatchContent)
 
 	resources := []*resource.Resource{
 		th.RF().FromMapWithName("dply1", map[string]interface{}{
