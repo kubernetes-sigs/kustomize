@@ -8,4 +8,6 @@
 # (or is used by) the travis/pre-commit.sh script
 
 all:
-        ./travis/pre-commit.sh
+	./travis/pre-commit.sh
+
+.PHONY: all
