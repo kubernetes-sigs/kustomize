@@ -63,13 +63,17 @@ func NewKustTestHarnessFull(
 }
 
 func (th *KustTestHarness) MakeKustTarget() *target.KustTarget {
-	kt, err := target.NewKustTarget(
-		th.ldr, valtest_test.MakeFakeValidator(), th.rf,
-		transformer.NewFactoryImpl(), th.pl)
+	kt, err := th.MakeKustTargetOrErr()
 	if err != nil {
 		th.t.Fatalf("Unexpected construction error %v", err)
 	}
 	return kt
+}
+
+func (th *KustTestHarness) MakeKustTargetOrErr() (*target.KustTarget, error) {
+	return target.NewKustTarget(
+		th.ldr, valtest_test.MakeFakeValidator(), th.rf,
+		transformer.NewFactoryImpl(), th.pl)
 }
 
 func (th *KustTestHarness) WriteF(dir string, content string) {
