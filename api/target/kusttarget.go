@@ -94,16 +94,37 @@ func loadKustFile(ldr ifc.Loader) ([]byte, error) {
 	}
 	switch match {
 	case 0:
-		return nil, fmt.Errorf(
-			"unable to find one of %v in directory '%s'",
-			commaOr(quoted(pgmconfig.RecognizedKustomizationFileNames())),
-			ldr.Root())
+		return nil, NewErrMissingKustomization(ldr.Root())
 	case 1:
 		return content, nil
 	default:
 		return nil, fmt.Errorf(
 			"Found multiple kustomization files under: %s\n", ldr.Root())
 	}
+}
+
+type errMissingKustomization struct {
+	path string
+}
+
+func (e *errMissingKustomization) Error() string {
+	return fmt.Sprintf(
+		"unable to find one of %v in directory '%s'",
+		commaOr(quoted(pgmconfig.RecognizedKustomizationFileNames())),
+		e.path)
+}
+
+func NewErrMissingKustomization(p string) *errMissingKustomization {
+	return &errMissingKustomization{path: p}
+}
+
+func IsMissingKustomizationFileError(err error) bool {
+	_, ok := err.(*errMissingKustomization)
+	if ok {
+		return true
+	}
+	_, ok = errors.Cause(err).(*errMissingKustomization)
+	return ok
 }
 
 func unmarshal(y []byte, o interface{}) error {
@@ -321,7 +342,7 @@ func (kt *KustTarget) accumulateResources(
 	for _, path := range paths {
 		ldr, err := kt.ldr.New(path)
 		if err == nil {
-			err = kt.accumulateDirectory(ra, ldr, path)
+			err = kt.accumulateDirectory(ra, ldr)
 			if err != nil {
 				return err
 			}
@@ -338,22 +359,23 @@ func (kt *KustTarget) accumulateResources(
 }
 
 func (kt *KustTarget) accumulateDirectory(
-	ra *accumulator.ResAccumulator, ldr ifc.Loader, path string) error {
+	ra *accumulator.ResAccumulator, ldr ifc.Loader) error {
 	defer ldr.Cleanup()
 	subKt, err := NewKustTarget(
 		ldr, kt.validator, kt.rFactory, kt.tFactory, kt.pLdr)
 	if err != nil {
-		return errors.Wrapf(err, "couldn't make target for path '%s'", path)
+		return errors.Wrapf(
+			err, "couldn't make target for path '%s'", ldr.Root())
 	}
 	subRa, err := subKt.AccumulateTarget()
 	if err != nil {
 		return errors.Wrapf(
-			err, "recursed accumulation of path '%s'", path)
+			err, "recursed accumulation of path '%s'", ldr.Root())
 	}
 	err = ra.MergeAccumulator(subRa)
 	if err != nil {
 		return errors.Wrapf(
-			err, "recursed merging from path '%s'", path)
+			err, "recursed merging from path '%s'", ldr.Root())
 	}
 	return nil
 }
