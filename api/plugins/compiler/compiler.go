@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"sigs.k8s.io/kustomize/api/pgmconfig"
-	"sigs.k8s.io/kustomize/api/plugins/config"
 )
 
 // Compiler creates Go plugin object files.
@@ -36,20 +35,20 @@ func DefaultSrcRoot() (string, error) {
 
 	root = filepath.Join(
 		os.Getenv("GOPATH"), "src",
-		config.DomainName, pgmconfig.ProgramName, config.PluginRoot)
+		pgmconfig.DomainName, pgmconfig.ProgramName, pgmconfig.PluginRoot)
 	if FileExists(root) {
 		return root, nil
 	}
 	nope = append(nope, root)
 
-	root = config.DefaultPluginConfig().DirectoryPath
+	root = pgmconfig.DefaultPluginConfig().DirectoryPath
 	if FileExists(root) {
 		return root, nil
 	}
 	nope = append(nope, root)
 
 	root = filepath.Join(
-		config.HomeDir(), pgmconfig.ProgramName, config.PluginRoot)
+		pgmconfig.HomeDir(), pgmconfig.ProgramName, pgmconfig.PluginRoot)
 	if FileExists(root) {
 		return root, nil
 	}

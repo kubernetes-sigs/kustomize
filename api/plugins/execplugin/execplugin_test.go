@@ -11,7 +11,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/internal/loadertest"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/api/plugins/config"
+	"sigs.k8s.io/kustomize/api/pgmconfig"
 	. "sigs.k8s.io/kustomize/api/plugins/execplugin"
 	"sigs.k8s.io/kustomize/api/plugins/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -46,7 +46,7 @@ s/$BAR/bar/g
 
 	p, err := NewExecPlugin(
 		loader.AbsolutePluginPath(
-			config.DefaultPluginConfig(),
+			pgmconfig.DefaultPluginConfig(),
 			pluginConfig.OrgId()))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err.Error())

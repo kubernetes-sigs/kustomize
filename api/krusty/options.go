@@ -4,7 +4,7 @@
 package krusty
 
 import (
-	"sigs.k8s.io/kustomize/api/plugins/config"
+	"sigs.k8s.io/kustomize/api/pgmconfig"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
@@ -35,6 +35,6 @@ func MakeDefaultOptions() *Options {
 		DoLegacyResourceSort: true,
 		LoadRestrictions:     rootOnly,
 		DoPrune:              false,
-		PluginConfig:         config.DefaultPluginConfig(),
+		PluginConfig:         pgmconfig.DefaultPluginConfig(),
 	}
 }

@@ -23,11 +23,11 @@ const (
 	// An environment variable to consult for kustomization
 	// configuration data.  See:
 	// https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-	XdgConfigHome = "XDG_CONFIG_HOME"
+	XdgConfigHomeEnv = "XDG_CONFIG_HOME"
 
-	// Use this when XdgConfigHome not defined.
-	DefaultConfigSubdir = ".config"
+	// Use this when XdgConfigHomeEnv not defined.
+	XdgConfigHomeEnvDefault = ".config"
 
-	// Program name, for help, finding the XDG_CONFIG_DIR, etc.
+	// A program name, for use in help, finding the XDG_CONFIG_DIR, etc.
 	ProgramName = "kustomize"
 )
