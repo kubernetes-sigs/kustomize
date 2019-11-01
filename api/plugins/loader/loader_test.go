@@ -8,12 +8,12 @@ import (
 
 	"sigs.k8s.io/kustomize/api/internal/loadertest"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/api/plugins/config"
+	"sigs.k8s.io/kustomize/api/pgmconfig"
 	. "sigs.k8s.io/kustomize/api/plugins/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
-	"sigs.k8s.io/kustomize/api/testutils/kusttest"
-	"sigs.k8s.io/kustomize/api/testutils/valtest"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 )
 
 const (
@@ -57,7 +57,7 @@ func TestLoader(t *testing.T) {
 
 	ldr := loadertest.NewFakeLoader("/foo")
 
-	pLdr := NewLoader(config.ActivePluginConfig(), rmF)
+	pLdr := NewLoader(pgmconfig.ActivePluginConfig(), rmF)
 	if pLdr == nil {
 		t.Fatal("expect non-nil loader")
 	}
