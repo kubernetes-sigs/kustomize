@@ -13,7 +13,6 @@ import (
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/krusty"
 	"sigs.k8s.io/kustomize/api/pgmconfig"
-	"sigs.k8s.io/kustomize/api/plugins/config"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/yaml"
@@ -75,7 +74,7 @@ func NewCmdBuild(out io.Writer) *cobra.Command {
 		"output", "o", "",
 		"If specified, write the build output to this path.")
 	krusty.AddFlagLoadRestrictor(cmd.Flags())
-	config.AddFlagEnablePlugins(
+	pgmconfig.AddFlagEnablePlugins(
 		cmd.Flags(), &o.pluginsEnabled)
 	addFlagReorderOutput(cmd.Flags())
 	cmd.AddCommand(NewCmdBuildPrune(out))
