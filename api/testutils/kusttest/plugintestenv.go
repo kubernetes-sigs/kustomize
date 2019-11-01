@@ -13,7 +13,6 @@ import (
 
 	"sigs.k8s.io/kustomize/api/pgmconfig"
 	"sigs.k8s.io/kustomize/api/plugins/compiler"
-	"sigs.k8s.io/kustomize/api/plugins/config"
 )
 
 // PluginTestEnv manages the plugin test environment.
@@ -71,7 +70,7 @@ func (x *PluginTestEnv) makeCompiler() *compiler.Compiler {
 	//    $objRoot
 	// so set things up accordingly.
 	objRoot := filepath.Join(
-		x.workDir, pgmconfig.ProgramName, config.PluginRoot)
+		x.workDir, pgmconfig.ProgramName, pgmconfig.PluginRoot)
 	err := os.MkdirAll(objRoot, os.ModePerm)
 	if err != nil {
 		x.t.Error(err)
@@ -100,14 +99,14 @@ func (x *PluginTestEnv) removeWorkDir() {
 }
 
 func (x *PluginTestEnv) setEnv() {
-	x.oldXdg, x.wasSet = os.LookupEnv(pgmconfig.XdgConfigHome)
-	os.Setenv(pgmconfig.XdgConfigHome, x.workDir)
+	x.oldXdg, x.wasSet = os.LookupEnv(pgmconfig.XdgConfigHomeEnv)
+	os.Setenv(pgmconfig.XdgConfigHomeEnv, x.workDir)
 }
 
 func (x *PluginTestEnv) resetEnv() {
 	if x.wasSet {
-		os.Setenv(pgmconfig.XdgConfigHome, x.oldXdg)
+		os.Setenv(pgmconfig.XdgConfigHomeEnv, x.oldXdg)
 	} else {
-		os.Unsetenv(pgmconfig.XdgConfigHome)
+		os.Unsetenv(pgmconfig.XdgConfigHomeEnv)
 	}
 }

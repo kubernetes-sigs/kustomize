@@ -15,7 +15,6 @@ import (
 	fLdr "sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/pgmconfig"
 	"sigs.k8s.io/kustomize/api/plugins/builtinconfig/consts"
-	"sigs.k8s.io/kustomize/api/plugins/config"
 	pLdr "sigs.k8s.io/kustomize/api/plugins/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -37,17 +36,17 @@ type KustTestHarness struct {
 
 func NewKustTestHarness(t *testing.T, path string) *KustTestHarness {
 	return NewKustTestHarnessFull(
-		t, path, fLdr.RestrictionRootOnly, config.DefaultPluginConfig())
+		t, path, fLdr.RestrictionRootOnly, pgmconfig.DefaultPluginConfig())
 }
 
 func NewKustTestHarnessAllowPlugins(t *testing.T, path string) *KustTestHarness {
 	return NewKustTestHarnessFull(
-		t, path, fLdr.RestrictionRootOnly, config.ActivePluginConfig())
+		t, path, fLdr.RestrictionRootOnly, pgmconfig.ActivePluginConfig())
 }
 
 func NewKustTestHarnessNoLoadRestrictor(t *testing.T, path string) *KustTestHarness {
 	return NewKustTestHarnessFull(
-		t, path, fLdr.RestrictionNone, config.DefaultPluginConfig())
+		t, path, fLdr.RestrictionNone, pgmconfig.DefaultPluginConfig())
 }
 
 func NewKustTestHarnessFull(

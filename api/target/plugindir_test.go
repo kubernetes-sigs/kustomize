@@ -13,13 +13,13 @@ import (
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/k8sdeps/transformer"
 	fLdr "sigs.k8s.io/kustomize/api/loader"
-	"sigs.k8s.io/kustomize/api/plugins/config"
+	"sigs.k8s.io/kustomize/api/pgmconfig"
 	pLdr "sigs.k8s.io/kustomize/api/plugins/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/target"
-	"sigs.k8s.io/kustomize/api/testutils/kusttest"
-	"sigs.k8s.io/kustomize/api/testutils/valtest"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 )
 
 func TestPluginDir(t *testing.T) {
@@ -65,7 +65,7 @@ metadata:
 	rf := resmap.NewFactory(resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl()), nil)
 
-	pl := pLdr.NewLoader(config.ActivePluginConfig(), rf)
+	pl := pLdr.NewLoader(pgmconfig.ActivePluginConfig(), rf)
 	tg, err := target.NewKustTarget(
 		ldr, valtest_test.MakeFakeValidator(), rf, transformer.NewFactoryImpl(), pl)
 	if err != nil {

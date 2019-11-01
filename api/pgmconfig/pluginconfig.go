@@ -1,9 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// Package config provides configuration methods and constants
-// for general plugins.
-package config
+package pgmconfig
 
 import (
 	"fmt"
@@ -12,22 +10,23 @@ import (
 	"runtime"
 
 	"github.com/spf13/pflag"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
 const (
-	// Used with Go plugins.
+	// Symbol that must be used inside Go plugins.
 	PluginSymbol = "KustomizePlugin"
 
 	// Location of builtins.
 	BuiltinPluginPackage = "builtin"
 
-	// ApiVersion of builtins.
+	// The value of kubernetes ApiVersion to use in configuration
+	// files for builtin plugins.
+	// The value for non-builtins can be anything.
 	BuiltinPluginApiVersion = BuiltinPluginPackage
 
 	// Domain from which kustomize code is imported, for locating
-	// plugin source code under $GOPATH.
+	// plugin source code under $GOPATH when GOPATH is defined.
 	DomainName = "sigs.k8s.io"
 
 	// Name of directory housing all plugins.
@@ -73,12 +72,12 @@ func AddFlagEnablePlugins(set *pflag.FlagSet, v *bool) {
 
 // Use https://github.com/kirsle/configdir instead?
 func configRoot() string {
-	dir := os.Getenv(pgmconfig.XdgConfigHome)
+	dir := os.Getenv(XdgConfigHomeEnv)
 	if len(dir) == 0 {
 		dir = filepath.Join(
-			HomeDir(), pgmconfig.DefaultConfigSubdir)
+			HomeDir(), XdgConfigHomeEnvDefault)
 	}
-	return filepath.Join(dir, pgmconfig.ProgramName)
+	return filepath.Join(dir, ProgramName)
 }
 
 func HomeDir() string {
