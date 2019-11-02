@@ -11,6 +11,7 @@ type PluginConfig struct {
 	// further categorizing plugins.
 	DirectoryPath string
 
-	// Enabled is true if plugins are enabled.
-	Enabled bool
+	// PluginRestrictions defines the plugin restriction state.
+	// See type for more information.
+	PluginRestrictions PluginRestrictions
 }

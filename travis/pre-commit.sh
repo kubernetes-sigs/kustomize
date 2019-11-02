@@ -34,6 +34,10 @@ function removeBin {
   /bin/rm -f $d
 }
 
+# TODO: go install golang.org/x/tools/cmd/stringer
+# TODO: kubeval?
+# TODO: helm?  no.  except then we should not requirekubeval either,
+#  since they're both only used in demo (non-builtin) plugins.
 function installTools {
   # TODO(2019/Oct/19): After the API is in place, and
   # there's a new pluginator compiled against that API,
