@@ -300,7 +300,7 @@ spec:
 func TestSharedPatchDisAllowed(t *testing.T) {
 	th := kusttest_test.NewKustTestHarnessFull(
 		t, "/app/overlay",
-		loader.RestrictionRootOnly, pgmconfig.DefaultPluginConfig())
+		loader.RestrictionRootOnly, pgmconfig.DisabledPluginConfig())
 	writeSmallBase(th)
 	th.WriteK("/app/overlay", `
 commonLabels:
@@ -332,7 +332,7 @@ spec:
 func TestSharedPatchAllowed(t *testing.T) {
 	th := kusttest_test.NewKustTestHarnessFull(
 		t, "/app/overlay",
-		loader.RestrictionNone, pgmconfig.DefaultPluginConfig())
+		loader.RestrictionNone, pgmconfig.DisabledPluginConfig())
 	writeSmallBase(th)
 	th.WriteK("/app/overlay", `
 commonLabels:

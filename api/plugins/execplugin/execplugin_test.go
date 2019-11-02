@@ -5,7 +5,6 @@ package execplugin_test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -44,13 +43,15 @@ s/$BAR/bar/g
  \ \ \ 
 `))
 
-	p, err := NewExecPlugin(
+	p := NewExecPlugin(
 		loader.AbsolutePluginPath(
-			pgmconfig.DefaultPluginConfig(),
+			pgmconfig.DisabledPluginConfig(),
 			pluginConfig.OrgId()))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err.Error())
-	}
+	// Not checking to see if the plugin is executable,
+	// because this test does not run it.
+	// This tests only covers sending configuration
+	// to the plugin wrapper object and confirming
+	// that it's properly prepared for execution.
 
 	yaml, err := pluginConfig.AsYAML()
 	if err != nil {
@@ -58,7 +59,7 @@ s/$BAR/bar/g
 	}
 	p.Config(resmap.NewPluginHelpers(ldr, v, rf), yaml)
 
-	expected := "/kustomize/plugin/someteam.example.com/v1/sedtransformer/SedTransformer"
+	expected := "someteam.example.com/v1/sedtransformer/SedTransformer"
 	if !strings.HasSuffix(p.Path(), expected) {
 		t.Fatalf("expected suffix '%s', got '%s'", expected, p.Path())
 	}
@@ -118,9 +119,9 @@ func strptr(s string) *string {
 }
 
 func TestUpdateResourceOptions(t *testing.T) {
-	p, err := NewExecPlugin("")
-	if !os.IsNotExist(err) {
-		t.Fatalf("unexpected error: %v", err.Error())
+	p := NewExecPlugin("")
+	if err := p.ErrIfNotExecutable(); err == nil {
+		t.Fatalf("expected unexecutable error")
 	}
 	rf := resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
 	in := resmap.New()
@@ -166,9 +167,9 @@ func TestUpdateResourceOptions(t *testing.T) {
 }
 
 func TestUpdateResourceOptionsWithInvalidHashAnnotationValues(t *testing.T) {
-	p, err := NewExecPlugin("")
-	if !os.IsNotExist(err) {
-		t.Fatalf("unexpected error: %v", err.Error())
+	p := NewExecPlugin("")
+	if err := p.ErrIfNotExecutable(); err == nil {
+		t.Fatalf("expected unexecutable error")
 	}
 	rf := resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
 	cases := []string{
