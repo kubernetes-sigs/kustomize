@@ -4,10 +4,10 @@
 package target_test
 
 import (
-	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/testutils/kusttest"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	"sigs.k8s.io/kustomize/api/types"
 )
 
 func writeDeployment(th *kusttest_test.KustTestHarness, path string) {
@@ -112,7 +112,7 @@ transformers:
 	if err == nil {
 		t.Fatalf("expected error")
 	}
-	if !strings.Contains(err.Error(), "unable to load external plugin StringPrefixer") {
+	if !types.IsErrOnlyBuiltinPluginsAllowed(err) {
 		t.Fatalf("unexpected err: %v", err)
 	}
 }

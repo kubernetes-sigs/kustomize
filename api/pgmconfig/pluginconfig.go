@@ -4,12 +4,10 @@
 package pgmconfig
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
 
-	"github.com/spf13/pflag"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
@@ -31,43 +29,19 @@ const (
 
 	// Name of directory housing all plugins.
 	PluginRoot = "plugin"
-
-	flagEnablePluginsName = "enable_alpha_plugins"
-	flagEnablePluginsHelp = `enable plugins, an alpha feature.
-See https://github.com/kubernetes-sigs/kustomize/blob/master/docs/plugins/README.md
-`
-	flagErrorFmt = `
-unable to load external plugin %s because plugins disabled
-specify the flag
-  --%s
-to %s`
 )
 
 func ActivePluginConfig() *types.PluginConfig {
 	pc := DefaultPluginConfig()
-	pc.Enabled = true
+	pc.PluginRestrictions = types.PluginRestrictionsNone
 	return pc
 }
 
 func DefaultPluginConfig() *types.PluginConfig {
 	return &types.PluginConfig{
-		Enabled:       false,
-		DirectoryPath: filepath.Join(configRoot(), PluginRoot),
+		PluginRestrictions: types.PluginRestrictionsBuiltinsOnly,
+		DirectoryPath:      filepath.Join(configRoot(), PluginRoot),
 	}
-}
-
-func NotEnabledErr(name string) error {
-	return fmt.Errorf(
-		flagErrorFmt,
-		name,
-		flagEnablePluginsName,
-		flagEnablePluginsHelp)
-}
-
-func AddFlagEnablePlugins(set *pflag.FlagSet, v *bool) {
-	set.BoolVar(
-		v, flagEnablePluginsName,
-		false, flagEnablePluginsHelp)
 }
 
 // Use https://github.com/kirsle/configdir instead?
