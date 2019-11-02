@@ -148,7 +148,7 @@ The staging customization adds a configMap.
 > ```
 as well as 2 replica
 > ```cat $OVERLAYS/staging/deployment.yaml
-> apiVersion: apps/v1beta2
+> apiVersion: apps/v1
 > kind: Deployment
 > metadata:
 >   name: ldap
@@ -167,7 +167,7 @@ curl -s -o "$OVERLAYS/production/#1" "$CONTENT/overlays/production\
 
 The production customization adds 6 replica as well as a consistent disk.
 > ```cat $OVERLAYS/production/deployment.yaml
-> apiVersion: apps/v1beta2
+> apiVersion: apps/v1
 > kind: Deployment
 > metadata:
 >   name: ldap

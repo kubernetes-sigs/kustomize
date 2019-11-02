@@ -76,7 +76,7 @@ curl -s -o "$DEMO_HOME/#1.yaml" \
 ```
 The patch has following content
 > ```
-> apiVersion: apps/v1beta2
+> apiVersion: apps/v1
 > kind: Deployment
 > metadata:
 >   name: wordpress
