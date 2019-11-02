@@ -20,7 +20,7 @@ type Options struct {
 
 	// Restrictions on what can be loaded from the file system.
 	// See type definition.
-	LoadRestrictions loadRestrictions
+	LoadRestrictions types.LoadRestrictions
 
 	// Create an inventory object for pruning.
 	DoPrune bool
@@ -33,7 +33,7 @@ type Options struct {
 func MakeDefaultOptions() *Options {
 	return &Options{
 		DoLegacyResourceSort: true,
-		LoadRestrictions:     rootOnly,
+		LoadRestrictions:     types.LoadRestrictionsRootOnly,
 		DoPrune:              false,
 		PluginConfig:         pgmconfig.DefaultPluginConfig(),
 	}

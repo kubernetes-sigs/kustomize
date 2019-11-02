@@ -14,6 +14,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/target"
+	"sigs.k8s.io/kustomize/api/types"
 )
 
 // Kustomizer performs kustomizations.  It's meant to behave
@@ -55,7 +56,7 @@ func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
 			kunstruct.NewKunstructuredFactoryImpl()),
 		pf)
 	lr := fLdr.RestrictionNone
-	if b.options.LoadRestrictions == rootOnly {
+	if b.options.LoadRestrictions == types.LoadRestrictionsRootOnly {
 		lr = fLdr.RestrictionRootOnly
 	}
 	ldr, err := fLdr.NewLoader(lr, path, b.fSys)

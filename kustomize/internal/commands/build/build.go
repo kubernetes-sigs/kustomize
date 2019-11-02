@@ -15,6 +15,7 @@ import (
 	"sigs.k8s.io/kustomize/api/pgmconfig"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
+	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 )
 
@@ -23,7 +24,6 @@ type Options struct {
 	kustomizationPath string
 	outputPath        string
 	outOrder          reorderOutput
-	pluginsEnabled    bool
 }
 
 // NewOptions creates a Options object
@@ -73,9 +73,8 @@ func NewCmdBuild(out io.Writer) *cobra.Command {
 		&o.outputPath,
 		"output", "o", "",
 		"If specified, write the build output to this path.")
-	krusty.AddFlagLoadRestrictor(cmd.Flags())
-	pgmconfig.AddFlagEnablePlugins(
-		cmd.Flags(), &o.pluginsEnabled)
+	addFlagLoadRestrictor(cmd.Flags())
+	addFlagEnablePlugins(cmd.Flags())
 	addFlagReorderOutput(cmd.Flags())
 	cmd.AddCommand(NewCmdBuildPrune(out))
 	return cmd
@@ -95,7 +94,7 @@ func (o *Options) Validate(args []string) (err error) {
 	} else {
 		o.kustomizationPath = args[0]
 	}
-	err = krusty.ValidateFlagLoadRestrictor()
+	err = validateFlagLoadRestrictor()
 	if err != nil {
 		return err
 	}
@@ -105,9 +104,12 @@ func (o *Options) Validate(args []string) (err error) {
 
 func (o *Options) makeOptions() *krusty.Options {
 	opts := krusty.MakeDefaultOptions()
-	opts.LoadRestrictions = krusty.GetFlagLoadRestrictorValue()
+	opts.LoadRestrictions = getFlagLoadRestrictorValue()
 	opts.DoLegacyResourceSort = o.outOrder == legacy
-	opts.PluginConfig.Enabled = o.pluginsEnabled
+	opts.PluginConfig.PluginRestrictions = types.PluginRestrictionsBuiltinsOnly
+	if isFlagEnablePluginsSet() {
+		opts.PluginConfig.PluginRestrictions = types.PluginRestrictionsNone
+	}
 	return opts
 }
 
