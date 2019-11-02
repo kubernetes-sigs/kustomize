@@ -70,7 +70,7 @@ func (x *PluginTestEnv) makeCompiler() *compiler.Compiler {
 	//    $objRoot
 	// so set things up accordingly.
 	objRoot := filepath.Join(
-		x.workDir, pgmconfig.ProgramName, pgmconfig.PluginRoot)
+		x.workDir, pgmconfig.ProgramName, pgmconfig.RelPluginHome)
 	err := os.MkdirAll(objRoot, os.ModePerm)
 	if err != nil {
 		x.t.Error(err)

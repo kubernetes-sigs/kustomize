@@ -15,7 +15,15 @@ const (
 	// Symbol that must be used inside Go plugins.
 	PluginSymbol = "KustomizePlugin"
 
-	// Location of builtins.
+	// Name of environment variable used to set AbsPluginHome.
+	// See that variable for an explanation.
+	KustomizePluginHomeEnv = "KUSTOMIZE_PLUGIN_HOME"
+
+	// Relative path below XDG_CONFIG_HOME/kustomize to find plugins.
+	// e.g. AbsPluginHome = XDG_CONFIG_HOME/kustomize/plugin
+	RelPluginHome = "plugin"
+
+	// Location of builtin plugins below AbsPluginHome.
 	BuiltinPluginPackage = "builtin"
 
 	// The value of kubernetes ApiVersion to use in configuration
@@ -26,9 +34,6 @@ const (
 	// Domain from which kustomize code is imported, for locating
 	// plugin source code under $GOPATH when GOPATH is defined.
 	DomainName = "sigs.k8s.io"
-
-	// Name of directory housing all plugins.
-	PluginRoot = "plugin"
 )
 
 func ActivePluginConfig() *types.PluginConfig {
@@ -40,8 +45,12 @@ func ActivePluginConfig() *types.PluginConfig {
 func DefaultPluginConfig() *types.PluginConfig {
 	return &types.PluginConfig{
 		PluginRestrictions: types.PluginRestrictionsBuiltinsOnly,
-		DirectoryPath:      filepath.Join(configRoot(), PluginRoot),
+		AbsPluginHome:      DefaultAbsPluginHome(),
 	}
+}
+
+func DefaultAbsPluginHome() string {
+	return filepath.Join(configRoot(), RelPluginHome)
 }
 
 // Use https://github.com/kirsle/configdir instead?
@@ -67,4 +76,20 @@ func homeEnv() string {
 		return "USERPROFILE"
 	}
 	return "HOME"
+}
+
+func CurrentWorkingDir() string {
+	// Try for full path first to be explicit.
+	pwd := os.Getenv(pwdEnv())
+	if len(pwd) > 0 {
+		return pwd
+	}
+	return "."
+}
+
+func pwdEnv() string {
+	if runtime.GOOS == "windows" {
+		return "CD"
+	}
+	return "PWD"
 }
