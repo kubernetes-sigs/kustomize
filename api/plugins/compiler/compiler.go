@@ -35,20 +35,20 @@ func DefaultSrcRoot() (string, error) {
 
 	root = filepath.Join(
 		os.Getenv("GOPATH"), "src",
-		pgmconfig.DomainName, pgmconfig.ProgramName, pgmconfig.PluginRoot)
+		pgmconfig.DomainName, pgmconfig.ProgramName, pgmconfig.RelPluginHome)
 	if FileExists(root) {
 		return root, nil
 	}
 	nope = append(nope, root)
 
-	root = pgmconfig.DefaultPluginConfig().DirectoryPath
+	root = pgmconfig.DefaultPluginConfig().AbsPluginHome
 	if FileExists(root) {
 		return root, nil
 	}
 	nope = append(nope, root)
 
 	root = filepath.Join(
-		pgmconfig.HomeDir(), pgmconfig.ProgramName, pgmconfig.PluginRoot)
+		pgmconfig.HomeDir(), pgmconfig.ProgramName, pgmconfig.RelPluginHome)
 	if FileExists(root) {
 		return root, nil
 	}
