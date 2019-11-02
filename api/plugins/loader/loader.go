@@ -114,10 +114,10 @@ func (l *Loader) loadAndConfigurePlugin(
 		// function (see "pluginator").  Being able to do this
 		// is what makes a plugin "builtin".
 		c, err = l.makeBuiltinPlugin(res.GetGvk())
-	} else if l.pc.Enabled {
+	} else if l.pc.PluginRestrictions == types.PluginRestrictionsNone {
 		c, err = l.loadPlugin(res.OrgId())
 	} else {
-		err = pgmconfig.NotEnabledErr(res.OrgId().Kind)
+		err = types.NewErrOnlyBuiltinPluginsAllowed(res.OrgId().Kind)
 	}
 	if err != nil {
 		return nil, err
