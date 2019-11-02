@@ -65,7 +65,7 @@ metadata:
 	rf := resmap.NewFactory(resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl()), nil)
 
-	pl := pLdr.NewLoader(pgmconfig.ActivePluginConfig(), rf)
+	pl := pLdr.NewLoader(pgmconfig.EnabledPluginConfig(), rf)
 	tg, err := target.NewKustTarget(
 		ldr, valtest_test.MakeFakeValidator(), rf, transformer.NewFactoryImpl(), pl)
 	if err != nil {

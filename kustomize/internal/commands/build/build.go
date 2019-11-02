@@ -15,7 +15,6 @@ import (
 	"sigs.k8s.io/kustomize/api/pgmconfig"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
-	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 )
 
@@ -103,12 +102,15 @@ func (o *Options) Validate(args []string) (err error) {
 }
 
 func (o *Options) makeOptions() *krusty.Options {
-	opts := krusty.MakeDefaultOptions()
-	opts.LoadRestrictions = getFlagLoadRestrictorValue()
-	opts.DoLegacyResourceSort = o.outOrder == legacy
-	opts.PluginConfig.PluginRestrictions = types.PluginRestrictionsBuiltinsOnly
+	opts := &krusty.Options{
+		DoLegacyResourceSort: o.outOrder == legacy,
+		LoadRestrictions:     getFlagLoadRestrictorValue(),
+		DoPrune:              false,
+	}
 	if isFlagEnablePluginsSet() {
-		opts.PluginConfig.PluginRestrictions = types.PluginRestrictionsNone
+		opts.PluginConfig = pgmconfig.EnabledPluginConfig()
+	} else {
+		opts.PluginConfig = pgmconfig.DisabledPluginConfig()
 	}
 	return opts
 }
