@@ -93,7 +93,7 @@ func relativePluginPath(id resid.ResId) string {
 
 func AbsolutePluginPath(pc *types.PluginConfig, id resid.ResId) string {
 	return filepath.Join(
-		pc.DirectoryPath, relativePluginPath(id), id.Kind)
+		pc.AbsPluginHome, relativePluginPath(id), id.Kind)
 }
 
 func (l *Loader) absolutePluginPath(id resid.ResId) string {
