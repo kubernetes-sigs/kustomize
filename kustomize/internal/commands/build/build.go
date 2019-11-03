@@ -5,6 +5,7 @@ package build
 
 import (
 	"io"
+	"log"
 	"path/filepath"
 	"strings"
 
@@ -108,7 +109,11 @@ func (o *Options) makeOptions() *krusty.Options {
 		DoPrune:              false,
 	}
 	if isFlagEnablePluginsSet() {
-		opts.PluginConfig = pgmconfig.EnabledPluginConfig()
+		c, err := pgmconfig.EnabledPluginConfig()
+		if err != nil {
+			log.Fatal(err)
+		}
+		opts.PluginConfig = c
 	} else {
 		opts.PluginConfig = pgmconfig.DisabledPluginConfig()
 	}

@@ -231,7 +231,7 @@ func definePatchDirStructure(th *kusttest_test.KustTestHarness) {
 
 // Fails due to file load restrictor.
 func TestIssue1251_Patches_ProdVsDev_Failure(t *testing.T) {
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app/prod")
+	th := kusttest_test.NewKustTestHarness(t, "/app/prod")
 	definePatchDirStructure(th)
 
 	th.WriteK("/app/prod", `

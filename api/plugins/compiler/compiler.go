@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/pgmconfig"
 )
 
@@ -29,33 +30,36 @@ type Compiler struct {
 
 // DefaultSrcRoot guesses where the user
 // has her ${g}/${v}/$lower(${k})/${k}.go files.
-func DefaultSrcRoot() (string, error) {
-	var nope []string
-	var root string
-
-	root = filepath.Join(
-		os.Getenv("GOPATH"), "src",
-		pgmconfig.DomainName, pgmconfig.ProgramName, pgmconfig.RelPluginHome)
-	if FileExists(root) {
-		return root, nil
-	}
-	nope = append(nope, root)
-
-	root = pgmconfig.DefaultAbsPluginHome()
-	if FileExists(root) {
-		return root, nil
-	}
-	nope = append(nope, root)
-
-	root = filepath.Join(
-		pgmconfig.HomeDir(), pgmconfig.ProgramName, pgmconfig.RelPluginHome)
-	if FileExists(root) {
-		return root, nil
-	}
-	nope = append(nope, root)
-
-	return "", fmt.Errorf(
-		"no default src root; tried %v", nope)
+func DefaultSrcRoot(fSys filesys.FileSystem) (string, error) {
+	return pgmconfig.FirstDirThatExistsElseError(
+		"source directory", fSys, []pgmconfig.NotedFunc{
+			{
+				Note: "old style $GOPATH",
+				F: func() string {
+					return filepath.Join(
+						os.Getenv("GOPATH"),
+						"src", pgmconfig.DomainName,
+						pgmconfig.ProgramName, pgmconfig.RelPluginHome)
+				},
+			},
+			{
+				Note: "HOME with literal 'gopath'",
+				F: func() string {
+					return filepath.Join(
+						pgmconfig.HomeDir(), "gopath",
+						"src", pgmconfig.DomainName,
+						pgmconfig.ProgramName, pgmconfig.RelPluginHome)
+				},
+			},
+			{
+				Note: "home directory",
+				F: func() string {
+					return filepath.Join(
+						pgmconfig.HomeDir(), pgmconfig.DomainName,
+						pgmconfig.ProgramName, pgmconfig.RelPluginHome)
+				},
+			},
+		})
 }
 
 // NewCompiler returns a new compiler instance.

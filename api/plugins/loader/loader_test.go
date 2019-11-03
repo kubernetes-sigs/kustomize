@@ -57,7 +57,12 @@ func TestLoader(t *testing.T) {
 
 	ldr := loadertest.NewFakeLoader("/foo")
 
-	pLdr := NewLoader(pgmconfig.EnabledPluginConfig(), rmF)
+	c, err := pgmconfig.EnabledPluginConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pLdr := NewLoader(c, rmF)
 	if pLdr == nil {
 		t.Fatal("expect non-nil loader")
 	}

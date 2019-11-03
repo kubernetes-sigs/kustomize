@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
@@ -36,9 +37,12 @@ const (
 	DomainName = "sigs.k8s.io"
 )
 
-func EnabledPluginConfig() *types.PluginConfig {
-	return MakePluginConfig(
-		types.PluginRestrictionsNone, DefaultAbsPluginHome())
+func EnabledPluginConfig() (*types.PluginConfig, error) {
+	dir, err := DefaultAbsPluginHome(filesys.MakeFsOnDisk())
+	if err != nil {
+		return nil, err
+	}
+	return MakePluginConfig(types.PluginRestrictionsNone, dir), nil
 }
 
 func DisabledPluginConfig() *types.PluginConfig {
@@ -57,18 +61,61 @@ func MakePluginConfig(
 // Use an obviously erroneous path, in case it's accidentally used.
 const NoPluginHomeSentinal = "/no/non-builtin/plugins!"
 
-func DefaultAbsPluginHome() string {
-	return filepath.Join(configRoot(), RelPluginHome)
+type NotedFunc struct {
+	Note string
+	F    func() string
 }
 
-// Use https://github.com/kirsle/configdir instead?
-func configRoot() string {
-	dir := os.Getenv(XdgConfigHomeEnv)
-	if len(dir) == 0 {
-		dir = filepath.Join(
-			HomeDir(), XdgConfigHomeEnvDefault)
+func DefaultAbsPluginHome(fSys filesys.FileSystem) (string, error) {
+	return FirstDirThatExistsElseError(
+		"plugin home directory", fSys, []NotedFunc{
+			{
+				Note: "homed in $" + KustomizePluginHomeEnv,
+				F: func() string {
+					return os.Getenv(KustomizePluginHomeEnv)
+				},
+			},
+			{
+				Note: "homed in $" + XdgConfigHomeEnv,
+				F: func() string {
+					return filepath.Join(
+						os.Getenv(XdgConfigHomeEnv),
+						ProgramName, RelPluginHome)
+				},
+			},
+			{
+				Note: "homed in default value of $" + XdgConfigHomeEnv,
+				F: func() string {
+					return filepath.Join(
+						HomeDir(), XdgConfigHomeEnvDefault,
+						ProgramName, RelPluginHome)
+				},
+			},
+			{
+				Note: "homed in home directory",
+				F: func() string {
+					return filepath.Join(
+						HomeDir(), ProgramName, RelPluginHome)
+				},
+			},
+		})
+}
+
+// FirstDirThatExistsElseError tests different path functions for
+// existence, returning the first that works, else error if all fail.
+func FirstDirThatExistsElseError(
+	what string,
+	fSys filesys.FileSystem,
+	pathFuncs []NotedFunc) (string, error) {
+	var nope []types.Pair
+	for _, dt := range pathFuncs {
+		dir := dt.F()
+		if fSys.Exists(dir) {
+			return dir, nil
+		}
+		nope = append(nope, types.Pair{Key: dt.Note, Value: dir})
 	}
-	return filepath.Join(dir, ProgramName)
+	return "", types.NewErrUnableToFind(what, nope)
 }
 
 func HomeDir() string {
