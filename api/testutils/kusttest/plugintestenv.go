@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/pgmconfig"
 	"sigs.k8s.io/kustomize/api/plugins/compiler"
 )
@@ -75,7 +76,7 @@ func (x *PluginTestEnv) makeCompiler() *compiler.Compiler {
 	if err != nil {
 		x.t.Error(err)
 	}
-	srcRoot, err := compiler.DefaultSrcRoot()
+	srcRoot, err := compiler.DefaultSrcRoot(filesys.MakeFsOnDisk())
 	if err != nil {
 		x.t.Error(err)
 	}
