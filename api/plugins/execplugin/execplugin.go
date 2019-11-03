@@ -44,15 +44,19 @@ type ExecPlugin struct {
 	h *resmap.PluginHelpers
 }
 
-func NewExecPlugin(p string) (*ExecPlugin, error) {
-	f, err := os.Stat(p)
+func NewExecPlugin(p string) *ExecPlugin {
+	return &ExecPlugin{path: p}
+}
+
+func (p *ExecPlugin) ErrIfNotExecutable() error {
+	f, err := os.Stat(p.path)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if f.Mode()&0111 == 0000 {
-		return nil, fmt.Errorf("unable to execute plugin on path: %s", p)
+		return fmt.Errorf("unexecutable plugin at: %s", p.path)
 	}
-	return &ExecPlugin{path: p}, nil
+	return nil
 }
 
 func (p *ExecPlugin) Path() string {

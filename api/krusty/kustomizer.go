@@ -28,11 +28,6 @@ type Kustomizer struct {
 	options *Options
 }
 
-// MakeDefaultKustomizer returns a Kustomizer with default configuration.
-func MakeDefaultKustomizer() *Kustomizer {
-	return MakeKustomizer(filesys.MakeFsOnDisk(), MakeDefaultOptions())
-}
-
 // MakeKustomizer returns an instance of Kustomizer.
 func MakeKustomizer(fSys filesys.FileSystem, o *Options) *Kustomizer {
 	return &Kustomizer{fSys: fSys, options: o}

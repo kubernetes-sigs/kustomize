@@ -35,6 +35,6 @@ func MakeDefaultOptions() *Options {
 		DoLegacyResourceSort: true,
 		LoadRestrictions:     types.LoadRestrictionsRootOnly,
 		DoPrune:              false,
-		PluginConfig:         pgmconfig.DefaultPluginConfig(),
+		PluginConfig:         pgmconfig.DisabledPluginConfig(),
 	}
 }

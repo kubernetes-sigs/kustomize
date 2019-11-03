@@ -146,13 +146,23 @@ func (l *Loader) makeBuiltinPlugin(r resid.Gvk) (resmap.Configurable, error) {
 }
 
 func (l *Loader) loadPlugin(resId resid.ResId) (resmap.Configurable, error) {
-	p, err := execplugin.NewExecPlugin(l.absolutePluginPath(resId))
+	// First try to load the plugin as an executable.
+	p := execplugin.NewExecPlugin(l.absolutePluginPath(resId))
+	err := p.ErrIfNotExecutable()
 	if err == nil {
 		return p, nil
 	}
 	if !os.IsNotExist(err) {
+		// The file exists, but something else is wrong,
+		// likely it's not executable.
+		// Assume the user forgot to set the exec bit,
+		// and return an error, rather than adding ".so"
+		// to the name and attempting to load it as a Go
+		// plugin, which will likely fail and result
+		// in an obscure message.
 		return nil, err
 	}
+	// Failing the above, try loading it as a Go plugin.
 	c, err := l.loadGoPlugin(resId)
 	if err != nil {
 		return nil, err
@@ -186,7 +196,7 @@ func (l *Loader) loadGoPlugin(id resid.ResId) (resmap.Configurable, error) {
 	}
 	c, ok := symbol.(resmap.Configurable)
 	if !ok {
-		return nil, fmt.Errorf("plugin %s not configurable", regId)
+		return nil, fmt.Errorf("plugin '%s' not configurable", regId)
 	}
 	registry[regId] = c
 	return copyPlugin(c), nil
