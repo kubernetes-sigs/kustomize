@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"sigs.k8s.io/kustomize/api/filesys"
 	. "sigs.k8s.io/kustomize/api/plugins/compiler"
 )
 
@@ -18,7 +19,7 @@ func TestCompiler(t *testing.T) {
 	if err != nil {
 		t.Errorf("failed to make temp dir: %v", err)
 	}
-	srcRoot, err := DefaultSrcRoot()
+	srcRoot, err := DefaultSrcRoot(filesys.MakeFsOnDisk())
 	if err != nil {
 		t.Error(err)
 	}
