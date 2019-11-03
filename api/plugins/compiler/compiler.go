@@ -41,7 +41,7 @@ func DefaultSrcRoot() (string, error) {
 	}
 	nope = append(nope, root)
 
-	root = pgmconfig.DefaultPluginConfig().AbsPluginHome
+	root = pgmconfig.DefaultAbsPluginHome()
 	if FileExists(root) {
 		return root, nil
 	}

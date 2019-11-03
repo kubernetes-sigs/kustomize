@@ -36,17 +36,17 @@ type KustTestHarness struct {
 
 func NewKustTestHarness(t *testing.T, path string) *KustTestHarness {
 	return NewKustTestHarnessFull(
-		t, path, fLdr.RestrictionRootOnly, pgmconfig.DefaultPluginConfig())
+		t, path, fLdr.RestrictionRootOnly, pgmconfig.DisabledPluginConfig())
 }
 
 func NewKustTestHarnessAllowPlugins(t *testing.T, path string) *KustTestHarness {
 	return NewKustTestHarnessFull(
-		t, path, fLdr.RestrictionRootOnly, pgmconfig.ActivePluginConfig())
+		t, path, fLdr.RestrictionRootOnly, pgmconfig.EnabledPluginConfig())
 }
 
 func NewKustTestHarnessNoLoadRestrictor(t *testing.T, path string) *KustTestHarness {
 	return NewKustTestHarnessFull(
-		t, path, fLdr.RestrictionNone, pgmconfig.DefaultPluginConfig())
+		t, path, fLdr.RestrictionNone, pgmconfig.DisabledPluginConfig())
 }
 
 func NewKustTestHarnessFull(

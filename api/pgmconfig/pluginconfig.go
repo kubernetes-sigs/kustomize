@@ -36,18 +36,26 @@ const (
 	DomainName = "sigs.k8s.io"
 )
 
-func ActivePluginConfig() *types.PluginConfig {
-	pc := DefaultPluginConfig()
-	pc.PluginRestrictions = types.PluginRestrictionsNone
-	return pc
+func EnabledPluginConfig() *types.PluginConfig {
+	return MakePluginConfig(
+		types.PluginRestrictionsNone, DefaultAbsPluginHome())
 }
 
-func DefaultPluginConfig() *types.PluginConfig {
+func DisabledPluginConfig() *types.PluginConfig {
+	return MakePluginConfig(
+		types.PluginRestrictionsBuiltinsOnly, NoPluginHomeSentinal)
+}
+
+func MakePluginConfig(
+	pr types.PluginRestrictions, home string) *types.PluginConfig {
 	return &types.PluginConfig{
-		PluginRestrictions: types.PluginRestrictionsBuiltinsOnly,
-		AbsPluginHome:      DefaultAbsPluginHome(),
+		PluginRestrictions: pr,
+		AbsPluginHome:      home,
 	}
 }
+
+// Use an obviously erroneous path, in case it's accidentally used.
+const NoPluginHomeSentinal = "/no/non-builtin/plugins!"
 
 func DefaultAbsPluginHome() string {
 	return filepath.Join(configRoot(), RelPluginHome)
