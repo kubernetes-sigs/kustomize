@@ -40,8 +40,11 @@ func NewKustTestHarness(t *testing.T, path string) *KustTestHarness {
 }
 
 func NewKustTestHarnessAllowPlugins(t *testing.T, path string) *KustTestHarness {
-	return NewKustTestHarnessFull(
-		t, path, fLdr.RestrictionRootOnly, pgmconfig.EnabledPluginConfig())
+	c, err := pgmconfig.EnabledPluginConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return NewKustTestHarnessFull(t, path, fLdr.RestrictionRootOnly, c)
 }
 
 func NewKustTestHarnessNoLoadRestrictor(t *testing.T, path string) *KustTestHarness {
@@ -100,7 +103,10 @@ func (th *KustTestHarness) FromMap(m map[string]interface{}) *resource.Resource 
 	return th.rf.RF().FromMap(m)
 }
 
-func (th *KustTestHarness) FromMapAndOption(m map[string]interface{}, args *types.GeneratorArgs, option *types.GeneratorOptions) *resource.Resource {
+func (th *KustTestHarness) FromMapAndOption(
+	m map[string]interface{},
+	args *types.GeneratorArgs,
+	option *types.GeneratorOptions) *resource.Resource {
 	return th.rf.RF().FromMapAndOption(m, args, option)
 }
 

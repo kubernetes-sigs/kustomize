@@ -6,38 +6,121 @@ package pgmconfig
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
+
+	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/types"
 )
 
-func TestConfigDirNoXdg(t *testing.T) {
-	xdg, isSet := os.LookupEnv(XdgConfigHomeEnv)
+func TestDefaultAbsPluginHome_NoKustomizePluginHomeEnv(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	keep, isSet := os.LookupEnv(KustomizePluginHomeEnv)
 	if isSet {
-		os.Unsetenv(XdgConfigHomeEnv)
+		_ = os.Unsetenv(KustomizePluginHomeEnv)
 	}
-	s := configRoot()
+	_, err := DefaultAbsPluginHome(fSys)
 	if isSet {
-		os.Setenv(XdgConfigHomeEnv, xdg)
+		os.Setenv(KustomizePluginHomeEnv, keep)
 	}
-	if !strings.HasSuffix(
-		s,
-		rootedPath(XdgConfigHomeEnvDefault, ProgramName)) {
+	if err == nil {
+		t.Fatalf("expected err")
+	}
+	if !types.IsErrUnableToFind(err) {
+		t.Fatalf("unexpected err: %v", err)
+	}
+}
+
+func TestDefaultAbsPluginHome_WithKustomizePluginHomeEnv(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	keep, isSet := os.LookupEnv(KustomizePluginHomeEnv)
+	if !isSet {
+		keep = "whatever"
+		os.Setenv(KustomizePluginHomeEnv, keep)
+	}
+	fSys.Mkdir(keep)
+	h, err := DefaultAbsPluginHome(fSys)
+	if !isSet {
+		_ = os.Unsetenv(KustomizePluginHomeEnv)
+	}
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	if h != keep {
+		t.Fatalf("unexpected config dir: %s", h)
+	}
+}
+
+func TestDefaultAbsPluginHomeWithXdg(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	keep, isSet := os.LookupEnv(XdgConfigHomeEnv)
+	if !isSet {
+		keep = "whatever"
+		os.Setenv(XdgConfigHomeEnv, keep)
+	}
+	configDir := filepath.Join(keep, ProgramName, RelPluginHome)
+	fSys.Mkdir(configDir)
+	h, err := DefaultAbsPluginHome(fSys)
+	if !isSet {
+		_ = os.Unsetenv(XdgConfigHomeEnv)
+	}
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	if h != configDir {
+		t.Fatalf("unexpected config dir: %s", h)
+	}
+}
+
+func TestDefaultAbsPluginHomeNoConfig(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	keep, isSet := os.LookupEnv(XdgConfigHomeEnv)
+	if isSet {
+		_ = os.Unsetenv(XdgConfigHomeEnv)
+	}
+	_, err := DefaultAbsPluginHome(fSys)
+	if isSet {
+		os.Setenv(XdgConfigHomeEnv, keep)
+	}
+	if err == nil {
+		t.Fatalf("expected err")
+	}
+	if !types.IsErrUnableToFind(err) {
+		t.Fatalf("unexpected err: %v", err)
+	}
+}
+
+func TestDefaultAbsPluginHomeNoXdgWithDotConfig(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	configDir := filepath.Join(
+		HomeDir(), XdgConfigHomeEnvDefault, ProgramName, RelPluginHome)
+	fSys.Mkdir(configDir)
+	keep, isSet := os.LookupEnv(XdgConfigHomeEnv)
+	if isSet {
+		_ = os.Unsetenv(XdgConfigHomeEnv)
+	}
+	s, _ := DefaultAbsPluginHome(fSys)
+	if isSet {
+		os.Setenv(XdgConfigHomeEnv, keep)
+	}
+	if s != configDir {
 		t.Fatalf("unexpected config dir: %s", s)
 	}
 }
 
-func rootedPath(elem ...string) string {
-	return string(filepath.Separator) + filepath.Join(elem...)
-}
-
-func TestConfigDirWithXdg(t *testing.T) {
-	xdg, isSet := os.LookupEnv(XdgConfigHomeEnv)
-	os.Setenv(XdgConfigHomeEnv, rootedPath("blah"))
-	s := configRoot()
+func TestDefaultAbsPluginHomeNoXdgJustHomeDir(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	configDir := filepath.Join(
+		HomeDir(), ProgramName, RelPluginHome)
+	fSys.Mkdir(configDir)
+	keep, isSet := os.LookupEnv(XdgConfigHomeEnv)
 	if isSet {
-		os.Setenv(XdgConfigHomeEnv, xdg)
+		_ = os.Unsetenv(XdgConfigHomeEnv)
 	}
-	if s != rootedPath("blah", ProgramName) {
+	s, _ := DefaultAbsPluginHome(fSys)
+	if isSet {
+		os.Setenv(XdgConfigHomeEnv, keep)
+	}
+	if s != configDir {
 		t.Fatalf("unexpected config dir: %s", s)
 	}
 }
