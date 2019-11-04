@@ -134,6 +134,12 @@ function testExamplesAgainstLatestKustomizeRelease {
     (cd api;
      $MDRIP --mode test \
        --label helmtest README.md ../examples/chart.md)
+
+    # The following requires kubeval.
+    # At the moment not asking travis to install it.
+    (cd api;
+     $MDRIP --mode test \
+       --label kubevalTest README.md ../examples/chart.md)
   fi
   echo "Example tests passed against $latest"
 }
