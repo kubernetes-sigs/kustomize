@@ -1,0 +1,23 @@
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+# 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+  annotations:
+    file/index: "0"
+    file/path: mysql-configmap.resource.yaml
+    package/name: mysql
+    package/original-name: mysql
+data:
+  master.cnf: |
+    # Apply this config only on the master.
+    [mysqld]
+    log-bin
+  slave.cnf: |
+    # Apply this config only on slaves.
+    [mysqld]
+    super-read-only
