@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package pgmconfig
+package konfig
 
 // RecognizedKustomizationFileNames is a list of file names
 // that kustomize recognizes.

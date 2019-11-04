@@ -8,7 +8,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/internal/loadertest"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/konfig"
 	. "sigs.k8s.io/kustomize/api/plugins/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -57,7 +57,7 @@ func TestLoader(t *testing.T) {
 
 	ldr := loadertest.NewFakeLoader("/foo")
 
-	c, err := pgmconfig.EnabledPluginConfig()
+	c, err := konfig.EnabledPluginConfig()
 	if err != nil {
 		t.Fatal(err)
 	}

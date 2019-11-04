@@ -15,7 +15,7 @@ import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/accumulator"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/plugins/builtinhelpers"
 	"sigs.k8s.io/kustomize/api/plugins/builtins"
@@ -85,7 +85,7 @@ func commaOr(q []string) string {
 func loadKustFile(ldr ifc.Loader) ([]byte, error) {
 	var content []byte
 	match := 0
-	for _, kf := range pgmconfig.RecognizedKustomizationFileNames() {
+	for _, kf := range konfig.RecognizedKustomizationFileNames() {
 		c, err := ldr.Load(kf)
 		if err == nil {
 			match += 1
@@ -110,7 +110,7 @@ type errMissingKustomization struct {
 func (e *errMissingKustomization) Error() string {
 	return fmt.Sprintf(
 		"unable to find one of %v in directory '%s'",
-		commaOr(quoted(pgmconfig.RecognizedKustomizationFileNames())),
+		commaOr(quoted(konfig.RecognizedKustomizationFileNames())),
 		e.path)
 }
 

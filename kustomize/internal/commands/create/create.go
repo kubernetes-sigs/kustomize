@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/util"
 )
@@ -162,7 +162,7 @@ func detectResources(fSys filesys.FileSystem, uf ifc.KunstructuredFactory, base 
 			}
 			// If a sub-directory contains an existing kustomization file add the
 			// directory as a resource and do not decend into it.
-			for _, kfilename := range pgmconfig.RecognizedKustomizationFileNames() {
+			for _, kfilename := range konfig.RecognizedKustomizationFileNames() {
 				if fSys.Exists(filepath.Join(path, kfilename)) {
 					paths = append(paths, path)
 					return filepath.SkipDir

@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/konfig"
 )
 
 // Compiler creates Go plugin object files.
@@ -31,32 +31,32 @@ type Compiler struct {
 // DefaultSrcRoot guesses where the user
 // has her ${g}/${v}/$lower(${k})/${k}.go files.
 func DefaultSrcRoot(fSys filesys.FileSystem) (string, error) {
-	return pgmconfig.FirstDirThatExistsElseError(
-		"source directory", fSys, []pgmconfig.NotedFunc{
+	return konfig.FirstDirThatExistsElseError(
+		"source directory", fSys, []konfig.NotedFunc{
 			{
 				Note: "old style $GOPATH",
 				F: func() string {
 					return filepath.Join(
 						os.Getenv("GOPATH"),
-						"src", pgmconfig.DomainName,
-						pgmconfig.ProgramName, pgmconfig.RelPluginHome)
+						"src", konfig.DomainName,
+						konfig.ProgramName, konfig.RelPluginHome)
 				},
 			},
 			{
 				Note: "HOME with literal 'gopath'",
 				F: func() string {
 					return filepath.Join(
-						pgmconfig.HomeDir(), "gopath",
-						"src", pgmconfig.DomainName,
-						pgmconfig.ProgramName, pgmconfig.RelPluginHome)
+						konfig.HomeDir(), "gopath",
+						"src", konfig.DomainName,
+						konfig.ProgramName, konfig.RelPluginHome)
 				},
 			},
 			{
 				Note: "home directory",
 				F: func() string {
 					return filepath.Join(
-						pgmconfig.HomeDir(), pgmconfig.DomainName,
-						pgmconfig.ProgramName, pgmconfig.RelPluginHome)
+						konfig.HomeDir(), konfig.DomainName,
+						konfig.ProgramName, konfig.RelPluginHome)
 				},
 			},
 		})

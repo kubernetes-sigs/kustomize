@@ -13,7 +13,7 @@ import (
 
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/ifc"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/plugins/builtinhelpers"
 	"sigs.k8s.io/kustomize/api/plugins/execplugin"
 	"sigs.k8s.io/kustomize/api/resid"
@@ -103,7 +103,7 @@ func (l *Loader) absolutePluginPath(id resid.ResId) string {
 func isBuiltinPlugin(res *resource.Resource) bool {
 	// TODO: the special string should appear in Group, not Version.
 	return res.GetGvk().Group == "" &&
-		res.GetGvk().Version == pgmconfig.BuiltinPluginApiVersion
+		res.GetGvk().Version == konfig.BuiltinPluginApiVersion
 }
 
 func (l *Loader) loadAndConfigurePlugin(
@@ -188,11 +188,11 @@ func (l *Loader) loadGoPlugin(id resid.ResId) (resmap.Configurable, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "plugin %s fails to load", absPath)
 	}
-	symbol, err := p.Lookup(pgmconfig.PluginSymbol)
+	symbol, err := p.Lookup(konfig.PluginSymbol)
 	if err != nil {
 		return nil, errors.Wrapf(
 			err, "plugin %s doesn't have symbol %s",
-			regId, pgmconfig.PluginSymbol)
+			regId, konfig.PluginSymbol)
 	}
 	c, ok := symbol.(resmap.Configurable)
 	if !ok {

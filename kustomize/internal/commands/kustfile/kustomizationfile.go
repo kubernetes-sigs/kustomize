@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 )
@@ -119,7 +119,7 @@ func NewKustomizationFile(fSys filesys.FileSystem) (*kustomizationFile, error) {
 func (mf *kustomizationFile) validate() error {
 	match := 0
 	var path []string
-	for _, kfilename := range pgmconfig.RecognizedKustomizationFileNames() {
+	for _, kfilename := range konfig.RecognizedKustomizationFileNames() {
 		if mf.fSys.Exists(kfilename) {
 			match += 1
 			path = append(path, kfilename)
@@ -130,7 +130,7 @@ func (mf *kustomizationFile) validate() error {
 	case 0:
 		return fmt.Errorf(
 			"Missing kustomization file '%s'.\n",
-			pgmconfig.DefaultKustomizationFileName())
+			konfig.DefaultKustomizationFileName())
 	case 1:
 		mf.path = path[0]
 	default:

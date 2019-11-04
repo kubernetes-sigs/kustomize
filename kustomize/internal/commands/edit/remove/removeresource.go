@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 )
 
@@ -24,7 +24,7 @@ func newCmdRemoveResource(fSys filesys.FileSystem) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "resource",
 		Short: "Removes one or more resource file paths from " +
-			pgmconfig.DefaultKustomizationFileName(),
+			konfig.DefaultKustomizationFileName(),
 		Example: `
 		remove resource my-resource.yml
 		remove resource resource1.yml resource2.yml resource3.yml
