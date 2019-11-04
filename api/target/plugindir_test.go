@@ -12,8 +12,8 @@ import (
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/k8sdeps/transformer"
+	"sigs.k8s.io/kustomize/api/konfig"
 	fLdr "sigs.k8s.io/kustomize/api/loader"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
 	pLdr "sigs.k8s.io/kustomize/api/plugins/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -65,7 +65,7 @@ metadata:
 	rf := resmap.NewFactory(resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl()), nil)
 
-	c, err := pgmconfig.EnabledPluginConfig()
+	c, err := konfig.EnabledPluginConfig()
 	if err != nil {
 		t.Fatal(err)
 	}

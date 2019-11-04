@@ -12,8 +12,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/krusty"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/yaml"
@@ -57,7 +57,7 @@ func NewCmdBuild(out io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "build {path}",
 		Short: "Print configuration per contents of " +
-			pgmconfig.DefaultKustomizationFileName(),
+			konfig.DefaultKustomizationFileName(),
 		Example:      examples,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -87,7 +87,7 @@ func (o *Options) Validate(args []string) (err error) {
 	if len(args) > 1 {
 		return errors.New(
 			"specify one path to " +
-				pgmconfig.DefaultKustomizationFileName())
+				konfig.DefaultKustomizationFileName())
 	}
 	if len(args) == 0 {
 		o.kustomizationPath = CWD
@@ -109,13 +109,13 @@ func (o *Options) makeOptions() *krusty.Options {
 		DoPrune:              false,
 	}
 	if isFlagEnablePluginsSet() {
-		c, err := pgmconfig.EnabledPluginConfig()
+		c, err := konfig.EnabledPluginConfig()
 		if err != nil {
 			log.Fatal(err)
 		}
 		opts.PluginConfig = c
 	} else {
-		opts.PluginConfig = pgmconfig.DisabledPluginConfig()
+		opts.PluginConfig = konfig.DisabledPluginConfig()
 	}
 	return opts
 }

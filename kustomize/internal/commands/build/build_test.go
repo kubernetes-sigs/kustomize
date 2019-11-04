@@ -6,7 +6,7 @@ package build
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/konfig"
 )
 
 func TestNewOptionsToSilenceCodeInspectionError(t *testing.T) {
@@ -28,7 +28,7 @@ func TestBuildValidate(t *testing.T) {
 		{"path", []string{"too", "many"},
 			"",
 			"specify one path to " +
-				pgmconfig.DefaultKustomizationFileName()},
+				konfig.DefaultKustomizationFileName()},
 	}
 	for _, mycase := range cases {
 		opts := Options{}

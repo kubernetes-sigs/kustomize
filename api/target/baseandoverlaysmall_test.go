@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/loader"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -300,7 +300,7 @@ spec:
 func TestSharedPatchDisAllowed(t *testing.T) {
 	th := kusttest_test.NewKustTestHarnessFull(
 		t, "/app/overlay",
-		loader.RestrictionRootOnly, pgmconfig.DisabledPluginConfig())
+		loader.RestrictionRootOnly, konfig.DisabledPluginConfig())
 	writeSmallBase(th)
 	th.WriteK("/app/overlay", `
 commonLabels:
@@ -332,7 +332,7 @@ spec:
 func TestSharedPatchAllowed(t *testing.T) {
 	th := kusttest_test.NewKustTestHarnessFull(
 		t, "/app/overlay",
-		loader.RestrictionNone, pgmconfig.DisabledPluginConfig())
+		loader.RestrictionNone, konfig.DisabledPluginConfig())
 	writeSmallBase(th)
 	th.WriteK("/app/overlay", `
 commonLabels:

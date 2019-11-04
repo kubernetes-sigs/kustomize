@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
 )
@@ -104,7 +104,7 @@ configMapGenerator:
   - baz=qux
   name: my-configmap
 `
-	for _, n := range pgmconfig.RecognizedKustomizationFileNames() {
+	for _, n := range konfig.RecognizedKustomizationFileNames() {
 		fSys := filesys.MakeFsInMemory()
 		fSys.WriteFile(n, []byte(kcontent))
 		k, err := NewKustomizationFile(fSys)

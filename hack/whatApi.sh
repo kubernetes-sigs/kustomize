@@ -20,7 +20,7 @@ function whatApi {
     grep -v " resid " |\
     grep -v " resmap " |\
     grep -v " testutils/" |\
-    grep -v "types "
+    grep -v " types "
   echo "==== end $1 =================================="
 }
 
