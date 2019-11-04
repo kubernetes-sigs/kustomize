@@ -122,24 +122,16 @@ function testExamplesAgainstLatestKustomizeRelease {
   echo "Installing latest kustomize from $latest"
   (cd ~; GO111MODULE=on go install $latest)
 
-  (cd api;
-   $MDRIP --mode test \
-     --label testAgainstLatestRelease ../examples)
+  $MDRIP --mode test \
+      --label testAgainstLatestRelease examples
 
   if [ -z ${TRAVIS+x} ]; then
     echo "Not on travis, so running the notravis example tests."
 
     # The following requires helm.
     # At the moment not asking travis to install it.
-    (cd api;
-     $MDRIP --mode test \
-       --label helmtest README.md ../examples/chart.md)
-
-    # The following requires kubeval.
-    # At the moment not asking travis to install it.
-    (cd api;
-     $MDRIP --mode test \
-       --label kubevalTest README.md ../examples/chart.md)
+    $MDRIP --mode test \
+        --label helmtest examples/chart.md
   fi
   echo "Example tests passed against $latest"
 }
@@ -149,12 +141,12 @@ function testExamplesAgainstLocalHead {
 
   echo "Installing kustomize from HEAD"
   (cd kustomize; go install .)
+
   # To test examples of unreleased features, add
   # examples with code blocks annotated with some
   # label _other than_ @testAgainstLatestRelease.
-  (cd api;
-   $MDRIP --mode test \
-     --label testAgainstLatestRelease ../examples)
+  $MDRIP --mode test \
+      --label testAgainstLatestRelease examples
   echo "Example tests passed against HEAD"
 }
 
