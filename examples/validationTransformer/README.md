@@ -24,7 +24,7 @@ loaded by Kustomize.
 
 Make a place to work:
 
-<!-- @makeWorkplace @testAgainstLatestRelease -->
+<!-- @makeWorkplace @kubevalTest -->
 ```
 DEMO_HOME=$(mktemp -d)
 mkdir -p $DEMO_HOME/valid
@@ -38,7 +38,7 @@ mkdir -p $PLUGINDIR
 Download the [kubeval] binary depending on the operating system
 and add it to $PATH.
 
-<!-- @downloadKubeval @testAgainstLatestRelease -->
+<!-- @downloadKubeval @kubevalTest -->
 ```
 OS=`uname | sed -e 's/Linux/linux/' -e 's/Darwin/darwin/'`
 wget https://github.com/instrumenta/kubeval/releases/download/0.9.2/kubeval-${OS}-amd64.tar.gz
@@ -60,7 +60,7 @@ A transformer plugin for the validation can be written as a
 bash script, which execute the [kubeval] binary and return proper
 output and exit code.
 
-<!-- @writePlugin @testAgainstLatestRelease -->
+<!-- @writePlugin @kubevalTest -->
 ```
 cat <<'EOF' > $PLUGINDIR/Validator
 #!/bin/bash
@@ -95,7 +95,7 @@ chmod +x $PLUGINDIR/Validator
 Define a kustomization containing a valid ConfigMap
 and the transformer plugin.
 
-<!-- @writeKustomization @testAgainstLatestRelease -->
+<!-- @writeKustomization @kubevalTest -->
 ```
 cat <<'EOF' >$DEMO_HOME/valid/configmap.yaml
 apiVersion: v1
@@ -125,7 +125,7 @@ EOF
 Define a kustomization containing an invalid ConfigMap
 and the transformer plugin.
 
-<!-- @writeKustomization @testAgainstLatestRelease -->
+<!-- @writeKustomization @kubevalTest -->
 ```
 cat <<'EOF' >$DEMO_HOME/invalid/configmap.yaml
 apiVersion: v1
@@ -175,7 +175,7 @@ The directory structure is as the following:
 Define a helper function to run kustomize with the
 correct environment and flags for plugins:
 
-<!-- @defineKustomizeBd @testAgainstLatestRelease -->
+<!-- @defineKustomizeBd @kubevalTest -->
 ```
 function kustomizeBd {
   XDG_CONFIG_HOME=$DEMO_HOME \
@@ -187,7 +187,7 @@ function kustomizeBd {
 
 Build the valid variant
 
-<!-- @buildValid @testAgainstLatestRelease -->
+<!-- @buildValid @kubevalTest -->
 ```
 kustomizeBd valid
 ```
@@ -215,7 +215,7 @@ data: Invalid type. Expected: object, given: array
 
 ## cleanup
 
-<!-- @cleanup @testAgainstLatestRelease -->
+<!-- @cleanup @kubevalTest -->
 ```shell
 rm -rf $DEMO_HOME
 ```
