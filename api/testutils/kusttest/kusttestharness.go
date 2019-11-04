@@ -12,14 +12,14 @@ import (
 	"sigs.k8s.io/kustomize/api/internal/loadertest"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/k8sdeps/transformer"
+	"sigs.k8s.io/kustomize/api/konfig"
+	"sigs.k8s.io/kustomize/api/konfig/builtinpluginconsts"
 	fLdr "sigs.k8s.io/kustomize/api/loader"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
-	"sigs.k8s.io/kustomize/api/plugins/builtinconfig/consts"
 	pLdr "sigs.k8s.io/kustomize/api/plugins/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/target"
-	"sigs.k8s.io/kustomize/api/testutils/valtest"
+	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
@@ -36,11 +36,11 @@ type KustTestHarness struct {
 
 func NewKustTestHarness(t *testing.T, path string) *KustTestHarness {
 	return NewKustTestHarnessFull(
-		t, path, fLdr.RestrictionRootOnly, pgmconfig.DisabledPluginConfig())
+		t, path, fLdr.RestrictionRootOnly, konfig.DisabledPluginConfig())
 }
 
 func NewKustTestHarnessAllowPlugins(t *testing.T, path string) *KustTestHarness {
-	c, err := pgmconfig.EnabledPluginConfig()
+	c, err := konfig.EnabledPluginConfig()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +49,7 @@ func NewKustTestHarnessAllowPlugins(t *testing.T, path string) *KustTestHarness 
 
 func NewKustTestHarnessNoLoadRestrictor(t *testing.T, path string) *KustTestHarness {
 	return NewKustTestHarnessFull(
-		t, path, fLdr.RestrictionNone, pgmconfig.DisabledPluginConfig())
+		t, path, fLdr.RestrictionNone, konfig.DisabledPluginConfig())
 }
 
 func NewKustTestHarnessFull(
@@ -89,7 +89,7 @@ func (th *KustTestHarness) WriteK(dir string, content string) {
 	th.WriteF(
 		filepath.Join(
 			dir,
-			pgmconfig.DefaultKustomizationFileName()), `
+			konfig.DefaultKustomizationFileName()), `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 `+content)
@@ -111,7 +111,7 @@ func (th *KustTestHarness) FromMapAndOption(
 }
 
 func (th *KustTestHarness) WriteDefaultConfigs(fName string) {
-	m := consts.GetDefaultFieldSpecsAsMap()
+	m := builtinpluginconsts.GetDefaultFieldSpecsAsMap()
 	var content []byte
 	for _, tCfg := range m {
 		content = append(content, []byte(tCfg)...)

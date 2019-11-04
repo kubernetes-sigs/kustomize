@@ -10,7 +10,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/internal/loadertest"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/konfig"
 	. "sigs.k8s.io/kustomize/api/plugins/execplugin"
 	"sigs.k8s.io/kustomize/api/plugins/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -45,7 +45,7 @@ s/$BAR/bar/g
 
 	p := NewExecPlugin(
 		loader.AbsolutePluginPath(
-			pgmconfig.DisabledPluginConfig(),
+			konfig.DisabledPluginConfig(),
 			pluginConfig.OrgId()))
 	// Not checking to see if the plugin is executable,
 	// because this test does not run it.

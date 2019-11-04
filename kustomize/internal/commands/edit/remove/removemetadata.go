@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 )
@@ -48,7 +48,7 @@ func newCmdRemoveAnnotation(fSys filesys.FileSystem, v func([]string) error) *co
 	cmd := &cobra.Command{
 		Use: "annotation",
 		Short: "Removes one or more commonAnnotations from " +
-			pgmconfig.DefaultKustomizationFileName(),
+			konfig.DefaultKustomizationFileName(),
 		Example: `
 		remove annotation {annotationKey1},{annotationKey2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -69,7 +69,7 @@ func newCmdRemoveLabel(fSys filesys.FileSystem, v func([]string) error) *cobra.C
 	cmd := &cobra.Command{
 		Use: "label",
 		Short: "Removes one or more commonLabels from " +
-			pgmconfig.DefaultKustomizationFileName(),
+			konfig.DefaultKustomizationFileName(),
 		Example: `
 		remove label {labelKey1},{labelKey2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
