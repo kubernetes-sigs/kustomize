@@ -35,6 +35,7 @@ install: true
 
 script:
   - ./travis/pre-commit.sh
+  - ./travis/kyaml-pre-commit.sh
 
 # TBD. Suppressing for now.
 notifications:
