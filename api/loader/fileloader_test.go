@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/git"
 	"sigs.k8s.io/kustomize/api/ifc"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/konfig"
 )
 
 type testData struct {
@@ -374,7 +374,7 @@ func TestNewLoaderAtGitClone(t *testing.T) {
 	fSys.MkdirAll(coRoot + "/" + pathInRepo)
 	fSys.WriteFile(
 		coRoot+"/"+pathInRepo+"/"+
-			pgmconfig.DefaultKustomizationFileName(),
+			konfig.DefaultKustomizationFileName(),
 		[]byte(`
 whatever
 `))

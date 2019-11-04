@@ -8,7 +8,7 @@ import (
 	"sort"
 
 	"sigs.k8s.io/kustomize/api/ifc"
-	"sigs.k8s.io/kustomize/api/plugins/builtinconfig/consts"
+	"sigs.k8s.io/kustomize/api/konfig/builtinpluginconsts"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
@@ -33,7 +33,7 @@ func MakeEmptyConfig() *TransformerConfig {
 // MakeDefaultConfig returns a default TransformerConfig.
 func MakeDefaultConfig() *TransformerConfig {
 	c, err := makeTransformerConfigFromBytes(
-		consts.GetDefaultFieldSpecs())
+		builtinpluginconsts.GetDefaultFieldSpecs())
 	if err != nil {
 		log.Fatalf("Unable to make default transformconfig: %v", err)
 	}

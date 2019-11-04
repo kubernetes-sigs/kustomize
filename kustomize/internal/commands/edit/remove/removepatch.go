@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/patch"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/util"
@@ -26,7 +26,7 @@ func newCmdRemovePatch(fSys filesys.FileSystem) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "patch",
 		Short: "Removes one or more patches from " +
-			pgmconfig.DefaultKustomizationFileName(),
+			konfig.DefaultKustomizationFileName(),
 		Example: `
 		remove patch {filepath}`,
 		RunE: func(cmd *cobra.Command, args []string) error {

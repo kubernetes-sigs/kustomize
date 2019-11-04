@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/k8sdeps/validator"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/build"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/config"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/create"
@@ -26,7 +26,7 @@ func NewDefaultCommand() *cobra.Command {
 	stdOut := os.Stdout
 
 	c := &cobra.Command{
-		Use:   pgmconfig.ProgramName,
+		Use:   konfig.ProgramName,
 		Short: "Manages declarative configuration of Kubernetes",
 		Long: `
 Manages declarative configuration of Kubernetes.

@@ -5,7 +5,7 @@ package testutils_test
 
 import (
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/konfig"
 )
 
 const (
@@ -38,10 +38,10 @@ func WriteTestKustomization(fSys filesys.FileSystem) {
 
 // WriteTestKustomizationWith writes content to a well known file name.
 func WriteTestKustomizationWith(fSys filesys.FileSystem, bytes []byte) {
-	fSys.WriteFile(pgmconfig.DefaultKustomizationFileName(), bytes)
+	fSys.WriteFile(konfig.DefaultKustomizationFileName(), bytes)
 }
 
 // ReadTestKustomization reads content from a well known file name.
 func ReadTestKustomization(fSys filesys.FileSystem) ([]byte, error) {
-	return fSys.ReadFile(pgmconfig.DefaultKustomizationFileName())
+	return fSys.ReadFile(konfig.DefaultKustomizationFileName())
 }
