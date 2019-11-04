@@ -189,7 +189,7 @@ func CrawlFromSeed(ctx context.Context, seed CrawlSeed,
 // CRunner takes in a seed, which represents the documents stored in an
 // index somewhere. The document data is not required to be populated. If there
 // are many documents, this is preferable. The order of iteration over the seed
-// is not garanteed, but the CRunner does guarantee that every element
+// is not guaranteed, but the CRunner does guarantee that every element
 // from the seed will be processed before any other documents from the
 // crawlers.
 func CRunner(ctx context.Context,
