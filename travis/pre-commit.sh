@@ -5,70 +5,15 @@ set -e
 # 0==success, any other value is a failure.
 rcAccumulator=0
 
-# Not used here, and not cross platform, but kept because
-# I don't want to have to look it up again.
-function installHelm {
-  local d=$(mktemp -d)
-  pushd $d
-  wget https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz
-  tar -xvzf helm-v2.13.1-linux-amd64.tar.gz
-  sudo mv linux-amd64/helm /usr/local/bin/helm
-  popd
-}
-
-# Not used here, and not cross platform, but kept because
-# I don't want to have to look it up again.
-# Per https://kubeval.instrumenta.dev/installation
-function installKubeval {
-  local d=$(mktemp -d)
-  pushd $d
-  wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
-  tar xf kubeval-linux-amd64.tar.gz
-  sudo cp kubeval /usr/local/bin
-  popd
-}
-
 function removeBin {
   local d=$(go env GOPATH)/bin/$1
   echo "Removing binary $d"
   /bin/rm -f $d
 }
 
-# TODO: go install golang.org/x/tools/cmd/stringer
-# TODO: kubeval?
-# TODO: helm?  no.  except then we should not requirekubeval either,
-#  since they're both only used in demo (non-builtin) plugins.
 function installTools {
-  # TODO(2019/Oct/19): After the API is in place, and
-  # there's a new pluginator compiled against that API,
-  # switch back to this:
-  #  go install sigs.k8s.io/kustomize/pluginator
-  # In the meantime, use the local copy.
-  # Go module rules, and the existing violations of
-  # semver, mean that simply using the replace directive
-  # in the go.mod won't yield the desired result.
-
-  removeBin pluginator
-  # Install from whatever code is on disk.
-  (cd pluginator; go install .)
-  echo "Installed pluginator."
-
-  # TODO figure out how to express this dependence in the three
-  # modules (kustomize/api, kustomize/pluginator, kustomize/kustomize).
-  # Maybe make a top level module with an internal/tools/tools.go with
-  # import _ "github.com/golangci/golangci-lint/cmd/golangci-lint" etc?
-  # but it will be a kustomize module, and that will be confusing
-  # to people accustomied to the old one-module scheme.  Will
-  # require setting the module to at least v4, because it is
-  # incompatible with v3.
-  removeBin golangci-lint
-  GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.19.1
-  CILINT=$(go env GOPATH)/bin/golangci-lint
-
-  removeBin mdrip
-  GO111MODULE=on go get github.com/monopole/mdrip@v1.0.0
+  make install-tools
   MDRIP=$(go env GOPATH)/bin/mdrip
-
   ls -l $(go env GOPATH)/bin
 }
 
@@ -85,29 +30,28 @@ function runFunc {
   printf "============== end %s : %s; exit code=%d\n\n\n" "$name" "$result" $code
 }
 
-function testGoLangCILint {
-  (cd api; $CILINT run ./...)
-  (cd kustomize; $CILINT run ./...)
-  (cd pluginator; $CILINT run ./...)
+function runLint {
+  make lint
 }
 
-function runApiModuleGoTests {
-  (cd api; go test ./...)
+function runUnitTests {
+  make unit-tests
 
-  if [ -z ${TRAVIS+x} ]; then
+  # TODO: make work for non-linux
+  if [[ (-z ${TRAVIS+x}) && ("linux" == "$(go env GOOS)") ]]; then
     echo " "
-    echo Not on travis, so running the notravis Go tests
+    echo "On linux, and not on travis, so running the notravis Go tests."
     echo " "
 
     # Requires helm.
-    # At the moment not asking travis to install it.
+    make $(go env GOPATH)/bin/helm
     (cd api; go test -v sigs.k8s.io/kustomize/api/target \
       -run TestChartInflatorPlugin -tags=notravis)
     (cd plugin/someteam.example.com/v1/chartinflator;
      go test -v . -run TestChartInflator -tags=notravis)
 
-    # Requires kubeeval.
-    # At the moment not asking travis to install it.
+    # Requires kubeval.
+    make $(go env GOPATH)/bin/kubeval
     (cd plugin/someteam.example.com/v1/validator;
      go test -v . -run TestValidatorHappy -tags=notravis)
     (cd plugin/someteam.example.com/v1/validator;
@@ -125,11 +69,12 @@ function testExamplesAgainstLatestKustomizeRelease {
   $MDRIP --mode test \
       --label testAgainstLatestRelease examples
 
-  if [ -z ${TRAVIS+x} ]; then
-    echo "Not on travis, so running the notravis example tests."
+  # TODO: make work for non-linux
+  if [[ (-z ${TRAVIS+x}) && ("linux" == "$(go env GOOS)") ]]; then
+    echo "On linux, and not on travis, so running the notravis example tests."
 
-    # The following requires helm.
-    # At the moment not asking travis to install it.
+    # Requires helm.
+    make $(go env GOPATH)/bin/helm
     $MDRIP --mode test \
         --label helmtest examples/chart.md
   fi
@@ -221,8 +166,8 @@ echo "Working..."
 
 runFunc installTools
 runFunc generateCode
-runFunc testGoLangCILint
-runFunc runApiModuleGoTests
+runFunc runLint
+runFunc runUnitTests
 runFunc testExamplesAgainstLatestKustomizeRelease
 runFunc testExamplesAgainstLocalHead
 
