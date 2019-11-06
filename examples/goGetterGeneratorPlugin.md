@@ -5,7 +5,7 @@ Kustomize supports building a [remote target], but the URLs are limited to commo
 To extend the supported format, Kustomize has a [plugin] system that allows one to integrate third-party tools such as [hashicorp/go-getter] to "download things from a string URL suing a variety of protocols", extract the content and generated resources as part of kustomize build.
 
 [remote target]: https://github.com/kubernetes-sigs/kustomize/blob/master/examples/remoteBuild.md
-[Git repository specs]: https://github.com/kubernetes-sigs/kustomize/blob/master/pkg/git/repospec_test.go
+[Git repository specs]: https://github.com/kubernetes-sigs/kustomize/blob/master/api/internal/git/repospec_test.go
 [plugin]: ../docs/plugins
 [hashicorp/go-getter]: https://github.com/hashicorp/go-getter
 
