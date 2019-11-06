@@ -41,6 +41,11 @@ func (ra *ResAccumulator) Vars() []types.Var {
 	return ra.varSet.AsSlice()
 }
 
+// DeleteVars returns a copy of underlying vars.
+func (ra *ResAccumulator) DeleteVars() {
+	ra.varSet = types.NewVarSet()
+}
+
 func (ra *ResAccumulator) AppendAll(
 	resources resmap.ResMap) error {
 	return ra.resMap.AppendAll(resources)
@@ -154,6 +159,44 @@ func (ra *ResAccumulator) ResolveVars() error {
 			"well-defined vars that were never replaced: %s\n",
 			strings.Join(t.UnusedVars(), ","))
 	}
+	return err
+}
+
+// if a resource is not found dont error, assume we will find it later.
+func (ra *ResAccumulator) makeVarDirectoryReplacementMap() (map[string]interface{}, error) {
+	result := map[string]interface{}{}
+	for _, v := range ra.Vars() {
+		s, err := ra.findVarValueFromResources(v)
+		if err != nil {
+			result[v.Name] = nil
+		}
+
+		result[v.Name] = s
+	}
+
+	return result, nil
+}
+
+// allows for vars to not have a found resource at the time of directory resolution
+func (ra *ResAccumulator) ResolveDirectoryVars() error {
+	replacementMap, err := ra.makeVarDirectoryReplacementMap()
+	if err != nil {
+		return err
+	}
+	varSetCopy := types.NewVarSet()
+	if len(replacementMap) == 0 {
+		return nil
+	}
+	t := newRefVarTransformer(
+		replacementMap, ra.tConfig.VarReference)
+	err = ra.Transform(t)
+	if len(t.UnusedVars()) > 0 {
+		for _, i := range t.UnusedVars() {
+			unusedVar := ra.varSet.Get(i)
+			varSetCopy.Merge(*unusedVar)
+		}
+	}
+	ra.varSet = varSetCopy
 	return err
 }
 

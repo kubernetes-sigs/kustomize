@@ -228,10 +228,18 @@ func (kt *KustTarget) AccumulateTarget() (
 	if err != nil {
 		return nil, err
 	}
+	// append unresolved vars to kustomize vars in hope of finding refrence in current resource
+	kt.kustomization.Vars = append(kt.kustomization.Vars, ra.Vars()...)
+	ra.DeleteVars()
+
 	err = ra.MergeVars(kt.kustomization.Vars)
 	if err != nil {
 		return nil, errors.Wrapf(
 			err, "merging vars %v", kt.kustomization.Vars)
+	}
+	err = ra.ResolveDirectoryVars()
+	if err != nil {
+		return nil, err
 	}
 	return ra, nil
 }
