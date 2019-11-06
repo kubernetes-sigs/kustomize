@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
+	. "sigs.k8s.io/kustomize/api/internal/target"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/api/konfig"
@@ -17,7 +18,6 @@ import (
 	pLdr "sigs.k8s.io/kustomize/api/plugins/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
-	"sigs.k8s.io/kustomize/api/target"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 )
@@ -70,7 +70,7 @@ metadata:
 		t.Fatal(err)
 	}
 	pl := pLdr.NewLoader(c, rf)
-	tg, err := target.NewKustTarget(
+	tg, err := NewKustTarget(
 		ldr, valtest_test.MakeFakeValidator(), rf, transformer.NewFactoryImpl(), pl)
 	if err != nil {
 		t.Fatalf("err %v", err)

@@ -6,7 +6,7 @@ package target_test
 import (
 	"testing"
 
-	. "sigs.k8s.io/kustomize/api/target"
+	. "sigs.k8s.io/kustomize/api/internal/target"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
