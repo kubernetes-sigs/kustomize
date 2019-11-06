@@ -11,12 +11,12 @@ import (
 
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/loadertest"
+	. "sigs.k8s.io/kustomize/api/internal/target"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
-	. "sigs.k8s.io/kustomize/api/target"
-	"sigs.k8s.io/kustomize/api/testutils/kusttest"
-	"sigs.k8s.io/kustomize/api/testutils/valtest"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
 )
 

@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/internal/loadertest"
+	"sigs.k8s.io/kustomize/api/internal/target"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/api/konfig"
@@ -18,7 +19,6 @@ import (
 	pLdr "sigs.k8s.io/kustomize/api/plugins/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
-	"sigs.k8s.io/kustomize/api/target"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
 )
