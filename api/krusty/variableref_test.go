@@ -129,7 +129,14 @@ resources:
 - ../base1
 - ../base2
 `)
+<<<<<<< HEAD:api/krusty/variableref_test.go
 	m := th.Run("/app/overlay", th.MakeDefaultOptions())
+=======
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+>>>>>>> restructure:api/target/variableref_test.go
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Pod
@@ -240,7 +247,14 @@ vars:
   fieldref:
     fieldpath: metadata.test
 `)
+<<<<<<< HEAD:api/krusty/variableref_test.go
 	m := th.Run("/app/overlay", th.MakeDefaultOptions())
+=======
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+>>>>>>> restructure:api/target/variableref_test.go
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Pod
@@ -556,7 +570,14 @@ resources:
 - ../o1
 - ../o2
 `)
+<<<<<<< HEAD:api/krusty/variableref_test.go
 	m := th.Run("/app/top", th.MakeDefaultOptions())
+=======
+	m, err := th.MakeKustTarget().MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+>>>>>>> restructure:api/target/variableref_test.go
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Pod
