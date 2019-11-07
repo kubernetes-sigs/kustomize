@@ -34,6 +34,7 @@ before_install:
 install: true
 
 script:
+  - ./travis/verify-deps.sh
   - ./travis/pre-commit.sh
   - ./travis/kyaml-pre-commit.sh
 
