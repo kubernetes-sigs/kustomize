@@ -303,10 +303,13 @@ func (f FieldMatcher) Filter(rn *RNode) (*RNode, error) {
 	return nil, nil
 }
 
+// Lookup returns a PathGetter to lookup a field by its path.
 func Lookup(path ...string) PathGetter {
 	return PathGetter{Path: path}
 }
 
+// Lookup returns a PathGetter to lookup a field by its path and create it if it doesn't already
+// exist.
 func LookupCreate(kind yaml.Kind, path ...string) PathGetter {
 	return PathGetter{Path: path, Create: kind}
 }

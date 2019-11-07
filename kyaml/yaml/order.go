@@ -77,19 +77,19 @@ func (s set) Has(key string) bool {
 	return found
 }
 
-// whitelistedListSortKinds contains the set of kinds that are whitelisted
+// WhitelistedListSortKinds contains the set of kinds that are whitelisted
 // for sorting list field elements
 var WhitelistedListSortKinds = newSet(
 	"CronJob", "DaemonSet", "Deployment", "Job", "ReplicaSet", "StatefulSet",
 	"ValidatingWebhookConfiguration")
 
-// whitelistedListSortApis contains the set of apis that are whitelisted for
+// WhitelistedListSortApis contains the set of apis that are whitelisted for
 // sorting list field elements
 var WhitelistedListSortApis = newSet(
 	"apps/v1", "apps/v1beta1", "apps/v1beta2", "batch/v1", "batch/v1beta1",
 	"extensions/v1beta1", "v1", "admissionregistration.k8s.io/v1beta1")
 
-// whitelistedListSortFields contains json paths to list fields that should
+// WhitelistedListSortFields contains json paths to list fields that should
 // be sorted, and the field they should be sorted by
 var WhitelistedListSortFields = map[string]string{
 	".spec.template.spec.containers": "name",
