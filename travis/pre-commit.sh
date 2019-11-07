@@ -35,28 +35,7 @@ function runLint {
 }
 
 function runUnitTests {
-  make unit-tests
-
-  # TODO: make work for non-linux
-  if [[ (-z ${TRAVIS+x}) && ("linux" == "$(go env GOOS)") ]]; then
-    echo " "
-    echo "On linux, and not on travis, so running the notravis Go tests."
-    echo " "
-
-    # Requires helm.
-    make $(go env GOPATH)/bin/helm
-    (cd api; go test -v sigs.k8s.io/kustomize/api/internal/target \
-      -run TestChartInflatorPlugin -tags=notravis)
-    (cd plugin/someteam.example.com/v1/chartinflator;
-     go test -v . -run TestChartInflator -tags=notravis)
-
-    # Requires kubeval.
-    make $(go env GOPATH)/bin/kubeval
-    (cd plugin/someteam.example.com/v1/validator;
-     go test -v . -run TestValidatorHappy -tags=notravis)
-    (cd plugin/someteam.example.com/v1/validator;
-     go test -v . -run TestValidatorUnHappy -tags=notravis)
-  fi
+  make unit-test-all
 }
 
 function testExamplesAgainstLatestKustomizeRelease {
