@@ -13,7 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/kustomize/api/ifc"
-	"sigs.k8s.io/kustomize/api/k8sdeps/configmapandsecret"
+	"sigs.k8s.io/kustomize/api/internal/k8sdeps/configmapandsecret"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
