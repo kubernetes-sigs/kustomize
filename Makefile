@@ -47,16 +47,20 @@ lint: install-tools
 	cd kustomize; $(MYGOBIN)/golangci-lint run ./...
 	cd pluginator; $(MYGOBIN)/golangci-lint run ./...
 
-.PHONY: unit-tests-api
-unit-tests-api:
+.PHONY: unit-test-api
+unit-test-api:
 	cd api; go test ./...
 
-.PHONY: unit-tests-kustomize
-unit-tests-kustomize:
+.PHONY: unit-test-plugins
+unit-test-plugins:
+	./hack/runPluginUnitTests.sh
+
+.PHONY: unit-test-kustomize
+unit-test-kustomize:
 	cd kustomize; go test ./...
 
-.PHONY: unit-tests
-unit-tests: unit-tests-api unit-tests-kustomize
+.PHONY: unit-test-all
+unit-test-all: unit-test-api unit-test-kustomize unit-test-plugins
 
 # linux only.
 $(MYGOBIN)/kubeval:
