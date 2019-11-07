@@ -126,7 +126,7 @@ func makeOutputFileName(root string) string {
 		"src",
 		pgmconfig.DomainName,
 		pgmconfig.ProgramName,
-		"api", "plugins", packageForGeneratedCode,
+		"api", packageForGeneratedCode,
 		root+".go")
 }
 
