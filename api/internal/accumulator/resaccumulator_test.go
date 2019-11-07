@@ -11,8 +11,8 @@ import (
 	"testing"
 
 	. "sigs.k8s.io/kustomize/api/internal/accumulator"
+	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/api/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"

@@ -12,8 +12,8 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/internal/plugins/compiler"
 	"sigs.k8s.io/kustomize/api/konfig"
-	"sigs.k8s.io/kustomize/api/plugins/compiler"
 )
 
 // PluginTestEnv manages the plugin test environment.

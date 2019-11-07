@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/internal/loadertest"
+	. "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/konfig"
-	. "sigs.k8s.io/kustomize/api/plugins/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
