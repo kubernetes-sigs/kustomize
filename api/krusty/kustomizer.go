@@ -6,10 +6,10 @@ package krusty
 import (
 	"sigs.k8s.io/kustomize/api/builtins"
 	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/internal/k8sdeps/transformer"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/internal/target"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/api/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/api/k8sdeps/validator"
 	fLdr "sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
