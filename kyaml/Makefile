@@ -1,9 +1,14 @@
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
-.PHONY: generate fix vet fmt test build tidy
+.PHONY: generate license fix vet fmt test build tidy
 
-all: generate fix vet fmt test build tidy
+GOPATH := $(shell go env GOPATH)
+
+build:
+	go build -v -o $(GOPATH)/bin/kyaml .
+
+all: generate license fix vet fmt test lint lint tidy
 
 fix:
 	go fix ./...
@@ -14,12 +19,16 @@ fmt:
 generate:
 	go generate ./...
 
+license:
+	(which $(GOPATH)/bin/addlicense || go get github.com/google/addlicense)
+	$(GOPATH)/bin/addlicense  -y 2019 -c "The Kubernetes Authors." -f LICENSE_TEMPLATE .
+
 tidy:
 	go mod tidy
 
 lint:
-	(which $(go env GOPATH)/bin/golangci-lint || go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.19.1)
-	$(go env GOPATH)/bin/golangci-lint run ./...
+	(which $(GOPATH)/bin/golangci-lint || go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.19.1)
+	$(GOPATH)/bin/golangci-lint run ./...
 
 test:
 	go test -cover ./...
