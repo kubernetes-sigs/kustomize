@@ -17,6 +17,7 @@ import (
 // files.
 var requiredResourcePackageAnnotations = []string{kioutil.IndexAnnotation, kioutil.PathAnnotation}
 
+// PackageBuffer implements Reader and Writer, storing Resources in a local field.
 type PackageBuffer struct {
 	Nodes []*yaml.RNode
 }
@@ -30,6 +31,9 @@ func (r *PackageBuffer) Write(nodes []*yaml.RNode) error {
 	return nil
 }
 
+// LocalPackageReadWriter reads and writes Resources from / to a local directory.
+// When writing, LocalPackageReadWriter will delete files if all of the Resources from
+// that file have been removed from the output.
 type LocalPackageReadWriter struct {
 	Kind string `yaml:"kind,omitempty"`
 

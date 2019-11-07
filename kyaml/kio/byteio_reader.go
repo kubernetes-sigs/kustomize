@@ -19,7 +19,7 @@ const (
 	ResourceListApiVersion = "kyaml.kustomize.dev/v1alpha1"
 )
 
-// ByteReadWriter reads from an input and writes to an output
+// ByteReadWriter reads from an input and writes to an output.
 type ByteReadWriter struct {
 	// Reader is where ResourceNodes are decoded from.
 	Reader io.Reader

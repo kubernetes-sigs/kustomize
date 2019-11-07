@@ -19,10 +19,12 @@ const (
 	NullNodeTag = "!!null"
 )
 
+// NullNode returns a RNode point represents a null; value
 func NullNode() *RNode {
 	return NewRNode(&Node{Tag: NullNodeTag})
 }
 
+// IsMissingOrNull returns true if the RNode is nil or contains and explicitly null value.
 func IsMissingOrNull(node *RNode) bool {
 	if node == nil || node.YNode() == nil || node.YNode().Tag == NullNodeTag {
 		return true
@@ -30,6 +32,8 @@ func IsMissingOrNull(node *RNode) bool {
 	return false
 }
 
+// IsEmpty returns true if the RNode is MissingOrNull, or is either a MappingNode with
+// no fields, or a SequenceNode with no elements.
 func IsEmpty(node *RNode) bool {
 	if node == nil || node.YNode() == nil || node.YNode().Tag == NullNodeTag {
 		return true
@@ -118,7 +122,7 @@ func MustParse(value string) *RNode {
 	return v
 }
 
-// NewScalarRNode returns a new Scalar *RNode containing the provided value.
+// NewScalarRNode returns a new Scalar *RNode containing the provided scalar value.
 func NewScalarRNode(value string) *RNode {
 	return &RNode{
 		value: &yaml.Node{
@@ -127,7 +131,7 @@ func NewScalarRNode(value string) *RNode {
 		}}
 }
 
-// NewListRNode returns a new List *RNode containing the provided value.
+// NewListRNode returns a new List *RNode containing the provided scalar values.
 func NewListRNode(values ...string) *RNode {
 	seq := &RNode{value: &yaml.Node{Kind: yaml.SequenceNode}}
 	for _, v := range values {
@@ -139,7 +143,7 @@ func NewListRNode(values ...string) *RNode {
 	return seq
 }
 
-// NewRNode returns a new *RNode containing the provided value.
+// NewRNode returns a new RNode pointer containing the provided Node.
 func NewRNode(value *yaml.Node) *RNode {
 	if value != nil {
 		value.Style = 0
@@ -147,7 +151,9 @@ func NewRNode(value *yaml.Node) *RNode {
 	return &RNode{value: value}
 }
 
-// GrepFilter may modify or walk the RNode.
+// Filter defines a function to manipulate an individual RNode such as by changing
+// its values, or returning a field.
+//
 // When possible, Filters should be serializable to yaml so that they can be described
 // declaratively as data.
 //
@@ -212,30 +218,31 @@ func (m MapNodeSlice) Values() []*RNode {
 	return values
 }
 
-// ResourceMeta contains the metadata for a Resource.
+// ResourceMeta contains the metadata for a both Resource Type and Resource.
 type ResourceMeta struct {
+	// ApiVersion is the apiVersion field of a Resource
 	ApiVersion string `yaml:"apiVersion,omitempty"`
-	Kind       string `yaml:"kind,omitempty"`
+	// Kind is the kind field of a Resource
+	Kind string `yaml:"kind,omitempty"`
+	// ObjectMeta is the metadata field of a Resource
 	ObjectMeta `yaml:"metadata,omitempty"`
 }
 
-func NewResourceMeta(name string, typeMeta ResourceMeta) ResourceMeta {
-	return ResourceMeta{
-		Kind:       typeMeta.Kind,
-		ApiVersion: typeMeta.ApiVersion,
-		ObjectMeta: ObjectMeta{Name: name},
-	}
-}
-
+// ObjectMeta contains metadata about a Resource
 type ObjectMeta struct {
-	Name        string            `yaml:"name,omitempty"`
-	Namespace   string            `yaml:"namespace,omitempty"`
-	Labels      map[string]string `yaml:"labels,omitempty"`
+	// Name is the metadata.name field of a Resource
+	Name string `yaml:"name,omitempty"`
+	// Namespace is the metadata.namespace field of a Resource
+	Namespace string `yaml:"namespace,omitempty"`
+	// Labels is the metadata.labels field of a Resource
+	Labels map[string]string `yaml:"labels,omitempty"`
+	// Annotations is the metadata.annotations field of a Resource.
 	Annotations map[string]string `yaml:"annotations,omitempty"`
 }
 
 var MissingMetaError = errors.New("missing Resource metadata")
 
+// GetMeta returns the ResourceMeta for a RNode
 func (rn *RNode) GetMeta() (ResourceMeta, error) {
 	m := ResourceMeta{}
 	b := &bytes.Buffer{}
@@ -309,7 +316,7 @@ func (rn *RNode) YNode() *yaml.Node {
 	return rn.value
 }
 
-// SetYNode sets the yaml.Node value.
+// SetYNode sets the yaml.Node value on an RNode.
 func (rn *RNode) SetYNode(node *yaml.Node) {
 	if rn.value == nil || node == nil {
 		rn.value = node
@@ -318,12 +325,13 @@ func (rn *RNode) SetYNode(node *yaml.Node) {
 	*rn.value = *node
 }
 
-// SetYNode sets the value on a Document.
+// AppendToFieldPath appends a field name to the FieldPath.
 func (rn *RNode) AppendToFieldPath(parts ...string) {
 	rn.fieldPath = append(rn.fieldPath, parts...)
 }
 
-// FieldPath returns the field path from the object root to rn.  Does not include list indexes.
+// FieldPath returns the field path from the Resource root node, to rn.
+// Does not include list indexes.
 func (rn *RNode) FieldPath() []string {
 	return rn.fieldPath
 }
@@ -333,6 +341,7 @@ const (
 	Flow = "Flow"
 )
 
+// String returns a string valuer for a Node, applying the supplied formatting options
 func String(node *yaml.Node, opts ...string) (string, error) {
 	if node == nil {
 		return "", nil
@@ -358,7 +367,7 @@ func String(node *yaml.Node, opts ...string) (string, error) {
 	return val, err
 }
 
-// NewScalarRNode returns the yaml NewScalarRNode representation of the RNode value.
+// String returns string representation of the RNode
 func (rn *RNode) String() (string, error) {
 	if rn == nil {
 		return "", nil
@@ -366,6 +375,7 @@ func (rn *RNode) String() (string, error) {
 	return String(rn.value)
 }
 
+// MustString returns string representation of the RNode or panics if there is an error
 func (rn *RNode) MustString() string {
 	s, err := rn.String()
 	if err != nil {
@@ -374,7 +384,7 @@ func (rn *RNode) MustString() string {
 	return s
 }
 
-// Content returns the value node's Content field.
+// Content returns Node Content field.
 func (rn *RNode) Content() []*yaml.Node {
 	if rn == nil {
 		return nil
@@ -382,8 +392,8 @@ func (rn *RNode) Content() []*yaml.Node {
 	return rn.YNode().Content
 }
 
-// Fields returns the list of fields for a ResourceNode containing a MappingNode
-// value.
+// Fields returns the list of field names for a MappingNode.
+// Returns an error for non-MappingNodes.
 func (rn *RNode) Fields() ([]string, error) {
 	if err := ErrorIfInvalid(rn, yaml.MappingNode); err != nil {
 		return nil, err
@@ -395,7 +405,8 @@ func (rn *RNode) Fields() ([]string, error) {
 	return fields, nil
 }
 
-// Field returns the fieldName, fieldValue pair for MappingNodes.  Returns nil for non-MappingNodes.
+// Field returns a fieldName, fieldValue pair for MappingNodes.
+// Returns nil for non-MappingNodes.
 func (rn *RNode) Field(field string) *MapNode {
 	if rn.YNode().Kind != yaml.MappingNode {
 		return nil
@@ -409,7 +420,8 @@ func (rn *RNode) Field(field string) *MapNode {
 	return nil
 }
 
-// VisitFields calls fn for each field in rn.
+// VisitFields calls fn for each field in the RNode.
+// Returns an error for non-MappingNodes.
 func (rn *RNode) VisitFields(fn func(node *MapNode) error) error {
 	// get the list of srcFieldNames
 	srcFieldNames, err := rn.Fields()
@@ -426,8 +438,8 @@ func (rn *RNode) VisitFields(fn func(node *MapNode) error) error {
 	return nil
 }
 
-// Elements returns a list of elements for a ResourceNode containing a
-// SequenceNode value.
+// Elements returns the list of elements in the RNode.
+// Returns an error for non-SequenceNodes.
 func (rn *RNode) Elements() ([]*RNode, error) {
 	if err := ErrorIfInvalid(rn, yaml.SequenceNode); err != nil {
 		return nil, err
@@ -439,6 +451,9 @@ func (rn *RNode) Elements() ([]*RNode, error) {
 	return elements, nil
 }
 
+// ElementValues returns a list of all observed values for a given field name in a
+// list of elements.
+// Returns error for non-SequenceNodes.
 func (rn *RNode) ElementValues(key string) ([]string, error) {
 	if err := ErrorIfInvalid(rn, yaml.SequenceNode); err != nil {
 		return nil, err
@@ -454,7 +469,7 @@ func (rn *RNode) ElementValues(key string) ([]string, error) {
 }
 
 // Element returns the element in the list which contains the field matching the value.
-// Returns nil for non-SequenceNodes
+// Returns nil for non-SequenceNodes or if no Element matches.
 func (rn *RNode) Element(key, value string) *RNode {
 	if rn.YNode().Kind != yaml.SequenceNode {
 		return nil
@@ -466,7 +481,8 @@ func (rn *RNode) Element(key, value string) *RNode {
 	return elem
 }
 
-// VisitElements calls fn for each element in the list.
+// VisitElements calls fn for each element in a SequenceNode.
+// Returns an error for non-SequenceNodes
 func (rn *RNode) VisitElements(fn func(node *RNode) error) error {
 	elements, err := rn.Elements()
 	if err != nil {
@@ -481,14 +497,17 @@ func (rn *RNode) VisitElements(fn func(node *RNode) error) error {
 	return nil
 }
 
-// AssociativeSequencePaths is a map of paths to sequences that have associative keys.
+// AssociativeSequencePaths is a list of field names that may be used as associative keys
+// when merge Resources.
 // The order sets the precedence of the merge keys -- if multiple keys are present
-// in the list, then the FIRST key which ALL elements have is used as the
-// associative key.
+// in Resources in a list, then the FIRST key which ALL elements in the list have is used as the
+// associative key for merging that list.
 var AssociativeSequenceKeys = []string{
 	"mountPath", "devicePath", "ip", "type", "topologyKey", "name", "containerPort",
 }
 
+// IsAssociative returns true if all elements in the list contain an AssociativeSequenceKey
+// as a field.
 func IsAssociative(nodes []*RNode) bool {
 	for i := range nodes {
 		node := nodes[i]
@@ -502,13 +521,13 @@ func IsAssociative(nodes []*RNode) bool {
 	return false
 }
 
-// IsAssociative returns true if the RNode is for an associative list.
+// IsAssociative returns true if the RNode contains an AssociativeSequenceKey as a field.
 func (rn *RNode) IsAssociative() bool {
 	return rn.GetAssociativeKey() != ""
 }
 
-// GetAssociativeKey returns the associative key used to merge the list, or "" if the
-// list is not associative.
+// GetAssociativeKey returns the AssociativeSequenceKey used to merge the elements in the
+// SequenceNode, or "" if the  list is not associative.
 func (rn *RNode) GetAssociativeKey() string {
 	// look for any associative keys in the first element
 	for _, key := range AssociativeSequenceKeys {
