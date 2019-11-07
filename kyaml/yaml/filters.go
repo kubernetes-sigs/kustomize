@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// Filters is the list of serializable Pipeline Filters
 var Filters = map[string]func() Filter{
 	"AnnotationClearer": func() Filter { return &AnnotationClearer{} },
 	"AnnotationGetter":  func() Filter { return &AnnotationGetter{} },
@@ -29,7 +30,9 @@ var Filters = map[string]func() Filter{
 	"TeePiper":          func() Filter { return &TeePiper{} },
 }
 
-// YFilter wraps the GrepFilter interface so it can be unmarshalled into a struct.
+// YFilter wraps the GrepFilter interface so the filter can be represented as
+// data and can be unmarshalled into a struct from a yaml config file.
+// This allows Pipelines to be expressed as data rather than code.
 type YFilter struct {
 	Filter
 }
