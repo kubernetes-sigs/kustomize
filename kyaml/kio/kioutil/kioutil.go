@@ -15,13 +15,13 @@ type AnnotationKey = string
 
 const (
 	// IndexAnnotation records the index of a specific resource in a file or input stream.
-	IndexAnnotation AnnotationKey = "kyaml.kustomize.dev/kio/index"
+	IndexAnnotation AnnotationKey = "config.kubernetes.io/index"
 
 	// PathAnnotation records the path to the file the Resource was read from
-	PathAnnotation AnnotationKey = "kyaml.kustomize.dev/kio/path"
+	PathAnnotation AnnotationKey = "config.kubernetes.io/path"
 
 	// PackageAnnotation records the name of the package the Resource was read from
-	PackageAnnotation AnnotationKey = "kyaml.kustomize.dev/kio/package"
+	PackageAnnotation AnnotationKey = "config.kubernetes.io/package"
 )
 
 func GetFileAnnotations(rn *yaml.RNode) (string, string, error) {
@@ -48,6 +48,21 @@ func ErrorIfMissingAnnotation(nodes []*yaml.RNode, keys ...AnnotationKey) error 
 		}
 	}
 	return nil
+}
+
+// Map invokes fn for each element in nodes.
+func Map(nodes []*yaml.RNode, fn func(*yaml.RNode) (*yaml.RNode, error)) ([]*yaml.RNode, error) {
+	var returnNodes []*yaml.RNode
+	for i := range nodes {
+		n, err := fn(nodes[i])
+		if err != nil {
+			return nil, err
+		}
+		if n != nil {
+			returnNodes = append(returnNodes, n)
+		}
+	}
+	return returnNodes, nil
 }
 
 // SortNodes sorts nodes in place:
@@ -92,12 +107,12 @@ func SortNodes(nodes []*yaml.RNode) error {
 		var iIndex, jIndex int
 		iIndex, err = strconv.Atoi(iValue)
 		if err != nil {
-			err = fmt.Errorf("unable to parse kyaml.kustomize.dev/kio/index %s :%v", iValue, err)
+			err = fmt.Errorf("unable to parse config.kubernetes.io/index %s :%v", iValue, err)
 			return false
 		}
 		jIndex, err = strconv.Atoi(jValue)
 		if err != nil {
-			err = fmt.Errorf("unable to parse kyaml.kustomize.dev/kio/index %s :%v", jValue, err)
+			err = fmt.Errorf("unable to parse config.kubernetes.io/index %s :%v", jValue, err)
 			return false
 		}
 		if iIndex != jIndex {
