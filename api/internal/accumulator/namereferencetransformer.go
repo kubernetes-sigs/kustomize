@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"log"
 
-	"sigs.k8s.io/kustomize/api/plugins/builtinconfig"
+	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"

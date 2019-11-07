@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
-	. "sigs.k8s.io/kustomize/api/plugins/compiler"
+	. "sigs.k8s.io/kustomize/api/internal/plugins/compiler"
 )
 
 // Regression coverage over compiler behavior.
