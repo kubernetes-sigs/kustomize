@@ -3,7 +3,7 @@
 # Generate the Go code for the generator and
 # transformer factory functions in
 #
-#   sigs.k8s.io/kustomize/api/plugins/builtins
+#   sigs.k8s.io/kustomize/api/builtins
 #
 # from the raw plugin directories found under
 #

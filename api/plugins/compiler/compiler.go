@@ -4,6 +4,7 @@
 package compiler
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -12,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig"
 )
@@ -118,10 +120,12 @@ func (b *Compiler) Compile(g, v, k string) error {
 			"cannot find go compiler %s", goBin)
 	}
 	cmd := exec.Command(goBin, commands...)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
 	cmd.Env = os.Environ()
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf(
-			"compiler error building %s: %v", srcFile, err)
+		return errors.Wrapf(
+			err, "cannot compile %s:\nSTDERR\n%s\n", srcFile, stderr.String())
 	}
 	return nil
 }
