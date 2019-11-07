@@ -97,7 +97,7 @@ function testExamplesAgainstLocalHead {
 
 function generateCode {
   echo "preferredGoPath = $preferredGoPath"
-  ./api/plugins/builtinhelpers/generateBuiltins.sh $preferredGoPath
+  ./api/internal/plugins/builtinhelpers/generateBuiltins.sh $preferredGoPath
 }
 
 # This script tries to work for both travis
