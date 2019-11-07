@@ -21,8 +21,8 @@ metadata:
   namespace: default
   annotations:
     app: nginx3
-    kyaml.kustomize.dev/kio/package: foo-package/3
-    kyaml.kustomize.dev/kio/path: f3.yaml
+    config.kubernetes.io/package: foo-package/3
+    config.kubernetes.io/path: f3.yaml
 spec:
   replicas: 1
 ---
@@ -34,8 +34,8 @@ metadata:
   namespace: default
   annotations:
     app: nginx2
-    kyaml.kustomize.dev/kio/package: foo-package
-    kyaml.kustomize.dev/kio/path: f1.yaml
+    config.kubernetes.io/package: foo-package
+    config.kubernetes.io/path: f1.yaml
 spec:
   replicas: 1
 ---
@@ -45,8 +45,8 @@ metadata:
     app: nginx
   annotations:
     app: nginx
-    kyaml.kustomize.dev/kio/package: bar-package
-    kyaml.kustomize.dev/kio/path: f2.yaml
+    config.kubernetes.io/package: bar-package
+    config.kubernetes.io/path: f2.yaml
   name: bar
 spec:
   replicas: 3
@@ -57,8 +57,8 @@ metadata:
   namespace: default
   annotations:
     app: nginx
-    kyaml.kustomize.dev/kio/package: foo-package
-    kyaml.kustomize.dev/kio/path: f1.yaml
+    config.kubernetes.io/package: foo-package
+    config.kubernetes.io/path: f1.yaml
 spec:
   selector:
     app: nginx
@@ -94,8 +94,8 @@ metadata:
   namespace: default
   annotations:
     app: nginx3
-    kyaml.kustomize.dev/kio/package: .
-    kyaml.kustomize.dev/kio/path: f3.yaml
+    config.kubernetes.io/package: .
+    config.kubernetes.io/path: f3.yaml
 spec:
   replicas: 1
 ---
@@ -107,8 +107,8 @@ metadata:
   namespace: default
   annotations:
     app: nginx2
-    kyaml.kustomize.dev/kio/package: foo-package
-    kyaml.kustomize.dev/kio/path: f1.yaml
+    config.kubernetes.io/package: foo-package
+    config.kubernetes.io/path: f1.yaml
 spec:
   replicas: 1
 ---
@@ -118,8 +118,8 @@ metadata:
     app: nginx
   annotations:
     app: nginx
-    kyaml.kustomize.dev/kio/package: bar-package
-    kyaml.kustomize.dev/kio/path: f2.yaml
+    config.kubernetes.io/package: bar-package
+    config.kubernetes.io/path: f2.yaml
   name: bar
 spec:
   replicas: 3
@@ -130,8 +130,8 @@ metadata:
   namespace: default
   annotations:
     app: nginx
-    kyaml.kustomize.dev/kio/package: .
-    kyaml.kustomize.dev/kio/path: f1.yaml
+    config.kubernetes.io/package: .
+    config.kubernetes.io/path: f1.yaml
 spec:
   selector:
     app: nginx
@@ -167,8 +167,8 @@ metadata:
   namespace: default
   annotations:
     app: nginx2
-    kyaml.kustomize.dev/kio/package: .
-    kyaml.kustomize.dev/kio/path: f1.yaml
+    config.kubernetes.io/package: .
+    config.kubernetes.io/path: f1.yaml
 spec:
   replicas: 1
 ---
@@ -181,8 +181,8 @@ metadata:
   namespace: default
   annotations:
     app: nginx2
-    kyaml.kustomize.dev/kio/package: .
-    kyaml.kustomize.dev/kio/path: f1.yaml
+    config.kubernetes.io/package: .
+    config.kubernetes.io/path: f1.yaml
 spec:
   replicas: 1
 ---
@@ -195,8 +195,8 @@ metadata:
   namespace: default
   annotations:
     app: nginx2
-    kyaml.kustomize.dev/kio/package: .
-    kyaml.kustomize.dev/kio/path: f1.yaml
+    config.kubernetes.io/package: .
+    config.kubernetes.io/path: f1.yaml
 spec:
   replicas: 1
 ---
@@ -209,8 +209,8 @@ metadata:
   namespace: default2
   annotations:
     app: nginx2
-    kyaml.kustomize.dev/kio/package: .
-    kyaml.kustomize.dev/kio/path: f1.yaml
+    config.kubernetes.io/package: .
+    config.kubernetes.io/path: f1.yaml
 spec:
   replicas: 1
 ---
@@ -223,8 +223,8 @@ metadata:
   namespace: default
   annotations:
     app: nginx3
-    kyaml.kustomize.dev/kio/package: .
-    kyaml.kustomize.dev/kio/path: f1.yaml
+    config.kubernetes.io/package: .
+    config.kubernetes.io/path: f1.yaml
 spec:
   replicas: 1
 ---
@@ -234,8 +234,8 @@ metadata:
     app: nginx
   annotations:
     app: nginx
-    kyaml.kustomize.dev/kio/package: bar-package
-    kyaml.kustomize.dev/kio/path: f2.yaml
+    config.kubernetes.io/package: bar-package
+    config.kubernetes.io/path: f2.yaml
   name: bar
 spec:
   replicas: 3
@@ -246,8 +246,8 @@ metadata:
   namespace: default
   annotations:
     app: nginx
-    kyaml.kustomize.dev/kio/package: .
-    kyaml.kustomize.dev/kio/path: f1.yaml
+    config.kubernetes.io/package: .
+    config.kubernetes.io/path: f1.yaml
 spec:
   selector:
     app: nginx

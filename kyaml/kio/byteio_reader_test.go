@@ -151,7 +151,7 @@ func TestByteReader_Read(t *testing.T) {
 c: d
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: 0
+    config.kubernetes.io/index: 0
 `,
 		`# second resource
 e: f
@@ -159,12 +159,12 @@ g:
 - h
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: 1
+    config.kubernetes.io/index: 1
 `,
 		`i: j
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: 2
+    config.kubernetes.io/index: 2
 `,
 	}
 	for i := range nodes {
@@ -279,8 +279,8 @@ func TestByteReader_Read_setAnnotations(t *testing.T) {
 c: d
 metadata:
   annotations:
+    config.kubernetes.io/index: 0
     foo: bar
-    kyaml.kustomize.dev/kio/index: 0
 `,
 		`# second resource
 e: f
@@ -288,14 +288,14 @@ g:
 - h
 metadata:
   annotations:
+    config.kubernetes.io/index: 1
     foo: bar
-    kyaml.kustomize.dev/kio/index: 1
 `,
 		`i: j
 metadata:
   annotations:
+    config.kubernetes.io/index: 2
     foo: bar
-    kyaml.kustomize.dev/kio/index: 2
 `,
 	}
 	for i := range nodes {

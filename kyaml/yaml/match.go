@@ -82,10 +82,9 @@ func (p *PathMatcher) filter(rn *RNode) (*RNode, error) {
 	if IsListIndex(p.Path[0]) {
 		// match seq elements
 		return p.doSeq(rn)
-	} else {
-		// match a field
-		return p.doField(rn)
 	}
+	// match a field
+	return p.doField(rn)
 }
 
 func (p *PathMatcher) doField(rn *RNode) (*RNode, error) {

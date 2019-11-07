@@ -22,7 +22,7 @@ type TypeError = yaml.TypeError
 type Unmarshaler = yaml.Unmarshaler
 
 var Marshal = yaml.Marshal
-var UnMarshal = yaml.Unmarshal
+var Unmarshal = yaml.Unmarshal
 var NewDecoder = yaml.NewDecoder
 var NewEncoder = func(w io.Writer) *yaml.Encoder {
 	e := yaml.NewEncoder(w)

@@ -200,9 +200,9 @@ func (r LocalPackageReader) Read() ([]*yaml.RNode, error) {
 
 		// check if we should skip the directory or file
 		if info.IsDir() {
-			return r.shouldSkipDir(path, info)
+			return r.shouldSkipDir(path)
 		}
-		if match, err := r.shouldSkipFile(path, info); err != nil {
+		if match, err := r.shouldSkipFile(info); err != nil {
 			return err
 		} else if !match {
 			// skip this file
@@ -243,7 +243,7 @@ func (r *LocalPackageReader) readFile(path string, info os.FileInfo) ([]*yaml.RN
 }
 
 // shouldSkipFile returns true if the file should be skipped
-func (r *LocalPackageReader) shouldSkipFile(path string, info os.FileInfo) (bool, error) {
+func (r *LocalPackageReader) shouldSkipFile(info os.FileInfo) (bool, error) {
 	// check if the files are in scope
 	for _, g := range r.MatchFilesGlob {
 		if match, err := filepath.Match(g, info.Name()); err != nil {
@@ -267,7 +267,7 @@ func (r *LocalPackageReader) initReaderAnnotations(path string, info os.FileInfo
 }
 
 // shouldSkipDir returns a filepath.SkipDir if the directory should be skipped
-func (r *LocalPackageReader) shouldSkipDir(path string, info os.FileInfo) error {
+func (r *LocalPackageReader) shouldSkipDir(path string) error {
 	if r.PackageFileName == "" {
 		return nil
 	}
