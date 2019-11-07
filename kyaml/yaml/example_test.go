@@ -839,3 +839,56 @@ spec:
 	//         - bar
 	//  <nil>
 }
+
+func ExampleRNode_Elements() {
+	resource, err := Parse(`
+- name: foo
+  args: ['run.sh']
+- name: bar
+  args: ['run.sh']
+- name: baz
+  args: ['run.sh']
+`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	elements, err := resource.Elements()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for i, e := range elements {
+		fmt.Println(fmt.Sprintf("Element: %d", i))
+		fmt.Println(e.MustString())
+	}
+	// Output:
+	// Element: 0
+	// name: foo
+	// args: ['run.sh']
+	//
+	// Element: 1
+	// name: bar
+	// args: ['run.sh']
+	//
+	// Element: 2
+	// name: baz
+	// args: ['run.sh']
+
+}
+
+func ExampleRNode_ElementValues() {
+	resource, err := Parse(`
+- name: foo
+  args: ['run.sh']
+- name: bar
+  args: ['run.sh']
+- name: baz
+  args: ['run.sh']
+`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(resource.ElementValues("name"))
+	// Output:
+	// [foo bar baz] <nil>
+}

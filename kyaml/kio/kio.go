@@ -30,22 +30,23 @@ type Writer interface {
 	Write([]*yaml.RNode) error
 }
 
+// WriterFunc implements a Writer as a function.
 type WriterFunc func([]*yaml.RNode) error
 
 func (fn WriterFunc) Write(o []*yaml.RNode) error {
 	return fn(o)
 }
 
-// GrepFilter modifies a collection of Resource Configuration by returning the modified slice.
+// Filter modifies a collection of Resource Configuration by returning the modified slice.
 // When possible, Filters should be serializable to yaml so that they can be described
-// declaratively as data.
+// as either data or code.
 //
 // Analogous to http://www.linfo.org/filters.html
 type Filter interface {
 	Filter([]*yaml.RNode) ([]*yaml.RNode, error)
 }
 
-// FilterFunc can be used to implement GrepFilter by defining a function.
+// FilterFunc implements a Filter as a function.
 type FilterFunc func([]*yaml.RNode) ([]*yaml.RNode, error)
 
 func (fn FilterFunc) Filter(o []*yaml.RNode) ([]*yaml.RNode, error) {
@@ -53,7 +54,7 @@ func (fn FilterFunc) Filter(o []*yaml.RNode) ([]*yaml.RNode, error) {
 }
 
 // Pipeline reads Resource Configuration from a set of Inputs, applies some
-// transformations, and writes the results to a set of Outputs.
+// transformation filters, and writes the results to a set of Outputs.
 //
 // Analogous to http://www.linfo.org/pipes.html
 type Pipeline struct {
@@ -69,7 +70,8 @@ type Pipeline struct {
 	Outputs []Writer `yaml:"outputs,omitempty"`
 }
 
-// Execute implements the Pipeline pipeline.
+// Execute executes each step in the sequence, returning immediately after encountering
+// any error as part of the Pipeline.
 func (p Pipeline) Execute() error {
 	var result []*yaml.RNode
 
