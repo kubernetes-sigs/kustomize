@@ -65,6 +65,25 @@ func Map(nodes []*yaml.RNode, fn func(*yaml.RNode) (*yaml.RNode, error)) ([]*yam
 	return returnNodes, nil
 }
 
+func MapMeta(nodes []*yaml.RNode, fn func(*yaml.RNode, yaml.ResourceMeta) (*yaml.RNode, error)) (
+	[]*yaml.RNode, error) {
+	var returnNodes []*yaml.RNode
+	for i := range nodes {
+		meta, err := nodes[i].GetMeta()
+		if err != nil {
+			return nil, err
+		}
+		n, err := fn(nodes[i], meta)
+		if err != nil {
+			return nil, err
+		}
+		if n != nil {
+			returnNodes = append(returnNodes, n)
+		}
+	}
+	return returnNodes, nil
+}
+
 // SortNodes sorts nodes in place:
 // - by PathAnnotation annotation
 // - by IndexAnnotation annotation
