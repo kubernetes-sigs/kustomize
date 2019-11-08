@@ -67,14 +67,14 @@ func TestLocalPackageWriter_Write_keepReaderAnnotations(t *testing.T) {
 	assert.Equal(t, `a: b #first
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: 0
-    kyaml.kustomize.dev/kio/path: a/b/a_test.yaml
+    config.kubernetes.io/index: 0
+    config.kubernetes.io/path: a/b/a_test.yaml
 ---
 c: d # second
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: 1
-    kyaml.kustomize.dev/kio/path: a/b/a_test.yaml
+    config.kubernetes.io/index: 1
+    config.kubernetes.io/path: a/b/a_test.yaml
 `, string(b))
 
 	b, err = ioutil.ReadFile(filepath.Join(d, "a", "b", "b_test.yaml"))
@@ -88,8 +88,8 @@ g:
   - j
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: 0
-    kyaml.kustomize.dev/kio/path: a/b/b_test.yaml
+    config.kubernetes.io/index: 0
+    config.kubernetes.io/path: a/b/b_test.yaml
 `, string(b))
 }
 
@@ -99,7 +99,7 @@ func TestLocalPackageWriter_Write_clearAnnotations(t *testing.T) {
 	d, node1, node2, node3 := getWriterInputs(t)
 	defer os.RemoveAll(d)
 
-	w := LocalPackageWriter{PackagePath: d, ClearAnnotations: []string{"kyaml.kustomize.dev/kio/mode"}}
+	w := LocalPackageWriter{PackagePath: d, ClearAnnotations: []string{"config.kubernetes.io/mode"}}
 	err := w.Write([]*yaml.RNode{node2, node1, node3})
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, err.Error())
@@ -139,8 +139,8 @@ g:
   - j
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: 0
-    kyaml.kustomize.dev/kio/path: "a/b/../../../b_test.yaml"
+    config.kubernetes.io/index: 0
+    config.kubernetes.io/path: "a/b/../../../b_test.yaml"
 `)
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, err.Error())
@@ -166,8 +166,8 @@ g:
   - j
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: a
-    kyaml.kustomize.dev/kio/path: "a/b/b_test.yaml" # use a different path, should still collide
+    config.kubernetes.io/index: a
+    config.kubernetes.io/path: "a/b/b_test.yaml" # use a different path, should still collide
 `)
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, err.Error())
@@ -176,12 +176,12 @@ metadata:
 	w := LocalPackageWriter{PackagePath: d}
 	err = w.Write([]*yaml.RNode{node2, node1, node3, node4})
 	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "unable to parse kyaml.kustomize.dev/kio/index")
+		assert.Contains(t, err.Error(), "unable to parse config.kubernetes.io/index")
 	}
 }
 
 // TestLocalPackageWriter_Write_absPath tests:
-// - If kyaml.kustomize.dev/kio/path is absolute, fail
+// - If config.kubernetes.io/path is absolute, fail
 func TestLocalPackageWriter_Write_absPath(t *testing.T) {
 	d, node1, node2, node3 := getWriterInputs(t)
 	defer os.RemoveAll(d)
@@ -193,8 +193,8 @@ g:
   - j
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: a
-    kyaml.kustomize.dev/kio/path: "%s/a/b/b_test.yaml" # use a different path, should still collide
+    config.kubernetes.io/index: a
+    config.kubernetes.io/path: "%s/a/b/b_test.yaml" # use a different path, should still collide
 `, d))
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, err.Error())
@@ -208,7 +208,7 @@ metadata:
 }
 
 // TestLocalPackageWriter_Write_missingIndex tests:
-// - If kyaml.kustomize.dev/kio/path is missing, fail
+// - If config.kubernetes.io/path is missing, fail
 func TestLocalPackageWriter_Write_missingPath(t *testing.T) {
 	d, node1, node2, node3 := getWriterInputs(t)
 	defer os.RemoveAll(d)
@@ -220,7 +220,7 @@ g:
   - j
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: a
+    config.kubernetes.io/index: a
 `)
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, err.Error())
@@ -229,12 +229,12 @@ metadata:
 	w := LocalPackageWriter{PackagePath: d}
 	err = w.Write([]*yaml.RNode{node2, node1, node3, node4})
 	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "kyaml.kustomize.dev/kio/path")
+		assert.Contains(t, err.Error(), "config.kubernetes.io/path")
 	}
 }
 
 // TestLocalPackageWriter_Write_missingIndex tests:
-// - If kyaml.kustomize.dev/kio/index is missing, fail
+// - If config.kubernetes.io/index is missing, fail
 func TestLocalPackageWriter_Write_missingIndex(t *testing.T) {
 	d, node1, node2, node3 := getWriterInputs(t)
 	defer os.RemoveAll(d)
@@ -246,7 +246,7 @@ g:
   - j
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/path: a/a.yaml
+    config.kubernetes.io/path: a/a.yaml
 `)
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, err.Error())
@@ -255,12 +255,12 @@ metadata:
 	w := LocalPackageWriter{PackagePath: d}
 	err = w.Write([]*yaml.RNode{node2, node1, node3, node4})
 	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "kyaml.kustomize.dev/kio/index")
+		assert.Contains(t, err.Error(), "config.kubernetes.io/index")
 	}
 }
 
 // TestLocalPackageWriter_Write_pathIsDir tests:
-// - If  kyaml.kustomize.dev/kio/path is a directory, fail
+// - If  config.kubernetes.io/path is a directory, fail
 func TestLocalPackageWriter_Write_pathIsDir(t *testing.T) {
 	d, node1, node2, node3 := getWriterInputs(t)
 	defer os.RemoveAll(d)
@@ -272,8 +272,8 @@ g:
   - j
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/path: a/
-    kyaml.kustomize.dev/kio/index: 0
+    config.kubernetes.io/path: a/
+    config.kubernetes.io/index: 0
 `)
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, err.Error())
@@ -282,7 +282,7 @@ metadata:
 	w := LocalPackageWriter{PackagePath: d}
 	err = w.Write([]*yaml.RNode{node2, node1, node3, node4})
 	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "kyaml.kustomize.dev/kio/path cannot be a directory")
+		assert.Contains(t, err.Error(), "config.kubernetes.io/path cannot be a directory")
 	}
 }
 
@@ -290,8 +290,8 @@ func getWriterInputs(t *testing.T) (string, *yaml.RNode, *yaml.RNode, *yaml.RNod
 	node1, err := yaml.Parse(`a: b #first
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: 0
-    kyaml.kustomize.dev/kio/path: "a/b/a_test.yaml"
+    config.kubernetes.io/index: 0
+    config.kubernetes.io/path: "a/b/a_test.yaml"
 `)
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, err.Error())
@@ -299,8 +299,8 @@ metadata:
 	node2, err := yaml.Parse(`c: d # second
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: 1
-    kyaml.kustomize.dev/kio/path: "a/b/a_test.yaml"
+    config.kubernetes.io/index: 1
+    config.kubernetes.io/path: "a/b/a_test.yaml"
 `)
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, err.Error())
@@ -312,8 +312,8 @@ g:
   - j
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: 0
-    kyaml.kustomize.dev/kio/path: "a/b/b_test.yaml"
+    config.kubernetes.io/index: 0
+    config.kubernetes.io/path: "a/b/b_test.yaml"
 `)
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, err.Error())

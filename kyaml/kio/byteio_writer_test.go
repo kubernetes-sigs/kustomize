@@ -107,8 +107,8 @@ func TestByteWriter_Write_withAnnotationsKeepAnnotations(t *testing.T) {
 	node1, err := yaml.Parse(`a: b #first
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: 0
-    kyaml.kustomize.dev/kio/path: "a/b/a_test.yaml"
+    config.kubernetes.io/index: 0
+    config.kubernetes.io/path: "a/b/a_test.yaml"
 `)
 	if !assert.NoError(t, err) {
 		return
@@ -116,8 +116,8 @@ metadata:
 	node2, err := yaml.Parse(`c: d # second
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: 1
-    kyaml.kustomize.dev/kio/path: "a/b/a_test.yaml"
+    config.kubernetes.io/index: 1
+    config.kubernetes.io/path: "a/b/a_test.yaml"
 `)
 	if !assert.NoError(t, err) {
 		return
@@ -129,8 +129,8 @@ g:
   - j
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: 0
-    kyaml.kustomize.dev/kio/path: "a/b/b_test.yaml"
+    config.kubernetes.io/index: 0
+    config.kubernetes.io/path: "a/b/b_test.yaml"
 `)
 	if !assert.NoError(t, err) {
 		return
@@ -145,14 +145,14 @@ metadata:
 	assert.Equal(t, `a: b #first
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: 0
-    kyaml.kustomize.dev/kio/path: "a/b/a_test.yaml"
+    config.kubernetes.io/index: 0
+    config.kubernetes.io/path: "a/b/a_test.yaml"
 ---
 c: d # second
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: 1
-    kyaml.kustomize.dev/kio/path: "a/b/a_test.yaml"
+    config.kubernetes.io/index: 1
+    config.kubernetes.io/path: "a/b/a_test.yaml"
 ---
 e: f
 g:
@@ -161,8 +161,8 @@ g:
   - j
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: 0
-    kyaml.kustomize.dev/kio/path: "a/b/b_test.yaml"
+    config.kubernetes.io/index: 0
+    config.kubernetes.io/path: "a/b/b_test.yaml"
 `, buff.String())
 }
 
@@ -173,8 +173,8 @@ func TestByteWriter_Write_withAnnotations(t *testing.T) {
 	node1, err := yaml.Parse(`a: b #first
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: 0
-    kyaml.kustomize.dev/kio/path: "a/b/a_test.yaml"
+    config.kubernetes.io/index: 0
+    config.kubernetes.io/path: "a/b/a_test.yaml"
 `)
 	if !assert.NoError(t, err) {
 		return
@@ -182,8 +182,8 @@ metadata:
 	node2, err := yaml.Parse(`c: d # second
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: 1
-    kyaml.kustomize.dev/kio/path: "a/b/a_test.yaml"
+    config.kubernetes.io/index: 1
+    config.kubernetes.io/path: "a/b/a_test.yaml"
 `)
 	if !assert.NoError(t, err) {
 		return
@@ -195,8 +195,8 @@ g:
   - j
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: 0
-    kyaml.kustomize.dev/kio/path: "a/b/b_test.yaml"
+    config.kubernetes.io/index: 0
+    config.kubernetes.io/path: "a/b/b_test.yaml"
 `)
 	if !assert.NoError(t, err) {
 		return
@@ -211,12 +211,12 @@ metadata:
 	assert.Equal(t, `a: b #first
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/path: "a/b/a_test.yaml"
+    config.kubernetes.io/path: "a/b/a_test.yaml"
 ---
 c: d # second
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/path: "a/b/a_test.yaml"
+    config.kubernetes.io/path: "a/b/a_test.yaml"
 ---
 e: f
 g:
@@ -225,7 +225,7 @@ g:
   - j
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/path: "a/b/b_test.yaml"
+    config.kubernetes.io/path: "a/b/b_test.yaml"
 `, buff.String())
 }
 
@@ -235,7 +235,7 @@ func TestByteWriter_Write_partialAnnotations(t *testing.T) {
 	node1, err := yaml.Parse(`a: b #first
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/path: "a/b/a_test.yaml"
+    config.kubernetes.io/path: "a/b/a_test.yaml"
 `)
 	if !assert.NoError(t, err) {
 		return
@@ -243,8 +243,8 @@ metadata:
 	node2, err := yaml.Parse(`c: d # second
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/index: 1
-    kyaml.kustomize.dev/kio/path: "a/b/a_test.yaml"
+    config.kubernetes.io/index: 1
+    config.kubernetes.io/path: "a/b/a_test.yaml"
 `)
 	if !assert.NoError(t, err) {
 		return
@@ -274,11 +274,11 @@ g:
 a: b #first
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/path: "a/b/a_test.yaml"
+    config.kubernetes.io/path: "a/b/a_test.yaml"
 ---
 c: d # second
 metadata:
   annotations:
-    kyaml.kustomize.dev/kio/path: "a/b/a_test.yaml"
+    config.kubernetes.io/path: "a/b/a_test.yaml"
 `, buff.String())
 }

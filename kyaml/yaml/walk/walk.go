@@ -48,9 +48,9 @@ func (l Walker) Walk() (*yaml.RNode, error) {
 		}
 		if yaml.IsAssociative(l.Sources) {
 			return l.walkAssociativeSequence()
-		} else {
-			return l.walkNonAssociativeSequence()
 		}
+		return l.walkNonAssociativeSequence()
+
 	case yaml.ScalarNode:
 		if err := yaml.ErrorIfAnyInvalidAndNonNull(yaml.ScalarNode, l.Sources...); err != nil {
 			return nil, err

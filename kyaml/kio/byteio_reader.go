@@ -27,7 +27,7 @@ type ByteReadWriter struct {
 	// Writer is where ResourceNodes are encoded.
 	Writer io.Writer
 
-	// OmitReaderAnnotations will configures Read to skip setting the kyaml.kustomize.dev/kio/index
+	// OmitReaderAnnotations will configures Read to skip setting the config.kubernetes.io/index
 	// annotation on Resources as they are Read.
 	OmitReaderAnnotations bool
 
@@ -68,13 +68,13 @@ func (rw *ByteReadWriter) Write(nodes []*yaml.RNode) error {
 }
 
 // ByteReader decodes ResourceNodes from bytes.
-// By default, Read will set the kyaml.kustomize.dev/kio/index annotation on each RNode as it
+// By default, Read will set the config.kubernetes.io/index annotation on each RNode as it
 // is read so they can be written back in the same order.
 type ByteReader struct {
 	// Reader is where ResourceNodes are decoded from.
 	Reader io.Reader
 
-	// OmitReaderAnnotations will configures Read to skip setting the kyaml.kustomize.dev/kio/index
+	// OmitReaderAnnotations will configures Read to skip setting the config.kubernetes.io/index
 	// annotation on Resources as they are Read.
 	OmitReaderAnnotations bool
 

@@ -240,7 +240,7 @@ type ObjectMeta struct {
 	Annotations map[string]string `yaml:"annotations,omitempty"`
 }
 
-var MissingMetaError = errors.New("missing Resource metadata")
+var ErrMissingMetadata = errors.New("missing Resource metadata")
 
 // GetMeta returns the ResourceMeta for a RNode
 func (rn *RNode) GetMeta() (ResourceMeta, error) {
@@ -259,7 +259,7 @@ func (rn *RNode) GetMeta() (ResourceMeta, error) {
 		return m, err
 	}
 	if reflect.DeepEqual(m, ResourceMeta{}) {
-		return m, MissingMetaError
+		return m, ErrMissingMetadata
 	}
 	return m, nil
 }
@@ -296,6 +296,13 @@ func (rn *RNode) Pipe(functions ...Filter) (*RNode, error) {
 		}
 	}
 	return v, err
+}
+
+// PipeE runs Pipe, dropping the *RNode return value.
+// Useful for directly returning the Pipe error value from functions.
+func (rn *RNode) PipeE(functions ...Filter) error {
+	_, err := rn.Pipe(functions...)
+	return err
 }
 
 // Document returns the Node RNode for the value.  Does not unwrap the node if it is a
@@ -445,7 +452,7 @@ func (rn *RNode) Elements() ([]*RNode, error) {
 		return nil, err
 	}
 	var elements []*RNode
-	for i := 0; i < len(rn.Content()); i += 1 {
+	for i := 0; i < len(rn.Content()); i++ {
 		elements = append(elements, NewRNode(rn.Content()[i]))
 	}
 	return elements, nil
@@ -459,7 +466,7 @@ func (rn *RNode) ElementValues(key string) ([]string, error) {
 		return nil, err
 	}
 	var elements []string
-	for i := 0; i < len(rn.Content()); i += 1 {
+	for i := 0; i < len(rn.Content()); i++ {
 		field := NewRNode(rn.Content()[i]).Field(key)
 		if !IsFieldEmpty(field) {
 			elements = append(elements, field.Value.YNode().Value)
@@ -497,8 +504,7 @@ func (rn *RNode) VisitElements(fn func(node *RNode) error) error {
 	return nil
 }
 
-// AssociativeSequencePaths is a list of field names that may be used as associative keys
-// when merge Resources.
+// AssociativeSequenceKeys is a map of paths to sequences that have associative keys.
 // The order sets the precedence of the merge keys -- if multiple keys are present
 // in Resources in a list, then the FIRST key which ALL elements in the list have is used as the
 // associative key for merging that list.

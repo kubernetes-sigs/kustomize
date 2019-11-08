@@ -69,7 +69,7 @@ func (r LocalPackageWriter) Write(nodes []*yaml.RNode) error {
 				return err
 			}
 			if st.IsDir() {
-				return fmt.Errorf("kyaml.kustomize.dev/kio/path cannot be a directory: %s", path)
+				return fmt.Errorf("config.kubernetes.io/path cannot be a directory: %s", path)
 			}
 		}
 
