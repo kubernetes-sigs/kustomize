@@ -20,7 +20,7 @@ type TreeStructure string
 const (
 	// TreeStructurePackage configures TreeWriter to generate the tree structure off of the
 	// Resources packages.
-	TreeStructurePackage TreeStructure = "package"
+	TreeStructurePackage TreeStructure = "directory"
 
 	// TreeStructureOwners configures TreeWriter to generate the tree structure off of the
 	// Resource owners.
