@@ -38,8 +38,8 @@ These libraries were forked by running `git clone` to clone the repos.
 
 1. Remove the current existing psuedo modules
   - `$ rm -rf psuedo/k8s`
-2. Run the [fork-packages.sh](fork-packages.sh) script to clone and configure pseudo deps
-  - `$ psuedo/fork-packages.sh`
+2. Run the [init-pseudo-module.sh](init-pseudo-module.sh) script to clone and configure pseudo deps
+  - From the root directory -- `$ psuedo/init-pseudo-module.sh`
 
 ### Using the Pseudo Modules in Kustomize
 
