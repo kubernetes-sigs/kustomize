@@ -25,7 +25,7 @@ Add `kubeval` to your PATH
 [Instructions](https://www.topbug.net/blog/2013/04/14/install-and-use-gnu-command-line-tools-in-mac-os-x/)
 
 ```sh
-brew install coreutils wget sed
+brew install coreutils wget gnu-sed
 ```
 
 Add the new tools to your PATH
