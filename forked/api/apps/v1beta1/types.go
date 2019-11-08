@@ -17,10 +17,10 @@ limitations under the License.
 package v1beta1
 
 import (
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/intstr"
+	v1 "sigs.k8s.io/kustomize/forked/api/core/v1"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/intstr"
 )
 
 const (
@@ -55,7 +55,7 @@ type ScaleStatus struct {
 	TargetSelector string `json:"targetSelector,omitempty" protobuf:"bytes,3,opt,name=targetSelector"`
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // Scale represents a scaling request for a resource.
 type Scale struct {
@@ -74,7 +74,7 @@ type Scale struct {
 }
 
 // +genclient
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // DEPRECATED - This group version of StatefulSet is deprecated by apps/v1beta2/StatefulSet. See the release notes for
 // more information.
@@ -261,7 +261,7 @@ type StatefulSetCondition struct {
 	// Type of statefulset condition.
 	Type StatefulSetConditionType `json:"type" protobuf:"bytes,1,opt,name=type,casttype=StatefulSetConditionType"`
 	// Status of the condition, one of True, False, Unknown.
-	Status v1.ConditionStatus `json:"status" protobuf:"bytes,2,opt,name=status,casttype=k8s.io/api/core/v1.ConditionStatus"`
+	Status v1.ConditionStatus `json:"status" protobuf:"bytes,2,opt,name=status,casttype=sigs.k8s.io/kustomize/forked/api/core/v1.ConditionStatus"`
 	// Last time the condition transitioned from one status to another.
 	// +optional
 	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty" protobuf:"bytes,3,opt,name=lastTransitionTime"`
@@ -273,7 +273,7 @@ type StatefulSetCondition struct {
 	Message string `json:"message,omitempty" protobuf:"bytes,5,opt,name=message"`
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // StatefulSetList is a collection of StatefulSets.
 type StatefulSetList struct {
@@ -284,7 +284,7 @@ type StatefulSetList struct {
 }
 
 // +genclient
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // DEPRECATED - This group version of Deployment is deprecated by apps/v1beta2/Deployment. See the release notes for
 // more information.
@@ -354,7 +354,7 @@ type DeploymentSpec struct {
 	ProgressDeadlineSeconds *int32 `json:"progressDeadlineSeconds,omitempty" protobuf:"varint,9,opt,name=progressDeadlineSeconds"`
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // DEPRECATED.
 // DeploymentRollback stores the information required to rollback a deployment.
@@ -500,7 +500,7 @@ type DeploymentCondition struct {
 	// Type of deployment condition.
 	Type DeploymentConditionType `json:"type" protobuf:"bytes,1,opt,name=type,casttype=DeploymentConditionType"`
 	// Status of the condition, one of True, False, Unknown.
-	Status v1.ConditionStatus `json:"status" protobuf:"bytes,2,opt,name=status,casttype=k8s.io/api/core/v1.ConditionStatus"`
+	Status v1.ConditionStatus `json:"status" protobuf:"bytes,2,opt,name=status,casttype=sigs.k8s.io/kustomize/forked/api/core/v1.ConditionStatus"`
 	// The last time this condition was updated.
 	LastUpdateTime metav1.Time `json:"lastUpdateTime,omitempty" protobuf:"bytes,6,opt,name=lastUpdateTime"`
 	// Last time the condition transitioned from one status to another.
@@ -511,7 +511,7 @@ type DeploymentCondition struct {
 	Message string `json:"message,omitempty" protobuf:"bytes,5,opt,name=message"`
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // DeploymentList is a list of Deployments.
 type DeploymentList struct {
@@ -525,7 +525,7 @@ type DeploymentList struct {
 }
 
 // +genclient
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // DEPRECATED - This group version of ControllerRevision is deprecated by apps/v1beta2/ControllerRevision. See the
 // release notes for more information.
@@ -552,7 +552,7 @@ type ControllerRevision struct {
 	Revision int64 `json:"revision" protobuf:"varint,3,opt,name=revision"`
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // ControllerRevisionList is a resource containing a list of ControllerRevision objects.
 type ControllerRevisionList struct {

@@ -16,7 +16,7 @@ limitations under the License.
 
 package v1beta1
 
-import "k8s.io/api/extensions/v1beta1"
+import "sigs.k8s.io/kustomize/forked/api/extensions/v1beta1"
 
 // The DeploymentExpansion interface allows manually adding extra methods to the DeploymentInterface.
 type DeploymentExpansion interface {

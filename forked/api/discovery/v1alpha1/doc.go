@@ -19,4 +19,4 @@ limitations under the License.
 // +k8s:openapi-gen=true
 // +groupName=discovery.k8s.io
 
-package v1alpha1 // import "k8s.io/api/discovery/v1alpha1"
+package v1alpha1 // import "sigs.k8s.io/kustomize/forked/api/discovery/v1alpha1"

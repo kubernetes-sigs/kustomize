@@ -19,10 +19,10 @@ limitations under the License.
 package v2alpha1
 
 import (
-	v2alpha1 "k8s.io/api/batch/v2alpha1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/tools/cache"
+	v2alpha1 "sigs.k8s.io/kustomize/forked/api/batch/v2alpha1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/labels"
+	"sigs.k8s.io/kustomize/forked/client-go/tools/cache"
 )
 
 // CronJobLister helps list CronJobs.

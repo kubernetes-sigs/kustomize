@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
 )
 
 // MetaFactory is used to store and retrieve the version and kind

@@ -19,7 +19,7 @@ package resource_test
 import (
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/api/resource"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/resource"
 )
 
 func ExampleFormat() {

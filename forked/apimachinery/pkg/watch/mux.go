@@ -19,8 +19,8 @@ package watch
 import (
 	"sync"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
 )
 
 // FullChannelBehavior controls how the Broadcaster reacts if a watcher's watch

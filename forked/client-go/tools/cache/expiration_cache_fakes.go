@@ -17,8 +17,8 @@ limitations under the License.
 package cache
 
 import (
-	"k8s.io/apimachinery/pkg/util/clock"
-	"k8s.io/apimachinery/pkg/util/sets"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/clock"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/sets"
 )
 
 type fakeThreadSafeMap struct {

@@ -19,8 +19,8 @@ limitations under the License.
 package core
 
 import (
-	v1 "k8s.io/client-go/informers/core/v1"
-	internalinterfaces "k8s.io/client-go/informers/internalinterfaces"
+	v1 "sigs.k8s.io/kustomize/forked/client-go/informers/core/v1"
+	internalinterfaces "sigs.k8s.io/kustomize/forked/client-go/informers/internalinterfaces"
 )
 
 // Interface provides access to each of this group's versions.

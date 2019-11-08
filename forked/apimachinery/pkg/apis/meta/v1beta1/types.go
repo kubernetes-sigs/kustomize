@@ -18,12 +18,12 @@ limitations under the License.
 package v1beta1
 
 import (
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
 )
 
 // Table is a tabular representation of a set of API resources. The server transforms the
 // object into a set of preferred columns for quickly reviewing the objects.
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 // +protobuf=false
 type Table = v1.Table
 
@@ -46,12 +46,12 @@ type ConditionStatus = v1.ConditionStatus
 type IncludeObjectPolicy = v1.IncludeObjectPolicy
 
 // TableOptions are used when a Table is requested by the caller.
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 type TableOptions = v1.TableOptions
 
 // PartialObjectMetadata is a generic representation of any object with ObjectMeta. It allows clients
 // to get access to a particular ObjectMeta schema without knowing the details of the version.
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 type PartialObjectMetadata = v1.PartialObjectMetadata
 
 // IMPORTANT: PartialObjectMetadataList has different protobuf field ids in v1beta1 than
@@ -59,7 +59,7 @@ type PartialObjectMetadata = v1.PartialObjectMetadata
 // remain independent of v1.PartialObjectMetadataList to preserve mappings.
 
 // PartialObjectMetadataList contains a list of objects containing only their metadata.
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 type PartialObjectMetadataList struct {
 	v1.TypeMeta `json:",inline"`
 	// Standard list metadata.

@@ -17,8 +17,8 @@ limitations under the License.
 package memory
 
 import (
-	"k8s.io/client-go/discovery"
-	"k8s.io/client-go/discovery/cached/memory"
+	"sigs.k8s.io/kustomize/forked/client-go/discovery"
+	"sigs.k8s.io/kustomize/forked/client-go/discovery/cached/memory"
 )
 
 // NewMemCacheClient is DEPRECATED. Use memory.NewMemCacheClient directly.

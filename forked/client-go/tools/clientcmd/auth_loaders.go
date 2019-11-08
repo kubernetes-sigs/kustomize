@@ -25,7 +25,7 @@ import (
 
 	"golang.org/x/crypto/ssh/terminal"
 
-	clientauth "k8s.io/client-go/tools/auth"
+	clientauth "sigs.k8s.io/kustomize/forked/client-go/tools/auth"
 )
 
 // AuthLoaders are used to build clientauth.Info objects.

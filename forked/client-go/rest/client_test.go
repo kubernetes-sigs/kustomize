@@ -27,15 +27,15 @@ import (
 
 	"fmt"
 
-	"k8s.io/api/core/v1"
-	v1beta1 "k8s.io/api/extensions/v1beta1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/diff"
-	"k8s.io/client-go/kubernetes/scheme"
-	utiltesting "k8s.io/client-go/util/testing"
+	"sigs.k8s.io/kustomize/forked/api/core/v1"
+	v1beta1 "sigs.k8s.io/kustomize/forked/api/extensions/v1beta1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/errors"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/types"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/diff"
+	"sigs.k8s.io/kustomize/forked/client-go/kubernetes/scheme"
+	utiltesting "sigs.k8s.io/kustomize/forked/client-go/util/testing"
 )
 
 type TestParam struct {

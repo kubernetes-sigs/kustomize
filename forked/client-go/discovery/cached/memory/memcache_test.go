@@ -23,9 +23,9 @@ import (
 	"sync"
 	"testing"
 
-	errorsutil "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/discovery/fake"
+	errorsutil "sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/errors"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/client-go/discovery/fake"
 )
 
 type resourceMapEntry struct {

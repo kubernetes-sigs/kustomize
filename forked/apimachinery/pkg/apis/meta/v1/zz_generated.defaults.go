@@ -21,7 +21,7 @@ limitations under the License.
 package v1
 
 import (
-	runtime "k8s.io/apimachinery/pkg/runtime"
+	runtime "sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
 )
 
 // RegisterDefaults adds defaulters functions to the given scheme.

@@ -19,10 +19,10 @@ package versioned
 import (
 	"encoding/json"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer/streaming"
-	"k8s.io/apimachinery/pkg/watch"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/serializer/streaming"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/watch"
 )
 
 // Encoder serializes watch.Events into io.Writer. The internal objects

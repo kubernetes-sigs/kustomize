@@ -26,12 +26,12 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/net"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/client-go/tools/cache"
+	apierrors "sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/errors"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/net"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/wait"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/watch"
+	"sigs.k8s.io/kustomize/forked/client-go/tools/cache"
 	"k8s.io/klog"
 )
 

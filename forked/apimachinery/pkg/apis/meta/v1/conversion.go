@@ -21,12 +21,12 @@ import (
 	"strconv"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/apimachinery/pkg/conversion"
-	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/intstr"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/resource"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/conversion"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/fields"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/labels"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/intstr"
 )
 
 func AddConversionFuncs(scheme *runtime.Scheme) error {

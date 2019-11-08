@@ -19,9 +19,9 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1alpha1 "k8s.io/api/storage/v1alpha1"
-	"k8s.io/client-go/kubernetes/scheme"
-	rest "k8s.io/client-go/rest"
+	v1alpha1 "sigs.k8s.io/kustomize/forked/api/storage/v1alpha1"
+	"sigs.k8s.io/kustomize/forked/client-go/kubernetes/scheme"
+	rest "sigs.k8s.io/kustomize/forked/client-go/rest"
 )
 
 type StorageV1alpha1Interface interface {

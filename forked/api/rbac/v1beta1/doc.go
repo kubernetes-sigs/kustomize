@@ -20,4 +20,4 @@ limitations under the License.
 
 // +groupName=rbac.authorization.k8s.io
 
-package v1beta1 // import "k8s.io/api/rbac/v1beta1"
+package v1beta1 // import "sigs.k8s.io/kustomize/forked/api/rbac/v1beta1"

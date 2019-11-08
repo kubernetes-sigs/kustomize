@@ -22,8 +22,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/httpstream"
+	"sigs.k8s.io/kustomize/forked/api/core/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/httpstream"
 	"k8s.io/klog"
 )
 

@@ -22,7 +22,7 @@ import (
 	"sort"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/selection"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/selection"
 )
 
 // Selector represents a field selector.

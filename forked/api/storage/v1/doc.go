@@ -19,4 +19,4 @@ limitations under the License.
 // +groupName=storage.k8s.io
 // +k8s:openapi-gen=true
 
-package v1 // import "k8s.io/api/storage/v1"
+package v1 // import "sigs.k8s.io/kustomize/forked/api/storage/v1"

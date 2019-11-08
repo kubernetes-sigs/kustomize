@@ -19,12 +19,12 @@ package v1
 import (
 	"fmt"
 
-	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	ref "k8s.io/client-go/tools/reference"
+	"sigs.k8s.io/kustomize/forked/api/core/v1"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/fields"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/types"
+	ref "sigs.k8s.io/kustomize/forked/client-go/tools/reference"
 )
 
 // The EventExpansion interface allows manually adding extra methods to the EventInterface.

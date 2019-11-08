@@ -19,12 +19,12 @@ package v1beta1
 import (
 	"fmt"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
 )
 
 // +genclient
 // +genclient:nonNamespaced
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // Describes a certificate signing request
 type CertificateSigningRequest struct {
@@ -113,7 +113,7 @@ type CertificateSigningRequestCondition struct {
 	LastUpdateTime metav1.Time `json:"lastUpdateTime,omitempty" protobuf:"bytes,4,opt,name=lastUpdateTime"`
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 type CertificateSigningRequestList struct {
 	metav1.TypeMeta `json:",inline"`

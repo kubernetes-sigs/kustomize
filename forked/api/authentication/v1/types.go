@@ -19,8 +19,8 @@ package v1
 import (
 	"fmt"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/types"
 )
 
 const (
@@ -41,7 +41,7 @@ const (
 // +genclient
 // +genclient:nonNamespaced
 // +genclient:noVerbs
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // TokenReview attempts to authenticate a token to a known user.
 // Note: TokenReview requests may be cached by the webhook token authenticator
@@ -125,7 +125,7 @@ func (t ExtraValue) String() string {
 	return fmt.Sprintf("%v", []string(t))
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // TokenRequest requests a token for a given service account.
 type TokenRequest struct {
@@ -185,5 +185,5 @@ type BoundObjectReference struct {
 	Name string `json:"name,omitempty" protobuf:"bytes,3,opt,name=name"`
 	// UID of the referent.
 	// +optional
-	UID types.UID `json:"uid,omitempty" protobuf:"bytes,4,opt,name=uID,casttype=k8s.io/apimachinery/pkg/types.UID"`
+	UID types.UID `json:"uid,omitempty" protobuf:"bytes,4,opt,name=uID,casttype=sigs.k8s.io/kustomize/forked/apimachinery/pkg/types.UID"`
 }

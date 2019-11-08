@@ -20,14 +20,14 @@ import (
 	"fmt"
 	"strings"
 
-	apiequality "k8s.io/apimachinery/pkg/api/equality"
-	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/apimachinery/pkg/util/validation"
-	"k8s.io/apimachinery/pkg/util/validation/field"
+	apiequality "sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/equality"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/meta"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	v1validation "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1/validation"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/sets"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/validation"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/validation/field"
 )
 
 const FieldImmutableErrorMsg string = `field is immutable`

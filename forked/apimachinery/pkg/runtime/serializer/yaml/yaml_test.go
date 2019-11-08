@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/util/yaml"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/yaml"
 	sigsyaml "sigs.k8s.io/yaml"
 )
 

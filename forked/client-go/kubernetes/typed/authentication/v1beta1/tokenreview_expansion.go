@@ -19,7 +19,7 @@ package v1beta1
 import (
 	"context"
 
-	authenticationapi "k8s.io/api/authentication/v1beta1"
+	authenticationapi "sigs.k8s.io/kustomize/forked/api/authentication/v1beta1"
 )
 
 type TokenReviewExpansion interface {

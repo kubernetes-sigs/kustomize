@@ -17,7 +17,7 @@ limitations under the License.
 package conversion
 
 import (
-	"k8s.io/apimachinery/third_party/forked/golang/reflect"
+	"sigs.k8s.io/kustomize/forked/apimachinery/third_party/forked/golang/reflect"
 )
 
 // The code for this type must be located in third_party, since it forks from

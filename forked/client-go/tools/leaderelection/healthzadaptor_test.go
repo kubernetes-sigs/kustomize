@@ -23,8 +23,8 @@ import (
 
 	"net/http"
 
-	"k8s.io/apimachinery/pkg/util/clock"
-	rl "k8s.io/client-go/tools/leaderelection/resourcelock"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/clock"
+	rl "sigs.k8s.io/kustomize/forked/client-go/tools/leaderelection/resourcelock"
 )
 
 type fakeLock struct {

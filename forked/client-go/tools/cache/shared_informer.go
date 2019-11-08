@@ -21,11 +21,11 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/clock"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/util/retry"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/clock"
+	utilruntime "sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/wait"
+	"sigs.k8s.io/kustomize/forked/client-go/util/retry"
 	"k8s.io/utils/buffer"
 
 	"k8s.io/klog"

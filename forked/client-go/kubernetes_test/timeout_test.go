@@ -24,12 +24,12 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 
-	appsv1 "k8s.io/api/apps/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
-	manualfake "k8s.io/client-go/rest/fake"
+	appsv1 "sigs.k8s.io/kustomize/forked/api/apps/v1"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/client-go/kubernetes"
+	"sigs.k8s.io/kustomize/forked/client-go/kubernetes/scheme"
+	"sigs.k8s.io/kustomize/forked/client-go/rest"
+	manualfake "sigs.k8s.io/kustomize/forked/client-go/rest/fake"
 )
 
 func TestListTimeout(t *testing.T) {

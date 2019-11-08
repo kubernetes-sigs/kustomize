@@ -29,8 +29,8 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 	"k8s.io/klog"
 
-	"k8s.io/apimachinery/pkg/util/net"
-	restclient "k8s.io/client-go/rest"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/net"
+	restclient "sigs.k8s.io/kustomize/forked/client-go/rest"
 )
 
 const (

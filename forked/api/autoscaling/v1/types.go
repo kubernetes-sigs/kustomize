@@ -17,9 +17,9 @@ limitations under the License.
 package v1
 
 import (
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "sigs.k8s.io/kustomize/forked/api/core/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/resource"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
 )
 
 // CrossVersionObjectReference contains enough information to let you identify the referred resource.
@@ -77,7 +77,7 @@ type HorizontalPodAutoscalerStatus struct {
 }
 
 // +genclient
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // configuration of a horizontal pod autoscaler.
 type HorizontalPodAutoscaler struct {
@@ -95,7 +95,7 @@ type HorizontalPodAutoscaler struct {
 	Status HorizontalPodAutoscalerStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // list of horizontal pod autoscaler objects.
 type HorizontalPodAutoscalerList struct {
@@ -108,7 +108,7 @@ type HorizontalPodAutoscalerList struct {
 	Items []HorizontalPodAutoscaler `json:"items" protobuf:"bytes,2,rep,name=items"`
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // Scale represents a scaling request for a resource.
 type Scale struct {

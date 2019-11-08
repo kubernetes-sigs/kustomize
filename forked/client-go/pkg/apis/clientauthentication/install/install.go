@@ -19,10 +19,10 @@ limitations under the License.
 package install
 
 import (
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/client-go/pkg/apis/clientauthentication"
-	"k8s.io/client-go/pkg/apis/clientauthentication/v1alpha1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	utilruntime "sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/runtime"
+	"sigs.k8s.io/kustomize/forked/client-go/pkg/apis/clientauthentication"
+	"sigs.k8s.io/kustomize/forked/client-go/pkg/apis/clientauthentication/v1alpha1"
 )
 
 // Install registers the API group and adds types to a scheme

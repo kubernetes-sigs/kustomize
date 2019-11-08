@@ -19,8 +19,8 @@ package fake
 import (
 	"context"
 
-	authorizationapi "k8s.io/api/authorization/v1beta1"
-	core "k8s.io/client-go/testing"
+	authorizationapi "sigs.k8s.io/kustomize/forked/api/authorization/v1beta1"
+	core "sigs.k8s.io/kustomize/forked/client-go/testing"
 )
 
 func (c *FakeSelfSubjectAccessReviews) Create(sar *authorizationapi.SelfSubjectAccessReview) (result *authorizationapi.SelfSubjectAccessReview, err error) {

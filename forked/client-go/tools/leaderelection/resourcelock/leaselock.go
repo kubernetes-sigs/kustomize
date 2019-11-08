@@ -21,10 +21,10 @@ import (
 	"errors"
 	"fmt"
 
-	coordinationv1 "k8s.io/api/coordination/v1"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	coordinationv1client "k8s.io/client-go/kubernetes/typed/coordination/v1"
+	coordinationv1 "sigs.k8s.io/kustomize/forked/api/coordination/v1"
+	corev1 "sigs.k8s.io/kustomize/forked/api/core/v1"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	coordinationv1client "sigs.k8s.io/kustomize/forked/client-go/kubernetes/typed/coordination/v1"
 )
 
 type LeaseLock struct {

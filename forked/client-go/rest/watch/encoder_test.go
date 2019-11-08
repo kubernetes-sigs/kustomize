@@ -21,18 +21,18 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"k8s.io/api/core/v1"
-	apiequality "k8s.io/apimachinery/pkg/api/equality"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	runtimejson "k8s.io/apimachinery/pkg/runtime/serializer/json"
-	"k8s.io/apimachinery/pkg/runtime/serializer/streaming"
-	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/client-go/kubernetes/scheme"
-	restclientwatch "k8s.io/client-go/rest/watch"
+	"sigs.k8s.io/kustomize/forked/api/core/v1"
+	apiequality "sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/equality"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	runtimejson "sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/serializer/json"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/serializer/streaming"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/watch"
+	"sigs.k8s.io/kustomize/forked/client-go/kubernetes/scheme"
+	restclientwatch "sigs.k8s.io/kustomize/forked/client-go/rest/watch"
 )
 
-// getEncoder mimics how k8s.io/client-go/rest.createSerializers creates a encoder
+// getEncoder mimics how sigs.k8s.io/kustomize/forked/client-go/rest.createSerializers creates a encoder
 func getEncoder() runtime.Encoder {
 	jsonSerializer := runtimejson.NewSerializer(runtimejson.DefaultMetaFactory, scheme.Scheme, scheme.Scheme, false)
 	directCodecFactory := scheme.Codecs.WithoutConversion()

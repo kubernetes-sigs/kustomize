@@ -17,9 +17,9 @@ limitations under the License.
 package scheme
 
 import (
-	autoscalingv1 "k8s.io/api/autoscaling/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	autoscalingv1 "sigs.k8s.io/kustomize/forked/api/autoscaling/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
 )
 
 // GroupName is the group name use in this package

@@ -21,18 +21,18 @@
 //       tree/master/pkg/util/yaml
 //
 // It vendors that package into
-//   sigs.k8s.io/kustomize/vendor/k8s.io/apimachinery/
+//   sigs.k8s.io/kustomize/vendor/sigs.k8s.io/kustomize/forked/apimachinery/
 //
 // Whereas kubectl-kustomize would have to depend on the "staging"
 // version of this code, located at
 //
 //   https://github.com/kubernetes/kubernetes/
-//       blob/master/staging/src/k8s.io/apimachinery/pkg/util/yaml
+//       blob/master/staging/src/sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/yaml
 //
 // which is "vendored" via symlinks:
-//   k8s.io/kubernetes/vendor/k8s.io/apimachinery
+//   k8s.io/kubernetes/vendor/sigs.k8s.io/kustomize/forked/apimachinery
 // is a symlink to
-//   ../../staging/src/k8s.io/apimachinery
+//   ../../staging/src/sigs.k8s.io/kustomize/forked/apimachinery
 //
 // The staging version is the canonical, under-development
 // version of the code that kubectl depends on, whereas the packages

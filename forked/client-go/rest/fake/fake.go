@@ -22,11 +22,11 @@ import (
 	"net/http"
 	"net/url"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
-	restclient "k8s.io/client-go/rest"
-	"k8s.io/client-go/util/flowcontrol"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/types"
+	restclient "sigs.k8s.io/kustomize/forked/client-go/rest"
+	"sigs.k8s.io/kustomize/forked/client-go/util/flowcontrol"
 )
 
 func CreateHTTPClient(roundTripper func(*http.Request) (*http.Response, error)) *http.Client {

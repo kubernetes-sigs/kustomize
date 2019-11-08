@@ -23,7 +23,7 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/apimachinery/pkg/util/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/runtime"
 )
 
 // For any test of the style:

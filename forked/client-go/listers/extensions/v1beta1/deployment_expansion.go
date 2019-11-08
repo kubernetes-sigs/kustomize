@@ -19,9 +19,9 @@ package v1beta1
 import (
 	"fmt"
 
-	extensions "k8s.io/api/extensions/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
+	extensions "sigs.k8s.io/kustomize/forked/api/extensions/v1beta1"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/labels"
 )
 
 // DeploymentListerExpansion allows custom methods to be added to

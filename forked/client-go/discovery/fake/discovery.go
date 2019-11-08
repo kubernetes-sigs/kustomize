@@ -21,12 +21,12 @@ import (
 
 	"github.com/googleapis/gnostic/OpenAPIv2"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/version"
-	kubeversion "k8s.io/client-go/pkg/version"
-	restclient "k8s.io/client-go/rest"
-	"k8s.io/client-go/testing"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/version"
+	kubeversion "sigs.k8s.io/kustomize/forked/client-go/pkg/version"
+	restclient "sigs.k8s.io/kustomize/forked/client-go/rest"
+	"sigs.k8s.io/kustomize/forked/client-go/testing"
 )
 
 // FakeDiscovery implements discovery.DiscoveryInterface and sometimes calls testing.Fake.Invoke with an action,

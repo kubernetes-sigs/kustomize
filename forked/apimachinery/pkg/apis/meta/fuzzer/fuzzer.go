@@ -25,14 +25,14 @@ import (
 
 	fuzz "github.com/google/gofuzz"
 
-	apitesting "k8s.io/apimachinery/pkg/api/apitesting"
-	"k8s.io/apimachinery/pkg/api/apitesting/fuzzer"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	metav1beta1 "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
-	"k8s.io/apimachinery/pkg/runtime"
-	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/apimachinery/pkg/types"
+	apitesting "sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/apitesting"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/apitesting/fuzzer"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/resource"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	metav1beta1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1beta1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	runtimeserializer "sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/serializer"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/types"
 )
 
 func genericFuzzerFuncs(codecs runtimeserializer.CodecFactory) []interface{} {

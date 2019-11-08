@@ -21,7 +21,7 @@ import (
 
 	"github.com/google/gofuzz"
 
-	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
+	runtimeserializer "sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/serializer"
 )
 
 // FuzzerFuncs returns a list of func(*SomeType, c fuzz.Continue) functions.

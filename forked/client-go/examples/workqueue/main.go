@@ -23,15 +23,15 @@ import (
 
 	"k8s.io/klog"
 
-	v1 "k8s.io/api/core/v1"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/workqueue"
+	v1 "sigs.k8s.io/kustomize/forked/api/core/v1"
+	meta_v1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/fields"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/wait"
+	"sigs.k8s.io/kustomize/forked/client-go/kubernetes"
+	"sigs.k8s.io/kustomize/forked/client-go/tools/cache"
+	"sigs.k8s.io/kustomize/forked/client-go/tools/clientcmd"
+	"sigs.k8s.io/kustomize/forked/client-go/util/workqueue"
 )
 
 type Controller struct {

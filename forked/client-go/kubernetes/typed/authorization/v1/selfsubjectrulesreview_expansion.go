@@ -19,7 +19,7 @@ package v1
 import (
 	"context"
 
-	authorizationapi "k8s.io/api/authorization/v1"
+	authorizationapi "sigs.k8s.io/kustomize/forked/api/authorization/v1"
 )
 
 type SelfSubjectRulesReviewExpansion interface {

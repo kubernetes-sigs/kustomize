@@ -19,10 +19,10 @@ limitations under the License.
 package v1beta1
 
 import (
-	v1beta1 "k8s.io/api/extensions/v1beta1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/tools/cache"
+	v1beta1 "sigs.k8s.io/kustomize/forked/api/extensions/v1beta1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/labels"
+	"sigs.k8s.io/kustomize/forked/client-go/tools/cache"
 )
 
 // DeploymentLister helps list Deployments.

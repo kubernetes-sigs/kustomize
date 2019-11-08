@@ -17,20 +17,20 @@ limitations under the License.
 package test
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/testapigroup"
-	"k8s.io/apimachinery/pkg/apis/testapigroup/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	apiserializer "k8s.io/apimachinery/pkg/runtime/serializer"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/testapigroup"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/testapigroup/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	apiserializer "sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/serializer"
+	utilruntime "sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/runtime"
 )
 
 // List and ListV1 should be kept in sync with k8s.io/kubernetes/pkg/api#List
-// and k8s.io/api/core/v1#List.
+// and sigs.k8s.io/kustomize/forked/api/core/v1#List.
 //
 // +k8s:deepcopy-gen=true
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 type List struct {
 	metav1.TypeMeta
 	metav1.ListMeta
@@ -39,7 +39,7 @@ type List struct {
 }
 
 // +k8s:deepcopy-gen=true
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 type ListV1 struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`

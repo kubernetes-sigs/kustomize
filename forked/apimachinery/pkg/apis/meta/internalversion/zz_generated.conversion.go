@@ -23,9 +23,9 @@ package internalversion
 import (
 	unsafe "unsafe"
 
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	conversion "k8s.io/apimachinery/pkg/conversion"
-	runtime "k8s.io/apimachinery/pkg/runtime"
+	v1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	conversion "sigs.k8s.io/kustomize/forked/apimachinery/pkg/conversion"
+	runtime "sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
 )
 
 func init() {

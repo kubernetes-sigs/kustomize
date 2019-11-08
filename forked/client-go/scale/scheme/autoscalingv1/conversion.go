@@ -19,10 +19,10 @@ package autoscalingv1
 import (
 	"fmt"
 
-	v1 "k8s.io/api/autoscaling/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/conversion"
-	scheme "k8s.io/client-go/scale/scheme"
+	v1 "sigs.k8s.io/kustomize/forked/api/autoscaling/v1"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/conversion"
+	scheme "sigs.k8s.io/kustomize/forked/client-go/scale/scheme"
 )
 
 func Convert_scheme_ScaleStatus_To_v1_ScaleStatus(in *scheme.ScaleStatus, out *v1.ScaleStatus, s conversion.Scope) error {

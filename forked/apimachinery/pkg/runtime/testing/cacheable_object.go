@@ -22,8 +22,8 @@ import (
 	"io"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
 )
 
 // nonCacheableTestObject implements json.Marshaler and proto.Marshaler interfaces

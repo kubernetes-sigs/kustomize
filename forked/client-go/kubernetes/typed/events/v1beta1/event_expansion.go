@@ -19,8 +19,8 @@ package v1beta1
 import (
 	"fmt"
 
-	"k8s.io/api/events/v1beta1"
-	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/kustomize/forked/api/events/v1beta1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/types"
 )
 
 // The EventExpansion interface allows manually adding extra methods to the EventInterface.

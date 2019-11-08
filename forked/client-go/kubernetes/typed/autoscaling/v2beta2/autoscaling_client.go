@@ -19,9 +19,9 @@ limitations under the License.
 package v2beta2
 
 import (
-	v2beta2 "k8s.io/api/autoscaling/v2beta2"
-	"k8s.io/client-go/kubernetes/scheme"
-	rest "k8s.io/client-go/rest"
+	v2beta2 "sigs.k8s.io/kustomize/forked/api/autoscaling/v2beta2"
+	"sigs.k8s.io/kustomize/forked/client-go/kubernetes/scheme"
+	rest "sigs.k8s.io/kustomize/forked/client-go/rest"
 )
 
 type AutoscalingV2beta2Interface interface {

@@ -16,7 +16,7 @@ limitations under the License.
 
 package v1beta1
 
-import "k8s.io/apimachinery/pkg/conversion"
+import "sigs.k8s.io/kustomize/forked/apimachinery/pkg/conversion"
 
 // Convert_Slice_string_To_v1beta1_IncludeObjectPolicy allows converting a URL query parameter value
 func Convert_Slice_string_To_v1beta1_IncludeObjectPolicy(input *[]string, out *IncludeObjectPolicy, s conversion.Scope) error {

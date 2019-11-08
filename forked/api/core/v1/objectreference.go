@@ -17,7 +17,7 @@ limitations under the License.
 package v1
 
 import (
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
 )
 
 // IsAnAPIObject allows clients to preemptively get a reference to an API object and pass it to places that

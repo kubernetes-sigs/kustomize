@@ -21,9 +21,9 @@ import (
 	"reflect"
 	"testing"
 
-	metainternalversion "k8s.io/apimachinery/pkg/apis/meta/internalversion"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/diff"
+	metainternalversion "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/internalversion"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/diff"
 )
 
 func TestListOptions(t *testing.T) {

@@ -19,10 +19,10 @@ package v1beta1
 import (
 	"fmt"
 
-	apps "k8s.io/api/apps/v1beta1"
-	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
+	apps "sigs.k8s.io/kustomize/forked/api/apps/v1beta1"
+	"sigs.k8s.io/kustomize/forked/api/core/v1"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/labels"
 )
 
 // StatefulSetListerExpansion allows custom methods to be added to

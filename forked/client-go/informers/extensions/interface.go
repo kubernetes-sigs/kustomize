@@ -19,8 +19,8 @@ limitations under the License.
 package extensions
 
 import (
-	v1beta1 "k8s.io/client-go/informers/extensions/v1beta1"
-	internalinterfaces "k8s.io/client-go/informers/internalinterfaces"
+	v1beta1 "sigs.k8s.io/kustomize/forked/client-go/informers/extensions/v1beta1"
+	internalinterfaces "sigs.k8s.io/kustomize/forked/client-go/informers/internalinterfaces"
 )
 
 // Interface provides access to each of this group's versions.

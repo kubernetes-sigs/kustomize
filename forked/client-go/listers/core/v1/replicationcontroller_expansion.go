@@ -19,8 +19,8 @@ package v1
 import (
 	"fmt"
 
-	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/labels"
+	"sigs.k8s.io/kustomize/forked/api/core/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/labels"
 )
 
 // ReplicationControllerListerExpansion allows custom methods to be added to

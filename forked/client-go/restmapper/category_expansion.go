@@ -17,8 +17,8 @@ limitations under the License.
 package restmapper
 
 import (
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/discovery"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/client-go/discovery"
 )
 
 // CategoryExpander maps category strings to GroupResources.

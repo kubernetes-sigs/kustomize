@@ -20,4 +20,4 @@ limitations under the License.
 
 // +groupName=authorization.k8s.io
 
-package v1 // import "k8s.io/api/authorization/v1"
+package v1 // import "sigs.k8s.io/kustomize/forked/api/authorization/v1"

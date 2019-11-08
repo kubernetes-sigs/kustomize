@@ -19,7 +19,7 @@ package meta
 import (
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
 )
 
 const (

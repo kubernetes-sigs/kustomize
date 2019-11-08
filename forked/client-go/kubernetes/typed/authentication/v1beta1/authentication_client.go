@@ -19,9 +19,9 @@ limitations under the License.
 package v1beta1
 
 import (
-	v1beta1 "k8s.io/api/authentication/v1beta1"
-	"k8s.io/client-go/kubernetes/scheme"
-	rest "k8s.io/client-go/rest"
+	v1beta1 "sigs.k8s.io/kustomize/forked/api/authentication/v1beta1"
+	"sigs.k8s.io/kustomize/forked/client-go/kubernetes/scheme"
+	rest "sigs.k8s.io/kustomize/forked/client-go/rest"
 )
 
 type AuthenticationV1beta1Interface interface {

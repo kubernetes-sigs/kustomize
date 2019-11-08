@@ -19,9 +19,9 @@ limitations under the License.
 package v2alpha1
 
 import (
-	v2alpha1 "k8s.io/api/batch/v2alpha1"
-	"k8s.io/client-go/kubernetes/scheme"
-	rest "k8s.io/client-go/rest"
+	v2alpha1 "sigs.k8s.io/kustomize/forked/api/batch/v2alpha1"
+	"sigs.k8s.io/kustomize/forked/client-go/kubernetes/scheme"
+	rest "sigs.k8s.io/kustomize/forked/client-go/rest"
 )
 
 type BatchV2alpha1Interface interface {

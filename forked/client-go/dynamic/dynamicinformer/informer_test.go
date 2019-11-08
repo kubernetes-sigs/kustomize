@@ -21,15 +21,15 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/apimachinery/pkg/api/equality"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/util/diff"
-	"k8s.io/client-go/dynamic/dynamicinformer"
-	"k8s.io/client-go/dynamic/fake"
-	"k8s.io/client-go/tools/cache"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/equality"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1/unstructured"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/diff"
+	"sigs.k8s.io/kustomize/forked/client-go/dynamic/dynamicinformer"
+	"sigs.k8s.io/kustomize/forked/client-go/dynamic/fake"
+	"sigs.k8s.io/kustomize/forked/client-go/tools/cache"
 )
 
 func TestDynamicSharedInformerFactory(t *testing.T) {

@@ -17,12 +17,12 @@ limitations under the License.
 package v1beta1
 
 import (
-	batchv1 "k8s.io/api/batch/v1"
-	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	batchv1 "sigs.k8s.io/kustomize/forked/api/batch/v1"
+	"sigs.k8s.io/kustomize/forked/api/core/v1"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
 )
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // JobTemplate describes a template for creating copies of a predefined pod.
 type JobTemplate struct {
@@ -52,7 +52,7 @@ type JobTemplateSpec struct {
 }
 
 // +genclient
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // CronJob represents the configuration of a single cron job.
 type CronJob struct {
@@ -73,7 +73,7 @@ type CronJob struct {
 	Status CronJobStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // CronJobList is a collection of cron jobs.
 type CronJobList struct {

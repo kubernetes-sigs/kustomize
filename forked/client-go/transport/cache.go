@@ -24,7 +24,7 @@ import (
 	"sync"
 	"time"
 
-	utilnet "k8s.io/apimachinery/pkg/util/net"
+	utilnet "sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/net"
 )
 
 // TlsTransportCache caches TLS http.RoundTrippers different configurations. The

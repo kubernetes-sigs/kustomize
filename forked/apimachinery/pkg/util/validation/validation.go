@@ -24,7 +24,7 @@ import (
 	"strconv"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/util/validation/field"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/validation/field"
 )
 
 const qnameCharFmt string = "[A-Za-z0-9]"

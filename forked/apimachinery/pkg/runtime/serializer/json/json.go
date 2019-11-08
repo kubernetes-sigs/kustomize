@@ -26,11 +26,11 @@ import (
 	"github.com/modern-go/reflect2"
 	"sigs.k8s.io/yaml"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/runtime/serializer/recognizer"
-	"k8s.io/apimachinery/pkg/util/framer"
-	utilyaml "k8s.io/apimachinery/pkg/util/yaml"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/serializer/recognizer"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/framer"
+	utilyaml "sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/yaml"
 	"k8s.io/klog"
 )
 

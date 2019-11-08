@@ -31,13 +31,13 @@ import (
 	"net/url"
 	"strings"
 
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/apimachinery/pkg/util/httpstream"
-	utilnet "k8s.io/apimachinery/pkg/util/net"
-	"k8s.io/apimachinery/third_party/forked/golang/netutil"
+	apierrors "sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/errors"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/serializer"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/httpstream"
+	utilnet "sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/net"
+	"sigs.k8s.io/kustomize/forked/apimachinery/third_party/forked/golang/netutil"
 )
 
 // SpdyRoundTripper knows how to upgrade an HTTP request to one that supports
@@ -98,7 +98,7 @@ func (s *SpdyRoundTripper) TLSClientConfig() *tls.Config {
 	return s.tlsConfig
 }
 
-// Dial implements k8s.io/apimachinery/pkg/util/net.Dialer.
+// Dial implements sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/net.Dialer.
 func (s *SpdyRoundTripper) Dial(req *http.Request) (net.Conn, error) {
 	conn, err := s.dial(req)
 	if err != nil {

@@ -20,11 +20,11 @@ import (
 	"fmt"
 	"unicode"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/apimachinery/pkg/util/validation"
-	"k8s.io/apimachinery/pkg/util/validation/field"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/types"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/sets"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/validation"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/validation/field"
 )
 
 func ValidateLabelSelector(ps *metav1.LabelSelector, fldPath *field.Path) field.ErrorList {

@@ -19,10 +19,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1alpha1 "k8s.io/api/scheduling/v1alpha1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/tools/cache"
+	v1alpha1 "sigs.k8s.io/kustomize/forked/api/scheduling/v1alpha1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/labels"
+	"sigs.k8s.io/kustomize/forked/client-go/tools/cache"
 )
 
 // PriorityClassLister helps list PriorityClasses.

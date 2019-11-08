@@ -17,17 +17,17 @@ limitations under the License.
 package v1
 
 import (
-	"k8s.io/apimachinery/pkg/conversion"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/watch"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/conversion"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/watch"
 )
 
 // Event represents a single event to a watched resource.
 //
 // +protobuf=true
 // +k8s:deepcopy-gen=true
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 type WatchEvent struct {
 	Type string `json:"type" protobuf:"bytes,1,opt,name=type"`
 

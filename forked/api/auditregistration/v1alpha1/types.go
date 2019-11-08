@@ -19,7 +19,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
 )
 
 // Level defines the amount of information logged during auditing
@@ -59,7 +59,7 @@ const (
 
 // +genclient
 // +genclient:nonNamespaced
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // AuditSink represents a cluster level audit sink
 type AuditSink struct {
@@ -82,7 +82,7 @@ type AuditSinkSpec struct {
 	Webhook Webhook `json:"webhook" protobuf:"bytes,2,opt,name=webhook"`
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // AuditSinkList is a list of AuditSink items.
 type AuditSinkList struct {

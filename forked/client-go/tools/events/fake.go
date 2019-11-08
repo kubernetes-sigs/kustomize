@@ -19,7 +19,7 @@ package events
 import (
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
 )
 
 // FakeRecorder is used as a fake during tests. It is thread safe. It is usable

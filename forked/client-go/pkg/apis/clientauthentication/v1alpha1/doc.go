@@ -15,10 +15,10 @@ limitations under the License.
 */
 
 // +k8s:deepcopy-gen=package
-// +k8s:conversion-gen=k8s.io/client-go/pkg/apis/clientauthentication
+// +k8s:conversion-gen=sigs.k8s.io/kustomize/forked/client-go/pkg/apis/clientauthentication
 // +k8s:openapi-gen=true
 // +k8s:defaulter-gen=TypeMeta
 
 // +groupName=client.authentication.k8s.io
 
-package v1alpha1 // import "k8s.io/client-go/pkg/apis/clientauthentication/v1alpha1"
+package v1alpha1 // import "sigs.k8s.io/kustomize/forked/client-go/pkg/apis/clientauthentication/v1alpha1"

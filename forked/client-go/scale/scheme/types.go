@@ -17,13 +17,13 @@ limitations under the License.
 package scheme
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
 )
 
 // This file contains our own "internal" version of scale that we use for conversions,
 // since we can't use the main Kubernetes internal versions.
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // Scale represents a scaling request for a resource.
 type Scale struct {

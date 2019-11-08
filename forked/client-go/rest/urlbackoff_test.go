@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/client-go/util/flowcontrol"
+	"sigs.k8s.io/kustomize/forked/client-go/util/flowcontrol"
 )
 
 func parse(raw string) *url.URL {

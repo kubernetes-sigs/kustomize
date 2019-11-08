@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/apimachinery/pkg/util/clock"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/clock"
 )
 
 type testMetrics struct {

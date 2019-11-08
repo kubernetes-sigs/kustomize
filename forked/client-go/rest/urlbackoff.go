@@ -20,8 +20,8 @@ import (
 	"net/url"
 	"time"
 
-	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/client-go/util/flowcontrol"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/sets"
+	"sigs.k8s.io/kustomize/forked/client-go/util/flowcontrol"
 	"k8s.io/klog"
 )
 

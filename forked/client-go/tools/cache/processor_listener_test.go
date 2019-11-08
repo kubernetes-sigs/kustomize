@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/apimachinery/pkg/util/wait"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/wait"
 )
 
 const (

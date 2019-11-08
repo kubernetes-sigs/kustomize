@@ -24,7 +24,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	utilnet "k8s.io/apimachinery/pkg/util/net"
+	utilnet "sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/net"
 	"k8s.io/klog"
 )
 

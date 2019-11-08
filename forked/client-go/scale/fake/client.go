@@ -20,11 +20,11 @@ limitations under the License.
 package fake
 
 import (
-	autoscalingapi "k8s.io/api/autoscaling/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/scale"
-	"k8s.io/client-go/testing"
+	autoscalingapi "sigs.k8s.io/kustomize/forked/api/autoscaling/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/types"
+	"sigs.k8s.io/kustomize/forked/client-go/scale"
+	"sigs.k8s.io/kustomize/forked/client-go/testing"
 )
 
 // FakeScaleClient provides a fake implementation of scale.ScalesGetter.

@@ -17,9 +17,9 @@ limitations under the License.
 package metadatalister
 
 import (
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/cache"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/labels"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/client-go/tools/cache"
 )
 
 var _ cache.GenericLister = &metadataListerShim{}

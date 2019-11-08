@@ -21,14 +21,14 @@ import (
 	"testing"
 
 	fuzz "github.com/google/gofuzz"
-	"k8s.io/apimachinery/pkg/api/meta"
-	metafuzzer "k8s.io/apimachinery/pkg/apis/meta/fuzzer"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/testapigroup"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/meta"
+	metafuzzer "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/fuzzer"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/testapigroup"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/serializer"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/types"
 )
 
 func TestAPIObjectMeta(t *testing.T) {

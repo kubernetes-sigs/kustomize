@@ -15,6 +15,6 @@ limitations under the License.
 */
 
 // +k8s:deepcopy-gen=package
-// +k8s:conversion-gen=k8s.io/apimachinery/pkg/apis/meta/v1
+// +k8s:conversion-gen=sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1
 
-package internalversion // import "k8s.io/apimachinery/pkg/apis/meta/internalversion"
+package internalversion // import "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/internalversion"

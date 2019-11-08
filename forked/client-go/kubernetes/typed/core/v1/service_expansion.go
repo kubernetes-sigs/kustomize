@@ -17,8 +17,8 @@ limitations under the License.
 package v1
 
 import (
-	"k8s.io/apimachinery/pkg/util/net"
-	restclient "k8s.io/client-go/rest"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/net"
+	restclient "sigs.k8s.io/kustomize/forked/client-go/rest"
 )
 
 // The ServiceExpansion interface allows manually adding extra methods to the ServiceInterface.

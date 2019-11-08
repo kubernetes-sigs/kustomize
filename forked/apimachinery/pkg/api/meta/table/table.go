@@ -19,11 +19,11 @@ package table
 import (
 	"time"
 
-	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	metav1beta1 "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/duration"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/meta"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	metav1beta1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1beta1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/duration"
 )
 
 // MetaToTableRow converts a list or object into one or more table rows. The provided rowFn is invoked for

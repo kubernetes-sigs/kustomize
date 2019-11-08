@@ -26,8 +26,8 @@ import (
 
 	"k8s.io/klog"
 
-	restclient "k8s.io/client-go/rest"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+	restclient "sigs.k8s.io/kustomize/forked/client-go/rest"
+	clientcmdapi "sigs.k8s.io/kustomize/forked/client-go/tools/clientcmd/api"
 )
 
 // ConfigAccess is used by subcommands and methods in this package to load and modify the appropriate config files

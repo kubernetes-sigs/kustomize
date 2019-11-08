@@ -21,12 +21,12 @@ package v1beta1
 import (
 	"time"
 
-	v1beta1 "k8s.io/api/extensions/v1beta1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	scheme "k8s.io/client-go/kubernetes/scheme"
-	rest "k8s.io/client-go/rest"
+	v1beta1 "sigs.k8s.io/kustomize/forked/api/extensions/v1beta1"
+	v1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	types "sigs.k8s.io/kustomize/forked/apimachinery/pkg/types"
+	watch "sigs.k8s.io/kustomize/forked/apimachinery/pkg/watch"
+	scheme "sigs.k8s.io/kustomize/forked/client-go/kubernetes/scheme"
+	rest "sigs.k8s.io/kustomize/forked/client-go/rest"
 )
 
 // ReplicaSetsGetter has a method to return a ReplicaSetInterface.

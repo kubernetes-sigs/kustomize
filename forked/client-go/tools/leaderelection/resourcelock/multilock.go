@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"encoding/json"
 
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	apierrors "sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/errors"
 )
 
 const (

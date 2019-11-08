@@ -21,12 +21,12 @@ import (
 	"reflect"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
-	runtimetesting "k8s.io/apimachinery/pkg/runtime/testing"
-	"k8s.io/apimachinery/pkg/util/diff"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/meta"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/serializer"
+	runtimetesting "sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/testing"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/diff"
 )
 
 func TestDecodeEmptyRawExtensionAsObject(t *testing.T) {

@@ -15,4 +15,4 @@ limitations under the License.
 */
 
 // Package types implements various generic types used throughout kubernetes.
-package types // import "k8s.io/apimachinery/pkg/types"
+package types // import "sigs.k8s.io/kustomize/forked/apimachinery/pkg/types"

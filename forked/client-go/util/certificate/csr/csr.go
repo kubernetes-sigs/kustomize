@@ -27,17 +27,17 @@ import (
 
 	"k8s.io/klog"
 
-	certificates "k8s.io/api/certificates/v1beta1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/apimachinery/pkg/watch"
-	certificatesclient "k8s.io/client-go/kubernetes/typed/certificates/v1beta1"
-	"k8s.io/client-go/tools/cache"
-	watchtools "k8s.io/client-go/tools/watch"
-	certutil "k8s.io/client-go/util/cert"
+	certificates "sigs.k8s.io/kustomize/forked/api/certificates/v1beta1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/errors"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/fields"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/wait"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/watch"
+	certificatesclient "sigs.k8s.io/kustomize/forked/client-go/kubernetes/typed/certificates/v1beta1"
+	"sigs.k8s.io/kustomize/forked/client-go/tools/cache"
+	watchtools "sigs.k8s.io/kustomize/forked/client-go/tools/watch"
+	certutil "sigs.k8s.io/kustomize/forked/client-go/util/cert"
 )
 
 // RequestCertificate will either use an existing (if this process has run

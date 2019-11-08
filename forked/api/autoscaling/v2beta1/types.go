@@ -17,9 +17,9 @@ limitations under the License.
 package v2beta1
 
 import (
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "sigs.k8s.io/kustomize/forked/api/core/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/resource"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
 )
 
 // CrossVersionObjectReference contains enough information to let you identify the referred resource.
@@ -372,7 +372,7 @@ type ExternalMetricStatus struct {
 }
 
 // +genclient
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // HorizontalPodAutoscaler is the configuration for a horizontal pod
 // autoscaler, which automatically manages the replica count of any resource
@@ -394,7 +394,7 @@ type HorizontalPodAutoscaler struct {
 	Status HorizontalPodAutoscalerStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime.Object
 
 // HorizontalPodAutoscaler is a list of horizontal pod autoscaler objects.
 type HorizontalPodAutoscalerList struct {

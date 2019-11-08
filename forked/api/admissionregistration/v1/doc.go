@@ -23,4 +23,4 @@ limitations under the License.
 // AdmissionConfiguration and AdmissionPluginConfiguration are legacy static admission plugin configuration
 // MutatingWebhookConfiguration and ValidatingWebhookConfiguration are for the
 // new dynamic admission controller configuration.
-package v1 // import "k8s.io/api/admissionregistration/v1"
+package v1 // import "sigs.k8s.io/kustomize/forked/api/admissionregistration/v1"

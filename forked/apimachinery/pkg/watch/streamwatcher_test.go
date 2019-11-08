@@ -22,8 +22,8 @@ import (
 	"reflect"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	. "k8s.io/apimachinery/pkg/watch"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	. "sigs.k8s.io/kustomize/forked/apimachinery/pkg/watch"
 )
 
 type fakeDecoder struct {

@@ -26,7 +26,7 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/apimachinery/pkg/util/httpstream"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/httpstream"
 )
 
 type fakeDialer struct {

@@ -20,7 +20,7 @@ import (
 	"context"
 	"sync"
 
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	utilruntime "sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/runtime"
 )
 
 type DoWorkPieceFunc func(piece int)

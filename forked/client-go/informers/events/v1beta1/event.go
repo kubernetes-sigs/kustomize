@@ -21,14 +21,14 @@ package v1beta1
 import (
 	time "time"
 
-	eventsv1beta1 "k8s.io/api/events/v1beta1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	runtime "k8s.io/apimachinery/pkg/runtime"
-	watch "k8s.io/apimachinery/pkg/watch"
-	internalinterfaces "k8s.io/client-go/informers/internalinterfaces"
-	kubernetes "k8s.io/client-go/kubernetes"
-	v1beta1 "k8s.io/client-go/listers/events/v1beta1"
-	cache "k8s.io/client-go/tools/cache"
+	eventsv1beta1 "sigs.k8s.io/kustomize/forked/api/events/v1beta1"
+	v1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	runtime "sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	watch "sigs.k8s.io/kustomize/forked/apimachinery/pkg/watch"
+	internalinterfaces "sigs.k8s.io/kustomize/forked/client-go/informers/internalinterfaces"
+	kubernetes "sigs.k8s.io/kustomize/forked/client-go/kubernetes"
+	v1beta1 "sigs.k8s.io/kustomize/forked/client-go/listers/events/v1beta1"
+	cache "sigs.k8s.io/kustomize/forked/client-go/tools/cache"
 )
 
 // EventInformer provides access to a shared informer and lister for

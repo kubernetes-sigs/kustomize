@@ -21,9 +21,9 @@ import (
 	"testing"
 	"time"
 
-	apiequality "k8s.io/apimachinery/pkg/api/equality"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	apiequality "sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/equality"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
 )
 
 func TestMapToLabelSelectorRoundTrip(t *testing.T) {

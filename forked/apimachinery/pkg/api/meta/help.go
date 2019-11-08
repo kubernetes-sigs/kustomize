@@ -22,8 +22,8 @@ import (
 	"reflect"
 	"sync"
 
-	"k8s.io/apimachinery/pkg/conversion"
-	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/conversion"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
 )
 
 var (

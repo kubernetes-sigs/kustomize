@@ -17,7 +17,7 @@ limitations under the License.
 package v1
 
 import (
-	authenticationv1 "k8s.io/api/authentication/v1"
+	authenticationv1 "sigs.k8s.io/kustomize/forked/api/authentication/v1"
 )
 
 // The ServiceAccountExpansion interface allows manually adding extra methods

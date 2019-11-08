@@ -20,14 +20,14 @@ import (
 	"sync"
 	"time"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/client-go/informers"
-	"k8s.io/client-go/metadata"
-	"k8s.io/client-go/metadata/metadatalister"
-	"k8s.io/client-go/tools/cache"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/watch"
+	"sigs.k8s.io/kustomize/forked/client-go/informers"
+	"sigs.k8s.io/kustomize/forked/client-go/metadata"
+	"sigs.k8s.io/kustomize/forked/client-go/metadata/metadatalister"
+	"sigs.k8s.io/kustomize/forked/client-go/tools/cache"
 )
 
 // NewSharedInformerFactory constructs a new instance of metadataSharedInformerFactory for all namespaces.

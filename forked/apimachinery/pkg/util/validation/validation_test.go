@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/util/validation/field"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/validation/field"
 )
 
 func TestIsDNS1123Label(t *testing.T) {

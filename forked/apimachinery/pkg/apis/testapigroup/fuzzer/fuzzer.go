@@ -21,15 +21,15 @@ import (
 
 	"github.com/google/gofuzz"
 
-	apitesting "k8s.io/apimachinery/pkg/api/apitesting"
-	"k8s.io/apimachinery/pkg/api/apitesting/fuzzer"
-	"k8s.io/apimachinery/pkg/apis/testapigroup"
-	"k8s.io/apimachinery/pkg/apis/testapigroup/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
+	apitesting "sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/apitesting"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/apitesting/fuzzer"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/testapigroup"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/testapigroup/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	runtimeserializer "sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/serializer"
 )
 
-// overrideMetaFuncs override some generic fuzzer funcs from k8s.io/apimachinery in order to have more realistic
+// overrideMetaFuncs override some generic fuzzer funcs from sigs.k8s.io/kustomize/forked/apimachinery in order to have more realistic
 // values in a Kubernetes context.
 func overrideMetaFuncs(codecs runtimeserializer.CodecFactory) []interface{} {
 	return []interface{}{

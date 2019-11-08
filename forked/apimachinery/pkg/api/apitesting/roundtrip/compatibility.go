@@ -30,16 +30,16 @@ import (
 	"github.com/google/go-cmp/cmp"
 	fuzz "github.com/google/gofuzz"
 
-	apiequality "k8s.io/apimachinery/pkg/api/equality"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
-	genericfuzzer "k8s.io/apimachinery/pkg/apis/meta/fuzzer"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/apimachinery/pkg/runtime/serializer/json"
-	"k8s.io/apimachinery/pkg/runtime/serializer/protobuf"
-	"k8s.io/apimachinery/pkg/util/sets"
+	apiequality "sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/equality"
+	apimeta "sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/meta"
+	genericfuzzer "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/fuzzer"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/serializer"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/serializer/json"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/serializer/protobuf"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/sets"
 )
 
 // CompatibilityTestOptions holds configuration for running a compatibility test using in-memory objects

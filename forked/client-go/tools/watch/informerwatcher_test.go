@@ -26,15 +26,15 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/util/diff"
-	"k8s.io/apimachinery/pkg/watch"
-	fakeclientset "k8s.io/client-go/kubernetes/fake"
-	testcore "k8s.io/client-go/testing"
-	"k8s.io/client-go/tools/cache"
+	corev1 "sigs.k8s.io/kustomize/forked/api/core/v1"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/diff"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/watch"
+	fakeclientset "sigs.k8s.io/kustomize/forked/client-go/kubernetes/fake"
+	testcore "sigs.k8s.io/kustomize/forked/client-go/testing"
+	"sigs.k8s.io/kustomize/forked/client-go/tools/cache"
 )
 
 // TestEventProcessorExit is expected to timeout if the event processor fails

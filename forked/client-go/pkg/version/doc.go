@@ -18,4 +18,4 @@ limitations under the License.
 
 // Package version supplies version information collected at build time to
 // kubernetes components.
-package version // import "k8s.io/client-go/pkg/version"
+package version // import "sigs.k8s.io/kustomize/forked/client-go/pkg/version"

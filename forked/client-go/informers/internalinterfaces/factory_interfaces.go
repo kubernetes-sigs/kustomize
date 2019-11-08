@@ -21,10 +21,10 @@ package internalinterfaces
 import (
 	time "time"
 
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	runtime "k8s.io/apimachinery/pkg/runtime"
-	kubernetes "k8s.io/client-go/kubernetes"
-	cache "k8s.io/client-go/tools/cache"
+	v1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	runtime "sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	kubernetes "sigs.k8s.io/kustomize/forked/client-go/kubernetes"
+	cache "sigs.k8s.io/kustomize/forked/client-go/tools/cache"
 )
 
 // NewInformerFunc takes kubernetes.Interface and time.Duration to return a SharedIndexInformer.

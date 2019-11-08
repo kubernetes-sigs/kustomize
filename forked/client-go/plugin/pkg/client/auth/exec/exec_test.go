@@ -36,11 +36,11 @@ import (
 	"testing"
 	"time"
 
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/pkg/apis/clientauthentication"
-	"k8s.io/client-go/tools/clientcmd/api"
-	"k8s.io/client-go/transport"
+	v1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/client-go/pkg/apis/clientauthentication"
+	"sigs.k8s.io/kustomize/forked/client-go/tools/clientcmd/api"
+	"sigs.k8s.io/kustomize/forked/client-go/transport"
 )
 
 var (

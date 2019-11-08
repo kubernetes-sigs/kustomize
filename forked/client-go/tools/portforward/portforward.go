@@ -28,9 +28,9 @@ import (
 	"strings"
 	"sync"
 
-	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/httpstream"
-	"k8s.io/apimachinery/pkg/util/runtime"
+	"sigs.k8s.io/kustomize/forked/api/core/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/httpstream"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/runtime"
 )
 
 // PortForwardProtocolV1Name is the subprotocol used for port forwarding.

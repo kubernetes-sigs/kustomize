@@ -22,7 +22,7 @@ import (
 
 	"github.com/spf13/pflag"
 
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+	clientcmdapi "sigs.k8s.io/kustomize/forked/client-go/tools/clientcmd/api"
 )
 
 // ConfigOverrides holds values that should override whatever information is pulled from the actual Config object.  You can't

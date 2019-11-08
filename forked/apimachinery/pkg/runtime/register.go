@@ -16,7 +16,7 @@ limitations under the License.
 
 package runtime
 
-import "k8s.io/apimachinery/pkg/runtime/schema"
+import "sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
 
 // SetGroupVersionKind satisfies the ObjectKind interface for all objects that embed TypeMeta
 func (obj *TypeMeta) SetGroupVersionKind(gvk schema.GroupVersionKind) {

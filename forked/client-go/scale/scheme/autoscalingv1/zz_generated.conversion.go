@@ -21,10 +21,10 @@ limitations under the License.
 package autoscalingv1
 
 import (
-	v1 "k8s.io/api/autoscaling/v1"
-	conversion "k8s.io/apimachinery/pkg/conversion"
-	runtime "k8s.io/apimachinery/pkg/runtime"
-	scheme "k8s.io/client-go/scale/scheme"
+	v1 "sigs.k8s.io/kustomize/forked/api/autoscaling/v1"
+	conversion "sigs.k8s.io/kustomize/forked/apimachinery/pkg/conversion"
+	runtime "sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	scheme "sigs.k8s.io/kustomize/forked/client-go/scale/scheme"
 )
 
 func init() {
@@ -121,12 +121,12 @@ func Convert_scheme_ScaleSpec_To_v1_ScaleSpec(in *scheme.ScaleSpec, out *v1.Scal
 
 func autoConvert_v1_ScaleStatus_To_scheme_ScaleStatus(in *v1.ScaleStatus, out *scheme.ScaleStatus, s conversion.Scope) error {
 	out.Replicas = in.Replicas
-	// WARNING: in.Selector requires manual conversion: inconvertible types (string vs *k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector)
+	// WARNING: in.Selector requires manual conversion: inconvertible types (string vs *sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1.LabelSelector)
 	return nil
 }
 
 func autoConvert_scheme_ScaleStatus_To_v1_ScaleStatus(in *scheme.ScaleStatus, out *v1.ScaleStatus, s conversion.Scope) error {
 	out.Replicas = in.Replicas
-	// WARNING: in.Selector requires manual conversion: inconvertible types (*k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector vs string)
+	// WARNING: in.Selector requires manual conversion: inconvertible types (*sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1.LabelSelector vs string)
 	return nil
 }

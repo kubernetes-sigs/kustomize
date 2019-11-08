@@ -25,12 +25,12 @@ import (
 	"strings"
 	"testing"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/conversion"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	serializertesting "k8s.io/apimachinery/pkg/runtime/serializer/testing"
-	"k8s.io/apimachinery/pkg/util/diff"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/conversion"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	serializertesting "sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/serializer/testing"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/diff"
 
 	fuzz "github.com/google/gofuzz"
 	flag "github.com/spf13/pflag"

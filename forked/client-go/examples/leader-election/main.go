@@ -25,12 +25,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/tools/leaderelection"
-	"k8s.io/client-go/tools/leaderelection/resourcelock"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	clientset "sigs.k8s.io/kustomize/forked/client-go/kubernetes"
+	"sigs.k8s.io/kustomize/forked/client-go/rest"
+	"sigs.k8s.io/kustomize/forked/client-go/tools/clientcmd"
+	"sigs.k8s.io/kustomize/forked/client-go/tools/leaderelection"
+	"sigs.k8s.io/kustomize/forked/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/klog"
 )
 

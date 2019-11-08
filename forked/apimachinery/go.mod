@@ -1,6 +1,6 @@
 // This is a generated file. Do not edit directly.
 
-module k8s.io/apimachinery
+module sigs.k8s.io/kustomize/forked/apimachinery
 
 go 1.12
 

@@ -32,8 +32,8 @@ import (
 	"golang.org/x/net/html/atom"
 	"k8s.io/klog"
 
-	"k8s.io/apimachinery/pkg/util/net"
-	"k8s.io/apimachinery/pkg/util/sets"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/net"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/sets"
 )
 
 // atomsToAttrs states which attributes of which tags require URL substitution.

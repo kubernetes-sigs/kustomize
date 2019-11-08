@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	utilerrors "k8s.io/apimachinery/pkg/util/errors"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	utilerrors "sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/errors"
 )
 
 // MultiRESTMapper is a wrapper for multiple RESTMappers.

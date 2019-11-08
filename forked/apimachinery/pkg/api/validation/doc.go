@@ -15,4 +15,4 @@ limitations under the License.
 */
 
 // Package validation contains generic api type validation functions.
-package validation // import "k8s.io/apimachinery/pkg/api/validation"
+package validation // import "sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/validation"

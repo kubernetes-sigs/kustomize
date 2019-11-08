@@ -35,3 +35,8 @@ These libraries were forked by running `git clone` to clone the repos.  From the
   - `rm -rf api/.git`
   - `rm -rf apimachinery/.git`
   - `rm -rf client-go/.git`
+4. Rename the packages
+  - `find . -name go.mod | xargs sed -i -e 's$k8s.io/client-go$sigs.k8s.io/kustomize/forked/client-go$g'`
+  - `find . -name go.mod | xargs sed -i -e 's$k8s.io/api$sigs.k8s.io/kustomize/forked/api$g'`
+  - `find . -name *.go | xargs sed -i -e 's$k8s.io/api$sigs.k8s.io/kustomize/forked/api$g'`
+  - `find . -name *.go | xargs sed -i -e 's$k8s.io/client-go$sigs.k8s.io/kustomize/forked/client-go$g'`

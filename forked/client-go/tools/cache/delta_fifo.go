@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"sync"
 
-	"k8s.io/apimachinery/pkg/util/sets"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/sets"
 
 	"k8s.io/klog"
 )
@@ -48,7 +48,7 @@ import (
 //       Example:
 //       In case of sharedIndexInformer being a consumer
 //       (https://github.com/kubernetes/kubernetes/blob/0cdd940f/staging/
-//       src/k8s.io/client-go/tools/cache/shared_informer.go#L192),
+//       src/sigs.k8s.io/kustomize/forked/client-go/tools/cache/shared_informer.go#L192),
 //       there is no race as knownObjects (s.indexer) is modified safely
 //       under DeltaFIFO's lock. The only exceptions are GetStore() and
 //       GetIndexer() methods, which expose ways to modify the underlying

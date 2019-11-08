@@ -16,7 +16,7 @@ limitations under the License.
 
 package v1
 
-import "k8s.io/api/core/v1"
+import "sigs.k8s.io/kustomize/forked/api/core/v1"
 
 // The NamespaceExpansion interface allows manually adding extra methods to the NamespaceInterface.
 type NamespaceExpansion interface {

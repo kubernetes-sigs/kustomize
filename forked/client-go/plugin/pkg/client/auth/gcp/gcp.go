@@ -29,10 +29,10 @@ import (
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"k8s.io/apimachinery/pkg/util/net"
-	"k8s.io/apimachinery/pkg/util/yaml"
-	restclient "k8s.io/client-go/rest"
-	"k8s.io/client-go/util/jsonpath"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/net"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/yaml"
+	restclient "sigs.k8s.io/kustomize/forked/client-go/rest"
+	"sigs.k8s.io/kustomize/forked/client-go/util/jsonpath"
 	"k8s.io/klog"
 )
 

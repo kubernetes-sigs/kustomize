@@ -16,4 +16,4 @@ limitations under the License.
 
 // Package portforward adds support for SSH-like port forwarding from the client's
 // local host to remote containers.
-package portforward // import "k8s.io/client-go/tools/portforward"
+package portforward // import "sigs.k8s.io/kustomize/forked/client-go/tools/portforward"

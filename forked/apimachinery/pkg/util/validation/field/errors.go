@@ -22,8 +22,8 @@ import (
 	"strconv"
 	"strings"
 
-	utilerrors "k8s.io/apimachinery/pkg/util/errors"
-	"k8s.io/apimachinery/pkg/util/sets"
+	utilerrors "sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/errors"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/sets"
 )
 
 // Error is an implementation of the 'error' interface, which represents a

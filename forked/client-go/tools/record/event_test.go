@@ -24,15 +24,15 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	k8sruntime "k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/clock"
-	"k8s.io/apimachinery/pkg/util/strategicpatch"
-	"k8s.io/client-go/kubernetes/scheme"
-	restclient "k8s.io/client-go/rest"
-	ref "k8s.io/client-go/tools/reference"
+	"sigs.k8s.io/kustomize/forked/api/core/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/errors"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	k8sruntime "sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/clock"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/strategicpatch"
+	"sigs.k8s.io/kustomize/forked/client-go/kubernetes/scheme"
+	restclient "sigs.k8s.io/kustomize/forked/client-go/rest"
+	ref "sigs.k8s.io/kustomize/forked/client-go/tools/reference"
 )
 
 type testEventSink struct {

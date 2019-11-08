@@ -24,23 +24,23 @@ import (
 	"os"
 	"path/filepath"
 
-	apiv1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
-	"k8s.io/client-go/util/retry"
+	apiv1 "sigs.k8s.io/kustomize/forked/api/core/v1"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1/unstructured"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/client-go/dynamic"
+	"sigs.k8s.io/kustomize/forked/client-go/tools/clientcmd"
+	"sigs.k8s.io/kustomize/forked/client-go/util/homedir"
+	"sigs.k8s.io/kustomize/forked/client-go/util/retry"
 	//
 	// Uncomment to load all auth plugins
-	// _ "k8s.io/client-go/plugin/pkg/client/auth"
+	// _ "sigs.k8s.io/kustomize/forked/client-go/plugin/pkg/client/auth"
 	//
 	// Or uncomment to load specific auth plugins
-	// _ "k8s.io/client-go/plugin/pkg/client/auth/azure"
-	// _ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	// _ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
-	// _ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
+	// _ "sigs.k8s.io/kustomize/forked/client-go/plugin/pkg/client/auth/azure"
+	// _ "sigs.k8s.io/kustomize/forked/client-go/plugin/pkg/client/auth/gcp"
+	// _ "sigs.k8s.io/kustomize/forked/client-go/plugin/pkg/client/auth/oidc"
+	// _ "sigs.k8s.io/kustomize/forked/client-go/plugin/pkg/client/auth/openstack"
 )
 
 func main() {

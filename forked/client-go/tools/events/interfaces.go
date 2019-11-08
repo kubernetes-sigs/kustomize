@@ -17,8 +17,8 @@ limitations under the License.
 package events
 
 import (
-	"k8s.io/api/events/v1beta1"
-	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/api/events/v1beta1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
 )
 
 // EventRecorder knows how to record events on behalf of an EventSource.

@@ -23,9 +23,9 @@ import (
 	"strconv"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/selection"
-	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/apimachinery/pkg/util/validation"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/selection"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/sets"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/validation"
 	"k8s.io/klog"
 )
 

@@ -21,12 +21,12 @@ package v2alpha1
 import (
 	"time"
 
-	v2alpha1 "k8s.io/api/batch/v2alpha1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	scheme "k8s.io/client-go/kubernetes/scheme"
-	rest "k8s.io/client-go/rest"
+	v2alpha1 "sigs.k8s.io/kustomize/forked/api/batch/v2alpha1"
+	v1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	types "sigs.k8s.io/kustomize/forked/apimachinery/pkg/types"
+	watch "sigs.k8s.io/kustomize/forked/apimachinery/pkg/watch"
+	scheme "sigs.k8s.io/kustomize/forked/client-go/kubernetes/scheme"
+	rest "sigs.k8s.io/kustomize/forked/client-go/rest"
 )
 
 // CronJobsGetter has a method to return a CronJobInterface.

@@ -19,10 +19,10 @@ limitations under the License.
 package v2beta2
 
 import (
-	v2beta2 "k8s.io/api/autoscaling/v2beta2"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/tools/cache"
+	v2beta2 "sigs.k8s.io/kustomize/forked/api/autoscaling/v2beta2"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/labels"
+	"sigs.k8s.io/kustomize/forked/client-go/tools/cache"
 )
 
 // HorizontalPodAutoscalerLister helps list HorizontalPodAutoscalers.

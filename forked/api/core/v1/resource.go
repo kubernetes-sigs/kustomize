@@ -17,7 +17,7 @@ limitations under the License.
 package v1
 
 import (
-	"k8s.io/apimachinery/pkg/api/resource"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/api/resource"
 )
 
 // Returns string version of ResourceName.

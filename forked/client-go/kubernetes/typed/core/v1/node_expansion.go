@@ -17,8 +17,8 @@ limitations under the License.
 package v1
 
 import (
-	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/kustomize/forked/api/core/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/types"
 )
 
 // The NodeExpansion interface allows manually adding extra methods to the NodeInterface.

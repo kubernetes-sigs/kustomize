@@ -25,7 +25,7 @@ import (
 	"golang.org/x/oauth2"
 	"k8s.io/klog"
 
-	utilnet "k8s.io/apimachinery/pkg/util/net"
+	utilnet "sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/net"
 )
 
 // HTTPWrappersForConfig wraps a round tripper with any relevant layered

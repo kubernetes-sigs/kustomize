@@ -31,7 +31,7 @@ import (
 
 	"github.com/elazarl/goproxy"
 
-	"k8s.io/apimachinery/pkg/util/httpstream"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/httpstream"
 )
 
 // be sure to unset environment variable https_proxy (if exported) before testing, otherwise the testing will fail unexpectedly.

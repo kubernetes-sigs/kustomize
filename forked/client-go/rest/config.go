@@ -29,14 +29,14 @@ import (
 	"strings"
 	"time"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/pkg/version"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
-	"k8s.io/client-go/transport"
-	certutil "k8s.io/client-go/util/cert"
-	"k8s.io/client-go/util/flowcontrol"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/client-go/pkg/version"
+	clientcmdapi "sigs.k8s.io/kustomize/forked/client-go/tools/clientcmd/api"
+	"sigs.k8s.io/kustomize/forked/client-go/transport"
+	certutil "sigs.k8s.io/kustomize/forked/client-go/util/cert"
+	"sigs.k8s.io/kustomize/forked/client-go/util/flowcontrol"
 	"k8s.io/klog"
 )
 

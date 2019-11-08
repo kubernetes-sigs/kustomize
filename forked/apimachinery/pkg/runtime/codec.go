@@ -27,8 +27,8 @@ import (
 	"strconv"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/conversion/queryparams"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/conversion/queryparams"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
 	"k8s.io/klog"
 )
 

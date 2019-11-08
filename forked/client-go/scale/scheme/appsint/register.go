@@ -17,10 +17,10 @@ limitations under the License.
 package appsint
 
 import (
-	appsv1beta2 "k8s.io/api/apps/v1beta2"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	scalescheme "k8s.io/client-go/scale/scheme"
+	appsv1beta2 "sigs.k8s.io/kustomize/forked/api/apps/v1beta2"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	scalescheme "sigs.k8s.io/kustomize/forked/client-go/scale/scheme"
 )
 
 // GroupName is the group name use in this package

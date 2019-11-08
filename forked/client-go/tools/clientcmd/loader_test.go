@@ -28,9 +28,9 @@ import (
 
 	"sigs.k8s.io/yaml"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
-	clientcmdlatest "k8s.io/client-go/tools/clientcmd/api/latest"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	clientcmdapi "sigs.k8s.io/kustomize/forked/client-go/tools/clientcmd/api"
+	clientcmdlatest "sigs.k8s.io/kustomize/forked/client-go/tools/clientcmd/api/latest"
 )
 
 var (

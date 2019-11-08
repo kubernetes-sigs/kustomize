@@ -25,8 +25,8 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"k8s.io/apimachinery/pkg/util/httpstream"
-	"k8s.io/apimachinery/pkg/util/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/httpstream"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/runtime"
 )
 
 const HeaderSpdy31 = "SPDY/3.1"

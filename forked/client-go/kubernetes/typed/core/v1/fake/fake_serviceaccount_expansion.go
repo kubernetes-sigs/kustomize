@@ -17,8 +17,8 @@ limitations under the License.
 package fake
 
 import (
-	authenticationv1 "k8s.io/api/authentication/v1"
-	core "k8s.io/client-go/testing"
+	authenticationv1 "sigs.k8s.io/kustomize/forked/api/authentication/v1"
+	core "sigs.k8s.io/kustomize/forked/client-go/testing"
 )
 
 func (c *FakeServiceAccounts) CreateToken(name string, tr *authenticationv1.TokenRequest) (*authenticationv1.TokenRequest, error) {

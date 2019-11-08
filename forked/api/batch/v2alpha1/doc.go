@@ -18,4 +18,4 @@ limitations under the License.
 // +k8s:protobuf-gen=package
 // +k8s:openapi-gen=true
 
-package v2alpha1 // import "k8s.io/api/batch/v2alpha1"
+package v2alpha1 // import "sigs.k8s.io/kustomize/forked/api/batch/v2alpha1"

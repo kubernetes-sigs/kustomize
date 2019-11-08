@@ -20,7 +20,7 @@ import (
 	"errors"
 	"sync"
 
-	"k8s.io/apimachinery/pkg/util/sets"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/sets"
 )
 
 // PopProcessFunc is passed to Pop() method of Queue interface.

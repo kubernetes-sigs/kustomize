@@ -17,9 +17,9 @@ limitations under the License.
 package fake
 
 import (
-	"k8s.io/api/core/v1"
-	types "k8s.io/apimachinery/pkg/types"
-	core "k8s.io/client-go/testing"
+	"sigs.k8s.io/kustomize/forked/api/core/v1"
+	types "sigs.k8s.io/kustomize/forked/apimachinery/pkg/types"
+	core "sigs.k8s.io/kustomize/forked/client-go/testing"
 )
 
 // TODO: Should take a PatchType as an argument probably.

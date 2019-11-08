@@ -21,13 +21,13 @@ package v1
 import (
 	"time"
 
-	autoscalingv1 "k8s.io/api/autoscaling/v1"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	scheme "k8s.io/client-go/kubernetes/scheme"
-	rest "k8s.io/client-go/rest"
+	autoscalingv1 "sigs.k8s.io/kustomize/forked/api/autoscaling/v1"
+	v1 "sigs.k8s.io/kustomize/forked/api/core/v1"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	types "sigs.k8s.io/kustomize/forked/apimachinery/pkg/types"
+	watch "sigs.k8s.io/kustomize/forked/apimachinery/pkg/watch"
+	scheme "sigs.k8s.io/kustomize/forked/client-go/kubernetes/scheme"
+	rest "sigs.k8s.io/kustomize/forked/client-go/rest"
 )
 
 // ReplicationControllersGetter has a method to return a ReplicationControllerInterface.

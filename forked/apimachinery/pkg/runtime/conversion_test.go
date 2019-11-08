@@ -20,9 +20,9 @@ import (
 	"reflect"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	runtimetesting "k8s.io/apimachinery/pkg/runtime/testing"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	runtimetesting "sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/testing"
 )
 
 func TestStringMapConversion(t *testing.T) {

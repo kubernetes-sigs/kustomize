@@ -23,9 +23,9 @@ package v1
 import (
 	unsafe "unsafe"
 
-	conversion "k8s.io/apimachinery/pkg/conversion"
-	runtime "k8s.io/apimachinery/pkg/runtime"
-	api "k8s.io/client-go/tools/clientcmd/api"
+	conversion "sigs.k8s.io/kustomize/forked/apimachinery/pkg/conversion"
+	runtime "sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	api "sigs.k8s.io/kustomize/forked/client-go/tools/clientcmd/api"
 )
 
 func init() {

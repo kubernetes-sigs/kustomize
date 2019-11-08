@@ -20,4 +20,4 @@ limitations under the License.
 
 // +groupName=imagepolicy.k8s.io
 
-package v1alpha1 // import "k8s.io/api/imagepolicy/v1alpha1"
+package v1alpha1 // import "sigs.k8s.io/kustomize/forked/api/imagepolicy/v1alpha1"

@@ -21,4 +21,4 @@ limitations under the License.
 // Package policy is for any kind of policy object.  Suitable examples, even if
 // they aren't all here, are PodDisruptionBudget, PodSecurityPolicy,
 // NetworkPolicy, etc.
-package v1beta1 // import "k8s.io/api/policy/v1beta1"
+package v1beta1 // import "sigs.k8s.io/kustomize/forked/api/policy/v1beta1"

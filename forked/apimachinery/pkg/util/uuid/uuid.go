@@ -19,7 +19,7 @@ package uuid
 import (
 	"github.com/google/uuid"
 
-	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/types"
 )
 
 func NewUUID() types.UID {

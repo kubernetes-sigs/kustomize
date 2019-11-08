@@ -21,9 +21,9 @@ import (
 	"errors"
 	"fmt"
 
-	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
+	"sigs.k8s.io/kustomize/forked/api/core/v1"
+	metav1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	corev1client "sigs.k8s.io/kustomize/forked/client-go/kubernetes/typed/core/v1"
 )
 
 type EndpointsLock struct {

@@ -19,13 +19,13 @@ package scale
 import (
 	"fmt"
 
-	autoscaling "k8s.io/api/autoscaling/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/dynamic"
-	restclient "k8s.io/client-go/rest"
+	autoscaling "sigs.k8s.io/kustomize/forked/api/autoscaling/v1"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	serializer "sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/serializer"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/types"
+	"sigs.k8s.io/kustomize/forked/client-go/dynamic"
+	restclient "sigs.k8s.io/kustomize/forked/client-go/rest"
 )
 
 var scaleConverter = NewScaleConverter()

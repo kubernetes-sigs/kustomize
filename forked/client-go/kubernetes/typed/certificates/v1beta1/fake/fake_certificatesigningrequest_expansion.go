@@ -17,8 +17,8 @@ limitations under the License.
 package fake
 
 import (
-	certificates "k8s.io/api/certificates/v1beta1"
-	core "k8s.io/client-go/testing"
+	certificates "sigs.k8s.io/kustomize/forked/api/certificates/v1beta1"
+	core "sigs.k8s.io/kustomize/forked/client-go/testing"
 )
 
 func (c *FakeCertificateSigningRequests) UpdateApproval(certificateSigningRequest *certificates.CertificateSigningRequest) (result *certificates.CertificateSigningRequest, err error) {

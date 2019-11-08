@@ -21,8 +21,8 @@ import (
 	"strings"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/selection"
-	"k8s.io/apimachinery/pkg/util/sets"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/selection"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/sets"
 )
 
 func TestSelectorParse(t *testing.T) {

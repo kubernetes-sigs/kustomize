@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"runtime"
 
-	apimachineryversion "k8s.io/apimachinery/pkg/version"
+	apimachineryversion "sigs.k8s.io/kustomize/forked/apimachinery/pkg/version"
 )
 
 // Get returns the overall codebase version. It's for detecting

@@ -19,4 +19,4 @@ limitations under the License.
 // +k8s:protobuf-gen=package
 
 // Package v1 is the v1 version of the core API.
-package v1 // import "k8s.io/api/core/v1"
+package v1 // import "sigs.k8s.io/kustomize/forked/api/core/v1"

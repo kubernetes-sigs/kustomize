@@ -19,14 +19,14 @@ limitations under the License.
 package fake
 
 import (
-	appsv1 "k8s.io/api/apps/v1"
-	autoscalingv1 "k8s.io/api/autoscaling/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	appsv1 "sigs.k8s.io/kustomize/forked/api/apps/v1"
+	autoscalingv1 "sigs.k8s.io/kustomize/forked/api/autoscaling/v1"
+	v1 "sigs.k8s.io/kustomize/forked/apimachinery/pkg/apis/meta/v1"
+	labels "sigs.k8s.io/kustomize/forked/apimachinery/pkg/labels"
+	schema "sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	types "sigs.k8s.io/kustomize/forked/apimachinery/pkg/types"
+	watch "sigs.k8s.io/kustomize/forked/apimachinery/pkg/watch"
+	testing "sigs.k8s.io/kustomize/forked/client-go/testing"
 )
 
 // FakeReplicaSets implements ReplicaSetInterface

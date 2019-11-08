@@ -21,7 +21,7 @@ import (
 	"sync"
 	"testing"
 
-	runtimetesting "k8s.io/apimachinery/pkg/runtime/testing"
+	runtimetesting "sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/testing"
 
 	"github.com/stretchr/testify/assert"
 )

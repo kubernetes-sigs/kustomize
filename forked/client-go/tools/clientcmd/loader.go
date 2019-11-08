@@ -30,13 +30,13 @@ import (
 	"github.com/imdario/mergo"
 	"k8s.io/klog"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	utilerrors "k8s.io/apimachinery/pkg/util/errors"
-	restclient "k8s.io/client-go/rest"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
-	clientcmdlatest "k8s.io/client-go/tools/clientcmd/api/latest"
-	"k8s.io/client-go/util/homedir"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime"
+	"sigs.k8s.io/kustomize/forked/apimachinery/pkg/runtime/schema"
+	utilerrors "sigs.k8s.io/kustomize/forked/apimachinery/pkg/util/errors"
+	restclient "sigs.k8s.io/kustomize/forked/client-go/rest"
+	clientcmdapi "sigs.k8s.io/kustomize/forked/client-go/tools/clientcmd/api"
+	clientcmdlatest "sigs.k8s.io/kustomize/forked/client-go/tools/clientcmd/api/latest"
+	"sigs.k8s.io/kustomize/forked/client-go/util/homedir"
 )
 
 const (
