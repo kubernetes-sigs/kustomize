@@ -100,13 +100,13 @@ items:
   metadata:
     name: deployment-foo
     annotations:
-      kyaml.kustomize.dev/kio/index: 0
+      config.kubernetes.io/index: 0
 - apiVersion: v1
   kind: Service
   metadata:
     name: service-foo
     annotations:
-      kyaml.kustomize.dev/kio/index: 1
+      config.kubernetes.io/index: 1
 functionConfig: {apiVersion: apps/v1, kind: Deployment, metadata: {name: foo}}
 `, s) {
 				t.FailNow()
@@ -131,14 +131,14 @@ kind: StatefulSet
 metadata:
   name: deployment-foo
   annotations:
-    kyaml.kustomize.dev/kio/index: 0
+    config.kubernetes.io/index: 0
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: service-foo
   annotations:
-    kyaml.kustomize.dev/kio/index: 1
+    config.kubernetes.io/index: 1
 `, b.String())
 }
 
@@ -182,13 +182,13 @@ items:
   metadata:
     name: deployment-foo
     annotations:
-      kyaml.kustomize.dev/kio/index: 0
+      config.kubernetes.io/index: 0
 - apiVersion: v1
   kind: Service
   metadata:
     name: service-foo
     annotations:
-      kyaml.kustomize.dev/kio/index: 1
+      config.kubernetes.io/index: 1
 functionConfig: {apiversion: apps/v1, kind: Deployment, metadata: {name: foo}}
 `, s) {
 				t.FailNow()
@@ -213,14 +213,14 @@ kind: Deployment
 metadata:
   name: deployment-foo
   annotations:
-    kyaml.kustomize.dev/kio/index: 0
+    config.kubernetes.io/index: 0
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: service-foo
   annotations:
-    kyaml.kustomize.dev/kio/index: 1
+    config.kubernetes.io/index: 1
 `, b.String())
 }
 

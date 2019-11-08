@@ -41,7 +41,8 @@ func (t *KFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if err := unmarshal(meta); err != nil {
 		return err
 	}
-	if filter, found := Filters[meta.Kind]; !found {
+	filter, found := Filters[meta.Kind]
+	if !found {
 		var knownFilters []string
 		for k := range Filters {
 			knownFilters = append(knownFilters, k)
@@ -49,9 +50,9 @@ func (t *KFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		sort.Strings(knownFilters)
 		return fmt.Errorf("unsupported filter Kind %v:  may be one of: [%s]",
 			meta, strings.Join(knownFilters, ","))
-	} else {
-		t.Filter = filter()
 	}
+	t.Filter = filter()
+
 	return unmarshal(t.Filter)
 }
 

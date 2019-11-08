@@ -37,6 +37,12 @@ func (fn WriterFunc) Write(o []*yaml.RNode) error {
 	return fn(o)
 }
 
+// ReaderWriter implements both Reader and Writer interfaces
+type ReaderWriter interface {
+	Reader
+	Writer
+}
+
 // Filter modifies a collection of Resource Configuration by returning the modified slice.
 // When possible, Filters should be serializable to yaml so that they can be described
 // as either data or code.
@@ -105,4 +111,17 @@ func (p Pipeline) Execute() error {
 		}
 	}
 	return nil
+}
+
+// FilterAll runs the yaml.Filter against all inputs
+func FilterAll(filter yaml.Filter) Filter {
+	return FilterFunc(func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+		for i := range nodes {
+			_, err := filter.Filter(nodes[i])
+			if err != nil {
+				return nil, err
+			}
+		}
+		return nodes, nil
+	})
 }

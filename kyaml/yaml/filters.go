@@ -46,7 +46,8 @@ func (y *YFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if err := unmarshal(meta); err != nil {
 		return err
 	}
-	if filter, found := Filters[meta.Kind]; !found {
+	filter, found := Filters[meta.Kind]
+	if !found {
 		var knownFilters []string
 		for k := range Filters {
 			knownFilters = append(knownFilters, k)
@@ -54,9 +55,9 @@ func (y *YFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		sort.Strings(knownFilters)
 		return fmt.Errorf("unsupported GrepFilter Kind %s:  may be one of: [%s]",
 			meta.Kind, strings.Join(knownFilters, ","))
-	} else {
-		y.Filter = filter()
 	}
+	y.Filter = filter()
+
 	if err := unmarshal(y.Filter); err != nil {
 		return err
 	}

@@ -24,10 +24,7 @@ func (l *Walker) walkAssociativeSequence() (*yaml.RNode, error) {
 	if err != nil {
 		return nil, err
 	}
-	values, err := l.elementValues(key)
-	if err != nil {
-		return nil, err
-	}
+	values := l.elementValues(key)
 
 	// recursively set the elements in the list
 	for _, value := range values {
@@ -90,7 +87,7 @@ func (l Walker) elementKey() (string, error) {
 // from all sources.
 // Return value slice is ordered using the original ordering from the elements, where
 // elements missing from earlier sources appear later.
-func (l Walker) elementValues(key string) ([]string, error) {
+func (l Walker) elementValues(key string) []string {
 	// use slice to to keep elements in the original order
 	// dest node must be first
 	var returnValues []string
@@ -111,7 +108,7 @@ func (l Walker) elementValues(key string) ([]string, error) {
 			seen.Insert(s)
 		}
 	}
-	return returnValues, nil
+	return returnValues
 }
 
 // fieldValue returns a slice containing each source's value for fieldName
