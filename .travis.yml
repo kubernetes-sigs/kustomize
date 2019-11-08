@@ -34,8 +34,7 @@ before_install:
 install: true
 
 script:
-# TODO(pwittrock): Enable this once the psuedo deps have been created
-#  - ./travis/verify-deps.sh
+  - ./travis/verify-deps.sh
   - ./travis/pre-commit.sh
   - ./travis/kyaml-pre-commit.sh
 
