@@ -8,16 +8,27 @@
 # gradually being moved here.
 
 MYGOBIN := $(shell go env GOPATH)/bin
+PATH := $(PATH):$(MYGOBIN)
+SHELL := env PATH=$(PATH) /bin/bash
 
 .PHONY: all
-all:
+all: pre-commit
+
+# The pre-commit.sh script generates, lints and tests.
+# It uses this makefile.  For more clarity, would like
+# to stop that - any scripts invoked by targets here
+# shouldn't "call back" to the makefile.
+.PHONY: pre-commit
+pre-commit:
 	./travis/pre-commit.sh
 
 $(MYGOBIN)/golangci-lint:
-	cd api; go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	cd api; \
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint
 
 $(MYGOBIN)/mdrip:
-	cd api; go install github.com/monopole/mdrip
+	cd api; \
+	go install github.com/monopole/mdrip
 
 # TODO: need a new release of the API, followed by a new pluginator.
 # pluginator v1.1.0 is too old for the code currently needed in the API.
@@ -27,28 +38,61 @@ $(MYGOBIN)/mdrip:
 #  - pin the version tag in './api/go.mod' to match the new release
 #  - change the following to 'cd api; go install sigs.k8s.io/kustomize/pluginator'
 $(MYGOBIN)/pluginator:
-	cd pluginator; go install .
+	cd pluginator; \
+	go install .
 
 $(MYGOBIN)/stringer:
-	cd api; go install golang.org/x/tools/cmd/stringer
+	cd api; \
+	go install golang.org/x/tools/cmd/stringer
 
-# Specific version tags for these utilities are pinned in ./api/go.mod
-# which seems to be as good a place as any to do so.
-# That's the reason for all the occurances of 'cd api;' in the
-# dependencies; 'go install' uses the local 'go.mod' to get the version.
-install-tools: $(MYGOBIN)/golangci-lint \
+# Specific version tags for these utilities are pinned
+# in ./api/go.mod, which seems to be as good a place as
+# any to do so.  That's the reason for all the occurances
+# of 'cd api;' in the dependencies; 'go install' uses the
+# local 'go.mod' to find the correct version to install.
+.PHONY: install-tools
+install-tools: \
+	$(MYGOBIN)/golangci-lint \
 	$(MYGOBIN)/mdrip \
 	$(MYGOBIN)/pluginator \
 	$(MYGOBIN)/stringer
 
+# Builtin plugins are generated code.
+# Add new items here to create new builtins.
+builtinplugins = \
+	api/builtins/annotationstransformer.go \
+	api/builtins/configmapgenerator.go \
+	api/builtins/hashtransformer.go \
+	api/builtins/imagetagtransformer.go \
+	api/builtins/inventorytransformer.go \
+	api/builtins/labeltransformer.go \
+	api/builtins/legacyordertransformer.go \
+	api/builtins/namespacetransformer.go \
+	api/builtins/patchjson6902transformer.go \
+	api/builtins/patchstrategicmergetransformer.go \
+	api/builtins/patchtransformer.go \
+	api/builtins/prefixsuffixtransformer.go \
+	api/builtins/replicacounttransformer.go \
+	api/builtins/secretgenerator.go
+
 .PHONY: lint
-lint: install-tools
+lint: install-tools $(builtinplugins)
 	cd api; $(MYGOBIN)/golangci-lint run ./...
 	cd kustomize; $(MYGOBIN)/golangci-lint run ./...
 	cd pluginator; $(MYGOBIN)/golangci-lint run ./...
 
+# pluginator consults the GOPATH env var to write generated code.
+api/builtins/%.go: $(MYGOBIN)/pluginator
+	@echo "generating $*"; \
+	cd plugin/builtin/$*; \
+	GOPATH=$(shell pwd)/../../.. go generate ./...; \
+	go fmt ./...
+
+.PHONY: generate
+generate: $(builtinplugins)
+
 .PHONY: unit-test-api
-unit-test-api:
+unit-test-api: $(builtinplugins)
 	cd api; go test ./...
 
 .PHONY: unit-test-plugins
@@ -77,3 +121,8 @@ $(MYGOBIN)/helm:
 	tar -xvzf helm-v2.13.1-linux-amd64.tar.gz; \
 	mv linux-amd64/helm $(MYGOBIN); \
 	rm -rf $$d
+
+.PHONY: clean
+clean:
+	rm -f $(builtinplugins)
+	rm -f $(MYGOBIN)/pluginator
