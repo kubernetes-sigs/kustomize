@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/api/resource"
+	"sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )

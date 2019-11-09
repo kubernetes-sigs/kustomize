@@ -300,7 +300,7 @@ func (r *Resource) AppendRefVarName(variable types.Var) {
 	r.refVarNames = append(r.refVarNames, variable.Name)
 }
 
-// TODO: Add BinaryData once we sync to new k8s.io/api
+// TODO: Add BinaryData once we sync to new sigs.k8s.io/kustomize/pseudo/k8s/api
 func mergeConfigmap(
 	mergedTo map[string]interface{},
 	maps ...map[string]interface{}) {
