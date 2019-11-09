@@ -9,8 +9,8 @@ import (
 	"unicode/utf8"
 
 	"github.com/pkg/errors"
-	"k8s.io/api/core/v1"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/pseudo/k8s/api/core/v1"
 )
 
 func makeFreshConfigMap(
