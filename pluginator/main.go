@@ -132,7 +132,8 @@ func makeOutputFileName(root string) string {
 }
 
 func (w *writer) close() {
-	fmt.Println("Generated " + w.root)
+	// Do this for debugging.
+	// fmt.Println("Generated " + makeOutputFileName(w.root))
 	w.f.Close()
 }
 

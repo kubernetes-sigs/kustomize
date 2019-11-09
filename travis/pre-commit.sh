@@ -74,11 +74,6 @@ function testExamplesAgainstLocalHead {
   echo "Example tests passed against HEAD"
 }
 
-function generateCode {
-  echo "preferredGoPath = $preferredGoPath"
-  ./api/internal/plugins/builtinhelpers/generateBuiltins.sh $preferredGoPath
-}
-
 # This script tries to work for both travis
 # and contributors who have or do not have
 # GOPATH set.
@@ -86,8 +81,8 @@ function generateCode {
 # Use GOPATH to define XDG_CONFIG_HOME, then unset
 # GOPATH so that go.mod is unambiguously honored.
 #
-function setPreferredGoPathAndUnsetGoPath {
-  preferredGoPath=$GOPATH
+function unsetGoPath {
+  local preferredGoPath=$GOPATH
   if [ -z ${GOPATH+x} ]; then
     # GOPATH is unset
     local tmp=$HOME/gopath
@@ -107,21 +102,20 @@ function setPreferredGoPathAndUnsetGoPath {
     echo "GOPATH=$GOPATH, but should be unset at this point."
     exit 1
   fi
-  echo "preferredGoPath=$preferredGoPath"
+
+  # This is needed for plugins.
+  # TODO: switch this to set KUSTOMIZE_PLUGIN_HOME instead.
+  export XDG_CONFIG_HOME=$preferredGoPath/src/sigs.k8s.io
+  echo "XDG_CONFIG_HOME=$XDG_CONFIG_HOME"
+  if [ ! -d "$XDG_CONFIG_HOME" ]; then
+    echo "$XDG_CONFIG_HOME is not a directory."
+    echo "Unable to compile or otherwise work with kustomize plugins."
+    exit 1
+  fi
 }
 
-# We don't want GOPATH to be defined, as it
-# has too much baggage.
-setPreferredGoPathAndUnsetGoPath
+unsetGoPath
 
-# This is needed for plugins.
-export XDG_CONFIG_HOME=$preferredGoPath/src/sigs.k8s.io
-echo "XDG_CONFIG_HOME=$XDG_CONFIG_HOME"
-if [ ! -d "$XDG_CONFIG_HOME" ]; then
-  echo "$XDG_CONFIG_HOME is not a directory."
-  echo "Unable to compile or otherwise work with kustomize plugins."
-  exit 1
-fi
 
 # With GOPATH now undefined, this most
 # likely this puts $HOME/go/bin on the path.
@@ -144,7 +138,6 @@ echo " "
 echo "Working..."
 
 runFunc installTools
-runFunc generateCode
 runFunc runLint
 runFunc runUnitTests
 runFunc testExamplesAgainstLatestKustomizeRelease
