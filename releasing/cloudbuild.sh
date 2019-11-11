@@ -27,7 +27,12 @@ if [ "$module" != "$tModule" ]; then
   exit 1
 fi
 
-cd $module
+if [ "$module" == "pseudok8s" ]; then
+  cd pseudo/k8s
+else
+  cd $module
+fi
+
 
 configFile=$(mktemp)
 cat <<EOF >$configFile
