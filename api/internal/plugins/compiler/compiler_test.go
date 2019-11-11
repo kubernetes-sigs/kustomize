@@ -19,7 +19,7 @@ func TestCompiler(t *testing.T) {
 	if err != nil {
 		t.Errorf("failed to make temp dir: %v", err)
 	}
-	srcRoot, err := DefaultSrcRoot(filesys.MakeFsOnDisk())
+	srcRoot, err := DeterminePluginSrcRoot(filesys.MakeFsOnDisk())
 	if err != nil {
 		t.Error(err)
 	}

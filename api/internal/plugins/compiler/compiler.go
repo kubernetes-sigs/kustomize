@@ -30,11 +30,31 @@ type Compiler struct {
 	objRoot string
 }
 
-// DefaultSrcRoot guesses where the user
+// DeterminePluginSrcRoot guesses where the user
 // has her ${g}/${v}/$lower(${k})/${k}.go files.
-func DefaultSrcRoot(fSys filesys.FileSystem) (string, error) {
+func DeterminePluginSrcRoot(fSys filesys.FileSystem) (string, error) {
 	return konfig.FirstDirThatExistsElseError(
 		"source directory", fSys, []konfig.NotedFunc{
+			{
+				Note: "relative to unit test",
+				F: func() string {
+					return filepath.Clean(
+						filepath.Join(
+							os.Getenv("PWD"),
+							"..", "..", "..", "..",
+							konfig.RelPluginHome))
+				},
+			},
+			{
+				Note: "relative to api package",
+				F: func() string {
+					return filepath.Clean(
+						filepath.Join(
+							os.Getenv("PWD"),
+							"..", "..", "..",
+							konfig.RelPluginHome))
+				},
+			},
 			{
 				Note: "old style $GOPATH",
 				F: func() string {

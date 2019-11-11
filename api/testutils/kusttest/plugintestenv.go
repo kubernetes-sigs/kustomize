@@ -76,7 +76,7 @@ func (x *PluginTestEnv) makeCompiler() *compiler.Compiler {
 	if err != nil {
 		x.t.Error(err)
 	}
-	srcRoot, err := compiler.DefaultSrcRoot(filesys.MakeFsOnDisk())
+	srcRoot, err := compiler.DeterminePluginSrcRoot(filesys.MakeFsOnDisk())
 	if err != nil {
 		x.t.Error(err)
 	}
