@@ -30,23 +30,12 @@ brew install coreutils wget gnu-sed
 
 Add the new tools to your PATH
 
-## Clone Kustomize
+## Run the pre-commit tests
 
-- Kustomize must be cloned under `$GOPATH/src/sigs.k8s.io/` or some of the tests will not work
-
-## Running the tests
-
-Run the `pre-commit.sh` script to verify your install
+Run the `pre-commit` target to verify your install
 
 ```sh
-./travis/pre-commit.sh
+make pre-commit
 ```
 
 This will run the go tests, as well as documentation tests.
-
-## Known Issues
-
-`pre-commit.sh` will modify all api/plugins by changing `linux` to `darwin`.
-See [#1711](https://github.com/kubernetes-sigs/kustomize/issues/1711) for details.
-
-Don't check these updates in.
