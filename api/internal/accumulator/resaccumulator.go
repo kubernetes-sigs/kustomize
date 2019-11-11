@@ -112,7 +112,7 @@ func (ra *ResAccumulator) MergeVars(incoming []types.Var) error {
 		matched := ra.resMap.GetMatchingResourcesByOriginalId(idMatcher)
 		if len(matched) > 1 {
 			return fmt.Errorf(
-				"found %d resId matches for var %s "+
+				"found %d resId matches for var %v "+
 					"(unable to disambiguate)",
 				len(matched), v)
 		}
@@ -174,7 +174,7 @@ func (ra *ResAccumulator) findVarValueFromResources(v types.Var) (interface{}, e
 // for substitution wherever the $(var.Name) occurs.
 func (ra *ResAccumulator) makeVarReplacementMap() (map[string]interface{}, error) {
 	result := map[string]interface{}{}
-	for _, v := range ra.AccumulatedVars() {
+	for _, v := range ra.Vars() {
 		s, err := ra.findVarValueFromResources(v)
 		if err != nil {
 			return nil, err
@@ -244,6 +244,9 @@ func (ra *ResAccumulator) ResolveDirectoryVars() error {
 	t := newRefVarTransformer(
 		replacementMap, ra.tConfig.VarReference)
 	err := ra.Transform(t)
+	if err != nil {
+		return err
+	}
 	if len(t.UnusedVars()) > 0 {
 		for _, i := range t.UnusedVars() {
 			unusedVar := ra.varSet.Get(i)
