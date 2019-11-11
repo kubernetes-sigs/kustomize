@@ -132,6 +132,7 @@ resources:
 vars:
 - fieldref:
     fieldPath: metadata.name
+  immediateSubstitution: false
   name: MY_SERVICE_NAME
   objref:
     apiVersion: v1
@@ -156,7 +157,6 @@ patchesStrategicMerge:
 		t.Fatalf("Unexpected Error: %v", err)
 	}
 	bytes, _ := fSys.ReadFile(mf.path)
-
 	if !reflect.DeepEqual(kustomizationContentWithComments, bytes) {
 		t.Fatal("written kustomization with comments is not the same as original one")
 	}
@@ -219,6 +219,7 @@ kind: kustomization
 vars:
 - fieldref:
     fieldPath: metadata.name
+  immediateSubstitution: false
   name: MY_SERVICE_NAME
   objref:
     apiVersion: v1
