@@ -33,6 +33,8 @@ type Var struct {
 	// If unspecified, this defaults to fieldPath: $defaultFieldPath
 	FieldRef FieldSelector `json:"fieldref,omitempty" yaml:"fieldref,omitempty"`
 
+	// ImmediateSubstitution is a flag used to tell kustomize when it should do
+	// var replacements on a build level
 	ImmediateSubstitution bool `json:"immediateSubstitution" yaml:"immediateSubstitution"`
 }
 

@@ -18,9 +18,11 @@ import (
 // used to customize those resources.  It's a ResMap
 // plus stuff needed to modify the ResMap.
 type ResAccumulator struct {
-	resMap  resmap.ResMap
-	tConfig *builtinconfig.TransformerConfig
-	varSet  types.VarSet
+	resMap            resmap.ResMap
+	tConfig           *builtinconfig.TransformerConfig
+	varSet            types.VarSet
+	accumulatedVars   types.VarSet
+	unaccumulatedVars types.VarSet
 }
 
 func MakeEmptyAccumulator() *ResAccumulator {
@@ -28,6 +30,8 @@ func MakeEmptyAccumulator() *ResAccumulator {
 	ra.resMap = resmap.New()
 	ra.tConfig = &builtinconfig.TransformerConfig{}
 	ra.varSet = types.NewVarSet()
+	ra.accumulatedVars = types.NewVarSet()
+	ra.unaccumulatedVars = types.NewVarSet()
 	return ra
 }
 
@@ -41,9 +45,24 @@ func (ra *ResAccumulator) Vars() []types.Var {
 	return ra.varSet.AsSlice()
 }
 
-// DeleteVars returns a copy of underlying vars.
+// AccumulatedVars returns a copy of underlying vars.
+func (ra *ResAccumulator) AccumulatedVars() []types.Var {
+	return ra.accumulatedVars.AsSlice()
+}
+
+// UnaccumulatedVars returns a copy of underlying vars.
+func (ra *ResAccumulator) UnaccumulatedVars() []types.Var {
+	return ra.unaccumulatedVars.AsSlice()
+}
+
+// DeleteVars deletes varset.
 func (ra *ResAccumulator) DeleteVars() {
 	ra.varSet = types.NewVarSet()
+}
+
+// DeleteUnaccumulatedVars deletes unaccumulated varset.
+func (ra *ResAccumulator) DeleteUnaccumulatedVars() {
+	ra.unaccumulatedVars = types.NewVarSet()
 }
 
 func (ra *ResAccumulator) AppendAll(
@@ -60,6 +79,21 @@ func (ra *ResAccumulator) MergeConfig(
 	tConfig *builtinconfig.TransformerConfig) (err error) {
 	ra.tConfig, err = ra.tConfig.Merge(tConfig)
 	return err
+}
+
+//MergeVarSet merges the varset through resource accumulators
+func (ra *ResAccumulator) MergeVarSet(vars []types.Var) (err error) {
+	return ra.varSet.MergeSlice(vars)
+}
+
+//MergeUnaccumulatedVarSet merges the varset through resource accumulators
+func (ra *ResAccumulator) MergeUnaccumulatedVarSet(vars []types.Var) (err error) {
+	return ra.unaccumulatedVars.MergeSlice(vars)
+}
+
+//MergeAccumulatedVars merges the accumulatedVars through resource accumulators
+func (ra *ResAccumulator) MergeAccumulatedVars(accumulatedVars types.VarSet) (err error) {
+	return ra.accumulatedVars.MergeSet(accumulatedVars)
 }
 
 func (ra *ResAccumulator) GetTransformerConfig() *builtinconfig.TransformerConfig {
@@ -84,7 +118,12 @@ func (ra *ResAccumulator) MergeVars(incoming []types.Var) error {
 		}
 		if len(matched) == 1 {
 			matched[0].AppendRefVarName(v)
+			ra.accumulatedVars.Merge(v)
 		}
+		if len(matched) == 0 {
+			ra.unaccumulatedVars.Merge(v)
+		}
+
 	}
 	return ra.varSet.MergeSlice(incoming)
 }
@@ -95,6 +134,14 @@ func (ra *ResAccumulator) MergeAccumulator(other *ResAccumulator) (err error) {
 		return err
 	}
 	err = ra.MergeConfig(other.tConfig)
+	if err != nil {
+		return err
+	}
+	err = ra.MergeAccumulatedVars(other.accumulatedVars)
+	if err != nil {
+		return err
+	}
+	err = ra.MergeUnaccumulatedVarSet(other.UnaccumulatedVars())
 	if err != nil {
 		return err
 	}
@@ -127,7 +174,7 @@ func (ra *ResAccumulator) findVarValueFromResources(v types.Var) (interface{}, e
 // for substitution wherever the $(var.Name) occurs.
 func (ra *ResAccumulator) makeVarReplacementMap() (map[string]interface{}, error) {
 	result := map[string]interface{}{}
-	for _, v := range ra.Vars() {
+	for _, v := range ra.AccumulatedVars() {
 		s, err := ra.findVarValueFromResources(v)
 		if err != nil {
 			return nil, err
@@ -166,7 +213,7 @@ func (ra *ResAccumulator) ResolveVars() error {
 func (ra *ResAccumulator) makeVarDirectoryReplacementMap() (map[string]interface{}, []types.Var) {
 	result := map[string]interface{}{}
 	globalVars := []types.Var{}
-	for _, v := range ra.Vars() {
+	for _, v := range ra.AccumulatedVars() {
 		if v.IsImmediateSubstitution() {
 			s, err := ra.findVarValueFromResources(v)
 			if err != nil {
@@ -178,6 +225,9 @@ func (ra *ResAccumulator) makeVarDirectoryReplacementMap() (map[string]interface
 		}
 	}
 
+	//add unaccumulatedVars to global
+	globalVars = append(globalVars, ra.UnaccumulatedVars()...)
+
 	return result, globalVars
 }
 
@@ -185,8 +235,11 @@ func (ra *ResAccumulator) makeVarDirectoryReplacementMap() (map[string]interface
 func (ra *ResAccumulator) ResolveDirectoryVars() error {
 	replacementMap, globalVars := ra.makeVarDirectoryReplacementMap()
 	varSetCopy := types.NewVarSet()
+	accumulatedVarSetCopy := types.NewVarSet()
 	if len(replacementMap) == 0 {
-		return nil
+		err := varSetCopy.MergeSlice(globalVars)
+		ra.varSet = varSetCopy
+		return err
 	}
 	t := newRefVarTransformer(
 		replacementMap, ra.tConfig.VarReference)
@@ -195,8 +248,11 @@ func (ra *ResAccumulator) ResolveDirectoryVars() error {
 		for _, i := range t.UnusedVars() {
 			unusedVar := ra.varSet.Get(i)
 			varSetCopy.Merge(*unusedVar)
+			accumulatedVarSetCopy.Merge(*unusedVar)
 		}
+
 	}
+	ra.accumulatedVars = accumulatedVarSetCopy
 	err = varSetCopy.MergeSlice(globalVars)
 	ra.varSet = varSetCopy
 	return err

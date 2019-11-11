@@ -229,8 +229,9 @@ func (kt *KustTarget) AccumulateTarget() (
 		return nil, err
 	}
 	// append unresolved vars to kustomize vars in hope of finding reference in current resource
-	kt.kustomization.Vars = append(kt.kustomization.Vars, ra.Vars()...)
+	kt.kustomization.Vars = append(kt.kustomization.Vars, ra.UnaccumulatedVars()...)
 	ra.DeleteVars()
+	ra.DeleteUnaccumulatedVars()
 
 	err = ra.MergeVars(kt.kustomization.Vars)
 	if err != nil {
