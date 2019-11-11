@@ -4,8 +4,7 @@
 # That script generates all the code that needs
 # to be generated, and runs all the tests.
 #
-# Functionality in that script, expressed in bash, is
-# gradually being moved here.
+# Functionality in that script is gradually moving here.
 
 MYGOBIN := $(shell go env GOPATH)/bin
 PATH := $(PATH):$(MYGOBIN)
@@ -22,13 +21,25 @@ all: pre-commit
 pre-commit:
 	./travis/pre-commit.sh
 
+# Version pinned by api/go.mod
 $(MYGOBIN)/golangci-lint:
 	cd api; \
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint
 
+# Version pinned by api/go.mod
 $(MYGOBIN)/mdrip:
 	cd api; \
 	go install github.com/monopole/mdrip
+
+# Version pinned by api/go.mod
+$(MYGOBIN)/stringer:
+	cd api; \
+	go install golang.org/x/tools/cmd/stringer
+
+# Version pinned by api/go.mod
+$(MYGOBIN)/goimports:
+	cd api; \
+	go install golang.org/x/tools/cmd/goimports
 
 # TODO: need a new release of the API, followed by a new pluginator.
 # pluginator v1.1.0 is too old for the code currently needed in the API.
@@ -41,17 +52,9 @@ $(MYGOBIN)/pluginator:
 	cd pluginator; \
 	go install .
 
-$(MYGOBIN)/stringer:
-	cd api; \
-	go install golang.org/x/tools/cmd/stringer
-
-# Specific version tags for these utilities are pinned
-# in ./api/go.mod, which seems to be as good a place as
-# any to do so.  That's the reason for all the occurances
-# of 'cd api;' in the dependencies; 'go install' uses the
-# local 'go.mod' to find the correct version to install.
 .PHONY: install-tools
 install-tools: \
+	$(MYGOBIN)/goimports \
 	$(MYGOBIN)/golangci-lint \
 	$(MYGOBIN)/mdrip \
 	$(MYGOBIN)/pluginator \
@@ -81,12 +84,12 @@ lint: install-tools $(builtinplugins)
 	cd kustomize; $(MYGOBIN)/golangci-lint run ./...
 	cd pluginator; $(MYGOBIN)/golangci-lint run ./...
 
-# pluginator consults the GOPATH env var to write generated code.
 api/builtins/%.go: $(MYGOBIN)/pluginator
 	@echo "generating $*"; \
 	cd plugin/builtin/$*; \
-	GOPATH=$(shell pwd)/../../.. go generate ./...; \
-	go fmt ./...
+	go generate .; \
+	cd ../../../api/builtins; \
+	$(MYGOBIN)/goimports -w $*.go
 
 .PHONY: generate
 generate: $(builtinplugins)
@@ -107,6 +110,11 @@ unit-test-kustomize:
 unit-test-all: unit-test-api unit-test-kustomize unit-test-plugins
 
 # linux only.
+# This is for testing an example plugin that
+# uses kubeval for validation.
+# Don't want to add a hard dependence in go.mod file
+# to github.com/instrumenta/kubeval.
+# Instead, download the binary.
 $(MYGOBIN)/kubeval:
 	d=$(shell mktemp -d); cd $$d; \
 	wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz; \
@@ -115,6 +123,11 @@ $(MYGOBIN)/kubeval:
 	rm -rf $$d
 
 # linux only.
+# This is for testing an example plugin that
+# uses helm to inflate a chart for subsequent kustomization.
+# Don't want to add a hard dependence in go.mod file
+# to helm.
+# Instead, download the binary.
 $(MYGOBIN)/helm:
 	d=$(shell mktemp -d); cd $$d; \
 	wget https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz; \
@@ -126,3 +139,7 @@ $(MYGOBIN)/helm:
 clean:
 	rm -f $(builtinplugins)
 	rm -f $(MYGOBIN)/pluginator
+
+.PHONY: nuke
+nuke: clean
+	sudo rm -rf $(shell go env GOPATH)/pkg/mod/sigs.k8s.io

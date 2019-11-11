@@ -6,8 +6,6 @@ package main
 
 import (
 	"fmt"
-	"os"
-
 	"sigs.k8s.io/kustomize/api/provenance"
 )
 
@@ -17,5 +15,5 @@ func main() {
 This 'main' exists only to make goreleaser create release notes for the API.
 See https://github.com/goreleaser/goreleaser/issues/981
 and https://github.com/kubernetes-sigs/kustomize/tree/master/releasing`)
-	provenance.GetProvenance().Print(os.Stdout, false)
+	fmt.Println(provenance.GetProvenance())
 }
