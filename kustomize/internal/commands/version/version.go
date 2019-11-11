@@ -4,6 +4,7 @@
 package version
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/spf13/cobra"
@@ -19,7 +20,11 @@ func NewCmdVersion(w io.Writer) *cobra.Command {
 		Short:   "Prints the kustomize version",
 		Example: `kustomize version`,
 		Run: func(cmd *cobra.Command, args []string) {
-			provenance.GetProvenance().Print(w, short)
+			if short {
+				fmt.Println(provenance.GetProvenance().Short())
+			} else {
+				fmt.Println(provenance.GetProvenance().Full())
+			}
 		},
 	}
 

@@ -5,7 +5,6 @@ package provenance
 
 import (
 	"fmt"
-	"io"
 	"runtime"
 )
 
@@ -22,15 +21,15 @@ var (
 // Provenance holds information about the build of an executable.
 type Provenance struct {
 	// Version of the kustomize binary.
-	Version string `json:"version"`
+	Version string `json:"version,omitempty"`
 	// GitCommit is a git commit
-	GitCommit string `json:"gitCommit"`
+	GitCommit string `json:"gitCommit,omitempty"`
 	// BuildDate is date of the build.
-	BuildDate string `json:"buildDate"`
+	BuildDate string `json:"buildDate,omitempty"`
 	// GoOs holds OS name.
-	GoOs string `json:"goOs"`
+	GoOs string `json:"goOs,omitempty"`
 	// GoArch holds architecture name.
-	GoArch string `json:"goArch"`
+	GoArch string `json:"goArch,omitempty"`
 }
 
 // GetProvenance returns an instance of Provenance.
@@ -44,11 +43,17 @@ func GetProvenance() Provenance {
 	}
 }
 
-// Print prints provenance info.
-func (v Provenance) Print(w io.Writer, short bool) {
-	if short {
-		fmt.Fprintf(w, "%s\n", v.Version)
-	} else {
-		fmt.Fprintf(w, "Version: %+v\n", v)
-	}
+// Full returns the full provenance stamp.
+func (v Provenance) Full() string {
+	return fmt.Sprintf("%+v", v)
+}
+
+// Short returns the shortened provenance stamp.
+func (v Provenance) Short() string {
+	return fmt.Sprintf(
+		"%v",
+		Provenance{
+			Version:   v.Version,
+			BuildDate: v.BuildDate,
+		})
 }

@@ -12,8 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"sigs.k8s.io/kustomize/api/pgmconfig"
-	"sigs.k8s.io/kustomize/api/plugins/config"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/provenance"
 )
 
@@ -48,7 +47,7 @@ func main() {
 			root))
 	w.write(
 		fmt.Sprintf(
-			"// pluginator %+v\n", provenance.GetProvenance()))
+			"// pluginator %s\n", provenance.GetProvenance().Short()))
 	w.write("\n")
 	w.write("package " + packageForGeneratedCode)
 
@@ -62,7 +61,7 @@ func main() {
 		if strings.HasPrefix(l, "//noinspection") {
 			continue
 		}
-		if l == "var "+config.PluginSymbol+" plugin" {
+		if l == "var "+konfig.PluginSymbol+" plugin" {
 			continue
 		}
 		if strings.Contains(l, " Transform(") {
@@ -120,14 +119,14 @@ func NewWriter(r string) *writer {
 	return &writer{root: r, f: f}
 }
 
+// Assmue that this command is running with a $PWD of
+//   $HOME/kustomize/plugin/builtin/secretgenerator
+// (for example).  Then we want to write to
+//   $HOME/kustomize/api/builtins
 func makeOutputFileName(root string) string {
 	return filepath.Join(
-		os.Getenv("GOPATH"),
-		"src",
-		pgmconfig.DomainName,
-		pgmconfig.ProgramName,
-		"api",
-		packageForGeneratedCode,
+		"..", "..", "..",
+		"api", packageForGeneratedCode,
 		strings.ToLower(root)+".go")
 }
 
