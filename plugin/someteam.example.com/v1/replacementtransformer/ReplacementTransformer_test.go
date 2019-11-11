@@ -283,3 +283,126 @@ metadata:
   name: cm
 `)
 }
+
+func TestReplacementTransformerWithDiamondShape(t *testing.T) {
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
+	defer tc.Reset()
+
+	tc.BuildGoPlugin(
+		"someteam.example.com", "v1", "ReplacementTransformer")
+
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app/combined")
+
+        th.WriteF("/app/base/deployment.yaml",
+`
+group: apps
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx
+`)
+
+        th.WriteF("/app/base/kustomization.yaml",
+`
+resources:
+- deployment.yaml
+`)
+
+        th.WriteF("/app/a/kustomization.yaml",
+`
+nameprefix: a-
+resources:
+- ../base
+
+transformers:
+- replacement.yaml
+`)
+
+        th.WriteF("/app/a/replacement.yaml",
+`
+apiVersion: someteam.example.com/v1
+kind: ReplacementTransformer
+metadata:
+  name: notImportantHere
+replacements:
+- source:
+    value: nginx:newtagA
+  target:
+    objref:
+      kind: Deployment
+    fieldrefs:
+    - spec.template.spec.containers[name=nginx].image
+`)
+
+        th.WriteF("/app/b/kustomization.yaml",
+`
+nameprefix: b-
+resources:
+- ../base
+
+transformers:
+- replacement.yaml
+`)
+
+        th.WriteF("/app/b/replacement.yaml",
+`
+apiVersion: someteam.example.com/v1
+kind: ReplacementTransformer
+metadata:
+  name: notImportantHere
+replacements:
+- source:
+    value: nginx:newtagB
+  target:
+    objref: 
+      kind: Deployment
+    fieldrefs:
+    - spec.template.spec.containers[name=nginx].image
+`)
+
+
+        th.WriteF("/app/combined/kustomization.yaml",
+`
+resources:
+- ../a
+- ../b
+`)
+
+        m, err := th.MakeKustTarget().MakeCustomizedResMap()
+        if err != nil {
+            t.Fatalf("Err: %v", err)
+        }
+
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+group: apps
+kind: Deployment
+metadata:
+  name: a-deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:newtagA
+        name: nginx
+---
+apiVersion: v1
+group: apps
+kind: Deployment
+metadata:
+  name: b-deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:newtagB
+        name: nginx
+`)
+}
+
