@@ -32,6 +32,8 @@ type Var struct {
 	// replacing $(FOO).
 	// If unspecified, this defaults to fieldPath: $defaultFieldPath
 	FieldRef FieldSelector `json:"fieldref,omitempty" yaml:"fieldref,omitempty"`
+
+	ImmediateSubstitution bool `json:"immediateSubstitution" yaml:"immediateSubstitution"`
 }
 
 // Target refers to a kubernetes object by Group, Version, Kind and Name
@@ -74,6 +76,11 @@ func (v *Var) Defaulting() {
 		v.FieldRef.FieldPath = defaultFieldPath
 	}
 	v.ObjRef.GVK()
+}
+
+// IsImmediateSubstitution Checks if var should substitute immediate
+func (v *Var) IsImmediateSubstitution() bool {
+	return v.ImmediateSubstitution
 }
 
 // DeepEqual returns true if var a and b are Equals.

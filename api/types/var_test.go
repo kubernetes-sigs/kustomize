@@ -154,7 +154,7 @@ func TestVarSetCopy(t *testing.T) {
 	set2 := set1.Copy()
 	for _, varInSet1 := range set1.AsSlice() {
 		if v := set2.Get(varInSet1.Name); v == nil {
-			t.Fatalf("set %v should contain a Var named %s", set2.AsSlice(), varInSet1)
+			t.Fatalf("set %v should contain a Var named %v", set2.AsSlice(), varInSet1)
 		} else if !set2.Contains(*v) {
 			t.Fatalf("set %v should contain %v", set2.AsSlice(), v)
 		}
@@ -168,4 +168,22 @@ func TestVarSetCopy(t *testing.T) {
 	if set1.Contains(w) {
 		t.Fatalf("set %v should not contain %v", set1.AsSlice(), w)
 	}
+}
+
+func TestIsImmediateSubstitution(t *testing.T) {
+	v := &Var{
+		Name: "SOME_VARIABLE_NAME",
+		ObjRef: Target{
+			Gvk: resid.Gvk{
+				Version: "v1",
+				Kind:    "Secret",
+			},
+			Name: "my-secret",
+		},
+		ImmediateSubstitution: true,
+	}
+	if !v.IsImmediateSubstitution() {
+		t.Fatalf("expected true, got %v", v.ImmediateSubstitution)
+	}
+
 }

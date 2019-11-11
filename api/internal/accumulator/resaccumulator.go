@@ -163,23 +163,27 @@ func (ra *ResAccumulator) ResolveVars() error {
 }
 
 // if a resource is not found dont error, assume we will find it later.
-func (ra *ResAccumulator) makeVarDirectoryReplacementMap() map[string]interface{} {
+func (ra *ResAccumulator) makeVarDirectoryReplacementMap() (map[string]interface{}, []types.Var) {
 	result := map[string]interface{}{}
+	globalVars := []types.Var{}
 	for _, v := range ra.Vars() {
-		s, err := ra.findVarValueFromResources(v)
-		if err != nil {
-			result[v.Name] = nil
+		if v.IsImmediateSubstitution() {
+			s, err := ra.findVarValueFromResources(v)
+			if err != nil {
+				globalVars = append(globalVars, v)
+			}
+			result[v.Name] = s
+		} else {
+			globalVars = append(globalVars, v)
 		}
-
-		result[v.Name] = s
 	}
 
-	return result
+	return result, globalVars
 }
 
 // allows for vars to not have a found resource at the time of directory resolution
 func (ra *ResAccumulator) ResolveDirectoryVars() error {
-	replacementMap := ra.makeVarDirectoryReplacementMap()
+	replacementMap, globalVars := ra.makeVarDirectoryReplacementMap()
 	varSetCopy := types.NewVarSet()
 	if len(replacementMap) == 0 {
 		return nil
@@ -193,6 +197,7 @@ func (ra *ResAccumulator) ResolveDirectoryVars() error {
 			varSetCopy.Merge(*unusedVar)
 		}
 	}
+	err = varSetCopy.MergeSlice(globalVars)
 	ra.varSet = varSetCopy
 	return err
 }
