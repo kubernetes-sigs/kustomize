@@ -272,7 +272,9 @@ git tag -a $tag -m "Release $tag on branch $branch"
 
 ### optionally build a release locally
 
-Install [`cloud-build-local`], then run
+[localbuild.sh]: localbuild.sh
+
+Install [`cloud-build-local`], then run [localbuild.sh]:
 
 ```
 ./releasing/localbuild.sh $module
