@@ -47,6 +47,8 @@ case "$module" in
   ;;
   pluginator)
   ;;
+  pseudok8s)
+  ;;
   *)
     echo "Don't recognize module=$module"
     exit 1
