@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -81,13 +82,13 @@ func (r *LocalPackageReadWriter) Read() ([]*yaml.RNode, error) {
 		SetAnnotations:      r.SetAnnotations,
 	}.Read()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err)
 	}
 	// keep track of all the files
 	if !r.NoDeleteFiles {
 		r.files, err = r.getFiles(nodes)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err)
 		}
 	}
 	return nodes, nil
@@ -96,7 +97,7 @@ func (r *LocalPackageReadWriter) Read() ([]*yaml.RNode, error) {
 func (r *LocalPackageReadWriter) Write(nodes []*yaml.RNode) error {
 	newFiles, err := r.getFiles(nodes)
 	if err != nil {
-		return err
+		return errors.Wrap(err)
 	}
 	var clear []string
 	for k := range r.SetAnnotations {
@@ -108,12 +109,12 @@ func (r *LocalPackageReadWriter) Write(nodes []*yaml.RNode) error {
 		KeepReaderAnnotations: r.KeepReaderAnnotations,
 	}.Write(nodes)
 	if err != nil {
-		return err
+		return errors.Wrap(err)
 	}
 	deleteFiles := r.files.Difference(newFiles)
 	for f := range deleteFiles {
 		if err = os.Remove(filepath.Join(r.PackagePath, f)); err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 	}
 	return nil
@@ -124,7 +125,7 @@ func (r *LocalPackageReadWriter) getFiles(nodes []*yaml.RNode) (sets.String, err
 	for _, n := range nodes {
 		path, _, err := kioutil.GetFileAnnotations(n)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err)
 		}
 		val.Insert(path)
 	}
@@ -182,7 +183,7 @@ func (r LocalPackageReader) Read() ([]*yaml.RNode, error) {
 	err := filepath.Walk(r.PackagePath, func(
 		path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 
 		// is this the user specified path?
@@ -213,13 +214,13 @@ func (r LocalPackageReader) Read() ([]*yaml.RNode, error) {
 		// to another location.
 		path, err = filepath.Rel(pathRelativeTo, path)
 		if err != nil {
-			return err
+			return errors.WrapPrefixf(err, pathRelativeTo)
 		}
 
 		r.initReaderAnnotations(path, info)
 		nodes, err := r.readFile(filepath.Join(pathRelativeTo, path), info)
 		if err != nil {
-			return err
+			return errors.WrapPrefixf(err, filepath.Join(pathRelativeTo, path))
 		}
 		operand = append(operand, nodes...)
 		return nil
@@ -235,6 +236,7 @@ func (r *LocalPackageReader) readFile(path string, info os.FileInfo) ([]*yaml.RN
 	}
 	defer f.Close()
 	rr := &ByteReader{
+		DisableUnwrapping:     true,
 		Reader:                f,
 		OmitReaderAnnotations: r.OmitReaderAnnotations,
 		SetAnnotations:        r.SetAnnotations,
@@ -247,7 +249,7 @@ func (r *LocalPackageReader) shouldSkipFile(info os.FileInfo) (bool, error) {
 	// check if the files are in scope
 	for _, g := range r.MatchFilesGlob {
 		if match, err := filepath.Match(g, info.Name()); err != nil {
-			return false, err
+			return false, errors.Wrap(err)
 		} else if match {
 			return true, nil
 		}
@@ -276,7 +278,7 @@ func (r *LocalPackageReader) shouldSkipDir(path string) error {
 	if os.IsNotExist(err) {
 		return nil
 	} else if err != nil {
-		return err
+		return errors.Wrap(err)
 	}
 	if !r.IncludeSubpackages {
 		return filepath.SkipDir

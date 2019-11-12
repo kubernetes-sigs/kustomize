@@ -6,6 +6,7 @@
 package kio
 
 import (
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -85,7 +86,7 @@ func (p Pipeline) Execute() error {
 	for _, i := range p.Inputs {
 		nodes, err := i.Read()
 		if err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 		result = append(result, nodes...)
 	}
@@ -100,14 +101,14 @@ func (p Pipeline) Execute() error {
 		op := p.Filters[i]
 		result, err = op.Filter(result)
 		if len(result) == 0 || err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 	}
 
 	// write to the outputs
 	for _, o := range p.Outputs {
 		if err := o.Write(result); err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 	}
 	return nil
@@ -119,7 +120,7 @@ func FilterAll(filter yaml.Filter) Filter {
 		for i := range nodes {
 			_, err := filter.Filter(nodes[i])
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err)
 			}
 		}
 		return nodes, nil

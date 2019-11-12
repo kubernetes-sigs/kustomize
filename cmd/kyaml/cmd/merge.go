@@ -76,5 +76,5 @@ func (r *MergeRunner) runE(c *cobra.Command, args []string) error {
 	}
 
 	filters := []kio.Filter{filters.MergeFilter{}, filters.FormatFilter{}}
-	return kio.Pipeline{Inputs: inputs, Filters: filters, Outputs: outputs}.Execute()
+	return handleError(c, kio.Pipeline{Inputs: inputs, Filters: filters, Outputs: outputs}.Execute())
 }

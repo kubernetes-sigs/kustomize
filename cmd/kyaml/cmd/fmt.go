@@ -107,8 +107,8 @@ func (r *FmtRunner) runE(c *cobra.Command, args []string) error {
 			Writer:                c.OutOrStdout(),
 			KeepReaderAnnotations: r.KeepAnnotations,
 		}
-		return kio.Pipeline{
-			Inputs: []kio.Reader{rw}, Filters: f, Outputs: []kio.Writer{rw}}.Execute()
+		return handleError(c, kio.Pipeline{
+			Inputs: []kio.Reader{rw}, Filters: f, Outputs: []kio.Writer{rw}}.Execute())
 	}
 
 	for i := range args {
@@ -120,7 +120,7 @@ func (r *FmtRunner) runE(c *cobra.Command, args []string) error {
 		err := kio.Pipeline{
 			Inputs: []kio.Reader{rw}, Filters: f, Outputs: []kio.Writer{rw}}.Execute()
 		if err != nil {
-			return err
+			return handleError(c, err)
 		}
 	}
 	return nil

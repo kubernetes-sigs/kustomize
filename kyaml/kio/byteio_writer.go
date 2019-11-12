@@ -6,6 +6,7 @@ package kio
 import (
 	"io"
 
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -46,7 +47,7 @@ var _ Writer = ByteWriter{}
 func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 	if w.Sort {
 		if err := kioutil.SortNodes(nodes); err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 	}
 
@@ -58,13 +59,13 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 		if !w.KeepReaderAnnotations {
 			_, err := nodes[i].Pipe(yaml.ClearAnnotation(kioutil.IndexAnnotation))
 			if err != nil {
-				return err
+				return errors.Wrap(err)
 			}
 		}
 		for _, a := range w.ClearAnnotations {
 			_, err := nodes[i].Pipe(yaml.ClearAnnotation(a))
 			if err != nil {
-				return err
+				return errors.Wrap(err)
 			}
 		}
 
@@ -72,11 +73,11 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 		_, err := nodes[i].Pipe(yaml.Lookup("metadata"), yaml.FieldClearer{
 			Name: "annotations", IfEmpty: true})
 		if err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 		_, err = nodes[i].Pipe(yaml.FieldClearer{Name: "metadata", IfEmpty: true})
 		if err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 
 		if w.Style != 0 {
@@ -89,7 +90,7 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 		for i := range nodes {
 			err := encoder.Encode(nodes[i].Document())
 			if err != nil {
-				return err
+				return errors.Wrap(err)
 			}
 		}
 		return nil
@@ -118,5 +119,5 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 	for i := range nodes {
 		items.Content = append(items.Content, nodes[i].YNode())
 	}
-	return encoder.Encode(doc)
+	return errors.Wrap(encoder.Encode(doc))
 }
