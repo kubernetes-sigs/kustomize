@@ -138,7 +138,7 @@ that API clients can `require` from their `go.mod` file.
 
 Release notes should appear on the [release page].
 
-There's a toy executable called `k8s`, which, if
+There's a toy executable called `pseudok8s`, which, if
 run, prints a message, but is of
 no practical use to an API client.
 
