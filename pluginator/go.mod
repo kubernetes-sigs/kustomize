@@ -1,4 +1,4 @@
-module sigs.k8s.io/kustomize/pluginator
+module sigs.k8s.io/kustomize/pluginator/v2
 
 go 1.13
 
