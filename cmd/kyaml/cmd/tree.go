@@ -194,7 +194,7 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 		IncludeNonReconcilers: !r.excludeNonReconcilers,
 	}}
 
-	return kio.Pipeline{
+	return handleError(c, kio.Pipeline{
 		Inputs:  []kio.Reader{input},
 		Filters: fltrs,
 		Outputs: []kio.Writer{kio.TreeWriter{
@@ -202,7 +202,7 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 			Writer:    c.OutOrStdout(),
 			Fields:    fields,
 			Structure: kio.TreeStructure(r.structure)}},
-	}.Execute()
+	}.Execute())
 }
 
 func newField(val ...string) kio.TreeWriterField {

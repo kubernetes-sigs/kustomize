@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -53,7 +54,7 @@ func (rw *ByteReadWriter) Read() ([]*yaml.RNode, error) {
 	rw.FunctionConfig = b.FunctionConfig
 	rw.WrappingApiVersion = b.WrappingApiVersion
 	rw.WrappingKind = b.WrappingKind
-	return val, err
+	return val, errors.Wrap(err)
 }
 
 func (rw *ByteReadWriter) Write(nodes []*yaml.RNode) error {
@@ -84,8 +85,16 @@ type ByteReader struct {
 
 	FunctionConfig *yaml.RNode
 
+	// DisableUnwrapping prevents Resources in Lists and ResourceLists from being unwrapped
+	DisableUnwrapping bool
+
+	// WrappingApiVersion is set by Read(), and is the apiVersion of the object that
+	// the read objects were originally wrapped in.
 	WrappingApiVersion string
-	WrappingKind       string
+
+	// WrappingKind is set by Read(), and is the kind of the object that
+	// the read objects were originally wrapped in.
+	WrappingKind string
 }
 
 var _ Reader = &ByteReader{}
@@ -98,7 +107,7 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 	input := &bytes.Buffer{}
 	_, err := io.Copy(input, r.Reader)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err)
 	}
 	values := strings.Split(input.String(), "\n---\n")
 
@@ -110,7 +119,7 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 			continue
 		}
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err)
 		}
 		if yaml.IsMissingOrNull(node) {
 			// empty value
@@ -118,12 +127,18 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 		}
 
 		// ok if no metadata -- assume not an InputList
-		meta, _ := node.GetMeta()
+		meta, err := node.GetMeta()
+		if err != yaml.ErrMissingMetadata && err != nil {
+			return nil, errors.WrapPrefixf(err, "[%d]", i)
+		}
 
 		// the elements are wrapped in an InputList, unwrap them
 		// don't check apiVersion, we haven't standardized on the domain
-		if (meta.Kind == ResourceListKind || meta.Kind == "List") &&
+		if !r.DisableUnwrapping &&
+			len(values) == 1 && // Only unwrap if there is only 1 value
+			(meta.Kind == ResourceListKind || meta.Kind == "List") &&
 			node.Field("items") != nil {
+
 			r.WrappingKind = meta.Kind
 			r.WrappingApiVersion = meta.ApiVersion
 
@@ -166,7 +181,7 @@ func (r *ByteReader) decode(index int, decoder *yaml.Decoder) (*yaml.RNode, erro
 		return nil, io.EOF
 	}
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err)
 	}
 
 	if isEmptyDocument(node) {
@@ -191,7 +206,7 @@ func (r *ByteReader) decode(index int, decoder *yaml.Decoder) (*yaml.RNode, erro
 	for _, k := range keys {
 		_, err = n.Pipe(yaml.SetAnnotation(k, r.SetAnnotations[k]))
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err)
 		}
 	}
 	return yaml.NewRNode(node), nil

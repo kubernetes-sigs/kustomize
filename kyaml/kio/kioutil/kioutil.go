@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strconv"
 
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -40,10 +41,10 @@ func ErrorIfMissingAnnotation(nodes []*yaml.RNode, keys ...AnnotationKey) error 
 		for _, node := range nodes {
 			val, err := node.Pipe(yaml.GetAnnotation(key))
 			if err != nil {
-				return err
+				return errors.Wrap(err)
 			}
 			if val == nil {
-				return fmt.Errorf("missing package annotation %s", key)
+				return errors.Errorf("missing package annotation %s", key)
 			}
 		}
 	}
@@ -56,7 +57,7 @@ func Map(nodes []*yaml.RNode, fn func(*yaml.RNode) (*yaml.RNode, error)) ([]*yam
 	for i := range nodes {
 		n, err := fn(nodes[i])
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err)
 		}
 		if n != nil {
 			returnNodes = append(returnNodes, n)
@@ -71,11 +72,11 @@ func MapMeta(nodes []*yaml.RNode, fn func(*yaml.RNode, yaml.ResourceMeta) (*yaml
 	for i := range nodes {
 		meta, err := nodes[i].GetMeta()
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err)
 		}
 		n, err := fn(nodes[i], meta)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err)
 		}
 		if n != nil {
 			returnNodes = append(returnNodes, n)
@@ -141,5 +142,5 @@ func SortNodes(nodes []*yaml.RNode) error {
 		// elements are equal
 		return false
 	})
-	return err
+	return errors.Wrap(err)
 }

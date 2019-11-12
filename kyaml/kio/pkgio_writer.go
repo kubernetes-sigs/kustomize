@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -52,7 +53,7 @@ func (r LocalPackageWriter) Write(nodes []*yaml.RNode) error {
 	}
 	for k := range outputFiles {
 		if err = kioutil.SortNodes(outputFiles[k]); err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 	}
 
@@ -66,7 +67,7 @@ func (r LocalPackageWriter) Write(nodes []*yaml.RNode) error {
 		outputPath := filepath.Join(r.PackagePath, path)
 		if st, err := os.Stat(outputPath); !os.IsNotExist(err) {
 			if err != nil {
-				return err
+				return errors.Wrap(err)
 			}
 			if st.IsDir() {
 				return fmt.Errorf("config.kubernetes.io/path cannot be a directory: %s", path)
@@ -75,7 +76,7 @@ func (r LocalPackageWriter) Write(nodes []*yaml.RNode) error {
 
 		err = os.MkdirAll(filepath.Dir(outputPath), 0700)
 		if err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 	}
 
@@ -84,12 +85,12 @@ func (r LocalPackageWriter) Write(nodes []*yaml.RNode) error {
 		outputPath := filepath.Join(r.PackagePath, path)
 		err = os.MkdirAll(filepath.Dir(filepath.Join(r.PackagePath, path)), 0700)
 		if err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 
 		f, err := os.OpenFile(outputPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.FileMode(0600))
 		if err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 		if err := func() error {
 			defer f.Close()
@@ -99,11 +100,11 @@ func (r LocalPackageWriter) Write(nodes []*yaml.RNode) error {
 				ClearAnnotations:      r.ClearAnnotations,
 			}
 			if err = w.Write(outputFiles[path]); err != nil {
-				return err
+				return errors.Wrap(err)
 			}
 			return nil
 		}(); err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 	}
 
@@ -115,10 +116,10 @@ func (r LocalPackageWriter) errorIfMissingRequiredAnnotation(nodes []*yaml.RNode
 		for _, s := range requiredResourcePackageAnnotations {
 			key, err := nodes[i].Pipe(yaml.GetAnnotation(s))
 			if err != nil {
-				return err
+				return errors.Wrap(err)
 			}
 			if key == nil || key.YNode() == nil || key.YNode().Value == "" {
-				return fmt.Errorf(
+				return errors.Errorf(
 					"resources must be annotated with %s to be written to files", s)
 			}
 		}
@@ -135,13 +136,13 @@ func (r LocalPackageWriter) indexByFilePath(nodes []*yaml.RNode) (map[string][]*
 		value, err := node.Pipe(yaml.GetAnnotation(kioutil.PathAnnotation))
 		if err != nil {
 			// this should never happen if errorIfMissingRequiredAnnotation was run
-			return nil, err
+			return nil, errors.Wrap(err)
 		}
 		path := value.YNode().Value
 		outputFiles[path] = append(outputFiles[path], node)
 
 		if filepath.IsAbs(path) {
-			return nil, fmt.Errorf("package paths may not be absolute paths")
+			return nil, errors.Errorf("package paths may not be absolute paths")
 		}
 		if strings.Contains(filepath.Clean(path), "..") {
 			return nil, fmt.Errorf("resource must be written under package %s: %s",
