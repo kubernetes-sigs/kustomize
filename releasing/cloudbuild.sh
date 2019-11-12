@@ -10,29 +10,41 @@ set -x
 module=$1
 shift
 
-# The following assumes git tags formatted like
-# "api/v1.2.3" and splits on the slash.
-# Goreleaser doesn't know what to do with this
-# tag format, and fails when creating an archive
-# with a / in the name.
-fullTag=$(git describe)
-export tModule=${fullTag%/*}
-export tSemver=${fullTag#*/}
-echo "tModule=$tModule"
-echo "tSemver=$tSemver"
-if [ "$module" != "$tModule" ]; then
-  # Tag and argument sanity check
-  echo "Unexpected mismatch: moduleFromArg=$module, moduleFromTag=$tModule"
-  echo "Either the module arg to this script is wrong, or the git tag is wrong."
-  exit 1
-fi
+function setSemVer {
+  # Check the tag for consistency with module name.
+  # The following assumes git tags formatted like
+  # "api/v1.2.3" and splits on the slash.
+  # Goreleaser doesn't know what to do with this
+  # tag format, and fails when creating an archive
+  # with a / in the name.
+  local fullTag=$(git describe)
+  local tModule=${fullTag%/*}
+  semVer=${fullTag#*/}
 
-if [ "$module" == "pseudok8s" ]; then
-  cd pseudo/k8s
-else
-  cd $module
-fi
+  # Make sure version has no slash
+  # (k8s/v0.1.0 becomes v0.1.0)
+  local tmp=${semVer#*/}
+  if [ "$tmp" != "$semVer" ]; then
+    semVer="$tmp"
+  fi
 
+  echo "tModule=$tModule"
+  echo "semVer=$semVer"
+  if [ "$module" != "$tModule" ]; then
+    # Tag and argument sanity check
+    echo "Unexpected mismatch: moduleFromArg=$module, moduleFromTag=$tModule"
+    echo "Either the module arg to this script is wrong, or the git tag is wrong."
+    exit 1
+  fi
+}
+
+setSemVer
+
+cd $module
+
+# Remove slash from module name
+# (pseudo/k8s becomes pseudok8s)
+module=$(echo $module | sed 's|/||')
 
 configFile=$(mktemp)
 cat <<EOF >$configFile
@@ -69,7 +81,7 @@ builds:
   goarch:
   - amd64
 archives:
--  name_template: "${module}_${tSemver}_{{ .Os }}_{{ .Arch }}"
+-  name_template: "${module}_${semVer}_{{ .Os }}_{{ .Arch }}"
 EOF
 
 cat $configFile
