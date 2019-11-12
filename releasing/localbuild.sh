@@ -26,8 +26,6 @@
 #
 #   releasing/cloudbuild_${module}.yaml
 #
-# where module is one of kustomize, pluginator or api.
-#
 # Inside this yaml file is a reference to the script
 #
 #   releasing/cloudbuild.sh
