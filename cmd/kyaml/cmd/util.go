@@ -5,7 +5,11 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
+
+	"github.com/go-errors/errors"
+	"github.com/spf13/cobra"
 )
 
 // parseFieldPath parse a flag value into a field path
@@ -34,3 +38,27 @@ func parseFieldPath(path string) ([]string, error) {
 	}
 	return newParts, nil
 }
+
+func handleError(c *cobra.Command, err error) error {
+	if err == nil {
+		return nil
+	}
+	if StackOnError {
+		if err, ok := err.(*errors.Error); ok {
+			fmt.Fprint(os.Stderr, fmt.Sprintf("%s", err.Stack()))
+		}
+	}
+
+	if ExitOnError {
+		fmt.Fprintf(c.ErrOrStderr(), "Error: %v\n", err)
+		os.Exit(1)
+	}
+	return err
+}
+
+// ExitOnError if true, will cause commands to call os.Exit instead of returning an error.
+// Used for skipping printing usage on failure.
+var ExitOnError bool
+
+// StackOnError if true, will print a stack trace on failure.
+var StackOnError bool

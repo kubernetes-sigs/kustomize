@@ -5,11 +5,12 @@ package yaml
 
 import (
 	"bytes"
-	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 
 	"gopkg.in/yaml.v3"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 )
 
@@ -240,7 +241,7 @@ type ObjectMeta struct {
 	Annotations map[string]string `yaml:"annotations,omitempty"`
 }
 
-var ErrMissingMetadata = errors.New("missing Resource metadata")
+var ErrMissingMetadata = fmt.Errorf("missing Resource metadata")
 
 // GetMeta returns the ResourceMeta for a RNode
 func (rn *RNode) GetMeta() (ResourceMeta, error) {
@@ -248,15 +249,15 @@ func (rn *RNode) GetMeta() (ResourceMeta, error) {
 	b := &bytes.Buffer{}
 	e := NewEncoder(b)
 	if err := e.Encode(rn.YNode()); err != nil {
-		return m, err
+		return m, errors.Wrap(err)
 	}
 	if err := e.Close(); err != nil {
-		return m, err
+		return m, errors.Wrap(err)
 	}
 	d := yaml.NewDecoder(b)
 	d.KnownFields(false) // only want to parse the metadata
 	if err := d.Decode(&m); err != nil {
-		return m, err
+		return m, errors.Wrap(err)
 	}
 	if reflect.DeepEqual(m, ResourceMeta{}) {
 		return m, ErrMissingMetadata
@@ -279,8 +280,8 @@ func (rn *RNode) Pipe(functions ...Filter) (*RNode, error) {
 		return nil, nil
 	}
 
-	var err error
 	var v *RNode
+	var err error
 	if rn.value != nil && rn.value.Kind == yaml.DocumentNode {
 		// the first node may be a DocumentNode containing a single MappingNode
 		v = &RNode{value: rn.value.Content[0]}
@@ -292,7 +293,7 @@ func (rn *RNode) Pipe(functions ...Filter) (*RNode, error) {
 	for _, c := range functions {
 		v, err = c.Filter(v)
 		if err != nil || v == nil {
-			return v, err
+			return v, errors.Wrap(err)
 		}
 	}
 	return v, err
@@ -302,7 +303,7 @@ func (rn *RNode) Pipe(functions ...Filter) (*RNode, error) {
 // Useful for directly returning the Pipe error value from functions.
 func (rn *RNode) PipeE(functions ...Filter) error {
 	_, err := rn.Pipe(functions...)
-	return err
+	return errors.Wrap(err)
 }
 
 // Document returns the Node RNode for the value.  Does not unwrap the node if it is a
@@ -371,7 +372,7 @@ func String(node *yaml.Node, opts ...string) (string, error) {
 	if optsSet.Has(Trim) {
 		val = strings.TrimSpace(val)
 	}
-	return val, err
+	return val, errors.Wrap(err)
 }
 
 // String returns string representation of the RNode
@@ -403,7 +404,7 @@ func (rn *RNode) Content() []*yaml.Node {
 // Returns an error for non-MappingNodes.
 func (rn *RNode) Fields() ([]string, error) {
 	if err := ErrorIfInvalid(rn, yaml.MappingNode); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err)
 	}
 	var fields []string
 	for i := 0; i < len(rn.Content()); i += 2 {
@@ -433,13 +434,13 @@ func (rn *RNode) VisitFields(fn func(node *MapNode) error) error {
 	// get the list of srcFieldNames
 	srcFieldNames, err := rn.Fields()
 	if err != nil {
-		return err
+		return errors.Wrap(err)
 	}
 
 	// visit each field
 	for _, fieldName := range srcFieldNames {
 		if err := fn(rn.Field(fieldName)); err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 	}
 	return nil
@@ -449,7 +450,7 @@ func (rn *RNode) VisitFields(fn func(node *MapNode) error) error {
 // Returns an error for non-SequenceNodes.
 func (rn *RNode) Elements() ([]*RNode, error) {
 	if err := ErrorIfInvalid(rn, yaml.SequenceNode); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err)
 	}
 	var elements []*RNode
 	for i := 0; i < len(rn.Content()); i++ {
@@ -463,7 +464,7 @@ func (rn *RNode) Elements() ([]*RNode, error) {
 // Returns error for non-SequenceNodes.
 func (rn *RNode) ElementValues(key string) ([]string, error) {
 	if err := ErrorIfInvalid(rn, yaml.SequenceNode); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err)
 	}
 	var elements []string
 	for i := 0; i < len(rn.Content()); i++ {
@@ -493,12 +494,12 @@ func (rn *RNode) Element(key, value string) *RNode {
 func (rn *RNode) VisitElements(fn func(node *RNode) error) error {
 	elements, err := rn.Elements()
 	if err != nil {
-		return err
+		return errors.Wrap(err)
 	}
 
 	for i := range elements {
 		if err := fn(elements[i]); err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 	}
 	return nil

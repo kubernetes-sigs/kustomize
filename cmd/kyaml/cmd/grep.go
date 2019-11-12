@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+	"sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/api/resource"
 )
 
 // Cmd returns a command GrepRunner.
@@ -133,12 +133,12 @@ func (r *GrepRunner) runE(c *cobra.Command, args []string) error {
 		inputs = append(inputs, &kio.ByteReader{Reader: c.InOrStdin()})
 	}
 
-	return kio.Pipeline{
+	return handleError(c, kio.Pipeline{
 		Inputs:  inputs,
 		Filters: filters,
 		Outputs: []kio.Writer{kio.ByteWriter{
 			Writer:                c.OutOrStdout(),
 			KeepReaderAnnotations: r.KeepAnnotations,
 		}},
-	}.Execute()
+	}.Execute())
 }

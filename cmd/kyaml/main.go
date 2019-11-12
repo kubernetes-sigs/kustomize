@@ -22,6 +22,10 @@ var root = &cobra.Command{
 }
 
 func main() {
+	root.PersistentFlags().BoolVar(&cmd.StackOnError, "stack-trace", false,
+		"print a stack-trace on failure")
+
+	cmd.ExitOnError = true
 	root.AddCommand(cmd.GrepCommand())
 	root.AddCommand(cmd.TreeCommand())
 	root.AddCommand(cmd.CatCommand())

@@ -126,5 +126,5 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 		Style:                 yaml.GetStyle(r.Styles...),
 	})
 
-	return kio.Pipeline{Inputs: inputs, Filters: fltr, Outputs: outputs}.Execute()
+	return handleError(c, kio.Pipeline{Inputs: inputs, Filters: fltr, Outputs: outputs}.Execute())
 }
