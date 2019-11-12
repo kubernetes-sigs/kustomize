@@ -41,16 +41,10 @@ $(MYGOBIN)/goimports:
 	cd api; \
 	go install golang.org/x/tools/cmd/goimports
 
-# TODO: need a new release of the API, followed by a new pluginator.
-# pluginator v1.1.0 is too old for the code currently needed in the API.
-# Can release a new one at any time, just haven't done so.
-# When one has been released,
-#  - uncomment the pluginator line in './api/internal/tools/tools.go'
-#  - pin the version tag in './api/go.mod' to match the new release
-#  - change the following to 'cd api; go install sigs.k8s.io/kustomize/pluginator'
+# Version pinned by api/go.mod
 $(MYGOBIN)/pluginator:
-	cd pluginator; \
-	go install .
+	cd api; \
+	go install sigs.k8s.io/kustomize/pluginator/v2
 
 .PHONY: install-tools
 install-tools: \

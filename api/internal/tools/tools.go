@@ -14,6 +14,6 @@ import (
 	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
 	// for integration tests driven by the examples
 	_ "github.com/monopole/mdrip"
-	// TODO: See comment in Makefile.
-	//_ "sigs.k8s.io/kustomize/pluginator"
+	// for generating code for builtin plugins
+	_ "sigs.k8s.io/kustomize/pluginator/v2"
 )
