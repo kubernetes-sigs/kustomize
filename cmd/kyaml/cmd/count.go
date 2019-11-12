@@ -85,8 +85,8 @@ func (r *CountRunner) runE(c *cobra.Command, args []string) error {
 			return nil
 		}))
 	}
-	return kio.Pipeline{
+	return handleError(c, kio.Pipeline{
 		Inputs:  inputs,
 		Outputs: out,
-	}.Execute()
+	}.Execute())
 }

@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/go-errors/errors"
 	"gopkg.in/yaml.v3"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 // Append creates an ElementAppender
@@ -378,7 +378,7 @@ func (l PathGetter) doElem(rn *RNode, part string) (*RNode, error) {
 	var match *RNode
 	name, value, err := SplitIndexNameValue(part)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err)
 	}
 	if !IsCreate(l.Create) {
 		return rn.Pipe(MatchElement(name, value))
@@ -537,6 +537,14 @@ func ErrorIfAnyInvalidAndNonNull(kind yaml.Kind, rn ...*RNode) error {
 	return nil
 }
 
+var nodeTypeIndex = map[yaml.Kind]string{
+	yaml.SequenceNode: "SequenceNode",
+	yaml.MappingNode:  "MappingNode",
+	yaml.ScalarNode:   "ScalarNode",
+	yaml.DocumentNode: "DocumentNode",
+	yaml.AliasNode:    "AliasNode",
+}
+
 func ErrorIfInvalid(rn *RNode, kind yaml.Kind) error {
 	if rn == nil || rn.YNode() == nil || IsNull(rn) {
 		// node has no type, pass validation
@@ -548,12 +556,13 @@ func ErrorIfInvalid(rn *RNode, kind yaml.Kind) error {
 		return errors.Errorf(
 			"wrong Node Kind for %s expected: %v was %v: value: {%s}",
 			strings.Join(rn.FieldPath(), "."),
-			kind, rn.YNode().Kind, strings.TrimSpace(s))
+			nodeTypeIndex[kind], nodeTypeIndex[rn.YNode().Kind], strings.TrimSpace(s))
 	}
 
 	if kind == yaml.MappingNode {
 		if len(rn.YNode().Content)%2 != 0 {
-			return fmt.Errorf("yaml MappingNodes must have even length contents: %v", spew.Sdump(rn))
+			return errors.Errorf(
+				"yaml MappingNodes must have even length contents: %v", spew.Sdump(rn))
 		}
 	}
 

@@ -1,12 +1,9 @@
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
-.PHONY: generate license fix vet fmt test build tidy
+.PHONY: generate license fix vet fmt test lint tidy
 
 GOPATH := $(shell go env GOPATH)
-
-build:
-	go build -v -o $(GOPATH)/bin/kyaml .
 
 all: generate license fix vet fmt test lint tidy
 
@@ -35,4 +32,3 @@ test:
 
 vet:
 	go vet ./...
-
