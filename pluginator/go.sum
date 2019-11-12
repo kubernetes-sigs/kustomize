@@ -371,6 +371,8 @@ mvdan.cc/unparam v0.0.0-20190720180237-d51796306d8f/go.mod h1:4G1h5nDURzA3bwVMZI
 sigs.k8s.io/kustomize/api v0.1.1 h1:W2dWXex2MhF4/EZNokZllvet2RejCHqdAFklufN7VTg=
 sigs.k8s.io/kustomize/api v0.1.1/go.mod h1:FyfJD1q1QMjC/TvK78b6cCtZB+mbpnGIo9YOvbucJes=
 sigs.k8s.io/kustomize/api v0.1.2 h1:4zcI8UOsQv31nPn4S1qKq+PSpFdlxQ1YbMvB1lWSrO8=
+sigs.k8s.io/kustomize/api v0.2.0 h1:e++6JpysnnlUbHmFrv6jvfF5rFlgQ103bS1DO7r5bWA=
+sigs.k8s.io/kustomize/api v0.2.0/go.mod h1:zVtMg179jW1gr74jo9fc2Ac9dLYLTZZThc3DDb9lDW4=
 sigs.k8s.io/kustomize/pseudo/k8s v0.0.0-20191108212413-1f86a0ca5d6c/go.mod h1:bl/gVJgYYhJZCZdYU2BfnaKYAlqFkgbJEkpl302jEss=
 sigs.k8s.io/kustomize/pseudo/k8s v0.1.0/go.mod h1:bl/gVJgYYhJZCZdYU2BfnaKYAlqFkgbJEkpl302jEss=
 sigs.k8s.io/structured-merge-diff v0.0.0-20190525122527-15d366b2352e/go.mod h1:wWxsB5ozmmv/SG7nM11ayaAW51xMvak/t1r0CSlcokI=
