@@ -14,8 +14,6 @@ require (
 	github.com/rs/cors v1.7.0
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20191107075043-30be4d16710a // indirect
-	sigs.k8s.io/kustomize/api v0.1.1
+	sigs.k8s.io/kustomize/api v0.2.0
 	sigs.k8s.io/yaml v1.1.0
 )
-
-replace sigs.k8s.io/kustomize/api v0.0.0 => ../../api
