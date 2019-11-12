@@ -60,6 +60,41 @@ metadata:
 	assert.True(t, foundKyaml)
 }
 
+func TestFilter_command_network(t *testing.T) {
+	cfg, err := yaml.Parse(`apiversion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+`)
+	if !assert.NoError(t, err) {
+		return
+	}
+	instance := &ContainerFilter{
+		Image:  "example.com:version",
+		Network: "test-net",
+		Config: cfg,
+	}
+	cmd, err := instance.getCommand()
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	expected := []string{
+		"docker", "run",
+		"--rm",
+		"-i", "-a", "STDIN", "-a", "STDOUT", "-a", "STDERR",
+		"--network", "test-net",
+		"--user", "nobody",
+		"--security-opt=no-new-privileges",
+	}
+	for _, e := range os.Environ() {
+		// the process env
+		expected = append(expected, "-e", strings.Split(e, "=")[0])
+	}
+	expected = append(expected, "example.com:version")
+	assert.Equal(t, expected, cmd.Args)
+}
+
 func TestFilter_Filter(t *testing.T) {
 	cfg, err := yaml.Parse(`apiVersion: apps/v1
 kind: Deployment
