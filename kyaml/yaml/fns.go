@@ -286,7 +286,7 @@ func (f FieldMatcher) Filter(rn *RNode) (*RNode, error) {
 		return nil, err
 	}
 
-	for i := 0; i < len(rn.Content()); IncrementFieldIndex(&i) {
+	for i := 0; i < len(rn.Content()); i = IncrementFieldIndex(i) {
 		isMatchingField := rn.Content()[i].Value == f.Name
 		if isMatchingField {
 			requireMatchFieldValue := f.Value != nil
@@ -592,6 +592,6 @@ func SplitIndexNameValue(p string) (string, string, error) {
 
 // IncrementFieldIndex increments i to point to the next field name element in
 // a slice of Contents.
-func IncrementFieldIndex(i *int) {
-	*i = *i + 2
+func IncrementFieldIndex(i int) int {
+	return i + 2
 }
