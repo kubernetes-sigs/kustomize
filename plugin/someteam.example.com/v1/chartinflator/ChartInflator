@@ -13,6 +13,8 @@
 #  chartName: nameOfStableChart
 #  values: /abs/path/to/local/values/file
 #  chartHome: /abs/path/local/chart/storage
+#  chartRelease: (stable|incubator)
+#  chartVersion: 9.0.1
 #  helmHome: /abs/path/to/helm/config
 #  helmBin: /abs/path/to/helmBin
 #  releaseNam: nameOfHelmRelease
@@ -43,6 +45,8 @@ function parseYaml {
 
     [ "$k" == "chartName" ] && chartName=$v
     [ "$k" == "chartHome" ] && chartHome=$v
+    [ "$k" == "chartRelease" ] && chartRelease=$v
+    [ "$k" == "chartVersion" ] && chartVersion=$v
     [ "$k" == "values" ] && valuesFile=$v
     [ "$k" == "helmHome" ] && helmHome=$v
     [ "$k" == "helmBin" ] && helmBin=$v
@@ -53,6 +57,8 @@ function parseYaml {
   # Trim leading space
   chartName="${chartName#"${chartName%%[![:space:]]*}"}"
   chartHome="${chartHome#"${chartHome%%[![:space:]]*}"}"
+  chartRelease="${chartRelease#"${chartRelease%%[![:space:]]*}"}"
+  chartVersion="${chartVersion#"${chartVersion%%[![:space:]]*}"}"
   valuesFile="${valuesFile#"${valuesFile%%[![:space:]]*}"}"
   helmBin="${helmBin#"${helmBin%%[![:space:]]*}"}"
   releaseName="${releaseName#"${releaseName%%[![:space:]]*}"}"
@@ -71,6 +77,16 @@ fi
 # Where helm charts are unpacked.
 if [ -z "$chartHome" ]; then
   chartHome=$TMP_DIR/charts
+fi
+
+# Set default chartRelease to "stable"
+if [ -z "$chartRelease" ]; then
+  chartRelease="stable"
+fi
+
+# Set version only if specified
+if [ ! -z "$chartVersion" ]; then
+  chartVersionArg="--version=$chartVersion"
 fi
 
 if [ -z "$helmBin" ]; then
@@ -97,9 +113,10 @@ function doHelm {
 doHelm init --client-only >& /dev/null
 
 if [ ! -d "$chartHome/$chartName" ]; then
-  doHelm fetch --untar \
+  doHelm fetch $chartVersionArg \
+      --untar \
       --untardir $chartHome \
-      stable/$chartName
+      ${chartRelease}/$chartName
 fi
 
 doHelm template \
