@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	mergeSourceAnnotation = "kyaml.kustomize.dev/merge-source"
+	mergeSourceAnnotation = "config.kubernetes.io/merge-source"
 	mergeSourceOriginal   = "original"
 	mergeSourceUpdated    = "updated"
 	mergeSourceDest       = "dest"

@@ -5,12 +5,13 @@ package filters
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"os/exec"
-	"regexp"
 	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -24,6 +25,8 @@ import (
 // The full set of environment variables from the parent process
 // are passed to the container.
 type ContainerFilter struct {
+	mountPath string
+
 	// Image is the container image to use to create a container.
 	Image string `yaml:"image,omitempty"`
 
@@ -36,6 +39,10 @@ type ContainerFilter struct {
 	args []string
 
 	checkInput func(string)
+}
+
+func (c *ContainerFilter) SetMountPath(path string) {
+	c.mountPath = path
 }
 
 // GrepFilter implements kio.GrepFilter
@@ -89,6 +96,10 @@ func (c *ContainerFilter) getArgs() []string {
 		// don't make fs readonly because things like heredoc rely on writing tmp files
 		"--security-opt=no-new-privileges", // don't allow the user to escalate privileges
 	}
+	// mount the directory containing the function as read-only
+	if c.mountPath != "" {
+		args = append(args, "-v", fmt.Sprintf("%s:/local/:ro", c.mountPath))
+	}
 
 	// export the local environment vars to the container
 	for _, pair := range os.Environ() {
@@ -141,7 +152,8 @@ type IsReconcilerFilter struct {
 func (c *IsReconcilerFilter) Filter(inputs []*yaml.RNode) ([]*yaml.RNode, error) {
 	var out []*yaml.RNode
 	for i := range inputs {
-		isContainerResource := GetContainerName(inputs[i]) != ""
+		img, _ := GetContainerName(inputs[i])
+		isContainerResource := img != ""
 		if isContainerResource && !c.ExcludeReconcilers {
 			out = append(out, inputs[i])
 		}
@@ -153,19 +165,20 @@ func (c *IsReconcilerFilter) Filter(inputs []*yaml.RNode) ([]*yaml.RNode, error)
 }
 
 // GetContainerName returns the container image for an API if one exists
-func GetContainerName(n *yaml.RNode) string {
+func GetContainerName(n *yaml.RNode) (string, string) {
 	meta, _ := n.GetMeta()
-	container := meta.Annotations["kyaml.kustomize.dev/container"]
+
+	// path to the function, this will be mounted into the container
+	path := meta.Annotations[kioutil.PathAnnotation]
+
+	container := meta.Annotations["config.kubernetes.io/container"]
 	if container != "" {
-		return container
+		return container, path
 	}
 
-	if match.MatchString(meta.ApiVersion) {
-		return meta.ApiVersion
+	image, err := n.Pipe(yaml.Lookup("metadata", "configFn", "container", "image"))
+	if err != nil || yaml.IsMissingOrNull(image) {
+		return "", path
 	}
-
-	return ""
+	return image.YNode().Value, path
 }
-
-// match specifies the set of apiVersions to recognize as being container images
-var match = regexp.MustCompile(`(docker\.io|.*\.?gcr\.io)/.*(:.*)?`)

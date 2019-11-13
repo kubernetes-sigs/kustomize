@@ -17,7 +17,7 @@ import (
 
 const (
 	ResourceListKind       = "ResourceList"
-	ResourceListApiVersion = "kyaml.kustomize.dev/v1alpha1"
+	ResourceListApiVersion = "config.kubernetes.io/v1alpha1"
 )
 
 // ByteReadWriter reads from an input and writes to an output.
