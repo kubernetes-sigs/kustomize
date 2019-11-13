@@ -74,7 +74,7 @@ spec:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := cmd.GetTreeRunner()
+	r := cmd.GetTreeRunner("")
 	r.Command.SetArgs([]string{d})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {
@@ -93,7 +93,7 @@ spec:
 func TestTreeCommand_stdin(t *testing.T) {
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := cmd.GetTreeRunner()
+	r := cmd.GetTreeRunner("")
 	r.Command.SetArgs([]string{})
 	r.Command.SetIn(bytes.NewBufferString(`apiVersion: extensions/v1
 kind: Deployment
@@ -263,7 +263,7 @@ spec:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := cmd.GetTreeRunner()
+	r := cmd.GetTreeRunner("")
 	r.Command.SetArgs([]string{d, "--include-local"})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {
@@ -340,7 +340,7 @@ spec:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := cmd.GetTreeRunner()
+	r := cmd.GetTreeRunner("")
 	r.Command.SetArgs([]string{d, "--include-local", "--exclude-non-local"})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {

@@ -7,33 +7,23 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/cmd/config/cmddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // GetCatRunner returns a command CatRunner.
-func GetCatRunner() *CatRunner {
+func GetCatRunner(name string) *CatRunner {
 	r := &CatRunner{}
 	c := &cobra.Command{
-		Use:   "cat DIR...",
-		Short: "Print Resource Config from a local directory",
-		Long: `Print Resource Config from a local directory.
-
-  DIR:
-    Path to local directory.
-`,
-		Example: `# print Resource config from a directory
-kyaml cat my-dir/
-
-# wrap Resource config from a directory in an ResourceList
-kyaml cat my-dir/ --wrap-kind ResourceList --wrap-version config.kubernetes.io/v1alpha1 --function-config fn.yaml
-
-# unwrap Resource config from a directory in an ResourceList
-... | kyaml cat
-`,
-		RunE: r.runE,
+		Use:     "cat DIR...",
+		Short:   commands.CatShort,
+		Long:    commands.CatLong,
+		Example: commands.CatExamples,
+		RunE:    r.runE,
 	}
+	fixDocs(name, c)
 	c.Flags().BoolVar(&r.IncludeSubpackages, "include-subpackages", true,
 		"also print resources from subpackages.")
 	c.Flags().BoolVar(&r.Format, "format", true,
@@ -59,8 +49,8 @@ kyaml cat my-dir/ --wrap-kind ResourceList --wrap-version config.kubernetes.io/v
 	return r
 }
 
-func CatCommand() *cobra.Command {
-	return GetCatRunner().Command
+func CatCommand(name string) *cobra.Command {
+	return GetCatRunner(name).Command
 }
 
 // CatRunner contains the run function

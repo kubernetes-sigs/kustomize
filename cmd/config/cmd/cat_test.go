@@ -76,7 +76,7 @@ spec:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := cmd.GetCatRunner()
+	r := cmd.GetCatRunner("")
 	r.Command.SetArgs([]string{d})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {
@@ -182,7 +182,7 @@ spec:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := cmd.GetCatRunner()
+	r := cmd.GetCatRunner("")
 	r.Command.SetArgs([]string{d, "--include-local"})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {
@@ -301,7 +301,7 @@ spec:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := cmd.GetCatRunner()
+	r := cmd.GetCatRunner("")
 	r.Command.SetArgs([]string{d, "--include-local", "--exclude-non-local"})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {

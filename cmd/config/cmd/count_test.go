@@ -60,7 +60,7 @@ spec:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := cmd.GetCountRunner()
+	r := cmd.GetCountRunner("")
 	r.Command.SetArgs([]string{d})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {
