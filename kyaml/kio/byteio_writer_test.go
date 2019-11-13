@@ -45,7 +45,7 @@ g:
 	if !assert.NoError(t, err) {
 		return
 	}
-	assert.Equal(t, `apiVersion: kyaml.kustomize.dev/v1alpha1
+	assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
 - c: d # second
