@@ -27,7 +27,7 @@ earlier are lower-precedence (the destination).
 
 For information on merge rules, run:
 
-	kyaml help merge
+	kyaml docs merge
 `,
 		Example: `cat resources_and_patches.yaml | kyaml merge > merged_resources.yaml`,
 		RunE:    r.runE,
