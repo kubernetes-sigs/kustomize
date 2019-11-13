@@ -24,10 +24,15 @@ func TestTreeCommand_files(t *testing.T) {
 	}
 
 	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
-apiVersion: gcr.io/example/reconciler:v1
+apiVersion: v1
 kind: Abstraction
 metadata:
   name: foo
+  configFn:
+    container:
+      image: gcr.io/example/reconciler:v1
+  annotations:
+    config.kubernetes.io/local-config: "true"
 spec:
   replicas: 1
 ---
@@ -259,7 +264,7 @@ spec:
 	// fmt the files
 	b := &bytes.Buffer{}
 	r := cmd.GetTreeRunner()
-	r.Command.SetArgs([]string{d, "--include-reconcilers"})
+	r.Command.SetArgs([]string{d, "--include-local"})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {
 		return
@@ -306,10 +311,15 @@ spec:
 		return
 	}
 	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
-apiVersion: gcr.io/example/reconciler:v1
+apiVersion: v1
 kind: Abstraction
 metadata:
   name: foo
+  configFn:
+    container:
+      image: gcr.io/example/reconciler:v1
+  annotations:
+    config.kubernetes.io/local-config: "true"
 spec:
   replicas: 1
 ---
@@ -331,7 +341,7 @@ spec:
 	// fmt the files
 	b := &bytes.Buffer{}
 	r := cmd.GetTreeRunner()
-	r.Command.SetArgs([]string{d, "--include-reconcilers", "--exclude-non-reconcilers"})
+	r.Command.SetArgs([]string{d, "--include-local", "--exclude-non-local"})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {
 		return

@@ -34,7 +34,7 @@ i: j
 }
 
 func TestByteReader_Read_wrappedResourceßßList(t *testing.T) {
-	r := &ByteReader{Reader: bytes.NewBufferString(`apiVersion: kyaml.kustomize.dev/v1alpha1
+	r := &ByteReader{Reader: bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 functionConfig:
   foo: bar
