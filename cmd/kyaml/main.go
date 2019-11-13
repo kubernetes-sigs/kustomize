@@ -32,6 +32,7 @@ func main() {
 	root.AddCommand(cmd.FmtCommand())
 	root.AddCommand(cmd.MergeCommand())
 	root.AddCommand(cmd.CountCommand())
+	root.AddCommand(cmd.RunFnCommand())
 	root.AddCommand(&cobra.Command{Use: "merge", Long: merge2.Help})
 	root.AddCommand(&cobra.Command{Use: "merge3", Long: merge3.Help})
 
