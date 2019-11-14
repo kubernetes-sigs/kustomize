@@ -57,9 +57,7 @@ These libraries were forked by running `git clone` to clone the repos.
 
 ### Automated Creation Steps
 
-1. Remove the current existing psuedo modules
-  - `$ rm -rf psuedo/k8s`
+1. Remove the current existing pseudo modules
+  - `$ rm -rf pseudo/k8s`
 2. Run the [init-pseudo-module.sh](init-pseudo-module.sh) script to clone and configure pseudo deps
-  - From the root directory -- `$ psuedo/init-pseudo-module.sh`
-
-
+  - From the root directory -- `$ pseudo/init-pseudo-module.sh`
