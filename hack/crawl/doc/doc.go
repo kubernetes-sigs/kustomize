@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 )
@@ -46,7 +46,7 @@ type set map[string]struct{}
 // Implements the CrawlerDocument interface.
 func (doc *KustomizationDocument) GetResources() ([]*Document, error) {
 	isResource := true
-	for _, suffix := range pgmconfig.RecognizedKustomizationFileNames() {
+	for _, suffix := range konfig.RecognizedKustomizationFileNames() {
 		if strings.HasSuffix(doc.FilePath, "/"+suffix) {
 			isResource = false
 		}
@@ -85,7 +85,7 @@ func (doc *KustomizationDocument) GetResources() ([]*Document, error) {
 func (doc *KustomizationDocument) readBytes() ([]map[string]interface{}, error) {
 	data := []byte(doc.DocumentData)
 
-	for _, suffix := range pgmconfig.RecognizedKustomizationFileNames() {
+	for _, suffix := range konfig.RecognizedKustomizationFileNames() {
 		if !strings.HasSuffix(doc.FilePath, "/"+suffix) {
 			continue
 		}
