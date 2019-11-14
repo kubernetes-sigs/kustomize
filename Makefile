@@ -5,7 +5,7 @@
 
 MYGOBIN := $(shell go env GOPATH)/bin
 PATH := $(PATH):$(MYGOBIN)
-SHELL := env PATH=$(PATH) /bin/bash
+SHELL := env PATH="$(PATH)" /bin/bash
 
 .PHONY: all
 all: verify-kustomize
