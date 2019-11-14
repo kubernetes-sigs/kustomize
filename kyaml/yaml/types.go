@@ -419,7 +419,7 @@ func (rn *RNode) Field(field string) *MapNode {
 	if rn.YNode().Kind != yaml.MappingNode {
 		return nil
 	}
-	for i := 0; i < len(rn.Content()); IncrementFieldIndex(&i) {
+	for i := 0; i < len(rn.Content()); i = IncrementFieldIndex(i) {
 		isMatchingField := rn.Content()[i].Value == field
 		if isMatchingField {
 			return &MapNode{Key: NewRNode(rn.Content()[i]), Value: NewRNode(rn.Content()[i+1])}
