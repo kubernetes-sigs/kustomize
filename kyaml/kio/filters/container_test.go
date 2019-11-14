@@ -97,17 +97,41 @@ metadata:
 	}
 	expected = append(expected, "example.com:version")
 	assert.Equal(t, expected, cmd.Args)
+}
 
-	foundKyaml := false
-	for _, e := range cmd.Env {
-		// verify the command has the right environment variables to pass to the container
-		split := strings.Split(e, "=")
-		if split[0] == "KYAML_TEST" {
-			assert.Equal(t, "FOO", split[1])
-			foundKyaml = true
-		}
+func TestFilter_command_network(t *testing.T) {
+	cfg, err := yaml.Parse(`apiversion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+`)
+	if !assert.NoError(t, err) {
+		return
 	}
-	assert.True(t, foundKyaml)
+	instance := &ContainerFilter{
+		Image:  "example.com:version",
+		Network: "test-net",
+		Config: cfg,
+	}
+	cmd, err := instance.getCommand()
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	expected := []string{
+		"docker", "run",
+		"--rm",
+		"-i", "-a", "STDIN", "-a", "STDOUT", "-a", "STDERR",
+		"--network", "test-net",
+		"--user", "nobody",
+		"--security-opt=no-new-privileges",
+	}
+	for _, e := range os.Environ() {
+		// the process env
+		expected = append(expected, "-e", strings.Split(e, "=")[0])
+	}
+	expected = append(expected, "example.com:version")
+	assert.Equal(t, expected, cmd.Args)
 }
 
 func TestFilter_Filter(t *testing.T) {
