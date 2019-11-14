@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
+#
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
-
-# TODO: get rid of this script, make individual targets
-# in the makefile.
 
 # Run this script with no arguments from the repo root
 # to test all the plugins.
