@@ -18,9 +18,9 @@ import (
 
 	"sigs.k8s.io/kustomize/api/internal/git"
 	"sigs.k8s.io/kustomize/api/konfig"
-	"sigs.k8s.io/kustomize/hack/crawl/crawler"
-	"sigs.k8s.io/kustomize/hack/crawl/doc"
-	"sigs.k8s.io/kustomize/hack/crawl/httpclient"
+	"sigs.k8s.io/kustomize/api/internal/crawl/crawler"
+	"sigs.k8s.io/kustomize/api/internal/crawl/doc"
+	"sigs.k8s.io/kustomize/api/internal/crawl/httpclient"
 )
 
 var logger = log.New(os.Stdout, "Github Crawler: ",
