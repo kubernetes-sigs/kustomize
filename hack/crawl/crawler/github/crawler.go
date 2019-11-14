@@ -16,9 +16,9 @@ import (
 	"strings"
 	"time"
 
-	"sigs.k8s.io/kustomize/api/git"
-	"sigs.k8s.io/kustomize/api/pgmconfig"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/hack/crawl/crawler"
+	"sigs.k8s.io/kustomize/hack/crawl/crawler/git"
 	"sigs.k8s.io/kustomize/hack/crawl/doc"
 	"sigs.k8s.io/kustomize/hack/crawl/httpclient"
 )
@@ -122,7 +122,7 @@ func (gc githubCrawler) FetchDocument(ctx context.Context, d *doc.Document) erro
 		return nil
 	}
 
-	for _, file := range pgmconfig.RecognizedKustomizationFileNames() {
+	for _, file := range konfig.RecognizedKustomizationFileNames() {
 		resp, err = gc.client.GetRawUserContent(url + "/" + file)
 		err := handle(resp, err, "/"+file)
 		if err != nil {
