@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
-	server "sigs.k8s.io/kustomize/hack/crawl/backend"
+	server "sigs.k8s.io/kustomize/api/internal/crawl/backend"
 	"strconv"
 )
 
