@@ -1,25 +1,21 @@
-# This Makefile is (and must be) used by
-# travis/pre-commit.sh to qualify pull requests.
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
 #
-# That script generates all the code that needs
-# to be generated, and runs all the tests.
-#
-# Functionality in that script is gradually moving here.
+# Makefile for the kustomize repo.
 
 MYGOBIN := $(shell go env GOPATH)/bin
 PATH := $(PATH):$(MYGOBIN)
 SHELL := env PATH=$(PATH) /bin/bash
 
 .PHONY: all
-all: pre-commit
+all: verify-kustomize
 
-# The pre-commit.sh script generates, lints and tests.
-# It uses this makefile.  For more clarity, would like
-# to stop that - any scripts invoked by targets here
-# shouldn't "call back" to the makefile.
-.PHONY: pre-commit
-pre-commit:
-	./travis/pre-commit.sh
+.PHONY: verify-kustomize
+verify-kustomize: \
+	lint-kustomize \
+	test-unit-kustomize-all \
+	test-examples-kustomize-against-HEAD \
+	test-examples-kustomize-against-latest
 
 # Version pinned by api/go.mod
 $(MYGOBIN)/golangci-lint:
@@ -45,6 +41,11 @@ $(MYGOBIN)/goimports:
 $(MYGOBIN)/pluginator:
 	cd api; \
 	go install sigs.k8s.io/kustomize/pluginator/v2
+
+# Install kustomize from whatever is checked out.
+$(MYGOBIN)/kustomize:
+	cd kustomize; \
+	go install .
 
 .PHONY: install-tools
 install-tools: \
@@ -72,8 +73,8 @@ builtinplugins = \
 	api/builtins/replicacounttransformer.go \
 	api/builtins/secretgenerator.go
 
-.PHONY: lint
-lint: install-tools $(builtinplugins)
+.PHONY: lint-kustomize
+lint-kustomize: install-tools $(builtinplugins)
 	cd api; $(MYGOBIN)/golangci-lint run ./...
 	cd kustomize; $(MYGOBIN)/golangci-lint run ./...
 	cd pluginator; $(MYGOBIN)/golangci-lint run ./...
@@ -85,23 +86,36 @@ api/builtins/%.go: $(MYGOBIN)/pluginator
 	cd ../../../api/builtins; \
 	$(MYGOBIN)/goimports -w $*.go
 
-.PHONY: generate
-generate: $(builtinplugins)
-
-.PHONY: unit-test-api
-unit-test-api: $(builtinplugins)
+.PHONY: test-unit-kustomize-api
+test-unit-kustomize-api: $(builtinplugins)
 	cd api; go test ./...
 
-.PHONY: unit-test-plugins
-unit-test-plugins:
-	./hack/runPluginUnitTests.sh
+.PHONY: test-unit-kustomize-plugins
+test-unit-kustomize-plugins:
+	./hack/testUnitKustomizePlugins.sh
 
-.PHONY: unit-test-kustomize
-unit-test-kustomize:
+.PHONY: test-unit-kustomize-cli
+test-unit-kustomize-cli:
 	cd kustomize; go test ./...
 
-.PHONY: unit-test-all
-unit-test-all: unit-test-api unit-test-kustomize unit-test-plugins
+.PHONY: test-unit-kustomize-all
+test-unit-kustomize-all: \
+	test-unit-kustomize-api \
+	test-unit-kustomize-cli \
+	test-unit-kustomize-plugins
+
+.PHONY:
+test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
+	./hack/testExamplesAgainstKustomize.sh HEAD
+
+.PHONY:
+test-examples-kustomize-against-latest: $(MYGOBIN)/mdrip
+	/bin/rm -f $(MYGOBIN)/kustomize; \
+	echo "Installing kustomize from latest."; \
+	go install sigs.k8s.io/kustomize/kustomize/v3; \
+	./hack/testExamplesAgainstKustomize.sh latest; \
+	echo "Reinstalling kustomize from HEAD."; \
+	cd kustomize; go install .
 
 # linux only.
 # This is for testing an example plugin that
@@ -133,6 +147,7 @@ $(MYGOBIN)/helm:
 clean:
 	rm -f $(builtinplugins)
 	rm -f $(MYGOBIN)/pluginator
+	rm -f $(MYGOBIN)/kustomize
 
 .PHONY: nuke
 nuke: clean

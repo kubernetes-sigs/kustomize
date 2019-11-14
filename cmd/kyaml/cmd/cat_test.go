@@ -47,10 +47,15 @@ spec:
 		return
 	}
 	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
-apiVersion: gcr.io/example/image:version
+apiVersion: v1
 kind: Abstraction
 metadata:
   name: foo
+  configFn:
+    container:
+      image: gcr.io/example/reconciler:v1
+  annotations:
+    config.kubernetes.io/local-config: "true"
 spec:
   replicas: 3
 ---
@@ -149,10 +154,15 @@ spec:
 		return
 	}
 	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
-apiVersion: gcr.io/example/image:version
+apiVersion: v1
 kind: Abstraction
 metadata:
   name: foo
+  configFn:
+    container:
+      image: gcr.io/example/image:version
+  annotations:
+    config.kubernetes.io/local-config: "true"
 spec:
   replicas: 3
 ---
@@ -173,7 +183,7 @@ spec:
 	// fmt the files
 	b := &bytes.Buffer{}
 	r := cmd.GetCatRunner()
-	r.Command.SetArgs([]string{d, "--include-reconcilers"})
+	r.Command.SetArgs([]string{d, "--include-local"})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {
 		return
@@ -202,13 +212,17 @@ spec:
   selector:
     app: nginx
 ---
-apiVersion: gcr.io/example/image:version
+apiVersion: v1
 kind: Abstraction
 metadata:
   name: foo
   annotations:
+    config.kubernetes.io/local-config: "true"
     config.kubernetes.io/package: .
     config.kubernetes.io/path: f2.yaml
+  configFn:
+    container:
+      image: gcr.io/example/image:version
 spec:
   replicas: 3
 ---
@@ -259,10 +273,15 @@ spec:
 		return
 	}
 	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
-apiVersion: gcr.io/example/image:version
+apiVersion: v1
 kind: Abstraction
 metadata:
   name: foo
+  annotations:
+    config.kubernetes.io/local-config: "true"
+  configFn:
+    container:
+      image: gcr.io/example/reconciler:v1
 spec:
   replicas: 3
 ---
@@ -283,19 +302,23 @@ spec:
 	// fmt the files
 	b := &bytes.Buffer{}
 	r := cmd.GetCatRunner()
-	r.Command.SetArgs([]string{d, "--include-reconcilers", "--exclude-non-reconcilers"})
+	r.Command.SetArgs([]string{d, "--include-local", "--exclude-non-local"})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {
 		return
 	}
 
-	if !assert.Equal(t, `apiVersion: gcr.io/example/image:version
+	if !assert.Equal(t, `apiVersion: v1
 kind: Abstraction
 metadata:
   name: foo
   annotations:
+    config.kubernetes.io/local-config: "true"
     config.kubernetes.io/package: .
     config.kubernetes.io/path: f2.yaml
+  configFn:
+    container:
+      image: gcr.io/example/reconciler:v1
 spec:
   replicas: 3
 `, b.String()) {

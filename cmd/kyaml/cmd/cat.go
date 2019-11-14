@@ -27,7 +27,7 @@ func GetCatRunner() *CatRunner {
 kyaml cat my-dir/
 
 # wrap Resource config from a directory in an ResourceList
-kyaml cat my-dir/ --wrap-kind ResourceList --wrap-version kyaml.kustomize.dev/v1alpha1 --function-config fn.yaml
+kyaml cat my-dir/ --wrap-kind ResourceList --wrap-version config.kubernetes.io/v1alpha1 --function-config fn.yaml
 
 # unwrap Resource config from a directory in an ResourceList
 ... | kyaml cat
@@ -51,10 +51,10 @@ kyaml cat my-dir/ --wrap-kind ResourceList --wrap-version kyaml.kustomize.dev/v1
 			"'FoldedStyle', 'FlowStyle'.")
 	c.Flags().BoolVar(&r.StripComments, "strip-comments", false,
 		"remove comments from yaml.")
-	c.Flags().BoolVar(&r.IncludeReconcilers, "include-reconcilers", false,
-		"if true, include reconciler Resources in the output.")
-	c.Flags().BoolVar(&r.ExcludeNonReconcilers, "exclude-non-reconcilers", false,
-		"if true, exclude non-reconciler Resources in the output.")
+	c.Flags().BoolVar(&r.IncludeLocal, "include-local", false,
+		"if true, include local-config in the output.")
+	c.Flags().BoolVar(&r.ExcludeNonLocal, "exclude-non-local", false,
+		"if true, exclude non-local-config in the output.")
 	r.Command = c
 	return r
 }
@@ -65,17 +65,17 @@ func CatCommand() *cobra.Command {
 
 // CatRunner contains the run function
 type CatRunner struct {
-	IncludeSubpackages    bool
-	Format                bool
-	KeepAnnotations       bool
-	WrapKind              string
-	WrapApiVersion        string
-	FunctionConfig        string
-	Styles                []string
-	StripComments         bool
-	IncludeReconcilers    bool
-	ExcludeNonReconcilers bool
-	Command               *cobra.Command
+	IncludeSubpackages bool
+	Format             bool
+	KeepAnnotations    bool
+	WrapKind           string
+	WrapApiVersion     string
+	FunctionConfig     string
+	Styles             []string
+	StripComments      bool
+	IncludeLocal       bool
+	ExcludeNonLocal    bool
+	Command            *cobra.Command
 }
 
 func (r *CatRunner) runE(c *cobra.Command, args []string) error {
@@ -105,9 +105,9 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 	}
 	var fltr []kio.Filter
 	// don't include reconcilers
-	fltr = append(fltr, &filters.IsReconcilerFilter{
-		ExcludeReconcilers:    !r.IncludeReconcilers,
-		IncludeNonReconcilers: !r.ExcludeNonReconcilers,
+	fltr = append(fltr, &filters.IsLocalConfig{
+		IncludeLocalConfig:    r.IncludeLocal,
+		ExcludeNonLocalConfig: r.ExcludeNonLocal,
 	})
 	if r.Format {
 		fltr = append(fltr, filters.FormatFilter{})

@@ -84,10 +84,10 @@ kubectl get all,applications,releasetracks -o yaml | kyaml tree --structure=grap
 	c.Flags().BoolVar(&r.env, "env", false, "print env field")
 	c.Flags().BoolVar(&r.all, "all", false, "print all field infos")
 	c.Flags().StringSliceVar(&r.fields, "field", []string{}, "print field")
-	c.Flags().BoolVar(&r.includeReconcilers, "include-reconcilers", false,
-		"if true, include reconciler Resources in the output.")
-	c.Flags().BoolVar(&r.excludeNonReconcilers, "exclude-non-reconcilers", false,
-		"if true, exclude non-reconciler Resources in the output.")
+	c.Flags().BoolVar(&r.includeLocal, "include-local", false,
+		"if true, include local-config in the output.")
+	c.Flags().BoolVar(&r.excludeNonLocal, "exclude-non-local", false,
+		"if true, exclude non-local-config in the output.")
 	c.Flags().StringVar(&r.structure, "graph-structure", "directory",
 		"Graph structure to use for printing the tree.  may be 'directory' or 'owners'.")
 
@@ -101,21 +101,21 @@ func TreeCommand() *cobra.Command {
 
 // TreeRunner contains the run function
 type TreeRunner struct {
-	IncludeSubpackages    bool
-	Command               *cobra.Command
-	name                  bool
-	resources             bool
-	ports                 bool
-	images                bool
-	replicas              bool
-	all                   bool
-	env                   bool
-	args                  bool
-	cmd                   bool
-	fields                []string
-	includeReconcilers    bool
-	excludeNonReconcilers bool
-	structure             string
+	IncludeSubpackages bool
+	Command            *cobra.Command
+	name               bool
+	resources          bool
+	ports              bool
+	images             bool
+	replicas           bool
+	all                bool
+	env                bool
+	args               bool
+	cmd                bool
+	fields             []string
+	includeLocal       bool
+	excludeNonLocal    bool
+	structure          string
 }
 
 func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
@@ -189,9 +189,9 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 	}
 
 	// show reconcilers in tree
-	fltrs := []kio.Filter{&filters.IsReconcilerFilter{
-		ExcludeReconcilers:    !r.includeReconcilers,
-		IncludeNonReconcilers: !r.excludeNonReconcilers,
+	fltrs := []kio.Filter{&filters.IsLocalConfig{
+		IncludeLocalConfig:    r.includeLocal,
+		ExcludeNonLocalConfig: r.excludeNonLocal,
 	}}
 
 	return handleError(c, kio.Pipeline{
