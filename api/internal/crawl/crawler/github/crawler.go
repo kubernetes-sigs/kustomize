@@ -16,9 +16,9 @@ import (
 	"strings"
 	"time"
 
+	"sigs.k8s.io/kustomize/api/internal/git"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/hack/crawl/crawler"
-	"sigs.k8s.io/kustomize/hack/crawl/crawler/git"
 	"sigs.k8s.io/kustomize/hack/crawl/doc"
 	"sigs.k8s.io/kustomize/hack/crawl/httpclient"
 )
