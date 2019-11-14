@@ -309,6 +309,7 @@ golang.org/x/net v0.0.0-20190613194153-d28f0bde5980/go.mod h1:z5CRVTTTmAJ677TzLL
 golang.org/x/net v0.0.0-20190620200207-3b0461eec859/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/net v0.0.0-20190812203447-cdfb69ac37fc/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
 golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
+golang.org/x/net v0.0.0-20190909003024-a7b16738d86b h1:XfVGCX+0T4WOStkaOsJRllbsiImhB2jgVBGc9L0lPGc=
 golang.org/x/net v0.0.0-20190909003024-a7b16738d86b/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/net v0.0.0-20190923162816-aa69164e4478 h1:l5EDrHhldLYb3ZRHDUhXF7Om7MvYXnkV9/iQNo1lX6g=
 golang.org/x/net v0.0.0-20190923162816-aa69164e4478/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
@@ -406,7 +407,9 @@ mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b/go.mod h1:2odslEg/xrtNQqCYg2/jC
 mvdan.cc/unparam v0.0.0-20190720180237-d51796306d8f/go.mod h1:4G1h5nDURzA3bwVMZIVpwbkw+04kSxk3rAtzlimaUJw=
 sigs.k8s.io/kustomize/api v0.1.1 h1:W2dWXex2MhF4/EZNokZllvet2RejCHqdAFklufN7VTg=
 sigs.k8s.io/kustomize/api v0.1.1/go.mod h1:FyfJD1q1QMjC/TvK78b6cCtZB+mbpnGIo9YOvbucJes=
+sigs.k8s.io/kustomize/api v0.2.0 h1:e++6JpysnnlUbHmFrv6jvfF5rFlgQ103bS1DO7r5bWA=
 sigs.k8s.io/kustomize/api v0.2.0/go.mod h1:zVtMg179jW1gr74jo9fc2Ac9dLYLTZZThc3DDb9lDW4=
+sigs.k8s.io/kustomize/pseudo/k8s v0.1.0 h1:otg4dLFc03c3gzl+2CV8GPGcd1kk8wjXwD+UhhcCn5I=
 sigs.k8s.io/kustomize/pseudo/k8s v0.1.0/go.mod h1:bl/gVJgYYhJZCZdYU2BfnaKYAlqFkgbJEkpl302jEss=
 sigs.k8s.io/structured-merge-diff v0.0.0-20190525122527-15d366b2352e/go.mod h1:wWxsB5ozmmv/SG7nM11ayaAW51xMvak/t1r0CSlcokI=
 sigs.k8s.io/yaml v1.1.0 h1:4A07+ZFc2wgJwo8YNlQpr1rVlgUDlxXHhPJciaPY5gs=
