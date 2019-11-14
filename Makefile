@@ -4,8 +4,8 @@
 # Makefile for the kustomize repo.
 
 MYGOBIN := $(shell go env GOPATH)/bin
-PATH := $(PATH):$(MYGOBIN)
-SHELL := env PATH="$(PATH)" /bin/bash
+SHELL := /bin/bash
+export PATH := $(MYGOBIN):$(PATH)
 
 .PHONY: all
 all: verify-kustomize
@@ -82,12 +82,21 @@ lint-kustomize: install-tools $(builtinplugins)
 	cd pluginator; \
 	$(MYGOBIN)/golangci-lint -c ../.golangci.yml run ./...
 
+# TODO: modify rule to trigger on source material.  E.g. editting
+#   plugin/builtin/namespacetransformer/NamespaceTransformer.go
+# should trigger regeneration of
+#   api/builtins/namespacetransformer.go
+# To faciliate a simple rule, rename the name of the generated
+# file to CamelCase format like the source material.
 api/builtins/%.go: $(MYGOBIN)/pluginator
-	@echo "generating $*"; \
-	cd plugin/builtin/$*; \
-	go generate .; \
-	cd ../../../api/builtins; \
-	$(MYGOBIN)/goimports -w $*.go
+	@echo "generating $*"
+	( \
+	  set -e; \
+	  cd plugin/builtin/$*; \
+	  go generate .; \
+	  cd ../../../api/builtins; \
+	  $(MYGOBIN)/goimports -w $*.go \
+	)
 
 .PHONY: test-unit-kustomize-api
 test-unit-kustomize-api: $(builtinplugins)
@@ -113,12 +122,15 @@ test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
 
 .PHONY:
 test-examples-kustomize-against-latest: $(MYGOBIN)/mdrip
-	/bin/rm -f $(MYGOBIN)/kustomize; \
-	echo "Installing kustomize from latest."; \
-	go install sigs.k8s.io/kustomize/kustomize/v3; \
-	./hack/testExamplesAgainstKustomize.sh latest; \
-	echo "Reinstalling kustomize from HEAD."; \
-	cd kustomize; go install .
+	( \
+	  set -e; \
+	  /bin/rm -f $(MYGOBIN)/kustomize; \
+	  echo "Installing kustomize from latest."; \
+	  GO111MODULE=on go install sigs.k8s.io/kustomize/kustomize/v3; \
+	  ./hack/testExamplesAgainstKustomize.sh latest; \
+	  echo "Reinstalling kustomize from HEAD."; \
+	  cd kustomize; go install .; \
+	)
 
 # linux only.
 # This is for testing an example plugin that
@@ -127,11 +139,14 @@ test-examples-kustomize-against-latest: $(MYGOBIN)/mdrip
 # to github.com/instrumenta/kubeval.
 # Instead, download the binary.
 $(MYGOBIN)/kubeval:
-	d=$(shell mktemp -d); cd $$d; \
-	wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz; \
-	tar xf kubeval-linux-amd64.tar.gz; \
-	mv kubeval $(MYGOBIN); \
-	rm -rf $$d
+	( \
+	  set -e; \
+	  d=$(shell mktemp -d); cd $$d; \
+	  wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz; \
+	  tar xf kubeval-linux-amd64.tar.gz; \
+	  mv kubeval $(MYGOBIN); \
+	  rm -rf $$d; \
+	)
 
 # linux only.
 # This is for testing an example plugin that
@@ -140,17 +155,21 @@ $(MYGOBIN)/kubeval:
 # to helm.
 # Instead, download the binary.
 $(MYGOBIN)/helm:
-	d=$(shell mktemp -d); cd $$d; \
-	wget https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz; \
-	tar -xvzf helm-v2.13.1-linux-amd64.tar.gz; \
-	mv linux-amd64/helm $(MYGOBIN); \
-	rm -rf $$d
+	( \
+	  set -e; \
+	  d=$(shell mktemp -d); cd $$d; \
+	  wget https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz; \
+	  tar -xvzf helm-v2.13.1-linux-amd64.tar.gz; \
+	  mv linux-amd64/helm $(MYGOBIN); \
+	  rm -rf $$d \
+	)
 
 .PHONY: clean
 clean:
 	rm -f $(builtinplugins)
 	rm -f $(MYGOBIN)/pluginator
 	rm -f $(MYGOBIN)/kustomize
+	rm -f $(MYGOBIN)/golangci-lint
 
 .PHONY: nuke
 nuke: clean

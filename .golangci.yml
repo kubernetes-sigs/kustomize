@@ -4,18 +4,29 @@ run:
 linters:
   disable-all: true
   enable:
+    - bodyclose
+    - deadcode
+    - depguard
     - dupl
     - goconst
     - gocyclo
     - gofmt
+    - goimports
     - golint
+    - gosec
+    # - gosimple (panics)
     - govet
     - ineffassign
     - interfacer
     - lll
     - misspell
     - nakedret
+    # - staticcheck (panics)
     - structcheck
+    # - stylecheck (panics)
+    # - typecheck (fails in lots of places)
+    - unconvert
+    # - unused (panics)
     - unparam
     - varcheck
 

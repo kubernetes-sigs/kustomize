@@ -41,6 +41,7 @@ var testConfigMap = factory.FromMap(
 
 const genArgOptions = "{nsfx:false,beh:unspecified}"
 
+//nolint:gosec
 const configMapAsString = `{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"winnie","namespace":"hundred-acre-wood"}}`
 
 var testDeployment = factory.FromMap(
