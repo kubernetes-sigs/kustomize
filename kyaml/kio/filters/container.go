@@ -16,7 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// GrepFilter filters Resources using a container image.
+// ContainerFilter filters Resources using a container image.
 // The container must start a process that reads the list of
 // input Resources from stdin, reads the Configuration from the env
 // API_CONFIG, and writes the filtered Resources to stdout.
@@ -29,6 +29,9 @@ type ContainerFilter struct {
 
 	// Image is the container image to use to create a container.
 	Image string `yaml:"image,omitempty"`
+
+	// Network is the container network to use.
+	Network string `yaml:"network,omitempty"`
 
 	// Config is the API configuration for the container and passed through the
 	// API_CONFIG env var to the container.
@@ -86,12 +89,18 @@ func (c *ContainerFilter) getArgs() []string {
 	// run the container using docker.  this is simpler than using the docker
 	// libraries, and ensures things like auth work the same as if the container
 	// was run from the cli.
+
+	network := "none"
+	if c.Network != "" {
+		network = c.Network
+	}
+
 	args := []string{"docker", "run",
 		"--rm",                                              // delete the container afterward
 		"-i", "-a", "STDIN", "-a", "STDOUT", "-a", "STDERR", // attach stdin, stdout, stderr
 
 		// added security options
-		"--network", "none", // disable the network
+		"--network", network,
 		"--user", "nobody", // run as nobody
 		// don't make fs readonly because things like heredoc rely on writing tmp files
 		"--security-opt=no-new-privileges", // don't allow the user to escalate privileges
