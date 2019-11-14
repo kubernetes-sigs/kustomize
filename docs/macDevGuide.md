@@ -30,12 +30,12 @@ brew install coreutils wget gnu-sed
 
 Add the new tools to your PATH
 
-## Run the pre-commit tests
+## Make everything
 
-Run the `pre-commit` target to verify your install
+Verify your install by running `make`:
 
 ```sh
-make pre-commit
+make
 ```
 
-This will run the go tests, as well as documentation tests.
+Be default, this runs all tests needed to qualify a pull request.
