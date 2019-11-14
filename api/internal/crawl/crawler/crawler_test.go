@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"sigs.k8s.io/kustomize/api/konfig"
-	"sigs.k8s.io/kustomize/hack/crawl/doc"
+	"sigs.k8s.io/kustomize/api/internal/crawl/doc"
 )
 
 const (
