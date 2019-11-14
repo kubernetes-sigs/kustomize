@@ -10,12 +10,12 @@ import (
 
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/kustomize/pseudo/k8s/api/core/v1"
+	corev1 "sigs.k8s.io/kustomize/pseudo/k8s/api/core/v1"
 )
 
 func makeFreshConfigMap(
-	args *types.ConfigMapArgs) *v1.ConfigMap {
-	cm := &v1.ConfigMap{}
+	args *types.ConfigMapArgs) *corev1.ConfigMap {
+	cm := &corev1.ConfigMap{}
 	cm.APIVersion = "v1"
 	cm.Kind = "ConfigMap"
 	cm.Name = args.Name
@@ -26,7 +26,7 @@ func makeFreshConfigMap(
 
 // MakeConfigMap returns a new ConfigMap, or nil and an error.
 func (f *Factory) MakeConfigMap(
-	args *types.ConfigMapArgs) (*v1.ConfigMap, error) {
+	args *types.ConfigMapArgs) (*corev1.ConfigMap, error) {
 	all, err := f.kvLdr.Load(args.KvPairSources)
 	if err != nil {
 		return nil, errors.Wrap(err, "loading KV pairs")
@@ -47,7 +47,7 @@ func (f *Factory) MakeConfigMap(
 
 // addKvToConfigMap adds the given key and data to the given config map.
 // Error if key invalid, or already exists.
-func (f *Factory) addKvToConfigMap(configMap *v1.ConfigMap, p types.Pair) error {
+func (f *Factory) addKvToConfigMap(configMap *corev1.ConfigMap, p types.Pair) error {
 	if err := f.kvLdr.Validator().ErrIfInvalidKey(p.Key); err != nil {
 		return err
 	}
