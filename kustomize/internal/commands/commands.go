@@ -13,6 +13,7 @@ import (
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/k8sdeps/validator"
 	"sigs.k8s.io/kustomize/api/konfig"
+	configcmd "sigs.k8s.io/kustomize/cmd/cfg/cmd"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/build"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/config"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/create"
@@ -42,9 +43,10 @@ See https://sigs.k8s.io/kustomize
 		config.NewCmdConfig(fSys),
 		version.NewCmdVersion(stdOut),
 	)
+	c.AddCommand(configcmd.GetRootCommand())
 	c.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 
-	// Workaround for this kissue:
+	// Workaround for this issue:
 	// https://github.com/kubernetes/kubernetes/issues/17162
 	flag.CommandLine.Parse([]string{})
 	return c
