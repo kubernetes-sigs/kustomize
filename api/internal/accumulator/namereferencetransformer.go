@@ -212,31 +212,27 @@ func (o *nameReferenceTransformer) getNewNameFunc(
 	target resid.Gvk,
 	referralCandidates resmap.ResMap) func(in interface{}) (interface{}, error) {
 	return func(in interface{}) (interface{}, error) {
-		switch in.(type) {
+		switch thing := in.(type) {
 		case string:
-			oldName, _ := in.(string)
-			return o.getSimpleNameField(oldName, referrer, target,
+			return o.getSimpleNameField(thing, referrer, target,
 				referralCandidates, referralCandidates.Resources())
 		case map[string]interface{}:
 			// Kind: ValidatingWebhookConfiguration
 			// FieldSpec is webhooks/clientConfig/service
-			oldMap, _ := in.(map[string]interface{})
-			return o.getNameAndNsStruct(oldMap, referrer, target,
+			return o.getNameAndNsStruct(thing, referrer, target,
 				referralCandidates)
 		case []interface{}:
-			l, _ := in.([]interface{})
-			for idx, item := range l {
-				switch item.(type) {
+			for idx, item := range thing {
+				switch value := item.(type) {
 				case string:
 					// Kind: Role/ClusterRole
 					// FieldSpec is rules.resourceNames
-					oldName, _ := item.(string)
-					newName, err := o.getSimpleNameField(oldName, referrer, target,
+					newName, err := o.getSimpleNameField(value, referrer, target,
 						referralCandidates, referralCandidates.Resources())
 					if err != nil {
 						return nil, err
 					}
-					l[idx] = newName
+					thing[idx] = newName
 				case map[string]interface{}:
 					// Kind: RoleBinding/ClusterRoleBinding
 					// FieldSpec is subjects
@@ -245,13 +241,12 @@ func (o *nameReferenceTransformer) getNewNameFunc(
 					// what get mutatefield to request the mapping of the whole
 					// map containing namespace and name instead of just a simple
 					// string field containing the name
-					oldMap, _ := item.(map[string]interface{})
-					newMap, err := o.getNameAndNsStruct(oldMap, referrer, target,
+					newMap, err := o.getNameAndNsStruct(value, referrer, target,
 						referralCandidates)
 					if err != nil {
 						return nil, err
 					}
-					l[idx] = newMap
+					thing[idx] = newMap
 				default:
 					return nil, fmt.Errorf(
 						"%#v is expected to be either a []string or a []map[string]interface{}", in)
