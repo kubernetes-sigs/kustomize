@@ -109,9 +109,9 @@ metadata:
 		return
 	}
 	instance := &ContainerFilter{
-		Image:  "example.com:version",
+		Image:   "example.com:version",
 		Network: "test-net",
-		Config: cfg,
+		Config:  cfg,
 	}
 	cmd, err := instance.getCommand()
 	if !assert.NoError(t, err) {

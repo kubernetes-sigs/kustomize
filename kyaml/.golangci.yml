@@ -14,7 +14,7 @@ linters:
     - depguard
     - dogsled
     - dupl
-#    - errcheck
+    - errcheck
 #    - funlen
 #    - gochecknoinits
 #    - goconst
@@ -22,7 +22,7 @@ linters:
     - gocyclo
     - gofmt
     - goimports
-#    - golint
+    - golint
     - gosec
     - gosimple
     - govet
