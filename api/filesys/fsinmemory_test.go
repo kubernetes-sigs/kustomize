@@ -126,7 +126,7 @@ func TestWriteFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected read to work: %v", err)
 	}
-	if bytes.Compare(c, content) != 0 {
+	if !bytes.Equal(c, content) {
 		t.Fatalf("incorrect content: %v", content)
 	}
 }

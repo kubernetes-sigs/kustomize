@@ -39,7 +39,7 @@ func (g *GenArgs) String() string {
 //  1) GenArgs is not nil
 //  2) DisableNameSuffixHash in GeneratorOptions is not set to true
 func (g *GenArgs) NeedsHashSuffix() bool {
-	return g.args != nil && (g.opts == nil || g.opts.DisableNameSuffixHash == false)
+	return g.args != nil && (g.opts == nil || !g.opts.DisableNameSuffixHash)
 }
 
 // Behavior returns Behavior field of GeneratorArgs

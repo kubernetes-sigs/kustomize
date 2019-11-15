@@ -460,5 +460,4 @@ spec:
 		err.Error(), "both containing ") {
 		t.Fatalf("Unexpected err: %v", err)
 	}
-	return
 }
