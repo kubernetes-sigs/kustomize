@@ -6,7 +6,7 @@ package target_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/testutils/kusttest"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func writeMediumBase(th *kusttest_test.KustTestHarness) {

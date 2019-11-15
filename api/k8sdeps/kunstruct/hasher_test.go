@@ -8,30 +8,30 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/pseudo/k8s/api/core/v1"
+	corev1 "sigs.k8s.io/kustomize/pseudo/k8s/api/core/v1"
 )
 
 func TestConfigMapHash(t *testing.T) {
 	cases := []struct {
 		desc string
-		cm   *v1.ConfigMap
+		cm   *corev1.ConfigMap
 		hash string
 		err  string
 	}{
 		// empty map
-		{"empty data", &v1.ConfigMap{Data: map[string]string{}, BinaryData: map[string][]byte{}}, "42745tchd9", ""},
+		{"empty data", &corev1.ConfigMap{Data: map[string]string{}, BinaryData: map[string][]byte{}}, "42745tchd9", ""},
 		// one key
-		{"one key", &v1.ConfigMap{Data: map[string]string{"one": ""}}, "9g67k2htb6", ""},
+		{"one key", &corev1.ConfigMap{Data: map[string]string{"one": ""}}, "9g67k2htb6", ""},
 		// three keys (tests sorting order)
-		{"three keys", &v1.ConfigMap{Data: map[string]string{"two": "2", "one": "", "three": "3"}}, "f5h7t85m9b", ""},
+		{"three keys", &corev1.ConfigMap{Data: map[string]string{"two": "2", "one": "", "three": "3"}}, "f5h7t85m9b", ""},
 		// empty binary data map
-		{"empty binary data", &v1.ConfigMap{BinaryData: map[string][]byte{}}, "dk855m5d49", ""},
+		{"empty binary data", &corev1.ConfigMap{BinaryData: map[string][]byte{}}, "dk855m5d49", ""},
 		// one key with binary data
-		{"one key with binary data", &v1.ConfigMap{BinaryData: map[string][]byte{"one": []byte("")}}, "mk79584b8c", ""},
+		{"one key with binary data", &corev1.ConfigMap{BinaryData: map[string][]byte{"one": []byte("")}}, "mk79584b8c", ""},
 		// three keys with binary data (tests sorting order)
-		{"three keys with binary data", &v1.ConfigMap{BinaryData: map[string][]byte{"two": []byte("2"), "one": []byte(""), "three": []byte("3")}}, "t458mc6db2", ""},
+		{"three keys with binary data", &corev1.ConfigMap{BinaryData: map[string][]byte{"two": []byte("2"), "one": []byte(""), "three": []byte("3")}}, "t458mc6db2", ""},
 		// two keys, one with string and another with binary data
-		{"two keys with one each", &v1.ConfigMap{Data: map[string]string{"one": ""}, BinaryData: map[string][]byte{"two": []byte("")}}, "698h7c7t9m", ""},
+		{"two keys with one each", &corev1.ConfigMap{Data: map[string]string{"one": ""}, BinaryData: map[string][]byte{"two": []byte("")}}, "698h7c7t9m", ""},
 	}
 
 	for _, c := range cases {
@@ -48,16 +48,16 @@ func TestConfigMapHash(t *testing.T) {
 func TestSecretHash(t *testing.T) {
 	cases := []struct {
 		desc   string
-		secret *v1.Secret
+		secret *corev1.Secret
 		hash   string
 		err    string
 	}{
 		// empty map
-		{"empty data", &v1.Secret{Type: "my-type", Data: map[string][]byte{}}, "t75bgf6ctb", ""},
+		{"empty data", &corev1.Secret{Type: "my-type", Data: map[string][]byte{}}, "t75bgf6ctb", ""},
 		// one key
-		{"one key", &v1.Secret{Type: "my-type", Data: map[string][]byte{"one": []byte("")}}, "74bd68bm66", ""},
+		{"one key", &corev1.Secret{Type: "my-type", Data: map[string][]byte{"one": []byte("")}}, "74bd68bm66", ""},
 		// three keys (tests sorting order)
-		{"three keys", &v1.Secret{Type: "my-type", Data: map[string][]byte{"two": []byte("2"), "one": []byte(""), "three": []byte("3")}}, "dgcb6h9tmk", ""},
+		{"three keys", &corev1.Secret{Type: "my-type", Data: map[string][]byte{"two": []byte("2"), "one": []byte(""), "three": []byte("3")}}, "dgcb6h9tmk", ""},
 	}
 
 	for _, c := range cases {
@@ -74,27 +74,27 @@ func TestSecretHash(t *testing.T) {
 func TestEncodeConfigMap(t *testing.T) {
 	cases := []struct {
 		desc   string
-		cm     *v1.ConfigMap
+		cm     *corev1.ConfigMap
 		expect string
 		err    string
 	}{
 		// empty map
-		{"empty data", &v1.ConfigMap{Data: map[string]string{}}, `{"data":{},"kind":"ConfigMap","name":""}`, ""},
+		{"empty data", &corev1.ConfigMap{Data: map[string]string{}}, `{"data":{},"kind":"ConfigMap","name":""}`, ""},
 		// one key
-		{"one key", &v1.ConfigMap{Data: map[string]string{"one": ""}}, `{"data":{"one":""},"kind":"ConfigMap","name":""}`, ""},
+		{"one key", &corev1.ConfigMap{Data: map[string]string{"one": ""}}, `{"data":{"one":""},"kind":"ConfigMap","name":""}`, ""},
 		// three keys (tests sorting order)
-		{"three keys", &v1.ConfigMap{Data: map[string]string{"two": "2", "one": "", "three": "3"}},
+		{"three keys", &corev1.ConfigMap{Data: map[string]string{"two": "2", "one": "", "three": "3"}},
 			`{"data":{"one":"","three":"3","two":"2"},"kind":"ConfigMap","name":""}`, ""},
 		// empty binary map
-		{"empty data", &v1.ConfigMap{BinaryData: map[string][]byte{}}, `{"data":null,"kind":"ConfigMap","name":""}`, ""},
+		{"empty data", &corev1.ConfigMap{BinaryData: map[string][]byte{}}, `{"data":null,"kind":"ConfigMap","name":""}`, ""},
 		// one key with binary data
-		{"one key", &v1.ConfigMap{BinaryData: map[string][]byte{"one": []byte("")}},
+		{"one key", &corev1.ConfigMap{BinaryData: map[string][]byte{"one": []byte("")}},
 			`{"binaryData":{"one":""},"data":null,"kind":"ConfigMap","name":""}`, ""},
 		// three keys with binary data (tests sorting order)
-		{"three keys", &v1.ConfigMap{BinaryData: map[string][]byte{"two": []byte("2"), "one": []byte(""), "three": []byte("3")}},
+		{"three keys", &corev1.ConfigMap{BinaryData: map[string][]byte{"two": []byte("2"), "one": []byte(""), "three": []byte("3")}},
 			`{"binaryData":{"one":"","three":"Mw==","two":"Mg=="},"data":null,"kind":"ConfigMap","name":""}`, ""},
 		// two keys, one string and one binary values
-		{"two keys with one each", &v1.ConfigMap{Data: map[string]string{"one": ""}, BinaryData: map[string][]byte{"two": []byte("")}},
+		{"two keys with one each", &corev1.ConfigMap{Data: map[string]string{"one": ""}, BinaryData: map[string][]byte{"two": []byte("")}},
 			`{"binaryData":{"two":""},"data":{"one":""},"kind":"ConfigMap","name":""}`, ""},
 	}
 	for _, c := range cases {
@@ -111,16 +111,16 @@ func TestEncodeConfigMap(t *testing.T) {
 func TestEncodeSecret(t *testing.T) {
 	cases := []struct {
 		desc   string
-		secret *v1.Secret
+		secret *corev1.Secret
 		expect string
 		err    string
 	}{
 		// empty map
-		{"empty data", &v1.Secret{Type: "my-type", Data: map[string][]byte{}}, `{"data":{},"kind":"Secret","name":"","type":"my-type"}`, ""},
+		{"empty data", &corev1.Secret{Type: "my-type", Data: map[string][]byte{}}, `{"data":{},"kind":"Secret","name":"","type":"my-type"}`, ""},
 		// one key
-		{"one key", &v1.Secret{Type: "my-type", Data: map[string][]byte{"one": []byte("")}}, `{"data":{"one":""},"kind":"Secret","name":"","type":"my-type"}`, ""},
+		{"one key", &corev1.Secret{Type: "my-type", Data: map[string][]byte{"one": []byte("")}}, `{"data":{"one":""},"kind":"Secret","name":"","type":"my-type"}`, ""},
 		// three keys (tests sorting order) - note json.Marshal base64 encodes the values because they come in as []byte
-		{"three keys", &v1.Secret{
+		{"three keys", &corev1.Secret{
 			Type: "my-type",
 			Data: map[string][]byte{"two": []byte("2"), "one": []byte(""), "three": []byte("3")},
 		},
@@ -150,8 +150,8 @@ not their metadata (e.g. the Data of a ConfigMap, but nothing in ObjectMeta).
 		obj      interface{}
 		expect   int
 	}{
-		{"ConfigMap", v1.ConfigMap{}, 4},
-		{"Secret", v1.Secret{}, 5},
+		{"ConfigMap", corev1.ConfigMap{}, 4},
+		{"Secret", corev1.Secret{}, 5},
 	}
 	for _, c := range cases {
 		val := reflect.ValueOf(c.obj)
