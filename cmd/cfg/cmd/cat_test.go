@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/cmd/kyaml/cmd"
+	"sigs.k8s.io/kustomize/cmd/cfg/cmd"
 )
 
 // TODO(pwittrock): write tests for reading / writing ResourceLists

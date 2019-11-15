@@ -41,21 +41,21 @@ items:
 - 1
 
 # this command:
-$ kyaml cat pkg/ --function-config config.yaml --wrap-kind ResourceList | kyaml run-fns xargs -- app
+$ kustomize cfg cat pkg/ --function-config config.yaml --wrap-kind ResourceList | kustomize cfg run-fns xargs -- app
 
 # is equivalent to this command:
-$ kyaml cat pkg/ --function-config config.yaml --wrap-kind ResourceList | app --flag1=value1 --flag2=value2 2 1
+$ kustomize cfg cat pkg/ --function-config config.yaml --wrap-kind ResourceList | app --flag1=value1 --flag2=value2 2 1
 
 # echo: prints the app arguments
-$ kyaml cat pkg/ --function-config config.yaml --wrap-kind ResourceList | kyaml reconcile xargs -- echo
+$ kustomize cfg cat pkg/ --function-config config.yaml --wrap-kind ResourceList | kustomize cfg run-fns xargs -- echo
 --flag1=value1 --flag2=value2 2 1
 
 # env: prints the app env
-$ kyaml cat pkg/ --function-config config.yaml --wrap-kind ResourceList | kyaml reconcile xargs -- env
+$ kustomize cfg cat pkg/ --function-config config.yaml --wrap-kind ResourceList | kustomize cfg run-fns xargs -- env
 
 # cat: prints the app stdin -- prints the package contents and functionConfig wrapped in a
 # ResourceList
-$ kyaml cat pkg/ --function-config config.yaml --wrap-kind ResourceList | kyaml reconcile xargs --no-flags -- env
+$ kustomize cfg cat pkg/ --function-config config.yaml --wrap-kind ResourceList | kustomize cfg run-fns xargs --no-flags -- env
 
 `,
 		RunE:               r.runE,

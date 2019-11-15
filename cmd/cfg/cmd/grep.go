@@ -31,16 +31,17 @@ func GetGrepRunner() *GrepRunner {
     Path to local directory.
 `,
 		Example: `# find Deployment Resources
-kyaml grep "kind=Deployment" my-dir/
+kustomize cfg grep "kind=Deployment" my-dir/
 
 # find Resources named nginx
-kyaml grep "metadata.name=nginx" my-dir/
+kustomize cfg grep "metadata.name=nginx" my-dir/
 
 # use tree to display matching Resources
-kyaml grep "metadata.name=nginx" my-dir/ | kyaml tree
+kustomize cfg grep "metadata.name=nginx" my-dir/ | kustomize cfg tree
 
 # look for Resources matching a specific container image
-kyaml grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-dir/ | kyaml tree
+kustomize cfg grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-dir/ | kustomize cfg tree
+kustomize cfg grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-dir/ | kustomize cfg tree
 `,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,

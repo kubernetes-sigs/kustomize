@@ -4,5 +4,5 @@ set -e
 cd kyaml
 make all
 
-cd ../cmd/kyaml
+cd ../cmd/cfg
 make all

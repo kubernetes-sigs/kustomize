@@ -6,9 +6,9 @@
 GOPATH := $(shell go env GOPATH)
 
 build:
-	go build -v -o $(GOPATH)/bin/kyaml .
+	go build -v -o $(GOPATH)/bin/cfg .
 
-all: generate license fix vet fmt test lint tidy
+all: generate license fix vet fmt test lint build tidy
 
 fix:
 	go fix ./...

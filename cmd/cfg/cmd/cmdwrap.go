@@ -32,9 +32,9 @@ config function authors may use wrap by using it to invoke a command from a cont
 
 The following are equivalent:
 
-	kyaml wrap -- CMD
+	kustomize cfg run-fns wrap -- CMD
 
-	kyaml xargs -- CMD | kyaml merge | kyaml fmt --set-filenames
+	kustomize cfg run-fns xargs -- CMD | kustomize cfg merge | kustomize cfg fmt --set-filenames
 
 Environment Variables:
 

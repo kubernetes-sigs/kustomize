@@ -44,7 +44,7 @@ See https://sigs.k8s.io/kustomize
 	)
 	c.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 
-	// Workaround for this issue:
+	// Workaround for this kissue:
 	// https://github.com/kubernetes/kubernetes/issues/17162
 	flag.CommandLine.Parse([]string{})
 	return c

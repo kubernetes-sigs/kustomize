@@ -24,7 +24,7 @@ func GetCountRunner() *CountRunner {
     Path to local directory.
 `,
 		Example: `# print Resource counts from a directory
-kyaml count my-dir/
+kustomize cfg count my-dir/
 `,
 		RunE: r.runE,
 	}

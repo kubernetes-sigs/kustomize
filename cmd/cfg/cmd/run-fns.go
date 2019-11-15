@@ -51,14 +51,14 @@ order they appear in the file).
 	spec:
 	  configField: configValue
 
-  In the preceding example, 'kyaml run-fns example/' would identify the function by
+  In the preceding example, 'kustomize cfg run-fns example/' would identify the function by
   the metadata.configFn field.  It would then write all Resources in the directory to
   a container stdin (running the gcr.io/example/examplefunction:v1.0.1 image).  It
   would then writer the container stdout back to example/, replacing the directory
   file contents.
 `,
 		Example: `
-kyaml run-fns example/
+kustomize cfg run-fns example/
 `,
 		RunE: r.runE,
 		Args: cobra.ExactArgs(1),
