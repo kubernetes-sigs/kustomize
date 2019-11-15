@@ -17,6 +17,7 @@ import (
 )
 
 const (
+	//nolint:gosec
 	secretGenerator = `
 apiVersion: builtin
 kind: SecretGenerator

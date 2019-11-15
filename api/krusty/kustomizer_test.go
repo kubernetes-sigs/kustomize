@@ -5,17 +5,11 @@
 package krusty_test
 
 import (
+	"testing"
+
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/krusty"
-	"testing"
 )
-
-// TODO: make this more like kusttest_test.AssertActualEqualsExpected
-func assertOutput(t *testing.T, actual []byte, expected string) {
-	if string(actual) != expected {
-		t.Fatalf("Err: expected:\n%s\nbut got:\n%s\n", expected, actual)
-	}
-}
 
 func TestSomething1(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
