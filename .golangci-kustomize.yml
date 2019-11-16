@@ -21,7 +21,7 @@ linters:
     - lll
     - misspell
     - nakedret
-    # - staticcheck (panics)
+    - staticcheck
     - structcheck
     # - stylecheck (panics)
     # - typecheck (fails in lots of places)
