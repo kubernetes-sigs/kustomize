@@ -26,13 +26,11 @@ verify-kustomize: \
 # Version pinned by api/go.mod
 $(MYGOBIN)/golangci-lint-kustomize:
 	( \
-    set -e; \
-    export GOBIN=$$(mktemp -d) \
-    cd api; \
-    GO111MODULE=on go install \
-        github.com/golangci/golangci-lint/cmd/golangci-lint; \
-    mv $$GOBIN/golangci-lint \
-        $(MYGOBIN)/golangci-lint-kustomize \
+		set -e; \
+		export GOBIN=$$(mktemp -d) \
+		cd api; \
+		GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint; \
+		mv $$GOBIN/golangci-lint $(MYGOBIN)/golangci-lint-kustomize \
 	)
 
 # Version pinned by api/go.mod
@@ -104,11 +102,11 @@ lint-kustomize: install-tools $(builtinplugins)
 api/builtins/%.go: $(MYGOBIN)/pluginator
 	@echo "generating $*"
 	( \
-    set -e; \
-    cd plugin/builtin/$*; \
-    go generate .; \
-    cd ../../../api/builtins; \
-    $(MYGOBIN)/goimports -w $*.go \
+		set -e; \
+		cd plugin/builtin/$*; \
+		go generate .; \
+		cd ../../../api/builtins; \
+		$(MYGOBIN)/goimports -w $*.go \
 	)
 
 .PHONY: test-unit-kustomize-api
@@ -136,13 +134,13 @@ test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
 .PHONY:
 test-examples-kustomize-against-latest: $(MYGOBIN)/mdrip
 	( \
-    set -e; \
-    /bin/rm -f $(MYGOBIN)/kustomize; \
-    echo "Installing kustomize from latest."; \
-    GO111MODULE=on go install sigs.k8s.io/kustomize/kustomize/v3; \
-    ./hack/testExamplesAgainstKustomize.sh latest; \
-    echo "Reinstalling kustomize from HEAD."; \
-    cd kustomize; go install .; \
+		set -e; \
+		/bin/rm -f $(MYGOBIN)/kustomize; \
+		echo "Installing kustomize from latest."; \
+		GO111MODULE=on go install sigs.k8s.io/kustomize/kustomize/v3; \
+		./hack/testExamplesAgainstKustomize.sh latest; \
+		echo "Reinstalling kustomize from HEAD."; \
+		cd kustomize; go install .; \
 	)
 
 # linux only.
@@ -153,12 +151,12 @@ test-examples-kustomize-against-latest: $(MYGOBIN)/mdrip
 # Instead, download the binary.
 $(MYGOBIN)/kubeval:
 	( \
-    set -e; \
-    d=$(shell mktemp -d); cd $$d; \
-    wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz; \
-    tar xf kubeval-linux-amd64.tar.gz; \
-    mv kubeval $(MYGOBIN); \
-    rm -rf $$d; \
+		set -e; \
+		d=$(shell mktemp -d); cd $$d; \
+		wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz; \
+		tar xf kubeval-linux-amd64.tar.gz; \
+		mv kubeval $(MYGOBIN); \
+		rm -rf $$d; \
 	)
 
 # linux only.
@@ -169,12 +167,12 @@ $(MYGOBIN)/kubeval:
 # Instead, download the binary.
 $(MYGOBIN)/helm:
 	( \
-    set -e; \
-    d=$(shell mktemp -d); cd $$d; \
-    wget https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz; \
-    tar -xvzf helm-v2.13.1-linux-amd64.tar.gz; \
-    mv linux-amd64/helm $(MYGOBIN); \
-    rm -rf $$d \
+		set -e; \
+		d=$(shell mktemp -d); cd $$d; \
+		wget https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz; \
+		tar -xvzf helm-v2.13.1-linux-amd64.tar.gz; \
+		mv linux-amd64/helm $(MYGOBIN); \
+		rm -rf $$d \
 	)
 
 .PHONY: clean
