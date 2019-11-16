@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	corev1 "sigs.k8s.io/kustomize/pseudo/k8s/api/core/v1"
-	"sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 const (
@@ -23,6 +23,7 @@ const (
 	FailedStatus      Status = "Failed"
 	CurrentStatus     Status = "Current"
 	TerminatingStatus Status = "Terminating"
+	UnknownStatus     Status = "Unknown"
 )
 
 // ConditionType defines the set of condition types allowed inside a Condition struct.
@@ -81,8 +82,15 @@ type Condition struct {
 // a list of standard resources that would belong on the given resource.
 func Compute(u *unstructured.Unstructured) (*Result, error) {
 	res, err := checkGenericProperties(u)
-	if err != nil || res != nil {
-		return res, err
+	if err != nil {
+		return nil, err
+	}
+
+	// If res is not nil, it means the generic checks was able to determine
+	// the status of the resource. We don't need to check the type-specific
+	// rules.
+	if res != nil {
+		return res, nil
 	}
 
 	fn := GetLegacyConditionsFn(u)
