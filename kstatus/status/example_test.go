@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log"
 
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	. "sigs.k8s.io/kustomize/kstatus/status"
-	"sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/yaml"
 )
 

@@ -14,7 +14,7 @@
 // Computing the status of a resources can be done by calling the
 // Compute function in the status package.
 // import (
-//     "sigs.k8s.io/kustomize/kstatus/status
+//     "sigs.k8s.io/kustomize/kstatus/status"
 // )
 // res, err := status.Compute(resource)
 //

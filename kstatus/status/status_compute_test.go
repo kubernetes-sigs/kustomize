@@ -8,8 +8,8 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	corev1 "sigs.k8s.io/kustomize/pseudo/k8s/api/core/v1"
-	"sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 func y2u(t *testing.T, spec string) *unstructured.Unstructured {
