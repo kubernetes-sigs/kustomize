@@ -480,7 +480,7 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 		t.Fatalf("unexpected root %s", l2.Root())
 	}
 	// This is not okay.
-	l3, err = l2.New("../../../highBase")
+	_, err = l2.New("../../../highBase")
 	if err == nil {
 		t.Fatalf("expected err")
 	}
