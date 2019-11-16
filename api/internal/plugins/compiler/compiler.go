@@ -159,7 +159,7 @@ func RecentFileExists(path string) bool {
 			return false
 		}
 	}
-	age := time.Now().Sub(fi.ModTime())
+	age := time.Since(fi.ModTime())
 	return age.Minutes() < 3
 }
 

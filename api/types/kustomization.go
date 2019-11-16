@@ -133,9 +133,7 @@ func (k *Kustomization) FixKustomizationPostUnmarshalling() {
 	if k.Kind == "" {
 		k.Kind = KustomizationKind
 	}
-	for _, b := range k.Bases {
-		k.Resources = append(k.Resources, b)
-	}
+	k.Resources = append(k.Resources, k.Bases...)
 	k.Bases = nil
 }
 
