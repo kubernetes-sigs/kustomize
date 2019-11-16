@@ -14,7 +14,7 @@ linters:
     - goimports
     - golint
     - gosec
-    # - gosimple (panics)
+    - gosimple
     - govet
     - ineffassign
     - interfacer
@@ -32,8 +32,8 @@ linters:
 
 linters-settings:
   dupl:
-    threshold: 400 
-  lll:   
+    threshold: 400
+  lll:
     line-length: 170
   gocyclo:
     min-complexity: 15

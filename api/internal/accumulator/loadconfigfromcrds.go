@@ -93,10 +93,7 @@ func looksLikeAk8sType(properties myProperties) bool {
 		return false
 	}
 	_, ok = properties["metadata"]
-	if !ok {
-		return false
-	}
-	return true
+	return ok
 }
 
 const (
