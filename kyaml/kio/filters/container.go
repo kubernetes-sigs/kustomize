@@ -32,6 +32,9 @@ type ContainerFilter struct {
 
 	// Network is the container network to use.
 	Network string `yaml:"network,omitempty"`
+	
+	// LocalVolumes contains all the local volumes the container uses.
+	LocalVolumes []string `yaml:"localVolumes,omitempty"`
 
 	// Config is the API configuration for the container and passed through the
 	// API_CONFIG env var to the container.
