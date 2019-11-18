@@ -157,7 +157,7 @@ func TestUpdateResourceOptions(t *testing.T) {
 		if !a.Equals(b) {
 			t.Errorf("expected %v got %v", a, b)
 		}
-		if a.ShouldAddHashSuffixToName() != b.ShouldAddHashSuffixToName() {
+		if a.NeedHashSuffix() != b.NeedHashSuffix() {
 			t.Errorf("")
 		}
 		if a.Behavior() != b.Behavior() {

@@ -26,7 +26,7 @@ linters:
     # stylecheck demands that acronyms not be treated as words
     # in camelCase, so JsonOp become JSONOp, etc.  Yuck.
     # - stylecheck
-    # - typecheck (fails in lots of places)
+    - typecheck
     - unconvert
     - unused
     - unparam
