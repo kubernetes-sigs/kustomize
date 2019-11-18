@@ -252,9 +252,9 @@ func (r *Resource) Behavior() types.GenerationBehavior {
 	return r.options.Behavior()
 }
 
-// ShouldAddHashSuffixToName returns true if a resource
-// content hash should be appended to the name of the resource.
-func (r *Resource) ShouldAddHashSuffixToName() bool {
+// NeedHashSuffix returns true if a resource content
+// hash should be appended to the name of the resource.
+func (r *Resource) NeedHashSuffix() bool {
 	return r.options != nil && r.options.ShouldAddHashSuffixToName()
 }
 
