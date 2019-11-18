@@ -34,7 +34,7 @@ func (g *GenArgs) String() string {
 		"}"
 }
 
-// NeedHashSuffix returns true if a resource
+// ShouldAddHashSuffixToName returns true if a resource
 // content hash should be appended to the name of the resource.
 func (g *GenArgs) ShouldAddHashSuffixToName() bool {
 	return g.args != nil &&
