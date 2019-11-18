@@ -23,7 +23,7 @@ func (p *HashTransformerPlugin) Config(
 // Transform appends hash to generated resources.
 func (p *HashTransformerPlugin) Transform(m resmap.ResMap) error {
 	for _, res := range m.Resources() {
-		if res.NeedHashSuffix() {
+		if res.ShouldAddHashSuffixToName() {
 			h, err := p.hasher.Hash(res)
 			if err != nil {
 				return err

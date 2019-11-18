@@ -70,7 +70,9 @@ func (rv *refVarTransformer) replaceVars(in interface{}) (interface{}, error) {
 		// This field can potentially contain a $(VAR) since it is
 		// of string type.
 		return expansion2.Expand(s, rv.mappingFunc), nil
-	//nolint:staticcheck (erroneously claims that `case nil` is unreachable)
+	// staticcheck erroneously claims that `case nil`
+	// is unreachable here, so suppressing it.
+	//nolint:staticcheck
 	case nil:
 		return nil, nil
 	default:
