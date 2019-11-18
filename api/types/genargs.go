@@ -28,18 +28,17 @@ func (g *GenArgs) String() string {
 	}
 	return "{" +
 		strings.Join([]string{
-			"nsfx:" + strconv.FormatBool(g.NeedsHashSuffix()),
+			"nsfx:" + strconv.FormatBool(g.ShouldAddHashSuffixToName()),
 			"beh:" + g.Behavior().String()},
 			",") +
 		"}"
 }
 
-// NeedsHashSuffix returns true if the hash suffix is needed.
-// It is needed when the two conditions are both met
-//  1) GenArgs is not nil
-//  2) DisableNameSuffixHash in GeneratorOptions is not set to true
-func (g *GenArgs) NeedsHashSuffix() bool {
-	return g.args != nil && (g.opts == nil || !g.opts.DisableNameSuffixHash)
+// ShouldAddHashSuffixToName returns true if a resource
+// content hash should be appended to the name of the resource.
+func (g *GenArgs) ShouldAddHashSuffixToName() bool {
+	return g.args != nil &&
+		(g.opts == nil || !g.opts.DisableNameSuffixHash)
 }
 
 // Behavior returns Behavior field of GeneratorArgs

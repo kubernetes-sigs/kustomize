@@ -252,9 +252,10 @@ func (r *Resource) Behavior() types.GenerationBehavior {
 	return r.options.Behavior()
 }
 
-// NeedHashSuffix checks if the resource need a hash suffix
-func (r *Resource) NeedHashSuffix() bool {
-	return r.options != nil && r.options.NeedsHashSuffix()
+// ShouldAddHashSuffixToName returns true if a resource
+// content hash should be appended to the name of the resource.
+func (r *Resource) ShouldAddHashSuffixToName() bool {
+	return r.options != nil && r.options.ShouldAddHashSuffixToName()
 }
 
 // GetNamespace returns the namespace the resource thinks it's in.
