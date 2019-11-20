@@ -2,7 +2,7 @@
 
 set -o xtrace
 
-for dir in api kustomize pseudo kyaml plugin cmd/kyaml
+for dir in api kustomize pseudo kyaml plugin cmd/config
 do
   for item in api apimachinery client-go
   do
