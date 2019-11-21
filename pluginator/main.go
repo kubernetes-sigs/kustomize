@@ -119,15 +119,13 @@ func NewWriter(r string) *writer {
 	return &writer{root: r, f: f}
 }
 
-// Assmue that this command is running with a $PWD of
+// Assume that this command is running with a $PWD of
 //   $HOME/kustomize/plugin/builtin/secretgenerator
 // (for example).  Then we want to write to
 //   $HOME/kustomize/api/builtins
 func makeOutputFileName(root string) string {
 	return filepath.Join(
-		"..", "..", "..",
-		"api", packageForGeneratedCode,
-		strings.ToLower(root)+".go")
+		"..", "..", "..", "api", packageForGeneratedCode, root+".go")
 }
 
 func (w *writer) close() {
