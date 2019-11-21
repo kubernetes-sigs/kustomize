@@ -33,6 +33,9 @@ type ContainerFilter struct {
 	// Network is the container network to use.
 	Network string `yaml:"network,omitempty"`
 
+	// LocalVolume is the volume the container uses.
+	LocalVolume string `yaml:"localVolume,omitempty"`
+
 	// Config is the API configuration for the container and passed through the
 	// API_CONFIG env var to the container.
 	// Typically a Kubernetes style Resource Config.
@@ -108,6 +111,10 @@ func (c *ContainerFilter) getArgs() []string {
 	// mount the directory containing the function as read-only
 	if c.mountPath != "" {
 		args = append(args, "-v", fmt.Sprintf("%s:/local/:ro", c.mountPath))
+	}
+
+	if c.LocalVolume != "" {
+		args = append(args, "--mount", fmt.Sprintf("'type=volume,src=%s,dst=/local/'", c.LocalVolume))
 	}
 
 	// export the local environment vars to the container

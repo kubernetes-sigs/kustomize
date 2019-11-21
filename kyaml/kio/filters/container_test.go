@@ -99,6 +99,42 @@ metadata:
 	assert.Equal(t, expected, cmd.Args)
 }
 
+func TestFilter_command_LocalVolume(t *testing.T) {
+	cfg, err := yaml.Parse(`apiversion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+`)
+	if !assert.NoError(t, err) {
+		return
+	}
+	instance := &ContainerFilter{
+		Image:       "example.com:version",
+		Config:      cfg,
+		LocalVolume: "myvol",
+	}
+	cmd, err := instance.getCommand()
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	expected := []string{
+		"docker", "run",
+		"--rm",
+		"-i", "-a", "STDIN", "-a", "STDOUT", "-a", "STDERR",
+		"--network", "none",
+		"--user", "nobody",
+		"--security-opt=no-new-privileges",
+		"--mount", fmt.Sprintf("'type=volume,src=%s,dst=/local/'", "myvol"),
+	}
+	for _, e := range os.Environ() {
+		// the process env
+		expected = append(expected, "-e", strings.Split(e, "=")[0])
+	}
+	expected = append(expected, "example.com:version")
+	assert.Equal(t, expected, cmd.Args)
+}
+
 func TestFilter_command_network(t *testing.T) {
 	cfg, err := yaml.Parse(`apiversion: apps/v1
 kind: Deployment
