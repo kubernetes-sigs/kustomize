@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/cmd/kyaml/cmd"
+	"sigs.k8s.io/kustomize/cmd/config/cmd"
 	"sigs.k8s.io/kustomize/kyaml/yaml/merge2"
 	"sigs.k8s.io/kustomize/kyaml/yaml/merge3"
 )
