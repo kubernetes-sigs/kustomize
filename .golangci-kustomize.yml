@@ -23,10 +23,12 @@ linters:
     - nakedret
     - staticcheck
     - structcheck
-    # - stylecheck (panics)
-    # - typecheck (fails in lots of places)
+    # stylecheck demands that acronyms not be treated as words
+    # in camelCase, so JsonOp become JSONOp, etc.  Yuck.
+    # - stylecheck
+    - typecheck
     - unconvert
-    # - unused (panics)
+    - unused
     - unparam
     - varcheck
 
