@@ -222,11 +222,6 @@ func (kt *KustTarget) computeInventory(
 	return ra.Transform(p)
 }
 
-func (kt *KustTarget) shouldAddHashSuffixesToGeneratedResources() bool {
-	return kt.kustomization.GeneratorOptions == nil ||
-		!kt.kustomization.GeneratorOptions.DisableNameSuffixHash
-}
-
 // AccumulateTarget returns a new ResAccumulator,
 // holding customized resources and the data/rules used
 // to do so.  The name back references and vars are

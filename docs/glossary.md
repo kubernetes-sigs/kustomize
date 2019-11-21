@@ -71,7 +71,7 @@ cluster in the form of a complete resource list.
 
 The cluster merges this with the previously applied
 state and the actual state to arrive at a new desired
-state, which the cluster's reconcilation loop attempts
+state, which the cluster's reconciliation loop attempts
 to create.  This is the foundation of level-based state
 management in k8s.
 

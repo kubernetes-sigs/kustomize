@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/cmd/kyaml/cmd"
+	"sigs.k8s.io/kustomize/cmd/config/cmd"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters/testyaml"
 )
 
