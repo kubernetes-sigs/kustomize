@@ -86,7 +86,7 @@ func (p *plugin) findAndReplaceImage(obj map[string]interface{}) error {
 	updated := false
 	for _, path := range paths {
 		containers, found := obj[path]
-		if found {
+		if found && containers != nil {
 			if _, err := p.updateContainers(containers); err != nil {
 				return err
 			}
