@@ -4,7 +4,6 @@
 package main_test
 
 import (
-	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/testutils/kusttest"
@@ -379,7 +378,7 @@ func TestImageTagTransformerEmptyContainers(t *testing.T) {
 
 	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
 
-	err := th.ErrorFromLoadAndRunTransformer(`
+	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
 kind: ImageTagTransformer
 metadata:
@@ -399,13 +398,16 @@ spec:
       containers:
       initContainers:
 `)
-
-	expectedErrMsg := "containers path is not of type []interface{} but <nil>"
-	if err == nil {
-		t.Fatalf("expected error: %s; got nothing", expectedErrMsg)
-	}
-
-	if !strings.Contains(err.Error(), expectedErrMsg) {
-		t.Fatalf("expected error: %s; got error: %s", expectedErrMsg, err.Error())
-	}
+	th.AssertActualEqualsExpected(rm, `
+apiVersion: v1
+group: apps
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers: null
+      initContainers: null
+`)
 }
