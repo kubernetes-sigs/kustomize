@@ -1,4 +1,4 @@
-module sigs.k8s.io/kustomize/cmd/kyaml
+module sigs.k8s.io/kustomize/cmd/config
 
 go 1.13
 
