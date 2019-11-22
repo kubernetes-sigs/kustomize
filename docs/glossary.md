@@ -26,7 +26,7 @@
 [patch]: #patch
 [patches]: #patch
 [patchJson6902]: #patchjson6902
-[patchExampleJson6902]: https://github.com/kubernetes-sigs/kustomize/blob/master/examples/jsonpatch.md
+[patchExampleJson6902]: /examples/jsonpatch.md
 [patchesJson6902]: #patchjson6902
 [proposal]: https://github.com/kubernetes/community/pull/1629
 [rebase]: https://git-scm.com/docs/git-rebase

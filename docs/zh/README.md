@@ -45,6 +45,6 @@
 
 >声明：部分文档可能稍微滞后于英文版本，同步工作持续进行中
 
-[v2.0.3]: https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.0.3
+[v2.0.3]: /../../releases/tag/v2.0.3
 [kubectl]: https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement
 [kubectl repository]: https://github.com/kubernetes/kubectl

@@ -10,10 +10,10 @@ This was meant to help protect the person inclined to
 download kustomization directories from the web and use
 them without inspection to control their production
 cluster
-(see [#693](https://github.com/kubernetes-sigs/kustomize/issues/693),
-[#700](https://github.com/kubernetes-sigs/kustomize/pull/700),
-[#995](https://github.com/kubernetes-sigs/kustomize/pull/995) and
-[#998](https://github.com/kubernetes-sigs/kustomize/pull/998))
+(see [#693](/../../issues/693),
+[#700](/../../pull/700),
+[#995](/../../pull/995) and
+[#998](/../../pull/998))
 
 Resources (including configmap and secret generators)
 can _still be shared_ via the recommended best practice
@@ -31,9 +31,9 @@ kustomize build --load_restrictor none $target
 
 ## Some field is not transformed by kustomize
 
-Example: [#1319](https://github.com/kubernetes-sigs/kustomize/issues/1319), [#1322](https://github.com/kubernetes-sigs/kustomize/issues/1322), [#1347](https://github.com/kubernetes-sigs/kustomize/issues/1347) and etc.
+Example: [#1319](/../../issues/1319), [#1322](/../../issues/1322), [#1347](/../../issues/1347) and etc.
 
-The fields transformed by kustomize is configured explicitly in [defaultconfig](https://github.com/kubernetes-sigs/kustomize/tree/master/pkg/transformers/config/defaultconfig). The configuration itself can be customized by including `configurations` in `kustomization.yaml`, e.g.
+The fields transformed by kustomize is configured explicitly in [defaultconfig](/api/konfig/builtinpluginconsts/defaultconfig.go). The configuration itself can be customized by including `configurations` in `kustomization.yaml`, e.g. 
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -55,4 +55,4 @@ images: []
 replicas: []
 ```
 
-To persist the changes to default configuration, submit a PR like [#1338](https://github.com/kubernetes-sigs/kustomize/pull/1338), [#1348](https://github.com/kubernetes-sigs/kustomize/pull/1348) and etc.
+To persist the changes to default configuration, submit a PR like [#1338](/../../pull/1338), [#1348](/../../pull/1348) and etc.

@@ -1,7 +1,7 @@
 # Filing bugs
 
-[target package]: https://github.com/kubernetes-sigs/kustomize/tree/master/pkg/target
-[example of a target test]: https://github.com/kubernetes-sigs/kustomize/blob/master/pkg/target/baseandoverlaysmall_test.go
+[target package]: /api/internal/target
+[example of a target test]: /api/internal/target/baseandoverlaysmall_test.go
 
 File issues as desired, but
 if you've found a problem with how
@@ -22,7 +22,7 @@ kustomize has a simple test harness in the
 input and the expected output.
 
 See this [example of a target test], and contribution
-[#971](https://github.com/kubernetes-sigs/kustomize/pull/971),
+[#971](/../../pull/971),
 which does exactly the right thing.
 
 The pattern is
