@@ -4,6 +4,7 @@
 package main_test
 
 import (
+	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/testutils/kusttest"
@@ -368,4 +369,43 @@ spec:
       - image: alpine:1.8.0
         name: init-alpine
 `)
+}
+func TestImageTagTransformerEmptyContainers(t *testing.T) {
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
+	defer tc.Reset()
+
+	tc.BuildGoPlugin(
+		"builtin", "", "ImageTagTransformer")
+
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+
+	err := th.ErrorFromLoadAndRunTransformer(`
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: notImportantHere
+imageTag:
+  name: nginx
+  newTag: v2
+`, `
+group: apps
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      initContainers:
+`)
+
+	expectedErrMsg := "containers path is not of type []interface{} but <nil>"
+	if err == nil {
+		t.Fatalf("expected error: %s; got nothing", expectedErrMsg)
+	}
+
+	if !strings.Contains(err.Error(), expectedErrMsg) {
+		t.Fatalf("expected error: %s; got error: %s", expectedErrMsg, err.Error())
+	}
 }
