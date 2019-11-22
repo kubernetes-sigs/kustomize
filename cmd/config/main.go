@@ -43,6 +43,16 @@ func main() {
 		Short: "Documentation for merging Resources (3-way merge).",
 		Long:  api.Merge3Long,
 	})
+	root.AddCommand(&cobra.Command{
+		Use:   "docs-fn",
+		Short: "Documentation for writing containerized functions run by run-fns.",
+		Long:  api.ConfigFnLong,
+	})
+	root.AddCommand(&cobra.Command{
+		Use:   "docs-io-annotations",
+		Short: "Documentation for annotations used by io.",
+		Long:  api.ConfigIoLong,
+	})
 
 	if err := root.Execute(); err != nil {
 		os.Exit(1)
