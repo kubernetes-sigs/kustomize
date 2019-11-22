@@ -62,3 +62,13 @@ var ExitOnError bool
 
 // StackOnError if true, will print a stack trace on failure.
 var StackOnError bool
+
+const cmdName = "kyaml"
+
+// FixDocs replaces instances of old with new in the docs for c
+func fixDocs(new string, c *cobra.Command) {
+	c.Use = strings.ReplaceAll(c.Use, cmdName, new)
+	c.Short = strings.ReplaceAll(c.Short, cmdName, new)
+	c.Long = strings.ReplaceAll(c.Long, cmdName, new)
+	c.Example = strings.ReplaceAll(c.Example, cmdName, new)
+}
