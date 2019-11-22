@@ -1,6 +1,6 @@
 # Releasing
 
-[release page]: https://github.com/kubernetes-sigs/kustomize/releases
+[release page]: /../../releases
 [`cloud-build-local`]: https://github.com/GoogleCloudPlatform/cloud-build-local
 [Google Cloud Build]: https://cloud.google.com/cloud-build
 [semver]: https://semver.org
@@ -21,8 +21,8 @@ for an explanation of the `foo/v2.3.0` tags applied below.
 [`sigs.k8s.io/kustomize/api`]: #sigsk8siokustomizeapi
 [`sigs.k8s.io/kustomize/pluginator`]: #sigsk8siokustomizepluginator
 [`sigs.k8s.io/kustomize/pseudo/k8s`]: #sigsk8siokustomizepseudok8s
-[kustomize/v3.2.1]: https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2Fv3.2.1
-[pluginator/v1.0.0]: https://github.com/kubernetes-sigs/kustomize/releases/tag/pluginator%2Fv1.0.0
+[kustomize/v3.2.1]: /../../releases/tag/kustomize%2Fv3.2.1
+[pluginator/v1.0.0]: /../../releases/tag/pluginator%2Fv1.0.0
 
 | Module Description | Module Prefix | Ex. Tag  | Ex. Branch Name |
 | ---                | ------        | --- | ---         |

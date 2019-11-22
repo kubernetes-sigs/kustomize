@@ -1,4 +1,4 @@
-[release page]: https://github.com/kubernetes-sigs/kustomize/releases
+[release page]: /../../releases
 [Go]: https://golang.org
 
 # Installation

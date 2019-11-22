@@ -255,11 +255,11 @@ If missing, the value of `apiVersion` defaults to
 [proposal]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/api-machinery/customresources-versioning.md
 [beta-level rules]: https://github.com/kubernetes/community/blob/master/contributors/devel/api_changes.md#alpha-beta-and-stable-versions
 [changes]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api_changes.md
-[adapt]: https://github.com/kubernetes-sigs/kustomize/blob/master/pkg/types/kustomization.go#L166
+[adapt]: /api/types/kustomization.go#L166
 [special]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#resources
 [k8s API]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md
 [conventions]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md
-[release page]: https://github.com/kubernetes-sigs/kustomize/releases
+[release page]: /../../releases
 [release process]: ../releasing/README.md
 [kustomization]: glossary.md#kustomization
 [`kind`]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#types-kinds

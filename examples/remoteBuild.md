@@ -14,7 +14,7 @@ one pod in the output:
 <!-- @remoteOverlayBuild @testAgainstLatestRelease -->
 
 ```
-target="github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6"
+target="github.com/kubernetes-sigs/kustomize/examples/multibases/dev/?ref=v1.0.6"
 test 1 == \
   $(kustomize build $target | grep dev-myapp-pod | wc -l); \
   echo $?
@@ -26,7 +26,7 @@ someone who wants to send them all at the same time):
 
 <!-- @remoteBuild @testAgainstLatestRelease -->
 ```
-target="https://github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6"
+target="https://github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6"
 test 3 == \
   $(kustomize build $target | grep cluster-a-.*-myapp-pod | wc -l); \
   echo $?
@@ -40,7 +40,7 @@ DEMO_HOME=$(mktemp -d)
 
 cat <<EOF >$DEMO_HOME/kustomization.yaml
 resources:
-- github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6
+- github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6
 namePrefix: remote-
 EOF
 ```
@@ -69,10 +69,10 @@ Here are some example urls pointing to Github repos following this convention.
   `github.com/Liujingfang1/mysql?ref=test`
 - a subdirectory in a repo on version v1.0.6
 
-  `github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6`
+  `github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6`
 - a subdirectory in a repo on branch repoUrl2
 
-  `github.com/Liujingfang1/kustomize//examples/helloWorld?ref=repoUrl2`
+  `github.com/Liujingfang1/kustomize/examples/helloWorld?ref=repoUrl2`
 - a subdirectory in a repo on commit `7050a45134e9848fca214ad7e7007e96e5042c03`
 
-  `github.com/Liujingfang1/kustomize//examples/helloWorld?ref=7050a45134e9848fca214ad7e7007e96e5042c03`
+  `github.com/Liujingfang1/kustomize/examples/helloWorld?ref=7050a45134e9848fca214ad7e7007e96e5042c03`

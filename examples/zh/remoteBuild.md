@@ -9,7 +9,7 @@
 <!-- @remoteOverlayBuild @test -->
 
 ```bash
-target="github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6"
+target="github.com/kubernetes-sigs/kustomize/examples/multibases/dev/?ref=v1.0.6"
 test 1 == \
   $(kustomize build $target | grep dev-myapp-pod | wc -l); \
   echo $?
@@ -19,7 +19,7 @@ test 1 == \
 
 <!-- @remoteBuild @test -->
 ```bash
-target="https://github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6"
+target="https://github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6"
 test 3 == \
   $(kustomize build $target | grep cluster-a-.*-myapp-pod | wc -l); \
   echo $?
@@ -33,7 +33,7 @@ DEMO_HOME=$(mktemp -d)
 
 cat <<EOF >$DEMO_HOME/kustomization.yaml
 resources:
-- github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6
+- github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6
 namePrefix: remote-
 EOF
 ```
@@ -59,10 +59,10 @@ URL 需要遵循 [hashicorp/go-getter URL 格式](https://github.com/hashicorp/g
   `github.com/Liujingfang1/mysql?ref=test`
 - kustomization.yaml 在 v1.0.6 版本的子目录
 
-  `github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6`
+  `github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6`
 - kustomization.yaml repoUrl2 分支的子目录
 
-  `github.com/Liujingfang1/kustomize//examples/helloWorld?ref=repoUrl2`
+  `github.com/Liujingfang1/kustomize/examples/helloWorld?ref=repoUrl2`
 - kustomization.yaml commit `7050a45134e9848fca214ad7e7007e96e5042c03` 的子目录
 
-  `github.com/Liujingfang1/kustomize//examples/helloWorld?ref=7050a45134e9848fca214ad7e7007e96e5042c03`
+  `github.com/Liujingfang1/kustomize/examples/helloWorld?ref=7050a45134e9848fca214ad7e7007e96e5042c03`
