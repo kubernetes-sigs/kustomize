@@ -19,14 +19,24 @@ set -o nounset
 set -o pipefail
 
 operation=$1
-version=$2
-
 if [[ ("$operation" != "pin") && ("$operation" != "unPin") ]]; then
   echo "unknown operation $operation"
   exit 1
 fi
 
+version="unused"
+if [ "$operation" == "pin" ]; then
+  if [ "$#" -le 1 ]; then
+    echo "must specify version to pin"
+    exit 1
+  else
+    version=$2
+  fi
+fi
+
 function doUnPin {
+  # TODO fix bug where there's only one required module
+  # (need $3, not $2).
   oldV=$(grep -m 1 sigs.k8s.io/kustomize/api go.mod | awk '{print $2}')
   go mod edit -replace=sigs.k8s.io/kustomize/api@${oldV}=$1
   go mod tidy
@@ -50,12 +60,12 @@ function forEachGoMod {
 
 function unPin {
   forEachGoMod doUnPin ./plugin/builtin              ../../../api
-  forEachGoMod doUnPin ./plugin/someteam.example.com ../../../../api
+#  forEachGoMod doUnPin ./plugin/someteam.example.com ../../../../api
 }
 
 function pin {
   forEachGoMod doPin ./plugin/builtin              $version
-  forEachGoMod doPin ./plugin/someteam.example.com $version
+#  forEachGoMod doPin ./plugin/someteam.example.com $version
 }
 
 $operation
