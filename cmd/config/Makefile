@@ -3,10 +3,10 @@
 
 .PHONY: generate license fix vet fmt test build tidy
 
-GOPATH := $(shell go env GOPATH)
+GOBIN := $(shell go env GOPATH)/bin
 
 build:
-	go build -v -o $(GOPATH)/bin/kyaml .
+	go build -v -o $(GOBIN)/config .
 
 all: generate license fix vet fmt test lint tidy
 
@@ -17,18 +17,18 @@ fmt:
 	go fmt ./...
 
 generate:
-	go generate ./...
+	GOBIN=$(GOBIN) go generate ./...
 
 license:
-	(which $(GOPATH)/bin/addlicense || go get github.com/google/addlicense)
-	$(GOPATH)/bin/addlicense  -y 2019 -c "The Kubernetes Authors." -f LICENSE_TEMPLATE .
+	(which $(GOBIN)/addlicense || go get github.com/google/addlicense)
+	$(GOBIN)/addlicense  -y 2019 -c "The Kubernetes Authors." -f LICENSE_TEMPLATE .
 
 tidy:
 	go mod tidy
 
 lint:
-	(which $(GOPATH)/bin/golangci-lint || go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.19.1)
-	$(GOPATH)/bin/golangci-lint run ./...
+	(which $(GOBIN)/golangci-lint || go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.19.1)
+	$(GOBIN)/golangci-lint run ./...
 
 test:
 	go test -cover ./...
