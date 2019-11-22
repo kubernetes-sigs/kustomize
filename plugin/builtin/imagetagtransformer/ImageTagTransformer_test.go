@@ -369,3 +369,45 @@ spec:
         name: init-alpine
 `)
 }
+func TestImageTagTransformerEmptyContainers(t *testing.T) {
+	tc := kusttest_test.NewPluginTestEnv(t).Set()
+	defer tc.Reset()
+
+	tc.BuildGoPlugin(
+		"builtin", "", "ImageTagTransformer")
+
+	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: notImportantHere
+imageTag:
+  name: nginx
+  newTag: v2
+`, `
+group: apps
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      initContainers:
+`)
+	th.AssertActualEqualsExpected(rm, `
+apiVersion: v1
+group: apps
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers: null
+      initContainers: null
+`)
+}
