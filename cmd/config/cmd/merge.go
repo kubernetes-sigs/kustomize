@@ -5,41 +5,29 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/cmd/config/cmddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
 
-func GetMergeRunner() *MergeRunner {
+func GetMergeRunner(name string) *MergeRunner {
 	r := &MergeRunner{}
 	c := &cobra.Command{
-		Use:   "merge [SOURCE_DIR...] [DESTINATION_DIR]",
-		Short: "Merge Resource configuration files",
-		Long: `Merge Resource configuration files
-
-Merge reads Kubernetes Resource yaml configuration files from stdin or sources packages and write
-the result to stdout or a destination package.
-
-Resources are merged using the Resource [apiVersion, kind, name, namespace] as the key.  If any of
-these are missing, merge will default the missing values to empty.
-
-Resources specified later are high-precedence (the source) and Resources specified
-earlier are lower-precedence (the destination).
-
-For information on merge rules, run:
-
-	kyaml help merge
-`,
-		Example: `cat resources_and_patches.yaml | kyaml merge > merged_resources.yaml`,
+		Use:     "merge [SOURCE_DIR...] [DESTINATION_DIR]",
+		Short:   commands.MergeShort,
+		Long:    commands.MergeLong,
+		Example: commands.MergeExamples,
 		RunE:    r.runE,
 	}
+	fixDocs(name, c)
 	r.Command = c
 	r.Command.Flags().BoolVar(&r.InvertOrder, "invert-order", false,
 		"if true, merge Resources in the reverse order")
 	return r
 }
 
-func MergeCommand() *cobra.Command {
-	return GetMergeRunner().Command
+func MergeCommand(name string) *cobra.Command {
+	return GetMergeRunner(name).Command
 }
 
 // MergeRunner contains the run function

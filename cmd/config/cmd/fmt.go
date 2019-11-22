@@ -5,57 +5,23 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/cmd/config/cmddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
 
 // FmtCmd returns a command FmtRunner.
-func GetFmtRunner() *FmtRunner {
+func GetFmtRunner(name string) *FmtRunner {
 	r := &FmtRunner{}
 	c := &cobra.Command{
-		Use:   "fmt",
-		Short: "Format yaml configuration files",
-		Long: `Format yaml configuration files
-
-Fmt will format input by ordering fields and unordered list items in Kubernetes
-objects.  Inputs may be directories, files or stdin, and their contents must
-include both apiVersion and kind fields.
-
-- Stdin inputs are formatted and written to stdout
-- File inputs (args) are formatted and written back to the file
-- Directory inputs (args) are walked, each encountered .yaml and .yml file
-  acts as an input
-
-For inputs which contain multiple yaml documents separated by \n---\n,
-each document will be formatted and written back to the file in the original
-order.
-
-Field ordering roughly follows the ordering defined in the source Kubernetes
-resource definitions (i.e. go structures), falling back on lexicographical
-sorting for unrecognized fields.
-
-Unordered list item ordering is defined for specific Resource types and
-field paths.
-
-- .spec.template.spec.containers (by element name)
-- .webhooks.rules.operations (by element value)
-`,
-		Example: `
-	# format file1.yaml and file2.yml
-	kyaml fmt file1.yaml file2.yml
-
-	# format all *.yaml and *.yml recursively traversing directories
-	kyaml fmt my-dir/
-
-	# format kubectl output
-	kubectl get -o yaml deployments | kyaml fmt
-
-	# format kustomize output
-	kustomize build | kyaml fmt
-`,
+		Use:     "fmt",
+		Short:   commands.FmtShort,
+		Long:    commands.FmtLong,
+		Example: commands.FmtExamples,
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
+	fixDocs(name, c)
 	c.Flags().StringVar(&r.FilenamePattern, "pattern", filters.DefaultFilenamePattern,
 		`pattern to use for generating filenames for resources -- may contain the following
 formatting substitution verbs {'%n': 'metadata.name', '%s': 'metadata.namespace', '%k': 'kind'}`)
@@ -69,8 +35,8 @@ formatting substitution verbs {'%n': 'metadata.name', '%s': 'metadata.namespace'
 	return r
 }
 
-func FmtCommand() *cobra.Command {
-	return GetFmtRunner().Command
+func FmtCommand(name string) *cobra.Command {
+	return GetFmtRunner(name).Command
 }
 
 // FmtRunner contains the run function

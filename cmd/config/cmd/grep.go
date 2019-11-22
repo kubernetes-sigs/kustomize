@@ -8,44 +8,25 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/cmd/config/cmddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/api/resource"
 )
 
 // Cmd returns a command GrepRunner.
-func GetGrepRunner() *GrepRunner {
+func GetGrepRunner(name string) *GrepRunner {
 	r := &GrepRunner{}
 	c := &cobra.Command{
-		Use:   "grep QUERY [DIR]...",
-		Short: "Search for matching Resources in a directory or from stdin",
-		Long: `Search for matching Resources in a directory or from stdin.
-  QUERY:
-    Query to match expressed as 'path.to.field=value'.
-    Maps and fields are matched as '.field-name' or '.map-key'
-    List elements are matched as '[list-elem-field=field-value]'
-    The value to match is expressed as '=value'
-    '.' as part of a key or value can be escaped as '\.'
-
-  DIR:
-    Path to local directory.
-`,
-		Example: `# find Deployment Resources
-kyaml grep "kind=Deployment" my-dir/
-
-# find Resources named nginx
-kyaml grep "metadata.name=nginx" my-dir/
-
-# use tree to display matching Resources
-kyaml grep "metadata.name=nginx" my-dir/ | kyaml tree
-
-# look for Resources matching a specific container image
-kyaml grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-dir/ | kyaml tree
-`,
+		Use:     "grep QUERY [DIR]...",
+		Short:   commands.GrepShort,
+		Long:    commands.GrepLong,
+		Example: commands.GrepExamples,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Args:    cobra.MinimumNArgs(1),
 	}
+	fixDocs(name, c)
 	c.Flags().BoolVar(&r.IncludeSubpackages, "include-subpackages", true,
 		"also print resources from subpackages.")
 	c.Flags().BoolVar(&r.KeepAnnotations, "annotate", true,
@@ -57,8 +38,8 @@ kyaml grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-di
 	return r
 }
 
-func GrepCommand() *cobra.Command {
-	return GetGrepRunner().Command
+func GrepCommand(name string) *cobra.Command {
+	return GetGrepRunner(name).Command
 }
 
 // GrepRunner contains the run function
