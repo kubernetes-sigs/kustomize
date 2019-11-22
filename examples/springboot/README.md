@@ -105,7 +105,7 @@ steps. Add an environment variable through the patch and add a file to the confi
 <!-- @customizeConfigMap @testAgainstLatestRelease -->
 ```
 cat <<EOF >$DEMO_HOME/patch.yaml
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: sbdemo
@@ -216,7 +216,7 @@ cat $DEMO_HOME/memorylimit_patch.yaml
 The output contains
 
 > ```
-> apiVersion: apps/v1beta2
+> apiVersion: apps/v1
 > kind: Deployment
 > metadata:
 >   name: sbdemo
@@ -254,7 +254,7 @@ cat $DEMO_HOME/healthcheck_patch.yaml
 The output contains
 
 > ```
-> apiVersion: apps/v1beta2
+> apiVersion: apps/v1
 > kind: Deployment
 > metadata:
 >   name: sbdemo

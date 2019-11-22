@@ -115,7 +115,7 @@ The output should contain:
 > spec:
 >   ....
 > ---
-> apiVersion: apps/v1beta2
+> apiVersion: apps/v1
 > kind: Deployment
 > metadata:
 >   ....
@@ -156,7 +156,7 @@ resources.
 <!-- @createPatchFile @testAgainstLatestRelease -->
 ```
 cat <<'EOF' > $DEMO_HOME/persistent-disk.yaml
-apiVersion: apps/v1beta2 # for versions before 1.9.0 use apps/v1beta2
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
 kind: Deployment
 metadata:
   name: mysql
