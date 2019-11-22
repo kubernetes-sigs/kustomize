@@ -28,9 +28,9 @@ Since [v1.14][kubectl announcement] the kustomize build system has been included
 
 | kubectl version | kustomize version |
 |---------|--------|
-| v1.16.0 | [v2.0.3](https://github.com/kubernetes-sigs/kustomize/tree/v2.0.3) |
-| v1.15.x | [v2.0.3](https://github.com/kubernetes-sigs/kustomize/tree/v2.0.3) |
-| v1.14.x | [v2.0.3](https://github.com/kubernetes-sigs/kustomize/tree/v2.0.3) |
+| v1.16.0 | [v2.0.3](/../../tree/v2.0.3) |
+| v1.15.x | [v2.0.3](/../../tree/v2.0.3) |
+| v1.14.x | [v2.0.3](/../../tree/v2.0.3) |
 
 For examples and guides for using the kubectl integration please see the [kubectl book] or the [kubernetes documentation].
 
@@ -167,7 +167,7 @@ is governed by the [Kubernetes Code of Conduct].
 [eschewed feature list]: docs/eschewedFeatures.md
 [imageBase]: docs/images/base.jpg
 [imageOverlay]: docs/images/overlay.jpg
-[kind/feature]: https://github.com/kubernetes-sigs/kustomize/labels/kind%2Ffeature
+[kind/feature]: /../../labels/kind%2Ffeature
 [kubectl announcement]: https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement
 [kubectl book]: https://kubectl.docs.kubernetes.io/pages/app_customization/introduction.html
 [kubernetes documentation]: https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/
@@ -175,12 +175,12 @@ is governed by the [Kubernetes Code of Conduct].
 [kustomization]: docs/glossary.md#kustomization
 [overlay]: docs/glossary.md#overlay
 [overlays]: docs/glossary.md#overlay
-[release page]: https://github.com/kubernetes-sigs/kustomize/releases
+[release page]: /../../releases
 [resource]: docs/glossary.md#resource
 [resources]: docs/glossary.md#resource
 [sig-cli]: https://github.com/kubernetes/community/blob/master/sig-cli/README.md
 [variant]: docs/glossary.md#variant
 [variants]: docs/glossary.md#variant
-[v2.0.3]: https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.0.3
-[v2.1.0]: https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.1.0
+[v2.0.3]: /../../releases/tag/v2.0.3
+[v2.1.0]: /../../releases/tag/v2.1.0
 [workflows]: docs/workflows.md

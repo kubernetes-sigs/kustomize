@@ -5,8 +5,8 @@
 [base64]: https://tools.ietf.org/html/rfc4648#section-4
 [configuration directory]: https://wiki.archlinux.org/index.php/XDG_Base_Directory#Specification
 [grpc]: https://grpc.io
-[tag]: https://github.com/kubernetes-sigs/kustomize/releases
-[v2.0.3]: https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.0.3
+[tag]: /../../releases
+[v2.0.3]: /../../releases/tag/v2.0.3
 [`exec.Command`]: https://golang.org/pkg/os/exec/#Command
 
 # Generating Secrets

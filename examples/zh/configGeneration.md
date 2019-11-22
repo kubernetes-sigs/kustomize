@@ -105,7 +105,7 @@ grep -C 2 configMapKeyRef $BASE/deployment.yaml
  1. 使用新名称创建一个新的 configMap
  2. 为_deployment_ 添加 patch，修改相应 `configMapKeyRef` 字段的名称值。
 
-后一种更改会启动对 deployment 中的 pod 的滚动更新。旧的 configMap 在不再被任何其他资源引用时最终会被[垃圾回收](https://github.com/kubernetes-sigs/kustomize/issues/242)。
+后一种更改会启动对 deployment 中的 pod 的滚动更新。旧的 configMap 在不再被任何其他资源引用时最终会被[垃圾回收](/../../issues/242)。
 
 ### 如何使用 kustomize 
 

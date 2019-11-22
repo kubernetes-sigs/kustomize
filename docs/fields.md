@@ -211,9 +211,9 @@ resource:
 - myNamespace.yaml
 - sub-dir/some-deployment.yaml
 - ../../commonbase
-- github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6
+- github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6
 - deployment.yaml
-- github.com/kubernets-sigs/kustomize//examples/helloWorld?ref=test-branch
+- github.com/kubernets-sigs/kustomize/examples/helloWorld?ref=test-branch
 ```
 
 Resources will be read and processed in
@@ -301,8 +301,7 @@ can only be placed in particular fields of
 particular objects as specified by kustomize's
 configuration data.
 
-The default config data for vars is at
-https://github.com/kubernetes-sigs/kustomize/blob/master/pkg/transformers/config/defaultconfig/varreference.go
+The default config data for vars is at [/api/konfig/builtinpluginconsts/varreference.go](/api/konfig/builtinpluginconsts/varreference.go)
 Long story short, the default targets are all
 container command args and env value fields.
 
