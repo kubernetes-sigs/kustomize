@@ -167,7 +167,7 @@ This step may succeed, but kustomize might
 ultimately fail to load the plugin because of
 dependency [skew].
 
-[skew]: https://github.com/kubernetes-sigs/kustomize/blob/master/docs/plugins/README.md#caveats
+[skew]: /docs/plugins/README.md#caveats
 [used in this demo]: #install-kustomize
 
 On load failure

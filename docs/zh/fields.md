@@ -428,7 +428,7 @@ var 是包含该对象的变量名、对象引用和字段引用的元组。
 变量引用，即字符串 '$(FOO)' ，只能放在 kustomize 配置指定的特定对象的特定字段中。
 
 关于 vars 的默认配置数据可以查看：
-https://github.com/kubernetes-sigs/kustomize/blob/master/pkg/transformers/config/defaultconfig/varreference.go
+[/api/konfig/builtinpluginconsts/varreference.go](/api/konfig/builtinpluginconsts/varreference.go)
 
 默认目标是所有容器 command args 和 env 字段。
 

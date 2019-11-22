@@ -1,4 +1,4 @@
-[release 页面]: https://github.com/kubernetes-sigs/kustomize/releases
+[release 页面]: /../../releases
 [Go]: https://golang.org
 [golang.org]: https://golang.org
 
