@@ -8,26 +8,22 @@ import (
 	"sort"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/cmd/config/cmddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-func GetCountRunner() *CountRunner {
+func GetCountRunner(name string) *CountRunner {
 	r := &CountRunner{}
 	c := &cobra.Command{
-		Use:   "count DIR...",
-		Short: "Count Resources Config from a local directory",
-		Long: `Count Resources Config from a local directory.
-
-  DIR:
-    Path to local directory.
-`,
-		Example: `# print Resource counts from a directory
-kyaml count my-dir/
-`,
-		RunE: r.runE,
+		Use:     "count DIR...",
+		Short:   commands.CountShort,
+		Long:    commands.CountLong,
+		Example: commands.CountExamples,
+		RunE:    r.runE,
 	}
+	fixDocs(name, c)
 	c.Flags().BoolVar(&r.IncludeSubpackages, "include-subpackages", true,
 		"also print resources from subpackages.")
 	c.Flags().BoolVar(&r.Kind, "kind", true,
@@ -37,8 +33,8 @@ kyaml count my-dir/
 	return r
 }
 
-func CountCommand() *cobra.Command {
-	return GetCountRunner().Command
+func CountCommand(name string) *cobra.Command {
+	return GetCountRunner(name).Command
 }
 
 // CountRunner contains the run function

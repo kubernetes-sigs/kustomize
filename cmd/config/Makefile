@@ -8,7 +8,7 @@ GOBIN := $(shell go env GOPATH)/bin
 build:
 	go build -v -o $(GOBIN)/config .
 
-all: generate license fix vet fmt test lint tidy
+all: generate build license fix vet fmt test lint tidy
 
 fix:
 	go fix ./...
@@ -17,6 +17,7 @@ fmt:
 	go fmt ./...
 
 generate:
+	(which $(GOBIN)/mdtogo || go get sigs.k8s.io/kustomize/cmd/mdtogo)
 	GOBIN=$(GOBIN) go generate ./...
 
 license:
