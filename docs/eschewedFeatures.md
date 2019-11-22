@@ -42,41 +42,64 @@ _Structured edits_ are changes controlled by
 knowledge of the k8s API, and YAML or JSON syntax.
 
 Most edits performed by kustomize can be expressed as
-[JSON patches] or [SMP patches].  Common edits, like
-adding labels or adding a name prefix, get dedicated 
-shorthand commands.  Another class of edits take
-data from one specific object's field and use it in
-another (e.g. a service object's name found and
-copied into a container's command line).
+[JSON patches] or [SMP patches].
+Those can be verbose, so common patches,
+like adding labels or annotatations, get dedicated 
+transformer plugins - `LabelTransformer`,
+`AnnotationsTransformer`, etc.
+These accept relatively simple YAML configuration
+allowing easy targetting of any number of resources.
 
-These edits are designed to create valid output
-given valid input, and can provide syntactically
-and semantically informed error messages if inputs
-are invalid.
+Another class of edits take data from one specific
+object's field and use it in another (e.g. a service
+object's name found and copied into a container's
+command line).  These reflection-style edits
+are called _replacements_.
 
-_Unstructured edits_, e.g. a templating approach,
-or a command to replace any target string in the
-character stream with some other string, aren't
-limited by any syntax or object structure.
-  
-Such powerful techniques are eschewed because
-- There would be no way to say that a kustomization
-  was correct without running it and checking
-  the output.
-- Errors in the output would be
-  disconnected from the edit that caused it.
-- They are toil to maintain by a rotating
-  staff of operators.
+The above edits create valid output given valid input,
+and can provide syntactically and semantically
+informed error messages if inputs are invalid.
+
+_Unstructured edits_, edits that don't limit
+themselves to a syntax or object structure,
+come in many forms.  A common one in the 
+configuration domain is the template or
+parameterization approach.
+
+In this technique, the source
+material is sprinkled with strings of the
+form `${VAR}`.  A scanner replaces them
+with a value taken from a map using `VAR`
+as the map key. It's trivial to implement.
+
+kustomize eschews parameterization, because
+
+- The source yaml gets polluted with `$VARs`
+  and can no longed be applied as is
+  to the cluster (it _must_ be processed).
+- The source material is no longer structured,
+  making it unusable with any YAML processor.
+  It's no longer _data_, it's now logic that
+  must be compiled.
+- Errors in the output are disconnected from
+  the edit that caused it.
+- The input becomes [unintelligible] as the project
+  scales in any number of dimensions (resource
+  count, cluster count, environment count, etc.)
     
 Kustomizations are meant to be sharable and stackable.
 Imagine tracing down a problem rooted in a
 clever set of stacked regexp replacements
-performed by various overlays on some remote base. 
+performed by various overlays on some remote base.
+We've used such systems, and never want to again.
 
-Other tools (sed, jinja, erb, envsubst, helm, ksonnet,
+Other tools (sed, jinja, erb, envsubst, kafka, helm, ksonnet,
 etc.) provide varying degrees of unstructured editting
 and/or embedded languages, and can be used instead
-of, or in a pipe with, kustomize.
+of, or in a pipe with, kustomize.  If you want to
+go all-in on _configuration as a language_, consider [cue].
+
+kustomize is going to stick to YAML in / YAML out.
 
 ## Build-time side effects from CLI args or env variables
 
@@ -128,3 +151,6 @@ explicit names into the kustomization file.
 [kustomization]: glossary.md#kustomization
 [OTS workflow]: workflows.md#off-the-shelf-configuration
 [SMP patches]: glossary.md#patchstrategicmerge
+[parameterization pitfall discussion]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md#parameterization-pitfalls
+[unintelligible]: https://github.com/helm/charts/blob/e002378c13e91bef4a3b0ba718c191ec791ce3f9/stable/artifactory/templates/artifactory-deployment.yaml
+[cue]: https://cuelang.org/
