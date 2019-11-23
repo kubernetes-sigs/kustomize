@@ -2,8 +2,7 @@
 
 [field-name-namespace]: plugins/builtins.md#field-name-namespace
 [field-name-images]: plugins/builtins.md#field-name-images
-[field-name-namePrefix]: plugins/builtins.md#field-name-prefix
-[field-name-nameSuffix]: plugins/builtins.md#field-name-prefix
+[field-names-namePrefix-nameSuffix]: plugins/builtins.md#field-names-namePrefix-nameSuffix
 [field-name-patches]: plugins/builtins.md#field-name-patches
 [field-name-patchesStrategicMerge]: plugins/builtins.md#field-name-patchesStrategicMerge
 [field-name-patchesJson6902]: plugins/builtins.md#field-name-patchesJson6902
@@ -178,11 +177,11 @@ See [field-name-namespace].
 
 ### namePrefix
 
-See [field-name-namePrefix].
+See [field-names-namePrefix-nameSuffix].
 
 ### nameSuffix
 
-See [field-name-nameSuffix].
+See [field-names-namePrefix-nameSuffix].
 
 ### patches
 
