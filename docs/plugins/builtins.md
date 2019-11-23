@@ -152,7 +152,7 @@ configMapGenerator:
 ## _ImageTagTransformer_
 ### Usage via `kustomization.yaml`
 
-#### field name: `image`
+#### field name: `images`
 
 Images modify the name, tags and/or digest for images
 without creating patches.  E.g. Given this
