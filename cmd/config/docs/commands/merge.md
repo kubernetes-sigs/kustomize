@@ -1,10 +1,10 @@
 ## merge
 
-Merge Resource configuration files
+[Alpha] Merge Resource configuration files
 
 ### Synopsis
 
-Merge Resource configuration files
+[Alpha] Merge Resource configuration files
 
 Merge reads Kubernetes Resource yaml configuration files from stdin or sources packages and write
 the result to stdout or a destination package.

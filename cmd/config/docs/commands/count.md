@@ -1,10 +1,10 @@
 ## count
 
-Count Resources Config from a local directory.
+[Alpha] Count Resources Config from a local directory.
 
 ### Synopsis
 
-Count Resources Config from a local directory.
+[Alpha] Count Resources Config from a local directory.
 
   DIR:
     Path to local directory.
