@@ -1,10 +1,10 @@
 ## run-fns
 
-Apply config functions to Resources.
+[Alpha] Reoncile config functions to Resources.
 
 ### Synopsis
 
-Apply config functions to Resources.
+[Alpha] Reconcile config functions to Resources.
 
 run-fns sequentially invokes all config functions in the directly, providing Resources
 in the directory as input to the first function, and writing the output of the last

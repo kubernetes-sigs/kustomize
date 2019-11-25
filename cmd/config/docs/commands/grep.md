@@ -1,10 +1,10 @@
 ## grep
 
-Search for matching Resources in a directory or from stdin
+[Alpha] Search for matching Resources in a directory or from stdin
 
 ### Synopsis
 
-  Search for matching Resources in a directory or from stdin.
+[Alpha] Search for matching Resources in a directory or from stdin.
 
   QUERY:
     Query to match expressed as 'path.to.field=value'.

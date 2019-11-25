@@ -1,10 +1,10 @@
 ## tree
 
-Display Resource structure from a directory or stdin.
+[Alpha] Display Resource structure from a directory or stdin.
 
 ### Synopsis
 
-Display Resource structure from a directory or stdin.
+[Alpha] Display Resource structure from a directory or stdin.
 
 kyaml tree may be used to print Resources in a directory or cluster, preserving structure
 
