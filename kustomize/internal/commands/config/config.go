@@ -10,20 +10,13 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig/builtinpluginconsts"
+	"sigs.k8s.io/kustomize/cmd/config/cmds"
 )
 
 // NewCmdConfig returns an instance of 'config' subcommand.
 func NewCmdConfig(fSys filesys.FileSystem) *cobra.Command {
-	c := &cobra.Command{
-		Use:   "config",
-		Short: "Config Kustomize transformers",
-		Long:  "",
-		Example: `
-	# Save the default transformer configurations to a local directory
-	kustomize config save -d ~/.kustomize/config
-`,
-		Args: cobra.MinimumNArgs(1),
-	}
+	c := cmds.NewConfigCommand("kustomize")
+
 	c.AddCommand(
 		newCmdSave(fSys),
 	)
@@ -57,6 +50,12 @@ func newCmdSave(fSys filesys.FileSystem) *cobra.Command {
 			}
 			return o.RunSave(fSys)
 		},
+		Hidden: true, // Don't display this command, but keep it for backwards compatibility.
+		Deprecated: `The save command is deprecated and will be removed in a future release.
+
+If you require this command file an issue at https://github.com/kubernetes-sigs/kustomize/issues
+so we can capture your requirements.
+`,
 	}
 	c.Flags().StringVarP(
 		&o.saveDirectory,
