@@ -15,8 +15,8 @@ import (
 
 var root = &cobra.Command{
 	Use:     "config",
-	Short:   "Utilities for working with Resource Configuration.",
-	Long:    `Utilities for working with Resource Configuration.`,
+	Short:   "[Alpha] Utilities for working with Resource Configuration.",
+	Long:    `[Alpha] Utilities for working with Resource Configuration.`,
 	Version: "v0.0.1",
 }
 
@@ -44,22 +44,22 @@ func NewConfigCommand(name string) *cobra.Command {
 
 	root.AddCommand(&cobra.Command{
 		Use:   "docs-merge",
-		Short: "Documentation for merging Resources (2-way merge).",
+		Short: "[Alpha] Documentation for merging Resources (2-way merge).",
 		Long:  api.Merge2Long,
 	})
 	root.AddCommand(&cobra.Command{
 		Use:   "docs-merge3",
-		Short: "Documentation for merging Resources (3-way merge).",
+		Short: "[Alpha] Documentation for merging Resources (3-way merge).",
 		Long:  api.Merge3Long,
 	})
 	root.AddCommand(&cobra.Command{
 		Use:   "docs-fn",
-		Short: "Documentation for writing containerized functions run by run-fns.",
+		Short: "[Alpha] Documentation for writing containerized functions run by run-fns.",
 		Long:  api.ConfigFnLong,
 	})
 	root.AddCommand(&cobra.Command{
 		Use:   "docs-io-annotations",
-		Short: "Documentation for annotations used by io.",
+		Short: "[Alpha] Documentation for annotations used by io.",
 		Long:  api.ConfigIoLong,
 	})
 	return root
