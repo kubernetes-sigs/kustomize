@@ -1,10 +1,10 @@
 ## fmt
 
-Format yaml configuration files.
+[Alpha] Format yaml configuration files.
 
 ### Synopsis
 
-Format yaml configuration files.
+[Alpha] Format yaml configuration files.
 
 Fmt will format input by ordering fields and unordered list items in Kubernetes
 objects.  Inputs may be directories, files or stdin, and their contents must

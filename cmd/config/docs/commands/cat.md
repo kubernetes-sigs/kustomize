@@ -1,10 +1,10 @@
 ## cat
 
-Print Resource Config from a local directory.
+[Alpha] Print Resource Config from a local directory.
 
 ### Synopsis
 
-Print Resource Config from a local directory.
+[Alpha]  Print Resource Config from a local directory.
 
   DIR:
     Path to local directory.
