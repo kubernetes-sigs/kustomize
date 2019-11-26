@@ -37,7 +37,7 @@ func TestCreateNoArgs(t *testing.T) {
 }
 
 func TestCreateWithResources(t *testing.T) {
-	fSys := filesys.MakeFsInMemory()
+	fSys := filesys.MakeEmptyDirInMemory()
 	fSys.WriteFile("foo.yaml", []byte(""))
 	fSys.WriteFile("bar.yaml", []byte(""))
 	opts := createFlags{resources: "foo.yaml,bar.yaml"}

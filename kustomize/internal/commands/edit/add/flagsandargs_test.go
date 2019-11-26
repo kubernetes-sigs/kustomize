@@ -73,7 +73,7 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 }
 
 func TestExpandFileSource(t *testing.T) {
-	fSys := filesys.MakeFsInMemory()
+	fSys := filesys.MakeEmptyDirInMemory()
 	fSys.Create("dir/fa1")
 	fSys.Create("dir/fa2")
 	fSys.Create("dir/readme")
@@ -91,7 +91,7 @@ func TestExpandFileSource(t *testing.T) {
 }
 
 func TestExpandFileSourceWithKey(t *testing.T) {
-	fSys := filesys.MakeFsInMemory()
+	fSys := filesys.MakeEmptyDirInMemory()
 	fSys.Create("dir/faaaaaaaaaabbbbbbbbbccccccccccccccccc")
 	fSys.Create("dir/foobar")
 	fSys.Create("dir/simplebar")
