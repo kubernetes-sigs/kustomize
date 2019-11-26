@@ -16,11 +16,11 @@ import (
 	"strings"
 	"time"
 
-	"sigs.k8s.io/kustomize/api/internal/git"
-	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/internal/crawl/crawler"
 	"sigs.k8s.io/kustomize/api/internal/crawl/doc"
 	"sigs.k8s.io/kustomize/api/internal/crawl/httpclient"
+	"sigs.k8s.io/kustomize/api/internal/git"
+	"sigs.k8s.io/kustomize/api/konfig"
 )
 
 var logger = log.New(os.Stdout, "Github Crawler: ",
@@ -34,11 +34,11 @@ type githubCrawler struct {
 
 type GhClient struct {
 	RequestConfig
-	retryCount uint64
-	client     *http.Client
+	retryCount  uint64
+	client      *http.Client
+	accessToken string
 }
 
-/*
 func NewCrawler(accessToken string, retryCount uint64, client *http.Client,
 	query Query) githubCrawler {
 
@@ -47,14 +47,13 @@ func NewCrawler(accessToken string, retryCount uint64, client *http.Client,
 			retryCount: retryCount,
 			client:     client,
 			RequestConfig: RequestConfig{
-				perPage:     githubMaxPageSize,
-				accessToken: accessToken,
+				perPage: githubMaxPageSize,
 			},
+			accessToken: accessToken,
 		},
 		query: query,
 	}
 }
-*/
 
 // Implements crawler.Crawler.
 func (gc githubCrawler) Crawl(
@@ -64,6 +63,7 @@ func (gc githubCrawler) Crawl(
 		RequestConfig: gc.client.RequestConfig,
 		client:        &http.Client{Timeout: gc.client.client.Timeout},
 		retryCount:    gc.client.retryCount,
+		accessToken:   gc.client.accessToken,
 	}
 
 	// Since Github returns a max of 1000 results per query, we can use
@@ -129,7 +129,7 @@ func (gc githubCrawler) FetchDocument(ctx context.Context, d *doc.Document) erro
 			continue
 		}
 	}
-	return fmt.Errorf("file not found: %s", url)
+	return fmt.Errorf("file not found: %s, error: %v", url, err)
 }
 
 func (gc githubCrawler) SetCreated(ctx context.Context, d *doc.Document) error {
@@ -534,10 +534,20 @@ func (gcl GhClient) GetRawUserContent(query string) (*http.Response, error) {
 	return gcl.getWithRetry(query)
 }
 
+func (gcl GhClient) Do(query string) (*http.Response, error) {
+	req, err := http.NewRequest("GET", query, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Authorization", fmt.Sprintf("token %s", gcl.accessToken))
+	return gcl.client.Do(req)
+}
+
 func (gcl GhClient) getWithRetry(
 	query string) (resp *http.Response, err error) {
 
-	resp, err = gcl.client.Get(query)
+	resp, err = gcl.Do(query)
+
 	retryCount := gcl.retryCount
 
 	for err == nil &&
@@ -556,7 +566,7 @@ func (gcl GhClient) getWithRetry(
 		logger.Printf("waiting %d seconds before retrying\n", i)
 		time.Sleep(time.Second * time.Duration(i))
 		retryCount--
-		resp, err = gcl.client.Get(query)
+		resp, err = gcl.Do(query)
 	}
 
 	if err != nil {
