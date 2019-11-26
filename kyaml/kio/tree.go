@@ -24,8 +24,10 @@ const (
 
 	// TreeStructureOwners configures TreeWriter to generate the tree structure off of the
 	// Resource owners.
-	TreeStructureGraph TreeStructure = "graph"
+	TreeStructureGraph TreeStructure = "owners"
 )
+
+var GraphStructures = []string{string(TreeStructureGraph), string(TreeStructurePackage)}
 
 // TreeWriter prints the package structured as a tree.
 // TODO(pwittrock): test this package better.  it is lower-risk since it is only
