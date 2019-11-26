@@ -22,14 +22,9 @@ type fsInMemory struct {
 // MakeFsInMemory returns an instance of fsInMemory with no files in it.
 func MakeFsInMemory() FileSystem {
 	result := &fsInMemory{m: map[string]*fileInMemory{}}
-	result.Mkdir(separator)
+	result.Mkdir(Separator)
 	return result
 }
-
-const (
-	separator = string(filepath.Separator)
-	doubleSep = separator + separator
-)
 
 // Create assures a fake file appears in the in-memory file system.
 func (fs *fsInMemory) Create(name string) (File, error) {
@@ -109,8 +104,8 @@ func (fs *fsInMemory) IsDir(name string) bool {
 	if found && f.dir {
 		return true
 	}
-	if !strings.HasSuffix(name, separator) {
-		name = name + separator
+	if !strings.HasSuffix(name, Separator) {
+		name = name + Separator
 	}
 	for k := range fs.m {
 		if strings.HasPrefix(k, name) {
@@ -167,7 +162,7 @@ func (fs *fsInMemory) join(elem ...string) string {
 	for i, e := range elem {
 		if e != "" {
 			return strings.Replace(
-				strings.Join(elem[i:], separator), doubleSep, separator, -1)
+				strings.Join(elem[i:], Separator), doubleSep, Separator, -1)
 		}
 	}
 	return ""
@@ -175,15 +170,15 @@ func (fs *fsInMemory) join(elem ...string) string {
 
 func (fs *fsInMemory) readDirNames(path string) []string {
 	var names []string
-	if !strings.HasSuffix(path, separator) {
-		path += separator
+	if !strings.HasSuffix(path, Separator) {
+		path += Separator
 	}
-	pathSegments := strings.Count(path, separator)
+	pathSegments := strings.Count(path, Separator)
 	for name := range fs.m {
 		if name == path {
 			continue
 		}
-		if strings.Count(name, separator) > pathSegments {
+		if strings.Count(name, Separator) > pathSegments {
 			continue
 		}
 		if strings.HasPrefix(name, path) {
