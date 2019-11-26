@@ -125,7 +125,7 @@ metadata:
 		"--network", "none",
 		"--user", "nobody",
 		"--security-opt=no-new-privileges",
-		"--mount", fmt.Sprintf("'type=volume,src=%s,dst=/local/'", "myvol"),
+		"--mount", fmt.Sprintf("'type=volume,src=%s,dst=/local/:ro'", "myvol"),
 	}
 	for _, e := range os.Environ() {
 		// the process env
