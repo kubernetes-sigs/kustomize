@@ -6,9 +6,9 @@ package status
 import (
 	"strings"
 
+	apiunstructured "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	corev1 "sigs.k8s.io/kustomize/pseudo/k8s/api/core/v1"
-	apiunstructured "sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/apis/meta/v1/unstructured"
-	"sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/runtime"
 )
 
 // newInProgressCondition creates an inProgress condition with the given
