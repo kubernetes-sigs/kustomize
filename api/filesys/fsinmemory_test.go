@@ -11,7 +11,7 @@ import (
 	. "sigs.k8s.io/kustomize/api/filesys"
 )
 
-func TestExists(t *testing.T) {
+func TestOldExists(t *testing.T) {
 	fSys := MakeFsInMemory()
 	if fSys.Exists("foo") {
 		t.Fatalf("expected no foo")
@@ -131,7 +131,7 @@ func TestWriteFile(t *testing.T) {
 	}
 }
 
-func TestGlob(t *testing.T) {
+func TestOldGlob(t *testing.T) {
 	fSys := MakeFsInMemory()
 	fSys.Create("dir/foo")
 	fSys.Create("dir/bar")
