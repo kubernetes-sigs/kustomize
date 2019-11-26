@@ -148,8 +148,7 @@ func demandDirectoryRoot(
 	}
 	d, f, err := fSys.CleanedAbs(path)
 	if err != nil {
-		return "", fmt.Errorf(
-			"absolute path error in '%s' : %v", path, err)
+		return "", err
 	}
 	if f != "" {
 		return "", fmt.Errorf(

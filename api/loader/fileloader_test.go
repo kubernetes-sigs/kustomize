@@ -45,7 +45,7 @@ var testCases = []testData{
 func MakeFakeFs(td []testData) filesys.FileSystem {
 	fSys := filesys.MakeFsInMemory()
 	for _, x := range td {
-		fSys.WriteFile("/"+x.path, []byte(x.expectedContent))
+		fSys.WriteFile(x.path, []byte(x.expectedContent))
 	}
 	return fSys
 }
