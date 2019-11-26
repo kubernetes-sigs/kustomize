@@ -12,7 +12,7 @@ linters:
     - bodyclose
     - deadcode
     - depguard
-    - dogsled
+#    - dogsled
     - dupl
 #    - errcheck
 #    - funlen
