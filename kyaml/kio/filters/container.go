@@ -114,7 +114,7 @@ func (c *ContainerFilter) getArgs() []string {
 	}
 
 	if c.LocalVolume != "" {
-		args = append(args, "--mount", fmt.Sprintf("'type=volume,src=%s,dst=/local/'", c.LocalVolume))
+		args = append(args, "--mount", fmt.Sprintf("'type=volume,src=%s,dst=/local/:ro'", c.LocalVolume))
 	}
 
 	// export the local environment vars to the container
