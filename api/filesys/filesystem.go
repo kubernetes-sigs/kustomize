@@ -8,13 +8,20 @@ import (
 	"path/filepath"
 )
 
+const (
+	Separator = string(filepath.Separator)
+	doubleSep = Separator + Separator
+	DotDir    = "."
+)
+
 // FileSystem groups basic os filesystem methods.
+// It's supposed be functional subset of https://golang.org/pkg/os
 type FileSystem interface {
 	// Create a file.
-	Create(name string) (File, error)
+	Create(path string) (File, error)
 	// MkDir makes a directory.
 	Mkdir(path string) error
-	// MkDir makes a directory path, creating intervening directories.
+	// MkDirAll makes a directory path, creating intervening directories.
 	MkdirAll(path string) error
 	// RemoveAll removes path and any children it contains.
 	RemoveAll(path string) error

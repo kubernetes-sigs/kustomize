@@ -8,5 +8,14 @@ import "path/filepath"
 // RootedPath returns a rooted path, e.g. "/foo/bar" as
 // opposed to "foo/bar".
 func RootedPath(elem ...string) string {
-	return separator + filepath.Join(elem...)
+	return Separator + filepath.Join(elem...)
+}
+
+// StripTrailingSeps trims trailing filepath separators from input.
+func StripTrailingSeps(s string) string {
+	k := len(s)
+	for k > 0 && s[k-1] == filepath.Separator {
+		k--
+	}
+	return s[:k]
 }
