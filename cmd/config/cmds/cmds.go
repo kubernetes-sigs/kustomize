@@ -11,12 +11,35 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/cmd"
 	"sigs.k8s.io/kustomize/cmd/config/cmddocs/api"
+	"sigs.k8s.io/kustomize/cmd/config/cmddocs/tutorials"
 )
 
 var root = &cobra.Command{
-	Use:     "config",
-	Short:   "[Alpha] Utilities for working with Resource Configuration.",
-	Long:    `[Alpha] Utilities for working with Resource Configuration.`,
+	Use:   "config",
+	Short: "[Alpha] Utilities for working with Resource Configuration.",
+	Long: `[Alpha] Utilities for working with Resource Configuration.
+
+Tutorials:
+
+  Run 'kustomize help config tutorial-TUTORIAL'
+
+	$ kustomize help config tutorials-basics
+
+Command Documentation:
+
+  Run 'kustomize help config CMD'
+
+	$ kustomize help config tree
+
+Advanced Documentation Topics:
+
+  Run 'kustomize help config docs-TOPIC'
+
+	$ kustomize help config docs-merge
+	$ kustomize help config docs-merge3
+	$ kustomize help config docs-fn
+	$ kustomize help config docs-io-annotations
+`,
 	Version: "v0.0.1",
 }
 
@@ -62,5 +85,12 @@ func NewConfigCommand(name string) *cobra.Command {
 		Short: "[Alpha] Documentation for annotations used by io.",
 		Long:  api.ConfigIoLong,
 	})
+
+	root.AddCommand(&cobra.Command{
+		Use:   "tutorials-basics",
+		Short: "[Alpha] Tutorials for using basic config commands.",
+		Long:  tutorials.ConfigurationBasicsLong,
+	})
+
 	return root
 }
