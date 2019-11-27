@@ -53,7 +53,7 @@
     generated Resources -- e.g. 1. the function generates a Deployment, but doesn't
     specify `cpu`, 2. the user sets the `cpu` on the generated Resource, 3. the
     function should keep the `cpu` when regenerating the Resource a second time.
-  - Functions **SHOULD** be usable outside `kustomize config run-fns` -- e.g. though pipeline
+  - Functions **SHOULD** be usable outside `kustomize config run` -- e.g. though pipeline
     mechanisms such as Tekton.
 
 #### Input Format
@@ -120,7 +120,7 @@
 
 #### Container Environment
 
-  When run by `kustomize config run-fns`, functions are run in containers with the
+  When run by `kustomize config run`, functions are run in containers with the
   following environment:
 
   - Network: `none`
@@ -138,7 +138,7 @@
   `nginx-template.sh` is a simple bash script which uses a *heredoc* as a templating solution
   for generating Resources from the functionConfig input fields.
 
-  The script wraps itself using `config run-fns wrap -- $0` which will:
+  The script wraps itself using `config run wrap -- $0` which will:
 
   1. Parse the `ResourceList.functionConfig` (provided to the container stdin) into env vars
   2. Merge the stdout into the original list of Resources
@@ -147,11 +147,11 @@
   4. Format the output
 
     #!/bin/bash
-    # script must run wrapped by `kustomize config run-fns wrap`
+    # script must run wrapped by `kustomize config run wrap`
     # for parsing input the functionConfig into env vars
     if [ -z ${WRAPPED} ]; then
       export WRAPPED=true
-      config run-fns wrap -- $0
+      config run wrap -- $0
       exit $?
     fi
 
@@ -210,7 +210,7 @@
 
 ### Example Function Usage
 
-Following is an example of running the `kustomize config run-fns` using the preceding API.
+Following is an example of running the `kustomize config run` using the preceding API.
 
 #### `nginx.yaml` (Input)
 
@@ -233,7 +233,7 @@ Following is an example of running the `kustomize config run-fns` using the prec
   - `annotations[config.kubernetes.io/local-config]`: mark this as not a Resource that should
     be applied
     
-#### `kustomize config run-fns dir/` (Output)
+#### `kustomize config run dir/` (Output)
 
   `dir/my-instance_deployment.yaml` contains the Deployment:
     
