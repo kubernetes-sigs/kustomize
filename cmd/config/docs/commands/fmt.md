@@ -32,13 +32,13 @@ field paths.
 ### Examples
 
 	# format file1.yaml and file2.yml
-	kyaml fmt file1.yaml file2.yml
+	kustomize config fmt file1.yaml file2.yml
 
 	# format all *.yaml and *.yml recursively traversing directories
-	kyaml fmt my-dir/
+	kustomize config fmt my-dir/
 
 	# format kubectl output
-	kubectl get -o yaml deployments | kyaml fmt
+	kubectl get -o yaml deployments | kustomize config fmt
 
 	# format kustomize output
-	kustomize build | kyaml fmt
+	kustomize build | kustomize config fmt
