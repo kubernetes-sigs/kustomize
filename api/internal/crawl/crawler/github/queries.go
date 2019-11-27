@@ -11,6 +11,8 @@ const (
 	accessTokenArg = "access_token"
 )
 
+const githubMaxPageSize = 100
+
 // Implementation detail, not important to external API.
 type queryField struct {
 	name  string
@@ -96,14 +98,12 @@ func Path(p string) queryField {
 // - CommitsRequests: asks Github to list commits made one a file. Useful to
 // determine the date of a file.
 type RequestConfig struct {
-	perPage     uint64
-	accessToken string
+	perPage uint64
 }
 
-func NewRequestConfig(perPage uint64, accessToken string) RequestConfig {
+func NewRequestConfig(perPage uint64) RequestConfig {
 	return RequestConfig{
-		perPage:     perPage,
-		accessToken: accessToken,
+		perPage: perPage,
 	}
 }
 
@@ -139,9 +139,6 @@ func (rc RequestConfig) CommitsRequest(fullRepoName, path string) string {
 
 func (rc RequestConfig) makeRequest(path string, query Query) request {
 	vals := url.Values{}
-	if rc.accessToken != "" {
-		vals.Set(accessTokenArg, rc.accessToken)
-	}
 	vals.Set(perPageArg, fmt.Sprint(rc.perPage))
 
 	return request{
@@ -183,7 +180,7 @@ func (r request) URL() string {
 	if encoded == "" && query != "" {
 		sep = "?"
 	}
-	r.url.RawQuery = encoded + sep + query
+	r.url.RawQuery = query + sep + encoded
 	return r.url.String()
 }
 

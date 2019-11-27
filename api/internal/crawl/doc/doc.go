@@ -43,6 +43,12 @@ type KustomizationDocument struct {
 
 type set map[string]struct{}
 
+func (doc *KustomizationDocument) String() string {
+	return fmt.Sprintf("%s %s %s %v %v %v %v %v", doc.RepositoryURL, doc.FilePath,
+		doc.DefaultBranch, doc.CreationTime, doc.IsSame,
+		doc.Kinds, doc.Identifiers, doc.Values)
+}
+
 // Implements the CrawlerDocument interface.
 func (doc *KustomizationDocument) GetResources() ([]*Document, error) {
 	isResource := true
