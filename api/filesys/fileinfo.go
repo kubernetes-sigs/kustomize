@@ -27,7 +27,7 @@ func (fi fileInfo) Mode() os.FileMode { return 0777 }
 // ModTime returns a bogus time
 func (fi fileInfo) ModTime() time.Time { return time.Time{} }
 
-// IsADir returns if it is a directory
+// IsDir returns true if it is a directory
 func (fi fileInfo) IsDir() bool { return fi.dir }
 
 // Sys should return underlying data source, but it now returns nil

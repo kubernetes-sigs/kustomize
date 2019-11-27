@@ -11,7 +11,8 @@ import (
 const (
 	Separator = string(filepath.Separator)
 	doubleSep = Separator + Separator
-	DotDir    = "."
+	SelfDir   = "."
+	ParentDir = ".."
 )
 
 // FileSystem groups basic os filesystem methods.
@@ -41,7 +42,8 @@ type FileSystem interface {
 	Glob(pattern string) ([]string, error)
 	// ReadFile returns the contents of the file at the given path.
 	ReadFile(path string) ([]byte, error)
-	// WriteFile writes the data to a file at the given path.
+	// WriteFile writes the data to a file at the given path,
+	// overwriting anything that's already there.
 	WriteFile(path string, data []byte) error
 	// Walk walks the file system with the given WalkFunc.
 	Walk(path string, walkFn filepath.WalkFunc) error

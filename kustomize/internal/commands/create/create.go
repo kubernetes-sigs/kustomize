@@ -31,7 +31,7 @@ type createFlags struct {
 
 // NewCmdCreate returns an instance of 'create' subcommand.
 func NewCmdCreate(fSys filesys.FileSystem, uf ifc.KunstructuredFactory) *cobra.Command {
-	opts := createFlags{path: "."}
+	opts := createFlags{path: filesys.SelfDir}
 	c := &cobra.Command{
 		Use:   "create",
 		Short: "Create a new kustomization in the current directory",

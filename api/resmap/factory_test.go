@@ -8,13 +8,12 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/resid"
-
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/loadertest"
 	"sigs.k8s.io/kustomize/api/kv"
 	"sigs.k8s.io/kustomize/api/loader"
+	"sigs.k8s.io/kustomize/api/resid"
 	. "sigs.k8s.io/kustomize/api/resmap"
 	resmaptest_test "sigs.k8s.io/kustomize/api/testutils/resmaptest"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
@@ -209,8 +208,11 @@ BAR=baz
 		// files/literal/env etc.
 	}
 	for _, tc := range testCases {
-		if fErr := l.AddFile(tc.filepath, []byte(tc.content)); fErr != nil {
-			t.Fatalf("Error adding fake file: %v\n", fErr)
+		if tc.filepath != "" {
+			if fErr := l.AddFile(
+				tc.filepath, []byte(tc.content)); fErr != nil {
+				t.Fatalf("error adding file '%s': %v\n", tc.filepath, fErr)
+			}
 		}
 		r, err := rmF.NewResMapFromConfigMapArgs(kvLdr, nil, tc.input)
 		if err != nil {
@@ -238,7 +240,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 		},
 	}
 	fSys := filesys.MakeFsInMemory()
-	fSys.Mkdir(".")
+	fSys.Mkdir(filesys.SelfDir)
 
 	actual, err := rmF.NewResMapFromSecretArgs(
 		kv.NewLoader(

@@ -93,20 +93,18 @@ type fileLoader struct {
 	cleaner func() error
 }
 
-const CWD = "."
-
-// NewFileLoaderAtCwd returns a loader that loads from ".".
+// NewFileLoaderAtCwd returns a loader that loads from PWD.
 // A convenience for kustomize edit commands.
 func NewFileLoaderAtCwd(fSys filesys.FileSystem) *fileLoader {
 	return newLoaderOrDie(
-		RestrictionRootOnly, fSys, CWD)
+		RestrictionRootOnly, fSys, filesys.SelfDir)
 }
 
 // NewFileLoaderAtRoot returns a loader that loads from "/".
 // A convenience for tests.
 func NewFileLoaderAtRoot(fSys filesys.FileSystem) *fileLoader {
 	return newLoaderOrDie(
-		RestrictionRootOnly, fSys, string(filepath.Separator))
+		RestrictionRootOnly, fSys, filesys.Separator)
 }
 
 // Root returns the absolute path that is prepended to any
