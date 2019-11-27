@@ -1,0 +1,43 @@
+apiVersion: elasticsearch.cloud.google.com/v1alpha1
+kind: ESCluster
+metadata:
+  name: esbasic
+spec:
+  plugin:
+   pluginList:
+    - repository-gcs
+    - ingest-user-agent
+    - ingest-geoip
+  config:
+    env:
+      example: test
+  nodegroups:
+    - name: di
+      replicas: 2
+      data: true
+      ingest: true
+      config:
+        jvm:
+          - Djava.net.preferIPv4Stack=true
+          - Xms2g
+          - Xmx2g
+        es:
+          path.repo: '["/tmp/es_backup_basic"]'
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchLabels:
+                es/nodegroup: di
+      resources:
+        requests:
+          memory: 3Gi
+        limits:
+          memory: 3Gi
+    - name: m
+      replicas: 2
+      master: true
+      config:
+        es:
+          path.repo: '["/tmp/es_backup_basic"]'

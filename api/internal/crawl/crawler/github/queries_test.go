@@ -84,7 +84,6 @@ func TestGithubSearchQuery(t *testing.T) {
 		{
 			rc: RequestConfig{
 				perPage:     perPage,
-				accessToken: accessToken,
 			},
 			codeQuery: Query{
 				Filename("kustomization.yaml"),
@@ -94,13 +93,13 @@ func TestGithubSearchQuery(t *testing.T) {
 			path:         "examples/helloWorld/kustomization.yaml",
 
 			expectedCodeQuery: "https://api.github.com/search/code?" +
-				"access_token=random_token&order=desc&per_page=100&sort=indexed&q=filename:kustomization.yaml+size:64..128",
+				"q=filename:kustomization.yaml+size:64..128&order=desc&per_page=100&sort=indexed",
 
 			expectedContentsQuery: "https://api.github.com/repos/kubernetes-sigs/kustomize/contents/" +
-				"examples/helloWorld/kustomization.yaml?access_token=random_token&per_page=100",
+				"examples/helloWorld/kustomization.yaml?per_page=100",
 
 			expectedCommitsQuery: "https://api.github.com/repos/kubernetes-sigs/kustomize/commits?" +
-				"access_token=random_token&per_page=100&q=path:examples/helloWorld/kustomization.yaml",
+				"q=path:examples/helloWorld/kustomization.yaml&per_page=100",
 		},
 	}
 

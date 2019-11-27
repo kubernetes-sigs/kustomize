@@ -21,10 +21,6 @@ spec:
           httpGet:
             path: /liveness
             port: backend-port
-        readinessProbe:
-          httpGet:
-            path: /readiness
-            port: backend-port
         ports:
         - name: backend-port
           containerPort: 8080
