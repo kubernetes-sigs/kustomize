@@ -19,7 +19,7 @@ func RestrictionRootOnly(
 		return "", err
 	}
 	if f == "" {
-		return "", fmt.Errorf("'%s' must be a file", path)
+		return "", fmt.Errorf("'%s' must resolve to a file", path)
 	}
 	if !d.HasPrefix(root) {
 		return "", fmt.Errorf(

@@ -19,3 +19,12 @@ func StripTrailingSeps(s string) string {
 	}
 	return s[:k]
 }
+
+// StripLeadingSeps trims leading filepath separators from input.
+func StripLeadingSeps(s string) string {
+	k := 0
+	for k < len(s) && s[k] == filepath.Separator {
+		k++
+	}
+	return s[k:]
+}

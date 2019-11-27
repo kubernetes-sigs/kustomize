@@ -4,6 +4,7 @@
 package loader
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -25,9 +26,11 @@ func TestRestrictionNone(t *testing.T) {
 
 func TestRestrictionRootOnly(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	root := filesys.ConfirmedDir("/tmp/foo")
+	root := filesys.ConfirmedDir(
+		filesys.Separator + filepath.Join("tmp", "foo"))
+	path := filepath.Join(string(root), "whatever", "beans")
 
-	path := "/tmp/foo/whatever/beans"
+	fSys.Create(path)
 	p, err := RestrictionRootOnly(fSys, root, path)
 	if err != nil {
 		t.Fatal(err)
@@ -37,18 +40,21 @@ func TestRestrictionRootOnly(t *testing.T) {
 	}
 
 	// Legal.
-	path = "/tmp/foo/whatever/../../foo/whatever"
+	path = filepath.Join(
+		string(root), "whatever", "..", "..", "foo", "whatever", "beans")
 	p, err = RestrictionRootOnly(fSys, root, path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	path = "/tmp/foo/whatever"
+	path = filepath.Join(
+		string(root), "whatever", "beans")
 	if p != path {
 		t.Fatalf("expected '%s', got '%s'", path, p)
 	}
 
-	// Illegal.
-	path = "/tmp/illegal"
+	// Illegal; file exists but is out of bounds.
+	path = filepath.Join(filesys.Separator+"tmp", "illegal")
+	fSys.Create(path)
 	_, err = RestrictionRootOnly(fSys, root, path)
 	if err == nil {
 		t.Fatal("should have an error")
