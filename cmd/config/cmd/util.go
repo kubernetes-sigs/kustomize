@@ -63,7 +63,7 @@ var ExitOnError bool
 // StackOnError if true, will print a stack trace on failure.
 var StackOnError bool
 
-const cmdName = "kyaml"
+const cmdName = "kustomize config"
 
 // FixDocs replaces instances of old with new in the docs for c
 func fixDocs(new string, c *cobra.Command) {
