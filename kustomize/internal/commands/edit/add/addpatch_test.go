@@ -20,7 +20,7 @@ sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 )
 
 func TestAddPatchHappyPath(t *testing.T) {
-	fSys := filesys.MakeFsInMemory()
+	fSys := filesys.MakeEmptyDirInMemory()
 	fSys.WriteFile(patchFileName, []byte(patchFileContent))
 	fSys.WriteFile(patchFileName+"another", []byte(patchFileContent))
 	testutils_test.WriteTestKustomization(fSys)
@@ -44,7 +44,7 @@ func TestAddPatchHappyPath(t *testing.T) {
 }
 
 func TestAddPatchAlreadyThere(t *testing.T) {
-	fSys := filesys.MakeFsInMemory()
+	fSys := filesys.MakeEmptyDirInMemory()
 	fSys.WriteFile(patchFileName, []byte(patchFileContent))
 	testutils_test.WriteTestKustomization(fSys)
 
@@ -63,7 +63,7 @@ func TestAddPatchAlreadyThere(t *testing.T) {
 }
 
 func TestAddPatchNoArgs(t *testing.T) {
-	fSys := filesys.MakeFsInMemory()
+	fSys := filesys.MakeEmptyDirInMemory()
 
 	cmd := newCmdAddPatch(fSys)
 	err := cmd.Execute()

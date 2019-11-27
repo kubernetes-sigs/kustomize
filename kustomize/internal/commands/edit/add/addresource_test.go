@@ -20,7 +20,7 @@ sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 )
 
 func TestAddResourceHappyPath(t *testing.T) {
-	fSys := filesys.MakeFsInMemory()
+	fSys := filesys.MakeEmptyDirInMemory()
 	fSys.WriteFile(resourceFileName, []byte(resourceFileContent))
 	fSys.WriteFile(resourceFileName+"another", []byte(resourceFileContent))
 	testutils_test.WriteTestKustomization(fSys)
