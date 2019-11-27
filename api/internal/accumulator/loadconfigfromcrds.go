@@ -10,6 +10,7 @@ import (
 	"github.com/go-openapi/spec"
 	"github.com/pkg/errors"
 	"k8s.io/kube-openapi/pkg/common"
+	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/resid"
@@ -78,7 +79,7 @@ func makeConfigFromApiMap(m nameToApiMap) (*builtinconfig.TransformerConfig, err
 // openAPI definition once
 // "x-kubernetes-group-version-kind" is available in CRD
 func makeGvkFromTypeName(n string) resid.Gvk {
-	names := strings.Split(n, ".")
+	names := strings.Split(n, filesys.SelfDir)
 	kind := names[len(names)-1]
 	return resid.Gvk{Kind: kind}
 }

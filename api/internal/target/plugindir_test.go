@@ -81,7 +81,7 @@ metadata:
 		t.Fatalf("Err: %v", err)
 	}
 
-	th := kusttest_test.NewKustTestHarness(t, ".")
+	th := kusttest_test.NewKustTestHarness(t, filesys.SelfDir)
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: WorkDir

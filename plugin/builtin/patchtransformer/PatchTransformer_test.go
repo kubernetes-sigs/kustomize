@@ -83,7 +83,7 @@ path: patch.yaml
 		t.Fatalf("expected error")
 	}
 	if !strings.Contains(err.Error(),
-		"cannot read file \"/app/patch.yaml\"") {
+		"'/app/patch.yaml' doesn't exist") {
 		t.Fatalf("unexpected err: %v", err)
 	}
 }

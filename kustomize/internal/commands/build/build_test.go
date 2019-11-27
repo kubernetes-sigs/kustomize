@@ -6,6 +6,7 @@ package build
 import (
 	"testing"
 
+	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig"
 )
 
@@ -22,7 +23,7 @@ func TestBuildValidate(t *testing.T) {
 		path  string
 		erMsg string
 	}{
-		{"noargs", []string{}, ".", ""},
+		{"noargs", []string{}, filesys.SelfDir, ""},
 		{"file", []string{"beans"}, "beans", ""},
 		{"path", []string{"a/b/c"}, "a/b/c", ""},
 		{"path", []string{"too", "many"},
