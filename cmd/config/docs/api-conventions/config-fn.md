@@ -53,7 +53,7 @@
     generated Resources -- e.g. 1. the function generates a Deployment, but doesn't
     specify `cpu`, 2. the user sets the `cpu` on the generated Resource, 3. the
     function should keep the `cpu` when regenerating the Resource a second time.
-  - Functions **SHOULD** be usable outside `kyaml run-fns` -- e.g. though pipeline
+  - Functions **SHOULD** be usable outside `kustomize config run-fns` -- e.g. though pipeline
     mechanisms such as Tekton.
 
 #### Input Format
@@ -120,7 +120,8 @@
 
 #### Container Environment
 
-  When run by `kyaml run-fns`, functions are run in containers with the following environment:
+  When run by `kustomize config run-fns`, functions are run in containers with the
+  following environment:
 
   - Network: `none`
   - User: `nobody`
@@ -146,8 +147,8 @@
   4. Format the output
 
     #!/bin/bash
-    # script must run wrapped by kyaml for parsing input
-    # the functionConfig into env vars
+    # script must run wrapped by `kustomize config run-fns wrap`
+    # for parsing input the functionConfig into env vars
     if [ -z ${WRAPPED} ]; then
       export WRAPPED=true
       config run-fns wrap -- $0
@@ -199,7 +200,7 @@
 
 #### `Dockerfile`
 
-  `Dockerfile` installs `kyaml` and copies the script into the container image.    
+  `Dockerfile` installs `kustomize config` and copies the script into the container image.    
 
     FROM golang:1.13-stretch
     RUN go get sigs.k8s.io/kustomize/cmd/config
@@ -209,7 +210,7 @@
 
 ### Example Function Usage
 
-Following is an example of running the `kyaml run-fns` using the preceding API.
+Following is an example of running the `kustomize config run-fns` using the preceding API.
 
 #### `nginx.yaml` (Input)
 
@@ -232,7 +233,7 @@ Following is an example of running the `kyaml run-fns` using the preceding API.
   - `annotations[config.kubernetes.io/local-config]`: mark this as not a Resource that should
     be applied
     
-#### `kyaml run-fns dir/` (Output)
+#### `kustomize config run-fns dir/` (Output)
 
   `dir/my-instance_deployment.yaml` contains the Deployment:
     

@@ -12,4 +12,4 @@
 ### Examples
 
     # print Resource counts from a directory
-    kyaml count my-dir/
+    kustomize config count my-dir/

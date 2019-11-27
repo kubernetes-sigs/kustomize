@@ -40,14 +40,14 @@ order they appear in the file).
 	spec:
 	  configField: configValue
 
-  In the preceding example, 'kyaml run-fns example/' would identify the function by
+  In the preceding example, 'kustomize config run-fns example/' would identify the function by
   the metadata.configFn field.  It would then write all Resources in the directory to
   a container stdin (running the gcr.io/example/examplefunction:v1.0.1 image).  It
   would then writer the container stdout back to example/, replacing the directory
   file contents.
 
-  See `kyaml help docs-fn` for more details on writing functions.
+  See `kustomize config help docs-fn` for more details on writing functions.
 
 ### Examples
 
-kyaml run-fns example/
+kustomize config run-fns example/
