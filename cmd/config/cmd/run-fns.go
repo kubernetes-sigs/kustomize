@@ -14,6 +14,7 @@ func GetRunFnRunner(name string) *RunFnRunner {
 	r := &RunFnRunner{}
 	c := &cobra.Command{
 		Use:     "run-fns DIR",
+		Aliases: []string{"run"},
 		Short:   commands.RunFnsShort,
 		Long:    commands.RunFnsLong,
 		Example: commands.RunFnsExamples,
