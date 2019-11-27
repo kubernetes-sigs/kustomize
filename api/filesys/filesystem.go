@@ -10,7 +10,6 @@ import (
 
 const (
 	Separator = string(filepath.Separator)
-	doubleSep = Separator + Separator
 	SelfDir   = "."
 	ParentDir = ".."
 )
@@ -38,7 +37,8 @@ type FileSystem interface {
 	CleanedAbs(path string) (ConfirmedDir, string, error)
 	// Exists is true if the path exists in the file system.
 	Exists(path string) bool
-	// Glob returns the list of matching files
+	// Glob returns the list of matching files,
+	// emulating https://golang.org/pkg/path/filepath/#Glob
 	Glob(pattern string) ([]string, error)
 	// ReadFile returns the contents of the file at the given path.
 	ReadFile(path string) ([]byte, error)

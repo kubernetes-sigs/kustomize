@@ -21,7 +21,7 @@ sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 )
 
 func makeKustomizationPatchFS() filesys.FileSystem {
-	fSys := filesys.MakeFsInMemory()
+	fSys := filesys.MakeEmptyDirInMemory()
 	patches := []string{"patch1.yaml", "patch2.yaml"}
 
 	testutils_test.WriteTestKustomizationWith(fSys, []byte(
