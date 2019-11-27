@@ -80,8 +80,6 @@ func NewCmdBuild(out io.Writer) *cobra.Command {
 	return cmd
 }
 
-const CWD = "."
-
 // Validate validates build command.
 func (o *Options) Validate(args []string) (err error) {
 	if len(args) > 1 {
@@ -90,7 +88,7 @@ func (o *Options) Validate(args []string) (err error) {
 				konfig.DefaultKustomizationFileName())
 	}
 	if len(args) == 0 {
-		o.kustomizationPath = CWD
+		o.kustomizationPath = filesys.SelfDir
 	} else {
 		o.kustomizationPath = args[0]
 	}

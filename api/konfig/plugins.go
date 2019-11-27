@@ -139,7 +139,7 @@ func CurrentWorkingDir() string {
 	if len(pwd) > 0 {
 		return pwd
 	}
-	return "."
+	return filesys.SelfDir
 }
 
 func pwdEnv() string {

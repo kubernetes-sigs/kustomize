@@ -203,7 +203,7 @@ func TestResourceNotFound(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Didn't get the expected error for an unknown resource")
 	}
-	if !strings.Contains(err.Error(), `cannot read file`) {
+	if !strings.Contains(err.Error(), "'/whatever/deployment.yaml' doesn't exist") {
 		t.Fatalf("unexpected error: %q", err)
 	}
 }

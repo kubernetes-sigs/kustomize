@@ -131,7 +131,7 @@ func TestLoaderBadRelative(t *testing.T) {
 	}
 
 	// It's not okay to stay at the same place.
-	l2, err = l1.New(".")
+	l2, err = l1.New(filesys.SelfDir)
 	if err == nil {
 		t.Fatalf("expected err, but got root %s", l2.Root())
 	}

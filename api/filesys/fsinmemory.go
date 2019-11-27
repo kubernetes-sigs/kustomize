@@ -120,7 +120,7 @@ func (fs *fsInMemory) ReadFile(name string) ([]byte, error) {
 	if ff, found := fs.m[name]; found {
 		return ff.content, nil
 	}
-	return nil, fmt.Errorf("cannot read file %q", name)
+	return nil, fmt.Errorf("'%s' doesn't exist", name)
 }
 
 // WriteFile always succeeds and does nothing.

@@ -51,7 +51,7 @@ path: jsonpatch.json
 	if err == nil {
 		t.Fatalf("expected error")
 	}
-	if !strings.Contains(err.Error(), "cannot read file \"/app/jsonpatch.json\"") {
+	if !strings.Contains(err.Error(), "'/app/jsonpatch.json' doesn't exist") {
 		t.Fatalf("unexpected err: %v", err)
 	}
 }

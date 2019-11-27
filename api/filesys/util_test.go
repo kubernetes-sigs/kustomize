@@ -84,9 +84,9 @@ func TestFilePathSplit(t *testing.T) {
 			file: "",
 		},
 		{
-			full: DotDir,
+			full: SelfDir,
 			dir:  "",
-			file: DotDir,
+			file: SelfDir,
 		},
 		{
 			full: "rabbit.jpg",
@@ -156,6 +156,46 @@ func TestStripTrailingSeps(t *testing.T) {
 	}
 	for _, p := range cases {
 		dir := StripTrailingSeps(p.full)
+		if dir != p.rem {
+			t.Fatalf(
+				"in '%s', got dir='%s' (expected '%s')",
+				p.full, dir, p.rem)
+		}
+	}
+}
+
+func TestStripLeadingSeps(t *testing.T) {
+	cases := []struct {
+		full string
+		rem  string
+	}{
+		{
+			full: "foo",
+			rem:  "foo",
+		},
+		{
+			full: "",
+			rem:  "",
+		},
+		{
+			full: "/foo",
+			rem:  "foo",
+		},
+		{
+			full: "///foo///bar///",
+			rem:  "foo///bar///",
+		},
+		{
+			full: "/////",
+			rem:  "",
+		},
+		{
+			full: "/",
+			rem:  "",
+		},
+	}
+	for _, p := range cases {
+		dir := StripLeadingSeps(p.full)
 		if dir != p.rem {
 			t.Fatalf(
 				"in '%s', got dir='%s' (expected '%s')",
