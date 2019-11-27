@@ -13,8 +13,8 @@ import (
 func GetRunFnRunner(name string) *RunFnRunner {
 	r := &RunFnRunner{}
 	c := &cobra.Command{
-		Use:     "run-fns DIR",
-		Aliases: []string{"run"},
+		Use:     "run DIR",
+		Aliases: []string{"run-fns"},
 		Short:   commands.RunFnsShort,
 		Long:    commands.RunFnsLong,
 		Example: commands.RunFnsExamples,

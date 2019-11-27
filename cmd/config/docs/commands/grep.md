@@ -19,13 +19,13 @@
 ### Examples
 
     # find Deployment Resources
-    kyaml grep "kind=Deployment" my-dir/
+    kustomize config grep "kind=Deployment" my-dir/
     
     # find Resources named nginx
-    kyaml grep "metadata.name=nginx" my-dir/
+    kustomize config grep "metadata.name=nginx" my-dir/
     
     # use tree to display matching Resources
-    kyaml grep "metadata.name=nginx" my-dir/ | kyaml tree
+    kustomize config grep "metadata.name=nginx" my-dir/ | kustomize config tree
     
     # look for Resources matching a specific container image
-    kyaml grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-dir/ | kyaml tree
+    kustomize config grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-dir/ | kustomize config tree

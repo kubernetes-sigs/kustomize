@@ -282,7 +282,7 @@ var ConfigurationBasicsLong = `
 var FunctionBasicsShort = `### Synopsis`
 var FunctionBasicsLong = `
   ` + "`" + `kustomize config` + "`" + ` enables encapsulating function for manipulating Resource
-  configuration inside containers, which are run using ` + "`" + `run-fns` + "`" + `.
+  configuration inside containers, which are run using ` + "`" + `run` + "`" + `.
 
   First fetch the kustomize repository, which contains a collection of example
   functions
@@ -299,7 +299,7 @@ var FunctionBasicsLong = `
   #### 1: Generate the Resources
 
   ` + "`" + `cd` + "`" + ` into the ` + "`" + `kustomize/functions/examples/template-heredoc-cockroachdb/` + "`" + `
-  directory, and invoke ` + "`" + `run-fns` + "`" + ` on the ` + "`" + `local-resource/` + "`" + ` directory.
+  directory, and invoke ` + "`" + `run` + "`" + ` on the ` + "`" + `local-resource/` + "`" + ` directory.
 
     cd template-heredoc-cockroachdb/
     
@@ -307,12 +307,12 @@ var FunctionBasicsLong = `
     kustomize config tree local-resource/ --name --image --replicas
     
     # run the function
-    kustomize config run-fns local-resource/
+    kustomize config run local-resource/
     
     # view the generated Resources 
     kustomize config tree local-resource/ --name --image --replicas
     
-  ` + "`" + `run-fns` + "`" + ` generated the directory ` + "`" + ` local-resource/config` + "`" + ` containing the generated
+  ` + "`" + `run` + "`" + ` generated the directory ` + "`" + ` local-resource/config` + "`" + ` containing the generated
   Resources.
   
   #### 2. Modify the Generated Resources
@@ -320,14 +320,14 @@ var FunctionBasicsLong = `
   - modify the generated Resources by adding an annotation, sidecar container, etc.
   - modify the ` + "`" + `local-resources/example-use.yaml` + "`" + ` by changing the replicas 
   
-  re-run ` + "`" + `run-fns` + "`" + `.  this will apply the updated replicas to the generated Resources,
+  re-run ` + "`" + `run` + "`" + `.  this will apply the updated replicas to the generated Resources,
   but keep the fields that you manually added to the generated Resource configuration.
 
     
     # run the function
-    kustomize config run-fns local-resource/
+    kustomize config run local-resource/
   
-  ` + "`" + `run-fns` + "`" + ` facilitates a non-destructive *smart templating* approach that allows templating
+  ` + "`" + `run` + "`" + ` facilitates a non-destructive *smart templating* approach that allows templating
   to be composed with manual modifications directly to the template output, as well as
   composition with other functions which may appy validation or injection of values.
 
@@ -345,7 +345,7 @@ var FunctionBasicsLong = `
   #### 1: Generate the Resources
 
   ` + "`" + `cd` + "`" + ` into the ` + "`" + `kustomize/functions/examples/template-go-nginx/` + "`" + `
-  directory, and invoke ` + "`" + `run-fns` + "`" + ` on the ` + "`" + `local-resource/` + "`" + ` directory.
+  directory, and invoke ` + "`" + `run` + "`" + ` on the ` + "`" + `local-resource/` + "`" + ` directory.
 
     cd template-go-nginx/
     
@@ -353,12 +353,12 @@ var FunctionBasicsLong = `
     kustomize config tree local-resource/ --name --image --replicas
     
     # run the function
-    kustomize config run-fns local-resource/
+    kustomize config run local-resource/
     
     # view the generated Resources 
     kustomize config tree local-resource/ --name --image --replicas
     
-  ` + "`" + `run-fns` + "`" + ` generated the directory ` + "`" + ` local-resource/config` + "`" + ` containing the generated
+  ` + "`" + `run` + "`" + ` generated the directory ` + "`" + ` local-resource/config` + "`" + ` containing the generated
   Resources.  this time it put the configuration in a single file rather than multiple
   files.  The mapping of Resources to files is controlled by the function itself through
   annotations on the generated Resources.
@@ -368,11 +368,11 @@ var FunctionBasicsLong = `
   - modify the generated Resources by adding an annotation, sidecar container, etc.
   - modify the ` + "`" + `local-resources/example-use.yaml` + "`" + ` by changing the replicas
   
-  re-run ` + "`" + `run-fns` + "`" + `.  this will apply the updated replicas to the generated Resources,
+  re-run ` + "`" + `run` + "`" + `.  this will apply the updated replicas to the generated Resources,
   but keep the fields that you manually added to the generated Resource configuration.
     
     # run the function
-    kustomize config run-fns local-resource/
+    kustomize config run local-resource/
   
   Just like in the preceding section, the function is implemented using a non-destructive
   approach which merges the generated Resources into previously generated instances.
@@ -384,15 +384,15 @@ var FunctionBasicsLong = `
 
 ### Validation -- resource reservations
 
-  This section uses ` + "`" + `run-fns` + "`" + ` to perform validation rather than generate Resources.
+  This section uses ` + "`" + `run` + "`" + ` to perform validation rather than generate Resources.
   
   #### 1: Run the Validator
 
   ` + "`" + `cd` + "`" + ` into the ` + "`" + `kustomize/functions/examples/validator-resource-requests` + "`" + `
-  directory, and invoke ` + "`" + `run-fns` + "`" + ` on the ` + "`" + `local-resource/` + "`" + ` directory.
+  directory, and invoke ` + "`" + `run` + "`" + ` on the ` + "`" + `local-resource/` + "`" + ` directory.
 
     # run the function
-    kustomize config run-fns local-resource/
+    kustomize config run local-resource/
     cpu-requests missing for a container in Deployment nginx (example-use.yaml [1])
     Error: exit status 1
     Usage:
@@ -404,19 +404,19 @@ var FunctionBasicsLong = `
   and print the name of the file + Resource index.  Edit the file and uncomment the resources,
   then re-run the functions.
   
-    kustomize config run-fns local-resource/
+    kustomize config run local-resource/
 
   The validation now passes.
 
 ### Injection -- resource reservations
 
-  This section uses ` + "`" + `run-fns` + "`" + ` to perform injection of field values based off annotations
+  This section uses ` + "`" + `run` + "`" + ` to perform injection of field values based off annotations
   on the Resource.
   
   #### 1: Run the Injector
 
   ` + "`" + `cd` + "`" + ` into the ` + "`" + `kustomize/functions/examples/inject-tshirt-sizes` + "`" + `
-  directory, and invoke ` + "`" + `run-fns` + "`" + ` on the ` + "`" + `local-resource/` + "`" + ` directory.
+  directory, and invoke ` + "`" + `run` + "`" + ` on the ` + "`" + `local-resource/` + "`" + ` directory.
 
     # print the resources
     kustomize config tree local-resource --resources --name
@@ -428,7 +428,7 @@ var FunctionBasicsLong = `
                 └── name: nginx
 
     # run the functions
-    kustomize config run-fns local-resource/
+    kustomize config run local-resource/
     
     # print the new resources
     kustomize config tree local-resource --resources --name    
@@ -443,7 +443,7 @@ var FunctionBasicsLong = `
   
   Change the ` + "`" + `tshirt-size` + "`" + ` annotation from ` + "`" + `medium` + "`" + ` to ` + "`" + `small` + "`" + ` and re-run the functions.
 
-    kustomize config run-fns local-resource/
+    kustomize config run local-resource/
     kustomize config tree local-resource/
     local-resource
     ├── [example-use.yaml]  Validator 
@@ -459,5 +459,5 @@ var FunctionBasicsLong = `
 
 Functions may be composed together.  Try putting the Injection (tshirt-size) and 
 Validation functions together in the same .yaml file (separated by ` + "`" + `---` + "`" + `).  Run
-` + "`" + `run-fns` + "`" + ` and observe that the first function in the file is applied to the Resources,
+` + "`" + `run` + "`" + ` and observe that the first function in the file is applied to the Resources,
 and then the second function in the file is applied.`

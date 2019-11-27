@@ -13,13 +13,13 @@ var CatLong = `
 `
 var CatExamples = `
     # print Resource config from a directory
-    kyaml cat my-dir/
+    kustomize config cat my-dir/
     
     # wrap Resource config from a directory in an ResourceList
-    kyaml cat my-dir/ --wrap-kind ResourceList --wrap-version config.kubernetes.io/v1alpha1 --function-config fn.yaml
+    kustomize config cat my-dir/ --wrap-kind ResourceList --wrap-version config.kubernetes.io/v1alpha1 --function-config fn.yaml
     
     # unwrap Resource config from a directory in an ResourceList
-    ... | kyaml cat`
+    ... | kustomize config cat`
 
 var CountShort = `[Alpha] Count Resources Config from a local directory.`
 var CountLong = `
@@ -30,7 +30,7 @@ var CountLong = `
 `
 var CountExamples = `
     # print Resource counts from a directory
-    kyaml count my-dir/`
+    kustomize config count my-dir/`
 
 var FmtShort = `[Alpha] Format yaml configuration files.`
 var FmtLong = `
@@ -61,16 +61,16 @@ field paths.
 `
 var FmtExamples = `
 	# format file1.yaml and file2.yml
-	kyaml fmt file1.yaml file2.yml
+	kustomize config fmt file1.yaml file2.yml
 
 	# format all *.yaml and *.yml recursively traversing directories
-	kyaml fmt my-dir/
+	kustomize config fmt my-dir/
 
 	# format kubectl output
-	kubectl get -o yaml deployments | kyaml fmt
+	kubectl get -o yaml deployments | kustomize config fmt
 
 	# format kustomize output
-	kustomize build | kyaml fmt`
+	kustomize build | kustomize config fmt`
 
 var GrepShort = `[Alpha] Search for matching Resources in a directory or from stdin`
 var GrepLong = `
@@ -88,16 +88,16 @@ var GrepLong = `
 `
 var GrepExamples = `
     # find Deployment Resources
-    kyaml grep "kind=Deployment" my-dir/
+    kustomize config grep "kind=Deployment" my-dir/
     
     # find Resources named nginx
-    kyaml grep "metadata.name=nginx" my-dir/
+    kustomize config grep "metadata.name=nginx" my-dir/
     
     # use tree to display matching Resources
-    kyaml grep "metadata.name=nginx" my-dir/ | kyaml tree
+    kustomize config grep "metadata.name=nginx" my-dir/ | kustomize config tree
     
     # look for Resources matching a specific container image
-    kyaml grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-dir/ | kyaml tree`
+    kustomize config grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-dir/ | kustomize config tree`
 
 var MergeShort = `[Alpha] Merge Resource configuration files`
 var MergeLong = `
@@ -114,16 +114,16 @@ earlier are lower-precedence (the destination).
 
 For information on merge rules, run:
 
-	kyaml docs merge
+	kustomize config docs merge
 `
 var MergeExamples = `
-    cat resources_and_patches.yaml | kyaml merge > merged_resources.yaml`
+    cat resources_and_patches.yaml | kustomize config merge > merged_resources.yaml`
 
 var RunFnsShort = `[Alpha] Reoncile config functions to Resources.`
 var RunFnsLong = `
 [Alpha] Reconcile config functions to Resources.
 
-run-fns sequentially invokes all config functions in the directly, providing Resources
+run sequentially invokes all config functions in the directly, providing Resources
 in the directory as input to the first function, and writing the output of the last
 function back to the directory.
 
@@ -140,7 +140,7 @@ order they appear in the file).
 #### Config Functions:
 
   Config functions are specified as Kubernetes types containing a metadata.configFn.container.image
-  field.  This fields tells run-fns how to invoke the container.
+  field.  This fields tells run how to invoke the container.
 
   Example config function:
 
@@ -157,22 +157,22 @@ order they appear in the file).
 	spec:
 	  configField: configValue
 
-  In the preceding example, 'kyaml run-fns example/' would identify the function by
+  In the preceding example, 'kustomize config run example/' would identify the function by
   the metadata.configFn field.  It would then write all Resources in the directory to
   a container stdin (running the gcr.io/example/examplefunction:v1.0.1 image).  It
   would then writer the container stdout back to example/, replacing the directory
   file contents.
 
-  See ` + "`" + `kyaml help docs-fn` + "`" + ` for more details on writing functions.
+  See ` + "`" + `kustomize config help docs-fn` + "`" + ` for more details on writing functions.
 `
 var RunFnsExamples = `
-kyaml run-fns example/`
+kustomize config run example/`
 
 var TreeShort = `[Alpha] Display Resource structure from a directory or stdin.`
 var TreeLong = `
 [Alpha] Display Resource structure from a directory or stdin.
 
-kyaml tree may be used to print Resources in a directory or cluster, preserving structure
+kustomize config tree may be used to print Resources in a directory or cluster, preserving structure
 
 Args:
 
@@ -181,37 +181,37 @@ Args:
 
 Resource fields may be printed as part of the Resources by specifying the fields as flags.
 
-kyaml tree has build-in support for printing common fields, such as replicas, container images,
+kustomize config tree has build-in support for printing common fields, such as replicas, container images,
 container names, etc.
 
-kyaml tree supports printing arbitrary fields using the '--field' flag.
+kustomize config tree supports printing arbitrary fields using the '--field' flag.
 
-By default, kyaml tree uses the directory structure for the tree structure, however when printing
+By default, kustomize config tree uses the directory structure for the tree structure, however when printing
 from the cluster, the Resource graph structure may be used instead.
 `
 var TreeExamples = `
     # print Resources using directory structure
-    kyaml tree my-dir/
+    kustomize config tree my-dir/
     
     # print replicas, container name, and container image and fields for Resources
-    kyaml tree my-dir --replicas --image --name
+    kustomize config tree my-dir --replicas --image --name
     
     # print all common Resource fields
-    kyaml tree my-dir/ --all
+    kustomize config tree my-dir/ --all
     
     # print the "foo"" annotation
-    kyaml tree my-dir/ --field "metadata.annotations.foo" 
+    kustomize config tree my-dir/ --field "metadata.annotations.foo" 
     
     # print the "foo"" annotation
-    kubectl get all -o yaml | kyaml tree my-dir/ --structure=graph \
+    kubectl get all -o yaml | kustomize config tree my-dir/ --structure=graph \
       --field="status.conditions[type=Completed].status"
     
     # print live Resources from a cluster using graph for structure
-    kubectl get all -o yaml | kyaml tree --replicas --name --image --structure=graph
+    kubectl get all -o yaml | kustomize config tree --replicas --name --image --structure=graph
     
     
     # print live Resources using graph for structure
-    kubectl get all,applications,releasetracks -o yaml | kyaml tree --structure=graph \
+    kubectl get all,applications,releasetracks -o yaml | kustomize config tree --structure=graph \
       --name --image --replicas \
       --field="status.conditions[type=Completed].status" \
       --field="status.conditions[type=Complete].status" \

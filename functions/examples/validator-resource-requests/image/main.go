@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// Package main implements a validator function run by `kustomize config run-fns`
+// Package main implements a validator function run by `kustomize config run`
 package main
 
 import (
