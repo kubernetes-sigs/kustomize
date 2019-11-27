@@ -77,7 +77,7 @@ func NewConfigCommand(name string) *cobra.Command {
 	})
 	root.AddCommand(&cobra.Command{
 		Use:   "docs-fn",
-		Short: "[Alpha] Documentation for writing containerized functions run by run-fns.",
+		Short: "[Alpha] Documentation for writing containerized functions run by run.",
 		Long:  api.ConfigFnLong,
 	})
 	root.AddCommand(&cobra.Command{
@@ -87,9 +87,15 @@ func NewConfigCommand(name string) *cobra.Command {
 	})
 
 	root.AddCommand(&cobra.Command{
-		Use:   "tutorials-basics",
+		Use:   "tutorials-command-basics",
 		Short: "[Alpha] Tutorials for using basic config commands.",
 		Long:  tutorials.ConfigurationBasicsLong,
+	})
+
+	root.AddCommand(&cobra.Command{
+		Use:   "tutorials-function-basics",
+		Short: "[Alpha] Tutorials for using functions.",
+		Long:  tutorials.FunctionBasicsLong,
 	})
 
 	return root
