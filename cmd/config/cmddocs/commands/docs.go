@@ -123,7 +123,7 @@ var RunFnsShort = `[Alpha] Reoncile config functions to Resources.`
 var RunFnsLong = `
 [Alpha] Reconcile config functions to Resources.
 
-run-fns sequentially invokes all config functions in the directly, providing Resources
+run sequentially invokes all config functions in the directly, providing Resources
 in the directory as input to the first function, and writing the output of the last
 function back to the directory.
 
@@ -140,7 +140,7 @@ order they appear in the file).
 #### Config Functions:
 
   Config functions are specified as Kubernetes types containing a metadata.configFn.container.image
-  field.  This fields tells run-fns how to invoke the container.
+  field.  This fields tells run how to invoke the container.
 
   Example config function:
 
@@ -157,7 +157,7 @@ order they appear in the file).
 	spec:
 	  configField: configValue
 
-  In the preceding example, 'kustomize config run-fns example/' would identify the function by
+  In the preceding example, 'kustomize config run example/' would identify the function by
   the metadata.configFn field.  It would then write all Resources in the directory to
   a container stdin (running the gcr.io/example/examplefunction:v1.0.1 image).  It
   would then writer the container stdout back to example/, replacing the directory
@@ -166,7 +166,7 @@ order they appear in the file).
   See ` + "`" + `kustomize config help docs-fn` + "`" + ` for more details on writing functions.
 `
 var RunFnsExamples = `
-kustomize config run-fns example/`
+kustomize config run example/`
 
 var TreeShort = `[Alpha] Display Resource structure from a directory or stdin.`
 var TreeLong = `

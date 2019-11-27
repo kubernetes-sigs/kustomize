@@ -41,7 +41,7 @@ items:
 - 1
 
 # this command:
-$ kyaml cat pkg/ --function-config config.yaml --wrap-kind ResourceList | kyaml run-fns xargs -- app
+$ kyaml cat pkg/ --function-config config.yaml --wrap-kind ResourceList | kyaml run xargs -- app
 
 # is equivalent to this command:
 $ kyaml cat pkg/ --function-config config.yaml --wrap-kind ResourceList | app --flag1=value1 --flag2=value2 2 1

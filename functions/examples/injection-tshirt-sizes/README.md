@@ -17,7 +17,7 @@ Resource configuration, and looks for invalid configuration.
 The function is invoked by authoring a [local Resource](local-resource)
 with `metadata.configFn` and running:
 
-    kustomize config run-fns local-resources/
+    kustomize config run local-resources/
     
 This exists non-zero if there is an error.
 
@@ -25,11 +25,11 @@ This exists non-zero if there is an error.
 
 Run the validator with:
 
-    kustomize config run-fns local-resource/
+    kustomize config run local-resource/
     
 This will add resource reservations to the Deployment.  Change the `tshirt-size`
 annotation from `medium` to `small` and rerun:
 
-    kustomize config run-fns local-resource/
+    kustomize config run local-resource/
 
 Observe that the reservations have changed.
