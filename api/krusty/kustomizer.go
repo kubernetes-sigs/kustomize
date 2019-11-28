@@ -22,7 +22,7 @@ import (
 // performing an exec to a kustomize CLI subprocess.
 // To use, load a filesystem with kustomization files (any
 // number of overlays and bases), then make a Kustomizer
-// injected with the given fileystem, then call Build.
+// injected with the given fileystem, then call Run.
 type Kustomizer struct {
 	fSys    filesys.FileSystem
 	options *Options
