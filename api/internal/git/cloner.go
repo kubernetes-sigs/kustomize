@@ -15,6 +15,41 @@ import (
 // Cloner is a function that can clone a git repo.
 type Cloner func(repoSpec *RepoSpec) error
 
+// DeepClonerUsingGitExec uses a local git install
+// to obtain a full-depth clone of a remote repo
+func DeepClonerUsingGitExec(repoSpec *RepoSpec) error {
+	gitProgram, err := exec.LookPath("git")
+	if err != nil {
+		return errors.Wrap(err, "no 'git' program on path")
+	}
+	repoSpec.Dir, err = filesys.NewTmpConfirmedDir()
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command(
+		gitProgram,
+		"clone",
+		repoSpec.CloneSpec(),
+		repoSpec.Dir.String())
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err = cmd.Run()
+	if err != nil {
+		return errors.Wrapf(err, "trouble cloning %s", repoSpec.OrgRepo)
+	}
+	if repoSpec.Ref == "" {
+		repoSpec.Ref = "master"
+	}
+	cmd = exec.Command(gitProgram, "checkout", repoSpec.Ref)
+	cmd.Dir = repoSpec.Dir.String()
+	err = cmd.Run()
+	if err != nil {
+		return errors.Wrapf(
+			err, "trouble checking out href %s", repoSpec.Ref)
+	}
+	return nil
+}
+
 // ClonerUsingGitExec uses a local git install, as opposed
 // to say, some remote API, to obtain a local clone of
 // a remote repo.

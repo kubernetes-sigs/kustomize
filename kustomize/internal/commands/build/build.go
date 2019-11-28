@@ -76,6 +76,7 @@ func NewCmdBuild(out io.Writer) *cobra.Command {
 	addFlagLoadRestrictor(cmd.Flags())
 	addFlagEnablePlugins(cmd.Flags())
 	addFlagReorderOutput(cmd.Flags())
+	addFlagEnableDeepClone(cmd.Flags())
 	cmd.AddCommand(NewCmdBuildPrune(out))
 	return cmd
 }
@@ -105,6 +106,7 @@ func (o *Options) makeOptions() *krusty.Options {
 		DoLegacyResourceSort: o.outOrder == legacy,
 		LoadRestrictions:     getFlagLoadRestrictorValue(),
 		DoPrune:              false,
+		DoDeepGitClone:       isFlagEnableDeepCloneSet(),
 	}
 	if isFlagEnablePluginsSet() {
 		c, err := konfig.EnabledPluginConfig()
