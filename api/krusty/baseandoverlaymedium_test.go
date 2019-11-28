@@ -1,15 +1,13 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"testing"
-
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func writeMediumBase(th *kusttest_test.KustTestHarness) {
+func writeMediumBase(th testingHarness) {
 	th.WriteK("/app/base", `
 namePrefix: baseprefix-
 commonLabels:
@@ -59,12 +57,9 @@ spec:
 }
 
 func TestMediumBase(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	writeMediumBase(th)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -116,7 +111,7 @@ spec:
 }
 
 func TestMediumOverlay(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
+	th := makeTestHarness(t)
 	writeMediumBase(th)
 	th.WriteK("/app/overlay", `
 namePrefix: test-infra-
@@ -193,10 +188,7 @@ spec:
           name: app-env
         name: app-env
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
