@@ -25,7 +25,6 @@ import (
 // The full set of environment variables from the parent process
 // are passed to the container.
 type ContainerFilter struct {
-	mountPath string
 
 	// Image is the container image to use to create a container.
 	Image string `yaml:"image,omitempty"`
@@ -33,8 +32,8 @@ type ContainerFilter struct {
 	// Network is the container network to use.
 	Network string `yaml:"network,omitempty"`
 
-	// LocalVolume is the volume the container uses.
-	LocalVolume string `yaml:"localVolume,omitempty"`
+	// List of storage options that container will have mounted.
+	StorageMounts []StorageMount
 
 	// Config is the API configuration for the container and passed through the
 	// API_CONFIG env var to the container.
@@ -47,8 +46,25 @@ type ContainerFilter struct {
 	checkInput func(string)
 }
 
-func (c *ContainerFilter) SetMountPath(path string) {
-	c.mountPath = path
+// StorageMount represents a container's mounted storage option(s)
+type StorageMount struct {
+	// Type of mount e.g. bind mount, local volume, etc.
+	mountType string
+
+	// Source for the storage to be mounted.
+	// For named volumes, this is the name of the volume.
+	// For anonymous volumes, this field is omitted (empty string).
+	// For bind mounts, this is the path to the file or directory on the host.
+	src string
+
+	// The path where the file or directory is mounted in the container.
+	dstPath string
+}
+
+// AddStorageMount adds a mounted storage option to the Container
+func (c *ContainerFilter) AddStorageMount(mountType, src, dstPath string) {
+	storageMount := StorageMount{mountType, src, dstPath}
+	c.StorageMounts = append(c.StorageMounts, storageMount)
 }
 
 // GrepFilter implements kio.GrepFilter
@@ -108,13 +124,14 @@ func (c *ContainerFilter) getArgs() []string {
 		// don't make fs readonly because things like heredoc rely on writing tmp files
 		"--security-opt=no-new-privileges", // don't allow the user to escalate privileges
 	}
-	// mount the directory containing the function as read-only
-	if c.mountPath != "" {
-		args = append(args, "-v", fmt.Sprintf("%s:/local/:ro", c.mountPath))
-	}
 
-	if c.LocalVolume != "" {
-		args = append(args, "--mount", fmt.Sprintf("'type=volume,src=%s,dst=/local/:ro'", c.LocalVolume))
+	// TODO(joncwong): Allow StorageMount fields to have default values.
+	for _, storageMount := range c.StorageMounts {
+		mountType := storageMount.mountType
+		src := storageMount.src
+		dstPath := storageMount.dstPath
+
+		args = append(args, "--mount", fmt.Sprintf("'type=%s,src=%s,dst=%s:ro'", mountType, src, dstPath))
 	}
 
 	// export the local environment vars to the container

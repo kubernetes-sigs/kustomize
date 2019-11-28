@@ -91,7 +91,6 @@ func (r *RunFns) init() {
 	if r.containerFilterProvider == nil {
 		r.containerFilterProvider = func(image, path string, api *yaml.RNode) kio.Filter {
 			cf := &filters.ContainerFilter{Image: image, Config: api}
-			cf.SetMountPath(filepath.Join(r.Path, path))
 			return cf
 		}
 	}
