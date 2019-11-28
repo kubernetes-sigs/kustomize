@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -62,7 +61,7 @@ metadata:
 	assert.True(t, foundKyaml)
 }
 
-func TestFilter_commandMountPath(t *testing.T) {
+func TestFilter_command_StorageMount(t *testing.T) {
 	cfg, err := yaml.Parse(`apiversion: apps/v1
 kind: Deployment
 metadata:
@@ -71,47 +70,13 @@ metadata:
 	if !assert.NoError(t, err) {
 		return
 	}
+	bindMount := StorageMount{"bind", "/mount/path", "/local/"}
+	localVol := StorageMount{"volume", "myvol", "/local/"}
+	tmpfs := StorageMount{"tmpfs", "", "/local/"}
 	instance := &ContainerFilter{
-		Image:     "example.com:version",
-		Config:    cfg,
-		mountPath: filepath.Join("mount", "path"),
-	}
-	os.Setenv("KYAML_TEST", "FOO")
-	cmd, err := instance.getCommand()
-	if !assert.NoError(t, err) {
-		return
-	}
-
-	expected := []string{
-		"docker", "run",
-		"--rm",
-		"-i", "-a", "STDIN", "-a", "STDOUT", "-a", "STDERR",
-		"--network", "none",
-		"--user", "nobody",
-		"--security-opt=no-new-privileges",
-		"-v", fmt.Sprintf("%s:/local/:ro", filepath.Join("mount", "path")),
-	}
-	for _, e := range os.Environ() {
-		// the process env
-		expected = append(expected, "-e", strings.Split(e, "=")[0])
-	}
-	expected = append(expected, "example.com:version")
-	assert.Equal(t, expected, cmd.Args)
-}
-
-func TestFilter_command_LocalVolume(t *testing.T) {
-	cfg, err := yaml.Parse(`apiversion: apps/v1
-kind: Deployment
-metadata:
-  name: foo
-`)
-	if !assert.NoError(t, err) {
-		return
-	}
-	instance := &ContainerFilter{
-		Image:       "example.com:version",
-		Config:      cfg,
-		LocalVolume: "myvol",
+		Image:         "example.com:version",
+		Config:        cfg,
+		StorageMounts: []StorageMount{bindMount, localVol, tmpfs},
 	}
 	cmd, err := instance.getCommand()
 	if !assert.NoError(t, err) {
@@ -125,7 +90,9 @@ metadata:
 		"--network", "none",
 		"--user", "nobody",
 		"--security-opt=no-new-privileges",
-		"--mount", fmt.Sprintf("'type=volume,src=%s,dst=/local/:ro'", "myvol"),
+		"--mount", fmt.Sprintf("'type=%s,src=%s,dst=%s:ro'", "bind", "/mount/path", "/local/"),
+		"--mount", fmt.Sprintf("'type=%s,src=%s,dst=%s:ro'", "volume", "myvol", "/local/"),
+		"--mount", fmt.Sprintf("'type=%s,src=%s,dst=%s:ro'", "tmpfs", "", "/local/"),
 	}
 	for _, e := range os.Environ() {
 		// the process env
