@@ -34,7 +34,8 @@ func NewFakeLoaderWithRestrictor(
 	// Create fake filesystem and inject it into initial Loader.
 	fSys := filesys.MakeFsInMemory()
 	fSys.Mkdir(initialDir)
-	ldr, err := loader.NewLoader(lr, initialDir, fSys)
+	dc := false
+	ldr, err := loader.NewLoader(lr, initialDir, fSys, dc)
 	if err != nil {
 		log.Fatalf("Unable to make loader: %v", err)
 	}

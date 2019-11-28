@@ -18,6 +18,10 @@ type Options struct {
 	// order as specified by the kustomization file(s).
 	DoLegacyResourceSort bool
 
+	// When true, use full-depth git clone, in order to allow
+	// reference to a specific commit
+	DoDeepGitClone bool
+
 	// Restrictions on what can be loaded from the file system.
 	// See type definition.
 	LoadRestrictions types.LoadRestrictions
@@ -33,6 +37,7 @@ type Options struct {
 func MakeDefaultOptions() *Options {
 	return &Options{
 		DoLegacyResourceSort: true,
+		DoDeepGitClone:       false,
 		LoadRestrictions:     types.LoadRestrictionsRootOnly,
 		DoPrune:              false,
 		PluginConfig:         konfig.DisabledPluginConfig(),
