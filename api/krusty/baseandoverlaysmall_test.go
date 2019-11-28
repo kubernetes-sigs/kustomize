@@ -1,19 +1,18 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/konfig"
-	"sigs.k8s.io/kustomize/api/loader"
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	. "sigs.k8s.io/kustomize/api/krusty"
+	"sigs.k8s.io/kustomize/api/types"
 )
 
 func TestOrderPreserved(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/prod")
+	th := makeTestHarness(t)
 	th.WriteK("/app/base", `
 namePrefix: b-
 resources:
@@ -65,11 +64,7 @@ kind: Namespace
 metadata:
   name: myNs2
 `)
-
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/prod", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Namespace
@@ -104,7 +99,7 @@ metadata:
 }
 
 func TestBaseInResourceList(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/prod")
+	th := makeTestHarness(t)
 	th.WriteK("/app/prod", `
 namePrefix: b-
 resources:
@@ -124,10 +119,7 @@ spec:
   selector:
     backend: bungie
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/prod", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Service
@@ -139,7 +131,7 @@ spec:
 `)
 }
 
-func writeSmallBase(th *kusttest_test.KustTestHarness) {
+func writeSmallBase(th testingHarness) {
 	th.WriteK("/app/base", `
 namePrefix: a-
 commonLabels:
@@ -177,12 +169,9 @@ spec:
 }
 
 func TestSmallBase(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	writeSmallBase(th)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -220,7 +209,7 @@ spec:
 }
 
 func TestSmallOverlay(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
+	th := makeTestHarness(t)
 	writeSmallBase(th)
 	th.WriteK("/app/overlay", `
 namePrefix: b-
@@ -251,10 +240,7 @@ metadata:
 spec:
   replicas: 1000
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -298,9 +284,7 @@ spec:
 }
 
 func TestSharedPatchDisAllowed(t *testing.T) {
-	th := kusttest_test.NewKustTestHarnessFull(
-		t, "/app/overlay",
-		loader.RestrictionRootOnly, konfig.DisabledPluginConfig())
+	th := makeTestHarness(t)
 	writeSmallBase(th)
 	th.WriteK("/app/overlay", `
 commonLabels:
@@ -318,10 +302,11 @@ metadata:
 spec:
   replicas: 1000
 `)
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err == nil {
-		t.Fatalf("expected error")
-	}
+	err := th.RunWithErr("/app/overlay", func() Options {
+		o := th.MakeDefaultOptions()
+		o.LoadRestrictions = types.LoadRestrictionsRootOnly
+		return o
+	}())
 	if !strings.Contains(
 		err.Error(),
 		"security; file '/app/shared/deployment-patch.yaml' is not in or below '/app/overlay'") {
@@ -330,9 +315,7 @@ spec:
 }
 
 func TestSharedPatchAllowed(t *testing.T) {
-	th := kusttest_test.NewKustTestHarnessFull(
-		t, "/app/overlay",
-		loader.RestrictionNone, konfig.DisabledPluginConfig())
+	th := makeTestHarness(t)
 	writeSmallBase(th)
 	th.WriteK("/app/overlay", `
 commonLabels:
@@ -350,10 +333,11 @@ metadata:
 spec:
   replicas: 1000
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/overlay", func() Options {
+		o := th.MakeDefaultOptions()
+		o.LoadRestrictions = types.LoadRestrictionsNone
+		return o
+	}())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -397,7 +381,7 @@ spec:
 }
 
 func TestSmallOverlayJSONPatch(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
+	th := makeTestHarness(t)
 	writeSmallBase(th)
 	th.WriteK("/app/overlay", `
 resources:
@@ -415,10 +399,7 @@ patchesJson6902:
   path: /spec/selector/backend
   value: beagle
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
