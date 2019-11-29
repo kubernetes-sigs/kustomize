@@ -54,8 +54,7 @@ func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
 	if b.options.LoadRestrictions == types.LoadRestrictionsRootOnly {
 		lr = fLdr.RestrictionRootOnly
 	}
-
-	ldr, err := fLdr.NewLoader(lr, path, b.fSys, b.options.DoDeepGitClone)
+	ldr, err := fLdr.NewLoader(lr, path, b.fSys)
 	if err != nil {
 		return nil, err
 	}

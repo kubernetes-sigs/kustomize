@@ -57,9 +57,8 @@ metadata:
 		t.Fatalf("err %v", err)
 	}
 
-	dc := false
 	ldr, err := fLdr.NewLoader(
-		fLdr.RestrictionRootOnly, dir, fSys, dc)
+		fLdr.RestrictionRootOnly, dir, fSys)
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
