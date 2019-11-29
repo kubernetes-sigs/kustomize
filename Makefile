@@ -231,6 +231,7 @@ $(MYGOBIN)/helm:
 
 .PHONY: clean
 clean:
+	go clean --cache
 	rm -f $(builtinplugins)
 	rm -f $(MYGOBIN)/pluginator
 	rm -f $(MYGOBIN)/kustomize
