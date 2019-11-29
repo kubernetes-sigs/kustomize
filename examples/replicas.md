@@ -25,7 +25,7 @@ Declare the deployment resource
 
 <!-- @createDeployment @testAgainstLatestRelease -->
 ```
-cat <<EOF >$DEMO_HOME/pod.yaml
+cat <<EOF >$DEMO_HOME/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -62,6 +62,6 @@ Confirm that this replaces replicas for myapp:
 <!-- @confirmImages @testAgainstLatestRelease -->
 ```
 test 3 = \
-  $(kustomize build $DEMO_HOME | grep replicas | awk '{print $2}); \
+  $(kustomize build $DEMO_HOME | grep replicas | awk '{print $2}'); \
   echo $?
 ```
