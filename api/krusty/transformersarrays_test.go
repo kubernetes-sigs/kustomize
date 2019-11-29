@@ -1,15 +1,13 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"testing"
-
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func makeStatefulSetKustomization(th *kusttest_test.KustTestHarness) {
+func makeStatefulSetKustomization(th testingHarness) {
 	th.WriteK("/app", `
 commonLabels:
   notIn: arrays
@@ -92,12 +90,9 @@ spec:
 }
 
 func TestTransformersNoCreateArrays(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th := makeTestHarness(t)
 	makeStatefulSetKustomization(th)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: StatefulSet
