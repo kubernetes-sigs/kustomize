@@ -1,12 +1,10 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"testing"
-
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 // Here is a structure of a kustomization of two components, component1
@@ -40,7 +38,7 @@ import (
 // ├── kustomization.yaml
 
 func TestBaseReuseNameConflict(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th := makeTestHarness(t)
 	th.WriteK("/app/component1/base", `
 resources:
   - ../../shared
@@ -117,10 +115,7 @@ resources:
   - component2/overlay
 `)
 
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: PersistentVolumeClaim
