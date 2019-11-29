@@ -11,6 +11,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig"
+	"sigs.k8s.io/kustomize/api/konfig/builtinpluginconsts"
 	. "sigs.k8s.io/kustomize/api/krusty"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
@@ -175,4 +176,16 @@ func tabToSpace(input string) string {
 		}
 	}
 	return strings.Join(result, "")
+}
+
+func (th testingHarness) WriteLegacyConfigs(fName string) {
+	m := builtinpluginconsts.GetDefaultFieldSpecsAsMap()
+	var content []byte
+	for _, tCfg := range m {
+		content = append(content, []byte(tCfg)...)
+	}
+	err := th.fSys.WriteFile(fName, content)
+	if err != nil {
+		th.t.Fatalf("unable to add file %s", fName)
+	}
 }

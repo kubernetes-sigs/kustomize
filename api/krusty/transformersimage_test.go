@@ -1,15 +1,13 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"testing"
-
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func makeTransfomersImageBase(th *kusttest_test.KustTestHarness) {
+func makeTransfomersImageBase(th testingHarness) {
 	th.WriteK("/app/base", `
 resources:
 - deploy1.yaml
@@ -94,8 +92,7 @@ spec3:
 }
 
 func TestIssue1281_JsonPatchAndImageTag(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app")
-
+	th := makeTestHarness(t)
 	th.WriteK("/app", `
 resources:
 - deployment.yaml
@@ -147,10 +144,7 @@ spec:
    "value": { "image": "costello" } } ]
 `)
 
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -178,12 +172,9 @@ spec:
 }
 
 func TestTransfomersImageDefaultConfig(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	makeTransfomersImageBase(th)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 group: apps
@@ -242,7 +233,7 @@ spec3:
 `)
 }
 
-func makeTransfomersImageCustomBase(th *kusttest_test.KustTestHarness) {
+func makeTransfomersImageCustomBase(th testingHarness) {
 	th.WriteK("/app/base", `
 resources:
 - custom.yaml
@@ -313,13 +304,11 @@ images:
   path: spec3/template/spec/myInitContainers/image
 `)
 }
+
 func TestTransfomersImageCustomConfig(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	makeTransfomersImageCustomBase(th)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 kind: customKind
 metadata:
@@ -357,7 +346,7 @@ spec3:
 `)
 }
 
-func makeTransfomersImageKnativeBase(th *kusttest_test.KustTestHarness) {
+func makeTransfomersImageKnativeBase(th testingHarness) {
 	th.WriteK("/app/base", `
 resources:
 - knative.yaml
@@ -389,12 +378,9 @@ images:
 }
 
 func TestTransfomersImageKnativeConfig(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	makeTransfomersImageKnativeBase(th)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: serving.knative.dev/v1alpha1
 kind: Service

@@ -1,15 +1,13 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"testing"
-
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func makeBaseReferencingCustomConfig(th *kusttest_test.KustTestHarness) {
+func makeBaseReferencingCustomConfig(th testingHarness) {
 	th.WriteK("/app/base", `
 namePrefix: x-
 commonLabels:
@@ -74,9 +72,9 @@ spec:
 }
 
 func TestCustomConfig(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	makeBaseReferencingCustomConfig(th)
-	th.WriteDefaultConfigs("/app/base/config/defaults.yaml")
+	th.WriteLegacyConfigs("/app/base/config/defaults.yaml")
 	th.WriteF("/app/base/config/custom.yaml", `
 nameReference:
 - kind: Gorilla
@@ -91,10 +89,7 @@ varReference:
 - path: spec/food
   kind: AnimalPark
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 kind: AnimalPark
 metadata:
@@ -140,9 +135,9 @@ spec:
 }
 
 func TestCustomConfigWithDefaultOverspecification(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	makeBaseReferencingCustomConfig(th)
-	th.WriteDefaultConfigs("/app/base/config/defaults.yaml")
+	th.WriteLegacyConfigs("/app/base/config/defaults.yaml")
 	// Specifying namePrefix here conflicts with (is the same as)
 	// the defaults written above.  This is intentional in the
 	// test to assure duplicate config doesn't cause problems.
@@ -162,10 +157,7 @@ varReference:
 - path: spec/food
   kind: AnimalPark
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 kind: AnimalPark
 metadata:
@@ -211,9 +203,9 @@ spec:
 }
 
 func TestFixedBug605_BaseCustomizationAvailableInOverlay(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
+	th := makeTestHarness(t)
 	makeBaseReferencingCustomConfig(th)
-	th.WriteDefaultConfigs("/app/base/config/defaults.yaml")
+	th.WriteLegacyConfigs("/app/base/config/defaults.yaml")
 	th.WriteF("/app/base/config/custom.yaml", `
 nameReference:
 - kind: Gorilla
@@ -255,12 +247,7 @@ spec:
   gorillaRef:
     name: ursus
 `)
-
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
-
+	m := th.Run("/app/overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 kind: AnimalPark
 metadata:
