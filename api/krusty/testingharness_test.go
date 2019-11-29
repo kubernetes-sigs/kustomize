@@ -43,20 +43,25 @@ func (th testingHarness) WriteF(path string, content string) {
 }
 
 func (th testingHarness) MakeDefaultOptions() Options {
+	return th.MakeOptionsPluginsDisabled()
+}
+
+func (th testingHarness) MakeOptionsPluginsDisabled() Options {
 	return Options{
 		LoadRestrictions: types.LoadRestrictionsRootOnly,
 		PluginConfig:     konfig.DisabledPluginConfig(),
 	}
 }
 
-func (th testingHarness) MakeEnabledPluginConfig() *types.PluginConfig {
-	// TODO: this doesn't work yet - need to set an env var.
-	// TODO: steal from kusttest_test.NewPluginTestEnv
+func (th testingHarness) MakeOptionsPluginsEnabled() Options {
 	c, err := konfig.EnabledPluginConfig()
 	if err != nil {
 		th.t.Fatal(err)
 	}
-	return c
+	return Options{
+		LoadRestrictions: types.LoadRestrictionsRootOnly,
+		PluginConfig:     c,
+	}
 }
 
 // Run, failing on error.

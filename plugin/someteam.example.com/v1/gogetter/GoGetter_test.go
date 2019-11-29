@@ -19,7 +19,7 @@ func TestGoGetter(t *testing.T) {
 	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
-	tc.BuildExecPlugin(
+	tc.PrepExecPlugin(
 		"someteam.example.com", "v1", "GoGetter")
 
 	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
@@ -47,7 +47,7 @@ func TestGoGetterUrl(t *testing.T) {
 	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
-	tc.BuildExecPlugin(
+	tc.PrepExecPlugin(
 		"someteam.example.com", "v1", "GoGetter")
 
 	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
@@ -76,7 +76,7 @@ func TestGoGetterCommand(t *testing.T) {
 	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
-	tc.BuildExecPlugin(
+	tc.PrepExecPlugin(
 		"someteam.example.com", "v1", "GoGetter")
 
 	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
@@ -105,7 +105,7 @@ func TestGoGetterSubPath(t *testing.T) {
 	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
-	tc.BuildExecPlugin(
+	tc.PrepExecPlugin(
 		"someteam.example.com", "v1", "GoGetter")
 
 	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
