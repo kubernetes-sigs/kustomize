@@ -22,7 +22,7 @@ func TestChartInflator(t *testing.T) {
 	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
-	tc.BuildExecPlugin(
+	tc.PrepExecPlugin(
 		"someteam.example.com", "v1", "ChartInflator")
 
 	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
