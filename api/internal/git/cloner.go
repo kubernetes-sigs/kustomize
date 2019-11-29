@@ -74,8 +74,28 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 	cmd.Dir = repoSpec.Dir.String()
 	err = cmd.Run()
 	if err != nil {
-		log.Printf("Error performing git fetch: %s", out.String())
-		return errors.Wrapf(err, "trouble fetching %s", repoSpec.Ref)
+		cmd = exec.Command(
+			gitProgram,
+			"pull",
+			"origin",
+			"master")
+		var out bytes.Buffer
+		cmd.Stdout = &out
+		cmd.Dir = repoSpec.Dir.String()
+		err := cmd.Run()
+		if err != nil {
+			return errors.Wrapf(err, "trouble pulling %s", repoSpec.OrgRepo)
+		}
+		if repoSpec.Ref == "" {
+			repoSpec.Ref = "master"
+		}
+		cmd = exec.Command(gitProgram, "checkout", repoSpec.Ref)
+		cmd.Dir = repoSpec.Dir.String()
+		err = cmd.Run()
+		if err != nil {
+			return errors.Wrapf(
+				err, "trouble checking out href %s", repoSpec.Ref)
+		}
 	}
 
 	cmd = exec.Command(
