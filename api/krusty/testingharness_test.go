@@ -56,6 +56,11 @@ func (th testingHarness) MakeOptionsPluginsDisabled() Options {
 func (th testingHarness) MakeOptionsPluginsEnabled() Options {
 	c, err := konfig.EnabledPluginConfig()
 	if err != nil {
+		if strings.Contains(err.Error(), "unable to find plugin root") {
+			th.t.Log(
+				"Tests that want to run with plugins enabled must be " +
+					"bookended by calls to NewPluginTestEnv.Set(), Reset().")
+		}
 		th.t.Fatal(err)
 	}
 	return Options{
