@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
-func writeDeployment(th *kusttest_test.KustTestHarness, path string) {
+func writeDeployment(th testingHarness, path string) {
 	th.WriteF(path, `
 apiVersion: apps/v1
 kind: Deployment
@@ -28,8 +28,7 @@ spec:
 `)
 }
 
-func writeStringPrefixer(
-	th *kusttest_test.KustTestHarness, path, name string) {
+func writeStringPrefixer(th testingHarness, path, name string) {
 	th.WriteF(path, `
 apiVersion: someteam.example.com/v1
 kind: StringPrefixer
@@ -38,8 +37,7 @@ metadata:
 `)
 }
 
-func writeDatePrefixer(
-	th *kusttest_test.KustTestHarness, path, name string) {
+func writeDatePrefixer(th testingHarness, path, name string) {
 	th.WriteF(path, `
 apiVersion: someteam.example.com/v1
 kind: DatePrefixer
@@ -57,8 +55,7 @@ func TestOrderedTransformers(t *testing.T) {
 
 	tc.BuildGoPlugin(
 		"someteam.example.com", "v1", "DatePrefixer")
-
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := makeTestHarness(t)
 	th.WriteK("/app", `
 resources:
 - deployment.yaml
@@ -73,10 +70,7 @@ transformers:
 	writeStringPrefixer(th, "/app/peachPrefixer.yaml", "peach")
 	writeDatePrefixer(th, "/app/date1Prefixer.yaml", "date1")
 	writeDatePrefixer(th, "/app/date2Prefixer.yaml", "date2")
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app", th.MakeOptionsPluginsEnabled())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -101,14 +95,13 @@ func TestPluginsNotEnabled(t *testing.T) {
 	tc.BuildGoPlugin(
 		"someteam.example.com", "v1", "StringPrefixer")
 
-	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th := makeTestHarness(t)
 	th.WriteK("/app", `
 transformers:
 - stringPrefixer.yaml
 `)
 	writeStringPrefixer(th, "/app/stringPrefixer.yaml", "apple")
-
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
+	err := th.RunWithErr("/app", th.MakeOptionsPluginsDisabled())
 	if err == nil {
 		t.Fatalf("expected error")
 	}
@@ -124,7 +117,7 @@ func TestSedTransformer(t *testing.T) {
 	tc.PrepExecPlugin(
 		"someteam.example.com", "v1", "SedTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := makeTestHarness(t)
 	th.WriteK("/app", `
 resources:
 - configmap.yaml
@@ -161,10 +154,7 @@ data:
   foo: $FOO
 `)
 
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app", th.MakeOptionsPluginsEnabled())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
@@ -195,7 +185,7 @@ func TestTransformedTransformers(t *testing.T) {
 	tc.BuildGoPlugin(
 		"someteam.example.com", "v1", "DatePrefixer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app/overlay")
+	th := makeTestHarness(t)
 
 	th.WriteK("/app/base", `
 resources:
@@ -214,10 +204,7 @@ transformers:
 `)
 	writeDeployment(th, "/app/overlay/deployment.yaml")
 
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/overlay", th.MakeOptionsPluginsEnabled())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
