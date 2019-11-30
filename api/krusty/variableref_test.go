@@ -1,17 +1,15 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"strings"
 	"testing"
-
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestBasicVariableRef(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th := makeTestHarness(t)
 	th.WriteK("/app", `
 namePrefix: base-
 resources:
@@ -42,10 +40,7 @@ spec:
       - name: FOO
         value: "$(POD_NAME)"
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Pod
@@ -65,7 +60,7 @@ spec:
 }
 
 func TestBasicVarCollision(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
+	th := makeTestHarness(t)
 	th.WriteK("/app/base1", `
 namePrefix: base1-
 resources:
@@ -131,7 +126,7 @@ resources:
 - ../base1
 - ../base2
 `)
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
+	err := th.RunWithErr("/app/overlay", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("should have an error")
 	}
@@ -141,7 +136,7 @@ resources:
 }
 
 func TestVarPropagatesUp(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
+	th := makeTestHarness(t)
 	th.WriteK("/app/base1", `
 namePrefix: base1-
 resources:
@@ -227,10 +222,7 @@ spec:
       - name: P2
         value: "$(POD_NAME2)"
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Pod
@@ -287,7 +279,7 @@ spec:
 // are global.  So if a base with a variable is included
 // twice, it's a collision, so it's denied.
 func TestBug506(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/top")
+	th := makeTestHarness(t)
 	th.WriteK("/app/base", `
 namePrefix: base-
 resources:
@@ -357,7 +349,7 @@ resources:
 	       name: myServer
 	   `
 	*/
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
+	err := th.RunWithErr("/app/top", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("should have an error")
 	}
@@ -367,7 +359,7 @@ resources:
 }
 
 func TestVarRefBig(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlay/staging")
+	th := makeTestHarness(t)
 	th.WriteK("/app/base", `
 namePrefix: base-
 resources:
@@ -684,10 +676,7 @@ namePrefix: dev-
 resources:
 - ../../base
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/overlay/staging", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ServiceAccount
@@ -936,7 +925,7 @@ metadata:
 }
 
 func TestVariableRefIngress(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
+	th := makeTestHarness(t)
 	th.WriteK("/app/base", `
 resources:
 - service.yaml
@@ -1015,10 +1004,7 @@ nameprefix: kustomized-
 resources:
 - ../base
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Service
@@ -1078,7 +1064,7 @@ spec:
 }
 
 func TestVariableRefMountPath(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	th.WriteK("/app/base", `
 resources:
 - deployment.yaml
@@ -1120,10 +1106,7 @@ vars:
     name: my-namespace
 `)
 
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -1153,7 +1136,7 @@ metadata:
 }
 
 func TestVariableRefMaps(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	th.WriteK("/app/base", `
 resources:
 - deployment.yaml
@@ -1186,10 +1169,7 @@ vars:
     name: my-namespace
 `)
 
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -1212,7 +1192,7 @@ metadata:
 }
 
 func TestVaribaleRefDifferentPrefix(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	th.WriteK("/app/base", `
 namePrefix: base-
 resources:
@@ -1299,11 +1279,7 @@ spec:
   clusterIP: None
 `)
 
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
-
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: StatefulSet
