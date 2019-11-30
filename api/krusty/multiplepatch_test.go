@@ -1,16 +1,14 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"strings"
 	"testing"
-
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func makeCommonFileForMultiplePatchTest(th *kusttest_test.KustTestHarness) {
+func makeCommonFileForMultiplePatchTest(th testingHarness) {
 	th.WriteK("/app/base", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -89,7 +87,7 @@ configMapGenerator:
 }
 
 func TestMultiplePatchesNoConflict(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlay/staging")
+	th := makeTestHarness(t)
 	makeCommonFileForMultiplePatchTest(th)
 	th.WriteF("/app/overlay/staging/deployment-patch1.yaml", `
 apiVersion: apps/v1beta2
@@ -130,10 +128,7 @@ spec:
       volumes:
       - name: nginx-persistent-storage
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/overlay/staging", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -233,7 +228,7 @@ metadata:
 }
 
 func TestMultiplePatchesWithConflict(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlay/staging")
+	th := makeTestHarness(t)
 	makeCommonFileForMultiplePatchTest(th)
 	th.WriteF("/app/overlay/staging/deployment-patch1.yaml", `
 apiVersion: apps/v1beta2
@@ -271,7 +266,7 @@ spec:
         - name: ENABLE_FEATURE_FOO
           value: FALSE
 `)
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
+	err := th.RunWithErr("/app/overlay/staging", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("expected conflict")
 	}
@@ -325,15 +320,12 @@ spec:
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			th := kusttest_test.NewKustTestHarness(t, "/app/overlay/staging")
+			th := makeTestHarness(t)
 
 			makeCommonFileForMultiplePatchTest(th)
 			th.WriteF("/app/overlay/staging/deployment-patch1.yaml", c.patch1)
 			th.WriteF("/app/overlay/staging/deployment-patch2.yaml", c.patch2)
-			m, err := th.MakeKustTarget().MakeCustomizedResMap()
-			if err != nil {
-				t.Fatalf("Err: %v", err)
-			}
+			m := th.Run("/app/overlay/staging", th.MakeDefaultOptions())
 			th.AssertActualEqualsExpected(m, `apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
@@ -426,7 +418,7 @@ metadata:
 }
 
 func TestMultiplePatchesBothWithPatchDeleteDirective(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlay/staging")
+	th := makeTestHarness(t)
 	makeCommonFileForMultiplePatchTest(th)
 	th.WriteF("/app/overlay/staging/deployment-patch1.yaml", `
 apiVersion: apps/v1beta2
@@ -452,7 +444,7 @@ spec:
       - $patch: delete
         name: nginx
 `)
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
+	err := th.RunWithErr("/app/overlay/staging", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("Expected error")
 	}

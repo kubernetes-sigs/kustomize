@@ -1,18 +1,15 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"strings"
 	"testing"
-
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestNamespacedSecrets(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app")
-
+	th := makeTestHarness(t)
 	th.WriteF("/app/secrets.yaml", `
 apiVersion: v1
 kind: Secret
@@ -51,16 +48,12 @@ resources:
 - secrets.yaml
 - role.yaml
 `)
-
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
 	// This validates Fix #1444. This should not be an error anymore -
 	// the secrets have the same name but are in different namespaces.
 	// The ClusterRole (by def) is not in a namespace,
 	// an in this case applies to *any* Secret resource
 	// named "dummy"
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
@@ -100,7 +93,7 @@ rules:
 // PrefixSuffixTransformer and namereference transformers are
 // able to deal with simultaneous change of namespace and name.
 func TestNameAndNsTransformation(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/nameandns")
+	th := makeTestHarness(t)
 
 	th.WriteK("/nameandns", `
 namePrefix: p1-
@@ -206,11 +199,7 @@ kind: PersistentVolume
 metadata:
   name: pv1
 `)
-
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/nameandns", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ConfigMap
@@ -474,11 +463,11 @@ spec:
 // using the same name in different namespaces are treated as ambiguous if the namespace is
 // not specified
 func TestVariablesAmbiguous(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/namespaceNeedInVar/myapp")
+	th := makeTestHarness(t)
 	th.WriteK("/namespaceNeedInVar/myapp", namespaceNeedInVarMyApp)
 	th.WriteF("/namespaceNeedInVar/myapp/elasticsearch-dev-service.yaml", namespaceNeedInVarDevResources)
 	th.WriteF("/namespaceNeedInVar/myapp/elasticsearch-test-service.yaml", namespaceNeedInVarTestResources)
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
+	err := th.RunWithErr("/namespaceNeedInVar/myapp", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("expected error")
 	}
@@ -531,7 +520,7 @@ vars:
 // to TestVariablesAmbiguous problem. It requires to separate the variables
 // and resources into multiple kustomization context/folders instead of one.
 func TestVariablesAmbiguousWorkaround(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/namespaceNeedInVar/workaround")
+	th := makeTestHarness(t)
 	th.WriteK("/namespaceNeedInVar/dev", namespaceNeedInVarDevFolder)
 	th.WriteF("/namespaceNeedInVar/dev/elasticsearch-dev-service.yaml", namespaceNeedInVarDevResources)
 	th.WriteK("/namespaceNeedInVar/test", namespaceNeedInVarTestFolder)
@@ -541,10 +530,7 @@ resources:
 - ../dev
 - ../test
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/namespaceNeedInVar/workaround", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, namespaceNeedInVarExpectedOutput)
 }
 
@@ -590,13 +576,10 @@ vars:
 // TestVariablesDisambiguatedWithNamespace demonstrates that adding the namespace
 // to the variable declarations allows to disambiguate the variables.
 func TestVariablesDisambiguatedWithNamespace(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/namespaceNeedInVar/myapp")
+	th := makeTestHarness(t)
 	th.WriteK("/namespaceNeedInVar/myapp", namespaceNeedInVarMyAppWithNamespace)
 	th.WriteF("/namespaceNeedInVar/myapp/elasticsearch-dev-service.yaml", namespaceNeedInVarDevResources)
 	th.WriteF("/namespaceNeedInVar/myapp/elasticsearch-test-service.yaml", namespaceNeedInVarTestResources)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/namespaceNeedInVar/myapp", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, namespaceNeedInVarExpectedOutput)
 }

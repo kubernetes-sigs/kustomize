@@ -1,16 +1,14 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"testing"
-
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestNullValues(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th := makeTestHarness(t)
 	th.WriteF("/app/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
@@ -38,10 +36,7 @@ kind: Kustomization
 resources:
 - deployment.yaml
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app", th.MakeDefaultOptions())
 
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
