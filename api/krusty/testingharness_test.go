@@ -47,6 +47,7 @@ func (th testingHarness) MakeDefaultOptions() Options {
 	return th.MakeOptionsPluginsDisabled()
 }
 
+// This has no impact on Builtin plugins, as they are always enabled.
 func (th testingHarness) MakeOptionsPluginsDisabled() Options {
 	return Options{
 		LoadRestrictions: types.LoadRestrictionsRootOnly,
@@ -54,6 +55,7 @@ func (th testingHarness) MakeOptionsPluginsDisabled() Options {
 	}
 }
 
+// Enables use of non-builtin plugins.
 func (th testingHarness) MakeOptionsPluginsEnabled() Options {
 	c, err := konfig.EnabledPluginConfig()
 	if err != nil {

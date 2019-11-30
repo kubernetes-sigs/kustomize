@@ -1,13 +1,14 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"strings"
 	"testing"
 
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	. "sigs.k8s.io/kustomize/api/krusty"
+	"sigs.k8s.io/kustomize/api/types"
 )
 
 const httpsService = `
@@ -24,7 +25,7 @@ spec:
     app: my-app
 `
 
-func writeStatefulSetBase(th *kusttest_test.KustTestHarness) {
+func writeStatefulSetBase(th testingHarness) {
 	th.WriteK("/app/base", `
 resources:
 - statefulset.yaml
@@ -53,7 +54,7 @@ spec:
 `)
 }
 
-func writeHTTPSOverlay(th *kusttest_test.KustTestHarness) {
+func writeHTTPSOverlay(th testingHarness) {
 	th.WriteK("/app/https", `
 resources:
 - ../base
@@ -72,7 +73,7 @@ spec:
 `)
 }
 
-func writeHTTPSTransformerRaw(th *kusttest_test.KustTestHarness) {
+func writeHTTPSTransformerRaw(th testingHarness) {
 	th.WriteF("/app/https/service/https-svc.yaml", httpsService)
 	th.WriteF("/app/https/transformer/transformer.yaml", `
 apiVersion: builtin
@@ -94,7 +95,7 @@ patch: |-
 `)
 }
 
-func writeHTTPSTransformerBase(th *kusttest_test.KustTestHarness) {
+func writeHTTPSTransformerBase(th testingHarness) {
 	th.WriteK("/app/https/service", `
 resources:
 - https-svc.yaml
@@ -106,7 +107,7 @@ resources:
 	writeHTTPSTransformerRaw(th)
 }
 
-func writeConfigFromEnvOverlay(th *kusttest_test.KustTestHarness) {
+func writeConfigFromEnvOverlay(th testingHarness) {
 	th.WriteK("/app/config", `
 resources:
 - ../base
@@ -135,7 +136,7 @@ spec:
 `)
 }
 
-func writeConfigFromEnvTransformerRaw(th *kusttest_test.KustTestHarness) {
+func writeConfigFromEnvTransformerRaw(th testingHarness) {
 	th.WriteF("/app/config/map/generator.yaml", `
 apiVersion: builtin
 kind: ConfigMapGenerator
@@ -170,7 +171,7 @@ patch: |-
               name: my-config
 `)
 }
-func writeConfigFromEnvTransformerBase(th *kusttest_test.KustTestHarness) {
+func writeConfigFromEnvTransformerBase(th testingHarness) {
 	th.WriteK("/app/config/map", `
 resources:
 - generator.yaml
@@ -182,7 +183,7 @@ resources:
 	writeConfigFromEnvTransformerRaw(th)
 }
 
-func writeTolerationsOverlay(th *kusttest_test.KustTestHarness) {
+func writeTolerationsOverlay(th testingHarness) {
 	th.WriteK("/app/tolerations", `
 resources:
 - ../base
@@ -204,7 +205,7 @@ spec:
 `)
 }
 
-func writeTolerationsTransformerRaw(th *kusttest_test.KustTestHarness) {
+func writeTolerationsTransformerRaw(th testingHarness) {
 	th.WriteF("/app/tolerations/transformer.yaml", `
 apiVersion: builtin
 kind: PatchTransformer
@@ -230,7 +231,7 @@ patch: |-
 `)
 }
 
-func writeTolerationsTransformerBase(th *kusttest_test.KustTestHarness) {
+func writeTolerationsTransformerBase(th testingHarness) {
 	th.WriteK("/app/tolerations", `
 resources:
 - transformer.yaml
@@ -238,7 +239,7 @@ resources:
 	writeTolerationsTransformerRaw(th)
 }
 
-func writeStorageOverlay(th *kusttest_test.KustTestHarness) {
+func writeStorageOverlay(th testingHarness) {
 	th.WriteK("/app/storage", `
 resources:
 - ../base
@@ -255,7 +256,7 @@ patchesJson6902:
 `)
 }
 
-func writeStorageTransformerRaw(th *kusttest_test.KustTestHarness) {
+func writeStorageTransformerRaw(th testingHarness) {
 	th.WriteF("/app/storage/transformer.yaml", `
 apiVersion: builtin
 kind: PatchTransformer
@@ -271,7 +272,7 @@ patch: |-
 `)
 }
 
-func writeStorageTransformerBase(th *kusttest_test.KustTestHarness) {
+func writeStorageTransformerBase(th testingHarness) {
 	th.WriteK("/app/storage", `
 resources:
 - transformer.yaml
@@ -279,14 +280,14 @@ resources:
 	writeStorageTransformerRaw(th)
 }
 
-func writePatchingOverlays(th *kusttest_test.KustTestHarness) {
+func writePatchingOverlays(th testingHarness) {
 	writeStorageOverlay(th)
 	writeConfigFromEnvOverlay(th)
 	writeTolerationsOverlay(th)
 	writeHTTPSOverlay(th)
 }
 
-func writePatchingTransformersRaw(th *kusttest_test.KustTestHarness) {
+func writePatchingTransformersRaw(th testingHarness) {
 	writeStorageTransformerRaw(th)
 	writeConfigFromEnvTransformerRaw(th)
 	writeTolerationsTransformerRaw(th)
@@ -309,7 +310,7 @@ func writePatchingTransformersRaw(th *kusttest_test.KustTestHarness) {
 // must be self-contained, i.e. the config may not have fields that
 // refer to local files, since those files won't be present when
 // the plugin is instantiated and used.
-func writePatchingTransformerBases(th *kusttest_test.KustTestHarness) {
+func writePatchingTransformerBases(th testingHarness) {
 	writeStorageTransformerBase(th)
 	writeConfigFromEnvTransformerBase(th)
 	writeTolerationsTransformerBase(th)
@@ -352,7 +353,7 @@ func writePatchingTransformerBases(th *kusttest_test.KustTestHarness) {
 //   - prod: Combines the config, tolerations and https intermediate overlays.
 
 func TestComplexComposition_Dev_Failure(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/dev")
+	th := makeTestHarness(t)
 	writeStatefulSetBase(th)
 	writePatchingOverlays(th)
 	th.WriteK("/app/dev", `
@@ -360,7 +361,7 @@ resources:
 - ../storage
 - ../config
 `)
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
+	err := th.RunWithErr("/app/dev", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("Expected resource accumulation error")
 	}
@@ -404,7 +405,7 @@ metadata:
 `
 
 func TestComplexComposition_Dev_SuccessWithRawTransformers(t *testing.T) {
-	th := kusttest_test.NewKustTestHarnessNoLoadRestrictor(t, "/app/dev")
+	th := makeTestHarness(t)
 	writeStatefulSetBase(th)
 	writePatchingTransformersRaw(th)
 	th.WriteK("/app/dev", `
@@ -416,15 +417,16 @@ transformers:
 - ../config/transformer/transformer.yaml
 - ../storage/transformer.yaml
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Unexpected err: %v", err)
-	}
+	m := th.Run("/app/dev", func() Options {
+		o := th.MakeDefaultOptions()
+		o.LoadRestrictions = types.LoadRestrictionsNone
+		return o
+	}())
 	th.AssertActualEqualsExpected(m, devDesiredResult)
 }
 
 func TestComplexComposition_Dev_SuccessWithBaseTransformers(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/dev")
+	th := makeTestHarness(t)
 	writeStatefulSetBase(th)
 	writePatchingTransformerBases(th)
 	th.WriteK("/app/dev", `
@@ -436,15 +438,12 @@ transformers:
 - ../config/transformer
 - ../storage
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Unexpected err: %v", err)
-	}
+	m := th.Run("/app/dev", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, devDesiredResult)
 }
 
 func TestComplexComposition_Prod_Failure(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/prod")
+	th := makeTestHarness(t)
 	writeStatefulSetBase(th)
 	writePatchingOverlays(th)
 	th.WriteK("/app/prod", `
@@ -453,7 +452,7 @@ resources:
 - ../tolerations
 - ../https
 `)
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
+	err := th.RunWithErr("/app/prod", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("Expected resource accumulation error")
 	}
@@ -513,7 +512,7 @@ metadata:
 `
 
 func TestComplexComposition_Prod_SuccessWithRawTransformers(t *testing.T) {
-	th := kusttest_test.NewKustTestHarnessNoLoadRestrictor(t, "/app/prod")
+	th := makeTestHarness(t)
 	writeStatefulSetBase(th)
 	writePatchingTransformersRaw(th)
 	th.WriteK("/app/prod", `
@@ -527,15 +526,16 @@ transformers:
 - ../https/transformer/transformer.yaml
 - ../tolerations/transformer.yaml
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Unexpected err: %v", err)
-	}
+	m := th.Run("/app/prod", func() Options {
+		o := th.MakeDefaultOptions()
+		o.LoadRestrictions = types.LoadRestrictionsNone
+		return o
+	}())
 	th.AssertActualEqualsExpected(m, prodDesiredResult)
 }
 
 func TestComplexComposition_Prod_SuccessWithBaseTransformers(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/prod")
+	th := makeTestHarness(t)
 	writeStatefulSetBase(th)
 	writePatchingTransformerBases(th)
 	th.WriteK("/app/prod", `
@@ -549,9 +549,6 @@ transformers:
 - ../https/transformer
 - ../tolerations
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Unexpected err: %v", err)
-	}
+	m := th.Run("/app/prod", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, prodDesiredResult)
 }
