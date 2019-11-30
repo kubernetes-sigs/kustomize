@@ -1,17 +1,16 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"testing"
 
 	. "sigs.k8s.io/kustomize/api/internal/target"
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestTargetMustHaveKustomizationFile(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th := makeTestHarness(t)
 	th.WriteF("/app/service.yaml", `
 apiVersion: v1
 kind: Service
@@ -24,7 +23,7 @@ kind: Service
 metadata:
   name: anotherService
 `)
-	_, err := th.MakeKustTargetOrErr()
+	err := th.RunWithErr("/app", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("expected an error")
 	}
@@ -33,8 +32,8 @@ metadata:
 	}
 }
 
-func TestResourceDirectoryMustHaveKustomizationFile(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app")
+func TestBaseMustHaveKustomizationFile(t *testing.T) {
+	th := makeTestHarness(t)
 	th.WriteK("/app", `
 resources:
 - base
@@ -50,7 +49,7 @@ spec:
   ports:
     - port: 7002
 `)
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
+	err := th.RunWithErr("/app", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("expected an error")
 	}

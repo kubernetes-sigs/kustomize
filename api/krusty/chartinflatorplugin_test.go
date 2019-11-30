@@ -5,7 +5,7 @@
 
 // Disabled on travis, because don't want to install helm on travis.
 
-package target_test
+package krusty_test
 
 import (
 	"regexp"
@@ -34,7 +34,7 @@ func TestChartInflatorPlugin(t *testing.T) {
 	tc.PrepExecPlugin(
 		"someteam.example.com", "v1", "ChartInflator")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := makeTestHarness(t)
 	th.WriteK("/app", `
 generators:
 - chartInflator.yaml
@@ -49,10 +49,7 @@ metadata:
 chartName: minecraft
 `)
 
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app", th.MakeOptionsPluginsEnabled())
 	chartName := regexp.MustCompile("chart: minecraft-[0-9.]+")
 	th.AssertActualEqualsExpectedWithTweak(m,
 		func(x []byte) []byte {
