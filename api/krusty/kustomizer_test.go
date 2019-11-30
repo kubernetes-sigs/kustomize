@@ -10,10 +10,10 @@ import (
 	"sigs.k8s.io/kustomize/api/krusty"
 )
 
-// A simple usage example - just shows what happens when
-// there are no files to read.  For more substantial tests
-// and examples, see other tests in this package.
-// TODO: https://github.com/kubernetes-sigs/kustomize/issues/1862
+// A simple usage example to shows what happens when
+// there are no files to read.
+// For more substantial tests and examples,
+// see other tests in this package.
 func TestEmptyFileSystem(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	b := krusty.MakeKustomizer(fSys, krusty.MakeDefaultOptions())
