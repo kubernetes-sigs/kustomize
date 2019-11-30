@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"testing"
@@ -19,8 +19,7 @@ func TestCustomNamePrefixer(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "PrefixSuffixTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
-
+	th := makeTestHarness(t)
 	th.WriteK("/app", `
 resources:
 - deployment.yaml
@@ -69,10 +68,7 @@ metadata:
   name: myService
 `)
 
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
