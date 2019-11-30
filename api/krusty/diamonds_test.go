@@ -1,12 +1,10 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"testing"
-
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 // Here's a structure of two kustomizations,
@@ -30,7 +28,7 @@ import (
 //          \    |    /
 //             base
 //
-func writeDiamondBase(th *kusttest_test.KustTestHarness) {
+func writeDiamondBase(th testingHarness) {
 	th.WriteK("/app/base", `
 resources:
 - deploy.yaml
@@ -45,7 +43,7 @@ spec:
 `)
 }
 
-func writeKirk(th *kusttest_test.KustTestHarness) {
+func writeKirk(th testingHarness) {
 	th.WriteK("/app/kirk", `
 namePrefix: kirk-
 resources:
@@ -72,7 +70,7 @@ data:
 `)
 }
 
-func writeSpock(th *kusttest_test.KustTestHarness) {
+func writeSpock(th testingHarness) {
 	th.WriteK("/app/spock", `
 namePrefix: spock-
 resources:
@@ -90,7 +88,7 @@ spec:
 `)
 }
 
-func writeBones(th *kusttest_test.KustTestHarness) {
+func writeBones(th testingHarness) {
 	th.WriteK("/app/bones", `
 namePrefix: bones-
 resources:
@@ -108,7 +106,7 @@ spec:
 `)
 }
 
-func writeTenants(th *kusttest_test.KustTestHarness) {
+func writeTenants(th testingHarness) {
 	th.WriteK("/app/tenants", `
 namePrefix: t-
 resources:
@@ -139,7 +137,7 @@ data:
 }
 
 func TestBasicDiamond(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/prod")
+	th := makeTestHarness(t)
 	writeDiamondBase(th)
 	writeKirk(th)
 	writeSpock(th)
@@ -177,10 +175,7 @@ data:
   zone: twilight
 `)
 
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/prod", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Deployment
