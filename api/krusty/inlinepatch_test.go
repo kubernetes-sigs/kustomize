@@ -1,15 +1,13 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"testing"
-
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func makeResourcesForPatchTest(th *kusttest_test.KustTestHarness) {
+func makeResourcesForPatchTest(th testingHarness) {
 	th.WriteF("/app/base/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
@@ -39,7 +37,7 @@ spec:
 }
 
 func TestStrategicMergePatchInline(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	makeResourcesForPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -58,10 +56,7 @@ patchesStrategicMerge:
           - name: nginx
             image: image1
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -91,7 +86,7 @@ spec:
 }
 
 func TestJSONPatchInline(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	makeResourcesForPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -108,10 +103,7 @@ patchesJson6902:
       path: /spec/template/spec/containers/0/image
       value: image1
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -141,7 +133,7 @@ spec:
 }
 
 func TestExtendedPatchInlineJSON(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	makeResourcesForPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -156,10 +148,7 @@ patches:
       path: /spec/template/spec/containers/0/image
       value: image1
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -189,7 +178,7 @@ spec:
 }
 
 func TestExtendedPatchInlineYAML(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	makeResourcesForPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -211,10 +200,7 @@ patches:
             - name: nginx
               image: image1
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
