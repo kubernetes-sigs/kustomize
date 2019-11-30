@@ -59,13 +59,14 @@ func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
 		return nil, err
 	}
 	defer ldr.Cleanup()
-	kt, err := target.NewKustTarget(
+	kt := target.NewKustTarget(
 		ldr,
 		validator.NewKustValidator(),
 		rf,
 		pf,
 		pLdr.NewLoader(b.options.PluginConfig, rf),
 	)
+	err = kt.Load()
 	if err != nil {
 		return nil, err
 	}
