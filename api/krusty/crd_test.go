@@ -1,15 +1,13 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"testing"
-
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func writeBaseWithCrd(th *kusttest_test.KustTestHarness) {
+func writeBaseWithCrd(th testingHarness) {
 	th.WriteK("/app/base", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -225,12 +223,9 @@ data:
 }
 
 func TestCrdBase(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	writeBaseWithCrd(th)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
@@ -259,7 +254,7 @@ spec:
 }
 
 func TestCrdWithOverlay(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
+	th := makeTestHarness(t)
 	writeBaseWithCrd(th)
 	th.WriteK("/app/overlay", `
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -278,10 +273,7 @@ metadata:
 spec:
   action: makehoney
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/overlay", th.MakeDefaultOptions())
 
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
@@ -311,7 +303,7 @@ spec:
 }
 
 func TestCrdWithContainers(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/crd/containers")
+	th := makeTestHarness(t)
 	th.WriteK("/app/crd/containers", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -343,10 +335,7 @@ spec:
           containers:
             description: Containers allows injecting additional containers
   `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/crd/containers", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
