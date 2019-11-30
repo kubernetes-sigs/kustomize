@@ -5,23 +5,20 @@ package target_test
 
 import (
 	"encoding/base64"
-	"fmt"
-	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/ifc"
-	"sigs.k8s.io/kustomize/api/internal/loadertest"
-	. "sigs.k8s.io/kustomize/api/internal/target"
-	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
-	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
-	"sigs.k8s.io/kustomize/api/types"
 )
 
-const (
-	kustomizationContent = `
+// KustTarget is primarily tested in the krusty package with
+// high level tests.
+
+func TestMakeCustomizedResMap(t *testing.T) {
+	th := kusttest_test.NewKustTestHarness(t, "/whatever")
+	th.WriteK("/whatever", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: foo-
@@ -54,30 +51,22 @@ patchesJson6902:
     kind: Deployment
     name: dply1
   path: jsonpatch.json
-`
-	deploymentContent = `
+`)
+	th.WriteF("/whatever/deployment.yaml", `
 apiVersion: apps/v1
 metadata:
   name: dply1
 kind: Deployment
-`
-	namespaceContent = `
+`)
+	th.WriteF("/whatever/namespace.yaml", `
 apiVersion: v1
 kind: Namespace
 metadata:
   name: ns1
-`
-	jsonpatchContent = `[
+`)
+	th.WriteF("/whatever/jsonpatch.json", `[
     {"op": "add", "path": "/spec/replica", "value": "3"}
-]`
-)
-
-func TestResources(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/whatever")
-	th.WriteK("/whatever/", kustomizationContent)
-	th.WriteF("/whatever/deployment.yaml", deploymentContent)
-	th.WriteF("/whatever/namespace.yaml", namespaceContent)
-	th.WriteF("/whatever/jsonpatch.json", jsonpatchContent)
+]`)
 
 	resources := []*resource.Resource{
 		th.RF().FromMapWithName("dply1", map[string]interface{}{
@@ -180,267 +169,5 @@ func TestResources(t *testing.T) {
 
 	if err = expected.ErrorIfNotEqualLists(actual); err != nil {
 		t.Fatalf("unexpected inequality: %v", err)
-	}
-}
-
-func TestKustomizationNotFound(t *testing.T) {
-	_, err := NewKustTarget(
-		loadertest.NewFakeLoader("/foo"),
-		valtest_test.MakeFakeValidator(), nil, nil, nil)
-	if err == nil {
-		t.Fatalf("expected an error")
-	}
-	if err.Error() !=
-		`unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization' in directory '/foo'` {
-		t.Fatalf("unexpected error: %q", err)
-	}
-}
-
-func TestResourceNotFound(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/whatever")
-	th.WriteK("/whatever", kustomizationContent)
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err == nil {
-		t.Fatalf("Didn't get the expected error for an unknown resource")
-	}
-	if !strings.Contains(err.Error(), "'/whatever/deployment.yaml' doesn't exist") {
-		t.Fatalf("unexpected error: %q", err)
-	}
-}
-
-func findSecret(m resmap.ResMap) *resource.Resource {
-	for _, r := range m.Resources() {
-		if r.OrgId().Kind == "Secret" {
-			return r
-		}
-	}
-	return nil
-}
-
-func TestDisableNameSuffixHash(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/whatever")
-	th.WriteK("/whatever/", kustomizationContent)
-	th.WriteF("/whatever/deployment.yaml", deploymentContent)
-	th.WriteF("/whatever/namespace.yaml", namespaceContent)
-	th.WriteF("/whatever/jsonpatch.json", jsonpatchContent)
-
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("unexpected Resources error %v", err)
-	}
-	secret := findSecret(m)
-	if secret == nil {
-		t.Errorf("Expected to find a Secret")
-	}
-	if secret.GetName() != "foo-secret-bar-9btc7bt4kb" {
-		t.Errorf("unexpected secret resource name: %s", secret.GetName())
-	}
-
-	th.WriteK("/whatever/",
-		strings.Replace(kustomizationContent,
-			"disableNameSuffixHash: false",
-			"disableNameSuffixHash: true", -1))
-	m, err = th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("unexpected Resources error %v", err)
-	}
-	secret = findSecret(m)
-	if secret == nil {
-		t.Errorf("Expected to find a Secret")
-	}
-	if secret.GetName() != "foo-secret-bar" { // No hash at end.
-		t.Errorf("unexpected secret resource name: %s", secret.GetName())
-	}
-}
-
-func TestIssue596AllowDirectoriesThatAreSubstringsOfEachOther(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlays/aws-sandbox2.us-east-1")
-	th.WriteK("/app/base", "")
-	th.WriteK("/app/overlays/aws", `
-resources:
-- ../../base
-`)
-	th.WriteK("/app/overlays/aws-nonprod", `
-resources:
-- ../aws
-`)
-	th.WriteK("/app/overlays/aws-sandbox2.us-east-1", `
-resources:
-- ../aws-nonprod
-`)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
-	th.AssertActualEqualsExpected(m, "")
-}
-
-// To simplify tests, these vars specified in alphabetical order.
-var someVars = []types.Var{
-	{
-		Name: "AWARD",
-		ObjRef: types.Target{
-			APIVersion: "v7",
-			Gvk:        resid.Gvk{Kind: "Service"},
-			Name:       "nobelPrize"},
-		FieldRef: types.FieldSelector{FieldPath: "some.arbitrary.path"},
-	},
-	{
-		Name: "BIRD",
-		ObjRef: types.Target{
-			APIVersion: "v300",
-			Gvk:        resid.Gvk{Kind: "Service"},
-			Name:       "heron"},
-		FieldRef: types.FieldSelector{FieldPath: "metadata.name"},
-	},
-	{
-		Name: "FRUIT",
-		ObjRef: types.Target{
-			Gvk:  resid.Gvk{Kind: "Service"},
-			Name: "apple"},
-		FieldRef: types.FieldSelector{FieldPath: "metadata.name"},
-	},
-	{
-		Name: "VEGETABLE",
-		ObjRef: types.Target{
-			Gvk:  resid.Gvk{Kind: "Leafy"},
-			Name: "kale"},
-		FieldRef: types.FieldSelector{FieldPath: "metadata.name"},
-	},
-}
-
-func TestGetAllVarsSimple(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app")
-	th.WriteK("/app", `
-vars:
-  - name: AWARD
-    objref:
-      kind: Service
-      name: nobelPrize
-      apiVersion: v7
-    fieldref:
-      fieldpath: some.arbitrary.path
-  - name: BIRD
-    objref:
-      kind: Service
-      name: heron
-      apiVersion: v300
-`)
-	ra, err := th.MakeKustTarget().AccumulateTarget()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
-	vars := ra.Vars()
-	if len(vars) != 2 {
-		t.Fatalf("unexpected size %d", len(vars))
-	}
-	for i := range vars[:2] {
-		// By using Var.DeepEqual, we are protecting the code
-		// from a potential invocation of vars[i].ObjRef.GVK()
-		// during AccumulateTarget
-		if !vars[i].DeepEqual(someVars[i]) {
-			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[i], someVars[i])
-		}
-	}
-}
-
-func TestGetAllVarsNested(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlays/o2")
-	th.WriteK("/app/base", `
-vars:
-  - name: AWARD
-    objref:
-      kind: Service
-      name: nobelPrize
-      apiVersion: v7
-    fieldref:
-      fieldpath: some.arbitrary.path
-  - name: BIRD
-    objref:
-      kind: Service
-      name: heron
-      apiVersion: v300
-`)
-	th.WriteK("/app/overlays/o1", `
-vars:
-  - name: FRUIT
-    objref:
-      kind: Service
-      name: apple
-resources:
-- ../../base
-`)
-	th.WriteK("/app/overlays/o2", `
-vars:
-  - name: VEGETABLE
-    objref:
-      kind: Leafy
-      name: kale
-resources:
-- ../o1
-`)
-	ra, err := th.MakeKustTarget().AccumulateTarget()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
-	vars := ra.Vars()
-	if len(vars) != 4 {
-		for i, v := range vars {
-			fmt.Printf("%v: %v\n", i, v)
-		}
-		t.Fatalf("expected 4 vars, got %d", len(vars))
-	}
-	for i := range vars {
-		// By using Var.DeepEqual, we are protecting the code
-		// from a potential invocation of vars[i].ObjRef.GVK()
-		// during AccumulateTarget
-		if !vars[i].DeepEqual(someVars[i]) {
-			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[i], someVars[i])
-		}
-	}
-}
-
-func TestVarCollisionsForbidden(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlays/o2")
-	th.WriteK("/app/base", `
-vars:
-  - name: AWARD
-    objref:
-      kind: Service
-      name: nobelPrize
-      apiVersion: v7
-    fieldref:
-      fieldpath: some.arbitrary.path
-  - name: BIRD
-    objref:
-      kind: Service
-      name: heron
-      apiVersion: v300
-`)
-	th.WriteK("/app/overlays/o1", `
-vars:
-  - name: AWARD
-    objref:
-      kind: Service
-      name: academy
-resources:
-- ../../base
-`)
-	th.WriteK("/app/overlays/o2", `
-vars:
-  - name: VEGETABLE
-    objref:
-      kind: Leafy
-      name: kale
-resources:
-- ../o1
-`)
-	_, err := th.MakeKustTarget().AccumulateTarget()
-	if err == nil {
-		t.Fatalf("expected var collision")
-	}
-	if !strings.Contains(err.Error(),
-		"var 'AWARD' already encountered") {
-		t.Fatalf("unexpected error: %v", err)
 	}
 }

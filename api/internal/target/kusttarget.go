@@ -1,8 +1,6 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// Package target implements state for the set of all
-// resources to customize.
 package target
 
 import (
@@ -36,38 +34,43 @@ type KustTarget struct {
 	pLdr          *loader.Loader
 }
 
-// NewKustTarget returns a new instance of KustTarget primed with a Loader.
+// NewKustTarget returns a new instance of KustTarget.
 func NewKustTarget(
 	ldr ifc.Loader,
 	validator ifc.Validator,
 	rFactory *resmap.Factory,
 	tFactory resmap.PatchFactory,
-	pLdr *loader.Loader) (*KustTarget, error) {
-	content, err := loadKustFile(ldr)
+	pLdr *loader.Loader) *KustTarget {
+	return &KustTarget{
+		ldr:       ldr,
+		validator: validator,
+		rFactory:  rFactory,
+		tFactory:  tFactory,
+		pLdr:      pLdr,
+	}
+}
+
+// Load attempts to load the target's kustomization file.
+func (kt *KustTarget) Load() error {
+	content, err := loadKustFile(kt.ldr)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	content = types.FixKustomizationPreUnmarshalling(content)
 	var k types.Kustomization
 	err = unmarshal(content, &k)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	k.FixKustomizationPostUnmarshalling()
 	errs := k.EnforceFields()
 	if len(errs) > 0 {
-		return nil, fmt.Errorf(
+		return fmt.Errorf(
 			"Failed to read kustomization file under %s:\n"+
-				strings.Join(errs, "\n"), ldr.Root())
+				strings.Join(errs, "\n"), kt.ldr.Root())
 	}
-	return &KustTarget{
-		kustomization: &k,
-		ldr:           ldr,
-		validator:     validator,
-		rFactory:      rFactory,
-		tFactory:      tFactory,
-		pLdr:          pLdr,
-	}, nil
+	kt.kustomization = &k
+	return nil
 }
 
 func loadKustFile(ldr ifc.Loader) ([]byte, error) {
@@ -101,8 +104,8 @@ func unmarshal(y []byte, o interface{}) error {
 	return dec.Decode(o)
 }
 
-// MakeCustomizedResMap creates a ResMap per kustomization instructions.
-// The Resources in the returned ResMap are fully customized.
+// MakeCustomizedResMap creates a fully customized ResMap
+// per the instructions contained in its kustomiztion instance.
 func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 	return kt.makeCustomizedResMap(types.GarbageIgnore)
 }
@@ -320,8 +323,9 @@ func (kt *KustTarget) accumulateResources(
 func (kt *KustTarget) accumulateDirectory(
 	ra *accumulator.ResAccumulator, ldr ifc.Loader) error {
 	defer ldr.Cleanup()
-	subKt, err := NewKustTarget(
+	subKt := NewKustTarget(
 		ldr, kt.validator, kt.rFactory, kt.tFactory, kt.pLdr)
+	err := subKt.Load()
 	if err != nil {
 		return errors.Wrapf(
 			err, "couldn't make target for path '%s'", ldr.Root())
