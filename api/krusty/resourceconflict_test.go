@@ -1,16 +1,14 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"strings"
 	"testing"
-
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func writeBase(th *kusttest_test.KustTestHarness) {
+func writeBase(th testingHarness) {
 	th.WriteK("/app/base", `
 resources:
 - serviceaccount.yaml
@@ -64,7 +62,7 @@ rules:
 `)
 }
 
-func writeMidOverlays(th *kusttest_test.KustTestHarness) {
+func writeMidOverlays(th testingHarness) {
 	// Mid-level overlays
 	th.WriteK("/app/overlays/a", `
 resources:
@@ -80,7 +78,7 @@ nameSuffix: -suffixB
 `)
 }
 
-func writeTopOverlay(th *kusttest_test.KustTestHarness) {
+func writeTopOverlay(th testingHarness) {
 	// Top overlay, combining the mid-level overlays
 	th.WriteK("/app/combined", `
 resources:
@@ -90,12 +88,10 @@ resources:
 }
 
 func TestBase(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	//th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	writeBase(th)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Unexpected err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ServiceAccount
@@ -143,13 +139,10 @@ rules:
 }
 
 func TestMidLevelA(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlays/a")
+	th := makeTestHarness(t)
 	writeBase(th)
 	writeMidOverlays(th)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Unexpected err: %v", err)
-	}
+	m := th.Run("/app/overlays/a", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ServiceAccount
@@ -197,13 +190,10 @@ rules:
 }
 
 func TestMidLevelB(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlays/b")
+	th := makeTestHarness(t)
 	writeBase(th)
 	writeMidOverlays(th)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Unexpected err: %v", err)
-	}
+	m := th.Run("/app/overlays/b", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ServiceAccount
@@ -251,14 +241,11 @@ rules:
 }
 
 func TestMultibasesNoConflict(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/combined")
+	th := makeTestHarness(t)
 	writeBase(th)
 	writeMidOverlays(th)
 	writeTopOverlay(th)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Unexpected err: %v", err)
-	}
+	m := th.Run("/app/combined", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ServiceAccount
@@ -349,7 +336,8 @@ rules:
 }
 
 func TestMultibasesWithConflict(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/combined")
+	th := makeTestHarness(t)
+	//th := kusttest_test.NewKustTestHarness(t, "/app/combined")
 	writeBase(th)
 	writeMidOverlays(th)
 	writeTopOverlay(th)
@@ -370,7 +358,7 @@ metadata:
   name: serviceaccount
 `)
 
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
+	err := th.RunWithErr("/app/combined", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("expected error")
 	}
