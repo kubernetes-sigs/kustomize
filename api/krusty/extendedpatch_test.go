@@ -1,15 +1,13 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"testing"
-
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func makeCommonFileForExtendedPatchTest(th *kusttest_test.KustTestHarness) {
+func makeCommonFileForExtendedPatchTest(th testingHarness) {
 	th.WriteF("/app/base/deployment.yaml", `
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -89,7 +87,7 @@ spec:
 }
 
 func TestExtendedPatchNameSelector(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -108,10 +106,7 @@ metadata:
   annotations:
     new-key: new-value
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -194,7 +189,7 @@ spec:
 }
 
 func TestExtendedPatchGvkSelector(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -213,10 +208,7 @@ metadata:
   annotations:
     new-key: new-value
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -299,7 +291,7 @@ spec:
 }
 
 func TestExtendedPatchLabelSelector(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -318,10 +310,7 @@ metadata:
   annotations:
     new-key: new-value
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -404,7 +393,7 @@ spec:
 }
 
 func TestExtendedPatchNameGvkSelector(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -424,10 +413,7 @@ metadata:
   annotations:
     new-key: new-value
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -508,7 +494,7 @@ spec:
 }
 
 func TestExtendedPatchNameLabelSelector(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -528,10 +514,7 @@ metadata:
   annotations:
     new-key: new-value
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -614,7 +597,7 @@ spec:
 }
 
 func TestExtendedPatchGvkLabelSelector(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -634,10 +617,7 @@ metadata:
   annotations:
     new-key: new-value
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -718,7 +698,7 @@ spec:
 }
 
 func TestExtendedPatchNameGvkLabelSelector(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -739,10 +719,7 @@ metadata:
   annotations:
     new-key: new-value
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -823,7 +800,7 @@ spec:
 }
 
 func TestExtendedPatchNoMatch(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -842,10 +819,7 @@ metadata:
   annotations:
     new-key: new-value
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -924,7 +898,7 @@ spec:
 }
 
 func TestExtendedPatchWithoutTarget(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -941,10 +915,7 @@ metadata:
   annotations:
     new-key: new-value
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -1025,7 +996,7 @@ spec:
 }
 
 func TestExtendedPatchNoMatchMultiplePatch(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -1048,10 +1019,7 @@ metadata:
   annotations:
     new-key: new-value
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -1130,7 +1098,7 @@ spec:
 }
 
 func TestExtendedPatchMultiplePatchOverlapping(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -1161,10 +1129,7 @@ metadata:
   annotations:
     new-key-from-patch2: new-value
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1beta2
 kind: Deployment

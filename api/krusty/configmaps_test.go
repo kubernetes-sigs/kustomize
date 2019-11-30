@@ -1,18 +1,16 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"testing"
-
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 // Generate a Secret and a ConfigMap from the same data
 // to compare the result.
 func TestGeneratorBasics(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th := makeTestHarness(t)
 	th.WriteK("/app", `
 namePrefix: blah-
 configMapGenerator:
@@ -59,10 +57,8 @@ electromagnetic
 strong nuclear
 weak nuclear
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+
+	m := th.Run("/app", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
@@ -111,7 +107,7 @@ type: Opaque
 
 // TODO: These should be errors instead.
 func TestGeneratorRepeatsInKustomization(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th := makeTestHarness(t)
 	th.WriteK("/app", `
 namePrefix: blah-
 configMapGenerator:
@@ -142,10 +138,7 @@ krypton
 xenon
 radon
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
@@ -166,7 +159,7 @@ metadata:
 }
 
 func TestGeneratorOverlays(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
+	th := makeTestHarness(t)
 	th.WriteK("/app/base1", `
 namePrefix: p1-
 configMapGenerator:
@@ -212,10 +205,7 @@ configMapGenerator:
   - foo=bar
   - baz=qux
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
@@ -240,7 +230,8 @@ metadata:
 }
 
 func TestConfigMapGeneratorMergeNamePrefix(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app")
+
+	th := makeTestHarness(t)
 	th.WriteK("/app/base", `
 configMapGenerator:
 - name: cm
@@ -272,10 +263,7 @@ configMapGenerator:
   literals:
   - big=crunch
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:

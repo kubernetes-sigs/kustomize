@@ -1,17 +1,15 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"strings"
 	"testing"
-
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestSimpleBase(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/base")
+	th := makeTestHarness(t)
 	th.WriteK("/app/base", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -72,10 +70,7 @@ spec:
       - name: nginx
         image: nginx
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Service
@@ -151,7 +146,7 @@ spec:
 `)
 }
 
-func makeBaseWithGenerators(th *kusttest_test.KustTestHarness) {
+func makeBaseWithGenerators(th testingHarness) {
 	th.WriteK("/app", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -217,12 +212,9 @@ spec:
 }
 
 func TestBaseWithGeneratorsAlone(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th := makeTestHarness(t)
 	makeBaseWithGenerators(th)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -311,7 +303,7 @@ type: Opaque
 }
 
 func TestMergeAndReplaceGenerators(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/overlay")
+	th := makeTestHarness(t)
 	makeBaseWithGenerators(th)
 	th.WriteF("/overlay/deployment.yaml", `
 apiVersion: apps/v1beta2
@@ -355,10 +347,7 @@ secretGenerator:
   literals:
   - proxy=haproxy
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -469,7 +458,7 @@ metadata:
 }
 
 func TestGeneratingIntoNamespaces(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th := makeTestHarness(t)
 	th.WriteK("/app", `
 configMapGenerator:
 - name: test
@@ -492,10 +481,7 @@ secretGenerator:
   - username=admin
   - password=somepw
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
@@ -538,7 +524,7 @@ type: Opaque
 // Valid that conflict is detected is the name are identical
 // and namespace left to default
 func TestConfigMapGeneratingIntoSameNamespace(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th := makeTestHarness(t)
 	th.WriteK("/app", `
 configMapGenerator:
 - name: test
@@ -549,7 +535,7 @@ configMapGenerator:
   literals:
   - key=value
 `)
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
+	err := th.RunWithErr("/app", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("expected error")
 	}
@@ -561,7 +547,7 @@ configMapGenerator:
 // Valid that conflict is detected is the name are identical
 // and namespace left to default
 func TestSecretGeneratingIntoSameNamespace(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th := makeTestHarness(t)
 	th.WriteK("/app", `
 secretGenerator:
 - name: test
@@ -574,7 +560,7 @@ secretGenerator:
   - username=admin
   - password=somepw
 `)
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
+	err := th.RunWithErr("/app", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("expected error")
 	}

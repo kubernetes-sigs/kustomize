@@ -1,16 +1,14 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"testing"
-
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestSecretGenerator(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th := makeTestHarness(t)
 	th.WriteK("/app", `
 secretGenerator:
 - name: bob
@@ -28,10 +26,7 @@ MOUNTAIN=everest
 OCEAN=pacific
 `)
 	th.WriteF("/app/phrase.dat", "dat phrase")
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
@@ -49,7 +44,7 @@ type: Opaque
 }
 
 func TestGeneratorOptionsWithBases(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
+	th := makeTestHarness(t)
 	th.WriteK("/app/base", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -76,10 +71,7 @@ configMapGenerator:
   literals:
   - fruit=apple
 `)
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
