@@ -16,18 +16,18 @@ func shouldContain(t *testing.T, s []byte, x string) {
 	}
 }
 
-func TestPrintWorkDirPlugin(t *testing.T) {
+func TestPrintPluginEnvPlugin(t *testing.T) {
 	tc := kusttest_test.NewPluginTestEnv(t).Set()
 	defer tc.Reset()
 
 	tc.PrepExecPlugin(
-		"someteam.example.com", "v1", "PrintWorkDir")
+		"someteam.example.com", "v1", "PrintPluginEnv")
 
 	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/theAppRoot")
 
 	m := th.LoadAndRunGenerator(`
 apiVersion: someteam.example.com/v1
-kind: PrintWorkDir
+kind: PrintPluginEnv
 metadata:
   name: whatever
 `)
@@ -35,6 +35,6 @@ metadata:
 	if err != nil {
 		t.Error(err)
 	}
-	shouldContain(t, a, "path: /theAppRoot")
-	shouldContain(t, a, "plugin/someteam.example.com/v1/printworkdir")
+	shouldContain(t, a, "kustomize_plugin_config_root: /theAppRoot")
+	shouldContain(t, a, "plugin/someteam.example.com/v1/printpluginenv")
 }

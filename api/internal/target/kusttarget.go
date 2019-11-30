@@ -70,18 +70,6 @@ func NewKustTarget(
 	}, nil
 }
 
-func quoted(l []string) []string {
-	r := make([]string, len(l))
-	for i, v := range l {
-		r[i] = "'" + v + "'"
-	}
-	return r
-}
-
-func commaOr(q []string) string {
-	return strings.Join(q[:len(q)-1], ", ") + " or " + q[len(q)-1]
-}
-
 func loadKustFile(ldr ifc.Loader) ([]byte, error) {
 	var content []byte
 	match := 0
@@ -101,30 +89,6 @@ func loadKustFile(ldr ifc.Loader) ([]byte, error) {
 		return nil, fmt.Errorf(
 			"Found multiple kustomization files under: %s\n", ldr.Root())
 	}
-}
-
-type errMissingKustomization struct {
-	path string
-}
-
-func (e *errMissingKustomization) Error() string {
-	return fmt.Sprintf(
-		"unable to find one of %v in directory '%s'",
-		commaOr(quoted(konfig.RecognizedKustomizationFileNames())),
-		e.path)
-}
-
-func NewErrMissingKustomization(p string) *errMissingKustomization {
-	return &errMissingKustomization{path: p}
-}
-
-func IsMissingKustomizationFileError(err error) bool {
-	_, ok := err.(*errMissingKustomization)
-	if ok {
-		return true
-	}
-	_, ok = errors.Cause(err).(*errMissingKustomization)
-	return ok
 }
 
 func unmarshal(y []byte, o interface{}) error {

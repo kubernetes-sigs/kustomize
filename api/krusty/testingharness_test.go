@@ -23,10 +23,19 @@ type testingHarness struct {
 }
 
 func makeTestHarness(t *testing.T) testingHarness {
+	return makeTestHarnessWithFs(t, filesys.MakeFsInMemory())
+}
+
+func makeTestHarnessWithFs(
+	t *testing.T, fSys filesys.FileSystem) testingHarness {
 	return testingHarness{
 		t:    t,
-		fSys: filesys.MakeFsInMemory(),
+		fSys: fSys,
 	}
+}
+
+func (th testingHarness) GetT() *testing.T {
+	return th.t
 }
 
 func (th testingHarness) WriteK(path string, content string) {

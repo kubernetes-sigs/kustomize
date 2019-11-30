@@ -53,6 +53,11 @@ func (x *PluginTestEnv) Reset() {
 	x.removeWorkDir()
 }
 
+// WorkDir allows inspection of the temp working directory.
+func (x *PluginTestEnv) WorkDir() string {
+	return x.workDir
+}
+
 // BuildGoPlugin compiles a Go plugin, leaving the newly
 // created object code in the right place - a temporary
 // working  directory pointed to by KustomizePluginHomeEnv.
