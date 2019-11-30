@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package target_test
+package krusty_test
 
 import (
 	"testing"
@@ -24,7 +24,7 @@ func TestReusableCustomTransformers(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "LabelTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app/staging")
+	th := makeTestHarness(t)
 
 	// First write three custom configurations for builtin plugins.
 
@@ -138,10 +138,7 @@ metadata:
   name: myService
 `)
 
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
+	m := th.Run("/app/staging", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
