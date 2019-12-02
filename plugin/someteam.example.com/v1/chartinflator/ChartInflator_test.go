@@ -25,7 +25,7 @@ func TestChartInflator(t *testing.T) {
 	tc.PrepExecPlugin(
 		"someteam.example.com", "v1", "ChartInflator")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	m := th.LoadAndRunGenerator(`
 apiVersion: someteam.example.com/v1

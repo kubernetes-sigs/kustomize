@@ -6,10 +6,12 @@ package krusty_test
 import (
 	"strings"
 	"testing"
+
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestSimpleBase(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/base", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -146,7 +148,7 @@ spec:
 `)
 }
 
-func makeBaseWithGenerators(th testingHarness) {
+func makeBaseWithGenerators(th kusttest_test.Harness) {
 	th.WriteK("/app", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -212,7 +214,7 @@ spec:
 }
 
 func TestBaseWithGeneratorsAlone(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeBaseWithGenerators(th)
 	m := th.Run("/app", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
@@ -303,7 +305,7 @@ type: Opaque
 }
 
 func TestMergeAndReplaceGenerators(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeBaseWithGenerators(th)
 	th.WriteF("/overlay/deployment.yaml", `
 apiVersion: apps/v1beta2
@@ -458,7 +460,7 @@ metadata:
 }
 
 func TestGeneratingIntoNamespaces(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 configMapGenerator:
 - name: test
@@ -524,7 +526,7 @@ type: Opaque
 // Valid that conflict is detected is the name are identical
 // and namespace left to default
 func TestConfigMapGeneratingIntoSameNamespace(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 configMapGenerator:
 - name: test
@@ -547,7 +549,7 @@ configMapGenerator:
 // Valid that conflict is detected is the name are identical
 // and namespace left to default
 func TestSecretGeneratingIntoSameNamespace(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 secretGenerator:
 - name: test

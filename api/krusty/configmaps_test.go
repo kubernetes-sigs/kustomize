@@ -5,12 +5,14 @@ package krusty_test
 
 import (
 	"testing"
+
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 // Generate a Secret and a ConfigMap from the same data
 // to compare the result.
 func TestGeneratorBasics(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 namePrefix: blah-
 configMapGenerator:
@@ -107,7 +109,7 @@ type: Opaque
 
 // TODO: These should be errors instead.
 func TestGeneratorRepeatsInKustomization(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 namePrefix: blah-
 configMapGenerator:
@@ -159,7 +161,7 @@ metadata:
 }
 
 func TestGeneratorOverlays(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/base1", `
 namePrefix: p1-
 configMapGenerator:
@@ -231,7 +233,7 @@ metadata:
 
 func TestConfigMapGeneratorMergeNamePrefix(t *testing.T) {
 
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/base", `
 configMapGenerator:
 - name: cm

@@ -6,9 +6,11 @@ package krusty_test
 import (
 	"strings"
 	"testing"
+
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func makeCommonFileForMultiplePatchTest(th testingHarness) {
+func makeCommonFileForMultiplePatchTest(th kusttest_test.Harness) {
 	th.WriteK("/app/base", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -87,7 +89,7 @@ configMapGenerator:
 }
 
 func TestMultiplePatchesNoConflict(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForMultiplePatchTest(th)
 	th.WriteF("/app/overlay/staging/deployment-patch1.yaml", `
 apiVersion: apps/v1beta2
@@ -228,7 +230,7 @@ metadata:
 }
 
 func TestMultiplePatchesWithConflict(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForMultiplePatchTest(th)
 	th.WriteF("/app/overlay/staging/deployment-patch1.yaml", `
 apiVersion: apps/v1beta2
@@ -320,7 +322,7 @@ spec:
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			th := makeTestHarness(t)
+			th := kusttest_test.MakeHarness(t)
 
 			makeCommonFileForMultiplePatchTest(th)
 			th.WriteF("/app/overlay/staging/deployment-patch1.yaml", c.patch1)
@@ -418,7 +420,7 @@ metadata:
 }
 
 func TestMultiplePatchesBothWithPatchDeleteDirective(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForMultiplePatchTest(th)
 	th.WriteF("/app/overlay/staging/deployment-patch1.yaml", `
 apiVersion: apps/v1beta2

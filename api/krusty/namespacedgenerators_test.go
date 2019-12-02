@@ -5,10 +5,12 @@ package krusty_test
 
 import (
 	"testing"
+
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestNamespacedGenerator(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -71,7 +73,7 @@ type: Opaque
 }
 
 func TestNamespacedGeneratorWithOverlays(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/base", `
 namespace: base
 

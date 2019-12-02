@@ -8,11 +8,12 @@ import (
 	"testing"
 
 	. "sigs.k8s.io/kustomize/api/krusty"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
 func TestOrderPreserved(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/base", `
 namePrefix: b-
 resources:
@@ -99,7 +100,7 @@ metadata:
 }
 
 func TestBaseInResourceList(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/prod", `
 namePrefix: b-
 resources:
@@ -131,7 +132,7 @@ spec:
 `)
 }
 
-func writeSmallBase(th testingHarness) {
+func writeSmallBase(th kusttest_test.Harness) {
 	th.WriteK("/app/base", `
 namePrefix: a-
 commonLabels:
@@ -169,7 +170,7 @@ spec:
 }
 
 func TestSmallBase(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeSmallBase(th)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
@@ -209,7 +210,7 @@ spec:
 }
 
 func TestSmallOverlay(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeSmallBase(th)
 	th.WriteK("/app/overlay", `
 namePrefix: b-
@@ -284,7 +285,7 @@ spec:
 }
 
 func TestSharedPatchDisAllowed(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeSmallBase(th)
 	th.WriteK("/app/overlay", `
 commonLabels:
@@ -315,7 +316,7 @@ spec:
 }
 
 func TestSharedPatchAllowed(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeSmallBase(th)
 	th.WriteK("/app/overlay", `
 commonLabels:
@@ -381,7 +382,7 @@ spec:
 }
 
 func TestSmallOverlayJSONPatch(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeSmallBase(th)
 	th.WriteK("/app/overlay", `
 resources:

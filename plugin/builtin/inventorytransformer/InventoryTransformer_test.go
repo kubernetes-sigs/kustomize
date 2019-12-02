@@ -64,7 +64,7 @@ func TestInventoryTransformerCollect(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "InventoryTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
@@ -85,7 +85,7 @@ func TestInventoryTransformerIgnore(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "InventoryTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
@@ -106,7 +106,7 @@ func TestInventoryTransformerDefaultPolicy(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "InventoryTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin

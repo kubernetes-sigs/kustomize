@@ -14,7 +14,7 @@ func TestSedTransformer(t *testing.T) {
 	defer tc.Reset()
 
 	tc.PrepExecPlugin("someteam.example.com", "v1", "SedTransformer")
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	th.WriteF("/app/sed-input.txt", `
 s/$FRUIT/orange/g

@@ -16,7 +16,7 @@ func TestImageTagTransformerNewTag(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "ImageTagTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
@@ -87,7 +87,7 @@ func TestImageTagTransformerNewImage(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "ImageTagTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
@@ -159,7 +159,7 @@ func TestImageTagTransformerNewImageAndTag(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "ImageTagTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
@@ -232,7 +232,7 @@ func TestImageTagTransformerNewDigest(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "ImageTagTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
@@ -304,7 +304,7 @@ func TestImageTagTransformerNewImageAndDigest(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "ImageTagTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
@@ -376,7 +376,7 @@ func TestImageTagTransformerEmptyContainers(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "ImageTagTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin

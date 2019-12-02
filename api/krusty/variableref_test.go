@@ -6,10 +6,12 @@ package krusty_test
 import (
 	"strings"
 	"testing"
+
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestBasicVariableRef(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 namePrefix: base-
 resources:
@@ -60,7 +62,7 @@ spec:
 }
 
 func TestBasicVarCollision(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/base1", `
 namePrefix: base1-
 resources:
@@ -136,7 +138,7 @@ resources:
 }
 
 func TestVarPropagatesUp(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/base1", `
 namePrefix: base1-
 resources:
@@ -279,7 +281,7 @@ spec:
 // are global.  So if a base with a variable is included
 // twice, it's a collision, so it's denied.
 func TestBug506(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/base", `
 namePrefix: base-
 resources:
@@ -359,7 +361,7 @@ resources:
 }
 
 func TestVarRefBig(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/base", `
 namePrefix: base-
 resources:
@@ -925,7 +927,7 @@ metadata:
 }
 
 func TestVariableRefIngress(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/base", `
 resources:
 - service.yaml
@@ -1064,7 +1066,7 @@ spec:
 }
 
 func TestVariableRefMountPath(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/base", `
 resources:
 - deployment.yaml
@@ -1136,7 +1138,7 @@ metadata:
 }
 
 func TestVariableRefMaps(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/base", `
 resources:
 - deployment.yaml
@@ -1192,7 +1194,7 @@ metadata:
 }
 
 func TestVaribaleRefDifferentPrefix(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/base", `
 namePrefix: base-
 resources:

@@ -70,7 +70,7 @@ func TestPatchTransformerMissingFile(t *testing.T) {
 
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchTransformer")
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	_, err := th.RunTransformer(`
 apiVersion: builtin
@@ -94,7 +94,7 @@ func TestPatchTransformerBadPatch(t *testing.T) {
 
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchTransformer")
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	_, err := th.RunTransformer(`
 apiVersion: builtin
@@ -118,7 +118,7 @@ func TestPatchTransformerMissingSelector(t *testing.T) {
 
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchTransformer")
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	_, err := th.RunTransformer(`
 apiVersion: builtin
@@ -143,7 +143,7 @@ func TestPatchTransformerBothEmptyPathAndPatch(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	_, err := th.RunTransformer(`
 apiVersion: builtin
@@ -166,7 +166,7 @@ func TestPatchTransformerBothNonEmptyPathAndPatch(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	_, err := th.RunTransformer(`
 apiVersion: builtin
@@ -191,7 +191,7 @@ func TestPatchTransformerFromFiles(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	th.WriteF("/app/patch.yaml", `
 apiVersion: apps/v1
@@ -273,7 +273,7 @@ func TestPatchTransformerWithInline(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
