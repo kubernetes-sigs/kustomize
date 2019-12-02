@@ -6,7 +6,7 @@
 
 [Alpha] Reconcile config functions to Resources.
 
-run sequentially invokes all config functions in the directly, providing Resources
+run sequentially invokes all config functions in the directory, providing Resources
 in the directory as input to the first function, and writing the output of the last
 function back to the directory.
 
@@ -23,7 +23,7 @@ order they appear in the file).
 #### Config Functions:
 
   Config functions are specified as Kubernetes types containing a metadata.configFn.container.image
-  field.  This fields tells run how to invoke the container.
+  field.  This field tells run how to invoke the container.
 
   Example config function:
 
@@ -43,7 +43,7 @@ order they appear in the file).
   In the preceding example, 'kustomize config run example/' would identify the function by
   the metadata.configFn field.  It would then write all Resources in the directory to
   a container stdin (running the gcr.io/example/examplefunction:v1.0.1 image).  It
-  would then writer the container stdout back to example/, replacing the directory
+  would then write the container stdout back to example/, replacing the directory
   file contents.
 
   See `kustomize config help docs-fn` for more details on writing functions.
