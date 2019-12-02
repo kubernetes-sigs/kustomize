@@ -23,7 +23,7 @@ order they appear in the file).
 #### Config Functions:
 
   Config functions are specified as Kubernetes types containing a metadata.configFn.container.image
-  field.  This fields tells run how to invoke the container.
+  field.  This field tells run how to invoke the container.
 
   Example config function:
 
