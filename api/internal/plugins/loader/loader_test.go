@@ -45,13 +45,10 @@ port: "12345"
 )
 
 func TestLoader(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.BuildGoPlugin(
-		"builtin", "", "SecretGenerator")
-	tc.BuildGoPlugin(
-		"someteam.example.com", "v1", "SomeServiceGenerator")
+	th := kusttest_test.MakeEnhancedHarness(t).
+		BuildGoPlugin("builtin", "", "SecretGenerator").
+		BuildGoPlugin("someteam.example.com", "v1", "SomeServiceGenerator")
+	defer th.Reset()
 
 	rmF := resmap.NewFactory(resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl()), nil)

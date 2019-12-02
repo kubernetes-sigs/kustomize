@@ -21,21 +21,23 @@ import (
 
 func makeKustTarget(
 	t *testing.T,
-	fSys filesys.FileSystem, path string) *target.KustTarget {
+	fSys filesys.FileSystem,
+	root string) *target.KustTarget {
 	return makeKustTargetWithRf(
-		t, fSys, path,
+		t, fSys, root,
 		resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()))
 }
 
 func makeKustTargetWithRf(
 	t *testing.T,
-	fSys filesys.FileSystem, path string,
+	fSys filesys.FileSystem,
+	root string,
 	resFact *resource.Factory) *target.KustTarget {
 	rf := resmap.NewFactory(resFact, transformer.NewFactoryImpl())
 	pc := konfig.DisabledPluginConfig()
 	kt := target.NewKustTarget(
 		loadertest.NewFakeLoaderWithRestrictor(
-			loader.RestrictionRootOnly, fSys, path),
+			loader.RestrictionRootOnly, fSys, root),
 		valtest_test.MakeFakeValidator(),
 		rf,
 		transformer.NewFactoryImpl(),

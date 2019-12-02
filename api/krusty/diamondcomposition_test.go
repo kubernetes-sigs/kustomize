@@ -331,13 +331,10 @@ patchesStrategicMerge:
 }
 
 func TestIssue1251_Plugins_ProdVsDev(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchJson6902Transformer")
+	defer th.Reset()
 
-	tc.BuildGoPlugin(
-		"builtin", "", "PatchJson6902Transformer")
-
-	th := kusttest_test.MakeHarness(t)
 	defineTransformerDirStructure(th)
 	th.WriteK("/app/prod", `
 resources:
@@ -364,14 +361,11 @@ transformers:
 }
 
 func TestIssue1251_Plugins_Local(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchJson6902Transformer")
+	defer th.Reset()
 
-	tc.BuildGoPlugin(
-		"builtin", "", "PatchJson6902Transformer")
-
-	th := kusttest_test.MakeHarness(t)
-	writeDeploymentBase(th)
+	writeDeploymentBase(th.Harness)
 
 	writeJsonTransformerPluginConfig(
 		th, "/app/composite", "addDnsPolicy", patchJsonDnsPolicy)
@@ -393,7 +387,7 @@ transformers:
 }
 
 func writeJsonTransformerPluginConfig(
-	th kusttest_test.Harness, path, name, patch string) {
+	th *kusttest_test.HarnessEnhanced, path, name, patch string) {
 	th.WriteF(filepath.Join(path, name+"Config.yaml"),
 		fmt.Sprintf(`
 apiVersion: builtin
@@ -411,14 +405,10 @@ jsonOp: '%s'
 
 // Remote in the sense that they are bundled in a different kustomization.
 func TestIssue1251_Plugins_Bundled(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.BuildGoPlugin(
-		"builtin", "", "PatchJson6902Transformer")
-
-	th := kusttest_test.MakeHarness(t)
-	writeDeploymentBase(th)
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchJson6902Transformer")
+	defer th.Reset()
+	writeDeploymentBase(th.Harness)
 
 	th.WriteK("/app/patches", `
 resources:
@@ -443,8 +433,8 @@ transformers:
 	th.AssertActualEqualsExpected(m, expectedPatchedDeployment)
 }
 
-func defineTransformerDirStructure(th kusttest_test.Harness) {
-	writeDeploymentBase(th)
+func defineTransformerDirStructure(th *kusttest_test.HarnessEnhanced) {
+	writeDeploymentBase(th.Harness)
 
 	th.WriteK("/app/patches/addDnsPolicy", `
 resources:
