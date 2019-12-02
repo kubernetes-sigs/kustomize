@@ -16,7 +16,7 @@ func TestAnnotationsTransformer(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "AnnotationsTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin

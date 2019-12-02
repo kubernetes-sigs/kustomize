@@ -5,9 +5,11 @@ package krusty_test
 
 import (
 	"testing"
+
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func makeStatefulSetKustomization(th testingHarness) {
+func makeStatefulSetKustomization(th kusttest_test.Harness) {
 	th.WriteK("/app", `
 commonLabels:
   notIn: arrays
@@ -90,7 +92,7 @@ spec:
 }
 
 func TestTransformersNoCreateArrays(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeStatefulSetKustomization(th)
 	m := th.Run("/app", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `

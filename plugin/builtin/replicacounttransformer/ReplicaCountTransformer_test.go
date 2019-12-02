@@ -16,7 +16,7 @@ func TestReplicaCountTransformer(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "ReplicaCountTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
@@ -158,7 +158,7 @@ func TestMatchesCurrentID(t *testing.T) {
 	tc.BuildGoPlugin("builtin", "", "PrefixSuffixTransformer")
 	tc.BuildGoPlugin("builtin", "", "ReplicaCountTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
@@ -203,7 +203,7 @@ func TestNoMatch(t *testing.T) {
 
 	tc.BuildGoPlugin("builtin", "", "ReplicaCountTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	err := th.ErrorFromLoadAndRunTransformer(`
 apiVersion: builtin

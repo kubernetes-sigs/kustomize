@@ -17,7 +17,7 @@ func TestValidatorHappy(t *testing.T) {
 	defer tc.Reset()
 
 	tc.PrepExecPlugin("someteam.example.com", "v1", "Validator")
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: someteam.example.com/v1
@@ -52,7 +52,7 @@ func TestValidatorUnHappy(t *testing.T) {
 	defer tc.Reset()
 
 	tc.PrepExecPlugin("someteam.example.com", "v1", "Validator")
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	err := th.ErrorFromLoadAndRunTransformer(`
 apiVersion: someteam.example.com/v1

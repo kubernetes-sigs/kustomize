@@ -19,7 +19,7 @@ func TestCustomNamePrefixer(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "PrefixSuffixTransformer")
 
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 resources:
 - deployment.yaml

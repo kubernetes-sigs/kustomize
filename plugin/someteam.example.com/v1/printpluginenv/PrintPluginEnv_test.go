@@ -23,7 +23,7 @@ func TestPrintPluginEnvPlugin(t *testing.T) {
 	tc.PrepExecPlugin(
 		"someteam.example.com", "v1", "PrintPluginEnv")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/theAppRoot")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/theAppRoot")
 
 	m := th.LoadAndRunGenerator(`
 apiVersion: someteam.example.com/v1

@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
-func writeDeployment(th testingHarness, path string) {
+func writeDeployment(th kusttest_test.Harness, path string) {
 	th.WriteF(path, `
 apiVersion: apps/v1
 kind: Deployment
@@ -28,7 +28,7 @@ spec:
 `)
 }
 
-func writeStringPrefixer(th testingHarness, path, name string) {
+func writeStringPrefixer(th kusttest_test.Harness, path, name string) {
 	th.WriteF(path, `
 apiVersion: someteam.example.com/v1
 kind: StringPrefixer
@@ -37,7 +37,7 @@ metadata:
 `)
 }
 
-func writeDatePrefixer(th testingHarness, path, name string) {
+func writeDatePrefixer(th kusttest_test.Harness, path, name string) {
 	th.WriteF(path, `
 apiVersion: someteam.example.com/v1
 kind: DatePrefixer
@@ -55,7 +55,7 @@ func TestOrderedTransformers(t *testing.T) {
 
 	tc.BuildGoPlugin(
 		"someteam.example.com", "v1", "DatePrefixer")
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 resources:
 - deployment.yaml
@@ -95,7 +95,7 @@ func TestPluginsNotEnabled(t *testing.T) {
 	tc.BuildGoPlugin(
 		"someteam.example.com", "v1", "StringPrefixer")
 
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 transformers:
 - stringPrefixer.yaml
@@ -117,7 +117,7 @@ func TestSedTransformer(t *testing.T) {
 	tc.PrepExecPlugin(
 		"someteam.example.com", "v1", "SedTransformer")
 
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 resources:
 - configmap.yaml
@@ -185,7 +185,7 @@ func TestTransformedTransformers(t *testing.T) {
 	tc.BuildGoPlugin(
 		"someteam.example.com", "v1", "DatePrefixer")
 
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 
 	th.WriteK("/app/base", `
 resources:

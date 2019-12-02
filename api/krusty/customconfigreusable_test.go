@@ -24,7 +24,7 @@ func TestReusableCustomTransformers(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "LabelTransformer")
 
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 
 	// First write three custom configurations for builtin plugins.
 

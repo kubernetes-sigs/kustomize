@@ -9,6 +9,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func findSecret(m resmap.ResMap) *resource.Resource {
@@ -21,7 +22,7 @@ func findSecret(m resmap.ResMap) *resource.Resource {
 }
 
 func TestDisableNameSuffixHash(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	const kustomizationContent = `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

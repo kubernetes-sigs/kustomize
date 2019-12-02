@@ -16,7 +16,7 @@ func TestHashTransformer(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "HashTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin

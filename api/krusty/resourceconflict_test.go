@@ -6,9 +6,11 @@ package krusty_test
 import (
 	"strings"
 	"testing"
+
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func writeBase(th testingHarness) {
+func writeBase(th kusttest_test.Harness) {
 	th.WriteK("/app/base", `
 resources:
 - serviceaccount.yaml
@@ -62,7 +64,7 @@ rules:
 `)
 }
 
-func writeMidOverlays(th testingHarness) {
+func writeMidOverlays(th kusttest_test.Harness) {
 	// Mid-level overlays
 	th.WriteK("/app/overlays/a", `
 resources:
@@ -78,7 +80,7 @@ nameSuffix: -suffixB
 `)
 }
 
-func writeTopOverlay(th testingHarness) {
+func writeTopOverlay(th kusttest_test.Harness) {
 	// Top overlay, combining the mid-level overlays
 	th.WriteK("/app/combined", `
 resources:
@@ -89,7 +91,7 @@ resources:
 
 func TestBase(t *testing.T) {
 	//th := kusttest_test.NewKustTestHarness(t, "/app/base")
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeBase(th)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
@@ -139,7 +141,7 @@ rules:
 }
 
 func TestMidLevelA(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeBase(th)
 	writeMidOverlays(th)
 	m := th.Run("/app/overlays/a", th.MakeDefaultOptions())
@@ -190,7 +192,7 @@ rules:
 }
 
 func TestMidLevelB(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeBase(th)
 	writeMidOverlays(th)
 	m := th.Run("/app/overlays/b", th.MakeDefaultOptions())
@@ -241,7 +243,7 @@ rules:
 }
 
 func TestMultibasesNoConflict(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeBase(th)
 	writeMidOverlays(th)
 	writeTopOverlay(th)
@@ -336,7 +338,7 @@ rules:
 }
 
 func TestMultibasesWithConflict(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	//th := kusttest_test.NewKustTestHarness(t, "/app/combined")
 	writeBase(th)
 	writeMidOverlays(th)

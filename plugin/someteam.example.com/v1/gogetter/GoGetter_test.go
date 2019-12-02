@@ -22,7 +22,7 @@ func TestGoGetter(t *testing.T) {
 	tc.PrepExecPlugin(
 		"someteam.example.com", "v1", "GoGetter")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	m := th.LoadAndRunGenerator(`
 apiVersion: someteam.example.com/v1
@@ -50,7 +50,7 @@ func TestGoGetterUrl(t *testing.T) {
 	tc.PrepExecPlugin(
 		"someteam.example.com", "v1", "GoGetter")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	m := th.LoadAndRunGenerator(`
 apiVersion: someteam.example.com/v1
@@ -79,7 +79,7 @@ func TestGoGetterCommand(t *testing.T) {
 	tc.PrepExecPlugin(
 		"someteam.example.com", "v1", "GoGetter")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	m := th.LoadAndRunGenerator(`
 apiVersion: someteam.example.com/v1
@@ -108,7 +108,7 @@ func TestGoGetterSubPath(t *testing.T) {
 	tc.PrepExecPlugin(
 		"someteam.example.com", "v1", "GoGetter")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	m := th.LoadAndRunGenerator(`
 apiVersion: someteam.example.com/v1

@@ -5,9 +5,11 @@ package krusty_test
 
 import (
 	"testing"
+
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func writeMediumBase(th testingHarness) {
+func writeMediumBase(th kusttest_test.Harness) {
 	th.WriteK("/app/base", `
 namePrefix: baseprefix-
 commonLabels:
@@ -57,7 +59,7 @@ spec:
 }
 
 func TestMediumBase(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeMediumBase(th)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
@@ -111,7 +113,7 @@ spec:
 }
 
 func TestMediumOverlay(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeMediumBase(th)
 	th.WriteK("/app/overlay", `
 namePrefix: test-infra-

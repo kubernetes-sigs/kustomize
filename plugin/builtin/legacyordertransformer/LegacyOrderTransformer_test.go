@@ -16,7 +16,7 @@ func TestLegacyOrderTransformer(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "LegacyOrderTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
 kind: LegacyOrderTransformer
