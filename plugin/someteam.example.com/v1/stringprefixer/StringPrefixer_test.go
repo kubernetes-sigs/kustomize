@@ -15,7 +15,7 @@ func TestStringPrefixerPlugin(t *testing.T) {
 
 	tc.BuildGoPlugin(
 		"someteam.example.com", "v1", "StringPrefixer")
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	m := th.LoadAndRunTransformer(`
 apiVersion: someteam.example.com/v1

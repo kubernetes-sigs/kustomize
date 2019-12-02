@@ -58,7 +58,7 @@ spec:
 `
 const patchJsonRestartPolicy = `[{"op": "add", "path": "/spec/template/spec/restartPolicy", "value": "Always"}]`
 
-func writeDeploymentBase(th testingHarness) {
+func writeDeploymentBase(th kusttest_test.Harness) {
 	th.WriteK("/app/base", `
 resources:
 - deployment.yaml
@@ -79,7 +79,7 @@ spec:
 `)
 }
 
-func writeProbeOverlay(th testingHarness) {
+func writeProbeOverlay(th kusttest_test.Harness) {
 	th.WriteK("/app/probe", `
 resources:
 - ../base
@@ -89,7 +89,7 @@ patchesStrategicMerge:
 	th.WriteF("/app/probe/dep-patch.yaml", patchAddProbe)
 }
 
-func writeDNSOverlay(th testingHarness) {
+func writeDNSOverlay(th kusttest_test.Harness) {
 	th.WriteK("/app/dns", `
 resources:
 - ../base
@@ -99,7 +99,7 @@ patchesStrategicMerge:
 	th.WriteF("/app/dns/dep-patch.yaml", patchDnsPolicy)
 }
 
-func writeRestartOverlay(th testingHarness) {
+func writeRestartOverlay(th kusttest_test.Harness) {
 	th.WriteK("/app/restart", `
 resources:
 - ../base
@@ -123,7 +123,7 @@ patchesStrategicMerge:
 //              base
 //
 func TestIssue1251_CompositeDiamond_Failure(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeDeploymentBase(th)
 	writeProbeOverlay(th)
 	writeDNSOverlay(th)
@@ -168,7 +168,7 @@ spec:
 // This test reuses some methods from TestIssue1251_CompositeDiamond,
 // but overwrites the kustomization files in the overlays.
 func TestIssue1251_Patches_Overlayed(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeDeploymentBase(th)
 
 	// probe overlays base.
@@ -197,7 +197,7 @@ patchesStrategicMerge:
 }
 
 func TestIssue1251_Patches_Local(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeDeploymentBase(th)
 
 	th.WriteK("/app/composite", `
@@ -216,7 +216,7 @@ patchesStrategicMerge:
 	th.AssertActualEqualsExpected(m, expectedPatchedDeployment)
 }
 
-func definePatchDirStructure(th testingHarness) {
+func definePatchDirStructure(th kusttest_test.Harness) {
 	writeDeploymentBase(th)
 
 	th.WriteF("/app/patches/patchRestartPolicy.yaml", patchRestartPolicy)
@@ -226,7 +226,7 @@ func definePatchDirStructure(th testingHarness) {
 
 // Fails due to file load restrictor.
 func TestIssue1251_Patches_ProdVsDev_Failure(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	definePatchDirStructure(th)
 
 	th.WriteK("/app/prod", `
@@ -299,7 +299,7 @@ spec:
 // the kustomization root), opening the user to whatever
 // threat the load restrictor was meant to address.
 func TestIssue1251_Patches_ProdVsDev(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	definePatchDirStructure(th)
 
 	th.WriteK("/app/prod", `
@@ -315,7 +315,7 @@ patchesStrategicMerge:
 	m := th.Run("/app/prod", opts)
 	th.AssertActualEqualsExpected(m, prodDevMergeResult1)
 
-	th = makeTestHarness(t)
+	th = kusttest_test.MakeHarness(t)
 	definePatchDirStructure(th)
 
 	th.WriteK("/app/dev", `
@@ -337,7 +337,7 @@ func TestIssue1251_Plugins_ProdVsDev(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchJson6902Transformer")
 
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	defineTransformerDirStructure(th)
 	th.WriteK("/app/prod", `
 resources:
@@ -370,7 +370,7 @@ func TestIssue1251_Plugins_Local(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchJson6902Transformer")
 
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeDeploymentBase(th)
 
 	writeJsonTransformerPluginConfig(
@@ -393,7 +393,7 @@ transformers:
 }
 
 func writeJsonTransformerPluginConfig(
-	th testingHarness, path, name, patch string) {
+	th kusttest_test.Harness, path, name, patch string) {
 	th.WriteF(filepath.Join(path, name+"Config.yaml"),
 		fmt.Sprintf(`
 apiVersion: builtin
@@ -417,7 +417,7 @@ func TestIssue1251_Plugins_Bundled(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchJson6902Transformer")
 
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeDeploymentBase(th)
 
 	th.WriteK("/app/patches", `
@@ -443,7 +443,7 @@ transformers:
 	th.AssertActualEqualsExpected(m, expectedPatchedDeployment)
 }
 
-func defineTransformerDirStructure(th testingHarness) {
+func defineTransformerDirStructure(th kusttest_test.Harness) {
 	writeDeploymentBase(th)
 
 	th.WriteK("/app/patches/addDnsPolicy", `

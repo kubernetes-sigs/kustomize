@@ -5,9 +5,11 @@ package krusty_test
 
 import (
 	"testing"
+
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func makeCommonFileForExtendedPatchTest(th testingHarness) {
+func makeCommonFileForExtendedPatchTest(th kusttest_test.Harness) {
 	th.WriteF("/app/base/deployment.yaml", `
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -87,7 +89,7 @@ spec:
 }
 
 func TestExtendedPatchNameSelector(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -189,7 +191,7 @@ spec:
 }
 
 func TestExtendedPatchGvkSelector(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -291,7 +293,7 @@ spec:
 }
 
 func TestExtendedPatchLabelSelector(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -393,7 +395,7 @@ spec:
 }
 
 func TestExtendedPatchNameGvkSelector(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -494,7 +496,7 @@ spec:
 }
 
 func TestExtendedPatchNameLabelSelector(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -597,7 +599,7 @@ spec:
 }
 
 func TestExtendedPatchGvkLabelSelector(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -698,7 +700,7 @@ spec:
 }
 
 func TestExtendedPatchNameGvkLabelSelector(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -800,7 +802,7 @@ spec:
 }
 
 func TestExtendedPatchNoMatch(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -898,7 +900,7 @@ spec:
 }
 
 func TestExtendedPatchWithoutTarget(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -996,7 +998,7 @@ spec:
 }
 
 func TestExtendedPatchNoMatchMultiplePatch(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -1098,7 +1100,7 @@ spec:
 }
 
 func TestExtendedPatchMultiplePatchOverlapping(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("/app/base", `
 resources:

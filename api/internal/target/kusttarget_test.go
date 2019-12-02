@@ -7,7 +7,9 @@ import (
 	"encoding/base64"
 	"testing"
 
+	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
+	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
@@ -17,7 +19,8 @@ import (
 // high level tests.
 
 func TestMakeCustomizedResMap(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/whatever")
+	fSys := filesys.MakeFsInMemory()
+	th := kusttest_test.MakeHarnessWithFs(t, fSys)
 	th.WriteK("/whatever", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -68,8 +71,10 @@ metadata:
     {"op": "add", "path": "/spec/replica", "value": "3"}
 ]`)
 
+	resFactory := resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
+
 	resources := []*resource.Resource{
-		th.RF().FromMapWithName("dply1", map[string]interface{}{
+		resFactory.FromMapWithName("dply1", map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
 			"metadata": map[string]interface{}{
@@ -101,7 +106,7 @@ metadata:
 				},
 			},
 		}),
-		th.RF().FromMapWithName("ns1", map[string]interface{}{
+		resFactory.FromMapWithName("ns1", map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "Namespace",
 			"metadata": map[string]interface{}{
@@ -114,7 +119,7 @@ metadata:
 				},
 			},
 		}),
-		th.RF().FromMapWithName("literalConfigMap",
+		resFactory.FromMapWithName("literalConfigMap",
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -133,7 +138,7 @@ metadata:
 					"DB_PASSWORD": "somepw",
 				},
 			}),
-		th.RF().FromMapWithName("secret",
+		resFactory.FromMapWithName("secret",
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Secret",
@@ -162,7 +167,8 @@ metadata:
 		}
 	}
 
-	actual, err := th.MakeKustTarget().MakeCustomizedResMap()
+	actual, err := makeKustTargetWithRf(
+		t, fSys, "/whatever", resFactory).MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("unexpected Resources error %v", err)
 	}

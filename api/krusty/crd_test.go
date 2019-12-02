@@ -5,9 +5,11 @@ package krusty_test
 
 import (
 	"testing"
+
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func writeBaseWithCrd(th testingHarness) {
+func writeBaseWithCrd(th kusttest_test.Harness) {
 	th.WriteK("/app/base", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -223,7 +225,7 @@ data:
 }
 
 func TestCrdBase(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeBaseWithCrd(th)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
@@ -254,7 +256,7 @@ spec:
 }
 
 func TestCrdWithOverlay(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeBaseWithCrd(th)
 	th.WriteK("/app/overlay", `
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -303,7 +305,7 @@ spec:
 }
 
 func TestCrdWithContainers(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/crd/containers", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

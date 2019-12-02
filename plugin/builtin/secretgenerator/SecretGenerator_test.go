@@ -16,7 +16,7 @@ func TestSecretGenerator(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "SecretGenerator")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	th.WriteF("/app/a.env", `
 ROUTER_PASSWORD=admin

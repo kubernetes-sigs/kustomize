@@ -5,10 +5,12 @@ package krusty_test
 
 import (
 	"testing"
+
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestNullValues(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteF("/app/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment

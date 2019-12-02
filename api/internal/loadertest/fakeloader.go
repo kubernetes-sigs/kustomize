@@ -23,16 +23,16 @@ type FakeLoader struct {
 // The initialDir argument should be an absolute file path.
 func NewFakeLoader(initialDir string) FakeLoader {
 	return NewFakeLoaderWithRestrictor(
-		loader.RestrictionRootOnly, initialDir)
+		loader.RestrictionRootOnly, filesys.MakeFsInMemory(), initialDir)
 }
 
 // NewFakeLoaderWithRestrictor returns a Loader that
 // uses a fake filesystem.
 // The initialDir argument should be an absolute file path.
 func NewFakeLoaderWithRestrictor(
-	lr loader.LoadRestrictorFunc, initialDir string) FakeLoader {
-	// Create fake filesystem and inject it into initial Loader.
-	fSys := filesys.MakeFsInMemory()
+	lr loader.LoadRestrictorFunc,
+	fSys filesys.FileSystem,
+	initialDir string) FakeLoader {
 	fSys.Mkdir(initialDir)
 	ldr, err := loader.NewLoader(lr, initialDir, fSys)
 	if err != nil {

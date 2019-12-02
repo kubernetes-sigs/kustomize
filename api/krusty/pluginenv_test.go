@@ -25,17 +25,17 @@ func TestPluginEnvironment(t *testing.T) {
 		"someteam.example.com", "v1", "PrintPluginEnv")
 
 	confirmBehavior(
-		makeTestHarnessWithFs(t, filesys.MakeFsInMemory()),
+		kusttest_test.MakeHarnessWithFs(t, filesys.MakeFsInMemory()),
 		filesys.Separator)
 
 	dir := makeTmpDir(t)
 	defer os.RemoveAll(dir)
 	confirmBehavior(
-		makeTestHarnessWithFs(t, filesys.MakeFsOnDisk()),
+		kusttest_test.MakeHarnessWithFs(t, filesys.MakeFsOnDisk()),
 		dir)
 }
 
-func confirmBehavior(th testingHarness, dir string) {
+func confirmBehavior(th kusttest_test.Harness, dir string) {
 	th.WriteK(dir, `
 generators:
 - config.yaml

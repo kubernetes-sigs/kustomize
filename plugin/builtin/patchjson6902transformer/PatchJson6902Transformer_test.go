@@ -34,7 +34,7 @@ func TestPatchJson6902TransformerMissingFile(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchJson6902Transformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	_, err := th.RunTransformer(`
 apiVersion: builtin
@@ -63,7 +63,7 @@ func TestBadPatchJson6902Transformer(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchJson6902Transformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	_, err := th.RunTransformer(`
 apiVersion: builtin
@@ -92,7 +92,7 @@ func TestBothEmptyJson6902Transformer(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchJson6902Transformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	_, err := th.RunTransformer(`
 apiVersion: builtin
@@ -120,7 +120,7 @@ func TestBothSpecifiedJson6902Transformer(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchJson6902Transformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	th.WriteF("/app/jsonpatch.json", `[
 {"op": "replace", "path": "/spec/template/spec/containers/0/name", "value": "my-nginx"},
@@ -156,7 +156,7 @@ func TestPatchJson6902TransformerFromJsonFile(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchJson6902Transformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	th.WriteF("/app/jsonpatch.json", `[
 {"op": "replace", "path": "/spec/template/spec/containers/0/name", "value": "my-nginx"},
@@ -206,7 +206,7 @@ func TestPatchJson6902TransformerFromYamlFile(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchJson6902Transformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	th.WriteF("/app/jsonpatch.json", `
 - op: add
@@ -256,7 +256,7 @@ func TestPatchJson6902TransformerWithInlineJSON(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchJson6902Transformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
@@ -297,7 +297,7 @@ func TestPatchJson6902TransformerWithInlineYAML(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "PatchJson6902Transformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin

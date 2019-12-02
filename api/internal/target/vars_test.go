@@ -48,7 +48,7 @@ var someVars = []types.Var{
 }
 
 func TestGetAllVarsSimple(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app")
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 vars:
   - name: AWARD
@@ -64,7 +64,8 @@ vars:
       name: heron
       apiVersion: v300
 `)
-	ra, err := th.MakeKustTarget().AccumulateTarget()
+	ra, err := makeKustTarget(
+		t, th.GetFSys(), "/app").AccumulateTarget()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
@@ -83,7 +84,7 @@ vars:
 }
 
 func TestGetAllVarsNested(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlays/o2")
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/base", `
 vars:
   - name: AWARD
@@ -117,7 +118,9 @@ vars:
 resources:
 - ../o1
 `)
-	ra, err := th.MakeKustTarget().AccumulateTarget()
+
+	ra, err := makeKustTarget(
+		t, th.GetFSys(), "/app/overlays/o2").AccumulateTarget()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
@@ -139,7 +142,7 @@ resources:
 }
 
 func TestVarCollisionsForbidden(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlays/o2")
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/base", `
 vars:
   - name: AWARD
@@ -173,7 +176,8 @@ vars:
 resources:
 - ../o1
 `)
-	_, err := th.MakeKustTarget().AccumulateTarget()
+	_, err := makeKustTarget(
+		t, th.GetFSys(), "/app/overlays/o2").AccumulateTarget()
 	if err == nil {
 		t.Fatalf("expected var collision")
 	}

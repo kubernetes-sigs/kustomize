@@ -17,7 +17,7 @@ func TestNamespaceTransformer1(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "NamespaceTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
@@ -195,7 +195,7 @@ func TestNamespaceTransformerClusterLevelKinds(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "NamespaceTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	const noChangeExpected = `
 apiVersion: v1
@@ -246,7 +246,7 @@ func TestNamespaceTransformerObjectConflict(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "NamespaceTransformer")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	err := th.ErrorFromLoadAndRunTransformer(`
 apiVersion: builtin

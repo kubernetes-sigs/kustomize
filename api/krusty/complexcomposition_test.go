@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	. "sigs.k8s.io/kustomize/api/krusty"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
@@ -25,7 +26,7 @@ spec:
     app: my-app
 `
 
-func writeStatefulSetBase(th testingHarness) {
+func writeStatefulSetBase(th kusttest_test.Harness) {
 	th.WriteK("/app/base", `
 resources:
 - statefulset.yaml
@@ -54,7 +55,7 @@ spec:
 `)
 }
 
-func writeHTTPSOverlay(th testingHarness) {
+func writeHTTPSOverlay(th kusttest_test.Harness) {
 	th.WriteK("/app/https", `
 resources:
 - ../base
@@ -73,7 +74,7 @@ spec:
 `)
 }
 
-func writeHTTPSTransformerRaw(th testingHarness) {
+func writeHTTPSTransformerRaw(th kusttest_test.Harness) {
 	th.WriteF("/app/https/service/https-svc.yaml", httpsService)
 	th.WriteF("/app/https/transformer/transformer.yaml", `
 apiVersion: builtin
@@ -95,7 +96,7 @@ patch: |-
 `)
 }
 
-func writeHTTPSTransformerBase(th testingHarness) {
+func writeHTTPSTransformerBase(th kusttest_test.Harness) {
 	th.WriteK("/app/https/service", `
 resources:
 - https-svc.yaml
@@ -107,7 +108,7 @@ resources:
 	writeHTTPSTransformerRaw(th)
 }
 
-func writeConfigFromEnvOverlay(th testingHarness) {
+func writeConfigFromEnvOverlay(th kusttest_test.Harness) {
 	th.WriteK("/app/config", `
 resources:
 - ../base
@@ -136,7 +137,7 @@ spec:
 `)
 }
 
-func writeConfigFromEnvTransformerRaw(th testingHarness) {
+func writeConfigFromEnvTransformerRaw(th kusttest_test.Harness) {
 	th.WriteF("/app/config/map/generator.yaml", `
 apiVersion: builtin
 kind: ConfigMapGenerator
@@ -171,7 +172,7 @@ patch: |-
               name: my-config
 `)
 }
-func writeConfigFromEnvTransformerBase(th testingHarness) {
+func writeConfigFromEnvTransformerBase(th kusttest_test.Harness) {
 	th.WriteK("/app/config/map", `
 resources:
 - generator.yaml
@@ -183,7 +184,7 @@ resources:
 	writeConfigFromEnvTransformerRaw(th)
 }
 
-func writeTolerationsOverlay(th testingHarness) {
+func writeTolerationsOverlay(th kusttest_test.Harness) {
 	th.WriteK("/app/tolerations", `
 resources:
 - ../base
@@ -205,7 +206,7 @@ spec:
 `)
 }
 
-func writeTolerationsTransformerRaw(th testingHarness) {
+func writeTolerationsTransformerRaw(th kusttest_test.Harness) {
 	th.WriteF("/app/tolerations/transformer.yaml", `
 apiVersion: builtin
 kind: PatchTransformer
@@ -231,7 +232,7 @@ patch: |-
 `)
 }
 
-func writeTolerationsTransformerBase(th testingHarness) {
+func writeTolerationsTransformerBase(th kusttest_test.Harness) {
 	th.WriteK("/app/tolerations", `
 resources:
 - transformer.yaml
@@ -239,7 +240,7 @@ resources:
 	writeTolerationsTransformerRaw(th)
 }
 
-func writeStorageOverlay(th testingHarness) {
+func writeStorageOverlay(th kusttest_test.Harness) {
 	th.WriteK("/app/storage", `
 resources:
 - ../base
@@ -256,7 +257,7 @@ patchesJson6902:
 `)
 }
 
-func writeStorageTransformerRaw(th testingHarness) {
+func writeStorageTransformerRaw(th kusttest_test.Harness) {
 	th.WriteF("/app/storage/transformer.yaml", `
 apiVersion: builtin
 kind: PatchTransformer
@@ -272,7 +273,7 @@ patch: |-
 `)
 }
 
-func writeStorageTransformerBase(th testingHarness) {
+func writeStorageTransformerBase(th kusttest_test.Harness) {
 	th.WriteK("/app/storage", `
 resources:
 - transformer.yaml
@@ -280,14 +281,14 @@ resources:
 	writeStorageTransformerRaw(th)
 }
 
-func writePatchingOverlays(th testingHarness) {
+func writePatchingOverlays(th kusttest_test.Harness) {
 	writeStorageOverlay(th)
 	writeConfigFromEnvOverlay(th)
 	writeTolerationsOverlay(th)
 	writeHTTPSOverlay(th)
 }
 
-func writePatchingTransformersRaw(th testingHarness) {
+func writePatchingTransformersRaw(th kusttest_test.Harness) {
 	writeStorageTransformerRaw(th)
 	writeConfigFromEnvTransformerRaw(th)
 	writeTolerationsTransformerRaw(th)
@@ -310,7 +311,7 @@ func writePatchingTransformersRaw(th testingHarness) {
 // must be self-contained, i.e. the config may not have fields that
 // refer to local files, since those files won't be present when
 // the plugin is instantiated and used.
-func writePatchingTransformerBases(th testingHarness) {
+func writePatchingTransformerBases(th kusttest_test.Harness) {
 	writeStorageTransformerBase(th)
 	writeConfigFromEnvTransformerBase(th)
 	writeTolerationsTransformerBase(th)
@@ -353,7 +354,7 @@ func writePatchingTransformerBases(th testingHarness) {
 //   - prod: Combines the config, tolerations and https intermediate overlays.
 
 func TestComplexComposition_Dev_Failure(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeStatefulSetBase(th)
 	writePatchingOverlays(th)
 	th.WriteK("/app/dev", `
@@ -405,7 +406,7 @@ metadata:
 `
 
 func TestComplexComposition_Dev_SuccessWithRawTransformers(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeStatefulSetBase(th)
 	writePatchingTransformersRaw(th)
 	th.WriteK("/app/dev", `
@@ -426,7 +427,7 @@ transformers:
 }
 
 func TestComplexComposition_Dev_SuccessWithBaseTransformers(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeStatefulSetBase(th)
 	writePatchingTransformerBases(th)
 	th.WriteK("/app/dev", `
@@ -443,7 +444,7 @@ transformers:
 }
 
 func TestComplexComposition_Prod_Failure(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeStatefulSetBase(th)
 	writePatchingOverlays(th)
 	th.WriteK("/app/prod", `
@@ -512,7 +513,7 @@ metadata:
 `
 
 func TestComplexComposition_Prod_SuccessWithRawTransformers(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeStatefulSetBase(th)
 	writePatchingTransformersRaw(th)
 	th.WriteK("/app/prod", `
@@ -535,7 +536,7 @@ transformers:
 }
 
 func TestComplexComposition_Prod_SuccessWithBaseTransformers(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeStatefulSetBase(th)
 	writePatchingTransformerBases(th)
 	th.WriteK("/app/prod", `
