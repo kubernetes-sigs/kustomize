@@ -16,7 +16,7 @@ func TestConfigMapGenerator(t *testing.T) {
 	tc.BuildGoPlugin(
 		"builtin", "", "ConfigMapGenerator")
 
-	th := kusttest_test.NewKustTestHarnessAllowPlugins(t, "/app")
+	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 
 	th.WriteF("/app/devops.env", `
 SERVICE_PORT=32

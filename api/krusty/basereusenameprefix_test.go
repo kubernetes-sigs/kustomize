@@ -5,6 +5,8 @@ package krusty_test
 
 import (
 	"testing"
+
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 // Here is a structure of a kustomization of two components, component1
@@ -38,7 +40,7 @@ import (
 // ├── kustomization.yaml
 
 func TestBaseReuseNameConflict(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/component1/base", `
 resources:
   - ../../shared

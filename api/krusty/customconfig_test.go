@@ -5,9 +5,11 @@ package krusty_test
 
 import (
 	"testing"
+
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func makeBaseReferencingCustomConfig(th testingHarness) {
+func makeBaseReferencingCustomConfig(th kusttest_test.Harness) {
 	th.WriteK("/app/base", `
 namePrefix: x-
 commonLabels:
@@ -72,7 +74,7 @@ spec:
 }
 
 func TestCustomConfig(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeBaseReferencingCustomConfig(th)
 	th.WriteLegacyConfigs("/app/base/config/defaults.yaml")
 	th.WriteF("/app/base/config/custom.yaml", `
@@ -135,7 +137,7 @@ spec:
 }
 
 func TestCustomConfigWithDefaultOverspecification(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeBaseReferencingCustomConfig(th)
 	th.WriteLegacyConfigs("/app/base/config/defaults.yaml")
 	// Specifying namePrefix here conflicts with (is the same as)
@@ -203,7 +205,7 @@ spec:
 }
 
 func TestFixedBug605_BaseCustomizationAvailableInOverlay(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeBaseReferencingCustomConfig(th)
 	th.WriteLegacyConfigs("/app/base/config/defaults.yaml")
 	th.WriteF("/app/base/config/custom.yaml", `

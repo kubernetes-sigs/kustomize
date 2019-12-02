@@ -5,9 +5,11 @@ package krusty_test
 
 import (
 	"testing"
+
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func makeTransfomersImageBase(th testingHarness) {
+func makeTransfomersImageBase(th kusttest_test.Harness) {
 	th.WriteK("/app/base", `
 resources:
 - deploy1.yaml
@@ -92,7 +94,7 @@ spec3:
 }
 
 func TestIssue1281_JsonPatchAndImageTag(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 resources:
 - deployment.yaml
@@ -172,7 +174,7 @@ spec:
 }
 
 func TestTransfomersImageDefaultConfig(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeTransfomersImageBase(th)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
@@ -233,7 +235,7 @@ spec3:
 `)
 }
 
-func makeTransfomersImageCustomBase(th testingHarness) {
+func makeTransfomersImageCustomBase(th kusttest_test.Harness) {
 	th.WriteK("/app/base", `
 resources:
 - custom.yaml
@@ -306,7 +308,7 @@ images:
 }
 
 func TestTransfomersImageCustomConfig(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeTransfomersImageCustomBase(th)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
@@ -346,7 +348,7 @@ spec3:
 `)
 }
 
-func makeTransfomersImageKnativeBase(th testingHarness) {
+func makeTransfomersImageKnativeBase(th kusttest_test.Harness) {
 	th.WriteK("/app/base", `
 resources:
 - knative.yaml
@@ -378,7 +380,7 @@ images:
 }
 
 func TestTransfomersImageKnativeConfig(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeTransfomersImageKnativeBase(th)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `

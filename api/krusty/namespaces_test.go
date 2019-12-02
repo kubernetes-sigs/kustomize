@@ -6,10 +6,12 @@ package krusty_test
 import (
 	"strings"
 	"testing"
+
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestNamespacedSecrets(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteF("/app/secrets.yaml", `
 apiVersion: v1
 kind: Secret
@@ -93,7 +95,7 @@ rules:
 // PrefixSuffixTransformer and namereference transformers are
 // able to deal with simultaneous change of namespace and name.
 func TestNameAndNsTransformation(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 
 	th.WriteK("/nameandns", `
 namePrefix: p1-
@@ -463,7 +465,7 @@ spec:
 // using the same name in different namespaces are treated as ambiguous if the namespace is
 // not specified
 func TestVariablesAmbiguous(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/namespaceNeedInVar/myapp", namespaceNeedInVarMyApp)
 	th.WriteF("/namespaceNeedInVar/myapp/elasticsearch-dev-service.yaml", namespaceNeedInVarDevResources)
 	th.WriteF("/namespaceNeedInVar/myapp/elasticsearch-test-service.yaml", namespaceNeedInVarTestResources)
@@ -520,7 +522,7 @@ vars:
 // to TestVariablesAmbiguous problem. It requires to separate the variables
 // and resources into multiple kustomization context/folders instead of one.
 func TestVariablesAmbiguousWorkaround(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/namespaceNeedInVar/dev", namespaceNeedInVarDevFolder)
 	th.WriteF("/namespaceNeedInVar/dev/elasticsearch-dev-service.yaml", namespaceNeedInVarDevResources)
 	th.WriteK("/namespaceNeedInVar/test", namespaceNeedInVarTestFolder)
@@ -576,7 +578,7 @@ vars:
 // TestVariablesDisambiguatedWithNamespace demonstrates that adding the namespace
 // to the variable declarations allows to disambiguate the variables.
 func TestVariablesDisambiguatedWithNamespace(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/namespaceNeedInVar/myapp", namespaceNeedInVarMyAppWithNamespace)
 	th.WriteF("/namespaceNeedInVar/myapp/elasticsearch-dev-service.yaml", namespaceNeedInVarDevResources)
 	th.WriteF("/namespaceNeedInVar/myapp/elasticsearch-test-service.yaml", namespaceNeedInVarTestResources)

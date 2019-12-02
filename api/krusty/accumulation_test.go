@@ -8,13 +8,13 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/konfig"
-
 	. "sigs.k8s.io/kustomize/api/internal/target"
+	"sigs.k8s.io/kustomize/api/konfig"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestTargetMustHaveKustomizationFile(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteF("/app/service.yaml", `
 apiVersion: v1
 kind: Service
@@ -37,7 +37,7 @@ metadata:
 }
 
 func TestTargetMustHaveOnlyOneKustomizationFile(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	for _, n := range konfig.RecognizedKustomizationFileNames() {
 		th.WriteF(filepath.Join("/app", n), `
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -54,7 +54,7 @@ kind: Kustomization
 }
 
 func TestBaseMustHaveKustomizationFile(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 resources:
 - base
@@ -80,7 +80,7 @@ spec:
 }
 
 func TestResourceNotFound(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 resources:
 - deployment.yaml

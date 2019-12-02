@@ -5,6 +5,8 @@ package krusty_test
 
 import (
 	"testing"
+
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 // Here's a structure of two kustomizations,
@@ -28,7 +30,7 @@ import (
 //          \    |    /
 //             base
 //
-func writeDiamondBase(th testingHarness) {
+func writeDiamondBase(th kusttest_test.Harness) {
 	th.WriteK("/app/base", `
 resources:
 - deploy.yaml
@@ -43,7 +45,7 @@ spec:
 `)
 }
 
-func writeKirk(th testingHarness) {
+func writeKirk(th kusttest_test.Harness) {
 	th.WriteK("/app/kirk", `
 namePrefix: kirk-
 resources:
@@ -70,7 +72,7 @@ data:
 `)
 }
 
-func writeSpock(th testingHarness) {
+func writeSpock(th kusttest_test.Harness) {
 	th.WriteK("/app/spock", `
 namePrefix: spock-
 resources:
@@ -88,7 +90,7 @@ spec:
 `)
 }
 
-func writeBones(th testingHarness) {
+func writeBones(th kusttest_test.Harness) {
 	th.WriteK("/app/bones", `
 namePrefix: bones-
 resources:
@@ -106,7 +108,7 @@ spec:
 `)
 }
 
-func writeTenants(th testingHarness) {
+func writeTenants(th kusttest_test.Harness) {
 	th.WriteK("/app/tenants", `
 namePrefix: t-
 resources:
@@ -137,7 +139,7 @@ data:
 }
 
 func TestBasicDiamond(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	writeDiamondBase(th)
 	writeKirk(th)
 	writeSpock(th)

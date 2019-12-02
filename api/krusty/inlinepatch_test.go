@@ -5,9 +5,11 @@ package krusty_test
 
 import (
 	"testing"
+
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func makeResourcesForPatchTest(th testingHarness) {
+func makeResourcesForPatchTest(th kusttest_test.Harness) {
 	th.WriteF("/app/base/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
@@ -37,7 +39,7 @@ spec:
 }
 
 func TestStrategicMergePatchInline(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeResourcesForPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -86,7 +88,7 @@ spec:
 }
 
 func TestJSONPatchInline(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeResourcesForPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -133,7 +135,7 @@ spec:
 }
 
 func TestExtendedPatchInlineJSON(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeResourcesForPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
@@ -178,7 +180,7 @@ spec:
 }
 
 func TestExtendedPatchInlineYAML(t *testing.T) {
-	th := makeTestHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	makeResourcesForPatchTest(th)
 	th.WriteK("/app/base", `
 resources:
