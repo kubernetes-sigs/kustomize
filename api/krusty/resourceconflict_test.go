@@ -90,7 +90,6 @@ resources:
 }
 
 func TestBase(t *testing.T) {
-	//th := kusttest_test.NewKustTestHarness(t, "/app/base")
 	th := kusttest_test.MakeHarness(t)
 	writeBase(th)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
@@ -339,7 +338,6 @@ rules:
 
 func TestMultibasesWithConflict(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	//th := kusttest_test.NewKustTestHarness(t, "/app/combined")
 	writeBase(th)
 	writeMidOverlays(th)
 	writeTopOverlay(th)

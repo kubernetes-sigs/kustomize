@@ -18,11 +18,10 @@ import (
 // its working directory and some environment variables,
 // to add regression protection to plugin loading logic.
 func TestPluginEnvironment(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.PrepExecPlugin(
-		"someteam.example.com", "v1", "PrintPluginEnv")
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepExecPlugin(
+			"someteam.example.com", "v1", "PrintPluginEnv")
+	defer th.Reset()
 
 	confirmBehavior(
 		kusttest_test.MakeHarnessWithFs(t, filesys.MakeFsInMemory()),

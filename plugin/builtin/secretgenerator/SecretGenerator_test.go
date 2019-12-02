@@ -6,25 +6,21 @@ package main_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/testutils/kusttest"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestSecretGenerator(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("SecretGenerator")
+	defer th.Reset()
 
-	tc.BuildGoPlugin(
-		"builtin", "", "SecretGenerator")
-
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
-
-	th.WriteF("/app/a.env", `
+	th.WriteF("a.env", `
 ROUTER_PASSWORD=admin
 `)
-	th.WriteF("/app/b.env", `
+	th.WriteF("b.env", `
 DB_PASSWORD=iloveyou
 `)
-	th.WriteF("/app/longsecret.txt", `
+	th.WriteF("longsecret.txt", `
 Lorem ipsum dolor sit amet,
 consectetur adipiscing elit.
 `)

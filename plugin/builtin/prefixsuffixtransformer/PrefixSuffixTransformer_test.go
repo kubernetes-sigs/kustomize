@@ -6,17 +6,14 @@ package main_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/testutils/kusttest"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestPrefixSuffixTransformer(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PrefixSuffixTransformer")
+	defer th.Reset()
 
-	tc.BuildGoPlugin(
-		"builtin", "", "PrefixSuffixTransformer")
-
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
 kind: PrefixSuffixTransformer

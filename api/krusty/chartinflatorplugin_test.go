@@ -28,13 +28,10 @@ import (
 // TODO: Download and inflate the chart, and check that
 // in for the test.
 func TestChartInflatorPlugin(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepExecPlugin("someteam.example.com", "v1", "ChartInflator")
+	defer th.Reset()
 
-	tc.PrepExecPlugin(
-		"someteam.example.com", "v1", "ChartInflator")
-
-	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 generators:
 - chartInflator.yaml

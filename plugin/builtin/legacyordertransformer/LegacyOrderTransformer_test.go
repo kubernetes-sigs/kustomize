@@ -4,19 +4,15 @@
 package main_test
 
 import (
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"testing"
-
-	"sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestLegacyOrderTransformer(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("LegacyOrderTransformer")
+	defer th.Reset()
 
-	tc.BuildGoPlugin(
-		"builtin", "", "LegacyOrderTransformer")
-
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
 kind: LegacyOrderTransformer

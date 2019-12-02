@@ -6,17 +6,13 @@ package main_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/testutils/kusttest"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestSecretsFromDatabasePlugin(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.BuildGoPlugin(
-		"someteam.example.com", "v1", "SecretsFromDatabase")
-
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
+	th := kusttest_test.MakeEnhancedHarness(t).
+		BuildGoPlugin("someteam.example.com", "v1", "SecretsFromDatabase")
+	defer th.Reset()
 
 	m := th.LoadAndRunGenerator(`
 apiVersion: someteam.example.com/v1

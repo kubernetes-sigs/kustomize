@@ -16,11 +16,11 @@ import (
 	"sigs.k8s.io/kustomize/api/konfig"
 )
 
-// PluginTestEnv manages the plugin test environment.
+// pluginTestEnv manages plugins for tests.
 // It manages a Go plugin compiler,
 // makes and removes a temporary working directory,
 // and sets/resets shell env vars as needed.
-type PluginTestEnv struct {
+type pluginTestEnv struct {
 	t        *testing.T
 	compiler *compiler.Compiler
 	srcRoot  string
@@ -29,13 +29,16 @@ type PluginTestEnv struct {
 	wasSet   bool
 }
 
-// NewPluginTestEnv returns a new instance of PluginTestEnv.
-func NewPluginTestEnv(t *testing.T) *PluginTestEnv {
-	return &PluginTestEnv{t: t}
+// newPluginTestEnv returns a new instance of pluginTestEnv.
+func newPluginTestEnv(t *testing.T) *pluginTestEnv {
+	return &pluginTestEnv{t: t}
 }
 
-// Set creates a test environment.
-func (x *PluginTestEnv) Set() *PluginTestEnv {
+// set creates a test environment.
+// Uses a filesystem on disk for compilation (or copying) of
+// plugin code - this FileSystem has nothing to do with
+// the FileSystem used for loading config yaml in the tests.
+func (x *pluginTestEnv) set() *pluginTestEnv {
 	x.createWorkDir()
 	var err error
 	x.srcRoot, err = compiler.DeterminePluginSrcRoot(filesys.MakeFsOnDisk())
@@ -47,30 +50,25 @@ func (x *PluginTestEnv) Set() *PluginTestEnv {
 	return x
 }
 
-// Reset restores the environment to pre-test state.
-func (x *PluginTestEnv) Reset() {
+// reset restores the environment to pre-test state.
+func (x *pluginTestEnv) reset() {
 	x.resetEnv()
 	x.removeWorkDir()
 }
 
-// WorkDir allows inspection of the temp working directory.
-func (x *PluginTestEnv) WorkDir() string {
-	return x.workDir
-}
-
-// BuildGoPlugin compiles a Go plugin, leaving the newly
+// buildGoPlugin compiles a Go plugin, leaving the newly
 // created object code in the right place - a temporary
 // working  directory pointed to by KustomizePluginHomeEnv.
 // This avoids overwriting anything the user/developer has
 // otherwise created.
-func (x *PluginTestEnv) BuildGoPlugin(g, v, k string) {
+func (x *pluginTestEnv) buildGoPlugin(g, v, k string) {
 	err := x.compiler.Compile(g, v, k)
 	if err != nil {
 		x.t.Errorf("compile failed: %v", err)
 	}
 }
 
-// PrepExecPlugin copies an exec plugin from it's
+// prepExecPlugin copies an exec plugin from it's
 // home in the discovered srcRoot to the same temp
 // directory where Go plugin object code is placed.
 // Kustomize (and its tests) expect to find plugins
@@ -78,7 +76,7 @@ func (x *PluginTestEnv) BuildGoPlugin(g, v, k string) {
 // framework is compiling Go plugins to a temp dir,
 // it must likewise copy Exec plugins to that same
 // temp dir.
-func (x *PluginTestEnv) PrepExecPlugin(g, v, k string) {
+func (x *pluginTestEnv) prepExecPlugin(g, v, k string) {
 	lowK := strings.ToLower(k)
 	src := filepath.Join(x.srcRoot, g, v, lowK, k)
 	tmp := filepath.Join(x.workDir, g, v, lowK, k)
@@ -92,7 +90,7 @@ func (x *PluginTestEnv) PrepExecPlugin(g, v, k string) {
 	}
 }
 
-func (x *PluginTestEnv) createWorkDir() {
+func (x *pluginTestEnv) createWorkDir() {
 	var err error
 	x.workDir, err = ioutil.TempDir("", "kustomize-plugin-tests")
 	if err != nil {
@@ -100,7 +98,7 @@ func (x *PluginTestEnv) createWorkDir() {
 	}
 }
 
-func (x *PluginTestEnv) removeWorkDir() {
+func (x *pluginTestEnv) removeWorkDir() {
 	err := os.RemoveAll(x.workDir)
 	if err != nil {
 		x.t.Errorf(
@@ -108,12 +106,12 @@ func (x *PluginTestEnv) removeWorkDir() {
 	}
 }
 
-func (x *PluginTestEnv) setEnv() {
+func (x *pluginTestEnv) setEnv() {
 	x.oldXdg, x.wasSet = os.LookupEnv(konfig.KustomizePluginHomeEnv)
 	os.Setenv(konfig.KustomizePluginHomeEnv, x.workDir)
 }
 
-func (x *PluginTestEnv) resetEnv() {
+func (x *pluginTestEnv) resetEnv() {
 	if x.wasSet {
 		os.Setenv(konfig.KustomizePluginHomeEnv, x.oldXdg)
 	} else {

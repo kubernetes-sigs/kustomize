@@ -6,22 +6,18 @@ package main_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/testutils/kusttest"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestConfigMapGenerator(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("ConfigMapGenerator")
+	defer th.Reset()
 
-	tc.BuildGoPlugin(
-		"builtin", "", "ConfigMapGenerator")
-
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
-
-	th.WriteF("/app/devops.env", `
+	th.WriteF("devops.env", `
 SERVICE_PORT=32
 `)
-	th.WriteF("/app/uxteam.env", `
+	th.WriteF("uxteam.env", `
 COLOR=red
 `)
 
