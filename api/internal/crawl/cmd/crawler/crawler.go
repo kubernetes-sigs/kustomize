@@ -92,7 +92,7 @@ func main() {
 				_, err := idx.Put("", d)
 				return err
 			default:
-				return fmt.Errorf("Type %T not supported", d)
+				return fmt.Errorf("type %T not supported", d)
 			}
 		},
 	)

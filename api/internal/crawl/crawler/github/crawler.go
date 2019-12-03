@@ -93,7 +93,7 @@ func (gc githubCrawler) Crawl(
 	return nil
 }
 
-func (gc githubCrawler) FetchDocument(ctx context.Context, d *doc.Document) error {
+func (gc githubCrawler) FetchDocument(_ context.Context, d *doc.Document) error {
 	repoURL := d.RepositoryURL + "/" + d.FilePath + "?ref=" + d.DefaultBranch
 	repoSpec, err := git.NewRepoSpecFromUrl(repoURL)
 	if err != nil {
@@ -132,7 +132,7 @@ func (gc githubCrawler) FetchDocument(ctx context.Context, d *doc.Document) erro
 	return fmt.Errorf("file not found: %s, error: %v", url, err)
 }
 
-func (gc githubCrawler) SetCreated(ctx context.Context, d *doc.Document) error {
+func (gc githubCrawler) SetCreated(_ context.Context, d *doc.Document) error {
 	fs := GhFileSpec{}
 	fs.Repository.FullName = d.RepositoryURL + "/" + d.FilePath
 	creationTime, err := gc.client.GetFileCreationTime(fs)

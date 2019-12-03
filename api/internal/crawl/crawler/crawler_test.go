@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/internal/crawl/doc"
+	"sigs.k8s.io/kustomize/api/konfig"
 )
 
 const (
@@ -32,7 +32,7 @@ func (c testCrawler) Match(d *doc.Document) bool {
 	return d != nil && strings.HasPrefix(d.ID(), c.matchPrefix)
 }
 
-func (c testCrawler) FetchDocument(ctx context.Context, d *doc.Document) error {
+func (c testCrawler) FetchDocument(_ context.Context, d *doc.Document) error {
 	if i, ok := c.lukp[d.ID()]; ok {
 		d.DocumentData = c.docs[i].DocumentData
 		return nil
@@ -51,7 +51,7 @@ func (c testCrawler) FetchDocument(ctx context.Context, d *doc.Document) error {
 		d, c.matchPrefix)
 }
 
-func (c testCrawler) SetCreated(ctx context.Context, d *doc.Document) error {
+func (c testCrawler) SetCreated(_ context.Context, d *doc.Document) error {
 	d.CreationTime = &time.Time{}
 	return nil
 }
@@ -71,7 +71,7 @@ func newCrawler(matchPrefix string, err error,
 }
 
 // Crawl implements the Crawler interface for testing.
-func (c testCrawler) Crawl(ctx context.Context,
+func (c testCrawler) Crawl(_ context.Context,
 	output chan<- CrawledDocument) error {
 
 	for i, d := range c.docs {

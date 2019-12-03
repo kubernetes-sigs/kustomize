@@ -15,7 +15,7 @@ type HashTransformerPlugin struct {
 }
 
 func (p *HashTransformerPlugin) Config(
-	h *resmap.PluginHelpers, config []byte) (err error) {
+	h *resmap.PluginHelpers, _ []byte) (err error) {
 	p.hasher = h.ResmapFactory().RF().Hasher()
 	return nil
 }

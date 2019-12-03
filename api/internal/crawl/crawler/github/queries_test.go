@@ -68,7 +68,6 @@ func TestQueryType(t *testing.T) {
 
 func TestGithubSearchQuery(t *testing.T) {
 	const (
-		accessToken = "random_token"
 		perPage     = 100
 	)
 
