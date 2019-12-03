@@ -13,6 +13,40 @@ import (
 	"github.com/elastic/go-elasticsearch/v6/esapi"
 )
 
+const IndexConfig = `
+{
+	"mappings": {
+		"_doc": {
+			"properties": {
+				"repositoryUrl": {
+					"type": "keyword"
+				},
+				"filePath": {
+					"type": "keyword"
+				},
+				"defaultBranch": {
+					"type": "keyword"
+				},
+				"document": {
+					"type": "text"
+				},
+				"creationTime": {
+					"type": "date"
+				},
+				"kinds": {
+					"type": "text"
+				},
+				"identifiers": {
+					"type": "text"
+				},
+				"values": {
+					"type": "text"
+				}
+			}
+		}
+	}
+}`
+
 // TODO(damienr74) Split index into reader and writer?
 type index struct {
 	ctx    context.Context
@@ -118,21 +152,19 @@ func (idx *index) UpdateSetting(settings []byte) error {
 		res, err, ignoreResponseBody)
 }
 
-// Create an index providing both the mappings and the settings.
-func (idx *index) CreateIndex(mappings []byte, settings []byte) error {
-	request := byteJoin(`{ "mappings":`, mappings, `, "settings":`, settings, `}`)
+// Create an index providing the config for both the mappings and the settings.
+func (idx *index) CreateIndex(config []byte) error {
 	op := idx.client.Indices.Create
 	res, err := op(
 		idx.name,
-		op.WithBody(bytes.NewReader(request)),
+		op.WithBody(bytes.NewReader(config)),
 		op.WithContext(idx.ctx),
 		op.WithHuman(),
 		op.WithPretty(),
-		op.WithIncludeTypeName(true),
 	)
 
 	return idx.responseErrorOrNil(
-		fmt.Sprintf("could not create index with config '%s'", request),
+		fmt.Sprintf("could not create index with config '%s'", config),
 		res, err, ignoreResponseBody)
 }
 

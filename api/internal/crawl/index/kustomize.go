@@ -96,6 +96,24 @@ func NewKustomizeIndex(ctx context.Context) (*KustomizeIndex, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	indicesExistsOp := idx.client.Indices.Exists
+	resp, err := indicesExistsOp([]string{"kustomize"},
+		indicesExistsOp.WithContext(idx.ctx),
+		indicesExistsOp.WithPretty())
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode == 200 {
+		fmt.Printf("The kustomize index already exists\n")
+	} else {
+		fmt.Printf("Creating the kustomize index\n")
+		if err := idx.CreateIndex([]byte(IndexConfig)); err != nil {
+			return nil, err
+		}
+	}
+
 	return &KustomizeIndex{idx}, nil
 }
 
