@@ -90,9 +90,9 @@ metadata:
 		"--network", "none",
 		"--user", "nobody",
 		"--security-opt=no-new-privileges",
-		"--mount", fmt.Sprintf("'type=%s,src=%s,dst=%s:ro'", "bind", "/mount/path", "/local/"),
-		"--mount", fmt.Sprintf("'type=%s,src=%s,dst=%s:ro'", "volume", "myvol", "/local/"),
-		"--mount", fmt.Sprintf("'type=%s,src=%s,dst=%s:ro'", "tmpfs", "", "/local/"),
+		"--mount", fmt.Sprintf("type=%s,src=%s,dst=%s:ro", "bind", "/mount/path", "/local/"),
+		"--mount", fmt.Sprintf("type=%s,src=%s,dst=%s:ro", "volume", "myvol", "/local/"),
+		"--mount", fmt.Sprintf("type=%s,src=%s,dst=%s:ro", "tmpfs", "", "/local/"),
 	}
 	for _, e := range os.Environ() {
 		// the process env

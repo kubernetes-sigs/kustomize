@@ -28,7 +28,10 @@ kind:
 		return
 	}
 	filter := instance.containerFilterProvider("example.com:version", "", api)
-	assert.Equal(t, &filters.ContainerFilter{Image: "example.com:version", Config: api}, filter)
+	defaultMount:= filters.StorageMount{}
+	mounts := []filters.StorageMount{}
+	mounts = append(mounts, defaultMount)
+	assert.Equal(t, &filters.ContainerFilter{Image: "example.com:version", Config: api, StorageMounts: mounts}, filter)
 }
 
 func TestCmd_Execute(t *testing.T) {
