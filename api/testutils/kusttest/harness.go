@@ -75,7 +75,7 @@ func (th Harness) MakeOptionsPluginsEnabled() krusty.Options {
 		if strings.Contains(err.Error(), "unable to find plugin root") {
 			th.t.Log(
 				"Tests that want to run with plugins enabled must be " +
-					"bookended by calls to newPluginTestEnv.Set(), Reset().")
+				"bookended by calls to MakeEnhancedHarness(), Reset().")
 		}
 		th.t.Fatal(err)
 	}
