@@ -32,10 +32,6 @@ func newCmdAddPatch(fSys filesys.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			err = o.Complete(cmd, args)
-			if err != nil {
-				return err
-			}
 			return o.RunAddPatch(fSys)
 		},
 	}
@@ -48,11 +44,6 @@ func (o *addPatchOptions) Validate(args []string) error {
 		return errors.New("must specify a patch file")
 	}
 	o.patchFilePaths = args
-	return nil
-}
-
-// Complete completes addPatch command.
-func (o *addPatchOptions) Complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 

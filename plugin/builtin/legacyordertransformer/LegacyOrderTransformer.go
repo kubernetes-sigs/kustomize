@@ -24,7 +24,7 @@ var KustomizePlugin plugin
 
 // Nothing needed for configuration.
 func (p *plugin) Config(
-	h *resmap.PluginHelpers, c []byte) (err error) {
+	_ *resmap.PluginHelpers, _ []byte) (err error) {
 	return nil
 }
 

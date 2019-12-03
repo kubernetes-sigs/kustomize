@@ -6,7 +6,6 @@ package resmaptest_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 )
@@ -32,14 +31,6 @@ func (rm *rmBuilder) Add(m map[string]interface{}) *rmBuilder {
 
 func (rm *rmBuilder) AddR(r *resource.Resource) *rmBuilder {
 	err := rm.m.Append(r)
-	if err != nil {
-		rm.t.Fatalf("test setup failure: %v", err)
-	}
-	return rm
-}
-
-func (rm *rmBuilder) AddWithId(id resid.ResId, m map[string]interface{}) *rmBuilder {
-	err := rm.m.Append(rm.rf.FromMap(m))
 	if err != nil {
 		rm.t.Fatalf("test setup failure: %v", err)
 	}

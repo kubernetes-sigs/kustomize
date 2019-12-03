@@ -26,7 +26,7 @@ type plugin struct {
 var KustomizePlugin plugin
 
 func (p *plugin) Config(
-	h *resmap.PluginHelpers, c []byte) (err error) {
+	_ *resmap.PluginHelpers, c []byte) (err error) {
 	p.Namespace = ""
 	p.FieldSpecs = nil
 	return yaml.Unmarshal(c, p)
@@ -79,7 +79,7 @@ func (p *plugin) applicableFieldSpecs(id resid.ResId) []types.FieldSpec {
 }
 
 func (p *plugin) changeNamespace(
-	referrer *resource.Resource) func(in interface{}) (interface{}, error) {
+	_ *resource.Resource) func(in interface{}) (interface{}, error) {
 	return func(in interface{}) (interface{}, error) {
 		switch in.(type) {
 		case string:

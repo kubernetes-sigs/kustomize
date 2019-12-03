@@ -22,7 +22,7 @@ var errExpected = fmt.Errorf("oops")
 const originalValue = "tomato"
 const newValue = "notThe" + originalValue
 
-func (m *noopMutator) mutate(in interface{}) (interface{}, error) {
+func (m *noopMutator) mutate(_ interface{}) (interface{}, error) {
 	m.wasCalled = true
 	return newValue, m.errorToReturn
 }
