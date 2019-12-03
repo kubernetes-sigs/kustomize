@@ -20,10 +20,10 @@ type FakeLoader struct {
 
 // NewFakeLoader returns a Loader that uses a fake filesystem.
 // The loader will be restricted to root only.
-// The initialDir argument should be an absolute file path.
-func NewFakeLoader(initialDir string) FakeLoader {
+// The root argument should be an absolute file path.
+func NewFakeLoader(root string) FakeLoader {
 	return NewFakeLoaderWithRestrictor(
-		loader.RestrictionRootOnly, filesys.MakeFsInMemory(), initialDir)
+		loader.RestrictionRootOnly, filesys.MakeFsInMemory(), root)
 }
 
 // NewFakeLoaderWithRestrictor returns a Loader that

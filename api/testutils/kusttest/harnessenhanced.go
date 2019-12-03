@@ -20,30 +20,60 @@ import (
 )
 
 // HarnessEnhanced manages a full plugin environment for tests.
-// TODO: get rid of this.  Combine Harness and PluginTestEnv.
 type HarnessEnhanced struct {
 	Harness
+	pte *pluginTestEnv
 	rf  *resmap.Factory
 	ldr loadertest.FakeLoader
 	pl  *pLdr.Loader
 }
 
-func MakeHarnessEnhanced(
-	t *testing.T, path string) *HarnessEnhanced {
+func MakeEnhancedHarness(t *testing.T) *HarnessEnhanced {
+	pte := newPluginTestEnv(t).set()
+
 	pc, err := konfig.EnabledPluginConfig()
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	fSys := filesys.MakeFsInMemory()
+
 	rf := resmap.NewFactory(
 		resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()),
 		transformer.NewFactoryImpl())
-	return &HarnessEnhanced{
+
+	result := &HarnessEnhanced{
 		Harness: Harness{t: t, fSys: fSys},
+		pte:     pte,
 		rf:      rf,
-		ldr: loadertest.NewFakeLoaderWithRestrictor(
-			fLdr.RestrictionRootOnly, fSys, path),
-		pl: pLdr.NewLoader(pc, rf)}
+		pl:      pLdr.NewLoader(pc, rf)}
+	result.ResetLoaderRoot(filesys.Separator)
+
+	return result
+}
+
+func (th *HarnessEnhanced) Reset() {
+	th.pte.reset()
+}
+
+func (th *HarnessEnhanced) BuildGoPlugin(g, v, k string) *HarnessEnhanced {
+	th.pte.buildGoPlugin(g, v, k)
+	return th
+}
+
+func (th *HarnessEnhanced) PrepExecPlugin(g, v, k string) *HarnessEnhanced {
+	th.pte.prepExecPlugin(g, v, k)
+	return th
+}
+
+func (th *HarnessEnhanced) PrepBuiltin(k string) *HarnessEnhanced {
+	th.pte.buildGoPlugin(konfig.BuiltinPluginPackage, "", k)
+	return th
+}
+
+func (th *HarnessEnhanced) ResetLoaderRoot(root string) {
+	th.ldr = loadertest.NewFakeLoaderWithRestrictor(
+		fLdr.RestrictionRootOnly, th.fSys, root)
 }
 
 func (th *HarnessEnhanced) LoadAndRunGenerator(

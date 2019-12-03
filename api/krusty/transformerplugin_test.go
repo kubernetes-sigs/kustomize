@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
-func writeDeployment(th kusttest_test.Harness, path string) {
+func writeDeployment(th *kusttest_test.HarnessEnhanced, path string) {
 	th.WriteF(path, `
 apiVersion: apps/v1
 kind: Deployment
@@ -28,7 +28,7 @@ spec:
 `)
 }
 
-func writeStringPrefixer(th kusttest_test.Harness, path, name string) {
+func writeStringPrefixer(th *kusttest_test.HarnessEnhanced, path, name string) {
 	th.WriteF(path, `
 apiVersion: someteam.example.com/v1
 kind: StringPrefixer
@@ -37,7 +37,7 @@ metadata:
 `)
 }
 
-func writeDatePrefixer(th kusttest_test.Harness, path, name string) {
+func writeDatePrefixer(th *kusttest_test.HarnessEnhanced, path, name string) {
 	th.WriteF(path, `
 apiVersion: someteam.example.com/v1
 kind: DatePrefixer
@@ -47,15 +47,11 @@ metadata:
 }
 
 func TestOrderedTransformers(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
+	th := kusttest_test.MakeEnhancedHarness(t).
+		BuildGoPlugin("someteam.example.com", "v1", "StringPrefixer").
+		BuildGoPlugin("someteam.example.com", "v1", "DatePrefixer")
+	defer th.Reset()
 
-	tc.BuildGoPlugin(
-		"someteam.example.com", "v1", "StringPrefixer")
-
-	tc.BuildGoPlugin(
-		"someteam.example.com", "v1", "DatePrefixer")
-	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 resources:
 - deployment.yaml
@@ -89,13 +85,10 @@ spec:
 }
 
 func TestPluginsNotEnabled(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
+	th := kusttest_test.MakeEnhancedHarness(t).
+		BuildGoPlugin("someteam.example.com", "v1", "StringPrefixer")
+	defer th.Reset()
 
-	tc.BuildGoPlugin(
-		"someteam.example.com", "v1", "StringPrefixer")
-
-	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 transformers:
 - stringPrefixer.yaml
@@ -111,13 +104,10 @@ transformers:
 }
 
 func TestSedTransformer(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepExecPlugin("someteam.example.com", "v1", "SedTransformer")
+	defer th.Reset()
 
-	tc.PrepExecPlugin(
-		"someteam.example.com", "v1", "SedTransformer")
-
-	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 resources:
 - configmap.yaml
@@ -176,16 +166,10 @@ metadata:
 }
 
 func TestTransformedTransformers(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.BuildGoPlugin(
-		"someteam.example.com", "v1", "StringPrefixer")
-
-	tc.BuildGoPlugin(
-		"someteam.example.com", "v1", "DatePrefixer")
-
-	th := kusttest_test.MakeHarness(t)
+	th := kusttest_test.MakeEnhancedHarness(t).
+		BuildGoPlugin("someteam.example.com", "v1", "StringPrefixer").
+		BuildGoPlugin("someteam.example.com", "v1", "DatePrefixer")
+	defer th.Reset()
 
 	th.WriteK("/app/base", `
 resources:

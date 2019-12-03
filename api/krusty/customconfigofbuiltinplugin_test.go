@@ -13,13 +13,10 @@ import (
 // This is a NamePrefixer that touches Deployments
 // and Services exclusively.
 func TestCustomNamePrefixer(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PrefixSuffixTransformer")
+	defer th.Reset()
 
-	tc.BuildGoPlugin(
-		"builtin", "", "PrefixSuffixTransformer")
-
-	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 resources:
 - deployment.yaml

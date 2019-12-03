@@ -6,17 +6,13 @@ package main_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/testutils/kusttest"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestBashedConfigMapPlugin(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.PrepExecPlugin(
-		"someteam.example.com", "v1", "BashedConfigMap")
-
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepExecPlugin("someteam.example.com", "v1", "BashedConfigMap")
+	defer th.Reset()
 
 	m := th.LoadAndRunGenerator(`
 apiVersion: someteam.example.com/v1

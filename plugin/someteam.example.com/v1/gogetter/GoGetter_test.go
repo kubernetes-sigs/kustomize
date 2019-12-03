@@ -10,19 +10,14 @@ package main_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/testutils/kusttest"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 // This test requires having the go-getter binary on the PATH.
-//
 func TestGoGetter(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.PrepExecPlugin(
-		"someteam.example.com", "v1", "GoGetter")
-
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepExecPlugin("someteam.example.com", "v1", "GoGetter")
+	defer th.Reset()
 
 	m := th.LoadAndRunGenerator(`
 apiVersion: someteam.example.com/v1
@@ -44,13 +39,9 @@ metadata:
 }
 
 func TestGoGetterUrl(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.PrepExecPlugin(
-		"someteam.example.com", "v1", "GoGetter")
-
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepExecPlugin("someteam.example.com", "v1", "GoGetter")
+	defer th.Reset()
 
 	m := th.LoadAndRunGenerator(`
 apiVersion: someteam.example.com/v1
@@ -73,13 +64,9 @@ metadata:
 }
 
 func TestGoGetterCommand(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.PrepExecPlugin(
-		"someteam.example.com", "v1", "GoGetter")
-
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepExecPlugin("someteam.example.com", "v1", "GoGetter")
+	defer th.Reset()
 
 	m := th.LoadAndRunGenerator(`
 apiVersion: someteam.example.com/v1
@@ -102,13 +89,9 @@ metadata:
 }
 
 func TestGoGetterSubPath(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.PrepExecPlugin(
-		"someteam.example.com", "v1", "GoGetter")
-
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepExecPlugin("someteam.example.com", "v1", "GoGetter")
+	defer th.Reset()
 
 	m := th.LoadAndRunGenerator(`
 apiVersion: someteam.example.com/v1

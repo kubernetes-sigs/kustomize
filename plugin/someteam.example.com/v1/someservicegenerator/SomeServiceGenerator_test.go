@@ -6,17 +6,13 @@ package main_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/testutils/kusttest"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestSomeServiceGeneratorPlugin(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.BuildGoPlugin(
+	th := kusttest_test.MakeEnhancedHarness(t).BuildGoPlugin(
 		"someteam.example.com", "v1", "SomeServiceGenerator")
-
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
+	defer th.Reset()
 
 	m := th.LoadAndRunGenerator(`
 apiVersion: someteam.example.com/v1
