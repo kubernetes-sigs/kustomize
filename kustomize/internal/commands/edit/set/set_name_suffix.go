@@ -33,10 +33,6 @@ and overwrite the value with "-acme" if the field does exist.
 			if err != nil {
 				return err
 			}
-			err = o.Complete(cmd, args)
-			if err != nil {
-				return err
-			}
 			return o.RunSetNameSuffix(fSys)
 		},
 	}
@@ -50,11 +46,6 @@ func (o *setNameSuffixOptions) Validate(args []string) error {
 	}
 	// TODO: add further validation on the value.
 	o.suffix = args[0]
-	return nil
-}
-
-// Complete completes setNameSuffix command.
-func (o *setNameSuffixOptions) Complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 

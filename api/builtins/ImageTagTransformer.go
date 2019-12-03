@@ -23,7 +23,7 @@ type ImageTagTransformerPlugin struct {
 }
 
 func (p *ImageTagTransformerPlugin) Config(
-	h *resmap.PluginHelpers, c []byte) (err error) {
+	_ *resmap.PluginHelpers, c []byte) (err error) {
 	p.ImageTag = types.Image{}
 	p.FieldSpecs = nil
 	return yaml.Unmarshal(c, p)

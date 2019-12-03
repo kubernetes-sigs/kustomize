@@ -33,10 +33,6 @@ and overwrite the value with "acme-" if the field does exist.
 			if err != nil {
 				return err
 			}
-			err = o.Complete(cmd, args)
-			if err != nil {
-				return err
-			}
 			return o.RunSetNamePrefix(fSys)
 		},
 	}
@@ -50,11 +46,6 @@ func (o *setNamePrefixOptions) Validate(args []string) error {
 	}
 	// TODO: add further validation on the value.
 	o.prefix = args[0]
-	return nil
-}
-
-// Complete completes setNamePrefix command.
-func (o *setNamePrefixOptions) Complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 

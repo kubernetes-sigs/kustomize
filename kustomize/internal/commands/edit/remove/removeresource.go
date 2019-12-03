@@ -35,10 +35,6 @@ func newCmdRemoveResource(fSys filesys.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			err = o.Complete(cmd, args)
-			if err != nil {
-				return err
-			}
 			return o.RunRemoveResource(fSys)
 		},
 	}
@@ -51,11 +47,6 @@ func (o *removeResourceOptions) Validate(args []string) error {
 		return errors.New("must specify a resource file")
 	}
 	o.resourceFilePaths = args
-	return nil
-}
-
-// Complete completes removeResource command.
-func (o *removeResourceOptions) Complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 

@@ -31,10 +31,6 @@ func newCmdAddResource(fSys filesys.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			err = o.Complete(cmd, args)
-			if err != nil {
-				return err
-			}
 			return o.RunAddResource(fSys)
 		},
 	}
@@ -47,11 +43,6 @@ func (o *addResourceOptions) Validate(args []string) error {
 		return errors.New("must specify a resource file")
 	}
 	o.resourceFilePaths = args
-	return nil
-}
-
-// Complete completes addResource command.
-func (o *addResourceOptions) Complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 

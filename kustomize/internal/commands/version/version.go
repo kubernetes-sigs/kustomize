@@ -21,9 +21,9 @@ func NewCmdVersion(w io.Writer) *cobra.Command {
 		Example: `kustomize version`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if short {
-				fmt.Println(provenance.GetProvenance().Short())
+				fmt.Fprintln(w, provenance.GetProvenance().Short())
 			} else {
-				fmt.Println(provenance.GetProvenance().Full())
+				fmt.Fprintln(w, provenance.GetProvenance().Full())
 			}
 		},
 	}

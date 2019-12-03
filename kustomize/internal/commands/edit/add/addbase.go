@@ -31,10 +31,6 @@ func newCmdAddBase(fSys filesys.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			err = o.Complete(cmd, args)
-			if err != nil {
-				return err
-			}
 			return o.RunAddBase(fSys)
 		},
 	}
@@ -47,11 +43,6 @@ func (o *addBaseOptions) Validate(args []string) error {
 		return errors.New("must specify a base directory")
 	}
 	o.baseDirectoryPaths = args[0]
-	return nil
-}
-
-// Complete completes addBase command.
-func (o *addBaseOptions) Complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
