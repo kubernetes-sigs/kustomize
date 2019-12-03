@@ -6,16 +6,13 @@ package main_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/testutils/kusttest"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestDatePrefixerPlugin(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.BuildGoPlugin(
-		"someteam.example.com", "v1", "DatePrefixer")
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
+	th := kusttest_test.MakeEnhancedHarness(t).
+		BuildGoPlugin("someteam.example.com", "v1", "DatePrefixer")
+	defer th.Reset()
 
 	m := th.LoadAndRunTransformer(`
 apiVersion: someteam.example.com/v1

@@ -10,13 +10,9 @@ import (
 )
 
 func TestLabelTransformer(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.BuildGoPlugin(
-		"builtin", "", "LabelTransformer")
-
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("LabelTransformer")
+	defer th.Reset()
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin

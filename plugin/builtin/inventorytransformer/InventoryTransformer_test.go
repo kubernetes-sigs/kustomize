@@ -6,7 +6,7 @@ package main_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/testutils/kusttest"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 const (
@@ -58,13 +58,9 @@ metadata:
 )
 
 func TestInventoryTransformerCollect(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.BuildGoPlugin(
-		"builtin", "", "InventoryTransformer")
-
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("InventoryTransformer")
+	defer th.Reset()
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
@@ -79,13 +75,9 @@ policy: GarbageCollect
 }
 
 func TestInventoryTransformerIgnore(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.BuildGoPlugin(
-		"builtin", "", "InventoryTransformer")
-
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("InventoryTransformer")
+	defer th.Reset()
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
@@ -100,13 +92,9 @@ policy: GarbageIgnore
 }
 
 func TestInventoryTransformerDefaultPolicy(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.BuildGoPlugin(
-		"builtin", "", "InventoryTransformer")
-
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("InventoryTransformer")
+	defer th.Reset()
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin

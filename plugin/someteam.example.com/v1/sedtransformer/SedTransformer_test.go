@@ -6,17 +6,15 @@ package main_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/testutils/kusttest"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestSedTransformer(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepExecPlugin("someteam.example.com", "v1", "SedTransformer")
+	defer th.Reset()
 
-	tc.PrepExecPlugin("someteam.example.com", "v1", "SedTransformer")
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
-
-	th.WriteF("/app/sed-input.txt", `
+	th.WriteF("sed-input.txt", `
 s/$FRUIT/orange/g
 s/$VEGGIE/tomato/g
 `)

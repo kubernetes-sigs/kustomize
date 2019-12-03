@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/testutils/kusttest"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 const (
@@ -65,12 +65,9 @@ spec:
 )
 
 func TestPatchTransformerMissingFile(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.BuildGoPlugin(
-		"builtin", "", "PatchTransformer")
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
 
 	_, err := th.RunTransformer(`
 apiVersion: builtin
@@ -83,18 +80,15 @@ path: patch.yaml
 		t.Fatalf("expected error")
 	}
 	if !strings.Contains(err.Error(),
-		"'/app/patch.yaml' doesn't exist") {
+		"'/patch.yaml' doesn't exist") {
 		t.Fatalf("unexpected err: %v", err)
 	}
 }
 
 func TestPatchTransformerBadPatch(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.BuildGoPlugin(
-		"builtin", "", "PatchTransformer")
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
 
 	_, err := th.RunTransformer(`
 apiVersion: builtin
@@ -113,12 +107,9 @@ patch: "thisIsNotAPatch"
 }
 
 func TestPatchTransformerMissingSelector(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.BuildGoPlugin(
-		"builtin", "", "PatchTransformer")
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
 
 	_, err := th.RunTransformer(`
 apiVersion: builtin
@@ -137,13 +128,9 @@ patch: '[{"op": "add", "path": "/spec/template/spec/dnsPolicy", "value": "Cluste
 }
 
 func TestPatchTransformerBothEmptyPathAndPatch(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.BuildGoPlugin(
-		"builtin", "", "PatchTransformer")
-
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
 
 	_, err := th.RunTransformer(`
 apiVersion: builtin
@@ -160,13 +147,9 @@ metadata:
 }
 
 func TestPatchTransformerBothNonEmptyPathAndPatch(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.BuildGoPlugin(
-		"builtin", "", "PatchTransformer")
-
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
 
 	_, err := th.RunTransformer(`
 apiVersion: builtin
@@ -185,15 +168,11 @@ Patch: "something"
 }
 
 func TestPatchTransformerFromFiles(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
 
-	tc.BuildGoPlugin(
-		"builtin", "", "PatchTransformer")
-
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
-
-	th.WriteF("/app/patch.yaml", `
+	th.WriteF("patch.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -267,13 +246,9 @@ spec:
 }
 
 func TestPatchTransformerWithInline(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.BuildGoPlugin(
-		"builtin", "", "PatchTransformer")
-
-	th := kusttest_test.MakeHarnessEnhanced(t, "/app")
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin

@@ -14,17 +14,11 @@ import (
 // in a base, allowing them to be reused in any number of
 // kustomizations.
 func TestReusableCustomTransformers(t *testing.T) {
-	tc := kusttest_test.NewPluginTestEnv(t).Set()
-	defer tc.Reset()
-
-	tc.BuildGoPlugin(
-		"builtin", "", "PrefixSuffixTransformer")
-	tc.BuildGoPlugin(
-		"builtin", "", "AnnotationsTransformer")
-	tc.BuildGoPlugin(
-		"builtin", "", "LabelTransformer")
-
-	th := kusttest_test.MakeHarness(t)
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PrefixSuffixTransformer").
+		PrepBuiltin("AnnotationsTransformer").
+		PrepBuiltin("LabelTransformer")
+	defer th.Reset()
 
 	// First write three custom configurations for builtin plugins.
 
