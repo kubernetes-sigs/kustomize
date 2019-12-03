@@ -32,7 +32,7 @@ type ContainerFilter struct {
 	// Network is the container network to use.
 	Network string `yaml:"network,omitempty"`
 
-	// List of storage options that container will have mounted.
+	// StorageMounts is a list of storage options that the container will have mounted.
 	StorageMounts []StorageMount
 
 	// Config is the API configuration for the container and passed through the
@@ -49,22 +49,20 @@ type ContainerFilter struct {
 // StorageMount represents a container's mounted storage option(s)
 type StorageMount struct {
 	// Type of mount e.g. bind mount, local volume, etc.
-	mountType string
+	MountType string
 
 	// Source for the storage to be mounted.
 	// For named volumes, this is the name of the volume.
 	// For anonymous volumes, this field is omitted (empty string).
 	// For bind mounts, this is the path to the file or directory on the host.
-	src string
+	Src string
 
 	// The path where the file or directory is mounted in the container.
-	dstPath string
+	DstPath string
 }
 
-// AddStorageMount adds a mounted storage option to the Container
-func (c *ContainerFilter) AddStorageMount(mountType, src, dstPath string) {
-	storageMount := StorageMount{mountType, src, dstPath}
-	c.StorageMounts = append(c.StorageMounts, storageMount)
+func (s *StorageMount) String() string {
+	return fmt.Sprintf("type=%s,src=%s,dst=%s:ro", s.MountType, s.Src, s.DstPath)
 }
 
 // GrepFilter implements kio.GrepFilter
@@ -127,11 +125,7 @@ func (c *ContainerFilter) getArgs() []string {
 
 	// TODO(joncwong): Allow StorageMount fields to have default values.
 	for _, storageMount := range c.StorageMounts {
-		mountType := storageMount.mountType
-		src := storageMount.src
-		dstPath := storageMount.dstPath
-
-		args = append(args, "--mount", fmt.Sprintf("'type=%s,src=%s,dst=%s:ro'", mountType, src, dstPath))
+		args = append(args, "--mount", storageMount.String())
 	}
 
 	// export the local environment vars to the container

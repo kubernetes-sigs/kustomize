@@ -16,6 +16,8 @@ import (
 // RunFns runs the set of configuration functions in a local directory against
 // the Resources in that directory
 type RunFns struct {
+	StorageMounts []filters.StorageMount
+
 	// Path is the path to the directory containing functions
 	Path string
 
@@ -90,7 +92,9 @@ func (r *RunFns) init() {
 	// if containerFilterProvider hasn't been set, use the default
 	if r.containerFilterProvider == nil {
 		r.containerFilterProvider = func(image, path string, api *yaml.RNode) kio.Filter {
-			cf := &filters.ContainerFilter{Image: image, Config: api}
+			defaultMount := filters.StorageMount{}
+			r.StorageMounts = append(r.StorageMounts, defaultMount)
+			cf := &filters.ContainerFilter{Image: image, Config: api, StorageMounts: r.StorageMounts}
 			return cf
 		}
 	}
