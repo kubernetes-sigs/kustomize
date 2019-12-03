@@ -8,7 +8,6 @@ import (
 
 const (
 	perPageArg     = "per_page"
-	accessTokenArg = "access_token"
 )
 
 const githubMaxPageSize = 100
@@ -99,12 +98,6 @@ func Path(p string) queryField {
 // determine the date of a file.
 type RequestConfig struct {
 	perPage uint64
-}
-
-func NewRequestConfig(perPage uint64) RequestConfig {
-	return RequestConfig{
-		perPage: perPage,
-	}
 }
 
 // CodeSearchRequestWith given a list of query parameters that specify the

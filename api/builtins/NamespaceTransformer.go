@@ -22,7 +22,7 @@ type NamespaceTransformerPlugin struct {
 }
 
 func (p *NamespaceTransformerPlugin) Config(
-	h *resmap.PluginHelpers, c []byte) (err error) {
+	_ *resmap.PluginHelpers, c []byte) (err error) {
 	p.Namespace = ""
 	p.FieldSpecs = nil
 	return yaml.Unmarshal(c, p)
@@ -75,7 +75,7 @@ func (p *NamespaceTransformerPlugin) applicableFieldSpecs(id resid.ResId) []type
 }
 
 func (p *NamespaceTransformerPlugin) changeNamespace(
-	referrer *resource.Resource) func(in interface{}) (interface{}, error) {
+	_ *resource.Resource) func(in interface{}) (interface{}, error) {
 	return func(in interface{}) (interface{}, error) {
 		switch in.(type) {
 		case string:

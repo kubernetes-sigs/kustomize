@@ -34,10 +34,6 @@ func newCmdRemovePatch(fSys filesys.FileSystem) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			err = o.Complete(cmd, args)
-			if err != nil {
-				return err
-			}
 			return o.RunRemovePatch(fSys)
 		},
 	}
@@ -50,11 +46,6 @@ func (o *removePatchOptions) Validate(args []string) error {
 		return errors.New("must specify a patch file")
 	}
 	o.patchFilePaths = args
-	return nil
-}
-
-// Complete completes removePatch command.
-func (o *removePatchOptions) Complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 

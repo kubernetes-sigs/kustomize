@@ -17,7 +17,7 @@ type LabelTransformerPlugin struct {
 }
 
 func (p *LabelTransformerPlugin) Config(
-	h *resmap.PluginHelpers, c []byte) (err error) {
+	_ *resmap.PluginHelpers, c []byte) (err error) {
 	p.Labels = nil
 	p.FieldSpecs = nil
 	return yaml.Unmarshal(c, p)

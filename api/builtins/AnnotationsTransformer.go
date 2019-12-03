@@ -17,7 +17,7 @@ type AnnotationsTransformerPlugin struct {
 }
 
 func (p *AnnotationsTransformerPlugin) Config(
-	h *resmap.PluginHelpers, c []byte) (err error) {
+	_ *resmap.PluginHelpers, c []byte) (err error) {
 	p.Annotations = nil
 	p.FieldSpecs = nil
 	return yaml.Unmarshal(c, p)

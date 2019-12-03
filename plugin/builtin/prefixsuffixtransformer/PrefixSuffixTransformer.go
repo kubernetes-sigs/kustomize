@@ -37,7 +37,7 @@ var prefixSuffixFieldSpecsToSkip = []types.FieldSpec{
 }
 
 func (p *plugin) Config(
-	h *resmap.PluginHelpers, c []byte) (err error) {
+	_ *resmap.PluginHelpers, c []byte) (err error) {
 	p.Prefix = ""
 	p.Suffix = ""
 	p.FieldSpecs = nil

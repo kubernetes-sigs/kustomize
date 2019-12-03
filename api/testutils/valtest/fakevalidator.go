@@ -36,12 +36,12 @@ func MakeFakeValidator() *fakeValidator {
 }
 
 // ErrIfInvalidKey returns nil
-func (v *fakeValidator) ErrIfInvalidKey(k string) error {
+func (v *fakeValidator) ErrIfInvalidKey(_ string) error {
 	return nil
 }
 
 // IsEnvVarName returns nil
-func (v *fakeValidator) IsEnvVarName(k string) error {
+func (v *fakeValidator) IsEnvVarName(_ string) error {
 	return nil
 }
 

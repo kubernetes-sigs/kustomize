@@ -26,8 +26,7 @@ type plugin struct {
 var KustomizePlugin plugin
 
 func (p *plugin) Config(
-	h *resmap.PluginHelpers, c []byte) (err error) {
-
+	_ *resmap.PluginHelpers, c []byte) (err error) {
 	p.Replica = types.Replica{}
 	p.FieldSpecs = nil
 	return yaml.Unmarshal(c, p)
