@@ -7,9 +7,8 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
-
+	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/k8sdeps/transformer"
-	"sigs.k8s.io/kustomize/api/internal/loadertest"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/konfig"
@@ -24,7 +23,7 @@ type HarnessEnhanced struct {
 	Harness
 	pte *pluginTestEnv
 	rf  *resmap.Factory
-	ldr loadertest.FakeLoader
+	ldr ifc.Loader
 	pl  *pLdr.Loader
 }
 
@@ -72,8 +71,15 @@ func (th *HarnessEnhanced) PrepBuiltin(k string) *HarnessEnhanced {
 }
 
 func (th *HarnessEnhanced) ResetLoaderRoot(root string) {
-	th.ldr = loadertest.NewFakeLoaderWithRestrictor(
-		fLdr.RestrictionRootOnly, th.fSys, root)
+	if err := th.fSys.Mkdir(root); err != nil {
+		th.t.Fatal(err)
+	}
+	ldr, err := fLdr.NewLoader(
+		fLdr.RestrictionRootOnly, root, th.fSys)
+	if err != nil {
+		th.t.Fatalf("Unable to make loader: %v", err)
+	}
+	th.ldr = ldr
 }
 
 func (th *HarnessEnhanced) LoadAndRunGenerator(
