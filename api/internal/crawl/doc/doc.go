@@ -123,6 +123,8 @@ func (doc *KustomizationDocument) ParseYAML() error {
 
 	identifierSet := make(set)
 	valueSet := make(set)
+	kindSet := make(set)
+
 	getKind := func(m map[string]interface{}) string {
 		const defaultStr = "Kustomization"
 		kind, ok := m["kind"]
@@ -141,8 +143,12 @@ func (doc *KustomizationDocument) ParseYAML() error {
 	}
 
 	for _, contents := range ks {
-		doc.Kinds = append(doc.Kinds, getKind(contents))
+		kindSet[getKind(contents)] = struct{}{}
 		createFlatStructure(identifierSet, valueSet, contents)
+	}
+
+	for val := range kindSet {
+		doc.Kinds = append(doc.Kinds, val)
 	}
 
 	for val := range valueSet {
