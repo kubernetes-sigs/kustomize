@@ -123,6 +123,39 @@ metadata:
   name: app-crd
 `,
 		},
+		{
+			identifiers: []string{
+				"kind",
+				"metadata",
+				"metadata:name",
+			},
+			values: []string{
+				"kind=Deployment",
+				"kind=Service",
+				"metadata:name=app1",
+				"metadata:name=app2",
+			},
+			kinds: []string{
+				"Deployment",
+				"Deployment",
+				"Service",
+			},
+			filepath: "resources.yaml",
+			yaml: `
+---
+kind: Deployment
+metadata:
+  name: app1
+---
+kind: Deployment
+metadata:
+  name: app2
+---
+kind: Service
+metadata:
+  name: app1
+`,
+		},
 	}
 
 	for _, test := range testCases {
