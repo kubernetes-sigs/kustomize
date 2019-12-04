@@ -137,7 +137,6 @@ metadata:
 			},
 			kinds: []string{
 				"Deployment",
-				"Deployment",
 				"Service",
 			},
 			filepath: "resources.yaml",
