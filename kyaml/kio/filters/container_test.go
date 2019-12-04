@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -62,7 +61,7 @@ metadata:
 	assert.True(t, foundKyaml)
 }
 
-func TestFilter_commandMountPath(t *testing.T) {
+func TestFilter_command_StorageMount(t *testing.T) {
 	cfg, err := yaml.Parse(`apiversion: apps/v1
 kind: Deployment
 metadata:
@@ -71,12 +70,14 @@ metadata:
 	if !assert.NoError(t, err) {
 		return
 	}
+	bindMount := StorageMount{"bind", "/mount/path", "/local/"}
+	localVol := StorageMount{"volume", "myvol", "/local/"}
+	tmpfs := StorageMount{"tmpfs", "", "/local/"}
 	instance := &ContainerFilter{
-		Image:     "example.com:version",
-		Config:    cfg,
-		mountPath: filepath.Join("mount", "path"),
+		Image:         "example.com:version",
+		Config:        cfg,
+		StorageMounts: []StorageMount{bindMount, localVol, tmpfs},
 	}
-	os.Setenv("KYAML_TEST", "FOO")
 	cmd, err := instance.getCommand()
 	if !assert.NoError(t, err) {
 		return
@@ -89,7 +90,9 @@ metadata:
 		"--network", "none",
 		"--user", "nobody",
 		"--security-opt=no-new-privileges",
-		"-v", fmt.Sprintf("%s:/local/:ro", filepath.Join("mount", "path")),
+		"--mount", fmt.Sprintf("type=%s,src=%s,dst=%s:ro", "bind", "/mount/path", "/local/"),
+		"--mount", fmt.Sprintf("type=%s,src=%s,dst=%s:ro", "volume", "myvol", "/local/"),
+		"--mount", fmt.Sprintf("type=%s,src=%s,dst=%s:ro", "tmpfs", "", "/local/"),
 	}
 	for _, e := range os.Environ() {
 		// the process env

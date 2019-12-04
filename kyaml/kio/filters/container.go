@@ -25,13 +25,15 @@ import (
 // The full set of environment variables from the parent process
 // are passed to the container.
 type ContainerFilter struct {
-	mountPath string
 
 	// Image is the container image to use to create a container.
 	Image string `yaml:"image,omitempty"`
 
 	// Network is the container network to use.
 	Network string `yaml:"network,omitempty"`
+
+	// StorageMounts is a list of storage options that the container will have mounted.
+	StorageMounts []StorageMount
 
 	// Config is the API configuration for the container and passed through the
 	// API_CONFIG env var to the container.
@@ -44,8 +46,23 @@ type ContainerFilter struct {
 	checkInput func(string)
 }
 
-func (c *ContainerFilter) SetMountPath(path string) {
-	c.mountPath = path
+// StorageMount represents a container's mounted storage option(s)
+type StorageMount struct {
+	// Type of mount e.g. bind mount, local volume, etc.
+	MountType string
+
+	// Source for the storage to be mounted.
+	// For named volumes, this is the name of the volume.
+	// For anonymous volumes, this field is omitted (empty string).
+	// For bind mounts, this is the path to the file or directory on the host.
+	Src string
+
+	// The path where the file or directory is mounted in the container.
+	DstPath string
+}
+
+func (s *StorageMount) String() string {
+	return fmt.Sprintf("type=%s,src=%s,dst=%s:ro", s.MountType, s.Src, s.DstPath)
 }
 
 // GrepFilter implements kio.GrepFilter
@@ -105,9 +122,10 @@ func (c *ContainerFilter) getArgs() []string {
 		// don't make fs readonly because things like heredoc rely on writing tmp files
 		"--security-opt=no-new-privileges", // don't allow the user to escalate privileges
 	}
-	// mount the directory containing the function as read-only
-	if c.mountPath != "" {
-		args = append(args, "-v", fmt.Sprintf("%s:/local/:ro", c.mountPath))
+
+	// TODO(joncwong): Allow StorageMount fields to have default values.
+	for _, storageMount := range c.StorageMounts {
+		args = append(args, "--mount", storageMount.String())
 	}
 
 	// export the local environment vars to the container
