@@ -10,7 +10,6 @@ import (
 
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
-	"sigs.k8s.io/kustomize/api/internal/loadertest"
 	"sigs.k8s.io/kustomize/api/kv"
 	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resid"
@@ -21,7 +20,6 @@ import (
 )
 
 func TestFromFile(t *testing.T) {
-
 	resourceStr := `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -41,10 +39,6 @@ metadata:
   namespace: test
 ---
 `
-	l := loadertest.NewFakeLoader("/whatever/project")
-	if ferr := l.AddFile("/whatever/project/deployment.yaml", []byte(resourceStr)); ferr != nil {
-		t.Fatalf("Error adding fake file: %v\n", ferr)
-	}
 	expected := resmaptest_test.NewRmBuilder(t, rf).
 		Add(map[string]interface{}{
 			"apiVersion": "apps/v1",
@@ -66,7 +60,22 @@ metadata:
 				"namespace": "test",
 			}}).ResMap()
 
-	m, _ := rmF.FromFile(l, "deployment.yaml")
+	fSys := filesys.MakeFsInMemory()
+	err := fSys.WriteFile("deployment.yaml", []byte(resourceStr))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ldr, err := loader.NewLoader(
+		loader.RestrictionRootOnly, filesys.Separator, fSys)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := rmF.FromFile(ldr, "deployment.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if m.Size() != 3 {
 		t.Fatalf("result should contain 3, but got %d", m.Size())
 	}
@@ -119,8 +128,13 @@ func TestNewFromConfigMaps(t *testing.T) {
 		expected    ResMap
 	}
 
-	l := loadertest.NewFakeLoader("/whatever/project")
-	kvLdr := kv.NewLoader(l, valtest_test.MakeFakeValidator())
+	fSys := filesys.MakeFsInMemory()
+	ldr, err := loader.NewLoader(
+		loader.RestrictionRootOnly, filesys.Separator, fSys)
+	if err != nil {
+		t.Fatal(err)
+	}
+	kvLdr := kv.NewLoader(ldr, valtest_test.MakeFakeValidator())
 	testCases := []testCase{
 		{
 			description: "construct config map from env",
@@ -134,7 +148,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 					},
 				},
 			},
-			filepath: "/whatever/project/app.env",
+			filepath: "app.env",
 			content:  "DB_USERNAME=admin\nDB_PASSWORD=somepw",
 			expected: resmaptest_test.NewRmBuilder(t, rf).Add(
 				map[string]interface{}{
@@ -160,7 +174,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 				},
 			},
 			},
-			filepath: "/whatever/project/app-init.ini",
+			filepath: "app-init.ini",
 			content:  "FOO=bar\nBAR=baz\n",
 			expected: resmaptest_test.NewRmBuilder(t, rf).Add(
 				map[string]interface{}{
@@ -209,8 +223,7 @@ BAR=baz
 	}
 	for _, tc := range testCases {
 		if tc.filepath != "" {
-			if fErr := l.AddFile(
-				tc.filepath, []byte(tc.content)); fErr != nil {
+			if fErr := fSys.WriteFile(tc.filepath, []byte(tc.content)); fErr != nil {
 				t.Fatalf("error adding file '%s': %v\n", tc.filepath, fErr)
 			}
 		}

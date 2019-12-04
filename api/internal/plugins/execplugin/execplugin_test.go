@@ -8,11 +8,12 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/internal/loadertest"
+	"sigs.k8s.io/kustomize/api/filesys"
 	. "sigs.k8s.io/kustomize/api/internal/plugins/execplugin"
-	"sigs.k8s.io/kustomize/api/internal/plugins/loader"
+	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/konfig"
+	fLdr "sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
@@ -20,11 +21,20 @@ import (
 )
 
 func TestExecPluginConfig(t *testing.T) {
-	path := "/app"
+	fSys := filesys.MakeFsInMemory()
+	fSys.WriteFile("sed-input.txt", []byte(`
+s/$FOO/foo/g
+s/$BAR/bar/g
+ \ \ \ 
+`))
+	ldr, err := fLdr.NewLoader(
+		fLdr.RestrictionRootOnly, filesys.Separator, fSys)
+	if err != nil {
+		t.Fatal(err)
+	}
 	rf := resmap.NewFactory(
 		resource.NewFactory(
 			kunstruct.NewKunstructuredFactoryImpl()), nil)
-	ldr := loadertest.NewFakeLoader(path)
 	v := valtest_test.MakeFakeValidator()
 	pluginConfig := rf.RF().FromMap(
 		map[string]interface{}{
@@ -36,15 +46,8 @@ func TestExecPluginConfig(t *testing.T) {
 			"argsOneLiner": "one two",
 			"argsFromFile": "sed-input.txt",
 		})
-
-	ldr.AddFile("/app/sed-input.txt", []byte(`
-s/$FOO/foo/g
-s/$BAR/bar/g
- \ \ \ 
-`))
-
 	p := NewExecPlugin(
-		loader.AbsolutePluginPath(
+		pLdr.AbsolutePluginPath(
 			konfig.DisabledPluginConfig(),
 			pluginConfig.OrgId()))
 	// Not checking to see if the plugin is executable,
