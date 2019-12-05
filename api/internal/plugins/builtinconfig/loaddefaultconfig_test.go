@@ -7,21 +7,30 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/internal/loadertest"
+	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
 func TestLoadDefaultConfigsFromFiles(t *testing.T) {
-	ldr := loadertest.NewFakeLoader("/app")
-	ldr.AddFile("/app/config.yaml", []byte(`
+	fSys := filesys.MakeFsInMemory()
+	err := fSys.WriteFile("config.yaml", []byte(`
 namePrefix:
 - path: nameprefix/path
   kind: SomeKind
 `))
-	tcfg, err := loadDefaultConfig(ldr, []string{"/app/config.yaml"})
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatal(err)
+	}
+	ldr, err := loader.NewLoader(
+		loader.RestrictionRootOnly, filesys.Separator, fSys)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tCfg, err := loadDefaultConfig(ldr, []string{"config.yaml"})
+	if err != nil {
+		t.Fatal(err)
 	}
 	expected := &TransformerConfig{
 		NamePrefix: []types.FieldSpec{
@@ -31,7 +40,7 @@ namePrefix:
 			},
 		},
 	}
-	if !reflect.DeepEqual(tcfg, expected) {
-		t.Fatalf("expected %v\n but go6t %v\n", expected, tcfg)
+	if !reflect.DeepEqual(tCfg, expected) {
+		t.Fatalf("expected %v\n but go6t %v\n", expected, tCfg)
 	}
 }

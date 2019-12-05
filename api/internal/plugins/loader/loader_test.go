@@ -6,10 +6,11 @@ package loader_test
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/internal/loadertest"
+	"sigs.k8s.io/kustomize/api/filesys"
 	. "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/konfig"
+	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
@@ -49,29 +50,29 @@ func TestLoader(t *testing.T) {
 		BuildGoPlugin("builtin", "", "SecretGenerator").
 		BuildGoPlugin("someteam.example.com", "v1", "SomeServiceGenerator")
 	defer th.Reset()
-
 	rmF := resmap.NewFactory(resource.NewFactory(
 		kunstruct.NewKunstructuredFactoryImpl()), nil)
-
-	ldr := loadertest.NewFakeLoader("/foo")
-
+	fLdr, err := loader.NewLoader(
+		loader.RestrictionRootOnly,
+		filesys.Separator, filesys.MakeFsInMemory())
+	if err != nil {
+		t.Fatal(err)
+	}
 	c, err := konfig.EnabledPluginConfig()
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	pLdr := NewLoader(c, rmF)
 	if pLdr == nil {
 		t.Fatal("expect non-nil loader")
 	}
-
 	m, err := rmF.NewResMapFromBytes([]byte(
 		someServiceGenerator + "---\n" + secretGenerator))
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	_, err = pLdr.LoadGenerators(ldr, valtest_test.MakeFakeValidator(), m)
+	_, err = pLdr.LoadGenerators(
+		fLdr, valtest_test.MakeFakeValidator(), m)
 	if err != nil {
 		t.Fatal(err)
 	}

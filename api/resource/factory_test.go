@@ -1,18 +1,5 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 package resource_test
 
@@ -20,13 +7,13 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/internal/loadertest"
+	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/loader"
 	. "sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
 func TestSliceFromPatches(t *testing.T) {
-
 	patchGood1 := types.PatchStrategicMerge("patch1.yaml")
 	patch1 := `
 apiVersion: apps/v1
@@ -131,14 +118,21 @@ kind: List
 			},
 			"spec": testDeploymentSpec,
 		})
-	l := loadertest.NewFakeLoader("/")
-	l.AddFile("/"+string(patchGood1), []byte(patch1))
-	l.AddFile("/"+string(patchGood2), []byte(patch2))
-	l.AddFile("/"+string(patchBad), []byte(patch3))
-	l.AddFile("/"+string(patchList), []byte(patch4))
-	l.AddFile("/"+string(patchList2), []byte(patch5))
-	l.AddFile("/"+string(patchList3), []byte(patch6))
-	l.AddFile("/"+string(patchList4), []byte(patch7))
+
+	fSys := filesys.MakeFsInMemory()
+	fSys.WriteFile(string(patchGood1), []byte(patch1))
+	fSys.WriteFile(string(patchGood2), []byte(patch2))
+	fSys.WriteFile(string(patchBad), []byte(patch3))
+	fSys.WriteFile(string(patchList), []byte(patch4))
+	fSys.WriteFile(string(patchList2), []byte(patch5))
+	fSys.WriteFile(string(patchList3), []byte(patch6))
+	fSys.WriteFile(string(patchList4), []byte(patch7))
+
+	ldr, err := loader.NewLoader(
+		loader.RestrictionRootOnly, filesys.Separator, fSys)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	tests := []struct {
 		name        string
@@ -190,7 +184,7 @@ kind: List
 		},
 	}
 	for _, test := range tests {
-		rs, err := factory.SliceFromPatches(l, test.input)
+		rs, err := factory.SliceFromPatches(ldr, test.input)
 		if test.expectedErr && err == nil {
 			t.Fatalf("%v: should return error", test.name)
 		}
