@@ -133,8 +133,12 @@ func (gc githubCrawler) FetchDocument(_ context.Context, d *doc.Document) error 
 }
 
 func (gc githubCrawler) SetCreated(_ context.Context, d *doc.Document) error {
-	fs := GhFileSpec{}
-	fs.Repository.FullName = d.RepositoryURL + "/" + d.FilePath
+	fs := GhFileSpec{
+		Path: d.FilePath,
+		Repository: GitRepository{
+			FullName: d.RepositoryFullName(),
+		},
+	}
 	creationTime, err := gc.client.GetFileCreationTime(fs)
 	if err != nil {
 		return err
@@ -185,9 +189,9 @@ func processQuery(ctx context.Context, gcl GhClient, query string,
 		for _, file := range page.Parsed.Items {
 			k, err := kustomizationResultAdapter(gcl, file)
 			if err != nil {
+				logger.Printf("kustomizationResultAdapter failed: %v", err)
 				errs = append(errs, err)
 				errorCnt++
-				continue
 			}
 			output <- k
 			totalCnt++
@@ -223,6 +227,18 @@ func kustomizationResultAdapter(gcl GhClient, k GhFileSpec) (
 			DefaultBranch: defaultBranch,
 			RepositoryURL: k.Repository.URL,
 		},
+	}
+	logger.Printf("Set the creationTime field")
+	creationTime, err := gcl.GetFileCreationTime(k)
+	if err != nil {
+		logger.Printf("GetFileCreationTime failed: %v", err)
+		return &d, err
+	}
+	d.CreationTime = &creationTime
+
+	if err := d.ParseYAML(); err != nil {
+		logger.Printf("ParseYAML failed: %v", err)
+		return &d, err
 	}
 
 	return &d, nil
@@ -410,13 +426,15 @@ func (e multiError) Error() string {
 	return strings.Join(strs, "\n")
 }
 
+type GitRepository struct {
+	API      string `json:"url,omitempty"`
+	URL      string `json:"html_url,omitempty"`
+	FullName string `json:"full_name,omitempty"`
+}
+
 type GhFileSpec struct {
-	Path       string `json:"path,omitempty"`
-	Repository struct {
-		API      string `json:"url,omitempty"`
-		URL      string `json:"html_url,omitempty"`
-		FullName string `json:"full_name,omitempty"`
-	} `json:"repository,omitempty"`
+	Path       string        `json:"path,omitempty"`
+	Repository GitRepository `json:"repository,omitempty"`
 }
 
 type githubResponse struct {

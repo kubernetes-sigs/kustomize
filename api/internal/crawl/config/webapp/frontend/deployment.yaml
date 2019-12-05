@@ -17,6 +17,7 @@ spec:
       containers:
       - name: frontend
         image: gcr.io/kustomize-search/frontend:latest
+        imagePullPolicy: Always
         ports:
         - name: frontend-port
           containerPort: 80
