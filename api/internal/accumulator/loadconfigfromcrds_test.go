@@ -7,9 +7,10 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/ifc"
+	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/loader"
+
 	. "sigs.k8s.io/kustomize/api/internal/accumulator"
-	"sigs.k8s.io/kustomize/api/internal/loadertest"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/types"
@@ -135,15 +136,6 @@ If it is not set we generate a secret dynamically",
 `
 )
 
-func makeLoader(t *testing.T) ifc.Loader {
-	ldr := loadertest.NewFakeLoader("/testpath")
-	err := ldr.AddFile("/testpath/crd.json", []byte(crdContent))
-	if err != nil {
-		t.Fatalf("Failed to setup fake ldr.")
-	}
-	return ldr
-}
-
 func TestLoadCRDs(t *testing.T) {
 	nbrs := []builtinconfig.NameBackReferences{
 		{
@@ -172,7 +164,14 @@ func TestLoadCRDs(t *testing.T) {
 		NameReference: nbrs,
 	}
 
-	actualTc, err := LoadConfigFromCRDs(makeLoader(t), []string{"crd.json"})
+	fSys := filesys.MakeFsInMemory()
+	fSys.WriteFile("/testpath/crd.json", []byte(crdContent))
+	ldr, err := loader.NewLoader(loader.RestrictionRootOnly, "/testpath", fSys)
+	if err != nil {
+		t.Fatalf("unexpected error:%v", err)
+	}
+
+	actualTc, err := LoadConfigFromCRDs(ldr, []string{"crd.json"})
 	if err != nil {
 		t.Fatalf("unexpected error:%v", err)
 	}
