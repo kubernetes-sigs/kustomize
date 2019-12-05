@@ -12,6 +12,7 @@ spec:
           containers:
           - name: crawler
             image: gcr.io/kustomize-search/crawler:latest
+            imagePullPolicy: Always
             env:
             - name: GITHUB_ACCESS_TOKEN
               valueFrom:
