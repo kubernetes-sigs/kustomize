@@ -4,9 +4,10 @@
 package types
 
 const (
-	KustomizationVersion  = "kustomize.config.k8s.io/v1beta1"
-	KustomizationKind     = "Kustomization"
-	MetadataNamespacePath = "metadata/namespace"
+	KustomizationVersion   = "kustomize.config.k8s.io/v1beta1"
+	KustomizationKind      = "Kustomization"
+	KustomizationPatchKind = "KustomizationPatch"
+	MetadataNamespacePath  = "metadata/namespace"
 )
 
 // Kustomization holds the information needed to generate customized k8s api resources.
@@ -143,8 +144,8 @@ func (k *Kustomization) EnforceFields() []string {
 	if k.APIVersion != "" && k.APIVersion != KustomizationVersion {
 		errs = append(errs, "apiVersion should be "+KustomizationVersion)
 	}
-	if k.Kind != "" && k.Kind != KustomizationKind {
-		errs = append(errs, "kind should be "+KustomizationKind)
+	if k.Kind != "" && k.Kind != KustomizationKind && k.Kind != KustomizationPatchKind {
+		errs = append(errs, "kind should be "+KustomizationKind+" or "+KustomizationPatchKind)
 	}
 	return errs
 }
