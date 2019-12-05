@@ -10,7 +10,8 @@ are available for manual download on the [release page].
 To do a quick download, run:
 
 ```
-curl https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh  | sh
+curl -s "https://raw.githubusercontent.com/\
+kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | sh
 ```
 
 This [script]
