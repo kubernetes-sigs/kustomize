@@ -4,18 +4,19 @@
 # Installation
 
 Binaries at various versions for linux, macOs and Windows
-are available on the [release page].
+are available for manual download on the [release page].
 
-Or...
-
-## Quickly curl the latest binary
-
-This script attempts to do the right thing:
-for linux, darwin or windows:
+To do a quick download, run:
 
 ```
 curl https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh  | sh
 ```
+
+This script
+ - attempt to detect your OS,
+ - download and unpack the release tar file in a temporary directory,
+ - copy the kustomize binary to your current working directory,
+ - remove the temp directory.
 
 See this [discussion of _curl | sh_](https://www.arp242.net/curl-to-sh.html).
 
