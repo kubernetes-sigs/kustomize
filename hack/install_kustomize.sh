@@ -7,7 +7,7 @@
 
 where=$PWD
 if [ -f $where/kustomize ]; then
-  echo "kustomize already exists.  Try: rm kustomize"
+  echo "A file named kustomize already exists (remove it first)."
   exit 1
 fi
 
@@ -38,7 +38,7 @@ curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases |\
   cut -d '"' -f 4 |\
   grep /kustomize/v |\
   sort | tail -n 1 |\
-  xargs curl -O -L
+  xargs curl -s -O -L
 
 tar xzf ./kustomize_v*_${opsys}_amd64.tar.gz
 
