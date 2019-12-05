@@ -71,7 +71,7 @@ an output flag so that output parsing could be done uniformly across the tool.
 
 ## Output Message Severity/Verbosity (Optional)
 
-In addition to supporting the `structured` output format, tools that support ouputting messages as different levels of severity should use the following
+In addition to supporting the `structured` output format, tools that support outputting messages at different levels of severity should use the following
 standard logging severities for easier filtering of generated messages:
 
 - debug
@@ -95,11 +95,9 @@ In these cases there are two main options:
   a 'catch-all' mechanism for dealing with any unstructured data it receives on
   stdout or stderr. 
   
-- The Kubernetes project tool it self can provide such a mechanism by capturing
+- The Kubernetes project tool itself can provide such a mechanism by capturing
   stdout/stderr while invoking the nested library and then using that output to 
   build a structured message.  
-
-
 
 ## Examples
 
