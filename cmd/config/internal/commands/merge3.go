@@ -19,7 +19,6 @@ func GetMerge3Runner(name string) *Merge3Runner {
 		RunE:    r.runE,
 	}
 	fixDocs(name, c)
-	//r.Command = c
 	c.Flags().StringVar(&r.ancestor, "ancestor", "",
 		"Path to original package")
 	c.Flags().StringVar(&r.fromDir, "from", "",
