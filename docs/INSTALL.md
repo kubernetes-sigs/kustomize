@@ -10,22 +10,15 @@ Or...
 
 ## Quickly curl the latest binary
 
-```
-# pick one
-opsys=darwin
-opsys=windows
-opsys=linux
+This script attempts to do the right thing:
+for linux, darwin or windows:
 
-curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases |\
-  grep browser_download |\
-  grep $opsys |\
-  cut -d '"' -f 4 |\
-  grep /kustomize/v |\
-  sort | tail -n 1 |\
-  xargs curl -O -L
-tar xzf ./kustomize_v*_${opsys}_amd64.tar.gz
-./kustomize version
 ```
+curl https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh  | sh
+```
+
+See this [discussion of _curl | sh_](https://www.arp242.net/curl-to-sh.html).
+
 ## Try `go`
 
 This method is more to show off how the `go` tool works,
