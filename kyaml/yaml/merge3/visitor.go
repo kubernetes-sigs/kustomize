@@ -135,7 +135,6 @@ func (m Visitor) getStrValues(nodes walk.Sources) (strValues, error) {
 		if err != nil {
 			return strValues{}, err
 		}
-
 	}
 	if nodes.Dest() != nil && nodes.Dest().YNode() != nil {
 		s := nodes.Dest().YNode().Style

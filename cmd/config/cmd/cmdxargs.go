@@ -186,7 +186,7 @@ func (r *XArgsRunner) runE(c *cobra.Command, _ []string) error {
 			if version := rw.FunctionConfig.Field("apiVersion"); !yaml.IsFieldEmpty(version) {
 				version.Value.YNode().Value = r.WrapVersion
 			}
-			rw.WrappingApiVersion = r.WrapVersion
+			rw.WrappingAPIVersion = r.WrapVersion
 		}
 		return nil
 	}(); err != nil {

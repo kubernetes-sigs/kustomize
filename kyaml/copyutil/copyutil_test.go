@@ -79,7 +79,6 @@ func TestDiff_additionalDestFiles(t *testing.T) {
 	diff, err := Diff(s, d)
 	assert.NoError(t, err)
 	assert.ElementsMatch(t, diff.List(), []string{"a2"})
-
 }
 
 // TestDiff_srcDestContentsDiffer verifies if the file contents

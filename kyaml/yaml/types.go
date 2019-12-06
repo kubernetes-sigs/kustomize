@@ -221,8 +221,8 @@ func (m MapNodeSlice) Values() []*RNode {
 
 // ResourceMeta contains the metadata for a both Resource Type and Resource.
 type ResourceMeta struct {
-	// ApiVersion is the apiVersion field of a Resource
-	ApiVersion string `yaml:"apiVersion,omitempty"`
+	// APIVersion is the apiVersion field of a Resource
+	APIVersion string `yaml:"apiVersion,omitempty"`
 	// Kind is the kind field of a Resource
 	Kind string `yaml:"kind,omitempty"`
 	// ObjectMeta is the metadata field of a Resource

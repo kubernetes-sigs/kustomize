@@ -16,7 +16,7 @@ linters:
     - dupl
     - errcheck
 #    - funlen
-#    - gochecknoinits
+    - gochecknoinits
 #    - goconst
 #    - gocritic
     - gocyclo
@@ -28,19 +28,19 @@ linters:
     - govet
     - ineffassign
     - interfacer
-#    - lll
+    - lll
     - misspell
     - nakedret
     - scopelint
     - staticcheck
     - structcheck
-#    - stylecheck
+    - stylecheck
     - typecheck
     - unconvert
-#    - unparam
+    - unparam
     - unused
     - varcheck
-#    - whitespace
+    - whitespace
 
 
 linters-settings:

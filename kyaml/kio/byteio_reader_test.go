@@ -86,8 +86,7 @@ elems:
 `, r.FunctionConfig.MustString())
 
 	assert.Equal(t, ResourceListKind, r.WrappingKind)
-	assert.Equal(t, ResourceListApiVersion, r.WrappingApiVersion)
-
+	assert.Equal(t, ResourceListAPIVersion, r.WrappingAPIVersion)
 }
 
 func TestByteReader_Read_wrappedList(t *testing.T) {
@@ -131,7 +130,7 @@ spec:
 	// verify the function config
 	assert.Nil(t, r.FunctionConfig)
 	assert.Equal(t, "List", r.WrappingKind)
-	assert.Equal(t, "v1", r.WrappingApiVersion)
+	assert.Equal(t, "v1", r.WrappingAPIVersion)
 }
 
 // TestByteReader_Read tests the default Read behavior

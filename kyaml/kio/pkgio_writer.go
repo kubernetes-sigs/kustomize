@@ -128,7 +128,6 @@ func (r LocalPackageWriter) errorIfMissingRequiredAnnotation(nodes []*yaml.RNode
 }
 
 func (r LocalPackageWriter) indexByFilePath(nodes []*yaml.RNode) (map[string][]*yaml.RNode, error) {
-
 	outputFiles := map[string][]*yaml.RNode{}
 	for i := range nodes {
 		// parse the file write path
