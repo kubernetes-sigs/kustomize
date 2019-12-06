@@ -40,7 +40,7 @@ g:
 		Writer:             buff,
 		FunctionConfig:     node3,
 		WrappingKind:       ResourceListKind,
-		WrappingApiVersion: ResourceListApiVersion}.
+		WrappingAPIVersion: ResourceListAPIVersion}.
 		Write([]*yaml.RNode{node2, node1})
 	if !assert.NoError(t, err) {
 		return

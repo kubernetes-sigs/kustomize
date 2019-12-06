@@ -78,7 +78,7 @@ func (c *ContainerFilter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 
 	// write the input
 	err = kio.ByteWriter{
-		WrappingApiVersion: kio.ResourceListApiVersion,
+		WrappingAPIVersion: kio.ResourceListAPIVersion,
 		WrappingKind:       kio.ResourceListKind,
 		Writer:             in, KeepReaderAnnotations: true, FunctionConfig: c.Config}.Write(input)
 	if err != nil {

@@ -17,7 +17,7 @@ import (
 
 const (
 	ResourceListKind       = "ResourceList"
-	ResourceListApiVersion = "config.kubernetes.io/v1alpha1"
+	ResourceListAPIVersion = "config.kubernetes.io/v1alpha1"
 )
 
 // ByteReadWriter reads from an input and writes to an output.
@@ -41,7 +41,7 @@ type ByteReadWriter struct {
 
 	FunctionConfig *yaml.RNode
 
-	WrappingApiVersion string
+	WrappingAPIVersion string
 	WrappingKind       string
 }
 
@@ -52,7 +52,7 @@ func (rw *ByteReadWriter) Read() ([]*yaml.RNode, error) {
 	}
 	val, err := b.Read()
 	rw.FunctionConfig = b.FunctionConfig
-	rw.WrappingApiVersion = b.WrappingApiVersion
+	rw.WrappingAPIVersion = b.WrappingAPIVersion
 	rw.WrappingKind = b.WrappingKind
 	return val, errors.Wrap(err)
 }
@@ -63,7 +63,7 @@ func (rw *ByteReadWriter) Write(nodes []*yaml.RNode) error {
 		KeepReaderAnnotations: rw.KeepReaderAnnotations,
 		Style:                 rw.Style,
 		FunctionConfig:        rw.FunctionConfig,
-		WrappingApiVersion:    rw.WrappingApiVersion,
+		WrappingAPIVersion:    rw.WrappingAPIVersion,
 		WrappingKind:          rw.WrappingKind,
 	}.Write(nodes)
 }
@@ -88,9 +88,9 @@ type ByteReader struct {
 	// DisableUnwrapping prevents Resources in Lists and ResourceLists from being unwrapped
 	DisableUnwrapping bool
 
-	// WrappingApiVersion is set by Read(), and is the apiVersion of the object that
+	// WrappingAPIVersion is set by Read(), and is the apiVersion of the object that
 	// the read objects were originally wrapped in.
-	WrappingApiVersion string
+	WrappingAPIVersion string
 
 	// WrappingKind is set by Read(), and is the kind of the object that
 	// the read objects were originally wrapped in.
@@ -140,7 +140,7 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 			node.Field("items") != nil {
 
 			r.WrappingKind = meta.Kind
-			r.WrappingApiVersion = meta.ApiVersion
+			r.WrappingAPIVersion = meta.APIVersion
 
 			// unwrap the list
 			fc := node.Field("functionConfig")

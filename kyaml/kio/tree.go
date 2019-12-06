@@ -285,8 +285,8 @@ func compareNodes(i, j *yaml.RNode) bool {
 	}
 
 	// compare apiVersion
-	if metai.ApiVersion != metaj.ApiVersion {
-		return metai.ApiVersion < metaj.ApiVersion
+	if metai.APIVersion != metaj.APIVersion {
+		return metai.APIVersion < metaj.APIVersion
 	}
 	return true
 }
