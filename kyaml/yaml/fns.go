@@ -141,10 +141,12 @@ func (c FieldClearer) Filter(rn *RNode) (*RNode, error) {
 			// save the item we are about to remove
 			removed := NewRNode(rn.Content()[i+1])
 			if len(rn.YNode().Content) > i+2 {
+				l := len(rn.YNode().Content)
 				// remove from the middle of the list
+				rn.YNode().Content = rn.Content()[:i]
 				rn.YNode().Content = append(
-					rn.Content()[:i],
-					rn.Content()[i+2:len(rn.YNode().Content)]...)
+					rn.YNode().Content,
+					rn.Content()[i+2:l]...)
 			} else {
 				// remove from the end of the list
 				rn.YNode().Content = rn.Content()[:i]
@@ -264,7 +266,8 @@ func (f FieldMatcher) Filter(rn *RNode) (*RNode, error) {
 		if err := ErrorIfInvalid(rn, yaml.ScalarNode); err != nil {
 			return nil, err
 		}
-		if f.StringRegexValue != "" {
+		switch {
+		case f.StringRegexValue != "":
 			// TODO(pwittrock): pre-compile this when unmarshalling and cache to a field
 			rg, err := regexp.Compile(f.StringRegexValue)
 			if err != nil {
@@ -274,9 +277,9 @@ func (f FieldMatcher) Filter(rn *RNode) (*RNode, error) {
 				return rn, nil
 			}
 			return nil, nil
-		} else if rn.value.Value == f.Value.YNode().Value {
+		case rn.value.Value == f.Value.YNode().Value:
 			return rn, nil
-		} else {
+		default:
 			return nil, nil
 		}
 	}
