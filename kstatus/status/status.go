@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	corev1 "sigs.k8s.io/kustomize/pseudo/k8s/api/core/v1"
 )
 
 const (
