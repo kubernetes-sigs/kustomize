@@ -79,7 +79,6 @@ func TestLocalPackageReader_Read_empty(t *testing.T) {
 		assert.Contains(t, err.Error(), "must specify package path")
 	}
 	assert.Nil(t, nodes)
-
 }
 
 func TestLocalPackageReader_Read_pkg(t *testing.T) {
@@ -207,7 +206,6 @@ func TestLocalPackageReader_Read_pkgOmitAnnotations(t *testing.T) {
 		{path: s.root},
 	}
 	for _, p := range paths {
-
 		// empty path
 		rfr := LocalPackageReader{PackagePath: p.path, OmitReaderAnnotations: true}
 		nodes, err := rfr.Read()

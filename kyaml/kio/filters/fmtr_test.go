@@ -145,7 +145,6 @@ spec:
 
 // TestFormatInput_service verifies a Service yaml is formatted correctly
 func TestFormatInput_service(t *testing.T) {
-
 	y := `
 apiVersion: v1
 kind: Service
@@ -178,7 +177,6 @@ spec:
 
 // TestFormatInput_service verifies a Service yaml is formatted correctly
 func TestFormatInput_validatingWebhookConfiguration(t *testing.T) {
-
 	y := `
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: ValidatingWebhookConfiguration

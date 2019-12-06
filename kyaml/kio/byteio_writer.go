@@ -54,7 +54,6 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 	encoder := yaml.NewEncoder(w.Writer)
 	defer encoder.Close()
 	for i := range nodes {
-
 		// clean resources by removing annotations set by the Reader
 		if !w.KeepReaderAnnotations {
 			_, err := nodes[i].Pipe(yaml.ClearAnnotation(kioutil.IndexAnnotation))

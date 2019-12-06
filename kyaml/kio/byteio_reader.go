@@ -138,7 +138,6 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 			len(values) == 1 && // Only unwrap if there is only 1 value
 			(meta.Kind == ResourceListKind || meta.Kind == "List") &&
 			node.Field("items") != nil {
-
 			r.WrappingKind = meta.Kind
 			r.WrappingAPIVersion = meta.APIVersion
 
@@ -154,7 +153,6 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 					// add items
 					output = append(output, yaml.NewRNode(items.Value.Content()[i]))
 				}
-
 			}
 			continue
 		}
