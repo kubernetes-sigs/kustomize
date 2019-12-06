@@ -1,26 +1,25 @@
 [release page]: /../../releases
 [Go]: https://golang.org
 [script]: https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh
+[quickly]: https://www.arp242.net/curl-to-sh.html
 
 # Installation
 
 Binaries at various versions for linux, macOs and Windows
 are available for manual download on the [release page].
 
-To do a quick download, run:
+To do this [quickly], run, run:
 
 ```
 curl -s "https://raw.githubusercontent.com/\
-kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | sh
+kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
 ```
 
 This [script]
  - attempts to detect your OS,
  - downloads and unpacks the release tar file in a temporary directory,
  - copies the kustomize binary (and only that file) to your current working directory,
- - removes the temp directory.
-
-<!--  Concerned?  See this [discussion of _curl | sh_](https://www.arp242.net/curl-to-sh.html). -->
+ - removes the temporary directory.
 
 ## Try `go`
 
