@@ -672,7 +672,7 @@ metadata:
 	}
 	assert.Equal(t, ResourceMeta{
 		Kind:       "Deployment",
-		ApiVersion: "v1/apps",
+		APIVersion: "v1/apps",
 		ObjectMeta: ObjectMeta{
 			Name:      "foo",
 			Namespace: "bar",
