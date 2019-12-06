@@ -133,7 +133,6 @@ func (c *ContainerFilter) getArgs() []string {
 		args = append(args, "-e", strings.Split(pair, "=")[0])
 	}
 	return append(args, c.Image)
-
 }
 
 // getCommand returns a command which will apply the GrepFilter using the container image

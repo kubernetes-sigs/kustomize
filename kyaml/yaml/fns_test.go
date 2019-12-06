@@ -143,7 +143,6 @@ r: s
 `
 
 func TestLookup_Fn_create(t *testing.T) {
-
 	// primitive
 	node, err := Parse(s)
 	assert.NoError(t, err)
@@ -167,7 +166,6 @@ r: s
 `, assertNoErrorString(t)(node.String()))
 	assert.Equal(t, `h
 `, assertNoErrorString(t)(rn.String()))
-
 }
 
 func TestLookup_Fn_create2(t *testing.T) {
@@ -442,7 +440,6 @@ foo: baz
 	assert.Contains(t, err.Error(), "wrong Node Kind")
 	assert.Equal(t, `foo: baz
 `, assertNoErrorString(t)(node.String()))
-
 }
 
 func TestErrorIfInvalid(t *testing.T) {

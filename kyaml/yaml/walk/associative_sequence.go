@@ -12,7 +12,6 @@ import (
 )
 
 func (l *Walker) walkAssociativeSequence() (*yaml.RNode, error) {
-
 	// may require initializing the dest node
 	dest, err := l.Sources.setDestNode(l.VisitList(l.Sources, AssociativeList))
 	if dest == nil || err != nil {
