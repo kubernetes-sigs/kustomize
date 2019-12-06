@@ -8,7 +8,7 @@
 Binaries at various versions for linux, macOs and Windows
 are available for manual download on the [release page].
 
-To do this [quickly], run, run:
+To do this [quickly], run:
 
 ```
 curl -s "https://raw.githubusercontent.com/\
