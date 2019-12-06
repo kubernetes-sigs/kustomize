@@ -87,7 +87,6 @@ elems:
 
 	assert.Equal(t, ResourceListKind, r.WrappingKind)
 	assert.Equal(t, ResourceListAPIVersion, r.WrappingAPIVersion)
-
 }
 
 func TestByteReader_Read_wrappedList(t *testing.T) {

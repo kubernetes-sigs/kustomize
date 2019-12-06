@@ -129,7 +129,6 @@ func (c FieldClearer) Filter(rn *RNode) (*RNode, error) {
 	}
 
 	for i := 0; i < len(rn.Content()); i += 2 {
-
 		// if name matches, remove these 2 elements from the list because
 		// they are treated as a fieldName/fieldValue pair.
 		if rn.Content()[i].Value == c.Name {
