@@ -325,3 +325,246 @@ spec:
 		return
 	}
 }
+
+func TestCmd_outputTruncateFile(t *testing.T) {
+	d, err := ioutil.TempDir("", "kustomize-cat-test")
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer os.RemoveAll(d)
+
+	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+kind: Deployment
+metadata:
+  labels:
+    app: nginx2
+  name: foo
+  annotations:
+    app: nginx2
+spec:
+  replicas: 1
+---
+kind: Service
+metadata:
+  name: foo
+  annotations:
+    app: nginx
+spec:
+  selector:
+    app: nginx
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
+apiVersion: v1
+kind: Abstraction
+metadata:
+  name: foo
+  configFn:
+    container:
+      image: gcr.io/example/reconciler:v1
+  annotations:
+    config.kubernetes.io/local-config: "true"
+spec:
+  replicas: 3
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: bar
+  annotations:
+    app: nginx
+spec:
+  replicas: 3
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	f, err := ioutil.TempFile("", "kustomize-cat-test-dest")
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer os.RemoveAll(d)
+
+	// fmt the files
+	b := &bytes.Buffer{}
+	r := cmd.GetCatRunner("")
+	r.Command.SetArgs([]string{d, "--dest", f.Name()})
+	r.Command.SetOut(b)
+	if !assert.NoError(t, r.Command.Execute()) {
+		return
+	}
+
+	if !assert.Equal(t, ``, b.String()) {
+		return
+	}
+
+	actual, err := ioutil.ReadFile(f.Name())
+	if !assert.NoError(t, err) {
+		return
+	}
+	if !assert.Equal(t, `kind: Deployment
+metadata:
+  labels:
+    app: nginx2
+  name: foo
+  annotations:
+    app: nginx2
+    config.kubernetes.io/package: .
+    config.kubernetes.io/path: f1.yaml
+spec:
+  replicas: 1
+---
+kind: Service
+metadata:
+  name: foo
+  annotations:
+    app: nginx
+    config.kubernetes.io/package: .
+    config.kubernetes.io/path: f1.yaml
+spec:
+  selector:
+    app: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar
+  labels:
+    app: nginx
+  annotations:
+    app: nginx
+    config.kubernetes.io/package: .
+    config.kubernetes.io/path: f2.yaml
+spec:
+  replicas: 3
+`, string(actual)) {
+		return
+	}
+}
+
+func TestCmd_outputCreateFile(t *testing.T) {
+	d, err := ioutil.TempDir("", "kustomize-cat-test")
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer os.RemoveAll(d)
+
+	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+kind: Deployment
+metadata:
+  labels:
+    app: nginx2
+  name: foo
+  annotations:
+    app: nginx2
+spec:
+  replicas: 1
+---
+kind: Service
+metadata:
+  name: foo
+  annotations:
+    app: nginx
+spec:
+  selector:
+    app: nginx
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
+apiVersion: v1
+kind: Abstraction
+metadata:
+  name: foo
+  configFn:
+    container:
+      image: gcr.io/example/reconciler:v1
+  annotations:
+    config.kubernetes.io/local-config: "true"
+spec:
+  replicas: 3
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: bar
+  annotations:
+    app: nginx
+spec:
+  replicas: 3
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	d2, err := ioutil.TempDir("", "kustomize-cat-test-dest")
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer os.RemoveAll(d2)
+	f := filepath.Join(d2, "output.yaml")
+
+	// fmt the files
+	b := &bytes.Buffer{}
+	r := cmd.GetCatRunner("")
+	r.Command.SetArgs([]string{d, "--dest", f})
+	r.Command.SetOut(b)
+	if !assert.NoError(t, r.Command.Execute()) {
+		return
+	}
+
+	if !assert.Equal(t, ``, b.String()) {
+		return
+	}
+
+	actual, err := ioutil.ReadFile(f)
+	if !assert.NoError(t, err) {
+		return
+	}
+	if !assert.Equal(t, `kind: Deployment
+metadata:
+  labels:
+    app: nginx2
+  name: foo
+  annotations:
+    app: nginx2
+    config.kubernetes.io/package: .
+    config.kubernetes.io/path: f1.yaml
+spec:
+  replicas: 1
+---
+kind: Service
+metadata:
+  name: foo
+  annotations:
+    app: nginx
+    config.kubernetes.io/package: .
+    config.kubernetes.io/path: f1.yaml
+spec:
+  selector:
+    app: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar
+  labels:
+    app: nginx
+  annotations:
+    app: nginx
+    config.kubernetes.io/package: .
+    config.kubernetes.io/path: f2.yaml
+spec:
+  replicas: 3
+`, string(actual)) {
+		return
+	}
+}

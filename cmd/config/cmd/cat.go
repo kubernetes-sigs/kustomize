@@ -5,9 +5,11 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/cmddocs/commands"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -45,6 +47,8 @@ func GetCatRunner(name string) *CatRunner {
 		"if true, include local-config in the output.")
 	c.Flags().BoolVar(&r.ExcludeNonLocal, "exclude-non-local", false,
 		"if true, exclude non-local-config in the output.")
+	c.Flags().StringVar(&r.OutputDest, "dest", "",
+		"if specified, write output to a file rather than stdout")
 	r.Command = c
 	return r
 }
@@ -61,6 +65,7 @@ type CatRunner struct {
 	WrapKind           string
 	WrapApiVersion     string
 	FunctionConfig     string
+	OutputDest         string
 	Styles             []string
 	StripComments      bool
 	IncludeLocal       bool
@@ -106,9 +111,19 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 		fltr = append(fltr, filters.StripCommentsFilter{})
 	}
 
+	var out = c.OutOrStdout()
+	if r.OutputDest != "" {
+		o, err := os.Create(r.OutputDest)
+		if err != nil {
+			return handleError(c, errors.Wrap(err))
+		}
+		defer o.Close()
+		out = o
+	}
+
 	var outputs []kio.Writer
 	outputs = append(outputs, kio.ByteWriter{
-		Writer:                c.OutOrStdout(),
+		Writer:                out,
 		KeepReaderAnnotations: r.KeepAnnotations,
 		WrappingKind:          r.WrapKind,
 		WrappingApiVersion:    r.WrapApiVersion,
