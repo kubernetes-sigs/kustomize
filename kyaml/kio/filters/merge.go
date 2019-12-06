@@ -44,7 +44,7 @@ func (c MergeFilter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 			return nil, err
 		}
 		key := mergeKey{
-			apiVersion: meta.ApiVersion,
+			apiVersion: meta.APIVersion,
 			kind:       meta.Kind,
 			namespace:  meta.Namespace,
 			name:       meta.Name,

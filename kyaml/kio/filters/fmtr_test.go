@@ -459,7 +459,7 @@ func TestFormatFileOrDirectory_YamlExtFileWithJson(t *testing.T) {
 	f, err := ioutil.TempFile("", "yamlfmt*.yaml")
 	assert.NoError(t, err)
 	defer os.Remove(f.Name())
-	err = ioutil.WriteFile(f.Name(), testyaml.UnformattedJson1, 0600)
+	err = ioutil.WriteFile(f.Name(), testyaml.UnformattedJSON1, 0600)
 	assert.NoError(t, err)
 
 	// format the file

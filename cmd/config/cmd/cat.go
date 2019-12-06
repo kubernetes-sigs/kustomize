@@ -111,7 +111,7 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 		Writer:                c.OutOrStdout(),
 		KeepReaderAnnotations: r.KeepAnnotations,
 		WrappingKind:          r.WrapKind,
-		WrappingApiVersion:    r.WrapApiVersion,
+		WrappingAPIVersion:    r.WrapApiVersion,
 		FunctionConfig:        functionConfig,
 		Style:                 yaml.GetStyle(r.Styles...),
 	})
