@@ -35,8 +35,8 @@ type ByteWriter struct {
 	// ByteWriter will wrap the Resources in a List .items field.
 	WrappingKind string
 
-	// WrappingApiVersion is the apiVersion for WrappingKind
-	WrappingApiVersion string
+	// WrappingAPIVersion is the apiVersion for WrappingKind
+	WrappingAPIVersion string
 
 	// Sort if set, will cause ByteWriter to sort the the nodes before writing them.
 	Sort bool
@@ -54,7 +54,6 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 	encoder := yaml.NewEncoder(w.Writer)
 	defer encoder.Close()
 	for i := range nodes {
-
 		// clean resources by removing annotations set by the Reader
 		if !w.KeepReaderAnnotations {
 			_, err := nodes[i].Pipe(yaml.ClearAnnotation(kioutil.IndexAnnotation))
@@ -102,7 +101,7 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 		Style: w.Style,
 		Content: []*yaml.Node{
 			{Kind: yaml.ScalarNode, Value: "apiVersion"},
-			{Kind: yaml.ScalarNode, Value: w.WrappingApiVersion},
+			{Kind: yaml.ScalarNode, Value: w.WrappingAPIVersion},
 			{Kind: yaml.ScalarNode, Value: "kind"},
 			{Kind: yaml.ScalarNode, Value: w.WrappingKind},
 			{Kind: yaml.ScalarNode, Value: "items"}, items,

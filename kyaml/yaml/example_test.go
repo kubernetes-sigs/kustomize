@@ -872,7 +872,6 @@ func ExampleRNode_Elements() {
 	// Element: 2
 	// name: baz
 	// args: ['run.sh']
-
 }
 
 func ExampleRNode_ElementValues() {

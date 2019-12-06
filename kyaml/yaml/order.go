@@ -97,12 +97,11 @@ var WhitelistedListSortFields = map[string]string{
 }
 
 // FieldOrder indexes fields and maps them to relative precedence
-var FieldOrder map[string]int
-
-func init() {
+var FieldOrder = func() map[string]int {
 	// create an index of field orderings
-	FieldOrder = map[string]int{}
+	fo := map[string]int{}
 	for i, f := range fieldSortOrder {
-		FieldOrder[f] = i + 1
+		fo[f] = i + 1
 	}
-}
+	return fo
+}()
