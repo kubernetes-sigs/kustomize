@@ -41,6 +41,16 @@ func DeterminePluginSrcRoot(fSys filesys.FileSystem) (string, error) {
 					return filepath.Clean(
 						filepath.Join(
 							os.Getenv("PWD"),
+							"..", "..",
+							konfig.RelPluginHome))
+				},
+			},
+			{
+				Note: "relative to unit test (internal pkg)",
+				F: func() string {
+					return filepath.Clean(
+						filepath.Join(
+							os.Getenv("PWD"),
 							"..", "..", "..", "..",
 							konfig.RelPluginHome))
 				},
