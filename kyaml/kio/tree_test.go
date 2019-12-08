@@ -12,8 +12,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-func TestPrinter_Write(t *testing.T) {
-	in := `kind: Deployment
+const (
+	WriteInput = `kind: Deployment
 metadata:
   labels:
     app: nginx3
@@ -63,30 +63,7 @@ spec:
   selector:
     app: nginx
 `
-	out := &bytes.Buffer{}
-	err := Pipeline{
-		Inputs:  []Reader{&ByteReader{Reader: bytes.NewBufferString(in)}},
-		Outputs: []Writer{TreeWriter{Writer: out}},
-	}.Execute()
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-
-	if !assert.Equal(t, `
-├── bar-package
-│   └── [f2.yaml]  Deployment bar
-└── foo-package
-    ├── [f1.yaml]  Deployment default/foo
-    ├── [f1.yaml]  Service default/foo
-    └── foo-package/3
-        └── [f3.yaml]  Deployment default/foo
-`, out.String()) {
-		t.FailNow()
-	}
-}
-
-func TestPrinter_Write_base(t *testing.T) {
-	in := `kind: Deployment
+	WriteBaseInput = `kind: Deployment
 metadata:
   labels:
     app: nginx3
@@ -136,29 +113,7 @@ spec:
   selector:
     app: nginx
 `
-	out := &bytes.Buffer{}
-	err := Pipeline{
-		Inputs:  []Reader{&ByteReader{Reader: bytes.NewBufferString(in)}},
-		Outputs: []Writer{TreeWriter{Writer: out}},
-	}.Execute()
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-
-	if !assert.Equal(t, `
-├── [f1.yaml]  Service default/foo
-├── [f3.yaml]  Deployment default/foo
-├── bar-package
-│   └── [f2.yaml]  Deployment bar
-└── foo-package
-    └── [f1.yaml]  Deployment default/foo
-`, out.String()) {
-		t.FailNow()
-	}
-}
-
-func TestPrinter_Write_sort(t *testing.T) {
-	in := `apiVersion: extensions/v1
+	WriteSortInput = `apiVersion: extensions/v1
 kind: Deployment
 metadata:
   labels:
@@ -252,43 +207,7 @@ spec:
   selector:
     app: nginx
 `
-	out := &bytes.Buffer{}
-	err := Pipeline{
-		Inputs:  []Reader{&ByteReader{Reader: bytes.NewBufferString(in)}},
-		Outputs: []Writer{TreeWriter{Writer: out}},
-	}.Execute()
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-
-	if !assert.Equal(t, `
-├── [f1.yaml]  Deployment default/foo
-├── [f1.yaml]  Service default/foo
-├── [f1.yaml]  Deployment default/foo3
-├── [f1.yaml]  Deployment default/foo3
-├── [f1.yaml]  Deployment default/foo3
-├── [f1.yaml]  Deployment default2/foo2
-└── bar-package
-    └── [f2.yaml]  Deployment bar
-`, out.String()) {
-		t.FailNow()
-	}
-}
-
-func TestPrinter_metaError(t *testing.T) {
-	out := &bytes.Buffer{}
-	err := TreeWriter{Writer: out}.Write([]*yaml.RNode{{}})
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	if !assert.Equal(t, `
-`, out.String()) {
-		t.FailNow()
-	}
-}
-
-func TestPrinter_Write_owners(t *testing.T) {
-	in := `
+	WriteOwnersInput = `
 apiVersion: v1
 kind: Pod
 metadata:
@@ -364,9 +283,93 @@ metadata:
   name: myapp
   namespace: myapp-staging
 `
+)
+
+func TestPrinter_Write(t *testing.T) {
 	out := &bytes.Buffer{}
 	err := Pipeline{
-		Inputs:  []Reader{&ByteReader{Reader: bytes.NewBufferString(in)}},
+		Inputs:  []Reader{&ByteReader{Reader: bytes.NewBufferString(WriteInput)}},
+		Outputs: []Writer{TreeWriter{Writer: out}},
+	}.Execute()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	if !assert.Equal(t, `
+├── bar-package
+│   └── [f2.yaml]  Deployment bar
+└── foo-package
+    ├── [f1.yaml]  Deployment default/foo
+    ├── [f1.yaml]  Service default/foo
+    └── foo-package/3
+        └── [f3.yaml]  Deployment default/foo
+`, out.String()) {
+		t.FailNow()
+	}
+}
+
+func TestPrinter_Write_base(t *testing.T) {
+	out := &bytes.Buffer{}
+	err := Pipeline{
+		Inputs:  []Reader{&ByteReader{Reader: bytes.NewBufferString(WriteBaseInput)}},
+		Outputs: []Writer{TreeWriter{Writer: out}},
+	}.Execute()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	if !assert.Equal(t, `
+├── [f1.yaml]  Service default/foo
+├── [f3.yaml]  Deployment default/foo
+├── bar-package
+│   └── [f2.yaml]  Deployment bar
+└── foo-package
+    └── [f1.yaml]  Deployment default/foo
+`, out.String()) {
+		t.FailNow()
+	}
+}
+
+func TestPrinter_Write_sort(t *testing.T) {
+	out := &bytes.Buffer{}
+	err := Pipeline{
+		Inputs:  []Reader{&ByteReader{Reader: bytes.NewBufferString(WriteSortInput)}},
+		Outputs: []Writer{TreeWriter{Writer: out}},
+	}.Execute()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	if !assert.Equal(t, `
+├── [f1.yaml]  Deployment default/foo
+├── [f1.yaml]  Service default/foo
+├── [f1.yaml]  Deployment default/foo3
+├── [f1.yaml]  Deployment default/foo3
+├── [f1.yaml]  Deployment default/foo3
+├── [f1.yaml]  Deployment default2/foo2
+└── bar-package
+    └── [f2.yaml]  Deployment bar
+`, out.String()) {
+		t.FailNow()
+	}
+}
+
+func TestPrinter_metaError(t *testing.T) {
+	out := &bytes.Buffer{}
+	err := TreeWriter{Writer: out}.Write([]*yaml.RNode{{}})
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, `
+`, out.String()) {
+		t.FailNow()
+	}
+}
+
+func TestPrinter_Write_owners(t *testing.T) {
+	out := &bytes.Buffer{}
+	err := Pipeline{
+		Inputs:  []Reader{&ByteReader{Reader: bytes.NewBufferString(WriteOwnersInput)}},
 		Outputs: []Writer{TreeWriter{Writer: out, Structure: TreeStructureGraph}},
 	}.Execute()
 	if !assert.NoError(t, err) {

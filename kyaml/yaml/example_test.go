@@ -10,6 +10,31 @@ import (
 	. "sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+const (
+	ExampleTeeInput = `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+        ports:
+        - containerPort: 80
+`
+)
+
 func Example() {
 	obj, err := Parse(`apiVersion: apps/v1
 kind: Deployment
@@ -775,28 +800,7 @@ metadata:
 }
 
 func ExampleTee() {
-	obj, err := Parse(`apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-  labels:
-    app: nginx
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - name: nginx
-        image: nginx:1.7.9
-        ports:
-        - containerPort: 80
-`)
+	obj, err := Parse(ExampleTeeInput)
 	if err != nil {
 		// handle error
 	}

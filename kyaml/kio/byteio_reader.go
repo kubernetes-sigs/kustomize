@@ -105,8 +105,7 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 	// by manually splitting resources -- otherwise the decoder will get the Resource
 	// boundaries wrong for header comments.
 	input := &bytes.Buffer{}
-	_, err := io.Copy(input, r.Reader)
-	if err != nil {
+	if _, err := io.Copy(input, r.Reader); err != nil {
 		return nil, errors.Wrap(err)
 	}
 	values := strings.Split(input.String(), "\n---\n")
@@ -134,10 +133,8 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 
 		// the elements are wrapped in an InputList, unwrap them
 		// don't check apiVersion, we haven't standardized on the domain
-		if !r.DisableUnwrapping &&
-			len(values) == 1 && // Only unwrap if there is only 1 value
-			(meta.Kind == ResourceListKind || meta.Kind == "List") &&
-			node.Field("items") != nil {
+		// Only unwrap if there is only 1 value
+		if !r.DisableUnwrapping && len(values) == 1 && (meta.Kind == ResourceListKind || meta.Kind == "List") && node.Field("items") != nil {
 			r.WrappingKind = meta.Kind
 			r.WrappingAPIVersion = meta.APIVersion
 
@@ -147,8 +144,7 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 				r.FunctionConfig = fc.Value
 			}
 
-			items := node.Field("items")
-			if items != nil {
+			if items := node.Field("items"); items != nil {
 				for i := range items.Value.Content() {
 					// add items
 					output = append(output, yaml.NewRNode(items.Value.Content()[i]))

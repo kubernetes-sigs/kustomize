@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPathMatcher_Filter(t *testing.T) {
-	node := MustParse(`apiVersion: apps/v1
+const (
+	PathMatcherFilterInput = `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
@@ -37,7 +37,11 @@ spec:
         ports:
         - containerPort: 8081
         - containerPort: 9090
-`)
+`
+)
+
+func TestPathMatcher_Filter(t *testing.T) {
+	node := MustParse(PathMatcherFilterInput)
 
 	updates := []struct {
 		path  []string

@@ -52,14 +52,9 @@ func CopyDir(src string, dst string) error {
 	})
 }
 
-// Diff returns a list of files that differ between the source and destination.
-//
-// Diff is guaranteed to return a non-empty set if any files differ, but
-// this set is not guaranteed to contain all differing files.
-func Diff(sourceDir, destDir string) (sets.String, error) {
-	// get set of filenames in the package source
-	upstreamFiles := sets.String{}
-	err := filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
+func getSetOfFiles(dir string) (sets.String, error) {
+	files := sets.String{}
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -69,28 +64,29 @@ func Diff(sourceDir, destDir string) (sets.String, error) {
 			return nil
 		}
 
-		upstreamFiles.Insert(strings.TrimPrefix(strings.TrimPrefix(path, sourceDir), string(filepath.Separator)))
+		files.Insert(strings.TrimPrefix(strings.TrimPrefix(path, dir), string(filepath.Separator)))
 		return nil
 	})
 	if err != nil {
 		return sets.String{}, err
 	}
 
+	return files, nil
+}
+
+// Diff returns a list of files that differ between the source and destination.
+//
+// Diff is guaranteed to return a non-empty set if any files differ, but
+// this set is not guaranteed to contain all differing files.
+func Diff(sourceDir, destDir string) (sets.String, error) {
+	// get set of filenames in the package source
+	upstreamFiles, err := getSetOfFiles(sourceDir)
+	if err != nil {
+		return sets.String{}, err
+	}
+
 	// get set of filenames in the cloned package
-	localFiles := sets.String{}
-	err = filepath.Walk(destDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		// skip git repo if it exists
-		if strings.Contains(path, ".git") {
-			return nil
-		}
-
-		localFiles.Insert(strings.TrimPrefix(strings.TrimPrefix(path, destDir), string(filepath.Separator)))
-		return nil
-	})
+	localFiles, err := getSetOfFiles(destDir)
 	if err != nil {
 		return sets.String{}, err
 	}
