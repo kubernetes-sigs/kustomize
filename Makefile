@@ -229,6 +229,20 @@ $(MYGOBIN)/helm:
 		rm -rf $$d \
 	)
 
+.PHONY: build-external-go-plugins
+build-external-go-plugins:
+	( \
+		cd plugin; \
+		../hack/buildExternalGoPlugins.sh; \
+	)
+
+.PHONY: clean-external-go-plugins
+clean-external-go-plugins:
+	( \
+		cd plugin; \
+		../hack/buildExternalGoPlugins.sh clean; \
+	)
+
 .PHONY: clean
 clean:
 	go clean --cache
