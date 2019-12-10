@@ -17,7 +17,7 @@ Resource configuration, and looks for invalid configuration.
 The function is invoked by authoring a [local Resource](local-resource)
 with `metadata.configFn` and running:
 
-    kustomize config run local-resources/
+    kustomize config run local-resource/
     
 This exists non-zero if there is an error.
 
