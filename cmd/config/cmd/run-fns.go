@@ -52,6 +52,5 @@ func (r *RunFnRunner) runE(c *cobra.Command, args []string) error {
 	if r.DryRun {
 		rec.Output = c.OutOrStdout()
 	}
-	return rec.Execute()
-
+	return handleError(c, rec.Execute())
 }
