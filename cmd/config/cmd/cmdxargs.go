@@ -211,7 +211,7 @@ func (r *XArgsRunner) runE(c *cobra.Command, _ []string) error {
 		return err
 	}
 
-	return run.Run()
+	return handleError(c, run.Run())
 }
 
 func parseYNode(node *yaml.Node) string {
