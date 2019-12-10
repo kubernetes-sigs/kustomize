@@ -39,7 +39,7 @@ Example:
 ```yaml
 metadata:
   annotations:
-    config.kubernetes.io/index: "0"
+    config.kubernetes.io/index: 0
 ```
 
 ### `config.kubernetes.io/local-config`
