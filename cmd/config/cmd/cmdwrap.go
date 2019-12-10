@@ -135,9 +135,5 @@ func (r *WrapRunner) runE(c *cobra.Command, args []string) error {
 			Writer:                c.OutOrStdout(),
 			WrappingKind:          kio.ResourceListKind,
 			WrappingAPIVersion:    kio.ResourceListAPIVersion}}}.Execute()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return handleError(c, err)
 }
