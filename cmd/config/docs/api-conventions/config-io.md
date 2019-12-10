@@ -34,13 +34,18 @@ This annotation **SHOULD** be set when reading Resources from files.
 When writing multiple Resources to the same file, the Resource **SHOULD** be written in the
 relative order matching the index.
 
+When this annotation is not specified, it implies a value of `0`.
+
 Example:
 
 ```yaml
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
+    config.kubernetes.io/path: "relative/file/path.yaml"
+    config.kubernetes.io/index: 2
 ```
+
+This represents the thrid Resource in the file.
 
 ### `config.kubernetes.io/local-config`
 
