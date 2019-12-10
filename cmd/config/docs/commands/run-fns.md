@@ -46,7 +46,7 @@ order they appear in the file).
   would then write the container stdout back to example/, replacing the directory
   file contents.
 
-  See `kustomize config help docs-fn` for more details on writing functions.
+  See `kustomize help config docs-fn` for more details on writing functions.
 
 ### Examples
 
