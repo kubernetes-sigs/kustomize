@@ -10,11 +10,11 @@ import (
 	"strconv"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/k8sdeps/configmapandsecret"
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/apis/meta/v1/unstructured"
-	"sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/util/yaml"
 )
 
 // KunstructuredFactoryImpl hides construction using apimachinery types.
