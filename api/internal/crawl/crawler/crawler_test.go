@@ -29,7 +29,7 @@ type testCrawler struct {
 }
 
 func (c testCrawler) Match(d *doc.Document) bool {
-	return d != nil && strings.HasPrefix(d.ID(), c.matchPrefix)
+	return d != nil
 }
 
 func (c testCrawler) FetchDocument(_ context.Context, d *doc.Document) error {
