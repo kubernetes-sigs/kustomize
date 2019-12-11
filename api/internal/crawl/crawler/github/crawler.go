@@ -193,7 +193,9 @@ func processQuery(ctx context.Context, gcl GhClient, query string,
 				errs = append(errs, err)
 				errorCnt++
 			}
-			output <- k
+			if k != nil {
+				output <- k
+			}
 			totalCnt++
 		}
 
