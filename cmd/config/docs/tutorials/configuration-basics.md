@@ -58,7 +58,7 @@
 
   `tree` can also be used with `kubectl get` to print cluster Resources using OwnersReferences
   to build the tree structure.
-  
+
     kubectl apply -R -f cockroachdb/
     kubectl get all -o yaml | kustomize config tree --graph-structure owners --name --image --replicas
     .
@@ -112,7 +112,7 @@
   ordering of fields and indentation.
 
 	$ kustomize config fmt mysql-wordpress-pd/
-	
+
   Run `git diff` and see the changes that have been applied.
 
 ### `grep` -- search for Resources by field values
@@ -141,7 +141,6 @@
 
   - list elements may be indexed by a field value using list[field=value]
   - '.' as part of a key or value may be escaped as '\.'
-  
 
 	$ kustomize config grep "spec.status.spec.containers[name=nginx].image=mysql:5\.6" wordpress/
 	apiVersion: apps/v1 # for k8s versions before 1.9.0 use apps/v1beta2  and before 1.8.0 use extensions/v1beta1
@@ -162,12 +161,11 @@
 			tier: mysql
 	...
 
-  
   `grep` may be used with kubectl to search for Resources in a cluster matching a value.
-  
+
     kubectl get all -o yaml | kustomize config grep "spec.replicas>0" | kustomize config tree --replicas
     .
-    └── 
+    └──
         ├── [.]  Deployment wp/wordpress
         │   └── spec.replicas: 1
         ├── [.]  ReplicaSet wp/wordpress-76b5d9f5c8
@@ -178,7 +176,7 @@
             └── spec.replicas: 1
 
 ### Error handling
-  
+
   If there is an error parsing the Resource configuration, kustomize will print an error with the file.
 
     $ kustomize config grep "spec.template.spec.containers[name=\.*].resources.limits.cpu>1.0" ./staging/ | kustomize config tree --name --resources
@@ -187,13 +185,13 @@
 
   Here the `staging/persistent-volume-provisioning/quobyte/quobyte-admin-secret.yaml` has a malformed
   Resource.  Remove the malformed Resources:
-  
+
     rm staging/persistent-volume-provisioning/quobyte/quobyte-admin-secret.yaml
     rm staging/storage/vitess/etcd-service-template.yaml
 
   When developing -- to get a stack trace for where an error was encountered,
   use the `--stack-trace` flag:
-  
+
     $ kustomize config grep "spec.template.spec.containers[name=\.*].resources.limits.cpu>1.0" ./staging/ --stack-trace
     go/src/sigs.k8s.io/kustomize/kyaml/yaml/types.go:260 (0x4d35c86)
             (*RNode).GetMeta: return m, errors.Wrap(err)
@@ -205,9 +203,9 @@
 ### Combine `grep` and `tree`
 
   `grep` and `tree` may be combined to perform queries against configuration.
-  
+
   Query for `replicas`:
-  
+
     $ kustomize config grep "spec.replicas>5" ./ | kustomize config tree --replicas
       .
       ├── staging/sysdig-cloud
@@ -245,9 +243,9 @@
 
   The `grep` results may be inverted with the `-v` flag and used to find Resources that don't
   match a query.
-  
+
   Find Resources that have an image specified, but the image doesn't have a tag:
-  
+
     $ kustomize config grep "spec.template.spec.containers[name=\.*].name=\.*" ./ |  kustomize config grep "spec.template.spec.containers[name=\.*].image=\.*:\.*" -v | kustomize config tree --image --name
     .
     ├── staging/newrelic

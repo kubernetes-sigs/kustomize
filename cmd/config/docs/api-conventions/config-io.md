@@ -45,7 +45,7 @@ metadata:
     config.kubernetes.io/index: 2
 ```
 
-This represents the thrid Resource in the file.
+This represents the third Resource in the file.
 
 ### `config.kubernetes.io/local-config`
 
