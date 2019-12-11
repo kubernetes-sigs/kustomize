@@ -12,6 +12,7 @@ import (
 	"sigs.k8s.io/kustomize/cmd/config/cmd"
 	"sigs.k8s.io/kustomize/cmd/config/cmddocs/api"
 	"sigs.k8s.io/kustomize/cmd/config/cmddocs/tutorials"
+	"sigs.k8s.io/kustomize/kyaml/commandutil"
 )
 
 var root = &cobra.Command{
@@ -40,7 +41,6 @@ Advanced Documentation Topics:
 	$ kustomize help config docs-fn
 	$ kustomize help config docs-io-annotations
 `,
-	Version: "v0.0.1",
 }
 
 // NewConfigCommand returns a new *cobra.Command for the config command group.  This may
@@ -52,6 +52,18 @@ Advanced Documentation Topics:
 // "kustomize" and the built-in docs will display "kustomize config" in the examples.
 //
 func NewConfigCommand(name string) *cobra.Command {
+	// config command is alpha
+	root.Version = "v0.0.0"
+
+	// Only populate the command if Alpha commands are enabled.
+	if !commandutil.GetAlphaEnabled() {
+		// return the command because other subcommands are added to it
+		root.Short = "[Alpha] To enable set KUSTOMIZE_ENABLE_ALPHA_COMMANDS=true"
+		root.Long = "[Alpha] To enable set KUSTOMIZE_ENABLE_ALPHA_COMMANDS=true"
+		root.Example = ""
+		return root
+	}
+
 	root.PersistentFlags().BoolVar(&cmd.StackOnError, "stack-trace", false,
 		"print a stack-trace on failure")
 
