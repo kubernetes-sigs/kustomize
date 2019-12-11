@@ -9,15 +9,15 @@ import (
 	"fmt"
 
 	jsonpatch "github.com/evanphx/json-patch"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/strategicpatch"
+	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/resid"
-	metav1 "sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/apis/meta/v1/unstructured"
-	"sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/labels"
-	"sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/runtime"
-	"sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/util/strategicpatch"
-	"sigs.k8s.io/kustomize/pseudo/k8s/client-go/kubernetes/scheme"
 )
 
 var _ ifc.Kunstructured = &UnstructAdapter{}
