@@ -3,9 +3,9 @@
   Configuration Functions are functions packaged as executables in containers which enable
   **shift-left practices**.  They configure applications and infrastructure through
   Kubernetes style Resource Configuration, but run locally pre-commit.
-  
+
   Configuration functions enable shift-left practices (client-side) through:
-  
+
   - Pre-commit / delivery validation and linting of configuration
     - e.g. Fail if any containers don't have PodSecurityPolicy or CPU / Memory limits
   - Implementation of abstractions as client actuated APIs (e.g. templating)
@@ -17,7 +17,7 @@
       Type, annotations, etc.
 
   Performing these on the client rather than the server enables:
-  
+
   - Configuration to be reviewed prior to being sent to the API server
   - Configuration to be validated as part of the CD pipeline
   - Configuration for Resources to validated holistically rather than individually
@@ -30,14 +30,14 @@
     - Compose generation, injection, validation together
 
   Configuration Functions are implemented as executable programs published in containers which:
-   
+
   - Accept as input (stdin):
     - A list of Resource Configuration
     - A Function Configuration (to configure the function itself)
   - Emit as output (stdout + exit):
     - A list of Resource Configuration
     - An exit code for success / failure
-  
+
 ### Function Specification
 
   - Functions **SHOULD** be published as container images containing a `CMD` invoking an executable.
@@ -65,7 +65,7 @@
   - contains `functionConfig` field -- a single item with the configuration for the function itself
 
   Example `ResourceList` Input:
-  
+
     apiVersion: config.kubernetes.io/v1alpha1
     kind: ResourceList
     functionConfig:
@@ -100,7 +100,7 @@
   - contains `items` field, same as `List.items`
 
   Example `ResourceList` Output:
-  
+
     apiVersion: config.kubernetes.io/v1alpha1
     kind: ResourceList
     items:
@@ -200,7 +200,7 @@
 
 #### `Dockerfile`
 
-  `Dockerfile` installs `kustomize config` and copies the script into the container image.    
+  `Dockerfile` installs `kustomize config` and copies the script into the container image.
 
     FROM golang:1.13-stretch
     RUN go get sigs.k8s.io/kustomize/cmd/config
@@ -232,11 +232,11 @@ Following is an example of running the `kustomize config run` using the precedin
   - `configFn.container.image`: the image to use for this API
   - `annotations[config.kubernetes.io/local-config]`: mark this as not a Resource that should
     be applied
-    
+
 #### `kustomize config run dir/` (Output)
 
   `dir/my-instance_deployment.yaml` contains the Deployment:
-    
+
     apiVersion: apps/v1
     kind: Deployment
     metadata:
@@ -279,4 +279,3 @@ Following is an example of running the `kustomize config run` using the precedin
       selector:
         app: nginx
         instance: my-instance
- 

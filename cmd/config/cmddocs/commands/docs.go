@@ -14,10 +14,10 @@ var CatLong = `
 var CatExamples = `
     # print Resource config from a directory
     kustomize config cat my-dir/
-    
+
     # wrap Resource config from a directory in an ResourceList
     kustomize config cat my-dir/ --wrap-kind ResourceList --wrap-version config.kubernetes.io/v1alpha1 --function-config fn.yaml
-    
+
     # unwrap Resource config from a directory in an ResourceList
     ... | kustomize config cat`
 
@@ -106,13 +106,13 @@ var GrepLong = `
 var GrepExamples = `
     # find Deployment Resources
     kustomize config grep "kind=Deployment" my-dir/
-    
+
     # find Resources named nginx
     kustomize config grep "metadata.name=nginx" my-dir/
-    
+
     # use tree to display matching Resources
     kustomize config grep "metadata.name=nginx" my-dir/ | kustomize config tree
-    
+
     # look for Resources matching a specific container image
     kustomize config grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-dir/ | kustomize config tree`
 
@@ -180,7 +180,7 @@ order they appear in the file).
   would then write the container stdout back to example/, replacing the directory
   file contents.
 
-  See ` + "`" + `kustomize config help docs-fn` + "`" + ` for more details on writing functions.
+  See ` + "`" + `kustomize help config docs-fn` + "`" + ` for more details on writing functions.
 `
 var RunFnsExamples = `
 kustomize config run example/`
@@ -209,26 +209,26 @@ from the cluster, the Resource graph structure may be used instead.
 var TreeExamples = `
     # print Resources using directory structure
     kustomize config tree my-dir/
-    
+
     # print replicas, container name, and container image and fields for Resources
     kustomize config tree my-dir --replicas --image --name
-    
+
     # print all common Resource fields
     kustomize config tree my-dir/ --all
-    
+
     # print the "foo"" annotation
-    kustomize config tree my-dir/ --field "metadata.annotations.foo" 
-    
+    kustomize config tree my-dir/ --field "metadata.annotations.foo"
+
     # print the "foo"" annotation
-    kubectl get all -o yaml | kustomize config tree my-dir/ --structure=graph \
+    kubectl get all -o yaml | kustomize config tree \
       --field="status.conditions[type=Completed].status"
-    
-    # print live Resources from a cluster using graph for structure
-    kubectl get all -o yaml | kustomize config tree --replicas --name --image --structure=graph
-    
-    
-    # print live Resources using graph for structure
-    kubectl get all,applications,releasetracks -o yaml | kustomize config tree --structure=graph \
+
+    # print live Resources from a cluster using owners for graph structure
+    kubectl get all -o yaml | kustomize config tree --replicas --name --image \
+      --graph-structure=owners
+
+    # print live Resources with status condition fields
+    kubectl get all -o yaml | kustomize config tree \
       --name --image --replicas \
       --field="status.conditions[type=Completed].status" \
       --field="status.conditions[type=Complete].status" \
