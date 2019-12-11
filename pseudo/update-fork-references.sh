@@ -5,9 +5,9 @@ set -o xtrace
 
 # replace the module name with the new module name
 function replaceModuleName {
-  find . -name *.go | xargs sed -i -e "s!k8s.io/$1!sigs.k8s.io/kustomize/pseudo/k8s/$1!g"
-  find . -name *.proto | xargs sed -i -e "s!k8s.io/$1!sigs.k8s.io/kustomize/pseudo/k8s/$1!g"
-  find . -name *.md | xargs sed -i -e "s!k8s.io/$1!sigs.k8s.io/kustomize/pseudo/k8s/$1!g"
+  find . -name *.go | xargs sed -i -e "s!sigs.k8s.io/kustomize/pseudo/k8s/$1!k8s.io/$1!g"
+  find . -name *.proto | xargs sed -i -e "s!sigs.k8s.io/kustomize/pseudo/k8s/$1!k8s.io/$1!g"
+  find . -name *.md | xargs sed -i -e "s!sigs.k8s.io/kustomize/pseudo/k8s/$1!k8s.io/$1!g"
 }
 
 # update the go.mod file, dropping the old module
@@ -59,6 +59,15 @@ function testAllModules {
 #    (cd $dir; testGoMod )
 #  done
 }
+
+# verify the package dependencies
+for item in $(find . -name go.mod | sed s/go.mod//g)
+do
+  cd $item
+  go fmt ./...
+  cd -
+done
+
 
 # update the names of the modules
 for item in api apimachinery client-go
