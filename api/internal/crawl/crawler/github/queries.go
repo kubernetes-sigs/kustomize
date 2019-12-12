@@ -123,11 +123,15 @@ func (rc RequestConfig) ReposRequest(fullRepoName string) string {
 	return rc.makeRequest(uri, Query{}).URL()
 }
 
+func escapeSpace(s string) string {
+	return strings.Replace(s, " ", "%20", -1)
+}
+
 // CommitsRequest given the repo name, and a filepath returns a formatted query
 // for the Github API to find the commits that affect this file.
 func (rc RequestConfig) CommitsRequest(fullRepoName, path string) string {
 	uri := fmt.Sprintf("repos/%s/commits", fullRepoName)
-	return rc.makeRequest(uri, Query{Path(path)}).URL()
+	return rc.makeRequest(uri, Query{Path(escapeSpace(path))}).URL()
 }
 
 func (rc RequestConfig) makeRequest(path string, query Query) request {
