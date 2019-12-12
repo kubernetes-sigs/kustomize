@@ -18,7 +18,7 @@ linters:
 #    - funlen
     - gochecknoinits
     - goconst
-#    - gocritic
+    - gocritic
     - gocyclo
     - gofmt
     - goimports
