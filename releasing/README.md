@@ -20,7 +20,6 @@ for an explanation of the `foo/v2.3.0` tags applied below.
 [`sigs.k8s.io/kustomize/kustomize`]: #sigsk8siokustomizekustomize
 [`sigs.k8s.io/kustomize/api`]: #sigsk8siokustomizeapi
 [`sigs.k8s.io/kustomize/pluginator`]: #sigsk8siokustomizepluginator
-[`sigs.k8s.io/kustomize/pseudo/k8s`]: #sigsk8siokustomizepseudok8s
 [kustomize/v3.2.1]: /../../releases/tag/kustomize%2Fv3.2.1
 [pluginator/v1.0.0]: /../../releases/tag/pluginator%2Fv1.0.0
 
@@ -29,7 +28,6 @@ for an explanation of the `foo/v2.3.0` tags applied below.
 | kustomize executable  | [`sigs.k8s.io/kustomize/kustomize`]  | _kustomize/v3.2.2_  | _release-kustomize-v3.2.2_ |
 | kustomize Go API      | [`sigs.k8s.io/kustomize/api`]        | _api/v0.1.0_        | _release-api-v0.1_         |
 | pluginator executable | [`sigs.k8s.io/kustomize/pluginator`] | _pluginator/v1.0.0_ | _release-pluginator-v1.0_  |
-| pseudo k8s API        | [`sigs.k8s.io/kustomize/pseudo/k8s`] | _pseudo/k8s/v0.1.0_  | _release-pseudok8s-v0.1.0_ |
 
 ### sigs.k8s.io/kustomize/kustomize
 
@@ -112,36 +110,6 @@ infrequently).
 Executables appear on the [release page].
 The tag appears in the URL, e.g. [pluginator/v1.0.0].
 
-### sigs.k8s.io/kustomize/pseudo/k8s
-
-
-This is a clone of a combination of kubernetes repositories.
-See the [README](../pseudo/README.md).
-
-#### Packages
-
-The packages in this module are used by kubernetes
-clients like the kustomize API.
-
-Go consumers of this API will have a `go.mod` file
-requiring this module at a particular tag, e.g.
-
-```
-require sigs.k8s.io/pseudo/k8s v0.1.0
-```
-
-#### Release artifacts
-
-This is a Go library-only release, so the only
-artifact per se is the repo tag, in the form `pseudo/k8s/v0.1.0`,
-that API clients can `require` from their `go.mod` file.
-
-Release notes should appear on the [release page].
-
-There's a toy executable called `pseudok8s`, which, if
-run, prints a message, but is of
-no practical use to an API client.
-
 ## Release procedure
 
 > TODO: script what follows, so someone can enter
@@ -173,7 +141,6 @@ git rebase upstream/master
 module=pluginator  # The pluginator executable
 module=kustomize   # The kustomize executable
 module=api         # The API
-module=pseudo/k8s  # The clone of the k8s API
 ```
 
 ### review tags to help determine new tag

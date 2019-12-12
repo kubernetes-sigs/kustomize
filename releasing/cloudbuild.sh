@@ -42,10 +42,6 @@ setSemVer
 
 cd $module
 
-# Remove slash from module name
-# (pseudo/k8s becomes pseudok8s)
-module=$(echo $module | sed 's|/||')
-
 configFile=$(mktemp)
 cat <<EOF >$configFile
 project_name: $module
