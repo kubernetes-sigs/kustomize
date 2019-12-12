@@ -5,7 +5,7 @@
 
 kustomize 不会验证其输入或输出是否符合资源要求。
 
-而另一个工具 [kubeval] 提供了验证 k8s 资源的功能，这里有一个示例：
+而另一个工具 [kubeval] 提供了验证 k8s 资源的功能，例如：
 
 ```shell
 $ kubeval my-invalid-rc.yaml
@@ -13,11 +13,11 @@ The document my-invalid-rc.yaml contains an invalid ReplicationController
 --> spec.replicas: Invalid type. Expected: integer, given: string
 ```
 
-可以编写一个 Kustomize transformer [插件] 来运行 [kubeval] 来验证资源。
+可以创建一个 Kustomize transformer [插件] 通过运行 [kubeval] 来进行验证资源。
 
 创建一个工作空间：
 
-<!-- @makeWorkplace @testAgainstLatestRelease -->
+<!-- @makeWorkplace @test -->
 ```bash
 DEMO_HOME=$(mktemp -d)
 mkdir -p $DEMO_HOME/valid
@@ -26,11 +26,11 @@ PLUGINDIR=$DEMO_HOME/kustomize/plugin/someteam.example.com/v1/validator
 mkdir -p $PLUGINDIR
 ```
 
-## 编写 transformer 插件
+## 创建 transformer 插件
 
 根据操作系统下载 [kubeval] 的二进制文件并将其添加到 $PATH。
 
-<!-- @downloadKubeval @testAgainstLatestRelease -->
+<!-- @downloadKubeval @test -->
 ```bash
 OS=`uname | sed -e 's/Linux/linux/' -e 's/Darwin/darwin/'`
 wget https://github.com/instrumenta/kubeval/releases/download/0.9.2/kubeval-${OS}-amd64.tar.gz
@@ -39,14 +39,15 @@ export PATH=$PATH:`pwd`
 ```
 
 transformer 插件将执行逻辑如下：
-- 资源从 stdin 传递到 transformer 插件 。
+
+- 从 stdin 中读取资源并传递到 transformer 插件。
 - transformer 插件的配置文件作为第一个参数传入。
 - transformer 插件的工作目录是 kustomization 所在目录。
 - 转换后的资源由插件写入 stdout 。
-- 如果 transformer 插件的返回值不为0，则 kustomize 认为转化期间存在错误。
+- transformer 返回值为0，则转化成功；如果 transformer 插件的返回值不为0，则 kustomize 认为转化期间存在错误。
 
-可以将用于验证的 transformer 插件编写为 bash 脚本，该脚本执行 [kubeval] 二进制文件并返回正确的输出和退出代码。
-<!-- @writePlugin @testAgainstLatestRelease -->
+我们可以写一个 bash 脚本作为用于验证资源的 transformer 插件，该脚本执行 [kubeval] 二进制文件并返回正确的输出和退出码。
+<!-- @writePlugin @test -->
 ```bash
 cat <<'EOF' > $PLUGINDIR/Validator
 #!/bin/bash
@@ -78,9 +79,9 @@ chmod +x $PLUGINDIR/Validator
 
 ## 使用 transformer 插件
 
-编写一个包含有效 ConfigMap 和 transformer 插件的 Kustomization。
+创建一个包含有效 ConfigMap 和 transformer 插件的 Kustomization。
 
-<!-- @writeKustomization @testAgainstLatestRelease -->
+<!-- @writeKustomization @test -->
 ```bash
 cat <<'EOF' >$DEMO_HOME/valid/configmap.yaml
 apiVersion: v1
@@ -107,9 +108,9 @@ transformers:
 EOF
 ```
 
-编写一个包含无效 ConfigMap 和 transformer 插件的 Kustomization。
+创建一个包含无效 ConfigMap 和 transformer 插件的 Kustomization。
 
-<!-- @writeKustomization @testAgainstLatestRelease -->
+<!-- @writeKustomization @test -->
 ```bash
 cat <<'EOF' >$DEMO_HOME/invalid/configmap.yaml
 apiVersion: v1
@@ -119,6 +120,7 @@ metadata:
 data:
 - foo: bar
 EOF
+# ConfigMap 的 data 字段需要传入的数据类型为 object，这里传入一个 array
 
 cat <<'EOF' >$DEMO_HOME/invalid/validation.yaml
 apiVersion: someteam.example.com/v1
@@ -158,7 +160,7 @@ EOF
 
 定义一个 helper 函数在正确的的环境和插件标记运行 kustomize 。
 
-<!-- @defineKustomizeBd @testAgainstLatestRelease -->
+<!-- @defineKustomizeBd @test -->
 ```bash
 function kustomizeBd {
   XDG_CONFIG_HOME=$DEMO_HOME \
@@ -170,7 +172,7 @@ function kustomizeBd {
 
 构建有效的 variant
 
-<!-- @buildValid @testAgainstLatestRelease -->
+<!-- @buildValid @test -->
 ```bash
 kustomizeBd valid
 ```
@@ -199,7 +201,7 @@ data: Invalid type. Expected: object, given: array
 
 ## 清理
 
-<!-- @cleanup @testAgainstLatestRelease -->
+<!-- @cleanup @test -->
 ```shell
 rm -rf $DEMO_HOME
 ```

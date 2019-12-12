@@ -14,7 +14,7 @@ transformer 配置的 `fieldSpec` 列表，用来确定哪些资源类型和这�
 
 ## FieldSpec
 
-FieldSpec 表示一种资源中字段路径的类型。
+FieldSpec 是一种表示资源中字段路径的类型。
 
 ```yaml
 group: some-group
@@ -24,11 +24,11 @@ path: path/to/the/field
 create: false
 ```
 
-如果 `create` 设置为 `true`，则如果尚未找到该路径，则 transformer 将在资源中创建该路径。这对于 label 和 annotation 转换器最有用，其中在转换之前可能未设置 label 或 annotation 的路径。
+如果 `create` 设置为 `true`，表示如果尚未找到该路径，则 transformer 将在资源中创建该路径。这对于 label 和 annotation 转换器最有用，因为在转换之前可能未设置 label 或 annotation 的路径。
 
 ## Images transformer
 
-默认的 images transformer 会更新包含 `containers` 和 `initcontainers` 子路径的路径中找到的指定镜像的键值 。如果找到，则定制 `image` 的 `newName`，`newTag` 和 `digest` 等字段。该 `name` 字段应与 `image` 资源中的键值匹配。
+默认的 images transformer 会更新包含 `containers` 和 `initcontainers` 子路径的路径中找到的指定镜像的键值 。如果找到，则更新 `image` 的 `newName`，`newTag` 和 `digest` 等字段。该 `name` 字段应与 `image` 资源中的键值匹配。
 
 kustomization.yaml 示例：
 
@@ -98,7 +98,11 @@ commonLabels:
 
 ## Annotations transformer
 
-annotations transformer 将 annotations 添加到所有资源的 `metadata/annotations` 字段。还添加 `spec/template/metadata/annotations` 为 Deployment，ReplicaSet，DaemonSet，StatefulSet，Job 和 CronJob 等资源以及 CronJob 资源的 `spec/jobTemplate/spec/template/metadata/annotations` 添加注释。
+annotations transformer 可以：
+
+- 将 annotations 添加到所有资源的 `metadata/annotations` 字段
+- 将 annotations 添加到Deployment，ReplicaSet，DaemonSet，StatefulSet，Job 和 CronJob 等资源的 `spec/template/metadata/annotations`
+- 将 annotations 添加到CronJob 资源的 `spec/jobTemplate/spec/template/metadata/annotations`字段。
 
 kustomization.yaml 示例：
 
