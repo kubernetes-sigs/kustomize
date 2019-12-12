@@ -74,5 +74,3 @@ done
 
 # test all of the modules still work
 testAllModules
-
-./travis/verify-deps.sh
