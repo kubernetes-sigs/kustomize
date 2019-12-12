@@ -68,11 +68,9 @@ func findMatch(d *doc.Document, crawlers []Crawler) Crawler {
 
 func addBranches(cdoc CrawledDocument, match Crawler, indx IndexFunc,
 	seen map[string]struct{}, stack *CrawlSeed) {
-	if _, ok := seen[cdoc.ID()]; ok {
-		return
-	}
 
 	seen[cdoc.ID()] = struct{}{}
+
 	// Insert into index
 	err := indx(cdoc, match)
 	logIfErr(err)
@@ -98,12 +96,16 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 	docCount := 0
 	// During the execution of the for loop, more Documents may be added into (*docsPtr).
 	for len(*docsPtr) > 0 {
-		docCount++
 		// get the last Document in (*docPtr), which will be crawled in this iteration.
 		tail := (*docsPtr)[len(*docsPtr)-1]
 
 		// remove the last Document in (*docPtr)
-		*docsPtr = (*docsPtr)[:(len(*docsPtr)-1)]
+		*docsPtr = (*docsPtr)[:(len(*docsPtr) - 1)]
+
+		if _, ok := seen[tail.ID()]; ok {
+			continue
+		}
+		docCount++
 
 		match := findMatch(tail, crawlers)
 		if match == nil {
@@ -138,7 +140,7 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 // CrawlFromSeed updates all the documents in seed, and crawls all the new
 // documents referred in the seed.
 func CrawlFromSeed(ctx context.Context, seed CrawlSeed, crawlers []Crawler,
-	conv Converter, indx IndexFunc,	seen map[string]struct{}) {
+	conv Converter, indx IndexFunc, seen map[string]struct{}) {
 
 	// stack tracks the documents directly referred in other documents.
 	stack := make(CrawlSeed, 0)
@@ -218,7 +220,7 @@ func CrawlGithubRunner(ctx context.Context, output chan<- CrawledDocument,
 
 // CrawlGithub crawls all the kustomization files on Github.
 func CrawlGithub(ctx context.Context, crawlers []Crawler, conv Converter,
-	indx IndexFunc,	seen map[string]struct{}) {
+	indx IndexFunc, seen map[string]struct{}) {
 	// stack tracks the documents directly referred in other documents.
 	stack := make(CrawlSeed, 0)
 
@@ -244,14 +246,15 @@ func CrawlGithub(ctx context.Context, crawlers []Crawler, conv Converter,
 		}
 	}()
 
+	logger.Println("processing the documents found from crawling github")
 	if errs := CrawlGithubRunner(ctx, ch, crawlers); errs != nil {
 		for _, err := range errs {
 			logIfErr(err)
 		}
 	}
 	close(ch)
-	logger.Println("Processing the documents found from crawling github")
 	wg.Wait()
+
 	// Handle deps of newly discovered documents.
 	logger.Printf("crawling the %d new documents referred by other documents",
 		len(stack))

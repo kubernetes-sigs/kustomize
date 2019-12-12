@@ -21,9 +21,14 @@ const (
 	redisCacheURL        = "REDIS_CACHE_URL"
 	redisKeyURL          = "REDIS_KEY_URL"
 	retryCount           = 3
+	githubUserEnv        = "GITHUB_USER"
+	githubRepoEnv        = "GITHUB_REPO"
 )
 
 func main() {
+	githubUser := os.Getenv(githubUserEnv)
+	githubRepo := os.Getenv(githubRepoEnv)
+
 	githubToken := os.Getenv(githubAccessTokenVar)
 	if githubToken == "" {
 		fmt.Printf("Must set the variable '%s' to make github requests.\n",
@@ -38,21 +43,9 @@ func main() {
 		return
 	}
 
+	seedDocs := make(crawler.CrawlSeed, 0)
+
 	cacheURL := os.Getenv(redisCacheURL)
-
-	query := []byte(`{ "query":{ "match_all":{} } }`)
-	it := idx.IterateQuery(query, 10000, 60*time.Second)
-	docs := make(crawler.CrawlSeed, 0)
-	for it.Next() {
-		for _, hit := range it.Value().Hits.Hits {
-			docs = append(docs, hit.Document.Copy())
-		}
-	}
-
-	if err := it.Err(); err != nil {
-		fmt.Printf("Error iterating: %v\n", err)
-	}
-
 	cache, err := redis.DialURL(cacheURL)
 	clientCache := &http.Client{}
 	if err != nil {
@@ -60,12 +53,6 @@ func main() {
 	} else {
 		clientCache = httpclient.NewClient(cache)
 	}
-
-	ghCrawler := github.NewCrawler(githubToken, retryCount, clientCache,
-		github.QueryWith(
-			github.Filename("kustomization.yaml"),
-			github.Filename("kustomization.yml")),
-	)
 
 	// docConverter takes in a plain document and processes it for the index.
 	docConverter := func(d *doc.Document) (crawler.CrawledDocument, error) {
@@ -81,7 +68,7 @@ func main() {
 	index := func(cdoc crawler.CrawledDocument, crwlr crawler.Crawler) error {
 		switch d := cdoc.(type) {
 		case *doc.KustomizationDocument:
-			fmt.Println("Inserting: ", d.ID(), d)
+			fmt.Println("Inserting: ", d)
 			_, err := idx.Put(d.ID(), d)
 			return err
 		default:
@@ -93,9 +80,43 @@ func main() {
 	// This helps avoid indexing a given document multiple times.
 	seen := make(map[string]struct{})
 
+	var ghCrawler crawler.Crawler
+
+	if githubRepo != "" {
+		ghCrawler = github.NewCrawler(githubToken, retryCount, clientCache,
+			github.QueryWith(
+				github.Filename("kustomization.yaml"),
+				github.Filename("kustomization.yml"),
+				github.Repo(githubRepo)),
+		)
+	} else if githubUser != "" {
+		ghCrawler = github.NewCrawler(githubToken, retryCount, clientCache,
+			github.QueryWith(
+				github.Filename("kustomization.yaml"),
+				github.Filename("kustomization.yml"),
+				github.User(githubUser)),
+		)
+	} else {
+		ghCrawler = github.NewCrawler(githubToken, retryCount, clientCache,
+			github.QueryWith(
+				github.Filename("kustomization.yaml"),
+				github.Filename("kustomization.yml")),
+		)
+
+		// get all the documents in the index
+		query := []byte(`{ "query":{ "match_all":{} } }`)
+		it := idx.IterateQuery(query, 10000, 60*time.Second)
+		for it.Next() {
+			for _, hit := range it.Value().Hits.Hits {
+				seedDocs = append(seedDocs, hit.Document.Copy())
+			}
+		}
+		if err := it.Err(); err != nil {
+			fmt.Printf("Error iterating: %v\n", err)
+		}
+	}
+
 	crawlers := []crawler.Crawler{ghCrawler}
-
-	crawler.CrawlFromSeed(ctx, docs, crawlers, docConverter, index, seen)
-
+	crawler.CrawlFromSeed(ctx, seedDocs, crawlers, docConverter, index, seen)
 	crawler.CrawlGithub(ctx, crawlers, docConverter, index, seen)
 }
