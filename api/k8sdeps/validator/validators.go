@@ -10,10 +10,10 @@ import (
 	"fmt"
 	"strings"
 
-	apivalidation "sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/api/validation"
-	v1validation "sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/apis/meta/v1/validation"
-	"sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/util/validation"
-	"sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/util/validation/field"
+	apivalidation "k8s.io/apimachinery/pkg/api/validation"
+	v1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
+	"k8s.io/apimachinery/pkg/util/validation"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 // KustValidator validates Labels and annotations by apimachinery
