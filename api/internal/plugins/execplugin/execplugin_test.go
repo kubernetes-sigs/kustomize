@@ -47,7 +47,7 @@ s/$BAR/bar/g
 			"argsFromFile": "sed-input.txt",
 		})
 
-	ldr.AddFile("/app/sed-input.txt", []byte(`
+	fSys.WriteFile("/app/sed-input.txt", []byte(`
 s/$FOO/foo/g
 s/$BAR/bar baz/g
  \ \ \ 
