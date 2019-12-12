@@ -92,8 +92,6 @@ func (r *RunFns) init() {
 	// if containerFilterProvider hasn't been set, use the default
 	if r.containerFilterProvider == nil {
 		r.containerFilterProvider = func(image, path string, api *yaml.RNode) kio.Filter {
-			defaultMount := filters.StorageMount{}
-			r.StorageMounts = append(r.StorageMounts, defaultMount)
 			cf := &filters.ContainerFilter{Image: image, Config: api, StorageMounts: r.StorageMounts}
 			return cf
 		}

@@ -10,8 +10,10 @@ require (
 	github.com/pkg/errors v0.8.1
 	golang.org/x/tools v0.0.0-20191010075000-0337d82405ff
 	gopkg.in/yaml.v2 v2.2.4
+	k8s.io/api v0.17.0
+	k8s.io/apimachinery v0.17.0
+	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/kube-openapi v0.0.0-20191107075043-30be4d16710a
 	sigs.k8s.io/kustomize/pluginator/v2 v2.0.0
-	sigs.k8s.io/kustomize/pseudo/k8s v0.1.0
 	sigs.k8s.io/yaml v1.1.0
 )

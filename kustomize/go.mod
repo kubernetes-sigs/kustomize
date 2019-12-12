@@ -15,5 +15,4 @@ replace (
 	sigs.k8s.io/kustomize/api v0.2.0 => ../api
 	sigs.k8s.io/kustomize/cmd/config v0.0.0 => ../cmd/config
 	sigs.k8s.io/kustomize/kyaml v0.0.0 => ../kyaml
-	sigs.k8s.io/kustomize/pseudo/k8s v0.0.0 => ../pseudo/k8s
 )

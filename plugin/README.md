@@ -23,5 +23,5 @@ which is either
   to statically linkable code.
 
 To read more about plugins, see
-sigs.k8s.io/kustomize/api/plugins/doc.go
+[doc.go](/api/internal/plugins/doc.go)
 

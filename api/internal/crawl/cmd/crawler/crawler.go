@@ -39,16 +39,16 @@ func main() {
 	}
 
 	cacheURL := os.Getenv(redisCacheURL)
-	keystoreURL := os.Getenv(redisKeyURL)
 
 	query := []byte(`{ "query":{ "match_all":{} } }`)
 	it := idx.IterateQuery(query, 10000, 60*time.Second)
 	docs := make(crawler.CrawlSeed, 0)
 	for it.Next() {
 		for _, hit := range it.Value().Hits.Hits {
-			docs = append(docs, hit.Document.GetDocument())
+			docs = append(docs, hit.Document.Copy())
 		}
 	}
+
 	if err := it.Err(); err != nil {
 		fmt.Printf("Error iterating: %v\n", err)
 	}
@@ -59,12 +59,6 @@ func main() {
 		fmt.Printf("Error: redis could not make a connection: %v\n", err)
 	} else {
 		clientCache = httpclient.NewClient(cache)
-	}
-
-	_, err = redis.DialURL(keystoreURL)
-	if err != nil {
-		fmt.Printf("Error: redis could not make a connection: %v\n", err)
-		os.Exit(1)
 	}
 
 	ghCrawler := github.NewCrawler(githubToken, retryCount, clientCache,
@@ -88,8 +82,8 @@ func main() {
 		func(cdoc crawler.CrawledDocument, crwlr crawler.Crawler) error {
 			switch d := cdoc.(type) {
 			case *doc.KustomizationDocument:
-				fmt.Println("Inserting: ", d)
-				_, err := idx.Put("", d)
+				fmt.Println("Inserting: ", d.ID(), d)
+				_, err := idx.Put(d.ID(), d)
 				return err
 			default:
 				return fmt.Errorf("type %T not supported", d)

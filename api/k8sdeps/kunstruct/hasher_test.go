@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	corev1 "sigs.k8s.io/kustomize/pseudo/k8s/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 func TestConfigMapHash(t *testing.T) {

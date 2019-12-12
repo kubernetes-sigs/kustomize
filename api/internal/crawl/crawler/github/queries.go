@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	perPageArg     = "per_page"
+	perPageArg = "per_page"
 )
 
 const githubMaxPageSize = 100

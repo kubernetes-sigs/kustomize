@@ -184,6 +184,12 @@ func (r *Resolver) WaitForStatus(ctx context.Context, resources []ResourceIdenti
 		// resources while polling the state.
 		waitState := newWaitState(resources, r.statusComputeFunc)
 
+		// Check all resources immediately. If the aggregate status is already
+		// Current, we can exit immediately.
+		if r.checkAllResources(ctx, waitState, eventChan) {
+			return
+		}
+
 		// Loop until either all resources have reached the Current status
 		// or until the wait is cancelled through the context. In both cases
 		// we will break out of the loop by returning from the function.
@@ -199,43 +205,54 @@ func (r *Resolver) WaitForStatus(ctx context.Context, resources []ResourceIdenti
 				}
 				return
 			case <-ticker.C:
-				// Every time the ticker fires, fetch all resources from the cluster,
-				// check if their status has changed and send an event for each resource
-				// with a new status. In each event, we also include the latest aggregate
-				// status. Finally, if the aggregate status becomes Current, send a final
-				// Completed type event and then return.
-				for id := range waitState.ResourceWaitStates {
-					// Make sure we have a local copy since we are passing
-					// pointers to this variable as parameters to functions
-					identifier := id
-					u, err := r.fetchResource(ctx, &identifier)
-					eventResource, updateObserved := waitState.ResourceObserved(&identifier, u, err)
-					// Find the aggregate status based on the new state for this resource.
-					aggStatus := waitState.AggregateStatus()
-					// We want events for changes in status for each resource, so send
-					// an event for this resource before checking if the aggregate status
-					// has become Current.
-					if updateObserved {
-						eventChan <- Event{
-							Type:            ResourceUpdate,
-							AggregateStatus: aggStatus,
-							EventResource:   &eventResource,
-						}
-					}
-					// If aggregate status is Current, we are done!
-					if aggStatus == status.CurrentStatus {
-						eventChan <- Event{
-							Type:            Completed,
-							AggregateStatus: status.CurrentStatus,
-						}
-						return
-					}
+				// Every time the ticker fires, we check the status of all
+				// resources. If the aggregate status has reached Current, checkAllResources
+				// will return true. If so, we just return.
+				if r.checkAllResources(ctx, waitState, eventChan) {
+					return
 				}
 			}
 		}
 	}()
 
 	return eventChan
+}
+
+// checkAllResources fetches all resources from the cluster,
+// checks if their status has changed and send an event for each resource
+// with a new status. In each event, we also include the latest aggregate
+// status. Finally, if the aggregate status becomes Current, send a final
+// Completed type event. If the aggregate status has become Current, this function
+// will return true to signal that it is done.
+func (r *Resolver) checkAllResources(ctx context.Context, waitState *waitState, eventChan chan Event) bool {
+	for id := range waitState.ResourceWaitStates {
+		// Make sure we have a local copy since we are passing
+		// pointers to this variable as parameters to functions
+		identifier := id
+		u, err := r.fetchResource(ctx, &identifier)
+		eventResource, updateObserved := waitState.ResourceObserved(&identifier, u, err)
+		// Find the aggregate status based on the new state for this resource.
+		aggStatus := waitState.AggregateStatus()
+		// We want events for changes in status for each resource, so send
+		// an event for this resource before checking if the aggregate status
+		// has become Current.
+		if updateObserved {
+			eventChan <- Event{
+				Type:            ResourceUpdate,
+				AggregateStatus: aggStatus,
+				EventResource:   &eventResource,
+			}
+		}
+		// If aggregate status is Current, we are done!
+		if aggStatus == status.CurrentStatus {
+			eventChan <- Event{
+				Type:            Completed,
+				AggregateStatus: status.CurrentStatus,
+			}
+			return true
+		}
+	}
+	return false
 }
 
 // fetchResource gets the resource given by the identifier from the cluster
