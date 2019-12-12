@@ -27,26 +27,26 @@ from the cluster, the Resource graph structure may be used instead.
 
     # print Resources using directory structure
     kustomize config tree my-dir/
-    
+
     # print replicas, container name, and container image and fields for Resources
     kustomize config tree my-dir --replicas --image --name
-    
+
     # print all common Resource fields
     kustomize config tree my-dir/ --all
-    
+
     # print the "foo"" annotation
-    kustomize config tree my-dir/ --field "metadata.annotations.foo" 
-    
+    kustomize config tree my-dir/ --field "metadata.annotations.foo"
+
     # print the "foo"" annotation
-    kubectl get all -o yaml | kustomize config tree my-dir/ --structure=graph \
+    kubectl get all -o yaml | kustomize config tree \
       --field="status.conditions[type=Completed].status"
-    
-    # print live Resources from a cluster using graph for structure
-    kubectl get all -o yaml | kustomize config tree --replicas --name --image --structure=graph
-    
-    
-    # print live Resources using graph for structure
-    kubectl get all,applications,releasetracks -o yaml | kustomize config tree --structure=graph \
+
+    # print live Resources from a cluster using owners for graph structure
+    kubectl get all -o yaml | kustomize config tree --replicas --name --image \
+      --graph-structure=owners
+
+    # print live Resources with status condition fields
+    kubectl get all -o yaml | kustomize config tree \
       --name --image --replicas \
       --field="status.conditions[type=Completed].status" \
       --field="status.conditions[type=Complete].status" \

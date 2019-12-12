@@ -27,7 +27,7 @@ apiVersion: example.com/v1beta1
 kind: MyType2
 `)
 
-var UnformattedJson1 = []byte(`
+var UnformattedJSON1 = []byte(`
 {
   "spec": "a",
   "status": {"conditions": [3, 1, 2]},

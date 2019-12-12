@@ -13,6 +13,8 @@ import (
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/k8sdeps/validator"
 	"sigs.k8s.io/kustomize/api/konfig"
+	shell_complete "sigs.k8s.io/kustomize/cmd/config/complete"
+	"sigs.k8s.io/kustomize/cmd/kubectl/kubectlcobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/build"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/config"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/create"
@@ -36,12 +38,19 @@ See https://sigs.k8s.io/kustomize
 	uf := kunstruct.NewKunstructuredFactoryImpl()
 	v := validator.NewKustValidator()
 	c.AddCommand(
+		shell_complete.NewCommand(),
 		build.NewCmdBuild(stdOut),
 		edit.NewCmdEdit(fSys, v, uf),
 		create.NewCmdCreate(fSys, uf),
-		config.NewCmdConfig(fSys),
 		version.NewCmdVersion(stdOut),
 	)
+	if cc := config.NewCmdConfig(fSys); cc != nil {
+		c.AddCommand(cc)
+	}
+	if kc := kubectlcobra.GetCommand(c); kc != nil {
+		c.AddCommand(kc)
+	}
+
 	c.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 
 	// Workaround for this issue:

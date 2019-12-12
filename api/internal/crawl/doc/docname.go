@@ -1,7 +1,10 @@
 package doc
 
 import (
+	"crypto/sha256"
+	"fmt"
 	"path"
+	"strings"
 	"time"
 
 	"sigs.k8s.io/kustomize/api/internal/git"
@@ -19,6 +22,17 @@ type Document struct {
 // Implements the CrawlerDocument interface.
 func (doc *Document) GetDocument() *Document {
 	return doc
+}
+
+func (doc *Document) Copy() *Document {
+	return &Document{
+		RepositoryURL: doc.RepositoryURL,
+		FilePath:      doc.FilePath,
+		DefaultBranch: doc.DefaultBranch,
+		DocumentData:  doc.DocumentData,
+		CreationTime:  doc.CreationTime,
+		IsSame:        doc.IsSame,
+	}
 }
 
 // Implements the CrawlerDocument interface.
@@ -53,6 +67,22 @@ func (doc *Document) FromRelativePath(newFile string) (Document, error) {
 }
 
 func (doc *Document) ID() string {
-	return doc.RepositoryURL + "/" +
-		doc.DefaultBranch + "/" + doc.FilePath
+	sum := sha256.Sum256([]byte(strings.Join(
+		[]string{
+			doc.RepositoryURL,
+			doc.DefaultBranch,
+			doc.FilePath,
+		},
+		"---|---")))
+	return fmt.Sprintf("%x", sum)
+}
+
+func (doc *Document) RepositoryFullName() string {
+	doc.RepositoryURL = strings.TrimRight(doc.RepositoryURL, "/")
+	sections := strings.Split(doc.RepositoryURL, "/")
+	l := len(sections)
+	if l < 2 {
+		return doc.RepositoryURL
+	}
+	return path.Join(sections[l-2], sections[l-1])
 }

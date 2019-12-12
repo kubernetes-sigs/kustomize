@@ -104,7 +104,6 @@ func (p *PathMatcher) doField(rn *RNode) (*RNode, error) {
 
 // doSeq iterates over a sequence and appends elements matching the path regex to p.Val
 func (p *PathMatcher) doSeq(rn *RNode) (*RNode, error) {
-
 	// parse the field + match pair
 	var err error
 	p.field, p.matchRegex, err = SplitIndexNameValue(p.Path[0])

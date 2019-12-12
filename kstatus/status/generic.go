@@ -36,29 +36,9 @@ func checkGenericProperties(u *unstructured.Unstructured) (*Result, error) {
 		}, nil
 	}
 
-	// ensure that the meta generation is observed
-	generation, found, err := unstructured.NestedInt64(u.Object, "metadata", "generation")
-	if err != nil {
-		return nil, errors.Wrap(err, "looking up metadata.generation from resource")
-	}
-	if !found {
-		return nil, errors.New("unable to find metadata.generation from resource")
-	}
-	observedGeneration, found, err := unstructured.NestedInt64(u.Object, "status", "observedGeneration")
-	if err != nil {
-		return nil, errors.Wrap(err, "looking up status.observedGeneration from resource")
-	}
-	if found {
-		// Resource does not have this field, so we can't do this check.
-		// TODO(mortent): Verify behavior of not set vs does not exist.
-		if observedGeneration != generation {
-			message := fmt.Sprintf("%s generation is %d, but latest observed generation is %d", u.GetKind(), generation, observedGeneration)
-			return &Result{
-				Status:     InProgressStatus,
-				Message:    message,
-				Conditions: []Condition{newInProgressCondition("LatestGenerationNotObserved", message)},
-			}, nil
-		}
+	res, err := checkGeneration(u)
+	if res != nil || err != nil {
+		return res, err
 	}
 
 	// Check if the resource has any of the standard conditions. If so, we just use them
@@ -88,5 +68,33 @@ func checkGenericProperties(u *unstructured.Unstructured) (*Result, error) {
 		}
 	}
 
+	return nil, nil
+}
+
+func checkGeneration(u *unstructured.Unstructured) (*Result, error) {
+	// ensure that the meta generation is observed
+	generation, found, err := unstructured.NestedInt64(u.Object, "metadata", "generation")
+	if err != nil {
+		return nil, errors.Wrap(err, "looking up metadata.generation from resource")
+	}
+	if !found {
+		return nil, nil
+	}
+	observedGeneration, found, err := unstructured.NestedInt64(u.Object, "status", "observedGeneration")
+	if err != nil {
+		return nil, errors.Wrap(err, "looking up status.observedGeneration from resource")
+	}
+	if found {
+		// Resource does not have this field, so we can't do this check.
+		// TODO(mortent): Verify behavior of not set vs does not exist.
+		if observedGeneration != generation {
+			message := fmt.Sprintf("%s generation is %d, but latest observed generation is %d", u.GetKind(), generation, observedGeneration)
+			return &Result{
+				Status:     InProgressStatus,
+				Message:    message,
+				Conditions: []Condition{newInProgressCondition("LatestGenerationNotObserved", message)},
+			}, nil
+		}
+	}
 	return nil, nil
 }

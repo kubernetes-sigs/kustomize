@@ -10,12 +10,13 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig/builtinpluginconsts"
-	"sigs.k8s.io/kustomize/cmd/config/cmds"
+	"sigs.k8s.io/kustomize/cmd/config/configcobra"
+	"sigs.k8s.io/kustomize/kyaml/commandutil"
 )
 
 // NewCmdConfig returns an instance of 'config' subcommand.
 func NewCmdConfig(fSys filesys.FileSystem) *cobra.Command {
-	c := cmds.NewConfigCommand("kustomize")
+	c := configcobra.NewConfigCommand("kustomize")
 
 	c.AddCommand(
 		newCmdSave(fSys),
@@ -50,7 +51,9 @@ func newCmdSave(fSys filesys.FileSystem) *cobra.Command {
 			}
 			return o.RunSave(fSys)
 		},
-		Hidden: true, // Don't display this command, but keep it for backwards compatibility.
+		// Alpha version of config is very different than the current version.
+		// If alpha is enabled, don't display this command, but keep it for backwards compatibility.
+		Hidden: commandutil.GetAlphaEnabled(),
 		Deprecated: `The save command is deprecated and will be removed in a future release.
 
 If you require this command file an issue at https://github.com/kubernetes-sigs/kustomize/issues

@@ -12,6 +12,13 @@ import (
 	. "sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+const (
+	NodeSampleData = `n: o
+a: b
+c: d
+`
+)
+
 func TestResourceNode_SetValue(t *testing.T) {
 	instance := *NewScalarRNode("foo")
 	copy := instance
@@ -32,11 +39,7 @@ func TestResourceNode_SetValue(t *testing.T) {
 }
 
 func TestAppend(t *testing.T) {
-	s := `n: o
-a: b
-c: d
-`
-	node, err := Parse(s)
+	node, err := Parse(NodeSampleData)
 	assert.NoError(t, err)
 	rn, err := node.Pipe(Append(NewScalarRNode("").YNode()))
 	if assert.Error(t, err) {
@@ -44,7 +47,7 @@ c: d
 	}
 	assert.Nil(t, rn)
 
-	s = `- a
+	s := `- a
 - b
 `
 	node, err = Parse(s)
@@ -55,36 +58,28 @@ c: d
 }
 
 func TestClearField_Fn(t *testing.T) {
-	s := `n: o
-a: b
-c: d
-`
-	node, err := Parse(s)
+	node, err := Parse(NodeSampleData)
 	assert.NoError(t, err)
 	rn, err := node.Pipe(FieldClearer{Name: "a"})
 	assert.NoError(t, err)
 	assert.Equal(t, "n: o\nc: d\n", assertNoErrorString(t)(node.String()))
 	assert.Equal(t, "b\n", assertNoErrorString(t)(rn.String()))
 
-	s = `n: o
-a: b
-c: d
-`
-	node, err = Parse(s)
+	node, err = Parse(NodeSampleData)
 	assert.NoError(t, err)
 	rn, err = node.Pipe(FieldClearer{Name: "n"})
 	assert.NoError(t, err)
 	assert.Equal(t, "a: b\nc: d\n", assertNoErrorString(t)(node.String()))
 	assert.Equal(t, "o\n", assertNoErrorString(t)(rn.String()))
 
-	node, err = Parse(s)
+	node, err = Parse(NodeSampleData)
 	assert.NoError(t, err)
 	rn, err = node.Pipe(FieldClearer{Name: "c"})
 	assert.NoError(t, err)
 	assert.Equal(t, "n: o\na: b\n", assertNoErrorString(t)(node.String()))
 	assert.Equal(t, "d\n", assertNoErrorString(t)(rn.String()))
 
-	s = `n: o
+	s := `n: o
 a: b
 `
 	node, err = Parse(s)
@@ -143,7 +138,6 @@ r: s
 `
 
 func TestLookup_Fn_create(t *testing.T) {
-
 	// primitive
 	node, err := Parse(s)
 	assert.NoError(t, err)
@@ -167,7 +161,6 @@ r: s
 `, assertNoErrorString(t)(node.String()))
 	assert.Equal(t, `h
 `, assertNoErrorString(t)(rn.String()))
-
 }
 
 func TestLookup_Fn_create2(t *testing.T) {
@@ -442,7 +435,6 @@ foo: baz
 	assert.Contains(t, err.Error(), "wrong Node Kind")
 	assert.Equal(t, `foo: baz
 `, assertNoErrorString(t)(node.String()))
-
 }
 
 func TestErrorIfInvalid(t *testing.T) {
@@ -675,7 +667,7 @@ metadata:
 	}
 	assert.Equal(t, ResourceMeta{
 		Kind:       "Deployment",
-		ApiVersion: "v1/apps",
+		APIVersion: "v1/apps",
 		ObjectMeta: ObjectMeta{
 			Name:      "foo",
 			Namespace: "bar",

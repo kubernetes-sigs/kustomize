@@ -34,7 +34,6 @@ before_install:
 install: true
 
 script:
-  - ./travis/verify-deps.sh
   - make verify-kustomize
   - ./travis/kyaml-pre-commit.sh
 

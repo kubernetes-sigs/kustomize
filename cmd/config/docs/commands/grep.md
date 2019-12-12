@@ -20,12 +20,12 @@
 
     # find Deployment Resources
     kustomize config grep "kind=Deployment" my-dir/
-    
+
     # find Resources named nginx
     kustomize config grep "metadata.name=nginx" my-dir/
-    
+
     # use tree to display matching Resources
     kustomize config grep "metadata.name=nginx" my-dir/ | kustomize config tree
-    
+
     # look for Resources matching a specific container image
     kustomize config grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-dir/ | kustomize config tree
