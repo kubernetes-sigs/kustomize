@@ -1,14 +1,14 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package cmd_test
+package commands_test
 
 import (
 	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/cmd/config/cmd"
+	"sigs.k8s.io/kustomize/cmd/config/internal/commands"
 )
 
 const (
@@ -74,7 +74,7 @@ items:
 )
 
 func TestXArgs_flags(t *testing.T) {
-	c := cmd.GetXArgsRunner()
+	c := commands.GetXArgsRunner()
 	c.Command.SetIn(bytes.NewBufferString(flagsInput))
 	out := &bytes.Buffer{}
 	c.Command.SetOut(out)
@@ -89,7 +89,7 @@ func TestXArgs_flags(t *testing.T) {
 }
 
 func TestXArgs_input(t *testing.T) {
-	c := cmd.GetXArgsRunner()
+	c := commands.GetXArgsRunner()
 	c.Command.SetIn(bytes.NewBufferString(resourceInput))
 	out := &bytes.Buffer{}
 	c.Command.SetOut(out)
@@ -103,7 +103,7 @@ func TestXArgs_input(t *testing.T) {
 }
 
 func TestCmd_env(t *testing.T) {
-	c := cmd.GetXArgsRunner()
+	c := commands.GetXArgsRunner()
 	c.Command.SetIn(bytes.NewBufferString(flagsInput))
 	out := &bytes.Buffer{}
 	c.Command.SetOut(out)

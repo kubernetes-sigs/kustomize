@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package cmd_test
+package commands_test
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/cmd/config/cmd"
+	"sigs.k8s.io/kustomize/cmd/config/internal/commands"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters/testyaml"
 )
 
@@ -38,7 +38,7 @@ func TestFmtCommand_files(t *testing.T) {
 	}
 
 	// fmt the files
-	r := cmd.GetFmtRunner("")
+	r := commands.GetFmtRunner("")
 	r.Command.SetArgs([]string{f1.Name(), f2.Name()})
 	err = r.Command.Execute()
 	if !assert.NoError(t, err) {
@@ -65,7 +65,7 @@ func TestFmtCommand_files(t *testing.T) {
 
 func TestFmtCommand_stdin(t *testing.T) {
 	out := &bytes.Buffer{}
-	r := cmd.GetFmtRunner("")
+	r := commands.GetFmtRunner("")
 	r.Command.SetOut(out)
 	r.Command.SetIn(bytes.NewReader(testyaml.UnformattedYaml1))
 
@@ -100,12 +100,12 @@ func TestFmtCmd_filesAndStdin(t *testing.T) {
 
 	out := &bytes.Buffer{}
 	in := &bytes.Buffer{}
-	r := cmd.GetFmtRunner("")
+	r := commands.GetFmtRunner("")
 	r.Command.SetOut(out)
 	r.Command.SetIn(in)
 
 	// fmt the files
-	r = cmd.GetFmtRunner("")
+	r = commands.GetFmtRunner("")
 	r.Command.SetArgs([]string{f1.Name(), f2.Name()})
 	err = r.Command.Execute()
 	if !assert.NoError(t, err) {
@@ -141,7 +141,7 @@ func TestFmtCmd_filesAndStdin(t *testing.T) {
 // TestCmd_files verifies the fmt command formats the files
 func TestCmd_failFiles(t *testing.T) {
 	// fmt the files
-	r := cmd.GetFmtRunner("")
+	r := commands.GetFmtRunner("")
 	r.Command.SetArgs([]string{"notrealfile"})
 	err := r.Command.Execute()
 	assert.EqualError(t, err, "lstat notrealfile: no such file or directory")
@@ -150,7 +150,7 @@ func TestCmd_failFiles(t *testing.T) {
 // TestCmd_files verifies the fmt command formats the files
 func TestCmd_failFileContents(t *testing.T) {
 	out := &bytes.Buffer{}
-	r := cmd.GetFmtRunner("")
+	r := commands.GetFmtRunner("")
 	r.Command.SetOut(out)
 	r.Command.SetIn(strings.NewReader(`{`))
 
