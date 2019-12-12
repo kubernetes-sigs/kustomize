@@ -1,40 +1,51 @@
 #!/usr/bin/env sh
 set -e
 
-# We assume one go file per plugin, and the desired name of the plugin .so
-# matches the basename of said go file.
-# Example: ReplacementTransformer.go -> ReplacementTransformer.so
+# Builds or removes Go plugin object code.
 #
-# We also assume the script is run from a kustomize plugin directory.
-# Usually one of:
-#   - ${HOME}/.config/kustomize/plugin
-#   - ${kustomize_git_repo}/plugin
-plugins_dir="${PWD}"
-command="${1}"
+# Specify plugin root as first arg, e.g.
+#
+#   ./hack/buildExternalGoPlugins.sh $KUSTOMIZE_PLUGIN_HOME
+#   ./hack/buildExternalGoPlugins.sh $XDG_CONFIG_HOME/kustomize/plugin
+#   ./hack/buildExternalGoPlugins.sh ${HOME}/.config/kustomize/plugin
+#   ./hack/buildExternalGoPlugins.sh ./plugin
+#
+# add 2nd arg "clean" to remove instead of build.
+
+root=$1
+if [ ! -d $root ]; then
+  echo "Don't see directory $root."
+  exit 1
+fi
+
+fn=buildPlugin
+if [ "$2" == "clean" ]; then
+  fn=removePlugin
+fi
 
 function buildPlugin {
-  pushd "${1}" >& /dev/null
-  plugin_src="$(find "${1}" -name '*.go'|grep -Ev '.*_test.go'|head -n1)"
-  plugin_bin="$(echo "${plugin_src}"|sed 's/\(.*\).go/\1.so/')"
-  if [ "${command}" = "clean" ]; then
-    echo "Deleting ${plugin_bin}"
-    rm -f "${plugin_bin}"
-    return
-  fi
-  echo "Building ${plugin_bin}"
-  go build -buildmode plugin -o "${plugin_bin}" "${plugin_src}"
+  echo "Building $1/$2.so"
+  # Change dir so local go.mod applies
+  pushd $1 >& /dev/null
+  go build -buildmode plugin -o $2.so $2.go
   popd >& /dev/null
 }
 
-for goMod in $(find "${plugins_dir}" -name 'go.mod'); do
-  d=$(dirname "${goMod}")
-  # Skip "builtin" plugins in kustomize repo.
-  if [ ! -z "$(echo "${goMod}" | grep -F "/plugin/builtin/")" ]; then
-    continue
+function removePlugin {
+  local f="$1/$2.so"
+  if [ -f "$f" ]; then
+    echo "Removing $f"
+    rm "$f"
   fi
-  # Skip plugins with only test Go files.
-  if [ -z "$(find "${d}" -maxdepth 1 -name '*.go' | grep -Ev ".*_test.go")" ]; then
-    continue
-  fi
-  buildPlugin "${d}"
+}
+
+goPlugins=$(
+  find $root -name "*.go" | 
+  grep -v builtin/ | 
+  xargs grep -l "var KustomizePlugin")
+
+for p in $goPlugins; do
+  d=$(dirname "$p")
+  n=$(basename "$p" | cut -f 1 -d '.')
+  $fn $d $n
 done
