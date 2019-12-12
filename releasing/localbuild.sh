@@ -9,7 +9,6 @@
 #     module=kustomize
 #     module=pluginator  # pick one
 #     module=api
-#     module=pseudo/k8s
 #
 #     ./releasing/localbuild.sh $module
 #
@@ -39,16 +38,12 @@
 set -e
 
 module=$1
-cbname=$module
 case "$module" in
   api)
   ;;
   kustomize)
   ;;
   pluginator)
-  ;;
-  pseudo/k8s)
-    cbname=pseudok8s
   ;;
   *)
     echo "Don't recognize module=$module"
@@ -57,7 +52,7 @@ case "$module" in
 esac
 
 config=$(mktemp)
-cp releasing/cloudbuild_${cbname}.yaml $config
+cp releasing/cloudbuild_${module}.yaml $config
 
 # Delete the cloud-builders/git step, which isn't needed
 # for a local run.
