@@ -38,12 +38,13 @@ func (c testCrawler) FetchDocument(_ context.Context, d *doc.Document) error {
 		return nil
 	}
 	for _, suffix := range konfig.RecognizedKustomizationFileNames() {
-		fmt.Println(d.ID(), "/", suffix)
-		i, ok := c.lukp[d.ID()+"/"+suffix]
+		savedFilePath := d.FilePath
+		d.FilePath += "/" + suffix
+		i, ok := c.lukp[d.ID()]
 		if !ok {
+			d.FilePath = savedFilePath
 			continue
 		}
-		d.FilePath += "/" + suffix
 		d.DocumentData = c.docs[i].DocumentData
 		return nil
 	}
@@ -106,8 +107,8 @@ func (s sortableDocs) Len() int {
 	return len(s)
 }
 
-func TestCrawlerRunner(t *testing.T) {
-	fmt.Println("testing CRunner")
+func TestCrawlGithubRunner(t *testing.T) {
+	fmt.Println("testing CrawlGithubRunner")
 	tests := []struct {
 		tc   []Crawler
 		errs []error
@@ -178,7 +179,7 @@ func TestCrawlerRunner(t *testing.T) {
 			defer close(output)
 			defer wg.Done()
 
-			errs := CRunner(context.Background(),
+			errs := CrawlGithubRunner(context.Background(),
 				output, test.tc)
 
 			// Check that errors are returned as they should be.
@@ -302,29 +303,6 @@ resources:
 					RepositoryURL: kustomizeRepo,
 					FilePath:      "examples/seedcrawl2/job.yaml",
 				}},
-				// Visited from the crawler runner.
-				{Document: doc.Document{
-					RepositoryURL: kustomizeRepo,
-					FilePath:      "examples/other/base/kustomization.yaml",
-					DocumentData: `
-resources:
-- ../app
-`,
-				}},
-				// Visited from the crawler runner.
-				{Document: doc.Document{
-					RepositoryURL: kustomizeRepo,
-					FilePath:      "examples/other/app/kustomization.yaml",
-					DocumentData: `
-resources:
-- resource.yaml
-`,
-				}},
-				// Visited from crawling runner imported as resource.
-				{Document: doc.Document{
-					RepositoryURL: kustomizeRepo,
-					FilePath:      "examples/other/app/resource.yaml",
-				}},
 			},
 		},
 	}
@@ -342,6 +320,7 @@ resources:
 				visited[d.ID()]++
 				return nil
 			},
+			make(map[string]struct{}),
 		)
 		if lv, lc := len(visited), len(tc.corpus); lv != lc {
 			t.Errorf("error: %d of %d documents visited.", lv, lc)
