@@ -67,27 +67,35 @@ func main() {
 			github.Filename("kustomization.yml")),
 	)
 
-	crawler.CrawlFromSeed(ctx, docs, []crawler.Crawler{ghCrawler},
-		// Converter takes in a plain document and processes it for the
-		// index.
-		func(d *doc.Document) (crawler.CrawledDocument, error) {
-			kdoc := doc.KustomizationDocument{
-				Document: *d,
-			}
+	// docConverter takes in a plain document and processes it for the index.
+	docConverter := func(d *doc.Document) (crawler.CrawledDocument, error) {
+		kdoc := doc.KustomizationDocument{
+			Document: *d,
+		}
 
-			err := kdoc.ParseYAML()
-			return &kdoc, err
-		},
-		// IndexFunc updates the value in the index.
-		func(cdoc crawler.CrawledDocument, crwlr crawler.Crawler) error {
-			switch d := cdoc.(type) {
-			case *doc.KustomizationDocument:
-				fmt.Println("Inserting: ", d.ID(), d)
-				_, err := idx.Put(d.ID(), d)
-				return err
-			default:
-				return fmt.Errorf("type %T not supported", d)
-			}
-		},
-	)
+		err := kdoc.ParseYAML()
+		return &kdoc, err
+	}
+
+	// Index updates the value in the index.
+	index := func(cdoc crawler.CrawledDocument, crwlr crawler.Crawler) error {
+		switch d := cdoc.(type) {
+		case *doc.KustomizationDocument:
+			fmt.Println("Inserting: ", d.ID(), d)
+			_, err := idx.Put(d.ID(), d)
+			return err
+		default:
+			return fmt.Errorf("type %T not supported", d)
+		}
+	}
+
+	// seen tracks the IDs of all the documents in the index.
+	// This helps avoid indexing a given document multiple times.
+	seen := make(map[string]struct{})
+
+	crawlers := []crawler.Crawler{ghCrawler}
+
+	crawler.CrawlFromSeed(ctx, docs, crawlers, docConverter, index, seen)
+
+	crawler.CrawlGithub(ctx, crawlers, docConverter, index, seen)
 }
