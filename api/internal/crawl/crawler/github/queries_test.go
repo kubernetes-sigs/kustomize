@@ -53,8 +53,11 @@ func TestQueryType(t *testing.T) {
 				Filename("kustomization.yaml"),
 				Keyword("keyword1"),
 				Keyword("keyword2"),
+				Repo("user1/repo1"),
+				User("user1"),
 			),
-			expected: "q=size:24..64+filename:kustomization.yaml+keyword1+keyword2",
+			expected: "q=size:24..64+filename:kustomization.yaml+keyword1+keyword2+" +
+				"repo:user1/repo1+user:user1",
 		},
 	}
 

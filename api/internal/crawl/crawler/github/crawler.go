@@ -230,7 +230,6 @@ func kustomizationResultAdapter(gcl GhClient, k GhFileSpec) (
 			RepositoryURL: k.Repository.URL,
 		},
 	}
-	logger.Printf("Set the creationTime field")
 	creationTime, err := gcl.GetFileCreationTime(k)
 	if err != nil {
 		logger.Printf("GetFileCreationTime failed: %v", err)
@@ -533,7 +532,7 @@ func (gcl GhClient) parseGithubResponse(getRequest string) GhResponseInfo {
 }
 
 // SearchGithubAPI performs a search query and handles rate limitting for
-// the 'code/search?' endpoint as well as timed retries in the case of abuse
+// the 'search/code?' endpoint as well as timed retries in the case of abuse
 // prevention.
 func (gcl GhClient) SearchGithubAPI(query string) (*http.Response, error) {
 	throttleSearchAPI()

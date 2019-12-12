@@ -90,6 +90,17 @@ func Path(p string) queryField {
 	return queryField{name: "path", value: p}
 }
 
+// Repo takes a repository (i.e., kubernetes-sigs/kustomize) and formats
+// it according to the Github API.
+func Repo(r string) queryField {
+	return queryField{name: "repo", value: r}
+}
+
+// Path takes a github username and formats it according to the Github API.
+func User(u string) queryField {
+	return queryField{name: "user", value: u}
+}
+
 // RequestConfig stores common variables that must be present for the queries.
 // - CodeSearchRequests: ask Github to check the code indices given a query.
 // - ContentsRequests: ask Github where to download a resource given a repo and a
