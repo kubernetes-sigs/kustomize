@@ -97,6 +97,10 @@ func (m Merger) VisitList(nodes walk.Sources, kind walk.ListKind) (*yaml.RNode, 
 func (m Merger) SetComments(sources walk.Sources) error {
 	source := sources.Origin()
 	dest := sources.Dest()
+	if dest == nil || dest.YNode() == nil || source == nil || source.YNode() == nil {
+		// avoid panic
+		return nil
+	}
 	if source != nil && source.YNode().FootComment != "" {
 		dest.YNode().FootComment = source.YNode().FootComment
 	}
