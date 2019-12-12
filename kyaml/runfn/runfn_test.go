@@ -18,6 +18,18 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+const (
+	ValueReplacerYAMLData = `apiVersion: v1
+kind: ValueReplacer
+metadata:
+  configFn:
+    container:
+      image: gcr.io/example.com/image:version
+stringMatch: Deployment
+replace: StatefulSet
+`
+)
+
 func TestRunFns_Execute(t *testing.T) {
 	instance := RunFns{}
 	instance.init()
@@ -28,10 +40,7 @@ kind:
 		return
 	}
 	filter := instance.containerFilterProvider("example.com:version", "", api)
-	defaultMount:= filters.StorageMount{}
-	mounts := []filters.StorageMount{}
-	mounts = append(mounts, defaultMount)
-	assert.Equal(t, &filters.ContainerFilter{Image: "example.com:version", Config: api, StorageMounts: mounts}, filter)
+	assert.Equal(t, &filters.ContainerFilter{Image: "example.com:version", Config: api}, filter)
 }
 
 func TestCmd_Execute(t *testing.T) {
@@ -57,17 +66,8 @@ func TestCmd_Execute(t *testing.T) {
 	}
 
 	// write a test filter
-	f := `apiVersion: v1
-kind: ValueReplacer
-metadata:
-  configFn:
-    container:
-      image: gcr.io/example.com/image:version
-stringMatch: Deployment
-replace: StatefulSet
-`
 	if !assert.NoError(t, ioutil.WriteFile(
-		filepath.Join(dir, "filter.yaml"), []byte(f), 0600)) {
+		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
 		return
 	}
 
@@ -126,21 +126,12 @@ func TestCmd_Execute_APIs(t *testing.T) {
 	}
 
 	// write a test filter
-	f := `apiVersion: v1
-kind: ValueReplacer
-metadata:
-  configFn:
-    container:
-      image: gcr.io/example.com/image:version
-stringMatch: Deployment
-replace: StatefulSet
-`
 	tmpF, err := ioutil.TempFile("", "filter*.yaml")
 	if !assert.NoError(t, err) {
 		return
 	}
 	os.RemoveAll(tmpF.Name())
-	if !assert.NoError(t, ioutil.WriteFile(tmpF.Name(), []byte(f), 0600)) {
+	if !assert.NoError(t, ioutil.WriteFile(tmpF.Name(), []byte(ValueReplacerYAMLData), 0600)) {
 		return
 	}
 
@@ -201,17 +192,8 @@ func TestCmd_Execute_Stdout(t *testing.T) {
 	}
 
 	// write a test filter
-	f := `apiVersion: v1
-kind: ValueReplacer
-metadata:
-  configFn:
-    container:
-      image: gcr.io/example.com/image:version
-stringMatch: Deployment
-replace: StatefulSet
-`
 	if !assert.NoError(t, ioutil.WriteFile(
-		filepath.Join(dir, "filter.yaml"), []byte(f), 0600)) {
+		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
 		return
 	}
 

@@ -102,11 +102,9 @@ func CrawlFromSeed(ctx context.Context, seed CrawlSeed,
 	}
 
 	doCrawl := func(docsPtr *CrawlSeed) {
-		for len(*docsPtr) > 0 {
-			back := len(*docsPtr) - 1
-			next := (*docsPtr)[back]
-			*docsPtr = (*docsPtr)[:back]
-
+		n := len(*docsPtr)
+		for i := 0; i < n; i++ {
+			next := (*docsPtr)[i]
 			match := findMatch(next)
 			if match == nil {
 				logIfErr(fmt.Errorf(
@@ -114,24 +112,28 @@ func CrawlFromSeed(ctx context.Context, seed CrawlSeed,
 				continue
 			}
 
+			logger.Println("Crawling ", next.RepositoryURL, next.FilePath)
 			err := match.FetchDocument(ctx, next)
 			logIfErr(err)
 			// If there was no change or there is an error, we don't have
 			// to branch out, since the dependencies are already in the
 			// index, or we cannot find the document.
 			if err != nil || next.WasCached() {
+				if next.WasCached() {
+					logger.Println(next.RepositoryURL, next.FilePath, "is cached already")
+				}
 				continue
 			}
 
+			logIfErr(match.SetCreated(ctx, next))
+
 			cdoc, err := conv(next)
 			logIfErr(err)
-			if err != nil {
-				continue
-			}
 
 			addBranches(cdoc, match)
 		}
 	}
+
 	// Exploit seed to update bulk of corpus.
 	logger.Printf("updating %d documents from seed\n", len(seed))
 	doCrawl(&seed)

@@ -23,7 +23,7 @@
     - if the field is present in both the src and dest, and the src value is
       `null`, the field is removed from the dest
     - if the field is present in both the src and dest, the value is recursively merged
-    - example src: `{'key1': 'value1', 'key2': 'value2'}`, 
+    - example src: `{'key1': 'value1', 'key2': 'value2'}`,
       dest: `{'key2': 'value0', 'key3': 'value3'}`
       => result: `{'key1': 'value1', 'key2': 'value2', 'key3': 'value3'}`
 

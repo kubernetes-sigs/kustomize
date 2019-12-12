@@ -301,6 +301,13 @@ version.
 git tag -a $tag -m "Release $tag on branch $branch"
 ```
 
+Move the `latest_kustomize` tag:
+```
+git tag -d latest_kustomize
+git push upstream :latest_kustomize
+git tag -a latest_kustomize
+```
+
 ### optionally build a release locally
 
 [localbuild.sh]: localbuild.sh
@@ -320,6 +327,7 @@ Push the tag:
 ```
 git remote set-url --push upstream git@github.com:kubernetes-sigs/kustomize.git
 git push upstream $tag
+git push upstream latest_kustomize
 git remote set-url --push upstream no_push
 ```
 

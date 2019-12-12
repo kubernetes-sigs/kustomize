@@ -23,7 +23,7 @@ Tutorials:
 
   Run 'kustomize help config tutorial-TUTORIAL'
 
-	$ kustomize help config tutorials-basics
+	$ kustomize help config tutorials-command-basics
 
 Command Documentation:
 

@@ -68,7 +68,7 @@ func TestQueryType(t *testing.T) {
 
 func TestGithubSearchQuery(t *testing.T) {
 	const (
-		perPage     = 100
+		perPage = 100
 	)
 
 	testCases := []struct {
@@ -82,7 +82,7 @@ func TestGithubSearchQuery(t *testing.T) {
 	}{
 		{
 			rc: RequestConfig{
-				perPage:     perPage,
+				perPage: perPage,
 			},
 			codeQuery: Query{
 				Filename("kustomization.yaml"),
