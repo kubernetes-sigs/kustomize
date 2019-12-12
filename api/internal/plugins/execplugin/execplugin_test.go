@@ -24,7 +24,7 @@ func TestExecPluginConfig(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	fSys.WriteFile("sed-input.txt", []byte(`
 s/$FOO/foo/g
-s/$BAR/bar/g
+s/$BAR/bar baz/g
  \ \ \ 
 `))
 	ldr, err := fLdr.NewLoader(
@@ -46,12 +46,6 @@ s/$BAR/bar/g
 			"argsOneLiner": "one two 'foo bar'",
 			"argsFromFile": "sed-input.txt",
 		})
-
-	fSys.WriteFile("/app/sed-input.txt", []byte(`
-s/$FOO/foo/g
-s/$BAR/bar baz/g
- \ \ \ 
-`))
 
 	p := NewExecPlugin(
 		pLdr.AbsolutePluginPath(
