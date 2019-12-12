@@ -38,11 +38,11 @@ go get sigs.k8s.io/kustomize/v3/cmd/kustomize
 
   - transformer 插件:
 
-    * [validation transformer](../validationTransformer/README.md) - 通过 transformer 验证资源。
+    * [validation transformer](validationTransformer.md) - 通过 transformer 验证资源。
 
   - 定制内建 transformer 配置
 
-    * [transformer configs](../transformerconfigs/README.md) - 自定义 transformer 配置。
+    * [transformer configs](transformerconfigs.md) - 自定义 transformer 配置。
 
 多 Variant 示例
 
