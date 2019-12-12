@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/google/shlex"
+
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -86,7 +88,7 @@ func (p *ExecPlugin) processOptionalArgsFields() error {
 	var c argsConfig
 	yaml.Unmarshal(p.cfg, &c)
 	if c.ArgsOneLiner != "" {
-		p.args = strings.Split(c.ArgsOneLiner, " ")
+		p.args, _ = shlex.Split(c.ArgsOneLiner)
 	}
 	if c.ArgsFromFile != "" {
 		content, err := p.h.Loader().Load(c.ArgsFromFile)
