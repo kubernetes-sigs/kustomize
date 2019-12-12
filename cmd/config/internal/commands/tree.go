@@ -1,13 +1,13 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package cmd
+package commands
 
 import (
 	"path/filepath"
 	"strings"
 
-	"sigs.k8s.io/kustomize/cmd/config/cmddocs/commands"
+	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 
 	"github.com/spf13/cobra"

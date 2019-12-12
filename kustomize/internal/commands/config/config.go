@@ -10,13 +10,13 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig/builtinpluginconsts"
-	"sigs.k8s.io/kustomize/cmd/config/cmds"
+	"sigs.k8s.io/kustomize/cmd/config/configcobra"
 	"sigs.k8s.io/kustomize/kyaml/commandutil"
 )
 
 // NewCmdConfig returns an instance of 'config' subcommand.
 func NewCmdConfig(fSys filesys.FileSystem) *cobra.Command {
-	c := cmds.NewConfigCommand("kustomize")
+	c := configcobra.NewConfigCommand("kustomize")
 
 	c.AddCommand(
 		newCmdSave(fSys),
