@@ -24,7 +24,7 @@ func TestExecPluginConfig(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	fSys.WriteFile("sed-input.txt", []byte(`
 s/$FOO/foo/g
-s/$BAR/bar/g
+s/$BAR/bar baz/g
  \ \ \ 
 `))
 	ldr, err := fLdr.NewLoader(
@@ -43,9 +43,10 @@ s/$BAR/bar/g
 			"metadata": map[string]interface{}{
 				"name": "some-random-name",
 			},
-			"argsOneLiner": "one two",
+			"argsOneLiner": "one two 'foo bar'",
 			"argsFromFile": "sed-input.txt",
 		})
+
 	p := NewExecPlugin(
 		pLdr.AbsolutePluginPath(
 			konfig.DisabledPluginConfig(),
@@ -69,7 +70,7 @@ s/$BAR/bar/g
 
 	expected = `apiVersion: someteam.example.com/v1
 argsFromFile: sed-input.txt
-argsOneLiner: one two
+argsOneLiner: one two 'foo bar'
 kind: SedTransformer
 metadata:
   name: some-random-name
@@ -78,15 +79,16 @@ metadata:
 		t.Fatalf("expected cfg '%s', got '%s'", expected, string(p.Cfg()))
 
 	}
-	if len(p.Args()) != 5 {
-		t.Fatalf("unexpected arg len %d, %v", len(p.Args()), p.Args())
+	if len(p.Args()) != 6 {
+		t.Fatalf("unexpected arg len %d, %#v", len(p.Args()), p.Args())
 	}
 	if p.Args()[0] != "one" ||
 		p.Args()[1] != "two" ||
-		p.Args()[2] != "s/$FOO/foo/g" ||
-		p.Args()[3] != "s/$BAR/bar/g" ||
-		p.Args()[4] != "\\ \\ \\ " {
-		t.Fatalf("unexpected arg array: %v", p.Args())
+		p.Args()[2] != "foo bar" ||
+		p.Args()[3] != "s/$FOO/foo/g" ||
+		p.Args()[4] != "s/$BAR/bar baz/g" ||
+		p.Args()[5] != "\\ \\ \\ " {
+		t.Fatalf("unexpected arg array: %#v", p.Args())
 	}
 }
 
