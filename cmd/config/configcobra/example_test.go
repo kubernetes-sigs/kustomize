@@ -1,13 +1,13 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package cmds_test
+package configcobra_test
 
 import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/cmd/config/cmds"
+	"sigs.k8s.io/kustomize/cmd/config/configcobra"
 	"sigs.k8s.io/kustomize/kyaml/commandutil"
 )
 
@@ -21,5 +21,5 @@ func ExampleNewConfigCommand() {
 		Short: "My command.",
 		Long:  `My command.`,
 	}
-	root.AddCommand(cmds.NewConfigCommand("my-cmd"))
+	root.AddCommand(configcobra.NewConfigCommand("my-cmd"))
 }

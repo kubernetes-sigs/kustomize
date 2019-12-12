@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package cmd_test
+package commands_test
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/cmd/config/cmd"
+	"sigs.k8s.io/kustomize/cmd/config/internal/commands"
 )
 
 // TestGrepCommand_files verifies grep reads the files and filters them
@@ -61,7 +61,7 @@ spec:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := cmd.GetGrepRunner("")
+	r := commands.GetGrepRunner("")
 	r.Command.SetArgs([]string{"metadata.name=foo", d})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {
@@ -101,7 +101,7 @@ spec:
 func TestGrepCmd_stdin(t *testing.T) {
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := cmd.GetGrepRunner("")
+	r := commands.GetGrepRunner("")
 	r.Command.SetArgs([]string{"metadata.name=foo"})
 	r.Command.SetOut(b)
 	r.Command.SetIn(bytes.NewBufferString(`
@@ -166,7 +166,7 @@ spec:
 // TestGrepCmd_errInputs verifies the grep command errors on invalid matches
 func TestGrepCmd_errInputs(t *testing.T) {
 	b := &bytes.Buffer{}
-	r := cmd.GetGrepRunner("")
+	r := commands.GetGrepRunner("")
 	r.Command.SetArgs([]string{"metadata.name=foo=bar"})
 	r.Command.SetOut(b)
 	r.Command.SetIn(bytes.NewBufferString(`
@@ -188,7 +188,7 @@ spec:
 
 	// fmt the files
 	b = &bytes.Buffer{}
-	r = cmd.GetGrepRunner("")
+	r = commands.GetGrepRunner("")
 	r.Command.SetArgs([]string{"spec.template.spec.containers[a[b=c].image=foo"})
 	r.Command.SetOut(b)
 	r.Command.SetIn(bytes.NewBufferString(`
@@ -213,7 +213,7 @@ spec:
 func TestGrepCommand_escapeDots(t *testing.T) {
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := cmd.GetGrepRunner("")
+	r := commands.GetGrepRunner("")
 	r.Command.SetArgs([]string{"spec.template.spec.containers[name=nginx].image=nginx:1\\.7\\.9",
 		"--annotate=false"})
 	r.Command.SetOut(b)

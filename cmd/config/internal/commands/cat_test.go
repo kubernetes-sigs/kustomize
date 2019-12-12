@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package cmd_test
+package commands_test
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/cmd/config/cmd"
+	"sigs.k8s.io/kustomize/cmd/config/internal/commands"
 )
 
 // TODO(pwittrock): write tests for reading / writing ResourceLists
@@ -76,7 +76,7 @@ spec:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := cmd.GetCatRunner("")
+	r := commands.GetCatRunner("")
 	r.Command.SetArgs([]string{d})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {
@@ -182,7 +182,7 @@ spec:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := cmd.GetCatRunner("")
+	r := commands.GetCatRunner("")
 	r.Command.SetArgs([]string{d, "--include-local"})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {
@@ -301,7 +301,7 @@ spec:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := cmd.GetCatRunner("")
+	r := commands.GetCatRunner("")
 	r.Command.SetArgs([]string{d, "--include-local", "--exclude-non-local"})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {
@@ -392,7 +392,7 @@ spec:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := cmd.GetCatRunner("")
+	r := commands.GetCatRunner("")
 	r.Command.SetArgs([]string{d, "--dest", f.Name()})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {
@@ -514,7 +514,7 @@ spec:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := cmd.GetCatRunner("")
+	r := commands.GetCatRunner("")
 	r.Command.SetArgs([]string{d, "--dest", f})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {

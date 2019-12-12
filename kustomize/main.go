@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/cmd/config/cmd/complete"
+	"sigs.k8s.io/kustomize/cmd/config/complete"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands"
 )
 
