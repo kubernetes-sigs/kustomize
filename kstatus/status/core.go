@@ -5,6 +5,7 @@ package status
 
 import (
 	"fmt"
+	"math"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -23,8 +24,11 @@ var legacyTypes = map[string]GetConditionsFn{
 	"PersistentVolumeClaim":      pvcConditions,
 	"apps/StatefulSet":           stsConditions,
 	"apps/DaemonSet":             daemonsetConditions,
+	"extensions/DaemonSet":       daemonsetConditions,
 	"apps/Deployment":            deploymentConditions,
+	"extensions/Deployment":      deploymentConditions,
 	"apps/ReplicaSet":            replicasetConditions,
+	"extensions/ReplicaSet":      replicasetConditions,
 	"policy/PodDisruptionBudget": pdbConditions,
 	"batch/CronJob":              alwaysReady,
 	"ConfigMap":                  alwaysReady,
@@ -142,6 +146,17 @@ func deploymentConditions(u *unstructured.Unstructured) (*Result, error) {
 	obj := u.UnstructuredContent()
 
 	progressing := false
+
+	// Check if progressDeadlineSeconds is set. If not, the controller will not set
+	// the `Progressing` condition, so it will always consider a deployment to be
+	// progressing. The use of math.MaxInt32 is due to special handling in the
+	// controller:
+	// https://github.com/kubernetes/kubernetes/blob/a3ccea9d8743f2ff82e41b6c2af6dc2c41dc7b10/pkg/controller/deployment/util/deployment_util.go#L886
+	progressDeadline := GetIntField(obj, ".spec.progressDeadlineSeconds", math.MaxInt32)
+	if progressDeadline == math.MaxInt32 {
+		progressing = true
+	}
+
 	available := false
 
 	objc, err := GetObjectWithConditions(obj)
@@ -171,7 +186,7 @@ func deploymentConditions(u *unstructured.Unstructured) (*Result, error) {
 	}
 
 	// replicas
-	specReplicas := GetIntField(obj, ".spec.replicas", 1)
+	specReplicas := GetIntField(obj, ".spec.replicas", 1) // Controller uses 1 as default if not specified.
 	statusReplicas := GetIntField(obj, ".status.replicas", 0)
 	updatedReplicas := GetIntField(obj, ".status.updatedReplicas", 0)
 	readyReplicas := GetIntField(obj, ".status.readyReplicas", 0)
@@ -240,19 +255,14 @@ func replicasetConditions(u *unstructured.Unstructured) (*Result, error) {
 	}
 
 	// Replicas
-	specReplicas := GetIntField(obj, ".spec.replicas", 1)
+	specReplicas := GetIntField(obj, ".spec.replicas", 1) // Controller uses 1 as default if not specified.
 	statusReplicas := GetIntField(obj, ".status.replicas", 0)
 	readyReplicas := GetIntField(obj, ".status.readyReplicas", 0)
 	availableReplicas := GetIntField(obj, ".status.availableReplicas", 0)
-	labelledReplicas := GetIntField(obj, ".status.labelledReplicas", 0)
+	fullyLabelledReplicas := GetIntField(obj, ".status.fullyLabeledReplicas", 0)
 
-	if specReplicas == 0 && labelledReplicas == 0 && availableReplicas == 0 && readyReplicas == 0 {
-		message := ".spec.replica is 0"
-		return newInProgressStatus("ZeroReplicas", message), nil
-	}
-
-	if specReplicas > labelledReplicas {
-		message := fmt.Sprintf("Labelled: %d/%d", labelledReplicas, specReplicas)
+	if specReplicas > fullyLabelledReplicas {
+		message := fmt.Sprintf("Labelled: %d/%d", fullyLabelledReplicas, specReplicas)
 		return newInProgressStatus("LessLabelled", message), nil
 	}
 

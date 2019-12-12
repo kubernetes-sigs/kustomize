@@ -521,6 +521,8 @@ metadata:
    name: test
    generation: 1
    namespace: qual
+spec:
+   progressDeadlineSeconds: 45
 status:
    observedGeneration: 1
    updatedReplicas: 1
@@ -533,6 +535,25 @@ status:
       status: "False"
       reason: Some reason
     - type: Available 
+      status: "True"
+`
+
+var depNoProgressDeadlineSeconds = `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+   name: test
+   generation: 1
+   namespace: qual
+status:
+   observedGeneration: 1
+   updatedReplicas: 1
+   readyReplicas: 1
+   availableReplicas: 1
+   replicas: 1
+   observedGeneration: 1
+   conditions:
+    - type: Available
       status: "True"
 `
 
@@ -593,6 +614,15 @@ func TestDeploymentStatus(t *testing.T) {
 				ConditionFailed,
 			},
 		},
+		"depNoProgressDeadlineSeconds": {
+			spec:               depNoProgressDeadlineSeconds,
+			expectedStatus:     CurrentStatus,
+			expectedConditions: []Condition{},
+			absentConditionTypes: []ConditionType{
+				ConditionFailed,
+				ConditionInProgress,
+			},
+		},
 		"depNotAvailable": {
 			spec:           depNotAvailable,
 			expectedStatus: InProgressStatus,
@@ -637,7 +667,7 @@ status:
    replicas: 2
    readyReplicas: 2
    availableReplicas: 2
-   labelledReplicas: 2
+   fullyLabeledReplicas: 2
    conditions:
     - type: ReplicaFailure 
       status: "False"
@@ -654,7 +684,7 @@ spec:
    replicas: 2
 status:
    observedGeneration: 1
-   labelledReplicas: 2
+   fullyLabeledReplicas: 2
    replicas: 2
    readyReplicas: 2
    availableReplicas: 2
@@ -674,7 +704,7 @@ status:
    replicas: 4
    readyReplicas: 2
    availableReplicas: 4
-   labelledReplicas: 4
+   fullyLabeledReplicas: 4
 `
 
 var rsLessAvailable = `
@@ -691,7 +721,7 @@ status:
    replicas: 4
    readyReplicas: 4
    availableReplicas: 2
-   labelledReplicas: 4
+   fullyLabeledReplicas: 4
 `
 
 var rsReplicaFailure = `
@@ -707,7 +737,7 @@ status:
    observedGeneration: 1
    replicas: 4
    readyReplicas: 4
-   labelledReplicas: 4
+   fullyLabeledReplicas: 4
    availableReplicas: 4
    conditions:
     - type: ReplicaFailure 

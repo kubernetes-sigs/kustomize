@@ -348,7 +348,6 @@ replacements:
     - spec.template.spec.containers[name=nginx].image
 `)
 
-
 	th.WriteF("/app/combined/kustomization.yaml",
 		`
 resources:

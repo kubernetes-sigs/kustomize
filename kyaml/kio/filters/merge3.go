@@ -113,7 +113,7 @@ func (ts *tuples) add(node *yaml.RNode) error {
 	for i := range ts.list {
 		t := ts.list[i]
 		if t.meta.Name == nodeMeta.Name && t.meta.Namespace == nodeMeta.Namespace &&
-			t.meta.ApiVersion == nodeMeta.ApiVersion && t.meta.Kind == nodeMeta.Kind {
+			t.meta.APIVersion == nodeMeta.APIVersion && t.meta.Kind == nodeMeta.Kind {
 			return t.add(node)
 		}
 	}

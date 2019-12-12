@@ -31,12 +31,12 @@ rely on the `go` tool.
 
 Install the latest kustomize binary in the v3 series to `$GOPATH/bin`:
 ```
-go install sigs.k8s.io/kustomize/kustomize/v3
+GO111MODULE=on go install sigs.k8s.io/kustomize/kustomize/v3
 ```
 
 Install a specific version:
 ```
-go get sigs.k8s.io/kustomize/kustomize/v3@v3.3.0
+GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3@v3.3.0
 ```
 
 ## Build the kustomize CLI from local source

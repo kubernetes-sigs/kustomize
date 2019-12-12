@@ -152,6 +152,14 @@ $(pGen)/%.go: $(MYGOBIN)/pluginator
 .PHONY: generate-kustomize-builtin-plugins
 generate-kustomize-builtin-plugins: $(builtinplugins)
 
+.PHONY: kustomize-external-go-plugin-build
+kustomize-external-go-plugin-build:
+	./hack/buildExternalGoPlugins.sh ./plugin
+
+.PHONY: kustomize-external-go-plugin-clean
+kustomize-external-go-plugin-clean:
+	./hack/buildExternalGoPlugins.sh ./plugin clean
+
 ### End kustomize plugin rules.
 
 .PHONY: lint-kustomize
@@ -230,7 +238,7 @@ $(MYGOBIN)/helm:
 	)
 
 .PHONY: clean
-clean:
+clean: kustomize-external-go-plugin-clean
 	go clean --cache
 	rm -f $(builtinplugins)
 	rm -f $(MYGOBIN)/pluginator

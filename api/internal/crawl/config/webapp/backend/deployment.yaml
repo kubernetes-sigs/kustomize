@@ -17,6 +17,7 @@ spec:
       containers:
       - name: kustomize-search
         image: gcr.io/kustomize-search/backend:latest
+        imagePullPolicy: Always
         livenessProbe:
           httpGet:
             path: /liveness

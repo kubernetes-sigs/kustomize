@@ -103,15 +103,16 @@ func (s ValueReplacer) Filter(object *RNode) (*RNode, error) {
 	if s.Count == 0 {
 		s.Count = -1
 	}
-	if s.StringMatch != "" {
+	switch {
+	case s.StringMatch != "":
 		object.value.Value = strings.Replace(object.value.Value, s.StringMatch, s.Replace, s.Count)
-	} else if s.RegexMatch != "" {
+	case s.RegexMatch != "":
 		r, err := regexp.Compile(s.RegexMatch)
 		if err != nil {
 			return nil, fmt.Errorf("ValueReplacer RegexMatch does not compile: %v", err)
 		}
 		object.value.Value = r.ReplaceAllString(object.value.Value, s.Replace)
-	} else {
+	default:
 		return nil, fmt.Errorf("ValueReplacer missing StringMatch and RegexMatch")
 	}
 	return object, nil
@@ -138,7 +139,7 @@ type SuffixSetter struct {
 
 func (s SuffixSetter) Filter(object *RNode) (*RNode, error) {
 	if !strings.HasSuffix(object.value.Value, s.Value) {
-		object.value.Value = object.value.Value + s.Value
+		object.value.Value += s.Value
 	}
 	return object, nil
 }

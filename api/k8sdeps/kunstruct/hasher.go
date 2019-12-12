@@ -7,10 +7,10 @@ import (
 	"encoding/json"
 	"fmt"
 
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/kustomize/api/hasher"
 	"sigs.k8s.io/kustomize/api/ifc"
-	corev1 "sigs.k8s.io/kustomize/pseudo/k8s/api/core/v1"
-	"sigs.k8s.io/kustomize/pseudo/k8s/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 // kustHash computes a hash of an unstructured object.

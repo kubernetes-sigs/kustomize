@@ -62,3 +62,44 @@ func TestFromRelativePath(t *testing.T) {
 		}
 	}
 }
+
+func TestDocument_RepositoryFullName(t *testing.T) {
+	testCases := []struct {
+		doc Document
+		expectedRepositoryFullName string
+	}{
+		{
+			doc: Document{
+				RepositoryURL: "https://github.com/user/repo",
+			},
+			expectedRepositoryFullName: "user/repo",
+		},
+		{
+			doc: Document{
+				RepositoryURL: "https://github.com//user/repo////",
+			},
+			expectedRepositoryFullName: "user/repo",
+		},
+		{
+			doc: Document{
+				RepositoryURL: "repo/",
+			},
+			expectedRepositoryFullName: "repo",
+		},
+		{
+			doc: Document{
+				RepositoryURL: "",
+			},
+			expectedRepositoryFullName: "",
+		},
+	}
+
+	for _, tc := range testCases {
+		returnedRepositoryFullName := tc.doc.RepositoryFullName()
+		if returnedRepositoryFullName != tc.expectedRepositoryFullName {
+			t.Errorf("RepositoryFullName expected %s, got %s",
+				tc.expectedRepositoryFullName,
+				returnedRepositoryFullName)
+		}
+	}
+}

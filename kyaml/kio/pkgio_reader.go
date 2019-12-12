@@ -229,7 +229,7 @@ func (r LocalPackageReader) Read() ([]*yaml.RNode, error) {
 }
 
 // readFile reads the ResourceNodes from a file
-func (r *LocalPackageReader) readFile(path string, info os.FileInfo) ([]*yaml.RNode, error) {
+func (r *LocalPackageReader) readFile(path string, _ os.FileInfo) ([]*yaml.RNode, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -258,7 +258,7 @@ func (r *LocalPackageReader) shouldSkipFile(info os.FileInfo) (bool, error) {
 }
 
 // initReaderAnnotations adds the LocalPackageReader Annotations to r.SetAnnotations
-func (r *LocalPackageReader) initReaderAnnotations(path string, info os.FileInfo) {
+func (r *LocalPackageReader) initReaderAnnotations(path string, _ os.FileInfo) {
 	if r.SetAnnotations == nil {
 		r.SetAnnotations = map[string]string{}
 	}

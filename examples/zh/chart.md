@@ -6,7 +6,7 @@
 [_minecraft_]: https://github.com/helm/charts/tree/master/stable/minecraft
 [插件]: ../../docs/plugins
 
-kustomize 并不会读取 [Helm charts] ，但可以使用 generator ß来访问 [Helm charts] 。
+kustomize 并不会读取 [Helm charts] ，但可以使用 generator 来访问 [Helm charts] 。
 
 使用 [last mile] 模式来结合 kustomize 和 helm ，使用一个 inflated chart 作为基础，然后使用 kustomize 在部署到集群的途中进行修改。
 
