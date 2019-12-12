@@ -10,9 +10,12 @@ import (
 	"os"
 
 	"sigs.k8s.io/kustomize/cmd/config/cmds"
+	"sigs.k8s.io/kustomize/kyaml/commandutil"
 )
 
 func main() {
+	// enable the config commands
+	os.Setenv(commandutil.EnableAlphaCommmandsEnvName, "true")
 	if err := cmds.NewConfigCommand("").Execute(); err != nil {
 		os.Exit(1)
 	}
