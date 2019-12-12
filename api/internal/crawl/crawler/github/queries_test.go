@@ -100,6 +100,26 @@ func TestGithubSearchQuery(t *testing.T) {
 			expectedCommitsQuery: "https://api.github.com/repos/kubernetes-sigs/kustomize/commits?" +
 				"q=path:examples/helloWorld/kustomization.yaml&per_page=100",
 		},
+		{
+			rc: RequestConfig{
+				perPage: perPage,
+			},
+			codeQuery: Query{
+				Filename("kustomization.yaml"),
+				Filesize(RangeWithin{64, 128}),
+			},
+			fullRepoName: "kubernetes-sigs/kustomize",
+			path:         "examples 1/helloWorld/kustomization.yaml",
+
+			expectedCodeQuery: "https://api.github.com/search/code?" +
+				"q=filename:kustomization.yaml+size:64..128&order=desc&per_page=100&sort=indexed",
+
+			expectedContentsQuery: "https://api.github.com/repos/kubernetes-sigs/kustomize/contents/" +
+				"examples%201/helloWorld/kustomization.yaml?per_page=100",
+
+			expectedCommitsQuery: "https://api.github.com/repos/kubernetes-sigs/kustomize/commits?" +
+				"q=path:examples%201/helloWorld/kustomization.yaml&per_page=100",
+		},
 	}
 
 	for _, test := range testCases {
