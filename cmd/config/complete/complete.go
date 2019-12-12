@@ -11,7 +11,7 @@ import (
 	"github.com/posener/complete/v2/predict"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"sigs.k8s.io/kustomize/cmd/config/cmddocs/commands"
+	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 

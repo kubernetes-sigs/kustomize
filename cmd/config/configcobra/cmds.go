@@ -1,17 +1,17 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// Package cmds provides a target for embedding the config command group in another
+// Package configcobra provides a target for embedding the config command group in another
 // cobra command.
-package cmds
+package configcobra
 
 import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/cmd/config/cmd"
-	"sigs.k8s.io/kustomize/cmd/config/cmddocs/api"
-	"sigs.k8s.io/kustomize/cmd/config/cmddocs/tutorials"
+	"sigs.k8s.io/kustomize/cmd/config/internal/commands"
+	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/api"
+	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/tutorials"
 	"sigs.k8s.io/kustomize/kyaml/commandutil"
 )
 
@@ -64,18 +64,18 @@ func NewConfigCommand(name string) *cobra.Command {
 		return root
 	}
 
-	root.PersistentFlags().BoolVar(&cmd.StackOnError, "stack-trace", false,
+	root.PersistentFlags().BoolVar(&commands.StackOnError, "stack-trace", false,
 		"print a stack-trace on failure")
 
 	name = strings.TrimSpace(name + " config")
-	cmd.ExitOnError = true
-	root.AddCommand(cmd.GrepCommand(name))
-	root.AddCommand(cmd.TreeCommand(name))
-	root.AddCommand(cmd.CatCommand(name))
-	root.AddCommand(cmd.FmtCommand(name))
-	root.AddCommand(cmd.MergeCommand(name))
-	root.AddCommand(cmd.CountCommand(name))
-	root.AddCommand(cmd.RunFnCommand(name))
+	commands.ExitOnError = true
+	root.AddCommand(commands.GrepCommand(name))
+	root.AddCommand(commands.TreeCommand(name))
+	root.AddCommand(commands.CatCommand(name))
+	root.AddCommand(commands.FmtCommand(name))
+	root.AddCommand(commands.MergeCommand(name))
+	root.AddCommand(commands.CountCommand(name))
+	root.AddCommand(commands.RunFnCommand(name))
 
 	root.AddCommand(&cobra.Command{
 		Use:   "docs-merge",

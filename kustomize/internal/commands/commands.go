@@ -13,7 +13,7 @@ import (
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/k8sdeps/validator"
 	"sigs.k8s.io/kustomize/api/konfig"
-	shell_complete "sigs.k8s.io/kustomize/cmd/config/cmd/complete"
+	shell_complete "sigs.k8s.io/kustomize/cmd/config/complete"
 	"sigs.k8s.io/kustomize/cmd/kubectl/kubectlcobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/build"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/config"
