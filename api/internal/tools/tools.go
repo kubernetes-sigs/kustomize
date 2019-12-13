@@ -3,7 +3,10 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// This file exists to trigger installs of the given tools.
+// This file exists to automatically trigger installs
+// of the given tools, and is the offical 'unofficial'
+// way to declare a dependence on a Go binary until
+// some better technique comes along.
 
 package tools
 
@@ -14,6 +17,11 @@ import (
 	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
 	// for integration tests driven by the examples
 	_ "github.com/monopole/mdrip"
-	// for generating code for builtin plugins
-	_ "sigs.k8s.io/kustomize/pluginator/v2"
+	// REMOVED pluginator from this process, and leaving
+	// this note to discourage its reintroduction,
+	// because pluginator depends on the api, forcing
+	// major version increments in pluginator with each
+	// api release to allow this trick to work and not
+	// introduce cycles.
+	// _ "sigs.k8s.io/kustomize/pluginator/v2"
 )
