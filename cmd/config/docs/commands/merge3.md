@@ -1,24 +1,22 @@
 ## merge3
 
-[Alpha] Merge Resource configuration files (3-way)
+[Alpha] Merge diff of Resource configuration files into a destination (3-way)
 
 ### Synopsis
 
-[Alpha] Merge Resource configuration files (3-way)
+[Alpha] Merge diff of Resource configuration files into a destination (3-way)
 
-Merge (3-way) reads Kubernetes Resource yaml configuration files from source packages and updated
-packages then writes the result to stdout and a destination package.
+Merge3 performs a 3-way merge by applying the diff between 2 sets of Resources to a 3rd set.
 
-Resources are merged using the Resource [apiVersion, kind, name, namespace] as the key.  If any of
-these are missing, merge will default the missing values to empty.
+Merge3 may be for rebasing changes to a forked set of configuration -- e.g. compute the difference between the original
+set of Resources that was forked and an updated set of those Resources, then apply that difference to the fork.
 
-Resources specified in the updated packages have higher-precedence and Resources specified
-in the original packages have lower-precedence.  Resources specified in the destination
-packages either keep, clear, or recursively merge their values.
+If a field value differs between the ORIGINAL_DIR and UPDATED_DIR, the value from the UPDATED_DIR is taken and applied
+to the Resource in the DEST_DIR.
 
 For information on merge rules, run:
 
-	kustomize config docs merge3
+	kustomize config docs-merge3
 
 ### Examples
 
