@@ -15,7 +15,6 @@ linters:
     - dogsled
     - dupl
     - errcheck
-#    - funlen
     - gochecknoinits
     - goconst
     - gocritic
