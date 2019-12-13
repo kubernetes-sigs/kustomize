@@ -10,7 +10,5 @@ require (
 	github.com/stretchr/testify v1.4.0
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	k8s.io/apimachinery v0.17.0
-	sigs.k8s.io/kustomize/kyaml v0.0.0
+	sigs.k8s.io/kustomize/kyaml v0.0.1
 )
-
-replace sigs.k8s.io/kustomize/kyaml v0.0.0 => ../../kyaml
