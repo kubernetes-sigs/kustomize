@@ -12,7 +12,7 @@
   "private": true,
   "dependencies": {
     "@angular/animations": "^8.2.14",
-    "@angular/cdk": "~8.0.2",
+    "@angular/cdk": "~8.2.3",
     "@angular/common": "^8.2.14",
     "@angular/compiler": "^8.2.14",
     "@angular/core": "^8.2.14",
@@ -26,29 +26,30 @@
     "chart.js": "^2.9.3",
     "core-js": "^3.5.0",
     "hammerjs": "^2.0.8",
-    "rxjs": "~6.4.0",
-    "tslib": "^1.9.0",
-    "zone.js": "~0.9.1"
+    "rxjs": "~6.5.3",
+    "serialize-javascript": "^2.1.2",
+    "tslib": "^1.10.0",
+    "zone.js": "~0.10.2"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^0.801.3",
+    "@angular-devkit/build-angular": "^0.803.20",
     "@angular/cli": "^8.3.20",
     "@angular/compiler-cli": "^8.2.14",
     "@angular/language-service": "^8.2.14",
     "@types/jasmine": "^3.5.0",
     "@types/jasminewd2": "^2.0.8",
-    "@types/node": "~8.9.4",
+    "@types/node": "~12.12.17",
     "codelyzer": "^5.2.0",
-    "jasmine-core": "~3.4.0",
+    "jasmine-core": "~3.5.0",
     "jasmine-spec-reporter": "~4.2.1",
-    "karma": "~4.1.0",
-    "karma-chrome-launcher": "~2.2.0",
+    "karma": "~4.4.1",
+    "karma-chrome-launcher": "~3.1.0",
     "karma-coverage-istanbul-reporter": "^2.1.1",
     "karma-jasmine": "~2.0.1",
-    "karma-jasmine-html-reporter": "^1.4.0",
-    "protractor": "~5.4.0",
-    "ts-node": "~7.0.0",
-    "tslint": "~5.15.0",
-    "typescript": "~3.4.3"
+    "karma-jasmine-html-reporter": "^1.4.2",
+    "protractor": "~5.4.2",
+    "ts-node": "~8.5.4",
+    "tslint": "~5.20.1",
+    "typescript": "~3.7.3"
   }
 }
