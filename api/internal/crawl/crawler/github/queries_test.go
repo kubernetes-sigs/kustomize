@@ -53,8 +53,11 @@ func TestQueryType(t *testing.T) {
 				Filename("kustomization.yaml"),
 				Keyword("keyword1"),
 				Keyword("keyword2"),
+				Repo("user1/repo1"),
+				User("user1"),
 			),
-			expected: "q=size:24..64+filename:kustomization.yaml+keyword1+keyword2",
+			expected: "q=size:24..64+filename:kustomization.yaml+keyword1+keyword2+" +
+				"repo:user1/repo1+user:user1",
 		},
 	}
 
@@ -99,6 +102,26 @@ func TestGithubSearchQuery(t *testing.T) {
 
 			expectedCommitsQuery: "https://api.github.com/repos/kubernetes-sigs/kustomize/commits?" +
 				"q=path:examples/helloWorld/kustomization.yaml&per_page=100",
+		},
+		{
+			rc: RequestConfig{
+				perPage: perPage,
+			},
+			codeQuery: Query{
+				Filename("kustomization.yaml"),
+				Filesize(RangeWithin{64, 128}),
+			},
+			fullRepoName: "kubernetes-sigs/kustomize",
+			path:         "examples 1/helloWorld/kustomization.yaml",
+
+			expectedCodeQuery: "https://api.github.com/search/code?" +
+				"q=filename:kustomization.yaml+size:64..128&order=desc&per_page=100&sort=indexed",
+
+			expectedContentsQuery: "https://api.github.com/repos/kubernetes-sigs/kustomize/contents/" +
+				"examples%201/helloWorld/kustomization.yaml?per_page=100",
+
+			expectedCommitsQuery: "https://api.github.com/repos/kubernetes-sigs/kustomize/commits?" +
+				"q=path:examples%201/helloWorld/kustomization.yaml&per_page=100",
 		},
 	}
 

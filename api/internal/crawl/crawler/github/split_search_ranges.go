@@ -243,7 +243,7 @@ func FindRangesForRepoSearch(cache cachedSearch) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	logger.Println("total files: ", totalFiles)
+	logger.Println("total kustomization files: ", totalFiles)
 
 	if githubMaxResultsPerQuery >= totalFiles {
 		return []string{

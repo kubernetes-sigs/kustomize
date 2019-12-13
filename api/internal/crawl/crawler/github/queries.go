@@ -90,6 +90,17 @@ func Path(p string) queryField {
 	return queryField{name: "path", value: p}
 }
 
+// Repo takes a repository (i.e., kubernetes-sigs/kustomize) and formats
+// it according to the Github API.
+func Repo(r string) queryField {
+	return queryField{name: "repo", value: r}
+}
+
+// Path takes a github username and formats it according to the Github API.
+func User(u string) queryField {
+	return queryField{name: "user", value: u}
+}
+
 // RequestConfig stores common variables that must be present for the queries.
 // - CodeSearchRequests: ask Github to check the code indices given a query.
 // - ContentsRequests: ask Github where to download a resource given a repo and a
@@ -123,11 +134,15 @@ func (rc RequestConfig) ReposRequest(fullRepoName string) string {
 	return rc.makeRequest(uri, Query{}).URL()
 }
 
+func escapeSpace(s string) string {
+	return strings.Replace(s, " ", "%20", -1)
+}
+
 // CommitsRequest given the repo name, and a filepath returns a formatted query
 // for the Github API to find the commits that affect this file.
 func (rc RequestConfig) CommitsRequest(fullRepoName, path string) string {
 	uri := fmt.Sprintf("repos/%s/commits", fullRepoName)
-	return rc.makeRequest(uri, Query{Path(path)}).URL()
+	return rc.makeRequest(uri, Query{Path(escapeSpace(path))}).URL()
 }
 
 func (rc RequestConfig) makeRequest(path string, query Query) request {
