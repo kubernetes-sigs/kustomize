@@ -1,39 +1,79 @@
 [release 页面]: /../../releases
 [Go]: https://golang.org
-[golang.org]: https://golang.org
+[脚本]: https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh
+[快速开始]: https://www.arp242.net/curl-to-sh.html
 
 ## 安装
 
-在 macOS ，您可以使用软件包管理器 Homebrew 来安装 kustomize 。
+适用于 Linux、MacOS 和 Windows 的各版本的二进制可执行文件可以在 [release 页面] 上手动下载。
 
-    brew install kustomize
+如果希望[快速开始]，可以执行:
 
-在 windows ，您可以使用软件包管理器 Chocolatey 来安装 kustomize 。
+```bash
+curl -s "https://raw.githubusercontent.com/\
+kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+```
 
-    choco install kustomize
+这个[脚本]会：
+
+- 尝试检测您的操作系统
+- 在临时目录中下载并解压 tar 文件
+- 将 kustomize 二进制可执行文件复制到您当前的工作目录中
+- 删除临时目录
+
+## 尝试 `go`
+
+这种方式只是为了更好的展示 kustomize 作为 `go` 语言工具的工作原理。开发者应该拉取 repo（详见下一部分），而 CI/CD 脚本中应下载随时可以运行的可执行文件，而不要依赖 `go` 语言工具。
+
+安装 v3 版本中最新的 kustomize 到 `$GOPATH/bin`:
+
+```bash
+GO111MODULE=on go install sigs.k8s.io/kustomize/kustomize/v3
+```
+
+安装指定版本
+
+```bash
+GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3@v3.3.0
+```
+
+## 本地源码构建 kustomize CLI
+
+```bash
+# 需要 go 1.13 或更高版本
+unset GOPATH
+# 详见 https://golang.org/doc/go1.13#modules
+unset GO111MODULES
+
+# 拉取 repo
+git clone git@github.com:kubernetes-sigs/kustomize.git
+# 进入目录
+cd kustomize
+
+# 如果您不想从头开始构建，则可以选择 checkout 特定的标签
+git checkout kustomize/v3.2.3
+
+# 开始构建
+(cd kustomize; go install .)
+
+# 运行
+~/go/bin/kustomize version
+```
+
+### 其他方式
+
+#### macOS
+
+```bash
+brew install kustomize
+```
+
+#### windows
+
+```bash
+choco install kustomize
+```
 
 有关软件包管理器 chocolatey 的使用以及对之前版本的支持，请参考以下链接：
 - [Choco Package](https://chocolatey.org/packages/kustomize)
 - [Package Source](https://github.com/kenmaglio/choco-kustomize)
-
-对于其他系统，请在 [release 页面] 下载相应系统的二进制文件。
-
-或者使用命令行获取最新的官方版本：
-
-```
-opsys=linux  # or darwin, or windows
-curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/latest |\
-  grep browser_download |\
-  grep $opsys |\
-  cut -d '"' -f 4 |\
-  xargs curl -O -L
-mv kustomize_*_${opsys}_amd64 kustomize
-chmod u+x kustomize
-```
-
-使用 [Go] v1.10.1 或更高版本安装（如果可以访问 [golang.org]）：
-
-<!-- @installkustomize @testAgainstLatestRelease -->
-```
-go install sigs.k8s.io/kustomize/kustomize
-```
