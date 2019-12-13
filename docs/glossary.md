@@ -370,7 +370,7 @@ fields to establish the group/version/kind/name of the
 to step into a nested structure to specify a new field
 value, e.g. an image tag.
 
-By default, an SMP _replaces_ values.  This
+By default, an SMP _replaces_ values.  This is 
 usually desired when the target value is a simple
 string, but may not be desired when the target
 value is a list.
