@@ -8,6 +8,6 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/rs/cors v1.7.0
-	sigs.k8s.io/kustomize/api v0.2.0
+	sigs.k8s.io/kustomize/api v0.3.0
 	sigs.k8s.io/yaml v1.1.0
 )
