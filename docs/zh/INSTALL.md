@@ -23,9 +23,9 @@ kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
 
 ## 尝试 `go`
 
-这种方式只是为了更好的展示 kustomize 作为 `go` 语言工具的工作原理。开发者应该拉取 repo（详见下一部分），而 CI/CD 脚本中应下载随时可以运行的可执行文件，而不要依赖 `go` 语言工具。
+这种方式只是为了更好的展示如何使用 `go` 语言来安装 kustomize。实际使用中，我们并不推荐此方法。kustomize 的开发者应该拉取此 repo（详见下一部分），而 CI/CD 脚本中应直接下载可执行文件，而不要依赖 `go` 语言工具。
 
-安装 v3 版本中最新的 kustomize 到 `$GOPATH/bin`:
+将 kustomize 的最新版本 v3 安装到 `$GOPATH/bin`:
 
 ```bash
 GO111MODULE=on go install sigs.k8s.io/kustomize/kustomize/v3
@@ -50,7 +50,7 @@ git clone git@github.com:kubernetes-sigs/kustomize.git
 # 进入目录
 cd kustomize
 
-# 如果您不想从头开始构建，则可以选择 checkout 特定的标签
+# 如果您不想从 HEAD 开始构建， 则可以选择切换特定的标签
 git checkout kustomize/v3.2.3
 
 # 开始构建
