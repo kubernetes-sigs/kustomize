@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
 
 # Downloads the most recently released kustomize binary
 # to your current working directory.

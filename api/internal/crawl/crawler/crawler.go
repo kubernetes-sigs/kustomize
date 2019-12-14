@@ -1,3 +1,6 @@
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 // Package crawler provides helper methods and defines an interface for lauching
 // source repository crawlers that retrieve files from a source and forwards
 // to a channel for indexing and retrieval.

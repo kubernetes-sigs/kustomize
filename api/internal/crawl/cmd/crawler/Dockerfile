@@ -1,3 +1,6 @@
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
 FROM golang:1.11 AS build
 
 ARG GO111MODULE=on

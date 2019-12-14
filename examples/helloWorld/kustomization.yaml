@@ -1,3 +1,6 @@
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
 # Example configuration for the webserver
 # at https://github.com/monopole/hello
 commonLabels:

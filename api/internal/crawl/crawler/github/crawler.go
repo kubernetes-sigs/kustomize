@@ -1,3 +1,6 @@
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 // Package github implements the crawler.Crawler interface, getting data
 // from the Github search API.
 package github

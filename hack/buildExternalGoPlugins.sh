@@ -1,4 +1,7 @@
 #!/usr/bin/env sh
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
 set -e
 
 # Builds or removes Go plugin object code.

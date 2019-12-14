@@ -1,3 +1,6 @@
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
 steps:
 - name: "gcr.io/cloud-builders/git"
   args: [fetch, --tags, --depth=100]

@@ -1,3 +1,6 @@
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 package github
 
 // GitHub only returns at most 1000 results per search query,
