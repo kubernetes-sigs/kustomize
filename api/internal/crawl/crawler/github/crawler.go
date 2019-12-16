@@ -115,18 +115,18 @@ func (gc githubCrawler) FetchDocument(_ context.Context, d *doc.Document) error 
 			d.FilePath = d.FilePath + path
 			return nil
 		}
+
 		return err
 	}
-	resp, err := gc.client.GetRawUserContent(url)
-	if err := handle(resp, err, ""); err == nil {
+	resp, errGetRawUserContent := gc.client.GetRawUserContent(url)
+	if err := handle(resp, errGetRawUserContent, ""); err == nil {
 		return nil
 	}
 
 	for _, file := range konfig.RecognizedKustomizationFileNames() {
-		resp, err = gc.client.GetRawUserContent(url + "/" + file)
-		err := handle(resp, err, "/"+file)
-		if err != nil {
-			continue
+		resp, errGetRawUserContent = gc.client.GetRawUserContent(url + "/" + file)
+		if err = handle(resp, errGetRawUserContent, "/"+file); err == nil {
+			return nil
 		}
 	}
 	return fmt.Errorf("file not found: %s, error: %v", url, err)
@@ -559,7 +559,15 @@ func (gcl GhClient) Do(query string) (*http.Response, error) {
 		return nil, err
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("token %s", gcl.accessToken))
-	return gcl.client.Do(req)
+
+	// gcl.client.Do: a non-2xx status code doesn't cause an error.
+	// See https://golang.org/pkg/net/http/#Client.Do for more info.
+	resp, err :=  gcl.client.Do(req)
+	if resp.StatusCode != http.StatusOK {
+		err = fmt.Errorf("GhClient.Do(%s) failed with response code: %d",
+			query, resp.StatusCode)
+	}
+	return resp, err
 }
 
 func (gcl GhClient) getWithRetry(
@@ -574,8 +582,8 @@ func (gcl GhClient) getWithRetry(
 		retryCount > 0 {
 
 		retryTime := resp.Header.Get("Retry-After")
-		i, err := strconv.Atoi(retryTime)
-		if err != nil {
+		i, errAtoi := strconv.Atoi(retryTime)
+		if errAtoi != nil {
 			return resp, fmt.Errorf(
 				"query '%s' forbidden without 'Retry-After'", query)
 		}
