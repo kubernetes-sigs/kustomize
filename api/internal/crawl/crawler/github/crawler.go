@@ -93,6 +93,9 @@ func (gc githubCrawler) Crawl(
 	return nil
 }
 
+// FetchDocument first tries to fetch the document with d.FilePath. If it fails,
+// it will try to add each string in konfig.RecognizedKustomizationFileNames() to
+// d.FilePath, and try to fetch the document again.
 func (gc githubCrawler) FetchDocument(_ context.Context, d *doc.Document) error {
 	repoURL := d.RepositoryURL + "/" + d.FilePath + "?ref=" + d.DefaultBranch
 	repoSpec, err := git.NewRepoSpecFromUrl(repoURL)

@@ -116,6 +116,8 @@ func (doc *KustomizationDocument) readBytes() ([]map[string]interface{}, error) 
 	return configs, nil
 }
 
+// ParseYAML parses doc.Document and sets the following fields of doc:
+// Kinds, Values, Identifiers.
 func (doc *KustomizationDocument) ParseYAML() error {
 	doc.Identifiers = make([]string, 0)
 	doc.Values = make([]string, 0)
