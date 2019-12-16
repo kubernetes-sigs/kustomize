@@ -72,17 +72,17 @@ func addBranches(cdoc CrawledDocument, match Crawler, indx IndexFunc,
 	seen[cdoc.ID()] = struct{}{}
 
 	// Insert into index
-	err := indx(cdoc, match)
-	logIfErr(err)
-	if err != nil {
+	if err := indx(cdoc, match); err != nil {
+		logger.Println("Failed to index: ", err)
 		return
 	}
 
 	deps, err := cdoc.GetResources()
-	logIfErr(err)
 	if err != nil {
+		logger.Println(err)
 		return
 	}
+
 	for _, dep := range deps {
 		if _, ok := seen[dep.ID()]; ok {
 			continue
@@ -107,29 +107,33 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 		}
 		docCount++
 
+		if tail.WasCached() {
+			logger.Printf("%s %s is cached already", tail.RepositoryURL, tail.FilePath)
+			continue
+		}
+
 		match := findMatch(tail, crawlers)
 		if match == nil {
-			logIfErr(fmt.Errorf(
-				"%v could not match any crawler", tail))
+			logIfErr(fmt.Errorf("%v could not match any crawler", tail))
 			continue
 		}
 
 		logger.Println("Crawling ", tail.RepositoryURL, tail.FilePath)
-		err := match.FetchDocument(ctx, tail)
-		logIfErr(err)
-		// If there was no change or there is an error, we don't have
-		// to branch out, since the dependencies are already in the
-		// index, or we cannot find the document.
-		if err != nil || tail.WasCached() {
-			if tail.WasCached() {
-				logger.Println(tail.RepositoryURL, tail.FilePath, "is cached already")
-			}
+		if err := match.FetchDocument(ctx, tail); err != nil {
+			logger.Printf("FetchDocument failed on %s %s: %v",
+				tail.RepositoryURL, tail.FilePath, err)
 			continue
 		}
 
-		logIfErr(match.SetCreated(ctx, tail))
+		if err := match.SetCreated(ctx, tail); err != nil {
+			logger.Printf("SetCreated failed on %s %s: %v",
+				tail.RepositoryURL, tail.FilePath, err)
+			continue
+		}
 
 		cdoc, err := conv(tail)
+		// If conv returns an error, cdoc can still be added into the index so that
+		// cdoc.Document can be searched.
 		logIfErr(err)
 
 		addBranches(cdoc, match, indx, seen, stack)
