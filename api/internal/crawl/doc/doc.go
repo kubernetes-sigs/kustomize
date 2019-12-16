@@ -2,6 +2,7 @@ package doc
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
@@ -160,6 +161,13 @@ func (doc *KustomizationDocument) ParseYAML() error {
 	for key := range identifierSet {
 		doc.Identifiers = append(doc.Identifiers, key)
 	}
+
+	// Without sorting these fields, every time when the string order in these fields changes,
+	// the document in the index will be updated.
+	// Sorting these fields are necessary to avoid a document being updated unnecessarily.
+	sort.Strings(doc.Kinds)
+	sort.Strings(doc.Values)
+	sort.Strings(doc.Identifiers)
 
 	return nil
 }
