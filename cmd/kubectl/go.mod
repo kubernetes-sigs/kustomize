@@ -7,5 +7,5 @@ require (
 	k8s.io/cli-runtime v0.17.0
 	k8s.io/client-go v0.17.0
 	k8s.io/kubectl v0.17.0
-	sigs.k8s.io/kustomize/kyaml v0.0.1
+	sigs.k8s.io/kustomize/kyaml v0.0.2
 )
