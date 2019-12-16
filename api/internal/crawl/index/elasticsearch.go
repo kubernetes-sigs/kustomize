@@ -180,12 +180,15 @@ func (idx *index) DeleteIndex() error {
 
 // Insert or update the document by ID.
 func (idx *index) Put(uniqueID string, doc interface{}) (string, error) {
-	body, err := json.Marshal(doc)
+	docBytes, err := json.Marshal(doc)
 	if err != nil {
 		return "", err
 	}
+	body := byteJoin(`{"doc":`, docBytes, `}`)
 
-	req := esapi.IndexRequest{
+	// Use `UpdateRequest` here instead of `IndexRequest`.
+	// For a document with a given id, every call of IndexRequest.Do will increase the version of a document.
+	req := esapi.UpdateRequest{
 		Index:      idx.name,
 		Body:       bytes.NewReader(body),
 		DocumentID: uniqueID,
