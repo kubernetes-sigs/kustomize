@@ -5,8 +5,6 @@ import (
 	"io"
 	"time"
 
-	"github.com/sethgrid/curse"
-
 	"sigs.k8s.io/kustomize/kstatus/status"
 	"sigs.k8s.io/kustomize/kstatus/wait"
 )
@@ -17,9 +15,29 @@ const (
 	nameColumn      = "name"
 	statusColumn    = "status"
 	messageColumn   = "message"
+
+	ESC          = 27
+	RED    color = 31
+	GREEN  color = 32
+	YELLOW color = 33
+	WHITE  color = 37
 )
 
-type colorFunc func(s status.Status) int
+type color int
+
+func moveUp(w io.Writer, lineCount int) {
+	printOrDie(w, "%c[%dA", ESC, lineCount)
+}
+
+func eraseCurrentLine(w io.Writer) {
+	printOrDie(w, "%c[2K\r", ESC)
+}
+
+func setColor(w io.Writer, color color) {
+	printOrDie(w, "%c[%dm", ESC, color)
+}
+
+type colorFunc func(s status.Status) color
 type contentFunc func(resource ResourceStatusData) string
 
 type tableColumnInfo struct {
@@ -29,8 +47,8 @@ type tableColumnInfo struct {
 	contentFunc contentFunc
 }
 
-func defaultColorFunc(_ status.Status) int {
-	return curse.WHITE
+func defaultColorFunc(_ status.Status) color {
+	return WHITE
 }
 
 var (
@@ -112,66 +130,64 @@ func newTablePrinter(statusInfo StatusInfo, out io.Writer, err io.Writer, showAg
 }
 
 func (s *TablePrinter) Print() {
-	c := newCurseOrDie()
-	s.printTable(c, s.statusInfo.CurrentStatus(), false)
+	s.printTable(s.statusInfo.CurrentStatus(), false)
 }
 
 func (s *TablePrinter) PrintUntil(stop <-chan struct{}, interval time.Duration) <-chan struct{} {
 	completed := make(chan struct{})
 	go func() {
 		defer close(completed)
-		c := newCurseOrDie()
-		c.SetDefaultStyle()
-		s.printTable(c, s.statusInfo.CurrentStatus(), false)
+		setColor(s.out, WHITE)
+		s.printTable(s.statusInfo.CurrentStatus(), false)
 		ticker := time.NewTicker(interval)
 		for {
 			select {
 			case <-stop:
 				ticker.Stop()
-				s.printTable(c, s.statusInfo.CurrentStatus(), true)
+				s.printTable(s.statusInfo.CurrentStatus(), true)
 				return
 			case <-ticker.C:
-				s.printTable(c, s.statusInfo.CurrentStatus(), true)
+				s.printTable(s.statusInfo.CurrentStatus(), true)
 			}
 		}
 	}()
 	return completed
 }
 
-func (s *TablePrinter) printTable(c *curse.Cursor, data StatusData, moveUp bool) {
-	if moveUp {
+func (s *TablePrinter) printTable(data StatusData, deleteUp bool) {
+	if deleteUp {
 		if s.showAggStatus {
-			c.MoveUp(1)
+			moveUp(s.out, 1)
 		}
-		c.MoveUp(1)
-		c.MoveUp(len(data.ResourceStatuses))
+		moveUp(s.out, 1)
+		moveUp(s.out, len(data.ResourceStatuses))
 	}
-	c.EraseCurrentLine()
+	eraseCurrentLine(s.out)
 	if s.showAggStatus {
 		printOrDie(s.out, "AggregateStatus: ")
-		c.SetColor(colorForStatus(data.AggregateStatus))
+		setColor(s.out, colorForStatus(data.AggregateStatus))
 		printOrDie(s.out, "%s\n", data.AggregateStatus)
-		c.SetDefaultStyle()
+		setColor(s.out, WHITE)
 	}
-	s.printTableRow(c, headers())
+	s.printTableRow(headers())
 	for _, resource := range data.ResourceStatuses {
-		s.printTableRow(c, row(resource))
+		s.printTableRow(row(resource))
 	}
 }
 
-func (s *TablePrinter) printTableRow(c *curse.Cursor, rowData []RowData) {
+func (s *TablePrinter) printTableRow(rowData []RowData) {
 	for _, row := range rowData {
-		c.SetColor(row.color)
+		setColor(s.out, row.color)
 		format := fmt.Sprintf("%%-%ds  ", row.width)
 		printOrDie(s.out, format, trimString(row.content, row.width))
-		c.SetDefaultStyle()
+		setColor(s.out, WHITE)
 	}
 	printOrDie(s.out, "\n")
 }
 
 type RowData struct {
 	content string
-	color   int
+	color   color
 	width   int
 }
 
@@ -181,7 +197,7 @@ func headers() []RowData {
 		column := tableColumns[columnName]
 		headers = append(headers, RowData{
 			content: column.header,
-			color:   curse.WHITE,
+			color:   WHITE,
 			width:   column.width,
 		})
 	}
@@ -303,13 +319,6 @@ func (e *EventPrinter) printEvent(event wait.Event) {
 	printOrDie(e.out, "\n")
 }
 
-func newCurseOrDie() *curse.Cursor {
-	// TODO: Handle the issue with creating a new Cursor. For now we
-	// are just ignoring the error (which mostly works).
-	c, _ := curse.New()
-	return c
-}
-
 func printOrDie(w io.Writer, format string, a ...interface{}) {
 	_, err := fmt.Fprintf(w, format, a...)
 	if err != nil {
@@ -317,18 +326,18 @@ func printOrDie(w io.Writer, format string, a ...interface{}) {
 	}
 }
 
-func colorForStatus(s status.Status) int {
+func colorForStatus(s status.Status) color {
 	switch s {
 	case status.CurrentStatus:
-		return curse.GREEN
+		return GREEN
 	case status.UnknownStatus:
-		return curse.WHITE
+		return WHITE
 	case status.InProgressStatus:
-		return curse.YELLOW
+		return YELLOW
 	case status.FailedStatus:
-		return curse.RED
+		return RED
 	}
-	return curse.WHITE
+	return WHITE
 }
 
 func trimString(str string, maxLength int) string {
