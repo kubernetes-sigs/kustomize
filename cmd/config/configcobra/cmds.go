@@ -76,6 +76,8 @@ func NewConfigCommand(name string) *cobra.Command {
 	root.AddCommand(commands.MergeCommand(name))
 	root.AddCommand(commands.CountCommand(name))
 	root.AddCommand(commands.RunFnCommand(name))
+	root.AddCommand(commands.SubCommand(name))
+	root.AddCommand(commands.SubSetCommand(name))
 
 	root.AddCommand(&cobra.Command{
 		Use:   "docs-merge",
