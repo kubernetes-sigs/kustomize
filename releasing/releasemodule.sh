@@ -63,22 +63,8 @@ function releaseModule {
   rm -rf $wktree
   git worktree prune
   git branch -D $branch
+
   echo "$module complete"
-}
-
-function releaseBinary {
-  # move the latest tag for the binary to trigger cloudbuild
-  binary=$1
-  echo "binary: $binary"
-
-  if [ "$NO_DRY_RUN" == "true" ]; then
-    git tag -d latest_$binary
-    git push upstream :latest_$binary
-    git tag -a latest_$binary
-    git push upstream latest_$binary
-  else
-      echo "Skipping push binary $binary -- run with NO_DRY_RUN=true to push the release."
-  fi
 }
 
 modules="kyaml api cmd/config cmd/kubectl pluginator kustomize"
@@ -112,7 +98,11 @@ fi
 # release the module
 releaseModule $module
 
-# release the kustomize binary if the module is kustomize
 if [ "$module" == "kustomize" ]; then
-  releaseBinary $module
+  # TODO: Do this for all modules
+  pushd .
+  getter=$(mktemp -d /tmp/kustomize-releases-XXXXXX)
+  cd $getter
+  go get sigs.k8s.io/kustomize/$module/v3
+  popd
 fi
