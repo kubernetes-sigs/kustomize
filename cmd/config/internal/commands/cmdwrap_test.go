@@ -78,7 +78,7 @@ items:
       name: test
       app: nginx
     annotations:
-      config.kubernetes.io/index: 0
+      config.kubernetes.io/index: "0"
       config.kubernetes.io/path: config/test_deployment.yaml
   spec:
     replicas: 11
@@ -109,7 +109,7 @@ items:
       name: test
       app: nginx
     annotations:
-      config.kubernetes.io/index: 0
+      config.kubernetes.io/index: "0"
       config.kubernetes.io/path: config/test_service.yaml
   spec:
     selector:
@@ -133,7 +133,7 @@ items:
       name: test
       app: nginx
     annotations:
-      config.kubernetes.io/index: 0
+      config.kubernetes.io/index: "0"
       config.kubernetes.io/path: config/test_deployment.yaml
   spec:
     replicas: 11
@@ -161,7 +161,7 @@ items:
       name: test
       app: nginx
     annotations:
-      config.kubernetes.io/index: 0
+      config.kubernetes.io/index: "0"
       config.kubernetes.io/path: config/test_service.yaml
   spec:
     selector:
@@ -185,7 +185,7 @@ items:
       name: test
       app: nginx
     annotations:
-      config.kubernetes.io/index: 0
+      config.kubernetes.io/index: "0"
       config.kubernetes.io/path: config/test_deployment.yaml
   spec:
     replicas: 11
@@ -216,7 +216,7 @@ items:
       name: test
       app: nginx
     annotations:
-      config.kubernetes.io/index: 0
+      config.kubernetes.io/index: "0"
       config.kubernetes.io/path: config/test_service.yaml
   spec:
     selector:

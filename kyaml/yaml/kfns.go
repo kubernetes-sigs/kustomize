@@ -31,9 +31,13 @@ type AnnotationSetter struct {
 }
 
 func (s AnnotationSetter) Filter(rn *RNode) (*RNode, error) {
+	// some tools get confused about the type if annotations are not quoted
+	v := NewScalarRNode(s.Value)
+	v.YNode().Tag = "!!str"
+	v.YNode().Style = yaml.SingleQuotedStyle
 	return rn.Pipe(
 		PathGetter{Path: []string{"metadata", "annotations"}, Create: yaml.MappingNode},
-		FieldSetter{Name: s.Key, Value: NewScalarRNode(s.Value)})
+		FieldSetter{Name: s.Key, Value: v})
 }
 
 func SetAnnotation(key, value string) AnnotationSetter {
