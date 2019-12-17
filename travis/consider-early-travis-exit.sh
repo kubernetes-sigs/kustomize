@@ -1,3 +1,6 @@
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
 # Exits with status 0 if it can be determined that the
 # current PR should not trigger all travis checks.
 #
