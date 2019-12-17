@@ -262,12 +262,12 @@ var SubExamples = `
     # dir/resources.yaml
     ...
     metadata:
-      name: test-app1 # {"substitutions":[{"name":"prefix","marker":"PREFIX-","value":"test-"}],"ownedBy":"dev","description":"test environment"}
+      name: test-app1 # {"substitutions":[{"name":"prefix","marker":"PREFIX-","value":"test-"}],"setBy":"dev","description":"test environment"}
     ...
     ---
     ...
     metadata:
-      name: test-app2 # {"substitutions":[{"name":"prefix","marker":"PREFIX-","value":"test-"}],"ownedBy":"dev","description":"test environment"}
+      name: test-app2 # {"substitutions":[{"name":"prefix","marker":"PREFIX-","value":"test-"}],"setBy":"dev","description":"test environment"}
     ...
 
   Revert substitution:
@@ -421,7 +421,7 @@ FieldMeta Schema read by ` + "`" + `sub` + "`" + `:
           "type": "string",
           "description": "A description of the field's current value.  Optional."
         },
-        "ownedBy": {
+        "setBy": {
           "type": "string",
           "description": "The current owner of the field.  Optional."
         },
