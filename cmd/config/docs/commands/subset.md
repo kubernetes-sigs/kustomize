@@ -144,7 +144,7 @@ FieldMeta Schema read by `sub`:
           "type": "string",
           "description": "A description of the field's current value.  Optional."
         },
-        "ownedBy": {
+        "setBy": {
           "type": "string",
           "description": "The current owner of the field.  Optional."
         },

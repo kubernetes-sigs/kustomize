@@ -80,12 +80,12 @@ To create a substitution for a field see: `kustomize help config set create`
     # dir/resources.yaml
     ...
     metadata:
-      name: test-app1 # {"substitutions":[{"name":"prefix","marker":"PREFIX-","value":"test-"}],"ownedBy":"dev","description":"test environment"}
+      name: test-app1 # {"substitutions":[{"name":"prefix","marker":"PREFIX-","value":"test-"}],"setBy":"dev","description":"test environment"}
     ...
     ---
     ...
     metadata:
-      name: test-app2 # {"substitutions":[{"name":"prefix","marker":"PREFIX-","value":"test-"}],"ownedBy":"dev","description":"test environment"}
+      name: test-app2 # {"substitutions":[{"name":"prefix","marker":"PREFIX-","value":"test-"}],"setBy":"dev","description":"test environment"}
     ...
 
   Revert substitution:
