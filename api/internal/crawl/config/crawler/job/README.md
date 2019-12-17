@@ -2,40 +2,53 @@ There are three ways of running the crawler job.
 
 # Crawling all the documents in the index and crawling all the kustomization files on Github
 
-This is the default setting of the crawler job.
+This is the default setting of the crawler job. The `command` and `args` field
+of the container should be:
+
+```
+        command: ["/crawler"]
+        args: []
+```
+
+Or
+
+```
+        command: ["/crawler"]
+        args: [""]
+```
 
 # Crawling all the documents in the index
 
-Set the environment variable `CRAWL_INDEX_ONLY` to `true` like this:
+The `command` and `args` field of the container should be:
 
 ```
-        - name: CRAWL_INDEX_ONLY
-          value: true
+        command: ["/crawler"]
+        args: ["index"]
 ```
 
 # Crawling all the kustomization files on Github
 
-Set the environment variable `CRAWL_GITHUB_ONLY` to `true` like this:
+The `command` and `args` field of the container should be:
 
 ```
-        - name: CRAWL_GITHUB_ONLY
-          value: true
+        command: ["/crawler"]
+        args: ["github"]
 ```
 
 # Crawling all the kustomization files in a Github repo
 
-Add the environment variable `GITHUB_REPO` into the crawler container. For example:
+The `command` and `args` field of the container should be like:
 
 ```
-        - name: GITHUB_REPO
-          value: kubernetes-sigs/kustomize
+        command: ["/crawler"]
+        args: ["github-repo", "kubernetes-sigs/kustomize"]
 ```
 
 # Crawling all the kustomization files in all the repositories of a Github user
 
-Add the environment variable `GITHUB_USER` into the crawler container. For example:
+The `command` and `args` field of the container should be like:
 
 ```
-        - name: GITHUB_USER
-          value: kubernetes-sigs
+        command: ["/crawler"]
+        args: ["github-user", "kubernetes-sigs"]
 ```

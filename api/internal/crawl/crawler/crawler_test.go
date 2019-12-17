@@ -318,7 +318,7 @@ resources:
 					Document: *d,
 				}, nil
 			},
-			func(d CrawledDocument, cr Crawler, mode index.Mode) error {
+			func(d CrawledDocument, mode index.Mode) error {
 				visited[d.ID()]++
 				return nil
 			},

@@ -49,7 +49,7 @@ type CrawledDocument interface {
 
 type CrawlSeed []*doc.Document
 
-type IndexFunc func(CrawledDocument, Crawler, index.Mode) error
+type IndexFunc func(CrawledDocument, index.Mode) error
 type Converter func(*doc.Document) (CrawledDocument, error)
 
 func logIfErr(err error) {
@@ -74,7 +74,7 @@ func addBranches(cdoc CrawledDocument, match Crawler, indx IndexFunc,
 	seen[cdoc.ID()] = struct{}{}
 
 	// Insert into index
-	if err := indx(cdoc, match, index.InsertOrUpdate); err != nil {
+	if err := indx(cdoc, index.InsertOrUpdate); err != nil {
 		logger.Printf("Failed to insert or update %s %s: %v",
 			cdoc.GetDocument().RepositoryURL, cdoc.GetDocument().FilePath, err)
 		return
@@ -142,7 +142,7 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 				Document: *tail,
 			}
 			seen[cdoc.ID()] = struct{}{}
-			if err := indx(cdoc, match, index.Delete); err != nil {
+			if err := indx(cdoc, index.Delete); err != nil {
 				logger.Printf("Failed to delete %s %s: %v",
 					cdoc.RepositoryURL, cdoc.FilePath, err)
 			}
