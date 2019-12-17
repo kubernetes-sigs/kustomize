@@ -527,6 +527,12 @@ sigs.k8s.io/kustomize v2.0.3+incompatible h1:JUufWFNlI44MdtnjUqVnvh29rR37PQFzPbL
 sigs.k8s.io/kustomize v2.0.3+incompatible/go.mod h1:MkjgH3RdOWrievjo6c9T245dYlB5QeXV4WCbnt/PEpU=
 sigs.k8s.io/kustomize/api v0.3.0 h1:e7Erw2n8lT8+IWUukktozF0bgWwH2fFC+qsXP0gabg0=
 sigs.k8s.io/kustomize/api v0.3.0/go.mod h1:4jaPCtRzxfQLFdYq4gYo40dBGW1hyPp/f4AuiZB5dAQ=
+sigs.k8s.io/kustomize/cmd/config v0.0.2 h1:FphfIoGJ0jGGJJXq9WoG5sqqEIuTeDGx58E5NWHV8Hc=
+sigs.k8s.io/kustomize/cmd/config v0.0.2/go.mod h1:c6IBoPpAAm5a2aD+0iH8IfeyCF5GPsY5Ws57Dwpcvg0=
+sigs.k8s.io/kustomize/cmd/kubectl v0.0.2 h1:MxUAU5ie0tqx2MuDrUlcAL+Mgt8LVFcXc2scinSD8/w=
+sigs.k8s.io/kustomize/cmd/kubectl v0.0.2/go.mod h1:SbNCE1g937W1yvaQrZbvPNT3aDRdicdeW2qXLTa+YiM=
+sigs.k8s.io/kustomize/kyaml v0.0.2 h1:Rl/wMrnpZzZjsVeFIIOAb92Kz/UfLrTUEXjiHW6oS0o=
+sigs.k8s.io/kustomize/kyaml v0.0.2/go.mod h1:rywm/rcR5LmCBghz9956tE45OdUPChFoXVVs+WmhMTI=
 sigs.k8s.io/kustomize/pluginator/v2 v2.0.0/go.mod h1:zrXhTv8BAKt0egmZX/8AtMOSFUSWM9YuoHvvqz8/eHE=
 sigs.k8s.io/structured-merge-diff v0.0.0-20190525122527-15d366b2352e/go.mod h1:wWxsB5ozmmv/SG7nM11ayaAW51xMvak/t1r0CSlcokI=
 sigs.k8s.io/yaml v1.1.0 h1:4A07+ZFc2wgJwo8YNlQpr1rVlgUDlxXHhPJciaPY5gs=
