@@ -107,16 +107,16 @@ func TestLocalPackageReader_Read_pkg(t *testing.T) {
 			`a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/package: .
-    config.kubernetes.io/path: a_test.yaml
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/package: '.'
+    config.kubernetes.io/path: 'a_test.yaml'
 `,
 			`c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: 1
-    config.kubernetes.io/package: .
-    config.kubernetes.io/path: a_test.yaml
+    config.kubernetes.io/index: '1'
+    config.kubernetes.io/package: '.'
+    config.kubernetes.io/path: 'a_test.yaml'
 `,
 			`# second thing
 e: f
@@ -126,9 +126,9 @@ g:
   - j
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/package: .
-    config.kubernetes.io/path: b_test.yaml
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/package: '.'
+    config.kubernetes.io/path: 'b_test.yaml'
 `,
 		}
 		for i := range nodes {
@@ -169,16 +169,16 @@ func TestLocalPackageReader_Read_file(t *testing.T) {
 			`a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/package: .
-    config.kubernetes.io/path: a_test.yaml
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/package: '.'
+    config.kubernetes.io/path: 'a_test.yaml'
 `,
 			`c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: 1
-    config.kubernetes.io/package: .
-    config.kubernetes.io/path: a_test.yaml
+    config.kubernetes.io/index: '1'
+    config.kubernetes.io/package: '.'
+    config.kubernetes.io/path: 'a_test.yaml'
 `,
 		}
 		for i := range nodes {
@@ -268,16 +268,16 @@ func TestLocalPackageReader_Read_nestedDirs(t *testing.T) {
 			`a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/package: a/b
-    config.kubernetes.io/path: a/b/a_test.yaml
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/package: 'a/b'
+    config.kubernetes.io/path: 'a/b/a_test.yaml'
 `,
 			`c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: 1
-    config.kubernetes.io/package: a/b
-    config.kubernetes.io/path: a/b/a_test.yaml
+    config.kubernetes.io/index: '1'
+    config.kubernetes.io/package: 'a/b'
+    config.kubernetes.io/path: 'a/b/a_test.yaml'
 `,
 			`# second thing
 e: f
@@ -287,9 +287,9 @@ g:
   - j
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/package: a/b
-    config.kubernetes.io/path: a/b/b_test.yaml
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/package: 'a/b'
+    config.kubernetes.io/path: 'a/b/b_test.yaml'
 `,
 		}
 		for i := range nodes {
@@ -326,9 +326,9 @@ func TestLocalPackageReader_Read_matchRegex(t *testing.T) {
 	assert.Equal(t, `a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/package: a/b
-    config.kubernetes.io/path: a/b/a_test.yaml
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/package: 'a/b'
+    config.kubernetes.io/path: 'a/b/a_test.yaml'
 `, val)
 
 	val, err = nodes[1].String()
@@ -336,9 +336,9 @@ metadata:
 	assert.Equal(t, `c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: 1
-    config.kubernetes.io/package: a/b
-    config.kubernetes.io/path: a/b/a_test.yaml
+    config.kubernetes.io/index: '1'
+    config.kubernetes.io/package: 'a/b'
+    config.kubernetes.io/path: 'a/b/a_test.yaml'
 `, val)
 }
 
@@ -365,9 +365,9 @@ func TestLocalPackageReader_Read_skipSubpackage(t *testing.T) {
 	assert.Equal(t, `a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/package: a/b
-    config.kubernetes.io/path: a/b/a_test.yaml
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/package: 'a/b'
+    config.kubernetes.io/path: 'a/b/a_test.yaml'
 `, val)
 
 	val, err = nodes[1].String()
@@ -375,9 +375,9 @@ metadata:
 	assert.Equal(t, `c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: 1
-    config.kubernetes.io/package: a/b
-    config.kubernetes.io/path: a/b/a_test.yaml
+    config.kubernetes.io/index: '1'
+    config.kubernetes.io/package: 'a/b'
+    config.kubernetes.io/path: 'a/b/a_test.yaml'
 `, val)
 }
 
@@ -403,9 +403,9 @@ func TestLocalPackageReader_Read_includeSubpackage(t *testing.T) {
 	assert.Equal(t, `a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/package: a/b
-    config.kubernetes.io/path: a/b/a_test.yaml
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/package: 'a/b'
+    config.kubernetes.io/path: 'a/b/a_test.yaml'
 `, val)
 
 	val, err = nodes[1].String()
@@ -413,9 +413,9 @@ metadata:
 	assert.Equal(t, `c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: 1
-    config.kubernetes.io/package: a/b
-    config.kubernetes.io/path: a/b/a_test.yaml
+    config.kubernetes.io/index: '1'
+    config.kubernetes.io/package: 'a/b'
+    config.kubernetes.io/path: 'a/b/a_test.yaml'
 `, val)
 
 	val, err = nodes[2].String()
@@ -428,9 +428,9 @@ g:
   - j
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/package: a/c
-    config.kubernetes.io/path: a/c/c_test.yaml
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/package: 'a/c'
+    config.kubernetes.io/path: 'a/c/c_test.yaml'
 `, val)
 }
 
