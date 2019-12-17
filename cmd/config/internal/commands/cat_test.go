@@ -90,8 +90,8 @@ metadata:
   name: foo
   annotations:
     app: nginx2
-    config.kubernetes.io/package: .
-    config.kubernetes.io/path: f1.yaml
+    config.kubernetes.io/package: '.'
+    config.kubernetes.io/path: 'f1.yaml'
 spec:
   replicas: 1
 ---
@@ -100,8 +100,8 @@ metadata:
   name: foo
   annotations:
     app: nginx
-    config.kubernetes.io/package: .
-    config.kubernetes.io/path: f1.yaml
+    config.kubernetes.io/package: '.'
+    config.kubernetes.io/path: 'f1.yaml'
 spec:
   selector:
     app: nginx
@@ -196,8 +196,8 @@ metadata:
   name: foo
   annotations:
     app: nginx2
-    config.kubernetes.io/package: .
-    config.kubernetes.io/path: f1.yaml
+    config.kubernetes.io/package: '.'
+    config.kubernetes.io/path: 'f1.yaml'
 spec:
   replicas: 1
 ---
@@ -206,8 +206,8 @@ metadata:
   name: foo
   annotations:
     app: nginx
-    config.kubernetes.io/package: .
-    config.kubernetes.io/path: f1.yaml
+    config.kubernetes.io/package: '.'
+    config.kubernetes.io/path: 'f1.yaml'
 spec:
   selector:
     app: nginx
@@ -233,8 +233,8 @@ metadata:
   name: bar
   annotations:
     app: nginx
-    config.kubernetes.io/package: .
-    config.kubernetes.io/path: f2.yaml
+    config.kubernetes.io/package: '.'
+    config.kubernetes.io/path: 'f2.yaml'
 spec:
   replicas: 3
 `, b.String()) {
@@ -414,8 +414,8 @@ metadata:
   name: foo
   annotations:
     app: nginx2
-    config.kubernetes.io/package: .
-    config.kubernetes.io/path: f1.yaml
+    config.kubernetes.io/package: '.'
+    config.kubernetes.io/path: 'f1.yaml'
 spec:
   replicas: 1
 ---
@@ -424,8 +424,8 @@ metadata:
   name: foo
   annotations:
     app: nginx
-    config.kubernetes.io/package: .
-    config.kubernetes.io/path: f1.yaml
+    config.kubernetes.io/package: '.'
+    config.kubernetes.io/path: 'f1.yaml'
 spec:
   selector:
     app: nginx
@@ -536,8 +536,8 @@ metadata:
   name: foo
   annotations:
     app: nginx2
-    config.kubernetes.io/package: .
-    config.kubernetes.io/path: f1.yaml
+    config.kubernetes.io/package: '.'
+    config.kubernetes.io/path: 'f1.yaml'
 spec:
   replicas: 1
 ---
@@ -546,8 +546,8 @@ metadata:
   name: foo
   annotations:
     app: nginx
-    config.kubernetes.io/package: .
-    config.kubernetes.io/path: f1.yaml
+    config.kubernetes.io/package: '.'
+    config.kubernetes.io/path: 'f1.yaml'
 spec:
   selector:
     app: nginx
