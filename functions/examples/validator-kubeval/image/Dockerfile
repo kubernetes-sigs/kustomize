@@ -1,3 +1,6 @@
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
 FROM alpine:latest as schemas
 RUN apk --no-cache add git
 RUN git clone --depth 1 https://github.com/instrumenta/kubernetes-json-schema.git
