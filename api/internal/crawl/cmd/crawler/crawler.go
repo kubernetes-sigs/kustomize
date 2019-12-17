@@ -65,7 +65,7 @@ func main() {
 	}
 
 	// Index updates the value in the index.
-	index := func(cdoc crawler.CrawledDocument, crwlr crawler.Crawler, mode index.Mode) error {
+	indexFunc := func(cdoc crawler.CrawledDocument, crwlr crawler.Crawler, mode index.Mode) error {
 		switch d := cdoc.(type) {
 		case *doc.KustomizationDocument:
 			switch mode {
@@ -74,8 +74,7 @@ func main() {
 				return idx.Delete(d.ID())
 			default:
 				fmt.Println("Inserting: ", d)
-				_, err := idx.Put(d.ID(), d)
-				return err
+				return idx.Put(d.ID(), d)
 			}
 		default:
 			return fmt.Errorf("type %T not supported", d)
@@ -123,6 +122,6 @@ func main() {
 	}
 
 	crawlers := []crawler.Crawler{ghCrawler}
-	crawler.CrawlFromSeed(ctx, seedDocs, crawlers, docConverter, index, seen)
-	crawler.CrawlGithub(ctx, crawlers, docConverter, index, seen)
+	crawler.CrawlFromSeed(ctx, seedDocs, crawlers, docConverter, indexFunc, seen)
+	crawler.CrawlGithub(ctx, crawlers, docConverter, indexFunc, seen)
 }
