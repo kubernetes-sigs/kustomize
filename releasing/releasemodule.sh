@@ -4,11 +4,8 @@
 
 # run this script with releasing/releasemodule.sh MODULE
 #   -- e.g. releasing/releasemodule.sh cmd/config
-# to push the latest tag to release a binary, run with BINARY=true
-#   -- e.g. BINARY=true releasing/releasemodule.sh kustomize
 # to skip fetch from upstream, run with FETCH=false
 #   -- e.g. FETCH=false releasing/releasemodule.sh kyaml
-# for a list of modules see releasing/releaseallmodules.sh
 set -e
 
 # perform release for a module
@@ -28,10 +25,13 @@ function releaseModule {
 
   # create a temporary workspace for our work
   wktree=$(mktemp -d /tmp/kustomize-releases-XXXXXX)
-  git branch -f $branch upstream/master # always release from master
+  git branch $branch upstream/$branch
   git worktree add $wktree $branch # create a separate worktree for the branch
   pushd .
   cd $wktree/$module # cd into the worktree/module
+
+  # merge master changes into the release branch
+  git merge upstream/master
 
   echo "dir:    $wktree"
   echo "module: $module v$major.$minor.$patch"
@@ -81,8 +81,22 @@ function releaseBinary {
   fi
 }
 
+modules="kyaml api cmd/config cmd/kubectl pluginator kustomize"
+
 # configure the branch and tag names
-module="${1?must provide the module to release as an argument}"
+module="${1?must provide the module to release as an argument: supported modules [$modules]}"
+
+# verify the module
+found=false
+for m in $modules; do
+  if [ "$m" == "$module" ]; then
+    found=true
+  fi
+done
+if [ "$found" != "true" ]; then
+  echo "unknown module \"$module\", must be one of: [$modules]"
+  exit 1
+fi
 
 # get the release versions
 source releasing/VERSIONS
@@ -98,7 +112,7 @@ fi
 # release the module
 releaseModule $module
 
-# release the binary
-if [ "$BINARY" == "true" ]; then
+# release the kustomize binary if the module is kustomize
+if [ "$module" == "kustomize" ]; then
   releaseBinary $module
 fi
