@@ -22,34 +22,53 @@ const (
 	redisCacheURL        = "REDIS_CACHE_URL"
 	redisKeyURL          = "REDIS_KEY_URL"
 	retryCount           = 3
-	githubUserEnv        = "GITHUB_USER"
-	githubRepoEnv        = "GITHUB_REPO"
-	crawlIndexOnlyEnv    = "CRAWL_INDEX_ONLY"
-	crawlGithubOnlyEnv   = "CRAWL_GITHUB_ONLY"
 )
 
-// countEnvs count the environment variables whose values are not empty.
-func countEnvs(envs ...string) int {
-	count := 0
-	for _, env := range envs {
-		if env != "" {
-			count++
-		}
+type CrawlMode int
+const (
+	CrawlUnknown CrawlMode = iota
+	// Crawl all the kustomization files in all the repositories of a Github user
+	CrawlUser
+	// Crawl all the kustomization files in a Github repo
+	CrawlRepo
+	// Crawl all the documents in the index
+	CrawlIndex
+	// Crawl all the kustomization files on Github
+	CrawlGithub
+	// Crawl all the documents in the index and crawling all the kustomization files on Github
+	CrawlIndexAndGithub
+)
+
+func NewCrawlMode(s string) CrawlMode {
+	switch s {
+	case "github-user":
+		return CrawlUser
+	case "github-repo":
+		return CrawlRepo
+	case "":
+		return CrawlIndexAndGithub
+	case "index":
+		return CrawlIndex
+	case "github":
+		return CrawlGithub
+	default:
+		return CrawlUnknown
 	}
-	return count
+}
+
+func Usage() {
+	fmt.Printf("Usage: %s [mode] [githubUser|githubRepo]\n", os.Args[0])
+	fmt.Printf("\tmode can be one of [github-user, github-repo, index, github]\n")
+	fmt.Printf("%s: crawl all the documents in the index and crawling all the kustomization files on Github\n", os.Args[0])
+	fmt.Printf("%s index: crawl all the documents in the index\n", os.Args[0])
+	fmt.Printf("%s gihub: crawl all the kustomization files on Github\n", os.Args[0])
+	fmt.Printf("%s github-user <github-user>: Crawl all the kustomization files in all the repositories of a Github user\n", os.Args[0])
+	fmt.Printf("\tFor example, %s github-user kubernetes-sigs\n", os.Args[0])
+	fmt.Printf("%s github-repo <github-repo>: Crawl all the kustomization files in a Github repo\n", os.Args[0])
+	fmt.Printf("\tFor example, %s github-repo kubernetes-sigs/kustomize\n", os.Args[0])
 }
 
 func main() {
-	githubUser := os.Getenv(githubUserEnv)
-	githubRepo := os.Getenv(githubRepoEnv)
-	crawlIndexOnly := os.Getenv(crawlIndexOnlyEnv)
-	crawlGithubOnly := os.Getenv(crawlGithubOnlyEnv)
-
-	if countEnvs(githubUser, githubRepo, crawlIndexOnly, crawlGithubOnly) > 1 {
-		log.Fatalf("only one of [%s, %s, %s, %s] should be set",
-			githubUserEnv, githubRepoEnv, crawlIndexOnlyEnv, crawlGithubOnlyEnv)
-	}
-
 	githubToken := os.Getenv(githubAccessTokenVar)
 	if githubToken == "" {
 		fmt.Printf("Must set the variable '%s' to make github requests.\n",
@@ -63,8 +82,6 @@ func main() {
 		fmt.Printf("Could not create an index: %v\n", err)
 		return
 	}
-
-	seedDocs := make(crawler.CrawlSeed, 0)
 
 	cacheURL := os.Getenv(redisCacheURL)
 	cache, err := redis.DialURL(cacheURL)
@@ -86,7 +103,7 @@ func main() {
 	}
 
 	// Index updates the value in the index.
-	indexFunc := func(cdoc crawler.CrawledDocument, crwlr crawler.Crawler, mode index.Mode) error {
+	indexFunc := func(cdoc crawler.CrawledDocument, mode index.Mode) error {
 		switch d := cdoc.(type) {
 		case *doc.KustomizationDocument:
 			switch mode {
@@ -106,30 +123,41 @@ func main() {
 	// This helps avoid indexing a given document multiple times.
 	seen := make(map[string]struct{})
 
-	var ghCrawler crawler.Crawler
-
-	if githubRepo != "" {
-		ghCrawler = github.NewCrawler(githubToken, retryCount, clientCache,
-			github.QueryWith(
-				github.Filename("kustomization.yaml"),
-				github.Filename("kustomization.yml"),
-				github.Repo(githubRepo)),
-		)
-	} else if githubUser != "" {
-		ghCrawler = github.NewCrawler(githubToken, retryCount, clientCache,
-			github.QueryWith(
-				github.Filename("kustomization.yaml"),
-				github.Filename("kustomization.yml"),
-				github.User(githubUser)),
-		)
+	var mode CrawlMode
+	if len(os.Args) == 1 {
+		mode = CrawlIndexAndGithub
 	} else {
-		ghCrawler = github.NewCrawler(githubToken, retryCount, clientCache,
-			github.QueryWith(
-				github.Filename("kustomization.yaml"),
-				github.Filename("kustomization.yml")),
-		)
+		mode = NewCrawlMode(os.Args[1])
+	}
 
-		// get all the documents in the index
+	ghCrawlerConstructor := func(user, repo string) crawler.Crawler {
+		if user != "" {
+			return 	github.NewCrawler(githubToken, retryCount, clientCache,
+				github.QueryWith(
+					github.Filename("kustomization.yaml"),
+					github.Filename("kustomization.yml"),
+					github.User(user)),
+			)
+		} else if repo != "" {
+			return github.NewCrawler(githubToken, retryCount, clientCache,
+				github.QueryWith(
+					github.Filename("kustomization.yaml"),
+					github.Filename("kustomization.yml"),
+					github.Repo(repo)),
+			)
+		} else {
+			return github.NewCrawler(githubToken, retryCount, clientCache,
+				github.QueryWith(
+					github.Filename("kustomization.yaml"),
+					github.Filename("kustomization.yml")),
+			)
+		}
+	}
+
+	seedDocs := make(crawler.CrawlSeed, 0)
+
+	// get all the documents in the index
+	getSeedDocsFunc := func() {
 		query := []byte(`{ "query":{ "match_all":{} } }`)
 		it := idx.IterateQuery(query, 10000, 60*time.Second)
 		for it.Next() {
@@ -142,14 +170,35 @@ func main() {
 		}
 	}
 
-	crawlers := []crawler.Crawler{ghCrawler}
-
-	if crawlGithubOnly == "true" || githubRepo != "" || githubUser != "" {
-		crawler.CrawlGithub(ctx, crawlers, docConverter, indexFunc, seen)
-	} else if crawlIndexOnly == "true" {
-		crawler.CrawlFromSeed(ctx, seedDocs, crawlers, docConverter, indexFunc, seen)
-	} else {
+	switch mode {
+	case CrawlIndexAndGithub:
+		getSeedDocsFunc()
+		crawlers := []crawler.Crawler{ghCrawlerConstructor("", "")}
 		crawler.CrawlFromSeed(ctx, seedDocs, crawlers, docConverter, indexFunc, seen)
 		crawler.CrawlGithub(ctx, crawlers, docConverter, indexFunc, seen)
+	case CrawlIndex:
+		getSeedDocsFunc()
+		crawlers := []crawler.Crawler{ghCrawlerConstructor("", "")}
+		crawler.CrawlFromSeed(ctx, seedDocs, crawlers, docConverter, indexFunc, seen)
+	case CrawlGithub:
+		crawlers := []crawler.Crawler{ghCrawlerConstructor("", "")}
+		crawler.CrawlGithub(ctx, crawlers, docConverter, indexFunc, seen)
+	case CrawlUser:
+		if len(os.Args) < 3 {
+			Usage()
+			log.Fatalf("Please specify a github user!")
+		}
+		crawlers := []crawler.Crawler{ghCrawlerConstructor(os.Args[2], "")}
+		crawler.CrawlGithub(ctx, crawlers, docConverter, indexFunc, seen)
+	case CrawlRepo:
+		if len(os.Args) < 3 {
+			Usage()
+			log.Fatalf("Please specify a github repo!")
+		}
+		crawlers := []crawler.Crawler{ghCrawlerConstructor("", os.Args[2])}
+		crawler.CrawlGithub(ctx, crawlers, docConverter, indexFunc, seen)
+	case CrawlUnknown:
+		Usage()
+		log.Fatalf("The crawler mode must be one of [github-user, github-repo, index, github]")
 	}
 }
