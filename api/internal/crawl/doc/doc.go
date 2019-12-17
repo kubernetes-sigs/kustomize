@@ -47,7 +47,7 @@ type set map[string]struct{}
 func (doc *KustomizationDocument) String() string {
 	return fmt.Sprintf("%s %s %s %v %v %v len(identifiers):%v  len(values):%v",
 		doc.RepositoryURL, doc.FilePath, doc.DefaultBranch, doc.CreationTime,
-		doc.IsSame,	doc.Kinds, len(doc.Identifiers), len(doc.Values))
+		doc.IsSame, doc.Kinds, len(doc.Identifiers), len(doc.Values))
 }
 
 // Implements the CrawlerDocument interface.

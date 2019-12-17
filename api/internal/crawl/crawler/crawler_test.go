@@ -5,12 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"sigs.k8s.io/kustomize/api/internal/crawl/index"
 	"sort"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"sigs.k8s.io/kustomize/api/internal/crawl/index"
 
 	"sigs.k8s.io/kustomize/api/internal/crawl/doc"
 	"sigs.k8s.io/kustomize/api/konfig"

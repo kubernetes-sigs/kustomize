@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sigs.k8s.io/kustomize/api/internal/crawl/index"
 	"sync"
+
+	"sigs.k8s.io/kustomize/api/internal/crawl/index"
 
 	_ "github.com/gomodule/redigo/redis"
 
@@ -138,7 +139,7 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 			FetchDocumentErrCount++
 			// delete the document from the index
 			cdoc := &doc.KustomizationDocument{
-				Document:    *tail,
+				Document: *tail,
 			}
 			seen[cdoc.ID()] = struct{}{}
 			if err := indx(cdoc, match, index.Delete); err != nil {
