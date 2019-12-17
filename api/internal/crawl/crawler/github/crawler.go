@@ -580,10 +580,7 @@ func (gcl GhClient) getWithRetry(
 
 	retryCount := gcl.retryCount
 
-	for err == nil &&
-		resp.StatusCode == http.StatusForbidden &&
-		retryCount > 0 {
-
+	for resp.StatusCode == http.StatusForbidden && retryCount > 0 {
 		retryTime := resp.Header.Get("Retry-After")
 		i, errAtoi := strconv.Atoi(retryTime)
 		if errAtoi != nil {

@@ -65,12 +65,18 @@ func main() {
 	}
 
 	// Index updates the value in the index.
-	index := func(cdoc crawler.CrawledDocument, crwlr crawler.Crawler) error {
+	index := func(cdoc crawler.CrawledDocument, crwlr crawler.Crawler, mode index.Mode) error {
 		switch d := cdoc.(type) {
 		case *doc.KustomizationDocument:
-			fmt.Println("Inserting: ", d)
-			_, err := idx.Put(d.ID(), d)
-			return err
+			switch mode {
+			case index.Delete:
+				fmt.Println("Deleting: ", d)
+				return idx.Delete(d.ID())
+			default:
+				fmt.Println("Inserting: ", d)
+				_, err := idx.Put(d.ID(), d)
+				return err
+			}
 		default:
 			return fmt.Errorf("type %T not supported", d)
 		}
