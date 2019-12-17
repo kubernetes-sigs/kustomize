@@ -16,6 +16,12 @@ const (
 	AggregationKeyword = "aggs"
 )
 
+type Mode int
+const (
+	InsertOrUpdate = iota
+	Delete
+)
+
 // Redefinition of Hits structure. Must match the json string of
 // KustomizeResult.Hits.Hits. Declared as a convenience for iteration.
 type KustomizeHits []struct {
@@ -299,6 +305,11 @@ func (ki *KustomizeIndex) Put(id string, doc *doc.KustomizationDocument) (string
 		return id, fmt.Errorf("could not insert in elastic: %v", err)
 	}
 	return id, nil
+}
+
+// Delete a document with a given id from the kustomize index.
+func (ki *KustomizeIndex) Delete(id string) error {
+	return ki.index.Delete(id)
 }
 
 // Kustomize search options: What metrics should be returned? Kind Aggregation,

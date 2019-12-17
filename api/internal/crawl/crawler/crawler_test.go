@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"sigs.k8s.io/kustomize/api/internal/crawl/index"
 	"sort"
 	"strings"
 	"sync"
@@ -316,7 +317,7 @@ resources:
 					Document: *d,
 				}, nil
 			},
-			func(d CrawledDocument, cr Crawler) error {
+			func(d CrawledDocument, cr Crawler, mode index.Mode) error {
 				visited[d.ID()]++
 				return nil
 			},
