@@ -18,7 +18,7 @@ type FieldMeta struct {
 	// Substitutions are substitutions that may be performed against this field
 	Substitutions []Substitution `yaml:"substitutions,omitempty" json:"substitutions,omitempty"`
 	// OwnedBy records the owner of this field
-	OwnedBy string `yaml:"ownedBy,omitempty" json:"ownedBy,omitempty"`
+	OwnedBy string `yaml:"setBy,omitempty" json:"setBy,omitempty"`
 	// DefaultedBy records that this field was default, but may be changed by other owners
 	DefaultedBy string `yaml:"defaultedBy,omitempty" json:"defaultedBy,omitempty"`
 	// Description is a description of the current field value, e.g. why it was set
