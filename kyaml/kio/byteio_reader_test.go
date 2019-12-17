@@ -150,7 +150,7 @@ func TestByteReader_Read(t *testing.T) {
 c: d
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
+    config.kubernetes.io/index: '0'
 `,
 		`# second resource
 e: f
@@ -158,12 +158,12 @@ g:
 - h
 metadata:
   annotations:
-    config.kubernetes.io/index: 1
+    config.kubernetes.io/index: '1'
 `,
 		`i: j
 metadata:
   annotations:
-    config.kubernetes.io/index: 2
+    config.kubernetes.io/index: '2'
 `,
 	}
 	for i := range nodes {
@@ -230,7 +230,7 @@ func TestByteReader_Read_setAnnotationsOmitReaderAnnotations(t *testing.T) {
 c: d
 metadata:
   annotations:
-    foo: bar
+    foo: 'bar'
 `,
 		`# second resource
 e: f
@@ -238,12 +238,12 @@ g:
 - h
 metadata:
   annotations:
-    foo: bar
+    foo: 'bar'
 `,
 		`i: j
 metadata:
   annotations:
-    foo: bar
+    foo: 'bar'
 `,
 	}
 	for i := range nodes {
@@ -278,8 +278,8 @@ func TestByteReader_Read_setAnnotations(t *testing.T) {
 c: d
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
-    foo: bar
+    config.kubernetes.io/index: '0'
+    foo: 'bar'
 `,
 		`# second resource
 e: f
@@ -287,14 +287,14 @@ g:
 - h
 metadata:
   annotations:
-    config.kubernetes.io/index: 1
-    foo: bar
+    config.kubernetes.io/index: '1'
+    foo: 'bar'
 `,
 		`i: j
 metadata:
   annotations:
-    config.kubernetes.io/index: 2
-    foo: bar
+    config.kubernetes.io/index: '2'
+    foo: 'bar'
 `,
 	}
 	for i := range nodes {

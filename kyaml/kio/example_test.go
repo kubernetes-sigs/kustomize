@@ -77,7 +77,7 @@ spec:
 	//   labels:
 	//     app: nginx
 	//   annotations:
-	//     foo: bar
+	//     foo: 'bar'
 	// spec:
 	//   replicas: 3
 	//   selector:
@@ -99,7 +99,7 @@ spec:
 	// metadata:
 	//   name: nginx
 	//   annotations:
-	//     foo: bar
+	//     foo: 'bar'
 	// spec:
 	//   selector:
 	//     app: nginx
