@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -23,11 +24,31 @@ const (
 	retryCount           = 3
 	githubUserEnv        = "GITHUB_USER"
 	githubRepoEnv        = "GITHUB_REPO"
+	crawlIndexOnlyEnv    = "CRAWL_INDEX_ONLY"
+	crawlGithubOnlyEnv   = "CRAWL_GITHUB_ONLY"
 )
+
+// countEnvs count the environment variables whose values are not empty.
+func countEnvs(envs ...string) int {
+	count := 0
+	for _, env := range envs {
+		if env != "" {
+			count++
+		}
+	}
+	return count
+}
 
 func main() {
 	githubUser := os.Getenv(githubUserEnv)
 	githubRepo := os.Getenv(githubRepoEnv)
+	crawlIndexOnly := os.Getenv(crawlIndexOnlyEnv)
+	crawlGithubOnly := os.Getenv(crawlGithubOnlyEnv)
+
+	if countEnvs(githubUser, githubRepo, crawlIndexOnly, crawlGithubOnly) > 1 {
+		log.Fatalf("only one of [%s, %s, %s, %s] should be set",
+			githubUserEnv, githubRepoEnv, crawlIndexOnlyEnv, crawlGithubOnlyEnv)
+	}
 
 	githubToken := os.Getenv(githubAccessTokenVar)
 	if githubToken == "" {
@@ -122,6 +143,13 @@ func main() {
 	}
 
 	crawlers := []crawler.Crawler{ghCrawler}
-	crawler.CrawlFromSeed(ctx, seedDocs, crawlers, docConverter, indexFunc, seen)
-	crawler.CrawlGithub(ctx, crawlers, docConverter, indexFunc, seen)
+
+	if crawlGithubOnly == "true" || githubRepo != "" || githubUser != "" {
+		crawler.CrawlGithub(ctx, crawlers, docConverter, indexFunc, seen)
+	} else if crawlIndexOnly == "true" {
+		crawler.CrawlFromSeed(ctx, seedDocs, crawlers, docConverter, indexFunc, seen)
+	} else {
+		crawler.CrawlFromSeed(ctx, seedDocs, crawlers, docConverter, indexFunc, seen)
+		crawler.CrawlGithub(ctx, crawlers, docConverter, indexFunc, seen)
+	}
 }
