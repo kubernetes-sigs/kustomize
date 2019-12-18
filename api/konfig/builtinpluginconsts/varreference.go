@@ -190,5 +190,7 @@ varReference:
   kind: StatefulSet
 
 - path: metadata/labels
+
+- path: metadata/annotations
 `
 )
