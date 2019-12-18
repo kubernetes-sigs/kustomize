@@ -1157,6 +1157,8 @@ vars:
     name: my-deployment
     labels:
       my-label: $(NAMESPACE)
+    annotations:
+      my-annotation: $(NAMESPACE)
   spec:
     template:
       spec:
@@ -1176,6 +1178,8 @@ vars:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    my-annotation: my-namespace
   labels:
     my-label: my-namespace
   name: my-deployment
