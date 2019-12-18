@@ -1,0 +1,5 @@
+resources:
+  - crd-vaultsecret.yaml
+  - vaultsecret.yaml
+transformers:
+  - vaultsecrettransformer.yaml
