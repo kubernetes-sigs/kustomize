@@ -17,6 +17,35 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio/filters/testyaml"
 )
 
+func TestFormatInput_Style(t *testing.T) {
+	y := `
+apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+spec:
+  notBoolean: "true"
+  notBoolean2: "on"
+  isBoolean: on
+  isBoolean2: true
+`
+
+	expected := `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+spec:
+  isBoolean: on
+  isBoolean2: true
+  notBoolean: "true"
+  notBoolean2: "on"
+`
+
+	s, err := FormatInput(strings.NewReader(y))
+	assert.NoError(t, err)
+	assert.Equal(t, expected, s.String())
+}
+
 // TestFormatInput_configMap verifies a ConfigMap yaml is formatted correctly
 func TestFormatInput_configMap(t *testing.T) {
 	y := `
@@ -229,7 +258,7 @@ webhooks:
     - CONNECT
     - CREATE
     - UPDATE # this list is indented by 2
-    scope: Namespaced
+    scope: "Namespaced"
   timeoutSeconds: 1
 `
 	s, err := FormatInput(strings.NewReader(y))
@@ -467,7 +496,7 @@ func TestFormatFileOrDirectory_YamlExtFileWithJson(t *testing.T) {
 	// check the result is formatted as yaml
 	b, err := ioutil.ReadFile(f.Name())
 	assert.NoError(t, err)
-	assert.Equal(t, string(testyaml.FormattedYaml1), string(b))
+	assert.Equal(t, string(testyaml.FormattedJSON1), string(b))
 }
 
 // TestFormatFileOrDirectory_partialKubernetesYamlFile verifies that if a yaml file contains both

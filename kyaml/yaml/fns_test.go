@@ -646,6 +646,25 @@ metadata:
 `, assertNoErrorString(t)(r0.String()))
 }
 
+func TestUpdateAnnotation_Fn(t *testing.T) {
+	// create metadata.annotations field
+	r0 := assertNoError(t)(Parse(`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    a.b.c: "h.i.j"
+`))
+
+	rn := assertNoError(t)(r0.Pipe(SetAnnotation("a.b.c", "d.e.f")))
+	assert.Equal(t, "\"d.e.f\"\n", assertNoErrorString(t)(rn.String()))
+	assert.Equal(t, `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    a.b.c: "d.e.f"
+`, assertNoErrorString(t)(r0.String()))
+}
+
 func TestRNode_GetMeta(t *testing.T) {
 	s := `apiVersion: v1/apps
 kind: Deployment
