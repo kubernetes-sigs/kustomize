@@ -68,13 +68,13 @@ func TestLocalPackageWriter_Write_keepReaderAnnotations(t *testing.T) {
 metadata:
   annotations:
     config.kubernetes.io/index: 0
-    config.kubernetes.io/path: a/b/a_test.yaml
+    config.kubernetes.io/path: "a/b/a_test.yaml"
 ---
 c: d # second
 metadata:
   annotations:
     config.kubernetes.io/index: 1
-    config.kubernetes.io/path: a/b/a_test.yaml
+    config.kubernetes.io/path: "a/b/a_test.yaml"
 `, string(b))
 
 	b, err = ioutil.ReadFile(filepath.Join(d, "a", "b", "b_test.yaml"))
@@ -89,7 +89,7 @@ g:
 metadata:
   annotations:
     config.kubernetes.io/index: 0
-    config.kubernetes.io/path: a/b/b_test.yaml
+    config.kubernetes.io/path: "a/b/b_test.yaml"
 `, string(b))
 }
 
