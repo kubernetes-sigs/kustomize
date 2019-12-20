@@ -2,6 +2,7 @@ package doc
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
@@ -46,7 +47,7 @@ type set map[string]struct{}
 func (doc *KustomizationDocument) String() string {
 	return fmt.Sprintf("%s %s %s %v %v %v len(identifiers):%v  len(values):%v",
 		doc.RepositoryURL, doc.FilePath, doc.DefaultBranch, doc.CreationTime,
-		doc.IsSame,	doc.Kinds, len(doc.Identifiers), len(doc.Values))
+		doc.IsSame, doc.Kinds, len(doc.Identifiers), len(doc.Values))
 }
 
 // Implements the CrawlerDocument interface.
@@ -116,6 +117,8 @@ func (doc *KustomizationDocument) readBytes() ([]map[string]interface{}, error) 
 	return configs, nil
 }
 
+// ParseYAML parses doc.Document and sets the following fields of doc:
+// Kinds, Values, Identifiers.
 func (doc *KustomizationDocument) ParseYAML() error {
 	doc.Identifiers = make([]string, 0)
 	doc.Values = make([]string, 0)
@@ -158,6 +161,13 @@ func (doc *KustomizationDocument) ParseYAML() error {
 	for key := range identifierSet {
 		doc.Identifiers = append(doc.Identifiers, key)
 	}
+
+	// Without sorting these fields, every time when the string order in these fields changes,
+	// the document in the index will be updated.
+	// Sorting these fields are necessary to avoid a document being updated unnecessarily.
+	sort.Strings(doc.Kinds)
+	sort.Strings(doc.Values)
+	sort.Strings(doc.Identifiers)
 
 	return nil
 }
