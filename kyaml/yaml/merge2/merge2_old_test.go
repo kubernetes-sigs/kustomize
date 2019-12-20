@@ -83,10 +83,7 @@ spec:
       containers:
       - name: nginx
         image: nginx:1.7.9
-        args:
-        - c
-        - a
-        - b
+        args: ['c', 'a', 'b']
         env:
         - name: DEMO_GREETING
           value: "Hello from the environment"
@@ -139,10 +136,7 @@ spec:
       containers:
       - name: nginx
         image: nginx:1.7.9
-        args:
-        - c
-        - a
-        - b
+        args: ['c', 'a', 'b']
         env:
         - name: DEMO_GREETING
           value: "Hello from the environment"
@@ -208,10 +202,7 @@ spec:
       containers:
       - name: nginx
         image: nginx:1.7.9
-        args:
-        - c
-        - a
-        - b
+        args: ['c', 'a', 'b']
         env:
         - name: DEMO_GREETING
           value: "Hello from the environment"
@@ -276,10 +267,7 @@ spec:
       containers:
       - name: nginx
         image: nginx:1.7.9
-        args:
-        - c
-        - a
-        - b
+        args: ['c', 'a', 'b']
         env:
         - name: DEMO_GREETING
           value: "New Demo Greeting"
@@ -343,10 +331,7 @@ spec:
       containers:
       - name: nginx
         image: nginx:1.7.9
-        args:
-        - e
-        - d
-        - f
+        args: ['e', 'd', 'f']
         env:
         - name: DEMO_GREETING
           value: "Hello from the environment"

@@ -146,9 +146,6 @@ func NewListRNode(values ...string) *RNode {
 
 // NewRNode returns a new RNode pointer containing the provided Node.
 func NewRNode(value *yaml.Node) *RNode {
-	if value != nil {
-		value.Style = 0
-	}
 	return &RNode{value: value}
 }
 
@@ -389,7 +386,7 @@ const (
 	Flow = "Flow"
 )
 
-// String returns a string valuer for a Node, applying the supplied formatting options
+// String returns a string value for a Node, applying the supplied formatting options
 func String(node *yaml.Node, opts ...string) (string, error) {
 	if node == nil {
 		return "", nil

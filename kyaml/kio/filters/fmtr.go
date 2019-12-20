@@ -90,7 +90,6 @@ type formatter struct {
 
 // fmtNode recursively formats the Document Contents.
 func (f *formatter) fmtNode(n *yaml.Node, path string) error {
-	n.Style = 0
 	// sort the order of mapping fields
 	if n.Kind == yaml.MappingNode {
 		sort.Sort(sortedMapContents(*n))
