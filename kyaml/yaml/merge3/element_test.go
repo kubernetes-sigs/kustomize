@@ -174,8 +174,7 @@ kind: Deployment
 containers:
 - name: foo
   image: foo:bar
-  command:
-  - run2.sh
+  command: ['run2.sh']
 `, nil},
 
 	//
@@ -206,8 +205,7 @@ kind: Deployment
 containers:
 - name: foo
   image: foo:bar
-  command:
-  - run2.sh
+  command: ['run2.sh']
 `, nil},
 
 	//
@@ -239,8 +237,7 @@ kind: Deployment
 containers:
 - name: foo
   image: foo:bar
-  command:
-  - run2.sh
+  command: ['run2.sh']
 `, nil},
 
 	//
@@ -367,8 +364,7 @@ kind: Deployment
 containers:
 - name: foo
   image: foo:bar
-  command:
-  - run.sh
+  command: ['run.sh']
 `, nil},
 
 	//

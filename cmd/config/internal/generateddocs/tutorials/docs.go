@@ -316,7 +316,7 @@ var FunctionBasicsLong = `
   #### 2. Modify the Generated Resources
 
   - modify the generated Resources by adding an annotation, sidecar container, etc.
-  - modify the ` + "`" + `local-resources/example-use.yaml` + "`" + ` by changing the replicas
+  - modify the ` + "`" + `local-resource/example-use.yaml` + "`" + ` by changing the replicas
 
   re-run ` + "`" + `run` + "`" + `.  this will apply the updated replicas to the generated Resources,
   but keep the fields that you manually added to the generated Resource configuration.
@@ -363,7 +363,7 @@ var FunctionBasicsLong = `
   #### 2. Modify the Generated Resources
 
   - modify the generated Resources by adding an annotation, sidecar container, etc.
-  - modify the ` + "`" + `local-resources/example-use.yaml` + "`" + ` by changing the replicas
+  - modify the ` + "`" + `local-resource/example-use.yaml` + "`" + ` by changing the replicas
 
   re-run ` + "`" + `run` + "`" + `.  this will apply the updated replicas to the generated Resources,
   but keep the fields that you manually added to the generated Resource configuration.

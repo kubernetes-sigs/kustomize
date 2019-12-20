@@ -23,8 +23,7 @@ kind: Deployment
 items:
 - name: foo
   image: foo:v1
-  command:
-  - run.sh
+  command: ['run.sh']
 `,
 	},
 
@@ -47,8 +46,7 @@ kind: Deployment
 items:
 - name: foo
   image: foo:v1
-  command:
-  - run.sh
+  command: ['run.sh']
 `,
 	},
 
@@ -62,15 +60,14 @@ items:
 `,
 		`
 kind: Deployment
-items: {}
+items: []
 `,
 		`
 kind: Deployment
 items:
 - name: foo
   image: foo:v1
-  command:
-  - run.sh
+  command: ['run.sh']
 `,
 	},
 
@@ -90,8 +87,7 @@ kind: Deployment
 items:
 - name: foo
   image: foo:v1
-  command:
-  - run.sh
+  command: ['run.sh']
 `,
 	},
 
@@ -118,8 +114,7 @@ items:
   image: foo:v1
 - name: bar
   image: bar:v1
-  command:
-  - run2.sh
+  command: ['run2.sh']
 `,
 	},
 
@@ -146,8 +141,7 @@ items:
   image: foo:v1
 - name: bar
   image: bar:v1
-  command:
-  - run2.sh
+  command: ['run2.sh']
 `,
 	},
 
@@ -174,8 +168,7 @@ items:
   image: foo:v1
 - name: bar
   image: bar:v1
-  command:
-  - run2.sh
+  command: ['run2.sh']
 `,
 	},
 
@@ -205,8 +198,7 @@ items:
   image: foo:v1
 - name: bar
   image: bar:v1
-  command:
-  - run2.sh
+  command: ['run2.sh']
 `,
 	},
 
@@ -225,8 +217,7 @@ items:
   image: foo:v1
 - name: bar
   image: bar:v1
-  command:
-  - run2.sh
+  command: ['run2.sh']
 `,
 		`
 kind: Deployment
@@ -235,8 +226,7 @@ items:
   image: foo:v1
 - name: bar
   image: bar:v1
-  command:
-  - run2.sh
+  command: ['run2.sh']
 `,
 	},
 
@@ -255,8 +245,7 @@ items:
   image: foo:v1
 - name: bar
   image: bar:v1
-  command:
-  - run2.sh
+  command: ['run2.sh']
 `,
 		`
 kind: Deployment

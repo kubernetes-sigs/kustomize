@@ -15,8 +15,6 @@ import (
 	_ "golang.org/x/tools/cmd/stringer"
 	// for lint checks
 	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
-	// for integration tests driven by the examples
-	_ "github.com/monopole/mdrip"
 	// REMOVED pluginator from this process, and leaving
 	// this note to discourage its reintroduction,
 	// because pluginator depends on the api, forcing

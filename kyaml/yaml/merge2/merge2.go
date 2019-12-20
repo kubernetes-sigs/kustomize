@@ -43,6 +43,9 @@ func (m Merger) VisitMap(nodes walk.Sources) (*yaml.RNode, error) {
 	if err := m.SetComments(nodes); err != nil {
 		return nil, err
 	}
+	if err := m.SetStyle(nodes); err != nil {
+		return nil, err
+	}
 	if yaml.IsEmpty(nodes.Dest()) {
 		// Add
 		return nodes.Origin(), nil
@@ -59,6 +62,9 @@ func (m Merger) VisitScalar(nodes walk.Sources) (*yaml.RNode, error) {
 	if err := m.SetComments(nodes); err != nil {
 		return nil, err
 	}
+	if err := m.SetStyle(nodes); err != nil {
+		return nil, err
+	}
 	// Override value
 	if nodes.Origin() != nil {
 		return nodes.Origin(), nil
@@ -69,6 +75,9 @@ func (m Merger) VisitScalar(nodes walk.Sources) (*yaml.RNode, error) {
 
 func (m Merger) VisitList(nodes walk.Sources, kind walk.ListKind) (*yaml.RNode, error) {
 	if err := m.SetComments(nodes); err != nil {
+		return nil, err
+	}
+	if err := m.SetStyle(nodes); err != nil {
 		return nil, err
 	}
 	if kind == walk.NonAssociateList {
@@ -90,6 +99,25 @@ func (m Merger) VisitList(nodes walk.Sources, kind walk.ListKind) (*yaml.RNode, 
 	}
 	// Recursively Merge dest
 	return nodes.Dest(), nil
+}
+
+func (m Merger) SetStyle(sources walk.Sources) error {
+	source := sources.Origin()
+	dest := sources.Dest()
+	if dest == nil || dest.YNode() == nil || source == nil || source.YNode() == nil {
+		// avoid panic
+		return nil
+	}
+
+	// copy the style from the source.
+	// special case: if the dest was an empty map or seq, then it probably had
+	// folded style applied, but we actually want to keep the style of the origin
+	// in this case (even if it was the default).  otherwise the merged elements
+	// will get folded even though this probably isn't what is desired.
+	if dest.YNode().Kind != yaml.ScalarNode && len(dest.YNode().Content) == 0 {
+		dest.YNode().Style = source.YNode().Style
+	}
+	return nil
 }
 
 // SetComments copies the dest comments to the source comments if they are present

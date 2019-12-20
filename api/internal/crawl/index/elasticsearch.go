@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"time"
 
 	es "github.com/elastic/go-elasticsearch/v6"
@@ -179,44 +178,47 @@ func (idx *index) DeleteIndex() error {
 }
 
 // Insert or update the document by ID.
-func (idx *index) Put(uniqueID string, doc interface{}) (string, error) {
-	body, err := json.Marshal(doc)
+func (idx *index) Put(uniqueID string, doc interface{}) error {
+	exists, err := idx.Exists(uniqueID)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	req := esapi.IndexRequest{
-		Index:      idx.name,
-		Body:       bytes.NewReader(body),
-		DocumentID: uniqueID,
-	}
-	res, err := req.Do(idx.ctx, idx.client)
-
-	var id string
-	readId := func(reader io.Reader) error {
-		type InsertResult struct {
-			ID string `json:"_id,omitempty"`
+	if exists {
+		docBytes, err := json.Marshal(doc)
+		if err != nil {
+			return err
 		}
-		var ir InsertResult
-		data, err := ioutil.ReadAll(reader)
+		body := byteJoin(`{"doc":`, docBytes, `}`)
+
+		// For a document with a given id, every call of IndexRequest.Do will increase the version of a document.
+		// To avoid increasing the document version unnecessarily, use UpdateRequest here.
+		req := esapi.UpdateRequest{
+			Index:      idx.name,
+			Body:       bytes.NewReader(body),
+			DocumentID: uniqueID,
+		}
+		res, err := req.Do(idx.ctx, idx.client)
+
+		err = idx.responseErrorOrNil("could not update document",
+			res, err, ignoreResponseBody)
+	} else {
+		body, err := json.Marshal(doc)
 		if err != nil {
 			return err
 		}
 
-		err = json.Unmarshal(data, &ir)
-		if err != nil {
-			return err
+		req := esapi.IndexRequest{
+			Index:      idx.name,
+			Body:       bytes.NewReader(body),
+			DocumentID: uniqueID,
 		}
-		id = ir.ID
+		res, err := req.Do(idx.ctx, idx.client)
 
-		return nil
+		err = idx.responseErrorOrNil("could not insert document",
+			res, err, ignoreResponseBody)
 	}
-
-	// populates the id field.
-	err = idx.responseErrorOrNil("could not insert document",
-		res, err, readId)
-
-	return id, err
+	return err
 }
 
 type scrollUpdater func(string, readerFunc) error
@@ -295,4 +297,25 @@ func (idx *index) Delete(id string) error {
 	return idx.responseErrorOrNil(
 		fmt.Sprintf("could not delete id(%s) from index(%s)", id, idx.name),
 		res, err, ignoreResponseBody)
+}
+
+// Check whether a given document id is in the index
+func (idx *index) Exists(id string) (bool, error) {
+	op := idx.client.Exists
+	res, err := op(
+		idx.name,
+		id,
+		op.WithContext(idx.ctx),
+		op.WithPretty(),
+	)
+
+	if !res.IsError() {
+		return true, nil
+	} else if res.StatusCode == 404 {
+		return false, nil
+	} else {
+		return false, idx.responseErrorOrNil(
+			fmt.Sprintf("could not check the existence of id(%s) from index(%s)", id, idx.name),
+			res, err, ignoreResponseBody)
+	}
 }
