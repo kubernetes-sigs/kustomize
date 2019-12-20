@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"sigs.k8s.io/kustomize/api/internal/crawl/index"
+
 	"sigs.k8s.io/kustomize/api/internal/crawl/doc"
 	"sigs.k8s.io/kustomize/api/konfig"
 )
@@ -316,7 +318,7 @@ resources:
 					Document: *d,
 				}, nil
 			},
-			func(d CrawledDocument, cr Crawler) error {
+			func(d CrawledDocument, mode index.Mode) error {
 				visited[d.ID()]++
 				return nil
 			},

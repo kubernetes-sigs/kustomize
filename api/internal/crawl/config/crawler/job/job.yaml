@@ -8,8 +8,10 @@ spec:
       restartPolicy: OnFailure
       containers:
       - name: crawler
-        image: gcr.io/kustomize-search/crawler:latest
+        image: gcr.io/haiyanmeng-gke-dev/crawler:v1
         imagePullPolicy: Always
+        command: ["/crawler"]
+        args: ["github-repo", "kubernetes-sigs/kustomize"]
         env:
         - name: GITHUB_ACCESS_TOKEN
           valueFrom:

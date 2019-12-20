@@ -78,11 +78,17 @@ func (doc *Document) ID() string {
 }
 
 func (doc *Document) RepositoryFullName() string {
-	doc.RepositoryURL = strings.TrimRight(doc.RepositoryURL, "/")
-	sections := strings.Split(doc.RepositoryURL, "/")
+	url := strings.TrimRight(doc.RepositoryURL, "/")
+
+	gitPrefix := "git@github.com:"
+	if strings.HasPrefix(url, gitPrefix) {
+		url = url[len(gitPrefix):]
+	}
+
+	sections := strings.Split(url, "/")
 	l := len(sections)
 	if l < 2 {
-		return doc.RepositoryURL
+		return url
 	}
 	return path.Join(sections[l-2], sections[l-1])
 }
