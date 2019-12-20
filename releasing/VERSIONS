@@ -6,7 +6,7 @@
 # kyaml version
 export kyaml_major=0
 export kyaml_minor=0
-export kyaml_patch=2
+export kyaml_patch=3
 
 # kustomize api version
 export api_major=0
@@ -16,7 +16,7 @@ export api_patch=1
 # cmd/config version
 export cmd_config_major=0
 export cmd_config_minor=0
-export cmd_config_patch=2
+export cmd_config_patch=3
 
 # cmd/kubectl version
 export cmd_kubectl_major=0
