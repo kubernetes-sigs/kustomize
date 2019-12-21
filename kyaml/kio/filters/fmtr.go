@@ -54,7 +54,45 @@ func FormatFileOrDirectory(path string) error {
 	}.Execute()
 }
 
-type FormatFilter struct{}
+// SetStringStyle returns a function that sets the style on string nodes by calling yaml.SetStyle
+// Attempts to preserves yaml 1.1 compatibility by retaining style (leave unmodified) on
+// nodes which  parse as yaml 1.1 non-string values.
+// SetStringStyle does not change the style of field keys, or of the Kubernetes "kind" or
+// "apiVersion" field values.
+func SetStringStyle(style yaml.Style) func(n *yaml.Node, m NodeMeta) error {
+	return func(n *yaml.Node, m NodeMeta) error {
+		if m.IsKey {
+			// don't format field keys
+			return nil
+		}
+		if m.Path == ".kind" || m.Path == ".apiVersion" {
+			// don't format kind or apiVersion
+			return nil
+		}
+		// IMPORTANT:
+		// set the style using this function so that it doesn't change the style
+		// in ways that break yaml 1.1 compatibility
+		yaml.SetStringStyle(n, style)
+		return nil
+	}
+}
+
+// NodeMeta contains metadata about the processed node
+type NodeMeta struct {
+	// IsKey is true if the node is a field key
+	IsKey bool
+	// Path is the path to the node from the root of the object
+	// starts with . -- e.g. '.spec.replicas'.  Sequences are not
+	// included as part of the path -- e.g. '.spec.template.spec.container.name'
+	Path string
+}
+
+type FormatFilter struct {
+	// Postprocess is run on each node after it is formatted.  This can be
+	// used to perform additional formatting, such as setting the Style.
+	// The root node is not postprocessed. (it can be modified directly however)
+	Postprocess func(n *yaml.Node, meta NodeMeta) error
+}
 
 var _ kio.Filter = FormatFilter{}
 
@@ -75,7 +113,11 @@ func (f FormatFilter) Filter(slice []*yaml.RNode) ([]*yaml.RNode, error) {
 			continue
 		}
 		kind, apiVersion := kindNode.YNode().Value, apiVersionNode.YNode().Value
-		err = (&formatter{apiVersion: apiVersion, kind: kind}).fmtNode(slice[i].YNode(), "")
+		err = (&formatter{
+			apiVersion:  apiVersion,
+			kind:        kind,
+			postprocess: f.Postprocess,
+		}).fmtNode(slice[i].YNode(), "")
 		if err != nil {
 			return nil, err
 		}
@@ -84,8 +126,9 @@ func (f FormatFilter) Filter(slice []*yaml.RNode) ([]*yaml.RNode, error) {
 }
 
 type formatter struct {
-	apiVersion string
-	kind       string
+	apiVersion  string
+	kind        string
+	postprocess func(n *yaml.Node, meta NodeMeta) error
 }
 
 // fmtNode recursively formats the Document Contents.
@@ -112,6 +155,15 @@ func (f *formatter) fmtNode(n *yaml.Node, path string) error {
 		err := f.fmtNode(n.Content[i], p)
 		if err != nil {
 			return err
+		}
+
+		// postprocess the node if configured
+		if f.postprocess != nil {
+			isKey := n.Kind == yaml.MappingNode && i%2 == 0
+			meta := NodeMeta{IsKey: isKey, Path: p}
+			if err := f.postprocess(n.Content[i], meta); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
