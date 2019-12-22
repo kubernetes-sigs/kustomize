@@ -17,8 +17,8 @@ fmt:
 	go fmt ./...
 
 generate:
-	#(which $(GOBIN)/mdtogo || go get sigs.k8s.io/kustomize/cmd/resource)
-	#GOBIN=$(GOBIN) go generate ./...
+	(which $(GOBIN)/mdtogo || go get sigs.k8s.io/kustomize/cmd/mdtogo)
+	GOBIN=$(GOBIN) go generate ./...
 
 license:
 	(which $(GOBIN)/addlicense || go get github.com/google/addlicense)
