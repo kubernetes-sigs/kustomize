@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // Package sub substitutes strings in fields
-package sub
+package set
 
 import (
 	"strings"
