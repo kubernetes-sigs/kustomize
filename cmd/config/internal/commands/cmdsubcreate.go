@@ -17,8 +17,8 @@ package commands
 import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
-	"sigs.k8s.io/kustomize/cmd/config/internal/sub"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/set"
 )
 
 // NewSubSetRunner returns a command runner.
@@ -62,7 +62,7 @@ func SubSetCommand(parent string) *cobra.Command {
 
 type SubSetRunner struct {
 	Command *cobra.Command
-	Set     sub.SetSubstitutionMarker
+	Set     set.SetSubstitutionMarker
 }
 
 func (r *SubSetRunner) runE(c *cobra.Command, args []string) error {

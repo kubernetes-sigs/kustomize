@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package sub
+package set
 
 import (
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"

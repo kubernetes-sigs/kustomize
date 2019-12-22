@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package sub
+package set
 
 import (
 	"strings"
@@ -65,10 +65,10 @@ func (m *Marker) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	}
 }
 
-func (as *Marker) createSub(field *yaml.RNode) error {
+func (m *Marker) createSub(field *yaml.RNode) error {
 	// doesn't match the supplied value
-	if field.YNode().Value != as.Substitution.Value {
-		if !as.PartialMatch || !strings.Contains(field.YNode().Value, as.Substitution.Value) {
+	if field.YNode().Value != m.Substitution.Value {
+		if !m.PartialMatch || !strings.Contains(field.YNode().Value, m.Substitution.Value) {
 			return nil
 		}
 	}
@@ -77,26 +77,26 @@ func (as *Marker) createSub(field *yaml.RNode) error {
 	if err := fm.Read(field); err != nil {
 		return errors.Wrap(err)
 	}
-	fm.OwnedBy = as.OwnedBy
-	fm.Description = as.Description
-	fm.Type = fieldmeta.FieldValueType(as.Type)
-	if as.Substitution.Marker == "" {
-		as.Substitution.Marker = "[MARKER]"
+	fm.OwnedBy = m.OwnedBy
+	fm.Description = m.Description
+	fm.Type = fieldmeta.FieldValueType(m.Type)
+	if m.Substitution.Marker == "" {
+		m.Substitution.Marker = "[MARKER]"
 	}
 
 	found := false
 	for i := range fm.Substitutions {
 		s := fm.Substitutions[i]
-		if s.Name == as.Substitution.Name {
+		if s.Name == m.Substitution.Name {
 			// update the substitution if we find it
 			found = true
-			fm.Substitutions[i] = as.Substitution
+			fm.Substitutions[i] = m.Substitution
 			break
 		}
 	}
 	if !found {
 		// add the substitution if it wasn't found
-		fm.Substitutions = append(fm.Substitutions, as.Substitution)
+		fm.Substitutions = append(fm.Substitutions, m.Substitution)
 	}
 	if err := fm.Write(field); err != nil {
 		return errors.Wrap(err)
