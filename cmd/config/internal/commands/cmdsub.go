@@ -21,9 +21,9 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
-	"sigs.k8s.io/kustomize/cmd/config/internal/sub"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/set"
 )
 
 // NewSubRunner returns a command runner.
@@ -55,8 +55,8 @@ func SubCommand(parent string) *cobra.Command {
 
 type SubRunner struct {
 	Command *cobra.Command
-	Lookup  sub.LookupSubstitutions
-	Perform sub.PerformSubstitutions
+	Lookup  set.LookupSubstitutions
+	Perform set.PerformSubstitutions
 }
 
 func (r *SubRunner) preRunE(c *cobra.Command, args []string) error {
