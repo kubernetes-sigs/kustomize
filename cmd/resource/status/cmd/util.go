@@ -1,3 +1,6 @@
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 package cmd
 
 import (
@@ -19,6 +22,8 @@ func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
 }
 
+// getClient returns a client for talking to a Kubernetes cluster. The client
+// is from controller-runtime.
 func getClient() (client.Client, error) {
 	config := ctrl.GetConfigOrDie()
 	mapper, err := apiutil.NewDiscoveryRESTMapper(config)
@@ -28,6 +33,8 @@ func getClient() (client.Client, error) {
 	return client.New(config, client.Options{Scheme: scheme, Mapper: mapper})
 }
 
+// CaptureIdentifiersFilter implements the Filter interface in the kio package. It
+// captures the identifiers for all resources passed through the pipeline.
 type CaptureIdentifiersFilter struct {
 	Identifiers []wait.ResourceIdentifier
 }

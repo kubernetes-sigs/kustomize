@@ -1,3 +1,8 @@
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
+//go:generate $GOBIN/mdtogo docs/commands generateddocs/commands --license=none
+
 package status
 
 import (
@@ -8,7 +13,7 @@ import (
 func StatusCommand() *cobra.Command {
 	var status = &cobra.Command{
 		Use:   "status",
-		Short: "status reference command",
+		Short: "[Alpha] Commands for working with resource status.",
 	}
 
 	status.AddCommand(cmd.FetchCommand())
