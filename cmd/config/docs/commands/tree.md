@@ -20,8 +20,9 @@ container names, etc.
 
 kustomize config tree supports printing arbitrary fields using the '--field' flag.
 
-By default, kustomize config tree uses the directory structure for the tree structure, however when printing
-from the cluster, the Resource graph structure may be used instead.
+By default, kustomize config tree uses Resource graph structure if any relationships between resources (ownerReferences)
+are detected, as is typically the case when printing from a cluster. Otherwise, directory graph structure is used. The
+graph structure can also be selected explicitly using the '--graph-structure' flag.
 
 ### Examples
 
@@ -42,8 +43,7 @@ from the cluster, the Resource graph structure may be used instead.
       --field="status.conditions[type=Completed].status"
 
     # print live Resources from a cluster using owners for graph structure
-    kubectl get all -o yaml | kustomize config tree --replicas --name --image \
-      --graph-structure=owners
+    kubectl get all -o yaml | kustomize config tree --replicas --name --image
 
     # print live Resources with status condition fields
     kubectl get all -o yaml | kustomize config tree \
