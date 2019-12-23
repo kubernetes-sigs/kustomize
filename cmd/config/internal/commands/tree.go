@@ -45,7 +45,7 @@ func GetTreeRunner(name string) *TreeRunner {
 		"if true, include local-config in the output.")
 	c.Flags().BoolVar(&r.excludeNonLocal, "exclude-non-local", false,
 		"if true, exclude non-local-config in the output.")
-	c.Flags().StringVar(&r.structure, "graph-structure", "directory",
+	c.Flags().StringVar(&r.structure, "graph-structure", "",
 		"Graph structure to use for printing the tree.  may be any of: "+
 			strings.Join(kio.GraphStructures, ","))
 
