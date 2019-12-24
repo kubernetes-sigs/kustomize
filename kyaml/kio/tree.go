@@ -98,9 +98,15 @@ func (p TreeWriter) Write(nodes []*yaml.RNode) error {
 		return p.packageStructure(nodes)
 	case TreeStructureGraph:
 		return p.graphStructure(nodes)
-	default:
-		return p.packageStructure(nodes)
 	}
+
+	// If any resource has an owner reference, default to the graph structure. Otherwise, use package structure.
+	for _, node := range nodes {
+		if owners, _ := node.Pipe(yaml.Lookup("metadata", "ownerReferences")); owners != nil {
+			return p.graphStructure(nodes)
+		}
+	}
+	return p.packageStructure(nodes)
 }
 
 // node wraps a tree node, and any children nodes
