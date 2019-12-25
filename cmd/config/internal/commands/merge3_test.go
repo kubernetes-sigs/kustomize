@@ -3,7 +3,6 @@
 
 package commands_test
 
-
 import (
 	"io/ioutil"
 	"os"
