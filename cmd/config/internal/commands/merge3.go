@@ -5,7 +5,7 @@ package commands
 
 import (
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/cmd/config/cmddocs/commands"
+	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
 
@@ -36,17 +36,17 @@ func Merge3Command(name string) *cobra.Command {
 
 // Merge3Runner contains the run function
 type Merge3Runner struct {
-	Command     *cobra.Command
-	ancestor	string
-	fromDir		string
-	toDir		string
+	Command  *cobra.Command
+	ancestor string
+	fromDir  string
+	toDir    string
 }
 
 func (r *Merge3Runner) runE(c *cobra.Command, args []string) error {
 	err := filters.Merge3{
 		OriginalPath: r.ancestor,
-		UpdatedPath: r.fromDir,
-		DestPath: r.toDir,
+		UpdatedPath:  r.fromDir,
+		DestPath:     r.toDir,
 	}.Merge()
 	if err != nil {
 		return err
