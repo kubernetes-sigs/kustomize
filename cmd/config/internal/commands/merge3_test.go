@@ -1,7 +1,8 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package commands
+package commands_test
+
 
 import (
 	"io/ioutil"
@@ -233,4 +234,4 @@ spec:
 	if !assert.Empty(t, diffs.List()) {
 		t.FailNow()
 	}
-} 
+}
