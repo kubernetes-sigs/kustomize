@@ -131,7 +131,11 @@ metadata:
 	}
 	for _, e := range os.Environ() {
 		// the process env
-		expected = append(expected, "-e", strings.Split(e, "=")[0])
+		tokens := strings.Split(e, "=")
+		if tokens[0] == "" {
+			continue
+		}
+		expected = append(expected, "-e", tokens[0])
 	}
 	expected = append(expected, "example.com:version")
 	assert.Equal(t, expected, cmd.Args)
