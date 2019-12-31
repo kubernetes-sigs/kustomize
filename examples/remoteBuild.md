@@ -26,7 +26,7 @@ someone who wants to send them all at the same time):
 
 <!-- @remoteBuild @testAgainstLatestRelease -->
 ```
-target="https://github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6"
+target="https://github.com/kubernetes-sigs/kustomize/blob/master/examples/multibases?ref=v1.0.6"
 test 3 == \
   $(kustomize build $target | grep cluster-a-.*-myapp-pod | wc -l); \
   echo $?
