@@ -4,6 +4,7 @@
 package status
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -26,6 +27,11 @@ const (
 	UnknownStatus     Status = "Unknown"
 )
 
+var (
+	Statuses = []Status{InProgressStatus, FailedStatus, CurrentStatus, TerminatingStatus, UnknownStatus}
+	ConditionTypes = []ConditionType{ConditionFailed, ConditionInProgress}
+)
+
 // ConditionType defines the set of condition types allowed inside a Condition struct.
 type ConditionType string
 
@@ -40,6 +46,18 @@ type Status string
 // String returns the status as a string.
 func (s Status) String() string {
 	return string(s)
+}
+
+// StatusFromString turns a string into a Status. Will panic if the provided string is
+// not a valid status.
+func FromStringOrDie(text string) Status {
+	s := Status(text)
+	for _, r := range Statuses {
+		if s == r {
+			return s
+		}
+	}
+	panic(fmt.Errorf("string has invalid status: %s", s))
 }
 
 // Result contains the results of a call to compute the status of
