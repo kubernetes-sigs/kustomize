@@ -59,7 +59,7 @@ URL 需要遵循 [hashicorp/go-getter URL 格式](https://github.com/hashicorp/g
   `github.com/Liujingfang1/mysql?ref=test`
 - kustomization.yaml 在 v1.0.6 版本的子目录
 
-  `github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6`
+  `github.com/kubernetes-sigs/kustomize/blob/master/examples/multibases?ref=v1.0.6`
 - kustomization.yaml repoUrl2 分支的子目录
 
   `github.com/Liujingfang1/kustomize/examples/helloWorld?ref=repoUrl2`
