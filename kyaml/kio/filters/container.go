@@ -130,7 +130,11 @@ func (c *ContainerFilter) getArgs() []string {
 
 	// export the local environment vars to the container
 	for _, pair := range os.Environ() {
-		args = append(args, "-e", strings.Split(pair, "=")[0])
+		tokens := strings.Split(pair, "=")
+		if tokens[0] == "" {
+			continue
+		}
+		args = append(args, "-e", tokens[0])
 	}
 	return append(args, c.Image)
 }
