@@ -86,13 +86,13 @@ func (kvl *loader) keyValuesFromFileSources(sources []string) ([]types.Pair, err
 		if err != nil {
 			return nil, err
 		}
-		kvs = append(kvs, types.Pair{Key: k, Value: kvl.trimTrailingSpacesInLines(string(content))})
+		kvs = append(kvs, types.Pair{Key: k, Value: trimTrailingSpacesInLines(string(content))})
 	}
 	return kvs, nil
 }
 
-// Takes string with multiple lines and trims the trailing white spaces from each line.
-func (kvl *loader) trimTrailingSpacesInLines(str string) string {
+// trimTrailingSpacesInLines takes string with multiple lines and trims the trailing white spaces and tabs from each line.
+func trimTrailingSpacesInLines(str string) string {
 	re := regexp.MustCompile(`\s*\n`)
 	return re.ReplaceAllString(str, "\n")
 }
