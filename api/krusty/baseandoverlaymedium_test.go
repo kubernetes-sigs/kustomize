@@ -154,7 +154,7 @@ LEGUME=chickpea
 `)
 	th.WriteF("/app/overlay/configmap/dummy.txt",
 		`Lorem ipsum dolor sit amet, consectetur  
-adipiscing elit, sed do eiusmod tempor  
+adipiscing elit, sed do eiusmod tempor		
 incididunt ut labore et dolore magna aliqua.   
 `)
 	th.WriteF("/app/overlay/deployment/deployment.yaml", `

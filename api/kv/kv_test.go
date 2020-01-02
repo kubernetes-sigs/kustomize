@@ -98,10 +98,10 @@ func TestKeyValuesFromFileSources(t *testing.T) {
 
 func TestTrimTrailingSpacesInLines(t *testing.T) {
 	kvl := makeKvLoader(filesys.MakeFsInMemory())
-	input := "\"fooKey\": \"fooValue\"   \n\t\"barKey\": \"barValue\""
+	input := "\"fooKey\": \"fooValue\"   \t\n\t\"barKey\": \"barValue\""
 	expected := "\"fooKey\": \"fooValue\"\n\t\"barKey\": \"barValue\""
 	res := kvl.trimTrailingSpacesInLines(input)
 	if !reflect.DeepEqual(res, expected) {
-		t.Errorf("%s should succeed, got: %s exptected: %s", "trim trailing spaces in lines", res, expected)
+		t.Errorf("Trim trailing spaces in lines should succeed, got: %s exptected: %s", res, expected)
 	}
 }
