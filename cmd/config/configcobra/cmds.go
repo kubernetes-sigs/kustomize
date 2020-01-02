@@ -74,6 +74,7 @@ func NewConfigCommand(name string) *cobra.Command {
 	root.AddCommand(commands.CatCommand(name))
 	root.AddCommand(commands.FmtCommand(name))
 	root.AddCommand(commands.MergeCommand(name))
+	root.AddCommand(commands.Merge3Command(name))
 	root.AddCommand(commands.CountCommand(name))
 	root.AddCommand(commands.RunFnCommand(name))
 	root.AddCommand(commands.SubCommand(name))
