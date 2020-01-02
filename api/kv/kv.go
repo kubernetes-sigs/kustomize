@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -85,9 +86,15 @@ func (kvl *loader) keyValuesFromFileSources(sources []string) ([]types.Pair, err
 		if err != nil {
 			return nil, err
 		}
-		kvs = append(kvs, types.Pair{Key: k, Value: string(content)})
+		kvs = append(kvs, types.Pair{Key: k, Value: kvl.trimTrailingSpacesInLines(string(content))})
 	}
 	return kvs, nil
+}
+
+// Takes string with multiple lines and trims the trailing white spaces from each line.
+func (kvl *loader) trimTrailingSpacesInLines(str string) string {
+	re := regexp.MustCompile(`\s*\n`)
+	return re.ReplaceAllString(str, "\n")
 }
 
 func (kvl *loader) keyValuesFromEnvFiles(paths []string) ([]types.Pair, error) {
