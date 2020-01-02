@@ -110,11 +110,15 @@ func isBuiltinPlugin(res *resource.Resource) bool {
 		res.GetGvk().Version == konfig.BuiltinPluginApiVersion
 }
 
+func isBuiltinQlikPlugin(res *resource.Resource) bool {
+	return res.GetGvk().Group == "qlik.com"
+}
+
 func (l *Loader) loadAndConfigurePlugin(
 	ldr ifc.Loader,
 	v ifc.Validator,
 	res *resource.Resource) (c resmap.Configurable, err error) {
-	if isBuiltinPlugin(res) {
+	if isBuiltinPlugin(res) || isBuiltinQlikPlugin(res) {
 		switch l.pc.BpLoadingOptions {
 		case types.BploLoadFromFileSys:
 			c, err = l.loadPlugin(res)

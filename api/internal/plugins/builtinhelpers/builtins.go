@@ -5,6 +5,7 @@ package builtinhelpers
 
 import (
 	"sigs.k8s.io/kustomize/api/builtins"
+	"sigs.k8s.io/kustomize/api/builtins_qlik"
 	"sigs.k8s.io/kustomize/api/resmap"
 )
 
@@ -27,12 +28,62 @@ const (
 	ReplicaCountTransformer
 	SecretGenerator
 	ValueAddTransformer
+	ChartHomeFullPath
+	EnvUpsert
+	FullPath
+	Gomplate
+	HelmChart
+	HelmValues
+	SedOnPath
+	SelectivePatch
+	SuperVars
+	SuperConfigMap
+	SuperSecret
+	ValuesFile
 )
 
 var stringToBuiltinPluginTypeMap map[string]BuiltinPluginType
 
 func init() {
 	stringToBuiltinPluginTypeMap = makeStringToBuiltinPluginTypeMap()
+
+	TransformerFactories[ChartHomeFullPath] = builtins_qlik.NewChartHomeFullPathPlugin
+	stringToBuiltinPluginTypeMap["ChartHomeFullPath"] = ChartHomeFullPath
+
+	TransformerFactories[EnvUpsert] = builtins_qlik.NewEnvUpsertPlugin
+	stringToBuiltinPluginTypeMap["EnvUpsert"] = EnvUpsert
+
+	TransformerFactories[FullPath] = builtins_qlik.NewFullPathPlugin
+	stringToBuiltinPluginTypeMap["FullPath"] = FullPath
+
+	TransformerFactories[Gomplate] = builtins_qlik.NewGomplatePlugin
+	stringToBuiltinPluginTypeMap["Gomplate"] = Gomplate
+
+	GeneratorFactories[HelmChart] = builtins_qlik.NewHelmChartPlugin
+	stringToBuiltinPluginTypeMap["HelmChart"] = HelmChart
+
+	TransformerFactories[HelmValues] = builtins_qlik.NewHelmValuesPlugin
+	stringToBuiltinPluginTypeMap["HelmValues"] = HelmValues
+
+	TransformerFactories[SedOnPath] = builtins_qlik.NewSedOnPathPlugin
+	stringToBuiltinPluginTypeMap["SedOnPath"] = SedOnPath
+
+	TransformerFactories[SelectivePatch] = builtins_qlik.NewSelectivePatchPlugin
+	stringToBuiltinPluginTypeMap["SelectivePatch"] = SelectivePatch
+
+	TransformerFactories[SuperVars] = builtins_qlik.NewSuperVarsPlugin
+	stringToBuiltinPluginTypeMap["SuperVars"] = SuperVars
+
+	TransformerFactories[SuperConfigMap] = builtins_qlik.NewSuperConfigMapTransformerPlugin
+	GeneratorFactories[SuperConfigMap] = builtins_qlik.NewSuperConfigMapGeneratorPlugin
+	stringToBuiltinPluginTypeMap["SuperConfigMap"] = SuperConfigMap
+
+	TransformerFactories[SuperSecret] = builtins_qlik.NewSuperSecretTransformerPlugin
+	GeneratorFactories[SuperSecret] = builtins_qlik.NewSuperSecretGeneratorPlugin
+	stringToBuiltinPluginTypeMap["SuperSecret"] = SuperSecret
+
+	TransformerFactories[ValuesFile] = builtins_qlik.NewValuesFilePlugin
+	stringToBuiltinPluginTypeMap["ValuesFile"] = ValuesFile
 }
 
 func makeStringToBuiltinPluginTypeMap() (result map[string]BuiltinPluginType) {
