@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -269,15 +270,15 @@ func TestLocalPackageReader_Read_nestedDirs(t *testing.T) {
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
-    config.kubernetes.io/package: 'a/b'
-    config.kubernetes.io/path: 'a/b/a_test.yaml'
+    config.kubernetes.io/package: 'a${SEP}b'
+    config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
 `,
 			`c: d # second
 metadata:
   annotations:
     config.kubernetes.io/index: '1'
-    config.kubernetes.io/package: 'a/b'
-    config.kubernetes.io/path: 'a/b/a_test.yaml'
+    config.kubernetes.io/package: 'a${SEP}b'
+    config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
 `,
 			`# second thing
 e: f
@@ -288,8 +289,8 @@ g:
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
-    config.kubernetes.io/package: 'a/b'
-    config.kubernetes.io/path: 'a/b/b_test.yaml'
+    config.kubernetes.io/package: 'a${SEP}b'
+    config.kubernetes.io/path: 'a${SEP}b${SEP}b_test.yaml'
 `,
 		}
 		for i := range nodes {
@@ -297,7 +298,8 @@ metadata:
 			if !assert.NoError(t, err) {
 				return
 			}
-			if !assert.Equal(t, expected[i], val) {
+			want := strings.ReplaceAll(expected[i], "${SEP}", string(filepath.Separator))
+			if !assert.Equal(t, want, val) {
 				return
 			}
 		}
@@ -321,25 +323,29 @@ func TestLocalPackageReader_Read_matchRegex(t *testing.T) {
 		assert.FailNow(t, "wrong number items")
 	}
 
-	val, err := nodes[0].String()
-	assert.NoError(t, err)
-	assert.Equal(t, `a: b #first
+	expected := []string{
+		`a: b #first
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
-    config.kubernetes.io/package: 'a/b'
-    config.kubernetes.io/path: 'a/b/a_test.yaml'
-`, val)
-
-	val, err = nodes[1].String()
-	assert.NoError(t, err)
-	assert.Equal(t, `c: d # second
+    config.kubernetes.io/package: 'a${SEP}b'
+    config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
+`,
+		`c: d # second
 metadata:
   annotations:
     config.kubernetes.io/index: '1'
-    config.kubernetes.io/package: 'a/b'
-    config.kubernetes.io/path: 'a/b/a_test.yaml'
-`, val)
+    config.kubernetes.io/package: 'a${SEP}b'
+    config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
+`,
+	}
+
+	for i, node := range nodes {
+		val, err := node.String()
+		assert.NoError(t, err)
+		want := strings.ReplaceAll(expected[i], "${SEP}", string(filepath.Separator))
+		assert.Equal(t, want, val)
+	}
 }
 
 func TestLocalPackageReader_Read_skipSubpackage(t *testing.T) {
@@ -360,25 +366,29 @@ func TestLocalPackageReader_Read_skipSubpackage(t *testing.T) {
 		assert.FailNow(t, "wrong number items")
 	}
 
-	val, err := nodes[0].String()
-	assert.NoError(t, err)
-	assert.Equal(t, `a: b #first
+	expected := []string{
+		`a: b #first
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
-    config.kubernetes.io/package: 'a/b'
-    config.kubernetes.io/path: 'a/b/a_test.yaml'
-`, val)
-
-	val, err = nodes[1].String()
-	assert.NoError(t, err)
-	assert.Equal(t, `c: d # second
+    config.kubernetes.io/package: 'a${SEP}b'
+    config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
+`,
+		`c: d # second
 metadata:
   annotations:
     config.kubernetes.io/index: '1'
-    config.kubernetes.io/package: 'a/b'
-    config.kubernetes.io/path: 'a/b/a_test.yaml'
-`, val)
+    config.kubernetes.io/package: 'a${SEP}b'
+    config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
+`,
+	}
+
+	for i, node := range nodes {
+		val, err := node.String()
+		assert.NoError(t, err)
+		want := strings.ReplaceAll(expected[i], "${SEP}", string(filepath.Separator))
+		assert.Equal(t, want, val)
+	}
 }
 
 func TestLocalPackageReader_Read_includeSubpackage(t *testing.T) {
@@ -398,29 +408,23 @@ func TestLocalPackageReader_Read_includeSubpackage(t *testing.T) {
 	if !assert.Len(t, nodes, 3) {
 		assert.FailNow(t, "wrong number items")
 	}
-	val, err := nodes[0].String()
-	assert.NoError(t, err)
-	assert.Equal(t, `a: b #first
+
+	expected := []string{
+		`a: b #first
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
-    config.kubernetes.io/package: 'a/b'
-    config.kubernetes.io/path: 'a/b/a_test.yaml'
-`, val)
-
-	val, err = nodes[1].String()
-	assert.NoError(t, err)
-	assert.Equal(t, `c: d # second
+    config.kubernetes.io/package: 'a${SEP}b'
+    config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
+`,
+		`c: d # second
 metadata:
   annotations:
     config.kubernetes.io/index: '1'
-    config.kubernetes.io/package: 'a/b'
-    config.kubernetes.io/path: 'a/b/a_test.yaml'
-`, val)
-
-	val, err = nodes[2].String()
-	assert.NoError(t, err)
-	assert.Equal(t, `# second thing
+    config.kubernetes.io/package: 'a${SEP}b'
+    config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
+`,
+		`# second thing
 e: f
 g:
   h:
@@ -429,9 +433,17 @@ g:
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
-    config.kubernetes.io/package: 'a/c'
-    config.kubernetes.io/path: 'a/c/c_test.yaml'
-`, val)
+    config.kubernetes.io/package: 'a${SEP}c'
+    config.kubernetes.io/path: 'a${SEP}c${SEP}c_test.yaml'
+`,
+	}
+
+	for i, node := range nodes {
+		val, err := node.String()
+		assert.NoError(t, err)
+		want := strings.ReplaceAll(expected[i], "${SEP}", string(filepath.Separator))
+		assert.Equal(t, want, val)
+	}
 }
 
 // func TestLocalPackageReaderWriter_DeleteFiles(t *testing.T) {
