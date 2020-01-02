@@ -91,9 +91,9 @@ func (kvl *loader) keyValuesFromFileSources(sources []string) ([]types.Pair, err
 	return kvs, nil
 }
 
-//Takes string with multiple lines and trims the trailing white spaces from each line
+// Takes string with multiple lines and trims the trailing white spaces from each line.
 func (kvl *loader) trimTrailingSpacesInLines(str string) string {
-	re := regexp.MustCompile(` *\n`)
+	re := regexp.MustCompile(`\s*\n`)
 	return re.ReplaceAllString(str, "\n")
 }
 
