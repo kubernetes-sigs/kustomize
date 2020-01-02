@@ -9,6 +9,7 @@ require (
 	k8s.io/apimachinery v0.0.0-20190913080033-27d36303b655
 	k8s.io/client-go v0.0.0-20190918160344-1fbdaa4c8d90
 	sigs.k8s.io/controller-runtime v0.4.0
+	sigs.k8s.io/kustomize/cmd/mdtogo v0.0.0-20191222005333-3900166fdf4f // indirect
 	sigs.k8s.io/kustomize/kstatus v0.0.0-20191204200457-7c1b477ff62d
 	sigs.k8s.io/kustomize/kyaml v0.0.0-20191202204815-0a19a5dbd9b8
 )
