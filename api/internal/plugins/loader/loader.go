@@ -106,9 +106,13 @@ func isBuiltinPlugin(res *resource.Resource) bool {
 		res.GetGvk().Version == konfig.BuiltinPluginApiVersion
 }
 
+func isBuiltinQlikPlugin(res *resource.Resource) bool {
+	return res.GetGvk().Group == "qlik.com"
+}
+
 func (l *Loader) loadAndConfigurePlugin(
 	ldr ifc.Loader, v ifc.Validator, res *resource.Resource) (c resmap.Configurable, err error) {
-	if isBuiltinPlugin(res) {
+	if isBuiltinPlugin(res) || isBuiltinQlikPlugin(res) {
 		// Instead of looking for and loading a .so file, just
 		// instantiate the plugin from a generated factory
 		// function (see "pluginator").  Being able to do this
