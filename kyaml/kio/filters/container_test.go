@@ -316,12 +316,27 @@ metadata:
 	c, _ := GetContainerName(n)
 	assert.Equal(t, "gcr.io/foo/bar:something", c)
 
-	// container from annotation
+	// container from config.kubernetes.io/container annotation
 	n, err = yaml.Parse(`apiVersion: v1
 kind: MyThing
 metadata:
   annotations:
     config.kubernetes.io/container: gcr.io/foo/bar:something
+`)
+	if !assert.NoError(t, err) {
+		return
+	}
+	c, _ = GetContainerName(n)
+	assert.Equal(t, "gcr.io/foo/bar:something", c)
+
+	// container from config.k8s.io/function annotation
+	n, err = yaml.Parse(`apiVersion: v1
+kind: MyThing
+metadata:
+  annotations:
+    config.k8s.io/function: |
+      container:
+        image: gcr.io/foo/bar:something
 `)
 	if !assert.NoError(t, err) {
 		return
