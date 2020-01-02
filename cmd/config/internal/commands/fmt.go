@@ -14,7 +14,7 @@ import (
 func GetFmtRunner(name string) *FmtRunner {
 	r := &FmtRunner{}
 	c := &cobra.Command{
-		Use:     "fmt",
+		Use:     "fmt DIR...",
 		Short:   commands.FmtShort,
 		Long:    commands.FmtLong,
 		Example: commands.FmtExamples,

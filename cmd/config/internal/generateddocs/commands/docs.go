@@ -49,6 +49,32 @@ var CountExamples = `
     # print Resource counts from a directory
     kustomize config count my-dir/`
 
+var CreateSetterShort = `[Alpha] Create a custom setter for a Resource field`
+var CreateSetterLong = `
+Create a custom setter for a Resource field by inlining OpenAPI as comments.
+
+  DIR
+
+    A directory containing Resource configuration.
+
+  NAME
+
+    The name of the setter to create.
+
+  VALUE
+
+    The current value of the field, or a substring within the field.
+`
+var CreateSetterExamples = `
+    # create a setter for port fields matching "8080"
+    kustomize config create-setter DIR/ port 8080 --type "integer" --field port \
+         --description "default port used by the app"
+
+    # create a setter for a substring of a field rather than the full field -- e.g. only the
+    # image tag, not the full image
+    kustomize config create-setter DIR/ image-tag v1.0.1 --type "string" \
+        --field image --description "current stable release"`
+
 var FmtShort = `[Alpha] Format yaml configuration files.`
 var FmtLong = `
 [Alpha] Format yaml configuration files.
@@ -136,6 +162,25 @@ For information on merge rules, run:
 var MergeExamples = `
     cat resources_and_patches.yaml | kustomize config merge > merged_resources.yaml`
 
+var Merge3Short = `[Alpha] Merge diff of Resource configuration files into a destination (3-way)`
+var Merge3Long = `
+[Alpha] Merge diff of Resource configuration files into a destination (3-way)
+
+Merge3 performs a 3-way merge by applying the diff between 2 sets of Resources to a 3rd set.
+
+Merge3 may be for rebasing changes to a forked set of configuration -- e.g. compute the difference between the original
+set of Resources that was forked and an updated set of those Resources, then apply that difference to the fork.
+
+If a field value differs between the ORIGINAL_DIR and UPDATED_DIR, the value from the UPDATED_DIR is taken and applied
+to the Resource in the DEST_DIR.
+
+For information on merge rules, run:
+
+	kustomize config docs-merge3
+`
+var Merge3Examples = `
+    kustomize config merge3 --ancestor a/ --from b/ --to c/`
+
 var RunFnsShort = `[Alpha] Reoncile config functions to Resources.`
 var RunFnsLong = `
 [Alpha] Reconcile config functions to Resources.
@@ -185,17 +230,18 @@ order they appear in the file).
 var RunFnsExamples = `
 kustomize config run example/`
 
-var SubShort = `[Alpha] Set values on Resources fields by substituting values.`
-var SubLong = `
-Set values on Resources fields by substituting predefined markers for new values.
+var SetShort = `[Alpha] Set values on Resources fields values.`
+var SetLong = `
+Set values on Resources fields.  May set either the complete or partial field value.
 
-` + "`" + `set` + "`" + ` looks for markers specified on Resource fields and substitute a new user defined
-value for the existing value.
+` + "`" + `set` + "`" + ` identifies setters using field metadata published as OpenAPI extensions.
+` + "`" + `set` + "`" + ` parses both the Kubernetes OpenAPI, as well OpenAPI published inline in
+the configuration as comments.
 
 ` + "`" + `set` + "`" + ` maybe be used to:
 
-- edit configuration programmatically from the cli or scripts
-- create reusable bundles of configuration
+- edit configuration programmatically from the cli
+- create reusable bundles of configuration with custom setters
 
   DIR
 
@@ -203,244 +249,69 @@ value for the existing value.
 
   NAME
 
-    Optional.  The name of the substitution to perform or display.
+    Optional.  The name of the setter to perform or display.
 
   VALUE
 
-    Optional.  The new value to substitute into the field.
+    Optional.  The value to set on the field.
 
 
-To print the possible substitutions for the Resources in a directory, run ` + "`" + `set` + "`" + ` on
+To print the possible setters for the Resources in a directory, run ` + "`" + `set` + "`" + ` on
 a directory -- e.g. ` + "`" + `kustomize config set DIR/` + "`" + `.
 
 #### Tips
 
 - A description of the value may be specified with ` + "`" + `--description` + "`" + `.
-- An owner for the field's value may be defined with ` + "`" + `--owned-by` + "`" + `.
-- Prevent overriding previous substitutions with ` + "`" + `--override=false` + "`" + `.
-- Revert previous substitutions with ` + "`" + `--revert` + "`" + `.
-- Create substitutions on Kustomization.yaml's, patches, etc
+- The last setter for the field's value may be defined with ` + "`" + `--set-by` + "`" + `.
+- Create custom setters on Resources, Kustomization.yaml's, patches, etc
 
-When overriding or reverting previous substitutions, the description and owner are left
-unmodified unless specified with flags.
+The description and setBy fields are left unmodified unless specified with flags.
 
-To create a substitution for a field see: ` + "`" + `kustomize help config set create` + "`" + `
+To create a custom setter for a field see: ` + "`" + `kustomize help config create-setter` + "`" + `
 `
-var SubExamples = `
-  Resource YAML: Name substitution
+var SetExamples = `
+  Resource YAML: Name Prefix Setter
 
-    # dir/resources.yaml
+    # DIR/resources.yaml
     ...
     metadata:
-        name: PREFIX-app1 # {"substitutions":[{"name":"prefix","marker":"PREFIX-"}]}
+        name: PREFIX-app1 # {"type":"string","x-kustomize":{"partialFieldSetters":[{"name":"name-prefix","value":"PREFIX"}]}}
     ...
     ---
     ...
     metadata:
-        name: PREFIX-app2 # {"substitutions":[{"name":"prefix","marker":"PREFIX-"}]}
+        name: PREFIX-app2 # {"type":"string","x-kustomize":{"partialFieldSetters":[{"name":"name-prefix","value":"PREFIX"}]}}
     ...
 
-  Show substitutions: Show the possible substitutions
+  List setters: Show the possible setters
 
-    $ config set dir
-    NAME    DESCRIPTION    VALUE     TYPE    COUNT   SUBSTITUTED   OWNER
-    prefix   ''            PREFIX-   string   2       false
+    $ config set DIR/
+    NAME          DESCRIPTION    VALUE     TYPE    COUNT   OWNER
+    name-prefix   ''            PREFIX    string   2
 
   Perform substitution: set a new value, owner and description
 
-    $ config set dir prefix "test-" --description "test environment" --owned-by "dev"
+    $ kustomize config set DIR/ name-prefix "test" --description "test environment" --set-by "dev"
     performed 2 substitutions
 
   Show substitutions: Show the new values
 
     $ config set dir
     NAME       DESCRIPTION       VALUE    TYPE    COUNT   SUBSTITUTED   OWNER
-    prefix   'test environment'   test-   string   2       true          dev
+    prefix   'test environment'   test   string   2       true          dev
 
   New Resource YAML:
 
-    # dir/resources.yaml
+    # DIR/resources.yaml
     ...
     metadata:
-      name: test-app1 # {"substitutions":[{"name":"prefix","marker":"PREFIX-","value":"test-"}],"setBy":"dev","description":"test environment"}
+        name: test-app1 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","partialFieldSetters":[{"name":"name-prefix","value":"test"}]}}
     ...
     ---
     ...
     metadata:
-      name: test-app2 # {"substitutions":[{"name":"prefix","marker":"PREFIX-","value":"test-"}],"setBy":"dev","description":"test environment"}
-    ...
-
-  Revert substitution:
-
-    config set dir prefix --revert
-    performed 2 substitutions
-
-    config set dir
-    NAME       DESCRIPTION       VALUE    TYPE    COUNT   SUBSTITUTED   OWNER  
-    prefix   'test environment'   PREFIX-  string   2       false          dev    `
-
-var SubsetShort = `[Alpha] Create a new substitution for a Resource field`
-var SubsetLong = `
-Create a new substitution for a Resource field -- recognized by ` + "`" + `kustomize config set` + "`" + `.
-
-  DIR
-
-    A directory containing Resource configuration.
-
-  NAME
-
-    The name of the substitution to create.
-
-  VALUE
-
-    The current value of the field, or a substring of the field.
-
-#### Tips: Picking Good Marker
-
-Substitutions may be defined by directly editing yaml **or** by running ` + "`" + `kustomize config set create` + "`" + `
-to create a new substitution.
-
-Given the YAML:
-    
-    # resource.yaml
-    apiVersion: v1
-    kind: Service
-    metadata:
-      ...
-    spec:
-      ...
-      ports:
-        ...
-      - name: http
-        port: 8080
-        ...
-
-Create a new set marker:
-
-    # create a substitution for ports
-    $ kustomize config set create dir/ http-port 8080 --type "int" --field "port"
-
-Modified YAML:
-
-    # resource.yaml
-    apiVersion: v1
-    kind: Service
-    metadata:
-      ...
-    spec:
-      ...
-      ports:
-        ...
-      - name: http
-        port: 8080 # {"substitutions":[{"name":"port","marker":"[MARKER]"}],"type":"int"}
-        ...
-
-Change the value using the ` + "`" + `set` + "`" + ` command:
-
-    # change the http-port value to 8081
-    $ kustomize config set dir/ http-port 8081
-
-Resources fields with a field name matching ` + "`" + `--field` + "`" + ` and field value matching ` + "`" + `VALUE` + "`" + ` will
-have a line comment added marking this field as settable.
-
-Substitution markers may be:
-
-- valid field values (e.g. ` + "`" + `8080` + "`" + ` for a port)
-  - Note: ` + "`" + `008080` + "`" + ` would be preferred because it is more recognizable as a marker
-- invalid values that adhere to the schema (e.g. ` + "`" + `0000` + "`" + ` for a port)
-- values that do not adhere to the schema (e.g. ` + "`" + `[PORT]` + "`" + ` for port)
-
-Markers **SHOULD be clearly identifiable as a marker and either**:
-
-- **adhere to the field schema** -- e.g. use a valid value
-
-
-    port: 008080 # {"substitutions":[{"name":"port","marker":"008080"}],"type":"int"}
-
-- **be pre-filled in with a value** -- e.g. set the value when setting the marker
-
-
-    port: 8080 # {"substitutions":[{"name":"port","marker":"[MARKER]","value":"8080""}],"type":"int"}
-
-**Note:** The important thing is that in both cases the Resource configuration may be directly
-applied to a cluster and validated by tools without the tool knowing about the substitution
-marker.
-
-The difference between the preceding examples is that:
-
-- the former will be shown as ` + "`" + `SUBSTITUTED=false` + "`" + ` (` + "`" + `config sub dir/` + "`" + ` exits non-0)
-- the latter with show up as ` + "`" + `SUBSTITUTED=true` + "`" + ` (` + "`" + `config sub dir/` + "`" + ` exits 0)
-
-When choosing the which to use, consider that checks for unsubstituted values MAY be
-configured as pre-commit checks -- if you want to these checks to fail if the value
-hasn't been substituted, then don't specify a ` + "`" + `value` + "`" + `.
-
-Markers which are invalid field values MAY be chosen in cases where it is preferred to have
-the create or update request fail rather than succeed if the substitution has not yet been
-performed.
-
-A substitution may be a substring of the full field:
-
-    $ kustomize config set create dir/ app-image-tag v1.0.01 --type "string" --field "image"
-
-    image: gcr.io/example/app:v1.0.1 # {"substitutions":[{"name":"app-image-tag","marker":"[MARKER]","value":"v1.0.1"}]}
-
-
-A single field value may have multiple substitutions applied to it:
-
-    name: PREFIX-app-SUFFIX # {"substitutions":[{"name":"prefix","marker":"PREFIX-"},{"name":"suffix","marker":"-SUFFIX"}]}
-
-#### Substitution Format
-
-Substitutions are defined as json encoded FieldMeta comments on fields.
-
-FieldMeta Schema read by ` + "`" + `sub` + "`" + `:
-
-    {
-      "title": "FieldMeta",
-      "type": "object",
-      "properties": {
-        "substitutions": {
-          "type": "array",
-          "description": "Possible substitutions that may be performed against this field.",
-          "items": {
-            "type": "object",
-            "properties": {
-              "name": "Name of the substitution.",
-              "marker": "Marker for the value to be substituted.",
-              "value": "Current substituted value"
-            }   
-          }
-        },
-        "type": {
-          "type": "string",
-          "description": "The value type.  Defaults to string."
-          "enum": ["string", "int", "float", "bool"]
-        },
-        "description": {
-          "type": "string",
-          "description": "A description of the field's current value.  Optional."
-        },
-        "setBy": {
-          "type": "string",
-          "description": "The current owner of the field.  Optional."
-        },
-      }
-    }
-`
-var SubsetExamples = `
-    # set a substitution for port fields matching "8080"
-    kustomize config sub create dir/ port 8080 --type "int" --field port \
-         --description "default port used by the app"
-
-    # set a substitution for port fields matching "8080", using "0000" as a marker.
-    kustomize config sub dir/ port 8080 --marker "0000" --type "int" \
-        --field port --description "default port used by the app"
-
-    # substitute a substring of a field rather than the full field -- e.g. only the
-    # image tag, not the full image
-    kustomize config sub dir/ app-image-tag v1.0.1 --type "string" --substring \
-        --field port --description "current stable release"`
+        name: test-app2 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","partialFieldSetters":[{"name":"name-prefix","value":"test"}]}}
+    ...`
 
 var TreeShort = `[Alpha] Display Resource structure from a directory or stdin.`
 var TreeLong = `
@@ -460,8 +331,9 @@ container names, etc.
 
 kustomize config tree supports printing arbitrary fields using the '--field' flag.
 
-By default, kustomize config tree uses the directory structure for the tree structure, however when printing
-from the cluster, the Resource graph structure may be used instead.
+By default, kustomize config tree uses Resource graph structure if any relationships between resources (ownerReferences)
+are detected, as is typically the case when printing from a cluster. Otherwise, directory graph structure is used. The
+graph structure can also be selected explicitly using the '--graph-structure' flag.
 `
 var TreeExamples = `
     # print Resources using directory structure
@@ -481,8 +353,7 @@ var TreeExamples = `
       --field="status.conditions[type=Completed].status"
 
     # print live Resources from a cluster using owners for graph structure
-    kubectl get all -o yaml | kustomize config tree --replicas --name --image \
-      --graph-structure=owners
+    kubectl get all -o yaml | kustomize config tree --replicas --name --image
 
     # print live Resources with status condition fields
     kubectl get all -o yaml | kustomize config tree \

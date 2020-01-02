@@ -131,7 +131,11 @@ metadata:
 	}
 	for _, e := range os.Environ() {
 		// the process env
-		expected = append(expected, "-e", strings.Split(e, "=")[0])
+		tokens := strings.Split(e, "=")
+		if tokens[0] == "" {
+			continue
+		}
+		expected = append(expected, "-e", tokens[0])
 	}
 	expected = append(expected, "example.com:version")
 	assert.Equal(t, expected, cmd.Args)
@@ -316,12 +320,27 @@ metadata:
 	c, _ := GetContainerName(n)
 	assert.Equal(t, "gcr.io/foo/bar:something", c)
 
-	// container from annotation
+	// container from config.kubernetes.io/container annotation
 	n, err = yaml.Parse(`apiVersion: v1
 kind: MyThing
 metadata:
   annotations:
     config.kubernetes.io/container: gcr.io/foo/bar:something
+`)
+	if !assert.NoError(t, err) {
+		return
+	}
+	c, _ = GetContainerName(n)
+	assert.Equal(t, "gcr.io/foo/bar:something", c)
+
+	// container from config.k8s.io/function annotation
+	n, err = yaml.Parse(`apiVersion: v1
+kind: MyThing
+metadata:
+  annotations:
+    config.k8s.io/function: |
+      container:
+        image: gcr.io/foo/bar:something
 `)
 	if !assert.NoError(t, err) {
 		return

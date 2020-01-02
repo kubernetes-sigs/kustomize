@@ -4,6 +4,7 @@
 package copyutil_test
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -104,7 +105,9 @@ func TestDiff_srcDestContentsDiffer(t *testing.T) {
 
 	diff, err := Diff(s, d)
 	assert.NoError(t, err)
-	assert.ElementsMatch(t, diff.List(), []string{"a1/f.yaml"})
+	assert.ElementsMatch(t, diff.List(), []string{
+		fmt.Sprintf("a1%sf.yaml", string(filepath.Separator)),
+	})
 }
 
 // TestDiff_srcDestContentsDifferInDirs verifies if identical files
@@ -130,7 +133,11 @@ func TestDiff_srcDestContentsDifferInDirs(t *testing.T) {
 	diff, err := Diff(s, d)
 	assert.NoError(t, err)
 	assert.ElementsMatch(t, diff.List(), []string{
-		"a1", "a1/f.yaml", "b1/f.yaml", "b1"})
+		"a1",
+		fmt.Sprintf("a1%sf.yaml", string(filepath.Separator)),
+		fmt.Sprintf("b1%sf.yaml", string(filepath.Separator)),
+		"b1",
+	})
 }
 
 // TestDiff_skipGitSrc verifies that .git directories in the source
