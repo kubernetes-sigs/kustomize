@@ -55,7 +55,7 @@ function releaseModule {
      git tag -a $tag -m "Release $tag on branch $branch"
      git push upstream $tag
   else
-    printf "\nSkipping push binary $binary -- run with NO_DRY_RUN=true to push the release.\n\n"
+    printf "\nSkipping push module $module -- run with NO_DRY_RUN=true to push the release.\n\n"
   fi
 
   # cleanup release artifacts
