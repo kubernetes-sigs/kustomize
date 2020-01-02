@@ -30,7 +30,7 @@ type PerformSetters struct {
 
 func (s *PerformSetters) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 	for i := range input {
-		p := &partialFieldSetter{
+		p := &fieldSetter{
 			Name:        s.Name,
 			Value:       s.Value,
 			Description: s.Description,
