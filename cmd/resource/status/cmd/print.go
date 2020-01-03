@@ -138,10 +138,10 @@ func (s *TablePrinter) Print() {
 
 func (s *TablePrinter) PrintUntil(stop <-chan struct{}, interval time.Duration) <-chan struct{} {
 	completed := make(chan struct{})
+	setColor(s.out, WHITE)
+	s.printTable(s.statusInfo.CurrentStatus(), false)
 	go func() {
 		defer close(completed)
-		setColor(s.out, WHITE)
-		s.printTable(s.statusInfo.CurrentStatus(), false)
 		ticker := time.NewTicker(interval)
 		for {
 			select {
