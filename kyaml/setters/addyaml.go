@@ -29,6 +29,9 @@ type customFieldSetter struct {
 
 	Type string
 
+	// Partial will create a partial setter if set to true
+	Partial bool
+
 	// currentFieldName is the name of the current field being processed
 	currentFieldName string
 }
@@ -66,11 +69,6 @@ func (m *customFieldSetter) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 }
 
 func (m *customFieldSetter) create(field *yaml.RNode) error {
-	// doesn't match the supplied value
-	if !strings.Contains(field.YNode().Value, m.Setter.Value) {
-		return nil
-	}
-
 	fm := fieldmeta.FieldMeta{}
 	if err := fm.Read(field); err != nil {
 		return errors.Wrap(err)
@@ -83,20 +81,35 @@ func (m *customFieldSetter) create(field *yaml.RNode) error {
 	fm.Extensions.SetBy = m.SetBy
 	fm.Schema.Type = []string{m.Type}
 
-	found := false
-	for i := range fm.Extensions.PartialFieldSetters {
-		s := fm.Extensions.PartialFieldSetters[i]
-		if s.Name == m.Setter.Name {
-			// update the setter if we find it
-			found = true
-			fm.Extensions.PartialFieldSetters[i] = m.Setter
-			break
+	if !m.Partial {
+		// doesn't match the supplied value
+		if field.YNode().Value != m.Setter.Value {
+			return nil
+		}
+		// full setter
+		fm.Extensions.FieldSetter = &m.Setter
+		fm.Extensions.PartialFieldSetters = nil
+	} else {
+		// doesn't match the supplied value
+		if !strings.Contains(field.YNode().Value, m.Setter.Value) {
+			return nil
+		}
+		found := false
+		for i := range fm.Extensions.PartialFieldSetters {
+			s := fm.Extensions.PartialFieldSetters[i]
+			if s.Name == m.Setter.Name {
+				// update the setter if we find it
+				found = true
+				fm.Extensions.PartialFieldSetters[i] = m.Setter
+				break
+			}
+		}
+		if !found {
+			// add the setter if it wasn't found
+			fm.Extensions.PartialFieldSetters = append(fm.Extensions.PartialFieldSetters, m.Setter)
 		}
 	}
-	if !found {
-		// add the setter if it wasn't found
-		fm.Extensions.PartialFieldSetters = append(fm.Extensions.PartialFieldSetters, m.Setter)
-	}
+
 	if err := fm.Write(field); err != nil {
 		return errors.Wrap(err)
 	}

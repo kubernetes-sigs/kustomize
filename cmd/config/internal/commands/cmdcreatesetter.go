@@ -34,6 +34,8 @@ func NewCreateSetterRunner(parent string) *CreateSetterRunner {
 		"kind of the Resource on which to create the setter.")
 	set.Flags().StringVar(&r.Set.SetPartialField.Type, "type", "",
 		"valid OpenAPI field type -- e.g. integer,boolean,string.")
+	set.Flags().BoolVar(&r.Set.SetPartialField.Partial, "partial", false,
+		"create a partial setter for only part of the field value.")
 	fixDocs(parent, set)
 	set.MarkFlagRequired("type")
 	set.MarkFlagRequired("field")
