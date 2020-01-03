@@ -228,15 +228,15 @@ Following is an example of running the ` + "`" + `kustomize config run` + "`" + 
     metadata:
       name: my-instance
       annotations:
+        config.k8s.io/function: |
+          container:
+            image: gcr.io/example-functions/nginx-template:v1.0.0
         config.kubernetes.io/local-config: "true"
-      configFn:
-        container:
-          image: gcr.io/example-functions/nginx-template:v1.0.0
     spec:
       replicas: 5
 
-  - ` + "`" + `configFn.container.image` + "`" + `: the image to use for this API
-  - ` + "`" + `annotations[config.kubernetes.io/local-config]` + "`" + `: mark this as not a Resource that should
+  - ` + "`" + `annotations.[config.k8s.io/function]` + "`" + `: the image to use for this API
+  - ` + "`" + `annotations.[config.kubernetes.io/local-config]` + "`" + `: mark this as not a Resource that should
     be applied
 
 #### ` + "`" + `kustomize config run dir/` + "`" + ` (Output)
