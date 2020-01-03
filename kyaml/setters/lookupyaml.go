@@ -54,6 +54,22 @@ func (ls *lookupSetters) lookup(field *yaml.RNode) error {
 		return err
 	}
 
+	if fm.Extensions.FieldSetter != nil {
+		if ls.Name != "" && ls.Name != fm.Extensions.FieldSetter.Name {
+			// skip this setter, it doesn't match the specified setter
+			return nil
+		}
+		// full setter
+		ls.Setters = append(ls.Setters, setter{
+			PartialFieldSetter: *fm.Extensions.FieldSetter,
+			Description:        fm.Schema.Description,
+			Type:               fm.Schema.Type[0],
+			SetBy:              fm.Extensions.SetBy,
+		})
+		return nil
+	}
+
+	// partial setters
 	for i := range fm.Extensions.PartialFieldSetters {
 		if ls.Name != "" && ls.Name != fm.Extensions.PartialFieldSetters[i].Name {
 			// skip this setter

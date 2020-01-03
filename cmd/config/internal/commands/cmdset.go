@@ -27,6 +27,10 @@ func NewSetRunner(parent string) *SetRunner {
 	}
 	fixDocs(parent, c)
 	r.Command = c
+	c.Flags().StringVar(&r.Perform.SetBy, "set-by", "",
+		"annotate the field with who set it")
+	c.Flags().StringVar(&r.Perform.Description, "description", "",
+		"annotate the field with a description of its value")
 
 	return r
 }
