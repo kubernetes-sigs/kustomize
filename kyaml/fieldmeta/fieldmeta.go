@@ -22,7 +22,8 @@ type FieldMeta struct {
 
 type XKustomize struct {
 	SetBy               string               `yaml:"setBy,omitempty" json:"setBy,omitempty"`
-	PartialFieldSetters []PartialFieldSetter `yaml:"partialFieldSetters" json:"partialFieldSetters"`
+	PartialFieldSetters []PartialFieldSetter `yaml:"partialSetters,omitempty" json:"partialSetters,omitempty"`
+	FieldSetter         *PartialFieldSetter  `yaml:"setter,omitempty" json:"setter,omitempty"`
 }
 
 // PartialFieldSetter defines how to set part of a field rather than the full field
