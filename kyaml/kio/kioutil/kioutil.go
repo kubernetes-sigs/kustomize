@@ -136,7 +136,7 @@ func SortNodes(nodes []*yaml.RNode) error {
 			return false
 		}
 		if iIndex != jIndex {
-			return iValue < jValue
+			return iIndex < jIndex
 		}
 
 		// elements are equal
