@@ -142,6 +142,25 @@ var GrepExamples = `
     # look for Resources matching a specific container image
     kustomize config grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-dir/ | kustomize config tree`
 
+var ListSettersShort = `[Alpha] List setters for Resources.`
+var ListSettersLong = `
+List setters for Resources.
+
+  DIR
+
+    A directory containing Resource configuration.
+
+  NAME
+
+    Optional.  The name of the setter to display.
+`
+var ListSettersExamples = `
+  Show setters:
+
+    $ config set DIR/
+        NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY  
+    name-prefix   ''            PREFIX    string   2`
+
 var MergeShort = `[Alpha] Merge Resource configuration files`
 var MergeLong = `
 [Alpha] Merge Resource configuration files
@@ -286,19 +305,19 @@ var SetExamples = `
   List setters: Show the possible setters
 
     $ config set DIR/
-    NAME          DESCRIPTION    VALUE     TYPE    COUNT   OWNER
+        NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY  
     name-prefix   ''            PREFIX    string   2
 
-  Perform substitution: set a new value, owner and description
+  Perform set: set a new value, owner and description
 
     $ kustomize config set DIR/ name-prefix "test" --description "test environment" --set-by "dev"
-    performed 2 substitutions
+    set 2 values
 
-  Show substitutions: Show the new values
+  List setters: Show the new values
 
-    $ config set dir
-    NAME       DESCRIPTION       VALUE    TYPE    COUNT   SUBSTITUTED   OWNER
-    prefix   'test environment'   test   string   2       true          dev
+    $ config set DIR/
+        NAME      DESCRIPTION         VALUE     TYPE     COUNT     SETBY 
+    name-prefix   'test environment'   test     string   2          dev
 
   New Resource YAML:
 
