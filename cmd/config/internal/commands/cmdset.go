@@ -5,6 +5,7 @@ package commands
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -63,14 +64,14 @@ func (r *SetRunner) runE(c *cobra.Command, args []string) error {
 		return handleError(c, r.perform(c, args))
 	}
 
-	return handleError(c, r.lookup(c, args))
+	return handleError(c, lookup(r.Lookup, c, args))
 }
 
-func (r *SetRunner) lookup(c *cobra.Command, args []string) error {
+func lookup(l setters.LookupSetters, c *cobra.Command, args []string) error {
 	// lookup the setters
 	err := kio.Pipeline{
 		Inputs:  []kio.Reader{&kio.LocalPackageReader{PackagePath: args[0]}},
-		Filters: []kio.Filter{&r.Lookup},
+		Filters: []kio.Filter{&l},
 	}.Execute()
 	if err != nil {
 		return err
@@ -86,8 +87,8 @@ func (r *SetRunner) lookup(c *cobra.Command, args []string) error {
 	table.SetHeader([]string{
 		"NAME", "DESCRIPTION", "VALUE", "TYPE", "COUNT", "SETBY",
 	})
-	for i := range r.Lookup.SetterCounts {
-		s := r.Lookup.SetterCounts[i]
+	for i := range l.SetterCounts {
+		s := l.SetterCounts[i]
 		v := s.Value
 		if s.Value == "" {
 			v = s.Value
@@ -102,6 +103,11 @@ func (r *SetRunner) lookup(c *cobra.Command, args []string) error {
 		})
 	}
 	table.Render()
+
+	if len(l.SetterCounts) == 0 {
+		// exit non-0 if no matching setters are found
+		os.Exit(1)
+	}
 	return nil
 }
 
