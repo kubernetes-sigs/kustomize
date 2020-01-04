@@ -59,19 +59,19 @@ To create a custom setter for a field see: `kustomize help config create-setter`
   List setters: Show the possible setters
 
     $ config set DIR/
-    NAME          DESCRIPTION    VALUE     TYPE    COUNT   OWNER
+        NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY  
     name-prefix   ''            PREFIX    string   2
 
-  Perform substitution: set a new value, owner and description
+  Perform set: set a new value, owner and description
 
     $ kustomize config set DIR/ name-prefix "test" --description "test environment" --set-by "dev"
-    performed 2 substitutions
+    set 2 values
 
-  Show substitutions: Show the new values
+  List setters: Show the new values
 
-    $ config set dir
-    NAME       DESCRIPTION       VALUE    TYPE    COUNT   SUBSTITUTED   OWNER
-    prefix   'test environment'   test   string   2       true          dev
+    $ config set DIR/
+        NAME      DESCRIPTION         VALUE     TYPE     COUNT     SETBY 
+    name-prefix   'test environment'   test     string   2          dev
 
   New Resource YAML:
 
