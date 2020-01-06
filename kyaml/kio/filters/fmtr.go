@@ -95,6 +95,7 @@ type formatter struct {
 }
 
 // fmtNode recursively formats the Document Contents.
+// See: https://godoc.org/gopkg.in/yaml.v3#Node
 func (f *formatter) fmtNode(n *yaml.Node, path string, schema *openapi.ResourceSchema) error {
 	if n.Kind == yaml.ScalarNode && schema != nil && schema.Schema != nil {
 		// ensure values that are interpreted as non-string values (e.g. "true")
@@ -142,12 +143,12 @@ func (f *formatter) fmtNode(n *yaml.Node, path string, schema *openapi.ResourceS
 			// if the node is a field, lookup the schema using the field name
 			p = fmt.Sprintf("%s.%s", path, n.Content[i-1].Value)
 			if schema != nil {
-				s = schema.SchemaForField(n.Content[i-1].Value)
+				s = schema.Field(n.Content[i-1].Value)
 			}
 		case isElement:
 			// if the node is a list element, lookup the schema for the array items
 			if schema != nil {
-				s = schema.SchemaForElements()
+				s = schema.Elements()
 			}
 		}
 

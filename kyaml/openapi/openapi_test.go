@@ -18,7 +18,7 @@ func TestSchemaForResourceType(t *testing.T) {
 		t.FailNow()
 	}
 
-	f := s.SchemaForField("spec")
+	f := s.Field("spec")
 	if !assert.NotNil(t, f) {
 		t.FailNow()
 	}
@@ -27,7 +27,7 @@ func TestSchemaForResourceType(t *testing.T) {
 		t.FailNow()
 	}
 
-	replicas := f.SchemaForField("replicas")
+	replicas := f.Field("replicas")
 	if !assert.NotNil(t, replicas) {
 		t.FailNow()
 	}
@@ -36,7 +36,7 @@ func TestSchemaForResourceType(t *testing.T) {
 		t.FailNow()
 	}
 
-	temp := f.SchemaForField("template")
+	temp := f.Field("template")
 	if !assert.NotNil(t, temp) {
 		t.FailNow()
 	}
@@ -45,16 +45,12 @@ func TestSchemaForResourceType(t *testing.T) {
 		t.FailNow()
 	}
 
-	containers := temp.SchemaForField("spec").
-		SchemaForField("containers").
-		SchemaForElements()
+	containers := temp.Field("spec").Field("containers").Elements()
 	if !assert.NotNil(t, containers) {
 		t.FailNow()
 	}
 
-	targetPort := containers.SchemaForField("ports").
-		SchemaForElements().
-		SchemaForField("containerPort")
+	targetPort := containers.Field("ports").Elements().Field("containerPort")
 	if !assert.NotNil(t, targetPort) {
 		t.FailNow()
 	}
@@ -63,8 +59,7 @@ func TestSchemaForResourceType(t *testing.T) {
 		t.FailNow()
 	}
 
-	arg := containers.SchemaForField("args").
-		SchemaForElements()
+	arg := containers.Field("args").Elements()
 	if !assert.NotNil(t, arg) {
 		t.FailNow()
 	}
