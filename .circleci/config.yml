@@ -28,12 +28,15 @@ workflows:
   version: 2
   commit:
     jobs:
-      - build
+      - build:
+          filters:
+            tags:
+              ignore: /^qlik\/v.*/
   build_release:
     jobs:
       - build_release:
           filters:
-            branches:
-              ignore: /.*/ 
             tags:
-              only: /v.*/
+              only: /^qlik\/v.*/
+            branches:
+              ignore: /.*/
