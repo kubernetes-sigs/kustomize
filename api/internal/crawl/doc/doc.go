@@ -78,6 +78,9 @@ func (doc *KustomizationDocument) GetResources() ([]*Document, error) {
 
 	res := make([]*Document, 0, len(k.Resources))
 	for _, r := range k.Resources {
+		if strings.TrimSpace(r) == "" {
+			continue
+		}
 		next, err := doc.Document.FromRelativePath(r)
 		if err != nil {
 			fmt.Printf("GetResources error: %v\n", err)
