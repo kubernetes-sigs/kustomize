@@ -1,0 +1,39 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:stretch
+    working_directory: /go/src/github.com/qlik-oss/kustomize
+    steps:
+      - checkout
+      - run:
+          name: "Verify build"
+          command: |
+            cd kustomize
+            now=`date +"%T"`
+            go build -o /tmp/kustomize-${now} main.go
+  build_release:
+    docker:
+      - image: circleci/golang:stretch
+    working_directory: /go/src/github.com/qlik-oss/kustomize
+    steps:
+      - checkout
+      - run: make qlik-build-all
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            go get github.com/tcnksm/ghr
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} /go/src/github.com/qlik-oss/kustomize/bin
+workflows:
+  version: 2
+  commit:
+    jobs:
+      - build
+  build_release:
+    jobs:
+      - build_release:
+          filters:
+            branches:
+              ignore: /.*/ 
+            tags:
+              only: /v.*/
