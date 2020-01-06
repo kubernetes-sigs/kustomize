@@ -13,8 +13,7 @@ import (
 func Example() {
 	s := openapi.SchemaForResourceType(yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"})
 
-	f := s.SchemaForField("spec").
-		SchemaForField("replicas")
+	f := s.Lookup("spec", "replicas")
 	fmt.Println(f.Schema.Description[:70] + "...")
 	fmt.Println(f.Schema.Type)
 
@@ -26,10 +25,7 @@ func Example() {
 func Example_arrayMerge() {
 	s := openapi.SchemaForResourceType(yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"})
 
-	f := s.SchemaForField("spec").
-		SchemaForField("template").
-		SchemaForField("spec").
-		SchemaForField("containers")
+	f := s.Lookup("spec", "template", "spec", "containers")
 	fmt.Println(f.Schema.Description[:70] + "...")
 	fmt.Println(f.Schema.Type)
 	fmt.Println(f.PatchStrategyAndKey()) // merge patch strategy on name
@@ -43,11 +39,7 @@ func Example_arrayMerge() {
 func Example_arrayReplace() {
 	s := openapi.SchemaForResourceType(yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"})
 
-	f := s.SchemaForField("spec").
-		SchemaForField("template").
-		SchemaForField("spec").
-		SchemaForField("containers").SchemaForElements().
-		SchemaForField("args")
+	f := s.Lookup("spec", "template", "spec", "containers", openapi.Elements, "args")
 	fmt.Println(f.Schema.Description[:70] + "...")
 	fmt.Println(f.Schema.Type)
 	fmt.Println(f.PatchStrategyAndKey()) // no patch strategy or merge key
@@ -60,12 +52,8 @@ func Example_arrayReplace() {
 func Example_arrayElement() {
 	s := openapi.SchemaForResourceType(yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"})
 
-	f := s.SchemaForField("spec").
-		SchemaForField("template").
-		SchemaForField("spec").
-		SchemaForField("containers").SchemaForElements().
-		SchemaForField("ports").SchemaForElements().
-		SchemaForField("containerPort")
+	f := s.Lookup("spec", "template", "spec", "containers",
+		openapi.Elements, "ports", openapi.Elements, "containerPort")
 	fmt.Println(f.Schema.Description[:70] + "...")
 	fmt.Println(f.Schema.Type)
 
@@ -77,7 +65,7 @@ func Example_arrayElement() {
 func Example_map() {
 	s := openapi.SchemaForResourceType(yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"})
 
-	f := s.SchemaForField("metadata").SchemaForField("labels")
+	f := s.Lookup("metadata", "labels")
 	fmt.Println(f.Schema.Description[:70] + "...")
 	fmt.Println(f.Schema.Type)
 

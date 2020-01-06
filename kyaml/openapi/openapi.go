@@ -33,8 +33,8 @@ func SchemaForResourceType(t yaml.TypeMeta) *ResourceSchema {
 	return &ResourceSchema{Schema: rs}
 }
 
-// SchemaForElements returns the Schema for the elements of an array.
-func (r *ResourceSchema) SchemaForElements() *ResourceSchema {
+// Elements returns the Schema for the elements of an array.
+func (r *ResourceSchema) Elements() *ResourceSchema {
 	// load the schema from swagger.json
 	initSchema()
 
@@ -53,8 +53,30 @@ func (r *ResourceSchema) SchemaForElements() *ResourceSchema {
 	return &ResourceSchema{Schema: &s}
 }
 
-// SchemaForField returns the Schema for a field.
-func (r *ResourceSchema) SchemaForField(field string) *ResourceSchema {
+const Elements = "[]"
+
+// Lookup calls either Field or Elements for each item in the path.
+// If the path item is "[]", then Elements is called, otherwise
+// Field is called.
+// If any Field or Elements call returns nil, then Lookup returns
+// nil immediately.
+func (r *ResourceSchema) Lookup(path ...string) *ResourceSchema {
+	s := r
+	for _, p := range path {
+		if s == nil {
+			break
+		}
+		if p == Elements {
+			s = s.Elements()
+			continue
+		}
+		s = s.Field(p)
+	}
+	return s
+}
+
+// Field returns the Schema for a field.
+func (r *ResourceSchema) Field(field string) *ResourceSchema {
 	// load the schema from swagger.json
 	initSchema()
 

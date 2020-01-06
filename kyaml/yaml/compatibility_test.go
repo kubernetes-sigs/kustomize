@@ -61,14 +61,8 @@ spec:
 		t.FailNow()
 	}
 	on := args.YNode().Content[1]
-	onS := s.
-		SchemaForField("spec").
-		SchemaForField("template").
-		SchemaForField("spec").
-		SchemaForField("containers").
-		SchemaForElements().
-		SchemaForField("args").
-		SchemaForElements()
+	onS := s.Lookup(
+		"spec", "template", "spec", "containers", openapi.Elements, "args", openapi.Elements)
 	yaml.FormatNonStringStyle(on, *onS.Schema)
 
 	containerPort, err := n.Pipe(yaml.Lookup(
@@ -80,15 +74,8 @@ spec:
 	if !assert.NotNil(t, containerPort) {
 		t.FailNow()
 	}
-	cpS := s.
-		SchemaForField("spec").
-		SchemaForField("template").
-		SchemaForField("spec").
-		SchemaForField("containers").
-		SchemaForElements().
-		SchemaForField("ports").
-		SchemaForElements().
-		SchemaForField("containerPort")
+	cpS := s.Lookup("spec", "template", "spec", "containers", openapi.Elements,
+		"ports", openapi.Elements, "containerPort")
 	if !assert.NotNil(t, cpS) {
 		t.FailNow()
 	}
