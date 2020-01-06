@@ -6,11 +6,13 @@ package copyutil
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/sergi/go-diff/diffmatchpatch"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 )
 
@@ -119,6 +121,9 @@ func Diff(sourceDir, destDir string) (sets.String, error) {
 			return diff, err
 		}
 		if !bytes.Equal(b1, b2) {
+			dmp := diffmatchpatch.New()
+			diffs := dmp.DiffMain(string(b1), string(b2), false)
+			fmt.Println(dmp.DiffPrettyText(diffs))
 			diff.Insert(f)
 		}
 	}
