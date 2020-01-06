@@ -13,9 +13,194 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	. "sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters/testyaml"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+func TestFormatInput_FixYaml1_1Compatibility(t *testing.T) {
+	y := `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  labels:
+    foo: on
+    foo2: hello1
+  annotations:
+    bar: 1
+    bar2: hello2
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.0.0
+        args:
+        - on
+        - 1
+        - hello
+        ports:
+        - name: http
+          targetPort: 80
+          containerPort: 80
+`
+
+	// keep the style on values that parse as non-string types
+	expected := `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  labels:
+    foo: "on"
+    foo2: hello1
+  annotations:
+    bar: "1"
+    bar2: hello2
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.0.0
+        args:
+        - "on"
+        - "1"
+        - hello
+        ports:
+        - name: http
+          targetPort: 80
+          containerPort: 80
+`
+
+	buff := &bytes.Buffer{}
+	err := kio.Pipeline{
+		Inputs:  []kio.Reader{&kio.ByteReader{Reader: strings.NewReader(y)}},
+		Filters: []kio.Filter{FormatFilter{}},
+		Outputs: []kio.Writer{kio.ByteWriter{Writer: buff}},
+	}.Execute()
+	assert.NoError(t, err)
+	assert.Equal(t, expected, buff.String())
+}
+
+func TestFormatInput_PostprocessStyle(t *testing.T) {
+	y := `
+apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+spec:
+  notBoolean: "true"
+  notBoolean2: "on"
+  isBoolean: on
+  isBoolean2: true
+  notInt: "12345"
+  isInt: 12345
+  isString1: hello world
+  isString2: "hello world"
+`
+
+	// keep the style on values that parse as non-string types
+	expected := `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+spec:
+  isBoolean: on
+  isBoolean2: true
+  isInt: 12345
+  isString1: hello world
+  isString2: hello world
+  notBoolean: "true"
+  notBoolean2: "on"
+  notInt: "12345"
+`
+
+	buff := &bytes.Buffer{}
+	err := kio.Pipeline{
+		Inputs: []kio.Reader{&kio.ByteReader{Reader: strings.NewReader(y)}},
+		Filters: []kio.Filter{FormatFilter{Process: func(n *yaml.Node) error {
+			if yaml.IsYaml1_1NonString(n) {
+				// don't change these styles, they are important for backwards compatibility
+				// e.g. "on" must remain quoted, on must remain unquoted
+				return nil
+			}
+			// style does not have semantic meaning
+			n.Style = 0
+			return nil
+		}}},
+		Outputs: []kio.Writer{kio.ByteWriter{Writer: buff}},
+	}.Execute()
+	assert.NoError(t, err)
+	assert.Equal(t, expected, buff.String())
+
+	y = `
+apiVersion: v1
+kind: Foo
+metadata:
+  name: 'foo'
+spec:
+  notBoolean: "true"
+  notBoolean2: "on"
+  notBoolean3: y is yes
+  isBoolean: on
+  isBoolean2: true
+  isBoolean3: y
+  notInt2: 1234 five
+  notInt3: one 2345
+  notInt: "12345"
+  isInt1: 12345
+  isInt2: -12345
+  isFloat1: 1.1234
+  isFloat2: 1.1234
+  isString1: hello world
+  isString2: "hello world"
+  isString3: 'hello world'
+`
+
+	// keep the style on values that parse as non-string types
+	expected = `apiVersion: 'v1'
+kind: 'Foo'
+metadata:
+  name: 'foo'
+spec:
+  isBoolean: on
+  isBoolean2: true
+  isBoolean3: y
+  isFloat1: 1.1234
+  isFloat2: 1.1234
+  isInt1: 12345
+  isInt2: -12345
+  isString1: 'hello world'
+  isString2: 'hello world'
+  isString3: 'hello world'
+  notBoolean: "true"
+  notBoolean2: "on"
+  notBoolean3: 'y is yes'
+  notInt: "12345"
+  notInt2: '1234 five'
+  notInt3: 'one 2345'
+`
+
+	buff = &bytes.Buffer{}
+	err = kio.Pipeline{
+		Inputs: []kio.Reader{&kio.ByteReader{Reader: strings.NewReader(y)}},
+		Filters: []kio.Filter{FormatFilter{Process: func(n *yaml.Node) error {
+			if yaml.IsYaml1_1NonString(n) {
+				// don't change these styles, they are important for backwards compatibility
+				// e.g. "on" must remain quoted, on must remain unquoted
+				return nil
+			}
+			// style does not have semantic meaning
+			n.Style = yaml.SingleQuotedStyle
+			return nil
+		}}},
+		Outputs: []kio.Writer{kio.ByteWriter{Writer: buff}},
+	}.Execute()
+	assert.NoError(t, err)
+	assert.Equal(t, expected, buff.String())
+}
 
 func TestFormatInput_Style(t *testing.T) {
 	y := `
