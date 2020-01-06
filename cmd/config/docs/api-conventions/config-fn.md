@@ -229,7 +229,7 @@ Following is an example of running the `kustomize config run` using the precedin
     spec:
       replicas: 5
 
-  - `annotations.[config.k8s.io/function]`: the image to use for this API
+  - `annotations.[config.k8s.io/function]`: the specification of how to run the function
   - `annotations.[config.kubernetes.io/local-config]`: mark this as not a Resource that should
     be applied
 
