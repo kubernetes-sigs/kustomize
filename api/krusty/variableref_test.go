@@ -131,14 +131,7 @@ resources:
 - ../base1
 - ../base2
 `)
-<<<<<<< HEAD:api/krusty/variableref_test.go
 	m := th.Run("/app/overlay", th.MakeDefaultOptions())
-=======
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
->>>>>>> restructure:api/target/variableref_test.go
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Pod
@@ -252,14 +245,7 @@ vars:
     fieldpath: metadata.test
   immediateSubstitution: true
 `)
-<<<<<<< HEAD:api/krusty/variableref_test.go
 	m := th.Run("/app/overlay", th.MakeDefaultOptions())
-=======
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
->>>>>>> restructure:api/target/variableref_test.go
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Pod
@@ -385,7 +371,7 @@ spec:
 }
 
 func TestBasicVarCollision(t *testing.T) {
-	th := kusttest_test.NewKustTestHarness(t, "/app/overlay")
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/base1", `
 namePrefix: base1-
 resources:
@@ -451,7 +437,7 @@ resources:
 - ../base1
 - ../base2
 `)
-	_, err := th.MakeKustTarget().MakeCustomizedResMap()
+	err := th.RunWithErr("/app/overlay", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("should have an error")
 	}
@@ -652,14 +638,7 @@ resources:
 - ../o1
 - ../o2
 `)
-<<<<<<< HEAD:api/krusty/variableref_test.go
 	m := th.Run("/app/top", th.MakeDefaultOptions())
-=======
-	m, err := th.MakeKustTarget().MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("Err: %v", err)
-	}
->>>>>>> restructure:api/target/variableref_test.go
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Pod
