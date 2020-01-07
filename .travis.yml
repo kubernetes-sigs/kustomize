@@ -36,6 +36,7 @@ install: true
 script:
   - make verify-kustomize
   - ./travis/kyaml-pre-commit.sh
+  - ./travis/check-go-mod.sh
 
 # TBD. Suppressing for now.
 notifications:
