@@ -5,7 +5,7 @@ apiVersion: examples.config.kubernetes.io/v1beta1
 kind: Kubeval
 metadata:
   annotations:
-    config.k8s.io/function: |
+    config.kubernetes.io/function: |
       container:
         image: gcr.io/kustomize-functions/example-validator-kubeval:v0.1.0
 spec:

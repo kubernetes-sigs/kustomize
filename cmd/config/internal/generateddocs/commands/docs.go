@@ -220,7 +220,7 @@ order they appear in the file).
 
 #### Config Functions:
 
-  Config functions are specified as Kubernetes types containing a metadata.annotations.[config.k8s.io/function]
+  Config functions are specified as Kubernetes types containing a metadata.annotations.[config.kubernetes.io/function]
   field specifying an image for the container to run.  This image tells run how to invoke the container.
 
   Example config function:
@@ -230,7 +230,7 @@ order they appear in the file).
 	kind: ExampleFunctionKind
 	metadata:
 	  annotations:
-	    config.k8s.io/function: |
+	    config.kubernetes.io/function: |
 	      container:
 	        # function is invoked as a container running this image
 	        image: gcr.io/example/examplefunction:v1.0.1
@@ -239,7 +239,7 @@ order they appear in the file).
 	  configField: configValue
 
   In the preceding example, 'kustomize config run example/' would identify the function by
-  the metadata.annotations.[config.k8s.io/function] field.  It would then write all Resources in the directory to
+  the metadata.annotations.[config.kubernetes.io/function] field.  It would then write all Resources in the directory to
   a container stdin (running the gcr.io/example/examplefunction:v1.0.1 image).  It
   would then write the container stdout back to example/, replacing the directory
   file contents.
