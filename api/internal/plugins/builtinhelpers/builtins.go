@@ -35,6 +35,7 @@ const (
 	Gomplate
 	HelmChart
 	HelmValues
+	SearchReplace
 	SedOnPath
 	SelectivePatch
 	SuperVars
@@ -65,6 +66,9 @@ func init() {
 
 	TransformerFactories[HelmValues] = builtins_qlik.NewHelmValuesPlugin
 	stringToBuiltinPluginTypeMap["HelmValues"] = HelmValues
+
+	TransformerFactories[SearchReplace] = builtins_qlik.NewSearchReplacePlugin
+	stringToBuiltinPluginTypeMap["SearchReplace"] = SearchReplace
 
 	TransformerFactories[SedOnPath] = builtins_qlik.NewSedOnPathPlugin
 	stringToBuiltinPluginTypeMap["SedOnPath"] = SedOnPath
