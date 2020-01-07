@@ -16,7 +16,9 @@ import (
 
 // GetEventsRunner returns a command EventsRunner.
 func GetEventsRunner() *EventsRunner {
-	r := &EventsRunner{}
+	r := &EventsRunner{
+		createClientFunc: createClient,
+	}
 	c := &cobra.Command{
 		Use:     "events DIR...",
 		Short:   commands.EventsShort,
@@ -46,13 +48,15 @@ type EventsRunner struct {
 	Interval           time.Duration
 	Timeout            time.Duration
 	Command            *cobra.Command
+
+	createClientFunc createClientFunc
 }
 
 func (r *EventsRunner) runE(c *cobra.Command, args []string) error {
 	ctx := context.Background()
 
 	// Create a client and use it to set up a new resolver.
-	client, err := getClient()
+	client, err := r.createClientFunc()
 	if err != nil {
 		return errors.Wrap(err, "error creating client")
 	}

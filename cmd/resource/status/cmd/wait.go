@@ -18,7 +18,9 @@ import (
 
 // GetWaitRunner return a command WaitRunner.
 func GetWaitRunner() *WaitRunner {
-	r := &WaitRunner{}
+	r := &WaitRunner{
+		createClientFunc: createClient,
+	}
 	c := &cobra.Command{
 		Use:     "wait DIR...",
 		Short:   commands.WaitShort,
@@ -48,6 +50,8 @@ type WaitRunner struct {
 	Interval           time.Duration
 	Timeout            time.Duration
 	Command            *cobra.Command
+
+	createClientFunc createClientFunc
 }
 
 // runE implements the logic of the command and will call the Wait command in the wait
@@ -55,7 +59,7 @@ type WaitRunner struct {
 // TablePrinter to display the information.
 func (r *WaitRunner) runE(c *cobra.Command, args []string) error {
 	ctx := context.Background()
-	client, err := getClient()
+	client, err := r.createClientFunc()
 	if err != nil {
 		return errors.Wrap(err, "error creating client")
 	}
