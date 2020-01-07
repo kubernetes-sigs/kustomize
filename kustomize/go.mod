@@ -17,5 +17,3 @@ exclude (
 	github.com/russross/blackfriday v2.0.0+incompatible
 	sigs.k8s.io/kustomize/api v0.2.0
 )
-
-replace sigs.k8s.io/kustomize/api => ../api
