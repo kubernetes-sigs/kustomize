@@ -132,7 +132,6 @@ resources:
 vars:
 - fieldref:
     fieldPath: metadata.name
-  immediateSubstitution: false
   name: MY_SERVICE_NAME
   objref:
     apiVersion: v1
@@ -219,7 +218,6 @@ kind: kustomization
 vars:
 - fieldref:
     fieldPath: metadata.name
-  immediateSubstitution: false
   name: MY_SERVICE_NAME
   objref:
     apiVersion: v1
