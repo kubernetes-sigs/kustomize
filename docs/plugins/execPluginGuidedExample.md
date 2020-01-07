@@ -196,14 +196,13 @@ By definition, an _exec_ plugin must be executable:
 chmod a+x $MY_PLUGIN_DIR/SillyConfigMapGenerator
 ```
 
-## Download kustomize 3.0.0
+## Install kustomize
 
+Per the [instructions](../../INSTALL.md):
 ```
-mkdir -p $DEMO/bin
-gh=https://github.com/kubernetes-sigs/kustomize/releases/download
-url=$gh/v3.0.0/kustomize_3.0.0_linux_amd64.tar.gz
-curl -o $DEMO/bin/kustomize -L $url
-chmod u+x $DEMO/bin/kustomize
+curl -s "https://raw.githubusercontent.com/\
+kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+mv kustomize $DEMO/bin
 ```
 
 ## Review the layout
