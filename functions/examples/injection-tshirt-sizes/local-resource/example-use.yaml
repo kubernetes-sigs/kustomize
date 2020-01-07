@@ -5,7 +5,7 @@ apiVersion: examples.config.kubernetes.io/v1beta1
 kind: Validator
 metadata:
   annotations:
-    config.k8s.io/function: |
+    config.kubernetes.io/function: |
       container:
         image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
 ---

@@ -6,7 +6,7 @@ kind: Nginx
 metadata:
   name: demo
   annotations:
-    config.k8s.io/function: |
+    config.kubernetes.io/function: |
       container:
         image: gcr.io/kustomize-functions/example-nginx:v0.1.0
 spec:
