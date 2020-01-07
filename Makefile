@@ -292,5 +292,6 @@ clean: kustomize-external-go-plugin-clean
 nuke: clean
 	sudo rm -rf $(shell go env GOPATH)/pkg/mod/sigs.k8s.io
 
+QLIK_VERSION ?= qlik-dev
 qlik-build-all:
-	./qlik-build-all.sh
+	env QLIK_VERSION=$(QLIK_VERSION) ./qlik-build-all.sh
