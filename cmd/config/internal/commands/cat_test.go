@@ -90,7 +90,6 @@ metadata:
   name: foo
   annotations:
     app: nginx2
-    config.kubernetes.io/path: 'f1.yaml'
 spec:
   replicas: 1
 ---
@@ -99,7 +98,6 @@ metadata:
   name: foo
   annotations:
     app: nginx
-    config.kubernetes.io/path: 'f1.yaml'
 spec:
   selector:
     app: nginx
@@ -112,7 +110,6 @@ metadata:
     app: nginx
   annotations:
     app: nginx
-    config.kubernetes.io/path: 'f2.yaml'
 spec:
   replicas: 3
 `, b.String()) {
@@ -193,7 +190,6 @@ metadata:
   name: foo
   annotations:
     app: nginx2
-    config.kubernetes.io/path: 'f1.yaml'
 spec:
   replicas: 1
 ---
@@ -202,7 +198,6 @@ metadata:
   name: foo
   annotations:
     app: nginx
-    config.kubernetes.io/path: 'f1.yaml'
 spec:
   selector:
     app: nginx
@@ -213,7 +208,6 @@ metadata:
   name: foo
   annotations:
     config.kubernetes.io/local-config: "true"
-    config.kubernetes.io/path: 'f2.yaml'
   configFn:
     container:
       image: gcr.io/example/image:version
@@ -227,7 +221,6 @@ metadata:
   name: bar
   annotations:
     app: nginx
-    config.kubernetes.io/path: 'f2.yaml'
 spec:
   replicas: 3
 `, b.String()) {
@@ -307,7 +300,6 @@ metadata:
   name: foo
   annotations:
     config.kubernetes.io/local-config: "true"
-    config.kubernetes.io/path: 'f2.yaml'
   configFn:
     container:
       image: gcr.io/example/reconciler:v1
@@ -406,7 +398,6 @@ metadata:
   name: foo
   annotations:
     app: nginx2
-    config.kubernetes.io/path: 'f1.yaml'
 spec:
   replicas: 1
 ---
@@ -415,7 +406,6 @@ metadata:
   name: foo
   annotations:
     app: nginx
-    config.kubernetes.io/path: 'f1.yaml'
 spec:
   selector:
     app: nginx
@@ -428,7 +418,6 @@ metadata:
     app: nginx
   annotations:
     app: nginx
-    config.kubernetes.io/path: 'f2.yaml'
 spec:
   replicas: 3
 `, string(actual)) {
@@ -525,7 +514,6 @@ metadata:
   name: foo
   annotations:
     app: nginx2
-    config.kubernetes.io/path: 'f1.yaml'
 spec:
   replicas: 1
 ---
@@ -534,7 +522,6 @@ metadata:
   name: foo
   annotations:
     app: nginx
-    config.kubernetes.io/path: 'f1.yaml'
 spec:
   selector:
     app: nginx
@@ -547,7 +534,6 @@ metadata:
     app: nginx
   annotations:
     app: nginx
-    config.kubernetes.io/path: 'f2.yaml'
 spec:
   replicas: 3
 `, string(actual)) {

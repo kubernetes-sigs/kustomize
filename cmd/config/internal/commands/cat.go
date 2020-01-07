@@ -121,6 +121,13 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 		out = o
 	}
 
+	// remove this annotation explicitly, the ByteWriter won't clear it by
+	// default because it doesn't set it
+	clear := []string{"config.kubernetes.io/path"}
+	if r.KeepAnnotations {
+		clear = nil
+	}
+
 	var outputs []kio.Writer
 	outputs = append(outputs, kio.ByteWriter{
 		Writer:                out,
@@ -129,6 +136,7 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 		WrappingAPIVersion:    r.WrapApiVersion,
 		FunctionConfig:        functionConfig,
 		Style:                 yaml.GetStyle(r.Styles...),
+		ClearAnnotations:      clear,
 	})
 
 	return handleError(c, kio.Pipeline{Inputs: inputs, Filters: fltr, Outputs: outputs}.Execute())
