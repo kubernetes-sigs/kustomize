@@ -97,6 +97,17 @@ func (gc githubCrawler) Crawl(
 // it will try to add each string in konfig.RecognizedKustomizationFileNames() to
 // d.FilePath, and try to fetch the document again.
 func (gc githubCrawler) FetchDocument(_ context.Context, d *doc.Document) error {
+	// set the default branch if it is empty
+	if d.DefaultBranch == "" {
+		url := gc.client.ReposRequest(d.RepositoryFullName())
+		defaultBranch, err := gc.client.GetDefaultBranch(url)
+		if err != nil {
+			logger.Printf(
+				"(error: %v) setting default_branch to master\n", err)
+			defaultBranch = "master"
+		}
+		d.DefaultBranch = defaultBranch
+	}
 	repoURL := d.RepositoryURL + "/" + d.FilePath + "?ref=" + d.DefaultBranch
 	repoSpec, err := git.NewRepoSpecFromUrl(repoURL)
 	if err != nil {
