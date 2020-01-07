@@ -93,8 +93,13 @@ func NewConfigCommand(name string) *cobra.Command {
 	})
 	root.AddCommand(&cobra.Command{
 		Use:   "docs-fn",
-		Short: "[Alpha] Documentation for writing containerized functions run by run.",
-		Long:  api.ConfigFnLong,
+		Short: "[Alpha] Documentation for developing and invoking Configuration Functions.",
+		Long:  api.FunctionsImplLong,
+	})
+	root.AddCommand(&cobra.Command{
+		Use:   "docs-fn-spec",
+		Short: "[Alpha] Documentation for Configuration Functions Specification.",
+		Long:  api.FunctionsSpecLong,
 	})
 	root.AddCommand(&cobra.Command{
 		Use:   "docs-io-annotations",
