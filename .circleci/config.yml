@@ -26,6 +26,13 @@ jobs:
           command: |
             go get github.com/tcnksm/ghr
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} /go/src/github.com/qlik-oss/kustomize/bin
+      - setup_remote_docker
+      - run:
+          name: "Push Docker Image"
+          command: |
+            docker login -u "${DOCKER_LOGIN}" -p "${DOCKER_PASSWORD}" docker.io
+            docker build -f Dockerfile -t docker.io/qlik/qliksense-cloud-tools:latest .
+            docker push docker.io/qlik/qliksense-cloud-tools
 workflows:
   version: 2
   commit:
