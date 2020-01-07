@@ -24,7 +24,7 @@ var (
 func addFlagLoadRestrictor(set *pflag.FlagSet) {
 	set.StringVar(
 		&flagLrValue, flagName,
-		types.LoadRestrictionsRootOnly.String(), flagLrHelp)
+		types.LoadRestrictionsNone.String(), flagLrHelp)
 }
 
 func validateFlagLoadRestrictor() error {
