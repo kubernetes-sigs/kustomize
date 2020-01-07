@@ -21,8 +21,7 @@ metadata:
   namespace: default
   annotations:
     app: nginx3
-    config.kubernetes.io/package: foo-package/3
-    config.kubernetes.io/path: f3.yaml
+    config.kubernetes.io/path: foo-package/3/f3.yaml
 spec:
   replicas: 1
 ---
@@ -34,8 +33,7 @@ metadata:
   namespace: default
   annotations:
     app: nginx2
-    config.kubernetes.io/package: foo-package
-    config.kubernetes.io/path: f1.yaml
+    config.kubernetes.io/path: foo-package/f1.yaml
 spec:
   replicas: 1
 ---
@@ -45,8 +43,7 @@ metadata:
     app: nginx
   annotations:
     app: nginx
-    config.kubernetes.io/package: bar-package
-    config.kubernetes.io/path: f2.yaml
+    config.kubernetes.io/path: bar-package/f2.yaml
   name: bar
 spec:
   replicas: 3
@@ -57,8 +54,7 @@ metadata:
   namespace: default
   annotations:
     app: nginx
-    config.kubernetes.io/package: foo-package
-    config.kubernetes.io/path: f1.yaml
+    config.kubernetes.io/path: foo-package/f1.yaml
 spec:
   selector:
     app: nginx
@@ -94,7 +90,6 @@ metadata:
   namespace: default
   annotations:
     app: nginx3
-    config.kubernetes.io/package: .
     config.kubernetes.io/path: f3.yaml
 spec:
   replicas: 1
@@ -107,8 +102,7 @@ metadata:
   namespace: default
   annotations:
     app: nginx2
-    config.kubernetes.io/package: foo-package
-    config.kubernetes.io/path: f1.yaml
+    config.kubernetes.io/path: foo-package/f1.yaml
 spec:
   replicas: 1
 ---
@@ -118,8 +112,8 @@ metadata:
     app: nginx
   annotations:
     app: nginx
-    config.kubernetes.io/package: bar-package
-    config.kubernetes.io/path: f2.yaml
+    config.kubernetes.io/package: 
+    config.kubernetes.io/path: bar-package/f2.yaml
   name: bar
 spec:
   replicas: 3
@@ -167,7 +161,6 @@ metadata:
   namespace: default
   annotations:
     app: nginx2
-    config.kubernetes.io/package: .
     config.kubernetes.io/path: f1.yaml
 spec:
   replicas: 1
@@ -181,7 +174,6 @@ metadata:
   namespace: default
   annotations:
     app: nginx2
-    config.kubernetes.io/package: .
     config.kubernetes.io/path: f1.yaml
 spec:
   replicas: 1
@@ -195,7 +187,6 @@ metadata:
   namespace: default
   annotations:
     app: nginx2
-    config.kubernetes.io/package: .
     config.kubernetes.io/path: f1.yaml
 spec:
   replicas: 1
@@ -209,7 +200,6 @@ metadata:
   namespace: default2
   annotations:
     app: nginx2
-    config.kubernetes.io/package: .
     config.kubernetes.io/path: f1.yaml
 spec:
   replicas: 1
@@ -223,7 +213,6 @@ metadata:
   namespace: default
   annotations:
     app: nginx3
-    config.kubernetes.io/package: .
     config.kubernetes.io/path: f1.yaml
 spec:
   replicas: 1
@@ -234,8 +223,7 @@ metadata:
     app: nginx
   annotations:
     app: nginx
-    config.kubernetes.io/package: bar-package
-    config.kubernetes.io/path: f2.yaml
+    config.kubernetes.io/path: bar-package/f2.yaml
   name: bar
 spec:
   replicas: 3
@@ -246,7 +234,6 @@ metadata:
   namespace: default
   annotations:
     app: nginx
-    config.kubernetes.io/package: .
     config.kubernetes.io/path: f1.yaml
 spec:
   selector:
@@ -550,13 +537,12 @@ metadata:
 	}
 
 	if !assert.Equal(t, `
-└── 
-    ├── [.]  Service myapp-staging/cockroachdb
-    ├── [.]  StatefulSet myapp-staging/cockroachdb
-    ├── [.]  Pod myapp-staging/cockroachdb-0
-    ├── [.]  Pod myapp-staging/cockroachdb-1
-    ├── [.]  Pod myapp-staging/cockroachdb-2
-    └── [.]  Application myapp-staging/myapp
+├── [.]  Service myapp-staging/cockroachdb
+├── [.]  StatefulSet myapp-staging/cockroachdb
+├── [.]  Pod myapp-staging/cockroachdb-0
+├── [.]  Pod myapp-staging/cockroachdb-1
+├── [.]  Pod myapp-staging/cockroachdb-2
+└── [.]  Application myapp-staging/myapp
 `, out.String()) {
 		t.FailNow()
 	}
