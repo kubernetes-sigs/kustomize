@@ -1,3 +1,6 @@
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 package cmd
 
 import (
@@ -176,10 +179,13 @@ func (s *TablePrinter) printTable(data StatusData, deleteUp bool) {
 }
 
 func (s *TablePrinter) printTableRow(rowData []RowData) {
-	for _, row := range rowData {
+	for i, row := range rowData {
 		setColor(s.out, row.color)
-		format := fmt.Sprintf("%%-%ds  ", row.width)
+		format := fmt.Sprintf("%%-%ds", row.width)
 		printOrDie(s.out, format, trimString(row.content, row.width))
+		if i != len(rowData)-1 {
+			printOrDie(s.out, "  ")
+		}
 		setColor(s.out, WHITE)
 	}
 	printOrDie(s.out, "\n")

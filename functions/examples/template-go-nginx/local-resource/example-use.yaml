@@ -5,8 +5,9 @@ apiVersion: examples.config.kubernetes.io/v1beta1 # call `kustomize config run` 
 kind: Nginx
 metadata:
   name: demo
-  configFn:
-    container:
-      image: gcr.io/kustomize-functions/example-nginx:v0.1.0
+  annotations:
+    config.k8s.io/function: |
+      container:
+        image: gcr.io/kustomize-functions/example-nginx:v0.1.0
 spec:
   replicas: 4
