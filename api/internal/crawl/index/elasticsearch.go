@@ -309,9 +309,9 @@ func (idx *index) Exists(id string) (bool, error) {
 		op.WithPretty(),
 	)
 
-	if !res.IsError() {
+	if res != nil && !res.IsError() {
 		return true, nil
-	} else if res.StatusCode == 404 {
+	} else if res != nil && res.StatusCode == 404 {
 		return false, nil
 	} else {
 		return false, idx.responseErrorOrNil(

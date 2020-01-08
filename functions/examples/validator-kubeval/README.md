@@ -18,7 +18,7 @@ the `API` struct definition in [main.go](image/main.go) for documentation.
 ## Function invocation
 
 The function is invoked by authoring a [local Resource](local-resource)
-with `metadata.configFn` and running:
+with `metadata.annotations.[config.k8s.io/function]` and running:
 
     kustomize config run local-resource/
 

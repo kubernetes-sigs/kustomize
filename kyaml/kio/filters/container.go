@@ -130,7 +130,11 @@ func (c *ContainerFilter) getArgs() []string {
 
 	// export the local environment vars to the container
 	for _, pair := range os.Environ() {
-		args = append(args, "-e", strings.Split(pair, "=")[0])
+		tokens := strings.Split(pair, "=")
+		if tokens[0] == "" {
+			continue
+		}
+		args = append(args, "-e", tokens[0])
 	}
 	return append(args, c.Image)
 }
@@ -196,6 +200,13 @@ func GetContainerName(n *yaml.RNode) (string, string) {
 
 	// path to the function, this will be mounted into the container
 	path := meta.Annotations[kioutil.PathAnnotation]
+
+	functionAnnotation := meta.Annotations["config.k8s.io/function"]
+	if functionAnnotation != "" {
+		annotationContent, _ := yaml.Parse(functionAnnotation)
+		image, _ := annotationContent.Pipe(yaml.Lookup("container", "image"))
+		return image.YNode().Value, path
+	}
 
 	container := meta.Annotations["config.kubernetes.io/container"]
 	if container != "" {

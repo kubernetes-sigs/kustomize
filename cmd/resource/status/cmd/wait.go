@@ -1,3 +1,6 @@
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 package cmd
 
 import (
@@ -7,18 +10,23 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-
+	"sigs.k8s.io/kustomize/cmd/resource/status/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kstatus/status"
 	"sigs.k8s.io/kustomize/kstatus/wait"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
+// GetWaitRunner return a command WaitRunner.
 func GetWaitRunner() *WaitRunner {
-	r := &WaitRunner{}
+	r := &WaitRunner{
+		createClientFunc: createClient,
+	}
 	c := &cobra.Command{
-		Use:   "wait",
-		Short: "Wait",
-		RunE:  r.runE,
+		Use:     "wait DIR...",
+		Short:   commands.WaitShort,
+		Long:    commands.WaitLong,
+		Example: commands.WaitExamples,
+		RunE:    r.runE,
 	}
 	c.Flags().BoolVar(&r.IncludeSubpackages, "include-subpackages", true,
 		"also print resources from subpackages.")
@@ -35,16 +43,23 @@ func WaitCommand() *cobra.Command {
 	return GetWaitRunner().Command
 }
 
+// WaitRunner captures the parameters for the command and contains
+// the run function.
 type WaitRunner struct {
 	IncludeSubpackages bool
 	Interval           time.Duration
 	Timeout            time.Duration
 	Command            *cobra.Command
+
+	createClientFunc createClientFunc
 }
 
+// runE implements the logic of the command and will call the Wait command in the wait
+// package, use a ResourceStatusCollector to capture the events from the channel, and the
+// TablePrinter to display the information.
 func (r *WaitRunner) runE(c *cobra.Command, args []string) error {
 	ctx := context.Background()
-	client, err := getClient()
+	client, err := r.createClientFunc()
 	if err != nil {
 		return errors.Wrap(err, "error creating client")
 	}
@@ -98,6 +113,9 @@ func (r *WaitRunner) runE(c *cobra.Command, args []string) error {
 	return nil
 }
 
+// ResourceStatusCollector captures the latest state seen for all resources
+// based on the events from the Wait channel. This is used by the TablePrinter
+// to display status for all resources.
 type ResourceStatusCollector struct {
 	mux sync.RWMutex
 
@@ -105,6 +123,8 @@ type ResourceStatusCollector struct {
 	ResourceStatuses []*ResourceStatus
 }
 
+// updateResourceStatus takes the given event and update the status info
+// in the ResourceStatusCollector.
 func (r *ResourceStatusCollector) updateResourceStatus(msg wait.Event) {
 	r.mux.Lock()
 	defer r.mux.Unlock()
@@ -121,18 +141,23 @@ func (r *ResourceStatusCollector) updateResourceStatus(msg wait.Event) {
 	}
 }
 
+// updateAggregateStatus sets the aggregate status of the ResourceStatusCollector to the
+// given value.
 func (r *ResourceStatusCollector) updateAggregateStatus(aggregateStatus status.Status) {
 	r.mux.Lock()
 	defer r.mux.Unlock()
 	r.AggregateStatus = aggregateStatus
 }
 
+// ResourceStatus contains the status information for a single resource.
 type ResourceStatus struct {
 	Identifier wait.ResourceIdentifier
 	Status     status.Status
 	Message    string
 }
 
+// newResourceStatusCollector creates a new ResourceStatusCollector with the given
+// resources and sets the status for all of them to Unknown.
 func newResourceStatusCollector(identifiers []wait.ResourceIdentifier) *ResourceStatusCollector {
 	var statuses []*ResourceStatus
 
@@ -150,10 +175,16 @@ func newResourceStatusCollector(identifiers []wait.ResourceIdentifier) *Resource
 	}
 }
 
+// CollectorStatusInfo is a wrapper around the ResourceStatusCollector
+// to make it adhere to the interface of the TableWriter.
 type CollectorStatusInfo struct {
 	Collector *ResourceStatusCollector
 }
 
+// CurrentStatus implements the interface for the TableWriter and
+// returns a copy of the current status of the resources in the
+// ResourceStatusCollector. This is done to make sure the TableWriter
+// does not have to deal with synchronization when accessing the data.
 func (f CollectorStatusInfo) CurrentStatus() StatusData {
 	f.Collector.mux.RLock()
 	defer f.Collector.mux.RUnlock()

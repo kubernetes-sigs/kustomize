@@ -136,6 +136,7 @@ func main() {
 				github.QueryWith(
 					github.Filename("kustomization.yaml"),
 					github.Filename("kustomization.yml"),
+					github.Filename("kustomization"),
 					github.User(user)),
 			)
 		} else if repo != "" {
@@ -143,13 +144,15 @@ func main() {
 				github.QueryWith(
 					github.Filename("kustomization.yaml"),
 					github.Filename("kustomization.yml"),
+					github.Filename("kustomization"),
 					github.Repo(repo)),
 			)
 		} else {
 			return github.NewCrawler(githubToken, retryCount, clientCache,
 				github.QueryWith(
 					github.Filename("kustomization.yaml"),
-					github.Filename("kustomization.yml")),
+					github.Filename("kustomization.yml"),
+					github.Filename("kustomization")),
 			)
 		}
 	}
