@@ -579,8 +579,6 @@ mvdan.cc/unparam v0.0.0-20190720180237-d51796306d8f h1:Cq7MalBHYACRd6EesksG1Q8Eo
 mvdan.cc/unparam v0.0.0-20190720180237-d51796306d8f/go.mod h1:4G1h5nDURzA3bwVMZIVpwbkw+04kSxk3rAtzlimaUJw=
 sigs.k8s.io/kustomize v2.0.3+incompatible h1:JUufWFNlI44MdtnjUqVnvh29rR37PQFzPbLXqhyOyX0=
 sigs.k8s.io/kustomize v2.0.3+incompatible/go.mod h1:MkjgH3RdOWrievjo6c9T245dYlB5QeXV4WCbnt/PEpU=
-sigs.k8s.io/kustomize/api v0.3.1 h1:oqMIXvS6tFEUVuKIRUKDa05eC4Hh+cb9JYg8Zhp2d24=
-sigs.k8s.io/kustomize/api v0.3.1/go.mod h1:A+ATnlHqzictQfQC1q3KB/T6MSr0UWQsrrLxMWkge2E=
 sigs.k8s.io/kustomize/cmd/config v0.0.2 h1:FphfIoGJ0jGGJJXq9WoG5sqqEIuTeDGx58E5NWHV8Hc=
 sigs.k8s.io/kustomize/cmd/config v0.0.2/go.mod h1:c6IBoPpAAm5a2aD+0iH8IfeyCF5GPsY5Ws57Dwpcvg0=
 sigs.k8s.io/kustomize/cmd/kubectl v0.0.2 h1:MxUAU5ie0tqx2MuDrUlcAL+Mgt8LVFcXc2scinSD8/w=
