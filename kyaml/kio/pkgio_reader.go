@@ -263,7 +263,6 @@ func (r *LocalPackageReader) initReaderAnnotations(path string, _ os.FileInfo) {
 		r.SetAnnotations = map[string]string{}
 	}
 	if !r.OmitReaderAnnotations {
-		r.SetAnnotations[kioutil.PackageAnnotation] = filepath.Dir(path)
 		r.SetAnnotations[kioutil.PathAnnotation] = path
 	}
 }

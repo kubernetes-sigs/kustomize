@@ -20,9 +20,6 @@ const (
 
 	// PathAnnotation records the path to the file the Resource was read from
 	PathAnnotation AnnotationKey = "config.kubernetes.io/path"
-
-	// PackageAnnotation records the name of the package the Resource was read from
-	PackageAnnotation AnnotationKey = "config.kubernetes.io/package"
 )
 
 func GetFileAnnotations(rn *yaml.RNode) (string, string, error) {

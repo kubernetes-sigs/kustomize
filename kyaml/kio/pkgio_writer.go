@@ -58,7 +58,6 @@ func (r LocalPackageWriter) Write(nodes []*yaml.RNode) error {
 	}
 
 	if !r.KeepReaderAnnotations {
-		r.ClearAnnotations = append(r.ClearAnnotations, kioutil.PackageAnnotation)
 		r.ClearAnnotations = append(r.ClearAnnotations, kioutil.PathAnnotation)
 	}
 

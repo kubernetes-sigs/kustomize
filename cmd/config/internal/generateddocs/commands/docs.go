@@ -220,7 +220,7 @@ order they appear in the file).
 
 #### Config Functions:
 
-  Config functions are specified as Kubernetes types containing a metadata.annotations.[config.k8s.io/function]
+  Config functions are specified as Kubernetes types containing a metadata.annotations.[config.kubernetes.io/function]
   field specifying an image for the container to run.  This image tells run how to invoke the container.
 
   Example config function:
@@ -230,7 +230,7 @@ order they appear in the file).
 	kind: ExampleFunctionKind
 	metadata:
 	  annotations:
-	    config.k8s.io/function: |
+	    config.kubernetes.io/function: |
 	      container:
 	        # function is invoked as a container running this image
 	        image: gcr.io/example/examplefunction:v1.0.1
@@ -239,7 +239,7 @@ order they appear in the file).
 	  configField: configValue
 
   In the preceding example, 'kustomize config run example/' would identify the function by
-  the metadata.annotations.[config.k8s.io/function] field.  It would then write all Resources in the directory to
+  the metadata.annotations.[config.kubernetes.io/function] field.  It would then write all Resources in the directory to
   a container stdin (running the gcr.io/example/examplefunction:v1.0.1 image).  It
   would then write the container stdout back to example/, replacing the directory
   file contents.
@@ -331,6 +331,37 @@ var SetExamples = `
     metadata:
         name: test-app2 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","partialFieldSetters":[{"name":"name-prefix","value":"test"}]}}
     ...`
+
+var SinkShort = `[Alpha] Implement a Sink by writing input to a local directory.`
+var SinkLong = `
+[Alpha] Implement a Sink by writing input to a local directory.
+
+    kustomize config sink DIR
+
+  DIR:
+    Path to local directory.
+
+` + "`" + `sink` + "`" + ` writes its input to a directory
+`
+var SinkExamples = `
+    kustomize config source DIR/ | your-function | kustomize config sink DIR/`
+
+var SourceShort = `[Alpha] Implement a Source by reading a local directory.`
+var SourceLong = `
+[Alpha] Implement a Source by reading a local directory.
+
+    kustomize config source DIR
+
+  DIR:
+    Path to local directory.
+
+` + "`" + `source` + "`" + ` emits configuration to act as input to a function
+`
+var SourceExamples = `
+    # emity configuration directory as input source to a function
+    kustomize config source DIR/
+
+    kustomize config source DIR/ | your-function | kustomize config sink DIR/`
 
 var TreeShort = `[Alpha] Display Resource structure from a directory or stdin.`
 var TreeLong = `

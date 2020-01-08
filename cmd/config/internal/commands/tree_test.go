@@ -104,7 +104,6 @@ metadata:
   namespace: default
   annotations:
     app: nginx2
-    config.kubernetes.io/package: .
     config.kubernetes.io/path: f1.yaml
 spec:
   replicas: 1
@@ -118,7 +117,6 @@ metadata:
   namespace: default
   annotations:
     app: nginx2
-    config.kubernetes.io/package: .
     config.kubernetes.io/path: f1.yaml
 spec:
   replicas: 1
@@ -132,7 +130,6 @@ metadata:
   namespace: default
   annotations:
     app: nginx2
-    config.kubernetes.io/package: .
     config.kubernetes.io/path: f1.yaml
 spec:
   replicas: 1
@@ -146,7 +143,6 @@ metadata:
   namespace: default2
   annotations:
     app: nginx2
-    config.kubernetes.io/package: .
     config.kubernetes.io/path: f1.yaml
 spec:
   replicas: 1
@@ -160,7 +156,6 @@ metadata:
   namespace: default
   annotations:
     app: nginx3
-    config.kubernetes.io/package: .
     config.kubernetes.io/path: f1.yaml
 spec:
   replicas: 1
@@ -171,8 +166,7 @@ metadata:
     app: nginx
   annotations:
     app: nginx
-    config.kubernetes.io/package: bar-package
-    config.kubernetes.io/path: f2.yaml
+    config.kubernetes.io/path: bar-package/f2.yaml
   name: bar
 spec:
   replicas: 3
@@ -183,7 +177,6 @@ metadata:
   namespace: default
   annotations:
     app: nginx
-    config.kubernetes.io/package: .
     config.kubernetes.io/path: f1.yaml
 spec:
   selector:

@@ -194,6 +194,13 @@ func (c *IsReconcilerFilter) Filter(inputs []*yaml.RNode) ([]*yaml.RNode, error)
 	return out, nil
 }
 
+const (
+	FunctionAnnotationKey    = "config.kubernetes.io/function"
+	oldFunctionAnnotationKey = "config.k8s.io/function"
+)
+
+var functionAnnotationKeys = []string{FunctionAnnotationKey, oldFunctionAnnotationKey}
+
 // GetContainerName returns the container image for an API if one exists
 func GetContainerName(n *yaml.RNode) (string, string) {
 	meta, _ := n.GetMeta()
@@ -201,11 +208,14 @@ func GetContainerName(n *yaml.RNode) (string, string) {
 	// path to the function, this will be mounted into the container
 	path := meta.Annotations[kioutil.PathAnnotation]
 
-	functionAnnotation := meta.Annotations["config.k8s.io/function"]
-	if functionAnnotation != "" {
-		annotationContent, _ := yaml.Parse(functionAnnotation)
-		image, _ := annotationContent.Pipe(yaml.Lookup("container", "image"))
-		return image.YNode().Value, path
+	// check previous keys for backwards compatibility
+	for _, s := range functionAnnotationKeys {
+		functionAnnotation := meta.Annotations[s]
+		if functionAnnotation != "" {
+			annotationContent, _ := yaml.Parse(functionAnnotation)
+			image, _ := annotationContent.Pipe(yaml.Lookup("container", "image"))
+			return image.YNode().Value, path
+		}
 	}
 
 	container := meta.Annotations["config.kubernetes.io/container"]
