@@ -258,7 +258,7 @@ func (p TreeWriter) index(nodes []*yaml.RNode) map[string][]*yaml.RNode {
 			// not a resource
 			continue
 		}
-		pkg := meta.Annotations[kioutil.PackageAnnotation]
+		pkg := filepath.Dir(meta.Annotations[kioutil.PathAnnotation])
 		indexByPackage[pkg] = append(indexByPackage[pkg], nodes[i])
 	}
 	return indexByPackage

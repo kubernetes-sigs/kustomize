@@ -333,12 +333,12 @@ metadata:
 	c, _ = GetContainerName(n)
 	assert.Equal(t, "gcr.io/foo/bar:something", c)
 
-	// container from config.k8s.io/function annotation
+	// container from config.kubernetes.io/function annotation
 	n, err = yaml.Parse(`apiVersion: v1
 kind: MyThing
 metadata:
   annotations:
-    config.k8s.io/function: |
+    config.kubernetes.io/function: |
       container:
         image: gcr.io/foo/bar:something
 `)

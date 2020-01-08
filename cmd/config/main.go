@@ -9,6 +9,7 @@ package main
 import (
 	"os"
 
+	"sigs.k8s.io/kustomize/cmd/config/complete"
 	"sigs.k8s.io/kustomize/cmd/config/configcobra"
 	"sigs.k8s.io/kustomize/kyaml/commandutil"
 )
@@ -16,7 +17,10 @@ import (
 func main() {
 	// enable the config commands
 	os.Setenv(commandutil.EnableAlphaCommmandsEnvName, "true")
-	if err := configcobra.NewConfigCommand("").Execute(); err != nil {
+	cmd := configcobra.NewConfigCommand("")
+	complete.Complete(cmd).Complete("config")
+
+	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
