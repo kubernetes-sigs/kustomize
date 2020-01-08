@@ -19,6 +19,7 @@ import (
 type HelmChartPlugin struct {
 	ChartName        string                 `json:"chartName,omitempty" yaml:"chartName,omitempty"`
 	ChartHome        string                 `json:"chartHome,omitempty" yaml:"chartHome,omitempty"`
+	TmpChartHome     string                 `json:"tmpChartHome,omitempty" yaml:"tmpChartHome,omitempty"`
 	ChartVersion     string                 `json:"chartVersion,omitempty" yaml:"chartVersion,omitempty"`
 	ChartRepo        string                 `json:"chartRepo,omitempty" yaml:"chartRepo,omitempty"`
 	ValuesFrom       string                 `json:"valuesFrom,omitempty" yaml:"valuesFrom,omitempty"`
@@ -58,7 +59,11 @@ func (p *HelmChartPlugin) Generate() (resmap.ResMap, error) {
 		p.HelmHome = directory
 	}
 
-	if len(p.ChartHome) == 0 {
+	if p.ChartHome == "" && p.TmpChartHome != "" {
+		p.ChartHome = path.Join(os.TempDir(), p.TmpChartHome)
+	}
+
+	if p.ChartHome == "" {
 		// make home for chart stuff
 		directory := fmt.Sprintf("%s/%s", dir, p.ChartName)
 		p.ChartHome = directory
@@ -68,7 +73,7 @@ func (p *HelmChartPlugin) Generate() (resmap.ResMap, error) {
 		p.HelmBin = "helm"
 	}
 
-	if len(p.ChartVersion) > 0 {
+	if p.ChartVersion != "" {
 		p.ChartVersionExp = fmt.Sprintf("--version=%s", p.ChartVersion)
 	} else {
 		p.ChartVersionExp = ""
