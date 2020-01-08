@@ -332,6 +332,37 @@ var SetExamples = `
         name: test-app2 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","partialFieldSetters":[{"name":"name-prefix","value":"test"}]}}
     ...`
 
+var SinkShort = `[Alpha] Implement a Sink by writing input to a local directory.`
+var SinkLong = `
+[Alpha] Implement a Sink by writing input to a local directory.
+
+    kustomize config sink DIR
+
+  DIR:
+    Path to local directory.
+
+` + "`" + `sink` + "`" + ` writes its input to a directory
+`
+var SinkExamples = `
+    kustomize config source DIR/ | your-function | kustomize config sink DIR/`
+
+var SourceShort = `[Alpha] Implement a Source by reading a local directory.`
+var SourceLong = `
+[Alpha] Implement a Source by reading a local directory.
+
+    kustomize config source DIR
+
+  DIR:
+    Path to local directory.
+
+` + "`" + `source` + "`" + ` emits configuration to act as input to a function
+`
+var SourceExamples = `
+    # emity configuration directory as input source to a function
+    kustomize config source DIR/
+
+    kustomize config source DIR/ | your-function | kustomize config sink DIR/`
+
 var TreeShort = `[Alpha] Display Resource structure from a directory or stdin.`
 var TreeLong = `
 [Alpha] Display Resource structure from a directory or stdin.
