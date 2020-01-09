@@ -43,7 +43,12 @@ type CrawledDocument interface {
 	ID() string
 	GetDocument() *doc.Document
 	// Get all the Documents directly referred in a Document.
-	GetResources() ([]*doc.Document, error)
+	// For a Document representing a non-kustomization file, an empty slice will be returned.
+	// For a Document representing a kustomization file:
+	// the `includeResources` parameter determines whether the documents referred in the `resources` field are returned or not;
+	// the `includeTransformers` parameter determines whether the documents referred in the `transformers` field are returned or not;
+	// the `includeGenerators` parameter determines whether the documents referred in the `generators` field are returned or not.
+	GetResources(includeResources, includeTransformers, includeGenerators bool) ([]*doc.Document, error)
 	WasCached() bool
 }
 
@@ -95,7 +100,7 @@ func addBranches(cdoc CrawledDocument, match Crawler, indx IndexFunc,
 		return
 	}
 
-	deps, err := cdoc.GetResources()
+	deps, err := cdoc.GetResources(true, false, false)
 	if err != nil {
 		logger.Println(err)
 		return

@@ -5,12 +5,12 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"path/filepath"
 	"sort"
 	"time"
 
+	"sigs.k8s.io/kustomize/api/internal/crawl/doc"
+
 	"sigs.k8s.io/kustomize/api/internal/crawl/index"
-	"sigs.k8s.io/kustomize/api/konfig"
 )
 
 // iterateArr adds each item in arr into countMap.
@@ -25,17 +25,6 @@ func iterateArr(arr []string, countMap map[string]int) {
 
 }
 
-// isKustomizationFile determines whether a file path is a kustomization file
-func isKustomizationFile(path string) bool {
-	basename := filepath.Base(path)
-	for _, name := range konfig.RecognizedKustomizationFileNames() {
-		if basename == name {
-			return true
-		}
-	}
-	return false
-}
-
 // SortMapKeyByValue takes a map as its input, sorts its keys according to their values
 // in the map, and outputs the sorted keys as a slice.
 func SortMapKeyByValue(m map[string]int) []string {
@@ -44,7 +33,7 @@ func SortMapKeyByValue(m map[string]int) []string {
 		keys = append(keys, key)
 	}
 	// sort keys according to their values in the map m
-	sort.Slice(keys, func(i, j int) bool {return m[keys[i]] > m[keys[j]]})
+	sort.Slice(keys, func(i, j int) bool { return m[keys[i]] > m[keys[j]] })
 	return keys
 }
 
@@ -101,7 +90,7 @@ If you only want to list the 10 most popular features, set the flag to 10.`)
 			iterateArr(hit.Document.Kinds, kindsMap)
 			iterateArr(hit.Document.Identifiers, identifiersMap)
 
-			if isKustomizationFile(hit.Document.FilePath) {
+			if doc.IsKustomizationFile(hit.Document.FilePath) {
 				kustomizationFilecount++
 				iterateArr(hit.Document.Identifiers, kustomizeIdentifiersMap)
 			}
