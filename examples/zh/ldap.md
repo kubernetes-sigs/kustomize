@@ -30,7 +30,7 @@ DEMO_HOME=$(mktemp -d)
 
 ## 创建 base
 
-要使用 [overlays] 创建 [variant]，首先需要创建一个共同的 [base]。
+要使用 [overlays] 创建 [variant]，首先需要创建一个 [base]。
 
 为了保证文档的精简，基础资源都在补充目录中，如果需要请下载它们：
 
@@ -54,7 +54,7 @@ curl -s -o "$BASE/#1" "$CONTENT/base\
 tree $DEMO_HOME
 ```
 
-将会得到类似的内容：
+将会看到如下文件：
 
 > ```
 > /tmp/tmp.IyYQQlHaJP
@@ -65,13 +65,13 @@ tree $DEMO_HOME
 >     └── service.yaml
 > ```
 
-这些资源可以立刻部署到集群：
+这些资源可以由 kubectl 立刻部署到集群上来实例化 _ldap_ 服务：
 
 > ```
 > kubectl apply -f $DEMO_HOME/base
 > ```
 
-实例化 _ldap_ 服务。`kubectl` 只能识别资源文件。
+注意 `kubectl -f` 只能识别 k8s 资源文件。
 
 ### The Base Kustomization
 
@@ -82,7 +82,7 @@ tree $DEMO_HOME
 more $BASE/kustomization.yaml
 ```
 
-（可选）在 base 上运行 `kustomize`，可以在控制台打印自定义资源：
+（可选）在 base 上运行 `kustomize`，并将结果打印到标准输出：
 
 <!-- @buildBase @testAgainstLatestRelease -->
 ```
@@ -91,7 +91,7 @@ kustomize build $BASE
 
 ### Customize the base
 
-第一步可以为所有资源设置名称前缀：
+为所有资源设置名称前缀：
 
 <!-- @namePrefix @testAgainstLatestRelease -->
 ```
@@ -109,9 +109,9 @@ kustomize build $BASE | grep -C 3 "my-"
 
 创建 _staging_ 和 _production_ 的 [overlay]:
 
- * _Staging_ 新增一个 ConfigMap
- * _Production_ 拥有更多的副本数和持久化存储盘
- * [variants] 将有所不同
+ * 为 _Staging_ 新增一个 ConfigMap
+ * 为 _Production_ 添加持久化存储盘和更多的副本数
+ * 现实两个 [variants] 的不同之处
 
 <!-- @overlayDirectories @testAgainstLatestRelease -->
 ```

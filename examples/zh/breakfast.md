@@ -17,7 +17,7 @@ DEMO_HOME=$(mktemp -d)
 mkdir -p $DEMO_HOME/breakfast/base
 ```
 
-创建一个 `kustomization` 来定义早餐所需的东西。包含咖啡和薄煎饼：
+创建一个 `kustomization` 来定义早餐所需的食物。包含咖啡和薄煎饼：
 
 <!-- @baseKustomization @testAgainstLatestRelease -->
 ```
@@ -56,7 +56,7 @@ topping: none
 EOF
 ```
 
-为喜欢热咖啡的 Alice 定制早餐的 [variant]：
+为喜欢热咖啡的 Alice 定制她的早餐：
 
 <!-- @aliceOverlay @testAgainstLatestRelease -->
 ```
