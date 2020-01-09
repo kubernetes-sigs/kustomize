@@ -27,6 +27,7 @@ import (
 	"sort"
 
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -54,7 +55,9 @@ func FormatFileOrDirectory(path string) error {
 	}.Execute()
 }
 
-type FormatFilter struct{}
+type FormatFilter struct {
+	Process func(n *yaml.Node) error
+}
 
 var _ kio.Filter = FormatFilter{}
 
@@ -75,7 +78,9 @@ func (f FormatFilter) Filter(slice []*yaml.RNode) ([]*yaml.RNode, error) {
 			continue
 		}
 		kind, apiVersion := kindNode.YNode().Value, apiVersionNode.YNode().Value
-		err = (&formatter{apiVersion: apiVersion, kind: kind}).fmtNode(slice[i].YNode(), "")
+		s := openapi.SchemaForResourceType(yaml.TypeMeta{APIVersion: apiVersion, Kind: kind})
+		err = (&formatter{apiVersion: apiVersion, kind: kind, process: f.Process}).
+			fmtNode(slice[i].YNode(), "", s)
 		if err != nil {
 			return nil, err
 		}
@@ -86,10 +91,18 @@ func (f FormatFilter) Filter(slice []*yaml.RNode) ([]*yaml.RNode, error) {
 type formatter struct {
 	apiVersion string
 	kind       string
+	process    func(n *yaml.Node) error
 }
 
 // fmtNode recursively formats the Document Contents.
-func (f *formatter) fmtNode(n *yaml.Node, path string) error {
+// See: https://godoc.org/gopkg.in/yaml.v3#Node
+func (f *formatter) fmtNode(n *yaml.Node, path string, schema *openapi.ResourceSchema) error {
+	if n.Kind == yaml.ScalarNode && schema != nil && schema.Schema != nil {
+		// ensure values that are interpreted as non-string values (e.g. "true")
+		// are properly quoted
+		yaml.FormatNonStringStyle(n, *schema.Schema)
+	}
+
 	// sort the order of mapping fields
 	if n.Kind == yaml.MappingNode {
 		sort.Sort(sortedMapContents(*n))
@@ -104,12 +117,43 @@ func (f *formatter) fmtNode(n *yaml.Node, path string) error {
 			}
 		}
 	}
+
+	// format the Content
 	for i := range n.Content {
-		p := path
-		if n.Kind == yaml.MappingNode && i%2 == 1 {
-			p = fmt.Sprintf("%s.%s", path, n.Content[i-1].Value)
+		// MappingNode are structured as having their fields as Content,
+		// with the field-key and field-value alternating.  e.g. Even elements
+		// are the keys and odd elements are the values
+		isFieldKey := n.Kind == yaml.MappingNode && i%2 == 0
+		isFieldValue := n.Kind == yaml.MappingNode && i%2 == 1
+		isElement := n.Kind == yaml.SequenceNode
+
+		// run the process callback on the node if it has been set
+		// don't process keys: their format should be fixed
+		if f.process != nil && !isFieldKey {
+			if err := f.process(n.Content[i]); err != nil {
+				return err
+			}
 		}
-		err := f.fmtNode(n.Content[i], p)
+
+		// get the schema for this Node
+		p := path
+		var s *openapi.ResourceSchema
+		switch {
+		case isFieldValue:
+			// if the node is a field, lookup the schema using the field name
+			p = fmt.Sprintf("%s.%s", path, n.Content[i-1].Value)
+			if schema != nil {
+				s = schema.Field(n.Content[i-1].Value)
+			}
+		case isElement:
+			// if the node is a list element, lookup the schema for the array items
+			if schema != nil {
+				s = schema.Elements()
+			}
+		}
+
+		// format the node using the schema
+		err := f.fmtNode(n.Content[i], p, s)
 		if err != nil {
 			return err
 		}
@@ -143,6 +187,7 @@ func (s sortedMapContents) Swap(i, j int) {
 	s.Content[iFieldValueIndex], s.Content[jFieldValueIndex] = s.
 		Content[jFieldValueIndex], s.Content[iFieldValueIndex]
 }
+
 func (s sortedMapContents) Less(i, j int) bool {
 	iFieldNameIndex := i * 2
 	jFieldNameIndex := j * 2

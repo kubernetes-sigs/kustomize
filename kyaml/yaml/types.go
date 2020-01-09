@@ -223,6 +223,11 @@ func (m MapNodeSlice) Values() []*RNode {
 	return values
 }
 
+type TypeMeta struct {
+	Kind       string
+	APIVersion string
+}
+
 // ResourceMeta contains the metadata for a both Resource Type and Resource.
 type ResourceMeta struct {
 	// APIVersion is the apiVersion field of a Resource
