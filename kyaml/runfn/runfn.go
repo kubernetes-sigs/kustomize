@@ -55,7 +55,6 @@ func (r RunFns) Execute() error {
 		return err
 	}
 
-	// accept a
 	for i := range r.FunctionPaths {
 		err := kio.Pipeline{
 			Inputs:  []kio.Reader{kio.LocalPackageReader{PackagePath: r.FunctionPaths[i]}},
