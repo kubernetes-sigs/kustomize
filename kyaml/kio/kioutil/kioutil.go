@@ -5,8 +5,10 @@ package kioutil
 
 import (
 	"fmt"
+	"path"
 	"sort"
 	"strconv"
+	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -41,8 +43,96 @@ func ErrorIfMissingAnnotation(nodes []*yaml.RNode, keys ...AnnotationKey) error 
 				return errors.Wrap(err)
 			}
 			if val == nil {
-				return errors.Errorf("missing package annotation %s", key)
+				return errors.Errorf("missing annotation %s", key)
 			}
+		}
+	}
+	return nil
+}
+
+// CreatePathAnnotationValue creates a default path annotation value for a Resource.
+// The path prefix will be dir.
+func CreatePathAnnotationValue(dir string, m yaml.ResourceMeta) string {
+	filename := fmt.Sprintf("%s_%s.yaml", strings.ToLower(m.Kind), m.Name)
+	return path.Join(dir, m.Namespace, filename)
+}
+
+// DefaultPathAndIndexAnnotation sets a default path or index value on any nodes missing the
+// annotation
+func DefaultPathAndIndexAnnotation(dir string, nodes []*yaml.RNode) error {
+	counts := map[string]int{}
+
+	// check each node for the path annotation
+	for i := range nodes {
+		m, err := nodes[i].GetMeta()
+		if err != nil {
+			return err
+		}
+
+		// calculate the max index in each file in case we are appending
+		if p, found := m.Annotations[PathAnnotation]; found {
+			// record the max indexes into each file
+			if i, found := m.Annotations[IndexAnnotation]; found {
+				index, _ := strconv.Atoi(i)
+				if index > counts[p] {
+					counts[p] = index
+				}
+			}
+
+			// has the path annotation already -- do nothing
+			continue
+		}
+
+		// set a path annotation on the Resource
+		path := CreatePathAnnotationValue(dir, m)
+		if err := nodes[i].PipeE(yaml.SetAnnotation(PathAnnotation, path)); err != nil {
+			return err
+		}
+	}
+
+	// set the index annotations
+	for i := range nodes {
+		m, err := nodes[i].GetMeta()
+		if err != nil {
+			return err
+		}
+
+		if _, found := m.Annotations[IndexAnnotation]; found {
+			continue
+		}
+
+		p := m.Annotations[PathAnnotation]
+
+		// set an index annotation on the Resource
+		c := counts[p]
+		counts[p] = c + 1
+		if err := nodes[i].PipeE(
+			yaml.SetAnnotation(IndexAnnotation, fmt.Sprintf("%d", c))); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// DefaultPathAnnotation sets a default path annotation on any Reources
+// missing it.
+func DefaultPathAnnotation(dir string, nodes []*yaml.RNode) error {
+	// check each node for the path annotation
+	for i := range nodes {
+		m, err := nodes[i].GetMeta()
+		if err != nil {
+			return err
+		}
+
+		if _, found := m.Annotations[PathAnnotation]; found {
+			// has the path annotation already -- do nothing
+			continue
+		}
+
+		// set a path annotation on the Resource
+		path := CreatePathAnnotationValue(dir, m)
+		if err := nodes[i].PipeE(yaml.SetAnnotation(PathAnnotation, path)); err != nil {
+			return err
 		}
 	}
 	return nil

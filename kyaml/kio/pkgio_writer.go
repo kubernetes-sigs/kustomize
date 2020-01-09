@@ -31,7 +31,8 @@ type LocalPackageWriter struct {
 var _ Writer = LocalPackageWriter{}
 
 func (r LocalPackageWriter) Write(nodes []*yaml.RNode) error {
-	if err := kioutil.ErrorIfMissingAnnotation(nodes, requiredResourcePackageAnnotations...); err != nil {
+	// set the path and index annotations if they are missing
+	if err := kioutil.DefaultPathAndIndexAnnotation("", nodes); err != nil {
 		return err
 	}
 
