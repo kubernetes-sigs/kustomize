@@ -1,5 +1,7 @@
 # kustomize
 
+![logo](https://docs.google.com/drawings/d/e/2PACX-1vR70v01oOvZ7o1q6GHtgz3NiyQdSS187HK3gXWV53DmH2FHcjQ2gvcMS_gNq747OqMuqttVXEs2EqmZ/pub?w=400&h=300) 
+
 `kustomize` lets you customize raw, template-free YAML
 files for multiple purposes, leaving the original YAML
 untouched and usable as is.
