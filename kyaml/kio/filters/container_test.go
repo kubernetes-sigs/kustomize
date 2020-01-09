@@ -16,7 +16,7 @@ import (
 )
 
 func TestFilter_command(t *testing.T) {
-	cfg, err := yaml.Parse(`apiversion: apps/v1
+	cfg, err := yaml.Parse(`apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: foo
@@ -62,7 +62,7 @@ metadata:
 }
 
 func TestFilter_command_StorageMount(t *testing.T) {
-	cfg, err := yaml.Parse(`apiversion: apps/v1
+	cfg, err := yaml.Parse(`apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: foo
@@ -103,7 +103,7 @@ metadata:
 }
 
 func TestFilter_command_network(t *testing.T) {
-	cfg, err := yaml.Parse(`apiversion: apps/v1
+	cfg, err := yaml.Parse(`apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: foo
@@ -213,6 +213,7 @@ metadata:
   name: deployment-foo
   annotations:
     config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'statefulset_deployment-foo.yaml'
 ---
 apiVersion: v1
 kind: Service
@@ -220,11 +221,12 @@ metadata:
   name: service-foo
   annotations:
     config.kubernetes.io/index: '1'
+    config.kubernetes.io/path: 'service_service-foo.yaml'
 `, b.String())
 }
 
 func TestFilter_Filter_noChange(t *testing.T) {
-	cfg, err := yaml.Parse(`apiversion: apps/v1
+	cfg, err := yaml.Parse(`apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: foo
@@ -234,7 +236,7 @@ metadata:
 	}
 
 	input, err := (&kio.ByteReader{Reader: bytes.NewBufferString(`
-apiversion: apps/v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: deployment-foo
@@ -258,7 +260,7 @@ metadata:
 			if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiversion: apps/v1
+- apiVersion: apps/v1
   kind: Deployment
   metadata:
     name: deployment-foo
@@ -270,7 +272,7 @@ items:
     name: service-foo
     annotations:
       config.kubernetes.io/index: '1'
-functionConfig: {apiversion: apps/v1, kind: Deployment, metadata: {name: foo}}
+functionConfig: {apiVersion: apps/v1, kind: Deployment, metadata: {name: foo}}
 `, s) {
 				t.FailNow()
 			}
@@ -289,12 +291,13 @@ functionConfig: {apiversion: apps/v1, kind: Deployment, metadata: {name: foo}}
 		return
 	}
 
-	assert.Equal(t, `apiversion: apps/v1
+	assert.Equal(t, `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: deployment-foo
   annotations:
     config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'deployment_deployment-foo.yaml'
 ---
 apiVersion: v1
 kind: Service
@@ -302,6 +305,7 @@ metadata:
   name: service-foo
   annotations:
     config.kubernetes.io/index: '1'
+    config.kubernetes.io/path: 'service_service-foo.yaml'
 `, b.String())
 }
 
@@ -358,4 +362,419 @@ metadata:
 	}
 	c, _ = GetContainerName(n)
 	assert.Equal(t, "", c)
+}
+
+func TestFilter_Filter_defaultNaming(t *testing.T) {
+	cfg, err := yaml.Parse(`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  annotations:
+    config.kubernetes.io/path: 'foo/bar.yaml'
+`)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	input, err := (&kio.ByteReader{Reader: bytes.NewBufferString(``)}).Read()
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	called := false
+	result, err := (&ContainerFilter{
+		Image:  "example.com:version",
+		Config: cfg,
+		args: []string{"echo", `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-foo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-foo
+`},
+		checkInput: func(s string) {
+			called = true
+			if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items: []
+functionConfig: {apiVersion: apps/v1, kind: Deployment, metadata: {name: foo, annotations: {
+      config.kubernetes.io/path: 'foo/bar.yaml'}}}
+`, s) {
+				t.FailNow()
+			}
+		},
+	}).Filter(input)
+	if !assert.NoError(t, err) {
+		return
+	}
+	if !assert.True(t, called) {
+		return
+	}
+
+	b := &bytes.Buffer{}
+	err = kio.ByteWriter{Writer: b, KeepReaderAnnotations: true}.Write(result)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	assert.Equal(t, `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-foo
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'foo/deployment_deployment-foo.yaml'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-foo
+  annotations:
+    config.kubernetes.io/index: '1'
+    config.kubernetes.io/path: 'foo/service_service-foo.yaml'
+`, b.String())
+}
+
+func TestFilter_Filter_defaultNamingFunctions(t *testing.T) {
+	cfg, err := yaml.Parse(`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  annotations:
+    config.kubernetes.io/path: 'foo/functions/bar.yaml'
+`)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	input, err := (&kio.ByteReader{Reader: bytes.NewBufferString(``)}).Read()
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	called := false
+	result, err := (&ContainerFilter{
+		Image:  "example.com:version",
+		Config: cfg,
+		args: []string{"echo", `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-foo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-foo
+`},
+		checkInput: func(s string) {
+			called = true
+			if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items: []
+functionConfig: {apiVersion: apps/v1, kind: Deployment, metadata: {name: foo, annotations: {
+      config.kubernetes.io/path: 'foo/functions/bar.yaml'}}}
+`, s) {
+				t.FailNow()
+			}
+		},
+	}).Filter(input)
+	if !assert.NoError(t, err) {
+		return
+	}
+	if !assert.True(t, called) {
+		return
+	}
+
+	b := &bytes.Buffer{}
+	err = kio.ByteWriter{Writer: b, KeepReaderAnnotations: true}.Write(result)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	assert.Equal(t, `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-foo
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'foo/deployment_deployment-foo.yaml'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-foo
+  annotations:
+    config.kubernetes.io/index: '1'
+    config.kubernetes.io/path: 'foo/service_service-foo.yaml'
+`, b.String())
+}
+
+func TestFilter_Filter_scopeMissingFromResource(t *testing.T) {
+	cfg, err := yaml.Parse(`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  annotations:
+    config.kubernetes.io/path: 'foo/bar.yaml'
+`)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	input, err := (&kio.ByteReader{Reader: bytes.NewBufferString(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-foo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-foo
+`)}).Read()
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// no resources match the scope
+	called := false
+	result, err := (&ContainerFilter{
+		Image:  "example.com:version",
+		Config: cfg,
+		args:   []string{"sed", "s/Deployment/StatefulSet/g"},
+		checkInput: func(s string) {
+			called = true
+			if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items: []
+functionConfig: {apiVersion: apps/v1, kind: Deployment, metadata: {name: foo, annotations: {
+      config.kubernetes.io/path: 'foo/bar.yaml'}}}
+`, s) {
+				t.FailNow()
+			}
+		},
+	}).Filter(input)
+	if !assert.NoError(t, err) {
+		return
+	}
+	if !assert.True(t, called) {
+		return
+	}
+
+	b := &bytes.Buffer{}
+	err = kio.ByteWriter{Writer: b, KeepReaderAnnotations: true}.Write(result)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// Resources should be preserved -- paths shouldn't be set by container
+	assert.Equal(t, `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-foo
+  annotations:
+    config.kubernetes.io/index: '0'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-foo
+  annotations:
+    config.kubernetes.io/index: '1'
+`, b.String())
+}
+
+func TestFilter_Filter_scopeFunctionsDir(t *testing.T) {
+	// functions under "functions/" dir should be scoped to parent dir
+	cfg, err := yaml.Parse(`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  annotations:
+    config.kubernetes.io/path: 'foo/functions/bar.yaml'
+`)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	input, err := (&kio.ByteReader{Reader: bytes.NewBufferString(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-foo
+  annotations:
+    config.kubernetes.io/path: 'foo/bar/d.yaml'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-foo
+  annotations:
+    config.kubernetes.io/path: 'foo/bar/s.yaml'
+`)}).Read()
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// no resources match the scope
+	called := false
+	result, err := (&ContainerFilter{
+		Image:  "example.com:version",
+		Config: cfg,
+		args:   []string{"sed", "s/Deployment/StatefulSet/g"},
+		checkInput: func(s string) {
+			called = true
+			if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-foo
+    annotations:
+      config.kubernetes.io/path: 'foo/bar/d.yaml'
+      config.kubernetes.io/index: '0'
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: service-foo
+    annotations:
+      config.kubernetes.io/path: 'foo/bar/s.yaml'
+      config.kubernetes.io/index: '1'
+functionConfig: {apiVersion: apps/v1, kind: Deployment, metadata: {name: foo, annotations: {
+      config.kubernetes.io/path: 'foo/functions/bar.yaml'}}}
+`, s) {
+				t.FailNow()
+			}
+		},
+	}).Filter(input)
+	if !assert.NoError(t, err) {
+		return
+	}
+	if !assert.True(t, called) {
+		return
+	}
+
+	b := &bytes.Buffer{}
+	err = kio.ByteWriter{Writer: b, KeepReaderAnnotations: true}.Write(result)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// Resources should be modified
+	assert.Equal(t, `apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: deployment-foo
+  annotations:
+    config.kubernetes.io/path: 'foo/bar/d.yaml'
+    config.kubernetes.io/index: '0'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-foo
+  annotations:
+    config.kubernetes.io/path: 'foo/bar/s.yaml'
+    config.kubernetes.io/index: '1'
+`, b.String())
+}
+
+func TestFilter_Filter_scopeDir(t *testing.T) {
+	// functions under "functions/" dir should be scoped to parent dir
+	cfg, err := yaml.Parse(`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  annotations:
+    config.kubernetes.io/path: 'foo/bar.yaml'
+`)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	input, err := (&kio.ByteReader{Reader: bytes.NewBufferString(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-foo
+  annotations:
+    config.kubernetes.io/path: 'foo/bar/d.yaml'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-foo
+  annotations:
+    config.kubernetes.io/path: 'foo/bar/s.yaml'
+`)}).Read()
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// no resources match the scope
+	called := false
+	result, err := (&ContainerFilter{
+		Image:  "example.com:version",
+		Config: cfg,
+		args:   []string{"sed", "s/Deployment/StatefulSet/g"},
+		checkInput: func(s string) {
+			called = true
+			if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-foo
+    annotations:
+      config.kubernetes.io/path: 'foo/bar/d.yaml'
+      config.kubernetes.io/index: '0'
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: service-foo
+    annotations:
+      config.kubernetes.io/path: 'foo/bar/s.yaml'
+      config.kubernetes.io/index: '1'
+functionConfig: {apiVersion: apps/v1, kind: Deployment, metadata: {name: foo, annotations: {
+      config.kubernetes.io/path: 'foo/bar.yaml'}}}
+`, s) {
+				t.FailNow()
+			}
+		},
+	}).Filter(input)
+	if !assert.NoError(t, err) {
+		return
+	}
+	if !assert.True(t, called) {
+		return
+	}
+
+	b := &bytes.Buffer{}
+	err = kio.ByteWriter{Writer: b, KeepReaderAnnotations: true}.Write(result)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// Resources should be preserved
+	assert.Equal(t, `apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: deployment-foo
+  annotations:
+    config.kubernetes.io/path: 'foo/bar/d.yaml'
+    config.kubernetes.io/index: '0'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-foo
+  annotations:
+    config.kubernetes.io/path: 'foo/bar/s.yaml'
+    config.kubernetes.io/index: '1'
+`, b.String())
 }
