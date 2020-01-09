@@ -17,9 +17,6 @@ import (
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util/i18n"
 	"sigs.k8s.io/kustomize/kyaml/commandutil"
-
-	// initialize auth
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 // GetCommand returns a command from kubectl to install

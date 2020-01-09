@@ -10,7 +10,9 @@ import (
 
 	"sigs.k8s.io/kustomize/cmd/resource/status"
 
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	// This is here rather than in the libraries because of
+	// https://github.com/kubernetes-sigs/kustomize/issues/2060
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 var root = &cobra.Command{
