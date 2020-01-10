@@ -15,24 +15,24 @@
 // only requires functions for getting the apiVersion, kind, name
 // and namespace of a resource.
 //
-// import (
-//   "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-//   "k8s.io/apimachinery/pkg/types"
-//   "sigs.k8s.io/kustomize/kstatus/wait"
-// )
+//   import (
+//     "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+//     "k8s.io/apimachinery/pkg/types"
+//     "sigs.k8s.io/kustomize/kstatus/wait"
+//   )
 //
-// key := types.NamespacedName{Name: "name", Namespace: "namespace"}
-// deployment := &unstructured.Unstructured{
-//   Object: map[string]interface{}{
-//     "apiVersion": "apps/v1",
-//     "kind":       "Deployment",
-//   },
-// }
-// client.Get(context.Background(), key, deployment)
-// resourceIdentifiers := []wait.ResourceIdentifier{deployment}
+//   key := types.NamespacedName{Name: "name", Namespace: "namespace"}
+//   deployment := &unstructured.Unstructured{
+//     Object: map[string]interface{}{
+//       "apiVersion": "apps/v1",
+//       "kind":       "Deployment",
+//     },
+//   }
+//   client.Get(context.Background(), key, deployment)
+//   resourceIdentifiers := []wait.ResourceIdentifier{deployment}
 //
-// resolver := wait.NewResolver(client)
-// results := resolver.FetchAndResolve(context.Background(), resourceIdentifiers)
+//   resolver := wait.NewResolver(client)
+//   results := resolver.FetchAndResolve(context.Background(), resourceIdentifiers)
 //
 // WaitForStatus also looks up status for a list of resources, but it will
 // block until all the provided resources has reached the Current status or
@@ -40,18 +40,19 @@
 // a channel that will provide updates as the status of the different
 // resources change.
 //
-// import (
-//   "sigs.k8s.io/kustomize/kstatus/wait"
-// )
-// resolver := wait.NewResolver(client)
-// eventsChan := resolver.WaitForStatus(context.Background(), resourceIdentifiers, 2 * time.Second)
-// for {
-//   select {
-//   case event, ok := <-eventsChan:
-//     if !ok {
-//       return
+//   import (
+//     "sigs.k8s.io/kustomize/kstatus/wait"
+//   )
+//
+//   resolver := wait.NewResolver(client)
+//   eventsChan := resolver.WaitForStatus(context.Background(), resourceIdentifiers, 2 * time.Second)
+//   for {
+//     select {
+//     case event, ok := <-eventsChan:
+//       if !ok {
+//         return
+//       }
+//       fmt.Printf(event) // do something useful here.
 //     }
-//     fmt.Printf(event) // do something useful here.
 //   }
-// }
 package wait
