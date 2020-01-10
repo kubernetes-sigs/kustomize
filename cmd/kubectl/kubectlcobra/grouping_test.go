@@ -7,6 +7,8 @@ package kubectlcobra
 import (
 	"testing"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -88,6 +90,28 @@ var pod3Info = &resource.Info{
 	Namespace: testNamespace,
 	Name:      pod3Name,
 	Object:    &pod3,
+}
+
+var nonUnstructuredGroupingObj = &corev1.ConfigMap{
+	ObjectMeta: metav1.ObjectMeta{
+		Namespace: testNamespace,
+		Name:      groupingObjName,
+		Labels: map[string]string{
+			GroupingLabel: "true",
+		},
+	},
+}
+
+var nonUnstructuredGroupingInfo = &resource.Info{
+	Namespace: testNamespace,
+	Name:      groupingObjName,
+	Object:    nonUnstructuredGroupingObj,
+}
+
+var nilInfo = &resource.Info{
+	Namespace: testNamespace,
+	Name:      groupingObjName,
+	Object:    nil,
 }
 
 func TestIsGroupingObject(t *testing.T) {
@@ -250,6 +274,14 @@ func TestAddRetrieveInventoryToFromGroupingObject(t *testing.T) {
 		},
 		// Grouping object without other objects is OK.
 		{
+			infos:   []*resource.Info{groupingInfo, nilInfo},
+			isError: true,
+		},
+		{
+			infos:   []*resource.Info{nonUnstructuredGroupingInfo},
+			isError: true,
+		},
+		{
 			infos:    []*resource.Info{groupingInfo},
 			expected: []*Inventory{},
 			isError:  false,
@@ -266,6 +298,7 @@ func TestAddRetrieveInventoryToFromGroupingObject(t *testing.T) {
 			expected: []*Inventory{},
 			isError:  true,
 		},
+		// Basic test case: one grouping object, one pod.
 		{
 			infos: []*resource.Info{groupingInfo, pod1Info},
 			expected: []*Inventory{
@@ -412,6 +445,15 @@ func TestAddRetrieveInventoryToFromGroupingObject(t *testing.T) {
 					}
 					if !found {
 						t.Errorf("Expected inventory (%s) not found", expected)
+					}
+				}
+				// If the grouping object has an inventory, check the
+				// grouping object has an inventory hash.
+				groupingInfo, exists := findGroupingObject(test.infos)
+				if exists && len(test.expected) > 0 {
+					invHash := retrieveInventoryHash(groupingInfo)
+					if len(invHash) == 0 {
+						t.Errorf("Grouping object missing inventory hash")
 					}
 				}
 			}
