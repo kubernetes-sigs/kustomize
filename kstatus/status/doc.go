@@ -4,7 +4,7 @@
 // Package kstatus contains functionality for computing the status
 // of Kubernetes resources.
 //
-// The statuses defined in this package is:
+// The statuses defined in this package are:
 //  * InProgress
 //  * Current
 //  * Failed
@@ -13,11 +13,12 @@
 //
 // Computing the status of a resources can be done by calling the
 // Compute function in the status package.
-// import (
-//     "sigs.k8s.io/kustomize/kstatus/status"
-// )
-// res, err := status.Compute(resource)
 //
+//   import (
+//     "sigs.k8s.io/kustomize/kstatus/status"
+//   )
+//
+//   res, err := status.Compute(resource)
 //
 // The package also defines a set of new conditions:
 //  * InProgress
@@ -31,8 +32,10 @@
 // the standard conditions described above. The values of
 // these conditions are decided based on other status information
 // available in the resources.
-// import (
+//
+//   import (
 //     "sigs.k8s.io/kustomize/kstatus/status
-// )
-// err := status.Augment(resource)
+//   )
+//
+//   err := status.Augment(resource)
 package status
