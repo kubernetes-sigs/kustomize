@@ -35,6 +35,11 @@ func (doc *Document) Copy() *Document {
 	}
 }
 
+func (doc *Document) Path() string {
+	return fmt.Sprintf("repoURL: %s filePath: %s branch: %s",
+		doc.RepositoryURL, doc.FilePath, doc.DefaultBranch)
+}
+
 // Implements the CrawlerDocument interface.
 func (doc *Document) WasCached() bool {
 	return doc.IsSame
