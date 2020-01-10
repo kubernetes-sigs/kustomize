@@ -4,9 +4,10 @@
 apiVersion: examples.config.kubernetes.io/v1beta1
 kind: Validator
 metadata:
-  configFn:
-    container:
-      image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
 ---
 apiVersion: apps/v1
 kind: Deployment

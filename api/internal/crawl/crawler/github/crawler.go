@@ -93,7 +93,21 @@ func (gc githubCrawler) Crawl(
 	return nil
 }
 
+// FetchDocument first tries to fetch the document with d.FilePath. If it fails,
+// it will try to add each string in konfig.RecognizedKustomizationFileNames() to
+// d.FilePath, and try to fetch the document again.
 func (gc githubCrawler) FetchDocument(_ context.Context, d *doc.Document) error {
+	// set the default branch if it is empty
+	if d.DefaultBranch == "" {
+		url := gc.client.ReposRequest(d.RepositoryFullName())
+		defaultBranch, err := gc.client.GetDefaultBranch(url)
+		if err != nil {
+			logger.Printf(
+				"(error: %v) setting default_branch to master\n", err)
+			defaultBranch = "master"
+		}
+		d.DefaultBranch = defaultBranch
+	}
 	repoURL := d.RepositoryURL + "/" + d.FilePath + "?ref=" + d.DefaultBranch
 	repoSpec, err := git.NewRepoSpecFromUrl(repoURL)
 	if err != nil {
@@ -104,9 +118,13 @@ func (gc githubCrawler) FetchDocument(_ context.Context, d *doc.Document) error 
 		"/" + repoSpec.Ref + "/" + repoSpec.Path
 
 	handle := func(resp *http.Response, err error, path string) error {
+		if resp == nil {
+			return fmt.Errorf("empty http response (url: %s; path: %s), error: %v",
+				url, path, err)
+		}
 		if err == nil && resp.StatusCode == http.StatusOK {
 			d.IsSame = httpclient.FromCache(resp.Header)
-			defer resp.Body.Close()
+			defer CloseResponseBody(resp)
 			data, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				return err
@@ -115,18 +133,18 @@ func (gc githubCrawler) FetchDocument(_ context.Context, d *doc.Document) error 
 			d.FilePath = d.FilePath + path
 			return nil
 		}
+
 		return err
 	}
-	resp, err := gc.client.GetRawUserContent(url)
-	if err := handle(resp, err, ""); err == nil {
+	resp, errGetRawUserContent := gc.client.GetRawUserContent(url)
+	if err := handle(resp, errGetRawUserContent, ""); err == nil {
 		return nil
 	}
 
 	for _, file := range konfig.RecognizedKustomizationFileNames() {
-		resp, err = gc.client.GetRawUserContent(url + "/" + file)
-		err := handle(resp, err, "/"+file)
-		if err != nil {
-			continue
+		resp, errGetRawUserContent = gc.client.GetRawUserContent(url + "/" + file)
+		if err = handle(resp, errGetRawUserContent, "/"+file); err == nil {
+			return nil
 		}
 	}
 	return fmt.Errorf("file not found: %s, error: %v", url, err)
@@ -293,7 +311,10 @@ func (gcl GhClient) GetFileData(k GhFileSpec) ([]byte, error) {
 		return nil, fmt.Errorf("%+v: could not read '%s' metadata: %v",
 			k, url, err)
 	}
-	resp.Body.Close()
+
+	if err := resp.Body.Close(); err != nil {
+		return nil, err
+	}
 
 	type githubContentRawURL struct {
 		DownloadURL string `json:"download_url,omitempty"`
@@ -312,9 +333,15 @@ func (gcl GhClient) GetFileData(k GhFileSpec) ([]byte, error) {
 			k, rawURL.DownloadURL, err)
 	}
 
-	defer resp.Body.Close()
+	defer CloseResponseBody(resp)
 	data, err = ioutil.ReadAll(resp.Body)
 	return data, err
+}
+
+func CloseResponseBody(resp *http.Response) {
+	if err := resp.Body.Close(); err != nil {
+		log.Printf("failed to close response body: %v", err)
+	}
 }
 
 func (gcl GhClient) GetDefaultBranch(url string) (string, error) {
@@ -323,7 +350,7 @@ func (gcl GhClient) GetDefaultBranch(url string) (string, error) {
 		return "", fmt.Errorf(
 			"'%s' could not get default_branch: %v", url, err)
 	}
-	defer resp.Body.Close()
+	defer CloseResponseBody(resp)
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf(
@@ -375,7 +402,7 @@ func (gcl GhClient) GetFileCreationTime(
 		}
 	}
 
-	defer resp.Body.Close()
+	defer CloseResponseBody(resp)
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return defaultTime, fmt.Errorf(
@@ -498,7 +525,7 @@ func (gcl GhClient) parseGithubResponse(getRequest string) GhResponseInfo {
 	}
 
 	var data []byte
-	defer resp.Body.Close()
+	defer CloseResponseBody(resp)
 	data, requestInfo.Error = ioutil.ReadAll(resp.Body)
 	if requestInfo.Error != nil {
 		return requestInfo
@@ -559,7 +586,15 @@ func (gcl GhClient) Do(query string) (*http.Response, error) {
 		return nil, err
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("token %s", gcl.accessToken))
-	return gcl.client.Do(req)
+
+	// gcl.client.Do: a non-2xx status code doesn't cause an error.
+	// See https://golang.org/pkg/net/http/#Client.Do for more info.
+	resp, err :=  gcl.client.Do(req)
+	if resp != nil && resp.StatusCode != http.StatusOK {
+		err = fmt.Errorf("GhClient.Do(%s) failed with response code: %d",
+			query, resp.StatusCode)
+	}
+	return resp, err
 }
 
 func (gcl GhClient) getWithRetry(
@@ -569,13 +604,10 @@ func (gcl GhClient) getWithRetry(
 
 	retryCount := gcl.retryCount
 
-	for err == nil &&
-		resp.StatusCode == http.StatusForbidden &&
-		retryCount > 0 {
-
+	for resp != nil && resp.StatusCode == http.StatusForbidden && retryCount > 0 {
 		retryTime := resp.Header.Get("Retry-After")
-		i, err := strconv.Atoi(retryTime)
-		if err != nil {
+		i, errAtoi := strconv.Atoi(retryTime)
+		if errAtoi != nil {
 			return resp, fmt.Errorf(
 				"query '%s' forbidden without 'Retry-After'", query)
 		}

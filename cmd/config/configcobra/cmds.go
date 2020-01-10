@@ -74,10 +74,14 @@ func NewConfigCommand(name string) *cobra.Command {
 	root.AddCommand(commands.CatCommand(name))
 	root.AddCommand(commands.FmtCommand(name))
 	root.AddCommand(commands.MergeCommand(name))
+	root.AddCommand(commands.Merge3Command(name))
 	root.AddCommand(commands.CountCommand(name))
 	root.AddCommand(commands.RunFnCommand(name))
-	root.AddCommand(commands.SubCommand(name))
-	root.AddCommand(commands.SubSetCommand(name))
+	root.AddCommand(commands.SetCommand(name))
+	root.AddCommand(commands.ListSettersCommand(name))
+	root.AddCommand(commands.CreateSetterCommand(name))
+	root.AddCommand(commands.SinkCommand(name))
+	root.AddCommand(commands.SourceCommand(name))
 
 	root.AddCommand(&cobra.Command{
 		Use:   "docs-merge",
@@ -91,8 +95,13 @@ func NewConfigCommand(name string) *cobra.Command {
 	})
 	root.AddCommand(&cobra.Command{
 		Use:   "docs-fn",
-		Short: "[Alpha] Documentation for writing containerized functions run by run.",
-		Long:  api.ConfigFnLong,
+		Short: "[Alpha] Documentation for developing and invoking Configuration Functions.",
+		Long:  api.FunctionsImplLong,
+	})
+	root.AddCommand(&cobra.Command{
+		Use:   "docs-fn-spec",
+		Short: "[Alpha] Documentation for Configuration Functions Specification.",
+		Long:  api.FunctionsSpecLong,
 	})
 	root.AddCommand(&cobra.Command{
 		Use:   "docs-io-annotations",

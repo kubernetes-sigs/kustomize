@@ -68,13 +68,13 @@ func TestLocalPackageWriter_Write_keepReaderAnnotations(t *testing.T) {
 metadata:
   annotations:
     config.kubernetes.io/index: 0
-    config.kubernetes.io/path: a/b/a_test.yaml
+    config.kubernetes.io/path: "a/b/a_test.yaml"
 ---
 c: d # second
 metadata:
   annotations:
     config.kubernetes.io/index: 1
-    config.kubernetes.io/path: a/b/a_test.yaml
+    config.kubernetes.io/path: "a/b/a_test.yaml"
 `, string(b))
 
 	b, err = ioutil.ReadFile(filepath.Join(d, "a", "b", "b_test.yaml"))
@@ -89,7 +89,7 @@ g:
 metadata:
   annotations:
     config.kubernetes.io/index: 0
-    config.kubernetes.io/path: a/b/b_test.yaml
+    config.kubernetes.io/path: "a/b/b_test.yaml"
 `, string(b))
 }
 
@@ -207,55 +207,37 @@ metadata:
 	}
 }
 
-// TestLocalPackageWriter_Write_missingIndex tests:
-// - If config.kubernetes.io/path is missing, fail
-func TestLocalPackageWriter_Write_missingPath(t *testing.T) {
+// TestLocalPackageWriter_Write_missingPath tests:
+// - If config.kubernetes.io/path or index are missing, then default them
+func TestLocalPackageWriter_Write_missingAnnotations(t *testing.T) {
 	d, node1, node2, node3 := getWriterInputs(t)
 	defer os.RemoveAll(d)
 
-	node4, err := yaml.Parse(`e: f
+	node4String := `e: f
 g:
   h:
   - i # has a list
   - j
+kind: Foo
 metadata:
-  annotations:
-    config.kubernetes.io/index: a
-`)
+  name: bar
+`
+	node4, err := yaml.Parse(node4String)
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, err.Error())
 	}
 
 	w := LocalPackageWriter{PackagePath: d}
 	err = w.Write([]*yaml.RNode{node2, node1, node3, node4})
-	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "config.kubernetes.io/path")
-	}
-}
-
-// TestLocalPackageWriter_Write_missingIndex tests:
-// - If config.kubernetes.io/index is missing, fail
-func TestLocalPackageWriter_Write_missingIndex(t *testing.T) {
-	d, node1, node2, node3 := getWriterInputs(t)
-	defer os.RemoveAll(d)
-
-	node4, err := yaml.Parse(`e: f
-g:
-  h:
-  - i # has a list
-  - j
-metadata:
-  annotations:
-    config.kubernetes.io/path: a/a.yaml
-`)
 	if !assert.NoError(t, err) {
-		assert.FailNow(t, err.Error())
+		t.FailNow()
 	}
-
-	w := LocalPackageWriter{PackagePath: d}
-	err = w.Write([]*yaml.RNode{node2, node1, node3, node4})
-	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "config.kubernetes.io/index")
+	b, err := ioutil.ReadFile(filepath.Join(d, "foo_bar.yaml"))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, node4String, string(b)) {
+		t.FailNow()
 	}
 }
 

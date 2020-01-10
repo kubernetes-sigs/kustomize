@@ -1,7 +1,7 @@
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
-.PHONY: generate license fix vet fmt test lint tidy
+.PHONY: generate license fix vet fmt test lint tidy openapi
 
 GOPATH := $(shell go env GOPATH)
 
@@ -32,3 +32,7 @@ test:
 
 vet:
 	go vet ./...
+
+openapi:
+	(which $(GOPATH)/bin/go-bindata || go get -v github.com/go-bindata/go-bindata)
+	go-bindata --pkg openapi -o openapi/swagger.go openapi/swagger.json

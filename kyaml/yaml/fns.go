@@ -446,14 +446,18 @@ type FieldSetter struct {
 	// value on the ScalarNode.
 	Name string `yaml:"name,omitempty"`
 
-	// YNode is the value to set.
+	// Value is the value to set.
 	// Optional if Kind is set.
 	Value *RNode `yaml:"value,omitempty"`
 
 	StringValue string `yaml:"stringValue,omitempty"`
+
+	// OverrideStyle can be set to override the style of the existing node
+	// when setting it.  Otherwise, if an existing node is found, the style is
+	// retained.
+	OverrideStyle bool `yaml:"overrideStyle,omitempty"`
 }
 
-// FieldSetter returns an GrepFilter that sets the named field to the given value.
 func (s FieldSetter) Filter(rn *RNode) (*RNode, error) {
 	if s.StringValue != "" && s.Value == nil {
 		s.Value = NewScalarRNode(s.StringValue)
@@ -462,6 +466,12 @@ func (s FieldSetter) Filter(rn *RNode) (*RNode, error) {
 	if s.Name == "" {
 		if err := ErrorIfInvalid(rn, yaml.ScalarNode); err != nil {
 			return rn, err
+		}
+		// only apply the style if there is not an existing style
+		// or we want to override it
+		if !s.OverrideStyle || s.Value.YNode().Style == 0 {
+			// keep the original style if it exists
+			s.Value.YNode().Style = rn.YNode().Style
 		}
 		rn.SetYNode(s.Value.YNode())
 		return rn, nil
@@ -477,6 +487,12 @@ func (s FieldSetter) Filter(rn *RNode) (*RNode, error) {
 		return nil, err
 	}
 	if field != nil {
+		// only apply the style if there is not an existing style
+		// or we want to override it
+		if !s.OverrideStyle || field.YNode().Style == 0 {
+			// keep the original style if it exists
+			s.Value.YNode().Style = field.YNode().Style
+		}
 		// need to def ref the Node since field is ephemeral
 		field.SetYNode(s.Value.YNode())
 		return field, nil

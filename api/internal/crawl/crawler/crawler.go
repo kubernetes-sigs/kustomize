@@ -10,6 +10,8 @@ import (
 	"os"
 	"sync"
 
+	"sigs.k8s.io/kustomize/api/internal/crawl/index"
+
 	_ "github.com/gomodule/redigo/redis"
 
 	"sigs.k8s.io/kustomize/api/internal/crawl/doc"
@@ -47,7 +49,7 @@ type CrawledDocument interface {
 
 type CrawlSeed []*doc.Document
 
-type IndexFunc func(CrawledDocument, Crawler) error
+type IndexFunc func(CrawledDocument, index.Mode) error
 type Converter func(*doc.Document) (CrawledDocument, error)
 
 func logIfErr(err error) {
@@ -72,17 +74,18 @@ func addBranches(cdoc CrawledDocument, match Crawler, indx IndexFunc,
 	seen[cdoc.ID()] = struct{}{}
 
 	// Insert into index
-	err := indx(cdoc, match)
-	logIfErr(err)
-	if err != nil {
+	if err := indx(cdoc, index.InsertOrUpdate); err != nil {
+		logger.Printf("Failed to insert or update %s %s: %v",
+			cdoc.GetDocument().RepositoryURL, cdoc.GetDocument().FilePath, err)
 		return
 	}
 
 	deps, err := cdoc.GetResources()
-	logIfErr(err)
 	if err != nil {
+		logger.Println(err)
 		return
 	}
+
 	for _, dep := range deps {
 		if _, ok := seen[dep.ID()]; ok {
 			continue
@@ -93,7 +96,16 @@ func addBranches(cdoc CrawledDocument, match Crawler, indx IndexFunc,
 
 func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv Converter, indx IndexFunc,
 	seen map[string]struct{}, stack *CrawlSeed) {
-	docCount := 0
+
+	UpdatedDocCount := 0
+	seenDocCount := 0
+	cachedDocCount := 0
+	findMatchErrCount := 0
+	FetchDocumentErrCount := 0
+	SetCreatedErrCount := 0
+	convErrCount := 0
+	deleteDocCount := 0
+
 	// During the execution of the for loop, more Documents may be added into (*docsPtr).
 	for len(*docsPtr) > 0 {
 		// get the last Document in (*docPtr), which will be crawled in this iteration.
@@ -103,38 +115,68 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 		*docsPtr = (*docsPtr)[:(len(*docsPtr) - 1)]
 
 		if _, ok := seen[tail.ID()]; ok {
+			seenDocCount++
 			continue
 		}
-		docCount++
+
+		if tail.WasCached() {
+			logger.Printf("%s %s is cached already", tail.RepositoryURL, tail.FilePath)
+			cachedDocCount++
+			continue
+		}
 
 		match := findMatch(tail, crawlers)
 		if match == nil {
-			logIfErr(fmt.Errorf(
-				"%v could not match any crawler", tail))
+			logIfErr(fmt.Errorf("%v could not match any crawler", tail))
+			findMatchErrCount++
 			continue
 		}
 
 		logger.Println("Crawling ", tail.RepositoryURL, tail.FilePath)
-		err := match.FetchDocument(ctx, tail)
-		logIfErr(err)
-		// If there was no change or there is an error, we don't have
-		// to branch out, since the dependencies are already in the
-		// index, or we cannot find the document.
-		if err != nil || tail.WasCached() {
-			if tail.WasCached() {
-				logger.Println(tail.RepositoryURL, tail.FilePath, "is cached already")
+		if err := match.FetchDocument(ctx, tail); err != nil {
+			logger.Printf("FetchDocument failed on %s %s: %v",
+				tail.RepositoryURL, tail.FilePath, err)
+			FetchDocumentErrCount++
+			// delete the document from the index
+			cdoc := &doc.KustomizationDocument{
+				Document: *tail,
 			}
+			seen[cdoc.ID()] = struct{}{}
+			if err := indx(cdoc, index.Delete); err != nil {
+				logger.Printf("Failed to delete %s %s: %v",
+					cdoc.RepositoryURL, cdoc.FilePath, err)
+			}
+			deleteDocCount++
 			continue
 		}
 
-		logIfErr(match.SetCreated(ctx, tail))
+		if err := match.SetCreated(ctx, tail); err != nil {
+			logger.Printf("SetCreated failed on %s %s: %v",
+				tail.RepositoryURL, tail.FilePath, err)
+			SetCreatedErrCount++
+		}
 
 		cdoc, err := conv(tail)
-		logIfErr(err)
+		// If conv returns an error, cdoc can still be added into the index so that
+		// cdoc.Document can be searched.
+		if err != nil {
+			logger.Printf("conv failed on %s %s: %v",
+				tail.RepositoryURL, tail.FilePath, err)
+			convErrCount++
+		}
 
+		UpdatedDocCount++
 		addBranches(cdoc, match, indx, seen, stack)
 	}
-	logger.Printf("%d documents were crawled by doCrawl\n", docCount)
+	logger.Printf("Summary of doCrawl:\n")
+	logger.Printf("\t%d documents were updated\n", UpdatedDocCount)
+	logger.Printf("\t%d documents were seen by the crawler already and skipped\n", seenDocCount)
+	logger.Printf("\t%d documents were cached already and skipped\n", cachedDocCount)
+	logger.Printf("\t%d documents didn't have a matching crawler and skipped\n", findMatchErrCount)
+	logger.Printf("\t%d documents cannot be fetched, %d out of them are deleted\n",
+		FetchDocumentErrCount, deleteDocCount)
+	logger.Printf("\t%d documents cannot update its creation time but still were inserted or updated in the index\n", SetCreatedErrCount)
+	logger.Printf("\t%d documents cannot be converted but still were inserted or updated in the index\n", convErrCount)
 }
 
 // CrawlFromSeed updates all the documents in seed, and crawls all the new

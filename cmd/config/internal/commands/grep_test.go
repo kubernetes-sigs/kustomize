@@ -75,9 +75,8 @@ metadata:
   name: foo
   annotations:
     app: nginx2
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/package: .
-    config.kubernetes.io/path: f1.yaml
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'f1.yaml'
 spec:
   replicas: 1
 ---
@@ -86,9 +85,8 @@ metadata:
   name: foo
   annotations:
     app: nginx
-    config.kubernetes.io/index: 1
-    config.kubernetes.io/package: .
-    config.kubernetes.io/path: f1.yaml
+    config.kubernetes.io/index: '1'
+    config.kubernetes.io/path: 'f1.yaml'
 spec:
   selector:
     app: nginx
@@ -145,7 +143,7 @@ metadata:
   name: foo
   annotations:
     app: nginx2
-    config.kubernetes.io/index: 0
+    config.kubernetes.io/index: '0'
 spec:
   replicas: 1
 ---
@@ -154,7 +152,7 @@ metadata:
   name: foo
   annotations:
     app: nginx
-    config.kubernetes.io/index: 1
+    config.kubernetes.io/index: '1'
 spec:
   selector:
     app: nginx

@@ -92,6 +92,12 @@ func TestDocument_RepositoryFullName(t *testing.T) {
 			},
 			expectedRepositoryFullName: "",
 		},
+		{
+			doc: Document{
+				RepositoryURL: "git@github.com:user/repo",
+			},
+			expectedRepositoryFullName: "user/repo",
+		},
 	}
 
 	for _, tc := range testCases {

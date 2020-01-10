@@ -4,11 +4,8 @@
 
 # run this script with releasing/releasemodule.sh MODULE
 #   -- e.g. releasing/releasemodule.sh cmd/config
-# to push the latest tag to release a binary, run with BINARY=true
-#   -- e.g. BINARY=true releasing/releasemodule.sh kustomize
 # to skip fetch from upstream, run with FETCH=false
 #   -- e.g. FETCH=false releasing/releasemodule.sh kyaml
-# for a list of modules see releasing/releaseallmodules.sh
 set -e
 
 # perform release for a module
@@ -28,10 +25,13 @@ function releaseModule {
 
   # create a temporary workspace for our work
   wktree=$(mktemp -d /tmp/kustomize-releases-XXXXXX)
-  git branch -f $branch upstream/master # always release from master
+  git branch $branch upstream/$branch
   git worktree add $wktree $branch # create a separate worktree for the branch
   pushd .
   cd $wktree/$module # cd into the worktree/module
+
+  # merge master changes into the release branch
+  git merge upstream/master
 
   echo "dir:    $wktree"
   echo "module: $module v$major.$minor.$patch"
@@ -55,7 +55,7 @@ function releaseModule {
      git tag -a $tag -m "Release $tag on branch $branch"
      git push upstream $tag
   else
-    printf "\nSkipping push binary $binary -- run with NO_DRY_RUN=true to push the release.\n\n"
+    printf "\nSkipping push module $module -- run with NO_DRY_RUN=true to push the release.\n\n"
   fi
 
   # cleanup release artifacts
@@ -63,26 +63,26 @@ function releaseModule {
   rm -rf $wktree
   git worktree prune
   git branch -D $branch
+
   echo "$module complete"
 }
 
-function releaseBinary {
-  # move the latest tag for the binary to trigger cloudbuild
-  binary=$1
-  echo "binary: $binary"
-
-  if [ "$NO_DRY_RUN" == "true" ]; then
-    git tag -d latest_$binary
-    git push upstream :latest_$binary
-    git tag -a latest_$binary
-    git push upstream latest_$binary
-  else
-      echo "Skipping push binary $binary -- run with NO_DRY_RUN=true to push the release."
-  fi
-}
+modules="kyaml api cmd/config cmd/kubectl pluginator kustomize"
 
 # configure the branch and tag names
-module="${1?must provide the module to release as an argument}"
+module="${1?must provide the module to release as an argument: supported modules [$modules]}"
+
+# verify the module
+found=false
+for m in $modules; do
+  if [ "$m" == "$module" ]; then
+    found=true
+  fi
+done
+if [ "$found" != "true" ]; then
+  echo "unknown module \"$module\", must be one of: [$modules]"
+  exit 1
+fi
 
 # get the release versions
 source releasing/VERSIONS
@@ -98,7 +98,11 @@ fi
 # release the module
 releaseModule $module
 
-# release the binary
-if [ "$BINARY" == "true" ]; then
-  releaseBinary $module
+if [ "$module" == "kustomize" ]; then
+  # TODO: Do this for all modules
+  pushd .
+  getter=$(mktemp -d /tmp/kustomize-releases-XXXXXX)
+  cd $getter
+  go get sigs.k8s.io/kustomize/$module/v3
+  popd
 fi

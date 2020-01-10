@@ -15,7 +15,7 @@ Resource configuration, and looks for invalid configuration.
 ## Function invocation
 
 The function is invoked by authoring a [local Resource](local-resource)
-with `metadata.configFn` and running:
+with `metadata.annotations.[config.kubernetes.io/function]` and running:
 
     kustomize config run local-resource/
 

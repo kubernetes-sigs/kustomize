@@ -20,11 +20,11 @@ heavy lifting of implementing the function interface.
 ## Function invocation
 
 The function is invoked by authoring a [local Resource](local-resource)
-with `metadata.configFn` and running:
+with `metadata.annotations.[config.kubernetes.io/function]` and running:
 
     kustomize config run local-resource/
 
-This generates the `local-resources/config` directory containing the template output.
+This generates the `local-resource/config` directory containing the template output.
 
 - the template output may be modified by adding fields -- such as initContainers,
   sidecarConatiners, cpu resource limits, etc -- and these fields will be retained
