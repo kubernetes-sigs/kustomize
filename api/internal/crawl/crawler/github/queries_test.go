@@ -101,7 +101,7 @@ func TestGithubSearchQuery(t *testing.T) {
 				"examples/helloWorld/kustomization.yaml?per_page=100",
 
 			expectedCommitsQuery: "https://api.github.com/repos/kubernetes-sigs/kustomize/commits?" +
-				"q=path:examples/helloWorld/kustomization.yaml&per_page=100",
+				"path=examples%2FhelloWorld%2Fkustomization.yaml&per_page=100",
 		},
 		{
 			rc: RequestConfig{
@@ -121,7 +121,7 @@ func TestGithubSearchQuery(t *testing.T) {
 				"examples%201/helloWorld/kustomization.yaml?per_page=100",
 
 			expectedCommitsQuery: "https://api.github.com/repos/kubernetes-sigs/kustomize/commits?" +
-				"q=path:examples%201/helloWorld/kustomization.yaml&per_page=100",
+				"path=examples+1%2FhelloWorld%2Fkustomization.yaml&per_page=100",
 		},
 	}
 

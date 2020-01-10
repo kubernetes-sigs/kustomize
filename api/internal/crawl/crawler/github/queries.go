@@ -116,9 +116,11 @@ type RequestConfig struct {
 // the URL method to get the string value of the URL. See request.CopyWith, to
 // understand why the request object is useful.
 func (rc RequestConfig) CodeSearchRequestWith(query Query) request {
-	req := rc.makeRequest("search/code", query)
-	req.vals.Set("sort", "indexed")
-	req.vals.Set("order", "desc")
+	vals := url.Values{
+		"sort": []string{"indexed"},
+		"order": []string{"desc"},
+	}
+	req := rc.makeRequest("search/code", query, vals)
 	return req
 }
 
@@ -126,27 +128,25 @@ func (rc RequestConfig) CodeSearchRequestWith(query Query) request {
 // query for the Github API to find the dowload information of this filepath.
 func (rc RequestConfig) ContentsRequest(fullRepoName, path string) string {
 	uri := fmt.Sprintf("repos/%s/contents/%s", fullRepoName, path)
-	return rc.makeRequest(uri, Query{}).URL()
+	return rc.makeRequest(uri, Query{}, url.Values{}).URL()
 }
 
 func (rc RequestConfig) ReposRequest(fullRepoName string) string {
 	uri := fmt.Sprintf("repos/%s", fullRepoName)
-	return rc.makeRequest(uri, Query{}).URL()
-}
-
-func escapeSpace(s string) string {
-	return strings.Replace(s, " ", "%20", -1)
+	return rc.makeRequest(uri, Query{}, url.Values{}).URL()
 }
 
 // CommitsRequest given the repo name, and a filepath returns a formatted query
 // for the Github API to find the commits that affect this file.
 func (rc RequestConfig) CommitsRequest(fullRepoName, path string) string {
 	uri := fmt.Sprintf("repos/%s/commits", fullRepoName)
-	return rc.makeRequest(uri, Query{Path(escapeSpace(path))}).URL()
+	vals := url.Values{
+		"path": []string{path},
+	}
+	return rc.makeRequest(uri, Query{}, vals).URL()
 }
 
-func (rc RequestConfig) makeRequest(path string, query Query) request {
-	vals := url.Values{}
+func (rc RequestConfig) makeRequest(path string, query Query, vals url.Values) request {
 	vals.Set(perPageArg, fmt.Sprint(rc.perPage))
 
 	return request{

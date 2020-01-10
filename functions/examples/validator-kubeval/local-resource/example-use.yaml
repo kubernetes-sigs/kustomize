@@ -4,9 +4,10 @@
 apiVersion: examples.config.kubernetes.io/v1beta1
 kind: Kubeval
 metadata:
-  configFn:
-    container:
-      image: gcr.io/kustomize-functions/example-validator-kubeval:v0.1.0
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/kustomize-functions/example-validator-kubeval:v0.1.0
 spec:
   strict: true
   ignoreMissingSchemas: true

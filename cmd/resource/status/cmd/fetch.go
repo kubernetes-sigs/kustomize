@@ -17,7 +17,9 @@ import (
 
 // GetFetchRunner returns a command FetchRunner.
 func GetFetchRunner() *FetchRunner {
-	r := &FetchRunner{}
+	r := &FetchRunner{
+		createClientFunc: createClient,
+	}
 	c := &cobra.Command{
 		Use:     "fetch DIR...",
 		Short:   commands.FetchShort,
@@ -41,18 +43,20 @@ func FetchCommand() *cobra.Command {
 type FetchRunner struct {
 	IncludeSubpackages bool
 	Command            *cobra.Command
+
+	createClientFunc createClientFunc
 }
 
 func (r *FetchRunner) runE(c *cobra.Command, args []string) error {
 	ctx := context.Background()
 
 	// Create a new client and use it to set up a resolver.
-	client, err := getClient()
+	k8sClient, err := r.createClientFunc()
 	if err != nil {
-		return errors.Wrap(err, "error creating client")
+		return errors.Wrap(err, "error creating k8sClient")
 	}
 
-	resolver := wait.NewResolver(client, time.Minute)
+	resolver := wait.NewResolver(k8sClient, time.Minute)
 
 	// Set up a CaptureIdentifierFilter and run all inputs through the
 	// filter with the pipeline to capture the inventory of resources

@@ -109,14 +109,12 @@ func TestLocalPackageReader_Read_pkg(t *testing.T) {
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
-    config.kubernetes.io/package: '.'
     config.kubernetes.io/path: 'a_test.yaml'
 `,
 			`c: d # second
 metadata:
   annotations:
     config.kubernetes.io/index: '1'
-    config.kubernetes.io/package: '.'
     config.kubernetes.io/path: 'a_test.yaml'
 `,
 			`# second thing
@@ -128,7 +126,6 @@ g:
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
-    config.kubernetes.io/package: '.'
     config.kubernetes.io/path: 'b_test.yaml'
 `,
 		}
@@ -171,14 +168,12 @@ func TestLocalPackageReader_Read_file(t *testing.T) {
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
-    config.kubernetes.io/package: '.'
     config.kubernetes.io/path: 'a_test.yaml'
 `,
 			`c: d # second
 metadata:
   annotations:
     config.kubernetes.io/index: '1'
-    config.kubernetes.io/package: '.'
     config.kubernetes.io/path: 'a_test.yaml'
 `,
 		}
@@ -270,14 +265,12 @@ func TestLocalPackageReader_Read_nestedDirs(t *testing.T) {
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
-    config.kubernetes.io/package: 'a${SEP}b'
     config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
 `,
 			`c: d # second
 metadata:
   annotations:
     config.kubernetes.io/index: '1'
-    config.kubernetes.io/package: 'a${SEP}b'
     config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
 `,
 			`# second thing
@@ -289,7 +282,6 @@ g:
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
-    config.kubernetes.io/package: 'a${SEP}b'
     config.kubernetes.io/path: 'a${SEP}b${SEP}b_test.yaml'
 `,
 		}
@@ -328,14 +320,12 @@ func TestLocalPackageReader_Read_matchRegex(t *testing.T) {
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
-    config.kubernetes.io/package: 'a${SEP}b'
     config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
 `,
 		`c: d # second
 metadata:
   annotations:
     config.kubernetes.io/index: '1'
-    config.kubernetes.io/package: 'a${SEP}b'
     config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
 `,
 	}
@@ -371,14 +361,12 @@ func TestLocalPackageReader_Read_skipSubpackage(t *testing.T) {
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
-    config.kubernetes.io/package: 'a${SEP}b'
     config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
 `,
 		`c: d # second
 metadata:
   annotations:
     config.kubernetes.io/index: '1'
-    config.kubernetes.io/package: 'a${SEP}b'
     config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
 `,
 	}
@@ -414,14 +402,12 @@ func TestLocalPackageReader_Read_includeSubpackage(t *testing.T) {
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
-    config.kubernetes.io/package: 'a${SEP}b'
     config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
 `,
 		`c: d # second
 metadata:
   annotations:
     config.kubernetes.io/index: '1'
-    config.kubernetes.io/package: 'a${SEP}b'
     config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
 `,
 		`# second thing
@@ -433,7 +419,6 @@ g:
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
-    config.kubernetes.io/package: 'a${SEP}c'
     config.kubernetes.io/path: 'a${SEP}c${SEP}c_test.yaml'
 `,
 	}

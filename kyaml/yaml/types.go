@@ -6,7 +6,6 @@ package yaml
 import (
 	"bytes"
 	"fmt"
-	"reflect"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -68,6 +67,14 @@ func IsFieldEmpty(node *MapNode) bool {
 	}
 
 	return false
+}
+
+// GetValue returns underlying yaml.Node Value field
+func GetValue(node *RNode) string {
+	if IsEmpty(node) {
+		return ""
+	}
+	return node.YNode().Value
 }
 
 func IsFieldNull(node *MapNode) bool {
@@ -216,6 +223,11 @@ func (m MapNodeSlice) Values() []*RNode {
 	return values
 }
 
+type TypeMeta struct {
+	Kind       string
+	APIVersion string
+}
+
 // ResourceMeta contains the metadata for a both Resource Type and Resource.
 type ResourceMeta struct {
 	// APIVersion is the apiVersion field of a Resource
@@ -280,23 +292,79 @@ func (r *ResourceIdentifier) GetKind() string {
 
 var ErrMissingMetadata = fmt.Errorf("missing Resource metadata")
 
-// GetMeta returns the ResourceMeta for a RNode
+// Field names
+const (
+	AnnotationsField = "annotations"
+	APIVersionField  = "apiVersion"
+	KindField        = "kind"
+	MetadataField    = "metadata"
+	NameField        = "name"
+	NamespaceField   = "namespace"
+	LabelsField      = "labels"
+)
+
+// GetMeta returns the ResourceMeta for an RNode
 func (rn *RNode) GetMeta() (ResourceMeta, error) {
+	if IsEmpty(rn) {
+		return ResourceMeta{}, nil
+	}
+	missingMeta := true
+	n := rn
+	if n.YNode().Kind == DocumentNode {
+		// get the content is this is the document node
+		n = NewRNode(n.Content()[0])
+	}
+
+	// don't decode into the struct directly or it will fail on UTF-8 issues
+	// which appear in comments
 	m := ResourceMeta{}
-	b := &bytes.Buffer{}
-	e := NewEncoder(b)
-	if err := e.Encode(rn.YNode()); err != nil {
-		return m, errors.Wrap(err)
+
+	// TODO: consider optimizing this parsing
+	if f := n.Field(APIVersionField); !IsFieldEmpty(f) {
+		m.APIVersion = GetValue(f.Value)
+		missingMeta = false
 	}
-	if err := e.Close(); err != nil {
-		return m, errors.Wrap(err)
+	if f := n.Field(KindField); !IsFieldEmpty(f) {
+		m.Kind = GetValue(f.Value)
+		missingMeta = false
 	}
-	d := yaml.NewDecoder(b)
-	d.KnownFields(false) // only want to parse the metadata
-	if err := d.Decode(&m); err != nil {
-		return m, errors.Wrap(err)
+
+	mf := n.Field(MetadataField)
+	if IsFieldEmpty(mf) {
+		if missingMeta {
+			return m, ErrMissingMetadata
+		}
+		return m, nil
 	}
-	if reflect.DeepEqual(m, ResourceMeta{}) {
+	meta := mf.Value
+
+	if f := meta.Field(NameField); !IsFieldEmpty(f) {
+		m.Name = f.Value.YNode().Value
+		missingMeta = false
+	}
+	if f := meta.Field(NamespaceField); !IsFieldEmpty(f) {
+		m.Namespace = GetValue(f.Value)
+		missingMeta = false
+	}
+
+	if f := meta.Field(LabelsField); !IsFieldEmpty(f) {
+		m.Labels = map[string]string{}
+		_ = f.Value.VisitFields(func(node *MapNode) error {
+			m.Labels[GetValue(node.Key)] = GetValue(node.Value)
+			return nil
+		})
+		missingMeta = false
+	}
+	if f := meta.Field(AnnotationsField); !IsFieldEmpty(f) {
+		m.Annotations = map[string]string{}
+		_ = f.Value.VisitFields(func(node *MapNode) error {
+			m.Annotations[GetValue(node.Key)] = GetValue(node.Value)
+			return nil
+		})
+		missingMeta = false
+	}
+
+	if missingMeta {
 		return m, ErrMissingMetadata
 	}
 	return m, nil
