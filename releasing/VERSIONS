@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # VERSIONS contains the release versions of each kustomize go module
-# update this file and run releaseall.sh to cut a new release
+# update this file and run releasemodule.sh to cut a new release
 
 # kyaml version
 export kyaml_major=0
@@ -16,7 +16,7 @@ export kstatus_patch=1
 # kustomize api version
 export api_major=0
 export api_minor=3
-export api_patch=1
+export api_patch=2
 
 # cmd/config version
 export cmd_config_major=0
