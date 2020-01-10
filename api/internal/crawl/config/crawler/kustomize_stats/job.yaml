@@ -13,6 +13,11 @@ spec:
         command: ["/kustomize_stats"]
         args: ["--kinds=50", "--identifiers=50", "--kustomize-features=50"]
         env:
+        - name: GITHUB_ACCESS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: github-access-token
+              key: token
         - name: ELASTICSEARCH_URL
           valueFrom:
             configMapKeyRef:
