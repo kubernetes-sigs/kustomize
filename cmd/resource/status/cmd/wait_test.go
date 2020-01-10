@@ -36,7 +36,7 @@ func TestWaitNoResources(t *testing.T) {
 
 	aggStatuses := tableOutput.allAggStatuses()
 	expectedAggStatuses := []status.Status{
-		status.CurrentStatus,
+		status.UnknownStatus,
 		status.CurrentStatus,
 	}
 	if !reflect.DeepEqual(aggStatuses, expectedAggStatuses) {
