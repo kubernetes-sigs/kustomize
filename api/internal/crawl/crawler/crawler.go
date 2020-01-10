@@ -105,6 +105,7 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 	SetCreatedErrCount := 0
 	convErrCount := 0
 	deleteDocCount := 0
+	crawledDocCount := 0
 
 	// During the execution of the for loop, more Documents may be added into (*docsPtr).
 	for len(*docsPtr) > 0 {
@@ -114,7 +115,11 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 		// remove the last Document in (*docPtr)
 		*docsPtr = (*docsPtr)[:(len(*docsPtr) - 1)]
 
+		crawledDocCount++
+		logger.Printf("Crawling doc %d: %s %s", crawledDocCount, tail.RepositoryURL, tail.FilePath)
+
 		if _, ok := seen[tail.ID()]; ok {
+			logger.Printf("this doc has been seen before")
 			seenDocCount++
 			continue
 		}
@@ -132,7 +137,7 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 			continue
 		}
 
-		logger.Println("Crawling ", tail.RepositoryURL, tail.FilePath)
+
 		if err := match.FetchDocument(ctx, tail); err != nil {
 			logger.Printf("FetchDocument failed on %s %s: %v",
 				tail.RepositoryURL, tail.FilePath, err)
@@ -274,8 +279,12 @@ func CrawlGithub(ctx context.Context, crawlers []Crawler, conv Converter,
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		docCount := 0
 		for cdoc := range ch {
+			docCount++
+			logger.Printf("Processing doc %d found on Github", docCount)
 			if _, ok := seen[cdoc.ID()]; ok {
+				logger.Printf("the doc has been seen before")
 				continue
 			}
 			match := findMatch(cdoc.GetDocument(), crawlers)
