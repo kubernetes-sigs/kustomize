@@ -7,9 +7,9 @@ package kubectlcobra
 import (
 	"testing"
 
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/resource"
 )
 
@@ -19,12 +19,16 @@ var pod1Name = "pod-1"
 var pod2Name = "pod-2"
 var pod3Name = "pod-3"
 
-var groupingObj = corev1.ConfigMap{
-	ObjectMeta: metav1.ObjectMeta{
-		Namespace: testNamespace,
-		Name:      groupingObjName,
-		Labels: map[string]string{
-			GroupingLabel: "true",
+var groupingObj = unstructured.Unstructured{
+	Object: map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata": map[string]interface{}{
+			"name":      groupingObjName,
+			"namespace": testNamespace,
+			"labels": map[string]interface{}{
+				GroupingLabel: "true",
+			},
 		},
 	},
 }
@@ -35,10 +39,14 @@ var groupingInfo = &resource.Info{
 	Object:    &groupingObj,
 }
 
-var pod1 = corev1.Pod{
-	ObjectMeta: metav1.ObjectMeta{
-		Namespace: testNamespace,
-		Name:      pod1Name,
+var pod1 = unstructured.Unstructured{
+	Object: map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "Pod",
+		"metadata": map[string]interface{}{
+			"name":      pod1Name,
+			"namespace": testNamespace,
+		},
 	},
 }
 
@@ -48,10 +56,14 @@ var pod1Info = &resource.Info{
 	Object:    &pod1,
 }
 
-var pod2 = corev1.Pod{
-	ObjectMeta: metav1.ObjectMeta{
-		Namespace: testNamespace,
-		Name:      pod2Name,
+var pod2 = unstructured.Unstructured{
+	Object: map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "Pod",
+		"metadata": map[string]interface{}{
+			"name":      pod2Name,
+			"namespace": testNamespace,
+		},
 	},
 }
 
@@ -61,10 +73,14 @@ var pod2Info = &resource.Info{
 	Object:    &pod2,
 }
 
-var pod3 = corev1.Pod{
-	ObjectMeta: metav1.ObjectMeta{
-		Namespace: testNamespace,
-		Name:      pod3Name,
+var pod3 = unstructured.Unstructured{
+	Object: map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "Pod",
+		"metadata": map[string]interface{}{
+			"name":      pod3Name,
+			"namespace": testNamespace,
+		},
 	},
 }
 
@@ -211,6 +227,193 @@ func TestSortGroupingObject(t *testing.T) {
 			first := test.infos[0]
 			if !isGroupingObject(first.Object) {
 				t.Errorf("Grouping object was not sorted into first position")
+			}
+		}
+	}
+}
+
+func TestAddRetrieveInventoryToFromGroupingObject(t *testing.T) {
+	tests := []struct {
+		infos    []*resource.Info
+		expected []*Inventory
+		isError  bool
+	}{
+		// No grouping object is an error.
+		{
+			infos:   []*resource.Info{},
+			isError: true,
+		},
+		// No grouping object is an error.
+		{
+			infos:   []*resource.Info{pod1Info, pod2Info},
+			isError: true,
+		},
+		// Grouping object without other objects is OK.
+		{
+			infos:    []*resource.Info{groupingInfo},
+			expected: []*Inventory{},
+			isError:  false,
+		},
+		// More than one grouping object is an error.
+		{
+			infos:    []*resource.Info{groupingInfo, groupingInfo},
+			expected: []*Inventory{},
+			isError:  true,
+		},
+		// More than one grouping object is an error.
+		{
+			infos:    []*resource.Info{groupingInfo, pod1Info, groupingInfo},
+			expected: []*Inventory{},
+			isError:  true,
+		},
+		{
+			infos: []*resource.Info{groupingInfo, pod1Info},
+			expected: []*Inventory{
+				&Inventory{
+					Namespace: testNamespace,
+					Name:      pod1Name,
+					GroupKind: schema.GroupKind{
+						Group: "",
+						Kind:  "Pod",
+					},
+				},
+			},
+			isError: false,
+		},
+		{
+			infos: []*resource.Info{pod1Info, groupingInfo},
+			expected: []*Inventory{
+				&Inventory{
+					Namespace: testNamespace,
+					Name:      pod1Name,
+					GroupKind: schema.GroupKind{
+						Group: "",
+						Kind:  "Pod",
+					},
+				},
+			},
+			isError: false,
+		},
+		{
+			infos: []*resource.Info{pod1Info, pod2Info, groupingInfo, pod3Info},
+			expected: []*Inventory{
+				&Inventory{
+					Namespace: testNamespace,
+					Name:      pod1Name,
+					GroupKind: schema.GroupKind{
+						Group: "",
+						Kind:  "Pod",
+					},
+				},
+				&Inventory{
+					Namespace: testNamespace,
+					Name:      pod2Name,
+					GroupKind: schema.GroupKind{
+						Group: "",
+						Kind:  "Pod",
+					},
+				},
+				&Inventory{
+					Namespace: testNamespace,
+					Name:      pod3Name,
+					GroupKind: schema.GroupKind{
+						Group: "",
+						Kind:  "Pod",
+					},
+				},
+			},
+			isError: false,
+		},
+		{
+			infos: []*resource.Info{pod1Info, pod2Info, pod3Info, groupingInfo},
+			expected: []*Inventory{
+				&Inventory{
+					Namespace: testNamespace,
+					Name:      pod1Name,
+					GroupKind: schema.GroupKind{
+						Group: "",
+						Kind:  "Pod",
+					},
+				},
+				&Inventory{
+					Namespace: testNamespace,
+					Name:      pod2Name,
+					GroupKind: schema.GroupKind{
+						Group: "",
+						Kind:  "Pod",
+					},
+				},
+				&Inventory{
+					Namespace: testNamespace,
+					Name:      pod3Name,
+					GroupKind: schema.GroupKind{
+						Group: "",
+						Kind:  "Pod",
+					},
+				},
+			},
+			isError: false,
+		},
+		{
+			infos: []*resource.Info{groupingInfo, pod1Info, pod2Info, pod3Info},
+			expected: []*Inventory{
+				&Inventory{
+					Namespace: testNamespace,
+					Name:      pod1Name,
+					GroupKind: schema.GroupKind{
+						Group: "",
+						Kind:  "Pod",
+					},
+				},
+				&Inventory{
+					Namespace: testNamespace,
+					Name:      pod2Name,
+					GroupKind: schema.GroupKind{
+						Group: "",
+						Kind:  "Pod",
+					},
+				},
+				&Inventory{
+					Namespace: testNamespace,
+					Name:      pod3Name,
+					GroupKind: schema.GroupKind{
+						Group: "",
+						Kind:  "Pod",
+					},
+				},
+			},
+			isError: false,
+		},
+	}
+
+	for _, test := range tests {
+		err := addInventoryToGroupingObj(test.infos)
+		if test.isError && err == nil {
+			t.Errorf("Should have produced an error, but returned none.")
+		}
+		if !test.isError {
+			if err != nil {
+				t.Errorf("Received error when expecting none (%s)\n", err)
+			} else {
+				retrieved, err := retrieveInventoryFromGroupingObj(test.infos)
+				if err != nil {
+					t.Errorf("Error retrieving inventory: %s\n", err)
+				}
+				if len(test.expected) != len(retrieved) {
+					t.Errorf("Expected inventory for %d resources, actual %d",
+						len(test.expected), len(retrieved))
+				}
+				for _, expected := range test.expected {
+					found := false
+					for _, actual := range retrieved {
+						if expected.Equals(actual) {
+							found = true
+						}
+					}
+					if !found {
+						t.Errorf("Expected inventory (%s) not found", expected)
+					}
+				}
 			}
 		}
 	}
