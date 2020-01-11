@@ -36,7 +36,7 @@ export cmd_resource_patch=2
 # kustomize version
 export kustomize_major=3
 export kustomize_minor=5
-export kustomize_patch=3
+export kustomize_patch=4
 
 export pluginator_major=2
 export pluginator_minor=1
