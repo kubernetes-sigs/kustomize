@@ -137,6 +137,14 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 			continue
 		}
 
+		// If the Document represents a kustomization root, FetchDcoument will change
+		// the `filePath` field of the Document by adding `kustomization.yaml` or
+		// `kustomization.yml` or `kustomization` into the the field.
+		// Therefore, it is necessary to add the ID of the Document into seen before
+		// calling FetchDocument. Otherwise, the binary may enter into an infinite loop
+		// if a kustomization file points to its kustmozation root in its `resources` or
+		// `bases` field.
+		seen[tail.ID()] = struct{}{}
 
 		if err := match.FetchDocument(ctx, tail); err != nil {
 			logger.Printf("FetchDocument failed on %s %s: %v",
