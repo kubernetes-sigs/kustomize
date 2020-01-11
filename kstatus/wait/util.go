@@ -5,24 +5,28 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// keyFromResourceIdentifier creates a resourceKey from a ResourceIdentifier.
-func keyFromResourceIdentifier(i ResourceIdentifier) resourceKey {
-	return resourceKey{
-		apiVersion: i.GetAPIVersion(),
-		kind:       i.GetKind(),
-		name:       i.GetName(),
-		namespace:  i.GetNamespace(),
+func resourceIdentifierFromObject(object KubernetesObject) ResourceIdentifier {
+	return ResourceIdentifier{
+		Name:      object.GetName(),
+		Namespace: object.GetNamespace(),
+		GroupKind: object.GroupVersionKind().GroupKind(),
 	}
 }
 
-// keyFromObject creates a resourceKey from an Object.
-func keyFromObject(obj runtime.Object) resourceKey {
-	gvk := obj.GetObjectKind().GroupVersionKind()
-	r := obj.(metav1.Object)
-	return resourceKey{
-		apiVersion: gvk.GroupVersion().String(),
-		kind:       gvk.Kind,
-		name:       r.GetName(),
-		namespace:  r.GetNamespace(),
+func resourceIdentifiersFromObjects(objects []KubernetesObject) []ResourceIdentifier {
+	var resourceIdentifiers []ResourceIdentifier
+	for _, object := range objects {
+		resourceIdentifiers = append(resourceIdentifiers, resourceIdentifierFromObject(object))
+	}
+	return resourceIdentifiers
+}
+
+func resourceIdentifierFromRuntimeObject(object runtime.Object) ResourceIdentifier {
+	gvk := object.GetObjectKind().GroupVersionKind()
+	r := object.(metav1.Object)
+	return ResourceIdentifier{
+		GroupKind: gvk.GroupKind(),
+		Name:      r.GetName(),
+		Namespace: r.GetNamespace(),
 	}
 }

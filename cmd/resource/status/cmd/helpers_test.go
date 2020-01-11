@@ -6,11 +6,15 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kustomize/kstatus/status"
+	"sigs.k8s.io/kustomize/kstatus/wait"
 )
 
 type TableOutput struct {
@@ -232,8 +236,23 @@ func (f *FakeClient) Get(_ context.Context, _ client.ObjectKey, obj runtime.Obje
 	return callbackFunc(u)
 }
 
-func (f *FakeClient) List(ctx context.Context, list runtime.Object, opts ...client.ListOption) error {
+func (f *FakeClient) List(context.Context, runtime.Object, ...client.ListOption) error {
 	return nil
+}
+
+func fakeResolver(fakeClient client.Reader, mapperTypes ...schema.GroupVersionKind) newResolverFunc {
+	return func(pollInterval time.Duration) (*wait.Resolver, error) {
+		var groupVersions []schema.GroupVersion
+		for _, gvk := range mapperTypes {
+			groupVersions = append(groupVersions, gvk.GroupVersion())
+		}
+		mapper := meta.NewDefaultRESTMapper(groupVersions)
+		for _, gvk := range mapperTypes {
+			mapper.Add(gvk, meta.RESTScopeNamespace)
+		}
+
+		return wait.NewResolver(fakeClient, mapper, pollInterval), nil
+	}
 }
 
 func joinStatuses(statuses []status.Status) string {

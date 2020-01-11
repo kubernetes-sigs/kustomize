@@ -25,7 +25,7 @@ func TestEmptyManifest(t *testing.T) {
 	fakeClient := fake.NewFakeClientWithScheme(scheme)
 
 	r := GetFetchRunner()
-	r.createClientFunc = newClientFunc(fakeClient)
+	r.newResolverFunc = fakeResolver(fakeClient)
 	r.Command.SetArgs([]string{})
 	r.Command.SetIn(inBuffer)
 	r.Command.SetOut(outBuffer)
@@ -65,7 +65,7 @@ metadata:
 	fakeClient := fake.NewFakeClientWithScheme(scheme, deployment)
 
 	r := GetFetchRunner()
-	r.createClientFunc = newClientFunc(fakeClient)
+	r.newResolverFunc = fakeResolver(fakeClient, appsv1.SchemeGroupVersion.WithKind("Deployment"))
 	r.Command.SetArgs([]string{})
 	r.Command.SetIn(inBuffer)
 	r.Command.SetOut(outBuffer)
@@ -78,7 +78,7 @@ metadata:
 	tableOutput := parseTableOutput(t, cleanOutput)
 
 	expectedResource := ResourceIdentifier{
-		apiVersion: "apps/v1",
+		apiVersion: "apps",
 		kind:       "Deployment",
 		namespace:  "default",
 		name:       "bar",
@@ -139,7 +139,8 @@ metadata:
 	outBuffer := &bytes.Buffer{}
 
 	r := GetFetchRunner()
-	r.createClientFunc = newClientFunc(fakeClient)
+	r.newResolverFunc = fakeResolver(fakeClient, appsv1.SchemeGroupVersion.WithKind("Deployment"),
+		v1.SchemeGroupVersion.WithKind("Service"))
 	r.Command.SetArgs([]string{d})
 	r.Command.SetOut(outBuffer)
 
@@ -152,7 +153,7 @@ metadata:
 	tableOutput := parseTableOutput(t, cleanOutput)
 
 	expectedDeploymentResource := ResourceIdentifier{
-		apiVersion: "apps/v1",
+		apiVersion: "apps",
 		kind:       "Deployment",
 		namespace:  "default",
 		name:       "foo",
@@ -162,7 +163,7 @@ metadata:
 	verifyOutputContains(t, tableOutput, expectedDeploymentResource, expectedDeploymentStatus, expectedDeploymentMessage)
 
 	expectedServiceResource := ResourceIdentifier{
-		apiVersion: "v1",
+		apiVersion: "",
 		kind:       "Service",
 		namespace:  "default",
 		name:       "foo",
