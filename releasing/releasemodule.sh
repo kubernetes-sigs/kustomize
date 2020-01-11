@@ -67,7 +67,7 @@ function releaseModule {
   echo "$module complete"
 }
 
-modules="kyaml api cmd/config cmd/kubectl pluginator kustomize"
+modules="kyaml api kstatus cmd/config cmd/resource cmd/kubectl pluginator kustomize"
 
 # configure the branch and tag names
 module="${1?must provide the module to release as an argument: supported modules [$modules]}"
