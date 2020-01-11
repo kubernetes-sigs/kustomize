@@ -10,27 +10,58 @@ import (
 
 	"github.com/pkg/errors"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kustomize/kstatus/status"
 )
 
+const (
+	defaultNamespace = "default"
+)
+
 // ResourceIdentifier defines the functions needed to identify
 // a resource in a cluster. This interface is implemented by
 // both unstructured.Unstructured and the standard Kubernetes types.
-type ResourceIdentifier interface {
+type KubernetesObject interface {
 	GetName() string
 	GetNamespace() string
-	GetAPIVersion() string
-	GetKind() string
+	GroupVersionKind() schema.GroupVersionKind
+}
+
+// ResourceIdentifier contains the information needed to uniquely
+// identify a resource in a cluster.
+type ResourceIdentifier struct {
+	Name      string
+	Namespace string
+	GroupKind schema.GroupKind
+}
+
+// Equals compares two ResourceIdentifiers and returns true if they
+// refer to the same resource. Special handling is needed for namespace
+// since an empty namespace for a namespace-scoped resource is defaulted
+// to the "default" namespace.
+func (r ResourceIdentifier) Equals(other ResourceIdentifier) bool {
+	isSameNamespace := r.Namespace == other.Namespace ||
+		(r.Namespace == "" && other.Namespace == defaultNamespace) ||
+		(r.Namespace == defaultNamespace && other.Namespace == "")
+	return r.GroupKind == other.GroupKind &&
+		r.Name == other.Name &&
+		isSameNamespace
 }
 
 // Resolver provides the functions for resolving status of a list of resources.
 type Resolver struct {
-	// DynamicClient is the client used to talk
-	// with the cluster
+	// client is the client used to talk
+	// with the cluster. It uses the Reader interface
+	// from controller-runtime.
 	client client.Reader
+
+	// mapper is the RESTMapper needed to look up mappings
+	// for resource types.
+	mapper meta.RESTMapper
 
 	// statusComputeFunc defines which function should be used for computing
 	// the status of a resource. This is available for testing purposes.
@@ -44,9 +75,10 @@ type Resolver struct {
 
 // NewResolver creates a new resolver with the provided client. Fetching
 // and polling of resources will be done using the provided client.
-func NewResolver(client client.Reader, pollInterval time.Duration) *Resolver {
+func NewResolver(client client.Reader, mapper meta.RESTMapper, pollInterval time.Duration) *Resolver {
 	return &Resolver{
 		client:            client,
+		mapper:            mapper,
 		statusComputeFunc: status.Compute,
 		pollInterval:      pollInterval,
 	}
@@ -58,24 +90,31 @@ func NewResolver(client client.Reader, pollInterval time.Duration) *Resolver {
 type ResourceResult struct {
 	Result *status.Result
 
-	Resource ResourceIdentifier
+	ResourceIdentifier ResourceIdentifier
 
 	Error error
 }
 
-// FetchAndResolve returns the status for a list of resources. It will return
-// the status for each of them individually. The slice of ResourceIdentifiers will
-// only be used to get the information needed to fetch the updated state of
-// the resources from the cluster.
-func (r *Resolver) FetchAndResolve(ctx context.Context, resources []ResourceIdentifier) []ResourceResult {
+// FetchAndResolveObjects returns the status for a list of kubernetes objects. These can be provided
+// either as Unstructured resources or the specific resource types. It will return the status for each
+// of them individually. The provided resources will only be used to get the information needed to
+// fetch the updated state of the resources from the cluster.
+func (r *Resolver) FetchAndResolveObjects(ctx context.Context, objects []KubernetesObject) []ResourceResult {
+	resourceIds := resourceIdentifiersFromObjects(objects)
+	return r.FetchAndResolve(ctx, resourceIds)
+}
+
+// FetchAndResolve returns the status for a list of ResourceIdentifiers. It will return
+// the status for each of them individually.
+func (r *Resolver) FetchAndResolve(ctx context.Context, resourceIDs []ResourceIdentifier) []ResourceResult {
 	var results []ResourceResult
 
-	for _, resource := range resources {
-		u, err := r.fetchResource(ctx, resource)
+	for _, resourceID := range resourceIDs {
+		u, err := r.fetchResource(ctx, resourceID)
 		if err != nil {
 			if k8serrors.IsNotFound(errors.Cause(err)) {
 				results = append(results, ResourceResult{
-					Resource: resource,
+					ResourceIdentifier: resourceID,
 					Result: &status.Result{
 						Status:  status.CurrentStatus,
 						Message: "Resource does not exist",
@@ -87,17 +126,17 @@ func (r *Resolver) FetchAndResolve(ctx context.Context, resources []ResourceIden
 						Status:  status.UnknownStatus,
 						Message: fmt.Sprintf("Error fetching resource from cluster: %v", err),
 					},
-					Resource: resource,
-					Error:    err,
+					ResourceIdentifier: resourceID,
+					Error:              err,
 				})
 			}
 			continue
 		}
 		res, err := r.statusComputeFunc(u)
 		results = append(results, ResourceResult{
-			Result:   res,
-			Resource: resource,
-			Error:    err,
+			Result:             res,
+			ResourceIdentifier: resourceID,
+			Error:              err,
 		})
 	}
 
@@ -139,7 +178,7 @@ const (
 type EventResource struct {
 	// Identifier contains information that identifies which resource
 	// this information is about.
-	Identifier ResourceIdentifier
+	ResourceIdentifier ResourceIdentifier
 
 	// Status is the latest status for the given resource.
 	Status status.Status
@@ -153,9 +192,18 @@ type EventResource struct {
 	Error error
 }
 
-// WaitForStatus polls all the provided resources until all of them has
-// reached the Current status. Updates the channel as resources change their status and
-// when the wait is either completed or aborted.
+// WaitForStatus polls all the provided resources until all of them have reached the Current
+// status or the timeout specified through the context is reached. Updates on the status
+// of individual resources and the aggregate status is provided through the Event channel.
+func (r *Resolver) WaitForStatusOfObjects(ctx context.Context, objects []KubernetesObject) <-chan Event {
+	resourceIds := resourceIdentifiersFromObjects(objects)
+	return r.WaitForStatus(ctx, resourceIds)
+}
+
+// WaitForStatus polls all the resources references by the provided ResourceIdentifiers until
+// all of them have reached the Current status or the timeout specified through the context is
+// reached. Updates on the status of individual resources and the aggregate status is provided
+// through the Event channel.
 func (r *Resolver) WaitForStatus(ctx context.Context, resources []ResourceIdentifier) <-chan Event {
 	eventChan := make(chan Event)
 
@@ -225,12 +273,11 @@ func (r *Resolver) WaitForStatus(ctx context.Context, resources []ResourceIdenti
 // Completed type event. If the aggregate status has become Current, this function
 // will return true to signal that it is done.
 func (r *Resolver) checkAllResources(ctx context.Context, waitState *waitState, eventChan chan Event) bool {
-	for id := range waitState.ResourceWaitStates {
+	for resourceID := range waitState.ResourceWaitStates {
 		// Make sure we have a local copy since we are passing
 		// pointers to this variable as parameters to functions
-		identifier := id
-		u, err := r.fetchResource(ctx, &identifier)
-		eventResource, updateObserved := waitState.ResourceObserved(&identifier, u, err)
+		u, err := r.fetchResource(ctx, resourceID)
+		eventResource, updateObserved := waitState.ResourceObserved(resourceID, u, err)
 		// Find the aggregate status based on the new state for this resource.
 		aggStatus := waitState.AggregateStatus()
 		// We want events for changes in status for each resource, so send
@@ -259,15 +306,25 @@ func (r *Resolver) checkAllResources(ctx context.Context, waitState *waitState, 
 // through the client available in the Resolver. It returns the resource
 // as an Unstructured.
 func (r *Resolver) fetchResource(ctx context.Context, identifier ResourceIdentifier) (*unstructured.Unstructured, error) {
-	key := types.NamespacedName{Name: identifier.GetName(), Namespace: identifier.GetNamespace()}
-	u := &unstructured.Unstructured{
-		Object: map[string]interface{}{
-			"apiVersion": identifier.GetAPIVersion(),
-			"kind":       identifier.GetKind(),
-		},
+	// We need to look up the preferred version for the GroupKind and
+	// whether the resource type is cluster scoped. We look this
+	// up with the RESTMapper.
+	mapping, err := r.mapper.RESTMapping(identifier.GroupKind)
+	if err != nil {
+		return nil, err
 	}
-	err := r.client.Get(ctx, key, u)
-	//return u, err
+
+	// Resources might not have the namespace set, which means we need to set
+	// it to `default` if the resource is namespace scoped.
+	namespace := identifier.Namespace
+	if namespace == "" && mapping.Scope.Name() == meta.RESTScopeNameNamespace {
+		namespace = defaultNamespace
+	}
+
+	key := types.NamespacedName{Name: identifier.Name, Namespace: namespace}
+	u := &unstructured.Unstructured{}
+	u.SetGroupVersionKind(mapping.GroupVersionKind)
+	err = r.client.Get(ctx, key, u)
 	if err != nil {
 		return nil, errors.Wrap(err, "error fetching resource from cluster")
 	}

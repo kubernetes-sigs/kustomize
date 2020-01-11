@@ -18,7 +18,7 @@ import (
 // GetFetchRunner returns a command FetchRunner.
 func GetFetchRunner() *FetchRunner {
 	r := &FetchRunner{
-		createClientFunc: createClient,
+		newResolverFunc: newResolver,
 	}
 	c := &cobra.Command{
 		Use:     "fetch DIR...",
@@ -44,19 +44,16 @@ type FetchRunner struct {
 	IncludeSubpackages bool
 	Command            *cobra.Command
 
-	createClientFunc createClientFunc
+	newResolverFunc newResolverFunc
 }
 
 func (r *FetchRunner) runE(c *cobra.Command, args []string) error {
 	ctx := context.Background()
 
-	// Create a new client and use it to set up a resolver.
-	k8sClient, err := r.createClientFunc()
+	resolver, err := r.newResolverFunc(time.Minute)
 	if err != nil {
-		return errors.Wrap(err, "error creating k8sClient")
+		return errors.Wrap(err, "error creating resolver")
 	}
-
-	resolver := wait.NewResolver(k8sClient, time.Minute)
 
 	// Set up a CaptureIdentifierFilter and run all inputs through the
 	// filter with the pipeline to capture the inventory of resources
@@ -108,7 +105,7 @@ func (f FetchStatusInfo) CurrentStatus() StatusData {
 	var resourceData []ResourceStatusData
 	for _, res := range f.Results {
 		rsd := ResourceStatusData{
-			Identifier: res.Resource,
+			Identifier: res.ResourceIdentifier,
 		}
 		if res.Error != nil {
 			rsd.Status = status.UnknownStatus

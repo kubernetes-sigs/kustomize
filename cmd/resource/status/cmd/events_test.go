@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/kustomize/kstatus/status"
 	"sigs.k8s.io/kustomize/kstatus/wait"
 )
@@ -20,7 +22,7 @@ func TestEventsNoResources(t *testing.T) {
 	fakeClient := &FakeClient{}
 
 	r := GetEventsRunner()
-	r.createClientFunc = newClientFunc(fakeClient)
+	r.newResolverFunc = fakeResolver(fakeClient)
 	r.Command.SetArgs([]string{})
 	r.Command.SetIn(inBuffer)
 	r.Command.SetOut(outBuffer)
@@ -64,7 +66,7 @@ metadata:
 	}
 
 	r := GetEventsRunner()
-	r.createClientFunc = newClientFunc(fakeClient)
+	r.newResolverFunc = fakeResolver(fakeClient, appsv1.SchemeGroupVersion.WithKind("Deployment"))
 	r.Command.SetArgs([]string{})
 	r.Command.SetIn(inBuffer)
 	r.Command.SetOut(outBuffer)
@@ -141,7 +143,8 @@ items:
 	}
 
 	r := GetEventsRunner()
-	r.createClientFunc = newClientFunc(fakeClient)
+	r.newResolverFunc = fakeResolver(fakeClient, corev1.SchemeGroupVersion.WithKind("Pod"),
+		corev1.SchemeGroupVersion.WithKind("Service"))
 	r.Command.SetArgs([]string{})
 	r.Command.SetIn(inBuffer)
 	r.Command.SetOut(outBuffer)
