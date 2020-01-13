@@ -44,7 +44,7 @@ What transformations (customizations) should be applied?
 | Field  | Type  | Explanation |
 |---|---|---|
 | [commonLabels](#commonlabels) | string | Adds labels and some corresponding label selectors to all resources. |
-| [commonAnnotations](#commonannotations) | string | Adds annotions (non-identifying metadata) to add all resources. |
+| [commonAnnotations](#commonannotations) | string | Adds annotations (non-identifying metadata) to add all resources. |
 | [images](#images) | list | Images modify the name, tags and/or digest for images without creating patches. |
 | [inventory](#inventory) | struct | Specify an object who's annotations will contain a build result summary. |
 | [namespace](#namespace)   | string | Adds namespace to all resources |
