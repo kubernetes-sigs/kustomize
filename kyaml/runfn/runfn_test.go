@@ -43,6 +43,20 @@ kind:
 	assert.Equal(t, &filters.ContainerFilter{Image: "example.com:version", Config: api}, filter)
 }
 
+func TestRunFns_Execute_globalScope(t *testing.T) {
+	instance := RunFns{GlobalScope: true}
+	instance.init()
+	api, err := yaml.Parse(`apiVersion: apps/v1
+kind: 
+`)
+	if !assert.NoError(t, err) {
+		return
+	}
+	filter := instance.containerFilterProvider("example.com:version", "", api)
+	assert.Equal(t, &filters.ContainerFilter{
+		Image: "example.com:version", Config: api, GlobalScope: true}, filter)
+}
+
 func TestCmd_Execute(t *testing.T) {
 	dir, err := ioutil.TempDir("", "kustomize-kyaml-test")
 	if !assert.NoError(t, err) {
