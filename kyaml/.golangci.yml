@@ -22,7 +22,7 @@ linters:
     - gofmt
     - goimports
     - golint
-    - gosec
+#    - gosec
     - gosimple
     - govet
     - ineffassign

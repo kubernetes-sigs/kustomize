@@ -152,6 +152,10 @@ type ContainerFilter struct {
 	checkInput func(string)
 }
 
+func (c ContainerFilter) String() string {
+	return c.Image
+}
+
 // StorageMount represents a container's mounted storage option(s)
 type StorageMount struct {
 	// Type of mount e.g. bind mount, local volume, etc.
