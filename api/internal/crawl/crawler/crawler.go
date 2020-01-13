@@ -29,7 +29,7 @@ type Crawler interface {
 	// Crawl returns when it is done processing. This method does not take
 	// ownership of the channel. The channel is write only, and it
 	// designates where the crawler should forward the documents.
-	Crawl(ctx context.Context, output chan<- CrawledDocument) error
+	Crawl(ctx context.Context, output chan<- CrawledDocument, seen map[string]struct{}) error
 
 	// Get the document data given the FilePath, Repo, and Ref/Tag/Branch.
 	FetchDocument(context.Context, *doc.Document) error
@@ -231,7 +231,7 @@ func CrawlFromSeed(ctx context.Context, seed CrawlSeed, crawlers []Crawler,
 // from the seed will be processed before any other documents from the
 // crawlers.
 func CrawlGithubRunner(ctx context.Context, output chan<- CrawledDocument,
-	crawlers []Crawler) []error {
+	crawlers []Crawler, seen map[string]struct{}) []error {
 
 	errs := make([]error, len(crawlers))
 	wg := sync.WaitGroup{}
@@ -265,7 +265,7 @@ func CrawlGithubRunner(ctx context.Context, output chan<- CrawledDocument,
 				}
 			}()
 			defer close(docs)
-			errs[idx] = crawler.Crawl(ctx, docs)
+			errs[idx] = crawler.Crawl(ctx, docs, seen)
 		}(i, crawler, docs) // Copies the index and the crawler
 	}
 
@@ -306,7 +306,7 @@ func CrawlGithub(ctx context.Context, crawlers []Crawler, conv Converter,
 	}()
 
 	logger.Println("processing the documents found from crawling github")
-	if errs := CrawlGithubRunner(ctx, ch, crawlers); errs != nil {
+	if errs := CrawlGithubRunner(ctx, ch, crawlers, seen); errs != nil {
 		for _, err := range errs {
 			logIfErr(err)
 		}
