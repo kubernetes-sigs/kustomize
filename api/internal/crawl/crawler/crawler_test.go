@@ -75,7 +75,7 @@ func newCrawler(matchPrefix string, err error,
 
 // Crawl implements the Crawler interface for testing.
 func (c testCrawler) Crawl(_ context.Context,
-	output chan<- CrawledDocument) error {
+	output chan<- CrawledDocument, _ map[string]struct{}) error {
 
 	for i, d := range c.docs {
 		isResource := true
@@ -181,8 +181,9 @@ func TestCrawlGithubRunner(t *testing.T) {
 			defer close(output)
 			defer wg.Done()
 
+			seen := map[string]struct{}{}
 			errs := CrawlGithubRunner(context.Background(),
-				output, test.tc)
+				output, test.tc, seen)
 
 			// Check that errors are returned as they should be.
 			if !reflect.DeepEqual(errs, test.errs) {
