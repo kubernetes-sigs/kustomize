@@ -27,6 +27,8 @@ func GetRunFnRunner(name string) *RunFnRunner {
 	r.Command = c
 	r.Command.Flags().BoolVar(
 		&r.DryRun, "dry-run", false, "print results to stdout")
+	r.Command.Flags().BoolVar(
+		&r.GlobalScope, "global-scope", false, "set global scope for functions.")
 	r.Command.Flags().StringSliceVar(
 		&r.FnPaths, "fn-path", []string{},
 		"directories containing functions without configuration")
@@ -44,11 +46,12 @@ type RunFnRunner struct {
 	IncludeSubpackages bool
 	Command            *cobra.Command
 	DryRun             bool
+	GlobalScope        bool
 	FnPaths            []string
 }
 
 func (r *RunFnRunner) runE(c *cobra.Command, args []string) error {
-	rec := runfn.RunFns{Path: args[0], FunctionPaths: r.FnPaths}
+	rec := runfn.RunFns{Path: args[0], FunctionPaths: r.FnPaths, GlobalScope: r.GlobalScope}
 	if r.DryRun {
 		rec.Output = c.OutOrStdout()
 	}

@@ -87,7 +87,7 @@ func (idx *index) responseErrorOrNil(info string, res *esapi.Response,
 
 	defer res.Body.Close()
 	if res.IsError() {
-		return fmt.Errorf("%s: %s", messageStart, res.String())
+		return fmt.Errorf("%s: %s [%d]", messageStart, res.String(), res.StatusCode)
 	}
 
 	if reader != nil {

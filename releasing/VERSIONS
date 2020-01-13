@@ -21,7 +21,7 @@ export api_patch=2
 # cmd/config version
 export cmd_config_major=0
 export cmd_config_minor=0
-export cmd_config_patch=6
+export cmd_config_patch=7
 
 # cmd/kubectl version
 export cmd_kubectl_major=0
@@ -31,12 +31,12 @@ export cmd_kubectl_patch=3
 # cmd/resource version
 export cmd_resource_major=0
 export cmd_resource_minor=0
-export cmd_resource_patch=1
+export cmd_resource_patch=2
 
 # kustomize version
 export kustomize_major=3
 export kustomize_minor=5
-export kustomize_patch=3
+export kustomize_patch=4
 
 export pluginator_major=2
 export pluginator_minor=1

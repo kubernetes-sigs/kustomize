@@ -587,6 +587,96 @@ metadata:
 `, b.String())
 }
 
+func TestFilter_Filter_globalScope(t *testing.T) {
+	cfg, err := yaml.Parse(`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  annotations:
+    config.kubernetes.io/path: 'foo/bar.yaml'
+`)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	input, err := (&kio.ByteReader{Reader: bytes.NewBufferString(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-foo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-foo
+`)}).Read()
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// no resources match the scope
+	called := false
+	result, err := (&ContainerFilter{
+		GlobalScope: true,
+		Image:       "example.com:version",
+		Config:      cfg,
+		args:        []string{"sed", "s/Deployment/StatefulSet/g"},
+		checkInput: func(s string) {
+			called = true
+			if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-foo
+    annotations:
+      config.kubernetes.io/index: '0'
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: service-foo
+    annotations:
+      config.kubernetes.io/index: '1'
+functionConfig: {apiVersion: apps/v1, kind: Deployment, metadata: {name: foo, annotations: {
+      config.kubernetes.io/path: 'foo/bar.yaml'}}}
+`, s) {
+				t.FailNow()
+			}
+		},
+	}).Filter(input)
+	if !assert.NoError(t, err) {
+		return
+	}
+	if !assert.True(t, called) {
+		return
+	}
+
+	b := &bytes.Buffer{}
+	err = kio.ByteWriter{Writer: b, KeepReaderAnnotations: true}.Write(result)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// Resources should be preserved -- paths shouldn't be set by container
+	assert.Equal(t, `apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: deployment-foo
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'foo/statefulset_deployment-foo.yaml'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-foo
+  annotations:
+    config.kubernetes.io/index: '1'
+    config.kubernetes.io/path: 'foo/service_service-foo.yaml'
+`, b.String())
+}
+
 func TestFilter_Filter_scopeFunctionsDir(t *testing.T) {
 	// functions under "functions/" dir should be scoped to parent dir
 	cfg, err := yaml.Parse(`apiVersion: apps/v1

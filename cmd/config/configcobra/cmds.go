@@ -43,6 +43,26 @@ Advanced Documentation Topics:
 `,
 }
 
+// Export commands publicly for composition
+var (
+	Cat          = commands.CatCommand
+	Count        = commands.CountCommand
+	CreateSetter = commands.CreateSetterCommand
+	Fmt          = commands.FmtCommand
+	Grep         = commands.GrepCommand
+	ListSetters  = commands.ListSettersCommand
+	Merge        = commands.MergeCommand
+	Merge3       = commands.Merge3Command
+	RunFn        = commands.RunFnCommand
+	Set          = commands.SetCommand
+	Sink         = commands.SinkCommand
+	Source       = commands.SourceCommand
+	Tree         = commands.TreeCommand
+
+	StackOnError = &commands.StackOnError
+	ExitOnError  = &commands.ExitOnError
+)
+
 // NewConfigCommand returns a new *cobra.Command for the config command group.  This may
 // be embedded into other go binaries as a way of packaging the "config" command as part
 // of another binary.
