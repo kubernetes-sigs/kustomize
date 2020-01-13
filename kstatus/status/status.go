@@ -28,7 +28,7 @@ const (
 )
 
 var (
-	Statuses = []Status{InProgressStatus, FailedStatus, CurrentStatus, TerminatingStatus, UnknownStatus}
+	Statuses       = []Status{InProgressStatus, FailedStatus, CurrentStatus, TerminatingStatus, UnknownStatus}
 	ConditionTypes = []ConditionType{ConditionFailed, ConditionInProgress}
 )
 
