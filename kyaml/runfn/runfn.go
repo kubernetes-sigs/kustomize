@@ -25,6 +25,8 @@ type RunFns struct {
 	// directory
 	FunctionPaths []string
 
+	GlobalScope bool
+
 	// Output can be set to write the result to Output rather than back to the directory
 	Output io.Writer
 
@@ -91,7 +93,12 @@ func (r *RunFns) init() {
 	// if containerFilterProvider hasn't been set, use the default
 	if r.containerFilterProvider == nil {
 		r.containerFilterProvider = func(image, path string, api *yaml.RNode) kio.Filter {
-			cf := &filters.ContainerFilter{Image: image, Config: api, StorageMounts: r.StorageMounts}
+			cf := &filters.ContainerFilter{
+				Image:         image,
+				Config:        api,
+				StorageMounts: r.StorageMounts,
+				GlobalScope:   r.GlobalScope,
+			}
 			return cf
 		}
 	}
