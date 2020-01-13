@@ -102,14 +102,16 @@ func (gc githubCrawler) Crawl(ctx context.Context,
 		queryResult.errorCnt += result.errorCnt
 	}
 
-	if len(errs) > 0 {
-		return errs
-	}
 	logger.Printf("Summary of Crawl: got %d files from Github. "+
 		"%d have been seen before. %d are new and sent to the output channel." +
 		"%d have kustomizationResultAdapter errors.",
 		queryResult.totalDocCnt, queryResult.seenDocCnt,
 		queryResult.newDocCnt, queryResult.errorCnt)
+
+	if len(errs) > 0 {
+		return errs
+	}
+
 	return nil
 }
 

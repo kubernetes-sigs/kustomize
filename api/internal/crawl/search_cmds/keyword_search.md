@@ -64,3 +64,19 @@ curl -X GET "${ElasticSearchURL}:9200/kustomize/_search?pretty" -H 'Content-Type
 }
 '
 ```
+
+Search all the documents whose filePath does not end with any of these following
+three filenames: `kustomization.yaml`, `kustomization.yml`, `kustomization`:
+```
+curl -X GET "${ElasticSearchURL}:9200/kustomize/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "bool": {
+      "must_not": [
+       { "regexp": { "filePath": ".*/kustomization((.yaml)?|(.yml)?)/*" }}
+      ]
+    }
+  }
+}
+'
+```
