@@ -6,6 +6,9 @@ package kubectlcobra
 
 import (
 	"fmt"
+	"hash/fnv"
+	"sort"
+	"strconv"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -13,7 +16,10 @@ import (
 	"k8s.io/cli-runtime/pkg/resource"
 )
 
-const GroupingLabel = "kustomize.k8s.io/group-id"
+const (
+	GroupingLabel = "kustomize.config.k8s.io/inventory-id"
+	GroupingHash  = "kustomize.config.k8s.io/inventory-hash"
+)
 
 // isGroupingObject returns true if the passed object has the
 // grouping label.
@@ -102,11 +108,30 @@ func addInventoryToGroupingObj(infos []*resource.Info) error {
 	if groupingObj == nil {
 		return fmt.Errorf("Grouping object not found")
 	}
-	err := unstructured.SetNestedStringMap(groupingObj.UnstructuredContent(), inventoryMap, "data")
-	if err != nil {
-		return err
-	}
 
+	if len(inventoryMap) > 0 {
+		// Adds the inventory map to the ConfigMap "data" section.
+		err := unstructured.SetNestedStringMap(groupingObj.UnstructuredContent(),
+			inventoryMap, "data")
+		if err != nil {
+			return err
+		}
+		// Adds the hash of the inventory strings as an annotation to the
+		// grouping object. Inventory strings must be sorted to make hash
+		// deterministic.
+		inventoryList := mapKeysToSlice(inventoryMap)
+		sort.Strings(inventoryList)
+		invHash, err := calcInventoryHash(inventoryList)
+		if err != nil {
+			return err
+		}
+		annotations := groupingObj.GetAnnotations()
+		if annotations == nil {
+			annotations = map[string]string{}
+		}
+		annotations[GroupingHash] = strconv.FormatUint(uint64(invHash), 16)
+		groupingObj.SetAnnotations(annotations)
+	}
 	return nil
 }
 
@@ -142,4 +167,47 @@ func retrieveInventoryFromGroupingObj(infos []*resource.Info) ([]*Inventory, err
 		}
 	}
 	return inventory, nil
+}
+
+// calcInventoryHash returns an unsigned int32 representing the hash
+// of the inventory strings. If there is an error writing bytes to
+// the hash, then the error is returned; nil is returned otherwise.
+// Used to quickly identify the set of resources in the grouping object.
+func calcInventoryHash(inv []string) (uint32, error) {
+	h := fnv.New32a()
+	for _, is := range inv {
+		_, err := h.Write([]byte(is))
+		if err != nil {
+			return uint32(0), err
+		}
+	}
+	return h.Sum32(), nil
+}
+
+// retrieveInventoryHash takes a grouping object (encapsulated by
+// a resource.Info), and returns the string representing the hash
+// of the grouping inventory; returns empty string if the grouping
+// object is not in Unstructured format, or if the hash annotation
+// does not exist.
+func retrieveInventoryHash(groupingInfo *resource.Info) string {
+	var invHash = ""
+	groupingObj, ok := groupingInfo.Object.(*unstructured.Unstructured)
+	if ok {
+		annotations := groupingObj.GetAnnotations()
+		if annotations != nil {
+			invHash = annotations[GroupingHash]
+		}
+	}
+	return invHash
+}
+
+// mapKeysToSlice returns the map keys as a slice of strings.
+func mapKeysToSlice(m map[string]string) []string {
+	s := make([]string, len(m))
+	i := 0
+	for k := range m {
+		s[i] = k
+		i++
+	}
+	return s
 }
