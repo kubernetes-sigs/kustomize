@@ -30,6 +30,8 @@ var logger = log.New(os.Stdout, "Github Crawler: ",
 type githubCrawler struct {
 	client GhClient
 	query  Query
+	// branchMap maps github repositories to their default branches
+	branchMap map[string]string
 }
 
 type GhClient struct {
@@ -51,13 +53,22 @@ func NewCrawler(accessToken string, retryCount uint64, client *http.Client,
 			},
 			accessToken: accessToken,
 		},
-		query: query,
+		query:     query,
+		branchMap: map[string]string{},
 	}
 }
 
+func (gc githubCrawler) SetDefaultBranch(repo, branch string) {
+	gc.branchMap[repo] = branch
+}
+
+func (gc githubCrawler) DefaultBranch(repo string) string {
+	return gc.branchMap[repo]
+}
+
 // Implements crawler.Crawler.
-func (gc githubCrawler) Crawl(
-	ctx context.Context, output chan<- crawler.CrawledDocument) error {
+func (gc githubCrawler) Crawl(ctx context.Context,
+	output chan<- crawler.CrawledDocument, seen crawler.SeenMap) error {
 
 	noETagClient := GhClient{
 		RequestConfig: gc.client.RequestConfig,
@@ -79,12 +90,16 @@ func (gc githubCrawler) Crawl(
 
 	// Query each range for files.
 	errs := make(multiError, 0)
+	queryResult := RangeQueryResult{}
 	for _, query := range ranges {
-		err := processQuery(ctx, gc.client, query, output)
+		rangeResult, err := processQuery(ctx, gc.client, query, output, seen, gc.branchMap)
 		if err != nil {
 			errs = append(errs, err)
 		}
+		queryResult.Add(rangeResult)
 	}
+
+	logger.Printf("Summary of Crawl: %s", queryResult.String())
 
 	if len(errs) > 0 {
 		return errs
@@ -100,7 +115,7 @@ func (gc githubCrawler) FetchDocument(_ context.Context, d *doc.Document) error 
 	// set the default branch if it is empty
 	if d.DefaultBranch == "" {
 		url := gc.client.ReposRequest(d.RepositoryFullName())
-		defaultBranch, err := gc.client.GetDefaultBranch(url)
+		defaultBranch, err := gc.client.GetDefaultBranch(url, d.RepositoryURL, gc.branchMap)
 		if err != nil {
 			logger.Printf(
 				"(error: %v) setting default_branch to master\n", err)
@@ -108,6 +123,8 @@ func (gc githubCrawler) FetchDocument(_ context.Context, d *doc.Document) error 
 		}
 		d.DefaultBranch = defaultBranch
 	}
+	gc.SetDefaultBranch(d.RepositoryURL, d.DefaultBranch)
+
 	repoURL := d.RepositoryURL + "/" + d.FilePath + "?ref=" + d.DefaultBranch
 	repoSpec, err := git.NewRepoSpecFromUrl(repoURL)
 	if err != nil {
@@ -176,10 +193,32 @@ func (gc githubCrawler) Match(d *doc.Document) bool {
 	return strings.Contains(repoSpec.Host, "github.com")
 }
 
+type RangeQueryResult struct {
+	totalDocCnt uint64
+	seenDocCnt   uint64
+	newDocCnt uint64
+	errorCnt  uint64
+}
+
+func (r *RangeQueryResult) Add(other RangeQueryResult) {
+	r.totalDocCnt += other.totalDocCnt
+	r.newDocCnt += other.newDocCnt
+	r.seenDocCnt += other.seenDocCnt
+	r.errorCnt += other.errorCnt
+}
+
+func (r *RangeQueryResult) String() string {
+	return fmt.Sprintf("got %d files from API. "+
+		"%d have been seen before. %d are new and sent to the output channel." +
+		" %d have kustomizationResultAdapter errors.",
+		r.totalDocCnt, r.seenDocCnt, r.newDocCnt, r.errorCnt)
+}
+
 // processQuery follows all of the pages in a query, and updates/adds the
 // documents from the crawl to the datastore/index.
 func processQuery(ctx context.Context, gcl GhClient, query string,
-	output chan<- crawler.CrawledDocument) error {
+	output chan<- crawler.CrawledDocument, seen crawler.SeenMap,
+	branchMap map[string]string) (RangeQueryResult, error) {
 
 	queryPages := make(chan GhResponseInfo)
 
@@ -196,48 +235,65 @@ func processQuery(ctx context.Context, gcl GhClient, query string,
 	}()
 
 	errs := make(multiError, 0)
-	errorCnt := 0
-	totalCnt := 0
+	result := RangeQueryResult{}
+	pageID := 1
 	for page := range queryPages {
 		if page.Error != nil {
 			errs = append(errs, page.Error)
 			continue
 		}
-
+		pageResult := RangeQueryResult{}
 		for _, file := range page.Parsed.Items {
-			k, err := kustomizationResultAdapter(gcl, file)
+			k, err := kustomizationResultAdapter(gcl, file, seen, branchMap)
 			if err != nil {
 				logger.Printf("kustomizationResultAdapter failed: %v", err)
 				errs = append(errs, err)
-				errorCnt++
+				pageResult.errorCnt++
 			}
 			if k != nil {
+				pageResult.newDocCnt++
 				output <- k
+			} else {
+				pageResult.seenDocCnt++
 			}
-			totalCnt++
+			pageResult.totalDocCnt++
 		}
 
-		logger.Printf("got %d files out of %d from API. %d of %d had errors\n",
-			totalCnt, page.Parsed.TotalCount, errorCnt, totalCnt)
+		logger.Printf("processQuery [TotalCount %d - page %d]: %s",
+			page.Parsed.TotalCount, pageID, pageResult.String())
+		result.Add(pageResult)
+
+		pageID++
 	}
 
-	return errs
+	logger.Printf("Summary of processQuery: %s", result.String())
+
+	return result, errs
 }
 
-func kustomizationResultAdapter(gcl GhClient, k GhFileSpec) (
-	crawler.CrawledDocument, error) {
-
-	data, err := gcl.GetFileData(k)
-	if err != nil {
-		return nil, err
-	}
-
+func kustomizationResultAdapter(gcl GhClient, k GhFileSpec, seen crawler.SeenMap,
+	branchMap map[string]string) (crawler.CrawledDocument, error) {
 	url := gcl.ReposRequest(k.Repository.FullName)
-	defaultBranch, err := gcl.GetDefaultBranch(url)
+	defaultBranch, err := gcl.GetDefaultBranch(url, k.Repository.URL, branchMap)
 	if err != nil {
 		logger.Printf(
 			"(error: %v) setting default_branch to master\n", err)
 		defaultBranch = "master"
+	}
+
+	document := doc.Document{
+		FilePath:      k.Path,
+		DefaultBranch: defaultBranch,
+		RepositoryURL: k.Repository.URL,
+	}
+
+	if seen.Seen(document.ID()) {
+		return nil, nil
+	}
+
+	data, err := gcl.GetFileData(k)
+	if err != nil {
+		return nil, err
 	}
 
 	d := doc.KustomizationDocument{
@@ -344,7 +400,15 @@ func CloseResponseBody(resp *http.Response) {
 	}
 }
 
-func (gcl GhClient) GetDefaultBranch(url string) (string, error) {
+// GetDefaultBranch gets the default branch of a github repository.
+// m is a map which maps a github repository to its default branch.
+// If repo is already in m, the default branch for url will be obtained from m;
+// otherwise, a query will be made to github to obtain the default branch.
+func (gcl GhClient) GetDefaultBranch(url, repo string, m map[string]string) (string, error) {
+	if v, ok := m[repo]; ok {
+		return v, nil
+	}
+
 	resp, err := gcl.GetReposData(url)
 	if err != nil {
 		return "", fmt.Errorf(
@@ -589,7 +653,7 @@ func (gcl GhClient) Do(query string) (*http.Response, error) {
 
 	// gcl.client.Do: a non-2xx status code doesn't cause an error.
 	// See https://golang.org/pkg/net/http/#Client.Do for more info.
-	resp, err :=  gcl.client.Do(req)
+	resp, err := gcl.client.Do(req)
 	if resp != nil && resp.StatusCode != http.StatusOK {
 		err = fmt.Errorf("GhClient.Do(%s) failed with response code: %d",
 			query, resp.StatusCode)
