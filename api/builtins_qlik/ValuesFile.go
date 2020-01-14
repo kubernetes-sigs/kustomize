@@ -107,7 +107,7 @@ func (p *ValuesFilePlugin) Transform(m resmap.ResMap) error {
 	}
 
 	filePath := filepath.Join(p.Root, p.ValuesFile)
-	fileData, err := ioutil.ReadFile(filePath)
+	fileData, err := p.ldr.Load(filePath)
 	if err != nil {
 		p.logger.Printf("error reading values.tml.yaml file: %v, error: %v\n", filePath, err)
 		return errors.New("Error: values.tml.yaml is not found")
