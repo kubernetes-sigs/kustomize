@@ -5,6 +5,7 @@
 package kubectlcobra
 
 import (
+	"fmt"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
@@ -33,12 +34,6 @@ var groupingObj = unstructured.Unstructured{
 			},
 		},
 	},
-}
-
-var groupingInfo = &resource.Info{
-	Namespace: testNamespace,
-	Name:      groupingObjName,
-	Object:    &groupingObj,
 }
 
 var pod1 = unstructured.Unstructured{
@@ -161,7 +156,7 @@ func TestFindGroupingObject(t *testing.T) {
 			name:   "",
 		},
 		{
-			infos:  []*resource.Info{groupingInfo},
+			infos:  []*resource.Info{copyGroupingInfo()},
 			exists: true,
 			name:   groupingObjName,
 		},
@@ -176,7 +171,7 @@ func TestFindGroupingObject(t *testing.T) {
 			name:   "",
 		},
 		{
-			infos:  []*resource.Info{pod1Info, pod2Info, groupingInfo, pod3Info},
+			infos:  []*resource.Info{pod1Info, pod2Info, copyGroupingInfo(), pod3Info},
 			exists: true,
 			name:   groupingObjName,
 		},
@@ -206,7 +201,7 @@ func TestSortGroupingObject(t *testing.T) {
 			sorted: false,
 		},
 		{
-			infos:  []*resource.Info{groupingInfo},
+			infos:  []*resource.Info{copyGroupingInfo()},
 			sorted: true,
 		},
 		{
@@ -218,23 +213,23 @@ func TestSortGroupingObject(t *testing.T) {
 			sorted: false,
 		},
 		{
-			infos:  []*resource.Info{groupingInfo, pod1Info},
+			infos:  []*resource.Info{copyGroupingInfo(), pod1Info},
 			sorted: true,
 		},
 		{
-			infos:  []*resource.Info{pod1Info, groupingInfo},
+			infos:  []*resource.Info{pod1Info, copyGroupingInfo()},
 			sorted: true,
 		},
 		{
-			infos:  []*resource.Info{pod1Info, pod2Info, groupingInfo, pod3Info},
+			infos:  []*resource.Info{pod1Info, pod2Info, copyGroupingInfo(), pod3Info},
 			sorted: true,
 		},
 		{
-			infos:  []*resource.Info{pod1Info, pod2Info, pod3Info, groupingInfo},
+			infos:  []*resource.Info{pod1Info, pod2Info, pod3Info, copyGroupingInfo()},
 			sorted: true,
 		},
 		{
-			infos:  []*resource.Info{groupingInfo, pod1Info, pod2Info, pod3Info},
+			infos:  []*resource.Info{copyGroupingInfo(), pod1Info, pod2Info, pod3Info},
 			sorted: true,
 		},
 	}
@@ -274,7 +269,7 @@ func TestAddRetrieveInventoryToFromGroupingObject(t *testing.T) {
 		},
 		// Grouping object without other objects is OK.
 		{
-			infos:   []*resource.Info{groupingInfo, nilInfo},
+			infos:   []*resource.Info{copyGroupingInfo(), nilInfo},
 			isError: true,
 		},
 		{
@@ -282,25 +277,25 @@ func TestAddRetrieveInventoryToFromGroupingObject(t *testing.T) {
 			isError: true,
 		},
 		{
-			infos:    []*resource.Info{groupingInfo},
+			infos:    []*resource.Info{copyGroupingInfo()},
 			expected: []*Inventory{},
 			isError:  false,
 		},
 		// More than one grouping object is an error.
 		{
-			infos:    []*resource.Info{groupingInfo, groupingInfo},
+			infos:    []*resource.Info{copyGroupingInfo(), copyGroupingInfo()},
 			expected: []*Inventory{},
 			isError:  true,
 		},
 		// More than one grouping object is an error.
 		{
-			infos:    []*resource.Info{groupingInfo, pod1Info, groupingInfo},
+			infos:    []*resource.Info{copyGroupingInfo(), pod1Info, copyGroupingInfo()},
 			expected: []*Inventory{},
 			isError:  true,
 		},
 		// Basic test case: one grouping object, one pod.
 		{
-			infos: []*resource.Info{groupingInfo, pod1Info},
+			infos: []*resource.Info{copyGroupingInfo(), pod1Info},
 			expected: []*Inventory{
 				&Inventory{
 					Namespace: testNamespace,
@@ -314,7 +309,7 @@ func TestAddRetrieveInventoryToFromGroupingObject(t *testing.T) {
 			isError: false,
 		},
 		{
-			infos: []*resource.Info{pod1Info, groupingInfo},
+			infos: []*resource.Info{pod1Info, copyGroupingInfo()},
 			expected: []*Inventory{
 				&Inventory{
 					Namespace: testNamespace,
@@ -328,37 +323,7 @@ func TestAddRetrieveInventoryToFromGroupingObject(t *testing.T) {
 			isError: false,
 		},
 		{
-			infos: []*resource.Info{pod1Info, pod2Info, groupingInfo, pod3Info},
-			expected: []*Inventory{
-				&Inventory{
-					Namespace: testNamespace,
-					Name:      pod1Name,
-					GroupKind: schema.GroupKind{
-						Group: "",
-						Kind:  "Pod",
-					},
-				},
-				&Inventory{
-					Namespace: testNamespace,
-					Name:      pod2Name,
-					GroupKind: schema.GroupKind{
-						Group: "",
-						Kind:  "Pod",
-					},
-				},
-				&Inventory{
-					Namespace: testNamespace,
-					Name:      pod3Name,
-					GroupKind: schema.GroupKind{
-						Group: "",
-						Kind:  "Pod",
-					},
-				},
-			},
-			isError: false,
-		},
-		{
-			infos: []*resource.Info{pod1Info, pod2Info, pod3Info, groupingInfo},
+			infos: []*resource.Info{pod1Info, pod2Info, copyGroupingInfo(), pod3Info},
 			expected: []*Inventory{
 				&Inventory{
 					Namespace: testNamespace,
@@ -388,7 +353,37 @@ func TestAddRetrieveInventoryToFromGroupingObject(t *testing.T) {
 			isError: false,
 		},
 		{
-			infos: []*resource.Info{groupingInfo, pod1Info, pod2Info, pod3Info},
+			infos: []*resource.Info{pod1Info, pod2Info, pod3Info, copyGroupingInfo()},
+			expected: []*Inventory{
+				&Inventory{
+					Namespace: testNamespace,
+					Name:      pod1Name,
+					GroupKind: schema.GroupKind{
+						Group: "",
+						Kind:  "Pod",
+					},
+				},
+				&Inventory{
+					Namespace: testNamespace,
+					Name:      pod2Name,
+					GroupKind: schema.GroupKind{
+						Group: "",
+						Kind:  "Pod",
+					},
+				},
+				&Inventory{
+					Namespace: testNamespace,
+					Name:      pod3Name,
+					GroupKind: schema.GroupKind{
+						Group: "",
+						Kind:  "Pod",
+					},
+				},
+			},
+			isError: false,
+		},
+		{
+			infos: []*resource.Info{copyGroupingInfo(), pod1Info, pod2Info, pod3Info},
 			expected: []*Inventory{
 				&Inventory{
 					Namespace: testNamespace,
@@ -426,37 +421,117 @@ func TestAddRetrieveInventoryToFromGroupingObject(t *testing.T) {
 		}
 		if !test.isError {
 			if err != nil {
-				t.Errorf("Received error when expecting none (%s)\n", err)
-			} else {
-				retrieved, err := retrieveInventoryFromGroupingObj(test.infos)
-				if err != nil {
-					t.Errorf("Error retrieving inventory: %s\n", err)
-				}
-				if len(test.expected) != len(retrieved) {
-					t.Errorf("Expected inventory for %d resources, actual %d",
-						len(test.expected), len(retrieved))
-				}
-				for _, expected := range test.expected {
-					found := false
-					for _, actual := range retrieved {
-						if expected.Equals(actual) {
-							found = true
-						}
-					}
-					if !found {
-						t.Errorf("Expected inventory (%s) not found", expected)
+				t.Fatalf("Received error when expecting none (%s)\n", err)
+			}
+			retrieved, err := retrieveInventoryFromGroupingObj(test.infos)
+			if err != nil {
+				t.Fatalf("Error retrieving inventory: %s\n", err)
+			}
+			if len(test.expected) != len(retrieved) {
+				t.Errorf("Expected inventory for %d resources, actual %d",
+					len(test.expected), len(retrieved))
+			}
+			for _, expected := range test.expected {
+				found := false
+				for _, actual := range retrieved {
+					if expected.Equals(actual) {
+						found = true
+						continue
 					}
 				}
-				// If the grouping object has an inventory, check the
-				// grouping object has an inventory hash.
-				groupingInfo, exists := findGroupingObject(test.infos)
-				if exists && len(test.expected) > 0 {
-					invHash := retrieveInventoryHash(groupingInfo)
-					if len(invHash) == 0 {
-						t.Errorf("Grouping object missing inventory hash")
-					}
+				if !found {
+					t.Errorf("Expected inventory (%s) not found", expected)
+				}
+			}
+			// If the grouping object has an inventory, check the
+			// grouping object has an inventory hash.
+			groupingInfo, exists := findGroupingObject(test.infos)
+			if exists && len(test.expected) > 0 {
+				invHash := retrieveInventoryHash(groupingInfo)
+				if len(invHash) == 0 {
+					t.Errorf("Grouping object missing inventory hash")
 				}
 			}
 		}
 	}
+}
+
+func TestAddSuffixToName(t *testing.T) {
+	tests := []struct {
+		info     *resource.Info
+		suffix   string
+		expected string
+		isError  bool
+	}{
+		// Nil info should return error.
+		{
+			info:     nil,
+			suffix:   "",
+			expected: "",
+			isError:  true,
+		},
+		// Empty suffix should return error.
+		{
+			info:     copyGroupingInfo(),
+			suffix:   "",
+			expected: "",
+			isError:  true,
+		},
+		// Empty suffix should return error.
+		{
+			info:     copyGroupingInfo(),
+			suffix:   " \t",
+			expected: "",
+			isError:  true,
+		},
+		{
+			info:     copyGroupingInfo(),
+			suffix:   "hashsuffix",
+			expected: groupingObjName + "-hashsuffix",
+			isError:  false,
+		},
+	}
+
+	for _, test := range tests {
+		//t.Errorf("%#v [%s]", test.info, test.suffix)
+		err := addSuffixToName(test.info, test.suffix)
+		if test.isError {
+			if err == nil {
+				t.Errorf("Should have produced an error, but returned none.")
+			}
+		}
+		if !test.isError {
+			if err != nil {
+				t.Fatalf("Received error when expecting none (%s)\n", err)
+			}
+			actualName, err := getObjectName(test.info.Object)
+			if err != nil {
+				t.Fatalf("Error getting object name: %s", err)
+			}
+			if actualName != test.info.Name {
+				t.Errorf("Object name (%s) does not match info name (%s)\n", actualName, test.info.Name)
+			}
+			if test.expected != actualName {
+				t.Errorf("Expected name (%s), got (%s)\n", test.expected, actualName)
+			}
+		}
+	}
+}
+
+func getObjectName(obj runtime.Object) (string, error) {
+	u, ok := obj.(*unstructured.Unstructured)
+	if !ok {
+		return "", fmt.Errorf("Grouping object is not Unstructured format")
+	}
+	return u.GetName(), nil
+}
+
+func copyGroupingInfo() *resource.Info {
+	groupingObjCopy := groupingObj.DeepCopy()
+	var groupingInfo = &resource.Info{
+		Namespace: testNamespace,
+		Name:      groupingObjName,
+		Object:    groupingObjCopy,
+	}
+	return groupingInfo
 }
