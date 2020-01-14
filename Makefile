@@ -17,6 +17,9 @@ verify-kustomize: \
 	test-examples-kustomize-against-HEAD \
 	test-examples-kustomize-against-latest
 
+.PHONY: verify-kustomize-e2e
+verify-kustomize-e2e: test-examples-e2e-kustomize-against-HEAD
+
 # Other builds in this repo might want a different linter version.
 # Without one Makefile to rule them all, the different makes
 # cannot assume that golanci-lint is at the version they want
@@ -47,6 +50,11 @@ $(MYGOBIN)/stringer:
 $(MYGOBIN)/goimports:
 	cd api; \
 	go install golang.org/x/tools/cmd/goimports
+
+# Install resource from whatever is checked out.
+$(MYGOBIN)/resource:
+	cd cmd/resource; \
+	go install .
 
 # To pin pluginator, use this recipe instead:
 #   cd api;
@@ -192,6 +200,10 @@ test-unit-kustomize-all: \
 .PHONY:
 test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
 	./hack/testExamplesAgainstKustomize.sh HEAD
+
+.PHONY:
+test-examples-e2e-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip $(MYGOBIN)/resource
+	./hack/testExamplesE2EAgainstKustomize.sh HEAD
 
 .PHONY:
 test-examples-kustomize-against-latest: $(MYGOBIN)/mdrip

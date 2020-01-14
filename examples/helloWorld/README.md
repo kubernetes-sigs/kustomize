@@ -22,7 +22,7 @@ Steps:
 
 First define a place to work:
 
-<!-- @makeWorkplace @testAgainstLatestRelease -->
+<!-- @makeWorkplace @testAgainstLatestRelease @testE2EAgainstLatestRelease-->
 ```
 DEMO_HOME=$(mktemp -d)
 ```
@@ -44,7 +44,7 @@ To keep this document shorter, the base resources are
 off in a supplemental data directory rather than
 declared here as HERE documents.  Download them:
 
-<!-- @downloadBase @testAgainstLatestRelease -->
+<!-- @downloadBase @testAgainstLatestRelease @testE2EAgainstLatestRelease-->
 ```
 BASE=$DEMO_HOME/base
 mkdir -p $BASE
@@ -309,3 +309,31 @@ To deploy, pipe the above commands to kubectl apply:
 > kustomize build $OVERLAYS/production |\
 >    kubectl apply -f -
 > ```
+
+[Alpha] To do end to end tests using kustomize, use the following commands on any folder. You should have GOPATH set up and "kind" installed(https://github.com/kubernetes-sigs/kind).
+
+<!-- @e2eTest @testE2EAgainstLatestRelease -->
+```
+MYGOBIN=$GOPATH/bin
+kind delete cluster;
+kind create cluster;
+$MYGOBIN/kustomize build $BASE | kubectl apply -f -;
+status=$(mktemp);
+$MYGOBIN/resource status events $BASE #Waits for all transient events to finish
+$MYGOBIN/resource status fetch $BASE > $status
+
+test 1 == \
+  $(grep "apps/v1/Deployment" $status | grep "Deployment is available. Replicas: 3" | wc -l); \
+  echo $?
+
+test 1 == \
+  $(grep "v1/ConfigMap" $status | grep "Resource is always ready" | wc -l); \
+  echo $?
+
+test 1 == \
+  $(grep "v1/Service" $status | grep "Service is ready" | wc -l); \
+  echo $?
+
+$MYGOBIN/kustomize build $BASE | kubectl delete -f -;
+kind delete cluster;
+```
