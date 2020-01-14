@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -69,6 +70,10 @@ func Usage() {
 }
 
 func main() {
+	indexNamePtr := flag.String(
+		"index", "kustomize", "The name of the ElasticSearch index.")
+	flag.Parse()
+
 	githubToken := os.Getenv(githubAccessTokenVar)
 	if githubToken == "" {
 		fmt.Printf("Must set the variable '%s' to make github requests.\n",
@@ -77,7 +82,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	idx, err := index.NewKustomizeIndex(ctx)
+	idx, err := index.NewKustomizeIndex(ctx, *indexNamePtr)
 	if err != nil {
 		fmt.Printf("Could not create an index: %v\n", err)
 		return
