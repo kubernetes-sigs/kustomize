@@ -253,7 +253,7 @@ func (it *KustomizeIterator) Next() bool {
 	}
 
 	if it.err == nil {
-		fmt.Printf("updating scroll: %s\n", *it.scrollImpl.ScrollID)
+		log.Printf("updating scroll: %s\n", *it.scrollImpl.ScrollID)
 		it.err = it.update(*it.scrollImpl.ScrollID, reader)
 	}
 
@@ -342,7 +342,7 @@ func (ki *KustomizeIndex) Search(query string,
 	if err != nil {
 		return nil, fmt.Errorf("failed to format query %s", query)
 	}
-	fmt.Printf("formated query: %s\n", data)
+	log.Printf("formated query: %s\n", data)
 
 	var kr ElasticKustomizeResult
 	err = ki.index.Search(data, opts.SearchOptions, func(results io.Reader) error {
