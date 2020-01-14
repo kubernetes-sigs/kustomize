@@ -2,6 +2,7 @@ package doc
 
 import (
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 
@@ -83,7 +84,7 @@ func (doc *KustomizationDocument) GetResources() ([]*Document, error) {
 		}
 		next, err := doc.Document.FromRelativePath(r)
 		if err != nil {
-			fmt.Printf("GetResources error: %v\n", err)
+			log.Printf("GetResources error: %v\n", err)
 			continue
 		}
 		res = append(res, &next)

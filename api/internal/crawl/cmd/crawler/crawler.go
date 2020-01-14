@@ -75,7 +75,7 @@ func main() {
 
 	githubToken := os.Getenv(githubAccessTokenVar)
 	if githubToken == "" {
-		fmt.Printf("Must set the variable '%s' to make github requests.\n",
+		log.Printf("Must set the variable '%s' to make github requests.\n",
 			githubAccessTokenVar)
 		return
 	}
@@ -83,7 +83,7 @@ func main() {
 	ctx := context.Background()
 	idx, err := index.NewKustomizeIndex(ctx, *indexNamePtr)
 	if err != nil {
-		fmt.Printf("Could not create an index: %v\n", err)
+		log.Printf("Could not create an index: %v\n", err)
 		return
 	}
 
@@ -91,7 +91,7 @@ func main() {
 	cache, err := redis.DialURL(cacheURL)
 	clientCache := &http.Client{}
 	if err != nil {
-		fmt.Printf("Error: redis could not make a connection: %v\n", err)
+		log.Printf("Error: redis could not make a connection: %v\n", err)
 	} else {
 		clientCache = httpclient.NewClient(cache)
 	}
@@ -112,10 +112,10 @@ func main() {
 		case *doc.KustomizationDocument:
 			switch mode {
 			case index.Delete:
-				fmt.Println("Deleting: ", d)
+				log.Printf("Deleting: %v", d)
 				return idx.Delete(d.ID())
 			default:
-				fmt.Println("Inserting: ", d)
+				log.Printf("Inserting: %v", d)
 				return idx.Put(d.ID(), d)
 			}
 		default:
@@ -168,7 +168,7 @@ func main() {
 			}
 		}
 		if err := it.Err(); err != nil {
-			fmt.Printf("Error iterating: %v\n", err)
+			log.Fatalf("getSeedDocsFunc Error iterating: %v\n", err)
 		}
 	}
 
