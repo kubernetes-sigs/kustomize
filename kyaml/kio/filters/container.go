@@ -225,6 +225,11 @@ func (c *ContainerFilter) scope(dir string, nodes []*yaml.RNode) ([]*yaml.RNode,
 		}
 
 		resourceDir := path.Clean(path.Dir(p))
+		if path.Base(resourceDir) == functionsDirectoryName {
+			// Functions in the `functions` directory are scoped to
+			// themselves, and should see themselves as input
+			resourceDir = path.Dir(resourceDir)
+		}
 		if !strings.HasPrefix(resourceDir, dir) {
 			// this Resource doesn't fall under the function scope if it
 			// isn't in a subdirectory of where the function lives
