@@ -121,7 +121,7 @@ func main() {
 
 	// seen tracks the IDs of all the documents in the index.
 	// This helps avoid indexing a given document multiple times.
-	seen := make(map[string]struct{})
+	seen := crawler.NewSeenMap()
 
 	var mode CrawlMode
 	if len(os.Args) == 1 {
