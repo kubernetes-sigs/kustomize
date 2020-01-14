@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"strings"
 	"time"
 
@@ -97,14 +98,14 @@ type KustomizeIndex struct {
 }
 
 // Create index reference to the index containing the kustomize documents.
-func NewKustomizeIndex(ctx context.Context) (*KustomizeIndex, error) {
-	idx, err := newIndex(ctx, "kustomize")
+func NewKustomizeIndex(ctx context.Context, indexName string) (*KustomizeIndex, error) {
+	idx, err := newIndex(ctx, indexName)
 	if err != nil {
 		return nil, err
 	}
 
 	indicesExistsOp := idx.client.Indices.Exists
-	resp, err := indicesExistsOp([]string{"kustomize"},
+	resp, err := indicesExistsOp([]string{indexName},
 		indicesExistsOp.WithContext(idx.ctx),
 		indicesExistsOp.WithPretty())
 	if err != nil {
@@ -112,9 +113,9 @@ func NewKustomizeIndex(ctx context.Context) (*KustomizeIndex, error) {
 	}
 
 	if resp.StatusCode == 200 {
-		fmt.Printf("The kustomize index already exists\n")
+		log.Printf("The %s index already exists", indexName)
 	} else {
-		fmt.Printf("Creating the kustomize index\n")
+		log.Printf("Creating the %s index\n", indexName)
 		if err := idx.CreateIndex([]byte(IndexConfig)); err != nil {
 			return nil, err
 		}
