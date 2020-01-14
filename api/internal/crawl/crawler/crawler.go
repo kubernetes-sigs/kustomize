@@ -29,7 +29,7 @@ type Crawler interface {
 	// Crawl returns when it is done processing. This method does not take
 	// ownership of the channel. The channel is write only, and it
 	// designates where the crawler should forward the documents.
-	Crawl(ctx context.Context, output chan<- CrawledDocument, seen map[string]struct{}) error
+	Crawl(ctx context.Context, output chan<- CrawledDocument, seen SeenMap) error
 
 	// Get the document data given the FilePath, Repo, and Ref/Tag/Branch.
 	FetchDocument(context.Context, *doc.Document) error
@@ -45,6 +45,21 @@ type CrawledDocument interface {
 	// Get all the Documents directly referred in a Document.
 	GetResources() ([]*doc.Document, error)
 	WasCached() bool
+}
+
+type SeenMap map[string]struct{}
+
+func (seen SeenMap) Seen(item string) bool {
+	_, ok := seen[item]
+	return ok
+}
+
+func (seen SeenMap) Add(item string) {
+	seen[item] = struct{}{}
+}
+
+func NewSeenMap() SeenMap {
+	return make(map[string]struct{})
 }
 
 type CrawlSeed []*doc.Document
@@ -69,9 +84,9 @@ func findMatch(d *doc.Document, crawlers []Crawler) Crawler {
 }
 
 func addBranches(cdoc CrawledDocument, match Crawler, indx IndexFunc,
-	seen map[string]struct{}, stack *CrawlSeed) {
+	seen SeenMap, stack *CrawlSeed) {
 
-	seen[cdoc.ID()] = struct{}{}
+	seen.Add(cdoc.ID())
 
 	// Insert into index
 	if err := indx(cdoc, index.InsertOrUpdate); err != nil {
@@ -87,7 +102,7 @@ func addBranches(cdoc CrawledDocument, match Crawler, indx IndexFunc,
 	}
 
 	for _, dep := range deps {
-		if _, ok := seen[dep.ID()]; ok {
+		if seen.Seen(dep.ID()) {
 			continue
 		}
 		*stack = append(*stack, dep)
@@ -95,7 +110,7 @@ func addBranches(cdoc CrawledDocument, match Crawler, indx IndexFunc,
 }
 
 func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv Converter, indx IndexFunc,
-	seen map[string]struct{}, stack *CrawlSeed) {
+	seen SeenMap, stack *CrawlSeed) {
 
 	UpdatedDocCount := 0
 	seenDocCount := 0
@@ -118,7 +133,7 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 		crawledDocCount++
 		logger.Printf("Crawling doc %d: %s %s", crawledDocCount, tail.RepositoryURL, tail.FilePath)
 
-		if _, ok := seen[tail.ID()]; ok {
+		if seen.Seen(tail.ID()) {
 			logger.Printf("this doc has been seen before")
 			seenDocCount++
 			continue
@@ -144,7 +159,8 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 		// calling FetchDocument. Otherwise, the binary may enter into an infinite loop
 		// if a kustomization file points to its kustmozation root in its `resources` or
 		// `bases` field.
-		seen[tail.ID()] = struct{}{}
+		seen.Add(tail.ID())
+
 
 		if err := match.FetchDocument(ctx, tail); err != nil {
 			logger.Printf("FetchDocument failed on %s %s: %v",
@@ -154,7 +170,7 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 			cdoc := &doc.KustomizationDocument{
 				Document: *tail,
 			}
-			seen[cdoc.ID()] = struct{}{}
+			seen.Add(cdoc.ID())
 			if err := indx(cdoc, index.Delete); err != nil {
 				logger.Printf("Failed to delete %s %s: %v",
 					cdoc.RepositoryURL, cdoc.FilePath, err)
@@ -195,7 +211,7 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 // CrawlFromSeed updates all the documents in seed, and crawls all the new
 // documents referred in the seed.
 func CrawlFromSeed(ctx context.Context, seed CrawlSeed, crawlers []Crawler,
-	conv Converter, indx IndexFunc, seen map[string]struct{}) {
+	conv Converter, indx IndexFunc, seen SeenMap) {
 
 	// stack tracks the documents directly referred in other documents.
 	stack := make(CrawlSeed, 0)
@@ -231,7 +247,7 @@ func CrawlFromSeed(ctx context.Context, seed CrawlSeed, crawlers []Crawler,
 // from the seed will be processed before any other documents from the
 // crawlers.
 func CrawlGithubRunner(ctx context.Context, output chan<- CrawledDocument,
-	crawlers []Crawler, seen map[string]struct{}) []error {
+	crawlers []Crawler, seen SeenMap) []error {
 
 	errs := make([]error, len(crawlers))
 	wg := sync.WaitGroup{}
@@ -275,7 +291,7 @@ func CrawlGithubRunner(ctx context.Context, output chan<- CrawledDocument,
 
 // CrawlGithub crawls all the kustomization files on Github.
 func CrawlGithub(ctx context.Context, crawlers []Crawler, conv Converter,
-	indx IndexFunc, seen map[string]struct{}) {
+	indx IndexFunc, seen SeenMap) {
 	// stack tracks the documents directly referred in other documents.
 	stack := make(CrawlSeed, 0)
 
@@ -291,7 +307,7 @@ func CrawlGithub(ctx context.Context, crawlers []Crawler, conv Converter,
 		for cdoc := range ch {
 			docCount++
 			logger.Printf("Processing doc %d found on Github", docCount)
-			if _, ok := seen[cdoc.ID()]; ok {
+			if seen.Seen(cdoc.ID()) {
 				logger.Printf("the doc has been seen before")
 				continue
 			}

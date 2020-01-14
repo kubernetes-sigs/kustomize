@@ -68,7 +68,7 @@ func (gc githubCrawler) DefaultBranch(repo string) string {
 
 // Implements crawler.Crawler.
 func (gc githubCrawler) Crawl(ctx context.Context,
-	output chan<- crawler.CrawledDocument, seen map[string]struct{}) error {
+	output chan<- crawler.CrawledDocument, seen crawler.SeenMap) error {
 
 	noETagClient := GhClient{
 		RequestConfig: gc.client.RequestConfig,
@@ -217,7 +217,7 @@ func (r *RangeQueryResult) String() string {
 // processQuery follows all of the pages in a query, and updates/adds the
 // documents from the crawl to the datastore/index.
 func processQuery(ctx context.Context, gcl GhClient, query string,
-	output chan<- crawler.CrawledDocument, seen map[string]struct{},
+	output chan<- crawler.CrawledDocument, seen crawler.SeenMap,
 	branchMap map[string]string) (RangeQueryResult, error) {
 
 	queryPages := make(chan GhResponseInfo)
@@ -271,7 +271,7 @@ func processQuery(ctx context.Context, gcl GhClient, query string,
 	return result, errs
 }
 
-func kustomizationResultAdapter(gcl GhClient, k GhFileSpec, seen map[string]struct{},
+func kustomizationResultAdapter(gcl GhClient, k GhFileSpec, seen crawler.SeenMap,
 	branchMap map[string]string) (crawler.CrawledDocument, error) {
 	url := gcl.ReposRequest(k.Repository.FullName)
 	defaultBranch, err := gcl.GetDefaultBranch(url, k.Repository.URL, branchMap)
@@ -287,7 +287,7 @@ func kustomizationResultAdapter(gcl GhClient, k GhFileSpec, seen map[string]stru
 		RepositoryURL: k.Repository.URL,
 	}
 
-	if _, ok := seen[document.ID()]; ok {
+	if seen.Seen(document.ID()) {
 		return nil, nil
 	}
 
