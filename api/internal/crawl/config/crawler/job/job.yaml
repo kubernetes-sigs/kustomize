@@ -11,7 +11,7 @@ spec:
         image: gcr.io/haiyanmeng-gke-dev/crawler:v1
         imagePullPolicy: Always
         command: ["/crawler"]
-        args: ["github-repo", "kubernetes-sigs/kustomize"]
+        args: ["--mode=github-repo", "--github-repo=kubernetes-sigs/kustomize", "--index=kustomize"]
         env:
         - name: GITHUB_ACCESS_TOKEN
           valueFrom:
