@@ -92,21 +92,14 @@ func (gc githubCrawler) Crawl(ctx context.Context,
 	errs := make(multiError, 0)
 	queryResult := RangeQueryResult{}
 	for _, query := range ranges {
-		result, err := processQuery(ctx, gc.client, query, output, seen, gc.branchMap)
+		rangeResult, err := processQuery(ctx, gc.client, query, output, seen, gc.branchMap)
 		if err != nil {
 			errs = append(errs, err)
 		}
-		queryResult.totalDocCnt += result.totalDocCnt
-		queryResult.seenDocCnt += result.seenDocCnt
-		queryResult.newDocCnt += result.newDocCnt
-		queryResult.errorCnt += result.errorCnt
+		queryResult.Add(rangeResult)
 	}
 
-	logger.Printf("Summary of Crawl: got %d files from Github. "+
-		"%d have been seen before. %d are new and sent to the output channel." +
-		"%d have kustomizationResultAdapter errors.",
-		queryResult.totalDocCnt, queryResult.seenDocCnt,
-		queryResult.newDocCnt, queryResult.errorCnt)
+	logger.Printf("Summary of Crawl: %s", queryResult.String())
 
 	if len(errs) > 0 {
 		return errs
@@ -207,6 +200,20 @@ type RangeQueryResult struct {
 	errorCnt  uint64
 }
 
+func (r *RangeQueryResult) Add(other RangeQueryResult) {
+	r.totalDocCnt += other.totalDocCnt
+	r.newDocCnt += other.newDocCnt
+	r.seenDocCnt += other.seenDocCnt
+	r.errorCnt += other.errorCnt
+}
+
+func (r *RangeQueryResult) String() string {
+	return fmt.Sprintf("got %d files from API. "+
+		"%d have been seen before. %d are new and sent to the output channel." +
+		" %d have kustomizationResultAdapter errors.",
+		r.totalDocCnt, r.seenDocCnt, r.newDocCnt, r.errorCnt)
+}
+
 // processQuery follows all of the pages in a query, and updates/adds the
 // documents from the crawl to the datastore/index.
 func processQuery(ctx context.Context, gcl GhClient, query string,
@@ -235,39 +242,31 @@ func processQuery(ctx context.Context, gcl GhClient, query string,
 			errs = append(errs, page.Error)
 			continue
 		}
-		var errorCnt, seenDocCnt, newDocCnt, totalDocCnt uint64
+		pageResult := RangeQueryResult{}
 		for _, file := range page.Parsed.Items {
 			k, err := kustomizationResultAdapter(gcl, file, seen, branchMap)
 			if err != nil {
 				logger.Printf("kustomizationResultAdapter failed: %v", err)
 				errs = append(errs, err)
-				errorCnt++
+				pageResult.errorCnt++
 			}
 			if k != nil {
-				newDocCnt++
+				pageResult.newDocCnt++
 				output <- k
 			} else {
-				seenDocCnt++
+				pageResult.seenDocCnt++
 			}
-			totalDocCnt++
+			pageResult.totalDocCnt++
 		}
 
-		logger.Printf("processQuery [page %d]: got %d files out of %d from API. "+
-			"%d have been seen before. %d are new and sent to the output channel." +
-			"%d have kustomizationResultAdapter errors.",
-			pageID, totalDocCnt, page.Parsed.TotalCount, seenDocCnt, newDocCnt, errorCnt)
-		result.totalDocCnt += totalDocCnt
-		result.seenDocCnt += seenDocCnt
-		result.newDocCnt += newDocCnt
-		result.errorCnt += errorCnt
+		logger.Printf("processQuery [TotalCount %d - page %d]: %s",
+			page.Parsed.TotalCount, pageID, pageResult.String())
+		result.Add(pageResult)
 
 		pageID++
 	}
 
-	logger.Printf("Summary of processQuery: got %d files from API. "+
-		"%d have been seen before. %d are new and sent to the output channel." +
-		" %d have kustomizationResultAdapter errors.",
-		result.totalDocCnt, result.seenDocCnt, result.newDocCnt, result.errorCnt)
+	logger.Printf("Summary of processQuery: %s", result.String())
 
 	return result, errs
 }
