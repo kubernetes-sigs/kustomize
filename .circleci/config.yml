@@ -11,12 +11,22 @@ jobs:
           command: |
             cd kustomize
             go build -o /tmp/kustomize main.go
+      - run:
+          name: "Unit tests"
+          command: |
+            cd api
+            go test sigs.k8s.io/kustomize/api/builtins_qlik
   build_release:
     docker:
       - image: circleci/golang:stretch
     working_directory: /go/src/github.com/qlik-oss/kustomize
     steps:
       - checkout
+      - run:
+          name: "Unit tests"
+          command: |
+            cd api
+            go test sigs.k8s.io/kustomize/api/builtins_qlik
       - run:
           name: "Build for all platforms"
           command: |
