@@ -69,9 +69,6 @@ func init() {
 	TransformerFactories[SearchReplace] = builtins_qlik.NewSearchReplacePlugin
 	stringToBuiltinPluginTypeMap["SearchReplace"] = SearchReplace
 
-	TransformerFactories[SedOnPath] = builtins_qlik.NewSedOnPathPlugin
-	stringToBuiltinPluginTypeMap["SedOnPath"] = SedOnPath
-
 	TransformerFactories[SelectivePatch] = builtins_qlik.NewSelectivePatchPlugin
 	stringToBuiltinPluginTypeMap["SelectivePatch"] = SelectivePatch
 
