@@ -868,3 +868,26 @@ metadata:
     config.kubernetes.io/index: '1'
 `, b.String())
 }
+
+func TestContainerFilter_scope(t *testing.T) {
+	cf := &ContainerFilter{}
+
+	fnR, err := yaml.Parse(`apiVersion: config.kubernetes.io/v1beta1
+kind: ConfigFunction
+metadata:
+  name: config-function
+  annotations:
+    config.kubernetes.io/path: 'functions/bar.yaml'
+`)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	inRs := []*yaml.RNode{fnR}
+	inScopeRs, notInScopeRs, err := cf.scope(".", inRs)
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Len(t, inScopeRs, 1, "Number of in-scope Resources")
+	assert.Len(t, notInScopeRs, 0, "Number of out-of-scope Resources")
+}
