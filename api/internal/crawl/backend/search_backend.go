@@ -44,7 +44,7 @@ type kustomizeSearch struct {
 // /register: not implemented, but meant as an endpoint for adding new
 // kustomization files to the corpus.
 func NewKustomizeSearch(ctx context.Context) (*kustomizeSearch, error) {
-	idx, err := index.NewKustomizeIndex(ctx)
+	idx, err := index.NewKustomizeIndex(ctx, "kustomize")
 	if err != nil {
 		return nil, err
 	}
