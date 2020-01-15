@@ -95,8 +95,8 @@ func addBranches(cdoc CrawledDocument, match Crawler, indx IndexFunc,
 
 	// Insert into index
 	if err := indx(cdoc, index.InsertOrUpdate); err != nil {
-		logger.Printf("Failed to insert or update %s %s: %v",
-			cdoc.GetDocument().RepositoryURL, cdoc.GetDocument().FilePath, err)
+		logger.Printf("Failed to insert or update doc(%s): %v",
+			cdoc.GetDocument().Path(), err)
 		return
 	}
 
@@ -136,7 +136,7 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 		*docsPtr = (*docsPtr)[:(len(*docsPtr) - 1)]
 
 		crawledDocCount++
-		logger.Printf("Crawling doc %d: %s %s", crawledDocCount, tail.RepositoryURL, tail.FilePath)
+		logger.Printf("Crawling doc %d: %s", crawledDocCount, tail.Path())
 
 		if seen.Seen(tail.ID()) {
 			logger.Printf("this doc has been seen before")
@@ -145,7 +145,7 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 		}
 
 		if tail.WasCached() {
-			logger.Printf("%s %s is cached already", tail.RepositoryURL, tail.FilePath)
+			logger.Printf("doc(%s) is cached already", tail.Path())
 			cachedDocCount++
 			continue
 		}
@@ -168,8 +168,7 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 
 
 		if err := match.FetchDocument(ctx, tail); err != nil {
-			logger.Printf("FetchDocument failed on %s %s: %v",
-				tail.RepositoryURL, tail.FilePath, err)
+			logger.Printf("FetchDocument failed on doc(%s): %v", tail.Path(), err)
 			FetchDocumentErrCount++
 			// delete the document from the index
 			cdoc := &doc.KustomizationDocument{
@@ -177,16 +176,14 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 			}
 			seen.Add(cdoc.ID())
 			if err := indx(cdoc, index.Delete); err != nil {
-				logger.Printf("Failed to delete %s %s: %v",
-					cdoc.RepositoryURL, cdoc.FilePath, err)
+				logger.Printf("Failed to delete doc(%s): %v", cdoc.Path(), err)
 			}
 			deleteDocCount++
 			continue
 		}
 
 		if err := match.SetCreated(ctx, tail); err != nil {
-			logger.Printf("SetCreated failed on %s %s: %v",
-				tail.RepositoryURL, tail.FilePath, err)
+			logger.Printf("SetCreated failed on doc(%s): %v", tail.Path(), err)
 			SetCreatedErrCount++
 		}
 
@@ -194,8 +191,7 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 		// If conv returns an error, cdoc can still be added into the index so that
 		// cdoc.Document can be searched.
 		if err != nil {
-			logger.Printf("conv failed on %s %s: %v",
-				tail.RepositoryURL, tail.FilePath, err)
+			logger.Printf("conv failed on doc(%s): %v", tail.Path(), err)
 			convErrCount++
 		}
 
