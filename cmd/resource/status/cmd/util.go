@@ -56,7 +56,13 @@ func (f *CaptureIdentifiersFilter) Filter(slice []*yaml.RNode) ([]*yaml.RNode, e
 			return nil, err
 		}
 		id := meta.GetIdentifier()
-		f.Identifiers = append(f.Identifiers, &id)
+		if IsValidKubernetesResource(&id) {
+			f.Identifiers = append(f.Identifiers, &id)
+		}
 	}
 	return slice, nil
+}
+
+func IsValidKubernetesResource(id *yaml.ResourceIdentifier) bool {
+	return id != nil && id.GetKind() != "" && id.GetAPIVersion() != "" && id.GetName() != ""
 }
