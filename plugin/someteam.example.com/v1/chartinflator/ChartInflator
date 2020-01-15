@@ -40,10 +40,11 @@ function parseYaml {
   local file=$1
   while read -r line
   do
-    local k=${line%:*}
+    local k=${line%%:*}
     local v=${line#*:}
 
     [ "$k" == "chartName" ] && chartName=$v
+    [ "$k" == "chartRepo" ] && chartRepo=$v
     [ "$k" == "chartHome" ] && chartHome=$v
     [ "$k" == "chartRelease" ] && chartRelease=$v
     [ "$k" == "chartVersion" ] && chartVersion=$v
@@ -56,6 +57,7 @@ function parseYaml {
 
   # Trim leading space
   chartName="${chartName#"${chartName%%[![:space:]]*}"}"
+  chartRepo="${chartRepo#"${chartRepo%%[![:space:]]*}"}"
   chartHome="${chartHome#"${chartHome%%[![:space:]]*}"}"
   chartRelease="${chartRelease#"${chartRelease%%[![:space:]]*}"}"
   chartVersion="${chartVersion#"${chartVersion%%[![:space:]]*}"}"
@@ -82,6 +84,14 @@ fi
 # Set default chartRelease to "stable"
 if [ -z "$chartRelease" ]; then
   chartRelease="stable"
+fi
+
+# The repo to pull the chart from
+if [ -n "$chartRepo" ]; then
+  chartRepoArg="--repo=$chartRepo"
+  chartNameArg="$chartName"
+else
+  chartNameArg="$chartRelease/$chartName"
 fi
 
 # Set version only if specified
@@ -114,9 +124,10 @@ doHelm init --client-only >& /dev/null
 
 if [ ! -d "$chartHome/$chartName" ]; then
   doHelm fetch $chartVersionArg \
+      $chartRepoArg \
       --untar \
       --untardir $chartHome \
-      ${chartRelease}/$chartName
+      $chartNameArg
 fi
 
 doHelm template \
