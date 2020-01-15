@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"sigs.k8s.io/kustomize/api/internal/crawl/crawler"
 	"sort"
 	"time"
 
@@ -51,10 +50,10 @@ func GeneratorAndTransformerStats(ctx context.Context,
 	generatorDocs []*doc.Document, transformerDocs []*doc.Document,
 	idx *index.KustomizeIndex) {
 	// allGenerators includes all the documents referred in the generators field
-	allGenerators := crawler.NewUniqueDocuments()
+	allGenerators := doc.NewUniqueDocuments()
 
 	// allTransformers includes all the documents referred in the transformers field
-	allTransformers := crawler.NewUniqueDocuments()
+	allTransformers := doc.NewUniqueDocuments()
 
 	// docUsingGeneratorCount counts the number of the kustomization files using generators
 	docUsingGeneratorCount := 0

@@ -18,6 +18,7 @@ const (
 )
 
 type Mode int
+
 const (
 	InsertOrUpdate = iota
 	Delete

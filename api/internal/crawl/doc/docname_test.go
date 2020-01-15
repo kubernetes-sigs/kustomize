@@ -65,7 +65,7 @@ func TestFromRelativePath(t *testing.T) {
 
 func TestDocument_RepositoryFullName(t *testing.T) {
 	testCases := []struct {
-		doc Document
+		doc                        Document
 		expectedRepositoryFullName string
 	}{
 		{
