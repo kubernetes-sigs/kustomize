@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"sigs.k8s.io/kustomize/api/internal/crawl/utils"
+
 	"sigs.k8s.io/kustomize/api/internal/crawl/index"
 
 	"sigs.k8s.io/kustomize/api/internal/crawl/doc"
@@ -76,7 +78,7 @@ func newCrawler(matchPrefix string, err error,
 
 // Crawl implements the Crawler interface for testing.
 func (c testCrawler) Crawl(_ context.Context,
-	output chan<- CrawledDocument, _ SeenMap) error {
+	output chan<- CrawledDocument, _ utils.SeenMap) error {
 
 	for i, d := range c.docs {
 		isResource := true
@@ -182,7 +184,7 @@ func TestCrawlGithubRunner(t *testing.T) {
 			defer close(output)
 			defer wg.Done()
 
-			seen := NewSeenMap()
+			seen := utils.NewSeenMap()
 			errs := CrawlGithubRunner(context.Background(),
 				output, test.tc, seen)
 
@@ -324,7 +326,7 @@ resources:
 				visited[d.ID()]++
 				return nil
 			},
-			NewSeenMap(),
+			utils.NewSeenMap(),
 		)
 		if lv, lc := len(visited), len(tc.corpus); lv != lc {
 			t.Errorf("error: %d of %d documents visited.", lv, lc)
