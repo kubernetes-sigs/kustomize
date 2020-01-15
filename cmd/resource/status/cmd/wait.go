@@ -19,7 +19,7 @@ import (
 // GetWaitRunner return a command WaitRunner.
 func GetWaitRunner() *WaitRunner {
 	r := &WaitRunner{
-		createClientFunc: createClient,
+		newResolverFunc: newResolver,
 	}
 	c := &cobra.Command{
 		Use:     "wait DIR...",
@@ -51,7 +51,7 @@ type WaitRunner struct {
 	Timeout            time.Duration
 	Command            *cobra.Command
 
-	createClientFunc createClientFunc
+	newResolverFunc newResolverFunc
 }
 
 // runE implements the logic of the command and will call the Wait command in the wait
@@ -59,12 +59,11 @@ type WaitRunner struct {
 // TablePrinter to display the information.
 func (r *WaitRunner) runE(c *cobra.Command, args []string) error {
 	ctx := context.Background()
-	client, err := r.createClientFunc()
-	if err != nil {
-		return errors.Wrap(err, "error creating client")
-	}
 
-	resolver := wait.NewResolver(client, r.Interval)
+	resolver, err := r.newResolverFunc(r.Interval)
+	if err != nil {
+		return errors.Wrap(err, "errors creating resolver")
+	}
 
 	captureFilter := &CaptureIdentifiersFilter{}
 	filters := []kio.Filter{captureFilter}
@@ -131,10 +130,9 @@ func (r *ResourceStatusCollector) updateResourceStatus(msg wait.Event) {
 	r.AggregateStatus = msg.AggregateStatus
 	eventResource := msg.EventResource
 	for _, resourceState := range r.ResourceStatuses {
-		if resourceState.Identifier.GetAPIVersion() == eventResource.Identifier.GetAPIVersion() &&
-			resourceState.Identifier.GetKind() == eventResource.Identifier.GetKind() &&
-			resourceState.Identifier.GetNamespace() == eventResource.Identifier.GetNamespace() &&
-			resourceState.Identifier.GetName() == eventResource.Identifier.GetName() {
+		if resourceState.Identifier.GroupKind == eventResource.ResourceIdentifier.GroupKind &&
+			resourceState.Identifier.Namespace == eventResource.ResourceIdentifier.Namespace &&
+			resourceState.Identifier.Name == eventResource.ResourceIdentifier.Name {
 			resourceState.Status = eventResource.Status
 			resourceState.Message = eventResource.Message
 		}

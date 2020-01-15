@@ -4,7 +4,10 @@
 package cmd
 
 import (
+	"time"
+
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -22,23 +25,23 @@ func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
 }
 
-type createClientFunc func() (client.Reader, error)
+type newResolverFunc func(pollInterval time.Duration) (*wait.Resolver, error)
 
-// createClient returns a client for talking to a Kubernetes cluster. The client
-// is from controller-runtime.
-func createClient() (client.Reader, error) {
+// newResolver returns a new resolver that can resolve status for resources based
+// on polling the cluster.
+func newResolver(pollInterval time.Duration) (*wait.Resolver, error) {
 	config := ctrl.GetConfigOrDie()
 	mapper, err := apiutil.NewDiscoveryRESTMapper(config)
 	if err != nil {
 		return nil, err
 	}
-	return client.New(config, client.Options{Scheme: scheme, Mapper: mapper})
-}
 
-func newClientFunc(c client.Reader) func() (client.Reader, error) {
-	return func() (client.Reader, error) {
-		return c, nil
+	c, err := client.New(config, client.Options{Scheme: scheme, Mapper: mapper})
+	if err != nil {
+		return nil, err
 	}
+
+	return wait.NewResolver(c, mapper, pollInterval), nil
 }
 
 // CaptureIdentifiersFilter implements the Filter interface in the kio package. It
@@ -55,8 +58,20 @@ func (f *CaptureIdentifiersFilter) Filter(slice []*yaml.RNode) ([]*yaml.RNode, e
 		if err != nil {
 			return nil, err
 		}
+		// TODO(mortent): Update kyaml library
 		id := meta.GetIdentifier()
-		f.Identifiers = append(f.Identifiers, &id)
+		gv, err := schema.ParseGroupVersion(id.APIVersion)
+		if err != nil {
+			return nil, err
+		}
+		f.Identifiers = append(f.Identifiers, wait.ResourceIdentifier{
+			Name:      id.Name,
+			Namespace: id.Namespace,
+			GroupKind: schema.GroupKind{
+				Group: gv.Group,
+				Kind:  id.Kind,
+			},
+		})
 	}
 	return slice, nil
 }

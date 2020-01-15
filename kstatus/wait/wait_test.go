@@ -10,9 +10,11 @@ import (
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -32,6 +34,7 @@ func TestFetchAndResolve(t *testing.T) {
 
 	testCases := map[string]struct {
 		resources       []runtime.Object
+		mapperGVKs      []schema.GroupVersionKind
 		expectedResults []result
 	}{
 		"no resources": {
@@ -51,6 +54,9 @@ func TestFetchAndResolve(t *testing.T) {
 						Namespace:  "default",
 					},
 				},
+			},
+			mapperGVKs: []schema.GroupVersionKind{
+				appsv1.SchemeGroupVersion.WithKind("Deployment"),
 			},
 			expectedResults: []result{
 				{
@@ -92,6 +98,10 @@ func TestFetchAndResolve(t *testing.T) {
 					},
 				},
 			},
+			mapperGVKs: []schema.GroupVersionKind{
+				appsv1.SchemeGroupVersion.WithKind("StatefulSet"),
+				corev1.SchemeGroupVersion.WithKind("Secret"),
+			},
 			expectedResults: []result{
 				{
 					status: status.CurrentStatus,
@@ -109,18 +119,18 @@ func TestFetchAndResolve(t *testing.T) {
 		tc := tc
 		t.Run(tn, func(t *testing.T) {
 			fakeClient := fake.NewFakeClientWithScheme(scheme.Scheme, tc.resources...)
-			resolver := NewResolver(fakeClient, testPollInterval)
+
+			resolver := NewResolver(fakeClient, newRESTMapper(tc.mapperGVKs...), testPollInterval)
 			resolver.statusComputeFunc = status.Compute
 
 			var identifiers []ResourceIdentifier
 			for _, resource := range tc.resources {
 				gvk := resource.GetObjectKind().GroupVersionKind()
 				r := resource.(metav1.Object)
-				identifiers = append(identifiers, &resourceKey{
-					name:       r.GetName(),
-					namespace:  r.GetNamespace(),
-					apiVersion: gvk.GroupVersion().String(),
-					kind:       gvk.Kind,
+				identifiers = append(identifiers, ResourceIdentifier{
+					Name:      r.GetName(),
+					Namespace: r.GetNamespace(),
+					GroupKind: gvk.GroupKind(),
 				})
 			}
 
@@ -128,7 +138,7 @@ func TestFetchAndResolve(t *testing.T) {
 			for i, res := range results {
 				id := identifiers[i]
 				expectedRes := tc.expectedResults[i]
-				rid := fmt.Sprintf("%s/%s", id.GetNamespace(), id.GetName())
+				rid := fmt.Sprintf("%s/%s", id.Namespace, id.Name)
 				if expectedRes.error {
 					if res.Error == nil {
 						t.Errorf("expected error for resource %s, but didn't get one", rid)
@@ -150,13 +160,15 @@ func TestFetchAndResolve(t *testing.T) {
 
 func TestFetchAndResolveUnknownResource(t *testing.T) {
 	fakeClient := fake.NewFakeClientWithScheme(scheme.Scheme)
-	resolver := NewResolver(fakeClient, testPollInterval)
+	resolver := NewResolver(fakeClient, newRESTMapper(appsv1.SchemeGroupVersion.WithKind("Deployment")), testPollInterval)
 	results := resolver.FetchAndResolve(context.TODO(), []ResourceIdentifier{
-		&resourceKey{
-			apiVersion: "apps/v1",
-			kind:       "Deploymnet",
-			name:       "myDeployment",
-			namespace:  "default",
+		{
+			GroupKind: schema.GroupKind{
+				Group: "apps",
+				Kind:  "Deployment",
+			},
+			Name:      "myDeployment",
+			Namespace: "default",
 		},
 	})
 
@@ -181,14 +193,17 @@ func TestFetchAndResolveWithFetchError(t *testing.T) {
 		&fakeReader{
 			Err: expectedError,
 		},
+		newRESTMapper(appsv1.SchemeGroupVersion.WithKind("Deployment")),
 		testPollInterval,
 	)
 	results := resolver.FetchAndResolve(context.TODO(), []ResourceIdentifier{
-		&resourceKey{
-			apiVersion: "apps/v1",
-			kind:       "Deploymnet",
-			name:       "myDeployment",
-			namespace:  "default",
+		{
+			GroupKind: schema.GroupKind{
+				Group: "apps",
+				Kind:  "Deployment",
+			},
+			Name:      "myDeployment",
+			Namespace: "default",
 		},
 	})
 
@@ -222,7 +237,7 @@ func TestFetchAndResolveComputeStatusError(t *testing.T) {
 	}
 
 	fakeClient := fake.NewFakeClientWithScheme(scheme.Scheme, resource)
-	resolver := NewResolver(fakeClient, testPollInterval)
+	resolver := NewResolver(fakeClient, newRESTMapper(appsv1.SchemeGroupVersion.WithKind("Deployment")), testPollInterval)
 
 	resolver.statusComputeFunc = func(u *unstructured.Unstructured) (*status.Result, error) {
 		return &status.Result{
@@ -231,11 +246,13 @@ func TestFetchAndResolveComputeStatusError(t *testing.T) {
 		}, expectedError
 	}
 	results := resolver.FetchAndResolve(context.TODO(), []ResourceIdentifier{
-		&resourceKey{
-			apiVersion: resource.APIVersion,
-			kind:       resource.Kind,
-			name:       resource.GetName(),
-			namespace:  resource.GetNamespace(),
+		{
+			GroupKind: schema.GroupKind{
+				Group: resource.GroupVersionKind().Group,
+				Kind:  resource.Kind,
+			},
+			Name:      resource.GetName(),
+			Namespace: resource.GetNamespace(),
 		},
 	})
 
@@ -358,23 +375,28 @@ func TestWaitForStatus(t *testing.T) {
 		tc := tc
 		t.Run(tn, func(t *testing.T) {
 			var objs []runtime.Object
-			statusResults := make(map[resourceKey][]*status.Result)
+			statusResults := make(map[ResourceIdentifier][]*status.Result)
 			var identifiers []ResourceIdentifier
 
 			for obj, statuses := range tc.resources {
 				objs = append(objs, obj)
-				identifier := keyFromObject(obj)
-				identifiers = append(identifiers, &identifier)
+				identifier := resourceIdentifierFromRuntimeObject(obj)
+				identifiers = append(identifiers, identifier)
 				statusResults[identifier] = statuses
 			}
 
 			statusComputer := statusComputer{
 				results:           statusResults,
-				resourceCallCount: make(map[resourceKey]int),
+				resourceCallCount: make(map[ResourceIdentifier]int),
 			}
 
 			resolver := &Resolver{
-				client:            fake.NewFakeClientWithScheme(scheme.Scheme, objs...),
+				client: fake.NewFakeClientWithScheme(scheme.Scheme, objs...),
+				mapper: newRESTMapper(
+					appsv1.SchemeGroupVersion.WithKind("Deployment"),
+					appsv1.SchemeGroupVersion.WithKind("StatefulSet"),
+					corev1.SchemeGroupVersion.WithKind("Service"),
+				),
 				statusComputeFunc: statusComputer.Compute,
 				pollInterval:      testPollInterval,
 			}
@@ -397,20 +419,20 @@ func TestWaitForStatus(t *testing.T) {
 			}
 
 			var aggregateStatuses []status.Status
-			resourceStatuses := make(map[resourceKey][]status.Status)
+			resourceStatuses := make(map[ResourceIdentifier][]status.Status)
 			for _, e := range events {
 				aggregateStatuses = append(aggregateStatuses, e.AggregateStatus)
 				if e.EventResource != nil {
-					identifier := keyFromResourceIdentifier(e.EventResource.Identifier)
+					identifier := e.EventResource.ResourceIdentifier
 					resourceStatuses[identifier] = append(resourceStatuses[identifier], e.EventResource.Status)
 				}
 			}
 
 			for resource, expectedStatuses := range tc.expectedResourceStatuses {
-				identifier := keyFromObject(resource)
+				identifier := resourceIdentifierFromRuntimeObject(resource)
 				actualStatuses := resourceStatuses[identifier]
 				if !reflect.DeepEqual(expectedStatuses, actualStatuses) {
-					t.Errorf("expected statuses %v for resource %s/%s, but got %v", expectedStatuses, identifier.namespace, identifier.name, actualStatuses)
+					t.Errorf("expected statuses %v for resource %s/%s, but got %v", expectedStatuses, identifier.Namespace, identifier.Name, actualStatuses)
 				}
 			}
 
@@ -423,21 +445,25 @@ func TestWaitForStatus(t *testing.T) {
 
 func TestWaitForStatusDeletedResources(t *testing.T) {
 	statusComputer := statusComputer{
-		results:           make(map[resourceKey][]*status.Result),
-		resourceCallCount: make(map[resourceKey]int),
+		results:           make(map[ResourceIdentifier][]*status.Result),
+		resourceCallCount: make(map[ResourceIdentifier]int),
 	}
 
 	resolver := &Resolver{
-		client:            fake.NewFakeClientWithScheme(scheme.Scheme),
+		client: fake.NewFakeClientWithScheme(scheme.Scheme),
+		mapper: newRESTMapper(
+			appsv1.SchemeGroupVersion.WithKind("Deployment"),
+			corev1.SchemeGroupVersion.WithKind("Service"),
+		),
 		statusComputeFunc: statusComputer.Compute,
 		pollInterval:      testPollInterval,
 	}
 
-	depResourceIdentifier := keyFromObject(deploymentResource)
-	serviceResourceIdentifier := keyFromObject(serviceResource)
+	depResourceIdentifier := resourceIdentifierFromRuntimeObject(deploymentResource)
+	serviceResourceIdentifier := resourceIdentifierFromRuntimeObject(serviceResource)
 	identifiers := []ResourceIdentifier{
-		&depResourceIdentifier,
-		&serviceResourceIdentifier,
+		depResourceIdentifier,
+		serviceResourceIdentifier,
 	}
 
 	eventChan := resolver.WaitForStatus(context.TODO(), identifiers)
@@ -499,17 +525,12 @@ loop:
 type statusComputer struct {
 	t *testing.T
 
-	results           map[resourceKey][]*status.Result
-	resourceCallCount map[resourceKey]int
+	results           map[ResourceIdentifier][]*status.Result
+	resourceCallCount map[ResourceIdentifier]int
 }
 
 func (s *statusComputer) Compute(u *unstructured.Unstructured) (*status.Result, error) {
-	identifier := resourceKey{
-		apiVersion: u.GetAPIVersion(),
-		kind:       u.GetKind(),
-		name:       u.GetName(),
-		namespace:  u.GetNamespace(),
-	}
+	identifier := resourceIdentifierFromRuntimeObject(u)
 
 	resourceResults, ok := s.results[identifier]
 	if !ok {
@@ -558,4 +579,16 @@ var serviceResource = &corev1.Service{
 		Name:      "myService",
 		Namespace: "default",
 	},
+}
+
+func newRESTMapper(gvks ...schema.GroupVersionKind) meta.RESTMapper {
+	var groupVersions []schema.GroupVersion
+	for _, gvk := range gvks {
+		groupVersions = append(groupVersions, gvk.GroupVersion())
+	}
+	mapper := meta.NewDefaultRESTMapper(groupVersions)
+	for _, gvk := range gvks {
+		mapper.Add(gvk, meta.RESTScopeNamespace)
+	}
+	return mapper
 }
