@@ -61,8 +61,7 @@ var (
 			width:     25,
 			colorFunc: defaultColorFunc,
 			contentFunc: func(data ResourceStatusData) string {
-				return fmt.Sprintf("%s/%s", data.Identifier.GetAPIVersion(),
-					data.Identifier.GetKind())
+				return fmt.Sprintf("%s/%s", data.Identifier.GroupKind.Group, data.Identifier.GroupKind.Kind)
 			},
 		},
 		namespaceColumn: {
@@ -70,7 +69,7 @@ var (
 			width:     15,
 			colorFunc: defaultColorFunc,
 			contentFunc: func(data ResourceStatusData) string {
-				return data.Identifier.GetNamespace()
+				return data.Identifier.Namespace
 			},
 		},
 		nameColumn: {
@@ -78,7 +77,7 @@ var (
 			width:     20,
 			colorFunc: defaultColorFunc,
 			contentFunc: func(data ResourceStatusData) string {
-				return data.Identifier.GetName()
+				return data.Identifier.Name
 			},
 		},
 		statusColumn: {
@@ -255,8 +254,8 @@ var (
 			width:                      20,
 			requireResourceUpdateEvent: true,
 			contentFunc: func(event wait.Event) string {
-				return fmt.Sprintf("%s/%s", event.EventResource.Identifier.GetAPIVersion(),
-					event.EventResource.Identifier.GetKind())
+				return fmt.Sprintf("%s/%s", event.EventResource.ResourceIdentifier.GroupKind.Group,
+					event.EventResource.ResourceIdentifier.GroupKind.Kind)
 			},
 		},
 		{
@@ -264,7 +263,7 @@ var (
 			width:                      15,
 			requireResourceUpdateEvent: true,
 			contentFunc: func(event wait.Event) string {
-				return event.EventResource.Identifier.GetNamespace()
+				return event.EventResource.ResourceIdentifier.Namespace
 			},
 		},
 		{
@@ -272,7 +271,7 @@ var (
 			width:                      20,
 			requireResourceUpdateEvent: true,
 			contentFunc: func(event wait.Event) string {
-				return event.EventResource.Identifier.GetName()
+				return event.EventResource.ResourceIdentifier.Name
 			},
 		},
 		{

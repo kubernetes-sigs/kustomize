@@ -10,14 +10,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/resource/status/generateddocs/commands"
-	"sigs.k8s.io/kustomize/kstatus/wait"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
 // GetEventsRunner returns a command EventsRunner.
 func GetEventsRunner() *EventsRunner {
 	r := &EventsRunner{
-		createClientFunc: createClient,
+		newResolverFunc: newResolver,
 	}
 	c := &cobra.Command{
 		Use:     "events DIR...",
@@ -49,18 +48,16 @@ type EventsRunner struct {
 	Timeout            time.Duration
 	Command            *cobra.Command
 
-	createClientFunc createClientFunc
+	newResolverFunc newResolverFunc
 }
 
 func (r *EventsRunner) runE(c *cobra.Command, args []string) error {
 	ctx := context.Background()
 
-	// Create a client and use it to set up a new resolver.
-	client, err := r.createClientFunc()
+	resolver, err := r.newResolverFunc(r.Interval)
 	if err != nil {
-		return errors.Wrap(err, "error creating client")
+		return errors.Wrap(err, "error creating resolver")
 	}
-	resolver := wait.NewResolver(client, r.Interval)
 
 	// Set up a CaptureIdentifierFilter and run all inputs through the
 	// filter with the pipeline to capture the inventory of resources

@@ -10,41 +10,12 @@ import (
 	"sigs.k8s.io/kustomize/kstatus/status"
 )
 
-// resourceKey is a minimal implementation of
-// the ResourceIdentifier interface.
-type resourceKey struct {
-	name       string
-	namespace  string
-	apiVersion string
-	kind       string
-}
-
-// GetName returns the name of the resource.
-func (r *resourceKey) GetName() string {
-	return r.name
-}
-
-// GetNamespace returns the namespace of the resource.
-func (r *resourceKey) GetNamespace() string {
-	return r.namespace
-}
-
-// GetAPIVersion returns the API version of the resource.
-func (r *resourceKey) GetAPIVersion() string {
-	return r.apiVersion
-}
-
-// GetKind returns the Kind of the resource.
-func (r *resourceKey) GetKind() string {
-	return r.kind
-}
-
 // waitState keeps the state about the resources and their last
 // observed state. This is used to determine any changes in state
 // so events can be sent when needed.
 type waitState struct {
 	// ResourceWaitStates contains wait state for each of the resources.
-	ResourceWaitStates map[resourceKey]*resourceWaitState
+	ResourceWaitStates map[ResourceIdentifier]*resourceWaitState
 
 	// statusComputeFunc defines the function used to compute the state of
 	// a single resource. This is available for testing purposes.
@@ -62,17 +33,11 @@ type resourceWaitState struct {
 
 // newWaitState creates a new waitState object and initializes it with the
 // provided slice of resources and the provided statusComputeFunc.
-func newWaitState(resources []ResourceIdentifier, statusComputeFunc func(u *unstructured.Unstructured) (*status.Result, error)) *waitState {
-	resourceWaitStates := make(map[resourceKey]*resourceWaitState)
+func newWaitState(resourceIDs []ResourceIdentifier, statusComputeFunc func(u *unstructured.Unstructured) (*status.Result, error)) *waitState {
+	resourceWaitStates := make(map[ResourceIdentifier]*resourceWaitState)
 
-	for _, r := range resources {
-		identifier := resourceKey{
-			apiVersion: r.GetAPIVersion(),
-			kind:       r.GetKind(),
-			name:       r.GetName(),
-			namespace:  r.GetNamespace(),
-		}
-		resourceWaitStates[identifier] = &resourceWaitState{}
+	for _, resourceID := range resourceIDs {
+		resourceWaitStates[resourceID] = &resourceWaitState{}
 	}
 
 	return &waitState{
@@ -107,19 +72,12 @@ func (w *waitState) AggregateStatus() status.Status {
 // that will be true if the status of the observed resource has changed
 // since the previous observation and false it not. This is used to determine
 // whether a new event should be sent based on this observation.
-func (w *waitState) ResourceObserved(id ResourceIdentifier, resource *unstructured.Unstructured, err error) (EventResource, bool) {
-	identifier := resourceKey{
-		name:       id.GetName(),
-		namespace:  id.GetNamespace(),
-		apiVersion: id.GetAPIVersion(),
-		kind:       id.GetKind(),
-	}
-
+func (w *waitState) ResourceObserved(resourceID ResourceIdentifier, resource *unstructured.Unstructured, err error) (EventResource, bool) {
 	// Check for nil is not needed here as the id passed in comes
 	// from iterating over the keys of the map.
-	rws := w.ResourceWaitStates[identifier]
+	rws := w.ResourceWaitStates[resourceID]
 
-	eventResource := w.getEventResource(identifier, resource, err)
+	eventResource := w.getEventResource(resourceID, resource, err)
 	// If the new eventResource is identical to the previous one, we return
 	// with the last return value indicating this is not a new event.
 	if rws.LastEvent != nil && reflect.DeepEqual(eventResource, *rws.LastEvent) {
@@ -133,22 +91,22 @@ func (w *waitState) ResourceObserved(id ResourceIdentifier, resource *unstructur
 // the provided resourceKey. The EventResource contains information about the
 // latest status for the given resource, so it computes status for the resource
 // as well as check for deletion.
-func (w *waitState) getEventResource(identifier resourceKey, resource *unstructured.Unstructured, err error) EventResource {
+func (w *waitState) getEventResource(resourceID ResourceIdentifier, resource *unstructured.Unstructured, err error) EventResource {
 	// Get the resourceWaitState for this resource. It contains information
 	// of the previous observed statuses. We don't need to check for nil here
 	// as the identifier comes from iterating over the keys of the
 	// ResourceWaitState map.
-	r := w.ResourceWaitStates[identifier]
+	r := w.ResourceWaitStates[resourceID]
 
 	// If fetching the resource from the cluster failed, we don't really
 	// know anything about the status of the resource, so simply
 	// report the status as Unknown.
 	if err != nil && !k8serrors.IsNotFound(errors.Cause(err)) {
 		return EventResource{
-			Identifier: &identifier,
-			Status:     status.UnknownStatus,
-			Message:    fmt.Sprintf("Error: %s", err),
-			Error:      err,
+			ResourceIdentifier: resourceID,
+			Status:             status.UnknownStatus,
+			Message:            fmt.Sprintf("Error: %s", err),
+			Error:              err,
 		}
 	}
 
@@ -161,9 +119,9 @@ func (w *waitState) getEventResource(identifier resourceKey, resource *unstructu
 	if k8serrors.IsNotFound(errors.Cause(err)) {
 		r.HasBeenCurrent = true
 		return EventResource{
-			Identifier: &identifier,
-			Status:     status.CurrentStatus,
-			Message:    fmt.Sprintf("Resource has been deleted"),
+			ResourceIdentifier: resourceID,
+			Status:             status.CurrentStatus,
+			Message:            fmt.Sprintf("Resource has been deleted"),
 		}
 	}
 
@@ -177,9 +135,9 @@ func (w *waitState) getEventResource(identifier resourceKey, resource *unstructu
 
 	if resource.GetDeletionTimestamp() != nil {
 		return EventResource{
-			Identifier: &identifier,
-			Status:     status.TerminatingStatus,
-			Message:    fmt.Sprintf("Resource is terminating"),
+			ResourceIdentifier: resourceID,
+			Status:             status.TerminatingStatus,
+			Message:            fmt.Sprintf("Resource is terminating"),
 		}
 	}
 
@@ -188,10 +146,10 @@ func (w *waitState) getEventResource(identifier resourceKey, resource *unstructu
 	// as Unknown.
 	if err != nil {
 		return EventResource{
-			Identifier: &identifier,
-			Status:     status.UnknownStatus,
-			Message:    fmt.Sprintf("Error: %s", err),
-			Error:      err,
+			ResourceIdentifier: resourceID,
+			Status:             status.UnknownStatus,
+			Message:            fmt.Sprintf("Error: %s", err),
+			Error:              err,
 		}
 	}
 
@@ -204,8 +162,8 @@ func (w *waitState) getEventResource(identifier resourceKey, resource *unstructu
 	}
 
 	return EventResource{
-		Identifier: &identifier,
-		Status:     statusResult.Status,
-		Message:    statusResult.Message,
+		ResourceIdentifier: resourceID,
+		Status:             statusResult.Status,
+		Message:            statusResult.Message,
 	}
 }

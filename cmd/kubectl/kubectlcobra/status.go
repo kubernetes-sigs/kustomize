@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/kubectl/pkg/cmd/util"
@@ -47,7 +47,12 @@ func (s *StatusOptions) AddFlags(c *cobra.Command) {
 }
 
 func (s *StatusOptions) waitForStatus(infos []*resource.Info) error {
-	c, err := getClient(s.factory)
+	mapper, err := getRESTMapper(s.factory)
+	if err != nil {
+		return err
+	}
+
+	c, err := getClient(s.factory, mapper)
 	if err != nil {
 		return err
 	}
@@ -55,16 +60,15 @@ func (s *StatusOptions) waitForStatus(infos []*resource.Info) error {
 	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
 	defer cancel()
 
-	resolver := wait.NewResolver(c, s.period)
+	resolver := wait.NewResolver(c, mapper, s.period)
 	ch := resolver.WaitForStatus(ctx, infosToResourceIdentifiers(infos))
 
 	for msg := range ch {
 		switch msg.Type {
 		case wait.ResourceUpdate:
-			id := msg.EventResource.Identifier
-			gv, _ := schema.ParseGroupVersion(id.GetAPIVersion())
-			gvk := gv.WithKind(id.GetKind())
-			fmt.Fprintf(s.ioStreams.Out, "%s/%s is %s: %s\n", strings.ToLower(gvk.GroupKind().String()), id.GetName(), msg.EventResource.Status.String(), msg.EventResource.Message)
+			id := msg.EventResource.ResourceIdentifier
+			gk := id.GroupKind
+			fmt.Fprintf(s.ioStreams.Out, "%s/%s is %s: %s\n", strings.ToLower(gk.String()), id.Name, msg.EventResource.Status.String(), msg.EventResource.Message)
 		case wait.Completed:
 			fmt.Fprint(s.ioStreams.Out, "all resources has reached the Current status\n")
 		case wait.Aborted:
@@ -78,18 +82,21 @@ func infosToResourceIdentifiers(infos []*resource.Info) []wait.ResourceIdentifie
 	var resources []wait.ResourceIdentifier
 	for _, info := range infos {
 		u := info.Object.(*unstructured.Unstructured)
-		resources = append(resources, u)
+		resources = append(resources, wait.ResourceIdentifier{
+			GroupKind: u.GroupVersionKind().GroupKind(),
+			Namespace: u.GetNamespace(),
+			Name:      u.GetName(),
+		})
 	}
 	return resources
 }
 
-func getClient(f util.Factory) (client.Reader, error) {
-	config, err := f.ToRESTConfig()
-	if err != nil {
-		return nil, err
-	}
+func getRESTMapper(f util.Factory) (meta.RESTMapper, error) {
+	return f.ToRESTMapper()
+}
 
-	mapper, err := f.ToRESTMapper()
+func getClient(f util.Factory, mapper meta.RESTMapper) (client.Reader, error) {
+	config, err := f.ToRESTConfig()
 	if err != nil {
 		return nil, err
 	}
