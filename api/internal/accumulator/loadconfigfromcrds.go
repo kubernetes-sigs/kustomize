@@ -5,10 +5,14 @@ package accumulator
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/go-openapi/spec"
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/kube-openapi/pkg/common"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
@@ -67,6 +71,10 @@ func makeConfigFromApiMap(m nameToApiMap) (*builtinconfig.TransformerConfig, err
 		if err != nil {
 			return result, err
 		}
+		err = registerCrdScheme(name)
+		if err != nil {
+			return result, err
+		}
 		result, err = result.Merge(tc)
 		if err != nil {
 			return result, err
@@ -117,6 +125,23 @@ const (
 	// default is "name"
 	xNameKey = "x-kubernetes-object-ref-name-key"
 )
+
+// registerCrdScheme registers a CRD spec with the go client scheme
+func registerCrdScheme(name string) (err error) {
+	names := strings.Split(name, filesys.SelfDir)
+	parts := len(names)
+	if parts < 3 {
+		return fmt.Errorf("`api` should be specified in dot notation: group.version.kind")
+	}
+	kind := names[len(names)-1]
+	version := names[len(names)-2]
+	group := names[0]
+	if parts > 3 {
+		group = strings.Join(names[:parts-2], filesys.SelfDir)
+	}
+	scheme.Scheme.AddKnownTypeWithName(schema.GroupVersionKind{Group: group, Version: version, Kind: kind}, &unstructured.Unstructured{})
+	return nil
+}
 
 // loadCrdIntoConfig loads a CRD spec into a TransformerConfig
 func loadCrdIntoConfig(
