@@ -8,6 +8,6 @@ set -o errexit
 set -o pipefail
 
 mdrip --blockTimeOut 60m0s --mode test \
-    --label testE2EAgainstLatestRelease examples
+    --label testE2EAgainstLatestRelease examples/alphaTestExamples
 
-echo "Example e2e tests passed against ${version}."
+echo "Example e2e tests passed against ."
