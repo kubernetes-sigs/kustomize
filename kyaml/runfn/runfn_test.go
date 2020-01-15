@@ -34,9 +34,16 @@ replace: StatefulSet
 `
 )
 
-func TestRunFns_Execute(t *testing.T) {
+func TestRunFns_init(t *testing.T) {
 	instance := RunFns{}
 	instance.init()
+	if !assert.Equal(t, instance.Input, os.Stdin) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, instance.Output, os.Stdout) {
+		t.FailNow()
+	}
+
 	api, err := yaml.Parse(`apiVersion: apps/v1
 kind: 
 `)
@@ -47,9 +54,15 @@ kind:
 	assert.Equal(t, &filters.ContainerFilter{Image: "example.com:version", Config: api}, filter)
 }
 
-func TestRunFns_Execute_globalScope(t *testing.T) {
+func TestRunFns_Execute__initGlobalScope(t *testing.T) {
 	instance := RunFns{GlobalScope: true}
 	instance.init()
+	if !assert.Equal(t, instance.Input, os.Stdin) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, instance.Output, os.Stdout) {
+		t.FailNow()
+	}
 	api, err := yaml.Parse(`apiVersion: apps/v1
 kind: 
 `)
@@ -61,8 +74,80 @@ kind:
 		Image: "example.com:version", Config: api, GlobalScope: true}, filter)
 }
 
-var tru = true
-var fls = false
+func TestRunFns_Execute__initDefault(t *testing.T) {
+	b := &bytes.Buffer{}
+	var tests = []struct {
+		instance RunFns
+		expected RunFns
+		name     string
+	}{
+		{
+			instance: RunFns{},
+			name:     "empty",
+			expected: RunFns{Output: os.Stdout, Input: os.Stdin, NoFunctionsFromInput: getFalse()},
+		},
+		{
+			name:     "explicit output",
+			instance: RunFns{Output: b},
+			expected: RunFns{Output: b, Input: os.Stdin, NoFunctionsFromInput: getFalse()},
+		},
+		{
+			name:     "explicit input",
+			instance: RunFns{Input: b},
+			expected: RunFns{Output: os.Stdout, Input: b, NoFunctionsFromInput: getFalse()},
+		},
+		{
+			name:     "explicit functions -- no functions from input",
+			instance: RunFns{Functions: []*yaml.RNode{{}}},
+			expected: RunFns{Output: os.Stdout, Input: os.Stdin, NoFunctionsFromInput: getTrue(), Functions: []*yaml.RNode{{}}},
+		},
+		{
+			name:     "explicit functions -- yes functions from input",
+			instance: RunFns{Functions: []*yaml.RNode{{}}, NoFunctionsFromInput: getFalse()},
+			expected: RunFns{Output: os.Stdout, Input: os.Stdin, NoFunctionsFromInput: getFalse(), Functions: []*yaml.RNode{{}}},
+		},
+		{
+			name:     "explicit functions in paths -- no functions from input",
+			instance: RunFns{FunctionPaths: []string{"foo"}},
+			expected: RunFns{
+				Output:               os.Stdout,
+				Input:                os.Stdin,
+				NoFunctionsFromInput: getTrue(),
+				FunctionPaths:        []string{"foo"},
+			},
+		},
+		{
+			name:     "functions in paths -- yes functions from input",
+			instance: RunFns{FunctionPaths: []string{"foo"}, NoFunctionsFromInput: getFalse()},
+			expected: RunFns{
+				Output:               os.Stdout,
+				Input:                os.Stdin,
+				NoFunctionsFromInput: getFalse(),
+				FunctionPaths:        []string{"foo"},
+			},
+		},
+	}
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt.name, func(t *testing.T) {
+			(&tt.instance).init()
+			(&tt.instance).containerFilterProvider = nil
+			if !assert.Equal(t, tt.expected, tt.instance) {
+				t.FailNow()
+			}
+		})
+	}
+}
+
+func getTrue() *bool {
+	t := true
+	return &t
+}
+
+func getFalse() *bool {
+	f := false
+	return &f
+}
 
 // TestRunFns_getFilters tests how filters are found and sorted
 func TestRunFns_getFilters(t *testing.T) {
@@ -72,6 +157,10 @@ func TestRunFns_getFilters(t *testing.T) {
 		// if true, create the function in a separate directory from
 		// the config, and provide it through FunctionPaths
 		outOfPackage bool
+
+		// if true, create the function as an explicit Functions input
+		explicitFunction bool
+
 		// if true and outOfPackage is true, create a new directory
 		// for this function separate from the previous one.  If
 		// false and outOfPackage is true, create the function in
@@ -173,7 +262,7 @@ metadata:
 		//
 		//
 		{name: "sort functions -- skip implicit",
-			noFunctionsFromInput: &tru,
+			noFunctionsFromInput: getTrue(),
 			in: []f{
 				{
 					path: filepath.Join("foo", "a.yaml"),
@@ -203,7 +292,7 @@ metadata:
 		//
 		//
 		{name: "sort functions -- include implicit",
-			noFunctionsFromInput: &fls,
+			noFunctionsFromInput: getFalse(),
 			in: []f{
 				{
 					path: filepath.Join("foo", "a.yaml"),
@@ -233,7 +322,7 @@ metadata:
 		//
 		//
 		{name: "sort functions -- implicit first",
-			noFunctionsFromInput: &fls,
+			noFunctionsFromInput: getFalse(),
 			in: []f{
 				{
 					path:         filepath.Join("foo", "a.yaml"),
@@ -259,6 +348,76 @@ metadata:
 			},
 			out: []string{"b", "a"},
 		},
+
+		// Test
+		//
+		//
+		{name: "explicit functions",
+			in: []f{
+				{
+					explicitFunction: true,
+					value: `
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: c
+`,
+				},
+				{
+					path: filepath.Join("b.yaml"),
+					value: `
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: b
+`,
+				},
+			},
+			out: []string{"c"},
+		},
+
+		// Test
+		//
+		//
+		{name: "sort functions -- implicit first",
+			noFunctionsFromInput: getFalse(),
+			in: []f{
+				{
+					explicitFunction: true,
+					value: `
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: c
+`,
+				},
+				{
+					path:         filepath.Join("foo", "a.yaml"),
+					outOfPackage: true, // out of package is run last
+					value: `
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: a
+`,
+				},
+				{
+					path: filepath.Join("b.yaml"),
+					value: `
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: b
+`,
+				},
+			},
+			out: []string{"b", "a", "c"},
+		},
 	}
 
 	for i := range tests {
@@ -270,12 +429,14 @@ metadata:
 
 			// write the functions to files
 			var fnPaths []string
+			var parsedFns []*yaml.RNode
 			var fnPath string
 			var err error
 			for _, f := range tt.in {
 				// get the location for the file
 				var dir string
-				if f.outOfPackage {
+				switch {
+				case f.outOfPackage:
 					// if out of package, write to a separate temp directory
 					if f.newFnPath || fnPath == "" {
 						// create a new fn directory
@@ -287,25 +448,30 @@ metadata:
 						fnPaths = append(fnPaths, fnPath)
 					}
 					dir = fnPath
-				} else {
+				case f.explicitFunction:
+					parsedFns = append(parsedFns, yaml.MustParse(f.value))
+				default:
 					// if in package, write to the dir containing the configs
 					dir = d
 				}
 
-				// create the parent dir and write the file
-				err = os.MkdirAll(filepath.Join(dir, filepath.Dir(f.path)), 0700)
-				if !assert.NoError(t, err) {
-					t.FailNow()
-				}
-				err := ioutil.WriteFile(filepath.Join(dir, f.path), []byte(f.value), 0600)
-				if !assert.NoError(t, err) {
-					t.FailNow()
+				if !f.explicitFunction {
+					// create the parent dir and write the file
+					err = os.MkdirAll(filepath.Join(dir, filepath.Dir(f.path)), 0700)
+					if !assert.NoError(t, err) {
+						t.FailNow()
+					}
+					err := ioutil.WriteFile(filepath.Join(dir, f.path), []byte(f.value), 0600)
+					if !assert.NoError(t, err) {
+						t.FailNow()
+					}
 				}
 			}
 
 			// init the instance
 			r := &RunFns{
 				FunctionPaths:        fnPaths,
+				Functions:            parsedFns,
 				Path:                 d,
 				NoFunctionsFromInput: tt.noFunctionsFromInput,
 			}
@@ -313,7 +479,7 @@ metadata:
 
 			// get the filters which would be run
 			var results []string
-			fltrs, err := r.getFilters()
+			_, fltrs, _, err := r.getNodesAndFilters()
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -351,6 +517,7 @@ func TestCmd_Execute(t *testing.T) {
 	assert.Contains(t, string(b), "kind: StatefulSet")
 }
 
+// TestCmd_Execute_setOutput tests the execution of a filter reading and writing to a dir
 func TestCmd_Execute_setFunctionPaths(t *testing.T) {
 	dir := setupTest(t)
 	defer os.RemoveAll(dir)
@@ -371,6 +538,9 @@ func TestCmd_Execute_setFunctionPaths(t *testing.T) {
 		Path:                    dir,
 		containerFilterProvider: getFilterProvider(t),
 	}
+	// initialize the defaults
+	instance.init()
+
 	err = instance.Execute()
 	if !assert.NoError(t, err) {
 		return
@@ -383,6 +553,7 @@ func TestCmd_Execute_setFunctionPaths(t *testing.T) {
 	assert.Contains(t, string(b), "kind: StatefulSet")
 }
 
+// TestCmd_Execute_setOutput tests the execution of a filter using an io.Writer as output
 func TestCmd_Execute_setOutput(t *testing.T) {
 	dir := setupTest(t)
 	defer os.RemoveAll(dir)
@@ -399,6 +570,8 @@ func TestCmd_Execute_setOutput(t *testing.T) {
 		Path:                    dir,
 		containerFilterProvider: getFilterProvider(t),
 	}
+	// initialize the defaults
+	instance.init()
 
 	if !assert.NoError(t, instance.Execute()) {
 		return
@@ -410,6 +583,53 @@ func TestCmd_Execute_setOutput(t *testing.T) {
 	}
 	assert.NotContains(t, string(b), "kind: StatefulSet")
 	assert.Contains(t, out.String(), "kind: StatefulSet")
+}
+
+// TestCmd_Execute_setInput tests the execution of a filter using an io.Reader as input
+func TestCmd_Execute_setInput(t *testing.T) {
+	dir := setupTest(t)
+	defer os.RemoveAll(dir)
+	if !assert.NoError(t, ioutil.WriteFile(
+		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
+		return
+	}
+
+	read, err := kio.LocalPackageReader{PackagePath: dir}.Read()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	input := &bytes.Buffer{}
+	if !assert.NoError(t, kio.ByteWriter{Writer: input}.Write(read)) {
+		t.FailNow()
+	}
+
+	outDir, err := ioutil.TempDir("", "kustomize-test")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	if !assert.NoError(t, ioutil.WriteFile(
+		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
+		return
+	}
+
+	instance := RunFns{
+		Input:                   input, // read from input
+		Path:                    outDir,
+		containerFilterProvider: getFilterProvider(t),
+	}
+	// initialize the defaults
+	instance.init()
+
+	if !assert.NoError(t, instance.Execute()) {
+		return
+	}
+	b, err := ioutil.ReadFile(
+		filepath.Join(outDir, "java", "java-deployment.resource.yaml"))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, string(b), "kind: StatefulSet")
 }
 
 // setupTest initializes a temp test directory containing test data
