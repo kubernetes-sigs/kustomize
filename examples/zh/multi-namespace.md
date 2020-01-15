@@ -1,6 +1,6 @@
 # 示例：使用通用的 base 应用多 namespace
 
-`kustomize` 支持使用通用的 base 定义具有不同 namespace 的多个 variants。
+`kustomize` 支持基于同一base具有不同 namespace 的多个 variants。
 
 只需将 overlay 作为新的 kustomization 的 base，就可以创建一个额外的 overlay 将这些 variants 组合在一起。下面使用一个 pod 作为 base 来进行演示。
 
@@ -36,7 +36,7 @@ spec:
 EOF
 ```
 
-定义 namespace-a 的 overlaying base variant：
+定义 namespace-a 的 variant：
 <!-- @makeNamespaceA @testAgainstLatestRelease -->
 ```
 NSA=$DEMO_HOME/namespace-a
@@ -57,7 +57,7 @@ metadata:
 EOF
 ```
 
-定义 namespace-b 的 overlaying base variant：
+定义 namespace-b 的 variant：
 <!-- @makeNamespaceB @testAgainstLatestRelease -->
 ```
 NSB=$DEMO_HOME/namespace-b
@@ -103,7 +103,7 @@ EOF
 >     └── namespace.yaml
 > ```
 
-执行 `kustomize build` 命令，输出两个 namespace 包含 namespace-a 和 namespace-b 的 pod 对象。
+输出两个 namespace 的 pod 对象，分别在 namespace-a 和 namespace-b。
 
 <!-- @confirmVariants @testAgainstLatestRelease -->
 ```

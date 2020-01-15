@@ -4,7 +4,7 @@
 
 可以创建其他 overlay 来将这些 variants 组合在一起：只需将 overlay 声明为新 kustomization 的 base 即可。
 
-如果 base 由于某种原因无法控制，这也是在多个 variants 中应用通用的 label 或 annotation 的一种方法。另一种方法是通过 variants 中定义的 namePrefix。
+如果 base 由于某种原因无法控制，将多个 variants 组合在一起也可以为他们添加通用的 label 或 annotation。
 
 下面使用一个 pod 作为 base 来进行演示。
 
@@ -107,7 +107,7 @@ EOF
 >     └── kustomization.yaml
 > ```
 
-执行 `kustomize build` 命令，输出包含三个来自 dev、staging 和 production variants 的 pod 对象。
+输出包含三个 pod 对象，分别来自 dev、staging 和 production variants。
 
 <!-- @confirmVariants @testAgainstLatestRelease -->
 ```
