@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"reflect"
 	"sort"
 	"strings"
@@ -110,7 +111,7 @@ func (s sortableDocs) Len() int {
 }
 
 func TestCrawlGithubRunner(t *testing.T) {
-	fmt.Println("testing CrawlGithubRunner")
+	log.Println("testing CrawlGithubRunner")
 	tests := []struct {
 		tc   []Crawler
 		errs []error
@@ -216,7 +217,7 @@ func TestCrawlGithubRunner(t *testing.T) {
 }
 
 func TestCrawlFromSeed(t *testing.T) {
-	fmt.Println("testing CrawlFromSeed")
+	log.Println("testing CrawlFromSeed")
 
 	tests := []struct {
 		seed    CrawlSeed
