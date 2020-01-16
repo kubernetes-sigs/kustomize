@@ -18,7 +18,7 @@ verify-kustomize: \
 	test-examples-kustomize-against-latest
 
 .PHONY: verify-kustomize-e2e
-verify-kustomize-e2e: test-examples-e2e-kustomize-against-HEAD
+verify-kustomize-e2e: test-examples-e2e-kustomize
 
 # Other builds in this repo might want a different linter version.
 # Without one Makefile to rule them all, the different makes
@@ -202,8 +202,16 @@ test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
 	./hack/testExamplesAgainstKustomize.sh HEAD
 
 .PHONY:
-test-examples-e2e-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip $(MYGOBIN)/resource
-	./hack/testExamplesE2EAgainstKustomize.sh HEAD
+test-examples-e2e-kustomize: $(MYGOBIN)/mdrip
+	( \
+		set -e; \
+		/bin/rm -f $(MYGOBIN)/kustomize; \
+		echo "Installing kustomize from ."; \
+		cd kustomize; go install .; cd ..; \
+		echo "Installing resource from ."; \
+        cd cmd/resource; go install .; cd ../..; \
+		./hack/testExamplesE2EAgainstKustomize.sh .; \
+	)
 
 .PHONY:
 test-examples-kustomize-against-latest: $(MYGOBIN)/mdrip
