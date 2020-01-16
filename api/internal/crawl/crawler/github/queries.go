@@ -117,7 +117,7 @@ type RequestConfig struct {
 // understand why the request object is useful.
 func (rc RequestConfig) CodeSearchRequestWith(query Query) request {
 	vals := url.Values{
-		"sort": []string{"indexed"},
+		"sort":  []string{"indexed"},
 		"order": []string{"desc"},
 	}
 	req := rc.makeRequest("search/code", query, vals)

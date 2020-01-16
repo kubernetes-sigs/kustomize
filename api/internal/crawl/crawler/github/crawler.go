@@ -16,6 +16,8 @@ import (
 	"strings"
 	"time"
 
+	"sigs.k8s.io/kustomize/api/internal/crawl/utils"
+
 	"sigs.k8s.io/kustomize/api/internal/crawl/crawler"
 	"sigs.k8s.io/kustomize/api/internal/crawl/doc"
 	"sigs.k8s.io/kustomize/api/internal/crawl/httpclient"
@@ -68,7 +70,7 @@ func (gc githubCrawler) DefaultBranch(repo string) string {
 
 // Implements crawler.Crawler.
 func (gc githubCrawler) Crawl(ctx context.Context,
-	output chan<- crawler.CrawledDocument, seen crawler.SeenMap) error {
+	output chan<- crawler.CrawledDocument, seen utils.SeenMap) error {
 
 	noETagClient := GhClient{
 		RequestConfig: gc.client.RequestConfig,
@@ -195,9 +197,9 @@ func (gc githubCrawler) Match(d *doc.Document) bool {
 
 type RangeQueryResult struct {
 	totalDocCnt uint64
-	seenDocCnt   uint64
-	newDocCnt uint64
-	errorCnt  uint64
+	seenDocCnt  uint64
+	newDocCnt   uint64
+	errorCnt    uint64
 }
 
 func (r *RangeQueryResult) Add(other RangeQueryResult) {
@@ -209,7 +211,7 @@ func (r *RangeQueryResult) Add(other RangeQueryResult) {
 
 func (r *RangeQueryResult) String() string {
 	return fmt.Sprintf("got %d files from API. "+
-		"%d have been seen before. %d are new and sent to the output channel." +
+		"%d have been seen before. %d are new and sent to the output channel."+
 		" %d have kustomizationResultAdapter errors.",
 		r.totalDocCnt, r.seenDocCnt, r.newDocCnt, r.errorCnt)
 }
@@ -217,7 +219,7 @@ func (r *RangeQueryResult) String() string {
 // processQuery follows all of the pages in a query, and updates/adds the
 // documents from the crawl to the datastore/index.
 func processQuery(ctx context.Context, gcl GhClient, query string,
-	output chan<- crawler.CrawledDocument, seen crawler.SeenMap,
+	output chan<- crawler.CrawledDocument, seen utils.SeenMap,
 	branchMap map[string]string) (RangeQueryResult, error) {
 
 	queryPages := make(chan GhResponseInfo)
@@ -271,7 +273,7 @@ func processQuery(ctx context.Context, gcl GhClient, query string,
 	return result, errs
 }
 
-func kustomizationResultAdapter(gcl GhClient, k GhFileSpec, seen crawler.SeenMap,
+func kustomizationResultAdapter(gcl GhClient, k GhFileSpec, seen utils.SeenMap,
 	branchMap map[string]string) (crawler.CrawledDocument, error) {
 	url := gcl.ReposRequest(k.Repository.FullName)
 	defaultBranch, err := gcl.GetDefaultBranch(url, k.Repository.URL, branchMap)
