@@ -24,6 +24,8 @@ type flagsAndArgs struct {
 	EnvFileSource string
 	// Type of secret to create
 	Type string
+	// Namespace of secret
+	Namespace string
 }
 
 // Validate validates required fields are set to support structured generation.

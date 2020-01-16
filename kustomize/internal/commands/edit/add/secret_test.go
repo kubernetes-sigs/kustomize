@@ -28,6 +28,7 @@ func TestNewCmdAddSecretIsNotNil(t *testing.T) {
 
 func TestMakeSecretArgs(t *testing.T) {
 	secretName := "test-secret-name"
+	namespace := "test-secret-namespace"
 
 	kustomization := &types.Kustomization{
 		NamePrefix: "test-name-prefix",
@@ -38,7 +39,7 @@ func TestMakeSecretArgs(t *testing.T) {
 	if len(kustomization.SecretGenerator) != 0 {
 		t.Fatal("Initial kustomization should not have any secrets")
 	}
-	args := findOrMakeSecretArgs(kustomization, secretName, secretType)
+	args := findOrMakeSecretArgs(kustomization, secretName, namespace, secretType)
 
 	if args == nil {
 		t.Fatalf("args should always be non-nil")
@@ -52,7 +53,7 @@ func TestMakeSecretArgs(t *testing.T) {
 		t.Fatalf("Pointer address for newly inserted secret generator should be same")
 	}
 
-	args2 := findOrMakeSecretArgs(kustomization, secretName, secretType)
+	args2 := findOrMakeSecretArgs(kustomization, secretName, namespace, secretType)
 
 	if args2 != args {
 		t.Fatalf("should have returned an existing args with name: %v", secretName)
@@ -65,7 +66,7 @@ func TestMakeSecretArgs(t *testing.T) {
 
 func TestMergeFlagsIntoSecretArgs_LiteralSources(t *testing.T) {
 	k := &types.Kustomization{}
-	args := findOrMakeSecretArgs(k, "foo", "forbidden")
+	args := findOrMakeSecretArgs(k, "foo", "bar", "forbidden")
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
 		flagsAndArgs{LiteralSources: []string{"k1=v1"}})
@@ -82,7 +83,7 @@ func TestMergeFlagsIntoSecretArgs_LiteralSources(t *testing.T) {
 
 func TestMergeFlagsIntoSecretArgs_FileSources(t *testing.T) {
 	k := &types.Kustomization{}
-	args := findOrMakeSecretArgs(k, "foo", "forbidden")
+	args := findOrMakeSecretArgs(k, "foo", "bar", "forbidden")
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
 		flagsAndArgs{FileSources: []string{"file1"}})
@@ -99,7 +100,7 @@ func TestMergeFlagsIntoSecretArgs_FileSources(t *testing.T) {
 
 func TestMergeFlagsIntoSecretArgs_EnvSource(t *testing.T) {
 	k := &types.Kustomization{}
-	args := findOrMakeSecretArgs(k, "foo", "forbidden")
+	args := findOrMakeSecretArgs(k, "foo", "bar", "forbidden")
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
 		flagsAndArgs{EnvFileSource: "env1"})
