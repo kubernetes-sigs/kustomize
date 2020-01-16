@@ -202,7 +202,7 @@ test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
 	./hack/testExamplesAgainstKustomize.sh HEAD
 
 .PHONY:
-test-examples-e2e-kustomize: $(MYGOBIN)/mdrip
+test-examples-e2e-kustomize: $(MYGOBIN)/mdrip $(MYGOBIN)/kind
 	( \
 		set -e; \
 		/bin/rm -f $(MYGOBIN)/kustomize; \
@@ -255,6 +255,16 @@ $(MYGOBIN)/helm:
 		tar -xvzf helm-v2.13.1-linux-amd64.tar.gz; \
 		mv linux-amd64/helm $(MYGOBIN); \
 		rm -rf $$d \
+	)
+
+$(MYGOBIN)/kind:
+	( \
+        set -e; \
+        d=$(shell mktemp -d); cd $$d; \
+        wget -O ./kind https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-$(shell uname)-amd64; \
+        chmod +x ./kind; \
+        mv ./kind $(MYGOBIN); \
+        rm -rf $$d; \
 	)
 
 .PHONY: clean

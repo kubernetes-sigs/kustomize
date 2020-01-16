@@ -168,8 +168,8 @@ MYGOBIN=$GOPATH/bin
 Delete any existing kind cluster and create a new one. By default the name of the cluster is "kind"
 <!-- @deleteAndCreateKindCluster @testE2EAgainstLatestRelease -->
 ```
-kind delete cluster;
-kind create cluster;
+$MYGOBIN/kind delete cluster;
+$MYGOBIN/kind create cluster;
 ```
 
 Use the kustomize binary in MYGOBIN to apply a deployment, fetch the status and verify the status.
@@ -198,7 +198,7 @@ test 1 == \
 Clean-up the cluster 
 <!-- @createKindCluster @testE2EAgainstLatestRelease -->
 ```
-kind delete cluster;
+$MYGOBIN/kind delete cluster;
 ```
 
 ###Next Exercise
