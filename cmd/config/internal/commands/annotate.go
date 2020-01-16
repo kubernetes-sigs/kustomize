@@ -63,7 +63,8 @@ func (r *AnnotateRunner) runE(c *cobra.Command, args []string) error {
 	return handleError(c, kio.Pipeline{
 		Inputs:  input,
 		Filters: []kio.Filter{r},
-		Outputs: output}.Execute())
+		Outputs: output,
+	}.Execute())
 }
 
 func (r *AnnotateRunner) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
