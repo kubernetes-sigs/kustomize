@@ -64,14 +64,20 @@ func (f *CaptureIdentifiersFilter) Filter(slice []*yaml.RNode) ([]*yaml.RNode, e
 		if err != nil {
 			return nil, err
 		}
-		f.Identifiers = append(f.Identifiers, wait.ResourceIdentifier{
-			Name:      id.Name,
-			Namespace: id.Namespace,
-			GroupKind: schema.GroupKind{
-				Group: gv.Group,
-				Kind:  id.Kind,
-			},
-		})
+		if IsValidKubernetesResource(id) {
+			f.Identifiers = append(f.Identifiers, wait.ResourceIdentifier{
+				Name:      id.Name,
+				Namespace: id.Namespace,
+				GroupKind: schema.GroupKind{
+					Group: gv.Group,
+					Kind:  id.Kind,
+				},
+			})
+		}
 	}
 	return slice, nil
+}
+
+func IsValidKubernetesResource(id yaml.ResourceIdentifier) bool {
+	return id.GetKind() != "" && id.GetAPIVersion() != "" && id.GetName() != ""
 }
