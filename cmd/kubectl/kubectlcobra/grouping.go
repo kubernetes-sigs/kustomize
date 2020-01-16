@@ -9,6 +9,7 @@ import (
 	"hash/fnv"
 	"sort"
 	"strconv"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -75,7 +76,8 @@ func sortGroupingObject(infos []*resource.Info) bool {
 func addInventoryToGroupingObj(infos []*resource.Info) error {
 
 	// Iterate through the objects (infos), creating an Inventory struct
-	// as metadata for the object, or if it's the grouping object, store it.
+	// as metadata for each object, or if it's the grouping object, store it.
+	var groupingInfo *resource.Info
 	var groupingObj *unstructured.Unstructured
 	inventoryMap := map[string]string{}
 	for _, info := range infos {
@@ -90,6 +92,7 @@ func addInventoryToGroupingObj(infos []*resource.Info) error {
 			if !ok {
 				return fmt.Errorf("Grouping object is not an Unstructured: %#v", groupingObj)
 			}
+			groupingInfo = info
 		} else {
 			if obj == nil {
 				return fmt.Errorf("Creating inventory; object is nil")
@@ -125,11 +128,16 @@ func addInventoryToGroupingObj(infos []*resource.Info) error {
 		if err != nil {
 			return err
 		}
+		// Add the hash as a suffix to the grouping object's name.
+		invHashStr := strconv.FormatUint(uint64(invHash), 16)
+		if err := addSuffixToName(groupingInfo, invHashStr); err != nil {
+			return err
+		}
 		annotations := groupingObj.GetAnnotations()
 		if annotations == nil {
 			annotations = map[string]string{}
 		}
-		annotations[GroupingHash] = strconv.FormatUint(uint64(invHash), 16)
+		annotations[GroupingHash] = invHashStr
 		groupingObj.SetAnnotations(annotations)
 	}
 	return nil
@@ -210,4 +218,35 @@ func mapKeysToSlice(m map[string]string) []string {
 		i++
 	}
 	return s
+}
+
+// addSuffixToName adds the passed suffix (usually a hash) as a suffix
+// to the name of the passed object stored in the Info struct. Returns
+// an error if the object is not "*unstructured.Unstructured" or if the
+// name stored in the object differs from the name in the Info struct.
+func addSuffixToName(info *resource.Info, suffix string) error {
+
+	if info == nil {
+		return fmt.Errorf("Nil resource.Info")
+	}
+	suffix = strings.TrimSpace(suffix)
+	if len(suffix) == 0 {
+		return fmt.Errorf("Passed empty suffix")
+	}
+
+	accessor, _ := meta.Accessor(info.Object)
+	name := accessor.GetName()
+	if name != info.Name {
+		return fmt.Errorf("Grouping object (%s) and resource.Info (%s) have different names\n", name, info.Name)
+	}
+	// Error if name alread has suffix.
+	suffix = "-" + suffix
+	if strings.HasSuffix(name, suffix) {
+		return fmt.Errorf("Name already has suffix: %s\n", name)
+	}
+	name += suffix
+	accessor.SetName(name)
+	info.Name = name
+
+	return nil
 }

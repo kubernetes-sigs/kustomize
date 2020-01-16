@@ -822,92 +822,49 @@ func TestReplicasetStatus(t *testing.T) {
 	}
 }
 
-var pdbNoStatus = `
-apiVersion: policy/v1
+var pdbNotObserved = `
+apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
 metadata:
-   generation: 1
+   generation: 2
    name: test
+   namespace: qual
+status:
+   observedGeneration: 1
 `
 
-var pdbOK1 = `
-apiVersion: policy/v1
+var pdbObserved = `
+apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
 metadata:
    generation: 1
    name: test
    namespace: qual
 status:
-   currentHealthy: 2
-   desiredHealthy: 2
-`
-
-var pdbMoreHealthy = `
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-   generation: 1
-   name: test
-   namespace: qual
-status:
-   currentHealthy: 4
-   desiredHealthy: 2
-`
-
-var pdbLessHealthy = `
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-   generation: 1
-   name: test
-   namespace: qual
-status:
-   currentHealthy: 2
-   desiredHealthy: 4
+   observedGeneration: 1
 `
 
 func TestPDBStatus(t *testing.T) {
 	testCases := map[string]testSpec{
-		"pdbNoStatus": {
-			spec:           pdbNoStatus,
+		"pdbNotObserved": {
+			spec:           pdbNotObserved,
 			expectedStatus: InProgressStatus,
 			expectedConditions: []Condition{{
 				Type:   ConditionInProgress,
 				Status: corev1.ConditionTrue,
-				Reason: "ZeroDesiredHealthy",
+				Reason: "LatestGenerationNotObserved",
 			}},
 			absentConditionTypes: []ConditionType{
 				ConditionFailed,
 			},
 		},
-		"pdbOK1": {
-			spec:               pdbOK1,
+		"pdbObserved": {
+			spec:               pdbObserved,
 			expectedStatus:     CurrentStatus,
 			expectedConditions: []Condition{},
 			absentConditionTypes: []ConditionType{
 				ConditionFailed,
 				ConditionInProgress,
-			},
-		},
-		"pdbMoreHealthy": {
-			spec:               pdbMoreHealthy,
-			expectedStatus:     CurrentStatus,
-			expectedConditions: []Condition{},
-			absentConditionTypes: []ConditionType{
-				ConditionFailed,
-				ConditionInProgress,
-			},
-		},
-		"pdbLessHealthy": {
-			spec:           pdbLessHealthy,
-			expectedStatus: InProgressStatus,
-			expectedConditions: []Condition{{
-				Type:   ConditionInProgress,
-				Status: corev1.ConditionTrue,
-				Reason: "BudgetNotMet",
-			}},
-			absentConditionTypes: []ConditionType{
-				ConditionFailed,
 			},
 		},
 	}

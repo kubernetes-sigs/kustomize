@@ -395,26 +395,21 @@ func podConditions(u *unstructured.Unstructured) (*Result, error) {
 	return newInProgressStatus("PodNotReady", message), nil
 }
 
-// pdbConditions return standardized Conditions for Deployment
+// pdbConditions computes the status for PodDisruptionBudgets. A PDB
+// is currently considered Current if the disruption controller has
+// observed the latest version of the PDB resource and has computed
+// the AllowedDisruptions. PDBs do have ObservedGeneration in the
+// Status object, so if this function gets called we know that
+// the controller has observed the latest changes.
+// The disruption controller does not set any conditions if
+// computing the AllowedDisruptions fails (and there are many ways
+// it can fail), but there is PR against OSS Kubernetes to address
+// this: https://github.com/kubernetes/kubernetes/pull/86929
 func pdbConditions(u *unstructured.Unstructured) (*Result, error) {
-	obj := u.UnstructuredContent()
-
-	// replicas
-	currentHealthy := GetIntField(obj, ".status.currentHealthy", 0)
-	desiredHealthy := GetIntField(obj, ".status.desiredHealthy", 0)
-	if desiredHealthy == 0 {
-		message := "Missing or zero .status.desiredHealthy"
-		return newInProgressStatus("ZeroDesiredHealthy", message), nil
-	}
-	if desiredHealthy > currentHealthy {
-		message := fmt.Sprintf("Budget not met. healthy replicas: %d/%d", currentHealthy, desiredHealthy)
-		return newInProgressStatus("BudgetNotMet", message), nil
-	}
-
 	// All ok
 	return &Result{
 		Status:     CurrentStatus,
-		Message:    fmt.Sprintf("Budget is met. Replicas: %d/%d", currentHealthy, desiredHealthy),
+		Message:    "AllowedDisruptions has been computed.",
 		Conditions: []Condition{},
 	}, nil
 }

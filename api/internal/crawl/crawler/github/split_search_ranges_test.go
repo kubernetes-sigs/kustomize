@@ -2,6 +2,7 @@ package github
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 	"testing"
 )
@@ -11,7 +12,7 @@ type testCachedSearch struct {
 }
 
 func (c testCachedSearch) CountResults(upperBound uint64) (uint64, error) {
-	fmt.Printf("CountResults(%05x)\n", upperBound)
+	log.Printf("CountResults(%05x)\n", upperBound)
 	count, ok := c.cache[upperBound]
 	if !ok {
 		return count, fmt.Errorf("cache not set at %x", upperBound)

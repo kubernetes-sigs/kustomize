@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"reflect"
 	"sort"
 	"strings"
@@ -75,7 +76,7 @@ func newCrawler(matchPrefix string, err error,
 
 // Crawl implements the Crawler interface for testing.
 func (c testCrawler) Crawl(_ context.Context,
-	output chan<- CrawledDocument) error {
+	output chan<- CrawledDocument, _ SeenMap) error {
 
 	for i, d := range c.docs {
 		isResource := true
@@ -110,7 +111,7 @@ func (s sortableDocs) Len() int {
 }
 
 func TestCrawlGithubRunner(t *testing.T) {
-	fmt.Println("testing CrawlGithubRunner")
+	log.Println("testing CrawlGithubRunner")
 	tests := []struct {
 		tc   []Crawler
 		errs []error
@@ -181,8 +182,9 @@ func TestCrawlGithubRunner(t *testing.T) {
 			defer close(output)
 			defer wg.Done()
 
+			seen := NewSeenMap()
 			errs := CrawlGithubRunner(context.Background(),
-				output, test.tc)
+				output, test.tc, seen)
 
 			// Check that errors are returned as they should be.
 			if !reflect.DeepEqual(errs, test.errs) {
@@ -215,7 +217,7 @@ func TestCrawlGithubRunner(t *testing.T) {
 }
 
 func TestCrawlFromSeed(t *testing.T) {
-	fmt.Println("testing CrawlFromSeed")
+	log.Println("testing CrawlFromSeed")
 
 	tests := []struct {
 		seed    CrawlSeed
@@ -322,7 +324,7 @@ resources:
 				visited[d.ID()]++
 				return nil
 			},
-			make(map[string]struct{}),
+			NewSeenMap(),
 		)
 		if lv, lc := len(visited), len(tc.corpus); lv != lc {
 			t.Errorf("error: %d of %d documents visited.", lv, lc)

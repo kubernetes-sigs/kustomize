@@ -36,6 +36,7 @@ func main() {
 
 		m := entry.(map[string]interface{})
 		if payload, ok := m["textPayload"]; ok {
+			// use fmt.Printf here instead of log.Printf to avoid the time and code location info the log package provides
 			fmt.Printf("%s", payload)
 		} else {
 			log.Printf("the log entry does not have the `textPayload` field: %s\n", line)

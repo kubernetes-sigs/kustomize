@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -45,7 +46,7 @@ func NewCrawlMode(s string) CrawlMode {
 		return CrawlUser
 	case "github-repo":
 		return CrawlRepo
-	case "":
+	case "index+github":
 		return CrawlIndexAndGithub
 	case "index":
 		return CrawlIndex
@@ -56,30 +57,33 @@ func NewCrawlMode(s string) CrawlMode {
 	}
 }
 
-func Usage() {
-	fmt.Printf("Usage: %s [mode] [githubUser|githubRepo]\n", os.Args[0])
-	fmt.Printf("\tmode can be one of [github-user, github-repo, index, github]\n")
-	fmt.Printf("%s: crawl all the documents in the index and crawling all the kustomization files on Github\n", os.Args[0])
-	fmt.Printf("%s index: crawl all the documents in the index\n", os.Args[0])
-	fmt.Printf("%s gihub: crawl all the kustomization files on Github\n", os.Args[0])
-	fmt.Printf("%s github-user <github-user>: Crawl all the kustomization files in all the repositories of a Github user\n", os.Args[0])
-	fmt.Printf("\tFor example, %s github-user kubernetes-sigs\n", os.Args[0])
-	fmt.Printf("%s github-repo <github-repo>: Crawl all the kustomization files in a Github repo\n", os.Args[0])
-	fmt.Printf("\tFor example, %s github-repo kubernetes-sigs/kustomize\n", os.Args[0])
-}
-
 func main() {
+	indexNamePtr := flag.String(
+		"index", "kustomize", "The name of the ElasticSearch index.")
+	modePtr := flag.String("mode", "index+github",
+		`The crawling mode, which can be one of [github-user, github-repo, index, github, index+github].
+  * github-user: crawl all the kustomization files in all the repositories of a Github user (--github-user must be specified for this mode).
+  * github-repo: crawl all the kustomization files in a Github repository (--github-repo must be specified for this mode).
+  * index: crawl all the documents in the index.
+  * gihub: crawl all the kustomization files on Github.
+  * index+github: crawl all the documents in the index and crawling all the kustomization files on Github.`)
+	githubUserPtr := flag.String("github-user", "",
+		"A github user name (e.g., kubernetes-sigs). This flag is required for the `github-user` mode.")
+	githubRepoPtr := flag.String("github-repo", "",
+		"A github repository name (e.g., kubernetes-sigs/kustomize). This flag is required for the `github-repo` mode.")
+	flag.Parse()
+
 	githubToken := os.Getenv(githubAccessTokenVar)
 	if githubToken == "" {
-		fmt.Printf("Must set the variable '%s' to make github requests.\n",
+		log.Printf("Must set the variable '%s' to make github requests.\n",
 			githubAccessTokenVar)
 		return
 	}
 
 	ctx := context.Background()
-	idx, err := index.NewKustomizeIndex(ctx)
+	idx, err := index.NewKustomizeIndex(ctx, *indexNamePtr)
 	if err != nil {
-		fmt.Printf("Could not create an index: %v\n", err)
+		log.Printf("Could not create an index: %v\n", err)
 		return
 	}
 
@@ -87,7 +91,7 @@ func main() {
 	cache, err := redis.DialURL(cacheURL)
 	clientCache := &http.Client{}
 	if err != nil {
-		fmt.Printf("Error: redis could not make a connection: %v\n", err)
+		log.Printf("Error: redis could not make a connection: %v\n", err)
 	} else {
 		clientCache = httpclient.NewClient(cache)
 	}
@@ -108,10 +112,10 @@ func main() {
 		case *doc.KustomizationDocument:
 			switch mode {
 			case index.Delete:
-				fmt.Println("Deleting: ", d)
+				log.Printf("Deleting: %v", d)
 				return idx.Delete(d.ID())
 			default:
-				fmt.Println("Inserting: ", d)
+				log.Printf("Inserting: %v", d)
 				return idx.Put(d.ID(), d)
 			}
 		default:
@@ -121,14 +125,9 @@ func main() {
 
 	// seen tracks the IDs of all the documents in the index.
 	// This helps avoid indexing a given document multiple times.
-	seen := make(map[string]struct{})
+	seen := crawler.NewSeenMap()
 
-	var mode CrawlMode
-	if len(os.Args) == 1 {
-		mode = CrawlIndexAndGithub
-	} else {
-		mode = NewCrawlMode(os.Args[1])
-	}
+	mode := NewCrawlMode(*modePtr)
 
 	ghCrawlerConstructor := func(user, repo string) crawler.Crawler {
 		if user != "" {
@@ -169,7 +168,7 @@ func main() {
 			}
 		}
 		if err := it.Err(); err != nil {
-			fmt.Printf("Error iterating: %v\n", err)
+			log.Fatalf("getSeedDocsFunc Error iterating: %v\n", err)
 		}
 	}
 
@@ -187,21 +186,21 @@ func main() {
 		crawlers := []crawler.Crawler{ghCrawlerConstructor("", "")}
 		crawler.CrawlGithub(ctx, crawlers, docConverter, indexFunc, seen)
 	case CrawlUser:
-		if len(os.Args) < 3 {
-			Usage()
-			log.Fatalf("Please specify a github user!")
+		if *githubUserPtr == "" {
+			flag.Usage()
+			log.Fatalf("Please specify a github user with the github-user flag!")
 		}
-		crawlers := []crawler.Crawler{ghCrawlerConstructor(os.Args[2], "")}
+		crawlers := []crawler.Crawler{ghCrawlerConstructor(*githubUserPtr, "")}
 		crawler.CrawlGithub(ctx, crawlers, docConverter, indexFunc, seen)
 	case CrawlRepo:
-		if len(os.Args) < 3 {
-			Usage()
-			log.Fatalf("Please specify a github repo!")
+		if *githubRepoPtr == "" {
+			flag.Usage()
+			log.Fatalf("Please specify a github repository with the github-repo flag!")
 		}
-		crawlers := []crawler.Crawler{ghCrawlerConstructor("", os.Args[2])}
+		crawlers := []crawler.Crawler{ghCrawlerConstructor("", *githubRepoPtr)}
 		crawler.CrawlGithub(ctx, crawlers, docConverter, indexFunc, seen)
 	case CrawlUnknown:
-		Usage()
-		log.Fatalf("The crawler mode must be one of [github-user, github-repo, index, github]")
+		flag.Usage()
+		log.Fatalf("The --mode flag must be one of [github-user, github-repo, index, github, index+github].")
 	}
 }

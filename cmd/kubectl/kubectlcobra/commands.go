@@ -6,6 +6,7 @@ package kubectlcobra
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"strings"
 
@@ -79,6 +80,8 @@ func updateHelp(names []string, c *cobra.Command) {
 // NewCmdApply creates the `apply` command
 func NewCmdApply(baseName string, f util.Factory, ioStreams genericclioptions.IOStreams) *cobra.Command {
 	o := apply.NewApplyOptions(ioStreams)
+	so := newStatusOptions(f, ioStreams)
+	o.PreProcessorFn = PrependGroupingObject(o)
 
 	cmd := &cobra.Command{
 		Use:                   "apply (-f FILENAME | -k DIRECTORY)",
@@ -95,6 +98,10 @@ func NewCmdApply(baseName string, f util.Factory, ioStreams genericclioptions.IO
 
 			cmdutil.CheckErr(o.Complete(f, cmd))
 			cmdutil.CheckErr(o.Run())
+			infos, _ := o.GetObjects()
+			if so.wait {
+				cmdutil.CheckErr(so.waitForStatus(infos))
+			}
 		},
 	}
 
@@ -102,6 +109,7 @@ func NewCmdApply(baseName string, f util.Factory, ioStreams genericclioptions.IO
 	o.DeleteFlags.AddFlags(cmd)
 	o.RecordFlags.AddFlags(cmd)
 	o.PrintFlags.AddFlags(cmd)
+	so.AddFlags(cmd)
 
 	o.Overwrite = true
 
@@ -111,4 +119,28 @@ func NewCmdApply(baseName string, f util.Factory, ioStreams genericclioptions.IO
 	cmdutil.AddServerSideApplyFlags(cmd)
 
 	return cmd
+}
+
+// PrependGroupingObject orders the objects to apply so the "grouping"
+// object stores the inventory, and it is first to be applied.
+func PrependGroupingObject(o *apply.ApplyOptions) func() error {
+	return func() error {
+		if o == nil {
+			return fmt.Errorf("ApplyOptions are nil")
+		}
+		infos, err := o.GetObjects()
+		if err != nil {
+			return err
+		}
+		_, exists := findGroupingObject(infos)
+		if exists {
+			if err := addInventoryToGroupingObj(infos); err != nil {
+				return err
+			}
+			if !sortGroupingObject(infos) {
+				return err
+			}
+		}
+		return nil
+	}
 }
