@@ -45,6 +45,7 @@ Advanced Documentation Topics:
 
 // Export commands publicly for composition
 var (
+	Annotate     = commands.AnnotateCommand
 	Cat          = commands.CatCommand
 	Count        = commands.CountCommand
 	CreateSetter = commands.CreateSetterCommand
@@ -91,6 +92,7 @@ func NewConfigCommand(name string) *cobra.Command {
 
 	name = strings.TrimSpace(name + " config")
 	commands.ExitOnError = true
+	root.AddCommand(commands.AnnotateCommand(name))
 	root.AddCommand(commands.GrepCommand(name))
 	root.AddCommand(commands.TreeCommand(name))
 	root.AddCommand(commands.CatCommand(name))
