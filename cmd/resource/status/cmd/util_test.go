@@ -7,21 +7,34 @@ import (
 )
 
 func TestIsValidKubernetesResource(t *testing.T) {
-	assert.False(t, IsValidKubernetesResource(nil))
 
-	id := yaml.ResourceIdentifier{
-		Name : "",
-		APIVersion : "",
-		Kind : "",
-		Namespace : "",
+	testCases := map[string]struct {
+		data       yaml.ResourceIdentifier
+		expected      bool
+	}{
+		"invalid resource": {
+			data:       yaml.ResourceIdentifier {
+				Name : "",
+				APIVersion : "",
+				Kind : "",
+				Namespace : "",
+			},
+			expected:   false,
+		},
+		"valid resource": {
+			data:       yaml.ResourceIdentifier {
+				Name : "SomeName",
+				APIVersion : "SomeVersion",
+				Kind : "SomeKind",
+				Namespace : "",
+			},
+			expected:   true,
+		},
 	}
-	assert.False(t, IsValidKubernetesResource(&id))
 
-	id.Name = "SomeName"
-	id.APIVersion = "SomeVersion"
-	id.Kind = "SomeKind"
-	assert.True(t, IsValidKubernetesResource(&id))
-
-	id.APIVersion = ""
-	assert.False(t, IsValidKubernetesResource(&id))
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			assert.Equal(t, IsValidKubernetesResource(tc.data), tc.expected)
+		})
+	}
 }
