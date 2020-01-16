@@ -38,6 +38,8 @@ type Crawler interface {
 	// Write to the document what the created time is.
 	SetCreated(context.Context, *doc.Document) error
 
+	SetDefaultBranch(*doc.Document)
+
 	Match(*doc.Document) bool
 }
 
@@ -78,7 +80,7 @@ func findMatch(d *doc.Document, crawlers []Crawler) Crawler {
 func addBranches(cdoc CrawledDocument, match Crawler, indx IndexFunc,
 	seen utils.SeenMap, stack *CrawlSeed) {
 
-	seen.Add(cdoc.ID())
+	seen.Set(cdoc.ID(), cdoc.GetDocument().FileType)
 
 	// Insert into index
 	if err := indx(cdoc, index.InsertOrUpdate); err != nil {
@@ -87,14 +89,14 @@ func addBranches(cdoc CrawledDocument, match Crawler, indx IndexFunc,
 		return
 	}
 
-	deps, err := cdoc.GetResources(true, false, false)
+	deps, err := cdoc.GetResources(true, true, true)
 	if err != nil {
 		logger.Println(err)
 		return
 	}
 
 	for _, dep := range deps {
-		if seen.Seen(dep.ID()) {
+		if seen.Seen(dep.ID()) && seen.Value(dep.ID()) == dep.FileType {
 			continue
 		}
 		*stack = append(*stack, dep)
@@ -102,7 +104,7 @@ func addBranches(cdoc CrawledDocument, match Crawler, indx IndexFunc,
 }
 
 func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv Converter, indx IndexFunc,
-	seen utils.SeenMap, stack *CrawlSeed) {
+	seen utils.SeenMap, stack *CrawlSeed, refreshDoc bool, updateFileType bool) {
 
 	UpdatedDocCount := 0
 	seenDocCount := 0
@@ -126,9 +128,11 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 		logger.Printf("Crawling doc %d: %s", crawledDocCount, tail.Path())
 
 		if seen.Seen(tail.ID()) {
-			logger.Printf("this doc has been seen before")
-			seenDocCount++
-			continue
+			if !updateFileType || seen.Value(tail.ID()) == tail.FileType {
+				logger.Printf("this doc has been seen before")
+				seenDocCount++
+				continue
+			}
 		}
 
 		if tail.WasCached() {
@@ -151,26 +155,34 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 		// calling FetchDocument. Otherwise, the binary may enter into an infinite loop
 		// if a kustomization file points to its kustmozation root in its `resources` or
 		// `bases` field.
-		seen.Add(tail.ID())
+		seen.Set(tail.ID(), tail.FileType)
 
-		if err := match.FetchDocument(ctx, tail); err != nil {
-			logger.Printf("FetchDocument failed on doc(%s): %v", tail.Path(), err)
-			FetchDocumentErrCount++
-			// delete the document from the index
-			cdoc := &doc.KustomizationDocument{
-				Document: *tail,
-			}
-			seen.Add(cdoc.ID())
-			if err := indx(cdoc, index.Delete); err != nil {
-				logger.Printf("Failed to delete doc(%s): %v", cdoc.Path(), err)
-			}
-			deleteDocCount++
-			continue
+		if refreshDoc || tail.DefaultBranch == "" {
+			match.SetDefaultBranch(tail)
 		}
 
-		if err := match.SetCreated(ctx, tail); err != nil {
-			logger.Printf("SetCreated failed on doc(%s): %v", tail.Path(), err)
-			SetCreatedErrCount++
+		if refreshDoc || tail.DocumentData == "" {
+			if err := match.FetchDocument(ctx, tail); err != nil {
+				logger.Printf("FetchDocument failed on doc(%s): %v", tail.Path(), err)
+				FetchDocumentErrCount++
+				// delete the document from the index
+				cdoc := &doc.KustomizationDocument{
+					Document: *tail,
+				}
+				seen.Set(cdoc.ID(), tail.FileType)
+				if err := indx(cdoc, index.Delete); err != nil {
+					logger.Printf("Failed to delete doc(%s): %v", cdoc.Path(), err)
+				}
+				deleteDocCount++
+				continue
+			}
+		}
+
+		if refreshDoc || tail.CreationTime == nil {
+			if err := match.SetCreated(ctx, tail); err != nil {
+				logger.Printf("SetCreated failed on doc(%s): %v", tail.Path(), err)
+				SetCreatedErrCount++
+			}
 		}
 
 		cdoc, err := conv(tail)
@@ -206,14 +218,14 @@ func CrawlFromSeed(ctx context.Context, seed CrawlSeed, crawlers []Crawler,
 	// Exploit seed to update bulk of corpus.
 	logger.Printf("updating %d documents from seed\n", len(seed))
 	// each unique document in seed will be crawled once.
-	doCrawl(ctx, &seed, crawlers, conv, indx, seen, &stack)
+	doCrawl(ctx, &seed, crawlers, conv, indx, seen, &stack, true, false)
 
 	// Traverse any new documents added while updating corpus.
 	logger.Printf("crawling %d new documents found in the seed\n", len(stack))
 	// While crawling each document in stack, the documents directly referred in the document
 	// will be added into stack.
 	// After this statement is done, stack will become empty.
-	doCrawl(ctx, &stack, crawlers, conv, indx, seen, &stack)
+	doCrawl(ctx, &stack, crawlers, conv, indx, seen, &stack, false, true)
 }
 
 // CrawlGithubRunner is a blocking function and only returns once all of the
@@ -294,6 +306,8 @@ func CrawlGithub(ctx context.Context, crawlers []Crawler, conv Converter,
 		for cdoc := range ch {
 			docCount++
 			logger.Printf("Processing doc %d found on Github", docCount)
+			// all the docs here are kustomization files found by querying Github, and
+			// their `FileType` fields all should be empty.
 			if seen.Seen(cdoc.ID()) {
 				logger.Printf("the doc has been seen before")
 				continue
@@ -320,5 +334,5 @@ func CrawlGithub(ctx context.Context, crawlers []Crawler, conv Converter,
 	// Handle deps of newly discovered documents.
 	logger.Printf("crawling the %d new documents referred by other documents",
 		len(stack))
-	doCrawl(ctx, &stack, crawlers, conv, indx, seen, &stack)
+	doCrawl(ctx, &stack, crawlers, conv, indx, seen, &stack, false, true)
 }

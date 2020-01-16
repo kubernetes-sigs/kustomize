@@ -26,6 +26,9 @@ const IndexConfig = `
 				"defaultBranch": {
 					"type": "keyword"
 				},
+				"fileType": {
+					"type": "keyword"
+				},
 				"document": {
 					"type": "text"
 				},

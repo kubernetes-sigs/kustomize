@@ -126,7 +126,7 @@ func main() {
 		}
 	}
 
-	// seen tracks the IDs of all the documents in the index.
+	// seen tracks the IDs of all the documents in the index and their corresponding file types.
 	// This helps avoid indexing a given document multiple times.
 	seen := utils.NewSeenMap()
 

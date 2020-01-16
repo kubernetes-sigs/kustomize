@@ -17,6 +17,9 @@ type Document struct {
 	DocumentData  string     `json:"document,omitempty"`
 	CreationTime  *time.Time `json:"creationTime,omitempty"`
 	IsSame        bool       `json:"-"`
+	// FileType can be one of the following:
+	// "generator", "transformer", "resource", "".
+	FileType string `json:"fileType,omitempty"`
 }
 
 // Implements the CrawlerDocument interface.
@@ -32,6 +35,7 @@ func (doc *Document) Copy() *Document {
 		DocumentData:  doc.DocumentData,
 		CreationTime:  doc.CreationTime,
 		IsSame:        doc.IsSame,
+		FileType:      doc.FileType,
 	}
 }
 

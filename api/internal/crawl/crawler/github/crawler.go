@@ -60,8 +60,16 @@ func NewCrawler(accessToken string, retryCount uint64, client *http.Client,
 	}
 }
 
-func (gc githubCrawler) SetDefaultBranch(repo, branch string) {
-	gc.branchMap[repo] = branch
+func (gc githubCrawler) SetDefaultBranch(d *doc.Document) {
+	url := gc.client.ReposRequest(d.RepositoryFullName())
+	defaultBranch, err := gc.client.GetDefaultBranch(url, d.RepositoryURL, gc.branchMap)
+	if err != nil {
+		logger.Printf(
+			"(error: %v) setting default_branch to master\n", err)
+		defaultBranch = "master"
+	}
+	d.DefaultBranch = defaultBranch
+	gc.branchMap[d.RepositoryURL] = d.DefaultBranch
 }
 
 func (gc githubCrawler) DefaultBranch(repo string) string {
@@ -114,19 +122,6 @@ func (gc githubCrawler) Crawl(ctx context.Context,
 // it will try to add each string in konfig.RecognizedKustomizationFileNames() to
 // d.FilePath, and try to fetch the document again.
 func (gc githubCrawler) FetchDocument(_ context.Context, d *doc.Document) error {
-	// set the default branch if it is empty
-	if d.DefaultBranch == "" {
-		url := gc.client.ReposRequest(d.RepositoryFullName())
-		defaultBranch, err := gc.client.GetDefaultBranch(url, d.RepositoryURL, gc.branchMap)
-		if err != nil {
-			logger.Printf(
-				"(error: %v) setting default_branch to master\n", err)
-			defaultBranch = "master"
-		}
-		d.DefaultBranch = defaultBranch
-	}
-	gc.SetDefaultBranch(d.RepositoryURL, d.DefaultBranch)
-
 	repoURL := d.RepositoryURL + "/" + d.FilePath + "?ref=" + d.DefaultBranch
 	repoSpec, err := git.NewRepoSpecFromUrl(repoURL)
 	if err != nil {
@@ -283,6 +278,8 @@ func kustomizationResultAdapter(gcl GhClient, k GhFileSpec, seen utils.SeenMap,
 		defaultBranch = "master"
 	}
 
+	// document here is a kustomization file found by querying Github, whose
+	// `FileType` field should be empty.
 	document := doc.Document{
 		FilePath:      k.Path,
 		DefaultBranch: defaultBranch,
