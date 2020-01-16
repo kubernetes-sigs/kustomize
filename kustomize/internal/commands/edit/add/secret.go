@@ -86,6 +86,11 @@ func newCmdAddSecret(
 		"type",
 		"Opaque",
 		"Specify the secret type this can be 'Opaque' (default), or 'kubernetes.io/tls'")
+	cmd.Flags().StringVar(
+		&flags.Namespace,
+		"namespace",
+		"",
+		"Specify the namespace of the secret")
 
 	return cmd
 }
@@ -97,7 +102,7 @@ func addSecret(
 	ldr ifc.KvLoader,
 	k *types.Kustomization,
 	flags flagsAndArgs, kf ifc.KunstructuredFactory) error {
-	args := findOrMakeSecretArgs(k, flags.Name, flags.Type)
+	args := findOrMakeSecretArgs(k, flags.Name, flags.Namespace, flags.Type)
 	mergeFlagsIntoGeneratorArgs(&args.GeneratorArgs, flags)
 	// Validate by trying to create corev1.secret.
 	_, err := kf.MakeSecret(ldr, k.GeneratorOptions, args)
@@ -107,16 +112,17 @@ func addSecret(
 	return nil
 }
 
-func findOrMakeSecretArgs(m *types.Kustomization, name, secretType string) *types.SecretArgs {
+func findOrMakeSecretArgs(m *types.Kustomization, name, namespace, secretType string) *types.SecretArgs {
 	for i, v := range m.SecretGenerator {
-		if name == v.Name {
+		if name == v.Name && namespace == v.Namespace {
 			return &m.SecretGenerator[i]
 		}
 	}
 	// secret not found, create new one and add it to the kustomization file.
 	secret := &types.SecretArgs{
-		GeneratorArgs: types.GeneratorArgs{Name: name},
-		Type:          secretType}
+		GeneratorArgs: types.GeneratorArgs{Name: name, Namespace: namespace},
+		Type:          secretType,
+	}
 	m.SecretGenerator = append(m.SecretGenerator, *secret)
 	return &m.SecretGenerator[len(m.SecretGenerator)-1]
 }
