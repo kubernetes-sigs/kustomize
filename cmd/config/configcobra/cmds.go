@@ -58,6 +58,8 @@ var (
 	Sink         = commands.SinkCommand
 	Source       = commands.SourceCommand
 	Tree         = commands.TreeCommand
+	Wrap         = commands.WrapCommand
+	XArgs        = commands.XArgsCommand
 
 	StackOnError = &commands.StackOnError
 	ExitOnError  = &commands.ExitOnError
