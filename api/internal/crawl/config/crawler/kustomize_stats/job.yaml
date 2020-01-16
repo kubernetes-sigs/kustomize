@@ -11,8 +11,13 @@ spec:
         image: gcr.io/haiyanmeng-gke-dev/kustomize_stats:v1
         imagePullPolicy: Always
         command: ["/kustomize_stats"]
-        args: ["--kinds=50", "--identifiers=50", "--kustomize-features=50"]
+        args: ["--index=kustomize", "--kinds=50", "--identifiers=50", "--kustomize-features=50"]
         env:
+        - name: GITHUB_ACCESS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: github-access-token
+              key: token
         - name: ELASTICSEARCH_URL
           valueFrom:
             configMapKeyRef:

@@ -3,6 +3,7 @@ package doc
 import (
 	"fmt"
 	"log"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -51,15 +52,21 @@ func (doc *KustomizationDocument) String() string {
 		doc.IsSame, doc.Kinds, len(doc.Identifiers), len(doc.Values))
 }
 
-// Implements the CrawlerDocument interface.
-func (doc *KustomizationDocument) GetResources() ([]*Document, error) {
-	isResource := true
-	for _, suffix := range konfig.RecognizedKustomizationFileNames() {
-		if strings.HasSuffix(doc.FilePath, "/"+suffix) {
-			isResource = false
+// IsKustomizationFile determines whether a file path is a kustomization file
+func IsKustomizationFile(path string) bool {
+	basename := filepath.Base(path)
+	for _, name := range konfig.RecognizedKustomizationFileNames() {
+		if basename == name {
+			return true
 		}
 	}
-	if isResource {
+	return false
+}
+
+// Implements the CrawlerDocument interface.
+func (doc *KustomizationDocument) GetResources(
+	includeResources, includeTransformers, includeGenerators bool) ([]*Document, error) {
+	if !IsKustomizationFile(doc.FilePath) {
 		return []*Document{}, nil
 	}
 
@@ -77,20 +84,42 @@ func (doc *KustomizationDocument) GetResources() ([]*Document, error) {
 	}
 	k.FixKustomizationPostUnmarshalling()
 
-	res := make([]*Document, 0, len(k.Resources))
-	for _, r := range k.Resources {
+	res := make([]*Document, 0)
+
+	if includeResources {
+		resourceDocs := doc.CollectDocuments(k.Resources)
+		res = append(res, resourceDocs...)
+	}
+
+	if includeGenerators {
+		generatorDocs := doc.CollectDocuments(k.Generators)
+		res = append(res, generatorDocs...)
+	}
+
+	if includeTransformers {
+		transformerDocs := doc.CollectDocuments(k.Transformers)
+		res = append(res, transformerDocs...)
+	}
+
+	return res, nil
+}
+
+// CollectDocuments construct a Document for each path in paths, and return
+// a slice of Document pointers.
+func (doc *KustomizationDocument) CollectDocuments(paths []string) []*Document {
+	docs := make([]*Document, 0, len(paths))
+	for _, r := range paths {
 		if strings.TrimSpace(r) == "" {
 			continue
 		}
 		next, err := doc.Document.FromRelativePath(r)
 		if err != nil {
-			log.Printf("GetResources error: %v\n", err)
+			log.Printf("CollectDocuments error: %v\n", err)
 			continue
 		}
-		res = append(res, &next)
+		docs = append(docs, &next)
 	}
-
-	return res, nil
+	return docs
 }
 
 func (doc *KustomizationDocument) readBytes() ([]map[string]interface{}, error) {

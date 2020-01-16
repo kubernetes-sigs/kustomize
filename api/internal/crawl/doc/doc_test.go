@@ -189,11 +189,13 @@ metadata:
 	}
 }
 
+type TestStructForGetResources struct {
+	doc       KustomizationDocument
+	resources []*Document
+}
+
 func TestGetResources(t *testing.T) {
-	tests := []struct {
-		doc       KustomizationDocument
-		resources []*Document
-	}{
+	tests := []TestStructForGetResources{
 		{
 			doc: KustomizationDocument{
 				Document: Document{
@@ -248,9 +250,12 @@ resources:
 			resources: []*Document{},
 		},
 	}
+	runTest(t, tests, true, false, false)
+}
 
+func runTest(t *testing.T, tests []TestStructForGetResources, includeResources, includeTransformers, includeGenerators bool) {
 	for _, test := range tests {
-		res, err := test.doc.GetResources()
+		res, err := test.doc.GetResources(includeResources, includeTransformers, includeGenerators)
 		if err != nil {
 			t.Errorf("Unexpected error: %v\n", err)
 			continue
@@ -283,4 +288,74 @@ resources:
 			}
 		}
 	}
+}
+
+func TestGetResourcesAndGenerators(t *testing.T) {
+	tests := []TestStructForGetResources{
+		{
+			doc: KustomizationDocument{
+				Document: Document{
+					RepositoryURL: "sigs.k8s.io/kustomize",
+					FilePath:      "some/path/to/kdir/kustomization.yaml",
+					DocumentData: `
+resources:
+- file.yaml
+
+generators:
+- gen.yaml
+
+transformers:
+- tr.yaml
+`},
+			},
+			resources: []*Document{
+				{
+					RepositoryURL: "sigs.k8s.io/kustomize",
+					FilePath:      "some/path/to/kdir/gen.yaml",
+				},
+				{
+					RepositoryURL: "sigs.k8s.io/kustomize",
+					FilePath:      "some/path/to/kdir/file.yaml",
+				},
+			},
+		},
+	}
+	runTest(t, tests, true, false, true)
+}
+
+func TestGetResourcesAndGeneratorsAndTransformers(t *testing.T) {
+	tests := []TestStructForGetResources{
+		{
+			doc: KustomizationDocument{
+				Document: Document{
+					RepositoryURL: "sigs.k8s.io/kustomize",
+					FilePath:      "some/path/to/kdir/kustomization.yaml",
+					DocumentData: `
+resources:
+- file.yaml
+
+generators:
+- gen.yaml
+
+transformers:
+- tr.yaml
+`},
+			},
+			resources: []*Document{
+				{
+					RepositoryURL: "sigs.k8s.io/kustomize",
+					FilePath:      "some/path/to/kdir/tr.yaml",
+				},
+				{
+					RepositoryURL: "sigs.k8s.io/kustomize",
+					FilePath:      "some/path/to/kdir/gen.yaml",
+				},
+				{
+					RepositoryURL: "sigs.k8s.io/kustomize",
+					FilePath:      "some/path/to/kdir/file.yaml",
+				},
+			},
+		},
+	}
+	runTest(t, tests, true, true, true)
 }

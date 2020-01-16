@@ -1,6 +1,6 @@
 Search for all the kustomize resource files including a Deployment object:
 ```
-curl -X GET "${ElasticSearchURL}:9200/kustomize/_search?pretty" -H 'Content-Type: application/json' -d'
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "query": {
     "match" : {
@@ -16,7 +16,7 @@ curl -X GET "${ElasticSearchURL}:9200/kustomize/_search?pretty" -H 'Content-Type
 Search for all the kustomize resource files including a Deployment object, but only
 including the `kinds` field in the result:
 ```
-curl -X GET "${ElasticSearchURL}:9200/kustomize/_search?pretty" -H 'Content-Type: application/json' -d'
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "_source": {
     "includes": ["kinds"]
@@ -35,7 +35,7 @@ curl -X GET "${ElasticSearchURL}:9200/kustomize/_search?pretty" -H 'Content-Type
 Search for all the kustomize resource files including both a Deployment object and 
 a Service object:
 ```
-curl -X GET "${ElasticSearchURL}:9200/kustomize/_search?pretty" -H 'Content-Type: application/json' -d'
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "query": {
     "match" : {
@@ -52,7 +52,7 @@ curl -X GET "${ElasticSearchURL}:9200/kustomize/_search?pretty" -H 'Content-Type
 Count the number of documents including Deployment and the number of documents 
 including Service:
 ```
-curl -X GET "${ElasticSearchURL}:9200/kustomize/_search?pretty" -H 'Content-Type: application/json' -d'
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "size": 0,
   "aggs" : {
@@ -71,7 +71,7 @@ curl -X GET "${ElasticSearchURL}:9200/kustomize/_search?pretty" -H 'Content-Type
 
 Search for all the kustomization files involving CRDs:
 ```
-curl -X GET "${ElasticSearchURL}:9200/kustomize/_search?pretty" -H 'Content-Type: application/json' -d'
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "size": 10000,
   "query": {
@@ -87,7 +87,7 @@ curl -X GET "${ElasticSearchURL}:9200/kustomize/_search?pretty" -H 'Content-Type
 
 Search for all the kustomization files defining configMapGenerator:
 ```
-curl -X GET "${ElasticSearchURL}:9200/kustomize/_search?pretty" -H 'Content-Type: application/json' -d'
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "size": 10000,
   "query": {
@@ -103,7 +103,7 @@ curl -X GET "${ElasticSearchURL}:9200/kustomize/_search?pretty" -H 'Content-Type
 
 Search for all the documents having a `kind` field:
 ```
-curl -X GET "${ElasticSearchURL}:9200/kustomize/_search?pretty" -H 'Content-Type: application/json' -d'
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "query": {
     "bool": {
@@ -118,7 +118,7 @@ curl -X GET "${ElasticSearchURL}:9200/kustomize/_search?pretty" -H 'Content-Type
 
 Search for all the kuostmization files having a `kind` field:
 ```
-curl -X GET "${ElasticSearchURL}:9200/kustomize/_search?pretty" -H 'Content-Type: application/json' -d'
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "query": {
     "bool": {
@@ -134,7 +134,7 @@ curl -X GET "${ElasticSearchURL}:9200/kustomize/_search?pretty" -H 'Content-Type
 
 Search for all the kustomization files defining the `generatorOptions:disableNameSuffixHash` feature:
 ```
-curl -X GET "${ElasticSearchURL}:9200/kustomize/_search?pretty" -H 'Content-Type: application/json' -d'
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "query": {
     "match" : {

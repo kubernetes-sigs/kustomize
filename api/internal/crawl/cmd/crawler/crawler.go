@@ -9,6 +9,8 @@ import (
 	"os"
 	"time"
 
+	"sigs.k8s.io/kustomize/api/internal/crawl/utils"
+
 	"sigs.k8s.io/kustomize/api/internal/crawl/crawler"
 	"sigs.k8s.io/kustomize/api/internal/crawl/crawler/github"
 	"sigs.k8s.io/kustomize/api/internal/crawl/doc"
@@ -26,6 +28,7 @@ const (
 )
 
 type CrawlMode int
+
 const (
 	CrawlUnknown CrawlMode = iota
 	// Crawl all the kustomization files in all the repositories of a Github user
@@ -125,13 +128,13 @@ func main() {
 
 	// seen tracks the IDs of all the documents in the index.
 	// This helps avoid indexing a given document multiple times.
-	seen := crawler.NewSeenMap()
+	seen := utils.NewSeenMap()
 
 	mode := NewCrawlMode(*modePtr)
 
 	ghCrawlerConstructor := func(user, repo string) crawler.Crawler {
 		if user != "" {
-			return 	github.NewCrawler(githubToken, retryCount, clientCache,
+			return github.NewCrawler(githubToken, retryCount, clientCache,
 				github.QueryWith(
 					github.Filename("kustomization.yaml"),
 					github.Filename("kustomization.yml"),

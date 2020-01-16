@@ -5,12 +5,21 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"path/filepath"
+	"net/http"
+	"os"
 	"sort"
 	"time"
 
+	"sigs.k8s.io/kustomize/api/internal/crawl/crawler/github"
+
+	"sigs.k8s.io/kustomize/api/internal/crawl/doc"
+
 	"sigs.k8s.io/kustomize/api/internal/crawl/index"
-	"sigs.k8s.io/kustomize/api/konfig"
+)
+
+const (
+	githubAccessTokenVar = "GITHUB_ACCESS_TOKEN"
+	retryCount           = 3
 )
 
 // iterateArr adds each item in arr into countMap.
@@ -25,17 +34,6 @@ func iterateArr(arr []string, countMap map[string]int) {
 
 }
 
-// isKustomizationFile determines whether a file path is a kustomization file
-func isKustomizationFile(path string) bool {
-	basename := filepath.Base(path)
-	for _, name := range konfig.RecognizedKustomizationFileNames() {
-		if basename == name {
-			return true
-		}
-	}
-	return false
-}
-
 // SortMapKeyByValue takes a map as its input, sorts its keys according to their values
 // in the map, and outputs the sorted keys as a slice.
 func SortMapKeyByValue(m map[string]int) []string {
@@ -44,8 +42,127 @@ func SortMapKeyByValue(m map[string]int) []string {
 		keys = append(keys, key)
 	}
 	// sort keys according to their values in the map m
-	sort.Slice(keys, func(i, j int) bool {return m[keys[i]] > m[keys[j]]})
+	sort.Slice(keys, func(i, j int) bool { return m[keys[i]] > m[keys[j]] })
 	return keys
+}
+
+func GeneratorOrTransformerStats(ctx context.Context,
+	docs []*doc.Document, isGenerator bool, idx *index.KustomizeIndex) {
+
+	fieldName := "generators"
+	if !isGenerator {
+		fieldName = "transformers"
+	}
+
+	// allReferredDocs includes all the documents referred in the field
+	allReferredDocs := doc.NewUniqueDocuments()
+
+	// docUsingGeneratorCount counts the number of the kustomization files using generators or transformers
+	docCount := 0
+
+	// collect all the documents referred in the field
+	for _, d := range docs {
+		kdoc := doc.KustomizationDocument{
+			Document: *d,
+		}
+		referredDocs, err := kdoc.GetResources(false, !isGenerator, isGenerator)
+		if err != nil {
+			log.Printf("failed to parse the %s field of the Document (%s): %v",
+				fieldName, d.Path(), err)
+		}
+		if len(referredDocs) > 0 {
+			docCount++
+			allReferredDocs.AddDocuments(referredDocs)
+		}
+	}
+
+	fileCount, dirCount, fileTypeDocs, dirTypeDocs := DocumentTypeSummary(ctx, allReferredDocs.Documents())
+
+	// check whether any of the files are not in the index
+	nonExistFileCount := ExistInIndex(idx, fileTypeDocs, fieldName + " file ")
+	// check whether any of the dirs are not in the index
+	nonExistDirCount := ExistInIndex(idx, dirTypeDocs, fieldName + " dir ")
+
+	GitRepositorySummary(fileTypeDocs, fieldName + " files")
+	GitRepositorySummary(dirTypeDocs, fieldName + " dirs")
+
+	fmt.Printf("%d kustomization files use %s: %d %s are files and %d %s are dirs.\n",
+		docCount, fieldName, fileCount, fieldName, dirCount, fieldName)
+	fmt.Printf("%d %s files do not exist in the index\n", nonExistFileCount, fieldName)
+	fmt.Printf("%d %s dirs do not exist in the index\n", nonExistDirCount, fieldName)
+}
+
+// GitRepositorySummary counts the distribution of docs:
+// 1) how many git repositories are these docs from?
+// 2) how many docs are from each git repository?
+func GitRepositorySummary(docs []*doc.Document, msgPrefix string) {
+	m := make(map[string]int)
+	for _, d := range docs {
+		if _, ok := m[d.RepositoryURL]; ok {
+			m[d.RepositoryURL]++
+		} else {
+			m[d.RepositoryURL] = 1
+		}
+	}
+	sortedKeys := SortMapKeyByValue(m)
+	for _, k := range sortedKeys {
+		fmt.Printf("%d %s are from %s\n", m[k], msgPrefix, k)
+	}
+}
+
+// ExistInIndex goes through each Document in docs, and check whether it is in the index or not.
+// It returns the number of documents which does not exist in the index.
+func ExistInIndex(idx *index.KustomizeIndex, docs []*doc.Document, msgPrefix string) int {
+	nonExistCount := 0
+	for _, d := range docs {
+		exists, err := idx.Exists(d.ID())
+		if err != nil {
+			log.Println(err)
+		}
+		if !exists {
+			log.Printf("%s (%s) does not exist in the index", msgPrefix, d.Path())
+			nonExistCount++
+		}
+	}
+	return nonExistCount
+}
+
+// DocumentTypeSummary goes through each doc in docs, and determines whether it is a file or dir.
+func DocumentTypeSummary(ctx context.Context, docs []*doc.Document) (
+	fileCount, dirCount int, files, dirs []*doc.Document) {
+	githubToken := os.Getenv(githubAccessTokenVar)
+	if githubToken == "" {
+		log.Fatalf("Must set the variable '%s' to make github requests.\n",
+			githubAccessTokenVar)
+	}
+	ghCrawler := github.NewCrawler(githubToken, retryCount, &http.Client{}, github.QueryWith())
+
+	for _, d := range docs {
+		oldFilePath := d.FilePath
+		if err := ghCrawler.FetchDocument(ctx, d); err != nil {
+			log.Printf("FetchDocument failed on %s: %v", d.Path(), err)
+			continue
+		}
+
+		if d.FilePath == oldFilePath {
+			fileCount++
+			files = append(files, d)
+		} else {
+			dirCount++
+			dirs = append(dirs, d)
+		}
+	}
+	return fileCount, dirCount, files, dirs
+}
+
+// ExistInSlice checks where target exits in items.
+func ExistInSlice(items []string, target string) bool {
+	for _, item := range items {
+		if item == target {
+			return true
+		}
+	}
+	return false
 }
 
 func main() {
@@ -64,10 +181,12 @@ If you only want to list the 10 most popular identifiers, set the flag to 10.`)
 		`the number of kustomize features to be listed according to their popularities.
 By default, all the features will be listed.
 If you only want to list the 10 most popular features, set the flag to 10.`)
+	indexNamePtr := flag.String(
+		"index", "kustomize", "The name of the ElasticSearch index.")
 	flag.Parse()
 
 	ctx := context.Background()
-	idx, err := index.NewKustomizeIndex(ctx)
+	idx, err := index.NewKustomizeIndex(ctx, *indexNamePtr)
 	if err != nil {
 		log.Fatalf("Could not create an index: %v\n", err)
 	}
@@ -85,6 +204,12 @@ If you only want to list the 10 most popular features, set the flag to 10.`)
 	// ids tracks the unique IDs of the documents in the index
 	ids := make(map[string]struct{})
 
+	// generatorDocs includes all the docs using generators
+	generatorDocs := make([]*doc.Document, 0)
+
+	// transformersDocs includes all the docs using transformers
+	transformersDocs := make([]*doc.Document, 0)
+
 	// get all the documents in the index
 	query := []byte(`{ "query":{ "match_all":{} } }`)
 	it := idx.IterateQuery(query, 10000, 60*time.Second)
@@ -94,21 +219,28 @@ If you only want to list the 10 most popular features, set the flag to 10.`)
 			if _, ok := ids[hit.ID]; !ok {
 				ids[hit.ID] = struct{}{}
 			} else {
-				fmt.Printf("Found duplicate ID (%s)\n", hit.ID)
+				log.Printf("Found duplicate ID (%s)\n", hit.ID)
 			}
 
 			count++
 			iterateArr(hit.Document.Kinds, kindsMap)
 			iterateArr(hit.Document.Identifiers, identifiersMap)
 
-			if isKustomizationFile(hit.Document.FilePath) {
+			if doc.IsKustomizationFile(hit.Document.FilePath) {
 				kustomizationFilecount++
 				iterateArr(hit.Document.Identifiers, kustomizeIdentifiersMap)
+				if ExistInSlice(hit.Document.Identifiers, "generators") {
+					generatorDocs = append(generatorDocs, hit.Document.Copy())
+				}
+				if ExistInSlice(hit.Document.Identifiers, "transformers") {
+					transformersDocs = append(transformersDocs, hit.Document.Copy())
+				}
 			}
 		}
 	}
+
 	if err := it.Err(); err != nil {
-		fmt.Printf("Error iterating: %v\n", err)
+		log.Fatalf("Error iterating: %v\n", err)
 	}
 
 	sortedKindsMapKeys := SortMapKeyByValue(kindsMap)
@@ -147,4 +279,7 @@ There are %d documents in the kustomize index.
 			kustomizeFeatureCount++
 		}
 	}
+
+	GeneratorOrTransformerStats(ctx, generatorDocs, true, idx)
+	GeneratorOrTransformerStats(ctx, transformersDocs, false, idx)
 }

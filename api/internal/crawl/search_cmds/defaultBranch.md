@@ -1,6 +1,6 @@
 Count distinct values of the `defaultBranch` field:
 ```
-curl -X POST "${ElasticSearchURL}:9200/kustomize/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
+curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
 {
     "aggs" : {
         "defaultBranch_count" : {
@@ -17,7 +17,7 @@ curl -X POST "${ElasticSearchURL}:9200/kustomize/_search?size=0&pretty" -H 'Cont
 List all the github branches where kustomization files and kustomize resource files live, 
 and how many kustomization files and kustomize resource files live in each branch:
 ```
-curl -X GET "${ElasticSearchURL}:9200/kustomize/_search?pretty" -H 'Content-Type: application/json' -d'
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
 {
     "aggs" : {
         "defaultBranch" : {
