@@ -46,84 +46,50 @@ func SortMapKeyByValue(m map[string]int) []string {
 	return keys
 }
 
-func GeneratorAndTransformerStats(ctx context.Context,
-	generatorDocs []*doc.Document, transformerDocs []*doc.Document,
-	idx *index.KustomizeIndex) {
-	// allGenerators includes all the documents referred in the generators field
-	allGenerators := doc.NewUniqueDocuments()
+func GeneratorOrTransformerStats(ctx context.Context,
+	docs []*doc.Document, isGenerator bool, idx *index.KustomizeIndex) {
 
-	// allTransformers includes all the documents referred in the transformers field
-	allTransformers := doc.NewUniqueDocuments()
+	fieldName := "generators"
+	if !isGenerator {
+		fieldName = "transformers"
+	}
 
-	// docUsingGeneratorCount counts the number of the kustomization files using generators
-	docUsingGeneratorCount := 0
+	// allReferredDocs includes all the documents referred in the field
+	allReferredDocs := doc.NewUniqueDocuments()
 
-	// docUsingTransformerCount counts the number of the kustomization files using transformers
-	docUsingTransformerCount := 0
+	// docUsingGeneratorCount counts the number of the kustomization files using generators or transformers
+	docCount := 0
 
-	// collect all the documents referred in the generators and transformers fields
-	for _, d := range generatorDocs {
+	// collect all the documents referred in the field
+	for _, d := range docs {
 		kdoc := doc.KustomizationDocument{
 			Document: *d,
 		}
-		generators, err := kdoc.GetResources(false, false, true)
+		referredDocs, err := kdoc.GetResources(false, !isGenerator, isGenerator)
 		if err != nil {
-			log.Printf("failed to parse the generators field of the Document (%s): %v",
-				d.Path(), err)
+			log.Printf("failed to parse the %s field of the Document (%s): %v",
+				fieldName, d.Path(), err)
 		}
-		if len(generators) > 0 {
-			docUsingGeneratorCount++
-			allGenerators.AddDocuments(generators)
+		if len(referredDocs) > 0 {
+			docCount++
+			allReferredDocs.AddDocuments(referredDocs)
 		}
 	}
 
-	for _, d := range transformerDocs {
-		kdoc := doc.KustomizationDocument{
-			Document: *d,
-		}
-		transformers, err := kdoc.GetResources(false, true, false)
-		if err != nil {
-			log.Printf("failed to parse the transformers field of the Document (%s): %v",
-				d.Path(), err)
-		}
-		if len(transformers) > 0 {
-			docUsingTransformerCount++
-			allTransformers.AddDocuments(transformers)
-		}
-	}
+	fileCount, dirCount, fileTypeDocs, dirTypeDocs := DocumentTypeSummary(ctx, allReferredDocs.Documents())
 
-	// fileGeneratorCount counts file-type generators
-	// dirGeneratorCount counts dir-type generators
-	fileGeneratorCount, dirGeneratorCount, generatorFiles, generatorDirs := DocumentTypeSummary(ctx, allGenerators.Documents())
+	// check whether any of the files are not in the index
+	nonExistFileCount := ExistInIndex(idx, fileTypeDocs, fieldName + " file ")
+	// check whether any of the dirs are not in the index
+	nonExistDirCount := ExistInIndex(idx, dirTypeDocs, fieldName + " dir ")
 
-	// fileTransformerCount counts file-type transformers
-	// dirTransformerCount counts dir-type transformers
-	fileTransformerCount, dirTransformerCount, transformerFiles, transformerDirs := DocumentTypeSummary(ctx, allTransformers.Documents())
+	GitRepositorySummary(fileTypeDocs, fieldName + " files")
+	GitRepositorySummary(dirTypeDocs, fieldName + " dirs")
 
-	// check whether any of the generator files are not in the index
-	nonExistGeneratorFileCount := ExistInIndex(idx, generatorFiles, "generator file ")
-	// check whether any of the generator dirs are not in the index
-	nonExistGeneratorDirCount := ExistInIndex(idx, generatorDirs, "generator dir ")
-
-	// check whether any of the transformer files are not in the index
-	nonExistTransformerFileCount := ExistInIndex(idx, transformerFiles, "transformer file ")
-	// check whether any of the transformer dirs are not in the index
-	nonExistTransformerDirCount := ExistInIndex(idx, transformerDirs, "transformer dir ")
-
-	GitRepositorySummary(generatorFiles, "generator files")
-	GitRepositorySummary(generatorDirs, "generator dirs")
-	GitRepositorySummary(transformerFiles, "transformer files")
-	GitRepositorySummary(transformerDirs, "transformer dirs")
-
-	fmt.Printf(`%d kustomization files use generators: %d generators are files and %d generators are dirs.
-%d kustomization files use tranformers: %d transformers are files and %d transformers are dirs.`,
-		docUsingGeneratorCount, fileGeneratorCount, dirGeneratorCount,
-		docUsingTransformerCount, fileTransformerCount, dirTransformerCount)
-	fmt.Printf("\n")
-	fmt.Printf("%d generator files do not exist in the index\n", nonExistGeneratorFileCount)
-	fmt.Printf("%d generator dirs do not exist in the index\n", nonExistGeneratorDirCount)
-	fmt.Printf("%d transformer files do not exist in the index\n", nonExistTransformerFileCount)
-	fmt.Printf("%d transformer dirs do not exist in the index\n", nonExistTransformerDirCount)
+	fmt.Printf("%d kustomization files use %s: %d %s are files and %d %s are dirs.\n",
+		docCount, fieldName, fileCount, fieldName, dirCount, fieldName)
+	fmt.Printf("%d %s files do not exist in the index\n", nonExistFileCount, fieldName)
+	fmt.Printf("%d %s dirs do not exist in the index\n", nonExistDirCount, fieldName)
 }
 
 // GitRepositorySummary counts the distribution of docs:
@@ -314,5 +280,6 @@ There are %d documents in the kustomize index.
 		}
 	}
 
-	GeneratorAndTransformerStats(ctx, generatorDocs, transformersDocs, idx)
+	GeneratorOrTransformerStats(ctx, generatorDocs, true, idx)
+	GeneratorOrTransformerStats(ctx, transformersDocs, false, idx)
 }
