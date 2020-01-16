@@ -90,7 +90,7 @@ apiVersion: v1
 		},
 		{
 			name: "custom kind",
-			args: []string{"run", "dir", "-i", "foo:bar", "--", "Foo", "g=h"},
+			args: []string{"run", "dir", "--image", "foo:bar", "--", "Foo", "g=h"},
 			path: "dir",
 			expected: `
 metadata:
@@ -105,7 +105,7 @@ apiVersion: v1
 		},
 		{
 			name: "custom kind '=' in data",
-			args: []string{"run", "dir", "-i", "foo:bar", "--", "Foo", "g=h", "i=j=k"},
+			args: []string{"run", "dir", "--image", "foo:bar", "--", "Foo", "g=h", "i=j=k"},
 			path: "dir",
 			expected: `
 metadata:
@@ -120,14 +120,14 @@ apiVersion: v1
 		},
 		{
 			name:          "function paths",
-			args:          []string{"run", "dir", "-p", "path1", "--fn-path", "path2"},
+			args:          []string{"run", "dir", "--fn-path", "path1", "--fn-path", "path2"},
 			path:          "dir",
 			functionPaths: []string{"path1", "path2"},
 		},
 		{
 			name: "custom kind with function paths",
 			args: []string{
-				"run", "dir", "-p", "path", "-i", "foo:bar", "--", "Foo", "g=h", "i=j=k"},
+				"run", "dir", "--fn-path", "path", "--image", "foo:bar", "--", "Foo", "g=h", "i=j=k"},
 			path:          "dir",
 			functionPaths: []string{"path"},
 			expected: `

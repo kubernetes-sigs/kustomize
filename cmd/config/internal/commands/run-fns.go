@@ -34,11 +34,11 @@ func GetRunFnRunner(name string) *RunFnRunner {
 		&r.DryRun, "dry-run", false, "print results to stdout")
 	r.Command.Flags().BoolVar(
 		&r.GlobalScope, "global-scope", false, "set global scope for functions.")
-	r.Command.Flags().StringSliceVarP(
-		&r.FnPaths, "fn-path", "p", []string{},
+	r.Command.Flags().StringSliceVar(
+		&r.FnPaths, "fn-path", []string{},
 		"read functions from these directories instead of the configuration directory.")
-	r.Command.Flags().StringVarP(
-		&r.Image, "image", "i", "",
+	r.Command.Flags().StringVar(
+		&r.Image, "image", "",
 		"run this image as a function instead of discovering them.")
 	return r
 }
