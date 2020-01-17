@@ -2,6 +2,8 @@ package builtins_qlik
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -35,11 +37,15 @@ type HelmChartPlugin struct {
 	ldr              ifc.Loader
 	rf               *resmap.Factory
 	logger           *log.Logger
+	hash             string
 }
 
 func (p *HelmChartPlugin) Config(h *resmap.PluginHelpers, c []byte) (err error) {
 	p.ldr = h.Loader()
 	p.rf = h.ResmapFactory()
+	chartHash := sha256.New()
+	chartHash.Write(c)
+	p.hash = hex.EncodeToString(chartHash.Sum(nil))
 	return yaml.Unmarshal(c, p)
 }
 
@@ -91,31 +97,52 @@ func (p *HelmChartPlugin) Generate() (resmap.ResMap, error) {
 		p.ReleaseName = "default"
 	}
 
-	err = p.initHelm()
-	if err != nil {
-		p.logger.Printf("error executing initHelm(), error: %v\n", err)
-		return nil, err
-	}
-	if _, err := os.Stat(p.ChartHome); os.IsNotExist(err) {
-		err = p.fetchHelm()
-		if err != nil {
-			p.logger.Printf("error executing fetchHelm(), error: %v\n", err)
+	hashfolder := filepath.Join(p.ChartHome, ".plugincache")
+	hashfile := filepath.Join(hashfolder, p.hash)
+
+	var templatedYaml []byte
+
+	if _, err = os.Stat(hashfile); err != nil {
+		if os.IsNotExist(err) {
+			err = p.initHelm()
+			if err != nil {
+				p.logger.Printf("error executing initHelm(), error: %v\n", err)
+				return nil, err
+			}
+			if _, err = os.Stat(p.ChartHome); os.IsNotExist(err) {
+				err = p.fetchHelm()
+				if err != nil {
+					p.logger.Printf("error executing fetchHelm(), error: %v\n", err)
+					return nil, err
+				}
+			} else if err != nil {
+				p.logger.Printf("error executing stat on file: %v, error: %v\n", p.ChartHome, err)
+			}
+
+			err = p.deleteRequirements(p.ChartHome)
+			if err != nil {
+				p.logger.Printf("error executing deleteRequirements() for dir: %v, error: %v\n", p.ChartHome, err)
+				return nil, err
+			}
+
+			templatedYaml, err = p.templateHelm()
+			if err != nil {
+				p.logger.Printf("error executing templateHelm(), error: %v\n", err)
+				return nil, err
+			}
+			os.MkdirAll(hashfolder, os.ModePerm)
+			if err = ioutil.WriteFile(hashfile, templatedYaml, 0644); err != nil {
+				p.logger.Printf("error writing kustomization yaml to file: %v, error: %v\n", hashfile, err)
+			}
+		} else {
 			return nil, err
 		}
-	} else if err != nil {
-		p.logger.Printf("error executing stat on file: %v, error: %v\n", p.ChartHome, err)
-	}
-
-	err = p.deleteRequirements(p.ChartHome)
-	if err != nil {
-		p.logger.Printf("error executing deleteRequirements() for dir: %v, error: %v\n", p.ChartHome, err)
-		return nil, err
-	}
-
-	templatedYaml, err := p.templateHelm()
-	if err != nil {
-		p.logger.Printf("error executing templateHelm(), error: %v\n", err)
-		return nil, err
+	} else {
+		templatedYaml, err = ioutil.ReadFile(hashfile)
+		if err != nil {
+			p.logger.Printf("error reading file: %v, error: %v\n", hashfile, err)
+			return nil, err
+		}
 	}
 
 	if len(p.ChartPatches) > 0 {
@@ -217,14 +244,14 @@ func (p *HelmChartPlugin) fetchHelm() error {
 
 func (p *HelmChartPlugin) templateHelm() ([]byte, error) {
 
-	valuesYaml, err := yaml.Marshal(p.Values)
-	if err != nil {
-		p.logger.Printf("error marshalling values to yaml, error: %v\n", err)
-		return nil, err
-	}
 	file, err := ioutil.TempFile("", "yaml")
 	if err != nil {
 		p.logger.Printf("error creating temp file, error: %v\n", err)
+		return nil, err
+	}
+	valuesYaml, err := yaml.Marshal(p.Values)
+	if err != nil {
+		p.logger.Printf("error marshalling values to yaml, error: %v\n", err)
 		return nil, err
 	}
 	_, err = file.Write(valuesYaml)
@@ -232,16 +259,17 @@ func (p *HelmChartPlugin) templateHelm() ([]byte, error) {
 		p.logger.Printf("error writing yaml to file: %v, error: %v\n", file.Name(), err)
 		return nil, err
 	}
+	chart := p.ChartHome
+	if len(p.SubChart) > 0 {
+		chart = p.ChartHome + "/charts/" + p.SubChart
+	}
 
 	// build helm flags
 	home := fmt.Sprintf("--home=%s", p.HelmHome)
 	values := fmt.Sprintf("--values=%s", file.Name())
 	name := fmt.Sprintf("--name=%s", p.ReleaseName)
 	nameSpace := fmt.Sprintf("--namespace=%s", p.ReleaseNamespace)
-	chart := p.ChartHome
-	if len(p.SubChart) > 0 {
-		chart = p.ChartHome + "/charts/" + p.SubChart
-	}
+
 	helmCmd := exec.Command("helm", "template", home, values, name, nameSpace, chart)
 
 	if len(p.ExtraArgs) > 0 && p.ExtraArgs != "null" {
