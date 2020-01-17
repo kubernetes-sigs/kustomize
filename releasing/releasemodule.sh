@@ -50,6 +50,7 @@ function releaseModule {
     git commit -m "update go.mod for release" || echo "no changes made to go.mod"
   fi
 
+  go test ./...
   if [ "$NO_DRY_RUN" == "true" ]; then
      git push upstream $branch
      git tag -a $tag -m "Release $tag on branch $branch"
