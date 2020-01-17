@@ -87,6 +87,30 @@ curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-T
 '
 ```
 
+Query all the kustomization files whose `creationTime` falls within the specific range:
+```
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+  "size": 20,
+  "query": {
+    "bool": {
+      "filter": {
+        "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*" }
+      },
+      "must": {
+        "range": {
+          "creationTime": {
+            "gte": "2017-09-24T15:49:57.000Z",
+            "lte": "2017-09-24T15:49:57.000Z"
+          }
+        }
+      }
+    }
+  }
+}
+'
+```
+
 Aggregate how many new kustomization files were added into Github each month:
 ```
 curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
