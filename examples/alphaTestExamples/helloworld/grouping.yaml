@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: inventory-map
-  labels:
-    "kustomize.config.k8s.io/inventory-id": "hello-world-app"
