@@ -19,11 +19,12 @@ const (
 	statusColumn    = "status"
 	messageColumn   = "message"
 
-	ESC          = 27
-	RED    color = 31
-	GREEN  color = 32
-	YELLOW color = 33
-	WHITE  color = 37
+	RESET         = 0
+	ESC           = 27
+	RED     color = 31
+	GREEN   color = 32
+	YELLOW  color = 33
+	DEFAULT color = -1 // This is not a valid ANSI escape code. It is used here to mean that no color should be set.
 )
 
 type color int
@@ -34,10 +35,6 @@ func moveUp(w io.Writer, lineCount int) {
 
 func eraseCurrentLine(w io.Writer) {
 	printOrDie(w, "%c[2K\r", ESC)
-}
-
-func setColor(w io.Writer, color color) {
-	printOrDie(w, "%c[%dm", ESC, color)
 }
 
 type colorFunc func(s status.Status) color
@@ -51,7 +48,7 @@ type tableColumnInfo struct {
 }
 
 func defaultColorFunc(_ status.Status) color {
-	return WHITE
+	return DEFAULT
 }
 
 var (
@@ -137,7 +134,6 @@ func (s *TablePrinter) Print() {
 
 func (s *TablePrinter) PrintUntil(stop <-chan struct{}, interval time.Duration) <-chan struct{} {
 	completed := make(chan struct{})
-	setColor(s.out, WHITE)
 	s.printTable(s.statusInfo.CurrentStatus(), false)
 	go func() {
 		defer close(completed)
@@ -167,9 +163,7 @@ func (s *TablePrinter) printTable(data StatusData, deleteUp bool) {
 	eraseCurrentLine(s.out)
 	if s.showAggStatus {
 		printOrDie(s.out, "AggregateStatus: ")
-		setColor(s.out, colorForStatus(data.AggregateStatus))
-		printOrDie(s.out, "%s\n", data.AggregateStatus)
-		setColor(s.out, WHITE)
+		printWithColorOrDie(s.out, colorForStatus(data.AggregateStatus), "%s\n", data.AggregateStatus)
 	}
 	s.printTableRow(headers())
 	for _, resource := range data.ResourceStatuses {
@@ -179,13 +173,12 @@ func (s *TablePrinter) printTable(data StatusData, deleteUp bool) {
 
 func (s *TablePrinter) printTableRow(rowData []RowData) {
 	for i, row := range rowData {
-		setColor(s.out, row.color)
+
 		format := fmt.Sprintf("%%-%ds", row.width)
-		printOrDie(s.out, format, trimString(row.content, row.width))
+		printWithColorOrDie(s.out, row.color, format, trimString(row.content, row.width))
 		if i != len(rowData)-1 {
 			printOrDie(s.out, "  ")
 		}
-		setColor(s.out, WHITE)
 	}
 	printOrDie(s.out, "\n")
 }
@@ -202,7 +195,7 @@ func headers() []RowData {
 		column := tableColumns[columnName]
 		headers = append(headers, RowData{
 			content: column.header,
-			color:   WHITE,
+			color:   DEFAULT,
 			width:   column.width,
 		})
 	}
@@ -331,18 +324,26 @@ func printOrDie(w io.Writer, format string, a ...interface{}) {
 	}
 }
 
+func printWithColorOrDie(w io.Writer, color color, format string, a ...interface{}) {
+	if color == DEFAULT {
+		printOrDie(w, format, a...)
+	} else {
+		printOrDie(w, "%c[%dm", ESC, color)
+		printOrDie(w, format, a...)
+		printOrDie(w, "%c[%dm", ESC, RESET)
+	}
+}
+
 func colorForStatus(s status.Status) color {
 	switch s {
 	case status.CurrentStatus:
 		return GREEN
-	case status.UnknownStatus:
-		return WHITE
 	case status.InProgressStatus:
 		return YELLOW
 	case status.FailedStatus:
 		return RED
 	}
-	return WHITE
+	return DEFAULT
 }
 
 func trimString(str string, maxLength int) string {
