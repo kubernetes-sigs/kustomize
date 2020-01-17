@@ -6,6 +6,7 @@ package kubectlcobra
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -80,4 +81,100 @@ func (i *Inventory) String() string {
 		i.Name, fieldSeparator,
 		i.GroupKind.Group, fieldSeparator,
 		i.GroupKind.Kind)
+}
+
+// InventorySet encapsulates a grouping of unique Inventory
+// structs. Organizes the Inventory structs with a map,
+// which ensures there are no duplicates. Allows set
+// operations such as merging sets and subtracting sets.
+type InventorySet struct {
+	set map[string]*Inventory
+}
+
+// NewInventorySet returns a pointer to an InventorySet
+// struct grouping the passed Inventory items.
+func NewInventorySet(items []*Inventory) *InventorySet {
+	invSet := InventorySet{set: map[string]*Inventory{}}
+	invSet.AddItems(items)
+	return &invSet
+}
+
+// GetItems returns the set of pointers to Inventory
+// structs.
+func (is *InventorySet) GetItems() []*Inventory {
+	items := []*Inventory{}
+	for _, item := range is.set {
+		items = append(items, item)
+	}
+	return items
+}
+
+// AddItems adds Inventory structs to the set which
+// are not already in the set.
+func (is *InventorySet) AddItems(items []*Inventory) {
+	for _, item := range items {
+		if item != nil {
+			is.set[item.String()] = item
+		}
+	}
+}
+
+// DeleteItem removes an Inventory struct from the
+// set if it exists in the set. Returns true if the
+// Inventory item was deleted, false if it did not exist
+// in the set.
+func (is *InventorySet) DeleteItem(item *Inventory) bool {
+	if item == nil {
+		return false
+	}
+	if _, ok := is.set[item.String()]; ok {
+		delete(is.set, item.String())
+		return true
+	}
+	return false
+}
+
+// Merge combines the unique set of Inventory items from the
+// current set with the passed "other" set, returning a new
+// set or error. Returns an error if the passed set to merge
+// is nil.
+func (is *InventorySet) Merge(other *InventorySet) (*InventorySet, error) {
+	if other == nil {
+		return nil, fmt.Errorf("InventorySet to merge is nil.")
+	}
+	// Copy the current InventorySet into result
+	result := NewInventorySet(is.GetItems())
+	result.AddItems(other.GetItems())
+	return result, nil
+}
+
+// Subtract removes the Inventory items in the "other" set from the
+// current set, returning a new set. This does not modify the current
+// set. Returns an error if the passed set to subtract is nil.
+func (is *InventorySet) Subtract(other *InventorySet) (*InventorySet, error) {
+	if other == nil {
+		return nil, fmt.Errorf("InventorySet to subtract is nil.")
+	}
+	// Copy the current InventorySet into result
+	result := NewInventorySet(is.GetItems())
+	// Remove each item in "other" which exists in "result"
+	for _, item := range other.GetItems() {
+		result.DeleteItem(item)
+	}
+	return result, nil
+}
+
+// String returns a string describing set of Inventory structs.
+func (is *InventorySet) String() string {
+	strs := []string{}
+	for _, item := range is.GetItems() {
+		strs = append(strs, item.String())
+	}
+	sort.Strings(strs)
+	return strings.Join(strs, ", ")
+}
+
+// Size returns the number of Inventory structs in the set.
+func (is *InventorySet) Size() int {
+	return len(is.set)
 }
