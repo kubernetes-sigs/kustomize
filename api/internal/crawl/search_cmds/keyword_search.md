@@ -57,7 +57,7 @@ curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-T
   "query": {
     "bool": {
       "filter": [
-       { "regexp": { "filePath": ".*/kustomization((.yaml)?|(.yml)?)/*" }}
+       { "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*" }}
       ]
     }
   }
@@ -73,7 +73,7 @@ curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-T
   "query": {
     "bool": {
       "must_not": [
-       { "regexp": { "filePath": ".*/kustomization((.yaml)?|(.yml)?)/*" }}
+       { "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*" }}
       ]
     }
   }
