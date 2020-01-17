@@ -27,7 +27,7 @@ curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'C
   "query": {
     "bool": {
       "filter": [
-        { "regexp": { "filePath": ".*/kustomization((.yaml)?|(.yml)?)/*" }}
+        { "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*"  }}
       ]
     }
   },
@@ -45,7 +45,7 @@ curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'C
   "query": {
     "bool": {
       "must_not": {
-        "regexp": { "filePath": ".*/kustomization((.yaml)?|(.yml)?)/*" }
+        "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*"  }
       }
     }
   },
@@ -94,7 +94,7 @@ curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Co
     "query": {
         "bool": {
             "filter": [
-                { "regexp": { "filePath": ".*/kustomization((.yaml)?|(.yml)?)/*" }}
+                { "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*" }}
             ]
         }
     },
@@ -117,7 +117,7 @@ curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Co
     "query": {
         "bool": {
             "must_not": [
-                { "regexp": { "filePath": ".*/kustomization((.yaml)?|(.yml)?)/*" }}
+                { "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*" }}
             ]
         }
     },
@@ -140,7 +140,7 @@ curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Co
     "query": {
         "bool": {
             "filter": [
-                { "regexp": { "filePath": ".*/kustomization((.yaml)?|(.yml)?)/*" }}
+                { "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*" }}
             ]
         }
     },
@@ -163,7 +163,7 @@ curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Co
     "query": {
         "bool": {
             "must_not": [
-                { "regexp": { "filePath": ".*/kustomization((.yaml)?|(.yml)?)/*" }}
+                { "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*" }}
             ]
         }
     },
