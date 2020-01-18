@@ -148,6 +148,10 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 			continue
 		}
 
+		if tail.User == "" {
+			tail.User = doc.UserName(tail.RepositoryURL)
+		}
+
 		// If the Document represents a kustomization root, FetchDcoument will change
 		// the `filePath` field of the Document by adding `kustomization.yaml` or
 		// `kustomization.yml` or `kustomization` into the the field.

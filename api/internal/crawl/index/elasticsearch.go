@@ -20,6 +20,9 @@ const IndexConfig = `
 				"repositoryUrl": {
 					"type": "keyword"
 				},
+				"user": {
+					"type": "keyword"
+				},
 				"filePath": {
 					"type": "keyword"
 				},
