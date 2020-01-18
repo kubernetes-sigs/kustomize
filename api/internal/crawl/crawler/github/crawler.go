@@ -284,6 +284,7 @@ func kustomizationResultAdapter(gcl GhClient, k GhFileSpec, seen utils.SeenMap,
 		FilePath:      k.Path,
 		DefaultBranch: defaultBranch,
 		RepositoryURL: k.Repository.URL,
+		User:          doc.UserName(k.Repository.URL),
 	}
 
 	if seen.Seen(document.ID()) {
@@ -301,6 +302,7 @@ func kustomizationResultAdapter(gcl GhClient, k GhFileSpec, seen utils.SeenMap,
 			FilePath:      k.Path,
 			DefaultBranch: defaultBranch,
 			RepositoryURL: k.Repository.URL,
+			User:          doc.UserName(k.Repository.URL),
 		},
 	}
 	creationTime, err := gcl.GetFileCreationTime(k)
