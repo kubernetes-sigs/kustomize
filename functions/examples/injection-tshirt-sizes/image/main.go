@@ -48,9 +48,9 @@ var cpuSizes = map[string]string{
 
 // memorySizes is the mapping from tshirt-size to memory reservation quantity
 var memorySizes = map[string]string{
-	"small":  "50MiB",
-	"medium": "1GiB",
-	"large":  "32GiB",
+	"small":  "50M",
+	"medium": "1G",
+	"large":  "32G",
 }
 
 // inject sets the cpu and memory reservations on all containers for Resources annotated
