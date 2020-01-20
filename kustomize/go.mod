@@ -20,6 +20,7 @@ exclude (
 )
 
 replace (
+	sigs.k8s.io/kustomize/api v0.3.2 => ../api
 	sigs.k8s.io/kustomize/cmd/kubectl v0.0.3 => ../cmd/kubectl
 	sigs.k8s.io/kustomize/kstatus v0.0.1 => ../kstatus
 )
