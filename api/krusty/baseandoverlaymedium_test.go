@@ -153,7 +153,8 @@ FRUIT=banana
 LEGUME=chickpea
 `)
 	th.WriteF("/app/overlay/configmap/dummy.txt",
-		`Lorem ipsum dolor sit amet, consectetur  
+		`Lorem ipsum dolor sit amet, consectetur
+ 		 
 adipiscing elit, sed do eiusmod tempor		
 incididunt ut labore et dolore magna aliqua.   
 `)
@@ -294,6 +295,7 @@ apiVersion: v1
 data:
   nonsense: |
     Lorem ipsum dolor sit amet, consectetur
+
     adipiscing elit, sed do eiusmod tempor
     incididunt ut labore et dolore magna aliqua.
 kind: ConfigMap
@@ -304,6 +306,6 @@ metadata:
     app: mungebot
     org: kubernetes
     repo: test-infra
-  name: test-infra-app-config-4mt28b5bg2
+  name: test-infra-app-config-hh272bg5d4
 `)
 }
