@@ -37,7 +37,7 @@ mkdir -p $BASE
 
 Now lets add a simple config map resource to the `base`
 
-<!-- @createBase @testE2EAgainstLatestRelease-->
+<!-- @createConfigMapYaml @testE2EAgainstLatestRelease-->
 ```
 cat <<EOF >$BASE/configMap.yaml
 apiVersion: v1
@@ -52,7 +52,7 @@ EOF
 
 Create `deployment.yaml` with any image and with desired number of replicas
 
-<!-- @createBase @testE2EAgainstLatestRelease-->
+<!-- @createDeploymentYaml @testE2EAgainstLatestRelease-->
 ```
 cat <<EOF >$BASE/deployment.yaml
 apiVersion: apps/v1
@@ -90,7 +90,7 @@ EOF
 
 Create `service.yaml` pointing to the deployment created above
 
-<!-- @createBase @testE2EAgainstLatestRelease-->
+<!-- @createServiceYaml @testE2EAgainstLatestRelease-->
 ```
 cat <<EOF >$BASE/service.yaml
 kind: Service
@@ -110,7 +110,7 @@ EOF
 
 Create a `grouping.yaml` resource. By this, you are defining the grouping of the current directory, `base`. Kustomize uses the unique label in this file to track any future state changes made to this directory. Make sure the label key is `kustomize.config.k8s.io/inventory-id` and give any unique label value and DO NOT change it in future.
 
-<!-- @createBase @testE2EAgainstLatestRelease-->
+<!-- @createGroupingYaml @testE2EAgainstLatestRelease-->
 ```
 cat <<EOF >$BASE/grouping.yaml
 apiVersion: v1
@@ -124,7 +124,7 @@ EOF
 
 Now, create `kustomization.yaml` add all your resources.
 
-<!-- @createBase @testE2EAgainstLatestRelease-->
+<!-- @createKustomizationYaml @testE2EAgainstLatestRelease-->
 ```
 cat <<EOF >$BASE/kustomization.yaml
 commonLabels:
@@ -173,7 +173,7 @@ $MYGOBIN/kind create cluster;
 ```
 
 Use the kustomize binary in MYGOBIN to apply a deployment, fetch the status and verify the status.
-<!-- @e2eTestUsingKustomize @testE2EAgainstLatestRelease -->
+<!-- @runHelloApp @testE2EAgainstLatestRelease -->
 ```
 export KUSTOMIZE_ENABLE_ALPHA_COMMANDS=true
 
@@ -195,11 +195,51 @@ test 1 == \
   echo $?
 ```
 
+Now let's replace the configMap with configMap2 apply the config, fetch and verify the status. This should delete the-map from deployment and add the-map2.
+<!-- @replaceConfigMapInHello @testE2EAgainstLatestRelease -->
+```
+cat <<EOF >$BASE/configMap2.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: the-map2
+data:
+  altGreeting: "Good Evening!"
+  enableRisky: "false"
+EOF
+
+rm $BASE/configMap.yaml
+
+sed -i.bak 's/configMap/configMap2/' \
+    $BASE/kustomization.yaml
+
+sed -i.bak 's/the-map/the-map2/' \
+    $BASE/deployment.yaml
+
+$MYGOBIN/kustomize resources apply $BASE --status;
+
+status=$(mktemp);
+$MYGOBIN/resource status fetch $BASE > $status
+$MYGOBIN/resource status fetch $BASE > /tmp/teste2eout/out.txt
+
+test 1 == \
+  $(grep "the-deployment" $status | grep "Deployment is available. Replicas: 3" | wc -l); \
+  echo $?
+
+test 1 == \
+  $(grep "the-map2" $status | grep "Resource is always ready" | wc -l); \
+  echo $?
+
+test 1 == \
+  $(grep "the-service" $status | grep "Service is ready" | wc -l); \
+  echo $?
+```
+
 Clean-up the cluster 
-<!-- @createKindCluster @testE2EAgainstLatestRelease -->
+<!-- @deleteKindCluster @testE2EAgainstLatestRelease -->
 ```
 $MYGOBIN/kind delete cluster;
 ```
 
-###Next Exercise
+### Next Exercise
 Create overlays as described in the [helloWorld] section and verify the results. Good luck! 
