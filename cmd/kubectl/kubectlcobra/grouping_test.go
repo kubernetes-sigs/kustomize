@@ -22,6 +22,8 @@ var pod1Name = "pod-1"
 var pod2Name = "pod-2"
 var pod3Name = "pod-3"
 
+var testGroupingLabel = "test-app-label"
+
 var groupingObj = unstructured.Unstructured{
 	Object: map[string]interface{}{
 		"apiVersion": "v1",
@@ -30,7 +32,7 @@ var groupingObj = unstructured.Unstructured{
 			"name":      groupingObjName,
 			"namespace": testNamespace,
 			"labels": map[string]interface{}{
-				GroupingLabel: "true",
+				GroupingLabel: testGroupingLabel,
 			},
 		},
 	},
@@ -107,6 +109,67 @@ var nilInfo = &resource.Info{
 	Namespace: testNamespace,
 	Name:      groupingObjName,
 	Object:    nil,
+}
+
+var groupingObjLabelWithSpace = unstructured.Unstructured{
+	Object: map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata": map[string]interface{}{
+			"name":      groupingObjName,
+			"namespace": testNamespace,
+			"labels": map[string]interface{}{
+				GroupingLabel: "\tgrouping-label ",
+			},
+		},
+	},
+}
+
+func TestRetrieveGroupingLabel(t *testing.T) {
+	tests := []struct {
+		obj           runtime.Object
+		groupingLabel string
+		isError       bool
+	}{
+		// Nil grouping object throws error.
+		{
+			obj:           nil,
+			groupingLabel: "",
+			isError:       true,
+		},
+		// Pod is not a grouping object.
+		{
+			obj:           &pod2,
+			groupingLabel: "",
+			isError:       true,
+		},
+		// Retrieves label without preceding/trailing whitespace.
+		{
+			obj:           &groupingObjLabelWithSpace,
+			groupingLabel: "grouping-label",
+			isError:       false,
+		},
+		{
+			obj:           &groupingObj,
+			groupingLabel: testGroupingLabel,
+			isError:       false,
+		},
+	}
+
+	for _, test := range tests {
+		actual, err := retrieveGroupingLabel(test.obj)
+		if test.isError && err == nil {
+			t.Errorf("Did not receive expected error.\n")
+		}
+		if !test.isError {
+			if err != nil {
+				t.Fatalf("Received unexpected error: %s\n", err)
+			}
+			if test.groupingLabel != actual {
+				t.Errorf("Expected grouping label (%s), got (%s)\n", test.groupingLabel, actual)
+			}
+		}
+	}
 }
 
 func TestIsGroupingObject(t *testing.T) {
