@@ -164,6 +164,16 @@ func (is *InventorySet) Subtract(other *InventorySet) (*InventorySet, error) {
 	return result, nil
 }
 
+// Equals returns true if the "other" inventory set is the same
+// as this current inventory set. Relies on the fact that the
+// inventory items are sorted for the String() function.
+func (is *InventorySet) Equals(other *InventorySet) bool {
+	if other == nil {
+		return false
+	}
+	return is.String() == other.String()
+}
+
 // String returns a string describing set of Inventory structs.
 func (is *InventorySet) String() string {
 	strs := []string{}
