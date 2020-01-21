@@ -97,8 +97,8 @@ func TestKeyValuesFromFileSources(t *testing.T) {
 }
 
 func TestTrimTrailingSpacesInLines(t *testing.T) {
-	input := "\"fooKey\": \"fooValue\"   \t\n\t\"barKey\": \"barValue\""
-	expected := "\"fooKey\": \"fooValue\"\n\t\"barKey\": \"barValue\""
+	input := "\"fooKey\": \"fooValue\"   \t\n \t\t  \n\t\"barKey\": \"barValue\""
+	expected := "\"fooKey\": \"fooValue\"\n\n\t\"barKey\": \"barValue\""
 	res := trimTrailingSpacesInLines(input)
 	if !reflect.DeepEqual(res, expected) {
 		t.Errorf("Trim trailing spaces in lines should succeed, got: %s exptected: %s", res, expected)
