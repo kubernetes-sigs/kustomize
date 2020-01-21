@@ -22,6 +22,26 @@ const (
 	GroupingHash  = "kustomize.config.k8s.io/inventory-hash"
 )
 
+// retrieveGroupingLabel returns the string value of the GroupingLabel
+// for the passed object. Returns error if the passed object is nil or
+// is not a grouping object.
+func retrieveGroupingLabel(obj runtime.Object) (string, error) {
+	var groupingLabel string
+	if obj == nil {
+		return "", fmt.Errorf("Grouping object is nil.\n")
+	}
+	accessor, err := meta.Accessor(obj)
+	if err != nil {
+		return "", err
+	}
+	labels := accessor.GetLabels()
+	groupingLabel, exists := labels[GroupingLabel]
+	if !exists {
+		return "", fmt.Errorf("Grouping label does not exist for grouping object: %s\n", GroupingLabel)
+	}
+	return strings.TrimSpace(groupingLabel), nil
+}
+
 // isGroupingObject returns true if the passed object has the
 // grouping label.
 // TODO(seans3): Check type is ConfigMap.
@@ -29,13 +49,9 @@ func isGroupingObject(obj runtime.Object) bool {
 	if obj == nil {
 		return false
 	}
-	accessor, err := meta.Accessor(obj)
-	if err == nil {
-		labels := accessor.GetLabels()
-		_, exists := labels[GroupingLabel]
-		if exists {
-			return true
-		}
+	groupingLabel, err := retrieveGroupingLabel(obj)
+	if err == nil && len(groupingLabel) > 0 {
+		return true
 	}
 	return false
 }
