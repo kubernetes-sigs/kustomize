@@ -208,8 +208,6 @@ test-examples-e2e-kustomize: $(MYGOBIN)/mdrip $(MYGOBIN)/kind
 		/bin/rm -f $(MYGOBIN)/kustomize; \
 		echo "Installing kustomize from ."; \
 		cd kustomize; go install .; cd ..; \
-		echo "Installing resource from ."; \
-        cd cmd/resource; go install .; cd ../..; \
 		./hack/testExamplesE2EAgainstKustomize.sh .; \
 	)
 

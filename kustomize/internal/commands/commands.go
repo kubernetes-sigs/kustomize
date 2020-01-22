@@ -19,6 +19,7 @@ import (
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/config"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/create"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit"
+	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/status"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/version"
 )
 
@@ -43,6 +44,7 @@ See https://sigs.k8s.io/kustomize
 		edit.NewCmdEdit(fSys, v, uf),
 		create.NewCmdCreate(fSys, uf),
 		version.NewCmdVersion(stdOut),
+		status.NewCmdStatus(),
 	)
 	if cc := config.NewCmdConfig(fSys); cc != nil {
 		c.AddCommand(cc)
