@@ -33,6 +33,8 @@ Let's run the [hello] service.
 ```
 BASE=$DEMO_HOME/base
 mkdir -p $BASE
+OUTPUT=$DEMO_HOME/output
+mkdir -p $OUTPUT
 ```
 
 Now lets add a simple config map resource to the `base`
@@ -158,18 +160,13 @@ sed -i.bak 's/app: hello/app: my-hello/' \
     $BASE/kustomization.yaml
 ```
 
-To do end to end tests using kustomize on local, go through the following section. You should have GOPATH set up and [kind] installed.
-
-<!-- @setGoBin @testE2EAgainstLatestRelease -->
-```
-MYGOBIN=$GOPATH/bin
-```
+The following requires installation of [kind].
 
 Delete any existing kind cluster and create a new one. By default the name of the cluster is "kind"
 <!-- @deleteAndCreateKindCluster @testE2EAgainstLatestRelease -->
 ```
-$MYGOBIN/kind delete cluster;
-$MYGOBIN/kind create cluster;
+kind delete cluster
+kind create cluster
 ```
 
 Use the kustomize binary in MYGOBIN to apply a deployment, fetch the status and verify the status.
@@ -177,21 +174,20 @@ Use the kustomize binary in MYGOBIN to apply a deployment, fetch the status and 
 ```
 export KUSTOMIZE_ENABLE_ALPHA_COMMANDS=true
 
-$MYGOBIN/kustomize resources apply $BASE --status;
+kustomize resources apply $BASE --status;
 
-status=$(mktemp);
-$MYGOBIN/resource status fetch $BASE > $status
+kustomize status fetch $BASE > $OUTPUT/status
 
 test 1 == \
-  $(grep "the-deployment" $status | grep "Deployment is available. Replicas: 3" | wc -l); \
+  $(grep "the-deployment" $OUTPUT/status | grep "Deployment is available. Replicas: 3" | wc -l); \
   echo $?
 
 test 1 == \
-  $(grep "the-map" $status | grep "Resource is always ready" | wc -l); \
+  $(grep "the-map" $OUTPUT/status | grep "Resource is always ready" | wc -l); \
   echo $?
 
 test 1 == \
-  $(grep "the-service" $status | grep "Service is ready" | wc -l); \
+  $(grep "the-service" $OUTPUT/status | grep "Service is ready" | wc -l); \
   echo $?
 ```
 
@@ -216,30 +212,29 @@ sed -i.bak 's/configMap/configMap2/' \
 sed -i.bak 's/the-map/the-map2/' \
     $BASE/deployment.yaml
 
-$MYGOBIN/kustomize resources apply $BASE --status;
+kustomize resources apply $BASE --status;
 
 status=$(mktemp);
-$MYGOBIN/resource status fetch $BASE > $status
-$MYGOBIN/resource status fetch $BASE > /tmp/teste2eout/out.txt
+kustomize status fetch $BASE > $OUTPUT/status
 
 test 1 == \
-  $(grep "the-deployment" $status | grep "Deployment is available. Replicas: 3" | wc -l); \
+  $(grep "the-deployment" $OUTPUT/status | grep "Deployment is available. Replicas: 3" | wc -l); \
   echo $?
 
 test 1 == \
-  $(grep "the-map2" $status | grep "Resource is always ready" | wc -l); \
+  $(grep "the-map2" $OUTPUT/status | grep "Resource is always ready" | wc -l); \
   echo $?
 
 test 1 == \
-  $(grep "the-service" $status | grep "Service is ready" | wc -l); \
+  $(grep "the-service" $OUTPUT/status | grep "Service is ready" | wc -l); \
   echo $?
 ```
 
 Clean-up the cluster 
 <!-- @deleteKindCluster @testE2EAgainstLatestRelease -->
 ```
-$MYGOBIN/kind delete cluster;
+kind delete cluster
 ```
 
 ### Next Exercise
-Create overlays as described in the [helloWorld] section and verify the results. Good luck! 
+Create overlays as described in the [helloWorld] section and verify the results.

@@ -7,8 +7,13 @@ linters:
     - bodyclose
     - deadcode
     - depguard
+    # - dogsled
     - dupl
+    # - errcheck
+    # - funlen
+    # - gochecknoinits
     - goconst
+    # - gocritic
     - gocyclo
     - gofmt
     - goimports
@@ -21,6 +26,7 @@ linters:
     - lll
     - misspell
     - nakedret
+    # - scopelint
     - staticcheck
     - structcheck
     # stylecheck demands that acronyms not be treated as words
@@ -28,9 +34,10 @@ linters:
     # - stylecheck
     - typecheck
     - unconvert
-    - unused
     - unparam
+    - unused
     - varcheck
+    # - whitespace
 
 linters-settings:
   dupl:

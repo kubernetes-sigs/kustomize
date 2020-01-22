@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/cmd/resource/status/generateddocs/commands"
+	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/status/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 

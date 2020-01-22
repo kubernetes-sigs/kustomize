@@ -1,34 +1,35 @@
 package cmd
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
-	"testing"
 )
 
 func TestIsValidKubernetesResource(t *testing.T) {
 
 	testCases := map[string]struct {
-		data       yaml.ResourceIdentifier
-		expected      bool
+		data     yaml.ResourceIdentifier
+		expected bool
 	}{
 		"invalid resource": {
-			data:       yaml.ResourceIdentifier {
-				Name : "",
-				APIVersion : "",
-				Kind : "",
-				Namespace : "",
+			data: yaml.ResourceIdentifier{
+				Name:       "",
+				APIVersion: "",
+				Kind:       "",
+				Namespace:  "",
 			},
-			expected:   false,
+			expected: false,
 		},
 		"valid resource": {
-			data:       yaml.ResourceIdentifier {
-				Name : "SomeName",
-				APIVersion : "SomeVersion",
-				Kind : "SomeKind",
-				Namespace : "",
+			data: yaml.ResourceIdentifier{
+				Name:       "SomeName",
+				APIVersion: "SomeVersion",
+				Kind:       "SomeKind",
+				Namespace:  "",
 			},
-			expected:   true,
+			expected: true,
 		},
 	}
 
