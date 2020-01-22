@@ -87,10 +87,20 @@ func (gc githubCrawler) Crawl(ctx context.Context,
 		accessToken:   gc.client.accessToken,
 	}
 
+	var ranges []string
+	var err error
 	// Since Github returns a max of 1000 results per query, we can use
 	// multiple queries that split the search space into chunks of at most
 	// 1000 files to get all of the data.
-	ranges, err := FindRangesForRepoSearch(newCache(noETagClient, gc.query))
+	for i := 0; i < 5; i++ {
+		ranges, err = FindRangesForRepoSearch(newCache(noETagClient, gc.query))
+		if err == nil {
+			logger.Printf("FindRangesForRepoSearch succeeded after %d retries", i)
+			break
+		} else {
+			time.Sleep(time.Minute)
+		}
+	}
 	if err != nil {
 		return fmt.Errorf("could not split %v into ranges, %v\n",
 			gc.query, err)
