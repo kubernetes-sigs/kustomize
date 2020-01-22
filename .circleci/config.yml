@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:alpine
+      - image: golang:alpine
     working_directory: /go/src/github.com/qlik-oss/kustomize
     steps:
       - checkout
