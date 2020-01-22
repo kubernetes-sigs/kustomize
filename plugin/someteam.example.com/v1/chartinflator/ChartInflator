@@ -10,15 +10,16 @@
 #  kind: ChartInflator
 #  metadata:
 #    name: notImportantHere
-#  chartName: nameOfStableChart
-#  values: /abs/path/to/local/values/file
-#  chartHome: /abs/path/local/chart/storage
-#  chartRelease: (stable|incubator)
-#  chartVersion: 9.0.1
-#  helmHome: /abs/path/to/helm/config
-#  helmBin: /abs/path/to/helmBin
-#  releaseNam: nameOfHelmRelease
-#  releaseNamespace: namespaceWhereHelmWouldApply
+#  data:
+#    chartName: nameOfStableChart
+#    values: /abs/path/to/local/values/file
+#    chartHome: /abs/path/local/chart/storage
+#    chartRelease: (stable|incubator)
+#    chartVersion: 9.0.1
+#    helmHome: /abs/path/to/helm/config
+#    helmBin: /abs/path/to/helmBin
+#    releaseName: nameOfHelmRelease
+#    releaseNamespace: namespaceWhereHelmWouldApply
 #
 # fetches the given chart from stable/$chartName,
 # and inflates it to stdout, using the given values file.
