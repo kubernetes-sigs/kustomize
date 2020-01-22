@@ -80,6 +80,18 @@ func TestInventoryEqual(t *testing.T) {
 		inventory2 *Inventory
 		isEqual    bool
 	}{
+		// "Other" inventory is nil, then not equal.
+		{
+			inventory1: &Inventory{
+				Name: "test-inv",
+				GroupKind: schema.GroupKind{
+					Group: "apps",
+					Kind:  "Deployment",
+				},
+			},
+			inventory2: nil,
+			isEqual:    false,
+		},
 		// Two equal inventories without a namespace
 		{
 			inventory1: &Inventory{
