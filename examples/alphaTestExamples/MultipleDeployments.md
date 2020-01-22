@@ -31,6 +31,8 @@ Alternatively, use
 ```
 BASE=$DEMO_HOME/base
 mkdir -p $BASE
+OUTPUT=$DEMO_HOME/output
+mkdir -p $OUTPUT
 
 mkdir $BASE/wordpress
 mkdir $BASE/mysql
@@ -59,16 +61,11 @@ metadata:
 EOF
 ```
 
-<!-- @setGoBin @testE2EAgainstLatestRelease -->
-```
-MYGOBIN=$GOPATH/bin
-```
-
 Delete any existing kind cluster and create a new one. By default the name of the cluster is "kind"
 <!-- @deleteAndCreateKindCluster @testE2EAgainstLatestRelease -->
 ```
-$MYGOBIN/kind delete cluster;
-$MYGOBIN/kind create cluster;
+kind delete cluster
+kind create cluster
 ```
 
 Let's run the wordpress and mysql services.
@@ -76,34 +73,34 @@ Let's run the wordpress and mysql services.
 ```
 export KUSTOMIZE_ENABLE_ALPHA_COMMANDS=true
 
-$MYGOBIN/kustomize resources apply $BASE/mysql --status;
+kustomize resources apply $BASE/mysql --status;
 
 status=$(mktemp);
-$MYGOBIN/resource status fetch $BASE/mysql > $status
+kustomize status fetch $BASE/mysql > $OUTPUT/status
 
 test 1 == \
-  $(grep "mysql" $status | grep "Deployment is available. Replicas: 1" | wc -l); \
+  $(grep "mysql" $OUTPUT/status | grep "Deployment is available. Replicas: 1" | wc -l); \
   echo $?
 
 test 1 == \
-  $(grep "mysql-pass" $status | grep "Resource is always ready" | wc -l); \
+  $(grep "mysql-pass" $OUTPUT/status | grep "Resource is always ready" | wc -l); \
   echo $?
 
 test 1 == \
-  $(grep "mysql" $status | grep "Service is ready" | wc -l); \
+  $(grep "mysql" $OUTPUT/status | grep "Service is ready" | wc -l); \
   echo $?
 
-$MYGOBIN/kustomize resources apply $BASE/wordpress --status;
+kustomize resources apply $BASE/wordpress --status;
 
 status=$(mktemp);
-$MYGOBIN/resource status fetch $BASE/wordpress > $status
+kustomize status fetch $BASE/wordpress > $OUTPUT/status
 
 test 1 == \
-  $(grep "wordpress" $status | grep "Deployment is available. Replicas: 1" | wc -l); \
+  $(grep "wordpress" $OUTPUT/status | grep "Deployment is available. Replicas: 1" | wc -l); \
   echo $?
 
 test 1 == \
-  $(grep "wordpress" $status | grep "Service is ready" | wc -l); \
+  $(grep "wordpress" $OUTPUT/status | grep "Service is ready" | wc -l); \
   echo $?
 ```
 
@@ -130,26 +127,26 @@ sed -i.bak 's/secret/secret2/' \
 sed -i.bak 's/mysql-pass/mysql-pass2/' \
     $BASE/mysql/deployment.yaml
 
-$MYGOBIN/kustomize resources apply $BASE/mysql --status;
+kustomize resources apply $BASE/mysql --status;
 
 status=$(mktemp);
-$MYGOBIN/resource status fetch $BASE/mysql > $status
+kustomize status fetch $BASE/mysql > $OUTPUT/status
 
 test 1 == \
-  $(grep "mysql" $status | grep "Deployment is available. Replicas: 1" | wc -l); \
+  $(grep "mysql" $OUTPUT/status | grep "Deployment is available. Replicas: 1" | wc -l); \
   echo $?
 
 test 1 == \
-  $(grep "mysql-pass2" $status | grep "Resource is always ready" | wc -l); \
+  $(grep "mysql-pass2" $OUTPUT/status | grep "Resource is always ready" | wc -l); \
   echo $?
 
 test 1 == \
-  $(grep "mysql" $status | grep "Service is ready" | wc -l); \
+  $(grep "mysql" $OUTPUT/status | grep "Service is ready" | wc -l); \
   echo $?
 ```
 
 Clean-up the cluster 
 <!-- @deleteKindCluster @testE2EAgainstLatestRelease -->
 ```
-$MYGOBIN/kind delete cluster;
+kind delete cluster
 ```
