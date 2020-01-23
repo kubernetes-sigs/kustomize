@@ -71,6 +71,9 @@ func parseInventory(inv string) (*Inventory, error) {
 // Equals returns true if the Inventory structs are identical;
 // false otherwise.
 func (i *Inventory) Equals(other *Inventory) bool {
+	if other == nil {
+		return false
+	}
 	return i.String() == other.String()
 }
 
