@@ -93,7 +93,7 @@ package github
 //   apiCallsPerResult * 10(pages) * 100(resultsPerPage) * totalResults / 1000
 //   = apiCallsPerResult * totalResults.
 //
-// So it could very well take apiCallsPerResult * 50 times longer to acutally
+// So it could very well take apiCallsPerResult * 50 times longer to actually
 // fetch the results (assuming the quotas for the API calls are the same as the
 // search API), than it does to perform these range searches.
 
@@ -139,7 +139,7 @@ type cachedSearch interface {
 //    problematic). The current cache implementation looks at the
 //    predecessor entry to find out if the current value is monotonic.
 //    This is where the bit trick is used, since each step in the binary
-//    search is adding or ommiting to add a decreasing power of 2 to the query
+//    search is adding or omitting to add a decreasing power of 2 to the query
 //    value, we can remove the least significant set bit to find the
 //    predecessor in constant time. Ultimately since the search is rate
 //    limited, we could also easily afford to compute this in linear time
