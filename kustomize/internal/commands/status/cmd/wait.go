@@ -60,12 +60,14 @@ type WaitRunner struct {
 func (r *WaitRunner) runE(c *cobra.Command, args []string) error {
 	ctx := context.Background()
 
-	resolver, err := r.newResolverFunc(r.Interval)
+	resolver, mapper, err := r.newResolverFunc(r.Interval)
 	if err != nil {
 		return errors.Wrap(err, "errors creating resolver")
 	}
 
-	captureFilter := &CaptureIdentifiersFilter{}
+	captureFilter := &CaptureIdentifiersFilter{
+		Mapper: mapper,
+	}
 	filters := []kio.Filter{captureFilter}
 
 	var inputs []kio.Reader

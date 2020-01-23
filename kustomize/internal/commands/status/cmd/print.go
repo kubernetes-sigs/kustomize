@@ -227,11 +227,11 @@ type eventColumnInfo struct {
 var (
 	eventColumns = []eventColumnInfo{
 		{
-			header:                     "EVENT TYPE",
+			header:                     "NAMESPACE",
 			width:                      15,
-			requireResourceUpdateEvent: false,
+			requireResourceUpdateEvent: true,
 			contentFunc: func(event wait.Event) string {
-				return string(event.Type)
+				return event.EventResource.ResourceIdentifier.Namespace
 			},
 		},
 		{
@@ -247,16 +247,7 @@ var (
 			width:                      20,
 			requireResourceUpdateEvent: true,
 			contentFunc: func(event wait.Event) string {
-				return fmt.Sprintf("%s/%s", event.EventResource.ResourceIdentifier.GroupKind.Group,
-					event.EventResource.ResourceIdentifier.GroupKind.Kind)
-			},
-		},
-		{
-			header:                     "NAMESPACE",
-			width:                      15,
-			requireResourceUpdateEvent: true,
-			contentFunc: func(event wait.Event) string {
-				return event.EventResource.ResourceIdentifier.Namespace
+				return event.EventResource.ResourceIdentifier.GroupKind.Kind
 			},
 		},
 		{
@@ -278,12 +269,20 @@ var (
 		{
 			header:                     "MESSAGE",
 			width:                      50,
-			requireResourceUpdateEvent: true,
+			requireResourceUpdateEvent: false,
 			contentFunc: func(event wait.Event) string {
-				if event.EventResource.Error != nil {
-					return event.EventResource.Error.Error()
+				switch event.Type {
+				case wait.ResourceUpdate:
+					if event.EventResource.Error != nil {
+						return event.EventResource.Error.Error()
+					}
+					return event.EventResource.Message
+				case wait.Aborted:
+					return fmt.Sprint("Operation aborted before all resources have become Current")
+				case wait.Completed:
+					return fmt.Sprint("All resources have become Current")
 				}
-				return event.EventResource.Message
+				return ""
 			},
 		},
 	}
@@ -308,11 +307,14 @@ func newEventPrinter(out io.Writer, err io.Writer) *EventPrinter {
 
 func (e *EventPrinter) printEvent(event wait.Event) {
 	for _, column := range eventColumns {
+		var text string
 		if event.Type != wait.ResourceUpdate && column.requireResourceUpdateEvent {
-			continue
+			text = ""
+		} else {
+			text = trimString(column.contentFunc(event), column.width)
 		}
 		format := fmt.Sprintf("%%-%ds  ", column.width)
-		printOrDie(e.out, format, trimString(column.contentFunc(event), column.width))
+		printOrDie(e.out, format, text)
 	}
 	printOrDie(e.out, "\n")
 }
