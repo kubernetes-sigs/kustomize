@@ -241,7 +241,7 @@ func (f *FakeClient) List(context.Context, runtime.Object, ...client.ListOption)
 }
 
 func fakeResolver(fakeClient client.Reader, mapperTypes ...schema.GroupVersionKind) newResolverFunc {
-	return func(pollInterval time.Duration) (*wait.Resolver, error) {
+	return func(pollInterval time.Duration) (*wait.Resolver, meta.RESTMapper, error) {
 		var groupVersions []schema.GroupVersion
 		for _, gvk := range mapperTypes {
 			groupVersions = append(groupVersions, gvk.GroupVersion())
@@ -251,7 +251,7 @@ func fakeResolver(fakeClient client.Reader, mapperTypes ...schema.GroupVersionKi
 			mapper.Add(gvk, meta.RESTScopeNamespace)
 		}
 
-		return wait.NewResolver(fakeClient, mapper, pollInterval), nil
+		return wait.NewResolver(fakeClient, mapper, pollInterval), mapper, nil
 	}
 }
 
