@@ -54,7 +54,7 @@ type EventsRunner struct {
 func (r *EventsRunner) runE(c *cobra.Command, args []string) error {
 	ctx := context.Background()
 
-	resolver, err := r.newResolverFunc(r.Interval)
+	resolver, mapper, err := r.newResolverFunc(r.Interval)
 	if err != nil {
 		return errors.Wrap(err, "error creating resolver")
 	}
@@ -62,7 +62,9 @@ func (r *EventsRunner) runE(c *cobra.Command, args []string) error {
 	// Set up a CaptureIdentifierFilter and run all inputs through the
 	// filter with the pipeline to capture the inventory of resources
 	// which we are interested in.
-	captureFilter := &CaptureIdentifiersFilter{}
+	captureFilter := &CaptureIdentifiersFilter{
+		Mapper: mapper,
+	}
 	filters := []kio.Filter{captureFilter}
 
 	var inputs []kio.Reader

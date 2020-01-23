@@ -200,7 +200,11 @@ func (e *EventOutput) allResources() []ResourceIdentifier {
 		if !event.isResourceUpdateEvent() {
 			continue
 		}
-		r := event.identifier
+		r := ResourceIdentifier{
+			namespace: event.namespace,
+			name:      event.name,
+			kind:      event.kind,
+		}
 		if _, found := seenResources[r]; !found {
 			resources = append(resources, r)
 			seenResources[r] = true
@@ -215,7 +219,12 @@ func (e *EventOutput) statusesForResource(resource ResourceIdentifier) []status.
 		if !event.isResourceUpdateEvent() {
 			continue
 		}
-		if event.identifier.Equals(resource) {
+		identifier := ResourceIdentifier{
+			namespace: event.namespace,
+			name:      event.name,
+			kind:      event.kind,
+		}
+		if identifier.Equals(resource) {
 			statuses = append(statuses, event.status)
 		}
 	}
@@ -223,32 +232,36 @@ func (e *EventOutput) statusesForResource(resource ResourceIdentifier) []status.
 }
 
 type EventOutputLine struct {
-	eventType  string
-	aggStatus  status.Status
-	identifier ResourceIdentifier
-	status     status.Status
-	message    string
+	eventType wait.EventType
+	aggStatus status.Status
+	kind      string
+	namespace string
+	name      string
+	status    status.Status
+	message   string
 }
 
 func (e *EventOutputLine) isResourceUpdateEvent() bool {
-	return e.eventType == string(wait.ResourceUpdate)
+	return e.eventType == wait.ResourceUpdate
 }
 
 var (
 	eventRegex = regexp.MustCompile(`^\s*` +
-		`(?P<eventType>\S+)\s+` +
-		`(?P<aggStatus>\S+)\s+` +
-		`((?P<resourceType>\S+)\s+` +
+		`(?P<aggStatus>(?:Current|InProgress|Failed|Terminating|Unknown))\s+` +
+		`(?P<message>.*\S)` +
+		`\s*$`)
+	resourceEventRegex = regexp.MustCompile(`^\s*` +
 		`(?P<namespace>\S+)\s+` +
+		`(?P<aggStatus>(?:Current|InProgress|Failed|Terminating|Unknown))\s+` +
+		`(?P<resourceType>\S+)\s+` +
 		`(?P<name>\S+)\s+` +
-		`(?P<status>\S+)\s+` +
-		`(?P<message>.*\S)){0,1}` +
+		`(?P<status>(?:Current|InProgress|Failed|Terminating|Unknown))\s+` +
+		`(?P<message>.*\S)` +
 		`\s*$`)
 	eventHeaderRegex = regexp.MustCompile(`^\s*` +
-		`EVENT TYPE\s+` +
+		`NAMESPACE\s+` +
 		`AGG STATUS\s+` +
 		`TYPE\s+` +
-		`NAMESPACE\s+` +
 		`NAME\s+` +
 		`STATUS\s+` +
 		`MESSAGE` +
@@ -262,40 +275,43 @@ func parseEventOutput(_ *testing.T, output string) EventOutput {
 		if len(line) == 0 {
 			continue // Ignore empty lines
 		}
+
 		match := eventHeaderRegex.FindStringSubmatch(line)
 		if match != nil {
 			continue // Ignore headers
 		}
+
 		match = eventRegex.FindStringSubmatch(line)
+		if match != nil {
+			aggStatus := status.FromStringOrDie(match[1])
+			var eventType wait.EventType
+			if aggStatus == status.CurrentStatus {
+				eventType = wait.Completed
+			} else {
+				eventType = wait.Aborted
+			}
+			eventOutput.events = append(eventOutput.events, EventOutputLine{
+				eventType: eventType,
+				aggStatus: aggStatus,
+				message:   match[2],
+			})
+		}
+
+		match = resourceEventRegex.FindStringSubmatch(line)
 		if match == nil {
 			eventOutput.unknownLines = append(eventOutput.unknownLines, line)
 			continue
 		}
 
-		eventOutputLine := EventOutputLine{
-			eventType: match[1],
+		eventOutput.events = append(eventOutput.events, EventOutputLine{
+			eventType: wait.ResourceUpdate,
 			aggStatus: status.FromStringOrDie(match[2]),
-		}
-
-		if eventOutputLine.eventType == string(wait.ResourceUpdate) {
-			resourceType := match[4]
-			parts := strings.Split(resourceType, "/")
-			var identifier ResourceIdentifier
-			if len(parts) == 2 {
-				identifier.apiVersion = parts[0]
-				identifier.kind = parts[1]
-			} else {
-				identifier.apiVersion = strings.Join(parts[:2], "/")
-				identifier.kind = parts[2]
-			}
-			identifier.namespace = match[5]
-			identifier.name = match[6]
-			eventOutputLine.identifier = identifier
-			eventOutputLine.status = status.FromStringOrDie(match[7])
-			eventOutputLine.message = match[8]
-		}
-
-		eventOutput.events = append(eventOutput.events, eventOutputLine)
+			kind:      match[3],
+			namespace: match[1],
+			name:      match[4],
+			status:    status.FromStringOrDie(match[5]),
+			message:   match[6],
+		})
 	}
 	return eventOutput
 }
