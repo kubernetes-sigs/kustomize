@@ -166,7 +166,7 @@ type request struct {
 	query Query
 }
 
-// CopyWith copies the requests and adds the extra query parameters. Usefull
+// CopyWith copies the requests and adds the extra query parameters. It is useful
 // for dynamically adding sizes to a filename only query without modifying it.
 func (r request) CopyWith(queryParams ...queryField) request {
 	cpy := r

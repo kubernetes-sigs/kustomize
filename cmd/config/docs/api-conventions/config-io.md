@@ -29,7 +29,7 @@ metadata:
 ### `config.kubernetes.io/index`
 
 Records the index of a Resource in file. In a multi-object YAML file, Resources are separated
-by three dashes (`---`), and the index represents the positon of the Resource starting from zero.
+by three dashes (`---`), and the index represents the position of the Resource starting from zero.
 
 This annotation **SHOULD** be set when reading Resources from files.
 It **SHOULD** be unset when writing Resources to files.
