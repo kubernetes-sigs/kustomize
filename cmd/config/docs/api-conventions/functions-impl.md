@@ -129,7 +129,7 @@ spec:
 
 ### Output
 
-The function is invoked using by runing `kustomize config run dir/`.
+The function is invoked using byrunning `kustomize config run dir/`.
 
 `dir/my-instance_deployment.yaml` contains the Deployment:
 
