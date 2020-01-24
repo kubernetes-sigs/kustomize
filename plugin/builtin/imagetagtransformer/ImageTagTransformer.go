@@ -149,6 +149,8 @@ func (p *plugin) findContainers(obj map[string]interface{}) error {
 
 func isImageMatched(s, t string) bool {
 	// Tag values are limited to [a-zA-Z0-9_.{}-].
+	// Some tools like Bazel rules_k8s allow tag patterns with {} characters.
+	// More info: https://github.com/bazelbuild/rules_k8s/pull/423
 	pattern, _ := regexp.Compile("^" + t + "(@sha256)?(:[a-zA-Z0-9_.{}-]*)?$")
 	return pattern.MatchString(s)
 }
