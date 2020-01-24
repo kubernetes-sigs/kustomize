@@ -81,6 +81,7 @@ func updateHelp(names []string, c *cobra.Command) {
 func NewCmdApply(baseName string, f util.Factory, ioStreams genericclioptions.IOStreams) *cobra.Command {
 	o := apply.NewApplyOptions(ioStreams)
 	so := newStatusOptions(f, ioStreams)
+	// Set up grouping object for this apply; used in subsequent prune.
 	o.PreProcessorFn = PrependGroupingObject(o)
 
 	cmd := &cobra.Command{
@@ -97,6 +98,9 @@ func NewCmdApply(baseName string, f util.Factory, ioStreams genericclioptions.IO
 			}
 
 			cmdutil.CheckErr(o.Complete(f, cmd))
+			// Default PostProcessor is configured in "Complete" function,
+			// so the prune must happen after "Complete".
+			o.PostProcessorFn = prune(f, o)
 			cmdutil.CheckErr(o.Run())
 			infos, _ := o.GetObjects()
 			if so.wait {
@@ -142,5 +146,18 @@ func PrependGroupingObject(o *apply.ApplyOptions) func() error {
 			}
 		}
 		return nil
+	}
+}
+
+// Prune deletes previously applied objects that have been
+// omitted in the current apply. The previously applied objects
+// are reached through ConfigMap grouping objects.
+func prune(f util.Factory, o *apply.ApplyOptions) func() error {
+	return func() error {
+		po, err := NewPruneOptions(f, o)
+		if err != nil {
+			return err
+		}
+		return po.Prune()
 	}
 }
