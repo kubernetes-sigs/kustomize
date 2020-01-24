@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -84,17 +85,13 @@ func NewCmdApply(baseName string, f util.Factory, ioStreams genericclioptions.IO
 	o.PreProcessorFn = PrependGroupingObject(o)
 
 	cmd := &cobra.Command{
-		Use:                   "apply (-f FILENAME | -k DIRECTORY)",
+		Use:                   "apply (FILENAME | DIRECTORY)",
 		DisableFlagsInUseLine: true,
 		Short:                 i18n.T("Apply a configuration to a resource by filename or stdin"),
 		//Long:                  applyLong,
 		//Example:               applyExample,
-		Args: cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 0 {
-				// check is kustomize, if so update
-				o.DeleteFlags.FileNameFlags.Kustomize = &args[0]
-			}
+			cmdutil.CheckErr(setFileNameFlags(args, o))
 
 			cmdutil.CheckErr(o.Complete(f, cmd))
 			cmdutil.CheckErr(o.Run())
@@ -118,7 +115,79 @@ func NewCmdApply(baseName string, f util.Factory, ioStreams genericclioptions.IO
 	cmd.Flags().Bool("dry-run", false, "If true, only print the object that would be sent, without sending it. Warning: --dry-run cannot accurately output the result of merging the local manifest and the server-side data. Use --server-dry-run to get the merged result instead.")
 	cmdutil.AddServerSideApplyFlags(cmd)
 
+	// Hide flags that are set inside ApplyOptions, but that we don't really want exposed.
+	cmdutil.CheckErr(cmd.Flags().MarkHidden("kustomize"))
+	cmdutil.CheckErr(cmd.Flags().MarkHidden("filename"))
+	cmdutil.CheckErr(cmd.Flags().MarkHidden("recursive"))
+
 	return cmd
+}
+
+func setFileNameFlags(args []string, o *apply.ApplyOptions) error {
+	// No arguments means we are reading from StdIn
+	if len(args) == 0 {
+		fileNames := []string{"-"}
+		o.DeleteFlags.FileNameFlags.Filenames = &fileNames
+		return nil
+	}
+
+	// If there are more than one argument, it can't be a kustomization,
+	// so just set the FileNames argument. Also always set the Recursive flag
+	// to true
+	t := true
+	if len(args) > 1 {
+		o.DeleteFlags.FileNameFlags.Filenames = &args
+		o.DeleteFlags.FileNameFlags.Recursive = &t
+		return nil
+	}
+
+	// If we have exactly one parameters, we check if the target
+	// is a Kustomization.
+	isKustomization, err := hasKustomization(args[0])
+	if err != nil {
+		return err
+	}
+	// If the argument is a folder and it has a Kustomization
+	// file in it, use Kustomize. If not, just fall back to
+	// regular apply.
+	if isKustomization {
+		o.DeleteFlags.FileNameFlags.Kustomize = &args[0]
+	} else {
+		o.DeleteFlags.FileNameFlags.Filenames = &args
+		o.DeleteFlags.FileNameFlags.Recursive = &t
+	}
+
+	return nil
+}
+
+// hasKustomization checks if the given path points to a folder
+// that contains a Kustomization file. If so, it returns true. Otherwise
+// it will return false.
+func hasKustomization(path string) (bool, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false, err
+	}
+	if !info.IsDir() {
+		return false, nil
+	}
+
+	fileNames := []string{"kustomization.yaml", "kustomization.yml", "Kustomization"}
+	var firstErr error
+	for _, fileName := range fileNames {
+		p := filepath.Join(path, fileName)
+		_, err := os.Stat(p)
+		if err == nil {
+			return true, nil
+		}
+		if os.IsNotExist(err) {
+			continue
+		}
+		if firstErr != nil {
+			firstErr = err
+		}
+	}
+	return false, firstErr
 }
 
 // PrependGroupingObject orders the objects to apply so the "grouping"
