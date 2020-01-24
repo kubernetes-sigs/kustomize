@@ -44,6 +44,184 @@ curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-T
 '
 ```
 
+Search for all the kustomization files whose `fileType` field is `resource`:
+```
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "bool": {
+      "filter": [
+       { "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*"  }}, 
+       { "regexp": { "fileType": "resource" }}
+      ]
+    }
+  }
+}
+'
+```
+
+Search for all the kustomize resource files:
+```
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "bool": {
+      "filter": [
+       { "regexp": { "fileType": "resource" }}
+      ],
+      "must_not": {
+        "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*"  }
+      }
+    }
+  }
+}
+'
+```
+
+Search all the kustomization files including a `generators` field:
+```
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+  "size": 10000,
+  "query": {
+    "bool": {
+      "must": {
+        "match" : {
+          "identifiers" : {
+            "query" : "generators"
+          }
+        }
+      },
+      "filter": {
+        "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*"  }
+      }
+    }
+  }
+}
+'
+```
+
+Search for all the documents whose `fileType` field is `generator`:
+```
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "bool": {
+      "filter": [
+       { "regexp": { "fileType": "generator" }}
+      ]
+    }
+  }
+}
+'
+```
+
+Search for all the kustomization files whose `fileType` field is `generator`:
+```
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "bool": {
+      "filter": [
+       { "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*"  }}, 
+       { "regexp": { "fileType": "generator" }}
+      ]
+    }
+  }
+}
+'
+```
+
+Search for all the kustomize generator files:
+```
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "bool": {
+      "filter": [
+       { "regexp": { "fileType": "generator" }}
+      ],
+      "must_not": {
+        "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*"  }
+      }
+    }
+  }
+}
+'
+```
+
+Search all the kustomization files including a `transformers` field:
+```
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+  "size": 10000,
+  "query": {
+    "bool": {
+      "must": {
+        "match" : {
+          "identifiers" : {
+            "query" : "transformers"
+          }
+        }
+      },
+      "filter": {
+        "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*"  }
+      }
+    }
+  }
+}
+'
+```
+
+Search for all the documents whose `fileType` field is `transformer`:
+```
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "bool": {
+      "filter": [
+       { "regexp": { "fileType": "transformer" }}
+      ]
+    }
+  }
+}
+'
+```
+
+Search for all the kustomization files whose `fileType` field is `transformer`:
+```
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "bool": {
+      "filter": [
+       { "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*"  }}, 
+       { "regexp": { "fileType": "transformer" }}
+      ]
+    }
+  }
+}
+'
+```
+
+Search for all the kustomize transformer files:
+```
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "bool": {
+      "filter": [
+       { "regexp": { "fileType": "transformer" }}
+      ],
+      "must_not": {
+        "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*"  }
+      }
+    }
+  }
+}
+'
+```
+
 Count distinct values of the `fileType` field:
 ```
 curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'

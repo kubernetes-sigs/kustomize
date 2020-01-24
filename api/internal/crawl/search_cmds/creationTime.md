@@ -46,7 +46,52 @@ curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'C
     "bool": {
       "must_not": {
         "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*"  }
-      }
+      }, 
+      "filter": [
+        { "regexp": { "fileType": "resource"  }}
+      ]
+    }
+  },
+  "aggs" : {
+    "min_creationTime" : { "min" : { "field" : "creationTime" } }
+  }
+}
+'
+```
+
+Find out the smallest value of the `creationTime` field of all kustomize generator files:
+```
+curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "bool": {
+      "must_not": {
+        "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*"  }
+      }, 
+      "filter": [
+        { "regexp": { "fileType": "generator"  }}
+      ]
+    }
+  },
+  "aggs" : {
+    "min_creationTime" : { "min" : { "field" : "creationTime" } }
+  }
+}
+'
+```
+
+Find out the smallest value of the `creationTime` field of all kustomize transformer files:
+```
+curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "bool": {
+      "must_not": {
+        "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*"  }
+      }, 
+      "filter": [
+        { "regexp": { "fileType": "transformer"  }}
+      ]
     }
   },
   "aggs" : {
@@ -142,6 +187,61 @@ curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Co
         "bool": {
             "must_not": [
                 { "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*" }}
+            ],
+            "filter": [
+                { "regexp": { "fileType": "resource" }}
+            ]
+        }
+    },
+    "aggs" : {
+        "newFiles_over_time" : {
+            "date_histogram" : {
+                "field" : "creationTime",
+                "interval" : "month"
+            }
+        }
+    }
+}
+'
+```
+
+Aggregate how many new kustomize generator files were added into Github each month:
+```
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
+{
+    "query": {
+        "bool": {
+            "must_not": [
+                { "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*" }}
+            ],
+            "filter": [
+                { "regexp": { "fileType": "generator" }}
+            ]
+        }
+    },
+    "aggs" : {
+        "newFiles_over_time" : {
+            "date_histogram" : {
+                "field" : "creationTime",
+                "interval" : "month"
+            }
+        }
+    }
+}
+'
+```
+
+Aggregate how many new kustomize transformer files were added into Github each month:
+```
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
+{
+    "query": {
+        "bool": {
+            "must_not": [
+                { "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*" }}
+            ],
+            "filter": [
+                { "regexp": { "fileType": "transformer" }}
             ]
         }
     },
@@ -188,7 +288,10 @@ curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Co
         "bool": {
             "must_not": [
                 { "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*" }}
-            ]
+            ],
+            "filter": [
+                { "regexp": { "fileType": "resource" }}
+            ]            
         }
     },
     "aggs" : {
@@ -199,6 +302,110 @@ curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Co
             }
         }
     }
+}
+'
+```
+
+Aggregate how many new kustomize generator files were added into Github each year:
+```
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
+{
+    "query": {
+        "bool": {
+            "must_not": [
+                { "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*" }}
+            ],
+            "filter": [
+                { "regexp": { "fileType": "generator" }}
+            ]            
+        }
+    },
+    "aggs" : {
+        "newFiles_over_time" : {
+            "date_histogram" : {
+                "field" : "creationTime",
+                "interval" : "year"
+            }
+        }
+    }
+}
+'
+```
+
+Aggregate how many new kustomize transformer files were added into Github each year:
+```
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
+{
+    "query": {
+        "bool": {
+            "must_not": [
+                { "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*" }}
+            ],
+            "filter": [
+                { "regexp": { "fileType": "transformer" }}
+            ]            
+        }
+    },
+    "aggs" : {
+        "newFiles_over_time" : {
+            "date_histogram" : {
+                "field" : "creationTime",
+                "interval" : "year"
+            }
+        }
+    }
+}
+'
+```
+
+Find the generator files created within the given time range:
+```
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "bool": {
+      "filter": [
+       { "regexp": { "fileType": "generator" }}
+      ],
+      "must_not": {
+        "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*"  }
+      },
+      "must": {
+        "range": {
+          "creationTime": {
+           "gte": "2019-04-26T16:40:02.000Z",
+           "lte": "2019-04-26T16:40:02.000Z"
+          }
+        }
+      }
+    }
+  }
+}
+'
+```
+
+Find the transformer files created within the given time range:
+```
+curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "bool": {
+      "filter": [
+       { "regexp": { "fileType": "transformer" }}
+      ],
+      "must_not": {
+        "regexp": { "filePath": "(.*/)?kustomization((.yaml)?|(.yml)?)(/)*"  }
+      },
+      "must": {
+        "range": {
+          "creationTime": {
+           "gte": "2019-04-26T16:40:02.000Z",
+           "lte": "2019-04-26T16:40:02.000Z"
+          }
+        }
+      }
+    }
+  }
 }
 '
 ```
