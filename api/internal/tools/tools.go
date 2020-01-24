@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // This file exists to automatically trigger installs
-// of the given tools, and is the offical 'unofficial'
+// of the given tools, and is the official 'unofficial'
 // way to declare a dependence on a Go binary until
 // some better technique comes along.
 

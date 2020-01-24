@@ -33,7 +33,7 @@ Example:
 ### ` + "`" + `config.kubernetes.io/index` + "`" + `
 
 Records the index of a Resource in file. In a multi-object YAML file, Resources are separated
-by three dashes (` + "`" + `---` + "`" + `), and the index represents the positon of the Resource starting from zero.
+by three dashes (` + "`" + `---` + "`" + `), and the index represents the position of the Resource starting from zero.
 
 This annotation **SHOULD** be set when reading Resources from files.
 It **SHOULD** be unset when writing Resources to files.
@@ -187,7 +187,7 @@ are passed to the Function through the ` + "`" + `ResourceList.functionConfig` +
 
 ### Output
 
-The function is invoked using by runing ` + "`" + `kustomize config run dir/` + "`" + `.
+The function is invoked using byrunning ` + "`" + `kustomize config run dir/` + "`" + `.
 
 ` + "`" + `dir/my-instance_deployment.yaml` + "`" + ` contains the Deployment:
 
