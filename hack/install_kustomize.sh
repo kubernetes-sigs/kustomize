@@ -26,9 +26,9 @@ trap cleanup EXIT
 pushd $tmpDir >& /dev/null
 
 opsys=windows
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
+if [[ "$OSTYPE" == linux* ]]; then
   opsys=linux
-elif [[ "$OSTYPE" == "darwin"* ]]; then
+elif [[ "$OSTYPE" == darwin* ]]; then
   opsys=darwin
 fi
 
