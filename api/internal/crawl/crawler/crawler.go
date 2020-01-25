@@ -82,6 +82,8 @@ func addBranches(cdoc CrawledDocument, match Crawler, indx IndexFunc,
 
 	seen.Set(cdoc.ID(), cdoc.GetDocument().FileType)
 
+	match.SetDefaultBranch(cdoc.GetDocument())
+
 	// Insert into index
 	if err := indx(cdoc, index.InsertOrUpdate); err != nil {
 		logger.Printf("Failed to insert or update doc(%s): %v",
