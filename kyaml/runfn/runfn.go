@@ -47,6 +47,9 @@ type RunFns struct {
 	// Output can be set to write the result to Output rather than back to the directory
 	Output io.Writer
 
+	// NoMerge disables merging of Resources after functions are ran.
+	NoMerge bool
+
 	// NoFunctionsFromInput if set to true will not read any functions from the input,
 	// and only use explicit sources
 	NoFunctionsFromInput *bool
@@ -70,6 +73,11 @@ func (r RunFns) Execute() error {
 	if err != nil {
 		return err
 	}
+
+	if !r.NoMerge {
+		fltrs = append(fltrs, filters.MergeFilter{})
+	}
+
 	return r.runFunctions(nodes, output, fltrs)
 }
 

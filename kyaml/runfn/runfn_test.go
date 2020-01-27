@@ -632,6 +632,71 @@ func TestCmd_Execute_setInput(t *testing.T) {
 	assert.Contains(t, string(b), "kind: StatefulSet")
 }
 
+func TestCmd_Execute_Merge(t *testing.T) {
+	dir := setupTest(t)
+	defer os.RemoveAll(dir)
+	if !assert.NoError(t, copyutil.CopyDir(dir, filepath.Join(dir, "merge"))) {
+		t.FailNow()
+	}
+
+	// write a test filter
+	if !assert.NoError(t, ioutil.WriteFile(
+		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
+		return
+	}
+
+	instance := RunFns{Path: dir, containerFilterProvider: getFilterProvider(t)}
+	if !assert.NoError(t, instance.Execute()) {
+		t.FailNow()
+	}
+	b, err := ioutil.ReadFile(
+		filepath.Join(dir, "java", "java-deployment.resource.yaml"))
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	b, err = ioutil.ReadFile(
+		filepath.Join(dir, "merge", "java", "java-deployment.resource.yaml"))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, string(b), "kind: StatefulSet")
+}
+
+func TestCmd_Execute_noMerge(t *testing.T) {
+	dir := setupTest(t)
+	defer os.RemoveAll(dir)
+	if !assert.NoError(t, copyutil.CopyDir(dir, filepath.Join(dir, "merge"))) {
+		t.FailNow()
+	}
+
+	// write a test filter
+	if !assert.NoError(t, ioutil.WriteFile(
+		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
+		return
+	}
+
+	instance := RunFns{
+		Path:                    dir,
+		NoMerge:                 true,
+		containerFilterProvider: getFilterProvider(t),
+	}
+	if !assert.NoError(t, instance.Execute()) {
+		t.FailNow()
+	}
+	b, err := ioutil.ReadFile(
+		filepath.Join(dir, "java", "java-deployment.resource.yaml"))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, string(b), "kind: StatefulSet")
+	b, err = ioutil.ReadFile(
+		filepath.Join(dir, "merge", "java", "java-deployment.resource.yaml"))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, string(b), "kind: StatefulSet")
+}
+
 // setupTest initializes a temp test directory containing test data
 func setupTest(t *testing.T) string {
 	dir, err := ioutil.TempDir("", "kustomize-kyaml-test")
