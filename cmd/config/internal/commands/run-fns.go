@@ -34,6 +34,8 @@ func GetRunFnRunner(name string) *RunFnRunner {
 		&r.DryRun, "dry-run", false, "print results to stdout")
 	r.Command.Flags().BoolVar(
 		&r.GlobalScope, "global-scope", false, "set global scope for functions.")
+	r.Command.Flags().BoolVar(
+		&r.NoMerge, "no-merge", false, "do not merge resources after functions run.")
 	r.Command.Flags().StringSliceVar(
 		&r.FnPaths, "fn-path", []string{},
 		"read functions from these directories instead of the configuration directory.")
@@ -53,6 +55,7 @@ type RunFnRunner struct {
 	Command            *cobra.Command
 	DryRun             bool
 	GlobalScope        bool
+	NoMerge            bool
 	FnPaths            []string
 	Image              string
 	RunFns             runfn.RunFns
@@ -184,6 +187,7 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 	r.RunFns = runfn.RunFns{
 		FunctionPaths: r.FnPaths,
 		GlobalScope:   r.GlobalScope,
+		NoMerge:       r.NoMerge,
 		Functions:     fns,
 		Output:        output,
 		Input:         input,
