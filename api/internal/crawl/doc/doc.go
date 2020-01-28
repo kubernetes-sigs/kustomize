@@ -46,6 +46,15 @@ type KustomizationDocument struct {
 
 type set map[string]struct{}
 
+func (doc *KustomizationDocument) Copy() *KustomizationDocument {
+	return &KustomizationDocument{
+		Document:    *(doc.Document.Copy()),
+		Kinds:       doc.Kinds,
+		Identifiers: doc.Identifiers,
+		Values:      doc.Values,
+	}
+}
+
 func (doc *KustomizationDocument) String() string {
 	return fmt.Sprintf("%s %s %s %v %v %v len(identifiers):%v  len(values):%v",
 		doc.RepositoryURL, doc.FilePath, doc.DefaultBranch, doc.CreationTime,
