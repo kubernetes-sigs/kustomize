@@ -8,12 +8,24 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
+	"strings"
+	"sync"
+
+	"github.com/pkg/errors"
+
+	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/chart/loader"
+	"helm.sh/helm/v3/pkg/chartutil"
+	"helm.sh/helm/v3/pkg/cli"
+	"helm.sh/helm/v3/pkg/downloader"
+	"helm.sh/helm/v3/pkg/getter"
+	"helm.sh/helm/v3/pkg/release"
+	"helm.sh/helm/v3/pkg/repo"
 
 	"sigs.k8s.io/kustomize/api/builtins_qlik/utils"
-	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/yaml"
 )
@@ -24,69 +36,53 @@ type HelmChartPlugin struct {
 	TmpChartHome     string                 `json:"tmpChartHome,omitempty" yaml:"tmpChartHome,omitempty"`
 	ChartVersion     string                 `json:"chartVersion,omitempty" yaml:"chartVersion,omitempty"`
 	ChartRepo        string                 `json:"chartRepo,omitempty" yaml:"chartRepo,omitempty"`
+	ChartRepoName    string                 `json:"chartRepoName,omitempty" yaml:"chartRepoName,omitempty"`
 	ValuesFrom       string                 `json:"valuesFrom,omitempty" yaml:"valuesFrom,omitempty"`
 	Values           map[string]interface{} `json:"values,omitempty" yaml:"values,omitempty"`
 	HelmHome         string                 `json:"helmHome,omitempty" yaml:"helmHome,omitempty"`
-	HelmBin          string                 `json:"helmBin,omitempty" yaml:"helmBin,omitempty"`
 	ReleaseName      string                 `json:"releaseName,omitempty" yaml:"releaseName,omitempty"`
 	ReleaseNamespace string                 `json:"releaseNamespace,omitempty" yaml:"releaseNamespace,omitempty"`
 	ExtraArgs        string                 `json:"extraArgs,omitempty" yaml:"extraArgs,omitempty"`
-	ChartPatches     string                 `json:"chartPatches,omitempty" yaml:"chartPatches,omitempty"`
 	SubChart         string                 `json:"subChart,omitempty" yaml:"subChart,omitempty"`
-	ChartVersionExp  string
-	ldr              ifc.Loader
 	rf               *resmap.Factory
 	logger           *log.Logger
 	hash             string
+	hashFolder       string
 }
 
 func (p *HelmChartPlugin) Config(h *resmap.PluginHelpers, c []byte) (err error) {
-	p.ldr = h.Loader()
 	p.rf = h.ResmapFactory()
-	chartHash := sha256.New()
-	chartHash.Write(c)
-	p.hash = hex.EncodeToString(chartHash.Sum(nil))
-	return yaml.Unmarshal(c, p)
-}
 
-func (p *HelmChartPlugin) Generate() (resmap.ResMap, error) {
-
-	// make temp directory
-	dir, err := ioutil.TempDir("", "tempRoot")
-	if err != nil {
-		p.logger.Printf("error creating temporaty directory: %v\n", err)
-		return nil, err
+	if err = yaml.Unmarshal(c, p); err != nil {
+		p.logger.Printf("error unmarshalling yaml config: %v, error: %v\n", string(c), err)
+		return err
 	}
-	dir = path.Join(dir, "../")
 
 	if p.HelmHome == "" {
-		// make home for helm stuff
-		directory := fmt.Sprintf("%s/%s", dir, "dotHelm")
+		directory := path.Join(os.TempDir(), "dotHelm")
 		p.HelmHome = directory
 	}
 
+	chartVersion := "latest"
+	if p.ChartVersion != "" {
+		chartVersion = p.ChartVersion
+	}
+
 	if p.ChartHome == "" && p.TmpChartHome != "" {
-		p.ChartHome = path.Join(os.TempDir(), p.TmpChartHome)
+		p.ChartHome = path.Join(os.TempDir(), p.TmpChartHome, fmt.Sprintf("%v-%v", p.ChartName, chartVersion))
 	}
 
 	if p.ChartHome == "" {
-		// make home for chart stuff
-		directory := fmt.Sprintf("%s/%s", dir, p.ChartName)
+		directory := path.Join(os.TempDir(), fmt.Sprintf("%v-%v", p.ChartName, chartVersion))
 		p.ChartHome = directory
 	}
 
-	if p.HelmBin == "" {
-		p.HelmBin = "helm"
-	}
-
-	if p.ChartVersion != "" {
-		p.ChartVersionExp = fmt.Sprintf("--version=%s", p.ChartVersion)
-	} else {
-		p.ChartVersionExp = ""
-	}
-
 	if p.ChartRepo == "" {
-		p.ChartRepo = "https://kubernetes-charts.storage.googleapis.com"
+		p.ChartRepo = "https://qlik.bintray.com/edge"
+	}
+
+	if p.ChartRepoName == "" {
+		p.ChartRepoName = "qlik"
 	}
 
 	if p.ReleaseName == "" {
@@ -94,61 +90,42 @@ func (p *HelmChartPlugin) Generate() (resmap.ResMap, error) {
 	}
 
 	if p.ReleaseNamespace == "" {
-		p.ReleaseName = "default"
+		p.ReleaseNamespace = "default"
 	}
 
-	hashfolder := filepath.Join(p.ChartHome, ".plugincache")
-	hashfile := filepath.Join(hashfolder, p.hash)
+	p.hashFolder = filepath.Join(p.ChartHome, ".plugincache")
+	if err = os.MkdirAll(p.hashFolder, os.ModePerm); err != nil {
+		p.logger.Printf("error creating hashfolder: %v, error: %v\n", p.hashFolder, err)
+		return err
+	}
+
+	chartHash := sha256.New()
+	chartHash.Write(c)
+	p.hash = hex.EncodeToString(chartHash.Sum(nil))
+
+	return nil
+}
+
+func (p *HelmChartPlugin) Generate() (resmap.ResMap, error) {
 
 	var templatedYaml []byte
 
-	if _, err = os.Stat(hashfile); err != nil {
+	hashFilePath := filepath.Join(p.hashFolder, p.hash)
+	if _, err := os.Stat(hashFilePath); err != nil {
 		if os.IsNotExist(err) {
-			err = p.initHelm()
-			if err != nil {
-				p.logger.Printf("error executing initHelm(), error: %v\n", err)
+			if templatedYaml, err = p.executeHelmTemplate(); err != nil {
+				p.logger.Printf("error executing helm template, error: %v\n", err)
 				return nil, err
-			}
-			if _, err = os.Stat(p.ChartHome); os.IsNotExist(err) {
-				err = p.fetchHelm()
-				if err != nil {
-					p.logger.Printf("error executing fetchHelm(), error: %v\n", err)
-					return nil, err
-				}
-			} else if err != nil {
-				p.logger.Printf("error executing stat on file: %v, error: %v\n", p.ChartHome, err)
-			}
-
-			err = p.deleteRequirements(p.ChartHome)
-			if err != nil {
-				p.logger.Printf("error executing deleteRequirements() for dir: %v, error: %v\n", p.ChartHome, err)
-				return nil, err
-			}
-
-			templatedYaml, err = p.templateHelm()
-			if err != nil {
-				p.logger.Printf("error executing templateHelm(), error: %v\n", err)
-				return nil, err
-			}
-			os.MkdirAll(hashfolder, os.ModePerm)
-			if err = ioutil.WriteFile(hashfile, templatedYaml, 0644); err != nil {
-				p.logger.Printf("error writing kustomization yaml to file: %v, error: %v\n", hashfile, err)
+			} else if err = ioutil.WriteFile(hashFilePath, templatedYaml, 0644); err != nil {
+				p.logger.Printf("error writing kustomization yaml to file: %v, error: %v\n", hashFilePath, err)
 			}
 		} else {
 			return nil, err
 		}
 	} else {
-		templatedYaml, err = ioutil.ReadFile(hashfile)
+		templatedYaml, err = ioutil.ReadFile(hashFilePath)
 		if err != nil {
-			p.logger.Printf("error reading file: %v, error: %v\n", hashfile, err)
-			return nil, err
-		}
-	}
-
-	if len(p.ChartPatches) > 0 {
-		templatedYaml, err = p.applyPatches(templatedYaml)
-		if err != nil {
-			p.logger.Printf("error executing applyPatches(), error: %v\n", err)
+			p.logger.Printf("error reading file: %v, error: %v\n", hashFilePath, err)
 			return nil, err
 		}
 	}
@@ -156,220 +133,269 @@ func (p *HelmChartPlugin) Generate() (resmap.ResMap, error) {
 	return p.rf.NewResMapFromBytes(templatedYaml)
 }
 
-func (p *HelmChartPlugin) deleteRequirements(dir string) error {
+func (p *HelmChartPlugin) executeHelmTemplate() ([]byte, error) {
+	os.Setenv("HELM_NAMESPACE", p.ReleaseNamespace)
+	os.Setenv("XDG_CONFIG_HOME", p.HelmHome)
+	os.Setenv("XDG_CACHE_HOME", p.HelmHome)
+	settings := cli.New()
 
-	d, err := os.Open(dir)
-	if err != nil {
-		p.logger.Printf("error opening directory %v, error: %v\n", dir, err)
-		return err
-	}
-	defer d.Close()
-
-	files, err := d.Readdir(-1)
-	if err != nil {
-		p.logger.Printf("error listing directory %v, error: %v\n", d.Name(), err)
-		return err
+	if err := p.helmFetchIfRequired(settings, p.ChartRepoName); err != nil {
+		p.logger.Printf("error checking/fetching chart, err: %v\n", err)
+		return nil, err
 	}
 
-	for _, file := range files {
-		if file.Mode().IsRegular() {
-			ext := filepath.Ext(file.Name())
-			name := file.Name()[0 : len(file.Name())-len(ext)]
-			if name == "requirements" {
-				filePath := dir + "/" + file.Name()
-				err := os.Remove(filePath)
-				if err != nil {
-					p.logger.Printf("error deleting the requirements file %v, error: %v\n", filePath, err)
-					return err
+	var chartPath string
+	var chartName string
+
+	if p.SubChart != "" {
+		chartName = p.SubChart
+		chartPath = filepath.Join(p.ChartHome, p.ChartName, "charts", p.SubChart)
+	} else {
+		chartName = p.ChartName
+		chartPath = filepath.Join(p.ChartHome, p.ChartName)
+	}
+
+	resources, err := p.helmTemplate(settings, chartPath, p.ReleaseName, p.Values)
+	if err != nil {
+		p.logger.Printf("error executing helm template for chart: %v at path: %v, err: %v\n", chartName, chartPath, err)
+		return nil, err
+	}
+
+	return resources, nil
+}
+
+func (p *HelmChartPlugin) directoryExists(path string) (exists bool, err error) {
+	if info, err := os.Stat(path); err != nil && os.IsNotExist(err) {
+		exists = false
+		err = nil
+	} else if err != nil && !os.IsNotExist(err) {
+		exists = false
+	} else if err == nil && info.IsDir() {
+		exists = true
+	} else if err == nil && !info.IsDir() {
+		exists = false
+		err = fmt.Errorf("path: %v is occupied by a file instead of a directory\n", path)
+	}
+	return exists, err
+}
+
+func (p *HelmChartPlugin) helmFetchIfRequired(settings *cli.EnvSettings, repoName string) error {
+	chartDir := filepath.Join(p.ChartHome, p.ChartName)
+	if exists, err := p.directoryExists(chartDir); err != nil {
+		p.logger.Printf("error checking if chart was already fetched to path: %v, err: %v\n", chartDir, err)
+		return err
+	} else if !exists {
+		if err := p.helmRepoAdd(settings, repoName, p.ChartRepo); err != nil {
+			p.logger.Printf("error adding repo: %v, err: %v\n", p.ChartRepo, err)
+			return err
+		}
+		if err := p.helmReposUpdate(settings); err != nil {
+			p.logger.Printf("error updating helm repos, err: %v\n", err)
+			return err
+		}
+		if err := p.helmFetch(settings, fmt.Sprintf("%v/%v", repoName, p.ChartName), p.ChartVersion, p.ChartHome); err != nil {
+			p.logger.Printf("error fetching chart, err: %v\n", err)
+			return err
+		}
+	} else {
+		p.logger.Printf("nothing to do, chart is already at path: %v\n", chartDir)
+	}
+	return nil
+}
+
+func (p *HelmChartPlugin) helmRepoAdd(settings *cli.EnvSettings, name, url string) error {
+	repoFilePath := settings.RepositoryConfig
+
+	b, err := ioutil.ReadFile(repoFilePath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	var repoFile repo.File
+	if err := yaml.Unmarshal(b, &repoFile); err != nil {
+		return err
+	}
+
+	if repoFile.Has(name) {
+		return nil
+	}
+
+	repoEntry := repo.Entry{
+		Name: name,
+		URL:  url,
+	}
+
+	chartRepository, err := repo.NewChartRepository(&repoEntry, getter.All(settings))
+	if err != nil {
+		return err
+	}
+
+	if _, err := chartRepository.DownloadIndexFile(); err != nil {
+		return errors.Wrapf(err, "looks like %q is not a valid chart repository or cannot be reached", url)
+	}
+
+	repoFile.Update(&repoEntry)
+
+	if err := repoFile.WriteFile(repoFilePath, 0644); err != nil {
+		return err
+	}
+	p.logger.Printf("%q has been added to your repositories\n", name)
+	return nil
+}
+
+func (p *HelmChartPlugin) helmReposUpdate(settings *cli.EnvSettings) error {
+	var (
+		repoFilePath = settings.RepositoryConfig
+		err          error
+		repoFile     *repo.File
+		repos        []*repo.ChartRepository
+		cfg          *repo.Entry
+		wg           sync.WaitGroup
+	)
+
+	repoFile, err = repo.LoadFile(repoFilePath)
+	if os.IsNotExist(errors.Cause(err)) || len(repoFile.Repositories) == 0 {
+		return errors.New("no repositories found. You must add one before updating")
+	}
+
+	for _, cfg = range repoFile.Repositories {
+		r, err := repo.NewChartRepository(cfg, getter.All(settings))
+		if err != nil {
+			return err
+		}
+		repos = append(repos, r)
+	}
+
+	// fmt.Printf("Downloading helm chart index ...\n")
+	for _, r := range repos {
+		wg.Add(1)
+		go func(re *repo.ChartRepository) {
+			defer wg.Done()
+			if _, err := re.DownloadIndexFile(); err != nil {
+				p.logger.Printf("...Unable to get an update from the %q chart repository (%s):\n\t%s\n", re.Config.Name, re.Config.URL, err)
+			} else {
+				p.logger.Printf("...Successfully got an update from the %q chart repository\n", re.Config.Name)
+			}
+		}(r)
+	}
+	wg.Wait()
+	return nil
+}
+
+func (p *HelmChartPlugin) helmFetch(settings *cli.EnvSettings, chartRef, version, chartUntarDirPath string) error {
+	client := action.NewPull()
+	client.Untar = true
+	client.UntarDir = chartUntarDirPath
+	client.Settings = settings
+	client.Version = version
+	_, err := client.Run(chartRef)
+	return err
+}
+
+func (p *HelmChartPlugin) helmTemplate(settings *cli.EnvSettings, chartPath, releaseName string, vals map[string]interface{}) ([]byte, error) {
+	validate := false
+	var extraAPIs []string
+
+	actionConfig := new(action.Configuration)
+
+	if err := actionConfig.Init(settings.RESTClientGetter(), settings.Namespace(), os.Getenv("HELM_DRIVER"), func(format string, v ...interface{}) {}); err != nil {
+		return nil, err
+	}
+
+	client := action.NewInstall(actionConfig)
+	client.DryRun = true
+	client.ReleaseName = releaseName
+	client.Replace = true // Skip the name check
+	client.ClientOnly = !validate
+	client.APIVersions = chartutil.VersionSet(extraAPIs)
+
+	rel, err := p.runInstall(settings, chartPath, client, vals)
+	if err != nil {
+		return nil, err
+	}
+
+	var manifests bytes.Buffer
+
+	fmt.Fprintln(&manifests, strings.TrimSpace(rel.Manifest))
+	if !client.DisableHooks {
+		for _, m := range rel.Hooks {
+			fmt.Fprintf(&manifests, "---\n# Source: %s\n%s\n", m.Path, m.Manifest)
+		}
+	}
+
+	return manifests.Bytes(), nil
+}
+
+func (p *HelmChartPlugin) runInstall(settings *cli.EnvSettings, chartPath string, client *action.Install, vals map[string]interface{}) (*release.Release, error) {
+	cp, err := client.ChartPathOptions.LocateChart(chartPath, settings)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check chart dependencies to make sure all are present in /charts
+	chartRequested, err := loader.Load(cp)
+	if err != nil {
+		return nil, err
+	}
+
+	validInstallableChart, err := isChartInstallable(chartRequested)
+	if !validInstallableChart {
+		return nil, err
+	}
+
+	if req := chartRequested.Metadata.Dependencies; req != nil {
+		// If CheckDependencies returns an error, we have unfulfilled dependencies.
+		// As of Helm 2.4.0, this is treated as a stopping condition:
+		// https://github.com/helm/helm/issues/2209
+		if err := action.CheckDependencies(chartRequested, req); err != nil {
+			if client.DependencyUpdate {
+				man := &downloader.Manager{
+					Out:              os.Stdout,
+					ChartPath:        cp,
+					Keyring:          client.ChartPathOptions.Keyring,
+					SkipUpdate:       false,
+					Getters:          getter.All(settings),
+					RepositoryConfig: settings.RepositoryConfig,
+					RepositoryCache:  settings.RepositoryCache,
 				}
+				if err := man.Update(); err != nil {
+					return nil, err
+				}
+			} else {
+				return nil, err
 			}
 		}
 	}
 
-	return nil
+	client.Namespace = settings.Namespace()
+	return client.Run(chartRequested, vals)
 }
 
-func (p *HelmChartPlugin) initHelm() error {
-	// build helm flags
-	home := fmt.Sprintf("--home=%s", p.HelmHome)
-	helmCmd := exec.Command(p.HelmBin, "init", home, "--client-only")
-	err := helmCmd.Run()
-	if err != nil {
-		p.logger.Printf("error executing command: %v with args: %v, error: %v\n", helmCmd.Path, helmCmd.Args, err)
-		return err
+func isChartInstallable(ch *chart.Chart) (bool, error) {
+	switch ch.Metadata.Type {
+	case "", "application":
+		return true, nil
 	}
-	return nil
+	return false, fmt.Errorf("%s charts are not installable", ch.Metadata.Type)
 }
 
-func (p *HelmChartPlugin) fetchHelm() error {
-
-	// build helm flags
-	home := fmt.Sprintf("--home=%s", p.HelmHome)
-	untarDir := fmt.Sprintf("--untardir=%s", p.ChartHome)
-	repo := fmt.Sprintf("--repo=%s", p.ChartRepo)
-	helmCmd := exec.Command("helm", "fetch", home, "--untar", untarDir, repo, p.ChartVersionExp, p.ChartName)
-
-	var out bytes.Buffer
-	helmCmd.Stdout = &out
-	err := helmCmd.Run()
-	if err != nil {
-		p.logger.Printf("error executing command: %v with args: %v, error: %v\n", helmCmd.Path, helmCmd.Args, err)
-		return err
+func mergeMaps(a, b map[string]interface{}) map[string]interface{} {
+	out := make(map[string]interface{}, len(a))
+	for k, v := range a {
+		out[k] = v
 	}
-
-	fileLocation := fmt.Sprintf("%s/%s", p.ChartHome, p.ChartName)
-	tempFileLocation := fileLocation + "-temp"
-
-	p.logger.Printf(fileLocation)
-	err = os.Rename(fileLocation, tempFileLocation)
-	if err != nil {
-		p.logger.Printf("error renaming: %v to: %v, error: %v\n", fileLocation, tempFileLocation, err)
-		return err
+	for k, v := range b {
+		if v, ok := v.(map[string]interface{}); ok {
+			if bv, ok := out[k]; ok {
+				if bv, ok := bv.(map[string]interface{}); ok {
+					out[k] = mergeMaps(bv, v)
+					continue
+				}
+			}
+		}
+		out[k] = v
 	}
-
-	err = utils.CopyDir(tempFileLocation, p.ChartHome, p.logger)
-	if err != nil {
-		p.logger.Printf("error copying directory from: %v, to: %v, error: %v\n", tempFileLocation, p.ChartHome, err)
-		return err
-	}
-	p.logger.Printf(fileLocation)
-	err = os.RemoveAll(tempFileLocation)
-	if err != nil {
-		p.logger.Printf("error removing: %v, error: %v\n", tempFileLocation, err)
-		return err
-	}
-	return nil
-
-}
-
-func (p *HelmChartPlugin) templateHelm() ([]byte, error) {
-
-	file, err := ioutil.TempFile("", "yaml")
-	if err != nil {
-		p.logger.Printf("error creating temp file, error: %v\n", err)
-		return nil, err
-	}
-	valuesYaml, err := yaml.Marshal(p.Values)
-	if err != nil {
-		p.logger.Printf("error marshalling values to yaml, error: %v\n", err)
-		return nil, err
-	}
-	_, err = file.Write(valuesYaml)
-	if err != nil {
-		p.logger.Printf("error writing yaml to file: %v, error: %v\n", file.Name(), err)
-		return nil, err
-	}
-	chart := p.ChartHome
-	if len(p.SubChart) > 0 {
-		chart = p.ChartHome + "/charts/" + p.SubChart
-	}
-
-	// build helm flags
-	home := fmt.Sprintf("--home=%s", p.HelmHome)
-	values := fmt.Sprintf("--values=%s", file.Name())
-	name := fmt.Sprintf("--name=%s", p.ReleaseName)
-	nameSpace := fmt.Sprintf("--namespace=%s", p.ReleaseNamespace)
-
-	helmCmd := exec.Command("helm", "template", home, values, name, nameSpace, chart)
-
-	if len(p.ExtraArgs) > 0 && p.ExtraArgs != "null" {
-		helmCmd.Args = append(helmCmd.Args, p.ExtraArgs)
-	}
-
-	if len(p.ValuesFrom) > 0 && p.ValuesFrom != "null" {
-		templatedValues := fmt.Sprintf("--values=%s", p.ValuesFrom)
-		helmCmd.Args = append(helmCmd.Args, templatedValues)
-	}
-
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	helmCmd.Stdout = &out
-	helmCmd.Stderr = &stderr
-	err = helmCmd.Run()
-	if err != nil {
-		p.logger.Printf("error executing command: %v with args: %v, error: %v, stderr: %v\n", helmCmd.Path, helmCmd.Args, err, stderr.String())
-		return nil, err
-	}
-	return out.Bytes(), nil
-}
-
-func (p *HelmChartPlugin) applyPatches(templatedHelm []byte) ([]byte, error) {
-	// get the patches
-	path := filepath.Join(p.ChartHome + "/" + p.ChartPatches + "/kustomization.yaml")
-	origYamlBytes, err := ioutil.ReadFile(path)
-	if err != nil {
-		p.logger.Printf("error reading file: %v, error: %v\n", path, err)
-		return nil, err
-	}
-
-	var originalYamlMap map[string]interface{}
-
-	if err := yaml.Unmarshal(origYamlBytes, &originalYamlMap); err != nil {
-		p.logger.Printf("error unmarshalling kustomization yaml from file: %v, error: %v\n", path, err)
-	}
-
-	// helmoutput file for kustomize build
-	helpOutputPath := p.ChartHome + "/" + p.ChartPatches + "/helmoutput.yaml"
-	f, err := os.Create(helpOutputPath)
-	if err != nil {
-		p.logger.Printf("error creating helm output file: %v, error: %v\n", helpOutputPath, err)
-		return nil, err
-	}
-
-	_, err = f.Write(templatedHelm)
-	if err != nil {
-		p.logger.Printf("error writing to helm output file: %v, error: %v\n", helpOutputPath, err)
-		return nil, err
-	}
-
-	kustomizeYaml, err := ioutil.ReadFile(path)
-	if err != nil {
-		p.logger.Printf("error reading file: %v, error: %v\n", path, err)
-		return nil, err
-	}
-
-	var kustomizeYamlMap map[string]interface{}
-	if err := yaml.Unmarshal(kustomizeYaml, &kustomizeYamlMap); err != nil {
-		p.logger.Printf("error unmarshalling kustomization yaml from file: %v, error: %v\n", path, err)
-	}
-
-	delete(kustomizeYamlMap, "resources")
-
-	kustomizeYamlMap["resources"] = []string{"helmoutput.yaml"}
-
-	yamlM, err := yaml.Marshal(kustomizeYamlMap)
-	if err != nil {
-		p.logger.Printf("error marshalling kustomization yaml map, error: %v\n", err)
-		return nil, err
-	}
-
-	if err := ioutil.WriteFile(path, yamlM, 0644); err != nil {
-		p.logger.Printf("error writing kustomization yaml to file: %v, error: %v\n", path, err)
-	}
-
-	// kustomize build
-	templatedHelm, err = p.buildPatches()
-	if err != nil {
-		p.logger.Printf("error executing buildPatches(), error: %v\n", err)
-		return nil, err
-	}
-
-	return templatedHelm, nil
-}
-
-func (p *HelmChartPlugin) buildPatches() ([]byte, error) {
-	path := filepath.Join(p.ChartHome + "/" + p.ChartPatches)
-	kustomizeCmd := exec.Command("kustomize", "build", path)
-
-	var out bytes.Buffer
-	kustomizeCmd.Stdout = &out
-
-	err := kustomizeCmd.Run()
-	if err != nil {
-		p.logger.Printf("error executing command: %v with args: %v, error: %v\n", kustomizeCmd.Path, kustomizeCmd.Args, err)
-		return nil, err
-	}
-	return out.Bytes(), nil
+	return out
 }
 
 func NewHelmChartPlugin() resmap.GeneratorPlugin {

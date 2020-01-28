@@ -8,13 +8,14 @@ require (
 	github.com/golangci/golangci-lint v1.21.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/hairyhenderson/gomplate/v3 v3.6.0
-	github.com/imdario/mergo v0.3.5
+	github.com/imdario/mergo v0.3.8
 	github.com/pkg/errors v0.8.1
 	github.com/stretchr/testify v1.4.0
 	github.com/yujunz/go-getter v1.4.1-lite
 	golang.org/x/tools v0.0.0-20191119224855-298f0cb1881e
 	gopkg.in/yaml.v2 v2.3.0
 	gopkg.in/yaml.v3 v3.0.0-20200121175148-a6ecf24a6d71
+	helm.sh/helm/v3 v3.0.2
 	k8s.io/api v0.17.0
 	k8s.io/apimachinery v0.17.0
 	k8s.io/client-go v11.0.0+incompatible
@@ -23,4 +24,11 @@ require (
 	sigs.k8s.io/yaml v1.2.0
 )
 
-replace k8s.io/client-go => k8s.io/client-go v0.17.0
+replace (
+	github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309
+	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20191004115801-a2eda9f80ab8
+	k8s.io/client-go => k8s.io/client-go v0.0.0-20191016111102-bec269661e48
+	k8s.io/kubectl => k8s.io/kubectl v0.0.0-20191016120415-2ed914427d51
+)
+
+exclude github.com/Azure/go-autorest v12.0.0+incompatible
