@@ -1,0 +1,13 @@
+apiVersion: elasticsearch.cloud.google.com/v1alpha1
+kind: ESRestore
+metadata:
+  name: kustomize-restore
+spec:
+  include_global_state: true
+  ignore_unavailable: true
+  rename_pattern: kustomize
+  rename_replacement: kustomize-restore1
+  essnapshot:
+    name: kustomize-snapshot
+  escluster:
+    name: esbasic
