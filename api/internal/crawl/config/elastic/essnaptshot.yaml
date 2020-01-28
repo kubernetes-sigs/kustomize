@@ -1,0 +1,12 @@
+apiVersion: elasticsearch.cloud.google.com/v1alpha1
+kind: ESSnapshot
+metadata:
+  name: kustomize-snapshot
+spec:
+  # indices are optional. If not specified all indices are selected.
+  indices:
+  - kustomize
+  include_global_state: true
+  ignore_unavailable: true
+  esbackup:
+    name: kustomize-backup

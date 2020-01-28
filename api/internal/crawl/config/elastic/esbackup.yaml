@@ -1,0 +1,13 @@
+apiVersion: elasticsearch.cloud.google.com/v1alpha1
+kind: ESBackup
+metadata:
+  name: kustomize-backup
+spec:
+  storage:
+    gcs:
+      bucket: kustomize-backup
+      path: kustomize
+      secret:
+        name: kustomizesa
+  escluster:
+    name: esbasic
