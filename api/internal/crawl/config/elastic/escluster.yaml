@@ -8,6 +8,8 @@ spec:
     - repository-gcs
     - ingest-user-agent
     - ingest-geoip
+  gcpserviceaccount:
+    name: kustomizesa
   config:
     env:
       example: test
