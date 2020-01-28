@@ -1,9 +1,10 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: crawler
+  name: crawler-cronjob
 spec:
-  schedule: "5 0 * * */1"
+  # run the cronjob at 00:00 every 7 days
+  schedule: "0 0 */7 * *"
   jobTemplate:
     spec:
       template:
@@ -11,7 +12,9 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: crawler
-            image: gcr.io/kustomize-search/crawler:latest
+            image: gcr.io/haiyanmeng-gke-dev/crawler:v1
+            command: ["/crawler"]
+            args: ["--mode=index+github", "--github-repo=kubernetes-sigs/kustomize", "--index=kustomize"]
             imagePullPolicy: Always
             env:
             - name: GITHUB_ACCESS_TOKEN
