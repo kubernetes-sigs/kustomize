@@ -17,3 +17,16 @@ Delete the kustomize index from the ElasticSearch cluster (**Use this command wi
 ```
 curl -X DELETE "${ElasticSearchURL}:9200/${INDEXNAME}?pretty"
 ```
+
+Add a new field into an existing index.
+```
+curl -X PUT "${ElasticSearchURL}:9200/${INDEXNAME}/_mapping/_doc?pretty" -H 'Content-Type: application/json' -d'
+{
+  "properties": {
+    "fileType": {
+      "type": "keyword"
+    }
+  }
+}
+'
+```
