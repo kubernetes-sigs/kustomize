@@ -126,7 +126,7 @@ func main() {
 		}
 	}
 
-	// seen tracks the IDs of all the documents in the index.
+	// seen tracks the IDs of all the documents in the index and their corresponding file types.
 	// This helps avoid indexing a given document multiple times.
 	seen := utils.NewSeenMap()
 
@@ -187,6 +187,12 @@ func main() {
 		crawler.CrawlFromSeed(ctx, seedDocs, crawlers, docConverter, indexFunc, seen)
 	case CrawlGithub:
 		crawlers := []crawler.Crawler{ghCrawlerConstructor("", "")}
+		// add all the documents in the index into seen.
+		// this greatly reduces the time overhead of CrawlGithub.
+		getSeedDocsFunc()
+		for _, d := range seedDocs {
+			seen[d.ID()] = d.FileType
+		}
 		crawler.CrawlGithub(ctx, crawlers, docConverter, indexFunc, seen)
 	case CrawlUser:
 		if *githubUserPtr == "" {

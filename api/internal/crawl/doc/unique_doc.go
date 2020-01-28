@@ -22,7 +22,7 @@ func (uds *UniqueDocuments) Add(d *Document) {
 		return
 	}
 	uds.docs = append(uds.docs, d)
-	uds.docIDs.Add(d.ID())
+	uds.docIDs.Set(d.ID(), "")
 }
 
 func (uds *UniqueDocuments) AddDocuments(docs []*Document) {
