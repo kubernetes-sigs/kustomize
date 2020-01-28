@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"flag"
 	"fmt"
 	"log"
@@ -210,11 +211,20 @@ If you only want to list the 10 most popular features, set the flag to 10.`)
 	// transformersDocs includes all the docs using transformers
 	transformersDocs := make([]*doc.Document, 0)
 
+	checksums := make(map[string]int)
+
 	// get all the documents in the index
 	query := []byte(`{ "query":{ "match_all":{} } }`)
 	it := idx.IterateQuery(query, 10000, 60*time.Second)
 	for it.Next() {
 		for _, hit := range it.Value().Hits.Hits {
+			sum := fmt.Sprintf("%x", sha256.Sum256([]byte(hit.Document.DocumentData)))
+			if _, ok := checksums[sum]; ok {
+				checksums[sum]++
+			} else {
+				checksums[sum] = 1
+			}
+
 			// check whether there is any duplicate IDs in the index
 			if _, ok := ids[hit.ID]; !ok {
 				ids[hit.ID] = struct{}{}
@@ -282,4 +292,12 @@ There are %d documents in the kustomize index.
 
 	GeneratorOrTransformerStats(ctx, generatorDocs, true, idx)
 	GeneratorOrTransformerStats(ctx, transformersDocs, false, idx)
+
+	fmt.Printf("There are total %d checksums of document contents\n", len(checksums))
+	sortedChecksums := SortMapKeyByValue(checksums)
+	sortedChecksums = sortedChecksums[:20]
+	fmt.Printf("The top 20 checksums are:\n")
+	for _, key := range sortedChecksums {
+		fmt.Printf("checksum %s apprears %d\n", key, checksums[key])
+	}
 }
