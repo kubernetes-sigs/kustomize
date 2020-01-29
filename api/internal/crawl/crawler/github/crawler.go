@@ -80,6 +80,36 @@ func (gc githubCrawler) DefaultBranch(repo string) string {
 func (gc githubCrawler) Crawl(ctx context.Context,
 	output chan<- crawler.CrawledDocument, seen utils.SeenMap) error {
 
+	ranges := []RangeWithin{
+		RangeWithin{
+		start: uint64(0),
+		end:   githubMaxFileSize,
+	},
+	}
+
+	errs := make(multiError, 0)
+	for len(ranges) > 0 {
+		tailRange := ranges[len(ranges) - 1]
+		ranges = ranges[:(len(ranges) - 1)]
+		reProcessQueryRanges, err := gc.CrawlSingleRange(ctx, output, seen, tailRange.start, tailRange.end)
+		if err != nil {
+			errs = append(errs, err)
+		}
+		ranges = append(ranges, reProcessQueryRanges...)
+	}
+
+	if len(errs) > 0 {
+		return errs
+	}
+	return nil
+}
+
+func (gc githubCrawler) CrawlSingleRange(ctx context.Context,
+	output chan<- crawler.CrawledDocument, seen utils.SeenMap,
+	lowerBound, upperBound uint64) ([]RangeWithin, error) {
+
+	log.Printf("CrawlSingleRange [%d, %d]", lowerBound, upperBound)
+
 	noETagClient := GhClient{
 		RequestConfig: gc.client.RequestConfig,
 		client:        &http.Client{Timeout: gc.client.client.Timeout},
@@ -87,13 +117,16 @@ func (gc githubCrawler) Crawl(ctx context.Context,
 		accessToken:   gc.client.accessToken,
 	}
 
+	var reProcessQueryRanges []RangeWithin
+
 	var ranges []string
 	var err error
 	// Since Github returns a max of 1000 results per query, we can use
 	// multiple queries that split the search space into chunks of at most
 	// 1000 files to get all of the data.
 	for i := 0; i < 5; i++ {
-		ranges, err = FindRangesForRepoSearch(newCache(noETagClient, gc.query))
+		ranges, err = FindRangesForRepoSearch(newCache(noETagClient, gc.query),
+			lowerBound, upperBound)
 		if err == nil {
 			logger.Printf("FindRangesForRepoSearch succeeded after %d retries", i)
 			break
@@ -102,7 +135,7 @@ func (gc githubCrawler) Crawl(ctx context.Context,
 		}
 	}
 	if err != nil {
-		return fmt.Errorf("could not split %v into ranges, %v\n",
+		return reProcessQueryRanges, fmt.Errorf("could not split %v into ranges, %v\n",
 			gc.query, err)
 	}
 
@@ -112,20 +145,23 @@ func (gc githubCrawler) Crawl(ctx context.Context,
 	errs := make(multiError, 0)
 	queryResult := RangeQueryResult{}
 	for _, query := range ranges {
-		rangeResult, err := processQuery(ctx, gc.client, query, output, seen, gc.branchMap)
+		reProcessQuery, rangeResult, err := processQuery(ctx, gc.client, query, output, seen, gc.branchMap)
 		if err != nil {
 			errs = append(errs, err)
 		}
 		queryResult.Add(rangeResult)
+		if reProcessQuery {
+			reProcessQueryRanges = append(reProcessQueryRanges, RangeSizes(query))
+		}
 	}
 
 	logger.Printf("Summary of Crawl: %s", queryResult.String())
 
 	if len(errs) > 0 {
-		return errs
+		return reProcessQueryRanges, errs
 	}
 
-	return nil
+	return reProcessQueryRanges, nil
 }
 
 // FetchDocument first tries to fetch the document with d.FilePath. If it fails,
@@ -225,7 +261,7 @@ func (r *RangeQueryResult) String() string {
 // documents from the crawl to the datastore/index.
 func processQuery(ctx context.Context, gcl GhClient, query string,
 	output chan<- crawler.CrawledDocument, seen utils.SeenMap,
-	branchMap map[string]string) (RangeQueryResult, error) {
+	branchMap map[string]string) (bool, RangeQueryResult, error) {
 
 	queryPages := make(chan GhResponseInfo)
 
@@ -240,6 +276,8 @@ func processQuery(ctx context.Context, gcl GhClient, query string,
 		}
 		close(queryPages)
 	}()
+
+	reProcessQuery := false
 
 	errs := make(multiError, 0)
 	result := RangeQueryResult{}
@@ -271,11 +309,15 @@ func processQuery(ctx context.Context, gcl GhClient, query string,
 		result.Add(pageResult)
 
 		pageID++
+
+		if page.Parsed.TotalCount > githubMaxResultsPerQuery {
+			reProcessQuery = true
+		}
 	}
 
 	logger.Printf("Summary of processQuery: %s", result.String())
 
-	return result, errs
+	return reProcessQuery, result, errs
 }
 
 func kustomizationResultAdapter(gcl GhClient, k GhFileSpec, seen utils.SeenMap,
