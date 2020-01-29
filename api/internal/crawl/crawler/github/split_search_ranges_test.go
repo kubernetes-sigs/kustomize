@@ -11,7 +11,7 @@ type testCachedSearch struct {
 	cache map[uint64]uint64
 }
 
-func (c testCachedSearch) CountResults(upperBound uint64) (uint64, error) {
+func (c testCachedSearch) CountResults(lowerBound, upperBound uint64) (uint64, error) {
 	log.Printf("CountResults(%05x)\n", upperBound)
 	count, ok := c.cache[upperBound]
 	if !ok {
@@ -73,19 +73,29 @@ func TestRangeSplitting(t *testing.T) {
 		},
 	}
 
-	requests, err := FindRangesForRepoSearch(cache)
+	requests, err := FindRangesForRepoSearch(cache, 0, 524288)
 	if err != nil {
 		t.Errorf("Error while finding ranges: %v", err)
 	}
 	expected := []string{
-		"<107",      // cache.RequestString(RangeLessThan{0x6b}),
-		"107..128",  // cache.RequestString(RangeWithin{0x6b, 0x80}),
-		"129..256",  // cache.RequestString(RangeWithin{0x81, 0x100}),
-		"257..4095", // cache.RequestString(RangeWithin{0x101, 0xfff}),
-		">4095",     // cache.RequestString(RangeGreaterThan{0xfff}),
+		"0..106",       // cache.RequestString(RangeWithin{0x00, 0x6a}),
+		"107..128",     // cache.RequestString(RangeWithin{0x6b, 0x80}),
+		"129..256",     // cache.RequestString(RangeWithin{0x81, 0x100}),
+		"257..4095",    // cache.RequestString(RangeWithin{0x101, 0xfff}),
+		"4096..524288", // cache.RequestString(RangeWithin{0x1000, 0x80000}),
 	}
 
 	if !reflect.DeepEqual(requests, expected) {
 		t.Errorf("Expected requests (%v) to equal (%v)", requests, expected)
+	}
+}
+
+func TestRangeSizes(t *testing.T) {
+	s := "https://api.github.com/search/code?q=filename:kustomization.yaml+filename:kustomization.yml" +
+		"+filename:kustomization+size:2365..10000&order=desc&per_page=100&sort=indexed"
+	returnedResult := RangeSizes(s)
+	expectedResult := RangeWithin{uint64(2365), uint64(10000)}
+	if !reflect.DeepEqual(returnedResult, expectedResult) {
+		t.Errorf("RangeSizes expected (%v), got (%v)",expectedResult, returnedResult)
 	}
 }
