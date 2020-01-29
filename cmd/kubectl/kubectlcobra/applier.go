@@ -50,6 +50,7 @@ type Applier struct {
 	applyOptions  *apply.ApplyOptions
 	statusOptions *StatusOptions
 	resolver      resolver
+	isPreview     bool
 }
 
 // Initialize sets up the Applier for actually doing an apply against

@@ -58,13 +58,15 @@ func GetCommand(parent *cobra.Command) *cobra.Command {
 		ioStreams.ErrOut = os.Stderr
 	}
 
-	names := []string{"apply", "diff"}
+	names := []string{"apply", "diff", "preview"}
 	applyCmd := NewCmdApply("kustomize", f, ioStreams)
 	updateHelp(names, applyCmd)
 	diffCmd := diff.NewCmdDiff(f, ioStreams)
 	updateHelp(names, diffCmd)
+	previewCmd := NewCmdPreview("kustomize", f, ioStreams)
+	updateHelp(names, previewCmd)
 
-	r.AddCommand(applyCmd, diffCmd)
+	r.AddCommand(applyCmd, diffCmd, previewCmd)
 	return r
 }
 
@@ -80,13 +82,25 @@ func updateHelp(names []string, c *cobra.Command) {
 
 // NewCmdApply creates the `apply` command
 func NewCmdApply(baseName string, f util.Factory, ioStreams genericclioptions.IOStreams) *cobra.Command {
+	usage := "apply (-f FILENAME | -k DIRECTORY)"
+	return NewCmdWithUsage(f, ioStreams, usage, false)
+}
+
+// NewCmdPreview creates the `preview` command
+func NewCmdPreview(baseName string, f util.Factory, ioStreams genericclioptions.IOStreams) *cobra.Command {
+	usage := "preview (-f FILENAME | -k DIRECTORY)"
+	return NewCmdWithUsage(f, ioStreams, usage, true)
+}
+
+// NewCmdWithUsage creates the command based on input usage
+func NewCmdWithUsage(f util.Factory, ioStreams genericclioptions.IOStreams, usage string, isPreview bool) *cobra.Command {
 	applier := newApplier(f, ioStreams)
 	printer := &BasicPrinter{
 		ioStreams: ioStreams,
 	}
 
 	cmd := &cobra.Command{
-		Use:                   "apply (-f FILENAME | -k DIRECTORY)",
+		Use:                   usage,
 		DisableFlagsInUseLine: true,
 		Short:                 i18n.T("Apply a configuration to a resource by filename or stdin"),
 		//Long:                  applyLong,
@@ -109,14 +123,19 @@ func NewCmdApply(baseName string, f util.Factory, ioStreams genericclioptions.IO
 
 			// The printer will print updates from the channel. It will block
 			// until the channel is closed.
-			printer.Print(ch)
+			applier.isPreview = isPreview
+			printer.Print(ch, applier)
 		},
 	}
 
 	applier.SetFlags(cmd)
 
 	cmdutil.AddValidateFlags(cmd)
-	cmd.Flags().BoolVar(&applier.applyOptions.ServerDryRun, "server-dry-run", applier.applyOptions.ServerDryRun, "If true, request will be sent to server with dry-run flag, which means the modifications won't be persisted. This is an alpha feature and flag.")
+
+	//Preview and server-dry-run follows same path except for printing format.
+	serverDryRun := isPreview || applier.applyOptions.ServerDryRun
+
+	cmd.Flags().BoolVar(&applier.applyOptions.ServerDryRun, "server-dry-run", serverDryRun, "If true, request will be sent to server with dry-run flag, which means the modifications won't be persisted. This is an alpha feature and flag.")
 	cmd.Flags().Bool("dry-run", false, "If true, only print the object that would be sent, without sending it. Warning: --dry-run cannot accurately output the result of merging the local manifest and the server-side data. Use --server-dry-run to get the merged result instead.")
 	cmdutil.AddServerSideApplyFlags(cmd)
 
