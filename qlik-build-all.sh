@@ -19,7 +19,7 @@ for os in linux darwin windows; do
     fi
 
     pushd kustomize
-    GOOS=${os} GOARCH=${arch} go build -ldflags "${ldFlags}" -o ../${binDir}/${os}/${exeName} main.go
+    CGO_ENABLED=0 GOOS=${os} GOARCH=${arch} go build -ldflags "${ldFlags}" -o ../${binDir}/${os}/${exeName} main.go
     popd
 
     pushd ${binDir}/${os}
