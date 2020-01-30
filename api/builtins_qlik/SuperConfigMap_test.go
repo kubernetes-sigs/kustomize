@@ -6,9 +6,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/api/builtins_qlik/utils/loadertest"
+	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/internal/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
@@ -210,7 +211,7 @@ data:
 
 			plugin := NewSuperConfigMapTransformerPlugin()
 
-			err = plugin.Config(resmap.NewPluginHelpers(loadertest.NewFakeLoader("/"), valtest_test.MakeFakeValidator(), resourceFactory), []byte(testCase.pluginConfig))
+			err = plugin.Config(resmap.NewPluginHelpers(loader.NewFileLoaderAtRoot(filesys.MakeFsInMemory()), valtest_test.MakeFakeValidator(), resourceFactory), []byte(testCase.pluginConfig))
 			if err != nil {
 				t.Fatalf("Err: %v", err)
 			}
@@ -441,7 +442,7 @@ prefix: some-service-
 								kunstruct.NewKunstructuredFactoryImpl()), nil)
 
 							plugin := NewSuperConfigMapGeneratorPlugin()
-							err = plugin.Config(resmap.NewPluginHelpers(loadertest.NewFakeLoader("/"), valtest_test.MakeFakeValidator(), resourceFactory), []byte(`
+							err = plugin.Config(resmap.NewPluginHelpers(loader.NewFileLoaderAtRoot(filesys.MakeFsInMemory()), valtest_test.MakeFakeValidator(), resourceFactory), []byte(`
 apiVersion: qlik.com/v1
 kind: SuperConfigMap
 metadata:
@@ -486,7 +487,7 @@ prefix: some-service-
 			}
 
 			plugin := NewSuperConfigMapTransformerPlugin()
-			err = plugin.Config(resmap.NewPluginHelpers(loadertest.NewFakeLoader("/"), valtest_test.MakeFakeValidator(), resourceFactory), []byte(testCase.pluginConfig))
+			err = plugin.Config(resmap.NewPluginHelpers(loader.NewFileLoaderAtRoot(filesys.MakeFsInMemory()), valtest_test.MakeFakeValidator(), resourceFactory), []byte(testCase.pluginConfig))
 			if err != nil {
 				t.Fatalf("Err: %v", err)
 			}
@@ -651,7 +652,7 @@ behavior: create
 				kunstruct.NewKunstructuredFactoryImpl()), nil)
 
 			plugin := NewSuperConfigMapGeneratorPlugin()
-			err := plugin.Config(resmap.NewPluginHelpers(loadertest.NewFakeLoader("/"), valtest_test.MakeFakeValidator(), resourceFactory), []byte(testCase.pluginConfig))
+			err := plugin.Config(resmap.NewPluginHelpers(loader.NewFileLoaderAtRoot(filesys.MakeFsInMemory()), valtest_test.MakeFakeValidator(), resourceFactory), []byte(testCase.pluginConfig))
 			if err != nil {
 				t.Fatalf("Err: %v", err)
 			}
