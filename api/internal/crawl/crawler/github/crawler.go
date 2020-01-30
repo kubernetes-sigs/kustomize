@@ -379,7 +379,7 @@ func (gcl GhClient) ForwardPaginatedQuery(ctx context.Context, query string,
 	output chan<- GhResponseInfo) error {
 
 	logger.Println("querying: ", query)
-	response := gcl.parseGithubResponse(query)
+	response := gcl.parseGithubResponseWithRetry(query)
 
 	if response.Error != nil {
 		return response.Error
@@ -392,7 +392,7 @@ func (gcl GhClient) ForwardPaginatedQuery(ctx context.Context, query string,
 		case <-ctx.Done():
 			return nil
 		default:
-			response = gcl.parseGithubResponse(response.NextURL)
+			response = gcl.parseGithubResponseWithRetry(response.NextURL)
 			if response.Error != nil {
 				return response.Error
 			}
@@ -587,6 +587,8 @@ type githubResponse struct {
 	// This is the number of files that match the query.
 	TotalCount uint64 `json:"total_count,omitempty"`
 
+	IncompleteResults bool `json:"incomplete_results,omitempty"`
+
 	// Github representation of a file.
 	Items []GhFileSpec `json:"items,omitempty"`
 }
@@ -627,6 +629,17 @@ func parseGithubLinkFormat(links string) (string, string) {
 	}
 
 	return next, last
+}
+
+func (gcl GhClient) parseGithubResponseWithRetry(getRequest string) GhResponseInfo {
+	resp := gcl.parseGithubResponse(getRequest)
+	retries := 0
+	for resp.Parsed.IncompleteResults {
+		resp = gcl.parseGithubResponse(getRequest)
+		retries++
+	}
+	log.Printf("The result of query(%s) is complete after %d retries", getRequest, retries)
+	return resp
 }
 
 func (gcl GhClient) parseGithubResponse(getRequest string) GhResponseInfo {
