@@ -5,9 +5,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/api/builtins_qlik/utils/loadertest"
+	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/internal/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
@@ -91,16 +92,16 @@ values:
 				t.Fatalf("Err: %v", err)
 			}
 
-			ldr := loadertest.NewFakeLoader("/")
+			fSys := filesys.MakeFsInMemory()
 			if len(testCase.valuesFileContent) > 0 {
-				err = ldr.AddFile("/values.tml.yaml", []byte(testCase.valuesFileContent))
+				err = fSys.WriteFile("/values.tml.yaml", []byte(testCase.valuesFileContent))
 				if err != nil {
 					t.Fatalf("Err: %v", err)
 				}
 			}
 
 			plugin := NewValuesFilePlugin()
-			err = plugin.Config(resmap.NewPluginHelpers(ldr, valtest_test.MakeFakeValidator(), resourceFactory), []byte(testCase.pluginConfig))
+			err = plugin.Config(resmap.NewPluginHelpers(loader.NewFileLoaderAtRoot(fSys), valtest_test.MakeFakeValidator(), resourceFactory), []byte(testCase.pluginConfig))
 			if err != nil {
 				t.Fatalf("Err: %v", err)
 			}
