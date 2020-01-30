@@ -172,7 +172,7 @@ func (c githubCachedSearch) CountResults(lowerBound, upperBound uint64) (uint64,
 	sizeRange := RangeWithin{lowerBound, upperBound}
 	rangeRequest := c.RequestString(sizeRange)
 
-	result := c.gcl.parseGithubResponse(rangeRequest)
+	result := c.gcl.parseGithubResponseWithRetry(rangeRequest)
 	if result.Error != nil {
 		return count, result.Error
 	}
@@ -206,7 +206,7 @@ func (c githubCachedSearch) CountResults(lowerBound, upperBound uint64) (uint64,
 			"Retrying query... current lower bound: %d, got: %d\n",
 			c.cache[prev], result.Parsed.TotalCount)
 
-		result = c.gcl.parseGithubResponse(rangeRequest)
+		result = c.gcl.parseGithubResponseWithRetry(rangeRequest)
 		if result.Error != nil {
 			return count, result.Error
 		}
@@ -221,8 +221,8 @@ func (c githubCachedSearch) CountResults(lowerBound, upperBound uint64) (uint64,
 	}
 
 	count = result.Parsed.TotalCount
-	logger.Printf("Caching new query %s, with count %d\n",
-		sizeRange.RangeString(), count)
+	logger.Printf("Caching new query %s, with count %d (incomplete_results: %v)\n",
+		sizeRange.RangeString(), count, result.Parsed.IncompleteResults)
 	c.cache[upperBound] = count
 	return count, nil
 }
