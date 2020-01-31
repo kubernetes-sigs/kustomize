@@ -5,7 +5,10 @@ package loader
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
+	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -293,6 +296,20 @@ func (fl *fileLoader) errIfRepoCycle(newRepoSpec *git.RepoSpec) error {
 // else an error.  Relative paths are taken relative
 // to the root.
 func (fl *fileLoader) Load(path string) ([]byte, error) {
+	if u, err := url.Parse(path); err == nil && strings.HasPrefix(u.Scheme, "http") {
+		client := &http.Client{}
+		resp, err := client.Get(path)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		return body, nil
+	}
+
 	if !filepath.IsAbs(path) {
 		path = fl.root.Join(path)
 	}
