@@ -209,8 +209,8 @@ func (c *ContainerFilter) scope(dir string, nodes []*yaml.RNode) ([]*yaml.RNode,
 		return nodes, nil, nil
 	}
 
-	if dir == "" {
-		// global function
+	// global function
+	if dir == "" || dir == "." {
 		return nodes, nil, nil
 	}
 
