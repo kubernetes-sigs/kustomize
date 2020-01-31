@@ -74,7 +74,7 @@ spec:
 	if err == nil {
 		t.Fatalf("expected an error")
 	}
-	if !IsMissingKustomizationFileError(err) {
+	if !strings.Contains(err.Error(), "accumulating resources") {
 		t.Fatalf("unexpected error: %q", err)
 	}
 }
@@ -89,7 +89,7 @@ resources:
 	if err == nil {
 		t.Fatalf("expected an error")
 	}
-	if !strings.Contains(err.Error(), "'/app/deployment.yaml' doesn't exist") {
+	if !strings.Contains(err.Error(), "accumulating resources") {
 		t.Fatalf("unexpected error: %q", err)
 	}
 }
