@@ -1,3 +1,6 @@
+# Creating `esbackup/kustomize-backbup` will create the `kustomize-backup` snapshot repository.
+# Deleting `esbackup/kustomize-backbup` will delete the `kustomize-backup` snapshot repository and all the snapshots in the repository.
+# Deleting `esbackup/kustomize-backbup` will NOT delete essnapshot and esrestore objects.
 apiVersion: elasticsearch.cloud.google.com/v1alpha1
 kind: ESBackup
 metadata:

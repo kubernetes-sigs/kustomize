@@ -1,3 +1,6 @@
+# Creating `esrestore/kustomize-restore` will restore the `kuostmize` index in the `kustomize-snapshot` snapshot to a new index named `kusotmize-restore`.
+# Deleting `esrestore/kustomize-restore` will not delete the restored index.
+# Deleting `esrestore/kustomize-restore` should happen before deleting `essnapshot/kustomize-snapshot`.
 apiVersion: elasticsearch.cloud.google.com/v1alpha1
 kind: ESRestore
 metadata:
@@ -6,7 +9,7 @@ spec:
   include_global_state: true
   ignore_unavailable: true
   rename_pattern: kustomize
-  rename_replacement: kustomize-restore1
+  rename_replacement: kustomize-restore
   essnapshot:
     name: kustomize-snapshot
   escluster:
