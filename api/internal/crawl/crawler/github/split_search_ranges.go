@@ -100,6 +100,8 @@ package github
 import (
 	"fmt"
 	"math/bits"
+	"strconv"
+	"strings"
 )
 
 // Files cannot be more than 2^19 bytes, according to
@@ -112,7 +114,7 @@ const (
 // Interface instead of struct for testing purposes.
 // Not expecting to have multiple implementations.
 type cachedSearch interface {
-	CountResults(uint64) (uint64, error)
+	CountResults(uint64, uint64) (uint64, error)
 	RequestString(filesize rangeFormatter) string
 }
 
@@ -161,16 +163,16 @@ func newCache(client GhClient, query Query) githubCachedSearch {
 	}
 }
 
-func (c githubCachedSearch) CountResults(upperBound uint64) (uint64, error) {
+func (c githubCachedSearch) CountResults(lowerBound, upperBound uint64) (uint64, error) {
 	count, cached := c.cache[upperBound]
 	if cached {
 		return count, nil
 	}
 
-	sizeRange := RangeWithin{0, upperBound}
+	sizeRange := RangeWithin{lowerBound, upperBound}
 	rangeRequest := c.RequestString(sizeRange)
 
-	result := c.gcl.parseGithubResponse(rangeRequest)
+	result := c.gcl.parseGithubResponseWithRetry(rangeRequest)
 	if result.Error != nil {
 		return count, result.Error
 	}
@@ -204,7 +206,7 @@ func (c githubCachedSearch) CountResults(upperBound uint64) (uint64, error) {
 			"Retrying query... current lower bound: %d, got: %d\n",
 			c.cache[prev], result.Parsed.TotalCount)
 
-		result = c.gcl.parseGithubResponse(rangeRequest)
+		result = c.gcl.parseGithubResponseWithRetry(rangeRequest)
 		if result.Error != nil {
 			return count, result.Error
 		}
@@ -219,8 +221,8 @@ func (c githubCachedSearch) CountResults(upperBound uint64) (uint64, error) {
 	}
 
 	count = result.Parsed.TotalCount
-	logger.Printf("Caching new query %s, with count %d\n",
-		sizeRange.RangeString(), count)
+	logger.Printf("Caching new query %s, with count %d (incomplete_results: %v)\n",
+		sizeRange.RangeString(), count, result.Parsed.IncompleteResults)
 	c.cache[upperBound] = count
 	return count, nil
 }
@@ -238,8 +240,8 @@ func (c githubCachedSearch) RequestString(filesize rangeFormatter) string {
 // This would mean that the search as it is could not find all files. If queries
 // are sorted by last indexed, and retrieved on regular intervals, it should be
 // sufficient to get most if not all documents.
-func FindRangesForRepoSearch(cache cachedSearch) ([]string, error) {
-	totalFiles, err := cache.CountResults(githubMaxFileSize)
+func FindRangesForRepoSearch(cache cachedSearch, lowerBound, upperBound uint64) ([]string, error) {
+	totalFiles, err := cache.CountResults(lowerBound, upperBound)
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +249,7 @@ func FindRangesForRepoSearch(cache cachedSearch) ([]string, error) {
 
 	if githubMaxResultsPerQuery >= totalFiles {
 		return []string{
-			cache.RequestString(RangeWithin{0, githubMaxFileSize}),
+			cache.RequestString(RangeWithin{lowerBound, upperBound}),
 		}, nil
 	}
 
@@ -275,6 +277,7 @@ func FindRangesForRepoSearch(cache cachedSearch) ([]string, error) {
 	// range.
 	filesAccessible := uint64(0)
 	sizes := make([]uint64, 0)
+	sizes = append(sizes, lowerBound)
 	for filesAccessible < totalFiles {
 		target := filesAccessible + githubMaxResultsPerQuery
 		if target >= totalFiles {
@@ -284,22 +287,22 @@ func FindRangesForRepoSearch(cache cachedSearch) ([]string, error) {
 		logger.Printf("%d accessible files, next target = %d\n",
 			filesAccessible, target)
 
-		cur, err := lowerBoundFileCount(cache, target)
+		size, err := FindFileSize(cache, target, lowerBound, upperBound)
 		if err != nil {
 			return nil, err
 		}
 
 		// If there are more than 1000 files in the next bucket, we must
 		// advance anyway and lose out on some files :(.
-		if l := len(sizes); l > 0 && sizes[l-1] == cur {
-			cur++
+		if l := len(sizes); l > 0 && sizes[l-1] == size {
+			size++
 		}
 
-		nextAccessible, err := cache.CountResults(cur)
+		nextAccessible, err := cache.CountResults(lowerBound, size)
 		if err != nil {
 			return nil, fmt.Errorf(
 				"cache should be populated at %d already, got %v",
-				cur, err)
+				size, err)
 		}
 		if nextAccessible < filesAccessible {
 			return nil, fmt.Errorf(
@@ -309,31 +312,31 @@ func FindRangesForRepoSearch(cache cachedSearch) ([]string, error) {
 
 		filesAccessible = nextAccessible
 		if nextAccessible < totalFiles {
-			sizes = append(sizes, cur)
+			sizes = append(sizes, size)
 		}
 	}
-
+	sizes = append(sizes, upperBound)
 	return formatFilesizeRanges(cache, sizes), nil
 }
 
-// lowerBoundFileCount finds the filesize range from [0, return value] that has
+// FindFileSize finds the filesize range from [lowerBound, return value] that has
 // the largest file count that is smaller than or equal to
 // githubMaxResultsPerQuery. It is important to note that this returned value
 // could already be in a previous range if the next file size has more than 1000
 // results. It is left to the caller to handle this bit of logic and guarantee
 // forward progession in this case.
-func lowerBoundFileCount(
-	cache cachedSearch, targetFileCount uint64) (uint64, error) {
+func FindFileSize(
+	cache cachedSearch, targetFileCount, lowerBound, upperBound uint64) (uint64, error) {
 
 	// Binary search for file sizes that make up the next <=1000 element
 	// chunk.
-	cur := uint64(0)
-	increase := githubMaxFileSize / 2
+	cur := lowerBound
+	increase := (upperBound - lowerBound) / 2
 
 	for increase > 0 {
 		mid := cur + increase
 
-		count, err := cache.CountResults(mid)
+		count, err := cache.CountResults(lowerBound, mid)
 		if err != nil {
 			return count, err
 		}
@@ -353,26 +356,24 @@ func lowerBoundFileCount(
 }
 
 func formatFilesizeRanges(cache cachedSearch, sizes []uint64) []string {
-	ranges := make([]string, 0, len(sizes)+1)
-
-	if len(sizes) > 0 {
-		ranges = append(ranges, cache.RequestString(
-			RangeLessThan{sizes[0] + 1},
-		))
+	n := len(sizes)
+	if n < 2 {
+		return []string{}
 	}
 
-	for i := 0; i < len(sizes)-1; i += 1 {
-		ranges = append(ranges, cache.RequestString(
-			RangeWithin{sizes[i] + 1, sizes[i+1]},
-		))
-
-		if i != len(sizes)-2 {
-			continue
-		}
-		ranges = append(ranges, cache.RequestString(
-			RangeGreaterThan{sizes[i+1]},
-		))
+	ranges := make([]string, 0, n-1)
+	ranges = append(ranges, cache.RequestString(RangeWithin{sizes[0], sizes[1]}))
+	for i := 1; i < n-1; i++ {
+		ranges = append(ranges, cache.RequestString(RangeWithin{sizes[i] + 1, sizes[i+1]}))
 	}
-
 	return ranges
+}
+
+func RangeSizes(s string) RangeWithin {
+	start := strings.Index(s, "+size:") + len("+size:")
+	end := strings.Index(s, "&")
+	ranges := strings.Split(s[start:end], "..")
+	lowerBound, _ := strconv.ParseUint(ranges[0], 10, 64)
+	upperBound, _ := strconv.ParseUint(ranges[1], 10, 64)
+	return RangeWithin{lowerBound, upperBound}
 }
