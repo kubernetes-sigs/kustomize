@@ -167,7 +167,7 @@ func main() {
 		it := idx.IterateQuery(query, 10000, 60*time.Second)
 		for it.Next() {
 			for _, hit := range it.Value().Hits.Hits {
-				seedDocs = append(seedDocs, hit.Document.Copy())
+				seedDocs = append(seedDocs, hit.Document.Document.Copy())
 			}
 		}
 		if err := it.Err(); err != nil {

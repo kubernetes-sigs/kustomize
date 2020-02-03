@@ -8,6 +8,13 @@ spec:
     - repository-gcs
     - ingest-user-agent
     - ingest-geoip
+  # To set `gcpserviceaccount`,
+  # First, create and download a GCP service account into a json file, named `sakey.json` following the instruction:
+  #     https://www.elastic.co/guide/en/elasticsearch/plugins/6.5/repository-gcs-usage.html#repository-gcs-using-service-account
+  # Second, create a secret for the service account using the following command:
+  #     $ kubectl create secret generic kustomizesa --from-file=./sakey.json
+  gcpserviceaccount:
+    name: kustomizesa
   config:
     env:
       example: test
