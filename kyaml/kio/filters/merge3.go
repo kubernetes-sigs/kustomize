@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/yaml/merge3"
 )
@@ -24,6 +25,11 @@ type Merge3 struct {
 	UpdatedPath    string
 	DestPath       string
 	MatchFilesGlob []string
+
+	// MergeOnPath will use the relative filepath as part of the merge key.
+	// This may be necessary if the directory contains multiple copies of
+	// the same resource, or resources patches.
+	MergeOnPath bool
 }
 
 func (m Merge3) Merge() error {
@@ -61,7 +67,7 @@ func (m Merge3) Merge() error {
 // Filter combines Resources with the same GVK + N + NS into tuples, and then merges them
 func (m Merge3) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 	// index the nodes by their identity
-	tl := tuples{}
+	tl := tuples{mergeOnPath: m.MergeOnPath}
 	for i := range nodes {
 		if err := tl.add(nodes[i]); err != nil {
 			return nil, err
@@ -102,6 +108,37 @@ func (m Merge3) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 // tuples combines nodes with the same GVK + N + NS
 type tuples struct {
 	list []*tuple
+
+	// mergeOnPath if set to true will use the resource filepath
+	// as part of the merge key
+	mergeOnPath bool
+}
+
+// isSameResource returns true if meta1 and meta2 are for the same logic resource
+func (ts *tuples) isSameResource(meta1, meta2 yaml.ResourceMeta) bool {
+	if meta1.Name != meta2.Name {
+		return false
+	}
+	if meta1.Namespace != meta2.Namespace {
+		return false
+	}
+	if meta1.APIVersion != meta2.APIVersion {
+		return false
+	}
+	if meta1.Kind != meta2.Kind {
+		return false
+	}
+	if ts.mergeOnPath {
+		// directories may contain multiple copies of a resource with the same
+		// name, namespace, apiVersion and kind -- e.g. kustomize patches, or
+		// multiple environments
+		// mergeOnPath configures the merge logic to use the path as part of the
+		// resource key
+		if meta1.Annotations[kioutil.PathAnnotation] != meta2.Annotations[kioutil.PathAnnotation] {
+			return false
+		}
+	}
+	return true
 }
 
 // add adds a node to the list, combining it with an existing matching Resource if found
@@ -112,8 +149,7 @@ func (ts *tuples) add(node *yaml.RNode) error {
 	}
 	for i := range ts.list {
 		t := ts.list[i]
-		if t.meta.Name == nodeMeta.Name && t.meta.Namespace == nodeMeta.Namespace &&
-			t.meta.APIVersion == nodeMeta.APIVersion && t.meta.Kind == nodeMeta.Kind {
+		if ts.isSameResource(t.meta, nodeMeta) {
 			return t.add(node)
 		}
 	}
