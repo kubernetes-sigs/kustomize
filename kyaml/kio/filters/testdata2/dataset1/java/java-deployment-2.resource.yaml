@@ -1,0 +1,38 @@
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+# 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  labels:
+    app: java
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: java
+  template:
+    metadata:
+      labels:
+        app: java
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: app
+        image: gcr.io/project/app:version
+        command:
+        - java
+        - -jar
+        - /app.jar
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: app-config
+        env:
+        - name: JAVA_OPTS
+          value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
+            -Djava.security.egd=file:/dev/./urandom
+        imagePullPolicy: Always
+  minReadySeconds: 10
