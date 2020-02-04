@@ -31,6 +31,8 @@ formatting substitution verbs {'%n': 'metadata.name', '%s': 'metadata.namespace'
 		`if true, keep index and filename annotations set on Resources.`)
 	c.Flags().BoolVar(&r.Override, "override", false,
 		`if true, override existing filepath annotations.`)
+	c.Flags().BoolVar(&r.UseSchema, "use-schema", false,
+		`if true, uses openapi resource schema to format resources.`)
 	r.Command = c
 	return r
 }
@@ -46,6 +48,7 @@ type FmtRunner struct {
 	SetFilenames    bool
 	KeepAnnotations bool
 	Override        bool
+	UseSchema       bool
 }
 
 func (r *FmtRunner) preRunE(c *cobra.Command, args []string) error {
@@ -56,7 +59,9 @@ func (r *FmtRunner) preRunE(c *cobra.Command, args []string) error {
 }
 
 func (r *FmtRunner) runE(c *cobra.Command, args []string) error {
-	f := []kio.Filter{filters.FormatFilter{}}
+	f := []kio.Filter{filters.FormatFilter{
+		UseSchema: r.UseSchema,
+	}}
 
 	// format with file names
 	if r.SetFilenames {
