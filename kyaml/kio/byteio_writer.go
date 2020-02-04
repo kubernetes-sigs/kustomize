@@ -113,7 +113,6 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 	}
 	doc := &yaml.Node{
 		Kind:    yaml.DocumentNode,
-		Style:   yaml.FoldedStyle,
 		Content: []*yaml.Node{list}}
 	for i := range nodes {
 		items.Content = append(items.Content, nodes[i].YNode())
