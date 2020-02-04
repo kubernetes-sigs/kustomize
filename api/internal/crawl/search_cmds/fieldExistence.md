@@ -1,7 +1,7 @@
 Count the documents whose `document` field is empty (The reason why the `document` field
 of a document is empty is because of empty documents):
 ```
-curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
+curl -s -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
 {
    "size": 10000,
     "query": {
@@ -19,7 +19,7 @@ curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-T
 
 Find all the documents having the `creationTime` field set:
 ```
-curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
+curl -s -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
 {
     "query": {
         "exists": {
@@ -32,7 +32,7 @@ curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-T
 
 Find all the documents whose `creationTime` field is not set:
 ```
-curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
+curl -s -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
 {
    "size": 10000,
     "query": {

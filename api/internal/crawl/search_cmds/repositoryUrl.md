@@ -1,6 +1,6 @@
 Count distinct values of the `repositoryUrl` field:
 ```
-curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
+curl -s -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
 {
     "aggs" : {
         "repositoryUrl_count" : {
@@ -16,7 +16,7 @@ curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'C
 
 Count how many Github repositories include kustomization files:
 ```
-curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
+curl -s -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
 {
     "query": {
         "bool": {
@@ -39,7 +39,7 @@ curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'C
 
 Count distinct values of the `repositoryUrl` field for all the kustomize resource files in the index:
 ```
-curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
+curl -s -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
 {
     "query": {
         "bool": {
@@ -65,7 +65,7 @@ curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'C
 
 Count distinct values of the `repositoryUrl` field for all the kustomize generator files in the index:
 ```
-curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
+curl -s -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
 {
     "query": {
         "bool": {
@@ -91,7 +91,7 @@ curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'C
 
 Count distinct values of the `repositoryUrl` field for all the kustomize transformer files in the index:
 ```
-curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
+curl -s -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
 {
     "query": {
         "bool": {
@@ -117,7 +117,7 @@ curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'C
 
 Count distinct values of the `repositoryUrl` field for all the kustomize resource dirs in the index:
 ```
-curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
+curl -s -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
 {
     "query": {
         "bool": {
@@ -141,7 +141,7 @@ curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'C
 
 Count distinct values of the `repositoryUrl` field for all the kustomize generator dirs in the index:
 ```
-curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
+curl -s -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
 {
     "query": {
         "bool": {
@@ -165,7 +165,7 @@ curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'C
 
 Count distinct values of the `repositoryUrl` field for all the kustomize transformer dirs in the index:
 ```
-curl -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
+curl -s -X POST "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
 {
     "query": {
         "bool": {
@@ -191,7 +191,7 @@ List all the github repositories including kustomization files and kustomize res
 and how many kustomization files and kustomize resource files each github repository includes
 (the github repository including the most kustomization files is listed first):
 ```
-curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
+curl -s -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
 {
     "aggs" : {
         "repositoryUrl" : {
@@ -207,7 +207,7 @@ curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Co
 
 List the top 20 Github repositories including the most amount of kustomization files:
 ```
-curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
+curl -s -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
 {
     "query": {
         "bool": {
@@ -230,7 +230,7 @@ curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Co
 
 List the top 20 Github repositories including the most amount of kustomize resource files:
 ```
-curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
+curl -s -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?size=0&pretty" -H 'Content-Type: application/json' -d'
 {
     "query": {
         "bool": {
