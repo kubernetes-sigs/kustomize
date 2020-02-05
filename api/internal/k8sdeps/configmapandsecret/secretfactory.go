@@ -39,10 +39,7 @@ func (f *Factory) MakeSecret(
 			return nil, err
 		}
 	}
-	if f.options != nil {
-		s.SetLabels(f.options.Labels)
-		s.SetAnnotations(f.options.Annotations)
-	}
+	f.setLabelsAndAnnnotations(s, args.GeneratorOptions)
 	return s, nil
 }
 
