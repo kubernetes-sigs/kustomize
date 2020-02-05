@@ -21,4 +21,7 @@ type GeneratorArgs struct {
 
 	// KvPairSources for the generator.
 	KvPairSources `json:",inline,omitempty" yaml:",inline,omitempty"`
+
+	// GeneratorOptions modify this generator
+	GeneratorOptions *GeneratorOptions `json:"generatorOptions,omitempty" yaml:"generatorOptions,omitempty"`
 }

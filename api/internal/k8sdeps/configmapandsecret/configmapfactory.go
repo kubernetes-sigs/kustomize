@@ -38,10 +38,7 @@ func (f *Factory) MakeConfigMap(
 			return nil, errors.Wrap(err, "trouble mapping")
 		}
 	}
-	if f.options != nil {
-		cm.SetLabels(f.options.Labels)
-		cm.SetAnnotations(f.options.Annotations)
-	}
+	f.setLabelsAndAnnnotations(cm, args.GeneratorOptions)
 	return cm, nil
 }
 
