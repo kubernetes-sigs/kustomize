@@ -38,7 +38,6 @@ func NewCreateSetterRunner(parent string) *CreateSetterRunner {
 		"create a partial setter for only part of the field value.")
 	fixDocs(parent, set)
 	set.MarkFlagRequired("type")
-	set.MarkFlagRequired("field")
 	r.Command = set
 	return r
 }
