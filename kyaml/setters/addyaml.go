@@ -55,8 +55,9 @@ func (m *customFieldSetter) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 			return node.PipeE(m)
 		})
 	case yaml.ScalarNode:
-		// only create the setter for fields with the given name
-		if m.currentFieldName != m.Field {
+		// if filed is empty, create the setter for all fields with given value
+		// else only create the setter for given field and value combination, with given name
+		if m.Field != "" && m.currentFieldName != m.Field {
 			return object, nil
 		}
 		if err := m.create(object); err != nil {
