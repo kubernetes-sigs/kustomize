@@ -1,18 +1,73 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package openapi_test
+package openapi
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+func TestAddSchema(t *testing.T) {
+	// reset package vars
+	globalSchema = openapiData{}
+
+	_, err := AddSchema(additionalSchema)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	s, err := GetSchema(`{"$ref": "#/definitions/io.k8s.config.setters.replicas"}`)
+	if !assert.Greater(t, len(globalSchema.schema.Definitions), 200) {
+		t.FailNow()
+	}
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	assert.Equal(t, `map[x-kustomize:map[setBy:Jane setter:map[name:replicas value:5]]]`,
+		fmt.Sprintf("%v", s.Schema.Extensions))
+}
+
+func TestNoUseBuiltInSchema_AddSchema(t *testing.T) {
+	// reset package vars
+	globalSchema = openapiData{}
+
+	SuppressBuiltInSchemaUse()
+	_, err := AddSchema(additionalSchema)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	s, err := GetSchema(`{"$ref": "#/definitions/io.k8s.config.setters.replicas"}`)
+	if !assert.Greater(t, len(globalSchema.schema.Definitions), 1) {
+		t.FailNow()
+	}
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	assert.Equal(t, `map[x-kustomize:map[setBy:Jane setter:map[name:replicas value:5]]]`,
+		fmt.Sprintf("%v", s.Schema.Extensions))
+}
+
+var additionalSchema = []byte(`
+{
+  "definitions": {
+    "io.k8s.config.setters.replicas": {
+      "description": "replicas description.",
+      "type": "integer",
+      "x-kustomize": {"setBy":"Jane","setter": {"name":"replicas","value":"5"}}
+    }
+  },
+  "invalid": "field"
+}
+`)
+
 func TestSchemaForResourceType(t *testing.T) {
-	s := openapi.SchemaForResourceType(
+	// reset package vars
+	globalSchema = openapiData{}
+
+	s := SchemaForResourceType(
 		yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"})
 	if !assert.NotNil(t, s) {
 		t.FailNow()

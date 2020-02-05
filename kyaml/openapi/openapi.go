@@ -4,15 +4,26 @@
 package openapi
 
 import (
+	"encoding/json"
+	"fmt"
 	"sync"
 
 	"github.com/go-openapi/spec"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-var setup sync.Once
-var schema spec.Schema
-var schemaByResourceType map[yaml.TypeMeta]*spec.Schema
+// globalSchema contains global state information about the openapi
+var globalSchema openapiData
+
+// openapiData contains the parsed openapi state.  this is in a struct rather than
+// a list of vars so that it can be reset from tests.
+type openapiData struct {
+	setup                sync.Once
+	schema               spec.Schema
+	schemaByResourceType map[yaml.TypeMeta]*spec.Schema
+	noUseBuiltInSchema   bool
+}
 
 // ResourceSchema wraps the OpenAPI Schema.
 type ResourceSchema struct {
@@ -26,11 +37,93 @@ type ResourceSchema struct {
 // as metadata, replicas and spec.template.spec
 func SchemaForResourceType(t yaml.TypeMeta) *ResourceSchema {
 	initSchema()
-	rs, found := schemaByResourceType[t]
+	rs, found := globalSchema.schemaByResourceType[t]
 	if !found {
 		return nil
 	}
 	return &ResourceSchema{Schema: rs}
+}
+
+// AddSchema parses s, and adds definitions from s to the global schema.
+func AddSchema(s []byte) (*spec.Schema, error) {
+	return parse(s)
+}
+
+// AddDefinitions adds the definitions to the global schema.
+func AddDefinitions(definitions spec.Definitions) {
+	// initialize values if they have not yet been set
+	if globalSchema.schemaByResourceType == nil {
+		globalSchema.schemaByResourceType = map[yaml.TypeMeta]*spec.Schema{}
+	}
+	if globalSchema.schema.Definitions == nil {
+		globalSchema.schema.Definitions = spec.Definitions{}
+	}
+
+	// index the schema definitions so we can lookup them up for Resources
+	for k := range definitions {
+		// index by GVK, if no GVK is found then it is the schema for a subfield
+		// of a Resource
+		d := definitions[k]
+
+		// copy definitions to the schema
+		globalSchema.schema.Definitions[k] = d
+		gvk, found := d.VendorExtensible.Extensions[kubernetesGVKExtensionKey]
+		if !found {
+			continue
+		}
+		// cast the extension to a []map[string]string
+		exts, ok := gvk.([]interface{})
+		if !ok || len(exts) != 1 {
+			continue
+		}
+		m, ok := exts[0].(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		// build the index key and save it
+		g := m[groupKey].(string)
+		apiVersion := m[versionKey].(string)
+		if g != "" {
+			apiVersion = g + "/" + apiVersion
+		}
+		globalSchema.schemaByResourceType[yaml.TypeMeta{Kind: m[kindKey].(string), APIVersion: apiVersion}] = &d
+	}
+}
+
+// Resolve resolves the reference against the global schema
+func Resolve(ref *spec.Ref) (*spec.Schema, error) {
+	return resolve(Schema(), ref)
+}
+
+// Schema returns the global schema
+func Schema() *spec.Schema {
+	return rootSchema()
+}
+
+// GetSchema parses s into a ResourceSchema, resolving References within the
+// global schema.
+func GetSchema(s string) (*ResourceSchema, error) {
+	var sc spec.Schema
+	if err := sc.UnmarshalJSON([]byte(s)); err != nil {
+		return nil, errors.Wrap(err)
+	}
+	if sc.Ref.String() != "" {
+		r, err := Resolve(&sc.Ref)
+		if err != nil {
+			return nil, errors.Wrap(err)
+		}
+		sc = *r
+	}
+
+	return &ResourceSchema{Schema: &sc}, nil
+}
+
+// SuppressBuiltInSchemaUse can be called to prevent using the built-in Kubernetes
+// schema as part of the global schema.
+// Must be called before the schema is used.
+func SuppressBuiltInSchemaUse() {
+	globalSchema.noUseBuiltInSchema = false
 }
 
 // Elements returns the Schema for the elements of an array.
@@ -44,7 +137,7 @@ func (r *ResourceSchema) Elements() *ResourceSchema {
 	}
 	s := *r.Schema.Items.Schema
 	for s.Ref.String() != "" {
-		sc, e := spec.ResolveRef(rootSchema(), &s.Ref)
+		sc, e := Resolve(&s.Ref)
 		if e != nil {
 			return nil
 		}
@@ -96,7 +189,7 @@ func (r *ResourceSchema) Field(field string) *ResourceSchema {
 
 	// resolve the reference to the Schema if the Schema has one
 	for s.Ref.String() != "" {
-		sc, e := spec.ResolveRef(rootSchema(), &s.Ref)
+		sc, e := Resolve(&s.Ref)
 		if e != nil {
 			return nil
 		}
@@ -148,53 +241,57 @@ const (
 
 // initSchema parses the json schema
 func initSchema() {
-	setup.Do(func() {
-		// initialize the map
-		schemaByResourceType = map[yaml.TypeMeta]*spec.Schema{}
+	globalSchema.setup.Do(func() {
+		if globalSchema.noUseBuiltInSchema {
+			// don't parse the built in schema
+			return
+		}
 
 		// parse the swagger, this should never fail
-		parse(MustAsset(openAPIAssetName))
-
-		// TODO(pwittrock): add support for parsing additional schemas from
-		// environment variables, files or other sources
+		if _, err := parse(MustAsset(openAPIAssetName)); err != nil {
+			// this should never happen
+			panic(err)
+		}
 	})
 }
 
 // parse parses and indexes a single json schema
-func parse(b []byte) {
-	if err := schema.UnmarshalJSON(b); err != nil {
-		panic(err)
-	}
-	// index the schema definitions so we can lookup them up for Resources
-	for k := range schema.Definitions {
-		// index by GVK, if no GVK is found then it is the schema for a subfield
-		// of a Resource
-		d := schema.Definitions[k]
-		gvk, found := d.VendorExtensible.Extensions[kubernetesGVKExtensionKey]
-		if !found {
-			continue
-		}
-		// cast the extension to a []map[string]string
-		exts, ok := gvk.([]interface{})
-		if !ok || len(exts) != 1 {
-			continue
-		}
-		m, ok := exts[0].(map[string]interface{})
-		if !ok {
-			continue
-		}
+func parse(b []byte) (*spec.Schema, error) {
+	var sc spec.Schema
 
-		// build the index key and save it
-		g := m[groupKey].(string)
-		apiVersion := m[versionKey].(string)
-		if g != "" {
-			apiVersion = g + "/" + apiVersion
+	if err := sc.UnmarshalJSON(b); err != nil {
+		return nil, errors.Wrap(err)
+	}
+	AddDefinitions(sc.Definitions)
+	return &sc, nil
+}
+
+func resolve(root interface{}, ref *spec.Ref) (*spec.Schema, error) {
+	res, _, err := ref.GetPointer().Get(root)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	switch sch := res.(type) {
+	case spec.Schema:
+		return &sch, nil
+	case *spec.Schema:
+		return sch, nil
+	case map[string]interface{}:
+		b, err := json.Marshal(sch)
+		if err != nil {
+			return nil, err
 		}
-		schemaByResourceType[yaml.TypeMeta{Kind: m[kindKey].(string), APIVersion: apiVersion}] = &d
+		newSch := new(spec.Schema)
+		if err = json.Unmarshal(b, newSch); err != nil {
+			return nil, err
+		}
+		return newSch, nil
+	default:
+		return nil, errors.Wrap(fmt.Errorf("unknown type for the resolved reference"))
 	}
 }
 
 func rootSchema() *spec.Schema {
 	initSchema()
-	return &schema
+	return &globalSchema.schema
 }
