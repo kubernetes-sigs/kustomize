@@ -130,6 +130,304 @@ fooSpec:
 				}
 			},
 		},
+		{
+			name: "object reference, GVK-only match",
+			pluginConfig: `
+apiVersion: qlik.com/v1
+kind: SearchReplace
+metadata:
+  name: notImportantHere
+target:
+  kind: Foo
+  name: some-foo
+path: fooSpec/fooTemplate/fooContainers/env/value
+search: ^far$
+replaceWithObjRef:
+  objref:
+    apiVersion: qlik.com/v1
+    kind: Bar
+  fieldref:
+    fieldpath: metadata.labels.myproperty
+`,
+			pluginInputResources: `
+apiVersion: qlik.com/v1
+kind: Foo
+metadata:
+  name: some-foo
+fooSpec:
+  fooTemplate:
+    fooContainers:
+    - name: have-env
+      env:
+      - name: FOO
+        value: far
+      - name: BOO
+        value: farther than it looks
+--- 
+apiVersion: qlik.com/v1
+kind: Bar
+metadata:
+  name: some-bar
+  labels:
+    myproperty: not far
+fooSpec:
+  test: test
+--- 
+apiVersion: qlik.com/v1
+kind: Foo
+metadata:
+  name: some-Foo
+  labels:
+    myproperty: not good
+`,
+			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
+				res := resMap.GetByIndex(0)
+
+				envVars, err := res.GetFieldValue("fooSpec.fooTemplate.fooContainers[0].env")
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+
+				fooEnvVar := envVars.([]interface{})[0].(map[string]interface{})
+				if "FOO" != fooEnvVar["name"].(string) {
+					t.Fatalf("unexpected: %v\n", fooEnvVar["name"].(string))
+				}
+				if "not far" != fooEnvVar["value"].(string) {
+					t.Fatalf("unexpected: %v\n", fooEnvVar["value"].(string))
+				}
+
+				booEnvVar := envVars.([]interface{})[1].(map[string]interface{})
+				if "BOO" != booEnvVar["name"].(string) {
+					t.Fatalf("unexpected: %v\n", booEnvVar["name"].(string))
+				}
+				if "farther than it looks" != booEnvVar["value"].(string) {
+					t.Fatalf("unexpected: %v\n", booEnvVar["value"].(string))
+				}
+			},
+		},
+		{
+			name: "object reference, first GVK-only match",
+			pluginConfig: `
+apiVersion: qlik.com/v1
+kind: SearchReplace
+metadata:
+  name: notImportantHere
+target:
+  kind: Foo
+  name: some-foo
+path: fooSpec/fooTemplate/fooContainers/env/value
+search: ^far$
+replaceWithObjRef:
+  objref:
+    apiVersion: qlik.com/
+    kind: Bar
+  fieldref:
+    fieldpath: metadata.labels.myproperty
+`,
+			pluginInputResources: `
+apiVersion: qlik.com/v1
+kind: Foo
+metadata:
+  name: some-foo
+fooSpec:
+  fooTemplate:
+    fooContainers:
+    - name: have-env
+      env:
+      - name: FOO
+        value: far
+      - name: BOO
+        value: farther than it looks
+--- 
+apiVersion: qlik.com/v1
+kind: Bar
+metadata:
+  name: some-bar-1
+  labels:
+    myproperty: not far
+fooSpec:
+  test: test
+---
+apiVersion: qlik.com/v1
+kind: Bar
+metadata:
+  name: some-bar-2
+  labels:
+    myproperty: too far
+fooSpec:
+  test: test
+--- 
+apiVersion: qlik.com/v1
+kind: Foo
+metadata:
+  name: some-Foo
+  labels:
+    myproperty: not good
+`,
+			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
+				res := resMap.GetByIndex(0)
+
+				envVars, err := res.GetFieldValue("fooSpec.fooTemplate.fooContainers[0].env")
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+
+				fooEnvVar := envVars.([]interface{})[0].(map[string]interface{})
+				if "FOO" != fooEnvVar["name"].(string) {
+					t.Fatalf("unexpected: %v\n", fooEnvVar["name"].(string))
+				}
+				if "not far" != fooEnvVar["value"].(string) {
+					t.Fatalf("unexpected: %v\n", fooEnvVar["value"].(string))
+				}
+
+				booEnvVar := envVars.([]interface{})[1].(map[string]interface{})
+				if "BOO" != booEnvVar["name"].(string) {
+					t.Fatalf("unexpected: %v\n", booEnvVar["name"].(string))
+				}
+				if "farther than it looks" != booEnvVar["value"].(string) {
+					t.Fatalf("unexpected: %v\n", booEnvVar["value"].(string))
+				}
+			},
+		},
+		{
+			name: "object reference, GVK and name match",
+			pluginConfig: `
+apiVersion: qlik.com/v1
+kind: SearchReplace
+metadata:
+  name: notImportantHere
+target:
+  kind: Foo
+  name: some-foo
+path: fooSpec/fooTemplate/fooContainers/env/value
+search: ^far$
+replaceWithObjRef:
+  objref:
+    apiVersion: qlik.com/
+    kind: Bar
+    name: some-bar
+  fieldref:
+    fieldpath: metadata.labels.myproperty
+`,
+			pluginInputResources: `
+apiVersion: qlik.com/v1
+kind: Foo
+metadata:
+  name: some-foo
+fooSpec:
+  fooTemplate:
+    fooContainers:
+    - name: have-env
+      env:
+      - name: FOO
+        value: far
+      - name: BOO
+        value: farther than it looks
+--- 
+apiVersion: qlik.com/v1
+kind: Bar
+metadata:
+  name: some-chocolate-bar
+  labels:
+    myproperty: not far enough
+fooSpec:
+  test: test
+--- 
+apiVersion: qlik.com/v1
+kind: Bar
+metadata:
+  name: some-bar
+  labels:
+    myproperty: not far
+fooSpec:
+  test: test
+--- 
+apiVersion: qlik.com/v1
+kind: Foo
+metadata:
+  name: some-Foo
+  labels:
+    myproperty: not good
+`,
+			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
+				res := resMap.GetByIndex(0)
+
+				envVars, err := res.GetFieldValue("fooSpec.fooTemplate.fooContainers[0].env")
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+
+				fooEnvVar := envVars.([]interface{})[0].(map[string]interface{})
+				if "FOO" != fooEnvVar["name"].(string) {
+					t.Fatalf("unexpected: %v\n", fooEnvVar["name"].(string))
+				}
+				if "not far" != fooEnvVar["value"].(string) {
+					t.Fatalf("unexpected: %v\n", fooEnvVar["value"].(string))
+				}
+
+				booEnvVar := envVars.([]interface{})[1].(map[string]interface{})
+				if "BOO" != booEnvVar["name"].(string) {
+					t.Fatalf("unexpected: %v\n", booEnvVar["name"].(string))
+				}
+				if "farther than it looks" != booEnvVar["value"].(string) {
+					t.Fatalf("unexpected: %v\n", booEnvVar["value"].(string))
+				}
+			},
+		},
+		{
+			name: "can replace with a blank",
+			pluginConfig: `
+apiVersion: qlik.com/v1
+kind: SearchReplace
+metadata:
+  name: notImportantHere
+target:
+  kind: Foo
+  name: some-foo
+path: fooSpec/fooTemplate/fooContainers/env/value
+search: ^far$
+replace: ""
+`,
+			pluginInputResources: `
+apiVersion: qlik.com/v1
+kind: Foo
+metadata:
+  name: some-foo
+fooSpec:
+  fooTemplate:
+    fooContainers:
+    - name: have-env
+      env:
+      - name: FOO
+        value: far
+      - name: BOO
+        value: farther than it looks
+`,
+			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
+				res := resMap.GetByIndex(0)
+
+				envVars, err := res.GetFieldValue("fooSpec.fooTemplate.fooContainers[0].env")
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+
+				fooEnvVar := envVars.([]interface{})[0].(map[string]interface{})
+				if "FOO" != fooEnvVar["name"].(string) {
+					t.Fatalf("unexpected: %v\n", fooEnvVar["name"].(string))
+				}
+				if "" != fooEnvVar["value"].(string) {
+					t.Fatalf("unexpected: %v\n", fooEnvVar["value"].(string))
+				}
+
+				booEnvVar := envVars.([]interface{})[1].(map[string]interface{})
+				if "BOO" != booEnvVar["name"].(string) {
+					t.Fatalf("unexpected: %v\n", booEnvVar["name"].(string))
+				}
+				if "farther than it looks" != booEnvVar["value"].(string) {
+					t.Fatalf("unexpected: %v\n", booEnvVar["value"].(string))
+				}
+			},
+		},
 	}
 	plugin := SearchReplacePlugin{logger: utils.GetLogger("SearchReplacePlugin")}
 	for _, testCase := range testCases {

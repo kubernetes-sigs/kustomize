@@ -2,6 +2,7 @@ package builtins_qlik
 
 import (
 	"log"
+
 	"sigs.k8s.io/kustomize/api/builtins_qlik/utils"
 
 	"sigs.k8s.io/kustomize/api/internal/accumulator"

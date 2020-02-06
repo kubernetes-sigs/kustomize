@@ -7,19 +7,21 @@ import (
 
 	"sigs.k8s.io/kustomize/api/builtins_qlik/utils"
 	"sigs.k8s.io/kustomize/api/resmap"
+	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/transform"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 )
 
 type SearchReplacePlugin struct {
-	Target    *types.Selector `json:"target,omitempty" yaml:"target,omitempty"`
-	Path      string          `json:"path,omitempty" yaml:"path,omitempty"`
-	Search    string          `json:"search,omitempty" yaml:"search,omitempty"`
-	Replace   string          `json:"replace,omitempty" yaml:"replace,omitempty"`
-	logger    *log.Logger
-	fieldSpec types.FieldSpec
-	re        *regexp.Regexp
+	Target            *types.Selector `json:"target,omitempty" yaml:"target,omitempty"`
+	Path              string          `json:"path,omitempty" yaml:"path,omitempty"`
+	Search            string          `json:"search,omitempty" yaml:"search,omitempty"`
+	Replace           string          `json:"replace,omitempty" yaml:"replace,omitempty"`
+	ReplaceWithObjRef *types.Var      `json:"replaceWithObjRef,omitempty" yaml:"replaceWithObjRef,omitempty"`
+	logger            *log.Logger
+	fieldSpec         types.FieldSpec
+	re                *regexp.Regexp
 }
 
 func (p *SearchReplacePlugin) Config(h *resmap.PluginHelpers, c []byte) (err error) {
@@ -53,6 +55,18 @@ func (p *SearchReplacePlugin) Transform(m resmap.ResMap) error {
 		p.logger.Printf("error selecting resources based on the target selector, error: %v\n", err)
 		return err
 	}
+	if p.Replace == "" && p.ReplaceWithObjRef != nil {
+		for _, res := range m.Resources() {
+			if p.matchesObjRef(res) {
+				s, err := res.GetFieldValue(p.ReplaceWithObjRef.FieldRef.FieldPath)
+				if err != nil {
+					continue
+				}
+				p.Replace = s.(string)
+				break
+			}
+		}
+	}
 	for _, r := range resources {
 		err := transform.MutateField(
 			r.Map(),
@@ -65,6 +79,16 @@ func (p *SearchReplacePlugin) Transform(m resmap.ResMap) error {
 		}
 	}
 	return nil
+}
+
+func (p *SearchReplacePlugin) matchesObjRef(res *resource.Resource) bool {
+	if res.GetGvk().IsSelected(&p.ReplaceWithObjRef.ObjRef.Gvk) {
+		if len(p.ReplaceWithObjRef.ObjRef.Name) > 0 {
+			return res.GetName() == p.ReplaceWithObjRef.ObjRef.Name
+		}
+		return true
+	}
+	return false
 }
 
 func (p *SearchReplacePlugin) searchAndReplace(in interface{}) (interface{}, error) {
