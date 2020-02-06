@@ -21,7 +21,6 @@ func GetSourceRunner(name string) *SourceRunner {
 		Long:    commands.SourceLong,
 		Example: commands.SourceExamples,
 		RunE:    r.runE,
-		Args:    cobra.ExactArgs(1),
 	}
 	fixDocs(name, c)
 	c.Flags().StringVar(&r.WrapKind, "wrap-kind", kio.ResourceListKind,
@@ -70,8 +69,14 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 		FunctionConfig:        functionConfig,
 	})
 
-	err := kio.Pipeline{
-		Inputs:  []kio.Reader{kio.LocalPackageReader{PackagePath: args[0]}},
-		Outputs: outputs}.Execute()
+	var inputs []kio.Reader
+	for _, a := range args {
+		inputs = append(inputs, kio.LocalPackageReader{PackagePath: a})
+	}
+	if len(inputs) == 0 {
+		inputs = []kio.Reader{&kio.ByteReader{Reader: c.InOrStdin()}}
+	}
+
+	err := kio.Pipeline{Inputs: inputs, Outputs: outputs}.Execute()
 	return handleError(c, err)
 }

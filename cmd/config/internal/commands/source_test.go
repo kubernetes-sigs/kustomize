@@ -134,3 +134,67 @@ items:
 		return
 	}
 }
+
+func TestSourceCommand_Stdin(t *testing.T) {
+	d, err := ioutil.TempDir("", "kustomize-source-test")
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer os.RemoveAll(d)
+
+	in := bytes.NewBufferString(`
+kind: Deployment
+metadata:
+  labels:
+    app: nginx2
+  name: foo
+  annotations:
+    app: nginx2
+spec:
+  replicas: 1
+---
+kind: Service
+metadata:
+  name: foo
+  annotations:
+    app: nginx
+spec:
+  selector:
+    app: nginx
+`)
+
+	out := &bytes.Buffer{}
+	r := commands.GetSourceRunner("")
+	r.Command.SetArgs([]string{})
+	r.Command.SetIn(in)
+	r.Command.SetOut(out)
+	if !assert.NoError(t, r.Command.Execute()) {
+		return
+	}
+
+	if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- kind: Deployment
+  metadata:
+    labels:
+      app: nginx2
+    name: foo
+    annotations:
+      app: nginx2
+      config.kubernetes.io/index: '0'
+  spec:
+    replicas: 1
+- kind: Service
+  metadata:
+    name: foo
+    annotations:
+      app: nginx
+      config.kubernetes.io/index: '1'
+  spec:
+    selector:
+      app: nginx
+`, out.String()) {
+		return
+	}
+}
