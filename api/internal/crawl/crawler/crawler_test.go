@@ -37,6 +37,8 @@ func (c testCrawler) Match(d *doc.Document) bool {
 	return d != nil
 }
 
+func (c testCrawler) SetDefaultBranch(d *doc.Document) {}
+
 func (c testCrawler) FetchDocument(_ context.Context, d *doc.Document) error {
 	if i, ok := c.lukp[d.ID()]; ok {
 		d.DocumentData = c.docs[i].DocumentData

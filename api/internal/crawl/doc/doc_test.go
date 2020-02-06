@@ -215,19 +215,27 @@ resources:
 				{
 					RepositoryURL: "sigs.k8s.io/kustomize",
 					FilePath:      "some/path/to/base",
+					FileType:      "resource",
+					User:          "sigs.k8s.io",
 				},
 				{
 					RepositoryURL: "sigs.k8s.io/kustomize",
 					FilePath:      "some/path/to/otherbase",
+					FileType:      "resource",
+					User:          "sigs.k8s.io",
 				},
 				{
 					RepositoryURL: "sigs.k8s.io/kustomize",
 					FilePath:      "some/path/to/kdir/file.yaml",
+					FileType:      "resource",
+					User:          "sigs.k8s.io",
 				},
 				{
 					RepositoryURL: "https://github.com/kubernetes-sigs/kustomize",
 					FilePath:      "examples/helloWorld",
 					DefaultBranch: "v3.1.0",
+					FileType:      "resource",
+					User:          "kubernetes-sigs",
 				},
 			},
 		},
@@ -312,10 +320,14 @@ transformers:
 				{
 					RepositoryURL: "sigs.k8s.io/kustomize",
 					FilePath:      "some/path/to/kdir/gen.yaml",
+					FileType:      "generator",
+					User:          "sigs.k8s.io",
 				},
 				{
 					RepositoryURL: "sigs.k8s.io/kustomize",
 					FilePath:      "some/path/to/kdir/file.yaml",
+					FileType:      "resource",
+					User:          "sigs.k8s.io",
 				},
 			},
 		},
@@ -345,14 +357,20 @@ transformers:
 				{
 					RepositoryURL: "sigs.k8s.io/kustomize",
 					FilePath:      "some/path/to/kdir/tr.yaml",
+					FileType:      "transformer",
+					User:          "sigs.k8s.io",
 				},
 				{
 					RepositoryURL: "sigs.k8s.io/kustomize",
 					FilePath:      "some/path/to/kdir/gen.yaml",
+					FileType:      "generator",
+					User:          "sigs.k8s.io",
 				},
 				{
 					RepositoryURL: "sigs.k8s.io/kustomize",
 					FilePath:      "some/path/to/kdir/file.yaml",
+					FileType:      "resource",
+					User:          "sigs.k8s.io",
 				},
 			},
 		},

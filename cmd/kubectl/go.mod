@@ -3,7 +3,9 @@ module sigs.k8s.io/kustomize/cmd/kubectl
 go 1.13
 
 require (
+	github.com/go-errors/errors v1.0.1
 	github.com/spf13/cobra v0.0.5
+	github.com/stretchr/testify v1.4.0
 	k8s.io/api v0.17.0
 	k8s.io/apimachinery v0.17.0
 	k8s.io/cli-runtime v0.17.0

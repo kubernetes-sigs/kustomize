@@ -2,15 +2,12 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
-	"os"
 	"sort"
 	"time"
-
-	"sigs.k8s.io/kustomize/api/internal/crawl/crawler/github"
 
 	"sigs.k8s.io/kustomize/api/internal/crawl/doc"
 
@@ -34,9 +31,9 @@ func iterateArr(arr []string, countMap map[string]int) {
 
 }
 
-// SortMapKeyByValue takes a map as its input, sorts its keys according to their values
+// SortMapKeyByValueInt takes a map as its input, sorts its keys according to their values
 // in the map, and outputs the sorted keys as a slice.
-func SortMapKeyByValue(m map[string]int) []string {
+func SortMapKeyByValueInt(m map[string]int) []string {
 	keys := make([]string, 0, len(m))
 	for key := range m {
 		keys = append(keys, key)
@@ -46,56 +43,58 @@ func SortMapKeyByValue(m map[string]int) []string {
 	return keys
 }
 
-func GeneratorOrTransformerStats(ctx context.Context,
-	docs []*doc.Document, isGenerator bool, idx *index.KustomizeIndex) {
+// SortMapKeyByValue takes a map as its input, sorts its keys according to their values
+// in the map, and outputs the sorted keys as a slice.
+func SortMapKeyByValueLen(m map[string][]string) []string {
+	keys := make([]string, 0, len(m))
+	for key := range m {
+		keys = append(keys, key)
+	}
+	// sort keys according to their values in the map m
+	sort.Slice(keys, func(i, j int) bool { return len(m[keys[i]]) > len(m[keys[j]]) })
+	return keys
+}
 
-	fieldName := "generators"
-	if !isGenerator {
-		fieldName = "transformers"
+func GeneratorOrTransformerStats(docs []*doc.KustomizationDocument) {
+	n := len(docs)
+	if n == 0 {
+		return
 	}
 
-	// allReferredDocs includes all the documents referred in the field
-	allReferredDocs := doc.NewUniqueDocuments()
+	fileType := docs[0].FileType
+	fmt.Printf("There are totally %d %s files.\n", n, fileType)
 
-	// docUsingGeneratorCount counts the number of the kustomization files using generators or transformers
-	docCount := 0
+	GitRepositorySummary(docs, fileType)
 
-	// collect all the documents referred in the field
+	// key of kindToUrls: a string in the KustomizationDocument.Kinds field
+	// value of kindToUrls: a slice of string urls defining a given kind.
+	kindToUrls := make(map[string][]string)
+
 	for _, d := range docs {
-		kdoc := doc.KustomizationDocument{
-			Document: *d,
-		}
-		referredDocs, err := kdoc.GetResources(false, !isGenerator, isGenerator)
-		if err != nil {
-			log.Printf("failed to parse the %s field of the Document (%s): %v",
-				fieldName, d.Path(), err)
-		}
-		if len(referredDocs) > 0 {
-			docCount++
-			allReferredDocs.AddDocuments(referredDocs)
+		url := fmt.Sprintf("%s/blob/%s/%s", d.RepositoryURL, d.DefaultBranch, d.FilePath)
+		for _, kind := range d.Kinds {
+			if _, ok := kindToUrls[kind]; !ok {
+				kindToUrls[kind] = []string{url}
+			} else {
+				kindToUrls[kind] = append(kindToUrls[kind], url)
+			}
 		}
 	}
-
-	fileCount, dirCount, fileTypeDocs, dirTypeDocs := DocumentTypeSummary(ctx, allReferredDocs.Documents())
-
-	// check whether any of the files are not in the index
-	nonExistFileCount := ExistInIndex(idx, fileTypeDocs, fieldName + " file ")
-	// check whether any of the dirs are not in the index
-	nonExistDirCount := ExistInIndex(idx, dirTypeDocs, fieldName + " dir ")
-
-	GitRepositorySummary(fileTypeDocs, fieldName + " files")
-	GitRepositorySummary(dirTypeDocs, fieldName + " dirs")
-
-	fmt.Printf("%d kustomization files use %s: %d %s are files and %d %s are dirs.\n",
-		docCount, fieldName, fileCount, fieldName, dirCount, fieldName)
-	fmt.Printf("%d %s files do not exist in the index\n", nonExistFileCount, fieldName)
-	fmt.Printf("%d %s dirs do not exist in the index\n", nonExistDirCount, fieldName)
+	fmt.Printf("There are totally %d kinds of %s\n", len(kindToUrls), fileType)
+	sortedKeys := SortMapKeyByValueLen(kindToUrls)
+	for _, k := range sortedKeys {
+		sort.Strings(kindToUrls[k])
+		fmt.Printf("%s kind %s appears %d times\n", fileType, k, len(kindToUrls[k]))
+		for _, url := range kindToUrls[k] {
+			fmt.Printf("%s\n", url)
+		}
+	}
 }
 
 // GitRepositorySummary counts the distribution of docs:
 // 1) how many git repositories are these docs from?
 // 2) how many docs are from each git repository?
-func GitRepositorySummary(docs []*doc.Document, msgPrefix string) {
+func GitRepositorySummary(docs []*doc.KustomizationDocument, fileType string) {
 	m := make(map[string]int)
 	for _, d := range docs {
 		if _, ok := m[d.RepositoryURL]; ok {
@@ -104,65 +103,16 @@ func GitRepositorySummary(docs []*doc.Document, msgPrefix string) {
 			m[d.RepositoryURL] = 1
 		}
 	}
-	sortedKeys := SortMapKeyByValue(m)
+	sortedKeys := SortMapKeyByValueInt(m)
+	topN := 10
+	i := 0
 	for _, k := range sortedKeys {
-		fmt.Printf("%d %s are from %s\n", m[k], msgPrefix, k)
-	}
-}
-
-// ExistInIndex goes through each Document in docs, and check whether it is in the index or not.
-// It returns the number of documents which does not exist in the index.
-func ExistInIndex(idx *index.KustomizeIndex, docs []*doc.Document, msgPrefix string) int {
-	nonExistCount := 0
-	for _, d := range docs {
-		exists, err := idx.Exists(d.ID())
-		if err != nil {
-			log.Println(err)
+		if i >= topN {
+			break
 		}
-		if !exists {
-			log.Printf("%s (%s) does not exist in the index", msgPrefix, d.Path())
-			nonExistCount++
-		}
+		fmt.Printf("%d %s are from %s\n", m[k], fileType, k)
+		i++
 	}
-	return nonExistCount
-}
-
-// DocumentTypeSummary goes through each doc in docs, and determines whether it is a file or dir.
-func DocumentTypeSummary(ctx context.Context, docs []*doc.Document) (
-	fileCount, dirCount int, files, dirs []*doc.Document) {
-	githubToken := os.Getenv(githubAccessTokenVar)
-	if githubToken == "" {
-		log.Fatalf("Must set the variable '%s' to make github requests.\n",
-			githubAccessTokenVar)
-	}
-	ghCrawler := github.NewCrawler(githubToken, retryCount, &http.Client{}, github.QueryWith())
-
-	for _, d := range docs {
-		oldFilePath := d.FilePath
-		if err := ghCrawler.FetchDocument(ctx, d); err != nil {
-			log.Printf("FetchDocument failed on %s: %v", d.Path(), err)
-			continue
-		}
-
-		if d.FilePath == oldFilePath {
-			fileCount++
-			files = append(files, d)
-		} else {
-			dirCount++
-			dirs = append(dirs, d)
-		}
-	}
-	return fileCount, dirCount, files, dirs
-}
-
-// ExistInSlice checks where target exits in items.
-func ExistInSlice(items []string, target string) bool {
-	for _, item := range items {
-		if item == target {
-			return true
-		}
-	}
-	return false
 }
 
 func main() {
@@ -204,17 +154,26 @@ If you only want to list the 10 most popular features, set the flag to 10.`)
 	// ids tracks the unique IDs of the documents in the index
 	ids := make(map[string]struct{})
 
-	// generatorDocs includes all the docs using generators
-	generatorDocs := make([]*doc.Document, 0)
+	// generatorFiles include all the non-kustomization files whose FileType is generator
+	generatorFiles := make([]*doc.KustomizationDocument, 0)
 
-	// transformersDocs includes all the docs using transformers
-	transformersDocs := make([]*doc.Document, 0)
+	// transformersFiles include all the non-kustomization files whose FileType is transformer
+	transformersFiles := make([]*doc.KustomizationDocument, 0)
+
+	checksums := make(map[string]int)
 
 	// get all the documents in the index
 	query := []byte(`{ "query":{ "match_all":{} } }`)
 	it := idx.IterateQuery(query, 10000, 60*time.Second)
 	for it.Next() {
 		for _, hit := range it.Value().Hits.Hits {
+			sum := fmt.Sprintf("%x", sha256.Sum256([]byte(hit.Document.DocumentData)))
+			if _, ok := checksums[sum]; ok {
+				checksums[sum]++
+			} else {
+				checksums[sum] = 1
+			}
+
 			// check whether there is any duplicate IDs in the index
 			if _, ok := ids[hit.ID]; !ok {
 				ids[hit.ID] = struct{}{}
@@ -229,11 +188,13 @@ If you only want to list the 10 most popular features, set the flag to 10.`)
 			if doc.IsKustomizationFile(hit.Document.FilePath) {
 				kustomizationFilecount++
 				iterateArr(hit.Document.Identifiers, kustomizeIdentifiersMap)
-				if ExistInSlice(hit.Document.Identifiers, "generators") {
-					generatorDocs = append(generatorDocs, hit.Document.Copy())
-				}
-				if ExistInSlice(hit.Document.Identifiers, "transformers") {
-					transformersDocs = append(transformersDocs, hit.Document.Copy())
+
+			} else {
+				switch hit.Document.FileType {
+				case "generator":
+					generatorFiles = append(generatorFiles, hit.Document.Copy())
+				case "transformer":
+					transformersFiles = append(transformersFiles, hit.Document.Copy())
 				}
 			}
 		}
@@ -243,9 +204,9 @@ If you only want to list the 10 most popular features, set the flag to 10.`)
 		log.Fatalf("Error iterating: %v\n", err)
 	}
 
-	sortedKindsMapKeys := SortMapKeyByValue(kindsMap)
-	sortedIdentifiersMapKeys := SortMapKeyByValue(identifiersMap)
-	sortedKustomizeIdentifiersMapKeys := SortMapKeyByValue(kustomizeIdentifiersMap)
+	sortedKindsMapKeys := SortMapKeyByValueInt(kindsMap)
+	sortedIdentifiersMapKeys := SortMapKeyByValueInt(identifiersMap)
+	sortedKustomizeIdentifiersMapKeys := SortMapKeyByValueInt(kustomizeIdentifiersMap)
 
 	fmt.Printf(`The count of unique document IDs in the kustomize index: %d
 There are %d documents in the kustomize index.
@@ -280,6 +241,14 @@ There are %d documents in the kustomize index.
 		}
 	}
 
-	GeneratorOrTransformerStats(ctx, generatorDocs, true, idx)
-	GeneratorOrTransformerStats(ctx, transformersDocs, false, idx)
+	GeneratorOrTransformerStats(generatorFiles)
+	GeneratorOrTransformerStats(transformersFiles)
+
+	fmt.Printf("There are total %d checksums of document contents\n", len(checksums))
+	sortedChecksums := SortMapKeyByValueInt(checksums)
+	sortedChecksums = sortedChecksums[:20]
+	fmt.Printf("The top 20 checksums are:\n")
+	for _, key := range sortedChecksums {
+		fmt.Printf("checksum %s apprears %d\n", key, checksums[key])
+	}
 }

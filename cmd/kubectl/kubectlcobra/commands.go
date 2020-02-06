@@ -5,6 +5,7 @@
 package kubectlcobra
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -79,9 +80,10 @@ func updateHelp(names []string, c *cobra.Command) {
 
 // NewCmdApply creates the `apply` command
 func NewCmdApply(baseName string, f util.Factory, ioStreams genericclioptions.IOStreams) *cobra.Command {
-	o := apply.NewApplyOptions(ioStreams)
-	so := newStatusOptions(f, ioStreams)
-	o.PreProcessorFn = PrependGroupingObject(o)
+	applier := newApplier(f, ioStreams)
+	printer := &BasicPrinter{
+		ioStreams: ioStreams,
+	}
 
 	cmd := &cobra.Command{
 		Use:                   "apply (-f FILENAME | -k DIRECTORY)",
@@ -93,28 +95,28 @@ func NewCmdApply(baseName string, f util.Factory, ioStreams genericclioptions.IO
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) > 0 {
 				// check is kustomize, if so update
-				o.DeleteFlags.FileNameFlags.Kustomize = &args[0]
+				applier.applyOptions.DeleteFlags.FileNameFlags.Kustomize = &args[0]
 			}
 
-			cmdutil.CheckErr(o.Complete(f, cmd))
-			cmdutil.CheckErr(o.Run())
-			infos, _ := o.GetObjects()
-			if so.wait {
-				cmdutil.CheckErr(so.waitForStatus(infos))
-			}
+			cmdutil.CheckErr(applier.Initialize(cmd))
+
+			// Create a context with the provided timout from the cobra parameter.
+			ctx, cancel := context.WithTimeout(context.Background(), applier.statusOptions.timeout)
+			defer cancel()
+			// Run the applier. It will return a channel where we can receive updates
+			// to keep track of progress and any issues.
+			ch := applier.Run(ctx)
+
+			// The printer will print updates from the channel. It will block
+			// until the channel is closed.
+			printer.Print(ch)
 		},
 	}
 
-	// bind flag structs
-	o.DeleteFlags.AddFlags(cmd)
-	o.RecordFlags.AddFlags(cmd)
-	o.PrintFlags.AddFlags(cmd)
-	so.AddFlags(cmd)
-
-	o.Overwrite = true
+	applier.SetFlags(cmd)
 
 	cmdutil.AddValidateFlags(cmd)
-	cmd.Flags().BoolVar(&o.ServerDryRun, "server-dry-run", o.ServerDryRun, "If true, request will be sent to server with dry-run flag, which means the modifications won't be persisted. This is an alpha feature and flag.")
+	cmd.Flags().BoolVar(&applier.applyOptions.ServerDryRun, "server-dry-run", applier.applyOptions.ServerDryRun, "If true, request will be sent to server with dry-run flag, which means the modifications won't be persisted. This is an alpha feature and flag.")
 	cmd.Flags().Bool("dry-run", false, "If true, only print the object that would be sent, without sending it. Warning: --dry-run cannot accurately output the result of merging the local manifest and the server-side data. Use --server-dry-run to get the merged result instead.")
 	cmdutil.AddServerSideApplyFlags(cmd)
 
@@ -142,5 +144,18 @@ func PrependGroupingObject(o *apply.ApplyOptions) func() error {
 			}
 		}
 		return nil
+	}
+}
+
+// Prune deletes previously applied objects that have been
+// omitted in the current apply. The previously applied objects
+// are reached through ConfigMap grouping objects.
+func prune(f util.Factory, o *apply.ApplyOptions) func() error {
+	return func() error {
+		po, err := NewPruneOptions(f, o)
+		if err != nil {
+			return err
+		}
+		return po.Prune()
 	}
 }

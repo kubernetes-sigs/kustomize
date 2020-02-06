@@ -56,7 +56,8 @@ func FormatFileOrDirectory(path string) error {
 }
 
 type FormatFilter struct {
-	Process func(n *yaml.Node) error
+	Process   func(n *yaml.Node) error
+	UseSchema bool
 }
 
 var _ kio.Filter = FormatFilter{}
@@ -78,7 +79,12 @@ func (f FormatFilter) Filter(slice []*yaml.RNode) ([]*yaml.RNode, error) {
 			continue
 		}
 		kind, apiVersion := kindNode.YNode().Value, apiVersionNode.YNode().Value
-		s := openapi.SchemaForResourceType(yaml.TypeMeta{APIVersion: apiVersion, Kind: kind})
+		var s *openapi.ResourceSchema
+		if f.UseSchema {
+			s = openapi.SchemaForResourceType(yaml.TypeMeta{APIVersion: apiVersion, Kind: kind})
+		} else {
+			s = nil
+		}
 		err = (&formatter{apiVersion: apiVersion, kind: kind, process: f.Process}).
 			fmtNode(slice[i].YNode(), "", s)
 		if err != nil {
@@ -151,7 +157,6 @@ func (f *formatter) fmtNode(n *yaml.Node, path string, schema *openapi.ResourceS
 				s = schema.Elements()
 			}
 		}
-
 		// format the node using the schema
 		err := f.fmtNode(n.Content[i], p, s)
 		if err != nil {

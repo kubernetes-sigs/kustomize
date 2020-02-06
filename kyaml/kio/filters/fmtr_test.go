@@ -76,6 +76,73 @@ spec:
 
 	buff := &bytes.Buffer{}
 	err := kio.Pipeline{
+		Inputs: []kio.Reader{&kio.ByteReader{Reader: strings.NewReader(y)}},
+		Filters: []kio.Filter{FormatFilter{
+			UseSchema: true,
+		}},
+		Outputs: []kio.Writer{kio.ByteWriter{Writer: buff}},
+	}.Execute()
+	assert.NoError(t, err)
+	assert.Equal(t, expected, buff.String())
+}
+
+func TestFormat_UnsortedInput_No_Schema(t *testing.T) {
+	y := `
+apiVersion: apps/v1
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.0.0
+        args:
+        - on
+        - 1
+        - hello
+        ports:
+        - name: http
+          targetPort: 80
+          containerPort: 80
+kind: Deployment
+metadata:
+  name: foo
+  labels:
+    foo: on
+    foo2: hello1
+  annotations:
+    bar: 1
+    bar2: hello2
+`
+
+	// keep the style on values that parse as non-string types
+	expected := `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  labels:
+    foo: on
+    foo2: hello1
+  annotations:
+    bar: 1
+    bar2: hello2
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.0.0
+        args:
+        - on
+        - 1
+        - hello
+        ports:
+        - name: http
+          targetPort: 80
+          containerPort: 80
+`
+
+	buff := &bytes.Buffer{}
+	err := kio.Pipeline{
 		Inputs:  []kio.Reader{&kio.ByteReader{Reader: strings.NewReader(y)}},
 		Filters: []kio.Filter{FormatFilter{}},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: buff}},
@@ -120,16 +187,18 @@ spec:
 	buff := &bytes.Buffer{}
 	err := kio.Pipeline{
 		Inputs: []kio.Reader{&kio.ByteReader{Reader: strings.NewReader(y)}},
-		Filters: []kio.Filter{FormatFilter{Process: func(n *yaml.Node) error {
-			if yaml.IsYaml1_1NonString(n) {
-				// don't change these styles, they are important for backwards compatibility
-				// e.g. "on" must remain quoted, on must remain unquoted
+		Filters: []kio.Filter{FormatFilter{
+			UseSchema: true,
+			Process: func(n *yaml.Node) error {
+				if yaml.IsYaml1_1NonString(n) {
+					// don't change these styles, they are important for backwards compatibility
+					// e.g. "on" must remain quoted, on must remain unquoted
+					return nil
+				}
+				// style does not have semantic meaning
+				n.Style = 0
 				return nil
-			}
-			// style does not have semantic meaning
-			n.Style = 0
-			return nil
-		}}},
+			}}},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: buff}},
 	}.Execute()
 	assert.NoError(t, err)
@@ -186,16 +255,18 @@ spec:
 	buff = &bytes.Buffer{}
 	err = kio.Pipeline{
 		Inputs: []kio.Reader{&kio.ByteReader{Reader: strings.NewReader(y)}},
-		Filters: []kio.Filter{FormatFilter{Process: func(n *yaml.Node) error {
-			if yaml.IsYaml1_1NonString(n) {
-				// don't change these styles, they are important for backwards compatibility
-				// e.g. "on" must remain quoted, on must remain unquoted
+		Filters: []kio.Filter{FormatFilter{
+			UseSchema: true,
+			Process: func(n *yaml.Node) error {
+				if yaml.IsYaml1_1NonString(n) {
+					// don't change these styles, they are important for backwards compatibility
+					// e.g. "on" must remain quoted, on must remain unquoted
+					return nil
+				}
+				// style does not have semantic meaning
+				n.Style = yaml.SingleQuotedStyle
 				return nil
-			}
-			// style does not have semantic meaning
-			n.Style = yaml.SingleQuotedStyle
-			return nil
-		}}},
+			}}},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: buff}},
 	}.Execute()
 	assert.NoError(t, err)

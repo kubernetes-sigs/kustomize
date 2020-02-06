@@ -25,6 +25,8 @@ func GetMerge3Runner(name string) *Merge3Runner {
 		"Path to updated package")
 	c.Flags().StringVar(&r.toDir, "to", "",
 		"Path to destination package")
+	c.Flags().BoolVar(&r.path, "path-merge-key", false,
+		"Use the path as part of the merge key when merging resources")
 
 	r.Command = c
 	return r
@@ -40,6 +42,7 @@ type Merge3Runner struct {
 	ancestor string
 	fromDir  string
 	toDir    string
+	path     bool
 }
 
 func (r *Merge3Runner) runE(c *cobra.Command, args []string) error {
@@ -47,6 +50,7 @@ func (r *Merge3Runner) runE(c *cobra.Command, args []string) error {
 		OriginalPath: r.ancestor,
 		UpdatedPath:  r.fromDir,
 		DestPath:     r.toDir,
+		MergeOnPath:  r.path,
 	}.Merge()
 	if err != nil {
 		return err

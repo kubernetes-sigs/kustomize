@@ -28,6 +28,7 @@ func TestFromRelativePath(t *testing.T) {
 						RepositoryURL: "example.com/repo",
 						FilePath:      "path/to/other/file/resource.yaml",
 						DefaultBranch: "master",
+						User:          "example.com",
 					},
 				},
 				{
@@ -36,6 +37,7 @@ func TestFromRelativePath(t *testing.T) {
 						RepositoryURL: "example.com/repo",
 						FilePath:      "path/to/other/file/patch.yaml",
 						DefaultBranch: "master",
+						User:          "example.com",
 					},
 				},
 				{
@@ -44,6 +46,7 @@ func TestFromRelativePath(t *testing.T) {
 						RepositoryURL: "example.com/repo",
 						FilePath:      "path/to/file/service.yaml",
 						DefaultBranch: "master",
+						User:          "example.com",
 					},
 				},
 			},
@@ -106,6 +109,42 @@ func TestDocument_RepositoryFullName(t *testing.T) {
 			t.Errorf("RepositoryFullName expected %s, got %s",
 				tc.expectedRepositoryFullName,
 				returnedRepositoryFullName)
+		}
+	}
+}
+
+func TestDocument_UserName(t *testing.T) {
+	testCases := []struct {
+		repositoryURL    string
+		expectedUserName string
+	}{
+		{
+			repositoryURL:    "https://github.com/user/repo",
+			expectedUserName: "user",
+		},
+		{
+			repositoryURL:    "https://github.com//user/repo////",
+			expectedUserName: "user",
+		},
+		{
+			repositoryURL:    "repo/",
+			expectedUserName: "repo",
+		},
+		{
+			repositoryURL:    "",
+			expectedUserName: "",
+		},
+		{
+			repositoryURL:    "git@github.com:user/repo",
+			expectedUserName: "user",
+		},
+	}
+
+	for _, tc := range testCases {
+		returnedUserName := UserName(tc.repositoryURL)
+		if returnedUserName != tc.expectedUserName {
+			t.Errorf("UserName expected %s, got %s",
+				tc.expectedUserName, returnedUserName)
 		}
 	}
 }

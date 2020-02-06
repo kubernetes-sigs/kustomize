@@ -80,6 +80,18 @@ func TestInventoryEqual(t *testing.T) {
 		inventory2 *Inventory
 		isEqual    bool
 	}{
+		// "Other" inventory is nil, then not equal.
+		{
+			inventory1: &Inventory{
+				Name: "test-inv",
+				GroupKind: schema.GroupKind{
+					Group: "apps",
+					Kind:  "Deployment",
+				},
+			},
+			inventory2: nil,
+			isEqual:    false,
+		},
 		// Two equal inventories without a namespace
 		{
 			inventory1: &Inventory{
@@ -484,6 +496,63 @@ func TestInventorySetSubtract(t *testing.T) {
 		actual, _ := invInitialItems.Subtract(invSubtractItems)
 		if expected.Size() != actual.Size() {
 			t.Errorf("Expected subtracted inventory set size (%d), got (%d)\n", expected.Size(), actual.Size())
+		}
+	}
+}
+
+func TestInventorySetEquals(t *testing.T) {
+	tests := []struct {
+		set1    []*Inventory
+		set2    []*Inventory
+		isEqual bool
+	}{
+		{
+			set1:    []*Inventory{},
+			set2:    []*Inventory{&inventory1},
+			isEqual: false,
+		},
+		{
+			set1:    []*Inventory{&inventory1},
+			set2:    []*Inventory{},
+			isEqual: false,
+		},
+		{
+			set1:    []*Inventory{&inventory1, &inventory2},
+			set2:    []*Inventory{&inventory1},
+			isEqual: false,
+		},
+		{
+			set1:    []*Inventory{&inventory1, &inventory2},
+			set2:    []*Inventory{&inventory3, &inventory4},
+			isEqual: false,
+		},
+		// Empty sets are equal.
+		{
+			set1:    []*Inventory{},
+			set2:    []*Inventory{},
+			isEqual: true,
+		},
+		{
+			set1:    []*Inventory{&inventory1},
+			set2:    []*Inventory{&inventory1},
+			isEqual: true,
+		},
+		// Ordering of the inventory items does not matter for equality.
+		{
+			set1:    []*Inventory{&inventory1, &inventory2},
+			set2:    []*Inventory{&inventory2, &inventory1},
+			isEqual: true,
+		},
+	}
+
+	for _, test := range tests {
+		invSet1 := NewInventorySet(test.set1)
+		invSet2 := NewInventorySet(test.set2)
+		if !invSet1.Equals(invSet2) && test.isEqual {
+			t.Errorf("Expected equal inventory sets; got unequal (%s)/(%s)\n", invSet1, invSet2)
+		}
+		if invSet1.Equals(invSet2) && !test.isEqual {
+			t.Errorf("Expected inequal inventory sets; got equal (%s)/(%s)\n", invSet1, invSet2)
 		}
 	}
 }

@@ -270,7 +270,7 @@ func (it *KustomizeIterator) Value() KustomizeResult {
 	return it.scrollImpl
 }
 
-// Check if any errors have occured.
+// Check if any errors have occurred.
 func (it *KustomizeIterator) Err() error {
 	return it.err
 }

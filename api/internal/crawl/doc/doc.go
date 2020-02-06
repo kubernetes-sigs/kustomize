@@ -46,6 +46,15 @@ type KustomizationDocument struct {
 
 type set map[string]struct{}
 
+func (doc *KustomizationDocument) Copy() *KustomizationDocument {
+	return &KustomizationDocument{
+		Document:    *(doc.Document.Copy()),
+		Kinds:       doc.Kinds,
+		Identifiers: doc.Identifiers,
+		Values:      doc.Values,
+	}
+}
+
 func (doc *KustomizationDocument) String() string {
 	return fmt.Sprintf("%s %s %s %v %v %v len(identifiers):%v  len(values):%v",
 		doc.RepositoryURL, doc.FilePath, doc.DefaultBranch, doc.CreationTime,
@@ -87,17 +96,17 @@ func (doc *KustomizationDocument) GetResources(
 	res := make([]*Document, 0)
 
 	if includeResources {
-		resourceDocs := doc.CollectDocuments(k.Resources)
+		resourceDocs := doc.CollectDocuments(k.Resources, "resource")
 		res = append(res, resourceDocs...)
 	}
 
 	if includeGenerators {
-		generatorDocs := doc.CollectDocuments(k.Generators)
+		generatorDocs := doc.CollectDocuments(k.Generators, "generator")
 		res = append(res, generatorDocs...)
 	}
 
 	if includeTransformers {
-		transformerDocs := doc.CollectDocuments(k.Transformers)
+		transformerDocs := doc.CollectDocuments(k.Transformers, "transformer")
 		res = append(res, transformerDocs...)
 	}
 
@@ -106,7 +115,8 @@ func (doc *KustomizationDocument) GetResources(
 
 // CollectDocuments construct a Document for each path in paths, and return
 // a slice of Document pointers.
-func (doc *KustomizationDocument) CollectDocuments(paths []string) []*Document {
+func (doc *KustomizationDocument) CollectDocuments(
+	paths []string, fileType string) []*Document {
 	docs := make([]*Document, 0, len(paths))
 	for _, r := range paths {
 		if strings.TrimSpace(r) == "" {
@@ -117,6 +127,7 @@ func (doc *KustomizationDocument) CollectDocuments(paths []string) []*Document {
 			log.Printf("CollectDocuments error: %v\n", err)
 			continue
 		}
+		next.FileType = fileType
 		docs = append(docs, &next)
 	}
 	return docs
