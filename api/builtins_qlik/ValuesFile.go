@@ -46,7 +46,7 @@ func (p *ValuesFilePlugin) mergeFiles(orig map[string]interface{}, tmpl map[stri
 func (p *ValuesFilePlugin) Transform(m resmap.ResMap) error {
 	var env []string
 	var vaultAddressPath, vaultTokenPath string
-	var vaultAddress, vaultToken, ejsonKey string
+	var vaultAddress, vaultToken string
 	if p.DataSource["vault"] != nil {
 		vaultAddressPath = fmt.Sprintf("%v", p.DataSource["vault"].(map[string]interface{})["addressPath"])
 		vaultTokenPath = fmt.Sprintf("%v", p.DataSource["vault"].(map[string]interface{})["tokenPath"])
@@ -76,19 +76,24 @@ func (p *ValuesFilePlugin) Transform(m resmap.ResMap) error {
 		}
 	}
 
-	var ejsonPrivateKeyPath string
+	var ejsonKey string
 	if p.DataSource["ejson"] != nil {
-		ejsonPrivateKeyPath = fmt.Sprintf("%v", p.DataSource["ejson"].(map[string]interface{})["privateKeyPath"])
-		if _, err := os.Stat(ejsonPrivateKeyPath); err == nil {
-			readBytes, err := ioutil.ReadFile(ejsonPrivateKeyPath)
-			if err != nil {
-				p.logger.Printf("error reading ejson private key file: %v, error: %v\n", ejsonPrivateKeyPath, err)
+		if _, isSet := p.DataSource["ejson"].(map[string]interface{})["privateKeyPath"]; isSet {
+			if ejsonPrivateKeyPath, ok := p.DataSource["ejson"].(map[string]interface{})["privateKeyPath"].(string); !ok {
+				err := errors.New("privateKeyPath must be a string")
+				p.logger.Printf("error: %v\n", err)
 				return err
+			} else if _, err := os.Stat(ejsonPrivateKeyPath); err != nil {
+				p.logger.Printf("error executing stat on ejson private key file: %v, error: %v\n", ejsonPrivateKeyPath, err)
+			} else {
+				readBytes, err := ioutil.ReadFile(ejsonPrivateKeyPath)
+				if err != nil {
+					p.logger.Printf("error reading ejson private key file: %v, error: %v\n", ejsonPrivateKeyPath, err)
+					return err
+				}
+				ejsonKey = fmt.Sprintf("EJSON_KEY=%s", string(readBytes))
+				env = append(env, ejsonKey)
 			}
-			ejsonKey = fmt.Sprintf("EJSON_KEY=%s", string(readBytes))
-			env = append(env, ejsonKey)
-		} else {
-			p.logger.Printf("error executing stat on ejson private key file: %v, error: %v\n", ejsonPrivateKeyPath, err)
 		}
 	}
 	if os.Getenv("EJSON_KEY") != "" && ejsonKey == "" {
@@ -101,9 +106,6 @@ func (p *ValuesFilePlugin) Transform(m resmap.ResMap) error {
 		dataSource = fmt.Sprintf("%v", p.DataSource["ejson"].(map[string]interface{})["filePath"])
 	} else if vaultAddress != "" && vaultToken != "" {
 		dataSource = fmt.Sprintf("%v", p.DataSource["vault"].(map[string]interface{})["secretPath"])
-	} else {
-		p.logger.Print("returning error exit 1\n")
-		return errors.New("exit 1")
 	}
 
 	filePath := filepath.Join(p.Root, p.ValuesFile)
