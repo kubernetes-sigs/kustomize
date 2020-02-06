@@ -164,7 +164,7 @@ k8s.io/gengo v0.0.0-20190128074634-0689ccc1d7d6/go.mod h1:ezvh/TsK7cY6rbqRK0oQQ8
 k8s.io/klog v0.0.0-20181102134211-b9b56d5dfc92/go.mod h1:Gq+BEi5rUBO/HRz0bTSXDUcqjScdoY3a9IHpCEIOOfk=
 k8s.io/klog v1.0.0/go.mod h1:4Bi6QPql/J/LkTDqv7R/cd3hPo4k2DG6Ptcz060Ez5I=
 k8s.io/kube-openapi v0.0.0-20191107075043-30be4d16710a/go.mod h1:1TqjTSzOxsLGIKfj0lK8EeCP7K1iUG65v09OM0/WG5E=
-sigs.k8s.io/kustomize/kyaml v0.0.9 h1:SHH80zEkbHt0smvKjYrpOm2FjoH+XOr1Nxtc3AQbkr8=
-sigs.k8s.io/kustomize/kyaml v0.0.9/go.mod h1:tDOfJjL6slQVBLHJ76XfXAFgAOEdfm04AW2HehYOp8k=
+sigs.k8s.io/kustomize/kyaml v0.0.11 h1:2ZzpHdFgBt056/Aqo3G5/ZujYN5Ihc9TUWICI+0AbJo=
+sigs.k8s.io/kustomize/kyaml v0.0.11/go.mod h1:tDOfJjL6slQVBLHJ76XfXAFgAOEdfm04AW2HehYOp8k=
 sigs.k8s.io/structured-merge-diff v0.0.0-20190525122527-15d366b2352e/go.mod h1:wWxsB5ozmmv/SG7nM11ayaAW51xMvak/t1r0CSlcokI=
 sigs.k8s.io/yaml v1.1.0/go.mod h1:UJmg0vDUVViEyp3mgSv9WPwZCDxu4rQW1olrI1uml+o=
