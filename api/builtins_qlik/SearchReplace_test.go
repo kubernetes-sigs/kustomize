@@ -28,10 +28,10 @@ func TestSearchReplacePlugin(t *testing.T) {
 apiVersion: qlik.com/v1
 kind: SearchReplace
 metadata:
-  name: notImportantHere
+ name: notImportantHere
 target:
-  kind: Foo
-  name: some-foo
+ kind: Foo
+ name: some-foo
 path: fooSpec/fooTemplate/fooContainers/env/value
 search: far
 replace: not far
@@ -40,16 +40,16 @@ replace: not far
 apiVersion: qlik.com/v1
 kind: Foo
 metadata:
-  name: some-foo
+ name: some-foo
 fooSpec:
-  fooTemplate:
-    fooContainers:
-    - name: have-env
-      env:
-      - name: FOO
-        value: far
-      - name: BOO
-        value: farther than it looks
+ fooTemplate:
+   fooContainers:
+   - name: have-env
+     env:
+     - name: FOO
+       value: far
+     - name: BOO
+       value: farther than it looks
 `,
 			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
 				res := resMap.GetByIndex(0)
@@ -82,10 +82,10 @@ fooSpec:
 apiVersion: qlik.com/v1
 kind: SearchReplace
 metadata:
-  name: notImportantHere
+ name: notImportantHere
 target:
-  kind: Foo
-  name: some-foo
+ kind: Foo
+ name: some-foo
 path: fooSpec/fooTemplate/fooContainers/env/value
 search: ^far$
 replace: not far
@@ -94,16 +94,16 @@ replace: not far
 apiVersion: qlik.com/v1
 kind: Foo
 metadata:
-  name: some-foo
+ name: some-foo
 fooSpec:
-  fooTemplate:
-    fooContainers:
-    - name: have-env
-      env:
-      - name: FOO
-        value: far
-      - name: BOO
-        value: farther than it looks
+ fooTemplate:
+   fooContainers:
+   - name: have-env
+     env:
+     - name: FOO
+       value: far
+     - name: BOO
+       value: farther than it looks
 `,
 			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
 				res := resMap.GetByIndex(0)
@@ -136,49 +136,49 @@ fooSpec:
 apiVersion: qlik.com/v1
 kind: SearchReplace
 metadata:
-  name: notImportantHere
+ name: notImportantHere
 target:
-  kind: Foo
-  name: some-foo
+ kind: Foo
+ name: some-foo
 path: fooSpec/fooTemplate/fooContainers/env/value
 search: ^far$
 replaceWithObjRef:
-  objref:
-    apiVersion: qlik.com/v1
-    kind: Bar
-  fieldref:
-    fieldpath: metadata.labels.myproperty
+ objref:
+   apiVersion: qlik.com/v1
+   kind: Bar
+ fieldref:
+   fieldpath: metadata.labels.myproperty
 `,
 			pluginInputResources: `
 apiVersion: qlik.com/v1
 kind: Foo
 metadata:
-  name: some-foo
+ name: some-foo
 fooSpec:
-  fooTemplate:
-    fooContainers:
-    - name: have-env
-      env:
-      - name: FOO
-        value: far
-      - name: BOO
-        value: farther than it looks
---- 
+ fooTemplate:
+   fooContainers:
+   - name: have-env
+     env:
+     - name: FOO
+       value: far
+     - name: BOO
+       value: farther than it looks
+---
 apiVersion: qlik.com/v1
 kind: Bar
 metadata:
-  name: some-bar
-  labels:
-    myproperty: not far
+ name: some-bar
+ labels:
+   myproperty: not far
 fooSpec:
-  test: test
---- 
+ test: test
+---
 apiVersion: qlik.com/v1
 kind: Foo
 metadata:
-  name: some-Foo
-  labels:
-    myproperty: not good
+ name: some-Foo
+ labels:
+   myproperty: not good
 `,
 			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
 				res := resMap.GetByIndex(0)
@@ -211,58 +211,58 @@ metadata:
 apiVersion: qlik.com/v1
 kind: SearchReplace
 metadata:
-  name: notImportantHere
+ name: notImportantHere
 target:
-  kind: Foo
-  name: some-foo
+ kind: Foo
+ name: some-foo
 path: fooSpec/fooTemplate/fooContainers/env/value
 search: ^far$
 replaceWithObjRef:
-  objref:
-    apiVersion: qlik.com/
-    kind: Bar
-  fieldref:
-    fieldpath: metadata.labels.myproperty
+ objref:
+   apiVersion: qlik.com/
+   kind: Bar
+ fieldref:
+   fieldpath: metadata.labels.myproperty
 `,
 			pluginInputResources: `
 apiVersion: qlik.com/v1
 kind: Foo
 metadata:
-  name: some-foo
+ name: some-foo
 fooSpec:
-  fooTemplate:
-    fooContainers:
-    - name: have-env
-      env:
-      - name: FOO
-        value: far
-      - name: BOO
-        value: farther than it looks
---- 
-apiVersion: qlik.com/v1
-kind: Bar
-metadata:
-  name: some-bar-1
-  labels:
-    myproperty: not far
-fooSpec:
-  test: test
+ fooTemplate:
+   fooContainers:
+   - name: have-env
+     env:
+     - name: FOO
+       value: far
+     - name: BOO
+       value: farther than it looks
 ---
 apiVersion: qlik.com/v1
 kind: Bar
 metadata:
-  name: some-bar-2
-  labels:
-    myproperty: too far
+ name: some-bar-1
+ labels:
+   myproperty: not far
 fooSpec:
-  test: test
---- 
+ test: test
+---
+apiVersion: qlik.com/v1
+kind: Bar
+metadata:
+ name: some-bar-2
+ labels:
+   myproperty: too far
+fooSpec:
+ test: test
+---
 apiVersion: qlik.com/v1
 kind: Foo
 metadata:
-  name: some-Foo
-  labels:
-    myproperty: not good
+ name: some-Foo
+ labels:
+   myproperty: not good
 `,
 			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
 				res := resMap.GetByIndex(0)
@@ -295,59 +295,59 @@ metadata:
 apiVersion: qlik.com/v1
 kind: SearchReplace
 metadata:
-  name: notImportantHere
+ name: notImportantHere
 target:
-  kind: Foo
-  name: some-foo
+ kind: Foo
+ name: some-foo
 path: fooSpec/fooTemplate/fooContainers/env/value
 search: ^far$
 replaceWithObjRef:
-  objref:
-    apiVersion: qlik.com/
-    kind: Bar
-    name: some-bar
-  fieldref:
-    fieldpath: metadata.labels.myproperty
+ objref:
+   apiVersion: qlik.com/
+   kind: Bar
+   name: some-bar
+ fieldref:
+   fieldpath: metadata.labels.myproperty
 `,
 			pluginInputResources: `
 apiVersion: qlik.com/v1
 kind: Foo
 metadata:
-  name: some-foo
+ name: some-foo
 fooSpec:
-  fooTemplate:
-    fooContainers:
-    - name: have-env
-      env:
-      - name: FOO
-        value: far
-      - name: BOO
-        value: farther than it looks
---- 
+ fooTemplate:
+   fooContainers:
+   - name: have-env
+     env:
+     - name: FOO
+       value: far
+     - name: BOO
+       value: farther than it looks
+---
 apiVersion: qlik.com/v1
 kind: Bar
 metadata:
-  name: some-chocolate-bar
-  labels:
-    myproperty: not far enough
+ name: some-chocolate-bar
+ labels:
+   myproperty: not far enough
 fooSpec:
-  test: test
---- 
+ test: test
+---
 apiVersion: qlik.com/v1
 kind: Bar
 metadata:
-  name: some-bar
-  labels:
-    myproperty: not far
+ name: some-bar
+ labels:
+   myproperty: not far
 fooSpec:
-  test: test
---- 
+ test: test
+---
 apiVersion: qlik.com/v1
 kind: Foo
 metadata:
-  name: some-Foo
-  labels:
-    myproperty: not good
+ name: some-Foo
+ labels:
+   myproperty: not good
 `,
 			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
 				res := resMap.GetByIndex(0)
@@ -380,10 +380,10 @@ metadata:
 apiVersion: qlik.com/v1
 kind: SearchReplace
 metadata:
-  name: notImportantHere
+ name: notImportantHere
 target:
-  kind: Foo
-  name: some-foo
+ kind: Foo
+ name: some-foo
 path: fooSpec/fooTemplate/fooContainers/env/value
 search: ^far$
 replace: ""
@@ -392,16 +392,16 @@ replace: ""
 apiVersion: qlik.com/v1
 kind: Foo
 metadata:
-  name: some-foo
+ name: some-foo
 fooSpec:
-  fooTemplate:
-    fooContainers:
-    - name: have-env
-      env:
-      - name: FOO
-        value: far
-      - name: BOO
-        value: farther than it looks
+ fooTemplate:
+   fooContainers:
+   - name: have-env
+     env:
+     - name: FOO
+       value: far
+     - name: BOO
+       value: farther than it looks
 `,
 			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
 				res := resMap.GetByIndex(0)
@@ -425,6 +425,76 @@ fooSpec:
 				}
 				if "farther than it looks" != booEnvVar["value"].(string) {
 					t.Fatalf("unexpected: %v\n", booEnvVar["value"].(string))
+				}
+			},
+		},
+		{
+			name: "replace label keys",
+			pluginConfig: `
+apiVersion: qlik.com/v1
+kind: SearchReplace
+metadata:
+  name: notImportantHere
+target:
+  kind: Deployment
+path: spec/template/metadata/labels
+search: \b[^"]*-messaging-nats-client\b
+replace: foo-messaging-nats-client
+`,
+			pluginInputResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-1
+spec:
+  template:
+    metadata:
+      labels:
+        app: some-app
+        something-messaging-nats-client: "true"
+        release: some-release
+    spec:
+      containers:
+      - name: name-1
+        image: image-1:latest
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-2
+spec:
+  template:
+    metadata:
+      labels:
+        app: some-app
+        something-messaging-nats-client: "true"
+        release: some-release
+    spec:
+      containers:
+      - name: name-2
+        image: image-2:latest
+`,
+			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
+				for _, res := range resMap.Resources() {
+					labels, err := res.GetFieldValue("spec.template.metadata.labels")
+					if err != nil {
+						t.Fatalf("unexpected error: %v", err)
+					}
+
+					appLabel := labels.(map[string]interface{})["app"].(string)
+					if "some-app" != appLabel {
+						t.Fatalf("unexpected: %v\n", appLabel)
+					}
+
+					natsClientLabe := labels.(map[string]interface{})["foo-messaging-nats-client"].(string)
+					if "true" != natsClientLabe {
+						t.Fatalf("unexpected: %v\n", natsClientLabe)
+					}
+
+					releaseLabel := labels.(map[string]interface{})["release"].(string)
+					if "some-release" != releaseLabel {
+						t.Fatalf("unexpected: %v\n", releaseLabel)
+					}
 				}
 			},
 		},

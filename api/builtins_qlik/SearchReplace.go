@@ -1,6 +1,7 @@
 package builtins_qlik
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"regexp"
@@ -92,10 +93,28 @@ func (p *SearchReplacePlugin) matchesObjRef(res *resource.Resource) bool {
 }
 
 func (p *SearchReplacePlugin) searchAndReplace(in interface{}) (interface{}, error) {
-	if target, ok := in.(string); !ok {
-		return in, nil
-	} else {
+	if target, ok := in.(string); ok {
 		return p.re.ReplaceAllString(target, p.Replace), nil
+	} else if target, ok := in.(map[string]interface{}); ok {
+		return p.marshallToJsonAndReplace(target)
+	} else if target, ok := in.([]interface{}); ok {
+		return p.marshallToJsonAndReplace(target)
+	}
+	return in, nil
+}
+
+func (p *SearchReplacePlugin) marshallToJsonAndReplace(in interface{}) (interface{}, error) {
+	if marshalledTarget, err := json.Marshal(in); err != nil {
+		p.logger.Printf("error marshalling interface to JSON, error: %v\n", err)
+		return nil, err
+	} else {
+		replaced := p.re.ReplaceAllString(string(marshalledTarget), p.Replace)
+		if err := json.Unmarshal([]byte(replaced), &in); err != nil {
+			p.logger.Printf("error unmarshalling JSON string after replacements back to interface, error: %v\n", err)
+			return nil, err
+		} else {
+			return in, err
+		}
 	}
 }
 
