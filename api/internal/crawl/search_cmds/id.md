@@ -1,6 +1,6 @@
 Find the document with the given `_id`:
 ```
-curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
+curl -s -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "query": {
     "terms": {
