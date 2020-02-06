@@ -9,6 +9,8 @@ jobs:
       - run:
           name: "Verify build"
           command: |
+            make qlik-test-api-plugins
+
             cd kustomize
             go build -o /tmp/kustomize main.go
   build_release:
@@ -20,6 +22,7 @@ jobs:
       - run:
           name: "Build for all platforms"
           command: |
+            make qlik-test-api-plugins
             QLIK_VERSION=${CIRCLE_TAG} make qlik-build-all
       - run:
           name: "Publish Release on GitHub"

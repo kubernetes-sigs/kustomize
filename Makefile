@@ -337,3 +337,6 @@ nuke: clean
 QLIK_VERSION ?= qlik-dev
 qlik-build-all:
 	env QLIK_VERSION=$(QLIK_VERSION) ./qlik-build-all.sh
+
+qlik-test-api-plugins:
+	cd api; go test -v -count=1 sigs.k8s.io/kustomize/api/builtins_qlik
