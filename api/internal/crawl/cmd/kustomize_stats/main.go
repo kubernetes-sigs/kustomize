@@ -14,11 +14,6 @@ import (
 	"sigs.k8s.io/kustomize/api/internal/crawl/index"
 )
 
-const (
-	githubAccessTokenVar = "GITHUB_ACCESS_TOKEN"
-	retryCount           = 3
-)
-
 // iterateArr adds each item in arr into countMap.
 func iterateArr(arr []string, countMap map[string]int) {
 	for _, item := range arr {
