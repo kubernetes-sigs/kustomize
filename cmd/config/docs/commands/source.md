@@ -6,10 +6,11 @@
 
 [Alpha] Implement a Source by reading a local directory.
 
-    kustomize config source DIR
+    kustomize config source DIR...
 
   DIR:
-    Path to local directory.
+    One or more paths to local directories.  Contents from directories will be concatenated.
+    If no directories are provided, source will read from stdin as if it were a single file.
 
 `source` emits configuration to act as input to a function
 

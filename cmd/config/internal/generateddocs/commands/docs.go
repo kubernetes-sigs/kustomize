@@ -350,10 +350,10 @@ var SinkShort = `[Alpha] Implement a Sink by writing input to a local directory.
 var SinkLong = `
 [Alpha] Implement a Sink by writing input to a local directory.
 
-    kustomize config sink DIR
+    kustomize config sink [DIR]
 
   DIR:
-    Path to local directory.
+    Path to local directory.  If unspecified, sink will write to stdout as if it were a single file.
 
 ` + "`" + `sink` + "`" + ` writes its input to a directory
 `
@@ -364,10 +364,11 @@ var SourceShort = `[Alpha] Implement a Source by reading a local directory.`
 var SourceLong = `
 [Alpha] Implement a Source by reading a local directory.
 
-    kustomize config source DIR
+    kustomize config source DIR...
 
   DIR:
-    Path to local directory.
+    One or more paths to local directories.  Contents from directories will be concatenated.
+    If no directories are provided, source will read from stdin as if it were a single file.
 
 ` + "`" + `source` + "`" + ` emits configuration to act as input to a function
 `
