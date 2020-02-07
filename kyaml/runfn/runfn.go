@@ -44,6 +44,12 @@ type RunFns struct {
 	// Input can be set to read the Resources from Input rather than from a directory
 	Input io.Reader
 
+	// Network enables network access for functions that declare it
+	Network bool
+
+	// NetworkName is the name of the docker network to use for the container
+	NetworkName string
+
 	// Output can be set to write the result to Output rather than back to the directory
 	Output io.Writer
 
@@ -52,7 +58,7 @@ type RunFns struct {
 	NoFunctionsFromInput *bool
 
 	// for testing purposes only
-	containerFilterProvider func(string, string, *yaml.RNode) kio.Filter
+	containerFilterProvider func(string, string, string, *yaml.RNode) kio.Filter
 }
 
 // Execute runs the command
@@ -119,7 +125,10 @@ func (r RunFns) getFilters(nodes []*yaml.RNode) ([]kio.Filter, error) {
 	fltrs = append(fltrs, f...)
 
 	// explicit filters from a list of directories
-	f = r.getFunctionsFromFunctions()
+	f, err = r.getFunctionsFromFunctions()
+	if err != nil {
+		return nil, err
+	}
 	fltrs = append(fltrs, f...)
 
 	return fltrs, nil
@@ -160,8 +169,22 @@ func (r RunFns) getFunctionsFromInput(nodes []*yaml.RNode) ([]kio.Filter, error)
 	sortFns(buff)
 	for i := range buff.Nodes {
 		api := buff.Nodes[i]
+		network := ""
 		img, path := filters.GetContainerName(api)
-		fltrs = append(fltrs, r.containerFilterProvider(img, path, api))
+
+		required, err := filters.GetContainerNetworkRequired(api)
+		if err != nil {
+			return nil, err
+		}
+		if required {
+			if !r.Network {
+				// TODO(eddizane): Provide error info about which function needs the network
+				return fltrs, errors.Errorf("network required but not enabled with --network")
+			}
+			network = r.NetworkName
+		}
+
+		fltrs = append(fltrs, r.containerFilterProvider(img, path, network, api))
 	}
 	return fltrs, nil
 }
@@ -182,8 +205,22 @@ func (r RunFns) getFunctionsFromFunctionPaths() ([]kio.Filter, error) {
 	}
 	for i := range buff.Nodes {
 		api := buff.Nodes[i]
+		network := ""
 		img, path := filters.GetContainerName(api)
-		c := r.containerFilterProvider(img, path, api)
+
+		required, err := filters.GetContainerNetworkRequired(api)
+		if err != nil {
+			return nil, err
+		}
+		if required {
+			if !r.Network {
+				// TODO(eddiezane): Provide error info about which function needs the network
+				return fltrs, errors.Errorf("network required but not enabled with --network")
+			}
+			network = r.NetworkName
+		}
+
+		c := r.containerFilterProvider(img, path, network, api)
 		cf, ok := c.(*filters.ContainerFilter)
 		if ok {
 			// functions provided by FunctionPaths are globally scoped
@@ -196,12 +233,26 @@ func (r RunFns) getFunctionsFromFunctionPaths() ([]kio.Filter, error) {
 
 // getFunctionsFromFunctions returns the set of explicitly provided functions as
 // Filters
-func (r RunFns) getFunctionsFromFunctions() []kio.Filter {
+func (r RunFns) getFunctionsFromFunctions() ([]kio.Filter, error) {
 	var fltrs []kio.Filter
 	for i := range r.Functions {
 		api := r.Functions[i]
+		network := ""
 		img, path := filters.GetContainerName(api)
-		c := r.containerFilterProvider(img, path, api)
+
+		required, err := filters.GetContainerNetworkRequired(api)
+		if err != nil {
+			return nil, err
+		}
+		if required {
+			if !r.Network {
+				// TODO(eddizane): Provide error info about which function needs the network
+				return fltrs, errors.Errorf("network required but not enabled with --network")
+			}
+			network = r.NetworkName
+		}
+
+		c := r.containerFilterProvider(img, path, network, api)
 		cf, ok := c.(*filters.ContainerFilter)
 		if ok {
 			// functions provided by Functions are globally scoped
@@ -209,7 +260,7 @@ func (r RunFns) getFunctionsFromFunctions() []kio.Filter {
 		}
 		fltrs = append(fltrs, c)
 	}
-	return fltrs
+	return fltrs, nil
 }
 
 // sortFns sorts functions so that functions with the longest paths come first
@@ -278,10 +329,11 @@ func (r *RunFns) init() {
 
 	// if containerFilterProvider hasn't been set, use the default
 	if r.containerFilterProvider == nil {
-		r.containerFilterProvider = func(image, path string, api *yaml.RNode) kio.Filter {
+		r.containerFilterProvider = func(image, path, network string, api *yaml.RNode) kio.Filter {
 			cf := &filters.ContainerFilter{
 				Image:         image,
 				Config:        api,
+				Network:       network,
 				StorageMounts: r.StorageMounts,
 				GlobalScope:   r.GlobalScope,
 			}

@@ -50,7 +50,7 @@ kind:
 	if !assert.NoError(t, err) {
 		return
 	}
-	filter := instance.containerFilterProvider("example.com:version", "", api)
+	filter := instance.containerFilterProvider("example.com:version", "", "", api)
 	assert.Equal(t, &filters.ContainerFilter{Image: "example.com:version", Config: api}, filter)
 }
 
@@ -69,7 +69,7 @@ kind:
 	if !assert.NoError(t, err) {
 		return
 	}
-	filter := instance.containerFilterProvider("example.com:version", "", api)
+	filter := instance.containerFilterProvider("example.com:version", "", "", api)
 	assert.Equal(t, &filters.ContainerFilter{
 		Image: "example.com:version", Config: api, GlobalScope: true}, filter)
 }
@@ -659,8 +659,8 @@ func setupTest(t *testing.T) string {
 // getFilterProvider fakes the creation of a filter, replacing the ContainerFiler with
 // a filter to s/kind: Deployment/kind: StatefulSet/g.
 // this can be used to simulate running a filter.
-func getFilterProvider(t *testing.T) func(string, string, *yaml.RNode) kio.Filter {
-	return func(s, _ string, node *yaml.RNode) kio.Filter {
+func getFilterProvider(t *testing.T) func(string, string, string, *yaml.RNode) kio.Filter {
+	return func(s, _, _ string, node *yaml.RNode) kio.Filter {
 		// parse the filter from the input
 		filter := yaml.YFilter{}
 		b := &bytes.Buffer{}
