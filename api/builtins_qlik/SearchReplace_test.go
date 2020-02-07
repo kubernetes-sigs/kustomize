@@ -498,6 +498,43 @@ spec:
 				}
 			},
 		},
+		{
+			name: "replace label key for a custom type and a dollar-variable",
+			pluginConfig: `
+apiVersion: qlik.com/v1
+kind: SearchReplace
+metadata:
+  name: notImportantHere
+target:
+  kind: Engine
+path: spec/metadata/labels
+search: \$\(PREFIX\)-messaging-nats-client
+replace: foo-messaging-nats-client
+`,
+			pluginInputResources: `
+apiVersion: qixmanager.qlik.com/v1
+kind: Engine
+metadata:
+  name: whatever-engine
+spec:
+  metadata:
+    labels:
+      $(PREFIX)-messaging-nats-client: "true"
+`,
+			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
+				for _, res := range resMap.Resources() {
+					labels, err := res.GetFieldValue("spec.metadata.labels")
+					if err != nil {
+						t.Fatalf("unexpected error: %v", err)
+					}
+
+					natsClientLabe := labels.(map[string]interface{})["foo-messaging-nats-client"].(string)
+					if "true" != natsClientLabe {
+						t.Fatalf("unexpected: %v\n", natsClientLabe)
+					}
+				}
+			},
+		},
 	}
 	plugin := SearchReplacePlugin{logger: utils.GetLogger("SearchReplacePlugin")}
 	for _, testCase := range testCases {
