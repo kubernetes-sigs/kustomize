@@ -49,6 +49,11 @@ func AddSchema(s []byte) (*spec.Schema, error) {
 	return parse(s)
 }
 
+// ResetOpenAPI resets the openapi data to empty
+func ResetOpenAPI() {
+	globalSchema = openapiData{}
+}
+
 // AddDefinitions adds the definitions to the global schema.
 func AddDefinitions(definitions spec.Definitions) {
 	// initialize values if they have not yet been set
@@ -123,7 +128,7 @@ func GetSchema(s string) (*ResourceSchema, error) {
 // schema as part of the global schema.
 // Must be called before the schema is used.
 func SuppressBuiltInSchemaUse() {
-	globalSchema.noUseBuiltInSchema = false
+	globalSchema.noUseBuiltInSchema = true
 }
 
 // Elements returns the Schema for the elements of an array.
