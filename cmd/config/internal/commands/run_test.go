@@ -25,6 +25,8 @@ func TestRunFnCommand_preRunE(t *testing.T) {
 		input         io.Reader
 		output        io.Writer
 		functionPaths []string
+		network       bool
+		networkName   string
 	}{
 		{
 			name: "config map",
@@ -77,6 +79,40 @@ apiVersion: v1
 			name: "config map no args",
 			args: []string{"run", "dir", "--image", "foo:bar"},
 			path: "dir",
+			expected: `
+metadata:
+  name: function-input
+  annotations:
+    config.kubernetes.io/function: |
+      container: {image: 'foo:bar'}
+data: {}
+kind: ConfigMap
+apiVersion: v1
+`,
+		},
+		{
+			name:        "network enabled",
+			args:        []string{"run", "dir", "--image", "foo:bar", "--network"},
+			path:        "dir",
+			network:     true,
+			networkName: "bridge",
+			expected: `
+metadata:
+  name: function-input
+  annotations:
+    config.kubernetes.io/function: |
+      container: {image: 'foo:bar'}
+data: {}
+kind: ConfigMap
+apiVersion: v1
+`,
+		},
+		{
+			name:        "with network name",
+			args:        []string{"run", "dir", "--image", "foo:bar", "--network", "--network-name", "foo"},
+			path:        "dir",
+			network:     true,
+			networkName: "foo",
 			expected: `
 metadata:
   name: function-input
@@ -204,6 +240,20 @@ apiVersion: v1
 			// check if Path was set
 			if !assert.Equal(t, tt.path, r.RunFns.Path) {
 				t.FailNow()
+			}
+
+			// check if Network was set
+			if tt.network {
+				if !assert.Equal(t, tt.network, r.RunFns.Network) {
+					t.FailNow()
+				}
+				if !assert.Equal(t, tt.networkName, r.RunFns.NetworkName) {
+					t.FailNow()
+				}
+			} else {
+				if !assert.Equal(t, false, r.RunFns.Network) {
+					t.FailNow()
+				}
 			}
 
 			// check if FunctionPaths were set

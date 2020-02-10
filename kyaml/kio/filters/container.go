@@ -408,6 +408,17 @@ const (
 
 var functionAnnotationKeys = []string{FunctionAnnotationKey, oldFunctionAnnotationKey}
 
+// GetFunction parses the config function from the object if it is found
+func GetFunction(n *yaml.RNode, meta yaml.ResourceMeta) (*yaml.RNode, error) {
+	for _, s := range functionAnnotationKeys {
+		fn := meta.Annotations[s]
+		if fn != "" {
+			return yaml.Parse(fn)
+		}
+	}
+	return n.Pipe(yaml.Lookup("metadata", "configFn"))
+}
+
 // GetContainerName returns the container image for an API if one exists
 func GetContainerName(n *yaml.RNode) (string, string) {
 	meta, _ := n.GetMeta()
@@ -415,14 +426,10 @@ func GetContainerName(n *yaml.RNode) (string, string) {
 	// path to the function, this will be mounted into the container
 	path := meta.Annotations[kioutil.PathAnnotation]
 
-	// check previous keys for backwards compatibility
-	for _, s := range functionAnnotationKeys {
-		functionAnnotation := meta.Annotations[s]
-		if functionAnnotation != "" {
-			annotationContent, _ := yaml.Parse(functionAnnotation)
-			image, _ := annotationContent.Pipe(yaml.Lookup("container", "image"))
-			return image.YNode().Value, path
-		}
+	fn, _ := GetFunction(n, meta)
+	if fn != nil {
+		image, _ := fn.Pipe(yaml.Lookup("container", "image"))
+		return yaml.GetValue(image), path
 	}
 
 	container := meta.Annotations["config.kubernetes.io/container"]
@@ -434,5 +441,19 @@ func GetContainerName(n *yaml.RNode) (string, string) {
 	if err != nil || yaml.IsMissingOrNull(image) {
 		return "", path
 	}
-	return image.YNode().Value, path
+	return yaml.GetValue(image), path
+}
+
+// GetContainerNetworkRequired returns whether or not networking is required for the container
+func GetContainerNetworkRequired(n *yaml.RNode) (bool, error) {
+	meta, err := n.GetMeta()
+	if err != nil {
+		return false, err
+	}
+	f, err := GetFunction(n, meta)
+	if err != nil {
+		return false, err
+	}
+	networkRequired, _ := f.Pipe(yaml.Lookup("container", "network", "required"))
+	return yaml.GetValue(networkRequired) == "true", nil
 }
