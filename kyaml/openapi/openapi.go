@@ -6,6 +6,9 @@ package openapi
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/go-openapi/spec"
@@ -294,4 +297,40 @@ func resolve(root interface{}, ref *spec.Ref) (*spec.Schema, error) {
 func rootSchema() *spec.Schema {
 	initSchema()
 	return &globalSchema.schema
+}
+
+// WriteSchemaToFile writes input schema to file in the directory
+func WriteSchemaToFile(dir string, file string, schema *spec.Schema) error {
+	b, err := json.Marshal(schema)
+	if err != nil {
+		return err
+	}
+	if _, err := os.Stat(filepath.Join(dir, file)); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	// fyi: perm is ignored if the file already exists
+	return ioutil.WriteFile(filepath.Join(dir, file), b, 0600)
+}
+
+// ReadSchemaFromFile reads the file in the directory and returns schema
+func ReadSchemaFromFile(dir string, file string) (*spec.Schema, error) {
+	f, err := os.Open(filepath.Join(dir, file))
+
+	// if we are in a package subdirectory, find the parent dir with the Kptfile.
+	for os.IsNotExist(err) && filepath.Dir(dir) != dir {
+		dir = filepath.Dir(dir)
+		f, err = os.Open(filepath.Join(dir, file))
+	}
+	schema := Schema()
+	if err != nil {
+		return schema, errors.Errorf("unable to read %s: %v", file, err)
+	}
+	defer f.Close()
+
+	d := json.NewDecoder(f)
+	if err = d.Decode(&schema); err != nil {
+		return schema, errors.Errorf("unable to parse %s: %v", file, err)
+	}
+	return schema, nil
 }

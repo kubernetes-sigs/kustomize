@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-openapi/spec"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -46,9 +47,17 @@ func (fm *FieldMeta) Read(n *yaml.RNode) error {
 		// TODO: consider most sophisticated parsing techniques similar to what is used
 		// for go struct tags.
 		if err := fm.Schema.UnmarshalJSON([]byte(v)); err != nil {
-			// note: don't return an error if the comment isn't a fieldmeta struct
-			return nil
+			// check for new implementation of maintaining setters and get schema
+			if b, err := GetSchemaBySetterName(v); err == nil {
+				if err := fm.Schema.UnmarshalJSON(b); err != nil {
+					return nil
+				}
+			} else {
+				// note: don't return an error if the comment isn't a fieldmeta struct
+				return nil
+			}
 		}
+
 		fe := fm.Schema.VendorExtensible.Extensions["x-kustomize"]
 		if fe == nil {
 			return nil
@@ -60,6 +69,19 @@ func (fm *FieldMeta) Read(n *yaml.RNode) error {
 		return json.Unmarshal(b, &fm.Extensions)
 	}
 	return nil
+}
+
+func GetSchemaBySetterName(setterName string) ([]byte, error) {
+	sc, err := openapi.ReadSchemaFromFile(".", "schema.json")
+	if err != nil {
+		return nil, nil
+	}
+	openapi.AddDefinitions(sc.Definitions)
+	s, err := openapi.GetSchema(`{"$ref": "#/definitions/` + strings.TrimSpace(setterName) + `"}`)
+	if err != nil {
+		return nil, nil
+	}
+	return json.Marshal(s.Schema)
 }
 
 // Write writes the FieldMeta to a node

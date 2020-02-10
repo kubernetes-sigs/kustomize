@@ -5,6 +5,7 @@ package openapi
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -46,6 +47,44 @@ func TestNoUseBuiltInSchema_AddSchema(t *testing.T) {
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
+	assert.Equal(t, `map[x-kustomize:map[setBy:Jane setter:map[name:replicas value:5]]]`,
+		fmt.Sprintf("%v", s.Schema.Extensions))
+}
+
+func TestWriteAndReadSchema(t *testing.T) {
+	dir := os.TempDir()
+	file := "schema.json"
+	globalSchema = openapiData{}
+	SuppressBuiltInSchemaUse()
+	res, err := AddSchema(additionalSchema)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	err = WriteSchemaToFile(dir, file, res)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	globalSchema = openapiData{}
+	SuppressBuiltInSchemaUse()
+	sc, err := ReadSchemaFromFile(dir, file)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	AddDefinitions(sc.Definitions)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	s, err := GetSchema(`{"$ref": "#/definitions/io.k8s.config.setters.replicas"}`)
+	if !assert.Equal(t, len(globalSchema.schema.Definitions), 1) {
+		t.FailNow()
+	}
+
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
 	assert.Equal(t, `map[x-kustomize:map[setBy:Jane setter:map[name:replicas value:5]]]`,
 		fmt.Sprintf("%v", s.Schema.Extensions))
 }
