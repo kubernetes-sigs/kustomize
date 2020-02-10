@@ -40,7 +40,7 @@ func TestNoUseBuiltInSchema_AddSchema(t *testing.T) {
 		t.FailNow()
 	}
 	s, err := GetSchema(`{"$ref": "#/definitions/io.k8s.config.setters.replicas"}`)
-	if !assert.Greater(t, len(globalSchema.schema.Definitions), 1) {
+	if !assert.Equal(t, len(globalSchema.schema.Definitions), 1) {
 		t.FailNow()
 	}
 	if !assert.NoError(t, err) {
