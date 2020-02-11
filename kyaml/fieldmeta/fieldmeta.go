@@ -17,7 +17,7 @@ import (
 type FieldMeta struct {
 	Schema spec.Schema
 
-	Extensions XKustomize
+	Extensions *XKustomize
 }
 
 type XKustomize struct {
@@ -64,7 +64,11 @@ func (fm *FieldMeta) Read(n *yaml.RNode) error {
 
 // Write writes the FieldMeta to a node
 func (fm *FieldMeta) Write(n *yaml.RNode) error {
-	fm.Schema.VendorExtensible.AddExtension("x-kustomize", fm.Extensions)
+	if fm.Extensions != nil {
+		fm.Schema.VendorExtensible.AddExtension("x-kustomize", fm.Extensions)
+	} else {
+		delete(fm.Schema.VendorExtensible.Extensions, "x-kustomize")
+	}
 	b, err := json.Marshal(fm.Schema)
 	if err != nil {
 		return errors.Wrap(err)
