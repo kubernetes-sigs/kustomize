@@ -122,3 +122,80 @@ func TestSchemaForResourceType(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestPopulateDefsInOpenAPI_Setter(t *testing.T) {
+	globalSchema = openapiData{}
+	inputyaml := `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.image-name:
+      x-k8s-cli:
+        setter:
+          name: image-name
+          value: "nginx"
+ `
+	err := PopulateDefsInOpenAPI(inputyaml)
+
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	s, err := GetSchema(`{"$ref": "#/definitions/io.k8s.cli.setters.image-name"}`)
+
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.Greater(t, len(globalSchema.schema.Definitions), 200) {
+		t.FailNow()
+	}
+	assert.Equal(t, `map[x-k8s-cli:map[setter:map[name:image-name value:nginx]]]`,
+		fmt.Sprintf("%v", s.Schema.Extensions))
+}
+
+func TestPopulateDefsInOpenAPI_Substitution(t *testing.T) {
+	globalSchema = openapiData{}
+	inputyaml := `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.image-name:
+      x-k8s-cli:
+        setter:
+          name: image-name
+          value: "nginx"
+    io.k8s.cli.setters.image-tag:
+      x-k8s-cli:
+        setter:
+          name: image-tag
+          value: "1.8.1"
+    io.k8s.cli.substitutions.image:
+      x-k8s-cli:
+        substitution:
+          name: image
+          pattern: IMAGE_NAME:IMAGE_TAG
+          values:
+          - marker: "IMAGE_NAME"
+            ref: "#/definitions/io.k8s.cli.setters.image-name"
+          - marker: "IMAGE_TAG"
+            ref: "#/definitions/io.k8s.cli.setters.image-tag"
+ `
+	err := PopulateDefsInOpenAPI(inputyaml)
+
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	s, err := GetSchema(`{"$ref": "#/definitions/io.k8s.cli.substitutions.image"}`)
+
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.Greater(t, len(globalSchema.schema.Definitions), 200) {
+		t.FailNow()
+	}
+
+	assert.Equal(t,
+		`map[x-k8s-cli:map[substitution:map[name:image pattern:IMAGE_NAME:IMAGE_TAG`+
+			` values:[map[marker:IMAGE_NAME ref:#/definitions/io.k8s.cli.setters.image-name]`+
+			` map[marker:IMAGE_TAG ref:#/definitions/io.k8s.cli.setters.image-tag]]]]]`,
+		fmt.Sprintf("%v", s.Schema.Extensions))
+}
