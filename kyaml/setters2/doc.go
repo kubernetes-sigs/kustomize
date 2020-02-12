@@ -154,4 +154,10 @@
 // to "1.8.2", then calling either Set{Name: "image-name"}.Filter(deployment) or
 // Set{Name: "image-tag"}.Filter(deployment) would update the Deployment field
 // spec.template.spec.container[name=nginx].image from "nginx:1.8.1" to "nginx:1.8.2".
+//
+// Adding Field References
+//
+// References to setters and substitutions may be added to fields using the Add Filter.
+// Add will write a JSON OpenAPI string as a comment to any fields matching the specified
+// FieldName add FieldValue.
 package setters2
