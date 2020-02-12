@@ -55,7 +55,7 @@ func (fm *FieldMeta) Read(n *yaml.RNode) error {
 		}
 		b, err := json.Marshal(fe)
 		if err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 		return json.Unmarshal(b, &fm.Extensions)
 	}
@@ -67,7 +67,7 @@ func (fm *FieldMeta) Write(n *yaml.RNode) error {
 	fm.Schema.VendorExtensible.AddExtension("x-kustomize", fm.Extensions)
 	b, err := json.Marshal(fm.Schema)
 	if err != nil {
-		return err
+		return errors.Wrap(err)
 	}
 	n.YNode().LineComment = string(b)
 	return nil
