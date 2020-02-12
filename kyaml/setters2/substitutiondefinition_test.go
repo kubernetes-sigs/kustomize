@@ -11,20 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var resourcefile = `apiVersion: resource.dev/v1alpha1
-kind: resourcefile
-metadata:
-    name: hello-world-set
-upstream:
-    type: git
-    git:
-        commit: 5c1c019b59299a4f6c7edd1ff5ff54d720621bbe
-        directory: /package-examples/helloworld-set
-        ref: v0.1.0
-packageMetadata:
-    shortDescription: example package using setters`
-
-func TestAddUpdateSetter(t *testing.T) {
+func TestAddUpdateSubstitution(t *testing.T) {
 	path := os.TempDir() + "/resourcefile"
 
 	//write initial resourcefile to temp path
@@ -33,25 +20,38 @@ func TestAddUpdateSetter(t *testing.T) {
 		t.FailNow()
 	}
 
-	//add a setter definition
-	sd := SetterDefinition{
-		Name:  "image",
-		Value: "1",
+	value1 := Value{
+		Marker: "IMAGE_NAME",
+		Ref:    "#/definitions/io.k8s.cli.setters.image-name",
 	}
 
-	err = sd.AddSetterToFile(path)
+	value2 := Value{
+		Marker: "IMAGE_TAG",
+		Ref:    "#/definitions/io.k8s.cli.setters.image-tag",
+	}
+
+	values := []Value{value1, value2}
+
+	//add a setter definition
+	subd := SubstitutionDefinition{
+		Name:    "image",
+		Pattern: "IMAGE_NAME:IMAGE_TAG",
+		Values:  values,
+	}
+
+	err = subd.AddSubstitutionToFile(path)
 
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
 	// update setter definition
-	sd2 := SetterDefinition{
-		Name:  "image",
-		Value: "2",
+	subd2 := SubstitutionDefinition{
+		Name:    "image",
+		Pattern: "IMAGE_NAME:IMAGE_TAG2",
 	}
 
-	err = sd2.AddSetterToFile(path)
+	err = subd2.AddSubstitutionToFile(path)
 
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -78,9 +78,9 @@ openAPI:
   definitions:
     io.k8s.cli.setters.image:
       x-k8s-cli:
-        setter:
+        substitution:
           name: image
-          value: 2
+          pattern: IMAGE_NAME:IMAGE_TAG2
 `
 	assert.Equal(t, expected, string(b))
 }
