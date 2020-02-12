@@ -17,6 +17,12 @@ verify-kustomize: \
 	test-examples-kustomize-against-HEAD \
 	test-examples-kustomize-against-latest
 
+# The following target referenced by a file in
+# https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/kustomize
+.PHONY: prow-presubmit-check
+prow-presubmit-check: \
+	test-unit-kustomize-all
+
 .PHONY: verify-kustomize-e2e
 verify-kustomize-e2e: test-examples-e2e-kustomize
 
