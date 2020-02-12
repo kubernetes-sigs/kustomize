@@ -296,6 +296,41 @@ func resolve(root interface{}, ref *spec.Ref) (*spec.Schema, error) {
 	}
 }
 
+func PopulateDefsInOpenAPI(s string) error {
+	y, err := yaml.Parse(s)
+	if err != nil {
+		return err
+	}
+	// get the field containing the openAPI
+	f := y.Field("openAPI")
+
+	defs, err := f.Value.String()
+	if err != nil {
+		return err
+	}
+
+	// convert the yaml openAPI to an interface{}
+	// which can be marshalled into json
+	var o interface{}
+	err = yaml.Unmarshal([]byte(defs), &o)
+	if err != nil {
+		return err
+	}
+
+	// convert the interface{} into a json string
+	j, err := json.Marshal(o)
+	if err != nil {
+		return err
+	}
+
+	// add the json schema to the global schema
+	_, err = AddSchema(j)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func rootSchema() *spec.Schema {
 	initSchema()
 	return &globalSchema.schema
