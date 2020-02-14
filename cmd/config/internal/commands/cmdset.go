@@ -6,19 +6,21 @@ package commands
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/setters"
+	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
 
 // NewSetRunner returns a command runner.
 func NewSetRunner(parent string) *SetRunner {
 	r := &SetRunner{}
 	c := &cobra.Command{
-		Use:     "set DIR [NAME] [VALUE]",
+		Use:     "set DIR NAME [VALUE]",
 		Args:    cobra.RangeArgs(1, 3),
 		Short:   commands.SetShort,
 		Long:    commands.SetLong,
@@ -32,8 +34,17 @@ func NewSetRunner(parent string) *SetRunner {
 		"annotate the field with who set it")
 	c.Flags().StringVar(&r.Perform.Description, "description", "",
 		"annotate the field with a description of its value")
+	c.Flags().StringVar(&setterVersion, "version", "",
+		"use this version of the setter format")
+	c.Flags().MarkHidden("version")
 
 	return r
+}
+
+var setterVersion string
+
+var GetOpenAPIFile = func(args []string) (string, error) {
+	return filepath.Join(args[0], "kustomization"), nil
 }
 
 func SetCommand(parent string) *cobra.Command {
@@ -41,9 +52,30 @@ func SetCommand(parent string) *cobra.Command {
 }
 
 type SetRunner struct {
-	Command *cobra.Command
-	Lookup  setters.LookupSetters
-	Perform setters.PerformSetters
+	Command     *cobra.Command
+	Lookup      setters.LookupSetters
+	Perform     setters.PerformSetters
+	Set         settersutil.FieldSetter
+	OpenAPIFile string
+}
+
+func initSetterVersion(c *cobra.Command, args []string) error {
+	setterVersion = "v2"
+	l := setters.LookupSetters{}
+
+	// backwards compatibility for resources with setter v1
+	err := kio.Pipeline{
+		Inputs:  []kio.Reader{&kio.LocalPackageReader{PackagePath: args[0]}},
+		Filters: []kio.Filter{&l},
+	}.Execute()
+	if err != nil {
+		return err
+	}
+	if len(l.SetterCounts) > 0 {
+		setterVersion = "v1"
+	}
+
+	return nil
 }
 
 func (r *SetRunner) preRunE(c *cobra.Command, args []string) error {
@@ -55,15 +87,37 @@ func (r *SetRunner) preRunE(c *cobra.Command, args []string) error {
 		r.Perform.Value = args[2]
 	}
 
+	if setterVersion == "" {
+		if len(args) < 3 {
+			setterVersion = "v1"
+		} else if err := initSetterVersion(c, args); err != nil {
+			return err
+		}
+	}
+	if setterVersion == "v2" {
+		var err error
+		r.Set.Name = args[1]
+		r.Set.Value = args[2]
+		r.Set.Description = r.Perform.Description
+		r.Set.SetBy = r.Perform.SetBy
+		r.OpenAPIFile, err = GetOpenAPIFile(args)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 func (r *SetRunner) runE(c *cobra.Command, args []string) error {
-
+	if setterVersion == "v2" {
+		count, err := r.Set.Set(r.OpenAPIFile, args[0])
+		fmt.Fprintf(c.OutOrStdout(), "set %d fields\n", count)
+		return handleError(c, err)
+	}
 	if len(args) == 3 {
 		return handleError(c, r.perform(c, args))
 	}
-
 	return handleError(c, lookup(r.Lookup, c, args))
 }
 
