@@ -16,12 +16,17 @@ type FieldSetter struct {
 
 	// Value is the value to set
 	Value string
+
+	Description string
+
+	SetBy string
 }
 
 // Set updates the OpenAPI definitions and resources with the new setter value
 func (fs FieldSetter) Set(openAPIPath, resourcesPath string) (int, error) {
 	// Update the OpenAPI definitions
-	soa := setters2.SetOpenAPI{Name: fs.Name, Value: fs.Value}
+	soa := setters2.SetOpenAPI{
+		Name: fs.Name, Value: fs.Value, Description: fs.Description, SetBy: fs.SetBy}
 	if err := soa.UpdateFile(openAPIPath); err != nil {
 		return 0, err
 	}

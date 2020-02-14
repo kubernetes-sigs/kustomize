@@ -125,6 +125,10 @@ type SetOpenAPI struct {
 	Name string `yaml:"name"`
 	// Value is the current value of the setter
 	Value string `yaml:"value"`
+
+	Description string `yaml:"description"`
+
+	SetBy string `yaml:"setBy"`
 }
 
 // UpdateFile updates the OpenAPI definitions in a file with the given setter value.
@@ -144,6 +148,23 @@ func (s SetOpenAPI) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	}
 	if err := def.PipeE(&yaml.FieldSetter{Name: "value", StringValue: s.Value}); err != nil {
 		return nil, err
+	}
+
+	if s.SetBy != "" {
+		if err := def.PipeE(&yaml.FieldSetter{Name: "setBy", StringValue: s.SetBy}); err != nil {
+			return nil, err
+		}
+	}
+
+	if s.Description != "" {
+		d, err := object.Pipe(yaml.LookupCreate(
+			yaml.MappingNode, "openAPI", "definitions", key))
+		if err != nil {
+			return nil, err
+		}
+		if err := d.PipeE(&yaml.FieldSetter{Name: "description", StringValue: s.Description}); err != nil {
+			return nil, err
+		}
 	}
 
 	return object, nil
