@@ -1,0 +1,9 @@
+# This is the execPlugin configuration file for executing a command 
+# Each cmd is tested on the path and if found, the command is used
+# Each arg is handled as a template and each template will receive the "Script" which 
+# contains the file that needs to be executed
+execOptions:
+  - cmd: "powershell.exe" # Powershell < 6  
+    args: ["-NoProfile","-File","{{.Script}}.ps1"]    
+  - cmd: "pwsh" # Can run on Windows and Linux (Powershell core)
+    args: ["-NoProfile","-File","{{.Script}}.ps1"]

@@ -244,6 +244,28 @@ kustomize uses an exec plugin adapter to provide
 marshalled resources on `stdin` and capture
 `stdout` for further processing.
 
+#### Targeting multiple operatings systems
+
+An exec plugin allows an exec configuration to configure usage on multiple operatings systems. 
+Simply add a configuration file allongside the `execPlugin`.
+
+Create a yaml file in the plugin folder: 
+```
+$XDG_CONFIG_HOME/kustomize/plugin
+    /${apiVersion}/LOWERCASE(${kind})/${kind}.yaml 
+```
+This configuration file contains a list of exec options, which are tried in order of appearance: 
+```
+execOptions:
+  - cmd: "pwsh" # Allow execution of powershell core on linux and windows
+    args: ["-NoProfile","-File","{{.Script}}"]
+  - cmd: "powershell.exe"
+    args: ["-NoProfile","-File","{{.Script}}.ps1"]    
+```  
+The plugin will check if the cmd is on the path, and if so it will use that exec option. 
+Each `arg` is a go template, which will be parsed with a single value data map that contains the script to be executed. 
+If no command or exec config is found, the default execution will be used (`sh`).
+
 #### Generator Options
 
 A generator exec plugin can adjust the generator options for the resources it emits by setting one of the following internal annotations. 

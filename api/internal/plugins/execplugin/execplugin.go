@@ -9,8 +9,10 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
+	"text/template"
 
 	"github.com/google/shlex"
 
@@ -55,7 +57,8 @@ func (p *ExecPlugin) ErrIfNotExecutable() error {
 	if err != nil {
 		return err
 	}
-	if f.Mode()&0111 == 0000 {
+	// FileMode does not say much about executability on windows
+	if f.Mode()&0111 == 0000 && runtime.GOOS != "windows" {
 		return fmt.Errorf("unexecutable plugin at: %s", p.path)
 	}
 	return nil
@@ -140,6 +143,67 @@ func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
 	return p.updateResMapValues(output, rm)
 }
 
+type execConfig struct {
+	ExecOptions []ExecOption `json:"execOptions,omitempty" yaml:"execOptions,omitempty"`
+}
+
+type ExecOption struct {
+	Exec     string   `json:"cmd,omitempty" yaml:"cmd,omitempty"`
+	ExecArgs []string `json:"args,omitempty" yaml:"args,omitempty"`
+}
+
+// Creates a command from an optional command configuration ("<path>.yml")
+// This allows to create a custom command on Windows
+func (p *ExecPlugin) createCommand(configFile string) (*exec.Cmd, error) {
+	// Check if a command configuration file exists
+	execConfigPath := fmt.Sprintf("%s%s", p.path, ".yaml")
+	execConfigYaml, err := ioutil.ReadFile(execConfigPath)
+
+	execCmd := p.path
+	execCmdArgs := []string{}
+
+	if err == nil {
+		var c execConfig
+		err = yaml.Unmarshal(execConfigYaml, &c)
+
+		if err != nil {
+			return nil, err
+		}
+		for _, cmdOption := range c.ExecOptions {
+			// Check if the cmd is available on the path
+			_, err := exec.LookPath(cmdOption.Exec)
+			if err != nil {
+				// Try next
+				continue
+			}
+			execCmd = cmdOption.Exec
+			if cmdOption.ExecArgs != nil {
+				data := struct {
+					Script string
+				}{
+					Script: p.path,
+				}
+
+				for i, s := range cmdOption.ExecArgs {
+					tmpl, err := template.New("exec").Parse(s)
+					if err != nil {
+						return nil, err
+					}
+					var tpl bytes.Buffer
+					if err = tmpl.Execute(&tpl, data); err != nil {
+						return nil, err
+					}
+					cmdOption.ExecArgs[i] = tpl.String()
+				}
+				execCmdArgs = cmdOption.ExecArgs
+			}
+			break
+		}
+	}
+	cmd := exec.Command(execCmd, append(execCmdArgs, append([]string{configFile}, p.args...)...)...)
+	return cmd, nil
+}
+
 // invokePlugin writes plugin config to a temp file, then
 // passes the full temp file path as the first arg to a process
 // running the plugin binary.  Process output is returned.
@@ -160,8 +224,12 @@ func (p *ExecPlugin) invokePlugin(input []byte) ([]byte, error) {
 			err, "closing plugin config file "+f.Name())
 	}
 	//nolint:gosec
-	cmd := exec.Command(
-		p.path, append([]string{f.Name()}, p.args...)...)
+
+	cmd, err := p.createCommand(f.Name())
+	if err != nil {
+		return nil, errors.Wrapf(
+			err, "failure in creating exec command configured via %s;", f.Name())
+	}
 	cmd.Env = p.getEnv()
 	cmd.Stdin = bytes.NewReader(input)
 	cmd.Stderr = os.Stderr
@@ -171,8 +239,8 @@ func (p *ExecPlugin) invokePlugin(input []byte) ([]byte, error) {
 	result, err := cmd.Output()
 	if err != nil {
 		return nil, errors.Wrapf(
-			err, "failure in plugin configured via %s; %v",
-			f.Name(), err.Error())
+			err, "failure in plugin configured via %s; %s %v",
+			f.Name(), result, err.Error())
 	}
 	return result, os.Remove(f.Name())
 }
