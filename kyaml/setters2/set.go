@@ -17,6 +17,9 @@ type Set struct {
 	// Name is the name of the setter to set on the object.  i.e. matches the x-k8s-cli.setter.name
 	// of the setter that should have its value applied to fields which reference it.
 	Name string
+
+	// Count is the number of fields that were updated by calling Filter
+	Count int
 }
 
 // Filter implements Set as a yaml.Filter
@@ -25,7 +28,7 @@ func (s *Set) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 }
 
 // visitScalar
-func (s *Set) visitScalar(object *yaml.RNode, _ string) error {
+func (s *Set) visitScalar(object *yaml.RNode, p string) error {
 	// get the openAPI for this field describing how to apply the setter
 	ext, err := getExtFromComment(object)
 	if err != nil {
@@ -37,14 +40,18 @@ func (s *Set) visitScalar(object *yaml.RNode, _ string) error {
 
 	// perform a direct set of the field if it matches
 	if s.set(object, ext) {
+		s.Count++
 		return nil
 	}
 
 	// perform a substitution of the field if it matches
-	if sub, err := s.substitute(object, ext); sub || err != nil {
+	sub, err := s.substitute(object, ext)
+	if err != nil {
 		return err
 	}
-
+	if sub {
+		s.Count++
+	}
 	return nil
 }
 
@@ -110,4 +117,55 @@ func (s *Set) set(field *yaml.RNode, ext *cliExtension) bool {
 	// this has a full setter, set its value
 	field.YNode().Value = ext.Setter.Value
 	return true
+}
+
+// SetOpenAPI updates a setter value
+type SetOpenAPI struct {
+	// Name is the name of the setter to add
+	Name string `yaml:"name"`
+	// Value is the current value of the setter
+	Value string `yaml:"value"`
+
+	Description string `yaml:"description"`
+
+	SetBy string `yaml:"setBy"`
+}
+
+// UpdateFile updates the OpenAPI definitions in a file with the given setter value.
+func (s SetOpenAPI) UpdateFile(path string) error {
+	return yaml.UpdateFile(s, path)
+}
+
+func (s SetOpenAPI) Filter(object *yaml.RNode) (*yaml.RNode, error) {
+	key := SetterDefinitionPrefix + s.Name
+	def, err := object.Pipe(yaml.Lookup(
+		"openAPI", "definitions", key, "x-k8s-cli", "setter"))
+	if err != nil {
+		return nil, err
+	}
+	if def == nil {
+		return nil, errors.Errorf("no setter %s found", s.Name)
+	}
+	if err := def.PipeE(&yaml.FieldSetter{Name: "value", StringValue: s.Value}); err != nil {
+		return nil, err
+	}
+
+	if s.SetBy != "" {
+		if err := def.PipeE(&yaml.FieldSetter{Name: "setBy", StringValue: s.SetBy}); err != nil {
+			return nil, err
+		}
+	}
+
+	if s.Description != "" {
+		d, err := object.Pipe(yaml.LookupCreate(
+			yaml.MappingNode, "openAPI", "definitions", key))
+		if err != nil {
+			return nil, err
+		}
+		if err := d.PipeE(&yaml.FieldSetter{Name: "description", StringValue: s.Description}); err != nil {
+			return nil, err
+		}
+	}
+
+	return object, nil
 }

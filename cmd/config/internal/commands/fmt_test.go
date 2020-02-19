@@ -143,6 +143,8 @@ func TestCmd_failFiles(t *testing.T) {
 	// fmt the files
 	r := commands.GetFmtRunner("")
 	r.Command.SetArgs([]string{"notrealfile"})
+	r.Command.SilenceUsage = true
+	r.Command.SilenceErrors = true
 	err := r.Command.Execute()
 	assert.EqualError(t, err, "lstat notrealfile: no such file or directory")
 }
