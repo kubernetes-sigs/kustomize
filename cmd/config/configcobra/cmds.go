@@ -45,22 +45,23 @@ Advanced Documentation Topics:
 
 // Export commands publicly for composition
 var (
-	Annotate     = commands.AnnotateCommand
-	Cat          = commands.CatCommand
-	Count        = commands.CountCommand
-	CreateSetter = commands.CreateSetterCommand
-	Fmt          = commands.FmtCommand
-	Grep         = commands.GrepCommand
-	ListSetters  = commands.ListSettersCommand
-	Merge        = commands.MergeCommand
-	Merge3       = commands.Merge3Command
-	RunFn        = commands.RunFnCommand
-	Set          = commands.SetCommand
-	Sink         = commands.SinkCommand
-	Source       = commands.SourceCommand
-	Tree         = commands.TreeCommand
-	Wrap         = commands.WrapCommand
-	XArgs        = commands.XArgsCommand
+	Annotate           = commands.AnnotateCommand
+	Cat                = commands.CatCommand
+	Count              = commands.CountCommand
+	CreateSetter       = commands.CreateSetterCommand
+	CreateSubstitution = commands.CreateSubstitutionCommand
+	Fmt                = commands.FmtCommand
+	Grep               = commands.GrepCommand
+	ListSetters        = commands.ListSettersCommand
+	Merge              = commands.MergeCommand
+	Merge3             = commands.Merge3Command
+	RunFn              = commands.RunFnCommand
+	Set                = commands.SetCommand
+	Sink               = commands.SinkCommand
+	Source             = commands.SourceCommand
+	Tree               = commands.TreeCommand
+	Wrap               = commands.WrapCommand
+	XArgs              = commands.XArgsCommand
 
 	StackOnError = &commands.StackOnError
 	ExitOnError  = &commands.ExitOnError
@@ -107,6 +108,7 @@ func NewConfigCommand(name string) *cobra.Command {
 	root.AddCommand(commands.SetCommand(name))
 	root.AddCommand(commands.ListSettersCommand(name))
 	root.AddCommand(commands.CreateSetterCommand(name))
+	root.AddCommand(commands.CreateSubstitutionCommand(name))
 	root.AddCommand(commands.SinkCommand(name))
 	root.AddCommand(commands.SourceCommand(name))
 
