@@ -5,6 +5,7 @@ package openapi
 
 import (
 	"fmt"
+	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -123,8 +124,8 @@ func TestSchemaForResourceType(t *testing.T) {
 	}
 }
 
-func TestPopulateDefsInOpenAPI_Setter(t *testing.T) {
-	globalSchema = openapiData{}
+func TestAddSchemaFromFile(t *testing.T) {
+	ResetOpenAPI()
 	inputyaml := `
 openAPI:
   definitions:
@@ -134,8 +135,15 @@ openAPI:
           name: image-name
           value: "nginx"
  `
-	err := PopulateDefsInOpenAPI(inputyaml)
+	f, err := ioutil.TempFile("", "openapi-")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.NoError(t, ioutil.WriteFile(f.Name(), []byte(inputyaml), 0600)) {
+		t.FailNow()
+	}
 
+	err = AddSchemaFromFile(f.Name())
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -153,7 +161,7 @@ openAPI:
 }
 
 func TestPopulateDefsInOpenAPI_Substitution(t *testing.T) {
-	globalSchema = openapiData{}
+	ResetOpenAPI()
 	inputyaml := `
 openAPI:
   definitions:
@@ -178,9 +186,16 @@ openAPI:
           - marker: "IMAGE_TAG"
             ref: "#/definitions/io.k8s.cli.setters.image-tag"
  `
-	err := PopulateDefsInOpenAPI(inputyaml)
 
+	f, err := ioutil.TempFile("", "openapi-")
 	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.NoError(t, ioutil.WriteFile(f.Name(), []byte(inputyaml), 0600)) {
+		t.FailNow()
+	}
+
+	if !assert.NoError(t, AddSchemaFromFile(f.Name())) {
 		t.FailNow()
 	}
 
@@ -198,4 +213,27 @@ openAPI:
 			` values:[map[marker:IMAGE_NAME ref:#/definitions/io.k8s.cli.setters.image-name]`+
 			` map[marker:IMAGE_TAG ref:#/definitions/io.k8s.cli.setters.image-tag]]]]]`,
 		fmt.Sprintf("%v", s.Schema.Extensions))
+}
+
+func TestAddSchemaFromFile_empty(t *testing.T) {
+	ResetOpenAPI()
+	inputyaml := `
+kind: Example
+ `
+
+	f, err := ioutil.TempFile("", "openapi-")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.NoError(t, ioutil.WriteFile(f.Name(), []byte(inputyaml), 0600)) {
+		t.FailNow()
+	}
+
+	if !assert.NoError(t, AddSchemaFromFile(f.Name())) {
+		t.FailNow()
+	}
+
+	if !assert.Equal(t, len(globalSchema.schema.Definitions), 0) {
+		t.FailNow()
+	}
 }

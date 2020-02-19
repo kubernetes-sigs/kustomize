@@ -9,6 +9,7 @@ import (
 	"github.com/go-openapi/spec"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -71,4 +72,129 @@ func (a *Add) visitScalar(object *yaml.RNode, p string) error {
 		return err
 	}
 	return nil
+}
+
+const (
+	// CLIDefinitionsPrefix is the prefix for cli definition keys.
+	CLIDefinitionsPrefix = "io.k8s.cli."
+
+	// SetterDefinitionPrefix is the prefix for setter definition keys.
+	SetterDefinitionPrefix = CLIDefinitionsPrefix + "setters."
+
+	// SubstitutionDefinitionPrefix is the prefix for substitution definition keys.
+	SubstitutionDefinitionPrefix = CLIDefinitionsPrefix + "substitutions."
+
+	// DefinitionsPrefix is the prefix used to reference definitions in the OpenAPI
+	DefinitionsPrefix = "#/definitions/"
+)
+
+// SetterDefinition may be used to update a files OpenAPI definitions with a new setter.
+type SetterDefinition struct {
+	// Name is the name of the setter to create or update.
+	Name string `yaml:"name"`
+
+	// Value is the value of the setter.
+	Value string `yaml:"value"`
+
+	// SetBy is the person or role that last set the value.
+	SetBy string `yaml:"setBy,omitempty"`
+
+	// Description is a description of the value.
+	Description string `yaml:"description,omitempty"`
+
+	// Count is the number of fields set by this setter.
+	Count int `yaml:"count,omitempty"`
+}
+
+func (sd SetterDefinition) AddToFile(path string) error {
+	return yaml.UpdateFile(sd, path)
+}
+
+func (sd SetterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
+	key := SetterDefinitionPrefix + sd.Name
+
+	def, err := object.Pipe(yaml.LookupCreate(
+		yaml.MappingNode, openapi.SupplementaryOpenAPIFieldName, "definitions", key))
+	if err != nil {
+		return nil, err
+	}
+	if sd.Description != "" {
+		err = def.PipeE(yaml.FieldSetter{Name: "description", StringValue: sd.Description})
+		if err != nil {
+			return nil, err
+		}
+		// don't write the description to the extension
+		sd.Description = ""
+	}
+
+	ext, err := def.Pipe(yaml.LookupCreate(yaml.MappingNode, K8sCliExtensionKey))
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := yaml.Marshal(sd)
+	if err != nil {
+		return nil, err
+	}
+	y, err := yaml.Parse(string(b))
+	if err != nil {
+		return nil, err
+	}
+
+	if err := ext.PipeE(yaml.SetField("setter", y)); err != nil {
+		return nil, err
+	}
+
+	return object, nil
+}
+
+// SetterDefinition may be used to update a files OpenAPI definitions with a new substitution.
+type SubstitutionDefinition struct {
+	// Name is the name of the substitution to create or update
+	Name string `yaml:"name"`
+
+	// Pattern is the substitution pattern into which setter values are substituted
+	Pattern string `yaml:"pattern"`
+
+	// Values are setters which are substituted into pattern to produce a field value
+	Values []Value `yaml:"values"`
+}
+
+type Value struct {
+	// Marker is the string marker in pattern that is replace by the referenced setter.
+	Marker string `yaml:"marker"`
+
+	// Ref is a reference to a setter to pull the replacement value from.
+	Ref string `yaml:"ref"`
+}
+
+func (sd SubstitutionDefinition) AddToFile(path string) error {
+	return yaml.UpdateFile(sd, path)
+}
+
+func (sd SubstitutionDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
+	// create the substitution extension value by marshalling the SubstitutionDefinition itself
+	b, err := yaml.Marshal(sd)
+	if err != nil {
+		return nil, err
+	}
+	sub, err := yaml.Parse(string(b))
+	if err != nil {
+		return nil, err
+	}
+
+	// lookup or create the definition for the substitution
+	defKey := SubstitutionDefinitionPrefix + sd.Name
+	def, err := object.Pipe(yaml.LookupCreate(
+		yaml.MappingNode, openapi.SupplementaryOpenAPIFieldName, "definitions", defKey, "x-k8s-cli"))
+	if err != nil {
+		return nil, err
+	}
+
+	// set the substitution on the definition
+	if err := def.PipeE(yaml.SetField("substitution", sub)); err != nil {
+		return nil, err
+	}
+
+	return object, nil
 }
