@@ -438,3 +438,218 @@ func initSchema(t *testing.T, s string) {
 		t.FailNow()
 	}
 }
+
+func TestSetOpenAPI_Filter(t *testing.T) {
+	var tests = []struct {
+		name        string
+		setter      string
+		value       string
+		input       string
+		expected    string
+		description string
+		setBy       string
+		err         string
+	}{
+		{
+			name:   "set-replicas",
+			setter: "replicas",
+			value:  "3",
+			input: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.no-match-1':
+      x-k8s-cli:
+        setter:
+          name: no-match-1
+          value: "1"
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "4"
+    io.k8s.cli.setters.no-match-2':
+      x-k8s-cli:
+        setter:
+          name: no-match-2
+          value: "2"
+ `,
+			expected: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.no-match-1':
+      x-k8s-cli:
+        setter:
+          name: no-match-1
+          value: "1"
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+    io.k8s.cli.setters.no-match-2':
+      x-k8s-cli:
+        setter:
+          name: no-match-2
+          value: "2"
+`,
+		},
+		{
+			name:        "set-replicas-description",
+			setter:      "replicas",
+			value:       "3",
+			description: "hello world",
+			input: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.no-match-1':
+      x-k8s-cli:
+        setter:
+          name: no-match-1
+          value: "1"
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "4"
+    io.k8s.cli.setters.no-match-2':
+      x-k8s-cli:
+        setter:
+          name: no-match-2
+          value: "2"
+ `,
+			expected: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.no-match-1':
+      x-k8s-cli:
+        setter:
+          name: no-match-1
+          value: "1"
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+      description: hello world
+    io.k8s.cli.setters.no-match-2':
+      x-k8s-cli:
+        setter:
+          name: no-match-2
+          value: "2"
+`,
+		},
+		{
+			name:   "set-replicas-set-by",
+			setter: "replicas",
+			value:  "3",
+			setBy:  "carl",
+			input: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.no-match-1':
+      x-k8s-cli:
+        setter:
+          name: no-match-1
+          value: "1"
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "4"
+    io.k8s.cli.setters.no-match-2':
+      x-k8s-cli:
+        setter:
+          name: no-match-2
+          value: "2"
+ `,
+			expected: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.no-match-1':
+      x-k8s-cli:
+        setter:
+          name: no-match-1
+          value: "1"
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: carl
+    io.k8s.cli.setters.no-match-2':
+      x-k8s-cli:
+        setter:
+          name: no-match-2
+          value: "2"
+`,
+		},
+		{
+			name:   "error",
+			setter: "replicas",
+			err:    "no setter replicas found",
+			input: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.no-match-1':
+      x-k8s-cli:
+        setter:
+          name: no-match-1
+          value: "1"
+    io.k8s.cli.setters.no-match-2':
+      x-k8s-cli:
+        setter:
+          name: no-match-2
+          value: "2"
+ `,
+			expected: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.no-match-1':
+      x-k8s-cli:
+        setter:
+          name: no-match-1
+          value: "1"
+    io.k8s.cli.setters.no-match-2':
+      x-k8s-cli:
+        setter:
+          name: no-match-2
+          value: "2"
+ `,
+		},
+	}
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.name, func(t *testing.T) {
+			in, err := yaml.Parse(test.input)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			// invoke the setter
+			instance := &SetOpenAPI{
+				Name: test.setter, Value: test.value,
+				SetBy: test.setBy, Description: test.description}
+			result, err := instance.Filter(in)
+			if test.err != "" {
+				if !assert.EqualError(t, err, test.err) {
+					t.FailNow()
+				}
+				return
+			}
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			// compare the actual and expected output
+			actual, err := result.String()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			actual = strings.TrimSpace(actual)
+			expected := strings.TrimSpace(test.expected)
+			if !assert.Equal(t, expected, actual) {
+				t.FailNow()
+			}
+		})
+	}
+}

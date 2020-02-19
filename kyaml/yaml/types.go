@@ -6,6 +6,7 @@ package yaml
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -97,6 +98,42 @@ func (p Parser) Filter(_ *RNode) (*RNode, error) {
 // Parse parses a yaml string into an *RNode
 func Parse(value string) (*RNode, error) {
 	return Parser{Value: value}.Filter(nil)
+}
+
+// ReadFile parses a single Resource from a yaml file
+func ReadFile(path string) (*RNode, error) {
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return Parse(string(b))
+}
+
+// WriteFile writes a single Resource to a yaml file
+func WriteFile(node *RNode, path string) error {
+	out, err := node.String()
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(path, []byte(out), 0600)
+}
+
+// UpdateFile reads the file at path, applies the filter to it, and write the result back.
+// path must contain a exactly 1 resource (YAML).
+func UpdateFile(filter Filter, path string) error {
+	// Read the yaml
+	y, err := ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	// Update the yaml
+	if err := y.PipeE(filter); err != nil {
+		return err
+	}
+
+	// Write the yaml
+	return WriteFile(y, path)
 }
 
 // TODO(pwittrock): test this
