@@ -44,17 +44,14 @@ $(MYGOBIN)/golangci-lint-kustomize:
 
 # Version pinned by api/go.mod
 $(MYGOBIN)/mdrip:
-	cd api; \
 	go install github.com/monopole/mdrip
 
 # Version pinned by api/go.mod
 $(MYGOBIN)/stringer:
-	cd api; \
 	go install golang.org/x/tools/cmd/stringer
 
 # Version pinned by api/go.mod
 $(MYGOBIN)/goimports:
-	cd api; \
 	go install golang.org/x/tools/cmd/goimports
 
 # Install resource from whatever is checked out.
@@ -77,10 +74,10 @@ $(MYGOBIN)/kustomize:
 .PHONY: install-tools
 install-tools: \
 	$(MYGOBIN)/goimports \
-	$(MYGOBIN)/golangci-lint-kustomize \
+	$(MYGOBIN)/stringer \
 	$(MYGOBIN)/mdrip \
-	$(MYGOBIN)/pluginator \
-	$(MYGOBIN)/stringer
+	$(MYGOBIN)/golangci-lint-kustomize \
+	$(MYGOBIN)/pluginator
 
 ### Begin kustomize plugin rules.
 #
