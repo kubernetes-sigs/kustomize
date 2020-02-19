@@ -309,6 +309,79 @@ metadata:
 `, b.String())
 }
 
+func Test_GetFunction(t *testing.T) {
+	var tests = []struct {
+		name       string
+		resource   string
+		expectedFn string
+		missingFn  bool
+	}{
+
+		// fn annotation
+		{
+			name: "fn annotation",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  annotations:
+    config.kubernetes.io/function: |-
+      container: foo:v1.0.0
+`,
+			expectedFn: `container: foo:v1.0.0`,
+		},
+
+		// legacy fn style
+		{name: "legacy fn meta",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  configFn:
+      container: foo:v1.0.0
+`,
+			expectedFn: `container: foo:v1.0.0`,
+		},
+
+		// no fn
+		{name: "no fn",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  annotations: {}
+`,
+			missingFn: true,
+		},
+
+		// test network, etc...
+	}
+
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt.name, func(t *testing.T) {
+			resource := yaml.MustParse(tt.resource)
+			meta, err := resource.GetMeta()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			fn, err := GetFunction(resource, meta)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			if tt.missingFn {
+				if !assert.Nil(t, fn) {
+					t.FailNow()
+				}
+			} else {
+				if !assert.Equal(t, strings.TrimSpace(fn.MustString()), strings.TrimSpace(tt.expectedFn)) {
+					t.FailNow()
+				}
+			}
+		})
+	}
+}
+
 func Test_GetContainerName(t *testing.T) {
 	// make sure gcr.io works
 	n, err := yaml.Parse(`apiVersion: v1beta1
@@ -362,6 +435,76 @@ metadata:
 	}
 	c, _ = GetContainerName(n)
 	assert.Equal(t, "", c)
+}
+
+func Test_GetContainerNetworkRequired(t *testing.T) {
+	tests := []struct {
+		input    string
+		required bool
+	}{
+		{
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+  configFn:
+    container:
+      image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
+      network:
+        required: true
+`,
+			required: true,
+		},
+		{
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+  configFn:
+    container:
+      image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
+      network:
+        required: false
+`,
+			required: false,
+		},
+		{
+
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+  configFn:
+    container:
+      image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
+`,
+			required: false,
+		},
+		{
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
+        network:
+          required: true
+`,
+			required: true,
+		},
+	}
+
+	for _, tc := range tests {
+		cfg, err := yaml.Parse(tc.input)
+		if !assert.NoError(t, err) {
+			return
+		}
+		required, err := GetContainerNetworkRequired(cfg)
+		assert.NoError(t, err)
+		assert.Equal(t, tc.required, required)
+	}
 }
 
 func TestFilter_Filter_defaultNaming(t *testing.T) {

@@ -206,7 +206,7 @@ _file_, or a path (or URL) refering to another
 kustomization _directory_, e.g.
 
 ```
-resource:
+resources:
 - myNamespace.yaml
 - sub-dir/some-deployment.yaml
 - ../../commonbase

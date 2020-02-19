@@ -1,7 +1,7 @@
 Find all the trasnformer files whose `kinds` field includes `HelmValues`, and
 only output certain fields of each document:
 ```
-curl -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
+curl -s -X GET "${ElasticSearchURL}:9200/${INDEXNAME}/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "size": 200,
   "_source": {

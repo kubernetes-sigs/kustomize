@@ -55,19 +55,36 @@ func (fm *FieldMeta) Read(n *yaml.RNode) error {
 		}
 		b, err := json.Marshal(fe)
 		if err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 		return json.Unmarshal(b, &fm.Extensions)
 	}
 	return nil
 }
 
+func isExtensionEmpty(x XKustomize) bool {
+	if x.FieldSetter != nil {
+		return false
+	}
+	if x.SetBy != "" {
+		return false
+	}
+	if len(x.PartialFieldSetters) > 0 {
+		return false
+	}
+	return true
+}
+
 // Write writes the FieldMeta to a node
 func (fm *FieldMeta) Write(n *yaml.RNode) error {
-	fm.Schema.VendorExtensible.AddExtension("x-kustomize", fm.Extensions)
+	if !isExtensionEmpty(fm.Extensions) {
+		fm.Schema.VendorExtensible.AddExtension("x-kustomize", fm.Extensions)
+	} else {
+		delete(fm.Schema.VendorExtensible.Extensions, "x-kustomize")
+	}
 	b, err := json.Marshal(fm.Schema)
 	if err != nil {
-		return err
+		return errors.Wrap(err)
 	}
 	n.YNode().LineComment = string(b)
 	return nil

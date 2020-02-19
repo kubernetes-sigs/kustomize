@@ -6,6 +6,7 @@ package openapi
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"sync"
 
 	"github.com/go-openapi/spec"
@@ -44,9 +45,74 @@ func SchemaForResourceType(t yaml.TypeMeta) *ResourceSchema {
 	return &ResourceSchema{Schema: rs}
 }
 
+// SupplementaryOpenAPIFieldName is the conventional field name (JSON/YAML) containing
+// supplementary OpenAPI definitions.
+const SupplementaryOpenAPIFieldName = "openAPI"
+
+// AddSchemaFromFile reads the file at path and parses the OpenAPI definitions
+// from the field "openAPI"
+func AddSchemaFromFile(path string) error {
+	return AddSchemaFromFileUsingField(path, SupplementaryOpenAPIFieldName)
+}
+
+// AddSchemaFromFileUsingField reads the file at path and parses the OpenAPI definitions
+// from the specified field.  If field is the empty string, use the whole document as
+// OpenAPI.
+func AddSchemaFromFileUsingField(path, field string) error {
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	// parse the yaml file (json is a subset of yaml, so will also parse)
+	y, err := yaml.Parse(string(b))
+	if err != nil {
+		return err
+	}
+
+	if field != "" {
+		// get the field containing the openAPI
+		m := y.Field(field)
+		if yaml.IsFieldEmpty(m) {
+			// doesn't contain openAPI definitions
+			return nil
+		}
+		y = m.Value
+	}
+
+	oAPI, err := y.String()
+	if err != nil {
+		return err
+	}
+
+	// convert the yaml openAPI to a JSON string by unmarshalling it to an
+	// interface{} and the marshalling it to a string
+	var o interface{}
+	err = yaml.Unmarshal([]byte(oAPI), &o)
+	if err != nil {
+		return err
+	}
+	j, err := json.Marshal(o)
+	if err != nil {
+		return err
+	}
+
+	// add the json schema to the global schema
+	_, err = AddSchema(j)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // AddSchema parses s, and adds definitions from s to the global schema.
 func AddSchema(s []byte) (*spec.Schema, error) {
 	return parse(s)
+}
+
+// ResetOpenAPI resets the openapi data to empty
+func ResetOpenAPI() {
+	globalSchema = openapiData{}
 }
 
 // AddDefinitions adds the definitions to the global schema.
@@ -123,7 +189,7 @@ func GetSchema(s string) (*ResourceSchema, error) {
 // schema as part of the global schema.
 // Must be called before the schema is used.
 func SuppressBuiltInSchemaUse() {
-	globalSchema.noUseBuiltInSchema = false
+	globalSchema.noUseBuiltInSchema = true
 }
 
 // Elements returns the Schema for the elements of an array.

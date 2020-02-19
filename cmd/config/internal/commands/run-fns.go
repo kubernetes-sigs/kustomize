@@ -40,6 +40,10 @@ func GetRunFnRunner(name string) *RunFnRunner {
 	r.Command.Flags().StringVar(
 		&r.Image, "image", "",
 		"run this image as a function instead of discovering them.")
+	r.Command.Flags().BoolVar(
+		&r.Network, "network", false, "enable network access for functions that declare it")
+	r.Command.Flags().StringVar(
+		&r.NetworkName, "network-name", "bridge", "the docker network to run the container in")
 	return r
 }
 
@@ -56,6 +60,8 @@ type RunFnRunner struct {
 	FnPaths            []string
 	Image              string
 	RunFns             runfn.RunFns
+	Network            bool
+	NetworkName        string
 }
 
 func (r *RunFnRunner) runE(c *cobra.Command, args []string) error {
@@ -188,6 +194,8 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 		Output:        output,
 		Input:         input,
 		Path:          path,
+		Network:       r.Network,
+		NetworkName:   r.NetworkName,
 	}
 
 	// don't consider args for the function
