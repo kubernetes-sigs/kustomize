@@ -1336,3 +1336,240 @@ spec:
     protocol: TCP
 `)
 }
+
+func TestVariableRefNFSServer(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("/app/base", `
+resources:
+- pv_pvc.yaml
+- nfs_deployment.yaml
+- nfs_service.yaml
+- deployment.yaml
+- nfs_pv.yaml
+
+vars:
+- name: NFS_SERVER_SERVICE_NAME
+  objref:
+    kind: Service
+    name: nfs-server-service
+    apiVersion: v1
+  fieldref:
+    fieldpath: metadata.name
+`)
+	th.WriteF("/app/base/pv_pvc.yaml", `
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shared-volume-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+`)
+	th.WriteF("/app/base/nfs_deployment.yaml", `
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: nfs-server
+spec:
+  replicas: 1
+  template:
+    spec:
+      metadata:
+        labels:
+          role: nfs-server
+      containers:
+        - name: nfs-server
+          image: gcr.io/google_containers/volume-nfs:0.8
+          ports:
+            - name: nfs
+              containerPort: 2049
+            - name: mountd
+              containerPort: 20048
+            - name: rpcbind
+              containerPort: 111
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /exports
+              name: shared-files
+      volumes:
+        - name: shared-files
+          persistentVolumeClaim:
+            claimName: shared-volume-claim
+`)
+	th.WriteF("/app/base/nfs_service.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: nfs-server-service
+spec:
+  ports:
+    - name: nfs
+      port: 2049
+    - name: mountd
+      port: 20048
+    - name: rpcbind
+      port: 111
+  selector:
+    role: nfs-server
+`)
+	th.WriteF("/app/base/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app.kubernetes.io/component: nginx
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: nginx
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.15.7-alpine
+        ports:
+        - name: http
+          containerPort: 80
+        volumeMounts:
+          - mountPath: /app/shared-files
+            name: nfs-files-vol
+      volumes:
+        - name: nfs-files-vol
+          nfs:
+            server: $(NFS_SERVER_SERVICE_NAME).default.srv.cluster.local
+            path: /
+            readOnly: false
+`)
+	th.WriteF("/app/base/nfs_pv.yaml", `
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-files-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: $(NFS_SERVER_SERVICE_NAME).default.srv.cluster.local
+    path: /
+    readOnly: false
+`)
+	th.WriteK("/app/overlay", `
+nameprefix: kustomized-
+resources:
+- ../base
+`)
+	m := th.Run("/app/overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Service
+metadata:
+  name: kustomized-nfs-server-service
+spec:
+  ports:
+  - name: nfs
+    port: 2049
+  - name: mountd
+    port: 20048
+  - name: rpcbind
+    port: 111
+  selector:
+    role: nfs-server
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: nginx
+  name: kustomized-nginx
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: nginx
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: nginx
+    spec:
+      containers:
+      - image: nginx:1.15.7-alpine
+        name: nginx
+        ports:
+        - containerPort: 80
+          name: http
+        volumeMounts:
+        - mountPath: /app/shared-files
+          name: nfs-files-vol
+      volumes:
+      - name: nfs-files-vol
+        nfs:
+          path: /
+          readOnly: false
+          server: kustomized-nfs-server-service.default.srv.cluster.local
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kustomized-nfs-server
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - image: gcr.io/google_containers/volume-nfs:0.8
+        name: nfs-server
+        ports:
+        - containerPort: 2049
+          name: nfs
+        - containerPort: 20048
+          name: mountd
+        - containerPort: 111
+          name: rpcbind
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /exports
+          name: shared-files
+      metadata:
+        labels:
+          role: nfs-server
+      volumes:
+      - name: shared-files
+        persistentVolumeClaim:
+          claimName: kustomized-shared-volume-claim
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: kustomized-nfs-files-pv
+spec:
+  accessModes:
+  - ReadWriteMany
+  capacity:
+    storage: 10Gi
+  nfs:
+    path: /
+    readOnly: false
+    server: kustomized-nfs-server-service.default.srv.cluster.local
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kustomized-shared-volume-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+`)
+}

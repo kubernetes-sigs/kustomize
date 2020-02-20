@@ -78,6 +78,9 @@ varReference:
 - path: spec/template/spec/initContainers/volumeMounts/mountPath
   kind: Deployment
 
+- path: spec/template/spec/volumes/nfs/server
+  kind: Deployment
+
 - path: spec/rules/host
   kind: Ingress
 
@@ -188,6 +191,9 @@ varReference:
 
 - path: spec/template/spec/initContainers/volumeMounts/mountPath
   kind: StatefulSet
+
+- path: spec/nfs/server
+  kind: PersistentVolume
 
 - path: metadata/labels
 
