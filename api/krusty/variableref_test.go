@@ -1471,6 +1471,48 @@ resources:
 	m := th.Run("/app/overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kustomized-shared-volume-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kustomized-nfs-server
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - image: gcr.io/google_containers/volume-nfs:0.8
+        name: nfs-server
+        ports:
+        - containerPort: 2049
+          name: nfs
+        - containerPort: 20048
+          name: mountd
+        - containerPort: 111
+          name: rpcbind
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /exports
+          name: shared-files
+      metadata:
+        labels:
+          role: nfs-server
+      volumes:
+      - name: shared-files
+        persistentVolumeClaim:
+          claimName: kustomized-shared-volume-claim
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: kustomized-nfs-server-service
@@ -1516,37 +1558,6 @@ spec:
           readOnly: false
           server: kustomized-nfs-server-service.default.srv.cluster.local
 ---
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: kustomized-nfs-server
-spec:
-  replicas: 1
-  template:
-    spec:
-      containers:
-      - image: gcr.io/google_containers/volume-nfs:0.8
-        name: nfs-server
-        ports:
-        - containerPort: 2049
-          name: nfs
-        - containerPort: 20048
-          name: mountd
-        - containerPort: 111
-          name: rpcbind
-        securityContext:
-          privileged: true
-        volumeMounts:
-        - mountPath: /exports
-          name: shared-files
-      metadata:
-        labels:
-          role: nfs-server
-      volumes:
-      - name: shared-files
-        persistentVolumeClaim:
-          claimName: kustomized-shared-volume-claim
----
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -1560,16 +1571,5 @@ spec:
     path: /
     readOnly: false
     server: kustomized-nfs-server-service.default.srv.cluster.local
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: kustomized-shared-volume-claim
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
 `)
 }
