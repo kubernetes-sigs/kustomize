@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/commands"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
@@ -120,7 +121,9 @@ spec:
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			commands.GetOpenAPIFile = func(args []string) (s string, err error) {
+			old := ext.GetOpenAPIFile
+			defer func() { ext.GetOpenAPIFile = old }()
+			ext.GetOpenAPIFile = func(args []string) (s string, err error) {
 				return f.Name(), nil
 			}
 

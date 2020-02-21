@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
@@ -58,7 +59,7 @@ func (r *CreateSubstitutionRunner) preRunE(c *cobra.Command, args []string) erro
 		return err
 	}
 
-	r.OpenAPIFile, err = GetOpenAPIFile(args)
+	r.OpenAPIFile, err = ext.GetOpenAPIFile(args)
 	if err != nil {
 		return err
 	}
