@@ -6,10 +6,10 @@ package commands
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/setters"
@@ -42,10 +42,6 @@ func NewSetRunner(parent string) *SetRunner {
 }
 
 var setterVersion string
-
-var GetOpenAPIFile = func(args []string) (string, error) {
-	return filepath.Join(args[0], "kustomization"), nil
-}
 
 func SetCommand(parent string) *cobra.Command {
 	return NewSetRunner(parent).Command
@@ -100,7 +96,7 @@ func (r *SetRunner) preRunE(c *cobra.Command, args []string) error {
 		r.Set.Value = args[2]
 		r.Set.Description = r.Perform.Description
 		r.Set.SetBy = r.Perform.SetBy
-		r.OpenAPIFile, err = GetOpenAPIFile(args)
+		r.OpenAPIFile, err = ext.GetOpenAPIFile(args)
 		if err != nil {
 			return err
 		}
