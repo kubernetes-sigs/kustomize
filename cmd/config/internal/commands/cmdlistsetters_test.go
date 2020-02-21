@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/commands"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
@@ -261,7 +262,9 @@ spec:
 				t.FailNow()
 			}
 			defer os.Remove(f.Name())
-			commands.GetOpenAPIFile = func(args []string) (s string, err error) {
+			old := ext.GetOpenAPIFile
+			defer func() { ext.GetOpenAPIFile = old }()
+			ext.GetOpenAPIFile = func(args []string) (s string, err error) {
 				err = ioutil.WriteFile(f.Name(), []byte(test.openapi), 0600)
 				if !assert.NoError(t, err) {
 					t.FailNow()
