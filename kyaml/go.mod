@@ -9,6 +9,7 @@ require (
 	github.com/sergi/go-diff v1.1.0
 	github.com/stretchr/testify v1.4.0
 	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca
-	gopkg.in/yaml.v2 v2.2.4
-	gopkg.in/yaml.v3 v3.0.0-20191026110619-0b21df46bc1d
+	golang.org/x/net v0.0.0-20191004110552-13f9640d40b9 // indirect
+	gopkg.in/yaml.v2 v2.2.7
+	gopkg.in/yaml.v3 v3.0.0-20191120175047-4206685974f2
 )
