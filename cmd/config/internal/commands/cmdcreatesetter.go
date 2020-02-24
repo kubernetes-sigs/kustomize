@@ -5,6 +5,7 @@ package commands
 
 import (
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/setters"
@@ -85,7 +86,7 @@ func (r *CreateSetterRunner) preRunE(c *cobra.Command, args []string) error {
 	}
 	if setterVersion == "v2" {
 		var err error
-		r.OpenAPIFile, err = GetOpenAPIFile(args)
+		r.OpenAPIFile, err = ext.GetOpenAPIFile(args)
 		r.CreateSetter.Description = r.Set.SetPartialField.Description
 		r.CreateSetter.SetBy = r.Set.SetPartialField.SetBy
 		if err != nil {

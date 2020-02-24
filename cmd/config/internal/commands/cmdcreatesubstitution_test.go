@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/commands"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
@@ -106,7 +107,7 @@ spec:
 		{
 			name: "substitution and create setters 1",
 			args: []string{
-				"image", "something/nginx:1.7.9", "--pattern", "something/IMAGE:TAG",
+				"image", "something/nginx::1.7.9/nginxotherthing", "--pattern", "something/IMAGE::TAG/nginxotherthing",
 				"--value", "IMAGE=image", "--value", "TAG=tag"},
 			input: `
 apiVersion: apps/v1
@@ -119,7 +120,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: something/nginx:1.7.9
+        image: something/nginx::1.7.9/nginxotherthing
       - name: sidecar
         image: sidecar:1.7.9
  `,
@@ -146,7 +147,7 @@ openAPI:
       x-k8s-cli:
         substitution:
           name: image
-          pattern: something/IMAGE:TAG
+          pattern: something/IMAGE::TAG/nginxotherthing
           values:
           - marker: IMAGE
             ref: '#/definitions/io.k8s.cli.setters.image'
@@ -164,7 +165,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: something/nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image"}
+        image: something/nginx::1.7.9/nginxotherthing # {"$ref":"#/definitions/io.k8s.cli.substitutions.image"}
       - name: sidecar
         image: sidecar:1.7.9
  `,
@@ -186,7 +187,9 @@ spec:
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			commands.GetOpenAPIFile = func(args []string) (s string, err error) {
+			old := ext.GetOpenAPIFile
+			defer func() { ext.GetOpenAPIFile = old }()
+			ext.GetOpenAPIFile = func(args []string) (s string, err error) {
 				return f.Name(), nil
 			}
 

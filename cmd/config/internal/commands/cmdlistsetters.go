@@ -10,6 +10,7 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/setters"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
@@ -55,7 +56,7 @@ func (r *ListSettersRunner) preRunE(c *cobra.Command, args []string) error {
 func (r *ListSettersRunner) runE(c *cobra.Command, args []string) error {
 	if setterVersion == "v2" {
 		// use setters v2
-		path, err := GetOpenAPIFile(args)
+		path, err := ext.GetOpenAPIFile(args)
 		if err != nil {
 			return err
 		}
