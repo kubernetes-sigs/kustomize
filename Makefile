@@ -21,6 +21,7 @@ verify-kustomize: \
 # https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/kustomize
 .PHONY: prow-presubmit-check
 prow-presubmit-check: \
+	lint-kustomize \
 	test-unit-kustomize-all
 
 .PHONY: verify-kustomize-e2e
