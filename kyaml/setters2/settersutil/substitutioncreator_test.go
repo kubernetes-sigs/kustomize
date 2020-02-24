@@ -11,19 +11,9 @@ import (
 )
 
 func TestGetValuesForMarkersPositive(t *testing.T) {
-	value1 := setters2.Value{
-		Marker: "IMAGE",
-	}
-
-	value2 := setters2.Value{
-		Marker: "VERSION",
-	}
-
-	values := []setters2.Value{value1, value2}
-
 	c := SubstitutionCreator{
 		Pattern:    "something/IMAGE::VERSION/otherthing/IMAGE::VERSION/",
-		Values:     values,
+		Values:     Values(),
 		FieldValue: "something/nginx::0.1.0/otherthing/nginx::0.1.0/",
 	}
 
@@ -38,19 +28,9 @@ func TestGetValuesForMarkersPositive(t *testing.T) {
 }
 
 func TestGetValuesForMarkersDiffMarkerValues(t *testing.T) {
-	value1 := setters2.Value{
-		Marker: "IMAGE",
-	}
-
-	value2 := setters2.Value{
-		Marker: "VERSION",
-	}
-
-	values := []setters2.Value{value1, value2}
-
 	c := SubstitutionCreator{
 		Pattern:    "something/IMAGE:VERSION/IMAGE",
-		Values:     values,
+		Values:     Values(),
 		FieldValue: "something/nginx:0.1.0/ubuntu",
 	}
 
@@ -60,25 +40,15 @@ func TestGetValuesForMarkersDiffMarkerValues(t *testing.T) {
 		t.FailNow()
 	}
 
-	if !assert.Equal(t, err.Error(), "Same marker is found to have different values in field value.") {
+	if !assert.Equal(t, err.Error(), "same marker is found to have different values in field value") {
 		t.FailNow()
 	}
 }
 
 func TestGetValuesForMarkersNoMatch(t *testing.T) {
-	value1 := setters2.Value{
-		Marker: "IMAGE",
-	}
-
-	value2 := setters2.Value{
-		Marker: "VERSION",
-	}
-
-	values := []setters2.Value{value1, value2}
-
 	c := SubstitutionCreator{
 		Pattern:    "something/IMAGE:VERSION",
-		Values:     values,
+		Values:     Values(),
 		FieldValue: "otherthing/nginx:0.1.0",
 	}
 
@@ -88,25 +58,15 @@ func TestGetValuesForMarkersNoMatch(t *testing.T) {
 		t.FailNow()
 	}
 
-	if !assert.Equal(t, err.Error(), "Unable to derive values for markers. Create setters for all markers and then try again.") {
+	if !assert.Equal(t, err.Error(), "unable to derive values for markers, create setters for all markers and then try again") {
 		t.FailNow()
 	}
 }
 
 func TestGetValuesForMarkersNoMatch2(t *testing.T) {
-	value1 := setters2.Value{
-		Marker: "IMAGE",
-	}
-
-	value2 := setters2.Value{
-		Marker: "VERSION",
-	}
-
-	values := []setters2.Value{value1, value2}
-
 	c := SubstitutionCreator{
 		Pattern:    "something/IMAGE:VERSION/abc",
-		Values:     values,
+		Values:     Values(),
 		FieldValue: "something/nginx:0.1.0/abcd",
 	}
 
@@ -116,29 +76,19 @@ func TestGetValuesForMarkersNoMatch2(t *testing.T) {
 		t.FailNow()
 	}
 
-	if !assert.Equal(t, err.Error(), "Unable to derive values for markers. Create setters for all markers and then try again.") {
+	if !assert.Equal(t, err.Error(), "unable to derive values for markers, create setters for all markers and then try again") {
 		t.FailNow()
 	}
 }
 
 func TestGetValuesForMarkersSubStngMarkers(t *testing.T) {
-	value1 := setters2.Value{
-		Marker: "IMAGE",
-	}
-
-	value2 := setters2.Value{
-		Marker: "VERSION",
-	}
-
 	value3 := setters2.Value{
 		Marker: "MAGE",
 	}
 
-	values := []setters2.Value{value1, value2, value3}
-
 	c := SubstitutionCreator{
 		Pattern:    "something/IMAGE:VERSION/abc/MAGE",
-		Values:     values,
+		Values:     append(Values(), value3),
 		FieldValue: "something/nginx:0.1.0/abc/ubuntu",
 	}
 
@@ -151,4 +101,16 @@ func TestGetValuesForMarkersSubStngMarkers(t *testing.T) {
 	assert.Equal(t, m["IMAGE"], "nginx")
 	assert.Equal(t, m["VERSION"], "0.1.0")
 	assert.Equal(t, m["MAGE"], "ubuntu")
+}
+
+func Values() []setters2.Value {
+	value1 := setters2.Value{
+		Marker: "IMAGE",
+	}
+
+	value2 := setters2.Value{
+		Marker: "VERSION",
+	}
+
+	return []setters2.Value{value1, value2}
 }

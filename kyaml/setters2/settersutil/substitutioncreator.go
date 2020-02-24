@@ -4,11 +4,10 @@
 package settersutil
 
 import (
-	"io/ioutil"
 	"math"
 	"strings"
 
-	"sigs.k8s.io/kind/pkg/errors"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
@@ -78,13 +77,7 @@ func (c SubstitutionCreator) Create(openAPIPath, resourcesPath string) error {
 // CreateSettersForSubstitution creates the setters for all the references in the substitution
 // values if they don't already exist in openAPIPath file.
 func (c SubstitutionCreator) CreateSettersForSubstitution(openAPIPath string) error {
-	b, err := ioutil.ReadFile(openAPIPath)
-	if err != nil {
-		return err
-	}
-
-	// parse the yaml file
-	y, err := yaml.Parse(string(b))
+	y, err := yaml.ReadFile(openAPIPath)
 	if err != nil {
 		return err
 	}
@@ -129,58 +122,55 @@ func (c SubstitutionCreator) GetValuesForMarkers() (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := c.FieldValue
-	p := c.Pattern
-	i := 0
-	j := 0
-	// iterate s, p with indices i, j respectively and when j hits the index of a marker, freeze j and iterate
-	// i and capture string till we find the substring just after current marker and before next marker
+	fv := c.FieldValue
+	pattern := c.Pattern
+	fvInd := 0
+	patternInd := 0
+	// iterate fv, pattern with indices fvInd, patternInd respectively and when patternInd hits the index of a marker,
+	// freeze patternInd and iterate fvInd and capture string till we find the substring just after current marker
+	// and before next marker
 
-	// Ex: s = "something/ubuntu:0.1.0", p = "something/IMAGE::VERSION", till j reaches 10
-	// just proceed i and j and check if s[i]==p[j]
-	// when j is 10, freeze j and move i till it sees substring '::' which derives IMAGE = ubuntu and so on.
-	for i < len(s) && j < len(p) {
-		if marker, ok := indices[j]; ok {
-			value := ""
-			e := j + len(marker)
-
-			for i < len(s) && (e == len(p) ||
-				s[i:min(len(s), i+lenToNextMarker(indices, e))] != p[e:min(e+lenToNextMarker(indices, e), len(p))]) {
-				value += string(s[i])
-				i++
-			}
+	// Ex: fv = "something/ubuntu:0.1.0", pattern = "something/IMAGE:VERSION", till patternInd reaches 10
+	// just proceed fvInd and patternInd and check if fv[fvInd]==pattern[patternInd] when patternInd is 10,
+	// freeze patternInd and move fvInd till it sees substring ':' which derives IMAGE = ubuntu and so on.
+	for fvInd < len(fv) && patternInd < len(pattern) {
+		// if we hit marker index, extract its corresponding value
+		if marker, ok := indices[patternInd]; ok {
+			// increment the patternInd to end of marker. This helps us to extract the substring before next marker.
+			patternInd += len(marker)
+			value := c.extractValueForMarker(&fvInd, fv, patternInd, indices)
 			// if marker is repeated in the pattern, make sure that the corresponding values
 			// are same and throw error if not.
 			if prevValue, ok := m[marker]; ok && prevValue != value {
-				return nil, errors.Errorf("Same marker is found to have different values in field value.")
+				return nil, errors.Errorf("same marker is found to have different values in field value")
 			}
 			m[marker] = value
-			j += len(marker)
 		} else {
-			if s[i] != p[j] {
-				return nil, errors.Errorf("Unable to derive values for markers. Create setters for all markers and then try again.")
+			// Ex: fv = "samething/ubuntu:0.1.0" pattern = "something/IMAGE:VERSION". Error out at 'a' in fv.
+			if fv[fvInd] != pattern[patternInd] {
+				return nil, errors.Errorf("unable to derive values for markers, create setters for all markers and then try again")
 			}
-			i++
-			j++
+			fvInd++
+			patternInd++
 		}
 	}
 	// check if both strings are completely visited or throw error
-	if i < len(s) || j < len(p) {
-		return nil, errors.Errorf("Unable to derive values for markers. Create setters for all markers and then try again.")
+	if fvInd < len(fv) || patternInd < len(pattern) {
+		return nil, errors.Errorf("unable to derive values for markers, create setters for all markers and then try again")
 	}
 	return m, nil
 }
 
 // GetStartIndices returns the start indices of all the markers in the pattern
 func (c SubstitutionCreator) GetStartIndices() (map[int]string, error) {
-	inds := make(map[int]string)
+	indices := make(map[int]string)
 	p := c.Pattern
 	for _, value := range c.Values {
 		m := value.Marker
 		found := false
 		for i := range p {
 			if strings.HasPrefix(p[i:], m) {
-				inds[i] = m
+				indices[i] = m
 				found = true
 			}
 		}
@@ -188,12 +178,27 @@ func (c SubstitutionCreator) GetStartIndices() (map[int]string, error) {
 			return nil, errors.Errorf("Unable to find marker " + m + " in the pattern")
 		}
 	}
-	return inds, nil
+	return indices, nil
+}
+
+func (c SubstitutionCreator) extractValueForMarker(fvInd *int, fv string, patternInd int, indices map[int]string) string {
+	value := ""
+	lm := lenTillNextMarker(indices, patternInd)
+
+	// keep appending chars to value till we find the substring between 2 markers in fv
+	// In example fv = "something/ubuntu:0.1.0", pattern = "something/IMAGE:VERSION",
+	// proceed till we find substring ":" in fv which makes value = ubuntu for marker IMAGE
+	for *fvInd < len(fv) && (patternInd == len(c.Pattern) ||
+		fv[*fvInd:min(len(fv), *fvInd+lm)] != c.Pattern[patternInd:min(patternInd+lm, len(c.Pattern))]) {
+		value += string(fv[*fvInd])
+		*fvInd++
+	}
+	return value
 }
 
 // lenToNextMarker takes in the indices map, an index and returns the distance to
-// next greater index
-func lenToNextMarker(m map[int]string, j int) int {
+// next marker start index in indices map
+func lenTillNextMarker(m map[int]string, j int) int {
 	res := math.MaxInt32
 	for k := range m {
 		if k > j {
