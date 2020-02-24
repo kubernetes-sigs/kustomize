@@ -109,10 +109,13 @@ func (c SubstitutionCreator) CreateSettersForSubstitution(openAPIPath string) er
 			sd := setters2.SetterDefinition{
 				// get the setter name from ref. Ex: from #/definitions/io.k8s.cli.setters.image_setter
 				// extract image_setter
-				Name:        strings.Split(value.Ref, ".")[4],
-				Value:       m[value.Marker],
+				Name:  strings.TrimPrefix(value.Ref, "#/definitions/io.k8s.cli.setters."),
+				Value: m[value.Marker],
 			}
-			sd.AddToFile(openAPIPath)
+			err := sd.AddToFile(openAPIPath)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -126,23 +129,23 @@ func (c SubstitutionCreator) GetValuesForMarkers() (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	s:=c.FieldValue
-	p:=c.Pattern
-	i:=0
-	j:=0
+	s := c.FieldValue
+	p := c.Pattern
+	i := 0
+	j := 0
 	// iterate s, p with indices i, j respectively and when j hits the index of a marker, freeze j and iterate
 	// i and capture string till we find the substring just after current marker and before next marker
 
 	// Ex: s = "something/ubuntu:0.1.0", p = "something/IMAGE::VERSION", till j reaches 10
 	// just proceed i and j and check if s[i]==p[j]
 	// when j is 10, freeze j and move i till it sees substring '::' which derives IMAGE = ubuntu and so on.
-	for i< len(s) && j< len(p) {
+	for i < len(s) && j < len(p) {
 		if marker, ok := indices[j]; ok {
 			value := ""
-			e := j+len(marker)
+			e := j + len(marker)
 
-			for i<len(s) && (e == len(p) ||
-					s[i:min(len(s), i+lenToNextMarker(indices, e))] != p[e:min(e+lenToNextMarker(indices, e), len(p))]) {
+			for i < len(s) && (e == len(p) ||
+				s[i:min(len(s), i+lenToNextMarker(indices, e))] != p[e:min(e+lenToNextMarker(indices, e), len(p))]) {
 				value += string(s[i])
 				i++
 			}
@@ -152,17 +155,17 @@ func (c SubstitutionCreator) GetValuesForMarkers() (map[string]string, error) {
 				return nil, errors.Errorf("Same marker is found to have different values in field value.")
 			}
 			m[marker] = value
-			j+=len(marker)
+			j += len(marker)
 		} else {
 			if s[i] != p[j] {
-				return nil, errors.Errorf("Unable to derive values for markers. Create setters for all markers.")
+				return nil, errors.Errorf("Unable to derive values for markers. Create setters for all markers and then try again.")
 			}
 			i++
 			j++
 		}
 	}
 	// check if both strings are completely visited or throw error
-	if i<len(s) || j<len(p) {
+	if i < len(s) || j < len(p) {
 		return nil, errors.Errorf("Unable to derive values for markers. Create setters for all markers and then try again.")
 	}
 	return m, nil
@@ -175,7 +178,7 @@ func (c SubstitutionCreator) GetStartIndices() (map[int]string, error) {
 	for _, value := range c.Values {
 		m := value.Marker
 		found := false
-		for i, _ := range p {
+		for i := range p {
 			if strings.HasPrefix(p[i:], m) {
 				inds[i] = m
 				found = true
@@ -192,7 +195,7 @@ func (c SubstitutionCreator) GetStartIndices() (map[int]string, error) {
 // next greater index
 func lenToNextMarker(m map[int]string, j int) int {
 	res := math.MaxInt32
-	for k, _ := range m {
+	for k := range m {
 		if k > j {
 			res = min(k-j, res)
 		}
@@ -201,7 +204,7 @@ func lenToNextMarker(m map[int]string, j int) int {
 }
 
 func min(a int, b int) int {
-	if a<b {
+	if a < b {
 		return a
 	}
 	return b
