@@ -114,7 +114,7 @@ type ResMap interface {
 	Append(*resource.Resource) error
 
 	// AppendAll appends another ResMap to self,
-	// failing on any OrgId collision.
+	// failing on any CurId collision.
 	AppendAll(ResMap) error
 
 	// AbsorbAll appends, replaces or merges the contents
