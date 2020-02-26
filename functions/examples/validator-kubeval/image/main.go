@@ -59,14 +59,23 @@ type API struct {
 
 // Filter checks each resource for validity, otherwise returning an error.
 func (f kubevalFilter) Filter(in []*yaml.RNode) ([]*yaml.RNode, error) {
-	api := f.parseAPI()
+	var api API
+	for _, r := range in {
+		meta, err := r.GetMeta()
+		if err != nil {
+			return nil, err
+		}
+		if _, ok := meta.Annotations["config.kubernetes.io/function"]; ok {
+			api = f.parseAPI(r)
+		}
+	}
+
 	config := kubeval.NewDefaultConfig()
 	config.Strict = api.Spec.Strict
 	config.IgnoreMissingSchemas = api.Spec.IgnoreMissingSchemas
 	config.KubernetesVersion = api.Spec.KubernetesVersion
 	config.SchemaLocation = api.Spec.SchemaLocation
 
-	// validate each Resource
 	for _, r := range in {
 		if err := validate(r.MustString(), config); err != nil {
 			meta, merr := r.GetMeta()
@@ -122,10 +131,10 @@ func checkResults(results []kubeval.ValidationResult) error {
 }
 
 // parseAPI parses the functionConfig into an API struct.
-func (f *kubevalFilter) parseAPI() API {
+func (f *kubevalFilter) parseAPI(node *yaml.RNode) API {
 	// parse the input function config -- TODO: simplify this
 	var api API
-	if err := yaml.Unmarshal([]byte(f.rw.FunctionConfig.MustString()), &api); err != nil {
+	if err := yaml.Unmarshal([]byte(node.MustString()), &api); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
