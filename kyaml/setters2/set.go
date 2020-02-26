@@ -150,10 +150,8 @@ func (s SetOpenAPI) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 		return nil, err
 	}
 
-	if s.SetBy != "" {
-		if err := def.PipeE(&yaml.FieldSetter{Name: "setBy", StringValue: s.SetBy}); err != nil {
-			return nil, err
-		}
+	if err := def.PipeE(&yaml.FieldSetter{Name: "setBy", StringValue: s.SetBy}); err != nil {
+		return nil, err
 	}
 
 	if s.Description != "" {
