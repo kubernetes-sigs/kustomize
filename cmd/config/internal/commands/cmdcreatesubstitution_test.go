@@ -104,6 +104,72 @@ spec:
         image: sidecar:1.7.9
  `,
 		},
+		{
+			name: "substitution and create setters 1",
+			args: []string{
+				"image", "something/nginx::1.7.9/nginxotherthing", "--pattern", "something/IMAGE::TAG/nginxotherthing",
+				"--value", "IMAGE=image", "--value", "TAG=tag"},
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: something/nginx::1.7.9/nginxotherthing
+      - name: sidecar
+        image: sidecar:1.7.9
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+ `,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: image
+          value: nginx
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: tag
+          value: 1.7.9
+    io.k8s.cli.substitutions.image:
+      x-k8s-cli:
+        substitution:
+          name: image
+          pattern: something/IMAGE::TAG/nginxotherthing
+          values:
+          - marker: IMAGE
+            ref: '#/definitions/io.k8s.cli.setters.image'
+          - marker: TAG
+            ref: '#/definitions/io.k8s.cli.setters.tag'
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: something/nginx::1.7.9/nginxotherthing # {"$ref":"#/definitions/io.k8s.cli.substitutions.image"}
+      - name: sidecar
+        image: sidecar:1.7.9
+ `,
+		},
 	}
 	for i := range tests {
 		test := tests[i]
