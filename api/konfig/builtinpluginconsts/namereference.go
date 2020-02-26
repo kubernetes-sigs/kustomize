@@ -345,5 +345,24 @@ nameReference:
     kind: PersistentVolumeClaim
   - path: spec/volumeClaimTemplates/spec/storageClassName
     kind: StatefulSet
+
+- kind: PriorityClass
+  version: v1
+  group: scheduling.k8s.io
+  fieldSpecs:
+  - path: spec/priorityClassName
+    kind: Pod
+  - path: spec/template/spec/priorityClassName
+    kind: StatefulSet
+  - path: spec/template/spec/priorityClassName
+    kind: Deployment
+  - path: spec/template/spec/priorityClassName
+    kind: ReplicationController
+  - path: spec/jobTemplate/spec/template/spec/priorityClassName
+    kind: CronJob
+  - path: spec/template/spec/priorityClassName
+    kind: Job
+  - path: spec/template/spec/priorityClassName
+    kind: DaemonSet
 `
 )
