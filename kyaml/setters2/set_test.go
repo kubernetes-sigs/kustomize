@@ -584,6 +584,54 @@ openAPI:
 `,
 		},
 		{
+			name:   "set-replicas-set-by-empty",
+			setter: "replicas",
+			value:  "3",
+			input: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.no-match-1':
+      x-k8s-cli:
+        setter:
+          name: no-match-1
+          value: "1"
+          setBy: "package-default"
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "4"
+          setBy: "package-default"
+    io.k8s.cli.setters.no-match-2':
+      x-k8s-cli:
+        setter:
+          name: no-match-2
+          value: "2"
+          setBy: "package-default"
+ `,
+			expected: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.no-match-1':
+      x-k8s-cli:
+        setter:
+          name: no-match-1
+          value: "1"
+          setBy: "package-default"
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+    io.k8s.cli.setters.no-match-2':
+      x-k8s-cli:
+        setter:
+          name: no-match-2
+          value: "2"
+          setBy: "package-default"
+`,
+		},
+		{
 			name:   "error",
 			setter: "replicas",
 			err:    "no setter replicas found",
