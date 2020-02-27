@@ -30,7 +30,7 @@ func (s *Set) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 // visitScalar
 func (s *Set) visitScalar(object *yaml.RNode, p string) error {
 	// get the openAPI for this field describing how to apply the setter
-	ext, err := getExtFromComment(object)
+	ext, sch, err := getExtFromComment(object)
 	if err != nil {
 		return err
 	}
@@ -39,13 +39,13 @@ func (s *Set) visitScalar(object *yaml.RNode, p string) error {
 	}
 
 	// perform a direct set of the field if it matches
-	if s.set(object, ext) {
+	if s.set(object, ext, sch) {
 		s.Count++
 		return nil
 	}
 
 	// perform a substitution of the field if it matches
-	sub, err := s.substitute(object, ext)
+	sub, err := s.substitute(object, ext, sch)
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func (s *Set) visitScalar(object *yaml.RNode, p string) error {
 
 // substitute updates the value of field from ext if ext contains a substitution that
 // depends on a setter whose name matches s.Name.
-func (s *Set) substitute(field *yaml.RNode, ext *cliExtension) (bool, error) {
+func (s *Set) substitute(field *yaml.RNode, ext *cliExtension, _ *spec.Schema) (bool, error) {
 	nameMatch := false
 
 	// check partial setters to see if they contain the setter as part of a
@@ -109,11 +109,15 @@ func (s *Set) substitute(field *yaml.RNode, ext *cliExtension) (bool, error) {
 	// TODO(pwittrock): validate the field value
 
 	field.YNode().Value = p
+
+	// substitutions are always strings
+	field.YNode().Tag = "!!str"
+
 	return true, nil
 }
 
 // set applies the value from ext to field if its name matches s.Name
-func (s *Set) set(field *yaml.RNode, ext *cliExtension) bool {
+func (s *Set) set(field *yaml.RNode, ext *cliExtension, sch *spec.Schema) bool {
 	// check full setter
 	if ext.Setter == nil || ext.Setter.Name != s.Name {
 		return false
@@ -130,6 +134,9 @@ func (s *Set) set(field *yaml.RNode, ext *cliExtension) bool {
 
 	// this has a full setter, set its value
 	field.YNode().Value = ext.Setter.Value
+
+	// format the node so it is quoted if it is a string
+	yaml.FormatNonStringStyle(field.YNode(), *sch)
 	return true
 }
 
@@ -191,7 +198,14 @@ func (s SetOpenAPI) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 		}
 	}
 
-	if err := def.PipeE(&yaml.FieldSetter{Name: "value", StringValue: s.Value}); err != nil {
+	v := yaml.NewScalarRNode(s.Value)
+	// values are always represented as strings the OpenAPI
+	// since the are unmarshalled into strings.  Use double quote style to
+	// ensure this consistently.
+	v.YNode().Tag = "!!str"
+	v.YNode().Style = yaml.DoubleQuotedStyle
+
+	if err := def.PipeE(&yaml.FieldSetter{Name: "value", Value: v}); err != nil {
 		return nil, err
 	}
 
