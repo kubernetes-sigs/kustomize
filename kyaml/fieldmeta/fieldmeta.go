@@ -5,6 +5,7 @@ package fieldmeta
 
 import (
 	"encoding/json"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -36,16 +37,29 @@ type PartialFieldSetter struct {
 	Value string `yaml:"value" json:"value"`
 }
 
+// IsEmpty returns true if the FieldMeta has any empty Schema
+func (fm *FieldMeta) IsEmpty() bool {
+	if fm == nil {
+		return true
+	}
+	return reflect.DeepEqual(fm.Schema, spec.Schema{})
+}
+
 // Read reads the FieldMeta from a node
 func (fm *FieldMeta) Read(n *yaml.RNode) error {
-	if n.YNode().LineComment != "" {
-		v := strings.TrimLeft(n.YNode().LineComment, "#")
+	// check for metadata on head and line comments
+	comments := []string{n.YNode().LineComment, n.YNode().HeadComment}
+	for _, c := range comments {
+		if c == "" {
+			continue
+		}
+		c := strings.TrimLeft(c, "#")
 		// if it doesn't Unmarshal that is fine, it means there is no metadata
 		// other comments are valid, they just don't parse
 
-		// TODO: consider most sophisticated parsing techniques similar to what is used
+		// TODO: consider more sophisticated parsing techniques similar to what is used
 		// for go struct tags.
-		if err := fm.Schema.UnmarshalJSON([]byte(v)); err != nil {
+		if err := fm.Schema.UnmarshalJSON([]byte(c)); err != nil {
 			// note: don't return an error if the comment isn't a fieldmeta struct
 			return nil
 		}

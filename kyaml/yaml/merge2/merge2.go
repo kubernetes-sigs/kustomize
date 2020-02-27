@@ -6,6 +6,7 @@
 package merge2
 
 import (
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/yaml/walk"
 )
@@ -16,7 +17,7 @@ func Merge(src, dest *yaml.RNode) (*yaml.RNode, error) {
 }
 
 // Merge parses the arguments, and merges fields from srcStr into destStr.
-func MergeStrings(srcStr, destStr string) (string, error) {
+func MergeStrings(srcStr, destStr string, infer bool) (string, error) {
 	src, err := yaml.Parse(srcStr)
 	if err != nil {
 		return "", err
@@ -26,10 +27,15 @@ func MergeStrings(srcStr, destStr string) (string, error) {
 		return "", err
 	}
 
-	result, err := Merge(src, dest)
+	result, err := walk.Walker{
+		Sources:               []*yaml.RNode{dest, src},
+		Visitor:               Merger{},
+		InferAssociativeLists: infer,
+	}.Walk()
 	if err != nil {
 		return "", err
 	}
+
 	return result.String()
 }
 
@@ -39,7 +45,7 @@ type Merger struct {
 
 var _ walk.Visitor = Merger{}
 
-func (m Merger) VisitMap(nodes walk.Sources) (*yaml.RNode, error) {
+func (m Merger) VisitMap(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.RNode, error) {
 	if err := m.SetComments(nodes); err != nil {
 		return nil, err
 	}
@@ -58,7 +64,7 @@ func (m Merger) VisitMap(nodes walk.Sources) (*yaml.RNode, error) {
 	return nodes.Dest(), nil
 }
 
-func (m Merger) VisitScalar(nodes walk.Sources) (*yaml.RNode, error) {
+func (m Merger) VisitScalar(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.RNode, error) {
 	if err := m.SetComments(nodes); err != nil {
 		return nil, err
 	}
@@ -73,7 +79,7 @@ func (m Merger) VisitScalar(nodes walk.Sources) (*yaml.RNode, error) {
 	return nodes.Dest(), nil
 }
 
-func (m Merger) VisitList(nodes walk.Sources, kind walk.ListKind) (*yaml.RNode, error) {
+func (m Merger) VisitList(nodes walk.Sources, s *openapi.ResourceSchema, kind walk.ListKind) (*yaml.RNode, error) {
 	if err := m.SetComments(nodes); err != nil {
 		return nil, err
 	}

@@ -13,11 +13,12 @@ import (
 func Merge(dest, original, update *yaml.RNode) (*yaml.RNode, error) {
 	// if update == nil && original != nil => declarative deletion
 
-	return walk.Walker{Visitor: Visitor{},
+	return walk.Walker{
+		Visitor: Visitor{},
 		Sources: []*yaml.RNode{dest, original, update}}.Walk()
 }
 
-func MergeStrings(dest, original, update string) (string, error) {
+func MergeStrings(dest, original, update string, infer bool) (string, error) {
 	srcOriginal, err := yaml.Parse(original)
 	if err != nil {
 		return "", err
@@ -31,7 +32,10 @@ func MergeStrings(dest, original, update string) (string, error) {
 		return "", err
 	}
 
-	result, err := Merge(d, srcOriginal, srcUpdated)
+	result, err := walk.Walker{
+		InferAssociativeLists: infer,
+		Visitor:               Visitor{},
+		Sources:               []*yaml.RNode{d, srcOriginal, srcUpdated}}.Walk()
 	if err != nil {
 		return "", err
 	}
