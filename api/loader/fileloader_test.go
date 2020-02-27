@@ -4,7 +4,9 @@
 package loader
 
 import (
+	"bytes"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -54,6 +56,7 @@ func makeLoader() *fileLoader {
 	return NewFileLoaderAtRoot(MakeFakeFs(testCases))
 
 }
+
 func TestLoaderLoad(t *testing.T) {
 	l1 := makeLoader()
 	if "/" != l1.Root() {
@@ -577,5 +580,95 @@ func TestRepoIndirectCycleDetection(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "cycle detected") {
 		t.Fatalf("unexpected err: %v", err)
+	}
+}
+
+// Inspired by https://hassansin.github.io/Unit-Testing-http-client-in-Go
+type fakeRoundTripper func(req *http.Request) *http.Response
+
+func (f fakeRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req), nil
+}
+
+func makeFakeHTTPClient(fn fakeRoundTripper) *http.Client {
+	return &http.Client{
+		Transport: fn,
+	}
+}
+
+// TestLoaderHTTP test http file loader
+func TestLoaderHTTP(t *testing.T) {
+	var testCasesFile = []testData{
+		{
+			path:            "http/file.yaml",
+			expectedContent: "file content",
+		},
+	}
+
+	l1 := NewFileLoaderAtRoot(MakeFakeFs(testCasesFile))
+	if "/" != l1.Root() {
+		t.Fatalf("incorrect root: '%s'\n", l1.Root())
+	}
+	for _, x := range testCasesFile {
+		b, err := l1.Load(x.path)
+		if err != nil {
+			t.Fatalf("unexpected load error: %v", err)
+		}
+		if !reflect.DeepEqual([]byte(x.expectedContent), b) {
+			t.Fatalf("in load expected %s, but got %s", x.expectedContent, b)
+		}
+	}
+
+	var testCasesHTTP = []testData{
+		{
+			path:            "http://example.com/resource.yaml",
+			expectedContent: "http content",
+		},
+		{
+			path:            "https://example.com/resource.yaml",
+			expectedContent: "https content",
+		},
+	}
+
+	for _, x := range testCasesHTTP {
+		hc := makeFakeHTTPClient(func(req *http.Request) *http.Response {
+			u := req.URL.String()
+			if x.path != u {
+				t.Fatalf("expected URL %s, but got %s", x.path, u)
+			}
+			return &http.Response{
+				StatusCode: 200,
+				Body:       ioutil.NopCloser(bytes.NewBufferString(x.expectedContent)),
+				Header:     make(http.Header),
+			}
+		})
+		l2 := l1
+		l2.http = hc
+		b, err := l2.Load(x.path)
+		if err != nil {
+			t.Fatalf("unexpected load error: %v", err)
+		}
+		if !reflect.DeepEqual([]byte(x.expectedContent), b) {
+			t.Fatalf("in load expected %s, but got %s", x.expectedContent, b)
+		}
+	}
+
+	var testCaseUnsupported = []testData{
+		{
+			path:            "httpsnotreal://example.com/resource.yaml",
+			expectedContent: "invalid",
+		},
+	}
+	for _, x := range testCaseUnsupported {
+		hc := makeFakeHTTPClient(func(req *http.Request) *http.Response {
+			t.Fatalf("unexpected request to URL %s", req.URL.String())
+			return nil
+		})
+		l2 := l1
+		l2.http = hc
+		_, err := l2.Load(x.path)
+		if err == nil {
+			t.Fatalf("expect error but get %v", err)
+		}
 	}
 }
