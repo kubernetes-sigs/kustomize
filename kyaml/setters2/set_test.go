@@ -15,11 +15,12 @@ import (
 
 func TestSet_Filter(t *testing.T) {
 	var tests = []struct {
-		name     string
-		setter   string
-		openapi  string
-		input    string
-		expected string
+		name        string
+		description string
+		setter      string
+		openapi     string
+		input       string
+		expected    string
 	}{
 		{
 			name:   "set-replicas",
@@ -58,6 +59,184 @@ metadata:
   name: nginx-deployment
 spec:
   replicas: 4 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
+ `,
+		},
+		{
+			name:        "set-foo-type",
+			description: "if a type is specified for a setter, ensure the field is properly quoted",
+			setter:      "foo",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.foo:
+      x-k8s-cli:
+        setter:
+          name: foo
+          value: "4"
+      type: string
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: "4" # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+		},
+		{
+			name:        "set-foo-type-wrong",
+			description: "if a type is specified for a setter, for the field to the type",
+			setter:      "foo",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.foo:
+      x-k8s-cli:
+        setter:
+          name: foo
+          value: "4"
+      type: boolean
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: !!bool 4 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+		},
+		{
+			name:        "set-foo-no-type",
+			description: "if a type is not specified for a setter, keep the existing quoting",
+			setter:      "foo",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.foo:
+      x-k8s-cli:
+        setter:
+          name: foo
+          value: "4"
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: 4 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+		},
+		{
+			name:   "set-replicas-enum",
+			setter: "replicas",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.no-match-1':
+      x-k8s-cli:
+        setter:
+          name: no-match-1
+          value: "1"
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "medium"
+          enumValues:
+            small: "1"
+            medium: "5"
+            large: "50"
+    io.k8s.cli.setters.no-match-2':
+      x-k8s-cli:
+        setter:
+          name: no-match-2
+          value: "2"
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 1 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 5 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
+ `,
+		},
+		{
+			name:   "set-replicas-enum-large",
+			setter: "replicas",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.no-match-1':
+      x-k8s-cli:
+        setter:
+          name: no-match-1
+          value: "1"
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "large"
+          enumValues:
+            small: "1"
+            medium: "5"
+            large: "50"
+    io.k8s.cli.setters.no-match-2':
+      x-k8s-cli:
+        setter:
+          name: no-match-2
+          value: "2"
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 1 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 50 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
  `,
 		},
 		{
@@ -155,6 +334,61 @@ spec:
       containers:
       - name: nginx
         image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+ `,
+		},
+		{
+			name:   "substitute-image-name-enum",
+			setter: "image-tag",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.image-name:
+      x-k8s-cli:
+        setter:
+          name: image-name
+          value: "helloworld"
+          enumValues:
+            nginx: gcr.io/nginx
+            helloworld: us.gcr.io/helloworld
+    io.k8s.cli.setters.image-tag:
+      x-k8s-cli:
+        setter:
+          name: image-tag
+          value: "1.8.1"
+    io.k8s.cli.substitutions.image:
+      x-k8s-cli:
+        substitution:
+          name: image
+          pattern: IMAGE_NAME:IMAGE_TAG
+          values:
+          - marker: "IMAGE_NAME"
+            ref: "#/definitions/io.k8s.cli.setters.image-name"
+          - marker: "IMAGE_TAG"
+            ref: "#/definitions/io.k8s.cli.setters.image-tag"
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: us.gcr.io/helloworld:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
  `,
 		},
 		{
@@ -494,6 +728,29 @@ openAPI:
 `,
 		},
 		{
+			name:   "set-annotation-quoted",
+			setter: "replicas",
+			value:  "3",
+			input: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: 4
+ `,
+			expected: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+`,
+		},
+		{
 			name:        "set-replicas-description",
 			setter:      "replicas",
 			value:       "3",
@@ -582,6 +839,137 @@ openAPI:
           name: no-match-2
           value: "2"
 `,
+		},
+		{
+			name:   "set-replicas-set-by-empty",
+			setter: "replicas",
+			value:  "3",
+			input: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.no-match-1':
+      x-k8s-cli:
+        setter:
+          name: no-match-1
+          value: "1"
+          setBy: "package-default"
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "4"
+          setBy: "package-default"
+    io.k8s.cli.setters.no-match-2':
+      x-k8s-cli:
+        setter:
+          name: no-match-2
+          value: "2"
+          setBy: "package-default"
+ `,
+			expected: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.no-match-1':
+      x-k8s-cli:
+        setter:
+          name: no-match-1
+          value: "1"
+          setBy: "package-default"
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+    io.k8s.cli.setters.no-match-2':
+      x-k8s-cli:
+        setter:
+          name: no-match-2
+          value: "2"
+          setBy: "package-default"
+`,
+		},
+		{
+			name:   "set-replicas-with-enum",
+			setter: "replicas",
+			value:  "baz",
+			input: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.no-match-1':
+      x-k8s-cli:
+        setter:
+          name: no-match-1
+          value: "1"
+          setBy: "package-default"
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "foo"
+          enumValues:
+            foo: bar
+            baz: biz
+    io.k8s.cli.setters.no-match-2':
+      x-k8s-cli:
+        setter:
+          name: no-match-2
+          value: "2"
+          setBy: "package-default"
+ `,
+			expected: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.no-match-1':
+      x-k8s-cli:
+        setter:
+          name: no-match-1
+          value: "1"
+          setBy: "package-default"
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "baz"
+          enumValues:
+            foo: bar
+            baz: biz
+    io.k8s.cli.setters.no-match-2':
+      x-k8s-cli:
+        setter:
+          name: no-match-2
+          value: "2"
+          setBy: "package-default"
+`,
+		},
+		{
+			name:   "set-replicas-fail",
+			setter: "replicas",
+			value:  "hello",
+			input: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.no-match-1':
+      x-k8s-cli:
+        setter:
+          name: no-match-1
+          value: "1"
+          setBy: "package-default"
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "foo"
+          enumValues:
+            foo: bar
+            baz: biz
+    io.k8s.cli.setters.no-match-2':
+      x-k8s-cli:
+        setter:
+          name: no-match-2
+          value: "2"
+          setBy: "package-default"
+ `,
+			err: "hello does not match the possible values for replicas: [foo,baz]",
 		},
 		{
 			name:   "error",

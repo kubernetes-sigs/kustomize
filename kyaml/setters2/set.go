@@ -30,7 +30,7 @@ func (s *Set) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 // visitScalar
 func (s *Set) visitScalar(object *yaml.RNode, p string) error {
 	// get the openAPI for this field describing how to apply the setter
-	ext, err := getExtFromComment(object)
+	ext, sch, err := getExtFromComment(object)
 	if err != nil {
 		return err
 	}
@@ -39,13 +39,13 @@ func (s *Set) visitScalar(object *yaml.RNode, p string) error {
 	}
 
 	// perform a direct set of the field if it matches
-	if s.set(object, ext) {
+	if s.set(object, ext, sch) {
 		s.Count++
 		return nil
 	}
 
 	// perform a substitution of the field if it matches
-	sub, err := s.substitute(object, ext)
+	sub, err := s.substitute(object, ext, sch)
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func (s *Set) visitScalar(object *yaml.RNode, p string) error {
 
 // substitute updates the value of field from ext if ext contains a substitution that
 // depends on a setter whose name matches s.Name.
-func (s *Set) substitute(field *yaml.RNode, ext *cliExtension) (bool, error) {
+func (s *Set) substitute(field *yaml.RNode, ext *cliExtension, _ *spec.Schema) (bool, error) {
 	nameMatch := false
 
 	// check partial setters to see if they contain the setter as part of a
@@ -86,8 +86,15 @@ func (s *Set) substitute(field *yaml.RNode, ext *cliExtension) (bool, error) {
 		if err != nil {
 			return false, errors.Wrap(err)
 		}
-		// substitute the setters current value into the substitution pattern
-		p = strings.ReplaceAll(p, v.Marker, subSetter.Setter.Value)
+
+		if val, found := subSetter.Setter.EnumValues[subSetter.Setter.Value]; found {
+			// the setter has an enum-map.  we should replace the marker with the
+			// enum value looked up from the map rather than the enum key
+			p = strings.ReplaceAll(p, v.Marker, val)
+		} else {
+			// substitute the setters current value into the substitution pattern
+			p = strings.ReplaceAll(p, v.Marker, subSetter.Setter.Value)
+		}
 
 		if subSetter.Setter.Name == s.Name {
 			// the substitution depends on the specified setter
@@ -102,11 +109,15 @@ func (s *Set) substitute(field *yaml.RNode, ext *cliExtension) (bool, error) {
 	// TODO(pwittrock): validate the field value
 
 	field.YNode().Value = p
+
+	// substitutions are always strings
+	field.YNode().Tag = "!!str"
+
 	return true, nil
 }
 
 // set applies the value from ext to field if its name matches s.Name
-func (s *Set) set(field *yaml.RNode, ext *cliExtension) bool {
+func (s *Set) set(field *yaml.RNode, ext *cliExtension, sch *spec.Schema) bool {
 	// check full setter
 	if ext.Setter == nil || ext.Setter.Name != s.Name {
 		return false
@@ -114,8 +125,18 @@ func (s *Set) set(field *yaml.RNode, ext *cliExtension) bool {
 
 	// TODO(pwittrock): validate the field value
 
+	if val, found := ext.Setter.EnumValues[ext.Setter.Value]; found {
+		// the setter has an enum-map.  we should replace the marker with the
+		// enum value looked up from the map rather than the enum key
+		field.YNode().Value = val
+		return true
+	}
+
 	// this has a full setter, set its value
 	field.YNode().Value = ext.Setter.Value
+
+	// format the node so it is quoted if it is a string
+	yaml.FormatNonStringStyle(field.YNode(), *sch)
 	return true
 }
 
@@ -146,14 +167,50 @@ func (s SetOpenAPI) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	if def == nil {
 		return nil, errors.Errorf("no setter %s found", s.Name)
 	}
-	if err := def.PipeE(&yaml.FieldSetter{Name: "value", StringValue: s.Value}); err != nil {
+
+	// if the setter contains an enumValues map, then ensure the set value appears
+	// as a key in the map
+	if values, err := def.Pipe(yaml.Lookup("enumValues")); err != nil {
+		// error looking up the enumValues
+		return nil, err
+	} else if values != nil {
+		// contains enumValues map -- validate the set value against the map entries
+
+		// get the enumValues keys
+		fields, err := values.Fields()
+		if err != nil {
+			return nil, err
+		}
+
+		// search for the user provided value in the set of allowed values
+		var match bool
+		for i := range fields {
+			if fields[i] == s.Value {
+				// found a match, we are good
+				match = true
+				break
+			}
+		}
+		if !match {
+			// no match found -- provide an informative error to the user
+			return nil, errors.Errorf("%s does not match the possible values for %s: [%s]",
+				s.Value, s.Name, strings.Join(fields, ","))
+		}
+	}
+
+	v := yaml.NewScalarRNode(s.Value)
+	// values are always represented as strings the OpenAPI
+	// since the are unmarshalled into strings.  Use double quote style to
+	// ensure this consistently.
+	v.YNode().Tag = "!!str"
+	v.YNode().Style = yaml.DoubleQuotedStyle
+
+	if err := def.PipeE(&yaml.FieldSetter{Name: "value", Value: v}); err != nil {
 		return nil, err
 	}
 
-	if s.SetBy != "" {
-		if err := def.PipeE(&yaml.FieldSetter{Name: "setBy", StringValue: s.SetBy}); err != nil {
-			return nil, err
-		}
+	if err := def.PipeE(&yaml.FieldSetter{Name: "setBy", StringValue: s.SetBy}); err != nil {
+		return nil, err
 	}
 
 	if s.Description != "" {
