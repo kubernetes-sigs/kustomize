@@ -4,48 +4,30 @@
 package merge2_test
 
 var scalarTestCases = []testCase{
-	{`replace scalar -- different value in dest`,
-		`
+	{description: `replace scalar -- different value in dest`,
+		source: `
 kind: Deployment
 field: value1
 `,
-		`
+		dest: `
 kind: Deployment
 field: value0
 `,
-		`
+		expected: `
 kind: Deployment
 field: value1
 `,
 	},
 
-	{`replace scalar -- missing from dest`,
-		`
+	{description: `replace scalar -- missing from dest`,
+		source: `
 kind: Deployment
 field: value1
 `,
-		`
+		dest: `
 kind: Deployment
 `,
-		`
-kind: Deployment
-field: value1
-`,
-	},
-
-	//
-	// Test Case
-	//
-	{`keep scalar -- same value in src and dest`,
-		`
-kind: Deployment
-field: value1
-`,
-		`
-kind: Deployment
-field: value1
-`,
-		`
+		expected: `
 kind: Deployment
 field: value1
 `,
@@ -54,15 +36,16 @@ field: value1
 	//
 	// Test Case
 	//
-	{`keep scalar -- unspecified in src`,
-		`
-kind: Deployment
-`,
-		`
+	{description: `keep scalar -- same value in src and dest`,
+		source: `
 kind: Deployment
 field: value1
 `,
-		`
+		dest: `
+kind: Deployment
+field: value1
+`,
+		expected: `
 kind: Deployment
 field: value1
 `,
@@ -71,16 +54,33 @@ field: value1
 	//
 	// Test Case
 	//
-	{`remove scalar -- null in src`,
-		`
+	{description: `keep scalar -- unspecified in src`,
+		source: `
+kind: Deployment
+`,
+		dest: `
+kind: Deployment
+field: value1
+`,
+		expected: `
+kind: Deployment
+field: value1
+`,
+	},
+
+	//
+	// Test Case
+	//
+	{description: `remove scalar -- null in src`,
+		source: `
 kind: Deployment
 field: null
 `,
-		`
+		dest: `
 kind: Deployment
 field: value1
 `,
-		`
+		expected: `
 kind: Deployment
 `,
 	},
@@ -88,16 +88,16 @@ kind: Deployment
 	//
 	// Test Case
 	//
-	{`remove scalar -- empty in src`,
-		`
+	{description: `remove scalar -- empty in src`,
+		source: `
 kind: Deployment
 field: {}
 `,
-		`
+		dest: `
 kind: Deployment
 field: value1
 `,
-		`
+		expected: `
 kind: Deployment
 field: {}
 `,
@@ -106,15 +106,15 @@ field: {}
 	//
 	// Test Case
 	//
-	{`remove scalar -- null in src, missing in dest`,
-		`
+	{description: `remove scalar -- null in src, missing in dest`,
+		source: `
 kind: Deployment
 field: null
 `,
-		`
+		dest: `
 kind: Deployment
 `,
-		`
+		expected: `
 kind: Deployment
 `,
 	},
@@ -122,15 +122,15 @@ kind: Deployment
 	//
 	// Test Case
 	//
-	{`merge an empty value`,
-		`
+	{description: `merge an empty value`,
+		source: `
 kind: Deployment
 field: {}
 `,
-		`
+		dest: `
 kind: Deployment
 `,
-		`
+		expected: `
 kind: Deployment
 field: {}
 `,

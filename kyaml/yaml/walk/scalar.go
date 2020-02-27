@@ -7,5 +7,5 @@ import "sigs.k8s.io/kustomize/kyaml/yaml"
 
 // walkScalar returns the value of VisitScalar
 func (l Walker) walkScalar() (*yaml.RNode, error) {
-	return l.VisitScalar(l.Sources)
+	return l.VisitScalar(l.Sources, l.Schema)
 }
