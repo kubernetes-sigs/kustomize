@@ -38,8 +38,7 @@ func NewCreateSetterRunner(parent string) *CreateSetterRunner {
 		"kind of the Resource on which to create the setter.")
 	set.Flags().MarkHidden("kind")
 	set.Flags().StringVar(&r.Set.SetPartialField.Type, "type", "",
-		"valid OpenAPI field type -- e.g. integer,boolean,string.")
-	set.Flags().MarkHidden("type")
+		"OpenAPI field type for the setter -- e.g. integer,boolean,string.")
 	set.Flags().BoolVar(&r.Set.SetPartialField.Partial, "partial", false,
 		"create a partial setter for only part of the field value.")
 	set.Flags().MarkHidden("partial")
@@ -89,6 +88,7 @@ func (r *CreateSetterRunner) preRunE(c *cobra.Command, args []string) error {
 		r.OpenAPIFile, err = ext.GetOpenAPIFile(args)
 		r.CreateSetter.Description = r.Set.SetPartialField.Description
 		r.CreateSetter.SetBy = r.Set.SetPartialField.SetBy
+		r.CreateSetter.Type = r.Set.SetPartialField.Type
 		if err != nil {
 			return err
 		}

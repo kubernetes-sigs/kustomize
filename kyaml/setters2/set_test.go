@@ -15,11 +15,12 @@ import (
 
 func TestSet_Filter(t *testing.T) {
 	var tests = []struct {
-		name     string
-		setter   string
-		openapi  string
-		input    string
-		expected string
+		name        string
+		description string
+		setter      string
+		openapi     string
+		input       string
+		expected    string
 	}{
 		{
 			name:   "set-replicas",
@@ -58,6 +59,98 @@ metadata:
   name: nginx-deployment
 spec:
   replicas: 4 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
+ `,
+		},
+		{
+			name:        "set-foo-type",
+			description: "if a type is specified for a setter, ensure the field is properly quoted",
+			setter:      "foo",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.foo:
+      x-k8s-cli:
+        setter:
+          name: foo
+          value: "4"
+      type: string
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: "4" # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+		},
+		{
+			name:        "set-foo-type-wrong",
+			description: "if a type is specified for a setter, for the field to the type",
+			setter:      "foo",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.foo:
+      x-k8s-cli:
+        setter:
+          name: foo
+          value: "4"
+      type: boolean
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: !!bool 4 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+		},
+		{
+			name:        "set-foo-no-type",
+			description: "if a type is not specified for a setter, keep the existing quoting",
+			setter:      "foo",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.foo:
+      x-k8s-cli:
+        setter:
+          name: foo
+          value: "4"
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: 4 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
  `,
 		},
 		{
@@ -632,6 +725,29 @@ openAPI:
         setter:
           name: no-match-2
           value: "2"
+`,
+		},
+		{
+			name:   "set-annotation-quoted",
+			setter: "replicas",
+			value:  "3",
+			input: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: 4
+ `,
+			expected: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
 `,
 		},
 		{
