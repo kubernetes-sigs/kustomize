@@ -15,6 +15,7 @@ var Filters = map[string]func() Filter{
 	"AnnotationClearer": func() Filter { return &AnnotationClearer{} },
 	"AnnotationGetter":  func() Filter { return &AnnotationGetter{} },
 	"AnnotationSetter":  func() Filter { return &AnnotationSetter{} },
+	"LabelSetter":       func() Filter { return &LabelSetter{} },
 	"ElementAppender":   func() Filter { return &ElementAppender{} },
 	"ElementMatcher":    func() Filter { return &ElementMatcher{} },
 	"FieldClearer":      func() Filter { return &FieldClearer{} },
