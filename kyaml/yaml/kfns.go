@@ -68,3 +68,25 @@ func (g AnnotationGetter) Filter(rn *RNode) (*RNode, error) {
 func GetAnnotation(key string) AnnotationGetter {
 	return AnnotationGetter{Key: key}
 }
+
+// LabelSetter sets a label at metadata.labels.
+// Creates metadata.labels if does not exist.
+type LabelSetter struct {
+	Kind  string `yaml:"kind,omitempty"`
+	Key   string `yaml:"key,omitempty"`
+	Value string `yaml:"value,omitempty"`
+}
+
+func (s LabelSetter) Filter(rn *RNode) (*RNode, error) {
+	// some tools get confused about the type if labels are not quoted
+	v := NewScalarRNode(s.Value)
+	v.YNode().Tag = "!!str"
+	v.YNode().Style = yaml.SingleQuotedStyle
+	return rn.Pipe(
+		PathGetter{Path: []string{"metadata", "labels"}, Create: yaml.MappingNode},
+		FieldSetter{Name: s.Key, Value: v})
+}
+
+func SetLabel(key, value string) LabelSetter {
+	return LabelSetter{Key: key, Value: value}
+}
