@@ -109,7 +109,6 @@ openAPI:
         setter:
           name: replicas
           value: "4"
-          setBy: me
  `,
 			expectedResources: `
 apiVersion: apps/v1

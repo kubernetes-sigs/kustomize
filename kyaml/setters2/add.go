@@ -106,7 +106,11 @@ type SetterDefinition struct {
 	Count int `yaml:"count,omitempty"`
 
 	// EnumValues is a map of possible setter values to actual field values.
-	// May be used for t-shirt sizing values -- e.g. set cpu to small, medium, large
+	// If EnumValues is specified, then the value set the by user 1) MUST
+	// be present in the enumValues map as a key, and 2) the map entry value
+	// MUST be used as the value to set in the configuration (rather than the key)
+	// Example -- may be used for t-shirt sizing values by allowing cpu to be
+	// set to small, medium or large, and then mapping these values to cpu values -- 0.5, 2, 8
 	EnumValues map[string]string `yaml:"enumValues,omitempty"`
 }
 

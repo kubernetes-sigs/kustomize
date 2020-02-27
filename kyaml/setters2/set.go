@@ -88,7 +88,8 @@ func (s *Set) substitute(field *yaml.RNode, ext *cliExtension) (bool, error) {
 		}
 
 		if val, found := subSetter.Setter.EnumValues[subSetter.Setter.Value]; found {
-			// resolve enum for substitution
+			// the setter has an enum-map.  we should replace the marker with the
+			// enum value looked up from the map rather than the enum key
 			p = strings.ReplaceAll(p, v.Marker, val)
 		} else {
 			// substitute the setters current value into the substitution pattern
@@ -121,6 +122,8 @@ func (s *Set) set(field *yaml.RNode, ext *cliExtension) bool {
 	// TODO(pwittrock): validate the field value
 
 	if val, found := ext.Setter.EnumValues[ext.Setter.Value]; found {
+		// the setter has an enum-map.  we should replace the marker with the
+		// enum value looked up from the map rather than the enum key
 		field.YNode().Value = val
 		return true
 	}
@@ -158,22 +161,31 @@ func (s SetOpenAPI) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 		return nil, errors.Errorf("no setter %s found", s.Name)
 	}
 
-	// if the setter is an enumeration, then make sure the value matches
+	// if the setter contains an enumValues map, then ensure the set value appears
+	// as a key in the map
 	if values, err := def.Pipe(yaml.Lookup("enumValues")); err != nil {
+		// error looking up the enumValues
 		return nil, err
 	} else if values != nil {
+		// contains enumValues map -- validate the set value against the map entries
+
+		// get the enumValues keys
 		fields, err := values.Fields()
 		if err != nil {
 			return nil, err
 		}
+
+		// search for the user provided value in the set of allowed values
 		var match bool
 		for i := range fields {
 			if fields[i] == s.Value {
+				// found a match, we are good
 				match = true
 				break
 			}
 		}
 		if !match {
+			// no match found -- provide an informative error to the user
 			return nil, errors.Errorf("%s does not match the possible values for %s: [%s]",
 				s.Value, s.Name, strings.Join(fields, ","))
 		}
