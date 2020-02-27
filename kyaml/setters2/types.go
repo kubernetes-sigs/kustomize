@@ -19,8 +19,9 @@ type cliExtension struct {
 }
 
 type setter struct {
-	Name  string `yaml:"name,omitempty" json:"name,omitempty"`
-	Value string `yaml:"value,omitempty" json:"value,omitempty"`
+	Name       string            `yaml:"name,omitempty" json:"name,omitempty"`
+	Value      string            `yaml:"value,omitempty" json:"value,omitempty"`
+	EnumValues map[string]string `yaml:"enumValues,omitempty" json:"enumValues,omitempty"`
 }
 
 type substitution struct {

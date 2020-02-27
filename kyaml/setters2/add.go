@@ -104,6 +104,10 @@ type SetterDefinition struct {
 
 	// Count is the number of fields set by this setter.
 	Count int `yaml:"count,omitempty"`
+
+	// EnumValues is a map of possible setter values to actual field values.
+	// May be used for t-shirt sizing values -- e.g. set cpu to small, medium, large
+	EnumValues map[string]string `yaml:"enumValues,omitempty"`
 }
 
 func (sd SetterDefinition) AddToFile(path string) error {

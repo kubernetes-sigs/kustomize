@@ -86,8 +86,14 @@ func (s *Set) substitute(field *yaml.RNode, ext *cliExtension) (bool, error) {
 		if err != nil {
 			return false, errors.Wrap(err)
 		}
-		// substitute the setters current value into the substitution pattern
-		p = strings.ReplaceAll(p, v.Marker, subSetter.Setter.Value)
+
+		if val, found := subSetter.Setter.EnumValues[subSetter.Setter.Value]; found {
+			// resolve enum for substitution
+			p = strings.ReplaceAll(p, v.Marker, val)
+		} else {
+			// substitute the setters current value into the substitution pattern
+			p = strings.ReplaceAll(p, v.Marker, subSetter.Setter.Value)
+		}
 
 		if subSetter.Setter.Name == s.Name {
 			// the substitution depends on the specified setter
@@ -113,6 +119,11 @@ func (s *Set) set(field *yaml.RNode, ext *cliExtension) bool {
 	}
 
 	// TODO(pwittrock): validate the field value
+
+	if val, found := ext.Setter.EnumValues[ext.Setter.Value]; found {
+		field.YNode().Value = val
+		return true
+	}
 
 	// this has a full setter, set its value
 	field.YNode().Value = ext.Setter.Value
@@ -146,6 +157,28 @@ func (s SetOpenAPI) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	if def == nil {
 		return nil, errors.Errorf("no setter %s found", s.Name)
 	}
+
+	// if the setter is an enumeration, then make sure the value matches
+	if values, err := def.Pipe(yaml.Lookup("enumValues")); err != nil {
+		return nil, err
+	} else if values != nil {
+		fields, err := values.Fields()
+		if err != nil {
+			return nil, err
+		}
+		var match bool
+		for i := range fields {
+			if fields[i] == s.Value {
+				match = true
+				break
+			}
+		}
+		if !match {
+			return nil, errors.Errorf("%s does not match the possible values for %s: [%s]",
+				s.Value, s.Name, strings.Join(fields, ","))
+		}
+	}
+
 	if err := def.PipeE(&yaml.FieldSetter{Name: "value", StringValue: s.Value}); err != nil {
 		return nil, err
 	}
