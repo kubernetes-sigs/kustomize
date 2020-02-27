@@ -105,6 +105,9 @@ type SetterDefinition struct {
 	// Count is the number of fields set by this setter.
 	Count int `yaml:"count,omitempty"`
 
+	// Type is the type of the setter value.
+	Type string `yaml:"type,omitempty"`
+
 	// EnumValues is a map of possible setter values to actual field values.
 	// If EnumValues is specified, then the value set the by user 1) MUST
 	// be present in the enumValues map as a key, and 2) the map entry value
@@ -133,6 +136,15 @@ func (sd SetterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 		}
 		// don't write the description to the extension
 		sd.Description = ""
+	}
+
+	if sd.Type != "" {
+		err = def.PipeE(yaml.FieldSetter{Name: "type", StringValue: sd.Type})
+		if err != nil {
+			return nil, err
+		}
+		// don't write the type to the extension
+		sd.Type = ""
 	}
 
 	ext, err := def.Pipe(yaml.LookupCreate(yaml.MappingNode, K8sCliExtensionKey))

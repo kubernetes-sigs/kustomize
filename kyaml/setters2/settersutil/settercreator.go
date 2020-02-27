@@ -19,6 +19,8 @@ type SetterCreator struct {
 
 	SetBy string
 
+	Type string
+
 	// FieldName if set will add the OpenAPI reference to fields with this name or path
 	// FieldName may be the full name of the field, full path to the field, or the path suffix.
 	// e.g. all of the following would match spec.template.spec.containers.image --
@@ -35,7 +37,9 @@ type SetterCreator struct {
 func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
 	// Update the OpenAPI definitions to hace the setter
 	sd := setters2.SetterDefinition{
-		Name: c.Name, Value: c.FieldValue, Description: c.Description, SetBy: c.SetBy}
+		Name: c.Name, Value: c.FieldValue, Description: c.Description, SetBy: c.SetBy,
+		Type: c.Type,
+	}
 	if err := sd.AddToFile(openAPIPath); err != nil {
 		return err
 	}
