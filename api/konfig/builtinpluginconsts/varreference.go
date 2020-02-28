@@ -30,7 +30,7 @@ varReference:
 - path: spec/jobTemplate/spec/template/spec/initContainers/volumeMounts/mountPath
   kind: CronJob
 
-- path: spec/jobTemplate/spec/template/spec/volumes/nfs/server
+- path: spec/jobTemplate/spec/template/volumes/nfs/server
   kind: CronJob
 
 - path: spec/template/spec/containers/args
