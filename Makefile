@@ -22,7 +22,9 @@ verify-kustomize: \
 .PHONY: prow-presubmit-check
 prow-presubmit-check: \
 	lint-kustomize \
-	test-unit-kustomize-all
+	test-unit-kustomize-all \
+	test-unit-cmd-all \
+	test-go-mod
 
 .PHONY: verify-kustomize-e2e
 verify-kustomize-e2e: test-examples-e2e-kustomize
@@ -203,6 +205,12 @@ test-unit-kustomize-all: \
 	test-unit-kustomize-api \
 	test-unit-kustomize-cli \
 	test-unit-kustomize-plugins
+
+test-unit-cmd-all:
+	./travis/kyaml-pre-commit.sh
+
+test-go-mod:
+	./travis/check-go-mod.sh
 
 .PHONY:
 test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip

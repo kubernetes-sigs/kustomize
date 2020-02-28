@@ -5,8 +5,8 @@
 
 # kyaml version
 export kyaml_major=0
-export kyaml_minor=0
-export kyaml_patch=13
+export kyaml_minor=1
+export kyaml_patch=0
 
 # kstatus version
 export kstatus_major=0
@@ -20,8 +20,8 @@ export api_patch=2
 
 # cmd/config version
 export cmd_config_major=0
-export cmd_config_minor=0
-export cmd_config_patch=13
+export cmd_config_minor=1
+export cmd_config_patch=0
 
 # cmd/kubectl version
 export cmd_kubectl_major=0
