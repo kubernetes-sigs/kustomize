@@ -26,7 +26,8 @@ func (l Walker) walkMap() (*yaml.RNode, error) {
 	// recursively set the field values on the map
 	for _, key := range l.fieldNames() {
 		val, err := Walker{Visitor: l,
-			Sources: l.fieldValue(key), Path: append(l.Path, key)}.Walk()
+			Sources: l.fieldValue(key), Path: append(l.Path, key),
+			TypeMeta: l.TypeMeta}.Walk()
 		if err != nil {
 			return nil, err
 		}

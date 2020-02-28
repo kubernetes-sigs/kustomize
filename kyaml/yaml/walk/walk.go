@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -22,6 +23,9 @@ type Walker struct {
 
 	// Path is the field path to the current Source Node.
 	Path []string
+
+	// TypeMeta of the current Source Node.
+	TypeMeta yaml.TypeMeta
 }
 
 func (l Walker) Kind() yaml.Kind {
@@ -35,6 +39,15 @@ func (l Walker) Kind() yaml.Kind {
 
 // GrepFilter implements yaml.GrepFilter
 func (l Walker) Walk() (*yaml.RNode, error) {
+	if len(l.TypeMeta.APIVersion) == 0 && len(l.TypeMeta.Kind) == 0 {
+		meta, err := l.Sources[0].GetMeta()
+		if err != nil {
+			return nil, err
+		}
+		l.TypeMeta = yaml.TypeMeta{APIVersion: meta.APIVersion,
+			Kind: meta.Kind}
+	}
+
 	// invoke the handler for the corresponding node type
 	switch l.Kind() {
 	case yaml.MappingNode:
@@ -46,7 +59,7 @@ func (l Walker) Walk() (*yaml.RNode, error) {
 		if err := yaml.ErrorIfAnyInvalidAndNonNull(yaml.SequenceNode, l.Sources...); err != nil {
 			return nil, err
 		}
-		if yaml.IsAssociative(l.Sources) {
+		if IsAssociative(l.TypeMeta, l.Path...) {
 			return l.walkAssociativeSequence()
 		}
 		return l.walkNonAssociativeSequence()
@@ -141,4 +154,27 @@ func (s FieldSources) Updated() *yaml.MapNode {
 		return nil
 	}
 	return s[UpdatedIndex]
+}
+
+// IsAssociative returns true if a merge key exists at the openapi schema path
+func IsAssociative(meta yaml.TypeMeta, path ...string) bool {
+	if GetAssociativeKey(meta, path...) != "" {
+		return true
+	}
+	return false
+}
+
+// GetAssociativeKey returns the merge key at the openapi schema path, used to merge
+// the elements in the SequenceNode, or "" if the  list is not associative.
+func GetAssociativeKey(meta yaml.TypeMeta, path ...string) string {
+	// get openapi schema and lookup path
+	s := openapi.SchemaForResourceType(meta)
+	f := s.Lookup(path...)
+
+	// path does not exist
+	if f == nil {
+		return ""
+	}
+	_, key := f.PatchStrategyAndKey()
+	return key
 }

@@ -28,7 +28,8 @@ func (l *Walker) walkAssociativeSequence() (*yaml.RNode, error) {
 	// recursively set the elements in the list
 	for _, value := range values {
 		val, err := Walker{Visitor: l,
-			Sources: l.elementValue(key, value)}.Walk()
+			Sources:  l.elementValue(key, value),
+			TypeMeta: l.TypeMeta}.Walk()
 		if err != nil {
 			return nil, err
 		}
@@ -66,7 +67,7 @@ func (l Walker) elementKey() (string, error) {
 	var key string
 	for i := range l.Sources {
 		if l.Sources[i] != nil && len(l.Sources[i].Content()) > 0 {
-			newKey := l.Sources[i].GetAssociativeKey()
+			newKey := GetAssociativeKey(l.TypeMeta, l.Path...)
 			if key != "" && key != newKey {
 				return "", errors.Errorf(
 					"conflicting merge keys [%s,%s] for field %s",
