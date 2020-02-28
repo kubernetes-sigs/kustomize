@@ -30,6 +30,9 @@ varReference:
 - path: spec/jobTemplate/spec/template/spec/initContainers/volumeMounts/mountPath
   kind: CronJob
 
+- path: spec/jobTemplate/spec/template/spec/volumes/nfs/server
+  kind: CronJob
+
 - path: spec/template/spec/containers/args
   kind: DaemonSet
 
@@ -52,6 +55,9 @@ varReference:
   kind: DaemonSet
 
 - path: spec/template/spec/initContainers/volumeMounts/mountPath
+  kind: DaemonSet
+
+- path: spec/template/spec/volumes/nfs/server
   kind: DaemonSet
 
 - path: spec/template/spec/containers/args
@@ -114,6 +120,9 @@ varReference:
 - path: spec/template/spec/initContainers/volumeMounts/mountPath
   kind: Job
 
+- path: spec/template/spec/volumes/nfs/server
+  kind: Job
+
 - path: spec/containers/args
   kind: Pod
 
@@ -138,6 +147,9 @@ varReference:
 - path: spec/initContainers/volumeMounts/mountPath
   kind: Pod
 
+- path: spec/volumes/nfs/server
+  kind: Pod
+
 - path: spec/template/spec/containers/args
   kind: ReplicaSet
 
@@ -160,6 +172,9 @@ varReference:
   kind: ReplicaSet
 
 - path: spec/template/spec/initContainers/volumeMounts/mountPath
+  kind: ReplicaSet
+
+- path: spec/template/spec/volumes/nfs/server
   kind: ReplicaSet
 
 - path: spec/ports/port
@@ -190,6 +205,9 @@ varReference:
   kind: StatefulSet
 
 - path: spec/template/spec/initContainers/volumeMounts/mountPath
+  kind: StatefulSet
+
+- path: spec/volumeClaimTemplates/spec/nfs/server
   kind: StatefulSet
 
 - path: spec/nfs/server

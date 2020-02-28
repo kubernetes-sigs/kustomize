@@ -1344,7 +1344,13 @@ resources:
 - pv_pvc.yaml
 - nfs_deployment.yaml
 - nfs_service.yaml
-- deployment.yaml
+- Deployment.yaml
+- CronJob.yaml
+- DaemonSet.yaml
+- ReplicaSet.yaml
+- StatefulSet.yaml
+- Pod.yaml
+- Job.yaml
 - nfs_pv.yaml
 
 vars:
@@ -1416,7 +1422,7 @@ spec:
   selector:
     role: nfs-server
 `)
-	th.WriteF("/app/base/deployment.yaml", `
+	th.WriteF("/app/base/Deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -1447,6 +1453,204 @@ spec:
             server: $(NFS_SERVER_SERVICE_NAME).default.srv.cluster.local
             path: /
             readOnly: false
+`)
+	th.WriteF("/app/base/CronJob.yaml", `
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: hello
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: hello
+            image: busybox
+            args:
+            - /bin/sh
+            - -c
+            - date; echo Hello from the Kubernetes cluster
+          restartPolicy: OnFailure
+          volumeMounts:
+          - mountPath: /app/shared-files
+            name: nfs-files-vol
+        volumes:
+        - name: nfs-files-vol
+          nfs:
+            server: $(NFS_SERVER_SERVICE_NAME).default.srv.cluster.local
+            path: /
+            readOnly: false
+`)
+	th.WriteF("/app/base/DaemonSet.yaml", `
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd-elasticsearch
+  namespace: kube-system
+  labels:
+    k8s-app: fluentd-logging
+spec:
+  selector:
+    matchLabels:
+      name: fluentd-elasticsearch
+  template:
+    metadata:
+      labels:
+        name: fluentd-elasticsearch
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: fluentd-elasticsearch
+        image: quay.io/fluentd_elasticsearch/fluentd:v2.5.2
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        - mountPath: /app/shared-files
+          name: nfs-files-vol
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+	  - name: nfs-files-vol
+        nfs:
+          server: $(NFS_SERVER_SERVICE_NAME).default.srv.cluster.local
+          path: /
+          readOnly: false
+`)
+	th.WriteF("/app/base/ReplicaSet.yaml", `
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: frontend
+  labels:
+    app: guestbook
+    tier: frontend
+spec:
+  # modify replicas according to your case
+  replicas: 3
+  selector:
+    matchLabels:
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        tier: frontend
+    spec:
+      containers:
+      - name: php-redis
+        image: gcr.io/google_samples/gb-frontend:v3
+        volumeMounts:
+        - mountPath: /app/shared-files
+          name: nfs-files-vol
+      volumes:
+	  - name: nfs-files-vol
+        nfs:
+          server: $(NFS_SERVER_SERVICE_NAME).default.srv.cluster.local
+          path: /
+          readOnly: false
+`)
+
+	th.WriteF("/app/base/Job.yaml", `
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pi
+spec:
+  template:
+    spec:
+      containers:
+      - name: pi
+        image: perl
+        command: ["perl",  "-Mbignum=bpi", "-wle", "print bpi(2000)"]
+        volumeMounts:
+        - mountPath: /app/shared-files
+          name: nfs-files-vol
+      restartPolicy: Never
+      volumes:
+	  - name: nfs-files-vol
+        nfs:
+          server: $(NFS_SERVER_SERVICE_NAME).default.srv.cluster.local
+          path: /
+          readOnly: false
+  backoffLimit: 4
+`)
+	th.WriteF("/app/base/StatefulSet.yaml", `
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels:
+      app: nginx # has to match .spec.template.metadata.labels
+  serviceName: "nginx"
+  replicas: 3 # by default is 1
+  template:
+    metadata:
+      labels:
+        app: nginx # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: nginx
+        image: k8s.gcr.io/nginx-slim:0.8
+        ports:
+        - containerPort: 80
+          name: web
+        volumeMounts:
+        - name: www
+          mountPath: /usr/share/nginx/html
+  volumeClaimTemplates:
+  - metadata:
+      name: www
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "my-storage-class"
+      nfs:
+        server: $(NFS_SERVER_SERVICE_NAME).default.srv.cluster.local
+        path: /
+        readOnly: false
+`)
+	th.WriteF("/app/base/Pod.yaml", `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.15.7-alpine
+    ports:
+    - name: http
+      containerPort: 80
+  volumeMounts:
+  - name: nfs-files-vol
+    mountPath: /app/shared-files
+  volumes:
+  - name: nfs-files-vol
+    nfs:
+      server: $(NFS_SERVER_SERVICE_NAME).default.srv.cluster.local
+      path: /
+      readOnly: false
 `)
 	th.WriteF("/app/base/nfs_pv.yaml", `
 apiVersion: v1
