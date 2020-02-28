@@ -5,7 +5,7 @@
 set -e
 
 # run all tests for kyaml and related commands
-targets="kyaml cmd/config cmd/kubectl functions/examples/injection-tshirt-sizes functions/examples/template-go-nginx functions/examples/template-heredoc-cockroachdb functions/examples/validator-kubeval functions/examples/validator-resource-requests"
+targets="kyaml cmd/config cmd/kubectl functions/examples/injection-tshirt-sizes functions/examples/template-go-nginx functions/examples/template-heredoc-cockroachdb functions/examples/validator-kubeval functions/examples/validator-resource-requests functions/examples/application-cr"
 for target in $targets; do
   pushd .
   cd $target
