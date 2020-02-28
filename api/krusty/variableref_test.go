@@ -1528,11 +1528,11 @@ spec:
       - name: varlibdockercontainers
         hostPath:
           path: /var/lib/docker/containers
-	  - name: nfs-files-vol
-        nfs:
-          server: $(NFS_SERVER_SERVICE_NAME).default.srv.cluster.local
-          path: /
-          readOnly: false
+      - name: nfs-files-vol
+          nfs:
+            server: $(NFS_SERVER_SERVICE_NAME).default.srv.cluster.local
+            path: /
+            readOnly: false
 `)
 	th.WriteF("/app/base/ReplicaSet.yaml", `
 apiVersion: apps/v1
@@ -1560,7 +1560,7 @@ spec:
         - mountPath: /app/shared-files
           name: nfs-files-vol
       volumes:
-	  - name: nfs-files-vol
+      - name: nfs-files-vol
         nfs:
           server: $(NFS_SERVER_SERVICE_NAME).default.srv.cluster.local
           path: /
@@ -1584,7 +1584,7 @@ spec:
           name: nfs-files-vol
       restartPolicy: Never
       volumes:
-	  - name: nfs-files-vol
+      - name: nfs-files-vol
         nfs:
           server: $(NFS_SERVER_SERVICE_NAME).default.srv.cluster.local
           path: /
