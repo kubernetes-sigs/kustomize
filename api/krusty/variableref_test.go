@@ -1529,10 +1529,10 @@ spec:
         hostPath:
           path: /var/lib/docker/containers
       - name: nfs-files-vol
-          nfs:
-            server: $(NFS_SERVER_SERVICE_NAME).default.srv.cluster.local
-            path: /
-            readOnly: false
+        nfs:
+          server: $(NFS_SERVER_SERVICE_NAME).default.srv.cluster.local
+          path: /
+          readOnly: false
 `)
 	th.WriteF("/app/base/ReplicaSet.yaml", `
 apiVersion: apps/v1
