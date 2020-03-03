@@ -651,24 +651,8 @@ func (rn *RNode) VisitElements(fn func(node *RNode) error) error {
 // The order sets the precedence of the merge keys -- if multiple keys are present
 // in Resources in a list, then the FIRST key which ALL elements in the list have is used as the
 // associative key for merging that list.
-var AssociativeSequenceKeys = []string{
-	"mountPath", "devicePath", "ip", "type", "topologyKey", "name", "containerPort",
-}
-
-// IsAssociative returns true if all elements in the list contain an AssociativeSequenceKey
-// as a field.
-func IsAssociative(nodes []*RNode) bool {
-	for i := range nodes {
-		node := nodes[i]
-		if IsEmpty(node) {
-			continue
-		}
-		if node.IsAssociative() {
-			return true
-		}
-	}
-	return false
-}
+// Only infer name as a merge key.
+var AssociativeSequenceKeys = []string{"name"}
 
 // IsAssociative returns true if the RNode contains an AssociativeSequenceKey as a field.
 func (rn *RNode) IsAssociative() bool {

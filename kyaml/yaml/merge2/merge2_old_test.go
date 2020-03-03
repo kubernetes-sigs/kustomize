@@ -365,7 +365,7 @@ a:
   b:
     # header comment
     c: d
-`)
+`, true)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -385,7 +385,7 @@ a:
   b:
     c: d
     # footer comment
-`)
+`, true)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -404,7 +404,7 @@ a:
 a:
   b:
     c: d # line comment
-`)
+`, true)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -426,7 +426,7 @@ a:
   b:
     # replace comment
     c: d
-`)
+`, true)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -447,7 +447,7 @@ a:
   b:
     c: d
     # replace comment
-`)
+`, true)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -466,7 +466,7 @@ a:
 a:
   b:
     c: d # replace comment
-`)
+`, true)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -484,7 +484,7 @@ a:
 a:
   b:
     c: d # replace comment
-`)
+`, true)
 	if !assert.NoError(t, err) {
 		return
 	}

@@ -7,28 +7,44 @@ import (
 	"strings"
 
 	"github.com/go-errors/errors"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func (l *Walker) walkAssociativeSequence() (*yaml.RNode, error) {
 	// may require initializing the dest node
-	dest, err := l.Sources.setDestNode(l.VisitList(l.Sources, AssociativeList))
+	dest, err := l.Sources.setDestNode(l.VisitList(l.Sources, l.Schema, AssociativeList))
 	if dest == nil || err != nil {
 		return nil, err
 	}
 
-	// find the list of elements we need to recursively walk
-	key, err := l.elementKey()
-	if err != nil {
-		return nil, err
+	var key string
+	if l.Schema != nil {
+		_, key = l.Schema.PatchStrategyAndKey()
 	}
+	if key == "" { // no key from the schema, try to infer one
+		// find the list of elements we need to recursively walk
+		key, err = l.elementKey()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	values := l.elementValues(key)
 
 	// recursively set the elements in the list
+	var s *openapi.ResourceSchema
+	if l.Schema != nil {
+		s = l.Schema.Elements()
+	}
 	for _, value := range values {
-		val, err := Walker{Visitor: l,
-			Sources: l.elementValue(key, value)}.Walk()
+		val, err := Walker{
+			InferAssociativeLists: l.InferAssociativeLists,
+			Visitor:               l,
+			Schema:                s,
+			Sources:               l.elementValue(key, value),
+		}.Walk()
 		if err != nil {
 			return nil, err
 		}

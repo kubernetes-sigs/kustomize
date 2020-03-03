@@ -4,6 +4,7 @@
 package merge3
 
 import (
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/yaml/walk"
 )
@@ -17,7 +18,7 @@ const (
 
 type Visitor struct{}
 
-func (m Visitor) VisitMap(nodes walk.Sources) (*yaml.RNode, error) {
+func (m Visitor) VisitMap(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.RNode, error) {
 	if yaml.IsNull(nodes.Updated()) || yaml.IsNull(nodes.Dest()) {
 		// explicitly cleared from either dest or update
 		return walk.ClearNode, nil
@@ -36,7 +37,7 @@ func (m Visitor) VisitMap(nodes walk.Sources) (*yaml.RNode, error) {
 	return nodes.Dest(), nil
 }
 
-func (m Visitor) visitAList(nodes walk.Sources) (*yaml.RNode, error) {
+func (m Visitor) visitAList(nodes walk.Sources, _ *openapi.ResourceSchema) (*yaml.RNode, error) {
 	if yaml.IsEmpty(nodes.Updated()) && !yaml.IsEmpty(nodes.Origin()) {
 		// implicitly cleared from update -- element was deleted
 		return walk.ClearNode, nil
@@ -51,7 +52,7 @@ func (m Visitor) visitAList(nodes walk.Sources) (*yaml.RNode, error) {
 	return nodes.Dest(), nil
 }
 
-func (m Visitor) VisitScalar(nodes walk.Sources) (*yaml.RNode, error) {
+func (m Visitor) VisitScalar(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.RNode, error) {
 	if yaml.IsNull(nodes.Updated()) || yaml.IsNull(nodes.Dest()) {
 		// explicitly cleared from either dest or update
 		return nil, nil
@@ -103,9 +104,9 @@ func (m Visitor) visitNAList(nodes walk.Sources) (*yaml.RNode, error) {
 	return nodes.Dest(), nil
 }
 
-func (m Visitor) VisitList(nodes walk.Sources, kind walk.ListKind) (*yaml.RNode, error) {
+func (m Visitor) VisitList(nodes walk.Sources, s *openapi.ResourceSchema, kind walk.ListKind) (*yaml.RNode, error) {
 	if kind == walk.AssociativeList {
-		return m.visitAList(nodes)
+		return m.visitAList(nodes, s)
 	}
 	// non-associative list
 	return m.visitNAList(nodes)
