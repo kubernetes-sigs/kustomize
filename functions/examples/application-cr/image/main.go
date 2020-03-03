@@ -6,13 +6,13 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"os"
-	"text/template"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/application/api/v1beta1"
+	yaml2 "sigs.k8s.io/yaml"
 
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -56,6 +56,8 @@ type API struct {
 		Name string `yaml:"name"`
 
 		Namespace string `yaml:"namespace"`
+
+		Descriptor v1beta1.Descriptor `yaml:"descriptor,omitempty"`
 	} `yaml:"spec"`
 }
 
@@ -120,47 +122,32 @@ func getGroupKinds(in []*yaml.RNode) ([]metav1.GroupKind, error) {
 	return groupKinds, nil
 }
 
-var applicationTemplate = `apiVersion: app.k8s.io/v1beta1
-kind: Application
-metadata:
-  name: {{.Name}}
-  namespace: {{.Namespace}}
-  labels:
-    app.kubernetes.io/name: {{.Name}}
-  annotations:
-    app.kubernetes.io/managed-by: {{.ManagedBy}}
-spec:
-  selector:
-    app.kubernetes.io/name: {{.Name}}
-{{if .ComponentKinds }}
-  componentKinds:
-{{range $kind := .ComponentKinds }}
-  - group: {{$kind.Group}}
-    kind: {{$kind.Kind}}
-{{end}}
-{{end}}
-
-`
-
 func addApplicationCR(api API, groupKinds []metav1.GroupKind) (*yaml.RNode, error) {
-	data := struct {
-		Name           string
-		Namespace      string
-		ManagedBy      string
-		ComponentKinds []metav1.GroupKind
-	}{
-		Name:           api.Spec.Name,
-		Namespace:      api.Spec.Namespace,
-		ManagedBy:      api.Spec.ManagedBy,
-		ComponentKinds: groupKinds,
+	app := v1beta1.Application{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "app.k8s.io/v1beta1",
+			Kind:       "Application",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:   api.Spec.Namespace,
+			Name:        api.Spec.Name,
+			Labels:      map[string]string{"app.kubernetes.io/name": api.Spec.Name},
+			Annotations: map[string]string{"app.kubernetes.io/managed-by": api.Spec.ManagedBy},
+		},
+		Spec: v1beta1.ApplicationSpec{
+			ComponentGroupKinds: groupKinds,
+			Descriptor:          api.Spec.Descriptor,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"app.kubernetes.io/name": api.Spec.Name},
+			},
+		},
 	}
-	// execute the deployment template
-	buff := &bytes.Buffer{}
-	t := template.Must(template.New("application").Parse(applicationTemplate))
-	if err := t.Execute(buff, data); err != nil {
+
+	data, err := yaml2.Marshal(app)
+	if err != nil {
 		return nil, err
 	}
-	return yaml.Parse(buff.String())
+	return yaml.Parse(string(data))
 }
 
 func addApplicationLabel(name string, in []*yaml.RNode) error {
