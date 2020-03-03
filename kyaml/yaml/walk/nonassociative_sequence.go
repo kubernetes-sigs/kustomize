@@ -9,5 +9,5 @@ import (
 
 // walkNonAssociativeSequence returns the value of VisitList
 func (l Walker) walkNonAssociativeSequence() (*yaml.RNode, error) {
-	return l.VisitList(l.Sources, NonAssociateList)
+	return l.VisitList(l.Sources, l.Schema, NonAssociateList)
 }

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"reflect"
 	"sync"
 
 	"github.com/go-openapi/spec"
@@ -30,6 +31,14 @@ type openapiData struct {
 type ResourceSchema struct {
 	// Schema is the OpenAPI schema for a Resource or field
 	Schema *spec.Schema
+}
+
+// IsEmpty returns true if the ResourceSchema is empty
+func (rs *ResourceSchema) IsEmpty() bool {
+	if rs == nil || rs.Schema == nil {
+		return true
+	}
+	return reflect.DeepEqual(*rs.Schema, spec.Schema{})
 }
 
 // SchemaForResourceType returns the Schema for the given Resource
@@ -193,15 +202,15 @@ func SuppressBuiltInSchemaUse() {
 }
 
 // Elements returns the Schema for the elements of an array.
-func (r *ResourceSchema) Elements() *ResourceSchema {
+func (rs *ResourceSchema) Elements() *ResourceSchema {
 	// load the schema from swagger.json
 	initSchema()
 
-	if len(r.Schema.Type) != 1 || r.Schema.Type[0] != "array" {
+	if len(rs.Schema.Type) != 1 || rs.Schema.Type[0] != "array" {
 		// either not an array, or array has multiple types
 		return nil
 	}
-	s := *r.Schema.Items.Schema
+	s := *rs.Schema.Items.Schema
 	for s.Ref.String() != "" {
 		sc, e := Resolve(&s.Ref)
 		if e != nil {
@@ -219,8 +228,8 @@ const Elements = "[]"
 // Field is called.
 // If any Field or Elements call returns nil, then Lookup returns
 // nil immediately.
-func (r *ResourceSchema) Lookup(path ...string) *ResourceSchema {
-	s := r
+func (rs *ResourceSchema) Lookup(path ...string) *ResourceSchema {
+	s := rs
 	for _, p := range path {
 		if s == nil {
 			break
@@ -235,19 +244,19 @@ func (r *ResourceSchema) Lookup(path ...string) *ResourceSchema {
 }
 
 // Field returns the Schema for a field.
-func (r *ResourceSchema) Field(field string) *ResourceSchema {
+func (rs *ResourceSchema) Field(field string) *ResourceSchema {
 	// load the schema from swagger.json
 	initSchema()
 
 	// locate the Schema
-	s, found := r.Schema.Properties[field]
+	s, found := rs.Schema.Properties[field]
 	switch {
 	case found:
 		// no-op, continue with s as the schema
-	case r.Schema.AdditionalProperties != nil && r.Schema.AdditionalProperties.Schema != nil:
+	case rs.Schema.AdditionalProperties != nil && rs.Schema.AdditionalProperties.Schema != nil:
 		// map field type -- use Schema of the value
 		// (the key doesn't matter, they all have the same value type)
-		s = *r.Schema.AdditionalProperties.Schema
+		s = *rs.Schema.AdditionalProperties.Schema
 	default:
 		// no Schema found from either swagger.json or line comments
 		return nil
@@ -267,14 +276,14 @@ func (r *ResourceSchema) Field(field string) *ResourceSchema {
 }
 
 // PatchStrategyAndKey returns the patch strategy and merge key extensions
-func (r *ResourceSchema) PatchStrategyAndKey() (string, string) {
-	ps, found := r.Schema.Extensions[kubernetesPatchStrategyExtensionKey]
+func (rs *ResourceSchema) PatchStrategyAndKey() (string, string) {
+	ps, found := rs.Schema.Extensions[kubernetesPatchStrategyExtensionKey]
 	if !found {
 		// merge key and patch strategy must appear together
 		return "", ""
 	}
 
-	mk, found := r.Schema.Extensions[kubernetesMergeKeyExtensionKey]
+	mk, found := rs.Schema.Extensions[kubernetesMergeKeyExtensionKey]
 	if !found {
 		// merge key and patch strategy must appear together
 		return "", ""
