@@ -3,39 +3,55 @@
 
 package merge3_test
 
+//nolint:lll
 var elementTestCases = []testCase{
 	//
 	// Test Case
 	//
 	{description: `Add an element to an existing list`,
 		origin: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:1
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:1
 `,
 		update: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:1
-- name: baz
-  image: baz:2
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:1
+      - name: baz
+        image: baz:2
 `,
 		local: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:1
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:1
 `,
 		expected: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:1
-- image: baz:2
-  name: baz
-  
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:1
+      - image: baz:2
+        name: baz
 `},
 
 	//
@@ -43,45 +59,68 @@ containers:
 	//
 	{description: `Add an element to a non-existing list`,
 		origin: `
+apiVersion: apps/v1
 kind: Deployment`,
 		update: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
 `,
 		local: `
+apiVersion: apps/v1
 kind: Deployment
 `,
 		expected: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- image: foo:bar
-  name: foo
+spec:
+  template:
+    spec:
+      containers:
+      - image: foo:bar
+        name: foo
 `},
 
 	{description: `Add an element to a non-existing list, existing in dest`,
 		origin: `
+apiVersion: apps/v1
 kind: Deployment`,
 		update: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
 `,
 		local: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: baz
-  image: baz:bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: baz
+        image: baz:bar
 `,
 		expected: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: baz
-  image: baz:bar
-- image: foo:bar
-  name: foo
+spec:
+  template:
+    spec:
+      containers:
+      - name: baz
+        image: baz:bar
+      - image: foo:bar
+        name: foo
 `},
 
 	//
@@ -90,27 +129,40 @@ containers:
 	// This element is missing from the destination -- only the new fields are added
 	{description: `Add a field to the element, element missing from dest`,
 		origin: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar`,
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar`,
 		update: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
-  command:
-  - run.sh
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
+        command:
+        - run.sh
 `,
 		local: `
+apiVersion: apps/v1
 kind: Deployment
 `,
 		expected: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- command:
-  - run.sh
-  name: foo
+spec:
+  template:
+    spec:
+      containers:
+      - command:
+        - run.sh
+        name: foo
 `},
 
 	//
@@ -118,30 +170,43 @@ containers:
 	//
 	{description: `Update a field on the elem, element missing from the dest`,
 		origin: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
-  command:
-  - run.sh
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
+        command:
+        - run.sh
 `,
 		update: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
-  command: 
-  - run2.sh
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
+        command:
+        - run2.sh
 `,
 		local: `
+apiVersion: apps/v1
 kind: Deployment
 `,
 		expected: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- command:
-  - run2.sh
-  name: foo
+spec:
+  template:
+    spec:
+      containers:
+      - command:
+        - run2.sh
+        name: foo
 `},
 
 	//
@@ -149,32 +214,48 @@ containers:
 	//
 	{description: `Update a field on the elem, element present in the dest`,
 		origin: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
-  command: ['run.sh']
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
+        command: ['run.sh']
 `,
 		update: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
-  command: ['run2.sh']
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
+        command: ['run2.sh']
 `,
 		local: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
-  command: ['run.sh']
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
+        command: ['run.sh']
 `,
 		expected: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
-  command: ['run2.sh']
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
+        command: ['run2.sh']
 `},
 
 	//
@@ -182,30 +263,46 @@ containers:
 	//
 	{description: `Add a field on the elem, element present in the dest`,
 		origin: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
 `,
 		update: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
-  command: ['run2.sh']
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
+        command: ['run2.sh']
 `,
 		local: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
 `,
 		expected: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
-  command: ['run2.sh']
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
+        command: ['run2.sh']
 `},
 
 	//
@@ -213,31 +310,47 @@ containers:
 	//
 	{description: `Add a field on the elem, element and field present in the dest`,
 		origin: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
 `,
 		update: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
-  command: ['run2.sh']
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
+        command: ['run2.sh']
 `,
 		local: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
-  command: ['run.sh']
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
+        command: ['run.sh']
 `,
 		expected: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
-  command: ['run2.sh']
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
+        command: ['run2.sh']
 `},
 
 	//
@@ -245,24 +358,40 @@ containers:
 	//
 	{description: `Ignore an element`,
 		origin: `
+apiVersion: apps/v1
 kind: Deployment
-containers: {}
+spec:
+  template:
+    spec:
+      containers: {}
 `,
 		update: `
+apiVersion: apps/v1
 kind: Deployment
-containers: {}
+spec:
+  template:
+    spec:
+      containers: {}
 `,
 		local: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
 `,
 		expected: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
 `},
 
 	//
@@ -270,18 +399,25 @@ containers:
 	//
 	{description: `Leave deleted`,
 		origin: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
 `,
 		update: `
+apiVersion: apps/v1
 kind: Deployment
 `,
 		local: `
+apiVersion: apps/v1
 kind: Deployment
 `,
 		expected: `
+apiVersion: apps/v1
 kind: Deployment
 `},
 
@@ -290,22 +426,38 @@ kind: Deployment
 	//
 	{description: `Remove an element -- matching`,
 		origin: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
 `,
 		update: `
+apiVersion: apps/v1
 kind: Deployment
+spec:
+  template:
+    spec: {}
 `,
 		local: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
 `,
 		expected: `
+apiVersion: apps/v1
 kind: Deployment
+spec:
+  template:
+    spec: {}
 `},
 
 	//
@@ -313,23 +465,39 @@ kind: Deployment
 	//
 	{description: `Remove an element -- field missing from update`,
 		origin: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
 `,
 		update: `
+apiVersion: apps/v1
 kind: Deployment
+spec:
+  template:
+    spec: {}
 `,
 		local: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
-  command: ['run.sh']
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
+        command: ['run.sh']
 `,
 		expected: `
+apiVersion: apps/v1
 kind: Deployment
+spec:
+  template:
+    spec: {}
 `},
 
 	//
@@ -337,34 +505,50 @@ kind: Deployment
 	//
 	{description: `Remove an element -- element missing`,
 		origin: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
-- name: baz
-  image: baz:bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
+      - name: baz
+        image: baz:bar
 `,
 		update: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
 `,
 		local: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
-  command: ['run.sh']
-- name: baz
-  image: baz:bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
+        command: ['run.sh']
+      - name: baz
+        image: baz:bar
 `,
 		expected: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
-  command: ['run.sh']
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
+        command: ['run.sh']
 `},
 
 	//
@@ -372,24 +556,40 @@ containers:
 	//
 	{description: `Remove an element -- empty containers`,
 		origin: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
 `,
 		update: `
+apiVersion: apps/v1
 kind: Deployment
-containers: {}
+spec:
+  template:
+    spec:
+      containers: {}
 `,
 		local: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
-  command: ['run.sh']
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
+        command: ['run.sh']
 `,
 		expected: `
+apiVersion: apps/v1
 kind: Deployment
+spec:
+  template:
+    spec: {}
 `},
 
 	//
@@ -397,53 +597,82 @@ kind: Deployment
 	//
 	{description: `Remove an element -- missing list field`,
 		origin: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
 `,
 		update: `
+apiVersion: apps/v1
 kind: Deployment
+spec:
+  template:
+    spec: {}
 `,
 		local: `
+apiVersion: apps/v1
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
-  command: ['run.sh']
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
+        command: ['run.sh']
 `,
 		expected: `
+apiVersion: apps/v1
 kind: Deployment
+spec:
+  template:
+    spec: {}
 `},
 
 	//
 	// Test Case
 	//
-	{description: `no infer merge keys no merge'`,
+	{description: `infer merge keys merge'`,
 		origin: `
 kind: Deployment
-containers:
-- name: foo
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
 `,
 		update: `
 kind: Deployment
-containers:
-- name: foo
-  command: ['run2.sh']
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        command: ['run2.sh']
 `,
 		local: `
 kind: Deployment
-containers:
-- name: foo
-  image: foo:bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
 `,
 		expected: `
 kind: Deployment
-containers:
-- name: foo
-  command: ['run2.sh']
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:bar
+        command: ['run2.sh']
 `,
-		noInfer: true,
+		infer: true,
 	},
 
 	//
@@ -451,8 +680,8 @@ containers:
 	//
 	{description: `no infer merge keys merge using schema`,
 		origin: `
-kind: Deployment
 apiVersion: apps/v1
+kind: Deployment
 spec:
   template:
     spec:
@@ -460,8 +689,8 @@ spec:
       - name: foo
 `,
 		update: `
-kind: Deployment
 apiVersion: apps/v1
+kind: Deployment
 spec:
   template:
     spec:
@@ -470,8 +699,8 @@ spec:
         command: ['run2.sh']
 `,
 		local: `
-kind: Deployment
 apiVersion: apps/v1
+kind: Deployment
 spec:
   template:
     spec:
@@ -480,8 +709,8 @@ spec:
         image: foo:bar
 `,
 		expected: `
-kind: Deployment
 apiVersion: apps/v1
+kind: Deployment
 spec:
   template:
     spec:
@@ -490,7 +719,7 @@ spec:
         image: foo:bar
         command: ['run2.sh']
 `,
-		noInfer: true,
+		infer: false,
 	},
 
 	//
@@ -498,30 +727,46 @@ spec:
 	//
 	{description: `no infer merge keys merge using explicit schema as line comment'`,
 		origin: `
+apiVersion: custom
 kind: Deployment
-containers:
-- name: foo
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
 `,
 		update: `
+apiVersion: custom
 kind: Deployment
-containers:
-- name: foo
-  command: ['run2.sh']
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        command: ['run2.sh']
 `,
 		local: `
+apiVersion: custom
 kind: Deployment
-containers: # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"type":"array","x-kubernetes-patch-merge-key":"name","x-kubernetes-patch-strategy": "merge"}
-- name: foo # hell ow
-  image: foo:bar
+spec:
+  template:
+    spec:
+      containers: # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"type":"array","x-kubernetes-patch-merge-key":"name","x-kubernetes-patch-strategy": "merge"}
+      - name: foo # hell ow
+        image: foo:bar
 `,
 		expected: `
+apiVersion: custom
 kind: Deployment
-containers: # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"type":"array","x-kubernetes-patch-merge-key":"name","x-kubernetes-patch-strategy": "merge"}
-- name: foo # hell ow
-  image: foo:bar
-  command: ['run2.sh']
+spec:
+  template:
+    spec:
+      containers: # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"type":"array","x-kubernetes-patch-merge-key":"name","x-kubernetes-patch-strategy": "merge"}
+      - name: foo # hell ow
+        image: foo:bar
+        command: ['run2.sh']
 `,
-		noInfer: true,
+		infer: false,
 	},
 
 	//
@@ -529,32 +774,48 @@ containers: # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"t
 	//
 	{description: `no infer merge keys merge using explicit schema as head comment'`,
 		origin: `
+apiVersion: custom
 kind: Deployment
-containers:
-- name: foo
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
 `,
 		update: `
+apiVersion: custom
 kind: Deployment
-containers:
-- name: foo
-  command: ['run2.sh']
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        command: ['run2.sh']
 `,
 		local: `
+apiVersion: custom
 kind: Deployment
-# {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"type":"array","x-kubernetes-patch-merge-key":"name","x-kubernetes-patch-strategy": "merge"}
-containers:
-- name: foo # hell ow
-  image: foo:bar
+spec:
+  template:
+    spec:
+      # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"type":"array","x-kubernetes-patch-merge-key":"name","x-kubernetes-patch-strategy": "merge"}
+      containers:
+      - name: foo # hell ow
+        image: foo:bar
 `,
 		expected: `
+apiVersion: custom
 kind: Deployment
-# {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"type":"array","x-kubernetes-patch-merge-key":"name","x-kubernetes-patch-strategy": "merge"}
-containers:
-- name: foo # hell ow
-  image: foo:bar
-  command: ['run2.sh']
+spec:
+  template:
+    spec:
+      # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"type":"array","x-kubernetes-patch-merge-key":"name","x-kubernetes-patch-strategy": "merge"}
+      containers:
+      - name: foo # hell ow
+        image: foo:bar
+        command: ['run2.sh']
 `,
-		noInfer: true,
+		infer: false,
 	},
 
 	//
@@ -562,12 +823,14 @@ containers:
 	//
 	{description: `no infer merge keys merge using explicit schema to parent field'`,
 		origin: `
+apiVersion: custom
 kind: Deployment
 spec:
   containers:
   - name: foo
 `,
 		update: `
+apiVersion: custom
 kind: Deployment
 spec:
   containers:
@@ -575,6 +838,7 @@ spec:
     command: ['run2.sh']
 `,
 		local: `
+apiVersion: custom
 kind: Deployment
 spec: # {"$ref":"#/definitions/io.k8s.api.core.v1.PodSpec"}
   containers:
@@ -582,6 +846,7 @@ spec: # {"$ref":"#/definitions/io.k8s.api.core.v1.PodSpec"}
     image: foo:bar
 `,
 		expected: `
+apiVersion: custom
 kind: Deployment
 spec: # {"$ref":"#/definitions/io.k8s.api.core.v1.PodSpec"}
   containers:
@@ -589,7 +854,7 @@ spec: # {"$ref":"#/definitions/io.k8s.api.core.v1.PodSpec"}
     image: foo:bar
     command: ['run2.sh']
 `,
-		noInfer: true,
+		infer: false,
 	},
 
 	//
@@ -597,12 +862,14 @@ spec: # {"$ref":"#/definitions/io.k8s.api.core.v1.PodSpec"}
 	//
 	{description: `no infer merge keys merge using explicit schema to parent field header'`,
 		origin: `
+apiVersion: custom
 kind: Deployment
 spec:
   containers:
   - name: foo
 `,
 		update: `
+apiVersion: custom
 kind: Deployment
 spec:
   containers:
@@ -610,6 +877,7 @@ spec:
     command: ['run2.sh']
 `,
 		local: `
+apiVersion: custom
 kind: Deployment
 # {"$ref":"#/definitions/io.k8s.api.core.v1.PodSpec"}
 spec:
@@ -618,6 +886,7 @@ spec:
     image: foo:bar
 `,
 		expected: `
+apiVersion: custom
 kind: Deployment
 # {"$ref":"#/definitions/io.k8s.api.core.v1.PodSpec"}
 spec:
@@ -626,6 +895,6 @@ spec:
     image: foo:bar
     command: ['run2.sh']
 `,
-		noInfer: true,
+		infer: false,
 	},
 }
