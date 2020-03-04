@@ -20,7 +20,7 @@ func TestMerge(t *testing.T) {
 		for j := range testCases[i] {
 			tc := testCases[i][j]
 			t.Run(tc.description, func(t *testing.T) {
-				actual, err := MergeStrings(tc.source, tc.dest, !tc.noInfer)
+				actual, err := MergeStrings(tc.source, tc.dest, tc.infer)
 				if !assert.NoError(t, err, tc.description) {
 					t.FailNow()
 				}
@@ -47,5 +47,5 @@ type testCase struct {
 	source      string
 	dest        string
 	expected    string
-	noInfer     bool
+	infer       bool
 }
