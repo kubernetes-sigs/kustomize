@@ -18,7 +18,7 @@ func TestMerge(t *testing.T) {
 		for j := range testCases[i] {
 			tc := testCases[i][j]
 			t.Run(tc.description, func(t *testing.T) {
-				actual, err := MergeStrings(tc.local, tc.origin, tc.update, !tc.noInfer)
+				actual, err := MergeStrings(tc.local, tc.origin, tc.update, tc.infer)
 				if tc.err == nil {
 					if !assert.NoError(t, err, tc.description) {
 						t.FailNow()
@@ -47,5 +47,5 @@ type testCase struct {
 	local       string
 	expected    string
 	err         error
-	noInfer     bool
+	infer       bool
 }
