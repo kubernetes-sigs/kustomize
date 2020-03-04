@@ -10,9 +10,10 @@ import (
 	"log"
 	"os"
 
+	getter "github.com/yujunz/go-getter"
+
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
-	"sigs.k8s.io/kustomize/api/internal/getter"
 	"sigs.k8s.io/kustomize/api/internal/git"
 )
 
