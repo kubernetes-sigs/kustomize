@@ -81,6 +81,12 @@ functionConfig:
     managedBy: jingfang
     name: example-app
     namespace: example-namespace
+    descriptor:
+      links:
+      - description: About
+        url: https://worldpress.org/
+      - description: web server dashboard
+        url: https://metrics/internal/worldpress-01/web-app
 `
 
 var output = `apiVersion: config.kubernetes.io/v1alpha1
@@ -151,22 +157,31 @@ items:
 - apiVersion: app.k8s.io/v1beta1
   kind: Application
   metadata:
-    name: example-app
-    namespace: example-namespace
-    labels:
-      app.kubernetes.io/name: example-app
     annotations:
       app.kubernetes.io/managed-by: jingfang
-  spec:
-    selector:
+    creationTimestamp: null
+    labels:
       app.kubernetes.io/name: example-app
+    name: example-app
+    namespace: example-namespace
+  spec:
     componentKinds:
-    - group:
+    - group: ""
       kind: ConfigMap
     - group: apps
       kind: Deployment
-    - group:
+    - group: ""
       kind: Service
+    descriptor:
+      links:
+      - description: About
+        url: https://worldpress.org/
+      - description: web server dashboard
+        url: https://metrics/internal/worldpress-01/web-app
+    selector:
+      matchLabels:
+        app.kubernetes.io/name: example-app
+  status: {}
 functionConfig:
   # Copyright 2019 The Kubernetes Authors.
   # SPDX-License-Identifier: Apache-2.0
@@ -176,6 +191,12 @@ functionConfig:
     managedBy: jingfang
     name: example-app
     namespace: example-namespace
+    descriptor:
+      links:
+      - description: About
+        url: https://worldpress.org/
+      - description: web server dashboard
+        url: https://metrics/internal/worldpress-01/web-app
 `
 
 func Test(t *testing.T) {
