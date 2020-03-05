@@ -273,9 +273,9 @@ more than one version).
 
 _kustomize_ is a command line tool supporting
 template-free, structured customization of declarative
-configuration targetted to k8s-style objects.
+configuration targeted to k8s-style objects.
 
-_Targetted to k8s means_ that kustomize has some
+_Targeted to k8s means_ that kustomize has some
 understanding of API resources, k8s concepts like
 names, labels, namespaces, etc. and the semantics of
 resource patching.

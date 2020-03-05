@@ -206,7 +206,7 @@ See [field-name-replicas].
 ### resources
 
 Each entry in this list must be a path to a
-_file_, or a path (or URL) refering to another
+_file_, or a path (or URL) referring to another
 kustomization _directory_, e.g.
 
 ```
