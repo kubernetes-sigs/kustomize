@@ -209,7 +209,7 @@ but they are functional.
 
 ## Technical details
 
-### Overall design and imlpementation
+### Overall design and implementations
 
 There are a few components that are all running together in order to get
 the overall application to work smoothly. This section will provide a brief
