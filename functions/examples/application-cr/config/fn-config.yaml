@@ -1,0 +1,13 @@
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+apiVersion: examples.config.kubernetes.io/v1beta1
+kind: CreateApp
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/kustomize-functions/create-application:v0.1.0
+spec:
+  managedBy: jingfang
+  name: example-app
+  namespace: example-namespace
