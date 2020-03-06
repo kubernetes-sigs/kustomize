@@ -51,7 +51,7 @@ BAR=baz
 	}
 }
 
-func makeLiteralSecret(name string) *corev1.Secret {
+func makeLiteralSecret(name string, labels, annotations map[string]string) *corev1.Secret {
 	s := &corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -66,7 +66,12 @@ func makeLiteralSecret(name string) *corev1.Secret {
 		},
 		Type: "Opaque",
 	}
-	s.SetLabels(map[string]string{"foo": "bar"})
+	if labels != nil {
+		s.SetLabels(labels)
+	}
+	if annotations != nil {
+		s.SetAnnotations(annotations)
+	}
 	return s
 }
 
@@ -120,7 +125,49 @@ func TestConstructSecret(t *testing.T) {
 					"foo": "bar",
 				},
 			},
-			expected: makeLiteralSecret("literalSecret"),
+			expected: makeLiteralSecret("literalSecret", map[string]string{
+				"foo": "bar",
+			}, nil),
+		},
+		{
+			description: "construct secret from literal with GeneratorOptions in SecretArgs",
+			input: types.SecretArgs{
+				GeneratorArgs: types.GeneratorArgs{
+					Name: "literalSecret",
+					KvPairSources: types.KvPairSources{
+						LiteralSources: []string{"a=x", "b=y"},
+					},
+					GeneratorOptions: &types.GeneratorOptions{
+						Labels: map[string]string{
+							"foo": "changed",
+							"cat": "dog",
+						},
+						Annotations: map[string]string{
+							"foo": "changed",
+							"cat": "dog",
+						},
+					},
+				},
+			},
+			options: &types.GeneratorOptions{
+				Labels: map[string]string{
+					"foo": "bar",
+				},
+				Annotations: map[string]string{
+					"foo": "bar",
+				},
+			},
+			// GeneratorOptions from the SecretArgs take precedence over the
+			// factory level GeneratorOptions and should overwrite
+			// labels/annotations set in the factory level if there are common
+			// labels/annotations
+			expected: makeLiteralSecret("literalSecret", map[string]string{
+				"foo": "changed",
+				"cat": "dog",
+			}, map[string]string{
+				"foo": "changed",
+				"cat": "dog",
+			}),
 		},
 	}
 
