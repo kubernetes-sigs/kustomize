@@ -24,7 +24,8 @@ prow-presubmit-check: \
 	lint-kustomize \
 	test-unit-kustomize-all \
 	test-unit-cmd-all \
-	test-go-mod
+	test-go-mod \
+	test-examples-kustomize-against-HEAD
 
 .PHONY: verify-kustomize-e2e
 verify-kustomize-e2e: test-examples-e2e-kustomize
