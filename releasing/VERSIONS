@@ -16,7 +16,7 @@ export kstatus_patch=1
 # kustomize api version
 export api_major=0
 export api_minor=3
-export api_patch=2
+export api_patch=3
 
 # cmd/config version
 export cmd_config_major=0
