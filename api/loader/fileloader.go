@@ -95,6 +95,13 @@ type fileLoader struct {
 	// Used to clone repositories.
 	cloner git.Cloner
 
+	// If this is non-nil, the files were
+	// obtained from the given resource
+	rscSpec *resourceSpec
+
+	// Used to get resources
+	getter resourceGetter
+
 	// Used to clean up, as needed.
 	cleaner func() error
 }
@@ -127,20 +134,21 @@ func newLoaderOrDie(
 		log.Fatalf("unable to make loader at '%s'; %v", path, err)
 	}
 	return newLoaderAtConfirmedDir(
-		lr, root, fSys, nil, git.ClonerUsingGitExec)
+		lr, root, fSys, nil, git.ClonerUsingGitExec, getResource)
 }
 
 // newLoaderAtConfirmedDir returns a new fileLoader with given root.
 func newLoaderAtConfirmedDir(
 	lr LoadRestrictorFunc,
 	root filesys.ConfirmedDir, fSys filesys.FileSystem,
-	referrer *fileLoader, cloner git.Cloner) *fileLoader {
+	referrer *fileLoader, cloner git.Cloner, getter resourceGetter) *fileLoader {
 	return &fileLoader{
 		loadRestrictor: lr,
 		root:           root,
 		referrer:       referrer,
 		fSys:           fSys,
 		cloner:         cloner,
+		getter:         getter,
 		cleaner:        func() error { return nil },
 	}
 }
@@ -170,37 +178,44 @@ func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 	if path == "" {
 		return nil, fmt.Errorf("new root cannot be empty")
 	}
-	repoSpec, err := git.NewRepoSpecFromUrl(path)
-	if err == nil {
+
+	ldr, errGet := newResourceGetter(path, fl.fSys, nil, fl.cloner, fl.getter)
+	if errGet == nil {
+		return ldr, nil
+	}
+
+	repoSpec, errGit := git.NewRepoSpecFromUrl(path)
+	if errGit == nil {
 		// Treat this as git repo clone request.
-		if err := fl.errIfRepoCycle(repoSpec); err != nil {
-			return nil, err
+		if errGit := fl.errIfRepoCycle(repoSpec); errGit != nil {
+			return nil, errGit
 		}
 		return newLoaderAtGitClone(
-			repoSpec, fl.fSys, fl, fl.cloner)
+			repoSpec, fl.fSys, fl, fl.cloner, fl.getter)
 	}
+
 	if filepath.IsAbs(path) {
 		return nil, fmt.Errorf("new root '%s' cannot be absolute", path)
 	}
-	root, err := demandDirectoryRoot(fl.fSys, fl.root.Join(path))
-	if err != nil {
-		return nil, err
+	root, errDir := demandDirectoryRoot(fl.fSys, fl.root.Join(path))
+	if errDir != nil {
+		return nil, fmt.Errorf("Error loading %s with git: %v, dir: %v, get: %v", path, errGit, errDir, errGet)
 	}
-	if err := fl.errIfGitContainmentViolation(root); err != nil {
-		return nil, err
+	if errDir := fl.errIfGitContainmentViolation(root); errDir != nil {
+		return nil, errDir
 	}
-	if err := fl.errIfArgEqualOrHigher(root); err != nil {
-		return nil, err
+	if errDir := fl.errIfArgEqualOrHigher(root); errDir != nil {
+		return nil, errDir
 	}
 	return newLoaderAtConfirmedDir(
-		fl.loadRestrictor, root, fl.fSys, fl, fl.cloner), nil
+		fl.loadRestrictor, root, fl.fSys, fl, fl.cloner, fl.getter), nil
 }
 
 // newLoaderAtGitClone returns a new Loader pinned to a temporary
 // directory holding a cloned git repo.
 func newLoaderAtGitClone(
 	repoSpec *git.RepoSpec, fSys filesys.FileSystem,
-	referrer *fileLoader, cloner git.Cloner) (ifc.Loader, error) {
+	referrer *fileLoader, cloner git.Cloner, getter resourceGetter) (ifc.Loader, error) {
 	cleaner := repoSpec.Cleaner(fSys)
 	err := cloner(repoSpec)
 	if err != nil {
@@ -230,6 +245,7 @@ func newLoaderAtGitClone(
 		repoSpec:       repoSpec,
 		fSys:           fSys,
 		cloner:         cloner,
+		getter:         getter,
 		cleaner:        cleaner,
 	}, nil
 }

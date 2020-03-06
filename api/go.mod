@@ -8,6 +8,7 @@ require (
 	github.com/golangci/golangci-lint v1.21.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/pkg/errors v0.8.1
+	github.com/yujunz/go-getter v1.4.1-lite
 	golang.org/x/tools v0.0.0-20191010075000-0337d82405ff
 	gopkg.in/yaml.v2 v2.2.4
 	k8s.io/api v0.17.0
