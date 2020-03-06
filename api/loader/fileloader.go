@@ -5,7 +5,10 @@ package loader
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
+	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -85,6 +88,9 @@ type fileLoader struct {
 
 	// File system utilities.
 	fSys filesys.FileSystem
+
+	// Used to load from HTTP
+	http *http.Client
 
 	// Used to clone repositories.
 	cloner git.Cloner
@@ -293,6 +299,25 @@ func (fl *fileLoader) errIfRepoCycle(newRepoSpec *git.RepoSpec) error {
 // else an error.  Relative paths are taken relative
 // to the root.
 func (fl *fileLoader) Load(path string) ([]byte, error) {
+	if u, err := url.Parse(path); err == nil && (u.Scheme == "http" || u.Scheme == "https") {
+		var hc *http.Client
+		if fl.http != nil {
+			hc = fl.http
+		} else {
+			hc = &http.Client{}
+		}
+		resp, err := hc.Get(path)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		return body, nil
+	}
+
 	if !filepath.IsAbs(path) {
 		path = fl.root.Join(path)
 	}
