@@ -62,11 +62,6 @@ func (x *RepoSpec) Raw() string {
 	return x.raw
 }
 
-func (x *RepoSpec) WithRaw(s string) *RepoSpec {
-	x.raw = s
-	return x
-}
-
 func (x *RepoSpec) AbsPath() string {
 	return x.Dir.Join(x.Path)
 }
