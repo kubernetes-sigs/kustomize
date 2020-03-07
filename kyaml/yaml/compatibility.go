@@ -14,9 +14,9 @@ import (
 
 // typeToTag maps OpenAPI schema types to yaml 1.2 tags
 var typeToTag = map[string]string{
-	"string":  "!!str",
-	"integer": "!!int",
-	"boolean": "!!bool",
+	"string":  StringTag,
+	"integer": IntTag,
+	"boolean": BoolTag,
 	"number":  "!!float",
 }
 

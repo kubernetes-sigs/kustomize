@@ -8,9 +8,7 @@ import (
 
 	"github.com/go-openapi/spec"
 	"sigs.k8s.io/kustomize/kyaml/errors"
-	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 type cliExtension struct {
@@ -21,6 +19,7 @@ type cliExtension struct {
 type setter struct {
 	Name       string            `yaml:"name,omitempty" json:"name,omitempty"`
 	Value      string            `yaml:"value,omitempty" json:"value,omitempty"`
+	ListValues []string          `yaml:"listValues,omitempty" json:"listValues,omitempty"`
 	EnumValues map[string]string `yaml:"enumValues,omitempty" json:"enumValues,omitempty"`
 }
 
@@ -57,32 +56,17 @@ func getExtFromSchema(schema *spec.Schema) (*cliExtension, error) {
 
 // getExtFromComment returns the cliExtension openAPI extension if it is present as
 // a comment on the field.
-func getExtFromComment(object *yaml.RNode) (*cliExtension, *spec.Schema, error) {
-	// TODO(pwittrock): also use path to the field to get openapi, not just comments
-	// parse comment containing the extended openapi for this field
-	fm := fieldmeta.FieldMeta{}
-	if err := fm.Read(object); err != nil {
-		return nil, nil, errors.Wrap(err)
-	}
-	if fm.Schema.Ref.String() == "" {
-		return nil, nil, nil
-	}
-
-	// resolve the comment reference to the extended openapi definitions
-	r, err := openapi.Resolve(&fm.Schema.Ref)
-	if err != nil {
-		return nil, nil, errors.Wrap(err)
-	}
-	if r == nil {
+func getExtFromComment(schema *openapi.ResourceSchema) (*cliExtension, error) {
+	if schema == nil {
 		// no schema found
 		// TODO(pwittrock): should this be an error if it doesn't resolve?
-		return nil, nil, nil
+		return nil, nil
 	}
 
 	// get the cli extension from the openapi (contains setter information)
-	ext, err := getExtFromSchema(r)
+	ext, err := getExtFromSchema(schema.Schema)
 	if err != nil {
-		return nil, nil, errors.Wrap(err)
+		return nil, errors.Wrap(err)
 	}
-	return ext, r, nil
+	return ext, nil
 }
