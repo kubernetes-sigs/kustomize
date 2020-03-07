@@ -43,9 +43,14 @@ func (a *Add) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	return object, accept(a, object)
 }
 
+func (a *Add) visitSequence(_ *yaml.RNode, _ string, _ *openapi.ResourceSchema) error {
+	// no-op
+	return nil
+}
+
 // visitScalar implements visitor
 // visitScalar will set the field metadata on each scalar field whose name + value match
-func (a *Add) visitScalar(object *yaml.RNode, p string) error {
+func (a *Add) visitScalar(object *yaml.RNode, p string, _ *openapi.ResourceSchema) error {
 	// check if the field matches
 	if a.FieldName != "" && !strings.HasSuffix(p, a.FieldName) {
 		return nil
@@ -95,6 +100,9 @@ type SetterDefinition struct {
 
 	// Value is the value of the setter.
 	Value string `yaml:"value"`
+
+	// ListValues are the value of a list setter.
+	ListValues []string `yaml:"listValues,omitempty"`
 
 	// SetBy is the person or role that last set the value.
 	SetBy string `yaml:"setBy,omitempty"`

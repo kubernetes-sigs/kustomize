@@ -21,7 +21,7 @@ func NewSetRunner(parent string) *SetRunner {
 	r := &SetRunner{}
 	c := &cobra.Command{
 		Use:     "set DIR NAME [VALUE]",
-		Args:    cobra.RangeArgs(1, 3),
+		Args:    cobra.MinimumNArgs(3),
 		Short:   commands.SetShort,
 		Long:    commands.SetLong,
 		Example: commands.SetExamples,
@@ -94,6 +94,11 @@ func (r *SetRunner) preRunE(c *cobra.Command, args []string) error {
 		var err error
 		r.Set.Name = args[1]
 		r.Set.Value = args[2]
+
+		// set remaining values as list values
+		if len(args) > 3 {
+			r.Set.ListValues = args[3:]
+		}
 		r.Set.Description = r.Perform.Description
 		r.Set.SetBy = r.Perform.SetBy
 		r.OpenAPIFile, err = ext.GetOpenAPIFile(args)
