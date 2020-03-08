@@ -40,6 +40,7 @@ func (l *Walker) walkAssociativeSequence() (*yaml.RNode, error) {
 	}
 	for _, value := range values {
 		val, err := Walker{
+			VisitKeysAsScalars:    l.VisitKeysAsScalars,
 			InferAssociativeLists: l.InferAssociativeLists,
 			Visitor:               l,
 			Schema:                s,
