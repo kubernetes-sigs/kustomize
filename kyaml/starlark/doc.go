@@ -4,12 +4,22 @@
 // Package starlark contains a kio.Filter which can be applied to resources to transform
 // them through starlark program.
 //
-// The resources are provided to the program through the global variable "resourceList".
+// Starlark has become a popular runtime embedding in go programs, especially for Kubernetes
+// and data processing.
+// Examples: https://github.com/cruise-automation/isopod, https://qri.io/docs/starlark/starlib,
+// https://github.com/stripe/skycfg, https://github.com/k14s/ytt
+//
+// The resources are provided to the starlark program through the global variable "resourceList".
 // "resourceList" is a dictionary containing an "items" field with a list of resources.
-// Changes to "resourceList" made by the starlark program will be reflected in the Filter output.
+// The starlark modified "resourceList" is the Filter output.
 //
 // After being run through the starlark program, the filter will copy the comments from the input
-// resources to restore them after they are dropped due to the serialization.
+// resources to restore them -- due to them being dropped as a result of serializing the resources
+// as starlark values.
+//
+// "resourceList" may also contain a "functionConfig" entry to configure the starlark script itself.
+// Changes made by the starlark program to the "functionConfig" will be reflected in the
+// Filter.FunctionConfig value.
 //
 // The Filter will also format the output so that output has the preferred field ordering
 // rather than an alphabetical field ordering.
