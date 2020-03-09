@@ -5,6 +5,8 @@ package starlark
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strconv"
 
 	"github.com/qri-io/starlib/util"
@@ -21,9 +23,54 @@ type Filter struct {
 
 	// Program is a starlark script which will be run against the resources
 	Program string
+
+	// URL is the url of a starlark program to fetch and run
+	URL string
+
+	// Path is the path to a starlark program to read and run
+	Path string
+
+	// FunctionConfig is the value to be provided for resourceList.functionConfig as specified by
+	// https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md.
+	FunctionConfig *yaml.RNode
 }
 
 func (sf *Filter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
+	if sf.URL != "" && sf.Path != "" ||
+		sf.URL != "" && sf.Program != "" ||
+		sf.Path != "" && sf.Program != "" {
+		return nil, errors.Errorf("Filter Path, Program and URL are mutually exclusive")
+	}
+
+	// read the program from a file
+	if sf.Path != "" {
+		b, err := ioutil.ReadFile(sf.Path)
+		if err != nil {
+			return nil, err
+		}
+		sf.Program = string(b)
+	}
+
+	// read the program from a URL
+	if sf.URL != "" {
+		err := func() error {
+			resp, err := http.Get(sf.URL)
+			if err != nil {
+				return err
+			}
+			defer resp.Body.Close()
+			b, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return err
+			}
+			sf.Program = string(b)
+			return nil
+		}()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// retain map of inputs to outputs by id so if the name is changed by the
 	// starlark program, we are able to match the same resources
 	value, ids, err := sf.inputToResourceList(input)
@@ -69,6 +116,16 @@ func (sf *Filter) inputToResourceList(
 	if err != nil {
 		return nil, nil, errors.Wrap(err)
 	}
+
+	// set the functionConfig
+	if sf.FunctionConfig != nil {
+		if err := resourceList.PipeE(
+			yaml.FieldSetter{Name: "functionConfig", Value: sf.FunctionConfig}); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	// the inputs should be provided as the list "items"
 	items, err := resourceList.Pipe(yaml.LookupCreate(yaml.SequenceNode, "items"))
 	if err != nil {
 		return nil, nil, errors.Wrap(err)
@@ -115,10 +172,24 @@ func (sf *Filter) resourceListToOutput(
 		return nil, errors.Wrap(err)
 	}
 	o := out.(map[string]interface{})
-	it := (o["items"].([]interface{}))
 
+	// parse the function config
+	if _, found := o["functionConfig"]; found {
+		fc := (o["functionConfig"].(map[string]interface{}))
+		b, err := yaml.Marshal(fc)
+		if err != nil {
+			return nil, errors.Wrap(err)
+		}
+		sf.FunctionConfig, err = yaml.Parse(string(b))
+		if err != nil {
+			return nil, errors.Wrap(err)
+		}
+	}
+
+	// parse the items
 	// copy the items out of the ResourceList, and into the Filter output
 	var results []*yaml.RNode
+	it := (o["items"].([]interface{}))
 	for i := range it {
 		// convert the resource back to the native yaml form
 		b, err := yaml.Marshal(it[i])
