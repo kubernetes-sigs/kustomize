@@ -4,7 +4,6 @@
 package krusty_test
 
 import (
-	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
@@ -22,7 +21,7 @@ func TestEmptyFileSystem(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected error")
 	}
-	if !strings.Contains(err.Error(), "'noSuchThing' doesn't exist") {
+	if err.Error() != "'noSuchThing' doesn't exist" {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
