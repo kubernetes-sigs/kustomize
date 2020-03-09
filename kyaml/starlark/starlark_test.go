@@ -16,7 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-func TestStarlarkFilter_Filter(t *testing.T) {
+func TestFilter_Filter(t *testing.T) {
 	var tests = []struct {
 		name                   string
 		input                  string
