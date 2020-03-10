@@ -27,6 +27,32 @@ func (l Walker) walkMap() (*yaml.RNode, error) {
 
 	// recursively set the field values on the map
 	for _, key := range l.fieldNames() {
+		if l.VisitKeysAsScalars {
+			// visit the map keys as if they were scalars,
+			// this is necessary if doing things such as copying
+			// comments
+			var keys []*yaml.RNode
+			for i := range l.Sources {
+				// construct the sources from the keys
+				if l.Sources[i] == nil {
+					keys = append(keys, nil)
+					continue
+				}
+				field := l.Sources[i].Field(key)
+				if field == nil || yaml.IsEmpty(field.Key) {
+					keys = append(keys, nil)
+					continue
+				}
+				keys = append(keys, field.Key)
+			}
+			// visit the sources as a scalar
+			// keys don't have any schema --pass in nil
+			_, err := l.Visitor.VisitScalar(keys, nil)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		var s *openapi.ResourceSchema
 		if l.Schema != nil {
 			s = l.Schema.Field(key)
@@ -36,6 +62,7 @@ func (l Walker) walkMap() (*yaml.RNode, error) {
 			s = commentSch
 		}
 		val, err := Walker{
+			VisitKeysAsScalars:    l.VisitKeysAsScalars,
 			InferAssociativeLists: l.InferAssociativeLists,
 			Visitor:               l,
 			Schema:                s,
