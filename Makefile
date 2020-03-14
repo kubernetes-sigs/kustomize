@@ -21,11 +21,11 @@ verify-kustomize: \
 # https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/kustomize
 .PHONY: prow-presubmit-check
 prow-presubmit-check: \
+	test-examples-kustomize-against-HEAD \
 	lint-kustomize \
 	test-unit-kustomize-all \
 	test-unit-cmd-all \
-	test-go-mod \
-	test-examples-kustomize-against-HEAD
+	test-go-mod
 
 .PHONY: verify-kustomize-e2e
 verify-kustomize-e2e: test-examples-e2e-kustomize

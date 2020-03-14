@@ -14,6 +14,9 @@ function onLinuxAndNotOnTravis {
   false
 }
 
+# tree command not found in prow
+hash tree 2>/dev/null || alias tree=ls
+
 # TODO: change the label?
 # We test against the latest release, and HEAD, and presumably
 # any branch using this label, so it should probably get
