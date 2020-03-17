@@ -597,6 +597,76 @@ spec:
         image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
  `,
 		},
+		{
+			name:   "set-args-list",
+			setter: "args",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.args:
+      x-k8s-cli:
+        type: array
+        setter:
+          name: args
+          listValues: ["1", "2", "3"]
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  # {"$ref": "#/definitions/io.k8s.cli.setters.args"}
+  replicas: []
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  # {"$ref": "#/definitions/io.k8s.cli.setters.args"}
+  replicas:
+  - "1"
+  - "2"
+  - "3"
+ `,
+		},
+		{
+			name:   "set-args-list-replace",
+			setter: "args",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.args:
+      x-k8s-cli:
+        type: array
+        setter:
+          name: args
+          listValues: ["1", "2", "3"]
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  # {"$ref": "#/definitions/io.k8s.cli.setters.args"}
+  replicas: ["4", "5"]
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  # {"$ref": "#/definitions/io.k8s.cli.setters.args"}
+  replicas:
+  - "1"
+  - "2"
+  - "3"
+ `,
+		},
 	}
 	for i := range tests {
 		test := tests[i]
@@ -678,6 +748,7 @@ func TestSetOpenAPI_Filter(t *testing.T) {
 		name        string
 		setter      string
 		value       string
+		values      []string
 		input       string
 		expected    string
 		description string
@@ -1004,6 +1075,33 @@ openAPI:
           value: "2"
  `,
 		},
+
+		{
+			name:   "set-args-list",
+			setter: "args",
+			value:  "2",
+			values: []string{"3", "4"},
+			input: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.args:
+      type: array
+      x-k8s-cli:
+        setter:
+          name: args
+          listValues: ["1"]
+ `,
+			expected: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.args:
+      type: array
+      x-k8s-cli:
+        setter:
+          name: args
+          listValues: ["2", "3", "4"]
+`,
+		},
 	}
 	for i := range tests {
 		test := tests[i]
@@ -1015,7 +1113,7 @@ openAPI:
 
 			// invoke the setter
 			instance := &SetOpenAPI{
-				Name: test.setter, Value: test.value,
+				Name: test.setter, Value: test.value, ListValues: test.values,
 				SetBy: test.setBy, Description: test.description}
 			result, err := instance.Filter(in)
 			if test.err != "" {

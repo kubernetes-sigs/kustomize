@@ -588,6 +588,12 @@ func (rn *RNode) VisitFields(fn func(node *MapNode) error) error {
 	return nil
 }
 
+const (
+	StringTag = "!!str"
+	BoolTag   = "!!bool"
+	IntTag    = "!!int"
+)
+
 // Elements returns the list of elements in the RNode.
 // Returns an error for non-SequenceNodes.
 func (rn *RNode) Elements() ([]*RNode, error) {

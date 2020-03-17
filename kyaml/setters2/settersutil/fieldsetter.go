@@ -17,6 +17,9 @@ type FieldSetter struct {
 	// Value is the value to set
 	Value string
 
+	// ListValues contains a list of values to set on a Sequence
+	ListValues []string
+
 	Description string
 
 	SetBy string
@@ -26,7 +29,12 @@ type FieldSetter struct {
 func (fs FieldSetter) Set(openAPIPath, resourcesPath string) (int, error) {
 	// Update the OpenAPI definitions
 	soa := setters2.SetOpenAPI{
-		Name: fs.Name, Value: fs.Value, Description: fs.Description, SetBy: fs.SetBy}
+		Name:        fs.Name,
+		Value:       fs.Value,
+		ListValues:  fs.ListValues,
+		Description: fs.Description,
+		SetBy:       fs.SetBy,
+	}
 	if err := soa.UpdateFile(openAPIPath); err != nil {
 		return 0, err
 	}

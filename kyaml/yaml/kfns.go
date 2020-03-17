@@ -3,7 +3,9 @@
 
 package yaml
 
-import "gopkg.in/yaml.v3"
+import (
+	"gopkg.in/yaml.v3"
+)
 
 // AnnotationClearer removes an annotation at metadata.annotations.
 // Returns nil if the annotation or field does not exist.
@@ -33,7 +35,7 @@ type AnnotationSetter struct {
 func (s AnnotationSetter) Filter(rn *RNode) (*RNode, error) {
 	// some tools get confused about the type if annotations are not quoted
 	v := NewScalarRNode(s.Value)
-	v.YNode().Tag = "!!str"
+	v.YNode().Tag = StringTag
 	v.YNode().Style = yaml.SingleQuotedStyle
 	return rn.Pipe(
 		PathGetter{Path: []string{"metadata", "annotations"}, Create: yaml.MappingNode},
@@ -80,7 +82,7 @@ type LabelSetter struct {
 func (s LabelSetter) Filter(rn *RNode) (*RNode, error) {
 	// some tools get confused about the type if labels are not quoted
 	v := NewScalarRNode(s.Value)
-	v.YNode().Tag = "!!str"
+	v.YNode().Tag = StringTag
 	v.YNode().Style = yaml.SingleQuotedStyle
 	return rn.Pipe(
 		PathGetter{Path: []string{"metadata", "labels"}, Create: yaml.MappingNode},

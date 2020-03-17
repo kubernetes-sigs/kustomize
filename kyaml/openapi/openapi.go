@@ -210,6 +210,10 @@ func (rs *ResourceSchema) Elements() *ResourceSchema {
 		// either not an array, or array has multiple types
 		return nil
 	}
+	if rs == nil || rs.Schema == nil || rs.Schema.Items == nil {
+		// no-scheme for the items
+		return nil
+	}
 	s := *rs.Schema.Items.Schema
 	for s.Ref.String() != "" {
 		sc, e := Resolve(&s.Ref)
