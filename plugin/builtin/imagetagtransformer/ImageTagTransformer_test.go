@@ -388,3 +388,45 @@ spec:
       initContainers: null
 `)
 }
+
+func TestImageTagTransformerTagWithBraces(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("ImageTagTransformer")
+	defer th.Reset()
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: notImportantHere
+imageTag:
+  name: some.registry.io/my-image
+  newTag: "my-fixed-tag"
+`, `
+group: apps
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: some.registry.io/my-image:{GENERATED_TAG}
+        name: my-image
+`)
+
+	th.AssertActualEqualsExpected(rm, `
+apiVersion: v1
+group: apps
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: some.registry.io/my-image:my-fixed-tag
+        name: my-image
+`)
+}
