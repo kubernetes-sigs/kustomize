@@ -7,6 +7,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // FieldSetter sets the value for a field setter.
@@ -23,6 +24,17 @@ type FieldSetter struct {
 	Description string
 
 	SetBy string
+
+	Count int
+
+	OpenAPIPath string
+
+	ResourcesPath string
+}
+
+func (fs *FieldSetter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
+	fs.Count, _ = fs.Set(fs.OpenAPIPath, fs.ResourcesPath)
+	return nil, nil
 }
 
 // Set updates the OpenAPI definitions and resources with the new setter value
