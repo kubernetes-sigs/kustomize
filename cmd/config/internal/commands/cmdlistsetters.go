@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -67,8 +68,15 @@ func (r *ListSettersRunner) runE(c *cobra.Command, args []string) error {
 		table.SetHeader([]string{"NAME", "VALUE", "SET BY", "DESCRIPTION", "COUNT"})
 		for i := range r.List.Setters {
 			s := r.List.Setters[i]
+			v := s.Value
+
+			// if the setter is for a list, populate the values
+			if len(s.ListValues) > 0 {
+				v = strings.Join(s.ListValues, ",")
+				v = fmt.Sprintf("[%s]", v)
+			}
 			table.Append([]string{
-				s.Name, s.Value, s.SetBy, s.Description, fmt.Sprintf("%d", s.Count)})
+				s.Name, v, s.SetBy, s.Description, fmt.Sprintf("%d", s.Count)})
 		}
 		table.Render()
 
