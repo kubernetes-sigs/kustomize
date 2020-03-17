@@ -35,12 +35,12 @@ verify-kustomize-e2e: test-examples-e2e-kustomize
 # since everything uses the same implicit GOPATH.
 # This installs in a temp dir to avoid overwriting someone else's
 # linter, then installs in MYGOBIN with a new name.
-# Version pinned by api/go.mod
+# Version pinned by hack/go.mod
 $(MYGOBIN)/golangci-lint-kustomize:
 	( \
 		set -e; \
-		export GOBIN=$$(mktemp -d) \
-		cd api; \
+		export GOBIN=$$(mktemp -d); \
+		cd hack; \
 		GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint; \
 		mv $$GOBIN/golangci-lint $(MYGOBIN)/golangci-lint-kustomize \
 	)
