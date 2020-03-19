@@ -48,7 +48,7 @@ like adding labels or annotatations, get dedicated
 transformer plugins - `LabelTransformer`,
 `AnnotationsTransformer`, etc.
 These accept relatively simple YAML configuration
-allowing easy targetting of any number of resources.
+allowing easy targeting of any number of resources.
 
 Another class of edits take data from one specific
 object's field and use it in another (e.g. a service

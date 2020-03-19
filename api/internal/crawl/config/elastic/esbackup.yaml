@@ -11,7 +11,7 @@ metadata:
 spec:
   storage:
     gcs:
-      # the bucket must exist for the snapshot respository to be created successfully.
+      # the bucket must exist for the snapshot repository to be created successfully.
       bucket: kustomize-backup
       # the path does not need to exist.
       # If the path does not exist, the controller will create the folder in the GCS bucket.

@@ -209,7 +209,7 @@ a YAML file containing its configuration (the file name
 provided in the kustomization file).
 
 > TODO: restrictions on plugin to allow the _same exec
-> plugin_ to be targetted by  both the
+> plugin_ to be targeted by both the
 > `generators` and `transformers` fields.
 >
 > - first arg could be the fixed string
