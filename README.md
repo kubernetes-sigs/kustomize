@@ -107,7 +107,7 @@ Take the work from step (1) above, move it into a
 `someApp` subdirectory called `base`, then
 place overlays in a sibling directory.
 
-An overlay is just another kustomization, refering to
+An overlay is just another kustomization, referring to
 the base, and referring to patches to apply to that
 base.
 

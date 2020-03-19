@@ -56,7 +56,7 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 
 		matches := m.GetMatchingResourcesByCurrentId(r.CurId().Equals)
 		if len(matches) != 1 {
-			return fmt.Errorf("namespace tranformation produces ID conflict: %+v", matches)
+			return fmt.Errorf("namespace transformation produces ID conflict: %+v", matches)
 		}
 	}
 	return nil

@@ -18,7 +18,7 @@ cluster
 Resources (including configmap and secret generators)
 can _still be shared_ via the recommended best practice
 of placing them in a directory with their own
-kustomization file, and refering to this directory as a
+kustomization file, and referring to this directory as a
 [`base`](glossary.md#base) from any kustomization that
 wants to use it.  This encourages modularity and
 relocatability.
