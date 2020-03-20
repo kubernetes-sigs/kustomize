@@ -101,7 +101,7 @@ metadata:
   name: function-input
   annotations:
     config.kubernetes.io/function: |
-      container: {image: 'foo:bar'}
+      container: {image: 'foo:bar', network: {required: true}}
 data: {}
 kind: ConfigMap
 apiVersion: v1
@@ -118,7 +118,7 @@ metadata:
   name: function-input
   annotations:
     config.kubernetes.io/function: |
-      container: {image: 'foo:bar'}
+      container: {image: 'foo:bar', network: {required: true}}
 data: {}
 kind: ConfigMap
 apiVersion: v1
