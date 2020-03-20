@@ -702,6 +702,160 @@ spec:
 	}
 }
 
+func TestSet_SetAll(t *testing.T) {
+	var tests = []struct {
+		name        string
+		description string
+		setter      string
+		openapi     string
+		input       []string
+		expected    []string
+	}{
+		{
+			name:   "set-replicas-same-file",
+			setter: "replicas",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "4"
+ `,
+			input: []string{`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'cluster.yaml'
+spec:
+  replicas: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
+ `, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment2
+  annotations:
+    config.kubernetes.io/index: '1'
+    config.kubernetes.io/path: 'cluster.yaml'
+spec:
+  replicas: 10
+ `},
+			expected: []string{`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'cluster.yaml'
+spec:
+  replicas: 4 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
+ `, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment2
+  annotations:
+    config.kubernetes.io/index: '1'
+    config.kubernetes.io/path: 'cluster.yaml'
+spec:
+  replicas: 10
+ `},
+		},
+		{
+			name:   "set-replicas-different-file",
+			setter: "replicas",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "4"
+ `,
+			input: []string{`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'cluster.yaml'
+spec:
+  replicas: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
+ `, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment2
+  annotations:
+    config.kubernetes.io/index: '1'
+    config.kubernetes.io/path: 'another_cluster.yaml'
+spec:
+  replicas: 10
+ `},
+			expected: []string{`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'cluster.yaml'
+spec:
+  replicas: 4 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
+ `},
+		},
+	}
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.name, func(t *testing.T) {
+			// reset the openAPI afterward
+			defer openapi.ResetOpenAPI()
+			initSchema(t, test.openapi)
+
+			// parse the input to be modified
+			var inputNodes []*yaml.RNode
+			for _, s := range test.input {
+				r, err := yaml.Parse(s)
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				inputNodes = append(inputNodes, r)
+			}
+
+			// invoke the setter
+			instance := &Set{Name: test.setter}
+			result, err := SetAll(instance).Filter(inputNodes)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			// compare the actual and expected output
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			if !assert.Equal(t, len(result), len(test.expected)) {
+				t.FailNow()
+			}
+
+			for i := range result {
+				actual, _ := result[i].String()
+				actual = strings.TrimSpace(actual)
+				expected := strings.TrimSpace(test.expected[i])
+				if !assert.Equal(t, expected, actual) {
+					t.FailNow()
+				}
+			}
+		})
+	}
+}
+
 // initSchema initializes the openAPI with the definitions from s
 func initSchema(t *testing.T, s string) {
 	// parse out the schema from the input openAPI
