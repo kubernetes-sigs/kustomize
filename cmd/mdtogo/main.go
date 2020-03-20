@@ -2,36 +2,35 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package main generates cobra.Command go variables containing documentation read from .md files.
-// Usage: mdtogo SOURCE_MD_DIR/ DEST_GO_DIR/ [--full=true] [--license=license.txt|none]
+// Usage: mdtogo SOURCE_MD_DIR/ DEST_GO_DIR/ [--recursive=true] [--license=license.txt|none]
 //
 // The command will create a docs.go file under DEST_GO_DIR/ containing string variables to be
-// used by cobra commands for documentation.The variable names are generated from the SOURCE_MD_DIR/
-// file names, replacing '-' with '', title casing the filename, and dropping the extension.
-// All *.md will be read from DEST_GO_DIR/, and a single DEST_GO_DIR/docs.go file is generated.
+// used by cobra commands for documentation. The variable names are generated from the name of
+// the directory in which the files resides, replacing '-' with '', title casing the name.
+// All *.md files will be read from DEST_GO_DIR/, including subdirectories if --recursive=true,
+// and a single DEST_GO_DIR/docs.go file is generated.
 //
-// Each .md document will be parsed as follows if no flags are provided:
+// The content for each of the three variables created per folder, are set
+// by looking for a HTML comment on one of two forms:
 //
-//   ## cmd
+// <!--mdtogo:<VARIABLE_NAME>-->
+//   ..some content..
+// <!--mdtogo-->
 //
-//   This section will be parsed into a string variable for `Short`
+// or
 //
-//   ### Synopsis
+// <!--mdtogo:<VARIABLE_NAME>
+// ..some content..
+// -->
 //
-//   This section will be parsed into a string variable for `Long`
+// The first are for content that should show up in the rendered HTML, while
+// the second is for content that should be hidden in the rendered HTML.
 //
-//   ### Examples
-//
-//   This section will be parsed into a string variable for `Example`
-//
-// If --full=true is provided, the document will be parsed as follows:
-//
-//   ## cmd
-//
-//   All sections will be parsed into a Long string.
+// <VARIABLE_NAME> must be one of Short, Long or Examples.
 //
 // Flags:
-//   --full=true
-//     Create a Long variable from the full .md files, rather than separate sections.
+//   --recursive=true
+//     Scan the directory structure recursively for .md files
 //   --license
 //     Controls the license header added to the files.  Specify a path to a license file,
 //     or "none" to skip adding a license.
@@ -42,19 +41,19 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
-var full bool
+var recursive bool
 var licenseFile string
 
 func main() {
 	for _, a := range os.Args {
-		if a == "--full=true" {
-			full = true
+		if a == "--recursive=true" {
+			recursive = true
 		}
 		if strings.HasPrefix(a, "--license=") {
 			licenseFile = strings.ReplaceAll(a, "--license=", "")
@@ -68,24 +67,26 @@ func main() {
 	source := os.Args[1]
 	dest := os.Args[2]
 
-	files, err := ioutil.ReadDir(source)
+	files, err := readFiles(source)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
 
 	var docs []doc
-	for _, f := range files {
-		if filepath.Ext(f.Name()) != ".md" {
-			continue
+	for _, path := range files {
+		b, err := ioutil.ReadFile(path)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", err)
+			os.Exit(1)
 		}
-		b, err := ioutil.ReadFile(filepath.Join(source, f.Name()))
+		parsedDoc, err := parse(path, string(b))
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%v\n", err)
 			os.Exit(1)
 		}
 
-		docs = append(docs, parse(f.Name(), string(b)))
+		docs = append(docs, parsedDoc)
 	}
 
 	var license string
@@ -124,80 +125,92 @@ package ` + filepath.Base(dest) + "\n"}
 	}
 }
 
-func parse(name, value string) doc {
-	name = strings.ReplaceAll(name, filepath.Ext(name), "")
+func readFiles(source string) ([]string, error) {
+	filePaths := make([]string, 0)
+	if recursive {
+		err := filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if filepath.Ext(info.Name()) == ".md" {
+				filePaths = append(filePaths, path)
+			}
+			return nil
+		})
+		if err != nil {
+			return filePaths, err
+		}
+	} else {
+		files, err := ioutil.ReadDir(source)
+		if err != nil {
+			return filePaths, err
+		}
+		for _, info := range files {
+			if filepath.Ext(info.Name()) == ".md" {
+				path := filepath.Join(source, info.Name())
+				filePaths = append(filePaths, path)
+			}
+		}
+	}
+	return filePaths, nil
+}
+
+var (
+	mdtogoTag = regexp.MustCompile(`<!--mdtogo:(Short|Long|Examples)-->([\s\S]*?)<!--mdtogo-->`)
+	mdtogoInternalTag = regexp.MustCompile(`<!--mdtogo:(Short|Long|Examples)\s+?([\s\S]*?)-->`)
+)
+
+func parse(path, value string) (doc, error) {
+	pathDir := filepath.Dir(path)
+	_, name := filepath.Split(pathDir)
+
 	name = strings.Title(name)
 	name = strings.ReplaceAll(name, "-", "")
 
-	scanner := bufio.NewScanner(bytes.NewBufferString(value))
+	matches := mdtogoTag.FindAllStringSubmatch(value, -1)
+	matches = append(matches, mdtogoInternalTag.FindAllStringSubmatch(value, -1)...)
 
-	var long, examples []string
-	var short string
-	var isLong, isExample, isIndent bool
 	var doc doc
+	for _, match := range matches {
+		switch match[1] {
+		case "Short":
+			val := strings.TrimSpace(match[2])
+			doc.Short = val
+		case "Long":
+			val := cleanUpContent(match[2])
+			doc.Long = val
+		case "Examples":
+			val := cleanUpContent(match[2])
+			doc.Examples = val
+		}
+	}
+	doc.Name = name
+	return doc, nil
+}
 
+func cleanUpContent(text string) string {
+	var lines []string
+
+	scanner := bufio.NewScanner(bytes.NewBufferString(strings.Trim(text, "\n")))
+
+	indent := false
 	for scanner.Scan() {
 		line := scanner.Text()
-
-		if strings.HasPrefix(line, "## ") && short == "" {
-			for scanner.Scan() {
-				if strings.TrimSpace(scanner.Text()) == "" {
-					continue
-				}
-				short = scanner.Text()
-				break
-			}
-			continue
-		}
-
-		if !full {
-			if strings.HasPrefix(line, "### Synopsis") {
-				isLong = true
-				isExample = false
-				continue
-			}
-
-			if strings.HasPrefix(line, "### Examples") {
-				isLong = false
-				isExample = true
-				continue
-			}
-
-			if strings.HasPrefix(line, "### ") {
-				isLong = false
-				isExample = false
-				continue
-			}
-		}
-
 		if strings.HasPrefix(line, "```") {
-			isIndent = !isIndent
+			indent = !indent
 			continue
 		}
+
+		if indent {
+			line = "  " + line
+		}
+
 		line = strings.ReplaceAll(line, "`", "` + \"`\" + `")
-		if isIndent {
-			line = "\t" + line
-		}
 
-		if isLong || full {
-			long = append(long, line)
-			continue
-		}
-		if isExample {
-			examples = append(examples, line)
-		}
+		lines = append(lines, line)
 	}
 
-	doc.Name = name
-	doc.Short = short
-	doc.Long = strings.Join(long, "\n")
-	doc.Examples = strings.Join(examples, "\n")
-
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
-
-	return doc
+	return fmt.Sprintf("\n%s\n", strings.Join(lines, "\n"))
 }
 
 type doc struct {
