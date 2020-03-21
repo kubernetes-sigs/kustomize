@@ -8,7 +8,10 @@ import (
 
 	"github.com/go-openapi/spec"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
+	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -296,4 +299,40 @@ func (s SetOpenAPI) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	}
 
 	return object, nil
+}
+
+// SetAll applies the set filter for all yaml nodes and only returns the nodes whose
+// corresponding file has at least one node with input setter
+func SetAll(s *Set) kio.Filter {
+	return kio.FilterFunc(func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+		filesToUpdate := sets.String{}
+		// for each node record the set fields count before and after filter is applied and
+		// store the corresponding file paths if there is an increment in setters count
+		for i := range nodes {
+			preCount := s.Count
+			_, err := s.Filter(nodes[i])
+			if err != nil {
+				return nil, errors.Wrap(err)
+			}
+			if s.Count > preCount {
+				path, _, err := kioutil.GetFileAnnotations(nodes[i])
+				if err != nil {
+					return nil, errors.Wrap(err)
+				}
+				filesToUpdate.Insert(path)
+			}
+		}
+		var nodesInUpdatedFiles []*yaml.RNode
+		// return only the nodes whose corresponding file has at least one node with input setter
+		for i := range nodes {
+			path, _, err := kioutil.GetFileAnnotations(nodes[i])
+			if err != nil {
+				return nil, errors.Wrap(err)
+			}
+			if filesToUpdate.Has(path) {
+				nodesInUpdatedFiles = append(nodesInUpdatedFiles, nodes[i])
+			}
+		}
+		return nodesInUpdatedFiles, nil
+	})
 }
