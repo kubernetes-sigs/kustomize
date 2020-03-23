@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/examples/wordpress/wordpress/deployment.yaml
+- https://github.com/knative/serving/releases/download/v0.12.0/serving.yaml # redirects to s3
+patches:
+- https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/examples/wordpress/patch.yaml
+patchesStrategicMerge:
+- |-
+  apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    name: custom-metrics-auth-reader
+    namespace: kube-system
+  $patch: delete

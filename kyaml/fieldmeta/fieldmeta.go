@@ -140,11 +140,11 @@ func (it FieldValueType) Validate(value string) error {
 func (it FieldValueType) Tag() string {
 	switch it {
 	case String:
-		return "!!str"
+		return yaml.StringTag
 	case Bool:
-		return "!!bool"
+		return yaml.BoolTag
 	case Int:
-		return "!!int"
+		return yaml.IntTag
 	}
 	return ""
 }
@@ -152,17 +152,17 @@ func (it FieldValueType) Tag() string {
 func (it FieldValueType) TagForValue(value string) string {
 	switch it {
 	case String:
-		return "!!str"
+		return yaml.StringTag
 	case Bool:
 		if _, err := strconv.ParseBool(string(it)); err != nil {
 			return ""
 		}
-		return "!!bool"
+		return yaml.BoolTag
 	case Int:
 		if _, err := strconv.ParseInt(string(it), 0, 32); err != nil {
 			return ""
 		}
-		return "!!int"
+		return yaml.IntTag
 	}
 	return ""
 }

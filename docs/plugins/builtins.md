@@ -90,9 +90,9 @@ commonAnnotations:
 Each entry in this list results in the creation of
 one ConfigMap resource (it's a generator of n maps).
 
-The example below creates two ConfigMaps. One with the
-names and contents of the given files, the other with
-key/value as data.
+The example below creates three ConfigMaps. One with the names and contents of
+the given files, one with key/value as data, and a third which sets an
+annotation and label via generatorOptions for that single ConfigMap.
 
 Each configMapGenerator item accepts a parameter of
 `behavior: [create|replace|merge]`.
@@ -109,6 +109,14 @@ configMapGenerator:
   literals:	
   - JAVA_HOME=/opt/java/jdk
   - JAVA_TOOL_OPTIONS=-agentlib:hprof
+- name: dashboards
+  files:
+  - mydashboard.json
+  generatorOptions:
+    annotations:
+      dashboard: "1"
+    labels:
+      app.kubernetes.io/name: "app1"
 ```
 
 It is also possible to
@@ -651,6 +659,15 @@ secretGenerator:
   envs:
   - env.txt
   type: Opaque
+- name: secret-with-annotation
+  files:
+  - app-config.yaml
+  type: Opaque
+  generatorOptions:
+    annotations:
+      app_config: "true"
+    labels:
+      app.kubernetes.io/name: "app2"
 ```
 
 ### Usage via plugin

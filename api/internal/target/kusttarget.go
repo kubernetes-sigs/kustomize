@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -302,18 +301,15 @@ func (kt *KustTarget) configureExternalTransformers() ([]resmap.Transformer, err
 func (kt *KustTarget) accumulateResources(
 	ra *accumulator.ResAccumulator, paths []string) error {
 	for _, path := range paths {
-		ldr, err := kt.ldr.New(path)
-		if err == nil {
-			err = kt.accumulateDirectory(ra, ldr)
-			if err != nil {
-				return err
+		// try loading resource as file then as base (directory or git repository)
+		if errF := kt.accumulateFile(ra, path); errF != nil {
+			ldr, errL := kt.ldr.New(path)
+			if errL != nil {
+				return fmt.Errorf("accumulateFile %q, loader.New %q", errF, errL)
 			}
-		} else {
-			err2 := kt.accumulateFile(ra, path)
-			if err2 != nil {
-				// Log ldr.New() error to highlight git failures.
-				log.Print(err.Error())
-				return err2
+			errD := kt.accumulateDirectory(ra, ldr)
+			if errD != nil {
+				return fmt.Errorf("accumulateFile %q, accumulateDirector: %q", errF, errD)
 			}
 		}
 	}

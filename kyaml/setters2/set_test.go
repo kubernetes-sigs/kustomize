@@ -597,6 +597,76 @@ spec:
         image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
  `,
 		},
+		{
+			name:   "set-args-list",
+			setter: "args",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.args:
+      x-k8s-cli:
+        type: array
+        setter:
+          name: args
+          listValues: ["1", "2", "3"]
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  # {"$ref": "#/definitions/io.k8s.cli.setters.args"}
+  replicas: []
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  # {"$ref": "#/definitions/io.k8s.cli.setters.args"}
+  replicas:
+  - "1"
+  - "2"
+  - "3"
+ `,
+		},
+		{
+			name:   "set-args-list-replace",
+			setter: "args",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.args:
+      x-k8s-cli:
+        type: array
+        setter:
+          name: args
+          listValues: ["1", "2", "3"]
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  # {"$ref": "#/definitions/io.k8s.cli.setters.args"}
+  replicas: ["4", "5"]
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  # {"$ref": "#/definitions/io.k8s.cli.setters.args"}
+  replicas:
+  - "1"
+  - "2"
+  - "3"
+ `,
+		},
 	}
 	for i := range tests {
 		test := tests[i]
@@ -627,6 +697,160 @@ spec:
 			expected := strings.TrimSpace(test.expected)
 			if !assert.Equal(t, expected, actual) {
 				t.FailNow()
+			}
+		})
+	}
+}
+
+func TestSet_SetAll(t *testing.T) {
+	var tests = []struct {
+		name        string
+		description string
+		setter      string
+		openapi     string
+		input       []string
+		expected    []string
+	}{
+		{
+			name:   "set-replicas-same-file",
+			setter: "replicas",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "4"
+ `,
+			input: []string{`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'cluster.yaml'
+spec:
+  replicas: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
+ `, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment2
+  annotations:
+    config.kubernetes.io/index: '1'
+    config.kubernetes.io/path: 'cluster.yaml'
+spec:
+  replicas: 10
+ `},
+			expected: []string{`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'cluster.yaml'
+spec:
+  replicas: 4 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
+ `, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment2
+  annotations:
+    config.kubernetes.io/index: '1'
+    config.kubernetes.io/path: 'cluster.yaml'
+spec:
+  replicas: 10
+ `},
+		},
+		{
+			name:   "set-replicas-different-file",
+			setter: "replicas",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "4"
+ `,
+			input: []string{`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'cluster.yaml'
+spec:
+  replicas: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
+ `, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment2
+  annotations:
+    config.kubernetes.io/index: '1'
+    config.kubernetes.io/path: 'another_cluster.yaml'
+spec:
+  replicas: 10
+ `},
+			expected: []string{`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'cluster.yaml'
+spec:
+  replicas: 4 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
+ `},
+		},
+	}
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.name, func(t *testing.T) {
+			// reset the openAPI afterward
+			defer openapi.ResetOpenAPI()
+			initSchema(t, test.openapi)
+
+			// parse the input to be modified
+			var inputNodes []*yaml.RNode
+			for _, s := range test.input {
+				r, err := yaml.Parse(s)
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				inputNodes = append(inputNodes, r)
+			}
+
+			// invoke the setter
+			instance := &Set{Name: test.setter}
+			result, err := SetAll(instance).Filter(inputNodes)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			// compare the actual and expected output
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			if !assert.Equal(t, len(result), len(test.expected)) {
+				t.FailNow()
+			}
+
+			for i := range result {
+				actual, _ := result[i].String()
+				actual = strings.TrimSpace(actual)
+				expected := strings.TrimSpace(test.expected[i])
+				if !assert.Equal(t, expected, actual) {
+					t.FailNow()
+				}
 			}
 		})
 	}
@@ -678,6 +902,7 @@ func TestSetOpenAPI_Filter(t *testing.T) {
 		name        string
 		setter      string
 		value       string
+		values      []string
 		input       string
 		expected    string
 		description string
@@ -1004,6 +1229,33 @@ openAPI:
           value: "2"
  `,
 		},
+
+		{
+			name:   "set-args-list",
+			setter: "args",
+			value:  "2",
+			values: []string{"3", "4"},
+			input: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.args:
+      type: array
+      x-k8s-cli:
+        setter:
+          name: args
+          listValues: ["1"]
+ `,
+			expected: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.args:
+      type: array
+      x-k8s-cli:
+        setter:
+          name: args
+          listValues: ["2", "3", "4"]
+`,
+		},
 	}
 	for i := range tests {
 		test := tests[i]
@@ -1015,7 +1267,7 @@ openAPI:
 
 			// invoke the setter
 			instance := &SetOpenAPI{
-				Name: test.setter, Value: test.value,
+				Name: test.setter, Value: test.value, ListValues: test.values,
 				SetBy: test.setBy, Description: test.description}
 			result, err := instance.Filter(in)
 			if test.err != "" {

@@ -8,7 +8,10 @@ import (
 
 	"github.com/go-openapi/spec"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
+	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -27,10 +30,36 @@ func (s *Set) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	return object, accept(s, object)
 }
 
+// visitSequence will perform setters for sequences
+func (s *Set) visitSequence(object *yaml.RNode, p string, schema *openapi.ResourceSchema) error {
+	ext, err := getExtFromComment(schema)
+	if err != nil {
+		return err
+	}
+	if ext == nil || ext.Setter == nil || ext.Setter.Name != s.Name ||
+		len(ext.Setter.ListValues) == 0 {
+		// setter was not invoked for this sequence
+		return nil
+	}
+	s.Count++
+
+	// set the values on the sequences
+	var elements []*yaml.Node
+	for i := range ext.Setter.ListValues {
+		v := ext.Setter.ListValues[i]
+		n := yaml.NewScalarRNode(v).YNode()
+		n.Style = yaml.DoubleQuotedStyle
+		elements = append(elements, n)
+	}
+	object.YNode().Content = elements
+	object.YNode().Style = yaml.FoldedStyle
+	return nil
+}
+
 // visitScalar
-func (s *Set) visitScalar(object *yaml.RNode, p string) error {
+func (s *Set) visitScalar(object *yaml.RNode, p string, schema *openapi.ResourceSchema) error {
 	// get the openAPI for this field describing how to apply the setter
-	ext, sch, err := getExtFromComment(object)
+	ext, err := getExtFromComment(schema)
 	if err != nil {
 		return err
 	}
@@ -39,13 +68,13 @@ func (s *Set) visitScalar(object *yaml.RNode, p string) error {
 	}
 
 	// perform a direct set of the field if it matches
-	if s.set(object, ext, sch) {
+	if s.set(object, ext, schema.Schema) {
 		s.Count++
 		return nil
 	}
 
 	// perform a substitution of the field if it matches
-	sub, err := s.substitute(object, ext, sch)
+	sub, err := s.substitute(object, ext, schema.Schema)
 	if err != nil {
 		return err
 	}
@@ -111,7 +140,7 @@ func (s *Set) substitute(field *yaml.RNode, ext *cliExtension, _ *spec.Schema) (
 	field.YNode().Value = p
 
 	// substitutions are always strings
-	field.YNode().Tag = "!!str"
+	field.YNode().Tag = yaml.StringTag
 
 	return true, nil
 }
@@ -147,6 +176,9 @@ type SetOpenAPI struct {
 	// Value is the current value of the setter
 	Value string `yaml:"value"`
 
+	// ListValue is the current value for a list of items
+	ListValues []string `yaml:"listValue"`
+
 	Description string `yaml:"description"`
 
 	SetBy string `yaml:"setBy"`
@@ -159,8 +191,14 @@ func (s SetOpenAPI) UpdateFile(path string) error {
 
 func (s SetOpenAPI) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	key := SetterDefinitionPrefix + s.Name
-	def, err := object.Pipe(yaml.Lookup(
-		"openAPI", "definitions", key, "x-k8s-cli", "setter"))
+	oa, err := object.Pipe(yaml.Lookup("openAPI", "definitions", key))
+	if err != nil {
+		return nil, err
+	}
+	if oa == nil {
+		return nil, errors.Errorf("no setter %s found", s.Name)
+	}
+	def, err := oa.Pipe(yaml.Lookup("x-k8s-cli", "setter"))
 	if err != nil {
 		return nil, err
 	}
@@ -168,9 +206,16 @@ func (s SetOpenAPI) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 		return nil, errors.Errorf("no setter %s found", s.Name)
 	}
 
+	// record the OpenAPI type for the setter
+	var t string
+	if n := oa.Field("type"); n != nil {
+		t = n.Value.YNode().Value
+	}
+
 	// if the setter contains an enumValues map, then ensure the set value appears
 	// as a key in the map
-	if values, err := def.Pipe(yaml.Lookup("enumValues")); err != nil {
+	if values, err := def.Pipe(
+		yaml.Lookup("enumValues")); err != nil {
 		// error looking up the enumValues
 		return nil, err
 	} else if values != nil {
@@ -202,11 +247,40 @@ func (s SetOpenAPI) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	// values are always represented as strings the OpenAPI
 	// since the are unmarshalled into strings.  Use double quote style to
 	// ensure this consistently.
-	v.YNode().Tag = "!!str"
+	v.YNode().Tag = yaml.StringTag
 	v.YNode().Style = yaml.DoubleQuotedStyle
 
-	if err := def.PipeE(&yaml.FieldSetter{Name: "value", Value: v}); err != nil {
-		return nil, err
+	if t != "array" {
+		// set a scalar value
+		if err := def.PipeE(&yaml.FieldSetter{Name: "value", Value: v}); err != nil {
+			return nil, err
+		}
+	} else {
+		// set a list value
+		if err := def.PipeE(&yaml.FieldClearer{Name: "value"}); err != nil {
+			return nil, err
+		}
+		// create the list values
+		var elements []*yaml.Node
+		n := yaml.NewScalarRNode(s.Value).YNode()
+		n.Tag = yaml.StringTag
+		n.Style = yaml.DoubleQuotedStyle
+		elements = append(elements, n)
+		for i := range s.ListValues {
+			v := s.ListValues[i]
+			n := yaml.NewScalarRNode(v).YNode()
+			n.Style = yaml.DoubleQuotedStyle
+			elements = append(elements, n)
+		}
+		l := yaml.NewRNode(&yaml.Node{
+			Kind:    yaml.SequenceNode,
+			Content: elements,
+		})
+
+		def.YNode().Style = yaml.FoldedStyle
+		if err := def.PipeE(&yaml.FieldSetter{Name: "listValues", Value: l}); err != nil {
+			return nil, err
+		}
 	}
 
 	if err := def.PipeE(&yaml.FieldSetter{Name: "setBy", StringValue: s.SetBy}); err != nil {
@@ -225,4 +299,40 @@ func (s SetOpenAPI) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	}
 
 	return object, nil
+}
+
+// SetAll applies the set filter for all yaml nodes and only returns the nodes whose
+// corresponding file has at least one node with input setter
+func SetAll(s *Set) kio.Filter {
+	return kio.FilterFunc(func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+		filesToUpdate := sets.String{}
+		// for each node record the set fields count before and after filter is applied and
+		// store the corresponding file paths if there is an increment in setters count
+		for i := range nodes {
+			preCount := s.Count
+			_, err := s.Filter(nodes[i])
+			if err != nil {
+				return nil, errors.Wrap(err)
+			}
+			if s.Count > preCount {
+				path, _, err := kioutil.GetFileAnnotations(nodes[i])
+				if err != nil {
+					return nil, errors.Wrap(err)
+				}
+				filesToUpdate.Insert(path)
+			}
+		}
+		var nodesInUpdatedFiles []*yaml.RNode
+		// return only the nodes whose corresponding file has at least one node with input setter
+		for i := range nodes {
+			path, _, err := kioutil.GetFileAnnotations(nodes[i])
+			if err != nil {
+				return nil, errors.Wrap(err)
+			}
+			if filesToUpdate.Has(path) {
+				nodesInUpdatedFiles = append(nodesInUpdatedFiles, nodes[i])
+			}
+		}
+		return nodesInUpdatedFiles, nil
+	})
 }

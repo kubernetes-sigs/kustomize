@@ -53,7 +53,7 @@ BAR=baz
 	}
 }
 
-func makeLiteralConfigMap(name string) *corev1.ConfigMap {
+func makeLiteralConfigMap(name string, labels, annotations map[string]string) *corev1.ConfigMap {
 	cm := &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -69,7 +69,12 @@ func makeLiteralConfigMap(name string) *corev1.ConfigMap {
 			"d": "true",
 		},
 	}
-	cm.SetLabels(map[string]string{"foo": "bar"})
+	if labels != nil {
+		cm.SetLabels(labels)
+	}
+	if annotations != nil {
+		cm.SetAnnotations(annotations)
+	}
 	return cm
 }
 
@@ -128,7 +133,49 @@ func TestConstructConfigMap(t *testing.T) {
 					"foo": "bar",
 				},
 			},
-			expected: makeLiteralConfigMap("literalConfigMap"),
+			expected: makeLiteralConfigMap("literalConfigMap", map[string]string{
+				"foo": "bar",
+			}, nil),
+		},
+		{
+			description: "construct config map from literal with GeneratorOptions in ConfigMapArgs",
+			input: types.ConfigMapArgs{
+				GeneratorArgs: types.GeneratorArgs{
+					Name: "literalConfigMap",
+					KvPairSources: types.KvPairSources{
+						LiteralSources: []string{"a=x", "b=y", "c=\"Hello World\"", "d='true'"},
+					},
+					GeneratorOptions: &types.GeneratorOptions{
+						Labels: map[string]string{
+							"foo": "changed",
+							"cat": "dog",
+						},
+						Annotations: map[string]string{
+							"foo": "changed",
+							"cat": "dog",
+						},
+					},
+				},
+			},
+			options: &types.GeneratorOptions{
+				Labels: map[string]string{
+					"foo": "bar",
+				},
+				Annotations: map[string]string{
+					"foo": "bar",
+				},
+			},
+			// GeneratorOptions from the ConfigMapArgs take precedence over the
+			// factory level GeneratorOptions and should overwrite
+			// labels/annotations set in the factory level if there are common
+			// labels/annotations
+			expected: makeLiteralConfigMap("literalConfigMap", map[string]string{
+				"foo": "changed",
+				"cat": "dog",
+			}, map[string]string{
+				"foo": "changed",
+				"cat": "dog",
+			}),
 		},
 	}
 

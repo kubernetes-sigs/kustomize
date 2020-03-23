@@ -131,6 +131,10 @@ crds:
 Modifies behavior of all [ConfigMap](#configmapgenerator)
 and [Secret](#secretgenerator) generators.
 
+Additionally, generatorOptions can be set on a per resource level within each
+generator. For details on per-resource generatorOptions usage see
+[field-name-configMapGenerator] and See [field-name-secretGenerator].
+
 ```
 generatorOptions:
   # labels to add to all generated resources
@@ -202,7 +206,7 @@ See [field-name-replicas].
 ### resources
 
 Each entry in this list must be a path to a
-_file_, or a path (or URL) refering to another
+_file_, or a path (or URL) referring to another
 kustomization _directory_, e.g.
 
 ```

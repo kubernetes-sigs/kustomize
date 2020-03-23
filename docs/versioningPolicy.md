@@ -37,7 +37,7 @@ the _kustomize Go API_.
 
 [import path]: https://github.com/golang/go/wiki/Modules#releasing-modules-v2-or-higher
 
-In `kustomize/v3` (and preceeding major versions), the
+In `kustomize/v3` (and preceding major versions), the
 kustomize program and the API live the same Go
 module at `sigs.k8s.io/kustomize`, at [import path]
 `sigs.k8s.io/kustomize/v3`.

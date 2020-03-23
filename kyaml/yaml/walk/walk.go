@@ -32,6 +32,10 @@ type Walker struct {
 	// fields which it doesn't have the schema based on the fields in the
 	// list elements.
 	InferAssociativeLists bool
+
+	// VisitKeysAsScalars if true will call VisitScalar on map entry keys,
+	// providing nil as the OpenAPI schema.
+	VisitKeysAsScalars bool
 }
 
 func (l Walker) Kind() yaml.Kind {

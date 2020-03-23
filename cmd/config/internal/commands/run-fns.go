@@ -89,6 +89,14 @@ func (r *RunFnRunner) getFunctions(c *cobra.Command, args, dataItems []string) (
 	if err != nil {
 		return nil, err
 	}
+	if r.Network {
+		err = fn.PipeE(
+			yaml.LookupCreate(yaml.MappingNode, "container", "network"),
+			yaml.SetField("required", yaml.NewScalarRNode("true")))
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	// create the function config
 	rc, err := yaml.Parse(`
