@@ -6,6 +6,8 @@ package builtins
 import (
 	"fmt"
 
+	"sigs.k8s.io/kustomize/api/filters/filtersutil"
+	"sigs.k8s.io/kustomize/api/filters/namespace"
 	"sigs.k8s.io/kustomize/api/transform"
 
 	"sigs.k8s.io/kustomize/api/resid"
@@ -19,6 +21,10 @@ import (
 type NamespaceTransformerPlugin struct {
 	types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 	FieldSpecs       []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+
+	// YAMLSupport can be set to true to use the kyaml filter instead of the
+	// kunstruct transformer
+	YAMLSupport bool
 }
 
 func (p *NamespaceTransformerPlugin) Config(
@@ -39,12 +45,25 @@ func (p *NamespaceTransformerPlugin) Transform(m resmap.ResMap) error {
 		}
 
 		id := r.OrgId()
-		applicableFs := p.applicableFieldSpecs(id)
 
-		for _, fs := range applicableFs {
-			err := transform.MutateField(
-				r.Map(), fs.PathSlice(), fs.CreateIfNotPresent,
-				p.changeNamespace(r))
+		if !p.YAMLSupport {
+			// use the old style transform
+			applicableFs := p.applicableFieldSpecs(id)
+
+			for _, fs := range applicableFs {
+				err := transform.MutateField(
+					r.Map(), fs.PathSlice(), fs.CreateIfNotPresent,
+					p.changeNamespace(r))
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			// use the new style transform
+			err := filtersutil.ApplyToJSON(namespace.Filter{
+				Namespace: p.Namespace,
+				FsSlice:   p.FieldSpecs,
+			}, r.Kunstructured)
 			if err != nil {
 				return err
 			}
