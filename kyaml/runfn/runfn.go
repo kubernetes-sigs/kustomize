@@ -57,8 +57,10 @@ type RunFns struct {
 	// and only use explicit sources
 	NoFunctionsFromInput *bool
 
-	// for testing purposes only
-	containerFilterProvider func(string, string, string, *yaml.RNode) kio.Filter
+	// functionFilterProvider provides a filter to perform the function.
+	// this is a variable so it can be mocked in tests
+	functionFilterProvider func(
+		filter filters.FunctionSpec, api *yaml.RNode) kio.Filter
 }
 
 // Execute runs the command
@@ -110,21 +112,21 @@ func (r RunFns) getNodesAndFilters() (
 func (r RunFns) getFilters(nodes []*yaml.RNode) ([]kio.Filter, error) {
 	var fltrs []kio.Filter
 
-	// implicit filters from the input Resources
+	// fns from annotations on the input resources
 	f, err := r.getFunctionsFromInput(nodes)
 	if err != nil {
 		return nil, err
 	}
 	fltrs = append(fltrs, f...)
 
-	// explicit filters from a list of directories
+	// fns from directories specified on the struct
 	f, err = r.getFunctionsFromFunctionPaths()
 	if err != nil {
 		return nil, err
 	}
 	fltrs = append(fltrs, f...)
 
-	// explicit filters from a list of directories
+	// explicit fns specified on the struct
 	f, err = r.getFunctionsFromFunctions()
 	if err != nil {
 		return nil, err
@@ -156,7 +158,6 @@ func (r RunFns) getFunctionsFromInput(nodes []*yaml.RNode) ([]kio.Filter, error)
 		return nil, nil
 	}
 
-	var fltrs []kio.Filter
 	buff := &kio.PackageBuffer{}
 	err := kio.Pipeline{
 		Inputs:  []kio.Reader{&kio.PackageBuffer{Nodes: nodes}},
@@ -167,95 +168,50 @@ func (r RunFns) getFunctionsFromInput(nodes []*yaml.RNode) ([]kio.Filter, error)
 		return nil, err
 	}
 	sortFns(buff)
-	for i := range buff.Nodes {
-		api := buff.Nodes[i]
-		network := ""
-		img, path := filters.GetContainerName(api)
-
-		required, err := filters.GetContainerNetworkRequired(api)
-		if err != nil {
-			return nil, err
-		}
-		if required {
-			if !r.Network {
-				// TODO(eddizane): Provide error info about which function needs the network
-				return fltrs, errors.Errorf("network required but not enabled with --network")
-			}
-			network = r.NetworkName
-		}
-
-		fltrs = append(fltrs, r.containerFilterProvider(img, path, network, api))
-	}
-	return fltrs, nil
+	return r.getFunctionFilters(false, buff.Nodes...)
 }
 
 // getFunctionsFromFunctionPaths returns the set of functions read from r.FunctionPaths
 // as a slice of Filters
 func (r RunFns) getFunctionsFromFunctionPaths() ([]kio.Filter, error) {
-	var fltrs []kio.Filter
 	buff := &kio.PackageBuffer{}
 	for i := range r.FunctionPaths {
 		err := kio.Pipeline{
-			Inputs:  []kio.Reader{kio.LocalPackageReader{PackagePath: r.FunctionPaths[i]}},
+			Inputs: []kio.Reader{
+				kio.LocalPackageReader{PackagePath: r.FunctionPaths[i]},
+			},
 			Outputs: []kio.Writer{buff},
 		}.Execute()
 		if err != nil {
 			return nil, err
 		}
 	}
-	for i := range buff.Nodes {
-		api := buff.Nodes[i]
-		network := ""
-		img, path := filters.GetContainerName(api)
-
-		required, err := filters.GetContainerNetworkRequired(api)
-		if err != nil {
-			return nil, err
-		}
-		if required {
-			if !r.Network {
-				// TODO(eddiezane): Provide error info about which function needs the network
-				return fltrs, errors.Errorf("network required but not enabled with --network")
-			}
-			network = r.NetworkName
-		}
-
-		c := r.containerFilterProvider(img, path, network, api)
-		cf, ok := c.(*filters.ContainerFilter)
-		if ok {
-			// functions provided by FunctionPaths are globally scoped
-			cf.GlobalScope = true
-		}
-		fltrs = append(fltrs, c)
-	}
-	return fltrs, nil
+	return r.getFunctionFilters(true, buff.Nodes...)
 }
 
 // getFunctionsFromFunctions returns the set of explicitly provided functions as
 // Filters
 func (r RunFns) getFunctionsFromFunctions() ([]kio.Filter, error) {
-	var fltrs []kio.Filter
-	for i := range r.Functions {
-		api := r.Functions[i]
-		network := ""
-		img, path := filters.GetContainerName(api)
+	return r.getFunctionFilters(true, r.Functions...)
+}
 
-		required, err := filters.GetContainerNetworkRequired(api)
-		if err != nil {
-			return nil, err
-		}
-		if required {
+func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
+	[]kio.Filter, error) {
+	var fltrs []kio.Filter
+	for i := range fns {
+		api := fns[i]
+		spec := filters.GetFunctionSpec(api)
+		if spec.Container.Network.Required {
 			if !r.Network {
-				// TODO(eddizane): Provide error info about which function needs the network
+				// TODO(eddiezane): Provide error info about which function needs the network
 				return fltrs, errors.Errorf("network required but not enabled with --network")
 			}
-			network = r.NetworkName
+			spec.Network = r.NetworkName
 		}
 
-		c := r.containerFilterProvider(img, path, network, api)
+		c := r.functionFilterProvider(*spec, api)
 		cf, ok := c.(*filters.ContainerFilter)
-		if ok {
-			// functions provided by Functions are globally scoped
+		if global && ok {
 			cf.GlobalScope = true
 		}
 		fltrs = append(fltrs, c)
@@ -327,17 +283,26 @@ func (r *RunFns) init() {
 		}
 	}
 
-	// if containerFilterProvider hasn't been set, use the default
-	if r.containerFilterProvider == nil {
-		r.containerFilterProvider = func(image, path, network string, api *yaml.RNode) kio.Filter {
-			cf := &filters.ContainerFilter{
-				Image:         image,
-				Config:        api,
-				Network:       network,
-				StorageMounts: r.StorageMounts,
-				GlobalScope:   r.GlobalScope,
-			}
-			return cf
-		}
+	// functionFilterProvider set the filter provider
+	if r.functionFilterProvider == nil {
+		r.functionFilterProvider = r.ffp
 	}
 }
+
+// ffp provides function filters
+func (r *RunFns) ffp(spec filters.FunctionSpec, api *yaml.RNode) kio.Filter {
+	if spec.Container.Image != "" {
+		return &filters.ContainerFilter{
+			Image:         spec.Container.Image,
+			Config:        api,
+			Network:       spec.Network,
+			StorageMounts: r.StorageMounts,
+			GlobalScope:   r.GlobalScope,
+		}
+	}
+	return noOpFilter
+}
+
+var noOpFilter = kio.FilterFunc(func(in []*yaml.RNode) ([]*yaml.RNode, error) {
+	return in, nil
+})
