@@ -389,8 +389,7 @@ type IsReconcilerFilter struct {
 func (c *IsReconcilerFilter) Filter(inputs []*yaml.RNode) ([]*yaml.RNode, error) {
 	var out []*yaml.RNode
 	for i := range inputs {
-		img, _ := GetContainerName(inputs[i])
-		isContainerResource := img != ""
+		isContainerResource := GetFunctionSpec(inputs[i]) != nil
 		if isContainerResource && !c.ExcludeReconcilers {
 			out = append(out, inputs[i])
 		}
@@ -408,52 +407,67 @@ const (
 
 var functionAnnotationKeys = []string{FunctionAnnotationKey, oldFunctionAnnotationKey}
 
-// GetFunction parses the config function from the object if it is found
-func GetFunction(n *yaml.RNode, meta yaml.ResourceMeta) (*yaml.RNode, error) {
+// getFunction parses the config function from the object if it is found
+func getFunction(n *yaml.RNode, meta yaml.ResourceMeta) *FunctionSpec {
+	var fs FunctionSpec
 	for _, s := range functionAnnotationKeys {
 		fn := meta.Annotations[s]
 		if fn != "" {
-			return yaml.Parse(fn)
+			_ = yaml.Unmarshal([]byte(fn), &fs)
+			return &fs
 		}
 	}
-	return n.Pipe(yaml.Lookup("metadata", "configFn"))
+	n, err := n.Pipe(yaml.Lookup("metadata", "configFn"))
+	if err != nil || yaml.IsEmpty(n) {
+		return nil
+	}
+	s, err := n.String()
+	if err != nil {
+		return nil
+	}
+	_ = yaml.Unmarshal([]byte(s), &fs)
+	return &fs
 }
 
-// GetContainerName returns the container image for an API if one exists
-func GetContainerName(n *yaml.RNode) (string, string) {
-	meta, _ := n.GetMeta()
+type ContainerSpec struct {
+	Image   string           `json:"image,omitempty" yaml:"image,omitempty"`
+	Network ContainerNetwork `json:"network,omitempty" yaml:"network,omitempty"`
+}
+
+type FunctionSpec struct {
+	Path      string        `json:"path,omitempty" yaml:"path,omitempty"`
+	Network   string        `json:"network,omitempty" yaml:"network,omitempty"`
+	Container ContainerSpec `json:"container,omitempty" yaml:"container,omitempty"`
+}
+
+type ContainerNetwork struct {
+	Required bool `json:"required,omitempty" yaml:"required,omitempty"`
+}
+
+// GetFunctionSpec returns the FunctionSpec for a resource.  Returns
+// nil if the resource does not have a FunctionSpec.
+//
+// The FunctionSpec is read from the resource metadata.annotation
+// "config.kubernetes.io/function"
+func GetFunctionSpec(n *yaml.RNode) *FunctionSpec {
+	meta, err := n.GetMeta()
+	if err != nil {
+		return nil
+	}
 
 	// path to the function, this will be mounted into the container
 	path := meta.Annotations[kioutil.PathAnnotation]
-
-	fn, _ := GetFunction(n, meta)
-	if fn != nil {
-		image, _ := fn.Pipe(yaml.Lookup("container", "image"))
-		return yaml.GetValue(image), path
+	if fn := getFunction(n, meta); fn != nil {
+		fn.Network = ""
+		fn.Path = path
+		return fn
 	}
 
+	// legacy function specification for backwards compatibility
 	container := meta.Annotations["config.kubernetes.io/container"]
 	if container != "" {
-		return container, path
+		return &FunctionSpec{
+			Path: path, Container: ContainerSpec{Image: container}}
 	}
-
-	image, err := n.Pipe(yaml.Lookup("metadata", "configFn", "container", "image"))
-	if err != nil || yaml.IsMissingOrNull(image) {
-		return "", path
-	}
-	return yaml.GetValue(image), path
-}
-
-// GetContainerNetworkRequired returns whether or not networking is required for the container
-func GetContainerNetworkRequired(n *yaml.RNode) (bool, error) {
-	meta, err := n.GetMeta()
-	if err != nil {
-		return false, err
-	}
-	f, err := GetFunction(n, meta)
-	if err != nil {
-		return false, err
-	}
-	networkRequired, _ := f.Pipe(yaml.Lookup("container", "network", "required"))
-	return yaml.GetValue(networkRequired) == "true", nil
+	return nil
 }

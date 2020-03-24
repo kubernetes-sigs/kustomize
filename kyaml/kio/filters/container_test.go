@@ -326,9 +326,71 @@ kind: Example
 metadata:
   annotations:
     config.kubernetes.io/function: |-
-      container: foo:v1.0.0
+      container:
+        image: foo:v1.0.0
 `,
-			expectedFn: `container: foo:v1.0.0`,
+			expectedFn: `
+container:
+    image: foo:v1.0.0`,
+		},
+
+		{
+			name: "network",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  annotations:
+    config.kubernetes.io/function: |-
+      container:
+        image: foo:v1.0.0
+        network:
+          required: true
+`,
+			expectedFn: `
+container:
+    image: foo:v1.0.0
+    network:
+        required: true
+`,
+		},
+
+		{
+			name: "path",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  annotations:
+    config.kubernetes.io/function: |-
+      path: foo
+      container:
+        image: foo:v1.0.0
+`,
+			// path should be erased
+			expectedFn: `
+container:
+    image: foo:v1.0.0
+`,
+		},
+
+		{
+			name: "network",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  annotations:
+    config.kubernetes.io/function: |-
+      network: foo
+      container:
+        image: foo:v1.0.0
+`,
+			// network should be erased
+			expectedFn: `
+container:
+    image: foo:v1.0.0
+`,
 		},
 
 		// legacy fn style
@@ -338,9 +400,13 @@ apiVersion: v1beta1
 kind: Example
 metadata:
   configFn:
-      container: foo:v1.0.0
+      container:
+        image: foo:v1.0.0
 `,
-			expectedFn: `container: foo:v1.0.0`,
+			expectedFn: `
+container:
+    image: foo:v1.0.0
+`,
 		},
 
 		// no fn
@@ -361,80 +427,24 @@ metadata:
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			resource := yaml.MustParse(tt.resource)
-			meta, err := resource.GetMeta()
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-			fn, err := GetFunction(resource, meta)
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			fn := GetFunctionSpec(resource)
 			if tt.missingFn {
 				if !assert.Nil(t, fn) {
 					t.FailNow()
 				}
 			} else {
-				if !assert.Equal(t, strings.TrimSpace(fn.MustString()), strings.TrimSpace(tt.expectedFn)) {
+				b, err := yaml.Marshal(fn)
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				if !assert.Equal(t,
+					strings.TrimSpace(tt.expectedFn),
+					strings.TrimSpace(string(b))) {
 					t.FailNow()
 				}
 			}
 		})
 	}
-}
-
-func Test_GetContainerName(t *testing.T) {
-	// make sure gcr.io works
-	n, err := yaml.Parse(`apiVersion: v1beta1
-kind: MyThing
-metadata:
-  configFn:
-    container:
-      image: gcr.io/foo/bar:something
-`)
-	if !assert.NoError(t, err) {
-		return
-	}
-	c, _ := GetContainerName(n)
-	assert.Equal(t, "gcr.io/foo/bar:something", c)
-
-	// container from config.kubernetes.io/container annotation
-	n, err = yaml.Parse(`apiVersion: v1
-kind: MyThing
-metadata:
-  annotations:
-    config.kubernetes.io/container: gcr.io/foo/bar:something
-`)
-	if !assert.NoError(t, err) {
-		return
-	}
-	c, _ = GetContainerName(n)
-	assert.Equal(t, "gcr.io/foo/bar:something", c)
-
-	// container from config.kubernetes.io/function annotation
-	n, err = yaml.Parse(`apiVersion: v1
-kind: MyThing
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: gcr.io/foo/bar:something
-`)
-	if !assert.NoError(t, err) {
-		return
-	}
-	c, _ = GetContainerName(n)
-	assert.Equal(t, "gcr.io/foo/bar:something", c)
-
-	// doesn't have a container
-	n, err = yaml.Parse(`apiVersion: v1
-kind: MyThing
-metadata:
-`)
-	if !assert.NoError(t, err) {
-		return
-	}
-	c, _ = GetContainerName(n)
-	assert.Equal(t, "", c)
 }
 
 func Test_GetContainerNetworkRequired(t *testing.T) {
@@ -501,9 +511,10 @@ metadata:
 		if !assert.NoError(t, err) {
 			return
 		}
-		required, err := GetContainerNetworkRequired(cfg)
-		assert.NoError(t, err)
-		assert.Equal(t, tc.required, required)
+
+		meta, _ := cfg.GetMeta()
+		fn := getFunction(cfg, meta)
+		assert.Equal(t, tc.required, fn.Container.Network.Required)
 	}
 }
 
