@@ -14,7 +14,7 @@ import (
 	"sigs.k8s.io/kustomize/api/internal/git"
 )
 
-type resourceSpec struct {
+type remoteTargetSpec struct {
 	// Raw is the original resource in kustomization.yaml
 	Raw string
 
@@ -23,10 +23,10 @@ type resourceSpec struct {
 }
 
 // Getter is a function that can gets resource
-type resourceGetter func(rs *resourceSpec) error
+type remoteTargetGetter func(rs *remoteTargetSpec) error
 
-func newResourceGetter(raw string, fSys filesys.FileSystem, referrer *fileLoader, cloner git.Cloner, getter resourceGetter) (ifc.Loader, error) {
-	rs := &resourceSpec{
+func newLoaderAtGetter(raw string, fSys filesys.FileSystem, referrer *fileLoader, cloner git.Cloner, getter remoteTargetGetter) (ifc.Loader, error) {
+	rs := &remoteTargetSpec{
 		Raw: raw,
 	}
 
@@ -38,8 +38,6 @@ func newResourceGetter(raw string, fSys filesys.FileSystem, referrer *fileLoader
 		cleaner()
 		return nil, err
 	}
-
-	// TODO(yujunz): check file or directory
 
 	return &fileLoader{
 		loadRestrictor: RestrictionRootOnly,
@@ -54,7 +52,7 @@ func newResourceGetter(raw string, fSys filesys.FileSystem, referrer *fileLoader
 	}, nil
 }
 
-func getResource(rs *resourceSpec) error {
+func getRemoteTarget(rs *remoteTargetSpec) error {
 	var err error
 
 	rs.Dir, err = filesys.NewTmpConfirmedDir()
@@ -85,7 +83,7 @@ func getResource(rs *resourceSpec) error {
 	return client.Get()
 }
 
-func getNothing(rs *resourceSpec) error {
+func getNothing(rs *remoteTargetSpec) error {
 	var err error
 	rs.Dir, err = filesys.NewTmpConfirmedDir()
 	if err != nil {
