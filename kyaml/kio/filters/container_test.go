@@ -511,9 +511,7 @@ metadata:
 		if !assert.NoError(t, err) {
 			return
 		}
-
-		meta, _ := cfg.GetMeta()
-		fn := getFunction(cfg, meta)
+		fn := GetFunctionSpec(cfg)
 		assert.Equal(t, tc.required, fn.Container.Network.Required)
 	}
 }
