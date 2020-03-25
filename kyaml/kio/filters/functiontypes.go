@@ -25,6 +25,9 @@ type FunctionSpec struct {
 
 	// Container is the spec for running a function as a container
 	Container ContainerSpec `json:"container,omitempty" yaml:"container,omitempty"`
+
+	// Starlark is the spec for running a function as a starlark script
+	Starlark StarlarkSpec `json:"starlark,omitempty" yaml:"starlark,omitempty"`
 }
 
 // ContainerSpec defines a spec for running a function as a container
@@ -40,6 +43,14 @@ type ContainerSpec struct {
 type ContainerNetwork struct {
 	// Required specifies that function requires a network
 	Required bool `json:"required,omitempty" yaml:"required,omitempty"`
+}
+
+// StarlarkSpec defines how to run a function as a starlark program
+type StarlarkSpec struct {
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+
+	// Path specifies a path to a starlark script
+	Path string `json:"path,omitempty" yaml:"path,omitempty"`
 }
 
 // GetFunctionSpec returns the FunctionSpec for a resource.  Returns
