@@ -56,7 +56,7 @@ The _inventory_ ConfigMap contains two special annotations:
   The value of this annotation is a hash that is
   computed from the list of items in the Inventory
 
-Basically, this inventory object acts a record of objects that are applied as a group.
+Basically, this inventory object acts as a record of objects that are applied as a group.
 This object can be consumed by a client such as
 [cli-experimental](https://github.com/kubernetes-sigs/cli-experimental).
 The client can recognize the inventory annotations and take proper actions
