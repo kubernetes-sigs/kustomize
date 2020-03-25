@@ -35,6 +35,10 @@ type Filter struct {
 	FunctionConfig *yaml.RNode
 }
 
+func (sf *Filter) String() string {
+	return fmt.Sprintf("name: %v path: %v url: %v program: %v", sf.Name, sf.Path, sf.URL, sf.Program)
+}
+
 func (sf *Filter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 	if sf.URL != "" && sf.Path != "" ||
 		sf.URL != "" && sf.Program != "" ||

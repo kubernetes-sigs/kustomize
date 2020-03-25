@@ -190,6 +190,10 @@ func TestRunFns_getFilters(t *testing.T) {
 		name string
 		// value to set for NoFunctionsFromInput
 		noFunctionsFromInput *bool
+
+		enableStarlark bool
+
+		disableContainers bool
 	}{
 		// Test
 		//
@@ -211,6 +215,26 @@ metadata:
 				},
 			},
 			out: []string{"gcr.io/example.com/image:v1.0.0"},
+		},
+
+		{name: "disable containers",
+			in: []f{
+				{
+					path: filepath.Join("foo", "bar.yaml"),
+					value: `
+apiVersion: example.com/v1alpha1
+kind: ExampleFunction
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/example.com/image:v1.0.0
+    config.kubernetes.io/local-config: "true"
+`,
+				},
+			},
+			out:               nil,
+			disableContainers: true,
 		},
 
 		// Test
@@ -432,6 +456,45 @@ metadata:
 			},
 			out: []string{"b", "a", "c"},
 		},
+
+		// Test
+		//
+		//
+		{name: "starlark-function",
+			in: []f{
+				{
+					path: filepath.Join("foo", "bar.yaml"),
+					value: `
+apiVersion: example.com/v1alpha1
+kind: ExampleFunction
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      starlark:
+        path: a/b/c
+`,
+				},
+			},
+			enableStarlark: true,
+			out:            []string{"name:  path: a/b/c url:  program:"},
+		},
+
+		{name: "starlark-function-disabled",
+			in: []f{
+				{
+					path: filepath.Join("foo", "bar.yaml"),
+					value: `
+apiVersion: example.com/v1alpha1
+kind: ExampleFunction
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      starlark:
+        path: a/b/c
+`,
+				},
+			},
+		},
 	}
 
 	for i := range tests {
@@ -484,6 +547,8 @@ metadata:
 
 			// init the instance
 			r := &RunFns{
+				EnableStarlark:       tt.enableStarlark,
+				DisableContainers:    tt.disableContainers,
 				FunctionPaths:        fnPaths,
 				Functions:            parsedFns,
 				Path:                 d,
