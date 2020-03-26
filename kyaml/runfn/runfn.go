@@ -15,6 +15,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/starlark"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -56,6 +57,12 @@ type RunFns struct {
 	// NoFunctionsFromInput if set to true will not read any functions from the input,
 	// and only use explicit sources
 	NoFunctionsFromInput *bool
+
+	// EnableStarlark will enable functions run as starlark scripts
+	EnableStarlark bool
+
+	// DisableContainers will disable functions run as containers
+	DisableContainers bool
 
 	// functionFilterProvider provides a filter to perform the function.
 	// this is a variable so it can be mocked in tests
@@ -208,8 +215,10 @@ func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
 			}
 			spec.Network = r.NetworkName
 		}
-
 		c := r.functionFilterProvider(*spec, api)
+		if c == nil {
+			continue
+		}
 		cf, ok := c.(*filters.ContainerFilter)
 		if global && ok {
 			cf.GlobalScope = true
@@ -291,7 +300,7 @@ func (r *RunFns) init() {
 
 // ffp provides function filters
 func (r *RunFns) ffp(spec filters.FunctionSpec, api *yaml.RNode) kio.Filter {
-	if spec.Container.Image != "" {
+	if !r.DisableContainers && spec.Container.Image != "" {
 		return &filters.ContainerFilter{
 			Image:         spec.Container.Image,
 			Config:        api,
@@ -300,9 +309,12 @@ func (r *RunFns) ffp(spec filters.FunctionSpec, api *yaml.RNode) kio.Filter {
 			GlobalScope:   r.GlobalScope,
 		}
 	}
-	return noOpFilter
+	if r.EnableStarlark && spec.Starlark.Path != "" {
+		return &starlark.Filter{
+			Name:           spec.Starlark.Name,
+			Path:           spec.Starlark.Path,
+			FunctionConfig: api,
+		}
+	}
+	return nil
 }
-
-var noOpFilter = kio.FilterFunc(func(in []*yaml.RNode) ([]*yaml.RNode, error) {
-	return in, nil
-})

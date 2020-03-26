@@ -41,6 +41,16 @@ func GetRunFnRunner(name string) *RunFnRunner {
 		&r.Image, "image", "",
 		"run this image as a function instead of discovering them.")
 	r.Command.Flags().BoolVar(
+		&r.EnableStar, "enable-star", false, "enable support for starlark functions.")
+	r.Command.Flags().MarkHidden("enable-star")
+	r.Command.Flags().StringVar(
+		&r.StarPath, "star-path", "", "run a starlark script as a function.")
+	r.Command.Flags().MarkHidden("star-path")
+	r.Command.Flags().StringVar(
+		&r.StarName, "star-name", "", "name of starlark program.")
+	r.Command.Flags().MarkHidden("star-name")
+
+	r.Command.Flags().BoolVar(
 		&r.Network, "network", false, "enable network access for functions that declare it")
 	r.Command.Flags().StringVar(
 		&r.NetworkName, "network-name", "bridge", "the docker network to run the container in")
@@ -59,6 +69,9 @@ type RunFnRunner struct {
 	GlobalScope        bool
 	FnPaths            []string
 	Image              string
+	EnableStar         bool
+	StarPath           string
+	StarName           string
 	RunFns             runfn.RunFns
 	Network            bool
 	NetworkName        string
@@ -68,34 +81,61 @@ func (r *RunFnRunner) runE(c *cobra.Command, args []string) error {
 	return handleError(c, r.RunFns.Execute())
 }
 
-// getFunctions parses the commandline flags and arguments into explicit
+// getContainerFunctions parses the commandline flags and arguments into explicit
 // Functions to run.
-func (r *RunFnRunner) getFunctions(c *cobra.Command, args, dataItems []string) (
+func (r *RunFnRunner) getContainerFunctions(c *cobra.Command, args, dataItems []string) (
 	[]*yaml.RNode, error) {
-	// if image isn't specified, then Functions is empty
-	if r.Image == "" {
+	if r.Image == "" && r.StarPath == "" {
 		return nil, nil
 	}
 
-	// create the function spec to set as an annotation
-	fn, err := yaml.Parse(`container: {}`)
-	if err != nil {
-		return nil, err
-	}
-	// TODO: add support network, volumes, etc based on flag values
-	err = fn.PipeE(
-		yaml.Lookup("container"),
-		yaml.SetField("image", yaml.NewScalarRNode(r.Image)))
-	if err != nil {
-		return nil, err
-	}
-	if r.Network {
-		err = fn.PipeE(
-			yaml.LookupCreate(yaml.MappingNode, "container", "network"),
-			yaml.SetField("required", yaml.NewScalarRNode("true")))
+	var fn *yaml.RNode
+	var err error
+
+	// if image isn't specified, then Functions is empty
+	if r.Image != "" {
+		// create the function spec to set as an annotation
+		fn, err = yaml.Parse(`container: {}`)
 		if err != nil {
 			return nil, err
 		}
+		// TODO: add support network, volumes, etc based on flag values
+		err = fn.PipeE(
+			yaml.Lookup("container"),
+			yaml.SetField("image", yaml.NewScalarRNode(r.Image)))
+		if err != nil {
+			return nil, err
+		}
+		if r.Network {
+			err = fn.PipeE(
+				yaml.LookupCreate(yaml.MappingNode, "container", "network"),
+				yaml.SetField("required", yaml.NewScalarRNode("true")))
+			if err != nil {
+				return nil, err
+			}
+		}
+	} else if r.EnableStar && r.StarPath != "" {
+		// create the function spec to set as an annotation
+		fn, err = yaml.Parse(`starlark: {}`)
+		if err != nil {
+			return nil, err
+		}
+
+		err = fn.PipeE(
+			yaml.Lookup("starlark"),
+			yaml.SetField("path", yaml.NewScalarRNode(r.StarPath)))
+		if err != nil {
+			return nil, err
+		}
+
+		err = fn.PipeE(
+			yaml.Lookup("starlark"),
+			yaml.SetField("name", yaml.NewScalarRNode(r.StarName)))
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, nil
 	}
 
 	// create the function config
@@ -160,7 +200,12 @@ data: {}
 }
 
 func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
-	if c.ArgsLenAtDash() >= 0 && r.Image == "" {
+	if r.EnableStar != (r.StarPath != "") {
+		return errors.Errorf("must specify --star-path with --enable-star")
+	}
+
+	if c.ArgsLenAtDash() >= 0 && r.Image == "" &&
+		!(r.EnableStar && r.StarPath != "") {
 		return errors.Errorf("must specify --image")
 	}
 
@@ -173,7 +218,7 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 		return errors.Errorf("0 or 1 arguments supported, function arguments go after '--'")
 	}
 
-	fns, err := r.getFunctions(c, args, dataItems)
+	fns, err := r.getContainerFunctions(c, args, dataItems)
 	if err != nil {
 		return err
 	}
@@ -196,14 +241,15 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 	}
 
 	r.RunFns = runfn.RunFns{
-		FunctionPaths: r.FnPaths,
-		GlobalScope:   r.GlobalScope,
-		Functions:     fns,
-		Output:        output,
-		Input:         input,
-		Path:          path,
-		Network:       r.Network,
-		NetworkName:   r.NetworkName,
+		FunctionPaths:  r.FnPaths,
+		GlobalScope:    r.GlobalScope,
+		Functions:      fns,
+		Output:         output,
+		Input:          input,
+		Path:           path,
+		Network:        r.Network,
+		NetworkName:    r.NetworkName,
+		EnableStarlark: r.EnableStar,
 	}
 
 	// don't consider args for the function
