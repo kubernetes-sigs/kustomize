@@ -1,7 +1,7 @@
 // Copyright 2020 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package annotations
+package labels
 
 import (
 	"strings"
@@ -13,14 +13,14 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
-var annosFs = builtinconfig.MakeDefaultConfig().CommonAnnotations
+var labelsFs = builtinconfig.MakeDefaultConfig().CommonLabels
 
-func TestAnnotations_Filter(t *testing.T) {
+func TestLabels_Filter(t *testing.T) {
 	testCases := map[string]struct {
 		input          string
 		expectedOutput string
 		filter         Filter
-		fsslice        types.FsSlice
+		fsSlice        types.FsSlice
 	}{
 		"add": {
 			input: `
@@ -28,7 +28,7 @@ apiVersion: example.com/v1
 kind: Foo
 metadata:
   name: instance
-  annotations:
+  labels:
     hero: batman
     fiend: riddler
 `,
@@ -37,7 +37,7 @@ apiVersion: example.com/v1
 kind: Foo
 metadata:
   name: instance
-  annotations:
+  labels:
     hero: batman
     fiend: riddler
     auto: ford
@@ -45,7 +45,7 @@ metadata:
     clown: emmett kelley
     dragon: smaug
 `,
-			filter: Filter{Annotations: annoMap{
+			filter: Filter{Labels: labelMap{
 				"clown":  "emmett kelley",
 				"auto":   "ford",
 				"dragon": "smaug",
@@ -58,7 +58,7 @@ apiVersion: example.com/v1
 kind: Foo
 metadata:
   name: instance
-  annotations:
+  labels:
     hero: batman
     fiend: riddler
 `,
@@ -67,13 +67,13 @@ apiVersion: example.com/v1
 kind: Foo
 metadata:
   name: instance
-  annotations:
+  labels:
     hero: superman
     fiend: luthor
     bean: cannellini
     clown: emmett kelley
 `,
-			filter: Filter{Annotations: annoMap{
+			filter: Filter{Labels: labelMap{
 				"clown": "emmett kelley",
 				"hero":  "superman",
 				"fiend": "luthor",
@@ -97,7 +97,7 @@ apiVersion: example.com/v1
 kind: Foo
 metadata:
   name: instance
-  annotations:
+  labels:
     sleater: kinney
 a:
   b:
@@ -107,16 +107,16 @@ apiVersion: example.com/v1
 kind: Bar
 metadata:
   name: instance
-  annotations:
+  labels:
     sleater: kinney
 a:
   b:
     sleater: kinney
 `,
-			filter: Filter{Annotations: annoMap{
+			filter: Filter{Labels: labelMap{
 				"sleater": "kinney",
 			}},
-			fsslice: []types.FieldSpec{
+			fsSlice: []types.FieldSpec{
 				{
 					Path:               "a/b",
 					CreateIfNotPresent: true,
@@ -128,7 +128,7 @@ a:
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			filter := tc.filter
-			filter.FsSlice = append(annosFs, tc.fsslice...)
+			filter.FsSlice = append(labelsFs, tc.fsSlice...)
 			if !assert.Equal(t,
 				strings.TrimSpace(tc.expectedOutput),
 				strings.TrimSpace(filtertest_test.RunFilter(t, tc.input, filter))) {

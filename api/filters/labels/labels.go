@@ -1,7 +1,7 @@
 // Copyright 2020 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package annotations
+package labels
 
 import (
 	"sigs.k8s.io/kustomize/api/filters/filtersutil"
@@ -11,27 +11,28 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-type annoMap map[string]string
+type labelMap map[string]string
 
+// Filter sets labels.
 type Filter struct {
-	// Annotations is the set of annotations to apply to the inputs
-	Annotations annoMap `yaml:"annotations,omitempty"`
+	// Labels is the set of labels to apply to the inputs
+	Labels labelMap `yaml:"labels,omitempty"`
 
-	// FsSlice contains the FieldSpecs to locate the namespace field
+	// FsSlice identifies the label fields.
 	FsSlice types.FsSlice
 }
 
 var _ kio.Filter = Filter{}
 
 func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
-	keys := filtersutil.SortedMapKeys(f.Annotations)
+	keys := filtersutil.SortedMapKeys(f.Labels)
 	_, err := kio.FilterAll(yaml.FilterFunc(
 		func(node *yaml.RNode) (*yaml.RNode, error) {
 			for _, k := range keys {
 				if err := node.PipeE(fsslice.Filter{
 					FsSlice:    f.FsSlice,
-					SetValue:   fsslice.SetEntry(k, f.Annotations[k]),
-					CreateKind: yaml.MappingNode, // Annotations are MappingNodes.
+					SetValue:   fsslice.SetEntry(k, f.Labels[k]),
+					CreateKind: yaml.MappingNode, // Labels are MappingNodes.
 				}); err != nil {
 					return nil, err
 				}
