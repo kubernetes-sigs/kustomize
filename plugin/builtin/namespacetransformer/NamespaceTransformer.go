@@ -7,9 +7,9 @@ package main
 import (
 	"fmt"
 
-	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 	"sigs.k8s.io/kustomize/api/filters/namespace"
 	"sigs.k8s.io/kustomize/api/transform"
+	"sigs.k8s.io/kustomize/kyaml/filtersutil"
 
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
