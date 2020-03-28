@@ -4,15 +4,14 @@
 package namespace_test
 
 import (
-	"bytes"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/api/filters/namespace"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
+	filtertest_test "sigs.k8s.io/kustomize/api/testutils/filtertest"
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
 var tests = []TestCase{
@@ -270,27 +269,10 @@ func TestNamespace_Filter(t *testing.T) {
 		test := tests[i]
 		t.Run(test.name, func(t *testing.T) {
 			test.filter.FsSlice = append(config.NameSpace, test.fsslice...)
-
-			out := &bytes.Buffer{}
-			rw := &kio.ByteReadWriter{
-				Reader: bytes.NewBufferString(test.input),
-				Writer: out,
-			}
-
-			// run the filter
-			err := kio.Pipeline{
-				Inputs:  []kio.Reader{rw},
-				Filters: []kio.Filter{test.filter},
-				Outputs: []kio.Writer{rw},
-			}.Execute()
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-
-			// check results
 			if !assert.Equal(t,
 				strings.TrimSpace(test.expected),
-				strings.TrimSpace(out.String())) {
+				strings.TrimSpace(
+					filtertest_test.RunFilter(t, test.input, test.filter))) {
 				t.FailNow()
 			}
 		})

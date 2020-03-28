@@ -21,19 +21,14 @@ type Filter struct {
 var _ kio.Filter = Filter{}
 
 func (ns Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
-	for i := range nodes {
-		if err := ns.run(nodes[i]); err != nil {
-			return nil, err
-		}
-	}
-	return nodes, nil
+	return kio.FilterAll(yaml.FilterFunc(ns.run)).Filter(nodes)
 }
 
 // Run runs the filter on a single node rather than a slice
-func (ns Filter) run(node *yaml.RNode) error {
+func (ns Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 	// hacks for hardcoded types -- :(
 	if err := ns.hacks(node); err != nil {
-		return err
+		return nil, err
 	}
 
 	// Remove the fieldspecs that are for hardcoded fields.  The fieldspecs
@@ -45,11 +40,12 @@ func (ns Filter) run(node *yaml.RNode) error {
 	ns.FsSlice = ns.removeFieldSpecsForHacks(ns.FsSlice)
 
 	// transformations based on data -- :)
-	return node.PipeE(fsslice.Filter{
+	err := node.PipeE(fsslice.Filter{
 		FsSlice:    ns.FsSlice,
 		SetValue:   fsslice.SetScalar(ns.Namespace),
 		CreateKind: yaml.ScalarNode, // Namespace is a ScalarNode
 	})
+	return node, err
 }
 
 // hacks applies the namespace transforms that are hardcoded rather

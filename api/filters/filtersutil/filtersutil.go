@@ -5,10 +5,24 @@ package filtersutil
 
 import (
 	"encoding/json"
+	"sort"
 
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+// SortedMapKeys returns a sorted slice of keys to the given map.
+// Writing this function never gets old.
+func SortedMapKeys(m map[string]string) []string {
+	keys := make([]string, len(m))
+	i := 0
+	for k := range m {
+		keys[i] = k
+		i++
+	}
+	sort.Strings(keys)
+	return keys
+}
 
 // ApplyToJSON applies the filter to the json objects.
 func ApplyToJSON(filter kio.Filter, objs ...marshalerUnmarshaler) error {
