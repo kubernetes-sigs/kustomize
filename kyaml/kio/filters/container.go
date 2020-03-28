@@ -389,71 +389,13 @@ type IsReconcilerFilter struct {
 func (c *IsReconcilerFilter) Filter(inputs []*yaml.RNode) ([]*yaml.RNode, error) {
 	var out []*yaml.RNode
 	for i := range inputs {
-		img, _ := GetContainerName(inputs[i])
-		isContainerResource := img != ""
-		if isContainerResource && !c.ExcludeReconcilers {
+		isFnResource := GetFunctionSpec(inputs[i]) != nil
+		if isFnResource && !c.ExcludeReconcilers {
 			out = append(out, inputs[i])
 		}
-		if !isContainerResource && c.IncludeNonReconcilers {
+		if !isFnResource && c.IncludeNonReconcilers {
 			out = append(out, inputs[i])
 		}
 	}
 	return out, nil
-}
-
-const (
-	FunctionAnnotationKey    = "config.kubernetes.io/function"
-	oldFunctionAnnotationKey = "config.k8s.io/function"
-)
-
-var functionAnnotationKeys = []string{FunctionAnnotationKey, oldFunctionAnnotationKey}
-
-// GetFunction parses the config function from the object if it is found
-func GetFunction(n *yaml.RNode, meta yaml.ResourceMeta) (*yaml.RNode, error) {
-	for _, s := range functionAnnotationKeys {
-		fn := meta.Annotations[s]
-		if fn != "" {
-			return yaml.Parse(fn)
-		}
-	}
-	return n.Pipe(yaml.Lookup("metadata", "configFn"))
-}
-
-// GetContainerName returns the container image for an API if one exists
-func GetContainerName(n *yaml.RNode) (string, string) {
-	meta, _ := n.GetMeta()
-
-	// path to the function, this will be mounted into the container
-	path := meta.Annotations[kioutil.PathAnnotation]
-
-	fn, _ := GetFunction(n, meta)
-	if fn != nil {
-		image, _ := fn.Pipe(yaml.Lookup("container", "image"))
-		return yaml.GetValue(image), path
-	}
-
-	container := meta.Annotations["config.kubernetes.io/container"]
-	if container != "" {
-		return container, path
-	}
-
-	image, err := n.Pipe(yaml.Lookup("metadata", "configFn", "container", "image"))
-	if err != nil || yaml.IsMissingOrNull(image) {
-		return "", path
-	}
-	return yaml.GetValue(image), path
-}
-
-// GetContainerNetworkRequired returns whether or not networking is required for the container
-func GetContainerNetworkRequired(n *yaml.RNode) (bool, error) {
-	meta, err := n.GetMeta()
-	if err != nil {
-		return false, err
-	}
-	f, err := GetFunction(n, meta)
-	if err != nil {
-		return false, err
-	}
-	networkRequired, _ := f.Pipe(yaml.Lookup("container", "network", "required"))
-	return yaml.GetValue(networkRequired) == "true", nil
 }

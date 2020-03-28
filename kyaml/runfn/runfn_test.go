@@ -47,10 +47,15 @@ func TestRunFns_init(t *testing.T) {
 	api, err := yaml.Parse(`apiVersion: apps/v1
 kind: 
 `)
+	spec := filters.FunctionSpec{
+		Container: filters.ContainerSpec{
+			Image: "example.com:version",
+		},
+	}
 	if !assert.NoError(t, err) {
 		return
 	}
-	filter := instance.containerFilterProvider("example.com:version", "", "", api)
+	filter := instance.functionFilterProvider(spec, api)
 	assert.Equal(t, &filters.ContainerFilter{Image: "example.com:version", Config: api}, filter)
 }
 
@@ -69,7 +74,16 @@ kind:
 	if !assert.NoError(t, err) {
 		return
 	}
-	filter := instance.containerFilterProvider("example.com:version", "", "", api)
+
+	spec := filters.FunctionSpec{
+		Container: filters.ContainerSpec{
+			Image: "example.com:version",
+		},
+	}
+	if !assert.NoError(t, err) {
+		return
+	}
+	filter := instance.functionFilterProvider(spec, api)
 	assert.Equal(t, &filters.ContainerFilter{
 		Image: "example.com:version", Config: api, GlobalScope: true}, filter)
 }
@@ -131,7 +145,7 @@ func TestRunFns_Execute__initDefault(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			(&tt.instance).init()
-			(&tt.instance).containerFilterProvider = nil
+			(&tt.instance).functionFilterProvider = nil
 			if !assert.Equal(t, tt.expected, tt.instance) {
 				t.FailNow()
 			}
@@ -176,6 +190,10 @@ func TestRunFns_getFilters(t *testing.T) {
 		name string
 		// value to set for NoFunctionsFromInput
 		noFunctionsFromInput *bool
+
+		enableStarlark bool
+
+		disableContainers bool
 	}{
 		// Test
 		//
@@ -197,6 +215,26 @@ metadata:
 				},
 			},
 			out: []string{"gcr.io/example.com/image:v1.0.0"},
+		},
+
+		{name: "disable containers",
+			in: []f{
+				{
+					path: filepath.Join("foo", "bar.yaml"),
+					value: `
+apiVersion: example.com/v1alpha1
+kind: ExampleFunction
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/example.com/image:v1.0.0
+    config.kubernetes.io/local-config: "true"
+`,
+				},
+			},
+			out:               nil,
+			disableContainers: true,
 		},
 
 		// Test
@@ -418,6 +456,45 @@ metadata:
 			},
 			out: []string{"b", "a", "c"},
 		},
+
+		// Test
+		//
+		//
+		{name: "starlark-function",
+			in: []f{
+				{
+					path: filepath.Join("foo", "bar.yaml"),
+					value: `
+apiVersion: example.com/v1alpha1
+kind: ExampleFunction
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      starlark:
+        path: a/b/c
+`,
+				},
+			},
+			enableStarlark: true,
+			out:            []string{"name:  path: a/b/c url:  program:"},
+		},
+
+		{name: "starlark-function-disabled",
+			in: []f{
+				{
+					path: filepath.Join("foo", "bar.yaml"),
+					value: `
+apiVersion: example.com/v1alpha1
+kind: ExampleFunction
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      starlark:
+        path: a/b/c
+`,
+				},
+			},
+		},
 	}
 
 	for i := range tests {
@@ -470,6 +547,8 @@ metadata:
 
 			// init the instance
 			r := &RunFns{
+				EnableStarlark:       tt.enableStarlark,
+				DisableContainers:    tt.disableContainers,
 				FunctionPaths:        fnPaths,
 				Functions:            parsedFns,
 				Path:                 d,
@@ -505,7 +584,7 @@ func TestCmd_Execute(t *testing.T) {
 		return
 	}
 
-	instance := RunFns{Path: dir, containerFilterProvider: getFilterProvider(t)}
+	instance := RunFns{Path: dir, functionFilterProvider: getFilterProvider(t)}
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()
 	}
@@ -534,9 +613,9 @@ func TestCmd_Execute_setFunctionPaths(t *testing.T) {
 
 	// run the functions, providing the path to the directory of filters
 	instance := RunFns{
-		FunctionPaths:           []string{tmpF.Name()},
-		Path:                    dir,
-		containerFilterProvider: getFilterProvider(t),
+		FunctionPaths:          []string{tmpF.Name()},
+		Path:                   dir,
+		functionFilterProvider: getFilterProvider(t),
 	}
 	// initialize the defaults
 	instance.init()
@@ -566,9 +645,9 @@ func TestCmd_Execute_setOutput(t *testing.T) {
 
 	out := &bytes.Buffer{}
 	instance := RunFns{
-		Output:                  out, // write to out
-		Path:                    dir,
-		containerFilterProvider: getFilterProvider(t),
+		Output:                 out, // write to out
+		Path:                   dir,
+		functionFilterProvider: getFilterProvider(t),
 	}
 	// initialize the defaults
 	instance.init()
@@ -614,9 +693,9 @@ func TestCmd_Execute_setInput(t *testing.T) {
 	}
 
 	instance := RunFns{
-		Input:                   input, // read from input
-		Path:                    outDir,
-		containerFilterProvider: getFilterProvider(t),
+		Input:                  input, // read from input
+		Path:                   outDir,
+		functionFilterProvider: getFilterProvider(t),
 	}
 	// initialize the defaults
 	instance.init()
@@ -659,8 +738,8 @@ func setupTest(t *testing.T) string {
 // getFilterProvider fakes the creation of a filter, replacing the ContainerFiler with
 // a filter to s/kind: Deployment/kind: StatefulSet/g.
 // this can be used to simulate running a filter.
-func getFilterProvider(t *testing.T) func(string, string, string, *yaml.RNode) kio.Filter {
-	return func(s, _, _ string, node *yaml.RNode) kio.Filter {
+func getFilterProvider(t *testing.T) func(filters.FunctionSpec, *yaml.RNode) kio.Filter {
+	return func(f filters.FunctionSpec, node *yaml.RNode) kio.Filter {
 		// parse the filter from the input
 		filter := yaml.YFilter{}
 		b := &bytes.Buffer{}

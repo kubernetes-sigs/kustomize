@@ -2,10 +2,9 @@
 
 `kustomize build` can be run on a URL.
 
-The effect is the same as cloning the repo, checking out a particular
-_ref_ (commit hash, branch name, release tag, etc.),
-then running `kustomize build` against the desired
-directory in the local copy.
+A [lite version of go-getter module](https://github.com/yujunz/go-getter) is
+leveraged to get remote content, then running `kustomize build` against the
+desired directory in the local copy.
 
 To try this immediately, run a build against the kustomization
 in the [multibases](multibases/README.md) example.  There's
@@ -31,6 +30,18 @@ test 3 == \
   $(kustomize build $target | grep cluster-a-.*-myapp-pod | wc -l); \
   echo $?
 ```
+
+The URL can be an archive
+
+<!-- @remoteBuild -->
+```
+target="https://github.com/kustless/kustomize-examples/archive/master.zip//kustomize-examples-master"
+test 1 == \
+  $(kustomize build $target | grep remote-cm | wc -l); \
+  echo $?
+```
+
+Note the kustomize root path inside archive must be appended after `//`.
 
 A base can be a URL:
 
@@ -59,20 +70,32 @@ test 3 == \
 
 The url should follow
 [hashicorp/go-getter URL format](https://github.com/hashicorp/go-getter#url-format).
-Here are some example urls pointing to Github repos following this convention.
 
-- a repo with a root level kustomization.yaml
+Note that S3 and GCS are NOT supported to avoid introducing massive dependency.
 
-  `github.com/Liujingfang1/mysql`
-- a repo with a root level kustomization.yaml on branch test
+Here are some example urls
 
-  `github.com/Liujingfang1/mysql?ref=test`
-- a subdirectory in a repo on version v1.0.6
+<!-- @createOverlay @testAgainstLatestRelease -->
+```
+DEMO_HOME=$(mktemp -d)
 
-  `github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6`
-- a subdirectory in a repo on branch repoUrl2
+cat <<EOF >$DEMO_HOME/kustomization.yaml
+resources:
 
-  `github.com/Liujingfang1/kustomize/examples/helloWorld?ref=repoUrl2`
-- a subdirectory in a repo on commit `7050a45134e9848fca214ad7e7007e96e5042c03`
+# a repo with a root level kustomization.yaml
+- github.com/Liujingfang1/mysql
 
-  `github.com/Liujingfang1/kustomize/examples/helloWorld?ref=7050a45134e9848fca214ad7e7007e96e5042c03`
+# a repo with a root level kustomization.yaml on branch test
+- github.com/Liujingfang1/mysql?ref=test
+
+# a subdirectory in a repo on branch repoUrl2
+- github.com/Liujingfang1/kustomize/examples/helloWorld?ref=repoUrl2
+
+# a subdirectory in a repo on commit `7050a45134e9848fca214ad7e7007e96e5042c03`
+- github.com/Liujingfang1/kustomize/examples/helloWorld?ref=7050a45134e9848fca214ad7e7007e96e5042c03
+
+# a subdirectory in a remote archive
+- https://github.com/kustless/kustomize-examples/archive/master.zip//kustomize-examples-master
+
+EOF
+```

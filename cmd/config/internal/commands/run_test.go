@@ -155,6 +155,44 @@ apiVersion: v1
 `,
 		},
 		{
+			name: "star",
+			args: []string{"run", "dir",
+				"--enable-star",
+				"--star-path", "a/b/c",
+				"--star-name", "foo",
+				"--", "Foo", "g=h"},
+			path: "dir",
+			expected: `
+metadata:
+  name: function-input
+  annotations:
+    config.kubernetes.io/function: |
+      starlark: {path: a/b/c, name: foo}
+data: {g: h}
+kind: Foo
+apiVersion: v1
+`,
+		},
+		{
+			name: "star-not-enabled",
+			args: []string{"run", "dir",
+				"--star-path", "a/b/c",
+				"--star-name", "foo",
+				"--", "Foo", "g=h"},
+			path: "dir",
+			err:  "must specify --star-path with --enable-star",
+		},
+		{
+			name: "image-star-not-enabled",
+			args: []string{"run", "dir",
+				"--image", "some_image",
+				"--star-path", "a/b/c",
+				"--star-name", "foo",
+				"--", "Foo", "g=h"},
+			path: "dir",
+			err:  "must specify --star-path with --enable-star",
+		},
+		{
 			name:          "function paths",
 			args:          []string{"run", "dir", "--fn-path", "path1", "--fn-path", "path2"},
 			path:          "dir",

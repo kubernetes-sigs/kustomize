@@ -20,6 +20,7 @@ func main() {
 		Filters: []kio.Filter{filter{}}, // run the inject into the inputs
 		Outputs: []kio.Writer{rw}}       // copy the inputs to the output
 	if err := p.Execute(); err != nil {
+		fmt.Fprint(os.Stderr, err)
 		os.Exit(1)
 	}
 }
