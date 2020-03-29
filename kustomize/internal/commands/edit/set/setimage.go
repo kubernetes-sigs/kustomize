@@ -28,7 +28,7 @@ var (
 	errImageNoArgs      = errors.New("no image specified")
 	errImageInvalidArgs = errors.New(`invalid format of image, use one of the following options:
 - <image>=<newimage>:<newtag>
-- <image>=<newimage>@<newtag>
+- <image>=<newimage>@<digest>
 - <image>=<newimage>
 - <image>:<newtag>
 - <image>@<digest>`)
