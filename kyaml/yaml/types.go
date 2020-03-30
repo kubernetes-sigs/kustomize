@@ -496,6 +496,7 @@ func String(node *yaml.Node, opts ...string) (string, error) {
 	if node == nil {
 		return "", nil
 	}
+	DoSerializationHacks(node)
 	optsSet := sets.String{}
 	optsSet.Insert(opts...)
 	if optsSet.Has(Flow) {
@@ -514,6 +515,7 @@ func String(node *yaml.Node, opts ...string) (string, error) {
 	if optsSet.Has(Trim) {
 		val = strings.TrimSpace(val)
 	}
+	UndoSerializationHacks(node)
 	return val, errors.Wrap(err)
 }
 

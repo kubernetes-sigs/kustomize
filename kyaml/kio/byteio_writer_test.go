@@ -75,8 +75,10 @@ func TestByteWriter_Write_withoutAnnotations(t *testing.T) {
 	node3, err := yaml.Parse(`e: f
 g:
   h:
-  - i # has a list
-  - j
+  # has a list
+  - i : [i1, i2] # line comment
+  # has a list 2
+  - j : j1
 `)
 	if !assert.NoError(t, err) {
 		return
@@ -93,8 +95,10 @@ g:
 e: f
 g:
   h:
-  - i # has a list
-  - j
+  # has a list
+  - i: [i1, i2] # line comment
+  # has a list 2
+  - j: j1
 ---
 a: b #first
 `, buff.String())
