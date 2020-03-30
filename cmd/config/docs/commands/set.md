@@ -28,8 +28,8 @@ the configuration as comments.
     Optional.  The value to set on the field.
 
 
-To print the possible setters for the Resources in a directory, run `set` on
-a directory -- e.g. `kustomize config set DIR/`.
+To print the possible setters for the Resources in a directory, run
+`list-setters` on a directory -- e.g. `kustomize config list-setters DIR/`.
 
 #### Tips
 
@@ -58,7 +58,7 @@ To create a custom setter for a field see: `kustomize help config create-setter`
 
   List setters: Show the possible setters
 
-    $ config set DIR/
+    $ config list-setters DIR/
         NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY  
     name-prefix   ''            PREFIX    string   2
 
@@ -69,7 +69,7 @@ To create a custom setter for a field see: `kustomize help config create-setter`
 
   List setters: Show the new values
 
-    $ config set DIR/
+    $ config list-setters DIR/
         NAME      DESCRIPTION         VALUE     TYPE     COUNT     SETBY 
     name-prefix   'test environment'   test     string   2          dev
 
