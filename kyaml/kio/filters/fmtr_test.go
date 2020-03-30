@@ -411,8 +411,8 @@ spec:
         app: nginx
     spec:
       containers:
-      - # this is another container
-        name: a-nginx
+      # this is another container
+      - name: a-nginx
         image: nginx:1.7.9
         ports:
         - containerPort: 80
