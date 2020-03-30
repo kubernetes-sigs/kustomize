@@ -45,6 +45,7 @@ type ByteWriter struct {
 var _ Writer = ByteWriter{}
 
 func (w ByteWriter) Write(nodes []*yaml.RNode) error {
+	yaml.DoSerializationHacksOnNodes(nodes)
 	if w.Sort {
 		if err := kioutil.SortNodes(nodes); err != nil {
 			return errors.Wrap(err)
@@ -117,5 +118,7 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 	for i := range nodes {
 		items.Content = append(items.Content, nodes[i].YNode())
 	}
-	return errors.Wrap(encoder.Encode(doc))
+	err := errors.Wrap(encoder.Encode(doc))
+	yaml.UndoSerializationHacksOnNodes(nodes)
+	return err
 }
