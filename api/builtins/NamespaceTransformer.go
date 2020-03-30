@@ -7,13 +7,12 @@ import (
 	"fmt"
 
 	"sigs.k8s.io/kustomize/api/filters/namespace"
-	"sigs.k8s.io/kustomize/api/transform"
-	"sigs.k8s.io/kustomize/kyaml/filtersutil"
-
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
+	"sigs.k8s.io/kustomize/api/transform"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/filtersutil"
 	"sigs.k8s.io/yaml"
 )
 
@@ -23,8 +22,9 @@ type NamespaceTransformerPlugin struct {
 	FieldSpecs       []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 
 	// YAMLSupport can be set to true to use the kyaml filter instead of the
-	// kunstruct transformer
-	YAMLSupport bool
+	// kunstruct transformer.
+	// TODO: change the default to use kyaml when it is stable
+	YAMLSupport bool `json:"yamlSupport,omitempty" yaml:"yamlSupport,omitempty"`
 }
 
 func (p *NamespaceTransformerPlugin) Config(
