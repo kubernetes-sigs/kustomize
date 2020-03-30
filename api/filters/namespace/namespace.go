@@ -15,7 +15,7 @@ type Filter struct {
 	Namespace string `yaml:"namespace,omitempty"`
 
 	// FsSlice contains the FieldSpecs to locate the namespace field
-	FsSlice types.FsSlice
+	FsSlice types.FsSlice `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
 var _ kio.Filter = Filter{}
