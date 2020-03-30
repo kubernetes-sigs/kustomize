@@ -171,7 +171,7 @@ List setters for Resources.
 var ListSettersExamples = `
   Show setters:
 
-    $ config set DIR/
+    $ config list-setters DIR/
         NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY  
     name-prefix   ''            PREFIX    string   2`
 
@@ -289,8 +289,8 @@ the configuration as comments.
     Optional.  The value to set on the field.
 
 
-To print the possible setters for the Resources in a directory, run ` + "`" + `set` + "`" + ` on
-a directory -- e.g. ` + "`" + `kustomize config set DIR/` + "`" + `.
+To print the possible setters for the Resources in a directory, run
+` + "`" + `list-setters` + "`" + ` on a directory -- e.g. ` + "`" + `kustomize config list-setters DIR/` + "`" + `.
 
 #### Tips
 
@@ -318,7 +318,7 @@ var SetExamples = `
 
   List setters: Show the possible setters
 
-    $ config set DIR/
+    $ config list-setters DIR/
         NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY  
     name-prefix   ''            PREFIX    string   2
 
@@ -329,7 +329,7 @@ var SetExamples = `
 
   List setters: Show the new values
 
-    $ config set DIR/
+    $ config list-setters DIR/
         NAME      DESCRIPTION         VALUE     TYPE     COUNT     SETBY 
     name-prefix   'test environment'   test     string   2          dev
 
