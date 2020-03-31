@@ -134,6 +134,9 @@ type ContainerFilter struct {
 	// Network is the container network to use.
 	Network string `yaml:"network,omitempty"`
 
+	// Volumes are the directories to mount as container volumes.
+	Volumes []string `yaml:"volumes,omitempty"`
+
 	// StorageMounts is a list of storage options that the container will have mounted.
 	StorageMounts []StorageMount
 
@@ -333,6 +336,11 @@ func (c *ContainerFilter) getArgs() []string {
 	// TODO(joncwong): Allow StorageMount fields to have default values.
 	for _, storageMount := range c.StorageMounts {
 		args = append(args, "--mount", storageMount.String())
+	}
+
+	// export volumes to the container
+	for _, volume := range c.Volumes {
+		args = append(args, "--volume", volume)
 	}
 
 	// export the local environment vars to the container

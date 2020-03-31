@@ -27,6 +27,7 @@ func TestRunFnCommand_preRunE(t *testing.T) {
 		functionPaths []string
 		network       bool
 		networkName   string
+		volumes       []string
 	}{
 		{
 			name: "config map",
@@ -216,6 +217,29 @@ apiVersion: v1
 `,
 		},
 		{
+			name:    "volumes",
+			args:    []string{"run", "dir", "--volume", "vol1", "--volume", "vol2"},
+			path:    "dir",
+			volumes: []string{"vol1", "vol2"},
+		},
+		{
+			name: "custom kind with volumes",
+			args: []string{
+				"run", "dir", "--volume", "vol", "--image", "foo:bar", "--", "Foo", "g=h", "i=j=k"},
+			path:    "dir",
+			volumes: []string{"vol"},
+			expected: `
+metadata:
+  name: function-input
+  annotations:
+    config.kubernetes.io/function: |
+      container: {image: 'foo:bar'}
+data: {g: h, i: j=k}
+kind: Foo
+apiVersion: v1
+`,
+		},
+		{
 			name: "config map multi args",
 			args: []string{"run", "dir", "dir2", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			err:  "0 or 1 arguments supported",
@@ -300,6 +324,15 @@ apiVersion: v1
 				tt.functionPaths = []string{}
 			}
 			if !assert.Equal(t, tt.functionPaths, r.RunFns.FunctionPaths) {
+				t.FailNow()
+			}
+
+			// check if Volumes were set
+			if tt.volumes == nil {
+				// make Equal work against flag default
+				tt.volumes = []string{}
+			}
+			if !assert.Equal(t, tt.volumes, r.RunFns.Volumes) {
 				t.FailNow()
 			}
 

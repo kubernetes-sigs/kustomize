@@ -140,6 +140,16 @@ func TestRunFns_Execute__initDefault(t *testing.T) {
 				FunctionPaths:        []string{"foo"},
 			},
 		},
+		{
+			name:     "explicit directories in volumes",
+			instance: RunFns{Volumes: []string{"vol"}},
+			expected: RunFns{
+				Output:               os.Stdout,
+				Input:                os.Stdin,
+				NoFunctionsFromInput: getFalse(),
+				Volumes:              []string{"vol"},
+			},
+		},
 	}
 	for i := range tests {
 		tt := tests[i]

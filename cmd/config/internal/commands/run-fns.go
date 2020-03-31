@@ -54,6 +54,9 @@ func GetRunFnRunner(name string) *RunFnRunner {
 		&r.Network, "network", false, "enable network access for functions that declare it")
 	r.Command.Flags().StringVar(
 		&r.NetworkName, "network-name", "bridge", "the docker network to run the container in")
+	r.Command.Flags().StringSliceVar(
+		&r.Volumes, "volume", []string{},
+		"the volumes to bind mount to the container.")
 	return r
 }
 
@@ -75,6 +78,7 @@ type RunFnRunner struct {
 	RunFns             runfn.RunFns
 	Network            bool
 	NetworkName        string
+	Volumes            []string
 }
 
 func (r *RunFnRunner) runE(c *cobra.Command, args []string) error {
@@ -250,6 +254,7 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 		Network:        r.Network,
 		NetworkName:    r.NetworkName,
 		EnableStarlark: r.EnableStar,
+		Volumes:        r.Volumes,
 	}
 
 	// don't consider args for the function
