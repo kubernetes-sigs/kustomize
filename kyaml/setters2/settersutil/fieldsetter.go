@@ -68,3 +68,36 @@ func (fs FieldSetter) Set(openAPIPath, resourcesPath string) (int, error) {
 	}.Execute()
 	return s.Count, err
 }
+
+// SetAllSetterDefinitions reads all the Setter Definitions from OpenAPI in source
+// package and sets all setter values in destination packages with out updating
+// destination packages openAPI files
+func SetAllSetterDefinitions(sourcePkgPath, sourcePkgOpenAPIPath string, destDirs ...string) error {
+	// get all the setter definitions from package
+	l := setters2.List{}
+	err := l.List(sourcePkgOpenAPIPath, sourcePkgPath)
+	if err != nil {
+		return err
+	}
+
+	// for each setter definition set the setter values in destination packages
+	//TODO(pmarupaka): optimize to perform all the setters in single pass instead of N passes
+	for _, sd := range l.Setters {
+		for _, destDir := range destDirs {
+			fs := FieldSetter{
+				Name:        sd.Name,
+				Value:       sd.Value,
+				ListValues:  sd.ListValues,
+				Description: sd.Description,
+				SetBy:       sd.SetBy,
+			}
+			// pass sourcePkgOpenAPIPath remains unchanged due to set but should be passed as
+			// a place holder
+			_, err = fs.Set(sourcePkgOpenAPIPath, destDir)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
