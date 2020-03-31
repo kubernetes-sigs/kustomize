@@ -28,6 +28,9 @@ type FunctionSpec struct {
 
 	// Starlark is the spec for running a function as a starlark script
 	Starlark StarlarkSpec `json:"starlark,omitempty" yaml:"starlark,omitempty"`
+
+	// Volumes are the directories to mount as container volumes
+	Volumes []string `json:"volumes,omitempty" yaml:"volumes,omitempty"`
 }
 
 // ContainerSpec defines a spec for running a function as a container
@@ -37,6 +40,9 @@ type ContainerSpec struct {
 
 	// Network defines network specific configuration
 	Network ContainerNetwork `json:"network,omitempty" yaml:"network,omitempty"`
+
+	// Volumes are the directories to mount as container volumes
+	Volumes []string `json:"volumes,omitempty" yaml:"volumes,omitempty"`
 }
 
 // ContainerNetwork
@@ -68,6 +74,7 @@ func GetFunctionSpec(n *yaml.RNode) *FunctionSpec {
 	path := meta.Annotations[kioutil.PathAnnotation]
 	if fn := getFunctionSpecFromAnnotation(n, meta); fn != nil {
 		fn.Network = ""
+		fn.Volumes = []string{}
 		fn.Path = path
 		return fn
 	}

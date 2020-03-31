@@ -141,6 +141,87 @@ metadata:
 	assert.Equal(t, expected, cmd.Args)
 }
 
+func TestFilter_command_volume(t *testing.T) {
+	cfg, err := yaml.Parse(`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+`)
+	if !assert.NoError(t, err) {
+		return
+	}
+	instance := &ContainerFilter{
+		Image:   "example.com:version",
+		Volumes: []string{"/host-src:/container-dest:ro"},
+		Config:  cfg,
+	}
+	cmd, err := instance.getCommand()
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	expected := []string{
+		"docker", "run",
+		"--rm",
+		"-i", "-a", "STDIN", "-a", "STDOUT", "-a", "STDERR",
+		"--network", "none",
+		"--user", "nobody",
+		"--security-opt=no-new-privileges",
+		"--volume", "/host-src:/container-dest:ro",
+	}
+	for _, e := range os.Environ() {
+		// the process env
+		tokens := strings.Split(e, "=")
+		if tokens[0] == "" {
+			continue
+		}
+		expected = append(expected, "-e", tokens[0])
+	}
+	expected = append(expected, "example.com:version")
+	assert.Equal(t, expected, cmd.Args)
+}
+
+func TestFilter_command_volumes(t *testing.T) {
+	cfg, err := yaml.Parse(`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+`)
+	if !assert.NoError(t, err) {
+		return
+	}
+	instance := &ContainerFilter{
+		Image:   "example.com:version",
+		Volumes: []string{"/host-src1:/container-dest1:ro", "/host-src2:/container-dest2:rw"},
+		Config:  cfg,
+	}
+	cmd, err := instance.getCommand()
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	expected := []string{
+		"docker", "run",
+		"--rm",
+		"-i", "-a", "STDIN", "-a", "STDOUT", "-a", "STDERR",
+		"--network", "none",
+		"--user", "nobody",
+		"--security-opt=no-new-privileges",
+		"--volume", "/host-src1:/container-dest1:ro",
+		"--volume", "/host-src2:/container-dest2:rw",
+	}
+	for _, e := range os.Environ() {
+		// the process env
+		tokens := strings.Split(e, "=")
+		if tokens[0] == "" {
+			continue
+		}
+		expected = append(expected, "-e", tokens[0])
+	}
+	expected = append(expected, "example.com:version")
+	assert.Equal(t, expected, cmd.Args)
+}
+
 func TestFilter_Filter(t *testing.T) {
 	cfg, err := yaml.Parse(`apiVersion: apps/v1
 kind: Deployment
@@ -356,6 +437,70 @@ container:
 		},
 
 		{
+			name: "volume",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  annotations:
+    config.kubernetes.io/function: |-
+      container:
+        image: foo:v1.0.0
+        volumes: ["/host-src:/container-dest:ro"]
+`,
+			expectedFn: `
+container:
+    image: foo:v1.0.0
+    volumes:
+      - /host-src:/container-dest:ro
+`,
+		},
+
+		{
+			name: "volumes as array",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  annotations:
+    config.kubernetes.io/function: |-
+      container:
+        image: foo:v1.0.0
+        volumes: ["/host-src1:/container-dest1:ro", "/host-src2:/container-dest2:rw"]
+`,
+			expectedFn: `
+container:
+    image: foo:v1.0.0
+    volumes:
+      - /host-src1:/container-dest1:ro
+      - /host-src2:/container-dest2:rw
+`,
+		},
+
+		{
+			name: "volumes as list",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  annotations:
+    config.kubernetes.io/function: |-
+      container:
+        image: foo:v1.0.0
+        volumes:
+        - "/host-src1:/container-dest1:ro"
+        - "/host-src2:/container-dest2:rw"
+`,
+			expectedFn: `
+container:
+    image: foo:v1.0.0
+    volumes:
+      - /host-src1:/container-dest1:ro
+      - /host-src2:/container-dest2:rw
+`,
+		},
+
+		{
 			name: "path",
 			resource: `
 apiVersion: v1beta1
@@ -513,6 +658,76 @@ metadata:
 		}
 		fn := GetFunctionSpec(cfg)
 		assert.Equal(t, tc.required, fn.Container.Network.Required)
+	}
+}
+
+func Test_GetContainerVolumeRequired(t *testing.T) {
+	tests := []struct {
+		input   string
+		volumes []string
+	}{
+		{
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+  configFn:
+    container:
+      image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
+      volumes: [ /host-src:/container-dest:ro ]
+`,
+			volumes: []string{"/host-src:/container-dest:ro"},
+		},
+		{
+
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+  configFn:
+    container:
+      image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
+`,
+			volumes: []string(nil),
+		},
+		{
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
+        volumes: [ "/host-src1:/container-dest1:ro", "/host-src2:/container-dest2:rw" ]
+`,
+			volumes: []string{"/host-src1:/container-dest1:ro", "/host-src2:/container-dest2:rw"},
+		},
+		{
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
+        volumes:
+          - /host-src1:/container-dest1:ro
+          - /host-src2:/container-dest2:rw
+`,
+			volumes: []string{"/host-src1:/container-dest1:ro", "/host-src2:/container-dest2:rw"},
+		},
+	}
+
+	for _, tc := range tests {
+		cfg, err := yaml.Parse(tc.input)
+		if !assert.NoError(t, err) {
+			return
+		}
+
+		fn := GetFunctionSpec(cfg)
+		assert.Equal(t, tc.volumes, fn.Container.Volumes)
 	}
 }
 
