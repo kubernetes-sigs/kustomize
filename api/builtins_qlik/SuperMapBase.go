@@ -17,6 +17,8 @@ import (
 type IDecorator interface {
 	GetLogger() *log.Logger
 	GetName() string
+	GetNamespace() string
+	SetNamespace(namespace string)
 	GetType() string
 	GetConfigData() map[string]string
 	ShouldBase64EncodeConfigData() bool
@@ -75,6 +77,12 @@ func (b *SuperMapPluginBase) Transform(m resmap.ResMap) error {
 
 func (b *SuperMapPluginBase) executeAssumeWillExistTransform(m resmap.ResMap) error {
 	b.Decorator.GetLogger().Printf("executeAssumeWillExistTransform() for imaginary resource: %v\n", b.Decorator.GetName())
+
+	if b.Decorator.GetNamespace() == "" {
+		if anyExistingResource := m.GetByIndex(0); anyExistingResource != nil && anyExistingResource.GetNamespace() != "" {
+			b.Decorator.SetNamespace(anyExistingResource.GetNamespace())
+		}
+	}
 
 	generateResourceMap, err := b.Decorator.Generate()
 	if err != nil {

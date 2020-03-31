@@ -77,6 +77,15 @@ func (p *SuperSecretPlugin) GetName() string {
 	return p.SecretGeneratorPlugin.Name
 }
 
+func (p *SuperSecretPlugin) GetNamespace() string {
+	return p.SecretGeneratorPlugin.Namespace
+}
+
+func (p *SuperSecretPlugin) SetNamespace(namespace string) {
+	p.SecretGeneratorPlugin.Namespace = namespace
+	p.SecretGeneratorPlugin.GeneratorArgs.Namespace = namespace
+}
+
 func (p *SuperSecretPlugin) GetType() string {
 	return "Secret"
 }

@@ -52,6 +52,15 @@ func (p *SuperConfigMapPlugin) GetName() string {
 	return p.ConfigMapGeneratorPlugin.Name
 }
 
+func (p *SuperConfigMapPlugin) GetNamespace() string {
+	return p.ConfigMapGeneratorPlugin.Namespace
+}
+
+func (p *SuperConfigMapPlugin) SetNamespace(namespace string) {
+	p.ConfigMapGeneratorPlugin.Namespace = namespace
+	p.ConfigMapGeneratorPlugin.GeneratorArgs.Namespace = namespace
+}
+
 func (p *SuperConfigMapPlugin) GetType() string {
 	return "ConfigMap"
 }
