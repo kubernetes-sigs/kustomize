@@ -12,13 +12,6 @@ spec:
   strict: true
   ignoreMissingSchemas: true
 
-  # TODO: Remove these once function container network/volumes features are
-  # stabilized.
-  # Relevant issues:
-  #   - https://github.com/kubernetes-sigs/kustomize/issues/1901
-  #   - https://github.com/kubernetes-sigs/kustomize/issues/1902
-  kubernetesVersion: "1.16.0"
-  schemaLocation: "file:///schemas"
 ---
 apiVersion: v1
 kind: Service
