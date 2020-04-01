@@ -1,6 +1,7 @@
 package builtins_qlik
 
 import (
+	"encoding/base64"
 	"fmt"
 	"testing"
 
@@ -9,6 +10,7 @@ import (
 	"sigs.k8s.io/kustomize/api/internal/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/loader"
+	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
@@ -532,6 +534,185 @@ spec:
 					if "true" != natsClientLabe {
 						t.Fatalf("unexpected: %v\n", natsClientLabe)
 					}
+				}
+			},
+		},
+		{
+			name: "base64-encoded target and replacement",
+			pluginConfig: `
+apiVersion: qlik.com/v1
+kind: SearchReplace
+metadata:
+  name: notImportantHere
+target:
+  kind: Secret
+  name: keycloak-secret
+path: data/idpConfigs
+search: \$\(QLIKSENSE_DOMAIN\)
+replaceWithObjRef:
+  objref:
+    apiVersion: qlik.com/v1
+    kind: Secret
+    mame: gke-configs
+  fieldref:
+    fieldpath: data.qlikSenseDomain
+`,
+			pluginInputResources: `
+apiVersion: v1
+kind: Secret
+metadata:
+  name: keycloak-secret
+type: Opaque
+data:
+  idpConfigs: JChRTElLU0VOU0VfRE9NQUlOKS5iYXIuY29t
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gke-configs
+type: Opaque
+data:
+  qlikSenseDomain: Zm9v
+`,
+			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
+				res, err := resMap.GetById(resid.NewResId(resid.Gvk{
+					Group:   "",
+					Version: "v1",
+					Kind:    "Secret",
+				}, "keycloak-secret"))
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+
+				base64EncodedIdpConfigs, err := res.GetFieldValue("data.idpConfigs")
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+
+				decodedIdpConfigsBytes, err := base64.StdEncoding.DecodeString(base64EncodedIdpConfigs.(string))
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+
+				if string(decodedIdpConfigsBytes) != "foo.bar.com" {
+					t.Fatalf("expected %v to equal %v", string(decodedIdpConfigsBytes), "foo.bar.com")
+				}
+			},
+		},
+		{
+			name: "base64-encoded target only",
+			pluginConfig: `
+apiVersion: qlik.com/v1
+kind: SearchReplace
+metadata:
+  name: notImportantHere
+target:
+  kind: Secret
+  name: keycloak-secret
+path: data/idpConfigs
+search: \$\(QLIKSENSE_DOMAIN\)
+replaceWithObjRef:
+  objref:
+    apiVersion: qlik.com/v1
+    kind: ConfigMap
+    mame: gke-configs
+  fieldref:
+    fieldpath: data.qlikSenseDomain
+`,
+			pluginInputResources: `
+apiVersion: v1
+kind: Secret
+metadata:
+  name: keycloak-secret
+type: Opaque
+data:
+  idpConfigs: JChRTElLU0VOU0VfRE9NQUlOKS5iYXIuY29t
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gke-configs
+data:
+  qlikSenseDomain: foo
+`,
+			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
+				res, err := resMap.GetById(resid.NewResId(resid.Gvk{
+					Group:   "",
+					Version: "v1",
+					Kind:    "Secret",
+				}, "keycloak-secret"))
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+
+				base64EncodedIdpConfigs, err := res.GetFieldValue("data.idpConfigs")
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+
+				decodedIdpConfigsBytes, err := base64.StdEncoding.DecodeString(base64EncodedIdpConfigs.(string))
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+
+				if string(decodedIdpConfigsBytes) != "foo.bar.com" {
+					t.Fatalf("expected %v to equal %v", string(decodedIdpConfigsBytes), "foo.bar.com")
+				}
+			},
+		},
+		{
+			name: "base64-encoded replacement only",
+			pluginConfig: `
+apiVersion: qlik.com/v1
+kind: SearchReplace
+metadata:
+  name: notImportantHere
+target:
+  kind: ConfigMap
+  name: keycloak-config
+path: data/idpConfigs
+search: \$\(QLIKSENSE_DOMAIN\)
+replaceWithObjRef:
+  objref:
+    apiVersion: qlik.com/v1
+    kind: Secret
+    mame: gke-secrets
+  fieldref:
+    fieldpath: data.qlikSenseDomain
+`,
+			pluginInputResources: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-config
+data:
+  idpConfigs: $(QLIKSENSE_DOMAIN).bar.com
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gke-secrets
+type: Opaque
+data:
+  qlikSenseDomain: Zm9v
+`,
+			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
+				res, err := resMap.GetById(resid.NewResId(resid.Gvk{
+					Group:   "",
+					Version: "v1",
+					Kind:    "ConfigMap",
+				}, "keycloak-config"))
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+
+				idpConfigs, err := res.GetFieldValue("data.idpConfigs")
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+
+				if idpConfigs.(string) != "foo.bar.com" {
+					t.Fatalf("expected %v to equal %v", idpConfigs.(string), "foo.bar.com")
 				}
 			},
 		},
