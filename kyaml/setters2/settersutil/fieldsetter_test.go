@@ -52,17 +52,17 @@ spec:
 
 	srcDir, err := ioutil.TempDir("", "")
 	if !assert.NoError(t, err) {
-		t.Fail()
+		t.FailNow()
 	}
 
 	destDir1, err := ioutil.TempDir("", "")
 	if !assert.NoError(t, err) {
-		t.Fail()
+		t.FailNow()
 	}
 
 	destDir2, err := ioutil.TempDir("", "")
 	if !assert.NoError(t, err) {
-		t.Fail()
+		t.FailNow()
 	}
 
 	defer os.RemoveAll(srcDir)
@@ -71,32 +71,36 @@ spec:
 
 	err = ioutil.WriteFile(srcDir+"/OpenAPIFile", []byte(srcOpenAPIFile), 0600)
 	if !assert.NoError(t, err) {
-		t.Fail()
+		t.FailNow()
 	}
 	err = ioutil.WriteFile(destDir1+"/destFile.yaml", []byte(destFile1), 0600)
 	if !assert.NoError(t, err) {
-		t.Fail()
+		t.FailNow()
 	}
 
 	err = ioutil.WriteFile(destDir2+"/destFile.yaml", []byte(destFile2), 0600)
 	if !assert.NoError(t, err) {
-		t.Fail()
+		t.FailNow()
 	}
 
-	err = SetAllSetterDefinitions(srcDir, srcDir+"/OpenAPIFile", destDir1, destDir2)
+	err = SetAllSetterDefinitions(srcDir+"/OpenAPIFile", destDir1, destDir2)
 	if !assert.NoError(t, err) {
-		t.Fail()
+		t.FailNow()
 	}
 
 	actualdestFile1, err := ioutil.ReadFile(destDir1 + "/destFile.yaml")
 	if !assert.NoError(t, err) {
-		t.Fail()
+		t.FailNow()
 	}
-	assert.Equal(t, strings.Trim(string(actualdestFile1), "\n"), expectedDestFile)
+	if !assert.Equal(t, strings.Trim(string(actualdestFile1), "\n"), expectedDestFile) {
+		t.FailNow()
+	}
 
 	actualdestFile2, err := ioutil.ReadFile(destDir2 + "/destFile.yaml")
 	if !assert.NoError(t, err) {
-		t.Fail()
+		t.FailNow()
 	}
-	assert.Equal(t, strings.Trim(string(actualdestFile2), "\n"), expectedDestFile)
+	if !assert.Equal(t, strings.Trim(string(actualdestFile2), "\n"), expectedDestFile) {
+		t.FailNow()
+	}
 }

@@ -69,34 +69,30 @@ func (fs FieldSetter) Set(openAPIPath, resourcesPath string) (int, error) {
 	return s.Count, err
 }
 
-// SetAllSetterDefinitions reads all the Setter Definitions from OpenAPI in source
-// package and sets all setter values in destination packages with out updating
-// destination packages openAPI files
-func SetAllSetterDefinitions(sourcePkgPath, sourcePkgOpenAPIPath string, destDirs ...string) error {
-	// get all the setter definitions from package
-	l := setters2.List{}
-	err := l.List(sourcePkgOpenAPIPath, sourcePkgPath)
-	if err != nil {
+// SetAllSetterDefinitions reads all the Setter Definitions from the OpenAPI
+// file and sets all values in the provided directories.
+func SetAllSetterDefinitions(openAPIPath string, dirs ...string) error {
+	if err := openapi.AddSchemaFromFile(openAPIPath); err != nil {
 		return err
 	}
 
-	// for each setter definition set the setter values in destination packages
-	//TODO(pmarupaka): optimize to perform all the setters in single pass instead of N passes
-	for _, sd := range l.Setters {
-		for _, destDir := range destDirs {
-			fs := FieldSetter{
-				Name:        sd.Name,
-				Value:       sd.Value,
-				ListValues:  sd.ListValues,
-				Description: sd.Description,
-				SetBy:       sd.SetBy,
-			}
-			// pass sourcePkgOpenAPIPath remains unchanged due to set but should be passed as
-			// a place holder
-			_, err = fs.Set(sourcePkgOpenAPIPath, destDir)
-			if err != nil {
-				return err
-			}
+	for _, dir := range dirs {
+		rw := &kio.LocalPackageReadWriter{
+			PackagePath: dir,
+			// set output won't include resources from files which
+			//weren't modified.  make sure we don't delete them.
+			NoDeleteFiles: true,
+		}
+
+		// apply all of the setters to the directory
+		err := kio.Pipeline{
+			Inputs: []kio.Reader{rw},
+			// Set all of the setters
+			Filters: []kio.Filter{setters2.SetAll(&setters2.Set{SetAll: true})},
+			Outputs: []kio.Writer{rw},
+		}.Execute()
+		if err != nil {
+			return err
 		}
 	}
 	return nil
