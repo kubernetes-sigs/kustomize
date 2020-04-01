@@ -23,11 +23,20 @@ type Set struct {
 
 	// Count is the number of fields that were updated by calling Filter
 	Count int
+
+	// SetAll if set to true will set all setters regardless of name
+	SetAll bool
 }
 
 // Filter implements Set as a yaml.Filter
 func (s *Set) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	return object, accept(s, object)
+}
+
+// isMatch returns true if the setter with name should have the field
+// value set
+func (s *Set) isMatch(name string) bool {
+	return s.SetAll || s.Name == name
 }
 
 // visitSequence will perform setters for sequences
@@ -36,7 +45,7 @@ func (s *Set) visitSequence(object *yaml.RNode, p string, schema *openapi.Resour
 	if err != nil {
 		return err
 	}
-	if ext == nil || ext.Setter == nil || ext.Setter.Name != s.Name ||
+	if ext == nil || ext.Setter == nil || !s.isMatch(ext.Setter.Name) ||
 		len(ext.Setter.ListValues) == 0 {
 		// setter was not invoked for this sequence
 		return nil
@@ -125,7 +134,7 @@ func (s *Set) substitute(field *yaml.RNode, ext *cliExtension, _ *spec.Schema) (
 			p = strings.ReplaceAll(p, v.Marker, subSetter.Setter.Value)
 		}
 
-		if subSetter.Setter.Name == s.Name {
+		if s.isMatch(subSetter.Setter.Name) {
 			// the substitution depends on the specified setter
 			nameMatch = true
 		}
@@ -148,7 +157,7 @@ func (s *Set) substitute(field *yaml.RNode, ext *cliExtension, _ *spec.Schema) (
 // set applies the value from ext to field if its name matches s.Name
 func (s *Set) set(field *yaml.RNode, ext *cliExtension, sch *spec.Schema) bool {
 	// check full setter
-	if ext.Setter == nil || ext.Setter.Name != s.Name {
+	if ext.Setter == nil || !s.isMatch(ext.Setter.Name) {
 		return false
 	}
 
