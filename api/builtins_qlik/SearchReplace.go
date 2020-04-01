@@ -1,10 +1,13 @@
 package builtins_qlik
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 
 	"sigs.k8s.io/kustomize/api/builtins_qlik/utils"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -30,6 +33,7 @@ func (p *SearchReplacePlugin) Config(h *resmap.PluginHelpers, c []byte) (err err
 	p.Path = ""
 	p.Search = ""
 	p.Replace = ""
+	p.ReplaceWithObjRef = nil
 	err = yaml.Unmarshal(c, p)
 	if err != nil {
 		p.logger.Printf("error unmarshalling config from yaml, error: %v\n", err)
@@ -59,27 +63,54 @@ func (p *SearchReplacePlugin) Transform(m resmap.ResMap) error {
 	if p.Replace == "" && p.ReplaceWithObjRef != nil {
 		for _, res := range m.Resources() {
 			if p.matchesObjRef(res) {
-				s, err := res.GetFieldValue(p.ReplaceWithObjRef.FieldRef.FieldPath)
-				if err != nil {
-					continue
+				if replacementValue, err := getReplacementValue(res, p.ReplaceWithObjRef.FieldRef.FieldPath); err != nil {
+					p.logger.Printf("error getting replacement value: %v\n", err)
+				} else {
+					p.Replace = replacementValue
+					break
 				}
-				p.Replace = s.(string)
-				break
 			}
 		}
 	}
 	for _, r := range resources {
+		pathSlice := p.fieldSpec.PathSlice()
 		err := transform.MutateField(
 			r.Map(),
-			p.fieldSpec.PathSlice(),
+			pathSlice,
 			false,
-			p.searchAndReplace)
+			func(in interface{}) (interface{}, error) {
+				return p.searchAndReplace(in, isSecretDataTarget(r, pathSlice))
+			})
 		if err != nil {
 			p.logger.Printf("error executing transformers.MutateField(), error: %v\n", err)
 			return err
 		}
 	}
 	return nil
+}
+
+func getReplacementValue(res *resource.Resource, fieldPath string) (string, error) {
+	if val, err := res.GetFieldValue(fieldPath); err != nil {
+		return "", err
+	} else if strVal, ok := val.(string); !ok {
+		return "", errors.New("FieldRef for the ReplaceWithObjRef must point to a value of string type")
+	} else if isSecretDataReplacement(res, fieldPath) {
+		if decodedStrVal, err := base64.StdEncoding.DecodeString(strVal); err != nil {
+			return "", err
+		} else {
+			return string(decodedStrVal), nil
+		}
+	} else {
+		return strVal, nil
+	}
+}
+
+func isSecretDataReplacement(res *resource.Resource, fieldPath string) bool {
+	return res.GetGvk().Kind == "Secret" && strings.HasPrefix(fieldPath, "data.")
+}
+
+func isSecretDataTarget(r *resource.Resource, pathSlice []string) bool {
+	return r.GetGvk().Kind == "Secret" && len(pathSlice) > 0 && pathSlice[0] == "data"
 }
 
 func (p *SearchReplacePlugin) matchesObjRef(res *resource.Resource) bool {
@@ -92,9 +123,18 @@ func (p *SearchReplacePlugin) matchesObjRef(res *resource.Resource) bool {
 	return false
 }
 
-func (p *SearchReplacePlugin) searchAndReplace(in interface{}) (interface{}, error) {
+func (p *SearchReplacePlugin) searchAndReplace(in interface{}, base64Encoded bool) (interface{}, error) {
 	if target, ok := in.(string); ok {
-		return p.re.ReplaceAllString(target, p.Replace), nil
+		if base64Encoded {
+			if decodedValue, err := base64.StdEncoding.DecodeString(target); err != nil {
+				return nil, err
+			} else {
+				replacedDecodedValue := p.re.ReplaceAllString(string(decodedValue), p.Replace)
+				return base64.StdEncoding.EncodeToString([]byte(replacedDecodedValue)), nil
+			}
+		} else {
+			return p.re.ReplaceAllString(target, p.Replace), nil
+		}
 	} else if target, ok := in.(map[string]interface{}); ok {
 		return p.marshallToJsonAndReplace(target)
 	} else if target, ok := in.([]interface{}); ok {
