@@ -51,10 +51,6 @@ type RunFns struct {
 	// NetworkName is the name of the docker network to use for the container
 	NetworkName string
 
-	// Volumes Volumes allows directories to be specified outside the configuration
-	// directory.
-	Volumes []string
-
 	// Output can be set to write the result to Output rather than back to the directory
 	Output io.Writer
 
@@ -137,13 +133,6 @@ func (r RunFns) getFilters(nodes []*yaml.RNode) ([]kio.Filter, error) {
 	}
 	fltrs = append(fltrs, f...)
 
-	// directories from volumes specified on the struct
-	f, err = r.getDirectoriesFromVolumes()
-	if err != nil {
-		return nil, err
-	}
-	fltrs = append(fltrs, f...)
-
 	// explicit fns specified on the struct
 	f, err = r.getFunctionsFromFunctions()
 	if err != nil {
@@ -197,24 +186,6 @@ func (r RunFns) getFunctionsFromFunctionPaths() ([]kio.Filter, error) {
 		err := kio.Pipeline{
 			Inputs: []kio.Reader{
 				kio.LocalPackageReader{PackagePath: r.FunctionPaths[i]},
-			},
-			Outputs: []kio.Writer{buff},
-		}.Execute()
-		if err != nil {
-			return nil, err
-		}
-	}
-	return r.getFunctionFilters(true, buff.Nodes...)
-}
-
-// getDirectoriesFromVolumes returns the set of directories read from r.Volumes
-// as a slice of Filters
-func (r RunFns) getDirectoriesFromVolumes() ([]kio.Filter, error) {
-	buff := &kio.PackageBuffer{}
-	for i := range r.Volumes {
-		err := kio.Pipeline{
-			Inputs: []kio.Reader{
-				kio.LocalPackageReader{PackagePath: r.Volumes[i]},
 			},
 			Outputs: []kio.Writer{buff},
 		}.Execute()

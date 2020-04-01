@@ -134,11 +134,8 @@ type ContainerFilter struct {
 	// Network is the container network to use.
 	Network string `yaml:"network,omitempty"`
 
-	// Volumes are the directories to mount as container volumes.
-	Volumes []string `yaml:"volumes,omitempty"`
-
 	// StorageMounts is a list of storage options that the container will have mounted.
-	StorageMounts []StorageMount
+	StorageMounts []StorageMount `yaml:"mounts,omitempty"`
 
 	// Config is the API configuration for the container and passed through the
 	// API_CONFIG env var to the container.
@@ -159,23 +156,29 @@ func (c ContainerFilter) String() string {
 	return c.Image
 }
 
-// StorageMount represents a container's mounted storage option(s)
-type StorageMount struct {
-	// Type of mount e.g. bind mount, local volume, etc.
-	MountType string
-
-	// Source for the storage to be mounted.
-	// For named volumes, this is the name of the volume.
-	// For anonymous volumes, this field is omitted (empty string).
-	// For bind mounts, this is the path to the file or directory on the host.
-	Src string
-
-	// The path where the file or directory is mounted in the container.
-	DstPath string
-}
-
 func (s *StorageMount) String() string {
 	return fmt.Sprintf("type=%s,src=%s,dst=%s:ro", s.MountType, s.Src, s.DstPath)
+}
+
+func StringToStorageMount(s string) StorageMount {
+	m := make(map[string]string)
+	options := strings.Split(s, ";")
+	for _, option := range options {
+		keyVal := strings.Split(option, "=")
+		m[keyVal[0]] = keyVal[1]
+	}
+	var sm StorageMount
+	for key, value := range m {
+		switch {
+		case key == "type":
+			sm.MountType = value
+		case key == "src":
+			sm.Src = value
+		case key == "dst":
+			sm.DstPath = value
+		}
+	}
+	return sm
 }
 
 // functionsDirectoryName is keyword directory name for functions scoped 1 directory higher
@@ -336,11 +339,6 @@ func (c *ContainerFilter) getArgs() []string {
 	// TODO(joncwong): Allow StorageMount fields to have default values.
 	for _, storageMount := range c.StorageMounts {
 		args = append(args, "--mount", storageMount.String())
-	}
-
-	// export volumes to the container
-	for _, volume := range c.Volumes {
-		args = append(args, "--volume", volume)
 	}
 
 	// export the local environment vars to the container
