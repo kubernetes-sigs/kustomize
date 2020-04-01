@@ -27,7 +27,7 @@ func TestRunFnCommand_preRunE(t *testing.T) {
 		functionPaths []string
 		network       bool
 		networkName   string
-		volumes       []string
+		mount         []string
 	}{
 		{
 			name: "config map",
@@ -217,17 +217,14 @@ apiVersion: v1
 `,
 		},
 		{
-			name:    "volumes",
-			args:    []string{"run", "dir", "--volume", "vol1", "--volume", "vol2"},
-			path:    "dir",
-			volumes: []string{"vol1", "vol2"},
-		},
-		{
-			name: "custom kind with volumes",
+			name: "custom kind with storage mounts",
 			args: []string{
-				"run", "dir", "--volume", "vol", "--image", "foo:bar", "--", "Foo", "g=h", "i=j=k"},
-			path:    "dir",
-			volumes: []string{"vol"},
+				"run", "dir", "--mount", "type=bind;src=/mount/path;dst=/local/",
+				"--mount", "type=volume;src=myvol;dst=/local/",
+				"--mount", "type=tmpfs;dst=/local/",
+				"--image", "foo:bar", "--", "Foo", "g=h", "i=j=k"},
+			path:  "dir",
+			mount: []string{"type=bind;src=/mount/path;dst=/local/", "type=volume;src=myvol;dst=/local/", "type=tmpfs;dst=/local/"},
 			expected: `
 metadata:
   name: function-input
@@ -327,12 +324,7 @@ apiVersion: v1
 				t.FailNow()
 			}
 
-			// check if Volumes were set
-			if tt.volumes == nil {
-				// make Equal work against flag default
-				tt.volumes = []string{}
-			}
-			if !assert.Equal(t, tt.volumes, r.RunFns.Volumes) {
+			if !assert.Equal(t, toStorageMounts(tt.mount), r.RunFns.StorageMounts) {
 				t.FailNow()
 			}
 

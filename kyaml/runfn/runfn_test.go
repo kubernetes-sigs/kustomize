@@ -141,13 +141,13 @@ func TestRunFns_Execute__initDefault(t *testing.T) {
 			},
 		},
 		{
-			name:     "explicit directories in volumes",
-			instance: RunFns{Volumes: []string{"vol"}},
+			name:     "explicit directories in mounts",
+			instance: RunFns{StorageMounts: []filters.StorageMount{{MountType: "volume", Src: "myvol", DstPath: "/local/"}}},
 			expected: RunFns{
 				Output:               os.Stdout,
 				Input:                os.Stdin,
 				NoFunctionsFromInput: getFalse(),
-				Volumes:              []string{"vol"},
+				StorageMounts:        []filters.StorageMount{{MountType: "volume", Src: "myvol", DstPath: "/local/"}},
 			},
 		},
 	}
