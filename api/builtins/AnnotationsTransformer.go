@@ -19,7 +19,7 @@ type AnnotationsTransformerPlugin struct {
 
 	// YAMLSupport can be set to true to use the kyaml filter instead of the
 	// kunstruct transformer
-	YAMLSupport bool
+	YAMLSupport bool `json:"yamlSupport,omitempty" yaml:"yamlSupport,omitempty"`
 }
 
 func (p *AnnotationsTransformerPlugin) Config(
