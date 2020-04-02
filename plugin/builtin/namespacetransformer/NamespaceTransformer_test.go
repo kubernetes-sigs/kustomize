@@ -4,7 +4,6 @@
 package main_test
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
@@ -12,18 +11,15 @@ import (
 )
 
 func TestNamespaceTransformer1(t *testing.T) {
-	for _, b := range []bool{true, false} {
-		t.Run(fmt.Sprintf("yaml-%v", b), func(t *testing.T) {
-			th := kusttest_test.MakeEnhancedHarness(t).
-				PrepBuiltin("NamespaceTransformer")
-			defer th.Reset()
-			rm := th.LoadAndRunTransformer(fmt.Sprintf(`
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("NamespaceTransformer")
+	defer th.Reset()
+	th.RunTransformerAndCheckResult(`
 apiVersion: builtin
 kind: NamespaceTransformer
 metadata:
   name: notImportantHere
   namespace: test
-yamlSupport: %v
 fieldSpecs:
 - path: metadata/namespace
   create: true
@@ -33,7 +29,7 @@ fieldSpecs:
 - path: subjects
   kind: ClusterRoleBinding
   group: rbac.authorization.k8s.io
-`, b), `
+`, `
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -102,18 +98,17 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: crd
-`)
-
-			// Import note: The namespace transformer is in charge of
-			// the metadata.namespace field. The namespace transformer SHOULD
-			// NOT modify neither the "namespace" subfield within the
-			// ClusterRoleBinding.subjects field nor the "namespace"
-			// subfield in the ValidatingWebhookConfiguration.webhooks field.
-			// This is the role of the namereference Transformer to handle
-			// object reference changes (prefix/suffix and namespace).
-			// For use cases involving simultaneous change of name and namespace,
-			// refer to namespaces tests in pkg/target test suites.
-			th.AssertActualEqualsExpected(rm, `
+`,
+// Import note: The namespace transformer is in charge of
+// the metadata.namespace field. The namespace transformer SHOULD
+// NOT modify neither the "namespace" subfield within the
+// ClusterRoleBinding.subjects field nor the "namespace"
+// subfield in the ValidatingWebhookConfiguration.webhooks field.
+// This is the role of the namereference Transformer to handle
+// object reference changes (prefix/suffix and namespace).
+// For use cases involving simultaneous change of name and namespace,
+// refer to namespaces tests in pkg/target test suites.
+`
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -185,18 +180,14 @@ kind: CustomResourceDefinition
 metadata:
   name: crd
 `)
-		})
-	}
 }
 
 func TestNamespaceTransformerClusterLevelKinds(t *testing.T) {
-	for _, b := range []bool{true, false} {
-		t.Run(fmt.Sprintf("yaml-%v", b), func(t *testing.T) {
-			th := kusttest_test.MakeEnhancedHarness(t).
-				PrepBuiltin("NamespaceTransformer")
-			defer th.Reset()
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("NamespaceTransformer")
+	defer th.Reset()
 
-			const noChangeExpected = `
+	const noChangeExpected = `
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -218,13 +209,13 @@ kind: PersistentVolume
 metadata:
   name: pv1
 `
-			rm := th.LoadAndRunTransformer(fmt.Sprintf(`
+
+	th.RunTransformerAndCheckResult(`
 apiVersion: builtin
 kind: NamespaceTransformer
 metadata:
   name: notImportantHere
   namespace: test
-yamlSupport: %v
 fieldSpecs:
 - path: metadata/namespace
   create: true
@@ -234,32 +225,24 @@ fieldSpecs:
 - path: subjects
   kind: ClusterRoleBinding
   group: rbac.authorization.k8s.io
-`, b), noChangeExpected)
-
-			th.AssertActualEqualsExpected(rm, noChangeExpected)
-		})
-	}
+`, noChangeExpected, noChangeExpected)
 }
 
 func TestNamespaceTransformerObjectConflict(t *testing.T) {
-	for _, b := range []bool{true, false} {
-		t.Run(fmt.Sprintf("yaml-%v", b), func(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("NamespaceTransformer")
+	defer th.Reset()
 
-			th := kusttest_test.MakeEnhancedHarness(t).
-				PrepBuiltin("NamespaceTransformer")
-			defer th.Reset()
-
-			err := th.ErrorFromLoadAndRunTransformer(fmt.Sprintf(`
+	th.RunTransformerAndCheckError(`
 apiVersion: builtin
 kind: NamespaceTransformer
 metadata:
   name: notImportantHere
   namespace: test
-yamlSupport: %v
 fieldSpecs:
 - path: metadata/namespace
   create: true
-`, b), `
+`, `
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -271,14 +254,13 @@ kind: ConfigMap
 metadata:
   name: cm
   namespace: bar
-`)
-
-			if err == nil {
-				t.Fatal("expected error")
-			}
-			if !strings.Contains(err.Error(), "ID conflict") {
-				t.Fatalf("unexpected error: %s", err.Error())
-			}
-		})
-	}
+`,
+    func(t *testing.T, err error) {
+		if err == nil {
+			t.Fatal("expected error")
+		}
+		if !strings.Contains(err.Error(), "ID conflict") {
+			t.Fatalf("unexpected error: %s", err.Error())
+		}
+	})
 }
