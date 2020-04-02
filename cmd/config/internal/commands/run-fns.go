@@ -55,7 +55,7 @@ func GetRunFnRunner(name string) *RunFnRunner {
 		&r.Network, "network", false, "enable network access for functions that declare it")
 	r.Command.Flags().StringVar(
 		&r.NetworkName, "network-name", "bridge", "the docker network to run the container in")
-	r.Command.Flags().StringSliceVar(
+	r.Command.Flags().StringArrayVar(
 		&r.Mounts, "mount", []string{},
 		"a list of storage options read from the filesystem")
 	return r

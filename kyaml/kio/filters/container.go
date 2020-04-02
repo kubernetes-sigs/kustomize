@@ -162,7 +162,7 @@ func (s *StorageMount) String() string {
 
 func StringToStorageMount(s string) StorageMount {
 	m := make(map[string]string)
-	options := strings.Split(s, ";")
+	options := strings.Split(s, ",")
 	for _, option := range options {
 		keyVal := strings.Split(option, "=")
 		m[keyVal[0]] = keyVal[1]
