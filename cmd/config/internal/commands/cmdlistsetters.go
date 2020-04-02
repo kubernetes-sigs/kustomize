@@ -29,6 +29,8 @@ func NewListSettersRunner(parent string) *ListSettersRunner {
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 	}
+	c.Flags().BoolVar(&r.Markdown, "markdown", false,
+		"output as github markdown")
 	fixDocs(parent, c)
 	r.Command = c
 	return r
@@ -39,9 +41,10 @@ func ListSettersCommand(parent string) *cobra.Command {
 }
 
 type ListSettersRunner struct {
-	Command *cobra.Command
-	Lookup  setters.LookupSetters
-	List    setters2.List
+	Command  *cobra.Command
+	Lookup   setters.LookupSetters
+	List     setters2.List
+	Markdown bool
 }
 
 func (r *ListSettersRunner) preRunE(c *cobra.Command, args []string) error {
@@ -64,7 +67,7 @@ func (r *ListSettersRunner) runE(c *cobra.Command, args []string) error {
 		if err := r.List.List(path, args[0]); err != nil {
 			return err
 		}
-		table := newTable(c.OutOrStdout())
+		table := newTable(c.OutOrStdout(), r.Markdown)
 		table.SetHeader([]string{"NAME", "VALUE", "SET BY", "DESCRIPTION", "COUNT"})
 		for i := range r.List.Setters {
 			s := r.List.Setters[i]
@@ -92,13 +95,19 @@ func (r *ListSettersRunner) runE(c *cobra.Command, args []string) error {
 	return handleError(c, lookup(r.Lookup, c, args))
 }
 
-func newTable(o io.Writer) *tablewriter.Table {
+func newTable(o io.Writer, m bool) *tablewriter.Table {
 	table := tablewriter.NewWriter(o)
 	table.SetRowLine(false)
-	table.SetBorder(false)
-	table.SetHeaderLine(false)
-	table.SetColumnSeparator(" ")
-	table.SetCenterSeparator(" ")
+	if m {
+		// markdown format
+		table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
+		table.SetCenterSeparator("|")
+	} else {
+		table.SetBorder(false)
+		table.SetHeaderLine(false)
+		table.SetColumnSeparator(" ")
+		table.SetCenterSeparator(" ")
+	}
 	table.SetAlignment(tablewriter.ALIGN_LEFT)
 	return table
 }
