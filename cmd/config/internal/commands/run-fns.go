@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/runfn"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -54,6 +55,9 @@ func GetRunFnRunner(name string) *RunFnRunner {
 		&r.Network, "network", false, "enable network access for functions that declare it")
 	r.Command.Flags().StringVar(
 		&r.NetworkName, "network-name", "bridge", "the docker network to run the container in")
+	r.Command.Flags().StringArrayVar(
+		&r.Mounts, "mount", []string{},
+		"a list of storage options read from the filesystem")
 	return r
 }
 
@@ -75,6 +79,7 @@ type RunFnRunner struct {
 	RunFns             runfn.RunFns
 	Network            bool
 	NetworkName        string
+	Mounts             []string
 }
 
 func (r *RunFnRunner) runE(c *cobra.Command, args []string) error {
@@ -199,6 +204,14 @@ data: {}
 	return []*yaml.RNode{rc}, nil
 }
 
+func toStorageMounts(mounts []string) []filters.StorageMount {
+	var sms []filters.StorageMount
+	for _, mount := range mounts {
+		sms = append(sms, filters.StringToStorageMount(mount))
+	}
+	return sms
+}
+
 func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 	if r.EnableStar != (r.StarPath != "") {
 		return errors.Errorf("must specify --star-path with --enable-star")
@@ -240,6 +253,9 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 		path = args[0]
 	}
 
+	// parse mounts to set storageMounts
+	storageMounts := toStorageMounts(r.Mounts)
+
 	r.RunFns = runfn.RunFns{
 		FunctionPaths:  r.FnPaths,
 		GlobalScope:    r.GlobalScope,
@@ -250,6 +266,7 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 		Network:        r.Network,
 		NetworkName:    r.NetworkName,
 		EnableStarlark: r.EnableStar,
+		StorageMounts:  storageMounts,
 	}
 
 	// don't consider args for the function

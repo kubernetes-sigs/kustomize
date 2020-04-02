@@ -140,6 +140,16 @@ func TestRunFns_Execute__initDefault(t *testing.T) {
 				FunctionPaths:        []string{"foo"},
 			},
 		},
+		{
+			name:     "explicit directories in mounts",
+			instance: RunFns{StorageMounts: []filters.StorageMount{{MountType: "volume", Src: "myvol", DstPath: "/local/"}}},
+			expected: RunFns{
+				Output:               os.Stdout,
+				Input:                os.Stdin,
+				NoFunctionsFromInput: getFalse(),
+				StorageMounts:        []filters.StorageMount{{MountType: "volume", Src: "myvol", DstPath: "/local/"}},
+			},
+		},
 	}
 	for i := range tests {
 		tt := tests[i]

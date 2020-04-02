@@ -12,8 +12,7 @@ spec:
   strict: true
   ignoreMissingSchemas: true
 
-  # TODO: Remove these once function container network/volumes features are
-  # stabilized.
+  # TODO: Update this to use network/volumes features.
   # Relevant issues:
   #   - https://github.com/kubernetes-sigs/kustomize/issues/1901
   #   - https://github.com/kubernetes-sigs/kustomize/issues/1902

@@ -28,6 +28,9 @@ type FunctionSpec struct {
 
 	// Starlark is the spec for running a function as a starlark script
 	Starlark StarlarkSpec `json:"starlark,omitempty" yaml:"starlark,omitempty"`
+
+	// Mounts are the storage or directories to mount into the container
+	StorageMounts []StorageMount `json:"mounts,omitempty" yaml:"mounts,omitempty"`
 }
 
 // ContainerSpec defines a spec for running a function as a container
@@ -37,6 +40,9 @@ type ContainerSpec struct {
 
 	// Network defines network specific configuration
 	Network ContainerNetwork `json:"network,omitempty" yaml:"network,omitempty"`
+
+	// Mounts are the storage or directories to mount into the container
+	StorageMounts []StorageMount `json:"mounts,omitempty" yaml:"mounts,omitempty"`
 }
 
 // ContainerNetwork
@@ -51,6 +57,21 @@ type StarlarkSpec struct {
 
 	// Path specifies a path to a starlark script
 	Path string `json:"path,omitempty" yaml:"path,omitempty"`
+}
+
+// StorageMount represents a container's mounted storage option(s)
+type StorageMount struct {
+	// Type of mount e.g. bind mount, local volume, etc.
+	MountType string `json:"type,omitempty" yaml:"type,omitempty"`
+
+	// Source for the storage to be mounted.
+	// For named volumes, this is the name of the volume.
+	// For anonymous volumes, this field is omitted (empty string).
+	// For bind mounts, this is the path to the file or directory on the host.
+	Src string `json:"src,omitempty" yaml:"src,omitempty"`
+
+	// The path where the file or directory is mounted in the container.
+	DstPath string `json:"dst,omitempty" yaml:"dst,omitempty"`
 }
 
 // GetFunctionSpec returns the FunctionSpec for a resource.  Returns
@@ -68,6 +89,7 @@ func GetFunctionSpec(n *yaml.RNode) *FunctionSpec {
 	path := meta.Annotations[kioutil.PathAnnotation]
 	if fn := getFunctionSpecFromAnnotation(n, meta); fn != nil {
 		fn.Network = ""
+		fn.StorageMounts = []StorageMount{}
 		fn.Path = path
 		return fn
 	}
