@@ -61,15 +61,21 @@ func (p *SearchReplacePlugin) Transform(m resmap.ResMap) error {
 		return err
 	}
 	if p.Replace == "" && p.ReplaceWithObjRef != nil {
+		var replaceEmpty bool
 		for _, res := range m.Resources() {
 			if p.matchesObjRef(res) {
 				if replacementValue, err := getReplacementValue(res, p.ReplaceWithObjRef.FieldRef.FieldPath); err != nil {
 					p.logger.Printf("error getting replacement value: %v\n", err)
 				} else {
 					p.Replace = replacementValue
+					replaceEmpty = true
 					break
 				}
 			}
+		}
+		if p.Replace == "" && !replaceEmpty {
+			p.logger.Printf("Object Reference could not be found")
+			return nil
 		}
 	}
 	for _, r := range resources {
