@@ -4,6 +4,7 @@
 package yaml
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -44,6 +45,44 @@ spec:
 		},
 	}
 	if !assert.Equal(t, expected, actual) {
+		t.FailNow()
+	}
+}
+
+func TestRNode_UnmarshalJSON(t *testing.T) {
+	instance := &RNode{}
+	err := instance.UnmarshalJSON([]byte(`{"hello":"world"}`))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	actual, err := instance.String()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	expected := `{"hello": "world"}`
+	if !assert.Equal(t,
+		strings.TrimSpace(expected), strings.TrimSpace(actual)) {
+		t.FailNow()
+	}
+}
+
+func TestRNode_MarshalJSON(t *testing.T) {
+	instance, err := Parse(`
+hello: world
+`)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	actual, err := instance.MarshalJSON()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	expected := `{"hello":"world"}`
+	if !assert.Equal(t,
+		strings.TrimSpace(expected), strings.TrimSpace(string(actual))) {
 		t.FailNow()
 	}
 }
