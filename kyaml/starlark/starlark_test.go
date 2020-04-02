@@ -24,6 +24,7 @@ func TestFilter_Filter(t *testing.T) {
 		script                 string
 		expected               string
 		expectedFunctionConfig string
+		env                    map[string]string
 	}{
 		{
 			name: "add_annotation",
@@ -46,7 +47,7 @@ def run(r):
   for resource in r:
     resource["metadata"]["annotations"]["foo"] = "bar"
 
-run(resourceList["items"])
+run(ctx.resource_list["items"])
 `,
 			expected: `
 apiVersion: apps/v1
@@ -55,6 +56,83 @@ metadata:
   name: nginx-deployment
   annotations:
     foo: bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        # head comment
+        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+`,
+		},
+		{
+			name: "add_annotation_from_env",
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        # head comment
+        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+`,
+			script: `
+def run(r):
+  for resource in r:
+    resource["metadata"]["annotations"]["foo"] = ctx.environment["ANNOTATION"]
+
+run(ctx.resource_list["items"])
+`,
+			env: map[string]string{"ANNOTATION": "annotation-value"},
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: annotation-value
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        # head comment
+        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+`,
+		},
+		{
+			name: "add_annotation_from_open_api",
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        # head comment
+        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+`,
+			script: `
+def run(r):
+  for resource in r:
+    resource["metadata"]["annotations"]["foo"] = ctx.open_api["definitions"]["io.k8s.api.apps.v1.Deployment"]["description"]
+
+run(ctx.resource_list["items"])
+`,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: Deployment enables declarative updates for Pods and ReplicaSets.
 spec:
   template:
     spec:
@@ -87,7 +165,7 @@ def run(r):
   for resource in r:
     resource["metadata"]["annotations"]["foo"] = "bar"
 
-run(resourceList["items"])
+run(ctx.resource_list["items"])
 `,
 			expected: `
 apiVersion: apps/v1
@@ -96,6 +174,45 @@ metadata:
   name: nginx-deployment
   annotations:
     foo: bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        # head comment
+        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+`,
+		},
+		{
+			name: "delete_annotation",
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: baz
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        # head comment
+        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+`,
+			script: `
+# set the foo annotation on each resource
+def run(r):
+  for resource in r:
+    resource["metadata"]["annotations"].pop("foo")
+
+run(ctx.resource_list["items"])
+`,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
 spec:
   template:
     spec:
@@ -140,7 +257,7 @@ def run(r):
   for resource in r:
     resource["metadata"]["annotations"]["foo"] = "bar"
 
-run(resourceList["items"])
+run(ctx.resource_list["items"])
 `,
 			expected: `
 apiVersion: apps/v1
@@ -196,7 +313,7 @@ def run(r):
   },
 }
   r.append(d)
-run(resourceList["items"])
+run(ctx.resource_list["items"])
 `,
 			expected: `
 apiVersion: apps/v1
@@ -233,7 +350,7 @@ metadata:
 			script: `
 def run(r):
   r.pop()
-run(resourceList["items"])
+run(ctx.resource_list["items"])
 `,
 			expected: `
 apiVersion: apps/v1
@@ -268,8 +385,8 @@ def run(r, an):
   for resource in r:
     resource["metadata"]["annotations"]["foo"] = an
 
-an = resourceList["functionConfig"]["spec"]["value"]
-run(resourceList["items"], an)
+an = ctx.resource_list["functionConfig"]["spec"]["value"]
+run(ctx.resource_list["items"], an)
 `,
 			expected: `
 apiVersion: apps/v1
@@ -319,9 +436,9 @@ def run(r, an):
   for resource in r:
     resource["metadata"]["annotations"]["foo"] = an
 
-an = resourceList["functionConfig"]["spec"]["value"]
-run(resourceList["items"], an)
-resourceList["functionConfig"]["spec"]["value"] = "updated"
+an = ctx.resource_list["functionConfig"]["spec"]["value"]
+run(ctx.resource_list["items"], an)
+ctx.resource_list["functionConfig"]["spec"]["value"] = "updated"
 `,
 			expected: `
 apiVersion: apps/v1
@@ -348,6 +465,10 @@ spec:
 	for i := range tests {
 		test := tests[i]
 		t.Run(test.name, func(t *testing.T) {
+			os.Clearenv()
+			for k, v := range test.env {
+				os.Setenv(k, v)
+			}
 			f := &Filter{Name: test.name, Program: test.script}
 
 			if test.functionConfig != "" {

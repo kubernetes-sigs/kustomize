@@ -50,7 +50,7 @@ def run(items):
   for item in items:
     item["metadata"]["annotations"]["foo"] = "bar"
 
-run(resourceList["items"])
+run(ctx.resource_list["items"])
 `,
 	}
 
@@ -139,7 +139,7 @@ def run(items, value):
   for item in items:
     item["metadata"]["annotations"]["foo"] = value
 
-run(resourceList["items"], resourceList["functionConfig"]["spec"]["value"])
+run(ctx.resource_list["items"], ctx.resource_list["functionConfig"]["spec"]["value"])
 `,
 		FunctionConfig: fc,
 	}
@@ -233,7 +233,7 @@ def run(items):
   for item in items:
     item["metadata"]["annotations"]["foo"] = "bar"
 
-run(resourceList["items"])
+run(ctx.resource_list["items"])
 `), 0600)
 	if err != nil {
 		log.Fatal(err)
