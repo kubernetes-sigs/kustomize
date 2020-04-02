@@ -335,6 +335,68 @@ container:
 		},
 
 		{
+			name: "storage mounts json style",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  annotations:
+    config.kubernetes.io/function: |-
+      container:
+        image: foo:v1.0.0
+        mounts: [ {type: bind, src: /mount/path, dst: /local/}, {src: myvol, dst: /local/, type: volume}, {dst: /local/, type: tmpfs} ]
+`,
+			expectedFn: `
+container:
+    image: foo:v1.0.0
+    mounts:
+      - type: bind
+        src: /mount/path
+        dst: /local/
+      - type: volume
+        src: myvol
+        dst: /local/
+      - type: tmpfs
+        dst: /local/
+`,
+		},
+
+		{
+			name: "storage mounts yaml style",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  annotations:
+    config.kubernetes.io/function: |-
+      container:
+        image: foo:v1.0.0
+        mounts:
+        - src: /mount/path
+          type: bind
+          dst: /local/
+        - dst: /local/
+          src: myvol
+          type: volume
+        - type: tmpfs
+          dst: /local/
+`,
+			expectedFn: `
+container:
+    image: foo:v1.0.0
+    mounts:
+      - type: bind
+        src: /mount/path
+        dst: /local/
+      - type: volume
+        src: myvol
+        dst: /local/
+      - type: tmpfs
+        dst: /local/
+`,
+		},
+
+		{
 			name: "network",
 			resource: `
 apiVersion: v1beta1

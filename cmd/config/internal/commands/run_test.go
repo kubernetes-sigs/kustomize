@@ -27,6 +27,7 @@ func TestRunFnCommand_preRunE(t *testing.T) {
 		functionPaths []string
 		network       bool
 		networkName   string
+		mount         []string
 	}{
 		{
 			name: "config map",
@@ -216,6 +217,26 @@ apiVersion: v1
 `,
 		},
 		{
+			name: "custom kind with storage mounts",
+			args: []string{
+				"run", "dir", "--mount", "type=bind,src=/mount/path,dst=/local/",
+				"--mount", "type=volume,src=myvol,dst=/local/",
+				"--mount", "type=tmpfs,dst=/local/",
+				"--image", "foo:bar", "--", "Foo", "g=h", "i=j=k"},
+			path:  "dir",
+			mount: []string{"type=bind,src=/mount/path,dst=/local/", "type=volume,src=myvol,dst=/local/", "type=tmpfs,dst=/local/"},
+			expected: `
+metadata:
+  name: function-input
+  annotations:
+    config.kubernetes.io/function: |
+      container: {image: 'foo:bar'}
+data: {g: h, i: j=k}
+kind: Foo
+apiVersion: v1
+`,
+		},
+		{
 			name: "config map multi args",
 			args: []string{"run", "dir", "dir2", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			err:  "0 or 1 arguments supported",
@@ -300,6 +321,10 @@ apiVersion: v1
 				tt.functionPaths = []string{}
 			}
 			if !assert.Equal(t, tt.functionPaths, r.RunFns.FunctionPaths) {
+				t.FailNow()
+			}
+
+			if !assert.Equal(t, toStorageMounts(tt.mount), r.RunFns.StorageMounts) {
 				t.FailNow()
 			}
 
