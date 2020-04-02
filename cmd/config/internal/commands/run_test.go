@@ -219,12 +219,12 @@ apiVersion: v1
 		{
 			name: "custom kind with storage mounts",
 			args: []string{
-				"run", "dir", "--mount", "type=bind;src=/mount/path;dst=/local/",
-				"--mount", "type=volume;src=myvol;dst=/local/",
-				"--mount", "type=tmpfs;dst=/local/",
+				"run", "dir", "--mount", "type=bind,src=/mount/path,dst=/local/",
+				"--mount", "type=volume,src=myvol,dst=/local/",
+				"--mount", "type=tmpfs,dst=/local/",
 				"--image", "foo:bar", "--", "Foo", "g=h", "i=j=k"},
 			path:  "dir",
-			mount: []string{"type=bind;src=/mount/path;dst=/local/", "type=volume;src=myvol;dst=/local/", "type=tmpfs;dst=/local/"},
+			mount: []string{"type=bind,src=/mount/path,dst=/local/", "type=volume,src=myvol,dst=/local/", "type=tmpfs,dst=/local/"},
 			expected: `
 metadata:
   name: function-input
