@@ -1,0 +1,28 @@
+#!/bin/bash
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+# helm-v3 compatible functions
+
+function doHelm {
+  XDG_CONFIG_DIR=$helmHome
+  $helmBin $@
+}
+
+function doHelmChartInflation {
+  
+  if [ ! -d "$chartHome/$chartName" ]; then
+    doHelm fetch $chartVersionArg \
+        $chartRepoArg \
+        --untar \
+        --untardir $chartHome \
+        $chartNameArg
+  fi
+  
+  doHelm template \
+      --name-template $releaseName \
+      --namespace $releaseNamespace \
+      --values $valuesFile \
+      $chartHome/$chartName
+  
+}

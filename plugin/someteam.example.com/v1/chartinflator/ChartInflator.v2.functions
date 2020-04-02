@@ -1,0 +1,29 @@
+#!/bin/bash
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+# helm-v2 compatible functions
+
+function doHelm {
+  $helmBin --home $helmHome $@
+}
+
+function doHelmChartInflation {
+  # The init command is extremely chatty
+  doHelm init --client-only >& /dev/null
+  
+  if [ ! -d "$chartHome/$chartName" ]; then
+    doHelm fetch $chartVersionArg \
+        $chartRepoArg \
+        --untar \
+        --untardir $chartHome \
+        $chartNameArg
+  fi
+  
+  doHelm template \
+      --name $releaseName \
+      --namespace $releaseNamespace \
+      --values $valuesFile \
+      $chartHome/$chartName
+  
+}

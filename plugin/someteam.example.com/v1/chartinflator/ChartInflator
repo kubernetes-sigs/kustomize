@@ -68,6 +68,7 @@ function parseYaml {
 }
 
 TMP_DIR=$(mktemp -d)
+HELM_VERSION=$(helm version --short)
 
 parseYaml $1
 
@@ -115,25 +116,18 @@ if [ -z "$releaseNamespace" ]; then
   releaseNamespace=default
 fi
 
-function doHelm {
-  $helmBin --home $helmHome $@
-}
+case $HELM_VERSION in
+  v2*)
+    source $(dirname ${BASH_SOURCE[0]})/ChartInflator.v2.functions
+  ;;
+  v1*)
+    source $(dirname ${BASH_SOURCE[0]})/ChartInflator.v3.functions
+  ;;
+  *)
+    echo "[!] Unsupported 'helm' version '${HELM_VERSION}'" && exit 1
+  ;;
+esac
 
-# The init command is extremely chatty
-doHelm init --client-only >& /dev/null
-
-if [ ! -d "$chartHome/$chartName" ]; then
-  doHelm fetch $chartVersionArg \
-      $chartRepoArg \
-      --untar \
-      --untardir $chartHome \
-      $chartNameArg
-fi
-
-doHelm template \
-    --name $releaseName \
-    --namespace $releaseNamespace \
-    --values $valuesFile \
-    $chartHome/$chartName
+doHelmChartInflation
 
 /bin/rm -rf $TMP_DIR
