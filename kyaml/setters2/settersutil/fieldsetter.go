@@ -68,3 +68,32 @@ func (fs FieldSetter) Set(openAPIPath, resourcesPath string) (int, error) {
 	}.Execute()
 	return s.Count, err
 }
+
+// SetAllSetterDefinitions reads all the Setter Definitions from the OpenAPI
+// file and sets all values in the provided directories.
+func SetAllSetterDefinitions(openAPIPath string, dirs ...string) error {
+	if err := openapi.AddSchemaFromFile(openAPIPath); err != nil {
+		return err
+	}
+
+	for _, dir := range dirs {
+		rw := &kio.LocalPackageReadWriter{
+			PackagePath: dir,
+			// set output won't include resources from files which
+			//weren't modified.  make sure we don't delete them.
+			NoDeleteFiles: true,
+		}
+
+		// apply all of the setters to the directory
+		err := kio.Pipeline{
+			Inputs: []kio.Reader{rw},
+			// Set all of the setters
+			Filters: []kio.Filter{setters2.SetAll(&setters2.Set{SetAll: true})},
+			Outputs: []kio.Writer{rw},
+		}.Execute()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

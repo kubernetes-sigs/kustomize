@@ -18,6 +18,6 @@ List setters for Resources.
 
   Show setters:
 
-    $ config set DIR/
+    $ config list-setters DIR/
         NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY  
     name-prefix   ''            PREFIX    string   2
