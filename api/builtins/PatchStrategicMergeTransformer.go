@@ -4,11 +4,16 @@
 package builtins
 
 import (
+	"encoding/json"
 	"fmt"
 
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
+
+	"sigs.k8s.io/kustomize/api/filters/patchstrategicmerge"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/filtersutil"
 	"sigs.k8s.io/yaml"
 )
 
@@ -17,6 +22,8 @@ type PatchStrategicMergeTransformerPlugin struct {
 	loadedPatches []*resource.Resource
 	Paths         []types.PatchStrategicMerge `json:"paths,omitempty" yaml:"paths,omitempty"`
 	Patches       string                      `json:"patches,omitempty" yaml:"patches,omitempty"`
+
+	YAMLSupport bool `json:"yamlSupport,omitempty" yaml:"yamlSupport,omitempty"`
 }
 
 func (p *PatchStrategicMergeTransformerPlugin) Config(
@@ -69,20 +76,40 @@ func (p *PatchStrategicMergeTransformerPlugin) Transform(m resmap.ResMap) error 
 		if err != nil {
 			return err
 		}
-		err = target.Patch(patch.Kunstructured)
-		if err != nil {
-			return err
-		}
-		// remove the resource from resmap
-		// when the patch is to $patch: delete that target
-		if len(target.Map()) == 0 {
-			err = m.Remove(target.CurId())
+		if !p.YAMLSupport {
+			err = target.Patch(patch.Kunstructured)
 			if err != nil {
 				return err
 			}
+			// remove the resource from resmap
+			// when the patch is to $patch: delete that target
+			if len(target.Map()) == 0 {
+				err = m.Remove(target.CurId())
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			node, err := getRNode(patch)
+			if err != nil {
+				return err
+			}
+			err = filtersutil.ApplyToJSON(patchstrategicmerge.Filter{
+				Patch: node,
+			}, target.Kunstructured)
 		}
 	}
 	return nil
+}
+
+//TODO: Remove this once the next version of kyaml is released which
+// exposes GetRNode from the filutersutil package.
+func getRNode(k json.Marshaler) (*kyaml.RNode, error) {
+	j, err := k.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return kyaml.Parse(string(j))
 }
 
 func NewPatchStrategicMergeTransformerPlugin() resmap.TransformerPlugin {
