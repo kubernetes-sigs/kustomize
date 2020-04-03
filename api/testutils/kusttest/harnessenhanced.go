@@ -4,6 +4,9 @@
 package kusttest_test
 
 import (
+	"bytes"
+	"fmt"
+	"strconv"
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
@@ -16,6 +19,8 @@ import (
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // HarnessEnhanced manages a full plugin environment for tests.
@@ -109,10 +114,67 @@ func (th *HarnessEnhanced) LoadAndRunTransformer(
 	return resMap
 }
 
+func (th *HarnessEnhanced) RunTransformerAndCheckResult(
+	config, input, expected string) {
+	for _, b := range []bool{true, false} {
+		th.t.Run(fmt.Sprintf("yaml-%v", b), func(t *testing.T) {
+			c, err := toggleYamlSupportField(config, b)
+			if err != nil {
+				th.t.Fatalf("Err: %v", err)
+			}
+			resMap, err := th.RunTransformer(c, input)
+			if err != nil {
+				th.t.Fatalf("Err: %v", err)
+			}
+			th.AssertActualEqualsExpected(resMap, expected)
+		})
+	}
+}
+
+func toggleYamlSupportField(config string, yamlSupport bool) (string, error) {
+	var out bytes.Buffer
+	rw := kio.ByteReadWriter{
+		Reader: bytes.NewBufferString(config),
+		Writer: &out,
+	}
+
+	err := kio.Pipeline{
+		Inputs: []kio.Reader{&rw},
+		Filters: []kio.Filter{
+			kio.FilterAll(yaml.FilterFunc(
+				func(node *yaml.RNode) (*yaml.RNode, error) {
+					return node.Pipe(yaml.FieldSetter{
+						Name:        "yamlSupport",
+						StringValue: strconv.FormatBool(yamlSupport),
+					})
+				}),
+			),
+		},
+		Outputs: []kio.Writer{&rw},
+	}.Execute()
+	return out.String(), err
+}
+
 func (th *HarnessEnhanced) ErrorFromLoadAndRunTransformer(
 	config, input string) error {
 	_, err := th.RunTransformer(config, input)
 	return err
+}
+
+type AssertFunc func(t *testing.T, err error)
+
+func (th *HarnessEnhanced) RunTransformerAndCheckError(
+	config, input string, assertFn AssertFunc) {
+	for _, b := range []bool{true, false} {
+		th.t.Run(fmt.Sprintf("yaml-%v", b), func(t *testing.T) {
+			c, err := toggleYamlSupportField(config, b)
+			if err != nil {
+				th.t.Fatalf("Err: %v", err)
+			}
+			_, err = th.RunTransformer(c, input)
+			assertFn(t, err)
+		})
+	}
 }
 
 func (th *HarnessEnhanced) RunTransformer(
