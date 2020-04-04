@@ -106,7 +106,7 @@ func (p *ExecPlugin) processOptionalArgsFields() error {
 }
 
 func (p *ExecPlugin) Generate() (resmap.ResMap, error) {
-	output, err := p.invokePlugin(nil)
+	output, err := p.invokePlugin(nil, "generate")
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
 	}
 
 	// invoke the plugin with resources as the input
-	output, err := p.invokePlugin(resources)
+	output, err := p.invokePlugin(resources, "transform")
 	if err != nil {
 		return fmt.Errorf("%v %s", err, string(output))
 	}
@@ -143,7 +143,7 @@ func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
 // invokePlugin writes plugin config to a temp file, then
 // passes the full temp file path as the first arg to a process
 // running the plugin binary.  Process output is returned.
-func (p *ExecPlugin) invokePlugin(input []byte) ([]byte, error) {
+func (p *ExecPlugin) invokePlugin(input []byte, mode string) ([]byte, error) {
 	f, err := ioutil.TempFile("", tmpConfigFilePrefix)
 	if err != nil {
 		return nil, errors.Wrap(
@@ -158,10 +158,6 @@ func (p *ExecPlugin) invokePlugin(input []byte) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(
 			err, "closing plugin config file "+f.Name())
-	}
-	mode := "generate"
-	if input != nil {
-		mode = "transform"
 	}
 	//nolint:gosec
 	cmd := exec.Command(
