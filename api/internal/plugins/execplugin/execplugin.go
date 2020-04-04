@@ -159,10 +159,14 @@ func (p *ExecPlugin) invokePlugin(input []byte) ([]byte, error) {
 		return nil, errors.Wrap(
 			err, "closing plugin config file "+f.Name())
 	}
+	mode := "generate"
+	if input != nil {
+		mode = "transform"
+	}
 	//nolint:gosec
 	cmd := exec.Command(
 		p.path, append([]string{f.Name()}, p.args...)...)
-	cmd.Env = p.getEnv()
+	cmd.Env = p.getEnv(mode)
 	cmd.Stdin = bytes.NewReader(input)
 	cmd.Stderr = os.Stderr
 	if _, err := os.Stat(p.h.Loader().Root()); err == nil {
@@ -177,11 +181,12 @@ func (p *ExecPlugin) invokePlugin(input []byte) ([]byte, error) {
 	return result, os.Remove(f.Name())
 }
 
-func (p *ExecPlugin) getEnv() []string {
+func (p *ExecPlugin) getEnv(mode string) []string {
 	env := os.Environ()
 	env = append(env,
 		"KUSTOMIZE_PLUGIN_CONFIG_STRING="+string(p.cfg),
-		"KUSTOMIZE_PLUGIN_CONFIG_ROOT="+p.h.Loader().Root())
+		"KUSTOMIZE_PLUGIN_CONFIG_ROOT="+p.h.Loader().Root(),
+		"KUSTOMIZE_PLUGIN_MODE="+mode)
 	return env
 }
 
