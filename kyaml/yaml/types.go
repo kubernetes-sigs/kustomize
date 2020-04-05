@@ -697,7 +697,17 @@ func (rn *RNode) MarshalJSON() ([]byte, error) {
 }
 
 func (rn *RNode) UnmarshalJSON(b []byte) error {
-	r, err := Parse(string(b))
+	m := map[string]interface{}{}
+	if err := json.Unmarshal(b, &m); err != nil {
+		return err
+	}
+
+	c, err := Marshal(m)
+	if err != nil {
+		return err
+	}
+
+	r, err := Parse(string(c))
 	if err != nil {
 		return err
 	}
