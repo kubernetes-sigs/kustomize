@@ -133,7 +133,7 @@ func (fs *UnstructAdapter) selectSubtree(path string) (map[string]interface{}, [
 func (fs *UnstructAdapter) GetFieldValue(path string) (interface{}, error) {
 	content, fields, found, err := fs.selectSubtree(path)
 	if !found || err != nil {
-		return nil, noFieldError{Field: path}
+		return nil, NoFieldError{Field: path}
 	}
 
 	s, found, err := unstructured.NestedFieldNoCopy(
@@ -141,14 +141,14 @@ func (fs *UnstructAdapter) GetFieldValue(path string) (interface{}, error) {
 	if found || err != nil {
 		return s, err
 	}
-	return nil, noFieldError{Field: path}
+	return nil, NoFieldError{Field: path}
 }
 
 // GetString returns value at the given fieldpath.
 func (fs *UnstructAdapter) GetString(path string) (string, error) {
 	content, fields, found, err := fs.selectSubtree(path)
 	if !found || err != nil {
-		return "", noFieldError{Field: path}
+		return "", NoFieldError{Field: path}
 	}
 
 	s, found, err := unstructured.NestedString(
@@ -156,14 +156,14 @@ func (fs *UnstructAdapter) GetString(path string) (string, error) {
 	if found || err != nil {
 		return s, err
 	}
-	return "", noFieldError{Field: path}
+	return "", NoFieldError{Field: path}
 }
 
 // GetStringSlice returns value at the given fieldpath.
 func (fs *UnstructAdapter) GetStringSlice(path string) ([]string, error) {
 	content, fields, found, err := fs.selectSubtree(path)
 	if !found || err != nil {
-		return []string{}, noFieldError{Field: path}
+		return []string{}, NoFieldError{Field: path}
 	}
 
 	s, found, err := unstructured.NestedStringSlice(
@@ -171,14 +171,14 @@ func (fs *UnstructAdapter) GetStringSlice(path string) ([]string, error) {
 	if found || err != nil {
 		return s, err
 	}
-	return []string{}, noFieldError{Field: path}
+	return []string{}, NoFieldError{Field: path}
 }
 
 // GetBool returns value at the given fieldpath.
 func (fs *UnstructAdapter) GetBool(path string) (bool, error) {
 	content, fields, found, err := fs.selectSubtree(path)
 	if !found || err != nil {
-		return false, noFieldError{Field: path}
+		return false, NoFieldError{Field: path}
 	}
 
 	s, found, err := unstructured.NestedBool(
@@ -186,7 +186,7 @@ func (fs *UnstructAdapter) GetBool(path string) (bool, error) {
 	if found || err != nil {
 		return s, err
 	}
-	return false, noFieldError{Field: path}
+	return false, NoFieldError{Field: path}
 }
 
 // GetFloat64 returns value at the given fieldpath.
@@ -201,14 +201,14 @@ func (fs *UnstructAdapter) GetFloat64(path string) (float64, error) {
 	if found || err != nil {
 		return s, err
 	}
-	return 0, noFieldError{Field: path}
+	return 0, NoFieldError{Field: path}
 }
 
 // GetInt64 returns value at the given fieldpath.
 func (fs *UnstructAdapter) GetInt64(path string) (int64, error) {
 	content, fields, found, err := fs.selectSubtree(path)
 	if !found || err != nil {
-		return 0, noFieldError{Field: path}
+		return 0, NoFieldError{Field: path}
 	}
 
 	s, found, err := unstructured.NestedInt64(
@@ -216,14 +216,14 @@ func (fs *UnstructAdapter) GetInt64(path string) (int64, error) {
 	if found || err != nil {
 		return s, err
 	}
-	return 0, noFieldError{Field: path}
+	return 0, NoFieldError{Field: path}
 }
 
 // GetSlice returns value at the given fieldpath.
 func (fs *UnstructAdapter) GetSlice(path string) ([]interface{}, error) {
 	content, fields, found, err := fs.selectSubtree(path)
 	if !found || err != nil {
-		return nil, noFieldError{Field: path}
+		return nil, NoFieldError{Field: path}
 	}
 
 	s, found, err := unstructured.NestedSlice(
@@ -231,14 +231,14 @@ func (fs *UnstructAdapter) GetSlice(path string) ([]interface{}, error) {
 	if found || err != nil {
 		return s, err
 	}
-	return nil, noFieldError{Field: path}
+	return nil, NoFieldError{Field: path}
 }
 
 // GetStringMap returns value at the given fieldpath.
 func (fs *UnstructAdapter) GetStringMap(path string) (map[string]string, error) {
 	content, fields, found, err := fs.selectSubtree(path)
 	if !found || err != nil {
-		return nil, noFieldError{Field: path}
+		return nil, NoFieldError{Field: path}
 	}
 
 	s, found, err := unstructured.NestedStringMap(
@@ -246,14 +246,14 @@ func (fs *UnstructAdapter) GetStringMap(path string) (map[string]string, error) 
 	if found || err != nil {
 		return s, err
 	}
-	return nil, noFieldError{Field: path}
+	return nil, NoFieldError{Field: path}
 }
 
 // GetMap returns value at the given fieldpath.
 func (fs *UnstructAdapter) GetMap(path string) (map[string]interface{}, error) {
 	content, fields, found, err := fs.selectSubtree(path)
 	if !found || err != nil {
-		return nil, noFieldError{Field: path}
+		return nil, NoFieldError{Field: path}
 	}
 
 	s, found, err := unstructured.NestedMap(
@@ -261,7 +261,7 @@ func (fs *UnstructAdapter) GetMap(path string) (map[string]interface{}, error) {
 	if found || err != nil {
 		return s, err
 	}
-	return nil, noFieldError{Field: path}
+	return nil, NoFieldError{Field: path}
 }
 
 func (fs *UnstructAdapter) MatchesLabelSelector(selector string) (bool, error) {
@@ -340,11 +340,11 @@ func toSchemaGvk(x resid.Gvk) schema.GroupVersionKind {
 	}
 }
 
-// noFieldError is returned when a field is expected, but missing.
-type noFieldError struct {
+// NoFieldError is returned when a field is expected, but missing.
+type NoFieldError struct {
 	Field string
 }
 
-func (e noFieldError) Error() string {
+func (e NoFieldError) Error() string {
 	return fmt.Sprintf("no field named '%s'", e.Field)
 }
