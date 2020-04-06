@@ -13,7 +13,7 @@ patches.  Each patch must be associated with
 a _target selector_:
 
 [strategic merge patch]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-api-machinery/strategic-merge-patch.md
-[JSON patch]: ../jsonpatch.md
+[JSON patch]: jsonpatch.md
 
 > ```yaml
 > patches:
