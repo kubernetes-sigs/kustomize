@@ -83,11 +83,7 @@ func (p *HelmChartPlugin) Config(h *resmap.PluginHelpers, c []byte) (err error) 
 	}
 
 	if p.ChartRepo == "" {
-		p.ChartRepo = "https://qlik.bintray.com/edge"
-	}
-
-	if p.ChartRepoName == "" {
-		p.ChartRepoName = "qlik"
+		p.logger.Println("No chartRepo set in the config. If fetch is needed, it will fail.")
 	}
 
 	if p.ReleaseName == "" {
@@ -195,6 +191,17 @@ func (p *HelmChartPlugin) helmFetchIfRequired(settings *cli.EnvSettings, repoNam
 		p.logger.Printf("error checking if chart was already fetched to path: %v, err: %v\n", chartDir, err)
 		return err
 	} else if !exists {
+		if repoName == "" {
+			repoFileEntries, err := getRepoFileEntries(settings)
+			if err != nil {
+				return err
+			} else if repoEntry := repoEntriesContainHttpUrl(repoFileEntries, p.ChartRepo); repoEntry != nil {
+				repoName = repoEntry.Name
+			} else {
+				repoName = getAutoRepoName("auto")
+			}
+		}
+
 		if err := p.helmRepoAdd(settings, &repo.Entry{Name: repoName, URL: p.ChartRepo}); err != nil {
 			p.logger.Printf("error adding repo: %v, err: %v\n", p.ChartRepo, err)
 			return err
@@ -446,17 +453,21 @@ func resolveDependencyRepos(settings *cli.EnvSettings, c *chart.Chart) ([]*repo.
 	}
 
 	for _, dep := range pureUrlDependencies {
-		if repoEntriesContainHttpUrl(newAliasedRepoEntries, dep.Repository) {
+		if repoEntriesContainHttpUrl(newAliasedRepoEntries, dep.Repository) != nil {
 			break
-		} else if repoEntriesContainHttpUrl(repoFileEntries, dep.Repository) {
+		} else if repoEntriesContainHttpUrl(repoFileEntries, dep.Repository) != nil {
 			break
 		}
 		newAliasedRepoEntries = append(newAliasedRepoEntries, &repo.Entry{
-			Name: fmt.Sprintf("auto-%v", uuid.New().String()),
+			Name: getAutoRepoName("auto"),
 			URL:  dep.Repository,
 		})
 	}
 	return newAliasedRepoEntries, nil
+}
+
+func getAutoRepoName(prefix string) string {
+	return fmt.Sprintf("%v-%v", prefix, uuid.New().String())
 }
 
 func getRepoFileEntries(settings *cli.EnvSettings) ([]*repo.Entry, error) {
@@ -481,8 +492,8 @@ func getRepoEntryForAliasedDependency(aliasMarker string, dep *chart.Dependency,
 		return &repo.Entry{
 			Name:     repoEntryName,
 			URL:      repoEntryUrl,
-			Username: os.Getenv(fmt.Sprintf("%v-helm-repo-username", repoEntryName)),
-			Password: os.Getenv(fmt.Sprintf("%v-helm-repo-password", repoEntryName)),
+			Username: os.Getenv(strings.ToUpper(fmt.Sprintf("%v_helm_repo_username", repoEntryName))),
+			Password: os.Getenv(strings.ToUpper(fmt.Sprintf("%v_helm_repo_password", repoEntryName))),
 		}, nil
 	}
 }
@@ -496,10 +507,10 @@ func getRepoUrlFromChartLock(chartLock *chart.Lock, name string) string {
 	return ""
 }
 
-func repoEntriesContainHttpUrl(repoEntries []*repo.Entry, testUrl string) bool {
+func repoEntriesContainHttpUrl(repoEntries []*repo.Entry, testUrl string) *repo.Entry {
 	for _, entry := range repoEntries {
 		if entry.URL == testUrl {
-			return true
+			return entry
 		} else {
 			if entryUrlObject := getAbsoluteHttpUrlObject(entry.URL); entryUrlObject == nil {
 				break
@@ -513,12 +524,12 @@ func repoEntriesContainHttpUrl(repoEntries []*repo.Entry, testUrl string) bool {
 					u.Path = filepath.Clean(u.Path)
 				}
 				if entryUrlObject.String() == testUrlObject.String() {
-					return true
+					return entry
 				}
 			}
 		}
 	}
-	return false
+	return nil
 }
 
 func getAbsoluteHttpUrlObject(test string) *url.URL {
