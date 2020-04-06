@@ -7,11 +7,17 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"github.com/google/uuid"
+
+	"helm.sh/helm/v3/pkg/downloader"
+	"k8s.io/client-go/util/homedir"
 
 	"github.com/pkg/errors"
 
@@ -20,7 +26,6 @@ import (
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/chartutil"
 	"helm.sh/helm/v3/pkg/cli"
-	"helm.sh/helm/v3/pkg/downloader"
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/repo"
@@ -155,6 +160,11 @@ func (p *HelmChartPlugin) executeHelmTemplate() ([]byte, error) {
 		chartPath = filepath.Join(p.ChartHome, p.ChartName)
 	}
 
+	if err := p.helmDependenciesBuild(settings, chartPath); err != nil {
+		p.logger.Printf("error building dependencies, err: %v\n", err)
+		return nil, err
+	}
+
 	resources, err := p.helmTemplate(settings, chartPath, p.ReleaseName, p.Values)
 	if err != nil {
 		p.logger.Printf("error executing helm template for chart: %v at path: %v, err: %v\n", chartName, chartPath, err)
@@ -185,7 +195,7 @@ func (p *HelmChartPlugin) helmFetchIfRequired(settings *cli.EnvSettings, repoNam
 		p.logger.Printf("error checking if chart was already fetched to path: %v, err: %v\n", chartDir, err)
 		return err
 	} else if !exists {
-		if err := p.helmRepoAdd(settings, repoName, p.ChartRepo); err != nil {
+		if err := p.helmRepoAdd(settings, &repo.Entry{Name: repoName, URL: p.ChartRepo}); err != nil {
 			p.logger.Printf("error adding repo: %v, err: %v\n", p.ChartRepo, err)
 			return err
 		}
@@ -203,7 +213,7 @@ func (p *HelmChartPlugin) helmFetchIfRequired(settings *cli.EnvSettings, repoNam
 	return nil
 }
 
-func (p *HelmChartPlugin) helmRepoAdd(settings *cli.EnvSettings, name, url string) error {
+func (p *HelmChartPlugin) helmRepoAdd(settings *cli.EnvSettings, repoEntry *repo.Entry) error {
 	repoFilePath := settings.RepositoryConfig
 
 	b, err := ioutil.ReadFile(repoFilePath)
@@ -216,30 +226,30 @@ func (p *HelmChartPlugin) helmRepoAdd(settings *cli.EnvSettings, name, url strin
 		return err
 	}
 
-	if repoFile.Has(name) {
-		return nil
+	if existingEntry := repoFile.Get(repoEntry.Name); existingEntry != nil {
+		if existingEntry.URL == repoEntry.URL {
+			return nil
+		} else {
+			return fmt.Errorf("cannot add helm repo name: %v, URL: %v, "+
+				"because an entry with the same name but different URL already exists", repoEntry.Name, repoEntry.URL)
+		}
 	}
 
-	repoEntry := repo.Entry{
-		Name: name,
-		URL:  url,
-	}
-
-	chartRepository, err := repo.NewChartRepository(&repoEntry, getter.All(settings))
+	chartRepository, err := repo.NewChartRepository(repoEntry, getter.All(settings))
 	if err != nil {
 		return err
 	}
 
 	if _, err := chartRepository.DownloadIndexFile(); err != nil {
-		return errors.Wrapf(err, "looks like %q is not a valid chart repository or cannot be reached", url)
+		return errors.Wrapf(err, "looks like %q is not a valid chart repository or cannot be reached", repoEntry.URL)
 	}
 
-	repoFile.Update(&repoEntry)
+	repoFile.Update(repoEntry)
 
 	if err := repoFile.WriteFile(repoFilePath, 0644); err != nil {
 		return err
 	}
-	p.logger.Printf("%q has been added to your repositories\n", name)
+	p.logger.Printf("%q has been added to your repositories\n", repoEntry.Name)
 	return nil
 }
 
@@ -327,13 +337,7 @@ func (p *HelmChartPlugin) helmTemplate(settings *cli.EnvSettings, chartPath, rel
 }
 
 func (p *HelmChartPlugin) runInstall(settings *cli.EnvSettings, chartPath string, client *action.Install, vals map[string]interface{}) (*release.Release, error) {
-	cp, err := client.ChartPathOptions.LocateChart(chartPath, settings)
-	if err != nil {
-		return nil, err
-	}
-
-	// Check chart dependencies to make sure all are present in /charts
-	chartRequested, err := loader.Load(cp)
+	chartRequested, err := loader.Load(chartPath)
 	if err != nil {
 		return nil, err
 	}
@@ -344,26 +348,8 @@ func (p *HelmChartPlugin) runInstall(settings *cli.EnvSettings, chartPath string
 	}
 
 	if req := chartRequested.Metadata.Dependencies; req != nil {
-		// If CheckDependencies returns an error, we have unfulfilled dependencies.
-		// As of Helm 2.4.0, this is treated as a stopping condition:
-		// https://github.com/helm/helm/issues/2209
 		if err := action.CheckDependencies(chartRequested, req); err != nil {
-			if client.DependencyUpdate {
-				man := &downloader.Manager{
-					Out:              os.Stdout,
-					ChartPath:        cp,
-					Keyring:          client.ChartPathOptions.Keyring,
-					SkipUpdate:       false,
-					Getters:          getter.All(settings),
-					RepositoryConfig: settings.RepositoryConfig,
-					RepositoryCache:  settings.RepositoryCache,
-				}
-				if err := man.Update(); err != nil {
-					return nil, err
-				}
-			} else {
-				return nil, err
-			}
+			return nil, err
 		}
 	}
 
@@ -379,23 +365,179 @@ func isChartInstallable(ch *chart.Chart) (bool, error) {
 	return false, fmt.Errorf("%s charts are not installable", ch.Metadata.Type)
 }
 
-func mergeMaps(a, b map[string]interface{}) map[string]interface{} {
-	out := make(map[string]interface{}, len(a))
-	for k, v := range a {
-		out[k] = v
+// defaultKeyring returns the expanded path to the default keyring.
+func defaultKeyring() string {
+	if v, ok := os.LookupEnv("GNUPGHOME"); ok {
+		return filepath.Join(v, "pubring.gpg")
 	}
-	for k, v := range b {
-		if v, ok := v.(map[string]interface{}); ok {
-			if bv, ok := out[k]; ok {
-				if bv, ok := bv.(map[string]interface{}); ok {
-					out[k] = mergeMaps(bv, v)
-					continue
+	return filepath.Join(homedir.HomeDir(), ".gnupg", "pubring.gpg")
+}
+
+func (p *HelmChartPlugin) helmDependenciesBuild(settings *cli.EnvSettings, chartPath string) error {
+	c, err := loader.Load(chartPath)
+	if err != nil {
+		return err
+	}
+
+	if req := c.Metadata.Dependencies; req != nil {
+		if err := action.CheckDependencies(c, req); err != nil {
+
+			if dependencyRepoEntries, err := resolveDependencyRepos(settings, c); err != nil {
+				p.logger.Printf("error resolving dependency repos: %v\n", err)
+				return err
+			} else {
+				for _, repoEntry := range dependencyRepoEntries {
+					if err := p.helmRepoAdd(settings, repoEntry); err != nil {
+						p.logger.Printf("error adding dependency repo: %v to the repo file: %v\n", repoEntry.Name, err)
+						return err
+					}
+				}
+			}
+
+			man := &downloader.Manager{
+				Out:              p.logger.Writer(),
+				ChartPath:        chartPath,
+				Keyring:          defaultKeyring(),
+				Getters:          getter.All(settings),
+				RepositoryConfig: settings.RepositoryConfig,
+				RepositoryCache:  settings.RepositoryCache,
+				Debug:            settings.Debug,
+				SkipUpdate:       true,
+			}
+			return man.Build()
+		}
+	}
+
+	return nil
+}
+
+func resolveDependencyRepos(settings *cli.EnvSettings, c *chart.Chart) ([]*repo.Entry, error) {
+	newAliasedRepoEntries := make([]*repo.Entry, 0)
+	pureUrlDependencies := make([]*chart.Dependency, 0)
+
+	//only consider named and unnamed repo entries with HTTP URLs:
+	for _, dep := range c.Metadata.Dependencies {
+		isAliasedRepoDependency := false
+		for _, aliasMarker := range []string{"@", "alias:"} {
+			if strings.HasPrefix(dep.Repository, aliasMarker) {
+				if repoEntry, err := getRepoEntryForAliasedDependency(aliasMarker, dep, c); err != nil {
+					return nil, err
+				} else {
+					newAliasedRepoEntries = append(newAliasedRepoEntries, repoEntry)
+					isAliasedRepoDependency = true
+					break
 				}
 			}
 		}
-		out[k] = v
+		if isAliasedRepoDependency {
+			continue
+		}
+
+		//need to process pure URL dependencies after all aliased(named) dependencies,
+		//in case there are overlaps:
+		if u := getAbsoluteHttpUrlObject(dep.Repository); u != nil {
+			pureUrlDependencies = append(pureUrlDependencies, dep)
+		}
 	}
-	return out
+
+	repoFileEntries, err := getRepoFileEntries(settings)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, dep := range pureUrlDependencies {
+		if repoEntriesContainHttpUrl(newAliasedRepoEntries, dep.Repository) {
+			break
+		} else if repoEntriesContainHttpUrl(repoFileEntries, dep.Repository) {
+			break
+		}
+		newAliasedRepoEntries = append(newAliasedRepoEntries, &repo.Entry{
+			Name: fmt.Sprintf("auto-%v", uuid.New().String()),
+			URL:  dep.Repository,
+		})
+	}
+	return newAliasedRepoEntries, nil
+}
+
+func getRepoFileEntries(settings *cli.EnvSettings) ([]*repo.Entry, error) {
+	repoFile, err := repo.LoadFile(settings.RepositoryConfig)
+	if err != nil {
+		if os.IsNotExist(errors.Cause(err)) {
+			return make([]*repo.Entry, 0), nil
+		} else {
+			return nil, err
+		}
+	} else {
+		return repoFile.Repositories, nil
+	}
+}
+
+func getRepoEntryForAliasedDependency(aliasMarker string, dep *chart.Dependency, c *chart.Chart) (*repo.Entry, error) {
+	repoEntryName := strings.TrimPrefix(dep.Repository, aliasMarker)
+	repoEntryUrl := getRepoUrlFromChartLock(c.Lock, dep.Name)
+	if repoEntryUrl == "" {
+		return nil, fmt.Errorf("cannot find URL for dependency: %v, alias: %v", dep.Name, repoEntryName)
+	} else {
+		return &repo.Entry{
+			Name:     repoEntryName,
+			URL:      repoEntryUrl,
+			Username: os.Getenv(fmt.Sprintf("%v-helm-repo-username", repoEntryName)),
+			Password: os.Getenv(fmt.Sprintf("%v-helm-repo-password", repoEntryName)),
+		}, nil
+	}
+}
+
+func getRepoUrlFromChartLock(chartLock *chart.Lock, name string) string {
+	for _, lockDep := range chartLock.Dependencies {
+		if lockDep.Name == name {
+			return lockDep.Repository
+		}
+	}
+	return ""
+}
+
+func repoEntriesContainHttpUrl(repoEntries []*repo.Entry, testUrl string) bool {
+	for _, entry := range repoEntries {
+		if entry.URL == testUrl {
+			return true
+		} else {
+			if entryUrlObject := getAbsoluteHttpUrlObject(entry.URL); entryUrlObject == nil {
+				break
+			} else if testUrlObject := getAbsoluteHttpUrlObject(testUrl); testUrlObject == nil {
+				break
+			} else {
+				for _, u := range []*url.URL{entryUrlObject, testUrlObject} {
+					if u.Path == "" {
+						u.Path = "/"
+					}
+					u.Path = filepath.Clean(u.Path)
+				}
+				if entryUrlObject.String() == testUrlObject.String() {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+func getAbsoluteHttpUrlObject(test string) *url.URL {
+	if u, err := url.Parse(test); err != nil {
+		return nil
+	} else if !isAbsoluteHttpUrlObject(u) {
+		return nil
+	} else {
+		return u
+	}
+}
+
+func isAbsoluteHttpUrlObject(u *url.URL) bool {
+	if !u.IsAbs() {
+		return false
+	} else if u.Scheme != "http" && u.Scheme != "https" {
+		return false
+	}
+	return true
 }
 
 func NewHelmChartPlugin() resmap.GeneratorPlugin {
