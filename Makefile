@@ -340,3 +340,4 @@ qlik-build-all:
 
 qlik-test-api-plugins:
 	cd api; go test -v -count=1 sigs.k8s.io/kustomize/api/builtins_qlik
+	cd api; go test -v -count=1 sigs.k8s.io/kustomize/api -run ^Test_executeKustomizeTestBuild$$
