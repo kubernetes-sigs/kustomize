@@ -1,6 +1,10 @@
-# Demo: applying a json patch
+# JSON Patching
 
-A kustomization file supports customizing resources via [JSON patches](https://tools.ietf.org/html/rfc6902).
+[JSON patches]: https://tools.ietf.org/html/rfc6902
+[JSON patch]: https://tools.ietf.org/html/rfc6902
+
+A kustomization file supports customizing
+resources via [JSON patches].
 
 Make a place to work:
 
@@ -140,9 +144,8 @@ Confirm they match:
 diff $DEMO_HOME/out_actual.yaml $DEMO_HOME/out_expected.yaml
 ```
 
-Let's further edit the same `Ingress` object,
-but using a patch written in YAML instead of JSON.
-
+If you prefer YAML to JSON, the patch can be expressed
+in YAML format (neverthless following [JSON patch] rules):
 
 <!-- @writeYamlPatch @testAgainstLatestRelease -->
 ```
@@ -193,3 +196,6 @@ Try it:
 kustomize build $DEMO_HOME | tail -n 8 |\
     diff  $DEMO_HOME/out_expected.yaml -
 ```
+
+To see how to apply one JSON patch to many resources,
+see the [multi-patch](../patchMultipleObjects.md) demo.
