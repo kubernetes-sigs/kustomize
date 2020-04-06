@@ -67,7 +67,7 @@ type RunFns struct {
 	// functionFilterProvider provides a filter to perform the function.
 	// this is a variable so it can be mocked in tests
 	functionFilterProvider func(
-		filter filters.FunctionSpec, api *yaml.RNode) kio.Filter
+		filter filters.FunctionSpec, api *yaml.RNode) (kio.Filter, error)
 }
 
 // Execute runs the command
@@ -215,7 +215,10 @@ func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
 			}
 			spec.Network = r.NetworkName
 		}
-		c := r.functionFilterProvider(*spec, api)
+		c, err := r.functionFilterProvider(*spec, api)
+		if err != nil {
+			return nil, err
+		}
 		if c == nil {
 			continue
 		}
@@ -299,7 +302,7 @@ func (r *RunFns) init() {
 }
 
 // ffp provides function filters
-func (r *RunFns) ffp(spec filters.FunctionSpec, api *yaml.RNode) kio.Filter {
+func (r *RunFns) ffp(spec filters.FunctionSpec, api *yaml.RNode) (kio.Filter, error) {
 	if !r.DisableContainers && spec.Container.Image != "" {
 		return &filters.ContainerFilter{
 			Image:         spec.Container.Image,
@@ -307,14 +310,31 @@ func (r *RunFns) ffp(spec filters.FunctionSpec, api *yaml.RNode) kio.Filter {
 			Network:       spec.Network,
 			StorageMounts: r.StorageMounts,
 			GlobalScope:   r.GlobalScope,
-		}
+		}, nil
 	}
 	if r.EnableStarlark && spec.Starlark.Path != "" {
+		// the script path is relative to the function config file
+		m, err := api.GetMeta()
+		if err != nil {
+			return nil, errors.Wrap(err)
+		}
+		p := m.Annotations[kioutil.PathAnnotation]
+		spec.Starlark.Path = path.Clean(spec.Starlark.Path)
+		if path.IsAbs(spec.Starlark.Path) {
+			return nil, errors.Errorf(
+				"absolute function path %s not allowed", spec.Starlark.Path)
+		}
+		if strings.HasPrefix(spec.Starlark.Path, "..") {
+			return nil, errors.Errorf(
+				"function path %s not allowed to start with ../", spec.Starlark.Path)
+		}
+		p = path.Join(r.Path, path.Dir(p), spec.Starlark.Path)
+
 		return &starlark.Filter{
 			Name:           spec.Starlark.Name,
-			Path:           spec.Starlark.Path,
+			Path:           p,
 			FunctionConfig: api,
-		}
+		}, nil
 	}
-	return nil
+	return nil, nil
 }
