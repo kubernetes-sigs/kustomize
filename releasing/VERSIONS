@@ -6,7 +6,7 @@
 # kyaml version
 export kyaml_major=0
 export kyaml_minor=1
-export kyaml_patch=4
+export kyaml_patch=5
 
 # kstatus version
 export kstatus_major=0
