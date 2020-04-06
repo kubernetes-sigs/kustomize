@@ -198,4 +198,4 @@ kustomize build $DEMO_HOME | tail -n 8 |\
 ```
 
 To see how to apply one JSON patch to many resources,
-see the [multi-patch](../patchMultipleObjects.md) demo.
+see the [multi-patch](patchMultipleObjects.md) demo.
