@@ -4,7 +4,6 @@
 package filters
 
 import (
-	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -17,9 +16,6 @@ var functionAnnotationKeys = []string{FunctionAnnotationKey, oldFunctionAnnotati
 
 // FunctionSpec defines a spec for running a function
 type FunctionSpec struct {
-	// Path defines the path for scoped functions
-	Path string `json:"path,omitempty" yaml:"path,omitempty"`
-
 	// Network is the name of the network to use from a container
 	Network string `json:"network,omitempty" yaml:"network,omitempty"`
 
@@ -85,20 +81,16 @@ func GetFunctionSpec(n *yaml.RNode) *FunctionSpec {
 		return nil
 	}
 
-	// path to the function, this will be mounted into the container
-	path := meta.Annotations[kioutil.PathAnnotation]
 	if fn := getFunctionSpecFromAnnotation(n, meta); fn != nil {
 		fn.Network = ""
 		fn.StorageMounts = []StorageMount{}
-		fn.Path = path
 		return fn
 	}
 
 	// legacy function specification for backwards compatibility
 	container := meta.Annotations["config.kubernetes.io/container"]
 	if container != "" {
-		return &FunctionSpec{
-			Path: path, Container: ContainerSpec{Image: container}}
+		return &FunctionSpec{Container: ContainerSpec{Image: container}}
 	}
 	return nil
 }
