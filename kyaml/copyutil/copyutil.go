@@ -131,3 +131,49 @@ func Diff(sourceDir, destDir string) (sets.String, error) {
 	// return the differing files
 	return diff, nil
 }
+
+// SyncFile copies file from src file path to a dst file path by replacement
+// deletes dst file if src file doesn't exist
+func SyncFile(src, dst string) error {
+	srcFileInfo, err := os.Stat(src)
+	if err != nil {
+		// delete dst if source doesn't exist
+		if err = deleteFile(dst); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	input, err := ioutil.ReadFile(src)
+	if err != nil {
+		return err
+	}
+
+	var filePerm os.FileMode
+
+	// get the destination file perm if file exists
+	dstFileInfo, err := os.Stat(dst)
+	if err != nil {
+		// get source file perm if destination file doesn't exist
+		filePerm = srcFileInfo.Mode().Perm()
+	} else {
+		filePerm = dstFileInfo.Mode().Perm()
+	}
+
+	err = ioutil.WriteFile(dst, input, filePerm)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// deleteFile deletes file from path, returns no error if file doesn't exist
+func deleteFile(path string) error {
+	_, err := os.Stat(path)
+	if err != nil {
+		// return nil if file doesn't exist
+		return nil
+	}
+	return os.Remove(path)
+}
