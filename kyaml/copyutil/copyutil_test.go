@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -202,4 +203,61 @@ func TestDiff_skipGitDest(t *testing.T) {
 	diff, err := Diff(s, d)
 	assert.NoError(t, err)
 	assert.Empty(t, diff.List())
+}
+
+// TestSyncFile tests if destination file is replaced by source file content
+func TestSyncFile(t *testing.T) {
+	d1, err := ioutil.TempDir("", "")
+	assert.NoError(t, err)
+	d2, err := ioutil.TempDir("", "")
+	assert.NoError(t, err)
+	f1Name := d1 + "/temp.txt"
+	f2Name := d2 + "/temp.txt"
+	err = ioutil.WriteFile(f1Name, []byte("abc"), 0600)
+	assert.NoError(t, err)
+	err = ioutil.WriteFile(f2Name, []byte("def"), 0644)
+	assert.NoError(t, err)
+	err = SyncFile(f1Name, f2Name)
+	assert.NoError(t, err)
+	actual, err := ioutil.ReadFile(f2Name)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc", string(actual))
+	dstFileInfo, _ := os.Stat(f2Name)
+	assert.Equal(t, "-rw-r--r--", dstFileInfo.Mode().String())
+}
+
+// TestSyncFileNoDestFile tests if new file is created at destination with source file content
+func TestSyncFileNoDestFile(t *testing.T) {
+	d1, err := ioutil.TempDir("", "")
+	assert.NoError(t, err)
+	d2, err := ioutil.TempDir("", "")
+	assert.NoError(t, err)
+	f1Name := d1 + "/temp.txt"
+	f2Name := d2 + "/temp.txt"
+	err = ioutil.WriteFile(f1Name, []byte("abc"), 0644)
+	assert.NoError(t, err)
+	err = SyncFile(f1Name, f2Name)
+	assert.NoError(t, err)
+	actual, err := ioutil.ReadFile(f2Name)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc", string(actual))
+	dstFileInfo, _ := os.Stat(f2Name)
+	assert.Equal(t, "-rw-r--r--", dstFileInfo.Mode().String())
+}
+
+// TestSyncFileNoSrcFile tests if destination file is deleted if source file doesn't exist
+func TestSyncFileNoSrcFile(t *testing.T) {
+	d1, err := ioutil.TempDir("", "")
+	assert.NoError(t, err)
+	d2, err := ioutil.TempDir("", "")
+	assert.NoError(t, err)
+	f1Name := d1 + "/temp.txt"
+	f2Name := d2 + "/temp.txt"
+	err = ioutil.WriteFile(f2Name, []byte("abc"), 0644)
+	assert.NoError(t, err)
+	err = SyncFile(f1Name, f2Name)
+	assert.NoError(t, err)
+	_, err = ioutil.ReadFile(f2Name)
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "no such file or directory"))
 }

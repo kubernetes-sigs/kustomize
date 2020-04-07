@@ -166,7 +166,7 @@ type LocalPackageReader struct {
 
 var _ Reader = LocalPackageReader{}
 
-var defaultMatch = []string{"*.yaml", "*.yml"}
+var DefaultMatch = []string{"*.yaml", "*.yml"}
 
 // Read reads the Resources.
 func (r LocalPackageReader) Read() ([]*yaml.RNode, error) {
@@ -174,7 +174,7 @@ func (r LocalPackageReader) Read() ([]*yaml.RNode, error) {
 		return nil, fmt.Errorf("must specify package path")
 	}
 	if len(r.MatchFilesGlob) == 0 {
-		r.MatchFilesGlob = defaultMatch
+		r.MatchFilesGlob = DefaultMatch
 	}
 
 	var operand ResourceNodeSlice
@@ -201,9 +201,9 @@ func (r LocalPackageReader) Read() ([]*yaml.RNode, error) {
 
 		// check if we should skip the directory or file
 		if info.IsDir() {
-			return r.shouldSkipDir(path)
+			return r.ShouldSkipDir(path)
 		}
-		if match, err := r.shouldSkipFile(info); err != nil {
+		if match, err := r.ShouldSkipFile(info); err != nil {
 			return err
 		} else if !match {
 			// skip this file
@@ -244,8 +244,8 @@ func (r *LocalPackageReader) readFile(path string, _ os.FileInfo) ([]*yaml.RNode
 	return rr.Read()
 }
 
-// shouldSkipFile returns true if the file should be skipped
-func (r *LocalPackageReader) shouldSkipFile(info os.FileInfo) (bool, error) {
+// ShouldSkipFile returns true if the file should be skipped
+func (r *LocalPackageReader) ShouldSkipFile(info os.FileInfo) (bool, error) {
 	// check if the files are in scope
 	for _, g := range r.MatchFilesGlob {
 		if match, err := filepath.Match(g, info.Name()); err != nil {
@@ -267,8 +267,8 @@ func (r *LocalPackageReader) initReaderAnnotations(path string, _ os.FileInfo) {
 	}
 }
 
-// shouldSkipDir returns a filepath.SkipDir if the directory should be skipped
-func (r *LocalPackageReader) shouldSkipDir(path string) error {
+// ShouldSkipDir returns a filepath.SkipDir if the directory should be skipped
+func (r *LocalPackageReader) ShouldSkipDir(path string) error {
 	if r.PackageFileName == "" {
 		return nil
 	}
