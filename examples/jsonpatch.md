@@ -83,14 +83,14 @@ EOF
 ```
 
 To this same `kustomization` file, add a
-`patchesJson6902` field refering to
+`patches` field refering to
 the patch file we just made and
 target it to the `Ingress` object:
 
 <!-- @applyJsonPatch @testAgainstLatestRelease -->
 ```
 cat <<EOF >>$DEMO_HOME/kustomization.yaml
-patchesJson6902:
+patches:
 - path: ingress_patch.json
   target:
     group: networking.k8s.io
