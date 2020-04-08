@@ -21,6 +21,15 @@ func findSecret(m resmap.ResMap) *resource.Resource {
 	return nil
 }
 
+func findSecretByNamePrefix(m resmap.ResMap, prefix string) *resource.Resource {
+	for _, r := range m.Resources() {
+		if r.OrgId().Kind == "Secret" && strings.HasPrefix(r.GetName(), prefix) {
+			return r
+		}
+	}
+	return nil
+}
+
 func TestDisableNameSuffixHash(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	const kustomizationContent = `
@@ -95,6 +104,51 @@ metadata:
 		t.Errorf("Expected to find a Secret")
 	}
 	if secret.GetName() != "foo-secret-bar" { // No hash at end.
+		t.Errorf("unexpected secret resource name: %s", secret.GetName())
+	}
+}
+
+func TestDisableNameSuffixHashPerObject(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	const kustomizationContent = `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+generatorOptions:
+  disableNameSuffixHash: false
+secretGenerator:
+- name: nohash
+  generatorOptions:
+    disableNameSuffixHash: true
+  literals:
+    - DB_USERNAME=admin
+    - DB_PASSWORD=somepw
+  type: Opaque
+- name: yeshash
+  generatorOptions:
+    disableNameSuffixHash: false
+  literals:
+    - DB_USERNAME=admin
+    - DB_PASSWORD=somepw
+  type: Opaque
+`
+
+	th.WriteK("/whatever", kustomizationContent)
+
+	m := th.Run("/whatever", th.MakeDefaultOptions())
+
+	secret := findSecretByNamePrefix(m, "nohash")
+	if secret == nil {
+		t.Errorf("Expected to find a Secret")
+	}
+	if secret.GetName() != "nohash" {
+		t.Errorf("unexpected secret resource name: %s", secret.GetName())
+	}
+
+	secret = findSecretByNamePrefix(m, "yeshash")
+	if secret == nil {
+		t.Errorf("Expected to find a Secret")
+	}
+	if secret.GetName() != "yeshash-mcgcmdcm69" {
 		t.Errorf("unexpected secret resource name: %s", secret.GetName())
 	}
 }

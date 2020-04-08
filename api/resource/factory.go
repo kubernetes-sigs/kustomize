@@ -159,7 +159,7 @@ func (rf *Factory) MakeConfigMap(
 		u,
 		types.NewGenArgs(
 			&types.GeneratorArgs{Behavior: args.Behavior},
-			options)), nil
+			mergeGeneratorOptions(options, args.GeneratorOptions))), nil
 }
 
 // MakeSecret makes an instance of Resource for Secret
@@ -175,5 +175,20 @@ func (rf *Factory) MakeSecret(
 		u,
 		types.NewGenArgs(
 			&types.GeneratorArgs{Behavior: args.Behavior},
-			options)), nil
+			mergeGeneratorOptions(options, args.GeneratorOptions))), nil
+}
+
+func mergeGeneratorOptions(a, b *types.GeneratorOptions) *types.GeneratorOptions {
+	if a == nil {
+		return b
+	}
+	if b == nil {
+		return a
+	}
+
+	r := *a
+	if b.DisableNameSuffixHash {
+		r.DisableNameSuffixHash = true
+	}
+	return &r
 }
