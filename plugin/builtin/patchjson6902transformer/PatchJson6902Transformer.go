@@ -7,12 +7,14 @@ package main
 import (
 	"fmt"
 
-	"github.com/evanphx/json-patch"
+	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/api/filters/patchjson6902"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/filtersutil"
 	"sigs.k8s.io/yaml"
 )
 
@@ -22,6 +24,8 @@ type plugin struct {
 	Target       types.PatchTarget `json:"target,omitempty" yaml:"target,omitempty"`
 	Path         string            `json:"path,omitempty" yaml:"path,omitempty"`
 	JsonOp       string            `json:"jsonOp,omitempty" yaml:"jsonOp,omitempty"`
+
+	YAMLSupport bool `json:"yamlSupport,omitempty" yaml:"yamlSupport,omitempty"`
 }
 
 //noinspection GoUnusedGlobalVariable
@@ -87,14 +91,20 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 	if err != nil {
 		return err
 	}
-	rawObj, err := obj.MarshalJSON()
-	if err != nil {
-		return err
+	if !p.YAMLSupport {
+		rawObj, err := obj.MarshalJSON()
+		if err != nil {
+			return err
+		}
+		modifiedObj, err := p.decodedPatch.Apply(rawObj)
+		if err != nil {
+			return errors.Wrapf(
+				err, "failed to apply json patch '%s'", p.JsonOp)
+		}
+		return obj.UnmarshalJSON(modifiedObj)
+	} else {
+		return filtersutil.ApplyToJSON(patchjson6902.Filter{
+			Patch: p.JsonOp,
+		}, obj.Kunstructured)
 	}
-	modifiedObj, err := p.decodedPatch.Apply(rawObj)
-	if err != nil {
-		return errors.Wrapf(
-			err, "failed to apply json patch '%s'", p.JsonOp)
-	}
-	return obj.UnmarshalJSON(modifiedObj)
 }
