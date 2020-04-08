@@ -7,11 +7,11 @@ Contains Qlik plugins as part of the executable
 ## Building
 ```bash
 git clone git@github.com:qlik-oss/kustomize.git kustomize_fork
-cd kustomize_fork/kustomize
-go install .
+cd kustomize_fork
+make qlik-build-all
 ```
 
 ## Usage
 ```bash
-$HOME/go/bin/kustomize build . --load_restrictor=none
+./kustomize build .
 ```
