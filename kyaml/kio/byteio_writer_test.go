@@ -1,96 +1,84 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package kio
+package kio_test
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	. "sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// TestByteWriter_Write_withoutAnnotations tests:
-// - Resource Config ordering is preserved if no annotations are present
-func TestByteWriter_Write_wrapped(t *testing.T) {
-	node1, err := yaml.Parse(`a: b #first
-`)
-	if !assert.NoError(t, err) {
-		return
+func TestByteWriter(t *testing.T) {
+	type testCase struct {
+		name           string
+		err            string
+		items          []string
+		functionConfig string
+		results        string
+		expectedOutput string
+		instance       kio.ByteWriter
 	}
-	node2, err := yaml.Parse(`c: d # second
-`)
-	if !assert.NoError(t, err) {
-		return
-	}
-	node3, err := yaml.Parse(`e: f
+
+	testCases := []testCase{
+		//
+		//
+		//
+		{
+			name: "wrap_resource_list",
+			instance: ByteWriter{
+				Sort:               true,
+				WrappingKind:       ResourceListKind,
+				WrappingAPIVersion: ResourceListAPIVersion,
+			},
+			items: []string{
+				`a: b #first`,
+				`c: d # second`,
+			},
+			functionConfig: `
+e: f
 g:
   h:
   - i # has a list
-  - j
-`)
-	if !assert.NoError(t, err) {
-		return
-	}
-
-	buff := &bytes.Buffer{}
-	err = ByteWriter{
-		Sort:               true,
-		Writer:             buff,
-		FunctionConfig:     node3,
-		WrappingKind:       ResourceListKind,
-		WrappingAPIVersion: ResourceListAPIVersion}.
-		Write([]*yaml.RNode{node2, node1})
-	if !assert.NoError(t, err) {
-		return
-	}
-	assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
+  - j`,
+			expectedOutput: `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- c: d # second
 - a: b #first
+- c: d # second
 functionConfig:
   e: f
   g:
     h:
     - i # has a list
     - j
-`, buff.String())
-}
+`,
+		},
 
-// TestByteWriter_Write_withoutAnnotations tests:
-// - Resource Config ordering is preserved if no annotations are present
-func TestByteWriter_Write_withoutAnnotations(t *testing.T) {
-	node1, err := yaml.Parse(`a: b #first
-`)
-	if !assert.NoError(t, err) {
-		return
-	}
-	node2, err := yaml.Parse(`c: d # second
-`)
-	if !assert.NoError(t, err) {
-		return
-	}
-	node3, err := yaml.Parse(`e: f
+		//
+		//
+		//
+		{
+			name: "multiple_items",
+			items: []string{
+				`c: d # second`,
+				`e: f
 g:
   h:
   # has a list
   - i : [i1, i2] # line comment
   # has a list 2
   - j : j1
-`)
-	if !assert.NoError(t, err) {
-		return
-	}
-
-	buff := &bytes.Buffer{}
-	err = ByteWriter{Writer: buff}.
-		Write([]*yaml.RNode{node2, node3, node1})
-	if !assert.NoError(t, err) {
-		return
-	}
-	assert.Equal(t, `c: d # second
+`,
+				`a: b #first`,
+			},
+			expectedOutput: `
+c: d # second
 ---
 e: f
 g:
@@ -101,32 +89,23 @@ g:
   - j: j1
 ---
 a: b #first
-`, buff.String())
-}
+`,
+		},
 
-// TestByteWriter_Write_withAnnotationsKeepAnnotations tests:
-// - Resource Config is sorted by annotations if present
-// - IndexAnnotations are retained
-func TestByteWriter_Write_withAnnotationsKeepAnnotations(t *testing.T) {
-	node1, err := yaml.Parse(`a: b #first
+		//
+		// Test Case
+		//
+		{
+			name:     "sort_keep_annotation",
+			instance: ByteWriter{Sort: true, KeepReaderAnnotations: true},
+			items: []string{
+				`a: b #first
 metadata:
   annotations:
     config.kubernetes.io/index: 0
     config.kubernetes.io/path: "a/b/a_test.yaml"
-`)
-	if !assert.NoError(t, err) {
-		return
-	}
-	node2, err := yaml.Parse(`c: d # second
-metadata:
-  annotations:
-    config.kubernetes.io/index: 1
-    config.kubernetes.io/path: "a/b/a_test.yaml"
-`)
-	if !assert.NoError(t, err) {
-		return
-	}
-	node3, err := yaml.Parse(`e: f
+`,
+				`e: f
 g:
   h:
   - i # has a list
@@ -135,18 +114,16 @@ metadata:
   annotations:
     config.kubernetes.io/index: 0
     config.kubernetes.io/path: "a/b/b_test.yaml"
-`)
-	if !assert.NoError(t, err) {
-		return
-	}
+`,
+				`c: d # second
+metadata:
+  annotations:
+    config.kubernetes.io/index: 1
+    config.kubernetes.io/path: "a/b/a_test.yaml"
+`,
+			},
 
-	buff := &bytes.Buffer{}
-	err = ByteWriter{Sort: true, Writer: buff, KeepReaderAnnotations: true}.
-		Write([]*yaml.RNode{node2, node3, node1})
-	if !assert.NoError(t, err) {
-		return
-	}
-	assert.Equal(t, `a: b #first
+			expectedOutput: `a: b #first
 metadata:
   annotations:
     config.kubernetes.io/index: 0
@@ -167,109 +144,36 @@ metadata:
   annotations:
     config.kubernetes.io/index: 0
     config.kubernetes.io/path: "a/b/b_test.yaml"
-`, buff.String())
-}
+`,
+		},
 
-// TestByteWriter_Write_withAnnotations tests:
-// - Resource Config is sorted by annotations if present
-// - IndexAnnotations are pruned
-func TestByteWriter_Write_withAnnotations(t *testing.T) {
-	node1, err := yaml.Parse(`a: b #first
+		//
+		// Test Case
+		//
+		{
+			name:     "sort_partial_annotations",
+			instance: ByteWriter{Sort: true},
+			items: []string{
+				`a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
     config.kubernetes.io/path: "a/b/a_test.yaml"
-`)
-	if !assert.NoError(t, err) {
-		return
-	}
-	node2, err := yaml.Parse(`c: d # second
+`,
+				`c: d # second
 metadata:
   annotations:
     config.kubernetes.io/index: 1
     config.kubernetes.io/path: "a/b/a_test.yaml"
-`)
-	if !assert.NoError(t, err) {
-		return
-	}
-	node3, err := yaml.Parse(`e: f
+`,
+				`e: f
 g:
   h:
   - i # has a list
   - j
-metadata:
-  annotations:
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/path: "a/b/b_test.yaml"
-`)
-	if !assert.NoError(t, err) {
-		return
-	}
+`,
+			},
 
-	buff := &bytes.Buffer{}
-	err = ByteWriter{Sort: true, Writer: buff}.
-		Write([]*yaml.RNode{node2, node3, node1})
-	if !assert.NoError(t, err) {
-		return
-	}
-	assert.Equal(t, `a: b #first
-metadata:
-  annotations:
-    config.kubernetes.io/path: "a/b/a_test.yaml"
----
-c: d # second
-metadata:
-  annotations:
-    config.kubernetes.io/path: "a/b/a_test.yaml"
----
-e: f
-g:
-  h:
-  - i # has a list
-  - j
-metadata:
-  annotations:
-    config.kubernetes.io/path: "a/b/b_test.yaml"
-`, buff.String())
-}
-
-// TestByteWriter_Write_partialValues tests:
-// - Resource Config is sorted when annotations are present on some but not all ResourceNodes
-func TestByteWriter_Write_partialAnnotations(t *testing.T) {
-	node1, err := yaml.Parse(`a: b #first
-metadata:
-  annotations:
-    config.kubernetes.io/path: "a/b/a_test.yaml"
-`)
-	if !assert.NoError(t, err) {
-		return
-	}
-	node2, err := yaml.Parse(`c: d # second
-metadata:
-  annotations:
-    config.kubernetes.io/index: 1
-    config.kubernetes.io/path: "a/b/a_test.yaml"
-`)
-	if !assert.NoError(t, err) {
-		return
-	}
-	node3, err := yaml.Parse(`e: f
-g:
-  h:
-  - i # has a list
-  - j
-`)
-	if !assert.NoError(t, err) {
-		return
-	}
-
-	buff := &bytes.Buffer{}
-	rw := ByteWriter{Sort: true, Writer: buff}
-	err = rw.Write([]*yaml.RNode{node2, node3, node1})
-	if !assert.NoError(t, err) {
-		return
-	}
-	assert.Equal(t, `e: f
+			expectedOutput: `e: f
 g:
   h:
   - i # has a list
@@ -284,5 +188,45 @@ c: d # second
 metadata:
   annotations:
     config.kubernetes.io/path: "a/b/a_test.yaml"
-`, buff.String())
+`,
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			actual := &bytes.Buffer{}
+			w := tc.instance
+			w.Writer = actual
+
+			if tc.functionConfig != "" {
+				w.FunctionConfig = yaml.MustParse(tc.functionConfig)
+			}
+
+			if tc.results != "" {
+				w.Results = yaml.MustParse(tc.results)
+			}
+
+			var items []*yaml.RNode
+			for i := range tc.items {
+				items = append(items, yaml.MustParse(tc.items[i]))
+			}
+			err := w.Write(items)
+
+			if tc.err != "" {
+				if !assert.EqualError(t, err, tc.err) {
+					t.FailNow()
+				}
+				return
+			}
+
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			if !assert.Equal(t,
+				strings.TrimSpace(tc.expectedOutput), strings.TrimSpace(actual.String())) {
+				t.FailNow()
+			}
+		})
+	}
 }
