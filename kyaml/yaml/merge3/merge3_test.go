@@ -11,7 +11,7 @@ import (
 	. "sigs.k8s.io/kustomize/kyaml/yaml/merge3"
 )
 
-var testCases = [][]testCase{scalarTestCases, listTestCases, mapTestCases, elementTestCases}
+var testCases = [][]testCase{scalarTestCases, listTestCases, mapTestCases, elementTestCases, kustomizationTestCases}
 
 func TestMerge(t *testing.T) {
 	for i := range testCases {
