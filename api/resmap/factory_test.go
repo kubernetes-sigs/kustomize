@@ -227,7 +227,7 @@ BAR=baz
 				t.Fatalf("error adding file '%s': %v\n", tc.filepath, fErr)
 			}
 		}
-		r, err := rmF.NewResMapFromConfigMapArgs(kvLdr, nil, tc.input)
+		r, err := rmF.NewResMapFromConfigMapArgs(kvLdr, tc.input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -258,7 +258,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	actual, err := rmF.NewResMapFromSecretArgs(
 		kv.NewLoader(
 			loader.NewFileLoaderAtRoot(fSys),
-			valtest_test.MakeFakeValidator()), nil, secrets)
+			valtest_test.MakeFakeValidator()), secrets)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

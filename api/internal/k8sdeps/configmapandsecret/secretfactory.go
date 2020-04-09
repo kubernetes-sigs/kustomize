@@ -26,8 +26,7 @@ func makeFreshSecret(
 }
 
 // MakeSecret returns a new secret.
-func (f *Factory) MakeSecret(
-	args *types.SecretArgs) (*corev1.Secret, error) {
+func (f *Factory) MakeSecret(args *types.SecretArgs) (*corev1.Secret, error) {
 	all, err := f.kvLdr.Load(args.KvPairSources)
 	if err != nil {
 		return nil, err
@@ -39,7 +38,7 @@ func (f *Factory) MakeSecret(
 			return nil, err
 		}
 	}
-	f.setLabelsAndAnnnotations(s, args.GeneratorOptions)
+	f.copyLabelsAndAnnotations(s, args.Options)
 	return s, nil
 }
 

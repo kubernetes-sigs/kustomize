@@ -55,26 +55,23 @@ func (p *InventoryTransformerPlugin) Config(
 //      (e.g. some App object) become more desirable
 //      for this purpose.
 func (p *InventoryTransformerPlugin) Transform(m resmap.ResMap) error {
-
 	inv, h, err := makeInventory(m)
 	if err != nil {
 		return err
 	}
-
 	args := types.ConfigMapArgs{}
 	args.Name = p.Name
 	args.Namespace = p.Namespace
-	opts := &types.GeneratorOptions{
-		Annotations: make(map[string]string),
+	args.Options = &types.GeneratorOptions{
+		Annotations: map[string]string{inventory.HashAnnotation: h},
 	}
-	opts.Annotations[inventory.HashAnnotation] = h
-	err = inv.UpdateAnnotations(opts.Annotations)
+	err = inv.UpdateAnnotations(args.Options.Annotations)
 	if err != nil {
 		return err
 	}
 
 	cm, err := p.h.ResmapFactory().RF().MakeConfigMap(
-		kv.NewLoader(p.h.Loader(), p.h.Validator()), opts, &args)
+		kv.NewLoader(p.h.Loader(), p.h.Validator()), &args)
 	if err != nil {
 		return err
 	}

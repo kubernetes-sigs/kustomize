@@ -79,7 +79,6 @@ func TestConstructSecret(t *testing.T) {
 	type testCase struct {
 		description string
 		input       types.SecretArgs
-		options     *types.GeneratorOptions
 		expected    *corev1.Secret
 	}
 
@@ -94,7 +93,6 @@ func TestConstructSecret(t *testing.T) {
 					},
 				},
 			},
-			options:  nil,
 			expected: makeEnvSecret("envSecret"),
 		},
 		{
@@ -107,7 +105,6 @@ func TestConstructSecret(t *testing.T) {
 					},
 				},
 			},
-			options:  nil,
 			expected: makeFileSecret("fileSecret"),
 		},
 		{
@@ -118,55 +115,22 @@ func TestConstructSecret(t *testing.T) {
 					KvPairSources: types.KvPairSources{
 						LiteralSources: []string{"a=x", "b=y"},
 					},
-				},
-			},
-			options: &types.GeneratorOptions{
-				Labels: map[string]string{
-					"foo": "bar",
+					Options: &types.GeneratorOptions{
+						Labels: map[string]string{
+							"foo": "bar",
+						},
+						Annotations: map[string]string{
+							"fruit": "banana",
+							"pet":   "dog",
+						},
+					},
 				},
 			},
 			expected: makeLiteralSecret("literalSecret", map[string]string{
 				"foo": "bar",
-			}, nil),
-		},
-		{
-			description: "construct secret from literal with GeneratorOptions in SecretArgs",
-			input: types.SecretArgs{
-				GeneratorArgs: types.GeneratorArgs{
-					Name: "literalSecret",
-					KvPairSources: types.KvPairSources{
-						LiteralSources: []string{"a=x", "b=y"},
-					},
-					GeneratorOptions: &types.GeneratorOptions{
-						Labels: map[string]string{
-							"foo": "changed",
-							"cat": "dog",
-						},
-						Annotations: map[string]string{
-							"foo": "changed",
-							"cat": "dog",
-						},
-					},
-				},
-			},
-			options: &types.GeneratorOptions{
-				Labels: map[string]string{
-					"foo": "bar",
-				},
-				Annotations: map[string]string{
-					"foo": "bar",
-				},
-			},
-			// GeneratorOptions from the SecretArgs take precedence over the
-			// factory level GeneratorOptions and should overwrite
-			// labels/annotations set in the factory level if there are common
-			// labels/annotations
-			expected: makeLiteralSecret("literalSecret", map[string]string{
-				"foo": "changed",
-				"cat": "dog",
 			}, map[string]string{
-				"foo": "changed",
-				"cat": "dog",
+				"fruit": "banana",
+				"pet":   "dog",
 			}),
 		},
 	}
@@ -178,7 +142,7 @@ func TestConstructSecret(t *testing.T) {
 		loader.NewFileLoaderAtRoot(fSys),
 		valtest_test.MakeFakeValidator())
 	for _, tc := range testCases {
-		f := NewFactory(kvLdr, tc.options)
+		f := NewFactory(kvLdr)
 		cm, err := f.MakeSecret(&tc.input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)

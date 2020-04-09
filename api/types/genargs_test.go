@@ -24,8 +24,10 @@ func TestGenArgs_String(t *testing.T) {
 		},
 		{
 			ga: NewGenArgs(
-				&GeneratorArgs{Behavior: "merge"},
-				&GeneratorOptions{DisableNameSuffixHash: false}),
+				&GeneratorArgs{
+					Behavior: "merge",
+					Options:  &GeneratorOptions{DisableNameSuffixHash: false},
+				}),
 			expected: "{nsfx:true,beh:merge}",
 		},
 	}

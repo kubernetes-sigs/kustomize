@@ -8,18 +8,14 @@ import (
 	"strings"
 )
 
-// GenArgs contains both GeneratorArgs and GeneratorOptions.
+// GenArgs is a facade over GeneratorArgs, exposing a few readonly properties.
 type GenArgs struct {
 	args *GeneratorArgs
-	opts *GeneratorOptions
 }
 
-// NewGenArgs returns a new object of GenArgs
-func NewGenArgs(args *GeneratorArgs, opts *GeneratorOptions) *GenArgs {
-	return &GenArgs{
-		args: args,
-		opts: opts,
-	}
+// NewGenArgs returns a new instance of GenArgs.
+func NewGenArgs(args *GeneratorArgs) *GenArgs {
+	return &GenArgs{args: args}
 }
 
 func (g *GenArgs) String() string {
@@ -38,7 +34,7 @@ func (g *GenArgs) String() string {
 // content hash should be appended to the name of the resource.
 func (g *GenArgs) ShouldAddHashSuffixToName() bool {
 	return g.args != nil &&
-		(g.opts == nil || !g.opts.DisableNameSuffixHash)
+		(g.args.Options == nil || !g.args.Options.DisableNameSuffixHash)
 }
 
 // Behavior returns Behavior field of GeneratorArgs
