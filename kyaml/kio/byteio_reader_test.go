@@ -5,36 +5,64 @@ package kio_test
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	. "sigs.k8s.io/kustomize/kyaml/kio"
 )
 
-// getByteReaderTestInput returns test input
-func getByteReaderTestInput(t *testing.T) *bytes.Buffer {
-	b := &bytes.Buffer{}
-	_, err := b.WriteString(`
----
-a: b # first resource
-c: d
----
-# second resource
-e: f
-g:
-- h
----
----
-i: j
-`)
-	if !assert.NoError(t, err) {
-		assert.FailNow(t, "")
+func TestByteReader(t *testing.T) {
+	type testCase struct {
+		name                   string
+		input                  string
+		err                    string
+		expectedItems          []string
+		expectedFunctionConfig string
+		expectedResults        string
+		wrappingAPIVersion     string
+		wrappingAPIKind        string
+		instance               ByteReader
 	}
-	return b
-}
 
-func TestByteReader_Read_wrappedResourceßßList(t *testing.T) {
-	r := &ByteReader{Reader: bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1alpha1
+	testCases := []testCase{
+		//
+		//
+		//
+		{
+			name: "wrapped_resource_list",
+			input: `apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+-  kind: Deployment
+   spec:
+     replicas: 1
+- kind: Service
+  spec:
+    selectors:
+      foo: bar
+`,
+			expectedItems: []string{
+				`kind: Deployment
+spec:
+  replicas: 1
+`,
+				`kind: Service
+spec:
+  selectors:
+    foo: bar
+`,
+			},
+			wrappingAPIVersion: ResourceListAPIVersion,
+			wrappingAPIKind:    ResourceListKind,
+		},
+
+		//
+		//
+		//
+		{
+			name: "wrapped_resource_list_function_config",
+			input: `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 functionConfig:
   foo: bar
@@ -50,109 +78,87 @@ items:
   spec:
     selectors:
       foo: bar
-`)}
-	nodes, err := r.Read()
-	if !assert.NoError(t, err) {
-		return
-	}
-
-	// verify the contents
-	if !assert.Len(t, nodes, 2) {
-		return
-	}
-	expected := []string{
-		`kind: Deployment
+`,
+			expectedItems: []string{
+				`kind: Deployment
 spec:
   replicas: 1
 `,
-		`kind: Service
+				`kind: Service
 spec:
   selectors:
     foo: bar
 `,
-	}
-	for i := range nodes {
-		if !assert.Equal(t, expected[i], nodes[i].MustString()) {
-			return
-		}
-	}
-
-	// verify the function config
-	assert.Equal(t, `foo: bar
+			},
+			expectedFunctionConfig: `foo: bar
 elems:
 - a
 - b
-- c
-`, r.FunctionConfig.MustString())
+- c`,
+			wrappingAPIVersion: ResourceListAPIVersion,
+			wrappingAPIKind:    ResourceListKind,
+		},
 
-	assert.Equal(t, ResourceListKind, r.WrappingKind)
-	assert.Equal(t, ResourceListAPIVersion, r.WrappingAPIVersion)
-}
-
-func TestByteReader_Read_wrappedList(t *testing.T) {
-	r := &ByteReader{Reader: bytes.NewBufferString(`apiVersion: v1
+		//
+		//
+		//
+		{
+			name: "wrapped_list",
+			input: `
+apiVersion: v1
 kind: List
 items:
--  kind: Deployment
-   spec:
-     replicas: 1
+- kind: Deployment
+  spec:
+    replicas: 1
 - kind: Service
   spec:
     selectors:
       foo: bar
-`)}
-	nodes, err := r.Read()
-	if !assert.NoError(t, err) {
-		return
-	}
-
-	// verify the contents
-	if !assert.Len(t, nodes, 2) {
-		return
-	}
-	expected := []string{
-		`kind: Deployment
+`,
+			expectedItems: []string{
+				`
+kind: Deployment
 spec:
   replicas: 1
 `,
-		`kind: Service
+				`
+kind: Service
 spec:
   selectors:
     foo: bar
 `,
-	}
-	for i := range nodes {
-		if !assert.Equal(t, expected[i], nodes[i].MustString()) {
-			return
-		}
-	}
+			},
+			wrappingAPIKind:    "List",
+			wrappingAPIVersion: "v1",
+		},
 
-	// verify the function config
-	assert.Nil(t, r.FunctionConfig)
-	assert.Equal(t, "List", r.WrappingKind)
-	assert.Equal(t, "v1", r.WrappingAPIVersion)
-}
-
-// TestByteReader_Read tests the default Read behavior
-// - Resources are read into a slice
-// - ReaderAnnotations are set on the ResourceNodes
-func TestByteReader_Read(t *testing.T) {
-	nodes, err := (&ByteReader{Reader: getByteReaderTestInput(t)}).Read()
-	if !assert.NoError(t, err) {
-		return
-	}
-
-	if !assert.Len(t, nodes, 3) {
-		return
-	}
-	expected := []string{
-		`a: b # first resource
+		//
+		//
+		//
+		{
+			name: "unwrapped_items",
+			input: `
+---
+a: b # first resource
+c: d
+---
+# second resource
+e: f
+g:
+- h
+---
+---
+i: j
+`,
+			expectedItems: []string{
+				`a: b # first resource
 c: d
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
 `,
-		`# second resource
+				`# second resource
 e: f
 g:
 - h
@@ -160,150 +166,209 @@ metadata:
   annotations:
     config.kubernetes.io/index: '1'
 `,
-		`i: j
+				`i: j
 metadata:
   annotations:
     config.kubernetes.io/index: '2'
 `,
-	}
-	for i := range nodes {
-		val, err := nodes[i].String()
-		if !assert.NoError(t, err) {
-			return
-		}
-		if !assert.Equal(t, expected[i], val) {
-			return
-		}
-	}
-}
+			},
+		},
 
-// TestByteReader_Read_omitReaderAnnotations tests
-// - Resources are read into a slice
-// - ReaderAnnotations are not set on the ResourceNodes
-func TestByteReader_Read_omitReaderAnnotations(t *testing.T) {
-	nodes, err := (&ByteReader{
-		Reader:                getByteReaderTestInput(t),
-		OmitReaderAnnotations: true}).Read()
-	if !assert.NoError(t, err) {
-		return
-	}
-
-	// should have parsed 3 resources
-	if !assert.Len(t, nodes, 3) {
-		return
-	}
-	expected := []string{
-		"a: b # first resource\nc: d\n",
-		"# second resource\ne: f\ng:\n- h\n",
-		"i: j\n",
-	}
-	for i := range nodes {
-		val, err := nodes[i].String()
-		if !assert.NoError(t, err) {
-			return
-		}
-		if !assert.Equal(t, expected[i], val) {
-			return
-		}
-	}
-}
-
-// TestByteReader_Read_omitReaderAnnotations tests
-// - Resources are read into a slice
-// - ReaderAnnotations are NOT set on the ResourceNodes
-// - Additional annotations ARE set on the ResourceNodes
-func TestByteReader_Read_setAnnotationsOmitReaderAnnotations(t *testing.T) {
-	nodes, err := (&ByteReader{
-		Reader:                getByteReaderTestInput(t),
-		SetAnnotations:        map[string]string{"foo": "bar"},
-		OmitReaderAnnotations: true,
-	}).Read()
-	if !assert.NoError(t, err) {
-		return
-	}
-
-	if !assert.Len(t, nodes, 3) {
-		return
-	}
-	expected := []string{
-		`a: b # first resource
+		//
+		//
+		//
+		{
+			name: "omit_annotations",
+			input: `
+---
+a: b # first resource
 c: d
-metadata:
-  annotations:
-    foo: 'bar'
-`,
-		`# second resource
+---
+# second resource
 e: f
 g:
 - h
-metadata:
-  annotations:
-    foo: 'bar'
+---
+---
+i: j
 `,
-		`i: j
-metadata:
-  annotations:
-    foo: 'bar'
+			expectedItems: []string{
+				`
+a: b # first resource
+c: d
 `,
-	}
-	for i := range nodes {
-		val, err := nodes[i].String()
-		if !assert.NoError(t, err) {
-			return
-		}
-		if !assert.Equal(t, expected[i], val) {
-			return
-		}
-	}
-}
+				`
+# second resource
+e: f
+g:
+- h
+`,
+				`
+i: j
+`,
+			},
+			instance: ByteReader{OmitReaderAnnotations: true},
+		},
 
-// TestByteReader_Read_omitReaderAnnotations tests
-// - Resources are read into a slice
-// - ReaderAnnotations ARE set on the ResourceNodes
-// - Additional annotations ARE set on the ResourceNodes
-func TestByteReader_Read_setAnnotations(t *testing.T) {
-	nodes, err := (&ByteReader{
-		Reader:         getByteReaderTestInput(t),
-		SetAnnotations: map[string]string{"foo": "bar"},
-	}).Read()
-	if !assert.NoError(t, err) {
-		return
-	}
-
-	if !assert.Len(t, nodes, 3) {
-		return
-	}
-	expected := []string{
-		`a: b # first resource
+		//
+		//
+		//
+		{
+			name: "no_omit_annotations",
+			input: `
+---
+a: b # first resource
+c: d
+---
+# second resource
+e: f
+g:
+- h
+---
+---
+i: j
+`,
+			expectedItems: []string{
+				`
+a: b # first resource
 c: d
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
-    foo: 'bar'
 `,
-		`# second resource
+				`
+# second resource
 e: f
 g:
 - h
 metadata:
   annotations:
     config.kubernetes.io/index: '1'
-    foo: 'bar'
 `,
-		`i: j
+				`
+i: j
 metadata:
   annotations:
     config.kubernetes.io/index: '2'
+`,
+			},
+			instance: ByteReader{},
+		},
+
+		//
+		//
+		//
+		{
+			name: "set_annotation",
+			input: `
+---
+a: b # first resource
+c: d
+---
+# second resource
+e: f
+g:
+- h
+---
+---
+i: j
+`,
+			expectedItems: []string{
+				`a: b # first resource
+c: d
+metadata:
+  annotations:
     foo: 'bar'
 `,
+				`# second resource
+e: f
+g:
+- h
+metadata:
+  annotations:
+    foo: 'bar'
+`,
+				`i: j
+metadata:
+  annotations:
+    foo: 'bar'
+`,
+			},
+			instance: ByteReader{
+				OmitReaderAnnotations: true,
+				SetAnnotations:        map[string]string{"foo": "bar"}},
+		},
 	}
-	for i := range nodes {
-		val, err := nodes[i].String()
-		if !assert.NoError(t, err) {
-			return
-		}
-		if !assert.Equal(t, expected[i], val) {
-			return
-		}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			r := tc.instance
+			r.Reader = bytes.NewBufferString(tc.input)
+			nodes, err := r.Read()
+			if tc.err != "" {
+				if !assert.EqualError(t, err, tc.err) {
+					t.FailNow()
+				}
+				return
+			}
+
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			// verify the contents
+			if !assert.Len(t, nodes, len(tc.expectedItems)) {
+				t.FailNow()
+			}
+			for i := range nodes {
+				actual, err := nodes[i].String()
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				if !assert.Equal(t,
+					strings.TrimSpace(tc.expectedItems[i]),
+					strings.TrimSpace(actual)) {
+					t.FailNow()
+				}
+			}
+
+			// verify the function config
+			if tc.expectedFunctionConfig != "" {
+				actual, err := r.FunctionConfig.String()
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				if !assert.Equal(t,
+					strings.TrimSpace(tc.expectedFunctionConfig),
+					strings.TrimSpace(actual)) {
+					t.FailNow()
+				}
+			} else if !assert.Nil(t, r.FunctionConfig) {
+				t.FailNow()
+			}
+
+			if tc.expectedResults != "" {
+				actual, err := r.Results.String()
+				actual = strings.TrimSpace(actual)
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+
+				tc.expectedResults = strings.TrimSpace(tc.expectedResults)
+				if !assert.Equal(t, tc.expectedResults, actual) {
+					t.FailNow()
+				}
+			} else if !assert.Nil(t, r.Results) {
+				t.FailNow()
+			}
+
+			if !assert.Equal(t, tc.wrappingAPIKind, r.WrappingKind) {
+				t.FailNow()
+			}
+			if !assert.Equal(t, tc.wrappingAPIVersion, r.WrappingAPIVersion) {
+				t.FailNow()
+			}
+		})
 	}
 }

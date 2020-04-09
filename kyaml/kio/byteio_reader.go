@@ -41,6 +41,8 @@ type ByteReadWriter struct {
 
 	FunctionConfig *yaml.RNode
 
+	Results *yaml.RNode
+
 	WrappingAPIVersion string
 	WrappingKind       string
 }
@@ -52,6 +54,7 @@ func (rw *ByteReadWriter) Read() ([]*yaml.RNode, error) {
 	}
 	val, err := b.Read()
 	rw.FunctionConfig = b.FunctionConfig
+	rw.Results = b.Results
 	rw.WrappingAPIVersion = b.WrappingAPIVersion
 	rw.WrappingKind = b.WrappingKind
 	return val, errors.Wrap(err)
@@ -63,6 +66,7 @@ func (rw *ByteReadWriter) Write(nodes []*yaml.RNode) error {
 		KeepReaderAnnotations: rw.KeepReaderAnnotations,
 		Style:                 rw.Style,
 		FunctionConfig:        rw.FunctionConfig,
+		Results:               rw.Results,
 		WrappingAPIVersion:    rw.WrappingAPIVersion,
 		WrappingKind:          rw.WrappingKind,
 	}.Write(nodes)
@@ -84,6 +88,8 @@ type ByteReader struct {
 	SetAnnotations map[string]string
 
 	FunctionConfig *yaml.RNode
+
+	Results *yaml.RNode
 
 	// DisableUnwrapping prevents Resources in Lists and ResourceLists from being unwrapped
 	DisableUnwrapping bool
@@ -142,9 +148,11 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 			r.WrappingAPIVersion = meta.APIVersion
 
 			// unwrap the list
-			fc := node.Field("functionConfig")
-			if fc != nil {
+			if fc := node.Field("functionConfig"); fc != nil {
 				r.FunctionConfig = fc.Value
+			}
+			if res := node.Field("results"); res != nil {
+				r.Results = res.Value
 			}
 
 			items := node.Field("items")
