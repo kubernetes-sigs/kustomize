@@ -13,12 +13,10 @@ import (
 type SecretGeneratorPlugin struct {
 	h                *resmap.PluginHelpers
 	types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
-	types.GeneratorOptions
 	types.SecretArgs
 }
 
 func (p *SecretGeneratorPlugin) Config(h *resmap.PluginHelpers, config []byte) (err error) {
-	p.GeneratorOptions = types.GeneratorOptions{}
 	p.SecretArgs = types.SecretArgs{}
 	err = yaml.Unmarshal(config, p)
 	if p.SecretArgs.Name == "" {
@@ -33,8 +31,7 @@ func (p *SecretGeneratorPlugin) Config(h *resmap.PluginHelpers, config []byte) (
 
 func (p *SecretGeneratorPlugin) Generate() (resmap.ResMap, error) {
 	return p.h.ResmapFactory().FromSecretArgs(
-		kv.NewLoader(p.h.Loader(), p.h.Validator()),
-		&p.GeneratorOptions, p.SecretArgs)
+		kv.NewLoader(p.h.Loader(), p.h.Validator()), p.SecretArgs)
 }
 
 func NewSecretGeneratorPlugin() resmap.GeneratorPlugin {

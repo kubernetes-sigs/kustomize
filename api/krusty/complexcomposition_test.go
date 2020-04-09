@@ -143,7 +143,8 @@ apiVersion: builtin
 kind: ConfigMapGenerator
 metadata:
   name: my-config
-disableNameSuffixHash: true
+options:
+  disableNameSuffixHash: true
 literals:
 - MY_ENV=foo
 `)

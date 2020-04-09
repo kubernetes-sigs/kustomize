@@ -13,13 +13,10 @@ import (
 type ConfigMapGeneratorPlugin struct {
 	h                *resmap.PluginHelpers
 	types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
-	types.GeneratorOptions
 	types.ConfigMapArgs
 }
 
-func (p *ConfigMapGeneratorPlugin) Config(
-	h *resmap.PluginHelpers, config []byte) (err error) {
-	p.GeneratorOptions = types.GeneratorOptions{}
+func (p *ConfigMapGeneratorPlugin) Config(h *resmap.PluginHelpers, config []byte) (err error) {
 	p.ConfigMapArgs = types.ConfigMapArgs{}
 	err = yaml.Unmarshal(config, p)
 	if p.ConfigMapArgs.Name == "" {
@@ -34,8 +31,7 @@ func (p *ConfigMapGeneratorPlugin) Config(
 
 func (p *ConfigMapGeneratorPlugin) Generate() (resmap.ResMap, error) {
 	return p.h.ResmapFactory().FromConfigMapArgs(
-		kv.NewLoader(p.h.Loader(), p.h.Validator()),
-		&p.GeneratorOptions, p.ConfigMapArgs)
+		kv.NewLoader(p.h.Loader(), p.h.Validator()), p.ConfigMapArgs)
 }
 
 func NewConfigMapGeneratorPlugin() resmap.GeneratorPlugin {
