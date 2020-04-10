@@ -116,7 +116,9 @@ func makeConfigMapOptions(rf *resource.Factory, name, behavior string, disableHa
 		"apiVersion": "v1",
 		"kind":       "ConfigMap",
 		"metadata":   map[string]interface{}{"name": name},
-	}, &types.GeneratorArgs{Behavior: behavior}, &types.GeneratorOptions{DisableNameSuffixHash: disableHash})
+	}, &types.GeneratorArgs{
+		Behavior: behavior,
+		Options:  &types.GeneratorOptions{DisableNameSuffixHash: disableHash}})
 }
 
 func strptr(s string) *string {

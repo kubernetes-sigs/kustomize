@@ -266,8 +266,9 @@ func (p *ExecPlugin) UpdateResourceOptions(rm resmap.ResMap) (resmap.ResMap, err
 		}
 		r.SetAnnotations(annotations)
 		r.SetOptions(types.NewGenArgs(
-			&types.GeneratorArgs{Behavior: behavior},
-			&types.GeneratorOptions{DisableNameSuffixHash: !needsHash}))
+			&types.GeneratorArgs{
+				Behavior: behavior,
+				Options:  &types.GeneratorOptions{DisableNameSuffixHash: !needsHash}}))
 	}
 	return rm, nil
 }

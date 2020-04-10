@@ -50,8 +50,8 @@ func (rf *Factory) FromMapWithNamespaceAndName(ns string, n string, m map[string
 
 // FromMapAndOption returns a new instance of Resource with given options.
 func (rf *Factory) FromMapAndOption(
-	m map[string]interface{}, args *types.GeneratorArgs, option *types.GeneratorOptions) *Resource {
-	return rf.makeOne(rf.kf.FromMap(m), types.NewGenArgs(args, option))
+	m map[string]interface{}, args *types.GeneratorArgs) *Resource {
+	return rf.makeOne(rf.kf.FromMap(m), types.NewGenArgs(args))
 }
 
 // FromKunstructured returns a new instance of Resource.
@@ -66,7 +66,7 @@ func (rf *Factory) makeOne(
 		log.Fatal("unstruct ifc must not be null")
 	}
 	if o == nil {
-		o = types.NewGenArgs(nil, nil)
+		o = types.NewGenArgs(nil)
 	}
 	r := &Resource{
 		Kunstructured: u,
@@ -147,33 +147,19 @@ func (rf *Factory) SliceFromBytes(in []byte) ([]*Resource, error) {
 }
 
 // MakeConfigMap makes an instance of Resource for ConfigMap
-func (rf *Factory) MakeConfigMap(
-	kvLdr ifc.KvLoader,
-	options *types.GeneratorOptions,
-	args *types.ConfigMapArgs) (*Resource, error) {
-	u, err := rf.kf.MakeConfigMap(kvLdr, options, args)
+func (rf *Factory) MakeConfigMap(kvLdr ifc.KvLoader, args *types.ConfigMapArgs) (*Resource, error) {
+	u, err := rf.kf.MakeConfigMap(kvLdr, args)
 	if err != nil {
 		return nil, err
 	}
-	return rf.makeOne(
-		u,
-		types.NewGenArgs(
-			&types.GeneratorArgs{Behavior: args.Behavior},
-			options)), nil
+	return rf.makeOne(u, types.NewGenArgs(&args.GeneratorArgs)), nil
 }
 
 // MakeSecret makes an instance of Resource for Secret
-func (rf *Factory) MakeSecret(
-	kvLdr ifc.KvLoader,
-	options *types.GeneratorOptions,
-	args *types.SecretArgs) (*Resource, error) {
-	u, err := rf.kf.MakeSecret(kvLdr, options, args)
+func (rf *Factory) MakeSecret(kvLdr ifc.KvLoader, args *types.SecretArgs) (*Resource, error) {
+	u, err := rf.kf.MakeSecret(kvLdr, args)
 	if err != nil {
 		return nil, err
 	}
-	return rf.makeOne(
-		u,
-		types.NewGenArgs(
-			&types.GeneratorArgs{Behavior: args.Behavior},
-			options)), nil
+	return rf.makeOne(u, types.NewGenArgs(&args.GeneratorArgs)), nil
 }
