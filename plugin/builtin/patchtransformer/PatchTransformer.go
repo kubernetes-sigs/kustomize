@@ -7,11 +7,14 @@ package main
 import (
 	"fmt"
 
-	"github.com/evanphx/json-patch"
+	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/api/filters/patchjson6902"
+	"sigs.k8s.io/kustomize/api/filters/patchstrategicmerge"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/filtersutil"
 	"sigs.k8s.io/yaml"
 )
 
@@ -21,6 +24,8 @@ type plugin struct {
 	Path         string          `json:"path,omitempty" yaml:"path,omitempty"`
 	Patch        string          `json:"patch,omitempty" yaml:"patch,omitempty"`
 	Target       *types.Selector `json:"target,omitempty" yaml:"target,omitempty"`
+
+	YAMLSupport bool `json:"yamlSupport,omitempty" yaml:"yamlSupport,omitempty"`
 }
 
 //noinspection GoUnusedGlobalVariable
@@ -42,19 +47,17 @@ func (p *plugin) Config(
 			"patch and path can't be set at the same time\n%s", string(c))
 		return
 	}
-	var in []byte
+
 	if p.Path != "" {
-		in, err = h.Loader().Load(p.Path)
-		if err != nil {
-			return
+		loaded, loadErr := h.Loader().Load(p.Path)
+		if loadErr != nil {
+			return loadErr
 		}
-	}
-	if p.Patch != "" {
-		in = []byte(p.Patch)
+		p.Patch = string(loaded)
 	}
 
-	patchSM, errSM := h.ResmapFactory().RF().FromBytes(in)
-	patchJson, errJson := jsonPatchFromBytes(in)
+	patchSM, errSM := h.ResmapFactory().RF().FromBytes([]byte(p.Patch))
+	patchJson, errJson := jsonPatchFromBytes([]byte(p.Patch))
 	if errSM != nil && errJson != nil {
 		err = fmt.Errorf(
 			"unable to get either a Strategic Merge Patch or JSON patch 6902 from %s", p.Patch)
@@ -75,18 +78,63 @@ func (p *plugin) Config(
 }
 
 func (p *plugin) Transform(m resmap.ResMap) error {
-	if p.loadedPatch != nil && p.Target == nil {
-		target, err := m.GetById(p.loadedPatch.OrgId())
+	if p.loadedPatch != nil {
+		// The patch was a strategic merge patch
+		return p.transformStrategicMerge(m, p.loadedPatch)
+	} else {
+		return p.transformJson6902(m, p.decodedPatch)
+	}
+}
+
+// transformStrategicMerge applies the provided strategic merge patch
+// to all the resources in the ResMap that match either the Target or
+// the identifier of the patch.
+func (p *plugin) transformStrategicMerge(m resmap.ResMap, patch *resource.Resource) error {
+	if p.Target == nil {
+		target, err := m.GetById(patch.OrgId())
 		if err != nil {
 			return err
 		}
-		err = target.Patch(p.loadedPatch.Kunstructured)
-		if err != nil {
-			return err
-		}
-		return nil
+		return p.applySMPatch(target, patch)
 	}
 
+	resources, err := m.Select(*p.Target)
+	if err != nil {
+		return err
+	}
+	for _, res := range resources {
+		patchCopy := patch.DeepCopy()
+		patchCopy.SetName(res.GetName())
+		patchCopy.SetNamespace(res.GetNamespace())
+		patchCopy.SetGvk(res.GetGvk())
+		err := p.applySMPatch(res, patchCopy)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// applySMPatch applies the provided strategic merge patch to the
+// given resource. Depending on the value of YAMLSupport, it will either
+// use the legacy implementation or the kyaml-based solution.
+func (p *plugin) applySMPatch(resource, patch *resource.Resource) error {
+	if !p.YAMLSupport {
+		return resource.Patch(patch.Kunstructured)
+	} else {
+		node, err := filtersutil.GetRNode(patch)
+		if err != nil {
+			return err
+		}
+		return filtersutil.ApplyToJSON(patchstrategicmerge.Filter{
+			Patch: node,
+		}, resource.Kunstructured)
+	}
+}
+
+// transformJson6902 applies the provided json6902 patch
+// to all the resources in the ResMap that match the Target.
+func (p *plugin) transformJson6902(m resmap.ResMap, patch jsonpatch.Patch) error {
 	if p.Target == nil {
 		return fmt.Errorf("must specify a target for patch %s", p.Patch)
 	}
@@ -96,33 +144,34 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 		return err
 	}
 	for _, res := range resources {
-		if p.decodedPatch != nil {
-			rawObj, err := res.MarshalJSON()
-			if err != nil {
-				return err
-			}
-			modifiedObj, err := p.decodedPatch.Apply(rawObj)
-			if err != nil {
-				return errors.Wrapf(
-					err, "failed to apply json patch '%s'", p.Patch)
-			}
-			err = res.UnmarshalJSON(modifiedObj)
-			if err != nil {
-				return err
-			}
-		}
-		if p.loadedPatch != nil {
-			patchCopy := p.loadedPatch.DeepCopy()
-			patchCopy.SetName(res.GetName())
-			patchCopy.SetNamespace(res.GetNamespace())
-			patchCopy.SetGvk(res.GetGvk())
-			err = res.Patch(patchCopy.Kunstructured)
-			if err != nil {
-				return err
-			}
+		err = p.applyJson6902Patch(res, patch)
+		if err != nil {
+			return err
 		}
 	}
 	return nil
+}
+
+// applyJson6902Patch applies the provided patch to the given resource.
+// Depending on the value of YAMLSupport, it will either
+// use the legacy implementation or the kyaml-based solution.
+func (p *plugin) applyJson6902Patch(resource *resource.Resource, patch jsonpatch.Patch) error {
+	if !p.YAMLSupport {
+		rawObj, err := resource.MarshalJSON()
+		if err != nil {
+			return err
+		}
+		modifiedObj, err := patch.Apply(rawObj)
+		if err != nil {
+			return errors.Wrapf(
+				err, "failed to apply json patch '%s'", p.Patch)
+		}
+		return resource.UnmarshalJSON(modifiedObj)
+	} else {
+		return filtersutil.ApplyToJSON(patchjson6902.Filter{
+			Patch: p.Patch,
+		}, resource.Kunstructured)
+	}
 }
 
 // jsonPatchFromBytes loads a Json 6902 patch from
