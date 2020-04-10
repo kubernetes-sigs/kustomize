@@ -69,20 +69,21 @@ func TestPatchTransformerMissingFile(t *testing.T) {
 		PrepBuiltin("PatchTransformer")
 	defer th.Reset()
 
-	_, err := th.RunTransformer(`
+	th.RunTransformerAndCheckError(`
 apiVersion: builtin
 kind: PatchTransformer
 metadata:
   name: notImportantHere
 path: patch.yaml
-`, target)
-	if err == nil {
-		t.Fatalf("expected error")
-	}
-	if !strings.Contains(err.Error(),
-		"'/patch.yaml' doesn't exist") {
-		t.Fatalf("unexpected err: %v", err)
-	}
+`, target, func(t *testing.T, err error) {
+		if err == nil {
+			t.Fatalf("expected error")
+		}
+		if !strings.Contains(err.Error(),
+			"'/patch.yaml' doesn't exist") {
+			t.Fatalf("unexpected err: %v", err)
+		}
+	})
 }
 
 func TestPatchTransformerBadPatch(t *testing.T) {
@@ -90,20 +91,21 @@ func TestPatchTransformerBadPatch(t *testing.T) {
 		PrepBuiltin("PatchTransformer")
 	defer th.Reset()
 
-	_, err := th.RunTransformer(`
+	th.RunTransformerAndCheckError(`
 apiVersion: builtin
 kind: PatchTransformer
 metadata:
   name: notImportantHere
 patch: "thisIsNotAPatch"
-`, target)
-	if err == nil {
-		t.Fatalf("expected error")
-	}
-	if !strings.Contains(err.Error(),
-		"unable to get either a Strategic Merge Patch or JSON patch 6902 from") {
-		t.Fatalf("unexpected err: %v", err)
-	}
+`, target, func(t *testing.T, err error) {
+		if err == nil {
+			t.Fatalf("expected error")
+		}
+		if !strings.Contains(err.Error(),
+			"unable to get either a Strategic Merge Patch or JSON patch 6902 from") {
+			t.Fatalf("unexpected err: %v", err)
+		}
+	})
 }
 
 func TestPatchTransformerMissingSelector(t *testing.T) {
@@ -111,20 +113,21 @@ func TestPatchTransformerMissingSelector(t *testing.T) {
 		PrepBuiltin("PatchTransformer")
 	defer th.Reset()
 
-	_, err := th.RunTransformer(`
+	th.RunTransformerAndCheckError(`
 apiVersion: builtin
 kind: PatchTransformer
 metadata:
   name: notImportantHere
 patch: '[{"op": "add", "path": "/spec/template/spec/dnsPolicy", "value": "ClusterFirst"}]'
-`, target)
-	if err == nil {
-		t.Fatalf("expected error")
-	}
-	if !strings.Contains(err.Error(),
-		"must specify a target for patch") {
-		t.Fatalf("unexpected err: %v", err)
-	}
+`, target, func(t *testing.T, err error) {
+		if err == nil {
+			t.Fatalf("expected error")
+		}
+		if !strings.Contains(err.Error(),
+			"must specify a target for patch") {
+			t.Fatalf("unexpected err: %v", err)
+		}
+	})
 }
 
 func TestPatchTransformerBothEmptyPathAndPatch(t *testing.T) {
@@ -132,18 +135,19 @@ func TestPatchTransformerBothEmptyPathAndPatch(t *testing.T) {
 		PrepBuiltin("PatchTransformer")
 	defer th.Reset()
 
-	_, err := th.RunTransformer(`
+	th.RunTransformerAndCheckError(`
 apiVersion: builtin
 kind: PatchTransformer
 metadata:
   name: notImportantHere
-`, target)
-	if err == nil {
-		t.Fatalf("expected error")
-	}
-	if !strings.Contains(err.Error(), "must specify one of patch and path in") {
-		t.Fatalf("unexpected err: %v", err)
-	}
+`, target, func(t *testing.T, err error) {
+		if err == nil {
+			t.Fatalf("expected error")
+		}
+		if !strings.Contains(err.Error(), "must specify one of patch and path in") {
+			t.Fatalf("unexpected err: %v", err)
+		}
+	})
 }
 
 func TestPatchTransformerBothNonEmptyPathAndPatch(t *testing.T) {
@@ -151,20 +155,21 @@ func TestPatchTransformerBothNonEmptyPathAndPatch(t *testing.T) {
 		PrepBuiltin("PatchTransformer")
 	defer th.Reset()
 
-	_, err := th.RunTransformer(`
+	th.RunTransformerAndCheckError(`
 apiVersion: builtin
 kind: PatchTransformer
 metadata:
   name: notImportantHere
 Path: patch.yaml
 Patch: "something"
-`, target)
-	if err == nil {
-		t.Fatalf("expected error")
-	}
-	if !strings.Contains(err.Error(), "patch and path can't be set at the same time") {
-		t.Fatalf("unexpected err: %v", err)
-	}
+`, target, func(t *testing.T, err error) {
+		if err == nil {
+			t.Fatalf("expected error")
+		}
+		if !strings.Contains(err.Error(), "patch and path can't be set at the same time") {
+			t.Fatalf("unexpected err: %v", err)
+		}
+	})
 }
 
 func TestPatchTransformerFromFiles(t *testing.T) {
@@ -181,7 +186,7 @@ spec:
   replica: 3
 `)
 
-	rm := th.LoadAndRunTransformer(`
+	th.RunTransformerAndCheckResult(`
 apiVersion: builtin
 kind: PatchTransformer
 metadata:
@@ -189,9 +194,9 @@ metadata:
 path: patch.yaml
 target:
   name: .*Deploy
-`, target)
-
-	th.AssertActualEqualsExpected(rm, `
+`,
+		target,
+		`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -250,7 +255,7 @@ func TestPatchTransformerWithInline(t *testing.T) {
 		PrepBuiltin("PatchTransformer")
 	defer th.Reset()
 
-	rm := th.LoadAndRunTransformer(`
+	th.RunTransformerAndCheckResult(`
 apiVersion: builtin
 kind: PatchTransformer
 metadata:
@@ -259,9 +264,8 @@ patch: '[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "va
 target:
   name: .*Deploy
   kind: Deployment
-`, target)
-
-	th.AssertActualEqualsExpected(rm, `
+`, target,
+		`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
