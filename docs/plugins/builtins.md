@@ -12,8 +12,8 @@
 
 # Builtin Plugins
 
-A list of kustomize's builtin plugins (both
-generators and transformers).
+A list of kustomize's builtin plugins - both
+generators and transformers.
 
 For each plugin, an example is given for
 
@@ -92,16 +92,35 @@ one ConfigMap resource (it's a generator of n maps).
 
 The example below creates three ConfigMaps. One with the names and contents of
 the given files, one with key/value as data, and a third which sets an
-annotation and label via generatorOptions for that single ConfigMap.
+annotation and label via `options` for that single ConfigMap.
 
 Each configMapGenerator item accepts a parameter of
 `behavior: [create|replace|merge]`.
 This allows an overlay to modify or
 replace an existing configMap from the parent.
 
+Also, each entry has an `options` field, that has the
+same subfields as the kustomization file's `generatorOptions` field.
+  
+This `options` field allows one to add labels and/or
+annotations to the generated instance, or to individually
+disable the name suffix hash for that instance.
+Labels and annotations added here will not be overwritten
+by the global options associated with the kustomization
+file `generatorOptions` field.  However, due to how
+booleans behave, if the global `generatorOptions` field
+specifies `disableNameSuffixHash: true`, this will
+trump any attempt to locally override it.
+
 ```
+# These labels are added to all configmaps and secrets.
+generatorOptions:
+  labels:
+    fruit: apple
+
 configMapGenerator:
 - name: my-java-server-props
+  behavior: merge
   files:
   - application.properties
   - more.properties
@@ -109,10 +128,14 @@ configMapGenerator:
   literals:	
   - JAVA_HOME=/opt/java/jdk
   - JAVA_TOOL_OPTIONS=-agentlib:hprof
+  options:
+    disableNameSuffixHash: true
+    labels:
+      pet: dog
 - name: dashboards
   files:
   - mydashboard.json
-  generatorOptions:
+  options:
     annotations:
       dashboard: "1"
     labels:
@@ -138,8 +161,6 @@ configMapGenerator:
 ### Usage via plugin
 #### Arguments
 
-> [types.GeneratorOptions]
->
 > [types.ConfigMapArgs]
 
 #### Example
@@ -640,6 +661,9 @@ results in the creation of
 one Secret resource
 (it's a generator of n secrets).
 
+This works like the `configMapGenerator` field
+described above.
+
 ```
 secretGenerator:
 - name: app-tls
@@ -663,7 +687,7 @@ secretGenerator:
   files:
   - app-config.yaml
   type: Opaque
-  generatorOptions:
+  options:
     annotations:
       app_config: "true"
     labels:
@@ -675,8 +699,6 @@ secretGenerator:
 #### Arguments
 
 > [types.ObjectMeta]
->
-> [types.GeneratorOptions]
 >
 > [types.SecretArgs]
 
