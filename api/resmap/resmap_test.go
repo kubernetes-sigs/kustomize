@@ -826,7 +826,7 @@ func makeMap1() ResMap {
 			},
 		}, &types.GeneratorArgs{
 			Behavior: "create",
-		}, nil))
+		}))
 }
 
 func makeMap2(b types.GenerationBehavior) ResMap {
@@ -844,7 +844,7 @@ func makeMap2(b types.GenerationBehavior) ResMap {
 			},
 		}, &types.GeneratorArgs{
 			Behavior: b.String(),
-		}, nil))
+		}))
 }
 
 func TestAbsorbAll(t *testing.T) {
@@ -864,7 +864,7 @@ func TestAbsorbAll(t *testing.T) {
 			},
 		}, &types.GeneratorArgs{
 			Behavior: "create",
-		}, nil))
+		}))
 	w := makeMap1()
 	if err := w.AbsorbAll(makeMap2(types.BehaviorMerge)); err != nil {
 		t.Fatalf("unexpected error: %v", err)

@@ -95,11 +95,10 @@ func addConfigMap(
 	args := findOrMakeConfigMapArgs(k, flags.Name)
 	mergeFlagsIntoCmArgs(args, flags)
 	// Validate by trying to create corev1.configmap.
-	_, err := kf.MakeConfigMap(ldr, k.GeneratorOptions, args)
-	if err != nil {
-		return err
-	}
-	return nil
+	args.Options = types.MergeGlobalOptionsIntoLocal(
+		args.Options, k.GeneratorOptions)
+	_, err := kf.MakeConfigMap(ldr, args)
+	return err
 }
 
 func findOrMakeConfigMapArgs(m *types.Kustomization, name string) *types.ConfigMapArgs {

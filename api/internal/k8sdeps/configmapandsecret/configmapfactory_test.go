@@ -82,7 +82,6 @@ func TestConstructConfigMap(t *testing.T) {
 	type testCase struct {
 		description string
 		input       types.ConfigMapArgs
-		options     *types.GeneratorOptions
 		expected    *corev1.ConfigMap
 	}
 
@@ -99,7 +98,6 @@ func TestConstructConfigMap(t *testing.T) {
 					},
 				},
 			},
-			options:  nil,
 			expected: makeEnvConfigMap("envConfigMap"),
 		},
 		{
@@ -115,7 +113,6 @@ func TestConstructConfigMap(t *testing.T) {
 					},
 				},
 			},
-			options:  nil,
 			expected: makeFileConfigMap("fileConfigMap"),
 		},
 		{
@@ -126,11 +123,11 @@ func TestConstructConfigMap(t *testing.T) {
 					KvPairSources: types.KvPairSources{
 						LiteralSources: []string{"a=x", "b=y", "c=\"Hello World\"", "d='true'"},
 					},
-				},
-			},
-			options: &types.GeneratorOptions{
-				Labels: map[string]string{
-					"foo": "bar",
+					Options: &types.GeneratorOptions{
+						Labels: map[string]string{
+							"foo": "bar",
+						},
+					},
 				},
 			},
 			expected: makeLiteralConfigMap("literalConfigMap", map[string]string{
@@ -145,7 +142,7 @@ func TestConstructConfigMap(t *testing.T) {
 					KvPairSources: types.KvPairSources{
 						LiteralSources: []string{"a=x", "b=y", "c=\"Hello World\"", "d='true'"},
 					},
-					GeneratorOptions: &types.GeneratorOptions{
+					Options: &types.GeneratorOptions{
 						Labels: map[string]string{
 							"foo": "changed",
 							"cat": "dog",
@@ -157,18 +154,6 @@ func TestConstructConfigMap(t *testing.T) {
 					},
 				},
 			},
-			options: &types.GeneratorOptions{
-				Labels: map[string]string{
-					"foo": "bar",
-				},
-				Annotations: map[string]string{
-					"foo": "bar",
-				},
-			},
-			// GeneratorOptions from the ConfigMapArgs take precedence over the
-			// factory level GeneratorOptions and should overwrite
-			// labels/annotations set in the factory level if there are common
-			// labels/annotations
 			expected: makeLiteralConfigMap("literalConfigMap", map[string]string{
 				"foo": "changed",
 				"cat": "dog",
@@ -193,8 +178,7 @@ func TestConstructConfigMap(t *testing.T) {
 		loader.NewFileLoaderAtRoot(fSys),
 		valtest_test.MakeFakeValidator())
 	for _, tc := range testCases {
-		f := NewFactory(kvLdr, tc.options)
-		cm, err := f.MakeConfigMap(&tc.input)
+		cm, err := NewFactory(kvLdr).MakeConfigMap(&tc.input)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}

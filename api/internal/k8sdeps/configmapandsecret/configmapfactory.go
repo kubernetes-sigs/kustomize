@@ -25,8 +25,7 @@ func makeFreshConfigMap(
 }
 
 // MakeConfigMap returns a new ConfigMap, or nil and an error.
-func (f *Factory) MakeConfigMap(
-	args *types.ConfigMapArgs) (*corev1.ConfigMap, error) {
+func (f *Factory) MakeConfigMap(args *types.ConfigMapArgs) (*corev1.ConfigMap, error) {
 	all, err := f.kvLdr.Load(args.KvPairSources)
 	if err != nil {
 		return nil, errors.Wrap(err, "loading KV pairs")
@@ -38,7 +37,7 @@ func (f *Factory) MakeConfigMap(
 			return nil, errors.Wrap(err, "trouble mapping")
 		}
 	}
-	f.setLabelsAndAnnnotations(cm, args.GeneratorOptions)
+	f.copyLabelsAndAnnotations(cm, args.Options)
 	return cm, nil
 }
 

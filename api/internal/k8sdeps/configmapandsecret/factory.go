@@ -11,44 +11,26 @@ import (
 
 // Factory makes ConfigMaps and Secrets.
 type Factory struct {
-	kvLdr   ifc.KvLoader
-	options *types.GeneratorOptions
+	kvLdr ifc.KvLoader
 }
 
 // NewFactory returns a new factory that makes ConfigMaps and Secrets.
-func NewFactory(
-	kvLdr ifc.KvLoader, o *types.GeneratorOptions) *Factory {
-	return &Factory{kvLdr: kvLdr, options: o}
+func NewFactory(kvLdr ifc.KvLoader) *Factory {
+	return &Factory{kvLdr: kvLdr}
 }
 
-// setLabelsAndAnnnotations will take the labels and annotations from
-// global GeneratorOptions and resource level GeneratorOptions and merge them
-// with the resource level taking precedence, and then set them on the provided
-// obj.
-func (f *Factory) setLabelsAndAnnnotations(obj metav1.Object, opts *types.GeneratorOptions) {
-	labels := make(map[string]string)
-	annotations := make(map[string]string)
-	if f.options != nil {
-		for k, v := range f.options.Labels {
-			labels[k] = v
-		}
-		for k, v := range f.options.Annotations {
-			annotations[k] = v
-		}
+// copyLabelsAndAnnotations copies labels and annotations from
+// GeneratorOptions into the given object.
+func (f *Factory) copyLabelsAndAnnotations(
+	obj metav1.Object, opts *types.GeneratorOptions) {
+	if opts == nil {
+		return
 	}
-	if opts != nil {
-		for k, v := range opts.Labels {
-			labels[k] = v
-		}
-		for k, v := range opts.Annotations {
-			annotations[k] = v
-		}
+	if opts.Labels != nil {
+		obj.SetLabels(types.CopyMap(opts.Labels))
 	}
-	if len(labels) != 0 {
-		obj.SetLabels(labels)
-	}
-	if len(annotations) != 0 {
-		obj.SetAnnotations(annotations)
+	if opts.Annotations != nil {
+		obj.SetAnnotations(types.CopyMap(opts.Annotations))
 	}
 }
 

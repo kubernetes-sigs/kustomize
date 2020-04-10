@@ -75,14 +75,8 @@ type KunstructuredFactory interface {
 	SliceFromBytes([]byte) ([]Kunstructured, error)
 	FromMap(m map[string]interface{}) Kunstructured
 	Hasher() KunstructuredHasher
-	MakeConfigMap(
-		kvLdr KvLoader,
-		options *types.GeneratorOptions,
-		args *types.ConfigMapArgs) (Kunstructured, error)
-	MakeSecret(
-		kvLdr KvLoader,
-		options *types.GeneratorOptions,
-		args *types.SecretArgs) (Kunstructured, error)
+	MakeConfigMap(kvLdr KvLoader, args *types.ConfigMapArgs) (Kunstructured, error)
+	MakeSecret(kvLdr KvLoader, args *types.SecretArgs) (Kunstructured, error)
 }
 
 // KunstructuredHasher returns a hash of the argument
