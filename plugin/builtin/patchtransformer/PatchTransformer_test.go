@@ -250,7 +250,97 @@ spec:
 `)
 }
 
-func TestPatchTransformerWithInline(t *testing.T) {
+func TestPatchTransformerSmpSidecars(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+
+	th.WriteF("patch.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: not-important
+spec:
+  template:
+    spec:
+      containers:
+        - name: istio-proxy
+          image: docker.io/istio/proxyv2
+          args:
+          - proxy
+          - sidecar
+`)
+
+	th.RunTransformerAndCheckResult(`
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: notImportantHere
+path: patch.yaml
+target:
+  name: myDeploy
+`, target, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    old-label: old-value
+  name: myDeploy
+spec:
+  replica: 2
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - args:
+        - proxy
+        - sidecar
+        image: docker.io/istio/proxyv2
+        name: istio-proxy
+      - image: nginx
+        name: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    new-label: new-value
+  name: yourDeploy
+spec:
+  replica: 1
+  template:
+    metadata:
+      labels:
+        new-label: new-value
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx
+---
+apiVersion: apps/v1
+kind: MyKind
+metadata:
+  label:
+    old-label: old-value
+  name: myDeploy
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - args:
+        - proxy
+        - sidecar
+        image: docker.io/istio/proxyv2
+        name: istio-proxy
+`)
+}
+
+func TestPatchTransformerWithInlineJson(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchTransformer")
 	defer th.Reset()
@@ -315,5 +405,207 @@ spec:
       containers:
       - image: nginx
         name: nginx
+`)
+}
+
+func TestPatchTransformerWithInlineYaml(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+
+	th.RunTransformerAndCheckResult(`
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: notImportantHere
+target:
+  name: .*Deploy
+  kind: Deployment
+patch: |-
+  apiVersion: apps/v1
+  metadata:
+    name: myDeploy
+  kind: Deployment
+  spec:
+    replica: 77
+`, target, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    old-label: old-value
+  name: myDeploy
+spec:
+  replica: 77
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    new-label: new-value
+  name: yourDeploy
+spec:
+  replica: 77
+  template:
+    metadata:
+      labels:
+        new-label: new-value
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx
+---
+apiVersion: apps/v1
+kind: MyKind
+metadata:
+  label:
+    old-label: old-value
+  name: myDeploy
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`)
+}
+
+const ingressTarget = `apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: my-ingress
+spec:
+  rules:
+  - host: foo.bar.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: homepage
+          servicePort: 8888
+      - path: /api
+        backend:
+          serviceName: my-api
+          servicePort: 7701
+      - path: /test
+        backend:
+          serviceName: hello
+          servicePort: 7702
+`
+
+func TestPatchTransformerJson(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+	th.WriteF("patch.json", `[
+  {"op": "replace",
+   "path": "/spec/rules/0/host",
+   "value": "foo.bar.io"},
+
+  {"op": "replace",
+   "path": "/spec/rules/0/http/paths/0/backend/servicePort",
+   "value": 80},
+
+  {"op": "add",
+   "path": "/spec/rules/0/http/paths/1",
+   "value": { "path": "/healthz", "backend": {"servicePort":7700} }}
+]
+`)
+
+	th.RunTransformerAndCheckResult(`
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: notImportantHere
+path: patch.json
+target:
+  kind: Ingress
+`, ingressTarget, `
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: my-ingress
+spec:
+  rules:
+  - host: foo.bar.io
+    http:
+      paths:
+      - backend:
+          serviceName: homepage
+          servicePort: 80
+        path: /
+      - backend:
+          servicePort: 7700
+        path: /healthz
+      - backend:
+          serviceName: my-api
+          servicePort: 7701
+        path: /api
+      - backend:
+          serviceName: hello
+          servicePort: 7702
+        path: /test
+`)
+
+}
+func TestPatchTransformerJsonAsYaml(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+	th.WriteF("patch.yaml", `
+- op: add
+  path: /spec/rules/0/http/paths/-
+  value:
+    path: '/canada'
+    backend:
+      serviceName: hoser
+      servicePort: 7703
+`)
+
+	th.RunTransformerAndCheckResult(`
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: notImportantHere
+path: patch.yaml
+target:
+  kind: Ingress
+`, ingressTarget, `
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: my-ingress
+spec:
+  rules:
+  - host: foo.bar.com
+    http:
+      paths:
+      - backend:
+          serviceName: homepage
+          servicePort: 8888
+        path: /
+      - backend:
+          serviceName: my-api
+          servicePort: 7701
+        path: /api
+      - backend:
+          serviceName: hello
+          servicePort: 7702
+        path: /test
+      - backend:
+          serviceName: hoser
+          servicePort: 7703
+        path: /canada
 `)
 }
