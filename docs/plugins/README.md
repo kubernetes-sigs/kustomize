@@ -208,17 +208,13 @@ single argument on its command line - the name of
 a YAML file containing its configuration (the file name
 provided in the kustomization file).
 
-> TODO: restrictions on plugin to allow the _same exec
-> plugin_ to be targeted by both the
-> `generators` and `transformers` fields.
+> NOTE: the same exec plugin is allowd to be used as
+> `generators` and `transformers`.
 >
-> - first arg could be the fixed string
->   `generate` or `transform`,
->   (the name of the configuration file moves to
->   the 2nd arg), or
-> - or by default an exec plugin behaves as a tranformer
->   unless a flag `-g` is provided, switching the
->   exec plugin to behave as a generator.
+> The special environment variable KUSTOMIZE_PLUGIN_MODE
+> is passed to the plugin and can take the following values:
+> - `generate` if the plugin is called as `generator`, or
+> - `transform` if the plugin is called as `transformer`.
 
 [helm chart inflator]: ../../plugin/someteam.example.com/v1/chartinflator
 [bashed config map]: ../../plugin/someteam.example.com/v1/bashedconfigmap
