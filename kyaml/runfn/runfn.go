@@ -4,12 +4,14 @@
 package runfn
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync/atomic"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -63,6 +65,12 @@ type RunFns struct {
 
 	// DisableContainers will disable functions run as containers
 	DisableContainers bool
+
+	// ResultsDir is where to write each functions results
+	ResultsDir string
+
+	// resultsCount is used to generate the results filename for each container
+	resultsCount uint32
 
 	// functionFilterProvider provides a filter to perform the function.
 	// this is a variable so it can be mocked in tests
@@ -219,6 +227,7 @@ func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
 		if err != nil {
 			return nil, err
 		}
+
 		if c == nil {
 			continue
 		}
@@ -304,12 +313,21 @@ func (r *RunFns) init() {
 // ffp provides function filters
 func (r *RunFns) ffp(spec filters.FunctionSpec, api *yaml.RNode) (kio.Filter, error) {
 	if !r.DisableContainers && spec.Container.Image != "" {
+		var resultsFile string
+		// TODO: Add a test for this behavior
+
+		if r.ResultsDir != "" {
+			resultsFile = filepath.Join(r.ResultsDir, fmt.Sprintf(
+				"results-%v.yaml", r.resultsCount))
+			atomic.AddUint32(&r.resultsCount, 1)
+		}
 		return &filters.ContainerFilter{
 			Image:         spec.Container.Image,
 			Config:        api,
 			Network:       spec.Network,
 			StorageMounts: r.StorageMounts,
 			GlobalScope:   r.GlobalScope,
+			ResultsFile:   resultsFile,
 		}, nil
 	}
 	if r.EnableStarlark && spec.Starlark.Path != "" {
