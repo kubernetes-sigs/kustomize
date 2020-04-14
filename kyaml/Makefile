@@ -35,4 +35,5 @@ vet:
 
 openapi:
 	(which $(GOPATH)/bin/go-bindata || go get -v github.com/go-bindata/go-bindata)
-	go-bindata --pkg openapi -o openapi/swagger.go openapi/swagger.json
+	$(GOPATH)/bin/go-bindata --pkg kubernetesapi -o openapi/kubernetesapi/swagger.go openapi/kubernetesapi/swagger.json
+	$(GOPATH)/bin/go-bindata --pkg kustomizationapi -o openapi/kustomizationapi/swagger.go openapi/kustomizationapi/swagger.json

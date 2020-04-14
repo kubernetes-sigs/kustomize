@@ -12,6 +12,8 @@ import (
 
 	"github.com/go-openapi/spec"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi"
+	"sigs.k8s.io/kustomize/kyaml/openapi/kustomizationapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -296,9 +298,13 @@ func (rs *ResourceSchema) PatchStrategyAndKey() (string, string) {
 }
 
 const (
-	// openAPIAssetName is the name of the asset containing the statically compiled in
+	// kubernetesAPIAssetName is the name of the asset containing the statically compiled in
 	// OpenAPI definitions for Kubernetes built-in types
-	openAPIAssetName = "openapi/swagger.json"
+	kubernetesAPIAssetName = "openapi/kubernetesapi/swagger.json"
+
+	// kustomizationAPIAssetName is the name of the asset containing the statically compiled in
+	// OpenAPI definitions for Kustomization built-in types
+	kustomizationAPIAssetName = "openapi/kustomizationapi/swagger.json"
 
 	// kubernetesGVKExtensionKey is the key to lookup the kubernetes group version kind extension
 	// -- the extension is an array of objects containing a gvk
@@ -327,7 +333,12 @@ func initSchema() {
 		}
 
 		// parse the swagger, this should never fail
-		if _, err := parse(MustAsset(openAPIAssetName)); err != nil {
+		if _, err := parse(kubernetesapi.MustAsset(kubernetesAPIAssetName)); err != nil {
+			// this should never happen
+			panic(err)
+		}
+
+		if _, err := parse(kustomizationapi.MustAsset(kustomizationAPIAssetName)); err != nil {
 			// this should never happen
 			panic(err)
 		}
