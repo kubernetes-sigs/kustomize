@@ -27,26 +27,24 @@ type plugin struct {
 var KustomizePlugin plugin
 
 func (p *plugin) Config(
-	h *resmap.PluginHelpers, c []byte) (err error) {
-	err = yaml.Unmarshal(c, p)
+	h *resmap.PluginHelpers, c []byte) error {
+	err := yaml.Unmarshal(c, p)
 	if err != nil {
 		return err
 	}
 	if p.Patch == "" && p.Path == "" {
-		err = fmt.Errorf(
+		return fmt.Errorf(
 			"must specify one of patch and path in\n%s", string(c))
-		return
 	}
 	if p.Patch != "" && p.Path != "" {
-		err = fmt.Errorf(
+		return fmt.Errorf(
 			"patch and path can't be set at the same time\n%s", string(c))
-		return
 	}
 	var in []byte
 	if p.Path != "" {
 		in, err = h.Loader().Load(p.Path)
 		if err != nil {
-			return
+			return err
 		}
 	}
 	if p.Patch != "" {
@@ -55,22 +53,21 @@ func (p *plugin) Config(
 
 	patchSM, errSM := h.ResmapFactory().RF().FromBytes(in)
 	patchJson, errJson := jsonPatchFromBytes(in)
+	if (errSM == nil && errJson == nil) ||
+		(patchSM != nil && patchJson != nil) {
+		return fmt.Errorf(
+			"illegally qualifies as both an SM and JSON patch: [%v]",
+			p.Patch)
+	}
 	if errSM != nil && errJson != nil {
-		err = fmt.Errorf(
-			"unable to get either a Strategic Merge Patch or JSON patch 6902 from %s", p.Patch)
-		return
+		return fmt.Errorf(
+			"unable to parse SM or JSON patch from [%v]", p.Patch)
 	}
-	if errSM == nil && errJson != nil {
+	if errSM == nil {
 		p.loadedPatch = patchSM
+		return nil
 	}
-	if errJson == nil && errSM != nil {
-		p.decodedPatch = patchJson
-	}
-	if patchSM != nil && patchJson != nil {
-		err = fmt.Errorf(
-			"a patch can't be both a Strategic Merge Patch and JSON patch 6902 %s", p.Patch)
-	}
-
+	p.decodedPatch = patchJson
 	return nil
 }
 

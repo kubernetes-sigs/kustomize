@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	target = `
+	someDeploymentResources = `
 apiVersion: apps/v1
 metadata:
   name: myDeploy
@@ -75,7 +75,7 @@ kind: PatchTransformer
 metadata:
   name: notImportantHere
 path: patch.yaml
-`, target, func(t *testing.T, err error) {
+`, someDeploymentResources, func(t *testing.T, err error) {
 		if err == nil {
 			t.Fatalf("expected error")
 		}
@@ -97,12 +97,12 @@ kind: PatchTransformer
 metadata:
   name: notImportantHere
 patch: "thisIsNotAPatch"
-`, target, func(t *testing.T, err error) {
+`, someDeploymentResources, func(t *testing.T, err error) {
 		if err == nil {
 			t.Fatalf("expected error")
 		}
 		if !strings.Contains(err.Error(),
-			"unable to get either a Strategic Merge Patch or JSON patch 6902 from") {
+			"unable to parse SM or JSON patch from") {
 			t.Fatalf("unexpected err: %v", err)
 		}
 	})
@@ -119,7 +119,7 @@ kind: PatchTransformer
 metadata:
   name: notImportantHere
 patch: '[{"op": "add", "path": "/spec/template/spec/dnsPolicy", "value": "ClusterFirst"}]'
-`, target, func(t *testing.T, err error) {
+`, someDeploymentResources, func(t *testing.T, err error) {
 		if err == nil {
 			t.Fatalf("expected error")
 		}
@@ -140,7 +140,7 @@ apiVersion: builtin
 kind: PatchTransformer
 metadata:
   name: notImportantHere
-`, target, func(t *testing.T, err error) {
+`, someDeploymentResources, func(t *testing.T, err error) {
 		if err == nil {
 			t.Fatalf("expected error")
 		}
@@ -162,7 +162,7 @@ metadata:
   name: notImportantHere
 Path: patch.yaml
 Patch: "something"
-`, target, func(t *testing.T, err error) {
+`, someDeploymentResources, func(t *testing.T, err error) {
 		if err == nil {
 			t.Fatalf("expected error")
 		}
@@ -195,7 +195,7 @@ path: patch.yaml
 target:
   name: .*Deploy
 `,
-		target,
+		someDeploymentResources,
 		`
 apiVersion: apps/v1
 kind: Deployment
@@ -279,7 +279,7 @@ metadata:
 path: patch.yaml
 target:
   name: myDeploy
-`, target, `
+`, someDeploymentResources, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -354,7 +354,7 @@ patch: '[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "va
 target:
   name: .*Deploy
   kind: Deployment
-`, target,
+`, someDeploymentResources,
 		`
 apiVersion: apps/v1
 kind: Deployment
@@ -428,7 +428,7 @@ patch: |-
   kind: Deployment
   spec:
     replica: 77
-`, target, `
+`, someDeploymentResources, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -481,7 +481,7 @@ spec:
 `)
 }
 
-const ingressTarget = `apiVersion: networking.k8s.io/v1beta1
+const anIngressResource = `apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   name: my-ingress
@@ -531,7 +531,7 @@ metadata:
 path: patch.json
 target:
   kind: Ingress
-`, ingressTarget, `
+`, anIngressResource, `
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
@@ -581,7 +581,7 @@ metadata:
 path: patch.yaml
 target:
   kind: Ingress
-`, ingressTarget, `
+`, anIngressResource, `
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
