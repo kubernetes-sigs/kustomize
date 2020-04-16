@@ -4,6 +4,7 @@
 package main_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -251,11 +252,7 @@ spec:
 }
 
 func TestPatchTransformerSmpSidecars(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarness(t).
-		PrepBuiltin("PatchTransformer")
-	defer th.Reset()
-
-	th.WriteF("patch.yaml", `
+	patch := `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -269,17 +266,32 @@ spec:
           args:
           - proxy
           - sidecar
-`)
+`
 
-	th.RunTransformerAndCheckResult(`
+	config := `
 apiVersion: builtin
 kind: PatchTransformer
 metadata:
   name: notImportantHere
+yamlSupport: %t
 path: patch.yaml
 target:
   name: myDeploy
-`, target, `
+`
+
+	// The expected results with and without yamlSupport is
+	// slightly different for this test. This is because
+	// the two different implementations order the results
+	// differently.
+	testCases := []struct {
+		testName       string
+		yamlSupport    bool
+		expectedOutput string
+	}{
+		{
+			testName:    "yaml=false",
+			yamlSupport: false,
+			expectedOutput: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -337,7 +349,87 @@ spec:
         - sidecar
         image: docker.io/istio/proxyv2
         name: istio-proxy
-`)
+`,
+		},
+		{
+			testName:    "yaml=true",
+			yamlSupport: true,
+			expectedOutput: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    old-label: old-value
+  name: myDeploy
+spec:
+  replica: 2
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+      - args:
+        - proxy
+        - sidecar
+        image: docker.io/istio/proxyv2
+        name: istio-proxy
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    new-label: new-value
+  name: yourDeploy
+spec:
+  replica: 1
+  template:
+    metadata:
+      labels:
+        new-label: new-value
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx
+---
+apiVersion: apps/v1
+kind: MyKind
+metadata:
+  label:
+    old-label: old-value
+  name: myDeploy
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - args:
+        - proxy
+        - sidecar
+        image: docker.io/istio/proxyv2
+        name: istio-proxy
+`,
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.testName, func(t *testing.T) {
+			th := kusttest_test.MakeEnhancedHarness(t).
+				PrepBuiltin("PatchTransformer")
+			defer th.Reset()
+
+			th.WriteF("patch.yaml", patch)
+
+			c := fmt.Sprintf(config, tc.yamlSupport)
+			rm := th.LoadAndRunTransformer(c, target)
+			th.AssertActualEqualsExpected(rm, tc.expectedOutput)
+		})
+	}
 }
 
 func TestPatchTransformerWithInlineJson(t *testing.T) {
