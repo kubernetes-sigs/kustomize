@@ -72,8 +72,7 @@ pairs in line:
 cat <<'EOF' >$DEMO_HOME/kustomization.yaml
 secretGenerator:
 - name: mysecrets
-  envs:
-  - foo.env
+  env: foo.env
   files:
   - longsecret.txt
   literals:
