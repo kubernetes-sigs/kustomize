@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	target = `
+	someDeploymentResources = `
 apiVersion: apps/v1
 metadata:
   name: myDeploy
@@ -76,7 +76,7 @@ kind: PatchTransformer
 metadata:
   name: notImportantHere
 path: patch.yaml
-`, target, func(t *testing.T, err error) {
+`, someDeploymentResources, func(t *testing.T, err error) {
 		if err == nil {
 			t.Fatalf("expected error")
 		}
@@ -98,12 +98,13 @@ kind: PatchTransformer
 metadata:
   name: notImportantHere
 patch: "thisIsNotAPatch"
-`, target, func(t *testing.T, err error) {
+`, someDeploymentResources, func(t *testing.T, err error) {
 		if err == nil {
 			t.Fatalf("expected error")
 		}
+		fmt.Print(err)
 		if !strings.Contains(err.Error(),
-			"unable to get either a Strategic Merge Patch or JSON patch 6902 from") {
+			"unable to parse SM or JSON patch from ") {
 			t.Fatalf("unexpected err: %v", err)
 		}
 	})
@@ -120,12 +121,36 @@ kind: PatchTransformer
 metadata:
   name: notImportantHere
 patch: '[{"op": "add", "path": "/spec/template/spec/dnsPolicy", "value": "ClusterFirst"}]'
-`, target, func(t *testing.T, err error) {
+`, someDeploymentResources, func(t *testing.T, err error) {
 		if err == nil {
 			t.Fatalf("expected error")
 		}
 		if !strings.Contains(err.Error(),
 			"must specify a target for patch") {
+			t.Fatalf("unexpected err: %v", err)
+		}
+	})
+}
+
+func TestPatchTransformerBlankPatch(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+
+	th.RunTransformerAndCheckError(`
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: notImportantHere
+patch: "  "
+target:
+  name: .*Deploy
+`, someDeploymentResources, func(t *testing.T, err error) {
+		if err == nil {
+			t.Fatalf("expected error")
+		}
+		if !strings.Contains(err.Error(),
+			"must specify one of patch and path in") {
 			t.Fatalf("unexpected err: %v", err)
 		}
 	})
@@ -141,11 +166,12 @@ apiVersion: builtin
 kind: PatchTransformer
 metadata:
   name: notImportantHere
-`, target, func(t *testing.T, err error) {
+`, someDeploymentResources, func(t *testing.T, err error) {
 		if err == nil {
 			t.Fatalf("expected error")
 		}
-		if !strings.Contains(err.Error(), "must specify one of patch and path in") {
+		if !strings.Contains(err.Error(),
+			"must specify one of patch and path in") {
 			t.Fatalf("unexpected err: %v", err)
 		}
 	})
@@ -163,11 +189,12 @@ metadata:
   name: notImportantHere
 Path: patch.yaml
 Patch: "something"
-`, target, func(t *testing.T, err error) {
+`, someDeploymentResources, func(t *testing.T, err error) {
 		if err == nil {
 			t.Fatalf("expected error")
 		}
-		if !strings.Contains(err.Error(), "patch and path can't be set at the same time") {
+		if !strings.Contains(err.Error(),
+			"patch and path can't be set at the same time") {
 			t.Fatalf("unexpected err: %v", err)
 		}
 	})
@@ -196,7 +223,7 @@ path: patch.yaml
 target:
   name: .*Deploy
 `,
-		target,
+		someDeploymentResources,
 		`
 apiVersion: apps/v1
 kind: Deployment
@@ -426,7 +453,7 @@ spec:
 			th.WriteF("patch.yaml", patch)
 
 			c := fmt.Sprintf(config, tc.yamlSupport)
-			rm := th.LoadAndRunTransformer(c, target)
+			rm := th.LoadAndRunTransformer(c, someDeploymentResources)
 			th.AssertActualEqualsExpected(rm, tc.expectedOutput)
 		})
 	}
@@ -446,7 +473,7 @@ patch: '[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "va
 target:
   name: .*Deploy
   kind: Deployment
-`, target,
+`, someDeploymentResources,
 		`
 apiVersion: apps/v1
 kind: Deployment
@@ -520,7 +547,7 @@ patch: |-
   kind: Deployment
   spec:
     replica: 77
-`, target, `
+`, someDeploymentResources, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -573,7 +600,7 @@ spec:
 `)
 }
 
-const ingressTarget = `apiVersion: networking.k8s.io/v1beta1
+const anIngressResource = `apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   name: my-ingress
@@ -623,7 +650,7 @@ metadata:
 path: patch.json
 target:
   kind: Ingress
-`, ingressTarget, `
+`, anIngressResource, `
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
@@ -673,7 +700,7 @@ metadata:
 path: patch.yaml
 target:
   kind: Ingress
-`, ingressTarget, `
+`, anIngressResource, `
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
