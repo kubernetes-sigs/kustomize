@@ -62,23 +62,24 @@ func TestPatchStrategicMergeTransformerMissingFile(t *testing.T) {
 		PrepBuiltin("PatchStrategicMergeTransformer")
 	defer th.Reset()
 
-	_, err := th.RunTransformer(`
+	th.RunTransformerAndCheckError(`
 apiVersion: builtin
 kind: PatchStrategicMergeTransformer
 metadata:
   name: notImportantHere
 paths:
 - patch.yaml
-`, target)
-	if err == nil {
-		t.Fatalf("expected error")
-	}
-	if !strings.Contains(err.Error(),
-		"'/patch.yaml' doesn't exist") &&
-		!strings.Contains(err.Error(),
-			"cannot unmarshal string") {
-		t.Fatalf("unexpected err: %v", err)
-	}
+`, target, func(t *testing.T, err error) {
+		if err == nil {
+			t.Fatalf("expected error")
+		}
+		if !strings.Contains(err.Error(),
+			"'/patch.yaml' doesn't exist") &&
+			!strings.Contains(err.Error(),
+				"cannot unmarshal string") {
+			t.Fatalf("unexpected err: %v", err)
+		}
+	})
 }
 
 func TestBadPatchStrategicMergeTransformer(t *testing.T) {
@@ -86,20 +87,21 @@ func TestBadPatchStrategicMergeTransformer(t *testing.T) {
 		PrepBuiltin("PatchStrategicMergeTransformer")
 	defer th.Reset()
 
-	_, err := th.RunTransformer(`
+	th.RunTransformerAndCheckError(`
 apiVersion: builtin
 kind: PatchStrategicMergeTransformer
 metadata:
   name: notImportantHere
 patches: 'thisIsNotAPatch'
-`, target)
-	if err == nil {
-		t.Fatalf("expected error")
-	}
-	if !strings.Contains(err.Error(),
-		"cannot unmarshal string into Go value of type map[string]interface {}") {
-		t.Fatalf("unexpected err: %v", err)
-	}
+`, target, func(t *testing.T, err error) {
+		if err == nil {
+			t.Fatalf("expected error")
+		}
+		if !strings.Contains(err.Error(),
+			"cannot unmarshal string into Go value of type map[string]interface {}") {
+			t.Fatalf("unexpected err: %v", err)
+		}
+	})
 }
 
 func TestBothEmptyPatchStrategicMergeTransformer(t *testing.T) {
@@ -107,18 +109,19 @@ func TestBothEmptyPatchStrategicMergeTransformer(t *testing.T) {
 		PrepBuiltin("PatchStrategicMergeTransformer")
 	defer th.Reset()
 
-	_, err := th.RunTransformer(`
+	th.RunTransformerAndCheckError(`
 apiVersion: builtin
 kind: PatchStrategicMergeTransformer
 metadata:
   name: notImportantHere
-`, target)
-	if err == nil {
-		t.Fatalf("expected error")
-	}
-	if !strings.Contains(err.Error(), "empty file path and empty patch content") {
-		t.Fatalf("unexpected err: %v", err)
-	}
+`, target, func(t *testing.T, err error) {
+		if err == nil {
+			t.Fatalf("expected error")
+		}
+		if !strings.Contains(err.Error(), "empty file path and empty patch content") {
+			t.Fatalf("unexpected err: %v", err)
+		}
+	})
 }
 
 func TestPatchStrategicMergeTransformerFromFiles(t *testing.T) {
@@ -139,16 +142,16 @@ spec:
   replica: 3
 `)
 
-	rm := th.LoadAndRunTransformer(`
+	th.RunTransformerAndCheckResult(`
 apiVersion: builtin
 kind: PatchStrategicMergeTransformer
 metadata:
   name: notImportantHere
 paths:
 - patch.yaml
-`, target)
-
-	th.AssertActualEqualsExpected(rm, `
+`,
+target,
+`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -172,15 +175,15 @@ func TestPatchStrategicMergeTransformerWithInlineJSON(t *testing.T) {
 		PrepBuiltin("PatchStrategicMergeTransformer")
 	defer th.Reset()
 
-	rm := th.LoadAndRunTransformer(`
+	th.RunTransformerAndCheckResult(`
 apiVersion: builtin
 kind: PatchStrategicMergeTransformer
 metadata:
   name: notImportantHere
 patches: '{"apiVersion": "apps/v1", "metadata": {"name": "myDeploy"}, "kind": "Deployment", "spec": {"replica": 3}}'
-`, target)
-
-	th.AssertActualEqualsExpected(rm, `
+`,
+target,
+`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -203,7 +206,7 @@ func TestPatchStrategicMergeTransformerWithInlineYAML(t *testing.T) {
 		PrepBuiltin("PatchStrategicMergeTransformer")
 	defer th.Reset()
 
-	rm := th.LoadAndRunTransformer(`
+	th.RunTransformerAndCheckResult(`
 apiVersion: builtin
 kind: PatchStrategicMergeTransformer
 metadata:
@@ -226,9 +229,9 @@ patches: |-
         containers:
         - name: nginx
           image: nginx:latest
-`, target)
-
-	th.AssertActualEqualsExpected(rm, `
+`,
+target,
+`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -284,7 +287,7 @@ spec:
         image: busybox
 `)
 
-	rm := th.LoadAndRunTransformer(`
+	th.RunTransformerAndCheckResult(`
 apiVersion: builtin
 kind: PatchStrategicMergeTransformer
 metadata:
@@ -292,9 +295,9 @@ metadata:
 paths:
 - patch1.yaml
 - patch2.yaml
-`, target)
-
-	th.AssertActualEqualsExpected(rm, `
+`,
+target,
+`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -358,7 +361,7 @@ spec:
         image: busybox
 `)
 
-	err := th.ErrorFromLoadAndRunTransformer(`
+	th.RunTransformerAndCheckError(`
 apiVersion: builtin
 kind: PatchStrategicMergeTransformer
 metadata:
@@ -366,14 +369,14 @@ metadata:
 paths:
 - patch1.yaml
 - patch2.yaml
-`, target)
-
-	if err == nil {
-		t.Fatalf("did not get expected error")
-	}
-	if !strings.Contains(err.Error(), "conflict") {
-		t.Fatalf("expected error to contain %q but get %v", "conflict", err)
-	}
+`, target, func(t *testing.T, err error) {
+		if err == nil {
+			t.Fatalf("did not get expected error")
+		}
+		if !strings.Contains(err.Error(), "conflict") {
+			t.Fatalf("expected error to contain %q but get %v", "conflict", err)
+		}
+	})
 }
 
 func TestStrategicMergeTransformerWrongNamespace(t *testing.T) {
@@ -398,21 +401,21 @@ spec:
           value: BAR
 `)
 
-	err := th.ErrorFromLoadAndRunTransformer(`
+	th.RunTransformerAndCheckError(`
 apiVersion: builtin
 kind: PatchStrategicMergeTransformer
 metadata:
   name: notImportantHere
 paths:
 - patch.yaml
-`, targetWithNamespace)
-
-	if err == nil {
-		t.Fatalf("did not get expected error")
-	}
-	if !strings.Contains(err.Error(), "failed to find unique target for patch") {
-		t.Fatalf("expected error to contain %q but get %v", "failed to find target for patch", err)
-	}
+`, targetWithNamespace, func(t *testing.T, err error) {
+		if err == nil {
+			t.Fatalf("did not get expected error")
+		}
+		if !strings.Contains(err.Error(), "failed to find unique target for patch") {
+			t.Fatalf("expected error to contain %q but get %v", "failed to find target for patch", err)
+		}
+	})
 }
 
 func TestStrategicMergeTransformerNoSchema(t *testing.T) {
@@ -430,16 +433,16 @@ spec:
     B:
     C: Z
 `)
-	rm := th.LoadAndRunTransformer(`
+	th.RunTransformerAndCheckResult(`
 apiVersion: builtin
 kind: PatchStrategicMergeTransformer
 metadata:
   name: notImportantHere
 paths:
 - patch.yaml
-`, targetNoschema)
-
-	th.AssertActualEqualsExpected(rm, `
+`,
+targetNoschema,
+`
 apiVersion: example.com/v1
 kind: Foo
 metadata:
@@ -478,7 +481,7 @@ spec:
   baz:
     hello: world
 `)
-	rm := th.LoadAndRunTransformer(`
+	th.RunTransformerAndCheckResult(`
 apiVersion: builtin
 kind: PatchStrategicMergeTransformer
 metadata:
@@ -486,9 +489,9 @@ metadata:
 paths:
 - patch1.yaml
 - patch2.yaml
-`, targetNoschema)
-
-	th.AssertActualEqualsExpected(rm, `
+`,
+targetNoschema,
+`
 apiVersion: example.com/v1
 kind: Foo
 metadata:
@@ -527,7 +530,7 @@ spec:
     C: NOT_Z
 
 `)
-	err := th.ErrorFromLoadAndRunTransformer(`
+	th.RunTransformerAndCheckError(`
 apiVersion: builtin
 kind: PatchStrategicMergeTransformer
 metadata:
@@ -535,10 +538,12 @@ metadata:
 paths:
 - patch1.yaml
 - patch2.yaml
-`, targetNoschema)
-	if !strings.Contains(err.Error(), "conflict") {
-		t.Fatalf("expected error to contain %q but get %v", "conflict", err)
-	}
+`, targetNoschema, func(t *testing.T, err error) {
+		if !strings.Contains(err.Error(), "conflict") {
+			t.Fatalf("expected error to contain %q but get %v", "conflict", err)
+		}
+	})
+
 }
 
 // simple utility function to add an namespace in a resource
@@ -844,11 +849,13 @@ func TestSinglePatch(t *testing.T) {
 		th.ResetLoaderRoot(fmt.Sprintf("/%s", test.name))
 		th.WriteF(fmt.Sprintf("/%s/patch%d.yaml", test.name, 0), test.patch)
 		if test.errorExpected {
-			err := th.ErrorFromLoadAndRunTransformer(toConfig(test.patch), test.base)
-			compareExpectedError(t, test.name, err, test.errorMsg)
+			th.RunTransformerAndCheckError(toConfig(test.patch), test.base,
+				func(t *testing.T, err error) {
+					compareExpectedError(t, test.name, err, test.errorMsg)
+				})
 		} else {
-			rm := th.LoadAndRunTransformer(toConfig(test.patch), test.base)
-			th.AssertActualEqualsExpected(rm, test.expected)
+			th.RunTransformerAndCheckResult(toConfig(test.patch), test.base,
+				test.expected)
 		}
 	}
 }
@@ -948,11 +955,13 @@ func TestMultiplePatches(t *testing.T) {
 		}
 
 		if test.errorExpected {
-			err := th.ErrorFromLoadAndRunTransformer(toConfig(test.patch...), test.base)
-			compareExpectedError(t, test.name, err, test.errorMsg)
+			th.RunTransformerAndCheckError(toConfig(test.patch...), test.base,
+				func(t *testing.T, err error) {
+					compareExpectedError(t, test.name, err, test.errorMsg)
+				})
 		} else {
-			rm := th.LoadAndRunTransformer(toConfig(test.patch...), test.base)
-			th.AssertActualEqualsExpected(rm, test.expected)
+			th.RunTransformerAndCheckResult(toConfig(test.patch...), test.base,
+				test.expected)
 		}
 	}
 
@@ -1078,11 +1087,13 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 		}
 
 		if test.errorExpected {
-			err := th.ErrorFromLoadAndRunTransformer(toConfig(test.patch...), test.base)
-			compareExpectedError(t, test.name, err, test.errorMsg)
+			th.RunTransformerAndCheckError(toConfig(test.patch...), test.base,
+				func(t *testing.T, err error) {
+					compareExpectedError(t, test.name, err, test.errorMsg)
+				})
 		} else {
-			rm := th.LoadAndRunTransformer(toConfig(test.patch...), test.base)
-			th.AssertActualEqualsExpected(rm, test.expected)
+			th.RunTransformerAndCheckResult(toConfig(test.patch...), test.base,
+				test.expected)
 		}
 	}
 
@@ -1186,15 +1197,19 @@ func TestMultipleNamespaces(t *testing.T) {
 		}
 
 		if test.errorExpected {
-			err := th.ErrorFromLoadAndRunTransformer(toConfig(test.patch...), strings.Join(test.base, "\n---\n"))
-			compareExpectedError(t, test.name, err, test.errorMsg)
+			th.RunTransformerAndCheckError(toConfig(test.patch...), strings.Join(test.base, "\n---\n"),
+				func(t *testing.T, err error) {
+					compareExpectedError(t, test.name, err, test.errorMsg)
+				})
 		} else {
-			rm := th.LoadAndRunTransformer(toConfig(test.patch...), strings.Join(test.base, "\n---\n"))
-			th.AssertActualEqualsExpected(rm, strings.Join(test.expected, "---\n"))
+			th.RunTransformerAndCheckResult(toConfig(test.patch...), strings.Join(test.base, "\n---\n"),
+				strings.Join(test.expected, "---\n"))
 		}
 	}
 }
 
+// We don't run this for the kyaml implementation since we don't support
+// the strategic merge patch directives (yet).
 func TestPatchStrategicMergeTransformerPatchDelete(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchStrategicMergeTransformer")

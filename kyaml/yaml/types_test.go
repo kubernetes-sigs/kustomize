@@ -4,6 +4,7 @@
 package yaml
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -44,6 +45,81 @@ spec:
 		},
 	}
 	if !assert.Equal(t, expected, actual) {
+		t.FailNow()
+	}
+}
+
+func TestRNode_UnmarshalJSON(t *testing.T) {
+	testCases := []struct {
+		testName string
+		input    string
+		output   string
+	}{
+		{
+			testName: "simple document",
+			input:    `{"hello":"world"}`,
+			output:   `hello: world`,
+		},
+		{
+			testName: "nested structure",
+			input: `
+{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "my-deployment",
+    "namespace": "default"
+  }
+}
+`,
+			output: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment
+  namespace: default
+`,
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.testName, func(t *testing.T) {
+			instance := &RNode{}
+			err := instance.UnmarshalJSON([]byte(tc.input))
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			actual, err := instance.String()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			if !assert.Equal(t,
+				strings.TrimSpace(tc.output), strings.TrimSpace(actual)) {
+				t.FailNow()
+			}
+		})
+	}
+}
+
+func TestRNode_MarshalJSON(t *testing.T) {
+	instance, err := Parse(`
+hello: world
+`)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	actual, err := instance.MarshalJSON()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	expected := `{"hello":"world"}`
+	if !assert.Equal(t,
+		strings.TrimSpace(expected), strings.TrimSpace(string(actual))) {
 		t.FailNow()
 	}
 }

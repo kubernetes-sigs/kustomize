@@ -4,12 +4,14 @@
 package runfn
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync/atomic"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -64,10 +66,16 @@ type RunFns struct {
 	// DisableContainers will disable functions run as containers
 	DisableContainers bool
 
+	// ResultsDir is where to write each functions results
+	ResultsDir string
+
+	// resultsCount is used to generate the results filename for each container
+	resultsCount uint32
+
 	// functionFilterProvider provides a filter to perform the function.
 	// this is a variable so it can be mocked in tests
 	functionFilterProvider func(
-		filter filters.FunctionSpec, api *yaml.RNode) kio.Filter
+		filter filters.FunctionSpec, api *yaml.RNode) (kio.Filter, error)
 }
 
 // Execute runs the command
@@ -215,7 +223,11 @@ func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
 			}
 			spec.Network = r.NetworkName
 		}
-		c := r.functionFilterProvider(*spec, api)
+		c, err := r.functionFilterProvider(*spec, api)
+		if err != nil {
+			return nil, err
+		}
+
 		if c == nil {
 			continue
 		}
@@ -299,22 +311,48 @@ func (r *RunFns) init() {
 }
 
 // ffp provides function filters
-func (r *RunFns) ffp(spec filters.FunctionSpec, api *yaml.RNode) kio.Filter {
+func (r *RunFns) ffp(spec filters.FunctionSpec, api *yaml.RNode) (kio.Filter, error) {
 	if !r.DisableContainers && spec.Container.Image != "" {
+		var resultsFile string
+		// TODO: Add a test for this behavior
+
+		if r.ResultsDir != "" {
+			resultsFile = filepath.Join(r.ResultsDir, fmt.Sprintf(
+				"results-%v.yaml", r.resultsCount))
+			atomic.AddUint32(&r.resultsCount, 1)
+		}
 		return &filters.ContainerFilter{
 			Image:         spec.Container.Image,
 			Config:        api,
 			Network:       spec.Network,
 			StorageMounts: r.StorageMounts,
 			GlobalScope:   r.GlobalScope,
-		}
+			ResultsFile:   resultsFile,
+		}, nil
 	}
 	if r.EnableStarlark && spec.Starlark.Path != "" {
+		// the script path is relative to the function config file
+		m, err := api.GetMeta()
+		if err != nil {
+			return nil, errors.Wrap(err)
+		}
+		p := m.Annotations[kioutil.PathAnnotation]
+		spec.Starlark.Path = path.Clean(spec.Starlark.Path)
+		if path.IsAbs(spec.Starlark.Path) {
+			return nil, errors.Errorf(
+				"absolute function path %s not allowed", spec.Starlark.Path)
+		}
+		if strings.HasPrefix(spec.Starlark.Path, "..") {
+			return nil, errors.Errorf(
+				"function path %s not allowed to start with ../", spec.Starlark.Path)
+		}
+		p = path.Join(r.Path, path.Dir(p), spec.Starlark.Path)
+
 		return &starlark.Filter{
 			Name:           spec.Starlark.Name,
-			Path:           spec.Starlark.Path,
+			Path:           p,
 			FunctionConfig: api,
-		}
+		}, nil
 	}
-	return nil
+	return nil, nil
 }

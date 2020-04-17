@@ -74,14 +74,12 @@ var generatorConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 	builtinhelpers.SecretGenerator: func(kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f gFactory) (
 		result []resmap.Generator, err error) {
 		var c struct {
-			types.GeneratorOptions
 			types.SecretArgs
-		}
-		if kt.kustomization.GeneratorOptions != nil {
-			c.GeneratorOptions = *kt.kustomization.GeneratorOptions
 		}
 		for _, args := range kt.kustomization.SecretGenerator {
 			c.SecretArgs = args
+			c.SecretArgs.Options = types.MergeGlobalOptionsIntoLocal(
+				c.SecretArgs.Options, kt.kustomization.GeneratorOptions)
 			p := f()
 			err := kt.configureBuiltinPlugin(p, c, bpt)
 			if err != nil {
@@ -95,14 +93,12 @@ var generatorConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 	builtinhelpers.ConfigMapGenerator: func(kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f gFactory) (
 		result []resmap.Generator, err error) {
 		var c struct {
-			types.GeneratorOptions
 			types.ConfigMapArgs
-		}
-		if kt.kustomization.GeneratorOptions != nil {
-			c.GeneratorOptions = *kt.kustomization.GeneratorOptions
 		}
 		for _, args := range kt.kustomization.ConfigMapGenerator {
 			c.ConfigMapArgs = args
+			c.ConfigMapArgs.Options = types.MergeGlobalOptionsIntoLocal(
+				c.ConfigMapArgs.Options, kt.kustomization.GeneratorOptions)
 			p := f()
 			err := kt.configureBuiltinPlugin(p, c, bpt)
 			if err != nil {

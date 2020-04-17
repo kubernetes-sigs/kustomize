@@ -11,22 +11,25 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/runfn"
 )
 
 // TestRunFnCommand_preRunE verifies that preRunE correctly parses the commandline
 // flags and arguments into the RunFns structure to be executed.
 func TestRunFnCommand_preRunE(t *testing.T) {
 	tests := []struct {
-		name          string
-		args          []string
-		expected      string
-		err           string
-		path          string
-		input         io.Reader
-		output        io.Writer
-		functionPaths []string
-		network       bool
-		networkName   string
+		name           string
+		args           []string
+		expected       string
+		expectedStruct *runfn.RunFns
+		err            string
+		path           string
+		input          io.Reader
+		output         io.Writer
+		functionPaths  []string
+		network        bool
+		networkName    string
+		mount          []string
 	}{
 		{
 			name: "config map",
@@ -216,6 +219,46 @@ apiVersion: v1
 `,
 		},
 		{
+			name: "custom kind with storage mounts",
+			args: []string{
+				"run", "dir", "--mount", "type=bind,src=/mount/path,dst=/local/",
+				"--mount", "type=volume,src=myvol,dst=/local/",
+				"--mount", "type=tmpfs,dst=/local/",
+				"--image", "foo:bar", "--", "Foo", "g=h", "i=j=k"},
+			path:  "dir",
+			mount: []string{"type=bind,src=/mount/path,dst=/local/", "type=volume,src=myvol,dst=/local/", "type=tmpfs,dst=/local/"},
+			expected: `
+metadata:
+  name: function-input
+  annotations:
+    config.kubernetes.io/function: |
+      container: {image: 'foo:bar'}
+data: {g: h, i: j=k}
+kind: Foo
+apiVersion: v1
+`,
+		},
+		{
+			name: "results_dir",
+			args: []string{"run", "dir", "--results-dir", "foo/", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
+			path: "dir",
+			expectedStruct: &runfn.RunFns{
+				Path:        "dir",
+				NetworkName: "bridge",
+				ResultsDir:  "foo/",
+			},
+			expected: `
+metadata:
+  name: function-input
+  annotations:
+    config.kubernetes.io/function: |
+      container: {image: 'foo:bar'}
+data: {a: b, c: d, e: f}
+kind: ConfigMap
+apiVersion: v1
+`,
+		},
+		{
 			name: "config map multi args",
 			args: []string{"run", "dir", "dir2", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			err:  "0 or 1 arguments supported",
@@ -303,6 +346,14 @@ apiVersion: v1
 				t.FailNow()
 			}
 
+			if !assert.Equal(t, r.RunFns, r.RunFns) {
+				t.FailNow()
+			}
+
+			if !assert.Equal(t, toStorageMounts(tt.mount), r.RunFns.StorageMounts) {
+				t.FailNow()
+			}
+
 			// check if Functions were set
 			if tt.expected != "" {
 				if !assert.Len(t, r.RunFns.Functions, 1) {
@@ -310,6 +361,14 @@ apiVersion: v1
 				}
 				actual := strings.TrimSpace(r.RunFns.Functions[0].MustString())
 				if !assert.Equal(t, strings.TrimSpace(tt.expected), actual) {
+					t.FailNow()
+				}
+			}
+
+			if tt.expectedStruct != nil {
+				r.RunFns.Functions = nil
+				tt.expectedStruct.FunctionPaths = tt.functionPaths
+				if !assert.Equal(t, *tt.expectedStruct, r.RunFns) {
 					t.FailNow()
 				}
 			}

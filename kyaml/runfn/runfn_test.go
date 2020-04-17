@@ -55,7 +55,7 @@ kind:
 	if !assert.NoError(t, err) {
 		return
 	}
-	filter := instance.functionFilterProvider(spec, api)
+	filter, _ := instance.functionFilterProvider(spec, api)
 	assert.Equal(t, &filters.ContainerFilter{Image: "example.com:version", Config: api}, filter)
 }
 
@@ -83,7 +83,7 @@ kind:
 	if !assert.NoError(t, err) {
 		return
 	}
-	filter := instance.functionFilterProvider(spec, api)
+	filter, _ := instance.functionFilterProvider(spec, api)
 	assert.Equal(t, &filters.ContainerFilter{
 		Image: "example.com:version", Config: api, GlobalScope: true}, filter)
 }
@@ -140,6 +140,16 @@ func TestRunFns_Execute__initDefault(t *testing.T) {
 				FunctionPaths:        []string{"foo"},
 			},
 		},
+		{
+			name:     "explicit directories in mounts",
+			instance: RunFns{StorageMounts: []filters.StorageMount{{MountType: "volume", Src: "myvol", DstPath: "/local/"}}},
+			expected: RunFns{
+				Output:               os.Stdout,
+				Input:                os.Stdin,
+				NoFunctionsFromInput: getFalse(),
+				StorageMounts:        []filters.StorageMount{{MountType: "volume", Src: "myvol", DstPath: "/local/"}},
+			},
+		},
 	}
 	for i := range tests {
 		tt := tests[i]
@@ -186,6 +196,13 @@ func TestRunFns_getFilters(t *testing.T) {
 		in []f
 		// images to be run in a specific order
 		out []string
+
+		// images to be run in a specific order -- computed from directory path
+		outFn func(string) []string
+
+		// expected Error
+		error string
+
 		// name of the test
 		name string
 		// value to set for NoFunctionsFromInput
@@ -476,7 +493,54 @@ metadata:
 				},
 			},
 			enableStarlark: true,
-			out:            []string{"name:  path: a/b/c url:  program:"},
+			outFn: func(path string) []string {
+				return []string{
+					fmt.Sprintf("name:  path: %s/foo/a/b/c url:  program:", path)}
+			},
+		},
+
+		// Test
+		//
+		//
+		{name: "starlark-function-absolute",
+			in: []f{
+				{
+					path: filepath.Join("foo", "bar.yaml"),
+					value: `
+apiVersion: example.com/v1alpha1
+kind: ExampleFunction
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      starlark:
+        path: /a/b/c
+`,
+				},
+			},
+			enableStarlark: true,
+			error:          "absolute function path /a/b/c not allowed",
+		},
+
+		// Test
+		//
+		//
+		{name: "starlark-function-escape-parent",
+			in: []f{
+				{
+					path: filepath.Join("foo", "bar.yaml"),
+					value: `
+apiVersion: example.com/v1alpha1
+kind: ExampleFunction
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      starlark:
+        path: ../a/b/c
+`,
+				},
+			},
+			enableStarlark: true,
+			error:          "function path ../a/b/c not allowed to start with ../",
 		},
 
 		{name: "starlark-function-disabled",
@@ -559,6 +623,14 @@ metadata:
 			// get the filters which would be run
 			var results []string
 			_, fltrs, _, err := r.getNodesAndFilters()
+
+			if tt.error != "" {
+				if !assert.EqualError(t, err, tt.error) {
+					t.FailNow()
+				}
+				return
+			}
+
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -567,8 +639,14 @@ metadata:
 			}
 
 			// compare the actual ordering to the expected ordering
-			if !assert.Equal(t, tt.out, results) {
-				t.FailNow()
+			if tt.outFn != nil {
+				if !assert.Equal(t, tt.outFn(d), results) {
+					t.FailNow()
+				}
+			} else {
+				if !assert.Equal(t, tt.out, results) {
+					t.FailNow()
+				}
 			}
 		})
 	}
@@ -738,8 +816,8 @@ func setupTest(t *testing.T) string {
 // getFilterProvider fakes the creation of a filter, replacing the ContainerFiler with
 // a filter to s/kind: Deployment/kind: StatefulSet/g.
 // this can be used to simulate running a filter.
-func getFilterProvider(t *testing.T) func(filters.FunctionSpec, *yaml.RNode) kio.Filter {
-	return func(f filters.FunctionSpec, node *yaml.RNode) kio.Filter {
+func getFilterProvider(t *testing.T) func(filters.FunctionSpec, *yaml.RNode) (kio.Filter, error) {
+	return func(f filters.FunctionSpec, node *yaml.RNode) (kio.Filter, error) {
 		// parse the filter from the input
 		filter := yaml.YFilter{}
 		b := &bytes.Buffer{}
@@ -755,6 +833,6 @@ func getFilterProvider(t *testing.T) func(filters.FunctionSpec, *yaml.RNode) kio
 
 		return filters.Modifier{
 			Filters: []yaml.YFilter{{Filter: yaml.Lookup("kind")}, filter},
-		}
+		}, nil
 	}
 }

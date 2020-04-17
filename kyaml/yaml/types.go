@@ -5,6 +5,7 @@ package yaml
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"strings"
@@ -679,6 +680,39 @@ func (rn *RNode) GetAssociativeKey() string {
 
 	// element doesn't have an associative keys
 	return ""
+}
+
+func (rn *RNode) MarshalJSON() ([]byte, error) {
+	s, err := rn.String()
+	if err != nil {
+		return nil, err
+	}
+
+	m := map[string]interface{}{}
+	if err := Unmarshal([]byte(s), &m); err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(m)
+}
+
+func (rn *RNode) UnmarshalJSON(b []byte) error {
+	m := map[string]interface{}{}
+	if err := json.Unmarshal(b, &m); err != nil {
+		return err
+	}
+
+	c, err := Marshal(m)
+	if err != nil {
+		return err
+	}
+
+	r, err := Parse(string(c))
+	if err != nil {
+		return err
+	}
+	rn.value = r.value
+	return nil
 }
 
 // checkKey returns true if all elems have the key

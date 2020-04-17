@@ -6,6 +6,7 @@ package filters
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -135,7 +136,7 @@ type ContainerFilter struct {
 	Network string `yaml:"network,omitempty"`
 
 	// StorageMounts is a list of storage options that the container will have mounted.
-	StorageMounts []StorageMount
+	StorageMounts []StorageMount `yaml:"mounts,omitempty"`
 
 	// Config is the API configuration for the container and passed through the
 	// API_CONFIG env var to the container.
@@ -145,6 +146,13 @@ type ContainerFilter struct {
 	// GlobalScope will cause the function to be run against all input
 	// nodes instead of only nodes scoped under the function.
 	GlobalScope bool
+
+	ResultsFile string
+
+	Results *yaml.RNode
+
+	// SetFlowStyleForConfig sets the style for config to Flow when serializing it
+	SetFlowStyleForConfig bool
 
 	// args may be specified by tests to override how a container is spawned
 	args []string
@@ -156,23 +164,29 @@ func (c ContainerFilter) String() string {
 	return c.Image
 }
 
-// StorageMount represents a container's mounted storage option(s)
-type StorageMount struct {
-	// Type of mount e.g. bind mount, local volume, etc.
-	MountType string
-
-	// Source for the storage to be mounted.
-	// For named volumes, this is the name of the volume.
-	// For anonymous volumes, this field is omitted (empty string).
-	// For bind mounts, this is the path to the file or directory on the host.
-	Src string
-
-	// The path where the file or directory is mounted in the container.
-	DstPath string
-}
-
 func (s *StorageMount) String() string {
 	return fmt.Sprintf("type=%s,src=%s,dst=%s:ro", s.MountType, s.Src, s.DstPath)
+}
+
+func StringToStorageMount(s string) StorageMount {
+	m := make(map[string]string)
+	options := strings.Split(s, ",")
+	for _, option := range options {
+		keyVal := strings.SplitN(option, "=", 2)
+		m[keyVal[0]] = keyVal[1]
+	}
+	var sm StorageMount
+	for key, value := range m {
+		switch {
+		case key == "type":
+			sm.MountType = value
+		case key == "src":
+			sm.Src = value
+		case key == "dst":
+			sm.DstPath = value
+		}
+	}
+	return sm
 }
 
 // functionsDirectoryName is keyword directory name for functions scoped 1 directory higher
@@ -251,10 +265,7 @@ func (c *ContainerFilter) scope(dir string, nodes []*yaml.RNode) ([]*yaml.RNode,
 // GrepFilter implements kio.GrepFilter
 func (c *ContainerFilter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 	// get the command to filter the Resources
-	cmd, err := c.getCommand()
-	if err != nil {
-		return nil, err
-	}
+	cmd := c.getCommand()
 
 	in := &bytes.Buffer{}
 	out := &bytes.Buffer{}
@@ -290,11 +301,24 @@ func (c *ContainerFilter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 	cmd.Stdin = in
 	cmd.Stdout = out
 	if err := cmd.Run(); err != nil {
-		return nil, err
+		// write the results file on failure
+		results, e := r.Read()
+		if e != nil {
+			return nil, e
+		}
+		if e = c.doResults(r); e != nil {
+			return nil, e
+		}
+		// return the results from the function even on failure
+		return results, err
 	}
 
 	output, err := r.Read()
 	if err != nil {
+		return nil, err
+	}
+
+	if err := c.doResults(r); err != nil {
 		return nil, err
 	}
 
@@ -306,6 +330,25 @@ func (c *ContainerFilter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 	// emit both the Resources output from the function, and the out-of-scope Resources
 	// which were not provided to the function
 	return append(output, saved...), nil
+}
+
+func (c *ContainerFilter) doResults(r *kio.ByteReader) error {
+	// Write the results to a file if configured to do so
+	if c.ResultsFile != "" && r.Results != nil {
+		results, err := r.Results.String()
+		if err != nil {
+			return err
+		}
+		err = ioutil.WriteFile(c.ResultsFile, []byte(results), 0600)
+		if err != nil {
+			return err
+		}
+	}
+
+	if r.Results != nil {
+		c.Results = r.Results
+	}
+	return nil
 }
 
 // getArgs returns the command + args to run to spawn the container
@@ -335,6 +378,9 @@ func (c *ContainerFilter) getArgs() []string {
 		args = append(args, "--mount", storageMount.String())
 	}
 
+	// tell functions to write error messages to stderr as well as results
+	os.Setenv("LOG_TO_STDERR", "true")
+
 	// export the local environment vars to the container
 	for _, pair := range os.Environ() {
 		tokens := strings.Split(pair, "=")
@@ -347,17 +393,9 @@ func (c *ContainerFilter) getArgs() []string {
 }
 
 // getCommand returns a command which will apply the Filter using the container image
-func (c *ContainerFilter) getCommand() (*exec.Cmd, error) {
-	// encode the filter command API configuration
-	cfg := &bytes.Buffer{}
-	if err := func() error {
-		e := yaml.NewEncoder(cfg)
-		defer e.Close()
-		// make it fit on a single line
+func (c *ContainerFilter) getCommand() *exec.Cmd {
+	if c.SetFlowStyleForConfig {
 		c.Config.YNode().Style = yaml.FlowStyle
-		return e.Encode(c.Config.YNode())
-	}(); err != nil {
-		return nil, err
 	}
 
 	if len(c.args) == 0 {
@@ -369,7 +407,7 @@ func (c *ContainerFilter) getCommand() (*exec.Cmd, error) {
 	cmd.Env = os.Environ()
 
 	// set stderr for err messaging
-	return cmd, nil
+	return cmd
 }
 
 // IsReconcilerFilter filters Resources based on whether or not they are Reconciler Resource.

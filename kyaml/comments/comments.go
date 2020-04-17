@@ -11,6 +11,7 @@ import (
 
 // CopyComments recursively copies the comments on fields in from to fields in to
 func CopyComments(from, to *yaml.RNode) error {
+	copy(from, to)
 	// walk the fields copying comments
 	_, err := walk.Walker{
 		Sources:            []*yaml.RNode{from, to},
@@ -44,13 +45,13 @@ func copy(from, to *yaml.RNode) {
 	if from == nil || to == nil {
 		return
 	}
-	if from.YNode().LineComment != "" {
-		to.YNode().LineComment = from.YNode().LineComment
+	if from.Document().LineComment != "" {
+		to.Document().LineComment = from.Document().LineComment
 	}
-	if from.YNode().HeadComment != "" {
-		to.YNode().HeadComment = from.YNode().HeadComment
+	if from.Document().HeadComment != "" {
+		to.Document().HeadComment = from.Document().HeadComment
 	}
-	if from.YNode().FootComment != "" {
-		to.YNode().FootComment = from.YNode().FootComment
+	if from.Document().FootComment != "" {
+		to.Document().FootComment = from.Document().FootComment
 	}
 }

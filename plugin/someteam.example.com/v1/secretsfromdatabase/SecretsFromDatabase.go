@@ -49,5 +49,5 @@ func (p *plugin) Generate() (resmap.ResMap, error) {
 		}
 	}
 	return p.h.ResmapFactory().FromSecretArgs(
-		kv.NewLoader(p.h.Loader(), p.h.Validator()), nil, args)
+		kv.NewLoader(p.h.Loader(), p.h.Validator()), args)
 }

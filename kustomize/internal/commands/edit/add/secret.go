@@ -105,11 +105,10 @@ func addSecret(
 	args := findOrMakeSecretArgs(k, flags.Name, flags.Namespace, flags.Type)
 	mergeFlagsIntoGeneratorArgs(&args.GeneratorArgs, flags)
 	// Validate by trying to create corev1.secret.
-	_, err := kf.MakeSecret(ldr, k.GeneratorOptions, args)
-	if err != nil {
-		return err
-	}
-	return nil
+	args.Options = types.MergeGlobalOptionsIntoLocal(
+		args.Options, k.GeneratorOptions)
+	_, err := kf.MakeSecret(ldr, args)
+	return err
 }
 
 func findOrMakeSecretArgs(m *types.Kustomization, name, namespace, secretType string) *types.SecretArgs {

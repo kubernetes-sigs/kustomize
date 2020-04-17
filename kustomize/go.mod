@@ -16,7 +16,7 @@ require (
 	sigs.k8s.io/kustomize/cmd/config v0.0.5
 	sigs.k8s.io/kustomize/cmd/kubectl v0.0.3
 	sigs.k8s.io/kustomize/kstatus v0.0.1
-	sigs.k8s.io/kustomize/kyaml v0.1.3
+	sigs.k8s.io/kustomize/kyaml v0.1.5
 	sigs.k8s.io/yaml v1.1.0
 )
 

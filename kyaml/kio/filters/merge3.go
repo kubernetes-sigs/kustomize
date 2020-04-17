@@ -59,7 +59,7 @@ func (m Merge3) Merge() error {
 
 	return kio.Pipeline{
 		Inputs:  inputs,
-		Filters: []kio.Filter{m, FormatFilter{}}, // format the merged output
+		Filters: []kio.Filter{m},
 		Outputs: []kio.Writer{dest},
 	}.Execute()
 }

@@ -66,12 +66,10 @@ func (rmF *Factory) NewResMapFromBytes(b []byte) (ResMap, error) {
 // NewResMapFromConfigMapArgs returns a Resource slice given
 // a configmap metadata slice from kustomization file.
 func (rmF *Factory) NewResMapFromConfigMapArgs(
-	kvLdr ifc.KvLoader,
-	options *types.GeneratorOptions,
-	argList []types.ConfigMapArgs) (ResMap, error) {
+	kvLdr ifc.KvLoader, argList []types.ConfigMapArgs) (ResMap, error) {
 	var resources []*resource.Resource
 	for _, args := range argList {
-		res, err := rmF.resF.MakeConfigMap(kvLdr, options, &args)
+		res, err := rmF.resF.MakeConfigMap(kvLdr, &args)
 		if err != nil {
 			return nil, errors.Wrap(err, "NewResMapFromConfigMapArgs")
 		}
@@ -81,10 +79,8 @@ func (rmF *Factory) NewResMapFromConfigMapArgs(
 }
 
 func (rmF *Factory) FromConfigMapArgs(
-	kvLdr ifc.KvLoader,
-	options *types.GeneratorOptions,
-	args types.ConfigMapArgs) (ResMap, error) {
-	res, err := rmF.resF.MakeConfigMap(kvLdr, options, &args)
+	kvLdr ifc.KvLoader, args types.ConfigMapArgs) (ResMap, error) {
+	res, err := rmF.resF.MakeConfigMap(kvLdr, &args)
 	if err != nil {
 		return nil, err
 	}
@@ -94,12 +90,10 @@ func (rmF *Factory) FromConfigMapArgs(
 // NewResMapFromSecretArgs takes a SecretArgs slice, generates
 // secrets from each entry, and accumulates them in a ResMap.
 func (rmF *Factory) NewResMapFromSecretArgs(
-	kvLdr ifc.KvLoader,
-	options *types.GeneratorOptions,
-	argsList []types.SecretArgs) (ResMap, error) {
+	kvLdr ifc.KvLoader, argsList []types.SecretArgs) (ResMap, error) {
 	var resources []*resource.Resource
 	for _, args := range argsList {
-		res, err := rmF.resF.MakeSecret(kvLdr, options, &args)
+		res, err := rmF.resF.MakeSecret(kvLdr, &args)
 		if err != nil {
 			return nil, errors.Wrap(err, "NewResMapFromSecretArgs")
 		}
@@ -109,10 +103,8 @@ func (rmF *Factory) NewResMapFromSecretArgs(
 }
 
 func (rmF *Factory) FromSecretArgs(
-	kvLdr ifc.KvLoader,
-	options *types.GeneratorOptions,
-	args types.SecretArgs) (ResMap, error) {
-	res, err := rmF.resF.MakeSecret(kvLdr, options, &args)
+	kvLdr ifc.KvLoader, args types.SecretArgs) (ResMap, error) {
+	res, err := rmF.resF.MakeSecret(kvLdr, &args)
 	if err != nil {
 		return nil, err
 	}

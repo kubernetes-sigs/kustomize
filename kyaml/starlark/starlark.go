@@ -84,8 +84,15 @@ func (sf *Filter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 
 	// run the starlark as program as transformation function
 	thread := &starlark.Thread{Name: sf.Name}
-	predeclared := starlark.StringDict{"resourceList": value}
-	_, err = starlark.ExecFile(thread, sf.Name, sf.Program, predeclared)
+
+	ctx := &Context{
+		resourceList: value,
+	}
+	pd, err := ctx.predeclared()
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	_, err = starlark.ExecFile(thread, sf.Name, sf.Program, pd)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
@@ -151,18 +158,7 @@ func (sf *Filter) inputToResourceList(
 
 	// convert the ResourceList into a starlark dictionary by
 	// first converting it into a map[string]interface{}
-	s, err := resourceList.String()
-	if err != nil {
-		return nil, nil, errors.Wrap(err)
-	}
-	var in map[string]interface{}
-	if err := yaml.Unmarshal([]byte(s), &in); err != nil {
-		return nil, nil, errors.Wrap(err)
-	}
-	value, err := util.Marshal(in)
-	if err != nil {
-		return nil, nil, errors.Wrap(err)
-	}
+	value, err := nodeToValue(resourceList)
 	return value, ids, err
 }
 

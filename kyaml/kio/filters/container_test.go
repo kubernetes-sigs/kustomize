@@ -6,6 +6,7 @@ package filters
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -14,6 +15,367 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+func TestContainerFilter_Filter(t *testing.T) {
+	var tests = []struct {
+		name              string
+		input             []string
+		expectedOutput    []string
+		expectedError     string
+		expectedResults   string
+		noMakeResultsFile bool
+		instance          ContainerFilter
+	}{
+		{
+			name: "add_path_annotation",
+			instance: ContainerFilter{args: []string{
+				"echo", `
+apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-foo
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: service-foo
+`,
+			},
+			},
+			expectedOutput: []string{
+				`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-foo
+  annotations:
+    config.kubernetes.io/path: 'deployment_deployment-foo.yaml'
+`,
+				`
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-foo
+  annotations:
+    config.kubernetes.io/path: 'service_service-foo.yaml'
+`,
+			},
+		},
+
+		{
+			name: "write_results",
+			instance: ContainerFilter{args: []string{
+				"echo", `
+apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-foo
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: service-foo
+results:
+- apiVersion: config.k8s.io/v1alpha1
+  kind: ObjectError
+  name: "some-validator"
+  items:  
+  - type: error
+    message: "some message"
+    resourceRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: foo
+      namespace: bar
+    file:
+      path: deploy.yaml
+      index: 0
+    field:
+      path: "spec.template.spec.containers[3].resources.limits.cpu"
+      currentValue: "200"
+      suggestedValue: "2"
+`,
+			},
+			},
+			expectedOutput: []string{
+				`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-foo
+  annotations:
+    config.kubernetes.io/path: 'deployment_deployment-foo.yaml'
+`,
+				`
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-foo
+  annotations:
+    config.kubernetes.io/path: 'service_service-foo.yaml'
+`,
+			},
+			expectedResults: `
+- apiVersion: config.k8s.io/v1alpha1
+  kind: ObjectError
+  name: "some-validator"
+  items:
+  - type: error
+    message: "some message"
+    resourceRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: foo
+      namespace: bar
+    file:
+      path: deploy.yaml
+      index: 0
+    field:
+      path: "spec.template.spec.containers[3].resources.limits.cpu"
+      currentValue: "200"
+      suggestedValue: "2"
+`,
+		},
+
+		{
+			name:          "write_results_non_0_exit",
+			expectedError: "exit status 1",
+			instance: ContainerFilter{args: []string{"sh", "-c",
+				`echo '
+apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-foo
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: service-foo
+results:
+- apiVersion: config.k8s.io/v1alpha1
+  kind: ObjectError
+  name: "some-validator"
+  items:  
+  - type: error
+    message: "some message"
+    resourceRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: foo
+      namespace: bar
+    file:
+      path: deploy.yaml
+      index: 0
+    field:
+      path: "spec.template.spec.containers[3].resources.limits.cpu"
+      currentValue: "200"
+      suggestedValue: "2"
+' && cat not-real-dir
+`,
+			},
+			},
+			expectedOutput: []string{
+				`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-foo
+  annotations:
+    config.kubernetes.io/path: 'deployment_deployment-foo.yaml'
+`,
+				`
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-foo
+  annotations:
+    config.kubernetes.io/path: 'service_service-foo.yaml'
+`,
+			},
+			expectedResults: `
+- apiVersion: config.k8s.io/v1alpha1
+  kind: ObjectError
+  name: "some-validator"
+  items:
+  - type: error
+    message: "some message"
+    resourceRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: foo
+      namespace: bar
+    file:
+      path: deploy.yaml
+      index: 0
+    field:
+      path: "spec.template.spec.containers[3].resources.limits.cpu"
+      currentValue: "200"
+      suggestedValue: "2"
+`,
+		},
+
+		{
+			name:              "write_results_non_0_exit_missing_file",
+			expectedError:     "open /not/real/file: no such file or directory",
+			noMakeResultsFile: true,
+			instance: ContainerFilter{args: []string{"sh", "-c",
+				`echo '
+apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-foo
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: service-foo
+results:
+- apiVersion: config.k8s.io/v1alpha1
+  kind: ObjectError
+  name: "some-validator"
+  items:  
+  - type: error
+    message: "some message"
+    resourceRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: foo
+      namespace: bar
+    file:
+      path: deploy.yaml
+      index: 0
+    field:
+      path: "spec.template.spec.containers[3].resources.limits.cpu"
+      currentValue: "200"
+      suggestedValue: "2"
+' && cat not-real-dir
+`,
+			},
+			},
+			expectedOutput: []string{
+				`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-foo
+  annotations:
+    config.kubernetes.io/path: 'deployment_deployment-foo.yaml'
+`,
+				`
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-foo
+  annotations:
+    config.kubernetes.io/path: 'service_service-foo.yaml'
+`,
+			},
+			expectedResults: `
+- apiVersion: config.k8s.io/v1alpha1
+  kind: ObjectError
+  name: "some-validator"
+  items:
+  - type: error
+    message: "some message"
+    resourceRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: foo
+      namespace: bar
+    file:
+      path: deploy.yaml
+      index: 0
+    field:
+      path: "spec.template.spec.containers[3].resources.limits.cpu"
+      currentValue: "200"
+      suggestedValue: "2"
+`,
+		},
+	}
+
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.expectedResults) > 0 && !tt.noMakeResultsFile {
+				f, err := ioutil.TempFile("", "test-kyaml-*.yaml")
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				defer os.RemoveAll(f.Name())
+				tt.instance.ResultsFile = f.Name()
+			} else if len(tt.expectedResults) > 0 {
+				tt.instance.ResultsFile = "/not/real/file"
+			}
+
+			var inputs []*yaml.RNode
+			for i := range tt.input {
+				node, err := yaml.Parse(tt.input[i])
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				inputs = append(inputs, node)
+			}
+
+			output, err := tt.instance.Filter(inputs)
+			if tt.expectedError != "" {
+				if !assert.EqualError(t, err, tt.expectedError) {
+					t.FailNow()
+				}
+				return
+			}
+
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			var actual []string
+			for i := range output {
+				s, err := output[i].String()
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				actual = append(actual, strings.TrimSpace(s))
+			}
+			var expected []string
+			for i := range tt.expectedOutput {
+				expected = append(expected, strings.TrimSpace(tt.expectedOutput[i]))
+			}
+
+			if !assert.Equal(t, expected, actual) {
+				t.FailNow()
+			}
+
+			if len(tt.instance.ResultsFile) > 0 {
+				tt.expectedResults = strings.TrimSpace(tt.expectedResults)
+
+				results, err := tt.instance.Results.String()
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				if !assert.Equal(t, tt.expectedResults, strings.TrimSpace(results)) {
+					t.FailNow()
+				}
+
+				b, err := ioutil.ReadFile(tt.instance.ResultsFile)
+				writtenResults := strings.TrimSpace(string(b))
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				if !assert.Equal(t, tt.expectedResults, writtenResults) {
+					t.FailNow()
+				}
+			}
+		})
+	}
+}
 
 func TestFilter_command(t *testing.T) {
 	cfg, err := yaml.Parse(`apiVersion: apps/v1
@@ -29,10 +391,7 @@ metadata:
 		Config: cfg,
 	}
 	os.Setenv("KYAML_TEST", "FOO")
-	cmd, err := instance.getCommand()
-	if !assert.NoError(t, err) {
-		return
-	}
+	cmd := instance.getCommand()
 
 	expected := []string{
 		"docker", "run",
@@ -78,10 +437,7 @@ metadata:
 		Config:        cfg,
 		StorageMounts: []StorageMount{bindMount, localVol, tmpfs},
 	}
-	cmd, err := instance.getCommand()
-	if !assert.NoError(t, err) {
-		return
-	}
+	cmd := instance.getCommand()
 
 	expected := []string{
 		"docker", "run",
@@ -116,10 +472,7 @@ metadata:
 		Network: "test-net",
 		Config:  cfg,
 	}
-	cmd, err := instance.getCommand()
-	if !assert.NoError(t, err) {
-		return
-	}
+	cmd := instance.getCommand()
 
 	expected := []string{
 		"docker", "run",
@@ -168,9 +521,10 @@ metadata:
 
 	called := false
 	result, err := (&ContainerFilter{
-		Image:  "example.com:version",
-		Config: cfg,
-		args:   []string{"sed", "s/Deployment/StatefulSet/g"},
+		SetFlowStyleForConfig: true,
+		Image:                 "example.com:version",
+		Config:                cfg,
+		args:                  []string{"sed", "s/Deployment/StatefulSet/g"},
 		checkInput: func(s string) {
 			called = true
 			if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
@@ -252,9 +606,10 @@ metadata:
 
 	called := false
 	result, err := (&ContainerFilter{
-		Image:  "example.com:version",
-		Config: cfg,
-		args:   []string{"sh", "-c", "cat <&0"},
+		SetFlowStyleForConfig: true,
+		Image:                 "example.com:version",
+		Config:                cfg,
+		args:                  []string{"sh", "-c", "cat <&0"},
 		checkInput: func(s string) {
 			called = true
 			if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
@@ -332,6 +687,68 @@ metadata:
 			expectedFn: `
 container:
     image: foo:v1.0.0`,
+		},
+
+		{
+			name: "storage mounts json style",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  annotations:
+    config.kubernetes.io/function: |-
+      container:
+        image: foo:v1.0.0
+        mounts: [ {type: bind, src: /mount/path, dst: /local/}, {src: myvol, dst: /local/, type: volume}, {dst: /local/, type: tmpfs} ]
+`,
+			expectedFn: `
+container:
+    image: foo:v1.0.0
+    mounts:
+      - type: bind
+        src: /mount/path
+        dst: /local/
+      - type: volume
+        src: myvol
+        dst: /local/
+      - type: tmpfs
+        dst: /local/
+`,
+		},
+
+		{
+			name: "storage mounts yaml style",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  annotations:
+    config.kubernetes.io/function: |-
+      container:
+        image: foo:v1.0.0
+        mounts:
+        - src: /mount/path
+          type: bind
+          dst: /local/
+        - dst: /local/
+          src: myvol
+          type: volume
+        - type: tmpfs
+          dst: /local/
+`,
+			expectedFn: `
+container:
+    image: foo:v1.0.0
+    mounts:
+      - type: bind
+        src: /mount/path
+        dst: /local/
+      - type: volume
+        src: myvol
+        dst: /local/
+      - type: tmpfs
+        dst: /local/
+`,
 		},
 
 		{
@@ -535,8 +952,9 @@ metadata:
 
 	called := false
 	result, err := (&ContainerFilter{
-		Image:  "example.com:version",
-		Config: cfg,
+		SetFlowStyleForConfig: true,
+		Image:                 "example.com:version",
+		Config:                cfg,
 		args: []string{"echo", `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -609,8 +1027,9 @@ metadata:
 
 	called := false
 	result, err := (&ContainerFilter{
-		Image:  "example.com:version",
-		Config: cfg,
+		SetFlowStyleForConfig: true,
+		Image:                 "example.com:version",
+		Config:                cfg,
 		args: []string{"echo", `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -694,9 +1113,10 @@ metadata:
 	// no resources match the scope
 	called := false
 	result, err := (&ContainerFilter{
-		Image:  "example.com:version",
-		Config: cfg,
-		args:   []string{"sed", "s/Deployment/StatefulSet/g"},
+		SetFlowStyleForConfig: true,
+		Image:                 "example.com:version",
+		Config:                cfg,
+		args:                  []string{"sed", "s/Deployment/StatefulSet/g"},
 		checkInput: func(s string) {
 			called = true
 			if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
@@ -769,10 +1189,11 @@ metadata:
 	// no resources match the scope
 	called := false
 	result, err := (&ContainerFilter{
-		GlobalScope: true,
-		Image:       "example.com:version",
-		Config:      cfg,
-		args:        []string{"sed", "s/Deployment/StatefulSet/g"},
+		SetFlowStyleForConfig: true,
+		GlobalScope:           true,
+		Image:                 "example.com:version",
+		Config:                cfg,
+		args:                  []string{"sed", "s/Deployment/StatefulSet/g"},
 		checkInput: func(s string) {
 			called = true
 			if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
@@ -864,9 +1285,10 @@ metadata:
 	// no resources match the scope
 	called := false
 	result, err := (&ContainerFilter{
-		Image:  "example.com:version",
-		Config: cfg,
-		args:   []string{"sed", "s/Deployment/StatefulSet/g"},
+		SetFlowStyleForConfig: true,
+		Image:                 "example.com:version",
+		Config:                cfg,
+		args:                  []string{"sed", "s/Deployment/StatefulSet/g"},
 		checkInput: func(s string) {
 			called = true
 			if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
@@ -960,9 +1382,10 @@ metadata:
 	// no resources match the scope
 	called := false
 	result, err := (&ContainerFilter{
-		Image:  "example.com:version",
-		Config: cfg,
-		args:   []string{"sed", "s/Deployment/StatefulSet/g"},
+		SetFlowStyleForConfig: true,
+		Image:                 "example.com:version",
+		Config:                cfg,
+		args:                  []string{"sed", "s/Deployment/StatefulSet/g"},
 		checkInput: func(s string) {
 			called = true
 			if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
@@ -1056,9 +1479,10 @@ metadata:
 	// no resources match the scope
 	called := false
 	result, err := (&ContainerFilter{
-		Image:  "example.com:version",
-		Config: cfg,
-		args:   []string{"sed", "s/Deployment/StatefulSet/g"},
+		SetFlowStyleForConfig: true,
+		Image:                 "example.com:version",
+		Config:                cfg,
+		args:                  []string{"sed", "s/Deployment/StatefulSet/g"},
 		checkInput: func(s string) {
 			called = true
 			if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1

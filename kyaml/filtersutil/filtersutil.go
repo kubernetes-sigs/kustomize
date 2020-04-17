@@ -23,7 +23,7 @@ func ApplyToJSON(filter kio.Filter, objs ...marshalerUnmarshaler) error {
 
 	// convert the json objects to rnodes
 	for i := range objs {
-		node, err := getRNode(objs[i])
+		node, err := GetRNode(objs[i])
 		if err != nil {
 			return err
 		}
@@ -55,8 +55,8 @@ type marshalerUnmarshaler interface {
 	json.Marshaler
 }
 
-// getRNode converts k into an RNode
-func getRNode(k json.Marshaler) (*yaml.RNode, error) {
+// GetRNode converts k into an RNode
+func GetRNode(k json.Marshaler) (*yaml.RNode, error) {
 	j, err := k.MarshalJSON()
 	if err != nil {
 		return nil, err

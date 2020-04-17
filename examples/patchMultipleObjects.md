@@ -1,43 +1,78 @@
-[Strategic Merge Patch]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-api-machinery/strategic-merge-patch.md
-[JSON patches]: https://tools.ietf.org/html/rfc6902
-[label selector]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
+# Patching multiple resources at once.
+
+kustomize supports patching via either a
+[strategic merge patch] (wherein you
+partially re-specify the thing you want to
+modify, with in-place changes) or a
+[JSON patch] (wherein you specify specific
+operation/target/value tuples in a particular
+syntax).
+
+A kustomize file lets one specify many
+patches.  Each patch must be associated with
+a _target selector_:
+
+[strategic merge patch]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-api-machinery/strategic-merge-patch.md
+[JSON patch]: jsonpatch.md
+
+> ```yaml
+> patches:
+> - path: <relative path to file containing patch>
+>   target:
+>     group: <optional group>
+>     version: <optional version>
+>     kind: <optional kind>
+>     name: <optional name>
+>     namespace: <optional namespace>
+>     labelSelector: <optional label selector>
+>     annotationSelector: <optional annotation selector>
+> ```
+
+E.g. select resources with _name_ matching `foo*`:
+
+> ```yaml
+> target:
+>   name: foo*
+> ```
+
+Select all resources of _kind_ `Deployment`:
+
+> ```yaml
+> target:
+>   kind: Deployment
+> ```
+
+[label/annotation selector rules]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
+
+Using multiple fields just makes the target
+more specific. The following selects only
+Deployments that also have the _label_ `app=hello`
+(full [label/annotation selector rules]):
+
+> ```yaml
+> target:
+>   kind: Deployment
+>   labelSelector: app=hello
+> ```
+
+### Demo
+
+The example below shows how to inject a
+sidecar container for multiple Deployment
+resources.
 
 
-# Demo: applying a patch to multiple resources
+Make a place to work:
 
-A kustomization file supports customizing resources via both
-[Strategic Merge Patch] and [JSON patches]. Now one patch can be
-applied to multiple resources.
-
-This can be done by specifying a patch and a target selector as follows:
-```
-patches:
-- path: <PatchFile>
-  target:
-    group: <Group>
-    version: <Version>
-    kind: <Kind>
-    name: <Name>
-    namespace: <Namespace>
-    labelSelector: <LabelSelector>
-    annotationSelector: <AnnotationSelector>
-```
-Both `labelSelector` and `annotationSelector` should follow the convention in [label selector].
-Kustomize selects the targets which match all the fields in `target` to apply the patch.
-
-The example below shows how to inject a sidecar container for all deployment resources.
-
-Make a `kustomization` containing a Deployment resource.
-
-<!-- @createDeployment @testAgainstLatestRelease -->
+<!-- @demoHome @testAgainstLatestRelease -->
 ```
 DEMO_HOME=$(mktemp -d)
+```
 
-cat <<EOF >$DEMO_HOME/kustomization.yaml
-resources:
-- deployments.yaml
-EOF
+Make a file describing two Deployments:
 
+<!-- @createDeployments @testAgainstLatestRelease -->
+```
 cat <<EOF >$DEMO_HOME/deployments.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -72,9 +107,10 @@ spec:
 EOF
 ```
 
-Declare a Strategic Merge Patch file to inject a sidecar container:
+Declare a [strategic merge patch] file
+to inject a sidecar container:
 
-<!-- @addPatch @testAgainstLatestRelease -->
+<!-- @definePatch @testAgainstLatestRelease -->
 ```
 cat <<EOF >$DEMO_HOME/patch.yaml
 apiVersion: apps/v1
@@ -93,11 +129,16 @@ spec:
 EOF
 ```
 
-Apply the patch by adding _patches_ field in kustomization.yaml
+Finally, define a kustomization file
+that specifies both a `patches` and `resources`
+entry:
 
-<!-- @applyPatch @testAgainstLatestRelease -->
+<!-- @createKustomization @testAgainstLatestRelease -->
 ```
-cat <<EOF >>$DEMO_HOME/kustomization.yaml
+cat <<EOF >$DEMO_HOME/kustomization.yaml
+resources:
+- deployments.yaml
+
 patches:
 - path: patch.yaml
   target:
@@ -105,18 +146,11 @@ patches:
 EOF
 ```
 
-Running `kustomize build $DEMO_HOME`, in the output confirm that both Deployment resources are patched correctly.
+The expected result is:
 
-<!-- @confirmPatch @testAgainstLatestRelease -->
+<!-- @definedExpectedOutput @testAgainstLatestRelease -->
 ```
-test 2 == \
-  $(kustomize build $DEMO_HOME | grep "image: docker.io/istio/proxyv2" | wc -l); \
-  echo $?
-```
-
-The output is as follows:
-
-```yaml
+cat <<EOF >$DEMO_HOME/out_expected.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -157,32 +191,21 @@ spec:
         name: istio-proxy
       - image: busybox
         name: busybox
+EOF
 ```
 
-## Target selector
-- Select resources with name matching `name*`
-  ```yaml
-  target:
-    name: name*
-  ```
-- Select all Deployment resources
-  ```yaml
-  target:
-    kind: Deployment
-  ```
-- Select resources matching label `app=hello`
-  ```yaml
-  target:
-    labelSelector: app=hello
-  ```
-- Select resources matching annotation `app=hello`
-  ```yaml
-  target:
-    annotationSelector: app=hello
-  ```
-- Select all Deployment resources matching label `app=hello`
-  ```yaml
-  target:
-    kind: Deployment
-    labelSelector: app=hello
-  ```
+Run the build:
+<!-- @runIt @testAgainstLatestRelease -->
+```
+kustomize build $DEMO_HOME >$DEMO_HOME/out_actual.yaml
+```
+
+Confirm expectations:
+
+<!-- @diffShouldExitZero @testAgainstLatestRelease -->
+```
+diff $DEMO_HOME/out_actual.yaml $DEMO_HOME/out_expected.yaml
+```
+
+To see how to do this with JSON patches,
+try the [JSON patch] demo.
