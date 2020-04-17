@@ -109,6 +109,7 @@ func getGroupKinds(in []*yaml.RNode) ([]metav1.GroupKind, error) {
 		found := false
 		for _, gk := range groupKinds {
 			if gk.Group == gvk.Group && gk.Kind == gvk.Kind {
+				found = true
 				break
 			}
 		}
