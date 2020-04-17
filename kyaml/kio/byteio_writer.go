@@ -30,6 +30,8 @@ type ByteWriter struct {
 	// wrap the results in an ResourceList.
 	FunctionConfig *yaml.RNode
 
+	Results *yaml.RNode
+
 	// WrappingKind if set will cause ByteWriter to wrap the Resources in
 	// an 'items' field in this kind.  e.g. if WrappingKind is 'List',
 	// ByteWriter will wrap the Resources in a List .items field.
@@ -111,6 +113,11 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 		list.Content = append(list.Content,
 			&yaml.Node{Kind: yaml.ScalarNode, Value: "functionConfig"},
 			w.FunctionConfig.YNode())
+	}
+	if w.Results != nil {
+		list.Content = append(list.Content,
+			&yaml.Node{Kind: yaml.ScalarNode, Value: "results"},
+			w.Results.YNode())
 	}
 	doc := &yaml.Node{
 		Kind:    yaml.DocumentNode,

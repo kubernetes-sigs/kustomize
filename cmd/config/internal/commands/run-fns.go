@@ -51,6 +51,9 @@ func GetRunFnRunner(name string) *RunFnRunner {
 		&r.StarName, "star-name", "", "name of starlark program.")
 	r.Command.Flags().MarkHidden("star-name")
 
+	r.Command.Flags().StringVar(
+		&r.ResultsDir, "results-dir", "", "write function results to this dir")
+
 	r.Command.Flags().BoolVar(
 		&r.Network, "network", false, "enable network access for functions that declare it")
 	r.Command.Flags().StringVar(
@@ -77,6 +80,7 @@ type RunFnRunner struct {
 	StarPath           string
 	StarName           string
 	RunFns             runfn.RunFns
+	ResultsDir         string
 	Network            bool
 	NetworkName        string
 	Mounts             []string
@@ -267,6 +271,7 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 		NetworkName:    r.NetworkName,
 		EnableStarlark: r.EnableStar,
 		StorageMounts:  storageMounts,
+		ResultsDir:     r.ResultsDir,
 	}
 
 	// don't consider args for the function
