@@ -18,13 +18,14 @@ import (
 
 func TestContainerFilter_Filter(t *testing.T) {
 	var tests = []struct {
-		name              string
-		input             []string
-		expectedOutput    []string
-		expectedError     string
-		expectedResults   string
-		noMakeResultsFile bool
-		instance          ContainerFilter
+		name               string
+		input              []string
+		expectedOutput     []string
+		expectedError      string
+		expectedSavedError string
+		expectedResults    string
+		noMakeResultsFile  bool
+		instance           ContainerFilter
 	}{
 		{
 			name: "add_path_annotation",
@@ -221,6 +222,87 @@ metadata:
 		},
 
 		{
+			name:               "write_results_defer_failure",
+			expectedSavedError: "exit status 1",
+			instance: ContainerFilter{
+				DeferFailure: true,
+				args: []string{"sh", "-c",
+					`echo '
+apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-foo
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: service-foo
+results:
+- apiVersion: config.k8s.io/v1alpha1
+  kind: ObjectError
+  name: "some-validator"
+  items:  
+  - type: error
+    message: "some message"
+    resourceRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: foo
+      namespace: bar
+    file:
+      path: deploy.yaml
+      index: 0
+    field:
+      path: "spec.template.spec.containers[3].resources.limits.cpu"
+      currentValue: "200"
+      suggestedValue: "2"
+' && cat not-real-dir
+`,
+				},
+			},
+			expectedOutput: []string{
+				`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-foo
+  annotations:
+    config.kubernetes.io/path: 'deployment_deployment-foo.yaml'
+`,
+				`
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-foo
+  annotations:
+    config.kubernetes.io/path: 'service_service-foo.yaml'
+`,
+			},
+			expectedResults: `
+- apiVersion: config.k8s.io/v1alpha1
+  kind: ObjectError
+  name: "some-validator"
+  items:
+  - type: error
+    message: "some message"
+    resourceRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: foo
+      namespace: bar
+    file:
+      path: deploy.yaml
+      index: 0
+    field:
+      path: "spec.template.spec.containers[3].resources.limits.cpu"
+      currentValue: "200"
+      suggestedValue: "2"
+`,
+		},
+
+		{
 			name:              "write_results_non_0_exit_missing_file",
 			expectedError:     "open /not/real/file: no such file or directory",
 			noMakeResultsFile: true,
@@ -327,6 +409,13 @@ metadata:
 			output, err := tt.instance.Filter(inputs)
 			if tt.expectedError != "" {
 				if !assert.EqualError(t, err, tt.expectedError) {
+					t.FailNow()
+				}
+				return
+			}
+
+			if tt.expectedSavedError != "" {
+				if !assert.EqualError(t, tt.instance.Exit, tt.expectedSavedError) {
 					t.FailNow()
 				}
 				return

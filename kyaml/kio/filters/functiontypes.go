@@ -19,6 +19,8 @@ type FunctionSpec struct {
 	// Network is the name of the network to use from a container
 	Network string `json:"network,omitempty" yaml:"network,omitempty"`
 
+	DeferFailure bool `json:"deferFailure,omitempty" yaml:"deferFailure,omitempty"`
+
 	// Container is the spec for running a function as a container
 	Container ContainerSpec `json:"container,omitempty" yaml:"container,omitempty"`
 
