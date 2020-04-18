@@ -119,7 +119,7 @@ func (b *Compiler) Compile(g, v, k string) error {
 	lowK := strings.ToLower(k)
 	objDir := filepath.Join(b.objRoot, g, v, lowK)
 	objFile := filepath.Join(objDir, k) + ".so"
-	if RecentFileExists(objFile) {
+	if FileYoungerThan(objFile, time.Minute) {
 		// Skip rebuilding it.
 		return nil
 	}
@@ -134,7 +134,6 @@ func (b *Compiler) Compile(g, v, k string) error {
 		if !FileExists(s) {
 			return fmt.Errorf(
 				"cannot find source at '%s' or '%s'", srcFile, s)
-
 		}
 		srcFile = s
 	}
@@ -160,17 +159,15 @@ func (b *Compiler) Compile(g, v, k string) error {
 	return nil
 }
 
-// True if file less than 3 minutes old, i.e. not
-// accidentally left over from some earlier build.
-func RecentFileExists(path string) bool {
+// FileYoungerThan returns true if the file age is <= the Duration argument.
+func FileYoungerThan(path string, d time.Duration) bool {
 	fi, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return false
 		}
 	}
-	age := time.Since(fi.ModTime())
-	return age.Minutes() < 3
+	return time.Since(fi.ModTime()) <= d
 }
 
 func FileExists(name string) bool {

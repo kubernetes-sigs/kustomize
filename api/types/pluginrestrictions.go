@@ -26,3 +26,18 @@ const (
 	// No restrictions, do whatever you want.
 	PluginRestrictionsNone
 )
+
+// BuiltinPluginLoadingOptions distinguish ways in which builtin plugins are used.
+//go:generate stringer -type=BuiltinPluginLoadingOptions
+type BuiltinPluginLoadingOptions int
+
+const (
+	BploUndefined BuiltinPluginLoadingOptions = iota
+
+	// Desired in production use for performance.
+	BploUseStaticallyLinked
+
+	// Desired in testing and development cycles where it's undesirable
+	// to generate static code.
+	BploLoadFromFileSys
+)
