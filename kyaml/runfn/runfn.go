@@ -164,7 +164,27 @@ func (r RunFns) runFunctions(
 		// the output is nil (reading from Input)
 		outputs = append(outputs, kio.ByteWriter{Writer: r.Output})
 	}
-	return kio.Pipeline{Inputs: []kio.Reader{input}, Filters: fltrs, Outputs: outputs}.Execute()
+	err := kio.Pipeline{
+		Inputs: []kio.Reader{input}, Filters: fltrs, Outputs: outputs}.Execute()
+	if err != nil {
+		return err
+	}
+
+	// check for deferred function errors
+	var errs []string
+	for i := range fltrs {
+		cf, ok := fltrs[i].(filters.DeferFailureFunction)
+		if !ok {
+			continue
+		}
+		if cf.GetExit() != nil {
+			errs = append(errs, cf.GetExit().Error())
+		}
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf(strings.Join(errs, "\n---\n"))
+	}
+	return nil
 }
 
 // getFunctionsFromInput scans the input for functions and runs them
@@ -328,6 +348,7 @@ func (r *RunFns) ffp(spec filters.FunctionSpec, api *yaml.RNode) (kio.Filter, er
 			StorageMounts: r.StorageMounts,
 			GlobalScope:   r.GlobalScope,
 			ResultsFile:   resultsFile,
+			DeferFailure:  spec.DeferFailure,
 		}, nil
 	}
 	if r.EnableStarlark && spec.Starlark.Path != "" {
