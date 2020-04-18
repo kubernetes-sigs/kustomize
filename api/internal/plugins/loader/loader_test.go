@@ -15,6 +15,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resource"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
+	"sigs.k8s.io/kustomize/api/types"
 )
 
 const (
@@ -58,22 +59,26 @@ func TestLoader(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c, err := konfig.EnabledPluginConfig()
-	if err != nil {
-		t.Fatal(err)
-	}
-	pLdr := NewLoader(c, rmF)
-	if pLdr == nil {
-		t.Fatal("expect non-nil loader")
-	}
-	m, err := rmF.NewResMapFromBytes([]byte(
+	generatorConfigs, err := rmF.NewResMapFromBytes([]byte(
 		someServiceGenerator + "---\n" + secretGenerator))
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = pLdr.LoadGenerators(
-		fLdr, valtest_test.MakeFakeValidator(), m)
-	if err != nil {
-		t.Fatal(err)
+	for _, behavior := range []types.BuiltinPluginLoadingOptions{
+		types.BploUseStaticallyLinked,
+		types.BploLoadFromFileSys} {
+		c, err := konfig.EnabledPluginConfig(behavior)
+		if err != nil {
+			t.Fatal(err)
+		}
+		pLdr := NewLoader(c, rmF)
+		if pLdr == nil {
+			t.Fatal("expect non-nil loader")
+		}
+		_, err = pLdr.LoadGenerators(
+			fLdr, valtest_test.MakeFakeValidator(), generatorConfigs)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 }

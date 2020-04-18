@@ -10,22 +10,23 @@ type PluginConfig struct {
 	// containing the fields 'apiVersion' and 'kind', e.g.
 	//   apiVersion: apps/v1
 	//   kind: Deployment
-	// When kustomize reads a plugin configuration file (as as result
-	// of seeing the file name in the 'generators:' or 'transformers:'
-	// field in a kustomization file), it must then locate the plugin
-	// code (Go plugin or exec plugin).
-	// Every kustomize plugin (its code, its tests, supporting data
+	// kustomize reads plugin configuration data from a file path
+	// specified in the 'generators:' or 'transformers:' field of a
+	// kustomization file.  kustomize must then use this data to both
+	// locate the plugin and configure it.
+	// Every kustomize plugin (its code, its tests, its supporting data
 	// files, etc.) must be housed in its own directory at
 	//   ${AbsPluginHome}/${pluginApiVersion}/LOWERCASE(${pluginKind})
 	// where
 	//   - ${AbsPluginHome} is an absolute path, defined below.
 	//   - ${pluginApiVersion} is taken from the plugin config file.
 	//   - ${pluginKind} is taken from the plugin config file.
-	// The value of AbsPluginHome can be any absolute path, but might
-	// default to $XDG_CONFIG_HOME/kustomize/plugin.
+	// The value of AbsPluginHome can be any absolute path.
 	AbsPluginHome string
 
-	// PluginRestrictions defines the plugin restriction state.
-	// See type for more information.
+	// PluginRestrictions distinguishes plugin restrictions.
 	PluginRestrictions PluginRestrictions
+
+	// BpLoadingOptions distinguishes builtin plugin behaviors.
+	BpLoadingOptions BuiltinPluginLoadingOptions
 }

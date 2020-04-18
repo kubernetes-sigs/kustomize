@@ -19,38 +19,51 @@ import (
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
+	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // HarnessEnhanced manages a full plugin environment for tests.
 type HarnessEnhanced struct {
+	// An instance of *testing.T, and a filesystem (likely in-memory)
+	// for loading test data - plugin config, resources to transform, etc.
 	Harness
+
+	// plugintestEnv holds the plugin compiler and data needed to
+	// create compilation sub-processes.
 	pte *pluginTestEnv
-	rf  *resmap.Factory
+
+	// rf creates Resources from byte streams.
+	rf *resmap.Factory
+
+	// A file loader using the Harness.fSys to read test data.
 	ldr ifc.Loader
-	pl  *pLdr.Loader
+
+	// A plugin loader that loads plugins from a (real) file system.
+	pl *pLdr.Loader
 }
 
 func MakeEnhancedHarness(t *testing.T) *HarnessEnhanced {
 	pte := newPluginTestEnv(t).set()
 
-	pc, err := konfig.EnabledPluginConfig()
+	// TODO: Change to types.BploLoadFromFileSys to enable debugging.
+	pc, err := konfig.EnabledPluginConfig(types.BploUseStaticallyLinked)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	fSys := filesys.MakeFsInMemory()
 
 	rf := resmap.NewFactory(
 		resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()),
 		transformer.NewFactoryImpl())
 
 	result := &HarnessEnhanced{
-		Harness: Harness{t: t, fSys: fSys},
+		Harness: MakeHarness(t),
 		pte:     pte,
 		rf:      rf,
 		pl:      pLdr.NewLoader(pc, rf)}
+
+	// Point the file loader to the root ('/') of the in-memory file system.
 	result.ResetLoaderRoot(filesys.Separator)
 
 	return result
@@ -60,21 +73,23 @@ func (th *HarnessEnhanced) Reset() {
 	th.pte.reset()
 }
 
+func (th *HarnessEnhanced) PrepBuiltin(k string) *HarnessEnhanced {
+	return th.BuildGoPlugin(konfig.BuiltinPluginPackage, "", k)
+}
+
 func (th *HarnessEnhanced) BuildGoPlugin(g, v, k string) *HarnessEnhanced {
-	th.pte.buildGoPlugin(g, v, k)
+	th.pte.prepareGoPlugin(g, v, k)
 	return th
 }
 
 func (th *HarnessEnhanced) PrepExecPlugin(g, v, k string) *HarnessEnhanced {
-	th.pte.prepExecPlugin(g, v, k)
+	th.pte.prepareExecPlugin(g, v, k)
 	return th
 }
 
-func (th *HarnessEnhanced) PrepBuiltin(k string) *HarnessEnhanced {
-	th.pte.buildGoPlugin(konfig.BuiltinPluginPackage, "", k)
-	return th
-}
-
+// ResetLoaderRoot interprets its argument as an absolute directory path.
+// It creates the directory, and creates the harness's file loader
+// rooted in that directory.
 func (th *HarnessEnhanced) ResetLoaderRoot(root string) {
 	if err := th.fSys.Mkdir(root); err != nil {
 		th.t.Fatal(err)
@@ -137,7 +152,6 @@ func toggleYamlSupportField(config string, yamlSupport bool) (string, error) {
 		Reader: bytes.NewBufferString(config),
 		Writer: &out,
 	}
-
 	err := kio.Pipeline{
 		Inputs: []kio.Reader{&rw},
 		Filters: []kio.Filter{

@@ -16,6 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/api/krusty"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
+	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 )
 
@@ -107,7 +108,7 @@ func (o *Options) makeOptions() *krusty.Options {
 		DoPrune:              false,
 	}
 	if isFlagEnablePluginsSet() {
-		c, err := konfig.EnabledPluginConfig()
+		c, err := konfig.EnabledPluginConfig(types.BploUseStaticallyLinked)
 		if err != nil {
 			log.Fatal(err)
 		}
