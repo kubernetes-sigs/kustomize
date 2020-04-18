@@ -151,6 +151,10 @@ type ContainerFilter struct {
 
 	Results *yaml.RNode
 
+	DeferFailure bool
+
+	Exit error
+
 	// SetFlowStyleForConfig sets the style for config to Flow when serializing it
 	SetFlowStyleForConfig bool
 
@@ -160,7 +164,18 @@ type ContainerFilter struct {
 	checkInput func(string)
 }
 
+func (c ContainerFilter) GetExit() error {
+	return c.Exit
+}
+
+type DeferFailureFunction interface {
+	GetExit() error
+}
+
 func (c ContainerFilter) String() string {
+	if c.DeferFailure {
+		return fmt.Sprintf("%s deferFailure: %v", c.Image, c.DeferFailure)
+	}
 	return c.Image
 }
 
@@ -300,18 +315,9 @@ func (c *ContainerFilter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 	}
 	cmd.Stdin = in
 	cmd.Stdout = out
-	if err := cmd.Run(); err != nil {
-		// write the results file on failure
-		results, e := r.Read()
-		if e != nil {
-			return nil, e
-		}
-		if e = c.doResults(r); e != nil {
-			return nil, e
-		}
-		// return the results from the function even on failure
-		return results, err
-	}
+
+	// don't exit immediately if the function fails -- write out the validation
+	c.Exit = cmd.Run()
 
 	output, err := r.Read()
 	if err != nil {
@@ -320,6 +326,10 @@ func (c *ContainerFilter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 
 	if err := c.doResults(r); err != nil {
 		return nil, err
+	}
+
+	if c.Exit != nil && !c.DeferFailure {
+		return append(output, saved...), c.Exit
 	}
 
 	// annotate any generated Resources with a path and index if they don't already have one
@@ -380,6 +390,7 @@ func (c *ContainerFilter) getArgs() []string {
 
 	// tell functions to write error messages to stderr as well as results
 	os.Setenv("LOG_TO_STDERR", "true")
+	os.Setenv("STRUCTURED_RESULTS", "true")
 
 	// export the local environment vars to the container
 	for _, pair := range os.Environ() {

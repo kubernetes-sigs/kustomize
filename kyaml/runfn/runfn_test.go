@@ -15,6 +15,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -232,6 +233,29 @@ metadata:
 				},
 			},
 			out: []string{"gcr.io/example.com/image:v1.0.0"},
+		},
+
+		// Test
+		//
+		//
+		{name: "defer_failure",
+			in: []f{
+				{
+					path: filepath.Join("foo", "bar.yaml"),
+					value: `
+apiVersion: example.com/v1alpha1
+kind: ExampleFunction
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      deferFailure: true
+      container:
+        image: gcr.io/example.com/image:v1.0.0
+    config.kubernetes.io/local-config: "true"
+`,
+				},
+			},
+			out: []string{"gcr.io/example.com/image:v1.0.0 deferFailure: true"},
 		},
 
 		{name: "disable containers",
@@ -672,6 +696,93 @@ func TestCmd_Execute(t *testing.T) {
 		t.FailNow()
 	}
 	assert.Contains(t, string(b), "kind: StatefulSet")
+}
+
+type TestFilter struct {
+	invoked bool
+	Exit    error
+}
+
+func (f *TestFilter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
+	f.invoked = true
+	return input, nil
+}
+
+func (f *TestFilter) GetExit() error {
+	return f.Exit
+}
+
+func TestCmd_Execute_deferFailure(t *testing.T) {
+	dir := setupTest(t)
+	defer os.RemoveAll(dir)
+
+	// write a test filter to the directory of configuration
+	if !assert.NoError(t, ioutil.WriteFile(
+		filepath.Join(dir, "filter1.yaml"), []byte(`apiVersion: v1
+kind: ValueReplacer
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: 1
+    config.kubernetes.io/local-config: "true"
+stringMatch: Deployment
+replace: StatefulSet
+`), 0600)) {
+		t.FailNow()
+	}
+
+	// write a test filter to the directory of configuration
+	if !assert.NoError(t, ioutil.WriteFile(
+		filepath.Join(dir, "filter2.yaml"), []byte(`apiVersion: v1
+kind: ValueReplacer
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: 2
+    config.kubernetes.io/local-config: "true"
+stringMatch: Deployment
+replace: StatefulSet
+`), 0600)) {
+		t.FailNow()
+	}
+
+	var fltrs []*TestFilter
+	instance := RunFns{
+		Path: dir,
+		functionFilterProvider: func(f filters.FunctionSpec, node *yaml.RNode) (kio.Filter, error) {
+			tf := &TestFilter{
+				Exit: errors.Errorf("message: %s", f.Container.Image),
+			}
+			fltrs = append(fltrs, tf)
+			return tf, nil
+		},
+	}
+	instance.init()
+
+	err := instance.Execute()
+
+	// make sure all filters were run
+	if !assert.Equal(t, 2, len(fltrs)) {
+		t.FailNow()
+	}
+	for i := range fltrs {
+		if !assert.True(t, fltrs[i].invoked) {
+			t.FailNow()
+		}
+	}
+
+	if !assert.EqualError(t, err, "message: 1\n---\nmessage: 2") {
+		t.FailNow()
+	}
+	b, err := ioutil.ReadFile(
+		filepath.Join(dir, "java", "java-deployment.resource.yaml"))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	// files weren't changed because there was an error
+	assert.Contains(t, string(b), "kind: Deployment")
 }
 
 // TestCmd_Execute_setOutput tests the execution of a filter reading and writing to a dir
