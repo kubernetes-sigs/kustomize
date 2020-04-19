@@ -70,7 +70,8 @@ func (th Harness) MakeOptionsPluginsDisabled() krusty.Options {
 
 // Enables use of non-builtin plugins.
 func (th Harness) MakeOptionsPluginsEnabled() krusty.Options {
-	c, err := konfig.EnabledPluginConfig()
+	// TODO: Change to types.BploLoadFromFileSys to enable debugging.
+	c, err := konfig.EnabledPluginConfig(types.BploUseStaticallyLinked)
 	if err != nil {
 		if strings.Contains(err.Error(), "unable to find plugin root") {
 			th.t.Log(
