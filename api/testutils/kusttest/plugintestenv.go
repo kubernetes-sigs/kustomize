@@ -16,10 +16,10 @@ import (
 	"sigs.k8s.io/kustomize/api/konfig"
 )
 
-// pluginTestEnv manages plugins for tests.
+// pluginTestEnv manages compiling plugins for tests.
 // It manages a Go plugin compiler,
-// makes and removes a temporary working directory,
-// and sets/resets shell env vars as needed.
+// maybe makes and removes a temporary working directory,
+// maybe sets/resets shell env vars as needed.
 type pluginTestEnv struct {
 	t        *testing.T
 	compiler *compiler.Compiler
@@ -56,19 +56,19 @@ func (x *pluginTestEnv) reset() {
 	x.removeWorkDir()
 }
 
-// buildGoPlugin compiles a Go plugin, leaving the newly
+// prepareGoPlugin compiles a Go plugin, leaving the newly
 // created object code in the right place - a temporary
-// working  directory pointed to by KustomizePluginHomeEnv.
+// working directory pointed to by KustomizePluginHomeEnv.
 // This avoids overwriting anything the user/developer has
 // otherwise created.
-func (x *pluginTestEnv) buildGoPlugin(g, v, k string) {
+func (x *pluginTestEnv) prepareGoPlugin(g, v, k string) {
 	err := x.compiler.Compile(g, v, k)
 	if err != nil {
 		x.t.Errorf("compile failed: %v", err)
 	}
 }
 
-// prepExecPlugin copies an exec plugin from it's
+// prepareExecPlugin copies an exec plugin from it's
 // home in the discovered srcRoot to the same temp
 // directory where Go plugin object code is placed.
 // Kustomize (and its tests) expect to find plugins
@@ -76,7 +76,7 @@ func (x *pluginTestEnv) buildGoPlugin(g, v, k string) {
 // framework is compiling Go plugins to a temp dir,
 // it must likewise copy Exec plugins to that same
 // temp dir.
-func (x *pluginTestEnv) prepExecPlugin(g, v, k string) {
+func (x *pluginTestEnv) prepareExecPlugin(g, v, k string) {
 	lowK := strings.ToLower(k)
 	src := filepath.Join(x.srcRoot, g, v, lowK, k)
 	tmp := filepath.Join(x.workDir, g, v, lowK, k)

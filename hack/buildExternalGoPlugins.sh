@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/bash
 set -e
 
 # Builds or removes Go plugin object code.
@@ -40,8 +40,8 @@ function removePlugin {
 }
 
 goPlugins=$(
-  find $root -name "*.go" | 
-  grep -v builtin/ | 
+  find $root -name "*.go" |
+  grep -v builtin/ |
   xargs grep -l "var KustomizePlugin")
 
 for p in $goPlugins; do
