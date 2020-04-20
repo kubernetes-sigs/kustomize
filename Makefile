@@ -188,8 +188,14 @@ lint-kustomize: install-tools $(builtinplugins)
 	cd pluginator; \
 	$(MYGOBIN)/golangci-lint-kustomize -c ../.golangci-kustomize.yml run ./...
 
+# Used to add non-default compilation flags when experimenting with
+# plugin-to-api compatibility checks.
+.PHONY: build-kustomize-api
+build-kustomize-api: $(builtinplugins)
+	cd api; go build ./...
+
 .PHONY: test-unit-kustomize-api
-test-unit-kustomize-api: $(builtinplugins)
+test-unit-kustomize-api: build-kustomize-api
 	cd api; go test ./...
 
 .PHONY: test-unit-kustomize-plugins
@@ -288,6 +294,7 @@ clean: kustomize-external-go-plugin-clean
 	rm -f $(MYGOBIN)/kustomize
 	rm -f $(MYGOBIN)/golangci-lint-kustomize
 
+# Nuke the site from orbit.  It's the only way to be sure.
 .PHONY: nuke
 nuke: clean
-	sudo rm -rf $(shell go env GOPATH)/pkg/mod/sigs.k8s.io
+	go clean --modcache

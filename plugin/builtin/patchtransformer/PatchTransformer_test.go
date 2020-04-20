@@ -102,7 +102,6 @@ patch: "thisIsNotAPatch"
 		if err == nil {
 			t.Fatalf("expected error")
 		}
-		fmt.Print(err)
 		if !strings.Contains(err.Error(),
 			"unable to parse SM or JSON patch from ") {
 			t.Fatalf("unexpected err: %v", err)

@@ -4,8 +4,6 @@
 package compiler_test
 
 import (
-	"io/ioutil"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -16,53 +14,46 @@ import (
 
 // Regression coverage over compiler behavior.
 func TestCompiler(t *testing.T) {
-	configRoot, err := ioutil.TempDir("", "kustomize-compiler-test")
-	if err != nil {
-		t.Errorf("failed to make temp dir: %v", err)
-	}
 	srcRoot, err := DeterminePluginSrcRoot(filesys.MakeFsOnDisk())
 	if err != nil {
 		t.Error(err)
 	}
-	c := NewCompiler(srcRoot, configRoot)
-	if configRoot != c.ObjRoot() {
-		t.Errorf("unexpected objRoot %s", c.ObjRoot())
-	}
+	c := NewCompiler(srcRoot)
 
+	c.SetGVK("someteam.example.com", "v1", "DatePrefixer")
 	expectObj := filepath.Join(
-		c.ObjRoot(),
-		"someteam.example.com", "v1", "dateprefixer", "DatePrefixer.so")
-	if FileExists(expectObj) {
-		t.Errorf("obj file should not exist yet: %s", expectObj)
+		srcRoot, "someteam.example.com", "v1", "dateprefixer", "DatePrefixer.so")
+	if expectObj != c.ObjPath() {
+		t.Errorf("Expected '%s', got '%s'", expectObj, c.ObjPath())
 	}
-	err = c.Compile("someteam.example.com", "v1", "DatePrefixer")
+	err = c.Compile()
 	if err != nil {
 		t.Error(err)
 	}
 	if !FileYoungerThan(expectObj, time.Second) {
 		t.Errorf("didn't find expected obj file %s", expectObj)
 	}
+	c.Cleanup()
+	if FileExists(expectObj) {
+		t.Errorf("obj file '%s' should be gone", expectObj)
+	}
 
+	c.SetGVK("builtin", "", "SecretGenerator")
 	expectObj = filepath.Join(
-		c.ObjRoot(),
+		srcRoot,
 		"builtin", "", "secretgenerator", "SecretGenerator.so")
-	if FileExists(expectObj) {
-		t.Errorf("obj file should not exist yet: %s", expectObj)
+	if expectObj != c.ObjPath() {
+		t.Errorf("Expected '%s', got '%s'", expectObj, c.ObjPath())
 	}
-	err = c.Compile("builtin", "", "SecretGenerator")
+	err = c.Compile()
 	if err != nil {
 		t.Error(err)
 	}
 	if !FileYoungerThan(expectObj, time.Second) {
 		t.Errorf("didn't find expected obj file %s", expectObj)
 	}
-
-	err = os.RemoveAll(c.ObjRoot())
-	if err != nil {
-		t.Errorf(
-			"removing temp dir: %s %v", c.ObjRoot(), err)
-	}
+	c.Cleanup()
 	if FileExists(expectObj) {
-		t.Errorf("cleanup failed; still see: %s", expectObj)
+		t.Errorf("obj file '%s' should be gone", expectObj)
 	}
 }

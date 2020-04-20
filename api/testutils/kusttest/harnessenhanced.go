@@ -47,8 +47,7 @@ type HarnessEnhanced struct {
 func MakeEnhancedHarness(t *testing.T) *HarnessEnhanced {
 	pte := newPluginTestEnv(t).set()
 
-	// TODO: Change to types.BploLoadFromFileSys to enable debugging.
-	pc, err := konfig.EnabledPluginConfig(types.BploUseStaticallyLinked)
+	pc, err := konfig.EnabledPluginConfig(types.BploLoadFromFileSys)
 	if err != nil {
 		t.Fatal(err)
 	}
