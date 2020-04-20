@@ -9,13 +9,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/konfig"
 )
 
 // Compiler creates Go plugin object files.
@@ -28,70 +25,6 @@ import (
 type Compiler struct {
 	srcRoot string
 	objRoot string
-}
-
-// DeterminePluginSrcRoot guesses where the user
-// has her ${g}/${v}/$lower(${k})/${k}.go files.
-func DeterminePluginSrcRoot(fSys filesys.FileSystem) (string, error) {
-	return konfig.FirstDirThatExistsElseError(
-		"source directory", fSys, []konfig.NotedFunc{
-			{
-				Note: "relative to unit test",
-				F: func() string {
-					return filepath.Clean(
-						filepath.Join(
-							os.Getenv("PWD"),
-							"..", "..",
-							konfig.RelPluginHome))
-				},
-			},
-			{
-				Note: "relative to unit test (internal pkg)",
-				F: func() string {
-					return filepath.Clean(
-						filepath.Join(
-							os.Getenv("PWD"),
-							"..", "..", "..", "..",
-							konfig.RelPluginHome))
-				},
-			},
-			{
-				Note: "relative to api package",
-				F: func() string {
-					return filepath.Clean(
-						filepath.Join(
-							os.Getenv("PWD"),
-							"..", "..", "..",
-							konfig.RelPluginHome))
-				},
-			},
-			{
-				Note: "old style $GOPATH",
-				F: func() string {
-					return filepath.Join(
-						os.Getenv("GOPATH"),
-						"src", konfig.DomainName,
-						konfig.ProgramName, konfig.RelPluginHome)
-				},
-			},
-			{
-				Note: "HOME with literal 'gopath'",
-				F: func() string {
-					return filepath.Join(
-						konfig.HomeDir(), "gopath",
-						"src", konfig.DomainName,
-						konfig.ProgramName, konfig.RelPluginHome)
-				},
-			},
-			{
-				Note: "home directory",
-				F: func() string {
-					return filepath.Join(
-						konfig.HomeDir(), konfig.DomainName,
-						konfig.ProgramName, konfig.RelPluginHome)
-				},
-			},
-		})
 }
 
 // NewCompiler returns a new compiler instance.
@@ -107,10 +40,6 @@ func (b *Compiler) ObjRoot() string {
 // SrcRoot is where to find src.
 func (b *Compiler) SrcRoot() string {
 	return b.srcRoot
-}
-
-func goBin() string {
-	return filepath.Join(runtime.GOROOT(), "bin", "go")
 }
 
 // Compile reads ${srcRoot}/${g}/${v}/${k}.go
@@ -157,24 +86,4 @@ func (b *Compiler) Compile(g, v, k string) error {
 			err, "cannot compile %s:\nSTDERR\n%s\n", srcFile, stderr.String())
 	}
 	return nil
-}
-
-// FileYoungerThan returns true if the file age is <= the Duration argument.
-func FileYoungerThan(path string, d time.Duration) bool {
-	fi, err := os.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-	}
-	return time.Since(fi.ModTime()) <= d
-}
-
-func FileExists(name string) bool {
-	if _, err := os.Stat(name); err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-	}
-	return true
 }
