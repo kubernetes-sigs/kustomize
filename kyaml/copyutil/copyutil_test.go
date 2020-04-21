@@ -261,3 +261,25 @@ func TestSyncFileNoSrcFile(t *testing.T) {
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "no such file or directory"))
 }
+
+func TestPrettyFileDiff(t *testing.T) {
+	s1 := `apiVersion: someversion/v1alpha2
+kind: ContainerCluster
+metadata:
+  clusterName: "some_cluster"
+  name: asm-cluster
+  namespace: "PROJECT_ID" # {"$ref":"#/definitions/io.k8s.cli.setters.gcloud.core.project"}`
+
+	s2 := `apiVersion: someversion/v1alpha2
+kind: ContainerCluster
+metadata:
+  clusterName: "some_cluster"
+  name: asm-cluster
+  namespace: "some_project" # {"$ref":"#/definitions/io.k8s.cli.setters.gcloud.core.project"}`
+
+	expectedLine1 := `[31m  namespace: "PROJECT_ID" # {"$ref":"#/definitions/io.k8s.cli.setters.gcloud.core.project"}`
+	expectedLine2 := `[32m  namespace: "some_project" # {"$ref":"#/definitions/io.k8s.cli.setters.gcloud.core.project"}`
+
+	assert.Contains(t, PrettyFileDiff(s1, s2), expectedLine1)
+	assert.Contains(t, PrettyFileDiff(s1, s2), expectedLine2)
+}

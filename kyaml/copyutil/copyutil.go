@@ -121,15 +121,21 @@ func Diff(sourceDir, destDir string) (sets.String, error) {
 			return diff, err
 		}
 		if !bytes.Equal(b1, b2) {
-			dmp := diffmatchpatch.New()
-			diffs := dmp.DiffMain(string(b1), string(b2), false)
-			fmt.Println(dmp.DiffPrettyText(diffs))
+			fmt.Println(PrettyFileDiff(string(b1), string(b2)))
 			diff.Insert(f)
 		}
 	}
-
 	// return the differing files
 	return diff, nil
+}
+
+// PrettyFileDiff takes the content of two files and returns the pretty diff
+func PrettyFileDiff(s1, s2 string) string {
+	dmp := diffmatchpatch.New()
+	wSrc, wDst, warray := dmp.DiffLinesToRunes(s1, s2)
+	diffs := dmp.DiffMainRunes(wSrc, wDst, false)
+	diffs = dmp.DiffCharsToLines(diffs, warray)
+	return dmp.DiffPrettyText(diffs)
 }
 
 // SyncFile copies file from src file path to a dst file path by replacement
