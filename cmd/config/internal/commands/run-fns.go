@@ -217,8 +217,8 @@ func toStorageMounts(mounts []string) []filters.StorageMount {
 }
 
 func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
-	if r.EnableStar != (r.StarPath != "") {
-		return errors.Errorf("must specify --star-path with --enable-star")
+	if !r.EnableStar && r.StarPath != "" {
+		return errors.Errorf("must specify --enable-star with --star-path")
 	}
 
 	if c.ArgsLenAtDash() >= 0 && r.Image == "" &&
