@@ -22,6 +22,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
+// Loader loads plugins using a file loader (a different loader).
 type Loader struct {
 	pc *types.PluginConfig
 	rf *resmap.Factory
@@ -107,17 +108,35 @@ func isBuiltinPlugin(res *resource.Resource) bool {
 }
 
 func (l *Loader) loadAndConfigurePlugin(
-	ldr ifc.Loader, v ifc.Validator, res *resource.Resource) (c resmap.Configurable, err error) {
+	ldr ifc.Loader,
+	v ifc.Validator,
+	res *resource.Resource) (c resmap.Configurable, err error) {
 	if isBuiltinPlugin(res) {
-		// Instead of looking for and loading a .so file, just
-		// instantiate the plugin from a generated factory
-		// function (see "pluginator").  Being able to do this
-		// is what makes a plugin "builtin".
-		c, err = l.makeBuiltinPlugin(res.GetGvk())
-	} else if l.pc.PluginRestrictions == types.PluginRestrictionsNone {
-		c, err = l.loadPlugin(res.OrgId())
+		switch l.pc.BpLoadingOptions {
+		case types.BploLoadFromFileSys:
+			c, err = l.loadPlugin(res.OrgId())
+		case types.BploUseStaticallyLinked:
+			// Instead of looking for and loading a .so file,
+			// instantiate the plugin from a generated factory
+			// function (see "pluginator").  Being able to do this
+			// is what makes a plugin "builtin".
+			c, err = l.makeBuiltinPlugin(res.GetGvk())
+		default:
+			err = fmt.Errorf(
+				"unknown plugin loader behavior specified: %v",
+				l.pc.BpLoadingOptions)
+		}
 	} else {
-		err = types.NewErrOnlyBuiltinPluginsAllowed(res.OrgId().Kind)
+		switch l.pc.PluginRestrictions {
+		case types.PluginRestrictionsNone:
+			c, err = l.loadPlugin(res.OrgId())
+		case types.PluginRestrictionsBuiltinsOnly:
+			err = types.NewErrOnlyBuiltinPluginsAllowed(res.OrgId().Kind)
+		default:
+			err = fmt.Errorf(
+				"unknown plugin restriction specified: %v",
+				l.pc.PluginRestrictions)
+		}
 	}
 	if err != nil {
 		return nil, err

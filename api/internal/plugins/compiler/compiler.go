@@ -6,143 +6,85 @@ package compiler
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
-	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/konfig"
 )
 
 // Compiler creates Go plugin object files.
-//
-// Source code is read from
-//   ${srcRoot}/${g}/${v}/${k}.go
-//
-// Object code is written to
-//   ${objRoot}/${g}/${v}/${k}.so
 type Compiler struct {
-	srcRoot string
-	objRoot string
-}
-
-// DeterminePluginSrcRoot guesses where the user
-// has her ${g}/${v}/$lower(${k})/${k}.go files.
-func DeterminePluginSrcRoot(fSys filesys.FileSystem) (string, error) {
-	return konfig.FirstDirThatExistsElseError(
-		"source directory", fSys, []konfig.NotedFunc{
-			{
-				Note: "relative to unit test",
-				F: func() string {
-					return filepath.Clean(
-						filepath.Join(
-							os.Getenv("PWD"),
-							"..", "..",
-							konfig.RelPluginHome))
-				},
-			},
-			{
-				Note: "relative to unit test (internal pkg)",
-				F: func() string {
-					return filepath.Clean(
-						filepath.Join(
-							os.Getenv("PWD"),
-							"..", "..", "..", "..",
-							konfig.RelPluginHome))
-				},
-			},
-			{
-				Note: "relative to api package",
-				F: func() string {
-					return filepath.Clean(
-						filepath.Join(
-							os.Getenv("PWD"),
-							"..", "..", "..",
-							konfig.RelPluginHome))
-				},
-			},
-			{
-				Note: "old style $GOPATH",
-				F: func() string {
-					return filepath.Join(
-						os.Getenv("GOPATH"),
-						"src", konfig.DomainName,
-						konfig.ProgramName, konfig.RelPluginHome)
-				},
-			},
-			{
-				Note: "HOME with literal 'gopath'",
-				F: func() string {
-					return filepath.Join(
-						konfig.HomeDir(), "gopath",
-						"src", konfig.DomainName,
-						konfig.ProgramName, konfig.RelPluginHome)
-				},
-			},
-			{
-				Note: "home directory",
-				F: func() string {
-					return filepath.Join(
-						konfig.HomeDir(), konfig.DomainName,
-						konfig.ProgramName, konfig.RelPluginHome)
-				},
-			},
-		})
+	// pluginRoot is where the user
+	// has her ${g}/${v}/$lower(${k})/${k}.go files.
+	pluginRoot string
+	// Where compilation happens.
+	workDir string
+	// Used as the root file name for src and object.
+	rawKind string
+	// Capture compiler output.
+	stderr bytes.Buffer
+	// Capture compiler output.
+	stdout bytes.Buffer
 }
 
 // NewCompiler returns a new compiler instance.
-func NewCompiler(srcRoot, objRoot string) *Compiler {
-	return &Compiler{srcRoot: srcRoot, objRoot: objRoot}
+func NewCompiler(root string) *Compiler {
+	return &Compiler{pluginRoot: root}
 }
 
-// ObjRoot is root of compilation target tree.
-func (b *Compiler) ObjRoot() string {
-	return b.objRoot
+// Set GVK converts g,v,k tuples to file path components.
+func (b *Compiler) SetGVK(g, v, k string) {
+	b.rawKind = k
+	b.workDir = filepath.Join(b.pluginRoot, g, v, strings.ToLower(k))
 }
 
-// SrcRoot is where to find src.
-func (b *Compiler) SrcRoot() string {
-	return b.srcRoot
+func (b *Compiler) srcPath() string {
+	return filepath.Join(b.workDir, b.rawKind+".go")
 }
 
-func goBin() string {
-	return filepath.Join(runtime.GOROOT(), "bin", "go")
+func (b *Compiler) objFile() string {
+	return b.rawKind + ".so"
 }
 
-// Compile reads ${srcRoot}/${g}/${v}/${k}.go
-//    and writes ${objRoot}/${g}/${v}/${k}.so
-func (b *Compiler) Compile(g, v, k string) error {
-	lowK := strings.ToLower(k)
-	objDir := filepath.Join(b.objRoot, g, v, lowK)
-	objFile := filepath.Join(objDir, k) + ".so"
-	if RecentFileExists(objFile) {
-		// Skip rebuilding it.
+// Absolute path to the compiler output (the .so file).
+func (b *Compiler) ObjPath() string {
+	return filepath.Join(b.workDir, b.objFile())
+}
+
+// Cleanup provides a hook to delete the .so file.
+// Ignore errors.
+func (b *Compiler) Cleanup() {
+	_ = os.Remove(b.ObjPath())
+}
+
+// Compile changes its working directory to
+// ${pluginRoot}/${g}/${v}/$lower(${k} and places
+// object code next to source code.
+func (b *Compiler) Compile() error {
+	if FileYoungerThan(b.ObjPath(), 8*time.Second) {
+		// Skip rebuilding it, to save time in a plugin test file
+		// that has many distinct calls to make a harness and compile
+		// the plugin (only the first compile will happen).
+		// Make it a short time to avoid tricking someone who's actively
+		// developing a plugin.
 		return nil
 	}
-	err := os.MkdirAll(objDir, os.ModePerm)
-	if err != nil {
-		return err
+	if !FileExists(b.srcPath()) {
+		return fmt.Errorf("cannot  find source at '%s'", b.srcPath())
 	}
-	srcFile := filepath.Join(b.srcRoot, g, v, lowK, k) + ".go"
-	if !FileExists(srcFile) {
-		// Handy for tests of lone plugins.
-		s := k + ".go"
-		if !FileExists(s) {
-			return fmt.Errorf(
-				"cannot find source at '%s' or '%s'", srcFile, s)
-
-		}
-		srcFile = s
-	}
+	// If you use an IDE, make sure it's go build and test flags
+	// match those used below.  Same goes for Makefile targets.
 	commands := []string{
 		"build",
+		// "-trimpath",  This flag used to make it better, now it makes it worse,
+		//               see https://github.com/golang/go/issues/31354
 		"-buildmode",
 		"plugin",
-		"-o", objFile, srcFile,
+		"-o", b.objFile(),
 	}
 	goBin := goBin()
 	if !FileExists(goBin) {
@@ -150,34 +92,26 @@ func (b *Compiler) Compile(g, v, k string) error {
 			"cannot find go compiler %s", goBin)
 	}
 	cmd := exec.Command(goBin, commands...)
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
+	b.stderr.Reset()
+	cmd.Stderr = &b.stderr
+	b.stdout.Reset()
+	cmd.Stdout = &b.stdout
 	cmd.Env = os.Environ()
+	cmd.Dir = b.workDir
 	if err := cmd.Run(); err != nil {
+		b.report()
 		return errors.Wrapf(
-			err, "cannot compile %s:\nSTDERR\n%s\n", srcFile, stderr.String())
+			err, "cannot compile %s:\nSTDERR\n%s\n",
+			b.srcPath(), b.stderr.String())
 	}
 	return nil
 }
 
-// True if file less than 3 minutes old, i.e. not
-// accidentally left over from some earlier build.
-func RecentFileExists(path string) bool {
-	fi, err := os.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-	}
-	age := time.Since(fi.ModTime())
-	return age.Minutes() < 3
-}
-
-func FileExists(name string) bool {
-	if _, err := os.Stat(name); err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-	}
-	return true
+func (b *Compiler) report() {
+	log.Println("stdout:  -------")
+	log.Println(b.stdout.String())
+	log.Println("----------------")
+	log.Println("stderr:  -------")
+	log.Println(b.stderr.String())
+	log.Println("----------------")
 }

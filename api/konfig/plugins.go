@@ -35,37 +35,46 @@ const (
 	// Domain from which kustomize code is imported, for locating
 	// plugin source code under $GOPATH when GOPATH is defined.
 	DomainName = "sigs.k8s.io"
+
+	// Injected into plugin paths when plugins are disabled.
+	// Provides a clue in flows that shouldn't happen.
+	NoPluginHomeSentinal = "/No/non-builtin/plugins!"
 )
 
-func EnabledPluginConfig() (*types.PluginConfig, error) {
+func EnabledPluginConfig(b types.BuiltinPluginLoadingOptions) (*types.PluginConfig, error) {
 	dir, err := DefaultAbsPluginHome(filesys.MakeFsOnDisk())
 	if err != nil {
 		return nil, err
 	}
-	return MakePluginConfig(types.PluginRestrictionsNone, dir), nil
+	return MakePluginConfig(types.PluginRestrictionsNone, b, dir), nil
 }
 
 func DisabledPluginConfig() *types.PluginConfig {
 	return MakePluginConfig(
-		types.PluginRestrictionsBuiltinsOnly, NoPluginHomeSentinal)
+		types.PluginRestrictionsBuiltinsOnly,
+		types.BploUseStaticallyLinked,
+		NoPluginHomeSentinal)
 }
 
 func MakePluginConfig(
-	pr types.PluginRestrictions, home string) *types.PluginConfig {
+	pr types.PluginRestrictions,
+	b types.BuiltinPluginLoadingOptions,
+	home string) *types.PluginConfig {
 	return &types.PluginConfig{
 		PluginRestrictions: pr,
 		AbsPluginHome:      home,
+		BpLoadingOptions:   b,
 	}
 }
-
-// Use an obviously erroneous path, in case it's accidentally used.
-const NoPluginHomeSentinal = "/no/non-builtin/plugins!"
 
 type NotedFunc struct {
 	Note string
 	F    func() string
 }
 
+// DefaultAbsPluginHome returns the absolute path in the given file
+// system to first directory that looks like a good candidate for
+// the home of kustomize plugins.
 func DefaultAbsPluginHome(fSys filesys.FileSystem) (string, error) {
 	return FirstDirThatExistsElseError(
 		"plugin home directory", fSys, []NotedFunc{

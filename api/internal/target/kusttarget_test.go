@@ -7,7 +7,6 @@ import (
 	"encoding/base64"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -19,8 +18,7 @@ import (
 // high level tests.
 
 func TestMakeCustomizedResMap(t *testing.T) {
-	fSys := filesys.MakeFsInMemory()
-	th := kusttest_test.MakeHarnessWithFs(t, fSys)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/whatever", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -168,7 +166,7 @@ metadata:
 	}
 
 	actual, err := makeKustTargetWithRf(
-		t, fSys, "/whatever", resFactory).MakeCustomizedResMap()
+		t, th.GetFSys(), "/whatever", resFactory).MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("unexpected Resources error %v", err)
 	}
