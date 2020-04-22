@@ -19,6 +19,16 @@
 
 ## 发行说明
 
+* [kustomize/3.2.2](/../../releases/tag/kustomize%2Fv3.2.2) - 基于 kustomize Go API [3.3.0](../v3.3.0.md) 的 `kustomize` CLI。
+
+ * [API 3.3.0](../v3.3.0.md) - kustomize Go API 的首个 release，该 release 不包含  `kustomize` CLI，且之后 CLI 和 API 将独立发布。
+ 
+ * [kustomize/3.2.1](/../../releases/tag/kustomize%2Fv3.2.1) - `kustomize` CLI 基于 kustomize Go API release [3.2.0](../v3.2.0.md) 发布的补丁。
+
+ * [3.2.0](../v3.2.0.md)
+
+ * [3.1.1](../v3.1.0.md)
+
  * [3.1](../v3.1.0.md) - 2019年7月下旬，扩展 patches 和改进的资源匹配。
 
  * [3.0](../v3.0.0.md) - 2019年6月下旬，插件开发者发布。
