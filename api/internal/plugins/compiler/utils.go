@@ -81,7 +81,8 @@ func DeterminePluginSrcRoot(fSys filesys.FileSystem) (string, error) {
 		})
 }
 
-// FileYoungerThan returns true if the file age is <= the Duration argument.
+// FileYoungerThan returns true if the file both exists and has an
+// age is <= the Duration argument.
 func FileYoungerThan(path string, d time.Duration) bool {
 	fi, err := os.Stat(path)
 	if err != nil {
@@ -92,8 +93,20 @@ func FileYoungerThan(path string, d time.Duration) bool {
 	return time.Since(fi.ModTime()) <= d
 }
 
-func FileExists(name string) bool {
-	if _, err := os.Stat(name); err != nil {
+// FileModifiedAfter returns true if the file both exists and was
+// modified after the given time..
+func FileModifiedAfter(path string, t time.Time) bool {
+	fi, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return fi.ModTime().After(t)
+}
+
+func FileExists(path string) bool {
+	if _, err := os.Stat(path); err != nil {
 		if os.IsNotExist(err) {
 			return false
 		}
