@@ -115,25 +115,69 @@ if [ -z "$releaseNamespace" ]; then
   releaseNamespace=default
 fi
 
-function doHelm {
-  $helmBin --home $helmHome $@
+function v2RunHelm {
+  $helmBin --home $helmHome "$@"
 }
 
-# The init command is extremely chatty
-doHelm init --client-only >& /dev/null
+function v3RunHelm {
+  XDG_CONFIG_DIR=$helmHome
+  $helmBin "$@"
+}
 
-if [ ! -d "$chartHome/$chartName" ]; then
-  doHelm fetch $chartVersionArg \
-      $chartRepoArg \
-      --untar \
-      --untardir $chartHome \
-      $chartNameArg
-fi
+function v2InitHelm {
+  # The init command is extremely chatty
+  v2RunHelm init --client-only >& /dev/null
+}
 
-doHelm template \
-    --name $releaseName \
-    --namespace $releaseNamespace \
-    --values $valuesFile \
-    $chartHome/$chartName
+function v3InitHelm {
+  # Do nothing - there's no init command in helm v3
+  true
+}
+
+function v2PullChart {
+  if [ ! -d "$chartHome/$chartName" ]; then
+    v2RunHelm fetch $chartVersionArg \
+        $chartRepoArg \
+        --untar \
+        --untardir $chartHome \
+        $chartNameArg
+  fi
+}
+
+function v3PullChart {
+  # TODO implement
+  echo "?? helmV3 pull --repo https://hub.helm.sh/charts/ stable/minecraft  --destination /tmp/junk"
+}
+
+function v2InflateChart {
+  v2RunHelm template \
+      --name $releaseName \
+      --namespace $releaseNamespace \
+      --values $valuesFile \
+      $chartHome/$chartName
+}
+
+function v3InflateChart {
+  # TODO implement
+  true
+}
+
+HELM_VERSION=$($helmBin version -c --short)
+
+case $HELM_VERSION in
+  'Client: v2'*)
+    v2InitHelm
+    v2PullChart
+    v2InflateChart
+  ;;
+  v3*)
+    v3InitHelm
+    v3PullChart
+    v3InflateChart
+  ;;
+  *)
+    echo "[!] Unsupported 'helm' version '${HELM_VERSION}'" 1>&2 && exit 1
+  ;;
+esac
 
 /bin/rm -rf $TMP_DIR
