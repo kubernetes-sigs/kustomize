@@ -3,9 +3,11 @@
 
 .PHONY: license image
 
+GOBIN := $(shell go env GOPATH)/bin
+
 license:
-	(which $(GOPATH)/bin/addlicense || go get github.com/google/addlicense)
-	$(GOPATH)/bin/addlicense  -y 2019 -c "The Kubernetes Authors." -f LICENSE_TEMPLATE .
+	(which $(GOBIN)/addlicense || go get github.com/google/addlicense)
+	$(GOBIN)/addlicense  -y 2019 -c "The Kubernetes Authors." -f LICENSE_TEMPLATE .
 
 all: license
 
