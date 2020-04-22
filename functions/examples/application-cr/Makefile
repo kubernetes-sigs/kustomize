@@ -21,8 +21,8 @@ generate:
 	(cd image && GOBIN=$(GOBIN) go generate ./...)
 
 license:
-	(which $(GOPATH)/bin/addlicense || go get github.com/google/addlicense)
-	$(GOPATH)/bin/addlicense  -y 2019 -c "The Kubernetes Authors." -f LICENSE_TEMPLATE .
+	(which $(GOBIN)/addlicense || go get github.com/google/addlicense)
+	$(GOBIN)/addlicense  -y 2019 -c "The Kubernetes Authors." -f LICENSE_TEMPLATE .
 
 tidy:
 	(cd image && go mod tidy)
