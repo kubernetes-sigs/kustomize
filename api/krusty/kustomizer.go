@@ -71,11 +71,7 @@ func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
 		return nil, err
 	}
 	var m resmap.ResMap
-	if b.options.DoPrune {
-		m, err = kt.MakePruneConfigMap()
-	} else {
-		m, err = kt.MakeCustomizedResMap()
-	}
+	m, err = kt.MakeCustomizedResMap()
 	if err != nil {
 		return nil, err
 	}
