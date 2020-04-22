@@ -17,7 +17,6 @@ const (
 	ConfigMapGenerator
 	HashTransformer
 	ImageTagTransformer
-	InventoryTransformer
 	LabelTransformer
 	LegacyOrderTransformer
 	NamespaceTransformer
@@ -63,7 +62,6 @@ var TransformerFactories = map[BuiltinPluginType]func() resmap.TransformerPlugin
 	AnnotationsTransformer:         builtins.NewAnnotationsTransformerPlugin,
 	HashTransformer:                builtins.NewHashTransformerPlugin,
 	ImageTagTransformer:            builtins.NewImageTagTransformerPlugin,
-	InventoryTransformer:           builtins.NewInventoryTransformerPlugin,
 	LabelTransformer:               builtins.NewLabelTransformerPlugin,
 	LegacyOrderTransformer:         builtins.NewLegacyOrderTransformerPlugin,
 	NamespaceTransformer:           builtins.NewNamespaceTransformerPlugin,

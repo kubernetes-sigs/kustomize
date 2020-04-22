@@ -13,21 +13,20 @@ func _() {
 	_ = x[ConfigMapGenerator-2]
 	_ = x[HashTransformer-3]
 	_ = x[ImageTagTransformer-4]
-	_ = x[InventoryTransformer-5]
-	_ = x[LabelTransformer-6]
-	_ = x[LegacyOrderTransformer-7]
-	_ = x[NamespaceTransformer-8]
-	_ = x[PatchJson6902Transformer-9]
-	_ = x[PatchStrategicMergeTransformer-10]
-	_ = x[PatchTransformer-11]
-	_ = x[PrefixSuffixTransformer-12]
-	_ = x[ReplicaCountTransformer-13]
-	_ = x[SecretGenerator-14]
+	_ = x[LabelTransformer-5]
+	_ = x[LegacyOrderTransformer-6]
+	_ = x[NamespaceTransformer-7]
+	_ = x[PatchJson6902Transformer-8]
+	_ = x[PatchStrategicMergeTransformer-9]
+	_ = x[PatchTransformer-10]
+	_ = x[PrefixSuffixTransformer-11]
+	_ = x[ReplicaCountTransformer-12]
+	_ = x[SecretGenerator-13]
 }
 
-const _BuiltinPluginType_name = "UnknownAnnotationsTransformerConfigMapGeneratorHashTransformerImageTagTransformerInventoryTransformerLabelTransformerLegacyOrderTransformerNamespaceTransformerPatchJson6902TransformerPatchStrategicMergeTransformerPatchTransformerPrefixSuffixTransformerReplicaCountTransformerSecretGenerator"
+const _BuiltinPluginType_name = "UnknownAnnotationsTransformerConfigMapGeneratorHashTransformerImageTagTransformerLabelTransformerLegacyOrderTransformerNamespaceTransformerPatchJson6902TransformerPatchStrategicMergeTransformerPatchTransformerPrefixSuffixTransformerReplicaCountTransformerSecretGenerator"
 
-var _BuiltinPluginType_index = [...]uint16{0, 7, 29, 47, 62, 81, 101, 117, 139, 159, 183, 213, 229, 252, 275, 290}
+var _BuiltinPluginType_index = [...]uint16{0, 7, 29, 47, 62, 81, 97, 119, 139, 163, 193, 209, 232, 255, 270}
 
 func (i BuiltinPluginType) String() string {
 	if i < 0 || i >= BuiltinPluginType(len(_BuiltinPluginType_index)-1) {
