@@ -183,7 +183,7 @@ apiVersion: v1
 				"--star-name", "foo",
 				"--", "Foo", "g=h"},
 			path: "dir",
-			err:  "must specify --star-path with --enable-star",
+			err:  "must specify --enable-star with --star-path",
 		},
 		{
 			name: "image-star-not-enabled",
@@ -193,7 +193,17 @@ apiVersion: v1
 				"--star-name", "foo",
 				"--", "Foo", "g=h"},
 			path: "dir",
-			err:  "must specify --star-path with --enable-star",
+			err:  "must specify --enable-star with --star-path",
+		},
+		{
+			name: "star-enabled",
+			args: []string{"run", "dir", "--enable-star"},
+			path: "dir",
+			expectedStruct: &runfn.RunFns{
+				Path:           "dir",
+				NetworkName:    "bridge",
+				EnableStarlark: true,
+			},
 		},
 		{
 			name:          "function paths",
