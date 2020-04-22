@@ -5,7 +5,7 @@
 
 GOBIN := $(shell go env GOPATH)/bin
 
-all: generate license fix vet fmt test lint tidy
+all: generate license fix vet fmt test tidy
 
 fix:
 	go fix ./...
@@ -33,4 +33,3 @@ test:
 
 vet:
 	go vet ./...
-
