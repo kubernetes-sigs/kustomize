@@ -14,6 +14,14 @@ set -o pipefail
 
 rcAccumulator=0
 
+# hack.  We used to run test on travis, and disable certain tests
+# when running on travis.  Now we run on Prow, so look for that.
+# https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md
+# TODO: Make the code ignorant of the CI environment "brand name".
+# brand name of the CI environment (replace "travis" and "prow" with "CI_env"
+# or something).
+TRAVIS=$PROW_JOB_ID
+
 function onLinuxAndNotOnTravis {
   [[ ("linux" == "$(go env GOOS)") && (-z ${TRAVIS+x}) ]] && return
   false
@@ -24,7 +32,7 @@ function runTest {
   local code=0
   if grep -q "// +build notravis" "$file"; then
     if onLinuxAndNotOnTravis; then
-      go test -v -tags=notravis $file 
+      go test -v -tags=notravis $file
       code=$?
     else
       # TODO: make work for non-linux
@@ -51,7 +59,8 @@ function scanDir {
 
 if onLinuxAndNotOnTravis; then
   # Some of these tests have special deps.
-  make $(go env GOPATH)/bin/helm
+  make $(go env GOPATH)/bin/helmV2
+  make $(go env GOPATH)/bin/helmV3
   make $(go env GOPATH)/bin/kubeval
 fi
 
@@ -60,7 +69,7 @@ for goMod in $(find ./plugin -name 'go.mod'); do
   if [[ "$d" == "./plugin/someteam.example.com/v1/gogetter" ]]; then
     echo "Skipping broken $d"
   else
-    scanDir $d                                                             
+    scanDir $d
   fi
 done
 
