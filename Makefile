@@ -261,18 +261,31 @@ $(MYGOBIN)/kubeval:
 	)
 
 # linux only.
-# This is for testing an example plugin that
-# uses helm to inflate a chart for subsequent kustomization.
-# Don't want to add a hard dependence in go.mod file
-# to helm.
-# Instead, download the binary.
-$(MYGOBIN)/helm:
+# This is for testing an example plugin that uses helm to inflate a chart
+# for subsequent kustomization.
+# Don't want to add a hard dependence in go.mod file to helm.
+# Instead, download the binaries.
+$(MYGOBIN)/helmV2:
 	( \
 		set -e; \
 		d=$(shell mktemp -d); cd $$d; \
-		wget https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz; \
-		tar -xvzf helm-v2.13.1-linux-amd64.tar.gz; \
-		mv linux-amd64/helm $(MYGOBIN); \
+		tgzFile=helm-v2.13.1-linux-amd64.tar.gz; \
+		wget https://storage.googleapis.com/kubernetes-helm/$$tgzFile; \
+		tar -xvzf $$tgzFile; \
+		mv linux-amd64/helm $(MYGOBIN)/helmV2; \
+		rm -rf $$d \
+	)
+
+# Helm V3 differs from helm V2; downloading it to provide coverage for the
+# chart inflator plugin under helm v3.
+$(MYGOBIN)/helmV3:
+	( \
+		set -e; \
+		d=$(shell mktemp -d); cd $$d; \
+		tgzFile=helm-v3.2.0-rc.1-linux-amd64.tar.gz; \
+		wget https://get.helm.sh/$$tgzFile; \
+		tar -xvzf $$tgzFile; \
+		mv linux-amd64/helm $(MYGOBIN)/helmV3; \
 		rm -rf $$d \
 	)
 

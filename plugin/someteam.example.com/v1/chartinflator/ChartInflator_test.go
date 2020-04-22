@@ -14,27 +14,7 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-// This test requires having the helm binary on the PATH.
-//
-// TODO: Download and inflate the chart, and check that
-// in for the test.
-func TestChartInflator(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarness(t).
-		PrepExecPlugin("someteam.example.com", "v1", "ChartInflator")
-	defer th.Reset()
-
-	m := th.LoadAndRunGenerator(`
-apiVersion: someteam.example.com/v1
-kind: ChartInflator
-metadata:
-  name: notImportantHere
-chartName: minecraft`)
-
-	chartName := regexp.MustCompile("chart: minecraft-[0-9.]+")
-	th.AssertActualEqualsExpectedWithTweak(m,
-		func(x []byte) []byte {
-			return chartName.ReplaceAll(x, []byte("chart: minecraft-SOMEVERSION"))
-		}, `
+const expectedResources=`
 apiVersion: v1
 data:
   rcon-password: Q0hBTkdFTUUh
@@ -84,5 +64,52 @@ spec:
   selector:
     app: release-name-minecraft
   type: LoadBalancer
+`
+
+// This test requires having "helmV2" (presumably helm V2 series) on the PATH.
+//
+// TODO: Download and inflate the chart, and check that
+// in for the test.
+func TestHelmV2ChartInflator(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepExecPlugin("someteam.example.com", "v1", "ChartInflator")
+	defer th.Reset()
+
+	m := th.LoadAndRunGenerator(`
+apiVersion: someteam.example.com/v1
+kind: ChartInflator
+metadata:
+  name: notImportantHere
+chartName: minecraft
+helmBin: helmV2
 `)
+
+	chartName := regexp.MustCompile("chart: minecraft-[0-9.]+")
+	th.AssertActualEqualsExpectedWithTweak(m,
+		func(x []byte) []byte {
+			return chartName.ReplaceAll(x, []byte("chart: minecraft-SOMEVERSION"))
+		}, expectedResources)
+}
+
+// This test requires having "helmV3" (presumably helm V3 series) on the PATH.
+//
+func disabled_TestHelmV3ChartInflator(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepExecPlugin("someteam.example.com", "v1", "ChartInflator")
+	defer th.Reset()
+
+	m := th.LoadAndRunGenerator(`
+apiVersion: someteam.example.com/v1
+kind: ChartInflator
+metadata:
+  name: notImportantHere
+chartName: minecraft
+helmBin: helmV3
+`)
+
+	chartName := regexp.MustCompile("chart: minecraft-[0-9.]+")
+	th.AssertActualEqualsExpectedWithTweak(m,
+		func(x []byte) []byte {
+			return chartName.ReplaceAll(x, []byte("chart: minecraft-SOMEVERSION"))
+		}, expectedResources)
 }
