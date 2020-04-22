@@ -14,7 +14,7 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-const expectedResources=`
+const expectedResources = `
 apiVersion: v1
 data:
   rcon-password: Q0hBTkdFTUUh
