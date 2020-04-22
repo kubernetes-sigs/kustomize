@@ -14,16 +14,14 @@ set -o pipefail
 
 rcAccumulator=0
 
-# hack.  We used to run test on travis, and disable certain tests
-# when running on travis.  Now we run on Prow, so look for that.
-# https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md
-# TODO: Make the code ignorant of the CI environment "brand name".
-# brand name of the CI environment (replace "travis" and "prow" with "CI_env"
-# or something).
-TRAVIS=$PROW_JOB_ID
-
 function onLinuxAndNotOnTravis {
-  [[ ("linux" == "$(go env GOOS)") && (-z ${TRAVIS+x}) ]] && return
+  # TODO: Make the code ignorant of the CI environment "brand name".
+  # We used to run CI tests on travis, and disabled certain tests
+  # when running there.  Now we run on Prow, so look for that.
+  # https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md
+  # Should eschew using the brand name of the CI environment
+  # (replace "travis" with "CI_env" or something - not just switch to "prow").
+  [[ ("linux" == "$(go env GOOS)") && (-z ${$PROW_JOB_ID+x}) ]] && return
   false
 }
 
