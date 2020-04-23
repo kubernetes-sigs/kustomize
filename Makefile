@@ -219,10 +219,6 @@ test-go-mod:
 	./travis/check-go-mod.sh
 
 .PHONY:
-test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
-	./hack/testExamplesAgainstKustomize.sh HEAD
-
-.PHONY:
 test-examples-e2e-kustomize: $(MYGOBIN)/mdrip $(MYGOBIN)/kind
 	( \
 		set -e; \
@@ -233,12 +229,16 @@ test-examples-e2e-kustomize: $(MYGOBIN)/mdrip $(MYGOBIN)/kind
 	)
 
 .PHONY:
+test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
+	./hack/testExamplesAgainstKustomize.sh HEAD
+
+.PHONY:
 test-examples-kustomize-against-latest: $(MYGOBIN)/mdrip
 	( \
 		set -e; \
 		/bin/rm -f $(MYGOBIN)/kustomize; \
 		echo "Installing kustomize from latest."; \
-		GO111MODULE=on go install sigs.k8s.io/kustomize/kustomize/v3; \
+		GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4; \
 		./hack/testExamplesAgainstKustomize.sh latest; \
 		echo "Reinstalling kustomize from HEAD."; \
 		cd kustomize; go install .; \
@@ -288,6 +288,10 @@ $(MYGOBIN)/helmV3:
 		mv linux-amd64/helm $(MYGOBIN)/helmV3; \
 		rm -rf $$d \
 	)
+
+# Default version of helm is v2 for the time being.
+$(MYGOBIN)/helm: $(MYGOBIN)/helmV2
+	ln -s $(MYGOBIN)/helmV2 $(MYGOBIN)/helm
 
 $(MYGOBIN)/kind:
 	( \
