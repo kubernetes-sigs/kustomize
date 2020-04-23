@@ -9,10 +9,8 @@ set -o pipefail
 
 version=$1
 
-function onLinuxAndNotOnTravis {
-  [[ ("linux" == "$(go env GOOS)") && (-z ${TRAVIS+x}) ]] && return
-  false
-}
+# All hack scripts should run from top level.
+. hack/shellHelpers.sh
 
 # TODO: change the label?
 # We test against the latest release, and HEAD, and presumably
@@ -22,13 +20,12 @@ mdrip --mode test \
     --label testAgainstLatestRelease examples
 
 # TODO: make work for non-linux
-if onLinuxAndNotOnTravis; then
-  echo "On linux, and not on travis, so running the notravis example tests."
+if onLinuxAndNotOnRemoteCI; then
+  echo "On linux, and not on remote CI.  Running expensive tests."
 
   # Requires helm.
   make $(go env GOPATH)/bin/helm
-  mdrip --mode test \
-      --label helmtest examples/chart.md
+  mdrip --mode test --label helmtest examples/chart.md
 fi
 
 echo "Example tests passed against ${version}."

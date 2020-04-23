@@ -14,27 +14,19 @@ set -o pipefail
 
 rcAccumulator=0
 
-function onLinuxAndNotOnTravis {
-  # TODO: Make the code ignorant of the CI environment "brand name".
-  # We used to run CI tests on travis, and disabled certain tests
-  # when running there.  Now we run on Prow, so look for that.
-  # https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md
-  # Should eschew using the brand name of the CI environment
-  # (replace "travis" with "CI_env" or something - not just switch to "prow").
-  [[ ("linux" == "$(go env GOOS)") && (-z ${$PROW_JOB_ID+x}) ]] && return
-  false
-}
+# All hack scripts should run from top level.
+. hack/shellHelpers.sh
 
 function runTest {
   local file=$1
   local code=0
   if grep -q "// +build notravis" "$file"; then
-    if onLinuxAndNotOnTravis; then
+    if onLinuxAndNotOnRemoteCI; then
       go test -v -tags=notravis $file
       code=$?
     else
       # TODO: make work for non-linux
-      echo "Not on linux or on travis; skipping $file"
+      echo "Not on linux or on remote CI; skipping $file"
     fi
   else
     go test -v $file
@@ -55,10 +47,11 @@ function scanDir {
   popd >& /dev/null
 }
 
-if onLinuxAndNotOnTravis; then
+if onLinuxAndNotOnRemoteCI; then
   # Some of these tests have special deps.
   make $(go env GOPATH)/bin/helmV2
   make $(go env GOPATH)/bin/helmV3
+  make $(go env GOPATH)/bin/helm
   make $(go env GOPATH)/bin/kubeval
 fi
 
