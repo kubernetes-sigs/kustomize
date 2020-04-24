@@ -9,6 +9,18 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+// Return true for 'v' followed by a 1 or 2, and don't look at rest.
+// I.e. 'v1', 'v1beta1', 'v2', would return true.
+func looksLikeACoreApiVersion(s string) bool {
+	if len(s) < 2 {
+		return false
+	}
+	if s[0:1] != "v" {
+		return false
+	}
+	return s[1:2] == "1" || s[1:2] == "2"
+}
+
 // parseGV parses apiVersion field into group and version.
 func parseGV(apiVersion string) (group, version string) {
 	// parse the group and version from the apiVersion field
@@ -17,12 +29,12 @@ func parseGV(apiVersion string) (group, version string) {
 	if len(parts) > 1 {
 		version = parts[1]
 	}
-	// TODO: Special case the original "apiVersion" of what
-	//       we now call the "core" (empty) group.
-	//if group == "v1" && version == "" {
-	//	version = "v1"
-	//	group = ""
-	//}
+	// Special case the original "apiVersion" of what
+	// we now call the "core" (empty) group.
+	if version == "" && looksLikeACoreApiVersion(group) {
+		version = group
+		group = ""
+	}
 	return
 }
 
