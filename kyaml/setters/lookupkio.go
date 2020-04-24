@@ -10,15 +10,18 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-var _ kio.Filter = &LookupSetters{}
+var _ kio.Filter = &LookupDeleteSetters{}
 
-// LookupSetters identifies setters for a collection of Resources
-type LookupSetters struct {
+// LookupDeleteSetters identifies setters for a collection of Resources
+type LookupDeleteSetters struct {
 	// Name is the name of the setter to match.  Optional.
 	Name string
 
 	// SetterCounts is populated by Filter and contains the count of fields matching each setter.
 	SetterCounts []setterCount
+
+	// Delete if set deletes the setter after lookup
+	Delete bool
 }
 
 // setterCount records the identified setters and number of fields matching those setters
@@ -31,12 +34,12 @@ type setterCount struct {
 }
 
 // Filter implements kio.Filter
-func (l *LookupSetters) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
+func (l *LookupDeleteSetters) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 	setters := map[string]*setterCount{}
 
 	for i := range input {
 		// lookup substitutions for this object
-		ls := &lookupSetters{Name: l.Name}
+		ls := &lookupDeleteSetters{Name: l.Name, Delete: l.Delete}
 		if err := input[i].PipeE(ls); err != nil {
 			return nil, err
 		}

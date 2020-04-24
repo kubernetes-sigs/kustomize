@@ -19,6 +19,8 @@ type FieldMeta struct {
 	Schema spec.Schema
 
 	Extensions XKustomize
+
+	Delete bool
 }
 
 type XKustomize struct {
@@ -70,6 +72,12 @@ func (fm *FieldMeta) Read(n *yaml.RNode) error {
 		b, err := json.Marshal(fe)
 		if err != nil {
 			return errors.Wrap(err)
+		}
+		// removes setters and substitutions from comments if Delete flag is set
+		// this version of setters are deprecated and migrate-setters use this flag
+		if fm.Delete {
+			n.YNode().HeadComment = ""
+			n.YNode().LineComment = ""
 		}
 		return json.Unmarshal(b, &fm.Extensions)
 	}

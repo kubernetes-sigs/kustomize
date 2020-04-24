@@ -53,6 +53,7 @@ var (
 	Fmt                = commands.FmtCommand
 	Grep               = commands.GrepCommand
 	ListSetters        = commands.ListSettersCommand
+	MigrateSetters     = commands.MigrateSettersCommand
 	Merge              = commands.MergeCommand
 	Merge3             = commands.Merge3Command
 	RunFn              = commands.RunFnCommand
@@ -107,6 +108,7 @@ func NewConfigCommand(name string) *cobra.Command {
 
 	root.AddCommand(commands.SetCommand(name))
 	root.AddCommand(commands.ListSettersCommand(name))
+	root.AddCommand(commands.MigrateSettersCommand(name))
 	root.AddCommand(commands.CreateSetterCommand(name))
 	root.AddCommand(commands.CreateSubstitutionCommand(name))
 	root.AddCommand(commands.SinkCommand(name))

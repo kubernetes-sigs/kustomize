@@ -47,6 +47,7 @@ func (fs FieldSetter) Set(openAPIPath, resourcesPath string) (int, error) {
 		Description: fs.Description,
 		SetBy:       fs.SetBy,
 	}
+
 	if err := soa.UpdateFile(openAPIPath); err != nil {
 		return 0, err
 	}

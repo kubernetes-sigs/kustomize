@@ -10,7 +10,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.4.0
 	k8s.io/apimachinery v0.17.0
-	sigs.k8s.io/kustomize/kyaml v0.0.0
+	sigs.k8s.io/kustomize/kyaml v0.1.4
 )
 
-replace sigs.k8s.io/kustomize/kyaml v0.0.0 => ../../kyaml
+replace sigs.k8s.io/kustomize/kyaml v0.1.4 => ../../kyaml

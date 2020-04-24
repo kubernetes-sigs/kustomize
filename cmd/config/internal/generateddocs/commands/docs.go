@@ -214,6 +214,21 @@ For information on merge rules, run:
 var Merge3Examples = `
     kustomize config merge3 --ancestor a/ --from b/ --to c/`
 
+var MigrateSettersShort = `Migrate setters for Resources.`
+var MigrateSettersLong = `
+Migrate setters for Resources.
+
+  DIR
+
+    A directory containing Resource configuration.
+`
+var MigrateSettersExamples = `
+  Migrate setters:
+
+    # migrate setters from v1 to v2 with openAPI
+    $ kustomize cfg migrate-setters hello-world/
+    migrated 2 setters`
+
 var RunFnsShort = `[Alpha] Reoncile config functions to Resources.`
 var RunFnsLong = `
 [Alpha] Reconcile config functions to Resources.

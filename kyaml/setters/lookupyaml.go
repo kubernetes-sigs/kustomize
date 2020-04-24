@@ -8,15 +8,18 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-var _ yaml.Filter = &lookupSetters{}
+var _ yaml.Filter = &lookupDeleteSetters{}
 
-// lookupSetters looks up setters for a Resource
-type lookupSetters struct {
+// lookupDeleteSetters looks up setters for a Resource
+type lookupDeleteSetters struct {
 	// Name of the setter to lookup.  Optional
 	Name string
 
 	// Setters is a list of setters that were found
 	Setters []setter
+
+	// Delete if set deletes the setter after lookup
+	Delete bool
 }
 
 type setter struct {
@@ -26,7 +29,7 @@ type setter struct {
 	SetBy       string
 }
 
-func (ls *lookupSetters) Filter(object *yaml.RNode) (*yaml.RNode, error) {
+func (ls *lookupDeleteSetters) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	switch object.YNode().Kind {
 	case yaml.DocumentNode:
 		// skip the document node
@@ -47,9 +50,9 @@ func (ls *lookupSetters) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 }
 
 // lookup finds any setters for a field
-func (ls *lookupSetters) lookup(field *yaml.RNode) error {
+func (ls *lookupDeleteSetters) lookup(field *yaml.RNode) error {
 	// check if there is a substitution for this field
-	var fm = &fieldmeta.FieldMeta{}
+	var fm = &fieldmeta.FieldMeta{Delete: ls.Delete}
 	if err := fm.Read(field); err != nil {
 		return err
 	}

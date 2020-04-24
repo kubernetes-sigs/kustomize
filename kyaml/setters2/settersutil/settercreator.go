@@ -7,6 +7,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // SetterCreator creates or updates a setter in the OpenAPI definitions, and inserts references
@@ -32,6 +33,14 @@ type SetterCreator struct {
 	// FieldValue if set will add the OpenAPI reference to fields if they have this value.
 	// Optional.  If unspecified match all field values.
 	FieldValue string
+
+	OpenAPIPath string
+
+	ResourcesPath string
+}
+
+func (c *SetterCreator) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
+	return nil, c.Create(c.OpenAPIPath, c.ResourcesPath)
 }
 
 func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
