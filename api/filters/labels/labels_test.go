@@ -283,7 +283,7 @@ metadata:
 					},
 					{
 						Gvk: resid.Gvk{
-							Group: "v1",
+							Version: "v1",
 						},
 						Path:               "a/b",
 						CreateIfNotPresent: true,
