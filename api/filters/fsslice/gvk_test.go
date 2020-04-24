@@ -11,6 +11,67 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+func TestParseGV(t *testing.T) {
+	testCases := map[string]struct {
+		input           string
+		expectedGroup   string
+		expectedVersion string
+	}{
+		"empty": {
+			input:           "",
+			expectedGroup:   "",
+			expectedVersion: "",
+		},
+		"certSigning": {
+			input:           "certificates.k8s.io/v1beta1",
+			expectedGroup:   "certificates.k8s.io",
+			expectedVersion: "v1beta1",
+		},
+		"extensions": {
+			input:           "extensions/v1beta1",
+			expectedGroup:   "extensions",
+			expectedVersion: "v1beta1",
+		},
+		"normal": {
+			input:           "apps/v1",
+			expectedGroup:   "apps",
+			expectedVersion: "v1",
+		},
+		"justApps": {
+			input:           "apps",
+			expectedGroup:   "apps",
+			expectedVersion: "",
+		},
+		"coreV1": {
+			input:           "v1",
+			expectedGroup:   "v1",
+			expectedVersion: "",
+		},
+		"coreV2": {
+			input:           "v2",
+			expectedGroup:   "v2",
+			expectedVersion: "",
+		},
+		"coreV2Beta1": {
+			input:           "v2beta1",
+			expectedGroup:   "v2beta1",
+			expectedVersion: "",
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			group, version := parseGV(tc.input)
+			if !assert.Equal(t, tc.expectedGroup, group) {
+				t.FailNow()
+			}
+			if !assert.Equal(t, tc.expectedVersion, version) {
+				t.FailNow()
+			}
+		})
+	}
+}
+
 func TestGetGVK(t *testing.T) {
 	testCases := map[string]struct {
 		input      string
