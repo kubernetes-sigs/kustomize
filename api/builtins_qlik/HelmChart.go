@@ -2,13 +2,11 @@ package builtins_qlik
 
 import (
 	"bytes"
-	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -16,7 +14,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gofrs/flock"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/action"
@@ -35,9 +32,6 @@ import (
 
 const (
 	defaultRepoIndexFileStaleAfterSeconds = 60
-	defaultLockRetryDelayMinMilliSeconds  = 750
-	defaultLockRetryDelayMaxMilliSeconds  = 1250
-	defaultLockTimeoutSeconds             = 60
 )
 
 type HelmChartPlugin struct {
@@ -124,13 +118,13 @@ func (p *HelmChartPlugin) Config(h *resmap.PluginHelpers, c []byte) (err error) 
 		p.RepoIndexFileStaleAfterSeconds = defaultRepoIndexFileStaleAfterSeconds
 	}
 	if p.LockRetryDelayMinMilliSeconds == 0 {
-		p.LockRetryDelayMinMilliSeconds = defaultLockRetryDelayMinMilliSeconds
+		p.LockRetryDelayMinMilliSeconds = utils.DefaultLockRetryDelayMinMilliSeconds
 	}
 	if p.LockRetryDelayMaxMilliSeconds == 0 {
-		p.LockRetryDelayMaxMilliSeconds = defaultLockRetryDelayMaxMilliSeconds
+		p.LockRetryDelayMaxMilliSeconds = utils.DefaultLockRetryDelayMaxMilliSeconds
 	}
 	if p.LockTimeoutSeconds == 0 {
-		p.LockTimeoutSeconds = defaultLockTimeoutSeconds
+		p.LockTimeoutSeconds = utils.DefaultLockTimeoutSeconds
 	}
 	return nil
 }
@@ -142,17 +136,12 @@ func (p *HelmChartPlugin) Generate() (resmap.ResMap, error) {
 	hashFilePath := filepath.Join(p.hashFolder, p.hash)
 	lockFilePath := filepath.Join(p.hashFolder, fmt.Sprintf("%v.flock", p.hash))
 
-	if unlockFn, err := p.lockPath(lockFilePath); err != nil {
+	if unlockFn, err := utils.LockPath(lockFilePath, p.LockTimeoutSeconds, p.LockRetryDelayMinMilliSeconds, p.LockRetryDelayMaxMilliSeconds, p.logger); err != nil {
 		p.logger.Printf("error locking %v, error: %v\n", hashFilePath, err)
 		return nil, err
 	} else {
 		defer unlockFn()
 	}
-	t1 := time.Now()
-	defer func() {
-		t2 := time.Now()
-		p.logger.Printf("chart: %v, subchart: %v, held lock: %v for: %vs\n", p.ChartName, p.SubChart, lockFilePath, t2.Sub(t1).Seconds())
-	}()
 
 	if _, err := os.Stat(hashFilePath); err != nil {
 		if os.IsNotExist(err) {
@@ -229,64 +218,14 @@ func (p *HelmChartPlugin) directoryExists(path string) (exists bool, err error) 
 	return exists, err
 }
 
-func (p *HelmChartPlugin) lockPath(lockFilePath string) (unlockFn func(), err error) {
-	t1 := time.Now()
-	defer func() {
-		t2 := time.Now()
-		p.logger.Printf("chart: %v, subchart: %v, waited on lock: %v for: %vs\n", p.ChartName, p.SubChart, lockFilePath, t2.Sub(t1).Seconds())
-	}()
-	if err := os.MkdirAll(filepath.Dir(lockFilePath), os.ModePerm); err != nil && !os.IsExist(err) {
-		return nil, err
-	}
-	fileLock := flock.New(lockFilePath)
-	lockCtx, cancel := context.WithTimeout(context.Background(), time.Duration(p.LockTimeoutSeconds)*time.Second)
-	defer cancel()
-	locked, err := p.tryLockContext(fileLock, lockCtx, p.LockRetryDelayMinMilliSeconds, p.LockRetryDelayMaxMilliSeconds)
-	if err != nil {
-		return nil, err
-	} else if !locked {
-		return nil, fmt.Errorf("file lock for: %v failed without an error", lockFilePath)
-	}
-
-	return func() {
-		_ = fileLock.Unlock()
-		_ = os.Remove(lockFilePath)
-	}, nil
-}
-
-func (p *HelmChartPlugin) tryLockContext(fileLock *flock.Flock, ctx context.Context, retryDelayMinMilliseconds, retryDelayMaxMilliseconds int) (bool, error) {
-	randomInt := func(min, max int) int {
-		return min + rand.Intn(max-min)
-	}
-	if ctx.Err() != nil {
-		return false, ctx.Err()
-	}
-	for {
-		if ok, err := fileLock.TryLock(); ok || err != nil {
-			return ok, err
-		}
-		select {
-		case <-ctx.Done():
-			return false, ctx.Err()
-		case <-time.After(time.Duration(randomInt(retryDelayMinMilliseconds, retryDelayMaxMilliseconds)) * time.Millisecond):
-			// try again
-		}
-	}
-}
-
 func (p *HelmChartPlugin) helmFetchIfRequired(settings *cli.EnvSettings) error {
 	lockFilePath := filepath.Join(p.ChartHome, fmt.Sprintf("%v.flock", p.ChartName))
-	if unlockFn, err := p.lockPath(lockFilePath); err != nil {
+	if unlockFn, err := utils.LockPath(lockFilePath, p.LockTimeoutSeconds, p.LockRetryDelayMinMilliSeconds, p.LockRetryDelayMaxMilliSeconds, p.logger); err != nil {
 		p.logger.Printf("error locking chart directory: %v in chartHome: %v, error: %v\n", p.ChartName, p.ChartHome, err)
 		return err
 	} else {
 		defer unlockFn()
 	}
-	t1 := time.Now()
-	defer func() {
-		t2 := time.Now()
-		p.logger.Printf("chart: %v, subchart: %v, held lock: %v for: %vs\n", p.ChartName, p.SubChart, lockFilePath, t2.Sub(t1).Seconds())
-	}()
 
 	chartDir := filepath.Join(p.ChartHome, p.ChartName)
 	if exists, err := p.directoryExists(chartDir); err != nil {
@@ -308,17 +247,12 @@ func (p *HelmChartPlugin) helmFetchIfRequired(settings *cli.EnvSettings) error {
 func (p *HelmChartPlugin) helmConfigForChart(settings *cli.EnvSettings, repoName string) (string, error) {
 	helmConfigHomeAndCacheDir := filepath.Dir(settings.RepositoryConfig)
 	lockFilePath := filepath.Join(helmConfigHomeAndCacheDir, "helm-repo-config.flock")
-	if unlockFn, err := p.lockPath(lockFilePath); err != nil {
+	if unlockFn, err := utils.LockPath(lockFilePath, p.LockTimeoutSeconds, p.LockRetryDelayMinMilliSeconds, p.LockRetryDelayMaxMilliSeconds, p.logger); err != nil {
 		p.logger.Printf("error locking helm config home and cache directory: %v, error: %v\n", helmConfigHomeAndCacheDir, err)
 		return "", err
 	} else {
 		defer unlockFn()
 	}
-	t1 := time.Now()
-	defer func() {
-		t2 := time.Now()
-		p.logger.Printf("chart: %v, subchart: %v, held lock: %v for: %vs\n", p.ChartName, p.SubChart, lockFilePath, t2.Sub(t1).Seconds())
-	}()
 
 	if repoName == "" {
 		repoFileEntries, err := getRepoFileEntries(settings)
@@ -435,11 +369,6 @@ func (p *HelmChartPlugin) helmReposUpdate(settings *cli.EnvSettings) error {
 }
 
 func (p *HelmChartPlugin) helmFetch(settings *cli.EnvSettings, chartRef, version, chartUntarDirPath string) error {
-	t1 := time.Now()
-	defer func() {
-		t2 := time.Now()
-		p.logger.Printf("chart: %v, subchart: %v, helm fetch/untar lasted for: %vs\n", p.ChartName, p.SubChart, t2.Sub(t1).Seconds())
-	}()
 	client := action.NewPull()
 	client.Untar = true
 	client.UntarDir = chartUntarDirPath
@@ -501,17 +430,12 @@ func defaultKeyring() string {
 
 func (p *HelmChartPlugin) loadChartWithDependencies(settings *cli.EnvSettings, chartPath string) (*chart.Chart, error) {
 	lockFilePath := fmt.Sprintf("%v.flock", chartPath)
-	if unlockFn, err := p.lockPath(lockFilePath); err != nil {
+	if unlockFn, err := utils.LockPath(lockFilePath, p.LockTimeoutSeconds, p.LockRetryDelayMinMilliSeconds, p.LockRetryDelayMaxMilliSeconds, p.logger); err != nil {
 		p.logger.Printf("error locking chart directory: %v, error: %v\n", chartPath, err)
 		return nil, err
 	} else {
 		defer unlockFn()
 	}
-	t1 := time.Now()
-	defer func() {
-		t2 := time.Now()
-		p.logger.Printf("chart: %v, subchart: %v, held lock: %v for: %vs\n", p.ChartName, p.SubChart, lockFilePath, t2.Sub(t1).Seconds())
-	}()
 
 	c, err := loader.Load(chartPath)
 	if err != nil {
@@ -558,17 +482,12 @@ func (p *HelmChartPlugin) loadChartWithDependencies(settings *cli.EnvSettings, c
 func (p *HelmChartPlugin) helmConfigForDependencies(settings *cli.EnvSettings, c *chart.Chart) error {
 	helmConfigHomeAndCacheDir := filepath.Dir(settings.RepositoryConfig)
 	lockFilePath := filepath.Join(helmConfigHomeAndCacheDir, "helm-repo-config.flock")
-	if unlockFn, err := p.lockPath(lockFilePath); err != nil {
+	if unlockFn, err := utils.LockPath(lockFilePath, p.LockTimeoutSeconds, p.LockRetryDelayMinMilliSeconds, p.LockRetryDelayMaxMilliSeconds, p.logger); err != nil {
 		p.logger.Printf("error locking helm config home and cache directory: %v, error: %v\n", helmConfigHomeAndCacheDir, err)
 		return err
 	} else {
 		defer unlockFn()
 	}
-	t1 := time.Now()
-	defer func() {
-		t2 := time.Now()
-		p.logger.Printf("chart: %v, subchart: %v, held lock: %v for: %vs\n", p.ChartName, p.SubChart, lockFilePath, t2.Sub(t1).Seconds())
-	}()
 
 	if dependencyRepoEntries, err := resolveDependencyRepos(settings, c); err != nil {
 		p.logger.Printf("error resolving dependency repos: %v\n", err)
