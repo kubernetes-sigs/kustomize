@@ -103,6 +103,7 @@ apiVersion: someteam.example.com/v1
 kind: ChartInflator
 metadata:
   name: notImportantHere
+chartRepo: https://kubernetes-charts.storage.googleapis.com/
 chartName: minecraft
 helmBin: helmV3
 `)
