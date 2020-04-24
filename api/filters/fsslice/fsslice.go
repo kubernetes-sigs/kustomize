@@ -4,9 +4,6 @@
 package fsslice
 
 import (
-	"strings"
-
-	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -58,21 +55,4 @@ func (fltr Filter) Filter(obj *yaml.RNode) (*yaml.RNode, error) {
 		}
 	}
 	return obj, nil
-}
-
-// GetGVK parses the metadata into a GVK
-func GetGVK(meta yaml.ResourceMeta) resid.Gvk {
-	// parse the group and version from the apiVersion field
-	var group, version string
-	parts := strings.SplitN(meta.APIVersion, "/", 2)
-	group = parts[0]
-	if len(parts) > 1 {
-		version = parts[1]
-	}
-
-	return resid.Gvk{
-		Group:   group,
-		Version: version,
-		Kind:    meta.Kind,
-	}
 }
