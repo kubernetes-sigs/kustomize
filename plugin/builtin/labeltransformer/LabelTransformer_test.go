@@ -23,8 +23,18 @@ labels:
   app: myApp
   env: production
 fieldSpecs:
-  - path: metadata/labels
-    create: true
+- path: spec/selector
+  create: true
+  version: v1
+  kind: Service
+- path: metadata/labels
+  create: true
+- path: spec/selector/matchLabels
+  create: true
+  kind: Deployment
+- path: spec/template/metadata/labels
+  create: true
+  kind: Deployment
 `, `
 apiVersion: v1
 kind: Service
@@ -33,6 +43,23 @@ metadata:
 spec:
   ports:
   - port: 7002
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mungebot
+  labels:
+    app: mungebot
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mungebot
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
 `)
 
 	th.AssertActualEqualsExpected(rm, `
@@ -46,5 +73,31 @@ metadata:
 spec:
   ports:
   - port: 7002
+  selector:
+    app: myApp
+    env: production
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: myApp
+    env: production
+  name: mungebot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myApp
+      env: production
+  template:
+    metadata:
+      labels:
+        app: myApp
+        env: production
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
 `)
 }
