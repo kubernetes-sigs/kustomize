@@ -10,7 +10,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/api/filters/fsslice"
-	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -287,6 +286,52 @@ a:
 			CreateKind: yaml.ScalarNode,
 		},
 	},
+
+	{
+		name: "group v1",
+		fsSlice: `
+- path: a/b
+  group: v1
+  create: true
+  kind: Bar
+`,
+		input: `
+apiVersion: v1
+kind: Bar
+`,
+		expected: `
+apiVersion: v1
+kind: Bar
+a:
+  b: e
+`,
+		filter: fsslice.Filter{
+			SetValue:   fsslice.SetScalar("e"),
+			CreateKind: yaml.ScalarNode,
+		},
+	},
+
+	{
+		name: "version v1",
+		fsSlice: `
+- path: a/b
+  version: v1
+  create: true
+  kind: Bar
+`,
+		input: `
+apiVersion: v1
+kind: Bar
+`,
+		expected: `
+apiVersion: v1
+kind: Bar
+`,
+		filter: fsslice.Filter{
+			SetValue:   fsslice.SetScalar("e"),
+			CreateKind: yaml.ScalarNode,
+		},
+	},
 }
 
 func TestFilter_Filter(t *testing.T) {
@@ -327,95 +372,6 @@ func TestFilter_Filter(t *testing.T) {
 			if !assert.Equal(t,
 				strings.TrimSpace(test.expected),
 				strings.TrimSpace(out.String())) {
-				t.FailNow()
-			}
-		})
-	}
-}
-
-func TestGetGVK(t *testing.T) {
-	testCases := map[string]struct {
-		input      string
-		expected   resid.Gvk
-		parseError string
-		metaError  string
-	}{
-		"empty": {
-			input: `
-`,
-			parseError: "EOF",
-		},
-		"junk": {
-			input: `
-congress: effective
-`,
-			metaError: "missing Resource metadata",
-		},
-		"normal": {
-			input: `
-apiVersion: apps/v1
-kind: Deployment
-`,
-			expected: resid.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"},
-		},
-		"apiVersionOnlyWithSlash": {
-			input: `
-apiVersion: apps/v1
-`,
-			expected: resid.Gvk{Group: "apps", Version: "v1", Kind: ""},
-		},
-		// When apiVersion is just "v1" (not, say, "apps/v1"), that
-		// could be interpreted as Group="", Version="v1"
-		// (implying the original "core" api group) or the other way around
-		// (Group="v1", Version="").
-		// At the time of writing, fsslice.go does the latter -
-		// might have to change that.
-		"apiVersionOnlyNoSlash1": {
-			input: `
-apiVersion: apps
-`,
-			expected: resid.Gvk{Group: "apps", Version: "", Kind: ""},
-		},
-		"apiVersionOnlyNoSlash2": {
-			input: `
-apiVersion: v1
-`,
-			expected: resid.Gvk{Group: "v1", Version: "", Kind: ""},
-		},
-	}
-
-	for tn, tc := range testCases {
-		t.Run(tn, func(t *testing.T) {
-			obj, err := yaml.Parse(tc.input)
-			if len(tc.parseError) != 0 {
-				if err == nil {
-					t.Error("expected parse error")
-					return
-				}
-				if !strings.Contains(err.Error(), tc.parseError) {
-					t.Errorf("expected parse err '%s', got '%v'", tc.parseError, err)
-				}
-				return
-			}
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-			meta, err := obj.GetMeta()
-			if len(tc.metaError) != 0 {
-				if err == nil {
-					t.Error("expected meta error")
-					return
-				}
-				if !strings.Contains(err.Error(), tc.metaError) {
-					t.Errorf("expected meta err '%s', got '%v'", tc.metaError, err)
-				}
-				return
-			}
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-			gvk := fsslice.GetGVK(meta)
-			if !assert.Equal(t, tc.expected, gvk) {
 				t.FailNow()
 			}
 		})
