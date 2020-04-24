@@ -8,19 +8,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
+	"sigs.k8s.io/kustomize/api/resid"
 	filtertest_test "sigs.k8s.io/kustomize/api/testutils/filtertest"
 	"sigs.k8s.io/kustomize/api/types"
 )
-
-var labelsFs = builtinconfig.MakeDefaultConfig().CommonLabels
 
 func TestLabels_Filter(t *testing.T) {
 	testCases := map[string]struct {
 		input          string
 		expectedOutput string
 		filter         Filter
-		fsSlice        types.FsSlice
 	}{
 		"add": {
 			input: `
@@ -45,12 +42,20 @@ metadata:
     clown: emmett kelley
     dragon: smaug
 `,
-			filter: Filter{Labels: labelMap{
-				"clown":  "emmett kelley",
-				"auto":   "ford",
-				"dragon": "smaug",
-				"bean":   "cannellini",
-			}},
+			filter: Filter{
+				Labels: labelMap{
+					"clown":  "emmett kelley",
+					"auto":   "ford",
+					"dragon": "smaug",
+					"bean":   "cannellini",
+				},
+				FsSlice: []types.FieldSpec{
+					{
+						Path:               "metadata/labels",
+						CreateIfNotPresent: true,
+					},
+				},
+			},
 		},
 		"update": {
 			input: `
@@ -73,13 +78,21 @@ metadata:
     bean: cannellini
     clown: emmett kelley
 `,
-			filter: Filter{Labels: labelMap{
-				"clown": "emmett kelley",
-				"hero":  "superman",
-				"fiend": "luthor",
-				"bean":  "cannellini",
-			}},
+			filter: Filter{
+				Labels: labelMap{
+					"clown": "emmett kelley",
+					"hero":  "superman",
+					"fiend": "luthor",
+					"bean":  "cannellini",
+				}, FsSlice: []types.FieldSpec{
+					{
+						Path:               "metadata/labels",
+						CreateIfNotPresent: true,
+					},
+				},
+			},
 		},
+
 		"data-fieldspecs": {
 			input: `
 apiVersion: example.com/v1
@@ -113,13 +126,168 @@ a:
   b:
     sleater: kinney
 `,
-			filter: Filter{Labels: labelMap{
-				"sleater": "kinney",
-			}},
-			fsSlice: []types.FieldSpec{
-				{
-					Path:               "a/b",
-					CreateIfNotPresent: true,
+			filter: Filter{
+				Labels: labelMap{
+					"sleater": "kinney",
+				},
+				FsSlice: []types.FieldSpec{
+					{
+						Path:               "metadata/labels",
+						CreateIfNotPresent: true,
+					},
+					{
+						Path:               "a/b",
+						CreateIfNotPresent: true,
+					},
+				},
+			},
+		},
+
+		"fieldSpecWithKind": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+---
+apiVersion: example.com/v2
+kind: Bar
+metadata:
+  name: instance
+`,
+			expectedOutput: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+  labels:
+    cheese: cheddar
+---
+apiVersion: example.com/v2
+kind: Bar
+metadata:
+  name: instance
+  labels:
+    cheese: cheddar
+a:
+  b:
+    cheese: cheddar
+`,
+			filter: Filter{
+				Labels: labelMap{
+					"cheese": "cheddar",
+				},
+				FsSlice: []types.FieldSpec{
+					{
+						Path:               "metadata/labels",
+						CreateIfNotPresent: true,
+					},
+					{
+						Gvk: resid.Gvk{
+							Kind: "Bar",
+						},
+						Path:               "a/b",
+						CreateIfNotPresent: true,
+					},
+				},
+			},
+		},
+
+		"fieldSpecWithVersion": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+---
+apiVersion: example.com/v2
+kind: Bar
+metadata:
+  name: instance
+`,
+			expectedOutput: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+  labels:
+    cheese: cheddar
+a:
+  b:
+    cheese: cheddar
+---
+apiVersion: example.com/v2
+kind: Bar
+metadata:
+  name: instance
+  labels:
+    cheese: cheddar
+`,
+			filter: Filter{
+				Labels: labelMap{
+					"cheese": "cheddar",
+				},
+				FsSlice: []types.FieldSpec{
+					{
+						Path:               "metadata/labels",
+						CreateIfNotPresent: true,
+					},
+					{
+						Gvk: resid.Gvk{
+							Version: "v1",
+						},
+						Path:               "a/b",
+						CreateIfNotPresent: true,
+					},
+				},
+			},
+		},
+		"fieldSpecWithVersionInConfigButNoGroupInData": {
+			input: `
+apiVersion: v1
+kind: Foo
+metadata:
+  name: instance
+---
+apiVersion: v2
+kind: Bar
+metadata:
+  name: instance
+`,
+			expectedOutput: `
+apiVersion: v1
+kind: Foo
+metadata:
+  name: instance
+  labels:
+    cheese: cheddar
+a:
+  b:
+    cheese: cheddar
+---
+apiVersion: v2
+kind: Bar
+metadata:
+  name: instance
+  labels:
+    cheese: cheddar
+`,
+			filter: Filter{
+				Labels: labelMap{
+					"cheese": "cheddar",
+				},
+				FsSlice: []types.FieldSpec{
+					{
+						Path:               "metadata/labels",
+						CreateIfNotPresent: true,
+					},
+					{
+						Gvk: resid.Gvk{
+							Group: "v1",
+						},
+						Path:               "a/b",
+						CreateIfNotPresent: true,
+					},
 				},
 			},
 		},
@@ -127,11 +295,9 @@ a:
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			filter := tc.filter
-			filter.FsSlice = append(labelsFs, tc.fsSlice...)
 			if !assert.Equal(t,
 				strings.TrimSpace(tc.expectedOutput),
-				strings.TrimSpace(filtertest_test.RunFilter(t, tc.input, filter))) {
+				strings.TrimSpace(filtertest_test.RunFilter(t, tc.input, tc.filter))) {
 				t.FailNow()
 			}
 		})
