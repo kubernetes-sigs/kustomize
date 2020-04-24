@@ -81,6 +81,45 @@ func (fm *FieldMeta) Read(n *yaml.RNode) error {
 	return nil
 }
 
+// Upgrade reads the FieldMeta from a node, deletes the V1 setters,
+// upgrades the long ref to short hand
+func (fm *FieldMeta) Upgrade(n *yaml.RNode) error {
+	// check for metadata on head and line comments
+	comments := []string{n.YNode().LineComment, n.YNode().HeadComment}
+	for _, c := range comments {
+		if c == "" {
+			continue
+		}
+		c := strings.TrimLeft(c, "#")
+
+		// check for new short hand notation or fall back to openAPI ref format
+		if !fm.processShortHand(c) {
+			// if it doesn't Unmarshal that is fine, it means there is no metadata
+			// other comments are valid, they just don't parse
+			// TODO: consider more sophisticated parsing techniques similar to what is used
+			// for go struct tags.
+			if err := fm.Schema.UnmarshalJSON([]byte(c)); err != nil {
+				// note: don't return an error if the comment isn't a fieldmeta struct
+				return nil
+			}
+		}
+		fe := fm.Schema.VendorExtensible.Extensions["x-kustomize"]
+		if fe == nil {
+			return nil
+		}
+		b, err := json.Marshal(fe)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		// removes setters and substitutions from comments
+		// this version of setters are deprecated
+		n.YNode().HeadComment = ""
+		n.YNode().LineComment = ""
+		return json.Unmarshal(b, &fm.Extensions)
+	}
+	return nil
+}
+
 // processShortHand parses the comment for short hand ref, loads schema to fm
 // and returns true if successful, returns false for any other cases and not throw
 // error, as the comment might not be a setter ref

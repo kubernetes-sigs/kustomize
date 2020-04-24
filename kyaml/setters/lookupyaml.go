@@ -8,15 +8,19 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-var _ yaml.Filter = &lookupSetters{}
+var _ yaml.Filter = &lookupSettersDeprecated{}
 
-// lookupSetters looks up setters for a Resource
-type lookupSetters struct {
+// lookupSettersDeprecated looks up setters for a Resource
+// upgrades the setters to latest if the Upgrade is set to true
+type lookupSettersDeprecated struct {
 	// Name of the setter to lookup.  Optional
 	Name string
 
 	// Setters is a list of setters that were found
 	Setters []setter
+
+	// Upgrade the setters
+	Upgrade bool
 }
 
 type setter struct {
@@ -26,7 +30,7 @@ type setter struct {
 	SetBy       string
 }
 
-func (ls *lookupSetters) Filter(object *yaml.RNode) (*yaml.RNode, error) {
+func (ls *lookupSettersDeprecated) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	switch object.YNode().Kind {
 	case yaml.DocumentNode:
 		// skip the document node
@@ -40,18 +44,24 @@ func (ls *lookupSetters) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 			return node.PipeE(ls)
 		})
 	case yaml.ScalarNode:
-		return object, ls.lookup(object)
+		return object, ls.deprecatedLookup(object)
 	default:
 		return object, nil
 	}
 }
 
 // lookup finds any setters for a field
-func (ls *lookupSetters) lookup(field *yaml.RNode) error {
+func (ls *lookupSettersDeprecated) deprecatedLookup(field *yaml.RNode) error {
 	// check if there is a substitution for this field
 	var fm = &fieldmeta.FieldMeta{}
-	if err := fm.Read(field); err != nil {
-		return err
+	if ls.Upgrade {
+		if err := fm.Upgrade(field); err != nil {
+			return err
+		}
+	} else {
+		if err := fm.Read(field); err != nil {
+			return err
+		}
 	}
 
 	if fm.Extensions.FieldSetter != nil {

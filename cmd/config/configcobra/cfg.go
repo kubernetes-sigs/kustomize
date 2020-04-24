@@ -27,6 +27,7 @@ func GetCfg(name string) *cobra.Command {
 	cmd.AddCommand(commands.Merge3Command(name))
 	cmd.AddCommand(commands.SetCommand(name))
 	cmd.AddCommand(commands.TreeCommand(name))
+	cmd.AddCommand(commands.UpgradeCommand(name))
 
 	return cmd
 }

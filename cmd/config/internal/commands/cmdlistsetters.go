@@ -45,7 +45,7 @@ func ListSettersCommand(parent string) *cobra.Command {
 
 type ListSettersRunner struct {
 	Command      *cobra.Command
-	Lookup       setters.LookupSetters
+	Lookup       setters.LookupSettersDeprecated
 	List         setters2.List
 	Markdown     bool
 	IncludeSubst bool

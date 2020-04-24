@@ -10,15 +10,18 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-var _ kio.Filter = &LookupSetters{}
+var _ kio.Filter = &LookupSettersDeprecated{}
 
-// LookupSetters identifies setters for a collection of Resources
-type LookupSetters struct {
+// LookupSettersDeprecated identifies setters for a collection of Resources
+type LookupSettersDeprecated struct {
 	// Name is the name of the setter to match.  Optional.
 	Name string
 
 	// SetterCounts is populated by Filter and contains the count of fields matching each setter.
 	SetterCounts []setterCount
+
+	// Upgrade the setters
+	Upgrade bool
 }
 
 // setterCount records the identified setters and number of fields matching those setters
@@ -31,12 +34,12 @@ type setterCount struct {
 }
 
 // Filter implements kio.Filter
-func (l *LookupSetters) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
+func (l *LookupSettersDeprecated) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 	setters := map[string]*setterCount{}
 
 	for i := range input {
 		// lookup substitutions for this object
-		ls := &lookupSetters{Name: l.Name}
+		ls := &lookupSettersDeprecated{Name: l.Name, Upgrade: l.Upgrade}
 		if err := input[i].PipeE(ls); err != nil {
 			return nil, err
 		}

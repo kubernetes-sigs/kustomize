@@ -24,6 +24,7 @@ var (
 	Grep               = commands.GrepCommand
 	Init               = commands.InitCommand
 	ListSetters        = commands.ListSettersCommand
+	MigrateSetters     = commands.UpgradeCommand
 	Merge              = commands.MergeCommand
 	Merge3             = commands.Merge3Command
 	RunFn              = commands.RunCommand

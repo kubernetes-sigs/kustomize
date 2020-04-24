@@ -52,7 +52,7 @@ func SetCommand(parent string) *cobra.Command {
 
 type SetRunner struct {
 	Command     *cobra.Command
-	Lookup      setters.LookupSetters
+	Lookup      setters.LookupSettersDeprecated
 	Perform     setters.PerformSetters
 	Set         settersutil.FieldSetter
 	OpenAPIFile string
@@ -61,7 +61,7 @@ type SetRunner struct {
 
 func initSetterVersion(c *cobra.Command, args []string) error {
 	setterVersion = "v2"
-	l := setters.LookupSetters{}
+	l := setters.LookupSettersDeprecated{}
 
 	// backwards compatibility for resources with setter v1
 	err := kio.Pipeline{
@@ -142,7 +142,7 @@ func (r *SetRunner) runE(c *cobra.Command, args []string) error {
 	return handleError(c, lookup(r.Lookup, c, args))
 }
 
-func lookup(l setters.LookupSetters, c *cobra.Command, args []string) error {
+func lookup(l setters.LookupSettersDeprecated, c *cobra.Command, args []string) error {
 	// lookup the setters
 	err := kio.Pipeline{
 		Inputs:  []kio.Reader{&kio.LocalPackageReader{PackagePath: args[0]}},
