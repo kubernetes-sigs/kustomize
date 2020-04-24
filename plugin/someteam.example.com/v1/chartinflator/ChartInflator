@@ -145,8 +145,13 @@ function v2PullChart {
 }
 
 function v3PullChart {
-  # TODO implement
-  echo "?? helmV3 pull --repo https://hub.helm.sh/charts/ stable/minecraft  --destination /tmp/junk"
+  if [ ! -d "$chartHome/$chartName" ]; then
+    v3RunHelm pull $chartVersionArg \
+        $chartRepoArg \
+        --untar \
+        --untardir $chartHome \
+        $chartNameArg
+  fi
 }
 
 function v2InflateChart {
@@ -158,8 +163,12 @@ function v2InflateChart {
 }
 
 function v3InflateChart {
-  # TODO implement
-  true
+    v3RunHelm template \
+      --release-name $releaseName \
+      --namespace $releaseNamespace \
+      --values $valuesFile \
+      $chartHome/$chartName
+
 }
 
 HELM_VERSION=$($helmBin version -c --short)
