@@ -124,12 +124,7 @@ func isMatchGVK(fs types.FieldSpec, obj *yaml.RNode) (bool, error) {
 	}
 
 	// parse the group and version from the apiVersion field
-	var group, version string
-	parts := strings.SplitN(meta.APIVersion, "/", 2)
-	group = parts[0]
-	if len(parts) > 1 {
-		version = parts[1]
-	}
+	group, version := parseGV(meta.APIVersion)
 
 	if fs.Group != "" && fs.Group != group {
 		// group doesn't match
