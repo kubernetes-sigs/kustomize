@@ -26,9 +26,11 @@ for target in $targets; do
   popd
 done
 
-# make sure no files were generated or changed by make
-# ignore changes to go.mod and go.sum -- they are too flaky
-find . -name go.mod | xargs git checkout --
-find . -name go.sum | xargs git checkout --
-git add .
-git diff-index HEAD --exit-code
+# Need better check.  This is repeated git diff check
+# more pain than benefit for most people 25Apr2020
+## make sure no files were generated or changed by make
+## ignore changes to go.mod and go.sum -- they are too flaky
+# find . -name go.mod | xargs git checkout --
+# find . -name go.sum | xargs git checkout --
+# git add .
+# git diff-index HEAD --exit-code
