@@ -44,18 +44,18 @@ func TestParseGV(t *testing.T) {
 		},
 		"coreV1": {
 			input:           "v1",
-			expectedGroup:   "v1",
-			expectedVersion: "",
+			expectedGroup:   "",
+			expectedVersion: "v1",
 		},
 		"coreV2": {
 			input:           "v2",
-			expectedGroup:   "v2",
-			expectedVersion: "",
+			expectedGroup:   "",
+			expectedVersion: "v2",
 		},
 		"coreV2Beta1": {
 			input:           "v2beta1",
-			expectedGroup:   "v2beta1",
-			expectedVersion: "",
+			expectedGroup:   "",
+			expectedVersion: "v2beta1",
 		},
 	}
 
@@ -103,12 +103,6 @@ apiVersion: apps/v1
 `,
 			expected: resid.Gvk{Group: "apps", Version: "v1", Kind: ""},
 		},
-		// When apiVersion is just "v1" (not, say, "apps/v1"), that
-		// could be interpreted as Group="", Version="v1"
-		// (implying the original "core" api group) or the other way around
-		// (Group="v1", Version="").
-		// At the time of writing, fsslice.go does the latter -
-		// might have to change that.
 		"apiVersionOnlyNoSlash1": {
 			input: `
 apiVersion: apps
@@ -119,7 +113,7 @@ apiVersion: apps
 			input: `
 apiVersion: v1
 `,
-			expected: resid.Gvk{Group: "v1", Version: "", Kind: ""},
+			expected: resid.Gvk{Group: "", Version: "v1", Kind: ""},
 		},
 	}
 
