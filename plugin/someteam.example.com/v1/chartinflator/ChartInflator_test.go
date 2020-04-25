@@ -8,13 +8,14 @@
 package main_test
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-const expectedResources = `
+const expectedResourcesTemplate = `
 apiVersion: v1
 data:
   rcon-password: Q0hBTkdFTUUh
@@ -23,7 +24,7 @@ metadata:
   labels:
     app: release-name-minecraft
     chart: minecraft-SOMEVERSION
-    heritage: Tiller
+    heritage: %s
     release: release-name
   name: release-name-minecraft
 type: Opaque
@@ -36,7 +37,7 @@ metadata:
   labels:
     app: release-name-minecraft
     chart: minecraft-SOMEVERSION
-    heritage: Tiller
+    heritage: %s
     release: release-name
   name: release-name-minecraft-datadir
 spec:
@@ -52,7 +53,7 @@ metadata:
   labels:
     app: release-name-minecraft
     chart: minecraft-SOMEVERSION
-    heritage: Tiller
+    heritage: %s
     release: release-name
   name: release-name-minecraft
 spec:
@@ -66,9 +67,13 @@ spec:
   type: LoadBalancer
 `
 
+func expectedResources(serviceName string) string {
+	return fmt.Sprintf(expectedResourcesTemplate, serviceName, serviceName, serviceName)
+}
+
 // This test requires having "helmV2" (presumably helm V2 series) on the PATH.
 //
-// TODO: Download and inflate the chart, and check that
+// Download and inflate the chart, and check that
 // in for the test.
 func TestHelmV2ChartInflator(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
@@ -81,6 +86,7 @@ kind: ChartInflator
 metadata:
   name: notImportantHere
 chartName: minecraft
+chartVersion: 1.2.0
 helmBin: helmV2
 `)
 
@@ -88,12 +94,12 @@ helmBin: helmV2
 	th.AssertActualEqualsExpectedWithTweak(m,
 		func(x []byte) []byte {
 			return chartName.ReplaceAll(x, []byte("chart: minecraft-SOMEVERSION"))
-		}, expectedResources)
+		}, expectedResources("Tiller"))
 }
 
 // This test requires having "helmV3" (presumably helm V3 series) on the PATH.
 //
-func disabled_TestHelmV3ChartInflator(t *testing.T) {
+func TestHelmV3ChartInflator(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepExecPlugin("someteam.example.com", "v1", "ChartInflator")
 	defer th.Reset()
@@ -103,7 +109,9 @@ apiVersion: someteam.example.com/v1
 kind: ChartInflator
 metadata:
   name: notImportantHere
+chartRepo: https://kubernetes-charts.storage.googleapis.com/
 chartName: minecraft
+chartVersion: 1.2.0
 helmBin: helmV3
 `)
 
@@ -111,5 +119,5 @@ helmBin: helmV3
 	th.AssertActualEqualsExpectedWithTweak(m,
 		func(x []byte) []byte {
 			return chartName.ReplaceAll(x, []byte("chart: minecraft-SOMEVERSION"))
-		}, expectedResources)
+		}, expectedResources("Helm"))
 }
