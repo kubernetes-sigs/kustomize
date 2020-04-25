@@ -302,8 +302,6 @@ kind: Bar
 		expected: `
 apiVersion: v1
 kind: Bar
-a:
-  b: e
 `,
 		filter: fsslice.Filter{
 			SetValue:   fsslice.SetScalar("e"),
@@ -326,6 +324,8 @@ kind: Bar
 		expected: `
 apiVersion: v1
 kind: Bar
+a:
+  b: e
 `,
 		filter: fsslice.Filter{
 			SetValue:   fsslice.SetScalar("e"),
