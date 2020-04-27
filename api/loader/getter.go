@@ -7,6 +7,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/yujunz/go-getter"
 	"sigs.k8s.io/kustomize/api/filesys"
@@ -24,6 +25,8 @@ type remoteTargetSpec struct {
 
 // Getter is a function that can gets resource
 type remoteTargetGetter func(rs *remoteTargetSpec) error
+
+var goGetterMutex sync.Mutex
 
 func newLoaderAtGetter(raw string, fSys filesys.FileSystem, referrer *fileLoader, cloner git.Cloner, getter remoteTargetGetter) (ifc.Loader, error) {
 	rs := &remoteTargetSpec{
@@ -80,6 +83,9 @@ func getRemoteTarget(rs *remoteTargetSpec) error {
 		},
 		Options: opts,
 	}
+
+	goGetterMutex.Lock()
+	defer goGetterMutex.Unlock()
 	return client.Get()
 }
 
