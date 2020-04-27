@@ -4,6 +4,7 @@
 package settersutil
 
 import (
+	"fmt"
 	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -98,11 +99,14 @@ func (c SubstitutionCreator) CreateSettersForSubstitution(openAPIPath string) er
 		}
 
 		if obj == nil {
+			name := strings.TrimPrefix(value.Ref, "#/definitions/io.k8s.cli.setters.")
+			value := m[value.Marker]
+			fmt.Printf("unable to find setter with name %s, creating new setter with value %s\n", name, value)
 			sd := setters2.SetterDefinition{
 				// get the setter name from ref. Ex: from #/definitions/io.k8s.cli.setters.image_setter
 				// extract image_setter
-				Name:  strings.TrimPrefix(value.Ref, "#/definitions/io.k8s.cli.setters."),
-				Value: m[value.Marker],
+				Name:  name,
+				Value: value,
 			}
 			err := sd.AddToFile(openAPIPath)
 			if err != nil {
