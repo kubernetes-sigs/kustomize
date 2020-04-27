@@ -1,4 +1,8 @@
-# inventory directive in kustomization.yaml
+# [DEPRECATED] inventory directive in kustomization.yaml
+
+**Inventory object has been deprecated in Kustomize. Please use [kpt live apply](https://googlecontainertools.github.io/kpt/reference/live/apply/).**
+
+---
 
 New in v2.1.0, a kustomization file may have an `inventory` field:
 ```yaml
