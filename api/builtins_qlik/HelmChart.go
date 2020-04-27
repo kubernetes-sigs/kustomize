@@ -34,6 +34,8 @@ const (
 	defaultRepoIndexFileStaleAfterSeconds = 60
 )
 
+var helmRunMutex sync.Mutex
+
 type HelmChartPlugin struct {
 	ChartName                      string                 `json:"chartName,omitempty" yaml:"chartName,omitempty"`
 	ChartHome                      string                 `json:"chartHome,omitempty" yaml:"chartHome,omitempty"`
@@ -396,7 +398,9 @@ func (p *HelmChartPlugin) helmTemplate(settings *cli.EnvSettings, c *chart.Chart
 	client.ClientOnly = true
 	client.Namespace = settings.Namespace()
 
+	helmRunMutex.Lock()
 	rel, err := client.Run(c, vals)
+	helmRunMutex.Unlock()
 	if err != nil {
 		return nil, err
 	}
