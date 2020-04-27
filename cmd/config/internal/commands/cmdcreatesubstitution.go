@@ -4,6 +4,7 @@
 package commands
 
 import (
+	"regexp"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -17,20 +18,19 @@ import (
 func NewCreateSubstitutionRunner(parent string) *CreateSubstitutionRunner {
 	r := &CreateSubstitutionRunner{}
 	cs := &cobra.Command{
-		Use:     "create-subst DIR NAME VALUE",
-		Args:    cobra.ExactArgs(3),
+		Use:     "create-subst DIR NAME",
+		Args:    cobra.ExactArgs(2),
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 	}
 	cs.Flags().StringVar(&r.CreateSubstitution.FieldName, "field", "",
-		"name of the field to set -- e.g. --field port")
+		"name of the field to set -- e.g. --field image")
+	cs.Flags().StringVar(&r.CreateSubstitution.FieldValue, "field-value", "",
+		"value of the field to create substitution for -- e.g. --field-value nginx:0.1.0")
 	cs.Flags().StringVar(&r.CreateSubstitution.Pattern, "pattern", "",
-		"substitution pattern")
-	cs.Flags().StringSliceVar(&r.Values, "value", []string{""},
-		"substitution values for the pattern.  format is PATTERN_MARKER=SETTER_NAME"+
-			"where PATTERN_MARKER is the pattern substring to replace, and SETTER_NAME is the"+
-			"setter from which to take the replacement value.")
+		`substitution pattern -- e.g. --pattern \${my-image-setter}:\${my-tag-setter}`)
 	_ = cs.MarkFlagRequired("pattern")
+	_ = cs.MarkFlagRequired("field-value")
 	fixDocs(parent, cs)
 	r.Command = cs
 	return r
@@ -54,7 +54,6 @@ func (r *CreateSubstitutionRunner) runE(c *cobra.Command, args []string) error {
 func (r *CreateSubstitutionRunner) preRunE(c *cobra.Command, args []string) error {
 	var err error
 	r.CreateSubstitution.Name = args[1]
-	r.CreateSubstitution.FieldValue = args[2]
 	if err != nil {
 		return err
 	}
@@ -64,16 +63,20 @@ func (r *CreateSubstitutionRunner) preRunE(c *cobra.Command, args []string) erro
 		return err
 	}
 
-	// parse the marker values
-	for i := range r.Values {
-		parts := strings.SplitN(r.Values[i], "=", 2)
-		if len(parts) < 2 {
-			return errors.Errorf("values must be specified as PATTERN_MARKER=SETTER_NAME")
-		}
-		ref := setters2.DefinitionsPrefix + setters2.SetterDefinitionPrefix + parts[1]
+	// extract setter name tokens from pattern enclosed in ${}
+	re := regexp.MustCompile(`\$\{([^}]*)\}`)
+	markers := re.FindAll([]byte(r.CreateSubstitution.Pattern), -1)
+	if len(markers) == 0 {
+		return errors.Errorf("unable to find setter names in pattern, " +
+			"setter names must be enclosed in ${}")
+	}
+
+	for _, marker := range markers {
+		ref := setters2.DefinitionsPrefix + setters2.SetterDefinitionPrefix +
+			strings.TrimSuffix(strings.TrimPrefix(string(marker), "${"), "}")
 		r.CreateSubstitution.Values = append(
 			r.CreateSubstitution.Values,
-			setters2.Value{Marker: parts[0], Ref: ref},
+			setters2.Value{Marker: string(marker), Ref: ref},
 		)
 	}
 
