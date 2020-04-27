@@ -40,7 +40,11 @@ func (rv *refVarTransformer) replaceVars(in interface{}) (interface{}, error) {
 	case []interface{}:
 		var xs []interface{}
 		for _, a := range in.([]interface{}) {
-			xs = append(xs, expansion2.Expand(a.(string), rv.mappingFunc))
+			x, ok := a.(string)
+			if !ok {
+				return nil, fmt.Errorf("expected array of strings, found %v", in)
+			}
+			xs = append(xs, expansion2.Expand(x, rv.mappingFunc))
 		}
 		return xs, nil
 	case map[string]interface{}:
@@ -49,7 +53,7 @@ func (rv *refVarTransformer) replaceVars(in interface{}) (interface{}, error) {
 		for k, v := range inMap {
 			s, ok := v.(string)
 			if !ok {
-				// This field not contain a $(VAR) since it is not
+				// This field can not contain a $(VAR) since it is not
 				// of string type. For instance .spec.replicas: 3 in
 				// a Deployment object
 				xs[k] = v
@@ -64,7 +68,7 @@ func (rv *refVarTransformer) replaceVars(in interface{}) (interface{}, error) {
 	case interface{}:
 		s, ok := in.(string)
 		if !ok {
-			// This field not contain a $(VAR) since it is not of string type.
+			// This field can not contain a $(VAR) since it is not of string type.
 			return in, nil
 		}
 		// This field can potentially contain a $(VAR) since it is

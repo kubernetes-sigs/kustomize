@@ -29,6 +29,7 @@ func TestRefVarTransformer(t *testing.T) {
 		description string
 		given       given
 		expected    expected
+		errMessage  string
 	}{
 		{
 			description: "var replacement in map[string]",
@@ -111,6 +112,27 @@ func TestRefVarTransformer(t *testing.T) {
 				unused: []string{"BAR"},
 			},
 		},
+		{
+			description: "var replacement panic in map[string]",
+			given: given{
+				varMap: map[string]interface{}{},
+				fs: []types.FieldSpec{
+					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/slice"},
+				},
+				res: resmaptest_test.NewRmBuilder(
+					t, resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())).
+					Add(map[string]interface{}{
+						"apiVersion": "v1",
+						"kind":       "ConfigMap",
+						"metadata": map[string]interface{}{
+							"name": "cm1",
+						},
+						"data": map[string]interface{}{
+							"slice": []interface{}{5}, // noticeably *not* a []string
+						}}).ResMap(),
+			},
+			errMessage: "expected array of strings, found [5]",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -122,16 +144,23 @@ func TestRefVarTransformer(t *testing.T) {
 			err := tr.Transform(tc.given.res)
 
 			// assert
-			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
+			if tc.errMessage != "" {
+				if err == nil {
+					t.Fatalf("missing expected error %v", tc.errMessage)
+				} else if err.Error() != tc.errMessage {
+					t.Fatalf("actual error doesn't match expected error: \nACTUAL: %v\nEXPECTED: %v", err.Error(), tc.errMessage)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("unexpected error: %v", err)
+				}
 
-			a, e := tc.given.res, tc.expected.res
-			if !reflect.DeepEqual(a, e) {
-				err = e.ErrorIfNotEqualLists(a)
-				t.Fatalf("actual doesn't match expected: \nACTUAL:\n%v\nEXPECTED:\n%v\nERR: %v", a, e, err)
+				a, e := tc.given.res, tc.expected.res
+				if !reflect.DeepEqual(a, e) {
+					err = e.ErrorIfNotEqualLists(a)
+					t.Fatalf("actual doesn't match expected: \nACTUAL:\n%v\nEXPECTED:\n%v\nERR: %v", a, e, err)
+				}
 			}
-
 		})
 	}
 }
