@@ -35,12 +35,12 @@ const (
 	HelmChart
 	HelmValues
 	SearchReplace
-	SedOnPath
 	SelectivePatch
 	SuperVars
 	SuperConfigMap
 	SuperSecret
 	ValuesFile
+	GitImageTag
 )
 
 var stringToBuiltinPluginTypeMap map[string]BuiltinPluginType
@@ -85,6 +85,9 @@ func init() {
 
 	TransformerFactories[ValuesFile] = builtins_qlik.NewValuesFilePlugin
 	stringToBuiltinPluginTypeMap["ValuesFile"] = ValuesFile
+
+	TransformerFactories[GitImageTag] = builtins_qlik.NewGitImageTagPlugin
+	stringToBuiltinPluginTypeMap["GitImageTag"] = GitImageTag
 }
 
 func makeStringToBuiltinPluginTypeMap() (result map[string]BuiltinPluginType) {

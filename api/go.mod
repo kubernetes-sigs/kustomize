@@ -3,7 +3,9 @@ module sigs.k8s.io/kustomize/api
 go 1.14
 
 require (
+	github.com/Masterminds/semver/v3 v3.1.0
 	github.com/evanphx/json-patch v4.5.0+incompatible
+	github.com/go-git/go-git/v5 v5.0.0
 	github.com/go-openapi/spec v0.19.5
 	github.com/gofrs/flock v0.7.1
 	github.com/golangci/golangci-lint v1.21.0
