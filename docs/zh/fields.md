@@ -25,12 +25,12 @@
 
 ## Generators
 
-资源生成生成器。
+资源生成器。
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-|[configMapGenerator](#configmapgenerator)| list  | 列表中的每个条目都将生成一个 ConfigMap （它可以生成是 n 个 ConfigMap）。 |
-|[secretGenerator](#secretgenerator)| list  | 列表中的每个条目都将生成一个 Secret（它可以是 n 个 Secrets）。 |
+|[configMapGenerator](#configmapgenerator)| list  | 列表中的每个条目都将生成一个 ConfigMap （合计可以生成 n 个 ConfigMap）。 |
+|[secretGenerator](#secretgenerator)| list  | 列表中的每个条目都将生成一个 Secret（合计可以生成 n 个 Secrets）。 |
 |[generatorOptions](#generatoroptions)| string | generatorOptions 可以修改所有 ConfigMapGenerator 和 SecretGenerator 的行为。 |
 |[generators](#generators)| list | [插件](../plugins)配置文件。 |
 
