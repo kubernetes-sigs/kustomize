@@ -5,11 +5,12 @@
 package filters
 
 import (
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/yaml/merge2"
 )
 
-// GrepFilter merges Resources with the Group/Version/Kind/Namespace/Name together using
+// MergeFilter merges Resources with the Group/Version/Kind/Namespace/Name together using
 // a 2-way merge strategy.
 //
 // - Fields set to null in the source will be cleared from the destination
@@ -20,6 +21,8 @@ type MergeFilter struct {
 	Reverse bool
 }
 
+var _ kio.Filter = MergeFilter{}
+
 type mergeKey struct {
 	apiVersion string
 	kind       string
@@ -27,7 +30,7 @@ type mergeKey struct {
 	name       string
 }
 
-// GrepFilter implements kio.GrepFilter by merge Resources with the same G/V/K/NS/N
+// MergeFilter implements kio.Filter by merging Resources with the same G/V/K/NS/N
 func (c MergeFilter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 	// invert the merge precedence
 	if c.Reverse {
