@@ -77,7 +77,6 @@ func NewCmdBuild(out io.Writer) *cobra.Command {
 	addFlagLoadRestrictor(cmd.Flags())
 	addFlagEnablePlugins(cmd.Flags())
 	addFlagReorderOutput(cmd.Flags())
-	cmd.AddCommand(NewCmdBuildPrune(out))
 	return cmd
 }
 
@@ -105,7 +104,6 @@ func (o *Options) makeOptions() *krusty.Options {
 	opts := &krusty.Options{
 		DoLegacyResourceSort: o.outOrder == legacy,
 		LoadRestrictions:     getFlagLoadRestrictorValue(),
-		DoPrune:              false,
 	}
 	if isFlagEnablePluginsSet() {
 		c, err := konfig.EnabledPluginConfig(types.BploUseStaticallyLinked)
@@ -129,18 +127,6 @@ func (o *Options) RunBuild(out io.Writer) error {
 	return o.emitResources(out, fSys, m)
 }
 
-func (o *Options) RunBuildPrune(out io.Writer) error {
-	fSys := filesys.MakeFsOnDisk()
-	opts := o.makeOptions()
-	opts.DoPrune = true
-	k := krusty.MakeKustomizer(fSys, opts)
-	m, err := k.Run(o.kustomizationPath)
-	if err != nil {
-		return err
-	}
-	return o.emitResources(out, fSys, m)
-}
-
 func (o *Options) emitResources(
 	out io.Writer, fSys filesys.FileSystem, m resmap.ResMap) error {
 	if o.outputPath != "" && fSys.IsDir(o.outputPath) {
@@ -155,24 +141,6 @@ func (o *Options) emitResources(
 	}
 	_, err = out.Write(res)
 	return err
-}
-
-func NewCmdBuildPrune(out io.Writer) *cobra.Command {
-	var o Options
-	cmd := &cobra.Command{
-		Use:          "alpha-inventory [path]",
-		Short:        "Print the inventory object which contains a list of all other objects",
-		Example:      examples,
-		SilenceUsage: true,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			err := o.Validate(args)
-			if err != nil {
-				return err
-			}
-			return o.RunBuildPrune(out)
-		},
-	}
-	return cmd
 }
 
 func writeIndividualFiles(

@@ -106,15 +106,10 @@ func unmarshal(y []byte, o interface{}) error {
 // MakeCustomizedResMap creates a fully customized ResMap
 // per the instructions contained in its kustomiztion instance.
 func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
-	return kt.makeCustomizedResMap(types.GarbageIgnore)
+	return kt.makeCustomizedResMap()
 }
 
-func (kt *KustTarget) MakePruneConfigMap() (resmap.ResMap, error) {
-	return kt.makeCustomizedResMap(types.GarbageCollect)
-}
-
-func (kt *KustTarget) makeCustomizedResMap(
-	garbagePolicy types.GarbagePolicy) (resmap.ResMap, error) {
+func (kt *KustTarget) makeCustomizedResMap() (resmap.ResMap, error) {
 	ra, err := kt.AccumulateTarget()
 	if err != nil {
 		return nil, err
@@ -141,11 +136,6 @@ func (kt *KustTarget) makeCustomizedResMap(
 		return nil, err
 	}
 
-	err = kt.computeInventory(ra, garbagePolicy)
-	if err != nil {
-		return nil, err
-	}
-
 	return ra.ResMap(), nil
 }
 
@@ -153,35 +143,6 @@ func (kt *KustTarget) addHashesToNames(
 	ra *accumulator.ResAccumulator) error {
 	p := builtins.NewHashTransformerPlugin()
 	err := kt.configureBuiltinPlugin(p, nil, builtinhelpers.HashTransformer)
-	if err != nil {
-		return err
-	}
-	return ra.Transform(p)
-}
-
-func (kt *KustTarget) computeInventory(
-	ra *accumulator.ResAccumulator, garbagePolicy types.GarbagePolicy) error {
-	inv := kt.kustomization.Inventory
-	if inv == nil {
-		return nil
-	}
-	if inv.Type != "ConfigMap" {
-		return fmt.Errorf("don't know how to do that")
-	}
-
-	if inv.ConfigMap.Namespace != kt.kustomization.Namespace {
-		return fmt.Errorf("namespace mismatch")
-	}
-
-	var c struct {
-		Policy           string
-		types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty"`
-	}
-	c.Name = inv.ConfigMap.Name
-	c.Namespace = inv.ConfigMap.Namespace
-	c.Policy = garbagePolicy.String()
-	p := builtins.NewInventoryTransformerPlugin()
-	err := kt.configureBuiltinPlugin(p, c, builtinhelpers.InventoryTransformer)
 	if err != nil {
 		return err
 	}
