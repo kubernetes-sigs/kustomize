@@ -29,8 +29,7 @@ func TestCreateSubstitutionCommand(t *testing.T) {
 		{
 			name: "substitution replicas",
 			args: []string{
-				"image", "nginx:1.7.9", "--pattern", "IMAGE:TAG",
-				"--value", "IMAGE=image", "--value", "TAG=tag"},
+				"my-image-subst", "--field-value", "nginx:1.7.9", "--pattern", "${my-image-setter}:${my-tag-setter}"},
 			input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -51,15 +50,15 @@ apiVersion: v1alpha1
 kind: Example
 openAPI:
   definitions:
-    io.k8s.cli.setters.image:
+    io.k8s.cli.setters.my-image-setter:
       x-k8s-cli:
         setter:
-          name: image
+          name: my-image-setter
           value: "nginx"
-    io.k8s.cli.setters.tag:
+    io.k8s.cli.setters.my-tag-setter:
       x-k8s-cli:
         setter:
-          name: tag
+          name: my-tag-setter
           value: "1.7.9"
  `,
 			expectedOpenAPI: `
@@ -67,26 +66,26 @@ apiVersion: v1alpha1
 kind: Example
 openAPI:
   definitions:
-    io.k8s.cli.setters.image:
+    io.k8s.cli.setters.my-image-setter:
       x-k8s-cli:
         setter:
-          name: image
+          name: my-image-setter
           value: "nginx"
-    io.k8s.cli.setters.tag:
+    io.k8s.cli.setters.my-tag-setter:
       x-k8s-cli:
         setter:
-          name: tag
+          name: my-tag-setter
           value: "1.7.9"
-    io.k8s.cli.substitutions.image:
+    io.k8s.cli.substitutions.my-image-subst:
       x-k8s-cli:
         substitution:
-          name: image
-          pattern: IMAGE:TAG
+          name: my-image-subst
+          pattern: ${my-image-setter}:${my-tag-setter}
           values:
-          - marker: IMAGE
-            ref: '#/definitions/io.k8s.cli.setters.image'
-          - marker: TAG
-            ref: '#/definitions/io.k8s.cli.setters.tag'
+          - marker: ${my-image-setter}
+            ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
+          - marker: ${my-tag-setter}
+            ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
  `,
 			expectedResources: `
 apiVersion: apps/v1
@@ -99,7 +98,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image"}
+        image: nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.my-image-subst"}
       - name: sidecar
         image: sidecar:1.7.9
  `,
@@ -107,8 +106,7 @@ spec:
 		{
 			name: "substitution and create setters 1",
 			args: []string{
-				"image", "something/nginx::1.7.9/nginxotherthing", "--pattern", "something/IMAGE::TAG/nginxotherthing",
-				"--value", "IMAGE=image", "--value", "TAG=tag"},
+				"my-image-subst", "--field-value", "something/nginx::1.7.9/nginxotherthing", "--pattern", "something/${my-image-setter}::${my-tag-setter}/nginxotherthing"},
 			input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -133,26 +131,26 @@ apiVersion: v1alpha1
 kind: Example
 openAPI:
   definitions:
-    io.k8s.cli.setters.image:
+    io.k8s.cli.setters.my-image-setter:
       x-k8s-cli:
         setter:
-          name: image
+          name: my-image-setter
           value: nginx
-    io.k8s.cli.setters.tag:
+    io.k8s.cli.setters.my-tag-setter:
       x-k8s-cli:
         setter:
-          name: tag
+          name: my-tag-setter
           value: 1.7.9
-    io.k8s.cli.substitutions.image:
+    io.k8s.cli.substitutions.my-image-subst:
       x-k8s-cli:
         substitution:
-          name: image
-          pattern: something/IMAGE::TAG/nginxotherthing
+          name: my-image-subst
+          pattern: something/${my-image-setter}::${my-tag-setter}/nginxotherthing
           values:
-          - marker: IMAGE
-            ref: '#/definitions/io.k8s.cli.setters.image'
-          - marker: TAG
-            ref: '#/definitions/io.k8s.cli.setters.tag'
+          - marker: ${my-image-setter}
+            ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
+          - marker: ${my-tag-setter}
+            ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
  `,
 			expectedResources: `
 apiVersion: apps/v1
@@ -165,7 +163,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: something/nginx::1.7.9/nginxotherthing # {"$ref":"#/definitions/io.k8s.cli.substitutions.image"}
+        image: something/nginx::1.7.9/nginxotherthing # {"$ref":"#/definitions/io.k8s.cli.substitutions.my-image-subst"}
       - name: sidecar
         image: sidecar:1.7.9
  `,
