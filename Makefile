@@ -116,7 +116,6 @@ _builtinplugins = \
 	ConfigMapGenerator.go \
 	HashTransformer.go \
 	ImageTagTransformer.go \
-	InventoryTransformer.go \
 	LabelTransformer.go \
 	LegacyOrderTransformer.go \
 	NamespaceTransformer.go \
@@ -141,7 +140,6 @@ $(pGen)/AnnotationsTransformer.go: $(pSrc)/annotationstransformer/AnnotationsTra
 $(pGen)/ConfigMapGenerator.go: $(pSrc)/configmapgenerator/ConfigMapGenerator.go
 $(pGen)/HashTransformer.go: $(pSrc)/hashtransformer/HashTransformer.go
 $(pGen)/ImageTagTransformer.go: $(pSrc)/imagetagtransformer/ImageTagTransformer.go
-$(pGen)/InventoryTransformer.go: $(pSrc)/inventorytransformer/InventoryTransformer.go
 $(pGen)/LabelTransformer.go: $(pSrc)/labeltransformer/LabelTransformer.go
 $(pGen)/LegacyOrderTransformer.go: $(pSrc)/legacyordertransformer/LegacyOrderTransformer.go
 $(pGen)/NamespaceTransformer.go: $(pSrc)/namespacetransformer/NamespaceTransformer.go

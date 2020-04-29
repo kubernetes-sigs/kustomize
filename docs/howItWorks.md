@@ -48,4 +48,3 @@ Call stack when running `kustomize build`, with links to code.
     * [addHashesToNames](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L153)
     * [FixBackReferences](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/accumulator/resaccumulator.go#L160): Given that names have changed (prefixs/suffixes added), fix all the back references to those names.
     * [ResolveVars](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/accumulator/resaccumulator.go#L141)
-    * [computeInventory](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L163)
