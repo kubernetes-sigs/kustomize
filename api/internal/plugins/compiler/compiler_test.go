@@ -6,7 +6,6 @@ package compiler_test
 import (
 	"path/filepath"
 	"testing"
-	"time"
 
 	"sigs.k8s.io/kustomize/api/filesys"
 	. "sigs.k8s.io/kustomize/api/internal/plugins/compiler"
@@ -30,7 +29,7 @@ func TestCompiler(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if !FileYoungerThan(expectObj, time.Second) {
+	if !FileExists(expectObj) {
 		t.Errorf("didn't find expected obj file %s", expectObj)
 	}
 	c.Cleanup()
@@ -49,7 +48,7 @@ func TestCompiler(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if !FileYoungerThan(expectObj, time.Second) {
+	if !FileExists(expectObj) {
 		t.Errorf("didn't find expected obj file %s", expectObj)
 	}
 	c.Cleanup()

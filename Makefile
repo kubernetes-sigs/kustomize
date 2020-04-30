@@ -116,7 +116,6 @@ _builtinplugins = \
 	ConfigMapGenerator.go \
 	HashTransformer.go \
 	ImageTagTransformer.go \
-	InventoryTransformer.go \
 	LabelTransformer.go \
 	LegacyOrderTransformer.go \
 	NamespaceTransformer.go \
@@ -141,7 +140,6 @@ $(pGen)/AnnotationsTransformer.go: $(pSrc)/annotationstransformer/AnnotationsTra
 $(pGen)/ConfigMapGenerator.go: $(pSrc)/configmapgenerator/ConfigMapGenerator.go
 $(pGen)/HashTransformer.go: $(pSrc)/hashtransformer/HashTransformer.go
 $(pGen)/ImageTagTransformer.go: $(pSrc)/imagetagtransformer/ImageTagTransformer.go
-$(pGen)/InventoryTransformer.go: $(pSrc)/inventorytransformer/InventoryTransformer.go
 $(pGen)/LabelTransformer.go: $(pSrc)/labeltransformer/LabelTransformer.go
 $(pGen)/LegacyOrderTransformer.go: $(pSrc)/legacyordertransformer/LegacyOrderTransformer.go
 $(pGen)/NamespaceTransformer.go: $(pSrc)/namespacetransformer/NamespaceTransformer.go
@@ -219,10 +217,6 @@ test-go-mod:
 	./travis/check-go-mod.sh
 
 .PHONY:
-test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
-	./hack/testExamplesAgainstKustomize.sh HEAD
-
-.PHONY:
 test-examples-e2e-kustomize: $(MYGOBIN)/mdrip $(MYGOBIN)/kind
 	( \
 		set -e; \
@@ -233,12 +227,16 @@ test-examples-e2e-kustomize: $(MYGOBIN)/mdrip $(MYGOBIN)/kind
 	)
 
 .PHONY:
+test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
+	./hack/testExamplesAgainstKustomize.sh HEAD
+
+.PHONY:
 test-examples-kustomize-against-latest: $(MYGOBIN)/mdrip
 	( \
 		set -e; \
 		/bin/rm -f $(MYGOBIN)/kustomize; \
 		echo "Installing kustomize from latest."; \
-		GO111MODULE=on go install sigs.k8s.io/kustomize/kustomize/v3; \
+		GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4; \
 		./hack/testExamplesAgainstKustomize.sh latest; \
 		echo "Reinstalling kustomize from HEAD."; \
 		cd kustomize; go install .; \
@@ -288,6 +286,10 @@ $(MYGOBIN)/helmV3:
 		mv linux-amd64/helm $(MYGOBIN)/helmV3; \
 		rm -rf $$d \
 	)
+
+# Default version of helm is v2 for the time being.
+$(MYGOBIN)/helm: $(MYGOBIN)/helmV2
+	ln -s $(MYGOBIN)/helmV2 $(MYGOBIN)/helm
 
 $(MYGOBIN)/kind:
 	( \

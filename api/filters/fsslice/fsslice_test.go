@@ -10,7 +10,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/api/filters/fsslice"
-	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -287,6 +286,52 @@ a:
 			CreateKind: yaml.ScalarNode,
 		},
 	},
+
+	{
+		name: "group v1",
+		fsSlice: `
+- path: a/b
+  group: v1
+  create: true
+  kind: Bar
+`,
+		input: `
+apiVersion: v1
+kind: Bar
+`,
+		expected: `
+apiVersion: v1
+kind: Bar
+`,
+		filter: fsslice.Filter{
+			SetValue:   fsslice.SetScalar("e"),
+			CreateKind: yaml.ScalarNode,
+		},
+	},
+
+	{
+		name: "version v1",
+		fsSlice: `
+- path: a/b
+  version: v1
+  create: true
+  kind: Bar
+`,
+		input: `
+apiVersion: v1
+kind: Bar
+`,
+		expected: `
+apiVersion: v1
+kind: Bar
+a:
+  b: e
+`,
+		filter: fsslice.Filter{
+			SetValue:   fsslice.SetScalar("e"),
+			CreateKind: yaml.ScalarNode,
+		},
+	},
 }
 
 func TestFilter_Filter(t *testing.T) {
@@ -330,25 +375,5 @@ func TestFilter_Filter(t *testing.T) {
 				t.FailNow()
 			}
 		})
-	}
-}
-
-func TestGetGVK(t *testing.T) {
-	obj, err := yaml.Parse(`
-apiVersion: apps/v1
-kind: Deployment
-`)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	meta, err := obj.GetMeta()
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-
-	gvk := fsslice.GetGVK(meta)
-	expected := resid.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
-	if !assert.Equal(t, expected, gvk) {
-		t.FailNow()
 	}
 }

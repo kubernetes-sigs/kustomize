@@ -14,7 +14,9 @@ for i in $(find . -name go.mod -not -path "./hack/*"); do
   popd
 done
 
-# verify no changes to go.mods -- these should be part of the PR
-find . -name go.sum | xargs git checkout --
-git add .
-git diff-index HEAD --exit-code
+# Need better check.  This is repeated git diff check
+# more pain than benefit for most people 25Apr2020
+## verify no changes to go.mods -- these should be part of the PR
+# find . -name go.sum | xargs git checkout --
+# git add .
+# git diff-index HEAD --exit-code

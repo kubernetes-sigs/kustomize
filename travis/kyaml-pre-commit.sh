@@ -5,17 +5,32 @@
 set -e
 
 # run all tests for kyaml and related commands
-targets="kyaml cmd/config cmd/kubectl functions/examples/injection-tshirt-sizes functions/examples/template-go-nginx functions/examples/template-heredoc-cockroachdb functions/examples/validator-kubeval functions/examples/validator-resource-requests functions/examples/application-cr"
+
+targets="
+kyaml
+cmd/config
+cmd/kubectl
+functions/examples/injection-tshirt-sizes
+functions/examples/template-go-nginx
+functions/examples/template-heredoc-cockroachdb
+functions/examples/validator-kubeval
+functions/examples/validator-resource-requests
+functions/examples/application-cr
+"
+
 for target in $targets; do
+  echo "----- Making $target -----"
   pushd .
   cd $target
   make all
   popd
 done
 
-# make sure no files were generated or changed by make
-# ignore changes to go.mod and go.sum -- they are too flaky
-find . -name go.mod | xargs git checkout --
-find . -name go.sum | xargs git checkout --
-git add .
-git diff-index HEAD --exit-code
+# Need better check.  This is repeated git diff check
+# more pain than benefit for most people 25Apr2020
+## make sure no files were generated or changed by make
+## ignore changes to go.mod and go.sum -- they are too flaky
+# find . -name go.mod | xargs git checkout --
+# find . -name go.sum | xargs git checkout --
+# git add .
+# git diff-index HEAD --exit-code
