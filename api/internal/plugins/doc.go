@@ -94,7 +94,7 @@ TO GENERATE CODE
   cd $repo/plugin/builtin
   go generate ./...
 
-See travis/pre-commit.sh for canonical way
+See travis/kyaml-pre-commit.sh for canonical way
 to execute the above.
 
 This creates
