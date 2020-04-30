@@ -308,8 +308,7 @@ An example using ` + "`" + `v1/List` + "`" + ` as input:
 	apiVersion: v1
 	kind: List
 	items:
-	  spec:
-	   - apiVersion: foo-corp.com/v1
+	  - apiVersion: foo-corp.com/v1
 	    kind: FulfillmentCenter
 	    metadata:
 	      name: staging
