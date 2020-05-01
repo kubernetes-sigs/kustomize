@@ -688,11 +688,18 @@ func (rn *RNode) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 
+	if rn.YNode().Kind == SequenceNode {
+		var a []interface{}
+		if err := Unmarshal([]byte(s), &a); err != nil {
+			return nil, err
+		}
+		return json.Marshal(a)
+	}
+
 	m := map[string]interface{}{}
 	if err := Unmarshal([]byte(s), &m); err != nil {
 		return nil, err
 	}
-
 	return json.Marshal(m)
 }
 
