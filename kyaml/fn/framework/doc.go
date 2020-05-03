@@ -31,7 +31,7 @@
 //
 // Validator Functions
 //
-// Functions may validate resources, returning Results as go errors.  Results may contain
+// Functions may validate resources, returning results as go errors.  results may contain
 // different items for different validation failures.
 //
 // Configuring Functions
