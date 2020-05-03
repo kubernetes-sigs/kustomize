@@ -281,7 +281,7 @@ functionConfig:
 }
 
 // ExampleCommand_validate validates that all Deployment resources have the replicas field set.
-// If any Deployments do not contain spec.replicas, then the function will return Results
+// If any Deployments do not contain spec.replicas, then the function will return results
 // which will be set on ResourceList.results
 func ExampleCommand_validate() {
 	cmd := framework.Command(nil, func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
@@ -320,7 +320,7 @@ func ExampleCommand_validate() {
 			})
 		}
 
-		// framework will only consider Results an error if it has at least 1 item
+		// framework will only consider results an error if it has at least 1 item
 		return nodes, framework.Result{
 			Name:  "replicas-validator",
 			Items: validationResults,
