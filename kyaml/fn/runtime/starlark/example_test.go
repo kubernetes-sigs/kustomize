@@ -11,8 +11,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/starlark"
 	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/starlark"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -75,6 +76,7 @@ run(ctx.resource_list["items"])
 	//   name: deployment-1
 	//   annotations:
 	//     foo: bar
+	//     config.kubernetes.io/path: 'deployment_deployment-1.yaml'
 	// spec:
 	//   template:
 	//     spec:
@@ -88,6 +90,7 @@ run(ctx.resource_list["items"])
 	//   name: deployment-2
 	//   annotations:
 	//     foo: bar
+	//     config.kubernetes.io/path: 'deployment_deployment-2.yaml'
 	// spec:
 	//   template:
 	//     spec:
@@ -141,7 +144,7 @@ def run(items, value):
 
 run(ctx.resource_list["items"], ctx.resource_list["functionConfig"]["spec"]["value"])
 `,
-		FunctionConfig: fc,
+		FunctionFilter: runtimeutil.FunctionFilter{FunctionConfig: fc},
 	}
 
 	// output contains the transformed resources
@@ -165,6 +168,7 @@ run(ctx.resource_list["items"], ctx.resource_list["functionConfig"]["spec"]["val
 	//   name: deployment-1
 	//   annotations:
 	//     foo: hello world
+	//     config.kubernetes.io/path: 'deployment_deployment-1.yaml'
 	// spec:
 	//   template:
 	//     spec:
@@ -178,6 +182,7 @@ run(ctx.resource_list["items"], ctx.resource_list["functionConfig"]["spec"]["val
 	//   name: deployment-2
 	//   annotations:
 	//     foo: hello world
+	//     config.kubernetes.io/path: 'deployment_deployment-2.yaml'
 	// spec:
 	//   template:
 	//     spec:
