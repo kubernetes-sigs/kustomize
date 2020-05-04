@@ -996,3 +996,272 @@ metadata:
 		})
 	}
 }
+
+func Test_GetFunction(t *testing.T) {
+	var tests = []struct {
+		name       string
+		resource   string
+		expectedFn string
+		missingFn  bool
+	}{
+
+		// fn annotation
+		{
+			name: "fn annotation",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  annotations:
+    config.kubernetes.io/function: |-
+      container:
+        image: foo:v1.0.0
+`,
+			expectedFn: `
+container:
+    image: foo:v1.0.0`,
+		},
+
+		{
+			name: "storage mounts json style",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  annotations:
+    config.kubernetes.io/function: |-
+      container:
+        image: foo:v1.0.0
+        mounts: [ {type: bind, src: /mount/path, dst: /local/}, {src: myvol, dst: /local/, type: volume}, {dst: /local/, type: tmpfs} ]
+`,
+			expectedFn: `
+container:
+    image: foo:v1.0.0
+    mounts:
+      - type: bind
+        src: /mount/path
+        dst: /local/
+      - type: volume
+        src: myvol
+        dst: /local/
+      - type: tmpfs
+        dst: /local/
+`,
+		},
+
+		{
+			name: "storage mounts yaml style",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  annotations:
+    config.kubernetes.io/function: |-
+      container:
+        image: foo:v1.0.0
+        mounts:
+        - src: /mount/path
+          type: bind
+          dst: /local/
+        - dst: /local/
+          src: myvol
+          type: volume
+        - type: tmpfs
+          dst: /local/
+`,
+			expectedFn: `
+container:
+    image: foo:v1.0.0
+    mounts:
+      - type: bind
+        src: /mount/path
+        dst: /local/
+      - type: volume
+        src: myvol
+        dst: /local/
+      - type: tmpfs
+        dst: /local/
+`,
+		},
+
+		{
+			name: "network",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  annotations:
+    config.kubernetes.io/function: |-
+      container:
+        image: foo:v1.0.0
+        network:
+          required: true
+`,
+			expectedFn: `
+container:
+    image: foo:v1.0.0
+    network:
+        required: true
+`,
+		},
+
+		{
+			name: "path",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  annotations:
+    config.kubernetes.io/function: |-
+      path: foo
+      container:
+        image: foo:v1.0.0
+`,
+			// path should be erased
+			expectedFn: `
+container:
+    image: foo:v1.0.0
+`,
+		},
+
+		{
+			name: "network",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  annotations:
+    config.kubernetes.io/function: |-
+      network: foo
+      container:
+        image: foo:v1.0.0
+`,
+			// network should be erased
+			expectedFn: `
+container:
+    image: foo:v1.0.0
+`,
+		},
+
+		// legacy fn style
+		{name: "legacy fn meta",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  configFn:
+      container:
+        image: foo:v1.0.0
+`,
+			expectedFn: `
+container:
+    image: foo:v1.0.0
+`,
+		},
+
+		// no fn
+		{name: "no fn",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  annotations: {}
+`,
+			missingFn: true,
+		},
+
+		// test network, etc...
+	}
+
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt.name, func(t *testing.T) {
+			resource := yaml.MustParse(tt.resource)
+			fn := GetFunctionSpec(resource)
+			if tt.missingFn {
+				if !assert.Nil(t, fn) {
+					t.FailNow()
+				}
+			} else {
+				b, err := yaml.Marshal(fn)
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				if !assert.Equal(t,
+					strings.TrimSpace(tt.expectedFn),
+					strings.TrimSpace(string(b))) {
+					t.FailNow()
+				}
+			}
+		})
+	}
+}
+
+func Test_GetContainerNetworkRequired(t *testing.T) {
+	tests := []struct {
+		input    string
+		required bool
+	}{
+		{
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+  configFn:
+    container:
+      image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
+      network:
+        required: true
+`,
+			required: true,
+		},
+		{
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+  configFn:
+    container:
+      image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
+      network:
+        required: false
+`,
+			required: false,
+		},
+		{
+
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+  configFn:
+    container:
+      image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
+`,
+			required: false,
+		},
+		{
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
+        network:
+          required: true
+`,
+			required: true,
+		},
+	}
+
+	for _, tc := range tests {
+		cfg, err := yaml.Parse(tc.input)
+		if !assert.NoError(t, err) {
+			return
+		}
+		fn := GetFunctionSpec(cfg)
+		assert.Equal(t, tc.required, fn.Container.Network.Required)
+	}
+}

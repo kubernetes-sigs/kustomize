@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/errors"
-	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/runfn"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -208,10 +208,10 @@ data: {}
 	return []*yaml.RNode{rc}, nil
 }
 
-func toStorageMounts(mounts []string) []filters.StorageMount {
-	var sms []filters.StorageMount
+func toStorageMounts(mounts []string) []runtimeutil.StorageMount {
+	var sms []runtimeutil.StorageMount
 	for _, mount := range mounts {
-		sms = append(sms, filters.StringToStorageMount(mount))
+		sms = append(sms, runtimeutil.StringToStorageMount(mount))
 	}
 	return sms
 }
