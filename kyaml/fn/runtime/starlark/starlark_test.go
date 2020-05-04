@@ -56,6 +56,7 @@ metadata:
   name: nginx-deployment
   annotations:
     foo: bar
+    config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
 spec:
   template:
     spec:
@@ -95,6 +96,7 @@ metadata:
   name: nginx-deployment
   annotations:
     foo: annotation-value
+    config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
 spec:
   template:
     spec:
@@ -133,6 +135,7 @@ metadata:
   name: nginx-deployment
   annotations:
     foo: Deployment enables declarative updates for Pods and ReplicaSets.
+    config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
 spec:
   template:
     spec:
@@ -174,6 +177,7 @@ metadata:
   name: nginx-deployment
   annotations:
     foo: bar
+    config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
 spec:
   template:
     spec:
@@ -213,6 +217,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
+  annotations:
+    config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
 spec:
   template:
     spec:
@@ -266,6 +272,7 @@ metadata:
   name: nginx-deployment-1
   annotations:
     foo: bar
+    config.kubernetes.io/path: 'deployment_nginx-deployment-1.yaml'
 spec:
   template:
     spec:
@@ -280,6 +287,7 @@ metadata:
   name: nginx-deployment-2
   annotations:
     foo: bar
+    config.kubernetes.io/path: 'deployment_nginx-deployment-2.yaml'
 spec:
   template:
     spec:
@@ -319,12 +327,9 @@ run(ctx.resource_list["items"])
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-deployment-2
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
   name: nginx-deployment-1
+  annotations:
+    config.kubernetes.io/path: 'deployment_nginx-deployment-1.yaml'
 spec:
   template:
     spec:
@@ -332,6 +337,13 @@ spec:
       - name: nginx
         # head comment
         image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment-2
+  annotations:
+    config.kubernetes.io/path: 'deployment_nginx-deployment-2.yaml'
 `,
 		},
 		{
@@ -357,6 +369,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment-1
+  annotations:
+    config.kubernetes.io/path: 'deployment_nginx-deployment-1.yaml'
 `,
 		},
 		{
@@ -395,6 +409,7 @@ metadata:
   name: nginx-deployment
   annotations:
     foo: hello world
+    config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
 spec:
   template:
     spec:
@@ -406,7 +421,7 @@ spec:
 			expectedFunctionConfig: `
 kind: Script
 spec:
-  value: hello world
+  value: "hello world"
 `,
 		},
 
@@ -447,6 +462,7 @@ metadata:
   name: nginx-deployment
   annotations:
     foo: hello world
+    config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
 spec:
   template:
     spec:
@@ -458,7 +474,7 @@ spec:
 			expectedFunctionConfig: `
 kind: Script
 spec:
-  value: updated
+  value: "hello world"
 `,
 		},
 	}
