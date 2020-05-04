@@ -10,6 +10,10 @@ to work with the latest _released_ version of kustomize.
 
 Basic Usage
 
+  * [valueAdd](valueAdd.md) - 
+    Add a simple string value easily to various fields, including
+    fields that happen to hold file paths.
+    
   * [configGenerations](configGeneration.md) -
    Rolling update when ConfigMapGenerator changes.
 
