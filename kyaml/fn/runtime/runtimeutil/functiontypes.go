@@ -1,9 +1,12 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package filters
+package runtimeutil
 
 import (
+	"fmt"
+	"strings"
+
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -72,6 +75,10 @@ type StorageMount struct {
 	DstPath string `json:"dst,omitempty" yaml:"dst,omitempty"`
 }
 
+func (s *StorageMount) String() string {
+	return fmt.Sprintf("type=%s,src=%s,dst=%s:ro", s.MountType, s.Src, s.DstPath)
+}
+
 // GetFunctionSpec returns the FunctionSpec for a resource.  Returns
 // nil if the resource does not have a FunctionSpec.
 //
@@ -118,4 +125,53 @@ func getFunctionSpecFromAnnotation(n *yaml.RNode, meta yaml.ResourceMeta) *Funct
 	}
 	_ = yaml.Unmarshal([]byte(s), &fs)
 	return &fs
+}
+
+func StringToStorageMount(s string) StorageMount {
+	m := make(map[string]string)
+	options := strings.Split(s, ",")
+	for _, option := range options {
+		keyVal := strings.SplitN(option, "=", 2)
+		m[keyVal[0]] = keyVal[1]
+	}
+	var sm StorageMount
+	for key, value := range m {
+		switch {
+		case key == "type":
+			sm.MountType = value
+		case key == "src":
+			sm.Src = value
+		case key == "dst":
+			sm.DstPath = value
+		}
+	}
+	return sm
+}
+
+// IsReconcilerFilter filters Resources based on whether or not they are Reconciler Resource.
+// Resources with an apiVersion starting with '*.gcr.io', 'gcr.io' or 'docker.io' are considered
+// Reconciler Resources.
+type IsReconcilerFilter struct {
+	// ExcludeReconcilers if set to true, then Reconcilers will be excluded -- e.g.
+	// Resources with a reconcile container through the apiVersion (gcr.io prefix) or
+	// through the annotations
+	ExcludeReconcilers bool `yaml:"excludeReconcilers,omitempty"`
+
+	// IncludeNonReconcilers if set to true, the NonReconciler will be included.
+	IncludeNonReconcilers bool `yaml:"includeNonReconcilers,omitempty"`
+}
+
+// Filter implements kio.Filter
+func (c *IsReconcilerFilter) Filter(inputs []*yaml.RNode) ([]*yaml.RNode, error) {
+	var out []*yaml.RNode
+	for i := range inputs {
+		isFnResource := GetFunctionSpec(inputs[i]) != nil
+		if isFnResource && !c.ExcludeReconcilers {
+			out = append(out, inputs[i])
+		}
+		if !isFnResource && c.IncludeNonReconcilers {
+			out = append(out, inputs[i])
+		}
+	}
+	return out, nil
 }
