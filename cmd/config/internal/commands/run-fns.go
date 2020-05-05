@@ -42,14 +42,17 @@ func GetRunFnRunner(name string) *RunFnRunner {
 		&r.Image, "image", "",
 		"run this image as a function instead of discovering them.")
 	r.Command.Flags().BoolVar(
-		&r.EnableStar, "enable-star", false, "enable support for starlark functions.")
-	r.Command.Flags().MarkHidden("enable-star")
+		&r.EnableExec, "enable-exec", false, "enable support for exec functions. (Alpha)")
 	r.Command.Flags().StringVar(
-		&r.StarPath, "star-path", "", "run a starlark script as a function.")
-	r.Command.Flags().MarkHidden("star-path")
+		&r.ExecPath, "exec-path", "", "run an executable as a function. (Alpha)")
+	r.Command.Flags().StringArrayVar(
+		&r.ExecArgs, "exec-arg", nil, "arg for executable function. (Alpha)")
+	r.Command.Flags().BoolVar(
+		&r.EnableStar, "enable-star", false, "enable support for starlark functions. (Alpha)")
 	r.Command.Flags().StringVar(
-		&r.StarName, "star-name", "", "name of starlark program.")
-	r.Command.Flags().MarkHidden("star-name")
+		&r.StarPath, "star-path", "", "run a starlark script as a function. (Alpha)")
+	r.Command.Flags().StringVar(
+		&r.StarName, "star-name", "", "name of starlark program. (Alpha)")
 
 	r.Command.Flags().StringVar(
 		&r.ResultsDir, "results-dir", "", "write function results to this dir")
@@ -79,6 +82,9 @@ type RunFnRunner struct {
 	EnableStar         bool
 	StarPath           string
 	StarName           string
+	EnableExec         bool
+	ExecPath           string
+	ExecArgs           []string
 	RunFns             runfn.RunFns
 	ResultsDir         string
 	Network            bool
@@ -94,14 +100,13 @@ func (r *RunFnRunner) runE(c *cobra.Command, args []string) error {
 // Functions to run.
 func (r *RunFnRunner) getContainerFunctions(c *cobra.Command, args, dataItems []string) (
 	[]*yaml.RNode, error) {
-	if r.Image == "" && r.StarPath == "" {
+	if r.Image == "" && r.StarPath == "" && r.ExecPath == "" {
 		return nil, nil
 	}
 
 	var fn *yaml.RNode
 	var err error
 
-	// if image isn't specified, then Functions is empty
 	if r.Image != "" {
 		// create the function spec to set as an annotation
 		fn, err = yaml.Parse(`container: {}`)
@@ -143,8 +148,29 @@ func (r *RunFnRunner) getContainerFunctions(c *cobra.Command, args, dataItems []
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		return nil, nil
+	} else if r.EnableExec && r.ExecPath != "" {
+		// create the function spec to set as an annotation
+		fn, err = yaml.Parse(`exec: {}`)
+		if err != nil {
+			return nil, err
+		}
+
+		err = fn.PipeE(
+			yaml.Lookup("exec"),
+			yaml.SetField("path", yaml.NewScalarRNode(r.ExecPath)))
+		if err != nil {
+			return nil, err
+		}
+
+		// add the arguments
+		for _, a := range r.ExecArgs {
+			err = fn.PipeE(
+				yaml.LookupCreate(yaml.SequenceNode, "exec", "args"),
+				yaml.Append(yaml.NewScalarRNode(a).YNode()))
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	// create the function config
@@ -221,8 +247,12 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 		return errors.Errorf("must specify --enable-star with --star-path")
 	}
 
+	if !r.EnableExec && r.ExecPath != "" {
+		return errors.Errorf("must specify --enable-exec with --exec-path")
+	}
+
 	if c.ArgsLenAtDash() >= 0 && r.Image == "" &&
-		!(r.EnableStar && r.StarPath != "") {
+		!(r.EnableStar && r.StarPath != "") && !(r.EnableExec && r.ExecPath != "") {
 		return errors.Errorf("must specify --image")
 	}
 
@@ -270,6 +300,7 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 		Network:        r.Network,
 		NetworkName:    r.NetworkName,
 		EnableStarlark: r.EnableStar,
+		EnableExec:     r.EnableExec,
 		StorageMounts:  storageMounts,
 		ResultsDir:     r.ResultsDir,
 	}

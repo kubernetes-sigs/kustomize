@@ -30,8 +30,17 @@ type FunctionSpec struct {
 	// Starlark is the spec for running a function as a starlark script
 	Starlark StarlarkSpec `json:"starlark,omitempty" yaml:"starlark,omitempty"`
 
+	// ExecSpec is the spec for running a function as an executable
+	Exec ExecSpec `json:"exec,omitempty" yaml:"exec,omitempty"`
+
 	// Mounts are the storage or directories to mount into the container
 	StorageMounts []StorageMount `json:"mounts,omitempty" yaml:"mounts,omitempty"`
+}
+
+type ExecSpec struct {
+	Path string `json:"path,omitempty" yaml:"path,omitempty"`
+
+	Args []string `json:"args,omitempty" yaml:"args,omitempty"`
 }
 
 // ContainerSpec defines a spec for running a function as a container
