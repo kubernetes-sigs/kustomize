@@ -4,11 +4,17 @@
 package commands
 
 import (
+	"fmt"
+
+	"github.com/go-openapi/spec"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters"
+	"sigs.k8s.io/kustomize/kyaml/setters2"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
 
@@ -86,12 +92,29 @@ func (r *CreateSetterRunner) preRunE(c *cobra.Command, args []string) error {
 	if setterVersion == "v2" {
 		var err error
 		r.OpenAPIFile, err = ext.GetOpenAPIFile(args)
-		r.CreateSetter.Description = r.Set.SetPartialField.Description
-		r.CreateSetter.SetBy = r.Set.SetPartialField.SetBy
-		r.CreateSetter.Type = r.Set.SetPartialField.Type
 		if err != nil {
 			return err
 		}
+
+		if err := openapi.AddSchemaFromFile(r.OpenAPIFile); err != nil {
+			return err
+		}
+
+		// check if substitution with same name exists and throw error
+		ref, err := spec.NewRef(setters2.DefinitionsPrefix + setters2.SubstitutionDefinitionPrefix + r.CreateSetter.Name)
+		if err != nil {
+			return err
+		}
+
+		_, err = openapi.Resolve(&ref)
+		if err == nil {
+			return errors.Errorf(fmt.Sprintf("substitution with name %s already exists, "+
+				"substitution and setter can't have same name", r.CreateSetter.Name))
+		}
+
+		r.CreateSetter.Description = r.Set.SetPartialField.Description
+		r.CreateSetter.SetBy = r.Set.SetPartialField.SetBy
+		r.CreateSetter.Type = r.Set.SetPartialField.Type
 	}
 	return nil
 }

@@ -25,6 +25,7 @@ func TestCreateSubstitutionCommand(t *testing.T) {
 		out               string
 		expectedOpenAPI   string
 		expectedResources string
+		err               string
 	}{
 		{
 			name: "substitution replicas",
@@ -102,6 +103,23 @@ spec:
       - name: sidecar
         image: sidecar:1.7.9
  `,
+		},
+		{
+			name: "error if setter with same name exists",
+			args: []string{
+				"my-image", "--field-value", "nginx:1.7.9", "--pattern", "${my-image-setter}:${my-tag-setter}"},
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.my-image:
+      x-k8s-cli:
+        setter:
+          name: my-image
+          value: "nginx"
+ `,
+			err: "setter with name my-image already exists, substitution and setter can't have same name",
 		},
 		{
 			name: "substitution and create setters 1",
@@ -206,6 +224,14 @@ spec:
 			runner.Command.SetOut(out)
 			runner.Command.SetArgs(append([]string{r.Name()}, test.args...))
 			err = runner.Command.Execute()
+
+			if test.err != "" {
+				if !assert.NotNil(t, err) {
+					t.FailNow()
+				}
+				assert.Equal(t, err.Error(), test.err)
+				return
+			}
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

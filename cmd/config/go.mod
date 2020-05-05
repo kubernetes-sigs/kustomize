@@ -6,6 +6,7 @@ require (
 	github.com/coreos/go-etcd v2.0.0+incompatible // indirect
 	github.com/cpuguy83/go-md2man v1.0.10 // indirect
 	github.com/go-errors/errors v1.0.1
+	github.com/go-openapi/spec v0.19.5
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/posener/complete/v2 v2.0.1-alpha.12
 	github.com/spf13/cobra v1.0.0
