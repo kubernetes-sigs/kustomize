@@ -136,8 +136,11 @@ metadata:
 			},
 		},
 
+		//
+		// Starklark function tests
+		//
 		{
-			name: "exec_function_config_args",
+			name: "exec_function_config",
 			args: func(d string) []string {
 				return []string{"--enable-exec"}
 			},
@@ -395,7 +398,7 @@ metadata:
 		},
 
 		{
-			name:           "container_function_config_args",
+			name:           "container_function_config",
 			skipIfFalseEnv: "KUSTOMIZE_DOCKER_E2E",
 			args:           func(d string) []string { return []string{} },
 			files: func(d string) map[string]string {
@@ -450,6 +453,122 @@ metadata:
     a-string-value: 'a'
     a-int-value: '2'
     a-bool-value: 'true'
+`,
+				}
+			},
+		},
+
+		{
+			name: "starlark_function_config",
+			args: func(d string) []string { return []string{"--enable-star"} },
+			files: func(d string) map[string]string {
+				return map[string]string{
+					"script.star": `
+# set the foo annotation on each resource
+def run(r, fc):
+  for resource in r:
+    resource["metadata"]["annotations"]["a-string-value"] = fc["data"]["stringValue"]
+    resource["metadata"]["annotations"]["a-int-value"] = fc["data"]["intValue"]
+    resource["metadata"]["annotations"]["a-bool-value"] = fc["data"]["boolValue"]
+
+run(ctx.resource_list["items"], ctx.resource_list["functionConfig"])
+`,
+					"config.yaml": `
+apiVersion: example.com/v1alpha1
+kind: Input
+metadata:
+  name: foo
+  annotations:
+    config.kubernetes.io/function: |
+      starlark:
+        path: script.star
+        name: fn
+data:
+  boolValue: true
+  intValue: 2
+  stringValue: a
+`,
+					"deployment.yaml": `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+`,
+				}
+			},
+			expectedFiles: func(d string) map[string]string {
+				return map[string]string{
+					"config.yaml": `
+apiVersion: example.com/v1alpha1
+kind: Input
+metadata:
+  name: foo
+  annotations:
+    a-bool-value: true
+    a-int-value: 2
+    a-string-value: a
+    config.kubernetes.io/function: |
+      starlark:
+        path: script.star
+        name: fn
+data:
+  boolValue: true
+  intValue: 2
+  stringValue: a
+`,
+					"deployment.yaml": `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  annotations:
+    a-bool-value: true
+    a-int-value: 2
+    a-string-value: a
+`,
+				}
+			},
+		},
+
+		{
+			name: "starlark_function_path",
+			args: func(d string) []string {
+				return []string{
+					"--enable-star", "--star-path", "script.star",
+					"--", "stringValue=a", "intValue=2", "boolValue=true",
+				}
+			},
+			files: func(d string) map[string]string {
+				return map[string]string{
+					"script.star": `
+# set the foo annotation on each resource
+def run(r, fc):
+  for resource in r:
+    resource["metadata"]["annotations"]["a-string-value"] = fc["data"]["stringValue"]
+    resource["metadata"]["annotations"]["a-int-value"] = fc["data"]["intValue"]
+    resource["metadata"]["annotations"]["a-bool-value"] = fc["data"]["boolValue"]
+
+run(ctx.resource_list["items"], ctx.resource_list["functionConfig"])
+`,
+					"deployment.yaml": `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+`,
+				}
+			},
+			expectedFiles: func(d string) map[string]string {
+				return map[string]string{
+					"deployment.yaml": `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  annotations:
+    a-bool-value: true
+    a-int-value: 2
+    a-string-value: a
 `,
 				}
 			},
