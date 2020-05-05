@@ -15,6 +15,7 @@ import (
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/container"
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/exec"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/starlark"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -63,6 +64,9 @@ type RunFns struct {
 
 	// EnableStarlark will enable functions run as starlark scripts
 	EnableStarlark bool
+
+	// EnableExec will enable exec functions
+	EnableExec bool
 
 	// DisableContainers will disable functions run as containers
 	DisableContainers bool
@@ -333,16 +337,14 @@ func (r *RunFns) init() {
 
 // ffp provides function filters
 func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode) (kio.Filter, error) {
+	var resultsFile string
+	if r.ResultsDir != "" {
+		resultsFile = filepath.Join(r.ResultsDir, fmt.Sprintf(
+			"results-%v.yaml", r.resultsCount))
+		atomic.AddUint32(&r.resultsCount, 1)
+	}
 	if !r.DisableContainers && spec.Container.Image != "" {
-		var resultsFile string
 		// TODO: Add a test for this behavior
-
-		if r.ResultsDir != "" {
-			resultsFile = filepath.Join(r.ResultsDir, fmt.Sprintf(
-				"results-%v.yaml", r.resultsCount))
-			atomic.AddUint32(&r.resultsCount, 1)
-		}
-
 		cf := &container.Filter{
 			Image:         spec.Container.Image,
 			Network:       spec.Network,
@@ -372,11 +374,24 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode) (kio.Filter
 		}
 		p = path.Join(r.Path, path.Dir(p), spec.Starlark.Path)
 
-		return &starlark.Filter{
-			Name:           spec.Starlark.Name,
-			Path:           p,
-			FunctionFilter: runtimeutil.FunctionFilter{FunctionConfig: api},
-		}, nil
+		sf := &starlark.Filter{Name: spec.Starlark.Name, Path: p}
+
+		sf.FunctionConfig = api
+		sf.GlobalScope = r.GlobalScope
+		sf.ResultsFile = resultsFile
+		sf.DeferFailure = spec.DeferFailure
+		return sf, nil
 	}
+
+	if r.EnableExec && spec.Exec.Path != "" {
+		ef := &exec.Filter{Path: spec.Exec.Path, Args: spec.Exec.Args}
+
+		ef.FunctionConfig = api
+		ef.GlobalScope = r.GlobalScope
+		ef.ResultsFile = resultsFile
+		ef.DeferFailure = spec.DeferFailure
+		return ef, nil
+	}
+
 	return nil, nil
 }
