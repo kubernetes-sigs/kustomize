@@ -199,6 +199,11 @@ metadata:
 		},
 
 		{
+			//
+			// NOTE: Do not change the expected value of this test.  It is to ensure that
+			// exec functions are off by default when run from the CLI.
+			// exec functions execute arbitrary code outside of a sandbox environment.
+			//
 			name: "exec_function_config_disabled",
 			args: func(d string) []string { return []string{} },
 			files: func(d string) map[string]string {
