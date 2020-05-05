@@ -13,7 +13,7 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8 // indirect
 	k8s.io/apimachinery v0.17.0
-	sigs.k8s.io/kustomize/kyaml v0.0.0
+	sigs.k8s.io/kustomize/kyaml v0.1.7
 )
 
-replace sigs.k8s.io/kustomize/kyaml v0.0.0 => ../../kyaml
+replace sigs.k8s.io/kustomize/kyaml v0.1.7 => ../../kyaml
