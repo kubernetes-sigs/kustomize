@@ -70,3 +70,5 @@ Multi Variant Examples
      Alice and Bob.
 
   * [multibases](multibases/README.md) - Composing three variants (dev, staging, production) with a common base.
+
+  * [components](components.md) - Compose three variants (community, enterprise, dev) with a common base, by reusing configuration between them.
