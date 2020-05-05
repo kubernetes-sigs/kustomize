@@ -104,6 +104,8 @@ spec:
   image      nginx   me2      hello world 2   2      
   replicas   3       me1      hello world 1   1      
   tag        1.7.9   me3      hello world 3   1      
+  SUBSTITUTION    PATTERN      SETTERS    
+  image          IMAGE:TAG   [image,tag]  
 `,
 		},
 		{
@@ -176,6 +178,8 @@ spec:
   image      nginx   me2      hello world 2   3      
   replicas   3       me1      hello world 1   2      
   tag        1.7.9   me3      hello world 3   2      
+  SUBSTITUTION    PATTERN      SETTERS    
+  image          IMAGE:TAG   [image,tag]  
 `,
 		},
 		{
@@ -247,6 +251,8 @@ spec:
 `,
 			expected: `  NAME    VALUE   SET BY    DESCRIPTION    COUNT  
   image   nginx   me2      hello world 2   3      
+  SUBSTITUTION    PATTERN      SETTERS    
+  image          IMAGE:TAG   [image,tag]  
 `,
 		},
 	}
