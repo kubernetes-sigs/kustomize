@@ -154,9 +154,8 @@ LEGUME=chickpea
 `)
 	th.WriteF("/app/overlay/configmap/dummy.txt",
 		`Lorem ipsum dolor sit amet, consectetur
- 		 
-adipiscing elit, sed do eiusmod tempor		
-incididunt ut labore et dolore magna aliqua.   
+adipiscing elit, sed do eiusmod tempor
+incididunt ut labore et dolore magna aliqua. 
 `)
 	th.WriteF("/app/overlay/deployment/deployment.yaml", `
 apiVersion: apps/v1
@@ -293,11 +292,8 @@ metadata:
 ---
 apiVersion: v1
 data:
-  nonsense: |
-    Lorem ipsum dolor sit amet, consectetur
-
-    adipiscing elit, sed do eiusmod tempor
-    incididunt ut labore et dolore magna aliqua.
+  nonsense: "Lorem ipsum dolor sit amet, consectetur\nadipiscing elit, sed do eiusmod
+    tempor\nincididunt ut labore et dolore magna aliqua. \n"
 kind: ConfigMap
 metadata:
   annotations:
@@ -306,6 +302,6 @@ metadata:
     app: mungebot
     org: kubernetes
     repo: test-infra
-  name: test-infra-app-config-hh272bg5d4
+  name: test-infra-app-config-f462h769f9
 `)
 }
