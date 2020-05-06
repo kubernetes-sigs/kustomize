@@ -76,8 +76,9 @@ func (r *CreateSubstitutionRunner) preRunE(c *cobra.Command, args []string) erro
 		return err
 	}
 
-	_, err = openapi.Resolve(&ref) // resolve the setter to its openAPI def
-	if err == nil {
+	setter, _ := openapi.Resolve(&ref)
+	// if setter already exists with input substitution name, throw error
+	if setter != nil {
 		return errors.Errorf(fmt.Sprintf("setter with name %s already exists, "+
 			"substitution and setter can't have same name", r.CreateSubstitution.Name))
 	}
