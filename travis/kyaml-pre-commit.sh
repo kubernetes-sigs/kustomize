@@ -18,8 +18,8 @@ functions/examples/validator-resource-requests
 functions/examples/application-cr
 "
 
-# don't run e2e tests in CI
-export KUSTOMIZE_DOCKER_E2E="false"
+# don't run e2e tests in CI by default
+export KUSTOMIZE_DOCKER_E2E=${KUSTOMIZE_DOCKER_E2E:-"false"}
 
 for target in $targets; do
   echo "----- Making $target -----"
