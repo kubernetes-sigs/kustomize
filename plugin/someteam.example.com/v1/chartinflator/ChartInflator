@@ -17,7 +17,7 @@
 #  chartVersion: 9.0.1
 #  helmHome: /abs/path/to/helm/config
 #  helmBin: /abs/path/to/helmBin
-#  releaseNam: nameOfHelmRelease
+#  releaseName: nameOfHelmRelease
 #  releaseNamespace: namespaceWhereHelmWouldApply
 #
 # fetches the given chart from stable/$chartName,
