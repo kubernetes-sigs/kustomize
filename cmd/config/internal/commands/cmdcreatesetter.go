@@ -4,8 +4,6 @@
 package commands
 
 import (
-	"fmt"
-
 	"github.com/go-openapi/spec"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
@@ -106,10 +104,11 @@ func (r *CreateSetterRunner) preRunE(c *cobra.Command, args []string) error {
 			return err
 		}
 
-		_, err = openapi.Resolve(&ref)
-		if err == nil {
-			return errors.Errorf(fmt.Sprintf("substitution with name %s already exists, "+
-				"substitution and setter can't have same name", r.CreateSetter.Name))
+		subst, _ := openapi.Resolve(&ref)
+		// if substitution already exists with the input setter name, throw error
+		if subst != nil {
+			return errors.Errorf("substitution with name %s already exists, "+
+				"substitution and setter can't have same name", r.CreateSetter.Name)
 		}
 
 		r.CreateSetter.Description = r.Set.SetPartialField.Description
