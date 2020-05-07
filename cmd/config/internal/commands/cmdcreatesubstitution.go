@@ -4,12 +4,15 @@
 package commands
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
+	"github.com/go-openapi/spec"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
@@ -61,6 +64,23 @@ func (r *CreateSubstitutionRunner) preRunE(c *cobra.Command, args []string) erro
 	r.OpenAPIFile, err = ext.GetOpenAPIFile(args)
 	if err != nil {
 		return err
+	}
+
+	if err := openapi.AddSchemaFromFile(r.OpenAPIFile); err != nil {
+		return err
+	}
+
+	// check if setter with same name exists and throw error
+	ref, err := spec.NewRef(setters2.DefinitionsPrefix + setters2.SetterDefinitionPrefix + r.CreateSubstitution.Name)
+	if err != nil {
+		return err
+	}
+
+	setter, _ := openapi.Resolve(&ref)
+	// if setter already exists with input substitution name, throw error
+	if setter != nil {
+		return errors.Errorf(fmt.Sprintf("setter with name %s already exists, "+
+			"substitution and setter can't have same name", r.CreateSubstitution.Name))
 	}
 
 	// extract setter name tokens from pattern enclosed in ${}
