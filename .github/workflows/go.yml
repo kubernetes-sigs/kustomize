@@ -24,3 +24,5 @@ jobs:
 
     - name: Build
       run: ./travis/kyaml-pre-commit.sh
+      env:
+        KUSTOMIZE_DOCKER_E2E: true
