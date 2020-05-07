@@ -276,7 +276,7 @@ spec:
 
 			// invoke the setter
 			instance := &List{Name: test.setter}
-			err = instance.List(f.Name(), r.Name())
+			err = instance.ListSetters(f.Name(), r.Name())
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

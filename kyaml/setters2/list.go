@@ -18,10 +18,12 @@ type List struct {
 	Name string
 
 	Setters []SetterDefinition
+
+	Substitutions []SubstitutionDefinition
 }
 
-// List initializes l.Setters with the setters from the OpenAPI definitions in the file
-func (l *List) List(openAPIPath, resourcePath string) error {
+// ListSetters initializes l.Setters with the setters from the OpenAPI definitions in the file
+func (l *List) ListSetters(openAPIPath, resourcePath string) error {
 	if err := openapi.AddSchemaFromFile(openAPIPath); err != nil {
 		return err
 	}
@@ -29,10 +31,22 @@ func (l *List) List(openAPIPath, resourcePath string) error {
 	if err != nil {
 		return err
 	}
-	return l.list(y, resourcePath)
+	return l.listSetters(y, resourcePath)
 }
 
-func (l *List) list(object *yaml.RNode, resourcePath string) error {
+// ListSubst initializes l.Substitutions with the substitutions from the OpenAPI definitions in the file
+func (l *List) ListSubst(openAPIPath string) error {
+	if err := openapi.AddSchemaFromFile(openAPIPath); err != nil {
+		return err
+	}
+	y, err := yaml.ReadFile(openAPIPath)
+	if err != nil {
+		return err
+	}
+	return l.listSubst(y)
+}
+
+func (l *List) listSetters(object *yaml.RNode, resourcePath string) error {
 	// read the OpenAPI definitions
 	def, err := object.Pipe(yaml.LookupCreate(yaml.MappingNode, "openAPI", "definitions"))
 	if err != nil {
@@ -100,6 +114,66 @@ func (l *List) list(object *yaml.RNode, resourcePath string) error {
 	// sort the setters by their name
 	sort.Slice(l.Setters, func(i, j int) bool {
 		return l.Setters[i].Name < l.Setters[j].Name
+	})
+
+	return nil
+}
+
+func (l *List) listSubst(object *yaml.RNode) error {
+	// read the OpenAPI definitions
+	def, err := object.Pipe(yaml.LookupCreate(yaml.MappingNode, "openAPI", "definitions"))
+	if err != nil {
+		return err
+	}
+	if yaml.IsEmpty(def) {
+		return nil
+	}
+
+	// iterate over definitions -- find those that are substitutions
+	err = def.VisitFields(func(node *yaml.MapNode) error {
+		subst := SubstitutionDefinition{}
+
+		// the definition key -- contains the substitution name
+		key := node.Key.YNode().Value
+
+		if !strings.HasPrefix(key, SubstitutionDefinitionPrefix) {
+			// not a substitution -- doesn't have the right prefix
+			return nil
+		}
+
+		substNode, err := node.Value.Pipe(yaml.Lookup(K8sCliExtensionKey, "substitution"))
+		if err != nil {
+			return err
+		}
+		if yaml.IsEmpty(substNode) {
+			// has the substitution prefix, but missing the setter extension
+			return errors.Errorf("missing x-k8s-cli.substitution for %s", key)
+		}
+
+		// unmarshal the yaml for the substitution extension into the definition struct
+		b, err := substNode.String()
+		if err != nil {
+			return err
+		}
+		if err := yaml.Unmarshal([]byte(b), &subst); err != nil {
+			return err
+		}
+
+		if l.Name != "" && l.Name != subst.Name {
+			// not the substitution that was requested by list
+			return nil
+		}
+
+		l.Substitutions = append(l.Substitutions, subst)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// sort the substitutions by their name
+	sort.Slice(l.Substitutions, func(i, j int) bool {
+		return l.Substitutions[i].Name < l.Substitutions[j].Name
 	})
 
 	return nil
