@@ -638,14 +638,6 @@ func build(t *testing.T, binDir string) {
 	if !assert.NoError(t, build.Run()) {
 		t.FailNow()
 	}
-	build = exec.Command("go", "build", "-o",
-		filepath.Join(binDir, "e2econtainerflags"))
-	build.Dir = "e2econtainerflags"
-	build.Stdout = os.Stdout
-	build.Stderr = os.Stderr
-	if !assert.NoError(t, build.Run()) {
-		t.FailNow()
-	}
 
 	build = exec.Command("go", "build", "-o", filepath.Join(binDir, "kyaml"))
 	build.Dir = filepath.Join("..", "..", "..")
@@ -661,14 +653,6 @@ func build(t *testing.T, binDir string) {
 	build = exec.Command(
 		"docker", "build", ".", "-t", "gcr.io/kustomize-functions/e2econtainerconfig")
 	build.Dir = "e2econtainerconfig"
-	build.Stdout = os.Stdout
-	build.Stderr = os.Stderr
-	if !assert.NoError(t, build.Run()) {
-		t.FailNow()
-	}
-	build = exec.Command(
-		"docker", "build", ".", "-t", "gcr.io/kustomize-functions/e2econtainerflags")
-	build.Dir = "e2econtainerflags"
 	build.Stdout = os.Stdout
 	build.Stderr = os.Stderr
 	if !assert.NoError(t, build.Run()) {

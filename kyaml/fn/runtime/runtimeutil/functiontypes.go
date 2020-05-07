@@ -39,8 +39,6 @@ type FunctionSpec struct {
 
 type ExecSpec struct {
 	Path string `json:"path,omitempty" yaml:"path,omitempty"`
-
-	Args []string `json:"args,omitempty" yaml:"args,omitempty"`
 }
 
 // ContainerSpec defines a spec for running a function as a container
