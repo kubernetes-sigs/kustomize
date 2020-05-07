@@ -14,17 +14,19 @@ import (
 	"sync/atomic"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/container"
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/exec"
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/starlark"
 	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
-	"sigs.k8s.io/kustomize/kyaml/starlark"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // RunFns runs the set of configuration functions in a local directory against
 // the Resources in that directory
 type RunFns struct {
-	StorageMounts []filters.StorageMount
+	StorageMounts []runtimeutil.StorageMount
 
 	// Path is the path to the directory containing functions
 	Path string
@@ -63,6 +65,9 @@ type RunFns struct {
 	// EnableStarlark will enable functions run as starlark scripts
 	EnableStarlark bool
 
+	// EnableExec will enable exec functions
+	EnableExec bool
+
 	// DisableContainers will disable functions run as containers
 	DisableContainers bool
 
@@ -75,7 +80,7 @@ type RunFns struct {
 	// functionFilterProvider provides a filter to perform the function.
 	// this is a variable so it can be mocked in tests
 	functionFilterProvider func(
-		filter filters.FunctionSpec, api *yaml.RNode) (kio.Filter, error)
+		filter runtimeutil.FunctionSpec, api *yaml.RNode) (kio.Filter, error)
 }
 
 // Execute runs the command
@@ -173,7 +178,7 @@ func (r RunFns) runFunctions(
 	// check for deferred function errors
 	var errs []string
 	for i := range fltrs {
-		cf, ok := fltrs[i].(filters.DeferFailureFunction)
+		cf, ok := fltrs[i].(runtimeutil.DeferFailureFunction)
 		if !ok {
 			continue
 		}
@@ -196,7 +201,7 @@ func (r RunFns) getFunctionsFromInput(nodes []*yaml.RNode) ([]kio.Filter, error)
 	buff := &kio.PackageBuffer{}
 	err := kio.Pipeline{
 		Inputs:  []kio.Reader{&kio.PackageBuffer{Nodes: nodes}},
-		Filters: []kio.Filter{&filters.IsReconcilerFilter{}},
+		Filters: []kio.Filter{&runtimeutil.IsReconcilerFilter{}},
 		Outputs: []kio.Writer{buff},
 	}.Execute()
 	if err != nil {
@@ -235,7 +240,7 @@ func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
 	var fltrs []kio.Filter
 	for i := range fns {
 		api := fns[i]
-		spec := filters.GetFunctionSpec(api)
+		spec := runtimeutil.GetFunctionSpec(api)
 		if spec.Container.Network.Required {
 			if !r.Network {
 				// TODO(eddiezane): Provide error info about which function needs the network
@@ -251,9 +256,9 @@ func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
 		if c == nil {
 			continue
 		}
-		cf, ok := c.(*filters.ContainerFilter)
+		cf, ok := c.(*container.Filter)
 		if global && ok {
-			cf.GlobalScope = true
+			cf.Exec.GlobalScope = true
 		}
 		fltrs = append(fltrs, c)
 	}
@@ -331,25 +336,25 @@ func (r *RunFns) init() {
 }
 
 // ffp provides function filters
-func (r *RunFns) ffp(spec filters.FunctionSpec, api *yaml.RNode) (kio.Filter, error) {
+func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode) (kio.Filter, error) {
+	var resultsFile string
+	if r.ResultsDir != "" {
+		resultsFile = filepath.Join(r.ResultsDir, fmt.Sprintf(
+			"results-%v.yaml", r.resultsCount))
+		atomic.AddUint32(&r.resultsCount, 1)
+	}
 	if !r.DisableContainers && spec.Container.Image != "" {
-		var resultsFile string
 		// TODO: Add a test for this behavior
-
-		if r.ResultsDir != "" {
-			resultsFile = filepath.Join(r.ResultsDir, fmt.Sprintf(
-				"results-%v.yaml", r.resultsCount))
-			atomic.AddUint32(&r.resultsCount, 1)
-		}
-		return &filters.ContainerFilter{
+		cf := &container.Filter{
 			Image:         spec.Container.Image,
-			Config:        api,
 			Network:       spec.Network,
 			StorageMounts: r.StorageMounts,
-			GlobalScope:   r.GlobalScope,
-			ResultsFile:   resultsFile,
-			DeferFailure:  spec.DeferFailure,
-		}, nil
+		}
+		cf.Exec.FunctionConfig = api
+		cf.Exec.GlobalScope = r.GlobalScope
+		cf.Exec.ResultsFile = resultsFile
+		cf.Exec.DeferFailure = spec.DeferFailure
+		return cf, nil
 	}
 	if r.EnableStarlark && spec.Starlark.Path != "" {
 		// the script path is relative to the function config file
@@ -369,11 +374,24 @@ func (r *RunFns) ffp(spec filters.FunctionSpec, api *yaml.RNode) (kio.Filter, er
 		}
 		p = path.Join(r.Path, path.Dir(p), spec.Starlark.Path)
 
-		return &starlark.Filter{
-			Name:           spec.Starlark.Name,
-			Path:           p,
-			FunctionConfig: api,
-		}, nil
+		sf := &starlark.Filter{Name: spec.Starlark.Name, Path: p}
+
+		sf.FunctionConfig = api
+		sf.GlobalScope = r.GlobalScope
+		sf.ResultsFile = resultsFile
+		sf.DeferFailure = spec.DeferFailure
+		return sf, nil
 	}
+
+	if r.EnableExec && spec.Exec.Path != "" {
+		ef := &exec.Filter{Path: spec.Exec.Path}
+
+		ef.FunctionConfig = api
+		ef.GlobalScope = r.GlobalScope
+		ef.ResultsFile = resultsFile
+		ef.DeferFailure = spec.DeferFailure
+		return ef, nil
+	}
+
 	return nil, nil
 }
