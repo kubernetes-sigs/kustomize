@@ -22,8 +22,10 @@ func TestCreateSetterCommand(t *testing.T) {
 		input             string
 		args              []string
 		out               string
+		inputOpenAPI      string
 		expectedOpenAPI   string
 		expectedResources string
+		err               string
 	}{
 		{
 			name: "add replicas",
@@ -36,6 +38,10 @@ metadata:
 spec:
   replicas: 3
  `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+`,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -58,6 +64,27 @@ spec:
   replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
  `,
 		},
+		{
+			name: "error if substitution with same name exists",
+			args: []string{"my-image", "3", "--description", "hello world", "--set-by", "me"},
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.substitutions.my-image:
+      x-k8s-cli:
+        substitution:
+          name: my-image
+          pattern: something/${my-image-setter}::${my-tag-setter}/nginxotherthing
+          values:
+          - marker: ${my-image-setter}
+            ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
+          - marker: ${my-tag-setter}
+            ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
+ `,
+			err: "substitution with name my-image already exists, substitution and setter can't have same name",
+		},
 	}
 	for i := range tests {
 		test := tests[i]
@@ -71,10 +98,7 @@ spec:
 				t.FailNow()
 			}
 			defer os.Remove(f.Name())
-			err = ioutil.WriteFile(f.Name(), []byte(`
-apiVersion: v1alpha1
-kind: Example
-`), 0600)
+			err = ioutil.WriteFile(f.Name(), []byte(test.inputOpenAPI), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -99,6 +123,14 @@ kind: Example
 			runner.Command.SetOut(out)
 			runner.Command.SetArgs(append([]string{r.Name()}, test.args...))
 			err = runner.Command.Execute()
+			if test.err != "" {
+				if !assert.NotNil(t, err) {
+					t.FailNow()
+				} else {
+					assert.Equal(t, err.Error(), test.err)
+					return
+				}
+			}
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
