@@ -60,22 +60,6 @@ func env() (starlark.Value, error) {
 	return value, nil
 }
 
-func nodeToValue(node *yaml.RNode) (starlark.Value, error) {
-	s, err := node.String()
-	if err != nil {
-		return nil, errors.Wrap(err)
-	}
-	var in map[string]interface{}
-	if err := yaml.Unmarshal([]byte(s), &in); err != nil {
-		return nil, errors.Wrap(err)
-	}
-	value, err := util.Marshal(in)
-	if err != nil {
-		return nil, errors.Wrap(err)
-	}
-	return value, nil
-}
-
 func interfaceToValue(i interface{}) (starlark.Value, error) {
 	b, err := json.Marshal(i)
 	if err != nil {
