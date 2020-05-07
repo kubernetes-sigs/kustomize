@@ -46,8 +46,6 @@ func GetRunFnRunner(name string) *RunFnRunner {
 		&r.EnableExec, "enable-exec", false /*do not change!*/, "enable support for exec functions -- note: exec functions run arbitrary code -- do not use for untrusted configs!!! (Alpha)")
 	r.Command.Flags().StringVar(
 		&r.ExecPath, "exec-path", "", "run an executable as a function. (Alpha)")
-	r.Command.Flags().StringArrayVar(
-		&r.ExecArgs, "exec-arg", nil, "arg for executable function. (Alpha)")
 	r.Command.Flags().BoolVar(
 		&r.EnableStar, "enable-star", false, "enable support for starlark functions. (Alpha)")
 	r.Command.Flags().StringVar(
@@ -85,7 +83,6 @@ type RunFnRunner struct {
 	StarName           string
 	EnableExec         bool
 	ExecPath           string
-	ExecArgs           []string
 	RunFns             runfn.RunFns
 	ResultsDir         string
 	Network            bool
@@ -161,16 +158,6 @@ func (r *RunFnRunner) getContainerFunctions(c *cobra.Command, args, dataItems []
 			yaml.SetField("path", yaml.NewScalarRNode(r.ExecPath)))
 		if err != nil {
 			return nil, err
-		}
-
-		// add the arguments
-		for _, a := range r.ExecArgs {
-			err = fn.PipeE(
-				yaml.LookupCreate(yaml.SequenceNode, "exec", "args"),
-				yaml.Append(yaml.NewScalarRNode(a).YNode()))
-			if err != nil {
-				return nil, err
-			}
 		}
 	}
 

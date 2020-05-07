@@ -384,7 +384,7 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode) (kio.Filter
 	}
 
 	if r.EnableExec && spec.Exec.Path != "" {
-		ef := &exec.Filter{Path: spec.Exec.Path, Args: spec.Exec.Args}
+		ef := &exec.Filter{Path: spec.Exec.Path}
 
 		ef.FunctionConfig = api
 		ef.GlobalScope = r.GlobalScope

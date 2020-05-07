@@ -7,9 +7,81 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/spf13/pflag"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+const service = "Service"
+
+// ExampleResourceList_modify implements a function that sets an annotation on each resource.
+// The annotation value is configured via a flag value parsed from ResourceList.functionConfig.data
+func ExampleResourceList_modify() {
+	// for testing purposes only -- normally read from stdin when Executing
+	input := bytes.NewBufferString(`
+apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+# items are provided as nodes
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: foo
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: foo
+# functionConfig is parsed into flags by framework.Command
+functionConfig:
+  apiVersion: v1
+  kind: ConfigMap
+  data:
+    value: baz
+`)
+
+	// configure the annotation value using a flag parsed from
+	// ResourceList.functionConfig.data.value
+	fs := pflag.NewFlagSet("tests", pflag.ContinueOnError)
+	value := fs.String("value", "", "annotation value")
+	rl := framework.ResourceList{
+		Flags:  fs,
+		Reader: input, // for testing only
+	}
+	if err := rl.Read(); err != nil {
+		panic(err)
+	}
+	for i := range rl.Items {
+		// set the annotation on each resource item
+		if err := rl.Items[i].PipeE(yaml.SetAnnotation("value", *value)); err != nil {
+			panic(err)
+		}
+	}
+	if err := rl.Write(); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// apiVersion: config.kubernetes.io/v1alpha1
+	// kind: ResourceList
+	// items:
+	// - apiVersion: apps/v1
+	//   kind: Deployment
+	//   metadata:
+	//     name: foo
+	//     annotations:
+	//       value: 'baz'
+	// - apiVersion: v1
+	//   kind: Service
+	//   metadata:
+	//     name: foo
+	//     annotations:
+	//       value: 'baz'
+	// functionConfig:
+	//   apiVersion: v1
+	//   kind: ConfigMap
+	//   data:
+	//     value: baz
+}
 
 // ExampleCommand_modify implements a function that sets an annotation on each resource.
 // The annotation value is configured via a flag value parsed from
@@ -102,7 +174,7 @@ func ExampleCommand_generateReplace() {
 
 			// something we already generated, remove it from the list so we regenerate it
 			if meta.Name == functionConfig.Spec.Name &&
-				meta.Kind == "Service" &&
+				meta.Kind == service &&
 				meta.APIVersion == "v1" {
 				continue
 			}
@@ -163,6 +235,95 @@ functionConfig:
 	//     name: bar
 }
 
+// ExampleResourceList_generateReplace generates a resource from a functionConfig.
+// If the resource already exist s, it replaces the resource with a new copy.
+func ExampleResourceList_generateReplace() {
+	input := bytes.NewBufferString(`
+apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+# items are provided as nodes
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: foo
+# functionConfig is parsed into flags by framework.Command
+functionConfig:
+  apiVersion: example.com/v1alpha1
+  kind: ExampleServiceGenerator
+  spec:
+    name: bar
+`)
+
+	// function API definition which will be parsed from the ResourceList.functionConfig
+	// read from stdin
+	type Spec struct {
+		Name string `yaml:"name,omitempty"`
+	}
+	type ExampleServiceGenerator struct {
+		Spec Spec `yaml:"spec,omitempty"`
+	}
+	functionConfig := &ExampleServiceGenerator{}
+
+	rl := framework.ResourceList{
+		FunctionConfig: functionConfig,
+		Reader:         input, // for testing only
+	}
+	if err := rl.Read(); err != nil {
+		panic(err)
+	}
+
+	// remove the last generated resource
+	var newNodes []*yaml.RNode
+	for i := range rl.Items {
+		meta, err := rl.Items[i].GetMeta()
+		if err != nil {
+			panic(err)
+		}
+		// something we already generated, remove it from the list so we regenerate it
+		if meta.Name == functionConfig.Spec.Name &&
+			meta.Kind == service &&
+			meta.APIVersion == "v1" {
+			continue
+		}
+		newNodes = append(newNodes, rl.Items[i])
+	}
+	rl.Items = newNodes
+
+	// generate the resource again
+	n, err := yaml.Parse(fmt.Sprintf(`apiVersion: v1
+kind: Service
+metadata:
+  name: %s
+`, functionConfig.Spec.Name))
+	if err != nil {
+		panic(err)
+	}
+	rl.Items = append(rl.Items, n)
+
+	if err := rl.Write(); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// apiVersion: config.kubernetes.io/v1alpha1
+	// kind: ResourceList
+	// items:
+	// - apiVersion: apps/v1
+	//   kind: Deployment
+	//   metadata:
+	//     name: foo
+	// - apiVersion: v1
+	//   kind: Service
+	//   metadata:
+	//     name: bar
+	// functionConfig:
+	//   apiVersion: example.com/v1alpha1
+	//   kind: ExampleServiceGenerator
+	//   spec:
+	//     name: bar
+}
+
 // ExampleCommand_generateUpdate generates a resource, updating the previously generated
 // copy rather than replacing it.
 //
@@ -191,7 +352,7 @@ func ExampleCommand_generateUpdate() {
 			// something we already generated, reconcile it to make sure it matches what
 			// is specified by the functionConfig
 			if meta.Name == functionConfig.Spec.Name &&
-				meta.Kind == "Service" &&
+				meta.Kind == service &&
 				meta.APIVersion == "v1" {
 				// set some values
 				for k, v := range functionConfig.Spec.Annotations {

@@ -11,18 +11,25 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+// Data contains the items
+type Data struct {
+	StringValue string `yaml:"stringValue,omitempty"`
+
+	IntValue int `yaml:"intValue,omitempty"`
+
+	BoolValue bool `yaml:"boolValue,omitempty"`
+}
+
+// Example defines the ResourceList.functionConfig schema.
+type Example struct {
+	// Data contains configuration data for the Example
+	// Nest values under Data so that the function can accept a ConfigMap as its
+	// functionConfig (`run` generates a ConfigMap for the functionConfig when run with --)
+	Data Data `yaml:"data,omitempty"`
+}
+
 func main() {
-	type Data struct {
-		StringValue string `yaml:"stringValue,omitempty"`
-
-		IntValue int `yaml:"intValue,omitempty"`
-
-		BoolValue bool `yaml:"boolValue,omitempty"`
-	}
-	type ExampleServiceGenerator struct {
-		Data Data `yaml:"data,omitempty"`
-	}
-	functionConfig := &ExampleServiceGenerator{}
+	functionConfig := &Example{}
 
 	cmd := framework.Command(functionConfig, func(items []*yaml.RNode) ([]*yaml.RNode, error) {
 		for i := range items {
