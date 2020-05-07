@@ -16,6 +16,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/container"
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -48,8 +50,8 @@ func TestRunFns_init(t *testing.T) {
 	api, err := yaml.Parse(`apiVersion: apps/v1
 kind: 
 `)
-	spec := filters.FunctionSpec{
-		Container: filters.ContainerSpec{
+	spec := runtimeutil.FunctionSpec{
+		Container: runtimeutil.ContainerSpec{
 			Image: "example.com:version",
 		},
 	}
@@ -57,7 +59,9 @@ kind:
 		return
 	}
 	filter, _ := instance.functionFilterProvider(spec, api)
-	assert.Equal(t, &filters.ContainerFilter{Image: "example.com:version", Config: api}, filter)
+	cf := &container.Filter{Image: "example.com:version"}
+	cf.Exec.FunctionConfig = api
+	assert.Equal(t, cf, filter)
 }
 
 func TestRunFns_Execute__initGlobalScope(t *testing.T) {
@@ -76,8 +80,8 @@ kind:
 		return
 	}
 
-	spec := filters.FunctionSpec{
-		Container: filters.ContainerSpec{
+	spec := runtimeutil.FunctionSpec{
+		Container: runtimeutil.ContainerSpec{
 			Image: "example.com:version",
 		},
 	}
@@ -85,8 +89,10 @@ kind:
 		return
 	}
 	filter, _ := instance.functionFilterProvider(spec, api)
-	assert.Equal(t, &filters.ContainerFilter{
-		Image: "example.com:version", Config: api, GlobalScope: true}, filter)
+	cf := &container.Filter{Image: "example.com:version"}
+	cf.Exec.FunctionConfig = api
+	cf.Exec.GlobalScope = true
+	assert.Equal(t, cf, filter)
 }
 
 func TestRunFns_Execute__initDefault(t *testing.T) {
@@ -143,12 +149,12 @@ func TestRunFns_Execute__initDefault(t *testing.T) {
 		},
 		{
 			name:     "explicit directories in mounts",
-			instance: RunFns{StorageMounts: []filters.StorageMount{{MountType: "volume", Src: "myvol", DstPath: "/local/"}}},
+			instance: RunFns{StorageMounts: []runtimeutil.StorageMount{{MountType: "volume", Src: "myvol", DstPath: "/local/"}}},
 			expected: RunFns{
 				Output:               os.Stdout,
 				Input:                os.Stdin,
 				NoFunctionsFromInput: getFalse(),
-				StorageMounts:        []filters.StorageMount{{MountType: "volume", Src: "myvol", DstPath: "/local/"}},
+				StorageMounts:        []runtimeutil.StorageMount{{MountType: "volume", Src: "myvol", DstPath: "/local/"}},
 			},
 		},
 	}
@@ -751,7 +757,7 @@ replace: StatefulSet
 	var fltrs []*TestFilter
 	instance := RunFns{
 		Path: dir,
-		functionFilterProvider: func(f filters.FunctionSpec, node *yaml.RNode) (kio.Filter, error) {
+		functionFilterProvider: func(f runtimeutil.FunctionSpec, node *yaml.RNode) (kio.Filter, error) {
 			tf := &TestFilter{
 				Exit: errors.Errorf("message: %s", f.Container.Image),
 			}
@@ -927,8 +933,8 @@ func setupTest(t *testing.T) string {
 // getFilterProvider fakes the creation of a filter, replacing the ContainerFiler with
 // a filter to s/kind: Deployment/kind: StatefulSet/g.
 // this can be used to simulate running a filter.
-func getFilterProvider(t *testing.T) func(filters.FunctionSpec, *yaml.RNode) (kio.Filter, error) {
-	return func(f filters.FunctionSpec, node *yaml.RNode) (kio.Filter, error) {
+func getFilterProvider(t *testing.T) func(runtimeutil.FunctionSpec, *yaml.RNode) (kio.Filter, error) {
+	return func(f runtimeutil.FunctionSpec, node *yaml.RNode) (kio.Filter, error) {
 		// parse the filter from the input
 		filter := yaml.YFilter{}
 		b := &bytes.Buffer{}
