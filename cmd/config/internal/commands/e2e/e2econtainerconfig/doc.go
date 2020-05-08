@@ -1,3 +1,6 @@
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 // Package main contains a function to be used for e2e testing.
 //
 // The function is written using the framework, and parses the ResourceList.functionConfig
