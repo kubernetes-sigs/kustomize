@@ -11,7 +11,7 @@ import (
 
 // Function defines a function which mutates or validates a collection of configuration
 // To create a structured validation result, return a Result as the error.
-type Function func(nodes []*yaml.RNode) ([]*yaml.RNode, error)
+type Function func() error
 
 // Result defines a function result which will be set on the emitted ResourceList
 type Result struct {
