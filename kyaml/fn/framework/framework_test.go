@@ -11,7 +11,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func TestCommand_dockerfile(t *testing.T) {
@@ -22,9 +21,9 @@ func TestCommand_dockerfile(t *testing.T) {
 	defer os.RemoveAll(d)
 
 	// create a function
-	cmd := framework.Command(nil, func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
-		return nil, nil
-	})
+
+	resourceList := &framework.ResourceList{}
+	cmd := framework.Command(resourceList, func() error { return nil })
 
 	// generate the Dockerfile
 	cmd.SetArgs([]string{"gen", d})
