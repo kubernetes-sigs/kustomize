@@ -181,3 +181,5 @@ gopkg.in/yaml.v3 v3.0.0-20191120175047-4206685974f2/go.mod h1:K4uyk7z7BCEPqu6E+C
 honnef.co/go/tools v0.0.0-20190102054323-c2f93a96b099/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 sigs.k8s.io/kustomize/kyaml v0.1.9-0.20200501190629-f7909fad7167 h1:138Q3rZVU5mLBF6dFekNuP6D4ZeF4mndI54RBJ8kK8c=
 sigs.k8s.io/kustomize/kyaml v0.1.9-0.20200501190629-f7909fad7167/go.mod h1:I4OFZ1vTPdteiqqCBwW3DI0swPzxBpd99y9CHN5IMUU=
+sigs.k8s.io/kustomize/kyaml v0.1.10 h1:ZZfBnA/kYa9ZxUFIgI9oq3pWKzzA1gGOKgU0Hv/NhVg=
+sigs.k8s.io/kustomize/kyaml v0.1.10/go.mod h1:mPmeBSRy0LTMv6fSrYSoi2yIFNZVouGKDsTekE5kdhs=
