@@ -12,14 +12,16 @@ import (
 
 func main() {
 	var value string
-	cmd := framework.Command(nil, func(items []*yaml.RNode) ([]*yaml.RNode, error) {
-		for i := range items {
+	resourceList := framework.ResourceList{}
+	cmd := framework.Command(&resourceList, func() error {
+		for i := range resourceList.Items {
 			// set the annotation on each resource item
-			if err := items[i].PipeE(yaml.SetAnnotation("value", value)); err != nil {
-				return nil, err
+			err := resourceList.Items[i].PipeE(yaml.SetAnnotation("value", value))
+			if err != nil {
+				return err
 			}
 		}
-		return items, nil
+		return nil
 	})
 	cmd.Flags().StringVar(&value, "value", "", "annotation value")
 

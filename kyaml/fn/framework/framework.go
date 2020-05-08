@@ -163,20 +163,18 @@ func (r *ResourceList) Write() error {
 
 // Command returns a cobra.Command to run a function.
 //
-// The cobra.Command will use a ResourceList to Read() the input, run the provided function,
-// and Write() the output.
-//
-// If functionConfig is non-nil, the ResourceList.functionConfig will be unmarshalled into it.
+// The cobra.Command will use the provided ResourceList to Read() the input,
+// run the provided function, and then Write() the output.
 //
 // The returned cobra.Command will have a "gen" subcommand which can be used to generate
 // a Dockerfile to build the function into a container image
 //
 //		go run main.go gen DIR/
-func Command(functionConfig interface{}, function Function) cobra.Command {
+func Command(resourceList *ResourceList, function Function) cobra.Command {
 	cmd := cobra.Command{}
 	AddGenerateDockerfile(&cmd)
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		err := execute(function, functionConfig, cmd)
+		err := execute(resourceList, function, cmd)
 		if err != nil {
 			fmt.Fprintf(cmd.ErrOrStderr(), "%v", err)
 		}
@@ -209,38 +207,20 @@ CMD ["function"]
 	cmd.AddCommand(gen)
 }
 
-func execute(function Function, functionConfig interface{}, cmd *cobra.Command) error {
-	rl := ResourceList{
-		FunctionConfig: functionConfig,
-		Flags:          cmd.Flags(),
-		Writer:         cmd.OutOrStdout(),
-		Reader:         cmd.InOrStdin(),
-	}
+func execute(rl *ResourceList, function Function, cmd *cobra.Command) error {
+	rl.Reader = cmd.InOrStdin()
+	rl.Writer = cmd.OutOrStdout()
+	rl.Flags = cmd.Flags()
 
 	if err := rl.Read(); err != nil {
 		return err
 	}
 
-	// run the function implementation
-	var err error
-	rl.Items, err = function(rl.Items)
-
-	// set the ResourceList.results for validating functions
-	var result *Result
-	if err != nil {
-		if val, ok := err.(Result); ok {
-			rl.Result = &val
-		} else {
-			return errors.Wrap(err)
-		}
-	}
+	retErr := function()
 
 	if err := rl.Write(); err != nil {
 		return err
 	}
 
-	if result != nil && result.ExitCode() != 0 {
-		return errors.Wrap(err)
-	}
-	return nil
+	return retErr
 }

@@ -89,15 +89,17 @@ functionConfig:
 func ExampleCommand_modify() {
 	// configure the annotation value using a flag parsed from
 	// ResourceList.functionConfig.data.value
+	resourceList := framework.ResourceList{}
 	var value string
-	cmd := framework.Command(nil, func(items []*yaml.RNode) ([]*yaml.RNode, error) {
-		for i := range items {
+	cmd := framework.Command(&resourceList, func() error {
+		for i := range resourceList.Items {
 			// set the annotation on each resource item
-			if err := items[i].PipeE(yaml.SetAnnotation("value", value)); err != nil {
-				return nil, err
+			err := resourceList.Items[i].PipeE(yaml.SetAnnotation("value", value))
+			if err != nil {
+				return err
 			}
 		}
-		return items, nil
+		return nil
 	})
 	cmd.Flags().StringVar(&value, "value", "", "annotation value")
 
@@ -164,12 +166,13 @@ func ExampleCommand_generateReplace() {
 	functionConfig := &ExampleServiceGenerator{}
 
 	// function implementation -- generate a Service resource
-	cmd := framework.Command(functionConfig, func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+	resourceList := &framework.ResourceList{FunctionConfig: functionConfig}
+	cmd := framework.Command(resourceList, func() error {
 		var newNodes []*yaml.RNode
-		for i := range nodes {
-			meta, err := nodes[i].GetMeta()
+		for i := range resourceList.Items {
+			meta, err := resourceList.Items[i].GetMeta()
 			if err != nil {
-				return nil, err
+				return err
 			}
 
 			// something we already generated, remove it from the list so we regenerate it
@@ -178,7 +181,7 @@ func ExampleCommand_generateReplace() {
 				meta.APIVersion == "v1" {
 				continue
 			}
-			newNodes = append(newNodes, nodes[i])
+			newNodes = append(newNodes, resourceList.Items[i])
 		}
 
 		// generate the resource
@@ -188,9 +191,11 @@ metadata:
   name: %s
 `, functionConfig.Spec.Name))
 		if err != nil {
-			return nil, err
+			return err
 		}
-		return append(newNodes, n), nil
+		newNodes = append(newNodes, n)
+		resourceList.Items = newNodes
+		return nil
 	})
 
 	// for testing purposes only -- normally read from stdin when Executing
@@ -341,12 +346,13 @@ func ExampleCommand_generateUpdate() {
 	functionConfig := &ExampleServiceGenerator{}
 
 	// function implementation -- generate or update a Service resource
-	cmd := framework.Command(functionConfig, func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+	resourceList := &framework.ResourceList{FunctionConfig: functionConfig}
+	cmd := framework.Command(resourceList, func() error {
 		var found bool
-		for i := range nodes {
-			meta, err := nodes[i].GetMeta()
+		for i := range resourceList.Items {
+			meta, err := resourceList.Items[i].GetMeta()
 			if err != nil {
-				return nil, err
+				return err
 			}
 
 			// something we already generated, reconcile it to make sure it matches what
@@ -356,9 +362,9 @@ func ExampleCommand_generateUpdate() {
 				meta.APIVersion == "v1" {
 				// set some values
 				for k, v := range functionConfig.Spec.Annotations {
-					err := nodes[i].PipeE(yaml.SetAnnotation(k, v))
+					err := resourceList.Items[i].PipeE(yaml.SetAnnotation(k, v))
 					if err != nil {
-						return nil, err
+						return err
 					}
 				}
 				found = true
@@ -366,7 +372,7 @@ func ExampleCommand_generateUpdate() {
 			}
 		}
 		if found {
-			return nodes, nil
+			return nil
 		}
 
 		// generate the resource if not found
@@ -375,18 +381,18 @@ kind: Service
 metadata:
   name: %s
 `, functionConfig.Spec.Name))
+		if err != nil {
+			return err
+		}
 		for k, v := range functionConfig.Spec.Annotations {
 			err := n.PipeE(yaml.SetAnnotation(k, v))
 			if err != nil {
-				return nil, err
+				return err
 			}
 		}
-		nodes = append(nodes, n)
-		if err != nil {
-			return nil, err
-		}
+		resourceList.Items = append(resourceList.Items, n)
 
-		return nodes, nil
+		return nil
 	})
 
 	// for testing purposes only -- normally read from stdin when Executing
@@ -445,25 +451,26 @@ functionConfig:
 // If any Deployments do not contain spec.replicas, then the function will return results
 // which will be set on ResourceList.results
 func ExampleCommand_validate() {
-	cmd := framework.Command(nil, func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+	resourceList := &framework.ResourceList{}
+	cmd := framework.Command(resourceList, func() error {
 		// validation results
 		var validationResults []framework.Item
 
 		// validate that each Deployment resource has spec.replicas set
-		for i := range nodes {
+		for i := range resourceList.Items {
 			// only check Deployment resources
-			meta, err := nodes[i].GetMeta()
+			meta, err := resourceList.Items[i].GetMeta()
 			if err != nil {
-				return nil, err
+				return err
 			}
 			if meta.Kind != "Deployment" {
 				continue
 			}
 
 			// lookup replicas field
-			r, err := nodes[i].Pipe(yaml.Lookup("spec", "replicas"))
+			r, err := resourceList.Items[i].Pipe(yaml.Lookup("spec", "replicas"))
 			if err != nil {
-				return nil, err
+				return err
 			}
 
 			// check replicas not specified
@@ -481,11 +488,14 @@ func ExampleCommand_validate() {
 			})
 		}
 
-		// framework will only consider results an error if it has at least 1 item
-		return nodes, framework.Result{
-			Name:  "replicas-validator",
-			Items: validationResults,
+		if len(validationResults) > 0 {
+			resourceList.Result = &framework.Result{
+				Name:  "replicas-validator",
+				Items: validationResults,
+			}
 		}
+
+		return resourceList.Result
 	})
 
 	// for testing purposes only -- normally read from stdin when Executing
