@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/kstatus
 
-go 1.12
+go 1.13
 
 require (
 	github.com/ghodss/yaml v1.0.0
@@ -17,5 +17,5 @@ require (
 	k8s.io/apimachinery v0.17.0
 	k8s.io/client-go v0.17.0
 	sigs.k8s.io/controller-runtime v0.4.0
-	sigs.k8s.io/yaml v1.1.0
+	sigs.k8s.io/yaml v1.2.0
 )
