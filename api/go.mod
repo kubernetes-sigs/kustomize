@@ -11,11 +11,11 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/yujunz/go-getter v1.4.1-lite
 	golang.org/x/tools v0.0.0-20191010075000-0337d82405ff
-	gopkg.in/yaml.v2 v2.2.7
+	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api v0.17.0
 	k8s.io/apimachinery v0.17.0
 	k8s.io/client-go v0.17.0
 	k8s.io/kube-openapi v0.0.0-20191107075043-30be4d16710a
-	sigs.k8s.io/kustomize/kyaml v0.1.5
-	sigs.k8s.io/yaml v1.1.0
+	sigs.k8s.io/kustomize/kyaml v0.1.10
+	sigs.k8s.io/yaml v1.2.0
 )
