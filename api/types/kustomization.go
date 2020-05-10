@@ -4,8 +4,9 @@
 package types
 
 const (
-	KustomizationVersion = "kustomize.config.k8s.io/v1beta1"
-	KustomizationKind    = "Kustomization"
+	KustomizationVersion  = "kustomize.config.k8s.io/v1beta1"
+	KustomizationKind     = "Kustomization"
+	MetadataNamespacePath = "metadata/namespace"
 )
 
 // Kustomization holds the information needed to generate customized k8s api resources.
