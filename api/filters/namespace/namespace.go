@@ -78,7 +78,7 @@ func (ns Filter) metaNamespaceHack(obj *yaml.RNode, meta yaml.ResourceMeta) erro
 	}
 	f := fsslice.Filter{
 		FsSlice: []types.FieldSpec{
-			{Path: metaNamespaceField, CreateIfNotPresent: true},
+			{Path: types.MetadataNamespacePath, CreateIfNotPresent: true},
 		},
 		SetValue:   fsslice.SetScalar(ns.Namespace),
 		CreateKind: yaml.ScalarNode, // Namespace is a ScalarNode
@@ -143,7 +143,7 @@ func (ns Filter) removeFieldSpecsForHacks(fs types.FsSlice) types.FsSlice {
 	var val types.FsSlice
 	for i := range fs {
 		// implemented by metaNamespaceHack
-		if fs[i].Path == metaNamespaceField {
+		if fs[i].Path == types.MetadataNamespacePath {
 			continue
 		}
 		// implemented by roleBindingHack
@@ -160,7 +160,6 @@ func (ns Filter) removeFieldSpecsForHacks(fs types.FsSlice) types.FsSlice {
 }
 
 const (
-	metaNamespaceField     = "metadata/namespace"
 	subjectsField          = "subjects"
 	roleBindingKind        = "RoleBinding"
 	clusterRoleBindingKind = "ClusterRoleBinding"
