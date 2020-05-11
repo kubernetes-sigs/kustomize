@@ -42,6 +42,13 @@ setSemVer
 
 cd $module
 
+# 2020/May/11 Windows build temporaraily removed
+# ("- windows" removed from the goos: list below)
+# because of https://github.com/microsoft/go-winio/issues/161
+# Seeing the following in builds:
+#   : /go/pkg/mod/golang.org/x/crypto@v0.0.0-20190923035154-9ee001bba392/ssh/terminal/util_windows.go:97:61:
+#  multiple-value "golang.org/x/sys/windows".GetCurrentProcess() in single-value context
+
 configFile=$(mktemp)
 cat <<EOF >$configFile
 project_name: $module
@@ -73,7 +80,6 @@ builds:
   goos:
   - linux
   - darwin
-  - windows
   goarch:
   - amd64
 archives:
