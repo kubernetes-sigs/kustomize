@@ -173,8 +173,7 @@ EOF
 Make a transformer, which at the moment has no
 equivalent directive in the kustomization file.
 
-It's purpose will be more
-evident momentarily.
+Its purpose will be more evident momentarily.
 
 <!-- @makeTransformerDir @testAgainstLatestRelease -->
 ```
@@ -345,8 +344,9 @@ EOF
 ```
 
 In this output, the namespace of all instances is the
-project name, and the project name also appears
+project name `dog-222`, and the project name also appears
 in the resourceRef field of the `IAMPolicyMember` instances.
+This project name only appears in the project directory name.
 
 Confirm this is happens:
 
