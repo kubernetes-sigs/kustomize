@@ -63,7 +63,7 @@ chartName: minecraft
 
 __`apiVersion` 和 `kind` 字段用于定位插件。__
 
-[k8s 对象]: glossary.md#kKubernetes-风格的对象
+[k8s 对象]: glossary.md#Kubernetes-风格的对象
 
 同时由于 kustomize 插件配置对象也是一个 [k8s 对象]，因此这些字段是必要的。
 
@@ -90,7 +90,7 @@ $XDG_CONFIG_HOME/kustomize/plugin
 
 为了便于插件包（源码、测试、插件数据文件等）的共享，要求每个目录存放一个插件。
 
-在 [Go 插件](#go-plugins)中，还可以为单个插件提供一个 `go.mod` 文件，可以缓解包版本依赖性偏移的问题。
+在 [Go 插件](#go-插件)中，还可以为单个插件提供一个 `go.mod` 文件，可以缓解包版本依赖性偏移的问题。
 
 加载时，kustomize 首先会寻找一个 _可执行_ 文件，名为：
 
@@ -99,7 +99,7 @@ $XDG_CONFIG_HOME/kustomize/plugin
     /${apiVersion}/LOWERCASE(${kind})/${kind}
 ```
 
-如果没有找到这个文件，或者这个文件不是可执行的，kustomize 会在同一目录下寻找一个名为 `${kind}.so` 的文件，并尝试将其作为 [Go插件](#go-plugins) 加载。
+如果没有找到这个文件，或者这个文件不是可执行的，kustomize 会在同一目录下寻找一个名为 `${kind}.so` 的文件，并尝试将其作为 [Go插件](#go-插件) 加载。
 
 如果这两项检查都失败，则插件加载失败，`kustomize build` 失败。
 
@@ -125,7 +125,7 @@ Kustomize 插件不会在任何形式的 kustomize 提供的沙盒中运行。�
 
 ## 创作
 
-插件有 [exec](#exec-plugins) 和 [Go](#go-plugins) 两种.
+插件有 [exec](#exec-插件) 和 [Go](#go-插件) 两种.
 
 ### Exec 插件
 
@@ -194,7 +194,7 @@ data:
   foo: bar
 ```
 
-### Go plugins
+### Go 插件
 
 请务必阅读 [Go plugin 注意事项](../plugins/goPluginCaveats.md)。
 
