@@ -84,7 +84,6 @@ var orderFirst = []string{
 	"ResourceQuota",
 	"StorageClass",
 	"CustomResourceDefinition",
-	"MutatingWebhookConfiguration",
 	"ServiceAccount",
 	"PodSecurityPolicy",
 	"Role",
@@ -102,6 +101,7 @@ var orderFirst = []string{
 	"PodDisruptionBudget",
 }
 var orderLast = []string{
+	"MutatingWebhookConfiguration",
 	"ValidatingWebhookConfiguration",
 }
 var typeOrders = func() map[string]int {
