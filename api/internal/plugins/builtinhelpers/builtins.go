@@ -26,6 +26,7 @@ const (
 	PrefixSuffixTransformer
 	ReplicaCountTransformer
 	SecretGenerator
+	ValueAddTransformer
 )
 
 var stringToBuiltinPluginTypeMap map[string]BuiltinPluginType
@@ -70,4 +71,5 @@ var TransformerFactories = map[BuiltinPluginType]func() resmap.TransformerPlugin
 	PatchTransformer:               builtins.NewPatchTransformerPlugin,
 	PrefixSuffixTransformer:        builtins.NewPrefixSuffixTransformerPlugin,
 	ReplicaCountTransformer:        builtins.NewReplicaCountTransformerPlugin,
+	ValueAddTransformer:            builtins.NewValueAddTransformerPlugin,
 }

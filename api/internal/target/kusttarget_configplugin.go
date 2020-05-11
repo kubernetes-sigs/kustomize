@@ -4,6 +4,8 @@
 package target
 
 import (
+	"fmt"
+
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinhelpers"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -289,5 +291,11 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 			result = append(result, p)
 		}
 		return
+	},
+	// No kustomization file keyword for this yet.
+	builtinhelpers.ValueAddTransformer: func(
+		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
+		result []resmap.Transformer, err error) {
+		return nil, fmt.Errorf("valueadd keyword not yet defined")
 	},
 }
