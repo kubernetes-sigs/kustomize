@@ -486,6 +486,7 @@ items:
     name: service-foo
     annotations:
       config.kubernetes.io/path: 'foo/bar/s.yaml'
+      config.k8s.io/id: '1'
 functionConfig:
   apiVersion: example.com/v1
   kind: Example
@@ -504,6 +505,7 @@ items:
     annotations:
       config.kubernetes.io/path: 'foo/bar/s.yaml'
       new: annotation
+      config.k8s.io/id: '1'
 functionConfig:
   apiVersion: example.com/v1
   kind: Example
@@ -573,6 +575,7 @@ items:
     name: service-foo
     annotations:
       config.kubernetes.io/path: 'foo/bar/s.yaml'
+      config.k8s.io/id: '1'
 functionConfig:
   apiVersion: example.com/v1
   kind: Example
@@ -591,6 +594,7 @@ items:
     annotations:
       config.kubernetes.io/path: 'foo/bar/s.yaml'
       new: annotation
+      config.k8s.io/id: '1'
 functionConfig:
   apiVersion: example.com/v1
   kind: Example
@@ -657,12 +661,14 @@ items:
     name: deployment-foo
     annotations:
       config.kubernetes.io/path: 'baz/bar/d.yaml'
+      config.k8s.io/id: '1'
 - apiVersion: v1
   kind: Service
   metadata:
     name: service-foo
     annotations:
       config.kubernetes.io/path: 'foo/bar/s.yaml'
+      config.k8s.io/id: '2'
 functionConfig:
   apiVersion: example.com/v1
   kind: Example
@@ -680,6 +686,7 @@ items:
     name: deployment-foo
     annotations:
       config.kubernetes.io/path: 'baz/bar/d.yaml'
+      config.k8s.io/id: '1'
 - apiVersion: v1
   kind: Service
   metadata:
@@ -687,6 +694,7 @@ items:
     annotations:
       config.kubernetes.io/path: 'foo/bar/s.yaml'
       new: annotation
+      config.k8s.io/id: '2'
 functionConfig:
   apiVersion: example.com/v1
   kind: Example
@@ -823,6 +831,7 @@ items:
     name: service-foo
     annotations:
       config.kubernetes.io/path: 'foo/bar/s.yaml'
+      config.k8s.io/id: '1'
 functionConfig:
   apiVersion: example.com/v1
   kind: Example
@@ -840,6 +849,7 @@ items:
     name: service-foo
     annotations:
       config.kubernetes.io/path: 'foo/bar/s.yaml'
+      config.k8s.io/id: '1'
       new: annotation
 functionConfig:
   apiVersion: example.com/v1
@@ -893,6 +903,107 @@ metadata:
   name: deployment-foo
   annotations:
     config.kubernetes.io/path: 'baz/bar/d.yaml'
+`,
+			},
+		},
+
+		{
+			name: "copy_comments",
+			run: testRun{
+				expectedInput: `apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-foo
+    annotations:
+      config.kubernetes.io/path: 'foo/b.yaml'
+      config.k8s.io/id: '1'
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: service-foo # name comment
+    annotations:
+      config.kubernetes.io/path: 'foo/a.yaml'
+      config.k8s.io/id: '2'
+functionConfig:
+  apiVersion: example.com/v1
+  kind: Example
+  metadata:
+    name: foo
+    annotations:
+      config.kubernetes.io/path: 'foo/f.yaml'
+`,
+				// delete the comment
+				output: `apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-foo
+    annotations:
+      config.kubernetes.io/path: 'foo/b.yaml'
+      config.k8s.io/id: '1'
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: service-foo
+    annotations:
+      config.kubernetes.io/path: 'foo/a.yaml'
+      config.k8s.io/id: '2'
+      new: annotation
+functionConfig:
+  apiVersion: example.com/v1
+  kind: Example
+  metadata:
+    name: foo
+    annotations:
+      config.kubernetes.io/path: 'foo/f.yaml'
+`,
+			},
+			functionConfig: `
+apiVersion: example.com/v1
+kind: Example
+metadata:
+  name: foo
+  annotations:
+    config.kubernetes.io/path: 'foo/f.yaml'
+`,
+			input: []string{
+				`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-foo
+  annotations:
+    config.kubernetes.io/path: 'foo/b.yaml'
+`,
+				`
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-foo # name comment
+  annotations:
+    config.kubernetes.io/path: 'foo/a.yaml'
+`},
+			expectedOutput: []string{
+				`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-foo
+  annotations:
+    config.kubernetes.io/path: 'foo/b.yaml'
+`, `
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-foo # name comment
+  annotations:
+    config.kubernetes.io/path: 'foo/a.yaml'
+    new: annotation
 `,
 			},
 		},

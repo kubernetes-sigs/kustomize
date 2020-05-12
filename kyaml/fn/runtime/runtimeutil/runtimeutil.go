@@ -5,11 +5,13 @@ package runtimeutil
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"path"
 	"strings"
 
+	"sigs.k8s.io/kustomize/kyaml/comments"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -44,6 +46,8 @@ type FunctionFilter struct {
 
 	// exit saves the error returned from Run
 	exit error
+
+	ids map[string]*yaml.RNode
 }
 
 // GetExit returns the error from Run
@@ -138,6 +142,11 @@ func (c *FunctionFilter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 		return nil, err
 	}
 
+	// set ids on each input so it is possible to copy comments from inputs back to outputs
+	if err := c.setIds(input); err != nil {
+		return nil, err
+	}
+
 	// write the input
 	err = kio.ByteWriter{
 		WrappingAPIVersion:    kio.ResourceListAPIVersion,
@@ -160,6 +169,11 @@ func (c *FunctionFilter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 		return nil, err
 	}
 
+	// copy the comments from the inputs to the outputs
+	if err := c.setComments(output); err != nil {
+		return nil, err
+	}
+
 	if err := c.doResults(r); err != nil {
 		return nil, err
 	}
@@ -176,6 +190,50 @@ func (c *FunctionFilter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 	// emit both the Resources output from the function, and the out-of-scope Resources
 	// which were not provided to the function
 	return append(output, saved...), nil
+}
+
+const idAnnotation = "config.k8s.io/id"
+
+func (c *FunctionFilter) setIds(nodes []*yaml.RNode) error {
+	// set the id on each node to map inputs to outputs
+	var id int
+	c.ids = map[string]*yaml.RNode{}
+	for i := range nodes {
+		id++
+		idStr := fmt.Sprintf("%v", id)
+		err := nodes[i].PipeE(yaml.SetAnnotation(idAnnotation, idStr))
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		c.ids[idStr] = nodes[i]
+	}
+	return nil
+}
+
+func (c *FunctionFilter) setComments(nodes []*yaml.RNode) error {
+	for i := range nodes {
+		node := nodes[i]
+		anID, err := node.Pipe(yaml.GetAnnotation(idAnnotation))
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		if anID == nil {
+			continue
+		}
+
+		var in *yaml.RNode
+		var found bool
+		if in, found = c.ids[anID.YNode().Value]; !found {
+			continue
+		}
+		if err := comments.CopyComments(in, node); err != nil {
+			return errors.Wrap(err)
+		}
+		if err := node.PipeE(yaml.ClearAnnotation(idAnnotation)); err != nil {
+			return errors.Wrap(err)
+		}
+	}
+	return nil
 }
 
 func (c *FunctionFilter) doResults(r *kio.ByteReader) error {

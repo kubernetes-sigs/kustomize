@@ -37,6 +37,18 @@ func (c *copier) VisitScalar(s walk.Sources, _ *openapi.ResourceSchema) (*yaml.R
 func (c *copier) VisitList(s walk.Sources, _ *openapi.ResourceSchema, _ walk.ListKind) (
 	*yaml.RNode, error) {
 	copy(s.Dest(), s.Origin())
+	destItems := s.Dest().Content()
+	originItems := s.Origin().Content()
+
+	for i := 0; i < len(destItems) && i < len(originItems); i++ {
+		dest := destItems[i]
+		origin := originItems[i]
+
+		if dest.Value == origin.Value {
+			copy(yaml.NewRNode(dest), yaml.NewRNode(origin))
+		}
+	}
+
 	return s.Dest(), nil
 }
 
@@ -45,13 +57,13 @@ func copy(from, to *yaml.RNode) {
 	if from == nil || to == nil {
 		return
 	}
-	if from.Document().LineComment != "" {
+	if to.Document().LineComment == "" {
 		to.Document().LineComment = from.Document().LineComment
 	}
-	if from.Document().HeadComment != "" {
+	if to.Document().HeadComment == "" {
 		to.Document().HeadComment = from.Document().HeadComment
 	}
-	if from.Document().FootComment != "" {
+	if to.Document().FootComment == "" {
 		to.Document().FootComment = from.Document().FootComment
 	}
 }
