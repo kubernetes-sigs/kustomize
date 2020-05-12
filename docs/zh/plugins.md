@@ -7,15 +7,15 @@
 
 Kustomize 提供一个插件框架，允许用户开发自己的 _生成器_ 和 _转化器_。
 
-[generator 选项]: ../../examples/generatorOptions.md
-[transformer 配置]: ../../examples/transformerconfigs
+[generatorOptions]: ../../examples/generatorOptions.md
+[transformerconfigs]: ../../examples/transformerconfigs
 
-通过插件，实现 [generator 选项] 和 [transformer 配置] 无法满足的需求。
+通过插件，实现 [generatorOptions] 和 [transformerconfigs] 无法满足的需求。
 
 [12-factor]: https://12factor.net
 
- * 一个 _generator_ 插件可以是一个 helm chart inflator，也可以是一个基于少量自由变量的插件，该插件是一个遵循 [12-factor] 并包含全部组件（deployment, service, scaler, ingress 等）的应用。
- * 一个 _transformer_ 插件可能会执行对特殊容器命令行的编辑，或为其他内置转换器（`namePrefix`、`commonLabels` 等）无法转换的内容提供转换。
+ * _generator_ 插件生成 k8s 资源，比如 [helm chart inflator] 是一个 generator 插件，基于少量自由变量生成一个 [12-factor] 应用所包含的全部组件 deployment，service，scaler，ingress 等）也是一个 generator 插件。
+ * _transformer_ 插件转化（修改）k8s 资源，比如可能会执行对特殊容器命令行的编辑，或为其他内置转换器（`namePrefix`、`commonLabels` 等）无法转换的内容提供转换。
 
 ## `kustomization.yaml` 的格式
 
@@ -123,7 +123,7 @@ Kustomize 插件不会在任何形式的 kustomize 提供的沙盒中运行。�
 
 简单的说，一些从网上下载的 kustomize 插件可能会奇妙地将 k8s 的配置以理想的方式进行改造，同时也会悄悄地对运行 `kustomize build` 的系统做任何用户可以做的事情。
 
-## 创作
+## 编写插件
 
 插件有 [exec](#exec-插件) 和 [Go](#go-插件) 两种.
 
