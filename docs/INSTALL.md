@@ -66,8 +66,16 @@ git checkout kustomize/v3.2.3
 
 #### macOS
 
+For [Homebrew](https://brew.sh) users:
+
 ```
 brew install kustomize
+```
+
+For [MacPorts](https://www.macports.org) users:
+
+```
+sudo port install kustomize
 ```
 
 #### windows
