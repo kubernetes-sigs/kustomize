@@ -22,7 +22,7 @@ generate:
 
 license:
 	(which $(GOBIN)/addlicense || go get github.com/google/addlicense)
-	$(GOBIN)/addlicense  -y 2019 -c "The Kubernetes Authors." -f LICENSE_TEMPLATE .
+	$(GOBIN)/addlicense  -y 2020 -c "The Kubernetes Authors." -f LICENSE_TEMPLATE .
 
 tidy:
 	(cd image && go mod tidy)
@@ -38,5 +38,5 @@ vet:
 	(cd image && go vet ./...)
 
 image:
-	docker build image -t gcr.io/kustomize-functions/example-tshirt:v0.1.0
-	docker push gcr.io/kustomize-functions/example-tshirt:v0.1.0
+	docker build image -t gcr.io/kustomize-functions/example-tshirt:v0.2.0
+	docker push gcr.io/kustomize-functions/example-tshirt:v0.2.0

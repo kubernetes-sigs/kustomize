@@ -5,40 +5,15 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"os"
-	"path/filepath"
 	"strconv"
 	"text/template"
 
-	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
-
-func main() {
-	rw := &kio.ByteReadWriter{
-		Reader:                os.Stdin,
-		Writer:                os.Stdout,
-		KeepReaderAnnotations: true,
-	}
-
-	err := kio.Pipeline{
-		Inputs: []kio.Reader{rw},
-		Filters: []kio.Filter{
-			&filter{rw: rw},       // generate the Resources from the template
-			filters.MergeFilter{}, // merge the generated template
-			// set Resource filenames
-			&filters.FileSetter{FilenamePattern: filepath.Join("config", "%n.yaml")},
-			filters.FormatFilter{}, // format the output
-		},
-		Outputs: []kio.Writer{rw},
-	}.Execute()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
-	}
-}
 
 // define the input API schema as a struct
 type API struct {
@@ -54,61 +29,69 @@ type API struct {
 	} `yaml:"spec"`
 }
 
-// filter implements kio.Filter
-type filter struct {
-	rw *kio.ByteReadWriter
-}
+func main() {
+	functionConfig := &API{}
+	resourceList := &framework.ResourceList{FunctionConfig: functionConfig}
 
-// Filter checks each input and ensures that all containers have cpu and memory
-// reservations set, otherwise it returns an error.
-func (f *filter) Filter(in []*yaml.RNode) ([]*yaml.RNode, error) {
-	api := f.parseAPI()
+	cmd := framework.Command(resourceList, func() error {
+		// initialize API defaults
+		if err := initAPI(functionConfig); err != nil {
+			return err
+		}
 
-	// execute the service template
-	buff := &bytes.Buffer{}
-	t := template.Must(template.New("nginx-service").Parse(serviceTemplate))
-	if err := t.Execute(buff, api); err != nil {
-		return nil, err
-	}
-	s, err := yaml.Parse(buff.String())
-	if err != nil {
-		return nil, err
-	}
+		// execute the service template
+		buff := &bytes.Buffer{}
+		t := template.Must(template.New("nginx-service").Parse(serviceTemplate))
+		if err := t.Execute(buff, functionConfig); err != nil {
+			return err
+		}
+		s, err := yaml.Parse(buff.String())
+		if err != nil {
+			return err
+		}
 
-	// execute the deployment template
-	buff = &bytes.Buffer{}
-	t = template.Must(template.New("nginx-deployment").Parse(deploymentTemplate))
-	if err := t.Execute(buff, api); err != nil {
-		return nil, err
-	}
-	d, err := yaml.Parse(buff.String())
-	if err != nil {
-		return nil, err
-	}
+		// execute the deployment template
+		buff = &bytes.Buffer{}
+		t = template.Must(template.New("nginx-deployment").Parse(deploymentTemplate))
+		if err := t.Execute(buff, functionConfig); err != nil {
+			return err
+		}
+		d, err := yaml.Parse(buff.String())
+		if err != nil {
+			return err
+		}
 
-	// add the template generated Resources to the output -- these will get merged by the next
-	// filter
-	in = append(in, s, d)
-	return in, nil
-}
+		// add the template generated Resources to the output -- these will get merged by the next
+		// filter
+		resourceList.Items = append(resourceList.Items, s, d)
 
-// parseAPI parses the functionConfig into an API struct, and validates the input
-func (f *filter) parseAPI() API {
-	// parse the input function config -- TODO: simplify this
-	var api API
-	if err := yaml.Unmarshal([]byte(f.rw.FunctionConfig.MustString()), &api); err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
+		// merge the new copies with the old copies of each resource
+		resourceList.Items, err = filters.MergeFilter{}.Filter(resourceList.Items)
+		if err != nil {
+			return err
+		}
+
+		// apply formatting
+		resourceList.Items, err = filters.FormatFilter{}.Filter(resourceList.Items)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
+}
 
+func initAPI(api *API) error {
 	// Default functionConfig values from environment variables if they are not set
 	// in the functionConfig
 	r := os.Getenv("REPLICAS")
 	if r != "" && api.Spec.Replicas == nil {
 		replicas, err := strconv.Atoi(r)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n", err)
-			os.Exit(1)
+			return errors.Wrap(err)
 		}
 		api.Spec.Replicas = &replicas
 	}
@@ -117,11 +100,10 @@ func (f *filter) parseAPI() API {
 		api.Spec.Replicas = &r
 	}
 	if api.Metadata.Name == "" {
-		fmt.Fprintf(os.Stderr, "must specify metadata.name\n")
-		os.Exit(1)
+		return errors.Errorf("must specify metadata.name\n")
 	}
 
-	return api
+	return nil
 }
 
 var serviceTemplate = `

@@ -38,5 +38,5 @@ vet:
 	(cd image && go vet ./...)
 
 image:
-	docker build image -t gcr.io/kustomize-functions/example-nginx:v0.1.0
-	docker push gcr.io/kustomize-functions/example-nginx:v0.1.0
+	docker build image -t gcr.io/kustomize-functions/example-nginx:v0.2.0
+	docker push gcr.io/kustomize-functions/example-nginx:v0.2.0
