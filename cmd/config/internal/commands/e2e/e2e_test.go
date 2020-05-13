@@ -573,6 +573,90 @@ metadata:
 				}
 			},
 		},
+
+		{
+			name: "starlark_function_url",
+			args: func(d string) []string {
+				return []string{
+					"--enable-star", "--star-url", "https://storage.googleapis.com/kustomize-starlark-functions/annotate.star",
+					"--star-name", "annotate",
+					"--", "stringValue=a", "intValue=2", "boolValue=true",
+				}
+			},
+			files: func(d string) map[string]string {
+				return map[string]string{
+					"deployment.yaml": `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+`,
+				}
+			},
+			expectedFiles: func(d string) map[string]string {
+				return map[string]string{
+					"deployment.yaml": `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  annotations:
+    a-bool-value: true
+    a-int-value: 2
+    a-string-value: a
+`,
+				}
+			},
+		},
+
+		{
+			name: "starlark_function_url_config",
+			args: func(d string) []string {
+				return []string{"--enable-star"}
+			},
+			files: func(d string) map[string]string {
+				return map[string]string{
+					"config.yaml": `
+apiVersion: example.com/v1alpha1
+kind: Input
+metadata:
+  name: foo
+  annotations:
+    a-bool-value: true
+    a-int-value: 2
+    a-string-value: a
+    config.kubernetes.io/function: |
+      starlark:
+        url: https://storage.googleapis.com/kustomize-starlark-functions/annotate.star
+        name: fn
+data:
+  boolValue: true
+  intValue: 2
+  stringValue: a
+`,
+					"deployment.yaml": `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+`,
+				}
+			},
+			expectedFiles: func(d string) map[string]string {
+				return map[string]string{
+					"deployment.yaml": `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  annotations:
+    a-bool-value: true
+    a-int-value: 2
+    a-string-value: a
+`,
+				}
+			},
+		},
 	}
 
 	for i := range tests {
@@ -607,7 +691,7 @@ metadata:
 
 			err = cmd.Run()
 			if tt.expectedErr != "" {
-				if !assert.Contains(t, stdErr.String(), tt.expectedErr) {
+				if !assert.Contains(t, stdErr.String(), tt.expectedErr, stdErr.String()) {
 					t.FailNow()
 				}
 				return
@@ -618,10 +702,10 @@ metadata:
 
 			for path, data := range tt.expectedFiles(binDir) {
 				b, err := ioutil.ReadFile(path)
-				if !assert.NoError(t, err) {
+				if !assert.NoError(t, err, stdErr.String()) {
 					t.FailNow()
 				}
-				if !assert.Equal(t, strings.TrimSpace(data), strings.TrimSpace(string(b))) {
+				if !assert.Equal(t, strings.TrimSpace(data), strings.TrimSpace(string(b)), stdErr.String()) {
 					t.FailNow()
 				}
 			}
