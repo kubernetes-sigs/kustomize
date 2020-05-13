@@ -465,15 +465,15 @@ spec:
 EOF
 ```
 
-Define an `external_db` component, using `kind: KustomizationPatch`, that
-creates a `Secret` for the DB password and a new entry in the `ConfigMap`:
+Define an `external_db` component, using `kind: v1alpha1/KustomizationPatch`,
+that creates a `Secret` for the DB password and a new entry in the `ConfigMap`:
 
 ```shell
 EXT_DB=$DEMO_HOME/components/external_db
 mkdir -p $EXT_DB
 
 cat <<EOF >$EXT_DB/kustomization.yaml
-kind: KustomizationPatch  # <-- Component notation
+kind: v1alpha1/KustomizationPatch  # <-- Component notation
 
 secretGenerator:
 - name: dbpass
@@ -528,7 +528,7 @@ LDAP=$DEMO_HOME/components/ldap
 mkdir -p $LDAP
 
 cat <<EOF >$LDAP/kustomization.yaml
-kind: KustomizationPatch
+kind: v1alpha1/KustomizationPatch
 
 secretGenerator:
 - name: ldappass
@@ -582,7 +582,7 @@ RECAPTCHA=$DEMO_HOME/components/recaptcha
 mkdir -p $RECAPTCHA
 
 cat <<EOF >$RECAPTCHA/kustomization.yaml
-kind: KustomizationPatch
+kind: v1alpha1/KustomizationPatch
 
 secretGenerator:
 - name: recaptcha
