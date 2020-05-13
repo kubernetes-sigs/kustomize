@@ -126,7 +126,8 @@ hello: world
 			want: `[{"name":"s1"},{"name":"s2"}]`,
 		},
 	}
-	for _, tt := range tests {
+	for idx := range tests {
+		tt := tests[idx]
 		t.Run(tt.name, func(t *testing.T) {
 			instance, err := Parse(tt.ydoc)
 			if !assert.NoError(t, err) {
