@@ -110,13 +110,14 @@ EOF
 
 Define corresponding instances of `IAMPolicyMember`.
 
-The `resourceRef/external` fields in these instances
-are intentionally incomplete, and will be completed
-by kustomize below.
+The values in the `resourceRef/external` fields in these instances
+are only partially complete.  kustomize will add projectIds to
+these below.
 
-The boilerplate in these instances could be removed
-by making a custom generator, but that's for
-different tutorial.
+The boilerplate in these instances could be eliminated
+by making a _custom generator_, but that's for
+different tutorial, and with only three instances here
+it's not worth it the effort.
 
 <!-- @policyMembers @testAgainstLatestRelease -->
 ```
@@ -170,19 +171,22 @@ resources:
 EOF
 ```
 
-Make a transformer, which at the moment has no
-equivalent directive in the kustomization file.
+Make a transformer configration file.
 
-Its purpose will be more evident momentarily.
+The transformer used is called `AddValueTransformer`.  It's
+intended to implement the 'add' operation of
+[IETF RFC 6902 JSON].   The add operation is simple declaration
+of what value to add, and a powerful syntax for specifying where
+to add the value.  The value can, for example, be inserted 
+into an existing file path as a prefix, postfix, or some change
+in the middle (e.g. `/volume/data` becomes `/volume/projectId/data`).
 
-<!-- @makeTransformerDir @testAgainstLatestRelease -->
-```
-mkdir -p $DEMO_HOME/transformers/setProject
-cat <<'EOF' >$DEMO_HOME/transformers/setProject/kustomization.yaml
-resources:
-- setProject.yaml
-EOF
-```
+[IETF RFC 6902 JSON]: https://tools.ietf.org/html/rfc6902
+
+
+At the time of writing, this transformer has no dedicated keyword
+in the kustomization file to hold it's config.  This means 
+the config must live in its own file:
 
 <!-- @defineSetProjectTransformer @testAgainstLatestRelease -->
 ```
@@ -203,6 +207,34 @@ targets:
     kind: IAMPolicyMember
   fieldPath: spec/resourceRef/external
   filePathPosition: 2
+EOF
+```
+
+This file defined both the value to insert, and a list of places to
+insert it.  It's saying 1) _take the name of the directory I am in_ and
+2) use the name as a namespace on all objects in scope, and 3) add that
+name to the 2nd position in the file path found in the `spec/resourceRef/external`
+field of all `IAMPolicyMember` instances.
+
+
+To be used, this transformer config file must be referenced
+from some kustomization file's `transformers:` field.
+
+This field can contain a path directly to the transformer config file,
+or a path to an encapsulating kustomization root.  The latter approach
+allows any number of transformers to be loaded as a group from a local
+or remote location.
+
+Here an example of the latter case that uses a kustomization file to
+"hold" pointers to transformer configs, although in this case it 
+references only one transformer config.
+
+<!-- @makeTransformerDir @testAgainstLatestRelease -->
+```
+mkdir -p $DEMO_HOME/transformers/setProject
+cat <<'EOF' >$DEMO_HOME/transformers/setProject/kustomization.yaml
+resources:
+- setProject.yaml
 EOF
 ```
 
@@ -241,8 +273,7 @@ transformers:
 EOF
 ```
 
-Then, optionally, a target to deploy all the
-projects at once:
+Then, optionally, a target to deploy all the projects at once:
 
 <!-- @defineAllTarget @testAgainstLatestRelease -->
 ```
@@ -348,14 +379,14 @@ project name `dog-222`, and the project name also appears
 in the resourceRef field of the `IAMPolicyMember` instances.
 This project name only appears in the project directory name.
 
-Confirm this is happens:
+Run the build:
 
 <!-- @runIt @testAgainstLatestRelease -->
 ```
 kustomize build $DEMO_HOME/projects/dog-222 >$DEMO_HOME/out_actual.yaml
 ```
 
-Confirm expectations:
+and confirm that the actual output matches the expected output:
 
 <!-- @diffShouldExitZero @testAgainstLatestRelease -->
 ```
