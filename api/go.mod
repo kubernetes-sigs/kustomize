@@ -11,7 +11,7 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/yujunz/go-getter v1.4.1-lite
 	golang.org/x/tools v0.0.0-20191010075000-0337d82405ff
-	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.17.0
 	k8s.io/apimachinery v0.17.0
 	k8s.io/client-go v0.17.0
