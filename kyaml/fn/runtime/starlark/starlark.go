@@ -50,9 +50,9 @@ func (sf *Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 }
 
 func (sf *Filter) setup() error {
-	if sf.URL != "" && sf.Path != "" ||
-		sf.URL != "" && sf.Program != "" ||
-		sf.Path != "" && sf.Program != "" {
+	if (sf.URL != "" && sf.Path != "") ||
+		(sf.URL != "" && sf.Program != "") ||
+		(sf.Path != "" && sf.Program != "") {
 		return errors.Errorf("Filter Path, Program and URL are mutually exclusive")
 	}
 
