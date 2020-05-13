@@ -20,6 +20,8 @@ func TestIsYaml1_1NonString(t *testing.T) {
 	testCases := []testCase{
 		{val: "hello world", expected: false},
 		{val: "2.0", expected: true},
+		{val: "2", expected: true},
+		{val: "true", expected: true},
 		{val: "1.0\nhello", expected: false}, // multiline strings should always be false
 	}
 

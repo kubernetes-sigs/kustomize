@@ -4,6 +4,9 @@
 package settersutil
 
 import (
+	"io/ioutil"
+	"os"
+
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
@@ -47,6 +50,22 @@ func (fs FieldSetter) Set(openAPIPath, resourcesPath string) (int, error) {
 		Description: fs.Description,
 		SetBy:       fs.SetBy,
 	}
+
+	// the input field value is updated in the openAPI file and then parsed
+	// at to get the value and set it to resource files, but if there is error
+	// after updating openAPI file and while updating resources, the openAPI
+	// file should be reverted, as set operation failed
+	stat, err := os.Stat(openAPIPath)
+	if err != nil {
+		return 0, err
+	}
+
+	curOpenAPI, err := ioutil.ReadFile(openAPIPath)
+	if err != nil {
+		return 0, err
+	}
+
+	// write the new input value to openAPI file
 	if err := soa.UpdateFile(openAPIPath); err != nil {
 		return 0, err
 	}
@@ -61,11 +80,18 @@ func (fs FieldSetter) Set(openAPIPath, resourcesPath string) (int, error) {
 	// hence, rest of the files should not be deleted
 	inout := &kio.LocalPackageReadWriter{PackagePath: resourcesPath, NoDeleteFiles: true}
 	s := &setters2.Set{Name: fs.Name}
-	err := kio.Pipeline{
+	err = kio.Pipeline{
 		Inputs:  []kio.Reader{inout},
 		Filters: []kio.Filter{setters2.SetAll(s)},
 		Outputs: []kio.Writer{inout},
 	}.Execute()
+
+	// revert openAPI file if set operation fails
+	if err != nil {
+		if writeErr := ioutil.WriteFile(openAPIPath, curOpenAPI, stat.Mode().Perm()); writeErr != nil {
+			return 0, writeErr
+		}
+	}
 	return s.Count, err
 }
 

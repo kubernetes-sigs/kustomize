@@ -63,7 +63,7 @@ spec:
 		},
 		{
 			name:        "set-foo-type",
-			description: "if a type is specified for a setter, ensure the field is properly quoted",
+			description: "if a type is specified for a setter, ensure the field is of provided type",
 			setter:      "foo",
 			openapi: `
 openAPI:
@@ -73,7 +73,7 @@ openAPI:
         setter:
           name: foo
           value: "4"
-      type: string
+      type: integer
  `,
 			input: `
 apiVersion: apps/v1
@@ -89,12 +89,12 @@ kind: Deployment
 metadata:
   name: nginx-deployment
   annotations:
-    foo: "4" # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+    foo: 4 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
  `,
 		},
 		{
-			name:        "set-foo-type-wrong",
-			description: "if a type is specified for a setter, for the field to the type",
+			name:        "set-foo-type-float",
+			description: "if a type is specified for a setter, ensure the field is of provided type",
 			setter:      "foo",
 			openapi: `
 openAPI:
@@ -103,8 +103,8 @@ openAPI:
       x-k8s-cli:
         setter:
           name: foo
-          value: "4"
-      type: boolean
+          value: "4.0"
+      type: number
  `,
 			input: `
 apiVersion: apps/v1
@@ -120,7 +120,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
   annotations:
-    foo: !!bool 4 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+    foo: 4.0 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
  `,
 		},
 		{

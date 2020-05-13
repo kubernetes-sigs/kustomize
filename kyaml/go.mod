@@ -6,6 +6,8 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/spec v0.19.5
+	github.com/go-openapi/strfmt v0.19.5
+	github.com/go-openapi/validate v0.19.8
 	github.com/qri-io/starlib v0.4.2-0.20200213133954-ff2e8cd5ef8d
 	github.com/sergi/go-diff v1.1.0
 	github.com/spf13/cobra v1.0.0
