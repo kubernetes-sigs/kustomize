@@ -356,25 +356,29 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode) (kio.Filter
 		cf.Exec.DeferFailure = spec.DeferFailure
 		return cf, nil
 	}
-	if r.EnableStarlark && spec.Starlark.Path != "" {
+	if r.EnableStarlark && (spec.Starlark.Path != "" || spec.Starlark.URL != "") {
 		// the script path is relative to the function config file
 		m, err := api.GetMeta()
 		if err != nil {
 			return nil, errors.Wrap(err)
 		}
-		p := m.Annotations[kioutil.PathAnnotation]
-		spec.Starlark.Path = path.Clean(spec.Starlark.Path)
-		if path.IsAbs(spec.Starlark.Path) {
-			return nil, errors.Errorf(
-				"absolute function path %s not allowed", spec.Starlark.Path)
-		}
-		if strings.HasPrefix(spec.Starlark.Path, "..") {
-			return nil, errors.Errorf(
-				"function path %s not allowed to start with ../", spec.Starlark.Path)
-		}
-		p = path.Join(r.Path, path.Dir(p), spec.Starlark.Path)
 
-		sf := &starlark.Filter{Name: spec.Starlark.Name, Path: p}
+		var p string
+		if spec.Starlark.Path != "" {
+			p = m.Annotations[kioutil.PathAnnotation]
+			spec.Starlark.Path = path.Clean(spec.Starlark.Path)
+			if path.IsAbs(spec.Starlark.Path) {
+				return nil, errors.Errorf(
+					"absolute function path %s not allowed", spec.Starlark.Path)
+			}
+			if strings.HasPrefix(spec.Starlark.Path, "..") {
+				return nil, errors.Errorf(
+					"function path %s not allowed to start with ../", spec.Starlark.Path)
+			}
+			p = path.Join(r.Path, path.Dir(p), spec.Starlark.Path)
+		}
+
+		sf := &starlark.Filter{Name: spec.Starlark.Name, Path: p, URL: spec.Starlark.URL}
 
 		sf.FunctionConfig = api
 		sf.GlobalScope = r.GlobalScope
