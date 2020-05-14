@@ -133,6 +133,10 @@ func (s *Set) substitute(field *yaml.RNode, ext *cliExtension, _ *spec.Schema) (
 			return false, errors.Wrap(err)
 		}
 
+		if err := validateAgainstSchema(subSetter, setter); err != nil {
+			return false, err
+		}
+
 		if val, found := subSetter.Setter.EnumValues[subSetter.Setter.Value]; found {
 			// the setter has an enum-map.  we should replace the marker with the
 			// enum value looked up from the map rather than the enum key

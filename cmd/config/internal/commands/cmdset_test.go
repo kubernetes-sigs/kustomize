@@ -310,6 +310,99 @@ spec:
  `,
 			errMsg: "name in body should be at most 5 chars long",
 		},
+
+		{
+			name: "validate substitution",
+			args: []string{"tag", "1.8.1"},
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: image
+          value: "nginx"
+    io.k8s.cli.setters.tag:
+      type: string
+      minLength: 6
+      x-k8s-cli:
+        setter:
+          name: tag
+          value: "1.7.9"
+    io.k8s.cli.substitutions.image:
+      x-k8s-cli:
+        substitution:
+          name: image
+          pattern: IMAGE:TAG
+          values:
+          - marker: IMAGE
+            ref: '#/definitions/io.k8s.cli.setters.image'
+          - marker: TAG
+            ref: '#/definitions/io.k8s.cli.setters.tag'
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image"}
+      - name: sidecar
+        image: sidecar:1.7.9
+ `,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: image
+          value: "nginx"
+    io.k8s.cli.setters.tag:
+      type: string
+      minLength: 6
+      x-k8s-cli:
+        setter:
+          name: tag
+          value: "1.7.9"
+    io.k8s.cli.substitutions.image:
+      x-k8s-cli:
+        substitution:
+          name: image
+          pattern: IMAGE:TAG
+          values:
+          - marker: IMAGE
+            ref: '#/definitions/io.k8s.cli.setters.image'
+          - marker: TAG
+            ref: '#/definitions/io.k8s.cli.setters.tag'
+
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image"}
+      - name: sidecar
+        image: sidecar:1.7.9
+`,
+			errMsg: "tag in body should be at least 6 chars long",
+		},
 	}
 	for i := range tests {
 		test := tests[i]
