@@ -9,8 +9,8 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-// Test kustomization.yaml files with  kind: KustomizationPatch
-func writeKustomizationPatchBase(th kusttest_test.Harness) {
+// Test kustomization.yaml files with  kind: Component
+func writeComponentBase(th kusttest_test.Harness) {
 	th.WriteK("/app/base", `
 resources:
 - deploy.yaml
@@ -30,10 +30,10 @@ spec:
 `)
 }
 
-func writeKustomizationPatchPatch(th kusttest_test.Harness) {
+func writeComponentPatch(th kusttest_test.Harness) {
 	th.WriteF("/app/patch/kustomization.yaml", `
 apiVersion: kustomize.config.k8s.io/v1beta1
-kind: KustomizationPatch
+kind: Component
 namePrefix: patched-
 replicas:
 - name: storefront
@@ -57,7 +57,7 @@ spec:
 `)
 }
 
-func writeKustomizationPatchProd(th kusttest_test.Harness) {
+func writeComponentProd(th kusttest_test.Harness) {
 	th.WriteK("/app/prod", `
 resources:
 - ../base
@@ -74,13 +74,13 @@ spec:
 `)
 }
 
-// KustomizationPatch are inserted into the resource hierarchy as the parent of those
+// Components are inserted into the resource hierarchy as the parent of those
 // resources that come before it in the resources list of the parent Kustomization.
-func TestBasicKustomizationPatch(t *testing.T) {
+func TestBasicComponent(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	writeKustomizationPatchBase(th)
-	writeKustomizationPatchPatch(th)
-	writeKustomizationPatchProd(th)
+	writeComponentBase(th)
+	writeComponentPatch(th)
+	writeComponentProd(th)
 	m := th.Run("/app/prod", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
@@ -117,14 +117,14 @@ spec:
 `)
 }
 
-func TestMultipleKustomizationPatches(t *testing.T) {
+func TestMultipleComponentes(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	writeKustomizationPatchBase(th)
-	writeKustomizationPatchPatch(th)
-	writeKustomizationPatchProd(th)
+	writeComponentBase(th)
+	writeComponentPatch(th)
+	writeComponentProd(th)
 	th.WriteF("/app/additionalpatch/kustomization.yaml", `
 apiVersion: kustomize.config.k8s.io/v1beta1
-kind: KustomizationPatch
+kind: Component
 configMapGenerator:
 - name: my-configmap
   behavior: merge
@@ -174,14 +174,14 @@ spec:
 `)
 }
 
-func TestNestedKustomizationPatches(t *testing.T) {
+func TestNestedComponents(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	writeKustomizationPatchBase(th)
-	writeKustomizationPatchPatch(th)
-	writeKustomizationPatchProd(th)
+	writeComponentBase(th)
+	writeComponentPatch(th)
+	writeComponentProd(th)
 	th.WriteF("/app/additionalpatch/kustomization.yaml", `
 apiVersion: kustomize.config.k8s.io/v1beta1
-kind: KustomizationPatch
+kind: Component
 resources:
 - ../patch
 configMapGenerator:
@@ -234,11 +234,11 @@ spec:
 
 // If a patch sets a name prefix on a base, then that base can also be separately included
 // without being affected by the patch in another branch of the resource tree
-func TestBasicKustomizationPatchWithRepeatedBase(t *testing.T) {
+func TestBasicComponentWithRepeatedBase(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	writeKustomizationPatchBase(th)
-	writeKustomizationPatchPatch(th)
-	writeKustomizationPatchProd(th)
+	writeComponentBase(th)
+	writeComponentPatch(th)
+	writeComponentProd(th)
 	th.WriteK("/app/repeated", `
 resources:
 - ../base
@@ -295,13 +295,13 @@ spec:
 `)
 }
 
-func TestApplyingKustomizationPatchDirectlySameAsKustomization(t *testing.T) {
+func TestApplyingComponentDirectlySameAsKustomization(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	writeKustomizationPatchBase(th)
-	writeKustomizationPatchPatch(th)
+	writeComponentBase(th)
+	writeComponentPatch(th)
 	th.WriteF("/app/solopatch/kustomization.yaml", `
 apiVersion: kustomize.config.k8s.io/v1beta1
-kind: KustomizationPatch
+kind: Component
 resources:
 - ../base
 configMapGenerator:
