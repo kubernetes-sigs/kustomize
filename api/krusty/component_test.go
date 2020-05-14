@@ -4,6 +4,7 @@
 package krusty_test
 
 import (
+	"strings"
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
@@ -32,7 +33,7 @@ spec:
 
 func writeComponentPatch(th kusttest_test.Harness) {
 	th.WriteF("/app/patch/kustomization.yaml", `
-apiVersion: kustomize.config.k8s.io/v1beta1
+apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
 namePrefix: patched-
 replicas:
@@ -117,13 +118,13 @@ spec:
 `)
 }
 
-func TestMultipleComponentes(t *testing.T) {
+func TestMultipleComponents(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeComponentBase(th)
 	writeComponentPatch(th)
 	writeComponentProd(th)
 	th.WriteF("/app/additionalpatch/kustomization.yaml", `
-apiVersion: kustomize.config.k8s.io/v1beta1
+apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
 configMapGenerator:
 - name: my-configmap
@@ -180,7 +181,7 @@ func TestNestedComponents(t *testing.T) {
 	writeComponentPatch(th)
 	writeComponentProd(th)
 	th.WriteF("/app/additionalpatch/kustomization.yaml", `
-apiVersion: kustomize.config.k8s.io/v1beta1
+apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
 resources:
 - ../patch
@@ -300,7 +301,7 @@ func TestApplyingComponentDirectlySameAsKustomization(t *testing.T) {
 	writeComponentBase(th)
 	writeComponentPatch(th)
 	th.WriteF("/app/solopatch/kustomization.yaml", `
-apiVersion: kustomize.config.k8s.io/v1beta1
+apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
 resources:
 - ../base
@@ -331,4 +332,66 @@ metadata:
   labels: {}
   name: my-configmap-t86ktk6tdk
 `)
+}
+
+func TestMissingOptionalComponentApiVersion(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	writeComponentBase(th)
+	writeComponentProd(th)
+	th.WriteF("/app/patch/kustomization.yaml", `
+kind: Component
+configMapGenerator:
+- name: my-configmap
+  behavior: merge
+  literals:	
+    - otherValue=9
+`)
+
+	m := th.Run("/app/prod", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: storefront
+spec:
+  replicas: 1
+---
+apiVersion: v1
+data:
+  otherValue: "9"
+  testValue: "1"
+kind: ConfigMap
+metadata:
+  annotations: {}
+  labels: {}
+  name: my-configmap-72cfg2mg5d
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: db
+spec:
+  type: Logical
+`)
+}
+
+func TestInvalidComponentApiVersion(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	writeComponentBase(th)
+	writeComponentProd(th)
+	th.WriteF("/app/patch/kustomization.yaml", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Component
+configMapGenerator:
+- name: my-configmap
+  behavior: merge
+  literals:	
+    - otherValue=9
+`)
+	err := th.RunWithErr("/app/prod", th.MakeDefaultOptions())
+	if !strings.Contains(
+		err.Error(),
+		"apiVersion should be kustomize.config.k8s.io/v1alpha1") {
+		t.Fatalf("unexpected error: %s", err)
+	}
 }
