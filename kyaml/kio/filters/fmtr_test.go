@@ -904,3 +904,118 @@ func TestFormatFileOrDirectory_trimWhiteSpace(t *testing.T) {
 
 	assert.Equal(t, string(testyaml.FormattedYaml1), string(b))
 }
+
+func TestFormatFileOrDirectory_FmtAnnotation(t *testing.T) {
+	testCases := []struct {
+		name           string
+		input          []byte
+		expectedOutput []byte
+		expectError    bool
+	}{
+		{
+			name:           "no formatting annotation",
+			input:          testyaml.UnformattedYaml1,
+			expectedOutput: testyaml.FormattedYaml1,
+		},
+		{
+			name: "formatting strategy none",
+			input: []byte(`
+spec: a
+status:
+  conditions:
+  - 3
+  - 1
+  - 2
+apiVersion: example.com/v1beta1
+kind: MyType
+metadata:
+  annotations:
+    config.kubernetes.io/formatting: none
+`),
+			expectedOutput: []byte(`
+spec: a
+status:
+  conditions:
+  - 3
+  - 1
+  - 2
+apiVersion: example.com/v1beta1
+kind: MyType
+metadata:
+  annotations:
+    config.kubernetes.io/formatting: none
+`),
+		},
+		{
+			name: "formatting strategy standard",
+			input: []byte(`
+spec: a
+status:
+  conditions:
+  - 3
+  - 1
+  - 2
+apiVersion: example.com/v1beta1
+kind: MyType
+metadata:
+  annotations:
+    config.kubernetes.io/formatting: standard
+`),
+			expectedOutput: []byte(`
+apiVersion: example.com/v1beta1
+kind: MyType
+metadata:
+  annotations:
+    config.kubernetes.io/formatting: standard
+spec: a
+status:
+  conditions:
+  - 3
+  - 1
+  - 2
+`),
+		},
+		{
+			name: "unknown formatting strategy",
+			input: []byte(`
+spec: a
+status:
+  conditions:
+  - 3
+  - 1
+  - 2
+apiVersion: example.com/v1beta1
+kind: MyType
+metadata:
+  annotations:
+    config.kubernetes.io/formatting: unknown
+`),
+			expectError: true,
+		},
+	}
+
+	for i := range testCases {
+		test := testCases[i]
+		t.Run(test.name, func(t *testing.T) {
+			f, err := ioutil.TempFile("", "yamlfmt*.yaml")
+			assert.NoError(t, err)
+			defer os.Remove(f.Name())
+
+			err = ioutil.WriteFile(f.Name(), test.input, 0600)
+			assert.NoError(t, err)
+
+			err = FormatFileOrDirectory(f.Name())
+			if test.expectError {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+
+			b, err := ioutil.ReadFile(f.Name())
+			assert.NoError(t, err)
+
+			assert.Equal(t, strings.TrimSpace(string(test.expectedOutput)),
+				strings.TrimSpace(string(b)))
+		})
+	}
+}
