@@ -692,6 +692,58 @@ spec:
 			},
 		},
 		{
+			name: "replace root",
+			pluginConfig: `
+apiVersion: qlik.com/v1
+kind: SearchReplace
+metadata:
+  name: notImportantHere
+target:
+  kind: Deployment
+path: /
+search: \$\(PREFIX\)
+replace: foo
+`,
+			pluginInputResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-1
+spec:
+  template:
+    metadata:
+      labels:
+        $(PREFIX)-messaging-nats-client: "true"
+        $(PREFIX): bar
+    spec:
+      containers:
+      - name: name-1
+        image: $(PREFIX)-image:latest
+`,
+			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
+				expectingFinalDeploymenYaml := `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-1
+spec:
+  template:
+    metadata:
+      labels:
+        foo: bar
+        foo-messaging-nats-client: "true"
+    spec:
+      containers:
+      - image: foo-image:latest
+        name: name-1
+`
+				if resMapYaml, err := resMap.AsYaml(); err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				} else if string(resMapYaml) != expectingFinalDeploymenYaml {
+					t.Fatalf("unexpected %v, but got: %v", expectingFinalDeploymenYaml, string(resMapYaml))
+				}
+			},
+		},
+		{
 			name: "base64-encoded target and replacement",
 			pluginConfig: `
 apiVersion: qlik.com/v1
