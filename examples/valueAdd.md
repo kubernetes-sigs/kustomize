@@ -178,7 +178,8 @@ intended to implement the 'add' operation of
 [IETF RFC 6902 JSON].   The add operation is simple declaration
 of what value to add, and a powerful syntax for specifying where
 to add the value.  The value can, for example, be inserted 
-into an existing file path as a prefix, postfix, or some change
+into an existing field holding a file path as either a prefix,
+a postfix, or some change
 in the middle (e.g. `/volume/data` becomes `/volume/projectId/data`).
 
 [IETF RFC 6902 JSON]: https://tools.ietf.org/html/rfc6902
@@ -226,7 +227,7 @@ allows any number of transformers to be loaded as a group from a local
 or remote location.
 
 Here an example of the latter case that uses a kustomization file to
-"hold" pointers to transformer configs, although in this case it 
+list pointers to transformer configs, although in this case it 
 references only one transformer config.
 
 <!-- @makeTransformerDir @testAgainstLatestRelease -->
@@ -377,7 +378,9 @@ EOF
 In this output, the namespace of all instances is the
 project name `dog-222`, and the project name also appears
 in the resourceRef field of the `IAMPolicyMember` instances.
-This project name only appears in the project directory name.
+
+This project name only appears in the project _directory name_,
+achieving our [DRY] goal.
 
 Run the build:
 
