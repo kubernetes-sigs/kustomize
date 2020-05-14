@@ -291,6 +291,41 @@ metadata:
 				},
 			},
 		},
+
+		"number": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+  labels:
+    hero: batman
+    fiend: riddler
+`,
+			expectedOutput: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+  labels:
+    hero: batman
+    fiend: riddler
+    1: emmett kelley
+    auto: "2"
+`,
+			filter: Filter{
+				Labels: labelMap{
+					"1":    "emmett kelley",
+					"auto": "2",
+				},
+				FsSlice: []types.FieldSpec{
+					{
+						Path:               "metadata/labels",
+						CreateIfNotPresent: true,
+					},
+				},
+			},
+		},
 	}
 
 	for tn, tc := range testCases {

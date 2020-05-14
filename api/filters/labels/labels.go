@@ -31,7 +31,7 @@ func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 			for _, k := range keys {
 				if err := node.PipeE(fsslice.Filter{
 					FsSlice:    f.FsSlice,
-					SetValue:   fsslice.SetEntry(k, f.Labels[k]),
+					SetValue:   fsslice.SetEntry(k, f.Labels[k], yaml.StringTag),
 					CreateKind: yaml.MappingNode, // Labels are MappingNodes.
 				}); err != nil {
 					return nil, err
