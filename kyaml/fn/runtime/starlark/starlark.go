@@ -12,7 +12,6 @@ import (
 
 	"github.com/qri-io/starlib/util"
 	"go.starlark.net/starlark"
-	"sigs.k8s.io/kustomize/kyaml/comments"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
@@ -33,8 +32,6 @@ type Filter struct {
 	Path string
 
 	runtimeutil.FunctionFilter
-
-	ids map[string]*yaml.RNode
 }
 
 func (sf *Filter) String() string {
@@ -53,9 +50,9 @@ func (sf *Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 }
 
 func (sf *Filter) setup() error {
-	if sf.URL != "" && sf.Path != "" ||
-		sf.URL != "" && sf.Program != "" ||
-		sf.Path != "" && sf.Program != "" {
+	if (sf.URL != "" && sf.Path != "") ||
+		(sf.URL != "" && sf.Program != "") ||
+		(sf.Path != "" && sf.Program != "") {
 		return errors.Errorf("Filter Path, Program and URL are mutually exclusive")
 	}
 
@@ -128,23 +125,6 @@ func (sf *Filter) readResourceList(reader io.Reader) (starlark.Value, error) {
 		return nil, errors.Wrap(err)
 	}
 
-	// set the id on each node to map inputs to outputs
-	var id int
-	sf.ids = map[string]*yaml.RNode{}
-	items, err := rn.Pipe(yaml.Lookup("items"))
-	if err != nil {
-		return nil, errors.Wrap(err)
-	}
-	err = items.VisitElements(func(node *yaml.RNode) error {
-		id++
-		idStr := fmt.Sprintf("%v", id)
-		sf.ids[idStr] = node
-		return node.PipeE(yaml.SetAnnotation("config.k8s.io/id", idStr))
-	})
-	if err != nil {
-		return nil, errors.Wrap(err)
-	}
-
 	// convert to a starlark value
 	b, err := yaml.Marshal(rn.Document()) // convert to bytes
 	if err != nil {
@@ -182,33 +162,10 @@ func (sf *Filter) writeResourceList(value starlark.Value, writer io.Writer) erro
 		return errors.Wrap(err)
 	}
 	err = items.VisitElements(func(node *yaml.RNode) error {
-		anID, err := node.Pipe(yaml.GetAnnotation("config.k8s.io/id"))
-		if err != nil {
-			return errors.Wrap(err)
-		}
-		if anID == nil {
-			return nil
-		}
-
-		var in *yaml.RNode
-		var found bool
-		if in, found = sf.ids[anID.YNode().Value]; !found {
-			return nil
-		}
-		if err := node.PipeE(yaml.ClearAnnotation("config.k8s.io/id")); err != nil {
-			return errors.Wrap(err)
-		}
-		if err := comments.CopyComments(in, node); err != nil {
-			return errors.Wrap(err)
-		}
-
 		// starlark will serialize the resources sorting the fields alphabetically,
 		// format them to have a better ordering
-		fmtFltr := filters.FormatFilter{}
-		if _, err := fmtFltr.Filter([]*yaml.RNode{node}); err != nil {
-			return errors.Wrap(err)
-		}
-		return nil
+		_, err := filters.FormatFilter{}.Filter([]*yaml.RNode{node})
+		return err
 	})
 	if err != nil {
 		return errors.Wrap(err)

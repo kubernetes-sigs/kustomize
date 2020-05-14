@@ -105,21 +105,44 @@ metadata:
 }
 
 func TestRNode_MarshalJSON(t *testing.T) {
-	instance, err := Parse(`
+	tests := []struct {
+		name string
+		ydoc string
+		want string
+	}{
+		{
+			name: "object",
+			ydoc: `
 hello: world
-`)
-	if !assert.NoError(t, err) {
-		t.FailNow()
+`,
+			want: `{"hello":"world"}`,
+		},
+		{
+			name: "array",
+			ydoc: `
+- name: s1
+- name: s2
+`,
+			want: `[{"name":"s1"},{"name":"s2"}]`,
+		},
 	}
+	for idx := range tests {
+		tt := tests[idx]
+		t.Run(tt.name, func(t *testing.T) {
+			instance, err := Parse(tt.ydoc)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
 
-	actual, err := instance.MarshalJSON()
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+			actual, err := instance.MarshalJSON()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
 
-	expected := `{"hello":"world"}`
-	if !assert.Equal(t,
-		strings.TrimSpace(expected), strings.TrimSpace(string(actual))) {
-		t.FailNow()
+			if !assert.Equal(t,
+				strings.TrimSpace(tt.want), strings.TrimSpace(string(actual))) {
+				t.FailNow()
+			}
+		})
 	}
 }

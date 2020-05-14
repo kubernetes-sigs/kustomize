@@ -4,9 +4,13 @@
 package setters2
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/go-openapi/spec"
+	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/validate"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -77,7 +81,11 @@ func (s *Set) visitScalar(object *yaml.RNode, p string, schema *openapi.Resource
 	}
 
 	// perform a direct set of the field if it matches
-	if s.set(object, ext, schema.Schema) {
+	ok, err := s.set(object, ext, schema.Schema)
+	if err != nil {
+		return err
+	}
+	if ok {
 		s.Count++
 		return nil
 	}
@@ -125,6 +133,10 @@ func (s *Set) substitute(field *yaml.RNode, ext *cliExtension, _ *spec.Schema) (
 			return false, errors.Wrap(err)
 		}
 
+		if err := validateAgainstSchema(subSetter, setter); err != nil {
+			return false, err
+		}
+
 		if val, found := subSetter.Setter.EnumValues[subSetter.Setter.Value]; found {
 			// the setter has an enum-map.  we should replace the marker with the
 			// enum value looked up from the map rather than the enum key
@@ -155,19 +167,21 @@ func (s *Set) substitute(field *yaml.RNode, ext *cliExtension, _ *spec.Schema) (
 }
 
 // set applies the value from ext to field if its name matches s.Name
-func (s *Set) set(field *yaml.RNode, ext *cliExtension, sch *spec.Schema) bool {
+func (s *Set) set(field *yaml.RNode, ext *cliExtension, sch *spec.Schema) (bool, error) {
 	// check full setter
 	if ext.Setter == nil || !s.isMatch(ext.Setter.Name) {
-		return false
+		return false, nil
 	}
 
-	// TODO(pwittrock): validate the field value
+	if err := validateAgainstSchema(ext, sch); err != nil {
+		return false, err
+	}
 
 	if val, found := ext.Setter.EnumValues[ext.Setter.Value]; found {
 		// the setter has an enum-map.  we should replace the marker with the
 		// enum value looked up from the map rather than the enum key
 		field.YNode().Value = val
-		return true
+		return true, nil
 	}
 
 	// this has a full setter, set its value
@@ -175,7 +189,35 @@ func (s *Set) set(field *yaml.RNode, ext *cliExtension, sch *spec.Schema) bool {
 
 	// format the node so it is quoted if it is a string
 	yaml.FormatNonStringStyle(field.YNode(), *sch)
-	return true
+	return true, nil
+}
+
+// validateAgainstSchema validates the input setter value against user provided
+// openAI schema
+func validateAgainstSchema(ext *cliExtension, sch *spec.Schema) error {
+	sc := spec.Schema{}
+	sc.Properties = map[string]spec.Schema{}
+	sc.Properties[ext.Setter.Name] = *sch
+
+	input := map[string]interface{}{}
+	format := `{"%s" : "%s"}`
+	if yaml.IsValueNonString(ext.Setter.Value) {
+		format = `{"%s" : %s}`
+	}
+
+	// leverage json.Unmarshal to parse the value type
+	// Ex: `{"setter" : "true"}` parses the value as string whereas
+	// `{"setter" : true}` parses as boolean
+	inputJSON := fmt.Sprintf(format, ext.Setter.Name, ext.Setter.Value)
+	err := json.Unmarshal([]byte(inputJSON), &input)
+	if err != nil {
+		return err
+	}
+	err = validate.AgainstSchema(&sc, input, strfmt.Default)
+	if err != nil {
+		return errors.Errorf("The input value doesn't validate against provided OpenAPI schema: %v\n", err.Error())
+	}
+	return nil
 }
 
 // SetOpenAPI updates a setter value

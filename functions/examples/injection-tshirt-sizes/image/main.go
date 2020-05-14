@@ -9,54 +9,45 @@ import (
 	"fmt"
 	"os"
 
-	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+var (
+	// cpuSizes is the mapping from tshirt-size to cpu reservation quantity
+	cpuSizes = map[string]string{
+		"small":  "200m",
+		"medium": "4",
+		"large":  "16",
+	}
+
+	// memorySizes is the mapping from tshirt-size to memory reservation quantity
+	memorySizes = map[string]string{
+		"small":  "50M",
+		"medium": "1G",
+		"large":  "32G",
+	}
+)
+
 func main() {
-	rw := &kio.ByteReadWriter{Reader: os.Stdin, Writer: os.Stdout, KeepReaderAnnotations: true}
-	p := kio.Pipeline{
-		Inputs:  []kio.Reader{rw},       // read the inputs into a slice
-		Filters: []kio.Filter{filter{}}, // run the inject into the inputs
-		Outputs: []kio.Writer{rw}}       // copy the inputs to the output
-	if err := p.Execute(); err != nil {
+	resourceList := &framework.ResourceList{}
+	cmd := framework.Command(resourceList, func() error {
+		for _, r := range resourceList.Items {
+			if err := size(r); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err := cmd.Execute(); err != nil {
 		fmt.Fprint(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
-// filter implements kio.Filter
-type filter struct{}
-
-// Filter injects cpu and memory resource reservations into containers for
-// Resources containing the `tshirt-size` annotation.
-func (filter) Filter(in []*yaml.RNode) ([]*yaml.RNode, error) {
-	// inject the resource reservations into each Resource
-	for _, r := range in {
-		if err := inject(r); err != nil {
-			return nil, err
-		}
-	}
-	return in, nil
-}
-
-// cpuSizes is the mapping from tshirt-size to cpu reservation quantity
-var cpuSizes = map[string]string{
-	"small":  "200m",
-	"medium": "4",
-	"large":  "16",
-}
-
-// memorySizes is the mapping from tshirt-size to memory reservation quantity
-var memorySizes = map[string]string{
-	"small":  "50M",
-	"medium": "1G",
-	"large":  "32G",
-}
-
-// inject sets the cpu and memory reservations on all containers for Resources annotated
+// size sets the cpu and memory reservations on all containers for Resources annotated
 // with `tshirt-size: small|medium|large`
-func inject(r *yaml.RNode) error {
+func size(r *yaml.RNode) error {
 	// lookup the containers field
 	containers, err := r.Pipe(yaml.Lookup("spec", "template", "spec", "containers"))
 	if err != nil {

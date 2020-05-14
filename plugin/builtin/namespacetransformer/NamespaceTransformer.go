@@ -50,19 +50,7 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 
 		id := r.OrgId()
 
-		if !p.YAMLSupport {
-			// use the old style transform
-			applicableFs := p.applicableFieldSpecs(id)
-
-			for _, fs := range applicableFs {
-				err := transform.MutateField(
-					r.Map(), fs.PathSlice(), fs.CreateIfNotPresent,
-					p.changeNamespace(r))
-				if err != nil {
-					return err
-				}
-			}
-		} else {
+		if p.YAMLSupport {
 			// use the new style transform
 			err := filtersutil.ApplyToJSON(namespace.Filter{
 				Namespace: p.Namespace,
@@ -71,17 +59,27 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 			if err != nil {
 				return err
 			}
+		} else {
+			// use the old style transform
+			applicableFs := p.applicableFieldSpecs(id)
+			for _, fs := range applicableFs {
+				err := transform.MutateField(
+					r.Map(), fs.PathSlice(), fs.CreateIfNotPresent,
+					p.changeNamespace(r))
+				if err != nil {
+					return err
+				}
+			}
 		}
 
 		matches := m.GetMatchingResourcesByCurrentId(r.CurId().Equals)
 		if len(matches) != 1 {
-			return fmt.Errorf("namespace transformation produces ID conflict: %+v", matches)
+			return fmt.Errorf(
+				"namespace transformation produces ID conflict: %+v", matches)
 		}
 	}
 	return nil
 }
-
-const metaNamespace = "metadata/namespace"
 
 // Special casing metadata.namespace since
 // all objects have it, even "ClusterKind" objects
@@ -90,7 +88,9 @@ const metaNamespace = "metadata/namespace"
 func (p *plugin) applicableFieldSpecs(id resid.ResId) []types.FieldSpec {
 	var res []types.FieldSpec
 	for _, fs := range p.FieldSpecs {
-		if id.IsSelected(&fs.Gvk) && (fs.Path != metaNamespace || (fs.Path == metaNamespace && id.IsNamespaceableKind())) {
+		if id.IsSelected(&fs.Gvk) &&
+			(fs.Path != types.MetadataNamespacePath ||
+				(fs.Path == types.MetadataNamespacePath && id.IsNamespaceableKind())) {
 			res = append(res, fs)
 		}
 	}

@@ -123,6 +123,33 @@ a:
 				},
 			},
 		},
+
+		"number": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+  annotations:
+    hero: batman
+    fiend: riddler
+`,
+			expectedOutput: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+  annotations:
+    hero: batman
+    fiend: riddler
+    2: ford
+    clown: "1"
+`,
+			filter: Filter{Annotations: annoMap{
+				"clown": "1",
+				"2":     "ford",
+			}},
+		},
 	}
 
 	for tn, tc := range testCases {

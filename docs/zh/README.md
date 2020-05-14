@@ -10,7 +10,7 @@
 
  * [Kustomize 字段](fields.md) - 介绍 [kustomization](../glossary.md#kustomization) 文件中各字段的含义。
 
- * [插件](../plugins) - 使用自定义的资源生成器和资源转换器来拓展 kustomize 功能。
+ * [插件](plugins.md) - 使用自定义的资源生成器和资源转换器来拓展 kustomize 功能。
 
  * [工作流](workflows.md) - 使用定制及使用现成配置使用的一些步骤。
 

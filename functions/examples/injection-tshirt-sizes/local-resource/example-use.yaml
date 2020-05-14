@@ -1,13 +1,13 @@
-# Copyright 2019 The Kubernetes Authors.
+# Copyright 2020 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
 apiVersion: examples.config.kubernetes.io/v1beta1
 kind: Validator
 metadata:
   annotations:
-    config.kubernetes.io/function: |
+    config.kubernetes.io/function: |-
       container:
-        image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
+        image: gcr.io/kustomize-functions/example-tshirt:v0.2.0
 ---
 apiVersion: apps/v1
 kind: Deployment
