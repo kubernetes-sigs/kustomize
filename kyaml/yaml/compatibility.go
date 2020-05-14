@@ -66,13 +66,17 @@ func IsYaml1_1NonString(node *Node) bool {
 		// not a keyword
 		return false
 	}
-	if strings.Contains(node.Value, "\n") {
+	return IsValueNonString(node.Value)
+}
+
+func IsValueNonString(value string) bool {
+	if strings.Contains(value, "\n") {
 		// multi-line strings will fail to unmarshal
 		return false
 	}
 	// check if the value will unmarshal into a non-string value using a yaml 1.1 parser
 	var i1 interface{}
-	if err := y1_1.Unmarshal([]byte(node.Value), &i1); err != nil {
+	if err := y1_1.Unmarshal([]byte(value), &i1); err != nil {
 		return false
 	}
 	if reflect.TypeOf(i1) != stringType {

@@ -25,6 +25,7 @@ func TestSetCommand(t *testing.T) {
 		out               string
 		expectedOpenAPI   string
 		expectedResources string
+		errMsg            string
 	}{
 		{
 			name: "set replicas",
@@ -207,6 +208,108 @@ spec:
         image: sidecar:1.7.9
 `,
 		},
+
+		{
+			name: "validate openAPI number",
+			args: []string{"replicas", "four"},
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      type: number
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+ `,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      type: number
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+ `,
+			errMsg: "replicas in body must be of type number",
+		},
+
+		{
+			name: "validate openAPI string maxLength",
+			args: []string{"name", "wordpress"},
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.name:
+      type: string
+      maxLength: 5
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: name
+          value: nginx
+          setBy: me
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx # {"$ref":"#/definitions/io.k8s.cli.setters.name"}
+spec:
+  replicas: 3
+ `,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.name:
+      type: string
+      maxLength: 5
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: name
+          value: nginx
+          setBy: me
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx # {"$ref":"#/definitions/io.k8s.cli.setters.name"}
+spec:
+  replicas: 3
+ `,
+			errMsg: "name in body should be at most 5 chars long",
+		},
 	}
 	for i := range tests {
 		test := tests[i]
@@ -245,11 +348,20 @@ spec:
 			runner.Command.SetOut(out)
 			runner.Command.SetArgs(append([]string{r.Name()}, test.args...))
 			err = runner.Command.Execute()
-			if !assert.NoError(t, err) {
+			if test.errMsg != "" {
+				if !assert.NotNil(t, err) {
+					t.FailNow()
+				}
+				if !assert.Contains(t, err.Error(), test.errMsg) {
+					t.FailNow()
+				}
+			}
+
+			if test.errMsg == "" && !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
-			if !assert.Equal(t, test.out, out.String()) {
+			if test.errMsg == "" && !assert.Equal(t, test.out, out.String()) {
 				t.FailNow()
 			}
 
