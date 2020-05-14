@@ -75,9 +75,13 @@ type Kustomization struct {
 	//
 
 	// Resources specifies relative paths to files holding YAML representations
-	// of kubernetes API objects, or specifcations of other kustomizations
+	// of kubernetes API objects, or specifications of other kustomizations
 	// via relative paths, absolute paths, or URLs.
 	Resources []string `json:"resources,omitempty" yaml:"resources,omitempty"`
+
+	// Components specifies relative paths to specifications of other Components
+	// via relative paths, absolute paths, or URLs.
+	Components []string `json:"components,omitempty" yaml:"components,omitempty"`
 
 	// Crds specifies relative paths to Custom Resource Definition files.
 	// This allows custom resources to be recognized as operands, making
