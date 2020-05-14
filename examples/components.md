@@ -60,6 +60,9 @@ BASE=$DEMO_HOME/base
 mkdir $BASE
 
 cat <<EOF >$BASE/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
 resources:
 - deployment.yaml
 
@@ -465,15 +468,16 @@ spec:
 EOF
 ```
 
-Define an `external_db` component, using `kind: v1alpha1/KustomizationPatch`,
-that creates a `Secret` for the DB password and a new entry in the `ConfigMap`:
+Define an `external_db` component, using `kind: Component`, that creates a
+`Secret` for the DB password and a new entry in the `ConfigMap`:
 
 ```shell
 EXT_DB=$DEMO_HOME/components/external_db
 mkdir -p $EXT_DB
 
 cat <<EOF >$EXT_DB/kustomization.yaml
-kind: v1alpha1/KustomizationPatch  # <-- Component notation
+apiVersion: kustomize.config.k8s.io/v1alpha1  # <-- Component notation
+kind: Component
 
 secretGenerator:
 - name: dbpass
@@ -528,7 +532,8 @@ LDAP=$DEMO_HOME/components/ldap
 mkdir -p $LDAP
 
 cat <<EOF >$LDAP/kustomization.yaml
-kind: v1alpha1/KustomizationPatch
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
 
 secretGenerator:
 - name: ldappass
@@ -582,7 +587,8 @@ RECAPTCHA=$DEMO_HOME/components/recaptcha
 mkdir -p $RECAPTCHA
 
 cat <<EOF >$RECAPTCHA/kustomization.yaml
-kind: v1alpha1/KustomizationPatch
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
 
 secretGenerator:
 - name: recaptcha
@@ -629,7 +635,7 @@ data:
 EOF
 ```
 
-Define a `community` overlay, that bundles the external DB and reCAPTCHA
+Define a `community` variant, that bundles the external DB and reCAPTCHA
 components:
 
 ```shell
