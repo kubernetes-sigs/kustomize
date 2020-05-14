@@ -51,6 +51,8 @@ func GetRunFnRunner(name string) *RunFnRunner {
 	r.Command.Flags().StringVar(
 		&r.StarPath, "star-path", "", "run a starlark script as a function. (Alpha)")
 	r.Command.Flags().StringVar(
+		&r.StarURL, "star-url", "", "run a starlark script as a function. (Alpha)")
+	r.Command.Flags().StringVar(
 		&r.StarName, "star-name", "", "name of starlark program. (Alpha)")
 
 	r.Command.Flags().StringVar(
@@ -80,6 +82,7 @@ type RunFnRunner struct {
 	Image              string
 	EnableStar         bool
 	StarPath           string
+	StarURL            string
 	StarName           string
 	EnableExec         bool
 	ExecPath           string
@@ -98,7 +101,8 @@ func (r *RunFnRunner) runE(c *cobra.Command, args []string) error {
 // Functions to run.
 func (r *RunFnRunner) getContainerFunctions(c *cobra.Command, args, dataItems []string) (
 	[]*yaml.RNode, error) {
-	if r.Image == "" && r.StarPath == "" && r.ExecPath == "" {
+
+	if r.Image == "" && r.StarPath == "" && r.ExecPath == "" && r.StarURL == "" {
 		return nil, nil
 	}
 
@@ -126,26 +130,36 @@ func (r *RunFnRunner) getContainerFunctions(c *cobra.Command, args, dataItems []
 				return nil, err
 			}
 		}
-	} else if r.EnableStar && r.StarPath != "" {
+	} else if r.EnableStar && (r.StarPath != "" || r.StarURL != "") {
 		// create the function spec to set as an annotation
 		fn, err = yaml.Parse(`starlark: {}`)
 		if err != nil {
 			return nil, err
 		}
 
-		err = fn.PipeE(
-			yaml.Lookup("starlark"),
-			yaml.SetField("path", yaml.NewScalarRNode(r.StarPath)))
-		if err != nil {
-			return nil, err
+		if r.StarPath != "" {
+			err = fn.PipeE(
+				yaml.Lookup("starlark"),
+				yaml.SetField("path", yaml.NewScalarRNode(r.StarPath)))
+			if err != nil {
+				return nil, err
+			}
 		}
-
+		if r.StarURL != "" {
+			err = fn.PipeE(
+				yaml.Lookup("starlark"),
+				yaml.SetField("url", yaml.NewScalarRNode(r.StarURL)))
+			if err != nil {
+				return nil, err
+			}
+		}
 		err = fn.PipeE(
 			yaml.Lookup("starlark"),
 			yaml.SetField("name", yaml.NewScalarRNode(r.StarName)))
 		if err != nil {
 			return nil, err
 		}
+
 	} else if r.EnableExec && r.ExecPath != "" {
 		// create the function spec to set as an annotation
 		fn, err = yaml.Parse(`exec: {}`)
@@ -231,8 +245,8 @@ func toStorageMounts(mounts []string) []runtimeutil.StorageMount {
 }
 
 func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
-	if !r.EnableStar && r.StarPath != "" {
-		return errors.Errorf("must specify --enable-star with --star-path")
+	if !r.EnableStar && (r.StarPath != "" || r.StarURL != "") {
+		return errors.Errorf("must specify --enable-star with --star-path and --star-url")
 	}
 
 	if !r.EnableExec && r.ExecPath != "" {
@@ -240,7 +254,7 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 	}
 
 	if c.ArgsLenAtDash() >= 0 && r.Image == "" &&
-		!(r.EnableStar && r.StarPath != "") && !(r.EnableExec && r.ExecPath != "") {
+		!(r.EnableStar && (r.StarPath != "" || r.StarURL != "")) && !(r.EnableExec && r.ExecPath != "") {
 		return errors.Errorf("must specify --image")
 	}
 

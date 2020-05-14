@@ -65,6 +65,9 @@ type StarlarkSpec struct {
 
 	// Path specifies a path to a starlark script
 	Path string `json:"path,omitempty" yaml:"path,omitempty"`
+
+	// URL specifies a url containing a starlark script
+	URL string `json:"url,omitempty" yaml:"url,omitempty"`
 }
 
 // StorageMount represents a container's mounted storage option(s)
