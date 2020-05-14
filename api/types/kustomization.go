@@ -6,6 +6,7 @@ package types
 const (
 	KustomizationVersion  = "kustomize.config.k8s.io/v1beta1"
 	KustomizationKind     = "Kustomization"
+	ComponentVersion      = "kustomize.config.k8s.io/v1alpha1"
 	ComponentKind         = "Component"
 	MetadataNamespacePath = "metadata/namespace"
 )
@@ -129,11 +130,15 @@ type Kustomization struct {
 // moving content of deprecated fields to newer
 // fields.
 func (k *Kustomization) FixKustomizationPostUnmarshalling() {
-	if k.APIVersion == "" {
-		k.APIVersion = KustomizationVersion
-	}
 	if k.Kind == "" {
 		k.Kind = KustomizationKind
+	}
+	if k.APIVersion == "" {
+		if k.Kind == ComponentKind {
+			k.APIVersion = ComponentVersion
+		} else {
+			k.APIVersion = KustomizationVersion
+		}
 	}
 	k.Resources = append(k.Resources, k.Bases...)
 	k.Bases = nil
@@ -141,11 +146,15 @@ func (k *Kustomization) FixKustomizationPostUnmarshalling() {
 
 func (k *Kustomization) EnforceFields() []string {
 	var errs []string
-	if k.APIVersion != "" && k.APIVersion != KustomizationVersion {
-		errs = append(errs, "apiVersion should be "+KustomizationVersion)
-	}
 	if k.Kind != "" && k.Kind != KustomizationKind && k.Kind != ComponentKind {
 		errs = append(errs, "kind should be "+KustomizationKind+" or "+ComponentKind)
+	}
+	requiredVersion := KustomizationVersion
+	if k.Kind == ComponentKind {
+		requiredVersion = ComponentVersion
+	}
+	if k.APIVersion != "" && k.APIVersion != requiredVersion {
+		errs = append(errs, "apiVersion should be "+requiredVersion)
 	}
 	return errs
 }
