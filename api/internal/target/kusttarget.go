@@ -294,7 +294,7 @@ func (kt *KustTarget) accumulateDirectory(
 	}
 
 	var subRa *accumulator.ResAccumulator
-	if subKt.kustomization.Kind == types.KustomizationPatchKind {
+	if subKt.kustomization.Kind == types.ComponentKind {
 		subRa, err = subKt.accumulateTarget(ra)
 		ra = accumulator.MakeEmptyAccumulator()
 	} else {
