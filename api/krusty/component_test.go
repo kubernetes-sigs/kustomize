@@ -62,8 +62,10 @@ func writeComponentProd(th kusttest_test.Harness) {
 	th.WriteK("/app/prod", `
 resources:
 - ../base
-- ../patch
 - db
+
+components:
+- ../patch
 `)
 	th.WriteF("/app/prod/db", `
 apiVersion: v1
@@ -105,16 +107,16 @@ metadata:
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: patched-stub
+  name: patched-db
 spec:
-  replicas: 1
+  type: Logical
 ---
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: db
+  name: patched-stub
 spec:
-  type: Logical
+  replicas: 1
 `)
 }
 
@@ -135,9 +137,11 @@ configMapGenerator:
 	th.WriteK("/app/prod", `
 resources:
 - ../base
+- db
+
+components:
 - ../patch
 - ../additionalpatch
-- db
 `)
 	m := th.Run("/app/prod", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
@@ -162,16 +166,16 @@ metadata:
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: patched-stub
+  name: patched-db
 spec:
-  replicas: 1
+  type: Logical
 ---
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: db
+  name: patched-stub
 spec:
-  type: Logical
+  replicas: 1
 `)
 }
 
@@ -183,7 +187,7 @@ func TestNestedComponents(t *testing.T) {
 	th.WriteF("/app/additionalpatch/kustomization.yaml", `
 apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
-resources:
+components:
 - ../patch
 configMapGenerator:
 - name: my-configmap
@@ -194,8 +198,10 @@ configMapGenerator:
 	th.WriteK("/app/prod", `
 resources:
 - ../base
-- ../additionalpatch
 - db
+
+components:
+- ../additionalpatch
 `)
 	m := th.Run("/app/prod", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
@@ -220,16 +226,16 @@ metadata:
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: patched-stub
+  name: patched-db
 spec:
-  replicas: 1
+  type: Logical
 ---
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: db
+  name: patched-stub
 spec:
-  type: Logical
+  replicas: 1
 `)
 }
 
@@ -283,16 +289,16 @@ metadata:
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: patched-stub
+  name: patched-db
 spec:
-  replicas: 1
+  type: Logical
 ---
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: db
+  name: patched-stub
 spec:
-  type: Logical
+  replicas: 1
 `)
 }
 
@@ -332,6 +338,44 @@ metadata:
   labels: {}
   name: my-configmap-t86ktk6tdk
 `)
+}
+
+func TestComponentsCannotBeAddedToResources(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	writeComponentBase(th)
+	writeComponentPatch(th)
+	th.WriteF("/app/custinres/kustomization.yaml", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../base
+- ../patch
+`)
+	err := th.RunWithErr("/app/custinres", th.MakeDefaultOptions())
+	if !strings.Contains(
+		err.Error(),
+		"expected kind != 'Component' for path '/app/patch'") {
+		t.Fatalf("unexpected error: %s", err)
+	}
+}
+
+func TestResourcesCannotBeAddedToComponents(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	writeComponentBase(th)
+	writeComponentPatch(th)
+	th.WriteF("/app/resincust/kustomization.yaml", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+components:
+- ../base
+- ../patch
+`)
+	err := th.RunWithErr("/app/resincust", th.MakeDefaultOptions())
+	if !strings.Contains(
+		err.Error(),
+		"accumulating components: accumulateDirectory: \"expected kind 'Component' for path '/app/base' but got 'Kustomization'") {
+		t.Fatalf("unexpected error: %s", err)
+	}
 }
 
 func TestMissingOptionalComponentApiVersion(t *testing.T) {

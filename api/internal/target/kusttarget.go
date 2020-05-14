@@ -164,6 +164,10 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 	if err != nil {
 		return nil, errors.Wrap(err, "accumulating resources")
 	}
+	ra, err = kt.accumulateComponents(ra, kt.kustomization.Components)
+	if err != nil {
+		return nil, errors.Wrap(err, "accumulating components")
+	}
 	tConfig, err := builtinconfig.MakeTransformerConfig(
 		kt.ldr, kt.kustomization.Configurations)
 	if err != nil {
@@ -273,7 +277,7 @@ func (kt *KustTarget) accumulateResources(
 				return nil, fmt.Errorf("accumulateFile %q, loader.New %q", errF, errL)
 			}
 			var errD error
-			ra, errD = kt.accumulateDirectory(ra, ldr)
+			ra, errD = kt.accumulateDirectory(ra, ldr, false)
 			if errD != nil {
 				return nil, fmt.Errorf("accumulateFile %q, accumulateDirector: %q", errF, errD)
 			}
@@ -282,8 +286,27 @@ func (kt *KustTarget) accumulateResources(
 	return ra, nil
 }
 
+// accumulateResources fills the given resourceAccumulator
+// with resources read from the given list of paths.
+func (kt *KustTarget) accumulateComponents(
+	ra *accumulator.ResAccumulator, paths []string) (*accumulator.ResAccumulator, error) {
+	for _, path := range paths {
+		// Components always refer to directories
+		ldr, errL := kt.ldr.New(path)
+		if errL != nil {
+			return nil, fmt.Errorf("loader.New %q", errL)
+		}
+		var errD error
+		ra, errD = kt.accumulateDirectory(ra, ldr, true)
+		if errD != nil {
+			return nil, fmt.Errorf("accumulateDirectory: %q", errD)
+		}
+	}
+	return ra, nil
+}
+
 func (kt *KustTarget) accumulateDirectory(
-	ra *accumulator.ResAccumulator, ldr ifc.Loader) (*accumulator.ResAccumulator, error) {
+	ra *accumulator.ResAccumulator, ldr ifc.Loader, isComponent bool) (*accumulator.ResAccumulator, error) {
 	defer ldr.Cleanup()
 	subKt := NewKustTarget(
 		ldr, kt.validator, kt.rFactory, kt.tFactory, kt.pLdr)
@@ -291,6 +314,13 @@ func (kt *KustTarget) accumulateDirectory(
 	if err != nil {
 		return nil, errors.Wrapf(
 			err, "couldn't make target for path '%s'", ldr.Root())
+	}
+	if isComponent && subKt.kustomization.Kind != types.ComponentKind {
+		return nil, fmt.Errorf(
+			"expected kind '%s' for path '%s' but got '%s'", types.ComponentKind, ldr.Root(), subKt.kustomization.Kind)
+	} else if !isComponent && subKt.kustomization.Kind == types.ComponentKind {
+		return nil, fmt.Errorf(
+			"expected kind != '%s' for path '%s'", types.ComponentKind, ldr.Root())
 	}
 
 	var subRa *accumulator.ResAccumulator
