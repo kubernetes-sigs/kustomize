@@ -171,9 +171,9 @@ resources:
 EOF
 ```
 
-Make a transformer configration file.
+Make a transformer configuration file.
 
-The transformer used is called `AddValueTransformer`.  It's
+The transformer used is called `ValueAddTransformer`.  It's
 intended to implement the 'add' operation of
 [IETF RFC 6902 JSON].   The add operation is simple declaration
 of what value to add, and a powerful syntax for specifying where
@@ -191,6 +191,7 @@ the config must live in its own file:
 
 <!-- @defineSetProjectTransformer @testAgainstLatestRelease -->
 ```
+mkdir -p $DEMO_HOME/transformers/setProject
 cat <<'EOF' >$DEMO_HOME/transformers/setProject/setProject.yaml
 apiVersion: builtin
 kind: ValueAddTransformer
