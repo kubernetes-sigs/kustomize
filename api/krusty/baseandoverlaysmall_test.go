@@ -216,6 +216,8 @@ func TestSmallOverlay(t *testing.T) {
 namePrefix: b-
 commonLabels:
   env: prod
+  quotedFruit: "peach"
+  quotedBoolean: "true"
 resources:
 - ../base
 patchesStrategicMerge:
@@ -249,6 +251,8 @@ metadata:
   labels:
     app: myApp
     env: prod
+    quotedBoolean: "true"
+    quotedFruit: peach
   name: b-a-myDeployment
 spec:
   replicas: 1000
@@ -256,12 +260,16 @@ spec:
     matchLabels:
       app: myApp
       env: prod
+      quotedBoolean: "true"
+      quotedFruit: peach
   template:
     metadata:
       labels:
         app: myApp
         backend: awesome
         env: prod
+        quotedBoolean: "true"
+        quotedFruit: peach
     spec:
       containers:
       - image: whatever:1.8.0
@@ -273,6 +281,8 @@ metadata:
   labels:
     app: myApp
     env: prod
+    quotedBoolean: "true"
+    quotedFruit: peach
   name: b-a-myService
 spec:
   ports:
@@ -281,6 +291,8 @@ spec:
     app: myApp
     backend: bungie
     env: prod
+    quotedBoolean: "true"
+    quotedFruit: peach
 `)
 }
 
