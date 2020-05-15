@@ -45,6 +45,37 @@ metadata:
 	},
 
 	{
+		name: "null_ns",
+		input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+  namespace: null
+---
+apiVersion: example.com/v1
+kind: Bar
+metadata:
+  name: instance
+  namespace: null
+`,
+		expected: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+  namespace: foo
+---
+apiVersion: example.com/v1
+kind: Bar
+metadata:
+  name: instance
+  namespace: foo
+`,
+		filter: namespace.Filter{Namespace: "foo"},
+	},
+
+	{
 		name: "add-recurse",
 		input: `
 apiVersion: example.com/v1

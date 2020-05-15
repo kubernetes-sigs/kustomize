@@ -186,6 +186,30 @@ metadata:
 				"f": "true1",
 			}},
 		},
+
+		// test quoting of values which are not considered strings in yaml 1.1
+		"null_annotations": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+  annotations: null
+`,
+			expectedOutput: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+  annotations:
+    a: a1
+    b: b1
+`,
+			filter: Filter{Annotations: annoMap{
+				"a": "a1",
+				"b": "b1",
+			}},
+		},
 	}
 
 	for tn, tc := range testCases {
