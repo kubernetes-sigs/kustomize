@@ -57,7 +57,7 @@ curl -s -o "$BASE/#1.yaml" "https://raw.githubusercontent.com\
 
 Look at the directory:
 
-<!-- @runTree @testAgainstLatestRelease -->
+<!-- @runTree -->
 ```
 tree $DEMO_HOME
 ```
@@ -228,7 +228,7 @@ EOF
 
 Review the directory structure and differences:
 
-<!-- @listFiles @testAgainstLatestRelease -->
+<!-- @listFiles -->
 ```
 tree $DEMO_HOME
 ```

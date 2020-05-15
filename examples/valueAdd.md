@@ -289,10 +289,11 @@ EOF
 
 The layout is now:
 
-<!-- @showLayout @testAgainstLatestRelease -->
+<!-- @showLayout -->
 ```
 tree $DEMO_HOME
 ```
+
 It should look like:
 
 > ```
