@@ -49,6 +49,9 @@ type Filter struct {
 
 	// CreateKind is used to create fields that do not exist
 	CreateKind yaml.Kind
+
+	// CreateTag is used to set the tag if encountering a null field
+	CreateTag string
 }
 
 func (fltr Filter) Filter(obj *yaml.RNode) (*yaml.RNode, error) {
@@ -60,6 +63,7 @@ func (fltr Filter) Filter(obj *yaml.RNode) (*yaml.RNode, error) {
 			FieldSpec:  fltr.FsSlice[i],
 			SetValue:   fltr.SetValue,
 			CreateKind: fltr.CreateKind,
+			CreateTag:  fltr.CreateTag,
 		}).Filter(obj)
 		if err != nil {
 			return nil, err
