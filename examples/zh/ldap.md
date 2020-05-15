@@ -49,7 +49,7 @@ curl -s -o "$BASE/#1" "$CONTENT/base\
 
 检查这个目录：
 
-<!-- @runTree @testAgainstLatestRelease -->
+<!-- @runTree -->
 ```
 tree $DEMO_HOME
 ```
@@ -185,7 +185,7 @@ curl -s -o "$OVERLAYS/production/#1" "$CONTENT/overlays/production\
 
 查看目录结构和差异：
 
-<!-- @listFiles @testAgainstLatestRelease -->
+<!-- @listFiles -->
 ```
 tree $DEMO_HOME
 ```
