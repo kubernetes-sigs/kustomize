@@ -21,6 +21,9 @@ metadata:
   name: notImportantHere
 labels:
   app: myApp
+  quotedBoolean: "true"
+  quotedFruit: "peach"
+  unquotedBoolean: true
   env: production
 fieldSpecs:
 - path: spec/selector
@@ -69,6 +72,9 @@ metadata:
   labels:
     app: myApp
     env: production
+    quotedBoolean: "true"
+    quotedFruit: peach
+    unquotedBoolean: "true"
   name: myService
 spec:
   ports:
@@ -76,6 +82,9 @@ spec:
   selector:
     app: myApp
     env: production
+    quotedBoolean: "true"
+    quotedFruit: peach
+    unquotedBoolean: "true"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -83,6 +92,9 @@ metadata:
   labels:
     app: myApp
     env: production
+    quotedBoolean: "true"
+    quotedFruit: peach
+    unquotedBoolean: "true"
   name: mungebot
 spec:
   replicas: 1
@@ -90,11 +102,17 @@ spec:
     matchLabels:
       app: myApp
       env: production
+      quotedBoolean: "true"
+      quotedFruit: peach
+      unquotedBoolean: "true"
   template:
     metadata:
       labels:
         app: myApp
         env: production
+        quotedBoolean: "true"
+        quotedFruit: peach
+        unquotedBoolean: "true"
     spec:
       containers:
       - image: nginx
