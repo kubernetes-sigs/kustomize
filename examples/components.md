@@ -643,7 +643,9 @@ COMMUNITY=$DEMO_HOME/overlays/community
 mkdir -p $COMMUNITY
 
 cat <<EOF >$COMMUNITY/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
 resources:
   - ../../components/external_db
   - ../../components/recaptcha
@@ -658,7 +660,9 @@ ENTERPRISE=$DEMO_HOME/overlays/enterprise
 mkdir -p $ENTERPRISE
 
 cat <<EOF >$ENTERPRISE/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
 resources:
   - ../../components/external_db
   - ../../components/ldap
@@ -673,7 +677,9 @@ DEV=$DEMO_HOME/overlays/dev
 mkdir -p $DEV
 
 cat <<EOF >$DEV/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
 resources:
   - ../../components/external_db
   #- ../../components/ldap
