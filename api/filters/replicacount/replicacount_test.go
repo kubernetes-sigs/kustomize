@@ -81,6 +81,41 @@ spec:
 				},
 			},
 		},
+
+		"add_field_null": {
+			input: `
+apiVersion: custom/v1
+kind: Custom
+metadata:
+  name: cus
+spec:
+  template:
+    other: something
+    replicas: null
+`,
+			expected: `
+apiVersion: custom/v1
+kind: Custom
+metadata:
+  name: cus
+spec:
+  template:
+    other: something
+    replicas: 42
+`,
+			filter: Filter{
+				Replica: types.Replica{
+					Name:  "cus",
+					Count: 42,
+				},
+			},
+			fsslice: types.FsSlice{
+				{
+					Path:               "spec/template/replicas",
+					CreateIfNotPresent: true,
+				},
+			},
+		},
 		"no update if CreateIfNotPresent is false": {
 			input: `
 apiVersion: custom/v1
