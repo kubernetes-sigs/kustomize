@@ -20,14 +20,18 @@ func SetScalar(value string) SetFn {
 
 // SetEntry returns a SetFn to set an entry in a map
 func SetEntry(key, value, tag string) SetFn {
+	n := &yaml.Node{
+		Kind:  yaml.ScalarNode,
+		Value: value,
+		Tag:   tag,
+	}
+	if tag == yaml.StringTag && yaml.IsYaml1_1NonString(n) {
+		n.Style = yaml.DoubleQuotedStyle
+	}
 	return func(node *yaml.RNode) error {
 		return node.PipeE(yaml.FieldSetter{
-			Name: key,
-			Value: yaml.NewRNode(&yaml.Node{
-				Kind:  yaml.ScalarNode,
-				Value: value,
-				Tag:   tag,
-			}),
+			Name:  key,
+			Value: yaml.NewRNode(n),
 		})
 	}
 
