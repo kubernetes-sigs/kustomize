@@ -647,6 +647,9 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
+  - ../../base
+
+components:
   - ../../components/external_db
   - ../../components/recaptcha
 EOF
@@ -664,6 +667,9 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
+  - ../../base
+
+components:
   - ../../components/external_db
   - ../../components/ldap
 EOF
@@ -681,6 +687,9 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
+  - ../../base
+
+components:
   - ../../components/external_db
   #- ../../components/ldap
   - ../../components/recaptcha
