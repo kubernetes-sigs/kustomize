@@ -26,6 +26,7 @@ verify-kustomize: \
 prow-presubmit-check: \
 	lint-kustomize \
 	test-unit-kustomize-all \
+	test-examples-kustomize-against-HEAD \
 	test-unit-cmd-all \
 	test-go-mod
 

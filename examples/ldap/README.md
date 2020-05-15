@@ -53,7 +53,7 @@ curl -s -o "$BASE/#1" "$CONTENT/base\
 
 Look at the directory:
 
-<!-- @runTree @testAgainstLatestRelease -->
+<!-- @runTree -->
 ```
 tree $DEMO_HOME
 ```
@@ -196,7 +196,7 @@ The production customization adds 6 replica as well as a consistent disk.
 
 Review the directory structure and differences:
 
-<!-- @listFiles @testAgainstLatestRelease -->
+<!-- @listFiles -->
 ```
 tree $DEMO_HOME
 ```
