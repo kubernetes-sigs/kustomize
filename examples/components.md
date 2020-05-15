@@ -596,8 +596,15 @@ secretGenerator:
     - site_key.txt
     - secret_key.txt
 
-patchesStrategicMerge:
-  - configmap.yaml
+# Updating the ConfigMap works with generators as well.
+configMapGenerator:
+- name: conf
+  behavior: merge
+  literals:
+    - recaptcha.conf=|
+        enabled=true
+        site_key=/var/run/secrets/recaptcha/site_key.txt
+        secret_key=/var/run/secrets/recaptcha/secret_key.txt
 
 patchesJson6902:
 - target:
@@ -620,18 +627,6 @@ cat <<EOF >$RECAPTCHA/deployment.yaml
   value:
     mountPath: /var/run/secrets/recaptcha/
     name: recaptcha
-EOF
-
-cat <<EOF >$RECAPTCHA/configmap.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: conf
-data:
-  recaptcha.conf: |
-    enabled=true
-    site_key=/var/run/secrets/recaptcha/site_key.txt
-    secret_key=/var/run/secrets/recaptcha/secret_key.txt
 EOF
 ```
 
@@ -714,7 +709,6 @@ Now the workspace has following directories:
 │   │   ├── kustomization.yaml
 │   │   └── ldappass.txt
 │   └── recaptcha
-│       ├── configmap.yaml
 │       ├── deployment.yaml
 │       ├── kustomization.yaml
 │       ├── secret_key.txt
