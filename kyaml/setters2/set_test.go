@@ -1293,3 +1293,8 @@ openAPI:
 		})
 	}
 }
+
+func TestJoinCompositeStrings(t *testing.T) {
+	input := []string{"10", "true", "hi", "1.1", "1.8.1"}
+	assert.Equal(t, `10,true,"hi",1.1,"1.8.1"`, JoinCompositeStrings(input))
+}
