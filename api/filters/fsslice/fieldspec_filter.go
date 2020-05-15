@@ -23,6 +23,8 @@ type fieldSpecFilter struct {
 	// CreateKind defines the type of node to create if the field is not found
 	CreateKind yaml.Kind
 
+	CreateTag string
+
 	// path keeps internal state about the current path
 	path []string
 }
@@ -63,6 +65,8 @@ func (fltr fieldSpecFilter) field(obj *yaml.RNode) error {
 
 	// lookup the field matching the next path element
 	var lookupField yaml.Filter
+	var kind yaml.Kind
+	var tag string
 	switch {
 	case !fltr.FieldSpec.CreateIfNotPresent || fltr.CreateKind == 0 || isSeq:
 		// dont' create the field if we don't find it
@@ -70,15 +74,26 @@ func (fltr fieldSpecFilter) field(obj *yaml.RNode) error {
 	case len(fltr.path) <= 1:
 		// create the field if it is missing: use the provided node kind
 		lookupField = yaml.LookupCreate(fltr.CreateKind, fieldName)
+		kind = fltr.CreateKind
+		tag = fltr.CreateTag
 	default:
 		// create the field if it is missing: must be a mapping node
 		lookupField = yaml.LookupCreate(yaml.MappingNode, fieldName)
+		kind = yaml.MappingNode
+		tag = "!!map"
 	}
 
 	// locate (or maybe create) the field
 	field, err := obj.Pipe(lookupField)
 	if err != nil || field == nil {
 		return errors.WrapPrefixf(err, "fieldName: %s", fieldName)
+	}
+
+	// if the value exists, but is null, then change it to the creation type
+	// TODO: update yaml.LookupCreate to support this
+	if field.YNode().Tag == "!!null" {
+		field.YNode().Kind = kind
+		field.YNode().Tag = tag
 	}
 
 	// copy the current fltr and change the path on the copy
