@@ -146,3 +146,23 @@ hello: world
 		})
 	}
 }
+
+func TestConvertJSONToYamlNode(t *testing.T) {
+	inputJSON := `{"type": "string", "maxLength": 15, "enum": ["allowedValue1", "allowedValue2"]}`
+	expected := `enum:
+- allowedValue1
+- allowedValue2
+maxLength: 15
+type: string
+`
+
+	node, err := ConvertJSONToYamlNode(inputJSON)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	actual, err := node.String()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	assert.Equal(t, expected, actual)
+}

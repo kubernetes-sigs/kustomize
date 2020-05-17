@@ -4,7 +4,6 @@
 package setters2
 
 import (
-	"encoding/json"
 	"strings"
 
 	"github.com/go-openapi/spec"
@@ -136,19 +135,19 @@ func (sd SetterDefinition) AddToFile(path string) error {
 func (sd SetterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	key := SetterDefinitionPrefix + sd.Name
 
-	def, err := object.Pipe(yaml.LookupCreate(
-		yaml.MappingNode, openapi.SupplementaryOpenAPIFieldName, "definitions", key))
+	definitions, err := object.Pipe(yaml.LookupCreate(
+		yaml.MappingNode, openapi.SupplementaryOpenAPIFieldName, "definitions"))
 	if err != nil {
 		return nil, err
 	}
 
-	definitions, err := object.Pipe(yaml.Lookup(openapi.SupplementaryOpenAPIFieldName, "definitions"))
+	setterDef, err := definitions.Pipe(yaml.LookupCreate(yaml.MappingNode, key))
 	if err != nil {
 		return nil, err
 	}
 
 	if sd.Schema != "" {
-		schNode, err := ConvertJSONToYamlNode(sd.Schema)
+		schNode, err := yaml.ConvertJSONToYamlNode(sd.Schema)
 		if err != nil {
 			return nil, err
 		}
@@ -162,7 +161,7 @@ func (sd SetterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	}
 
 	if sd.Description != "" {
-		err = def.PipeE(yaml.FieldSetter{Name: "description", StringValue: sd.Description})
+		err = setterDef.PipeE(yaml.FieldSetter{Name: "description", StringValue: sd.Description})
 		if err != nil {
 			return nil, err
 		}
@@ -171,7 +170,7 @@ func (sd SetterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	}
 
 	if sd.Type != "" {
-		err = def.PipeE(yaml.FieldSetter{Name: "type", StringValue: sd.Type})
+		err = setterDef.PipeE(yaml.FieldSetter{Name: "type", StringValue: sd.Type})
 		if err != nil {
 			return nil, err
 		}
@@ -179,7 +178,7 @@ func (sd SetterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 		sd.Type = ""
 	}
 
-	ext, err := def.Pipe(yaml.LookupCreate(yaml.MappingNode, K8sCliExtensionKey))
+	ext, err := setterDef.Pipe(yaml.LookupCreate(yaml.MappingNode, K8sCliExtensionKey))
 	if err != nil {
 		return nil, err
 	}
@@ -198,24 +197,6 @@ func (sd SetterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	}
 
 	return object, nil
-}
-
-// ConvertJSONToYamlNode parses input json string and returns equivalent yaml node
-func ConvertJSONToYamlNode(jsonStr string) (*yaml.RNode, error) {
-	var body map[string]interface{}
-	err := json.Unmarshal([]byte(jsonStr), &body)
-	if err != nil {
-		return nil, err
-	}
-	yml, err := yaml.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	ymlStr, err := yaml.Parse(string(yml))
-	if err != nil {
-		return nil, err
-	}
-	return ymlStr, nil
 }
 
 // SetterDefinition may be used to update a files OpenAPI definitions with a new substitution.
