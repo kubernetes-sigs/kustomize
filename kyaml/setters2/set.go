@@ -58,6 +58,11 @@ func (s *Set) visitSequence(object *yaml.RNode, p string, schema *openapi.Resour
 
 	// set the values on the sequences
 	var elements []*yaml.Node
+	if len(ext.Setter.ListValues) > 0 {
+		if err := validateAgainstSchema(ext, schema.Schema); err != nil {
+			return err
+		}
+	}
 	for i := range ext.Setter.ListValues {
 		v := ext.Setter.ListValues[i]
 		n := yaml.NewScalarRNode(v).YNode()
@@ -200,15 +205,22 @@ func validateAgainstSchema(ext *cliExtension, sch *spec.Schema) error {
 	sc.Properties[ext.Setter.Name] = *sch
 
 	input := map[string]interface{}{}
-	format := `{"%s" : "%s"}`
-	if yaml.IsValueNonString(ext.Setter.Value) {
-		format = `{"%s" : %s}`
+	var inputJSON string
+
+	if len(ext.Setter.ListValues) > 0 {
+		format := `{"%s" : [%s]}`
+		inputJSON = fmt.Sprintf(format, ext.Setter.Name, JoinCompositeStrings(ext.Setter.ListValues))
+	} else {
+		format := `{"%s" : "%s"}`
+		if yaml.IsValueNonString(ext.Setter.Value) {
+			format = `{"%s" : %s}`
+		}
+		inputJSON = fmt.Sprintf(format, ext.Setter.Name, ext.Setter.Value)
 	}
 
 	// leverage json.Unmarshal to parse the value type
 	// Ex: `{"setter" : "true"}` parses the value as string whereas
 	// `{"setter" : true}` parses as boolean
-	inputJSON := fmt.Sprintf(format, ext.Setter.Name, ext.Setter.Value)
 	err := json.Unmarshal([]byte(inputJSON), &input)
 	if err != nil {
 		return err
@@ -218,6 +230,21 @@ func validateAgainstSchema(ext *cliExtension, sch *spec.Schema) error {
 		return errors.Errorf("The input value doesn't validate against provided OpenAPI schema: %v\n", err.Error())
 	}
 	return nil
+}
+
+// JoinCompositeStrings takes in strings whose values can be of different types and returns
+// joined string with quotes for only string type values
+// ex: ["10", "true",  "hi", "1.1"] returns 10,true,"hi",1.1
+func JoinCompositeStrings(listValues []string) string {
+	res := ""
+	for _, val := range listValues {
+		if yaml.IsValueNonString(val) {
+			res += fmt.Sprintf(`%s,`, val)
+		} else {
+			res += fmt.Sprintf(`"%s",`, val)
+		}
+	}
+	return strings.TrimSuffix(res, ",")
 }
 
 // SetOpenAPI updates a setter value
