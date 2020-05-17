@@ -4,6 +4,7 @@
 package setters2
 
 import (
+	"encoding/json"
 	"strings"
 
 	"github.com/go-openapi/spec"
@@ -116,6 +117,9 @@ type SetterDefinition struct {
 	// Type is the type of the setter value.
 	Type string `yaml:"type,omitempty"`
 
+	// Schema is the openAPI schema for setter constraints.
+	Schema string `yaml:"schema,omitempty"`
+
 	// EnumValues is a map of possible setter values to actual field values.
 	// If EnumValues is specified, then the value set the by user 1) MUST
 	// be present in the enumValues map as a key, and 2) the map entry value
@@ -137,6 +141,26 @@ func (sd SetterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	definitions, err := object.Pipe(yaml.Lookup(openapi.SupplementaryOpenAPIFieldName, "definitions"))
+	if err != nil {
+		return nil, err
+	}
+
+	if sd.Schema != "" {
+		schNode, err := ConvertJSONToYamlNode(sd.Schema)
+		if err != nil {
+			return nil, err
+		}
+
+		err = definitions.PipeE(yaml.SetField(key, schNode))
+		if err != nil {
+			return nil, err
+		}
+		// don't write the schema to the extension
+		sd.Schema = ""
+	}
+
 	if sd.Description != "" {
 		err = def.PipeE(yaml.FieldSetter{Name: "description", StringValue: sd.Description})
 		if err != nil {
@@ -174,6 +198,24 @@ func (sd SetterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	}
 
 	return object, nil
+}
+
+// ConvertJSONToYamlNode parses input json string and returns equivalent yaml node
+func ConvertJSONToYamlNode(jsonStr string) (*yaml.RNode, error) {
+	var body map[string]interface{}
+	err := json.Unmarshal([]byte(jsonStr), &body)
+	if err != nil {
+		return nil, err
+	}
+	yml, err := yaml.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	ymlStr, err := yaml.Parse(string(yml))
+	if err != nil {
+		return nil, err
+	}
+	return ymlStr, nil
 }
 
 // SetterDefinition may be used to update a files OpenAPI definitions with a new substitution.
