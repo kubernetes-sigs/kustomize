@@ -2,11 +2,13 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"path"
 	"regexp"
 	"sort"
 	"strconv"
@@ -20,8 +22,9 @@ var modules = [...]string{
 	"cmd/resource", "cmd/kubectl", "pluginator", "kustomize",
 }
 var verbose bool   // Enable verbose or not
+var noDryRun bool  // Disable dry run
+var noTest bool    // Disable module tests
 var tempDir string // Temporary directory path for git worktree
-var pwd string     // Current working directory
 
 // === Log helper functions ===
 
@@ -33,6 +36,10 @@ func logDebug(format string, v ...interface{}) {
 
 func logInfo(format string, v ...interface{}) {
 	log.Printf("INFO "+format, v...)
+}
+
+func logWarn(format string, v ...interface{}) {
+	log.Printf("WARN "+format, v...)
 }
 
 func logFatal(format string, v ...interface{}) {
@@ -50,8 +57,7 @@ var listSubCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List current version of all covered modules",
 	Run: func(cmd *cobra.Command, args []string) {
-		var err error
-		pwd, err = os.Getwd()
+		pwd, err := os.Getwd()
 		if err != nil {
 			logFatal(err.Error())
 		}
@@ -63,7 +69,7 @@ var listSubCmd = &cobra.Command{
 		fetchTags(pwd, remote)
 		res := []string{} // Store result strings
 		for _, mod := range modules {
-			res = append(res, fmt.Sprintf("%s/%s", mod, getModuleCurrentVersion(mod)))
+			res = append(res, fmt.Sprintf("%s/%s", mod, getModuleCurrentVersion(mod, pwd)))
 		}
 		for _, l := range res {
 			fmt.Println(l)
@@ -72,18 +78,98 @@ var listSubCmd = &cobra.Command{
 }
 
 var release = &cobra.Command{
-	Use:   "release",
+	Use:   "release [module name] [version type]",
 	Short: "Release a new version of specified module",
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) != 2 {
+			return errors.New("2 arguments are required")
+		}
+		found := false
+		for _, mod := range modules {
+			if mod == args[0] {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("%s is not a valid module. Valid modules are %s", args[0], modules)
+		}
+		types := []string{"major", "minor", "patch"}
+		found = false
+		for _, t := range types {
+			if t == args[1] {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("%s is not a valid version type. Valid types are %s", args[1], types)
+		}
+		return nil
+	},
 	PreRun: func(cmd *cobra.Command, args []string) {
 		logDebug("Preparing Git environemnt")
 		prepareGit()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		logInfo("Done")
-	},
-	PostRun: func(cmd *cobra.Command, args []string) {
-		logDebug("Cleaning Git environment")
+		modName := args[0]
+		versionType := args[1]
+		logInfo("Creating tag for module %s", modName)
+		pwd, err := os.Getwd()
+		if err != nil {
+			logFatal(err.Error())
+		}
+		logDebug("Working directory: %s", pwd)
+		remote := "upstream"
+		// Check remotes
+		checkRemoteExistence(pwd, remote)
+		// Fetch latest tags from remote
+		fetchTags(pwd, remote)
+
+		mod := module{
+			name: modName,
+			path: pwd,
+		}
+		mod.UpdateCurrentVersion()
+
+		oldVersion := mod.version.String()
+		mod.version.Bump(versionType)
+		newVersion := mod.version.String()
+		logInfo("Bumping version: %s => %s", oldVersion, newVersion)
+
+		// Create branch
+		branch := fmt.Sprintf("release-%s-v%d.%d", mod.name, mod.version.major, mod.version.minor)
+		newBranch(pwd, branch)
+
+		addWorktree(pwd, tempDir, branch)
+
+		merge(tempDir, "upstream/master")
+		// Update module path
+		mod.path = tempDir
+
+		logInfo(
+			"Releasing summary:\nDir:\t%s\nModule:\t%s %s\nBranch:\t%s\nTag:\t%s",
+			tempDir,
+			mod.name,
+			mod.version.String(),
+			branch,
+			mod.Tag(),
+		)
+
+		// Run module tests
+		output, err := mod.RunTest()
+		if err != nil {
+			logWarn(output)
+		} else if !noDryRun {
+			logInfo("Skipping push module %s. Run with --no-dry-run to push the release.", mod.name)
+		} else {
+			// TODO: Push tags
+		}
+		// Clean
 		cleanGit()
+		pruneWorktree(pwd)
+		deleteBranch(pwd, branch)
+		logInfo("Done")
 	},
 }
 
@@ -99,49 +185,23 @@ func main() {
 		rootCmd.AddCommand(cmd)
 	}
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+	release.Flags().BoolVarP(&noDryRun, "no-dry-run", "", false, "disable dry-run")
+	release.Flags().BoolVarP(&noTest, "no-test", "", false, "don't run module tests")
 
 	if err := rootCmd.Execute(); err != nil {
 		logFatal(err.Error())
 	}
 }
 
-func getModuleCurrentVersion(modName string) string {
-	mod := newModule(modName, pwd)
+func getModuleCurrentVersion(modName, path string) string {
+	mod := module{
+		name: modName,
+		path: path,
+	}
 	mod.UpdateCurrentVersion()
 	v := mod.version.String()
 	logDebug("module %s version.toString => %s", mod.name, v)
 	return v
-}
-
-func checkRemoteExistence(path string, remote string) {
-	logDebug("Checking remote %s in %s", remote, path)
-	cmd := exec.Command("git", "remote")
-	cmd.Dir = path
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
-	if err != nil {
-		logFatal(err.Error())
-	}
-	logDebug("Remotes:\n%s", out.String())
-
-	regString := fmt.Sprintf("(?m)^%s$", remote)
-	reg := regexp.MustCompile(regString)
-	if !reg.MatchString(out.String()) {
-		logFatal("Cannot find remote named %s", remote)
-	}
-	logDebug("Remote %s exists", remote)
-}
-
-func fetchTags(path string, remote string) {
-	logDebug("Fetching latest tags")
-	cmd := exec.Command("git", "fetch", "-t", remote)
-	cmd.Dir = path
-	err := cmd.Run()
-	if err != nil {
-		logFatal(err.Error())
-	}
-	logDebug("Finished fetching")
 }
 
 // === module version struct and functions definition ===
@@ -156,7 +216,7 @@ func (v moduleVersion) String() string {
 	return fmt.Sprintf("v%d.%d.%d", v.major, v.minor, v.patch)
 }
 
-func (v *moduleVersion) Set(major int, minor int, patch int) {
+func (v *moduleVersion) Set(major, minor, patch int) {
 	v.major = major
 	v.minor = minor
 	v.patch = patch
@@ -179,21 +239,27 @@ func (v *moduleVersion) FromString(vs string) {
 	v.Set(major, minor, patch)
 }
 
+func (v *moduleVersion) Bump(t string) {
+	if t == "major" {
+		v.major++
+		v.minor = 0
+		v.patch = 0
+	} else if t == "minor" {
+		v.minor++
+		v.patch = 0
+	} else if t == "patch" {
+		v.patch++
+	} else {
+		logFatal("Invalid version type: %s", t)
+	}
+}
+
 // === module struct and functions definition ===
 
 type module struct {
 	name    string
 	path    string
 	version moduleVersion
-}
-
-func newModule(modName string, path string) module {
-	mod := module{
-		name: modName,
-		path: path,
-	}
-	logDebug("Created module struct for %s", modName)
-	return mod
 }
 
 func (m *module) UpdateCurrentVersion() {
@@ -234,10 +300,32 @@ func (m *module) UpdateCurrentVersion() {
 	m.version = versions[0]
 }
 
+func (m *module) Tag() string {
+	return m.name + "/" + m.version.String()
+}
+
+func (m *module) RunTest() (string, error) {
+	if noTest {
+		logInfo("Tests disabled.")
+		return "", nil
+	}
+	testPath := path.Join(m.path, m.name)
+	logInfo("Running tests in %s...", testPath)
+	cmd := exec.Command("go", "test", "./...")
+	cmd.Dir = testPath
+	stdoutStderr, err := cmd.CombinedOutput()
+	if err != nil {
+		return string(stdoutStderr), err
+	}
+	logInfo("Tests are successfully finished")
+	return "", nil
+}
+
 // === Git environment functions ===
 
 func prepareGit() {
 	var err error
+	// Create temporary directory
 	tempDir, err = ioutil.TempDir("", "kustomize-releases")
 	if err != nil {
 		logFatal(err.Error())
@@ -252,4 +340,105 @@ func cleanGit() {
 		logFatal(err.Error())
 	}
 	logDebug("Deleting done")
+}
+
+func checkRemoteExistence(path, remote string) {
+	logDebug("Checking remote %s in %s", remote, path)
+	cmd := exec.Command("git", "remote")
+	cmd.Dir = path
+	stdoutStderr, err := cmd.CombinedOutput()
+	if err != nil {
+		logFatal(string(stdoutStderr))
+	}
+	logDebug("Remotes:\n%s", string(stdoutStderr))
+
+	regString := fmt.Sprintf("(?m)^%s$", remote)
+	reg := regexp.MustCompile(regString)
+	if !reg.MatchString(string(stdoutStderr)) {
+		logFatal("Cannot find remote named %s", remote)
+	}
+	logDebug("Remote %s exists", remote)
+}
+
+func fetchTags(path, remote string) {
+	logDebug("Fetching latest tags")
+	cmd := exec.Command("git", "fetch", "-t", remote)
+	cmd.Dir = path
+	stdoutStderr, err := cmd.CombinedOutput()
+	if err != nil {
+		logFatal(string(stdoutStderr))
+	}
+	logDebug("Finished fetching")
+}
+
+func checkBranchExistence(path, name string) bool {
+	logDebug("Checking branch %s existence", name)
+	cmd := exec.Command("git", "branch", "-a")
+	cmd.Dir = path
+	stdoutStderr, err := cmd.CombinedOutput()
+	if err != nil {
+		logFatal(string(stdoutStderr))
+	}
+	return strings.Contains(string(stdoutStderr), name)
+}
+
+func newBranch(path, name string) {
+	logInfo("Creating new branch %s", name)
+	upstreamBranch := "upstream/" + name
+	cmd := exec.Command("git", "branch", name, upstreamBranch)
+	if !checkBranchExistence(path, upstreamBranch) {
+		logInfo("Remote branch %s doesn't exist", upstreamBranch)
+		cmd = exec.Command("git", "branch", name)
+	}
+	cmd.Dir = path
+	stdoutStderr, err := cmd.CombinedOutput()
+	if err != nil {
+		logFatal(string(stdoutStderr))
+	}
+	logInfo("Finished creating branch")
+}
+
+func deleteBranch(path, name string) {
+	logDebug("Deleting branch %s", name)
+	cmd := exec.Command("git", "branch", "-D", name)
+	cmd.Dir = path
+	stdoutStderr, err := cmd.CombinedOutput()
+	if err != nil {
+		logFatal(string(stdoutStderr))
+	}
+	logDebug("Finished deleting branch")
+}
+
+func addWorktree(path, tempDir, branch string) {
+	logInfo("Adding worktree %s for branch %s", tempDir, branch)
+	cmd := exec.Command("git", "worktree", "add", tempDir, branch)
+	cmd.Dir = path
+	stdoutStderr, err := cmd.CombinedOutput()
+	if err != nil {
+		logFatal(string(stdoutStderr))
+	}
+	logInfo("Finished adding worktree")
+}
+
+func pruneWorktree(path string) {
+	logDebug("Pruning worktree for repo %s", path)
+	cmd := exec.Command("git", "worktree", "prune")
+	cmd.Dir = path
+	stdoutStderr, err := cmd.CombinedOutput()
+	if err != nil {
+		logFatal(string(stdoutStderr))
+	}
+	logDebug("Finished pruning worktree")
+}
+
+func merge(path, branch string) {
+	logInfo("Merging %s", branch)
+	logDebug("Working dir: %s", path)
+	cmd := exec.Command("git", "merge", branch)
+	cmd.Dir = path
+	stdoutStderr, err := cmd.CombinedOutput()
+	if err != nil {
+		logFatal(string(stdoutStderr))
+	}
+	logInfo("Finished merging")
 }
