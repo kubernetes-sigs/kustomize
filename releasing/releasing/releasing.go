@@ -107,8 +107,8 @@ func main() {
 
 func getModuleCurrentVersion(modName string) string {
 	mod := newModule(modName, pwd)
-	mod.updateCurrentVersion()
-	v := mod.version.toString()
+	mod.UpdateCurrentVersion()
+	v := mod.version.String()
 	logDebug("module %s version.toString => %s", mod.name, v)
 	return v
 }
@@ -152,14 +152,31 @@ type moduleVersion struct {
 	patch int
 }
 
-func (v moduleVersion) toString() string {
+func (v moduleVersion) String() string {
 	return fmt.Sprintf("v%d.%d.%d", v.major, v.minor, v.patch)
 }
 
-func (v *moduleVersion) set(major int, minor int, patch int) {
+func (v *moduleVersion) Set(major int, minor int, patch int) {
 	v.major = major
 	v.minor = minor
 	v.patch = patch
+}
+
+func (v *moduleVersion) FromString(vs string) {
+	versions := strings.Split(vs, ".")
+	major, err := strconv.Atoi(versions[0])
+	if err != nil {
+		logFatal(err.Error())
+	}
+	minor, err := strconv.Atoi(versions[1])
+	if err != nil {
+		logFatal(err.Error())
+	}
+	patch, err := strconv.Atoi(versions[2])
+	if err != nil {
+		logFatal(err.Error())
+	}
+	v.Set(major, minor, patch)
 }
 
 // === module struct and functions definition ===
@@ -179,7 +196,7 @@ func newModule(modName string, path string) module {
 	return mod
 }
 
-func (m *module) updateCurrentVersion() {
+func (m *module) UpdateCurrentVersion() {
 	logDebug("Getting latest tag for %s", m.name)
 	cmd := exec.Command("git", "tag", "-l")
 	var out bytes.Buffer
@@ -197,25 +214,11 @@ func (m *module) updateCurrentVersion() {
 	logDebug("Tags for module %s:\n%s", m.name, tagsString)
 	var versions []moduleVersion
 	for _, tag := range tagsString {
-		v := tag[len(m.name)+2:]
-		vs := strings.Split(v, ".")
-		major, err := strconv.Atoi(vs[0])
-		if err != nil {
-			logFatal(err.Error())
-		}
-		minor, err := strconv.Atoi(vs[1])
-		if err != nil {
-			logFatal(err.Error())
-		}
-		patch, err := strconv.Atoi(vs[2])
-		if err != nil {
-			logFatal(err.Error())
-		}
-		versions = append(versions, moduleVersion{
-			major: major,
-			minor: minor,
-			patch: patch,
-		})
+		tag = tag[len(m.name)+2:]
+		v := moduleVersion{}
+		v.FromString(tag)
+
+		versions = append(versions, v)
 	}
 	// Sort to find latest tag
 	sort.Slice(versions, func(i, j int) bool {
