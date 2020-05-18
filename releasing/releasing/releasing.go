@@ -163,13 +163,13 @@ var release = &cobra.Command{
 		} else if !noDryRun {
 			logInfo("Skipping push module %s. Run with --no-dry-run to push the release.", mod.name)
 		} else {
-			// TODO: Push tags
+			pushRelease(tempDir, branch, mod)
 		}
 		// Clean
 		cleanGit()
 		pruneWorktree(pwd)
 		deleteBranch(pwd, branch)
-		logInfo("Done")
+		logInfo("Module %s completes", mod.name)
 	},
 }
 
@@ -441,4 +441,34 @@ func merge(path, branch string) {
 		logFatal(string(stdoutStderr))
 	}
 	logInfo("Finished merging")
+}
+
+func pushRelease(path, branch string, mod module) {
+	logInfo("Pushing branch %s", branch)
+	cmd := exec.Command("git", "push", "upstream", branch)
+	cmd.Dir = path
+	stdoutStderr, err := cmd.CombinedOutput()
+	if err != nil {
+		logFatal(string(stdoutStderr))
+	}
+
+	logInfo("Creating tag %s", mod.Tag())
+	cmd = exec.Command(
+		"git", "tag",
+		"-a", mod.Tag(),
+		"-m", fmt.Sprintf("Release %s on branch %s", mod.Tag(), branch),
+	)
+	cmd.Dir = path
+	stdoutStderr, err = cmd.CombinedOutput()
+	if err != nil {
+		logFatal(string(stdoutStderr))
+	}
+
+	logInfo("Pushing tag %s", mod.Tag())
+	cmd = exec.Command("git", "push", "upstream", mod.Tag())
+	cmd.Dir = path
+	stdoutStderr, err = cmd.CombinedOutput()
+	if err != nil {
+		logFatal(string(stdoutStderr))
+	}
 }
