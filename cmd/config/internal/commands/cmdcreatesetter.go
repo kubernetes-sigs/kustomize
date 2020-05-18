@@ -48,6 +48,9 @@ func NewCreateSetterRunner(parent string) *CreateSetterRunner {
 	set.Flags().MarkHidden("partial")
 	set.Flags().StringVar(&setterVersion, "version", "",
 		"use this version of the setter format")
+	set.Flags().StringVar(&r.CreateSetter.SchemaPath, "schema-path", "",
+		`openAPI schema file path for setter constraints -- file content `+
+			`e.g. {"type": "string", "maxLength": 15, "enum": ["allowedValue1", "allowedValue2"]}`)
 	set.Flags().MarkHidden("version")
 	fixDocs(parent, set)
 	r.Command = set

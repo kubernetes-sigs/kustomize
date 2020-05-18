@@ -4,6 +4,8 @@
 package settersutil
 
 import (
+	"io/ioutil"
+
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
@@ -21,6 +23,8 @@ type SetterCreator struct {
 
 	Type string
 
+	SchemaPath string
+
 	// FieldName if set will add the OpenAPI reference to fields with this name or path
 	// FieldName may be the full name of the field, full path to the field, or the path suffix.
 	// e.g. all of the following would match spec.template.spec.containers.image --
@@ -35,10 +39,14 @@ type SetterCreator struct {
 }
 
 func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
+	schema, err := schemaFromFile(c.SchemaPath)
+	if err != nil {
+		return err
+	}
 	// Update the OpenAPI definitions to hace the setter
 	sd := setters2.SetterDefinition{
 		Name: c.Name, Value: c.FieldValue, Description: c.Description, SetBy: c.SetBy,
-		Type: c.Type,
+		Type: c.Type, Schema: schema,
 	}
 	if err := sd.AddToFile(openAPIPath); err != nil {
 		return err
@@ -61,4 +69,16 @@ func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
 			})},
 		Outputs: []kio.Writer{inout},
 	}.Execute()
+}
+
+// schemaFromFile reads the contents from schemaPath and returns schema
+func schemaFromFile(schemaPath string) (string, error) {
+	if schemaPath == "" {
+		return "", nil
+	}
+	sch, err := ioutil.ReadFile(schemaPath)
+	if err != nil {
+		return "", err
+	}
+	return string(sch), nil
 }

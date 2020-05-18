@@ -116,6 +116,9 @@ type SetterDefinition struct {
 	// Type is the type of the setter value.
 	Type string `yaml:"type,omitempty"`
 
+	// Schema is the openAPI schema for setter constraints.
+	Schema string `yaml:"schema,omitempty"`
+
 	// EnumValues is a map of possible setter values to actual field values.
 	// If EnumValues is specified, then the value set the by user 1) MUST
 	// be present in the enumValues map as a key, and 2) the map entry value
@@ -132,13 +135,33 @@ func (sd SetterDefinition) AddToFile(path string) error {
 func (sd SetterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	key := SetterDefinitionPrefix + sd.Name
 
-	def, err := object.Pipe(yaml.LookupCreate(
-		yaml.MappingNode, openapi.SupplementaryOpenAPIFieldName, "definitions", key))
+	definitions, err := object.Pipe(yaml.LookupCreate(
+		yaml.MappingNode, openapi.SupplementaryOpenAPIFieldName, "definitions"))
 	if err != nil {
 		return nil, err
 	}
+
+	setterDef, err := definitions.Pipe(yaml.LookupCreate(yaml.MappingNode, key))
+	if err != nil {
+		return nil, err
+	}
+
+	if sd.Schema != "" {
+		schNode, err := yaml.ConvertJSONToYamlNode(sd.Schema)
+		if err != nil {
+			return nil, err
+		}
+
+		err = definitions.PipeE(yaml.SetField(key, schNode))
+		if err != nil {
+			return nil, err
+		}
+		// don't write the schema to the extension
+		sd.Schema = ""
+	}
+
 	if sd.Description != "" {
-		err = def.PipeE(yaml.FieldSetter{Name: "description", StringValue: sd.Description})
+		err = setterDef.PipeE(yaml.FieldSetter{Name: "description", StringValue: sd.Description})
 		if err != nil {
 			return nil, err
 		}
@@ -147,7 +170,7 @@ func (sd SetterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	}
 
 	if sd.Type != "" {
-		err = def.PipeE(yaml.FieldSetter{Name: "type", StringValue: sd.Type})
+		err = setterDef.PipeE(yaml.FieldSetter{Name: "type", StringValue: sd.Type})
 		if err != nil {
 			return nil, err
 		}
@@ -155,7 +178,7 @@ func (sd SetterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 		sd.Type = ""
 	}
 
-	ext, err := def.Pipe(yaml.LookupCreate(yaml.MappingNode, K8sCliExtensionKey))
+	ext, err := setterDef.Pipe(yaml.LookupCreate(yaml.MappingNode, K8sCliExtensionKey))
 	if err != nil {
 		return nil, err
 	}
