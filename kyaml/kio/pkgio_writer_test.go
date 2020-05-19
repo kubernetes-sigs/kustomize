@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"sigs.k8s.io/kustomize/kyaml/testutil"
+
 	"github.com/stretchr/testify/assert"
 	. "sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -186,7 +188,9 @@ func TestLocalPackageWriter_Write_absPath(t *testing.T) {
 	d, node1, node2, node3 := getWriterInputs(t)
 	defer os.RemoveAll(d)
 
-	node4, err := yaml.Parse(fmt.Sprintf(`e: f
+	d = filepath.ToSlash(d)
+
+	n4 := fmt.Sprintf(`e: f
 g:
   h:
   - i # has a list
@@ -195,16 +199,13 @@ metadata:
   annotations:
     config.kubernetes.io/index: a
     config.kubernetes.io/path: "%s/a/b/b_test.yaml" # use a different path, should still collide
-`, d))
-	if !assert.NoError(t, err) {
-		assert.FailNow(t, err.Error())
-	}
+`, d)
+	node4, err := yaml.Parse(n4)
+	testutil.AssertNoError(t, err, n4)
 
 	w := LocalPackageWriter{PackagePath: d}
 	err = w.Write([]*yaml.RNode{node2, node1, node3, node4})
-	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "package paths may not be absolute paths")
-	}
+	testutil.AssertErrorContains(t, err, "package paths may not be absolute paths")
 }
 
 // TestLocalPackageWriter_Write_missingPath tests:

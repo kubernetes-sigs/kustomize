@@ -481,7 +481,6 @@ spec:
 	for i := range tests {
 		test := tests[i]
 		t.Run(test.name, func(t *testing.T) {
-			os.Clearenv()
 			for k, v := range test.env {
 				os.Setenv(k, v)
 			}
