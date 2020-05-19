@@ -271,21 +271,21 @@ func sortFns(buff *kio.PackageBuffer) {
 	// functions deeper in the file system tree should be run first
 	sort.Slice(buff.Nodes, func(i, j int) bool {
 		mi, _ := buff.Nodes[i].GetMeta()
-		pi := mi.Annotations[kioutil.PathAnnotation]
-		if path.Base(path.Dir(pi)) == "functions" {
+		pi := filepath.ToSlash(mi.Annotations[kioutil.PathAnnotation])
+		if filepath.Base(path.Dir(pi)) == "functions" {
 			// don't count the functions dir, the functions are scoped 1 level above
-			pi = path.Dir(path.Dir(pi))
+			pi = filepath.Dir(path.Dir(pi))
 		} else {
-			pi = path.Dir(pi)
+			pi = filepath.Dir(pi)
 		}
 
 		mj, _ := buff.Nodes[j].GetMeta()
-		pj := mj.Annotations[kioutil.PathAnnotation]
-		if path.Base(path.Dir(pj)) == "functions" {
+		pj := filepath.ToSlash(mj.Annotations[kioutil.PathAnnotation])
+		if filepath.Base(path.Dir(pj)) == "functions" {
 			// don't count the functions dir, the functions are scoped 1 level above
-			pj = path.Dir(path.Dir(pj))
+			pj = filepath.Dir(path.Dir(pj))
 		} else {
-			pj = path.Dir(pj)
+			pj = filepath.Dir(pj)
 		}
 
 		// i is "less" than j (comes earlier) if its depth is greater -- e.g. run
@@ -365,9 +365,9 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode) (kio.Filter
 
 		var p string
 		if spec.Starlark.Path != "" {
-			p = m.Annotations[kioutil.PathAnnotation]
-			spec.Starlark.Path = path.Clean(spec.Starlark.Path)
-			if path.IsAbs(spec.Starlark.Path) {
+			p = filepath.ToSlash(path.Clean(m.Annotations[kioutil.PathAnnotation]))
+			spec.Starlark.Path = filepath.ToSlash(path.Clean(spec.Starlark.Path))
+			if filepath.IsAbs(spec.Starlark.Path) || path.IsAbs(spec.Starlark.Path) {
 				return nil, errors.Errorf(
 					"absolute function path %s not allowed", spec.Starlark.Path)
 			}
@@ -375,8 +375,9 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode) (kio.Filter
 				return nil, errors.Errorf(
 					"function path %s not allowed to start with ../", spec.Starlark.Path)
 			}
-			p = path.Join(r.Path, path.Dir(p), spec.Starlark.Path)
+			p = filepath.ToSlash(filepath.Join(r.Path, filepath.Dir(p), spec.Starlark.Path))
 		}
+		fmt.Println(p)
 
 		sf := &starlark.Filter{Name: spec.Starlark.Name, Path: p, URL: spec.Starlark.URL}
 

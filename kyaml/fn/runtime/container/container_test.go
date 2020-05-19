@@ -197,7 +197,10 @@ func TestFilter_ExitCode(t *testing.T) {
 		t.FailNow()
 	}
 
-	if !assert.EqualError(t, instance.GetExit(), "fork/exec /not/real/command: no such file or directory") {
+	if !assert.Error(t, instance.GetExit()) {
+		t.FailNow()
+	}
+	if !assert.Contains(t, instance.GetExit().Error(), "/not/real/command") {
 		t.FailNow()
 	}
 }

@@ -1,13 +1,19 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package testutil_test
+package testutil
 
 import (
 	"bytes"
 
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
+
+	"testing"
+
+	goerrors "github.com/go-errors/errors"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func UpdateYamlString(doc string, functions ...yaml.Filter) (string, error) {
@@ -33,4 +39,23 @@ func UpdateYamlBytes(b []byte, function ...yaml.Filter) ([]byte, error) {
 		Outputs: []kio.Writer{&rw},
 	}.Execute()
 	return out.Bytes(), err
+}
+
+func AssertErrorContains(t *testing.T, err error, value string, msg ...string) {
+	if !assert.Error(t, err, msg) {
+		t.FailNow()
+	}
+	if !assert.Contains(t, err.Error(), value, msg) {
+		t.FailNow()
+	}
+}
+
+func AssertNoError(t *testing.T, err error, msg ...string) {
+	if !assert.NoError(t, err, msg) {
+		gerr, ok := err.(*goerrors.Error)
+		if ok {
+			t.Fatal(string(gerr.Stack()))
+		}
+		t.FailNow()
+	}
 }

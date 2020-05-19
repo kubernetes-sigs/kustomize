@@ -525,7 +525,7 @@ metadata:
 			enableStarlark: true,
 			outFn: func(path string) []string {
 				return []string{
-					fmt.Sprintf("name:  path: %s/foo/a/b/c url:  program:", path)}
+					fmt.Sprintf("name:  path: %s/foo/a/b/c url:  program:", filepath.ToSlash(path))}
 			},
 		},
 
