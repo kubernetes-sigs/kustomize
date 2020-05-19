@@ -23,7 +23,7 @@ var modules = [...]string{
 }
 var verbose bool   // Enable verbose or not
 var noDryRun bool  // Disable dry run
-var noTest bool    // Disable module tests
+var doTest bool    // Enable module tests
 var tempDir string // Temporary directory path for git worktree
 
 // === Log helper functions ===
@@ -153,7 +153,11 @@ var release = &cobra.Command{
 			mod.Tag(),
 		)
 
-		if !noDryRun {
+		// Run module tests
+		output, err := mod.RunTest()
+		if err != nil {
+			logWarn(output)
+		} else if !noDryRun {
 			logInfo("Skipping push module %s. Run with --no-dry-run to push the release.", mod.name)
 		} else {
 			pushRelease(tempDir, branch, mod)
@@ -179,7 +183,7 @@ func main() {
 	}
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 	release.Flags().BoolVarP(&noDryRun, "no-dry-run", "", false, "disable dry-run")
-	release.Flags().BoolVarP(&noTest, "no-test", "", false, "don't run module tests")
+	release.Flags().BoolVarP(&doTest, "do-test", "", false, "run module tests before releasing")
 
 	if err := rootCmd.Execute(); err != nil {
 		logFatal(err.Error())
@@ -298,7 +302,7 @@ func (m *module) Tag() string {
 }
 
 func (m module) RunTest() (string, error) {
-	if noTest {
+	if !doTest {
 		logInfo("Tests disabled.")
 		return "", nil
 	}
