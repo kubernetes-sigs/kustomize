@@ -18,7 +18,7 @@
 
 * 通过 kustomization 文件的字段隐式触发插件，例如 `AnnotationsTransformer` 就是由 `commonAnnotations` 字段触发的。
 
-* 通过 `generators` 或 `transformers` 字段显示触发插件（通过指定插件的配置文件）。
+* 通过 `generators` 或 `transformers` 字段显式触发插件（通过指定插件的配置文件）。
 
 前一种方法比较方便，但功能有限，因为大多数插件参数都必须是默认的，而后一种方法允许传入完整的插件参数。
 
@@ -292,9 +292,7 @@ namespace: my-namespace
 
 #### 字段名称：`patchesJson6902`
 
-patchesJson6902 列表中的每个条目都应可以解析为 kubernetes 对象和将应用于该对象的 JSON patch。
-
-JSON patch 的文档地址：https://tools.ietf.org/html/rfc6902
+patchesJson6902 列表中的每个条目都应可以解析为 kubernetes 对象和将应用于该对象的 [JSON patch](https://tools.ietf.org/html/rfc6902)。
 
 目标字段指向的 kubernetes 对象的 group、 version、 kind、 name 和 namespace 在同一 kustomization 内 path 字段内容是 JSON patch 文件的相对路径。
 
@@ -379,7 +377,7 @@ patchesJson6902:
 
 #### 字段名称：`patchesStrategicMerge`
 
-此列表中的每个条目都应可以解析为部分或完整的资源定义文件。
+此列表中的每个条目都应可以解析为 [StrategicMergePatch](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-api-machinery/strategic-merge-patch.md).
 
 这些（也可能是部分的）资源文件中的 name 必须与已经通过 `resources` 加载的 name 字段匹配，或者通过 `bases` 中的 name 字段匹配。这些条目将用于 _patch_（修改）已知资源。
 
@@ -437,7 +435,7 @@ patchesStrategicMerge:
 
 #### 字段名称：`patches`
 
-这个列表中的每个条目应该解析到一个 Patch 对象，其中包括一个 patch 和一个目标选择器。patch 可以是策略合并 patch 或JSON patch，也可以是 patch 文件或 inline string。目标选择器可以通过 group、version、kind、name、namespace、标签选择器和注释选择器来选择资源，选择一个匹配所有指定字段的资源来应用 patch。
+这个列表中的每个条目应该解析到一个 Patch 对象，其中包括一个 patch 和一个目标选择器。patch 可以是 Strategic Merge Patch 或 JSON patch，也可以是 patch 文件或 inline string。目标选择器可以通过 group、version、kind、name、namespace、标签选择器和注释选择器来选择资源，选择一个或多个匹配所有指定字段的资源来应用 patch。
 
 ```
 patches:
