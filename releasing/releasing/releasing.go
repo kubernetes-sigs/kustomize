@@ -376,7 +376,13 @@ func checkBranchExistence(path, name string) bool {
 	if err != nil {
 		logFatal(string(stdoutStderr))
 	}
-	return strings.Contains(string(stdoutStderr), name)
+	branches := strings.Split(string(stdoutStderr), "\n")
+	for _, branch := range branches {
+		if strings.Trim(branch, " ") == "remotes/"+name {
+			return true
+		}
+	}
+	return false
 }
 
 func newBranch(path, name string) {
