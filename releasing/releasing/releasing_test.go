@@ -30,7 +30,7 @@ func TestList(t *testing.T) {
 }
 
 func TestRelease(t *testing.T) {
-	prepareGit()
+	createTempDir()
 	modName := "api"
 	versionType := "patch"
 	pwd, err := os.Getwd()
@@ -64,7 +64,7 @@ func TestRelease(t *testing.T) {
 	mod.path = tempDir
 
 	// Clean
-	cleanGit()
+	removeTempDir()
 	pruneWorktree(pwd)
 	deleteBranch(pwd, branch)
 }
