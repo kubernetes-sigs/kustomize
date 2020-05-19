@@ -107,13 +107,10 @@ var release = &cobra.Command{
 		}
 		return nil
 	},
-	PreRun: func(cmd *cobra.Command, args []string) {
-		logDebug("Preparing Git environemnt")
-		prepareGit()
-	},
 	Run: func(cmd *cobra.Command, args []string) {
 		modName := args[0]
 		versionType := args[1]
+		createTempDir()
 		logInfo("Creating tag for module %s", modName)
 		pwd, err := os.Getwd()
 		if err != nil {
@@ -156,20 +153,16 @@ var release = &cobra.Command{
 			mod.Tag(),
 		)
 
-		// Run module tests
-		output, err := mod.RunTest()
-		if err != nil {
-			logWarn(output)
-		} else if !noDryRun {
+		if !noDryRun {
 			logInfo("Skipping push module %s. Run with --no-dry-run to push the release.", mod.name)
 		} else {
 			pushRelease(tempDir, branch, mod)
 		}
 		// Clean
-		cleanGit()
+		removeTempDir()
 		pruneWorktree(pwd)
 		deleteBranch(pwd, branch)
-		logInfo("Module %s completes", mod.name)
+		logInfo("Releasing for module %s completes", mod.name)
 	},
 }
 
@@ -304,7 +297,7 @@ func (m *module) Tag() string {
 	return m.name + "/" + m.version.String()
 }
 
-func (m *module) RunTest() (string, error) {
+func (m module) RunTest() (string, error) {
 	if noTest {
 		logInfo("Tests disabled.")
 		return "", nil
@@ -323,17 +316,21 @@ func (m *module) RunTest() (string, error) {
 
 // === Git environment functions ===
 
-func prepareGit() {
-	var err error
+func createTempDir() {
 	// Create temporary directory
-	tempDir, err = ioutil.TempDir("", "kustomize-releases")
+	temp, err := ioutil.TempDir("", "kustomize-releases")
 	if err != nil {
 		logFatal(err.Error())
 	}
 	logDebug("Created git temp dir: " + tempDir)
+	tempDir = path.Join(temp, "sigs.k8s.io/kustomize")
+	err = os.MkdirAll(tempDir, 0700)
+	if err != nil {
+		logFatal(err.Error())
+	}
 }
 
-func cleanGit() {
+func removeTempDir() {
 	logDebug("Deleting git temp dir: " + tempDir)
 	err := os.RemoveAll(tempDir)
 	if err != nil {
@@ -395,7 +392,6 @@ func newBranch(path, name string) {
 	if err != nil {
 		logFatal(string(stdoutStderr))
 	}
-	logInfo("Finished creating branch")
 }
 
 func deleteBranch(path, name string) {
@@ -417,7 +413,6 @@ func addWorktree(path, tempDir, branch string) {
 	if err != nil {
 		logFatal(string(stdoutStderr))
 	}
-	logInfo("Finished adding worktree")
 }
 
 func pruneWorktree(path string) {
@@ -440,7 +435,6 @@ func merge(path, branch string) {
 	if err != nil {
 		logFatal(string(stdoutStderr))
 	}
-	logInfo("Finished merging")
 }
 
 func pushRelease(path, branch string, mod module) {
