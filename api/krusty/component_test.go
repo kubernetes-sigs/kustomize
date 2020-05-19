@@ -359,21 +359,49 @@ resources:
 	}
 }
 
-func TestResourcesCannotBeAddedToComponents(t *testing.T) {
+func TestKustomizationsCannotBeAddedToComponents(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeComponentBase(th)
 	writeComponentPatch(th)
-	th.WriteF("/app/resincust/kustomization.yaml", `
+	th.WriteF("/app/kustincomponents/kustomization.yaml", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 components:
 - ../base
 - ../patch
 `)
-	err := th.RunWithErr("/app/resincust", th.MakeDefaultOptions())
+	err := th.RunWithErr("/app/kustincomponents", th.MakeDefaultOptions())
 	if !strings.Contains(
 		err.Error(),
 		"accumulating components: accumulateDirectory: \"expected kind 'Component' for path '/app/base' but got 'Kustomization'") {
+		t.Fatalf("unexpected error: %s", err)
+	}
+}
+
+func TestFilesCannotBeAddedToComponentsList(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	writeComponentBase(th)
+
+	th.WriteF("/app/filesincomponents/stub.yaml", `
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: stub
+spec:
+  replicas: 1
+`)
+
+	th.WriteF("/app/filesincomponents/kustomization.yaml", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+components:
+- stub.yaml
+- ../patch
+`)
+	err := th.RunWithErr("/app/filesincomponents", th.MakeDefaultOptions())
+	if !strings.Contains(
+		err.Error(),
+		"'/app/filesincomponents/stub.yaml' must be a directory to be a root") {
 		t.Fatalf("unexpected error: %s", err)
 	}
 }
