@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
@@ -71,7 +72,7 @@ func (r *CreateSubstitutionRunner) preRunE(c *cobra.Command, args []string) erro
 	}
 
 	// check if setter with same name exists and throw error
-	ref, err := spec.NewRef(setters2.DefinitionsPrefix + setters2.SetterDefinitionPrefix + r.CreateSubstitution.Name)
+	ref, err := spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + r.CreateSubstitution.Name)
 	if err != nil {
 		return err
 	}
@@ -92,7 +93,7 @@ func (r *CreateSubstitutionRunner) preRunE(c *cobra.Command, args []string) erro
 	}
 
 	for _, marker := range markers {
-		ref := setters2.DefinitionsPrefix + setters2.SetterDefinitionPrefix +
+		ref := fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix +
 			strings.TrimSuffix(strings.TrimPrefix(string(marker), "${"), "}")
 		r.CreateSubstitution.Values = append(
 			r.CreateSubstitution.Values,

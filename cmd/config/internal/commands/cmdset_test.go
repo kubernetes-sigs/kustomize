@@ -50,7 +50,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
-  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+  replicas: 3 # {"$openAPI":"replicas"}
  `,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
@@ -71,7 +71,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
-  replicas: 4 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+  replicas: 4 # {"$openAPI":"replicas"}
  `,
 		},
 		{
@@ -129,10 +129,10 @@ apiVersion: v1alpha1
 kind: Example
 openAPI:
   definitions:
-    io.k8s.cli.setters.image:
+    io.k8s.cli.setters.image-setter:
       x-k8s-cli:
         setter:
-          name: image
+          name: image-setter
           value: "nginx"
     io.k8s.cli.setters.tag:
       x-k8s-cli:
@@ -146,7 +146,7 @@ openAPI:
           pattern: IMAGE:TAG
           values:
           - marker: IMAGE
-            ref: '#/definitions/io.k8s.cli.setters.image'
+            ref: '#/definitions/io.k8s.cli.setters.image-setter'
           - marker: TAG
             ref: '#/definitions/io.k8s.cli.setters.tag'
  `,
@@ -161,7 +161,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image"}
+        image: nginx:1.7.9 # {"$openAPI":"image"}
       - name: sidecar
         image: sidecar:1.7.9
  `,
@@ -170,10 +170,10 @@ apiVersion: v1alpha1
 kind: Example
 openAPI:
   definitions:
-    io.k8s.cli.setters.image:
+    io.k8s.cli.setters.image-setter:
       x-k8s-cli:
         setter:
-          name: image
+          name: image-setter
           value: "nginx"
     io.k8s.cli.setters.tag:
       x-k8s-cli:
@@ -187,7 +187,7 @@ openAPI:
           pattern: IMAGE:TAG
           values:
           - marker: IMAGE
-            ref: '#/definitions/io.k8s.cli.setters.image'
+            ref: '#/definitions/io.k8s.cli.setters.image-setter'
           - marker: TAG
             ref: '#/definitions/io.k8s.cli.setters.tag'
 
@@ -203,7 +203,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx:1.8.1 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image"}
+        image: nginx:1.8.1 # {"$openAPI":"image"}
       - name: sidecar
         image: sidecar:1.7.9
 `,

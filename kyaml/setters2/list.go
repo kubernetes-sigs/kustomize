@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -63,7 +64,7 @@ func (l *List) listSetters(object *yaml.RNode, resourcePath string) error {
 		// the definition key -- contains the setter name
 		key := node.Key.YNode().Value
 
-		if !strings.HasPrefix(key, SetterDefinitionPrefix) {
+		if !strings.HasPrefix(key, fieldmeta.SetterDefinitionPrefix) {
 			// not a setter -- doesn't have the right prefix
 			return nil
 		}
@@ -136,7 +137,7 @@ func (l *List) listSubst(object *yaml.RNode) error {
 		// the definition key -- contains the substitution name
 		key := node.Key.YNode().Value
 
-		if !strings.HasPrefix(key, SubstitutionDefinitionPrefix) {
+		if !strings.HasPrefix(key, fieldmeta.SubstitutionDefinitionPrefix) {
 			// not a substitution -- doesn't have the right prefix
 			return nil
 		}

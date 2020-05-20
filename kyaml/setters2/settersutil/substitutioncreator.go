@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
@@ -68,7 +69,7 @@ func (c SubstitutionCreator) Create(openAPIPath, resourcesPath string) error {
 			&setters2.Add{
 				FieldName:  c.FieldName,
 				FieldValue: c.FieldValue,
-				Ref:        setters2.DefinitionsPrefix + setters2.SubstitutionDefinitionPrefix + c.Name,
+				Ref:        fieldmeta.DefinitionsPrefix + fieldmeta.SubstitutionDefinitionPrefix + c.Name,
 			})},
 		Outputs: []kio.Writer{inout},
 	}.Execute()

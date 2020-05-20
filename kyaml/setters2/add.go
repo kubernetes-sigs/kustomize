@@ -79,20 +79,6 @@ func (a *Add) visitScalar(object *yaml.RNode, p string, _ *openapi.ResourceSchem
 	return nil
 }
 
-const (
-	// CLIDefinitionsPrefix is the prefix for cli definition keys.
-	CLIDefinitionsPrefix = "io.k8s.cli."
-
-	// SetterDefinitionPrefix is the prefix for setter definition keys.
-	SetterDefinitionPrefix = CLIDefinitionsPrefix + "setters."
-
-	// SubstitutionDefinitionPrefix is the prefix for substitution definition keys.
-	SubstitutionDefinitionPrefix = CLIDefinitionsPrefix + "substitutions."
-
-	// DefinitionsPrefix is the prefix used to reference definitions in the OpenAPI
-	DefinitionsPrefix = "#/definitions/"
-)
-
 // SetterDefinition may be used to update a files OpenAPI definitions with a new setter.
 type SetterDefinition struct {
 	// Name is the name of the setter to create or update.
@@ -133,7 +119,7 @@ func (sd SetterDefinition) AddToFile(path string) error {
 }
 
 func (sd SetterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
-	key := SetterDefinitionPrefix + sd.Name
+	key := fieldmeta.SetterDefinitionPrefix + sd.Name
 
 	definitions, err := object.Pipe(yaml.LookupCreate(
 		yaml.MappingNode, openapi.SupplementaryOpenAPIFieldName, "definitions"))
@@ -235,7 +221,7 @@ func (sd SubstitutionDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error)
 	}
 
 	// lookup or create the definition for the substitution
-	defKey := SubstitutionDefinitionPrefix + sd.Name
+	defKey := fieldmeta.SubstitutionDefinitionPrefix + sd.Name
 	def, err := object.Pipe(yaml.LookupCreate(
 		yaml.MappingNode, openapi.SupplementaryOpenAPIFieldName, "definitions", defKey, "x-k8s-cli"))
 	if err != nil {

@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-openapi/spec"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -54,14 +55,17 @@ func (fm *FieldMeta) Read(n *yaml.RNode) error {
 			continue
 		}
 		c := strings.TrimLeft(c, "#")
-		// if it doesn't Unmarshal that is fine, it means there is no metadata
-		// other comments are valid, they just don't parse
 
-		// TODO: consider more sophisticated parsing techniques similar to what is used
-		// for go struct tags.
-		if err := fm.Schema.UnmarshalJSON([]byte(c)); err != nil {
-			// note: don't return an error if the comment isn't a fieldmeta struct
-			return nil
+		// check for new short hand notation or fall back to openAPI ref format
+		if !fm.processShortHand(c) {
+			// if it doesn't Unmarshal that is fine, it means there is no metadata
+			// other comments are valid, they just don't parse
+			// TODO: consider more sophisticated parsing techniques similar to what is used
+			// for go struct tags.
+			if err := fm.Schema.UnmarshalJSON([]byte(c)); err != nil {
+				// note: don't return an error if the comment isn't a fieldmeta struct
+				return nil
+			}
 		}
 		fe := fm.Schema.VendorExtensible.Extensions["x-kustomize"]
 		if fe == nil {
@@ -74,6 +78,53 @@ func (fm *FieldMeta) Read(n *yaml.RNode) error {
 		return json.Unmarshal(b, &fm.Extensions)
 	}
 	return nil
+}
+
+// processShortHand parses the comment for short hand ref and loads schema to fm
+func (fm *FieldMeta) processShortHand(comment string) bool {
+	input := map[string]string{}
+	err := json.Unmarshal([]byte(comment), &input)
+	if err != nil {
+		return false
+	}
+	name := input[ShortHandRef]
+	if name == "" {
+		return false
+	}
+
+	// check if setter with the name exists, else check for a substitution
+	// setter and substitution can't have same name in shorthand
+
+	setterRef, err := spec.NewRef(DefinitionsPrefix + SetterDefinitionPrefix + name)
+	if err != nil {
+		return false
+	}
+
+	setterRefBytes, err := setterRef.MarshalJSON()
+	if err != nil {
+		return false
+	}
+
+	if _, err := openapi.Resolve(&setterRef); err == nil {
+		setterErr := fm.Schema.UnmarshalJSON(setterRefBytes)
+		return setterErr == nil
+	}
+
+	substRef, err := spec.NewRef(DefinitionsPrefix + SubstitutionDefinitionPrefix + name)
+	if err != nil {
+		return false
+	}
+
+	substRefBytes, err := substRef.MarshalJSON()
+	if err != nil {
+		return false
+	}
+
+	if _, err := openapi.Resolve(&substRef); err == nil {
+		substErr := fm.Schema.UnmarshalJSON(substRefBytes)
+		return substErr == nil
+	}
+	return false
 }
 
 func isExtensionEmpty(x XKustomize) bool {
@@ -166,3 +217,20 @@ func (it FieldValueType) TagForValue(value string) string {
 	}
 	return ""
 }
+
+const (
+	// CLIDefinitionsPrefix is the prefix for cli definition keys.
+	CLIDefinitionsPrefix = "io.k8s.cli."
+
+	// SetterDefinitionPrefix is the prefix for setter definition keys.
+	SetterDefinitionPrefix = CLIDefinitionsPrefix + "setters."
+
+	// SubstitutionDefinitionPrefix is the prefix for substitution definition keys.
+	SubstitutionDefinitionPrefix = CLIDefinitionsPrefix + "substitutions."
+
+	// DefinitionsPrefix is the prefix used to reference definitions in the OpenAPI
+	DefinitionsPrefix = "#/definitions/"
+
+	// ShortHandRef is the shorthand reference to setters and substitutions
+	ShortHandRef = "$openAPI"
+)
