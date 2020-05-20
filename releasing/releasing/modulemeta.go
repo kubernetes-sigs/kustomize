@@ -6,8 +6,11 @@ import (
 )
 
 type module struct {
-	name    string
-	path    string
+	// Module name
+	name string
+	// Module path. This path is only used for running test.
+	path string
+	// Module version
 	version moduleVersion
 }
 
