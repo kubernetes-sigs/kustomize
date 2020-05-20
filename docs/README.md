@@ -34,9 +34,7 @@ English | [简体中文](zh/README.md)
    of `kustomize` CLI in its own module,
    depending on Go API release [3.2.0](v3.2.0.md).
 
- * [3.2.0](v3.2.0.md) - TODO(jingfang)
-
- * [3.1.1](v3.1.0.md) - TODO(jingfang)
+ * [3.2.0](v3.2.0.md) - September 2019. Support inline patch and `create` sub command to crate a kustomization.yaml.
 
  * [3.1](v3.1.0.md) - Late July 2019. Extended patches and improved resource matching.
 
