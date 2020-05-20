@@ -5,6 +5,7 @@ package exec
 
 import (
 	"io"
+	"os"
 	"os/exec"
 
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -30,5 +31,6 @@ func (c *Filter) Run(reader io.Reader, writer io.Writer) error {
 	cmd := exec.Command(c.Path, c.Args...)
 	cmd.Stdin = reader
 	cmd.Stdout = writer
+	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
