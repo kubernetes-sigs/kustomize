@@ -18,13 +18,17 @@ import (
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 )
 
-func makeKustTarget(
+func makeAndLoadKustTarget(
 	t *testing.T,
 	fSys filesys.FileSystem,
 	root string) *target.KustTarget {
-	return makeKustTargetWithRf(
+	kt := makeKustTargetWithRf(
 		t, fSys, root,
 		resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()))
+	if err := kt.Load(); err != nil {
+		t.Fatalf("Unexpected load error %v", err)
+	}
+	return kt
 }
 
 func makeKustTargetWithRf(
@@ -38,14 +42,10 @@ func makeKustTargetWithRf(
 	if err != nil {
 		t.Fatal(err)
 	}
-	kt := target.NewKustTarget(
+	return target.NewKustTarget(
 		ldr,
 		valtest_test.MakeFakeValidator(),
 		rf,
 		transformer.NewFactoryImpl(),
 		pLdr.NewLoader(pc, rf))
-	if err = kt.Load(); err != nil {
-		t.Fatalf("Unexpected construction error %v", err)
-	}
-	return kt
 }
