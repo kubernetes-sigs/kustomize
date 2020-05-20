@@ -20,8 +20,7 @@
 
 * 通过 `generators` 或 `transformers` 字段显式触发插件（通过指定插件的配置文件）。
 
-前一种方法比较方便，但功能有限，因为大多数插件参数都必须是默认的，而后一种方法允许传入完整的插件参数。
-
+直接使用 `kustomization.yaml` 文件中的字段比如 `commonLables`、`commonAnnotation` 他们可以修改一些默认的字段，如果用户想要添加或减少能被 `commonLabel` 所修改的字段，则不是很容易做到；而使用 `transformers` 的话，用户可以指定哪些字段能被修改，而不受默认值的影响。
 
 [types.GeneratorOptions]: ../../api/types/generatoroptions.go
 [types.SecretArgs]: ../../api/types/secretargs.go
