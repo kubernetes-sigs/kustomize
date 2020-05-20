@@ -5,6 +5,7 @@ package target_test
 
 import (
 	"encoding/base64"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,6 +14,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	"sigs.k8s.io/kustomize/api/types"
 )
 
 // KustTarget is primarily tested in the krusty package with
@@ -20,24 +22,42 @@ import (
 
 func TestLoad(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
+	expectedTypeMeta := types.TypeMeta{
+		APIVersion: "kustomize.config.k8s.io/v1beta1",
+		Kind:       "Kustomization",
+	}
+
 	testCases := map[string]struct {
 		errContains string
 		content     string
+		k           types.Kustomization
 	}{
 		"empty": {
-			errContains: "unable to find one of 'kustomization.yaml', ",
 			// no content
+			k: types.Kustomization{
+				TypeMeta: expectedTypeMeta,
+			},
 		},
 		"nonsenseLatin": {
 			errContains: "error converting YAML to JSON",
 			content: `
-Lorem ipsum dolor sit amet, consectetur
-adipiscing elit, sed do eiusmod tempor
-incididunt ut labore et dolore magna aliqua.
-Ut enim ad minim veniam, quis nostrud
-exercitation ullamco laboris nisi ut
-aliquip ex ea commodo consequat.
+		Lorem ipsum dolor sit amet, consectetur
+		adipiscing elit, sed do eiusmod tempor
+		incididunt ut labore et dolore magna aliqua.
+		Ut enim ad minim veniam, quis nostrud
+		exercitation ullamco laboris nisi ut
+		aliquip ex ea commodo consequat.
+		`,
+		},
+		"simple": {
+			content: `
+commonLabels:
+  app: nginx
 `,
+			k: types.Kustomization{
+				TypeMeta:     expectedTypeMeta,
+				CommonLabels: map[string]string{"app": "nginx"},
+			},
 		},
 		"commented": {
 			content: `
@@ -46,34 +66,21 @@ aliquip ex ea commodo consequat.
 # yada yada yada.
 
 commonLabels:
-  app: nginx
+ app: nginx
 `,
-		},
-		"implicitHeader": {
-			content: `
-commonLabels:
-  app: nginx
-`,
-		},
-		"explicitHeader": {
-			content: `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-commonLabels:
-  app: nginx
-`,
+			k: types.Kustomization{
+				TypeMeta:     expectedTypeMeta,
+				CommonLabels: map[string]string{"app": "nginx"},
+			},
 		},
 	}
 
 	kt := makeKustTargetWithRf(
 		t, th.GetFSys(), "/",
 		resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()))
-
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			if tc.content != "" {
-				th.WriteK("/", tc.content)
-			}
+			th.WriteK("/", tc.content)
 			err := kt.Load()
 			if tc.errContains != "" {
 				require.NotNilf(t, err, "expected error containing: `%s`", tc.errContains)
@@ -82,11 +89,8 @@ commonLabels:
 				require.Nilf(t, err, "got error: %v", err)
 				k := kt.Kustomization()
 				require.Condition(t, func() bool {
-					return len(k.CommonLabels) == 1
-				}, "expecting a labels entry")
-				require.Condition(t, func() bool {
-					return k.CommonLabels["app"] == "nginx"
-				}, "expecting app:nginx")
+					return reflect.DeepEqual(tc.k, k)
+				}, "expected %v, got %v", tc.k, k)
 			}
 		})
 	}
