@@ -39,6 +39,16 @@ exercitation ullamco laboris nisi ut
 aliquip ex ea commodo consequat.
 `,
 		},
+		"commented": {
+			content: `
+# Licensed to the Blah Blah Software Foundation
+# ...
+# yada yada yada.
+
+commonLabels:
+  app: nginx
+`,
+		},
 		"implicitHeader": {
 			content: `
 commonLabels:
@@ -60,9 +70,6 @@ commonLabels:
 		resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()))
 
 	for tn, tc := range testCases {
-		if tn != "nonsenseLatin" {
-			continue
-		}
 		t.Run(tn, func(t *testing.T) {
 			if tc.content != "" {
 				th.WriteK("/", tc.content)
@@ -73,6 +80,13 @@ commonLabels:
 				require.Contains(t, err.Error(), tc.errContains)
 			} else {
 				require.Nilf(t, err, "got error: %v", err)
+				k := kt.Kustomization()
+				require.Condition(t, func() bool {
+					return len(k.CommonLabels) == 1
+				}, "expecting a labels entry")
+				require.Condition(t, func() bool {
+					return k.CommonLabels["app"] == "nginx"
+				}, "expecting app:nginx")
 			}
 		})
 	}
