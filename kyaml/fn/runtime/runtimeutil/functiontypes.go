@@ -5,6 +5,7 @@ package runtimeutil
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -121,7 +122,10 @@ func getFunctionSpecFromAnnotation(n *yaml.RNode, meta yaml.ResourceMeta) *Funct
 	for _, s := range functionAnnotationKeys {
 		fn := meta.Annotations[s]
 		if fn != "" {
-			_ = yaml.Unmarshal([]byte(fn), &fs)
+			err := yaml.Unmarshal([]byte(fn), &fs)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%v\n", err)
+			}
 			return &fs
 		}
 	}
@@ -131,9 +135,12 @@ func getFunctionSpecFromAnnotation(n *yaml.RNode, meta yaml.ResourceMeta) *Funct
 	}
 	s, err := n.String()
 	if err != nil {
-		return nil
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 	}
-	_ = yaml.Unmarshal([]byte(s), &fs)
+	err = yaml.Unmarshal([]byte(s), &fs)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+	}
 	return &fs
 }
 

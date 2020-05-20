@@ -194,9 +194,12 @@ func (c *Filter) getCommand() (string, []string) {
 
 	// export the local environment vars to the container
 	for _, pair := range os.Environ() {
-		args = append(args, "-e", strings.Split(pair, "=")[0])
+		items := strings.Split(pair, "=")
+		if items[0] == "" || items[1] == "" {
+			continue
+		}
+		args = append(args, "-e", items[0])
 	}
 	a := append(args, c.Image)
-
 	return "docker", a
 }

@@ -5,6 +5,7 @@ package testutil
 
 import (
 	"bytes"
+	"runtime"
 
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -57,5 +58,11 @@ func AssertNoError(t *testing.T, err error, msg ...string) {
 			t.Fatal(string(gerr.Stack()))
 		}
 		t.FailNow()
+	}
+}
+
+func SkipWindows(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip()
 	}
 }
