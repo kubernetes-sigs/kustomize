@@ -104,7 +104,7 @@ func (gr *gitRunner) CheckRemoteExistence(remote string) error {
 	}
 	logDebug("Remotes:\n%s", string(stdoutStderr))
 
-	regString := fmt.Sprintf("(?m)^%s$", remote)
+	regString := fmt.Sprintf("(?m)^\\s*%s\\s*$", remote)
 	reg := regexp.MustCompile(regString)
 	if !reg.MatchString(string(stdoutStderr)) {
 		return fmt.Errorf("Cannot find remote named %s", remote)
