@@ -34,38 +34,42 @@ func (v *moduleVersion) Bump(t string) error {
 	return nil
 }
 
-func newModuleVersionFromString(vs string) (*moduleVersion, error) {
+func newModuleVersionFromString(vs string) (moduleVersion, error) {
+	v := moduleVersion{}
 	if len(vs) < 1 {
-		return nil, fmt.Errorf("Invalid version string %s", vs)
+		return v, fmt.Errorf("Invalid version string %s", vs)
 	}
 	if vs[0] == 'v' {
 		vs = vs[1:]
 	}
 	versions := strings.Split(vs, ".")
+	if len(versions) != 3 {
+		return v, fmt.Errorf("Invalid version string %s", vs)
+	}
 	major, err := strconv.Atoi(versions[0])
 	if err != nil {
-		return nil, err
+		return v, err
 	}
 	minor, err := strconv.Atoi(versions[1])
 	if err != nil {
-		return nil, err
+		return v, err
 	}
 	patch, err := strconv.Atoi(versions[2])
 	if err != nil {
-		return nil, err
+		return v, err
 	}
-	v := moduleVersion{
+	v = moduleVersion{
 		major: major,
 		minor: minor,
 		patch: patch,
 	}
 
-	return &v, nil
+	return v, nil
 }
 
 func newModuleVersionFromGitTags(tags, modName string) (moduleVersion, error) {
 	// Search for module tag
-	regString := fmt.Sprintf("(?m)^%s/v(\\d+\\.){2}\\d+$", modName)
+	regString := fmt.Sprintf("(?m)^\\s*%s/v(\\d+\\.){2}\\d+\\s*$", modName)
 	reg := regexp.MustCompile(regString)
 	modTagsString := reg.FindAllString(tags, -1)
 	logDebug("Tags for module %s:\n%s", modName, modTagsString)
@@ -77,7 +81,7 @@ func newModuleVersionFromGitTags(tags, modName string) (moduleVersion, error) {
 			return moduleVersion{}, err
 		}
 
-		versions = append(versions, *v)
+		versions = append(versions, v)
 	}
 	// Sort to find latest tag
 	sort.Slice(versions, func(i, j int) bool {
