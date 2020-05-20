@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -16,6 +17,66 @@ import (
 
 // KustTarget is primarily tested in the krusty package with
 // high level tests.
+
+func TestLoad(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	testCases := map[string]struct {
+		errContains string
+		content     string
+	}{
+		"empty": {
+			errContains: "unable to find one of 'kustomization.yaml', ",
+			// no content
+		},
+		"nonsenseLatin": {
+			errContains: "error converting YAML to JSON",
+			content: `
+Lorem ipsum dolor sit amet, consectetur
+adipiscing elit, sed do eiusmod tempor
+incididunt ut labore et dolore magna aliqua.
+Ut enim ad minim veniam, quis nostrud
+exercitation ullamco laboris nisi ut
+aliquip ex ea commodo consequat.
+`,
+		},
+		"implicitHeader": {
+			content: `
+commonLabels:
+  app: nginx
+`,
+		},
+		"explicitHeader": {
+			content: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+commonLabels:
+  app: nginx
+`,
+		},
+	}
+
+	kt := makeKustTargetWithRf(
+		t, th.GetFSys(), "/",
+		resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()))
+
+	for tn, tc := range testCases {
+		if tn != "nonsenseLatin" {
+			continue
+		}
+		t.Run(tn, func(t *testing.T) {
+			if tc.content != "" {
+				th.WriteK("/", tc.content)
+			}
+			err := kt.Load()
+			if tc.errContains != "" {
+				require.NotNilf(t, err, "expected error containing: `%s`", tc.errContains)
+				require.Contains(t, err.Error(), tc.errContains)
+			} else {
+				require.Nilf(t, err, "got error: %v", err)
+			}
+		})
+	}
+}
 
 func TestMakeCustomizedResMap(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
@@ -165,8 +226,13 @@ metadata:
 		}
 	}
 
-	actual, err := makeKustTargetWithRf(
-		t, th.GetFSys(), "/whatever", resFactory).MakeCustomizedResMap()
+	kt := makeKustTargetWithRf(
+		t, th.GetFSys(), "/whatever", resFactory)
+	err := kt.Load()
+	if err != nil {
+		t.Fatalf("unexpected Resources error %v", err)
+	}
+	actual, err := kt.MakeCustomizedResMap()
 	if err != nil {
 		t.Fatalf("unexpected Resources error %v", err)
 	}

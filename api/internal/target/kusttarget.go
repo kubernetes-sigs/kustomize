@@ -55,7 +55,10 @@ func (kt *KustTarget) Load() error {
 	if err != nil {
 		return err
 	}
-	content = types.FixKustomizationPreUnmarshalling(content)
+	content, err = types.FixKustomizationPreUnmarshalling(content)
+	if err != nil {
+		return err
+	}
 	var k types.Kustomization
 	err = unmarshal(content, &k)
 	if err != nil {
