@@ -55,7 +55,10 @@ func (kt *KustTarget) Load() error {
 	if err != nil {
 		return err
 	}
-	content = types.FixKustomizationPreUnmarshalling(content)
+	content, err = types.FixKustomizationPreUnmarshalling(content)
+	if err != nil {
+		return err
+	}
 	var k types.Kustomization
 	err = unmarshal(content, &k)
 	if err != nil {
@@ -70,6 +73,14 @@ func (kt *KustTarget) Load() error {
 	}
 	kt.kustomization = &k
 	return nil
+}
+
+// Kustomization returns a copy of the immutable, internal kustomization object.
+func (kt *KustTarget) Kustomization() types.Kustomization {
+	var result types.Kustomization
+	b, _ := json.Marshal(*kt.kustomization)
+	json.Unmarshal(b, &result)
+	return result
 }
 
 func loadKustFile(ldr ifc.Loader) ([]byte, error) {

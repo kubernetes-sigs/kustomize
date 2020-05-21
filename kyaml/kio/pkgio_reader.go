@@ -173,6 +173,9 @@ func (r LocalPackageReader) Read() ([]*yaml.RNode, error) {
 	if r.PackagePath == "" {
 		return nil, fmt.Errorf("must specify package path")
 	}
+
+	// use slash for path
+	r.PackagePath = filepath.ToSlash(r.PackagePath)
 	if len(r.MatchFilesGlob) == 0 {
 		r.MatchFilesGlob = DefaultMatch
 	}

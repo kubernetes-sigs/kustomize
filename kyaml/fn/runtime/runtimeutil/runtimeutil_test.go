@@ -426,7 +426,7 @@ metadata:
 
 		{
 			name:              "write_results_bad_results_file",
-			expectedError:     "open /not/real/file: no such file or directory",
+			expectedError:     "open /not/real/file:",
 			noMakeResultsFile: true,
 			run: testRun{
 				output: `
@@ -1048,7 +1048,10 @@ metadata:
 			}
 			output, err := tt.instance.Filter(inputs)
 			if tt.expectedError != "" {
-				if !assert.EqualError(t, err, tt.expectedError) {
+				if !assert.Error(t, err) {
+					t.FailNow()
+				}
+				if !assert.Contains(t, err.Error(), tt.expectedError) {
 					t.FailNow()
 				}
 				return

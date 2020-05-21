@@ -64,7 +64,7 @@ vars:
       name: heron
       apiVersion: v300
 `)
-	ra, err := makeKustTarget(
+	ra, err := makeAndLoadKustTarget(
 		t, th.GetFSys(), "/app").AccumulateTarget()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
@@ -119,7 +119,7 @@ resources:
 - ../o1
 `)
 
-	ra, err := makeKustTarget(
+	ra, err := makeAndLoadKustTarget(
 		t, th.GetFSys(), "/app/overlays/o2").AccumulateTarget()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
@@ -176,7 +176,7 @@ vars:
 resources:
 - ../o1
 `)
-	_, err := makeKustTarget(
+	_, err := makeAndLoadKustTarget(
 		t, th.GetFSys(), "/app/overlays/o2").AccumulateTarget()
 	if err == nil {
 		t.Fatalf("expected var collision")

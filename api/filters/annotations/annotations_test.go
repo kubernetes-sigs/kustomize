@@ -150,6 +150,66 @@ metadata:
 				"2":     "ford",
 			}},
 		},
+
+		// test quoting of values which are not considered strings in yaml 1.1
+		"yaml_1_1_compatibility": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+  annotations:
+    hero: batman
+    fiend: riddler
+`,
+			expectedOutput: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+  annotations:
+    hero: batman
+    fiend: riddler
+    a: "y"
+    b: y1
+    c: "yes"
+    d: yes1
+    e: "true"
+    f: true1
+`,
+			filter: Filter{Annotations: annoMap{
+				"a": "y",
+				"b": "y1",
+				"c": "yes",
+				"d": "yes1",
+				"e": "true",
+				"f": "true1",
+			}},
+		},
+
+		// test quoting of values which are not considered strings in yaml 1.1
+		"null_annotations": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+  annotations: null
+`,
+			expectedOutput: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+  annotations:
+    a: a1
+    b: b1
+`,
+			filter: Filter{Annotations: annoMap{
+				"a": "a1",
+				"b": "b1",
+			}},
+		},
 	}
 
 	for tn, tc := range testCases {
