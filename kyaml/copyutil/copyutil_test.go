@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -216,6 +215,7 @@ func TestSyncFile(t *testing.T) {
 	err = ioutil.WriteFile(f1Name, []byte("abc"), 0600)
 	assert.NoError(t, err)
 	err = ioutil.WriteFile(f2Name, []byte("def"), 0644)
+	expectedFileInfo, _ := os.Stat(f2Name)
 	assert.NoError(t, err)
 	err = SyncFile(f1Name, f2Name)
 	assert.NoError(t, err)
@@ -223,7 +223,7 @@ func TestSyncFile(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "abc", string(actual))
 	dstFileInfo, _ := os.Stat(f2Name)
-	assert.Equal(t, "-rw-r--r--", dstFileInfo.Mode().String())
+	assert.Equal(t, expectedFileInfo.Mode().String(), dstFileInfo.Mode().String())
 }
 
 // TestSyncFileNoDestFile tests if new file is created at destination with source file content
@@ -242,7 +242,8 @@ func TestSyncFileNoDestFile(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "abc", string(actual))
 	dstFileInfo, _ := os.Stat(f2Name)
-	assert.Equal(t, "-rw-r--r--", dstFileInfo.Mode().String())
+	srcFileInfo, _ := os.Stat(f1Name)
+	assert.Equal(t, srcFileInfo.Mode().String(), dstFileInfo.Mode().String())
 }
 
 // TestSyncFileNoSrcFile tests if destination file is deleted if source file doesn't exist
@@ -259,7 +260,6 @@ func TestSyncFileNoSrcFile(t *testing.T) {
 	assert.NoError(t, err)
 	_, err = ioutil.ReadFile(f2Name)
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), "no such file or directory"))
 }
 
 func TestPrettyFileDiff(t *testing.T) {

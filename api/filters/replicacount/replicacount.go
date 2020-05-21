@@ -39,6 +39,7 @@ func (rc Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 		FsSlice:    rc.FsSlice,
 		SetValue:   rc.set,
 		CreateKind: yaml.ScalarNode, // replicas is a ScalarNode
+		CreateTag:  yaml.IntTag,
 	})
 	return node, err
 }

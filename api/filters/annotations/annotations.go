@@ -32,6 +32,7 @@ func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 					FsSlice:    f.FsSlice,
 					SetValue:   fsslice.SetEntry(k, f.Annotations[k], yaml.StringTag),
 					CreateKind: yaml.MappingNode, // Annotations are MappingNodes.
+					CreateTag:  "!!map",
 				}); err != nil {
 					return nil, err
 				}

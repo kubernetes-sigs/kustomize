@@ -31,6 +31,20 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+type FormattingStrategy = string
+
+const (
+	// NoFmtAnnotation determines if the resource should be formatted.
+	FmtAnnotation string = "config.kubernetes.io/formatting"
+
+	// FmtStrategyStandard means the resource will be formatted according
+	// to the default rules.
+	FmtStrategyStandard FormattingStrategy = "standard"
+
+	// FmtStrategyNone means the resource will not be formatted.
+	FmtStrategyNone FormattingStrategy = "none"
+)
+
 // FormatInput returns the formatted input.
 func FormatInput(input io.Reader) (*bytes.Buffer, error) {
 	buff := &bytes.Buffer{}
@@ -64,6 +78,15 @@ var _ kio.Filter = FormatFilter{}
 
 func (f FormatFilter) Filter(slice []*yaml.RNode) ([]*yaml.RNode, error) {
 	for i := range slice {
+		fmtStrategy, err := getFormattingStrategy(slice[i])
+		if err != nil {
+			return nil, err
+		}
+
+		if fmtStrategy == FmtStrategyNone {
+			continue
+		}
+
 		kindNode, err := slice[i].Pipe(yaml.Get("kind"))
 		if err != nil {
 			return nil, err
@@ -92,6 +115,28 @@ func (f FormatFilter) Filter(slice []*yaml.RNode) ([]*yaml.RNode, error) {
 		}
 	}
 	return slice, nil
+}
+
+// getFormattingStrategy looks for the formatting annotation to determine
+// which strategy should be used for formatting. The default is standard
+// if no annotation is found.
+func getFormattingStrategy(node *yaml.RNode) (FormattingStrategy, error) {
+	value, err := node.Pipe(yaml.GetAnnotation(FmtAnnotation))
+	if err != nil || value == nil {
+		return FmtStrategyStandard, err
+	}
+
+	fmtStrategy := value.YNode().Value
+
+	switch fmtStrategy {
+	case FmtStrategyStandard:
+		return FmtStrategyStandard, nil
+	case FmtStrategyNone:
+		return FmtStrategyNone, nil
+	default:
+		return "", fmt.Errorf(
+			"formatting annotation has illegal value %s", fmtStrategy)
+	}
 }
 
 type formatter struct {

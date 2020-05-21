@@ -403,6 +403,58 @@ spec:
 `,
 			errMsg: "tag in body should be at least 6 chars long",
 		},
+
+		{
+			name: "validate openAPI list values",
+			args: []string{"list", "10", "hi", "true"},
+			inputOpenAPI: `
+kind: Kptfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.list:
+      type: array
+      maxItems: 2
+      items:
+        type: integer
+      x-k8s-cli:
+        setter:
+          name: list
+          listValues:
+          - 0
+ `,
+			input: `
+apiVersion: example.com/v1beta1
+kind: Example
+spec:
+  list: # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
+  - 0
+ `,
+			expectedOpenAPI: `
+kind: Kptfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.list:
+      type: array
+      maxItems: 2
+      items:
+        type: integer
+      x-k8s-cli:
+        setter:
+          name: list
+          listValues:
+          - 0
+ `,
+			expectedResources: `
+apiVersion: example.com/v1beta1
+kind: Example
+spec:
+  list: # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
+  - 0
+ `,
+			errMsg: `list in body must be of type integer: "string"
+list in body must be of type integer: "boolean"
+list in body should have at most 2 items`,
+		},
 	}
 	for i := range tests {
 		test := tests[i]

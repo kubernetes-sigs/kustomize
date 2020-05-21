@@ -21,6 +21,7 @@ func TestCreateSetterCommand(t *testing.T) {
 		name              string
 		input             string
 		args              []string
+		schema            string
 		out               string
 		inputOpenAPI      string
 		expectedOpenAPI   string
@@ -85,6 +86,88 @@ openAPI:
  `,
 			err: "substitution with name my-image already exists, substitution and setter can't have same name",
 		},
+
+		{
+			name:   "add replicas with schema",
+			args:   []string{"replicas", "3", "--description", "hello world", "--set-by", "me"},
+			schema: `{"maximum": 10, "type": "integer"}`,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+`,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      maximum: 10
+      type: integer
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+ `,
+		},
+
+		{
+			name:   "add replicas with schema list values",
+			args:   []string{"list", "a", "--description", "hello world", "--set-by", "me", "--type", "array"},
+			schema: `{"maxItems": 2, "type": "array", "items": {"type": "string"}}`,
+			input: `
+apiVersion: example.com/v1beta1
+kind: Example
+spec:
+  list:
+  - "a"
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+`,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.list:
+      items:
+        type: string
+      maxItems: 2
+      type: array
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: list
+          value: a
+          setBy: me
+ `,
+			expectedResources: `
+apiVersion: example.com/v1beta1
+kind: Example
+spec:
+  list:
+  - "a" # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
+ `,
+		},
 	}
 	for i := range tests {
 		test := tests[i]
@@ -98,10 +181,27 @@ openAPI:
 				t.FailNow()
 			}
 			defer os.Remove(f.Name())
+
 			err = ioutil.WriteFile(f.Name(), []byte(test.inputOpenAPI), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
+
+			if test.schema != "" {
+				sch, err := ioutil.TempFile("", "schema.json")
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				defer os.Remove(sch.Name())
+
+				err = ioutil.WriteFile(sch.Name(), []byte(test.schema), 0600)
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+
+				test.args = append(test.args, "--schema-path", sch.Name())
+			}
+
 			old := ext.GetOpenAPIFile
 			defer func() { ext.GetOpenAPIFile = old }()
 			ext.GetOpenAPIFile = func(args []string) (s string, err error) {

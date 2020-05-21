@@ -51,7 +51,7 @@ curl -s -o "$BASE/#1.yaml" "https://raw.githubusercontent.com\
 
 观察该目录：
 
-<!-- @runTree @testAgainstLatestRelease -->
+<!-- @runTree -->
 ```
 tree $DEMO_HOME
 ```
@@ -210,7 +210,7 @@ EOF
 
 查看目录结构和差异：
 
-<!-- @listFiles @testAgainstLatestRelease -->
+<!-- @listFiles -->
 ```
 tree $DEMO_HOME
 ```

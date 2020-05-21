@@ -20,14 +20,18 @@ func SetScalar(value string) SetFn {
 
 // SetEntry returns a SetFn to set an entry in a map
 func SetEntry(key, value, tag string) SetFn {
+	n := &yaml.Node{
+		Kind:  yaml.ScalarNode,
+		Value: value,
+		Tag:   tag,
+	}
+	if tag == yaml.StringTag && yaml.IsYaml1_1NonString(n) {
+		n.Style = yaml.DoubleQuotedStyle
+	}
 	return func(node *yaml.RNode) error {
 		return node.PipeE(yaml.FieldSetter{
-			Name: key,
-			Value: yaml.NewRNode(&yaml.Node{
-				Kind:  yaml.ScalarNode,
-				Value: value,
-				Tag:   tag,
-			}),
+			Name:  key,
+			Value: yaml.NewRNode(n),
 		})
 	}
 
@@ -45,6 +49,9 @@ type Filter struct {
 
 	// CreateKind is used to create fields that do not exist
 	CreateKind yaml.Kind
+
+	// CreateTag is used to set the tag if encountering a null field
+	CreateTag string
 }
 
 func (fltr Filter) Filter(obj *yaml.RNode) (*yaml.RNode, error) {
@@ -56,6 +63,7 @@ func (fltr Filter) Filter(obj *yaml.RNode) (*yaml.RNode, error) {
 			FieldSpec:  fltr.FsSlice[i],
 			SetValue:   fltr.SetValue,
 			CreateKind: fltr.CreateKind,
+			CreateTag:  fltr.CreateTag,
 		}).Filter(obj)
 		if err != nil {
 			return nil, err

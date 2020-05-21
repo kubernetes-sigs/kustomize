@@ -77,6 +77,7 @@ DEMO_HOME=$(mktemp -d)
 <!-- @defineLayout @testAgainstLatestRelease -->
 ```
 mkdir -p $DEMO_HOME/bases/iam-iap-tunnel
+mkdir -p $DEMO_HOME/transformers/setProject
 mkdir -p $DEMO_HOME/projects/cat-111
 mkdir -p $DEMO_HOME/projects/dog-222
 mkdir -p $DEMO_HOME/projects/fox-333
@@ -84,7 +85,7 @@ mkdir -p $DEMO_HOME/projects/fox-333
 
 To ground this example with a common problem,
 assume a set of engineers:
- 
+
 * red@example.com
 * blue@example.com
 * yellow@example.com
@@ -177,7 +178,7 @@ The transformer used is called `AddValueTransformer`.  It's
 intended to implement the 'add' operation of
 [IETF RFC 6902 JSON].   The add operation is simple declaration
 of what value to add, and a powerful syntax for specifying where
-to add the value.  The value can, for example, be inserted 
+to add the value.  The value can, for example, be inserted
 into an existing field holding a file path as either a prefix,
 a postfix, or some change
 in the middle (e.g. `/volume/data` becomes `/volume/projectId/data`).
@@ -186,7 +187,7 @@ in the middle (e.g. `/volume/data` becomes `/volume/projectId/data`).
 
 
 At the time of writing, this transformer has no dedicated keyword
-in the kustomization file to hold it's config.  This means 
+in the kustomization file to hold it's config.  This means
 the config must live in its own file:
 
 <!-- @defineSetProjectTransformer @testAgainstLatestRelease -->
@@ -227,12 +228,11 @@ allows any number of transformers to be loaded as a group from a local
 or remote location.
 
 Here an example of the latter case that uses a kustomization file to
-list pointers to transformer configs, although in this case it 
+list pointers to transformer configs, although in this case it
 references only one transformer config.
 
 <!-- @makeTransformerDir @testAgainstLatestRelease -->
 ```
-mkdir -p $DEMO_HOME/transformers/setProject
 cat <<'EOF' >$DEMO_HOME/transformers/setProject/kustomization.yaml
 resources:
 - setProject.yaml
@@ -289,10 +289,11 @@ EOF
 
 The layout is now:
 
-<!-- @showLayout @testAgainstLatestRelease -->
+<!-- @showLayout -->
 ```
 tree $DEMO_HOME
 ```
+
 It should look like:
 
 > ```

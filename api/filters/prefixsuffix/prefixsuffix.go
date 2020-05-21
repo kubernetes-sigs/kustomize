@@ -33,6 +33,7 @@ func (ns Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 		FsSlice:    ns.FsSlice,
 		SetValue:   ns.set,
 		CreateKind: yaml.ScalarNode, // Name is a ScalarNode
+		CreateTag:  yaml.StringTag,
 	})
 	return node, err
 }
