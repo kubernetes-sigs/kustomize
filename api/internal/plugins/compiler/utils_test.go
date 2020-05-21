@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/konfig"
 )
 
 func TestDeterminePluginSrcRoot(t *testing.T) {
@@ -19,8 +20,7 @@ func TestDeterminePluginSrcRoot(t *testing.T) {
 	if !filepath.IsAbs(actual) {
 		t.Errorf("expected absolute path, but got '%s'", actual)
 	}
-	expectedSuffix := filepath.Join("sigs.k8s.io", "kustomize", "plugin")
-	if !strings.HasSuffix(actual, expectedSuffix) {
-		t.Errorf("expected suffix '%s' in '%s'", expectedSuffix, actual)
+	if !strings.HasSuffix(actual, konfig.RelPluginHome) {
+		t.Errorf("expected suffix '%s' in '%s'", konfig.RelPluginHome, actual)
 	}
 }
