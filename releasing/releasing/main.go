@@ -49,8 +49,9 @@ func logFatalE(e error) {
 // === Command line commands ===
 
 var rootCmd = &cobra.Command{
-	Use:   "releasing",
-	Short: "This go program is used to improve the modules releasing process in Kustomize repository.",
+	Use: "releasing",
+	Short: `This go program is used to improve the modules releasing process in Kustomize repository.
+Note: You may need to run fixgomod.sh in the module to make the module ready to release.`,
 }
 
 func listCmdImpl() error {
