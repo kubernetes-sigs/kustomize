@@ -1,5 +1,8 @@
 # Demo: Components
 
+_(Note: This is still a work in progress. Tracking KEP:
+https://github.com/kubernetes/enhancements/pull/1803)_
+
 Suppose you've written a very simple Web application:
 
 ```yaml
