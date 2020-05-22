@@ -167,6 +167,7 @@ var notNamespaceableKinds = []string{
 	"CSIDriver",
 	"CSINode",
 	"CertificateSigningRequest",
+	"Cluster",
 	"ClusterRole",
 	"ClusterRoleBinding",
 	"ComponentStatus",
