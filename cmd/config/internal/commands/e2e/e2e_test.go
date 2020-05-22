@@ -10,10 +10,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/testutil"
 )
 
 func TestRunE2e(t *testing.T) {
@@ -21,7 +23,7 @@ func TestRunE2e(t *testing.T) {
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	//defer os.RemoveAll(binDir)
+	defer os.RemoveAll(binDir)
 	build(t, binDir)
 
 	tests := []struct {
@@ -114,7 +116,7 @@ metadata:
   annotations:
     config.kubernetes.io/function: |
       exec:
-        path: "%s"
+        path: %s
 `, filepath.Join(d, "e2econtainerconfig")),
 				}
 			},
@@ -128,7 +130,7 @@ metadata:
   annotations:
     config.kubernetes.io/function: |
       exec:
-        path: "%s"
+        path: %s
     a-string-value: ''
     a-int-value: '0'
     a-bool-value: 'false'
@@ -140,7 +142,7 @@ metadata:
 		// Starklark function tests
 		//
 		{
-			name: "exec_function_config",
+			name: "exec_function_config_data",
 			args: func(d string) []string {
 				return []string{"--enable-exec"}
 			},
@@ -154,7 +156,7 @@ metadata:
   annotations:
     config.kubernetes.io/function: |
       exec:
-        path: "%s"
+        path: %s
 data:
   stringValue: a
   intValue: 2
@@ -178,7 +180,7 @@ metadata:
   annotations:
     config.kubernetes.io/function: |
       exec:
-        path: "%s"
+        path: %s
     a-string-value: 'a'
     a-int-value: '2'
     a-bool-value: 'true'
@@ -219,7 +221,7 @@ metadata:
   annotations:
     config.kubernetes.io/function: |
       exec:
-        path: "%s"
+        path: %s
 data:
   stringValue: a
   intValue: 2
@@ -243,7 +245,7 @@ metadata:
   annotations:
     config.kubernetes.io/function: |
       exec:
-        path: "%s"
+        path: %s
 data:
   stringValue: a
   intValue: 2
@@ -676,13 +678,11 @@ metadata:
 			// write the input
 			for path, data := range tt.files(binDir) {
 				err := ioutil.WriteFile(path, []byte(data), 0600)
-				if !assert.NoError(t, err) {
-					t.FailNow()
-				}
+				testutil.AssertNoError(t, err)
 			}
 
 			args := append([]string{"run", "."}, tt.args(binDir)...)
-			cmd := exec.Command(filepath.Join(binDir, "kyaml"), args...)
+			cmd := exec.Command(filepath.Join(binDir, kyamlBin), args...)
 			cmd.Dir = dir
 			var stdErr, stdOut bytes.Buffer
 			cmd.Stdout = &stdOut
@@ -696,15 +696,12 @@ metadata:
 				}
 				return
 			}
-			if !assert.NoError(t, err, stdErr.String()) {
-				t.FailNow()
-			}
+			testutil.AssertNoError(t, err, stdErr.String())
 
 			for path, data := range tt.expectedFiles(binDir) {
 				b, err := ioutil.ReadFile(path)
-				if !assert.NoError(t, err, stdErr.String()) {
-					t.FailNow()
-				}
+				testutil.AssertNoError(t, err, stdErr.String())
+
 				if !assert.Equal(t, strings.TrimSpace(data), strings.TrimSpace(string(b)), stdErr.String()) {
 					t.FailNow()
 				}
@@ -715,15 +712,16 @@ metadata:
 
 func build(t *testing.T, binDir string) {
 	build := exec.Command("go", "build", "-o",
-		filepath.Join(binDir, "e2econtainerconfig"))
+		filepath.Join(binDir, e2econtainerconfigBin))
 	build.Dir = "e2econtainerconfig"
 	build.Stdout = os.Stdout
 	build.Stderr = os.Stderr
+	build.Env = os.Environ()
 	if !assert.NoError(t, build.Run()) {
 		t.FailNow()
 	}
 
-	build = exec.Command("go", "build", "-o", filepath.Join(binDir, "kyaml"))
+	build = exec.Command("go", "build", "-o", filepath.Join(binDir, kyamlBin))
 	build.Dir = filepath.Join("..", "..", "..")
 	build.Stdout = os.Stdout
 	build.Stderr = os.Stderr
@@ -741,5 +739,20 @@ func build(t *testing.T, binDir string) {
 	build.Stderr = os.Stderr
 	if !assert.NoError(t, build.Run()) {
 		t.FailNow()
+	}
+}
+
+var (
+	e2econtainerconfigBin string
+	kyamlBin              string
+)
+
+func init() {
+	kyamlBin = "kyaml"
+	e2econtainerconfigBin = "e2econtainerconfig"
+
+	if runtime.GOOS == "windows" {
+		kyamlBin = "kyaml.exe"
+		e2econtainerconfigBin = "e2econtainerconfig.exe"
 	}
 }

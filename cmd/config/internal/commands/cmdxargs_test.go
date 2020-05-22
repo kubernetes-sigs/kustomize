@@ -5,6 +5,7 @@ package commands_test
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -84,8 +85,7 @@ func TestXArgs_flags(t *testing.T) {
 	if !assert.NoError(t, c.Command.Execute()) {
 		t.FailNow()
 	}
-	assert.Equal(t, `--a=b --c=d --e=f 1 3 2 4
-`, out.String())
+	assert.Equal(t, strings.TrimSpace(`--a=b --c=d --e=f 1 3 2 4`), strings.TrimSpace(out.String()))
 }
 
 func TestXArgs_input(t *testing.T) {

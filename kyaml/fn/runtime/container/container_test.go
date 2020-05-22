@@ -103,7 +103,11 @@ metadata:
 			// configure expected env
 			for _, e := range os.Environ() {
 				// the process env
-				tt.expectedArgs = append(tt.expectedArgs, "-e", strings.Split(e, "=")[0])
+				parts := strings.Split(e, "=")
+				if parts[0] == "" || parts[1] == "" {
+					continue
+				}
+				tt.expectedArgs = append(tt.expectedArgs, "-e", parts[0])
 			}
 			tt.expectedArgs = append(tt.expectedArgs, tt.instance.Image)
 
