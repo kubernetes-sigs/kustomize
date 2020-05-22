@@ -21,7 +21,7 @@ export api_patch=3
 # cmd/config version
 export cmd_config_major=0
 export cmd_config_minor=1
-export cmd_config_patch=11
+export cmd_config_patch=12
 
 # cmd/kubectl version
 export cmd_kubectl_major=0
