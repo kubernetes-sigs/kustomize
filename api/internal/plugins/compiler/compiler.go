@@ -11,7 +11,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 )
@@ -65,16 +64,8 @@ func (b *Compiler) Cleanup() {
 // ${pluginRoot}/${g}/${v}/$lower(${k} and places
 // object code next to source code.
 func (b *Compiler) Compile() error {
-	if FileYoungerThan(b.ObjPath(), 8*time.Second) {
-		// Skip rebuilding it, to save time in a plugin test file
-		// that has many distinct calls to make a harness and compile
-		// the plugin (only the first compile will happen).
-		// Make it a short time to avoid tricking someone who's actively
-		// developing a plugin.
-		return nil
-	}
 	if !FileExists(b.srcPath()) {
-		return fmt.Errorf("cannot  find source at '%s'", b.srcPath())
+		return fmt.Errorf("cannot find source at '%s'", b.srcPath())
 	}
 	// If you use an IDE, make sure it's go build and test flags
 	// match those used below.  Same goes for Makefile targets.
@@ -103,6 +94,9 @@ func (b *Compiler) Compile() error {
 		return errors.Wrapf(
 			err, "cannot compile %s:\nSTDERR\n%s\n",
 			b.srcPath(), b.stderr.String())
+	}
+	if result := filepath.Join(b.workDir, b.objFile()); !FileExists(result) {
+		return fmt.Errorf("post compile, cannot find '%s'", result)
 	}
 	return nil
 }
