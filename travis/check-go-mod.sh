@@ -6,7 +6,7 @@ set -x
 set -e
 
 # verify all modules pass validation
-for i in $(find . -name go.mod -not -path "./hack/*"); do
+for i in $(find . -name go.mod); do
   pushd .
   cd $(dirname $i);
   go list -m -json all > /dev/null
