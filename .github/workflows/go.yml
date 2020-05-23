@@ -8,9 +8,9 @@ on:
 
 jobs:
 
-  build:
-    name: Build
-    runs-on: ubuntu-latest
+  lint:
+    name: Lint
+    runs-on: [ubuntu-latest]
     steps:
 
     - name: Set up Go 1.x
@@ -22,7 +22,79 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
 
-    - name: Build
+    - name: Lint
       run: ./travis/kyaml-pre-commit.sh
       env:
-        KUSTOMIZE_DOCKER_E2E: true
+        KUSTOMIZE_DOCKER_E2E: false # don't need to do e2e tests for linting
+
+  test-linux:
+    name: Test Linux
+    runs-on: [ubuntu-latest]
+    steps:
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.13
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Test kyaml
+        run: go test -cover ./...
+        working-directory: ./kyaml
+
+      - name: Test cmd/config
+        run: go test -cover ./...
+        working-directory: ./cmd/config
+        env:
+          KUSTOMIZE_DOCKER_E2E: true
+
+  test-macos:
+    name: Test MacOS
+    runs-on: [macos-latest]
+    steps:
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.13
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Test kyaml
+        run: go test -cover ./...
+        working-directory: ./kyaml
+
+      - name: Test cmd/config
+        run: go test -cover ./...
+        working-directory: ./cmd/config
+        env:
+          KUSTOMIZE_DOCKER_E2E: false # docker not installed on mac
+
+  test-windows:
+    name: Test Windows
+    runs-on: [windows-latest]
+    steps:
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.13
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Test kyaml
+        run: go test -cover ./...
+        working-directory: ./kyaml
+
+      - name: Test cmd/config
+        run: go test -cover ./...
+        working-directory: ./cmd/config
+        env:
+          KUSTOMIZE_DOCKER_E2E: false # docker on windows not working well yet
