@@ -33,9 +33,10 @@ type createFlags struct {
 func NewCmdCreate(fSys filesys.FileSystem, uf ifc.KunstructuredFactory) *cobra.Command {
 	opts := createFlags{path: filesys.SelfDir}
 	c := &cobra.Command{
-		Use:   "create",
-		Short: "Create a new kustomization in the current directory",
-		Long:  "",
+		Use:     "create",
+		Aliases: []string{"init"},
+		Short:   "Create a new kustomization in the current directory",
+		Long:    "",
 		Example: `
 	# Create a new overlay from the base '../base".
 	kustomize create --resources ../base
