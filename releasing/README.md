@@ -112,17 +112,8 @@ The tag appears in the URL, e.g. [pluginator/v1.0.0].
 
 ## Release procedure
 
-> TODO: script what follows, so someone can enter
-> ```
-> go run ./releasing/release.go kustomize minor
-> # or:
-> # go run ./releasing/release.go api patch
-> # go run ./releasing/release.go pluginator minor
-> ```
-> The program would look at the existing remote tags,
-> confirm sanity and increment the appropriate major/minor/patch
-> component, create the right branch and tag, etc.
-> No more bash please.
+The script used to release modules is in progress. Check it in 
+`releasing/releasing` directory.
 
 At any given moment, the repository's master branch is
 passing all its tests and contains code one could release.
