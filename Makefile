@@ -43,10 +43,8 @@ verify-kustomize-e2e: test-examples-e2e-kustomize
 $(MYGOBIN)/golangci-lint-kustomize:
 	( \
 		set -e; \
-		export GOBIN=$$(mktemp -d); \
 		cd hack; \
-		GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint; \
-		mv $$GOBIN/golangci-lint $(MYGOBIN)/golangci-lint-kustomize \
+		GO111MODULE=on go build -tags=tools -o $(MYGOBIN)/golangci-lint-kustomize github.com/golangci/golangci-lint/cmd/golangci-lint; \
 	)
 
 # Version pinned by api/go.mod
