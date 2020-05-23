@@ -96,10 +96,12 @@ func (b *Compiler) Compile() error {
 			err, "cannot compile %s:\nSTDERR\n%s\n",
 			b.srcPath(), b.stderr.String())
 	}
-	if result := filepath.Join(b.workDir, b.objFile()); !utils.FileExists(result) {
-		return fmt.Errorf("post compile, cannot find '%s'", result)
+	result := filepath.Join(b.workDir, b.objFile())
+	if utils.FileExists(result) {
+		log.Printf("Created %s", result)
+		return nil
 	}
-	return nil
+	return fmt.Errorf("post compile, cannot find '%s'", result)
 }
 
 func (b *Compiler) report() {
