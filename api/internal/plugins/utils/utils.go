@@ -1,7 +1,7 @@
 // Copyright 2020 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package compiler
+package utils
 
 import (
 	"os"
@@ -13,7 +13,7 @@ import (
 	"sigs.k8s.io/kustomize/api/konfig"
 )
 
-func goBin() string {
+func GoBin() string {
 	return filepath.Join(runtime.GOROOT(), "bin", "go")
 }
 

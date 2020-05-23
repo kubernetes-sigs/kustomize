@@ -9,6 +9,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/internal/plugins/compiler"
+	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
 	"sigs.k8s.io/kustomize/api/konfig"
 )
 
@@ -33,7 +34,7 @@ func newPluginTestEnv(t *testing.T) *pluginTestEnv {
 // the FileSystem used for loading config yaml in the tests.
 func (x *pluginTestEnv) set() *pluginTestEnv {
 	var err error
-	x.pluginRoot, err = compiler.DeterminePluginSrcRoot(filesys.MakeFsOnDisk())
+	x.pluginRoot, err = utils.DeterminePluginSrcRoot(filesys.MakeFsOnDisk())
 	if err != nil {
 		x.t.Error(err)
 	}
