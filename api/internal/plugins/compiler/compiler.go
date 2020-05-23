@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
 )
 
 // Compiler creates Go plugin object files.
@@ -64,7 +65,7 @@ func (b *Compiler) Cleanup() {
 // ${pluginRoot}/${g}/${v}/$lower(${k} and places
 // object code next to source code.
 func (b *Compiler) Compile() error {
-	if !FileExists(b.srcPath()) {
+	if !utils.FileExists(b.srcPath()) {
 		return fmt.Errorf("cannot find source at '%s'", b.srcPath())
 	}
 	// If you use an IDE, make sure it's go build and test flags
@@ -77,8 +78,8 @@ func (b *Compiler) Compile() error {
 		"plugin",
 		"-o", b.objFile(),
 	}
-	goBin := goBin()
-	if !FileExists(goBin) {
+	goBin := utils.GoBin()
+	if !utils.FileExists(goBin) {
 		return fmt.Errorf(
 			"cannot find go compiler %s", goBin)
 	}
@@ -95,7 +96,7 @@ func (b *Compiler) Compile() error {
 			err, "cannot compile %s:\nSTDERR\n%s\n",
 			b.srcPath(), b.stderr.String())
 	}
-	if result := filepath.Join(b.workDir, b.objFile()); !FileExists(result) {
+	if result := filepath.Join(b.workDir, b.objFile()); !utils.FileExists(result) {
 		return fmt.Errorf("post compile, cannot find '%s'", result)
 	}
 	return nil
