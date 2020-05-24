@@ -55,12 +55,6 @@ func (b *Compiler) ObjPath() string {
 	return filepath.Join(b.workDir, b.objFile())
 }
 
-// Cleanup provides a hook to delete the .so file.
-// Ignore errors.
-func (b *Compiler) Cleanup() {
-	_ = os.Remove(b.ObjPath())
-}
-
 // Compile changes its working directory to
 // ${pluginRoot}/${g}/${v}/$lower(${k} and places
 // object code next to source code.
@@ -98,7 +92,7 @@ func (b *Compiler) Compile() error {
 	}
 	result := filepath.Join(b.workDir, b.objFile())
 	if utils.FileExists(result) {
-		log.Printf("Created %s", result)
+		log.Printf("compiler created: %s", result)
 		return nil
 	}
 	return fmt.Errorf("post compile, cannot find '%s'", result)
