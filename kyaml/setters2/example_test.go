@@ -162,7 +162,7 @@ spec:
 	//   annotations:
 	//     something: 3
 	// spec:
-	//   replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+	//   replicas: 3 # {"$openapi":"replicas"}
 }
 
 // ExampleAdd demonstrates adding a setter reference to fields.
@@ -196,7 +196,7 @@ spec:
 	// metadata:
 	//   name: nginx-deployment
 	//   annotations:
-	//     something: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+	//     something: 3 # {"$openapi":"replicas"}
 	// spec:
-	//   replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+	//   replicas: 3 # {"$openapi":"replicas"}
 }

@@ -5,6 +5,7 @@ package fieldmeta
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -87,7 +88,7 @@ func (fm *FieldMeta) processShortHand(comment string) bool {
 	if err != nil {
 		return false
 	}
-	name := input[ShortHandRef]
+	name := input[shortHandRef]
 	if name == "" {
 		return false
 	}
@@ -147,11 +148,11 @@ func (fm *FieldMeta) Write(n *yaml.RNode) error {
 	} else {
 		delete(fm.Schema.VendorExtensible.Extensions, "x-kustomize")
 	}
-	b, err := json.Marshal(fm.Schema)
-	if err != nil {
-		return errors.Wrap(err)
-	}
-	n.YNode().LineComment = string(b)
+
+	// Ex: {"$ref":"#/definitions/io.k8s.cli.setters.replicas"} should be converted to
+	// {"openAPI":"replicas"} and added to the line comment
+	arr := strings.Split(fm.Schema.Ref.String(), ".")
+	n.YNode().LineComment = fmt.Sprintf(`{"%s":"%s"}`, shortHandRef, arr[len(arr)-1])
 	return nil
 }
 
@@ -230,7 +231,15 @@ const (
 
 	// DefinitionsPrefix is the prefix used to reference definitions in the OpenAPI
 	DefinitionsPrefix = "#/definitions/"
-
-	// ShortHandRef is the shorthand reference to setters and substitutions
-	ShortHandRef = "$openAPI"
 )
+
+// shortHandRef is the shorthand reference to setters and substitutions
+var shortHandRef = "$openapi"
+
+func SetShortHandRef(ref string) {
+	shortHandRef = ref
+}
+
+func ShortHandRef() string {
+	return shortHandRef
+}

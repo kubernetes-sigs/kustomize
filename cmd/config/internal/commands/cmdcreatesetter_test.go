@@ -62,7 +62,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
-  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+  replicas: 3 # {"$openapi":"replicas"}
  `,
 		},
 		{
@@ -124,7 +124,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
-  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+  replicas: 3 # {"$openapi":"replicas"}
  `,
 		},
 
@@ -165,7 +165,7 @@ apiVersion: example.com/v1beta1
 kind: Example
 spec:
   list:
-  - "a" # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
+  - "a" # {"$openapi":"list"}
  `,
 		},
 	}

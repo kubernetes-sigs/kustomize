@@ -42,7 +42,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
-  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+  replicas: 3 # {"$openapi":"replicas"}
  `,
 		},
 		{
@@ -67,9 +67,9 @@ kind: Deployment
 metadata:
   name: nginx-deployment
   annotations:
-    something: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+    something: 3 # {"$openapi":"replicas"}
 spec:
-  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+  replicas: 3 # {"$openapi":"replicas"}
  `,
 		},
 		{
@@ -97,7 +97,7 @@ metadata:
   annotations:
     something: 3
 spec:
-  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+  replicas: 3 # {"$openapi":"replicas"}
  `,
 		},
 		{
@@ -123,9 +123,9 @@ kind: Deployment
 metadata:
   name: nginx-deployment
   annotations:
-    replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+    replicas: 3 # {"$openapi":"replicas"}
 spec:
-  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+  replicas: 3 # {"$openapi":"replicas"}
  `,
 		},
 		{
@@ -153,7 +153,7 @@ metadata:
   annotations:
     replicas: 3
 spec:
-  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+  replicas: 3 # {"$openapi":"replicas"}
  `,
 		},
 		{
