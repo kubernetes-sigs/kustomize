@@ -33,10 +33,6 @@ func TestCompiler(t *testing.T) {
 	if !utils.FileExists(expectObj) {
 		t.Errorf("didn't find expected obj file %s", expectObj)
 	}
-	c.Cleanup()
-	if utils.FileExists(expectObj) {
-		t.Errorf("obj file '%s' should be gone", expectObj)
-	}
 
 	c.SetGVK("builtin", "", "SecretGenerator")
 	expectObj = filepath.Join(
@@ -51,9 +47,5 @@ func TestCompiler(t *testing.T) {
 	}
 	if !utils.FileExists(expectObj) {
 		t.Errorf("didn't find expected obj file %s", expectObj)
-	}
-	c.Cleanup()
-	if utils.FileExists(expectObj) {
-		t.Errorf("obj file '%s' should be gone", expectObj)
 	}
 }
