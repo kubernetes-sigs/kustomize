@@ -99,7 +99,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.my-image-subst"}
+        image: nginx:1.7.9 # {"$openapi":"my-image-subst"}
       - name: sidecar
         image: sidecar:1.7.9
  `,
@@ -181,7 +181,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: something/nginx::1.7.9/nginxotherthing # {"$ref":"#/definitions/io.k8s.cli.substitutions.my-image-subst"}
+        image: something/nginx::1.7.9/nginxotherthing # {"$openapi":"my-image-subst"}
       - name: sidecar
         image: sidecar:1.7.9
  `,

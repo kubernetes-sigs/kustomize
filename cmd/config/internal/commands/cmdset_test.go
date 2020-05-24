@@ -50,7 +50,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
-  replicas: 3 # {"$openAPI":"replicas"}
+  replicas: 3 # {"$openapi":"replicas"}
  `,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
@@ -71,7 +71,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
-  replicas: 4 # {"$openAPI":"replicas"}
+  replicas: 4 # {"$openapi":"replicas"}
  `,
 		},
 		{
@@ -161,7 +161,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx:1.7.9 # {"$openAPI":"image"}
+        image: nginx:1.7.9 # {"$openapi":"image"}
       - name: sidecar
         image: sidecar:1.7.9
  `,
@@ -203,7 +203,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx:1.8.1 # {"$openAPI":"image"}
+        image: nginx:1.8.1 # {"$openapi":"image"}
       - name: sidecar
         image: sidecar:1.7.9
 `,
