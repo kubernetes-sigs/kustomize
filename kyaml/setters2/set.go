@@ -97,7 +97,7 @@ func (s *Set) visitScalar(object *yaml.RNode, p string, schema *openapi.Resource
 	}
 
 	// perform a substitution of the field if it matches
-	sub, err := s.substitute(object, ext, schema.Schema)
+	sub, err := s.substitute(object, ext)
 	if err != nil {
 		return err
 	}
@@ -109,67 +109,100 @@ func (s *Set) visitScalar(object *yaml.RNode, p string, schema *openapi.Resource
 
 // substitute updates the value of field from ext if ext contains a substitution that
 // depends on a setter whose name matches s.Name.
-func (s *Set) substitute(field *yaml.RNode, ext *cliExtension, _ *spec.Schema) (bool, error) {
-	nameMatch := false
-
+func (s *Set) substitute(field *yaml.RNode, ext *cliExtension) (bool, error) {
 	// check partial setters to see if they contain the setter as part of a
 	// substitution
 	if ext.Substitution == nil {
 		return false, nil
 	}
 
-	p := ext.Substitution.Pattern
+	// track the visited nodes to detect cycles in nested substitutions
+	visited := sets.String{}
 
-	// substitute each setter into the pattern to get the new value
-	for _, v := range ext.Substitution.Values {
-		if v.Ref == "" {
-			return false, errors.Errorf(
-				"missing reference on substitution " + ext.Substitution.Name)
-		}
-		ref, err := spec.NewRef(v.Ref)
-		if err != nil {
-			return false, errors.Wrap(err)
-		}
-		setter, err := openapi.Resolve(&ref) // resolve the setter to its openAPI def
-		if err != nil {
-			return false, errors.Wrap(err)
-		}
-		subSetter, err := getExtFromSchema(setter) // parse the extension out of the openAPI
-		if err != nil {
-			return false, errors.Wrap(err)
-		}
+	nameMatch := false
 
-		if err := validateAgainstSchema(subSetter, setter); err != nil {
-			return false, err
-		}
-
-		if val, found := subSetter.Setter.EnumValues[subSetter.Setter.Value]; found {
-			// the setter has an enum-map.  we should replace the marker with the
-			// enum value looked up from the map rather than the enum key
-			p = strings.ReplaceAll(p, v.Marker, val)
-		} else {
-			// substitute the setters current value into the substitution pattern
-			p = strings.ReplaceAll(p, v.Marker, subSetter.Setter.Value)
-		}
-
-		if s.isMatch(subSetter.Setter.Name) {
-			// the substitution depends on the specified setter
-			nameMatch = true
-		}
+	res, err := s.substituteUtil(ext, &visited, &nameMatch)
+	if err != nil {
+		return false, err
 	}
+
 	if !nameMatch {
 		// doesn't depend on the setter, don't modify its value
 		return false, nil
 	}
 
-	// TODO(pwittrock): validate the field value
-
-	field.YNode().Value = p
+	field.YNode().Value = res
 
 	// substitutions are always strings
 	field.YNode().Tag = yaml.StringTag
 
 	return true, nil
+}
+
+// substituteUtil recursively parses nested substitutions in ext and sets the setter value
+// returns error if cyclic substitution is detected or any other unexpected errors
+func (s *Set) substituteUtil(ext *cliExtension, visited *sets.String, nameMatch *bool) (string, error) {
+	// check if the substitution has already been visited and throw error as cycles
+	// are not allowed in nested substitutions
+	if visited.Has(ext.Substitution.Name) {
+		return "", errors.Errorf(
+			"cyclic substitution detected with name " + ext.Substitution.Name)
+	}
+
+	visited.Insert(ext.Substitution.Name)
+	pattern := ext.Substitution.Pattern
+
+	// substitute each setter into the pattern to get the new value
+	// if substitution references to another substitution, recursively
+	// process the nested substitutions to replace the pattern with setter values
+	for _, v := range ext.Substitution.Values {
+		if v.Ref == "" {
+			return "", errors.Errorf(
+				"missing reference on substitution " + ext.Substitution.Name)
+		}
+		ref, err := spec.NewRef(v.Ref)
+		if err != nil {
+			return "", errors.Wrap(err)
+		}
+		def, err := openapi.Resolve(&ref) // resolve the def to its openAPI def
+		if err != nil {
+			return "", errors.Wrap(err)
+		}
+		defExt, err := getExtFromSchema(def) // parse the extension out of the openAPI
+		if err != nil {
+			return "", errors.Wrap(err)
+		}
+
+		if defExt.Substitution != nil {
+			// parse recursively if it reference is substitution
+			substVal, err := s.substituteUtil(defExt, visited, nameMatch)
+			if err != nil {
+				return "", err
+			}
+			pattern = strings.ReplaceAll(pattern, v.Marker, substVal)
+			continue
+		}
+
+		// if code reaches this point, this is a setter, so validate the setter schema
+		if err := validateAgainstSchema(defExt, def); err != nil {
+			return "", err
+		}
+
+		if s.isMatch(defExt.Setter.Name) {
+			// the substitution depends on the specified setter
+			*nameMatch = true
+		}
+
+		if val, found := defExt.Setter.EnumValues[defExt.Setter.Value]; found {
+			// the setter has an enum-map.  we should replace the marker with the
+			// enum value looked up from the map rather than the enum key
+			pattern = strings.ReplaceAll(pattern, v.Marker, val)
+		} else {
+			pattern = strings.ReplaceAll(pattern, v.Marker, defExt.Setter.Value)
+		}
+	}
+
+	return pattern, nil
 }
 
 // set applies the value from ext to field if its name matches s.Name

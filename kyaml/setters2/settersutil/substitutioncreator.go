@@ -77,7 +77,7 @@ func (c SubstitutionCreator) Create(openAPIPath, resourcesPath string) error {
 
 // CreateSettersForSubstitution creates the setters for all the references in the substitution
 // values if they don't already exist in openAPIPath file.
-func (c SubstitutionCreator) CreateSettersForSubstitution(openAPIPath string) error {
+func (c *SubstitutionCreator) CreateSettersForSubstitution(openAPIPath string) error {
 	y, err := yaml.ReadFile(openAPIPath)
 	if err != nil {
 		return err
@@ -89,18 +89,34 @@ func (c SubstitutionCreator) CreateSettersForSubstitution(openAPIPath string) er
 	}
 
 	// for each ref in values, check if the setter already exists, if not create them
-	for _, value := range c.Values {
-		obj, err := y.Pipe(yaml.Lookup(
+	for i := range c.Values {
+		value := c.Values[i]
+		setterObj, err := y.Pipe(yaml.Lookup(
 			// get the setter key from ref. Ex: from #/definitions/io.k8s.cli.setters.image_setter
 			// extract io.k8s.cli.setters.image_setter
-			"openAPI", "definitions", strings.TrimPrefix(value.Ref, "#/definitions/")))
+			"openAPI", "definitions", strings.TrimPrefix(value.Ref, fieldmeta.DefinitionsPrefix)))
 
 		if err != nil {
 			return err
 		}
 
-		if obj == nil {
-			name := strings.TrimPrefix(value.Ref, "#/definitions/io.k8s.cli.setters.")
+		arr := strings.Split(value.Ref, ".")
+		name := arr[len(arr)-1]
+		// lookup if there is a substitution with name as it could be a nested substitution
+		substRef := fieldmeta.SubstitutionDefinitionPrefix + name
+		substObj, err := y.Pipe(yaml.Lookup("openAPI", "definitions", substRef))
+
+		if err != nil {
+			return err
+		}
+
+		if setterObj == nil && substObj != nil {
+			fmt.Printf("found a substitution with name %s\n", name)
+			c.Values[i].Ref = fieldmeta.DefinitionsPrefix + substRef
+		}
+
+		if setterObj == nil && substObj == nil {
+			name := strings.TrimPrefix(value.Ref, fieldmeta.DefinitionsPrefix+fieldmeta.SetterDefinitionPrefix)
 			value := m[value.Marker]
 			fmt.Printf("unable to find setter with name %s, creating new setter with value %s\n", name, value)
 			sd := setters2.SetterDefinition{
