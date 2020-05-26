@@ -691,7 +691,7 @@ func (m *resWrangler) appendReplaceOrMerge(
 			res.Merge(old)
 		default:
 			return fmt.Errorf(
-				"id %#v exists; must merge or replace", id)
+				"id %#v exists; behavior must be merge or replace", id)
 		}
 		i, err := m.Replace(res)
 		if err != nil {
