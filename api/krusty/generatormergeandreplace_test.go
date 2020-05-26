@@ -541,7 +541,7 @@ configMapGenerator:
 	if err == nil {
 		t.Fatalf("expected error")
 	}
-	if !strings.Contains(err.Error(), "must merge or replace") {
+	if !strings.Contains(err.Error(), "behavior must be merge or replace") {
 		t.Fatalf("unexpected error %v", err)
 	}
 }
@@ -566,7 +566,7 @@ secretGenerator:
 	if err == nil {
 		t.Fatalf("expected error")
 	}
-	if !strings.Contains(err.Error(), "must merge or replace") {
+	if !strings.Contains(err.Error(), "behavior must be merge or replace") {
 		t.Fatalf("unexpected error %v", err)
 	}
 }
