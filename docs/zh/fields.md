@@ -1,18 +1,18 @@
 # Kustomization 文件字段
 
-[field-name-namespace]: ../plugins/builtins.md#field-name-namespace
-[field-name-images]: ../plugins/builtins.md#field-name-images
-[field-names-namePrefix-nameSuffix]: ../plugins/builtins.md#field-names-namePrefix-nameSuffix
-[field-name-patches]: ../plugins/builtins.md#field-name-patches
-[field-name-patchesStrategicMerge]: ../plugins/builtins.md#field-name-patchesStrategicMerge
-[field-name-patchesJson6902]: ../plugins/builtins.md#field-name-patchesJson6902
-[field-name-replicas]: ../plugins/builtins.md#field-name-replicas
-[field-name-secretGenerator]: ../plugins/builtins.md#field-name-secretGenerator
-[field-name-commonLabels]: ../plugins/builtins.md#field-name-commonLabels
-[field-name-commonAnnotations]: ../plugins/builtins.md#field-name-commonAnnotations
-[field-name-configMapGenerator]: ../plugins/builtins.md#field-name-configMapGenerator
+[field-name-namespace]: plugins-builtins.md#字段名称namespace
+[field-name-images]: plugins-builtins.md#字段名称images
+[field-names-namePrefix-nameSuffix]: plugins-builtins.md#字段名称namePrefix-nameSuffix
+[field-name-patches]: plugins-builtins.md#字段名称patches
+[field-name-patchesStrategicMerge]: plugins-builtins.md#字段名称patchesStrategicMerge
+[field-name-patchesJson6902]: plugins-builtins.md#字段名称patchesJson6902
+[field-name-replicas]: plugins-builtins.md#字段名称replicas
+[field-name-secretGenerator]: plugins-builtins.md#字段名称secretGenerator
+[field-name-commonLabels]: plugins-builtins.md#字段名称commonLabels
+[field-name-commonAnnotations]: plugins-builtins.md#字段名称commonAnnotations
+[field-name-configMapGenerator]: plugins-builtins.md#字段名称configMapGenerator
 
-介绍 [kustomization.yaml](../glossary.md#kustomization) 配置文件中各字段的含义。
+介绍 [kustomization.yaml](glossary.md#kustomization) 配置文件中各字段的含义。
 
 ## Resources
 
@@ -32,7 +32,7 @@
 |[configMapGenerator](#configmapgenerator)| list  | 列表中的每个条目都将生成一个 ConfigMap （合计可以生成 n 个 ConfigMap）。 |
 |[secretGenerator](#secretgenerator)| list  | 列表中的每个条目都将生成一个 Secret（合计可以生成 n 个 Secrets）。 |
 |[generatorOptions](#generatoroptions)| string | generatorOptions 可以修改所有 ConfigMapGenerator 和 SecretGenerator 的行为。 |
-|[generators](#generators)| list | [插件](../plugins)配置文件。 |
+|[generators](#generators)| list | [插件](plugins.md)配置文件。 |
 
 ## Transformers
 
@@ -50,7 +50,7 @@
 | [replicas](#replicas) | list | 修改资源的副本数。 |
 | [patchesStrategicMerge](#patchesstrategicmerge) | list | 此列表中的每个条目都应可以解析为部分或完整的资源定义文件。 |
 | [patchesJson6902](#patchesjson6902) | list | 列表中的每个条目都应可以解析为 Kubernetes 对象和将应用于该对象的 JSON patch 。 |
-| [transformers](#transformers) | list | [插件](../plugins)配置文件。 |
+| [transformers](#transformers) | list | [插件](plugins.md)配置文件。 |
 
 ## Meta
 
@@ -135,7 +135,7 @@ generatorOptions:
 
 ### generators
 
-[插件](../plugins)生成器配置文件列表。
+[插件](plugins.md)生成器配置文件列表。
 
 ```
 generators:
@@ -149,7 +149,7 @@ generators:
 
 ### inventory
 
-详见 [inventory object](inventory_object.md)。
+详见 [inventory object](../inventory_object.md)。
 
 ### kind
 
