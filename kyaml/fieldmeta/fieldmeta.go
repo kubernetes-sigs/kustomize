@@ -81,7 +81,9 @@ func (fm *FieldMeta) Read(n *yaml.RNode) error {
 	return nil
 }
 
-// processShortHand parses the comment for short hand ref and loads schema to fm
+// processShortHand parses the comment for short hand ref, loads schema to fm
+// and returns true if successful, returns false for any other cases and not throw
+// error, as the comment might not be a setter ref
 func (fm *FieldMeta) processShortHand(comment string) bool {
 	input := map[string]string{}
 	err := json.Unmarshal([]byte(comment), &input)
