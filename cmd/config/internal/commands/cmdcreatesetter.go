@@ -9,10 +9,10 @@ import (
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters"
-	"sigs.k8s.io/kustomize/kyaml/setters2"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
 
@@ -102,7 +102,7 @@ func (r *CreateSetterRunner) preRunE(c *cobra.Command, args []string) error {
 		}
 
 		// check if substitution with same name exists and throw error
-		ref, err := spec.NewRef(setters2.DefinitionsPrefix + setters2.SubstitutionDefinitionPrefix + r.CreateSetter.Name)
+		ref, err := spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SubstitutionDefinitionPrefix + r.CreateSetter.Name)
 		if err != nil {
 			return err
 		}

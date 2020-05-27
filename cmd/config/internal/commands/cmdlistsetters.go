@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
+	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/setters"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
 )
@@ -117,7 +118,7 @@ func (r *ListSettersRunner) ListSubstitutions(c *cobra.Command, args []string) e
 		s := r.List.Substitutions[i]
 		setters := ""
 		for _, value := range s.Values {
-			setter := strings.TrimPrefix(value.Ref, setters2.DefinitionsPrefix+setters2.SetterDefinitionPrefix)
+			setter := strings.TrimPrefix(value.Ref, fieldmeta.DefinitionsPrefix+fieldmeta.SetterDefinitionPrefix)
 			setters = setters + "," + setter
 		}
 		setters = fmt.Sprintf("[%s]", strings.TrimPrefix(setters, ","))
