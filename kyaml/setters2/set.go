@@ -12,6 +12,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/validate"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
@@ -268,7 +269,7 @@ func (s SetOpenAPI) UpdateFile(path string) error {
 }
 
 func (s SetOpenAPI) Filter(object *yaml.RNode) (*yaml.RNode, error) {
-	key := SetterDefinitionPrefix + s.Name
+	key := fieldmeta.SetterDefinitionPrefix + s.Name
 	oa, err := object.Pipe(yaml.Lookup("openAPI", "definitions", key))
 	if err != nil {
 		return nil, err
