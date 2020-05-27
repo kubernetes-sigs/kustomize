@@ -60,6 +60,8 @@ func getRemoteTarget(rs *remoteTargetSpec) error {
 		return err
 	}
 
+	rs.Dir = filesys.ConfirmedDir(rs.Dir.Join("repo"))
+
 	// Get the pwd
 	pwd, err := os.Getwd()
 	if err != nil {
