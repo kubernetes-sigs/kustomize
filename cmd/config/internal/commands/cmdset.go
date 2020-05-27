@@ -21,7 +21,7 @@ func NewSetRunner(parent string) *SetRunner {
 	r := &SetRunner{}
 	c := &cobra.Command{
 		Use:     "set DIR NAME [VALUE]",
-		Args:    cobra.MinimumNArgs(3),
+		Args:    cobra.MinimumNArgs(1),
 		Short:   commands.SetShort,
 		Long:    commands.SetLong,
 		Example: commands.SetExamples,
@@ -30,6 +30,9 @@ func NewSetRunner(parent string) *SetRunner {
 	}
 	fixDocs(parent, c)
 	r.Command = c
+	c.Flags().StringVar(&r.Set.Name, "name", "", "name of the setter")
+	c.Flags().StringVar(&r.Set.Value, "value", "", "value of the setter to set")
+	c.Flags().StringArrayVar(&r.Set.ListValues, "list-value", []string{}, "List value to be set")
 	c.Flags().StringVar(&r.Perform.SetBy, "set-by", "",
 		"annotate the field with who set it")
 	c.Flags().StringVar(&r.Perform.Description, "description", "",
@@ -75,16 +78,12 @@ func initSetterVersion(c *cobra.Command, args []string) error {
 }
 
 func (r *SetRunner) preRunE(c *cobra.Command, args []string) error {
-	if len(args) > 1 {
-		r.Perform.Name = args[1]
-		r.Lookup.Name = args[1]
-	}
-	if len(args) > 2 {
-		r.Perform.Value = args[2]
-	}
+	r.Perform.Name = r.Set.Name
+	r.Lookup.Name = r.Set.Name
+	r.Perform.Value = r.Set.Value
 
 	if setterVersion == "" {
-		if len(args) < 3 {
+		if len(r.Set.ListValues) == 0 {
 			setterVersion = "v1"
 		} else if err := initSetterVersion(c, args); err != nil {
 			return err
@@ -92,13 +91,6 @@ func (r *SetRunner) preRunE(c *cobra.Command, args []string) error {
 	}
 	if setterVersion == "v2" {
 		var err error
-		r.Set.Name = args[1]
-		r.Set.Value = args[2]
-
-		// set remaining values as list values
-		if len(args) > 3 {
-			r.Set.ListValues = args[3:]
-		}
 		r.Set.Description = r.Perform.Description
 		r.Set.SetBy = r.Perform.SetBy
 		r.OpenAPIFile, err = ext.GetOpenAPIFile(args)

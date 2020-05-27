@@ -29,7 +29,7 @@ func TestSetCommand(t *testing.T) {
 	}{
 		{
 			name: "set replicas",
-			args: []string{"replicas", "4", "--description", "hi there", "--set-by", "pw"},
+			args: []string{"--name", "replicas", "--value", "4", "--description", "hi there", "--set-by", "pw"},
 			out:  "set 1 fields\n",
 			inputOpenAPI: `
 apiVersion: v1alpha1
@@ -76,7 +76,7 @@ spec:
 		},
 		{
 			name: "set replicas no description",
-			args: []string{"replicas", "4"},
+			args: []string{"--name", "replicas", "--value", "4"},
 			out:  "set 1 fields\n",
 			inputOpenAPI: `
 apiVersion: v1alpha1
@@ -121,8 +121,54 @@ spec:
  `,
 		},
 		{
+			name: "set replicas no description",
+			args: []string{"--name", "name", "--value", "-test"},
+			out:  "set 1 fields\n",
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.name:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: name
+          value: "t"
+          setBy: me
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  name: t # {"$ref":"#/definitions/io.k8s.cli.setters.name"}
+ `,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.name:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: name
+          value: "-test"
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  name: -test # {"$ref":"#/definitions/io.k8s.cli.setters.name"}
+ `,
+		},
+		{
 			name: "set image",
-			args: []string{"tag", "1.8.1"},
+			args: []string{"--name", "tag", "--value", "1.8.1"},
 			out:  "set 1 fields\n",
 			inputOpenAPI: `
 apiVersion: v1alpha1
@@ -211,7 +257,7 @@ spec:
 
 		{
 			name: "validate openAPI number",
-			args: []string{"replicas", "four"},
+			args: []string{"--name", "replicas", "--value", "four"},
 			inputOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -261,7 +307,7 @@ spec:
 
 		{
 			name: "validate openAPI string maxLength",
-			args: []string{"name", "wordpress"},
+			args: []string{"--name", "name", "--value", "wordpress"},
 			inputOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -313,7 +359,7 @@ spec:
 
 		{
 			name: "validate substitution",
-			args: []string{"tag", "1.8.1"},
+			args: []string{"--name", "tag", "--value", "1.8.1"},
 			inputOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -406,7 +452,7 @@ spec:
 
 		{
 			name: "validate openAPI list values",
-			args: []string{"list", "10", "hi", "true"},
+			args: []string{"--name", "list", "--list-value", "10, hi, true"},
 			inputOpenAPI: `
 kind: Kptfile
 openAPI:
