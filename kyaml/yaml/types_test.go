@@ -166,3 +166,19 @@ type: string
 	}
 	assert.Equal(t, expected, actual)
 }
+
+func TestConvertJSONToYamlString(t *testing.T) {
+	inputJSON := `{"type": "string", "maxLength": 15, "enum": ["allowedValue1", "allowedValue2"]}`
+	expected := `enum:
+  - allowedValue1
+  - allowedValue2
+maxLength: 15
+type: string
+`
+
+	actual, err := ConvertJSONToYamlString(inputJSON)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	assert.Equal(t, expected, actual)
+}
