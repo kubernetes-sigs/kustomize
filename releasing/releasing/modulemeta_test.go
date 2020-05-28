@@ -1,6 +1,9 @@
 package main
 
 import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -64,5 +67,97 @@ func TestModuleTags(t *testing.T) {
 
 	if m.Tag() != expect {
 		t.Errorf("Tag %s doesn't match expected %s", m.Tag(), expect)
+	}
+}
+
+func TestCheckModReplace1(t *testing.T) {
+	path := "testpath"
+	dataString := `module sigs.k8s.io/kustomize/kustomize/v3
+
+	go 1.13
+	
+	replace (
+		sigs.k8s.io/kustomize/cmd/kubectl v0.0.3 => ../cmd/kubectl
+		sigs.k8s.io/kustomize/kstatus v0.0.1 => ../kstatus
+	)`
+
+	expect := `Found replace in testpath
+ - Please update go.mod to pin a specific version of sigs.k8s.io/kustomize/cmd/kubectl
+ - Please update go.mod to pin a specific version of sigs.k8s.io/kustomize/kstatus
+`
+
+	err := checkModReplace(path, []byte(dataString))
+	if err.Error() != expect {
+		t.Errorf("Error %s doesn't match expected %s", err.Error(), expect)
+	}
+}
+
+func TestCheckModReplace2(t *testing.T) {
+	path := "testpath"
+	dataString := `module sigs.k8s.io/kustomize/kustomize/v3
+
+	go 1.13
+	
+	replace sigs.k8s.io/kustomize/cmd/kubectl v0.0.3 => ../cmd/kubectl`
+
+	expect := `Found replace in testpath
+ - Please update go.mod to pin a specific version of sigs.k8s.io/kustomize/cmd/kubectl
+`
+
+	err := checkModReplace(path, []byte(dataString))
+	if err.Error() != expect {
+		t.Errorf("Error %s doesn't match expected %s", err.Error(), expect)
+	}
+}
+
+func TestCheckModReplace3(t *testing.T) {
+	path := "testpath"
+	dataString := `module sigs.k8s.io/kustomize/kustomize/v3
+
+	go 1.13
+	
+	exclude (
+		github.com/russross/blackfriday v2.0.0+incompatible
+		sigs.k8s.io/kustomize/api v0.2.0
+	)`
+
+	err := checkModReplace(path, []byte(dataString))
+	if err != nil {
+		t.Errorf("Error %s is not expected", err.Error())
+	}
+}
+
+func TestCheckModReplaceWithFile(t *testing.T) {
+	dataString := `module sigs.k8s.io/kustomize/kustomize/v3
+
+	go 1.13
+	
+	exclude (
+		github.com/russross/blackfriday v2.0.0+incompatible
+		sigs.k8s.io/kustomize/api v0.2.0
+	)`
+
+	dir, err := ioutil.TempDir("", "kustomize-releases-test")
+	if err != nil {
+		t.Error(err)
+	}
+	modName := "kustomize"
+	defer os.RemoveAll(dir)
+
+	err = os.MkdirAll(filepath.Join(dir, modName), os.FileMode(0700))
+	if err != nil {
+		t.Error(err)
+	}
+
+	ioutil.WriteFile(filepath.Join(dir, modName, "go.mod"), []byte(dataString), os.FileMode(0600))
+
+	m := module{
+		name: modName,
+		path: dir,
+	}
+
+	err = m.CheckModReplace()
+	if err != nil {
+		t.Errorf("Error %s is not expected", err.Error())
 	}
 }
