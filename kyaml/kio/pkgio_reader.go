@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -163,19 +162,15 @@ type LocalPackageReader struct {
 
 	// SetAnnotations are annotations to set on the Resources as they are read.
 	SetAnnotations map[string]string `yaml:"setAnnotations,omitempty"`
-
-	// IncludeJSON indicates if the json resources files must be included during read
-	IncludeJSON bool
 }
 
 var _ Reader = LocalPackageReader{}
 
-const (
-	JSONFilePattern = "*.json"
-	JSONSuffix      = ".json"
-)
+const JSONSuffix = ".json"
 
 var DefaultMatch = []string{"*.yaml", "*.yml"}
+var JSONMatch = []string{"*.json"}
+var MatchAll = append(DefaultMatch, JSONMatch...)
 
 // Read reads the Resources.
 func (r LocalPackageReader) Read() ([]*yaml.RNode, error) {
@@ -187,9 +182,6 @@ func (r LocalPackageReader) Read() ([]*yaml.RNode, error) {
 	r.PackagePath = filepath.ToSlash(r.PackagePath)
 	if len(r.MatchFilesGlob) == 0 {
 		r.MatchFilesGlob = DefaultMatch
-		if r.IncludeJSON {
-			r.MatchFilesGlob = append(r.MatchFilesGlob, JSONFilePattern)
-		}
 	}
 
 	var operand ResourceNodeSlice
@@ -255,7 +247,7 @@ func (r *LocalPackageReader) readFile(path string, _ os.FileInfo) ([]*yaml.RNode
 		Reader:                f,
 		OmitReaderAnnotations: r.OmitReaderAnnotations,
 		SetAnnotations:        r.SetAnnotations,
-		JSON:                  strings.HasSuffix(path, JSONSuffix),
+		Path:                  path,
 	}
 	return rr.Read()
 }
