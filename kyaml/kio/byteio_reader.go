@@ -102,8 +102,8 @@ type ByteReader struct {
 	// the read objects were originally wrapped in.
 	WrappingKind string
 
-	// JSON indicates if the input file source is json
-	JSON bool
+	// Path indicates file path which is being read
+	Path string
 }
 
 var _ Reader = &ByteReader{}
@@ -123,7 +123,7 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 	index := 0
 	for i := range values {
 		value := values[i]
-		if r.JSON {
+		if strings.HasSuffix(r.Path, JSONSuffix) {
 			value, err = yaml.ConvertJSONToYamlString(value)
 			if err != nil {
 				return nil, err

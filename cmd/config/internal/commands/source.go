@@ -71,7 +71,7 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 
 	var inputs []kio.Reader
 	for _, a := range args {
-		inputs = append(inputs, kio.LocalPackageReader{PackagePath: a, IncludeJSON: true})
+		inputs = append(inputs, kio.LocalPackageReader{PackagePath: a, MatchFilesGlob: kio.MatchAll})
 	}
 	if len(inputs) == 0 {
 		inputs = []kio.Reader{&kio.ByteReader{Reader: c.InOrStdin()}}
