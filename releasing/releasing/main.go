@@ -212,6 +212,12 @@ func releaseCmdImpl(args []string) error {
 		mod.Tag(),
 	)
 
+	// Check is there replace statement in go.mod
+	err = mod.CheckModReplace()
+	if err != nil {
+		return err
+	}
+
 	// Run module tests
 	output, err := mod.RunTest()
 	if err != nil {
