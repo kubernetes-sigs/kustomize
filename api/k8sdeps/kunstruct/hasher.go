@@ -78,6 +78,7 @@ func secretHash(sec *corev1.Secret) (string, error) {
 
 // encodeConfigMap encodes a ConfigMap.
 // Data, Kind, and Name are taken into account.
+// BinaryData is included if it's not empty to avoid useless key in output.
 func encodeConfigMap(cm *corev1.ConfigMap) (string, error) {
 	// json.Marshal sorts the keys in a stable order in the encoding
 	m := map[string]interface{}{"kind": "ConfigMap", "name": cm.Name, "data": cm.Data}
@@ -93,9 +94,14 @@ func encodeConfigMap(cm *corev1.ConfigMap) (string, error) {
 
 // encodeSecret encodes a Secret.
 // Data, Kind, Name, and Type are taken into account.
+// StringData is included if it's not empty to avoid useless key in output.
 func encodeSecret(sec *corev1.Secret) (string, error) {
 	// json.Marshal sorts the keys in a stable order in the encoding
-	data, err := json.Marshal(map[string]interface{}{"kind": "Secret", "type": sec.Type, "name": sec.Name, "data": sec.Data})
+	m := map[string]interface{}{"kind": "Secret", "type": sec.Type, "name": sec.Name, "data": sec.Data}
+	if len(sec.StringData) > 0 {
+		m["stringData"] = sec.StringData
+	}
+	data, err := json.Marshal(m)
 	if err != nil {
 		return "", err
 	}
