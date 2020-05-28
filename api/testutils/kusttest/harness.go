@@ -52,6 +52,16 @@ kind: Kustomization
 `+content))
 }
 
+func (th Harness) WriteC(path string, content string) {
+	th.fSys.WriteFile(
+		filepath.Join(
+			path,
+			konfig.DefaultKustomizationFileName()), []byte(`
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+`+content))
+}
+
 func (th Harness) WriteF(path string, content string) {
 	th.fSys.WriteFile(path, []byte(content))
 }
