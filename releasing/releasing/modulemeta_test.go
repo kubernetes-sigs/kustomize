@@ -1,6 +1,9 @@
 package main
 
 import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -119,6 +122,38 @@ func TestCheckModReplace3(t *testing.T) {
 	)`
 
 	err := checkModReplace(path, []byte(dataString))
+	if err != nil {
+		t.Errorf("Error %s is not expected", err.Error())
+	}
+}
+
+func TestCheckModReplaceWithFile(t *testing.T) {
+	dataString := `module sigs.k8s.io/kustomize/kustomize/v3
+
+	go 1.13
+	
+	exclude (
+		github.com/russross/blackfriday v2.0.0+incompatible
+		sigs.k8s.io/kustomize/api v0.2.0
+	)`
+
+	dir, err := ioutil.TempDir("", "kustomize-releases-test")
+	modName := "kustomize"
+	defer os.RemoveAll(dir)
+
+	err = os.MkdirAll(filepath.Join(dir, modName), os.FileMode(0700))
+	if err != nil {
+		t.Error(err)
+	}
+
+	ioutil.WriteFile(filepath.Join(dir, modName, "go.mod"), []byte(dataString), os.FileMode(0600))
+
+	m := module{
+		name: modName,
+		path: dir,
+	}
+
+	err = m.CheckModReplace()
 	if err != nil {
 		t.Errorf("Error %s is not expected", err.Error())
 	}
