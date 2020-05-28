@@ -71,6 +71,10 @@ test 3 == \
 The url should follow
 [hashicorp/go-getter URL format](https://github.com/hashicorp/go-getter#url-format).
 
+Note that using `//` in the url will only copy the directory specified by the path
+after `//`, which means some relative paths, like `../xxx`, may not work. Using `/` to copy
+entire repo. For more details please see [go-getter documentation](https://github.com/hashicorp/go-getter#subdirectories).
+
 Note that S3 and GCS are NOT supported to avoid introducing massive dependency.
 
 Here are some example urls
