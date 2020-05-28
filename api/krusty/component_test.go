@@ -4,6 +4,7 @@
 package krusty_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -89,14 +90,18 @@ components:
 }
 
 func writeDB(th kusttest_test.Harness) {
-	th.WriteF("/app/prod/db", `
+	deployment("db", "/app/prod/db")(th)
+}
+
+func deployment(name string, path string) FileGen {
+	return writeF(path, fmt.Sprintf(`
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: db
+  name: %s
 spec:
   type: Logical
-`)
+`, name))
 }
 
 func TestComponent(t *testing.T) {
@@ -385,6 +390,119 @@ spec:
   type: Logical
 `,
 		},
+		// See how nameSuffix "-b" is also added to the resources included by "comp-a" because they are in the
+		// accumulator when "comp-b" is accumulated.  In practice we could use simple Kustomizations for this example.
+		"components-can-add-the-same-base-if-the-first-renames-resources": {
+			input: []FileGen{writeTestBase,
+				deployment("proxy", "/app/comp-a/proxy.yaml"),
+				writeC("/app/comp-a", `
+resources:
+- ../base
+
+nameSuffix: "-a"
+`),
+				writeC("/app/comp-b", `
+resources:
+- ../base
+
+nameSuffix: "-b"
+`),
+				writeK("/app/prod", `
+components:
+- ../comp-a
+- ../comp-b`),
+			},
+			runPath: "/app/prod",
+			expectedOutput: `
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: storefront-a-b
+spec:
+  replicas: 1
+---
+apiVersion: v1
+data:
+  otherValue: "10"
+  testValue: "1"
+kind: ConfigMap
+metadata:
+  name: my-configmap-a-b-tfb7c5t69m
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: storefront-b
+spec:
+  replicas: 1
+---
+apiVersion: v1
+data:
+  otherValue: "10"
+  testValue: "1"
+kind: ConfigMap
+metadata:
+  name: my-configmap-b-8h7b8862bb
+`,
+		},
+
+		"multiple-bases-can-add-the-same-component-if-it-doesn-not-define-named-entities": {
+			input: []FileGen{
+				writeC("/app/comp", `
+namespace: prod
+`),
+				writeK("/app/base-a", `
+resources:
+- proxy.yaml
+
+components:
+- ../comp
+`),
+				deployment("proxy-a", "/app/base-a/proxy.yaml"),
+				writeK("/app/base-b", `
+resources:
+- proxy.yaml
+
+components:
+- ../comp
+`),
+				deployment("proxy-b", "/app/base-b/proxy.yaml"),
+				writeK("/app/prod", `
+resources:
+- proxy.yaml
+- ../base-a
+- ../base-b
+`),
+				deployment("proxy-prod", "/app/prod/proxy.yaml"),
+			},
+			runPath: "/app/prod",
+			// Note that the namepsace has not been applied to proxy-prod because it was not in scope when the
+			// component was applied
+			expectedOutput: `
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: proxy-prod
+spec:
+  type: Logical
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: proxy-a
+  namespace: prod
+spec:
+  type: Logical
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: proxy-b
+  namespace: prod
+spec:
+  type: Logical
+`,
+		},
 	}
 
 	for tn, tc := range testCases {
@@ -461,6 +579,79 @@ configMapGenerator:
 			},
 			runPath:       "/app/prod",
 			expectedError: "apiVersion for Component should be kustomize.config.k8s.io/v1alpha1",
+		},
+		"components-cannot-add-the-same-resource": {
+			input: []FileGen{writeTestBase,
+				writeC("/app/comp-a", `
+resources:
+- proxy.yaml
+`),
+				deployment("proxy", "/app/comp-a/proxy.yaml"),
+				writeC("/app/comp-b", `
+resources:
+- proxy.yaml
+`),
+				deployment("proxy", "/app/comp-b/proxy.yaml"),
+				writeK("/app/prod", `
+resources:
+- ../base
+
+components:
+- ../comp-a
+- ../comp-b`),
+			},
+			runPath:       "/app/prod",
+			expectedError: "may not add resource with an already registered id: ~G_v1_Deployment|~X|proxy",
+		},
+		"components-cannot-add-the-same-base": {
+			input: []FileGen{writeTestBase,
+				deployment("proxy", "/app/comp-a/proxy.yaml"),
+				writeC("/app/comp-a", `
+resources:
+- ../base
+`),
+				writeC("/app/comp-b", `
+resources:
+- ../base
+`),
+				writeK("/app/prod", `
+components:
+- ../comp-a
+- ../comp-b`),
+			},
+			runPath:       "/app/prod",
+			expectedError: "may not add resource with an already registered id: ~G_v1_Deployment|~X|storefront",
+		},
+		"components-cannot-add-bases-containing-the-same-resource": {
+			input: []FileGen{writeTestBase,
+				writeC("/app/comp-a", `
+resources:
+- ../base-a
+`),
+				writeK("/app/base-a", `
+resources:
+- proxy.yaml
+`),
+				deployment("proxy", "/app/base-a/proxy.yaml"),
+				writeC("/app/comp-b", `
+resources:
+- ../base-b
+`),
+				writeK("/app/base-b", `
+resources:
+- proxy.yaml
+`),
+				deployment("proxy", "/app/base-b/proxy.yaml"),
+				writeK("/app/prod", `
+resources:
+- ../base
+
+components:
+- ../comp-a
+- ../comp-b`),
+			},
+			runPath:       "/app/prod",
+			expectedError: "may not add resource with an already registered id: ~G_v1_Deployment|~X|proxy",
 		},
 	}
 
