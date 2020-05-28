@@ -52,8 +52,8 @@ spec:
 }
 
 func writeTestComponent(th kusttest_test.Harness) {
-	th.WriteC("/app/patch", `
-namePrefix: patched-
+	th.WriteC("/app/comp", `
+namePrefix: comp-
 replicas:
 - name: storefront
   count: 3
@@ -64,9 +64,9 @@ configMapGenerator:
   behavior: merge
   literals:	
     - testValue=2
-    - patchValue=5
+    - compValue=5
 `)
-	th.WriteF("/app/patch/stub.yaml", `
+	th.WriteF("/app/comp/stub.yaml", `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -83,7 +83,7 @@ resources:
 - db
 
 components:
-- ../patch
+- ../comp
 `)
 	writeDB(th)
 }
@@ -114,39 +114,39 @@ func TestComponent(t *testing.T) {
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: patched-storefront
+  name: comp-storefront
 spec:
   replicas: 3
 ---
 apiVersion: v1
 data:
+  compValue: "5"
   otherValue: "10"
-  patchValue: "5"
   testValue: "2"
 kind: ConfigMap
 metadata:
   annotations: {}
   labels: {}
-  name: patched-my-configmap-5g55h28cdh
+  name: comp-my-configmap-ct5bgtbccd
 ---
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: patched-db
+  name: comp-db
 spec:
   type: Logical
 ---
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: patched-stub
+  name: comp-stub
 spec:
   replicas: 1
 `,
 		},
 		"multiple-components": {
 			input: []FileGen{writeTestBase, writeTestComponent, writeDB,
-				writeC("/app/additionalpatch", `
+				writeC("/app/additionalcomp", `
 configMapGenerator:
 - name: my-configmap
   behavior: merge
@@ -159,8 +159,8 @@ resources:
 - db
 
 components:
-- ../patch
-- ../additionalpatch
+- ../comp
+- ../additionalcomp
 `),
 			},
 			runPath: "/app/prod",
@@ -168,41 +168,41 @@ components:
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: patched-storefront
+  name: comp-storefront
 spec:
   replicas: 3
 ---
 apiVersion: v1
 data:
+  compValue: "5"
   otherValue: "9"
-  patchValue: "5"
   testValue: "2"
 kind: ConfigMap
 metadata:
   annotations: {}
   labels: {}
-  name: patched-my-configmap-9fddc87cdk
+  name: comp-my-configmap-dgf97tmg6h
 ---
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: patched-db
+  name: comp-db
 spec:
   type: Logical
 ---
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: patched-stub
+  name: comp-stub
 spec:
   replicas: 1
 `,
 		},
 		"nested-components": {
 			input: []FileGen{writeTestBase, writeTestComponent, writeDB,
-				writeC("/app/additionalpatch", `
+				writeC("/app/additionalcomp", `
 components:
-- ../patch
+- ../comp
 configMapGenerator:
 - name: my-configmap
   behavior: merge
@@ -215,7 +215,7 @@ resources:
 - db
 
 components:
-- ../additionalpatch
+- ../additionalcomp
 `),
 			},
 			runPath: "/app/prod",
@@ -223,38 +223,38 @@ components:
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: patched-storefront
+  name: comp-storefront
 spec:
   replicas: 3
 ---
 apiVersion: v1
 data:
+  compValue: "5"
   otherValue: "9"
-  patchValue: "5"
   testValue: "2"
 kind: ConfigMap
 metadata:
   annotations: {}
   labels: {}
-  name: patched-my-configmap-9fddc87cdk
+  name: comp-my-configmap-dgf97tmg6h
 ---
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: patched-db
+  name: comp-db
 spec:
   type: Logical
 ---
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: patched-stub
+  name: comp-stub
 spec:
   replicas: 1
 `,
 		},
-		// If a patch sets a name prefix on a base, then that base can also be separately included
-		// without being affected by the patch in another branch of the resource tree
+		// If a component sets a name prefix on a base, then that base can also be separately included
+		// without being affected by the component in another branch of the resource tree
 		"basic-component-with-repeated-base": {
 			input: []FileGen{writeTestBase, writeTestComponent, writeOverlayProd,
 				writeK("/app/repeated", `
@@ -283,32 +283,32 @@ metadata:
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: patched-storefront
+  name: comp-storefront
 spec:
   replicas: 3
 ---
 apiVersion: v1
 data:
+  compValue: "5"
   otherValue: "10"
-  patchValue: "5"
   testValue: "2"
 kind: ConfigMap
 metadata:
   annotations: {}
   labels: {}
-  name: patched-my-configmap-5g55h28cdh
+  name: comp-my-configmap-ct5bgtbccd
 ---
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: patched-db
+  name: comp-db
 spec:
   type: Logical
 ---
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: patched-stub
+  name: comp-stub
 spec:
   replicas: 1
 `,
@@ -322,7 +322,7 @@ configMapGenerator:
 - name: my-configmap
   behavior: merge
   literals:	
-    - patchValue=5
+    - compValue=5
     - testValue=2
 `),
 			},
@@ -337,19 +337,19 @@ spec:
 ---
 apiVersion: v1
 data:
+  compValue: "5"
   otherValue: "10"
-  patchValue: "5"
   testValue: "2"
 kind: ConfigMap
 metadata:
   annotations: {}
   labels: {}
-  name: my-configmap-t86ktk6tdk
+  name: my-configmap-96dt22k28h
 `,
 		},
 		"missing-optional-component-api-version": {
 			input: []FileGen{writeTestBase, writeOverlayProd,
-				writeF("/app/patch/"+konfig.DefaultKustomizationFileName(), `
+				writeF("/app/comp/"+konfig.DefaultKustomizationFileName(), `
 kind: Component
 configMapGenerator:
 - name: my-configmap
@@ -410,18 +410,18 @@ func TestComponentErrors(t *testing.T) {
 				writeK("/app/compinres", `
 resources:
 - ../base
-- ../patch
+- ../comp
 `),
 			},
 			runPath:       "app/compinres",
-			expectedError: "expected kind != 'Component' for path '/app/patch'",
+			expectedError: "expected kind != 'Component' for path '/app/comp'",
 		},
 		"kustomizations-cannot-be-added-to-components": {
 			input: []FileGen{writeTestBase, writeTestComponent,
 				writeK("/app/kustincomponents", `
 components:
 - ../base
-- ../patch
+- ../comp
 `),
 			},
 			runPath: "/app/kustincomponents",
@@ -441,7 +441,7 @@ spec:
 				writeK("/app/filesincomponents", `
 components:
 - stub.yaml
-- ../patch
+- ../comp
 `),
 			},
 			runPath:       "/app/filesincomponents",
@@ -449,7 +449,7 @@ components:
 		},
 		"invalid-component-api-version": {
 			input: []FileGen{writeTestBase, writeOverlayProd,
-				writeF("/app/patch/"+konfig.DefaultKustomizationFileName(), `
+				writeF("/app/comp/"+konfig.DefaultKustomizationFileName(), `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Component
 configMapGenerator:
