@@ -158,6 +158,8 @@ func (kt *KustTarget) AccumulateTarget() (
 	return kt.accumulateTarget(accumulator.MakeEmptyAccumulator())
 }
 
+// ra should be empty when this KustTarget is a Kustomization, or the ra of the parent if this KustTarget is a Component
+// (or empty if the Component does not have a parent).
 func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 	resRa *accumulator.ResAccumulator, err error) {
 	ra, err = kt.accumulateResources(ra, kt.kustomization.Resources)
@@ -324,10 +326,13 @@ func (kt *KustTarget) accumulateDirectory(
 	}
 
 	var subRa *accumulator.ResAccumulator
-	if subKt.kustomization.Kind == types.ComponentKind {
+	if isComponent {
+		// Components don't create a new accumulator: the kustomization directives are added to the current accumulator
 		subRa, err = subKt.accumulateTarget(ra)
 		ra = accumulator.MakeEmptyAccumulator()
 	} else {
+		// Child Kustomizations create a new accumulator which resolves their kustomization directives, which will later
+		// be merged into the current accumulator.
 		subRa, err = subKt.AccumulateTarget()
 	}
 	if err != nil {

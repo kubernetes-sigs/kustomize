@@ -158,7 +158,7 @@ func (k *Kustomization) EnforceFields() []string {
 		requiredVersion = ComponentVersion
 	}
 	if k.APIVersion != "" && k.APIVersion != requiredVersion {
-		errs = append(errs, "apiVersion should be "+requiredVersion)
+		errs = append(errs, "apiVersion for "+k.Kind+" should be "+requiredVersion)
 	}
 	return errs
 }
