@@ -48,12 +48,12 @@ To create a custom setter for a field see: `kustomize help config create-setter`
     # DIR/resources.yaml
     ...
     metadata:
-        name: PREFIX-app1 # {"type":"string","x-kustomize":{"partialFieldSetters":[{"name":"name-prefix","value":"PREFIX"}]}}
+        name: PREFIX-app1 # {"type":"string","x-kustomize":{"setter":[{"name":"name-prefix","value":"PREFIX"}]}}
     ...
     ---
     ...
     metadata:
-        name: PREFIX-app2 # {"type":"string","x-kustomize":{"partialFieldSetters":[{"name":"name-prefix","value":"PREFIX"}]}}
+        name: PREFIX-app2 # {"type":"string","x-kustomize":{"setter":[{"name":"name-prefix","value":"PREFIX"}]}}
     ...
 
   List setters: Show the possible setters
@@ -78,10 +78,10 @@ To create a custom setter for a field see: `kustomize help config create-setter`
     # DIR/resources.yaml
     ...
     metadata:
-        name: test-app1 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","partialFieldSetters":[{"name":"name-prefix","value":"test"}]}}
+        name: test-app1 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","setter":[{"name":"name-prefix","value":"test"}]}}
     ...
     ---
     ...
     metadata:
-        name: test-app2 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","partialFieldSetters":[{"name":"name-prefix","value":"test"}]}}
+        name: test-app2 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","setter":[{"name":"name-prefix","value":"test"}]}}
     ...
