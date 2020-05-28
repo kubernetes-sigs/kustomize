@@ -126,13 +126,9 @@ func (r *ListSettersRunner) ListSubstitutions(c *cobra.Command, args []string) e
 			s.Name, s.Pattern, setters})
 	}
 	if len(r.List.Substitutions) == 0 {
-		// exit non-0 if no matching substitutions are found
-		if ExitOnError {
-			os.Exit(1)
-		}
-	} else {
-		table.Render()
+		return nil
 	}
+	table.Render()
 
 	return nil
 }
