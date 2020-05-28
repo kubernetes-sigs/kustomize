@@ -101,6 +101,9 @@ type ByteReader struct {
 	// WrappingKind is set by Read(), and is the kind of the object that
 	// the read objects were originally wrapped in.
 	WrappingKind string
+
+	// JSON indicates if the input file source is json
+	JSON bool
 }
 
 var _ Reader = &ByteReader{}
@@ -119,7 +122,14 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 
 	index := 0
 	for i := range values {
-		decoder := yaml.NewDecoder(bytes.NewBufferString(values[i]))
+		value := values[i]
+		if r.JSON {
+			value, err = yaml.ConvertJSONToYamlString(value)
+			if err != nil {
+				return nil, err
+			}
+		}
+		decoder := yaml.NewDecoder(bytes.NewBufferString(value))
 		node, err := r.decode(index, decoder)
 		if err == io.EOF {
 			continue

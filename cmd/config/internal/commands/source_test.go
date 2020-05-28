@@ -21,25 +21,37 @@ func TestSourceCommand(t *testing.T) {
 	}
 	defer os.RemoveAll(d)
 
-	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
-kind: Deployment
-metadata:
-  labels:
-    app: nginx2
-  name: foo
-  annotations:
-    app: nginx2
-spec:
-  replicas: 1
+	err = ioutil.WriteFile(filepath.Join(d, "f1.json"), []byte(`
+{
+  "kind": "Deployment",
+  "metadata": {
+    "labels": {
+      "app": "nginx2"
+    },
+    "name": "foo",
+    "annotations": {
+      "app": "nginx2"
+    }
+  },
+  "spec": {
+    "replicas": 1
+  }
+}
 ---
-kind: Service
-metadata:
-  name: foo
-  annotations:
-    app: nginx
-spec:
-  selector:
-    app: nginx
+{
+  "kind": "Service",
+  "metadata": {
+    "name": "foo",
+    "annotations": {
+      "app": "nginx"
+    }
+  },
+  "spec": {
+    "selector": {
+      "app": "nginx"
+    }
+  }
+}
 `), 0600)
 	if !assert.NoError(t, err) {
 		return
@@ -86,22 +98,22 @@ kind: ResourceList
 items:
 - kind: Deployment
   metadata:
-    labels:
-      app: nginx2
-    name: foo
     annotations:
       app: nginx2
       config.kubernetes.io/index: '0'
-      config.kubernetes.io/path: 'f1.yaml'
+      config.kubernetes.io/path: 'f1.json'
+    labels:
+      app: nginx2
+    name: foo
   spec:
     replicas: 1
 - kind: Service
   metadata:
-    name: foo
     annotations:
       app: nginx
       config.kubernetes.io/index: '1'
-      config.kubernetes.io/path: 'f1.yaml'
+      config.kubernetes.io/path: 'f1.json'
+    name: foo
   spec:
     selector:
       app: nginx
