@@ -138,6 +138,9 @@ func TestCheckModReplaceWithFile(t *testing.T) {
 	)`
 
 	dir, err := ioutil.TempDir("", "kustomize-releases-test")
+	if err != nil {
+		t.Error(err)
+	}
 	modName := "kustomize"
 	defer os.RemoveAll(dir)
 
