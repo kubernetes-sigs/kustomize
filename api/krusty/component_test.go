@@ -463,7 +463,7 @@ configMapGenerator:
 	err := th.RunWithErr("/app/prod", th.MakeDefaultOptions())
 	if !strings.Contains(
 		err.Error(),
-		"apiVersion should be kustomize.config.k8s.io/v1alpha1") {
+		"apiVersion for Component should be kustomize.config.k8s.io/v1alpha1") {
 		t.Fatalf("unexpected error: %s", err)
 	}
 }
