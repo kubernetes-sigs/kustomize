@@ -58,6 +58,10 @@ func TestSecretHash(t *testing.T) {
 		{"one key", &corev1.Secret{Type: "my-type", Data: map[string][]byte{"one": []byte("")}}, "74bd68bm66", ""},
 		// three keys (tests sorting order)
 		{"three keys", &corev1.Secret{Type: "my-type", Data: map[string][]byte{"two": []byte("2"), "one": []byte(""), "three": []byte("3")}}, "dgcb6h9tmk", ""},
+		// with stringdata
+		{"stringdata", &corev1.Secret{Type: "my-type", Data: map[string][]byte{"one": []byte("")}, StringData: map[string]string{"two": "2"}}, "ckm7f798g2", ""},
+		// empty stringdata
+		{"empty stringdata", &corev1.Secret{Type: "my-type", Data: map[string][]byte{"one": []byte("")}, StringData: map[string]string{}}, "74bd68bm66", ""},
 	}
 
 	for _, c := range cases {
@@ -125,6 +129,12 @@ func TestEncodeSecret(t *testing.T) {
 			Data: map[string][]byte{"two": []byte("2"), "one": []byte(""), "three": []byte("3")},
 		},
 			`{"data":{"one":"","three":"Mw==","two":"Mg=="},"kind":"Secret","name":"","type":"my-type"}`, ""},
+		// with stringdata
+		{"stringdata", &corev1.Secret{Type: "my-type", Data: map[string][]byte{"one": []byte("")}, StringData: map[string]string{"two": "2"}},
+			`{"data":{"one":""},"kind":"Secret","name":"","stringData":{"two":"2"},"type":"my-type"}`, ""},
+		// empty stringdata
+		{"empty stringdata", &corev1.Secret{Type: "my-type", Data: map[string][]byte{"one": []byte("")}, StringData: map[string]string{}},
+			`{"data":{"one":""},"kind":"Secret","name":"","type":"my-type"}`, ""},
 	}
 	for _, c := range cases {
 		s, err := encodeSecret(c.secret)
