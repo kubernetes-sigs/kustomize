@@ -1,4 +1,4 @@
-// Copyright 2019 The Kubernetes Authors.
+// Copyright 2020 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 package krusty_test
@@ -7,11 +7,31 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/api/konfig"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-// Test kustomization.yaml files with  kind: Component
-func writeComponentBase(th kusttest_test.Harness) {
+type FileGen func(kusttest_test.Harness)
+
+func writeC(path string, content string) FileGen {
+	return func(th kusttest_test.Harness) {
+		th.WriteC(path, content)
+	}
+}
+
+func writeF(path string, content string) FileGen {
+	return func(th kusttest_test.Harness) {
+		th.WriteF(path, content)
+	}
+}
+
+func writeK(path string, content string) FileGen {
+	return func(th kusttest_test.Harness) {
+		th.WriteK(path, content)
+	}
+}
+
+func writeTestBase(th kusttest_test.Harness) {
 	th.WriteK("/app/base", `
 resources:
 - deploy.yaml
@@ -31,10 +51,8 @@ spec:
 `)
 }
 
-func writeComponentPatch(th kusttest_test.Harness) {
-	th.WriteF("/app/patch/kustomization.yaml", `
-apiVersion: kustomize.config.k8s.io/v1alpha1
-kind: Component
+func writeTestComponent(th kusttest_test.Harness) {
+	th.WriteC("/app/patch", `
 namePrefix: patched-
 replicas:
 - name: storefront
@@ -58,7 +76,7 @@ spec:
 `)
 }
 
-func writeComponentProd(th kusttest_test.Harness) {
+func writeOverlayProd(th kusttest_test.Harness) {
 	th.WriteK("/app/prod", `
 resources:
 - ../base
@@ -67,6 +85,10 @@ resources:
 components:
 - ../patch
 `)
+	writeDB(th)
+}
+
+func writeDB(th kusttest_test.Harness) {
 	th.WriteF("/app/prod/db", `
 apiVersion: v1
 kind: Deployment
@@ -77,15 +99,18 @@ spec:
 `)
 }
 
-// Components are inserted into the resource hierarchy as the parent of those
-// resources that come before it in the resources list of the parent Kustomization.
-func TestBasicComponent(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	writeComponentBase(th)
-	writeComponentPatch(th)
-	writeComponentProd(th)
-	m := th.Run("/app/prod", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, `
+func TestComponent(t *testing.T) {
+	testCases := map[string]struct {
+		input          []FileGen
+		runPath        string
+		expectedOutput string
+	}{
+		// Components are inserted into the resource hierarchy as the parent of those
+		// resources that come before it in the resources list of the parent Kustomization.
+		"basic-component": {
+			input:   []FileGen{writeTestBase, writeTestComponent, writeOverlayProd},
+			runPath: "/app/prod",
+			expectedOutput: `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -117,24 +142,18 @@ metadata:
   name: patched-stub
 spec:
   replicas: 1
-`)
-}
-
-func TestMultipleComponents(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	writeComponentBase(th)
-	writeComponentPatch(th)
-	writeComponentProd(th)
-	th.WriteF("/app/additionalpatch/kustomization.yaml", `
-apiVersion: kustomize.config.k8s.io/v1alpha1
-kind: Component
+`,
+		},
+		"multiple-components": {
+			input: []FileGen{writeTestBase, writeTestComponent, writeDB,
+				writeC("/app/additionalpatch", `
 configMapGenerator:
 - name: my-configmap
   behavior: merge
   literals:	
     - otherValue=9
-`)
-	th.WriteK("/app/prod", `
+`),
+				writeK("/app/prod", `
 resources:
 - ../base
 - db
@@ -142,9 +161,10 @@ resources:
 components:
 - ../patch
 - ../additionalpatch
-`)
-	m := th.Run("/app/prod", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, `
+`),
+			},
+			runPath: "/app/prod",
+			expectedOutput: `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -176,17 +196,11 @@ metadata:
   name: patched-stub
 spec:
   replicas: 1
-`)
-}
-
-func TestNestedComponents(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	writeComponentBase(th)
-	writeComponentPatch(th)
-	writeComponentProd(th)
-	th.WriteF("/app/additionalpatch/kustomization.yaml", `
-apiVersion: kustomize.config.k8s.io/v1alpha1
-kind: Component
+`,
+		},
+		"nested-components": {
+			input: []FileGen{writeTestBase, writeTestComponent, writeDB,
+				writeC("/app/additionalpatch", `
 components:
 - ../patch
 configMapGenerator:
@@ -194,17 +208,18 @@ configMapGenerator:
   behavior: merge
   literals:	
     - otherValue=9
-`)
-	th.WriteK("/app/prod", `
+`),
+				writeK("/app/prod", `
 resources:
 - ../base
 - db
 
 components:
 - ../additionalpatch
-`)
-	m := th.Run("/app/prod", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, `
+`),
+			},
+			runPath: "/app/prod",
+			expectedOutput: `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -236,23 +251,20 @@ metadata:
   name: patched-stub
 spec:
   replicas: 1
-`)
-}
-
-// If a patch sets a name prefix on a base, then that base can also be separately included
-// without being affected by the patch in another branch of the resource tree
-func TestBasicComponentWithRepeatedBase(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	writeComponentBase(th)
-	writeComponentPatch(th)
-	writeComponentProd(th)
-	th.WriteK("/app/repeated", `
+`,
+		},
+		// If a patch sets a name prefix on a base, then that base can also be separately included
+		// without being affected by the patch in another branch of the resource tree
+		"basic-component-with-repeated-base": {
+			input: []FileGen{writeTestBase, writeTestComponent, writeOverlayProd,
+				writeK("/app/repeated", `
 resources:
 - ../base
 - ../prod
-`)
-	m := th.Run("/app/repeated", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, `
+`),
+			},
+			runPath: "/app/repeated",
+			expectedOutput: `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -299,16 +311,11 @@ metadata:
   name: patched-stub
 spec:
   replicas: 1
-`)
-}
-
-func TestApplyingComponentDirectlySameAsKustomization(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	writeComponentBase(th)
-	writeComponentPatch(th)
-	th.WriteF("/app/solopatch/kustomization.yaml", `
-apiVersion: kustomize.config.k8s.io/v1alpha1
-kind: Component
+`,
+		},
+		"applying-component-directly-should-be-same-as-kustomization": {
+			input: []FileGen{writeTestBase, writeTestComponent,
+				writeC("/app/direct-component", `
 resources:
 - ../base
 configMapGenerator:
@@ -317,9 +324,10 @@ configMapGenerator:
   literals:	
     - patchValue=5
     - testValue=2
-`)
-	m := th.Run("/app/solopatch", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, `
+`),
+			},
+			runPath: "/app/direct-component",
+			expectedOutput: `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -337,90 +345,21 @@ metadata:
   annotations: {}
   labels: {}
   name: my-configmap-t86ktk6tdk
-`)
-}
-
-func TestComponentsCannotBeAddedToResources(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	writeComponentBase(th)
-	writeComponentPatch(th)
-	th.WriteF("/app/custinres/kustomization.yaml", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-- ../base
-- ../patch
-`)
-	err := th.RunWithErr("/app/custinres", th.MakeDefaultOptions())
-	if !strings.Contains(
-		err.Error(),
-		"expected kind != 'Component' for path '/app/patch'") {
-		t.Fatalf("unexpected error: %s", err)
-	}
-}
-
-func TestKustomizationsCannotBeAddedToComponents(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	writeComponentBase(th)
-	writeComponentPatch(th)
-	th.WriteF("/app/kustincomponents/kustomization.yaml", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-components:
-- ../base
-- ../patch
-`)
-	err := th.RunWithErr("/app/kustincomponents", th.MakeDefaultOptions())
-	if !strings.Contains(
-		err.Error(),
-		"accumulating components: accumulateDirectory: \"expected kind 'Component' for path '/app/base' but got 'Kustomization'") {
-		t.Fatalf("unexpected error: %s", err)
-	}
-}
-
-func TestFilesCannotBeAddedToComponentsList(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	writeComponentBase(th)
-
-	th.WriteF("/app/filesincomponents/stub.yaml", `
-apiVersion: v1
-kind: Deployment
-metadata:
-  name: stub
-spec:
-  replicas: 1
-`)
-
-	th.WriteF("/app/filesincomponents/kustomization.yaml", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-components:
-- stub.yaml
-- ../patch
-`)
-	err := th.RunWithErr("/app/filesincomponents", th.MakeDefaultOptions())
-	if !strings.Contains(
-		err.Error(),
-		"'/app/filesincomponents/stub.yaml' must be a directory to be a root") {
-		t.Fatalf("unexpected error: %s", err)
-	}
-}
-
-func TestMissingOptionalComponentApiVersion(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	writeComponentBase(th)
-	writeComponentProd(th)
-	th.WriteF("/app/patch/kustomization.yaml", `
+`,
+		},
+		"missing-optional-component-api-version": {
+			input: []FileGen{writeTestBase, writeOverlayProd,
+				writeF("/app/patch/"+konfig.DefaultKustomizationFileName(), `
 kind: Component
 configMapGenerator:
 - name: my-configmap
   behavior: merge
   literals:	
     - otherValue=9
-`)
-
-	m := th.Run("/app/prod", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, `
+`),
+			},
+			runPath: "/app/prod",
+			expectedOutput: `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -444,14 +383,73 @@ metadata:
   name: db
 spec:
   type: Logical
-`)
+`,
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			th := kusttest_test.MakeHarness(t)
+			for _, f := range tc.input {
+				f(th)
+			}
+			m := th.Run(tc.runPath, th.MakeDefaultOptions())
+			th.AssertActualEqualsExpected(m, tc.expectedOutput)
+		})
+	}
 }
 
-func TestInvalidComponentApiVersion(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	writeComponentBase(th)
-	writeComponentProd(th)
-	th.WriteF("/app/patch/kustomization.yaml", `
+func TestComponentErrors(t *testing.T) {
+	testCases := map[string]struct {
+		input         []FileGen
+		runPath       string
+		expectedError string
+	}{
+		"components-cannot-be-added-to-resources": {
+			input: []FileGen{writeTestBase, writeTestComponent,
+				writeK("/app/compinres", `
+resources:
+- ../base
+- ../patch
+`),
+			},
+			runPath:       "app/compinres",
+			expectedError: "expected kind != 'Component' for path '/app/patch'",
+		},
+		"kustomizations-cannot-be-added-to-components": {
+			input: []FileGen{writeTestBase, writeTestComponent,
+				writeK("/app/kustincomponents", `
+components:
+- ../base
+- ../patch
+`),
+			},
+			runPath: "/app/kustincomponents",
+			expectedError: "accumulating components: accumulateDirectory: \"expected kind 'Component' for path " +
+				"'/app/base' but got 'Kustomization'",
+		},
+		"files-cannot-be-added-to-components-list": {
+			input: []FileGen{writeTestBase,
+				writeF("/app/filesincomponents/stub.yaml", `
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: stub
+spec:
+  replicas: 1
+`),
+				writeK("/app/filesincomponents", `
+components:
+- stub.yaml
+- ../patch
+`),
+			},
+			runPath:       "/app/filesincomponents",
+			expectedError: "'/app/filesincomponents/stub.yaml' must be a directory to be a root",
+		},
+		"invalid-component-api-version": {
+			input: []FileGen{writeTestBase, writeOverlayProd,
+				writeF("/app/patch/"+konfig.DefaultKustomizationFileName(), `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Component
 configMapGenerator:
@@ -459,11 +457,23 @@ configMapGenerator:
   behavior: merge
   literals:	
     - otherValue=9
-`)
-	err := th.RunWithErr("/app/prod", th.MakeDefaultOptions())
-	if !strings.Contains(
-		err.Error(),
-		"apiVersion for Component should be kustomize.config.k8s.io/v1alpha1") {
-		t.Fatalf("unexpected error: %s", err)
+`),
+			},
+			runPath:       "/app/prod",
+			expectedError: "apiVersion for Component should be kustomize.config.k8s.io/v1alpha1",
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			th := kusttest_test.MakeHarness(t)
+			for _, f := range tc.input {
+				f(th)
+			}
+			err := th.RunWithErr(tc.runPath, th.MakeDefaultOptions())
+			if err == nil || !strings.Contains(err.Error(), tc.expectedError) {
+				t.Fatalf("unexpected error: %s", err)
+			}
+		})
 	}
 }
