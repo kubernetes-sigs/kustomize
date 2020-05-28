@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,12 +20,7 @@ import (
 )
 
 func TestRunE2e(t *testing.T) {
-	binDir, err := ioutil.TempDir("", "kustomize-test-")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(binDir)
-	build(t, binDir)
+	binDir := build()
 
 	tests := []struct {
 		name           string
@@ -661,6 +657,7 @@ metadata:
 		},
 	}
 
+	// TODO: dedup this with the shared version
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
@@ -710,36 +707,54 @@ metadata:
 	}
 }
 
-func build(t *testing.T, binDir string) {
-	build := exec.Command("go", "build", "-o",
-		filepath.Join(binDir, e2econtainerconfigBin))
-	build.Dir = "e2econtainerconfig"
-	build.Stdout = os.Stdout
-	build.Stderr = os.Stderr
-	build.Env = os.Environ()
-	if !assert.NoError(t, build.Run()) {
-		t.FailNow()
-	}
+var buildOnce sync.Once
+var binDir string
 
-	build = exec.Command("go", "build", "-o", filepath.Join(binDir, kyamlBin))
-	build.Dir = filepath.Join("..", "..", "..")
-	build.Stdout = os.Stdout
-	build.Stderr = os.Stderr
-	if !assert.NoError(t, build.Run()) {
-		t.FailNow()
-	}
+func build() string {
+	// only build the binaries once
+	buildOnce.Do(func() {
+		var err error
+		binDir, err = ioutil.TempDir("", "kustomize-test-")
+		if err != nil {
+			panic(err)
+		}
 
-	if os.Getenv("KUSTOMIZE_DOCKER_E2E") == "false" {
-		return
-	}
-	build = exec.Command(
-		"docker", "build", ".", "-t", "gcr.io/kustomize-functions/e2econtainerconfig")
-	build.Dir = "e2econtainerconfig"
-	build.Stdout = os.Stdout
-	build.Stderr = os.Stderr
-	if !assert.NoError(t, build.Run()) {
-		t.FailNow()
-	}
+		build := exec.Command("go", "build", "-o",
+			filepath.Join(binDir, e2econtainerconfigBin))
+		build.Dir = "e2econtainerconfig"
+		build.Stdout = os.Stdout
+		build.Stderr = os.Stderr
+		build.Env = os.Environ()
+
+		err = build.Run()
+		if err != nil {
+			panic(err)
+		}
+
+		build = exec.Command("go", "build", "-o", filepath.Join(binDir, kyamlBin))
+		build.Dir = filepath.Join("..", "..", "..")
+		build.Stdout = os.Stdout
+		build.Stderr = os.Stderr
+		err = build.Run()
+		if err != nil {
+			panic(err)
+		}
+
+		if os.Getenv("KUSTOMIZE_DOCKER_E2E") == "false" {
+			return
+		}
+		build = exec.Command(
+			"docker", "build", ".", "-t", "gcr.io/kustomize-functions/e2econtainerconfig")
+		build.Dir = "e2econtainerconfig"
+		build.Stdout = os.Stdout
+		build.Stderr = os.Stderr
+		err = build.Run()
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	return binDir
 }
 
 var (
