@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-errors/errors"
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 )
 
 // parseFieldPath parse a flag value into a field path
@@ -38,16 +37,6 @@ func parseFieldPath(path string) ([]string, error) {
 		newParts = append(newParts, p[0], p[1])
 	}
 	return newParts, nil
-}
-
-func isFlagSet(name string, c *cobra.Command) bool {
-	set := false
-	c.Flags().Visit(func(f *flag.Flag) {
-		if f.Name == name {
-			set = true
-		}
-	})
-	return set
 }
 
 func handleError(c *cobra.Command, err error) error {

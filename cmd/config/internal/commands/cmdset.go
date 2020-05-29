@@ -79,7 +79,7 @@ func initSetterVersion(c *cobra.Command, args []string) error {
 }
 
 func (r *SetRunner) preRunE(c *cobra.Command, args []string) error {
-	valueFlagSet := isFlagSet("values", c)
+	valueFlagSet := c.Flag("values").Changed
 
 	if valueFlagSet && len(args) > 2 {
 		return errors.Errorf("value should set either from flag or arg")
@@ -90,7 +90,7 @@ func (r *SetRunner) preRunE(c *cobra.Command, args []string) error {
 		r.Lookup.Name = args[1]
 	}
 
-	if isFlagSet("values", c) && len(r.Values) == 1 {
+	if valueFlagSet {
 		r.Perform.Value = r.Values[0]
 	} else if len(args) > 2 {
 		r.Perform.Value = args[2]
@@ -136,7 +136,7 @@ func (r *SetRunner) runE(c *cobra.Command, args []string) error {
 		fmt.Fprintf(c.OutOrStdout(), "set %d fields\n", count)
 		return handleError(c, err)
 	}
-	if len(args) > 2 || isFlagSet("values", c) {
+	if len(args) > 2 || c.Flag("values").Changed {
 		return handleError(c, r.perform(c, args))
 	}
 	return handleError(c, lookup(r.Lookup, c, args))

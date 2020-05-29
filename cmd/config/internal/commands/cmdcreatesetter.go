@@ -20,7 +20,7 @@ import (
 func NewCreateSetterRunner(parent string) *CreateSetterRunner {
 	r := &CreateSetterRunner{}
 	set := &cobra.Command{
-		Use:     "create-setter DIR NAME --value VALUE",
+		Use:     "create-setter DIR NAME VALUE",
 		Args:    cobra.RangeArgs(2, 3),
 		Short:   commands.CreateSetterShort,
 		Long:    commands.CreateSetterLong,
@@ -29,7 +29,7 @@ func NewCreateSetterRunner(parent string) *CreateSetterRunner {
 		RunE:    r.runE,
 	}
 	set.Flags().StringVar(&r.Set.SetPartialField.Setter.Value, "value", "",
-		"optional flag, the value of the setter to be set to")
+		"optional flag, alternative to specifying the value as an argument. e.g. used to specify values that start with '-'")
 	set.Flags().StringVar(&r.Set.SetPartialField.SetBy, "set-by", "",
 		"record who the field was default by.")
 	set.Flags().StringVar(&r.Set.SetPartialField.Description, "description", "",
@@ -75,7 +75,7 @@ func (r *CreateSetterRunner) runE(c *cobra.Command, args []string) error {
 }
 
 func (r *CreateSetterRunner) preRunE(c *cobra.Command, args []string) error {
-	valueSetFromFlag := isFlagSet("value", c)
+	valueSetFromFlag := c.Flag("value").Changed
 	var err error
 	r.Set.SetPartialField.Setter.Name = args[1]
 	r.CreateSetter.Name = args[1]
@@ -91,7 +91,7 @@ func (r *CreateSetterRunner) preRunE(c *cobra.Command, args []string) error {
 	}
 
 	if setterVersion == "" {
-		if len(args) < 2 || !valueSetFromFlag && len(args) < 3 {
+		if len(args) < 2 || !c.Flag("value").Changed && len(args) < 3 {
 			setterVersion = "v1"
 		} else if err := initSetterVersion(c, args); err != nil {
 			return err
