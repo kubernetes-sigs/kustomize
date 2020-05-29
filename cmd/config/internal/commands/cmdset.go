@@ -159,7 +159,6 @@ func lookup(l setters.LookupSetters, c *cobra.Command, args []string) error {
 	}
 	table.Render()
 
-	fmt.Println(l.SetterCounts)
 	if len(l.SetterCounts) == 0 {
 		// exit non-0 if no matching setters are found
 		os.Exit(1)

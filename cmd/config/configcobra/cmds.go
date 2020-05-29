@@ -105,6 +105,7 @@ func NewConfigCommand(name string) *cobra.Command {
 	root.AddCommand(commands.XArgsCommand())
 	root.AddCommand(commands.WrapCommand())
 
+	root.AddCommand(commands.InitCommand(name))
 	root.AddCommand(commands.SetCommand(name))
 	root.AddCommand(commands.ListSettersCommand(name))
 	root.AddCommand(commands.CreateSetterCommand(name))
