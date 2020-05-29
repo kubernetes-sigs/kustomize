@@ -202,7 +202,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
-  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+  replicas: 3 # {"$openapi":"replicas"}
  `,
 		},
 	}
