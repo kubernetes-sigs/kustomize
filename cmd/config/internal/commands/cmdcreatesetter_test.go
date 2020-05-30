@@ -168,6 +168,43 @@ spec:
   - "a" # {"$openapi":"list"}
  `,
 		},
+		{
+			name: "add replicas with value set by flag",
+			args: []string{"replicas", "--value", "3", "--description", "hello world", "--set-by", "me"},
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+`,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$openapi":"replicas"}
+ `,
+		},
 	}
 	for i := range tests {
 		test := tests[i]
