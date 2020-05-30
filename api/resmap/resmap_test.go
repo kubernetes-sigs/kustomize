@@ -669,7 +669,12 @@ func TestErrorIfNotEqualSets(t *testing.T) {
 		t.Fatalf("%v should not equal %v %v", m1, m2, err)
 	}
 
-	m3 := resmaptest_test.NewRmBuilder(t, rf).Add(
+	m3 := resmaptest_test.NewRmBuilder(t, rf).AddR(r2).ResMap()
+	if err := m2.ErrorIfNotEqualSets(m3); err == nil {
+		t.Fatalf("%v should not equal %v %v", m2, m3, err)
+	}
+
+	m3 = resmaptest_test.NewRmBuilder(t, rf).Add(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
