@@ -109,7 +109,7 @@ func (s *Set) visitScalar(object *yaml.RNode, p string, schema *openapi.Resource
 
 // substitute updates the value of field from ext if ext contains a substitution that
 // depends on a setter whose name matches s.Name.
-func (s *Set) substitute(field *yaml.RNode, ext *cliExtension) (bool, error) {
+func (s *Set) substitute(field *yaml.RNode, ext *CliExtension) (bool, error) {
 	// check partial setters to see if they contain the setter as part of a
 	// substitution
 	if ext.Substitution == nil {
@@ -119,9 +119,12 @@ func (s *Set) substitute(field *yaml.RNode, ext *cliExtension) (bool, error) {
 	// track the visited nodes to detect cycles in nested substitutions
 	visited := sets.String{}
 
+	// nameMatch indicates if the input substitution depends on the specified setter,
+	// the substitution in ext is parsed recursively and if the setter in Set is hit while
+	// parsing, it indicates the match
 	nameMatch := false
 
-	res, err := s.substituteUtil(ext, &visited, &nameMatch)
+	res, err := s.substituteUtil(ext, visited, &nameMatch)
 	if err != nil {
 		return false, err
 	}
@@ -141,7 +144,7 @@ func (s *Set) substitute(field *yaml.RNode, ext *cliExtension) (bool, error) {
 
 // substituteUtil recursively parses nested substitutions in ext and sets the setter value
 // returns error if cyclic substitution is detected or any other unexpected errors
-func (s *Set) substituteUtil(ext *cliExtension, visited *sets.String, nameMatch *bool) (string, error) {
+func (s *Set) substituteUtil(ext *CliExtension, visited sets.String, nameMatch *bool) (string, error) {
 	// check if the substitution has already been visited and throw error as cycles
 	// are not allowed in nested substitutions
 	if visited.Has(ext.Substitution.Name) {
@@ -168,7 +171,7 @@ func (s *Set) substituteUtil(ext *cliExtension, visited *sets.String, nameMatch 
 		if err != nil {
 			return "", errors.Wrap(err)
 		}
-		defExt, err := getExtFromSchema(def) // parse the extension out of the openAPI
+		defExt, err := GetExtFromSchema(def) // parse the extension out of the openAPI
 		if err != nil {
 			return "", errors.Wrap(err)
 		}
@@ -206,7 +209,7 @@ func (s *Set) substituteUtil(ext *cliExtension, visited *sets.String, nameMatch 
 }
 
 // set applies the value from ext to field if its name matches s.Name
-func (s *Set) set(field *yaml.RNode, ext *cliExtension, sch *spec.Schema) (bool, error) {
+func (s *Set) set(field *yaml.RNode, ext *CliExtension, sch *spec.Schema) (bool, error) {
 	// check full setter
 	if ext.Setter == nil || !s.isMatch(ext.Setter.Name) {
 		return false, nil
@@ -233,7 +236,7 @@ func (s *Set) set(field *yaml.RNode, ext *cliExtension, sch *spec.Schema) (bool,
 
 // validateAgainstSchema validates the input setter value against user provided
 // openAI schema
-func validateAgainstSchema(ext *cliExtension, sch *spec.Schema) error {
+func validateAgainstSchema(ext *CliExtension, sch *spec.Schema) error {
 	sc := spec.Schema{}
 	sc.Properties = map[string]spec.Schema{}
 	sc.Properties[ext.Setter.Name] = *sch
