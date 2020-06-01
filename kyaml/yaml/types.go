@@ -735,7 +735,7 @@ func ConvertJSONToYamlNode(jsonStr string) (*RNode, error) {
 	return node, nil
 }
 
-// ConvertJSONToYamlNode parses input json string and returns equivalent yaml string
+// ConvertJSONToYamlString parses input json string and returns equivalent yaml string
 func ConvertJSONToYamlString(jsonStr string) (string, error) {
 	var body map[string]interface{}
 	err := json.Unmarshal([]byte(jsonStr), &body)
@@ -747,6 +747,20 @@ func ConvertJSONToYamlString(jsonStr string) (string, error) {
 		return "", err
 	}
 	return string(yml), nil
+}
+
+// ConvertYamlNodeToJSONString returns json string from input yaml RNode
+func ConvertYamlNodeToJSONString(node *RNode) (string, error) {
+	nodeStr, err := node.String()
+	if err != nil {
+		return "", err
+	}
+	var body interface{}
+	if err := yaml.Unmarshal([]byte(nodeStr), &body); err != nil {
+		return "", err
+	}
+	res, err := json.Marshal(body)
+	return string(res), err
 }
 
 // checkKey returns true if all elems have the key

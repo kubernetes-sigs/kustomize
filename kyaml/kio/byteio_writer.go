@@ -5,6 +5,7 @@ package kio
 
 import (
 	"io"
+	"path/filepath"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -42,6 +43,9 @@ type ByteWriter struct {
 
 	// Sort if set, will cause ByteWriter to sort the the nodes before writing them.
 	Sort bool
+
+	// Path is the output file path to write to
+	Path string
 }
 
 var _ Writer = ByteWriter{}
@@ -90,9 +94,8 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 	// don't wrap the elements
 	if w.WrappingKind == "" {
 		for i := range nodes {
-			err := encoder.Encode(nodes[i].Document())
-			if err != nil {
-				return errors.Wrap(err)
+			if err := w.encode(encoder, nodes[i]); err != nil {
+				return err
 			}
 		}
 		return nil
@@ -125,7 +128,29 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 	for i := range nodes {
 		items.Content = append(items.Content, nodes[i].YNode())
 	}
-	err := errors.Wrap(encoder.Encode(doc))
+	rNode := yaml.RNode{}
+	rNode.SetYNode(doc)
+	err := w.encode(encoder, &rNode)
 	yaml.UndoSerializationHacksOnNodes(nodes)
 	return err
+}
+
+// encode encodes the input RNode to appropriate node format based on file path extension
+func (w ByteWriter) encode(encoder *yaml.Encoder, node *yaml.RNode) error {
+	for _, g := range JSONMatch {
+		if match, err := filepath.Match(g, filepath.Ext(w.Path)); err != nil {
+			return errors.Wrap(err)
+		} else if match {
+			json, err := yaml.ConvertYamlNodeToJSONString(node)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			err = encoder.Encode(json)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			return nil
+		}
+	}
+	return encoder.Encode(node.Document())
 }

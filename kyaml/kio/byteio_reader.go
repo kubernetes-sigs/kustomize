@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -103,6 +104,7 @@ type ByteReader struct {
 	WrappingKind string
 
 	// Path indicates file path which is being read
+	// empty if it is being read from stdin
 	Path string
 }
 
@@ -123,12 +125,20 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 	index := 0
 	for i := range values {
 		value := values[i]
-		if strings.HasSuffix(r.Path, JSONSuffix) {
-			value, err = yaml.ConvertJSONToYamlString(value)
-			if err != nil {
-				return nil, err
+
+		if r.Path != "" {
+			for _, g := range JSONMatch {
+				if match, err := filepath.Match(g, filepath.Ext(r.Path)); err != nil {
+					return nil, errors.Wrap(err)
+				} else if match {
+					value, err = yaml.ConvertJSONToYamlString(value)
+					if err != nil {
+						return nil, err
+					}
+				}
 			}
 		}
+
 		decoder := yaml.NewDecoder(bytes.NewBufferString(value))
 		node, err := r.decode(index, decoder)
 		if err == io.EOF {

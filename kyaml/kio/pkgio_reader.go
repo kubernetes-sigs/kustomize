@@ -166,8 +166,6 @@ type LocalPackageReader struct {
 
 var _ Reader = LocalPackageReader{}
 
-const JSONSuffix = ".json"
-
 var DefaultMatch = []string{"*.yaml", "*.yml"}
 var JSONMatch = []string{"*.json"}
 var MatchAll = append(DefaultMatch, JSONMatch...)
