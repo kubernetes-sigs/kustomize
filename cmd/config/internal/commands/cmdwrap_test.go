@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/testutil"
 )
 
 const (
@@ -231,6 +232,8 @@ items:
 )
 
 func TestCmd_wrap(t *testing.T) {
+	testutil.SkipWindows(t)
+
 	_, dir, _, ok := runtime.Caller(0)
 	if !assert.True(t, ok) {
 		t.FailNow()
@@ -253,6 +256,8 @@ func TestCmd_wrap(t *testing.T) {
 }
 
 func TestCmd_wrapNoMerge(t *testing.T) {
+	testutil.SkipWindows(t)
+
 	_, dir, _, ok := runtime.Caller(0)
 	if !assert.True(t, ok) {
 		t.FailNow()
@@ -280,6 +285,8 @@ func TestCmd_wrapNoMerge(t *testing.T) {
 }
 
 func TestCmd_wrapOverride(t *testing.T) {
+	testutil.SkipWindows(t)
+
 	_, dir, _, ok := runtime.Caller(0)
 	if !assert.True(t, ok) {
 		t.FailNow()

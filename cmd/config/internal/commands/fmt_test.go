@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/cmd/config/internal/commands"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters/testyaml"
+	"sigs.k8s.io/kustomize/kyaml/testutil"
 )
 
 // TestCmd_files verifies the fmt command formats the files
@@ -146,7 +147,7 @@ func TestCmd_failFiles(t *testing.T) {
 	r.Command.SilenceUsage = true
 	r.Command.SilenceErrors = true
 	err := r.Command.Execute()
-	assert.EqualError(t, err, "lstat notrealfile: no such file or directory")
+	testutil.AssertErrorContains(t, err, "notrealfile:")
 }
 
 // TestCmd_files verifies the fmt command formats the files

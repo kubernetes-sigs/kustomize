@@ -9,10 +9,10 @@ import (
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters"
-	"sigs.k8s.io/kustomize/kyaml/setters2"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
 
@@ -21,13 +21,15 @@ func NewCreateSetterRunner(parent string) *CreateSetterRunner {
 	r := &CreateSetterRunner{}
 	set := &cobra.Command{
 		Use:     "create-setter DIR NAME VALUE",
-		Args:    cobra.ExactArgs(3),
+		Args:    cobra.RangeArgs(2, 3),
 		Short:   commands.CreateSetterShort,
 		Long:    commands.CreateSetterLong,
 		Example: commands.CreateSetterExamples,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 	}
+	set.Flags().StringVar(&r.Set.SetPartialField.Setter.Value, "value", "",
+		"optional flag, alternative to specifying the value as an argument. e.g. used to specify values that start with '-'")
 	set.Flags().StringVar(&r.Set.SetPartialField.SetBy, "set-by", "",
 		"record who the field was default by.")
 	set.Flags().StringVar(&r.Set.SetPartialField.Description, "description", "",
@@ -73,18 +75,23 @@ func (r *CreateSetterRunner) runE(c *cobra.Command, args []string) error {
 }
 
 func (r *CreateSetterRunner) preRunE(c *cobra.Command, args []string) error {
+	valueSetFromFlag := c.Flag("value").Changed
 	var err error
 	r.Set.SetPartialField.Setter.Name = args[1]
-	r.Set.SetPartialField.Setter.Value = args[2]
 	r.CreateSetter.Name = args[1]
-	r.CreateSetter.FieldValue = args[2]
+	if valueSetFromFlag {
+		r.CreateSetter.FieldValue = r.Set.SetPartialField.Setter.Value
+	} else if len(args) > 2 {
+		r.Set.SetPartialField.Setter.Value = args[2]
+		r.CreateSetter.FieldValue = args[2]
+	}
 	r.CreateSetter.FieldName, err = c.Flags().GetString("field")
 	if err != nil {
 		return err
 	}
 
 	if setterVersion == "" {
-		if len(args) < 3 {
+		if len(args) < 2 || !c.Flag("value").Changed && len(args) < 3 {
 			setterVersion = "v1"
 		} else if err := initSetterVersion(c, args); err != nil {
 			return err
@@ -102,7 +109,7 @@ func (r *CreateSetterRunner) preRunE(c *cobra.Command, args []string) error {
 		}
 
 		// check if substitution with same name exists and throw error
-		ref, err := spec.NewRef(setters2.DefinitionsPrefix + setters2.SubstitutionDefinitionPrefix + r.CreateSetter.Name)
+		ref, err := spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SubstitutionDefinitionPrefix + r.CreateSetter.Name)
 		if err != nil {
 			return err
 		}

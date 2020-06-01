@@ -5,6 +5,7 @@ package loader
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"plugin"
@@ -15,6 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinhelpers"
 	"sigs.k8s.io/kustomize/api/internal/plugins/execplugin"
+	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -202,8 +204,13 @@ func (l *Loader) loadGoPlugin(id resid.ResId) (resmap.Configurable, error) {
 	if c, ok := registry[regId]; ok {
 		return copyPlugin(c), nil
 	}
-	absPath := l.absolutePluginPath(id)
-	p, err := plugin.Open(absPath + ".so")
+	absPath := l.absolutePluginPath(id) + ".so"
+	if !utils.FileExists(absPath) {
+		return nil, fmt.Errorf(
+			"expected file with Go object code at: %s", absPath)
+	}
+	log.Printf("Attempting plugin load from '%s'", absPath)
+	p, err := plugin.Open(absPath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "plugin %s fails to load", absPath)
 	}

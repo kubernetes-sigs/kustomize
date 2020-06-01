@@ -11,9 +11,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
 )
 
 // Compiler creates Go plugin object files.
@@ -55,26 +55,12 @@ func (b *Compiler) ObjPath() string {
 	return filepath.Join(b.workDir, b.objFile())
 }
 
-// Cleanup provides a hook to delete the .so file.
-// Ignore errors.
-func (b *Compiler) Cleanup() {
-	_ = os.Remove(b.ObjPath())
-}
-
 // Compile changes its working directory to
 // ${pluginRoot}/${g}/${v}/$lower(${k} and places
 // object code next to source code.
 func (b *Compiler) Compile() error {
-	if FileYoungerThan(b.ObjPath(), 8*time.Second) {
-		// Skip rebuilding it, to save time in a plugin test file
-		// that has many distinct calls to make a harness and compile
-		// the plugin (only the first compile will happen).
-		// Make it a short time to avoid tricking someone who's actively
-		// developing a plugin.
-		return nil
-	}
-	if !FileExists(b.srcPath()) {
-		return fmt.Errorf("cannot  find source at '%s'", b.srcPath())
+	if !utils.FileExists(b.srcPath()) {
+		return fmt.Errorf("cannot find source at '%s'", b.srcPath())
 	}
 	// If you use an IDE, make sure it's go build and test flags
 	// match those used below.  Same goes for Makefile targets.
@@ -86,8 +72,8 @@ func (b *Compiler) Compile() error {
 		"plugin",
 		"-o", b.objFile(),
 	}
-	goBin := goBin()
-	if !FileExists(goBin) {
+	goBin := utils.GoBin()
+	if !utils.FileExists(goBin) {
 		return fmt.Errorf(
 			"cannot find go compiler %s", goBin)
 	}
@@ -104,7 +90,12 @@ func (b *Compiler) Compile() error {
 			err, "cannot compile %s:\nSTDERR\n%s\n",
 			b.srcPath(), b.stderr.String())
 	}
-	return nil
+	result := filepath.Join(b.workDir, b.objFile())
+	if utils.FileExists(result) {
+		log.Printf("compiler created: %s", result)
+		return nil
+	}
+	return fmt.Errorf("post compile, cannot find '%s'", result)
 }
 
 func (b *Compiler) report() {

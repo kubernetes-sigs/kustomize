@@ -202,6 +202,7 @@ Per the [instructions](../../INSTALL.md):
 ```
 curl -s "https://raw.githubusercontent.com/\
 kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+mkdir -p $DEMO/bin
 mv kustomize $DEMO/bin
 ```
 

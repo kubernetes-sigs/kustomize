@@ -50,7 +50,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
-  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+  replicas: 3 # {"$openapi":"replicas"}
  `,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
@@ -71,9 +71,57 @@ kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
-  replicas: 4 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+  replicas: 4 # {"$openapi":"replicas"}
  `,
 		},
+		{
+			name: "validate length of argument",
+			args: []string{"--description", "hi there", "--set-by", "pw"},
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+ `,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+ `,
+			errMsg: "requires at least 2 arg(s), only received 1",
+		},
+
 		{
 			name: "set replicas no description",
 			args: []string{"replicas", "4"},
@@ -121,7 +169,7 @@ spec:
  `,
 		},
 		{
-			name: "set image",
+			name: "set image with value",
 			args: []string{"tag", "1.8.1"},
 			out:  "set 1 fields\n",
 			inputOpenAPI: `
@@ -129,10 +177,10 @@ apiVersion: v1alpha1
 kind: Example
 openAPI:
   definitions:
-    io.k8s.cli.setters.image:
+    io.k8s.cli.setters.image-setter:
       x-k8s-cli:
         setter:
-          name: image
+          name: image-setter
           value: "nginx"
     io.k8s.cli.setters.tag:
       x-k8s-cli:
@@ -146,7 +194,7 @@ openAPI:
           pattern: IMAGE:TAG
           values:
           - marker: IMAGE
-            ref: '#/definitions/io.k8s.cli.setters.image'
+            ref: '#/definitions/io.k8s.cli.setters.image-setter'
           - marker: TAG
             ref: '#/definitions/io.k8s.cli.setters.tag'
  `,
@@ -161,7 +209,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image"}
+        image: nginx:1.7.9 # {"$openapi":"image"}
       - name: sidecar
         image: sidecar:1.7.9
  `,
@@ -170,10 +218,10 @@ apiVersion: v1alpha1
 kind: Example
 openAPI:
   definitions:
-    io.k8s.cli.setters.image:
+    io.k8s.cli.setters.image-setter:
       x-k8s-cli:
         setter:
-          name: image
+          name: image-setter
           value: "nginx"
     io.k8s.cli.setters.tag:
       x-k8s-cli:
@@ -187,7 +235,7 @@ openAPI:
           pattern: IMAGE:TAG
           values:
           - marker: IMAGE
-            ref: '#/definitions/io.k8s.cli.setters.image'
+            ref: '#/definitions/io.k8s.cli.setters.image-setter'
           - marker: TAG
             ref: '#/definitions/io.k8s.cli.setters.tag'
 
@@ -203,7 +251,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx:1.8.1 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image"}
+        image: nginx:1.8.1 # {"$openapi":"image"}
       - name: sidecar
         image: sidecar:1.7.9
 `,
@@ -407,6 +455,205 @@ spec:
 		{
 			name: "validate openAPI list values",
 			args: []string{"list", "10", "hi", "true"},
+			inputOpenAPI: `
+kind: Kptfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.list:
+      type: array
+      maxItems: 2
+      items:
+        type: integer
+      x-k8s-cli:
+        setter:
+          name: list
+          listValues:
+          - 0
+ `,
+			input: `
+apiVersion: example.com/v1beta1
+kind: Example
+spec:
+  list: # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
+  - 0
+ `,
+			expectedOpenAPI: `
+kind: Kptfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.list:
+      type: array
+      maxItems: 2
+      items:
+        type: integer
+      x-k8s-cli:
+        setter:
+          name: list
+          listValues:
+          - 0
+ `,
+			expectedResources: `
+apiVersion: example.com/v1beta1
+kind: Example
+spec:
+  list: # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
+  - 0
+ `,
+			errMsg: `list in body must be of type integer: "string"
+list in body must be of type integer: "boolean"
+list in body should have at most 2 items`,
+		},
+
+		{
+			name: "set replicas with value set by flag",
+			args: []string{"replicas", "--values", "4", "--description", "hi there"},
+			out:  "set 1 fields\n",
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+ `,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hi there
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "4"
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 4 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+ `,
+		},
+
+		{
+			name: "validate values set from either flag or arg",
+			args: []string{"replicas", "4", "--values", "4", "--description", "hi there"},
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+ `,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+ `,
+			errMsg: `value should set either from flag or arg`,
+		},
+
+		{
+			name: "openAPI list values set by flag success",
+			args: []string{"list", "--values", "10", "--values", "11"},
+			out:  "set 1 fields\n",
+			inputOpenAPI: `
+kind: Kptfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.list:
+      type: array
+      maxItems: 2
+      items:
+        type: integer
+      x-k8s-cli:
+        setter:
+          name: list
+          listValues:
+          - 0
+ `,
+			input: `
+apiVersion: example.com/v1beta1
+kind: Example
+spec:
+  list: # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
+  - 0
+ `,
+			expectedOpenAPI: `
+kind: Kptfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.list:
+      type: array
+      maxItems: 2
+      items:
+        type: integer
+      x-k8s-cli:
+        setter:
+          name: list
+          listValues:
+          - "10"
+          - "11"
+ `,
+			expectedResources: `
+apiVersion: example.com/v1beta1
+kind: Example
+spec:
+  list: # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
+  - "10"
+  - "11"
+ `,
+		},
+
+		{
+			name: "validate openAPI list values set by flag error",
+			args: []string{"list", "--values", "10", "--values", "hi", "--values", "true"},
 			inputOpenAPI: `
 kind: Kptfile
 openAPI:

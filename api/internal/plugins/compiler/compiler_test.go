@@ -9,11 +9,12 @@ import (
 
 	"sigs.k8s.io/kustomize/api/filesys"
 	. "sigs.k8s.io/kustomize/api/internal/plugins/compiler"
+	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
 )
 
 // Regression coverage over compiler behavior.
 func TestCompiler(t *testing.T) {
-	srcRoot, err := DeterminePluginSrcRoot(filesys.MakeFsOnDisk())
+	srcRoot, err := utils.DeterminePluginSrcRoot(filesys.MakeFsOnDisk())
 	if err != nil {
 		t.Error(err)
 	}
@@ -29,12 +30,8 @@ func TestCompiler(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if !FileExists(expectObj) {
+	if !utils.FileExists(expectObj) {
 		t.Errorf("didn't find expected obj file %s", expectObj)
-	}
-	c.Cleanup()
-	if FileExists(expectObj) {
-		t.Errorf("obj file '%s' should be gone", expectObj)
 	}
 
 	c.SetGVK("builtin", "", "SecretGenerator")
@@ -48,11 +45,7 @@ func TestCompiler(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if !FileExists(expectObj) {
+	if !utils.FileExists(expectObj) {
 		t.Errorf("didn't find expected obj file %s", expectObj)
-	}
-	c.Cleanup()
-	if FileExists(expectObj) {
-		t.Errorf("obj file '%s' should be gone", expectObj)
 	}
 }
