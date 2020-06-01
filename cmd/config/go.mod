@@ -11,5 +11,5 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.4.0
 	k8s.io/apimachinery v0.17.0
-	sigs.k8s.io/kustomize/kyaml v0.1.12 // Don't change this!
+	sigs.k8s.io/kustomize/kyaml v0.1.13 // Don't change this!
 )
