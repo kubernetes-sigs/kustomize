@@ -33,7 +33,7 @@ items:
     annotations:
       app: nginx2
       config.kubernetes.io/index: '0'
-      config.kubernetes.io/path: 'f1.yaml'
+      config.kubernetes.io/path: 'f1.json'
   spec:
     replicas: 1
 - kind: Service
@@ -42,7 +42,7 @@ items:
     annotations:
       app: nginx
       config.kubernetes.io/index: '1'
-      config.kubernetes.io/path: 'f1.yaml'
+      config.kubernetes.io/path: 'f1.json'
   spec:
     selector:
       app: nginx
@@ -77,28 +77,13 @@ items:
 		t.FailNow()
 	}
 
-	actual, err := ioutil.ReadFile(filepath.Join(d, "f1.yaml"))
+	actual, err := ioutil.ReadFile(filepath.Join(d, "f1.json"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	expected := `kind: Deployment
-metadata:
-  labels:
-    app: nginx2
-  name: foo
-  annotations:
-    app: nginx2
-spec:
-  replicas: 1
+	expected := `'{"kind":"Deployment","metadata":{"annotations":{"app":"nginx2"},"labels":{"app":"nginx2"},"name":"foo"},"spec":{"replicas":1}}'
 ---
-kind: Service
-metadata:
-  name: foo
-  annotations:
-    app: nginx
-spec:
-  selector:
-    app: nginx
+'{"kind":"Service","metadata":{"annotations":{"app":"nginx"},"name":"foo"},"spec":{"selector":{"app":"nginx"}}}'
 `
 	if !assert.Equal(t, expected, string(actual)) {
 		t.FailNow()

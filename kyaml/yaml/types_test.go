@@ -182,3 +182,21 @@ type: string
 	}
 	assert.Equal(t, expected, actual)
 }
+
+func TestConvertYamlNodeToJSONStr(t *testing.T) {
+	yl := `enum:
+  - allowedValue1
+  - allowedValue2
+maxLength: 15
+type: string
+`
+	node, err := Parse(yl)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	res, err := ConvertYamlNodeToJSONString(node)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	assert.Equal(t, `{"enum":["allowedValue1","allowedValue2"],"maxLength":15,"type":"string"}`, res)
+}
