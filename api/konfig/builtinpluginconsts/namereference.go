@@ -21,6 +21,11 @@ nameReference:
   - path: spec/scaleTargetRef/name
     kind: HorizontalPodAutoscaler
 
+- kind: StatefulSet
+  fieldSpecs:
+  - path: spec/scaleTargetRef/name
+    kind: HorizontalPodAutoscaler
+
 - kind: ConfigMap
   version: v1
   fieldSpecs:
