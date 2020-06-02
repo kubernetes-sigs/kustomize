@@ -46,6 +46,41 @@ spec:
         secret:
           secretName: mySecret
 `
+	withHashWithAppendDataAssertions := func(t *testing.T, resMap resmap.ResMap) {
+		foundSecretResource := false
+		for _, res := range resMap.Resources() {
+			if res.GetKind() == "Secret" {
+				foundSecretResource = true
+
+				assert.Equal(t, "mySecret", res.GetName())
+				assert.True(t, res.NeedHashSuffix())
+
+				data, err := res.GetFieldValue("data")
+				assert.NoError(t, err)
+				assert.True(t, len(data.(map[string]interface{})) == 4)
+
+				value, err := res.GetFieldValue("data.PASSWORD")
+				assert.NoError(t, err)
+				assert.Equal(t, base64.StdEncoding.EncodeToString([]byte("whatever")), value)
+
+				value, err = res.GetFieldValue("data.foo")
+				assert.NoError(t, err)
+				assert.Equal(t, base64.StdEncoding.EncodeToString([]byte("bar")), value)
+
+				value, err = res.GetFieldValue("data.baz")
+				assert.NoError(t, err)
+				assert.Equal(t, base64.StdEncoding.EncodeToString([]byte("whatever")), value)
+
+				value, err = res.GetFieldValue("data.anotherPassword")
+				assert.NoError(t, err)
+				assert.Equal(t, base64.StdEncoding.EncodeToString([]byte("boom")), value)
+
+				break
+			}
+		}
+		assert.True(t, foundSecretResource)
+	}
+
 	testCases := []struct {
 		name                 string
 		pluginConfig         string
@@ -179,40 +214,32 @@ data:
   anotherPassword: Ym9vbQ==
 `,
 			pluginInputResources: pluginInputResources,
-			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
-				foundSecretResource := false
-				for _, res := range resMap.Resources() {
-					if res.GetKind() == "Secret" {
-						foundSecretResource = true
-
-						assert.Equal(t, "mySecret", res.GetName())
-						assert.True(t, res.NeedHashSuffix())
-
-						data, err := res.GetFieldValue("data")
-						assert.NoError(t, err)
-						assert.True(t, len(data.(map[string]interface{})) == 4)
-
-						value, err := res.GetFieldValue("data.PASSWORD")
-						assert.NoError(t, err)
-						assert.Equal(t, base64.StdEncoding.EncodeToString([]byte("whatever")), value)
-
-						value, err = res.GetFieldValue("data.foo")
-						assert.NoError(t, err)
-						assert.Equal(t, base64.StdEncoding.EncodeToString([]byte("bar")), value)
-
-						value, err = res.GetFieldValue("data.baz")
-						assert.NoError(t, err)
-						assert.Equal(t, base64.StdEncoding.EncodeToString([]byte("whatever")), value)
-
-						value, err = res.GetFieldValue("data.anotherPassword")
-						assert.NoError(t, err)
-						assert.Equal(t, base64.StdEncoding.EncodeToString([]byte("boom")), value)
-
-						break
-					}
-				}
-				assert.True(t, foundSecretResource)
-			},
+			checkAssertions:      withHashWithAppendDataAssertions,
+		},
+		{
+			name: "withHash_withAppendData_withOverwrite",
+			pluginConfig: `
+apiVersion: qlik.com/v1
+kind: SuperSecret
+metadata:
+  name: mySecret
+stringData:
+  foo: bar
+  baz: whatever
+data:
+  anotherPassword: Ym9vbQ==
+`,
+			pluginInputResources: `
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mySecret
+type: Opaque
+data:
+  foo: replace-me!!!
+  PASSWORD: d2hhdGV2ZXI=
+`,
+			checkAssertions: withHashWithAppendDataAssertions,
 		},
 	}
 	for _, testCase := range testCases {
