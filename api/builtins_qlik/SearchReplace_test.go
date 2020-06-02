@@ -806,6 +806,68 @@ data:
 			},
 		},
 		{
+			name: "base64-encoded target and replacement, replace entire (possibly multiline) string",
+			pluginConfig: `
+apiVersion: qlik.com/v1
+kind: SearchReplace
+metadata:
+  name: notImportantHere
+target:
+  kind: Secret
+  name: target-secret
+path: data/tls.crt
+search: (?s).*
+replaceWithObjRef:
+  objref:
+    apiVersion: qlik.com/v1
+    kind: Secret
+    name: source-secret
+  fieldref:
+    fieldpath: data.source
+`,
+			pluginInputResources: `
+apiVersion: v1
+kind: Secret
+metadata:
+  name: target-secret
+type: Opaque
+data:
+  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURWRENDQWp5Z0F3SUJBZ0lKQUowdHFNVDVEV3BzTUEwR0NTcUdTSWIzRFFFQkN3VUFNRDh4R0RBV0JnTlYKQkFNTUQyVnNZWE4wYVdNdVpYaGhiWEJzWlRFak1DRUdBMVVFQ2d3YVpXeGhjM1JwWXkxbGJHRnpkR2xqTFd4dgpZMkZzTFdObGNuUXdIaGNOTVRnd05qRXhNVFV4TVRBeldoY05Namd3TkRFNU1UVXhNVEF6V2pBL01SZ3dGZ1lEClZRUUREQTlsYkdGemRHbGpMbVY0WVcxd2JHVXhJekFoQmdOVkJBb01HbVZzWVhOMGFXTXRaV3hoYzNScFl5MXMKYjJOaGJDMWpaWEowTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUFwUUxJZ1Z4QwpkRjI3UFhzL3M4VFh2VGRVeTVwZFFneG9jWi9MenUxblJXbW1GRUc1Mlo5MmRjS1dJMDljdVg5ZUlZZzE0c21ZCkczSmtjb28vNUt0WUtpNmh5dVBtNlZrdGRyU1dCam1VdGxkbHg3UVRLNkxFVlhFeUU3VDZ6QW1GV3lMZTVJMEIKbDdRQlk2dnVoK3g1dlpkSWd3SzVldzBFZmNJUU1Ra2tiMzVkb00xYm41TEJEVklxUzNmNXUxNTArMTM1RitsWQpOc2lFcWhZaVExZm1PMmkzSzBLOW5TMEl3Nm5vNWp2MkZaNnR5bU9zY2wvaWYzdWQzUzUxOTZNTjJtaFpCRFVaCmlwbThlRVkxNVJOa3VQSXBETzhMYkEwZlFOcUcyYXFGa3JybFcrbEdTaDRYZjZLNmdtZkFRdW15K2xrR3RqVlUKZU5OdGF6NnlMMWNkU3dJREFRQUJvMU13VVRBTEJnTlZIUThFQkFNQ0JMQXdFd1lEVlIwbEJBd3dDZ1lJS3dZQgpCUVVIQXdFd0xRWURWUjBSQkNZd0pJSVBaV3hoYzNScFl5NWxlR0Z0Y0d4bGdoRXFMbVZzWVhOMGFXTXVaWGhoCmJYQnNaVEFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBVDFnMFhqelNDRDBBTkF5cDFOWURLU3ZZVUdHcGpSaFkKdUJRYnRwcDUrUDNzd2xvdTNvMDVwdDNydlZ3QmxwK2tjalFwTEJpN3AyRFNuNTdFWHM5eHFEQTBHRjlMSHdpUwpzcGZVYlhRazJIa1E3SGpHb01FSEJLVWpOVUJoZjJkWVRuK1BtbHhobllpZitoU2dkeDdIZ1JuMTh0K0hqTC9JClVlUUkxMHYvdExiT1diZkdBZmlGYjQyUHEvVjg1aGJlNW9mU1VObHVsNFZNOGVXNk1SNlB2b1dYYWJYcVB2ajMKSXpVOVk2UVFoN2dqYmNQN2RmWUZCd3FFRnUxOHlpMUdFbzcxK0NtUjFFL2VpK2kzZDdZTHlMTWhUOHZnMVNDUgozeTB1TVZZOHkxVHpIdS9OTEl0NVozYm1rNFJjcUo1MDVsYmtrTHdzSVFYUzJpMUxud25weXc9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: source-secret
+type: Opaque
+data:
+  source: Zm9v
+`,
+			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
+				res, err := resMap.GetById(resid.NewResId(resid.Gvk{
+					Group:   "",
+					Version: "v1",
+					Kind:    "Secret",
+				}, "target-secret"))
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+
+				base64EncodedIdpConfigs, err := res.GetFieldValue("data[tls.crt]")
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+
+				decodedIdpConfigsBytes, err := base64.StdEncoding.DecodeString(base64EncodedIdpConfigs.(string))
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+
+				if string(decodedIdpConfigsBytes) != "foo" {
+					t.Fatalf("expected %v to equal %v", string(decodedIdpConfigsBytes), "foo.bar.com")
+				}
+			},
+		},
+		{
 			name: "base64-encoded target only",
 			pluginConfig: `
 apiVersion: qlik.com/v1
