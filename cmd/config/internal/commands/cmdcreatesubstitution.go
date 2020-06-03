@@ -88,16 +88,31 @@ func (r *CreateSubstitutionRunner) preRunE(c *cobra.Command, args []string) erro
 	re := regexp.MustCompile(`\$\{([^}]*)\}`)
 	markers := re.FindAll([]byte(r.CreateSubstitution.Pattern), -1)
 	if len(markers) == 0 {
-		return errors.Errorf("unable to find setter names in pattern, " +
+		return errors.Errorf("unable to find setter or substitution names in pattern, " +
 			"setter names must be enclosed in ${}")
 	}
 
 	for _, marker := range markers {
-		ref := fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix +
-			strings.TrimSuffix(strings.TrimPrefix(string(marker), "${"), "}")
+		name := strings.TrimSuffix(strings.TrimPrefix(string(marker), "${"), "}")
+
+		ref, err := spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SubstitutionDefinitionPrefix + name)
+		if err != nil {
+			return err
+		}
+
+		var markerRef string
+		subst, _ := openapi.Resolve(&ref)
+		// check if the substitution exists with the marker name or fall back to creating setter
+		// ref with the name
+		if subst != nil {
+			markerRef = fieldmeta.DefinitionsPrefix + fieldmeta.SubstitutionDefinitionPrefix + name
+		} else {
+			markerRef = fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + name
+		}
+
 		r.CreateSubstitution.Values = append(
 			r.CreateSubstitution.Values,
-			setters2.Value{Marker: string(marker), Ref: ref},
+			setters2.Value{Marker: string(marker), Ref: markerRef},
 		)
 	}
 

@@ -5,12 +5,16 @@ package settersutil
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"strings"
 
+	"github.com/go-openapi/spec"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
+	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -47,7 +51,15 @@ func (c SubstitutionCreator) Create(openAPIPath, resourcesPath string) error {
 		Pattern: c.Pattern,
 	}
 
-	err := c.CreateSettersForSubstitution(openAPIPath)
+	// the input substitution definition is updated in the openAPI file and then parsed
+	// to check if there are any cycles in nested substitutions, if there are
+	// any, the openAPI file will be reverted to current state and error is thrown
+	stat, err := os.Stat(openAPIPath)
+	if err != nil {
+		return err
+	}
+
+	curOpenAPI, err := ioutil.ReadFile(openAPIPath)
 	if err != nil {
 		return err
 	}
@@ -58,6 +70,40 @@ func (c SubstitutionCreator) Create(openAPIPath, resourcesPath string) error {
 
 	// Load the updated definitions
 	if err := openapi.AddSchemaFromFile(openAPIPath); err != nil {
+		return err
+	}
+
+	visited := sets.String{}
+	ref, err := spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SubstitutionDefinitionPrefix + c.Name)
+	if err != nil {
+		return err
+	}
+
+	schema, err := openapi.Resolve(&ref)
+	if err != nil {
+		return err
+	}
+
+	ext, err := setters2.GetExtFromSchema(schema)
+	if err != nil {
+		return err
+	}
+
+	err = c.CreateSettersForSubstitution(openAPIPath)
+	if err != nil {
+		return err
+	}
+
+	// Load the updated definitions after setters are created
+	if err := openapi.AddSchemaFromFile(openAPIPath); err != nil {
+		return err
+	}
+
+	// revert openAPI file if there are cycles detected in created input substitution
+	if err := checkForCycles(ext, visited); err != nil {
+		if writeErr := ioutil.WriteFile(openAPIPath, curOpenAPI, stat.Mode().Perm()); writeErr != nil {
+			return writeErr
+		}
 		return err
 	}
 
@@ -88,19 +134,25 @@ func (c SubstitutionCreator) CreateSettersForSubstitution(openAPIPath string) er
 		return err
 	}
 
-	// for each ref in values, check if the setter already exists, if not create them
+	// for each ref in values, check if the setter or substitution already exists, if not create setter
 	for _, value := range c.Values {
-		obj, err := y.Pipe(yaml.Lookup(
+		// continue if ref is a substitution, as it has already been checked if it exists
+		// as part of preRunE
+		if strings.Contains(value.Ref, fieldmeta.SubstitutionDefinitionPrefix) {
+			fmt.Printf("found a substitution with name %s\n", value.Marker)
+			continue
+		}
+		setterObj, err := y.Pipe(yaml.Lookup(
 			// get the setter key from ref. Ex: from #/definitions/io.k8s.cli.setters.image_setter
 			// extract io.k8s.cli.setters.image_setter
-			"openAPI", "definitions", strings.TrimPrefix(value.Ref, "#/definitions/")))
+			"openAPI", "definitions", strings.TrimPrefix(value.Ref, fieldmeta.DefinitionsPrefix)))
 
 		if err != nil {
 			return err
 		}
 
-		if obj == nil {
-			name := strings.TrimPrefix(value.Ref, "#/definitions/io.k8s.cli.setters.")
+		if setterObj == nil {
+			name := strings.TrimPrefix(value.Ref, fieldmeta.DefinitionsPrefix+fieldmeta.SetterDefinitionPrefix)
 			value := m[value.Marker]
 			fmt.Printf("unable to find setter with name %s, creating new setter with value %s\n", name, value)
 			sd := setters2.SetterDefinition{
@@ -115,6 +167,49 @@ func (c SubstitutionCreator) CreateSettersForSubstitution(openAPIPath string) er
 			}
 		}
 	}
+	return nil
+}
+
+func checkForCycles(ext *setters2.CliExtension, visited sets.String) error {
+	// check if the substitution has already been visited and throw error as cycles
+	// are not allowed in nested substitutions
+	if visited.Has(ext.Substitution.Name) {
+		return errors.Errorf(
+			"cyclic substitution detected with name " + ext.Substitution.Name)
+	}
+
+	visited.Insert(ext.Substitution.Name)
+
+	// substitute each setter into the pattern to get the new value
+	// if substitution references to another substitution, recursively
+	// process the nested substitutions to replace the pattern with setter values
+	for _, v := range ext.Substitution.Values {
+		if v.Ref == "" {
+			return errors.Errorf(
+				"missing reference on substitution " + ext.Substitution.Name)
+		}
+		ref, err := spec.NewRef(v.Ref)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		def, err := openapi.Resolve(&ref) // resolve the def to its openAPI def
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		defExt, err := setters2.GetExtFromSchema(def) // parse the extension out of the openAPI
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
+		if defExt.Substitution != nil {
+			// parse recursively if it reference is substitution
+			err := checkForCycles(defExt, visited)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 

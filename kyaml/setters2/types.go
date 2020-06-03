@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
 
-type cliExtension struct {
+type CliExtension struct {
 	Setter       *setter       `yaml:"setter,omitempty" json:"setter,omitempty"`
 	Substitution *substitution `yaml:"substitution,omitempty" json:"substitution,omitempty"`
 }
@@ -37,8 +37,8 @@ type substitutionSetterReference struct {
 //K8sCliExtensionKey is the name of the OpenAPI field containing the setter extensions
 const K8sCliExtensionKey = "x-k8s-cli"
 
-// getExtFromSchema returns the cliExtension openAPI extension if it is present in schema
-func getExtFromSchema(schema *spec.Schema) (*cliExtension, error) {
+// GetExtFromSchema returns the cliExtension openAPI extension if it is present in schema
+func GetExtFromSchema(schema *spec.Schema) (*CliExtension, error) {
 	cep := schema.VendorExtensible.Extensions[K8sCliExtensionKey]
 	if cep == nil {
 		return nil, nil
@@ -47,7 +47,7 @@ func getExtFromSchema(schema *spec.Schema) (*cliExtension, error) {
 	if err != nil {
 		return nil, err
 	}
-	val := &cliExtension{}
+	val := &CliExtension{}
 	if err := json.Unmarshal(b, val); err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func getExtFromSchema(schema *spec.Schema) (*cliExtension, error) {
 
 // getExtFromComment returns the cliExtension openAPI extension if it is present as
 // a comment on the field.
-func getExtFromComment(schema *openapi.ResourceSchema) (*cliExtension, error) {
+func getExtFromComment(schema *openapi.ResourceSchema) (*CliExtension, error) {
 	if schema == nil {
 		// no schema found
 		// TODO(pwittrock): should this be an error if it doesn't resolve?
@@ -64,7 +64,7 @@ func getExtFromComment(schema *openapi.ResourceSchema) (*cliExtension, error) {
 	}
 
 	// get the cli extension from the openapi (contains setter information)
-	ext, err := getExtFromSchema(schema.Schema)
+	ext, err := GetExtFromSchema(schema.Schema)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
