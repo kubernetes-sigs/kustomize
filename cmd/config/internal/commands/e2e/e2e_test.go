@@ -678,7 +678,7 @@ metadata:
 				testutil.AssertNoError(t, err)
 			}
 
-			args := append([]string{"run", "."}, tt.args(binDir)...)
+			args := append([]string{"fn", "run", "."}, tt.args(binDir)...)
 			cmd := exec.Command(filepath.Join(binDir, kyamlBin), args...)
 			cmd.Dir = dir
 			var stdErr, stdOut bytes.Buffer
@@ -732,7 +732,7 @@ func build() string {
 		}
 
 		build = exec.Command("go", "build", "-o", filepath.Join(binDir, kyamlBin))
-		build.Dir = filepath.Join("..", "..", "..")
+		build.Dir = filepath.Join("..", "..", "..", "kubectl-krm")
 		build.Stdout = os.Stdout
 		build.Stderr = os.Stderr
 		err = build.Run()
@@ -763,11 +763,11 @@ var (
 )
 
 func init() {
-	kyamlBin = "kyaml"
+	kyamlBin = "kubectl-krm"
 	e2econtainerconfigBin = "e2econtainerconfig"
 
 	if runtime.GOOS == "windows" {
-		kyamlBin = "kyaml.exe"
+		kyamlBin = "kubectl-krm.exe"
 		e2econtainerconfigBin = "e2econtainerconfig.exe"
 	}
 }

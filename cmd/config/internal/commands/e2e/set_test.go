@@ -9,7 +9,7 @@ func TestSet(t *testing.T) {
 	tests := []test{
 		{
 			name: "set",
-			args: []string{"set", ".", "replicas", "4"},
+			args: []string{"cfg", "set", ".", "replicas", "4"},
 			files: map[string]string{
 				"deployment.yaml": `
 apiVersion: apps/v1

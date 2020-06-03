@@ -6,7 +6,7 @@ package tutorials
 
 var ConfigurationBasicsShort = `### Synopsis`
 var ConfigurationBasicsLong = `
-` + "`" + `kustomize config` + "`" + ` provides tools for working with local configuration directories.
+` + "`" + `kustomize cfg` + "`" + ` provides tools for working with local configuration directories.
 
   First fetch a bundle of configuration to your local file system from the
   Kubernetes examples repository.
@@ -18,7 +18,7 @@ var ConfigurationBasicsLong = `
 
   ` + "`" + `tree` + "`" + ` can be used to summarize the collection of Resources in a directory:
 
-	$ kustomize config tree mysql-wordpress-pd/
+	$ kustomize cfg tree mysql-wordpress-pd/
 	mysql-wordpress-pd
 	├── [gce-volumes.yaml]  v1.PersistentVolume wordpress-pv-1
 	├── [gce-volumes.yaml]  v1.PersistentVolume wordpress-pv-2
@@ -35,7 +35,7 @@ var ConfigurationBasicsLong = `
   supported fields, and may also print arbitrary values using the ` + "`" + `--field` + "`" + ` flag to specify a field
   path.
 
-    $  kustomize config tree mysql-wordpress-pd/ --name --image --replicas --ports
+    $  kustomize cfg tree mysql-wordpress-pd/ --name --image --replicas --ports
     mysql-wordpress-pd
     ├── [gce-volumes.yaml]  PersistentVolume wordpress-pv-1
     ├── [gce-volumes.yaml]  PersistentVolume wordpress-pv-2
@@ -64,7 +64,7 @@ var ConfigurationBasicsLong = `
   to build the tree structure.
 
     kubectl apply -R -f cockroachdb/
-    kubectl get all -o yaml | kustomize config tree --graph-structure owners --name --image --replicas
+    kubectl get all -o yaml | kustomize cfg tree --graph-structure owners --name --image --replicas
     .
     ├── [Resource]  Deployment wp/wordpress
     │   ├── spec.replicas: 1
@@ -88,7 +88,7 @@ var ConfigurationBasicsLong = `
 
 ### ` + "`" + `cat` + "`" + ` -- view the full collection of Resources
 
-	$ kustomize config cat mysql-wordpress-pd/
+	$ kustomize cfg cat mysql-wordpress-pd/
 	apiVersion: v1
 	kind: PersistentVolume
 	metadata:
@@ -115,7 +115,7 @@ var ConfigurationBasicsLong = `
   ` + "`" + `fmt` + "`" + ` formats the Resource Configuration by applying a consistent style, including
   ordering of fields and indentation.
 
-	$ kustomize config fmt mysql-wordpress-pd/
+	$ kustomize cfg fmt mysql-wordpress-pd/
 
   Run ` + "`" + `git diff` + "`" + ` and see the changes that have been applied.
 
@@ -124,7 +124,7 @@ var ConfigurationBasicsLong = `
   ` + "`" + `grep` + "`" + ` prints Resources matching some field value.  The Resources are annotated with their
   file source so they can be piped to other commands without losing this information.
 
-	$ kustomize config grep "metadata.name=wordpress" wordpress/
+	$ kustomize cfg grep "metadata.name=wordpress" wordpress/
 	apiVersion: v1
 	kind: Service
 	metadata:
@@ -146,7 +146,7 @@ var ConfigurationBasicsLong = `
   - list elements may be indexed by a field value using list[field=value]
   - '.' as part of a key or value may be escaped as '\.'
 
-	$ kustomize config grep "spec.status.spec.containers[name=nginx].image=mysql:5\.6" wordpress/
+	$ kustomize cfg grep "spec.status.spec.containers[name=nginx].image=mysql:5\.6" wordpress/
 	apiVersion: apps/v1 # for k8s versions before 1.9.0 use apps/v1beta2  and before 1.8.0 use extensions/v1beta1
 	kind: Deployment
 	metadata:
@@ -167,7 +167,7 @@ var ConfigurationBasicsLong = `
 
   ` + "`" + `grep` + "`" + ` may be used with kubectl to search for Resources in a cluster matching a value.
 
-    kubectl get all -o yaml | kustomize config grep "spec.replicas>0" | kustomize config tree --replicas
+    kubectl get all -o yaml | kustomize cfg grep "spec.replicas>0" | kustomize cfg tree --replicas
     .
     └──
         ├── [.]  Deployment wp/wordpress
@@ -183,7 +183,7 @@ var ConfigurationBasicsLong = `
 
   If there is an error parsing the Resource configuration, kustomize will print an error with the file.
 
-    $ kustomize config grep "spec.template.spec.containers[name=\.*].resources.limits.cpu>1.0" ./staging/ | kustomize config tree --name --resources
+    $ kustomize cfg grep "spec.template.spec.containers[name=\.*].resources.limits.cpu>1.0" ./staging/ | kustomize cfg tree --name --resources
     Error: staging/persistent-volume-provisioning/quobyte/quobyte-admin-secret.yaml: [0]: yaml: unmarshal errors:
       line 13: mapping key "type" already defined at line 9
 
@@ -196,7 +196,7 @@ var ConfigurationBasicsLong = `
   When developing -- to get a stack trace for where an error was encountered,
   use the ` + "`" + `--stack-trace` + "`" + ` flag:
 
-    $ kustomize config grep "spec.template.spec.containers[name=\.*].resources.limits.cpu>1.0" ./staging/ --stack-trace
+    $ kustomize cfg grep "spec.template.spec.containers[name=\.*].resources.limits.cpu>1.0" ./staging/ --stack-trace
     go/src/sigs.k8s.io/kustomize/kyaml/yaml/types.go:260 (0x4d35c86)
             (*RNode).GetMeta: return m, errors.Wrap(err)
     go/src/sigs.k8s.io/kustomize/kyaml/kio/byteio_reader.go:130 (0x4d3e099)
@@ -210,7 +210,7 @@ var ConfigurationBasicsLong = `
 
   Query for ` + "`" + `replicas` + "`" + `:
 
-    $ kustomize config grep "spec.replicas>5" ./ | kustomize config tree --replicas
+    $ kustomize cfg grep "spec.replicas>5" ./ | kustomize cfg tree --replicas
       .
       ├── staging/sysdig-cloud
       │   └── [sysdig-rc.yaml]  ReplicationController sysdig-agent
@@ -221,7 +221,7 @@ var ConfigurationBasicsLong = `
 
   Query for ` + "`" + `resource.limits` + "`" + `
 
-	$ kustomize config grep "spec.template.spec.containers[name=\.*].resources.limits.memory>0" ./ | kustomize config tree --resources
+	$ kustomize cfg grep "spec.template.spec.containers[name=\.*].resources.limits.memory>0" ./ | kustomize cfg tree --resources
 	.
     ├── cassandra
     │   └── [cassandra-statefulset.yaml]  StatefulSet cassandra
@@ -250,7 +250,7 @@ var ConfigurationBasicsLong = `
 
   Find Resources that have an image specified, but the image doesn't have a tag:
 
-    $ kustomize config grep "spec.template.spec.containers[name=\.*].name=\.*" ./ |  kustomize config grep "spec.template.spec.containers[name=\.*].image=\.*:\.*" -v | kustomize config tree --image --name
+    $ kustomize cfg grep "spec.template.spec.containers[name=\.*].name=\.*" ./ |  kustomize cfg grep "spec.template.spec.containers[name=\.*].image=\.*:\.*" -v | kustomize cfg tree --image --name
     .
     ├── staging/newrelic
     │   ├── [newrelic-daemonset.yaml]  DaemonSet newrelic-agent
@@ -302,13 +302,13 @@ var FunctionBasicsLong = `
     cd template-heredoc-cockroachdb/
 
     # view the Resources
-    kustomize config tree local-resource/ --name --image --replicas
+    kustomize cfg tree local-resource/ --name --image --replicas
 
     # run the function
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
     # view the generated Resources
-    kustomize config tree local-resource/ --name --image --replicas
+    kustomize cfg tree local-resource/ --name --image --replicas
 
   ` + "`" + `run` + "`" + ` generated the directory ` + "`" + ` local-resource/config` + "`" + ` containing the generated
   Resources.
@@ -322,7 +322,7 @@ var FunctionBasicsLong = `
   but keep the fields that you manually added to the generated Resource configuration.
 
     # run the function
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
   ` + "`" + `run` + "`" + ` facilitates a non-destructive *smart templating* approach that allows templating
   to be composed with manual modifications directly to the template output, as well as
@@ -347,13 +347,13 @@ var FunctionBasicsLong = `
     cd template-go-nginx/
 
     # view the Resources
-    kustomize config tree local-resource/ --name --image --replicas
+    kustomize cfg tree local-resource/ --name --image --replicas
 
     # run the function
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
     # view the generated Resources
-    kustomize config tree local-resource/ --name --image --replicas
+    kustomize cfg tree local-resource/ --name --image --replicas
 
   ` + "`" + `run` + "`" + ` generated the directory ` + "`" + ` local-resource/config` + "`" + ` containing the generated
   Resources.  this time it put the configuration in a single file rather than multiple
@@ -369,7 +369,7 @@ var FunctionBasicsLong = `
   but keep the fields that you manually added to the generated Resource configuration.
 
     # run the function
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
   Just like in the preceding section, the function is implemented using a non-destructive
   approach which merges the generated Resources into previously generated instances.
@@ -389,7 +389,7 @@ var FunctionBasicsLong = `
   directory, and invoke ` + "`" + `run` + "`" + ` on the ` + "`" + `local-resource/` + "`" + ` directory.
 
     # run the function
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
     cpu-requests missing for a container in Deployment nginx (example-use.yaml [1])
     Error: exit status 1
     Usage:
@@ -401,7 +401,7 @@ var FunctionBasicsLong = `
   and print the name of the file + Resource index.  Edit the file and uncomment the resources,
   then re-run the functions.
 
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
   The validation now passes.
 
@@ -416,7 +416,7 @@ var FunctionBasicsLong = `
   directory, and invoke ` + "`" + `run` + "`" + ` on the ` + "`" + `local-resource/` + "`" + ` directory.
 
     # print the resources
-    kustomize config tree local-resource --resources --name
+    kustomize cfg tree local-resource --resources --name
     local-resource
     ├── [example-use.yaml]  Validator
     └── [example-use.yaml]  Deployment nginx
@@ -425,10 +425,10 @@ var FunctionBasicsLong = `
                 └── name: nginx
 
     # run the functions
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
     # print the new resources
-    kustomize config tree local-resource --resources --name
+    kustomize cfg tree local-resource --resources --name
     ├── [example-use.yaml]  Validator
     └── [example-use.yaml]  Deployment nginx
         └── spec.template.spec.containers
@@ -440,8 +440,8 @@ var FunctionBasicsLong = `
 
   Change the ` + "`" + `tshirt-size` + "`" + ` annotation from ` + "`" + `medium` + "`" + ` to ` + "`" + `small` + "`" + ` and re-run the functions.
 
-    kustomize config run local-resource/
-    kustomize config tree local-resource/
+    kustomize fn run local-resource/
+    kustomize cfg tree local-resource/
     local-resource
     ├── [example-use.yaml]  Validator
     └── [example-use.yaml]  Deployment nginx

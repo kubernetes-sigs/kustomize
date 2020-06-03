@@ -857,7 +857,7 @@ func ExampleRNode_Elements() {
 		log.Fatal(err)
 	}
 	for i, e := range elements {
-		fmt.Println(fmt.Sprintf("Element: %d", i))
+		fmt.Printf("Element: %d\n", i)
 		fmt.Println(e.MustString())
 	}
 	// Output:

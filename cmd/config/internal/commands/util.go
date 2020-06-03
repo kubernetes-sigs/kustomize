@@ -45,7 +45,7 @@ func handleError(c *cobra.Command, err error) error {
 	}
 	if StackOnError {
 		if err, ok := err.(*errors.Error); ok {
-			fmt.Fprint(os.Stderr, fmt.Sprintf("%s", err.Stack()))
+			fmt.Fprintf(os.Stderr, "%s", err.Stack())
 		}
 	}
 

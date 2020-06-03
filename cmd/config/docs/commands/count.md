@@ -12,4 +12,4 @@
 ### Examples
 
     # print Resource counts from a directory
-    kustomize config count my-dir/
+    kustomize cfg count my-dir/

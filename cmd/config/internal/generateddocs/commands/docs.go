@@ -12,11 +12,11 @@ var AnnotateLong = `
     Path to local directory.
 `
 var AnnotateExamples = `
-    kustomize config annotate my-dir/ --kv foo=bar
+    kustomize cfg annotate my-dir/ --kv foo=bar
 
-    kustomize config annotate my-dir/ --kv foo=bar --kv a=b
+    kustomize cfg annotate my-dir/ --kv foo=bar --kv a=b
 
-    kustomize config annotate my-dir/ --kv foo=bar --kind Deployment --name foo`
+    kustomize cfg annotate my-dir/ --kv foo=bar --kind Deployment --name foo`
 
 var CatShort = `[Alpha] Print Resource Config from a local directory.`
 var CatLong = `
@@ -27,13 +27,13 @@ var CatLong = `
 `
 var CatExamples = `
     # print Resource config from a directory
-    kustomize config cat my-dir/
+    kustomize cfg cat my-dir/
 
     # wrap Resource config from a directory in an ResourceList
-    kustomize config cat my-dir/ --wrap-kind ResourceList --wrap-version config.kubernetes.io/v1alpha1 --function-config fn.yaml
+    kustomize cfg cat my-dir/ --wrap-kind ResourceList --wrap-version config.kubernetes.io/v1alpha1 --function-config fn.yaml
 
     # unwrap Resource config from a directory in an ResourceList
-    ... | kustomize config cat`
+    ... | kustomize cfg cat`
 
 var CompletionShort = `Install shell completion.`
 var CompletionLong = `
@@ -61,7 +61,7 @@ var CountLong = `
 `
 var CountExamples = `
     # print Resource counts from a directory
-    kustomize config count my-dir/`
+    kustomize cfg count my-dir/`
 
 var CreateSetterShort = `[Alpha] Create a custom setter for a Resource field`
 var CreateSetterLong = `
@@ -81,12 +81,12 @@ Create a custom setter for a Resource field by inlining OpenAPI as comments.
 `
 var CreateSetterExamples = `
     # create a setter for port fields matching "8080"
-    kustomize config create-setter DIR/ port 8080 --type "integer" --field port \
+    kustomize cfg create-setter DIR/ port 8080 --type "integer" --field port \
          --description "default port used by the app"
 
     # create a setter for a substring of a field rather than the full field -- e.g. only the
     # image tag, not the full image
-    kustomize config create-setter DIR/ image-tag v1.0.1 --type "string" \
+    kustomize cfg create-setter DIR/ image-tag v1.0.1 --type "string" \
         --field image --description "current stable release"`
 
 var FmtShort = `[Alpha] Format yaml configuration files.`
@@ -118,16 +118,16 @@ field paths.
 `
 var FmtExamples = `
 	# format file1.yaml and file2.yml
-	kustomize config fmt file1.yaml file2.yml
+	kustomize cfg fmt file1.yaml file2.yml
 
 	# format all *.yaml and *.yml recursively traversing directories
-	kustomize config fmt my-dir/
+	kustomize cfg fmt my-dir/
 
 	# format kubectl output
-	kubectl get -o yaml deployments | kustomize config fmt
+	kubectl get -o yaml deployments | kustomize cfg fmt
 
 	# format kustomize output
-	kustomize build | kustomize config fmt`
+	kustomize build | kustomize cfg fmt`
 
 var GrepShort = `[Alpha] Search for matching Resources in a directory or from stdin`
 var GrepLong = `
@@ -145,16 +145,16 @@ var GrepLong = `
 `
 var GrepExamples = `
     # find Deployment Resources
-    kustomize config grep "kind=Deployment" my-dir/
+    kustomize cfg grep "kind=Deployment" my-dir/
 
     # find Resources named nginx
-    kustomize config grep "metadata.name=nginx" my-dir/
+    kustomize cfg grep "metadata.name=nginx" my-dir/
 
     # use tree to display matching Resources
-    kustomize config grep "metadata.name=nginx" my-dir/ | kustomize config tree
+    kustomize cfg grep "metadata.name=nginx" my-dir/ | kustomize cfg tree
 
     # look for Resources matching a specific container image
-    kustomize config grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-dir/ | kustomize config tree`
+    kustomize cfg grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-dir/ | kustomize cfg tree`
 
 var InitShort = `[Alpha] Initialize a directory with a Krmfile.`
 var InitLong = `
@@ -165,10 +165,10 @@ var InitLong = `
 `
 var InitExamples = `
     # create a Krmfile in the local directory
-    kustomize config init
+    kustomize cfg init
 
     # create a Krmfile in my-dir/
-    kustomize config init my-dir/`
+    kustomize cfg init my-dir/`
 
 var ListSettersShort = `[Alpha] List setters for Resources.`
 var ListSettersLong = `
@@ -185,7 +185,7 @@ List setters for Resources.
 var ListSettersExamples = `
   Show setters:
 
-    $ config list-setters DIR/
+    $ kustomize cfg list-setters DIR/
         NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY  
     name-prefix   ''            PREFIX    string   2`
 
@@ -204,10 +204,10 @@ earlier are lower-precedence (the destination).
 
 For information on merge rules, run:
 
-	kustomize config docs merge
+	kustomize cfg docs merge
 `
 var MergeExamples = `
-    cat resources_and_patches.yaml | kustomize config merge > merged_resources.yaml`
+    cat resources_and_patches.yaml | kustomize cfg merge > merged_resources.yaml`
 
 var Merge3Short = `[Alpha] Merge diff of Resource configuration files into a destination (3-way)`
 var Merge3Long = `
@@ -223,10 +223,10 @@ to the Resource in the DEST_DIR.
 
 For information on merge rules, run:
 
-	kustomize config docs-merge3
+	kustomize cfg docs-merge3
 `
 var Merge3Examples = `
-    kustomize config merge3 --ancestor a/ --from b/ --to c/`
+    kustomize cfg merge3 --ancestor a/ --from b/ --to c/`
 
 var RunFnsShort = `[Alpha] Reoncile config functions to Resources.`
 var RunFnsLong = `
@@ -266,16 +266,16 @@ order they appear in the file).
 	spec:
 	  configField: configValue
 
-  In the preceding example, 'kustomize config run example/' would identify the function by
+  In the preceding example, 'kustomize fn run example/' would identify the function by
   the metadata.annotations.[config.kubernetes.io/function] field.  It would then write all Resources in the directory to
   a container stdin (running the gcr.io/example/examplefunction:v1.0.1 image).  It
   would then write the container stdout back to example/, replacing the directory
   file contents.
 
-  See ` + "`" + `kustomize help config docs-fn` + "`" + ` for more details on writing functions.
+  See ` + "`" + `kustomize help cfg docs-fn` + "`" + ` for more details on writing functions.
 `
 var RunFnsExamples = `
-kustomize config run example/`
+kustomize fn run example/`
 
 var SetShort = `[Alpha] Set values on Resources fields values.`
 var SetLong = `
@@ -304,7 +304,7 @@ the configuration as comments.
 
 
 To print the possible setters for the Resources in a directory, run
-` + "`" + `list-setters` + "`" + ` on a directory -- e.g. ` + "`" + `kustomize config list-setters DIR/` + "`" + `.
+` + "`" + `list-setters` + "`" + ` on a directory -- e.g. ` + "`" + `kustomize cfg list-setters DIR/` + "`" + `.
 
 #### Tips
 
@@ -314,7 +314,7 @@ To print the possible setters for the Resources in a directory, run
 
 The description and setBy fields are left unmodified unless specified with flags.
 
-To create a custom setter for a field see: ` + "`" + `kustomize help config create-setter` + "`" + `
+To create a custom setter for a field see: ` + "`" + `kustomize help cfg create-setter` + "`" + `
 `
 var SetExamples = `
   Resource YAML: Name Prefix Setter
@@ -322,12 +322,12 @@ var SetExamples = `
     # DIR/resources.yaml
     ...
     metadata:
-        name: PREFIX-app1 # {"type":"string","x-kustomize":{"partialFieldSetters":[{"name":"name-prefix","value":"PREFIX"}]}}
+        name: PREFIX-app1 # {"type":"string","x-kustomize":{"setter":[{"name":"name-prefix","value":"PREFIX"}]}}
     ...
     ---
     ...
     metadata:
-        name: PREFIX-app2 # {"type":"string","x-kustomize":{"partialFieldSetters":[{"name":"name-prefix","value":"PREFIX"}]}}
+        name: PREFIX-app2 # {"type":"string","x-kustomize":{"setter":[{"name":"name-prefix","value":"PREFIX"}]}}
     ...
 
   List setters: Show the possible setters
@@ -338,7 +338,7 @@ var SetExamples = `
 
   Perform set: set a new value, owner and description
 
-    $ kustomize config set DIR/ name-prefix "test" --description "test environment" --set-by "dev"
+    $ kustomize cfg set DIR/ name-prefix "test" --description "test environment" --set-by "dev"
     set 2 values
 
   List setters: Show the new values
@@ -352,19 +352,19 @@ var SetExamples = `
     # DIR/resources.yaml
     ...
     metadata:
-        name: test-app1 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","partialFieldSetters":[{"name":"name-prefix","value":"test"}]}}
+        name: test-app1 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","setter":[{"name":"name-prefix","value":"test"}]}}
     ...
     ---
     ...
     metadata:
-        name: test-app2 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","partialFieldSetters":[{"name":"name-prefix","value":"test"}]}}
+        name: test-app2 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","setter":[{"name":"name-prefix","value":"test"}]}}
     ...`
 
 var SinkShort = `[Alpha] Implement a Sink by writing input to a local directory.`
 var SinkLong = `
 [Alpha] Implement a Sink by writing input to a local directory.
 
-    kustomize config sink [DIR]
+    kustomize fn sink [DIR]
 
   DIR:
     Path to local directory.  If unspecified, sink will write to stdout as if it were a single file.
@@ -372,13 +372,13 @@ var SinkLong = `
 ` + "`" + `sink` + "`" + ` writes its input to a directory
 `
 var SinkExamples = `
-    kustomize config source DIR/ | your-function | kustomize config sink DIR/`
+    kustomize fn source DIR/ | your-function | kustomize fn sink DIR/`
 
 var SourceShort = `[Alpha] Implement a Source by reading a local directory.`
 var SourceLong = `
 [Alpha] Implement a Source by reading a local directory.
 
-    kustomize config source DIR...
+    kustomize fn source DIR...
 
   DIR:
     One or more paths to local directories.  Contents from directories will be concatenated.
@@ -388,15 +388,15 @@ var SourceLong = `
 `
 var SourceExamples = `
     # emity configuration directory as input source to a function
-    kustomize config source DIR/
+    kustomize fn source DIR/
 
-    kustomize config source DIR/ | your-function | kustomize config sink DIR/`
+    kustomize fn source DIR/ | your-function | kustomize fn sink DIR/`
 
 var TreeShort = `[Alpha] Display Resource structure from a directory or stdin.`
 var TreeLong = `
 [Alpha] Display Resource structure from a directory or stdin.
 
-kustomize config tree may be used to print Resources in a directory or cluster, preserving structure
+kustomize cfg tree may be used to print Resources in a directory or cluster, preserving structure
 
 Args:
 
@@ -405,37 +405,37 @@ Args:
 
 Resource fields may be printed as part of the Resources by specifying the fields as flags.
 
-kustomize config tree has build-in support for printing common fields, such as replicas, container images,
+kustomize cfg tree has build-in support for printing common fields, such as replicas, container images,
 container names, etc.
 
-kustomize config tree supports printing arbitrary fields using the '--field' flag.
+kustomize cfg tree supports printing arbitrary fields using the '--field' flag.
 
-By default, kustomize config tree uses Resource graph structure if any relationships between resources (ownerReferences)
+By default, kustomize cfg tree uses Resource graph structure if any relationships between resources (ownerReferences)
 are detected, as is typically the case when printing from a cluster. Otherwise, directory graph structure is used. The
 graph structure can also be selected explicitly using the '--graph-structure' flag.
 `
 var TreeExamples = `
     # print Resources using directory structure
-    kustomize config tree my-dir/
+    kustomize cfg tree my-dir/
 
     # print replicas, container name, and container image and fields for Resources
-    kustomize config tree my-dir --replicas --image --name
+    kustomize cfg tree my-dir --replicas --image --name
 
     # print all common Resource fields
-    kustomize config tree my-dir/ --all
+    kustomize cfg tree my-dir/ --all
 
     # print the "foo"" annotation
-    kustomize config tree my-dir/ --field "metadata.annotations.foo"
+    kustomize cfg tree my-dir/ --field "metadata.annotations.foo"
 
     # print the "foo"" annotation
-    kubectl get all -o yaml | kustomize config tree \
+    kubectl get all -o yaml | kustomize cfg tree \
       --field="status.conditions[type=Completed].status"
 
     # print live Resources from a cluster using owners for graph structure
-    kubectl get all -o yaml | kustomize config tree --replicas --name --image
+    kubectl get all -o yaml | kustomize cfg tree --replicas --name --image
 
     # print live Resources with status condition fields
-    kubectl get all -o yaml | kustomize config tree \
+    kubectl get all -o yaml | kustomize cfg tree \
       --name --image --replicas \
       --field="status.conditions[type=Completed].status" \
       --field="status.conditions[type=Complete].status" \

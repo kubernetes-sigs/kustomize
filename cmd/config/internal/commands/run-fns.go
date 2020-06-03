@@ -68,7 +68,7 @@ func GetRunFnRunner(name string) *RunFnRunner {
 	return r
 }
 
-func RunFnCommand(name string) *cobra.Command {
+func RunCommand(name string) *cobra.Command {
 	return GetRunFnRunner(name).Command
 }
 

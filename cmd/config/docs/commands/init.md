@@ -12,7 +12,7 @@
 ### Examples
 
     # create a Krmfile in the local directory
-    kustomize config init
+    kustomize cfg init
 
     # create a Krmfile in my-dir/
-    kustomize config init my-dir/
+    kustomize cfg init my-dir/
