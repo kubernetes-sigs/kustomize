@@ -6,6 +6,8 @@ package types
 const (
 	KustomizationVersion  = "kustomize.config.k8s.io/v1beta1"
 	KustomizationKind     = "Kustomization"
+	ComponentVersion      = "kustomize.config.k8s.io/v1alpha1"
+	ComponentKind         = "Component"
 	MetadataNamespacePath = "metadata/namespace"
 )
 
@@ -73,9 +75,13 @@ type Kustomization struct {
 	//
 
 	// Resources specifies relative paths to files holding YAML representations
-	// of kubernetes API objects, or specifcations of other kustomizations
+	// of kubernetes API objects, or specifications of other kustomizations
 	// via relative paths, absolute paths, or URLs.
 	Resources []string `json:"resources,omitempty" yaml:"resources,omitempty"`
+
+	// Components specifies relative paths to specifications of other Components
+	// via relative paths, absolute paths, or URLs.
+	Components []string `json:"components,omitempty" yaml:"components,omitempty"`
 
 	// Crds specifies relative paths to Custom Resource Definition files.
 	// This allows custom resources to be recognized as operands, making
@@ -128,11 +134,15 @@ type Kustomization struct {
 // moving content of deprecated fields to newer
 // fields.
 func (k *Kustomization) FixKustomizationPostUnmarshalling() {
-	if k.APIVersion == "" {
-		k.APIVersion = KustomizationVersion
-	}
 	if k.Kind == "" {
 		k.Kind = KustomizationKind
+	}
+	if k.APIVersion == "" {
+		if k.Kind == ComponentKind {
+			k.APIVersion = ComponentVersion
+		} else {
+			k.APIVersion = KustomizationVersion
+		}
 	}
 	k.Resources = append(k.Resources, k.Bases...)
 	k.Bases = nil
@@ -140,11 +150,15 @@ func (k *Kustomization) FixKustomizationPostUnmarshalling() {
 
 func (k *Kustomization) EnforceFields() []string {
 	var errs []string
-	if k.APIVersion != "" && k.APIVersion != KustomizationVersion {
-		errs = append(errs, "apiVersion should be "+KustomizationVersion)
+	if k.Kind != "" && k.Kind != KustomizationKind && k.Kind != ComponentKind {
+		errs = append(errs, "kind should be "+KustomizationKind+" or "+ComponentKind)
 	}
-	if k.Kind != "" && k.Kind != KustomizationKind {
-		errs = append(errs, "kind should be "+KustomizationKind)
+	requiredVersion := KustomizationVersion
+	if k.Kind == ComponentKind {
+		requiredVersion = ComponentVersion
+	}
+	if k.APIVersion != "" && k.APIVersion != requiredVersion {
+		errs = append(errs, "apiVersion for "+k.Kind+" should be "+requiredVersion)
 	}
 	return errs
 }
