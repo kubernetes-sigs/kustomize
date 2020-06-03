@@ -17,8 +17,8 @@ earlier are lower-precedence (the destination).
 
 For information on merge rules, run:
 
-	kustomize config docs merge
+	kustomize cfg docs merge
 
 ### Examples
 
-    cat resources_and_patches.yaml | kustomize config merge > merged_resources.yaml
+    cat resources_and_patches.yaml | kustomize cfg merge > merged_resources.yaml

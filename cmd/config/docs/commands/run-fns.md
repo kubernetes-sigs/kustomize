@@ -40,14 +40,14 @@ order they appear in the file).
 	spec:
 	  configField: configValue
 
-  In the preceding example, 'kustomize config run example/' would identify the function by
+  In the preceding example, 'kustomize fn run example/' would identify the function by
   the metadata.annotations.[config.kubernetes.io/function] field.  It would then write all Resources in the directory to
   a container stdin (running the gcr.io/example/examplefunction:v1.0.1 image).  It
   would then write the container stdout back to example/, replacing the directory
   file contents.
 
-  See `kustomize help config docs-fn` for more details on writing functions.
+  See `kustomize help cfg docs-fn` for more details on writing functions.
 
 ### Examples
 
-kustomize config run example/
+kustomize fn run example/

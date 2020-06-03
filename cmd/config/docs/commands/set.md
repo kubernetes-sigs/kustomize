@@ -29,7 +29,7 @@ the configuration as comments.
 
 
 To print the possible setters for the Resources in a directory, run
-`list-setters` on a directory -- e.g. `kustomize config list-setters DIR/`.
+`list-setters` on a directory -- e.g. `kustomize cfg list-setters DIR/`.
 
 #### Tips
 
@@ -39,7 +39,7 @@ To print the possible setters for the Resources in a directory, run
 
 The description and setBy fields are left unmodified unless specified with flags.
 
-To create a custom setter for a field see: `kustomize help config create-setter`
+To create a custom setter for a field see: `kustomize help cfg create-setter`
 
 ### Examples
 
@@ -64,7 +64,7 @@ To create a custom setter for a field see: `kustomize help config create-setter`
 
   Perform set: set a new value, owner and description
 
-    $ kustomize config set DIR/ name-prefix "test" --description "test environment" --set-by "dev"
+    $ kustomize cfg set DIR/ name-prefix "test" --description "test environment" --set-by "dev"
     set 2 values
 
   List setters: Show the new values

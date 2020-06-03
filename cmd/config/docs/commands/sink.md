@@ -6,7 +6,7 @@
 
 [Alpha] Implement a Sink by writing input to a local directory.
 
-    kustomize config sink [DIR]
+    kustomize fn sink [DIR]
 
   DIR:
     Path to local directory.  If unspecified, sink will write to stdout as if it were a single file.
@@ -15,4 +15,4 @@
 
 ### Examples
 
-    kustomize config source DIR/ | your-function | kustomize config sink DIR/
+    kustomize fn source DIR/ | your-function | kustomize fn sink DIR/

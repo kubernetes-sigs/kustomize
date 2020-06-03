@@ -16,8 +16,8 @@ to the Resource in the DEST_DIR.
 
 For information on merge rules, run:
 
-	kustomize config docs-merge3
+	kustomize cfg docs-merge3
 
 ### Examples
 
-    kustomize config merge3 --ancestor a/ --from b/ --to c/
+    kustomize cfg merge3 --ancestor a/ --from b/ --to c/

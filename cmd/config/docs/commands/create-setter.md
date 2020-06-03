@@ -38,7 +38,7 @@ Create a custom setter for a Resource field by inlining OpenAPI as comments.
 **Create a new setter:**
 
     # create a setter for ports
-    $ kustomize config set create DIR/ http-port 8080 --type "integer" --field "port"
+    $ kustomize cfg set create DIR/ http-port 8080 --type "integer" --field "port"
 
   Resources fields with a field name matching `--field` and field value matching `VALUE` will
   have a line comment added marking this field as settable.
@@ -63,7 +63,7 @@ Create a custom setter for a Resource field by inlining OpenAPI as comments.
 Users may not set the field value using the `set` command:
 
     # change the http-port value to 8081
-    $ kustomize config set DIR/ http-port 8081
+    $ kustomize cfg set DIR/ http-port 8081
 
 ### Using default values
 
@@ -75,7 +75,7 @@ The default values for a setter may be:
 
 A setter may be for a substring of a full field:
 
-    $ kustomize config set create DIR/ image-tag v1.0.01 --type "string" --field "image"
+    $ kustomize cfg set create DIR/ image-tag v1.0.01 --type "string" --field "image"
 
     image: gcr.io/example/app:v1.0.1 # # {"type":"string","x-kustomize":{"partialFieldSetters":[{"name":"image-tag","value":"v1.0.1"}]}}
 
@@ -84,10 +84,10 @@ A single field value may have multiple setters applied to it for different parts
 ### Examples
 
     # create a setter for port fields matching "8080"
-    kustomize config create-setter DIR/ port 8080 --type "integer" --field port \
+    kustomize cfg create-setter DIR/ port 8080 --type "integer" --field port \
          --description "default port used by the app"
 
     # create a setter for a substring of a field rather than the full field -- e.g. only the
     # image tag, not the full image
-    kustomize config create-setter DIR/ image-tag v1.0.1 --type "string" \
+    kustomize cfg create-setter DIR/ image-tag v1.0.1 --type "string" \
         --field image --description "current stable release"
