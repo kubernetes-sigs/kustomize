@@ -123,7 +123,8 @@ func getReplacementValue(res *resource.Resource, fieldPath string) (string, erro
 }
 
 func isSecretDataReplacement(res *resource.Resource, fieldPath string) bool {
-	return res.GetGvk().Kind == "Secret" && strings.HasPrefix(fieldPath, "data.")
+	return res.GetGvk().Kind == "Secret" &&
+		(strings.HasPrefix(fieldPath, "data.") || strings.HasPrefix(fieldPath, "data["))
 }
 
 func isSecretDataTarget(r *resource.Resource, pathSlice []string) bool {
