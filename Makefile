@@ -198,7 +198,7 @@ build-kustomize-api: $(builtinplugins)
 
 .PHONY: test-unit-kustomize-api
 test-unit-kustomize-api: build-kustomize-api
-	cd api; go test ./...
+	cd api; go test ./...  -ldflags "-X sigs.k8s.io/kustomize/api/provenance.version=v444.333.222"
 
 .PHONY: test-unit-kustomize-plugins
 test-unit-kustomize-plugins:

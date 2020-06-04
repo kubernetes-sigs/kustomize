@@ -4,6 +4,8 @@
 package krusty
 
 import (
+	"fmt"
+
 	"sigs.k8s.io/kustomize/api/builtins"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/internal/k8sdeps/transformer"
@@ -12,9 +14,14 @@ import (
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/k8sdeps/validator"
 	fLdr "sigs.k8s.io/kustomize/api/loader"
+	"sigs.k8s.io/kustomize/api/provenance"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+)
+
+const (
+	managedbyLabelKey = "app.kubernetes.io/managed-by"
 )
 
 // Kustomizer performs kustomizations.  It's meant to behave
@@ -77,6 +84,16 @@ func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
 	}
 	if b.options.DoLegacyResourceSort {
 		builtins.NewLegacyOrderTransformerPlugin().Transform(m)
+	}
+	if b.options.AddManagedbyLabel {
+		t := builtins.LabelTransformerPlugin{
+			Labels: map[string]string{managedbyLabelKey: fmt.Sprintf("kustomize-%s", provenance.GetProvenance().Version)},
+			FieldSpecs: []types.FieldSpec{{
+				Path:               "metadata/labels",
+				CreateIfNotPresent: true,
+			}},
+		}
+		t.Transform(m)
 	}
 	return m, nil
 }

@@ -18,6 +18,11 @@ type Options struct {
 	// order as specified by the kustomization file(s).
 	DoLegacyResourceSort bool
 
+	// When true, a label
+	//     app.kubernetes.io/managed-by: kustomize-<version>
+	// is added to all the resources in the build out.
+	AddManagedbyLabel bool
+
 	// Restrictions on what can be loaded from the file system.
 	// See type definition.
 	LoadRestrictions types.LoadRestrictions
