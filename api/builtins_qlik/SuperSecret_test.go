@@ -598,6 +598,7 @@ stringData:
   baz: whatever
 data:
   anotherPassword: Ym9vbQ==
+  nonBase64Key: should-generate-blank
 behavior: create
 disableNameSuffixHash: true
 `,
@@ -611,7 +612,7 @@ disableNameSuffixHash: true
 
 						data, err := res.GetFieldValue("data")
 						assert.NoError(t, err)
-						assert.True(t, len(data.(map[string]interface{})) == 3)
+						assert.True(t, len(data.(map[string]interface{})) == 4)
 
 						value, err := res.GetFieldValue("data.foo")
 						assert.NoError(t, err)
@@ -624,6 +625,10 @@ disableNameSuffixHash: true
 						value, err = res.GetFieldValue("data.anotherPassword")
 						assert.NoError(t, err)
 						assert.Equal(t, base64.StdEncoding.EncodeToString([]byte("boom")), value)
+
+						value, err = res.GetFieldValue("data.nonBase64Key")
+						assert.NoError(t, err)
+						assert.Equal(t, "", value)
 
 						break
 					}

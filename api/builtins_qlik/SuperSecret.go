@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
+
 	"sigs.k8s.io/kustomize/api/builtins_qlik/utils"
 
 	"sigs.k8s.io/kustomize/api/builtins"
@@ -48,12 +49,12 @@ func (p *SuperSecretPlugin) getAggregateConfigData() (map[string]string, error) 
 		aggregateConfigData[k] = v
 	}
 	for k, v := range p.Data {
-		decodedValue, err := base64.StdEncoding.DecodeString(v)
-		if err != nil {
+		if decodedValue, err := base64.StdEncoding.DecodeString(v); err != nil {
 			p.logger.Printf("error base64 decoding value: %v for key: %v, error: %v\n", v, k, err)
-			return nil, err
+			aggregateConfigData[k] = ""
+		} else {
+			aggregateConfigData[k] = string(decodedValue)
 		}
-		aggregateConfigData[k] = string(decodedValue)
 	}
 	return aggregateConfigData, nil
 }
