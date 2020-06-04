@@ -823,7 +823,7 @@ replaceWithObjRef:
     kind: Secret
     name: source-secret
   fieldref:
-    fieldpath: data.source
+    fieldpath: data[tls.foo]
 `,
 			pluginInputResources: `
 apiVersion: v1
@@ -840,7 +840,7 @@ metadata:
   name: source-secret
 type: Opaque
 data:
-  source: Zm9v
+  tls.foo: Zm9v
 `,
 			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
 				res, err := resMap.GetById(resid.NewResId(resid.Gvk{
