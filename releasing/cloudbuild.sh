@@ -80,6 +80,7 @@ builds:
   goos:
   - linux
   - darwin
+  - windows
   goarch:
   - amd64
 archives:
