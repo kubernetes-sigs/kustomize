@@ -2,8 +2,8 @@
 
 快速开始：
 
-* [60 秒构建一个 exec 插件](../plugins/execPluginGuidedExample.md)
-* [60 秒构建一个 Go 插件](../plugins/goPluginGuidedExample.md)
+* [60 秒构建一个 exec 插件](execPluginGuidedExample.md)
+* [60 秒构建一个 Go 插件](goPluginGuidedExample.md)
 
 Kustomize 提供一个插件框架，允许用户开发自己的 _生成器_ 和 _转化器_。
 
@@ -196,7 +196,7 @@ data:
 
 ### Go 插件
 
-请务必阅读 [Go plugin 注意事项](../plugins/goPluginCaveats.md)。
+请务必阅读 [Go plugin 注意事项](goPluginCaveats.md)。
 
 [Go 插件]: https://golang.org/pkg/plugin/
 
