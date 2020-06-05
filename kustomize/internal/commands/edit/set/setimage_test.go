@@ -40,6 +40,30 @@ func TestSetImage(t *testing.T) {
 		},
 		{
 			given: given{
+				args: []string{"image1=my-image1:1234"},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- name: image1",
+					"  newName: my-image1",
+					"  newTag: \"1234\"",
+				}},
+		},
+		{
+			given: given{
+				args: []string{"image1=my-image1:3.2e2"},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- name: image1",
+					"  newName: my-image1",
+					"  newTag: \"3.2e2\"",
+				}},
+		},
+		{
+			given: given{
 				args: []string{"image1=my-image1@sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3"},
 			},
 			expected: expected{
