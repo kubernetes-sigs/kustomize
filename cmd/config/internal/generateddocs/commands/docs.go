@@ -156,6 +156,20 @@ var GrepExamples = `
     # look for Resources matching a specific container image
     kustomize config grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-dir/ | kustomize config tree`
 
+var InitShort = `[Alpha] Initialize a directory with a Krmfile.`
+var InitLong = `
+[Alpha]  Initialize a directory with a Krmfile.
+
+  DIR:
+    Path to local directory.
+`
+var InitExamples = `
+    # create a Krmfile in the local directory
+    kustomize config init
+
+    # create a Krmfile in my-dir/
+    kustomize config init my-dir/`
+
 var ListSettersShort = `[Alpha] List setters for Resources.`
 var ListSettersLong = `
 List setters for Resources.
