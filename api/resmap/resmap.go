@@ -532,7 +532,7 @@ func (m *resWrangler) ErrorIfNotEqualSets(other ResMap) error {
 	for _, r1 := range m.rList {
 		id := r1.CurId()
 		others := m2.GetMatchingResourcesByCurrentId(id.Equals)
-		if len(others) < 0 {
+		if len(others) == 0 {
 			return fmt.Errorf(
 				"id in self missing from other; id: %s", id)
 		}
