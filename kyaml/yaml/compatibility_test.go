@@ -23,6 +23,7 @@ func TestIsYaml1_1NonString(t *testing.T) {
 		{val: "2", expected: true},
 		{val: "true", expected: true},
 		{val: "1.0\nhello", expected: false}, // multiline strings should always be false
+		{val: "", expected: false}, // empty string should be considered a string
 	}
 
 	for k := range valueToTagMap {
@@ -111,7 +112,7 @@ var valueToTagMap = func() map[string]string {
 	val := map[string]string{}
 
 	// https://yaml.org/type/null.html
-	values := []string{"", "~", "null", "Null", "NULL"}
+	values := []string{"~", "null", "Null", "NULL"}
 	for i := range values {
 		val[values[i]] = "!!null"
 	}

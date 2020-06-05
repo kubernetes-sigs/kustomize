@@ -70,6 +70,9 @@ func IsYaml1_1NonString(node *Node) bool {
 }
 
 func IsValueNonString(value string) bool {
+	if value == "" {
+		return false
+	}
 	if strings.Contains(value, "\n") {
 		// multi-line strings will fail to unmarshal
 		return false
