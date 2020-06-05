@@ -8,9 +8,9 @@
 
 请务必阅读 [Go plugin 注意事项](goPluginCaveats.md)。
 
-该示例使用 Go 插件，`SopsEncodedSecrets` 该插件位于 [sopsencodedsecrets repository]中。这是一个进程内的 Go 插件，而不是恰巧用 Go 编写的 exec 插件（这是 Go 作者的另一种选择）。
+该示例使用 Go 插件 `SopsEncodedSecrets`，该插件位于 [sopsencodedsecrets repository]中。这是一个进程内的 Go 插件，而不是恰巧用 Go 编写的 exec 插件（这是 Go 作者的另一种选择）。
 
-在不破坏当前的设置的情况下，尝试本教程。
+尝试本教程不会破坏你的当前设置。
 
 #### 环境要求
 
@@ -28,7 +28,7 @@
 * Google cloud (gcloud) 安装
 * 具有 KMS 权限的 Google帐户
 
-## 定义一个工作空间
+## 创建一个工作空间/目录
 
 ```shell
 # 将这些目录分开，以免造成 DEMO 目录的混乱。
@@ -68,7 +68,7 @@ PLUGIN_ROOT=$DEMO/kustomize/plugin
 
 并在下面的命令行中临时设置 `XDG_CONFIG_HOME`。
 
-### What apiVersion and kind?
+### 使用什么 apiVersion 和 kind？
 
 在 kustomize 插件的开发时，插件代码不关心也不知道配置文件中的 `apiVersion` 或 `kind`。
 
@@ -178,7 +178,7 @@ generators:
 EOF
 ```
 
-现在生成真实的加密数据了。
+接下来生成真实的加密数据。
 
 ### 确保您已安装加密工具
 
