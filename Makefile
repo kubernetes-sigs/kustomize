@@ -14,11 +14,8 @@ all: verify-kustomize
 verify-kustomize: \
 	lint-kustomize \
 	test-unit-kustomize-all \
-	test-examples-kustomize-against-HEAD
-# TODO: restore test-examples-kustomize-against-3.5.5 \
-# once it works.  Likely have to fix and release 3.6
-#	test-examples-kustomize-against-3.5.4 no longer works because
-# the examples tests features not in 3.5.4
+	test-examples-kustomize-against-HEAD \
+	test-examples-kustomize-against-3.6.1
 
 # The following target referenced by a file in
 # https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/kustomize
@@ -27,6 +24,7 @@ prow-presubmit-check: \
 	lint-kustomize \
 	test-unit-kustomize-all \
 	test-examples-kustomize-against-HEAD \
+	test-examples-kustomize-against-3.6.1 \
 	test-unit-cmd-all \
 	test-go-mod
 
@@ -235,10 +233,10 @@ test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
 	./hack/testExamplesAgainstKustomize.sh HEAD
 
 .PHONY:
-test-examples-kustomize-against-3.5.4: $(MYGOBIN)/mdrip
+test-examples-kustomize-against-3.6.1: $(MYGOBIN)/mdrip
 	( \
 		set -e; \
-		tag=v3.5.4; \
+		tag=v3.6.1; \
 		/bin/rm -f $(MYGOBIN)/kustomize; \
 		echo "Installing kustomize $$tag."; \
 		GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3@$${tag}; \
@@ -246,20 +244,6 @@ test-examples-kustomize-against-3.5.4: $(MYGOBIN)/mdrip
 		echo "Reinstalling kustomize from HEAD."; \
 		cd kustomize; go install .; \
 	)
-
-.PHONY:
-test-examples-kustomize-against-3.5.5: $(MYGOBIN)/mdrip
-	( \
-		set -e; \
-		tag=v3.5.5; \
-		/bin/rm -f $(MYGOBIN)/kustomize; \
-		echo "Installing kustomize $$tag."; \
-		GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3@$${tag}; \
-		./hack/testExamplesAgainstKustomize.sh $$tag; \
-		echo "Reinstalling kustomize from HEAD."; \
-		cd kustomize; go install .; \
-	)
-
 
 # linux only.
 # This is for testing an example plugin that
