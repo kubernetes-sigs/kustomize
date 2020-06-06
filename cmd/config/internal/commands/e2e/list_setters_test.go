@@ -9,7 +9,7 @@ func TestListSetters(t *testing.T) {
 	tests := []test{
 		{
 			name: "set",
-			args: []string{"list-setters", "."},
+			args: []string{"cfg", "list-setters", "."},
 			files: map[string]string{
 				"deployment.yaml": `
 apiVersion: apps/v1

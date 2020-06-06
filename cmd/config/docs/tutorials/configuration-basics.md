@@ -2,7 +2,7 @@
 
 ### Synopsis
 
-`kustomize config` provides tools for working with local configuration directories.
+`kustomize cfg` provides tools for working with local configuration directories.
 
   First fetch a bundle of configuration to your local file system from the
   Kubernetes examples repository.
@@ -14,7 +14,7 @@
 
   `tree` can be used to summarize the collection of Resources in a directory:
 
-	$ kustomize config tree mysql-wordpress-pd/
+	$ kustomize cfg tree mysql-wordpress-pd/
 	mysql-wordpress-pd
 	├── [gce-volumes.yaml]  v1.PersistentVolume wordpress-pv-1
 	├── [gce-volumes.yaml]  v1.PersistentVolume wordpress-pv-2
@@ -31,7 +31,7 @@
   supported fields, and may also print arbitrary values using the `--field` flag to specify a field
   path.
 
-    $  kustomize config tree mysql-wordpress-pd/ --name --image --replicas --ports
+    $  kustomize cfg tree mysql-wordpress-pd/ --name --image --replicas --ports
     mysql-wordpress-pd
     ├── [gce-volumes.yaml]  PersistentVolume wordpress-pv-1
     ├── [gce-volumes.yaml]  PersistentVolume wordpress-pv-2
@@ -60,7 +60,7 @@
   to build the tree structure.
 
     kubectl apply -R -f cockroachdb/
-    kubectl get all -o yaml | kustomize config tree --graph-structure owners --name --image --replicas
+    kubectl get all -o yaml | kustomize cfg tree --graph-structure owners --name --image --replicas
     .
     ├── [Resource]  Deployment wp/wordpress
     │   ├── spec.replicas: 1
@@ -84,7 +84,7 @@
 
 ### `cat` -- view the full collection of Resources
 
-	$ kustomize config cat mysql-wordpress-pd/
+	$ kustomize cfg cat mysql-wordpress-pd/
 	apiVersion: v1
 	kind: PersistentVolume
 	metadata:
@@ -111,7 +111,7 @@
   `fmt` formats the Resource Configuration by applying a consistent style, including
   ordering of fields and indentation.
 
-	$ kustomize config fmt mysql-wordpress-pd/
+	$ kustomize cfg fmt mysql-wordpress-pd/
 
   Run `git diff` and see the changes that have been applied.
 
@@ -120,7 +120,7 @@
   `grep` prints Resources matching some field value.  The Resources are annotated with their
   file source so they can be piped to other commands without losing this information.
 
-	$ kustomize config grep "metadata.name=wordpress" wordpress/
+	$ kustomize cfg grep "metadata.name=wordpress" wordpress/
 	apiVersion: v1
 	kind: Service
 	metadata:
@@ -142,7 +142,7 @@
   - list elements may be indexed by a field value using list[field=value]
   - '.' as part of a key or value may be escaped as '\.'
 
-	$ kustomize config grep "spec.status.spec.containers[name=nginx].image=mysql:5\.6" wordpress/
+	$ kustomize cfg grep "spec.status.spec.containers[name=nginx].image=mysql:5\.6" wordpress/
 	apiVersion: apps/v1 # for k8s versions before 1.9.0 use apps/v1beta2  and before 1.8.0 use extensions/v1beta1
 	kind: Deployment
 	metadata:
@@ -163,7 +163,7 @@
 
   `grep` may be used with kubectl to search for Resources in a cluster matching a value.
 
-    kubectl get all -o yaml | kustomize config grep "spec.replicas>0" | kustomize config tree --replicas
+    kubectl get all -o yaml | kustomize cfg grep "spec.replicas>0" | kustomize cfg tree --replicas
     .
     └──
         ├── [.]  Deployment wp/wordpress
@@ -179,7 +179,7 @@
 
   If there is an error parsing the Resource configuration, kustomize will print an error with the file.
 
-    $ kustomize config grep "spec.template.spec.containers[name=\.*].resources.limits.cpu>1.0" ./staging/ | kustomize config tree --name --resources
+    $ kustomize cfg grep "spec.template.spec.containers[name=\.*].resources.limits.cpu>1.0" ./staging/ | kustomize cfg tree --name --resources
     Error: staging/persistent-volume-provisioning/quobyte/quobyte-admin-secret.yaml: [0]: yaml: unmarshal errors:
       line 13: mapping key "type" already defined at line 9
 
@@ -192,7 +192,7 @@
   When developing -- to get a stack trace for where an error was encountered,
   use the `--stack-trace` flag:
 
-    $ kustomize config grep "spec.template.spec.containers[name=\.*].resources.limits.cpu>1.0" ./staging/ --stack-trace
+    $ kustomize cfg grep "spec.template.spec.containers[name=\.*].resources.limits.cpu>1.0" ./staging/ --stack-trace
     go/src/sigs.k8s.io/kustomize/kyaml/yaml/types.go:260 (0x4d35c86)
             (*RNode).GetMeta: return m, errors.Wrap(err)
     go/src/sigs.k8s.io/kustomize/kyaml/kio/byteio_reader.go:130 (0x4d3e099)
@@ -206,7 +206,7 @@
 
   Query for `replicas`:
 
-    $ kustomize config grep "spec.replicas>5" ./ | kustomize config tree --replicas
+    $ kustomize cfg grep "spec.replicas>5" ./ | kustomize cfg tree --replicas
       .
       ├── staging/sysdig-cloud
       │   └── [sysdig-rc.yaml]  ReplicationController sysdig-agent
@@ -217,7 +217,7 @@
 
   Query for `resource.limits`
 
-	$ kustomize config grep "spec.template.spec.containers[name=\.*].resources.limits.memory>0" ./ | kustomize config tree --resources
+	$ kustomize cfg grep "spec.template.spec.containers[name=\.*].resources.limits.memory>0" ./ | kustomize cfg tree --resources
 	.
     ├── cassandra
     │   └── [cassandra-statefulset.yaml]  StatefulSet cassandra
@@ -246,7 +246,7 @@
 
   Find Resources that have an image specified, but the image doesn't have a tag:
 
-    $ kustomize config grep "spec.template.spec.containers[name=\.*].name=\.*" ./ |  kustomize config grep "spec.template.spec.containers[name=\.*].image=\.*:\.*" -v | kustomize config tree --image --name
+    $ kustomize cfg grep "spec.template.spec.containers[name=\.*].name=\.*" ./ |  kustomize cfg grep "spec.template.spec.containers[name=\.*].image=\.*:\.*" -v | kustomize cfg tree --image --name
     .
     ├── staging/newrelic
     │   ├── [newrelic-daemonset.yaml]  DaemonSet newrelic-agent

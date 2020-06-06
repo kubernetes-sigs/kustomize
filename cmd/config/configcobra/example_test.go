@@ -11,15 +11,14 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/commandutil"
 )
 
-// ExampleNewConfigCommand demonstrates how to embed the config command as a command inside
+// ExampleAddCommands demonstrates how to embed the config command as a command inside
 // another group.
-func ExampleNewConfigCommand() {
+func ExampleAddCommands() {
 	// enable the config commands
 	os.Setenv(commandutil.EnableAlphaCommmandsEnvName, "true")
-	var root = &cobra.Command{
+	_ = configcobra.AddCommands(&cobra.Command{
 		Use:   "my-cmd",
 		Short: "My command.",
 		Long:  `My command.`,
-	}
-	root.AddCommand(configcobra.NewConfigCommand("my-cmd"))
+	}, "my-cmd")
 }

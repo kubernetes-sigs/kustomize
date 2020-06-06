@@ -25,13 +25,13 @@
     cd template-heredoc-cockroachdb/
 
     # view the Resources
-    kustomize config tree local-resource/ --name --image --replicas
+    kustomize cfg tree local-resource/ --name --image --replicas
 
     # run the function
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
     # view the generated Resources
-    kustomize config tree local-resource/ --name --image --replicas
+    kustomize cfg tree local-resource/ --name --image --replicas
 
   `run` generated the directory ` local-resource/config` containing the generated
   Resources.
@@ -45,7 +45,7 @@
   but keep the fields that you manually added to the generated Resource configuration.
 
     # run the function
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
   `run` facilitates a non-destructive *smart templating* approach that allows templating
   to be composed with manual modifications directly to the template output, as well as
@@ -70,13 +70,13 @@
     cd template-go-nginx/
 
     # view the Resources
-    kustomize config tree local-resource/ --name --image --replicas
+    kustomize cfg tree local-resource/ --name --image --replicas
 
     # run the function
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
     # view the generated Resources
-    kustomize config tree local-resource/ --name --image --replicas
+    kustomize cfg tree local-resource/ --name --image --replicas
 
   `run` generated the directory ` local-resource/config` containing the generated
   Resources.  this time it put the configuration in a single file rather than multiple
@@ -92,7 +92,7 @@
   but keep the fields that you manually added to the generated Resource configuration.
 
     # run the function
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
   Just like in the preceding section, the function is implemented using a non-destructive
   approach which merges the generated Resources into previously generated instances.
@@ -112,7 +112,7 @@
   directory, and invoke `run` on the `local-resource/` directory.
 
     # run the function
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
     cpu-requests missing for a container in Deployment nginx (example-use.yaml [1])
     Error: exit status 1
     Usage:
@@ -124,7 +124,7 @@
   and print the name of the file + Resource index.  Edit the file and uncomment the resources,
   then re-run the functions.
 
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
   The validation now passes.
 
@@ -139,7 +139,7 @@
   directory, and invoke `run` on the `local-resource/` directory.
 
     # print the resources
-    kustomize config tree local-resource --resources --name
+    kustomize cfg tree local-resource --resources --name
     local-resource
     ├── [example-use.yaml]  Validator
     └── [example-use.yaml]  Deployment nginx
@@ -148,10 +148,10 @@
                 └── name: nginx
 
     # run the functions
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
     # print the new resources
-    kustomize config tree local-resource --resources --name
+    kustomize cfg tree local-resource --resources --name
     ├── [example-use.yaml]  Validator
     └── [example-use.yaml]  Deployment nginx
         └── spec.template.spec.containers
@@ -163,8 +163,8 @@
 
   Change the `tshirt-size` annotation from `medium` to `small` and re-run the functions.
 
-    kustomize config run local-resource/
-    kustomize config tree local-resource/
+    kustomize fn run local-resource/
+    kustomize cfg tree local-resource/
     local-resource
     ├── [example-use.yaml]  Validator
     └── [example-use.yaml]  Deployment nginx

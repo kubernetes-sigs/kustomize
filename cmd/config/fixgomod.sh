@@ -9,4 +9,5 @@ set -e
 : "${kyaml_patch?Need to source VERSIONS}"
 
 go mod edit -dropreplace=sigs.k8s.io/kustomize/kyaml@v0.0.0
+go mod edit -dropreplace=sigs.k8s.io/kustomize/kyaml@v0.1.13
 go mod edit -require=sigs.k8s.io/kustomize/kyaml@v$kyaml_major.$kyaml_minor.$kyaml_patch
