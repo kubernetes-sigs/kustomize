@@ -8,6 +8,8 @@ import (
 	"flag"
 	"os"
 
+	"sigs.k8s.io/kustomize/cmd/config/configcobra"
+
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
@@ -44,6 +46,7 @@ See https://sigs.k8s.io/kustomize
 		version.NewCmdVersion(stdOut),
 		status.NewCmdStatus(),
 	)
+	configcobra.AddCommands(c, "kustomize")
 
 	c.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 
