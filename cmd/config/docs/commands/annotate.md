@@ -11,8 +11,8 @@
 
 ### Examples
 
-    kustomize config annotate my-dir/ --kv foo=bar
+    kustomize cfg annotate my-dir/ --kv foo=bar
 
-    kustomize config annotate my-dir/ --kv foo=bar --kv a=b
+    kustomize cfg annotate my-dir/ --kv foo=bar --kv a=b
 
-    kustomize config annotate my-dir/ --kv foo=bar --kind Deployment --name foo
+    kustomize cfg annotate my-dir/ --kv foo=bar --kind Deployment --name foo

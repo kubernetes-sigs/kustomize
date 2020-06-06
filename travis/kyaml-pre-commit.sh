@@ -9,7 +9,6 @@ set -e
 targets="
 kyaml
 cmd/config
-cmd/kubectl
 functions/examples/injection-tshirt-sizes
 functions/examples/template-go-nginx
 functions/examples/template-heredoc-cockroachdb

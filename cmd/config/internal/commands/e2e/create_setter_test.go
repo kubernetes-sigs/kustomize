@@ -11,7 +11,7 @@ func TestCreateSetter(t *testing.T) {
 	tests := []test{
 		{
 			name: "create_setter",
-			args: []string{"create-setter", ".", "replicas", "3"},
+			args: []string{"cfg", "create-setter", ".", "replicas", "3"},
 			files: map[string]string{
 				"deployment.yaml": `
 apiVersion: apps/v1

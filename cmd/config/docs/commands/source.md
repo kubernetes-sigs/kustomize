@@ -6,7 +6,7 @@
 
 [Alpha] Implement a Source by reading a local directory.
 
-    kustomize config source DIR...
+    kustomize fn source DIR...
 
   DIR:
     One or more paths to local directories.  Contents from directories will be concatenated.
@@ -17,6 +17,6 @@
 ### Examples
 
     # emity configuration directory as input source to a function
-    kustomize config source DIR/
+    kustomize fn source DIR/
 
-    kustomize config source DIR/ | your-function | kustomize config sink DIR/
+    kustomize fn source DIR/ | your-function | kustomize fn sink DIR/

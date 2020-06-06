@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/kyaml/kio"
 	. "sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -22,7 +21,7 @@ func TestByteWriter(t *testing.T) {
 		functionConfig string
 		results        string
 		expectedOutput string
-		instance       kio.ByteWriter
+		instance       ByteWriter
 	}
 
 	testCases := []testCase{

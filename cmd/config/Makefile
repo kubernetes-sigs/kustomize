@@ -6,7 +6,7 @@
 GOBIN := $(shell go env GOPATH)/bin
 
 build:
-	go build -v -o $(GOBIN)/config .
+	go build -v -o $(GOBIN)/kubectl-krm ./kubectl-krm
 
 all: generate build license fix vet fmt test lint tidy
 

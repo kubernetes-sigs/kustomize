@@ -6,7 +6,7 @@ of development of the kyaml package and as a reference implementation for using 
 ## Docs
 
 All documentation is also built directly into the `config` command group using 
-`kustomize help config`.
+`kustomize help cfg`.
 
 - [tutorials](docs/tutorials)
 - [commands](docs/commands)

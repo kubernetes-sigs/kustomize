@@ -187,7 +187,7 @@ spec:
 		return
 	}
 
-	if !assert.Equal(t, fmt.Sprintf(`.
+	if !assert.Equal(t, `.
 ├── [f1.yaml]  Deployment default/foo
 ├── [f1.yaml]  Service default/foo
 ├── [f1.yaml]  Deployment default/foo3
@@ -196,7 +196,7 @@ spec:
 ├── [f1.yaml]  Deployment default2/foo2
 └── bar-package
     └── [f2.yaml]  Deployment bar
-`), b.String()) {
+`, b.String()) {
 		return
 	}
 }
