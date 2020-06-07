@@ -447,7 +447,7 @@ func SetAll(s *Set) kio.Filter {
 				return nil, errors.Wrap(err)
 			}
 			if s.Count > preCount {
-				path, _, err := kioutil.GetFileAnnotations(nodes[i])
+				path, _, _, err := kioutil.GetFileAnnotations(nodes[i])
 				if err != nil {
 					return nil, errors.Wrap(err)
 				}
@@ -457,7 +457,7 @@ func SetAll(s *Set) kio.Filter {
 		var nodesInUpdatedFiles []*yaml.RNode
 		// return only the nodes whose corresponding file has at least one node with input setter
 		for i := range nodes {
-			path, _, err := kioutil.GetFileAnnotations(nodes[i])
+			path, _, _, err := kioutil.GetFileAnnotations(nodes[i])
 			if err != nil {
 				return nil, errors.Wrap(err)
 			}

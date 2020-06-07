@@ -22,16 +22,20 @@ const (
 
 	// PathAnnotation records the path to the file the Resource was read from
 	PathAnnotation AnnotationKey = "config.kubernetes.io/path"
+
+	// FormatAnnotation records the format of the resource ex: json
+	FormatAnnotation AnnotationKey = "config.kubernetes.io/format"
 )
 
-func GetFileAnnotations(rn *yaml.RNode) (string, string, error) {
+func GetFileAnnotations(rn *yaml.RNode) (string, string, string, error) {
 	meta, err := rn.GetMeta()
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 	path := meta.Annotations[PathAnnotation]
 	index := meta.Annotations[IndexAnnotation]
-	return path, index, nil
+	format := meta.Annotations[FormatAnnotation]
+	return path, index, format, nil
 }
 
 // ErrorIfMissingAnnotation validates the provided annotations are present on the given resources

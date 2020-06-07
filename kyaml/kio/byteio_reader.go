@@ -5,9 +5,9 @@ package kio
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
-	"path/filepath"
 	"sort"
 	"strings"
 
@@ -103,10 +103,14 @@ type ByteReader struct {
 	// the read objects were originally wrapped in.
 	WrappingKind string
 
-	// Path indicates file path which is being read
-	// empty if it is being read from stdin
-	Path string
+	// AcceptJSON indicates if the input json bytes should be processed
+	AcceptJSON bool
 }
+
+const (
+	YAML = "yaml"
+	JSON = "json"
+)
 
 var _ Reader = &ByteReader{}
 
@@ -120,24 +124,30 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
-	values := strings.Split(input.String(), "\n---\n")
+	inputStr := input.String()
+
+	// check if json is accepted and if input bytes are in json format
+	if r.AcceptJSON && json.Valid([]byte(inputStr)) {
+		// convert json to yaml string to generate resource list object
+		// with appropriate format annotation
+		yamlValue, err := yaml.ConvertJSONToYAMLString(input.String())
+		if err != nil {
+			return nil, err
+		}
+		if r.SetAnnotations == nil {
+			r.SetAnnotations = map[string]string{}
+		}
+		if !r.OmitReaderAnnotations {
+			r.SetAnnotations[kioutil.FormatAnnotation] = JSON
+		}
+		inputStr = yamlValue
+	}
+
+	values := strings.Split(inputStr, "\n---\n")
 
 	index := 0
 	for i := range values {
 		value := values[i]
-
-		if r.Path != "" {
-			for _, g := range JSONMatch {
-				if match, err := filepath.Match(g, filepath.Ext(r.Path)); err != nil {
-					return nil, errors.Wrap(err)
-				} else if match {
-					value, err = yaml.ConvertJSONToYamlString(value)
-					if err != nil {
-						return nil, err
-					}
-				}
-			}
-		}
 
 		decoder := yaml.NewDecoder(bytes.NewBufferString(value))
 		node, err := r.decode(index, decoder)

@@ -98,7 +98,6 @@ func (r LocalPackageWriter) Write(nodes []*yaml.RNode) error {
 				Writer:                f,
 				KeepReaderAnnotations: r.KeepReaderAnnotations,
 				ClearAnnotations:      r.ClearAnnotations,
-				Path:                  outputPath,
 			}
 			if err = w.Write(outputFiles[path]); err != nil {
 				return errors.Wrap(err)

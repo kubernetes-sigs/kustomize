@@ -722,9 +722,9 @@ func (rn *RNode) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// ConvertJSONToYamlNode parses input json string and returns equivalent yaml node
-func ConvertJSONToYamlNode(jsonStr string) (*RNode, error) {
-	yml, err := ConvertJSONToYamlString(jsonStr)
+// ConvertJSONToYAMLNode parses input json string and returns equivalent yaml node
+func ConvertJSONToYAMLNode(jsonStr string) (*RNode, error) {
+	yml, err := ConvertJSONToYAMLString(jsonStr)
 	if err != nil {
 		return nil, err
 	}
@@ -735,8 +735,8 @@ func ConvertJSONToYamlNode(jsonStr string) (*RNode, error) {
 	return node, nil
 }
 
-// ConvertJSONToYamlString parses input json string and returns equivalent yaml string
-func ConvertJSONToYamlString(jsonStr string) (string, error) {
+// ConvertJSONToYAMLString parses input json string and returns equivalent yaml string
+func ConvertJSONToYAMLString(jsonStr string) (string, error) {
 	var body map[string]interface{}
 	err := json.Unmarshal([]byte(jsonStr), &body)
 	if err != nil {
@@ -747,20 +747,6 @@ func ConvertJSONToYamlString(jsonStr string) (string, error) {
 		return "", err
 	}
 	return string(yml), nil
-}
-
-// ConvertYamlNodeToJSONString returns json string from input yaml RNode
-func ConvertYamlNodeToJSONString(node *RNode) (string, error) {
-	nodeStr, err := node.String()
-	if err != nil {
-		return "", err
-	}
-	var body interface{}
-	if err := yaml.Unmarshal([]byte(nodeStr), &body); err != nil {
-		return "", err
-	}
-	res, err := json.Marshal(body)
-	return string(res), err
 }
 
 // checkKey returns true if all elems have the key

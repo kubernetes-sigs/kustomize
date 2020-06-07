@@ -147,7 +147,7 @@ hello: world
 	}
 }
 
-func TestConvertJSONToYamlNode(t *testing.T) {
+func TestConvertJSONToYAMLNode(t *testing.T) {
 	inputJSON := `{"type": "string", "maxLength": 15, "enum": ["allowedValue1", "allowedValue2"]}`
 	expected := `enum:
 - allowedValue1
@@ -156,7 +156,7 @@ maxLength: 15
 type: string
 `
 
-	node, err := ConvertJSONToYamlNode(inputJSON)
+	node, err := ConvertJSONToYAMLNode(inputJSON)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -167,7 +167,7 @@ type: string
 	assert.Equal(t, expected, actual)
 }
 
-func TestConvertJSONToYamlString(t *testing.T) {
+func TestConvertJSONToYAMLString(t *testing.T) {
 	inputJSON := `{"type": "string", "maxLength": 15, "enum": ["allowedValue1", "allowedValue2"]}`
 	expected := `enum:
   - allowedValue1
@@ -176,27 +176,22 @@ maxLength: 15
 type: string
 `
 
-	actual, err := ConvertJSONToYamlString(inputJSON)
+	actual, err := ConvertJSONToYAMLString(inputJSON)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 	assert.Equal(t, expected, actual)
 }
 
-func TestConvertYamlNodeToJSONStr(t *testing.T) {
-	yl := `enum:
-  - allowedValue1
-  - allowedValue2
-maxLength: 15
-type: string
-`
-	node, err := Parse(yl)
-	if !assert.NoError(t, err) {
+// error if there are multiple json blobs in input string
+func TestConvertJSONToYAMLStringError(t *testing.T) {
+	inputJSON := `{"type": "string", "maxLength": 15, "enum": ["allowedValue1", "allowedValue2"]}
+{"type": "string", "maxLength": 5, "enum": ["allowedValue2", "allowedValue3"]}`
+	expected := `invalid character '{' after top-level value`
+
+	_, err := ConvertJSONToYAMLString(inputJSON)
+	if !assert.Error(t, err) {
 		t.FailNow()
 	}
-	res, err := ConvertYamlNodeToJSONString(node)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	assert.Equal(t, `{"enum":["allowedValue1","allowedValue2"],"maxLength":15,"type":"string"}`, res)
+	assert.Equal(t, expected, err.Error())
 }

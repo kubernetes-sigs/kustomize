@@ -4,8 +4,8 @@
 package kio
 
 import (
+	"encoding/json"
 	"io"
-	"path/filepath"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -43,9 +43,6 @@ type ByteWriter struct {
 
 	// Sort if set, will cause ByteWriter to sort the the nodes before writing them.
 	Sort bool
-
-	// Path is the output file path to write to
-	Path string
 }
 
 var _ Writer = ByteWriter{}
@@ -137,20 +134,17 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 
 // encode encodes the input RNode to appropriate node format based on file path extension
 func (w ByteWriter) encode(encoder *yaml.Encoder, node *yaml.RNode) error {
-	for _, g := range JSONMatch {
-		if match, err := filepath.Match(g, filepath.Ext(w.Path)); err != nil {
+	_, _, format, err := kioutil.GetFileAnnotations(node)
+	if !w.KeepReaderAnnotations {
+		_, err := node.Pipe(yaml.ClearAnnotation(kioutil.FormatAnnotation))
+		if err != nil {
 			return errors.Wrap(err)
-		} else if match {
-			json, err := yaml.ConvertYamlNodeToJSONString(node)
-			if err != nil {
-				return errors.Wrap(err)
-			}
-			err = encoder.Encode(json)
-			if err != nil {
-				return errors.Wrap(err)
-			}
-			return nil
 		}
+	}
+	if err == nil && format == JSON {
+		je := json.NewEncoder(w.Writer)
+		je.SetIndent("", "  ")
+		return errors.Wrap(je.Encode(node))
 	}
 	return encoder.Encode(node.Document())
 }
