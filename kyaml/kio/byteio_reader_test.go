@@ -298,6 +298,25 @@ metadata:
 				OmitReaderAnnotations: true,
 				SetAnnotations:        map[string]string{"foo": "bar"}},
 		},
+
+		//
+		//
+		//
+		{
+			name: "json",
+			input: `
+{
+  "a": "b",
+  "c": [1, 2]
+}
+`,
+			expectedItems: []string{
+				`
+{"a": "b", "c": [1, 2], metadata: {annotations: {config.kubernetes.io/index: '0'}}}
+`,
+			},
+			instance: ByteReader{},
+		},
 	}
 
 	for i := range testCases {
