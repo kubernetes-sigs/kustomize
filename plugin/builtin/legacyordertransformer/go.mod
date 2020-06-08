@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/plugin/builtin/legacyordertransformer
 
-go 1.13
+go 1.14
 
 require (
 	github.com/pkg/errors v0.8.1
