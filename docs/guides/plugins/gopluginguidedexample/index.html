@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="generator" content="Hugo 0.73.0-DEV" />
+
+<META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+
+<link rel="shortcut icon" href="/favicons/favicon.ico" >
+<link rel="apple-touch-icon" href="/kustomize/favicons/apple-touch-icon-180x180.png" sizes="180x180">
+<link rel="icon" type="image/png" href="/kustomize/favicons/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="/kustomize/favicons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-36x36.png" sizes="36x36">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-48x48.png" sizes="48x48">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-72x72.png" sizes="72x72">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-144x144.png" sizes="144x144">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-192x192.png" sizes="192x192">
+
+<title>Go plugin example | Kustomize</title><meta property="og:title" content="Go plugin example" />
+<meta property="og:description" content="Go plugin example
+" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/guides/plugins/gopluginguidedexample/" />
+<meta property="article:modified_time" content="2020-06-07T21:07:46-07:00" /><meta property="og:site_name" content="Kustomize" />
+<meta itemprop="name" content="Go plugin example">
+<meta itemprop="description" content="Go plugin example
+">
+<meta itemprop="dateModified" content="2020-06-07T21:07:46-07:00" />
+<meta itemprop="wordCount" content="1057">
+
+
+
+<meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Go plugin example"/>
+<meta name="twitter:description" content="Go plugin example
+"/>
+
+
+
+
+
+<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
+
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+
+
+
+<link rel="stylesheet" type="text/css" href="https://kubernetes-sigs.github.io/kustomize//css/asciinema-player.css" />
+
+    <title>Go plugin example | Kustomize</title>
+  </head>
+  <body class="td-page">
+    <header>
+      
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+        <a class="navbar-brand" href="/kustomize/">
+		<span class="navbar-logo"></span><span class="text-uppercase font-weight-bold">Kustomize</span>
+	</a>
+	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+		<ul class="navbar-nav mt-2 mt-lg-0">
+			
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/installation/" ><span>Installation</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link active" href="/kustomize/guides/" ><span class="active">Guides</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/api-reference/" ><span>API Reference</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/faq/" ><span>FAQ</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/blog/" ><span>Blog</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/contributing/" ><span>Contributing</span></a>
+			</li>
+			
+			
+			
+		</ul>
+	</div>
+	<div class="navbar-nav d-none d-lg-block">
+</div>
+</nav>
+
+    </header>
+    <div class="container-fluid td-outer">
+      <div class="td-main">
+        <div class="row flex-xl-nowrap">
+          <div class="col-12 col-md-3 col-xl-2 td-sidebar d-print-none">
+            
+
+
+
+
+<div id="td-sidebar-menu" class="td-sidebar__inner">
+  
+  <form class="td-sidebar__search d-flex align-items-center">
+    
+
+    <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    </button>
+  </form>
+  
+  <nav class="collapse td-sidebar-nav pt-2 pl-4" id="td-section-nav">
+    
+    
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Guides</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kustomizeguides">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/bespoke/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Bespoke Application</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidesbespoke">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/offtheshelf/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Off The Shelf Application</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidesofftheshelf">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/plugins/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Kustomize Plugins</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kustomizeguidesplugins">
+      
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeguidespluginsbuiltins" href="/kustomize/guides/plugins/builtins/">Builtin Plugins</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeguidespluginsexecpluginguidedexample" href="/kustomize/guides/plugins/execpluginguidedexample/">Exec plugin on linux</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeguidespluginsgoplugincaveats" href="/kustomize/guides/plugins/goplugincaveats/">Go plugin Caveats</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page  active" id="m-kustomizeguidespluginsgopluginguidedexample" href="/kustomize/guides/plugins/gopluginguidedexample/">Go plugin example</a>
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+  </nav>
+</div>
+
+
+
+
+          </div>
+          <div class="d-none d-xl-block col-xl-2 td-toc d-print-none">
+            
+
+
+
+
+
+
+<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+
+
+
+
+
+<a href="https://github.com/kubernetes-sigs/kustomize/edit/master/site/content/en/guides/plugins/goPluginGuidedExample.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/kubernetes-sigs/kustomize/issues/new?title=Go%20plugin%20example" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+
+
+<a href="https://github.com/kubernetes-sigs/kustomize/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
+
+</div>
+
+
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
+    <li><a href="#make-a-place-to-work">Make a place to work</a></li>
+    <li><a href="#install-kustomize">Install kustomize</a></li>
+    <li><a href="#make-a-home-for-plugins">Make a home for plugins</a>
+      <ul>
+        <li><a href="#what-apiversion-and-kind">What apiVersion and kind?</a></li>
+        <li><a href="#define-the-plugins-home-dir">Define the plugin&rsquo;s home dir</a></li>
+        <li><a href="#download-the-sopsencodedsecrets-plugin">Download the SopsEncodedSecrets plugin</a></li>
+        <li><a href="#try-the-plugins-own-test">Try the plugin&rsquo;s own test</a></li>
+      </ul>
+    </li>
+    <li><a href="#create-a-kustomization">Create a kustomization</a>
+      <ul>
+        <li><a href="#assure-you-have-an-encryption-tool-installed">Assure you have an encryption tool installed</a></li>
+        <li><a href="#install-sops">Install <code>sops</code></a></li>
+        <li><a href="#create-data-encrypted-with-your-private-key">Create data encrypted with your private key</a></li>
+      </ul>
+    </li>
+    <li><a href="#build-your-app-using-the-plugin">Build your app, using the plugin:</a></li>
+  </ul>
+</nav>
+
+
+
+          </div>
+          <main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
+            
+  
+
+            <nav aria-label="breadcrumb" class="d-none d-md-block d-print-none">
+	<ol class="breadcrumb spb-1">
+		
+
+
+
+
+
+
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://kubernetes-sigs.github.io/kustomize/guides/">Guides</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://kubernetes-sigs.github.io/kustomize/guides/plugins/">Kustomize Plugins</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item active" aria-current="page">
+	<a href="https://kubernetes-sigs.github.io/kustomize/guides/plugins/gopluginguidedexample/">Go plugin example</a>
+</li>
+
+	</ol>
+</nav	>
+
+            
+<div class="td-content">
+	<h1>Go plugin example</h1>
+	<div class="lead">Go plugin example</div>
+	<h1 id="go-plugin-guided-example-for-linux">Go Plugin Guided Example for Linux</h1>
+<p>This is a (no reading allowed!) 60 second copy/paste guided
+example.</p>
+<p>Full plugin docs <a href="README.md">here</a>.
+Be sure to read the <a href="goPluginCaveats.md">Go plugin caveats</a>.</p>
+<p>This demo uses a Go plugin, <code>SopsEncodedSecrets</code>,
+that lives in the <a href="https://github.com/monopole/sopsencodedsecrets">sopsencodedsecrets repository</a>.
+This is an inprocess <a href="https://golang.org/pkg/plugin">Go plugin</a>, not an
+sub-process exec plugin that happens to be written
+in Go (which is another option for Go authors).</p>
+<p>This is a guide to try it without damaging your
+current setup.</p>
+<h4 id="requirements">requirements</h4>
+<ul>
+<li>linux, git, curl, Go 1.13</li>
+</ul>
+<p>For encryption</p>
+<ul>
+<li>gpg</li>
+</ul>
+<p>Or</p>
+<ul>
+<li>Google cloud (gcloud) install</li>
+<li>a Google account with KMS permission</li>
+</ul>
+<h2 id="make-a-place-to-work">Make a place to work</h2>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#8f5902;font-style:italic"># Keeping these separate to avoid cluttering the DEMO dir.</span>
+<span style="color:#000">DEMO</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#204a87;font-weight:bold">$(</span>mktemp -d<span style="color:#204a87;font-weight:bold">)</span>
+<span style="color:#000">tmpGoPath</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#204a87;font-weight:bold">$(</span>mktemp -d<span style="color:#204a87;font-weight:bold">)</span>
+</code></pre></div><h2 id="install-kustomize">Install kustomize</h2>
+<p>Need v3.0.0 for what follows, and you must <em>compile</em>
+it (not download the binary from the release page):</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">GOPATH</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$tmpGoPath</span> go install sigs.k8s.io/kustomize/kustomize
+</code></pre></div><h2 id="make-a-home-for-plugins">Make a home for plugins</h2>
+<p>A kustomize plugin is fully determined by
+its configuration file and source code.</p>
+<p>Kustomize plugin configuration files are formatted
+as kubernetes resource objects, meaning
+<code>apiVersion</code>, <code>kind</code> and <code>metadata</code> are <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/#required-fields">required
+fields</a> in these config files.</p>
+<p>The kustomize program reads the config file
+(because the config file name appears in the
+<code>generators</code> or <code>transformers</code> field in the
+kustomization file), then locates the Go plugin&rsquo;s
+object code at the following location:</p>
+<blockquote>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">$XDG_CONFIG_HOME</span>/kustomize/plugin/<span style="color:#000">$apiVersion</span>/<span style="color:#000">$lKind</span>/<span style="color:#000">$kind</span>.so
+</code></pre></div></blockquote>
+<p>where <code>lKind</code> holds the lowercased kind.  The
+plugin is then loaded and fed its config, and the
+plugin&rsquo;s output becomes part of the overall
+<code>kustomize build</code> process.</p>
+<p>The same plugin might be used multiple times in
+one kustomize build, but with different config
+files.  Also, kustomize might customize config
+data before sending it to the plugin, for whatever
+reason.  For these reasons, kustomize owns the
+mapping between plugins and config data; it&rsquo;s not
+left to plugins to find their own config.</p>
+<p>This demo will house the plugin it uses at the
+ephemeral directory</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">PLUGIN_ROOT</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$DEMO</span>/kustomize/plugin
+</code></pre></div><p>and ephemerally set <code>XDG_CONFIG_HOME</code> on a command
+line below.</p>
+<h3 id="what-apiversion-and-kind">What apiVersion and kind?</h3>
+<p>At this stage in the development of kustomize
+plugins, plugin code doesn&rsquo;t know or care what
+<code>apiVersion</code> or <code>kind</code> appears in the config file
+sent to it.</p>
+<p>The plugin could check these fields, but it&rsquo;s the
+remaining fields that provide actual configuration
+data, and at this point the successful parsing of
+these other fields are the only thing that matters
+to a plugin.</p>
+<p>This demo uses a plugin called <em>SopsEncodedSecrets</em>,
+and it lives in the <a href="https://github.com/monopole/sopsencodedsecrets">SopsEncodedSecrets repository</a>.</p>
+<p>Somewhat arbitrarily, we&rsquo;ll chose to install
+this plugin with</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">apiVersion</span><span style="color:#ce5c00;font-weight:bold">=</span>mygenerators
+<span style="color:#000">kind</span><span style="color:#ce5c00;font-weight:bold">=</span>SopsEncodedSecrets
+</code></pre></div><h3 id="define-the-plugins-home-dir">Define the plugin&rsquo;s home dir</h3>
+<p>By convention, the ultimate home of the plugin
+code and supplemental data, tests, documentation,
+etc. is the lowercase form of its kind.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">lKind</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#204a87;font-weight:bold">$(</span><span style="color:#204a87">echo</span> <span style="color:#000">$kind</span> <span style="color:#000;font-weight:bold">|</span> awk <span style="color:#4e9a06">&#39;{print tolower($0)}&#39;</span><span style="color:#204a87;font-weight:bold">)</span>
+</code></pre></div><h3 id="download-the-sopsencodedsecrets-plugin">Download the SopsEncodedSecrets plugin</h3>
+<p>In this case, the repo name matches the lowercase
+kind already, so we just clone the repo and get
+the proper directory name automatically:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">mkdir -p <span style="color:#000">$PLUGIN_ROOT</span>/<span style="color:#4e9a06">${</span><span style="color:#000">apiVersion</span><span style="color:#4e9a06">}</span>
+<span style="color:#204a87">cd</span> <span style="color:#000">$PLUGIN_ROOT</span>/<span style="color:#4e9a06">${</span><span style="color:#000">apiVersion</span><span style="color:#4e9a06">}</span>
+git clone git@github.com:monopole/sopsencodedsecrets.git
+</code></pre></div><p>Remember this directory:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">MY_PLUGIN_DIR</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$PLUGIN_ROOT</span>/<span style="color:#4e9a06">${</span><span style="color:#000">apiVersion</span><span style="color:#4e9a06">}</span>/<span style="color:#4e9a06">${</span><span style="color:#000">lKind</span><span style="color:#4e9a06">}</span>
+</code></pre></div><h3 id="try-the-plugins-own-test">Try the plugin&rsquo;s own test</h3>
+<p>Plugins may come with their own tests.
+This one does, and it hopefully passes:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#204a87">cd</span> <span style="color:#000">$MY_PLUGIN_DIR</span>
+go <span style="color:#204a87">test</span> SopsEncodedSecrets_test.go
+</code></pre></div><p>Build the object code for use by kustomize:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#204a87">cd</span> <span style="color:#000">$MY_PLUGIN_DIR</span>
+<span style="color:#000">GOPATH</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$tmpGoPath</span> go build -buildmode plugin -o <span style="color:#4e9a06">${</span><span style="color:#000">kind</span><span style="color:#4e9a06">}</span>.so <span style="color:#4e9a06">${</span><span style="color:#000">kind</span><span style="color:#4e9a06">}</span>.go
+</code></pre></div><p>This step may succeed, but kustomize might
+ultimately fail to load the plugin because of
+dependency <a href="/docs/plugins/README.md#caveats">skew</a>.</p>
+<p>On load failure</p>
+<ul>
+<li>
+<p>be sure to build the plugin with the same
+version of Go (<em>go1.13</em>) on the same <code>$GOOS</code>
+(<em>linux</em>) and <code>$GOARCH</code> (<em>amd64</em>) used to build
+the kustomize being <a href="#install-kustomize">used in this demo</a>.</p>
+</li>
+<li>
+<p>change the plugin&rsquo;s dependencies in its <code>go.mod</code>
+to match the versions used by kustomize (check
+kustomize&rsquo;s <code>go.mod</code> used in its tagged commit).</p>
+</li>
+</ul>
+<p>Lacking tools and metadata to allow this to be
+automated, there won&rsquo;t be a Go plugin ecosystem.</p>
+<p>Kustomize has adopted a Go plugin architecture as
+to ease accept new generators and transformers
+(just write a plugin), and to be sure that native
+operations (also constructed and tested as
+plugins) are compartmentalized, orderable and
+reusable instead of bizarrely woven throughout the
+code as a individual special cases.</p>
+<h2 id="create-a-kustomization">Create a kustomization</h2>
+<p>Make a kustomization directory to
+hold all your config:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">MYAPP</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$DEMO</span>/myapp
+mkdir -p <span style="color:#000">$MYAPP</span>
+</code></pre></div><p>Make a config file for the SopsEncodedSecrets plugin.</p>
+<p>Its <code>apiVersion</code> and <code>kind</code> allow the plugin to be
+found:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">cat <span style="color:#4e9a06">&lt;&lt;EOF &gt;$MYAPP/secGenerator.yaml
+</span><span style="color:#4e9a06">apiVersion: ${apiVersion}
+</span><span style="color:#4e9a06">kind: ${kind}
+</span><span style="color:#4e9a06">metadata:
+</span><span style="color:#4e9a06">  name: mySecretGenerator
+</span><span style="color:#4e9a06">name: forbiddenValues
+</span><span style="color:#4e9a06">namespace: production
+</span><span style="color:#4e9a06">file: myEncryptedData.yaml
+</span><span style="color:#4e9a06">keys:
+</span><span style="color:#4e9a06">- ROCKET
+</span><span style="color:#4e9a06">- CAR
+</span><span style="color:#4e9a06">EOF</span>
+</code></pre></div><p>This plugin expects to find more data in
+<code>myEncryptedData.yaml</code>; we&rsquo;ll get to that shortly.</p>
+<p>Make a kustomization file referencing the plugin
+config:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">cat <span style="color:#4e9a06">&lt;&lt;EOF &gt;$MYAPP/kustomization.yaml
+</span><span style="color:#4e9a06">commonLabels:
+</span><span style="color:#4e9a06">  app: hello
+</span><span style="color:#4e9a06">generators:
+</span><span style="color:#4e9a06">- secGenerator.yaml
+</span><span style="color:#4e9a06">EOF</span>
+</code></pre></div><p>Now generate the real encrypted data.</p>
+<h3 id="assure-you-have-an-encryption-tool-installed">Assure you have an encryption tool installed</h3>
+<p>We&rsquo;re going to use <a href="https://github.com/mozilla/sops">sops</a> to encode a file. Choose either GPG or Google Cloud KMS as the secret provider to continue.</p>
+<h4 id="gpg">GPG</h4>
+<p>Try this:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">gpg --list-keys
+</code></pre></div><p>If it returns a list, presumably you&rsquo;ve already created keys. If not, try import test keys from sops for dev.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">curl https://raw.githubusercontent.com/mozilla/sops/master/pgp/sops_functional_tests_key.asc <span style="color:#000;font-weight:bold">|</span> gpg --import
+<span style="color:#000">SOPS_PGP_FP</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#34;1022470DE3F0BC54BC6AB62DE05550BC07FB1A0A&#34;</span>
+</code></pre></div><h4 id="google-cloude-kms">Google Cloude KMS</h4>
+<p>Try this:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">gcloud kms keys list --location global --keyring sops
+</code></pre></div><p>If it succeeds, presumably you&rsquo;ve already created keys and placed them in a keyring called sops. If not, do this:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">gcloud kms keyrings create sops --location global
+gcloud kms keys create sops-key --location global <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>    --keyring sops --purpose encryption
+</code></pre></div><p>Extract your keyLocation for use below:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">keyLocation</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#204a87;font-weight:bold">$(</span><span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>    gcloud kms keys list --location global --keyring sops <span style="color:#000;font-weight:bold">|</span><span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>    grep GOOGLE <span style="color:#000;font-weight:bold">|</span> cut -d <span style="color:#4e9a06">&#34; &#34;</span> -f1<span style="color:#204a87;font-weight:bold">)</span>
+<span style="color:#204a87">echo</span> <span style="color:#000">$keyLocation</span>
+</code></pre></div><h3 id="install-sops">Install <code>sops</code></h3>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">GOPATH</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$tmpGoPath</span> go install go.mozilla.org/sops/cmd/sops
+</code></pre></div><h3 id="create-data-encrypted-with-your-private-key">Create data encrypted with your private key</h3>
+<p>Create raw data to encrypt:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">cat <span style="color:#4e9a06">&lt;&lt;EOF &gt;$MYAPP/myClearData.yaml
+</span><span style="color:#4e9a06">VEGETABLE: carrot
+</span><span style="color:#4e9a06">ROCKET: saturn-v
+</span><span style="color:#4e9a06">FRUIT: apple
+</span><span style="color:#4e9a06">CAR: dymaxion
+</span><span style="color:#4e9a06">EOF</span>
+</code></pre></div><p>Encrypt the data into file the plugin wants to read:</p>
+<p>With PGP</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">$tmpGoPath</span>/bin/sops --encrypt <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>  --pgp <span style="color:#000">$SOPS_PGP_FP</span> <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>  <span style="color:#000">$MYAPP</span>/myClearData.yaml &gt;<span style="color:#000">$MYAPP</span>/myEncryptedData.yaml
+</code></pre></div><p>Or GCP KMS</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">$tmpGoPath</span>/bin/sops --encrypt <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>  --gcp-kms <span style="color:#000">$keyLocation</span> <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>  <span style="color:#000">$MYAPP</span>/myClearData.yaml &gt;<span style="color:#000">$MYAPP</span>/myEncryptedData.yaml
+</code></pre></div><p>Review the files</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">tree <span style="color:#000">$DEMO</span>
+</code></pre></div><p>This should look something like:</p>
+<blockquote>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">/tmp/tmp.0kIE9VclPt
+├── kustomize
+│   └── plugin
+│       └── mygenerators
+│           └── sopsencodedsecrets
+│               ├── go.mod
+│               ├── go.sum
+│               ├── LICENSE
+│               ├── README.md
+│               ├── SopsEncodedSecrets.go
+│               ├── SopsEncodedSecrets.so
+│               └── SopsEncodedSecrets_test.go
+└── myapp
+    ├── kustomization.yaml
+    ├── myClearData.yaml
+    ├── myEncryptedData.yaml
+    └── secGenerator.yaml
+</code></pre></div></blockquote>
+<h2 id="build-your-app-using-the-plugin">Build your app, using the plugin:</h2>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">XDG_CONFIG_HOME</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$DEMO</span> <span style="color:#000">$tmpGoPath</span>/bin/kustomize build --enable_alpha_plugins <span style="color:#000">$MYAPP</span>
+</code></pre></div><p>This should emit a kubernetes secret, with
+encrypted data for the names <code>ROCKET</code> and <code>CAR</code>.</p>
+<p>Above, if you had set</p>
+<blockquote>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">PLUGIN_ROOT</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$HOME</span>/.config/kustomize/plugin
+</code></pre></div></blockquote>
+<p>there would be no need to use <code>XDG_CONFIG_HOME</code> in the
+<em>kustomize</em> command above.</p>
+
+	
+	
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 7, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/a2ea87d167bfd7a9dce16ff47d93b379f2a2d80d">Convert docs to docsy (a2ea87d1)</a>
+</div>
+</div>
+
+
+          </main>
+        </div>
+      </div>
+      
+<footer class="bg-dark py-5 row d-print-none">
+  <div class="container-fluid mx-sm-5">
+    <div class="row">
+      <div class="col-6 col-sm-4 text-xs-center order-sm-2">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kubernetes-sig-cli">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-6 col-sm-4 text-right text-xs-center order-sm-3">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
+    <a class="text-white" target="_blank" href="https://github.com/kubernetes-sigs/kustomize">
+      <i class="fab fa-github"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-12 col-sm-4 text-center py-2 order-sm-2">
+        <small class="text-white">&copy; 2020 Kubernetes Authors All Rights Reserved</small>
+        
+	
+		
+	
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    </div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+
+
+
+
+
+
+<script src="/kustomize/js/main.min.35b203b3c2114e187f6e4bbf0903c511aaaac5535186321e3b5e364656b6de0c.js" integrity="sha256-NbIDs8IRThh/bku/CQPFEaqqxVNRhjIeO142Rla23gw=" crossorigin="anonymous"></script>
+
+
+
+<script src="https://kubernetes-sigs.github.io/kustomize//js/asciinema-player.js"></script>
+
+
+  </body>
+</html>
