@@ -141,6 +141,56 @@ metadata:
 	}
 }
 
+func TestLocalPackageReader_Read_JSON(t *testing.T) {
+	s := setupDirectories(t, filepath.Join("a", "b"), filepath.Join("a", "c"))
+	defer s.clean()
+
+	s.writeFile(t, filepath.Join("a_test.json"), []byte(`{
+  "a": "b"
+}`))
+	s.writeFile(t, filepath.Join("b_test.json"), []byte(`{
+  "e": "f",
+  "g": {
+    "h": ["i", "j"]
+  }
+}`))
+
+	paths := []struct {
+		path string
+	}{
+		{path: "./"},
+		{path: s.root},
+	}
+	for _, p := range paths {
+		rfr := LocalPackageReader{PackagePath: p.path, MatchFilesGlob: []string{"*.json"}}
+		nodes, err := rfr.Read()
+		if !assert.NoError(t, err) {
+			return
+		}
+
+		if !assert.Len(t, nodes, 2) {
+			t.FailNow()
+		}
+		// TODO: Fix https://github.com/go-yaml/yaml/issues/44 so these are printed correctly
+		expected := []string{
+			`{"a": "b", metadata: {annotations: {config.kubernetes.io/index: '0', config.kubernetes.io/path: 'a_test.json'}}}
+`,
+			`{"e": "f", "g": {"h": ["i", "j"]}, metadata: {annotations: {config.kubernetes.io/index: '0',
+      config.kubernetes.io/path: 'b_test.json'}}}
+`,
+		}
+		for i := range nodes {
+			val, err := nodes[i].String()
+			if !assert.NoError(t, err) {
+				return
+			}
+			if !assert.Equal(t, expected[i], val) {
+				return
+			}
+		}
+	}
+}
+
 func TestLocalPackageReader_Read_file(t *testing.T) {
 	s := setupDirectories(t, filepath.Join("a", "b"), filepath.Join("a", "c"))
 	defer s.clean()
