@@ -1,0 +1,16 @@
+<!-- Check the variable that indicates whether this is an archived doc set.
+  If yes, display a banner. -->
+  {{ if .Site.Params.archived_version }}
+  {{ $color := "primary" }}
+  {{ $latest_version := .Site.Params.url_latest_version }}
+  {{ $current_version := .Site.Params.version }}
+  <div class="pageinfo pageinfo-{{ $color }}">
+    {{ with $current_version }}<p>Version {{ . | markdownify }} of the
+      documentation is no longer actively maintained. The site that you are
+      currently viewing is an archived snapshot. 
+      {{ with $latest_version }}For up-to-date documentation, see the 
+        <a href="{{ $latest_version | safeURL }}" target="_blank">latest version</a>.</p>
+      {{ end }}
+    {{ end }}
+  </div>
+{{ end }}

@@ -19,3 +19,5 @@
 
 # macOS
 *.DS_store
+
+.bin
