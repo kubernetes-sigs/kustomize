@@ -13,15 +13,12 @@ import (
 	"sigs.k8s.io/kustomize/api/internal/target"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/k8sdeps/validator"
+	"sigs.k8s.io/kustomize/api/konfig"
 	fLdr "sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/provenance"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
-)
-
-const (
-	managedbyLabelKey = "app.kubernetes.io/managed-by"
 )
 
 // Kustomizer performs kustomizations.  It's meant to behave
@@ -87,7 +84,7 @@ func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
 	}
 	if b.options.AddManagedbyLabel {
 		t := builtins.LabelTransformerPlugin{
-			Labels: map[string]string{managedbyLabelKey: fmt.Sprintf("kustomize-%s", provenance.GetProvenance().Version)},
+			Labels: map[string]string{konfig.ManagedbyLabelKey: fmt.Sprintf("kustomize-%s", provenance.GetProvenance().Version)},
 			FieldSpecs: []types.FieldSpec{{
 				Path:               "metadata/labels",
 				CreateIfNotPresent: true,
