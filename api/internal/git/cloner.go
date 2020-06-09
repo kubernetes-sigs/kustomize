@@ -36,7 +36,7 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 		"--depth=1",
 		repoSpec.CloneSpec(),
 		repoSpec.Dir.String())
-	out, err = cmd.CombinedOutput()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Printf("Error cloning git repo: %s", out)
 		return errors.Wrapf(
