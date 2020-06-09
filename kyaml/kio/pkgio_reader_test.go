@@ -173,10 +173,11 @@ func TestLocalPackageReader_Read_JSON(t *testing.T) {
 		}
 		// TODO: Fix https://github.com/go-yaml/yaml/issues/44 so these are printed correctly
 		expected := []string{
-			`{"a": "b", metadata: {annotations: {config.kubernetes.io/index: '0', config.kubernetes.io/path: 'a_test.json'}}}
+			`{"a": "b", metadata: {annotations: {config.kubernetes.io/format: 'json', config.kubernetes.io/index: '0',
+      config.kubernetes.io/path: 'a_test.json'}}}
 `,
-			`{"e": "f", "g": {"h": ["i", "j"]}, metadata: {annotations: {config.kubernetes.io/index: '0',
-      config.kubernetes.io/path: 'b_test.json'}}}
+			`{"e": "f", "g": {"h": ["i", "j"]}, metadata: {annotations: {config.kubernetes.io/format: 'json',
+      config.kubernetes.io/index: '0', config.kubernetes.io/path: 'b_test.json'}}}
 `,
 		}
 		for i := range nodes {

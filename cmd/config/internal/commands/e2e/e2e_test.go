@@ -30,6 +30,7 @@ func TestRunE2e(t *testing.T) {
 		expectedErr    string
 		skipIfFalseEnv string
 	}{
+
 		{
 			name: "exec_function_no_args",
 			args: func(d string) []string {
@@ -58,6 +59,46 @@ metadata:
     a-string-value: ''
     a-int-value: '0'
     a-bool-value: 'false'
+`,
+				}
+			},
+		},
+
+		{
+			name: "exec_function_no_args_json",
+			args: func(d string) []string {
+				return []string{
+					"--enable-exec", "--exec-path", filepath.Join(d, "e2econtainerconfig"),
+				}
+			},
+			files: func(d string) map[string]string {
+				return map[string]string{
+					"deployment.json": `
+{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "foo"
+  }
+}
+`,
+				}
+			},
+			expectedFiles: func(d string) map[string]string {
+				return map[string]string{
+					"deployment.json": `
+{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "annotations": {
+      "a-bool-value": "false",
+      "a-int-value": "0",
+      "a-string-value": ""
+    },
+    "name": "foo"
+  }
+}
 `,
 				}
 			},
@@ -468,7 +509,6 @@ def run(r, fc):
     resource["metadata"]["annotations"]["a-string-value"] = fc["data"]["stringValue"]
     resource["metadata"]["annotations"]["a-int-value"] = fc["data"]["intValue"]
     resource["metadata"]["annotations"]["a-bool-value"] = fc["data"]["boolValue"]
-
 run(ctx.resource_list["items"], ctx.resource_list["functionConfig"])
 `,
 					"config.yaml": `
@@ -545,7 +585,6 @@ def run(r, fc):
     resource["metadata"]["annotations"]["a-string-value"] = fc["data"]["stringValue"]
     resource["metadata"]["annotations"]["a-int-value"] = fc["data"]["intValue"]
     resource["metadata"]["annotations"]["a-bool-value"] = fc["data"]["boolValue"]
-
 run(ctx.resource_list["items"], ctx.resource_list["functionConfig"])
 `,
 					"deployment.yaml": `

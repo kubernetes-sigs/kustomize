@@ -722,31 +722,22 @@ func (rn *RNode) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// ConvertJSONToYAMLNode parses input json string and returns equivalent yaml node
-func ConvertJSONToYAMLNode(jsonStr string) (*RNode, error) {
-	yml, err := ConvertJSONToYAMLString(jsonStr)
+// ConvertJSONToYamlNode parses input json string and returns equivalent yaml node
+func ConvertJSONToYamlNode(jsonStr string) (*RNode, error) {
+	var body map[string]interface{}
+	err := json.Unmarshal([]byte(jsonStr), &body)
 	if err != nil {
 		return nil, err
 	}
-	node, err := Parse(yml)
+	yml, err := yaml.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	node, err := Parse(string(yml))
 	if err != nil {
 		return nil, err
 	}
 	return node, nil
-}
-
-// ConvertJSONToYAMLString parses input json string and returns equivalent yaml string
-func ConvertJSONToYAMLString(jsonStr string) (string, error) {
-	var body map[string]interface{}
-	err := json.Unmarshal([]byte(jsonStr), &body)
-	if err != nil {
-		return "", err
-	}
-	yml, err := yaml.Marshal(body)
-	if err != nil {
-		return "", err
-	}
-	return string(yml), nil
 }
 
 // checkKey returns true if all elems have the key
