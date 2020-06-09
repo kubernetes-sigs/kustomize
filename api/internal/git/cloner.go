@@ -4,7 +4,6 @@
 package git
 
 import (
-	"log"
 	"os/exec"
 
 	"github.com/pkg/errors"
@@ -33,11 +32,11 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 	cmd := exec.Command(
 		gitProgram,
 		"clone",
+		"--depth=1",
 		repoSpec.CloneSpec(),
 		repoSpec.Dir.String())
-	out, err := cmd.CombinedOutput()
+	_, err = cmd.CombinedOutput()
 	if err != nil {
-		log.Printf("Error cloning git repo: %s", out)
 		return errors.Wrapf(
 			err,
 			"trouble cloning git repo %v in %s",
@@ -46,12 +45,23 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 
 	cmd = exec.Command(
 		gitProgram,
+		"fetch",
+		"--depth=1",
+		"origin",
+		repoSpec.Ref)
+	cmd.Dir = repoSpec.Dir.String()
+	_, err = cmd.CombinedOutput()
+	if err != nil {
+		return errors.Wrapf(err, "trouble fetching %s", repoSpec.Ref)
+	}
+
+	cmd = exec.Command(
+		gitProgram,
 		"checkout",
 		repoSpec.Ref)
 	cmd.Dir = repoSpec.Dir.String()
-	out, err = cmd.CombinedOutput()
+	_, err = cmd.CombinedOutput()
 	if err != nil {
-		log.Printf("Error checking out ref: %s", out)
 		return errors.Wrapf(err, "trouble checking out %s", repoSpec.Ref)
 	}
 
@@ -62,9 +72,8 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 		"--init",
 		"--recursive")
 	cmd.Dir = repoSpec.Dir.String()
-	out, err = cmd.CombinedOutput()
+	_, err = cmd.CombinedOutput()
 	if err != nil {
-		log.Printf("Error fetching submodules: %s", out)
 		return errors.Wrapf(err, "trouble fetching submodules for %s", repoSpec.CloneSpec())
 	}
 
