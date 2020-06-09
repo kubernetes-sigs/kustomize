@@ -77,6 +77,7 @@ func NewCmdBuild(out io.Writer) *cobra.Command {
 	addFlagLoadRestrictor(cmd.Flags())
 	addFlagEnablePlugins(cmd.Flags())
 	addFlagReorderOutput(cmd.Flags())
+	addFlagEnableManagedbyLabel(cmd.Flags())
 	return cmd
 }
 
@@ -113,6 +114,9 @@ func (o *Options) makeOptions() *krusty.Options {
 		opts.PluginConfig = c
 	} else {
 		opts.PluginConfig = konfig.DisabledPluginConfig()
+	}
+	if isManagedbyLabelEnabled() {
+		opts.AddManagedbyLabel = true
 	}
 	return opts
 }
