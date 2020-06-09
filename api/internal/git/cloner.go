@@ -50,7 +50,7 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 		"fetch",
 		"--depth=1",
 		"origin",
-		repoSpec.Ref)
+		"FETCH_HEAD")
 	cmd.Dir = repoSpec.Dir.String()
 	out, err = cmd.CombinedOutput()
 	if err != nil {
