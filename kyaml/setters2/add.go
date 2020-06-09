@@ -183,7 +183,7 @@ func (sd SetterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	}
 
 	if sd.Schema != "" {
-		schNode, err := yaml.ConvertJSONToYAMLNode(sd.Schema)
+		schNode, err := yaml.ConvertJSONToYamlNode(sd.Schema)
 		if err != nil {
 			return nil, err
 		}

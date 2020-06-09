@@ -147,18 +147,9 @@ func TestSinkCommandJSON(t *testing.T) {
 	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- kind: Deployment
-  metadata:
-    labels:
-      app: nginx2
-    name: foo
-    annotations:
-      app: nginx2
-      config.kubernetes.io/index: '0'
-      config.kubernetes.io/path: 'f1.json'
-      config.kubernetes.io/format: 'json'
-  spec:
-    replicas: 1
+- {"kind": "Deployment", "metadata": {"labels": {"app": "nginx2"}, "name": "foo",
+    "annotations": {"app": "nginx2", config.kubernetes.io/format: 'json', config.kubernetes.io/index: '0',
+      config.kubernetes.io/path: 'f1.json'}}, "spec": {"replicas": 1}}
 `))
 	r.Command.SetArgs([]string{d})
 	if !assert.NoError(t, r.Command.Execute()) {
@@ -317,17 +308,9 @@ func TestSinkCommandJSON_Stdout(t *testing.T) {
 	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- kind: Deployment
-  metadata:
-    labels:
-      app: nginx2
-    name: foo
-    annotations:
-      app: nginx2
-      config.kubernetes.io/index: '0'
-      config.kubernetes.io/format: 'json'
-  spec:
-    replicas: 1
+- {"kind": "Deployment", "metadata": {"labels": {"app": "nginx2"}, "name": "foo",
+    "annotations": {"app": "nginx2", config.kubernetes.io/format: 'json', config.kubernetes.io/index: '0',
+      config.kubernetes.io/path: 'f1.json'}}, "spec": {"replicas": 1}}
 `))
 
 	r.Command.SetOut(out)

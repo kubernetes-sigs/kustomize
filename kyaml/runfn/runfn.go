@@ -110,13 +110,13 @@ func (r RunFns) getNodesAndFilters() (
 	// the same one for reading must be used for writing if deleting Resources
 	var outputPkg *kio.LocalPackageReadWriter
 	if r.Path != "" {
-		outputPkg = &kio.LocalPackageReadWriter{PackagePath: r.Path}
+		outputPkg = &kio.LocalPackageReadWriter{PackagePath: r.Path, MatchFilesGlob: kio.MatchAll}
 	}
 
 	if r.Input == nil {
 		p.Inputs = []kio.Reader{outputPkg}
 	} else {
-		p.Inputs = []kio.Reader{&kio.ByteReader{Reader: r.Input}}
+		p.Inputs = []kio.Reader{&kio.ByteReader{Reader: r.Input, AcceptJSON: true}}
 	}
 	if err := p.Execute(); err != nil {
 		return nil, nil, outputPkg, err

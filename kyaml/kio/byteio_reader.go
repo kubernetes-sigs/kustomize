@@ -130,17 +130,12 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 	if r.AcceptJSON && json.Valid([]byte(inputStr)) {
 		// convert json to yaml string to generate resource list object
 		// with appropriate format annotation
-		yamlValue, err := yaml.ConvertJSONToYAMLString(input.String())
-		if err != nil {
-			return nil, err
-		}
 		if r.SetAnnotations == nil {
 			r.SetAnnotations = map[string]string{}
 		}
 		if !r.OmitReaderAnnotations {
 			r.SetAnnotations[kioutil.FormatAnnotation] = JSON
 		}
-		inputStr = yamlValue
 	}
 
 	values := strings.Split(inputStr, "\n---\n")
