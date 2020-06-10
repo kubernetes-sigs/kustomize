@@ -26,6 +26,8 @@ import (
 // RunFns runs the set of configuration functions in a local directory against
 // the Resources in that directory
 type RunFns struct {
+	MatchFilesGlob []string
+
 	StorageMounts []runtimeutil.StorageMount
 
 	// Path is the path to the directory containing functions
@@ -110,7 +112,10 @@ func (r RunFns) getNodesAndFilters() (
 	// the same one for reading must be used for writing if deleting Resources
 	var outputPkg *kio.LocalPackageReadWriter
 	if r.Path != "" {
-		outputPkg = &kio.LocalPackageReadWriter{PackagePath: r.Path}
+		outputPkg = &kio.LocalPackageReadWriter{
+			PackagePath:    r.Path,
+			MatchFilesGlob: r.MatchFilesGlob,
+		}
 	}
 
 	if r.Input == nil {
@@ -218,7 +223,10 @@ func (r RunFns) getFunctionsFromFunctionPaths() ([]kio.Filter, error) {
 	for i := range r.FunctionPaths {
 		err := kio.Pipeline{
 			Inputs: []kio.Reader{
-				kio.LocalPackageReader{PackagePath: r.FunctionPaths[i]},
+				kio.LocalPackageReader{
+					PackagePath:    r.FunctionPaths[i],
+					MatchFilesGlob: r.MatchFilesGlob,
+				},
 			},
 			Outputs: []kio.Writer{buff},
 		}.Execute()

@@ -11,6 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/runfn"
 )
 
@@ -378,6 +379,9 @@ apiVersion: v1
 			if tt.expectedStruct != nil {
 				r.RunFns.Functions = nil
 				tt.expectedStruct.FunctionPaths = tt.functionPaths
+				if tt.expectedStruct.MatchFilesGlob == nil {
+					tt.expectedStruct.MatchFilesGlob = kio.DefaultMatch
+				}
 				if !assert.Equal(t, *tt.expectedStruct, r.RunFns) {
 					t.FailNow()
 				}

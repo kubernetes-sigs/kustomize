@@ -12,6 +12,7 @@ import (
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/runfn"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -65,6 +66,8 @@ func GetRunFnRunner(name string) *RunFnRunner {
 	r.Command.Flags().StringArrayVar(
 		&r.Mounts, "mount", []string{},
 		"a list of storage options read from the filesystem")
+	c.Flags().StringSliceVar(&r.InputPattern, "input-pattern", kio.DefaultMatch,
+		"match files for input.")
 	return r
 }
 
@@ -91,6 +94,7 @@ type RunFnRunner struct {
 	Network            bool
 	NetworkName        string
 	Mounts             []string
+	InputPattern       []string
 }
 
 func (r *RunFnRunner) runE(c *cobra.Command, args []string) error {
@@ -293,6 +297,7 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 	storageMounts := toStorageMounts(r.Mounts)
 
 	r.RunFns = runfn.RunFns{
+		MatchFilesGlob: r.InputPattern,
 		FunctionPaths:  r.FnPaths,
 		GlobalScope:    r.GlobalScope,
 		Functions:      fns,

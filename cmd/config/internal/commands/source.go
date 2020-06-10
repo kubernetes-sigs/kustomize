@@ -29,6 +29,8 @@ func GetSourceRunner(name string) *SourceRunner {
 		"output using this format.")
 	c.Flags().StringVar(&r.FunctionConfig, "function-config", "",
 		"path to function config.")
+	c.Flags().StringSliceVar(&r.InputPattern, "input-pattern", kio.DefaultMatch,
+		"match files for input.")
 	r.Command = c
 	_ = c.MarkFlagFilename("function-config", "yaml", "json", "yml")
 	return r
@@ -40,6 +42,7 @@ func SourceCommand(name string) *cobra.Command {
 
 // SourceRunner contains the run function
 type SourceRunner struct {
+	InputPattern   []string
 	WrapKind       string
 	WrapApiVersion string
 	FunctionConfig string
@@ -50,7 +53,10 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 	// if there is a function-config specified, emit it
 	var functionConfig *yaml.RNode
 	if r.FunctionConfig != "" {
-		configs, err := kio.LocalPackageReader{PackagePath: r.FunctionConfig}.Read()
+		configs, err := kio.LocalPackageReader{
+			PackagePath:    r.FunctionConfig,
+			MatchFilesGlob: r.InputPattern,
+		}.Read()
 		if err != nil {
 			return err
 		}

@@ -655,6 +655,34 @@ metadata:
 				}
 			},
 		},
+
+		{
+			name: "exec_function_no_args",
+			args: func(d string) []string {
+				return []string{
+					"--enable-exec", "--exec-path", filepath.Join(d, "e2econtainerconfig"), "--input-pattern", "*.json",
+				}
+			},
+			files: func(d string) map[string]string {
+				return map[string]string{
+					"deployment.json": `{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "foo"
+  }
+}
+`,
+				}
+			},
+			expectedFiles: func(d string) map[string]string {
+				return map[string]string{
+					"deployment.json": `{"apiVersion": "apps/v1", "kind": "Deployment", "metadata": {"name": "foo", annotations: {
+      a-string-value: '', a-int-value: '0', a-bool-value: 'false'}}}
+`,
+				}
+			},
+		},
 	}
 
 	// TODO: dedup this with the shared version
