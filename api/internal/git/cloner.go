@@ -33,6 +33,7 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 	cmd := exec.Command(
 		gitProgram,
 		"clone",
+		"--depth=1",
 		repoSpec.CloneSpec(),
 		repoSpec.Dir.String())
 	out, err := cmd.CombinedOutput()
@@ -46,8 +47,21 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 
 	cmd = exec.Command(
 		gitProgram,
-		"checkout",
+		"fetch",
+		"--depth=1",
+		"origin",
 		repoSpec.Ref)
+	cmd.Dir = repoSpec.Dir.String()
+	out, err = cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error fetching ref: %s", out)
+		return errors.Wrapf(err, "trouble fetching %s", repoSpec.Ref)
+	}
+
+	cmd = exec.Command(
+		gitProgram,
+		"checkout",
+		"FETCH_HEAD")
 	cmd.Dir = repoSpec.Dir.String()
 	out, err = cmd.CombinedOutput()
 	if err != nil {
