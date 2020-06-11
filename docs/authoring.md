@@ -17,9 +17,10 @@ kustomize create --namespace=myapp --resources=deployment.yaml,service.yaml --la
 > NOTE: Resource detection will not follow symlinks.
 
 Flags:
+
       --annotation string   Add one or more common annotations.
       --autodetect          Search for kubernetes resources in the current directory to be added to the kustomization file.
-  -h, --help                help for create
+      --help, -h            help for create
       --label string        Add one or more common labels.
       --nameprefix string   Sets the value of the namePrefix field in the kustomization file.
       --namespace string    Set the value of the namespace field in the customization file.
