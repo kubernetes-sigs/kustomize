@@ -16,6 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinhelpers"
 	"sigs.k8s.io/kustomize/api/internal/plugins/execplugin"
+        "sigs.k8s.io/kustomize/api/internal/plugins/fnplugin"
 	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resid"
@@ -116,7 +117,7 @@ func (l *Loader) loadAndConfigurePlugin(
 	if isBuiltinPlugin(res) {
 		switch l.pc.BpLoadingOptions {
 		case types.BploLoadFromFileSys:
-			c, err = l.loadPlugin(res.OrgId())
+			c, err = l.loadPlugin(res)
 		case types.BploUseStaticallyLinked:
 			// Instead of looking for and loading a .so file,
 			// instantiate the plugin from a generated factory
@@ -131,7 +132,7 @@ func (l *Loader) loadAndConfigurePlugin(
 	} else {
 		switch l.pc.PluginRestrictions {
 		case types.PluginRestrictionsNone:
-			c, err = l.loadPlugin(res.OrgId())
+			c, err = l.loadPlugin(res)
 		case types.PluginRestrictionsBuiltinsOnly:
 			err = types.NewErrOnlyBuiltinPluginsAllowed(res.OrgId().Kind)
 		default:
@@ -166,7 +167,15 @@ func (l *Loader) makeBuiltinPlugin(r resid.Gvk) (resmap.Configurable, error) {
 	return nil, errors.Errorf("unable to load builtin %s", r)
 }
 
-func (l *Loader) loadPlugin(resId resid.ResId) (resmap.Configurable, error) {
+func (l *Loader) loadPlugin(res *resource.Resource) (resmap.Configurable, error) {
+	_, err := fnplugin.GetFunctionSpec(res)
+	if err == nil {
+		return fnplugin.NewFnPlugin(&l.pc.FnpLoadingOptions), nil
+	}
+	return l.loadExecOrGoPlugin(res.OrgId())
+}
+
+func (l *Loader) loadExecOrGoPlugin(resId resid.ResId) (resmap.Configurable, error) {
 	// First try to load the plugin as an executable.
 	p := execplugin.NewExecPlugin(l.absolutePluginPath(resId))
 	err := p.ErrIfNotExecutable()
