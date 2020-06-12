@@ -71,6 +71,17 @@ g:
   - j
 `)
 
+var readFileC = []byte(`---
+a: b #third
+metadata:
+  annotations:
+`)
+
+var readFileD = []byte(`---
+a: b #forth
+metadata:
+`)
+
 var pkgFile = []byte(``)
 
 func TestLocalPackageReader_Read_empty(t *testing.T) {
@@ -87,6 +98,8 @@ func TestLocalPackageReader_Read_pkg(t *testing.T) {
 	defer s.clean()
 	s.writeFile(t, filepath.Join("a_test.yaml"), readFileA)
 	s.writeFile(t, filepath.Join("b_test.yaml"), readFileB)
+	s.writeFile(t, filepath.Join("c_test.yaml"), readFileC)
+	s.writeFile(t, filepath.Join("d_test.yaml"), readFileD)
 
 	paths := []struct {
 		path string
@@ -101,7 +114,7 @@ func TestLocalPackageReader_Read_pkg(t *testing.T) {
 			return
 		}
 
-		if !assert.Len(t, nodes, 3) {
+		if !assert.Len(t, nodes, 5) {
 			return
 		}
 		expected := []string{
@@ -127,6 +140,18 @@ metadata:
   annotations:
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'b_test.yaml'
+`,
+			`a: b #third
+metadata:
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'c_test.yaml'
+`,
+			`a: b #forth
+metadata:
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'd_test.yaml'
 `,
 		}
 		for i := range nodes {

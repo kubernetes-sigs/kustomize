@@ -5,6 +5,7 @@ package yaml
 
 import (
 	"gopkg.in/yaml.v3"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 // AnnotationClearer removes an annotation at metadata.annotations.
@@ -24,6 +25,21 @@ func ClearAnnotation(key string) AnnotationClearer {
 	return AnnotationClearer{Key: key}
 }
 
+// ClearEmptyAnnotations clears the keys, annotations
+// and metadata if they are empty/null
+func ClearEmptyAnnotations(rn *RNode) error {
+	_, err := rn.Pipe(Lookup("metadata"), FieldClearer{
+		Name: "annotations", IfEmpty: true})
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	_, err = rn.Pipe(FieldClearer{Name: "metadata", IfEmpty: true})
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
+}
+
 // AnnotationSetter sets an annotation at metadata.annotations.
 // Creates metadata.annotations if does not exist.
 type AnnotationSetter struct {
@@ -37,6 +53,11 @@ func (s AnnotationSetter) Filter(rn *RNode) (*RNode, error) {
 	v := NewScalarRNode(s.Value)
 	v.YNode().Tag = StringTag
 	v.YNode().Style = yaml.SingleQuotedStyle
+
+	if err := ClearEmptyAnnotations(rn); err != nil {
+		return nil, err
+	}
+
 	return rn.Pipe(
 		PathGetter{Path: []string{"metadata", "annotations"}, Create: yaml.MappingNode},
 		FieldSetter{Name: s.Key, Value: v})
