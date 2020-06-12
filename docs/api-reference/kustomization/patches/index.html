@@ -712,10 +712,18 @@
 <div class="td-content">
 	<h1>patches</h1>
 	<div class="lead">Patch resources</div>
-	<p>Each entry in this list should resolve to patch object, which includes a patch and a target selector.
-The patch can be either a strategic merge patch or a JSON patch.  It can be either a patch file, or an inline
-string. The target selects resources by group, version, kind, name, namespace, labelSelector and
-annotationSelector. Any resource which matches all the specified fields has the patch applied.</p>
+	<p>Patches (also call overlays) add or override fields on resources.  They are provided using the
+<code>patches</code> Kustomization field.</p>
+<p>The <code>patches</code> field contains a list of patches to be applied in the order they are specified.</p>
+<p>Each patch may:</p>
+<ul>
+<li>be either a <a href="/kustomize/api-reference/glossary#patchstrategicmerge">strategic merge</a> patch, or a <a href="/kustomize/api-reference/glossary#patchjson6902">JSON</a> patch</li>
+<li>be either a file, or an inline string</li>
+<li>target a single resource or multiple resources</li>
+</ul>
+<p>The patch target selects resources by group, version, kind, name, namespace, labelSelector and
+annotationSelector.  Any resource which matches all the <strong>specified</strong> fields has the patch applied
+to it (regular expressions).</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>kustomize.config.k8s.io/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Kustomization<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">
@@ -793,7 +801,7 @@ is equivalent to <code>^myapp$</code>.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 7, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/42497c664f619a36cc86156e366b53099bd633cb">Convert docs to docsy (42497c66)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 11, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/6c54098664e6f584c19814fc26d716d550341d98">kustomize docs tweaks (6c540986)</a>
 </div>
 </div>
 
