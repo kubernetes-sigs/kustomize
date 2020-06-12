@@ -25,6 +25,7 @@ type Options struct {
 	kustomizationPath string
 	outputPath        string
 	outOrder          reorderOutput
+	fnOptions         types.FnPluginLoadingOptions
 }
 
 // NewOptions creates a Options object
@@ -74,10 +75,27 @@ func NewCmdBuild(out io.Writer) *cobra.Command {
 		&o.outputPath,
 		"output", "o", "",
 		"If specified, write the build output to this path.")
+	cmd.Flags().BoolVar(
+		&o.fnOptions.EnableExec, "enable-exec", false /*do not change!*/,
+		"enable support for exec functions -- note: exec functions run arbitrary code -- do not use for untrusted configs!!! (Alpha)")
+	cmd.Flags().BoolVar(
+		&o.fnOptions.EnableStar, "enable-star", false,
+		"enable support for starlark functions. (Alpha)")
+	cmd.Flags().BoolVar(
+		&o.fnOptions.Network, "network", false,
+		"enable network access for functions that declare it")
+	cmd.Flags().StringVar(
+		&o.fnOptions.NetworkName, "network-name", "bridge",
+		"the docker network to run the container in")
+	cmd.Flags().StringArrayVar(
+		&o.fnOptions.Mounts, "mount", []string{},
+		"a list of storage options read from the filesystem")
+
 	addFlagLoadRestrictor(cmd.Flags())
 	addFlagEnablePlugins(cmd.Flags())
 	addFlagReorderOutput(cmd.Flags())
 	addFlagEnableManagedbyLabel(cmd.Flags())
+
 	return cmd
 }
 
@@ -111,6 +129,9 @@ func (o *Options) makeOptions() *krusty.Options {
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		c.FnpLoadingOptions = o.fnOptions
+
 		opts.PluginConfig = c
 	} else {
 		opts.PluginConfig = konfig.DisabledPluginConfig()
