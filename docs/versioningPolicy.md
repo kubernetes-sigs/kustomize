@@ -1,1 +1,1 @@
-Moved to [kubernetes-sigs.githubpages.io/kustomize](kubernetes-sigs.githubpages.io/kustomize/faq/versioningpolicy/)
+Moved to [https://kubernetes-sigs.github.io/kustomize](https://kubernetes-sigs.github.io/kustomize/faq/versioningpolicy/)
