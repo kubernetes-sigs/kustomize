@@ -21,6 +21,10 @@ type FieldSetter struct {
 	// Value is the value to set
 	Value string
 
+	// ForceStringType defines whether the type of the new value should
+	// be forced to be string
+	ForceStringType bool
+
 	// ListValues contains a list of values to set on a Sequence
 	ListValues []string
 
@@ -75,11 +79,21 @@ func (fs FieldSetter) Set(openAPIPath, resourcesPath string) (int, error) {
 		return 0, err
 	}
 
+	// If ForceStringType is true, we need to set the Type field in the
+	// Set filter to force the yaml type of the value to be string.
+	var valueType string
+	if fs.ForceStringType {
+		valueType = yaml.StringTag
+	}
+
 	// Update the resources with the new value
 	// Set NoDeleteFiles to true as SetAll will return only the nodes of files which should be updated and
 	// hence, rest of the files should not be deleted
 	inout := &kio.LocalPackageReadWriter{PackagePath: resourcesPath, NoDeleteFiles: true}
-	s := &setters2.Set{Name: fs.Name}
+	s := &setters2.Set{
+		Name: fs.Name,
+		Type: valueType,
+	}
 	err = kio.Pipeline{
 		Inputs:  []kio.Reader{inout},
 		Filters: []kio.Filter{setters2.SetAll(s)},

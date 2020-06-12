@@ -16,12 +16,14 @@ import (
 
 func TestSet_Filter(t *testing.T) {
 	var tests = []struct {
-		name        string
-		description string
-		setter      string
-		openapi     string
-		input       string
-		expected    string
+		name             string
+		description      string
+		setter           string
+		fieldType        string
+		openapi          string
+		input            string
+		expected         string
+		expectedErrorMsg string
 	}{
 		{
 			name:   "set-replicas",
@@ -152,6 +154,36 @@ metadata:
   name: nginx-deployment
   annotations:
     foo: 4 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+		},
+		{
+			name:        "set-foo-different-than-existing-type",
+			description: "if the new value has a different type than existing, update node to appropriate type",
+			setter:      "foo",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.foo:
+      x-k8s-cli:
+        setter:
+          name: foo
+          value: "bar"
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: 3 # {"$openapi": "foo"}
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: bar # {"$openapi": "foo"}
  `,
 		},
 		{
@@ -668,6 +700,133 @@ spec:
   - "3"
  `,
 		},
+		{
+			name: "setter-type-override",
+			description: "If a yaml type is provided in the schema, it overrides" +
+				"any logic to automatically detect the type",
+			setter: "foo",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.foo:
+      type: string
+      x-k8s-cli:
+        setter:
+          name: foo
+          value: "1234"
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: "1234" # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+		},
+		{
+			name: "set-command-type-override",
+			description: "If a yaml type is provided to the set command, it overrides" +
+				"any logic to automatically detect the type",
+			setter:    "foo",
+			fieldType: yaml.StringTag,
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.foo:
+      x-k8s-cli:
+        setter:
+          name: foo
+          value: "1234"
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: "1234" # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+		},
+		{
+			name: "setter-nullable",
+			description: "A \"null\" value is only given the !!null type if" +
+				"the field is nullable",
+			setter: "foo",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.foo:
+      nullable: true
+      x-k8s-cli:
+        setter:
+          name: foo
+          value: "null"
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: null # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+		},
+		{
+			name: "setter-non-nullable",
+			description: "A \"null\" value is interpreted as a string by" +
+				"default",
+			setter: "foo",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.foo:
+      x-k8s-cli:
+        setter:
+          name: foo
+          value: "null"
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: "null" # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+		},
 	}
 	for i := range tests {
 		test := tests[i]
@@ -683,8 +842,18 @@ spec:
 			}
 
 			// invoke the setter
-			instance := &Set{Name: test.setter}
+			instance := &Set{
+				Name: test.setter,
+				Type: test.fieldType,
+			}
 			result, err := instance.Filter(r)
+			if test.expectedErrorMsg != "" {
+				if !assert.Error(t, err) {
+					t.FailNow()
+				}
+				assert.Contains(t, test.expectedErrorMsg, err.Error())
+				return
+			}
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

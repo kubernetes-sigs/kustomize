@@ -40,6 +40,8 @@ func NewSetRunner(parent string) *SetRunner {
 	c.Flags().StringVar(&setterVersion, "version", "",
 		"use this version of the setter format")
 	c.Flags().MarkHidden("version")
+	c.Flags().BoolVar(&r.Set.ForceStringType, "force-string-type", false,
+		"force the yaml type of the value to be string")
 
 	return r
 }

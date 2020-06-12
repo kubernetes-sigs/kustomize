@@ -13,11 +13,11 @@ import (
 )
 
 // typeToTag maps OpenAPI schema types to yaml 1.2 tags
-var typeToTag = map[string]string{
+var openAPITypeToYAMLTag = map[string]string{
 	"string":  StringTag,
 	"integer": IntTag,
 	"boolean": BoolTag,
-	"number":  "!!float",
+	"number":  FloatTag,
 }
 
 // FormatNonStringStyle makes sure that values which parse as non-string values in yaml 1.1
@@ -45,7 +45,7 @@ func FormatNonStringStyle(node *Node, schema spec.Schema) {
 	default:
 		return
 	}
-	if tag, found := typeToTag[t]; found {
+	if tag, found := openAPITypeToYAMLTag[t]; found {
 		// make sure the right tag is set
 		node.Tag = tag
 	}
@@ -90,3 +90,17 @@ func IsValueNonString(value string) bool {
 }
 
 var stringType = reflect.TypeOf("string")
+
+func OpenAPITypeForYALMType(yamlType string) (string, bool) {
+	for openAPIType, yamlTag := range openAPITypeToYAMLTag {
+		if yamlType == yamlTag {
+			return openAPIType, true
+		}
+	}
+	return "", false
+}
+
+func YAMLTypeForOpenAPIType(openAPIType string) (string, bool) {
+	yamlTag, found := openAPITypeToYAMLTag[openAPIType]
+	return yamlTag, found
+}

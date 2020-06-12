@@ -32,6 +32,11 @@ type Set struct {
 
 	// SetAll if set to true will set all setters regardless of name
 	SetAll bool
+
+	// Type is the yaml type that will be set on the node. If not provided,
+	// the value will be used to infer the type. The provided type must have
+	// yaml type format, so one of !!str, !!bool, !!float, !!int and !!null.
+	Type string
 }
 
 // Filter implements Set as a yaml.Filter
@@ -231,12 +236,97 @@ func (s *Set) set(field *yaml.RNode, ext *CliExtension, sch *spec.Schema) (bool,
 		return true, nil
 	}
 
+	var yamlType string
+	if s.Type != "" {
+		// If a specific type is provided, we just use it instead of trying
+		// to infer the type from the value.
+		yamlType = s.Type
+	} else {
+		var err error
+		yamlType, _, err = findTypeForField(ext.Setter.Value, field, sch)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	// Set the tag of the node to the desired yamlType. The value here
+	// might be an empty string, in which case the yaml library will decide
+	// on the appropriate value.
+	field.YNode().Tag = yamlType
+
 	// this has a full setter, set its value
 	field.YNode().Value = ext.Setter.Value
 
-	// format the node so it is quoted if it is a string
-	yaml.FormatNonStringStyle(field.YNode(), *sch)
 	return true, nil
+}
+
+// findTypeForField attempts to infer the appropriate type for the yaml
+// field based on the provided value and the schema. If it is able to
+// find a type, it will return it as the first return value and the second
+// return value will be true. If it is unable to determine a type, it will
+// return an empty string and the second return value will be false.
+func findTypeForField(newValue string, _ *yaml.RNode, sch *spec.Schema) (string, bool, error) {
+	if len(sch.Type) > 0 {
+		// If a type is specified in the schema, use it to find the type. We
+		// might not be able to find a mapping from the openapi type in the
+		// schema to a yaml type, in which case we return an empty string for
+		// the yamlType.
+		yamlType, found := yaml.YAMLTypeForOpenAPIType(sch.Type[0])
+		return yamlType, found, nil
+	}
+
+	yamlType, err := findPreferredTypeForValue(newValue)
+	if err != nil {
+		return "", false, err
+	}
+	// Only allow the type of a field to be !!null if the schema
+	// defines the field as nullable. Otherwise just treat the value
+	// as a string.
+	if yamlType == yaml.NullTag && !sch.Nullable {
+		return yaml.StringTag, true, nil
+	}
+	return yamlType, true, nil
+}
+
+// findPreferredTypeForValue decides the yaml type for a value based on
+// two steps:
+// First, parse the value as yaml and see which type the underlying library
+// decides on. Then, try to look up the corresponding openapi type and
+// verify that the provided value is valid for the type in openapi. If it is,
+// we return the yaml type from the library. If not, we return a string type.
+// This makes sure that values like "yes", which is parsed as a bool value in
+// yaml but is not a valid bool value for openapi, is given a string type.
+func findPreferredTypeForValue(value string) (string, error) {
+	node, err := yaml.Parse(value)
+	if err != nil {
+		return "", err
+	}
+	// Get the type assigned to the value by the underlying yaml library.
+	yamlType := node.YNode().Tag
+	openAPIType, found := yaml.OpenAPITypeForYALMType(yamlType)
+	// If we don't have a mapping from the yaml type to an openapi type,
+	// we just return the yaml type directly.
+	if !found {
+		return yamlType, nil
+	}
+
+	sc := spec.Schema{
+		SchemaProps: spec.SchemaProps{
+			Type: []string{openAPIType},
+		},
+	}
+	var input interface{}
+	err = goyaml.Unmarshal([]byte(value), &input)
+	if err != nil {
+		return "", err
+	}
+	err = validate.AgainstSchema(&sc, input, strfmt.Default)
+	// if the value doesn't validate against an openapi schema with the
+	// openapi type, we return the string yaml type.
+	if err != nil {
+		return yaml.StringTag, nil
+	}
+	return yamlType, nil
 }
 
 // validateAgainstSchema validates the input setter value against user provided

@@ -941,6 +941,140 @@ spec:
 `,
 			errMsg: "cyclic substitution detected with name my-nested-subst",
 		},
+		{
+			name: "new value has different type",
+			args: []string{"maxUnavailable", "3"},
+			out:  "set 1 fields\n",
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.maxUnavailable:
+      x-k8s-cli:
+        setter:
+          name: maxUnavailable
+          value: 35%
+ `,
+			input: `
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: zk-pdb
+spec:
+  maxUnavailable: 35% # {"$openapi":"maxUnavailable"}
+ `,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.maxUnavailable:
+      x-k8s-cli:
+        setter:
+          name: maxUnavailable
+          value: "3"
+          isSet: true
+ `,
+			expectedResources: `
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: zk-pdb
+spec:
+  maxUnavailable: 3 # {"$openapi":"maxUnavailable"}
+`,
+		},
+		{
+			name: "override type to be string",
+			args: []string{"maxUnavailable", "3", "--force-string-type"},
+			out:  "set 1 fields\n",
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.maxUnavailable:
+      x-k8s-cli:
+        setter:
+          name: maxUnavailable
+          value: 35%
+ `,
+			input: `
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: zk-pdb
+spec:
+  maxUnavailable: 35% # {"$openapi":"maxUnavailable"}
+ `,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.maxUnavailable:
+      x-k8s-cli:
+        setter:
+          name: maxUnavailable
+          value: "3"
+          isSet: true
+ `,
+			expectedResources: `
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: zk-pdb
+spec:
+  maxUnavailable: "3" # {"$openapi":"maxUnavailable"}
+`,
+		},
+		{
+			name: "type override in setter schema",
+			args: []string{"maxUnavailable", "3"},
+			out:  "set 1 fields\n",
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.maxUnavailable:
+      type: string
+      x-k8s-cli:
+        setter:
+          name: maxUnavailable
+          value: 35%
+ `,
+			input: `
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: zk-pdb
+spec:
+  maxUnavailable: 35% # {"$openapi":"maxUnavailable"}
+ `,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.maxUnavailable:
+      type: string
+      x-k8s-cli:
+        setter:
+          name: maxUnavailable
+          value: "3"
+          isSet: true
+ `,
+			expectedResources: `
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: zk-pdb
+spec:
+  maxUnavailable: "3" # {"$openapi":"maxUnavailable"}
+`,
+		},
 	}
 	for i := range tests {
 		test := tests[i]
