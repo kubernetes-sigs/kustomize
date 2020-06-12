@@ -1,3 +1,3 @@
 English | [简体中文](zh/README.md)
 
-Moved to [kubernetes-sigs.githubpages.io/kustomize](kubernetes-sigs.githubpages.io/kustomize)
+Moved to [https://kubernetes-sigs.github.io/kustomize](https://kubernetes-sigs.github.io/kustomize)

@@ -1,2 +1,2 @@
 
-Moved to [kubernetes-sigs.githubpages.io/kustomize](kubernetes-sigs.githubpages.io/kustomize/contributing)
+Moved to [https://kubernetes-sigs.github.io/kustomize](https://kubernetes-sigs.github.io/kustomize/contributing)
