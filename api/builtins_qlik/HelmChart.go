@@ -292,7 +292,7 @@ func (p *HelmChartPlugin) helmRepoAdd(settings *cli.EnvSettings, repoEntry *repo
 	}
 
 	if existingEntry := repoFile.Get(repoEntry.Name); existingEntry != nil {
-		if existingEntry.URL == repoEntry.URL {
+		if entry := repoEntriesContainHttpUrl([]*repo.Entry{existingEntry}, repoEntry.URL); entry != nil {
 			return nil
 		} else {
 			return fmt.Errorf("cannot add helm repo name: %v, URL: %v, "+

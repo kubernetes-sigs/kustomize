@@ -18,7 +18,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/provenance"
+	"helm.sh/helm/v3/pkg/repo"
 	"helm.sh/helm/v3/pkg/repo/repotest"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/internal/k8sdeps/transformer"
@@ -31,14 +33,14 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-type HelmChartTestCase struct {
-	name            string
-	pluginConfig    string
-	expectedResult  string
-	checkAssertions func(*testing.T, resmap.ResMap, string)
-}
-
 func TestHelmChart(t *testing.T) {
+	type HelmChartTestCase struct {
+		name            string
+		pluginConfig    string
+		expectedResult  string
+		checkAssertions func(*testing.T, resmap.ResMap, string)
+	}
+
 	srv, err := repotest.NewTempServer("helmTestData/testcharts/*.tgz*")
 	if err != nil {
 		t.Fatal(err)
@@ -809,4 +811,114 @@ func doTarGz(src string, dest string) error {
 		return err
 	}
 	return nil
+}
+
+func Test_helmRepoAdd(t *testing.T) {
+	type helmRepoAddTestCaseT struct {
+		name            string
+		repoFileContent string
+		repoAddEntry    *repo.Entry
+		checkAssertions func(t *testing.T, err error, resultRepoFileContent []byte)
+	}
+
+	testCases := []*helmRepoAddTestCaseT{
+		func() *helmRepoAddTestCaseT {
+			repoFileContent := `
+apiVersion: ""
+generated: "0001-01-01T00:00:00Z"
+repositories:
+- caFile: ""
+  certFile: ""
+  keyFile: ""
+  name: qlik
+  password: "foobar"
+  url: https://qliktech.jfrog.io/qliktech/qlikhelm
+  username: "foobar"
+`
+			return &helmRepoAddTestCaseT{
+				name:            "no trailing slash in repo, but trailing slash in entry",
+				repoFileContent: repoFileContent,
+				repoAddEntry: &repo.Entry{
+					Name: "qlik",
+					URL:  "https://qliktech.jfrog.io/qliktech/qlikhelm/",
+				},
+				checkAssertions: func(t *testing.T, err error, resultRepoFileContent []byte) {
+					assert.NoError(t, err)
+					assert.Equal(t, repoFileContent, string(resultRepoFileContent))
+				},
+			}
+		}(),
+		func() *helmRepoAddTestCaseT {
+			repoFileContent := `
+apiVersion: ""
+generated: "0001-01-01T00:00:00Z"
+repositories:
+- caFile: ""
+  certFile: ""
+  keyFile: ""
+  name: qlik
+  password: "foobar"
+  url: https://qliktech.jfrog.io/qliktech/qlikhelm/
+  username: "foobar"
+`
+			return &helmRepoAddTestCaseT{
+				name:            "trailing slash already in repo, but no trailing slash in entry",
+				repoFileContent: repoFileContent,
+				repoAddEntry: &repo.Entry{
+					Name: "qlik",
+					URL:  "https://qliktech.jfrog.io/qliktech/qlikhelm",
+				},
+				checkAssertions: func(t *testing.T, err error, resultRepoFileContent []byte) {
+					assert.NoError(t, err)
+					assert.Equal(t, repoFileContent, string(resultRepoFileContent))
+				},
+			}
+		}(),
+		func() *helmRepoAddTestCaseT {
+			repoFileContent := `
+apiVersion: ""
+generated: "0001-01-01T00:00:00Z"
+repositories:
+- caFile: ""
+  certFile: ""
+  keyFile: ""
+  name: qlik
+  password: "foobar"
+  url: https://qliktech.jfrog.io/qliktech/qlikhelm
+  username: "foobar"
+`
+			return &helmRepoAddTestCaseT{
+				name:            "expect an error if adding an entry with an existing name but different url",
+				repoFileContent: repoFileContent,
+				repoAddEntry: &repo.Entry{
+					Name: "qlik",
+					URL:  "https://foo/bar",
+				},
+				checkAssertions: func(t *testing.T, err error, resultRepoFileContent []byte) {
+					assert.Error(t, err)
+					assert.Equal(t, repoFileContent, string(resultRepoFileContent))
+				},
+			}
+		}(),
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			testHome, err := ioutil.TempDir("", "")
+			assert.NoError(t, err)
+			defer os.RemoveAll(testHome)
+
+			repoFilePath := filepath.Join(testHome, "repoFile.yaml")
+			err = ioutil.WriteFile(repoFilePath, []byte(testCase.repoFileContent), os.ModePerm)
+			assert.NoError(t, err)
+			settings := &cli.EnvSettings{RepositoryConfig: repoFilePath}
+
+			plugin := &HelmChartPlugin{logger: log.New(os.Stdout, "", log.LstdFlags|log.LUTC|log.Lmicroseconds|log.Lshortfile)}
+			helmRepoAddError := plugin.helmRepoAdd(settings, testCase.repoAddEntry)
+
+			resultRepoFileContent, err := ioutil.ReadFile(repoFilePath)
+			assert.NoError(t, err)
+
+			testCase.checkAssertions(t, helmRepoAddError, resultRepoFileContent)
+		})
+	}
 }
