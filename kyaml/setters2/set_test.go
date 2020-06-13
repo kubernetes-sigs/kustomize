@@ -1296,6 +1296,8 @@ openAPI:
 }
 
 func TestValidateAgainstSchema(t *testing.T) {
+	maxLength := int64(3)
+
 	testCases := []struct {
 		name             string
 		setter           *setter
@@ -1303,6 +1305,15 @@ func TestValidateAgainstSchema(t *testing.T) {
 		shouldValidate   bool
 		expectedErrorMsg string
 	}{
+		{
+			name: "no schema",
+			setter: &setter{
+				Name:  "foo",
+				Value: "bar",
+			},
+			schema:         spec.SchemaProps{},
+			shouldValidate: true,
+		},
 		{
 			name: "simple string value",
 			setter: &setter{
@@ -1348,7 +1359,7 @@ func TestValidateAgainstSchema(t *testing.T) {
 			shouldValidate: true,
 		},
 		{
-			name: "number value should not be accepted as string",
+			name: "number value should be accepted as integer",
 			setter: &setter{
 				Name:  "foo",
 				Value: "45",
@@ -1357,6 +1368,19 @@ func TestValidateAgainstSchema(t *testing.T) {
 				Type: []string{"integer"},
 			},
 			shouldValidate: true,
+		},
+		{
+			name: "string type allows string-specific validations",
+			setter: &setter{
+				Name:  "foo",
+				Value: "1234",
+			},
+			schema: spec.SchemaProps{
+				Type:      []string{"string"},
+				MaxLength: &maxLength,
+			},
+			shouldValidate:   false,
+			expectedErrorMsg: "foo in body should be at most 3 chars long",
 		},
 		{
 			name: "list with int values",
@@ -1394,6 +1418,44 @@ func TestValidateAgainstSchema(t *testing.T) {
 			},
 			shouldValidate:   false,
 			expectedErrorMsg: "foo in body must be of type integer",
+		},
+		{
+			name: "all values should satisfy type string",
+			setter: &setter{
+				Name:  "foo",
+				Value: "1234",
+			},
+			schema: spec.SchemaProps{
+				Type: []string{"string"},
+			},
+			shouldValidate: true,
+		},
+		{
+			name: "all values should satisfy type string even in arrays",
+			setter: &setter{
+				Name:       "foo",
+				ListValues: []string{"123", "456"},
+			},
+			schema: spec.SchemaProps{
+				Type: []string{"array"},
+				Items: &spec.SchemaOrArray{
+					Schema: &spec.Schema{
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"string"},
+						},
+					},
+				},
+			},
+			shouldValidate: true,
+		},
+		{
+			name: "List values without any schema",
+			setter: &setter{
+				Name:       "foo",
+				ListValues: []string{"123", "true", "abc"},
+			},
+			schema:         spec.SchemaProps{},
+			shouldValidate: true,
 		},
 	}
 

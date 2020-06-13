@@ -23,7 +23,7 @@ func TestIsYaml1_1NonString(t *testing.T) {
 		{val: "2", expected: true},
 		{val: "true", expected: true},
 		{val: "1.0\nhello", expected: false}, // multiline strings should always be false
-		{val: "", expected: false}, // empty string should be considered a string
+		{val: "", expected: false},           // empty string should be considered a string
 	}
 
 	for k := range valueToTagMap {
