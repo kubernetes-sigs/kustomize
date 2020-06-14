@@ -44,7 +44,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/contributing/bugs/</loc>
-    <lastmod>2020-06-07T21:07:46-07:00</lastmod>
+    <lastmod>2020-06-14T08:04:16-07:00</lastmod>
   </url>
   
   <url>
@@ -54,7 +54,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/contributing/community/</loc>
-    <lastmod>2020-06-07T21:07:46-07:00</lastmod>
+    <lastmod>2020-06-14T08:04:16-07:00</lastmod>
   </url>
   
   <url>
@@ -68,13 +68,18 @@
   </url>
   
   <url>
+    <loc>https://kubernetes-sigs.github.io/kustomize/contributing/features/</loc>
+    <lastmod>2020-06-14T08:04:16-07:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/contributing/docs/</loc>
-    <lastmod>2020-06-07T21:07:46-07:00</lastmod>
+    <lastmod>2020-06-11T21:40:35-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/contributing/howitworks/</loc>
-    <lastmod>2020-06-07T21:07:46-07:00</lastmod>
+    <lastmod>2020-06-14T08:04:16-07:00</lastmod>
   </url>
   
   <url>

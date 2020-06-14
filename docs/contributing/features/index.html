@@ -7,7 +7,7 @@
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
-<link rel="alternate" type="application/rss&#43;xml" href="https://kubernetes-sigs.github.io/kustomize/contributing/docs/index.xml">
+<link rel="alternate" type="application/rss&#43;xml" href="https://kubernetes-sigs.github.io/kustomize/contributing/features/index.xml">
 
 
 <link rel="shortcut icon" href="/favicons/favicon.ico" >
@@ -21,17 +21,17 @@
 <link rel="icon" type="image/png" href="/kustomize/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kustomize/favicons/android-192x192.png" sizes="192x192">
 
-<title>Writing Docs | Kustomize</title><meta property="og:title" content="Writing Docs" />
-<meta property="og:description" content="How to make Kustomize docs contributions
+<title>Contributing Features | Kustomize</title><meta property="og:title" content="Contributing Features" />
+<meta property="og:description" content="How to contribute features
 " />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/contributing/docs/" />
+<meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/contributing/features/" />
 <meta property="og:site_name" content="Kustomize" />
-<meta itemprop="name" content="Writing Docs">
-<meta itemprop="description" content="How to make Kustomize docs contributions
+<meta itemprop="name" content="Contributing Features">
+<meta itemprop="description" content="How to contribute features
 "><meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Writing Docs"/>
-<meta name="twitter:description" content="How to make Kustomize docs contributions
+<meta name="twitter:title" content="Contributing Features"/>
+<meta name="twitter:description" content="How to contribute features
 "/>
 
 
@@ -51,7 +51,7 @@
 
 <link rel="stylesheet" type="text/css" href="https://kubernetes-sigs.github.io/kustomize//css/asciinema-player.css" />
 
-    <title>Writing Docs | Kustomize</title>
+    <title>Contributing Features | Kustomize</title>
   </head>
   <body class="td-section">
     <header>
@@ -225,10 +225,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kustomize/contributing/features/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Contributing Features</a>
+    <a  href="/kustomize/contributing/features/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Contributing Features</a>
   </li>
   <ul>
-    <li class="collapse " id="kustomizecontributingfeatures">
+    <li class="collapse show" id="kustomizecontributingfeatures">
       
       
       
@@ -248,10 +248,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kustomize/contributing/docs/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Writing Docs</a>
+    <a  href="/kustomize/contributing/docs/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Writing Docs</a>
   </li>
   <ul>
-    <li class="collapse show" id="kustomizecontributingdocs">
+    <li class="collapse " id="kustomizecontributingdocs">
       
       
       
@@ -355,8 +355,8 @@
 
 
 
-<a href="https://github.com/kubernetes-sigs/kustomize/edit/master/site/content/en/contributing/docs/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/kubernetes-sigs/kustomize/issues/new?title=Writing%20Docs" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/kubernetes-sigs/kustomize/edit/master/site/content/en/contributing/features/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/kubernetes-sigs/kustomize/issues/new?title=Contributing%20Features" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/kubernetes-sigs/kustomize/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -367,20 +367,6 @@
 
 
 
-
-<nav id="TableOfContents">
-  <ul>
-    <li><a href="#prerequisites">Prerequisites</a></li>
-    <li><a href="#development">Development</a></li>
-    <li><a href="#publishing">Publishing</a></li>
-    <li><a href="#publishing-docs-to-your-kustomize-fork">Publishing docs to your kustomize fork</a>
-      <ul>
-        <li><a href="#setup-github-pages-for-the-fork">Setup GitHub Pages for the fork</a></li>
-        <li><a href="#publish-to-the-forks-github-pages">Publish to the fork&rsquo;s GitHub Pages</a></li>
-      </ul>
-    </li>
-  </ul>
-</nav>
 
 
 
@@ -407,7 +393,7 @@
 
 
 <li class="breadcrumb-item active" aria-current="page">
-	<a href="https://kubernetes-sigs.github.io/kustomize/contributing/docs/">Writing Docs</a>
+	<a href="https://kubernetes-sigs.github.io/kustomize/contributing/features/">Contributing Features</a>
 </li>
 
 	</ol>
@@ -415,72 +401,40 @@
 
             
 <div class="td-content">
-	<h1>Writing Docs</h1>
-	<div class="lead">How to make Kustomize docs contributions</div>
-	<p>Kustomize uses <a href="https://www.docsy.dev">Docsy</a> for the site, and was
-forked from the <a href="https://github.com/google/docsy-example">docsy-example</a></p>
-<h2 id="prerequisites">Prerequisites</h2>
-<ul>
-<li><a href="https://gohugo.io/getting-started/installing/#fetch-from-github">Install hugo</a></li>
-<li>Clone kustomize
-<ul>
-<li><code>git clone git@github.com:kubernetes-sigs/kustomize &amp;&amp; cd kustomize/</code></li>
-</ul>
-</li>
-</ul>
-<h2 id="development">Development</h2>
-<p>The doc input files are in the <code>site</code> directory.  The site can be hosted locally using
-<code>hugo serve</code>.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#204a87">cd</span> site/
-hugo serve
-</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">...
-Running in Fast Render Mode. For full rebuilds on change: hugo server --disableFastRender
-Web Server is available at http://localhost:1313/kustomize/ <span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#204a87">bind</span> address 127.0.0.1<span style="color:#ce5c00;font-weight:bold">)</span>
-</code></pre></div><h2 id="publishing">Publishing</h2>
-<p>Hugo compiles the files under <code>site</code> Hugo into html which it puts in the <code>docs</code> folder:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#204a87">cd</span> site/
-hugo
-</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">                   <span style="color:#000;font-weight:bold">|</span> EN  
--------------------+-----
-  Pages            <span style="color:#000;font-weight:bold">|</span> <span style="color:#0000cf;font-weight:bold">99</span>  
-  Paginator pages  <span style="color:#000;font-weight:bold">|</span>  <span style="color:#0000cf;font-weight:bold">0</span>  
-  Non-page files   <span style="color:#000;font-weight:bold">|</span>  <span style="color:#0000cf;font-weight:bold">0</span>  
-  Static files     <span style="color:#000;font-weight:bold">|</span> <span style="color:#0000cf;font-weight:bold">47</span>  
-  Processed images <span style="color:#000;font-weight:bold">|</span>  <span style="color:#0000cf;font-weight:bold">0</span>  
-  Aliases          <span style="color:#000;font-weight:bold">|</span>  <span style="color:#0000cf;font-weight:bold">2</span>  
-  Sitemaps         <span style="color:#000;font-weight:bold">|</span>  <span style="color:#0000cf;font-weight:bold">1</span>  
-  Cleaned          <span style="color:#000;font-weight:bold">|</span>  <span style="color:#0000cf;font-weight:bold">0</span>  
-</code></pre></div><p>Add the <code>site/</code> and <code>docs/</code> folders to a commit, then create a PR.</p>
-<h2 id="publishing-docs-to-your-kustomize-fork">Publishing docs to your kustomize fork</h2>
-<p>It is possible to have the kustomize docs published to your forks github pages.</p>
-<h3 id="setup-github-pages-for-the-fork">Setup GitHub Pages for the fork</h3>
+	<h1>Contributing Features</h1>
+	<div class="lead">How to contribute features</div>
+	<p>Following is the process for proposing a new Kustomize feature:</p>
 <ol>
-<li>Go to the <em>forked repo&rsquo;s</em> <strong>Settings</strong> tab
+<li>Check the <a href="https://kubernetes-sigs.github.io/kustomize/faq/eschewedfeatures/">eschewed feature list</a> to see if the feature has already been proposed</li>
+<li>File an <a href="https://github.com/kubernetes-sigs/kustomize/issues">issue</a> describing the desired feature
 <ul>
-<li>e.g. <a href="https://github.com/pwittrock/kustomize">https://github.com/pwittrock/kustomize</a></li>
+<li>label it <a href="https://github.com/kubernetes-sigs/kustomize/labels/kind%2Ffeature">kind/feature</a></li>
+<li>the motivation for the feature</li>
+<li>example of how you would accomplish the motivating task <em>without</em> the feature</li>
+<li>example of how you would accomplish the motivating task <em>with</em> the feature</li>
 </ul>
 </li>
-<li>Go to the <strong>GitHub Pages</strong> section</li>
-<li>Set the source to master branch <strong>/docs folder</strong></li>
-</ol>
-<h3 id="publish-to-the-forks-github-pages">Publish to the fork&rsquo;s GitHub Pages</h3>
-
-
-<div class="pageinfo pageinfo-info">
-<p>Changes must be pushed to the fork&rsquo;s <strong>master branch</strong> to be served as the fork&rsquo;s GitHub Page.</p>
-
-</div>
-
-<ol>
-<li>Make a change to a file under <code>site/content</code></li>
-<li>Run <code>hugo</code> from the <code>site/</code> directory</li>
-<li>Add the <code>site</code> and <code>docs</code> directories to the <strong>master branch</strong></li>
-<li>Commit and push the changes to the <em>remote fork&rsquo;s</em> <strong>master branch</strong></li>
-<li>After a few minutes, the docs should be served from the fork&rsquo;s GitHub Page
+<li>Email the <a href="/kustomize/contributing/community/">sig-cli</a> mailing list with the issue</li>
+<li>Present the issue at <a href="/kustomize/contributing/community/">sig-cli</a> bi-weekly meeting on Zoom
 <ul>
-<li>e.g. <a href="https://pwittrock.github.io/kustomize/">https://pwittrock.github.io/kustomize/</a></li>
+<li>add it to the <a href="https://docs.google.com/document/d/1r0YElcXt6G5mOWxwZiXgGu_X6he3F--wKwg-9UBc29I/edit#heading=h.himo1st0tqyy">meeting agenda</a> doc</li>
+<li>be present to discuss the feature</li>
+<li>response may be &ndash; move forward with a PoC, not to move forward, defer and come back later,
+or more information is needed.</li>
 </ul>
 </li>
+<li>Address the feedback on the issue
+<ul>
+<li>Possibly write a KEP for tracking the feature</li>
+</ul>
+</li>
+<li>Implement the feature and send a PR
+<ul>
+<li>Add <a href="https://github.com/kubernetes-sigs/kustomize/blob/a8b9741866cf8e0c43e643ab7a9f40a3bd7e2a4d/api/filters/imagetag/imagetag_test.go#L15">table-driven</a> tests</li>
+<li>Expect comments on the PR within 2 weeks</li>
+</ul>
+</li>
+<li>Kustomize team will release the kustomize <code>api</code> and <code>kustomize</code> modules</li>
 </ol>
 
         <div class="section-index">
@@ -511,7 +465,7 @@ hugo
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 11, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/589ddcb4faa1170e1cd549a41b11f18e146197d8">kustomize docs tweaks (589ddcb4)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 14, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/1f28681af4176a6d97fdf286da0bd2b8d46c57ee">Add more Kustomize contributing docs (1f28681a)</a>
 </div>
 </div>
 

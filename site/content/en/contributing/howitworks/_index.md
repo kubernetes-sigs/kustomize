@@ -4,8 +4,16 @@ linkTitle: "Writing Code"
 type: docs
 weight: 40
 description: >
-    How Kustomize is implemented
+    How to modify Kustomize
 ---
+
+{{% pageinfo color="info" %}}
+To build kustomize using the locally modified modules, `replace` statements must be added to
+the `kustomize/go.mod`.
+
+e.g. if code in `api` was modified, a `replace` statement would need to be added for the
+`kustomize/api` module.
+{{% /pageinfo %}}
 
 Call stack when running `kustomize build`, with links to code.
 
