@@ -6,7 +6,6 @@ package fnplugin
 import (
 	"bytes"
 	"fmt"
-	//"log"
 	"strconv"
 
 	"github.com/pkg/errors"
