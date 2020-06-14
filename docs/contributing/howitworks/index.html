@@ -22,16 +22,16 @@
 <link rel="icon" type="image/png" href="/kustomize/favicons/android-192x192.png" sizes="192x192">
 
 <title>Writing Code | Kustomize</title><meta property="og:title" content="Writing Code" />
-<meta property="og:description" content="How Kustomize is implemented
+<meta property="og:description" content="How to modify Kustomize
 " />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/contributing/howitworks/" />
 <meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="Writing Code">
-<meta itemprop="description" content="How Kustomize is implemented
+<meta itemprop="description" content="How to modify Kustomize
 "><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Writing Code"/>
-<meta name="twitter:description" content="How Kustomize is implemented
+<meta name="twitter:description" content="How to modify Kustomize
 "/>
 
 
@@ -225,6 +225,29 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/contributing/features/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Contributing Features</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizecontributingfeatures">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
     <a  href="/kustomize/contributing/docs/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Writing Docs</a>
   </li>
   <ul>
@@ -379,8 +402,18 @@
             
 <div class="td-content">
 	<h1>Writing Code</h1>
-	<div class="lead">How Kustomize is implemented</div>
-	<p>Call stack when running <code>kustomize build</code>, with links to code.</p>
+	<div class="lead">How to modify Kustomize</div>
+	
+
+<div class="pageinfo pageinfo-info">
+<p>To build kustomize using the locally modified modules, <code>replace</code> statements must be added to
+the <code>kustomize/go.mod</code>.</p>
+<p>e.g. if code in <code>api</code> was modified, a <code>replace</code> statement would need to be added for the
+<code>kustomize/api</code> module.</p>
+
+</div>
+
+<p>Call stack when running <code>kustomize build</code>, with links to code.</p>
 <h2 id="run-build">Run build</h2>
 <ul>
 <li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/kustomize/internal/commands/build/build.go#L121">RunBuild</a>
@@ -486,12 +519,14 @@
         
             
         
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 7, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/42497c664f619a36cc86156e366b53099bd633cb">Convert docs to docsy (42497c66)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 14, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/1f28681af4176a6d97fdf286da0bd2b8d46c57ee">Add more Kustomize contributing docs (1f28681a)</a>
 </div>
 </div>
 
