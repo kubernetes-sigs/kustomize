@@ -169,12 +169,12 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/commonannotations/</loc>
-    <lastmod>2020-06-07T21:07:46-07:00</lastmod>
+    <lastmod>2020-06-11T21:40:35-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/commonlabels/</loc>
-    <lastmod>2020-06-07T21:07:46-07:00</lastmod>
+    <lastmod>2020-06-11T21:40:35-07:00</lastmod>
   </url>
   
   <url>
@@ -249,7 +249,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/patches/</loc>
-    <lastmod>2020-06-07T21:07:46-07:00</lastmod>
+    <lastmod>2020-06-11T21:40:35-07:00</lastmod>
   </url>
   
   <url>
