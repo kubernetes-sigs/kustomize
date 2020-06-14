@@ -6,10 +6,23 @@ description: >
     Patch resources
 ---
 
-Each entry in this list should resolve to patch object, which includes a patch and a target selector. 
-The patch can be either a strategic merge patch or a JSON patch.  It can be either a patch file, or an inline
-string. The target selects resources by group, version, kind, name, namespace, labelSelector and
-annotationSelector. Any resource which matches all the specified fields has the patch applied.
+[strategic merge]: /kustomize/api-reference/glossary#patchstrategicmerge
+[JSON]: /kustomize/api-reference/glossary#patchjson6902
+
+Patches (also call overlays) add or override fields on resources.  They are provided using the
+`patches` Kustomization field.
+
+The `patches` field contains a list of patches to be applied in the order they are specified.
+
+Each patch may:
+ 
+- be either a [strategic merge] patch, or a [JSON] patch
+- be either a file, or an inline string
+- target a single resource or multiple resources 
+
+The patch target selects resources by group, version, kind, name, namespace, labelSelector and
+annotationSelector.  Any resource which matches all the **specified** fields has the patch applied
+to it (regular expressions).
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
