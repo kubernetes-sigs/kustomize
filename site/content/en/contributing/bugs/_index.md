@@ -4,7 +4,7 @@ linkTitle: "Filing Bugs"
 type: docs
 weight: 10
 description: >
-    How to file bugs against Kustomize
+    How to file bugs and fix Kustomize bugs
 ---
 
 

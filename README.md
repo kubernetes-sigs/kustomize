@@ -16,9 +16,9 @@ inspired by [DAM].
 [![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes-sigs/kustomize)](https://goreportcard.com/report/github.com/kubernetes-sigs/kustomize)
 
 Download a binary from the [release page], or see
-these [instructions](docs/INSTALL.md).
+these [instructions](https://kubernetes-sigs.github.io/kustomize/installation/).
 
-Browse the [docs](docs) or jump right into the
+Browse the [docs](https://kubernetes-sigs.github.io/kustomize/) or jump right into the
 tested [examples](examples).
 
 ## kubectl integration
@@ -132,20 +132,8 @@ The YAML can be directly [applied] to a cluster:
 
 ## Community
 
-To file bugs please read [this](docs/bugs.md).
-
-Before working on an implementation, please
-
- * Read the [eschewed feature list].
- * File an issue describing
-   how the new feature would behave
-   and label it [kind/feature].
-
-### Other communication channels
-
-- [Slack]
-- [Mailing List]
-- General kubernetes [community page]
+- [file a bug](https://kubernetes-sigs.github.io/kustomize/contributing/bugs/) instructions
+- [contribute a feature](https://kubernetes-sigs.github.io/kustomize/contributing/features/) instructions
 
 ### Code of conduct
 
@@ -154,32 +142,27 @@ is governed by the [Kubernetes Code of Conduct].
 
 [`make`]: https://www.gnu.org/software/make
 [`sed`]: https://www.gnu.org/software/sed
-[DAM]: docs/glossary.md#declarative-application-management
+[DAM]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#declarative-application-management
 [KEP]: https://github.com/kubernetes/enhancements/blob/master/keps/sig-cli/0008-kustomize.md
 [Kubernetes Code of Conduct]: code-of-conduct.md
-[Mailing List]: https://groups.google.com/forum/#!forum/kubernetes-sig-cli
-[Slack]: https://kubernetes.slack.com/messages/sig-cli
-[applied]: docs/glossary.md#apply
-[base]: docs/glossary.md#base
-[community page]: http://kubernetes.io/community/
-[declarative configuration]: docs/glossary.md#declarative-application-management
-[eschewed feature list]: docs/eschewedFeatures.md
+[applied]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#apply
+[base]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#base
+[declarative configuration]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#declarative-application-management
 [imageBase]: docs/images/base.jpg
 [imageOverlay]: docs/images/overlay.jpg
-[kind/feature]: /../../labels/kind%2Ffeature
 [kubectl announcement]: https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement
 [kubectl book]: https://kubectl.docs.kubernetes.io/pages/app_customization/introduction.html
 [kubernetes documentation]: https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/
-[kubernetes style]: docs/glossary.md#kubernetes-style-object
-[kustomization]: docs/glossary.md#kustomization
-[overlay]: docs/glossary.md#overlay
-[overlays]: docs/glossary.md#overlay
-[release page]: /../../releases
-[resource]: docs/glossary.md#resource
-[resources]: docs/glossary.md#resource
+[kubernetes style]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#kubernetes-style-object
+[kustomization]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#kustomization
+[overlay]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#overlay
+[overlays]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#overlay
+[release page]: https://github.com/kubernetes-sigs/kustomize/releases
+[resource]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#resource
+[resources]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#resource
 [sig-cli]: https://github.com/kubernetes/community/blob/master/sig-cli/README.md
-[variant]: docs/glossary.md#variant
-[variants]: docs/glossary.md#variant
-[v2.0.3]: /../../releases/tag/v2.0.3
-[v2.1.0]: /../../releases/tag/v2.1.0
-[workflows]: docs/workflows.md
+[variant]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#variant
+[variants]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#variant
+[v2.0.3]: https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.0.3
+[v2.1.0]: https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.1.0
+[workflows]: https://kubernetes-sigs.github.io/kustomize/guides
