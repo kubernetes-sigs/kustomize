@@ -30,6 +30,6 @@ type PluginConfig struct {
 	// BpLoadingOptions distinguishes builtin plugin behaviors.
 	BpLoadingOptions BuiltinPluginLoadingOptions
 
-	// FnpLoadingOpeions sets the way function-based plugin behaviors.
+	// FnpLoadingOptions sets the way function-based plugin behaviors.
 	FnpLoadingOptions FnPluginLoadingOptions
 }
