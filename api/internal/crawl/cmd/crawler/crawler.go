@@ -191,7 +191,7 @@ func main() {
 		// this greatly reduces the time overhead of CrawlGithub.
 		getSeedDocsFunc()
 		for _, d := range seedDocs {
-			seen[d.ID()] = d.FileType
+			seen.Set(d.ID(), d.FileType)
 		}
 		crawler.CrawlGithub(ctx, crawlers, docConverter, indexFunc, seen)
 	case CrawlUser:
