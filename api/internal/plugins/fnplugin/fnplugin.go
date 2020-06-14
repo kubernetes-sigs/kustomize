@@ -6,7 +6,7 @@ package fnplugin
 import (
 	"bytes"
 	"fmt"
-	"log"
+	//"log"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -17,22 +17,22 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 
-	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 
-	"sigs.k8s.io/kustomize/kyaml/runfn"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
+	"sigs.k8s.io/kustomize/kyaml/runfn"
 )
 
 const (
-	idAnnotation        = "kustomize.config.k8s.io/id"
-	HashAnnotation      = "kustomize.config.k8s.io/needs-hash"
-	BehaviorAnnotation  = "kustomize.config.k8s.io/behavior"
+	idAnnotation       = "kustomize.config.k8s.io/id"
+	HashAnnotation     = "kustomize.config.k8s.io/needs-hash"
+	BehaviorAnnotation = "kustomize.config.k8s.io/behavior"
 )
 
 type FnPlugin struct {
 	// Function runner
-	RunFns runfn.RunFns
+	runFns runfn.RunFns
 
 	// Plugin configuration data.
 	cfg []byte
@@ -42,11 +42,11 @@ type FnPlugin struct {
 }
 
 func bytesToRNode(yml []byte) (*kyaml.RNode, error) {
-        rnode, err := kyaml.Parse(string(yml))
-        if err != nil {
-                return nil, err
-        }
-        return rnode, nil
+	rnode, err := kyaml.Parse(string(yml))
+	if err != nil {
+		return nil, err
+	}
+	return rnode, nil
 }
 
 func resourceToRNode(res *resource.Resource) (*kyaml.RNode, error) {
@@ -81,10 +81,10 @@ func toStorageMounts(mounts []string) []runtimeutil.StorageMount {
 }
 
 func NewFnPlugin(o *types.FnPluginLoadingOptions) *FnPlugin {
-	log.Printf("options: %v\n", o)
+	//log.Printf("options: %v\n", o)
 	return &FnPlugin{
-		RunFns: runfn.RunFns{
-			Functions: []*kyaml.RNode{},
+		runFns: runfn.RunFns{
+			Functions:      []*kyaml.RNode{},
 			Network:        o.Network,
 			NetworkName:    o.NetworkName,
 			EnableStarlark: o.EnableStar,
@@ -101,14 +101,6 @@ func (p *FnPlugin) Cfg() []byte {
 func (p *FnPlugin) Config(h *resmap.PluginHelpers, config []byte) error {
 	p.h = h
 	p.cfg = config
-
-	rnode, err := bytesToRNode(config)
-	if err != nil {
-		return err
-	}
-
-	p.RunFns.Functions = append(p.RunFns.Functions, rnode)
-
 	return nil
 }
 
@@ -149,30 +141,50 @@ func (p *FnPlugin) Transform(rm resmap.ResMap) error {
 
 // invokePlugin uses Function runner to run function as plugin
 func (p *FnPlugin) invokePlugin(input []byte) ([]byte, error) {
+	// get config rnode
+	rnode, err := bytesToRNode(p.cfg)
+	if err != nil {
+		return nil, err
+	}
+	err = rnode.PipeE(kyaml.SetAnnotation("config.kubernetes.io/local-config", "true"))
+	if err != nil {
+		return nil, err
+	}
+
+	// we need to add config as input for generators. Some of them don't work with FunctionConfig
+	// and in addition kio.Pipeline won't create anything if there are no objects
+	// see https://github.com/kubernetes-sigs/kustomize/blob/master/kyaml/kio/kio.go#L93
+	if input == nil {
+		yaml, err := rnode.String()
+		if err != nil {
+			return nil, err
+		}
+		input = []byte(yaml)
+	}
+
 	// Transform to ResourceList
 	var inOut bytes.Buffer
 	inIn := bytes.NewReader(input)
-
-	err := kio.Pipeline{
-		Inputs:  []kio.Reader{&kio.ByteReader{Reader: inIn}},
+	err = kio.Pipeline{
+		Inputs: []kio.Reader{&kio.ByteReader{Reader: inIn}},
 		Outputs: []kio.Writer{kio.ByteWriter{
 			Writer:             &inOut,
 			WrappingKind:       kio.ResourceListKind,
-			WrappingAPIVersion: kio.ResourceListAPIVersion,}},
+			WrappingAPIVersion: kio.ResourceListAPIVersion}},
 	}.Execute()
 	if err != nil {
 		return nil, errors.Wrap(
-                        err, "couldn't transform to ResourceList")
+			err, "couldn't transform to ResourceList")
 	}
-
 	//log.Printf("converted to:\n%s\n", inOut.String())
 
-	// Execute Fn (it's configured - see Config())
+	// Configure and Execute Fn
 	var runFnsOut bytes.Buffer
-	p.RunFns.Input = bytes.NewReader(inOut.Bytes())
-	p.RunFns.Output = &runFnsOut
+	p.runFns.Input = bytes.NewReader(inOut.Bytes())
+	p.runFns.Functions = append(p.runFns.Functions, rnode)
+	p.runFns.Output = &runFnsOut
 
-	err = p.RunFns.Execute()
+	err = p.runFns.Execute()
 	if err != nil {
 		return nil, errors.Wrap(
 			err, "couln't execute function")
@@ -186,7 +198,7 @@ func (p *FnPlugin) invokePlugin(input []byte) ([]byte, error) {
 
 	err = kio.Pipeline{
 		Inputs:  []kio.Reader{&kio.ByteReader{Reader: outIn}},
-		Outputs: []kio.Writer{kio.ByteWriter{Writer:  &outOut}},
+		Outputs: []kio.Writer{kio.ByteWriter{Writer: &outOut}},
 	}.Execute()
 	if err != nil {
 		return nil, errors.Wrap(

@@ -45,12 +45,12 @@ const (
 // FnPluginLoadingOptions set way functions-based pluing are restricted
 type FnPluginLoadingOptions struct {
 	// Allow to run executables
-	EnableExec         bool
+	EnableExec bool
 	// Allow to run starlark
-	EnableStar         bool
+	EnableStar bool
 	// Allow container access to network
-	Network            bool
-	NetworkName        string
+	Network     bool
+	NetworkName string
 	// list of mounts
-	Mounts             []string
+	Mounts []string
 }

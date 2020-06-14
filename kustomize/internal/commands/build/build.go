@@ -76,7 +76,7 @@ func NewCmdBuild(out io.Writer) *cobra.Command {
 		"output", "o", "",
 		"If specified, write the build output to this path.")
 	cmd.Flags().BoolVar(
-		&o.fnOptions.EnableExec, "enable-exec", false /*do not change!*/,
+		&o.fnOptions.EnableExec, "enable-exec", false, /*do not change!*/
 		"enable support for exec functions -- note: exec functions run arbitrary code -- do not use for untrusted configs!!! (Alpha)")
 	cmd.Flags().BoolVar(
 		&o.fnOptions.EnableStar, "enable-star", false,
