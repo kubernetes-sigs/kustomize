@@ -6,8 +6,7 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-// TODO: enable when get docker installed before these tests start
-func disabled_TestFnGenerator(t *testing.T) {
+func TestFnGenerator(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
 
@@ -221,7 +220,7 @@ spec:
 `)
 }
 
-func disabled_TestFnTransformer(t *testing.T) {
+func TestFnTransformer(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
 
