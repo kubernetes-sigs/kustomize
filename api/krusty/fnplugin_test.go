@@ -159,7 +159,7 @@ spec:
         - /bin/bash
         - -ecx
         - |
-          # The use of qualified ` + "`hostname -f`" + ` is crucial:
+          # The use of qualified `+"`hostname -f`"+` is crucial:
           # Other nodes aren't able to look up the unqualified hostname.
           CRARGS=("start" "--logtostderr" "--insecure" "--host" "$(hostname -f)" "--http-host" "0.0.0.0")
           # We only want to initialize a new cluster (by omitting the join flag)
