@@ -198,6 +198,8 @@ build-kustomize-api: $(builtinplugins)
 install-docker:
 	curl -fsSL https://get.docker.com| sh
 	docker --version
+	service docker status
+	service docker restart
 	docker run hello-world
 
 .PHONY: test-unit-kustomize-api
