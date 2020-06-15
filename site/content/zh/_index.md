@@ -7,7 +7,7 @@ linkTitle = "Kustomize"
 
 {{<blocks/cover title="Kustomize" image_anchor="center" height="full" color="primary">}}
 <div class="mx-auto">
-  <p class="lead mt-5">TKustomize 提供了一种自定义 Kubernetes 资源配置的解决方案，该方案摆脱了模板和 DSL。</p>
+  <p class="lead mt-5">Kustomize 提供了一种自定义 Kubernetes 资源配置的解决方案，该方案摆脱了模板和 DSL。</p>
   <a
     class="btn btn-lg btn-primary mr-3 mb-4"
     href="/kustomize/zh/installation/"
