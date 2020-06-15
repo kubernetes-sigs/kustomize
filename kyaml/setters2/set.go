@@ -4,13 +4,14 @@
 package setters2
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
+	"text/template"
 
 	"github.com/go-openapi/spec"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/validate"
+	goyaml "gopkg.in/yaml.v3"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -241,24 +242,28 @@ func validateAgainstSchema(ext *CliExtension, sch *spec.Schema) error {
 	sc.Properties = map[string]spec.Schema{}
 	sc.Properties[ext.Setter.Name] = *sch
 
-	input := map[string]interface{}{}
-	var inputJSON string
-
+	var inputYAML string
 	if len(ext.Setter.ListValues) > 0 {
-		format := `{"%s" : [%s]}`
-		inputJSON = fmt.Sprintf(format, ext.Setter.Name, JoinCompositeStrings(ext.Setter.ListValues))
-	} else {
-		format := `{"%s" : "%s"}`
-		if yaml.IsValueNonString(ext.Setter.Value) {
-			format = `{"%s" : %s}`
+		tmpl, err := template.New("validator").
+			Parse(`{{.key}}:{{block "list" .values}}{{"\n"}}{{range .}}{{println "-" .}}{{end}}{{end}}`)
+		if err != nil {
+			return err
 		}
-		inputJSON = fmt.Sprintf(format, ext.Setter.Name, ext.Setter.Value)
+		var builder strings.Builder
+		err = tmpl.Execute(&builder, map[string]interface{}{
+			"key":    ext.Setter.Name,
+			"values": ext.Setter.ListValues,
+		})
+		if err != nil {
+			return err
+		}
+		inputYAML = builder.String()
+	} else {
+		inputYAML = fmt.Sprintf("%s: %s", ext.Setter.Name, ext.Setter.Value)
 	}
 
-	// leverage json.Unmarshal to parse the value type
-	// Ex: `{"setter" : "true"}` parses the value as string whereas
-	// `{"setter" : true}` parses as boolean
-	err := json.Unmarshal([]byte(inputJSON), &input)
+	input := map[string]interface{}{}
+	err := goyaml.Unmarshal([]byte(inputYAML), &input)
 	if err != nil {
 		return err
 	}
@@ -267,21 +272,6 @@ func validateAgainstSchema(ext *CliExtension, sch *spec.Schema) error {
 		return errors.Errorf("The input value doesn't validate against provided OpenAPI schema: %v\n", err.Error())
 	}
 	return nil
-}
-
-// JoinCompositeStrings takes in strings whose values can be of different types and returns
-// joined string with quotes for only string type values
-// ex: ["10", "true",  "hi", "1.1"] returns 10,true,"hi",1.1
-func JoinCompositeStrings(listValues []string) string {
-	res := ""
-	for _, val := range listValues {
-		if yaml.IsValueNonString(val) {
-			res += fmt.Sprintf(`%s,`, val)
-		} else {
-			res += fmt.Sprintf(`"%s",`, val)
-		}
-	}
-	return strings.TrimSuffix(res, ",")
 }
 
 // SetOpenAPI updates a setter value
