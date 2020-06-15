@@ -231,8 +231,6 @@ fieldSpecs:
 &lt;h4 id=&#34;field-name-namespace&#34;&gt;field name: &lt;code&gt;namespace&lt;/code&gt;&lt;/h4&gt;
 &lt;p&gt;Adds namespace to all resources&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;namespace: my-namespace
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Adds namespace to all resources&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;namespace: my-namespace
 &lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;usage-via-plugin-4&#34;&gt;Usage via plugin&lt;/h3&gt;
 &lt;h4 id=&#34;arguments-4&#34;&gt;Arguments&lt;/h4&gt;
 &lt;blockquote&gt;
@@ -575,7 +573,7 @@ literals:
         
         
         &lt;p&gt;This is a (no reading allowed!) 60 second copy/paste guided
-example.  Full plugin docs &lt;a href=&#34;README.md&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+example.  Full plugin docs &lt;a href=&#34;..&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;This demo writes and uses a somewhat ridiculous
 &lt;em&gt;exec&lt;/em&gt; plugin (written in bash) that generates a
 &lt;code&gt;ConfigMap&lt;/code&gt;.&lt;/p&gt;

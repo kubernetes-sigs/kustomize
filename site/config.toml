@@ -61,6 +61,21 @@ languageName ="English"
 # Weight used for sorting.
 weight = 1
 
+[[menu.main]]
+    name = "Example"
+    weight = 50
+    url = "https://github.com/kubernetes-sigs/kustomize/tree/master/examples"
+
+[languages.zh]
+title = "Kustomize"
+description = "自定义 Kubernetes 配置"
+languageName ="简体中文"
+contentDir = "content/zh"
+time_format_default = "2006年01月02日"
+time_format_blog = "2006年01月02日"
+# Weight used for sorting.
+weight = 2
+
 [markup]
   [markup.goldmark]
     [markup.goldmark.renderer]

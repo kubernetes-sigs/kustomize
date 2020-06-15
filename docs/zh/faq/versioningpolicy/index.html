@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="generator" content="Hugo 0.68.3" />
+
+<META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+
+<link rel="shortcut icon" href="/favicons/favicon.ico" >
+<link rel="apple-touch-icon" href="/kustomize/favicons/apple-touch-icon-180x180.png" sizes="180x180">
+<link rel="icon" type="image/png" href="/kustomize/favicons/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="/kustomize/favicons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-36x36.png" sizes="36x36">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-48x48.png" sizes="48x48">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-72x72.png" sizes="72x72">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-144x144.png" sizes="144x144">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-192x192.png" sizes="192x192">
+
+<title>Versioning Policy | Kustomize</title><meta property="og:title" content="Versioning Policy" />
+<meta property="og:description" content="Running kustomize means one is running a particular version of a program (a CLI), using a particular version of underlying packages (a Go API), and reading a particular version of a kustomization file.
+ If you&rsquo;re having trouble with go get, please read Go API Versioning and be patient.
+ CLI Program Versioning The command kustomize version prints a three field version tag (e.g. v3.0.0) that aspires to semantic versioning." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/zh/faq/versioningpolicy/" />
+<meta property="og:site_name" content="Kustomize" />
+<meta itemprop="name" content="Versioning Policy">
+<meta itemprop="description" content="Running kustomize means one is running a particular version of a program (a CLI), using a particular version of underlying packages (a Go API), and reading a particular version of a kustomization file.
+ If you&rsquo;re having trouble with go get, please read Go API Versioning and be patient.
+ CLI Program Versioning The command kustomize version prints a three field version tag (e.g. v3.0.0) that aspires to semantic versioning.">
+
+<meta itemprop="wordCount" content="1054">
+
+
+
+<meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Versioning Policy"/>
+<meta name="twitter:description" content="Running kustomize means one is running a particular version of a program (a CLI), using a particular version of underlying packages (a Go API), and reading a particular version of a kustomization file.
+ If you&rsquo;re having trouble with go get, please read Go API Versioning and be patient.
+ CLI Program Versioning The command kustomize version prints a three field version tag (e.g. v3.0.0) that aspires to semantic versioning."/>
+
+
+
+
+
+<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
+
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+
+
+
+<link rel="stylesheet" type="text/css" href="https://kubernetes-sigs.github.io/kustomize//css/asciinema-player.css" />
+
+    <title>Versioning Policy | Kustomize</title>
+  </head>
+  <body class="td-page">
+    <header>
+      
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+        <a class="navbar-brand" href="/kustomize/zh/">
+		<span class="navbar-logo"></span><span class="text-uppercase font-weight-bold">Kustomize</span>
+	</a>
+	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+		<ul class="navbar-nav mt-2 mt-lg-0">
+			
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/zh/installation/" ><span>安装</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/zh/guides/" ><span>指南</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/zh/api-reference/" ><span>API 参考</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				<a class="nav-link" href="https://github.com/kubernetes-sigs/kustomize/tree/master/examples" target="_blank" ><span>Example</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link active" href="/kustomize/zh/faq/" ><span class="active">FAQ</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/zh/blog/" ><span>博客</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/zh/contributing/" ><span>贡献指南</span></a>
+			</li>
+			
+			
+			
+			<li class="nav-item dropdown d-none d-lg-block">
+				
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	简体中文
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/kustomize/faq/versioningpolicy/">English</a>
+	
+</div>
+			</li>
+			
+		</ul>
+	</div>
+	<div class="navbar-nav d-none d-lg-block">
+</div>
+</nav>
+
+    </header>
+    <div class="container-fluid td-outer">
+      <div class="td-main">
+        <div class="row flex-xl-nowrap">
+          <div class="col-12 col-md-3 col-xl-2 td-sidebar d-print-none">
+            
+
+
+
+
+<div id="td-sidebar-menu" class="td-sidebar__inner">
+  
+  <form class="td-sidebar__search d-flex align-items-center">
+    
+
+    <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    </button>
+  </form>
+  
+  <nav class="collapse td-sidebar-nav pt-2 pl-4" id="td-section-nav">
+    
+    <div class="nav-item dropdown d-block d-lg-none">
+      
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	简体中文
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/kustomize/faq/versioningpolicy/">English</a>
+	
+</div>
+    </div>
+    
+    
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/zh/faq/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">FAQ</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kustomizezhfaq">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/zh/faq/eschewedfeatures/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Eschewed Features</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizezhfaqeschewedfeatures">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page  active" id="m-kustomizezhfaqversioningpolicy" href="/kustomize/zh/faq/versioningpolicy/">Versioning Policy</a>
+      
+      
+    </li>
+  </ul>
+</ul>
+
+  </nav>
+</div>
+
+
+
+
+          </div>
+          <div class="d-none d-xl-block col-xl-2 td-toc d-print-none">
+            
+
+
+
+
+
+
+<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+
+
+
+
+
+<a href="https://github.com/kubernetes-sigs/kustomize/edit/master/site/content/zh/faq/versioningPolicy.md" target="_blank"><i class="fa fa-edit fa-fw"></i> 编辑此页</a>
+<a href="https://github.com/kubernetes-sigs/kustomize/issues/new?title=Versioning%20Policy" target="_blank"><i class="fab fa-github fa-fw"></i> 提交文档问题</a>
+
+
+<a href="https://github.com/kubernetes-sigs/kustomize/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> 提交项目问题</a>
+
+</div>
+
+
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#cli-program-versioning">CLI Program Versioning</a>
+      <ul>
+        <li><a href="#installation">Installation</a></li>
+      </ul>
+    </li>
+    <li><a href="#go-api-versioning">Go API Versioning</a>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
+    <li><a href="#kustomization-file-versioning">Kustomization File Versioning</a>
+      <ul>
+        <li><a href="#field-change-policy">Field Change Policy</a></li>
+        <li><a href="#the-edit-fix-command">The <code>edit fix</code> Command</a></li>
+        <li><a href="#examples">Examples</a></li>
+      </ul>
+    </li>
+    <li><a href="#relationship-to-the-k8s-api">Relationship to the k8s API</a>
+      <ul>
+        <li><a href="#review-of-k8s-api-versioning">Review of k8s API versioning</a></li>
+        <li><a href="#differences">Differences</a></li>
+        <li><a href="#additional-kustomization-file-rules">Additional Kustomization file rules</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+          </div>
+          <main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
+            
+  
+
+            <nav aria-label="breadcrumb" class="d-none d-md-block d-print-none">
+	<ol class="breadcrumb spb-1">
+		
+
+
+
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://kubernetes-sigs.github.io/kustomize/zh/faq/">FAQ</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item active" aria-current="page">
+	<a href="https://kubernetes-sigs.github.io/kustomize/zh/faq/versioningpolicy/">Versioning Policy</a>
+</li>
+
+	</ol>
+</nav	>
+
+            
+<div class="td-content">
+	<h1>Versioning Policy</h1>
+	
+	<p>Running <code>kustomize</code> means one is running a
+particular version of a program (a CLI), using a
+particular version of underlying packages (a Go
+API), and reading a particular version of a
+<a href="/kustomize/api-reference/glossary#kustomization">kustomization</a> file.</p>
+<blockquote>
+<p>If you&rsquo;re having trouble with <code>go get</code>, please
+read  <a href="#go-api-versioning">Go API Versioning</a>
+and be patient.</p>
+</blockquote>
+<h2 id="cli-program-versioning">CLI Program Versioning</h2>
+<p>The command <code>kustomize version</code> prints a three
+field version tag (e.g. <code>v3.0.0</code>) that aspires to
+<a href="https://semver.org">semantic versioning</a>.</p>
+<p>This notion of semver applies only to the CLI;
+the command names, their arguments and their flags.</p>
+<p>The major version changes when some backward
+incompatibility appears in how the commands
+behave.</p>
+<h3 id="installation">Installation</h3>
+<p>See the <a href="INSTALL.md">installation docs</a>.</p>
+<h2 id="go-api-versioning">Go API Versioning</h2>
+<p>The public methods in the public packages
+of module <code>sigs.k8s.io/kustomize/api</code> constitute
+the <em>kustomize Go API</em>.</p>
+<h4 id="version-sigsk8siokustomizev3-and-earlier">Version sigs.k8s.io/kustomize/v3 and earlier</h4>
+<p>In <code>kustomize/v3</code> (and preceding major versions), the
+kustomize program and the API live the same Go
+module at <code>sigs.k8s.io/kustomize</code>, at <a href="https://github.com/golang/go/wiki/Modules#releasing-modules-v2-or-higher">import path</a>
+<code>sigs.k8s.io/kustomize/v3</code>.</p>
+<p>This has been fine for the CLI, but it presents a
+problem for the Go API.</p>
+<p>The process around Go modules, in particular the
+notion of <a href="https://research.swtch.com/vgo-mvs">minimal version selection</a>, demands
+that the module respect semver.</p>
+<p>Almost all the code in module
+<code>sigs.k8s.io/kustomize/v3</code> is exposed (not in a
+directory named <code>internal</code>).  Even a minor
+refactor changing a method name or argument type
+in some deeply buried (but still public) method is
+a backward incompatible change.  As a result, Go
+API semver hasn&rsquo;t been followed.  This was a mistake.</p>
+<p>Some options are</p>
+<ul>
+<li>
+<p>continue to ignore Go API semver and stick to
+CLI semver (eliminating the usefullness of
+minimal version selection),</p>
+</li>
+<li>
+<p>obey semver, and increment the module&rsquo;s major
+version number with every release (drastically
+reducing the usefullness of minimal version
+selection - since virtually all releases will
+be major),</p>
+</li>
+<li>
+<p>slow down change in the huge API in favor of
+stability, yet somehow continue to deliver
+features,</p>
+</li>
+<li>
+<p>drastically reduce the API surface, stabilize on
+semver there, and refactor as needed inside
+<code>internal</code>.</p>
+</li>
+</ul>
+<p>The last option seems the most appealing.</p>
+<h4 id="the-first-stable-api-version-is-coming">The first stable API version is coming</h4>
+<p>The first stable API version will launch
+as the Go module</p>
+<pre><code>sigs.k8s.io/kustomize/api
+</code></pre><p>The <em>kustomize</em> program itself (<code>main.go</code>
+and CLI specific code) will have moved out of
+<code>sigs.k8s.io/kustomize</code> and into the new module
+<code>sigs.k8s.io/kustomize/kustomize</code>.  This is a
+submodule in the same repo, and it will retain its
+current notion of semver (e.g. a backward
+incompatible change in command behavior will
+trigger a major version bump).  This module will
+not export packages; it&rsquo;s just home to a <code>main</code>
+package.</p>
+<p>The <code>sigs.k8s.io/kustomize/api</code> module will
+obey semver with a sustainable public
+surface, informed by current usage.  Clients
+should import packages from this module, i.e.
+from import paths prefixed by
+<code>sigs.k8s.io/kustomize/api/</code> at first,
+and later by <code>sigs.k8s.io/kustomize/api/v2/</code>.
+The kustomize binary
+itself is an API client requiring this module.</p>
+<p>The clients and API will evolve independently.</p>
+<h2 id="kustomization-file-versioning">Kustomization File Versioning</h2>
+<p>The kustomization file is a struct that is part of
+the kustomize Go API (the <code>sigs.k8s.io/kustomize</code>
+module), but it also evolves as a k8s API object -
+it has an <code>apiVersion</code> field containing its
+own version number.</p>
+<h3 id="field-change-policy">Field Change Policy</h3>
+<ul>
+<li>A field&rsquo;s meaning cannot be changed.</li>
+<li>A field may be deprecated, then removed.</li>
+<li>Deprecation means triggering a <em>minor</em> (semver)
+version bump in the kustomize Go API, and
+defining a migration path in a non-fatal error
+message.</li>
+<li>Removal means triggering a <em>major</em> (semver)
+version bump in the kustomize Go API, and fatal
+error if field encountered (as with any unknown
+field).  Likewise a change in <code>apiVersion</code>.</li>
+</ul>
+<h3 id="the-edit-fix-command">The <code>edit fix</code> Command</h3>
+<p>This <code>kustomize</code> command reads a Kustomization
+file, converts deprecated fields to new
+fields, and writes it out again in the latest
+format.</p>
+<p>This is a type version upgrade mechanism that
+works within <em>major</em> API revisions.  There is no
+downgrade capability, as there&rsquo;s no use case for
+it (see discussion below).</p>
+<h3 id="examples">Examples</h3>
+<p>With the 2.0.0 release, there were three field
+removals:</p>
+<ul>
+<li><code>imageTag</code> was deprecated when <code>images</code> was
+introduced, because the latter offers more
+general features for image data manipulation.
+<code>imageTag</code> was removed in v2.0.0.</li>
+<li><code>patches</code> was deprecated and replaced by
+<code>patchesStrategicMerge</code> when <code>patchesJson6902</code>
+was introduced, to make a clearer
+distinction between patch specification formats.
+<code>patches</code> was removed in v2.0.0.</li>
+<li><code>secretGenerator/commands</code> was removed
+due to security concerns in v2.0.0
+with no deprecation period.</li>
+</ul>
+<p>The <code>edit fix</code> command in a v2.0.x binary
+will no longer recognize these fields.</p>
+<h2 id="relationship-to-the-k8s-api">Relationship to the k8s API</h2>
+<h3 id="review-of-k8s-api-versioning">Review of k8s API versioning</h3>
+<p>The k8s API has specific <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md">conventions</a> and a
+process for making <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api_changes.md">changes</a>.</p>
+<p>The presence of an <code>apiVersion</code> field in a k8s
+native type signals:</p>
+<ul>
+<li>its reliability level (alpha vs beta vs
+generally available),</li>
+<li>the existence of code to provide default values
+to fields not present in a serialization,</li>
+<li>the existence of code to provide both forward
+and backward conversion between different
+versions of types.</li>
+</ul>
+<p>The k8s API promises a lossless <em>conversion</em>
+between versions over a specific range.  This
+means that a recent client can write an object
+bearing the newest possible value for its version,
+the server will accept it and store it in
+&ldquo;versionless&rdquo; JSON form in storage, and can
+convert it to a range of older versions should
+an older client request data.</p>
+<p>For native k8s types, this all requires writing Go
+code in the kubernetes core repo, to provide
+defaulting and conversions.</p>
+<p>For CRDs, there&rsquo;s a <a href="https://github.com/kubernetes/community/blob/master/contributors/design-proposals/api-machinery/customresources-versioning.md">proposal</a> on how to manage
+versioning (e.g. a remote service can offer type
+defaulting and conversions).</p>
+<h3 id="differences">Differences</h3>
+<ul>
+<li>A k8s API server is able to go <em>forward</em> and
+<em>backward</em> in versioning, to work with older
+clients, over <a href="https://kubernetes.io/docs/reference/using-api/deprecation-policy">some range</a>.</li>
+<li>The <code>kustomize edit fix</code> command only moves
+<em>forward</em> within a <em>major</em> API
+version.</li>
+</ul>
+<p>At the time of writing, the YAML in a
+kustomization file does not represent a <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md">k8s API</a>
+object, and the kustomize command and associated
+library is neither a server of, nor a client to,
+the k8s API.</p>
+<h3 id="additional-kustomization-file-rules">Additional Kustomization file rules</h3>
+<p>In addition to the <a href="#field-change-policy">field change policy</a> described
+above, kustomization files conform to
+the following rules.</p>
+<h4 id="eschew-classic-k8s-fields">Eschew classic k8s fields</h4>
+<p>Field names with dedicated meaning in k8s
+(<code>metadata</code>, <code>spec</code>, <code>status</code>, etc.)  aren&rsquo;t used.
+This is enforced via code review.</p>
+<h4 id="default-values-for-k8s-kind-and-apiversion">Default values for k8s <code>kind</code> and <code>apiVersion</code></h4>
+<p>In <code>v3</code> or below, the two <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#resources">special</a> k8s
+resource fields <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#types-kinds"><code>kind</code></a> and <a href="https://kubernetes.io/docs/concepts/overview/kubernetes-api/#api-versioning"><code>apiVersion</code></a> may
+be omitted from the kustomization file.</p>
+<p>If either field is present, they both must be.
+If present, the value of <code>kind</code> must be:</p>
+<blockquote>
+<pre><code>kind: Kustomization
+</code></pre></blockquote>
+<p>If missing, the value of <code>apiVersion</code> defaults to</p>
+<blockquote>
+<pre><code>apiVersion: kustomize.config.k8s.io/v1beta1
+</code></pre></blockquote>
+
+	
+	
+	<div class="text-muted mt-5 pt-3 border-top">最后修改 0001年01月01日
+</div>
+</div>
+
+
+          </main>
+        </div>
+      </div>
+      
+<footer class="bg-dark py-5 row d-print-none">
+  <div class="container-fluid mx-sm-5">
+    <div class="row">
+      <div class="col-6 col-sm-4 text-xs-center order-sm-2">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kubernetes-sig-cli">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-6 col-sm-4 text-right text-xs-center order-sm-3">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
+    <a class="text-white" target="_blank" href="https://github.com/kubernetes-sigs/kustomize">
+      <i class="fab fa-github"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-12 col-sm-4 text-center py-2 order-sm-2">
+        <small class="text-white">&copy; 2020 Kubernetes Authors All Rights Reserved</small>
+        
+	
+		
+	
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    </div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+
+
+
+
+
+
+<script src="/kustomize/js/main.min.35b203b3c2114e187f6e4bbf0903c511aaaac5535186321e3b5e364656b6de0c.js" integrity="sha256-NbIDs8IRThh/bku/CQPFEaqqxVNRhjIeO142Rla23gw=" crossorigin="anonymous"></script>
+
+
+
+<script src="https://kubernetes-sigs.github.io/kustomize//js/asciinema-player.js"></script>
+
+
+  </body>
+</html>

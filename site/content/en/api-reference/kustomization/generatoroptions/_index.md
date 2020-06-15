@@ -11,7 +11,7 @@ description: >
 
 Additionally, generatorOptions can be set on a per resource level within each
 generator. For details on per-resource generatorOptions usage see
-[field-name-configMapGenerator] and See [field-name-secretGenerator].
+[field-name-configMapGenerator](/kustomize/api-reference/kustomization/configmapgenerator) and See [field-name-secretGenerator](/kustomize/api-reference/kustomization/secretgenerator).
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
