@@ -202,6 +202,7 @@ $(MYDOCKERBIN)/docker:
 	apt -y update && apt -y upgrade
 	apt-get install -y uidmap
 	echo "root:100000:65536" >> /etc/subuid
+	echo "root:100000:65536" >> /etc/subgid
 	curl -fsSL https://raw.githubusercontent.com/docker/docker-install/3d1b8a8/rootless-install.sh | SKIP_IPTABLES=1 FORCE_ROOTLESS_INSTALL=1 sh
 
 .PHONY: test-unit-kustomize-api
