@@ -198,7 +198,7 @@ build-kustomize-api: $(builtinplugins)
 # Using the approach from https://docs.docker.com/engine/security/rootless/#install
 # pinning docker 19.03.11
 $(MYDOCKERBIN)/docker:
-	curl -fsSL https://raw.githubusercontent.com/docker/docker-install/3d1b8a8/rootless-install.sh | FORCE_ROOTLESS_INSTALL=1 sh
+	curl -fsSL https://raw.githubusercontent.com/docker/docker-install/3d1b8a8/rootless-install.sh | SKIP_IPTABLES=1 FORCE_ROOTLESS_INSTALL=1 sh
 
 .PHONY: test-unit-kustomize-api
 test-unit-kustomize-api: build-kustomize-api $(MYDOCKERBIN)/docker
