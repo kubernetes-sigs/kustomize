@@ -199,6 +199,7 @@ build-kustomize-api: $(builtinplugins)
 # pinning docker 19.03.11
 $(MYDOCKERBIN)/docker:
 	cat /etc/os-release
+	apt -y update && apt -y upgrade
 	apt-get install -y uidmap
 	curl -fsSL https://raw.githubusercontent.com/docker/docker-install/3d1b8a8/rootless-install.sh | SKIP_IPTABLES=1 FORCE_ROOTLESS_INSTALL=1 sh
 
