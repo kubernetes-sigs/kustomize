@@ -306,7 +306,6 @@ A Go plugin for kustomize looks like this:
 > package main
 >
 > import (
->	"sigs.k8s.io/kustomize/api/ifc"
 >	"sigs.k8s.io/kustomize/api/resmap"
 >   ...
 > )
@@ -316,8 +315,7 @@ A Go plugin for kustomize looks like this:
 > var KustomizePlugin plugin
 >
 > func (p *plugin) Config(
->    ldr ifc.Loader,
->    rf *resmap.Factory,
+>    h *resmap.PluginHelpers,
 >    c []byte) error {...}
 >
 > func (p *plugin) Generate() (resmap.ResMap, error) {...}
