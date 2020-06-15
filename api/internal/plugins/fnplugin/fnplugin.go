@@ -186,7 +186,7 @@ func (p *FnPlugin) invokePlugin(input []byte) ([]byte, error) {
 	err = p.runFns.Execute()
 	if err != nil {
 		return nil, errors.Wrap(
-			err, "couln't execute function")
+			err, "couldn't execute function")
 	}
 
 	//log.Printf("fn returned:\n%s\n", runFnsOut.String())
