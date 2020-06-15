@@ -4,8 +4,9 @@
 # Makefile for kustomize CLI and API.
 
 MYGOBIN := $(shell go env GOPATH)/bin
+MYDOCKERBIN := $(HOME)/bin
 SHELL := /bin/bash
-export PATH := $(MYGOBIN):$(PATH)
+export PATH := $(MYGOBIN):$(MYDOCKERBIN):$(PATH)
 
 .PHONY: all
 all: verify-kustomize
@@ -194,9 +195,14 @@ lint-kustomize: install-tools $(builtinplugins)
 build-kustomize-api: $(builtinplugins)
 	cd api; go build ./...
 
+# Using the approach from https://docs.docker.com/engine/security/rootless/#install
+# pinning docker 19.03.11
+$(MYDOCKERBIN)/docker:
+	curl -fsSL https://raw.githubusercontent.com/docker/docker-install/3d1b8a8/rootless-install.sh | sh
+
 .PHONY: test-unit-kustomize-api
-test-unit-kustomize-api: build-kustomize-api
-	cd api; go test ./...  -ldflags "-X sigs.k8s.io/kustomize/api/provenance.version=v444.333.222"
+test-unit-kustomize-api: build-kustomize-api $(MYDOCKERBIN)/docker
+	cd api; DOCKER_HOST=unix://$(XDG_RUNTIME_DIR)/docker.sock go test ./...  -ldflags "-X sigs.k8s.io/kustomize/api/provenance.version=v444.333.222"
 
 .PHONY: test-unit-kustomize-plugins
 test-unit-kustomize-plugins:
