@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-openapi/spec"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -1294,7 +1295,130 @@ openAPI:
 	}
 }
 
-func TestJoinCompositeStrings(t *testing.T) {
-	input := []string{"10", "true", "hi", "1.1", "1.8.1"}
-	assert.Equal(t, `10,true,"hi",1.1,"1.8.1"`, JoinCompositeStrings(input))
+func TestValidateAgainstSchema(t *testing.T) {
+	testCases := []struct {
+		name             string
+		setter           *setter
+		schema           spec.SchemaProps
+		shouldValidate   bool
+		expectedErrorMsg string
+	}{
+		{
+			name: "simple string value",
+			setter: &setter{
+				Name:  "foo",
+				Value: "bar",
+			},
+			schema: spec.SchemaProps{
+				Type: []string{"string"},
+			},
+			shouldValidate: true,
+		},
+		{
+			name: "simple bool value",
+			setter: &setter{
+				Name:  "foo",
+				Value: "false",
+			},
+			schema: spec.SchemaProps{
+				Type: []string{"boolean"},
+			},
+			shouldValidate: true,
+		},
+		{
+			name: "simple null value",
+			setter: &setter{
+				Name:  "foo",
+				Value: "null",
+			},
+			schema: spec.SchemaProps{
+				Type: []string{"null"},
+			},
+			shouldValidate: true,
+		},
+		{
+			name: "bool value in yaml but not openapi",
+			setter: &setter{
+				Name:  "foo",
+				Value: "yes",
+			},
+			schema: spec.SchemaProps{
+				Type: []string{"string"},
+			},
+			shouldValidate: true,
+		},
+		{
+			name: "number value should not be accepted as string",
+			setter: &setter{
+				Name:  "foo",
+				Value: "45",
+			},
+			schema: spec.SchemaProps{
+				Type: []string{"integer"},
+			},
+			shouldValidate: true,
+		},
+		{
+			name: "list with int values",
+			setter: &setter{
+				Name:       "foo",
+				ListValues: []string{"123", "456"},
+			},
+			schema: spec.SchemaProps{
+				Type: []string{"array"},
+				Items: &spec.SchemaOrArray{
+					Schema: &spec.Schema{
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"integer"},
+						},
+					},
+				},
+			},
+			shouldValidate: true,
+		},
+		{
+			name: "list expecting int values, but with a string",
+			setter: &setter{
+				Name:       "foo",
+				ListValues: []string{"123", "456", "abc"},
+			},
+			schema: spec.SchemaProps{
+				Type: []string{"array"},
+				Items: &spec.SchemaOrArray{
+					Schema: &spec.Schema{
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"integer"},
+						},
+					},
+				},
+			},
+			shouldValidate:   false,
+			expectedErrorMsg: "foo in body must be of type integer",
+		},
+	}
+
+	for i := range testCases {
+		test := testCases[i]
+		t.Run(test.name, func(t *testing.T) {
+			ext := &CliExtension{
+				Setter: test.setter,
+			}
+
+			schema := &spec.Schema{
+				SchemaProps: test.schema,
+			}
+
+			err := validateAgainstSchema(ext, schema)
+
+			if test.shouldValidate {
+				assert.NoError(t, err)
+				return
+			}
+
+			if !assert.Error(t, err) {
+				t.FailNow()
+			}
+			assert.Contains(t, err.Error(), test.expectedErrorMsg)
+		})
+	}
 }
