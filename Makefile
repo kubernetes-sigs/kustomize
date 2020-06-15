@@ -207,7 +207,7 @@ $(MYDOCKERBIN)/docker:
 
 .PHONY: test-unit-kustomize-api
 test-unit-kustomize-api: build-kustomize-api $(MYDOCKERBIN)/docker
-	export XDG_RUNTIME_DIR=/tmp/docker-0; export DOCKER_HOST=unix:///tmp/docker-0/docker.sock; /root/bin/dockerd-rootless.sh --experimental --iptables=false --storage-driver vfs &; cd api; go test ./...  -ldflags "-X sigs.k8s.io/kustomize/api/provenance.version=v444.333.222"
+	export XDG_RUNTIME_DIR=/tmp/docker-0; export DOCKER_HOST=unix:///tmp/docker-0/docker.sock; /root/bin/dockerd-rootless.sh --experimental --iptables=false --storage-driver vfs & cd api; go test ./...  -ldflags "-X sigs.k8s.io/kustomize/api/provenance.version=v444.333.222"
 
 .PHONY: test-unit-kustomize-plugins
 test-unit-kustomize-plugins:
