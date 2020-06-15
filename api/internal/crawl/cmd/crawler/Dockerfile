@@ -1,4 +1,4 @@
-FROM golang:1.11 AS build
+FROM golang:1.14 AS build
 
 ARG GO111MODULE=on
 
