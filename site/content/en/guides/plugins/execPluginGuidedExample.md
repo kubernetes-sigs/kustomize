@@ -7,7 +7,7 @@ description: >
 ---
 
 This is a (no reading allowed!) 60 second copy/paste guided
-example.  Full plugin docs [here](README.md).
+example.  Full plugin docs [here](..).
 
 This demo writes and uses a somewhat ridiculous
 _exec_ plugin (written in bash) that generates a

@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="generator" content="Hugo 0.68.3" />
+
+<META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+
+<link rel="shortcut icon" href="/favicons/favicon.ico" >
+<link rel="apple-touch-icon" href="/kustomize/favicons/apple-touch-icon-180x180.png" sizes="180x180">
+<link rel="icon" type="image/png" href="/kustomize/favicons/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="/kustomize/favicons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-36x36.png" sizes="36x36">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-48x48.png" sizes="48x48">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-72x72.png" sizes="72x72">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-144x144.png" sizes="144x144">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-192x192.png" sizes="192x192">
+
+<title>Go 插件注意事项 | Kustomize</title><meta property="og:title" content="Go 插件注意事项" />
+<meta property="og:description" content="Go 插件注意事项
+" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/zh/guides/plugins/goplugincaveats/" />
+<meta property="og:site_name" content="Kustomize" />
+<meta itemprop="name" content="Go 插件注意事项">
+<meta itemprop="description" content="Go 插件注意事项
+">
+
+<meta itemprop="wordCount" content="145">
+
+
+
+<meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Go 插件注意事项"/>
+<meta name="twitter:description" content="Go 插件注意事项
+"/>
+
+
+
+
+
+<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
+
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+
+
+
+<link rel="stylesheet" type="text/css" href="https://kubernetes-sigs.github.io/kustomize//css/asciinema-player.css" />
+
+    <title>Go 插件注意事项 | Kustomize</title>
+  </head>
+  <body class="td-page">
+    <header>
+      
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+        <a class="navbar-brand" href="/kustomize/zh/">
+		<span class="navbar-logo"></span><span class="text-uppercase font-weight-bold">Kustomize</span>
+	</a>
+	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+		<ul class="navbar-nav mt-2 mt-lg-0">
+			
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/zh/installation/" ><span>安装</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link active" href="/kustomize/zh/guides/" ><span class="active">指南</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/zh/api-reference/" ><span>API 参考</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				<a class="nav-link" href="https://github.com/kubernetes-sigs/kustomize/tree/master/examples" target="_blank" ><span>Example</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/zh/faq/" ><span>FAQ</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/zh/blog/" ><span>博客</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/zh/contributing/" ><span>贡献指南</span></a>
+			</li>
+			
+			
+			
+			<li class="nav-item dropdown d-none d-lg-block">
+				
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	简体中文
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/kustomize/guides/plugins/goplugincaveats/">English</a>
+	
+</div>
+			</li>
+			
+		</ul>
+	</div>
+	<div class="navbar-nav d-none d-lg-block">
+</div>
+</nav>
+
+    </header>
+    <div class="container-fluid td-outer">
+      <div class="td-main">
+        <div class="row flex-xl-nowrap">
+          <div class="col-12 col-md-3 col-xl-2 td-sidebar d-print-none">
+            
+
+
+
+
+<div id="td-sidebar-menu" class="td-sidebar__inner">
+  
+  <form class="td-sidebar__search d-flex align-items-center">
+    
+
+    <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    </button>
+  </form>
+  
+  <nav class="collapse td-sidebar-nav pt-2 pl-4" id="td-section-nav">
+    
+    <div class="nav-item dropdown d-block d-lg-none">
+      
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	简体中文
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/kustomize/guides/plugins/goplugincaveats/">English</a>
+	
+</div>
+    </div>
+    
+    
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/zh/guides/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">指南</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kustomizezhguides">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/zh/guides/bespoke/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">配置定制（Bespoke configuration）</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizezhguidesbespoke">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/zh/guides/offtheshelf/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">通用配置（Off-the-shelf configuration）</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizezhguidesofftheshelf">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/zh/guides/plugins/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Kustomize 插件</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kustomizezhguidesplugins">
+      
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizezhguidespluginsbuiltins" href="/kustomize/zh/guides/plugins/builtins/">内置插件</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizezhguidespluginsexecpluginguidedexample" href="/kustomize/zh/guides/plugins/execpluginguidedexample/">Exec 插件示例</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page  active" id="m-kustomizezhguidespluginsgoplugincaveats" href="/kustomize/zh/guides/plugins/goplugincaveats/">Go 插件注意事项</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizezhguidespluginsgopluginguidedexample" href="/kustomize/zh/guides/plugins/gopluginguidedexample/">Go 插件示例</a>
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+  </nav>
+</div>
+
+
+
+
+          </div>
+          <div class="d-none d-xl-block col-xl-2 td-toc d-print-none">
+            
+
+
+
+
+
+
+<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+
+
+
+
+
+<a href="https://github.com/kubernetes-sigs/kustomize/edit/master/site/content/zh/guides/plugins/goPluginCaveats.md" target="_blank"><i class="fa fa-edit fa-fw"></i> 编辑此页</a>
+<a href="https://github.com/kubernetes-sigs/kustomize/issues/new?title=Go%20%e6%8f%92%e4%bb%b6%e6%b3%a8%e6%84%8f%e4%ba%8b%e9%a1%b9" target="_blank"><i class="fab fa-github fa-fw"></i> 提交文档问题</a>
+
+
+<a href="https://github.com/kubernetes-sigs/kustomize/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> 提交项目问题</a>
+
+</div>
+
+
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#the-skew-problem">The skew problem</a></li>
+    <li><a href="#为什么支持-go-插件">为什么支持 Go 插件？</a>
+      <ul>
+        <li><a href="#安全">安全</a></li>
+        <li><a href="#debugging">Debugging</a></li>
+        <li><a href="#贡献单元化">贡献单元化</a></li>
+        <li><a href="#围绕生态系统发展">围绕生态系统发展</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+          </div>
+          <main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
+            
+  
+
+            <nav aria-label="breadcrumb" class="d-none d-md-block d-print-none">
+	<ol class="breadcrumb spb-1">
+		
+
+
+
+
+
+
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://kubernetes-sigs.github.io/kustomize/zh/guides/">指南</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://kubernetes-sigs.github.io/kustomize/zh/guides/plugins/">Kustomize 插件</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item active" aria-current="page">
+	<a href="https://kubernetes-sigs.github.io/kustomize/zh/guides/plugins/goplugincaveats/">Go 插件注意事项</a>
+</li>
+
+	</ol>
+</nav	>
+
+            
+<div class="td-content">
+	<h1>Go 插件注意事项</h1>
+	<div class="lead">Go 插件注意事项</div>
+	<p><em>Go 插件</em> 是一个编译产品/组件，其定义见 <a href="https://golang.org/pkg/plugin">plugin package</a>，需要特殊的构建标志，不能单独运行，必须加载到正在运行的 Go 程序中。</p>
+<blockquote>
+<p>用 Go 编写的普通程序可以作为 <em>exec 插件</em>，但是不能作为 <em>Go 插件</em>。</p>
+</blockquote>
+<p>Go 插件允许运行 kustomize 扩展，而无需在每次运行时将资源分配到子流程或从子流程中解封所有资源数据。Go 插件 API 确保一定程度的一致性，以避免混淆下游转换器。</p>
+<p>Go 插件的工作方式与 <a href="https://golang.org/pkg/plugin">plugin package</a> 中所述的相同，但与 <em>plugin</em> 一词相关的常见概念不同。</p>
+<h2 id="the-skew-problem">The skew problem</h2>
+<p>Go 插件编译会创建一个 <a href="https://en.wikipedia.org/wiki/Executable_and_Linkable_Format">ELF</a> 格式的 <code>.so</code> 文件，根据定义，该文件不包含有关目标代码来源的信息。</p>
+<p>主程序 ELF 和插件 ELF 的编译条件（软件包依赖项的版本 <code>GOOS</code>，<code>GOARCH</code>）之间的偏移会导致插件加载失败，并带有无用的错误消息。</p>
+<p>Exec 插件也会缺乏来源，但不会因编译不正确而失败。</p>
+<p>在任何情况下，共享插件的最好方法是使用某种 <em>捆绑包</em>（git repo URL、git 存档文件、tar 包等），其中包含可解包至 <code>$XDG_CONFIG_HOME/kustomize/plugin</code> 的源代码，测试和相关数据。</p>
+<p>对于 Go 插件，使用共享插件的最终用户 <em>必须同时编译 kustomize 和 plugin</em>。</p>
+<p>这意味着一次性运行</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#8f5902;font-style:italic"># Or whatever is appropriate at time of reading</span>
+<span style="color:#000">GOPATH</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">${</span><span style="color:#000">whatever</span><span style="color:#4e9a06">}</span> <span style="color:#000">GO111MODULE</span><span style="color:#ce5c00;font-weight:bold">=</span>on go get sigs.k8s.io/kustomize/api
+</code></pre></div><p>然后使用一个正常的开发周期</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">go build -buildmode plugin <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>    -o <span style="color:#4e9a06">${</span><span style="color:#000">wherever</span><span style="color:#4e9a06">}</span>/<span style="color:#4e9a06">${</span><span style="color:#000">kind</span><span style="color:#4e9a06">}</span>.so <span style="color:#4e9a06">${</span><span style="color:#000">wherever</span><span style="color:#4e9a06">}</span>/<span style="color:#4e9a06">${</span><span style="color:#000">kind</span><span style="color:#4e9a06">}</span>.go
+</code></pre></div><p>并根据需要调整路径和发行版本标记（例如 <code>v3.0.0</code>）。</p>
+<p>为了进行比较，可以参考编写 <a href="https://www.tensorflow.org/guide/extend/op">tensorflow plugin</a> 必须做的事情。</p>
+<h2 id="为什么支持-go-插件">为什么支持 Go 插件？</h2>
+<h3 id="安全">安全</h3>
+<p>Go 插件开发者可以操作与原生 kustomize 操作相同的 API，可确保某些语义、变量和检查等一致。exec 插件子进程通过 stdin/stdout 来处理这些问题，但对于下游的转化器和使用者来说，会更容易把事情搞砸。</p>
+<p>关键点：如果插件通过 kustomize 提供的文件 <code>Loader</code> 接口读取文件，则会受到 kustomize 文件加载限制的约束。当然，除了代码审计之外，没有什么可以阻止 Go 插件导入 io 包并执行其所需的任何操作。</p>
+<h3 id="debugging">Debugging</h3>
+<p>Go 插件开发者可以在功能测试中运行插件时，在 <em>本地</em> 调试插件，并在插件内部和其他位置设置断点。</p>
+<p>为了获得两全其美的方式（共享性和安全性），开发人员可以编写一个 <code>.go</code> 程序作为 <em>exec 插件</em>，同时可以被 <code>go generate</code> 程序处理生成 Go 插件（反之亦然）。</p>
+<h3 id="贡献单元化">贡献单元化</h3>
+<p>所有内置的生成器和转换器本身都是 Go 插件。这意味着 kustomize 维护者可以将贡献的插件升级为内置插件，而无需更改代码（超出常规代码审阅要求的范围）。</p>
+<h3 id="围绕生态系统发展">围绕生态系统发展</h3>
+<p>工具可以简化 Go 插件的 <em>共享</em>，但是这需要大量的 Go 插件的创作，而这又会导致围绕共享插件的混乱。<a href="https://github.com/golang/go/wiki/Modules">Go modules</a> 一旦被更广泛地采用，将解决共享插件最大的难题：含糊不清的插件 vs 主机依赖性。</p>
+
+	
+	
+	<div class="text-muted mt-5 pt-3 border-top">最后修改 0001年01月01日
+</div>
+</div>
+
+
+          </main>
+        </div>
+      </div>
+      
+<footer class="bg-dark py-5 row d-print-none">
+  <div class="container-fluid mx-sm-5">
+    <div class="row">
+      <div class="col-6 col-sm-4 text-xs-center order-sm-2">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kubernetes-sig-cli">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-6 col-sm-4 text-right text-xs-center order-sm-3">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
+    <a class="text-white" target="_blank" href="https://github.com/kubernetes-sigs/kustomize">
+      <i class="fab fa-github"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-12 col-sm-4 text-center py-2 order-sm-2">
+        <small class="text-white">&copy; 2020 Kubernetes Authors All Rights Reserved</small>
+        
+	
+		
+	
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    </div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+
+
+
+
+
+
+<script src="/kustomize/js/main.min.35b203b3c2114e187f6e4bbf0903c511aaaac5535186321e3b5e364656b6de0c.js" integrity="sha256-NbIDs8IRThh/bku/CQPFEaqqxVNRhjIeO142Rla23gw=" crossorigin="anonymous"></script>
+
+
+
+<script src="https://kubernetes-sigs.github.io/kustomize//js/asciinema-player.js"></script>
+
+
+  </body>
+</html>
