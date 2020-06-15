@@ -1,12 +1,21 @@
 package krusty_test
 
 import (
+	"os/exec"
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
+func skipIfNoDocker(t *testing.T) {
+	if _, err := exec.LookPath("docker"); err != nil {
+		t.Skip("skipping because docker binary wasn't found in PATH")
+	}
+}
+
 func TestFnGenerator(t *testing.T) {
+	skipIfNoDocker(t)
+
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
 
@@ -221,6 +230,8 @@ spec:
 }
 
 func TestFnTransformer(t *testing.T) {
+	skipIfNoDocker(t)
+
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
 
