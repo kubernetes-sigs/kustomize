@@ -5,6 +5,7 @@ package target
 
 import (
 	"bytes"
+	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -288,12 +289,34 @@ func (kt *KustTarget) runValidators(ra *accumulator.ResAccumulator) error {
 		return err
 	}
 	for _, v := range validators {
-		err := v.Validate(ra.ResMap())
+		// Validators shouldn't modify the resource map
+		orignalHash, err := getSha1Hash(ra.ResMap())
 		if err != nil {
 			return err
 		}
+		err = v.Validate(ra.ResMap())
+		if err != nil {
+			return err
+		}
+		newHash, err := getSha1Hash(ra.ResMap())
+		if err != nil {
+			return err
+		}
+		if !bytes.Equal(orignalHash, newHash) {
+			return fmt.Errorf("validator %#v shouldn't modify the resource map", v)
+		}
 	}
 	return nil
+}
+
+func getSha1Hash(rm resmap.ResMap) ([]byte, error) {
+	sha1Hash := sha1.New()
+	yamlBytes, err := rm.AsYaml()
+	if err != nil {
+		return nil, err
+	}
+	sha1Hash.Write(yamlBytes)
+	return sha1Hash.Sum(nil), nil
 }
 
 func (kt *KustTarget) configureExternalValidators() ([]resmap.Validator, error) {
