@@ -130,14 +130,16 @@ spec:
 
 		{
 			name:   "add replicas with schema list values",
-			args:   []string{"list", "a", "--description", "hello world", "--set-by", "me", "--type", "array"},
-			schema: `{"maxItems": 2, "type": "array", "items": {"type": "string"}}`,
+			args:   []string{"list", "a", "--description", "hello world", "--set-by", "me", "--type", "array", "--field", "spec.list"},
+			schema: `{"maxItems": 3, "type": "array", "items": {"type": "string"}}`,
 			input: `
 apiVersion: example.com/v1beta1
 kind: Example
 spec:
   list:
   - "a"
+  - "b"
+  - "c"
  `,
 			inputOpenAPI: `
 apiVersion: v1alpha1
@@ -151,21 +153,26 @@ openAPI:
     io.k8s.cli.setters.list:
       items:
         type: string
-      maxItems: 2
+      maxItems: 3
       type: array
       description: hello world
       x-k8s-cli:
         setter:
           name: list
-          value: a
+          listValues:
+          - a
+          - b
+          - c
           setBy: me
  `,
 			expectedResources: `
 apiVersion: example.com/v1beta1
 kind: Example
 spec:
-  list:
-  - "a" # {"$openapi":"list"}
+  list: # {"$openapi":"list"}
+  - "a"
+  - "b"
+  - "c"
  `,
 		},
 		{

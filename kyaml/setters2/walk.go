@@ -23,6 +23,12 @@ type visitor interface {
 	// path is the path to the field
 	// oa is the OpenAPI schema for the field
 	visitSequence(node *yaml.RNode, path string, oa *openapi.ResourceSchema) error
+
+	// visitMapping is called for each Mapping field value on a resource
+	// node is the mapping field value
+	// path is the path to the field
+	// oa is the OpenAPI schema for the field
+	visitMapping(node *yaml.RNode, path string, oa *openapi.ResourceSchema) error
 }
 
 // accept invokes the appropriate function on v for each field in object
@@ -39,6 +45,9 @@ func acceptImpl(v visitor, object *yaml.RNode, p string, oa *openapi.ResourceSch
 		// Traverse the child of the document
 		return accept(v, yaml.NewRNode(object.YNode()))
 	case yaml.MappingNode:
+		if err := v.visitMapping(object, p, oa); err != nil {
+			return err
+		}
 		return object.VisitFields(func(node *yaml.MapNode) error {
 			// get the schema for the field and propagate it
 			oa = getSchema(node.Key, oa, node.Key.YNode().Value)

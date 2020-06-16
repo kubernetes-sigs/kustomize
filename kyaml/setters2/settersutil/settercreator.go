@@ -60,16 +60,32 @@ func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
 
 	// Update the resources with the setter reference
 	inout := &kio.LocalPackageReadWriter{PackagePath: resourcesPath}
-	return kio.Pipeline{
-		Inputs: []kio.Reader{inout},
-		Filters: []kio.Filter{kio.FilterAll(
-			&setters2.Add{
-				FieldName:  c.FieldName,
-				FieldValue: c.FieldValue,
-				Ref:        fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + c.Name,
-			})},
+	a := &setters2.Add{
+		FieldName:  c.FieldName,
+		FieldValue: c.FieldValue,
+		Ref:        fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + c.Name,
+	}
+	err = kio.Pipeline{
+		Inputs:  []kio.Reader{inout},
+		Filters: []kio.Filter{kio.FilterAll(a)},
 		Outputs: []kio.Writer{inout},
 	}.Execute()
+
+	if err != nil {
+		return err
+	}
+
+	// if the setter is of array type write the derived list values back to
+	// openAPI definitions
+	if len(a.ListValues) > 0 {
+		sd.ListValues = a.ListValues
+		sd.Value = ""
+		if err := sd.AddToFile(openAPIPath); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // schemaFromFile reads the contents from schemaPath and returns schema
