@@ -209,6 +209,10 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 	if err != nil {
 		return nil, err
 	}
+	err = kt.runValidators(ra)
+	if err != nil {
+		return nil, err
+	}
 	err = ra.MergeVars(kt.kustomization.Vars)
 	if err != nil {
 		return nil, errors.Wrapf(
@@ -276,6 +280,29 @@ func (kt *KustTarget) configureExternalTransformers() ([]resmap.Transformer, err
 		return nil, err
 	}
 	return kt.pLdr.LoadTransformers(kt.ldr, kt.validator, ra.ResMap())
+}
+
+func (kt *KustTarget) runValidators(ra *accumulator.ResAccumulator) error {
+	validators, err := kt.configureExternalValidators()
+	if err != nil {
+		return err
+	}
+	for _, v := range validators {
+		err := v.Validate(ra.ResMap())
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (kt *KustTarget) configureExternalValidators() ([]resmap.Validator, error) {
+	ra := accumulator.MakeEmptyAccumulator()
+	ra, err := kt.accumulateResources(ra, kt.kustomization.Validators)
+	if err != nil {
+		return nil, err
+	}
+	return kt.pLdr.LoadValidators(kt.ldr, kt.validator, ra.ResMap())
 }
 
 // accumulateResources fills the given resourceAccumulator

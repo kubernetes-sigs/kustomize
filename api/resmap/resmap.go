@@ -30,6 +30,12 @@ type Generator interface {
 	Generate() (ResMap, error)
 }
 
+// A Validator checkes the ResMap and return an error
+// if it's not valid.
+type Validator interface {
+	Validate(m ResMap) error
+}
+
 // Something that's configurable accepts an
 // instance of PluginHelpers and a raw config
 // object (YAML in []byte form).
@@ -70,6 +76,11 @@ type GeneratorPlugin interface {
 
 type TransformerPlugin interface {
 	Transformer
+	Configurable
+}
+
+type ValidatorPlugin interface {
+	Validator
 	Configurable
 }
 
