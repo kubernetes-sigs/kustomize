@@ -5,7 +5,6 @@ package target
 
 import (
 	"bytes"
-	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -290,33 +289,36 @@ func (kt *KustTarget) runValidators(ra *accumulator.ResAccumulator) error {
 	}
 	for _, v := range validators {
 		// Validators shouldn't modify the resource map
-		orignalHash, err := getSha1Hash(ra.ResMap())
-		if err != nil {
-			return err
-		}
+		orignal := ra.ResMap().DeepCopy()
 		err = v.Validate(ra.ResMap())
 		if err != nil {
 			return err
 		}
-		newHash, err := getSha1Hash(ra.ResMap())
-		if err != nil {
-			return err
-		}
-		if !bytes.Equal(orignalHash, newHash) {
-			return fmt.Errorf("validator %#v shouldn't modify the resource map", v)
+		new := ra.ResMap().DeepCopy()
+		kt.removeValidatedByLabel(new)
+		if err = orignal.ErrorIfNotEqualSets(new); err != nil {
+			return fmt.Errorf("validator shouldn't modify the resource map: %v", err)
 		}
 	}
 	return nil
 }
 
-func getSha1Hash(rm resmap.ResMap) ([]byte, error) {
-	sha1Hash := sha1.New()
-	yamlBytes, err := rm.AsYaml()
-	if err != nil {
-		return nil, err
+func (kt *KustTarget) removeValidatedByLabel(rm resmap.ResMap) {
+	var validatedByLabelName string = "validated-by"
+
+	resources := rm.Resources()
+	for _, r := range resources {
+		labels := r.GetLabels()
+		if _, found := labels[validatedByLabelName]; !found {
+			continue
+		}
+		delete(labels, validatedByLabelName)
+		if len(labels) == 0 {
+			r.SetLabels(nil)
+		} else {
+			r.SetLabels(labels)
+		}
 	}
-	sha1Hash.Write(yamlBytes)
-	return sha1Hash.Sum(nil), nil
 }
 
 func (kt *KustTarget) configureExternalValidators() ([]resmap.Validator, error) {
