@@ -128,9 +128,9 @@ func (r *CreateSetterRunner) preRunE(c *cobra.Command, args []string) error {
 		r.CreateSetter.Type = r.Set.SetPartialField.Type
 
 		if r.CreateSetter.Type == "array" {
-			// this is just a place holder value, we derive the actual value at
-			// later point from the field path
-			r.CreateSetter.FieldValue = "listValues"
+			if !c.Flag("field").Changed {
+				return errors.Errorf("field flag must be set for array type setters")
+			}
 		}
 	}
 	return nil

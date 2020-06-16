@@ -272,7 +272,6 @@ openAPI:
       x-k8s-cli:
         setter:
           name: list
-          value: List Values
           listValues:
           - a
           - b

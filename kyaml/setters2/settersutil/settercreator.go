@@ -64,6 +64,7 @@ func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
 		FieldName:  c.FieldName,
 		FieldValue: c.FieldValue,
 		Ref:        fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + c.Name,
+		Type:       c.Type,
 	}
 	err = kio.Pipeline{
 		Inputs:  []kio.Reader{inout},
