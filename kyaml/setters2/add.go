@@ -4,6 +4,7 @@
 package setters2
 
 import (
+	"reflect"
 	"strings"
 
 	"github.com/go-openapi/spec"
@@ -30,6 +31,12 @@ type Add struct {
 
 	// Ref is the OpenAPI reference to set on the matching fields as a comment.
 	Ref string
+
+	// ListValues are the value of a list setter.
+	ListValues []string
+
+	// Type is the type of the setter value
+	Type string
 }
 
 // Filter implements yaml.Filter
@@ -48,17 +55,61 @@ func (a *Add) visitSequence(_ *yaml.RNode, _ string, _ *openapi.ResourceSchema) 
 	return nil
 }
 
+// visitMapping implements visitor
+// visitMapping visits the fields in input MappingNode and adds setter/subst ref
+// if the path path spec matches with input FiledName
+func (a *Add) visitMapping(object *yaml.RNode, p string, _ *openapi.ResourceSchema) error {
+	return object.VisitFields(func(node *yaml.MapNode) error {
+		if node.Value.YNode().Kind != yaml.SequenceNode {
+			return nil
+		}
+
+		key, err := node.Key.String()
+		if err != nil {
+			return err
+		}
+
+		// derive the list values for the sequence node to write it to openAPI definitions
+		var values []string
+		for _, sc := range node.Value.Content() {
+			values = append(values, sc.Value)
+		}
+
+		// check if there are different values for field path
+		if len(a.ListValues) > 0 && !reflect.DeepEqual(values, a.ListValues) {
+			return errors.Errorf("setters can only be created for fields with same values, "+
+				"encountered different array values for specified field path: %s, %s", values, a.ListValues)
+		}
+		a.ListValues = values
+
+		// pathToKey refers to the path address of the key node ex: metadata.annotations
+		// p is the path till parent node, pathToKey is obtained by appending child key
+		pathToKey := p + "." + strings.Trim(key, "\n")
+		if a.FieldName != "" && strings.HasSuffix(pathToKey, a.FieldName) {
+			return a.addRef(node.Key)
+		}
+		return nil
+	})
+}
+
 // visitScalar implements visitor
 // visitScalar will set the field metadata on each scalar field whose name + value match
 func (a *Add) visitScalar(object *yaml.RNode, p string, _ *openapi.ResourceSchema) error {
 	// check if the field matches
+	if a.Type == "array" {
+		return nil
+	}
 	if a.FieldName != "" && !strings.HasSuffix(p, a.FieldName) {
 		return nil
 	}
 	if a.FieldValue != "" && a.FieldValue != object.YNode().Value {
 		return nil
 	}
+	return a.addRef(object)
+}
 
+// addRef adds the setter/subst ref to the object node as a line comment
+func (a *Add) addRef(object *yaml.RNode) error {
 	// read the field metadata
 	fm := fieldmeta.FieldMeta{}
 	if err := fm.Read(object); err != nil {

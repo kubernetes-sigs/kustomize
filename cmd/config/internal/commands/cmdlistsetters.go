@@ -113,17 +113,20 @@ func (r *ListSettersRunner) ListSubstitutions(c *cobra.Command, args []string) e
 		return err
 	}
 	table := newTable(c.OutOrStdout(), r.Markdown)
-	table.SetHeader([]string{"SUBSTITUTION", "PATTERN", "SETTERS"})
+	table.SetHeader([]string{"SUBSTITUTION", "PATTERN", "REFERENCES"})
 	for i := range r.List.Substitutions {
 		s := r.List.Substitutions[i]
-		setters := ""
+		refs := ""
 		for _, value := range s.Values {
-			setter := strings.TrimPrefix(value.Ref, fieldmeta.DefinitionsPrefix+fieldmeta.SetterDefinitionPrefix)
-			setters = setters + "," + setter
+			// trim setter and substitution prefixes
+			ref := strings.TrimPrefix(
+				strings.TrimPrefix(value.Ref, fieldmeta.DefinitionsPrefix+fieldmeta.SetterDefinitionPrefix),
+				fieldmeta.DefinitionsPrefix+fieldmeta.SubstitutionDefinitionPrefix)
+			refs = refs + "," + ref
 		}
-		setters = fmt.Sprintf("[%s]", strings.TrimPrefix(setters, ","))
+		refs = fmt.Sprintf("[%s]", strings.TrimPrefix(refs, ","))
 		table.Append([]string{
-			s.Name, s.Pattern, setters})
+			s.Name, s.Pattern, refs})
 	}
 	if len(r.List.Substitutions) == 0 {
 		return nil
