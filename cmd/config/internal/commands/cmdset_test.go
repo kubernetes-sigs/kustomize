@@ -168,6 +168,7 @@ spec:
   replicas: 4 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
  `,
 		},
+
 		{
 			name: "set image with value",
 			args: []string{"tag", "1.8.1"},

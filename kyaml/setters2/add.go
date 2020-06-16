@@ -4,6 +4,7 @@
 package setters2
 
 import (
+	"reflect"
 	"strings"
 
 	"github.com/go-openapi/spec"
@@ -33,6 +34,9 @@ type Add struct {
 
 	// ListValues are the value of a list setter.
 	ListValues []string
+
+	// Type is the type of the setter value
+	Type string
 }
 
 // Filter implements yaml.Filter
@@ -70,6 +74,12 @@ func (a *Add) visitMapping(object *yaml.RNode, p string, _ *openapi.ResourceSche
 		for _, sc := range node.Value.Content() {
 			values = append(values, sc.Value)
 		}
+
+		// check if there are different values for field path
+		if len(a.ListValues) > 0 && !reflect.DeepEqual(values, a.ListValues) {
+			return errors.Errorf("setters can only be created for fields with same values, "+
+				"encountered different array values for specified field path: %s, %s", values, a.ListValues)
+		}
 		a.ListValues = values
 
 		// pathToKey refers to the path address of the key node ex: metadata.annotations
@@ -86,6 +96,9 @@ func (a *Add) visitMapping(object *yaml.RNode, p string, _ *openapi.ResourceSche
 // visitScalar will set the field metadata on each scalar field whose name + value match
 func (a *Add) visitScalar(object *yaml.RNode, p string, _ *openapi.ResourceSchema) error {
 	// check if the field matches
+	if a.Type == "array" {
+		return nil
+	}
 	if a.FieldName != "" && !strings.HasSuffix(p, a.FieldName) {
 		return nil
 	}
@@ -123,7 +136,7 @@ type SetterDefinition struct {
 	Name string `yaml:"name"`
 
 	// Value is the value of the setter.
-	Value string `yaml:"value,omitempty"`
+	Value string `yaml:"value"`
 
 	// ListValues are the value of a list setter.
 	ListValues []string `yaml:"listValues,omitempty"`
