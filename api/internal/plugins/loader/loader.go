@@ -87,6 +87,32 @@ func (l *Loader) LoadTransformer(
 	return t, nil
 }
 
+func (l *Loader) LoadValidators(
+	ldr ifc.Loader, v ifc.Validator, rm resmap.ResMap) ([]resmap.Validator, error) {
+	var result []resmap.Validator
+	for _, res := range rm.Resources() {
+		t, err := l.LoadValidator(ldr, v, res)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, t)
+	}
+	return result, nil
+}
+
+func (l *Loader) LoadValidator(
+	ldr ifc.Loader, v ifc.Validator, res *resource.Resource) (resmap.Validator, error) {
+	c, err := l.loadAndConfigurePlugin(ldr, v, res)
+	if err != nil {
+		return nil, err
+	}
+	t, ok := c.(resmap.Validator)
+	if !ok {
+		return nil, fmt.Errorf("plugin %s not a validator", res.OrgId())
+	}
+	return t, nil
+}
+
 func relativePluginPath(id resid.ResId) string {
 	return filepath.Join(
 		id.Group,
