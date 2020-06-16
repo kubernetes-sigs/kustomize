@@ -7,13 +7,89 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
+func TestFnExecGenerator(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t)
+	defer th.Reset()
+
+	th.WriteK("/app", `
+resources:
+- short_secret.yaml
+generators:
+- gener.yaml
+`)
+
+	// Create some additional resource just to make sure everything is added
+	th.WriteF("/app/short_secret.yaml", `
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    airshipit.org/ephemeral-user-data: "true"
+  name: node1-bmc-secret
+type: Opaque
+stringData:
+  userData: |
+    bootcmd:
+    - mkdir /mnt/vda
+`)
+
+	th.WriteF("/app/gener.yaml", `
+kind: executable
+metadata:
+  name: demo
+  annotations:
+    config.kubernetes.io/function: |
+      exec:
+        path: ./fnplugin_test/fnexectest.sh
+spec:
+`)
+	o := th.MakeOptionsPluginsEnabled()
+	o.PluginConfig.FnpLoadingOptions.EnableExec = true
+	m := th.Run("/app", o)
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    airshipit.org/ephemeral-user-data: "true"
+  name: node1-bmc-secret
+stringData:
+  userData: |
+    bootcmd:
+    - mkdir /mnt/vda
+type: Opaque
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    config.kubernetes.io/path: deployment_nginx.yaml
+    tshirt-size: small
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`)
+}
+
 func skipIfNoDocker(t *testing.T) {
 	if _, err := exec.LookPath("docker"); err != nil {
 		t.Skip("skipping because docker binary wasn't found in PATH")
 	}
 }
 
-func TestFnGenerator(t *testing.T) {
+func TestFnContainerGenerator(t *testing.T) {
 	skipIfNoDocker(t)
 
 	th := kusttest_test.MakeEnhancedHarness(t)
@@ -229,7 +305,7 @@ spec:
 `)
 }
 
-func TestFnTransformer(t *testing.T) {
+func TestFnContainerTransformer(t *testing.T) {
 	skipIfNoDocker(t)
 
 	th := kusttest_test.MakeEnhancedHarness(t)
