@@ -45,6 +45,10 @@ func (s *Set) isMatch(name string) bool {
 	return s.SetAll || s.Name == name
 }
 
+func (s *Set) visitMapping(object *yaml.RNode, p string, _ *openapi.ResourceSchema) error {
+	return nil
+}
+
 // visitSequence will perform setters for sequences
 func (s *Set) visitSequence(object *yaml.RNode, p string, schema *openapi.ResourceSchema) error {
 	ext, err := getExtFromComment(schema)

@@ -129,15 +129,25 @@ spec:
 		},
 
 		{
-			name:   "add replicas with schema list values",
-			args:   []string{"list", "a", "--description", "hello world", "--set-by", "me", "--type", "array"},
-			schema: `{"maxItems": 2, "type": "array", "items": {"type": "string"}}`,
+			name:   "list values with schema",
+			args:   []string{"list", "--description", "hello world", "--set-by", "me", "--type", "array", "--field", "spec.list"},
+			schema: `{"maxItems": 3, "type": "array", "items": {"type": "string"}}`,
 			input: `
 apiVersion: example.com/v1beta1
-kind: Example
+kind: Example1
 spec:
   list:
   - "a"
+  - "b"
+  - "c"
+---
+apiVersion: example.com/v1beta1
+kind: Example2
+spec:
+  list:
+  - "a"
+  - "b"
+  - "c"
  `,
 			inputOpenAPI: `
 apiVersion: v1alpha1
@@ -151,22 +161,113 @@ openAPI:
     io.k8s.cli.setters.list:
       items:
         type: string
-      maxItems: 2
+      maxItems: 3
       type: array
       description: hello world
       x-k8s-cli:
         setter:
           name: list
-          value: a
+          value: ""
+          listValues:
+          - a
+          - b
+          - c
+          setBy: me
+ `,
+			expectedResources: `
+apiVersion: example.com/v1beta1
+kind: Example1
+spec:
+  list: # {"$openapi":"list"}
+  - "a"
+  - "b"
+  - "c"
+---
+apiVersion: example.com/v1beta1
+kind: Example2
+spec:
+  list: # {"$openapi":"list"}
+  - "a"
+  - "b"
+  - "c"
+ `,
+		},
+
+		{
+			name:   "error list path with different values",
+			args:   []string{"list", "--description", "hello world", "--set-by", "me", "--type", "array", "--field", "spec.list"},
+			schema: `{"maxItems": 3, "type": "array", "items": {"type": "string"}}`,
+			input: `
+apiVersion: example.com/v1beta1
+kind: Example
+spec:
+  list:
+  - "a"
+  - "b"
+  - "c"
+---
+apiVersion: example.com/v1beta1
+kind: Example
+spec:
+  list:
+  - "c"
+  - "d"
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+`,
+			err: `setters can only be created for fields with same values, encountered different ` +
+				`array values for specified field path: [c d], [a b c]`,
+		},
+
+		{
+			name:   "list values error if field not set",
+			args:   []string{"list", "a", "--description", "hello world", "--set-by", "me", "--type", "array"},
+			schema: `{"maxItems": 3, "type": "array", "items": {"type": "string"}}`,
+			input: `
+apiVersion: example.com/v1beta1
+kind: Example
+spec:
+  list:
+  - "a"
+  - "b"
+  - "c"
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+`,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.list:
+      items:
+        type: string
+      maxItems: 3
+      type: array
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: list
+          listValues:
+          - a
+          - b
+          - c
           setBy: me
  `,
 			expectedResources: `
 apiVersion: example.com/v1beta1
 kind: Example
 spec:
-  list:
-  - "a" # {"$openapi":"list"}
+  list: # {"$openapi":"list"}
+  - "a"
+  - "b"
+  - "c"
  `,
+			err: `field flag must be set for array type setters`,
 		},
 		{
 			name: "add replicas with value set by flag",

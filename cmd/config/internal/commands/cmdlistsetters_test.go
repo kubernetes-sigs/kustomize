@@ -104,7 +104,7 @@ spec:
   image      nginx   me2      hello world 2   2      
   replicas   3       me1      hello world 1   1      
   tag        1.7.9   me3      hello world 3   1      
-  SUBSTITUTION    PATTERN      SETTERS    
+  SUBSTITUTION    PATTERN    REFERENCES   
   image          IMAGE:TAG   [image,tag]  
 `,
 		},
@@ -178,7 +178,7 @@ spec:
   image      nginx   me2      hello world 2   3      
   replicas   3       me1      hello world 1   2      
   tag        1.7.9   me3      hello world 3   2      
-  SUBSTITUTION    PATTERN      SETTERS    
+  SUBSTITUTION    PATTERN    REFERENCES   
   image          IMAGE:TAG   [image,tag]  
 `,
 		},
@@ -251,8 +251,115 @@ spec:
 `,
 			expected: `  NAME    VALUE   SET BY    DESCRIPTION    COUNT  
   image   nginx   me2      hello world 2   3      
-  SUBSTITUTION    PATTERN      SETTERS    
+  SUBSTITUTION    PATTERN    REFERENCES   
   image          IMAGE:TAG   [image,tag]  
+`,
+		},
+
+		{
+			name: "list array setter",
+			openapi: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.list:
+      items:
+        type: string
+      maxItems: 3
+      type: array
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: list
+          listValues:
+          - a
+          - b
+          - c
+          setBy: me
+ `,
+			input: `
+apiVersion: example.com/v1beta1
+kind: Example
+metadata:
+  annotations:
+    foo: bar
+spec:
+  list: # {"$openapi":"list"}
+  - "a"
+  - "b"
+  - "c"
+`,
+			expected: `  NAME    VALUE    SET BY   DESCRIPTION   COUNT  
+  list   [a,b,c]   me       hello world   1      
+`,
+		},
+
+		{
+			name: "nested substitution",
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: something/nginx::1.7.9/nginxotherthing # {"$openapi":"my-nested-subst"}
+      - name: sidecar
+        image: nginx::1.7.9 # {"$openapi":"my-image-subst"}
+ `,
+			openapi: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.my-image-setter:
+      x-k8s-cli:
+        setter:
+          name: my-image-setter
+          value: nginx
+    io.k8s.cli.setters.my-tag-setter:
+      x-k8s-cli:
+        setter:
+          name: my-tag-setter
+          value: 1.7.9
+    io.k8s.cli.substitutions.my-image-subst:
+      x-k8s-cli:
+        substitution:
+          name: my-image-subst
+          pattern: ${my-image-setter}::${my-tag-setter}
+          values:
+          - marker: ${my-image-setter}
+            ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
+          - marker: ${my-tag-setter}
+            ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
+    io.k8s.cli.substitutions.my-nested-subst:
+      x-k8s-cli:
+        substitution:
+          name: my-nested-subst
+          pattern: something/${my-image-subst}/${my-other-setter}
+          values:
+          - marker: ${my-image-subst}
+            ref: '#/definitions/io.k8s.cli.substitutions.my-image-subst'
+          - marker: ${my-other-setter}
+            ref: '#/definitions/io.k8s.cli.setters.my-other-setter'
+    io.k8s.cli.setters.my-other-setter:
+      x-k8s-cli:
+        setter:
+          name: my-other-setter
+          value: nginxotherthing
+ `,
+			expected: `       NAME              VALUE        SET BY   DESCRIPTION   COUNT  
+  my-image-setter   nginx                                    2      
+  my-other-setter   nginxotherthing                          1      
+  my-tag-setter     1.7.9                                    2      
+   SUBSTITUTION                        PATTERN                                  REFERENCES             
+  my-image-subst    ${my-image-setter}::${my-tag-setter}             [my-image-setter,my-tag-setter]   
+  my-nested-subst   something/${my-image-subst}/${my-other-setter}   [my-image-subst,my-other-setter]  
 `,
 		},
 	}

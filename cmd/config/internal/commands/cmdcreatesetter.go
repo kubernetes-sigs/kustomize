@@ -91,7 +91,9 @@ func (r *CreateSetterRunner) preRunE(c *cobra.Command, args []string) error {
 	}
 
 	if setterVersion == "" {
-		if len(args) < 2 || !c.Flag("value").Changed && len(args) < 3 {
+		if len(args) == 2 && r.Set.SetPartialField.Type == "array" && c.Flag("field").Changed {
+			setterVersion = "v2"
+		} else if len(args) < 2 || !c.Flag("value").Changed && len(args) < 3 {
 			setterVersion = "v1"
 		} else if err := initSetterVersion(c, args); err != nil {
 			return err
@@ -124,6 +126,12 @@ func (r *CreateSetterRunner) preRunE(c *cobra.Command, args []string) error {
 		r.CreateSetter.Description = r.Set.SetPartialField.Description
 		r.CreateSetter.SetBy = r.Set.SetPartialField.SetBy
 		r.CreateSetter.Type = r.Set.SetPartialField.Type
+
+		if r.CreateSetter.Type == "array" {
+			if !c.Flag("field").Changed {
+				return errors.Errorf("field flag must be set for array type setters")
+			}
+		}
 	}
 	return nil
 }
