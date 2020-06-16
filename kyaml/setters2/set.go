@@ -248,8 +248,23 @@ func validateAgainstSchema(ext *CliExtension, sch *spec.Schema) error {
 
 	var inputYAML string
 	if len(ext.Setter.ListValues) > 0 {
-		tmpl, err := template.New("validator").
-			Parse(`{{.key}}:{{block "list" .values}}{{"\n"}}{{range .}}{{println "-" .}}{{end}}{{end}}`)
+		// tmplText contains the template we will use to produce a yaml
+		// document that we can use for validation.
+		var tmplText string
+		if sch.Items != nil && sch.Items.Schema != nil &&
+			sch.Items.Schema.Type.Contains("string") {
+			// If string is one of the legal types for the value, we
+			// output it with quotes in the yaml document to make sure it
+			// is later parsed as a string.
+			tmplText = `{{.key}}:{{block "list" .values}}{{"\n"}}{{range .}}{{printf "- %q\n" .}}{{end}}{{end}}`
+		} else {
+			// If string is not specifically set as the type, we just
+			// let the yaml unmarshaller detect the correct type. Thus, we
+			// do not add quotes around the value.
+			tmplText = `{{.key}}:{{block "list" .values}}{{"\n"}}{{range .}}{{println "-" .}}{{end}}{{end}}`
+		}
+
+		tmpl, err := template.New("validator").Parse(tmplText)
 		if err != nil {
 			return err
 		}
@@ -263,7 +278,15 @@ func validateAgainstSchema(ext *CliExtension, sch *spec.Schema) error {
 		}
 		inputYAML = builder.String()
 	} else {
-		inputYAML = fmt.Sprintf("%s: %s", ext.Setter.Name, ext.Setter.Value)
+		var format string
+		// Only add quotes around the value is string is one of the
+		// types in the schema.
+		if sch.Type.Contains("string") {
+			format = "%s: \"%s\""
+		} else {
+			format = "%s: %s"
+		}
+		inputYAML = fmt.Sprintf(format, ext.Setter.Name, ext.Setter.Value)
 	}
 
 	input := map[string]interface{}{}
