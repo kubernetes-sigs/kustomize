@@ -1,32 +1,23 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package fnplugin
+package execplugin
 
 import (
 	"bytes"
 	"fmt"
-	"strconv"
 
 	"github.com/pkg/errors"
 
-	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/yaml"
 
 	"sigs.k8s.io/kustomize/kyaml/kio"
-	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/runfn"
-)
-
-const (
-	idAnnotation       = "kustomize.config.k8s.io/id"
-	HashAnnotation     = "kustomize.config.k8s.io/needs-hash"
-	BehaviorAnnotation = "kustomize.config.k8s.io/behavior"
 )
 
 type FnPlugin struct {
@@ -36,19 +27,22 @@ type FnPlugin struct {
 	// Plugin configuration data.
 	cfg []byte
 
+	// Plugin name cache for error output
+	pluginName string
+
 	// PluginHelpers
 	h *resmap.PluginHelpers
 }
 
-func bytesToRNode(yml []byte) (*kyaml.RNode, error) {
-	rnode, err := kyaml.Parse(string(yml))
+func bytesToRNode(yml []byte) (*yaml.RNode, error) {
+	rnode, err := yaml.Parse(string(yml))
 	if err != nil {
 		return nil, err
 	}
 	return rnode, nil
 }
 
-func resourceToRNode(res *resource.Resource) (*kyaml.RNode, error) {
+func resourceToRNode(res *resource.Resource) (*yaml.RNode, error) {
 	yml, err := res.AsYAML()
 	if err != nil {
 		return nil, err
@@ -83,7 +77,7 @@ func NewFnPlugin(o *types.FnPluginLoadingOptions) *FnPlugin {
 	//log.Printf("options: %v\n", o)
 	return &FnPlugin{
 		runFns: runfn.RunFns{
-			Functions:      []*kyaml.RNode{},
+			Functions:      []*yaml.RNode{},
 			Network:        o.Network,
 			NetworkName:    o.NetworkName,
 			EnableStarlark: o.EnableStar,
@@ -100,6 +94,21 @@ func (p *FnPlugin) Cfg() []byte {
 func (p *FnPlugin) Config(h *resmap.PluginHelpers, config []byte) error {
 	p.h = h
 	p.cfg = config
+
+	rnode, err := bytesToRNode(p.cfg)
+	if err != nil {
+		return err
+	}
+
+	meta, err := rnode.GetMeta()
+	if err != nil {
+		return err
+	}
+
+	p.pluginName = fmt.Sprintf("api: %s, kind: %s, name: %s",
+		meta.APIVersion, meta.Kind, meta.Name)
+	//log.Printf("config based pluginName: %s", p.pluginName)
+
 	return nil
 }
 
@@ -112,12 +121,12 @@ func (p *FnPlugin) Generate() (resmap.ResMap, error) {
 	if err != nil {
 		return nil, err
 	}
-	return p.UpdateResourceOptions(rm)
+	return UpdateResourceOptions(rm)
 }
 
 func (p *FnPlugin) Transform(rm resmap.ResMap) error {
 	// add ResIds as annotations to all objects so that we can add them back
-	inputRM, err := p.getResMapWithIdAnnotation(rm)
+	inputRM, err := getResMapWithIdAnnotation(rm)
 	if err != nil {
 		return err
 	}
@@ -135,7 +144,7 @@ func (p *FnPlugin) Transform(rm resmap.ResMap) error {
 	}
 
 	// update the original ResMap based on the output
-	return p.updateResMapValues(output, rm)
+	return updateResMapValues(p.pluginName, p.h, output, rm)
 }
 
 // invokePlugin uses Function runner to run function as plugin
@@ -145,7 +154,7 @@ func (p *FnPlugin) invokePlugin(input []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = rnode.PipeE(kyaml.SetAnnotation("config.kubernetes.io/local-config", "true"))
+	err = rnode.PipeE(yaml.SetAnnotation("config.kubernetes.io/local-config", "true"))
 	if err != nil {
 		return nil, err
 	}
@@ -207,92 +216,4 @@ func (p *FnPlugin) invokePlugin(input []byte) ([]byte, error) {
 	//log.Printf("converted back to:\n%s\n", outOut.String())
 
 	return outOut.Bytes(), nil
-}
-
-// Returns a new copy of the given ResMap with the ResIds annotated in each Resource
-func (p *FnPlugin) getResMapWithIdAnnotation(rm resmap.ResMap) (resmap.ResMap, error) {
-	inputRM := rm.DeepCopy()
-	for _, r := range inputRM.Resources() {
-		idString, err := yaml.Marshal(r.CurId())
-		if err != nil {
-			return nil, err
-		}
-		annotations := r.GetAnnotations()
-		if annotations == nil {
-			annotations = make(map[string]string)
-		}
-		annotations[idAnnotation] = string(idString)
-		r.SetAnnotations(annotations)
-	}
-	return inputRM, nil
-}
-
-// updateResMapValues updates the Resource value in the given ResMap
-// with the emitted Resource values in output.
-func (p *FnPlugin) updateResMapValues(output []byte, rm resmap.ResMap) error {
-	outputRM, err := p.h.ResmapFactory().NewResMapFromBytes(output)
-	if err != nil {
-		return err
-	}
-	for _, r := range outputRM.Resources() {
-		// for each emitted Resource, find the matching Resource in the original ResMap
-		// using its id
-		annotations := r.GetAnnotations()
-		idString, ok := annotations[idAnnotation]
-		if !ok {
-			return fmt.Errorf("the transformer should not remove annotation %s",
-				idAnnotation)
-		}
-		id := resid.ResId{}
-		err := yaml.Unmarshal([]byte(idString), &id)
-		if err != nil {
-			return err
-		}
-		res, err := rm.GetByCurrentId(id)
-		if err != nil {
-			return fmt.Errorf("unable to find unique match to %s", id.String())
-		}
-		// remove the annotation set by Kustomize to track the resource
-		delete(annotations, idAnnotation)
-		if len(annotations) == 0 {
-			annotations = nil
-		}
-		r.SetAnnotations(annotations)
-
-		// update the ResMap resource value with the transformed object
-		res.Kunstructured = r.Kunstructured
-	}
-	return nil
-}
-
-// updateResourceOptions updates the generator options for each resource in the
-// given ResMap based on plugin provided annotations.
-func (p *FnPlugin) UpdateResourceOptions(rm resmap.ResMap) (resmap.ResMap, error) {
-	for _, r := range rm.Resources() {
-		// Disable name hashing by default and require plugin to explicitly
-		// request it for each resource.
-		annotations := r.GetAnnotations()
-		behavior := annotations[BehaviorAnnotation]
-		var needsHash bool
-		if val, ok := annotations[HashAnnotation]; ok {
-			b, err := strconv.ParseBool(val)
-			if err != nil {
-				return nil, fmt.Errorf(
-					"the annotation %q contains an invalid value (%q)",
-					HashAnnotation, val)
-			}
-			needsHash = b
-		}
-		delete(annotations, HashAnnotation)
-		delete(annotations, BehaviorAnnotation)
-		if len(annotations) == 0 {
-			annotations = nil
-		}
-		r.SetAnnotations(annotations)
-		r.SetOptions(types.NewGenArgs(
-			&types.GeneratorArgs{
-				Behavior: behavior,
-				Options:  &types.GeneratorOptions{DisableNameSuffixHash: !needsHash}}))
-	}
-	return rm, nil
 }
