@@ -75,17 +75,16 @@ func (a *Add) visitMapping(object *yaml.RNode, p string, _ *openapi.ResourceSche
 			values = append(values, sc.Value)
 		}
 
-		// check if there are different values for field path
-		if len(a.ListValues) > 0 && !reflect.DeepEqual(values, a.ListValues) {
-			return errors.Errorf("setters can only be created for fields with same values, "+
-				"encountered different array values for specified field path: %s, %s", values, a.ListValues)
-		}
-		a.ListValues = values
-
 		// pathToKey refers to the path address of the key node ex: metadata.annotations
 		// p is the path till parent node, pathToKey is obtained by appending child key
 		pathToKey := p + "." + strings.Trim(key, "\n")
 		if a.FieldName != "" && strings.HasSuffix(pathToKey, a.FieldName) {
+			// check if there are different values for field path before adding ref to the field
+			if len(a.ListValues) > 0 && !reflect.DeepEqual(values, a.ListValues) {
+				return errors.Errorf("setters can only be created for fields with same values, "+
+					"encountered different array values for specified field path: %s, %s", values, a.ListValues)
+			}
+			a.ListValues = values
 			return a.addRef(node.Key)
 		}
 		return nil
