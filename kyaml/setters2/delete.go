@@ -73,11 +73,11 @@ func (dd DeleterDefinition) DeleteFromFile(path string) error {
 	return yaml.UpdateFile(dd, path)
 }
 
-// ContainedInSubstituion check if the setter used in substituition
-func ContainedInSubstituion(definitions *yaml.RNode, key string) bool {
+// ContainedInSubstituion check if the setter used in substituition and return the substitution name if true
+func ContainedInSubstituion(definitions *yaml.RNode, key string) string {
 	fieldNames, err := definitions.Fields()
 	if err != nil {
-		return false
+		return ""
 	}
 	for _, fieldname := range fieldNames {
 		// the definition key -- contains the substitution name
@@ -100,13 +100,13 @@ func ContainedInSubstituion(definitions *yaml.RNode, key string) bool {
 			// Check the ref in value to see if it contains the setter key
 			for _, v := range subst.Values {
 				if strings.HasSuffix(v.Ref, key) {
-					return true
+					return subst.Name
 				}
 			}
 		}
 	}
 
-	return false
+	return ""
 }
 
 func (dd DeleterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
@@ -121,8 +121,10 @@ func (dd DeleterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 		return nil, errors.Errorf("setter does not exist")
 	}
 
-	if ContainedInSubstituion(definitions, key) {
-		return nil, errors.Errorf("setter is used in substitution, please delete the substitution first")
+	subst := ContainedInSubstituion(definitions, key)
+
+	if subst != "" {
+		return nil, errors.Errorf("setter is used in substitution %s, please delete the substitution first", subst)
 	}
 
 	for i := 0; i < len(definitions.Content()); i += 2 {
