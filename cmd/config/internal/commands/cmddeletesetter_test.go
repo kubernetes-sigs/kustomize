@@ -222,7 +222,7 @@ openAPI:
 apiVersion: apps/v1
 kind: Deployment
  `,
-			err: `setter is used in substitution, please delete the substitution first`,
+			err: `setter is used in substitution image, please delete the substitution first`,
 		},
 	}
 	for i := range tests {
