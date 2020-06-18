@@ -82,14 +82,15 @@ func (gc githubCrawler) Crawl(ctx context.Context,
 
 	ranges := []RangeWithin{
 		RangeWithin{
-		start: uint64(0),
-		end:   githubMaxFileSize,
-	},
+			start: uint64(0),
+			end:   githubMaxFileSize,
+		},
 	}
 
 	errs := make(multiError, 0)
 	for len(ranges) > 0 {
-		tailRange := ranges[len(ranges) - 1]
+		logger.Printf("Current ranges: %v (len: %d)\n", ranges, len(ranges))
+		tailRange := ranges[len(ranges)-1]
 		ranges = ranges[:(len(ranges) - 1)]
 		reProcessQueryRanges, err := gc.CrawlSingleRange(ctx, output, seen, tailRange.start, tailRange.end)
 		if err != nil {
@@ -151,7 +152,15 @@ func (gc githubCrawler) CrawlSingleRange(ctx context.Context,
 		}
 		queryResult.Add(rangeResult)
 		if reProcessQuery {
-			reProcessQueryRanges = append(reProcessQueryRanges, RangeSizes(query))
+			// if the size of a range is 0, such as [245, 245], and reProcessQuery is true,
+			// it means that there are more than 1000 results for the query range.
+			// Reprocessing the query range will not help because the GitHub Search API
+			// only provides up to 1,000 results for each search.
+			if RangeSizes(query).Size() == 0 {
+				logger.Printf("range size is 0 includes more than 1000 results: %s", query)
+			} else {
+				reProcessQueryRanges = append(reProcessQueryRanges, RangeSizes(query))
+			}
 		}
 	}
 
