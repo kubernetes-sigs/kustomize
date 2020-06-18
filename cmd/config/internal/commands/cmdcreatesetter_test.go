@@ -148,6 +148,21 @@ spec:
   - "a"
   - "b"
   - "c"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: myspace
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: sidecar
+        image: nginx:1.7.9
+      - name: nginx
+        image: otherspace/nginx:1.7.9
  `,
 			inputOpenAPI: `
 apiVersion: v1alpha1
@@ -190,6 +205,21 @@ spec:
   - "a"
   - "b"
   - "c"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: myspace
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: sidecar
+        image: nginx:1.7.9
+      - name: nginx
+        image: otherspace/nginx:1.7.9
  `,
 		},
 
