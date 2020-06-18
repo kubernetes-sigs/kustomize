@@ -10,6 +10,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+const NoProcessAnnotation = "config.kubernetes.io/no-process"
+
 // Reader reads ResourceNodes. Analogous to io.Reader.
 type Reader interface {
 	Read() ([]*yaml.RNode, error)
@@ -81,6 +83,7 @@ type Pipeline struct {
 // any error as part of the Pipeline.
 func (p Pipeline) Execute() error {
 	var result []*yaml.RNode
+	var noProcess []*yaml.RNode
 
 	// read from the inputs
 	for _, i := range p.Inputs {
@@ -88,21 +91,32 @@ func (p Pipeline) Execute() error {
 		if err != nil {
 			return errors.Wrap(err)
 		}
-		result = append(result, nodes...)
+		for i := range nodes {
+			// store the nodes we do not process separately
+			node := nodes[i]
+			if IsNoProcessNode(node) {
+				noProcess = append(noProcess, node)
+			} else {
+				result = append(result, node)
+			}
+		}
 	}
-	if len(result) == 0 {
-		// no inputs to operate on
-		return nil
+	if len(result) > 0 {
+		// apply operations
+		var err error
+		for i := range p.Filters {
+			op := p.Filters[i]
+			result, err = op.Filter(result)
+			if len(result) == 0 || err != nil {
+				return errors.Wrap(err)
+			}
+		}
 	}
 
-	// apply operations
-	var err error
-	for i := range p.Filters {
-		op := p.Filters[i]
-		result, err = op.Filter(result)
-		if len(result) == 0 || err != nil {
-			return errors.Wrap(err)
-		}
+	// Add back the unprocessed nodes
+	result = append(result, noProcess...)
+	if len(result) == 0 {
+		return nil
 	}
 
 	// write to the outputs
@@ -125,4 +139,22 @@ func FilterAll(filter yaml.Filter) Filter {
 		}
 		return nodes, nil
 	})
+}
+
+// IsNoProcessNode returns true if the yaml config has the
+// "no-process" annotation; false otherwise
+func IsNoProcessNode(node *yaml.RNode) bool {
+	if node == nil {
+		return false
+	}
+	meta, err := node.GetMeta()
+	if err != nil {
+		return false
+	}
+	// Return true if node has NoProcessAnnotation key
+	annotations := meta.Annotations
+	if _, exists := annotations[NoProcessAnnotation]; exists {
+		return true
+	}
+	return false
 }
