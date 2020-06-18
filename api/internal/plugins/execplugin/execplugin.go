@@ -140,11 +140,6 @@ func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
 	return p.updateResMapValues(output, rm)
 }
 
-func (p *ExecPlugin) Validate(rm resmap.ResMap) error {
-	// Validate works exactly same with Transformer
-	return p.Transform(rm)
-}
-
 // invokePlugin writes plugin config to a temp file, then
 // passes the full temp file path as the first arg to a process
 // running the plugin binary.  Process output is returned.

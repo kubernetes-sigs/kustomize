@@ -264,7 +264,7 @@ func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator) error {
 		return err
 	}
 	r = append(r, lts...)
-	lts, err = kt.configureExternalTransformers()
+	lts, err = kt.configureExternalTransformers(kt.kustomization.Transformers)
 	if err != nil {
 		return err
 	}
@@ -273,9 +273,10 @@ func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator) error {
 	return ra.Transform(t)
 }
 
-func (kt *KustTarget) configureExternalTransformers() ([]resmap.Transformer, error) {
+func (kt *KustTarget) configureExternalTransformers(transformers []string) ([]resmap.Transformer, error) {
 	ra := accumulator.MakeEmptyAccumulator()
-	ra, err := kt.accumulateResources(ra, kt.kustomization.Transformers)
+	ra, err := kt.accumulateResources(ra, transformers)
+
 	if err != nil {
 		return nil, err
 	}
@@ -283,14 +284,14 @@ func (kt *KustTarget) configureExternalTransformers() ([]resmap.Transformer, err
 }
 
 func (kt *KustTarget) runValidators(ra *accumulator.ResAccumulator) error {
-	validators, err := kt.configureExternalValidators()
+	validators, err := kt.configureExternalTransformers(kt.kustomization.Validators)
 	if err != nil {
 		return err
 	}
 	for _, v := range validators {
 		// Validators shouldn't modify the resource map
 		orignal := ra.ResMap().DeepCopy()
-		err = v.Validate(ra.ResMap())
+		err = v.Transform(ra.ResMap())
 		if err != nil {
 			return err
 		}
@@ -304,30 +305,20 @@ func (kt *KustTarget) runValidators(ra *accumulator.ResAccumulator) error {
 }
 
 func (kt *KustTarget) removeValidatedByLabel(rm resmap.ResMap) {
-	var validatedByLabelName string = "validated-by"
 
 	resources := rm.Resources()
 	for _, r := range resources {
 		labels := r.GetLabels()
-		if _, found := labels[validatedByLabelName]; !found {
+		if _, found := labels[konfig.ValidatedByLabelKey]; !found {
 			continue
 		}
-		delete(labels, validatedByLabelName)
+		delete(labels, konfig.ValidatedByLabelKey)
 		if len(labels) == 0 {
 			r.SetLabels(nil)
 		} else {
 			r.SetLabels(labels)
 		}
 	}
-}
-
-func (kt *KustTarget) configureExternalValidators() ([]resmap.Validator, error) {
-	ra := accumulator.MakeEmptyAccumulator()
-	ra, err := kt.accumulateResources(ra, kt.kustomization.Validators)
-	if err != nil {
-		return nil, err
-	}
-	return kt.pLdr.LoadValidators(kt.ldr, kt.validator, ra.ResMap())
 }
 
 // accumulateResources fills the given resourceAccumulator
