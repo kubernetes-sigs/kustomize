@@ -225,3 +225,7 @@ type RangeWithin struct {
 func (r RangeWithin) RangeString() string {
 	return fmt.Sprintf("%d..%d", r.start, r.end)
 }
+
+func (r RangeWithin) Size() uint64 {
+	return r.end - r.start
+}
