@@ -119,7 +119,7 @@ func (gr *gitRunner) FetchTags(remote string) error {
 	if err != nil {
 		return err
 	}
-	cmd := exec.Command("git", "fetch", "-t", remote)
+	cmd := exec.Command("git", "fetch", "-t", remote, "-f")
 	cmd.Dir = path
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
