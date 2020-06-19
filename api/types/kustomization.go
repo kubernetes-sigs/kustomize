@@ -124,6 +124,9 @@ type Kustomization struct {
 	// Transformers is a list of files containing transformers
 	Transformers []string `json:"transformers,omitempty" yaml:"transformers,omitempty"`
 
+	// Validators is a list of files containing validators
+	Validators []string `json:"validators,omitempty" yaml:"validators,omitempty"`
+
 	// Inventory appends an object that contains the record
 	// of all other objects, which can be used in apply, prune and delete
 	Inventory *Inventory `json:"inventory,omitempty" yaml:"inventory,omitempty"`
