@@ -1,7 +1,9 @@
 # Demo: Components
 
-_(Note: This is still a work in progress. Tracking KEP:
-https://github.com/kubernetes/enhancements/pull/1803)_
+For more details regarding this feature you can read the
+[Kustomize Components KEP](https://github.com/kubernetes/enhancements/blob/master/keps/sig-cli/1802-kustomize-components.md).
+
+_This example requires Kustomize ``v3.7.0`` or newer_
 
 Suppose you've written a very simple Web application:
 
