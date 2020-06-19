@@ -115,7 +115,7 @@ func (p *PatchTransformerPlugin) transformStrategicMerge(m resmap.ResMap, patch 
 // use the legacy implementation or the kyaml-based solution.
 func (p *PatchTransformerPlugin) applySMPatch(resource, patch *resource.Resource) error {
 	if !p.YAMLSupport {
-		return resource.Patch(patch.Kunstructured)
+		return resource.Patch(patch.Copy())
 	} else {
 		node, err := filtersutil.GetRNode(patch)
 		if err != nil {
@@ -123,7 +123,7 @@ func (p *PatchTransformerPlugin) applySMPatch(resource, patch *resource.Resource
 		}
 		return filtersutil.ApplyToJSON(patchstrategicmerge.Filter{
 			Patch: node,
-		}, resource.Kunstructured)
+		}, resource)
 	}
 }
 
@@ -165,7 +165,7 @@ func (p *PatchTransformerPlugin) applyJson6902Patch(resource *resource.Resource,
 	} else {
 		return filtersutil.ApplyToJSON(patchjson6902.Filter{
 			Patch: p.Patch,
-		}, resource.Kunstructured)
+		}, resource)
 	}
 }
 

@@ -235,8 +235,8 @@ func (p *ExecPlugin) updateResMapValues(output []byte, rm resmap.ResMap) error {
 		}
 		r.SetAnnotations(annotations)
 
-		// update the ResMap resource value with the transformed object
-		res.Kunstructured = r.Kunstructured
+		// update the resource value with the transformed object
+		res.ResetPrimaryData(r)
 	}
 	return nil
 }
