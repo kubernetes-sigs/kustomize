@@ -33,7 +33,7 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 		err := filtersutil.ApplyToJSON(annotations.Filter{
 			Annotations: p.Annotations,
 			FsSlice:     p.FieldSpecs,
-		}, r.Kunstructured)
+		}, r)
 		if err != nil {
 			return err
 		}

@@ -51,7 +51,7 @@ func (p *NamespaceTransformerPlugin) Transform(m resmap.ResMap) error {
 			err := filtersutil.ApplyToJSON(namespace.Filter{
 				Namespace: p.Namespace,
 				FsSlice:   p.FieldSpecs,
-			}, r.Kunstructured)
+			}, r)
 			if err != nil {
 				return err
 			}

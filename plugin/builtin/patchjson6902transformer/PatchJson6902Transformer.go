@@ -105,6 +105,6 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 	} else {
 		return filtersutil.ApplyToJSON(patchjson6902.Filter{
 			Patch: p.JsonOp,
-		}, obj.Kunstructured)
+		}, obj)
 	}
 }

@@ -29,7 +29,7 @@ func (p *LabelTransformerPlugin) Transform(m resmap.ResMap) error {
 		err := filtersutil.ApplyToJSON(labels.Filter{
 			Labels:  p.Labels,
 			FsSlice: p.FieldSpecs,
-		}, r.Kunstructured)
+		}, r)
 		if err != nil {
 			return err
 		}
