@@ -121,13 +121,13 @@ func (p *ValueAddTransformerPlugin) Transform(m resmap.ResMap) (err error) {
 			if t.FieldPath == types.MetadataNamespacePath {
 				err = filtersutil.ApplyToJSON(namespace.Filter{
 					Namespace: p.Value,
-				}, res.Kunstructured)
+				}, res)
 			} else {
 				err = filtersutil.ApplyToJSON(valueadd.Filter{
 					Value:            p.Value,
 					FieldPath:        t.FieldPath,
 					FilePathPosition: t.FilePathPosition,
-				}, res.Kunstructured)
+				}, res)
 			}
 			if err != nil {
 				return err

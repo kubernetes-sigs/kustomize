@@ -77,7 +77,7 @@ func (p *PatchStrategicMergeTransformerPlugin) Transform(m resmap.ResMap) error 
 			return err
 		}
 		if !p.YAMLSupport {
-			err = target.Patch(patch.Kunstructured)
+			err = target.Patch(patch.Copy())
 			if err != nil {
 				return err
 			}
@@ -96,7 +96,7 @@ func (p *PatchStrategicMergeTransformerPlugin) Transform(m resmap.ResMap) error 
 			}
 			err = filtersutil.ApplyToJSON(patchstrategicmerge.Filter{
 				Patch: node,
-			}, target.Kunstructured)
+			}, target)
 		}
 	}
 	return nil

@@ -69,10 +69,10 @@ func (rf *Factory) makeOne(
 		o = types.NewGenArgs(nil)
 	}
 	r := &Resource{
-		Kunstructured: u,
-		options:       o,
+		kunStr:  u,
+		options: o,
 	}
-	return r.setOriginalName(r.GetName()).setOriginalNs(r.GetNamespace())
+	return r.setOriginalName(r.kunStr.GetName()).setOriginalNs(r.GetNamespace())
 }
 
 // SliceFromPatches returns a slice of resources given a patch path
