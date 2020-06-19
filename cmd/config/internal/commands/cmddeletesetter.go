@@ -6,7 +6,6 @@ package commands
 import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
-	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
@@ -17,9 +16,9 @@ func NewDeleteSetterRunner(parent string) *DeleteSetterRunner {
 	c := &cobra.Command{
 		Use:     "delete-setter DIR NAME",
 		Args:    cobra.MinimumNArgs(2),
-		Short:   commands.SetShort,
-		Long:    commands.SetLong,
-		Example: commands.SetExamples,
+		Short:   "delete values on Resources fields.",
+		Long:    "",
+		Example: "",
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 	}
