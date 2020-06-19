@@ -290,11 +290,6 @@ Adds namespace to all resources
 ```
 namespace: my-namespace
 ```
-Adds namespace to all resources
-
-```
-namespace: my-namespace
-```
 
 ### Usage via plugin
 #### Arguments

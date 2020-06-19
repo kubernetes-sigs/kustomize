@@ -316,7 +316,7 @@ same way.&lt;/p&gt;
         
         &lt;p&gt;Additionally, generatorOptions can be set on a per resource level within each
 generator. For details on per-resource generatorOptions usage see
-[field-name-configMapGenerator] and See [field-name-secretGenerator].&lt;/p&gt;
+&lt;a href=&#34;https://kubernetes-sigs.github.io/kustomize/kustomize/api-reference/kustomization/configmapgenerator&#34;&gt;field-name-configMapGenerator&lt;/a&gt; and See &lt;a href=&#34;https://kubernetes-sigs.github.io/kustomize/kustomize/api-reference/kustomization/secretgenerator&#34;&gt;field-name-secretGenerator&lt;/a&gt;.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;apiVersion&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;kustomize.config.k8s.io/v1beta1&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Kustomization&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -774,7 +774,7 @@ resources.&lt;/p&gt;
 supported.  No ints, bools, arrays etc.  It&amp;rsquo;s not
 possible to, say, extract the name of the image in
 container number 2 of some pod template.&lt;/p&gt;
-&lt;p&gt;A variable reference, i.e. the string &amp;lsquo;$(FOO)&amp;rsquo;,
+&lt;p&gt;A variable reference, i.e. the string &amp;lsquo;$(FOO)&#39;,
 can only be placed in particular fields of
 particular objects as specified by kustomize&amp;rsquo;s
 configuration data.&lt;/p&gt;

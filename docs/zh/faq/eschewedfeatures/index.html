@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="generator" content="Hugo 0.68.3" />
+
+<META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+<link rel="alternate" type="application/rss&#43;xml" href="https://kubernetes-sigs.github.io/kustomize/zh/faq/eschewedfeatures/index.xml">
+
+
+<link rel="shortcut icon" href="/favicons/favicon.ico" >
+<link rel="apple-touch-icon" href="/kustomize/favicons/apple-touch-icon-180x180.png" sizes="180x180">
+<link rel="icon" type="image/png" href="/kustomize/favicons/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="/kustomize/favicons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-36x36.png" sizes="36x36">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-48x48.png" sizes="48x48">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-72x72.png" sizes="72x72">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-144x144.png" sizes="144x144">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-192x192.png" sizes="192x192">
+
+<title>Eschewed Features | Kustomize</title><meta property="og:title" content="Eschewed Features" />
+<meta property="og:description" content="Eschewed Features
+" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/zh/faq/eschewedfeatures/" />
+<meta property="og:site_name" content="Kustomize" />
+<meta itemprop="name" content="Eschewed Features">
+<meta itemprop="description" content="Eschewed Features
+"><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Eschewed Features"/>
+<meta name="twitter:description" content="Eschewed Features
+"/>
+
+
+
+
+
+<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
+
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+
+
+
+<link rel="stylesheet" type="text/css" href="https://kubernetes-sigs.github.io/kustomize//css/asciinema-player.css" />
+
+    <title>Eschewed Features | Kustomize</title>
+  </head>
+  <body class="td-section">
+    <header>
+      
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+        <a class="navbar-brand" href="/kustomize/zh/">
+		<span class="navbar-logo"></span><span class="text-uppercase font-weight-bold">Kustomize</span>
+	</a>
+	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+		<ul class="navbar-nav mt-2 mt-lg-0">
+			
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/zh/installation/" ><span>安装</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/zh/guides/" ><span>指南</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/zh/api-reference/" ><span>API 参考</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				<a class="nav-link" href="https://github.com/kubernetes-sigs/kustomize/tree/master/examples" target="_blank" ><span>Example</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link active" href="/kustomize/zh/faq/" ><span class="active">FAQ</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/zh/blog/" ><span>博客</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/zh/contributing/" ><span>贡献指南</span></a>
+			</li>
+			
+			
+			
+			<li class="nav-item dropdown d-none d-lg-block">
+				
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	简体中文
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/kustomize/faq/eschewedfeatures/">English</a>
+	
+</div>
+			</li>
+			
+		</ul>
+	</div>
+	<div class="navbar-nav d-none d-lg-block">
+</div>
+</nav>
+
+    </header>
+    <div class="container-fluid td-outer">
+      <div class="td-main">
+        <div class="row flex-xl-nowrap">
+          <div class="col-12 col-md-3 col-xl-2 td-sidebar d-print-none">
+            
+
+
+
+
+<div id="td-sidebar-menu" class="td-sidebar__inner">
+  
+  <form class="td-sidebar__search d-flex align-items-center">
+    
+
+    <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    </button>
+  </form>
+  
+  <nav class="collapse td-sidebar-nav pt-2 pl-4" id="td-section-nav">
+    
+    <div class="nav-item dropdown d-block d-lg-none">
+      
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	简体中文
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/kustomize/faq/eschewedfeatures/">English</a>
+	
+</div>
+    </div>
+    
+    
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/zh/faq/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">FAQ</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kustomizezhfaq">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/zh/faq/eschewedfeatures/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Eschewed Features</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kustomizezhfaqeschewedfeatures">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizezhfaqversioningpolicy" href="/kustomize/zh/faq/versioningpolicy/">Versioning Policy</a>
+      
+      
+    </li>
+  </ul>
+</ul>
+
+  </nav>
+</div>
+
+
+
+
+          </div>
+          <div class="d-none d-xl-block col-xl-2 td-toc d-print-none">
+            
+
+
+
+
+
+
+<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+
+
+
+
+
+<a href="https://github.com/kubernetes-sigs/kustomize/edit/master/site/content/zh/faq/eschewedfeatures/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> 编辑此页</a>
+<a href="https://github.com/kubernetes-sigs/kustomize/issues/new?title=Eschewed%20Features" target="_blank"><i class="fab fa-github fa-fw"></i> 提交文档问题</a>
+
+
+<a href="https://github.com/kubernetes-sigs/kustomize/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> 提交项目问题</a>
+
+</div>
+
+
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#removal-directives">Removal directives</a></li>
+    <li><a href="#unstructured-edits">Unstructured edits</a></li>
+    <li><a href="#build-time-side-effects-from-cli-args-or-env-variables">Build-time side effects from CLI args or env variables</a></li>
+    <li><a href="#globs-in-kustomization-files">Globs in kustomization files</a></li>
+  </ul>
+</nav>
+
+
+
+          </div>
+          <main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
+            
+  
+
+            <nav aria-label="breadcrumb" class="d-none d-md-block d-print-none">
+	<ol class="breadcrumb spb-1">
+		
+
+
+
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://kubernetes-sigs.github.io/kustomize/zh/faq/">FAQ</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item active" aria-current="page">
+	<a href="https://kubernetes-sigs.github.io/kustomize/zh/faq/eschewedfeatures/">Eschewed Features</a>
+</li>
+
+	</ol>
+</nav	>
+
+            
+<div class="td-content">
+	<h1>Eschewed Features</h1>
+	<div class="lead">Eschewed Features</div>
+	<p>The maintainers established this list to
+place bounds on the kustomize feature
+set.  The bounds can be changed with
+a consensus on the risks.</p>
+<p>For a bigger picture about why kustomize
+does some things and not others, see the
+glossary entry for <a href="/kustomize/api-reference/glossary#declarative-application-management">DAM</a>.</p>
+<h2 id="removal-directives">Removal directives</h2>
+<p><code>kustomize</code> supports configurations that can be reasoned about as
+<em>compositions</em> or <em>mixins</em> - concepts that are widely accepted as
+a best practice in various programming languages.</p>
+<p>To this end, <code>kustomize</code> offers various <em>addition</em> directives.
+One may add labels, annotations, patches, resources, bases, etc.
+Corresponding <em>removal</em> directives are not offered.</p>
+<p>Removal semantics would introduce many possibilities for
+inconsistency, and the need to add code to detect, report and
+reject it.  It would also allow, and possibly encourage,
+unnecessarily complex configuration layouts.</p>
+<p>When faced with a situation where removal is desirable, it&rsquo;s
+always possible to remove things from a base like labels and
+annotations, and/or split multi-resource manifests into individual
+resource files - then add things back as desired via the
+<a href="/kustomize/api-reference/glossary#kustomization">kustomization</a>.</p>
+<p>If the underlying base is outside of one&rsquo;s control, an <a href="/kustomize/api-reference/glossary#off-the-shelf-configuration">OTS
+workflow</a> is the recommended best practice.  Fork the base, remove
+what you don&rsquo;t want and commit it to your private fork, then use
+kustomize on your fork.  As often as desired, use <em>git rebase</em> to
+capture improvements from the upstream base.</p>
+<h2 id="unstructured-edits">Unstructured edits</h2>
+<p><em>Structured edits</em> are changes controlled by
+knowledge of the k8s API, and YAML or JSON syntax.</p>
+<p>Most edits performed by kustomize can be expressed as
+<a href="/kustomize/api-reference/glossary#patchjson6902">JSON patches</a> or <a href="/kustomize/api-reference/glossary#patchstrategicmerge">SMP patches</a>.
+Those can be verbose, so common patches,
+like adding labels or annotatations, get dedicated
+transformer plugins - <code>LabelTransformer</code>,
+<code>AnnotationsTransformer</code>, etc.
+These accept relatively simple YAML configuration
+allowing easy targeting of any number of resources.</p>
+<p>Another class of edits take data from one specific
+object&rsquo;s field and use it in another (e.g. a service
+object&rsquo;s name found and copied into a container&rsquo;s
+command line).  These reflection-style edits
+are called <em>replacements</em>.</p>
+<p>The above edits create valid output given valid input,
+and can provide syntactically and semantically
+informed error messages if inputs are invalid.</p>
+<p><em>Unstructured edits</em>, edits that don&rsquo;t limit
+themselves to a syntax or object structure,
+come in many forms.  A common one in the
+configuration domain is the template or
+parameterization approach.</p>
+<p>In this technique, the source
+material is sprinkled with strings of the
+form <code>${VAR}</code>.  A scanner replaces them
+with a value taken from a map using <code>VAR</code>
+as the map key. It&rsquo;s trivial to implement.</p>
+<p>kustomize eschews parameterization, because</p>
+<ul>
+<li>The source yaml gets polluted with <code>$VARs</code>
+and can no longed be applied as is
+to the cluster (it <em>must</em> be processed).</li>
+<li>The source material is no longer structured,
+making it unusable with any YAML processor.
+It&rsquo;s no longer <em>data</em>, it&rsquo;s now logic that
+must be compiled.</li>
+<li>Errors in the output are disconnected from
+the edit that caused it.</li>
+<li>The input becomes <a href="https://github.com/helm/charts/blob/e002378c13e91bef4a3b0ba718c191ec791ce3f9/stable/artifactory/templates/artifactory-deployment.yaml">unintelligible</a> as the project
+scales in any number of dimensions (resource
+count, cluster count, environment count, etc.)</li>
+</ul>
+<p>Kustomizations are meant to be sharable and stackable.
+Imagine tracing down a problem rooted in a
+clever set of stacked regexp replacements
+performed by various overlays on some remote base.
+We&rsquo;ve used such systems, and never want to again.</p>
+<p>Other tools (sed, jinja, erb, envsubst, kafka, helm, ksonnet,
+etc.) provide varying degrees of unstructured editting
+and/or embedded languages, and can be used instead
+of, or in a pipe with, kustomize.  If you want to
+go all-in on <em>configuration as a language</em>, consider <a href="https://cuelang.org/">cue</a>.</p>
+<p>kustomize is going to stick to YAML in / YAML out.</p>
+<h2 id="build-time-side-effects-from-cli-args-or-env-variables">Build-time side effects from CLI args or env variables</h2>
+<p><code>kustomize</code> supports the best practice of storing one&rsquo;s
+entire configuration in a version control system.</p>
+<p>Changing <code>kustomize build</code> configuration output as a result
+of additional arguments or flags to <code>build</code>, or by
+consulting shell environment variable values in <code>build</code>
+code, would frustrate that goal.</p>
+<p><code>kustomize</code> insteads offers <a href="/kustomize/api-reference/glossary#kustomization">kustomization</a> file <code>edit</code>
+commands.  Like any shell command, they can accept
+environment variable arguments.</p>
+<p>For example, to set the tag used on an image to match an
+environment variable, run</p>
+<pre><code>kustomize edit set image nginx:$MY_NGINX_VERSION
+</code></pre><p>as part of some encapsulating work flow executed before
+<code>kustomize build</code>.</p>
+<h2 id="globs-in-kustomization-files">Globs in kustomization files</h2>
+<p><code>kustomize</code> supports the best practice of storing one&rsquo;s
+entire configuration in a version control system.</p>
+<p>Globbing the local file system for files not explicitly
+declared in the <a href="/kustomize/api-reference/glossary#kustomization">kustomization</a> file at <code>kustomize build</code> time
+would violate that goal.</p>
+<p>Allowing globbing in a kustomization file would also introduce
+the same problems as allowing globbing in <a href="https://www.codebyamir.com/blog/pitfalls-java-import-wildcards">java import</a>
+declarations or BUILD/Makefile dependency rules.</p>
+<p><code>kustomize</code> will instead provide kustomization file editting
+commands that accept globbed arguments, expand them at <em>edit
+time</em> relative to the local file system, and store the resulting
+explicit names into the kustomization file.</p>
+
+        <div class="section-index">
+    
+    
+    
+    
+    <hr class="panel-line">
+        
+            
+        
+            
+        
+            
+        
+    
+</div>
+
+	
+	
+	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年06月15日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/518147c129f831913d33226cf17068d0d4270f41">add zh docsy (518147c1)</a>
+</div>
+</div>
+
+          </main>
+        </div>
+      </div>
+      
+<footer class="bg-dark py-5 row d-print-none">
+  <div class="container-fluid mx-sm-5">
+    <div class="row">
+      <div class="col-6 col-sm-4 text-xs-center order-sm-2">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kubernetes-sig-cli">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-6 col-sm-4 text-right text-xs-center order-sm-3">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
+    <a class="text-white" target="_blank" href="https://github.com/kubernetes-sigs/kustomize">
+      <i class="fab fa-github"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-12 col-sm-4 text-center py-2 order-sm-2">
+        <small class="text-white">&copy; 2020 Kubernetes Authors All Rights Reserved</small>
+        
+	
+		
+	
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    </div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+
+
+
+
+
+
+<script src="/kustomize/js/main.min.35b203b3c2114e187f6e4bbf0903c511aaaac5535186321e3b5e364656b6de0c.js" integrity="sha256-NbIDs8IRThh/bku/CQPFEaqqxVNRhjIeO142Rla23gw=" crossorigin="anonymous"></script>
+
+
+
+<script src="https://kubernetes-sigs.github.io/kustomize//js/asciinema-player.js"></script>
+
+
+  </body>
+</html>
