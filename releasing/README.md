@@ -110,10 +110,64 @@ infrequently).
 Executables appear on the [release page].
 The tag appears in the URL, e.g. [pluginator/v1.0.0].
 
+## Releasing Program
+
+The go program used to release modules is in `releasing/releasing` directory. 
+Modules that can be handled by this program now:
+
+ - kyaml
+ - api
+ - kstatus
+ - cmd/config
+ - cmd/resource
+ - cmd/kubectl
+ - pluginator
+ - kustomize
+
+### List current module versions
+
+```bash
+(cd releasing/; go run . list)
+```
+
+This command will print the latest versions of supported modules.
+Example output:
+
+```
+kyaml/v0.3.0
+api/v0.4.1
+kstatus/v0.0.2
+cmd/config/v0.3.0
+cmd/resource/v0.0.2
+cmd/kubectl/v0.1.0
+pluginator/v2.1.0
+kustomize/v3.6.1
+```
+
+### Release a module
+
+To release a module, you need to make sure that:
+
+ - The codes in the module are ready to release, i.e. pass all tests and
+ release check. This program will not do any code verification.
+ - The `go.mod` file in the module cannot contain any `replace` field.
+
+Command:
+
+```bash
+(cd releasing/; go run . release [module name] [version type])
+```
+
+The command only accepts 3 version types: major, minor or patch.
+The specified version will be increased by 1 and inferior version(s) will be reset to 0.
+
+By default the `release` command will not create release in the remote
+unless you add a `--no-dry-run` flag. You can check the output of the dry-run command to ensure the behavior is expected.
+
 ## Release procedure
 
-The script used to release modules is in progress. Check it in 
-`releasing/releasing` directory.
+The previous release program does most of the following steps create a
+release.
 
 At any given moment, the repository's master branch is
 passing all its tests and contains code one could release.
