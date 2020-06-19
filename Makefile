@@ -14,8 +14,10 @@ all: verify-kustomize
 verify-kustomize: \
 	lint-kustomize \
 	test-unit-kustomize-all \
-	test-examples-kustomize-against-HEAD \
-	test-examples-kustomize-against-3.6.1
+	test-examples-kustomize-against-HEAD
+
+# Re-enable against v3.7.0; disabled due to field order in output.
+#   test-examples-kustomize-against-3.6.1
 
 # The following target referenced by a file in
 # https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/kustomize
@@ -24,9 +26,11 @@ prow-presubmit-check: \
 	lint-kustomize \
 	test-unit-kustomize-all \
 	test-examples-kustomize-against-HEAD \
-	test-examples-kustomize-against-3.6.1 \
 	test-unit-cmd-all \
 	test-go-mod
+
+# Re-enable against v3.7.0; disabled due to field order in output.
+#	test-examples-kustomize-against-3.6.1 \
 
 .PHONY: verify-kustomize-e2e
 verify-kustomize-e2e: test-examples-e2e-kustomize

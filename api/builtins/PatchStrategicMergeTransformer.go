@@ -6,6 +6,8 @@ package builtins
 import (
 	"fmt"
 
+	"strings"
+
 	"sigs.k8s.io/kustomize/api/filters/patchstrategicmerge"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -29,6 +31,11 @@ func (p *PatchStrategicMergeTransformerPlugin) Config(
 	err = yaml.Unmarshal(c, p)
 	if err != nil {
 		return err
+	}
+	if !strings.Contains(string(c), "yamlSupport") {
+		// If not explicitly denied,
+		// activate kyaml-based transformation.
+		p.YAMLSupport = true
 	}
 	if len(p.Paths) == 0 && p.Patches == "" {
 		return fmt.Errorf("empty file path and empty patch content")

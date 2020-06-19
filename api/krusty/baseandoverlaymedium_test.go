@@ -225,13 +225,13 @@ spec:
     spec:
       containers:
       - env:
+        - name: foo
+          value: bar
         - name: FOO
           valueFrom:
             configMapKeyRef:
               key: somekey
               name: test-infra-app-env-ffmd9b969m
-        - name: foo
-          value: bar
         image: nginx:1.8.0
         name: nginx
         ports:
