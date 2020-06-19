@@ -41,33 +41,33 @@ type Loader interface {
 // Kunstructured allows manipulation of k8s objects
 // that do not have Golang structs.
 type Kunstructured interface {
-	Map() map[string]interface{}
-	SetMap(map[string]interface{})
 	Copy() Kunstructured
-	GetFieldValue(string) (interface{}, error)
-	GetString(string) (string, error)
-	GetStringSlice(string) ([]string, error)
+	GetAnnotations() map[string]string
 	GetBool(path string) (bool, error)
+	GetFieldValue(string) (interface{}, error)
 	GetFloat64(path string) (float64, error)
-	GetInt64(path string) (int64, error)
-	GetSlice(path string) ([]interface{}, error)
-	GetStringMap(path string) (map[string]string, error)
-	GetMap(path string) (map[string]interface{}, error)
-	MarshalJSON() ([]byte, error)
-	UnmarshalJSON([]byte) error
 	GetGvk() resid.Gvk
-	SetGvk(resid.Gvk)
+	GetInt64(path string) (int64, error)
 	GetKind() string
+	GetLabels() map[string]string
+	GetMap(path string) (map[string]interface{}, error)
 	GetName() string
+	GetSlice(path string) ([]interface{}, error)
+	GetString(string) (string, error)
+	GetStringMap(path string) (map[string]string, error)
+	GetStringSlice(string) ([]string, error)
+	Map() map[string]interface{}
+	MarshalJSON() ([]byte, error)
+	MatchesAnnotationSelector(selector string) (bool, error)
+	MatchesLabelSelector(selector string) (bool, error)
+	Patch(Kunstructured) error
+	SetAnnotations(map[string]string)
+	SetGvk(resid.Gvk)
+	SetLabels(map[string]string)
+	SetMap(map[string]interface{})
 	SetName(string)
 	SetNamespace(string)
-	GetLabels() map[string]string
-	SetLabels(map[string]string)
-	GetAnnotations() map[string]string
-	SetAnnotations(map[string]string)
-	MatchesLabelSelector(selector string) (bool, error)
-	MatchesAnnotationSelector(selector string) (bool, error)
-	Patch(Kunstructured) error
+	UnmarshalJSON([]byte) error
 }
 
 // KunstructuredFactory makes instances of Kunstructured.
