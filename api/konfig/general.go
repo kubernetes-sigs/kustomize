@@ -36,4 +36,7 @@ const (
 
 	// An environment variable to turn on/off adding the ManagedByLabelKey
 	EnableManagedbyLabelEnv = "KUSTOMIZE_ENABLE_MANAGEDBY_LABEL"
+
+	// Label key that indicates the resources are validated by a validator
+	ValidatedByLabelKey = "validated-by"
 )
