@@ -112,22 +112,12 @@ The tag appears in the URL, e.g. [pluginator/v1.0.0].
 
 ## Releasing Program
 
-The go program used to release modules is in `releasing/releasing` directory. 
-Modules that can be handled by this program now:
-
- - kyaml
- - api
- - kstatus
- - cmd/config
- - cmd/resource
- - cmd/kubectl
- - pluginator
- - kustomize
+The Go program used to release modules is in `releasing/releasing` directory. 
 
 ### List current module versions
 
 ```bash
-(cd releasing/; go run . list)
+(cd releasing/releasing; go run . list)
 ```
 
 This command will print the latest versions of supported modules.
@@ -144,18 +134,17 @@ pluginator/v2.1.0
 kustomize/v3.6.1
 ```
 
-### Release a module
+### Releasing a module
 
 To release a module, you need to make sure that:
 
  - The codes in the module are ready to release, i.e. pass all tests and
  release check. This program will not do any code verification.
- - The `go.mod` file in the module cannot contain any `replace` field.
 
 Command:
 
 ```bash
-(cd releasing/; go run . release [module name] [version type])
+(cd releasing/releasing; go run . release {moduleName} {versionField})
 ```
 
 The command only accepts 3 version types: major, minor or patch.
