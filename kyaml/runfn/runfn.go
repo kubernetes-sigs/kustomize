@@ -116,7 +116,7 @@ func (r RunFns) getNodesAndFilters() (
 	if r.Input == nil {
 		p.Inputs = []kio.Reader{outputPkg}
 	} else {
-		p.Inputs = []kio.Reader{&kio.ByteReader{Reader: r.Input, AcceptJSON: true}}
+		p.Inputs = []kio.Reader{&kio.ByteReader{Reader: r.Input}}
 	}
 	if err := p.Execute(); err != nil {
 		return nil, nil, outputPkg, err

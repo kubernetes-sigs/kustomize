@@ -74,7 +74,7 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 		inputs = append(inputs, kio.LocalPackageReader{PackagePath: a, MatchFilesGlob: kio.MatchAll})
 	}
 	if len(inputs) == 0 {
-		inputs = []kio.Reader{&kio.ByteReader{Reader: c.InOrStdin(), AcceptJSON: true}}
+		inputs = []kio.Reader{&kio.ByteReader{Reader: c.InOrStdin()}}
 	}
 
 	err := kio.Pipeline{Inputs: inputs, Outputs: outputs}.Execute()

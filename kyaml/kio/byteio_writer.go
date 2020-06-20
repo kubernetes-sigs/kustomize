@@ -91,7 +91,7 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 	// don't wrap the elements
 	if w.WrappingKind == "" {
 		for i := range nodes {
-			if err := w.encode(encoder, nodes[i]); err != nil {
+			if err := w.encode(encoder, nodes[i].Document()); err != nil {
 				return err
 			}
 		}
@@ -125,26 +125,23 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 	for i := range nodes {
 		items.Content = append(items.Content, nodes[i].YNode())
 	}
-	rNode := yaml.RNode{}
-	rNode.SetYNode(doc)
-	err := w.encode(encoder, &rNode)
+	err := w.encode(encoder, doc)
 	yaml.UndoSerializationHacksOnNodes(nodes)
 	return err
 }
 
-// encode encodes the input RNode to appropriate node format based on file path extension
-func (w ByteWriter) encode(encoder *yaml.Encoder, node *yaml.RNode) error {
-	_, _, format, err := kioutil.GetFileAnnotations(node)
-	if !w.KeepReaderAnnotations {
-		_, err := node.Pipe(yaml.ClearAnnotation(kioutil.FormatAnnotation))
-		if err != nil {
-			return errors.Wrap(err)
-		}
+// encode encodes the input document node to appropriate node format
+func (w ByteWriter) encode(encoder *yaml.Encoder, doc *yaml.Node) error {
+	rNode := &yaml.RNode{}
+	rNode.SetYNode(doc)
+	str, err := rNode.String()
+	if err != nil {
+		return errors.Wrap(err)
 	}
-	if err == nil && format == JSON {
+	if json.Valid([]byte(str)) {
 		je := json.NewEncoder(w.Writer)
 		je.SetIndent("", "  ")
-		return errors.Wrap(je.Encode(node))
+		return errors.Wrap(je.Encode(rNode))
 	}
-	return encoder.Encode(node.Document())
+	return encoder.Encode(doc)
 }
