@@ -148,7 +148,7 @@ func TestSinkCommandJSON(t *testing.T) {
 kind: ResourceList
 items:
 - {"kind": "Deployment", "metadata": {"labels": {"app": "nginx2"}, "name": "foo",
-    "annotations": {"app": "nginx2", config.kubernetes.io/format: 'json', config.kubernetes.io/index: '0',
+    "annotations": {"app": "nginx2", config.kubernetes.io/index: '0',
       config.kubernetes.io/path: 'f1.json'}}, "spec": {"replicas": 1}}
 `))
 	r.Command.SetArgs([]string{d})
@@ -309,7 +309,7 @@ func TestSinkCommandJSON_Stdout(t *testing.T) {
 kind: ResourceList
 items:
 - {"kind": "Deployment", "metadata": {"labels": {"app": "nginx2"}, "name": "foo",
-    "annotations": {"app": "nginx2", config.kubernetes.io/format: 'json', config.kubernetes.io/index: '0',
+    "annotations": {"app": "nginx2", config.kubernetes.io/index: '0',
       config.kubernetes.io/path: 'f1.json'}}, "spec": {"replicas": 1}}
 `))
 

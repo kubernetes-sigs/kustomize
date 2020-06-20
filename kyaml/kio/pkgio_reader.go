@@ -123,7 +123,7 @@ func (r *LocalPackageReadWriter) Write(nodes []*yaml.RNode) error {
 func (r *LocalPackageReadWriter) getFiles(nodes []*yaml.RNode) (sets.String, error) {
 	val := sets.String{}
 	for _, n := range nodes {
-		path, _, _, err := kioutil.GetFileAnnotations(n)
+		path, _, err := kioutil.GetFileAnnotations(n)
 		if err != nil {
 			return nil, errors.Wrap(err)
 		}
@@ -246,23 +246,8 @@ func (r *LocalPackageReader) readFile(path string, _ os.FileInfo) ([]*yaml.RNode
 		Reader:                f,
 		OmitReaderAnnotations: r.OmitReaderAnnotations,
 		SetAnnotations:        r.SetAnnotations,
-		AcceptJSON:            r.acceptJSON(path),
 	}
 	return rr.Read()
-}
-
-// acceptJSON returns true if the input path has json ext and if the MatchFilesGlob
-// has any of the JSONMatch ext
-func (r *LocalPackageReader) acceptJSON(path string) bool {
-	for _, gm := range r.MatchFilesGlob {
-		for _, jm := range JSONMatch {
-			if filepath.Ext(path) == filepath.Ext(jm) &&
-				filepath.Ext(gm) == filepath.Ext(jm) {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 // ShouldSkipFile returns true if the file should be skipped

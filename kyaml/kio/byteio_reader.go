@@ -5,7 +5,6 @@ package kio
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"sort"
@@ -102,15 +101,7 @@ type ByteReader struct {
 	// WrappingKind is set by Read(), and is the kind of the object that
 	// the read objects were originally wrapped in.
 	WrappingKind string
-
-	// AcceptJSON indicates if the input json bytes should be processed
-	AcceptJSON bool
 }
-
-const (
-	YAML = "yaml"
-	JSON = "json"
-)
 
 var _ Reader = &ByteReader{}
 
@@ -124,27 +115,11 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
-	inputStr := input.String()
-
-	// check if json is accepted and if input bytes are in json format
-	if r.AcceptJSON && json.Valid([]byte(inputStr)) {
-		// convert json to yaml string to generate resource list object
-		// with appropriate format annotation
-		if r.SetAnnotations == nil {
-			r.SetAnnotations = map[string]string{}
-		}
-		if !r.OmitReaderAnnotations {
-			r.SetAnnotations[kioutil.FormatAnnotation] = JSON
-		}
-	}
-
-	values := strings.Split(inputStr, "\n---\n")
+	values := strings.Split(input.String(), "\n---\n")
 
 	index := 0
 	for i := range values {
-		value := values[i]
-
-		decoder := yaml.NewDecoder(bytes.NewBufferString(value))
+		decoder := yaml.NewDecoder(bytes.NewBufferString(values[i]))
 		node, err := r.decode(index, decoder)
 		if err == io.EOF {
 			continue
