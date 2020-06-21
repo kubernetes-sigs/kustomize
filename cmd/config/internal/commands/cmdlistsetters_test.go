@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -46,6 +47,32 @@ spec:
  `,
 			expected: `    NAME     VALUE   SET BY   DESCRIPTION   COUNT  
   replicas   3       me       hello world   1      
+`,
+		},
+
+		{
+			name: "list-replicas inconsistent with openapi",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "4"
+          setBy: me
+      description: "hello world"
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
+ `,
+			expected: `    NAME     VALUE   SET BY   DESCRIPTION   COUNT  
+  replicas   4       me       hello world   1      
 `,
 		},
 		{
@@ -405,6 +432,27 @@ openAPI:
 			}
 
 			if !assert.Equal(t, test.expected, actual.String()) {
+				t.FailNow()
+			}
+
+			// make sure that the resources are not altered
+			actualResources, err := ioutil.ReadFile(r.Name())
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			if !assert.Equal(t,
+				strings.TrimSpace(test.input),
+				strings.TrimSpace(string(actualResources))) {
+				t.FailNow()
+			}
+
+			actualOpenAPI, err := ioutil.ReadFile(f.Name())
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			if !assert.Equal(t,
+				strings.TrimSpace(test.openapi),
+				strings.TrimSpace(string(actualOpenAPI))) {
 				t.FailNow()
 			}
 		})
