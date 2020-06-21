@@ -7,7 +7,7 @@ containers that can be chained together as part of a configuration management pi
 The end result of such a pipeline are fully rendered configurations that can then be
 applied to a control plane (e.g. Using ‘kubectl apply’ for Kubernetes control plane).
 As such, although this document references Kubernetes Resource Model and API conventions,
-it is completely decoupled from Kuberentes API machinery and does not depend on any
+it is completely decoupled from Kubernetes API machinery and does not depend on any
 in-cluster components.
 
 This document references terms described in [Kubernetes API Conventions][1].
@@ -33,7 +33,7 @@ _Configuration functions_ enable shift-left practices (client-side) through:
 Performing these on the client rather than the server enables:
 
 - Configuration to be reviewed prior to being sent to the API server
-- Configuration to be validated as part of the CI?CD pipeline
+- Configuration to be validated as part of the CI/CD pipeline
 - Configuration for Resources to validated holistically rather than individually
   per-Resource
   - e.g. ensure the `Service.selector` and `Deployment.spec.template` labels
