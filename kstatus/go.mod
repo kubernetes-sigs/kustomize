@@ -3,7 +3,6 @@ module sigs.k8s.io/kustomize/kstatus
 go 1.14
 
 require (
-	github.com/ghodss/yaml v1.0.0
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/pkg/errors v0.8.1
