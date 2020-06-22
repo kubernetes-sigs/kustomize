@@ -99,7 +99,7 @@ func SubstReferringSetter(definitions *yaml.RNode, key string) string {
 			}
 
 			subst := SubstitutionDefinition{}
-			if err := yaml.Unmarshal([]byte(b), &subst); err != nil {
+			if err := yaml.Unmarshal(b, &subst); err != nil {
 				continue
 			}
 			// Check the ref in value to see if it contains the setter key
