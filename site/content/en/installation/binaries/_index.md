@@ -9,7 +9,7 @@ description: >
 
 Binaries at various versions for linux, MacOs and Windows are published on the [release page].
 
-The follow [script] detects your OS and downloads the appropriate kustomize binary to your
+The following [script] detects your OS and downloads the appropriate kustomize binary to your
 current working directory.  
 
 ```
