@@ -19,6 +19,7 @@ var (
 	Count              = commands.CountCommand
 	CreateSetter       = commands.CreateSetterCommand
 	CreateSubstitution = commands.CreateSubstitutionCommand
+	DeleteSetter       = commands.DeleteSetterCommand
 	Fmt                = commands.FmtCommand
 	Grep               = commands.GrepCommand
 	Init               = commands.InitCommand

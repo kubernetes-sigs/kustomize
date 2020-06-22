@@ -151,10 +151,16 @@ func (fm *FieldMeta) Write(n *yaml.RNode) error {
 		delete(fm.Schema.VendorExtensible.Extensions, "x-kustomize")
 	}
 
-	// Ex: {"$ref":"#/definitions/io.k8s.cli.setters.replicas"} should be converted to
-	// {"openAPI":"replicas"} and added to the line comment
-	arr := strings.Split(fm.Schema.Ref.String(), ".")
-	n.YNode().LineComment = fmt.Sprintf(`{"%s":"%s"}`, shortHandRef, arr[len(arr)-1])
+	// Ref is removed when a setter is deleted, so the Ref string could be empty.
+	if fm.Schema.Ref.String() != "" {
+		// Ex: {"$ref":"#/definitions/io.k8s.cli.setters.replicas"} should be converted to
+		// {"openAPI":"replicas"} and added to the line comment
+		arr := strings.Split(fm.Schema.Ref.String(), ".")
+		n.YNode().LineComment = fmt.Sprintf(`{"%s":"%s"}`, shortHandRef, arr[len(arr)-1])
+	} else {
+		n.YNode().LineComment = ""
+	}
+
 	return nil
 }
 
