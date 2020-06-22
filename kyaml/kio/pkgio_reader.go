@@ -167,6 +167,8 @@ type LocalPackageReader struct {
 var _ Reader = LocalPackageReader{}
 
 var DefaultMatch = []string{"*.yaml", "*.yml"}
+var JSONMatch = []string{"*.json"}
+var MatchAll = append(DefaultMatch, JSONMatch...)
 
 // Read reads the Resources.
 func (r LocalPackageReader) Read() ([]*yaml.RNode, error) {
@@ -238,6 +240,7 @@ func (r *LocalPackageReader) readFile(path string, _ os.FileInfo) ([]*yaml.RNode
 		return nil, err
 	}
 	defer f.Close()
+
 	rr := &ByteReader{
 		DisableUnwrapping:     true,
 		Reader:                f,
