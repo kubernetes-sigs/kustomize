@@ -78,22 +78,22 @@ func (dd DeleterDefinition) DeleteFromFile(path string) error {
 	return yaml.UpdateFile(dd, path)
 }
 
-// ContainedInSubstituion check if the setter used in substituition and return the substitution name if true
-func ContainedInSubstituion(definitions *yaml.RNode, key string) string {
+// SubstReferringSetter check if the setter used in substitution and return the substitution name if true
+func SubstReferringSetter(definitions *yaml.RNode, key string) string {
 	fieldNames, err := definitions.Fields()
 	if err != nil {
 		return ""
 	}
-	for _, fieldname := range fieldNames {
+	for _, fieldName := range fieldNames {
 		// the definition key -- contains the substitution name
-		subkey := definitions.Field(fieldname).Key.YNode().Value
+		subkey := definitions.Field(fieldName).Key.YNode().Value
 		if strings.HasPrefix(subkey, fieldmeta.SubstitutionDefinitionPrefix) {
-			substNode, err := definitions.Field(fieldname).Value.Pipe(yaml.Lookup(K8sCliExtensionKey, "substitution"))
+			substNode, err := definitions.Field(fieldName).Value.Pipe(yaml.Lookup(K8sCliExtensionKey, "substitution"))
 			if err != nil {
 				continue
 			}
 
-			b, err := substNode.String()
+			b, err := substNode.MarshalJSON()
 			if err != nil {
 				continue
 			}
@@ -126,26 +126,26 @@ func (dd DeleterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 		return nil, errors.Errorf("setter does not exist")
 	}
 
-	subst := ContainedInSubstituion(definitions, key)
+	subst := SubstReferringSetter(definitions, key)
 
 	if subst != "" {
 		return nil, errors.Errorf("setter is used in substitution %s, please delete the substitution first", subst)
 	}
 
-	for i := 0; i < len(definitions.Content()); i += 2 {
-		if definitions.Content()[i].Value == key {
-			if len(definitions.YNode().Content) > i+2 {
-				l := len(definitions.YNode().Content)
-				// remove from the middle of the list
-				definitions.YNode().Content = definitions.Content()[:i]
-				definitions.YNode().Content = append(
-					definitions.YNode().Content,
-					definitions.Content()[i+2:l]...)
-			} else {
-				// remove from the end of the list
-				definitions.YNode().Content = definitions.Content()[:i]
-			}
-		}
+	_, err = definitions.Pipe(yaml.FieldClearer{Name:key})
+	if err != nil {
+		return nil, err
+	}
+	// remove definitions if it's empty
+	_, err = object.Pipe(yaml.Lookup(openapi.SupplementaryOpenAPIFieldName), yaml.FieldClearer{Name:"definitions", IfEmpty: true})
+	if err != nil {
+		return nil, err
+	}
+
+	// remove openApi if it's empty
+	_, err = object.Pipe(yaml.FieldClearer{Name: openapi.SupplementaryOpenAPIFieldName, IfEmpty: true})
+	if err != nil {
+		return nil, err
 	}
 
 	return object, nil

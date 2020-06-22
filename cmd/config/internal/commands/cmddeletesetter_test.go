@@ -55,8 +55,6 @@ openAPI:
 			expectedOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
-openAPI:
-  definitions: {}
  `,
 			expectedResources: `
 apiVersion: apps/v1
