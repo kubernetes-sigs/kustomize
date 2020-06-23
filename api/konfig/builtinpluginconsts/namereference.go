@@ -252,6 +252,9 @@ nameReference:
     kind: Role
   - path: rules/resourceNames
     kind: ClusterRole
+  - path: spec/template/spec/containers/env/valueFrom/secretKeyRef/name
+    kind: Service
+    group: serving.knative.dev
 
 - kind: Service
   version: v1
