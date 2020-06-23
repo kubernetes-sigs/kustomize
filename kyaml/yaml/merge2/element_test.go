@@ -461,4 +461,57 @@ containers: # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"t
 `,
 		infer: false,
 	},
+
+	{description: `merge_primitive_finalizers`,
+		source: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  finalizers:
+  - a
+  - b 
+`,
+		dest: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  finalizers:
+  - b
+  - c
+`,
+		expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  finalizers:
+  - b
+  - c
+  - a
+`,
+	},
+
+	{description: `merge_primitive_items`,
+		source: `
+apiVersion: apps/v1
+kind: Deployment
+items: # {"type":"array", "x-kubernetes-patch-strategy": "merge"}
+- a
+- b
+`,
+		dest: `
+apiVersion: apps/v1
+kind: Deployment
+items:
+- b
+- c
+`,
+		expected: `
+apiVersion: apps/v1
+kind: Deployment
+items:
+- b
+- c
+- a
+`,
+	},
 }

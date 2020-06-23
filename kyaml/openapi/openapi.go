@@ -285,14 +285,14 @@ func (rs *ResourceSchema) Field(field string) *ResourceSchema {
 func (rs *ResourceSchema) PatchStrategyAndKey() (string, string) {
 	ps, found := rs.Schema.Extensions[kubernetesPatchStrategyExtensionKey]
 	if !found {
-		// merge key and patch strategy must appear together
+		// empty patch strategy
 		return "", ""
 	}
 
 	mk, found := rs.Schema.Extensions[kubernetesMergeKeyExtensionKey]
 	if !found {
-		// merge key and patch strategy must appear together
-		return "", ""
+		// no mergeKey -- may be a primitive associative list (e.g. finalizers)
+		mk = ""
 	}
 	return ps.(string), mk.(string)
 }
