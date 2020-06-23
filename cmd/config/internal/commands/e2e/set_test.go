@@ -54,6 +54,7 @@ openAPI:
         setter:
           name: replicas
           value: "4"
+          isSet: true
 `,
 			},
 		},
