@@ -64,6 +64,7 @@ openAPI:
           name: replicas
           value: "4"
           setBy: pw
+          isSet: true
  `,
 			expectedResources: `
 apiVersion: apps/v1
@@ -158,6 +159,7 @@ openAPI:
         setter:
           name: replicas
           value: "4"
+          isSet: true
  `,
 			expectedResources: `
 apiVersion: apps/v1
@@ -229,6 +231,7 @@ openAPI:
         setter:
           name: tag
           value: "1.8.1"
+          isSet: true
     io.k8s.cli.substitutions.image:
       x-k8s-cli:
         substitution:
@@ -539,6 +542,7 @@ openAPI:
         setter:
           name: replicas
           value: "4"
+          isSet: true
  `,
 			expectedResources: `
 apiVersion: apps/v1
@@ -639,6 +643,7 @@ openAPI:
           listValues:
           - "10"
           - "11"
+          isSet: true
  `,
 			expectedResources: `
 apiVersion: example.com/v1beta1
@@ -771,6 +776,7 @@ openAPI:
         setter:
           name: my-image-setter
           value: ubuntu
+          isSet: true
     io.k8s.cli.setters.my-tag-setter:
       x-k8s-cli:
         setter:

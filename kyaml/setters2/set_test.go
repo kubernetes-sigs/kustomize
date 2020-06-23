@@ -927,6 +927,8 @@ openAPI:
         setter:
           name: replicas
           value: "4"
+          required: true
+          isSet: true
     io.k8s.cli.setters.no-match-2':
       x-k8s-cli:
         setter:
@@ -946,6 +948,8 @@ openAPI:
         setter:
           name: replicas
           value: "3"
+          required: true
+          isSet: true
     io.k8s.cli.setters.no-match-2':
       x-k8s-cli:
         setter:
@@ -974,6 +978,7 @@ openAPI:
         setter:
           name: replicas
           value: "3"
+          isSet: true
 `,
 		},
 		{
@@ -1013,6 +1018,7 @@ openAPI:
         setter:
           name: replicas
           value: "3"
+          isSet: true
       description: hello world
     io.k8s.cli.setters.no-match-2':
       x-k8s-cli:
@@ -1059,6 +1065,7 @@ openAPI:
           name: replicas
           value: "3"
           setBy: carl
+          isSet: true
     io.k8s.cli.setters.no-match-2':
       x-k8s-cli:
         setter:
@@ -1106,6 +1113,7 @@ openAPI:
         setter:
           name: replicas
           value: "3"
+          isSet: true
     io.k8s.cli.setters.no-match-2':
       x-k8s-cli:
         setter:
@@ -1159,6 +1167,7 @@ openAPI:
           enumValues:
             foo: bar
             baz: biz
+          isSet: true
     io.k8s.cli.setters.no-match-2':
       x-k8s-cli:
         setter:
@@ -1245,6 +1254,7 @@ openAPI:
         setter:
           name: args
           listValues: ["1"]
+          required: true
  `,
 			expected: `
 openAPI:
@@ -1255,6 +1265,8 @@ openAPI:
         setter:
           name: args
           listValues: ["2", "3", "4"]
+          required: true
+          isSet: true
 `,
 		},
 	}
