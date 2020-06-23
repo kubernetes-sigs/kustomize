@@ -162,6 +162,11 @@ type SetterDefinition struct {
 	// Example -- may be used for t-shirt sizing values by allowing cpu to be
 	// set to small, medium or large, and then mapping these values to cpu values -- 0.5, 2, 8
 	EnumValues map[string]string `yaml:"enumValues,omitempty"`
+
+	// Required indicates that the setter must be set by package consumer before
+	// live apply/preview. This field is added to the setter definition to record
+	// the package publisher's intent to make the setter required to be set.
+	Required bool `yaml:"required,omitempty"`
 }
 
 func (sd SetterDefinition) AddToFile(path string) error {

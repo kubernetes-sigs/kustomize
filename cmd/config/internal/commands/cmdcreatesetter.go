@@ -50,6 +50,8 @@ func NewCreateSetterRunner(parent string) *CreateSetterRunner {
 	set.Flags().MarkHidden("partial")
 	set.Flags().StringVar(&setterVersion, "version", "",
 		"use this version of the setter format")
+	set.Flags().BoolVar(&r.CreateSetter.Required, "required", false,
+		"indicates that this setter must be set by package consumer before live apply/preview")
 	set.Flags().StringVar(&r.CreateSetter.SchemaPath, "schema-path", "",
 		`openAPI schema file path for setter constraints -- file content `+
 			`e.g. {"type": "string", "maxLength": 15, "enum": ["allowedValue1", "allowedValue2"]}`)

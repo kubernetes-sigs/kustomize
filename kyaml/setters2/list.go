@@ -181,6 +181,8 @@ func (l *List) listSubst(object *yaml.RNode) error {
 }
 
 // count returns the number of fields set by the setter with name
+// set filter is leveraged for this but the resources are not written
+// back to files as only LocalPackageReader is invoked and not writer
 func (l *List) count(path, name string) (int, error) {
 	s := &Set{Name: name}
 	err := kio.Pipeline{

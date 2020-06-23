@@ -34,6 +34,7 @@ openAPI:
           name: replicas
           value: "3"
           setBy: me
+          required: true
       description: "hello world"
  `,
 			input: `
@@ -44,8 +45,8 @@ metadata:
 spec:
   replicas: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
  `,
-			expected: `    NAME     VALUE   SET BY   DESCRIPTION   COUNT  
-  replicas   3       me       hello world   1      
+			expected: `    NAME     VALUE   SET BY   DESCRIPTION   COUNT   REQUIRED  
+  replicas   3       me       hello world   1       Yes       
 `,
 		},
 		{
@@ -74,6 +75,8 @@ openAPI:
           name: tag
           value: "1.7.9"
           setBy: me3
+          required: true
+          isSet: false
     io.k8s.cli.substitutions.image:
       x-k8s-cli:
         substitution:
@@ -100,10 +103,10 @@ spec:
       - name: nginx2
         image: nginx # {"$ref": "#/definitions/io.k8s.cli.setters.image"}
  `,
-			expected: `    NAME     VALUE   SET BY    DESCRIPTION    COUNT  
-  image      nginx   me2      hello world 2   2      
-  replicas   3       me1      hello world 1   1      
-  tag        1.7.9   me3      hello world 3   1      
+			expected: `    NAME     VALUE   SET BY    DESCRIPTION    COUNT   REQUIRED  
+  image      nginx   me2      hello world 2   2       No        
+  replicas   3       me1      hello world 1   1       No        
+  tag        1.7.9   me3      hello world 3   1       Yes       
   SUBSTITUTION    PATTERN    REFERENCES   
   image          IMAGE:TAG   [image,tag]  
 `,
@@ -174,10 +177,10 @@ spec:
       - name: nginx2
         image: nginx
 `,
-			expected: `    NAME     VALUE   SET BY    DESCRIPTION    COUNT  
-  image      nginx   me2      hello world 2   3      
-  replicas   3       me1      hello world 1   2      
-  tag        1.7.9   me3      hello world 3   2      
+			expected: `    NAME     VALUE   SET BY    DESCRIPTION    COUNT   REQUIRED  
+  image      nginx   me2      hello world 2   3       No        
+  replicas   3       me1      hello world 1   2       No        
+  tag        1.7.9   me3      hello world 3   2       No        
   SUBSTITUTION    PATTERN    REFERENCES   
   image          IMAGE:TAG   [image,tag]  
 `,
@@ -202,6 +205,7 @@ openAPI:
           name: image
           value: "nginx"
           setBy: me2
+          required: true
     io.k8s.cli.setters.tag:
       description: "hello world 3"
       x-k8s-cli:
@@ -249,8 +253,8 @@ spec:
       - name: nginx2
         image: nginx
 `,
-			expected: `  NAME    VALUE   SET BY    DESCRIPTION    COUNT  
-  image   nginx   me2      hello world 2   3      
+			expected: `  NAME    VALUE   SET BY    DESCRIPTION    COUNT   REQUIRED  
+  image   nginx   me2      hello world 2   3       Yes       
   SUBSTITUTION    PATTERN    REFERENCES   
   image          IMAGE:TAG   [image,tag]  
 `,
@@ -277,6 +281,7 @@ openAPI:
           - b
           - c
           setBy: me
+          required: true
  `,
 			input: `
 apiVersion: example.com/v1beta1
@@ -290,8 +295,8 @@ spec:
   - "b"
   - "c"
 `,
-			expected: `  NAME    VALUE    SET BY   DESCRIPTION   COUNT  
-  list   [a,b,c]   me       hello world   1      
+			expected: `  NAME    VALUE    SET BY   DESCRIPTION   COUNT   REQUIRED  
+  list   [a,b,c]   me       hello world   1       Yes       
 `,
 		},
 
@@ -327,6 +332,8 @@ openAPI:
         setter:
           name: my-tag-setter
           value: 1.7.9
+          required: true
+          isSet: true
     io.k8s.cli.substitutions.my-image-subst:
       x-k8s-cli:
         substitution:
@@ -353,10 +360,10 @@ openAPI:
           name: my-other-setter
           value: nginxotherthing
  `,
-			expected: `       NAME              VALUE        SET BY   DESCRIPTION   COUNT  
-  my-image-setter   nginx                                    2      
-  my-other-setter   nginxotherthing                          1      
-  my-tag-setter     1.7.9                                    2      
+			expected: `       NAME              VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED  
+  my-image-setter   nginx                                    2       No        
+  my-other-setter   nginxotherthing                          1       No        
+  my-tag-setter     1.7.9                                    2       Yes       
    SUBSTITUTION                        PATTERN                                  REFERENCES             
   my-image-subst    ${my-image-setter}::${my-tag-setter}             [my-image-setter,my-tag-setter]   
   my-nested-subst   something/${my-image-subst}/${my-other-setter}   [my-image-subst,my-other-setter]  
