@@ -37,6 +37,11 @@ type SetterCreator struct {
 	// FieldValue if set will add the OpenAPI reference to fields if they have this value.
 	// Optional.  If unspecified match all field values.
 	FieldValue string
+
+	// Required indicates that the setter must be set by package consumer before
+	// live apply/preview. This field is added to the setter definition to record
+	// the package publisher's intent to make the setter required to be set.
+	Required bool
 }
 
 func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
@@ -47,7 +52,7 @@ func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
 	// Update the OpenAPI definitions to hace the setter
 	sd := setters2.SetterDefinition{
 		Name: c.Name, Value: c.FieldValue, Description: c.Description, SetBy: c.SetBy,
-		Type: c.Type, Schema: schema,
+		Type: c.Type, Schema: schema, Required: c.Required,
 	}
 	if err := sd.AddToFile(openAPIPath); err != nil {
 		return err

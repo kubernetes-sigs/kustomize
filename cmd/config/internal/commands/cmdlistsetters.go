@@ -79,7 +79,7 @@ func (r *ListSettersRunner) ListSetters(c *cobra.Command, args []string) error {
 		return err
 	}
 	table := newTable(c.OutOrStdout(), r.Markdown)
-	table.SetHeader([]string{"NAME", "VALUE", "SET BY", "DESCRIPTION", "COUNT"})
+	table.SetHeader([]string{"NAME", "VALUE", "SET BY", "DESCRIPTION", "COUNT", "REQUIRED"})
 	for i := range r.List.Setters {
 		s := r.List.Setters[i]
 		v := s.Value
@@ -89,8 +89,14 @@ func (r *ListSettersRunner) ListSetters(c *cobra.Command, args []string) error {
 			v = strings.Join(s.ListValues, ",")
 			v = fmt.Sprintf("[%s]", v)
 		}
+		var required string
+		if s.Required {
+			required = "Yes"
+		} else {
+			required = "No"
+		}
 		table.Append([]string{
-			s.Name, v, s.SetBy, s.Description, fmt.Sprintf("%d", s.Count)})
+			s.Name, v, s.SetBy, s.Description, fmt.Sprintf("%d", s.Count), required})
 	}
 	table.Render()
 

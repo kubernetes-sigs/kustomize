@@ -419,6 +419,10 @@ func (s SetOpenAPI) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 		return nil, err
 	}
 
+	if err := def.PipeE(&yaml.FieldSetter{Name: "isSet", StringValue: "true"}); err != nil {
+		return nil, err
+	}
+
 	if s.Description != "" {
 		d, err := object.Pipe(yaml.LookupCreate(
 			yaml.MappingNode, "openAPI", "definitions", key))
