@@ -132,12 +132,12 @@ func (dd DeleterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 		return nil, errors.Errorf("setter is used in substitution %s, please delete the substitution first", subst)
 	}
 
-	_, err = definitions.Pipe(yaml.FieldClearer{Name:key})
+	_, err = definitions.Pipe(yaml.FieldClearer{Name: key})
 	if err != nil {
 		return nil, err
 	}
 	// remove definitions if it's empty
-	_, err = object.Pipe(yaml.Lookup(openapi.SupplementaryOpenAPIFieldName), yaml.FieldClearer{Name:"definitions", IfEmpty: true})
+	_, err = object.Pipe(yaml.Lookup(openapi.SupplementaryOpenAPIFieldName), yaml.FieldClearer{Name: "definitions", IfEmpty: true})
 	if err != nil {
 		return nil, err
 	}
