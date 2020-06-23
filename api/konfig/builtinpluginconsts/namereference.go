@@ -255,6 +255,7 @@ nameReference:
   - path: spec/template/spec/containers/env/valueFrom/secretKeyRef/name
     kind: Service
     group: serving.knative.dev
+    version: v1
 
 - kind: Service
   version: v1
