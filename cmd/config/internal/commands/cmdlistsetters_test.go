@@ -72,8 +72,8 @@ metadata:
 spec:
   replicas: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
  `,
-			expected: `    NAME     VALUE   SET BY   DESCRIPTION   COUNT  
-  replicas   4       me       hello world   1      
+			expected: `    NAME     VALUE   SET BY   DESCRIPTION   COUNT   REQUIRED  
+  replicas   4       me       hello world   1       No        
 `,
 		},
 		{
