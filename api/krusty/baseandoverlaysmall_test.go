@@ -132,6 +132,54 @@ spec:
 `)
 }
 
+func TestTinyOverlay(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+namePrefix: a-
+resources:
+- deployment.yaml
+`)
+	th.WriteF("base/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: whatever
+`)
+	th.WriteK("overlay", `
+namePrefix: b-
+resources:
+- ../base
+patchesStrategicMerge:
+- depPatch.yaml
+`)
+	th.WriteF("overlay/depPatch.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeployment
+spec:
+  replicas: 999
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: b-a-myDeployment
+spec:
+  replicas: 999
+  template:
+    spec:
+      containers:
+      - image: whatever
+`)
+}
+
 func writeSmallBase(th kusttest_test.Harness) {
 	th.WriteK("/app/base", `
 namePrefix: a-
