@@ -159,40 +159,31 @@ func main() {
 		}
 	}
 
-	seedDocs := make(crawler.CrawlSeed, 0)
-
-	// get all the documents in the index
-	getSeedDocsFunc := func() {
-		query := []byte(`{ "query":{ "match_all":{} } }`)
-		it := idx.IterateQuery(query, 10000, 60*time.Second)
-		for it.Next() {
-			for _, hit := range it.Value().Hits.Hits {
-				seedDocs = append(seedDocs, hit.Document.Document.Copy())
-			}
-		}
-		if err := it.Err(); err != nil {
-			log.Fatalf("getSeedDocsFunc Error iterating: %v\n", err)
-		}
-	}
+	query := []byte(`{ "query":{ "match_all":{} } }`)
+	it := idx.IterateQuery(query, 10000, 60*time.Second)
 
 	switch mode {
 	case CrawlIndexAndGithub:
-		getSeedDocsFunc()
 		crawlers := []crawler.Crawler{ghCrawlerConstructor("", "")}
-		crawler.CrawlFromSeed(ctx, seedDocs, crawlers, docConverter, indexFunc, seen)
+		crawler.CrawlFromSeedIterator(ctx, it, crawlers, docConverter, indexFunc, seen)
 		crawler.CrawlGithub(ctx, crawlers, docConverter, indexFunc, seen)
 	case CrawlIndex:
-		getSeedDocsFunc()
 		crawlers := []crawler.Crawler{ghCrawlerConstructor("", "")}
-		crawler.CrawlFromSeed(ctx, seedDocs, crawlers, docConverter, indexFunc, seen)
+		crawler.CrawlFromSeedIterator(ctx, it, crawlers, docConverter, indexFunc, seen)
 	case CrawlGithub:
 		crawlers := []crawler.Crawler{ghCrawlerConstructor("", "")}
 		// add all the documents in the index into seen.
 		// this greatly reduces the time overhead of CrawlGithub.
-		getSeedDocsFunc()
-		for _, d := range seedDocs {
-			seen[d.ID()] = d.FileType
+		for it.Next() {
+			for _, hit := range it.Value().Hits.Hits {
+				d := hit.Document.Document
+				seen.Set(d.ID(), d.FileType)
+			}
 		}
+		if err := it.Err(); err != nil {
+			log.Fatalf("Error iterating the index: %v\n", err)
+		}
+
 		crawler.CrawlGithub(ctx, crawlers, docConverter, indexFunc, seen)
 	case CrawlUser:
 		if *githubUserPtr == "" {

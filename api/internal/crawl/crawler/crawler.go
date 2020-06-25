@@ -213,21 +213,36 @@ func doCrawl(ctx context.Context, docsPtr *CrawlSeed, crawlers []Crawler, conv C
 	logger.Printf("\t%d documents cannot be converted but still were inserted or updated in the index\n", convErrCount)
 }
 
+// CrawlFromSeedIterator iterates all the documents in the index and call CrawlFromSeed for each document.
+func CrawlFromSeedIterator(ctx context.Context, it *index.KustomizeIterator, crawlers []Crawler,
+	conv Converter, indx IndexFunc, seen utils.SeenMap) {
+	docCount := 0
+	for it.Next() {
+		for _, hit := range it.Value().Hits.Hits {
+			docCount++
+			logger.Printf("updating document %d from seed\n", docCount)
+
+			singleSeed := CrawlSeed{&(hit.Document.Document)}
+			CrawlFromSeed(ctx, singleSeed, crawlers, conv, indx, seen)
+		}
+	}
+	if err := it.Err(); err != nil {
+		log.Fatalf("Error iterating the index: %v\n", err)
+	}
+}
+
 // CrawlFromSeed updates all the documents in seed, and crawls all the new
 // documents referred in the seed.
 func CrawlFromSeed(ctx context.Context, seed CrawlSeed, crawlers []Crawler,
 	conv Converter, indx IndexFunc, seen utils.SeenMap) {
 
-	// stack tracks the documents directly referred in other documents.
+	// stack tracks the documents directly referred in the seed.
 	stack := make(CrawlSeed, 0)
 
-	// Exploit seed to update bulk of corpus.
-	logger.Printf("updating %d documents from seed\n", len(seed))
 	// each unique document in seed will be crawled once.
 	doCrawl(ctx, &seed, crawlers, conv, indx, seen, &stack, true, false)
 
-	// Traverse any new documents added while updating corpus.
-	logger.Printf("crawling %d new documents found in the seed\n", len(stack))
+	logger.Printf("crawling %d new documents referred by doc\n", len(stack))
 	// While crawling each document in stack, the documents directly referred in the document
 	// will be added into stack.
 	// After this statement is done, stack will become empty.
@@ -297,8 +312,6 @@ func CrawlGithubRunner(ctx context.Context, output chan<- CrawledDocument,
 // CrawlGithub crawls all the kustomization files on Github.
 func CrawlGithub(ctx context.Context, crawlers []Crawler, conv Converter,
 	indx IndexFunc, seen utils.SeenMap) {
-	// stack tracks the documents directly referred in other documents.
-	stack := make(CrawlSeed, 0)
 
 	// ch is channel where all the crawlers sends the crawled documents to.
 	ch := make(chan CrawledDocument, 1<<10)
@@ -324,7 +337,20 @@ func CrawlGithub(ctx context.Context, crawlers []Crawler, conv Converter,
 					"%v could not match any crawler", cdoc))
 				continue
 			}
+
+			// stack tracks the documents directly referred in the document.
+			stack := make(CrawlSeed, 0)
+
 			addBranches(cdoc, match, indx, seen, &stack)
+
+			if len(stack) > 0 {
+				// here the documents referred in a kustomization file are crawled separately,
+				// to avoid accumulating all the referred documents into a single gigantic
+				// mem-inentive stack.
+				logger.Printf("crawling the %d new documents referred in doc %d",
+					len(stack), docCount)
+				doCrawl(ctx, &stack, crawlers, conv, indx, seen, &stack, false, true)
+			}
 		}
 	}()
 
@@ -336,9 +362,4 @@ func CrawlGithub(ctx context.Context, crawlers []Crawler, conv Converter,
 	}
 	close(ch)
 	wg.Wait()
-
-	// Handle deps of newly discovered documents.
-	logger.Printf("crawling the %d new documents referred by other documents",
-		len(stack))
-	doCrawl(ctx, &stack, crawlers, conv, indx, seen, &stack, false, true)
 }
