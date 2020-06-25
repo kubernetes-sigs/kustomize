@@ -578,6 +578,10 @@ func TestFormatInput_resources(t *testing.T) {
 	assert.NoError(t, err)
 	_, err = io.Copy(input, bytes.NewReader(testyaml.UnformattedYaml2))
 	assert.NoError(t, err)
+	_, err = io.Copy(input, strings.NewReader("---\n"))
+	assert.NoError(t, err)
+	_, err = io.Copy(input, bytes.NewReader(testyaml.UnformattedYaml3))
+	assert.NoError(t, err)
 
 	expectedOutput := &bytes.Buffer{}
 	_, err = io.Copy(expectedOutput, bytes.NewReader(testyaml.FormattedYaml1))
@@ -585,6 +589,10 @@ func TestFormatInput_resources(t *testing.T) {
 	_, err = io.Copy(expectedOutput, strings.NewReader("---\n"))
 	assert.NoError(t, err)
 	_, err = io.Copy(expectedOutput, bytes.NewReader(testyaml.FormattedYaml2))
+	assert.NoError(t, err)
+	_, err = io.Copy(expectedOutput, strings.NewReader("---\n"))
+	assert.NoError(t, err)
+	_, err = io.Copy(expectedOutput, bytes.NewReader(testyaml.FormattedYaml3))
 	assert.NoError(t, err)
 
 	s, err := FormatInput(input)
