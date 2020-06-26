@@ -66,6 +66,7 @@ spec:
   template:
     spec:
       volumes:
+      - name: foo0
       - name: foo1
       - name: foo2
       - name: foo3
