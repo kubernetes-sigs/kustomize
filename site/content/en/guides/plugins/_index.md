@@ -338,6 +338,7 @@ Do one or the other or both as desired.
 [string prefixer]: https://github.com/kubernetes-sigs/kustomize/tree/master/plugin/someteam.example.com/v1/stringprefixer
 [date prefixer]: https://github.com/kubernetes-sigs/kustomize/tree/master/plugin/someteam.example.com/v1/dateprefixer
 [sops encoded secrets]: https://github.com/monopole/sopsencodedsecrets
+[SOPSGenerator]: https://github.com/omninonsense/kustomize-sopsgenerator
 
 #### Examples
 
@@ -349,7 +350,8 @@ Do one or the other or both as desired.
  * [date prefixer] - prefix the current date to resource names, a simple
    example used to modify the string prefixer plugin just mentioned.
  * [secret generator] - generate secrets from a toy database.
- * [sops encoded secrets] - a more complex secret generator.
+ * [sops encoded secrets] - a more complex secret generator that converts SOPS files into Kubernetes Secrets
+ * [SOPSGenerator] - another generator that decrypts SOPS files into Secrets
  * [All the builtin plugins](https://github.com/kubernetes-sigs/kustomize/tree/master/plugin/builtin).
    User authored plugins are
    on the same footing as builtin operations.
