@@ -6,6 +6,7 @@ package settersutil
 import (
 	"io/ioutil"
 
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
@@ -18,9 +19,9 @@ type SetterCreator struct {
 	// Name is the name of the setter to create or update.
 	Name string
 
-	Description string
-
 	SetBy string
+
+	Description string
 
 	Type string
 
@@ -49,22 +50,6 @@ func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
 	if err != nil {
 		return err
 	}
-	// Update the OpenAPI definitions to hace the setter
-	sd := setters2.SetterDefinition{
-		Name: c.Name, Value: c.FieldValue, Description: c.Description, SetBy: c.SetBy,
-		Type: c.Type, Schema: schema, Required: c.Required,
-	}
-	if err := sd.AddToFile(openAPIPath); err != nil {
-		return err
-	}
-	if sd.Count == 0 {
-		fmt.Errorf("The setter you created does not match any fields.")
-	}
-
-	// Load the updated definitions
-	if err := openapi.AddSchemaFromFile(openAPIPath); err != nil {
-		return err
-	}
 
 	// Update the resources with the setter reference
 	inout := &kio.LocalPackageReadWriter{PackagePath: resourcesPath}
@@ -79,11 +64,26 @@ func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
 		Filters: []kio.Filter{kio.FilterAll(a)},
 		Outputs: []kio.Writer{inout},
 	}.Execute()
-
+	if a.Count == 0 {
+		return errors.Errorf("created setter doesn't match any fields")
+	}
 	if err != nil {
 		return err
 	}
 
+	// Update the OpenAPI definitions to hace the setter
+	sd := setters2.SetterDefinition{
+		Name: c.Name, Value: c.FieldValue, SetBy: c.SetBy, Description: c.Description,
+    Count: a.Count, Type: c.Type, Schema: schema, Required: c.Required,
+	}
+	if err := sd.AddToFile(openAPIPath); err != nil {
+		return err
+	}
+
+	// Load the updated definitions
+	if err := openapi.AddSchemaFromFile(openAPIPath); err != nil {
+		return err
+	}
 	// if the setter is of array type write the derived list values back to
 	// openAPI definitions
 	if len(a.ListValues) > 0 {
