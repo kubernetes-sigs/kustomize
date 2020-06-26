@@ -57,6 +57,9 @@ func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
 	if err := sd.AddToFile(openAPIPath); err != nil {
 		return err
 	}
+	if sd.Count == 0 {
+		fmt.Errorf("The setter you created does not match any fields.")
+	}
 
 	// Load the updated definitions
 	if err := openapi.AddSchemaFromFile(openAPIPath); err != nil {
