@@ -11,7 +11,7 @@ import (
 
 func makeCommonFileForExtendedPatchTest(th kusttest_test.Harness) {
 	th.WriteF("/app/base/deployment.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
@@ -36,7 +36,7 @@ spec:
           name: configmap-in-base
         name: configmap-in-base
 ---
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: busybox
@@ -101,7 +101,7 @@ patches:
     name: busybox
 `)
 	th.WriteF("/app/base/patch.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: busybox
@@ -110,7 +110,7 @@ metadata:
 `)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -135,7 +135,7 @@ spec:
           name: configmap-in-base
         name: configmap-in-base
 ---
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
@@ -203,7 +203,7 @@ patches:
     kind: Deployment
 `)
 	th.WriteF("/app/base/patch.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: busybox
@@ -212,7 +212,7 @@ metadata:
 `)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
@@ -239,7 +239,7 @@ spec:
           name: configmap-in-base
         name: configmap-in-base
 ---
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
@@ -305,7 +305,7 @@ patches:
     labelSelector: app=nginx
 `)
 	th.WriteF("/app/base/patch.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
@@ -314,7 +314,7 @@ metadata:
 `)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
@@ -341,7 +341,7 @@ spec:
           name: configmap-in-base
         name: configmap-in-base
 ---
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -408,7 +408,7 @@ patches:
     kind: Deployment
 `)
 	th.WriteF("/app/base/patch.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: busybox
@@ -417,7 +417,7 @@ metadata:
 `)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -442,7 +442,7 @@ spec:
           name: configmap-in-base
         name: configmap-in-base
 ---
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
@@ -509,7 +509,7 @@ patches:
     labelSelector: app=busybox
 `)
 	th.WriteF("/app/base/patch.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: busybox
@@ -518,7 +518,7 @@ metadata:
 `)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -543,7 +543,7 @@ spec:
           name: configmap-in-base
         name: configmap-in-base
 ---
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
@@ -612,7 +612,7 @@ patches:
     labelSelector: app=busybox
 `)
 	th.WriteF("/app/base/patch.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: busybox
@@ -621,7 +621,7 @@ metadata:
 `)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -646,7 +646,7 @@ spec:
           name: configmap-in-base
         name: configmap-in-base
 ---
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
@@ -714,7 +714,7 @@ patches:
     labelSelector: app=busybox
 `)
 	th.WriteF("/app/base/patch.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: busybox
@@ -723,7 +723,7 @@ metadata:
 `)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -748,7 +748,7 @@ spec:
           name: configmap-in-base
         name: configmap-in-base
 ---
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
@@ -814,7 +814,7 @@ patches:
     name: no-match
 `)
 	th.WriteF("/app/base/patch.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: busybox
@@ -823,7 +823,7 @@ metadata:
 `)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -848,7 +848,7 @@ spec:
           name: configmap-in-base
         name: configmap-in-base
 ---
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -910,7 +910,7 @@ patches:
 - path: patch.yaml
 `)
 	th.WriteF("/app/base/patch.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: busybox
@@ -919,7 +919,7 @@ metadata:
 `)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -944,7 +944,7 @@ spec:
           name: configmap-in-base
         name: configmap-in-base
 ---
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
@@ -1014,7 +1014,7 @@ patches:
     kind: Job
 `)
 	th.WriteF("/app/base/patch.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: busybox
@@ -1023,7 +1023,7 @@ metadata:
 `)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -1048,7 +1048,7 @@ spec:
           name: configmap-in-base
         name: configmap-in-base
 ---
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -1116,7 +1116,7 @@ patches:
     kind: Deployment
 `)
 	th.WriteF("/app/base/patch1.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: busybox
@@ -1124,7 +1124,7 @@ metadata:
     new-key-from-patch1: new-value
 `)
 	th.WriteF("/app/base/patch2.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: busybox
@@ -1133,7 +1133,7 @@ metadata:
 `)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -1158,7 +1158,7 @@ spec:
           name: configmap-in-base
         name: configmap-in-base
 ---
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
