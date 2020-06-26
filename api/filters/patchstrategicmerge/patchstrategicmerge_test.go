@@ -33,6 +33,86 @@ metadata:
 kind: Deployment
 `,
 		},
+		"container patch": {
+			input: `
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo1
+      - name: foo2
+      - name: foo3
+`,
+			patch: yaml.MustParse(`
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo0
+`),
+			expected: `
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo1
+      - name: foo2
+      - name: foo3
+      - name: foo0
+`,
+		},
+		"volumes patch": {
+			input: `
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  template:
+    spec:
+      volumes:
+      - name: foo1
+      - name: foo2
+      - name: foo3
+`,
+			patch: yaml.MustParse(`
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  template:
+    spec:
+      volumes:
+      - name: foo0
+`),
+			expected: `
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  template:
+    spec:
+      volumes:
+      - name: foo1
+      - name: foo2
+      - name: foo3
+      - name: foo0
+`,
+		},
 		"nested patch": {
 			input: `
 apiVersion: apps/v1
