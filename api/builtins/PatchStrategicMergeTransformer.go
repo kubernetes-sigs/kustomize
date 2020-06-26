@@ -4,10 +4,7 @@
 package builtins
 
 import (
-	"encoding/json"
 	"fmt"
-
-	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 
 	"sigs.k8s.io/kustomize/api/filters/patchstrategicmerge"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -90,7 +87,11 @@ func (p *PatchStrategicMergeTransformerPlugin) Transform(m resmap.ResMap) error 
 				}
 			}
 		} else {
-			node, err := getRNode(patch)
+			patchCopy := patch.DeepCopy()
+			patchCopy.SetName(target.GetName())
+			patchCopy.SetNamespace(target.GetNamespace())
+			patchCopy.SetGvk(target.GetGvk())
+			node, err := filtersutil.GetRNode(patchCopy)
 			if err != nil {
 				return err
 			}
@@ -100,16 +101,6 @@ func (p *PatchStrategicMergeTransformerPlugin) Transform(m resmap.ResMap) error 
 		}
 	}
 	return nil
-}
-
-//TODO: Remove this once the next version of kyaml is released which
-// exposes GetRNode from the filutersutil package.
-func getRNode(k json.Marshaler) (*kyaml.RNode, error) {
-	j, err := k.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-	return kyaml.Parse(string(j))
 }
 
 func NewPatchStrategicMergeTransformerPlugin() resmap.TransformerPlugin {
