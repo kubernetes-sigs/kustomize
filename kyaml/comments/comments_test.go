@@ -288,6 +288,29 @@ items:
 - a # comment
 `,
 		},
+
+		{
+			name: "copy_comments_folded_style",
+			from: `
+apiVersion: v1
+kind: ConfigMap
+data:
+  somekey: "012345678901234567890123456789012345678901234567890123456789012345678901234" # x
+`,
+			to: `
+apiVersion: v1
+kind: ConfigMap
+data:
+  somekey: >-
+    012345678901234567890123456789012345678901234567890123456789012345678901234
+`,
+			expected: `
+apiVersion: v1
+kind: ConfigMap
+data:
+  somekey: "012345678901234567890123456789012345678901234567890123456789012345678901234" # x
+`,
+		},
 	}
 
 	for i := range testCases {
