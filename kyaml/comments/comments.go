@@ -30,7 +30,16 @@ func (c *copier) VisitMap(s walk.Sources, _ *openapi.ResourceSchema) (*yaml.RNod
 }
 
 func (c *copier) VisitScalar(s walk.Sources, _ *openapi.ResourceSchema) (*yaml.RNode, error) {
-	copy(s.Dest(), s.Origin())
+	to := s.Origin()
+	// TODO: File a bug with upstream yaml to handle comments for FoldedStyle scalar nodes
+	// Hack: convert FoldedStyle scalar node to DoubleQuotedStyle as the line comments are
+	// being serialized without space
+	// https://github.com/GoogleContainerTools/kpt/issues/766
+	if to != nil && to.Document().Style == yaml.FoldedStyle {
+		to.Document().Style = yaml.DoubleQuotedStyle
+	}
+
+	copy(s.Dest(), to)
 	return s.Dest(), nil
 }
 
