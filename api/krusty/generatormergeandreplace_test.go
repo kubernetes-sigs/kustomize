@@ -56,7 +56,7 @@ spec:
               app: nginx
 `)
 	th.WriteF("/app/base/deployment.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
@@ -92,7 +92,7 @@ spec:
     org: example.com
     team: foo
 ---
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
@@ -173,7 +173,7 @@ secretGenerator:
   - password=somepw
 `)
 	th.WriteF("/app/deployment.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
@@ -218,7 +218,7 @@ func TestBaseWithGeneratorsAlone(t *testing.T) {
 	makeBaseWithGenerators(th)
 	m := th.Run("/app", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
@@ -308,7 +308,7 @@ func TestMergeAndReplaceGenerators(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeBaseWithGenerators(th)
 	th.WriteF("/overlay/deployment.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
@@ -351,7 +351,7 @@ secretGenerator:
 `)
 	m := th.Run("/overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:

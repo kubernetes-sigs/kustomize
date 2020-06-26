@@ -25,7 +25,7 @@ configMapGenerator:
   - foo=bar
 `)
 	th.WriteF("base/deployment.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
@@ -71,7 +71,7 @@ configMapGenerator:
   - hello=world
 `)
 	th.WriteF("overlay/deployment-patch1.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
@@ -94,7 +94,7 @@ spec:
         name: configmap-in-overlay
 `)
 	th.WriteF("overlay/deployment-patch2.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
@@ -111,7 +111,7 @@ spec:
 `)
 	m := th.Run("overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -208,7 +208,7 @@ configMapGenerator:
   - foo=bar
 `)
 	th.WriteF("/app/base/deployment.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
@@ -270,7 +270,7 @@ func TestMultiplePatchesNoConflict(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForMultiplePatchTest(th)
 	th.WriteF("/app/overlay/staging/deployment-patch1.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
@@ -293,7 +293,7 @@ spec:
         name: configmap-in-overlay
 `)
 	th.WriteF("/app/overlay/staging/deployment-patch2.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
@@ -310,7 +310,7 @@ spec:
 `)
 	m := th.Run("/app/overlay/staging", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
@@ -411,7 +411,7 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForMultiplePatchTest(th)
 	th.WriteF("/app/overlay/staging/deployment-patch1.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
@@ -433,7 +433,7 @@ spec:
         name: configmap-in-overlay
 `)
 	th.WriteF("/app/overlay/staging/deployment-patch2.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
@@ -457,7 +457,7 @@ spec:
 }
 
 func TestMultiplePatchesWithOnePatchDeleteDirective(t *testing.T) {
-	additivePatch := `apiVersion: apps/v1beta2
+	additivePatch := `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
@@ -470,7 +470,7 @@ spec:
         - name: SOME_NAME
           value: somevalue
 `
-	deletePatch := `apiVersion: apps/v1beta2
+	deletePatch := `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
@@ -506,7 +506,7 @@ spec:
 			th.WriteF("/app/overlay/staging/deployment-patch1.yaml", c.patch1)
 			th.WriteF("/app/overlay/staging/deployment-patch2.yaml", c.patch2)
 			m := th.Run("/app/overlay/staging", th.MakeDefaultOptions())
-			th.AssertActualEqualsExpected(m, `apiVersion: apps/v1beta2
+			th.AssertActualEqualsExpected(m, `apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
@@ -601,7 +601,7 @@ func TestMultiplePatchesBothWithPatchDeleteDirective(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForMultiplePatchTest(th)
 	th.WriteF("/app/overlay/staging/deployment-patch1.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
@@ -613,7 +613,7 @@ spec:
         name: sidecar
 `)
 	th.WriteF("/app/overlay/staging/deployment-patch2.yaml", `
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
