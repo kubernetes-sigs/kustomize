@@ -38,6 +38,11 @@ func (p *plugin) Config(
 	if err != nil {
 		return err
 	}
+	if !strings.Contains(string(c), "yamlSupport") {
+		// If not explicitly denied,
+		// activate kyaml-based transformation.
+		p.YAMLSupport = true
+	}
 	p.Patch = strings.TrimSpace(p.Patch)
 	if p.Patch == "" && p.Path == "" {
 		return fmt.Errorf(
