@@ -63,6 +63,34 @@ spec:
 `,
 	},
 
+	{description: `strategic merge patch delete 4`,
+		source: `
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+$patch: delete
+`,
+		dest: `
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  replica: 2
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+`,
+		expected: `
+`,
+	},
+
 	{description: `strategic merge patch replace 1`,
 		source: `
 kind: Deployment

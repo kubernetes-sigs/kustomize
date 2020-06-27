@@ -59,6 +59,7 @@ spec:
   location: SW
 `)
 	th.WriteF("/app/base/animalPark.yaml", `
+apiVersion: foo
 kind: AnimalPark
 metadata:
   name: sandiego
@@ -93,6 +94,7 @@ varReference:
 `)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
+apiVersion: foo
 kind: AnimalPark
 metadata:
   labels:
@@ -161,6 +163,7 @@ varReference:
 `)
 	m := th.Run("/app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
+apiVersion: foo
 kind: AnimalPark
 metadata:
   labels:
@@ -212,14 +215,17 @@ func TestFixedBug605_BaseCustomizationAvailableInOverlay(t *testing.T) {
 nameReference:
 - kind: Gorilla
   fieldSpecs:
-  - kind: AnimalPark
+  - apiVersion: foo
+    kind: AnimalPark
     path: spec/gorillaRef/name
 - kind: Giraffe
   fieldSpecs:
-  - kind: AnimalPark
+  - apiVersion: foo
+    kind: AnimalPark
     path: spec/giraffeRef/name
 varReference:
 - path: spec/food
+  apiVersion: foo
   kind: AnimalPark
 `)
 	th.WriteK("/app/overlay", `
@@ -242,6 +248,7 @@ spec:
 `)
 	// The following replaces the gorillaRef in the AnimalPark.
 	th.WriteF("/app/overlay/animalPark.yaml", `
+apiVersion: foo
 kind: AnimalPark
 metadata:
   name: sandiego
@@ -251,6 +258,7 @@ spec:
 `)
 	m := th.Run("/app/overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
+apiVersion: foo
 kind: AnimalPark
 metadata:
   labels:

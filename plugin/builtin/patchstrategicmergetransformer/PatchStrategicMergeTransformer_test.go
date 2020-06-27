@@ -1208,9 +1208,89 @@ func TestMultipleNamespaces(t *testing.T) {
 	}
 }
 
-// We don't run this for the kyaml implementation since we don't support
-// the strategic merge patch directives (yet).
-func TestPatchStrategicMergeTransformerPatchDelete(t *testing.T) {
+func TestPatchStrategicMergeTransformerPatchDelete1(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchStrategicMergeTransformer")
+	defer th.Reset()
+
+	th.WriteF("patch.yaml", `
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  replica: 2
+  template:
+    $patch: delete
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+`)
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: builtin
+kind: PatchStrategicMergeTransformer
+metadata:
+  name: notImportantHere
+paths:
+- patch.yaml
+`, target)
+
+	th.AssertActualEqualsExpected(rm, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  replica: 2
+`)
+}
+
+func TestPatchStrategicMergeTransformerPatchDelete2(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchStrategicMergeTransformer")
+	defer th.Reset()
+
+	th.WriteF("patch.yaml", `
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  $patch: delete
+  replica: 2
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+`)
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: builtin
+kind: PatchStrategicMergeTransformer
+metadata:
+  name: notImportantHere
+paths:
+- patch.yaml
+`, target)
+
+	th.AssertActualEqualsExpected(rm, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+`)
+}
+
+func TestPatchStrategicMergeTransformerPatchDelete3(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchStrategicMergeTransformer")
 	defer th.Reset()
@@ -1234,3 +1314,4 @@ paths:
 
 	th.AssertActualEqualsExpected(rm, ``)
 }
+
