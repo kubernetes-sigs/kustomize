@@ -4,6 +4,87 @@
 package merge2_test
 
 var mapTestCases = []testCase{
+
+	{description: `strategic merge patch delete 1`,
+		source: `
+kind: Deployment
+$patch: delete
+`,
+		dest: `
+kind: Deployment
+spec:
+  foo: bar1
+`,
+		expected: ``,
+	},
+
+	{description: `strategic merge patch delete 2`,
+		source: `
+kind: Deployment
+spec:
+  $patch: delete
+`,
+		dest: `
+kind: Deployment
+spec:
+  foo: bar
+  color: red
+`,
+		expected: `
+kind: Deployment
+`,
+	},
+
+	{description: `strategic merge patch delete 3`,
+		source: `
+kind: Deployment
+spec:
+  metadata:
+    name: wut
+  template:
+    $patch: delete
+`,
+		dest: `
+kind: Deployment
+spec:
+  metadata:
+    name: wut
+  template:
+    spec:
+      containers:
+      - name: foo
+      - name: bar
+`,
+		expected: `
+kind: Deployment
+spec:
+  metadata:
+    name: wut
+`,
+	},
+
+	{description: `strategic merge patch replace 1`,
+		source: `
+kind: Deployment
+spec:
+  metal: heavy
+  $patch: replace
+  veggie: carrot
+`,
+		dest: `
+kind: Deployment
+spec:
+  river: nile
+  color: red
+`,
+		expected: `
+kind: Deployment
+spec:
+  metal: heavy
+  veggie: carrot
+`,
+	},
+
 	{description: `merge Map -- update field in dest`,
 		source: `
 kind: Deployment

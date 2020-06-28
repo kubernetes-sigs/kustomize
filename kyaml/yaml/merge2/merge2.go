@@ -60,8 +60,20 @@ func (m Merger) VisitMap(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.R
 		// clear the value
 		return walk.ClearNode, nil
 	}
-	// Recursively Merge dest
-	return nodes.Dest(), nil
+
+	ps, err := determineMappingNodePatchStrategy(nodes.Origin())
+	if err != nil {
+		return nil, err
+	}
+
+	switch ps {
+	case smpDelete:
+		return walk.ClearNode, nil
+	case smpReplace:
+		return nodes.Origin(), nil
+	default:
+		return nodes.Dest(), nil
+	}
 }
 
 func (m Merger) VisitScalar(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.RNode, error) {
