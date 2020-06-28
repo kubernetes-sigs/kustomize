@@ -4,6 +4,76 @@
 package merge2_test
 
 var listTestCases = []testCase{
+	{description: `strategic merge patch delete 1`,
+		source: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo1
+        $patch: delete
+      - name: foo2
+      - name: foo3
+`,
+		dest: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo1
+      - name: foo2
+      - name: foo3
+`,
+		expected: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo2
+      - name: foo3
+`,
+	},
+	{description: `strategic merge patch delete 2`,
+		source: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo1
+      - name: foo2
+      - name: foo3
+        $patch: delete
+`,
+		dest: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo1
+      - name: foo2
+      - name: foo3
+`,
+		expected: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo1
+      - name: foo2
+`,
+	},
 	{description: `merge k8s deployment containers`,
 		source: `
 apiVersion: apps/v1
