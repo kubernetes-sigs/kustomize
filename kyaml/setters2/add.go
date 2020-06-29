@@ -88,6 +88,7 @@ func (a *Add) visitMapping(object *yaml.RNode, p string, _ *openapi.ResourceSche
 					"encountered different array values for specified field path: %s, %s", values, a.ListValues)
 			}
 			a.ListValues = values
+			a.Count++
 			return a.addRef(node.Key)
 		}
 		return nil
