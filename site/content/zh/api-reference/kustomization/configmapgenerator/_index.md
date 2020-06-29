@@ -8,7 +8,11 @@ description: >
 
 列表中的每个条目都将生成一个 ConfigMap （合计可以生成 n 个 ConfigMap）。
 
-下面的示例会生成 3 个ConfigMap：第一个带有给定文件的名称和内容，第二个将在 data 中添加 key/value，第三个通过 `options` 为单个 ConfigMap 设置注释和标签。
+以下示例创建四个 ConfigMap：
+- 第一个使用给定文件的名称和内容创建数据
+- 第二个使用文件中的键/值对将数据创建为键/值
+- 第三个使用 `literals` 中的键/值对创建数据作为键/值
+- 第四个通过 `options` 设置单个 ConfigMap 的注释和标签
 
 每个 configMapGenerator 项均接受的参数 `behavior: [create|replace|merge]`，这个参数允许修改或替换父级现有的 configMap。
 
@@ -31,8 +35,12 @@ configMapGenerator:
   files:
   - application.properties
   - more.properties
+- name: my-java-server-env-file-vars
+  envs:
+  - my-server-env.properties
+  - more-server-props.env
 - name: my-java-server-env-vars
-  literals:	
+  literals:
   - JAVA_HOME=/opt/java/jdk
   - JAVA_TOOL_OPTIONS=-agentlib:hprof
   options:

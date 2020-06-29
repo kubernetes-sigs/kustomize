@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.68.3" />
+<meta name="generator" content="Hugo 0.73.0" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -598,7 +598,6 @@ attached functions implement the <code>Configurable</code>,
 <pre><code>package main
 
 import (
-  &quot;sigs.k8s.io/kustomize/api/ifc&quot;
   &quot;sigs.k8s.io/kustomize/api/resmap&quot;
   ...
 )
@@ -608,8 +607,7 @@ type plugin struct {...}
 var KustomizePlugin plugin
 
 func (p *plugin) Config(
-   ldr ifc.Loader,
-   rf *resmap.Factory,
+   h *resmap.PluginHelpers,
    c []byte) error {...}
 
 func (p *plugin) Generate() (resmap.ResMap, error) {...}
@@ -708,7 +706,7 @@ go build -buildmode plugin \
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 7, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/42497c664f619a36cc86156e366b53099bd633cb">Convert docs to docsy (42497c66)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 15, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/36165d28437ac350db61d301c032c0c661ee684b">Update GO plugin doc (36165d28)</a>
 </div>
 </div>
 
