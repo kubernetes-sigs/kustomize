@@ -404,3 +404,63 @@ spec:
             memory: 50M
 `)
 }
+
+func TestFnContainerTransformerWithConfig(t *testing.T) {
+	skipIfNoDocker(t)
+
+	th := kusttest_test.MakeEnhancedHarness(t)
+	defer th.Reset()
+
+	th.WriteK("/app", `
+resources:
+- data1.yaml
+- data2.yaml
+transformers:
+- label_namespace.yaml
+`)
+
+	th.WriteF("/app/data1.yaml", `apiVersion: v1
+kind: Namespace
+metadata:
+  name: my-namespace
+`)
+	th.WriteF("/app/data2.yaml", `apiVersion: v1
+kind: Namespace
+metadata:
+  name: another-namespace
+`)
+
+	th.WriteF("/app/label_namespace.yaml", `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: label_namespace
+  annotations:
+    config.kubernetes.io/function: |-
+      container:
+        image: gcr.io/kpt-functions/label-namespace@sha256:4f030738d6d25a207641ca517916431517578bd0eb8d98a8bde04e3bb9315dcd
+data:
+  label_name: my-ns-name
+  label_value: function-test
+`)
+
+	m := th.Run("/app", th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    config.kubernetes.io/path: namespace_my-namespace.yaml
+  labels:
+    my-ns-name: function-test
+  name: my-namespace
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    config.kubernetes.io/path: namespace_another-namespace.yaml
+  labels:
+    my-ns-name: function-test
+  name: another-namespace
+`)
+}

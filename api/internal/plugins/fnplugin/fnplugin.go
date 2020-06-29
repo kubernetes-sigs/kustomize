@@ -14,7 +14,6 @@ import (
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
-	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/runfn"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -146,55 +145,11 @@ func (p *FnPlugin) Transform(rm resmap.ResMap) error {
 	return utils.UpdateResMapValues(p.pluginName, p.h, output, rm)
 }
 
-func toResourceList(input []byte) (bytes.Buffer, error) {
-	var out bytes.Buffer
-	if input == nil {
-		out.WriteString(fmt.Sprintf("apiVersion: %s\nkind: %s", kio.ResourceListAPIVersion, kio.ResourceListKind))
-	} else {
-		in := bytes.NewReader(input)
-		err := kio.Pipeline{
-			Inputs: []kio.Reader{&kio.ByteReader{Reader: in}},
-			Outputs: []kio.Writer{kio.ByteWriter{
-				Writer:             &out,
-				WrappingKind:       kio.ResourceListKind,
-				WrappingAPIVersion: kio.ResourceListAPIVersion}},
-		}.Execute()
-		if err != nil {
-			return out, errors.Wrap(
-				err, "couldn't transform to ResourceList")
-		}
-	}
-	return out, nil
-}
-
 func injectAnnotation(input *yaml.RNode, k, v string) error {
 	err := input.PipeE(yaml.SetAnnotation(k, v))
 	if err != nil {
 		return err
 	}
-	return nil
-}
-
-// injectFunctionConfig injects the `functionConfig` field into the resource list.
-// The value is the function configuaration.
-func injectFunctionConfig(input *bytes.Buffer, functionConfig *yaml.RNode) error {
-	nodes, err := bytesToRNode(input.Bytes())
-	if err != nil {
-		return err
-	}
-	err = nodes.PipeE(
-		yaml.LookupCreate(yaml.ScalarNode, "functionConfig"),
-		yaml.Set(functionConfig),
-	)
-	if err != nil {
-		return err
-	}
-	input.Reset()
-	s, err := nodes.String()
-	if err != nil {
-		return err
-	}
-	input.WriteString(s)
 	return nil
 }
 
@@ -205,24 +160,30 @@ func (p *FnPlugin) invokePlugin(input []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// This annotation will let kustomize ingnore this item in output
 	err = injectAnnotation(functionConfig, "config.kubernetes.io/local-config", "true")
 	if err != nil {
 		return nil, err
 	}
-
-	// Transform to ResourceList
-	inputBuffer, err := toResourceList(input)
-	if err != nil {
-		return nil, err
+	// we need to add config as input for generators. Some of them don't work with FunctionConfig
+	// and in addition kio.Pipeline won't create anything if there are no objects
+	// see https://github.com/kubernetes-sigs/kustomize/blob/master/kyaml/kio/kio.go#L93
+	// Since we added `local-config` annotation so it will be ignored in generator output
+	// TODO(donnyxia): This is actually not used by generator and only used to bypass a kio limitation.
+	// Need better solution.
+	if input == nil {
+		yaml, err := functionConfig.String()
+		if err != nil {
+			return nil, err
+		}
+		input = []byte(yaml)
 	}
-	err = injectFunctionConfig(&inputBuffer, functionConfig)
-	if err != nil {
-		return nil, err
-	}
 
-	// Configure and Execute Fn
+	// Configure and Execute Fn. We don't need to convert resources to ResourceList here
+	// because function runtime will do that. See kyaml/fn/runtime/runtimeutil/runtimeutil.go
 	var ouputBuffer bytes.Buffer
-	p.runFns.Input = bytes.NewReader(inputBuffer.Bytes())
+	p.runFns.Input = bytes.NewReader(input)
 	p.runFns.Functions = append(p.runFns.Functions, functionConfig)
 	p.runFns.Output = &ouputBuffer
 
@@ -232,18 +193,5 @@ func (p *FnPlugin) invokePlugin(input []byte) ([]byte, error) {
 			err, "couldn't execute function")
 	}
 
-	// Convert back to a single multi-yaml doc
-	var outOut bytes.Buffer
-	outIn := bytes.NewReader(ouputBuffer.Bytes())
-
-	err = kio.Pipeline{
-		Inputs:  []kio.Reader{&kio.ByteReader{Reader: outIn}},
-		Outputs: []kio.Writer{kio.ByteWriter{Writer: &outOut}},
-	}.Execute()
-	if err != nil {
-		return nil, errors.Wrap(
-			err, "couldn't transform from ResourceList")
-	}
-
-	return outOut.Bytes(), nil
+	return ouputBuffer.Bytes(), nil
 }
