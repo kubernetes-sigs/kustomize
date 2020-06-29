@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.68.3" />
+<meta name="generator" content="Hugo 0.73.0" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -747,7 +747,13 @@
 	<h1>configMapGenerator</h1>
 	<div class="lead">生成 ConfigMap 资源.</div>
 	<p>列表中的每个条目都将生成一个 ConfigMap （合计可以生成 n 个 ConfigMap）。</p>
-<p>下面的示例会生成 3 个ConfigMap：第一个带有给定文件的名称和内容，第二个将在 data 中添加 key/value，第三个通过 <code>options</code> 为单个 ConfigMap 设置注释和标签。</p>
+<p>以下示例创建四个 ConfigMap：</p>
+<ul>
+<li>第一个使用给定文件的名称和内容创建数据</li>
+<li>第二个使用文件中的键/值对将数据创建为键/值</li>
+<li>第三个使用 <code>literals</code> 中的键/值对创建数据作为键/值</li>
+<li>第四个通过 <code>options</code> 设置单个 ConfigMap 的注释和标签</li>
+</ul>
 <p>每个 configMapGenerator 项均接受的参数 <code>behavior: [create|replace|merge]</code>，这个参数允许修改或替换父级现有的 configMap。</p>
 <p>此外，每个条目都有一个 <code>options</code> 字段，该字段具有与 kustomization 文件的 <code>generatorOptions</code> 字段相同的子字段。</p>
 <p><code>options</code> 字段允许用户为生成的实例添加标签和（或）注释，或者分别禁用该实例名称的哈希后缀。此处添加的标签和注释不会被 kustomization 文件 <code>generatorOptions</code> 字段关联的全局选项覆盖。但是如果全局 <code>generatorOptions</code> 字段指定 <code>disableNameSuffixHash: true</code>，其他 <code>options</code> 的设置将无法将其覆盖。</p>
@@ -765,8 +771,12 @@
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">files</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span>- application.properties<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span>- more.properties<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>my-java-server-env-file-vars<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">envs</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>- my-server-env.properties<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>- more-server-props.env<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>my-java-server-env-vars<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span>literals<span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">	
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">literals</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span>- JAVA_HOME=/opt/java/jdk<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span>- JAVA_TOOL_OPTIONS=-agentlib<span style="color:#000;font-weight:bold">:</span>hprof<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">options</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">

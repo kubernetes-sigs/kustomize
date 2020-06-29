@@ -9,9 +9,11 @@ description: >
 Each entry in this list results in the creation of
 one ConfigMap resource (it's a generator of n maps).
 
-The example below creates three ConfigMaps. One with the names and contents of
-the given files, one with key/value as data, and a third which sets an
-annotation and label via `options` for that single ConfigMap.
+The example below creates four ConfigMaps:
+- first, with the names and contents of the given files
+- second, with key/value as data using key/value pairs from files
+- third, also with key/value as data, directly specified using `literals`
+- and a fourth, which sets an annotation and label via `options` for that single ConfigMap
 
 Each configMapGenerator item accepts a parameter of
 `behavior: [create|replace|merge]`.
@@ -46,8 +48,12 @@ configMapGenerator:
   files:
   - application.properties
   - more.properties
+- name: my-java-server-env-file-vars
+  envs:
+  - my-server-env.properties
+  - more-server-props.env
 - name: my-java-server-env-vars
-  literals:	
+  literals:
   - JAVA_HOME=/opt/java/jdk
   - JAVA_TOOL_OPTIONS=-agentlib:hprof
   options:
