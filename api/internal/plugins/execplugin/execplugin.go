@@ -14,6 +14,7 @@ import (
 	"github.com/google/shlex"
 
 	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/yaml"
 )
@@ -108,12 +109,12 @@ func (p *ExecPlugin) Generate() (resmap.ResMap, error) {
 	if err != nil {
 		return nil, err
 	}
-	return UpdateResourceOptions(rm)
+	return utils.UpdateResourceOptions(rm)
 }
 
 func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
 	// add ResIds as annotations to all objects so that we can add them back
-	inputRM, err := getResMapWithIdAnnotation(rm)
+	inputRM, err := utils.GetResMapWithIDAnnotation(rm)
 	if err != nil {
 		return err
 	}
@@ -131,7 +132,7 @@ func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
 	}
 
 	// update the original ResMap based on the output
-	return updateResMapValues(p.path, p.h, output, rm)
+	return utils.UpdateResMapValues(p.path, p.h, output, rm)
 }
 
 // invokePlugin writes plugin config to a temp file, then
