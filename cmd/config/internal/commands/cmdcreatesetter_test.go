@@ -55,6 +55,7 @@ openAPI:
           name: replicas
           value: "3"
           setBy: me
+          count: 1
  `,
 			expectedResources: `
 apiVersion: apps/v1
@@ -117,6 +118,7 @@ openAPI:
           name: replicas
           value: "3"
           setBy: me
+          count: 1
  `,
 			expectedResources: `
 apiVersion: apps/v1
@@ -188,6 +190,7 @@ openAPI:
           - b
           - c
           setBy: me
+          count: 2
  `,
 			expectedResources: `
 apiVersion: example.com/v1beta1
@@ -287,6 +290,7 @@ openAPI:
           - b
           - c
           setBy: me
+          count: 1
  `,
 			expectedResources: `
 apiVersion: example.com/v1beta1
@@ -326,6 +330,7 @@ openAPI:
           name: replicas
           value: "3"
           setBy: me
+          count: 1
  `,
 			expectedResources: `
 apiVersion: apps/v1
