@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.68.3" />
+<meta name="generator" content="Hugo 0.73.0" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -748,9 +748,13 @@
 	<div class="lead">Generate ConfigMap resources.</div>
 	<p>Each entry in this list results in the creation of
 one ConfigMap resource (it&rsquo;s a generator of n maps).</p>
-<p>The example below creates three ConfigMaps. One with the names and contents of
-the given files, one with key/value as data, and a third which sets an
-annotation and label via <code>options</code> for that single ConfigMap.</p>
+<p>The example below creates four ConfigMaps:</p>
+<ul>
+<li>first, with the names and contents of the given files</li>
+<li>second, with key/value as data using key/value pairs from files</li>
+<li>third, also with key/value as data, directly specified using <code>literals</code></li>
+<li>and a fourth, which sets an annotation and label via <code>options</code> for that single ConfigMap</li>
+</ul>
 <p>Each configMapGenerator item accepts a parameter of
 <code>behavior: [create|replace|merge]</code>.
 This allows an overlay to modify or
@@ -780,8 +784,12 @@ trump any attempt to locally override it.</p>
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">files</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span>- application.properties<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span>- more.properties<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>my-java-server-env-file-vars<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">envs</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>- my-server-env.properties<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>- more-server-props.env<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>my-java-server-env-vars<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span>literals<span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">	
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">literals</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span>- JAVA_HOME=/opt/java/jdk<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span>- JAVA_TOOL_OPTIONS=-agentlib<span style="color:#000;font-weight:bold">:</span>hprof<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">options</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">

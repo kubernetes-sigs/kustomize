@@ -199,9 +199,13 @@ resource has been applied to a cluster.&lt;/p&gt;
         
         &lt;p&gt;Each entry in this list results in the creation of
 one ConfigMap resource (it&amp;rsquo;s a generator of n maps).&lt;/p&gt;
-&lt;p&gt;The example below creates three ConfigMaps. One with the names and contents of
-the given files, one with key/value as data, and a third which sets an
-annotation and label via &lt;code&gt;options&lt;/code&gt; for that single ConfigMap.&lt;/p&gt;
+&lt;p&gt;The example below creates four ConfigMaps:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;first, with the names and contents of the given files&lt;/li&gt;
+&lt;li&gt;second, with key/value as data using key/value pairs from files&lt;/li&gt;
+&lt;li&gt;third, also with key/value as data, directly specified using &lt;code&gt;literals&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;and a fourth, which sets an annotation and label via &lt;code&gt;options&lt;/code&gt; for that single ConfigMap&lt;/li&gt;
+&lt;/ul&gt;
 &lt;p&gt;Each configMapGenerator item accepts a parameter of
 &lt;code&gt;behavior: [create|replace|merge]&lt;/code&gt;.
 This allows an overlay to modify or
@@ -231,8 +235,12 @@ trump any attempt to locally override it.&lt;/p&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;files&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- application.properties&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- more.properties&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;my-java-server-env-file-vars&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;envs&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- my-server-env.properties&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- more-server-props.env&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;my-java-server-env-vars&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;literals&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;	
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;literals&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- JAVA_HOME=/opt/java/jdk&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- JAVA_TOOL_OPTIONS=-agentlib&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;hprof&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;options&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -774,7 +782,7 @@ resources.&lt;/p&gt;
 supported.  No ints, bools, arrays etc.  It&amp;rsquo;s not
 possible to, say, extract the name of the image in
 container number 2 of some pod template.&lt;/p&gt;
-&lt;p&gt;A variable reference, i.e. the string &amp;lsquo;$(FOO)&#39;,
+&lt;p&gt;A variable reference, i.e. the string &amp;lsquo;$(FOO)&amp;rsquo;,
 can only be placed in particular fields of
 particular objects as specified by kustomize&amp;rsquo;s
 configuration data.&lt;/p&gt;
