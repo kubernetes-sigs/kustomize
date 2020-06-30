@@ -37,6 +37,9 @@ type Add struct {
 
 	// Type is the type of the setter value
 	Type string
+
+  // Count is the number of fields the setter applies to
+  Count int
 }
 
 // Filter implements yaml.Filter
@@ -85,6 +88,7 @@ func (a *Add) visitMapping(object *yaml.RNode, p string, _ *openapi.ResourceSche
 					"encountered different array values for specified field path: %s, %s", values, a.ListValues)
 			}
 			a.ListValues = values
+			a.Count++
 			return a.addRef(node.Key)
 		}
 		return nil
@@ -104,6 +108,7 @@ func (a *Add) visitScalar(object *yaml.RNode, p string, _ *openapi.ResourceSchem
 	if a.FieldValue != "" && a.FieldValue != object.YNode().Value {
 		return nil
 	}
+  a.Count++
 	return a.addRef(object)
 }
 
