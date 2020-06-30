@@ -192,7 +192,13 @@
         
         
         &lt;p&gt;列表中的每个条目都将生成一个 ConfigMap （合计可以生成 n 个 ConfigMap）。&lt;/p&gt;
-&lt;p&gt;下面的示例会生成 3 个ConfigMap：第一个带有给定文件的名称和内容，第二个将在 data 中添加 key/value，第三个通过 &lt;code&gt;options&lt;/code&gt; 为单个 ConfigMap 设置注释和标签。&lt;/p&gt;
+&lt;p&gt;以下示例创建四个 ConfigMap：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;第一个使用给定文件的名称和内容创建数据&lt;/li&gt;
+&lt;li&gt;第二个使用文件中的键/值对将数据创建为键/值&lt;/li&gt;
+&lt;li&gt;第三个使用 &lt;code&gt;literals&lt;/code&gt; 中的键/值对创建数据作为键/值&lt;/li&gt;
+&lt;li&gt;第四个通过 &lt;code&gt;options&lt;/code&gt; 设置单个 ConfigMap 的注释和标签&lt;/li&gt;
+&lt;/ul&gt;
 &lt;p&gt;每个 configMapGenerator 项均接受的参数 &lt;code&gt;behavior: [create|replace|merge]&lt;/code&gt;，这个参数允许修改或替换父级现有的 configMap。&lt;/p&gt;
 &lt;p&gt;此外，每个条目都有一个 &lt;code&gt;options&lt;/code&gt; 字段，该字段具有与 kustomization 文件的 &lt;code&gt;generatorOptions&lt;/code&gt; 字段相同的子字段。&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;options&lt;/code&gt; 字段允许用户为生成的实例添加标签和（或）注释，或者分别禁用该实例名称的哈希后缀。此处添加的标签和注释不会被 kustomization 文件 &lt;code&gt;generatorOptions&lt;/code&gt; 字段关联的全局选项覆盖。但是如果全局 &lt;code&gt;generatorOptions&lt;/code&gt; 字段指定 &lt;code&gt;disableNameSuffixHash: true&lt;/code&gt;，其他 &lt;code&gt;options&lt;/code&gt; 的设置将无法将其覆盖。&lt;/p&gt;
@@ -210,8 +216,12 @@
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;files&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- application.properties&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- more.properties&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;my-java-server-env-file-vars&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;envs&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- my-server-env.properties&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- more-server-props.env&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;my-java-server-env-vars&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;literals&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;	
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;literals&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- JAVA_HOME=/opt/java/jdk&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- JAVA_TOOL_OPTIONS=-agentlib&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;hprof&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;options&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
