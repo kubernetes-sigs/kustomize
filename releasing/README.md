@@ -126,7 +126,6 @@ Example output:
 ```
 kyaml/v0.3.0
 api/v0.4.1
-kstatus/v0.0.2
 cmd/config/v0.3.0
 cmd/resource/v0.0.2
 cmd/kubectl/v0.1.0

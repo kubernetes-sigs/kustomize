@@ -43,7 +43,6 @@ func TestModuleTags(t *testing.T) {
 	cmd/kubectl/v0.0.3
 	cmd/resource/v0.0.1
 	cmd/resource/v0.0.2
-	kstatus/v0.0.1
 	kustomize/v3.2.1
 	kustomize/v3.2.2
 	kustomize/v3.2.3
@@ -78,12 +77,10 @@ func TestCheckModReplace1(t *testing.T) {
 	
 	replace (
 		sigs.k8s.io/kustomize/cmd/kubectl v0.0.3 => ../cmd/kubectl
-		sigs.k8s.io/kustomize/kstatus v0.0.1 => ../kstatus
 	)`
 
 	expect := `Found replace in testpath
  - Please update go.mod to pin a specific version of sigs.k8s.io/kustomize/cmd/kubectl
- - Please update go.mod to pin a specific version of sigs.k8s.io/kustomize/kstatus
 `
 
 	err := checkModReplace(path, []byte(dataString))
