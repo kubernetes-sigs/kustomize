@@ -9,7 +9,7 @@ import (
 )
 
 var modules = [...]string{
-	"kyaml", "api", "kstatus", "cmd/config",
+	"kyaml", "api", "cmd/config",
 	"cmd/resource", "cmd/kubectl", "pluginator", "kustomize",
 }
 
