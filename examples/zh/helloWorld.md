@@ -1,9 +1,9 @@
 [base]: ../../docs/glossary.md#base
-[config]: https://github.com/kinflate/example-hello
+[config]: https://github.com/kubernetes-sigs/kustomize/tree/master/examples/helloWorld
 [gitops]: ../../docs/glossary.md#gitops
 [hello]: https://github.com/monopole/hello
 [kustomization]: ../../docs/glossary.md#kustomization
-[original]: https://github.com/kinflate/example-hello
+[original]: https://github.com/kubernetes-sigs/kustomize/tree/master/examples/helloWorld
 [overlay]: ../../docs/glossary.md#overlay
 [overlays]: ../../docs/glossary.md#overlay
 [patch]: ../../docs/glossary.md#patch

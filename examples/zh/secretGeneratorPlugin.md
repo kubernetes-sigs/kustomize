@@ -1,7 +1,7 @@
-[ConfigMaps]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#configmap-v1-core
+[ConfigMaps]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#configmap-v1-core
 [ELF]: https://en.wikipedia.org/wiki/Executable_and_Linkable_Format
 [Go plugin]: https://golang.org/pkg/plugin
-[Secrets]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#secret-v1-core
+[Secrets]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#secret-v1-core
 [base64]: https://tools.ietf.org/html/rfc4648#section-4
 [configuration directory]: https://wiki.archlinux.org/index.php/XDG_Base_Directory#Specification
 [grpc]: https://grpc.io
