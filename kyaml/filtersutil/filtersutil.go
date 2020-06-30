@@ -41,7 +41,7 @@ func ApplyToJSON(filter kio.Filter, objs ...marshalerUnmarshaler) error {
 
 	// convert the rnodes to json objects
 	for i := range nodes {
-		err = setRNode(objs[i], nodes[0])
+		err = setRNode(objs[i], nodes[i])
 		if err != nil {
 			return err
 		}
