@@ -74,7 +74,6 @@ func TestVersionFromGitTags(t *testing.T) {
 	cmd/kubectl/v0.0.3
 	cmd/resource/v0.0.1
 	cmd/resource/v0.0.2
-	kstatus/v0.0.1
 	kustomize/v3.2.1
 	kustomize/v3.2.2
 	kustomize/v3.2.3
