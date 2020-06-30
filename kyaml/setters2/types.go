@@ -21,6 +21,8 @@ type setter struct {
 	Value      string            `yaml:"value,omitempty" json:"value,omitempty"`
 	ListValues []string          `yaml:"listValues,omitempty" json:"listValues,omitempty"`
 	EnumValues map[string]string `yaml:"enumValues,omitempty" json:"enumValues,omitempty"`
+	Required   bool              `yaml:"required,omitempty" json:"required,omitempty"`
+	IsSet      bool              `yaml:"isSet,omitempty" json:"isSet,omitempty"`
 }
 
 type substitution struct {
