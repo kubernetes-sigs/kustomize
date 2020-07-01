@@ -267,7 +267,11 @@ func (p *HelmChartPlugin) helmConfigForChart(settings *cli.EnvSettings, repoName
 		}
 	}
 
-	if err := p.helmRepoAdd(settings, &repo.Entry{Name: repoName, URL: p.ChartRepo}); err != nil {
+	if err := p.helmRepoAdd(settings, &repo.Entry{
+		Name:     repoName,
+		URL:      p.ChartRepo,
+		Username: os.Getenv(strings.ToUpper(fmt.Sprintf("%v_helm_repo_username", repoName))),
+		Password: os.Getenv(strings.ToUpper(fmt.Sprintf("%v_helm_repo_password", repoName)))}); err != nil {
 		p.logger.Printf("error adding repo: %v, err: %v\n", p.ChartRepo, err)
 		return "", err
 	}
