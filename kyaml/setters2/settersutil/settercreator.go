@@ -4,9 +4,9 @@
 package settersutil
 
 import (
+	"fmt"
 	"io/ioutil"
 
-	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
@@ -65,7 +65,7 @@ func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
 		Outputs: []kio.Writer{inout},
 	}.Execute()
 	if a.Count == 0 {
-		return errors.Errorf("created setter doesn't match any fields")
+		fmt.Printf("setter %s doesn't match any field in resources, but creating setter definition\n", c.Name)
 	}
 	if err != nil {
 		return err
@@ -74,7 +74,7 @@ func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
 	// Update the OpenAPI definitions to hace the setter
 	sd := setters2.SetterDefinition{
 		Name: c.Name, Value: c.FieldValue, SetBy: c.SetBy, Description: c.Description,
-		Count: a.Count, Type: c.Type, Schema: schema, Required: c.Required,
+		Type: c.Type, Schema: schema, Required: c.Required,
 	}
 	if err := sd.AddToFile(openAPIPath); err != nil {
 		return err

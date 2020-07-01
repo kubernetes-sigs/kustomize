@@ -49,7 +49,6 @@ openAPI:
         setter:
           name: replicas
           value: "3"
-          count: 1
 `,
 			},
 		},
