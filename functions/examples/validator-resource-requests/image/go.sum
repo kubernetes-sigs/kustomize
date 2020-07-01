@@ -256,5 +256,5 @@ gopkg.in/yaml.v2 v2.2.7/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 gopkg.in/yaml.v3 v3.0.0-20191120175047-4206685974f2 h1:XZx7nhd5GMaZpmDaEHFVafUZC7ya0fuo7cSJ3UCKYmM=
 gopkg.in/yaml.v3 v3.0.0-20191120175047-4206685974f2/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 honnef.co/go/tools v0.0.0-20190102054323-c2f93a96b099/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
-sigs.k8s.io/kustomize/kyaml v0.3.2 h1:0AorBQuNiz/JwYBOULcjQTltif/vrPRjsEhGkE1FZig=
-sigs.k8s.io/kustomize/kyaml v0.3.2/go.mod h1:Z9y2rjGUGzVhgdYtDphESD9Hz+JZKOofKYObQYtMyVI=
+sigs.k8s.io/kustomize/kyaml v0.3.3 h1:sLvo5q3AghbiRbzSCOMnOqe1SPbP4pbJPBxnYtbepak=
+sigs.k8s.io/kustomize/kyaml v0.3.3/go.mod h1:Z9y2rjGUGzVhgdYtDphESD9Hz+JZKOofKYObQYtMyVI=
