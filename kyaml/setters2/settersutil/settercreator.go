@@ -74,7 +74,7 @@ func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
 	// Update the OpenAPI definitions to hace the setter
 	sd := setters2.SetterDefinition{
 		Name: c.Name, Value: c.FieldValue, SetBy: c.SetBy, Description: c.Description,
-    Count: a.Count, Type: c.Type, Schema: schema, Required: c.Required,
+		Count: a.Count, Type: c.Type, Schema: schema, Required: c.Required,
 	}
 	if err := sd.AddToFile(openAPIPath); err != nil {
 		return err
