@@ -55,7 +55,6 @@ openAPI:
           name: replicas
           value: "3"
           setBy: me
-          count: 1
  `,
 			expectedResources: `
 apiVersion: apps/v1
@@ -64,6 +63,44 @@ metadata:
   name: nginx-deployment
 spec:
   replicas: 3 # {"$openapi":"replicas"}
+ `,
+		},
+
+		{
+			name: "add replicas no match",
+			args: []string{"replicas", "3", "--description", "hello world", "--set-by", "me"},
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  foo: 2
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+`,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  foo: 2
  `,
 		},
 		{
@@ -118,7 +155,6 @@ openAPI:
           name: replicas
           value: "3"
           setBy: me
-          count: 1
  `,
 			expectedResources: `
 apiVersion: apps/v1
@@ -190,7 +226,6 @@ openAPI:
           - b
           - c
           setBy: me
-          count: 2
  `,
 			expectedResources: `
 apiVersion: example.com/v1beta1
@@ -290,7 +325,6 @@ openAPI:
           - b
           - c
           setBy: me
-          count: 1
  `,
 			expectedResources: `
 apiVersion: example.com/v1beta1
@@ -330,7 +364,6 @@ openAPI:
           name: replicas
           value: "3"
           setBy: me
-          count: 1
  `,
 			expectedResources: `
 apiVersion: apps/v1
