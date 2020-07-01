@@ -38,8 +38,8 @@ type Add struct {
 	// Type is the type of the setter value
 	Type string
 
-  // Count is the number of fields the setter applies to
-  Count int
+	// Count is the number of fields the setter applies to
+	Count int
 }
 
 // Filter implements yaml.Filter
@@ -108,7 +108,7 @@ func (a *Add) visitScalar(object *yaml.RNode, p string, _ *openapi.ResourceSchem
 	if a.FieldValue != "" && a.FieldValue != object.YNode().Value {
 		return nil
 	}
-  a.Count++
+	a.Count++
 	return a.addRef(object)
 }
 
