@@ -17,7 +17,7 @@
 #
 # At the time of writing,
 #
-#   https://pantheon.corp.google.com/cloud-build/triggers?project=kustomize-199618
+#   https://pantheon.corp.google.com/cloud-build/triggers?project=jregan-corp-gke-dev
 #
 # has a trigger such that whenever a git tag is
 # applied to the kustomize repo, the cloud builder
