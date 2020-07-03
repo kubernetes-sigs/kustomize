@@ -6,6 +6,6 @@ steps:
   args: ["releasing/cloudbuild.sh", "api"]
   secretEnv: ['GITHUB_TOKEN']
 secrets:
-- kmsKeyName: projects/kustomize-199618/locations/global/keyRings/github-tokens/cryptoKeys/gh-release-token
+- kmsKeyName: projects/jregan-corp-gke-dev/locations/global/keyRings/kust-cloud-key-ring/cryptoKeys/kust-cloud-key-name
   secretEnv:
-    GITHUB_TOKEN: CiQAyrREbPgXJOeT7M3t+WlxkhXwlMPudixBeiyWTjmLOMLqdK4SUQA0W+xUmDJKAhyfHCcwqSEzUn9OwKC7XAYcmwe0CCKTCbPbDgmioDK24q3LVapndXNvnnHvCjhOJNEr1o+P1DCF+LlzYV2YL8lP09rrKrslPg==
+    GITHUB_TOKEN: CiQAwfbOkSP4tJf3ZJZMjzHaRPZ2RxiQhORZ3xxlVtpoy8631uQSUACk6WMKjtkpsRkRl+uxWUVvN29M5qveyXjaDDO094/qwsSc8RiYlHYt7Ii1bWkkz3P1kG0nHfG7Fd46A+GJ6R5NhmNfingd/nu9iKrNwLXK
