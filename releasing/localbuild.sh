@@ -1,67 +1,33 @@
 #!/bin/bash
 #
-# To test the release process, this script attempts to
-# use Google cloudbuild configuration to create a release
-# locally.
-#
-# Usage: from the repo root, enter:
-#
-#     module=kustomize
-#     module=pluginator  # pick one
-#     module=api
-#
-#     ./releasing/localbuild.sh $module
-#
+# To test the release process, this script attempts
+# to use a Google cloudbuild configuration to create
+# release artifacts locally.
 #
 # See https://cloud.google.com/cloud-build/docs/build-debug-locally
 #
-# At the time of writing,
+# Usage: from the repo root, enter:
 #
-#   https://pantheon.corp.google.com/cloud-build/triggers?project=jregan-corp-gke-dev
+#   ./releasing/localbuild.sh kustomize/v1.2.3
 #
-# has a trigger such that whenever a git tag is
-# applied to the kustomize repo, the cloud builder
-# reads the repository-relative file
+# or some other valid tag value.
 #
-#   releasing/cloudbuild_${module}.yaml
-#
-# Inside this yaml file is a reference to the script
-#
-#   releasing/cloudbuild.sh
-#
-# which runs goreleaser from the proper directory, with the
-# proper config.
-#
-# The script you are reading now does something
-# analogous via docker tricks.
+# IMPORTANT:
+#   The process clones the repo at the given tag,
+#   so the repo must have the tag applied upstream.
+#   Either use an old tag, or disable the cloud build
+#   trigger so that a new testing tag can be applied
+#   without setting off a cloud build.
 
 set -e
 
-module=$1
-case "$module" in
-  api)
-  ;;
-  kustomize)
-  ;;
-  pluginator)
-  ;;
-  *)
-    echo "Don't recognize module=$module"
-    exit 1
-  ;;
-esac
-
 config=$(mktemp)
-cp releasing/cloudbuild_${module}.yaml $config
-
-# Delete the cloud-builders/git step, which isn't needed
-# for a local run.
-sed -i '2,3d'  $config
+cp releasing/cloudbuild.yaml $config
 
 # Add the --snapshot flag to suppress the
 # github release and leave the build output
 # in the kustomize/dist directory.
-sed -i 's|"\]$|", "--snapshot"]|' $config
+sed -i "s|# - '--snapshot|- '--snapshot|" $config
 
 echo "Executing cloud-build-local with:"
 echo "========================="
@@ -70,9 +36,11 @@ echo "========================="
 
 cloud-build-local \
     --config=$config \
-    --bind-mount-source \
+    --substitutions=TAG_NAME=$1 \
     --dryrun=false \
     .
+
+#  --bind-mount-source \
 
 echo " "
 echo "Result of local build:"
