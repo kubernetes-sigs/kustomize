@@ -1,75 +1,67 @@
 #!/bin/bash
+#
+# Usage (from top of repo):
+#
+#  releasing/cloudbuild.sh TAG [--snapshot]
+#
+# Where TAG is in the form
+#
+#   api/v1.2.3
+#   kustomize/v1.2.3
+#   cmd/config/v1.2.3
+#   ... etc.
+#
+# Cloud build should be configured to trigger on tags
+# matching:
+#
+#   [\w/]+/v\d+\.\d+\.\d+
+#
+# This script runs goreleaser (http://goreleaser.com),
+# presumably from a cloudbuild.yaml step that installed it.
+
 set -e
 set -x
 
-# Script to run http://goreleaser.com
-
-# Removed from `build` stanza
-# binary: $module
-
-module=$1
+fullTag=$1
 shift
+echo "fullTag=$fullTag"
 
-function setSemVer {
-  # Check the tag for consistency with module name.
-  # The following assumes git tags formatted like
-  # "api/v1.2.3" and splits on the slash.
-  # Goreleaser doesn't know what to do with this
-  # tag format, and fails when creating an archive
-  # with a / in the name.
-  local fullTag=$(git describe)
-  local tModule=${fullTag%/*}
-  semVer=${fullTag#*/}
+remainingArgs="$@"
+echo "Remaining args:  $remainingArgs"
 
-  # Make sure version has no slash
-  # (k8s/v0.1.0 becomes v0.1.0)
-  local tmp=${semVer#*/}
-  if [ "$tmp" != "$semVer" ]; then
-    semVer="$tmp"
-  fi
+# Take everything before the last slash.
+# This is expected to match $module.
+module=${fullTag%/*}
+echo "module=$module"
 
-  echo "tModule=$tModule"
-  echo "semVer=$semVer"
-  if [ "$module" != "$tModule" ]; then
-    # Tag and argument sanity check
-    echo "Unexpected mismatch: moduleFromArg=$module, moduleFromTag=$tModule"
-    echo "Either the module arg to this script is wrong, or the git tag is wrong."
-    exit 1
-  fi
-}
+# Take everything after the last slash.
+# This should be something like "v1.2.3".
+semVer=`echo $fullTag | sed "s|$module/||"`
+echo "semVer=$semVer"
 
-setSemVer
+# This is probably a directory called /workspace
+echo "pwd = $PWD"
 
+# Sanity check
+echo "### ls -las . ################################"
+ls -las .
+# echo "### ls -C /usr/bin ################################"
+# ls -C /usr/bin
+echo "###################################"
+
+
+# CD into the module directory.
+# This directory expected to contain a main.go, so there's
+# no need for extra details in the `build` stanza below.
 cd $module
-
-# 2020/May/11 Windows build temporaraily removed
-# ("- windows" removed from the goos: list below)
-# because of https://github.com/microsoft/go-winio/issues/161
-# Seeing the following in builds:
-#   : /go/pkg/mod/golang.org/x/crypto@v0.0.0-20190923035154-9ee001bba392/ssh/terminal/util_windows.go:97:61:
-#  multiple-value "golang.org/x/sys/windows".GetCurrentProcess() in single-value context
 
 configFile=$(mktemp)
 cat <<EOF >$configFile
 project_name: $module
-env:
-- CGO_ENABLED=0
-- GO111MODULE=on
-checksum:
-  name_template: 'checksums.txt'
-changelog:
-  sort: asc
-  filters:
-    exclude:
-    - '^docs:'
-    - '^test:'
-    - Merge pull request
-    - Merge branch
-release:
-  github:
-    owner: kubernetes-sigs
-    name: kustomize
-  draft: true
+
+archives:
+- name_template: "${module}_${semVer}_{{ .Os }}_{{ .Arch }}"
+
 builds:
 - ldflags: >
     -s
@@ -81,12 +73,34 @@ builds:
   - linux
   - darwin
   - windows
+
   goarch:
   - amd64
-archives:
--  name_template: "${module}_${semVer}_{{ .Os }}_{{ .Arch }}"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+    - Merge pull request
+    - Merge branch
+
+checksum:
+  name_template: 'checksums.txt'
+
+env:
+- CGO_ENABLED=0
+- GO111MODULE=on
+
+release:
+  github:
+    owner: monopole
+    name: kustomize
+  draft: true
+
 EOF
 
 cat $configFile
 
-/bin/goreleaser release --config=$configFile --rm-dist --skip-validate $@
+/bin/goreleaser release --config=$configFile --rm-dist --skip-validate $remainingArgs
