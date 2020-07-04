@@ -32,6 +32,8 @@ func NewListSettersRunner(parent string) *ListSettersRunner {
 	}
 	c.Flags().BoolVar(&r.Markdown, "markdown", false,
 		"output as github markdown")
+	c.Flags().BoolVar(&r.IncludeSubst, "include-subst", false,
+		"include substitutions in the output")
 	fixDocs(parent, c)
 	r.Command = c
 	return r
@@ -42,10 +44,11 @@ func ListSettersCommand(parent string) *cobra.Command {
 }
 
 type ListSettersRunner struct {
-	Command  *cobra.Command
-	Lookup   setters.LookupSetters
-	List     setters2.List
-	Markdown bool
+	Command      *cobra.Command
+	Lookup       setters.LookupSetters
+	List         setters2.List
+	Markdown     bool
+	IncludeSubst bool
 }
 
 func (r *ListSettersRunner) preRunE(c *cobra.Command, args []string) error {
@@ -63,7 +66,10 @@ func (r *ListSettersRunner) runE(c *cobra.Command, args []string) error {
 		if err := r.ListSetters(c, args); err != nil {
 			return err
 		}
-		return r.ListSubstitutions(c, args)
+		if r.IncludeSubst {
+			return r.ListSubstitutions(c, args)
+		}
+		return nil
 	}
 
 	return handleError(c, lookup(r.Lookup, c, args))
@@ -119,6 +125,9 @@ func (r *ListSettersRunner) ListSubstitutions(c *cobra.Command, args []string) e
 		return err
 	}
 	table := newTable(c.OutOrStdout(), r.Markdown)
+	b := tablewriter.Border{Top: true}
+	table.SetBorders(b)
+
 	table.SetHeader([]string{"SUBSTITUTION", "PATTERN", "REFERENCES"})
 	for i := range r.List.Substitutions {
 		s := r.List.Substitutions[i]
