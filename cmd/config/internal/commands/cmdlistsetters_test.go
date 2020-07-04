@@ -78,6 +78,7 @@ spec:
 		},
 		{
 			name: "list-multiple",
+			args: []string{"--include-subst"},
 			openapi: `
 openAPI:
   definitions:
@@ -134,12 +135,14 @@ spec:
   image      nginx   me2      hello world 2   2       No        
   replicas   3       me1      hello world 1   1       No        
   tag        1.7.9   me3      hello world 3   1       Yes       
+--------------- ----------- --------------
   SUBSTITUTION    PATTERN    REFERENCES   
   image          IMAGE:TAG   [image,tag]  
 `,
 		},
 		{
 			name: "list-multiple-resources",
+			args: []string{"--include-subst"},
 			openapi: `
 openAPI:
   definitions:
@@ -208,6 +211,7 @@ spec:
   image      nginx   me2      hello world 2   3       No        
   replicas   3       me1      hello world 1   2       No        
   tag        1.7.9   me3      hello world 3   2       No        
+--------------- ----------- --------------
   SUBSTITUTION    PATTERN    REFERENCES   
   image          IMAGE:TAG   [image,tag]  
 `,
@@ -240,10 +244,10 @@ openAPI:
           name: tag
           value: "1.7.9"
           setBy: me3
-    io.k8s.cli.substitutions.image:
+    io.k8s.cli.substitutions.image-subst:
       x-k8s-cli:
         substitution:
-          name: image
+          name: image-subst
           pattern: IMAGE:TAG
           values:
           - marker: IMAGE
@@ -262,7 +266,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-subst"}
       - name: nginx2
         image: nginx # {"$ref": "#/definitions/io.k8s.cli.setters.image"}
 ---
@@ -276,14 +280,12 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-subst"}
       - name: nginx2
         image: nginx
 `,
 			expected: `  NAME    VALUE   SET BY    DESCRIPTION    COUNT   REQUIRED  
   image   nginx   me2      hello world 2   3       Yes       
-  SUBSTITUTION    PATTERN    REFERENCES   
-  image          IMAGE:TAG   [image,tag]  
 `,
 		},
 
@@ -329,6 +331,7 @@ spec:
 
 		{
 			name: "nested substitution",
+			args: []string{"--include-subst"},
 			input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -391,6 +394,7 @@ openAPI:
   my-image-setter   nginx                                    2       No        
   my-other-setter   nginxotherthing                          1       No        
   my-tag-setter     1.7.9                                    2       Yes       
+------------------ ------------------------------------------------ -----------------------------------
    SUBSTITUTION                        PATTERN                                  REFERENCES             
   my-image-subst    ${my-image-setter}::${my-tag-setter}             [my-image-setter,my-tag-setter]   
   my-nested-subst   something/${my-image-subst}/${my-other-setter}   [my-image-subst,my-other-setter]  
