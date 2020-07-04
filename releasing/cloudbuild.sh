@@ -95,7 +95,7 @@ env:
 
 release:
   github:
-    owner: monopole
+    owner: kubernetes-sigs
     name: kustomize
   draft: true
 
