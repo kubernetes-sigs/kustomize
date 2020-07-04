@@ -31,8 +31,8 @@ func GetGrepRunner(name string) *GrepRunner {
 		"also print resources from subpackages.")
 	c.Flags().BoolVar(&r.KeepAnnotations, "annotate", true,
 		"annotate resources with their file origins.")
-	c.Flags().BoolVarP(&r.InvertMatch, "invert-match", "v", false,
-		" Selected Resources are those not matching any of the specified patterns..")
+	c.Flags().BoolVarP(&r.InvertMatch, "invert-match", "", false,
+		"Selected Resources are those not matching any of the specified patterns..")
 
 	r.Command = c
 	return r
