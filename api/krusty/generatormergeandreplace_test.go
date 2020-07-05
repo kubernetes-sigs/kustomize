@@ -150,8 +150,6 @@ spec:
 
 func makeBaseWithGenerators(th kusttest_test.Harness) {
 	th.WriteK("/app", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 namePrefix: team-foo-
 commonLabels:
   app: mynginx
@@ -325,8 +323,6 @@ spec:
         name: configmap-in-overlay
 `)
 	th.WriteK("/overlay", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 namePrefix: staging-
 commonLabels:
   env: staging
@@ -390,11 +386,11 @@ spec:
           pdName: nginx-persistent-storage
         name: nginx-persistent-storage
       - configMap:
-          name: staging-configmap-in-overlay-k7cbc75tg8
-        name: configmap-in-overlay
-      - configMap:
           name: staging-team-foo-configmap-in-base-gh9d7t85gb
         name: configmap-in-base
+      - configMap:
+          name: staging-configmap-in-overlay-k7cbc75tg8
+        name: configmap-in-overlay
 ---
 apiVersion: v1
 kind: Service

@@ -5,6 +5,7 @@ package builtins
 
 import (
 	"fmt"
+	"strings"
 
 	"sigs.k8s.io/kustomize/api/filters/namespace"
 	"sigs.k8s.io/kustomize/api/resid"
@@ -31,6 +32,11 @@ func (p *NamespaceTransformerPlugin) Config(
 	_ *resmap.PluginHelpers, c []byte) (err error) {
 	p.Namespace = ""
 	p.FieldSpecs = nil
+	if !strings.Contains(string(c), "yamlSupport") {
+		// If not explicitly denied,
+		// activate kyaml-based transformation.
+		p.YAMLSupport = true
+	}
 	return yaml.Unmarshal(c, p)
 }
 

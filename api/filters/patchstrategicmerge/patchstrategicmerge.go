@@ -1,3 +1,6 @@
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 package patchstrategicmerge
 
 import (
@@ -13,9 +16,13 @@ type Filter struct {
 var _ kio.Filter = Filter{}
 
 func (pf Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
-	return kio.FilterAll(yaml.FilterFunc(pf.run)).Filter(nodes)
-}
-
-func (pf Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
-	return merge2.Merge(pf.Patch, node)
+	var result []*yaml.RNode
+	for i := range nodes {
+		r, err := merge2.Merge(pf.Patch, nodes[i])
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, r)
+	}
+	return result, nil
 }

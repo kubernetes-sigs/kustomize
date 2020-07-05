@@ -5,6 +5,7 @@ package builtins
 
 import (
 	"fmt"
+	"strings"
 
 	"sigs.k8s.io/kustomize/api/filters/patchstrategicmerge"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -29,6 +30,11 @@ func (p *PatchStrategicMergeTransformerPlugin) Config(
 	err = yaml.Unmarshal(c, p)
 	if err != nil {
 		return err
+	}
+	if !strings.Contains(string(c), "yamlSupport") {
+		// If not explicitly denied,
+		// activate kyaml-based transformation.
+		p.YAMLSupport = true
 	}
 	if len(p.Paths) == 0 && p.Patches == "" {
 		return fmt.Errorf("empty file path and empty patch content")
@@ -75,17 +81,6 @@ func (p *PatchStrategicMergeTransformerPlugin) Transform(m resmap.ResMap) error 
 		}
 		if !p.YAMLSupport {
 			err = target.Patch(patch.Copy())
-			if err != nil {
-				return err
-			}
-			// remove the resource from resmap
-			// when the patch is to $patch: delete that target
-			if len(target.Map()) == 0 {
-				err = m.Remove(target.CurId())
-				if err != nil {
-					return err
-				}
-			}
 		} else {
 			patchCopy := patch.DeepCopy()
 			patchCopy.SetName(target.GetName())
@@ -98,6 +93,19 @@ func (p *PatchStrategicMergeTransformerPlugin) Transform(m resmap.ResMap) error 
 			err = filtersutil.ApplyToJSON(patchstrategicmerge.Filter{
 				Patch: node,
 			}, target)
+		}
+		if err != nil {
+			return err
+		}
+		if len(target.Map()) == 0 {
+			// This means all fields have been removed from the object.
+			// This can happen if a patch required deletion of the
+			// entire resource (not just a part of it).  This means
+			// the overall resmap must shrink by one.
+			err = m.Remove(target.CurId())
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
