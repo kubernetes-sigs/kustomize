@@ -6,6 +6,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/pkg/errors"
@@ -37,6 +38,11 @@ func (p *plugin) Config(
 	err = yaml.Unmarshal(c, p)
 	if err != nil {
 		return err
+	}
+	if !strings.Contains(string(c), "yamlSupport") {
+		// If not explicitly denied,
+		// activate kyaml-based transformation.
+		p.YAMLSupport = true
 	}
 	if p.Target.Name == "" {
 		return fmt.Errorf("must specify the target name")
