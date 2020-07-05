@@ -14,8 +14,8 @@ all: verify-kustomize
 verify-kustomize: \
 	lint-kustomize \
 	test-unit-kustomize-all \
-	test-examples-kustomize-against-HEAD \
-	test-examples-kustomize-against-3.7.0
+	test-examples-kustomize-against-HEAD
+#	test-examples-kustomize-against-3.7.0
 
 # The following target referenced by a file in
 # https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/kustomize
@@ -24,9 +24,9 @@ prow-presubmit-check: \
 	lint-kustomize \
 	test-unit-kustomize-all \
 	test-examples-kustomize-against-HEAD \
-	test-examples-kustomize-against-3.7.0 \
 	test-unit-cmd-all \
 	test-go-mod
+#	test-examples-kustomize-against-3.7.0 \
 
 .PHONY: verify-kustomize-e2e
 verify-kustomize-e2e: test-examples-e2e-kustomize
