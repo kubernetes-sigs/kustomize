@@ -175,13 +175,13 @@ are passed to the Function through the ` + "`" + `ResourceList.functionConfig` +
 	  name: my-instance
 	  annotations:
 	    config.kubernetes.io/local-config: "true"
-	    config.k8s.io/function: |
+	    config.kubernetes.io/function: |
 	      container:
 	        image: gcr.io/example-functions/nginx-template:v1.0.0
 	spec:
 	  replicas: 5
 
-- ` + "`" + `annotations[config.k8s.io/function].container.image` + "`" + `: the image to use for this API
+- ` + "`" + `annotations[config.kubernetes.io/function].container.image` + "`" + `: the image to use for this API
 - ` + "`" + `annotations[config.kubernetes.io/local-config]` + "`" + `: mark this as not a Resource that should
   be applied
 
@@ -343,7 +343,7 @@ An example using ` + "`" + `config.kubernetes.io/v1beta1/ResourceList` + "`" + `
 	    name: staging
 	    metadata:
 	      annotations:
-	        config.k8s.io/function: |
+	        config.kubernetes.io/function: |
 	          container:
 	            image: gcr.io/example/foo:v1.0.0
 	  spec:
