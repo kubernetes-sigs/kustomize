@@ -114,7 +114,7 @@ functionConfig:
     name: staging
     metadata:
       annotations:
-        config.k8s.io/function: |
+        config.kubernetes.io/function: |
           container:
             image: gcr.io/example/foo:v1.0.0
   spec:
