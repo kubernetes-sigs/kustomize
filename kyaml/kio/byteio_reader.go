@@ -115,7 +115,9 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
-	values := strings.Split(input.String(), "\n---\n")
+
+	// replace the ending \r\n (line ending used in windows) with \n and then separate by \n---\n
+	values := strings.Split(strings.Replace(input.String(), "\r\n", "\n", -1), "\n---\n")
 
 	index := 0
 	for i := range values {
