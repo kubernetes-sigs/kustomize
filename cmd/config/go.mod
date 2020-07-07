@@ -14,23 +14,6 @@ require (
 	k8s.io/cli-runtime v0.17.3
 	k8s.io/client-go v0.17.3
 	k8s.io/kubectl v0.0.0-20191219154910-1528d4eea6dd
-	sigs.k8s.io/cli-utils v0.12.0
-	// TODO: Fix this -- this should depend on v0.0.0 and be replaced (below),
-	// however the cli-runtime dependency causes `go mod` to set this as the
-	// dependency.
-	sigs.k8s.io/kustomize/kyaml v0.1.13 // Don't change this!
-)
-
-// TODO: Fix this -- we sould only depend on v0.0.0 and replace that one.
-//
-// This line is managed by the release script -- releasing/releasemodule.sh
-// Pinning to a released version of kyaml will invalidate the e2e tests used to
-// test kyaml changes as the e2e tests will run against the pinned version, not
-// the HEAD.
-//
-// releasing/releasemodule.sh will remove this line and set the require version
-// to the kyaml version specified in releasing/VERSIONS
-replace (
-	sigs.k8s.io/kustomize/kyaml v0.0.0 => ../../kyaml
-	sigs.k8s.io/kustomize/kyaml v0.1.13 => ../../kyaml
+	sigs.k8s.io/cli-utils v0.16.0
+	sigs.k8s.io/kustomize/kyaml v0.4.0
 )
