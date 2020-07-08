@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -58,10 +59,13 @@ type HelmChartPlugin struct {
 	logger                         *log.Logger
 	hash                           string
 	hashFolder                     string
+	cacheEnabled                   bool
 }
 
 func (p *HelmChartPlugin) Config(h *resmap.PluginHelpers, c []byte) (err error) {
 	p.rf = h.ResmapFactory()
+
+	p.cacheEnabled, _ = strconv.ParseBool(os.Getenv("KUST_HELM_CACHE"))
 
 	if err = yaml.Unmarshal(c, p); err != nil {
 		p.logger.Printf("error unmarshalling yaml config: %v, error: %v\n", string(c), err)
@@ -106,16 +110,16 @@ func (p *HelmChartPlugin) Config(h *resmap.PluginHelpers, c []byte) (err error) 
 		p.ReleaseNamespace = "default"
 	}
 
-	p.hashFolder = filepath.Join(p.ChartHome, ".plugincache")
-	if err = os.MkdirAll(p.hashFolder, os.ModePerm); err != nil {
-		p.logger.Printf("error creating hashfolder: %v, error: %v\n", p.hashFolder, err)
-		return err
+	if p.cacheEnabled {
+		p.hashFolder = filepath.Join(p.ChartHome, ".plugincache")
+		if err = os.MkdirAll(p.hashFolder, os.ModePerm); err != nil {
+			p.logger.Printf("error creating hashfolder: %v, error: %v\n", p.hashFolder, err)
+			return err
+		}
+		chartHash := sha256.New()
+		chartHash.Write(c)
+		p.hash = hex.EncodeToString(chartHash.Sum(nil))
 	}
-
-	chartHash := sha256.New()
-	chartHash.Write(c)
-	p.hash = hex.EncodeToString(chartHash.Sum(nil))
-
 	if p.RepoIndexFileStaleAfterSeconds == 0 {
 		p.RepoIndexFileStaleAfterSeconds = defaultRepoIndexFileStaleAfterSeconds
 	}
@@ -128,30 +132,35 @@ func (p *HelmChartPlugin) Config(h *resmap.PluginHelpers, c []byte) (err error) 
 	if p.LockTimeoutSeconds == 0 {
 		p.LockTimeoutSeconds = utils.DefaultLockTimeoutSeconds
 	}
+
 	return nil
 }
 
 func (p *HelmChartPlugin) Generate() (resmap.ResMap, error) {
 
 	var templatedYaml []byte
+	var hashFilePath = ""
 
-	hashFilePath := filepath.Join(p.hashFolder, p.hash)
-	lockFilePath := filepath.Join(p.hashFolder, fmt.Sprintf("%v.flock", p.hash))
+	if p.cacheEnabled {
+		hashFilePath = filepath.Join(p.hashFolder, p.hash)
+		lockFilePath := filepath.Join(p.hashFolder, fmt.Sprintf("%v.flock", p.hash))
 
-	if unlockFn, err := utils.LockPath(lockFilePath, p.LockTimeoutSeconds, p.LockRetryDelayMinMilliSeconds, p.LockRetryDelayMaxMilliSeconds, p.logger); err != nil {
-		p.logger.Printf("error locking %v, error: %v\n", hashFilePath, err)
-		return nil, err
-	} else {
-		defer unlockFn()
+		if unlockFn, err := utils.LockPath(lockFilePath, p.LockTimeoutSeconds, p.LockRetryDelayMinMilliSeconds, p.LockRetryDelayMaxMilliSeconds, p.logger); err != nil {
+			p.logger.Printf("error locking %v, error: %v\n", hashFilePath, err)
+			return nil, err
+		} else {
+			defer unlockFn()
+		}
 	}
-
 	if _, err := os.Stat(hashFilePath); err != nil {
 		if os.IsNotExist(err) {
 			if templatedYaml, err = p.executeHelmTemplate(); err != nil {
 				p.logger.Printf("error executing helm template, error: %v\n", err)
 				return nil, err
-			} else if err = ioutil.WriteFile(hashFilePath, templatedYaml, 0644); err != nil {
-				p.logger.Printf("error writing kustomization yaml to file: %v, error: %v\n", hashFilePath, err)
+			} else if p.cacheEnabled {
+				if err = ioutil.WriteFile(hashFilePath, templatedYaml, 0644); err != nil {
+					p.logger.Printf("error writing kustomization yaml to file: %v, error: %v\n", hashFilePath, err)
+				}
 			}
 		} else {
 			return nil, err
