@@ -5,7 +5,6 @@ package builtins
 
 import (
 	"fmt"
-	"strings"
 
 	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/pkg/errors"
@@ -24,8 +23,6 @@ type PatchJson6902TransformerPlugin struct {
 	Target       types.PatchTarget `json:"target,omitempty" yaml:"target,omitempty"`
 	Path         string            `json:"path,omitempty" yaml:"path,omitempty"`
 	JsonOp       string            `json:"jsonOp,omitempty" yaml:"jsonOp,omitempty"`
-
-	YAMLSupport bool `json:"yamlSupport,omitempty" yaml:"yamlSupport,omitempty"`
 }
 
 func (p *PatchJson6902TransformerPlugin) Config(
@@ -34,11 +31,6 @@ func (p *PatchJson6902TransformerPlugin) Config(
 	err = yaml.Unmarshal(c, p)
 	if err != nil {
 		return err
-	}
-	if !strings.Contains(string(c), "yamlSupport") {
-		// If not explicitly denied,
-		// activate kyaml-based transformation.
-		p.YAMLSupport = true
 	}
 	if p.Target.Name == "" {
 		return fmt.Errorf("must specify the target name")
@@ -93,22 +85,9 @@ func (p *PatchJson6902TransformerPlugin) Transform(m resmap.ResMap) error {
 	if err != nil {
 		return err
 	}
-	if !p.YAMLSupport {
-		rawObj, err := obj.MarshalJSON()
-		if err != nil {
-			return err
-		}
-		modifiedObj, err := p.decodedPatch.Apply(rawObj)
-		if err != nil {
-			return errors.Wrapf(
-				err, "failed to apply json patch '%s'", p.JsonOp)
-		}
-		return obj.UnmarshalJSON(modifiedObj)
-	} else {
-		return filtersutil.ApplyToJSON(patchjson6902.Filter{
-			Patch: p.JsonOp,
-		}, obj)
-	}
+	return filtersutil.ApplyToJSON(patchjson6902.Filter{
+		Patch: p.JsonOp,
+	}, obj)
 }
 
 func NewPatchJson6902TransformerPlugin() resmap.TransformerPlugin {
