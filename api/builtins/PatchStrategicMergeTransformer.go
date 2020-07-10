@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/filters/patchstrategicmerge"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -20,8 +21,6 @@ type PatchStrategicMergeTransformerPlugin struct {
 	loadedPatches []*resource.Resource
 	Paths         []types.PatchStrategicMerge `json:"paths,omitempty" yaml:"paths,omitempty"`
 	Patches       string                      `json:"patches,omitempty" yaml:"patches,omitempty"`
-
-	YAMLSupport bool `json:"yamlSupport,omitempty" yaml:"yamlSupport,omitempty"`
 }
 
 func (p *PatchStrategicMergeTransformerPlugin) Config(
@@ -30,11 +29,6 @@ func (p *PatchStrategicMergeTransformerPlugin) Config(
 	err = yaml.Unmarshal(c, p)
 	if err != nil {
 		return err
-	}
-	if !strings.Contains(string(c), "yamlSupport") {
-		// If not explicitly denied,
-		// activate kyaml-based transformation.
-		p.YAMLSupport = true
 	}
 	if len(p.Paths) == 0 && p.Patches == "" {
 		return fmt.Errorf("empty file path and empty patch content")
@@ -79,23 +73,33 @@ func (p *PatchStrategicMergeTransformerPlugin) Transform(m resmap.ResMap) error 
 		if err != nil {
 			return err
 		}
-		if !p.YAMLSupport {
-			err = target.Patch(patch.Copy())
-		} else {
-			patchCopy := patch.DeepCopy()
-			patchCopy.SetName(target.GetName())
-			patchCopy.SetNamespace(target.GetNamespace())
-			patchCopy.SetGvk(target.GetGvk())
-			node, err := filtersutil.GetRNode(patchCopy)
-			if err != nil {
-				return err
-			}
-			err = filtersutil.ApplyToJSON(patchstrategicmerge.Filter{
-				Patch: node,
-			}, target)
-		}
+		patchCopy := patch.DeepCopy()
+		patchCopy.SetName(target.GetName())
+		patchCopy.SetNamespace(target.GetNamespace())
+		patchCopy.SetGvk(target.GetGvk())
+		node, err := filtersutil.GetRNode(patchCopy)
 		if err != nil {
 			return err
+		}
+		err = filtersutil.ApplyToJSON(patchstrategicmerge.Filter{
+			Patch: node,
+		}, target)
+		if err != nil {
+			// Check for an error string from UnmarshalJSON that's indicative
+			// of an object that's missing basic KRM fields, and thus may have been
+			// entirely deleted (an acceptable outcome).  This error handling should
+			// be deleted along with use of ResMap and apimachinery functions like
+			// UnmarshalJSON.
+			if !strings.Contains(err.Error(), "Object 'Kind' is missing") {
+				// Some unknown error, let it through.
+				return err
+			}
+			if len(target.Map()) != 0 {
+				return errors.Wrapf(
+					err, "with unexpectedly non-empty object map of size %d",
+					len(target.Map()))
+			}
+			// Fall through to handle deleted object.
 		}
 		if len(target.Map()) == 0 {
 			// This means all fields have been removed from the object.
