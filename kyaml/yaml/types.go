@@ -35,16 +35,16 @@ func IsMissingOrNull(node *RNode) bool {
 }
 
 // IsEmpty returns true if the RNode is MissingOrNull, or is either a MappingNode with
-// no fields, or a SequenceNode with no elements.
+// no fields.
 func IsEmpty(node *RNode) bool {
-	if node == nil || node.YNode() == nil || node.YNode().Tag == NullNodeTag {
+	if IsMissingOrNull(node) {
 		return true
 	}
 
+	// Empty sequence is a special case and temporarily not considered as empty here.
+	// Some users may want to keep empty sequence for compatibility reason.
+	// For example, use JSON 6902 patch.
 	if node.YNode().Kind == yaml.MappingNode && len(node.YNode().Content) == 0 {
-		return true
-	}
-	if node.YNode().Kind == yaml.SequenceNode && len(node.YNode().Content) == 0 {
 		return true
 	}
 
