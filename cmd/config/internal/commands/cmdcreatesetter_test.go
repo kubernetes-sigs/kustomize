@@ -374,6 +374,41 @@ spec:
   replicas: 3 # {"$openapi":"replicas"}
  `,
 		},
+		{
+			name: "add setter with . in the name",
+			args: []string{"foo.bar", "3"},
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+`,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.foo.bar:
+      x-k8s-cli:
+        setter:
+          name: foo.bar
+          value: "3"
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$openapi":"foo.bar"}
+ `,
+		},
 	}
 	for i := range tests {
 		test := tests[i]

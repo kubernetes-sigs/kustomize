@@ -155,8 +155,18 @@ func (fm *FieldMeta) Write(n *yaml.RNode) error {
 	if fm.Schema.Ref.String() != "" {
 		// Ex: {"$ref":"#/definitions/io.k8s.cli.setters.replicas"} should be converted to
 		// {"openAPI":"replicas"} and added to the line comment
-		arr := strings.Split(fm.Schema.Ref.String(), ".")
-		n.YNode().LineComment = fmt.Sprintf(`{"%s":"%s"}`, shortHandRef, arr[len(arr)-1])
+		ref := fm.Schema.Ref.String()
+		var shortHandRefValue string
+		switch {
+		case strings.HasPrefix(ref, DefinitionsPrefix+SetterDefinitionPrefix):
+			shortHandRefValue = strings.TrimPrefix(ref, DefinitionsPrefix+SetterDefinitionPrefix)
+		case strings.HasPrefix(ref, DefinitionsPrefix+SubstitutionDefinitionPrefix):
+			shortHandRefValue = strings.TrimPrefix(ref, DefinitionsPrefix+SubstitutionDefinitionPrefix)
+		default:
+			return fmt.Errorf("unexpected ref format: %s", ref)
+		}
+		n.YNode().LineComment = fmt.Sprintf(`{"%s":"%s"}`, shortHandRef,
+			shortHandRefValue)
 	} else {
 		n.YNode().LineComment = ""
 	}
