@@ -408,6 +408,39 @@ spec:
 `,
 			err: "cyclic substitution detected with name my-nested-subst",
 		},
+		{
+			name: "substitution with non-existing setter with same name",
+			args: []string{
+				"foo", "--field-value", "prefix-1234", "--pattern", "prefix-${foo}"},
+			input: `
+apiVersion: test/v1
+kind: Foo
+metadata:
+  name: foo
+spec:
+  setterVal: 1234
+  substVal: prefix-1234
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+ `,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+ `,
+			expectedResources: `
+apiVersion: test/v1
+kind: Foo
+metadata:
+  name: foo
+spec:
+  setterVal: 1234
+  substVal: prefix-1234
+        	            	
+ `,
+			err: "setters must have different name than the substitution: foo",
+		},
 	}
 	for i := range tests {
 		test := tests[i]
