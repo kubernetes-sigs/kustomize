@@ -166,9 +166,9 @@ func StringToStorageMount(s string) StorageMount {
 		switch {
 		case key == "type":
 			sm.MountType = value
-		case key == "src":
+		case key == "src" || key == "source":
 			sm.Src = value
-		case key == "dst":
+		case key == "dst" || key == "target":
 			sm.DstPath = value
 		case key == "rw" && value == "true":
 			sm.ReadWriteMode = true

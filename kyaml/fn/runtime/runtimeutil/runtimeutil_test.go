@@ -1413,6 +1413,14 @@ func Test_StringToStorageMount(t *testing.T) {
 			in:          "type=tmpfs,src=/tmp/test/,dst",
 			expectedOut: "type=tmpfs,source=/tmp/test/,target=,readonly",
 		},
+		{
+			in:          "type=bind,source=/tmp/test/,target=/tmp/source/,rw=true",
+			expectedOut: "type=bind,source=/tmp/test/,target=/tmp/source/",
+		},
+		{
+			in:          "type=bind,source=/tmp/test/,target=/tmp/source/",
+			expectedOut: "type=bind,source=/tmp/test/,target=/tmp/source/,readonly",
+		},
 	}
 
 	for _, tc := range tests {
