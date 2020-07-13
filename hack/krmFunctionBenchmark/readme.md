@@ -1,9 +1,9 @@
 # Benchmark for KRM functions in Kustomize
 
-## Pre-request
+## Pre-prerequisites
 
- - You have to use Kustomize version with KRM function supported.
- - You need to have Docker running on your machine.
+ - [kustomize v3.7.0 or higher](https://kubernetes-sigs.github.io/kustomize/installation) (support for KRM Config Functions).
+ - [docker](https://github.com/kubernetes-sigs/kustomize/pull/docker.com)
 
 ## How to run
 
