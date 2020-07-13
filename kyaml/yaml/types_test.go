@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 )
 
 // Test that non-UTF8 characters in comments don't cause failures
@@ -165,4 +166,83 @@ type: string
 		t.FailNow()
 	}
 	assert.Equal(t, expected, actual)
+}
+
+func TestIsMissingOrNull(t *testing.T) {
+	if IsMissingOrNull(nil) != true {
+		t.Fatalf("input: nil")
+	}
+	// missing value or null value
+	node := &RNode{value: nil}
+	if IsMissingOrNull(node) != true {
+		t.Fatalf("input: nil value")
+	}
+
+	node.value = &yaml.Node{}
+	if IsMissingOrNull(node) != false {
+		t.Fatalf("input: valid node")
+	}
+	// node with NullNodeTag
+	node.value.Tag = NullNodeTag
+	if IsMissingOrNull(node) != true {
+		t.Fatalf("input: with NullNodeTag")
+	}
+
+	node.value = &yaml.Node{}
+	if IsMissingOrNull(node) != false {
+		t.Fatalf("input: valid node")
+	}
+}
+
+func TestIsEmpty(t *testing.T) {
+	if IsEmpty(nil) != true {
+		t.Fatalf("input: nil")
+	}
+
+	// missing value or null value
+	node := &RNode{value: nil}
+	if IsEmpty(node) != true {
+		t.Fatalf("input: nil value")
+	}
+	// not array or map
+	node.value = &yaml.Node{}
+	if IsEmpty(node) != false {
+		t.Fatalf("input: not array or map")
+	}
+
+	// === array tests ===
+	node.value.Kind = yaml.SequenceNode
+	// empty array. empty array is not expected as empty
+	if IsEmpty(node) != false {
+		t.Fatalf("input: empty array")
+	}
+	// array with 1 item
+	node.value.Content = append(node.value.Content, &yaml.Node{})
+	if IsEmpty(node) != false {
+		t.Fatalf("input: array with 1 item")
+	}
+	// delete the item in array
+	node.value.Content = node.value.Content[:len(node.value.Content)-1]
+	if IsEmpty(node) != false {
+		t.Fatalf("input: empty array")
+	}
+
+	// === map tests ===
+	node.value = &yaml.Node{
+		Kind: yaml.MappingNode,
+	}
+	// empty map
+	if IsEmpty(node) != true {
+		t.Fatalf("input: empty map")
+	}
+	// map with 1 item
+	node.value.Content = append(node.value.Content, &yaml.Node{})
+	if IsEmpty(node) != false {
+		t.Fatalf("input: map with 1 item")
+	}
+	// delete the item in map
+	node.value.Content = node.value.Content[:len(node.value.Content)-1]
+	if IsEmpty(node) != true {
+		t.Fatalf("input: empty map")
+	}
 }
