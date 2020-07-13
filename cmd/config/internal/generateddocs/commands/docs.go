@@ -89,6 +89,22 @@ var CreateSetterExamples = `
     kustomize cfg create-setter DIR/ image-tag v1.0.1 --type "string" \
         --field image --description "current stable release"`
 
+var DeleteSetterShort = `[Alpha] Delete a custom setter for a Resource field`
+var DeleteSetterLong = `
+Delete a custom setter for a Resource field.
+
+  DIR
+
+    A directory containing Resource configuration.
+
+  NAME
+
+    The name of the setter to create.
+`
+var DeleteSetterExamples = `
+    # delete a setter for port
+    kustomize cfg create-setter DIR/ port`
+
 var FmtShort = `[Alpha] Format yaml configuration files.`
 var FmtLong = `
 [Alpha] Format yaml configuration files.
