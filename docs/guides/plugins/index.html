@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.73.0" />
+<meta name="generator" content="Hugo 0.68.3" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -632,7 +632,8 @@ transform the behavior of a plugin.  See the
 <li><a href="https://github.com/kubernetes-sigs/kustomize/tree/master/plugin/someteam.example.com/v1/dateprefixer">date prefixer</a> - prefix the current date to resource names, a simple
 example used to modify the string prefixer plugin just mentioned.</li>
 <li><a href="https://github.com/kubernetes-sigs/kustomize/tree/master/plugin/someteam.example.com/v1/secretsfromdatabase">secret generator</a> - generate secrets from a toy database.</li>
-<li><a href="https://github.com/monopole/sopsencodedsecrets">sops encoded secrets</a> - a more complex secret generator.</li>
+<li><a href="https://github.com/monopole/sopsencodedsecrets">sops encoded secrets</a> - a more complex secret generator that converts SOPS files into Kubernetes Secrets</li>
+<li><a href="https://github.com/omninonsense/kustomize-sopsgenerator">SOPSGenerator</a> - another generator that decrypts SOPS files into Secrets</li>
 <li><a href="https://github.com/kubernetes-sigs/kustomize/tree/master/plugin/builtin">All the builtin plugins</a>.
 User authored plugins are
 on the same footing as builtin operations.</li>
@@ -706,7 +707,7 @@ go build -buildmode plugin \
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 15, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/36165d28437ac350db61d301c032c0c661ee684b">Update GO plugin doc (36165d28)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 26, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/69dc34500ad151a7ee04d3434c4cc17ff8827950">docs: add link to another Go plugin (69dc3450)</a>
 </div>
 </div>
 
