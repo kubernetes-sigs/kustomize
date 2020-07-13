@@ -84,10 +84,18 @@ type StorageMount struct {
 
 	// The path where the file or directory is mounted in the container.
 	DstPath string `json:"dst,omitempty" yaml:"dst,omitempty"`
+
+	// Mount in ReadWrite mode if it's explicitly configured
+	// See https://docs.docker.com/storage/bind-mounts/#use-a-read-only-bind-mount
+	ReadWriteMode bool `json:"rw,omitempty" yaml:"rw,omitempty"`
 }
 
 func (s *StorageMount) String() string {
-	return fmt.Sprintf("type=%s,src=%s,dst=%s:ro", s.MountType, s.Src, s.DstPath)
+	mode := ""
+	if !s.ReadWriteMode {
+		mode = ",readonly"
+	}
+	return fmt.Sprintf("type=%s,source=%s,target=%s%s", s.MountType, s.Src, s.DstPath, mode)
 }
 
 // GetFunctionSpec returns the FunctionSpec for a resource.  Returns
@@ -149,17 +157,21 @@ func StringToStorageMount(s string) StorageMount {
 	options := strings.Split(s, ",")
 	for _, option := range options {
 		keyVal := strings.SplitN(option, "=", 2)
-		m[keyVal[0]] = keyVal[1]
+		if len(keyVal) == 2 {
+			m[keyVal[0]] = keyVal[1]
+		}
 	}
 	var sm StorageMount
 	for key, value := range m {
 		switch {
 		case key == "type":
 			sm.MountType = value
-		case key == "src":
+		case key == "src" || key == "source":
 			sm.Src = value
-		case key == "dst":
+		case key == "dst" || key == "target":
 			sm.DstPath = value
+		case key == "rw" && value == "true":
+			sm.ReadWriteMode = true
 		}
 	}
 	return sm

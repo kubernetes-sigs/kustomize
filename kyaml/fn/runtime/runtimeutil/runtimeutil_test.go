@@ -1379,3 +1379,52 @@ metadata:
 		assert.Equal(t, tc.required, fn.Container.Network.Required)
 	}
 }
+
+func Test_StringToStorageMount(t *testing.T) {
+	tests := []struct {
+		in          string
+		expectedOut string
+	}{
+		{
+			in:          "type=bind,src=/tmp/test/,dst=/tmp/source/",
+			expectedOut: "type=bind,source=/tmp/test/,target=/tmp/source/,readonly",
+		},
+		{
+			in:          "type=bind,src=/tmp/test/,dst=/tmp/source/,rw=true",
+			expectedOut: "type=bind,source=/tmp/test/,target=/tmp/source/",
+		},
+		{
+			in:          "type=bind,src=/tmp/test/,dst=/tmp/source/,rw=false",
+			expectedOut: "type=bind,source=/tmp/test/,target=/tmp/source/,readonly",
+		},
+		{
+			in:          "type=bind,src=/tmp/test/,dst=/tmp/source/,rw=",
+			expectedOut: "type=bind,source=/tmp/test/,target=/tmp/source/,readonly",
+		},
+		{
+			in:          "type=tmpfs,src=/tmp/test/,dst=/tmp/source/,rw=invalid",
+			expectedOut: "type=tmpfs,source=/tmp/test/,target=/tmp/source/,readonly",
+		},
+		{
+			in:          "type=tmpfs,src=/tmp/test/,dst=/tmp/source/,rwe=invalid",
+			expectedOut: "type=tmpfs,source=/tmp/test/,target=/tmp/source/,readonly",
+		},
+		{
+			in:          "type=tmpfs,src=/tmp/test/,dst",
+			expectedOut: "type=tmpfs,source=/tmp/test/,target=,readonly",
+		},
+		{
+			in:          "type=bind,source=/tmp/test/,target=/tmp/source/,rw=true",
+			expectedOut: "type=bind,source=/tmp/test/,target=/tmp/source/",
+		},
+		{
+			in:          "type=bind,source=/tmp/test/,target=/tmp/source/",
+			expectedOut: "type=bind,source=/tmp/test/,target=/tmp/source/,readonly",
+		},
+	}
+
+	for _, tc := range tests {
+		s := StringToStorageMount(tc.in)
+		assert.Equal(t, tc.expectedOut, (&s).String())
+	}
+}
