@@ -56,6 +56,17 @@ function run_tshirt_benchmark {
     run_fn $loop "T-shirt Example Container Function" "example_tshirt/containerfn"
 }
 
+if [ "$1" != "--doIt" ]; then
+  echo "Usage: $0 --doIt"
+  echo " "
+  echo "This script measures performance of kustomize containerized"
+  echo "functions (KRM config functions) implementation."
+  echo "It does so by running functions in local executable mode and"
+  echo "in container mode for 10, 100 and 1000 times. The time"
+  echo "used in these 2 modes are recorded."
+  exit 1
+fi
+
 loops=(10 100 1000)
 
 build_exec
