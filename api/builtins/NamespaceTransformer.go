@@ -5,13 +5,11 @@ package builtins
 
 import (
 	"fmt"
-	"strings"
 
 	"sigs.k8s.io/kustomize/api/filters/namespace"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
-	"sigs.k8s.io/kustomize/api/transform"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filtersutil"
 	"sigs.k8s.io/yaml"
@@ -21,22 +19,12 @@ import (
 type NamespaceTransformerPlugin struct {
 	types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 	FieldSpecs       []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
-
-	// YAMLSupport can be set to true to use the kyaml filter instead of the
-	// kunstruct transformer.
-	// TODO: change the default to use kyaml when it is stable
-	YAMLSupport bool `json:"yamlSupport,omitempty" yaml:"yamlSupport,omitempty"`
 }
 
 func (p *NamespaceTransformerPlugin) Config(
 	_ *resmap.PluginHelpers, c []byte) (err error) {
 	p.Namespace = ""
 	p.FieldSpecs = nil
-	if !strings.Contains(string(c), "yamlSupport") {
-		// If not explicitly denied,
-		// activate kyaml-based transformation.
-		p.YAMLSupport = true
-	}
 	return yaml.Unmarshal(c, p)
 }
 
@@ -49,31 +37,13 @@ func (p *NamespaceTransformerPlugin) Transform(m resmap.ResMap) error {
 			// Don't mutate empty objects?
 			continue
 		}
-
-		id := r.OrgId()
-
-		if p.YAMLSupport {
-			// use the new style transform
-			err := filtersutil.ApplyToJSON(namespace.Filter{
-				Namespace: p.Namespace,
-				FsSlice:   p.FieldSpecs,
-			}, r)
-			if err != nil {
-				return err
-			}
-		} else {
-			// use the old style transform
-			applicableFs := p.applicableFieldSpecs(id)
-			for _, fs := range applicableFs {
-				err := transform.MutateField(
-					r.Map(), fs.PathSlice(), fs.CreateIfNotPresent,
-					p.changeNamespace(r))
-				if err != nil {
-					return err
-				}
-			}
+		err := filtersutil.ApplyToJSON(namespace.Filter{
+			Namespace: p.Namespace,
+			FsSlice:   p.FieldSpecs,
+		}, r)
+		if err != nil {
+			return err
 		}
-
 		matches := m.GetMatchingResourcesByCurrentId(r.CurId().Equals)
 		if len(matches) != 1 {
 			return fmt.Errorf(
