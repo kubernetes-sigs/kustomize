@@ -171,6 +171,29 @@ spec:
   replicas: 3
  `,
 		},
+		{
+			name: "ref has . in name of setter",
+			add: Add{
+				FieldValue: "3",
+				Ref:        "#/definitions/io.k8s.cli.setters.foo.bar",
+			},
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$openapi":"foo.bar"}
+ `,
+		},
 	}
 	for i := range tests {
 		test := tests[i]
