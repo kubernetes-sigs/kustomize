@@ -303,7 +303,7 @@ metadata:
 		//
 		//
 		{
-			name: "windows_line_ending",
+			name:  "windows_line_ending",
 			input: "\r\n---\r\na: b # first resource\r\nc: d\r\n---\r\n# second resource\r\ne: f\r\ng:\r\n- h\r\n---\r\n\r\n---\r\n i: j",
 			expectedItems: []string{
 				`a: b # first resource
