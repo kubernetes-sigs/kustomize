@@ -1,6 +1,6 @@
 # Benchmark for KRM functions in Kustomize
 
-## Pre-prerequisites
+## Prerequisites
 
  - [kustomize v3.7.0 or higher](https://kubernetes-sigs.github.io/kustomize/installation) (support for KRM Config Functions).
  - [docker](https://github.com/kubernetes-sigs/kustomize/pull/docker.com)
