@@ -274,7 +274,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/guides/plugins/</loc>
-    <lastmod>2020-06-15T14:22:31-07:00</lastmod>
+    <lastmod>2020-06-26T17:02:00+01:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -559,7 +559,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/configmapgenerator/</loc>
-    <lastmod>2020-06-07T21:07:46-07:00</lastmod>
+    <lastmod>2020-06-30T00:44:14+05:30</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
