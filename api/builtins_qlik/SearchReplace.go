@@ -17,15 +17,21 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+type ReplaceWithGitSemverTagT struct {
+	Default string `json:"default,omitempty" yaml:"default,omitempty"`
+}
+
 type SearchReplacePlugin struct {
-	Target            *types.Selector `json:"target,omitempty" yaml:"target,omitempty"`
-	Path              string          `json:"path,omitempty" yaml:"path,omitempty"`
-	Search            string          `json:"search,omitempty" yaml:"search,omitempty"`
-	Replace           string          `json:"replace,omitempty" yaml:"replace,omitempty"`
-	ReplaceWithObjRef *types.Var      `json:"replaceWithObjRef,omitempty" yaml:"replaceWithObjRef,omitempty"`
-	logger            *log.Logger
-	fieldSpec         types.FieldSpec
-	re                *regexp.Regexp
+	Target                  *types.Selector           `json:"target,omitempty" yaml:"target,omitempty"`
+	Path                    string                    `json:"path,omitempty" yaml:"path,omitempty"`
+	Search                  string                    `json:"search,omitempty" yaml:"search,omitempty"`
+	Replace                 string                    `json:"replace,omitempty" yaml:"replace,omitempty"`
+	ReplaceWithObjRef       *types.Var                `json:"replaceWithObjRef,omitempty" yaml:"replaceWithObjRef,omitempty"`
+	ReplaceWithGitSemverTag *ReplaceWithGitSemverTagT `json:"replaceWithGitSemverTag,omitempty" yaml:"replaceWithGitSemverTag,omitempty"`
+	logger                  *log.Logger
+	fieldSpec               types.FieldSpec
+	re                      *regexp.Regexp
+	pwd                     string
 }
 
 func (p *SearchReplacePlugin) Config(h *resmap.PluginHelpers, c []byte) (err error) {
@@ -34,6 +40,7 @@ func (p *SearchReplacePlugin) Config(h *resmap.PluginHelpers, c []byte) (err err
 	p.Search = ""
 	p.Replace = ""
 	p.ReplaceWithObjRef = nil
+	p.ReplaceWithGitSemverTag = nil
 	err = yaml.Unmarshal(c, p)
 	if err != nil {
 		p.logger.Printf("error unmarshalling config from yaml, error: %v\n", err)
@@ -51,6 +58,8 @@ func (p *SearchReplacePlugin) Config(h *resmap.PluginHelpers, c []byte) (err err
 		return err
 	}
 
+	p.pwd = h.Loader().Root()
+
 	return nil
 }
 
@@ -60,22 +69,28 @@ func (p *SearchReplacePlugin) Transform(m resmap.ResMap) error {
 		p.logger.Printf("error selecting resources based on the target selector, error: %v\n", err)
 		return err
 	}
-	if p.Replace == "" && p.ReplaceWithObjRef != nil {
-		var replaceEmpty bool
-		for _, res := range m.Resources() {
-			if p.matchesObjRef(res) {
-				if replacementValue, err := getReplacementValue(res, p.ReplaceWithObjRef.FieldRef.FieldPath); err != nil {
-					p.logger.Printf("error getting replacement value: %v\n", err)
-				} else {
-					p.Replace = replacementValue
-					replaceEmpty = true
-					break
+	if p.Replace == "" {
+		if p.ReplaceWithObjRef != nil {
+			var replaceEmpty bool
+			for _, res := range m.Resources() {
+				if p.matchesObjRef(res) {
+					if replacementValue, err := getReplacementValue(res, p.ReplaceWithObjRef.FieldRef.FieldPath); err != nil {
+						p.logger.Printf("error getting replacement value: %v\n", err)
+					} else {
+						p.Replace = replacementValue
+						replaceEmpty = true
+						break
+					}
 				}
 			}
-		}
-		if p.Replace == "" && !replaceEmpty {
-			p.logger.Printf("Object Reference could not be found")
-			return nil
+			if p.Replace == "" && !replaceEmpty {
+				p.logger.Printf("Object Reference could not be found")
+				return nil
+			}
+		} else if p.ReplaceWithGitSemverTag != nil {
+			if p.Replace, err = utils.GetHighestSemverGitTagForHead(p.pwd, p.ReplaceWithGitSemverTag.Default); err != nil {
+				return err
+			}
 		}
 	}
 	for _, r := range resources {

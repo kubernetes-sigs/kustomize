@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"sigs.k8s.io/kustomize/api/builtins_qlik/utils"
+
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/internal/k8sdeps/transformer"
@@ -124,7 +126,7 @@ func Test_ImageGitTag_getHighestSemverGitTagForHead(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			tag, err := getHighestSemverGitTagForHead(testCase.dir, log.New(os.Stdout, "", log.LstdFlags|log.LUTC|log.Lmicroseconds))
+			tag, err := utils.GetHighestSemverGitTagForHead(testCase.dir, "v0.0.0")
 			if err != nil {
 				t.Fatalf("unexpected error: %v\n", err)
 			}
