@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: label_namespace
+  annotations:
+    config.kubernetes.io/function: |-
+      exec:
+        path: ./fn.sh
+data:
+  label_name: my-ns-name
+  label_value: function-test
