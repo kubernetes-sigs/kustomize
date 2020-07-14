@@ -1,11 +1,11 @@
 package builtins_qlik
 
 import (
+	"fmt"
 	"log"
 	"sort"
 
 	"github.com/Masterminds/semver/v3"
-
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"sigs.k8s.io/kustomize/api/builtins"
@@ -16,8 +16,7 @@ import (
 )
 
 type GitImageTagPluginImage struct {
-	Name    string `json:"name,omitempty" yaml:"name,omitempty"`
-	Default string `json:"default,omitempty" yaml:"default,omitempty"`
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 }
 
 type GitImageTagPlugin struct {
@@ -46,9 +45,6 @@ func (p *GitImageTagPlugin) Transform(m resmap.ResMap) error {
 }
 
 func transformForImage(m *resmap.ResMap, gitImageTagPluginImage *GitImageTagPluginImage, newTag string) error {
-	if newTag == "" {
-		newTag = gitImageTagPluginImage.Default
-	}
 	if newTag != "" {
 		imageTagTransformerPlugin := builtins.ImageTagTransformerPlugin{
 			ImageTag: types.Image{
@@ -64,56 +60,55 @@ func transformForImage(m *resmap.ResMap, gitImageTagPluginImage *GitImageTagPlug
 }
 
 func getHighestSemverGitTagForHead(dir string, logger *log.Logger) (string, error) {
-	if tagsForHead, err := getGitTagsForHead(dir); err != nil {
-		return "", err
-	} else {
-		return getHighestSemverTag(tagsForHead, logger)
-	}
-}
-
-func getGitTagsForHead(dir string) ([]string, error) {
-	tagsForRef := make([]string, 0)
-	if r, err := git.PlainOpenWithOptions(dir, &git.PlainOpenOptions{DetectDotGit: true}); err != nil {
-		return nil, err
-	} else if ref, err := r.Head(); err != nil {
-		return nil, err
-	} else if refIter, err := r.Storer.IterReferences(); err != nil {
-		return nil, err
-	} else if err := refIter.ForEach(func(t *plumbing.Reference) error {
-		if t.Name().IsTag() && t.Hash() == ref.Hash() {
-			tagsForRef = append(tagsForRef, t.Name().Short())
-		}
-		return nil
-	}); err != nil {
-		return nil, err
-	} else {
-		return tagsForRef, nil
-	}
-}
-
-func getHighestSemverTag(tags []string, logger *log.Logger) (string, error) {
 	type tagVersionT struct {
 		tag     string
 		version *semver.Version
 	}
-	var tagVersions []*tagVersionT
-	for _, tag := range tags {
-		if version, err := semver.NewVersion(tag); err != nil {
-			logger.Printf("error parsing tag: %v as semver version, error: %v\n", tag, err)
-		} else {
-			tagVersions = append(tagVersions, &tagVersionT{
-				tag:     tag,
-				version: version,
-			})
+
+	allSemverTags := make([]*tagVersionT, 0)
+	headSemverTags := make(map[string]bool)
+	var headRef *plumbing.Reference
+
+	if r, err := git.PlainOpenWithOptions(dir, &git.PlainOpenOptions{DetectDotGit: true}); err != nil {
+		return "", err
+	} else if headRef, err = r.Head(); err != nil {
+		return "", err
+	} else if refIter, err := r.Storer.IterReferences(); err != nil {
+		return "", err
+	} else if err := refIter.ForEach(func(t *plumbing.Reference) error {
+		if t.Name().IsTag() {
+			tag := t.Name().Short()
+			if version, err := semver.NewVersion(tag); err != nil {
+				logger.Printf("could not parse tag: %v as semver version, error: %v\n", tag, err)
+			} else {
+				tagVersion := &tagVersionT{
+					tag:     tag,
+					version: version,
+				}
+				allSemverTags = append(allSemverTags, tagVersion)
+				if t.Hash() == headRef.Hash() {
+					headSemverTags[tag] = true
+				}
+			}
+		}
+		return nil
+	}); err != nil {
+		return "", err
+	}
+
+	latestSemverTag := ""
+	if len(allSemverTags) == 0 {
+		latestSemverTag = fmt.Sprintf("v0.0.0-%s", headRef.Hash().String()[0:7])
+	} else {
+		sort.SliceStable(allSemverTags, func(i, j int) bool {
+			return allSemverTags[j].version.LessThan(allSemverTags[i].version)
+		})
+		latestSemverTag = allSemverTags[0].tag
+		if _, ok := headSemverTags[latestSemverTag]; !ok {
+			latestSemverTag = fmt.Sprintf("%s-%s", latestSemverTag, headRef.Hash().String()[0:7])
 		}
 	}
-	sort.SliceStable(tagVersions, func(i, j int) bool {
-		return tagVersions[j].version.LessThan(tagVersions[i].version)
-	})
-	if len(tagVersions) == 0 {
-		return "", nil
-	}
-	return tagVersions[0].tag, nil
+	return latestSemverTag, nil
 }
 
 func NewGitImageTagPlugin() resmap.TransformerPlugin {

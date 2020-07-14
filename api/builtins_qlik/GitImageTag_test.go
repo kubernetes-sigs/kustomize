@@ -1,17 +1,16 @@
 package builtins_qlik
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"reflect"
 	"testing"
 
 	"github.com/pkg/errors"
-
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/internal/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
@@ -20,192 +19,6 @@ import (
 	"sigs.k8s.io/kustomize/api/resource"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 )
-
-func Test_ImageGitTag_getHighestSemverTag(t *testing.T) {
-	type tcT struct {
-		name                  string
-		testVersions          []string
-		expectedLatestVersion string
-	}
-	testCases := []*tcT{
-		func() *tcT {
-			testVersions := make([]string, 0)
-			for i := 1; i <= 10; i++ {
-				testVersions = append(testVersions, fmt.Sprintf("v0.0.%v", i))
-			}
-			return &tcT{
-				name:                  "all good semvers",
-				testVersions:          testVersions,
-				expectedLatestVersion: testVersions[len(testVersions)-1],
-			}
-		}(),
-		func() *tcT {
-			testVersions := make([]string, 0)
-			for i := 1; i <= 10; i++ {
-				testVersions = append(testVersions, fmt.Sprintf("v0.0.%v", i))
-			}
-			return &tcT{
-				name:                  "all bad semvers",
-				testVersions:          []string{"foo", "bar", "baz"},
-				expectedLatestVersion: "",
-			}
-		}(),
-		func() *tcT {
-			testVersions := make([]string, 0)
-			for i := 1; i <= 10; i++ {
-				testVersions = append(testVersions, fmt.Sprintf("v0.0.%v", i))
-			}
-			expected := "v1.2.3-rc1-with-hypen"
-			return &tcT{
-				name:                  "some good and some bad semvers",
-				testVersions:          []string{"v1.0.0", "foo", expected},
-				expectedLatestVersion: expected,
-			}
-		}(),
-	}
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			latestSemverTag, err := getHighestSemverTag(testCase.testVersions, log.New(os.Stdout, "", log.LstdFlags|log.LUTC|log.Lmicroseconds))
-			if err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			}
-			if latestSemverTag != testCase.expectedLatestVersion {
-				t.Fatalf("expected: %v, but got: %v\n", testCase.expectedLatestVersion, latestSemverTag)
-			}
-		})
-	}
-}
-
-func Test_ImageGitTag_getGitTagsForHead(t *testing.T) {
-	type tcT struct {
-		name     string
-		dir      string
-		validate func(t *testing.T, tags []string)
-	}
-
-	testCases := []*tcT{
-		func() *tcT {
-			tmpDir, err := ioutil.TempDir("", "")
-			if err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			}
-
-			if _, err := execCmd(tmpDir, "git", "init"); err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			} else if _, err := execCmd(tmpDir, "git", "config", "user.email", "you@example.com"); err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			}
-
-			numTags := 10
-			for i := 0; i <= numTags; i++ {
-				if err := writeAndCommitFile(tmpDir, fmt.Sprintf("foo-%v.txt", i), fmt.Sprintf("foo-%v", i), fmt.Sprintf("committing foo-%v.txt", i)); err != nil {
-					t.Fatalf("unexpected error: %v\n", err)
-				} else if _, err := execCmd(tmpDir, "git", "tag", fmt.Sprintf("v0.0.%v", i)); err != nil {
-					t.Fatalf("unexpected error: %v\n", err)
-				}
-			}
-
-			return &tcT{
-				name: "single tag",
-				dir:  tmpDir,
-				validate: func(t *testing.T, tags []string) {
-					expectedTags := []string{fmt.Sprintf("v0.0.%v", numTags)}
-					if !reflect.DeepEqual(tags, expectedTags) {
-						t.Fatalf("expected: %v, but got: %v\n", expectedTags, tags)
-					}
-					_ = os.RemoveAll(tmpDir)
-				},
-			}
-		}(),
-		func() *tcT {
-			tmpDir, err := ioutil.TempDir("", "")
-			if err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			}
-
-			if _, err := execCmd(tmpDir, "git", "init"); err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			} else if _, err := execCmd(tmpDir, "git", "config", "user.email", "you@example.com"); err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			}
-
-			numTags := 10
-			for i := 0; i <= numTags; i++ {
-				if err := writeAndCommitFile(tmpDir, fmt.Sprintf("foo-%v.txt", i), fmt.Sprintf("foo-%v", i), fmt.Sprintf("committing foo-%v.txt", i)); err != nil {
-					t.Fatalf("unexpected error: %v\n", err)
-				} else if _, err := execCmd(tmpDir, "git", "tag", fmt.Sprintf("v0.0.%v-foo", i)); err != nil {
-					t.Fatalf("unexpected error: %v\n", err)
-				} else if _, err := execCmd(tmpDir, "git", "tag", fmt.Sprintf("v0.0.%v-bar", i)); err != nil {
-					t.Fatalf("unexpected error: %v\n", err)
-				}
-			}
-
-			return &tcT{
-				name: "multiple tags",
-				dir:  tmpDir,
-				validate: func(t *testing.T, tags []string) {
-					foundTagsMap := make(map[string]bool)
-					for _, tag := range tags {
-						foundTagsMap[tag] = true
-					}
-					expectedTags := map[string]bool{
-						fmt.Sprintf("v0.0.%v-foo", numTags): true,
-						fmt.Sprintf("v0.0.%v-bar", numTags): true,
-					}
-
-					if !reflect.DeepEqual(foundTagsMap, expectedTags) {
-						t.Fatalf("expected: %v, but got: %v\n", expectedTags, tags)
-					}
-					_ = os.RemoveAll(tmpDir)
-				},
-			}
-		}(),
-		func() *tcT {
-			tmpDir, err := ioutil.TempDir("", "")
-			if err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			}
-
-			if _, err := execCmd(tmpDir, "git", "init"); err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			} else if _, err := execCmd(tmpDir, "git", "config", "user.email", "you@example.com"); err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			}
-
-			barDir := filepath.Join(tmpDir, "bar-dir")
-			if err := writeAndCommitFile(tmpDir, "foo.txt", "foo", "committing foo.txt"); err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			} else if err := os.MkdirAll(barDir, os.ModePerm); err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			} else if err := writeAndCommitFile(barDir, "bar.txt", "bar", "committing bar.txt"); err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			} else if _, err := execCmd(tmpDir, "git", "tag", "foobar"); err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			}
-
-			return &tcT{
-				name: "git operations from subdirectory",
-				dir:  barDir,
-				validate: func(t *testing.T, tags []string) {
-					expectedTags := []string{"foobar"}
-					if !reflect.DeepEqual(tags, expectedTags) {
-						t.Fatalf("expected: %v, but got: %v\n", expectedTags, tags)
-					}
-					_ = os.RemoveAll(tmpDir)
-				},
-			}
-		}(),
-	}
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			tags, err := getGitTagsForHead(testCase.dir)
-			if err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			}
-			testCase.validate(t, tags)
-		})
-	}
-}
 
 func Test_ImageGitTag_getHighestSemverGitTagForHead(t *testing.T) {
 	type tcT struct {
@@ -221,17 +34,18 @@ func Test_ImageGitTag_getHighestSemverGitTagForHead(t *testing.T) {
 				t.Fatalf("unexpected error: %v\n", err)
 			}
 
-			subDir, err := setupGitDirWithSubdir(tmpDir, []string{"foobar"})
+			subDir, shortGitRef, err := setupGitDirWithSubdir(tmpDir, []string{"foobar"}, []string{"foo-tag"})
 			if err != nil {
 				t.Fatalf("unexpected error: %v\n", err)
 			}
 
 			return &tcT{
-				name: "non-semver tag",
+				name: "no semver tags",
 				dir:  subDir,
 				validate: func(t *testing.T, tag string) {
-					if tag != "" {
-						t.Fatalf("expected: %v, but got: %v\n", "", tag)
+					expected := fmt.Sprintf("v0.0.0-%v", shortGitRef)
+					if tag != expected {
+						t.Fatalf("expected: %v, but got: %v\n", expected, tag)
 					}
 					_ = os.RemoveAll(tmpDir)
 				},
@@ -244,13 +58,37 @@ func Test_ImageGitTag_getHighestSemverGitTagForHead(t *testing.T) {
 			}
 
 			semverTag := "v1.0.0"
-			subDir, err := setupGitDirWithSubdir(tmpDir, []string{"foobar", semverTag})
+			subDir, shortGitRef, err := setupGitDirWithSubdir(tmpDir, []string{}, []string{semverTag})
 			if err != nil {
 				t.Fatalf("unexpected error: %v\n", err)
 			}
 
 			return &tcT{
-				name: "one semver tag ",
+				name: "semver tag before head",
+				dir:  subDir,
+				validate: func(t *testing.T, tag string) {
+					expected := fmt.Sprintf("%v-%v", semverTag, shortGitRef)
+					if tag != expected {
+						t.Fatalf("expected: %v, but got: %v\n", expected, tag)
+					}
+					_ = os.RemoveAll(tmpDir)
+				},
+			}
+		}(),
+		func() *tcT {
+			tmpDir, err := ioutil.TempDir("", "")
+			if err != nil {
+				t.Fatalf("unexpected error: %v\n", err)
+			}
+
+			semverTag := "v1.0.0"
+			subDir, _, err := setupGitDirWithSubdir(tmpDir, []string{"foobar", semverTag}, []string{"foo-tag"})
+			if err != nil {
+				t.Fatalf("unexpected error: %v\n", err)
+			}
+
+			return &tcT{
+				name: "semver tag on head",
 				dir:  subDir,
 				validate: func(t *testing.T, tag string) {
 					if tag != semverTag {
@@ -267,13 +105,13 @@ func Test_ImageGitTag_getHighestSemverGitTagForHead(t *testing.T) {
 			}
 
 			highestSemverTag := "v100.0.0-beta"
-			subDir, err := setupGitDirWithSubdir(tmpDir, []string{"foo", "v1.0.0", "bar", highestSemverTag, "baz", "v0.0.1", "boo", "v100.0.0-alpha"})
+			subDir, _, err := setupGitDirWithSubdir(tmpDir, []string{"foo", "v1.0.0", "bar", highestSemverTag, "baz", "v0.0.1", "boo", "v100.0.0-alpha"}, []string{})
 			if err != nil {
 				t.Fatalf("unexpected error: %v\n", err)
 			}
 
 			return &tcT{
-				name: "highest semver tag ",
+				name: "highest semver tag",
 				dir:  subDir,
 				validate: func(t *testing.T, tag string) {
 					if tag != highestSemverTag {
@@ -312,27 +150,40 @@ func writeAndCommitFile(dir, fileName, fileContent, commitMessage string) error 
 	return nil
 }
 
-func setupGitDirWithSubdir(tmpDir string, tags []string) (string, error) {
+func setupGitDirWithSubdir(tmpDir string, headTags []string, intermediateTags []string) (dir string, shortGitRef string, err error) {
 	if _, err := execCmd(tmpDir, "git", "init"); err != nil {
-		return "", err
+		return "", "", err
 	} else if _, err := execCmd(tmpDir, "git", "config", "user.email", "you@example.com"); err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	barDir := filepath.Join(tmpDir, "bar-dir")
 	if err := writeAndCommitFile(tmpDir, "foo.txt", "foo", "committing foo.txt"); err != nil {
-		return "", err
-	} else if err := os.MkdirAll(barDir, os.ModePerm); err != nil {
-		return "", err
-	} else if err := writeAndCommitFile(barDir, "bar.txt", "bar", "committing bar.txt"); err != nil {
-		return "", err
+		return "", "", err
 	} else {
-		for _, tag := range tags {
+		for _, tag := range intermediateTags {
 			if _, err := execCmd(tmpDir, "git", "tag", tag); err != nil {
-				return "", err
+				return "", "", err
 			}
 		}
-		return barDir, nil
+	}
+
+	if err := os.MkdirAll(barDir, os.ModePerm); err != nil {
+		return "", "", err
+	} else if err := writeAndCommitFile(barDir, "bar.txt", "bar", "committing bar.txt"); err != nil {
+		return "", "", err
+	} else {
+		for _, tag := range headTags {
+			if _, err := execCmd(tmpDir, "git", "tag", tag); err != nil {
+				return "", "", err
+			}
+		}
+	}
+
+	if shortGitRefBytes, err := execCmd(tmpDir, "git", "rev-parse", "--short", "HEAD"); err != nil {
+		return "", "", err
+	} else {
+		return barDir, string(bytes.TrimSpace(shortGitRefBytes)), nil
 	}
 }
 
@@ -400,14 +251,89 @@ spec:
 				t.Fatalf("unexpected error: %v\n", err)
 			}
 
-			semverTag := "v0.0.1"
-			subDir, err := setupGitDirWithSubdir(tmpDir, []string{"foo", semverTag, "bar"})
+			subDir, hash, err := setupGitDirWithSubdir(tmpDir, []string{}, []string{"foo"})
 			if err != nil {
 				t.Fatalf("unexpected error: %v\n", err)
 			}
 
 			return &tcT{
-				name: "single semver git tag chosen",
+				name: "no semver tags",
+				pluginConfig: `
+apiVersion: qlik.com/v1
+kind: GitImageTag
+metadata:
+  name: notImportantHere
+images:
+  - name: nginx
+`,
+				pluginInputResources: pluginInputResources,
+				loaderRootDir:        subDir,
+				checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
+					expectedTag := fmt.Sprintf("v0.0.0-%v", hash)
+					expected := fmt.Sprintf(outputResourcesTemplate, expectedTag, expectedTag, expectedTag, expectedTag)
+
+					actual, err := resMap.AsYaml()
+					if err != nil {
+						t.Fatalf("Err: %v", err)
+					} else if string(actual) != expected {
+						t.Fatalf("expected:\n%v\n, but got:\n%v", expected, string(actual))
+					}
+					_ = os.RemoveAll(tmpDir)
+				},
+			}
+		}(),
+		func() *tcT {
+			tmpDir, err := ioutil.TempDir("", "")
+			if err != nil {
+				t.Fatalf("unexpected error: %v\n", err)
+			}
+
+			semverTag := "v0.0.1"
+			subDir, hash, err := setupGitDirWithSubdir(tmpDir, []string{}, []string{"foo", semverTag, "bar"})
+			if err != nil {
+				t.Fatalf("unexpected error: %v\n", err)
+			}
+
+			return &tcT{
+				name: "semver tag before head",
+				pluginConfig: `
+apiVersion: qlik.com/v1
+kind: GitImageTag
+metadata:
+  name: notImportantHere
+images:
+  - name: nginx
+`,
+				pluginInputResources: pluginInputResources,
+				loaderRootDir:        subDir,
+				checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
+					expectedTag := fmt.Sprintf("%v-%v", semverTag, hash)
+					expected := fmt.Sprintf(outputResourcesTemplate, expectedTag, expectedTag, expectedTag, expectedTag)
+
+					actual, err := resMap.AsYaml()
+					if err != nil {
+						t.Fatalf("Err: %v", err)
+					} else if string(actual) != expected {
+						t.Fatalf("expected:\n%v\n, but got:\n%v", expected, string(actual))
+					}
+					_ = os.RemoveAll(tmpDir)
+				},
+			}
+		}(),
+		func() *tcT {
+			tmpDir, err := ioutil.TempDir("", "")
+			if err != nil {
+				t.Fatalf("unexpected error: %v\n", err)
+			}
+
+			semverTag := "v1.0.2"
+			subDir, _, err := setupGitDirWithSubdir(tmpDir, []string{semverTag, "v0.0.2"}, []string{"foo", "v0.0.1", "bar"})
+			if err != nil {
+				t.Fatalf("unexpected error: %v\n", err)
+			}
+
+			return &tcT{
+				name: "semver tag on head",
 				pluginConfig: `
 apiVersion: qlik.com/v1
 kind: GitImageTag
@@ -437,45 +363,8 @@ images:
 				t.Fatalf("unexpected error: %v\n", err)
 			}
 
-			highestSemverTag := "v5.0.0"
-			subDir, err := setupGitDirWithSubdir(tmpDir, []string{"foo", "1.0.0", highestSemverTag, "bar", "2.0.0"})
-			if err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			}
-
-			return &tcT{
-				name: "highest semver git tag chosen",
-				pluginConfig: `
-apiVersion: qlik.com/v1
-kind: GitImageTag
-metadata:
-  name: notImportantHere
-images:
-  - name: nginx
-`,
-				pluginInputResources: pluginInputResources,
-				loaderRootDir:        subDir,
-				checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
-					expected := fmt.Sprintf(outputResourcesTemplate, highestSemverTag, highestSemverTag, highestSemverTag, highestSemverTag)
-
-					actual, err := resMap.AsYaml()
-					if err != nil {
-						t.Fatalf("Err: %v", err)
-					} else if string(actual) != expected {
-						t.Fatalf("expected:\n%v\n, but got:\n%v", expected, string(actual))
-					}
-					_ = os.RemoveAll(tmpDir)
-				},
-			}
-		}(),
-		func() *tcT {
-			tmpDir, err := ioutil.TempDir("", "")
-			if err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			}
-
-			highestSemverTag := "v5.0.0"
-			subDir, err := setupGitDirWithSubdir(tmpDir, []string{"foo", "1.0.0", highestSemverTag, "bar", "2.0.0"})
+			highestSemverTag := "5.0.0"
+			subDir, _, err := setupGitDirWithSubdir(tmpDir, []string{"1.0.0", highestSemverTag, "bar", "2.0.0"}, []string{"foo", "v0.0.1"})
 			if err != nil {
 				t.Fatalf("unexpected error: %v\n", err)
 			}
@@ -520,79 +409,6 @@ spec:
         name: init-alpine
 `, highestSemverTag, highestSemverTag, highestSemverTag,
 						highestSemverTag, highestSemverTag, highestSemverTag)
-
-					actual, err := resMap.AsYaml()
-					if err != nil {
-						t.Fatalf("Err: %v", err)
-					} else if string(actual) != expected {
-						t.Fatalf("expected:\n%v\n, but got:\n%v", expected, string(actual))
-					}
-					_ = os.RemoveAll(tmpDir)
-				},
-			}
-		}(),
-		func() *tcT {
-			tmpDir, err := ioutil.TempDir("", "")
-			if err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			}
-
-			defaultSemverTag := "v5.0.0"
-			subDir, err := setupGitDirWithSubdir(tmpDir, []string{})
-			if err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			}
-
-			return &tcT{
-				name: "no semver tag, default used",
-				pluginConfig: fmt.Sprintf(`
-apiVersion: qlik.com/v1
-kind: GitImageTag
-metadata:
-  name: notImportantHere
-images:
-  - name: nginx
-    default: %v
-`, defaultSemverTag),
-				pluginInputResources: pluginInputResources,
-				loaderRootDir:        subDir,
-				checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
-					expected := fmt.Sprintf(outputResourcesTemplate, defaultSemverTag, defaultSemverTag, defaultSemverTag, defaultSemverTag)
-
-					actual, err := resMap.AsYaml()
-					if err != nil {
-						t.Fatalf("Err: %v", err)
-					} else if string(actual) != expected {
-						t.Fatalf("expected:\n%v\n, but got:\n%v", expected, string(actual))
-					}
-					_ = os.RemoveAll(tmpDir)
-				},
-			}
-		}(),
-		func() *tcT {
-			tmpDir, err := ioutil.TempDir("", "")
-			if err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			}
-
-			subDir, err := setupGitDirWithSubdir(tmpDir, []string{})
-			if err != nil {
-				t.Fatalf("unexpected error: %v\n", err)
-			}
-
-			return &tcT{
-				name: "no semver tag and no default = no change",
-				pluginConfig: `
-apiVersion: qlik.com/v1
-kind: GitImageTag
-metadata:
- name: notImportantHere
-name: nginx
-`,
-				pluginInputResources: pluginInputResources,
-				loaderRootDir:        subDir,
-				checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
-					expected := pluginInputResources
 
 					actual, err := resMap.AsYaml()
 					if err != nil {
