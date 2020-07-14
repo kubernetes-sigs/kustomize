@@ -182,6 +182,28 @@ func NewListRNode(values ...string) *RNode {
 	return seq
 }
 
+// NewMapRNode returns a new Map *RNode containing the provided values
+func NewMapRNode(values *map[string]string) *RNode {
+	m := &RNode{value: &yaml.Node{
+		Kind: yaml.MappingNode,
+	}}
+	if values == nil {
+		return m
+	}
+
+	for k, v := range *values {
+		m.value.Content = append(m.value.Content, &yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Value: k,
+		}, &yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Value: v,
+		})
+	}
+
+	return m
+}
+
 // NewRNode returns a new RNode pointer containing the provided Node.
 func NewRNode(value *yaml.Node) *RNode {
 	return &RNode{value: value}
