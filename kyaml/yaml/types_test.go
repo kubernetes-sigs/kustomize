@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v3"
 )
 
 // Test that non-UTF8 characters in comments don't cause failures
@@ -173,24 +172,16 @@ func TestIsMissingOrNull(t *testing.T) {
 		t.Fatalf("input: nil")
 	}
 	// missing value or null value
-	node := &RNode{value: nil}
-	if !IsMissingOrNull(node) {
+	if !IsMissingOrNull(NewRNode(nil)) {
 		t.Fatalf("input: nil value")
 	}
 
-	node.value = &yaml.Node{}
-	if IsMissingOrNull(node) {
+	if IsMissingOrNull(NewScalarRNode("foo")) {
 		t.Fatalf("input: valid node")
 	}
 	// node with NullNodeTag
-	node.value.Tag = NullNodeTag
-	if !IsMissingOrNull(node) {
+	if !IsMissingOrNull(NullNode()) {
 		t.Fatalf("input: with NullNodeTag")
-	}
-
-	node.value = &yaml.Node{}
-	if IsMissingOrNull(node) {
-		t.Fatalf("input: valid node")
 	}
 }
 
@@ -200,52 +191,48 @@ func TestIsEmpty(t *testing.T) {
 	}
 
 	// missing value or null value
-	node := &RNode{value: nil}
-	if !IsEmpty(node) {
+	if !IsEmpty(NewRNode(nil)) {
 		t.Fatalf("input: nil value")
 	}
 	// not array or map
-	node.value = &yaml.Node{}
-	if IsEmpty(node) {
+	if IsEmpty(NewScalarRNode("foo")) {
 		t.Fatalf("input: not array or map")
 	}
 }
 
 func TestIsEmpty_Arrays(t *testing.T) {
-	node := &RNode{value: &yaml.Node{
-		Kind: yaml.SequenceNode,
-	}}
+	node := NewListRNode()
 	// empty array. empty array is not expected as empty
 	if IsEmpty(node) {
 		t.Fatalf("input: empty array")
 	}
 	// array with 1 item
-	node.value.Content = append(node.value.Content, &yaml.Node{})
+	node = NewListRNode("foo")
 	if IsEmpty(node) {
 		t.Fatalf("input: array with 1 item")
 	}
 	// delete the item in array
-	node.value.Content = node.value.Content[:len(node.value.Content)-1]
+	node.value.Content = nil
 	if IsEmpty(node) {
 		t.Fatalf("input: empty array")
 	}
 }
 
 func TestIsEmpty_Maps(t *testing.T) {
-	node := &RNode{value: &yaml.Node{
-		Kind: yaml.MappingNode,
-	}}
+	node := NewMapRNode(nil)
 	// empty map
 	if !IsEmpty(node) {
 		t.Fatalf("input: empty map")
 	}
 	// map with 1 item
-	node.value.Content = append(node.value.Content, &yaml.Node{})
+	node = NewMapRNode(&map[string]string{
+		"foo": "bar",
+	})
 	if IsEmpty(node) {
 		t.Fatalf("input: map with 1 item")
 	}
 	// delete the item in map
-	node.value.Content = node.value.Content[:len(node.value.Content)-1]
+	node.value.Content = nil
 	if !IsEmpty(node) {
 		t.Fatalf("input: empty map")
 	}
