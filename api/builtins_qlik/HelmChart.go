@@ -51,6 +51,7 @@ type HelmChartPlugin struct {
 	ReleaseNamespace               string                 `json:"releaseNamespace,omitempty" yaml:"releaseNamespace,omitempty"`
 	ExtraArgs                      string                 `json:"extraArgs,omitempty" yaml:"extraArgs,omitempty"`
 	SubChart                       string                 `json:"subChart,omitempty" yaml:"subChart,omitempty"`
+	NewChartVersion                string                 `json:"newChartVersion,omitempty" yaml:"newChartVersion,omitempty"`
 	RepoIndexFileStaleAfterSeconds int                    `json:"repoIndexFileStaleAfterSeconds,omitempty" yaml:"repoIndexFileStaleAfterSeconds,omitempty"`
 	LockRetryDelayMinMilliSeconds  int                    `json:"lockRetryDelayMinMilliSeconds,omitempty" yaml:"lockRetryDelayMinMilliSeconds,omitempty"`
 	LockRetryDelayMaxMilliSeconds  int                    `json:"lockRetryDelayMaxMilliSeconds,omitempty" yaml:"lockRetryDelayMaxMilliSeconds,omitempty"`
@@ -457,6 +458,10 @@ func (p *HelmChartPlugin) loadChartWithDependencies(settings *cli.EnvSettings, c
 	c, err := loader.Load(chartPath)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(p.NewChartVersion) > 0 {
+		c.Metadata.Version = p.NewChartVersion
 	}
 
 	buildingDependencies := false
