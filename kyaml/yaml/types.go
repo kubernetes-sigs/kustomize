@@ -28,27 +28,20 @@ func NullNode() *RNode {
 
 // IsMissingOrNull returns true if the RNode is nil or contains and explicitly null value.
 func IsMissingOrNull(node *RNode) bool {
-	if node == nil || node.YNode() == nil || node.YNode().Tag == NullNodeTag {
-		return true
-	}
-	return false
+	return node == nil || node.YNode() == nil || node.YNode().Tag == NullNodeTag
 }
 
 // IsEmpty returns true if the RNode is MissingOrNull, or is either a MappingNode with
-// no fields, or a SequenceNode with no elements.
+// no fields.
 func IsEmpty(node *RNode) bool {
-	if node == nil || node.YNode() == nil || node.YNode().Tag == NullNodeTag {
+	if IsMissingOrNull(node) {
 		return true
 	}
 
-	if node.YNode().Kind == yaml.MappingNode && len(node.YNode().Content) == 0 {
-		return true
-	}
-	if node.YNode().Kind == yaml.SequenceNode && len(node.YNode().Content) == 0 {
-		return true
-	}
-
-	return false
+	// Empty sequence is a special case and temporarily not considered as empty here.
+	// Some users may want to keep empty sequence for compatibility reason.
+	// For example, use JSON 6902 patch.
+	return node.YNode().Kind == yaml.MappingNode && len(node.YNode().Content) == 0
 }
 
 func IsNull(node *RNode) bool {
@@ -187,6 +180,28 @@ func NewListRNode(values ...string) *RNode {
 		})
 	}
 	return seq
+}
+
+// NewMapRNode returns a new Map *RNode containing the provided values
+func NewMapRNode(values *map[string]string) *RNode {
+	m := &RNode{value: &yaml.Node{
+		Kind: yaml.MappingNode,
+	}}
+	if values == nil {
+		return m
+	}
+
+	for k, v := range *values {
+		m.value.Content = append(m.value.Content, &yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Value: k,
+		}, &yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Value: v,
+		})
+	}
+
+	return m
 }
 
 // NewRNode returns a new RNode pointer containing the provided Node.
