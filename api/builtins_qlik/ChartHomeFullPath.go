@@ -1,14 +1,14 @@
 package builtins_qlik
 
 import (
-	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
-	"path"
+	"path/filepath"
 
 	"sigs.k8s.io/kustomize/api/builtins_qlik/utils"
+	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/transform"
 	"sigs.k8s.io/kustomize/api/types"
@@ -30,34 +30,39 @@ func (p *ChartHomeFullPathPlugin) Config(h *resmap.PluginHelpers, c []byte) (err
 }
 
 func (p *ChartHomeFullPathPlugin) mutate(in interface{}) (interface{}, error) {
-	dir, err := ioutil.TempDir("", "temp")
+	dir, err := konfig.DefaultAbsPluginHome(filesys.MakeFsOnDisk())
 	if err != nil {
-		p.logger.Printf("error creating temporaty directory: %v\n", err)
-		return nil, err
+		dir = filepath.Join(konfig.HomeDir(), konfig.XdgConfigHomeEnvDefault, konfig.ProgramName, konfig.RelPluginHome)
+		p.logger.Printf("No kustomize plugin directory, will create default: %v\n", dir)
 	}
-	directory := fmt.Sprintf("%s/%s", dir, p.ChartName)
-	err = os.Mkdir(directory, 0777)
+	dir = filepath.Join(dir, "qlik", "v1", "charts")
+	err = os.MkdirAll(dir, 0777)
 	if err != nil {
-		p.logger.Printf("error creating directory: %v, error: %v\n", directory, err)
+		p.logger.Printf("error creating directory: %v, error: %v\n", dir, err)
 		return nil, err
 	}
 	if p.Kind == "HelmChart" {
-		err := utils.CopyDir(p.ChartHome, directory, p.logger)
+		err := utils.CopyDir(p.ChartHome, dir, p.logger)
 		if err != nil {
-			p.logger.Printf("error copying directory from: %v, to: %v, error: %v\n", p.ChartHome, directory, err)
+			p.logger.Printf("error copying directory from: %v, to: %v, error: %v\n", p.ChartHome, dir, err)
 			return nil, err
 		}
 	}
-	return directory, nil
+	// The chart name should be a subdirectory, so chartHome should be the parent
+	return dir, nil
 }
 
 func (p *ChartHomeFullPathPlugin) Transform(m resmap.ResMap) error {
-	//join the root(root of kustomize file) + location to chartHome
-	p.ChartHome = path.Join(p.Root, p.ChartHome)
 
 	for _, r := range m.Resources() {
 		p.ChartName = p.GetFieldValue(r, "chartName")
 		p.Kind = p.GetFieldValue(r, "kind")
+		if len(p.ChartHome) > 0 {
+			//join the root(root of kustomize file) + location to chartHome
+			p.ChartHome = filepath.Join(p.Root, p.ChartHome)
+		} else {
+			p.ChartHome = filepath.Join(p.Root, p.GetFieldValue(r, "chartHome"))
+		}
 		pathToField := []string{"chartHome"}
 		err := transform.MutateField(
 			r.Map(),
