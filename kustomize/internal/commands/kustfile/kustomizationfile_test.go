@@ -340,3 +340,21 @@ kind: Kustomization
 			string(expected), string(bytes))
 	}
 }
+
+func TestUnknownFieldInKustomization(t *testing.T) {
+	kContent := []byte(`
+foo:
+  bar
+`)
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomizationWith(fSys, kContent)
+	mf, err := NewKustomizationFile(fSys)
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+
+	_, err = mf.Read()
+	if err == nil || err.Error() != "json: unknown field \"foo\"" {
+		t.Fatalf("Expect an unknown field error but got: %v", err)
+	}
+}

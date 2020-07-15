@@ -3,6 +3,13 @@
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+
+	"sigs.k8s.io/yaml"
+)
+
 const (
 	KustomizationVersion  = "kustomize.config.k8s.io/v1beta1"
 	KustomizationKind     = "Kustomization"
@@ -164,4 +171,21 @@ func (k *Kustomization) EnforceFields() []string {
 		errs = append(errs, "apiVersion for "+k.Kind+" should be "+requiredVersion)
 	}
 	return errs
+}
+
+// Unmarshal replace k with the content in YAML input y
+func (k *Kustomization) Unmarshal(y []byte) error {
+	j, err := yaml.YAMLToJSON(y)
+	if err != nil {
+		return err
+	}
+	dec := json.NewDecoder(bytes.NewReader(j))
+	dec.DisallowUnknownFields()
+	var nk Kustomization
+	err = dec.Decode(&nk)
+	if err != nil {
+		return err
+	}
+	*k = nk
+	return nil
 }
