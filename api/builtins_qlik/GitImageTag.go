@@ -2,6 +2,7 @@ package builtins_qlik
 
 import (
 	"log"
+	"strings"
 
 	"sigs.k8s.io/kustomize/api/builtins"
 	"sigs.k8s.io/kustomize/api/builtins_qlik/utils"
@@ -27,11 +28,11 @@ func (p *GitImageTagPlugin) Config(h *resmap.PluginHelpers, c []byte) (err error
 }
 
 func (p *GitImageTagPlugin) Transform(m resmap.ResMap) error {
-	if headGitTag, err := utils.GetHighestSemverGitTagForHead(p.pwd, "v0.0.0"); err != nil {
+	if gitVersionTag, err := utils.GetHighestSemverGitTagForHead(p.pwd, "v0.0.0"); err != nil {
 		return err
 	} else {
 		for _, image := range p.Images {
-			if err := transformForImage(&m, &image, headGitTag); err != nil {
+			if err := transformForImage(&m, &image, strings.TrimPrefix(gitVersionTag, "v")); err != nil {
 				return err
 			}
 		}

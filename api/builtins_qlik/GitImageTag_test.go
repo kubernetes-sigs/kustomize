@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/builtins_qlik/utils"
@@ -272,7 +273,8 @@ images:
 				loaderRootDir:        subDir,
 				checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
 					expectedTag := fmt.Sprintf("v0.0.0-%v", hash)
-					expected := fmt.Sprintf(outputResourcesTemplate, expectedTag, expectedTag, expectedTag, expectedTag)
+					version := strings.TrimPrefix(expectedTag, "v")
+					expected := fmt.Sprintf(outputResourcesTemplate, version, version, version, version)
 
 					actual, err := resMap.AsYaml()
 					if err != nil {
@@ -309,8 +311,8 @@ images:
 				pluginInputResources: pluginInputResources,
 				loaderRootDir:        subDir,
 				checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
-					expectedTag := fmt.Sprintf("%v-%v", semverTag, hash)
-					expected := fmt.Sprintf(outputResourcesTemplate, expectedTag, expectedTag, expectedTag, expectedTag)
+					version := strings.TrimPrefix(fmt.Sprintf("%v-%v", semverTag, hash), "v")
+					expected := fmt.Sprintf(outputResourcesTemplate, version, version, version, version)
 
 					actual, err := resMap.AsYaml()
 					if err != nil {
@@ -347,13 +349,14 @@ images:
 				pluginInputResources: pluginInputResources,
 				loaderRootDir:        subDir,
 				checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
-					expected := fmt.Sprintf(outputResourcesTemplate, semverTag, semverTag, semverTag, semverTag)
+					version := strings.TrimPrefix(semverTag, "v")
+					expected := fmt.Sprintf(outputResourcesTemplate, version, version, version, version)
 
 					actual, err := resMap.AsYaml()
 					if err != nil {
 						t.Fatalf("Err: %v", err)
 					} else if string(actual) != expected {
-						t.Fatalf("expected:\n%v\n, but got:\n%v", expected, string(actual))
+						t.Fatalf("expected: [%v], but got: [%v]", expected, string(actual))
 					}
 					_ = os.RemoveAll(tmpDir)
 				},
@@ -386,6 +389,7 @@ images:
 				pluginInputResources: pluginInputResources,
 				loaderRootDir:        subDir,
 				checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
+					version := strings.TrimPrefix(highestSemverTag, "v")
 					expected := fmt.Sprintf(`apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -409,8 +413,7 @@ spec:
         name: nginx-sha256
       - image: alpine:%v
         name: init-alpine
-`, highestSemverTag, highestSemverTag, highestSemverTag,
-						highestSemverTag, highestSemverTag, highestSemverTag)
+`, version, version, version, version, version, version)
 
 					actual, err := resMap.AsYaml()
 					if err != nil {

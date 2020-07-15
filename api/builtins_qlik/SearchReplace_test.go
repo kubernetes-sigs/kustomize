@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/builtins_qlik/utils"
@@ -1044,7 +1045,8 @@ fooSpec:
 					if "FOO" != fooEnvVar["name"].(string) {
 						t.Fatalf("unexpected: %v\n", fooEnvVar["name"].(string))
 					}
-					expectedFooValue := fmt.Sprintf("%s-%s", semverTag, hash)
+					expectedVersion := strings.TrimPrefix(semverTag, "v")
+					expectedFooValue := fmt.Sprintf("%s-%s", expectedVersion, hash)
 					if expectedFooValue != fooEnvVar["value"].(string) {
 						t.Fatalf("unexpected: %v\n", fooEnvVar["value"].(string))
 					}

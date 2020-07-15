@@ -88,8 +88,10 @@ func (p *SearchReplacePlugin) Transform(m resmap.ResMap) error {
 				return nil
 			}
 		} else if p.ReplaceWithGitSemverTag != nil {
-			if p.Replace, err = utils.GetHighestSemverGitTagForHead(p.pwd, p.ReplaceWithGitSemverTag.Default); err != nil {
+			if gitVersionTag, err := utils.GetHighestSemverGitTagForHead(p.pwd, p.ReplaceWithGitSemverTag.Default); err != nil {
 				return err
+			} else {
+				p.Replace = strings.TrimPrefix(gitVersionTag, "v")
 			}
 		}
 	}
