@@ -153,7 +153,7 @@ func (mf *kustomizationFile) Read() (*types.Kustomization, error) {
 		return nil, err
 	}
 	var k types.Kustomization
-	err = yaml.Unmarshal(data, &k)
+	err = k.Unmarshal(data)
 	if err != nil {
 		return nil, err
 	}
