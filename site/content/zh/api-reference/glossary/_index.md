@@ -115,7 +115,7 @@ Kustomize 鼓励对声明式应用程序管理（[Declarative Application Manage
 - 一个 Git 压缩包。
 - 一个 Git 仓库的 URL。
 
-一个 Kustomization 文件包含的[字段](fields.md)，分为四个类别：
+一个 Kustomization 文件包含的[字段](./fields/)，分为四个类别：
 
 - `resources`：待定制的现存[资源]，示例字段：`resources`、`crds`。
 - `generator`：将要创建的**新**资源，示例字段：`configMapGenerator`（传统）、`secretGenerator`（传统）、`generators`（v2.1）

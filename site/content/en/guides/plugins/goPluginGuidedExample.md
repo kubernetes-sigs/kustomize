@@ -15,7 +15,7 @@ description: >
 This is a (no reading allowed!) 60 second copy/paste guided
 example.
 
-Full plugin docs [here](README.md).
+Full plugin docs [here](../).
 Be sure to read the [Go plugin caveats].
 
 This demo uses a Go plugin, `SopsEncodedSecrets`,

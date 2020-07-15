@@ -176,7 +176,7 @@ with [kustomize], it could be in the form of
  * a git archive (ditto),
  * a URL to a git repo (ditto), etc.
 
-A kustomization file contains [fields](fields.md)
+A kustomization file contains [fields](./fields/)
 falling into four categories:
 
  * _resources_ - what existing [resources] are to be customized.

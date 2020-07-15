@@ -202,7 +202,7 @@ data:
 
 ### Go 插件
 
-请务必阅读 [Go 插件注意事项](goPluginCaveats.md)。
+请务必阅读 [Go 插件注意事项](./goplugincaveats/)。
 
 [Go 插件]: https://golang.org/pkg/plugin/
 

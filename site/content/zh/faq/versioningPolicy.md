@@ -30,7 +30,7 @@ behave.
 
 ### Installation
 
-See the [installation docs](INSTALL.md).
+See the [installation docs](../../installation).
 
 ## Go API Versioning
 
