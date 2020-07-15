@@ -52,7 +52,12 @@ func (p *FullPathPlugin) computePath(in interface{}) (interface{}, error) {
 	if !ok {
 		return nil, fmt.Errorf("%#v is expected to be %T", in, relativePath)
 	}
-	return filepath.Join(p.RootDir, relativePath), nil
+
+	if filepath.IsAbs(relativePath) {
+		return relativePath, nil
+	} else {
+		return filepath.Join(p.RootDir, relativePath), nil
+	}
 }
 
 func NewFullPathPlugin() resmap.TransformerPlugin {
