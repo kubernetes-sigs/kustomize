@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/action"
@@ -466,8 +467,10 @@ func (p *HelmChartPlugin) loadChartWithDependencies(settings *cli.EnvSettings, c
 
 	buildingDependencies := false
 	if req := c.Metadata.Dependencies; req != nil {
-		if err := action.CheckDependencies(c, req); err != nil {
-
+		if ok, err := p.checkDependencies(c, req); err != nil {
+			p.logger.Printf("dependency check returned failed: %v\n", err)
+			return nil, err
+		} else if !ok {
 			buildingDependencies = true
 
 			if err := p.helmConfigForDependencies(settings, c); err != nil {
@@ -499,6 +502,29 @@ func (p *HelmChartPlugin) loadChartWithDependencies(settings *cli.EnvSettings, c
 	}
 
 	return c, nil
+}
+
+func (p *HelmChartPlugin) checkDependencies(ch *chart.Chart, reqs []*chart.Dependency) (bool, error) {
+	if err := action.CheckDependencies(ch, reqs); err != nil {
+		p.logger.Printf("helm dependency presence checker returned a non-fatal error: %v\n", err)
+		return false, nil
+	} else {
+		dependenciesOnDisk := make(map[string]*chart.Chart)
+		for _, dependency := range ch.Dependencies() {
+			dependenciesOnDisk[dependency.Name()] = dependency
+		}
+		for _, r := range reqs {
+			dependencyOnDisk := dependenciesOnDisk[r.Name]
+			if dependencyConstraint, err := semver.NewConstraint(r.Version); err != nil {
+				return false, fmt.Errorf("dependency: %v for chart: %v has an invalid version/constraint format: %w", r.Name, ch.Name(), err)
+			} else if versionOfDependencyOnDisk, err := semver.NewVersion(dependencyOnDisk.Metadata.Version); err != nil {
+				return false, fmt.Errorf("dependency on disk: %v for chart: %v has an invalid version format: %w", r.Name, ch.Name(), err)
+			} else if !dependencyConstraint.Check(versionOfDependencyOnDisk) {
+				return false, nil
+			}
+		}
+		return true, nil
+	}
 }
 
 func (p *HelmChartPlugin) helmConfigForDependencies(settings *cli.EnvSettings, c *chart.Chart) error {
