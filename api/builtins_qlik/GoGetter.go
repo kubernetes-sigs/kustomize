@@ -6,30 +6,39 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sync"
 
 	"github.com/hashicorp/go-getter"
-
 	"sigs.k8s.io/kustomize/api/builtins_qlik/utils"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/konfig"
+	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 )
 
-var goGetterMutex sync.Mutex
+type iExecutableResolverT interface {
+	Executable() (string, error)
+}
+
+type osExecutableResolverT struct {
+}
+
+func (r *osExecutableResolverT) Executable() (string, error) {
+	return os.Executable()
+}
 
 // GoGetterPlugin ...
 type GoGetterPlugin struct {
-	types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
-	URL              string `json:"url,omitempty" yaml:"url,omitempty"`
-	Pwd              string
-	ldr              ifc.Loader
-	rf               *resmap.Factory
-	logger           *log.Logger
-	newldr           ifc.Loader
+	types.ObjectMeta   `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	URL                string `json:"url,omitempty" yaml:"url,omitempty"`
+	Pwd                string
+	ldr                ifc.Loader
+	rf                 *resmap.Factory
+	logger             *log.Logger
+	newldr             ifc.Loader
+	executableResolver iExecutableResolverT
 }
 
 // Config ...
@@ -64,14 +73,15 @@ func (p *GoGetterPlugin) Generate() (resmap.ResMap, error) {
 		Mode:    getter.ClientModeAny,
 		Options: opts,
 	}
-	goGetterMutex.Lock()
-	defer goGetterMutex.Unlock()
+	loader.GoGetterMutex.Lock()
 	err = client.Get()
+	loader.GoGetterMutex.Unlock()
+
 	if err != nil {
 		p.logger.Printf("Error fetching repository: %v\n", err)
 		return nil, err
 	}
-	currentExe, err := os.Executable()
+	currentExe, err := p.executableResolver.Executable()
 	if err != nil {
 		p.logger.Printf("Unable to get kustomize executable: %v\n", err)
 		return nil, err
@@ -88,5 +98,5 @@ func (p *GoGetterPlugin) Generate() (resmap.ResMap, error) {
 
 // NewGoGetterPlugin ...
 func NewGoGetterPlugin() resmap.GeneratorPlugin {
-	return &GoGetterPlugin{logger: utils.GetLogger("GoGetterPlugin")}
+	return &GoGetterPlugin{logger: utils.GetLogger("GoGetterPlugin"), executableResolver: &osExecutableResolverT{}}
 }
