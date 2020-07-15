@@ -24,7 +24,7 @@ func TestFixKustomizationPostUnmarshalling(t *testing.T) {
 	}
 
 	if !fixKustomizationPostUnmarshallingCheck(&k, &expected) {
-		t.Fatalf("unexpected ouput: %v", k)
+		t.Fatalf("unexpected output: %v", k)
 	}
 }
 
@@ -46,7 +46,7 @@ func TestFixKustomizationPostUnmarshalling_2(t *testing.T) {
 	}
 
 	if !fixKustomizationPostUnmarshallingCheck(&k, &expected) {
-		t.Fatalf("unexpected ouput: %v", k)
+		t.Fatalf("unexpected output: %v", k)
 	}
 }
 
