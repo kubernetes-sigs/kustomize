@@ -4,7 +4,6 @@
 package target
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -60,7 +59,7 @@ func (kt *KustTarget) Load() error {
 		return err
 	}
 	var k types.Kustomization
-	err = unmarshal(content, &k)
+	err = k.Unmarshal(content)
 	if err != nil {
 		return err
 	}
@@ -102,16 +101,6 @@ func loadKustFile(ldr ifc.Loader) ([]byte, error) {
 		return nil, fmt.Errorf(
 			"Found multiple kustomization files under: %s\n", ldr.Root())
 	}
-}
-
-func unmarshal(y []byte, o interface{}) error {
-	j, err := yaml.YAMLToJSON(y)
-	if err != nil {
-		return err
-	}
-	dec := json.NewDecoder(bytes.NewReader(j))
-	dec.DisallowUnknownFields()
-	return dec.Decode(o)
 }
 
 // MakeCustomizedResMap creates a fully customized ResMap
