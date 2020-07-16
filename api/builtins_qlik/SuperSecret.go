@@ -100,7 +100,10 @@ func (p *SuperSecretPlugin) ShouldBase64EncodeConfigData() bool {
 }
 
 func (p *SuperSecretPlugin) GetDisableNameSuffixHash() bool {
-	return p.SecretGeneratorPlugin.DisableNameSuffixHash
+	if p.SecretGeneratorPlugin.Options != nil {
+		return p.SecretGeneratorPlugin.Options.DisableNameSuffixHash
+	}
+	return false
 }
 
 func NewSuperSecretTransformerPlugin() resmap.TransformerPlugin {

@@ -3,6 +3,7 @@ package builtins_qlik
 import (
 	"fmt"
 	"log"
+
 	"sigs.k8s.io/kustomize/api/builtins_qlik/utils"
 
 	"sigs.k8s.io/kustomize/api/builtins"
@@ -74,7 +75,10 @@ func (p *SuperConfigMapPlugin) ShouldBase64EncodeConfigData() bool {
 }
 
 func (p *SuperConfigMapPlugin) GetDisableNameSuffixHash() bool {
-	return p.ConfigMapGeneratorPlugin.DisableNameSuffixHash
+	if p.ConfigMapGeneratorPlugin.Options != nil {
+		return p.ConfigMapGeneratorPlugin.Options.DisableNameSuffixHash
+	}
+	return false
 }
 
 func NewSuperConfigMapTransformerPlugin() resmap.TransformerPlugin {

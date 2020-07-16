@@ -141,7 +141,7 @@ func (b *SuperMapPluginBase) executeBasicTransform(resource *resource.Resource, 
 			b.Decorator.GetLogger().Printf("error removing original resource on name change: %v\n", err)
 			return err
 		}
-		newResource := b.Rf.RF().FromMapAndOption(resource.Map(), &types.GeneratorArgs{Behavior: "replace"}, &types.GeneratorOptions{DisableNameSuffixHash: false})
+		newResource := b.Rf.RF().FromMapAndOption(resource.Map(), &types.GeneratorArgs{Behavior: "replace"})
 		if err := m.Append(newResource); err != nil {
 			b.Decorator.GetLogger().Printf("error re-adding resource on name change: %v\n", err)
 			return err

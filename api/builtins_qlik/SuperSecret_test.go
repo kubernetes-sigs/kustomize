@@ -94,7 +94,8 @@ apiVersion: qlik.com/v1
 kind: SuperSecret
 metadata:
   name: mySecret
-disableNameSuffixHash: true
+options:
+  disableNameSuffixHash: true
 `,
 			pluginInputResources: pluginInputResources,
 			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
@@ -131,7 +132,8 @@ stringData:
   baz: whatever
 data:
   anotherPassword: Ym9vbQ==
-disableNameSuffixHash: true
+options:
+  disableNameSuffixHash: true
 `,
 			pluginInputResources: pluginInputResources,
 			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
@@ -433,7 +435,8 @@ stringData:
  foo: bar
  baz: whatever
 assumeTargetWillExist: true
-disableNameSuffixHash: true
+options:
+  disableNameSuffixHash: true
 `,
 			pluginInputResources: pluginInputResources,
 			checkAssertions:      assertReferencesNotUpdated,
@@ -566,7 +569,8 @@ kind: SuperSecret
 metadata:
   name: mySecret
 behavior: create
-disableNameSuffixHash: true
+options:
+  disableNameSuffixHash: true
 `,
 			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
 				foundSecretResource := false
@@ -600,7 +604,8 @@ data:
   anotherPassword: Ym9vbQ==
   nonBase64Key: should-generate-blank
 behavior: create
-disableNameSuffixHash: true
+options:
+  disableNameSuffixHash: true
 `,
 			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
 				foundSecretResource := false

@@ -55,7 +55,8 @@ apiVersion: qlik.com/v1
 kind: SuperConfigMap
 metadata:
   name: my-config-map
-disableNameSuffixHash: true
+options:
+  disableNameSuffixHash: true
 `,
 			pluginInputResources: pluginInputResources,
 			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
@@ -90,7 +91,8 @@ metadata:
 data:
   baz: boo
   abra: cadabra
-disableNameSuffixHash: true
+options:
+  disableNameSuffixHash: true
 `,
 			pluginInputResources: pluginInputResources,
 			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
@@ -388,7 +390,8 @@ data:
   foo: bar
   baz: boo
 assumeTargetWillExist: true
-disableNameSuffixHash: true
+options:
+  disableNameSuffixHash: true
 `,
 			pluginInputResources: pluginInputResources,
 			checkAssertions:      assertReferencesNotUpdated,
@@ -521,7 +524,8 @@ kind: SuperConfigMap
 metadata:
  name: my-config-map
 behavior: create
-disableNameSuffixHash: true
+options:
+  disableNameSuffixHash: true
 `,
 			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
 				foundConfigMapResource := false
@@ -552,7 +556,8 @@ data:
   foo: bar
   baz: whatever
 behavior: create
-disableNameSuffixHash: true
+options:
+  disableNameSuffixHash: true
 `,
 			checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
 				foundConfigMapResource := false

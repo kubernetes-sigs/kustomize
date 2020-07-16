@@ -371,6 +371,7 @@ spec:
 
 	var wg sync.WaitGroup
 	numTests := 50
+	var configMutex sync.Mutex
 	for i := 0; i < numTests; i++ {
 		var config, expected string
 		if i%2 == 0 {
@@ -382,11 +383,16 @@ spec:
 			config = pluginConfigChartBar
 			expected = expectedGeneratorOutputBar
 		}
+
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			plugin := &HelmChartPlugin{logger: logger}
-			err = plugin.Config(pluginHelpers, []byte(config))
+
+			configMutex.Lock()
+			err := plugin.Config(pluginHelpers, []byte(config))
+			configMutex.Unlock()
+
 			if err != nil {
 				t.Fatalf("Err: %v", err)
 			}
@@ -520,6 +526,7 @@ spec:
 	log.Println("starting tests...")
 
 	var wg sync.WaitGroup
+	var configMutex sync.Mutex
 	for i := 0; i < numTests; i++ {
 		pluginConfig := pluginConfigs[i]
 		expectedResult := expectedResults[i]
@@ -528,7 +535,11 @@ spec:
 		go func() {
 			defer wg.Done()
 			plugin := &HelmChartPlugin{logger: logger}
-			err = plugin.Config(pluginHelpers, []byte(pluginConfig))
+
+			configMutex.Lock()
+			err := plugin.Config(pluginHelpers, []byte(pluginConfig))
+			configMutex.Unlock()
+
 			if err != nil {
 				t.Fatalf("Err: %v", err)
 			}
@@ -652,6 +663,7 @@ spec:
 	log.Println("starting tests...")
 
 	var wg sync.WaitGroup
+	var configMutex sync.Mutex
 	for i := 0; i < numTests; i++ {
 		pluginConfig := pluginConfigs[i]
 		expectedResult := expectedResults[i]
@@ -660,7 +672,11 @@ spec:
 		go func() {
 			defer wg.Done()
 			plugin := &HelmChartPlugin{logger: logger}
-			err = plugin.Config(pluginHelpers, []byte(pluginConfig))
+
+			configMutex.Lock()
+			err := plugin.Config(pluginHelpers, []byte(pluginConfig))
+			configMutex.Unlock()
+
 			if err != nil {
 				t.Fatalf("Err: %v", err)
 			}

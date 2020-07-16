@@ -27,4 +27,6 @@ replace (
 	k8s.io/apimachinery => k8s.io/apimachinery v0.17.0
 	k8s.io/client-go => k8s.io/client-go v0.17.0
 	k8s.io/kubectl => k8s.io/kubectl v0.0.0-20191219154910-1528d4eea6dd
+	sigs.k8s.io/kustomize/api => ../api
+
 )
