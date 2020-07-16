@@ -57,6 +57,7 @@ Run kustomize, and pipe the output to [apply].
 > ```
 
 You can also use [kubectl-v1.14.0] to apply your [variants].
+>
 > ```
 > kubectl apply -k ~/ldap/overlays/staging
 > kubectl apply -k ~/ldap/overlays/production
@@ -78,4 +79,3 @@ You can also use [kubectl-v1.14.0] to apply your [variants].
 [workflowBespoke]: /kustomize/images/workflowBespoke.jpg
 [workflowOts]: /kustomize/images/workflowOts.jpg
 [kubectl-v1.14.0]:https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement/
-

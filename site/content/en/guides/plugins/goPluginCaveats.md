@@ -57,6 +57,7 @@ accepting a shared plugin _must compile both
 kustomize and the plugin_.
 
 This means a one-time run of
+
 ```
 # Or whatever is appropriate at time of reading
 GOPATH=${whatever} GO111MODULE=on go get sigs.k8s.io/kustomize/api
@@ -68,16 +69,17 @@ and then a normal development cycle using
 go build -buildmode plugin \
     -o ${wherever}/${kind}.so ${wherever}/${kind}.go
 ```
+
 with paths and the release version tag (e.g. `v3.0.0`)
 adjusted as needed.
 
 For comparison, consider what one
 must do to write a [tensorflow plugin].
 
-## Why support Go plugins?
+## Why support Go plugins
 
 ### Safety
- 
+
 The Go plugin developer sees the same API offered
 to native kustomize operations, assuring certain
 semantics, invariants, checks, etc. An exec
@@ -104,7 +106,7 @@ a developer can write an `.go` program that functions
 as an _exec plugin_, but can be processed by `go generate`
 to emit a _Go plugin_ (or vice versa).
 
-### Unit of contribution 
+### Unit of contribution
 
 All the builtin generators and transformers
 are themselves Go plugins.  This means that

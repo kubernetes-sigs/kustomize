@@ -32,6 +32,7 @@ patchesStrategicMerge:
 ```
 
 The patch content can be a inline string as well.
+
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

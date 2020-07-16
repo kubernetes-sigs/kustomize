@@ -102,7 +102,7 @@ PLUGIN_ROOT=$DEMO/kustomize/plugin
 and ephemerally set `XDG_CONFIG_HOME` on a command
 line below.
 
-### What apiVersion and kind?
+### What apiVersion and kind
 
 At this stage in the development of kustomize
 plugins, plugin code doesn't know or care what
@@ -180,12 +180,12 @@ dependency [skew].
 
 On load failure
 
- * be sure to build the plugin with the same
+* be sure to build the plugin with the same
    version of Go (_go1.13_) on the same `$GOOS`
    (_linux_) and `$GOARCH` (_amd64_) used to build
    the kustomize being [used in this demo].
 
- * change the plugin's dependencies in its `go.mod`
+* change the plugin's dependencies in its `go.mod`
    to match the versions used by kustomize (check
    kustomize's `go.mod` used in its tagged commit).
 
@@ -356,7 +356,7 @@ This should look something like:
 >     └── secGenerator.yaml
 > ```
 
-## Build your app, using the plugin:
+## Build your app, using the plugin
 
 ```shell
 XDG_CONFIG_HOME=$DEMO $tmpGoPath/bin/kustomize build --enable_alpha_plugins $MYAPP

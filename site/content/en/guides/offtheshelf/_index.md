@@ -10,7 +10,6 @@ description: >
 In this workflow, all files are owned by the user and maintained in a repository under their control, but
 they are based on an [off-the-shelf] configuration that is periodically consulted for updates.
 
-
 ![off-the-shelf config workflow image][workflowOts]
 
 #### 1) find and [fork] an [OTS] config
@@ -49,6 +48,7 @@ distinct repository.
 > ```
 
 You can also use [kubectl-v1.14.0] to apply your [variants].
+>
 > ```
 > kubectl apply -k ~/ldap/overlays/staging
 > kubectl apply -k ~/ldap/overlays/production

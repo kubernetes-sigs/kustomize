@@ -35,6 +35,7 @@ be modified at the same time.
 As this declaration does not take in a `kind:` nor a `group:`
 it will match any `group` and `kind` that has a matching name and
 that is one of:
+
 - `Deployment`
 - `ReplicationController`
 - `ReplicaSet`

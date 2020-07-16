@@ -18,14 +18,14 @@ or [transformer configs] doesn't meet your needs.
 
 [12-factor]: https://12factor.net
 
- * A _generator_ plugin could be a helm chart
+* A _generator_ plugin could be a helm chart
    inflator, or a plugin that emits all the
    components (deployment, service, scaler,
    ingress, etc.) needed by someone's [12-factor]
    application, based on a smaller number of free
    variables.
 
- * A _transformer_ plugin might perform special
+* A _transformer_ plugin might perform special
    container command line edits, or any other
    transformation beyond those provided by the
    builtin (`namePrefix`, `commonLabels`, etc.)
@@ -62,7 +62,6 @@ URLs leading to kustomizations trigger an
 in-process kustomization run.  Each of the
 resulting objects is now further interpreted by
 kustomize as a _plugin configuration_ object.
-
 
 ## Configuration
 
@@ -111,7 +110,6 @@ For more examples of plugin configuration YAML,
 browse the unit tests below the [plugins] root,
 e.g. the tests for [ChartInflator] or
 [NameTransformer].
-
 
 ## Placement
 
@@ -228,11 +226,11 @@ provided in the kustomization file).
 
 #### Examples
 
- * [helm chart inflator] - A generator that inflates a helm chart.
- * [bashed config map] -  Super simple configMap generation from bash.
- * [sed transformer] - Define your unstructured edits using a
+* [helm chart inflator] - A generator that inflates a helm chart.
+* [bashed config map] -  Super simple configMap generation from bash.
+* [sed transformer] - Define your unstructured edits using a
    plugin like this one.
- * [hashicorp go-getter] - Download kustomize layes and build it to generate resources
+* [hashicorp go-getter] - Download kustomize layes and build it to generate resources
 
 A generator plugin accepts nothing on `stdin`, but emits
 generated resources to `stdout`.
@@ -247,7 +245,7 @@ marshalled resources on `stdin` and capture
 
 #### Generator Options
 
-A generator exec plugin can adjust the generator options for the resources it emits by setting one of the following internal annotations. 
+A generator exec plugin can adjust the generator options for the resources it emits by setting one of the following internal annotations.
 
 > NOTE: These annotations are local to kustomize and will not be included in the final output.
 
@@ -258,6 +256,7 @@ Resources can be marked as needing to be processed by the internal hash transfor
 If this annotation is set on a resource not supported by the hash transformer the build will fail.
 
 Example:
+
 ```yaml
 apiVersion: v1
 kind: ConfigMap
@@ -266,14 +265,15 @@ metadata:
   annotations:
     kustomize.config.k8s.io/needs-hash: "true"
 data:
-  foo: bar   
+  foo: bar
 ```
 
 **`kustomize.config.k8s.io/behavior`**
 
-The `behavior` annotation will influence how conflicts are handled for resources emitted by the plugin. Valid values include "create", "merge", and "replace" with "create" being the default. 
+The `behavior` annotation will influence how conflicts are handled for resources emitted by the plugin. Valid values include "create", "merge", and "replace" with "create" being the default.
 
 Example:
+
 ```yaml
 apiVersion: v1
 kind: ConfigMap
@@ -282,7 +282,7 @@ metadata:
   annotations:
     kustomize.config.k8s.io/behavior: "merge"
 data:
-  foo: bar   
+  foo: bar
 ```
 
 ### Go plugins
@@ -306,7 +306,7 @@ A Go plugin for kustomize looks like this:
 > package main
 >
 > import (
->	"sigs.k8s.io/kustomize/api/resmap"
+> "sigs.k8s.io/kustomize/api/resmap"
 >   ...
 > )
 >
@@ -342,17 +342,17 @@ Do one or the other or both as desired.
 
 #### Examples
 
- * [service generator] - generate a service from a name and port argument.
- * [string prefixer] - uses the value in `metadata/name` as the prefix.
+* [service generator] - generate a service from a name and port argument.
+* [string prefixer] - uses the value in `metadata/name` as the prefix.
    This particular example exists to show how a plugin can
    transform the behavior of a plugin.  See the
    `TestTransformedTransformers` test in the `target` package.
- * [date prefixer] - prefix the current date to resource names, a simple
+* [date prefixer] - prefix the current date to resource names, a simple
    example used to modify the string prefixer plugin just mentioned.
- * [secret generator] - generate secrets from a toy database.
- * [sops encoded secrets] - a more complex secret generator that converts SOPS files into Kubernetes Secrets
- * [SOPSGenerator] - another generator that decrypts SOPS files into Secrets
- * [All the builtin plugins](https://github.com/kubernetes-sigs/kustomize/tree/master/plugin/builtin).
+* [secret generator] - generate secrets from a toy database.
+* [sops encoded secrets] - a more complex secret generator that converts SOPS files into Kubernetes Secrets
+* [SOPSGenerator] - another generator that decrypts SOPS files into Secrets
+* [All the builtin plugins](https://github.com/kubernetes-sigs/kustomize/tree/master/plugin/builtin).
    User authored plugins are
    on the same footing as builtin operations.
 
@@ -372,4 +372,3 @@ d=$XDG_CONFIG_HOME/kustomize/plugin\
 go build -buildmode plugin \
    -o $d/${kind}.so $d/${kind}.go
 ```
-

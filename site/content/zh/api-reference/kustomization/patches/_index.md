@@ -9,7 +9,6 @@ description: >
 [strategic merge]: /kustomize/zh/api-reference/glossary#patchstrategicmerge
 [JSON]: /kustomize/zh/api-reference/glossary#patchjson6902
 
-
 Patches 在资源上添加或覆盖字段，Kustomization 使用 `patches` 字段来提供该功能。
 
 `patches` 字段包含要按指定顺序应用的 patch 列表。
