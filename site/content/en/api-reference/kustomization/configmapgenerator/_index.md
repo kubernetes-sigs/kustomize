@@ -10,6 +10,7 @@ Each entry in this list results in the creation of
 one ConfigMap resource (it's a generator of n maps).
 
 The example below creates four ConfigMaps:
+
 - first, with the names and contents of the given files
 - second, with key/value as data using key/value pairs from files
 - third, also with key/value as data, directly specified using `literals`

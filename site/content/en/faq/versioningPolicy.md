@@ -118,9 +118,7 @@ itself is an API client requiring this module.
 
 The clients and API will evolve independently.
 
-
 ## Kustomization File Versioning
-
 
 The kustomization file is a struct that is part of
 the kustomize Go API (the `sigs.k8s.io/kustomize`

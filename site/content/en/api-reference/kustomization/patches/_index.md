@@ -15,10 +15,10 @@ Patches (also call overlays) add or override fields on resources.  They are prov
 The `patches` field contains a list of patches to be applied in the order they are specified.
 
 Each patch may:
- 
+
 - be either a [strategic merge] patch, or a [JSON] patch
 - be either a file, or an inline string
-- target a single resource or multiple resources 
+- target a single resource or multiple resources
 
 The patch target selects resources by group, version, kind, name, namespace, labelSelector and
 annotationSelector.  Any resource which matches all the **specified** fields has the patch applied
@@ -43,7 +43,7 @@ patches:
       value: new value
   target:
     kind: MyKind
-    labelSelector: "env=dev"        
+    labelSelector: "env=dev"
 ```
 
 The `name` and `namespace` fields of the patch target selector are

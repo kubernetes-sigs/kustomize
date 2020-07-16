@@ -45,6 +45,7 @@ description: >
 > ```
 
 也可以在 [kubectl-v1.14.0] 版，使用 ```kubectl``` 命令发布你的 [variants] 。
+>
 > ```bash
 > kubectl apply -k ~/ldap/overlays/staging
 > kubectl apply -k ~/ldap/overlays/production

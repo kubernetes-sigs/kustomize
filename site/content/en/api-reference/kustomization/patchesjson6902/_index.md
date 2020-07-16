@@ -8,7 +8,7 @@ description: >
 
 Each entry in this list should resolve to a kubernetes object and a JSON patch that will be applied
 to the object.
-The JSON patch is documented at https://tools.ietf.org/html/rfc6902
+The JSON patch is documented at <https://tools.ietf.org/html/rfc6902>
 
 target field points to a kubernetes object within the same kustomization
 by the object's group, version, kind, name and namespace.

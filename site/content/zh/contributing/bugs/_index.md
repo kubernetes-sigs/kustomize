@@ -14,10 +14,10 @@ description: >
 File issues as desired, but if you've found a problem
 with how `kustomize build` works, please report
 
- * the output of `kustomize version`,
- * the input (the content of `kustomization.yaml`
+* the output of `kustomize version`,
+* the input (the content of `kustomization.yaml`
    and any files it refers to),
- * the expected YAML output.
+* the expected YAML output.
 
 ## If you have `go` installed
 
@@ -26,7 +26,7 @@ package] for specifying a kustomization's input and the
 expected output.
 
 Copy one of those tests, e.g. this [reusable custom
-transformer test], to a new test file in the 
+transformer test], to a new test file in the
 krusty package.
 
 Insert the inputs you want to use, and run it as

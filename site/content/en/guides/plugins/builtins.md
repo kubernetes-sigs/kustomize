@@ -16,7 +16,7 @@ For each plugin, an example is given for
 
 * implicitly triggering
 the plugin via a dedicated kustomization
-file field (e.g. the `AnnotationsTransformer` is 
+file field (e.g. the `AnnotationsTransformer` is
 triggered by the `commonAnnotations` field).
 
 * explicitly triggering the plugin
@@ -24,11 +24,10 @@ via the `generators` or `transformers` field
 (by providing a config file specifying the
 plugin).
 
-The former method is convenient but limited in 
+The former method is convenient but limited in
 power as most of the plugins arguments must
 be defaulted.  The latter method allows for
 complete plugin argument specification.
-
 
 [types.GeneratorOptions]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/generatoroptions.go
 [types.SecretArgs]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/secretargs.go
@@ -42,6 +41,7 @@ complete plugin argument specification.
 [image.Image]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/image.go
 
 ## _AnnotationTransformer_
+
 ### Usage via `kustomization.yaml`
 
 #### field name: `commonAnnotations`
@@ -56,6 +56,7 @@ commonAnnotations:
 ```
 
 ### Usage via plugin
+
 #### Arguments
 
 > Annotations map\[string\]string
@@ -63,6 +64,7 @@ commonAnnotations:
 > FieldSpecs  \[\][config.FieldSpec]
 
 #### Example
+>
 > ```
 > apiVersion: builtin
 > kind: AnnotationsTransformer
@@ -75,8 +77,6 @@ commonAnnotations:
 > - path: metadata/annotations
 >   create: true
 > ```
-
-
 
 ## _ConfigMapGenerator_
 
@@ -122,7 +122,7 @@ configMapGenerator:
   - application.properties
   - more.properties
 - name: my-java-server-env-vars
-  literals:	
+  literals: 
   - JAVA_HOME=/opt/java/jdk
   - JAVA_TOOL_OPTIONS=-agentlib:hprof
   options:
@@ -156,11 +156,13 @@ configMapGenerator:
 ```
 
 ### Usage via plugin
+
 #### Arguments
 
 > [types.ConfigMapArgs]
 
 #### Example
+>
 > ```
 > apiVersion: builtin
 > kind: ConfigMapGenerator
@@ -174,8 +176,8 @@ configMapGenerator:
 > - VEGETABLE=carrot
 > ```
 
-
 ## _ImageTagTransformer_
+
 ### Usage via `kustomization.yaml`
 
 #### field name: `images`
@@ -197,11 +199,11 @@ containers:
 ```
 
 one can change the `image` in the following ways:
- 
- - `postgres:8` to `my-registry/my-postgres:v1`,
- - nginx tag `1.7.9` to `1.8.0`,
- - image name `my-demo-app` to `my-app`,
- - alpine's tag `3.7` to a digest value
+
+- `postgres:8` to `my-registry/my-postgres:v1`,
+- nginx tag `1.7.9` to `1.8.0`,
+- image name `my-demo-app` to `my-app`,
+- alpine's tag `3.7` to a digest value
 
 all with the following *kustomization*:
 
@@ -219,6 +221,7 @@ images:
 ```
 
 ### Usage via plugin
+
 #### Arguments
 
 > ImageTag   [image.Image]
@@ -226,6 +229,7 @@ images:
 > FieldSpecs \[\][config.FieldSpec]
 
 #### Example
+>
 > ```
 > apiVersion: builtin
 > kind: ImageTagTransformer
@@ -236,9 +240,8 @@ images:
 >   newTag: v2
 > ```
 
-
-
 ## _LabelTransformer_
+
 ### Usage via `kustomization.yaml`
 
 #### field name: `commonLabels`
@@ -253,6 +256,7 @@ commonLabels:
 ```
 
 ### Usage via plugin
+
 #### Arguments
 
 > Labels  map\[string\]string
@@ -260,6 +264,7 @@ commonLabels:
 > FieldSpecs \[\][config.FieldSpec]
 
 #### Example
+>
 > ```
 > apiVersion: builtin
 > kind: LabelTransformer
@@ -273,14 +278,8 @@ commonLabels:
 >   create: true
 > ```
 
-
-
-
-
-
-
-
 ## _NamespaceTransformer_
+
 ### Usage via `kustomization.yaml`
 
 #### field name: `namespace`
@@ -292,6 +291,7 @@ namespace: my-namespace
 ```
 
 ### Usage via plugin
+
 #### Arguments
 
 > [types.ObjectMeta]
@@ -299,6 +299,7 @@ namespace: my-namespace
 > FieldSpecs \[\][config.FieldSpec]
 
 #### Example
+>
 > ```
 > apiVersion: builtin
 >  kind: NamespaceTransformer
@@ -316,11 +317,8 @@ namespace: my-namespace
 >    group: rbac.authorization.k8s.io
 > ```
 
-
-
-
-
 ## _PatchesJson6902_
+
 ### Usage via `kustomization.yaml`
 
 #### field name: `patchesJson6902`
@@ -328,7 +326,7 @@ namespace: my-namespace
 Each entry in this list should resolve to
 a kubernetes object and a JSON patch that will be applied
 to the object.
-The JSON patch is documented at https://tools.ietf.org/html/rfc6902
+The JSON patch is documented at <https://tools.ietf.org/html/rfc6902>
 
 target field points to a kubernetes object within the same kustomization
 by the object's group, version, kind, name and namespace.
@@ -385,7 +383,9 @@ patchesJson6902:
 ```
 
 ### Usage via plugin
+
 #### Arguments
+
 > Target [types.PatchTarget]
 >
 > Path   string
@@ -393,6 +393,7 @@ patchesJson6902:
 > JsonOp string
 
 #### Example
+>
 > ```
 > apiVersion: builtin
 > kind: PatchJson6902Transformer
@@ -406,8 +407,8 @@ patchesJson6902:
 > path: jsonpatch.json
 > ```
 
-
 ## _PatchesStrategicMerge_
+
 ### Usage via `kustomization.yaml`
 
 #### field name: `patchesStrategicMerge`
@@ -435,6 +436,7 @@ patchesStrategicMerge:
 ```
 
 The patch content can be a inline string as well.
+
 ```
 patchesStrategicMerge:
 - |-
@@ -463,8 +465,8 @@ patch that performs all the needed deletions.
 >
 > Patches string
 
-
 #### Example
+>
 > ```
 > apiVersion: builtin
 > kind: PatchStrategicMergeTransformer
@@ -474,14 +476,14 @@ patch that performs all the needed deletions.
 > - patch.yaml
 > ```
 
-
 ## _PatchTransformer_
+
 ### Usage via `kustomization.yaml`
 
 #### field name: `patches`
 
 Each entry in this list should resolve to an Patch
-object, which includes a patch and a target selector. 
+object, which includes a patch and a target selector.
 The patch can be either a strategic merge patch or a
 JSON patch. it can be either a patch file or an inline
 string. The target selects
@@ -506,23 +508,25 @@ patches:
       value: new value
   target:
     kind: MyKind
-    labelSelector: "env=dev"        
+    labelSelector: "env=dev"
 ```
 
 The `name` and `namespace` fields of the patch target selector are
 automatically anchored regular expressions. This means that the value `myapp`
-is equivalent to `^myapp$`. 
+is equivalent to `^myapp$`.
 
 ### Usage via plugin
+
 #### Arguments
 
 > Path string
 >
 > Patch string
 >
-> Target \*[types.Selector] 
+> Target \*[types.Selector]
 
 #### Example
+>
 > ```
 > apiVersion: builtin
 > kind: PatchTransformer
@@ -534,10 +538,8 @@ is equivalent to `^myapp$`.
 >   kind: Deployment
 > ```
 
-
-
-
 ## _PrefixSuffixTransformer_
+
 ### Usage via `kustomization.yaml`
 
 #### field names: `namePrefix`, `nameSuffix`
@@ -547,7 +549,7 @@ of all resources.
 
 E.g. a deployment named `wordpress` could
 become `alices-wordpress` or  `wordpress-v2`
-or `alices-wordpress-v2`. 
+or `alices-wordpress-v2`.
 
 ```
 namePrefix: alices-
@@ -558,6 +560,7 @@ The suffix is appended before the content hash if
 the resource type is ConfigMap or Secret.
 
 ### Usage via plugin
+
 #### Arguments
 
 > Prefix     string
@@ -567,6 +570,7 @@ the resource type is ConfigMap or Secret.
 > FieldSpecs \[\][config.FieldSpec]
 
 #### Example
+>
 > ```
 > apiVersion: builtin
 > kind: PrefixSuffixTransformer
@@ -578,9 +582,8 @@ the resource type is ConfigMap or Secret.
 >   - path: metadata/name
 > ```
 
-
-
 ## _ReplicaCountTransformer_
+
 ### Usage via `kustomization.yaml`
 
 #### field name: `replicas`
@@ -612,6 +615,7 @@ be modified at the same time.
 As this declaration does not take in a `kind:` nor a `group:`
 it will match any `group` and `kind` that has a matching name and
 that is one of:
+
 - `Deployment`
 - `ReplicationController`
 - `ReplicaSet`
@@ -628,6 +632,7 @@ For more complex use cases, revert to using a patch.
 > FieldSpecs \[\][config.FieldSpec]
 
 #### Example
+>
 > ```
 > apiVersion: builtin
 > kind: ReplicaCountTransformer
@@ -644,8 +649,6 @@ For more complex use cases, revert to using a patch.
 >   create: true
 >   kind: ReplicationController
 > ```
-
-
 
 ## _SecretGenerator_
 

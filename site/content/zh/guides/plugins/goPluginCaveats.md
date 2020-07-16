@@ -50,7 +50,7 @@ go build -buildmode plugin \
 
 为了进行比较，可以参考编写 [tensorflow plugin] 必须做的事情。
 
-## 为什么支持 Go 插件？
+## 为什么支持 Go 插件
 
 ### 安全
 

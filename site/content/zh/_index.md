@@ -28,7 +28,6 @@ linkTitle = "Kustomize"
 
 {{< blocks/section >}}
 
-
 {{% blocks/feature icon="fab fa-github" title="参与贡献" %}}
 欢迎在 **Github** 提交 [RP](https://github.com/kubernetes-sigs/kustomize/pulls)，贡献你的力量。
 {{% /blocks/feature %}}

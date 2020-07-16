@@ -79,4 +79,3 @@ Changes must be pushed to the fork's **master branch** to be served as the fork'
 4. Commit and push the changes to the *remote fork's* **master branch**
 5. After a few minutes, the docs should be served from the fork's GitHub Page
    - e.g. [https://pwittrock.github.io/kustomize/](https://pwittrock.github.io/kustomize/)
-

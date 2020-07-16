@@ -13,5 +13,6 @@ choco install kustomize
 
 For support on the chocolatey package
 and prior releases, see:
+
 - [Choco Package](https://chocolatey.org/packages/kustomize)
 - [Package Source](https://github.com/kenmaglio/choco-kustomize)

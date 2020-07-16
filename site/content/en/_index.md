@@ -33,5 +33,4 @@ We do a [Pull Request](https://github.com/kubernetes-sigs/kustomize/pulls) contr
 New users are always welcome!
 {{% /blocks/feature %}}
 
-
 {{< /blocks/section >}}
