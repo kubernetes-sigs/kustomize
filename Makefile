@@ -14,8 +14,8 @@ all: verify-kustomize
 verify-kustomize: \
 	lint-kustomize \
 	test-unit-kustomize-all \
-	test-examples-kustomize-against-HEAD
-#	test-examples-kustomize-against-3.7.0
+	test-examples-kustomize-against-HEAD \
+	test-examples-kustomize-against-3.8.0
 
 # The following target referenced by a file in
 # https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/kustomize
@@ -23,10 +23,10 @@ verify-kustomize: \
 prow-presubmit-check: \
 	lint-kustomize \
 	test-unit-kustomize-all \
-	test-examples-kustomize-against-HEAD \
 	test-unit-cmd-all \
-	test-go-mod
-#	test-examples-kustomize-against-3.7.0 \
+	test-go-mod \
+	test-examples-kustomize-against-HEAD \
+	test-examples-kustomize-against-3.8.0
 
 .PHONY: verify-kustomize-e2e
 verify-kustomize-e2e: test-examples-e2e-kustomize
@@ -233,10 +233,10 @@ test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
 	./hack/testExamplesAgainstKustomize.sh HEAD
 
 .PHONY:
-test-examples-kustomize-against-3.7.0: $(MYGOBIN)/mdrip
+test-examples-kustomize-against-3.8.0: $(MYGOBIN)/mdrip
 	( \
 		set -e; \
-		tag=v3.7.0; \
+		tag=v3.8.0; \
 		/bin/rm -f $(MYGOBIN)/kustomize; \
 		echo "Installing kustomize $$tag."; \
 		GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3@$${tag}; \
