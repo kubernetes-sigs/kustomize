@@ -104,7 +104,7 @@ func loadKustFile(ldr ifc.Loader) ([]byte, error) {
 }
 
 // MakeCustomizedResMap creates a fully customized ResMap
-// per the instructions contained in its kustomiztion instance.
+// per the instructions contained in its kustomization instance.
 func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 	return kt.makeCustomizedResMap()
 }
