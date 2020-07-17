@@ -6,7 +6,8 @@ package prefixsuffix
 import (
 	"fmt"
 
-	"sigs.k8s.io/kustomize/api/filters/fsslice"
+	"sigs.k8s.io/kustomize/api/filters/fieldspec"
+	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -17,28 +18,26 @@ type Filter struct {
 	Prefix string `json:"prefix,omitempty" yaml:"prefix,omitempty"`
 	Suffix string `json:"suffix,omitempty" yaml:"suffix,omitempty"`
 
-	FsSlice types.FsSlice `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+	FieldSpec types.FieldSpec `json:"fieldSpec,omitempty" yaml:"fieldSpec,omitempty"`
 }
 
 var _ kio.Filter = Filter{}
 
-func (ns Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
-	return kio.FilterAll(yaml.FilterFunc(ns.run)).Filter(nodes)
+func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+	return kio.FilterAll(yaml.FilterFunc(f.run)).Filter(nodes)
 }
 
-// Run runs the filter on a single node rather than a slice
-func (ns Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
-	// transformations based on data -- :)
-	err := node.PipeE(fsslice.Filter{
-		FsSlice:    ns.FsSlice,
-		SetValue:   ns.set,
+func (f Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
+	err := node.PipeE(fieldspec.Filter{
+		FieldSpec:  f.FieldSpec,
+		SetValue:   f.evaluateField,
 		CreateKind: yaml.ScalarNode, // Name is a ScalarNode
 		CreateTag:  yaml.StringTag,
 	})
 	return node, err
 }
 
-func (ns Filter) set(node *yaml.RNode) error {
-	return fsslice.SetScalar(fmt.Sprintf(
-		"%s%s%s", ns.Prefix, node.YNode().Value, ns.Suffix))(node)
+func (f Filter) evaluateField(node *yaml.RNode) error {
+	return filtersutil.SetScalar(fmt.Sprintf(
+		"%s%s%s", f.Prefix, node.YNode().Value, f.Suffix))(node)
 }
