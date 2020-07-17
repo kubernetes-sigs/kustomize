@@ -9,14 +9,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/api/filters/prefixsuffix"
-	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	filtertest_test "sigs.k8s.io/kustomize/api/testutils/filtertest"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
-var tests = []TestCase{
-	{
-		name: "prefix",
+var tests = map[string]TestCase{
+	"prefix": {
 		input: `
 apiVersion: example.com/v1
 kind: Foo
@@ -40,10 +38,10 @@ metadata:
   name: foo-instance
 `,
 		filter: prefixsuffix.Filter{Prefix: "foo-"},
+		fs:     types.FieldSpec{Path: "metadata/name"},
 	},
 
-	{
-		name: "suffix",
+	"suffix": {
 		input: `
 apiVersion: example.com/v1
 kind: Foo
@@ -67,10 +65,10 @@ metadata:
   name: instance-foo
 `,
 		filter: prefixsuffix.Filter{Suffix: "-foo"},
+		fs:     types.FieldSpec{Path: "metadata/name"},
 	},
 
-	{
-		name: "prefix-suffix",
+	"prefix-suffix": {
 		input: `
 apiVersion: example.com/v1
 kind: Foo
@@ -94,10 +92,10 @@ metadata:
   name: bar-instance-foo
 `,
 		filter: prefixsuffix.Filter{Prefix: "bar-", Suffix: "-foo"},
+		fs:     types.FieldSpec{Path: "metadata/name"},
 	},
 
-	{
-		name: "data-fieldspecs",
+	"data-fieldspecs": {
 		input: `
 apiVersion: example.com/v1
 kind: Foo
@@ -119,7 +117,7 @@ a:
 apiVersion: example.com/v1
 kind: Foo
 metadata:
-  name: foo-instance
+  name: instance
 a:
   b:
     c: foo-d
@@ -127,35 +125,28 @@ a:
 apiVersion: example.com/v1
 kind: Bar
 metadata:
-  name: foo-instance
+  name: instance
 a:
   b:
     c: foo-d
 `,
 		filter: prefixsuffix.Filter{Prefix: "foo-"},
-		fsslice: []types.FieldSpec{
-			{
-				Path: "a/b/c",
-			},
-		},
+		fs:     types.FieldSpec{Path: "a/b/c"},
 	},
 }
 
 type TestCase struct {
-	name     string
 	input    string
 	expected string
 	filter   prefixsuffix.Filter
-	fsslice  types.FsSlice
+	fs       types.FieldSpec
 }
 
-var config = builtinconfig.MakeDefaultConfig()
-
 func TestFilter(t *testing.T) {
-	for i := range tests {
-		test := tests[i]
-		t.Run(test.name, func(t *testing.T) {
-			test.filter.FsSlice = append(config.NamePrefix, test.fsslice...)
+	for name := range tests {
+		test := tests[name]
+		t.Run(name, func(t *testing.T) {
+			test.filter.FieldSpec = test.fs
 			if !assert.Equal(t,
 				strings.TrimSpace(test.expected),
 				strings.TrimSpace(

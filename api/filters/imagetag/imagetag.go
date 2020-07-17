@@ -4,6 +4,7 @@
 package imagetag
 
 import (
+	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 	"sigs.k8s.io/kustomize/api/filters/fsslice"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -35,7 +36,7 @@ func (f Filter) filter(node *yaml.RNode) (*yaml.RNode, error) {
 	return node, nil
 }
 
-func updateImageTagFn(imageTag types.Image) fsslice.SetFn {
+func updateImageTagFn(imageTag types.Image) filtersutil.SetFn {
 	return func(node *yaml.RNode) error {
 		return node.PipeE(imageTagUpdater{
 			ImageTag: imageTag,
