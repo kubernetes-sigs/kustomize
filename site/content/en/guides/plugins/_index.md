@@ -287,7 +287,7 @@ data:
 
 ### Go plugins
 
-Be sure to read [Go plugin caveats](goPluginCaveats.md).
+Be sure to read [Go plugin caveats](goplugincaveats/).
 
 [Go plugin]: https://golang.org/pkg/plugin/
 
