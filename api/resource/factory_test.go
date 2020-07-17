@@ -13,6 +13,178 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
+func TestSliceFromBytes(t *testing.T) {
+	type testCase struct {
+		input    string
+		expected []string
+	}
+	testCases := map[string]testCase{
+		"empty1": {
+			input:    "",
+			expected: []string{},
+		},
+		"empty2": {
+			input: `
+---
+---
+`,
+			expected: []string{},
+		},
+		"deployment1": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pooh
+---
+`,
+			expected: []string{
+				`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pooh
+`,
+			},
+		},
+		"deployment2": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    baseAnno: This is a base annotation
+  labels:
+    app: mungebot
+    foo: bar
+  name: baseprefix-mungebot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      foo: bar
+  template:
+    metadata:
+      annotations:
+        baseAnno: This is a base annotation
+      labels:
+        app: mungebot
+        foo: bar
+    spec:
+      containers:
+      - env:
+        - name: foo
+          value: bar
+        image: nginx
+        name: nginx
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    baseAnno: This is a base annotation
+  labels:
+    app: mungebot
+    foo: bar
+  name: baseprefix-mungebot-service
+spec:
+  ports:
+  - port: 7002
+  selector:
+    app: mungebot
+    foo: bar
+`,
+			expected: []string{
+				`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    baseAnno: This is a base annotation
+  labels:
+    app: mungebot
+    foo: bar
+  name: baseprefix-mungebot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      foo: bar
+  template:
+    metadata:
+      annotations:
+        baseAnno: This is a base annotation
+      labels:
+        app: mungebot
+        foo: bar
+    spec:
+      containers:
+      - env:
+        - name: foo
+          value: bar
+        image: nginx
+        name: nginx
+        ports:
+        - containerPort: 80
+`,
+				`apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    baseAnno: This is a base annotation
+  labels:
+    app: mungebot
+    foo: bar
+  name: baseprefix-mungebot-service
+spec:
+  ports:
+  - port: 7002
+  selector:
+    app: mungebot
+    foo: bar
+`,
+			},
+		},
+	}
+
+	for name := range testCases {
+		tc := testCases[name]
+		t.Run(name, func(t *testing.T) {
+			result, err := factory.SliceFromBytes([]byte(tc.input))
+			if err != nil {
+				t.Fatalf("%v: fails with err: %v", name, err)
+			}
+			if len(result) != len(tc.expected) {
+				for i := range result {
+					bytes, err := result[i].AsYAML()
+					if err != nil {
+						t.Fatalf("%v: result to YAML fails with err: %v", name, err)
+					}
+					tmp := string(bytes)
+					t.Logf("--- %d:\n%s", i, tmp)
+				}
+				t.Fatalf(
+					"%v: actual len %d != expected len %d",
+					name, len(result), len(tc.expected))
+			}
+			for i := range tc.expected {
+				bytes, err := result[i].AsYAML()
+				if err != nil {
+					t.Fatalf("%v: result to YAML fails with err: %v", name, err)
+				}
+				tmp := string(bytes)
+				if tmp != tc.expected[i] {
+					t.Fatalf(
+						"%v: string mismatch in item %d\n"+
+							"actual:\n-----\n%s\n-----\n"+
+							"expected:\n-----\n%s\n-----\n",
+						name, i, tmp, tc.expected[i])
+				}
+			}
+		})
+	}
+}
+
 func TestSliceFromPatches(t *testing.T) {
 	patchGood1 := types.PatchStrategicMerge("patch1.yaml")
 	patch1 := `
