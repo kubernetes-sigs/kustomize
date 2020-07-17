@@ -32,6 +32,10 @@ type Options struct {
 
 	// Options related to kustomize plugins.
 	PluginConfig *types.PluginConfig
+
+	// When true, use kyaml/ packages to manipulate KRM yaml.
+	// When false, use k8sdeps/ instead (uses k8s.io/api* packages).
+	UseKyaml bool
 }
 
 // MakeDefaultOptions returns a default instance of Options.
@@ -42,5 +46,6 @@ func MakeDefaultOptions() *Options {
 		LoadRestrictions:     types.LoadRestrictionsRootOnly,
 		DoPrune:              false,
 		PluginConfig:         konfig.DisabledPluginConfig(),
+		UseKyaml:             false,
 	}
 }

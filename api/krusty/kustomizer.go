@@ -8,16 +8,13 @@ import (
 
 	"sigs.k8s.io/kustomize/api/builtins"
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/internal/k8sdeps/merge"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/internal/target"
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/api/k8sdeps/validator"
 	"sigs.k8s.io/kustomize/api/konfig"
+	"sigs.k8s.io/kustomize/api/krusty/internal/provider"
 	fLdr "sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/provenance"
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
@@ -28,13 +25,18 @@ import (
 // number of overlays and bases), then make a Kustomizer
 // injected with the given fileystem, then call Run.
 type Kustomizer struct {
-	fSys    filesys.FileSystem
-	options *Options
+	fSys        filesys.FileSystem
+	options     *Options
+	depProvider *provider.DepProvider
 }
 
 // MakeKustomizer returns an instance of Kustomizer.
 func MakeKustomizer(fSys filesys.FileSystem, o *Options) *Kustomizer {
-	return &Kustomizer{fSys: fSys, options: o}
+	return &Kustomizer{
+		fSys:        fSys,
+		options:     o,
+		depProvider: provider.NewDepProvider(o.UseKyaml),
+	}
 }
 
 // Run performs a kustomization.
@@ -49,11 +51,9 @@ func MakeKustomizer(fSys filesys.FileSystem, o *Options) *Kustomizer {
 // on any number of internal paths (e.g. the filesystem may contain
 // multiple overlays, and Run can be called on each of them).
 func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
-	resourceFactory := resource.NewFactory(
-		kunstruct.NewKunstructuredFactoryImpl())
 	resmapFactory := resmap.NewFactory(
-		resourceFactory,
-		merge.NewMerginator(resourceFactory))
+		b.depProvider.GetResourceFactory(),
+		b.depProvider.GetMerginator())
 	lr := fLdr.RestrictionNone
 	if b.options.LoadRestrictions == types.LoadRestrictionsRootOnly {
 		lr = fLdr.RestrictionRootOnly
@@ -65,7 +65,7 @@ func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
 	defer ldr.Cleanup()
 	kt := target.NewKustTarget(
 		ldr,
-		validator.NewKustValidator(),
+		b.depProvider.GetFieldValidator(),
 		resmapFactory,
 		pLdr.NewLoader(b.options.PluginConfig, resmapFactory),
 	)
