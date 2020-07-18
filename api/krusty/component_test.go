@@ -39,8 +39,8 @@ resources:
 configMapGenerator:
 - name: my-configmap
   literals:	
-    - testValue=1
-    - otherValue=10
+  - testValue=1
+  - otherValue=10
 `)
 	th.WriteF("/app/base/deploy.yaml", `
 apiVersion: v1
@@ -59,13 +59,13 @@ replicas:
 - name: storefront
   count: 3
 resources:
-  - stub.yaml
+- stub.yaml
 configMapGenerator:
 - name: my-configmap
   behavior: merge
   literals:	
-    - testValue=2
-    - compValue=5
+  - testValue=2
+  - compValue=5
 `)
 	th.WriteF("/app/comp/stub.yaml", `
 apiVersion: v1
@@ -156,7 +156,7 @@ configMapGenerator:
 - name: my-configmap
   behavior: merge
   literals:	
-    - otherValue=9
+  - otherValue=9
 `),
 				writeK("/app/prod", `
 resources:
@@ -211,8 +211,8 @@ components:
 configMapGenerator:
 - name: my-configmap
   behavior: merge
-  literals:	
-    - otherValue=9
+  literals:
+  - otherValue=9
 `),
 				writeK("/app/prod", `
 resources:
@@ -327,8 +327,8 @@ configMapGenerator:
 - name: my-configmap
   behavior: merge
   literals:	
-    - compValue=5
-    - testValue=2
+  - compValue=5
+  - testValue=2
 `),
 			},
 			runPath: "/app/direct-component",
@@ -360,7 +360,7 @@ configMapGenerator:
 - name: my-configmap
   behavior: merge
   literals:	
-    - otherValue=9
+  - otherValue=9
 `),
 			},
 			runPath: "/app/prod",
@@ -574,7 +574,7 @@ configMapGenerator:
 - name: my-configmap
   behavior: merge
   literals:	
-    - otherValue=9
+  - otherValue=9
 `),
 			},
 			runPath:       "/app/prod",
