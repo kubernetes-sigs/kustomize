@@ -3,6 +3,7 @@ package replicacount
 import (
 	"strconv"
 
+	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 	"sigs.k8s.io/kustomize/api/filters/fsslice"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -45,5 +46,5 @@ func (rc Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 }
 
 func (rc Filter) set(node *yaml.RNode) error {
-	return fsslice.SetScalar(strconv.FormatInt(rc.Replica.Count, 10))(node)
+	return filtersutil.SetScalar(strconv.FormatInt(rc.Replica.Count, 10))(node)
 }

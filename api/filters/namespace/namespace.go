@@ -4,6 +4,8 @@
 package namespace
 
 import (
+	"sigs.k8s.io/kustomize/api/filters/fieldspec"
+	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 	"sigs.k8s.io/kustomize/api/filters/fsslice"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -42,7 +44,7 @@ func (ns Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 	// transformations based on data -- :)
 	err := node.PipeE(fsslice.Filter{
 		FsSlice:    ns.FsSlice,
-		SetValue:   fsslice.SetScalar(ns.Namespace),
+		SetValue:   filtersutil.SetScalar(ns.Namespace),
 		CreateKind: yaml.ScalarNode, // Namespace is a ScalarNode
 		CreateTag:  yaml.StringTag,
 	})
@@ -73,7 +75,7 @@ func (ns Filter) hacks(obj *yaml.RNode) error {
 // if they are cluster scoped through either an annotation on the resources,
 // or through inlined OpenAPI on the resource as a YAML comment.
 func (ns Filter) metaNamespaceHack(obj *yaml.RNode, meta yaml.ResourceMeta) error {
-	gvk := fsslice.GetGVK(meta)
+	gvk := fieldspec.GetGVK(meta)
 	if !gvk.IsNamespaceableKind() {
 		return nil
 	}
@@ -81,7 +83,7 @@ func (ns Filter) metaNamespaceHack(obj *yaml.RNode, meta yaml.ResourceMeta) erro
 		FsSlice: []types.FieldSpec{
 			{Path: types.MetadataNamespacePath, CreateIfNotPresent: true},
 		},
-		SetValue:   fsslice.SetScalar(ns.Namespace),
+		SetValue:   filtersutil.SetScalar(ns.Namespace),
 		CreateKind: yaml.ScalarNode, // Namespace is a ScalarNode
 	}
 	_, err := f.Filter(obj)

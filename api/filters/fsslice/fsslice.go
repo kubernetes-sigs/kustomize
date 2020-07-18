@@ -4,48 +4,22 @@
 package fsslice
 
 import (
+	"sigs.k8s.io/kustomize/api/filters/fieldspec"
+	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// SetFn sets a value
-type SetFn func(*yaml.RNode) error
-
-// SetScalar returns a SetFn to set a scalar value
-func SetScalar(value string) SetFn {
-	return func(node *yaml.RNode) error {
-		return node.PipeE(yaml.FieldSetter{StringValue: value})
-	}
-}
-
-// SetEntry returns a SetFn to set an entry in a map
-func SetEntry(key, value, tag string) SetFn {
-	n := &yaml.Node{
-		Kind:  yaml.ScalarNode,
-		Value: value,
-		Tag:   tag,
-	}
-	if tag == yaml.StringTag && yaml.IsYaml1_1NonString(n) {
-		n.Style = yaml.DoubleQuotedStyle
-	}
-	return func(node *yaml.RNode) error {
-		return node.PipeE(yaml.FieldSetter{
-			Name:  key,
-			Value: yaml.NewRNode(n),
-		})
-	}
-
-}
-
 var _ yaml.Filter = Filter{}
 
-// Filter uses an FsSlice to modify fields on a single object
+// Filter ranges over an FsSlice to modify fields on a single object.
+// An FsSlice is a range of FieldSpecs. A FieldSpec is a GVK plus a path.
 type Filter struct {
 	// FieldSpecList list of FieldSpecs to set
 	FsSlice types.FsSlice `yaml:"fsSlice"`
 
 	// SetValue is called on each field that matches one of the FieldSpecs
-	SetValue SetFn
+	SetValue filtersutil.SetFn
 
 	// CreateKind is used to create fields that do not exist
 	CreateKind yaml.Kind
@@ -59,7 +33,7 @@ func (fltr Filter) Filter(obj *yaml.RNode) (*yaml.RNode, error) {
 		// apply this FieldSpec
 		// create a new filter for each iteration because they
 		// store internal state about the field paths
-		_, err := (&fieldSpecFilter{
+		_, err := (&fieldspec.Filter{
 			FieldSpec:  fltr.FsSlice[i],
 			SetValue:   fltr.SetValue,
 			CreateKind: fltr.CreateKind,

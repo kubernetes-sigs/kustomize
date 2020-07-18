@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 
+	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 	"sigs.k8s.io/kustomize/api/filters/fsslice"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -30,7 +31,7 @@ metadata:
 	}
 	fltr := fsslice.Filter{
 		CreateKind: yaml.ScalarNode,
-		SetValue:   fsslice.SetScalar("green"),
+		SetValue:   filtersutil.SetScalar("green"),
 		FsSlice: []types.FieldSpec{
 			{Path: "a/b", CreateIfNotPresent: true},
 		},
