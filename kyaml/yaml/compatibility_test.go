@@ -114,7 +114,7 @@ var valueToTagMap = func() map[string]string {
 	// https://yaml.org/type/null.html
 	values := []string{"~", "null", "Null", "NULL"}
 	for i := range values {
-		val[values[i]] = "!!null"
+		val[values[i]] = yaml.NodeTagNull
 	}
 
 	// https://yaml.org/type/bool.html
@@ -122,7 +122,7 @@ var valueToTagMap = func() map[string]string {
 		"y", "Y", "yes", "Yes", "YES", "true", "True", "TRUE", "on", "On", "ON", "n", "N", "no",
 		"No", "NO", "false", "False", "FALSE", "off", "Off", "OFF"}
 	for i := range values {
-		val[values[i]] = "!!bool"
+		val[values[i]] = yaml.NodeTagBool
 	}
 
 	// https://yaml.org/type/float.html
@@ -130,7 +130,7 @@ var valueToTagMap = func() map[string]string {
 		".nan", ".NaN", ".NAN", ".inf", ".Inf", ".INF",
 		"+.inf", "+.Inf", "+.INF", "-.inf", "-.Inf", "-.INF"}
 	for i := range values {
-		val[values[i]] = "!!float"
+		val[values[i]] = yaml.NodeTagFloat
 	}
 
 	return val
