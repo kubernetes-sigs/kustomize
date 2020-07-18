@@ -5,19 +5,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	filtertest_test "sigs.k8s.io/kustomize/api/testutils/filtertest"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
 func TestFilter(t *testing.T) {
-	var config = builtinconfig.MakeDefaultConfig()
 
 	testCases := map[string]struct {
 		input    string
 		expected string
 		filter   Filter
-		fsslice  types.FsSlice
 	}{
 		"update field": {
 			input: `
@@ -41,11 +38,7 @@ spec:
 					Name:  "dep",
 					Count: 42,
 				},
-			},
-			fsslice: types.FsSlice{
-				{
-					Path: "spec/replicas",
-				},
+				FieldSpec: types.FieldSpec{Path: "spec/replicas"},
 			},
 		},
 		"add field": {
@@ -73,9 +66,7 @@ spec:
 					Name:  "cus",
 					Count: 42,
 				},
-			},
-			fsslice: types.FsSlice{
-				{
+				FieldSpec: types.FieldSpec{
 					Path:               "spec/template/replicas",
 					CreateIfNotPresent: true,
 				},
@@ -108,9 +99,7 @@ spec:
 					Name:  "cus",
 					Count: 42,
 				},
-			},
-			fsslice: types.FsSlice{
-				{
+				FieldSpec: types.FieldSpec{
 					Path:               "spec/template/replicas",
 					CreateIfNotPresent: true,
 				},
@@ -140,9 +129,7 @@ spec:
 					Name:  "cus",
 					Count: 42,
 				},
-			},
-			fsslice: types.FsSlice{
-				{
+				FieldSpec: types.FieldSpec{
 					Path: "spec/template/replicas",
 				},
 			},
@@ -154,7 +141,6 @@ kind: Custom
 metadata:
   name: cus
 spec:
-  replicas: 5
   template:
     replicas: 5
 `,
@@ -164,7 +150,6 @@ kind: Custom
 metadata:
   name: cus
 spec:
-  replicas: 42
   template:
     replicas: 42
 `,
@@ -173,21 +158,13 @@ spec:
 					Name:  "cus",
 					Count: 42,
 				},
-			},
-			fsslice: types.FsSlice{
-				{
-					Path: "spec/template/replicas",
-				},
-				{
-					Path: "spec/replicas",
-				},
+				FieldSpec: types.FieldSpec{Path: "spec/template/replicas"},
 			},
 		},
 	}
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			tc.filter.FsSlice = append(config.Replicas, tc.fsslice...)
 			if !assert.Equal(t,
 				strings.TrimSpace(tc.expected),
 				strings.TrimSpace(
