@@ -1,24 +1,27 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package fsslice
+package fieldspec
 
 import (
 	"strings"
 
+	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// fieldSpecFilter applies a single fieldSpec to a single object
-// fieldSpecFilter stores internal state and should not be reused
-type fieldSpecFilter struct {
+var _ yaml.Filter = Filter{}
+
+// Filter applies a single fieldSpec to a single object
+// Filter stores internal state and should not be reused
+type Filter struct {
 	// FieldSpec contains the path to the value to set.
 	FieldSpec types.FieldSpec `yaml:"fieldSpec"`
 
 	// Set the field using this function
-	SetValue SetFn
+	SetValue filtersutil.SetFn
 
 	// CreateKind defines the type of node to create if the field is not found
 	CreateKind yaml.Kind
@@ -29,7 +32,7 @@ type fieldSpecFilter struct {
 	path []string
 }
 
-func (fltr fieldSpecFilter) Filter(obj *yaml.RNode) (*yaml.RNode, error) {
+func (fltr Filter) Filter(obj *yaml.RNode) (*yaml.RNode, error) {
 	// check if the FieldSpec applies to the object
 	if match, err := isMatchGVK(fltr.FieldSpec, obj); !match || err != nil {
 		return obj, errors.Wrap(err)
@@ -43,7 +46,7 @@ func (fltr fieldSpecFilter) Filter(obj *yaml.RNode) (*yaml.RNode, error) {
 	return obj, nil
 }
 
-func (fltr fieldSpecFilter) filter(obj *yaml.RNode) error {
+func (fltr Filter) filter(obj *yaml.RNode) error {
 	if len(fltr.path) == 0 {
 		// found the field -- set its value
 		return fltr.SetValue(obj)
@@ -60,7 +63,7 @@ func (fltr fieldSpecFilter) filter(obj *yaml.RNode) error {
 }
 
 // field calls filter on the field matching the next path element
-func (fltr fieldSpecFilter) field(obj *yaml.RNode) error {
+func (fltr Filter) field(obj *yaml.RNode) error {
 	fieldName, isSeq := isSequenceField(fltr.path[0])
 
 	// lookup the field matching the next path element
@@ -104,9 +107,9 @@ func (fltr fieldSpecFilter) field(obj *yaml.RNode) error {
 }
 
 // seq calls filter on all sequence elements
-func (fltr fieldSpecFilter) seq(obj *yaml.RNode) error {
+func (fltr Filter) seq(obj *yaml.RNode) error {
 	if err := obj.VisitElements(func(node *yaml.RNode) error {
-		// recurse on each element -- re-allocating a fieldSpecFilter is
+		// recurse on each element -- re-allocating a Filter is
 		// not strictly required, but is more consistent with field
 		// and less likely to have side effects
 		// keep the entire path -- it does not contain parts for sequences
