@@ -176,7 +176,8 @@ kind: Bar
 a:
   b: a
 `,
-		error: "obj kind: Bar\na:\n  b: a\n at path a/b/c: unsupported yaml node",
+		error: "obj 'kind: Bar\na:\n  b: a\n' at path 'a/b/c': " +
+			"expected sequence or mapping node",
 		filter: fieldspec.Filter{
 			SetValue: filtersutil.SetScalar("e"),
 		},
@@ -332,6 +333,107 @@ a:
 			SetValue:   filtersutil.SetScalar("e"),
 			CreateKind: yaml.ScalarNode,
 		},
+	},
+	{
+		name: "successfully set field on array entry no sequence hint",
+		fieldSpec: `
+path: spec/containers/image
+version: v1
+kind: Bar
+`,
+		input: `
+apiVersion: v1
+kind: Bar
+spec:
+  containers:
+  - image: foo
+`,
+		expected: `
+apiVersion: v1
+kind: Bar
+spec:
+  containers:
+  - image: bar
+`,
+		filter: fieldspec.Filter{
+			SetValue:   filtersutil.SetScalar("bar"),
+			CreateKind: yaml.ScalarNode,
+		},
+	},
+	{
+		name: "successfully set field on array entry with sequence hint",
+		fieldSpec: `
+path: spec/containers[]/image
+version: v1
+kind: Bar
+`,
+		input: `
+apiVersion: v1
+kind: Bar
+spec:
+  containers:
+  - image: foo
+`,
+		expected: `
+apiVersion: v1
+kind: Bar
+spec:
+  containers:
+  - image: bar
+`,
+		filter: fieldspec.Filter{
+			SetValue:   filtersutil.SetScalar("bar"),
+			CreateKind: yaml.ScalarNode,
+		},
+	},
+	{
+		name: "failure to set field on array entry with sequence hint in path",
+		fieldSpec: `
+path: spec/containers[]/image
+version: v1
+kind: Bar
+`,
+		input: `
+apiVersion: v1
+kind: Bar
+spec:
+  containers:
+`,
+		expected: `
+apiVersion: v1
+kind: Bar
+spec:
+  containers: []
+`,
+		filter: fieldspec.Filter{
+			SetValue:   filtersutil.SetScalar("bar"),
+			CreateKind: yaml.ScalarNode,
+		},
+	},
+	{
+		name: "failure to set field on array entry, no sequence hint in path",
+		fieldSpec: `
+path: spec/containers/image
+version: v1
+kind: Bar
+`,
+		input: `
+apiVersion: v1
+kind: Bar
+spec:
+  containers:
+`,
+		expected: `
+apiVersion: v1
+kind: Bar
+spec:
+  containers:
+`,
+		filter: fieldspec.Filter{
+			SetValue:   filtersutil.SetScalar("bar"),
+			CreateKind: yaml.ScalarNode,
+		},
+		error: "obj '' at path 'spec/containers/image': expected sequence or mapping node",
 	},
 }
 

@@ -142,7 +142,7 @@ func (s *Set) substitute(field *yaml.RNode, ext *CliExtension) (bool, error) {
 	field.YNode().Value = res
 
 	// substitutions are always strings
-	field.YNode().Tag = yaml.StringTag
+	field.YNode().Tag = yaml.NodeTagString
 
 	return true, nil
 }
@@ -379,7 +379,7 @@ func (s SetOpenAPI) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	// values are always represented as strings the OpenAPI
 	// since the are unmarshalled into strings.  Use double quote style to
 	// ensure this consistently.
-	v.YNode().Tag = yaml.StringTag
+	v.YNode().Tag = yaml.NodeTagString
 	v.YNode().Style = yaml.DoubleQuotedStyle
 
 	if t != "array" {
@@ -395,7 +395,7 @@ func (s SetOpenAPI) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 		// create the list values
 		var elements []*yaml.Node
 		n := yaml.NewScalarRNode(s.Value).YNode()
-		n.Tag = yaml.StringTag
+		n.Tag = yaml.NodeTagString
 		n.Style = yaml.DoubleQuotedStyle
 		elements = append(elements, n)
 		for i := range s.ListValues {

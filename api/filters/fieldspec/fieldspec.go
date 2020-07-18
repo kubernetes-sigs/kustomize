@@ -41,7 +41,7 @@ func (fltr Filter) Filter(obj *yaml.RNode) (*yaml.RNode, error) {
 	if err := fltr.filter(obj); err != nil {
 		s, _ := obj.String()
 		return nil, errors.WrapPrefixf(err,
-			"obj %v at path %v", s, fltr.FieldSpec.Path)
+			"obj '%s' at path '%v'", s, fltr.FieldSpec.Path)
 	}
 	return obj, nil
 }
@@ -56,24 +56,27 @@ func (fltr Filter) filter(obj *yaml.RNode) error {
 		return fltr.seq(obj)
 	case yaml.MappingNode:
 		return fltr.field(obj)
+	default:
+		return errors.Errorf("expected sequence or mapping node")
 	}
-	// not found -- this might be an error since the type doesn't match
-
-	return errors.Errorf("unsupported yaml node")
 }
 
 // field calls filter on the field matching the next path element
 func (fltr Filter) field(obj *yaml.RNode) error {
 	fieldName, isSeq := isSequenceField(fltr.path[0])
-
 	// lookup the field matching the next path element
 	var lookupField yaml.Filter
 	var kind yaml.Kind
-	var tag string
+	tag := "" // TODO: change to yaml.NodeTagEmpty
 	switch {
 	case !fltr.FieldSpec.CreateIfNotPresent || fltr.CreateKind == 0 || isSeq:
 		// dont' create the field if we don't find it
 		lookupField = yaml.Lookup(fieldName)
+		if isSeq {
+			// The query path thinks this field should be a sequence;
+			// accept this hint for use later if the tag is NodeTagNull.
+			kind = yaml.SequenceNode
+		}
 	case len(fltr.path) <= 1:
 		// create the field if it is missing: use the provided node kind
 		lookupField = yaml.LookupCreate(fltr.CreateKind, fieldName)
@@ -83,7 +86,7 @@ func (fltr Filter) field(obj *yaml.RNode) error {
 		// create the field if it is missing: must be a mapping node
 		lookupField = yaml.LookupCreate(yaml.MappingNode, fieldName)
 		kind = yaml.MappingNode
-		tag = "!!map"
+		tag = "!!map" // TODO: change to yaml.NodeTagMap
 	}
 
 	// locate (or maybe create) the field
@@ -94,7 +97,7 @@ func (fltr Filter) field(obj *yaml.RNode) error {
 
 	// if the value exists, but is null, then change it to the creation type
 	// TODO: update yaml.LookupCreate to support this
-	if field.YNode().Tag == "!!null" {
+	if field.YNode().Tag == "!!null" { // TODO: change to yaml.NodeTagNull
 		field.YNode().Kind = kind
 		field.YNode().Tag = tag
 	}
