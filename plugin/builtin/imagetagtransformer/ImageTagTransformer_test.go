@@ -22,6 +22,9 @@ metadata:
 imageTag:
   name: nginx
   newTag: v2
+fieldSpecs:
+- path: spec/template/spec/containers[]/image
+- path: spec/template/spec/initContainers[]/image
 `, `
 group: apps
 apiVersion: v1
@@ -89,6 +92,9 @@ metadata:
 imageTag:
   name: nginx
   newName: busybox
+fieldSpecs:
+- path: spec/template/spec/containers[]/image
+- path: spec/template/spec/initContainers[]/image
 `, `
 group: apps
 apiVersion: v1
@@ -158,6 +164,9 @@ imageTag:
   name: nginx
   newName: busybox
   newTag: v2
+fieldSpecs:
+- path: spec/template/spec/containers[]/image
+- path: spec/template/spec/initContainers[]/image
 `, `
 group: apps
 apiVersion: v1
@@ -226,6 +235,9 @@ metadata:
 imageTag:
   name: nginx
   Digest: sha256:222222222222222222
+fieldSpecs:
+- path: spec/template/spec/containers[]/image
+- path: spec/template/spec/initContainers[]/image
 `, `
 group: apps
 apiVersion: v1
@@ -295,6 +307,9 @@ imageTag:
   name: nginx
   newName: busybox
   Digest: sha256:222222222222222222
+fieldSpecs:
+- path: spec/template/spec/containers[]/image
+- path: spec/template/spec/initContainers[]/image
 `, `
 group: apps
 apiVersion: v1
@@ -363,6 +378,11 @@ metadata:
 imageTag:
   name: nginx
   newTag: v2
+fieldSpecs:
+- path: spec/template/spec/containers[]/image
+  create: true
+- path: spec/template/spec/initContainers[]/image
+  create: true
 `, `
 group: apps
 apiVersion: v1
@@ -384,8 +404,8 @@ metadata:
 spec:
   template:
     spec:
-      containers: null
-      initContainers: null
+      containers: []
+      initContainers: []
 `)
 }
 
@@ -402,6 +422,8 @@ metadata:
 imageTag:
   name: some.registry.io/my-image
   newTag: "my-fixed-tag"
+fieldSpecs:
+- path: spec/template/spec/containers[]/image
 `, `
 group: apps
 apiVersion: v1
