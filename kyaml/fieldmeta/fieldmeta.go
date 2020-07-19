@@ -146,15 +146,13 @@ func isExtensionEmpty(x XKustomize) bool {
 // Write writes the FieldMeta to a node
 func (fm *FieldMeta) Write(n *yaml.RNode) error {
 	if !isExtensionEmpty(fm.Extensions) {
-		fm.Schema.VendorExtensible.AddExtension("x-kustomize", fm.Extensions)
-	} else {
-		delete(fm.Schema.VendorExtensible.Extensions, "x-kustomize")
+		return fm.WriteV1Setters(n)
 	}
 
 	// Ref is removed when a setter is deleted, so the Ref string could be empty.
 	if fm.Schema.Ref.String() != "" {
 		// Ex: {"$ref":"#/definitions/io.k8s.cli.setters.replicas"} should be converted to
-		// {"openAPI":"replicas"} and added to the line comment
+		// {"$openAPI":"replicas"} and added to the line comment
 		ref := fm.Schema.Ref.String()
 		var shortHandRefValue string
 		switch {
@@ -171,6 +169,18 @@ func (fm *FieldMeta) Write(n *yaml.RNode) error {
 		n.YNode().LineComment = ""
 	}
 
+	return nil
+}
+
+// WriteV1Setters is the v1 setters way of writing setter definitions
+// TODO: pmarupaka - remove this method after migration
+func (fm *FieldMeta) WriteV1Setters(n *yaml.RNode) error {
+	fm.Schema.VendorExtensible.AddExtension("x-kustomize", fm.Extensions)
+	b, err := json.Marshal(fm.Schema)
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	n.YNode().LineComment = string(b)
 	return nil
 }
 
