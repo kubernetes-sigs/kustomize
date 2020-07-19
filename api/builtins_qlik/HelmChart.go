@@ -411,6 +411,8 @@ func (p *HelmChartPlugin) helmTemplate(settings *cli.EnvSettings, c *chart.Chart
 	client.ReleaseName = releaseName
 	client.Replace = true // Skip the name check
 	client.ClientOnly = true
+	client.IncludeCRDs = true
+	
 	client.Namespace = settings.Namespace()
 
 	helmRunMutex.Lock()
