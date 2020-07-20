@@ -625,9 +625,8 @@ func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
 	return result
 }
 
-// getNamespacesForRoleBinding returns referenced namespace map if the inputRes is
-// a RoleBinding and the subject is ServiceAccount in another namespace. Otherwise it returns
-// {}.
+// getNamespacesForRoleBinding returns referenced ServiceAccount namespaces if the inputRes is
+// a RoleBinding
 func getNamespacesForRoleBinding(inputRes *resource.Resource) map[string]bool {
 	res := make(map[string]bool)
 	if inputRes.GetKind() != "RoleBinding" {
