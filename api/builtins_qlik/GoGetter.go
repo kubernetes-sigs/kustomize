@@ -86,6 +86,15 @@ func (p *GoGetterPlugin) Generate() (resmap.ResMap, error) {
 		p.logger.Printf("Unable to get kustomize executable: %v\n", err)
 		return nil, err
 	}
+
+	// Convert to relative path due to kustomize bug with drive letters
+	// thinks its a remote ref
+	oswd, _ := os.Getwd()
+	dir, err = filepath.Rel(oswd, dir)
+
+	if err != nil {
+		p.logger.Printf("Warning, Error fetching relative path of %v: %v\n", dir, err)
+	}
 	cmd := exec.Command(currentExe, "build", dir)
 	cmd.Stderr = os.Stderr
 	kustomizedYaml, err := cmd.Output()
