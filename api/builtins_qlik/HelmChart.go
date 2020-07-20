@@ -57,6 +57,7 @@ type HelmChartPlugin struct {
 	LockRetryDelayMinMilliSeconds  int                    `json:"lockRetryDelayMinMilliSeconds,omitempty" yaml:"lockRetryDelayMinMilliSeconds,omitempty"`
 	LockRetryDelayMaxMilliSeconds  int                    `json:"lockRetryDelayMaxMilliSeconds,omitempty" yaml:"lockRetryDelayMaxMilliSeconds,omitempty"`
 	LockTimeoutSeconds             int                    `json:"lockTimeoutSeconds,omitempty" yaml:"lockTimeoutSeconds,omitempty"`
+	IncludeCRDs                    *bool                  `json:"includeCRDs,omitempty" yaml:"includeCRDs,omitempty"`
 	rf                             *resmap.Factory
 	logger                         *log.Logger
 	hash                           string
@@ -135,6 +136,10 @@ func (p *HelmChartPlugin) Config(h *resmap.PluginHelpers, c []byte) (err error) 
 		p.LockTimeoutSeconds = utils.DefaultLockTimeoutSeconds
 	}
 
+	defaultIncludeCRDs := true
+	if p.IncludeCRDs == nil {
+		p.IncludeCRDs = &defaultIncludeCRDs
+	}
 	return nil
 }
 
@@ -411,8 +416,8 @@ func (p *HelmChartPlugin) helmTemplate(settings *cli.EnvSettings, c *chart.Chart
 	client.ReleaseName = releaseName
 	client.Replace = true // Skip the name check
 	client.ClientOnly = true
-	client.IncludeCRDs = true
-	
+	client.IncludeCRDs = *p.IncludeCRDs
+
 	client.Namespace = settings.Namespace()
 
 	helmRunMutex.Lock()

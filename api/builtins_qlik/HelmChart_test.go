@@ -938,3 +938,43 @@ repositories:
 		})
 	}
 }
+
+func Test_IncludeCRDs_defaults(t *testing.T) {
+	logger := log.New(os.Stdout, "", log.LstdFlags|log.LUTC|log.Lmicroseconds|log.Lshortfile)
+	resourceFactory := resmap.NewFactory(resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()), transformer.NewFactoryImpl())
+	pluginHelpers := resmap.NewPluginHelpers(loader.NewFileLoaderAtRoot(filesys.MakeFsInMemory()), valtest_test.MakeFakeValidator(), resourceFactory)
+
+	plugin := &HelmChartPlugin{logger: logger}
+	if err := plugin.Config(pluginHelpers, []byte(`apiVersion: apps/v1
+kind: HelmChart
+metadata:
+  name: dontCare
+`)); err != nil {
+		assert.FailNow(t, err.Error())
+	} else {
+		assert.True(t, *plugin.IncludeCRDs)
+	}
+
+	if err := plugin.Config(pluginHelpers, []byte(`apiVersion: apps/v1
+kind: HelmChart
+metadata:
+  name: dontCare
+includeCRDs: true
+`)); err != nil {
+		assert.FailNow(t, err.Error())
+	} else {
+		assert.True(t, *plugin.IncludeCRDs)
+	}
+
+	if err := plugin.Config(pluginHelpers, []byte(`apiVersion: apps/v1
+kind: HelmChart
+metadata:
+  name: dontCare
+includeCRDs: false
+`)); err != nil {
+		assert.FailNow(t, err.Error())
+	} else {
+		assert.False(t, *plugin.IncludeCRDs)
+	}
+
+}
