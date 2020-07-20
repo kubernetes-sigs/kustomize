@@ -34,6 +34,8 @@ type Set struct {
 	SetAll bool
 }
 
+const SetterNotFoundWarn = "unable to find setter with name "
+
 // Filter implements Set as a yaml.Filter
 func (s *Set) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	return object, accept(s, object)
@@ -328,14 +330,14 @@ func (s SetOpenAPI) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 		return nil, err
 	}
 	if oa == nil {
-		return nil, errors.Errorf("no setter %s found", s.Name)
+		return nil, errors.Errorf(SetterNotFoundWarn + s.Name)
 	}
 	def, err := oa.Pipe(yaml.Lookup("x-k8s-cli", "setter"))
 	if err != nil {
 		return nil, err
 	}
 	if def == nil {
-		return nil, errors.Errorf("no setter %s found", s.Name)
+		return nil, errors.Errorf(SetterNotFoundWarn + s.Name)
 	}
 
 	// record the OpenAPI type for the setter
