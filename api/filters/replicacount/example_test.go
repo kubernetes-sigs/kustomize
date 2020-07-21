@@ -33,10 +33,8 @@ spec:
 				Count: 42,
 				Name:  "instance",
 			},
-			FsSlice: types.FsSlice{
-				{
-					Path: "spec/template/replicas",
-				},
+			FieldSpec: types.FieldSpec{
+				Path: "spec/template/replicas",
 			},
 		}},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: os.Stdout}},
