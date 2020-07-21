@@ -25,6 +25,11 @@ fieldSpecs:
   - path: metadata/name
 `, `
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: apple
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: apple
@@ -49,6 +54,11 @@ metadata:
 `)
 
 	th.AssertActualEqualsExpected(rm, `
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: apple
+---
 apiVersion: v1
 kind: Service
 metadata:
