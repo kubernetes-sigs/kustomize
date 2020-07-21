@@ -6,7 +6,8 @@ package builtins
 import (
 	"fmt"
 
-	"sigs.k8s.io/kustomize/api/transform"
+	"sigs.k8s.io/kustomize/api/filters/replicacount"
+	"sigs.k8s.io/kustomize/kyaml/filtersutil"
 
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -30,18 +31,24 @@ func (p *ReplicaCountTransformerPlugin) Config(
 
 func (p *ReplicaCountTransformerPlugin) Transform(m resmap.ResMap) error {
 	found := false
-	for i, replicaSpec := range p.FieldSpecs {
-		matcher := p.createMatcher(i)
+	for _, fs := range p.FieldSpecs {
+		matcher := p.createMatcher(fs)
 		matchOriginal := m.GetMatchingResourcesByOriginalId(matcher)
-		matchCurrent := m.GetMatchingResourcesByCurrentId(matcher)
-
-		for _, res := range append(matchOriginal, matchCurrent...) {
+		resList := append(
+			matchOriginal, m.GetMatchingResourcesByCurrentId(matcher)...)
+		if len(resList) > 0 {
 			found = true
-			err := transform.MutateField(
-				res.Map(), replicaSpec.PathSlice(),
-				replicaSpec.CreateIfNotPresent, p.addReplicas)
-			if err != nil {
-				return err
+			for _, r := range resList {
+				// There are redundant checks in the filter
+				// that we'll live with until resolution of
+				// https://github.com/kubernetes-sigs/kustomize/issues/2506
+				err := filtersutil.ApplyToJSON(replicacount.Filter{
+					Replica:   p.Replica,
+					FieldSpec: fs,
+				}, r)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -59,28 +66,10 @@ func (p *ReplicaCountTransformerPlugin) Transform(m resmap.ResMap) error {
 }
 
 // Match Replica.Name and FieldSpec
-func (p *ReplicaCountTransformerPlugin) createMatcher(i int) resmap.IdMatcher {
+func (p *ReplicaCountTransformerPlugin) createMatcher(fs types.FieldSpec) resmap.IdMatcher {
 	return func(r resid.ResId) bool {
-		return r.Name == p.Replica.Name &&
-			r.Gvk.IsSelected(&p.FieldSpecs[i].Gvk)
+		return r.Name == p.Replica.Name && r.Gvk.IsSelected(&fs.Gvk)
 	}
-}
-
-func (p *ReplicaCountTransformerPlugin) addReplicas(in interface{}) (interface{}, error) {
-	switch m := in.(type) {
-	case int64:
-		// Was already in the field.
-	case map[string]interface{}:
-		if len(m) != 0 {
-			// A map was already in the replicas field, don't want to
-			// discard this data silently.
-			return nil, fmt.Errorf("%#v is expected to be %T", in, m)
-		}
-		// Just got added, default type is map, but we can return anything.
-	default:
-		return nil, fmt.Errorf("%#v is expected to be %T", in, m)
-	}
-	return p.Replica.Count, nil
 }
 
 func NewReplicaCountTransformerPlugin() resmap.TransformerPlugin {
