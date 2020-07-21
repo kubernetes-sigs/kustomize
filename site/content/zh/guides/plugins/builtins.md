@@ -50,6 +50,7 @@ commonAnnotations:
 > FieldSpecs  \[\][config.FieldSpec]
 
 #### Example
+>
 > ```yaml
 > apiVersion: builtin
 > kind: AnnotationsTransformer
@@ -62,8 +63,6 @@ commonAnnotations:
 > - path: metadata/annotations
 >   create: true
 > ```
-
-
 
 ## _ConfigMapGenerator_
 
@@ -94,7 +93,7 @@ configMapGenerator:
   - application.properties
   - more.properties
 - name: my-java-server-env-vars
-  literals:	
+  literals: 
   - JAVA_HOME=/opt/java/jdk
   - JAVA_TOOL_OPTIONS=-agentlib:hprof
   options:
@@ -129,6 +128,7 @@ configMapGenerator:
 > [types.ConfigMapArgs]
 
 #### Example
+>
 > ```yaml
 > apiVersion: builtin
 > kind: ConfigMapGenerator
@@ -141,7 +141,6 @@ configMapGenerator:
 > - FRUIT=apple
 > - VEGETABLE=carrot
 > ```
-
 
 ## _ImageTagTransformer_
 
@@ -164,11 +163,11 @@ containers:
 ```
 
 想要将 `image` 做如下更改：
- 
- - 将 `postgres:8` 改为 `my-registry/my-postgres:v1`
- - 将 nginx tag 从 `1.7.9` 改为 `1.8.0`
- - 将镜像名称 `my-demo-app` 改为 `my-app`
- - 将 alpine 的 tag `3.7` 改为 digest 值
+
+- 将 `postgres:8` 改为 `my-registry/my-postgres:v1`
+- 将 nginx tag 从 `1.7.9` 改为 `1.8.0`
+- 将镜像名称 `my-demo-app` 改为 `my-app`
+- 将 alpine 的 tag `3.7` 改为 digest 值
 
 只需在 *kustomization* 中添加以下内容：
 
@@ -194,6 +193,7 @@ images:
 > FieldSpecs \[\][config.FieldSpec]
 
 #### Example
+>
 > ```yaml
 > apiVersion: builtin
 > kind: ImageTagTransformer
@@ -203,8 +203,6 @@ images:
 >   name: nginx
 >   newTag: v2
 > ```
-
-
 
 ## _LabelTransformer_
 
@@ -230,6 +228,7 @@ commonLabels:
 > FieldSpecs \[\][config.FieldSpec]
 
 #### Example
+>
 > ```yaml
 > apiVersion: builtin
 > kind: LabelTransformer
@@ -264,6 +263,7 @@ namespace: my-namespace
 > FieldSpecs \[\][config.FieldSpec]
 
 #### Example
+>
 > ```yaml
 > apiVersion: builtin
 >  kind: NamespaceTransformer
@@ -345,6 +345,7 @@ patchesJson6902:
 ### 使用插件
 
 #### Arguments
+
 > Target [types.PatchTarget]
 >
 > Path   string
@@ -352,6 +353,7 @@ patchesJson6902:
 > JsonOp string
 
 #### Example
+>
 > ```yaml
 > apiVersion: builtin
 > kind: PatchJson6902Transformer
@@ -385,6 +387,7 @@ patchesStrategicMerge:
 ```
 
 patch 内容也可以是一个inline string：
+
 ```yaml
 patchesStrategicMerge:
 - |-
@@ -411,6 +414,7 @@ patchesStrategicMerge:
 > Patches string
 
 #### Example
+>
 > ```yaml
 > apiVersion: builtin
 > kind: PatchStrategicMergeTransformer
@@ -419,7 +423,6 @@ patchesStrategicMerge:
 > paths:
 > - patch.yaml
 > ```
-
 
 ## _PatchTransformer_
 
@@ -460,9 +463,10 @@ is equivalent to `^myapp$`。
 >
 > Patch string
 >
-> Target \*[types.Selector] 
+> Target \*[types.Selector]
 
 #### Example
+>
 > ```yaml
 > apiVersion: builtin
 > kind: PatchTransformer
@@ -502,6 +506,7 @@ nameSuffix: -v2
 > FieldSpecs \[\][config.FieldSpec]
 
 #### Example
+>
 > ```yaml
 > apiVersion: builtin
 > kind: PrefixSuffixTransformer
@@ -542,6 +547,7 @@ replicas:
 该字段内容为列表，所以可以同时修改许多资源。
 
 由于这个声明无法设置 `kind:` 或 `group:`，所以他只能匹配如下资源中的一种：
+
 - `Deployment`
 - `ReplicationController`
 - `ReplicaSet`
@@ -558,6 +564,7 @@ replicas:
 > FieldSpecs \[\][config.FieldSpec]
 
 #### Example
+>
 > ```yaml
 > apiVersion: builtin
 > kind: ReplicaCountTransformer

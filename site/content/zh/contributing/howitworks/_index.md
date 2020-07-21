@@ -48,7 +48,7 @@ Call stack when running `kustomize build`, with links to code.
       * Iterate all generators
     * [runTransfomers](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L274)
       * [configureBuiltinTransformers](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget_configplugin.go#L44)
-        *	PatchStrategicMergeTransformer
+        * PatchStrategicMergeTransformer
         * PatchTransformer
         * NamespaceTransformer
         * PrefixSuffixTransformer

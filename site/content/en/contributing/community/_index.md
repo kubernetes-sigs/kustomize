@@ -21,5 +21,3 @@ If you are interested in contributing towards Kustomize or getting more involved
 - join the [mailing list] and reach out
 - join the [slack channel] and reach out
 - attend one of the [bi-weekly meetings] (alternating Wednesdays at 9:00am Pacific Time)
-
-

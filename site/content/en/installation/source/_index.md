@@ -39,5 +39,4 @@ git checkout kustomize/v3.2.3
 ~/go/bin/kustomize version
 ```
 
-
 [Go]: https://golang.org

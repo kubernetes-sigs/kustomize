@@ -14,4 +14,3 @@ Move entries into the [resources](/kustomize/api-reference/kustomization/resourc
 field.  This allows bases - which are still a
 [central concept](/kustomize/api-reference/kustomization/glossary#base) - to be
 ordered relative to other input resources.
-

@@ -15,10 +15,10 @@ description: >
 
 #### 环境要求
 
- * `linux`
- * `git`
- * `curl`
- * `Go 1.13`
+* `linux`
+* `git`
+* `curl`
+* `Go 1.13`
 
 ## 创建一个工作空间/目录
 
@@ -203,7 +203,7 @@ mv kustomize $DEMO/bin
 tree $DEMO
 ```
 
-## 使用插件构建 APP:
+## 使用插件构建 APP
 
 ```bash
 XDG_CONFIG_HOME=$DEMO $DEMO/bin/kustomize build --enable_alpha_plugins $MYAPP

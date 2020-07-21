@@ -8,6 +8,7 @@ description: >
 ---
 
 # Glossary
+
 [CRD spec]: https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/
 [CRD]: #custom-resource-definition
 [DAM]: #declarative-application-management
@@ -67,7 +68,6 @@ dashboards.
 [kustomize] configures k8s resources, and the proposed
 application resource is just another resource.
 
-
 ## apply
 
 The verb _apply_ in the context of k8s refers to a
@@ -99,7 +99,6 @@ could be the _sole content of a git repository
 dedicated to that purpose_.  Same with [overlays].
 Changes in a repo could generate a build, test and
 deploy cycle.
-
 
 ## bespoke configuration
 
@@ -133,17 +132,17 @@ a set of best practices around managing k8s clusters.
 
 In brief, kustomize should
 
- * Work with any configuration, be it bespoke,
+* Work with any configuration, be it bespoke,
    off-the-shelf, stateless, stateful, etc.
- * Support common customizations, and creation of
+* Support common customizations, and creation of
    [variants] (e.g. _development_ vs.
    _staging_ vs. _production_).
- * Expose and teach native k8s APIs, rather than
+* Expose and teach native k8s APIs, rather than
    hide them.
- * Add no friction to version control integration to
+* Add no friction to version control integration to
    support reviews and audit trails.
- * Compose with other tools in a unix sense.
- * Eschew crossing the line into templating, domain
+* Compose with other tools in a unix sense.
+* Eschew crossing the line into templating, domain
    specific languages, etc., frustrating the other
    goals.
 
@@ -151,7 +150,6 @@ In brief, kustomize should
 
 A generator makes resources that can be used as is,
 or fed into a [transformer].
-
 
 ## gitops
 
@@ -171,30 +169,29 @@ data that doesn't require a URL specification).
 I.e. if someone gives you a _kustomization_ for use
 with [kustomize], it could be in the form of
 
- * one file called `kustomization.yaml`,
- * a tarball (containing that YAML file plus what it references),
- * a git archive (ditto),
- * a URL to a git repo (ditto), etc.
+* one file called `kustomization.yaml`,
+* a tarball (containing that YAML file plus what it references),
+* a git archive (ditto),
+* a URL to a git repo (ditto), etc.
 
 A kustomization file contains [fields](fields.md)
 falling into four categories:
 
- * _resources_ - what existing [resources] are to be customized.
+* _resources_ - what existing [resources] are to be customized.
    Example fields: _resources_, _crds_.
 
- * _generators_ - what _new_ resources should be created.
+* _generators_ - what _new_ resources should be created.
    Example fields: _configMapGenerator_ (legacy),
    _secretGenerator_ (legacy), _generators_ (v2.1).
 
- * _transformers_ - what to _do_ to the aforementioned resources.
+* _transformers_ - what to _do_ to the aforementioned resources.
    Example fields: _namePrefix_, _nameSuffix_, _images_,
    _commonLabels_, _patchesJson6902_, etc. and the more
    general _transformers_ (v2.1) field.
 
- * _meta_ - fields which may influence all or some of
+* _meta_ - fields which may influence all or some of
    the above.  Example fields: _vars_, _namespace_,
    _apiVersion_, _kind_, etc.
-
 
 ## kustomization root
 
@@ -222,8 +219,8 @@ absolute path, or by relative path.
 
 If kustomization __A__ depends on kustomization __B__, then
 
- * __B__ may not _contain_ __A__.
- * __B__ may not _depend on_ __A__, even transitively.
+* __B__ may not _contain_ __A__.
+* __B__ may not _depend on_ __A__, even transitively.
 
 __A__ may contain __B__, but in this case it might be
 simplest to have __A__ directly depend on __B__'s
@@ -233,7 +230,6 @@ resources and eliminate __B__'s kustomization.yaml file
 Conventionally, __B__ is in a directory that's sibling
 to __A__, or __B__ is off in a completely independent
 git repository, referencable from any kustomization.
-
 
 A common layout is
 
@@ -290,7 +286,6 @@ names, labels, namespaces, etc. and the semantics of
 resource patching.
 
 kustomize is an implementation of [DAM].
-
 
 ## off-the-shelf configuration
 
@@ -379,7 +374,7 @@ fields to establish the group/version/kind/name of the
 to step into a nested structure to specify a new field
 value, e.g. an image tag.
 
-By default, an SMP _replaces_ values.  This is 
+By default, an SMP _replaces_ values.  This is
 usually desired when the target value is a simple
 string, but may not be desired when the target
 value is a list.

@@ -31,6 +31,7 @@ replicas:
 该字段内容为列表，所以可以同时修改许多资源。
 
 由于这个声明无法设置 `kind:` 或 `group:`，所以他只能匹配如下资源中的一种：
+
 - `Deployment`
 - `ReplicationController`
 - `ReplicaSet`

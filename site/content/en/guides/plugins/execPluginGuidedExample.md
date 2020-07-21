@@ -18,8 +18,7 @@ current setup.
 
 #### requirements
 
- * linux, git, curl, Go 1.13
-
+* linux, git, curl, Go 1.13
 
 ## Make a place to work
 
@@ -128,10 +127,10 @@ EOF
 ```
 
 Review the files
+
 ```
 ls -C1 $MYAPP
 ```
-
 
 ## Make a home for plugins
 
@@ -205,6 +204,7 @@ chmod a+x $MY_PLUGIN_DIR/SillyConfigMapGenerator
 ## Install kustomize
 
 Per the [instructions](/kustomize/installation):
+
 ```
 curl -s "https://raw.githubusercontent.com/\
 kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
@@ -218,7 +218,7 @@ mv kustomize $DEMO/bin
 tree $DEMO
 ```
 
-## Build your app, using the plugin:
+## Build your app, using the plugin
 
 ```
 XDG_CONFIG_HOME=$DEMO $DEMO/bin/kustomize build --enable_alpha_plugins $MYAPP

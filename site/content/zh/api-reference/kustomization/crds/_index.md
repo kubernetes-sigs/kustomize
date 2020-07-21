@@ -17,12 +17,12 @@ description: >
 
 Annotations 可以放入 openAPI 的定义中：
 
--  "x-kubernetes-annotation": ""
--  "x-kubernetes-label-selector": ""
--  "x-kubernetes-identity": ""
--  "x-kubernetes-object-ref-api-version": "v1",
--  "x-kubernetes-object-ref-kind": "Secret",
--  "x-kubernetes-object-ref-name-key": "name",
+- "x-kubernetes-annotation": ""
+- "x-kubernetes-label-selector": ""
+- "x-kubernetes-identity": ""
+- "x-kubernetes-object-ref-api-version": "v1",
+- "x-kubernetes-object-ref-kind": "Secret",
+- "x-kubernetes-object-ref-name-key": "name",
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1

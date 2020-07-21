@@ -81,5 +81,3 @@ job.  E.g., a Deployment may reference a ConfigMap
 by name, and if kustomize changes the name of a
 ConfigMap, it knows to change the name reference
 in the Deployment.
-
-
