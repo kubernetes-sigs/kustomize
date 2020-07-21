@@ -51,7 +51,7 @@ knowledge of the k8s API, and YAML or JSON syntax.
 Most edits performed by kustomize can be expressed as
 [JSON patches] or [SMP patches].
 Those can be verbose, so common patches,
-like adding labels or annotatations, get dedicated 
+like adding labels or annotatations, get dedicated
 transformer plugins - `LabelTransformer`,
 `AnnotationsTransformer`, etc.
 These accept relatively simple YAML configuration
@@ -69,7 +69,7 @@ informed error messages if inputs are invalid.
 
 _Unstructured edits_, edits that don't limit
 themselves to a syntax or object structure,
-come in many forms.  A common one in the 
+come in many forms.  A common one in the
 configuration domain is the template or
 parameterization approach.
 
@@ -93,7 +93,7 @@ kustomize eschews parameterization, because
 - The input becomes [unintelligible] as the project
   scales in any number of dimensions (resource
   count, cluster count, environment count, etc.)
-    
+
 Kustomizations are meant to be sharable and stackable.
 Imagine tracing down a problem rooted in a
 clever set of stacked regexp replacements
@@ -131,7 +131,6 @@ kustomize edit set image nginx:$MY_NGINX_VERSION
 
 as part of some encapsulating work flow executed before
 `kustomize build`.
-
 
 ## Globs in kustomization files
 

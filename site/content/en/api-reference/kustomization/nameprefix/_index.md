@@ -13,4 +13,4 @@ kind: Kustomization
 namePrefix: alices-
 ```
 
-A deployment named `wordpress` would become `alices-wordpress`. 
+A deployment named `wordpress` would become `alices-wordpress`.

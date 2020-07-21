@@ -15,7 +15,6 @@ description: >
 [eschewed feature list]: https://kubernetes-sigs.github.io/kustomize/faq/eschewedfeatures/
 [kind/feature]: https://github.com/kubernetes-sigs/kustomize/labels/kind%2Ffeature
 
-
 Following is the process for proposing a new Kustomize feature:
 
 1. Check the [eschewed feature list] to see if the feature has already been proposed

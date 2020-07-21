@@ -7,6 +7,7 @@ description: >
 ---
 
 该条目可以是指向本地目录的相对路径，也可以是指向远程仓库中的目录的 URL，例如：
+
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

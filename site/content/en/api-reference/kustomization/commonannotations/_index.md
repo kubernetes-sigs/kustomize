@@ -55,4 +55,3 @@ metadata:
 spec:
   ...
 ```
-

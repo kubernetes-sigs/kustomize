@@ -12,5 +12,6 @@ choco install kustomize
 ```
 
 有关软件包管理器 chocolatey 的使用以及对之前版本的支持，请参考以下链接：
+
 - [Choco Package](https://chocolatey.org/packages/kustomize)
 - [Package Source](https://github.com/kenmaglio/choco-kustomize)

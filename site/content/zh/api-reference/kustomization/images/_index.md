@@ -26,11 +26,11 @@ spec:
 ```
 
 想要将 `image` 做如下更改：
- 
- - 将 `postgres:8` 改为 `my-registry/my-postgres:v1`
- - 将 nginx tag 从 `1.7.9` 改为 `1.8.0`
- - 将镜像名称 `my-demo-app` 改为 `my-app`
- - 将 alpine 的 tag `3.7` 改为 digest 值
+
+- 将 `postgres:8` 改为 `my-registry/my-postgres:v1`
+- 将 nginx tag 从 `1.7.9` 改为 `1.8.0`
+- 将镜像名称 `my-demo-app` 改为 `my-app`
+- 将 alpine 的 tag `3.7` 改为 digest 值
 
 只需在 *kustomization* 中添加以下内容：
 

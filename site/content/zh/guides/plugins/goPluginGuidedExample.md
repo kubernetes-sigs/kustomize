@@ -75,7 +75,7 @@ PLUGIN_ROOT=$DEMO/kustomize/plugin
 
 并在下面的命令行中临时设置 `XDG_CONFIG_HOME`。
 
-### 使用什么 apiVersion 和 kind？
+### 使用什么 apiVersion 和 kind
 
 在 kustomize 插件的开发时，插件代码不关心也不知道配置文件中的 `apiVersion` 或 `kind`。
 
@@ -136,9 +136,9 @@ GOPATH=$tmpGoPath go build -buildmode plugin -o ${kind}.so ${kind}.go
 
 在加载失败时
 
- * 确保使用相同版本的Go (_go1.13_)，在相同的 `$GOOS`(_linux_)和 `$GOARCH`(_amd64_) 上构建插件，用于构建本演示中使用的 [kustomize](#安装-kustomize)。
+* 确保使用相同版本的Go (_go1.13_)，在相同的 `$GOOS`(_linux_)和 `$GOARCH`(_amd64_) 上构建插件，用于构建本演示中使用的 [kustomize](#安装-kustomize)。
 
- * 修改插件中的依赖文件 `go.mod` 以匹配 kustomize 使用的版本。
+* 修改插件中的依赖文件 `go.mod` 以匹配 kustomize 使用的版本。
 
 缺乏工具和元数据来实现自动化，就不会有一个完整的 Go 插件生态。
 
@@ -296,7 +296,7 @@ tree $DEMO
 >     └── secGenerator.yaml
 > ```
 
-## 使用插件构建您的应用：
+## 使用插件构建您的应用
 
 ```shell
 XDG_CONFIG_HOME=$DEMO $tmpGoPath/bin/kustomize build --enable_alpha_plugins $MYAPP

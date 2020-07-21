@@ -27,11 +27,11 @@ spec:
 ```
 
 one can change the `image` in the following ways:
- 
- - `postgres:8` to `my-registry/my-postgres:v1`,
- - nginx tag `1.7.9` to `1.8.0`,
- - image name `my-demo-app` to `my-app`,
- - alpine's tag `3.7` to a digest value
+
+- `postgres:8` to `my-registry/my-postgres:v1`,
+- nginx tag `1.7.9` to `1.8.0`,
+- image name `my-demo-app` to `my-app`,
+- alpine's tag `3.7` to a digest value
 
 all with the following *kustomization*:
 

@@ -18,4 +18,3 @@ For [MacPorts](https://www.macports.org) users:
 ```
 sudo port install kustomize
 ```
-

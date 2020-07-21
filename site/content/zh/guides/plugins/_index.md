@@ -16,8 +16,8 @@ Kustomize 提供一个插件框架，允许用户开发自己的 _生成器_ 和
 
 [12-factor]: https://12factor.net
 
- * _generator_ 插件生成 k8s 资源，比如 [helm chart inflator] 是一个 generator 插件，基于少量自由变量生成一个 [12-factor] 应用所包含的全部组件 deployment，service，scaler，ingress 等）也是一个 generator 插件。
- * _transformer_ 插件转化（修改）k8s 资源，比如可能会执行对特殊容器命令行的编辑，或为其他内置转换器（`namePrefix`、`commonLabels` 等）无法转换的内容提供转换。
+* _generator_ 插件生成 k8s 资源，比如 [helm chart inflator] 是一个 generator 插件，基于少量自由变量生成一个 [12-factor] 应用所包含的全部组件 deployment，service，scaler，ingress 等）也是一个 generator 插件。
+* _transformer_ 插件转化（修改）k8s 资源，比如可能会执行对特殊容器命令行的编辑，或为其他内置转换器（`namePrefix`、`commonLabels` 等）无法转换的内容提供转换。
 
 ## `kustomization.yaml` 的格式
 
@@ -41,7 +41,6 @@ Kustomize 提供一个插件框架，允许用户开发自己的 _生成器_ 和
 [kustomization]: /kustomize/zh/api-reference/glossary#kustomization
 
 从磁盘上读取 YAML 文件，kustomization 的路径或 URL 会触发 kustomization 的运行。由此产生的每个的对象都会被 kustomize 进一步解析为 _plugin configuration_ 对象。
-
 
 ## 配置
 
@@ -149,10 +148,10 @@ _exec 插件_ 是一个可以在命令行中接收参数可执行文件，该参
 
 #### 示例
 
- * [helm chart inflator] - helm chart inflates 生成器。
- * [bashed config map] - 使用 bash 生成十分简单的 configMap。
- * [sed transformer] - 使用插件来定义非结构化的编辑。
- * [hashicorp go-getter] - 下载 kustomize layes 并通过构建它来生成资源。
+* [helm chart inflator] - helm chart inflates 生成器。
+* [bashed config map] - 使用 bash 生成十分简单的 configMap。
+* [sed transformer] - 使用插件来定义非结构化的编辑。
+* [hashicorp go-getter] - 下载 kustomize layes 并通过构建它来生成资源。
 
 生成器插件无需在 `stdin` 上输入任何东西，就会将生成的资源输出到 `stdout`。
 
@@ -173,6 +172,7 @@ kustomize 会使用 exec 插件适配器，为 `stdin` 提供的资源，并获�
 如果此注释被设置在不受哈希转换器支持的资源上，将导致构建将失败。
 
 示例：
+
 ```yaml
 apiVersion: v1
 kind: ConfigMap
@@ -181,7 +181,7 @@ metadata:
   annotations:
     kustomize.config.k8s.io/needs-hash: "true"
 data:
-  foo: bar   
+  foo: bar
 ```
 
 **`kustomize.config.k8s.io/behavior`**
@@ -189,6 +189,7 @@ data:
 `behavior` 注释为当资源发生冲突时插件的处理方式，有效值包括："create"、"merge "和 "replace"，默认为 "create"。
 
 示例：
+
 ```yaml
 apiVersion: v1
 kind: ConfigMap
@@ -197,7 +198,7 @@ metadata:
   annotations:
     kustomize.config.k8s.io/behavior: "merge"
 data:
-  foo: bar   
+  foo: bar
 ```
 
 ### Go 插件
@@ -216,8 +217,8 @@ kustomize 的一个 Go 插件看起来是这样的：
 > package main
 >
 > import (
->	"sigs.k8s.io/kustomize/api/ifc"
->	"sigs.k8s.io/kustomize/api/resmap"
+> "sigs.k8s.io/kustomize/api/ifc"
+> "sigs.k8s.io/kustomize/api/resmap"
 >   ...
 > )
 >
@@ -247,12 +248,12 @@ kustomize 的一个 Go 插件看起来是这样的：
 
 #### 示例
 
- * [service generator] - 使用 name 和 port 参数生成一个 service。
- * [string prefixer] - 使用 `metadata/name` 值作为前缀。这个特殊的示例是为了展示插件的转化行为。详见 `target` 包中的 `TestTransformedTransformers` 测试。
- * [date prefixer] - 将当前日期作为前缀添加到资源名称上，这是一个用于修改刚才提到的字符串前缀插件的简单示例。
- * [secret generator] - 从 toy 数据库生成 secret。
- * [sops encoded secrets] - 一个更复杂的 secret 生成器。
- * [All the builtin plugins](https://github.com/kubernetes-sigs/kustomize/tree/master/plugin/builtin).
+* [service generator] - 使用 name 和 port 参数生成一个 service。
+* [string prefixer] - 使用 `metadata/name` 值作为前缀。这个特殊的示例是为了展示插件的转化行为。详见 `target` 包中的 `TestTransformedTransformers` 测试。
+* [date prefixer] - 将当前日期作为前缀添加到资源名称上，这是一个用于修改刚才提到的字符串前缀插件的简单示例。
+* [secret generator] - 从 toy 数据库生成 secret。
+* [sops encoded secrets] - 一个更复杂的 secret 生成器。
+* [All the builtin plugins](https://github.com/kubernetes-sigs/kustomize/tree/master/plugin/builtin).
    用户自制的插件与内置插件是一样的。
 
 Go 插件既可以是生成器，也可以是转化器。`Generate` 方法将在 `Transform` 方法运行之前与所有其他生成器一起运行。

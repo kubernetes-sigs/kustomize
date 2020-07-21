@@ -13,6 +13,6 @@ kind: Kustomization
 nameSuffix: -v2
 ```
 
-A deployment named `wordpress` would become `wordpress-v2`. 
+A deployment named `wordpress` would become `wordpress-v2`.
 
 **Note:** The suffix is appended before the content hash if the resource type is ConfigMap or Secret.
