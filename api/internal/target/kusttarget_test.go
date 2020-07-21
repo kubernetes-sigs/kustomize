@@ -187,7 +187,7 @@ metadata:
 			"apiVersion": "v1",
 			"kind":       "Namespace",
 			"metadata": map[string]interface{}{
-				"name": "foo-ns1-bar",
+				"name": "ns1",
 				"labels": map[string]interface{}{
 					"app": "nginx",
 				},
