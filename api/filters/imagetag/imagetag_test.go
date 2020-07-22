@@ -139,7 +139,7 @@ spec:
   - image: nginx:1.2.1
   - image: tomcat:1.2.3
   template:
-    spec: 
+    spec:
       initContainers:
       - image: nginx:1.2.1
       - image: apache:1.2.3
