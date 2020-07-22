@@ -6,6 +6,7 @@ package commands
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -13,7 +14,10 @@ import (
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/pathutil"
+	"sigs.k8s.io/kustomize/kyaml/printutil"
 	"sigs.k8s.io/kustomize/kyaml/setters"
+	"sigs.k8s.io/kustomize/kyaml/setters2"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
 
@@ -132,14 +136,43 @@ func (r *SetRunner) preRunE(c *cobra.Command, args []string) error {
 
 func (r *SetRunner) runE(c *cobra.Command, args []string) error {
 	if setterVersion == "v2" {
-		count, err := r.Set.Set(r.OpenAPIFile, args[0])
-		fmt.Fprintf(c.OutOrStdout(), "set %d fields\n", count)
-		return handleError(c, err)
+		openAPIFileName, err := ext.GetOpenAPIFile([]string{"."})
+		if err != nil {
+			return err
+		}
+		openAPIPaths, err := pathutil.SubDirsWithFile(args[0], openAPIFileName)
+		if err != nil {
+			return err
+		}
+		if len(openAPIPaths) == 0 {
+			return errors.Errorf("unable to find %s in %s", openAPIFileName, args[0])
+		}
+		for _, openAPIPath := range openAPIPaths {
+			resourcePath := strings.TrimSuffix(openAPIPath, openAPIFileName)
+			fmt.Fprintf(c.OutOrStdout(), "\nfinding %s setter in package %s\n", r.Set.Name, resourcePath)
+			count, err := r.Set.Set(openAPIPath, resourcePath)
+			if setErr := handleSetError(c, err); setErr != nil {
+				return setErr
+			}
+			fmt.Fprintf(c.OutOrStdout(), "set %d fields in package %s\n", count, resourcePath)
+		}
+		return nil
 	}
 	if len(args) > 2 || c.Flag("values").Changed {
 		return handleError(c, r.perform(c, args))
 	}
 	return handleError(c, lookup(r.Lookup, c, args))
+}
+
+func handleSetError(c *cobra.Command, err error) error {
+	if err == nil {
+		return nil
+	}
+	if strings.Contains(err.Error(), setters2.SetterNotFoundWarn) {
+		printutil.WarnPrintf(c.OutOrStdout(), "%s\n", err.Error())
+		return nil
+	}
+	return handleError(c, err)
 }
 
 func lookup(l setters.LookupSetters, c *cobra.Command, args []string) error {

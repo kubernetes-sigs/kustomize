@@ -7,11 +7,11 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/commands"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
@@ -408,27 +408,19 @@ openAPI:
 			openapi.ResetOpenAPI()
 			defer openapi.ResetOpenAPI()
 
-			f, err := ioutil.TempFile("", "k8s-cli-")
+			dir, err := ioutil.TempDir("", "")
 			if !assert.NoError(t, err) {
 				t.FailNow()
-			}
-			defer os.Remove(f.Name())
-			old := ext.GetOpenAPIFile
-			defer func() { ext.GetOpenAPIFile = old }()
-			ext.GetOpenAPIFile = func(args []string) (s string, err error) {
-				err = ioutil.WriteFile(f.Name(), []byte(test.openapi), 0600)
-				if !assert.NoError(t, err) {
-					t.FailNow()
-				}
-				return f.Name(), nil
 			}
 
-			r, err := ioutil.TempFile("", "k8s-cli-*.yaml")
+			defer os.RemoveAll(dir)
+
+			err = ioutil.WriteFile(filepath.Join(dir, "Krmfile"), []byte(test.openapi), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			defer os.Remove(r.Name())
-			err = ioutil.WriteFile(r.Name(), []byte(test.input), 0600)
+
+			err = ioutil.WriteFile(filepath.Join(dir, "deployment.yaml"), []byte(test.input), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -436,18 +428,18 @@ openAPI:
 			runner := commands.NewListSettersRunner("")
 			actual := &bytes.Buffer{}
 			runner.Command.SetOut(actual)
-			runner.Command.SetArgs(append([]string{r.Name()}, test.args...))
+			runner.Command.SetArgs(append([]string{dir}, test.args...))
 			err = runner.Command.Execute()
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
-			if !assert.Equal(t, test.expected, actual.String()) {
+			if !assert.Contains(t, actual.String(), test.expected) {
 				t.FailNow()
 			}
 
 			// make sure that the resources are not altered
-			actualResources, err := ioutil.ReadFile(r.Name())
+			actualResources, err := ioutil.ReadFile(filepath.Join(dir, "deployment.yaml"))
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -457,7 +449,7 @@ openAPI:
 				t.FailNow()
 			}
 
-			actualOpenAPI, err := ioutil.ReadFile(f.Name())
+			actualOpenAPI, err := ioutil.ReadFile(filepath.Join(dir, "Krmfile"))
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
