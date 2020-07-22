@@ -173,6 +173,9 @@ spec:
 `)
 }
 
+// The default configuration recognizes image paths starting
+// with "spec", not spec2 or spec3, so the latter two specs won't
+// have their image entries changed.
 func TestTransfomersImageDefaultConfig(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeTransfomersImageBase(th)
@@ -212,25 +215,25 @@ spec2:
   template:
     spec:
       containers:
-      - image: nginx:v2
+      - image: nginx:v1
         name: nginx3
-      - image: my-nginx:previous
+      - image: my-nginx:latest
         name: nginx4
 spec3:
   template:
     spec:
       initContainers:
-      - image: my-postgres:v3
+      - image: postgres:alpine-9
         name: postgresdb
-      - image: my-docker@sha256:25a0d4b4
+      - image: docker:17-git
         name: init-docker
-      - image: myprivaterepohostname:1234/my/image:v1.0.1
+      - image: myprivaterepohostname:1234/my/image:latest
         name: myImage
-      - image: myprivaterepohostname:1234/my/image:v1.0.1
+      - image: myprivaterepohostname:1234/my/image
         name: myImage2
       - image: my-app-image:v1
         name: my-app
-      - image: my-cool-app:latest
+      - image: gcr.io:8080/my-project/my-cool-app:latest
         name: my-cool-app
 `)
 }
@@ -299,11 +302,11 @@ spec3:
 	th.WriteF("/app/base/config/custom.yaml", `
 images:
 - kind: Custom
-  path: spec/template/spec/myContainers/image
+  path: spec/template/spec/myContainers[]/image
 - kind: Custom
-  path: spec2/template/spec/myContainers/image
+  path: spec2/template/spec/myContainers[]/image
 - kind: Custom
-  path: spec3/template/spec/myInitContainers/image
+  path: spec3/template/spec/myInitContainers[]/image
 `)
 }
 
