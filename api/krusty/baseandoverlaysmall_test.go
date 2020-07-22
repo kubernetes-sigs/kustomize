@@ -70,7 +70,7 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: p-b-myNs
+  name: myNs
 ---
 apiVersion: v1
 kind: Role
@@ -95,7 +95,7 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: p-myNs2
+  name: myNs2
 `)
 }
 

@@ -30,6 +30,7 @@ var KustomizePlugin plugin
 var prefixSuffixFieldSpecsToSkip = types.FsSlice{
 	{Gvk: resid.Gvk{Kind: "CustomResourceDefinition"}},
 	{Gvk: resid.Gvk{Group: "apiregistration.k8s.io", Kind: "APIService"}},
+	{Gvk: resid.Gvk{Kind: "Namespace"}},
 }
 
 func (p *plugin) Config(
