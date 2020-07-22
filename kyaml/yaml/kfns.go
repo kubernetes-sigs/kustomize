@@ -51,7 +51,7 @@ type AnnotationSetter struct {
 func (s AnnotationSetter) Filter(rn *RNode) (*RNode, error) {
 	// some tools get confused about the type if annotations are not quoted
 	v := NewScalarRNode(s.Value)
-	v.YNode().Tag = StringTag
+	v.YNode().Tag = NodeTagString
 	v.YNode().Style = yaml.SingleQuotedStyle
 
 	if err := ClearEmptyAnnotations(rn); err != nil {
@@ -103,7 +103,7 @@ type LabelSetter struct {
 func (s LabelSetter) Filter(rn *RNode) (*RNode, error) {
 	// some tools get confused about the type if labels are not quoted
 	v := NewScalarRNode(s.Value)
-	v.YNode().Tag = StringTag
+	v.YNode().Tag = NodeTagString
 	v.YNode().Style = yaml.SingleQuotedStyle
 	return rn.Pipe(
 		PathGetter{Path: []string{"metadata", "labels"}, Create: yaml.MappingNode},
