@@ -72,15 +72,8 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 			}
 		}
 
-		// TODO(pwittrock): factor this into a a common module for pruning empty values
-		_, err := nodes[i].Pipe(yaml.Lookup("metadata"), yaml.FieldClearer{
-			Name: "annotations", IfEmpty: true})
-		if err != nil {
-			return errors.Wrap(err)
-		}
-		_, err = nodes[i].Pipe(yaml.FieldClearer{Name: "metadata", IfEmpty: true})
-		if err != nil {
-			return errors.Wrap(err)
+		if err := yaml.ClearEmptyAnnotations(nodes[i]); err != nil {
+			return err
 		}
 
 		if w.Style != 0 {
