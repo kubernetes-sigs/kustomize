@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.68.3" />
+<meta name="generator" content="Hugo 0.73.0-DEV" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -25,11 +25,11 @@
 " />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/zh/guides/plugins/gopluginguidedexample/" />
-<meta property="article:modified_time" content="2020-06-15T13:39:13+08:00" /><meta property="og:site_name" content="Kustomize" />
+<meta property="article:modified_time" content="2020-07-16T12:57:18-07:00" /><meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="Go 插件示例">
 <meta itemprop="description" content="Go 插件示例
 ">
-<meta itemprop="dateModified" content="2020-06-15T13:39:13&#43;08:00" />
+<meta itemprop="dateModified" content="2020-07-16T12:57:18-07:00" />
 <meta itemprop="wordCount" content="429">
 
 
@@ -350,7 +350,7 @@
     <li><a href="#安装-kustomize">安装 kustomize</a></li>
     <li><a href="#为插件创建目录">为插件创建目录</a>
       <ul>
-        <li><a href="#使用什么-apiversion-和-kind">使用什么 apiVersion 和 kind？</a></li>
+        <li><a href="#使用什么-apiversion-和-kind">使用什么 apiVersion 和 kind</a></li>
         <li><a href="#定义插件的主目录">定义插件的主目录</a></li>
         <li><a href="#下载-sopsencodedsecrets-插件">下载 SopsEncodedSecrets 插件</a></li>
         <li><a href="#尝试测试插件">尝试测试插件</a></li>
@@ -363,7 +363,7 @@
         <li><a href="#用你的私钥创建加密数据">用你的私钥创建加密数据</a></li>
       </ul>
     </li>
-    <li><a href="#使用插件构建您的应用">使用插件构建您的应用：</a></li>
+    <li><a href="#使用插件构建您的应用">使用插件构建您的应用</a></li>
   </ul>
 </nav>
 
@@ -451,7 +451,7 @@
 <p>该示例将在如下临时目录中存放其使用的插件：</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">PLUGIN_ROOT</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$DEMO</span>/kustomize/plugin
 </code></pre></div><p>并在下面的命令行中临时设置 <code>XDG_CONFIG_HOME</code>。</p>
-<h3 id="使用什么-apiversion-和-kind">使用什么 apiVersion 和 kind？</h3>
+<h3 id="使用什么-apiversion-和-kind">使用什么 apiVersion 和 kind</h3>
 <p>在 kustomize 插件的开发时，插件代码不关心也不知道配置文件中的 <code>apiVersion</code> 或 <code>kind</code>。</p>
 <p>插件会检查这些字段，但是剩下的字段提供了实际的配置数据，在这一点上，成功解析其他字段对于插件很重要。</p>
 <p>本示例使用一个名为 <em>SopsEncodedSecrets</em> 的插件，其位于 <a href="https://github.com/monopole/sopsencodedsecrets">SopsEncodedSecrets repository</a> 中。</p>
@@ -575,14 +575,14 @@ gcloud kms keys create sops-key --location global <span style="color:#4e9a06">\
     ├── myEncryptedData.yaml
     └── secGenerator.yaml
 </code></pre></div></blockquote>
-<h2 id="使用插件构建您的应用">使用插件构建您的应用：</h2>
+<h2 id="使用插件构建您的应用">使用插件构建您的应用</h2>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">XDG_CONFIG_HOME</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$DEMO</span> <span style="color:#000">$tmpGoPath</span>/bin/kustomize build --enable_alpha_plugins <span style="color:#000">$MYAPP</span>
 </code></pre></div><p>这将生成一个 kubernetes secret，并对名称 <code>ROCKET</code> 和 <code>CAR</code> 的数据进行加密。</p>
 <p>之前如果您已经设置了 <code>PLUGIN_ROOT=$HOME/.config/kustomize/plugin</code>，则无需在 <em>kustomize</em> 命令前使用 <code>XDG_CONFIG_HOME</code>。</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年06月15日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/518147c129f831913d33226cf17068d0d4270f41">add zh docsy (518147c1)</a>
+	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年07月16日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/f9ee578aed600136133c3232fff03029cdfc526e">Docs: Auto-fix markdownlint issues (f9ee578a)</a>
 </div>
 </div>
 
