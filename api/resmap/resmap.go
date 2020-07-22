@@ -611,17 +611,48 @@ func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
 	inputId := inputRes.CurId()
 	isInputIdNamespaceable := inputId.IsNamespaceableKind()
 	rctxm := inputRes.PrefixesSuffixesEquals
+	subjectNamespaces := getNamespacesForRoleBinding(inputRes)
 	for _, r := range m.Resources() {
 		// Need to match more accuratly both at the time of selection and transformation.
 		// OutmostPrefixSuffixEquals is not accurate enough since it is only using
 		// the outer most suffix and the last prefix. Use PrefixedSuffixesEquals instead.
 		resId := r.CurId()
-		if (!isInputIdNamespaceable || !resId.IsNamespaceableKind() || resId.IsNsEquals(inputId)) &&
-			r.InSameKustomizeCtx(rctxm) {
+		if (!isInputIdNamespaceable || !resId.IsNamespaceableKind() || resId.IsNsEquals(inputId) ||
+			isRoleBindingNamespace(&subjectNamespaces, r.GetNamespace())) && r.InSameKustomizeCtx(rctxm) {
 			result.append(r)
 		}
 	}
 	return result
+}
+
+// isRoleBindingNamespace returns true is the namespace `ns` is in role binding
+// namespaces `m`
+func isRoleBindingNamespace(m *map[string]bool, ns string) bool {
+	return (*m)[ns]
+}
+
+// getNamespacesForRoleBinding returns referenced ServiceAccount namespaces if the inputRes is
+// a RoleBinding
+func getNamespacesForRoleBinding(inputRes *resource.Resource) map[string]bool {
+	res := make(map[string]bool)
+	if inputRes.GetKind() != "RoleBinding" {
+		return res
+	}
+	subjects, err := inputRes.GetSlice("subjects")
+	if err != nil || subjects == nil {
+		return res
+	}
+
+	for _, s := range subjects {
+		subject := s.(map[string]interface{})
+		if subject["namespace"] == nil || subject["kind"] == nil ||
+			subject["kind"].(string) != "ServiceAccount" {
+			continue
+		}
+		res[subject["namespace"].(string)] = true
+	}
+
+	return res
 }
 
 func (m *resWrangler) append(res *resource.Resource) {
