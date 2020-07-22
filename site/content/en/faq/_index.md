@@ -7,6 +7,22 @@ menu:
     weight: 70
 ---
 
+## kubectl doesn't have the latest kustomize, when will it be updated?
+
+TLDR: This is blocked on either moving kubectl into its own repo, or changing its dependencies.  ETA k8s ~1.20.
+
+The adoption of go modules in the kubernetes/kubernetes repo broke the update process for kustomize.
+This is due to the kustomize libraries depending on the kubernetes apimachinery libraries, which are
+published out of the kubernetes staging directory.
+
+2 pieces of work are underway which will allow kustomize to be updated in kubectl:
+
+- migrating kubectl out of kubernetes/kubernetes (expected Kubernetes ~1.20)
+- migrating kustomize off of the apimachinery libraries (expected Kuberntes ~1.20)
+  - [2506](https://github.com/kubernetes-sigs/kustomize/issues/2506)
+
+Once either of these issues is resolved we will then update kubectl with the latest kustomize version.
+
 ## security: file 'foo' is not in or below 'bar'
 
 v2.0 added a security check that prevents
