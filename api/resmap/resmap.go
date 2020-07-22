@@ -618,11 +618,17 @@ func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
 		// the outer most suffix and the last prefix. Use PrefixedSuffixesEquals instead.
 		resId := r.CurId()
 		if (!isInputIdNamespaceable || !resId.IsNamespaceableKind() || resId.IsNsEquals(inputId) ||
-			subjectNamespaces[r.GetNamespace()]) && r.InSameKustomizeCtx(rctxm) {
+			isRoleBindingNamespace(&subjectNamespaces, r.GetNamespace())) && r.InSameKustomizeCtx(rctxm) {
 			result.append(r)
 		}
 	}
 	return result
+}
+
+// isRoleBindingNamespace returns true is the namespace `ns` is in role binding
+// namespaces `m`
+func isRoleBindingNamespace(m *map[string]bool, ns string) bool {
+	return (*m)[ns]
 }
 
 // getNamespacesForRoleBinding returns referenced ServiceAccount namespaces if the inputRes is
