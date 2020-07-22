@@ -16,9 +16,21 @@ import (
 )
 
 const (
-	// NullNodeTag is the tag set for a yaml.Document that contains no data -- e.g. it isn't a
-	// Map, Slice, Document, etc
-	NullNodeTag = "!!null"
+	// NodeTagNull is the tag set for a yaml.Document that contains no data;
+	// e.g. it isn't a Map, Slice, Document, etc
+	NodeTagNull   = "!!null"
+	NodeTagFloat  = "!!float"
+	NodeTagString = "!!str"
+	NodeTagBool   = "!!bool"
+	NodeTagInt    = "!!int"
+	NodeTagMap    = "!!map"
+	NodeTagEmpty  = ""
+
+	// TODO: deprecate these
+	NullNodeTag = NodeTagNull
+	StringTag   = NodeTagString
+	BoolTag     = NodeTagBool
+	IntTag      = NodeTagInt
 )
 
 // NullNode returns a RNode point represents a null; value
@@ -603,12 +615,6 @@ func (rn *RNode) VisitFields(fn func(node *MapNode) error) error {
 	}
 	return nil
 }
-
-const (
-	StringTag = "!!str"
-	BoolTag   = "!!bool"
-	IntTag    = "!!int"
-)
 
 // Elements returns the list of elements in the RNode.
 // Returns an error for non-SequenceNodes.
