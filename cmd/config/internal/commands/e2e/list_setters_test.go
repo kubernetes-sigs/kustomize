@@ -34,9 +34,7 @@ openAPI:
 `,
 			},
 			expectedStdOut: `
-[1;32m
-setters in package: [./]
-[0m    NAME     VALUE   SET BY   DESCRIPTION   COUNT   REQUIRED  
+NAME     VALUE   SET BY   DESCRIPTION   COUNT   REQUIRED  
   replicas   3                              1       No
 `,
 		},

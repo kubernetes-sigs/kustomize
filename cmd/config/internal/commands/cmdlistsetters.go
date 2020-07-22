@@ -13,10 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
-	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
-	"sigs.k8s.io/kustomize/kyaml/pathutil"
-	"sigs.k8s.io/kustomize/kyaml/printutil"
 	"sigs.k8s.io/kustomize/kyaml/setters"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
 )
@@ -66,28 +63,11 @@ func (r *ListSettersRunner) preRunE(c *cobra.Command, args []string) error {
 
 func (r *ListSettersRunner) runE(c *cobra.Command, args []string) error {
 	if setterVersion == "v2" {
-		openAPIFileName, err := ext.GetOpenAPIFile([]string{"."})
-		if err != nil {
+		if err := r.ListSetters(c, args); err != nil {
 			return err
 		}
-		openAPIPaths, err := pathutil.SubDirsWithFile(args[0], openAPIFileName)
-		if err != nil {
-			return err
-		}
-		if len(openAPIPaths) == 0 {
-			return errors.Errorf("unable to find %s in %s", openAPIFileName, args[0])
-		}
-		for _, openAPIPath := range openAPIPaths {
-			resourcePath := strings.TrimSuffix(openAPIPath, openAPIFileName)
-			printutil.GreenPrintf(c.OutOrStdout(), "\nsetters in package: %s\n", resourcePath)
-			if err := r.ListSetters(c, openAPIPath, resourcePath); err != nil {
-				return err
-			}
-			if r.IncludeSubst {
-				if err := r.ListSubstitutions(c, openAPIPath); err != nil {
-					return err
-				}
-			}
+		if r.IncludeSubst {
+			return r.ListSubstitutions(c, args)
 		}
 		return nil
 	}
@@ -95,9 +75,13 @@ func (r *ListSettersRunner) runE(c *cobra.Command, args []string) error {
 	return handleError(c, lookup(r.Lookup, c, args))
 }
 
-func (r *ListSettersRunner) ListSetters(c *cobra.Command, openAPIPath, resourcePath string) error {
+func (r *ListSettersRunner) ListSetters(c *cobra.Command, args []string) error {
 	// use setters v2
-	if err := r.List.ListSetters(openAPIPath, resourcePath); err != nil {
+	path, err := ext.GetOpenAPIFile(args)
+	if err != nil {
+		return err
+	}
+	if err := r.List.ListSetters(path, args[0]); err != nil {
 		return err
 	}
 	table := newTable(c.OutOrStdout(), r.Markdown)
@@ -128,13 +112,16 @@ func (r *ListSettersRunner) ListSetters(c *cobra.Command, openAPIPath, resourceP
 			os.Exit(1)
 		}
 	}
-	r.List.Setters = r.List.Setters[:0]
 	return nil
 }
 
-func (r *ListSettersRunner) ListSubstitutions(c *cobra.Command, openAPIPath string) error {
+func (r *ListSettersRunner) ListSubstitutions(c *cobra.Command, args []string) error {
 	// use setters v2
-	if err := r.List.ListSubst(openAPIPath); err != nil {
+	path, err := ext.GetOpenAPIFile(args)
+	if err != nil {
+		return err
+	}
+	if err := r.List.ListSubst(path); err != nil {
 		return err
 	}
 	table := newTable(c.OutOrStdout(), r.Markdown)
@@ -160,7 +147,6 @@ func (r *ListSettersRunner) ListSubstitutions(c *cobra.Command, openAPIPath stri
 		return nil
 	}
 	table.Render()
-	r.List.Substitutions = r.List.Substitutions[:0]
 
 	return nil
 }
