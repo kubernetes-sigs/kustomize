@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 func TestConfigMapHash(t *testing.T) {
@@ -66,6 +67,39 @@ func TestSecretHash(t *testing.T) {
 
 	for _, c := range cases {
 		h, err := secretHash(c.secret)
+		if SkipRest(t, c.desc, err, c.err) {
+			continue
+		}
+		if c.hash != h {
+			t.Errorf("case %q, expect hash %q but got %q", c.desc, c.hash, h)
+		}
+	}
+}
+
+func TestUnstructuredHash(t *testing.T) {
+	cases := []struct {
+		desc         string
+		unstructured *unstructured.Unstructured
+		hash         string
+		err          string
+	}{
+		{"minimal", &unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": "test/v1",
+				"kind":       "TestResource",
+				"metadata":   map[string]string{"name": "my-resource"}},
+		}, "2tt46d7f79", ""},
+		{"with spec", &unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": "test/v1",
+				"kind":       "TestResource",
+				"metadata":   map[string]string{"name": "my-resource"},
+				"spec":       map[string]interface{}{"foo": 1, "bar": "abc"}},
+		}, "6gc62g4m6k", ""},
+	}
+
+	for _, c := range cases {
+		h, err := unstructuredHash(c.unstructured)
 		if SkipRest(t, c.desc, err, c.err) {
 			continue
 		}

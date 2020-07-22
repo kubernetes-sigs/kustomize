@@ -253,7 +253,11 @@ A generator exec plugin can adjust the generator options for the resources it em
 
 Resources can be marked as needing to be processed by the internal hash transformer by including the `needs-hash` annotation. When set valid values for the annotation are `"true"` and `"false"` which respectively enable or disable hash suffixing for the resource. Omitting the annotation is equivalent to setting the value `"false"`.
 
-If this annotation is set on a resource not supported by the hash transformer the build will fail.
+Hashes are determined as follows:
+
+* For `ConfigMap` resources, hashes are based on the values of the `name`, `data`, and `binaryData` fields.
+* For `Secret` resources, hashes are based on the values of the `name`, `type`, `data`, and `stringData` fields.
+* For any other object type, hashes are based on the entire object content (i.e. all fields).
 
 Example:
 

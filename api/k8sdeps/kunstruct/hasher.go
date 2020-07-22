@@ -5,7 +5,6 @@ package kunstruct
 
 import (
 	"encoding/json"
-	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -21,7 +20,7 @@ func NewKustHash() *kustHash {
 	return &kustHash{}
 }
 
-// Hash returns a hash of either a ConfigMap or a Secret
+// Hash returns a hash of the given object
 func (h *kustHash) Hash(m ifc.Kunstructured) (string, error) {
 	u := unstructured.Unstructured{
 		Object: m.Map(),
@@ -36,15 +35,12 @@ func (h *kustHash) Hash(m ifc.Kunstructured) (string, error) {
 		return configMapHash(cm)
 	case "Secret":
 		sec, err := unstructuredToSecret(u)
-
 		if err != nil {
 			return "", err
 		}
 		return secretHash(sec)
 	default:
-		return "", fmt.Errorf(
-			"type %s is not supported for hashing in %v",
-			kind, m.Map())
+		return unstructuredHash(&u)
 	}
 }
 
@@ -70,6 +66,21 @@ func secretHash(sec *corev1.Secret) (string, error) {
 		return "", err
 	}
 	h, err := hasher.Encode(hasher.Hash(encoded))
+	if err != nil {
+		return "", err
+	}
+	return h, nil
+}
+
+// unstructuredHash creates a hash for an arbitrary type.
+// All fields of the object are taken into account when generating the hash.
+// This is a fallback for when a specalised hash for the type is unavailable.
+func unstructuredHash(u *unstructured.Unstructured) (string, error) {
+	encoded, err := json.Marshal(u.Object)
+	if err != nil {
+		return "", err
+	}
+	h, err := hasher.Encode(hasher.Hash(string(encoded)))
 	if err != nil {
 		return "", err
 	}
