@@ -44,7 +44,6 @@ func TestRefVarTransformer(t *testing.T) {
 					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/map"},
 					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/slice"},
 					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/interface"},
-					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/nil"},
 					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/num"},
 				},
 				res: resmaptest_test.NewRmBuilder(
@@ -63,7 +62,7 @@ func TestRefVarTransformer(t *testing.T) {
 								"item4": "$(BAZ)+$(BAZ)",
 								"item5": "$(BOO)",
 								"item6": "if $(BOO)",
-								"item7": 2019,
+								"item7": int64(2019),
 							},
 							"slice": []interface{}{
 								"$(FOO)",
@@ -74,8 +73,7 @@ func TestRefVarTransformer(t *testing.T) {
 								"if $(BOO)",
 							},
 							"interface": "$(FOO)",
-							"nil":       nil,
-							"num":       2019,
+							"num":       int64(2019),
 						}}).ResMap(),
 			},
 			expected: expected{
@@ -95,7 +93,7 @@ func TestRefVarTransformer(t *testing.T) {
 								"item4": "5+5",
 								"item5": true,
 								"item6": "if true",
-								"item7": 2019,
+								"item7": int64(2019),
 							},
 							"slice": []interface{}{
 								"replacementForFoo",
@@ -106,8 +104,7 @@ func TestRefVarTransformer(t *testing.T) {
 								"if true",
 							},
 							"interface": "replacementForFoo",
-							"nil":       nil,
-							"num":       2019,
+							"num":       int64(2019),
 						}}).ResMap(),
 				unused: []string{"BAR"},
 			},
@@ -131,7 +128,29 @@ func TestRefVarTransformer(t *testing.T) {
 							"slice": []interface{}{5}, // noticeably *not* a []string
 						}}).ResMap(),
 			},
-			errMessage: "expected array of strings, found [5]",
+			errMessage: `obj '{"apiVersion": "v1", "data": {"slice": [5]}, "kind": "ConfigMap", "metadata": {"name": "cm1"}}
+' at path 'data/slice': invalid value type expect a string`,
+		},
+		{
+			description: "var replacement panic in nil",
+			given: given{
+				varMap: map[string]interface{}{},
+				fs: []types.FieldSpec{
+					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/nil"},
+				},
+				res: resmaptest_test.NewRmBuilder(
+					t, resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())).
+					Add(map[string]interface{}{
+						"apiVersion": "v1",
+						"kind":       "ConfigMap",
+						"metadata": map[string]interface{}{
+							"name": "cm1",
+						},
+						"data": map[string]interface{}{
+							"nil": nil, // noticeably *not* a []string
+						}}).ResMap(),
+			},
+			errMessage: `obj '' at path 'data/nil': invalid type encountered 0`,
 		},
 	}
 
