@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.68.3" />
+<meta name="generator" content="Hugo 0.73.0-DEV" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -25,11 +25,11 @@
 " />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/zh/guides/plugins/execpluginguidedexample/" />
-<meta property="article:modified_time" content="2020-06-15T13:39:13+08:00" /><meta property="og:site_name" content="Kustomize" />
+<meta property="article:modified_time" content="2020-07-16T12:57:18-07:00" /><meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="Exec 插件示例">
 <meta itemprop="description" content="60 秒在 Linux 构建一个 Exec 插件
 ">
-<meta itemprop="dateModified" content="2020-06-15T13:39:13&#43;08:00" />
+<meta itemprop="dateModified" content="2020-07-16T12:57:18-07:00" />
 <meta itemprop="wordCount" content="257">
 
 
@@ -352,7 +352,7 @@
     <li><a href="#编写插件">编写插件</a></li>
     <li><a href="#安装-kustomize">安装 kustomize</a></li>
     <li><a href="#检查目录结构">检查目录结构</a></li>
-    <li><a href="#使用插件构建-app">使用插件构建 APP:</a></li>
+    <li><a href="#使用插件构建-app">使用插件构建 APP</a></li>
   </ul>
 </nav>
 
@@ -531,13 +531,13 @@ mkdir -p <span style="color:#000">$DEMO</span>/bin
 mv kustomize <span style="color:#000">$DEMO</span>/bin
 </code></pre></div><h2 id="检查目录结构">检查目录结构</h2>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">tree <span style="color:#000">$DEMO</span>
-</code></pre></div><h2 id="使用插件构建-app">使用插件构建 APP:</h2>
+</code></pre></div><h2 id="使用插件构建-app">使用插件构建 APP</h2>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#000">XDG_CONFIG_HOME</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$DEMO</span> <span style="color:#000">$DEMO</span>/bin/kustomize build --enable_alpha_plugins <span style="color:#000">$MYAPP</span>
 </code></pre></div><p>之前如果您已经设置了 <code>PLUGIN_ROOT=$HOME/.config/kustomize/plugin</code>，则无需在 <em>kustomize</em> 命令前使用 <code>XDG_CONFIG_HOME</code>。</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年06月15日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/518147c129f831913d33226cf17068d0d4270f41">add zh docsy (518147c1)</a>
+	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年07月16日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/f9ee578aed600136133c3232fff03029cdfc526e">Docs: Auto-fix markdownlint issues (f9ee578a)</a>
 </div>
 </div>
 

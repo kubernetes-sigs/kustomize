@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.68.3" />
+<meta name="generator" content="Hugo 0.73.0-DEV" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -25,11 +25,11 @@
 " />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/guides/plugins/builtins/" />
-<meta property="article:modified_time" content="2020-06-15T13:39:13+08:00" /><meta property="og:site_name" content="Kustomize" />
+<meta property="article:modified_time" content="2020-07-16T12:57:18-07:00" /><meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="Builtin Plugins">
 <meta itemprop="description" content="Builtin Plugins
 ">
-<meta itemprop="dateModified" content="2020-06-15T13:39:13&#43;08:00" />
+<meta itemprop="dateModified" content="2020-07-16T12:57:18-07:00" />
 <meta itemprop="wordCount" content="1560">
 
 
@@ -301,6 +301,29 @@
 
       
       
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/components/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Kustomize Components</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescomponents">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
     </li>
   </ul>
 </ul>
@@ -539,7 +562,7 @@ configMapGenerator:
   - application.properties
   - more.properties
 - name: my-java-server-env-vars
-  literals:	
+  literals: 
   - JAVA_HOME=/opt/java/jdk
   - JAVA_TOOL_OPTIONS=-agentlib:hprof
   options:
@@ -831,7 +854,7 @@ to apply the patch.</p>
       value: new value
   target:
     kind: MyKind
-    labelSelector: &quot;env=dev&quot;        
+    labelSelector: &quot;env=dev&quot;
 </code></pre><p>The <code>name</code> and <code>namespace</code> fields of the patch target selector are
 automatically anchored regular expressions. This means that the value <code>myapp</code>
 is equivalent to <code>^myapp$</code>.</p>
@@ -995,7 +1018,7 @@ literals:
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 15, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/518147c129f831913d33226cf17068d0d4270f41">add zh docsy (518147c1)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 16, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/f9ee578aed600136133c3232fff03029cdfc526e">Docs: Auto-fix markdownlint issues (f9ee578a)</a>
 </div>
 </div>
 

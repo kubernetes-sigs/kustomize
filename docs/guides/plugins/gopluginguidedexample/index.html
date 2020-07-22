@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.68.3" />
+<meta name="generator" content="Hugo 0.73.0-DEV" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -25,11 +25,11 @@
 " />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/guides/plugins/gopluginguidedexample/" />
-<meta property="article:modified_time" content="2020-06-07T21:07:46-07:00" /><meta property="og:site_name" content="Kustomize" />
+<meta property="article:modified_time" content="2020-07-16T12:57:18-07:00" /><meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="Go plugin example">
 <meta itemprop="description" content="Go plugin example
 ">
-<meta itemprop="dateModified" content="2020-06-07T21:07:46-07:00" />
+<meta itemprop="dateModified" content="2020-07-16T12:57:18-07:00" />
 <meta itemprop="wordCount" content="1057">
 
 
@@ -301,6 +301,29 @@
 
       
       
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/components/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Kustomize Components</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescomponents">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
     </li>
   </ul>
 </ul>
@@ -350,7 +373,7 @@
     <li><a href="#install-kustomize">Install kustomize</a></li>
     <li><a href="#make-a-home-for-plugins">Make a home for plugins</a>
       <ul>
-        <li><a href="#what-apiversion-and-kind">What apiVersion and kind?</a></li>
+        <li><a href="#what-apiversion-and-kind">What apiVersion and kind</a></li>
         <li><a href="#define-the-plugins-home-dir">Define the plugin&rsquo;s home dir</a></li>
         <li><a href="#download-the-sopsencodedsecrets-plugin">Download the SopsEncodedSecrets plugin</a></li>
         <li><a href="#try-the-plugins-own-test">Try the plugin&rsquo;s own test</a></li>
@@ -363,7 +386,7 @@
         <li><a href="#create-data-encrypted-with-your-private-key">Create data encrypted with your private key</a></li>
       </ul>
     </li>
-    <li><a href="#build-your-app-using-the-plugin">Build your app, using the plugin:</a></li>
+    <li><a href="#build-your-app-using-the-plugin">Build your app, using the plugin</a></li>
   </ul>
 </nav>
 
@@ -476,7 +499,7 @@ ephemeral directory</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">PLUGIN_ROOT</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$DEMO</span>/kustomize/plugin
 </code></pre></div><p>and ephemerally set <code>XDG_CONFIG_HOME</code> on a command
 line below.</p>
-<h3 id="what-apiversion-and-kind">What apiVersion and kind?</h3>
+<h3 id="what-apiversion-and-kind">What apiVersion and kind</h3>
 <p>At this stage in the development of kustomize
 plugins, plugin code doesn&rsquo;t know or care what
 <code>apiVersion</code> or <code>kind</code> appears in the config file
@@ -632,7 +655,7 @@ gcloud kms keys create sops-key --location global <span style="color:#4e9a06">\
     ├── myEncryptedData.yaml
     └── secGenerator.yaml
 </code></pre></div></blockquote>
-<h2 id="build-your-app-using-the-plugin">Build your app, using the plugin:</h2>
+<h2 id="build-your-app-using-the-plugin">Build your app, using the plugin</h2>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">XDG_CONFIG_HOME</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$DEMO</span> <span style="color:#000">$tmpGoPath</span>/bin/kustomize build --enable_alpha_plugins <span style="color:#000">$MYAPP</span>
 </code></pre></div><p>This should emit a kubernetes secret, with
 encrypted data for the names <code>ROCKET</code> and <code>CAR</code>.</p>
@@ -645,7 +668,7 @@ encrypted data for the names <code>ROCKET</code> and <code>CAR</code>.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 7, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/42497c664f619a36cc86156e366b53099bd633cb">Convert docs to docsy (42497c66)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 16, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/f9ee578aed600136133c3232fff03029cdfc526e">Docs: Auto-fix markdownlint issues (f9ee578a)</a>
 </div>
 </div>
 

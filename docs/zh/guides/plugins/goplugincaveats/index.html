@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.68.3" />
+<meta name="generator" content="Hugo 0.73.0-DEV" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -25,11 +25,11 @@
 " />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/zh/guides/plugins/goplugincaveats/" />
-<meta property="article:modified_time" content="2020-06-15T13:39:13+08:00" /><meta property="og:site_name" content="Kustomize" />
+<meta property="article:modified_time" content="2020-07-16T12:57:18-07:00" /><meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="Go 插件注意事项">
 <meta itemprop="description" content="Go 插件注意事项
 ">
-<meta itemprop="dateModified" content="2020-06-15T13:39:13&#43;08:00" />
+<meta itemprop="dateModified" content="2020-07-16T12:57:18-07:00" />
 <meta itemprop="wordCount" content="145">
 
 
@@ -342,7 +342,7 @@
 <nav id="TableOfContents">
   <ul>
     <li><a href="#the-skew-problem">The skew problem</a></li>
-    <li><a href="#为什么支持-go-插件">为什么支持 Go 插件？</a>
+    <li><a href="#为什么支持-go-插件">为什么支持 Go 插件</a>
       <ul>
         <li><a href="#安全">安全</a></li>
         <li><a href="#debugging">Debugging</a></li>
@@ -418,7 +418,7 @@
 </span><span style="color:#4e9a06"></span>    -o <span style="color:#4e9a06">${</span><span style="color:#000">wherever</span><span style="color:#4e9a06">}</span>/<span style="color:#4e9a06">${</span><span style="color:#000">kind</span><span style="color:#4e9a06">}</span>.so <span style="color:#4e9a06">${</span><span style="color:#000">wherever</span><span style="color:#4e9a06">}</span>/<span style="color:#4e9a06">${</span><span style="color:#000">kind</span><span style="color:#4e9a06">}</span>.go
 </code></pre></div><p>并根据需要调整路径和发行版本标记（例如 <code>v3.0.0</code>）。</p>
 <p>为了进行比较，可以参考编写 <a href="https://www.tensorflow.org/guide/extend/op">tensorflow plugin</a> 必须做的事情。</p>
-<h2 id="为什么支持-go-插件">为什么支持 Go 插件？</h2>
+<h2 id="为什么支持-go-插件">为什么支持 Go 插件</h2>
 <h3 id="安全">安全</h3>
 <p>Go 插件开发者可以操作与原生 kustomize 操作相同的 API，可确保某些语义、变量和检查等一致。exec 插件子进程通过 stdin/stdout 来处理这些问题，但对于下游的转化器和使用者来说，会更容易把事情搞砸。</p>
 <p>关键点：如果插件通过 kustomize 提供的文件 <code>Loader</code> 接口读取文件，则会受到 kustomize 文件加载限制的约束。当然，除了代码审计之外，没有什么可以阻止 Go 插件导入 io 包并执行其所需的任何操作。</p>
@@ -432,7 +432,7 @@
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年06月15日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/518147c129f831913d33226cf17068d0d4270f41">add zh docsy (518147c1)</a>
+	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年07月16日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/f9ee578aed600136133c3232fff03029cdfc526e">Docs: Auto-fix markdownlint issues (f9ee578a)</a>
 </div>
 </div>
 
