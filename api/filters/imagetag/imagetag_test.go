@@ -36,7 +36,7 @@ metadata:
   name: whatever
 spec:
   containers:
-  - image: theImageShouldNotChangeInACrd
+  - image: whatever
 `,
 			filter: Filter{
 				ImageTag: types.Image{

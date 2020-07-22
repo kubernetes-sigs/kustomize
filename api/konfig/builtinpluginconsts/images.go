@@ -4,7 +4,15 @@
 package builtinpluginconsts
 
 const (
-	// imageFieldSpecs is left empty since `containers` and `initContainers`
-	// of *ANY* kind in *ANY* path are builtin supported in code
-	imagesFieldSpecs = ``
+	imagesFieldSpecs = `
+images:
+- path: spec/containers[]/image
+  create: true
+- path: spec/initContainers[]/image
+  create: true
+- path: spec/template/spec/containers[]/image
+  create: true
+- path: spec/template/spec/initContainers[]/image
+  create: true
+`
 )
