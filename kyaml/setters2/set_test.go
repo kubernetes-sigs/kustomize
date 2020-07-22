@@ -1209,7 +1209,7 @@ openAPI:
 		{
 			name:   "error",
 			setter: "replicas",
-			err:    "no setter replicas found",
+			err:    "unable to find setter with name replicas",
 			input: `
 openAPI:
   definitions:
