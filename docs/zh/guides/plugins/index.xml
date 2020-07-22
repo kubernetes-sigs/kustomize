@@ -78,7 +78,7 @@
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- application.properties&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- more.properties&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;my-java-server-env-vars&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;literals&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;	
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;literals&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; 
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- JAVA_HOME=/opt/java/jdk&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- JAVA_TOOL_OPTIONS=-agentlib&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;hprof&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;options&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -630,7 +630,7 @@ mkdir -p &lt;span style=&#34;color:#000&#34;&gt;$DEMO&lt;/span&gt;/bin
 mv kustomize &lt;span style=&#34;color:#000&#34;&gt;$DEMO&lt;/span&gt;/bin
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;检查目录结构&#34;&gt;检查目录结构&lt;/h2&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;tree &lt;span style=&#34;color:#000&#34;&gt;$DEMO&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;使用插件构建-app&#34;&gt;使用插件构建 APP:&lt;/h2&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;使用插件构建-app&#34;&gt;使用插件构建 APP&lt;/h2&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;color:#000&#34;&gt;XDG_CONFIG_HOME&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;$DEMO&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;$DEMO&lt;/span&gt;/bin/kustomize build --enable_alpha_plugins &lt;span style=&#34;color:#000&#34;&gt;$MYAPP&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;之前如果您已经设置了 &lt;code&gt;PLUGIN_ROOT=$HOME/.config/kustomize/plugin&lt;/code&gt;，则无需在 &lt;em&gt;kustomize&lt;/em&gt; 命令前使用 &lt;code&gt;XDG_CONFIG_HOME&lt;/code&gt;。&lt;/p&gt;
 
@@ -666,7 +666,7 @@ mv kustomize &lt;span style=&#34;color:#000&#34;&gt;$DEMO&lt;/span&gt;/bin
 &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    -o &lt;span style=&#34;color:#4e9a06&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;wherever&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;}&lt;/span&gt;/&lt;span style=&#34;color:#4e9a06&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;}&lt;/span&gt;.so &lt;span style=&#34;color:#4e9a06&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;wherever&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;}&lt;/span&gt;/&lt;span style=&#34;color:#4e9a06&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;}&lt;/span&gt;.go
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;并根据需要调整路径和发行版本标记（例如 &lt;code&gt;v3.0.0&lt;/code&gt;）。&lt;/p&gt;
 &lt;p&gt;为了进行比较，可以参考编写 &lt;a href=&#34;https://www.tensorflow.org/guide/extend/op&#34;&gt;tensorflow plugin&lt;/a&gt; 必须做的事情。&lt;/p&gt;
-&lt;h2 id=&#34;为什么支持-go-插件&#34;&gt;为什么支持 Go 插件？&lt;/h2&gt;
+&lt;h2 id=&#34;为什么支持-go-插件&#34;&gt;为什么支持 Go 插件&lt;/h2&gt;
 &lt;h3 id=&#34;安全&#34;&gt;安全&lt;/h3&gt;
 &lt;p&gt;Go 插件开发者可以操作与原生 kustomize 操作相同的 API，可确保某些语义、变量和检查等一致。exec 插件子进程通过 stdin/stdout 来处理这些问题，但对于下游的转化器和使用者来说，会更容易把事情搞砸。&lt;/p&gt;
 &lt;p&gt;关键点：如果插件通过 kustomize 提供的文件 &lt;code&gt;Loader&lt;/code&gt; 接口读取文件，则会受到 kustomize 文件加载限制的约束。当然，除了代码审计之外，没有什么可以阻止 Go 插件导入 io 包并执行其所需的任何操作。&lt;/p&gt;
@@ -729,7 +729,7 @@ mv kustomize &lt;span style=&#34;color:#000&#34;&gt;$DEMO&lt;/span&gt;/bin
 &lt;p&gt;该示例将在如下临时目录中存放其使用的插件：&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;color:#000&#34;&gt;PLUGIN_ROOT&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;$DEMO&lt;/span&gt;/kustomize/plugin
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;并在下面的命令行中临时设置 &lt;code&gt;XDG_CONFIG_HOME&lt;/code&gt;。&lt;/p&gt;
-&lt;h3 id=&#34;使用什么-apiversion-和-kind&#34;&gt;使用什么 apiVersion 和 kind？&lt;/h3&gt;
+&lt;h3 id=&#34;使用什么-apiversion-和-kind&#34;&gt;使用什么 apiVersion 和 kind&lt;/h3&gt;
 &lt;p&gt;在 kustomize 插件的开发时，插件代码不关心也不知道配置文件中的 &lt;code&gt;apiVersion&lt;/code&gt; 或 &lt;code&gt;kind&lt;/code&gt;。&lt;/p&gt;
 &lt;p&gt;插件会检查这些字段，但是剩下的字段提供了实际的配置数据，在这一点上，成功解析其他字段对于插件很重要。&lt;/p&gt;
 &lt;p&gt;本示例使用一个名为 &lt;em&gt;SopsEncodedSecrets&lt;/em&gt; 的插件，其位于 &lt;a href=&#34;https://github.com/monopole/sopsencodedsecrets&#34;&gt;SopsEncodedSecrets repository&lt;/a&gt; 中。&lt;/p&gt;
@@ -853,7 +853,7 @@ gcloud kms keys create sops-key --location global &lt;span style=&#34;color:#4e9
     ├── myEncryptedData.yaml
     └── secGenerator.yaml
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
-&lt;h2 id=&#34;使用插件构建您的应用&#34;&gt;使用插件构建您的应用：&lt;/h2&gt;
+&lt;h2 id=&#34;使用插件构建您的应用&#34;&gt;使用插件构建您的应用&lt;/h2&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;color:#000&#34;&gt;XDG_CONFIG_HOME&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;$DEMO&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;$tmpGoPath&lt;/span&gt;/bin/kustomize build --enable_alpha_plugins &lt;span style=&#34;color:#000&#34;&gt;$MYAPP&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这将生成一个 kubernetes secret，并对名称 &lt;code&gt;ROCKET&lt;/code&gt; 和 &lt;code&gt;CAR&lt;/code&gt; 的数据进行加密。&lt;/p&gt;
 &lt;p&gt;之前如果您已经设置了 &lt;code&gt;PLUGIN_ROOT=$HOME/.config/kustomize/plugin&lt;/code&gt;，则无需在 &lt;em&gt;kustomize&lt;/em&gt; 命令前使用 &lt;code&gt;XDG_CONFIG_HOME&lt;/code&gt;。&lt;/p&gt;
