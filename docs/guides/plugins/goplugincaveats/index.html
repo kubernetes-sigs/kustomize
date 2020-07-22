@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.68.3" />
+<meta name="generator" content="Hugo 0.73.0-DEV" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -25,11 +25,11 @@
 " />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/guides/plugins/goplugincaveats/" />
-<meta property="article:modified_time" content="2020-06-07T21:07:46-07:00" /><meta property="og:site_name" content="Kustomize" />
+<meta property="article:modified_time" content="2020-07-16T12:57:18-07:00" /><meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="Go plugin Caveats">
 <meta itemprop="description" content="Go plugin Caveats
 ">
-<meta itemprop="dateModified" content="2020-06-07T21:07:46-07:00" />
+<meta itemprop="dateModified" content="2020-07-16T12:57:18-07:00" />
 <meta itemprop="wordCount" content="532">
 
 
@@ -301,6 +301,29 @@
 
       
       
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/components/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Kustomize Components</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescomponents">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
     </li>
   </ul>
 </ul>
@@ -342,7 +365,7 @@
 <nav id="TableOfContents">
   <ul>
     <li><a href="#the-skew-problem">The skew problem</a></li>
-    <li><a href="#why-support-go-plugins">Why support Go plugins?</a>
+    <li><a href="#why-support-go-plugins">Why support Go plugins</a>
       <ul>
         <li><a href="#safety">Safety</a></li>
         <li><a href="#debugging">Debugging</a></li>
@@ -445,7 +468,7 @@ GOPATH=${whatever} GO111MODULE=on go get sigs.k8s.io/kustomize/api
 adjusted as needed.</p>
 <p>For comparison, consider what one
 must do to write a <a href="https://www.tensorflow.org/guide/extend/op">tensorflow plugin</a>.</p>
-<h2 id="why-support-go-plugins">Why support Go plugins?</h2>
+<h2 id="why-support-go-plugins">Why support Go plugins</h2>
 <h3 id="safety">Safety</h3>
 <p>The Go plugin developer sees the same API offered
 to native kustomize operations, assuring certain
@@ -485,7 +508,7 @@ plugin vs host dependencies.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 7, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/42497c664f619a36cc86156e366b53099bd633cb">Convert docs to docsy (42497c66)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 16, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/f9ee578aed600136133c3232fff03029cdfc526e">Docs: Auto-fix markdownlint issues (f9ee578a)</a>
 </div>
 </div>
 

@@ -106,7 +106,7 @@ configMapGenerator:
   - application.properties
   - more.properties
 - name: my-java-server-env-vars
-  literals:	
+  literals: 
   - JAVA_HOME=/opt/java/jdk
   - JAVA_TOOL_OPTIONS=-agentlib:hprof
   options:
@@ -398,7 +398,7 @@ to apply the patch.&lt;/p&gt;
       value: new value
   target:
     kind: MyKind
-    labelSelector: &amp;quot;env=dev&amp;quot;        
+    labelSelector: &amp;quot;env=dev&amp;quot;
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;The &lt;code&gt;name&lt;/code&gt; and &lt;code&gt;namespace&lt;/code&gt; fields of the patch target selector are
 automatically anchored regular expressions. This means that the value &lt;code&gt;myapp&lt;/code&gt;
 is equivalent to &lt;code&gt;^myapp$&lt;/code&gt;.&lt;/p&gt;
@@ -718,7 +718,7 @@ mkdir -p $DEMO/bin
 mv kustomize $DEMO/bin
 &lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;review-the-layout&#34;&gt;Review the layout&lt;/h2&gt;
 &lt;pre&gt;&lt;code&gt;tree $DEMO
-&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;build-your-app-using-the-plugin&#34;&gt;Build your app, using the plugin:&lt;/h2&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;build-your-app-using-the-plugin&#34;&gt;Build your app, using the plugin&lt;/h2&gt;
 &lt;pre&gt;&lt;code&gt;XDG_CONFIG_HOME=$DEMO $DEMO/bin/kustomize build --enable_alpha_plugins $MYAPP
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Above, if you had set&lt;/p&gt;
 &lt;blockquote&gt;
@@ -786,7 +786,7 @@ GOPATH=${whatever} GO111MODULE=on go get sigs.k8s.io/kustomize/api
 adjusted as needed.&lt;/p&gt;
 &lt;p&gt;For comparison, consider what one
 must do to write a &lt;a href=&#34;https://www.tensorflow.org/guide/extend/op&#34;&gt;tensorflow plugin&lt;/a&gt;.&lt;/p&gt;
-&lt;h2 id=&#34;why-support-go-plugins&#34;&gt;Why support Go plugins?&lt;/h2&gt;
+&lt;h2 id=&#34;why-support-go-plugins&#34;&gt;Why support Go plugins&lt;/h2&gt;
 &lt;h3 id=&#34;safety&#34;&gt;Safety&lt;/h3&gt;
 &lt;p&gt;The Go plugin developer sees the same API offered
 to native kustomize operations, assuring certain
@@ -900,7 +900,7 @@ ephemeral directory&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;color:#000&#34;&gt;PLUGIN_ROOT&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;$DEMO&lt;/span&gt;/kustomize/plugin
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;and ephemerally set &lt;code&gt;XDG_CONFIG_HOME&lt;/code&gt; on a command
 line below.&lt;/p&gt;
-&lt;h3 id=&#34;what-apiversion-and-kind&#34;&gt;What apiVersion and kind?&lt;/h3&gt;
+&lt;h3 id=&#34;what-apiversion-and-kind&#34;&gt;What apiVersion and kind&lt;/h3&gt;
 &lt;p&gt;At this stage in the development of kustomize
 plugins, plugin code doesn&amp;rsquo;t know or care what
 &lt;code&gt;apiVersion&lt;/code&gt; or &lt;code&gt;kind&lt;/code&gt; appears in the config file
@@ -1056,7 +1056,7 @@ gcloud kms keys create sops-key --location global &lt;span style=&#34;color:#4e9
     ├── myEncryptedData.yaml
     └── secGenerator.yaml
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
-&lt;h2 id=&#34;build-your-app-using-the-plugin&#34;&gt;Build your app, using the plugin:&lt;/h2&gt;
+&lt;h2 id=&#34;build-your-app-using-the-plugin&#34;&gt;Build your app, using the plugin&lt;/h2&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;color:#000&#34;&gt;XDG_CONFIG_HOME&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;$DEMO&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;$tmpGoPath&lt;/span&gt;/bin/kustomize build --enable_alpha_plugins &lt;span style=&#34;color:#000&#34;&gt;$MYAPP&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This should emit a kubernetes secret, with
 encrypted data for the names &lt;code&gt;ROCKET&lt;/code&gt; and &lt;code&gt;CAR&lt;/code&gt;.&lt;/p&gt;

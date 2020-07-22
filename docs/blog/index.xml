@@ -23,7 +23,7 @@
         
         
         &lt;h2 id=&#34;summary-of-changes&#34;&gt;Summary of changes&lt;/h2&gt;
-&lt;h3 id=&#34;first-release-of-the-go-api-only-module&#34;&gt;First release of the Go API-only module.&lt;/h3&gt;
+&lt;h3 id=&#34;first-release-of-the-go-api-only-module&#34;&gt;First release of the Go API-only module&lt;/h3&gt;
 &lt;p&gt;Many of the PRs since the last vrelease were
 around restructuring the &lt;em&gt;sigs.k8s.io/kustomize&lt;/em&gt;
 repository into three Go modules instead of just one.&lt;/p&gt;
@@ -257,7 +257,7 @@ resources he needs to declare.&lt;/p&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;resources&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;resource-and-kustomize-context-matching&#34;&gt;Resource and Kustomize Context matching.&lt;/h3&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;resource-and-kustomize-context-matching&#34;&gt;Resource and Kustomize Context matching&lt;/h3&gt;
 &lt;p&gt;Kustomize is now able to support more aggregation patterns.&lt;/p&gt;
 &lt;p&gt;If for instance, the top level of kustomization.yaml, is simply
 combining sub-components, (as in the following example), Kustomize has improved
@@ -296,7 +296,7 @@ commits) and a &lt;code&gt;v3&lt;/code&gt; in Go package paths.&lt;/p&gt;
 floor on a stable API for &lt;a href=&#34;https://kubernetes-sigs.github.io/kustomize/docs/plugins&#34;&gt;plugin&lt;/a&gt; developers
 (both &lt;em&gt;Go&lt;/em&gt; plugin developers and &lt;em&gt;exec&lt;/em&gt; plugin
 developers who happen to use Go).&lt;/p&gt;
-&lt;h3 id=&#34;why-so-soon-after-v210&#34;&gt;Why so soon after v2.1.0?&lt;/h3&gt;
+&lt;h3 id=&#34;why-so-soon-after-v210&#34;&gt;Why so soon after v2.1.0&lt;/h3&gt;
 &lt;p&gt;We made a mistake - v2.1.0 should have been
 v3.0.0.  Per the &lt;a href=&#34;https://github.com/golang/go/wiki/Modules#releasing-modules-v2-or-higher&#34;&gt;Go modules doc&lt;/a&gt; (which have
 improved a great deal recently), a release that&amp;rsquo;s
