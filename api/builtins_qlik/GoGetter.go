@@ -90,18 +90,19 @@ func (p *GoGetterPlugin) Generate() (resmap.ResMap, error) {
 	// Convert to relative path due to kustomize bug with drive letters
 	// thinks its a remote ref
 	oswd, _ := os.Getwd()
-	dir, err = filepath.Rel(oswd, dir)
-
+	err = os.Chdir(dir)
 	if err != nil {
-		p.logger.Printf("Warning, Error fetching relative path of %v: %v\n", dir, err)
+		p.logger.Printf("Error: Unable to set working dir %v\n", dir, err)
+		return nil, err
 	}
-	cmd := exec.Command(currentExe, "build", dir)
+	cmd := exec.Command(currentExe, "build", ".")
 	cmd.Stderr = os.Stderr
 	kustomizedYaml, err := cmd.Output()
 	if err != nil {
 		p.logger.Printf("Error executing kustomize as a child process: %v\n", err)
 		return nil, err
 	}
+	os.Chdir(oswd)
 	return p.rf.NewResMapFromBytes(kustomizedYaml)
 }
 
