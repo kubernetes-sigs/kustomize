@@ -37,7 +37,7 @@ func (fltr Filter) Filter(obj *yaml.RNode) (*yaml.RNode, error) {
 	if match, err := isMatchGVK(fltr.FieldSpec, obj); !match || err != nil {
 		return obj, errors.Wrap(err)
 	}
-	fltr.path = strings.Split(fltr.FieldSpec.Path, "/")
+	fltr.path = splitPath(fltr.FieldSpec.Path)
 	if err := fltr.filter(obj); err != nil {
 		s, _ := obj.String()
 		return nil, errors.WrapPrefixf(err,
@@ -158,4 +158,19 @@ func isMatchGVK(fs types.FieldSpec, obj *yaml.RNode) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func splitPath(path string) []string {
+	ps := strings.Split(path, "/")
+	var res []string
+	res = append(res, ps[0])
+	for i := 1; i < len(ps); i++ {
+		lastIndex := len(res) - 1
+		if strings.HasSuffix(res[lastIndex], "\\") {
+			res[lastIndex] = strings.TrimSuffix(res[lastIndex], "\\") + "/" + ps[i]
+		} else {
+			res = append(res, ps[i])
+		}
+	}
+	return res
 }
