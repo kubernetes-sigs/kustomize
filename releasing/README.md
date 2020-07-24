@@ -11,7 +11,16 @@
 [`cloudbuild.yaml`]: cloudbuild.yaml
 
 This document describes how to perform a [semver release]
-of one of the [Go modules] in this repository.
+of one of the several [Go modules] in this repository.
+
+> This process doesn't describe or enforce a
+> particular module release sequence. There's a non-cyclic
+> dependence among the some of the modules defined in their
+> respective `go.mod` files.  If module `foo` depends on
+> module `bar`, and clients of `foo` would see an immediate
+> benefit from a change in `bar`, then a release of `bar`
+> should be followed by a change to `foo`'s `go.mod`
+> file and a subsequent release of `foo`.
 
 Briefly:
 - The repo HEAD is in a clean state (all tests passing).
@@ -20,6 +29,7 @@ Briefly:
 - A tag trigger in [Google Cloud Build], reading instructions from
   [`cloudbuild.yaml`] in this directory, creates release artifacts
   as needed and makes them available on the [release page].
+
 
 ## Public Modules
 
