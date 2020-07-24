@@ -55,6 +55,13 @@ echo "###################################"
 # no need for extra details in the `build` stanza below.
 cd $module
 
+skipBuild=true
+if [[ ("$module" == "kustomize") || \
+      ("$module" == "pluginator") ]]; then
+	# If releasing a main program, don't skip the build.
+  skipBuild=false
+fi
+
 configFile=$(mktemp)
 cat <<EOF >$configFile
 project_name: $module
@@ -63,7 +70,9 @@ archives:
 - name_template: "${module}_${semVer}_{{ .Os }}_{{ .Arch }}"
 
 builds:
-- ldflags: >
+- skip: $skipBuild
+
+  ldflags: >
     -s
     -X sigs.k8s.io/kustomize/api/provenance.version={{.Version}}
     -X sigs.k8s.io/kustomize/api/provenance.gitCommit={{.Commit}}
