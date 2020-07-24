@@ -24,6 +24,7 @@ const (
 	NodeTagBool   = "!!bool"
 	NodeTagInt    = "!!int"
 	NodeTagMap    = "!!map"
+	NodeTagSeq    = "!!seq"
 	NodeTagEmpty  = ""
 
 	// TODO: deprecate these
