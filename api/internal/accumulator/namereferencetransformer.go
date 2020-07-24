@@ -4,14 +4,12 @@
 package accumulator
 
 import (
-	"fmt"
 	"log"
 
+	"sigs.k8s.io/kustomize/api/filters/nameref"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
-	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/api/resource"
-	"sigs.k8s.io/kustomize/api/transform"
+	"sigs.k8s.io/kustomize/kyaml/filtersutil"
 )
 
 type nameReferenceTransformer struct {
@@ -86,16 +84,12 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 					if candidates == nil {
 						candidates = m.SubsetThatCouldBeReferencedByResource(referrer)
 					}
-					err := transform.MutateField(
-						referrer.Map(),
-						fSpec.PathSlice(),
-						fSpec.CreateIfNotPresent,
-						o.getNewNameFunc(
-							// referrer could be an HPA instance,
-							// target could be Gvk for Deployment,
-							// candidate a list of resources "reachable"
-							// from the HPA.
-							referrer, target.Gvk, candidates))
+					err := filtersutil.ApplyToJSON(nameref.Filter{
+						FieldSpec:          fSpec,
+						Referrer:           referrer,
+						Target:             target.Gvk,
+						ReferralCandidates: candidates,
+					}, referrer)
 					if err != nil {
 						return err
 					}
@@ -104,166 +98,4 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 		}
 	}
 	return nil
-}
-
-// selectReferral picks the referral among a subset of candidates.
-// It returns the current name and namespace of the selected candidate.
-// Note that the content of the referricalCandidateSubset slice is most of the time
-// identical to the referralCandidates resmap. Still in some cases, such
-// as ClusterRoleBinding, the subset only contains the resources of a specific
-// namespace.
-func (o *nameReferenceTransformer) selectReferral(
-	oldName string,
-	referrer *resource.Resource,
-	target resid.Gvk,
-	referralCandidates resmap.ResMap,
-	referralCandidateSubset []*resource.Resource) (interface{}, interface{}, error) {
-
-	for _, res := range referralCandidateSubset {
-		id := res.OrgId()
-		if id.IsSelected(&target) && res.GetOriginalName() == oldName {
-			matches := referralCandidates.GetMatchingResourcesByOriginalId(id.Equals)
-			// If there's more than one match, there's no way
-			// to know which one to pick, so emit error.
-			if len(matches) > 1 {
-				return nil, nil, fmt.Errorf(
-					"multiple matches for %s:\n  %v",
-					id, getIds(matches))
-			}
-			// In the resource, note that it is referenced
-			// by the referrer.
-			res.AppendRefBy(referrer.CurId())
-			// Return transformed name of the object,
-			// complete with prefixes, hashes, etc.
-			return res.GetName(), res.GetNamespace(), nil
-		}
-	}
-
-	return oldName, nil, nil
-}
-
-// utility function to replace a simple string by the new name
-func (o *nameReferenceTransformer) getSimpleNameField(
-	oldName string,
-	referrer *resource.Resource,
-	target resid.Gvk,
-	referralCandidates resmap.ResMap,
-	referralCandidateSubset []*resource.Resource) (interface{}, error) {
-
-	newName, _, err := o.selectReferral(oldName, referrer, target,
-		referralCandidates, referralCandidateSubset)
-
-	return newName, err
-}
-
-// utility function to replace name field within a map[string]interface{}
-// and leverage the namespace field.
-func (o *nameReferenceTransformer) getNameAndNsStruct(
-	inMap map[string]interface{},
-	referrer *resource.Resource,
-	target resid.Gvk,
-	referralCandidates resmap.ResMap) (interface{}, error) {
-
-	// Example:
-	if _, ok := inMap["name"]; !ok {
-		return nil, fmt.Errorf(
-			"%#v is expected to contain a name field", inMap)
-	}
-	oldName, ok := inMap["name"].(string)
-	if !ok {
-		return nil, fmt.Errorf(
-			"%#v is expected to contain a name field of type string", oldName)
-	}
-
-	subset := referralCandidates.Resources()
-	if namespacevalue, ok := inMap["namespace"]; ok {
-		namespace := namespacevalue.(string)
-		bynamespace := referralCandidates.GroupedByOriginalNamespace()
-		if _, ok := bynamespace[namespace]; !ok {
-			return inMap, nil
-		}
-		subset = bynamespace[namespace]
-	}
-
-	newname, newnamespace, err := o.selectReferral(oldName, referrer, target,
-		referralCandidates, subset)
-	if err != nil {
-		return nil, err
-	}
-
-	if (newname == oldName) && (newnamespace == nil) {
-		// no candidate found.
-		return inMap, nil
-	}
-
-	inMap["name"] = newname
-	if newnamespace != "" {
-		// We don't want value "" to replace value "default" since
-		// the empty string is handled as a wild card here not default namespace
-		// by kubernetes.
-		inMap["namespace"] = newnamespace
-	}
-	return inMap, nil
-
-}
-
-func (o *nameReferenceTransformer) getNewNameFunc(
-	referrer *resource.Resource,
-	target resid.Gvk,
-	referralCandidates resmap.ResMap) func(in interface{}) (interface{}, error) {
-	return func(in interface{}) (interface{}, error) {
-		switch thing := in.(type) {
-		case string:
-			return o.getSimpleNameField(thing, referrer, target,
-				referralCandidates, referralCandidates.Resources())
-		case map[string]interface{}:
-			// Kind: ValidatingWebhookConfiguration
-			// FieldSpec is webhooks/clientConfig/service
-			return o.getNameAndNsStruct(thing, referrer, target,
-				referralCandidates)
-		case []interface{}:
-			for idx, item := range thing {
-				switch value := item.(type) {
-				case string:
-					// Kind: Role/ClusterRole
-					// FieldSpec is rules.resourceNames
-					newName, err := o.getSimpleNameField(value, referrer, target,
-						referralCandidates, referralCandidates.Resources())
-					if err != nil {
-						return nil, err
-					}
-					thing[idx] = newName
-				case map[string]interface{}:
-					// Kind: RoleBinding/ClusterRoleBinding
-					// FieldSpec is subjects
-					// Note: The corresponding fieldSpec had been changed from
-					// from path: subjects/name to just path: subjects. This is
-					// what get mutatefield to request the mapping of the whole
-					// map containing namespace and name instead of just a simple
-					// string field containing the name
-					newMap, err := o.getNameAndNsStruct(value, referrer, target,
-						referralCandidates)
-					if err != nil {
-						return nil, err
-					}
-					thing[idx] = newMap
-				default:
-					return nil, fmt.Errorf(
-						"%#v is expected to be either a []string or a []map[string]interface{}", in)
-				}
-			}
-			return in, nil
-		default:
-			return nil, fmt.Errorf(
-				"%#v is expected to be either a string or a []interface{}", in)
-		}
-	}
-}
-
-func getIds(rs []*resource.Resource) []string {
-	var result []string
-	for _, r := range rs {
-		result = append(result, r.CurId().String()+"\n")
-	}
-	return result
 }
