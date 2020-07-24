@@ -31,6 +31,9 @@ func NewCmdAdd(
 	# Adds a patch to the kustomization
 	kustomize edit add patch <filepath>
 
+	# Adds a component to the kustomization
+	kustomize edit add component <filepath>
+
 	# Adds one or more base directories to the kustomization
 	kustomize edit add base <filepath>
 	kustomize edit add base <filepath1>,<filepath2>,<filepath3>
@@ -46,6 +49,7 @@ func NewCmdAdd(
 	c.AddCommand(
 		newCmdAddResource(fSys),
 		newCmdAddPatch(fSys),
+		newCmdAddComponent(fSys),
 		newCmdAddSecret(fSys, ldr, kf),
 		newCmdAddConfigMap(fSys, ldr, kf),
 		newCmdAddBase(fSys),
