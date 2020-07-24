@@ -12,10 +12,7 @@ require (
 	sigs.k8s.io/yaml v1.2.0
 )
 
-replace (
-	sigs.k8s.io/kustomize/api v0.5.1 => ../api
-	sigs.k8s.io/kustomize/kyaml v0.4.1 => ../kyaml
-)
+replace sigs.k8s.io/kustomize/api v0.5.1 => ../api
 
 exclude (
 	github.com/russross/blackfriday v2.0.0+incompatible
