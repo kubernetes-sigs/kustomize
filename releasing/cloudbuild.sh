@@ -56,7 +56,7 @@ echo "###################################"
 cd $module
 
 skipBuild=true
-if [[ ("$module" == "kustomize") || ("$module" == "pluginator") ]]; then
+if [[ "$module" == "kustomize" || "$module" == "pluginator" ]]; then
   # If releasing a main program, don't skip the build.
   skipBuild=false
 fi
