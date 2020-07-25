@@ -144,7 +144,104 @@ spec:
     - def
 `,
 		},
-	}
+		// kyaml cleans up things some folks prefer it didnt
+		// 1. []    -- see initContainers and imagePullSecrets
+		// 2. {}    -- see emptyDir
+		// 3. null  -- see creationTimestamp
+		"issue 2734 patch": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sas-crunchy-data-postgres-operator
+spec:
+  replicas: 1
+  template:
+    metadata:
+      creationTimestamp: null
+    spec:
+      containers:
+      - envFrom: []
+        image: sas-crunchy-data-operator-api-server
+        imagePullPolicy: IfNotPresent
+        name: apiserver
+        ports:
+        - containerPort: 8443
+        volumeMounts:
+        - mountPath: /security-ssh
+          name: security-ssh
+        - mountPath: /tmp
+          name: tmp
+      imagePullSecrets: []
+      initContainers: []
+      serviceAccountName: postgres-operator
+      volumes:
+      - emptyDir: {}
+        name: security-ssh
+      - emptyDir: {}
+        name: tmp
+`,
+			patch: yaml.MustParse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sas-crunchy-data-postgres-operator
+  labels:
+    workload.sas.com/class: stateless
+spec:
+  template:
+    metadata:
+      labels:
+        workload.sas.com/class: stateless
+    spec:
+      tolerations:
+        - effect: NoSchedule
+          key: workload.sas.com/class
+          operator: Equal
+          value: stateful
+`),
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sas-crunchy-data-postgres-operator
+  labels:
+    workload.sas.com/class: stateless
+spec:
+  replicas: 1
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        workload.sas.com/class: stateless
+    spec:
+      containers:
+      - envFrom: []
+        image: sas-crunchy-data-operator-api-server
+        imagePullPolicy: IfNotPresent
+        name: apiserver
+        ports:
+        - containerPort: 8443
+        volumeMounts:
+        - mountPath: /security-ssh
+          name: security-ssh
+        - mountPath: /tmp
+          name: tmp
+      imagePullSecrets: []
+      initContainers: []
+      serviceAccountName: postgres-operator
+      tolerations:
+      - effect: NoSchedule
+        key: workload.sas.com/class
+        operator: Equal
+        value: stateful
+      volumes:
+      - emptyDir: {}
+        name: security-ssh
+      - emptyDir: {}
+        name: tmp
+`,
+		}}
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
