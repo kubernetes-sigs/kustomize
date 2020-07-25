@@ -13,6 +13,7 @@ import (
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/konfig"
+	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/util"
 )
@@ -98,7 +99,7 @@ func runCreate(opts createFlags, fSys filesys.FileSystem, uf ifc.KunstructuredFa
 	var resources []string
 	var err error
 	if opts.resources != "" {
-		resources, err = util.GlobPatterns(fSys, strings.Split(opts.resources, ","))
+		resources, err = util.GlobPatternsWithLoader(fSys, loader.NewFileLoaderAtCwd(fSys), strings.Split(opts.resources, ","))
 		if err != nil {
 			return err
 		}

@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/util"
 )
@@ -48,7 +49,7 @@ func (o *addResourceOptions) Validate(args []string) error {
 
 // RunAddResource runs addResource command (do real work).
 func (o *addResourceOptions) RunAddResource(fSys filesys.FileSystem) error {
-	resources, err := util.GlobPatterns(fSys, o.resourceFilePaths)
+	resources, err := util.GlobPatternsWithLoader(fSys, loader.NewFileLoaderAtCwd(fSys), o.resourceFilePaths)
 	if err != nil {
 		return err
 	}
