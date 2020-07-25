@@ -636,3 +636,74 @@ spec:
         path: /canada
 `)
 }
+
+const aDeploymentResource = `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8080
+          name: take-over-the-world
+          protocol: TCP
+        - containerPort: 8080
+          name: disappearing-act
+          protocol: TCP
+`
+
+func TestPatchTransformerSimilarArrays(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+	th.WriteF("patch.yaml", `
+- op: add
+  path: /spec/rules/0/http/paths/-
+  value:
+    path: '/canada'
+    backend:
+      serviceName: hoser
+      servicePort: 7703
+`)
+
+	th.RunTransformerAndCheckResult(`
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: test-transformer
+patch: |-
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: test-transformer
+    labels:
+      test-transformer: did-my-job
+target:
+  kind: Deployment
+  name: test-deployment
+`, aDeploymentResource, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    test-transformer: did-my-job
+  name: test-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8080
+          name: take-over-the-world
+          protocol: TCP
+        - containerPort: 8080
+          name: take-over-the-world
+          protocol: TCP
+`)
+}
