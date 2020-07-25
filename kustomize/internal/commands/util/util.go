@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/ifc"
 )
 
 // GlobPatterns accepts a slice of glob strings and returns the set of
@@ -22,6 +23,32 @@ func GlobPatterns(fSys filesys.FileSystem, patterns []string) ([]string, error) 
 		}
 		if len(files) == 0 {
 			log.Printf("%s has no match", pattern)
+			continue
+		}
+		result = append(result, files...)
+	}
+	return result, nil
+}
+
+// GlobPatterns accepts a slice of glob strings and returns the set of
+// matching file paths. If files are not found, will try load from remote.
+func GlobPatternsWithLoader(fSys filesys.FileSystem, ldr ifc.Loader, patterns []string) ([]string, error) {
+	var result []string
+	for _, pattern := range patterns {
+		files, err := fSys.Glob(pattern)
+		if err != nil {
+			return nil, err
+		}
+		if len(files) == 0 {
+			loader, err := ldr.New(pattern)
+			if err != nil {
+				log.Printf("%s has no match", pattern)
+			} else {
+				result = append(result, pattern)
+				if loader != nil {
+					loader.Cleanup()
+				}
+			}
 			continue
 		}
 		result = append(result, files...)
