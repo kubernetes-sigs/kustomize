@@ -435,6 +435,60 @@ spec:
 		},
 		error: "obj '' at path 'spec/containers/image': expected sequence or mapping node",
 	},
+	{
+		name: "filedname with slash '/'",
+		fieldSpec: `
+path: a/b\/c/d
+version: v1
+kind: Bar
+`,
+		input: `
+apiVersion: v1
+kind: Bar
+a:
+  b/c:
+    d: foo
+`,
+		expected: `
+apiVersion: v1
+kind: Bar
+a:
+  b/c:
+    d: bar
+`,
+		filter: fieldspec.Filter{
+			SetValue:   filtersutil.SetScalar("bar"),
+			CreateKind: yaml.ScalarNode,
+		},
+	},
+	{
+		name: "filedname with multiple '/'",
+		fieldSpec: `
+path: a/b\/c/d\/e/f
+version: v1
+kind: Bar
+`,
+		input: `
+apiVersion: v1
+kind: Bar
+a:
+  b/c:
+    d/e:
+      f: foo
+`,
+		expected: `
+apiVersion: v1
+kind: Bar
+a:
+  b/c:
+    d/e:
+      f: bar
+`,
+		filter: fieldspec.Filter{
+			SetValue:   filtersutil.SetScalar("bar"),
+			CreateKind: yaml.ScalarNode,
+		},
+	},
 }
 
 func TestFilter_Filter(t *testing.T) {
