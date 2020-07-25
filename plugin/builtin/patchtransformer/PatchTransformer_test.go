@@ -637,6 +637,7 @@ spec:
 `)
 }
 
+// test for https://github.com/kubernetes-sigs/kustomize/issues/2767
 const aDeploymentResource = `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -656,19 +657,12 @@ spec:
           protocol: TCP
 `
 
+// currently documents broken state.  resulting ports: should have both
+//  take-over-the-world and disappearing-act on 8080
 func TestPatchTransformerSimilarArrays(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchTransformer")
 	defer th.Reset()
-	th.WriteF("patch.yaml", `
-- op: add
-  path: /spec/rules/0/http/paths/-
-  value:
-    path: '/canada'
-    backend:
-      serviceName: hoser
-      servicePort: 7703
-`)
 
 	th.RunTransformerAndCheckResult(`
 apiVersion: builtin
