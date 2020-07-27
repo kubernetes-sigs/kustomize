@@ -11,6 +11,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // SetterCreator creates or updates a setter in the OpenAPI definitions, and inserts references
@@ -43,6 +44,16 @@ type SetterCreator struct {
 	// live apply/preview. This field is added to the setter definition to record
 	// the package publisher's intent to make the setter required to be set.
 	Required bool
+
+	// Path to openAPI file
+	OpenAPIPath string
+
+	// Path to resources folder
+	ResourcesPath string
+}
+
+func (c *SetterCreator) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
+	return nil, c.Create(c.OpenAPIPath, c.ResourcesPath)
 }
 
 func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
