@@ -48,7 +48,7 @@ func (f Filter) set(node *yaml.RNode) error {
 		return f.setSequence(node)
 	default:
 		return fmt.Errorf(
-			"%#v is expected to be either a string or a slice of string or a map of string", node)
+			"node is expected to be either a string or a slice of string or a map of string")
 	}
 }
 
