@@ -286,8 +286,8 @@ func (p *HelmChartPlugin) helmConfigForChart(settings *cli.EnvSettings, repoName
 	if err := p.helmRepoAdd(settings, &repo.Entry{
 		Name:     repoName,
 		URL:      p.ChartRepo,
-		Username: os.Getenv(strings.ToUpper(fmt.Sprintf("%v_helm_repo_username", repoName))),
-		Password: os.Getenv(strings.ToUpper(fmt.Sprintf("%v_helm_repo_password", repoName)))}); err != nil {
+		Username: os.Getenv(fmt.Sprintf("%v_HELM_REPO_USERNAME", repoName)),
+		Password: os.Getenv(fmt.Sprintf("%v_HELM_REPO_PASSWORD", repoName))}); err != nil {
 		p.logger.Printf("error adding repo: %v, err: %v\n", p.ChartRepo, err)
 		return "", err
 	}
@@ -636,8 +636,8 @@ func getRepoEntryForAliasedDependency(aliasMarker string, dep *chart.Dependency,
 		return &repo.Entry{
 			Name:     repoEntryName,
 			URL:      repoEntryUrl,
-			Username: os.Getenv(strings.ToUpper(fmt.Sprintf("%v_helm_repo_username", repoEntryName))),
-			Password: os.Getenv(strings.ToUpper(fmt.Sprintf("%v_helm_repo_password", repoEntryName))),
+			Username: os.Getenv(fmt.Sprintf("%v_HELM_REPO_USERNAME", repoEntryName)),
+			Password: os.Getenv(fmt.Sprintf("%v_HELM_REPO_PASSWORD", repoEntryName)),
 		}, nil
 	}
 }

@@ -92,7 +92,7 @@ func (p *GoGetterPlugin) Generate() (resmap.ResMap, error) {
 	oswd, _ := os.Getwd()
 	err = os.Chdir(dir)
 	if err != nil {
-		p.logger.Printf("Error: Unable to set working dir %v\n", dir, err)
+		p.logger.Printf("Error: Unable to set working dir %v: %v\n", dir, err)
 		return nil, err
 	}
 	cmd := exec.Command(currentExe, "build", ".")
