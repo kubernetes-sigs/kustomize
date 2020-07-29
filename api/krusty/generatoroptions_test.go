@@ -40,7 +40,7 @@ data:
   passphrase: ZGF0IHBocmFzZQ==
 kind: Secret
 metadata:
-  name: bob-kf5c9fccbt
+  name: bob-bh645k7tmg
 type: Opaque
 `)
 }
@@ -91,6 +91,6 @@ kind: ConfigMap
 metadata:
   labels:
     fruit: apple
-  name: shouldHaveHash-2k9hc848ff
+  name: shouldHaveHash-c9867f8446
 `)
 }
