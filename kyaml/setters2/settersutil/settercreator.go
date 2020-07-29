@@ -5,8 +5,10 @@ package settersutil
 
 import (
 	"fmt"
-	"io/ioutil"
+	"strings"
 
+	"github.com/go-openapi/spec"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
@@ -25,7 +27,7 @@ type SetterCreator struct {
 
 	Type string
 
-	SchemaPath string
+	Schema string
 
 	// FieldName if set will add the OpenAPI reference to fields with this name or path
 	// FieldName may be the full name of the field, full path to the field, or the path suffix.
@@ -46,9 +48,9 @@ type SetterCreator struct {
 }
 
 func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
-	schema, err := schemaFromFile(c.SchemaPath)
+	err := validateSchema(c.Schema)
 	if err != nil {
-		return err
+		return errors.Errorf("invalid schema: %v", err)
 	}
 
 	// Update the resources with the setter reference
@@ -74,7 +76,7 @@ func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
 	// Update the OpenAPI definitions to hace the setter
 	sd := setters2.SetterDefinition{
 		Name: c.Name, Value: c.FieldValue, SetBy: c.SetBy, Description: c.Description,
-		Type: c.Type, Schema: schema, Required: c.Required,
+		Type: c.Type, Schema: c.Schema, Required: c.Required,
 	}
 	if err := sd.AddToFile(openAPIPath); err != nil {
 		return err
@@ -97,14 +99,57 @@ func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
 	return nil
 }
 
-// schemaFromFile reads the contents from schemaPath and returns schema
-func schemaFromFile(schemaPath string) (string, error) {
-	if schemaPath == "" {
-		return "", nil
-	}
-	sch, err := ioutil.ReadFile(schemaPath)
+// The types recognized by by the go openapi validation library:
+// https://github.com/go-openapi/validate/blob/master/helpers.go#L35
+var validTypeValues = []string{
+	"object", "array", "string", "integer", "number", "boolean", "file", "null",
+}
+
+// validateSchema parses the provided schema and validates it.
+func validateSchema(schema string) error {
+	var sc spec.Schema
+	err := sc.UnmarshalJSON([]byte(schema))
 	if err != nil {
-		return "", err
+		return errors.Errorf("unable to parse schema: %v", err)
 	}
-	return string(sch), nil
+	return validateSchemaTypes(&sc)
+}
+
+// validateSchemaTypes traverses the schema and checks that only valid types
+// are used.
+func validateSchemaTypes(sc *spec.Schema) error {
+	if len(sc.Type) > 1 {
+		return errors.Errorf("only one type is supported: %s", strings.Join(sc.Type, ", "))
+	}
+
+	if len(sc.Type) == 1 {
+		t := sc.Type[0]
+		var match bool
+		for _, validType := range validTypeValues {
+			if t == validType {
+				match = true
+			}
+		}
+		if !match {
+			return errors.Errorf("type %q is not supported. Must be one of: %s",
+				t, strings.Join(validTypeValues, ", "))
+		}
+	}
+
+	if items := sc.Items; items != nil {
+		if items.Schema != nil {
+			err := validateSchemaTypes(items.Schema)
+			if err != nil {
+				return err
+			}
+		}
+		for i := range items.Schemas {
+			schema := items.Schemas[i]
+			err := validateSchemaTypes(&schema)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

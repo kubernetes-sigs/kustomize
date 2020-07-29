@@ -4,6 +4,10 @@
 package commands
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"strings"
+
 	"github.com/go-openapi/spec"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
@@ -52,7 +56,7 @@ func NewCreateSetterRunner(parent string) *CreateSetterRunner {
 		"use this version of the setter format")
 	set.Flags().BoolVar(&r.CreateSetter.Required, "required", false,
 		"indicates that this setter must be set by package consumer before live apply/preview")
-	set.Flags().StringVar(&r.CreateSetter.SchemaPath, "schema-path", "",
+	set.Flags().StringVar(&r.SchemaPath, "schema-path", "",
 		`openAPI schema file path for setter constraints -- file content `+
 			`e.g. {"type": "string", "maxLength": 15, "enum": ["allowedValue1", "allowedValue2"]}`)
 	set.Flags().MarkHidden("version")
@@ -70,6 +74,7 @@ type CreateSetterRunner struct {
 	Set          setters.CreateSetter
 	CreateSetter settersutil.SetterCreator
 	OpenAPIFile  string
+	SchemaPath   string
 }
 
 func (r *CreateSetterRunner) runE(c *cobra.Command, args []string) error {
@@ -129,12 +134,62 @@ func (r *CreateSetterRunner) preRunE(c *cobra.Command, args []string) error {
 		r.CreateSetter.SetBy = r.Set.SetPartialField.SetBy
 		r.CreateSetter.Type = r.Set.SetPartialField.Type
 
+		err = r.processSchema()
+		if err != nil {
+			return err
+		}
+
 		if r.CreateSetter.Type == "array" {
 			if !c.Flag("field").Changed {
 				return errors.Errorf("field flag must be set for array type setters")
 			}
 		}
 	}
+	return nil
+}
+
+func (r *CreateSetterRunner) processSchema() error {
+	sc, err := schemaFromFile(r.SchemaPath)
+	if err != nil {
+		return err
+	}
+
+	flagType := r.CreateSetter.Type
+	var schemaType string
+	switch {
+	// json schema allows more than one type to be specified, but openapi
+	// only allows one. So we follow the openapi convention.
+	case len(sc.Type) > 1:
+		return errors.Errorf("only one type is supported: %s",
+			strings.Join(sc.Type, ", "))
+	case len(sc.Type) == 1:
+		schemaType = sc.Type[0]
+	}
+
+	// Since type can be set both through the schema file and through the
+	// --type flag, we make sure the same value is set in both places. If they
+	// are both set with different values, we return an error.
+	switch {
+	case flagType == "" && schemaType != "":
+		r.CreateSetter.Type = schemaType
+	case flagType != "" && schemaType == "":
+		sc.Type = []string{flagType}
+	case flagType != "" && schemaType != "":
+		if flagType != schemaType {
+			return errors.Errorf("type provided in type flag (%s) and in schema (%s) doesn't match",
+				r.CreateSetter.Type, sc.Type[0])
+		}
+	}
+
+	// Only marshal the properties in SchemaProps. This means any fields in
+	// the schema file that isn't recognized will be dropped.
+	// TODO: Consider if we should return an error here instead of just dropping
+	// the unknown fields.
+	b, err := json.Marshal(sc.SchemaProps)
+	if err != nil {
+		return errors.Errorf("error marshalling schema: %v", err)
+	}
+	r.CreateSetter.Schema = string(b)
 	return nil
 }
 
@@ -152,4 +207,26 @@ func (r *CreateSetterRunner) set(c *cobra.Command, args []string) error {
 		return err
 	}
 	return nil
+}
+
+// schemaFromFile reads the contents from schemaPath and returns schema
+func schemaFromFile(schemaPath string) (*spec.Schema, error) {
+	sc := &spec.Schema{}
+	if schemaPath == "" {
+		return sc, nil
+	}
+	sch, err := ioutil.ReadFile(schemaPath)
+	if err != nil {
+		return sc, err
+	}
+
+	if len(sch) == 0 {
+		return sc, nil
+	}
+
+	err = sc.UnmarshalJSON(sch)
+	if err != nil {
+		return sc, errors.Errorf("unable to parse schema: %v", err)
+	}
+	return sc, nil
 }
