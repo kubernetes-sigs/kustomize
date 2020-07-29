@@ -81,7 +81,7 @@ data:
   vegetable: broccoli
 kind: ConfigMap
 metadata:
-  name: blah-bob-k772g5db55
+  name: blah-bob-d87t8m8tgm
 ---
 apiVersion: v1
 data:
@@ -89,7 +89,7 @@ data:
   v2: '[{"path": "var/druid/segment-cache"}]'
 kind: ConfigMap
 metadata:
-  name: blah-json-9gtcc2fgb4
+  name: blah-json-5298bc8g99
 ---
 apiVersion: v1
 data:
@@ -101,7 +101,7 @@ data:
   vegetable: YnJvY2NvbGk=
 kind: Secret
 metadata:
-  name: blah-bob-gmc2824f4b
+  name: blah-bob-ftht6hfgmb
 type: Opaque
 `)
 }
@@ -155,7 +155,7 @@ data:
   vegetable: broccoli
 kind: ConfigMap
 metadata:
-  name: blah-bob-gfkcbk5ckf
+  name: blah-bob-db529cg5bk
 `)
 }
 
@@ -217,7 +217,7 @@ kind: ConfigMap
 metadata:
   annotations: {}
   labels: {}
-  name: p1-com1-dhbbm922gd
+  name: p1-com1-8tc62428t2
 ---
 apiVersion: v1
 data:
@@ -226,7 +226,7 @@ kind: ConfigMap
 metadata:
   annotations: {}
   labels: {}
-  name: p2-com2-c4b8md75k9
+  name: p2-com2-87mcggf7d7
 `)
 }
 
@@ -274,7 +274,7 @@ kind: ConfigMap
 metadata:
   annotations: {}
   labels: {}
-  name: o1-cm-28g596k77k
+  name: o1-cm-ft9mmdc8c6
 ---
 apiVersion: v1
 data:
@@ -284,6 +284,6 @@ kind: ConfigMap
 metadata:
   annotations: {}
   labels: {}
-  name: cm-o2-gfcc59fg5m
+  name: cm-o2-5k95kd76ft
 `)
 }

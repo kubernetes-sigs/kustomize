@@ -132,7 +132,7 @@ kind: ConfigMap
 metadata:
   annotations: {}
   labels: {}
-  name: comp-my-configmap-ct5bgtbccd
+  name: comp-my-configmap-kc6k2kmkh9
 ---
 apiVersion: v1
 kind: Deployment
@@ -186,7 +186,7 @@ kind: ConfigMap
 metadata:
   annotations: {}
   labels: {}
-  name: comp-my-configmap-dgf97tmg6h
+  name: comp-my-configmap-55249mf5kb
 ---
 apiVersion: v1
 kind: Deployment
@@ -241,7 +241,7 @@ kind: ConfigMap
 metadata:
   annotations: {}
   labels: {}
-  name: comp-my-configmap-dgf97tmg6h
+  name: comp-my-configmap-55249mf5kb
 ---
 apiVersion: v1
 kind: Deployment
@@ -283,7 +283,7 @@ data:
   testValue: "1"
 kind: ConfigMap
 metadata:
-  name: my-configmap-7k9t4h74f8
+  name: my-configmap-2g9c94mhb8
 ---
 apiVersion: v1
 kind: Deployment
@@ -301,7 +301,7 @@ kind: ConfigMap
 metadata:
   annotations: {}
   labels: {}
-  name: comp-my-configmap-ct5bgtbccd
+  name: comp-my-configmap-kc6k2kmkh9
 ---
 apiVersion: v1
 kind: Deployment
@@ -349,7 +349,7 @@ kind: ConfigMap
 metadata:
   annotations: {}
   labels: {}
-  name: my-configmap-96dt22k28h
+  name: my-configmap-kc6k2kmkh9
 `,
 		},
 		"missing-optional-component-api-version": {
@@ -380,7 +380,7 @@ kind: ConfigMap
 metadata:
   annotations: {}
   labels: {}
-  name: my-configmap-72cfg2mg5d
+  name: my-configmap-5g7gh5mgt5
 ---
 apiVersion: v1
 kind: Deployment
@@ -427,7 +427,7 @@ data:
   testValue: "1"
 kind: ConfigMap
 metadata:
-  name: my-configmap-a-b-tfb7c5t69m
+  name: my-configmap-a-b-2g9c94mhb8
 ---
 apiVersion: v1
 kind: Deployment
@@ -442,7 +442,7 @@ data:
   testValue: "1"
 kind: ConfigMap
 metadata:
-  name: my-configmap-b-8h7b8862bb
+  name: my-configmap-b-2g9c94mhb8
 `,
 		},
 
