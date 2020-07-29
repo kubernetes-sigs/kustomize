@@ -141,7 +141,7 @@ kustomize build $OVERLAYS/staging |\
 
 configMap 名称的后缀是由 map 内容的哈希生成的 - 在这种情况下，名称后缀是 _5276h4th55_ ：
 
-<!-- @grepStagingHash @testAgainstLatestRelease -->
+<!-- @grepStagingHash -->
 ```
 kustomize build $OVERLAYS/staging | grep 5276h4th55
 ```
@@ -170,7 +170,7 @@ kustomize build $OVERLAYS/staging |\
 
 确认 configMap 内容的更改将会生成以 _c2g8fcbf88_ 结尾的三个新名称 - 一个在 configMap 的名称中，另两个在使用 ConfigMap 的 deployment 中：
 
-<!-- @countHashes @testAgainstLatestRelease -->
+<!-- @countHashes -->
 ```
 test 3 == \
   $(kustomize build $OVERLAYS/staging | grep c2g8fcbf88 | wc -l); \

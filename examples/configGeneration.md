@@ -161,7 +161,7 @@ The suffix to the configMap name is generated from a
 hash of the maps content - in this case the name suffix
 is _5276h4th55_:
 
-<!-- @grepStagingHash @testAgainstLatestRelease -->
+<!-- @grepStagingHash -->
 ```
 kustomize build $OVERLAYS/staging | grep 5276h4th55
 ```
@@ -194,7 +194,7 @@ in three new names ending in _c2g8fcbf88_ - one in the
 configMap name itself, and two in the deployment that
 uses the map:
 
-<!-- @countHashes @testAgainstLatestRelease -->
+<!-- @countHashes -->
 ```
 test 3 == \
   $(kustomize build $OVERLAYS/staging | grep c2g8fcbf88 | wc -l); \
