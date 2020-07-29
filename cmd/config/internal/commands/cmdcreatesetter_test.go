@@ -463,6 +463,229 @@ spec:
   hub: my-hub # {"type":"","x-kustomize":{"setter":{"name":"hubsetter","value":"my-hub"}}}
  `,
 		},
+		{
+			name:   "provide different type values in schema and with flag",
+			args:   []string{"replicas", "3", "--description", "hello world", "--type", "string"},
+			schema: `{"type": "integer"}`,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+`,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			err: `type provided in type flag (string) and in schema (integer) doesn't match`,
+		},
+		{
+			name:   "invalid json in schema",
+			args:   []string{"replicas", "3"},
+			schema: `{"foo": bar`,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+`,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			err: "unable to parse schema: invalid character 'b' looking for beginning of value",
+		},
+		{
+			name:   "unknown fields in schema are dropped",
+			args:   []string{"replicas", "3"},
+			schema: `{"foo": "bar"}`,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+`,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$openapi":"replicas"}
+ `,
+		},
+		{
+			name:   "unknown types are not accepted",
+			args:   []string{"replicas", "3"},
+			schema: `{"type": "int"}`,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+`,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			err: `invalid schema: type "int" is not supported. Must be one of: object, array, string, integer, number, boolean, file, null`,
+		},
+		{
+			name:   "unknown types are not accepted in nested structures",
+			args:   []string{"replicas", "3", "--field", "replicas"},
+			schema: `{"maxItems": 3, "type": "array", "items": {"type": "foo"}}`,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+`,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			err: `invalid schema: type "foo" is not supported. Must be one of: object, array, string, integer, number, boolean, file, null`,
+		},
+		{
+			name: "unknown types are not accepted in --type flag",
+			args: []string{"replicas", "3", "--type", "bar"},
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+`,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			err: `invalid schema: type "bar" is not supported. Must be one of: object, array, string, integer, number, boolean, file, null`,
+		},
+		{
+			name:   "unknown properties in schema are dropped",
+			args:   []string{"replicas", "3", "--type", "integer"},
+			schema: `{"maximum": 3, "unknown": 42}`,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+`,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      maximum: 3
+      type: integer
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$openapi":"replicas"}
+ `,
+		},
 	}
 	for i := range tests {
 		test := tests[i]
