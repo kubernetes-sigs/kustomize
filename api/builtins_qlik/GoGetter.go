@@ -74,7 +74,15 @@ func (p *GoGetterPlugin) Generate() (resmap.ResMap, error) {
 		Options: opts,
 	}
 	loader.GoGetterMutex.Lock()
+	// In case it was an update (slighty inefficient but easy)
+	// go getter doesn't do --tags so we can "fake it"
+	cmd := exec.Command("git", "config", "-f", filepath.Join(dir, ".git", "config"), "--add", "remote.origin.fetch", "+refs/tags/*:refs/tags/*")
+	cmd.Stderr = os.Stderr
+	cmd.Run()
 	err = client.Get()
+	cmd = exec.Command("git", "config", "-f", filepath.Join(dir, ".git", "config"), "--unset", "remote.origin.fetch", `\+refs\/tags\/\*\:refs\/tags\/\*`)
+	cmd.Stderr = os.Stderr
+	cmd.Run()
 	loader.GoGetterMutex.Unlock()
 
 	if err != nil {
@@ -95,7 +103,7 @@ func (p *GoGetterPlugin) Generate() (resmap.ResMap, error) {
 		p.logger.Printf("Error: Unable to set working dir %v: %v\n", dir, err)
 		return nil, err
 	}
-	cmd := exec.Command(currentExe, "build", ".")
+	cmd = exec.Command(currentExe, "build", ".")
 	cmd.Stderr = os.Stderr
 	kustomizedYaml, err := cmd.Output()
 	if err != nil {
