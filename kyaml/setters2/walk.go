@@ -50,9 +50,9 @@ func acceptImpl(v visitor, object *yaml.RNode, p string, oa *openapi.ResourceSch
 		}
 		return object.VisitFields(func(node *yaml.MapNode) error {
 			// get the schema for the field and propagate it
-			oa = getSchema(node.Key, oa, node.Key.YNode().Value)
+			fieldSchema := getSchema(node.Key, oa, node.Key.YNode().Value)
 			// Traverse each field value
-			return acceptImpl(v, node.Value, p+"."+node.Key.YNode().Value, oa)
+			return acceptImpl(v, node.Value, p+"."+node.Key.YNode().Value, fieldSchema)
 		})
 	case yaml.SequenceNode:
 		// get the schema for the sequence node, use the schema provided if not present
@@ -61,15 +61,15 @@ func acceptImpl(v visitor, object *yaml.RNode, p string, oa *openapi.ResourceSch
 			return err
 		}
 		// get the schema for the elements
-		oa = getSchema(object, oa, "")
+		schema := getSchema(object, oa, "")
 		return object.VisitElements(func(node *yaml.RNode) error {
 			// Traverse each list element
-			return acceptImpl(v, node, p, oa)
+			return acceptImpl(v, node, p, schema)
 		})
 	case yaml.ScalarNode:
 		// Visit the scalar field
-		oa = getSchema(object, oa, "")
-		return v.visitScalar(object, p, oa)
+		fieldSchema := getSchema(object, oa, "")
+		return v.visitScalar(object, p, fieldSchema)
 	}
 	return nil
 }
