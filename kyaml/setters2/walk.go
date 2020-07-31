@@ -16,7 +16,7 @@ type visitor interface {
 	// node is the scalar field value
 	// path is the path to the field; path elements are separated by '.'
 	// oa is the OpenAPI schema for the field
-	visitScalar(node *yaml.RNode, path string, oa *openapi.ResourceSchema) error
+	visitScalar(node *yaml.RNode, path string, oa *openapi.ResourceSchema, fieldOA *openapi.ResourceSchema) error
 
 	// visitSequence is called for each sequence field value on a resource
 	// node is the sequence field value
@@ -69,7 +69,7 @@ func acceptImpl(v visitor, object *yaml.RNode, p string, oa *openapi.ResourceSch
 	case yaml.ScalarNode:
 		// Visit the scalar field
 		fieldSchema := getSchema(object, oa, "")
-		return v.visitScalar(object, p, fieldSchema)
+		return v.visitScalar(object, p, oa, fieldSchema)
 	}
 	return nil
 }

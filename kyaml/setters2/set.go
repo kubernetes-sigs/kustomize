@@ -81,9 +81,9 @@ func (s *Set) visitSequence(object *yaml.RNode, p string, schema *openapi.Resour
 }
 
 // visitScalar
-func (s *Set) visitScalar(object *yaml.RNode, p string, schema *openapi.ResourceSchema) error {
+func (s *Set) visitScalar(object *yaml.RNode, p string, oa, setterSchema *openapi.ResourceSchema) error {
 	// get the openAPI for this field describing how to apply the setter
-	ext, err := getExtFromComment(schema)
+	ext, err := getExtFromComment(setterSchema)
 	if err != nil {
 		return err
 	}
@@ -91,8 +91,13 @@ func (s *Set) visitScalar(object *yaml.RNode, p string, schema *openapi.Resource
 		return nil
 	}
 
+	var k8sSchema *spec.Schema
+	if oa != nil {
+		k8sSchema = oa.Schema
+	}
+
 	// perform a direct set of the field if it matches
-	ok, err := s.set(object, ext, schema.Schema)
+	ok, err := s.set(object, ext, k8sSchema, setterSchema.Schema)
 	if err != nil {
 		return err
 	}
@@ -214,7 +219,7 @@ func (s *Set) substituteUtil(ext *CliExtension, visited sets.String, nameMatch *
 }
 
 // set applies the value from ext to field if its name matches s.Name
-func (s *Set) set(field *yaml.RNode, ext *CliExtension, sch *spec.Schema) (bool, error) {
+func (s *Set) set(field *yaml.RNode, ext *CliExtension, k8sSch, sch *spec.Schema) (bool, error) {
 	// check full setter
 	if ext.Setter == nil || !s.isMatch(ext.Setter.Name) {
 		return false, nil
@@ -234,8 +239,14 @@ func (s *Set) set(field *yaml.RNode, ext *CliExtension, sch *spec.Schema) (bool,
 	// this has a full setter, set its value
 	field.YNode().Value = ext.Setter.Value
 
-	// format the node so it is quoted if it is a string
-	yaml.FormatNonStringStyle(field.YNode(), *sch)
+	// format the node so it is quoted if it is a string. If there is
+	// type information on the setter schema, we use it. Otherwise we
+	// fall back to the field schema if it exists.
+	if len(sch.Type) > 0 {
+		yaml.FormatNonStringStyle(field.YNode(), *sch)
+	} else if k8sSch != nil {
+		yaml.FormatNonStringStyle(field.YNode(), *k8sSch)
+	}
 	return true, nil
 }
 
