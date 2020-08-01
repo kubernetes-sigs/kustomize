@@ -47,7 +47,6 @@ func determineFieldOrder() []string {
 		"CommonLabels",
 		"CommonAnnotations",
 		"PatchesStrategicMerge",
-		"PatchesJson6902",
 		"Patches",
 		"ConfigMapGenerator",
 		"SecretGenerator",

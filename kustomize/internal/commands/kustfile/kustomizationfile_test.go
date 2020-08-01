@@ -27,7 +27,6 @@ func TestFieldOrder(t *testing.T) {
 		"CommonLabels",
 		"CommonAnnotations",
 		"PatchesStrategicMerge",
-		"PatchesJson6902",
 		"Patches",
 		"ConfigMapGenerator",
 		"SecretGenerator",
