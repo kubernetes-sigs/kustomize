@@ -342,6 +342,51 @@ kind: Kustomization
 	}
 }
 
+func TestFixOutdatedPatchesFieldTitle(t *testing.T) {
+	kustomizationContentWithOutdatedPatchesFieldTitle := []byte(`
+patchesJson6902:
+- path: patch1.yaml
+  target:
+    kind: Deployment
+- path: patch2.yaml
+  target:
+    kind: Service
+`)
+
+	expected := []byte(`
+patches:
+- path: patch1.yaml
+  target:
+    kind: Deployment
+- path: patch2.yaml
+  target:
+    kind: Service
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+`)
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedPatchesFieldTitle)
+	mf, err := NewKustomizationFile(fSys)
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+
+	kustomization, err := mf.Read()
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	if err = mf.Write(kustomization); err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	bytes, _ := fSys.ReadFile(mf.path)
+
+	if string(expected) != string(bytes) {
+		t.Fatalf(
+			"expected =\n%s\n\nactual =\n%s\n",
+			string(expected), string(bytes))
+	}
+}
+
 func TestUnknownFieldInKustomization(t *testing.T) {
 	kContent := []byte(`
 foo:
