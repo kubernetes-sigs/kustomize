@@ -150,8 +150,8 @@ metadata:
 paths:
 - patch.yaml
 `,
-target,
-`
+		target,
+		`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -182,8 +182,8 @@ metadata:
   name: notImportantHere
 patches: '{"apiVersion": "apps/v1", "metadata": {"name": "myDeploy"}, "kind": "Deployment", "spec": {"replica": 3}}'
 `,
-target,
-`
+		target,
+		`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -230,8 +230,8 @@ patches: |-
         - name: nginx
           image: nginx:latest
 `,
-target,
-`
+		target,
+		`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -296,8 +296,8 @@ paths:
 - patch1.yaml
 - patch2.yaml
 `,
-target,
-`
+		target,
+		`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -418,6 +418,162 @@ paths:
 	})
 }
 
+// issue #2734 -- https://github.com/kubernetes-sigs/kustomize/issues/2734
+// kyaml cleans up things some folks prefer it didnt
+// 1. []    -- see initContainers and imagePullSecrets
+// 2. {}    -- see emptyDir
+// 3. null  -- see creationTimestamp
+
+const anUncleanDeploymentResource = `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sas-crunchy-data-postgres-operator
+spec:
+  replicas: 1
+  template:
+    metadata:
+      creationTimestamp: null
+    spec:
+      serviceAccountName: postgres-operator
+      containers:
+      - name: apiserver
+        image: sas-crunchy-data-operator-api-server
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8443
+        envFrom: []
+        volumeMounts:
+        - name: security-ssh
+          mountPath: /security-ssh
+        - mountPath: /tmp
+          name: tmp
+      imagePullSecrets: []
+      initContainers: []
+      volumes:
+      - emptyDir: {}
+        name: security-ssh
+      - emptyDir: {}
+        name: tmp
+`
+
+// This is the preffered result (and what we get with kustomize 3.7.0)
+const expectedCleanedDeployment = `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    workload.sas.com/class: stateless
+  name: sas-crunchy-data-postgres-operator
+spec:
+  replicas: 1
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        workload.sas.com/class: stateless
+    spec:
+      containers:
+      - envFrom: []
+        image: sas-crunchy-data-operator-api-server
+        imagePullPolicy: IfNotPresent
+        name: apiserver
+        ports:
+        - containerPort: 8443
+        volumeMounts:
+        - mountPath: /security-ssh
+          name: security-ssh
+        - mountPath: /tmp
+          name: tmp
+      imagePullSecrets: []
+      initContainers: []
+      serviceAccountName: postgres-operator
+      tolerations:
+      - effect: NoSchedule
+        key: workload.sas.com/class
+        operator: Equal
+        value: stateful
+      volumes:
+      - emptyDir: {}
+        name: security-ssh
+      - emptyDir: {}
+        name: tmp
+`
+
+// This is the current (incorrect) result we get with kustomize 3.8.1
+const currentCleanedDeployment = `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    workload.sas.com/class: stateless
+  name: sas-crunchy-data-postgres-operator
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        workload.sas.com/class: stateless
+    spec:
+      containers:
+      - envFrom: []
+        image: sas-crunchy-data-operator-api-server
+        imagePullPolicy: IfNotPresent
+        name: apiserver
+        ports:
+        - containerPort: 8443
+        volumeMounts:
+        - mountPath: /security-ssh
+          name: security-ssh
+        - mountPath: /tmp
+          name: tmp
+      imagePullSecrets: []
+      initContainers: []
+      serviceAccountName: postgres-operator
+      tolerations:
+      - effect: NoSchedule
+        key: workload.sas.com/class
+        operator: Equal
+        value: stateful
+      volumes:
+      - name: security-ssh
+      - name: tmp
+`
+
+func TestPatchStrategicMergeTransformerCleanupItems(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchStrategicMergeTransformer")
+	defer th.Reset()
+
+	th.WriteF("/patch.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sas-crunchy-data-postgres-operator
+  labels:
+    workload.sas.com/class: stateless
+spec:
+  template:
+    metadata:
+      labels:
+        workload.sas.com/class: stateless
+    spec:
+      tolerations:
+        - effect: NoSchedule
+          key: workload.sas.com/class
+          operator: Equal
+          value: stateful
+`)
+
+	th.RunTransformerAndCheckResult(`
+apiVersion: builtin
+kind: PatchStrategicMergeTransformer
+metadata:
+  name: notImportantHere
+paths:
+- patch.yaml
+`,
+		anUncleanDeploymentResource,
+		currentCleanedDeployment) // prefer expectedCleanedDeployment
+}
+
 func TestStrategicMergeTransformerNoSchema(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchStrategicMergeTransformer")
@@ -441,8 +597,8 @@ metadata:
 paths:
 - patch.yaml
 `,
-targetNoschema,
-`
+		targetNoschema,
+		`
 apiVersion: example.com/v1
 kind: Foo
 metadata:
@@ -490,8 +646,8 @@ paths:
 - patch1.yaml
 - patch2.yaml
 `,
-targetNoschema,
-`
+		targetNoschema,
+		`
 apiVersion: example.com/v1
 kind: Foo
 metadata:
@@ -590,7 +746,7 @@ spec:
       labels:
         old-label: old-value
     spec:
-      containers: 
+      containers:
       - name: nginx
         image: nginx`
 	return fmt.Sprintf(res, kind)
@@ -616,7 +772,7 @@ spec:
     spec:
       containers:
        - name: nginx
-         env: 
+         env:
          - name: SOMEENV
            value: SOMEVALUE`
 
@@ -1314,4 +1470,3 @@ paths:
 
 	th.AssertActualEqualsExpected(rm, ``)
 }
-
