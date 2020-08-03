@@ -95,6 +95,8 @@ var orderFirst = []string{
 	"Service",
 	"LimitRange",
 	"PriorityClass",
+	"PersistentVolume",
+	"PersistentVolumeClaim",
 	"Deployment",
 	"StatefulSet",
 	"CronJob",
