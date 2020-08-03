@@ -4,8 +4,11 @@
 package fixsetters
 
 import (
+	"fmt"
+	"hash/fnv"
 	"strings"
 
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -82,19 +85,25 @@ func (ls *upgradeV1Setters) lookupAndUpgrade(field *yaml.RNode) error {
 	}
 
 	if len(fm.Extensions.PartialFieldSetters) > 0 {
-		substName := "subst"
-		filedValue := field.YNode().Value
-		pattern := filedValue
+		fieldValue := field.YNode().Value
+		pattern := fieldValue
 
+		var substName string
 		// derive substitution pattern from partial setters
 		for i := range fm.Extensions.PartialFieldSetters {
-			substName += "-" + fm.Extensions.PartialFieldSetters[i].Name
+			substName += fm.Extensions.PartialFieldSetters[i].Name + "-"
 			pattern = strings.Replace(pattern, fm.Extensions.PartialFieldSetters[i].Value, `${`+fm.Extensions.PartialFieldSetters[i].Name+"}", 1)
 		}
 
+		fvHash, err := FNV32aHash(fieldValue)
+		if err != nil {
+			return err
+		}
+
+		substName += fvHash
 		ls.Substitutions = append(ls.Substitutions, substitution{
 			Name:      substName,
-			FieldVale: filedValue,
+			FieldVale: fieldValue,
 			Pattern:   pattern,
 		})
 	}
@@ -112,4 +121,14 @@ func (ls *upgradeV1Setters) lookupAndUpgrade(field *yaml.RNode) error {
 		})
 	}
 	return nil
+}
+
+// FNV32aHash generates 32-bit FNV-1a hash for input string
+func FNV32aHash(text string) (string, error) {
+	algorithm := fnv.New32a()
+	_, err := algorithm.Write([]byte(text))
+	if err != nil {
+		return "", errors.Wrap(err)
+	}
+	return fmt.Sprint(algorithm.Sum32()), nil
 }
