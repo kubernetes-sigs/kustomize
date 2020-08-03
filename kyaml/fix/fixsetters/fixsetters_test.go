@@ -44,17 +44,17 @@ kind: Kustomization`,
 
 			needFix:        true,
 			createdSetters: []string{"cluster", "profile", "project"},
-			createdSubst:   []string{"subst-project-cluster"},
+			createdSubst:   []string{"project-cluster-54235872"},
 			failedSetters:  map[string]error{},
 			failedSubst:    map[string]error{},
 
 			expectedOutput: `apiVersion: install.istio.io/v1alpha2
 kind: IstioControlPlane
 metadata:
-  cluster: "someproj/someclus" # {"$openapi":"subst-project-cluster"}
+  cluster: "someproj/someclus" # {"$openapi":"project-cluster-54235872"}
 spec:
   profile: asm # {"$openapi":"profile"}
-  cluster: "someproj/someclus" # {"$openapi":"subst-project-cluster"}
+  cluster: "someproj/someclus" # {"$openapi":"project-cluster-54235872"}
 `,
 
 			expectedOpenAPI: `apiVersion: kustomization.dev/v1alpha1
@@ -79,10 +79,10 @@ openAPI:
         setter:
           name: project
           value: someproj
-    io.k8s.cli.substitutions.subst-project-cluster:
+    io.k8s.cli.substitutions.project-cluster-54235872:
       x-k8s-cli:
         substitution:
-          name: subst-project-cluster
+          name: project-cluster-54235872
           pattern: ${project}/${cluster}
           values:
           - marker: ${project}
@@ -105,7 +105,7 @@ spec:
 `,
 			needFix:        true,
 			createdSetters: []string{"cluster", "profile", "project"},
-			createdSubst:   []string{"subst-project-cluster"},
+			createdSubst:   []string{"project-cluster-54235872"},
 			failedSetters:  map[string]error{},
 			failedSubst:    map[string]error{},
 
@@ -135,7 +135,7 @@ kind: Kustomization`,
 
 			needFix:        true,
 			createdSetters: []string{"profile", "team"},
-			createdSubst:   []string{"subst-profile-team"},
+			createdSubst:   []string{"profile-team-1851878264"},
 			failedSetters:  map[string]error{},
 			failedSubst:    map[string]error{},
 
@@ -144,7 +144,7 @@ kind: IstioControlPlane
 spec:
   profile: asm # {"$openapi":"profile"}
   team: asm # {"$openapi":"team"}
-  profile-team: asm/asm # {"$openapi":"subst-profile-team"}
+  profile-team: asm/asm # {"$openapi":"profile-team-1851878264"}
 `,
 
 			expectedOpenAPI: `apiVersion: kustomization.dev/v1alpha1
@@ -163,16 +163,71 @@ openAPI:
         setter:
           name: team
           value: asm
-    io.k8s.cli.substitutions.subst-profile-team:
+    io.k8s.cli.substitutions.profile-team-1851878264:
       x-k8s-cli:
         substitution:
-          name: subst-profile-team
+          name: profile-team-1851878264
           pattern: ${profile}/${team}
           values:
           - marker: ${profile}
             ref: '#/definitions/io.k8s.cli.setters.profile'
           - marker: ${team}
             ref: '#/definitions/io.k8s.cli.setters.team'
+`,
+		},
+
+		{
+			name: "partial-setters-suffix-subst",
+			input: `
+apiVersion: install.istio.io/v1alpha2
+kind: IstioControlPlane
+spec:
+  profile: asm-profile # {"type":"string","x-kustomize":{"partialSetters":[{"name":"asm","value":"asm"}]}}
+  team: asm-team # {"type":"string","x-kustomize":{"partialSetters":[{"name":"asm","value":"asm"}]}}
+ `,
+
+			openAPIFile: `apiVersion: kustomization.dev/v1alpha1
+kind: Kustomization`,
+
+			needFix:        true,
+			createdSetters: []string{"asm"},
+			createdSubst:   []string{"asm-3472570278", "asm-3647054792"},
+			failedSetters:  map[string]error{},
+			failedSubst:    map[string]error{},
+
+			expectedOutput: `apiVersion: install.istio.io/v1alpha2
+kind: IstioControlPlane
+spec:
+  profile: asm-profile # {"$openapi":"asm-3647054792"}
+  team: asm-team # {"$openapi":"asm-3472570278"}
+`,
+
+			expectedOpenAPI: `apiVersion: kustomization.dev/v1alpha1
+kind: Kustomization
+openAPI:
+  definitions:
+    io.k8s.cli.setters.asm:
+      type: string
+      x-k8s-cli:
+        setter:
+          name: asm
+          value: asm
+    io.k8s.cli.substitutions.asm-3472570278:
+      x-k8s-cli:
+        substitution:
+          name: asm-3472570278
+          pattern: ${asm}-team
+          values:
+          - marker: ${asm}
+            ref: '#/definitions/io.k8s.cli.setters.asm'
+    io.k8s.cli.substitutions.asm-3647054792:
+      x-k8s-cli:
+        substitution:
+          name: asm-3647054792
+          pattern: ${asm}-profile
+          values:
+          - marker: ${asm}
+            ref: '#/definitions/io.k8s.cli.setters.asm'
 `,
 		},
 
@@ -387,6 +442,12 @@ spec:
 				}
 				return
 			}
+
+			actualOutput, err := ioutil.ReadFile(filepath.Join(dir, "deploy.yaml"))
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			assert.Equal(t, test.expectedOutput, string(actualOutput))
 
 			if test.expectedOpenAPI != "" {
 				actualOpenAPI, err := ioutil.ReadFile(filepath.Join(dir, openAPIFileName))
