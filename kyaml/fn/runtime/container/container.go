@@ -195,11 +195,23 @@ func (c *Filter) getCommand() (string, []string) {
 	// export the local environment vars to the container
 	for _, pair := range os.Environ() {
 		items := strings.Split(pair, "=")
-		if items[0] == "" || items[1] == "" {
+		if items[0] == "" || items[1] == "" || shouldEnvIgnored(items[0]) {
 			continue
 		}
 		args = append(args, "-e", items[0])
 	}
 	a := append(args, c.Image)
 	return "docker", a
+}
+
+// shouldEnvIgnored returns true if the environment variable key should be ignored
+// by the container runtime.
+func shouldEnvIgnored(envKey string) bool {
+	ignoreEnvKey := []string{"TMPDIR"}
+	for _, k := range ignoreEnvKey {
+		if k == envKey {
+			return true
+		}
+	}
+	return false
 }
