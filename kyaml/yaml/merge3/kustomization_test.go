@@ -6,7 +6,8 @@ package merge3_test
 var kustomizationTestCases = []testCase{
 	// Kustomization Test Cases
 
-	{description: `ConfigMapGenerator merge`,
+	{
+		description: `ConfigMapGenerator merge`,
 		origin: `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -48,7 +49,8 @@ configMapGenerator:
   - configkey=configs/another_configfile2
   name: a-configmap2`},
 
-	{description: `SecretGenerator merge`,
+	{
+		description: `SecretGenerator merge`,
 		origin: `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

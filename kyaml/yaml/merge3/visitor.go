@@ -4,6 +4,7 @@
 package merge3
 
 import (
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/yaml/walk"
@@ -64,6 +65,20 @@ func (m Visitor) VisitScalar(nodes walk.Sources, s *openapi.ResourceSchema) (*ya
 	if yaml.IsEmpty(nodes.Updated()) && yaml.IsEmpty(nodes.Origin()) {
 		// value added or removed in update
 		return nodes.Dest(), nil
+	}
+
+	updatedStr, err := nodes.Updated().String()
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	originStr, err := nodes.Origin().String()
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	if updatedStr != originStr {
+		// change in update node
+		return nodes.Updated(), nil
 	}
 
 	if nodes.Updated().YNode().Value != nodes.Origin().YNode().Value {
