@@ -167,6 +167,36 @@ spec:
 		},
 
 		{
+			name: "add replicas not enough arguments",
+			args: []string{"replicas", "--description", "hello world", "--set-by", "me"},
+			err:  `setter name and value must be provided, value can either be an argument or can be passed as a flag --value`,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+`,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+		},
+
+		{
 			name:   "list values with schema",
 			args:   []string{"list", "--description", "hello world", "--set-by", "me", "--type", "array", "--field", "spec.list"},
 			schema: `{"maxItems": 3, "type": "array", "items": {"type": "string"}}`,

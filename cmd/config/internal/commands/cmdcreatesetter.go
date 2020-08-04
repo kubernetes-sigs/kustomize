@@ -100,12 +100,16 @@ func (r *CreateSetterRunner) preRunE(c *cobra.Command, args []string) error {
 	if setterVersion == "" {
 		if len(args) == 2 && r.Set.SetPartialField.Type == "array" && c.Flag("field").Changed {
 			setterVersion = "v2"
-		} else if len(args) < 2 || !c.Flag("value").Changed && len(args) < 3 {
-			setterVersion = "v1"
 		} else if err := initSetterVersion(c, args); err != nil {
 			return err
 		}
 	}
+
+	if r.Set.SetPartialField.Type != "array" && !c.Flag("value").Changed && len(args) < 3 {
+		return errors.Errorf("setter name and value must be provided, " +
+			"value can either be an argument or can be passed as a flag --value")
+	}
+
 	if setterVersion == "v2" {
 		var err error
 		r.OpenAPIFile, err = ext.GetOpenAPIFile(args)
