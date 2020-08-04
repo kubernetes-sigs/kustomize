@@ -638,27 +638,8 @@ spec:
 }
 
 // test for https://github.com/kubernetes-sigs/kustomize/issues/2767
-const aDeploymentResource = `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: test-deployment
-spec:
-  template:
-    spec:
-      containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          name: take-over-the-world
-          protocol: TCP
-        - containerPort: 8080
-          name: disappearing-act
-          protocol: TCP
-`
-
 // currently documents broken state.  resulting ports: should have both
-//  take-over-the-world and disappearing-act on 8080
+// take-over-the-world and disappearing-act on 8080
 func TestPatchTransformerSimilarArrays(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchTransformer")
@@ -679,7 +660,24 @@ patch: |-
 target:
   kind: Deployment
   name: test-deployment
-`, aDeploymentResource, `
+`, `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8080
+          name: take-over-the-world
+          protocol: TCP
+        - containerPort: 8080
+          name: disappearing-act
+          protocol: TCP
+`, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
