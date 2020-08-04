@@ -74,6 +74,11 @@ func (l *UpgradeV1Setters) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 	for _, subst := range substitutions {
 		l.Substitutions = append(l.Substitutions, *subst)
 	}
+
+	sort.Slice(l.Substitutions, func(i, j int) bool {
+		return l.Substitutions[i].Name < l.Substitutions[j].Name
+	})
+
 	sort.Slice(l.SetterCounts, func(i, j int) bool {
 		return l.SetterCounts[i].Name < l.SetterCounts[j].Name
 	})
