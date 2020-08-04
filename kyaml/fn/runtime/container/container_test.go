@@ -106,7 +106,7 @@ metadata:
 			for _, e := range os.Environ() {
 				// the process env
 				parts := strings.Split(e, "=")
-				if parts[0] == "" || parts[1] == "" {
+				if parts[0] == "" || parts[1] == "" || shouldEnvIgnored(parts[0]) {
 					continue
 				}
 				tt.expectedArgs = append(tt.expectedArgs, "-e", parts[0])
