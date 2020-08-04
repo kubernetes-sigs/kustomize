@@ -210,3 +210,20 @@ func TestFilter_ExitCode(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestIgnoreEnv(t *testing.T) {
+	ignoredEnvKey := []string{"TMPDIR"}
+	for _, key := range ignoredEnvKey {
+		os.Setenv(key, "")
+	}
+
+	fltr := Filter{Image: "example.com:version"}
+	_, args := fltr.getCommand()
+	for _, arg := range args {
+		for _, key := range ignoredEnvKey {
+			if arg == key {
+				t.Fatalf("%s should not be exported to container", key)
+			}
+		}
+	}
+}
