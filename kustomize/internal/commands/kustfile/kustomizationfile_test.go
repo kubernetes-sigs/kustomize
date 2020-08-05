@@ -346,20 +346,24 @@ func TestFixOutdatedPatchesFieldTitle(t *testing.T) {
 patchesJson6902:
 - path: patch1.yaml
   target:
-    kind: Deployment
+    kind: Service
 - path: patch2.yaml
   target:
-    kind: Service
+    group: apps
+    kind: Deployment
+    version: v1
 `)
 
 	expected := []byte(`
 patches:
 - path: patch1.yaml
   target:
-    kind: Deployment
+    kind: Service
 - path: patch2.yaml
   target:
-    kind: Service
+    group: apps
+    kind: Deployment
+    version: v1
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 `)
