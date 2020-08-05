@@ -106,7 +106,7 @@ metadata:
 			for _, e := range os.Environ() {
 				// the process env
 				parts := strings.Split(e, "=")
-				if parts[0] == "" || parts[1] == "" || shouldEnvIgnored(parts[0]) {
+				if parts[0] == "" || parts[1] == "" || parts[0] == "TMPDIR" {
 					continue
 				}
 				tt.expectedArgs = append(tt.expectedArgs, "-e", parts[0])
@@ -212,17 +212,13 @@ func TestFilter_ExitCode(t *testing.T) {
 }
 
 func TestIgnoreEnv(t *testing.T) {
-	for _, key := range ignoreEnvKey {
-		os.Setenv(key, "")
-	}
+	os.Setenv("TMPDIR", "")
 
 	fltr := Filter{Image: "example.com:version"}
 	_, args := fltr.getCommand()
 	for _, arg := range args {
-		for _, key := range ignoreEnvKey {
-			if arg == key {
-				t.Fatalf("%s should not be exported to container", key)
-			}
+		if arg == "TMPDIR" {
+			t.Fatalf("TMPDIR should not be exported to container")
 		}
 	}
 }
