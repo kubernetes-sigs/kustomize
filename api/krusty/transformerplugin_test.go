@@ -96,7 +96,7 @@ data:
   FOO: foo
 kind: ConfigMap
 metadata:
-  name: test-k4bkhftttd
+  name: test-6bc28fff49
 `)
 }
 

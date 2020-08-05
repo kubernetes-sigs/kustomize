@@ -147,10 +147,10 @@ spec:
           pdName: nginx-persistent-storage
         name: nginx-persistent-storage
       - configMap:
-          name: a-b-configmap-in-base-fm96mhk4dt
+          name: a-b-configmap-in-base-798k5k7g9f
         name: configmap-in-base
       - configMap:
-          name: a-configmap-in-overlay-ffm9hf78mc
+          name: a-configmap-in-overlay-dc6fm46dhm
         name: configmap-in-overlay
 ---
 apiVersion: v1
@@ -175,7 +175,7 @@ metadata:
   labels:
     env: staging
     team: foo
-  name: a-b-configmap-in-base-fm96mhk4dt
+  name: a-b-configmap-in-base-798k5k7g9f
 ---
 apiVersion: v1
 data:
@@ -184,7 +184,7 @@ kind: ConfigMap
 metadata:
   labels:
     env: staging
-  name: a-configmap-in-overlay-ffm9hf78mc
+  name: a-configmap-in-overlay-dc6fm46dhm
 `)
 }
 
@@ -352,10 +352,10 @@ spec:
           pdName: nginx-persistent-storage
         name: nginx-persistent-storage
       - configMap:
-          name: staging-team-foo-configmap-in-base-g7k6gt2889
+          name: staging-team-foo-configmap-in-base-798k5k7g9f
         name: configmap-in-base
       - configMap:
-          name: staging-configmap-in-overlay-k7cbc75tg8
+          name: staging-configmap-in-overlay-dc6fm46dhm
         name: configmap-in-overlay
 ---
 apiVersion: v1
@@ -390,7 +390,7 @@ metadata:
     env: staging
     org: example.com
     team: foo
-  name: staging-team-foo-configmap-in-base-g7k6gt2889
+  name: staging-team-foo-configmap-in-base-798k5k7g9f
 ---
 apiVersion: v1
 data:
@@ -399,7 +399,7 @@ kind: ConfigMap
 metadata:
   labels:
     env: staging
-  name: staging-configmap-in-overlay-k7cbc75tg8
+  name: staging-configmap-in-overlay-dc6fm46dhm
 `)
 }
 
@@ -542,7 +542,7 @@ spec:
       volumes:
       - name: nginx-persistent-storage
       - configMap:
-          name: staging-team-foo-configmap-in-base-g7k6gt2889
+          name: staging-team-foo-configmap-in-base-798k5k7g9f
         name: configmap-in-base
 ---
 apiVersion: v1
@@ -577,7 +577,7 @@ metadata:
     env: staging
     org: example.com
     team: foo
-  name: staging-team-foo-configmap-in-base-g7k6gt2889
+  name: staging-team-foo-configmap-in-base-798k5k7g9f
 ---
 apiVersion: v1
 data:
@@ -586,7 +586,7 @@ kind: ConfigMap
 metadata:
   labels:
     env: staging
-  name: staging-configmap-in-overlay-k7cbc75tg8
+  name: staging-configmap-in-overlay-dc6fm46dhm
 `)
 		})
 	}
