@@ -106,7 +106,7 @@ metadata:
 			for _, e := range os.Environ() {
 				// the process env
 				parts := strings.Split(e, "=")
-				if parts[0] == "" || parts[1] == "" {
+				if parts[0] == "" || parts[1] == "" || parts[0] == tmpDirEnvKey {
 					continue
 				}
 				tt.expectedArgs = append(tt.expectedArgs, "-e", parts[0])
@@ -208,5 +208,17 @@ func TestFilter_ExitCode(t *testing.T) {
 	}
 	if !assert.Contains(t, instance.GetExit().Error(), "/not/real/command") {
 		t.FailNow()
+	}
+}
+
+func TestIgnoreEnv(t *testing.T) {
+	os.Setenv(tmpDirEnvKey, "")
+
+	fltr := Filter{Image: "example.com:version"}
+	_, args := fltr.getCommand()
+	for _, arg := range args {
+		if arg == tmpDirEnvKey {
+			t.Fatalf("%s should not be exported to container", tmpDirEnvKey)
+		}
 	}
 }
