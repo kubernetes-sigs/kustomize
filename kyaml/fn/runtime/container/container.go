@@ -204,10 +204,11 @@ func (c *Filter) getCommand() (string, []string) {
 	return "docker", a
 }
 
+var ignoreEnvKey []string = []string{"TMPDIR"}
+
 // shouldEnvIgnored returns true if the environment variable key should be ignored
 // by the container runtime.
 func shouldEnvIgnored(envKey string) bool {
-	ignoreEnvKey := []string{"TMPDIR"}
 	for _, k := range ignoreEnvKey {
 		if k == envKey {
 			return true
