@@ -162,6 +162,8 @@ func (c *Filter) setupExec() {
 	c.Exec.Args = args
 }
 
+var tmpDirEnvKey string = "TMPDIR"
+
 // getArgs returns the command + args to run to spawn the container
 func (c *Filter) getCommand() (string, []string) {
 	// run the container using docker.  this is simpler than using the docker
@@ -197,7 +199,7 @@ func (c *Filter) getCommand() (string, []string) {
 	// export the local environment vars to the container
 	for _, pair := range os.Environ() {
 		items := strings.Split(pair, "=")
-		if items[0] == "" || items[1] == "" || items[0] == "TMPDIR" {
+		if items[0] == "" || items[1] == "" || items[0] == tmpDirEnvKey {
 			continue
 		}
 		args = append(args, "-e", items[0])
