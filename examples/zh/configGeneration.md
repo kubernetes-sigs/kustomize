@@ -139,11 +139,11 @@ kustomize build $OVERLAYS/staging |\
 
 根据 `$OVERLAYS/staging/kustomization.yaml` 中的 `nameSuffix` 字段，configMap 名称以 _-v1_ 为后缀。
 
-configMap 名称的后缀是由 map 内容的哈希生成的 - 在这种情况下，名称后缀是 _k25m8k5k5m_ ：
+configMap 名称的后缀是由 map 内容的哈希生成的 - 在这种情况下，名称后缀是 _5276h4th55_ ：
 
-<!-- @grepStagingHash @testAgainstLatestRelease -->
+<!-- @grepStagingHash -->
 ```
-kustomize build $OVERLAYS/staging | grep k25m8k5k5m
+kustomize build $OVERLAYS/staging | grep 5276h4th55
 ```
 
 现在修改 map patch ，更改该服务将使用的问候消息：
@@ -168,16 +168,16 @@ kustomize build $OVERLAYS/staging |\
     grep -B 8 -A 1 staging-the-map
 ```
 
-确认 configMap 内容的更改将会生成以 _cd7kdh48fd_ 结尾的三个新名称 - 一个在 configMap 的名称中，另两个在使用 ConfigMap 的 deployment 中：
+确认 configMap 内容的更改将会生成以 _c2g8fcbf88_ 结尾的三个新名称 - 一个在 configMap 的名称中，另两个在使用 ConfigMap 的 deployment 中：
 
-<!-- @countHashes @testAgainstLatestRelease -->
+<!-- @countHashes -->
 ```
 test 3 == \
-  $(kustomize build $OVERLAYS/staging | grep cd7kdh48fd | wc -l); \
+  $(kustomize build $OVERLAYS/staging | grep c2g8fcbf88 | wc -l); \
   echo $?
 ```
 
-将这些资源应用于群集将导致 deployment pod 的滚动更新，将它们从 _k25m8k5k5m_ map 重新定位到 _cd7kdh48fd_ map 。系统稍后将垃圾收集未使用的 map。
+将这些资源应用于群集将导致 deployment pod 的滚动更新，将它们从 _5276h4th55_ map 重新定位到 _c2g8fcbf88_ map 。系统稍后将垃圾收集未使用的 map。
 
 ## 回滚
 
