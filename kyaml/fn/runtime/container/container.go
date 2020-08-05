@@ -189,30 +189,19 @@ func (c *Filter) getCommand() (string, []string) {
 		args = append(args, "--mount", storageMount.String())
 	}
 
+	// TODO: put these env processes into a separate function and call it in the outside of
+	// getCommand
 	os.Setenv("LOG_TO_STDERR", "true")
 	os.Setenv("STRUCTURED_RESULTS", "true")
 
 	// export the local environment vars to the container
 	for _, pair := range os.Environ() {
 		items := strings.Split(pair, "=")
-		if items[0] == "" || items[1] == "" || shouldEnvIgnored(items[0]) {
+		if items[0] == "" || items[1] == "" || items[0] == "TMPDIR" {
 			continue
 		}
 		args = append(args, "-e", items[0])
 	}
 	a := append(args, c.Image)
 	return "docker", a
-}
-
-var ignoreEnvKey []string = []string{"TMPDIR"}
-
-// shouldEnvIgnored returns true if the environment variable key should be ignored
-// by the container runtime.
-func shouldEnvIgnored(envKey string) bool {
-	for _, k := range ignoreEnvKey {
-		if k == envKey {
-			return true
-		}
-	}
-	return false
 }
