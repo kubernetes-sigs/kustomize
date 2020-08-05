@@ -45,7 +45,7 @@ func (d *Delete) visitMapping(_ *yaml.RNode, _ string, _ *openapi.ResourceSchema
 
 // visitScalar implements visitor
 // visitScalar will remove the reference on each scalar field whose name matches.
-func (d *Delete) visitScalar(object *yaml.RNode, p string, _ *openapi.ResourceSchema) error {
+func (d *Delete) visitScalar(object *yaml.RNode, p string, _, _ *openapi.ResourceSchema) error {
 	// check if the field matches
 	if d.FieldName != "" && !strings.HasSuffix(p, d.FieldName) {
 		return nil
