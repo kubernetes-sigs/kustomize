@@ -63,57 +63,21 @@ func HashRNode(node *yaml.RNode) (string, error) {
 	kind := kindNode.YNode().Value
 
 	// calculate hash for different kinds
+	encoded := ""
 	switch kind {
 	case "ConfigMap":
-		return configMapHash(node)
+		encoded, err = encodeConfigMap(node)
 	case "Secret":
-		return secretHash(node)
+		encoded, err = encodeSecret(node)
 	default:
-		return defaultHash(node)
+		var encodedBytes []byte
+		encodedBytes, err = json.Marshal(node.YNode())
+		encoded = string(encodedBytes)
 	}
-}
-
-// configMapHash returns a hash of the ConfigMap.
-// The Data, Kind, and Name are taken into account.
-func configMapHash(node *yaml.RNode) (string, error) {
-	encoded, err := encodeConfigMap(node)
 	if err != nil {
 		return "", err
 	}
-	h, err := Encode(Hash(encoded))
-	if err != nil {
-		return "", err
-	}
-	return h, nil
-}
-
-// SecretHash returns a hash of the Secret.
-// The Data, Kind, Name, and Type are taken into account.
-func secretHash(node *yaml.RNode) (string, error) {
-	encoded, err := encodeSecret(node)
-	if err != nil {
-		return "", err
-	}
-	h, err := Encode(Hash(encoded))
-	if err != nil {
-		return "", err
-	}
-	return h, nil
-}
-
-// unstructuredHash creates a hash for an arbitrary type.
-// All fields of the object are taken into account when generating the hash.
-// This is a fallback for when a specalised hash for the type is unavailable.
-func defaultHash(node *yaml.RNode) (string, error) {
-	encoded, err := json.Marshal(node.YNode())
-	if err != nil {
-		return "", err
-	}
-	h, err := Encode(Hash(string(encoded)))
-	if err != nil {
-		return "", err
-	}
-	return h, nil
+	return Encode(Hash(encoded))
 }
 
 func getNodeValues(node *yaml.RNode, paths []string) (map[string]interface{}, error) {
