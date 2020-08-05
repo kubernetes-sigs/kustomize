@@ -99,7 +99,7 @@ binaryData:
 		if err != nil {
 			t.Fatal(err)
 		}
-		h, err := configMapHash(node)
+		h, err := HashRNode(node)
 		if SkipRest(t, c.desc, err, c.err) {
 			continue
 		}
@@ -160,7 +160,7 @@ data:
 		if err != nil {
 			t.Fatal(err)
 		}
-		h, err := secretHash(node)
+		h, err := HashRNode(node)
 		if SkipRest(t, c.desc, err, c.err) {
 			continue
 		}
@@ -197,7 +197,7 @@ spec:
 		if err != nil {
 			t.Fatal(err)
 		}
-		h, err := defaultHash(node)
+		h, err := HashRNode(node)
 		if SkipRest(t, c.desc, err, c.err) {
 			continue
 		}
