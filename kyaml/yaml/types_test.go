@@ -221,19 +221,19 @@ func TestIsEmpty_Arrays(t *testing.T) {
 func TestIsEmpty_Maps(t *testing.T) {
 	node := NewMapRNode(nil)
 	// empty map
-	if !IsEmpty(node) {
+	if !IsEmptyMap(node) {
 		t.Fatalf("input: empty map")
 	}
 	// map with 1 item
 	node = NewMapRNode(&map[string]string{
 		"foo": "bar",
 	})
-	if IsEmpty(node) {
+	if IsEmptyMap(node) {
 		t.Fatalf("input: map with 1 item")
 	}
 	// delete the item in map
 	node.value.Content = nil
-	if !IsEmpty(node) {
+	if !IsEmptyMap(node) {
 		t.Fatalf("input: empty map")
 	}
 }

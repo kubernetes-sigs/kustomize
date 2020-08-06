@@ -67,14 +67,15 @@ func (e ElementSetter) Filter(rn *RNode) (*RNode, error) {
 	matchingElementFound := false
 	for i := range rn.YNode().Content {
 		elem := rn.Content()[i]
+		newNode := NewRNode(elem)
 
 		// empty elements are not valid -- they at least need an associative key
-		if IsEmpty(NewRNode(elem)) {
+		if IsEmpty(newNode) || IsEmptyMap(newNode) {
 			continue
 		}
 
 		// check if this is the element we are matching
-		val, err := NewRNode(elem).Pipe(FieldMatcher{Name: e.Key, StringValue: e.Value})
+		val, err := newNode.Pipe(FieldMatcher{Name: e.Key, StringValue: e.Value})
 		if err != nil {
 			return nil, err
 		}

@@ -302,7 +302,7 @@ kind: Deployment
 spec:
   template:
     spec:
-      containers: {}
+      containers: []
 `,
 		dest: `
 apiVersion: apps/v1
