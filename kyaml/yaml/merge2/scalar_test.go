@@ -91,7 +91,7 @@ kind: Deployment
 	{description: `remove scalar -- empty in src`,
 		source: `
 kind: Deployment
-field: {}
+field: null
 `,
 		dest: `
 kind: Deployment
@@ -99,7 +99,6 @@ field: value1
 `,
 		expected: `
 kind: Deployment
-field: {}
 `,
 	},
 

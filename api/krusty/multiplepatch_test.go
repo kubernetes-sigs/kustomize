@@ -540,7 +540,8 @@ spec:
         - mountPath: /tmp/ps
           name: nginx-persistent-storage
       volumes:
-      - name: nginx-persistent-storage
+      - emptyDir: {}
+        name: nginx-persistent-storage
       - configMap:
           name: staging-team-foo-configmap-in-base-798k5k7g9f
         name: configmap-in-base
