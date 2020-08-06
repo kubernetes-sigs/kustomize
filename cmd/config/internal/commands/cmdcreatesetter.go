@@ -134,6 +134,19 @@ func (r *CreateSetterRunner) preRunE(c *cobra.Command, args []string) error {
 				"substitution and setter can't have same name", r.CreateSetter.Name)
 		}
 
+		// check if setter with same name exists and throw error
+		ref, err = spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + r.CreateSetter.Name)
+		if err != nil {
+			return err
+		}
+
+		setter, _ := openapi.Resolve(&ref)
+		// if setter already exists with the input setter name, throw error
+		if setter != nil {
+			return errors.Errorf("setter with name %s already exists, "+
+				"if you want to modify it, please delete the existing setter and recreate it", r.CreateSetter.Name)
+		}
+
 		r.CreateSetter.Description = r.Set.SetPartialField.Description
 		r.CreateSetter.SetBy = r.Set.SetPartialField.SetBy
 		r.CreateSetter.Type = r.Set.SetPartialField.Type
