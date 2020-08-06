@@ -68,8 +68,20 @@ func (r *CreateSubstitutionRunner) preRunE(c *cobra.Command, args []string) erro
 		return err
 	}
 
+	// check if substitution with same name exists and throw error
+	ref, err := spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SubstitutionDefinitionPrefix + r.CreateSubstitution.Name)
+	if err != nil {
+		return err
+	}
+
+	subst, _ := openapi.Resolve(&ref)
+	// if substitution already exists with the input substitution name, throw error
+	if subst != nil {
+		return errors.Errorf("substitution with name %s already exists", r.CreateSubstitution.Name)
+	}
+
 	// check if setter with same name exists and throw error
-	ref, err := spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + r.CreateSubstitution.Name)
+	ref, err = spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + r.CreateSubstitution.Name)
 	if err != nil {
 		return err
 	}
