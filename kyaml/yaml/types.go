@@ -39,12 +39,8 @@ func IsMissingOrNull(node *RNode) bool {
 	return node.IsNil() || node.YNode().Tag == NodeTagNull
 }
 
-// Deprecated.  Use IsMissingOrNull instead.
-func IsEmpty(node *RNode) bool {
-	return IsMissingOrNull(node)
-}
-
-// IsEmptyMap returns true if the RNode is an empty node or an empty map
+// IsEmptyMap returns true if the RNode is an empty node or an empty map.
+// TODO: make this a method on RNode.
 func IsEmptyMap(node *RNode) bool {
 	return IsMissingOrNull(node) || IsYNodeEmptyMap(node.YNode())
 }
@@ -87,11 +83,6 @@ func GetValue(node *RNode) string {
 		return ""
 	}
 	return node.YNode().Value
-}
-
-func IsFieldNull(node *MapNode) bool {
-	return node != nil && node.Value != nil && node.Value.YNode() != nil &&
-		node.Value.YNode().Tag == NodeTagNull
 }
 
 // Parser parses values into configuration.
@@ -269,6 +260,12 @@ type MapNode struct {
 	Value *RNode
 }
 
+// IsNilOrEmpty returns true if the MapNode is nil,
+// has no value, or has a value that appears empty.
+func (mn *MapNode) IsNilOrEmpty() bool {
+	return mn == nil || mn.Value.IsNilOrEmpty()
+}
+
 type MapNodeSlice []*MapNode
 
 func (m MapNodeSlice) Keys() []*RNode {
@@ -409,17 +406,17 @@ func (rn *RNode) GetMeta() (ResourceMeta, error) {
 	m := ResourceMeta{}
 
 	// TODO: consider optimizing this parsing
-	if f := n.Field(APIVersionField); !IsFieldEmpty(f) {
+	if f := n.Field(APIVersionField); !f.IsNilOrEmpty() {
 		m.APIVersion = GetValue(f.Value)
 		missingMeta = false
 	}
-	if f := n.Field(KindField); !IsFieldEmpty(f) {
+	if f := n.Field(KindField); !f.IsNilOrEmpty() {
 		m.Kind = GetValue(f.Value)
 		missingMeta = false
 	}
 
 	mf := n.Field(MetadataField)
-	if IsFieldEmpty(mf) {
+	if mf.IsNilOrEmpty() {
 		if missingMeta {
 			return m, ErrMissingMetadata
 		}
@@ -427,16 +424,16 @@ func (rn *RNode) GetMeta() (ResourceMeta, error) {
 	}
 	meta := mf.Value
 
-	if f := meta.Field(NameField); !IsFieldEmpty(f) {
+	if f := meta.Field(NameField); !f.IsNilOrEmpty() {
 		m.Name = f.Value.YNode().Value
 		missingMeta = false
 	}
-	if f := meta.Field(NamespaceField); !IsFieldEmpty(f) {
+	if f := meta.Field(NamespaceField); !f.IsNilOrEmpty() {
 		m.Namespace = GetValue(f.Value)
 		missingMeta = false
 	}
 
-	if f := meta.Field(LabelsField); !IsFieldEmpty(f) {
+	if f := meta.Field(LabelsField); !f.IsNilOrEmpty() {
 		m.Labels = map[string]string{}
 		_ = f.Value.VisitFields(func(node *MapNode) error {
 			m.Labels[GetValue(node.Key)] = GetValue(node.Value)
@@ -444,7 +441,7 @@ func (rn *RNode) GetMeta() (ResourceMeta, error) {
 		})
 		missingMeta = false
 	}
-	if f := meta.Field(AnnotationsField); !IsFieldEmpty(f) {
+	if f := meta.Field(AnnotationsField); !f.IsNilOrEmpty() {
 		m.Annotations = map[string]string{}
 		_ = f.Value.VisitFields(func(node *MapNode) error {
 			m.Annotations[GetValue(node.Key)] = GetValue(node.Value)
@@ -663,7 +660,7 @@ func (rn *RNode) ElementValues(key string) ([]string, error) {
 	var elements []string
 	for i := 0; i < len(rn.Content()); i++ {
 		field := NewRNode(rn.Content()[i]).Field(key)
-		if !IsFieldEmpty(field) {
+		if !field.IsNilOrEmpty() {
 			elements = append(elements, field.Value.YNode().Value)
 		}
 	}
