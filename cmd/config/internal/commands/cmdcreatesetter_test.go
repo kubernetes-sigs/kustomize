@@ -126,6 +126,24 @@ openAPI:
 		},
 
 		{
+			name: "error if setter with same name exists",
+			args: []string{
+				"my-image", "ubuntu"},
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.my-image:
+      x-k8s-cli:
+        setter:
+          name: my-image
+          value: "nginx"
+ `,
+			err: "setter with name my-image already exists, if you want to modify it, please delete the existing setter and recreate it",
+		},
+
+		{
 			name:   "add replicas with schema",
 			args:   []string{"replicas", "3", "--description", "hello world", "--set-by", "me"},
 			schema: `{"maximum": 10, "type": "integer"}`,
