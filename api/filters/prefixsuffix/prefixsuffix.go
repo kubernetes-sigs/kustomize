@@ -32,7 +32,7 @@ func (f Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 		FieldSpec:  f.FieldSpec,
 		SetValue:   f.evaluateField,
 		CreateKind: yaml.ScalarNode, // Name is a ScalarNode
-		CreateTag:  yaml.StringTag,
+		CreateTag:  yaml.NodeTagString,
 	})
 	return node, err
 }

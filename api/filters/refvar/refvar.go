@@ -66,7 +66,7 @@ func updateNodeValue(node *yaml.Node, newValue interface{}) {
 }
 
 func (f Filter) setScalar(node *yaml.RNode) error {
-	if node.YNode().Kind != yaml.ScalarNode || node.YNode().Tag != yaml.StringTag {
+	if node.YNode().Kind != yaml.ScalarNode || node.YNode().Tag != yaml.NodeTagString {
 		// Only process string values
 		return nil
 	}
@@ -78,10 +78,10 @@ func (f Filter) setScalar(node *yaml.RNode) error {
 func (f Filter) setMap(node *yaml.RNode) error {
 	contents := node.YNode().Content
 	for i := 0; i < len(contents); i += 2 {
-		if contents[i].Kind != yaml.ScalarNode || contents[i].Tag != yaml.StringTag {
+		if contents[i].Kind != yaml.ScalarNode || contents[i].Tag != yaml.NodeTagString {
 			return fmt.Errorf("invalid map key: %s, type: %s", contents[i].Value, contents[i].Tag)
 		}
-		if contents[i+1].Kind != yaml.ScalarNode || contents[i+1].Tag != yaml.StringTag {
+		if contents[i+1].Kind != yaml.ScalarNode || contents[i+1].Tag != yaml.NodeTagString {
 			// value is not a string
 			continue
 		}
@@ -93,7 +93,7 @@ func (f Filter) setMap(node *yaml.RNode) error {
 
 func (f Filter) setSeq(node *yaml.RNode) error {
 	for _, item := range node.YNode().Content {
-		if item.Kind != yaml.ScalarNode || item.Tag != yaml.StringTag {
+		if item.Kind != yaml.ScalarNode || item.Tag != yaml.NodeTagString {
 			// value is not a string
 			return fmt.Errorf("invalid value type expect a string")
 		}
