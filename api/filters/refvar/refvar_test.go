@@ -8,6 +8,7 @@ import (
 	expansion2 "sigs.k8s.io/kustomize/api/internal/accumulator/expansion"
 	filtertest_test "sigs.k8s.io/kustomize/api/testutils/filtertest"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func TestFilter(t *testing.T) {
@@ -251,7 +252,7 @@ metadata:
     config.kubernetes.io/index: '0'
 data:
   1: str
-' at path 'data': invalid map key: 1, type: !!int`,
+' at path 'data': invalid map key: 1, type: ` + yaml.NodeTagInt,
 			filter: Filter{
 				MappingFunc: expansion2.MappingFuncFor(replacementCounts, map[string]interface{}{
 					"VAR": int64(5),
