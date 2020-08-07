@@ -179,7 +179,7 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 func isEmptyDocument(node *yaml.Node) bool {
 	// node is a Document with no content -- e.g. "---\n---"
 	return node.Kind == yaml.DocumentNode &&
-		node.Content[0].Tag == yaml.NullNodeTag
+		node.Content[0].Tag == yaml.NodeTagNull
 }
 
 func (r *ByteReader) decode(index int, decoder *yaml.Decoder) (*yaml.RNode, error) {
