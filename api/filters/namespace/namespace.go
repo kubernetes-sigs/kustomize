@@ -46,7 +46,7 @@ func (ns Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 		FsSlice:    ns.FsSlice,
 		SetValue:   filtersutil.SetScalar(ns.Namespace),
 		CreateKind: yaml.ScalarNode, // Namespace is a ScalarNode
-		CreateTag:  yaml.StringTag,
+		CreateTag:  yaml.NodeTagString,
 	})
 	return node, err
 }

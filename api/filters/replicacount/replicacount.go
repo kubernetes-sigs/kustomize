@@ -27,7 +27,7 @@ func (rc Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 		FieldSpec:  rc.FieldSpec,
 		SetValue:   rc.set,
 		CreateKind: yaml.ScalarNode, // replicas is a ScalarNode
-		CreateTag:  yaml.IntTag,     //  yaml.NodeTagInt
+		CreateTag:  yaml.NodeTagInt,
 	})
 	return node, err
 }
