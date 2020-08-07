@@ -35,7 +35,7 @@ func MakeNullNode() *RNode {
 
 // IsMissingOrNull returns true if the RNode is nil or contains and explicitly null value.
 func IsMissingOrNull(node *RNode) bool {
-	return node == nil || node.YNode() == nil || node.YNode().Tag == NodeTagNull
+	return IsNil(node) || node.YNode().Tag == NodeTagNull
 }
 
 // IsEmpty returns true if the RNode is MissingOrNull
@@ -48,12 +48,16 @@ func IsEmptyMap(node *RNode) bool {
 	if IsEmpty(node) {
 		return true
 	}
+	return IsYNodeEmptyMap(node.YNode())
+}
 
-	return node.YNode().Kind == yaml.MappingNode && len(node.YNode().Content) == 0
+// IsNil return true if the node is nil, or its underlying YNode is nil.
+func IsNil(node *RNode) bool {
+	return node == nil || node.YNode() == nil
 }
 
 func IsNull(node *RNode) bool {
-	return node != nil && node.YNode() != nil && node.YNode().Tag == NodeTagNull
+	return !IsNil(node) && node.YNode().Tag == NodeTagNull
 }
 
 func IsFieldEmpty(node *MapNode) bool {
@@ -61,15 +65,26 @@ func IsFieldEmpty(node *MapNode) bool {
 		node.Value.YNode().Tag == NodeTagNull {
 		return true
 	}
+	return IsYNodeEmptyMap(node.Value.YNode()) ||
+		IsYNodeEmptySeq(node.Value.YNode())
+}
 
-	if node.Value.YNode().Kind == yaml.MappingNode && len(node.Value.YNode().Content) == 0 {
-		return true
-	}
-	if node.Value.YNode().Kind == yaml.SequenceNode && len(node.Value.YNode().Content) == 0 {
-		return true
-	}
+func IsYNodeEmptyMap(n *yaml.Node) bool {
+	return n.Kind == yaml.MappingNode && len(n.Content) == 0
+}
 
-	return false
+func IsYNodeEmptySeq(n *yaml.Node) bool {
+	return n.Kind == yaml.SequenceNode && len(n.Content) == 0
+}
+
+// IsYNodeEmptyDoc is true if the node is a Document with no content.
+// E.g.: "---\n---"
+func IsYNodeEmptyDoc(n *yaml.Node) bool {
+	return n.Kind == yaml.DocumentNode && n.Content[0].Tag == NodeTagNull
+}
+
+func IsYNodeString(n *yaml.Node) bool {
+	return n.Kind == yaml.ScalarNode && n.Tag == NodeTagString
 }
 
 // GetValue returns underlying yaml.Node Value field
