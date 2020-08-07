@@ -180,7 +180,7 @@ func TestIsMissingOrNull(t *testing.T) {
 		t.Fatalf("input: valid node")
 	}
 	// node with NullNodeTag
-	if !IsMissingOrNull(NullNode()) {
+	if !IsMissingOrNull(MakeNullNode()) {
 		t.Fatalf("input: with NullNodeTag")
 	}
 }
