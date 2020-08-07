@@ -468,6 +468,9 @@ func (s FieldSetter) Filter(rn *RNode) (*RNode, error) {
 		if err := ErrorIfInvalid(rn, yaml.ScalarNode); err != nil {
 			return rn, err
 		}
+		if IsMissingOrNull(s.Value) {
+			return rn, nil
+		}
 		// only apply the style if there is not an existing style
 		// or we want to override it
 		if !s.OverrideStyle || s.Value.YNode().Style == 0 {
