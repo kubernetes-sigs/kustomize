@@ -26,22 +26,16 @@ const (
 	NodeTagMap    = "!!map"
 	NodeTagSeq    = "!!seq"
 	NodeTagEmpty  = ""
-
-	// TODO: deprecate these
-	NullNodeTag = NodeTagNull
-	StringTag   = NodeTagString
-	BoolTag     = NodeTagBool
-	IntTag      = NodeTagInt
 )
 
-// NullNode returns a RNode point represents a null; value
-func NullNode() *RNode {
-	return NewRNode(&Node{Tag: NullNodeTag})
+// MakeNullNode returns an RNode that represents an empty document.
+func MakeNullNode() *RNode {
+	return NewRNode(&Node{Tag: NodeTagNull})
 }
 
 // IsMissingOrNull returns true if the RNode is nil or contains and explicitly null value.
 func IsMissingOrNull(node *RNode) bool {
-	return node == nil || node.YNode() == nil || node.YNode().Tag == NullNodeTag
+	return node == nil || node.YNode() == nil || node.YNode().Tag == NodeTagNull
 }
 
 // IsEmpty returns true if the RNode is MissingOrNull
@@ -59,12 +53,12 @@ func IsEmptyMap(node *RNode) bool {
 }
 
 func IsNull(node *RNode) bool {
-	return node != nil && node.YNode() != nil && node.YNode().Tag == NullNodeTag
+	return node != nil && node.YNode() != nil && node.YNode().Tag == NodeTagNull
 }
 
 func IsFieldEmpty(node *MapNode) bool {
 	if node == nil || node.Value == nil || node.Value.YNode() == nil ||
-		node.Value.YNode().Tag == NullNodeTag {
+		node.Value.YNode().Tag == NodeTagNull {
 		return true
 	}
 
@@ -88,7 +82,7 @@ func GetValue(node *RNode) string {
 
 func IsFieldNull(node *MapNode) bool {
 	return node != nil && node.Value != nil && node.Value.YNode() != nil &&
-		node.Value.YNode().Tag == NullNodeTag
+		node.Value.YNode().Tag == NodeTagNull
 }
 
 // Parser parses values into configuration.
