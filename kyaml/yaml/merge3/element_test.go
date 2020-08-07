@@ -371,7 +371,7 @@ kind: Deployment
 spec:
   template:
     spec:
-      containers: {}
+      containers: null
 `,
 		update: `
 apiVersion: apps/v1
@@ -379,7 +379,7 @@ kind: Deployment
 spec:
   template:
     spec:
-      containers: {}
+      containers: null
 `,
 		local: `
 apiVersion: apps/v1
@@ -584,7 +584,7 @@ kind: Deployment
 spec:
   template:
     spec:
-      containers: {}
+      containers: null
 `,
 		local: `
 apiVersion: apps/v1

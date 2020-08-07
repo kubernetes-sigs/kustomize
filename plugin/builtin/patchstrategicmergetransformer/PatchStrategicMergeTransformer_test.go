@@ -467,7 +467,6 @@ spec:
   replicas: 1
   template:
     metadata:
-      creationTimestamp: null
       labels:
         workload.sas.com/class: stateless
     spec:
@@ -496,45 +495,6 @@ spec:
         name: security-ssh
       - emptyDir: {}
         name: tmp
-`
-
-// This is the current (incorrect) result we get with kustomize 3.8.1
-const currentCleanedDeployment = `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    workload.sas.com/class: stateless
-  name: sas-crunchy-data-postgres-operator
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        workload.sas.com/class: stateless
-    spec:
-      containers:
-      - envFrom: []
-        image: sas-crunchy-data-operator-api-server
-        imagePullPolicy: IfNotPresent
-        name: apiserver
-        ports:
-        - containerPort: 8443
-        volumeMounts:
-        - mountPath: /security-ssh
-          name: security-ssh
-        - mountPath: /tmp
-          name: tmp
-      imagePullSecrets: []
-      initContainers: []
-      serviceAccountName: postgres-operator
-      tolerations:
-      - effect: NoSchedule
-        key: workload.sas.com/class
-        operator: Equal
-        value: stateful
-      volumes:
-      - name: security-ssh
-      - name: tmp
 `
 
 func TestPatchStrategicMergeTransformerCleanupItems(t *testing.T) {
@@ -571,7 +531,7 @@ paths:
 - patch.yaml
 `,
 		anUncleanDeploymentResource,
-		currentCleanedDeployment) // prefer expectedCleanedDeployment
+		expectedCleanedDeployment) // prefer expectedCleanedDeployment
 }
 
 func TestStrategicMergeTransformerNoSchema(t *testing.T) {
