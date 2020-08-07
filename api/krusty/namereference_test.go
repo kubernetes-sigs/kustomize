@@ -6,7 +6,7 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func TestEmptyFielsSpecValue(t *testing.T) {
+func TestEmptyFieldSpecValue(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
 generators:
