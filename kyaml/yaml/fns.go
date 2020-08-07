@@ -568,7 +568,7 @@ var nodeTypeIndex = map[yaml.Kind]string{
 }
 
 func ErrorIfInvalid(rn *RNode, kind yaml.Kind) error {
-	if rn == nil || rn.YNode() == nil || rn.IsTaggedNull() {
+	if IsMissingOrNull(rn) {
 		// node has no type, pass validation
 		return nil
 	}

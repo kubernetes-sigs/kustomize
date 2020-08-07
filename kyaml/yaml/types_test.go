@@ -239,16 +239,17 @@ func TestIsMissingOrNull(t *testing.T) {
 		t.Fatalf("input: with NullNodeTag")
 	}
 
-	node := NewListRNode()
 	// empty array. empty array is not expected as empty
-	if IsMissingOrNull(node) {
+	if IsMissingOrNull(NewListRNode()) {
 		t.Fatalf("input: empty array")
 	}
+
 	// array with 1 item
-	node = NewListRNode("foo")
+	node := NewListRNode("foo")
 	if IsMissingOrNull(node) {
 		t.Fatalf("input: array with 1 item")
 	}
+
 	// delete the item in array
 	node.value.Content = nil
 	if IsMissingOrNull(node) {
@@ -352,6 +353,49 @@ func TestRNodeIsNilOrEmpty(t *testing.T) {
 	}
 
 	if NewListRNode("foo").IsNilOrEmpty() {
+		t.Fatalf("non-empty list should not be empty")
+	}
+}
+
+func TestMapNodeIsNilOrEmpty(t *testing.T) {
+	var mn *MapNode
+
+	if !mn.IsNilOrEmpty() {
+		t.Fatalf("nil should be empty")
+	}
+
+	mn = &MapNode{Key: MakeNullNode()}
+	if !mn.IsNilOrEmpty() {
+		t.Fatalf("missing value should be empty")
+	}
+
+	mn.Value = NewRNode(nil)
+	if !mn.IsNilOrEmpty() {
+		t.Fatalf("missing value YNode should be empty")
+	}
+
+	mn.Value = MakeNullNode()
+	if !mn.IsNilOrEmpty() {
+		t.Fatalf("value tagged null should be empty")
+	}
+
+	mn.Value = NewMapRNode(nil)
+	if !mn.IsNilOrEmpty() {
+		t.Fatalf("empty map should be empty")
+	}
+
+	mn.Value = NewMapRNode(&map[string]string{"foo": "bar"})
+	if mn.IsNilOrEmpty() {
+		t.Fatalf("non-empty map should not be empty")
+	}
+
+	mn.Value = NewListRNode()
+	if !mn.IsNilOrEmpty() {
+		t.Fatalf("empty list should be empty")
+	}
+
+	mn.Value = NewListRNode("foo")
+	if mn.IsNilOrEmpty() {
 		t.Fatalf("non-empty list should not be empty")
 	}
 }
