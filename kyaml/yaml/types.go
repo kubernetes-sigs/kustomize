@@ -45,10 +45,7 @@ func IsEmpty(node *RNode) bool {
 
 // IsEmptyMap returns true if the RNode is an empty node or an empty map
 func IsEmptyMap(node *RNode) bool {
-	if IsEmpty(node) {
-		return true
-	}
-	return IsYNodeEmptyMap(node.YNode())
+	return IsEmpty(node) || IsYNodeEmptyMap(node.YNode())
 }
 
 // IsNil return true if the node is nil, or its underlying YNode is nil.
