@@ -220,3 +220,27 @@ func TestIsEmptyMap(t *testing.T) {
 		t.Fatalf("input: empty map")
 	}
 }
+
+func TestIsNil(t *testing.T) {
+	var rn *RNode
+
+	if !rn.IsNil() {
+		t.Fatalf("uninitialized RNode should be nil")
+	}
+
+	if !NewRNode(nil).IsNil() {
+		t.Fatalf("missing value YNode should be nil")
+	}
+
+	if MakeNullNode().IsNil() {
+		t.Fatalf("value tagged null is not nil")
+	}
+
+	if NewMapRNode(nil).IsNil() {
+		t.Fatalf("empty map not nil")
+	}
+
+	if NewListRNode().IsNil() {
+		t.Fatalf("empty list not nil")
+	}
+}
