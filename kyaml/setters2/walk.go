@@ -110,7 +110,7 @@ func getSchema(r *yaml.RNode, s *openapi.ResourceSchema, field string) *openapi.
 		return s
 	}
 
-	if yaml.IsEmpty(r) {
+	if yaml.IsMissingOrNull(r) {
 		return nil
 	}
 
