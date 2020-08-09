@@ -383,6 +383,15 @@ func (rn *RNode) IsTaggedNull() bool {
 	return !rn.IsNil() && IsYNodeTaggedNull(rn.YNode())
 }
 
+// IsNilOrEmpty is true if the node is nil,
+// has no YNode, or has YNode that appears empty.
+func (rn *RNode) IsNilOrEmpty() bool {
+	return rn.IsNil() ||
+		IsYNodeTaggedNull(rn.YNode()) ||
+		IsYNodeEmptyMap(rn.YNode()) ||
+		IsYNodeEmptySeq(rn.YNode())
+}
+
 // GetMeta returns the ResourceMeta for an RNode
 func (rn *RNode) GetMeta() (ResourceMeta, error) {
 	if IsMissingOrNull(rn) {
