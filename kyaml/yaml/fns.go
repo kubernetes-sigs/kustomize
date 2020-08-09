@@ -482,7 +482,7 @@ func (s FieldSetter) Filter(rn *RNode) (*RNode, error) {
 	}
 
 	// Clear the field if it is empty, or explicitly null
-	if s.Value == nil || IsNull(s.Value) {
+	if s.Value == nil || s.Value.IsTaggedNull() {
 		return rn.Pipe(Clear(s.Name))
 	}
 
@@ -568,7 +568,7 @@ var nodeTypeIndex = map[yaml.Kind]string{
 }
 
 func ErrorIfInvalid(rn *RNode, kind yaml.Kind) error {
-	if rn == nil || rn.YNode() == nil || IsNull(rn) {
+	if rn == nil || rn.YNode() == nil || rn.IsTaggedNull() {
 		// node has no type, pass validation
 		return nil
 	}
