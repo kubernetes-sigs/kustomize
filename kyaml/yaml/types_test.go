@@ -323,3 +323,35 @@ func TestIsTaggedNull(t *testing.T) {
 		t.Fatalf("empty list should not be tagged null")
 	}
 }
+
+func TestRNodeIsNilOrEmpty(t *testing.T) {
+	var rn *RNode
+
+	if !rn.IsNilOrEmpty() {
+		t.Fatalf("uninitialized RNode should be empty")
+	}
+
+	if !NewRNode(nil).IsNilOrEmpty() {
+		t.Fatalf("missing value YNode should be empty")
+	}
+
+	if !MakeNullNode().IsNilOrEmpty() {
+		t.Fatalf("value tagged null should be empty")
+	}
+
+	if !NewMapRNode(nil).IsNilOrEmpty() {
+		t.Fatalf("empty map should be empty")
+	}
+
+	if NewMapRNode(&map[string]string{"foo": "bar"}).IsNilOrEmpty() {
+		t.Fatalf("non-empty map should not be empty")
+	}
+
+	if !NewListRNode().IsNilOrEmpty() {
+		t.Fatalf("empty list should be empty")
+	}
+
+	if NewListRNode("foo").IsNilOrEmpty() {
+		t.Fatalf("non-empty list should not be empty")
+	}
+}
