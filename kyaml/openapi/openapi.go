@@ -36,7 +36,7 @@ type ResourceSchema struct {
 }
 
 // IsEmpty returns true if the ResourceSchema is empty
-func (rs *ResourceSchema) IsEmpty() bool {
+func (rs *ResourceSchema) IsMissingOrNull() bool {
 	if rs == nil || rs.Schema == nil {
 		return true
 	}

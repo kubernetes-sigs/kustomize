@@ -40,7 +40,7 @@ type Walker struct {
 
 func (l Walker) Kind() yaml.Kind {
 	for _, s := range l.Sources {
-		if !yaml.IsEmpty(s) {
+		if !yaml.IsMissingOrNull(s) {
 			return s.YNode().Kind
 		}
 	}
@@ -83,7 +83,7 @@ func (l Walker) Walk() (*yaml.RNode, error) {
 func (l Walker) GetSchema() *openapi.ResourceSchema {
 	for i := range l.Sources {
 		r := l.Sources[i]
-		if yaml.IsEmpty(r) {
+		if yaml.IsMissingOrNull(r) {
 			continue
 		}
 
@@ -106,7 +106,7 @@ func (l Walker) GetSchema() *openapi.ResourceSchema {
 	}
 	for i := range l.Sources {
 		r := l.Sources[i]
-		if yaml.IsEmpty(r) {
+		if yaml.IsMissingOrNull(r) {
 			continue
 		}
 

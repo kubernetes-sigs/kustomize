@@ -51,7 +51,7 @@ func (l *Walker) walkAssociativeSequence() (*yaml.RNode, error) {
 			if err != nil {
 				return nil, err
 			}
-			if yaml.IsEmpty(val) || yaml.IsEmptyMap(val) {
+			if yaml.IsMissingOrNull(val) || yaml.IsEmptyMap(val) {
 				_, err = dest.Pipe(yaml.ElementSetter{Key: key, Value: value})
 				if err != nil {
 					return nil, err
@@ -74,7 +74,7 @@ func (l *Walker) walkAssociativeSequence() (*yaml.RNode, error) {
 			}
 		}
 		// field is empty
-		if yaml.IsEmpty(dest) {
+		if yaml.IsMissingOrNull(dest) {
 			return nil, nil
 		}
 		return dest, nil
@@ -97,7 +97,7 @@ func (l *Walker) walkAssociativeSequence() (*yaml.RNode, error) {
 		if err != nil {
 			return nil, err
 		}
-		if yaml.IsEmpty(val) {
+		if yaml.IsMissingOrNull(val) {
 			_, err = dest.Pipe(yaml.ElementSetter{Key: key, Value: value})
 			if err != nil {
 				return nil, err
@@ -121,7 +121,7 @@ func (l *Walker) walkAssociativeSequence() (*yaml.RNode, error) {
 	}
 
 	// field is empty
-	if yaml.IsEmpty(dest) {
+	if yaml.IsMissingOrNull(dest) {
 		return nil, nil
 	}
 	return dest, nil

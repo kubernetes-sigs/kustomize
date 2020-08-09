@@ -183,42 +183,25 @@ func TestIsMissingOrNull(t *testing.T) {
 	if !IsMissingOrNull(MakeNullNode()) {
 		t.Fatalf("input: with NullNodeTag")
 	}
-}
 
-func TestIsEmpty(t *testing.T) {
-	if !IsEmpty(nil) {
-		t.Fatalf("input: nil")
-	}
-
-	// missing value or null value
-	if !IsEmpty(NewRNode(nil)) {
-		t.Fatalf("input: nil value")
-	}
-	// not array or map
-	if IsEmpty(NewScalarRNode("foo")) {
-		t.Fatalf("input: not array or map")
-	}
-}
-
-func TestIsEmpty_Arrays(t *testing.T) {
 	node := NewListRNode()
 	// empty array. empty array is not expected as empty
-	if IsEmpty(node) {
+	if IsMissingOrNull(node) {
 		t.Fatalf("input: empty array")
 	}
 	// array with 1 item
 	node = NewListRNode("foo")
-	if IsEmpty(node) {
+	if IsMissingOrNull(node) {
 		t.Fatalf("input: array with 1 item")
 	}
 	// delete the item in array
 	node.value.Content = nil
-	if IsEmpty(node) {
+	if IsMissingOrNull(node) {
 		t.Fatalf("input: empty array")
 	}
 }
 
-func TestIsEmpty_Maps(t *testing.T) {
+func TestIsEmptyMap(t *testing.T) {
 	node := NewMapRNode(nil)
 	// empty map
 	if !IsEmptyMap(node) {
