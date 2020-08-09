@@ -70,7 +70,7 @@ func (e ElementSetter) Filter(rn *RNode) (*RNode, error) {
 		newNode := NewRNode(elem)
 
 		// empty elements are not valid -- they at least need an associative key
-		if IsEmpty(newNode) || IsEmptyMap(newNode) {
+		if IsMissingOrNull(newNode) || IsEmptyMap(newNode) {
 			continue
 		}
 
@@ -549,7 +549,7 @@ func IsFoundOrError(rn *RNode, err error) bool {
 
 func ErrorIfAnyInvalidAndNonNull(kind yaml.Kind, rn ...*RNode) error {
 	for i := range rn {
-		if IsEmpty(rn[i]) {
+		if IsMissingOrNull(rn[i]) {
 			continue
 		}
 		if err := ErrorIfInvalid(rn[i], kind); err != nil {

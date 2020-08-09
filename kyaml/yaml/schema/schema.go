@@ -22,7 +22,7 @@ func IsAssociative(schema *openapi.ResourceSchema, nodes []*yaml.RNode, infer bo
 	}
 	for i := range nodes {
 		node := nodes[i]
-		if yaml.IsEmpty(node) {
+		if yaml.IsMissingOrNull(node) {
 			continue
 		}
 		if node.IsAssociative() {

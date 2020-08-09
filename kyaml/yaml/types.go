@@ -33,19 +33,20 @@ func MakeNullNode() *RNode {
 	return NewRNode(&Node{Tag: NodeTagNull})
 }
 
-// IsMissingOrNull returns true if the RNode is nil or contains and explicitly null value.
+// IsMissingOrNull is true if the RNode is nil or explicitly tagged null.
+// TODO: make this a method on RNode.
 func IsMissingOrNull(node *RNode) bool {
 	return IsNil(node) || node.YNode().Tag == NodeTagNull
 }
 
-// IsEmpty returns true if the RNode is MissingOrNull
+// Deprecated.  Use IsMissingOrNull instead.
 func IsEmpty(node *RNode) bool {
 	return IsMissingOrNull(node)
 }
 
 // IsEmptyMap returns true if the RNode is an empty node or an empty map
 func IsEmptyMap(node *RNode) bool {
-	return IsEmpty(node) || IsYNodeEmptyMap(node.YNode())
+	return IsMissingOrNull(node) || IsYNodeEmptyMap(node.YNode())
 }
 
 // IsNil return true if the node is nil, or its underlying YNode is nil.
@@ -86,7 +87,7 @@ func IsYNodeString(n *yaml.Node) bool {
 
 // GetValue returns underlying yaml.Node Value field
 func GetValue(node *RNode) string {
-	if IsEmpty(node) {
+	if IsMissingOrNull(node) {
 		return ""
 	}
 	return node.YNode().Value
@@ -378,7 +379,7 @@ const (
 
 // GetMeta returns the ResourceMeta for an RNode
 func (rn *RNode) GetMeta() (ResourceMeta, error) {
-	if IsEmpty(rn) {
+	if IsMissingOrNull(rn) {
 		return ResourceMeta{}, nil
 	}
 	missingMeta := true
