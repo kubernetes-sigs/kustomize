@@ -36,7 +36,7 @@ func MakeNullNode() *RNode {
 // IsMissingOrNull is true if the RNode is nil or explicitly tagged null.
 // TODO: make this a method on RNode.
 func IsMissingOrNull(node *RNode) bool {
-	return IsNil(node) || node.YNode().Tag == NodeTagNull
+	return node.IsNil() || node.YNode().Tag == NodeTagNull
 }
 
 // Deprecated.  Use IsMissingOrNull instead.
@@ -49,13 +49,8 @@ func IsEmptyMap(node *RNode) bool {
 	return IsMissingOrNull(node) || IsYNodeEmptyMap(node.YNode())
 }
 
-// IsNil return true if the node is nil, or its underlying YNode is nil.
-func IsNil(node *RNode) bool {
-	return node == nil || node.YNode() == nil
-}
-
 func IsNull(node *RNode) bool {
-	return !IsNil(node) && node.YNode().Tag == NodeTagNull
+	return !node.IsNil() && node.YNode().Tag == NodeTagNull
 }
 
 func IsFieldEmpty(node *MapNode) bool {
@@ -376,6 +371,11 @@ const (
 	NamespaceField   = "namespace"
 	LabelsField      = "labels"
 )
+
+// IsNil is true if the node is nil, or its underlying YNode is nil.
+func (rn *RNode) IsNil() bool {
+	return rn == nil || rn.YNode() == nil
+}
 
 // GetMeta returns the ResourceMeta for an RNode
 func (rn *RNode) GetMeta() (ResourceMeta, error) {
