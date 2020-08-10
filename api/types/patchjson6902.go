@@ -19,3 +19,9 @@ type PatchJson6902 struct {
 	// inline patch string
 	Patch string `json:"patch,omitempty" yaml:"patch,omitempty"`
 }
+
+// ToPatch converts a PatchJson6902 to its superset Patch.
+func (patch *PatchJson6902) ToPatch() Patch {
+	selector := patch.Target.ToSelector()
+	return Patch{Path: patch.Path, Patch: patch.Patch, Target: &selector}
+}
