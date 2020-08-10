@@ -146,6 +146,22 @@ func (rf *Factory) SliceFromBytes(in []byte) ([]*Resource, error) {
 	return result, nil
 }
 
+// SliceFromBytesWithNames unmarshals bytes into a Resource slice with specified original
+// name.
+func (rf *Factory) SliceFromBytesWithNames(names []string, in []byte) ([]*Resource, error) {
+	result, err := rf.SliceFromBytes(in)
+	if err != nil {
+		return nil, err
+	}
+	if len(names) != len(result) {
+		return nil, fmt.Errorf("number of names doesn't match number of resources")
+	}
+	for i, res := range result {
+		res.originalName = names[i]
+	}
+	return result, nil
+}
+
 // MakeConfigMap makes an instance of Resource for ConfigMap
 func (rf *Factory) MakeConfigMap(kvLdr ifc.KvLoader, args *types.ConfigMapArgs) (*Resource, error) {
 	u, err := rf.kf.MakeConfigMap(kvLdr, args)

@@ -5,8 +5,6 @@ package commands
 
 import (
 	"fmt"
-	"regexp"
-	"strings"
 
 	"github.com/go-openapi/spec"
 	"github.com/spf13/cobra"
@@ -14,7 +12,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
-	"sigs.k8s.io/kustomize/kyaml/setters2"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
 
@@ -71,8 +68,20 @@ func (r *CreateSubstitutionRunner) preRunE(c *cobra.Command, args []string) erro
 		return err
 	}
 
+	// check if substitution with same name exists and throw error
+	ref, err := spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SubstitutionDefinitionPrefix + r.CreateSubstitution.Name)
+	if err != nil {
+		return err
+	}
+
+	subst, _ := openapi.Resolve(&ref)
+	// if substitution already exists with the input substitution name, throw error
+	if subst != nil {
+		return errors.Errorf("substitution with name %s already exists", r.CreateSubstitution.Name)
+	}
+
 	// check if setter with same name exists and throw error
-	ref, err := spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + r.CreateSubstitution.Name)
+	ref, err = spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + r.CreateSubstitution.Name)
 	if err != nil {
 		return err
 	}
@@ -82,41 +91,6 @@ func (r *CreateSubstitutionRunner) preRunE(c *cobra.Command, args []string) erro
 	if setter != nil {
 		return errors.Errorf(fmt.Sprintf("setter with name %s already exists, "+
 			"substitution and setter can't have same name", r.CreateSubstitution.Name))
-	}
-
-	// extract setter name tokens from pattern enclosed in ${}
-	re := regexp.MustCompile(`\$\{([^}]*)\}`)
-	markers := re.FindAllString(r.CreateSubstitution.Pattern, -1)
-	if len(markers) == 0 {
-		return errors.Errorf("unable to find setter or substitution names in pattern, " +
-			"setter names must be enclosed in ${}")
-	}
-
-	for _, marker := range markers {
-		name := strings.TrimSuffix(strings.TrimPrefix(marker, "${"), "}")
-		if name == r.CreateSubstitution.Name {
-			return fmt.Errorf("setters must have different name than the substitution: %s", name)
-		}
-
-		ref, err := spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SubstitutionDefinitionPrefix + name)
-		if err != nil {
-			return err
-		}
-
-		var markerRef string
-		subst, _ := openapi.Resolve(&ref)
-		// check if the substitution exists with the marker name or fall back to creating setter
-		// ref with the name
-		if subst != nil {
-			markerRef = fieldmeta.DefinitionsPrefix + fieldmeta.SubstitutionDefinitionPrefix + name
-		} else {
-			markerRef = fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + name
-		}
-
-		r.CreateSubstitution.Values = append(
-			r.CreateSubstitution.Values,
-			setters2.Value{Marker: marker, Ref: markerRef},
-		)
 	}
 
 	return nil

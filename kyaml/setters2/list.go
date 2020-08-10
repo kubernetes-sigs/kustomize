@@ -53,7 +53,7 @@ func (l *List) listSetters(object *yaml.RNode, resourcePath string) error {
 	if err != nil {
 		return err
 	}
-	if yaml.IsEmpty(def) {
+	if yaml.IsMissingOrNull(def) {
 		return nil
 	}
 
@@ -73,7 +73,7 @@ func (l *List) listSetters(object *yaml.RNode, resourcePath string) error {
 		if err != nil {
 			return err
 		}
-		if yaml.IsEmpty(setterNode) {
+		if yaml.IsMissingOrNull(setterNode) {
 			// has the setter prefix, but missing the setter extension
 			return errors.Errorf("missing x-k8s-cli.setter for %s", key)
 		}
@@ -126,7 +126,7 @@ func (l *List) listSubst(object *yaml.RNode) error {
 	if err != nil {
 		return err
 	}
-	if yaml.IsEmpty(def) {
+	if yaml.IsMissingOrNull(def) {
 		return nil
 	}
 
@@ -146,7 +146,7 @@ func (l *List) listSubst(object *yaml.RNode) error {
 		if err != nil {
 			return err
 		}
-		if yaml.IsEmpty(substNode) {
+		if yaml.IsMissingOrNull(substNode) {
 			// has the substitution prefix, but missing the setter extension
 			return errors.Errorf("missing x-k8s-cli.substitution for %s", key)
 		}

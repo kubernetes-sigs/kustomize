@@ -71,7 +71,7 @@ can only be placed in particular fields of
 particular objects as specified by kustomize's
 configuration data.
 
-The default config data for vars is at [/api/konfig/builtinpluginconsts/varreference.go](/konfig/builtinpluginconsts/varreference.go)
+The default config data for vars is at [/api/konfig/builtinpluginconsts/varreference.go](https://github.com/kubernetes-sigs/kustomize/blob/master/api/konfig/builtinpluginconsts/varreference.go)
 Long story short, the default targets are all
 container command args and env value fields.
 

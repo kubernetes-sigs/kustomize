@@ -52,11 +52,11 @@ func (m Merger) VisitMap(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.R
 	if err := m.SetStyle(nodes); err != nil {
 		return nil, err
 	}
-	if yaml.IsEmpty(nodes.Dest()) {
+	if yaml.IsMissingOrNull(nodes.Dest()) {
 		// Add
 		return nodes.Origin(), nil
 	}
-	if yaml.IsNull(nodes.Origin()) {
+	if nodes.Origin().IsTaggedNull() {
 		// clear the value
 		return walk.ClearNode, nil
 	}
@@ -108,11 +108,11 @@ func (m Merger) VisitList(nodes walk.Sources, s *openapi.ResourceSchema, kind wa
 	}
 
 	// Add
-	if yaml.IsEmpty(nodes.Dest()) {
+	if yaml.IsMissingOrNull(nodes.Dest()) {
 		return nodes.Origin(), nil
 	}
 	// Clear
-	if yaml.IsNull(nodes.Origin()) {
+	if nodes.Origin().IsTaggedNull() {
 		return walk.ClearNode, nil
 	}
 	// Recursively Merge dest

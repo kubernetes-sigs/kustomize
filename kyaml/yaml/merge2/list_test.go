@@ -262,7 +262,7 @@ kind: Deployment
 	{description: `remove list -- empty in src`,
 		source: `
 kind: Deployment
-items: {}
+items: []
 `,
 		dest: `
 kind: Deployment
@@ -273,7 +273,7 @@ items:
 `,
 		expected: `
 kind: Deployment
-items: {}
+items: []
 `,
 	},
 }
