@@ -201,7 +201,7 @@ metadata:
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
 				"metadata": map[string]interface{}{
-					"name":      "foo-literalConfigMap-bar-8d2dkb8k24",
+					"name":      "foo-literalConfigMap-bar-g5f6t456f5",
 					"namespace": "ns1",
 					"labels": map[string]interface{}{
 						"app": "nginx",
@@ -220,7 +220,7 @@ metadata:
 				"apiVersion": "v1",
 				"kind":       "Secret",
 				"metadata": map[string]interface{}{
-					"name":      "foo-secret-bar-9btc7bt4kb",
+					"name":      "foo-secret-bar-82c2g5f8f6",
 					"namespace": "ns1",
 					"labels": map[string]interface{}{
 						"app": "nginx",

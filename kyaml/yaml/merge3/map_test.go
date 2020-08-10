@@ -7,7 +7,8 @@ var mapTestCases = []testCase{
 	//
 	// Test Case
 	//
-	{description: `Add the annotations map field`,
+	{
+		description: `Add the annotations map field`,
 		origin: `
 kind: Deployment`,
 		update: `
@@ -27,7 +28,8 @@ metadata:
 	//
 	// Test Case
 	//
-	{description: `Add an annotation to the field`,
+	{
+		description: `Add an annotation to the field`,
 		origin: `
 kind: Deployment
 metadata:
@@ -54,7 +56,8 @@ metadata:
 	//
 	// Test Case
 	//
-	{description: `Add an annotation to the field, field missing from dest`,
+	{
+		description: `Add an annotation to the field, field missing from dest`,
 		origin: `
 kind: Deployment
 metadata:
@@ -64,7 +67,7 @@ metadata:
 kind: Deployment
 metadata:
   annotations:
-    a: b # ignore because unchanged
+    a: b # ignored because unchanged
     d: e`,
 		local: `
 kind: Deployment`,
@@ -77,7 +80,8 @@ metadata:
 	//
 	// Test Case
 	//
-	{description: `Update an annotation on the field, field messing rom the dest`,
+	{
+		description: `Update an annotation on the field, field messing rom the dest`,
 		origin: `
 kind: Deployment
 metadata:
@@ -105,7 +109,8 @@ metadata:
 	//
 	// Test Case
 	//
-	{description: `Add an annotation to the field, field missing from dest`,
+	{
+		description: `Add an annotation to the field, field missing from dest`,
 		origin: `
 kind: Deployment
 metadata:
@@ -115,7 +120,7 @@ metadata:
 kind: Deployment
 metadata:
   annotations:
-    a: b # ignore because unchanged
+    a: b # ignored because unchanged
     d: e`,
 		local: `
 kind: Deployment`,
@@ -128,7 +133,8 @@ metadata:
 	//
 	// Test Case
 	//
-	{description: `Remove an annotation`,
+	{
+		description: `Remove an annotation`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment
@@ -158,7 +164,8 @@ metadata:
 	// Test Case
 	//
 	// TODO(#36) support ~annotations~: {} deletion
-	{description: `Specify a field as empty that isn't present in the source`,
+	{
+		description: `Specify a field as empty that isn't present in the source`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment
@@ -186,7 +193,8 @@ metadata:
 	//
 	// Test Case
 	//
-	{description: `Remove an annotation`,
+	{
+		description: `Remove an annotation`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment
@@ -213,7 +221,8 @@ metadata:
 	//
 	// Test Case
 	//
-	{description: `Remove annotations field`,
+	{
+		description: `Remove annotations field`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment
@@ -238,7 +247,8 @@ metadata:
 	//
 	// Test Case
 	//
-	{description: `Remove annotations field, but keep in dest`,
+	{
+		description: `Remove annotations field, but keep in dest`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment
@@ -266,7 +276,8 @@ metadata:
 	//
 	// Test Case
 	//
-	{description: `Remove annotations, but they are already empty`,
+	{
+		description: `Remove annotations, but they are already empty`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment

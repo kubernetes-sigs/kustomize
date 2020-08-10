@@ -159,11 +159,11 @@ The configMap name is suffixed by _-v1_, per the
 
 The suffix to the configMap name is generated from a
 hash of the maps content - in this case the name suffix
-is _k25m8k5k5m_:
+is _5276h4th55_:
 
-<!-- @grepStagingHash @testAgainstLatestRelease -->
+<!-- @grepStagingHash -->
 ```
-kustomize build $OVERLAYS/staging | grep k25m8k5k5m
+kustomize build $OVERLAYS/staging | grep 5276h4th55
 ```
 
 Now modify the map patch, to change the greeting
@@ -190,20 +190,20 @@ kustomize build $OVERLAYS/staging |\
 ```
 
 Confirm that the change in configMap content resulted
-in three new names ending in _cd7kdh48fd_ - one in the
+in three new names ending in _c2g8fcbf88_ - one in the
 configMap name itself, and two in the deployment that
 uses the map:
 
-<!-- @countHashes @testAgainstLatestRelease -->
+<!-- @countHashes -->
 ```
 test 3 == \
-  $(kustomize build $OVERLAYS/staging | grep cd7kdh48fd | wc -l); \
+  $(kustomize build $OVERLAYS/staging | grep c2g8fcbf88 | wc -l); \
   echo $?
 ```
 
 Applying these resources to the cluster will result in
 a rolling update of the deployments pods, retargetting
-them from the _k25m8k5k5m_ maps to the _cd7kdh48fd_
+them from the _5276h4th55_ maps to the _c2g8fcbf88_
 maps.  The system will later garbage collect the
 unused maps.
 

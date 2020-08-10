@@ -167,8 +167,8 @@ spec: {}
 		expected: `
 kind: Deployment
 spec:
-  foo: bar1
   baz: buz
+  foo: bar1
 `,
 	},
 

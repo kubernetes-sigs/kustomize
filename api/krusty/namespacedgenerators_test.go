@@ -42,7 +42,7 @@ data:
   enableRisky: "false"
 kind: ConfigMap
 metadata:
-  name: the-non-default-namespace-map-b6h49k7mt8
+  name: the-non-default-namespace-map-64b2md8tth
   namespace: non-default
 ---
 apiVersion: v1
@@ -51,14 +51,14 @@ data:
   enableRisky: "false"
 kind: ConfigMap
 metadata:
-  name: the-map-4959m5tm6c
+  name: the-map-tg7t5hk8bk
 ---
 apiVersion: v1
 data:
   password.txt: dmVyeVNlY3JldA==
 kind: Secret
 metadata:
-  name: the-non-default-namespace-secret-h8d9hkgtb9
+  name: the-non-default-namespace-secret-8tc9gdd76t
   namespace: non-default
 type: Opaque
 ---
@@ -67,7 +67,7 @@ data:
   password.txt: YW5vdGhlclNlY3JldA==
 kind: Secret
 metadata:
-  name: the-secret-fgb45h45bh
+  name: the-secret-6557m7fcg8
 type: Opaque
 `)
 }
@@ -104,7 +104,7 @@ kind: ConfigMap
 metadata:
   annotations: {}
   labels: {}
-  name: testCase-4g75kbk6gm
+  name: testCase-bcbmmg48hd
   namespace: overlay
 `)
 }

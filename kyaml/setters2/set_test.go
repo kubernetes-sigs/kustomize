@@ -126,7 +126,7 @@ metadata:
 		},
 		{
 			name:        "set-foo-no-type",
-			description: "if a type is not specified for a setter, keep the existing quoting",
+			description: "if a type is not specified for a setter or k8s schema, keep existing quoting",
 			setter:      "foo",
 			openapi: `
 openAPI:
@@ -138,16 +138,16 @@ openAPI:
           value: "4"
  `,
 			input: `
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: custom/v1
+kind: Example
 metadata:
   name: nginx-deployment
   annotations:
     foo: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
  `,
 			expected: `
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: custom/v1
+kind: Example
 metadata:
   name: nginx-deployment
   annotations:
@@ -666,6 +666,68 @@ spec:
   - "1"
   - "2"
   - "3"
+ `,
+		},
+		{
+			name:        "set-with-invalid-type-int",
+			description: "if a type is set to int instead of integer, we accept it",
+			setter:      "foo",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.foo:
+      x-k8s-cli:
+        setter:
+          name: foo
+          value: "4"
+      type: int
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: 4 # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+		},
+		{
+			name:        "set-with-invalid-type-bool",
+			description: "if a type is set to bool instead of boolean, we accept it",
+			setter:      "foo",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.foo:
+      x-k8s-cli:
+        setter:
+          name: foo
+          value: "true"
+      type: bool
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: false # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: true # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
  `,
 		},
 	}

@@ -395,6 +395,19 @@ bar: buz
 	assert.Equal(t, `baz
 `, assertNoErrorString(t)(k.String()))
 
+	// Empty value
+	node, err = Parse(`
+foo
+`)
+	assert.NoError(t, err)
+	instance = FieldSetter{}
+	k, err = instance.Filter(node)
+	assert.NoError(t, err)
+	assert.Equal(t, `foo
+`, assertNoErrorString(t)(node.String()))
+	assert.Equal(t, `foo
+`, assertNoErrorString(t)(k.String()))
+
 	// Encounter error
 	node, err = Parse(`
 -a

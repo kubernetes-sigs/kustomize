@@ -97,7 +97,7 @@ func (a *Add) visitMapping(object *yaml.RNode, p string, _ *openapi.ResourceSche
 
 // visitScalar implements visitor
 // visitScalar will set the field metadata on each scalar field whose name + value match
-func (a *Add) visitScalar(object *yaml.RNode, p string, _ *openapi.ResourceSchema) error {
+func (a *Add) visitScalar(object *yaml.RNode, p string, _, _ *openapi.ResourceSchema) error {
 	// check if the field matches
 	if a.Type == "array" {
 		return nil
