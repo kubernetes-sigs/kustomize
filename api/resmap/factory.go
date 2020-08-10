@@ -40,6 +40,15 @@ func (rmF *Factory) FromResource(res *resource.Resource) ResMap {
 	return m
 }
 
+// FromResourceSlice returns a ResMap with a slice of resources.
+func (rmF *Factory) FromResourceSlice(ress []*resource.Resource) ResMap {
+	m, err := newResMapFromResourceSlice(ress)
+	if err != nil {
+		panic(err)
+	}
+	return m
+}
+
 // FromFile returns a ResMap given a resource path.
 func (rmF *Factory) FromFile(
 	loader ifc.Loader, path string) (ResMap, error) {

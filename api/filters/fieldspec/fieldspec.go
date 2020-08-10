@@ -86,7 +86,7 @@ func (fltr Filter) field(obj *yaml.RNode) error {
 		// create the field if it is missing: must be a mapping node
 		lookupField = yaml.LookupCreate(yaml.MappingNode, fieldName)
 		kind = yaml.MappingNode
-		tag = "!!map" // TODO: change to yaml.NodeTagMap
+		tag = yaml.NodeTagMap
 	}
 
 	// locate (or maybe create) the field
@@ -97,7 +97,7 @@ func (fltr Filter) field(obj *yaml.RNode) error {
 
 	// if the value exists, but is null, then change it to the creation type
 	// TODO: update yaml.LookupCreate to support this
-	if field.YNode().Tag == "!!null" { // TODO: change to yaml.NodeTagNull
+	if field.YNode().Tag == yaml.NodeTagNull {
 		field.YNode().Kind = kind
 		field.YNode().Tag = tag
 	}

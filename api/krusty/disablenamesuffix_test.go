@@ -83,7 +83,7 @@ metadata:
 	if secret == nil {
 		t.Errorf("Expected to find a Secret")
 	}
-	if secret.GetName() != "foo-secret-bar-9btc7bt4kb" {
+	if secret.GetName() != "foo-secret-bar-82c2g5f8f6" {
 		t.Errorf("unexpected secret resource name: %s", secret.GetName())
 	}
 
@@ -140,7 +140,7 @@ secretGenerator:
 	if secret == nil {
 		t.Errorf("Expected to find a Secret")
 	}
-	if secret.GetName() != "yeshash-mcgcmdcm69" {
+	if secret.GetName() != "yeshash-82c2g5f8f6" {
 		t.Errorf("unexpected secret resource name: %s", secret.GetName())
 	}
 }

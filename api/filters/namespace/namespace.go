@@ -46,7 +46,7 @@ func (ns Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 		FsSlice:    ns.FsSlice,
 		SetValue:   filtersutil.SetScalar(ns.Namespace),
 		CreateKind: yaml.ScalarNode, // Namespace is a ScalarNode
-		CreateTag:  yaml.StringTag,
+		CreateTag:  yaml.NodeTagString,
 	})
 	return node, err
 }
@@ -112,7 +112,7 @@ func (ns Filter) roleBindingHack(obj *yaml.RNode, meta yaml.ResourceMeta) error 
 	// Lookup the namespace field on all elements.
 	// We should change the fieldspec so this isn't necessary.
 	obj, err := obj.Pipe(yaml.Lookup(subjectsField))
-	if err != nil || yaml.IsEmpty(obj) {
+	if err != nil || yaml.IsMissingOrNull(obj) {
 		return err
 	}
 
@@ -125,7 +125,7 @@ func (ns Filter) roleBindingHack(obj *yaml.RNode, meta yaml.ResourceMeta) error 
 		name, err := o.Pipe(
 			yaml.Lookup("name"), yaml.Match("default"),
 		)
-		if err != nil || yaml.IsEmpty(name) {
+		if err != nil || yaml.IsMissingOrNull(name) {
 			return err
 		}
 

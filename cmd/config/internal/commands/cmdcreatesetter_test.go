@@ -126,6 +126,24 @@ openAPI:
 		},
 
 		{
+			name: "error if setter with same name exists",
+			args: []string{
+				"my-image", "ubuntu"},
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.my-image:
+      x-k8s-cli:
+        setter:
+          name: my-image
+          value: "nginx"
+ `,
+			err: "setter with name my-image already exists, if you want to modify it, please delete the existing setter and recreate it",
+		},
+
+		{
 			name:   "add replicas with schema",
 			args:   []string{"replicas", "3", "--description", "hello world", "--set-by", "me"},
 			schema: `{"maximum": 10, "type": "integer"}`,
@@ -163,6 +181,36 @@ metadata:
   name: nginx-deployment
 spec:
   replicas: 3 # {"$openapi":"replicas"}
+ `,
+		},
+
+		{
+			name: "add replicas not enough arguments",
+			args: []string{"replicas", "--description", "hello world", "--set-by", "me"},
+			err:  `setter name and value must be provided, value can either be an argument or can be passed as a flag --value`,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+`,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
  `,
 		},
 

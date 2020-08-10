@@ -39,7 +39,7 @@ func (l Walker) walkMap() (*yaml.RNode, error) {
 					continue
 				}
 				field := l.Sources[i].Field(key)
-				if field == nil || yaml.IsEmpty(field.Key) {
+				if field == nil || yaml.IsMissingOrNull(field.Key) {
 					keys = append(keys, nil)
 					continue
 				}
@@ -148,7 +148,7 @@ func (l Walker) fieldValue(fieldName string) ([]*yaml.RNode, *openapi.ResourceSc
 		field := l.Sources[i].Field(fieldName)
 		f, s := l.valueIfPresent(field)
 		fields = append(fields, f)
-		if sch == nil && !s.IsEmpty() {
+		if sch == nil && !s.IsMissingOrNull() {
 			sch = s
 		}
 	}

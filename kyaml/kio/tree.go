@@ -238,10 +238,10 @@ func ownerToString(node *yaml.RNode) (string, error) {
 	owner := elements[0]
 	var kind, name string
 
-	if value := owner.Field("kind"); !yaml.IsFieldEmpty(value) {
+	if value := owner.Field("kind"); !value.IsNilOrEmpty() {
 		kind = value.Value.YNode().Value
 	}
-	if value := owner.Field("name"); !yaml.IsFieldEmpty(value) {
+	if value := owner.Field("name"); !value.IsNilOrEmpty() {
 		name = value.Value.YNode().Value
 	}
 

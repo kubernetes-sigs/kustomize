@@ -8,7 +8,8 @@ var elementTestCases = []testCase{
 	//
 	// Test Case
 	//
-	{description: `Add an element to an existing list`,
+	{
+		description: `Add an element to an existing list`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment
@@ -57,7 +58,8 @@ spec:
 	//
 	// Test Case
 	//
-	{description: `Add an element to a non-existing list`,
+	{
+		description: `Add an element to a non-existing list`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment`,
@@ -86,7 +88,8 @@ spec:
         name: foo
 `},
 
-	{description: `Add an element to a non-existing list, existing in dest`,
+	{
+		description: `Add an element to a non-existing list, existing in dest`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment`,
@@ -127,7 +130,8 @@ spec:
 	// Test Case
 	// TODO(pwittrock): Figure out if there is something better we can do here
 	// This element is missing from the destination -- only the new fields are added
-	{description: `Add a field to the element, element missing from dest`,
+	{
+		description: `Add a field to the element, element missing from dest`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment
@@ -168,7 +172,8 @@ spec:
 	//
 	// Test Case
 	//
-	{description: `Update a field on the elem, element missing from the dest`,
+	{
+		description: `Update a field on the elem, element missing from the dest`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment
@@ -212,7 +217,8 @@ spec:
 	//
 	// Test Case
 	//
-	{description: `Update a field on the elem, element present in the dest`,
+	{
+		description: `Update a field on the elem, element present in the dest`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment
@@ -308,7 +314,8 @@ spec:
 	//
 	// Test Case
 	//
-	{description: `Add a field on the elem, element and field present in the dest`,
+	{
+		description: `Add a field on the elem, element and field present in the dest`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment
@@ -356,14 +363,15 @@ spec:
 	//
 	// Test Case
 	//
-	{description: `Ignore an element`,
+	{
+		description: `Ignore an element`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment
 spec:
   template:
     spec:
-      containers: {}
+      containers: null
 `,
 		update: `
 apiVersion: apps/v1
@@ -371,7 +379,7 @@ kind: Deployment
 spec:
   template:
     spec:
-      containers: {}
+      containers: null
 `,
 		local: `
 apiVersion: apps/v1
@@ -397,7 +405,8 @@ spec:
 	//
 	// Test Case
 	//
-	{description: `Leave deleted`,
+	{
+		description: `Leave deleted`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment
@@ -424,7 +433,8 @@ kind: Deployment
 	//
 	// Test Case
 	//
-	{description: `Remove an element -- matching`,
+	{
+		description: `Remove an element -- matching`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment
@@ -463,7 +473,8 @@ spec:
 	//
 	// Test Case
 	//
-	{description: `Remove an element -- field missing from update`,
+	{
+		description: `Remove an element -- field missing from update`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment
@@ -503,7 +514,8 @@ spec:
 	//
 	// Test Case
 	//
-	{description: `Remove an element -- element missing`,
+	{
+		description: `Remove an element -- element missing`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment
@@ -554,7 +566,8 @@ spec:
 	//
 	// Test Case
 	//
-	{description: `Remove an element -- empty containers`,
+	{
+		description: `Remove an element -- empty containers`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment
@@ -571,7 +584,7 @@ kind: Deployment
 spec:
   template:
     spec:
-      containers: {}
+      containers: null
 `,
 		local: `
 apiVersion: apps/v1
@@ -595,7 +608,8 @@ spec:
 	//
 	// Test Case
 	//
-	{description: `Remove an element -- missing list field`,
+	{
+		description: `Remove an element -- missing list field`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment
@@ -635,7 +649,8 @@ spec:
 	//
 	// Test Case
 	//
-	{description: `infer merge keys merge'`,
+	{
+		description: `infer merge keys merge'`,
 		origin: `
 kind: Deployment
 spec:
@@ -678,7 +693,8 @@ spec:
 	//
 	// Test Case
 	//
-	{description: `no infer merge keys merge using schema`,
+	{
+		description: `no infer merge keys merge using schema`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment
@@ -725,7 +741,8 @@ spec:
 	//
 	// Test Case
 	//
-	{description: `no infer merge keys merge using explicit schema as line comment'`,
+	{
+		description: `no infer merge keys merge using explicit schema as line comment'`,
 		origin: `
 apiVersion: custom
 kind: Deployment
@@ -772,7 +789,8 @@ spec:
 	//
 	// Test Case
 	//
-	{description: `no infer merge keys merge using explicit schema as head comment'`,
+	{
+		description: `no infer merge keys merge using explicit schema as head comment'`,
 		origin: `
 apiVersion: custom
 kind: Deployment
@@ -821,7 +839,8 @@ spec:
 	//
 	// Test Case
 	//
-	{description: `no infer merge keys merge using explicit schema to parent field'`,
+	{
+		description: `no infer merge keys merge using explicit schema to parent field'`,
 		origin: `
 apiVersion: custom
 kind: Deployment
@@ -860,7 +879,8 @@ spec: # {"$ref":"#/definitions/io.k8s.api.core.v1.PodSpec"}
 	//
 	// Test Case
 	//
-	{description: `no infer merge keys merge using explicit schema to parent field header'`,
+	{
+		description: `no infer merge keys merge using explicit schema to parent field header'`,
 		origin: `
 apiVersion: custom
 kind: Deployment

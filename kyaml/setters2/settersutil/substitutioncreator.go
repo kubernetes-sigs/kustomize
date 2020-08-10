@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/go-openapi/spec"
@@ -42,9 +43,24 @@ type SubstitutionCreator struct {
 	// FieldValue if set will add the OpenAPI reference to fields if they have this value.
 	// Optional.  If unspecified match all field values.
 	FieldValue string
+
+	// Path to openAPI file
+	OpenAPIPath string
+
+	// Path to resources folder
+	ResourcesPath string
+}
+
+func (c *SubstitutionCreator) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
+	return nil, c.Create(c.OpenAPIPath, c.ResourcesPath)
 }
 
 func (c SubstitutionCreator) Create(openAPIPath, resourcesPath string) error {
+	values, err := markersAndRefs(c.Name, c.Pattern)
+	if err != nil {
+		return err
+	}
+	c.Values = values
 	d := setters2.SubstitutionDefinition{
 		Name:    c.Name,
 		Values:  c.Values,
@@ -119,6 +135,47 @@ func (c SubstitutionCreator) Create(openAPIPath, resourcesPath string) error {
 			})},
 		Outputs: []kio.Writer{inout},
 	}.Execute()
+}
+
+// createMarkersAndRefs takes the input pattern, creates setter/substitution markers
+// and corresponding openAPI refs
+func markersAndRefs(substName, pattern string) ([]setters2.Value, error) {
+	var values []setters2.Value
+	// extract setter name tokens from pattern enclosed in ${}
+	re := regexp.MustCompile(`\$\{([^}]*)\}`)
+	markers := re.FindAllString(pattern, -1)
+	if len(markers) == 0 {
+		return nil, errors.Errorf("unable to find setter or substitution names in pattern, " +
+			"setter names must be enclosed in ${}")
+	}
+
+	for _, marker := range markers {
+		name := strings.TrimSuffix(strings.TrimPrefix(marker, "${"), "}")
+		if name == substName {
+			return nil, fmt.Errorf("setters must have different name than the substitution: %s", name)
+		}
+
+		ref, err := spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SubstitutionDefinitionPrefix + name)
+		if err != nil {
+			return nil, err
+		}
+
+		var markerRef string
+		subst, _ := openapi.Resolve(&ref)
+		// check if the substitution exists with the marker name or fall back to creating setter
+		// ref with the name
+		if subst != nil {
+			markerRef = fieldmeta.DefinitionsPrefix + fieldmeta.SubstitutionDefinitionPrefix + name
+		} else {
+			markerRef = fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + name
+		}
+
+		values = append(
+			values,
+			setters2.Value{Marker: marker, Ref: markerRef},
+		)
+	}
+	return values, nil
 }
 
 // CreateSettersForSubstitution creates the setters for all the references in the substitution

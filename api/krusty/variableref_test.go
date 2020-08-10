@@ -895,7 +895,7 @@ spec:
           - command:
             - echo
             - dev-base-cockroachdb
-            - dev-base-test-config-map-b2g2dmd64b
+            - dev-base-test-config-map-6b85g79g7g
             env:
             - name: CDB_PUBLIC_SVC
               value: dev-base-cockroachdb-public
@@ -921,7 +921,7 @@ data:
   foo: bar
 kind: ConfigMap
 metadata:
-  name: dev-base-test-config-map-b2g2dmd64b
+  name: dev-base-test-config-map-6b85g79g7g
 `)
 }
 

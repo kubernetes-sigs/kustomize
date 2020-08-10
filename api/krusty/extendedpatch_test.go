@@ -156,7 +156,8 @@ spec:
         - mountPath: /tmp/ps
           name: busybox-persistent-storage
       volumes:
-      - name: busybox-persistent-storage
+      - emptyDir: {}
+        name: busybox-persistent-storage
       - configMap:
           name: configmap-in-base
         name: configmap-in-base
@@ -232,7 +233,8 @@ spec:
         - mountPath: /tmp/ps
           name: nginx-persistent-storage
       volumes:
-      - name: nginx-persistent-storage
+      - emptyDir: {}
+        name: nginx-persistent-storage
       - configMap:
           name: configmap-in-base
         name: configmap-in-base
@@ -258,7 +260,8 @@ spec:
         - mountPath: /tmp/ps
           name: busybox-persistent-storage
       volumes:
-      - name: busybox-persistent-storage
+      - emptyDir: {}
+        name: busybox-persistent-storage
       - configMap:
           name: configmap-in-base
         name: configmap-in-base
@@ -332,7 +335,8 @@ spec:
         - mountPath: /tmp/ps
           name: nginx-persistent-storage
       volumes:
-      - name: nginx-persistent-storage
+      - emptyDir: {}
+        name: nginx-persistent-storage
       - configMap:
           name: configmap-in-base
         name: configmap-in-base
@@ -459,7 +463,8 @@ spec:
         - mountPath: /tmp/ps
           name: busybox-persistent-storage
       volumes:
-      - name: busybox-persistent-storage
+      - emptyDir: {}
+        name: busybox-persistent-storage
       - configMap:
           name: configmap-in-base
         name: configmap-in-base
@@ -559,7 +564,8 @@ spec:
         - mountPath: /tmp/ps
           name: busybox-persistent-storage
       volumes:
-      - name: busybox-persistent-storage
+      - emptyDir: {}
+        name: busybox-persistent-storage
       - configMap:
           name: configmap-in-base
         name: configmap-in-base
@@ -661,7 +667,8 @@ spec:
         - mountPath: /tmp/ps
           name: busybox-persistent-storage
       volumes:
-      - name: busybox-persistent-storage
+      - emptyDir: {}
+        name: busybox-persistent-storage
       - configMap:
           name: configmap-in-base
         name: configmap-in-base
@@ -762,7 +769,8 @@ spec:
         - mountPath: /tmp/ps
           name: busybox-persistent-storage
       volumes:
-      - name: busybox-persistent-storage
+      - emptyDir: {}
+        name: busybox-persistent-storage
       - configMap:
           name: configmap-in-base
         name: configmap-in-base
@@ -957,7 +965,8 @@ spec:
         - mountPath: /tmp/ps
           name: busybox-persistent-storage
       volumes:
-      - name: busybox-persistent-storage
+      - emptyDir: {}
+        name: busybox-persistent-storage
       - configMap:
           name: configmap-in-base
         name: configmap-in-base
@@ -1171,7 +1180,8 @@ spec:
         - mountPath: /tmp/ps
           name: busybox-persistent-storage
       volumes:
-      - name: busybox-persistent-storage
+      - emptyDir: {}
+        name: busybox-persistent-storage
       - configMap:
           name: configmap-in-base
         name: configmap-in-base
