@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/container"
@@ -904,6 +905,36 @@ func TestCmd_Execute_setInput(t *testing.T) {
 		t.FailNow()
 	}
 	assert.Contains(t, string(b), "kind: StatefulSet")
+}
+
+// TestCmd_Execute_enableLogSteps tests the execution of a filter with LogSteps enabled.
+func TestCmd_Execute_enableLogSteps(t *testing.T) {
+	dir := setupTest(t)
+	defer os.RemoveAll(dir)
+
+	// write a test filter to the directory of configuration
+	if !assert.NoError(t, ioutil.WriteFile(
+		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
+		return
+	}
+
+	logs := &bytes.Buffer{}
+	instance := RunFns{
+		Path: dir,
+		functionFilterProvider: getFilterProvider(t),
+		LogSteps: true,
+		LogWriter: logs,
+	}
+	if !assert.NoError(t, instance.Execute()) {
+		t.FailNow()
+	}
+	b, err := ioutil.ReadFile(
+		filepath.Join(dir, "java", "java-deployment.resource.yaml"))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, string(b), "kind: StatefulSet")
+	assert.Equal(t, "Running unknown-type function\n", logs.String())
 }
 
 // setupTest initializes a temp test directory containing test data
