@@ -239,6 +239,7 @@ github.com/google/btree v1.0.0/go.mod h1:lNA+9X1NB3Zf8V7Ke586lFgjr2dZNuvo3lPJSGZ
 github.com/google/go-cmp v0.2.0/go.mod h1:oXzfMopK8JAjlY9xF4vHSVASa0yLyX7SntLO5aqRK0M=
 github.com/google/go-cmp v0.3.0 h1:crn/baboCvb5fXaQ0IJ1SGTsTVrWpDsCWC8EGETZijY=
 github.com/google/go-cmp v0.3.0/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMywk6iLU=
+github.com/google/go-cmp v0.5.1 h1:JFrFEBb2xKufg6XkJsJr+WbKb4FQlURi5RUcBveYu9k=
 github.com/google/gofuzz v0.0.0-20161122191042-44d81051d367/go.mod h1:HP5RmnzzSNb993RKQDq4+1A4ia9nllfqcQFTQJedwGI=
 github.com/google/gofuzz v1.0.0 h1:A8PeW59pxE9IoFRqBp37U+mSNaQoZ46F1f0f863XSXw=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
@@ -756,6 +757,7 @@ sigs.k8s.io/kustomize/kyaml v0.1.4/go.mod h1:461i94nj0h0ylJ6w83jLkR4SqqVhn1iY6fj
 sigs.k8s.io/kustomize/kyaml v0.2.0/go.mod h1:72/rLkSi+L/pHM1oCjwrf3ClU+tH5kZQvvdLSqIHwWU=
 sigs.k8s.io/kustomize/kyaml v0.4.1 h1:NEqA/35upoAjb+I5vh1ODUqxoX4DOrezeQa9BhhG5Co=
 sigs.k8s.io/kustomize/kyaml v0.4.1/go.mod h1:XJL84E6sOFeNrQ7CADiemc1B0EjIxHo3OhW4o1aJYNw=
+sigs.k8s.io/kustomize/kyaml v0.4.2/go.mod h1:XJL84E6sOFeNrQ7CADiemc1B0EjIxHo3OhW4o1aJYNw=
 sigs.k8s.io/structured-merge-diff v0.0.0-20190525122527-15d366b2352e/go.mod h1:wWxsB5ozmmv/SG7nM11ayaAW51xMvak/t1r0CSlcokI=
 sigs.k8s.io/structured-merge-diff v0.0.0-20190817042607-6149e4549fca/go.mod h1:IIgPezJWb76P0hotTxzDbWsMYB8APh18qZnxkomBpxA=
 sigs.k8s.io/structured-merge-diff v1.0.1-0.20191108220359-b1b620dd3f06/go.mod h1:/ULNhyfzRopfcjskuui0cTITekDduZ7ycKN3oUT9R18=
