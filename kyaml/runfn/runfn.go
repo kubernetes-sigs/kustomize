@@ -74,6 +74,12 @@ type RunFns struct {
 	// ResultsDir is where to write each functions results
 	ResultsDir string
 
+	// LogSteps enables logging the function that is running.
+	LogSteps bool
+
+	// LogWriter can be set to write the logs to LogWriter rather than stderr if LogSteps is enabled.
+	LogWriter io.Writer
+
 	// resultsCount is used to generate the results filename for each container
 	resultsCount uint32
 
@@ -169,8 +175,33 @@ func (r RunFns) runFunctions(
 		// the output is nil (reading from Input)
 		outputs = append(outputs, kio.ByteWriter{Writer: r.Output})
 	}
-	err := kio.Pipeline{
-		Inputs: []kio.Reader{input}, Filters: fltrs, Outputs: outputs}.Execute()
+
+	var err error
+	pipeline := kio.Pipeline{
+		Inputs:  []kio.Reader{input},
+		Filters: fltrs,
+		Outputs: outputs,
+	}
+	if r.LogSteps {
+		err = pipeline.ExecuteWithCallback(func(op kio.Filter) {
+			var identifier string
+
+			switch filter := op.(type) {
+			case *container.Filter:
+				identifier = filter.Image
+			case *exec.Filter:
+				identifier = filter.Path
+			case *starlark.Filter:
+				identifier = filter.String()
+			default:
+				identifier = "unknown-type function"
+			}
+
+			_, _ = fmt.Fprintf(r.LogWriter, "Running %s\n", identifier)
+		})
+	} else {
+		err = pipeline.Execute()
+	}
 	if err != nil {
 		return err
 	}
@@ -332,6 +363,11 @@ func (r *RunFns) init() {
 	// functionFilterProvider set the filter provider
 	if r.functionFilterProvider == nil {
 		r.functionFilterProvider = r.ffp
+	}
+
+	// if LogSteps is enabled and LogWriter is not specified, use stderr
+	if r.LogSteps && r.LogWriter == nil {
+		r.LogWriter = os.Stderr
 	}
 }
 
