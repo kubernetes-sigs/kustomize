@@ -45,24 +45,18 @@ func IsEmptyMap(node *RNode) bool {
 	return IsMissingOrNull(node) || IsYNodeEmptyMap(node.YNode())
 }
 
-func IsFieldEmpty(node *MapNode) bool {
-	if node == nil || node.Value == nil || node.Value.YNode() == nil ||
-		node.Value.YNode().Tag == NodeTagNull {
-		return true
-	}
-	return IsYNodeEmptyMap(node.Value.YNode()) ||
-		IsYNodeEmptySeq(node.Value.YNode())
-}
-
-func IsYNodeEmptyMap(n *yaml.Node) bool {
-	return n != nil && n.Kind == yaml.MappingNode && len(n.Content) == 0
-}
-
 // IsYNodeTaggedNull returns true if the node is explicitly tagged Null.
 func IsYNodeTaggedNull(n *yaml.Node) bool {
 	return n != nil && n.Tag == NodeTagNull
 }
 
+// IsYNodeEmptyMap is true if the Node is a non-nil empty map.
+func IsYNodeEmptyMap(n *yaml.Node) bool {
+	return n != nil && n.Kind == yaml.MappingNode && len(n.Content) == 0
+}
+
+
+// IsYNodeEmptyMap is true if the Node is a non-nil empty sequence.
 func IsYNodeEmptySeq(n *yaml.Node) bool {
 	return n != nil && n.Kind == yaml.SequenceNode && len(n.Content) == 0
 }
