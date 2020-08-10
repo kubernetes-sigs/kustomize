@@ -84,7 +84,7 @@ func AddSchemaFromFileUsingField(path, field string) error {
 	if field != "" {
 		// get the field containing the openAPI
 		m := y.Field(field)
-		if yaml.IsFieldEmpty(m) {
+		if m.IsNilOrEmpty() {
 			// doesn't contain openAPI definitions
 			return nil
 		}
