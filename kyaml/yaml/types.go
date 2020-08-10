@@ -36,7 +36,7 @@ func MakeNullNode() *RNode {
 // IsMissingOrNull is true if the RNode is nil or explicitly tagged null.
 // TODO: make this a method on RNode.
 func IsMissingOrNull(node *RNode) bool {
-	return IsNil(node) || node.YNode().Tag == NodeTagNull
+	return node.IsNil() || node.YNode().Tag == NodeTagNull
 }
 
 // Deprecated.  Use IsMissingOrNull instead.
@@ -49,15 +49,6 @@ func IsEmptyMap(node *RNode) bool {
 	return IsMissingOrNull(node) || IsYNodeEmptyMap(node.YNode())
 }
 
-// IsNil return true if the node is nil, or its underlying YNode is nil.
-func IsNil(node *RNode) bool {
-	return node == nil || node.YNode() == nil
-}
-
-func IsNull(node *RNode) bool {
-	return !IsNil(node) && node.YNode().Tag == NodeTagNull
-}
-
 func IsFieldEmpty(node *MapNode) bool {
 	if node == nil || node.Value == nil || node.Value.YNode() == nil ||
 		node.Value.YNode().Tag == NodeTagNull {
@@ -68,11 +59,16 @@ func IsFieldEmpty(node *MapNode) bool {
 }
 
 func IsYNodeEmptyMap(n *yaml.Node) bool {
-	return n.Kind == yaml.MappingNode && len(n.Content) == 0
+	return n != nil && n.Kind == yaml.MappingNode && len(n.Content) == 0
+}
+
+// IsYNodeTaggedNull returns true if the node is explicitly tagged Null.
+func IsYNodeTaggedNull(n *yaml.Node) bool {
+	return n != nil && n.Tag == NodeTagNull
 }
 
 func IsYNodeEmptySeq(n *yaml.Node) bool {
-	return n.Kind == yaml.SequenceNode && len(n.Content) == 0
+	return n != nil && n.Kind == yaml.SequenceNode && len(n.Content) == 0
 }
 
 // IsYNodeEmptyDoc is true if the node is a Document with no content.
@@ -376,6 +372,25 @@ const (
 	NamespaceField   = "namespace"
 	LabelsField      = "labels"
 )
+
+// IsNil is true if the node is nil, or its underlying YNode is nil.
+func (rn *RNode) IsNil() bool {
+	return rn == nil || rn.YNode() == nil
+}
+
+// IsTaggedNull is true if a non-nil node is explicitly tagged Null.
+func (rn *RNode) IsTaggedNull() bool {
+	return !rn.IsNil() && IsYNodeTaggedNull(rn.YNode())
+}
+
+// IsNilOrEmpty is true if the node is nil,
+// has no YNode, or has YNode that appears empty.
+func (rn *RNode) IsNilOrEmpty() bool {
+	return rn.IsNil() ||
+		IsYNodeTaggedNull(rn.YNode()) ||
+		IsYNodeEmptyMap(rn.YNode()) ||
+		IsYNodeEmptySeq(rn.YNode())
+}
 
 // GetMeta returns the ResourceMeta for an RNode
 func (rn *RNode) GetMeta() (ResourceMeta, error) {

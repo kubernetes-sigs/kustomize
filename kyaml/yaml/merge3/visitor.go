@@ -20,7 +20,7 @@ const (
 type Visitor struct{}
 
 func (m Visitor) VisitMap(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.RNode, error) {
-	if yaml.IsNull(nodes.Updated()) || yaml.IsNull(nodes.Dest()) {
+	if nodes.Updated().IsTaggedNull() || nodes.Dest().IsTaggedNull() {
 		// explicitly cleared from either dest or update
 		return walk.ClearNode, nil
 	}
@@ -54,7 +54,7 @@ func (m Visitor) visitAList(nodes walk.Sources, _ *openapi.ResourceSchema) (*yam
 }
 
 func (m Visitor) VisitScalar(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.RNode, error) {
-	if yaml.IsNull(nodes.Updated()) || yaml.IsNull(nodes.Dest()) {
+	if nodes.Updated().IsTaggedNull() || nodes.Dest().IsTaggedNull() {
 		// explicitly cleared from either dest or update
 		return nil, nil
 	}
@@ -91,7 +91,7 @@ func (m Visitor) VisitScalar(nodes walk.Sources, s *openapi.ResourceSchema) (*ya
 }
 
 func (m Visitor) visitNAList(nodes walk.Sources) (*yaml.RNode, error) {
-	if yaml.IsNull(nodes.Updated()) || yaml.IsNull(nodes.Dest()) {
+	if nodes.Updated().IsTaggedNull() || nodes.Dest().IsTaggedNull() {
 		// explicitly cleared from either dest or update
 		return walk.ClearNode, nil
 	}
