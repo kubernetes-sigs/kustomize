@@ -67,14 +67,15 @@ func (e ElementSetter) Filter(rn *RNode) (*RNode, error) {
 	matchingElementFound := false
 	for i := range rn.YNode().Content {
 		elem := rn.Content()[i]
+		newNode := NewRNode(elem)
 
 		// empty elements are not valid -- they at least need an associative key
-		if IsEmpty(NewRNode(elem)) {
+		if IsMissingOrNull(newNode) || IsEmptyMap(newNode) {
 			continue
 		}
 
 		// check if this is the element we are matching
-		val, err := NewRNode(elem).Pipe(FieldMatcher{Name: e.Key, StringValue: e.Value})
+		val, err := newNode.Pipe(FieldMatcher{Name: e.Key, StringValue: e.Value})
 		if err != nil {
 			return nil, err
 		}
@@ -467,6 +468,9 @@ func (s FieldSetter) Filter(rn *RNode) (*RNode, error) {
 		if err := ErrorIfInvalid(rn, yaml.ScalarNode); err != nil {
 			return rn, err
 		}
+		if IsMissingOrNull(s.Value) {
+			return rn, nil
+		}
 		// only apply the style if there is not an existing style
 		// or we want to override it
 		if !s.OverrideStyle || s.Value.YNode().Style == 0 {
@@ -478,7 +482,7 @@ func (s FieldSetter) Filter(rn *RNode) (*RNode, error) {
 	}
 
 	// Clear the field if it is empty, or explicitly null
-	if s.Value == nil || IsNull(s.Value) {
+	if s.Value == nil || s.Value.IsTaggedNull() {
 		return rn.Pipe(Clear(s.Name))
 	}
 
@@ -545,7 +549,7 @@ func IsFoundOrError(rn *RNode, err error) bool {
 
 func ErrorIfAnyInvalidAndNonNull(kind yaml.Kind, rn ...*RNode) error {
 	for i := range rn {
-		if IsEmpty(rn[i]) {
+		if IsMissingOrNull(rn[i]) {
 			continue
 		}
 		if err := ErrorIfInvalid(rn[i], kind); err != nil {
@@ -564,7 +568,7 @@ var nodeTypeIndex = map[yaml.Kind]string{
 }
 
 func ErrorIfInvalid(rn *RNode, kind yaml.Kind) error {
-	if rn == nil || rn.YNode() == nil || IsNull(rn) {
+	if IsMissingOrNull(rn) {
 		// node has no type, pass validation
 		return nil
 	}

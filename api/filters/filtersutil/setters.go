@@ -21,7 +21,7 @@ func SetEntry(key, value, tag string) SetFn {
 		Value: value,
 		Tag:   tag,
 	}
-	if tag == yaml.StringTag && yaml.IsYaml1_1NonString(n) {
+	if tag == yaml.NodeTagString && yaml.IsYaml1_1NonString(n) {
 		n.Style = yaml.DoubleQuotedStyle
 	}
 	return func(node *yaml.RNode) error {

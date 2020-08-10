@@ -36,7 +36,7 @@ type ResourceSchema struct {
 }
 
 // IsEmpty returns true if the ResourceSchema is empty
-func (rs *ResourceSchema) IsEmpty() bool {
+func (rs *ResourceSchema) IsMissingOrNull() bool {
 	if rs == nil || rs.Schema == nil {
 		return true
 	}
@@ -84,7 +84,7 @@ func AddSchemaFromFileUsingField(path, field string) error {
 	if field != "" {
 		// get the field containing the openAPI
 		m := y.Field(field)
-		if yaml.IsFieldEmpty(m) {
+		if m.IsNilOrEmpty() {
 			// doesn't contain openAPI definitions
 			return nil
 		}

@@ -100,12 +100,16 @@ func (r *CreateSetterRunner) preRunE(c *cobra.Command, args []string) error {
 	if setterVersion == "" {
 		if len(args) == 2 && r.Set.SetPartialField.Type == "array" && c.Flag("field").Changed {
 			setterVersion = "v2"
-		} else if len(args) < 2 || !c.Flag("value").Changed && len(args) < 3 {
-			setterVersion = "v1"
 		} else if err := initSetterVersion(c, args); err != nil {
 			return err
 		}
 	}
+
+	if r.Set.SetPartialField.Type != "array" && !c.Flag("value").Changed && len(args) < 3 {
+		return errors.Errorf("setter name and value must be provided, " +
+			"value can either be an argument or can be passed as a flag --value")
+	}
+
 	if setterVersion == "v2" {
 		var err error
 		r.OpenAPIFile, err = ext.GetOpenAPIFile(args)
@@ -128,6 +132,19 @@ func (r *CreateSetterRunner) preRunE(c *cobra.Command, args []string) error {
 		if subst != nil {
 			return errors.Errorf("substitution with name %s already exists, "+
 				"substitution and setter can't have same name", r.CreateSetter.Name)
+		}
+
+		// check if setter with same name exists and throw error
+		ref, err = spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + r.CreateSetter.Name)
+		if err != nil {
+			return err
+		}
+
+		setter, _ := openapi.Resolve(&ref)
+		// if setter already exists with the input setter name, throw error
+		if setter != nil {
+			return errors.Errorf("setter with name %s already exists, "+
+				"if you want to modify it, please delete the existing setter and recreate it", r.CreateSetter.Name)
 		}
 
 		r.CreateSetter.Description = r.Set.SetPartialField.Description

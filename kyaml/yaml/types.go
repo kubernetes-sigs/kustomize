@@ -26,68 +26,63 @@ const (
 	NodeTagMap    = "!!map"
 	NodeTagSeq    = "!!seq"
 	NodeTagEmpty  = ""
-
-	// TODO: deprecate these
-	NullNodeTag = NodeTagNull
-	StringTag   = NodeTagString
-	BoolTag     = NodeTagBool
-	IntTag      = NodeTagInt
 )
 
-// NullNode returns a RNode point represents a null; value
-func NullNode() *RNode {
-	return NewRNode(&Node{Tag: NullNodeTag})
+// MakeNullNode returns an RNode that represents an empty document.
+func MakeNullNode() *RNode {
+	return NewRNode(&Node{Tag: NodeTagNull})
 }
 
-// IsMissingOrNull returns true if the RNode is nil or contains and explicitly null value.
+// IsMissingOrNull is true if the RNode is nil or explicitly tagged null.
+// TODO: make this a method on RNode.
 func IsMissingOrNull(node *RNode) bool {
-	return node == nil || node.YNode() == nil || node.YNode().Tag == NullNodeTag
+	return node.IsNil() || node.YNode().Tag == NodeTagNull
 }
 
-// IsEmpty returns true if the RNode is MissingOrNull, or is either a MappingNode with
-// no fields.
-func IsEmpty(node *RNode) bool {
-	if IsMissingOrNull(node) {
-		return true
-	}
-
-	// Empty sequence is a special case and temporarily not considered as empty here.
-	// Some users may want to keep empty sequence for compatibility reason.
-	// For example, use JSON 6902 patch.
-	return node.YNode().Kind == yaml.MappingNode && len(node.YNode().Content) == 0
-}
-
-func IsNull(node *RNode) bool {
-	return node != nil && node.YNode() != nil && node.YNode().Tag == NullNodeTag
+// IsEmptyMap returns true if the RNode is an empty node or an empty map.
+// TODO: make this a method on RNode.
+func IsEmptyMap(node *RNode) bool {
+	return IsMissingOrNull(node) || IsYNodeEmptyMap(node.YNode())
 }
 
 func IsFieldEmpty(node *MapNode) bool {
 	if node == nil || node.Value == nil || node.Value.YNode() == nil ||
-		node.Value.YNode().Tag == NullNodeTag {
+		node.Value.YNode().Tag == NodeTagNull {
 		return true
 	}
+	return IsYNodeEmptyMap(node.Value.YNode()) ||
+		IsYNodeEmptySeq(node.Value.YNode())
+}
 
-	if node.Value.YNode().Kind == yaml.MappingNode && len(node.Value.YNode().Content) == 0 {
-		return true
-	}
-	if node.Value.YNode().Kind == yaml.SequenceNode && len(node.Value.YNode().Content) == 0 {
-		return true
-	}
+func IsYNodeEmptyMap(n *yaml.Node) bool {
+	return n != nil && n.Kind == yaml.MappingNode && len(n.Content) == 0
+}
 
-	return false
+// IsYNodeTaggedNull returns true if the node is explicitly tagged Null.
+func IsYNodeTaggedNull(n *yaml.Node) bool {
+	return n != nil && n.Tag == NodeTagNull
+}
+
+func IsYNodeEmptySeq(n *yaml.Node) bool {
+	return n != nil && n.Kind == yaml.SequenceNode && len(n.Content) == 0
+}
+
+// IsYNodeEmptyDoc is true if the node is a Document with no content.
+// E.g.: "---\n---"
+func IsYNodeEmptyDoc(n *yaml.Node) bool {
+	return n.Kind == yaml.DocumentNode && n.Content[0].Tag == NodeTagNull
+}
+
+func IsYNodeString(n *yaml.Node) bool {
+	return n.Kind == yaml.ScalarNode && n.Tag == NodeTagString
 }
 
 // GetValue returns underlying yaml.Node Value field
 func GetValue(node *RNode) string {
-	if IsEmpty(node) {
+	if IsMissingOrNull(node) {
 		return ""
 	}
 	return node.YNode().Value
-}
-
-func IsFieldNull(node *MapNode) bool {
-	return node != nil && node.Value != nil && node.Value.YNode() != nil &&
-		node.Value.YNode().Tag == NullNodeTag
 }
 
 // Parser parses values into configuration.
@@ -265,6 +260,12 @@ type MapNode struct {
 	Value *RNode
 }
 
+// IsNilOrEmpty returns true if the MapNode is nil,
+// has no value, or has a value that appears empty.
+func (mn *MapNode) IsNilOrEmpty() bool {
+	return mn == nil || mn.Value.IsNilOrEmpty()
+}
+
 type MapNodeSlice []*MapNode
 
 func (m MapNodeSlice) Keys() []*RNode {
@@ -369,9 +370,28 @@ const (
 	LabelsField      = "labels"
 )
 
+// IsNil is true if the node is nil, or its underlying YNode is nil.
+func (rn *RNode) IsNil() bool {
+	return rn == nil || rn.YNode() == nil
+}
+
+// IsTaggedNull is true if a non-nil node is explicitly tagged Null.
+func (rn *RNode) IsTaggedNull() bool {
+	return !rn.IsNil() && IsYNodeTaggedNull(rn.YNode())
+}
+
+// IsNilOrEmpty is true if the node is nil,
+// has no YNode, or has YNode that appears empty.
+func (rn *RNode) IsNilOrEmpty() bool {
+	return rn.IsNil() ||
+		IsYNodeTaggedNull(rn.YNode()) ||
+		IsYNodeEmptyMap(rn.YNode()) ||
+		IsYNodeEmptySeq(rn.YNode())
+}
+
 // GetMeta returns the ResourceMeta for an RNode
 func (rn *RNode) GetMeta() (ResourceMeta, error) {
-	if IsEmpty(rn) {
+	if IsMissingOrNull(rn) {
 		return ResourceMeta{}, nil
 	}
 	missingMeta := true
@@ -386,17 +406,17 @@ func (rn *RNode) GetMeta() (ResourceMeta, error) {
 	m := ResourceMeta{}
 
 	// TODO: consider optimizing this parsing
-	if f := n.Field(APIVersionField); !IsFieldEmpty(f) {
+	if f := n.Field(APIVersionField); !f.IsNilOrEmpty() {
 		m.APIVersion = GetValue(f.Value)
 		missingMeta = false
 	}
-	if f := n.Field(KindField); !IsFieldEmpty(f) {
+	if f := n.Field(KindField); !f.IsNilOrEmpty() {
 		m.Kind = GetValue(f.Value)
 		missingMeta = false
 	}
 
 	mf := n.Field(MetadataField)
-	if IsFieldEmpty(mf) {
+	if mf.IsNilOrEmpty() {
 		if missingMeta {
 			return m, ErrMissingMetadata
 		}
@@ -404,16 +424,16 @@ func (rn *RNode) GetMeta() (ResourceMeta, error) {
 	}
 	meta := mf.Value
 
-	if f := meta.Field(NameField); !IsFieldEmpty(f) {
+	if f := meta.Field(NameField); !f.IsNilOrEmpty() {
 		m.Name = f.Value.YNode().Value
 		missingMeta = false
 	}
-	if f := meta.Field(NamespaceField); !IsFieldEmpty(f) {
+	if f := meta.Field(NamespaceField); !f.IsNilOrEmpty() {
 		m.Namespace = GetValue(f.Value)
 		missingMeta = false
 	}
 
-	if f := meta.Field(LabelsField); !IsFieldEmpty(f) {
+	if f := meta.Field(LabelsField); !f.IsNilOrEmpty() {
 		m.Labels = map[string]string{}
 		_ = f.Value.VisitFields(func(node *MapNode) error {
 			m.Labels[GetValue(node.Key)] = GetValue(node.Value)
@@ -421,7 +441,7 @@ func (rn *RNode) GetMeta() (ResourceMeta, error) {
 		})
 		missingMeta = false
 	}
-	if f := meta.Field(AnnotationsField); !IsFieldEmpty(f) {
+	if f := meta.Field(AnnotationsField); !f.IsNilOrEmpty() {
 		m.Annotations = map[string]string{}
 		_ = f.Value.VisitFields(func(node *MapNode) error {
 			m.Annotations[GetValue(node.Key)] = GetValue(node.Value)
@@ -640,7 +660,7 @@ func (rn *RNode) ElementValues(key string) ([]string, error) {
 	var elements []string
 	for i := 0; i < len(rn.Content()); i++ {
 		field := NewRNode(rn.Content()[i]).Field(key)
-		if !IsFieldEmpty(field) {
+		if !field.IsNilOrEmpty() {
 			elements = append(elements, field.Value.YNode().Value)
 		}
 	}

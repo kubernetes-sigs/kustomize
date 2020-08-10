@@ -29,10 +29,11 @@ func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 		func(node *yaml.RNode) (*yaml.RNode, error) {
 			for _, k := range keys {
 				if err := node.PipeE(fsslice.Filter{
-					FsSlice:    f.FsSlice,
-					SetValue:   filtersutil.SetEntry(k, f.Annotations[k], yaml.StringTag),
+					FsSlice: f.FsSlice,
+					SetValue: filtersutil.SetEntry(
+						k, f.Annotations[k], yaml.NodeTagString),
 					CreateKind: yaml.MappingNode, // Annotations are MappingNodes.
-					CreateTag:  "!!map",          // TODO: change to yaml.NodeTagMap
+					CreateTag:  yaml.NodeTagMap,
 				}); err != nil {
 					return nil, err
 				}

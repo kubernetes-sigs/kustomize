@@ -520,7 +520,7 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 						},
 					},
 				}).ResMap(),
-			expectedErr: "is expected to contain a name field"},
+			expectedErr: "cannot find field 'name' in node"},
 	}
 
 	nrt := newNameReferenceTransformer(builtinconfig.MakeDefaultConfig().NameReference)
