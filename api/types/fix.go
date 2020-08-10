@@ -14,8 +14,7 @@ import (
 // new field names.
 func FixKustomizationPreUnmarshalling(data []byte) ([]byte, error) {
 	deprecatedFieldsMap := map[string]string{
-		"imageTags:":      "images:",
-		"patchesJson6902": "patches",
+		"imageTags:": "images:",
 	}
 	for oldname, newname := range deprecatedFieldsMap {
 		pattern := regexp.MustCompile(oldname)
