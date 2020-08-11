@@ -260,6 +260,17 @@ func (mn *MapNode) IsNilOrEmpty() bool {
 	return mn == nil || mn.Value.IsNilOrEmpty()
 }
 
+// TODO: replace all calls to this with calls to MapNode.IsNilOrEmpty,
+// which does the same thing.
+func IsFieldEmpty(node *MapNode) bool {
+	if node == nil || node.Value == nil || node.Value.YNode() == nil ||
+			node.Value.YNode().Tag == NodeTagNull {
+		return true
+	}
+	return IsYNodeEmptyMap(node.Value.YNode()) ||
+			IsYNodeEmptySeq(node.Value.YNode())
+}
+
 type MapNodeSlice []*MapNode
 
 func (m MapNodeSlice) Keys() []*RNode {
