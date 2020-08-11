@@ -177,13 +177,13 @@ func (r *XArgsRunner) runE(c *cobra.Command, _ []string) error {
 		}
 
 		if r.WrapKind != "" {
-			if kind := rw.FunctionConfig.Field("kind"); !yaml.IsFieldEmpty(kind) {
+			if kind := rw.FunctionConfig.Field("kind"); !kind.IsNilOrEmpty() {
 				kind.Value.YNode().Value = r.WrapKind
 			}
 			rw.WrappingKind = r.WrapKind
 		}
 		if r.WrapVersion != "" {
-			if version := rw.FunctionConfig.Field("apiVersion"); !yaml.IsFieldEmpty(version) {
+			if version := rw.FunctionConfig.Field("apiVersion"); !version.IsNilOrEmpty() {
 				version.Value.YNode().Value = r.WrapVersion
 			}
 			rw.WrappingAPIVersion = r.WrapVersion
