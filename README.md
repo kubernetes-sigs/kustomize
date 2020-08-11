@@ -9,17 +9,14 @@ patch [kubernetes style] API objects.  It's like
 [`make`], in that what it does is declared in a file,
 and it's like [`sed`], in that it emits edited text.
 
-This tool is sponsored by [sig-cli] ([KEP]), and
-inspired by [DAM].
+This tool is sponsored by [sig-cli] ([KEP]).
+
+ - [Installation instructions](https://kubernetes-sigs.github.io/kustomize/installation)
+ - [General documentation](https://kubernetes-sigs.github.io/kustomize)
+ - [Examples](examples)
 
 [![Build Status](https://prow.k8s.io/badge.svg?jobs=kustomize-presubmit-master)](https://prow.k8s.io/job-history/kubernetes-jenkins/pr-logs/directory/kustomize-presubmit-master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes-sigs/kustomize)](https://goreportcard.com/report/github.com/kubernetes-sigs/kustomize)
-
-Download a binary from the [release page], or see
-these [instructions](https://kubernetes-sigs.github.io/kustomize/installation/).
-
-Browse the [docs](https://kubernetes-sigs.github.io/kustomize/) or jump right into the
-tested [examples](examples).
 
 ## kubectl integration
 
