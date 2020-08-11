@@ -15,6 +15,7 @@ require (
 replace (
 	sigs.k8s.io/kustomize/api v0.5.1 => ../api
 	sigs.k8s.io/kustomize/cmd/config v0.5.0 => ../cmd/config
+	sigs.k8s.io/kustomize/kyaml => ../kyaml
 )
 
 exclude (
