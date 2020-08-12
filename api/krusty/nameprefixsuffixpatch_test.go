@@ -104,10 +104,10 @@ spec:
         - valueFrom:
             configMapKeyRef:
               key: MYSQL_DATABASE
-              name: mysql-9792mdchtg
+              name: mysql
         envFrom:
         - configMapRef:
-            name: mysql-9792mdchtg
+            name: mysql
         name: handler
 `)
 }
