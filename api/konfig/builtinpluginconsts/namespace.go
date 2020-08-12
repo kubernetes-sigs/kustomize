@@ -12,5 +12,9 @@ namespace:
   kind: RoleBinding
 - path: subjects
   kind: ClusterRoleBinding
+- path: spec/service/namespace
+  group: apiregistration.k8s.io
+  kind: APIService
+  create: true
 `
 )
