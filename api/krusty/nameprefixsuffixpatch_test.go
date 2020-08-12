@@ -1,8 +1,6 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// I expected configMapRef.name and configMapKeyRef.name to be "mysql-g9ttm44c48" not "mysql"
-
 package krusty_test
 
 import (
@@ -11,22 +9,19 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
+// Coverage for issue #2609
 func TestNamePrefixSuffixPatch(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarness(t).
-		PrepBuiltin("PrefixSuffixTransformer").
-		PrepBuiltin("AnnotationsTransformer").
-		PrepBuiltin("LabelTransformer")
-	defer th.Reset()
+	th := kusttest_test.MakeHarness(t)
 
-	th.WriteF("/app/handlers/kustomization.yaml", `
+	th.WriteF("handlers/kustomization.yaml", `
 nameSuffix: -suffix
 
 resources:
-  - ./deployment.yaml
+- deployment.yaml
 `)
 
-	th.WriteF("/app/handlers/deployment.yaml", `
-apiVersion: extensions/v1beta1
+	th.WriteF("handlers/deployment.yaml", `
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: short
@@ -37,63 +32,67 @@ spec:
       - name: handler
 `)
 
-	th.WriteF("/app/mysql/kustomization.yaml", `
+	th.WriteF("mysql/kustomization.yaml", `
 configMapGenerator:
-  - name: mysql
-    literals:
-      - MYSQL_USER=mysql
-      - MYSQL_DATABASE=default
+- name: mysql
+  literals:
+  - MYSQL_USER=default
+  - MYSQL_DATABASE=default
+  - PORT=3306
 `)
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
-  - ./mysql
-  - ./handlers
+- mysql
+- handlers
 
 configMapGenerator:
-  - name: mysql
-    behavior: merge
-    literals:
-      - MYSQL_DATABASE=db
-      - MYSQL_USER=user
+- name: mysql
+  behavior: merge
+  literals:
+  - MYSQL_DATABASE=db
+  - MYSQL_USER=my-user
+  - MYSQL_PASSWORD='correct horse battery staple'
 
 patches:
-  - target:
-      kind: Deployment
-      name: s.*
-    patch: |-
-      kind: Deployment
-      metadata:
-        name: ignored
-      spec:
-        template:
-          spec:
-            containers:
-              - name: handler
-                envFrom:
-                  - configMapRef:
-                      name: mysql
-                env:
-                  - valueFrom:
-                      configMapKeyRef:
-                        name: mysql
-                        key: MYSQL_DATABASE
+- target:
+    kind: Deployment
+    name: s.*
+  patch: |-
+    kind: Deployment
+    metadata:
+      name: ignored
+    spec:
+      template:
+        spec:
+          containers:
+          - name: handler
+            envFrom:
+            - configMapRef:
+                name: mysql
+            env:
+            - valueFrom:
+                configMapKeyRef:
+                  name: mysql
+                  key: MYSQL_DATABASE
 `)
 
-	m := th.Run("/app", th.MakeDefaultOptions())
-	// I expected configMapRef.name and configMapKeyRef.name to be "mysql-g9ttm44c48" not "mysql"
+	m := th.Run(".", th.MakeDefaultOptions())
+	// Per #2609, the desired behavior is for configMapRef.name and configMapKeyRef.name to be "mysql-9792mdchtg" not "mysql"
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
   MYSQL_DATABASE: db
-  MYSQL_USER: user
+  MYSQL_PASSWORD: correct horse battery staple
+  MYSQL_USER: my-user
+  PORT: "3306"
 kind: ConfigMap
 metadata:
   annotations: {}
   labels: {}
-  name: mysql-g9ttm44c48
+  name: mysql-9792mdchtg
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: short-suffix
@@ -105,10 +104,10 @@ spec:
         - valueFrom:
             configMapKeyRef:
               key: MYSQL_DATABASE
-              name: mysql
+              name: mysql-9792mdchtg
         envFrom:
         - configMapRef:
-            name: mysql
+            name: mysql-9792mdchtg
         name: handler
 `)
 }
