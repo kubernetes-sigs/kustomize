@@ -43,7 +43,24 @@ type Merger struct {
 	// for forwards compatibility when new functions are added to the interface
 }
 
-var _ walk.Visitor = Merger{}
+// SkipWalk returns (false, nil) when there are more than 1 non-nil nodes in
+// sources. return (true, node) when there is only one. This function should be
+// called by walk and walk should use the result to determine should it skip
+// following steps.
+func (m Merger) SkipWalk(sources []*yaml.RNode) (bool, *yaml.RNode) {
+	cnt := 0
+	var node *yaml.RNode
+	for i := range sources {
+		if sources[i] != nil {
+			cnt++
+			node = sources[i]
+		}
+	}
+	if cnt != 1 {
+		return false, nil
+	}
+	return true, node
+}
 
 func (m Merger) VisitMap(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.RNode, error) {
 	if err := m.SetComments(nodes); err != nil {

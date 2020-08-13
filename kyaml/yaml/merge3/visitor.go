@@ -167,10 +167,14 @@ func (m Visitor) getStrValues(nodes walk.Sources) (strValues, error) {
 	return strValues{Origin: oStr, Update: uStr, Dest: dStr}, nil
 }
 
+// SkipWalk always returns (false, nil) by default. This functions is used to
+// keep consistent with merge2. merge2 will redefine this method.
+func (m Visitor) SkipWalk(sources []*yaml.RNode) (bool, *yaml.RNode) {
+	return false, nil
+}
+
 type strValues struct {
 	Origin string
 	Update string
 	Dest   string
 }
-
-var _ walk.Visitor = Visitor{}

@@ -51,6 +51,10 @@ func (l Walker) Kind() yaml.Kind {
 func (l Walker) Walk() (*yaml.RNode, error) {
 	l.Schema = l.GetSchema()
 
+	if isSingleSource, sourceNode := l.SkipWalk(l.Sources); isSingleSource {
+		return sourceNode, nil
+	}
+
 	// invoke the handler for the corresponding node type
 	switch l.Kind() {
 	case yaml.MappingNode:

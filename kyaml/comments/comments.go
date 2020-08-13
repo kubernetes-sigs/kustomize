@@ -24,6 +24,12 @@ func CopyComments(from, to *yaml.RNode) error {
 // of a resource
 type copier struct{}
 
+// SkipWalk always returns (false, nil) by default. This functions is used to
+// keep consistent with merge2.
+func (c *copier) SkipWalk(sources []*yaml.RNode) (bool, *yaml.RNode) {
+	return false, nil
+}
+
 func (c *copier) VisitMap(s walk.Sources, _ *openapi.ResourceSchema) (*yaml.RNode, error) {
 	copy(s.Dest(), s.Origin())
 	return s.Dest(), nil

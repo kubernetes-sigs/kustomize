@@ -22,6 +22,8 @@ type Visitor interface {
 	VisitScalar(Sources, *openapi.ResourceSchema) (*yaml.RNode, error)
 
 	VisitList(Sources, *openapi.ResourceSchema, ListKind) (*yaml.RNode, error)
+
+	SkipWalk(sources []*yaml.RNode) (bool, *yaml.RNode)
 }
 
 // ClearNode is returned if GrepFilter should do nothing after calling Set
