@@ -157,6 +157,40 @@ spec:
  `,
 		},
 		{
+			name: "add-field-inside-sequence",
+			add: Add{
+				FieldValue: "/usr/share/nginx",
+				FieldName:  "spec.containers.volumeMounts.mountPath",
+				Ref:        "#/definitions/io.k8s.cli.setters.mountPath",
+			},
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    volumeMounts:
+    - name: nginx
+      mountPath: /usr/share/nginx
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    volumeMounts:
+    - name: nginx
+      mountPath: /usr/share/nginx # {"$openapi":"mountPath"}
+ `,
+		},
+		{
 			name: "add-replicas-error",
 			add: Add{
 				Ref: "#/definitions/io.k8s.cli.setters.replicas",
