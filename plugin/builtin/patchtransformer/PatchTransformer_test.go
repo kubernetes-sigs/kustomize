@@ -638,8 +638,6 @@ spec:
 }
 
 // test for https://github.com/kubernetes-sigs/kustomize/issues/2767
-// currently documents broken state.  resulting ports: should have both
-// take-over-the-world and disappearing-act on 8080
 func TestPatchTransformerSimilarArrays(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchTransformer")
@@ -676,7 +674,7 @@ spec:
           protocol: TCP
         - containerPort: 8080
           name: disappearing-act
-          protocol: TCP
+          protocol: UDP
 `, `
 apiVersion: apps/v1
 kind: Deployment
@@ -695,7 +693,7 @@ spec:
           name: take-over-the-world
           protocol: TCP
         - containerPort: 8080
-          name: take-over-the-world
-          protocol: TCP
+          name: disappearing-act
+          protocol: UDP
 `)
 }
