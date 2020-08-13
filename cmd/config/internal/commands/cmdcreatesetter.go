@@ -39,8 +39,8 @@ func NewCreateSetterRunner(parent string) *CreateSetterRunner {
 	set.Flags().StringVar(&r.Set.SetPartialField.Description, "description", "",
 		"record a description for the current setter value.")
 	set.Flags().StringVar(&r.Set.SetPartialField.Field, "field", "",
-		"name of the field to set -- e.g. --field port.  defaults to all fields match"+
-			"VALUE.  maybe be the field name, field path, or partial field path (suffix)")
+		"name of the field to set, a suffix of the path to the field, or the full" +
+		" path to the field. Default is to match all fields.")
 	set.Flags().StringVar(&r.Set.ResourceMeta.Name, "name", "",
 		"name of the Resource on which to create the setter.")
 	set.Flags().MarkHidden("name")
