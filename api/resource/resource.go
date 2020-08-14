@@ -277,12 +277,6 @@ func (r *Resource) PrefixesSuffixesEquals(o ResCtx) bool {
 	return sameEndingSubarray(r.GetNamePrefixes(), o.GetNamePrefixes()) && sameEndingSubarray(r.GetNameSuffixes(), o.GetNameSuffixes())
 }
 
-// This is used to compute if a referrer could potentially be impacted
-// by the change of name of a referral.
-func (r *Resource) InSameKustomizeCtx(rctxm ResCtxMatcher) bool {
-	return rctxm(r)
-}
-
 func (r *Resource) GetOriginalName() string {
 	return r.originalName
 }
