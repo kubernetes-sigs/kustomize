@@ -382,15 +382,14 @@ func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
 	result := newOne()
 	inputId := inputRes.CurId()
 	isInputIdNamespaceable := inputId.IsNamespaceableKind()
-	rctxm := inputRes.PrefixesSuffixesEquals
 	subjectNamespaces := getNamespacesForRoleBinding(inputRes)
 	for _, r := range m.Resources() {
 		// Need to match more accuratly both at the time of selection and transformation.
 		// OutmostPrefixSuffixEquals is not accurate enough since it is only using
 		// the outer most suffix and the last prefix. Use PrefixedSuffixesEquals instead.
 		resId := r.CurId()
-		if (!isInputIdNamespaceable || !resId.IsNamespaceableKind() || resId.IsNsEquals(inputId) ||
-			isRoleBindingNamespace(&subjectNamespaces, r.GetNamespace())) && r.InSameKustomizeCtx(rctxm) {
+		if !isInputIdNamespaceable || !resId.IsNamespaceableKind() || resId.IsNsEquals(inputId) ||
+			isRoleBindingNamespace(&subjectNamespaces, r.GetNamespace()) {
 			result.append(r)
 		}
 	}
