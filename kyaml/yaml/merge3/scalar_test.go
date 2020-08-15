@@ -33,7 +33,7 @@ kind: StatefulSet # new value`},
 	// Test Case
 	//
 	{
-		description: `Ensure comments are updated`,
+		description: `Ensure comments are added`,
 		origin: `
 apiVersion: apps/v1
 kind: Deployment
@@ -79,6 +79,58 @@ metadata:
     config.kubernetes.io/path: 'temp.yaml'
 spec:
   replicas: 3 # {"$openapi":"replicas"}
+`},
+
+	//
+	// Test Case
+	//
+	{
+		description: `Ensure comments are updated`,
+		origin: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/merge-source: 'dest'
+    config.kubernetes.io/path: 'temp.yaml'
+spec:
+  replicas: 3 # {"$openapi":"replicas"}`,
+		update: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/merge-source: 'updated'
+    config.kubernetes.io/path: 'temp.yaml'
+spec:
+  replicas: 3 # {"$openapi":"replicas_new"}`,
+		local: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/merge-source: 'original'
+    config.kubernetes.io/path: 'temp.yaml'
+spec:
+  replicas: 3 # {"$openapi":"replicas"}
+`,
+		expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/merge-source: 'updated'
+    config.kubernetes.io/path: 'temp.yaml'
+spec:
+  replicas: 3 # {"$openapi":"replicas_new"}
 `},
 
 	{
