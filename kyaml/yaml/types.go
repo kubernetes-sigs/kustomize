@@ -55,7 +55,6 @@ func IsYNodeEmptyMap(n *yaml.Node) bool {
 	return n != nil && n.Kind == yaml.MappingNode && len(n.Content) == 0
 }
 
-
 // IsYNodeEmptyMap is true if the Node is a non-nil empty sequence.
 func IsYNodeEmptySeq(n *yaml.Node) bool {
 	return n != nil && n.Kind == yaml.SequenceNode && len(n.Content) == 0
@@ -333,6 +332,13 @@ type ResourceIdentifier struct {
 	APIVersion string `yaml:"apiVersion,omitempty"`
 	// Kind is the kind of the resource
 	Kind string `yaml:"kind,omitempty"`
+}
+
+// Comments struct is comment yaml comment types
+type Comments struct {
+	LineComment string `yaml:"lineComment,omitempty"`
+	HeadComment string `yaml:"headComment,omitempty"`
+	FootComment string `yaml:"footComment,omitempty"`
 }
 
 func (r *ResourceIdentifier) GetName() string {

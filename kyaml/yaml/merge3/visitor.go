@@ -4,7 +4,6 @@
 package merge3
 
 import (
-	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/yaml/walk"
@@ -34,6 +33,7 @@ func (m Visitor) VisitMap(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.
 		// initialize a new value that can be recursively merged
 		return yaml.NewRNode(&yaml.Node{Kind: yaml.MappingNode}), nil
 	}
+
 	// recursively merge the dest with the original and updated
 	return nodes.Dest(), nil
 }
@@ -67,17 +67,13 @@ func (m Visitor) VisitScalar(nodes walk.Sources, s *openapi.ResourceSchema) (*ya
 		return nodes.Dest(), nil
 	}
 
-	updatedStr, err := nodes.Updated().String()
+	values, err := m.getStrValues(nodes)
 	if err != nil {
-		return nil, errors.Wrap(err)
-	}
-	originStr, err := nodes.Origin().String()
-	if err != nil {
-		return nil, errors.Wrap(err)
+		return nil, err
 	}
 
-	if updatedStr != originStr {
-		// change in update node
+	if (values.Dest == "" || values.Dest == values.Origin) && values.Origin != values.Update {
+		// if local is nil or is unchanged but there is new update
 		return nodes.Updated(), nil
 	}
 
