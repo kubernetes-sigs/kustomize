@@ -78,7 +78,8 @@ func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
 		Outputs: []kio.Writer{inout},
 	}.Execute()
 	if a.Count == 0 {
-		fmt.Printf("setter %s doesn't match any field in resources, but creating setter definition\n", c.Name)
+		fmt.Printf("setter %s doesn't match any field in resource configs, "+
+			"but creating setter definition\n", c.Name)
 	}
 	if err != nil {
 		return err
