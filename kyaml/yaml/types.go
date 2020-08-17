@@ -139,6 +139,13 @@ type ResourceIdentifier struct {
 	Kind string `yaml:"kind,omitempty"`
 }
 
+// Comments struct is comment yaml comment types
+type Comments struct {
+	LineComment string `yaml:"lineComment,omitempty"`
+	HeadComment string `yaml:"headComment,omitempty"`
+	FootComment string `yaml:"footComment,omitempty"`
+}
+
 func (r *ResourceIdentifier) GetName() string {
 	return r.Name
 }
