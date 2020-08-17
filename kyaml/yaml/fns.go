@@ -447,6 +447,9 @@ type FieldSetter struct {
 	// value on the ScalarNode.
 	Name string `yaml:"name,omitempty"`
 
+	// Comments for the field
+	Comments Comments `yaml:"comments,omitempty"`
+
 	// Value is the value to set.
 	// Optional if Kind is set.
 	Value *RNode `yaml:"value,omitempty"`
@@ -504,7 +507,8 @@ func (s FieldSetter) Filter(rn *RNode) (*RNode, error) {
 
 	// create the field
 	rn.YNode().Content = append(rn.YNode().Content,
-		&yaml.Node{Kind: yaml.ScalarNode, Value: s.Name},
+		&yaml.Node{Kind: yaml.ScalarNode, HeadComment: s.Comments.HeadComment,
+			LineComment: s.Comments.LineComment, FootComment: s.Comments.FootComment, Value: s.Name},
 		s.Value.YNode())
 	return s.Value, nil
 }

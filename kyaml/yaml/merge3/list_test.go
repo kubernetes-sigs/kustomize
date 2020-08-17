@@ -55,11 +55,107 @@ list: # new value
 apiVersion: apps/v1`,
 		expected: `
 apiVersion: apps/v1
-list:
+list: # new value
 - 2
 - 3
 - 4
 `},
+
+	//
+	// Test Case
+	//
+	{
+		description: `Update comment`,
+		origin: `
+list: # comment
+- 1
+- 2
+- 3`,
+		update: `
+list: # updated comment
+- 2
+- 3
+- 4`,
+		local: `
+list: # comment
+- 1
+- 2
+- 3`,
+		expected: `
+list: # updated comment
+- 2
+- 3
+- 4`},
+
+	//
+	// Test Case
+	//
+	{
+		description: `Don't update local modified comment`,
+		origin: `
+list: # origin comment
+- 1
+- 2
+- 3`,
+		update: `
+list: # updated comment
+- 2
+- 3
+- 4`,
+		local: `
+list: # local comment
+- 1
+- 2
+- 3`,
+		expected: `
+list: # local comment
+- 2
+- 3
+- 4`},
+
+	//
+	// Test Case
+	//
+	{
+		description: `Don't add local deleted comment`,
+		origin: `
+list: # origin comment
+- 1
+- 2
+- 3`,
+		update: `
+list: # updated comment
+- 2
+- 3
+- 4`,
+		local: `
+list:
+- 1
+- 2
+- 3`,
+		expected: `
+list:
+- 2
+- 3
+- 4`},
+
+	{
+		description: `Add update with comment`,
+		origin: `
+apiVersion: apps/v1
+`,
+		update: `
+list: # updated comment
+- 2
+- 3
+- 4`,
+		local: `
+apiVersion: apps/v1`,
+		expected: `
+list: # updated comment
+- 2
+- 3
+- 4`},
 
 	//
 	// Test Case
@@ -140,14 +236,14 @@ list: # ignore value
 - 3`,
 		local: `
 apiVersion: apps/v1
-list:
+list: # local comment
 - 2
 - 3
 - 4
 `,
 		expected: `
 apiVersion: apps/v1
-list:
+list: # local comment
 - 2
 - 3
 - 4
