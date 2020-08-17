@@ -123,18 +123,25 @@ func (c SubstitutionCreator) Create(openAPIPath, resourcesPath string) error {
 		return err
 	}
 
-	// Update the resources with the setter reference
+	a := &setters2.Add{
+		FieldName:  c.FieldName,
+		FieldValue: c.FieldValue,
+		Ref:        fieldmeta.DefinitionsPrefix + fieldmeta.SubstitutionDefinitionPrefix + c.Name,
+	}
+
+	// Update the resources with the substitution reference
 	inout := &kio.LocalPackageReadWriter{PackagePath: resourcesPath}
-	return kio.Pipeline{
-		Inputs: []kio.Reader{inout},
-		Filters: []kio.Filter{kio.FilterAll(
-			&setters2.Add{
-				FieldName:  c.FieldName,
-				FieldValue: c.FieldValue,
-				Ref:        fieldmeta.DefinitionsPrefix + fieldmeta.SubstitutionDefinitionPrefix + c.Name,
-			})},
+	err = kio.Pipeline{
+		Inputs:  []kio.Reader{inout},
+		Filters: []kio.Filter{kio.FilterAll(a)},
 		Outputs: []kio.Writer{inout},
 	}.Execute()
+
+	if a.Count == 0 {
+		fmt.Printf("substitution %s doesn't match any field value in resource configs, "+
+			"but creating substitution definition\n", c.Name)
+	}
+	return err
 }
 
 // createMarkersAndRefs takes the input pattern, creates setter/substitution markers
