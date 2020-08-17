@@ -9,16 +9,20 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/setters2"
 )
 
-// DeleterCreator delete a setter in the OpenAPI definitions, and removes references
-// to the setter from matching resource fields.
+// DeleterCreator delete a definition in the OpenAPI definitions, and removes references
+// to the definition from matching resource fields.
 type DeleterCreator struct {
-	// Name is the name of the setter to create or update.
+	// Name is the name of the setter or substitution to delete
 	Name string
+
+	// DefinitionPrefix is the prefix of the OpenAPI definition type
+	DefinitionPrefix string
 }
 
 func (d DeleterCreator) Delete(openAPIPath, resourcesPath string) error {
 	dd := setters2.DeleterDefinition{
-		Name: d.Name,
+		Name:             d.Name,
+		DefinitionPrefix: d.DefinitionPrefix,
 	}
 	if err := dd.DeleteFromFile(openAPIPath); err != nil {
 		return err
@@ -35,7 +39,8 @@ func (d DeleterCreator) Delete(openAPIPath, resourcesPath string) error {
 		Inputs: []kio.Reader{inout},
 		Filters: []kio.Filter{kio.FilterAll(
 			&setters2.Delete{
-				FieldName: d.Name,
+				Name:             d.Name,
+				DefinitionPrefix: d.DefinitionPrefix,
 			})},
 		Outputs: []kio.Writer{inout},
 	}.Execute()

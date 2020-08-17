@@ -384,6 +384,23 @@ func (rn *RNode) Fields() ([]string, error) {
 	return fields, nil
 }
 
+// FieldRNodes returns the list of field key RNodes for a MappingNode.
+// Returns an error for non-MappingNodes.
+func (rn *RNode) FieldRNodes() ([]*RNode, error) {
+	if err := ErrorIfInvalid(rn, yaml.MappingNode); err != nil {
+		return nil, errors.Wrap(err)
+	}
+	var fields []*RNode
+	for i := 0; i < len(rn.Content()); i += 2 {
+		yNode := rn.Content()[i]
+		// for each key node in the input mapping node contents create equivalent rNode
+		rNode := &RNode{}
+		rNode.SetYNode(yNode)
+		fields = append(fields, rNode)
+	}
+	return fields, nil
+}
+
 // Field returns a fieldName, fieldValue pair for MappingNodes.
 // Returns nil for non-MappingNodes.
 func (rn *RNode) Field(field string) *MapNode {
