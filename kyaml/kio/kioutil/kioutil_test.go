@@ -275,40 +275,67 @@ func TestCreatePathAnnotationValue(t *testing.T) {
 	}{
 		{
 			`dir`,
-			yaml.ResourceMeta{Kind: "foo",
-				APIVersion: "apps/v1",
-				ObjectMeta: yaml.ObjectMeta{Name: "bar", Namespace: "baz"},
+			yaml.ResourceMeta{
+				TypeMeta: yaml.TypeMeta{
+					APIVersion: "apps/v1",
+					Kind:       "foo",
+				},
+				ObjectMeta: yaml.ObjectMeta{
+					NameMeta: yaml.NameMeta{
+						Name: "bar", Namespace: "baz",
+					},
+				},
 			},
 			`dir/baz/foo_bar.yaml`, `with namespace`,
 		},
 		{
 			``,
-			yaml.ResourceMeta{Kind: "foo",
-				APIVersion: "apps/v1",
-				ObjectMeta: yaml.ObjectMeta{Name: "bar", Namespace: "baz"},
+			yaml.ResourceMeta{
+				TypeMeta: yaml.TypeMeta{
+					APIVersion: "apps/v1",
+					Kind:       "foo",
+				},
+				ObjectMeta: yaml.ObjectMeta{
+					NameMeta: yaml.NameMeta{
+						Name: "bar", Namespace: "baz",
+					},
+				},
 			},
 			`baz/foo_bar.yaml`, `without dir`,
 		},
 		{
 			`dir`,
-			yaml.ResourceMeta{Kind: "foo",
-				APIVersion: "apps/v1",
-				ObjectMeta: yaml.ObjectMeta{Name: "bar"},
+			yaml.ResourceMeta{
+				TypeMeta: yaml.TypeMeta{
+					APIVersion: "apps/v1",
+					Kind:       "foo",
+				},
+				ObjectMeta: yaml.ObjectMeta{
+					NameMeta: yaml.NameMeta{Name: "bar"},
+				},
 			},
 			`dir/foo_bar.yaml`, `without namespace`,
 		},
 		{
 			``,
-			yaml.ResourceMeta{Kind: "foo",
-				APIVersion: "apps/v1",
-				ObjectMeta: yaml.ObjectMeta{Name: "bar"},
+			yaml.ResourceMeta{
+				TypeMeta: yaml.TypeMeta{
+					APIVersion: "apps/v1",
+					Kind:       "foo",
+				},
+				ObjectMeta: yaml.ObjectMeta{
+					NameMeta: yaml.NameMeta{Name: "bar"},
+				},
 			},
 			`foo_bar.yaml`, `without namespace or dir`,
 		},
 		{
 			``,
-			yaml.ResourceMeta{Kind: "foo",
-				APIVersion: "apps/v1",
+			yaml.ResourceMeta{
+				TypeMeta: yaml.TypeMeta{
+					APIVersion: "apps/v1",
+					Kind:       "foo",
+				},
 				ObjectMeta: yaml.ObjectMeta{},
 			},
 			`foo_.yaml`, `without namespace, dir or name`,
@@ -316,7 +343,9 @@ func TestCreatePathAnnotationValue(t *testing.T) {
 		{
 			``,
 			yaml.ResourceMeta{
-				APIVersion: "apps/v1",
+				TypeMeta: yaml.TypeMeta{
+					APIVersion: "apps/v1",
+				},
 				ObjectMeta: yaml.ObjectMeta{},
 			},
 			`_.yaml`, `without any`,

@@ -698,11 +698,15 @@ metadata:
 		return
 	}
 	assert.Equal(t, ResourceMeta{
-		Kind:       "Deployment",
-		APIVersion: "v1/apps",
+		TypeMeta: TypeMeta{
+			Kind:       "Deployment",
+			APIVersion: "v1/apps",
+		},
 		ObjectMeta: ObjectMeta{
-			Name:      "foo",
-			Namespace: "bar",
+			NameMeta: NameMeta{
+				Name:      "foo",
+				Namespace: "bar",
+			},
 			Annotations: map[string]string{
 				"ka": "va",
 			},

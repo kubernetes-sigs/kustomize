@@ -36,11 +36,15 @@ spec:
 	}
 
 	expected := ResourceMeta{
-		APIVersion: "rbac.istio.io/v1alpha1",
-		Kind:       "ServiceRole",
+		TypeMeta: TypeMeta{
+			APIVersion: "rbac.istio.io/v1alpha1",
+			Kind:       "ServiceRole",
+		},
 		ObjectMeta: ObjectMeta{
-			Name:        "wildcard",
-			Namespace:   "default",
+			NameMeta: NameMeta{
+				Name:      "wildcard",
+				Namespace: "default",
+			},
 			Annotations: map[string]string{"foo": "bar"},
 		},
 	}

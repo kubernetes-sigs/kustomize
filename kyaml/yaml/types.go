@@ -88,27 +88,33 @@ func (f FilterFunc) Filter(object *RNode) (*RNode, error) {
 	return f(object)
 }
 
+// TypeMeta partially copies apimachinery/pkg/apis/meta/v1.TypeMeta
+// No need for a direct dependence; the fields are stable.
 type TypeMeta struct {
-	Kind       string
-	APIVersion string
+	// APIVersion is the apiVersion field of a Resource
+	APIVersion string `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty"`
+	// Kind is the kind field of a Resource
+	Kind string `json:"kind,omitempty" yaml:"kind,omitempty"`
+}
+
+// NameMeta contains name information.
+type NameMeta struct {
+	// Name is the metadata.name field of a Resource
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	// Namespace is the metadata.namespace field of a Resource
+	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 }
 
 // ResourceMeta contains the metadata for a both Resource Type and Resource.
 type ResourceMeta struct {
-	// APIVersion is the apiVersion field of a Resource
-	APIVersion string `yaml:"apiVersion,omitempty"`
-	// Kind is the kind field of a Resource
-	Kind string `yaml:"kind,omitempty"`
+	TypeMeta `json:",inline" yaml:",inline"`
 	// ObjectMeta is the metadata field of a Resource
 	ObjectMeta `yaml:"metadata,omitempty"`
 }
 
 // ObjectMeta contains metadata about a Resource
 type ObjectMeta struct {
-	// Name is the metadata.name field of a Resource
-	Name string `yaml:"name,omitempty"`
-	// Namespace is the metadata.namespace field of a Resource
-	Namespace string `yaml:"namespace,omitempty"`
+	NameMeta `json:",inline" yaml:",inline"`
 	// Labels is the metadata.labels field of a Resource
 	Labels map[string]string `yaml:"labels,omitempty"`
 	// Annotations is the metadata.annotations field of a Resource.
@@ -119,24 +125,16 @@ type ObjectMeta struct {
 // the information needed to uniquely identify a resource in a cluster.
 func (m *ResourceMeta) GetIdentifier() ResourceIdentifier {
 	return ResourceIdentifier{
-		Name:       m.Name,
-		Namespace:  m.Namespace,
-		APIVersion: m.APIVersion,
-		Kind:       m.Kind,
+		TypeMeta: m.TypeMeta,
+		NameMeta: m.NameMeta,
 	}
 }
 
 // ResourceIdentifier contains the information needed to uniquely
 // identify a resource in a cluster.
 type ResourceIdentifier struct {
-	// Name is the name of the resource as set in metadata.name
-	Name string `yaml:"name,omitempty"`
-	// Namespace is the namespace of the resource as set in metadata.namespace
-	Namespace string `yaml:"namespace,omitempty"`
-	// ApiVersion is the apiVersion of the resource
-	APIVersion string `yaml:"apiVersion,omitempty"`
-	// Kind is the kind of the resource
-	Kind string `yaml:"kind,omitempty"`
+	TypeMeta `json:",inline" yaml:",inline"`
+	NameMeta `json:",inline" yaml:",inline"`
 }
 
 // Comments struct is comment yaml comment types
