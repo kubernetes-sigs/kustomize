@@ -88,6 +88,26 @@ metadata:
 				},
 			},
 		},
+		{
+			name: "root user",
+			functionConfig: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+`,
+			expectedArgs: []string{
+				"run",
+				"--rm",
+				"-i", "-a", "STDIN", "-a", "STDOUT", "-a", "STDERR",
+				"--network", "none",
+				"--user", "root",
+				"--security-opt=no-new-privileges",
+			},
+			instance: Filter{
+				Image: "example.com:version",
+				User:  "root",
+			},
+		},
 	}
 
 	for i := range tests {

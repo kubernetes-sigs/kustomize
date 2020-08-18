@@ -87,6 +87,9 @@ type RunFns struct {
 	// this is a variable so it can be mocked in tests
 	functionFilterProvider func(
 		filter runtimeutil.FunctionSpec, api *yaml.RNode) (kio.Filter, error)
+
+	// User username used to run the application in container,
+	User string
 }
 
 // Execute runs the command
@@ -380,11 +383,17 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode) (kio.Filter
 		atomic.AddUint32(&r.resultsCount, 1)
 	}
 	if !r.DisableContainers && spec.Container.Image != "" {
+		// command line username has higher priority
+		user := spec.Container.User
+		if r.User != "" {
+			user = r.User
+		}
 		// TODO: Add a test for this behavior
 		cf := &container.Filter{
 			Image:         spec.Container.Image,
 			Network:       spec.Network,
 			StorageMounts: r.StorageMounts,
+			User:          user,
 		}
 		cf.Exec.FunctionConfig = api
 		cf.Exec.GlobalScope = r.GlobalScope

@@ -52,6 +52,9 @@ type ContainerSpec struct {
 
 	// Mounts are the storage or directories to mount into the container
 	StorageMounts []StorageMount `json:"mounts,omitempty" yaml:"mounts,omitempty"`
+
+	// User is the username/uid that application runs as in continer
+	User string `json:"user,omitempty" yaml:"user,omitempty"`
 }
 
 // ContainerNetwork
