@@ -133,6 +133,9 @@ type Filter struct {
 	// StorageMounts is a list of storage options that the container will have mounted.
 	StorageMounts []runtimeutil.StorageMount `yaml:"mounts,omitempty"`
 
+	// User username used to run the application in container,
+	User string
+
 	Exec runtimeexec.Filter
 }
 
@@ -174,14 +177,18 @@ func (c *Filter) getCommand() (string, []string) {
 	if c.Network != "" {
 		network = c.Network
 	}
-
+	// run as nobody by default
+	user := c.User
+	if user == "" {
+		user = "nobody"
+	}
 	args := []string{"run",
 		"--rm",                                              // delete the container afterward
 		"-i", "-a", "STDIN", "-a", "STDOUT", "-a", "STDERR", // attach stdin, stdout, stderr
 		"--network", network,
 
 		// added security options
-		"--user", "nobody", // run as nobody
+		"--user", user,
 		"--security-opt=no-new-privileges", // don't allow the user to escalate privileges
 		// note: don't make fs readonly because things like heredoc rely on writing tmp files
 	}
