@@ -10,6 +10,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
 
 var openAPIFile = `
@@ -25,7 +27,6 @@ openAPI:
         setter:
           name: tag
           value: "sometag"
-
 `
 
 var resourceFile = `
@@ -40,18 +41,20 @@ spec:
 `
 
 func TestDeleterCreator_Delete(t *testing.T) {
+	openapi.ResetOpenAPI()
+	defer openapi.ResetOpenAPI()
 	openAPI, err := ioutil.TempFile("", "openAPI.yaml")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 	defer os.Remove(openAPI.Name())
-	//write openapi to temp dir
+	// write openapi to temp dir
 	err = ioutil.WriteFile(openAPI.Name(), []byte(openAPIFile), 0666)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
-	//write resource file to temp dir
+	// write resource file to temp dir
 	resource, err := ioutil.TempFile("", "k8s-cli-*.yaml")
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -62,9 +65,15 @@ func TestDeleterCreator_Delete(t *testing.T) {
 		t.FailNow()
 	}
 
-	//add a delete creator
+	// add a delete creator
 	dc := DeleterCreator{
-		Name: "image",
+		Name:             "image",
+		DefinitionPrefix: fieldmeta.SetterDefinitionPrefix,
+	}
+
+	err = openapi.AddSchemaFromFile(openAPI.Name())
+	if !assert.NoError(t, err) {
+		t.FailNow()
 	}
 
 	err = dc.Delete(openAPI.Name(), resource.Name())

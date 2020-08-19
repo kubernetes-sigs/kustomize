@@ -30,25 +30,25 @@ func TestDeleteSetterCommand(t *testing.T) {
 	}{
 		{
 			name: "delete replicas",
-			args: []string{"replicas", "hello world"},
+			args: []string{"replicas-setter"},
 			input: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
-  replicas: 3 # {"$openapi" : "replicas"}}
+  replicas: 3 # {"$openapi" : "replicas-setter"}
  `,
 			inputOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
 openAPI:
   definitions:
-    io.k8s.cli.setters.replicas:
+    io.k8s.cli.setters.replicas-setter:
       description: hello world
       x-k8s-cli:
         setter:
-          name: replicas
+          name: replicas-setter
           value: "3"
           setBy: me
 `,
@@ -67,32 +67,33 @@ spec:
 		},
 		{
 			name: "delete only one setter",
-			args: []string{"replicas", "hello world"},
+			args: []string{"replicas-setter"},
 			input: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
-  replicas: 3 # {"$openapi" : "replicas"}}
+  replicas: 3 # {"$openapi" : "replicas-setter"}
+  foo: nginx # {"$openapi" : "image"}
  `,
 			inputOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
 openAPI:
   definitions:
-    io.k8s.cli.setters.replicas:
+    io.k8s.cli.setters.replicas-setter:
       description: hello world
       x-k8s-cli:
         setter:
-          name: replicas
+          name: replicas-setter
           value: "3"
           setBy: me
     io.k8s.cli.setters.image:
       x-k8s-cli:
         setter:
           name: image
-          value: 1.0
+          value: nginx
 `,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
@@ -103,7 +104,7 @@ openAPI:
       x-k8s-cli:
         setter:
           name: image
-          value: 1.0
+          value: nginx
  `,
 			expectedResources: `
 apiVersion: apps/v1
@@ -112,29 +113,95 @@ metadata:
   name: nginx-deployment
 spec:
   replicas: 3
+  foo: nginx # {"$openapi" : "image"}
  `,
 		},
+
+		{
+			name: "delete array setter",
+			args: []string{"list"},
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.list:
+      items:
+        type: string
+      maxItems: 3
+      type: array
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: list
+          value: ""
+          listValues:
+          - a
+          - b
+          - c
+          setBy: me
+ `,
+			input: `
+apiVersion: example.com/v1beta1
+kind: Example1
+spec:
+  list: # {"$openapi":"list"}
+  - "a"
+  - "b"
+  - "c"
+---
+apiVersion: example.com/v1beta1
+kind: Example2
+spec:
+  list: # {"$openapi":"list2"}
+  - "a"
+  - "b"
+  - "c"
+ `,
+			expectedResources: `
+apiVersion: example.com/v1beta1
+kind: Example1
+spec:
+  list:
+  - "a"
+  - "b"
+  - "c"
+---
+apiVersion: example.com/v1beta1
+kind: Example2
+spec:
+  list: # {"$openapi":"list2"}
+  - "a"
+  - "b"
+  - "c"
+ `,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+`,
+		},
+
 		{
 			name: "delete non exist setter error",
-			args: []string{"image", "hello world"},
+			args: []string{"image"},
 			input: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
-  replicas: 3 # {"$openapi" : "replicas"}}
+  replicas: 3 # {"$openapi" : "replicas-setter"}
  `,
 			inputOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
 openAPI:
   definitions:
-    io.k8s.cli.setters.replicas:
+    io.k8s.cli.setters.replicas-setter:
       description: hello world
       x-k8s-cli:
         setter:
-          name: replicas
+          name: replicas-setter
           value: "3"
           setBy: me
 `,
@@ -143,11 +210,11 @@ apiVersion: v1alpha1
 kind: Example
 openAPI:
   definitions:
-    io.k8s.cli.setters.replicas:
+    io.k8s.cli.setters.replicas-setter:
       description: hello world
       x-k8s-cli:
         setter:
-          name: replicas
+          name: replicas-setter
           value: "3"
           setBy: me
  `,
@@ -157,13 +224,13 @@ kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
-  replicas: 3 # {"$openapi" : "replicas"}}
+  replicas: 3 # {"$openapi" : "replicas-setter"}
  `,
-			err: `setter does not exist`,
+			err: `setter with name image does not exist`,
 		},
 		{
 			name: "delete setter used in substitution error",
-			args: []string{"image-name", "hello world"},
+			args: []string{"image-name"},
 			input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -220,7 +287,7 @@ openAPI:
 apiVersion: apps/v1
 kind: Deployment
  `,
-			err: `setter is used in substitution image, please delete the substitution first`,
+			err: `setter is used in substitution image, please delete the parent substitution first`,
 		},
 	}
 	for i := range tests {
