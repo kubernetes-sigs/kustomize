@@ -144,6 +144,7 @@ type Kustomization struct {
 // moving content of deprecated fields to newer
 // fields.
 func (k *Kustomization) FixKustomizationPostUnmarshalling() {
+
 	if k.Kind == "" {
 		k.Kind = KustomizationKind
 	}
@@ -156,6 +157,17 @@ func (k *Kustomization) FixKustomizationPostUnmarshalling() {
 	}
 	k.Resources = append(k.Resources, k.Bases...)
 	k.Bases = nil
+}
+
+// FixKustomizationPreMarshalling fixes things
+// that should occur after the kustomization file
+// has been processed.
+func (k *Kustomization) FixKustomizationPreMarshalling() {
+	// PatchesJson6902 should be under the Patches field.
+	for _, patch := range k.PatchesJson6902 {
+		k.Patches = append(k.Patches, patch.ToPatch())
+	}
+	k.PatchesJson6902 = nil
 }
 
 func (k *Kustomization) EnforceFields() []string {
