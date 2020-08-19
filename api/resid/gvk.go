@@ -164,7 +164,7 @@ func (x Gvk) IsSelected(selector *Gvk) bool {
 	return true
 }
 
-var notNamespaceableKinds = []string{
+var NotNamespaceableKinds = []string{
 	"APIService",
 	"CSIDriver",
 	"CSINode",
@@ -193,7 +193,7 @@ var notNamespaceableKinds = []string{
 // IsNamespaceableKind returns true if x is a namespaceable Gvk
 // Implements https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/#not-all-objects-are-in-a-namespace
 func (x Gvk) IsNamespaceableKind() bool {
-	for _, k := range notNamespaceableKinds {
+	for _, k := range NotNamespaceableKinds {
 		if k == x.Kind {
 			return false
 		}
