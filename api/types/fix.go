@@ -9,14 +9,14 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// FixKustomizationPreUnmarshalling modies the raw data
+// FixKustomizationPreUnmarshalling modifies the raw data
 // before marshalling - e.g. changes old field names to
 // new field names.
 func FixKustomizationPreUnmarshalling(data []byte) ([]byte, error) {
-	deprecateFieldsMap := map[string]string{
+	deprecatedFieldsMap := map[string]string{
 		"imageTags:": "images:",
 	}
-	for oldname, newname := range deprecateFieldsMap {
+	for oldname, newname := range deprecatedFieldsMap {
 		pattern := regexp.MustCompile(oldname)
 		data = pattern.ReplaceAll(data, []byte(newname))
 	}

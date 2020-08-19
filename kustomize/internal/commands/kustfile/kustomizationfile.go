@@ -170,6 +170,7 @@ func (mf *kustomizationFile) Write(kustomization *types.Kustomization) error {
 	if kustomization == nil {
 		return errors.New("util: kustomization file arg is nil")
 	}
+	kustomization.FixKustomizationPreMarshalling()
 	data, err := mf.marshal(kustomization)
 	if err != nil {
 		return err

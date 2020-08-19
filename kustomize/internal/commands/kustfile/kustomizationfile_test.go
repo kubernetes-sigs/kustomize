@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
@@ -158,8 +160,8 @@ patchesStrategicMerge:
 	}
 	bytes, _ := fSys.ReadFile(mf.path)
 
-	if !reflect.DeepEqual(kustomizationContentWithComments, bytes) {
-		t.Fatal("written kustomization with comments is not the same as original one")
+	if diff := cmp.Diff(kustomizationContentWithComments, bytes); diff != "" {
+		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
 	}
 }
 
@@ -252,10 +254,8 @@ generatorOptions:
 	}
 	bytes, _ := fSys.ReadFile(mf.path)
 
-	if string(expected) != string(bytes) {
-		t.Fatalf(
-			"expected =\n%s\n\nactual =\n%s\n",
-			string(expected), string(bytes))
+	if diff := cmp.Diff(expected, bytes); diff != "" {
+		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
 	}
 }
 
@@ -290,10 +290,8 @@ kind: Kustomization
 	}
 	bytes, _ := fSys.ReadFile(mf.path)
 
-	if string(expected) != string(bytes) {
-		t.Fatalf(
-			"expected =\n%s\n\nactual =\n%s\n",
-			string(expected), string(bytes))
+	if diff := cmp.Diff(expected, bytes); diff != "" {
+		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
 	}
 }
 
@@ -335,10 +333,105 @@ kind: Kustomization
 	}
 	bytes, _ := fSys.ReadFile(mf.path)
 
-	if string(expected) != string(bytes) {
-		t.Fatalf(
-			"expected =\n%s\n\nactual =\n%s\n",
-			string(expected), string(bytes))
+	if diff := cmp.Diff(expected, bytes); diff != "" {
+		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
+	}
+}
+
+func TestRenameAndKeepOutdatedPatchesField(t *testing.T) {
+	kustomizationContentWithOutdatedPatchesFieldTitle := []byte(`
+patchesJson6902:
+- path: patch1.yaml
+  target:
+    kind: Deployment
+patches:
+- path: patch2.yaml
+  target:
+    kind: Deployment
+- path: patch3.yaml
+  target:
+    kind: Service
+`)
+
+	expected := []byte(`
+patches:
+- path: patch2.yaml
+  target:
+    kind: Deployment
+- path: patch3.yaml
+  target:
+    kind: Service
+- path: patch1.yaml
+  target:
+    kind: Deployment
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+`)
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedPatchesFieldTitle)
+	mf, err := NewKustomizationFile(fSys)
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+
+	kustomization, err := mf.Read()
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	if err = mf.Write(kustomization); err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	bytes, _ := fSys.ReadFile(mf.path)
+
+	if diff := cmp.Diff(expected, bytes); diff != "" {
+		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
+	}
+}
+
+func TestFixOutdatedPatchesFieldTitle(t *testing.T) {
+	kustomizationContentWithOutdatedPatchesFieldTitle := []byte(`
+patchesJson6902:
+- path: patch1.yaml
+  target:
+    kind: Service
+- path: patch2.yaml
+  target:
+    group: apps
+    kind: Deployment
+    version: v1
+`)
+
+	expected := []byte(`
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: patch1.yaml
+  target:
+    kind: Service
+- path: patch2.yaml
+  target:
+    group: apps
+    kind: Deployment
+    version: v1
+`)
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedPatchesFieldTitle)
+	mf, err := NewKustomizationFile(fSys)
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+
+	kustomization, err := mf.Read()
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	if err = mf.Write(kustomization); err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	bytes, _ := fSys.ReadFile(mf.path)
+
+	if diff := cmp.Diff(expected, bytes); diff != "" {
+		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
 	}
 }
 

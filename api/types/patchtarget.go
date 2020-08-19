@@ -13,3 +13,8 @@ type PatchTarget struct {
 	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 	Name      string `json:"name" yaml:"name"`
 }
+
+// ToSelector converts a PatchTarget to a Selector.
+func (target *PatchTarget) ToSelector() Selector {
+	return Selector{Name: target.Name, Namespace: target.Namespace, Gvk: target.Gvk}
+}
