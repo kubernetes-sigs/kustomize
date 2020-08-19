@@ -77,6 +77,6 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 		inputs = []kio.Reader{&kio.ByteReader{Reader: c.InOrStdin()}}
 	}
 
-	err := kio.Pipeline{Inputs: inputs, Outputs: outputs}.Execute()
+	err := kio.Pipeline{Inputs: inputs, Outputs: outputs, ContinueIfInputEmpty: true}.Execute()
 	return handleError(c, err)
 }
