@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
+	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
@@ -16,7 +17,7 @@ func NewDeleteSetterRunner(parent string) *DeleteSetterRunner {
 	r := &DeleteSetterRunner{}
 	c := &cobra.Command{
 		Use:     "delete-setter DIR NAME",
-		Args:    cobra.MinimumNArgs(2),
+		Args:    cobra.ExactArgs(2),
 		Short:   commands.DeleteSetterShort,
 		Long:    commands.DeleteSetterLong,
 		Example: commands.DeleteSetterExamples,
@@ -42,6 +43,7 @@ type DeleteSetterRunner struct {
 func (r *DeleteSetterRunner) preRunE(c *cobra.Command, args []string) error {
 	var err error
 	r.DeleteSetter.Name = args[1]
+	r.DeleteSetter.DefinitionPrefix = fieldmeta.SetterDefinitionPrefix
 
 	r.OpenAPIFile, err = ext.GetOpenAPIFile(args)
 	if err != nil {

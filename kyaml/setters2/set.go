@@ -45,7 +45,7 @@ func (s *Set) isMatch(name string) bool {
 	return s.SetAll || s.Name == name
 }
 
-func (s *Set) visitMapping(object *yaml.RNode, p string, _ *openapi.ResourceSchema) error {
+func (s *Set) visitMapping(_ *yaml.RNode, p string, _ *openapi.ResourceSchema) error {
 	return nil
 }
 

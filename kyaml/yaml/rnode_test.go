@@ -206,6 +206,62 @@ func TestIsMissingOrNull(t *testing.T) {
 	}
 }
 
+func TestFieldRNodes(t *testing.T) {
+	testCases := []struct {
+		testName string
+		input    string
+		output   []string
+		err      string
+	}{
+		{
+			testName: "simple document",
+			input: `apiVersion: example.com/v1beta1
+kind: Example1
+spec:
+  list:
+  - "a"
+  - "b"
+  - "c"`,
+			output: []string{"apiVersion", "kind", "spec", "list"},
+		},
+		{
+			testName: "non mapping node error",
+			input:    `apiVersion`,
+			err:      "wrong Node Kind for  expected: MappingNode was ScalarNode: value: {apiVersion}",
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.testName, func(t *testing.T) {
+			rNode, err := Parse(tc.input)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			fieldRNodes, err := rNode.FieldRNodes()
+			if tc.err == "" {
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+			} else {
+				if !assert.Equal(t, tc.err, err.Error()) {
+					t.FailNow()
+				}
+			}
+			for i := range fieldRNodes {
+				actual, err := fieldRNodes[i].String()
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				if !assert.Equal(t, tc.output[i], strings.TrimSpace(actual)) {
+					t.FailNow()
+				}
+			}
+		})
+	}
+}
+
 func TestIsEmptyMap(t *testing.T) {
 	node := NewMapRNode(nil)
 	// empty map

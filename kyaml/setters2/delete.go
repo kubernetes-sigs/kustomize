@@ -13,23 +13,17 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// Delete delete setter or substitution references from resource fields.
-// Requires that FieldName have been set.
+// Delete delete openAPI definition references from resource fields.
 type Delete struct {
+	// Name is the name of the openAPI definition to delete.
+	Name string
 
-	// FieldName if delete the OpenAPI reference to fields with this name or path
-	// FieldName may be the full name of the field, full path to the field, or the path suffix.
-	// e.g. all of the following would match spec.template.spec.containers.image --
-	// [image, containers.image, spec.containers.image, template.spec.containers.image,
-	//  spec.template.spec.containers.image]
-	FieldName string
+	// DefinitionPrefix is the prefix of the OpenAPI definition type
+	DefinitionPrefix string
 }
 
 // Filter implements yaml.Filter
 func (d *Delete) Filter(object *yaml.RNode) (*yaml.RNode, error) {
-	if d.FieldName == "" {
-		return nil, errors.Errorf("must specify fieldName")
-	}
 	return object, accept(d, object)
 }
 
@@ -38,31 +32,40 @@ func (d *Delete) visitSequence(_ *yaml.RNode, _ string, _ *openapi.ResourceSchem
 	return nil
 }
 
-func (d *Delete) visitMapping(_ *yaml.RNode, _ string, _ *openapi.ResourceSchema) error {
-	// no-op
+func (d *Delete) visitMapping(object *yaml.RNode, _ string, _ *openapi.ResourceSchema) error {
+	fieldRNodes, err := object.FieldRNodes()
+	if err != nil {
+		return err
+	}
+
+	// for each of the field node key visit it as scalar to delete the array setter comment
+	for _, fieldRNode := range fieldRNodes {
+		err := d.visitScalar(fieldRNode, "", nil, nil)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
 // visitScalar implements visitor
 // visitScalar will remove the reference on each scalar field whose name matches.
-func (d *Delete) visitScalar(object *yaml.RNode, p string, _, _ *openapi.ResourceSchema) error {
-	// check if the field matches
-	if d.FieldName != "" && !strings.HasSuffix(p, d.FieldName) {
-		return nil
-	}
-
+func (d *Delete) visitScalar(object *yaml.RNode, _ string, _, _ *openapi.ResourceSchema) error {
 	// read the field metadata
 	fm := fieldmeta.FieldMeta{}
 	if err := fm.Read(object); err != nil {
 		return err
 	}
 
-	// remove the ref on the metadata
-	fm.Schema.Ref = spec.Ref{}
+	// Delete the reference iff the ref string matches with DefinitionPrefix
+	if strings.HasSuffix(fm.Schema.Ref.String(), d.DefinitionPrefix+d.Name) {
+		// remove the ref on the metadata
+		fm.Schema.Ref = spec.Ref{}
 
-	// write the field metadata
-	if err := fm.Write(object); err != nil {
-		return err
+		// write the field metadata
+		if err := fm.Write(object); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -70,16 +73,19 @@ func (d *Delete) visitScalar(object *yaml.RNode, p string, _, _ *openapi.Resourc
 
 // DeleterDefinition may be used to update a files OpenAPI definitions with a new setter.
 type DeleterDefinition struct {
-	// Name is the name of the setter to create or update.
+	// Name is the name of the openAPI definition to delete.
 	Name string `yaml:"name"`
+
+	// DefinitionPrefix is the prefix of the OpenAPI definition type
+	DefinitionPrefix string `yaml:"definitionPrefix"`
 }
 
 func (dd DeleterDefinition) DeleteFromFile(path string) error {
 	return yaml.UpdateFile(dd, path)
 }
 
-// SubstReferringSetter check if the setter used in substitution and return the substitution name if true
-func SubstReferringSetter(definitions *yaml.RNode, key string) string {
+// SubstReferringDefinition check if the definition used in substitution and return the substitution name if true
+func SubstReferringDefinition(definitions *yaml.RNode, key string) string {
 	fieldNames, err := definitions.Fields()
 	if err != nil {
 		return ""
@@ -115,7 +121,18 @@ func SubstReferringSetter(definitions *yaml.RNode, key string) string {
 }
 
 func (dd DeleterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
-	key := fieldmeta.SetterDefinitionPrefix + dd.Name
+	key := dd.DefinitionPrefix + dd.Name
+	var defType string
+
+	switch dd.DefinitionPrefix {
+	case fieldmeta.SubstitutionDefinitionPrefix:
+		defType = "substitution"
+	case fieldmeta.SetterDefinitionPrefix:
+		defType = "setter"
+	default:
+		return nil, errors.Errorf("the input delete definitionPrefix does't match any of openAPI definitions, "+
+			"allowed values [%s, %s]", fieldmeta.SetterDefinitionPrefix, fieldmeta.SubstitutionDefinitionPrefix)
+	}
 
 	definitions, err := object.Pipe(yaml.Lookup(openapi.SupplementaryOpenAPIFieldName, "definitions"))
 	if err != nil || definitions == nil {
@@ -123,13 +140,13 @@ func (dd DeleterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	}
 	// return error if the setter to be deleted doesn't exist
 	if definitions.Field(key) == nil {
-		return nil, errors.Errorf("setter does not exist")
+		return nil, errors.Errorf("%s with name %s does not exist", defType, dd.Name)
 	}
 
-	subst := SubstReferringSetter(definitions, key)
+	subst := SubstReferringDefinition(definitions, key)
 
 	if subst != "" {
-		return nil, errors.Errorf("setter is used in substitution %s, please delete the substitution first", subst)
+		return nil, errors.Errorf("%s is used in substitution %s, please delete the parent substitution first", defType, subst)
 	}
 
 	_, err = definitions.Pipe(yaml.FieldClearer{Name: key})
