@@ -98,7 +98,7 @@ type TypeMeta struct {
 }
 
 // Hardcoded list.
-// TODO: replace this with data acquired from openapi.
+// TODO(#2861): replace this with data acquired from openapi.
 var notNamespaceableKinds = []string{
 	"APIService",
 	"CSIDriver",
