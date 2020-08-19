@@ -4,7 +4,9 @@
 package kio_test
 
 import (
+	"bytes"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -73,5 +75,36 @@ func TestPipelineWithCallback(t *testing.T) {
 			reflect.ValueOf(callback.Calls[i].Arguments[0]).Pointer(),
 			reflect.ValueOf(filter).Pointer(),
 		)
+	}
+}
+
+func TestContinueIfInputEmpty(t *testing.T) {
+	actual := &bytes.Buffer{}
+	output := ByteWriter{
+		Sort:               true,
+		WrappingKind:       ResourceListKind,
+		WrappingAPIVersion: ResourceListAPIVersion,
+	}
+	output.Writer = actual
+
+	p := Pipeline{
+		Outputs:              []Writer{output},
+		ContinueIfInputEmpty: true,
+	}
+
+	err := p.Execute()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `
+apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items: []
+`
+
+	if !assert.Equal(t,
+		strings.TrimSpace(expected), strings.TrimSpace(actual.String())) {
+		t.FailNow()
 	}
 }

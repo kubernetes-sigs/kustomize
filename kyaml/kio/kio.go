@@ -75,6 +75,11 @@ type Pipeline struct {
 
 	// Outputs are where the transformed Resource Configuration is written.
 	Outputs []Writer `yaml:"outputs,omitempty"`
+
+	// ContinueIfInputEmpty indicates should pipeline continue when the
+	// the input result is empty. This is useful when we want to run outputs
+	// even the input is empty.
+	ContinueIfInputEmpty bool
 }
 
 // Execute executes each step in the sequence, returning immediately after encountering
@@ -99,7 +104,7 @@ func (p Pipeline) ExecuteWithCallback(callback PipelineExecuteCallbackFunc) erro
 		}
 		result = append(result, nodes...)
 	}
-	if len(result) == 0 {
+	if len(result) == 0 && !p.ContinueIfInputEmpty {
 		// no inputs to operate on
 		return nil
 	}
