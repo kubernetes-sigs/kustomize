@@ -12,5 +12,5 @@ The `bases` field was deprecated in v2.1.0
 
 Move entries into the [resources](/kustomize/api-reference/kustomization/resources)
 field.  This allows bases - which are still a
-[central concept](/kustomize/api-reference/kustomization/glossary#base) - to be
+[central concept](/kustomize/api-reference/glossary#base) - to be
 ordered relative to other input resources.
