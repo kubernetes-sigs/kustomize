@@ -78,7 +78,7 @@ func TestPipelineWithCallback(t *testing.T) {
 	}
 }
 
-func TestContinueIfInputEmpty(t *testing.T) {
+func TestEmptyInput(t *testing.T) {
 	actual := &bytes.Buffer{}
 	output := ByteWriter{
 		Sort:               true,
@@ -88,8 +88,7 @@ func TestContinueIfInputEmpty(t *testing.T) {
 	output.Writer = actual
 
 	p := Pipeline{
-		Outputs:              []Writer{output},
-		ContinueIfInputEmpty: true,
+		Outputs: []Writer{output},
 	}
 
 	err := p.Execute()
@@ -101,6 +100,48 @@ func TestContinueIfInputEmpty(t *testing.T) {
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items: []
+`
+
+	if !assert.Equal(t,
+		strings.TrimSpace(expected), strings.TrimSpace(actual.String())) {
+		t.FailNow()
+	}
+}
+
+func TestEmptyInputWithFilter(t *testing.T) {
+	actual := &bytes.Buffer{}
+	output := ByteWriter{
+		Sort:               true,
+		WrappingKind:       ResourceListKind,
+		WrappingAPIVersion: ResourceListAPIVersion,
+	}
+	output.Writer = actual
+
+	filters := []Filter{
+		FilterFunc(func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+			nodes = append(nodes, yaml.NewMapRNode(&map[string]string{
+				"foo": "bar",
+			}))
+			return nodes, nil
+		}),
+		FilterFunc(func(nodes []*yaml.RNode) ([]*yaml.RNode, error) { return nodes, nil }),
+	}
+
+	p := Pipeline{
+		Outputs: []Writer{output},
+		Filters: filters,
+	}
+
+	err := p.Execute()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `
+apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- foo: bar
 `
 
 	if !assert.Equal(t,
