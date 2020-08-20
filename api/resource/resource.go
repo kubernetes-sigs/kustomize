@@ -86,24 +86,12 @@ func (r *Resource) Copy() ifc.Kunstructured {
 	return r.kunStr.Copy()
 }
 
-func (r *Resource) GetBool(p string) (bool, error) {
-	return r.kunStr.GetBool(p)
-}
-
 func (r *Resource) GetFieldValue(f string) (interface{}, error) {
 	return r.kunStr.GetFieldValue(f)
 }
 
-func (r *Resource) GetFloat64(p string) (float64, error) {
-	return r.kunStr.GetFloat64(p)
-}
-
 func (r *Resource) GetGvk() resid.Gvk {
 	return r.kunStr.GetGvk()
-}
-
-func (r *Resource) GetInt64(p string) (int64, error) {
-	return r.kunStr.GetInt64(p)
 }
 
 func (r *Resource) GetKind() string {
@@ -112,10 +100,6 @@ func (r *Resource) GetKind() string {
 
 func (r *Resource) GetLabels() map[string]string {
 	return r.kunStr.GetLabels()
-}
-
-func (r *Resource) GetMap(p string) (map[string]interface{}, error) {
-	return r.kunStr.GetMap(p)
 }
 
 func (r *Resource) GetName() string {
@@ -128,14 +112,6 @@ func (r *Resource) GetSlice(p string) ([]interface{}, error) {
 
 func (r *Resource) GetString(p string) (string, error) {
 	return r.kunStr.GetString(p)
-}
-
-func (r *Resource) GetStringMap(p string) (map[string]string, error) {
-	return r.kunStr.GetStringMap(p)
-}
-
-func (r *Resource) GetStringSlice(p string) ([]string, error) {
-	return r.kunStr.GetStringSlice(p)
 }
 
 func (r *Resource) Map() map[string]interface{} {
@@ -154,10 +130,6 @@ func (r *Resource) MatchesAnnotationSelector(selector string) (bool, error) {
 	return r.kunStr.MatchesAnnotationSelector(selector)
 }
 
-func (r *Resource) Patch(other ifc.Kunstructured) error {
-	return r.kunStr.Patch(other)
-}
-
 func (r *Resource) SetAnnotations(m map[string]string) {
 	r.kunStr.SetAnnotations(m)
 }
@@ -168,10 +140,6 @@ func (r *Resource) SetGvk(gvk resid.Gvk) {
 
 func (r *Resource) SetLabels(m map[string]string) {
 	r.kunStr.SetLabels(m)
-}
-
-func (r *Resource) SetMap(m map[string]interface{}) {
-	r.kunStr.SetMap(m)
 }
 
 func (r *Resource) SetName(n string) {

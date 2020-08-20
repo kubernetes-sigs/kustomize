@@ -17,7 +17,6 @@ import (
 	"sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/api/transform"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 )
@@ -258,8 +257,7 @@ func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator) error {
 		return err
 	}
 	r = append(r, lts...)
-	t := transform.NewMultiTransformer(r)
-	return ra.Transform(t)
+	return ra.Transform(newMultiTransformer(r))
 }
 
 func (kt *KustTarget) configureExternalTransformers(transformers []string) ([]resmap.Transformer, error) {
@@ -294,7 +292,6 @@ func (kt *KustTarget) runValidators(ra *accumulator.ResAccumulator) error {
 }
 
 func (kt *KustTarget) removeValidatedByLabel(rm resmap.ResMap) {
-
 	resources := rm.Resources()
 	for _, r := range resources {
 		labels := r.GetLabels()

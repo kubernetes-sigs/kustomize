@@ -41,32 +41,63 @@ type Loader interface {
 // Kunstructured allows manipulation of k8s objects
 // that do not have Golang structs.
 type Kunstructured interface {
+	// Several uses.
 	Copy() Kunstructured
+
+	// Used by Resource.Replace, in turned used by resWrangler.AbsorbAll,
+	// called by runGenerators to merge maps.  Hmm.
 	GetAnnotations() map[string]string
-	GetBool(path string) (bool, error)
+
+	// Used by ResAccumulator and ReplacementTransformer.
 	GetFieldValue(string) (interface{}, error)
-	GetFloat64(path string) (float64, error)
+
+	// Used by Resource.OrgId
 	GetGvk() resid.Gvk
-	GetInt64(path string) (int64, error)
+
+	// Used by resource.Factory.SliceFromBytes
 	GetKind() string
+
+	// Used by Resource.Replace
 	GetLabels() map[string]string
-	GetMap(path string) (map[string]interface{}, error)
+
+	// Used by Resource.CurId and resource factory.
 	GetName() string
+
+	// Used by special case code used by ResMap.SubsetThatCouldBeReferencedByResource
 	GetSlice(path string) ([]interface{}, error)
+
+	// GetString returns the value of a string field.
+	// Used by Resource.GetNamespace
 	GetString(string) (string, error)
-	GetStringMap(path string) (map[string]string, error)
-	GetStringSlice(string) ([]string, error)
+
+	// Several uses.
 	Map() map[string]interface{}
+
+	// Used by Resource.AsYAML and Resource.String
 	MarshalJSON() ([]byte, error)
+
+	// Used by resWrangler.Select
 	MatchesAnnotationSelector(selector string) (bool, error)
+
+	// Used by resWrangler.Select
 	MatchesLabelSelector(selector string) (bool, error)
-	Patch(Kunstructured) error
+
+	// Used by Resource.Replace.
 	SetAnnotations(map[string]string)
+
+	// Used by PatchStrategicMergeTransformer.
 	SetGvk(resid.Gvk)
+
+	// Used by Resource.Replace and used to remove "validated by" labels.
 	SetLabels(map[string]string)
-	SetMap(map[string]interface{})
+
+	// Used by Resource.Replace.
 	SetName(string)
+
+	// Used by Resource.Replace.
 	SetNamespace(string)
+
+	// Needed, for now, by kyaml/filtersutil.ApplyToJSON.
 	UnmarshalJSON([]byte) error
 }
 
