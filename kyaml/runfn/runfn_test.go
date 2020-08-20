@@ -920,10 +920,10 @@ func TestCmd_Execute_enableLogSteps(t *testing.T) {
 
 	logs := &bytes.Buffer{}
 	instance := RunFns{
-		Path: dir,
+		Path:                   dir,
 		functionFilterProvider: getFilterProvider(t),
-		LogSteps: true,
-		LogWriter: logs,
+		LogSteps:               true,
+		LogWriter:              logs,
 	}
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()

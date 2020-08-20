@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package transform
+package target
 
 import (
 	"fmt"
@@ -17,8 +17,8 @@ type multiTransformer struct {
 
 var _ resmap.Transformer = &multiTransformer{}
 
-// NewMultiTransformer constructs a multiTransformer.
-func NewMultiTransformer(t []resmap.Transformer) resmap.Transformer {
+// newMultiTransformer constructs a multiTransformer.
+func newMultiTransformer(t []resmap.Transformer) resmap.Transformer {
 	r := &multiTransformer{
 		transformers:         make([]resmap.Transformer, len(t)),
 		checkConflictEnabled: false}
