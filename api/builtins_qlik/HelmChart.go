@@ -312,8 +312,12 @@ func (p *HelmChartPlugin) helmRepoAdd(settings *cli.EnvSettings, repoEntry *repo
 	}
 
 	if existingEntry := repoFile.Get(repoEntry.Name); existingEntry != nil {
-		if entry := repoEntriesContainHttpUrl([]*repo.Entry{existingEntry}, repoEntry.URL); entry != nil {
-			return nil
+		//if there is an entry with the same name, make sure it has the same URL too:
+		if e := repoEntriesContainHttpUrl([]*repo.Entry{existingEntry}, repoEntry.URL); e != nil {
+			//if there is an entry with the same name, URL, username and password, then we're done:
+			if repoEntry.Username == existingEntry.Username && repoEntry.Password == existingEntry.Password {
+				return nil
+			}
 		} else {
 			return fmt.Errorf("cannot add helm repo name: %v, URL: %v, "+
 				"because an entry with the same name but different URL already exists", repoEntry.Name, repoEntry.URL)
@@ -564,7 +568,7 @@ func (p *HelmChartPlugin) helmConfigForDependencies(settings *cli.EnvSettings, c
 
 func resolveDependencyRepos(settings *cli.EnvSettings, c *chart.Chart) ([]*repo.Entry, error) {
 	newAliasedRepoEntries := make([]*repo.Entry, 0)
-	pureUrlDependencies := make([]*chart.Dependency, 0)
+	pureUrlDependencies := make(map[string]*chart.Dependency)
 
 	//only consider named and unnamed repo entries with HTTP URLs:
 	for _, dep := range c.Metadata.Dependencies {
@@ -587,7 +591,11 @@ func resolveDependencyRepos(settings *cli.EnvSettings, c *chart.Chart) ([]*repo.
 		//need to process pure URL dependencies after all aliased(named) dependencies,
 		//in case there are overlaps:
 		if u := getAbsoluteHttpUrlObject(dep.Repository); u != nil {
-			pureUrlDependencies = append(pureUrlDependencies, dep)
+			if u.Path == "" {
+				u.Path = "/"
+			}
+			u.Path = filepath.Clean(u.Path)
+			pureUrlDependencies[u.String()] = dep
 		}
 	}
 
@@ -607,6 +615,7 @@ func resolveDependencyRepos(settings *cli.EnvSettings, c *chart.Chart) ([]*repo.
 			URL:  dep.Repository,
 		})
 	}
+
 	return newAliasedRepoEntries, nil
 }
 

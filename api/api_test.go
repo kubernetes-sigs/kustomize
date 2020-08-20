@@ -50,6 +50,16 @@ metadata:
 	}
 }
 
+//func Test_foo(t *testing.T) {
+//	os.Setenv("qlik_HELM_REPO_USERNAME", "dlx")
+//	os.Setenv("qlik_HELM_REPO_PASSWORD", "AKCp5btLBQMnoy8rjT2zTrcg6PXnFM6sAzXfTcV5hZDP9W9uFLHs374uidqDmrKkcy4waUnQd")
+//	result, err := executeKustomizeBuild("/Users/dlx/node/elastic-charts/develop-QCS")
+//	if err != nil {
+//		t.Fatalf("unexpected kustomize error: %v\n", err)
+//	}
+//	fmt.Println(string(result))
+//}
+
 func executeKustomizeBuild(directory string) ([]byte, error) {
 	kustomizer := krusty.MakeKustomizer(filesys.MakeFsOnDisk(), &krusty.Options{
 		DoLegacyResourceSort: false,

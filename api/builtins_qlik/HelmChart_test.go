@@ -847,9 +847,9 @@ repositories:
   certFile: ""
   keyFile: ""
   name: qlik
-  password: "foobar"
+  password: ""
   url: https://qliktech.jfrog.io/qliktech/qlikhelm
-  username: "foobar"
+  username: ""
 `
 			return &helmRepoAddTestCaseT{
 				name:            "no trailing slash in repo, but trailing slash in entry",
@@ -873,9 +873,9 @@ repositories:
   certFile: ""
   keyFile: ""
   name: qlik
-  password: "foobar"
+  password: ""
   url: https://qliktech.jfrog.io/qliktech/qlikhelm/
-  username: "foobar"
+  username: ""
 `
 			return &helmRepoAddTestCaseT{
 				name:            "trailing slash already in repo, but no trailing slash in entry",
@@ -899,9 +899,9 @@ repositories:
   certFile: ""
   keyFile: ""
   name: qlik
-  password: "foobar"
+  password: ""
   url: https://qliktech.jfrog.io/qliktech/qlikhelm
-  username: "foobar"
+  username: ""
 `
 			return &helmRepoAddTestCaseT{
 				name:            "expect an error if adding an entry with an existing name but different url",
@@ -913,6 +913,80 @@ repositories:
 				checkAssertions: func(t *testing.T, err error, resultRepoFileContent []byte) {
 					assert.Error(t, err)
 					assert.Equal(t, repoFileContent, string(resultRepoFileContent))
+				},
+			}
+		}(),
+		func() *helmRepoAddTestCaseT {
+			repoFileContent := `
+apiVersion: ""
+generated: "0001-01-01T00:00:00Z"
+repositories:
+- caFile: ""
+  certFile: ""
+  keyFile: ""
+  name: qlik
+  password: ""
+  url: https://qliktech.jfrog.io/qliktech/qlikhelm
+  username: ""
+`
+			return &helmRepoAddTestCaseT{
+				name:            "overwrite entry on a different username",
+				repoFileContent: repoFileContent,
+				repoAddEntry: &repo.Entry{
+					Name:     "qlik",
+					URL:      "https://qliktech.jfrog.io/qliktech/qlikhelm",
+					Username: "foobar",
+				},
+				checkAssertions: func(t *testing.T, err error, resultRepoFileContent []byte) {
+					assert.NoError(t, err)
+					assert.Equal(t, `apiVersion: ""
+generated: "0001-01-01T00:00:00Z"
+repositories:
+- caFile: ""
+  certFile: ""
+  keyFile: ""
+  name: qlik
+  password: ""
+  url: https://qliktech.jfrog.io/qliktech/qlikhelm
+  username: foobar
+`, string(resultRepoFileContent))
+				},
+			}
+		}(),
+		func() *helmRepoAddTestCaseT {
+			repoFileContent := `
+apiVersion: ""
+generated: "0001-01-01T00:00:00Z"
+repositories:
+- caFile: ""
+  certFile: ""
+  keyFile: ""
+  name: qlik
+  password: ""
+  url: https://qliktech.jfrog.io/qliktech/qlikhelm
+  username: ""
+`
+			return &helmRepoAddTestCaseT{
+				name:            "overwrite entry on a different password",
+				repoFileContent: repoFileContent,
+				repoAddEntry: &repo.Entry{
+					Name:     "qlik",
+					URL:      "https://qliktech.jfrog.io/qliktech/qlikhelm",
+					Password: "foobar",
+				},
+				checkAssertions: func(t *testing.T, err error, resultRepoFileContent []byte) {
+					assert.NoError(t, err)
+					assert.Equal(t, `apiVersion: ""
+generated: "0001-01-01T00:00:00Z"
+repositories:
+- caFile: ""
+  certFile: ""
+  keyFile: ""
+  name: qlik
+  password: foobar
+  url: https://qliktech.jfrog.io/qliktech/qlikhelm
+  username: ""
+`, string(resultRepoFileContent))
 				},
 			}
 		}(),
