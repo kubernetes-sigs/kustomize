@@ -44,8 +44,10 @@ type Kunstructured interface {
 	// Several uses.
 	Copy() Kunstructured
 
-	// Used by Resource.Replace, in turned used by resWrangler.AbsorbAll,
-	// called by runGenerators to merge maps.  Hmm.
+	// Used by Resource.Replace, which in turn is used in many places, e.g.
+	//  - resource.Resource.Merge
+	//  - resWrangler.appendReplaceOrMerge (AbsorbAll)
+	//  - api.internal.k8sdeps.transformer.patch.conflictdetector
 	GetAnnotations() map[string]string
 
 	// Used by ResAccumulator and ReplacementTransformer.
@@ -63,7 +65,8 @@ type Kunstructured interface {
 	// Used by Resource.CurId and resource factory.
 	GetName() string
 
-	// Used by special case code used by ResMap.SubsetThatCouldBeReferencedByResource
+	// Used by special case code in
+	// ResMap.SubsetThatCouldBeReferencedByResource
 	GetSlice(path string) ([]interface{}, error)
 
 	// GetString returns the value of a string field.
