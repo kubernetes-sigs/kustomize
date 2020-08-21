@@ -38,7 +38,12 @@ metadata:
 				"--user", "nobody",
 				"--security-opt=no-new-privileges",
 			},
-			instance: Filter{Image: "example.com:version"},
+			instance: Filter{
+				ContainerSpec: runtimeutil.ContainerSpec{
+					Image: "example.com:version",
+					User:  "nobody",
+				},
+			},
 		},
 
 		{
@@ -56,7 +61,15 @@ metadata:
 				"--user", "nobody",
 				"--security-opt=no-new-privileges",
 			},
-			instance: Filter{Image: "example.com:version", Network: "test-1"},
+			instance: Filter{
+				ContainerSpec: runtimeutil.ContainerSpec{
+					Image: "example.com:version",
+					Network: runtimeutil.ContainerNetwork{
+						Name: "test-1",
+					},
+					User: "nobody",
+				},
+			},
 		},
 
 		{
@@ -79,12 +92,37 @@ metadata:
 				"--mount", fmt.Sprintf("type=%s,source=%s,target=%s,readonly", "tmpfs", "", "/local/"),
 			},
 			instance: Filter{
-				Image: "example.com:version",
-				StorageMounts: []runtimeutil.StorageMount{
-					{MountType: "bind", Src: "/mount/path", DstPath: "/local/"},
-					{MountType: "bind", Src: "/mount/pathrw", DstPath: "/localrw/", ReadWriteMode: true},
-					{MountType: "volume", Src: "myvol", DstPath: "/local/"},
-					{MountType: "tmpfs", Src: "", DstPath: "/local/"},
+				ContainerSpec: runtimeutil.ContainerSpec{
+					Image: "example.com:version",
+					StorageMounts: []runtimeutil.StorageMount{
+						{MountType: "bind", Src: "/mount/path", DstPath: "/local/"},
+						{MountType: "bind", Src: "/mount/pathrw", DstPath: "/localrw/", ReadWriteMode: true},
+						{MountType: "volume", Src: "myvol", DstPath: "/local/"},
+						{MountType: "tmpfs", Src: "", DstPath: "/local/"},
+					},
+					User: "nobody",
+				},
+			},
+		},
+		{
+			name: "root user",
+			functionConfig: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+`,
+			expectedArgs: []string{
+				"run",
+				"--rm",
+				"-i", "-a", "STDIN", "-a", "STDOUT", "-a", "STDERR",
+				"--network", "none",
+				"--user", "root",
+				"--security-opt=no-new-privileges",
+			},
+			instance: Filter{
+				ContainerSpec: runtimeutil.ContainerSpec{
+					Image: "example.com:version",
+					User:  "root",
 				},
 			},
 		},
@@ -183,7 +221,7 @@ metadata:
 	}
 }
 func TestFilter_String(t *testing.T) {
-	instance := Filter{Image: "foo"}
+	instance := Filter{ContainerSpec: runtimeutil.ContainerSpec{Image: "foo"}}
 	if !assert.Equal(t, "foo", instance.String()) {
 		t.FailNow()
 	}
@@ -214,7 +252,7 @@ func TestFilter_ExitCode(t *testing.T) {
 func TestIgnoreEnv(t *testing.T) {
 	os.Setenv(tmpDirEnvKey, "")
 
-	fltr := Filter{Image: "example.com:version"}
+	fltr := Filter{ContainerSpec: runtimeutil.ContainerSpec{Image: "example.com:version"}}
 	_, args := fltr.getCommand()
 	for _, arg := range args {
 		if arg == tmpDirEnvKey {
