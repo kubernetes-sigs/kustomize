@@ -108,8 +108,8 @@ func (p Pipeline) ExecuteWithCallback(callback PipelineExecuteCallbackFunc) erro
 			callback(op)
 		}
 		result, err = op.Filter(result)
-		// TODO: This len(result) == 0 should be removed and empty result list should be
-		// handled by outputs. However currently the some writer like LocalPackageReadWriter
+		// TODO (issue 2872): This len(result) == 0 should be removed and empty result list should be
+		// handled by outputs. However currently some writer like LocalPackageReadWriter
 		// will clear the output directory and which will cause unpredictable results
 		if len(result) == 0 || err != nil {
 			return errors.Wrap(err)
