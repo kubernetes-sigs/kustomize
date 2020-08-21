@@ -123,18 +123,7 @@ import (
 //             ├── deployment_foo.yaml
 //             └── service_bar.yaml
 type Filter struct {
-
-	// Image is the container image to use to create a container.
-	Image string `yaml:"image,omitempty"`
-
-	// Network is the container network to use.
-	Network string `yaml:"network,omitempty"`
-
-	// StorageMounts is a list of storage options that the container will have mounted.
-	StorageMounts []runtimeutil.StorageMount `yaml:"mounts,omitempty"`
-
-	// User username used to run the application in container,
-	User string
+	runtimeutil.ContainerSpec `json:",inline" yaml:",inline"`
 
 	Exec runtimeexec.Filter
 }
@@ -174,13 +163,8 @@ func (c *Filter) getCommand() (string, []string) {
 	// was run from the cli.
 
 	network := "none"
-	if c.Network != "" {
-		network = c.Network
-	}
-	// run as nobody by default
-	user := c.User
-	if user == "" {
-		user = "nobody"
+	if c.Network.Name != "" {
+		network = c.Network.Name
 	}
 	args := []string{"run",
 		"--rm",                                              // delete the container afterward
@@ -188,7 +172,7 @@ func (c *Filter) getCommand() (string, []string) {
 		"--network", network,
 
 		// added security options
-		"--user", user,
+		"--user", c.User.String(),
 		"--security-opt=no-new-privileges", // don't allow the user to escalate privileges
 		// note: don't make fs readonly because things like heredoc rely on writing tmp files
 	}
