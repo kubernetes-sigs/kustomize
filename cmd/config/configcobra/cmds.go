@@ -33,6 +33,7 @@ var (
 	Tree               = commands.TreeCommand
 	Wrap               = commands.WrapCommand
 	XArgs              = commands.XArgsCommand
+	Search             = commands.SearchCommand
 
 	StackOnError = &commands.StackOnError
 	ExitOnError  = &commands.ExitOnError
