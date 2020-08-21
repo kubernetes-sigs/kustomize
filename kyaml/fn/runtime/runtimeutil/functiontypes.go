@@ -18,11 +18,23 @@ const (
 
 var functionAnnotationKeys = []string{FunctionAnnotationKey, oldFunctionAnnotationKey}
 
+// ContainerUser is a type for username/uid used in container
+type ContainerUser string
+
+func (u *ContainerUser) String() string {
+	return string(*u)
+}
+
+func (u *ContainerUser) IsEmpty() bool {
+	return string(*u) == ""
+}
+
+const (
+	UserNobody ContainerUser = "nobody"
+)
+
 // FunctionSpec defines a spec for running a function
 type FunctionSpec struct {
-	// Network is the name of the network to use from a container
-	Network string `json:"network,omitempty" yaml:"network,omitempty"`
-
 	DeferFailure bool `json:"deferFailure,omitempty" yaml:"deferFailure,omitempty"`
 
 	// Container is the spec for running a function as a container
@@ -52,12 +64,18 @@ type ContainerSpec struct {
 
 	// Mounts are the storage or directories to mount into the container
 	StorageMounts []StorageMount `json:"mounts,omitempty" yaml:"mounts,omitempty"`
+
+	// User is the username/uid that application runs as in continer
+	User ContainerUser `json:"user,omitempty" yaml:"user,omitempty"`
 }
 
 // ContainerNetwork
 type ContainerNetwork struct {
 	// Required specifies that function requires a network
 	Required bool `json:"required,omitempty" yaml:"required,omitempty"`
+
+	// Name is the name of the network to use from a container
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 }
 
 // StarlarkSpec defines how to run a function as a starlark program
@@ -110,7 +128,7 @@ func GetFunctionSpec(n *yaml.RNode) *FunctionSpec {
 	}
 
 	if fn := getFunctionSpecFromAnnotation(n, meta); fn != nil {
-		fn.Network = ""
+		fn.Container.Network.Name = ""
 		fn.StorageMounts = []StorageMount{}
 		return fn
 	}
