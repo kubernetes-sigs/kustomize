@@ -99,10 +99,6 @@ func (p Pipeline) ExecuteWithCallback(callback PipelineExecuteCallbackFunc) erro
 		}
 		result = append(result, nodes...)
 	}
-	if len(result) == 0 {
-		// no inputs to operate on
-		return nil
-	}
 
 	// apply operations
 	var err error
@@ -112,6 +108,9 @@ func (p Pipeline) ExecuteWithCallback(callback PipelineExecuteCallbackFunc) erro
 			callback(op)
 		}
 		result, err = op.Filter(result)
+		// TODO (issue 2872): This len(result) == 0 should be removed and empty result list should be
+		// handled by outputs. However currently some writer like LocalPackageReadWriter
+		// will clear the output directory and which will cause unpredictable results
 		if len(result) == 0 || err != nil {
 			return errors.Wrap(err)
 		}
