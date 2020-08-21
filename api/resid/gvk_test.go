@@ -113,6 +113,30 @@ func TestString(t *testing.T) {
 	}
 }
 
+func TestParseGroupVersion(t *testing.T) {
+	tests := []struct {
+		input string
+		g     string
+		v     string
+	}{
+		{input: "", g: "", v: ""},
+		{input: "v1", g: "", v: "v1"},
+		{input: "apps/v1", g: "apps", v: "v1"},
+		{input: "/v1", g: "", v: "v1"},
+		{input: "apps/", g: "apps", v: ""},
+		{input: "/apps/", g: "", v: "apps/"},
+	}
+	for _, tc := range tests {
+		g, v := ParseGroupVersion(tc.input)
+		if g != tc.g {
+			t.Errorf("%s: expected group '%s', got '%s'", tc.input, tc.g, g)
+		}
+		if v != tc.v {
+			t.Errorf("%s: expected version '%s', got '%s'", tc.input, tc.v, v)
+		}
+	}
+}
+
 func TestSelectByGVK(t *testing.T) {
 	type testCase struct {
 		description string
