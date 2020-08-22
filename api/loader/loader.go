@@ -39,5 +39,7 @@ func NewLoader(
 		return newLoaderAtConfirmedDir(lr, root, fSys, nil, git.ClonerUsingGitExec, getRemoteTarget), nil
 	}
 
-	return nil, fmt.Errorf("Error creating new loader with git: %v, dir: %v, get: %v", errGit, errDir, errGet)
+	return nil, fmt.Errorf(
+		"error creating new loader with git: %v, dir: %v, get: %v",
+		errGit, errDir, errGet)
 }

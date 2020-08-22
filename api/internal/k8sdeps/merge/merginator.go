@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package patch
+package merge
 
 import (
 	"encoding/json"
@@ -20,18 +20,20 @@ import (
 
 type conflictDetector interface {
 	hasConflict(patch1, patch2 *resource.Resource) (bool, error)
-	findConflict(conflictingPatchIdx int, patches []*resource.Resource) (*resource.Resource, error)
+	findConflict(
+		conflictingPatchIdx int,
+		patches []*resource.Resource) (*resource.Resource, error)
 	mergePatches(patch1, patch2 *resource.Resource) (*resource.Resource, error)
 }
 
 type jsonMergePatch struct {
-	rf *resource.Factory
+	resourceFactory *resource.Factory
 }
 
 var _ conflictDetector = &jsonMergePatch{}
 
 func newJMPConflictDetector(rf *resource.Factory) conflictDetector {
-	return &jsonMergePatch{rf: rf}
+	return &jsonMergePatch{resourceFactory: rf}
 }
 
 func (jmp *jsonMergePatch) hasConflict(
@@ -40,7 +42,8 @@ func (jmp *jsonMergePatch) hasConflict(
 }
 
 func (jmp *jsonMergePatch) findConflict(
-	conflictingPatchIdx int, patches []*resource.Resource) (*resource.Resource, error) {
+	conflictingPatchIdx int,
+	patches []*resource.Resource) (*resource.Resource, error) {
 	for i, patch := range patches {
 		if i == conflictingPatchIdx {
 			continue
@@ -77,7 +80,7 @@ func (jmp *jsonMergePatch) mergePatches(
 	}
 	mergedMap := make(map[string]interface{})
 	err = json.Unmarshal(mergedBytes, &mergedMap)
-	return jmp.rf.FromMap(mergedMap), err
+	return jmp.resourceFactory.FromMap(mergedMap), err
 }
 
 type strategicMergePatch struct {
@@ -94,13 +97,15 @@ func newSMPConflictDetector(
 	return &strategicMergePatch{lookupPatchMeta: lookupPatchMeta, rf: rf}, err
 }
 
-func (smp *strategicMergePatch) hasConflict(p1, p2 *resource.Resource) (bool, error) {
+func (smp *strategicMergePatch) hasConflict(
+	p1, p2 *resource.Resource) (bool, error) {
 	return strategicpatch.MergingMapsHaveConflicts(
 		p1.Map(), p2.Map(), smp.lookupPatchMeta)
 }
 
 func (smp *strategicMergePatch) findConflict(
-	conflictingPatchIdx int, patches []*resource.Resource) (*resource.Resource, error) {
+	conflictingPatchIdx int,
+	patches []*resource.Resource) (*resource.Resource, error) {
 	for i, patch := range patches {
 		if i == conflictingPatchIdx {
 			continue
@@ -122,10 +127,12 @@ func (smp *strategicMergePatch) findConflict(
 	return nil, nil
 }
 
-func (smp *strategicMergePatch) mergePatches(patch1, patch2 *resource.Resource) (*resource.Resource, error) {
+func (smp *strategicMergePatch) mergePatches(
+	patch1, patch2 *resource.Resource) (*resource.Resource, error) {
 	if hasDeleteDirectiveMarker(patch2.Map()) {
 		if hasDeleteDirectiveMarker(patch1.Map()) {
-			return nil, fmt.Errorf("cannot merge patches both containing '$patch: delete' directives")
+			return nil, fmt.Errorf(
+				"cannot merge patches both containing '$patch: delete' directives")
 		}
 		patch1, patch2 = patch2, patch1
 	}
@@ -134,10 +141,21 @@ func (smp *strategicMergePatch) mergePatches(patch1, patch2 *resource.Resource) 
 	return smp.rf.FromMap(mergeJSONMap), err
 }
 
-// MergePatches merge and index patches by OrgId.
-// It errors out if there is conflict between patches.
-func MergePatches(patches []*resource.Resource,
-	rf *resource.Factory) (resmap.ResMap, error) {
+type merginatorImpl struct {
+	rf *resource.Factory
+}
+
+// NewMerginator returns a new implementation of resmap.Merginator.
+func NewMerginator(rf *resource.Factory) resmap.Merginator {
+	return &merginatorImpl{rf: rf}
+}
+
+var _ resmap.Merginator = (*merginatorImpl)(nil)
+
+// Merge merges the incoming resources into a new resmap.ResMap.
+// Returns an error on conflict.
+func (m *merginatorImpl) Merge(
+	patches []*resource.Resource) (resmap.ResMap, error) {
 	rc := resmap.New()
 	for ix, patch := range patches {
 		id := patch.OrgId()
@@ -156,9 +174,9 @@ func MergePatches(patches []*resource.Resource,
 		}
 		var cd conflictDetector
 		if err != nil {
-			cd = newJMPConflictDetector(rf)
+			cd = newJMPConflictDetector(m.rf)
 		} else {
-			cd, err = newSMPConflictDetector(versionedObj, rf)
+			cd, err = newSMPConflictDetector(versionedObj, m.rf)
 			if err != nil {
 				return nil, err
 			}

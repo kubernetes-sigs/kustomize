@@ -8,7 +8,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
-	"sigs.k8s.io/kustomize/api/internal/k8sdeps/transformer"
+	"sigs.k8s.io/kustomize/api/internal/k8sdeps/merge"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/konfig"
@@ -46,16 +46,17 @@ func MakeEnhancedHarness(t *testing.T) *HarnessEnhanced {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	rf := resmap.NewFactory(
-		resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()),
-		transformer.NewFactoryImpl())
+	resourceFactory := resource.NewFactory(
+		kunstruct.NewKunstructuredFactoryImpl())
+	resmapFactory := resmap.NewFactory(
+		resourceFactory,
+		merge.NewMerginator(resourceFactory))
 
 	result := &HarnessEnhanced{
 		Harness: MakeHarness(t),
 		pte:     pte,
-		rf:      rf,
-		pl:      pLdr.NewLoader(pc, rf)}
+		rf:      resmapFactory,
+		pl:      pLdr.NewLoader(pc, resmapFactory)}
 
 	// Point the file loader to the root ('/') of the in-memory file system.
 	result.ResetLoaderRoot(filesys.Separator)

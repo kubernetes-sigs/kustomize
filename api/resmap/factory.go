@@ -14,12 +14,12 @@ import (
 // Factory makes instances of ResMap.
 type Factory struct {
 	resF *resource.Factory
-	tf   PatchFactory
+	pm   Merginator
 }
 
 // NewFactory returns a new resmap.Factory.
-func NewFactory(rf *resource.Factory, tf PatchFactory) *Factory {
-	return &Factory{resF: rf, tf: tf}
+func NewFactory(rf *resource.Factory, pm Merginator) *Factory {
+	return &Factory{resF: rf, pm: pm}
 }
 
 // RF returns a resource.Factory.
@@ -87,6 +87,7 @@ func (rmF *Factory) NewResMapFromConfigMapArgs(
 	return newResMapFromResourceSlice(resources)
 }
 
+// FromConfigMapArgs creates a new ResMap containing one ConfigMap.
 func (rmF *Factory) FromConfigMapArgs(
 	kvLdr ifc.KvLoader, args types.ConfigMapArgs) (ResMap, error) {
 	res, err := rmF.resF.MakeConfigMap(kvLdr, &args)
@@ -111,6 +112,7 @@ func (rmF *Factory) NewResMapFromSecretArgs(
 	return newResMapFromResourceSlice(resources)
 }
 
+// FromSecretArgs creates a new ResMap containing one secret.
 func (rmF *Factory) FromSecretArgs(
 	kvLdr ifc.KvLoader, args types.SecretArgs) (ResMap, error) {
 	res, err := rmF.resF.MakeSecret(kvLdr, &args)
@@ -120,12 +122,14 @@ func (rmF *Factory) FromSecretArgs(
 	return rmF.FromResource(res), nil
 }
 
-func (rmF *Factory) MergePatches(patches []*resource.Resource) (
-	ResMap, error) {
-	return rmF.tf.MergePatches(patches, rmF.resF)
+// Merge creates a new ResMap by merging incoming resources.
+// Error if conflict found.
+func (rmF *Factory) Merge(patches []*resource.Resource) (ResMap, error) {
+	return rmF.pm.Merge(patches)
 }
 
-func newResMapFromResourceSlice(resources []*resource.Resource) (ResMap, error) {
+func newResMapFromResourceSlice(
+	resources []*resource.Resource) (ResMap, error) {
 	result := New()
 	for _, res := range resources {
 		err := result.Append(res)
