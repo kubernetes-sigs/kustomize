@@ -29,7 +29,7 @@ func (v *moduleVersion) Bump(t string) error {
 	} else if t == "patch" {
 		v.patch++
 	} else {
-		return fmt.Errorf("Invalid version type: %s", t)
+		return fmt.Errorf("invalid version type: %s", t)
 	}
 	return nil
 }
@@ -37,14 +37,14 @@ func (v *moduleVersion) Bump(t string) error {
 func newModuleVersionFromString(vs string) (moduleVersion, error) {
 	v := moduleVersion{}
 	if len(vs) < 1 {
-		return v, fmt.Errorf("Invalid version string %s", vs)
+		return v, fmt.Errorf("invalid version string %s", vs)
 	}
 	if vs[0] == 'v' {
 		vs = vs[1:]
 	}
 	versions := strings.Split(vs, ".")
 	if len(versions) != 3 {
-		return v, fmt.Errorf("Invalid version string %s", vs)
+		return v, fmt.Errorf("invalid version string %s", vs)
 	}
 	major, err := strconv.Atoi(versions[0])
 	if err != nil {

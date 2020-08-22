@@ -173,11 +173,11 @@ func (p *FnPlugin) invokePlugin(input []byte) ([]byte, error) {
 	// TODO(donnyxia): This is actually not used by generator and only used to bypass a kio limitation.
 	// Need better solution.
 	if input == nil {
-		yaml, err := functionConfig.String()
+		yml, err := functionConfig.String()
 		if err != nil {
 			return nil, err
 		}
-		input = []byte(yaml)
+		input = []byte(yml)
 	}
 
 	// Configure and Execute Fn. We don't need to convert resources to ResourceList here
