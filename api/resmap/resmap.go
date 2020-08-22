@@ -338,13 +338,8 @@ func (m *resWrangler) AllIds() (ids []resid.ResId) {
 // Debug implements ResMap.
 func (m *resWrangler) Debug(title string) {
 	fmt.Println("--------------------------- " + title)
-	firstObj := true
 	for i, r := range m.rList {
-		if firstObj {
-			firstObj = false
-		} else {
-			fmt.Println("---")
-		}
+		fmt.Println("---")
 		fmt.Printf("# %d  %s\n", i, r.OrgId())
 		blob, err := yaml.Marshal(r.Map())
 		if err != nil {
@@ -495,7 +490,6 @@ func (m *resWrangler) groupedByOriginalNamespace() map[string][]*resource.Resour
 
 // AsYaml implements ResMap.
 func (m *resWrangler) AsYaml() ([]byte, error) {
-	firstObj := true
 	var b []byte
 	buf := bytes.NewBuffer(b)
 	for _, res := range m.Resources() {
@@ -503,12 +497,8 @@ func (m *resWrangler) AsYaml() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		if firstObj {
-			firstObj = false
-		} else {
-			if _, err = buf.WriteString("---\n"); err != nil {
-				return nil, err
-			}
+		if _, err = buf.WriteString("---\n"); err != nil {
+			return nil, err
 		}
 		if _, err = buf.Write(out); err != nil {
 			return nil, err
