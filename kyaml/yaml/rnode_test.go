@@ -4,6 +4,7 @@
 package yaml
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 
@@ -203,6 +204,33 @@ func TestIsMissingOrNull(t *testing.T) {
 	node.value.Content = nil
 	if IsMissingOrNull(node) {
 		t.Fatalf("input: empty array")
+	}
+}
+
+func TestCopy(t *testing.T) {
+	rn := RNode{
+		fieldPath: []string{"fp1", "fp2"},
+		value: &Node{
+			Kind: 200,
+		},
+		Match: []string{"m1", "m2"},
+	}
+	rnC := rn.Copy()
+	if !reflect.DeepEqual(&rn, rnC) {
+		t.Fatalf("copy %v is not deep equal to %v", rnC, rn)
+	}
+	tmp := rn.value.Kind
+	rn.value.Kind = 666
+	if reflect.DeepEqual(rn, rnC) {
+		t.Fatalf("changing component should break equality")
+	}
+	rn.value.Kind = tmp
+	if !reflect.DeepEqual(&rn, rnC) {
+		t.Fatalf("should be back to normal")
+	}
+	rn.fieldPath[0] = "Different"
+	if reflect.DeepEqual(rn, rnC) {
+		t.Fatalf("changing fieldpath should break equality")
 	}
 }
 
