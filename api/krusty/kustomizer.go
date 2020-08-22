@@ -8,7 +8,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/builtins"
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/internal/k8sdeps/transformer"
+	"sigs.k8s.io/kustomize/api/internal/k8sdeps/merge"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/internal/target"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
@@ -49,11 +49,11 @@ func MakeKustomizer(fSys filesys.FileSystem, o *Options) *Kustomizer {
 // on any number of internal paths (e.g. the filesystem may contain
 // multiple overlays, and Run can be called on each of them).
 func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
-	pf := transformer.NewFactoryImpl()
-	rf := resmap.NewFactory(
-		resource.NewFactory(
-			kunstruct.NewKunstructuredFactoryImpl()),
-		pf)
+	resourceFactory := resource.NewFactory(
+		kunstruct.NewKunstructuredFactoryImpl())
+	resmapFactory := resmap.NewFactory(
+		resourceFactory,
+		merge.NewMerginator(resourceFactory))
 	lr := fLdr.RestrictionNone
 	if b.options.LoadRestrictions == types.LoadRestrictionsRootOnly {
 		lr = fLdr.RestrictionRootOnly
@@ -66,9 +66,8 @@ func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
 	kt := target.NewKustTarget(
 		ldr,
 		validator.NewKustValidator(),
-		rf,
-		pf,
-		pLdr.NewLoader(b.options.PluginConfig, rf),
+		resmapFactory,
+		pLdr.NewLoader(b.options.PluginConfig, resmapFactory),
 	)
 	err = kt.Load()
 	if err != nil {
@@ -84,7 +83,9 @@ func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
 	}
 	if b.options.AddManagedbyLabel {
 		t := builtins.LabelTransformerPlugin{
-			Labels: map[string]string{konfig.ManagedbyLabelKey: fmt.Sprintf("kustomize-%s", provenance.GetProvenance().Version)},
+			Labels: map[string]string{
+				konfig.ManagedbyLabelKey: fmt.Sprintf(
+					"kustomize-%s", provenance.GetProvenance().Version)},
 			FieldSpecs: []types.FieldSpec{{
 				Path:               "metadata/labels",
 				CreateIfNotPresent: true,
