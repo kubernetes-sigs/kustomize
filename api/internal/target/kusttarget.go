@@ -27,7 +27,6 @@ type KustTarget struct {
 	ldr           ifc.Loader
 	validator     ifc.Validator
 	rFactory      *resmap.Factory
-	tFactory      resmap.PatchFactory
 	pLdr          *loader.Loader
 }
 
@@ -36,13 +35,11 @@ func NewKustTarget(
 	ldr ifc.Loader,
 	validator ifc.Validator,
 	rFactory *resmap.Factory,
-	tFactory resmap.PatchFactory,
 	pLdr *loader.Loader) *KustTarget {
 	return &KustTarget{
 		ldr:       ldr,
 		validator: validator,
 		rFactory:  rFactory,
-		tFactory:  tFactory,
 		pLdr:      pLdr,
 	}
 }
@@ -350,8 +347,7 @@ func (kt *KustTarget) accumulateComponents(
 func (kt *KustTarget) accumulateDirectory(
 	ra *accumulator.ResAccumulator, ldr ifc.Loader, isComponent bool) (*accumulator.ResAccumulator, error) {
 	defer ldr.Cleanup()
-	subKt := NewKustTarget(
-		ldr, kt.validator, kt.rFactory, kt.tFactory, kt.pLdr)
+	subKt := NewKustTarget(ldr, kt.validator, kt.rFactory, kt.pLdr)
 	err := subKt.Load()
 	if err != nil {
 		return nil, errors.Wrapf(
