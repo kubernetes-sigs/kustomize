@@ -12,6 +12,23 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/sets"
 )
 
+// CopyYNode returns a distinct copy of its argument.
+// Use https://github.com/jinzhu/copier instead?
+func CopyYNode(n *yaml.Node) *yaml.Node {
+	if n == nil {
+		return nil
+	}
+	c := *n
+	if len(n.Content) > 0 {
+		// Using Go 'copy' here doesn't yield independent slices.
+		c.Content = make([]*Node, len(n.Content))
+		for i, item := range n.Content {
+			c.Content[i] = CopyYNode(item)
+		}
+	}
+	return &c
+}
+
 // IsYNodeTaggedNull returns true if the node is explicitly tagged Null.
 func IsYNodeTaggedNull(n *yaml.Node) bool {
 	return n != nil && n.Tag == NodeTagNull

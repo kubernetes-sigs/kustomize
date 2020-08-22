@@ -168,6 +168,16 @@ type RNode struct {
 	Match []string
 }
 
+// Copy returns a distinct copy.
+func (rn *RNode) Copy() *RNode {
+	if rn == nil {
+		return nil
+	}
+	result := *rn
+	result.value = CopyYNode(rn.value)
+	return &result
+}
+
 var ErrMissingMetadata = fmt.Errorf("missing Resource metadata")
 
 // Field names
