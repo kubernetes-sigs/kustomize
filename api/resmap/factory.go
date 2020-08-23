@@ -11,10 +11,19 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
+// Merginator merges resources.
+type Merginator interface {
+	// Merge creates a new ResMap by merging incoming resources.
+	// Error if conflict found.
+	Merge([]*resource.Resource) (ResMap, error)
+}
+
 // Factory makes instances of ResMap.
 type Factory struct {
+	// Makes resources.
 	resF *resource.Factory
-	pm   Merginator
+	// Makes ResMaps via merging.
+	pm Merginator
 }
 
 // NewFactory returns a new resmap.Factory.

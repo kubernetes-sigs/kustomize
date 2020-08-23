@@ -38,8 +38,7 @@ type Loader interface {
 	Cleanup() error
 }
 
-// Kunstructured allows manipulation of k8s objects
-// that do not have Golang structs.
+// Kunstructured represents a Kubernetes Resource Model object.
 type Kunstructured interface {
 	// Several uses.
 	Copy() Kunstructured
