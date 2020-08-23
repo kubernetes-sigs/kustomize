@@ -16,7 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
-// Harness manages a kustomize environment for tests.
+// Harness manages a test environment.
 type Harness struct {
 	t    *testing.T
 	fSys filesys.FileSystem
@@ -72,15 +72,12 @@ func (th Harness) MakeDefaultOptions() krusty.Options {
 
 // This has no impact on Builtin plugins, as they are always enabled.
 func (th Harness) MakeOptionsPluginsDisabled() krusty.Options {
-	return krusty.Options{
-		LoadRestrictions: types.LoadRestrictionsRootOnly,
-		PluginConfig:     konfig.DisabledPluginConfig(),
-	}
+	return *krusty.MakeDefaultOptions()
 }
 
 // Enables use of non-builtin plugins.
 func (th Harness) MakeOptionsPluginsEnabled() krusty.Options {
-	c, err := konfig.EnabledPluginConfig(types.BploLoadFromFileSys)
+	pc, err := konfig.EnabledPluginConfig(types.BploLoadFromFileSys)
 	if err != nil {
 		if strings.Contains(err.Error(), "unable to find plugin root") {
 			th.t.Log(
@@ -89,10 +86,9 @@ func (th Harness) MakeOptionsPluginsEnabled() krusty.Options {
 		}
 		th.t.Fatal(err)
 	}
-	return krusty.Options{
-		LoadRestrictions: types.LoadRestrictionsRootOnly,
-		PluginConfig:     c,
-	}
+	o := *krusty.MakeDefaultOptions()
+	o.PluginConfig = pc
+	return o
 }
 
 // Run, failing on error.
