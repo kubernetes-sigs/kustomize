@@ -195,6 +195,7 @@ github.com/spf13/viper v1.1.0/go.mod h1:A8kyI5cUJhb8N+3pkfONlcEcZbueH6nhAm0Fq7Sr
 github.com/spf13/viper v1.4.0/go.mod h1:PTJ7Z/lr49W6bUbkmS1V3by4uWynFiR9p7+dSq/yZzE=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.1.1/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/stretchr/objx v0.2.0 h1:Hbg2NidpLE8veEBkEZTL3CvlkUIVzuU9jDplZO54c48=
 github.com/stretchr/objx v0.2.0/go.mod h1:qt09Ya8vawLte6SNmTgCsAVtYtaKzEcn8ATUoHMkEqE=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.2.3-0.20181224173747-660f15d67dbb/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
@@ -293,7 +294,7 @@ gopkg.in/yaml.v2 v2.3.0/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 gopkg.in/yaml.v3 v3.0.0-20200121175148-a6ecf24a6d71 h1:Xe2gvTZUJpsvOWUnvmL/tmhVBZUmHSvLbMjRj6NUUKo=
 gopkg.in/yaml.v3 v3.0.0-20200121175148-a6ecf24a6d71/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 honnef.co/go/tools v0.0.0-20190102054323-c2f93a96b099/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
-sigs.k8s.io/kustomize/kyaml v0.5.0 h1:xufpSxgpugQxtd0aN1ZsWnr3Kj0fpAi7GN4dnEs4oPg=
-sigs.k8s.io/kustomize/kyaml v0.5.0/go.mod h1:bEzbO5pN9OvlEeCLvFHo8Pu7SA26Herc2m60UeWZBdI=
+sigs.k8s.io/kustomize/kyaml v0.6.1 h1:mwffj5vt3MPdbWV3fZnnwol8SO7sUoGdgejBlvseyak=
+sigs.k8s.io/kustomize/kyaml v0.6.1/go.mod h1:bEzbO5pN9OvlEeCLvFHo8Pu7SA26Herc2m60UeWZBdI=
 sigs.k8s.io/yaml v1.1.0 h1:4A07+ZFc2wgJwo8YNlQpr1rVlgUDlxXHhPJciaPY5gs=
 sigs.k8s.io/yaml v1.1.0/go.mod h1:UJmg0vDUVViEyp3mgSv9WPwZCDxu4rQW1olrI1uml+o=
