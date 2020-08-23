@@ -35,10 +35,14 @@ module=${fullTag%/*}
 echo "module=$module"
 
 # Obtain most recent commit hash associated with the module.
-lastCommitHash=$(git log --tags=$module -1 --oneline --no-walk --pretty=format:%h)
+lastCommitHash=$(
+    git log --tags=$module -1 --oneline --no-walk --pretty=format:%h)
 
-# Generate the changelog for this release using commit hashes and commit messages.
-cl=$(git log $lastCommitHash.. --pretty=oneline --abbrev-commit --no-decorate --no-color -- $module)
+# Generate the changelog for this release
+# using commit hashes and commit messages.
+cl=$(
+    git log $lastCommitHash.. --pretty=oneline \
+    --abbrev-commit --no-decorate --no-color -- $module)
 
 # Take everything after the last slash.
 # This should be something like "v1.2.3".
