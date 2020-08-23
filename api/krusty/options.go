@@ -37,7 +37,8 @@ type Options struct {
 // MakeDefaultOptions returns a default instance of Options.
 func MakeDefaultOptions() *Options {
 	return &Options{
-		DoLegacyResourceSort: true,
+		DoLegacyResourceSort: false,
+		AddManagedbyLabel:    false,
 		LoadRestrictions:     types.LoadRestrictionsRootOnly,
 		DoPrune:              false,
 		PluginConfig:         konfig.DisabledPluginConfig(),
