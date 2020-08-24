@@ -36,18 +36,6 @@ const (
 // ContainerNetworkName is a type for network name used in container
 type ContainerNetworkName string
 
-func (n *ContainerNetworkName) String() string {
-	return string(*n)
-}
-
-func (n *ContainerNetworkName) IsEmpty() bool {
-	return string(*n) == ""
-}
-
-func (n *ContainerNetworkName) Set(s string) {
-	*n = ContainerNetworkName(s)
-}
-
 const (
 	NetworkNameNone  ContainerNetworkName = "none"
 	NetworkNameEmpty ContainerNetworkName = ""

@@ -164,7 +164,7 @@ func (c *Filter) getCommand() (string, []string) {
 	args := []string{"run",
 		"--rm",                                              // delete the container afterward
 		"-i", "-a", "STDIN", "-a", "STDOUT", "-a", "STDERR", // attach stdin, stdout, stderr
-		"--network", c.ContainerSpec.Network.Name.String(),
+		"--network", string(c.ContainerSpec.Network.Name),
 
 		// added security options
 		"--user", c.User.String(),
@@ -194,7 +194,7 @@ func (c *Filter) getCommand() (string, []string) {
 	return "docker", a
 }
 
-// NewContainer returns a new container instance
+// NewContainer returns a new container filter
 func NewContainer(spec runtimeutil.ContainerSpec) Filter {
 	f := Filter{ContainerSpec: spec}
 	// default user is nobody
@@ -203,7 +203,7 @@ func NewContainer(spec runtimeutil.ContainerSpec) Filter {
 	}
 
 	// default network name is none
-	if f.ContainerSpec.Network.Name.IsEmpty() {
+	if f.ContainerSpec.Network.Name == "" {
 		f.ContainerSpec.Network.Name = runtimeutil.NetworkNameNone
 	}
 
