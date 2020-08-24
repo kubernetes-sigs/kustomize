@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -137,19 +136,12 @@ metadata:
 			}
 			tt.instance.Exec.FunctionConfig = cfg
 
-			os.Setenv("KYAML_TEST", "FOO")
-			tt.instance.setupExec()
+			tt.instance.Envs.AddKeyValue("KYAML_TEST", "FOO")
+			tt.expectedArgs = append(tt.expectedArgs, tt.instance.Envs.GetDockerFlags()...)
 
-			// configure expected env
-			for _, e := range os.Environ() {
-				// the process env
-				parts := strings.Split(e, "=")
-				if parts[0] == "" || parts[1] == "" || parts[0] == tmpDirEnvKey {
-					continue
-				}
-				tt.expectedArgs = append(tt.expectedArgs, "-e", parts[0])
-			}
 			tt.expectedArgs = append(tt.expectedArgs, tt.instance.Image)
+
+			tt.instance.setupExec()
 
 			if !assert.Equal(t, "docker", tt.instance.Exec.Path) {
 				t.FailNow()

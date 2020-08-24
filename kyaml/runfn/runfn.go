@@ -90,6 +90,9 @@ type RunFns struct {
 
 	// User username used to run the application in container,
 	User runtimeutil.ContainerUser
+
+	// Envs are environment variables that will be exported to container
+	Envs runtimeutil.ContainerEnvs
 }
 
 // Execute runs the command
@@ -269,6 +272,20 @@ func (r RunFns) getFunctionsFromFunctions() ([]kio.Filter, error) {
 	return r.getFunctionFilters(true, r.Functions...)
 }
 
+// mergeContainerEnvs will merge the envs specified by command line (imperative) and config
+// file (declarative). If they have same key, the imperative value will be respected.
+func (r RunFns) mergeContainerEnvs(envs runtimeutil.ContainerEnvs) runtimeutil.ContainerEnvs {
+	for key, value := range r.Envs.EnvsMap {
+		envs.AddKeyValue(key, value)
+	}
+
+	for _, key := range r.Envs.ExportKeys {
+		envs.AddKey(key)
+	}
+
+	return envs
+}
+
 func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
 	[]kio.Filter, error) {
 	var fltrs []kio.Filter
@@ -282,10 +299,11 @@ func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
 			}
 			spec.Container.Network.Name = runtimeutil.ContainerNetworkName(r.NetworkName)
 		}
-		// command line username has higher priority
-		if r.User != "" {
+		// command line username and envs has higher priority
+		if !r.User.IsEmpty() {
 			spec.Container.User = r.User
 		}
+		spec.Container.Envs = r.mergeContainerEnvs(spec.Container.Envs)
 
 		c, err := r.functionFilterProvider(*spec, api)
 		if err != nil {
@@ -394,6 +412,7 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode) (kio.Filter
 			Network:       spec.Container.Network,
 			StorageMounts: r.StorageMounts,
 			User:          spec.Container.User,
+			Envs:          spec.Container.Envs,
 		})
 		cf := &c
 		cf.Exec.FunctionConfig = api
