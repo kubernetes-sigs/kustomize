@@ -38,12 +38,12 @@ metadata:
 				"--user", "nobody",
 				"--security-opt=no-new-privileges",
 			},
-			instance: Filter{
-				ContainerSpec: runtimeutil.ContainerSpec{
+			instance: NewContainer(
+				runtimeutil.ContainerSpec{
 					Image: "example.com:version",
 					User:  "nobody",
 				},
-			},
+			),
 		},
 
 		{
@@ -61,15 +61,15 @@ metadata:
 				"--user", "nobody",
 				"--security-opt=no-new-privileges",
 			},
-			instance: Filter{
-				ContainerSpec: runtimeutil.ContainerSpec{
+			instance: NewContainer(
+				runtimeutil.ContainerSpec{
 					Image: "example.com:version",
 					Network: runtimeutil.ContainerNetwork{
 						Name: "test-1",
 					},
 					User: "nobody",
 				},
-			},
+			),
 		},
 
 		{
@@ -91,8 +91,8 @@ metadata:
 				"--mount", fmt.Sprintf("type=%s,source=%s,target=%s,readonly", "volume", "myvol", "/local/"),
 				"--mount", fmt.Sprintf("type=%s,source=%s,target=%s,readonly", "tmpfs", "", "/local/"),
 			},
-			instance: Filter{
-				ContainerSpec: runtimeutil.ContainerSpec{
+			instance: NewContainer(
+				runtimeutil.ContainerSpec{
 					Image: "example.com:version",
 					StorageMounts: []runtimeutil.StorageMount{
 						{MountType: "bind", Src: "/mount/path", DstPath: "/local/"},
@@ -102,7 +102,7 @@ metadata:
 					},
 					User: "nobody",
 				},
-			},
+			),
 		},
 		{
 			name: "root user",
@@ -119,12 +119,12 @@ metadata:
 				"--user", "root",
 				"--security-opt=no-new-privileges",
 			},
-			instance: Filter{
-				ContainerSpec: runtimeutil.ContainerSpec{
+			instance: NewContainer(
+				runtimeutil.ContainerSpec{
 					Image: "example.com:version",
 					User:  "root",
 				},
-			},
+			),
 		},
 	}
 
