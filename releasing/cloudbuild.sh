@@ -100,15 +100,6 @@ builds:
   goarch:
   - amd64
 
-changelog:
-  sort: asc
-  filters:
-    exclude:
-    - '^docs:'
-    - '^test:'
-    - Merge pull request
-    - Merge branch
-
 checksum:
   name_template: 'checksums.txt'
 
