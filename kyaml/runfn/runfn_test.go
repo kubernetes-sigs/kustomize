@@ -986,3 +986,104 @@ func getFilterProvider(t *testing.T) func(runtimeutil.FunctionSpec, *yaml.RNode)
 		}, nil
 	}
 }
+
+func TestRunfns_mergeContainerEnvs(t *testing.T) {
+	testcases := []struct {
+		name      string
+		instance  RunFns
+		inputEnvs runtimeutil.ContainerEnvs
+		expect    runtimeutil.ContainerEnvs
+	}{
+		{
+			name:      "all empty",
+			instance:  RunFns{},
+			inputEnvs: runtimeutil.NewContainerEnvs(),
+			expect:    runtimeutil.NewContainerEnvs(),
+		},
+		{
+			name:     "empty command line envs",
+			instance: RunFns{},
+			inputEnvs: runtimeutil.ContainerEnvs{
+				EnvsMap: map[string]string{
+					"foo": "bar",
+				},
+			},
+			expect: runtimeutil.ContainerEnvs{
+				EnvsMap: map[string]string{
+					"foo": "bar",
+				},
+			},
+		},
+		{
+			name: "empty declarative envs",
+			instance: RunFns{
+				Envs: runtimeutil.ContainerEnvs{
+					EnvsMap: map[string]string{
+						"foo": "bar",
+					},
+				},
+			},
+			inputEnvs: runtimeutil.NewContainerEnvs(),
+			expect: runtimeutil.ContainerEnvs{
+				EnvsMap: map[string]string{
+					"foo": "bar",
+				},
+			},
+		},
+		{
+			name: "same key",
+			instance: RunFns{
+				Envs: runtimeutil.ContainerEnvs{
+					EnvsMap: map[string]string{
+						"foo": "bar",
+					},
+					ExportKeys: []string{"foo"},
+				},
+			},
+			inputEnvs: runtimeutil.ContainerEnvs{
+				EnvsMap: map[string]string{
+					"foo": "bar1",
+				},
+				ExportKeys: []string{"bar"},
+			},
+			expect: runtimeutil.ContainerEnvs{
+				EnvsMap: map[string]string{
+					"foo": "bar",
+				},
+				ExportKeys: []string{"bar", "foo"},
+			},
+		},
+		{
+			name: "same exported key",
+			instance: RunFns{
+				Envs: runtimeutil.ContainerEnvs{
+					EnvsMap: map[string]string{
+						"foo": "bar",
+					},
+					ExportKeys: []string{"foo"},
+				},
+			},
+			inputEnvs: runtimeutil.ContainerEnvs{
+				EnvsMap: map[string]string{
+					"foo1": "bar1",
+				},
+				ExportKeys: []string{"foo"},
+			},
+			expect: runtimeutil.ContainerEnvs{
+				EnvsMap: map[string]string{
+					"foo":  "bar",
+					"foo1": "bar1",
+				},
+				ExportKeys: []string{"foo"},
+			},
+		},
+	}
+
+	for i := range testcases {
+		tc := testcases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			envs := tc.instance.mergeContainerEnvs(tc.inputEnvs)
+			assert.Equal(t, tc.expect.GetDockerFlags(), envs.GetDockerFlags())
+		})
+	}
+}

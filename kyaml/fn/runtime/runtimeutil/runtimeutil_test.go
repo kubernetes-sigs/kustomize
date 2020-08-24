@@ -1428,3 +1428,43 @@ func Test_StringToStorageMount(t *testing.T) {
 		assert.Equal(t, tc.expectedOut, (&s).String())
 	}
 }
+
+func TestContainerEnvs(t *testing.T) {
+	tests := []struct {
+		input  ContainerEnvs
+		output []string
+	}{
+		{
+			input: ContainerEnvs{
+				EnvsMap: map[string]string{
+					"foo": "bar",
+				},
+			},
+			output: []string{"-e", "LOG_TO_STDERR=true", "-e", "STRUCTURED_RESULTS=true", "-e", "foo=bar"},
+		},
+		{
+			input: ContainerEnvs{
+				ExportKeys: []string{"foo"},
+			},
+			output: []string{"-e", "LOG_TO_STDERR=true", "-e", "STRUCTURED_RESULTS=true", "-e", "foo"},
+		},
+		{
+			input: ContainerEnvs{
+				EnvsMap: map[string]string{
+					"foo": "bar",
+				},
+				ExportKeys: []string{"baz"},
+			},
+			output: []string{"-e", "LOG_TO_STDERR=true", "-e", "STRUCTURED_RESULTS=true", "-e", "foo=bar", "-e", "baz"},
+		},
+		{
+			input:  ContainerEnvs{},
+			output: []string{"-e", "LOG_TO_STDERR=true", "-e", "STRUCTURED_RESULTS=true"},
+		},
+	}
+
+	for _, tc := range tests {
+		flags := tc.input.GetDockerFlags()
+		assert.Equal(t, tc.output, flags)
+	}
+}
