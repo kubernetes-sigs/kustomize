@@ -280,7 +280,7 @@ func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
 				// TODO(eddiezane): Provide error info about which function needs the network
 				return fltrs, errors.Errorf("network required but not enabled with --network")
 			}
-			spec.Container.Network.Name.Set(r.NetworkName)
+			spec.Container.Network.Name = runtimeutil.ContainerNetworkName(r.NetworkName)
 		}
 		// command line username has higher priority
 		if r.User != "" {
