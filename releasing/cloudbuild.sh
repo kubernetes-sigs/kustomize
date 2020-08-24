@@ -41,11 +41,13 @@ lastCommitHash=$(
 
 # Generate the changelog for this release
 # using commit hashes and commit messages.
-changeLog=$(mktemp)
+changeLogFile=$(mktemp)
 git log $lastCommitHash.. \
   --pretty=oneline \
   --abbrev-commit --no-decorate --no-color \
-  -- $module > $changeLog
+  -- $module > $changeLogFile
+echo "Release notes:"
+cat $changeLogFile
 
 # Take everything after the last slash.
 # This should be something like "v1.2.3".
@@ -126,6 +128,6 @@ cat $configFile
 
 /bin/goreleaser release \
   --config=$configFile \
+  --release-notes=$changeLogFile \
   --rm-dist \
-  --skip-validate $remainingArgs \
-  --release-notes $changeLog
+  --skip-validate $remainingArgs 
