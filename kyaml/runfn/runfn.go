@@ -280,15 +280,11 @@ func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
 				// TODO(eddiezane): Provide error info about which function needs the network
 				return fltrs, errors.Errorf("network required but not enabled with --network")
 			}
-			spec.Container.Network.Name = r.NetworkName
+			spec.Container.Network.Name.Set(r.NetworkName)
 		}
 		// command line username has higher priority
 		if r.User != "" {
 			spec.Container.User = r.User
-		}
-		// default user is nobody
-		if spec.Container.User.IsEmpty() {
-			spec.Container.User = runtimeutil.UserNobody
 		}
 
 		c, err := r.functionFilterProvider(*spec, api)
@@ -393,14 +389,13 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode) (kio.Filter
 	}
 	if !r.DisableContainers && spec.Container.Image != "" {
 		// TODO: Add a test for this behavior
-		cf := &container.Filter{
-			ContainerSpec: runtimeutil.ContainerSpec{
-				Image:         spec.Container.Image,
-				Network:       spec.Container.Network,
-				StorageMounts: r.StorageMounts,
-				User:          spec.Container.User,
-			},
-		}
+		c := container.NewContainer(runtimeutil.ContainerSpec{
+			Image:         spec.Container.Image,
+			Network:       spec.Container.Network,
+			StorageMounts: r.StorageMounts,
+			User:          spec.Container.User,
+		})
+		cf := &c
 		cf.Exec.FunctionConfig = api
 		cf.Exec.GlobalScope = r.GlobalScope
 		cf.Exec.ResultsFile = resultsFile
