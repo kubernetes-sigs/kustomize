@@ -87,7 +87,7 @@ func (f Filter) setScalar(node *yaml.RNode) error {
 }
 
 func filterReferralCandidates(referrer *resource.Resource, matches []*resource.Resource) []*resource.Resource {
-	ret := []*resource.Resource{}
+	var ret []*resource.Resource
 	for _, m := range matches {
 		if referrer.PrefixesSuffixesEquals(m) {
 			ret = append(ret, m)

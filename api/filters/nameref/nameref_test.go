@@ -331,3 +331,434 @@ metadata:
 		})
 	}
 }
+
+func TestCandidatesWithDifferentPrefixSuffix(t *testing.T) {
+	testCases := map[string]struct {
+		input         string
+		candidates    string
+		expected      string
+		filter        Filter
+		originalNames []string
+		prefix        []string
+		suffix        []string
+		inputPrefix   string
+		inputSuffix   string
+		err           bool
+	}{
+		"prefix match": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  name: oldName
+`,
+			candidates: `
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName
+---
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName2
+`,
+			originalNames: []string{"oldName", "oldName"},
+			prefix:        []string{"prefix1", "prefix2"},
+			suffix:        []string{"", "suffix2"},
+			inputPrefix:   "prefix1",
+			inputSuffix:   "",
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  name: newName
+`,
+			filter: Filter{
+				FieldSpec: types.FieldSpec{Path: "ref/name"},
+				Target: resid.Gvk{
+					Group:   "apps",
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+			err: false,
+		},
+		"suffix match": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  name: oldName
+`,
+			candidates: `
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName
+---
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName2
+`,
+			originalNames: []string{"oldName", "oldName"},
+			prefix:        []string{"", "prefix2"},
+			suffix:        []string{"suffix1", "suffix2"},
+			inputPrefix:   "",
+			inputSuffix:   "suffix1",
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  name: newName
+`,
+			filter: Filter{
+				FieldSpec: types.FieldSpec{Path: "ref/name"},
+				Target: resid.Gvk{
+					Group:   "apps",
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+			err: false,
+		},
+		"prefix suffix both match": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  name: oldName
+`,
+			candidates: `
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName
+---
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName2
+`,
+			originalNames: []string{"oldName", "oldName"},
+			prefix:        []string{"prefix1", "prefix2"},
+			suffix:        []string{"suffix1", "suffix2"},
+			inputPrefix:   "prefix1",
+			inputSuffix:   "suffix1",
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  name: newName
+`,
+			filter: Filter{
+				FieldSpec: types.FieldSpec{Path: "ref/name"},
+				Target: resid.Gvk{
+					Group:   "apps",
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+			err: false,
+		},
+		"multiple match: both": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  name: oldName
+`,
+			candidates: `
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName
+---
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName2
+`,
+			originalNames: []string{"oldName", "oldName"},
+			prefix:        []string{"prefix", "prefix"},
+			suffix:        []string{"suffix", "suffix"},
+			inputPrefix:   "prefix",
+			inputSuffix:   "suffix",
+			expected:      "",
+			filter: Filter{
+				FieldSpec: types.FieldSpec{Path: "ref/name"},
+				Target: resid.Gvk{
+					Group:   "apps",
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+			err: true,
+		},
+		"multiple match: only prefix": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  name: oldName
+`,
+			candidates: `
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName
+---
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName2
+`,
+			originalNames: []string{"oldName", "oldName"},
+			prefix:        []string{"prefix", "prefix"},
+			suffix:        []string{"", ""},
+			inputPrefix:   "prefix",
+			inputSuffix:   "",
+			expected:      "",
+			filter: Filter{
+				FieldSpec: types.FieldSpec{Path: "ref/name"},
+				Target: resid.Gvk{
+					Group:   "apps",
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+			err: true,
+		},
+		"multiple match: only suffix": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  name: oldName
+`,
+			candidates: `
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName
+---
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName2
+`,
+			originalNames: []string{"oldName", "oldName"},
+			prefix:        []string{"", ""},
+			suffix:        []string{"suffix", "suffix"},
+			inputPrefix:   "",
+			inputSuffix:   "suffix",
+			expected:      "",
+			filter: Filter{
+				FieldSpec: types.FieldSpec{Path: "ref/name"},
+				Target: resid.Gvk{
+					Group:   "apps",
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+			err: true,
+		},
+		"no match: neither match": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  name: oldName
+`,
+			candidates: `
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName
+---
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName2
+`,
+			originalNames: []string{"oldName", "oldName"},
+			prefix:        []string{"prefix1", "prefix2"},
+			suffix:        []string{"suffix1", "suffix2"},
+			inputPrefix:   "prefix",
+			inputSuffix:   "suffix",
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  name: oldName
+`,
+			filter: Filter{
+				FieldSpec: types.FieldSpec{Path: "ref/name"},
+				Target: resid.Gvk{
+					Group:   "apps",
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+			err: false,
+		},
+		"no match: prefix doesn't match": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  name: oldName
+`,
+			candidates: `
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName
+---
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName2
+`,
+			originalNames: []string{"oldName", "oldName"},
+			prefix:        []string{"prefix1", "prefix2"},
+			suffix:        []string{"suffix", "suffix"},
+			inputPrefix:   "prefix",
+			inputSuffix:   "suffix",
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  name: oldName
+`,
+			filter: Filter{
+				FieldSpec: types.FieldSpec{Path: "ref/name"},
+				Target: resid.Gvk{
+					Group:   "apps",
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+			err: false,
+		},
+		"no match: suffix doesn't match": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  name: oldName
+`,
+			candidates: `
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName
+---
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName2
+`,
+			originalNames: []string{"oldName", "oldName"},
+			prefix:        []string{"prefix", "prefix"},
+			suffix:        []string{"suffix1", "suffix2"},
+			inputPrefix:   "prefix",
+			inputSuffix:   "suffix",
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  name: oldName
+`,
+			filter: Filter{
+				FieldSpec: types.FieldSpec{Path: "ref/name"},
+				Target: resid.Gvk{
+					Group:   "apps",
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+			err: false,
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			factory := resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
+			referrer, err := factory.FromBytes([]byte(tc.input))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if tc.inputPrefix != "" {
+				referrer.AddNamePrefix(tc.inputPrefix)
+			}
+			if tc.inputSuffix != "" {
+				referrer.AddNameSuffix(tc.inputSuffix)
+			}
+			tc.filter.Referrer = referrer
+
+			resMapFactory := resmap.NewFactory(factory, nil)
+			candidatesRes, err := factory.SliceFromBytesWithNames(
+				tc.originalNames, []byte(tc.candidates))
+			if err != nil {
+				t.Fatal(err)
+			}
+			for i := range candidatesRes {
+				if tc.prefix[i] != "" {
+					candidatesRes[i].AddNamePrefix(tc.prefix[i])
+				}
+				if tc.suffix[i] != "" {
+					candidatesRes[i].AddNameSuffix(tc.suffix[i])
+				}
+			}
+
+			candidates := resMapFactory.FromResourceSlice(candidatesRes)
+			tc.filter.ReferralCandidates = candidates
+
+			if !tc.err {
+				if !assert.Equal(t,
+					strings.TrimSpace(tc.expected),
+					strings.TrimSpace(
+						filtertest_test.RunFilter(t, tc.input, tc.filter))) {
+					t.FailNow()
+				}
+			} else {
+				_, err := filtertest_test.RunFilterE(t, tc.input, tc.filter)
+				if err == nil {
+					t.Fatalf("an error is expected")
+				}
+			}
+		})
+	}
+}
