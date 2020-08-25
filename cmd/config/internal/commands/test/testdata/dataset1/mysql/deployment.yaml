@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: myspace # {"$openapi":"namespace"}
+  name: mysql-deployment
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:1.7.9 # {"$openapi":"image-tag"}
