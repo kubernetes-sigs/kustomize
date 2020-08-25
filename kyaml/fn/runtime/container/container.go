@@ -175,7 +175,7 @@ func (c *Filter) getCommand() (string, []string) {
 		args = append(args, "--mount", storageMount.String())
 	}
 
-	args = append(args, c.Envs.GetDockerFlags()...)
+	args = append(args, c.Env.GetDockerFlags()...)
 	a := append(args, c.Image)
 	return "docker", a
 }

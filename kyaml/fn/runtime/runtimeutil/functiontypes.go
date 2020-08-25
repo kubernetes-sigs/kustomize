@@ -43,25 +43,21 @@ const (
 )
 const defaultEnvValue string = "true"
 
-// ContainerEnvs contains the environment variables for the container
-type ContainerEnvs struct {
-	// EnvsMap is a key-value map that will be set as env in container
-	EnvsMap map[string]string `json:"envsMap,omitempty" yaml:"envsMap,omitempty"`
+// ContainerEnv defines the environment present in a container.
+type ContainerEnv struct {
+	// EnvVars is a key-value map that will be set as env in container
+	EnvVars map[string]string
 
-	// ExportKeys are only env key. Value will be the value in the host system
-	ExportKeys []string `json:"exportKeys,omitempty" yaml:"exportKeys,omitempty"`
+	// VarsToExport are only env key. Value will be the value in the host system
+	VarsToExport []string
 }
 
 // GetDockerFlags returns docker run style env flags
-func (ce *ContainerEnvs) GetDockerFlags() []string {
-	envs := ce.EnvsMap
+func (ce *ContainerEnv) GetDockerFlags() []string {
+	envs := ce.EnvVars
 	if envs == nil {
 		envs = make(map[string]string)
 	}
-
-	// default envs
-	envs["LOG_TO_STDERR"] = defaultEnvValue
-	envs["STRUCTURED_RESULTS"] = defaultEnvValue
 
 	flags := []string{}
 	// return in order to keep consistent among different runs
@@ -74,7 +70,7 @@ func (ce *ContainerEnvs) GetDockerFlags() []string {
 		flags = append(flags, "-e", key+"="+envs[key])
 	}
 
-	for _, key := range ce.ExportKeys {
+	for _, key := range ce.VarsToExport {
 		flags = append(flags, "-e", key)
 	}
 
@@ -82,16 +78,16 @@ func (ce *ContainerEnvs) GetDockerFlags() []string {
 }
 
 // AddKeyValue adds a key-value pair into the envs
-func (ce *ContainerEnvs) AddKeyValue(key, value string) {
-	if ce.EnvsMap == nil {
-		ce.EnvsMap = make(map[string]string)
+func (ce *ContainerEnv) AddKeyValue(key, value string) {
+	if ce.EnvVars == nil {
+		ce.EnvVars = make(map[string]string)
 	}
-	ce.EnvsMap[key] = value
+	ce.EnvVars[key] = value
 }
 
 // HasExportedKey returns true if the key is a exported key
-func (ce *ContainerEnvs) HasExportedKey(key string) bool {
-	for _, k := range ce.ExportKeys {
+func (ce *ContainerEnv) HasExportedKey(key string) bool {
+	for _, k := range ce.VarsToExport {
 		if k == key {
 			return true
 		}
@@ -100,16 +96,34 @@ func (ce *ContainerEnvs) HasExportedKey(key string) bool {
 }
 
 // AddKey adds a key into the envs
-func (ce *ContainerEnvs) AddKey(key string) {
+func (ce *ContainerEnv) AddKey(key string) {
 	if !ce.HasExportedKey(key) {
-		ce.ExportKeys = append(ce.ExportKeys, key)
+		ce.VarsToExport = append(ce.VarsToExport, key)
 	}
 }
 
-// NewContainerEnvs returns an empty instance of ContainerEnvs
-func NewContainerEnvs() ContainerEnvs {
-	var ce ContainerEnvs
-	ce.EnvsMap = make(map[string]string)
+// NewContainerEnv returns a pointer to a new ContainerEnv
+func NewContainerEnv() *ContainerEnv {
+	var ce ContainerEnv
+	ce.EnvVars = make(map[string]string)
+	// default envs
+	ce.EnvVars["LOG_TO_STDERR"] = defaultEnvValue
+	ce.EnvVars["STRUCTURED_RESULTS"] = defaultEnvValue
+	return &ce
+}
+
+// NewContainerEnvFromStringSlice returns a new ContainerEnv pointer with parsing
+// input envStr. envStr example: ["foo=bar", "baz"]
+func NewContainerEnvFromStringSlice(envStr []string) *ContainerEnv {
+	ce := NewContainerEnv()
+	for _, e := range envStr {
+		parts := strings.SplitN(e, "=", 2)
+		if len(parts) == 1 {
+			ce.AddKey(e)
+		} else {
+			ce.AddKeyValue(parts[0], parts[1])
+		}
+	}
 	return ce
 }
 
@@ -148,8 +162,11 @@ type ContainerSpec struct {
 	// User is the username/uid that application runs as in continer
 	User ContainerUser `json:"user,omitempty" yaml:"user,omitempty"`
 
-	// Envs are environment variables that will be exported to container
-	Envs ContainerEnvs `json:"envs,omitempty" yaml:"envs,omitempty"`
+	// EnvRaw is a slice of env string.
+	EnvRaw []string `json:"envs,omitempty" yaml:"envs,omitempty"`
+
+	// Env contains environment variables that will be exported to container
+	Env ContainerEnv `json:"-" yaml:"-"`
 }
 
 // ContainerNetwork
@@ -213,6 +230,7 @@ func GetFunctionSpec(n *yaml.RNode) *FunctionSpec {
 	if fn := getFunctionSpecFromAnnotation(n, meta); fn != nil {
 		fn.Container.Network.Name = NetworkNameEmpty
 		fn.StorageMounts = []StorageMount{}
+		fn.Container.Env = *NewContainerEnvFromStringSlice(fn.Container.EnvRaw)
 		return fn
 	}
 
