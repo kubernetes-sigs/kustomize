@@ -33,6 +33,14 @@ const (
 	UserNobody ContainerUser = "nobody"
 )
 
+// ContainerNetworkName is a type for network name used in container
+type ContainerNetworkName string
+
+const (
+	NetworkNameNone  ContainerNetworkName = "none"
+	NetworkNameEmpty ContainerNetworkName = ""
+)
+
 // FunctionSpec defines a spec for running a function
 type FunctionSpec struct {
 	DeferFailure bool `json:"deferFailure,omitempty" yaml:"deferFailure,omitempty"`
@@ -75,7 +83,7 @@ type ContainerNetwork struct {
 	Required bool `json:"required,omitempty" yaml:"required,omitempty"`
 
 	// Name is the name of the network to use from a container
-	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	Name ContainerNetworkName `json:"name,omitempty" yaml:"name,omitempty"`
 }
 
 // StarlarkSpec defines how to run a function as a starlark program
@@ -128,7 +136,7 @@ func GetFunctionSpec(n *yaml.RNode) *FunctionSpec {
 	}
 
 	if fn := getFunctionSpecFromAnnotation(n, meta); fn != nil {
-		fn.Container.Network.Name = ""
+		fn.Container.Network.Name = NetworkNameEmpty
 		fn.StorageMounts = []StorageMount{}
 		return fn
 	}
