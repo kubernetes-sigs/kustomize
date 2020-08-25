@@ -1429,36 +1429,25 @@ func Test_StringToStorageMount(t *testing.T) {
 	}
 }
 
-func TestContainerEnvs(t *testing.T) {
+func TestContainerEnvGetDockerFlags(t *testing.T) {
 	tests := []struct {
-		input  ContainerEnvs
+		input  *ContainerEnv
 		output []string
 	}{
 		{
-			input: ContainerEnvs{
-				EnvsMap: map[string]string{
-					"foo": "bar",
-				},
-			},
+			input:  NewContainerEnvFromStringSlice([]string{"foo=bar"}),
 			output: []string{"-e", "LOG_TO_STDERR=true", "-e", "STRUCTURED_RESULTS=true", "-e", "foo=bar"},
 		},
 		{
-			input: ContainerEnvs{
-				ExportKeys: []string{"foo"},
-			},
+			input:  NewContainerEnvFromStringSlice([]string{"foo"}),
 			output: []string{"-e", "LOG_TO_STDERR=true", "-e", "STRUCTURED_RESULTS=true", "-e", "foo"},
 		},
 		{
-			input: ContainerEnvs{
-				EnvsMap: map[string]string{
-					"foo": "bar",
-				},
-				ExportKeys: []string{"baz"},
-			},
+			input:  NewContainerEnvFromStringSlice([]string{"foo=bar", "baz"}),
 			output: []string{"-e", "LOG_TO_STDERR=true", "-e", "STRUCTURED_RESULTS=true", "-e", "foo=bar", "-e", "baz"},
 		},
 		{
-			input:  ContainerEnvs{},
+			input:  NewContainerEnv(),
 			output: []string{"-e", "LOG_TO_STDERR=true", "-e", "STRUCTURED_RESULTS=true"},
 		},
 	}
@@ -1466,5 +1455,65 @@ func TestContainerEnvs(t *testing.T) {
 	for _, tc := range tests {
 		flags := tc.input.GetDockerFlags()
 		assert.Equal(t, tc.output, flags)
+	}
+}
+
+func TestGetContainerEnv(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected ContainerEnv
+	}{
+		{
+			input: `
+apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+  configFn:
+    container:
+      image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
+      envs:
+      - foo=bar
+`,
+			expected: *NewContainerEnvFromStringSlice([]string{"foo=bar"}),
+		},
+		{
+			input: `
+apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+  configFn:
+    container:
+      image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
+      envs:
+      - foo=bar
+      - baz
+`,
+			expected: *NewContainerEnvFromStringSlice([]string{"foo=bar", "baz"}),
+		},
+		{
+			input: `
+apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+  configFn:
+    container:
+      image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
+      envs:
+      - KUBECONFIG
+`,
+			expected: *NewContainerEnvFromStringSlice([]string{"KUBECONFIG"}),
+		},
+	}
+
+	for _, tc := range tests {
+		cfg, err := yaml.Parse(tc.input)
+		if !assert.NoError(t, err) {
+			return
+		}
+		fn := GetFunctionSpec(cfg)
+		assert.Equal(t, tc.expected, fn.Container.Env)
 	}
 }

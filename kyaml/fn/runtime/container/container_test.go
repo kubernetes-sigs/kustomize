@@ -135,13 +135,11 @@ metadata:
 				t.FailNow()
 			}
 			tt.instance.Exec.FunctionConfig = cfg
-
-			tt.instance.Envs.AddKeyValue("KYAML_TEST", "FOO")
-			tt.expectedArgs = append(tt.expectedArgs, tt.instance.Envs.GetDockerFlags()...)
-
-			tt.expectedArgs = append(tt.expectedArgs, tt.instance.Image)
-
+			tt.instance.Env.AddKeyValue("KYAML_TEST", "FOO")
 			tt.instance.setupExec()
+
+			tt.expectedArgs = append(tt.expectedArgs, tt.instance.Env.GetDockerFlags()...)
+			tt.expectedArgs = append(tt.expectedArgs, tt.instance.Image)
 
 			if !assert.Equal(t, "docker", tt.instance.Exec.Path) {
 				t.FailNow()

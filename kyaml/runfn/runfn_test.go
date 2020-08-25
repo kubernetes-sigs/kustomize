@@ -987,102 +987,55 @@ func getFilterProvider(t *testing.T) func(runtimeutil.FunctionSpec, *yaml.RNode)
 	}
 }
 
-func TestRunfns_mergeContainerEnvs(t *testing.T) {
+func TestRunfns_mergeContainerEnv(t *testing.T) {
 	testcases := []struct {
 		name      string
 		instance  RunFns
-		inputEnvs runtimeutil.ContainerEnvs
-		expect    runtimeutil.ContainerEnvs
+		inputEnvs runtimeutil.ContainerEnv
+		expect    runtimeutil.ContainerEnv
 	}{
 		{
 			name:      "all empty",
 			instance:  RunFns{},
-			inputEnvs: runtimeutil.NewContainerEnvs(),
-			expect:    runtimeutil.NewContainerEnvs(),
+			inputEnvs: *runtimeutil.NewContainerEnv(),
+			expect:    *runtimeutil.NewContainerEnv(),
 		},
 		{
-			name:     "empty command line envs",
-			instance: RunFns{},
-			inputEnvs: runtimeutil.ContainerEnvs{
-				EnvsMap: map[string]string{
-					"foo": "bar",
-				},
-			},
-			expect: runtimeutil.ContainerEnvs{
-				EnvsMap: map[string]string{
-					"foo": "bar",
-				},
-			},
+			name:      "empty command line envs",
+			instance:  RunFns{},
+			inputEnvs: *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo=bar"}),
+			expect:    *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo=bar"}),
 		},
 		{
 			name: "empty declarative envs",
 			instance: RunFns{
-				Envs: runtimeutil.ContainerEnvs{
-					EnvsMap: map[string]string{
-						"foo": "bar",
-					},
-				},
+				Env: *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo=bar"}),
 			},
-			inputEnvs: runtimeutil.NewContainerEnvs(),
-			expect: runtimeutil.ContainerEnvs{
-				EnvsMap: map[string]string{
-					"foo": "bar",
-				},
-			},
+			inputEnvs: *runtimeutil.NewContainerEnv(),
+			expect:    *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo=bar"}),
 		},
 		{
 			name: "same key",
 			instance: RunFns{
-				Envs: runtimeutil.ContainerEnvs{
-					EnvsMap: map[string]string{
-						"foo": "bar",
-					},
-					ExportKeys: []string{"foo"},
-				},
+				Env: *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo=bar", "foo"}),
 			},
-			inputEnvs: runtimeutil.ContainerEnvs{
-				EnvsMap: map[string]string{
-					"foo": "bar1",
-				},
-				ExportKeys: []string{"bar"},
-			},
-			expect: runtimeutil.ContainerEnvs{
-				EnvsMap: map[string]string{
-					"foo": "bar",
-				},
-				ExportKeys: []string{"bar", "foo"},
-			},
+			inputEnvs: *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo=bar1", "bar"}),
+			expect:    *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo=bar", "bar", "foo"}),
 		},
 		{
 			name: "same exported key",
 			instance: RunFns{
-				Envs: runtimeutil.ContainerEnvs{
-					EnvsMap: map[string]string{
-						"foo": "bar",
-					},
-					ExportKeys: []string{"foo"},
-				},
+				Env: *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo=bar", "foo"}),
 			},
-			inputEnvs: runtimeutil.ContainerEnvs{
-				EnvsMap: map[string]string{
-					"foo1": "bar1",
-				},
-				ExportKeys: []string{"foo"},
-			},
-			expect: runtimeutil.ContainerEnvs{
-				EnvsMap: map[string]string{
-					"foo":  "bar",
-					"foo1": "bar1",
-				},
-				ExportKeys: []string{"foo"},
-			},
+			inputEnvs: *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo1=bar1", "foo"}),
+			expect:    *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo=bar", "foo1=bar1", "foo"}),
 		},
 	}
 
 	for i := range testcases {
 		tc := testcases[i]
 		t.Run(tc.name, func(t *testing.T) {
-			envs := tc.instance.mergeContainerEnvs(tc.inputEnvs)
+			envs := tc.instance.mergeContainerEnv(tc.inputEnvs)
 			assert.Equal(t, tc.expect.GetDockerFlags(), envs.GetDockerFlags())
 		})
 	}
