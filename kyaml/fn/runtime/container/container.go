@@ -161,15 +161,10 @@ func (c *Filter) getCommand() (string, []string) {
 	// run the container using docker.  this is simpler than using the docker
 	// libraries, and ensures things like auth work the same as if the container
 	// was run from the cli.
-
-	network := "none"
-	if c.Network.Name != "" {
-		network = c.Network.Name
-	}
 	args := []string{"run",
 		"--rm",                                              // delete the container afterward
 		"-i", "-a", "STDIN", "-a", "STDOUT", "-a", "STDERR", // attach stdin, stdout, stderr
-		"--network", network,
+		"--network", string(c.ContainerSpec.Network.Name),
 
 		// added security options
 		"--user", c.User.String(),
@@ -197,4 +192,20 @@ func (c *Filter) getCommand() (string, []string) {
 	}
 	a := append(args, c.Image)
 	return "docker", a
+}
+
+// NewContainer returns a new container filter
+func NewContainer(spec runtimeutil.ContainerSpec) Filter {
+	f := Filter{ContainerSpec: spec}
+	// default user is nobody
+	if f.ContainerSpec.User.IsEmpty() {
+		f.ContainerSpec.User = runtimeutil.UserNobody
+	}
+
+	// default network name is none
+	if f.ContainerSpec.Network.Name == "" {
+		f.ContainerSpec.Network.Name = runtimeutil.NetworkNameNone
+	}
+
+	return f
 }
