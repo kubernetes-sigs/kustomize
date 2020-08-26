@@ -34,6 +34,21 @@ echo "Remaining args:  $remainingArgs"
 module=${fullTag%/*}
 echo "module=$module"
 
+# Obtain most recent commit hash associated with the module.
+lastCommitHash=$(
+  git log --tags=$module -1 \
+  --oneline --no-walk --pretty=format:%h)
+
+# Generate the changelog for this release
+# using commit hashes and commit messages.
+changeLogFile=$(mktemp)
+git log $lastCommitHash.. \
+  --pretty=oneline \
+  --abbrev-commit --no-decorate --no-color \
+  -- $module > $changeLogFile
+echo "Release notes:"
+cat $changeLogFile
+
 # Take everything after the last slash.
 # This should be something like "v1.2.3".
 semVer=`echo $fullTag | sed "s|$module/||"`
@@ -85,15 +100,6 @@ builds:
   goarch:
   - amd64
 
-changelog:
-  sort: asc
-  filters:
-    exclude:
-    - '^docs:'
-    - '^test:'
-    - Merge pull request
-    - Merge branch
-
 checksum:
   name_template: 'checksums.txt'
 
@@ -111,4 +117,8 @@ EOF
 
 cat $configFile
 
-/bin/goreleaser release --config=$configFile --rm-dist --skip-validate $remainingArgs
+/bin/goreleaser release \
+  --config=$configFile \
+  --release-notes=$changeLogFile \
+  --rm-dist \
+  --skip-validate $remainingArgs 

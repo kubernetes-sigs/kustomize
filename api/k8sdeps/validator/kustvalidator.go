@@ -14,10 +14,13 @@ import (
 	v1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"sigs.k8s.io/kustomize/api/ifc"
 )
 
 // KustValidator validates Labels and annotations by apimachinery
 type KustValidator struct{}
+
+var _ ifc.Validator = (*KustValidator)(nil)
 
 // NewKustValidator returns a KustValidator object
 func NewKustValidator() *KustValidator {

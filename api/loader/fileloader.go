@@ -199,7 +199,9 @@ func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 	}
 	root, errDir := demandDirectoryRoot(fl.fSys, fl.root.Join(path))
 	if errDir != nil {
-		return nil, fmt.Errorf("Error loading %s with git: %v, dir: %v, get: %v", path, errGit, errDir, errGet)
+		return nil, fmt.Errorf(
+			"error loading %s with git: %v, dir: %v, get: %v",
+			path, errGit, errDir, errGet)
 	}
 	if errDir := fl.errIfGitContainmentViolation(root); errDir != nil {
 		return nil, errDir

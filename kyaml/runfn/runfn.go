@@ -87,6 +87,9 @@ type RunFns struct {
 	// this is a variable so it can be mocked in tests
 	functionFilterProvider func(
 		filter runtimeutil.FunctionSpec, api *yaml.RNode) (kio.Filter, error)
+
+	// User username used to run the application in container,
+	User runtimeutil.ContainerUser
 }
 
 // Execute runs the command
@@ -277,8 +280,13 @@ func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
 				// TODO(eddiezane): Provide error info about which function needs the network
 				return fltrs, errors.Errorf("network required but not enabled with --network")
 			}
-			spec.Network = r.NetworkName
+			spec.Container.Network.Name = runtimeutil.ContainerNetworkName(r.NetworkName)
 		}
+		// command line username has higher priority
+		if r.User != "" {
+			spec.Container.User = r.User
+		}
+
 		c, err := r.functionFilterProvider(*spec, api)
 		if err != nil {
 			return nil, err
@@ -381,11 +389,13 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode) (kio.Filter
 	}
 	if !r.DisableContainers && spec.Container.Image != "" {
 		// TODO: Add a test for this behavior
-		cf := &container.Filter{
+		c := container.NewContainer(runtimeutil.ContainerSpec{
 			Image:         spec.Container.Image,
-			Network:       spec.Network,
+			Network:       spec.Container.Network,
 			StorageMounts: r.StorageMounts,
-		}
+			User:          spec.Container.User,
+		})
+		cf := &c
 		cf.Exec.FunctionConfig = api
 		cf.Exec.GlobalScope = r.GlobalScope
 		cf.Exec.ResultsFile = resultsFile

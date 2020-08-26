@@ -95,6 +95,7 @@ func NewCmdBuild(out io.Writer) *cobra.Command {
 	addFlagEnablePlugins(cmd.Flags())
 	addFlagReorderOutput(cmd.Flags())
 	addFlagEnableManagedbyLabel(cmd.Flags())
+	addFlagEnableKyaml(cmd.Flags())
 
 	return cmd
 }
@@ -120,25 +121,19 @@ func (o *Options) Validate(args []string) (err error) {
 }
 
 func (o *Options) makeOptions() *krusty.Options {
-	opts := &krusty.Options{
-		DoLegacyResourceSort: o.outOrder == legacy,
-		LoadRestrictions:     getFlagLoadRestrictorValue(),
-	}
+	opts := krusty.MakeDefaultOptions()
+	opts.DoLegacyResourceSort = o.outOrder == legacy
+	opts.LoadRestrictions = getFlagLoadRestrictorValue()
 	if isFlagEnablePluginsSet() {
 		c, err := konfig.EnabledPluginConfig(types.BploUseStaticallyLinked)
 		if err != nil {
 			log.Fatal(err)
 		}
-
 		c.FnpLoadingOptions = o.fnOptions
-
 		opts.PluginConfig = c
-	} else {
-		opts.PluginConfig = konfig.DisabledPluginConfig()
 	}
-	if isManagedbyLabelEnabled() {
-		opts.AddManagedbyLabel = true
-	}
+	opts.AddManagedbyLabel = isManagedbyLabelEnabled()
+	opts.UseKyaml = flagEnableKyamlValue
 	return opts
 }
 

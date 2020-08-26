@@ -14,55 +14,9 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// Resource is a representation of a Kubernetes Resource Model object paired
-// with metadata used by kustomize.
-//
-// At time of writing Resource is changing from being based on an object
-// sitting behind
-//
-//     sigs.k8s.io/kustomize/api/ifc.Unstructured
-//
-// to being based on an instance of
-//
-//    sigs.k8s.io/kustomize/kyaml/yaml.RNode
-//
-// Ultimately, use of the Resource struct in kustomize should be entirely
-// replaced by instances of RNode for direct use in kyaml, with all metadata
-// stored directly in the RNodes as short-lived annotations, to be deleted
-// before final output as part of a final filtration step.  Using annotations
-// will allow pipelined KRM Config Functions to share metadata that would
-// otherwise be hidden in kustomize-only structures.
-//
-// ifc.Unstructured is an interface hiding an instance of
-// 	  sigs.k8s.io/kustomize/api/k8sdeps/kunstruct.UnstructAdapter
-// which in turn adapts an instance of
-//    k8s.io/apimachinery/pkg/apis/meta/v1/unstructured
-// to the ifc.Unstructured interface.  This latter code handles
-// mutations in the old code.
-//
-// The rule in kustomize development has been
-//                           api/
-//                 k8sdeps/ ifc/ krusty/ theRest/
-//
-//   1) Depend on k8s.io/ only via sigs.k8s.io/kustomize/api/k8sdeps.
-//
-//   2) Instances created in k8sdeps/ can only be injected into theRest/
-//      behind interfaces defined in ifc/, arranged by a small bit of code
-//      in krusty/.  Nothing in theRest/ can import k8sdeps/.
-//
-// This was to allow for importing kustomize code into kubectl, which also
-// depends on k8s.io/apimachinery, albeit via a strange, old arrangement
-// predating Go modules.  The idea was to copy the k8sdeps/ tree into kubectl
-// via a large PR, and depend on the rest via vendoring (and a small copy of
-// krusty/ code).  Over 2019, however, kubectl underwent large code changes
-// including a switch to Go modules, and an attempt to extract it from the
-// k8s repo, and this made large kustomize integration PRs hard to get through
-// code review.
-//
-// The new plan is to eliminate k8sdeps/ entirely, along with its k8s.io/
-// dependence, switch to kyaml, and thus allow kustomize to be imported into
-// kubectl via normal Go module imports.
-//
+// Resource is a representation of a Kubernetes Resource Model (KRM) object
+// paired with metadata used by kustomize.
+// For more history, see sigs.k8s.io/kustomize/api/ifc.Unstructured
 type Resource struct {
 	kunStr       ifc.Kunstructured
 	originalName string
@@ -75,7 +29,7 @@ type Resource struct {
 }
 
 func (r *Resource) ResetPrimaryData(incoming *Resource) {
-	r.kunStr = incoming.kunStr.Copy()
+	r.kunStr = incoming.Copy()
 }
 
 func (r *Resource) GetAnnotations() map[string]string {
@@ -86,24 +40,12 @@ func (r *Resource) Copy() ifc.Kunstructured {
 	return r.kunStr.Copy()
 }
 
-func (r *Resource) GetBool(p string) (bool, error) {
-	return r.kunStr.GetBool(p)
-}
-
 func (r *Resource) GetFieldValue(f string) (interface{}, error) {
 	return r.kunStr.GetFieldValue(f)
 }
 
-func (r *Resource) GetFloat64(p string) (float64, error) {
-	return r.kunStr.GetFloat64(p)
-}
-
 func (r *Resource) GetGvk() resid.Gvk {
 	return r.kunStr.GetGvk()
-}
-
-func (r *Resource) GetInt64(p string) (int64, error) {
-	return r.kunStr.GetInt64(p)
 }
 
 func (r *Resource) GetKind() string {
@@ -112,10 +54,6 @@ func (r *Resource) GetKind() string {
 
 func (r *Resource) GetLabels() map[string]string {
 	return r.kunStr.GetLabels()
-}
-
-func (r *Resource) GetMap(p string) (map[string]interface{}, error) {
-	return r.kunStr.GetMap(p)
 }
 
 func (r *Resource) GetName() string {
@@ -128,14 +66,6 @@ func (r *Resource) GetSlice(p string) ([]interface{}, error) {
 
 func (r *Resource) GetString(p string) (string, error) {
 	return r.kunStr.GetString(p)
-}
-
-func (r *Resource) GetStringMap(p string) (map[string]string, error) {
-	return r.kunStr.GetStringMap(p)
-}
-
-func (r *Resource) GetStringSlice(p string) ([]string, error) {
-	return r.kunStr.GetStringSlice(p)
 }
 
 func (r *Resource) Map() map[string]interface{} {
@@ -154,10 +84,6 @@ func (r *Resource) MatchesAnnotationSelector(selector string) (bool, error) {
 	return r.kunStr.MatchesAnnotationSelector(selector)
 }
 
-func (r *Resource) Patch(other ifc.Kunstructured) error {
-	return r.kunStr.Patch(other)
-}
-
 func (r *Resource) SetAnnotations(m map[string]string) {
 	r.kunStr.SetAnnotations(m)
 }
@@ -168,10 +94,6 @@ func (r *Resource) SetGvk(gvk resid.Gvk) {
 
 func (r *Resource) SetLabels(m map[string]string) {
 	r.kunStr.SetLabels(m)
-}
-
-func (r *Resource) SetMap(m map[string]interface{}) {
-	r.kunStr.SetMap(m)
 }
 
 func (r *Resource) SetName(n string) {
@@ -205,7 +127,7 @@ type ResCtxMatcher func(ResCtx) bool
 // DeepCopy returns a new copy of resource
 func (r *Resource) DeepCopy() *Resource {
 	rc := &Resource{
-		kunStr: r.kunStr.Copy(),
+		kunStr: r.Copy(),
 	}
 	rc.copyOtherFields(r)
 	return rc
@@ -213,11 +135,10 @@ func (r *Resource) DeepCopy() *Resource {
 
 // Replace performs replace with other resource.
 func (r *Resource) Replace(other *Resource) {
-	r.kunStr.SetLabels(mergeStringMaps(other.kunStr.GetLabels(), r.kunStr.GetLabels()))
-	r.kunStr.SetAnnotations(
-		mergeStringMaps(other.kunStr.GetAnnotations(), r.kunStr.GetAnnotations()))
-	r.kunStr.SetName(other.GetName())
-	r.kunStr.SetNamespace(other.GetNamespace())
+	r.SetLabels(mergeStringMaps(other.GetLabels(), r.GetLabels()))
+	r.SetAnnotations(mergeStringMaps(other.GetAnnotations(), r.GetAnnotations()))
+	r.SetName(other.GetName())
+	r.SetNamespace(other.GetNamespace())
 	r.copyOtherFields(other)
 }
 
@@ -258,7 +179,7 @@ func (r *Resource) KunstructEqual(o *Resource) bool {
 // Merge performs merge with other resource.
 func (r *Resource) Merge(other *Resource) {
 	r.Replace(other)
-	mergeConfigmap(r.kunStr.Map(), other.Map(), r.Map())
+	mergeConfigmap(r.Map(), other.Map(), r.Map())
 }
 
 func (r *Resource) copyRefBy() []resid.ResId {
@@ -384,7 +305,7 @@ func (r *Resource) setOriginalNs(n string) *Resource {
 
 // String returns resource as JSON.
 func (r *Resource) String() string {
-	bs, err := r.kunStr.MarshalJSON()
+	bs, err := r.MarshalJSON()
 	if err != nil {
 		return "<" + err.Error() + ">"
 	}
@@ -394,7 +315,7 @@ func (r *Resource) String() string {
 // AsYAML returns the resource in Yaml form.
 // Easier to read than JSON.
 func (r *Resource) AsYAML() ([]byte, error) {
-	json, err := r.kunStr.MarshalJSON()
+	json, err := r.MarshalJSON()
 	if err != nil {
 		return nil, err
 	}
@@ -419,7 +340,7 @@ func (r *Resource) NeedHashSuffix() bool {
 
 // GetNamespace returns the namespace the resource thinks it's in.
 func (r *Resource) GetNamespace() string {
-	namespace, _ := r.kunStr.GetString("metadata.namespace")
+	namespace, _ := r.GetString("metadata.namespace")
 	// if err, namespace is empty, so no need to check.
 	return namespace
 }
@@ -429,7 +350,7 @@ func (r *Resource) GetNamespace() string {
 // TODO: compute this once and save it in the resource.
 func (r *Resource) OrgId() resid.ResId {
 	return resid.NewResIdWithNamespace(
-		r.kunStr.GetGvk(), r.GetOriginalName(), r.GetOriginalNs())
+		r.GetGvk(), r.GetOriginalName(), r.GetOriginalNs())
 }
 
 // CurId returns a ResId for the resource using the
@@ -437,7 +358,7 @@ func (r *Resource) OrgId() resid.ResId {
 // This should be unique in any ResMap.
 func (r *Resource) CurId() resid.ResId {
 	return resid.NewResIdWithNamespace(
-		r.kunStr.GetGvk(), r.kunStr.GetName(), r.GetNamespace())
+		r.GetGvk(), r.GetName(), r.GetNamespace())
 }
 
 // GetRefBy returns the ResIds that referred to current resource

@@ -68,7 +68,7 @@ func (p *plugin) Config(
 }
 
 func (p *plugin) Transform(m resmap.ResMap) error {
-	patches, err := p.h.ResmapFactory().MergePatches(p.loadedPatches)
+	patches, err := p.h.ResmapFactory().Merge(p.loadedPatches)
 	if err != nil {
 		return err
 	}

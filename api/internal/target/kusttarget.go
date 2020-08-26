@@ -17,7 +17,6 @@ import (
 	"sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/api/transform"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 )
@@ -28,7 +27,6 @@ type KustTarget struct {
 	ldr           ifc.Loader
 	validator     ifc.Validator
 	rFactory      *resmap.Factory
-	tFactory      resmap.PatchFactory
 	pLdr          *loader.Loader
 }
 
@@ -37,13 +35,11 @@ func NewKustTarget(
 	ldr ifc.Loader,
 	validator ifc.Validator,
 	rFactory *resmap.Factory,
-	tFactory resmap.PatchFactory,
 	pLdr *loader.Loader) *KustTarget {
 	return &KustTarget{
 		ldr:       ldr,
 		validator: validator,
 		rFactory:  rFactory,
-		tFactory:  tFactory,
 		pLdr:      pLdr,
 	}
 }
@@ -258,8 +254,7 @@ func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator) error {
 		return err
 	}
 	r = append(r, lts...)
-	t := transform.NewMultiTransformer(r)
-	return ra.Transform(t)
+	return ra.Transform(newMultiTransformer(r))
 }
 
 func (kt *KustTarget) configureExternalTransformers(transformers []string) ([]resmap.Transformer, error) {
@@ -294,7 +289,6 @@ func (kt *KustTarget) runValidators(ra *accumulator.ResAccumulator) error {
 }
 
 func (kt *KustTarget) removeValidatedByLabel(rm resmap.ResMap) {
-
 	resources := rm.Resources()
 	for _, r := range resources {
 		labels := r.GetLabels()
@@ -353,8 +347,7 @@ func (kt *KustTarget) accumulateComponents(
 func (kt *KustTarget) accumulateDirectory(
 	ra *accumulator.ResAccumulator, ldr ifc.Loader, isComponent bool) (*accumulator.ResAccumulator, error) {
 	defer ldr.Cleanup()
-	subKt := NewKustTarget(
-		ldr, kt.validator, kt.rFactory, kt.tFactory, kt.pLdr)
+	subKt := NewKustTarget(ldr, kt.validator, kt.rFactory, kt.pLdr)
 	err := subKt.Load()
 	if err != nil {
 		return nil, errors.Wrapf(

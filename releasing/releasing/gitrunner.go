@@ -63,14 +63,14 @@ func (gr *gitRunner) DeleteWorktreeDir() error {
 
 func (gr *gitRunner) WorktreePath() (string, error) {
 	if gr.worktreePath == "" {
-		return "", fmt.Errorf("Empty worktree path")
+		return "", fmt.Errorf("empty worktree path")
 	}
 	return gr.worktreePath, nil
 }
 
 func (gr *gitRunner) OriginalGitPath() (string, error) {
 	if gr.originalGitPath == "" {
-		return "", fmt.Errorf("Empty git path")
+		return "", fmt.Errorf("empty git path")
 	}
 	return gr.originalGitPath, nil
 }
@@ -107,7 +107,7 @@ func (gr *gitRunner) CheckRemoteExistence(remote string) error {
 	regString := fmt.Sprintf("(?m)^\\s*%s\\s*$", remote)
 	reg := regexp.MustCompile(regString)
 	if !reg.MatchString(string(stdoutStderr)) {
-		return fmt.Errorf("Cannot find remote named %s", remote)
+		return fmt.Errorf("cannot find remote named %s", remote)
 	}
 	logDebug("Remote %s exists", remote)
 	return nil
