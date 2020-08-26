@@ -92,7 +92,7 @@ type RunFns struct {
 	User runtimeutil.ContainerUser
 
 	// Env contains environment variables that will be exported to container
-	Env runtimeutil.ContainerEnv
+	Env []string
 }
 
 // Execute runs the command
@@ -274,16 +274,18 @@ func (r RunFns) getFunctionsFromFunctions() ([]kio.Filter, error) {
 
 // mergeContainerEnv will merge the envs specified by command line (imperative) and config
 // file (declarative). If they have same key, the imperative value will be respected.
-func (r RunFns) mergeContainerEnv(envs runtimeutil.ContainerEnv) runtimeutil.ContainerEnv {
-	for key, value := range r.Env.EnvVars {
-		envs.AddKeyValue(key, value)
+func (r RunFns) mergeContainerEnv(envs []string) []string {
+	imperative := runtimeutil.NewContainerEnvFromStringSlice(r.Env)
+	declarative := runtimeutil.NewContainerEnvFromStringSlice(envs)
+	for key, value := range imperative.EnvVars {
+		declarative.AddKeyValue(key, value)
 	}
 
-	for _, key := range r.Env.VarsToExport {
-		envs.AddKey(key)
+	for _, key := range imperative.VarsToExport {
+		declarative.AddKey(key)
 	}
 
-	return envs
+	return declarative.Raw()
 }
 
 func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (

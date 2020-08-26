@@ -6,7 +6,6 @@ package container
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -135,10 +134,11 @@ metadata:
 				t.FailNow()
 			}
 			tt.instance.Exec.FunctionConfig = cfg
-			tt.instance.Env.AddKeyValue("KYAML_TEST", "FOO")
+			tt.instance.Env = append(tt.instance.Env, "KYAML_TEST=FOO")
 			tt.instance.setupExec()
 
-			tt.expectedArgs = append(tt.expectedArgs, tt.instance.Env.GetDockerFlags()...)
+			tt.expectedArgs = append(tt.expectedArgs,
+				runtimeutil.NewContainerEnvFromStringSlice(tt.instance.Env).GetDockerFlags()...)
 			tt.expectedArgs = append(tt.expectedArgs, tt.instance.Image)
 
 			if !assert.Equal(t, "docker", tt.instance.Exec.Path) {
@@ -236,17 +236,5 @@ func TestFilter_ExitCode(t *testing.T) {
 	}
 	if !assert.Contains(t, instance.GetExit().Error(), "/not/real/command") {
 		t.FailNow()
-	}
-}
-
-func TestIgnoreEnv(t *testing.T) {
-	os.Setenv(tmpDirEnvKey, "")
-
-	fltr := Filter{ContainerSpec: runtimeutil.ContainerSpec{Image: "example.com:version"}}
-	_, args := fltr.getCommand()
-	for _, arg := range args {
-		if arg == tmpDirEnvKey {
-			t.Fatalf("%s should not be exported to container", tmpDirEnvKey)
-		}
 	}
 }

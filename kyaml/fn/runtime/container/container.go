@@ -152,8 +152,6 @@ func (c *Filter) setupExec() {
 	c.Exec.Args = args
 }
 
-var tmpDirEnvKey string = "TMPDIR"
-
 // getArgs returns the command + args to run to spawn the container
 func (c *Filter) getCommand() (string, []string) {
 	// run the container using docker.  this is simpler than using the docker
@@ -175,7 +173,7 @@ func (c *Filter) getCommand() (string, []string) {
 		args = append(args, "--mount", storageMount.String())
 	}
 
-	args = append(args, c.Env.GetDockerFlags()...)
+	args = append(args, runtimeutil.NewContainerEnvFromStringSlice(c.Env).GetDockerFlags()...)
 	a := append(args, c.Image)
 	return "docker", a
 }
