@@ -86,6 +86,18 @@ func (f Filter) setScalar(node *yaml.RNode) error {
 	return nil
 }
 
+func filterReferralCandidates(
+	referrer *resource.Resource,
+	matches []*resource.Resource) []*resource.Resource {
+	var ret []*resource.Resource
+	for _, m := range matches {
+		if referrer.PrefixesSuffixesEquals(m) {
+			ret = append(ret, m)
+		}
+	}
+	return ret
+}
+
 // selectReferral picks the referral among a subset of candidates.
 // It returns the current name and namespace of the selected candidate.
 // Note that the content of the referricalCandidateSubset slice is most of the time
@@ -103,12 +115,19 @@ func selectReferral(
 		id := res.OrgId()
 		if id.IsSelected(&target) && res.GetOriginalName() == oldName {
 			matches := referralCandidates.GetMatchingResourcesByOriginalId(id.Equals)
-			// If there's more than one match, there's no way
-			// to know which one to pick, so emit error.
+			// If there's more than one match,
+			// filter the matches by prefix and suffix
 			if len(matches) > 1 {
-				return "", "", fmt.Errorf(
-					"multiple matches for %s:\n  %v",
-					id, getIds(matches))
+				filteredMatches := filterReferralCandidates(referrer, matches)
+				if len(filteredMatches) > 1 {
+					return "", "", fmt.Errorf(
+						"multiple matches for %s:\n  %v",
+						id, getIds(filteredMatches))
+				}
+				// Check is the match the resource we are working on
+				if len(filteredMatches) == 0 || res != filteredMatches[0] {
+					continue
+				}
 			}
 			// In the resource, note that it is referenced
 			// by the referrer.
