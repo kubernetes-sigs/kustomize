@@ -17,7 +17,11 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
-// KunstructuredFactoryImpl hides construction using apimachinery types.
+// KunstructuredFactoryImpl makes instances of UnstructAdapter.
+// These instances in turn adapt structs in
+//   k8s.io/apimachinery/pkg/apis/meta/v1/unstructured
+// to implement ifc.Kunstructured.
+// This factory is meant to implement ifc.KunstructuredFactory.
 type KunstructuredFactoryImpl struct {
 	hasher *kustHash
 }

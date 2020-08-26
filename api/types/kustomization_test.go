@@ -5,9 +5,11 @@ import (
 )
 
 func fixKustomizationPostUnmarshallingCheck(k, e *Kustomization) bool {
-	return (k.Kind == e.Kind && k.APIVersion == e.APIVersion &&
-		len(k.Resources) == len(e.Resources) && k.Resources[0] == e.Resources[0] &&
-		k.Bases == nil)
+	return k.Kind == e.Kind &&
+		k.APIVersion == e.APIVersion &&
+		len(k.Resources) == len(e.Resources) &&
+		k.Resources[0] == e.Resources[0] &&
+		k.Bases == nil
 }
 
 func TestFixKustomizationPostUnmarshalling(t *testing.T) {

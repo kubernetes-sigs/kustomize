@@ -60,7 +60,8 @@ kind:
 		return
 	}
 	filter, _ := instance.functionFilterProvider(spec, api)
-	cf := &container.Filter{Image: "example.com:version"}
+	c := container.NewContainer(runtimeutil.ContainerSpec{Image: "example.com:version"})
+	cf := &c
 	cf.Exec.FunctionConfig = api
 	assert.Equal(t, cf, filter)
 }
@@ -90,7 +91,8 @@ kind:
 		return
 	}
 	filter, _ := instance.functionFilterProvider(spec, api)
-	cf := &container.Filter{Image: "example.com:version"}
+	c := container.NewContainer(runtimeutil.ContainerSpec{Image: "example.com:version"})
+	cf := &c
 	cf.Exec.FunctionConfig = api
 	cf.Exec.GlobalScope = true
 	assert.Equal(t, cf, filter)
@@ -920,10 +922,10 @@ func TestCmd_Execute_enableLogSteps(t *testing.T) {
 
 	logs := &bytes.Buffer{}
 	instance := RunFns{
-		Path: dir,
+		Path:                   dir,
 		functionFilterProvider: getFilterProvider(t),
-		LogSteps: true,
-		LogWriter: logs,
+		LogSteps:               true,
+		LogWriter:              logs,
 	}
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()
