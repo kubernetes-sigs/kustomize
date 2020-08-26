@@ -1428,3 +1428,92 @@ func Test_StringToStorageMount(t *testing.T) {
 		assert.Equal(t, tc.expectedOut, (&s).String())
 	}
 }
+
+func TestContainerEnvGetDockerFlags(t *testing.T) {
+	tests := []struct {
+		input  *ContainerEnv
+		output []string
+	}{
+		{
+			input:  NewContainerEnvFromStringSlice([]string{"foo=bar"}),
+			output: []string{"-e", "LOG_TO_STDERR=true", "-e", "STRUCTURED_RESULTS=true", "-e", "foo=bar"},
+		},
+		{
+			input:  NewContainerEnvFromStringSlice([]string{"foo"}),
+			output: []string{"-e", "LOG_TO_STDERR=true", "-e", "STRUCTURED_RESULTS=true", "-e", "foo"},
+		},
+		{
+			input:  NewContainerEnvFromStringSlice([]string{"foo=bar", "baz"}),
+			output: []string{"-e", "LOG_TO_STDERR=true", "-e", "STRUCTURED_RESULTS=true", "-e", "foo=bar", "-e", "baz"},
+		},
+		{
+			input:  NewContainerEnv(),
+			output: []string{"-e", "LOG_TO_STDERR=true", "-e", "STRUCTURED_RESULTS=true"},
+		},
+	}
+
+	for _, tc := range tests {
+		flags := tc.input.GetDockerFlags()
+		assert.Equal(t, tc.output, flags)
+	}
+}
+
+func TestGetContainerEnv(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected ContainerEnv
+	}{
+		{
+			input: `
+apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+  configFn:
+    container:
+      image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
+      envs:
+      - foo=bar
+`,
+			expected: *NewContainerEnvFromStringSlice([]string{"foo=bar"}),
+		},
+		{
+			input: `
+apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+  configFn:
+    container:
+      image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
+      envs:
+      - foo=bar
+      - baz
+`,
+			expected: *NewContainerEnvFromStringSlice([]string{"foo=bar", "baz"}),
+		},
+		{
+			input: `
+apiVersion: v1
+kind: Foo
+metadata:
+  name: foo
+  configFn:
+    container:
+      image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
+      envs:
+      - KUBECONFIG
+`,
+			expected: *NewContainerEnvFromStringSlice([]string{"KUBECONFIG"}),
+		},
+	}
+
+	for _, tc := range tests {
+		cfg, err := yaml.Parse(tc.input)
+		if !assert.NoError(t, err) {
+			return
+		}
+		fn := GetFunctionSpec(cfg)
+		assert.Equal(t, tc.expected, *NewContainerEnvFromStringSlice(fn.Container.Env))
+	}
+}
