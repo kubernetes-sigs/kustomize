@@ -65,6 +65,8 @@ func GetRunFnRunner(name string) *RunFnRunner {
 	r.Command.Flags().StringArrayVar(
 		&r.Mounts, "mount", []string{},
 		"a list of storage options read from the filesystem")
+	r.Command.Flags().StringVar(
+		&r.User, "fn-user", "nobody", "the username/uid used to run function in container")
 	return r
 }
 
@@ -91,6 +93,7 @@ type RunFnRunner struct {
 	Network            bool
 	NetworkName        string
 	Mounts             []string
+	User               string
 }
 
 func (r *RunFnRunner) runE(c *cobra.Command, args []string) error {
@@ -305,6 +308,7 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 		EnableExec:     r.EnableExec,
 		StorageMounts:  storageMounts,
 		ResultsDir:     r.ResultsDir,
+		User:           runtimeutil.ContainerUser(r.User),
 	}
 
 	// don't consider args for the function

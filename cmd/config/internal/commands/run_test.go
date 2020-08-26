@@ -203,6 +203,7 @@ apiVersion: v1
 				Path:           "dir",
 				NetworkName:    "bridge",
 				EnableStarlark: true,
+				User:           "nobody",
 			},
 		},
 		{
@@ -256,6 +257,7 @@ apiVersion: v1
 				Path:        "dir",
 				NetworkName: "bridge",
 				ResultsDir:  "foo/",
+				User:        "nobody",
 			},
 			expected: `
 metadata:
@@ -282,6 +284,26 @@ apiVersion: v1
 			name: "config map bad data",
 			args: []string{"run", "dir", "--image", "foo:bar", "--", "a=b", "c", "e=f"},
 			err:  "must have keys and values separated by",
+		},
+		{
+			name: "specify username",
+			args: []string{"run", "dir", "--fn-user", "root", "--image", "foo:bar"},
+			path: "dir",
+			expectedStruct: &runfn.RunFns{
+				Path:        "dir",
+				NetworkName: "bridge",
+				User:        "root",
+			},
+			expected: `
+metadata:
+  name: function-input
+  annotations:
+    config.kubernetes.io/function: |
+      container: {image: 'foo:bar'}
+data: {}
+kind: ConfigMap
+apiVersion: v1
+`,
 		},
 	}
 
