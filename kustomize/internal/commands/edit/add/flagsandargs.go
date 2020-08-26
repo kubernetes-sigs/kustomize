@@ -26,6 +26,8 @@ type flagsAndArgs struct {
 	Type string
 	// Namespace of secret
 	Namespace string
+	// Disable name suffix
+	DisableNameSuffixHash bool
 }
 
 // Validate validates required fields are set to support structured generation.
