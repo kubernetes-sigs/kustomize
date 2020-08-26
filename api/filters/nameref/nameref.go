@@ -86,7 +86,9 @@ func (f Filter) setScalar(node *yaml.RNode) error {
 	return nil
 }
 
-func filterReferralCandidates(referrer *resource.Resource, matches []*resource.Resource) []*resource.Resource {
+func filterReferralCandidates(
+	referrer *resource.Resource,
+	matches []*resource.Resource) []*resource.Resource {
 	var ret []*resource.Resource
 	for _, m := range matches {
 		if referrer.PrefixesSuffixesEquals(m) {
@@ -113,7 +115,8 @@ func selectReferral(
 		id := res.OrgId()
 		if id.IsSelected(&target) && res.GetOriginalName() == oldName {
 			matches := referralCandidates.GetMatchingResourcesByOriginalId(id.Equals)
-			// If there's more than one match, we need to filter the matches by prefix and suffix
+			// If there's more than one match,
+			// filter the matches by prefix and suffix
 			if len(matches) > 1 {
 				filteredMatches := filterReferralCandidates(referrer, matches)
 				if len(filteredMatches) > 1 {
