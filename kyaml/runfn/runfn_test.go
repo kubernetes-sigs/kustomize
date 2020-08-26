@@ -991,43 +991,41 @@ func TestRunfns_mergeContainerEnv(t *testing.T) {
 	testcases := []struct {
 		name      string
 		instance  RunFns
-		inputEnvs runtimeutil.ContainerEnv
+		inputEnvs []string
 		expect    runtimeutil.ContainerEnv
 	}{
 		{
-			name:      "all empty",
-			instance:  RunFns{},
-			inputEnvs: *runtimeutil.NewContainerEnv(),
-			expect:    *runtimeutil.NewContainerEnv(),
+			name:     "all empty",
+			instance: RunFns{},
+			expect:   *runtimeutil.NewContainerEnv(),
 		},
 		{
 			name:      "empty command line envs",
 			instance:  RunFns{},
-			inputEnvs: *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo=bar"}),
+			inputEnvs: []string{"foo=bar"},
 			expect:    *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo=bar"}),
 		},
 		{
 			name: "empty declarative envs",
 			instance: RunFns{
-				Env: *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo=bar"}),
+				Env: []string{"foo=bar"},
 			},
-			inputEnvs: *runtimeutil.NewContainerEnv(),
-			expect:    *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo=bar"}),
+			expect: *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo=bar"}),
 		},
 		{
 			name: "same key",
 			instance: RunFns{
-				Env: *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo=bar", "foo"}),
+				Env: []string{"foo=bar", "foo"},
 			},
-			inputEnvs: *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo=bar1", "bar"}),
+			inputEnvs: []string{"foo=bar1", "bar"},
 			expect:    *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo=bar", "bar", "foo"}),
 		},
 		{
 			name: "same exported key",
 			instance: RunFns{
-				Env: *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo=bar", "foo"}),
+				Env: []string{"foo=bar", "foo"},
 			},
-			inputEnvs: *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo1=bar1", "foo"}),
+			inputEnvs: []string{"foo1=bar1", "foo"},
 			expect:    *runtimeutil.NewContainerEnvFromStringSlice([]string{"foo=bar", "foo1=bar1", "foo"}),
 		},
 	}
@@ -1036,7 +1034,7 @@ func TestRunfns_mergeContainerEnv(t *testing.T) {
 		tc := testcases[i]
 		t.Run(tc.name, func(t *testing.T) {
 			envs := tc.instance.mergeContainerEnv(tc.inputEnvs)
-			assert.Equal(t, tc.expect.GetDockerFlags(), envs.GetDockerFlags())
+			assert.Equal(t, tc.expect.GetDockerFlags(), runtimeutil.NewContainerEnvFromStringSlice(envs).GetDockerFlags())
 		})
 	}
 }

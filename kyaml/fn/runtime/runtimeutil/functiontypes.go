@@ -102,6 +102,18 @@ func (ce *ContainerEnv) AddKey(key string) {
 	}
 }
 
+// Raw returns a slice of string which represents the envs.
+// Example: [foo=bar, baz]
+func (ce *ContainerEnv) Raw() []string {
+	var ret []string
+	for k, v := range ce.EnvVars {
+		ret = append(ret, k+"="+v)
+	}
+
+	ret = append(ret, ce.VarsToExport...)
+	return ret
+}
+
 // NewContainerEnv returns a pointer to a new ContainerEnv
 func NewContainerEnv() *ContainerEnv {
 	var ce ContainerEnv
@@ -162,11 +174,8 @@ type ContainerSpec struct {
 	// User is the username/uid that application runs as in continer
 	User ContainerUser `json:"user,omitempty" yaml:"user,omitempty"`
 
-	// EnvRaw is a slice of env string.
-	EnvRaw []string `json:"envs,omitempty" yaml:"envs,omitempty"`
-
-	// Env contains environment variables that will be exported to container
-	Env ContainerEnv `json:"-" yaml:"-"`
+	// Env is a slice of env string that will be exposed to container
+	Env []string `json:"envs,omitempty" yaml:"envs,omitempty"`
 }
 
 // ContainerNetwork
@@ -230,7 +239,6 @@ func GetFunctionSpec(n *yaml.RNode) *FunctionSpec {
 	if fn := getFunctionSpecFromAnnotation(n, meta); fn != nil {
 		fn.Container.Network.Name = NetworkNameEmpty
 		fn.StorageMounts = []StorageMount{}
-		fn.Container.Env = *NewContainerEnvFromStringSlice(fn.Container.EnvRaw)
 		return fn
 	}
 

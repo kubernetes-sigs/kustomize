@@ -1514,6 +1514,6 @@ metadata:
 			return
 		}
 		fn := GetFunctionSpec(cfg)
-		assert.Equal(t, tc.expected, fn.Container.Env)
+		assert.Equal(t, tc.expected, *NewContainerEnvFromStringSlice(fn.Container.Env))
 	}
 }
