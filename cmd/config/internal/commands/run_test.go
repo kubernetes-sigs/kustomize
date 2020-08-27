@@ -204,6 +204,7 @@ apiVersion: v1
 				NetworkName:    "bridge",
 				EnableStarlark: true,
 				User:           "nobody",
+				Env:            []string{},
 			},
 		},
 		{
@@ -258,6 +259,7 @@ apiVersion: v1
 				NetworkName: "bridge",
 				ResultsDir:  "foo/",
 				User:        "nobody",
+				Env:         []string{},
 			},
 			expected: `
 metadata:
@@ -293,6 +295,28 @@ apiVersion: v1
 				Path:        "dir",
 				NetworkName: "bridge",
 				User:        "root",
+				Env:         []string{},
+			},
+			expected: `
+metadata:
+  name: function-input
+  annotations:
+    config.kubernetes.io/function: |
+      container: {image: 'foo:bar'}
+data: {}
+kind: ConfigMap
+apiVersion: v1
+`,
+		},
+		{
+			name: "specify env",
+			args: []string{"run", "dir", "--fn-env", "foo=bar", "--fn-env", "baz", "--image", "foo:bar"},
+			path: "dir",
+			expectedStruct: &runfn.RunFns{
+				Path:        "dir",
+				NetworkName: "bridge",
+				User:        "nobody",
+				Env:         []string{"foo=bar", "baz"},
 			},
 			expected: `
 metadata:
