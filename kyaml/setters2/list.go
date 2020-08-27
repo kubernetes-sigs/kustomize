@@ -15,8 +15,12 @@ import (
 )
 
 // List lists the setters specified in the OpenAPI
+// excludes the subpackages which contain file with
+// name OpenAPIFileName in them
 type List struct {
 	Name string
+
+	OpenAPIFileName string
 
 	Setters []SetterDefinition
 
@@ -181,12 +185,13 @@ func (l *List) listSubst(object *yaml.RNode) error {
 }
 
 // count returns the number of fields set by the setter with name
+// this excludes all the subpackages with openAPI file in them
 // set filter is leveraged for this but the resources are not written
 // back to files as only LocalPackageReader is invoked and not writer
 func (l *List) count(path, name string) (int, error) {
 	s := &Set{Name: name}
 	err := kio.Pipeline{
-		Inputs:  []kio.Reader{&kio.LocalPackageReader{PackagePath: path}},
+		Inputs:  []kio.Reader{&kio.LocalPackageReader{PackagePath: path, PackageFileName: l.OpenAPIFileName}},
 		Filters: []kio.Filter{kio.FilterAll(s)},
 	}.Execute()
 

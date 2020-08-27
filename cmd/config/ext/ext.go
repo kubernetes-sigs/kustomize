@@ -12,3 +12,13 @@ import (
 var GetOpenAPIFile = func(args []string) (string, error) {
 	return filepath.Join(args[0], "Krmfile"), nil
 }
+
+// OpenAPIFileName returns the name of the file with openAPI definitions
+// uses OpenAPIFile function to derive it
+func OpenAPIFileName() (string, error) {
+	openAPIFileName, err := GetOpenAPIFile([]string{"."})
+	if err != nil {
+		return "", err
+	}
+	return openAPIFileName, nil
+}
