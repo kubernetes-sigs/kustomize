@@ -21,6 +21,15 @@ of one of the several [Go modules] in this repository.
 > benefit from a change in `bar`, then a release of `bar`
 > should be followed by a change to `foo`'s `go.mod`
 > file and a subsequent release of `foo`.
+>
+> recommended sequence (each stage depends on everything above it)
+>  - sigs.k8s.io/kustomize/kyaml
+>  - sigs.k8s.io/cli-utils
+>  - sigs.k8s.io/kustomize/cmd/config
+>  - sigs.k8s.io/kustomize/api
+>  - sigs.k8s.io/kustomize/kustomize
+
+> then other things like kustom
 
 Briefly:
 - The repo HEAD is in a clean state (all tests passing).
