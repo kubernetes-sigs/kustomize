@@ -14,13 +14,14 @@ This document describes how to perform a [semver release]
 of one of the several [Go modules] in this repository.
 
 > This process doesn't describe or enforce a
-> particular module release sequence. There's a non-cyclic
-> dependence among the some of the modules defined in their
-> respective `go.mod` files.  If module `foo` depends on
-> module `bar`, and clients of `foo` would see an immediate
-> benefit from a change in `bar`, then a release of `bar`
-> should be followed by a change to `foo`'s `go.mod`
-> file and a subsequent release of `foo`.
+> particular module release sequence.
+>
+> Recommended sequence (each stage depends on everything above it)
+>  - sigs.k8s.io/kustomize/kyaml
+>  - sigs.k8s.io/cli-utils
+>  - sigs.k8s.io/kustomize/cmd/config
+>  - sigs.k8s.io/kustomize/api
+>  - sigs.k8s.io/kustomize/kustomize
 
 Briefly:
 - The repo HEAD is in a clean state (all tests passing).
