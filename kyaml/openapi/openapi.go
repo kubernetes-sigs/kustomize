@@ -66,6 +66,41 @@ func AddSchemaFromFile(path string) error {
 	return AddSchemaFromFileUsingField(path, SupplementaryOpenAPIFieldName)
 }
 
+// DeleteSchemaInFile reads the file at path and removes all the openAPI definitions
+// present in file from global schema
+func DeleteSchemaInFile(path string) error {
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	object, err := yaml.Parse(string(b))
+	if err != nil {
+		return err
+	}
+
+	definitions, err := object.Pipe(yaml.Lookup(SupplementaryOpenAPIFieldName, "definitions"))
+	if definitions == nil {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	fields, err := definitions.Fields()
+	if err != nil {
+		return err
+	}
+
+	for _, field := range fields {
+		_, ok := globalSchema.schema.Definitions[field]
+		if ok {
+			delete(globalSchema.schema.Definitions, field)
+		}
+	}
+	return nil
+}
+
 // AddSchemaFromFileUsingField reads the file at path and parses the OpenAPI definitions
 // from the specified field.  If field is the empty string, use the whole document as
 // OpenAPI.

@@ -47,6 +47,10 @@ type SetterCreator struct {
 	// the package publisher's intent to make the setter required to be set.
 	Required bool
 
+	RecurseSubPackages bool
+
+	OpenAPIFileName string
+
 	// Path to openAPI file
 	OpenAPIPath string
 
@@ -55,17 +59,21 @@ type SetterCreator struct {
 }
 
 func (c *SetterCreator) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
-	return nil, c.Create(c.OpenAPIPath, c.ResourcesPath)
+	return nil, c.Create()
 }
 
-func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
-	err := validateSchema(c.Schema)
+func (c SetterCreator) Create() error {
+	err := c.validateSetterInfo()
+	if err != nil {
+		return err
+	}
+	err = validateSchema(c.Schema)
 	if err != nil {
 		return errors.Errorf("invalid schema: %v", err)
 	}
 
 	// Update the resources with the setter reference
-	inout := &kio.LocalPackageReadWriter{PackagePath: resourcesPath}
+	inout := &kio.LocalPackageReadWriter{PackagePath: c.ResourcesPath}
 	a := &setters2.Add{
 		FieldName:  c.FieldName,
 		FieldValue: c.FieldValue,
@@ -78,7 +86,7 @@ func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
 		Outputs: []kio.Writer{inout},
 	}.Execute()
 	if a.Count == 0 {
-		fmt.Printf("setter %s doesn't match any field in resource configs, "+
+		fmt.Printf("setter %q doesn't match any field in resource configs, "+
 			"but creating setter definition\n", c.Name)
 	}
 	if err != nil {
@@ -90,12 +98,12 @@ func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
 		Name: c.Name, Value: c.FieldValue, SetBy: c.SetBy, Description: c.Description,
 		Type: c.Type, Schema: c.Schema, Required: c.Required,
 	}
-	if err := sd.AddToFile(openAPIPath); err != nil {
+	if err := sd.AddToFile(c.OpenAPIPath); err != nil {
 		return err
 	}
 
 	// Load the updated definitions
-	if err := openapi.AddSchemaFromFile(openAPIPath); err != nil {
+	if err := openapi.AddSchemaFromFile(c.OpenAPIPath); err != nil {
 		return err
 	}
 	// if the setter is of array type write the derived list values back to
@@ -103,7 +111,7 @@ func (c SetterCreator) Create(openAPIPath, resourcesPath string) error {
 	if len(a.ListValues) > 0 {
 		sd.ListValues = a.ListValues
 		sd.Value = ""
-		if err := sd.AddToFile(openAPIPath); err != nil {
+		if err := sd.AddToFile(c.OpenAPIPath); err != nil {
 			return err
 		}
 	}
@@ -162,6 +170,35 @@ func validateSchemaTypes(sc *spec.Schema) error {
 				return err
 			}
 		}
+	}
+	return nil
+}
+
+func (c SetterCreator) validateSetterInfo() error {
+	// check if substitution with same name exists and throw error
+	ref, err := spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SubstitutionDefinitionPrefix + c.Name)
+	if err != nil {
+		return err
+	}
+
+	subst, _ := openapi.Resolve(&ref)
+	// if substitution already exists with the input setter name, throw error
+	if subst != nil {
+		return errors.Errorf("substitution with name %q already exists, "+
+			"substitution and setter can't have same name", c.Name)
+	}
+
+	// check if setter with same name exists and throw error
+	ref, err = spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + c.Name)
+	if err != nil {
+		return err
+	}
+
+	setter, _ := openapi.Resolve(&ref)
+	// if setter already exists with the input setter name, throw error
+	if setter != nil {
+		return errors.Errorf("setter with name %q already exists, "+
+			"if you want to modify it, please delete the existing setter and recreate it", c.Name)
 	}
 	return nil
 }

@@ -7,12 +7,13 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/commands"
+	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
 
@@ -1013,22 +1014,19 @@ spec:
 			openapi.ResetOpenAPI()
 			defer openapi.ResetOpenAPI()
 
-			f, err := ioutil.TempFile("", "k8s-cli-")
+			baseDir, err := ioutil.TempDir("", "")
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			defer os.Remove(f.Name())
-			err = ioutil.WriteFile(f.Name(), []byte(test.inputOpenAPI), 0600)
+			defer os.RemoveAll(baseDir)
+
+			f := filepath.Join(baseDir, "Krmfile")
+			err = ioutil.WriteFile(f, []byte(test.inputOpenAPI), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
-			}
-			old := ext.GetOpenAPIFile
-			defer func() { ext.GetOpenAPIFile = old }()
-			ext.GetOpenAPIFile = func(args []string) (s string, err error) {
-				return f.Name(), nil
 			}
 
-			r, err := ioutil.TempFile("", "k8s-cli-*.yaml")
+			r, err := ioutil.TempFile(baseDir, "k8s-cli-*.yaml")
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -1041,7 +1039,7 @@ spec:
 			runner := commands.NewSetRunner("")
 			out := &bytes.Buffer{}
 			runner.Command.SetOut(out)
-			runner.Command.SetArgs(append([]string{r.Name()}, test.args...))
+			runner.Command.SetArgs(append([]string{baseDir}, test.args...))
 			err = runner.Command.Execute()
 			if test.errMsg != "" {
 				if !assert.NotNil(t, err) {
@@ -1056,7 +1054,7 @@ spec:
 				t.FailNow()
 			}
 
-			if test.errMsg == "" && !assert.Equal(t, test.out, out.String()) {
+			if test.errMsg == "" && !assert.Contains(t, out.String(), strings.TrimSpace(test.out)) {
 				t.FailNow()
 			}
 
@@ -1070,13 +1068,88 @@ spec:
 				t.FailNow()
 			}
 
-			actualOpenAPI, err := ioutil.ReadFile(f.Name())
+			actualOpenAPI, err := ioutil.ReadFile(f)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 			if !assert.Equal(t,
 				strings.TrimSpace(test.expectedOpenAPI),
 				strings.TrimSpace(string(actualOpenAPI))) {
+				t.FailNow()
+			}
+		})
+	}
+}
+
+func TestSetSubPackages(t *testing.T) {
+	var tests = []struct {
+		name        string
+		dataset     string
+		packagePath string
+		args        []string
+		expected    string
+	}{
+		{
+			name:    "set-recurse-subpackages",
+			dataset: "dataset-with-setters",
+			args:    []string{"namespace", "otherspace", "-R"},
+			expected: `
+set 1 fields in package "${baseDir}/mysql"
+setter "namespace" is not found in package "${baseDir}/mysql/nosetters"
+set 1 fields in package "${baseDir}/mysql/storage"
+`,
+		},
+		{
+			name:        "set-top-level-pkg-no-recurse-subpackages",
+			dataset:     "dataset-with-setters",
+			packagePath: "mysql",
+			args:        []string{"namespace", "otherspace"},
+			expected: `
+set 1 fields in package "${baseDir}/mysql"
+`,
+		},
+		{
+			name:        "set-nested-pkg-no-recurse-subpackages",
+			dataset:     "dataset-with-setters",
+			packagePath: "mysql/storage",
+			args:        []string{"namespace", "otherspace"},
+			expected: `
+set 1 fields in package "${baseDir}/mysql/storage"
+`,
+		},
+	}
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.name, func(t *testing.T) {
+			// reset the openAPI afterward
+			openapi.ResetOpenAPI()
+			defer openapi.ResetOpenAPI()
+			sourceDir := filepath.Join("test", "testdata", test.dataset)
+			baseDir, err := ioutil.TempDir("", "")
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			copyutil.CopyDir(sourceDir, baseDir)
+			defer os.RemoveAll(baseDir)
+			runner := commands.NewSetRunner("")
+			actual := &bytes.Buffer{}
+			runner.Command.SetOut(actual)
+			runner.Command.SetArgs(append([]string{filepath.Join(baseDir, test.packagePath)}, test.args...))
+			err = runner.Command.Execute()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			// normalize path format for windows
+			actualNormalized := strings.Replace(
+				strings.Replace(actual.String(), "\\", "/", -1),
+				"//", "/", -1)
+
+			expected := strings.Replace(test.expected, "${baseDir}", baseDir, -1)
+			expectedNormalized := strings.Replace(
+				strings.Replace(expected, "\\", "/", -1),
+				"//", "/", -1)
+			if !assert.Equal(t, strings.TrimSpace(expectedNormalized), strings.TrimSpace(actualNormalized)) {
 				t.FailNow()
 			}
 		})

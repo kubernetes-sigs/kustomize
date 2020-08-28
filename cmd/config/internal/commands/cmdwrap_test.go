@@ -182,7 +182,7 @@ items:
   kind: Deployment
   metadata:
     name: mysql-deployment
-    namespace: myspace # {"$openapi":"namespace"}
+    namespace: myspace
     annotations:
       config.kubernetes.io/index: '0'
       config.kubernetes.io/path: 'config/mysql-deployment_deployment.yaml'
@@ -192,7 +192,7 @@ items:
       spec:
         containers:
         - name: mysql
-          image: mysql:1.7.9 # {"$openapi":"image-tag"}
+          image: mysql:1.7.9
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -212,7 +212,7 @@ items:
   kind: Deployment
   metadata:
     name: storage-deployment
-    namespace: myspace # {"$openapi":"namespace"}
+    namespace: myspace
     annotations:
       config.kubernetes.io/index: '0'
       config.kubernetes.io/path: 'config/storage-deployment_deployment.yaml'

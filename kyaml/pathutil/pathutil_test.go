@@ -13,6 +13,32 @@ import (
 )
 
 func TestSubDirsWithFile(t *testing.T) {
+	var tests = []struct {
+		name          string
+		fileName      string
+		recurse       bool
+		outFilesCount int
+	}{
+		{
+			name:          "dirs-with-file-recurse",
+			fileName:      "Krmfile",
+			outFilesCount: 3,
+			recurse:       true,
+		},
+		{
+			name:          "dirs-with-non-existent-file-recurse",
+			fileName:      "non-existent-file.txt",
+			outFilesCount: 0,
+			recurse:       true,
+		},
+		{
+			name:          "dir-with-file-no-recurse",
+			fileName:      "Krmfile",
+			outFilesCount: 1,
+			recurse:       false,
+		},
+	}
+
 	dir, err := ioutil.TempDir("", "")
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -23,28 +49,17 @@ func TestSubDirsWithFile(t *testing.T) {
 		t.FailNow()
 	}
 
-	res, err := SubDirsWithFile(dir, "Krmfile")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	if !assert.Equal(t, 3, len(res)) {
-		t.FailNow()
-	}
-}
-
-func TestSubDirsWithFileNoMatch(t *testing.T) {
-	dir, err := ioutil.TempDir("", "")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(dir)
-	res, err := SubDirsWithFile(dir, "non-existent-file.txt")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	var expected []string
-	if !assert.Equal(t, expected, res) {
-		t.FailNow()
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.name, func(t *testing.T) {
+			res, err := DirsWithFile(dir, test.fileName, test.recurse)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			if !assert.Equal(t, test.outFilesCount, len(res)) {
+				t.FailNow()
+			}
+		})
 	}
 }
 
