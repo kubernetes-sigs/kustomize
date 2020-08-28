@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.73.0-DEV" />
+<meta name="generator" content="Hugo 0.74.3" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -29,7 +29,8 @@
 <meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="Kustomize Plugins">
 <meta itemprop="description" content="Kustomize plugins guide
-"><meta name="twitter:card" content="summary"/>
+">
+<meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Kustomize Plugins"/>
 <meta name="twitter:description" content="Kustomize plugins guide
 "/>
@@ -586,7 +587,12 @@ marshalled resources on <code>stdin</code> and capture
 </blockquote>
 <p><strong><code>kustomize.config.k8s.io/needs-hash</code></strong></p>
 <p>Resources can be marked as needing to be processed by the internal hash transformer by including the <code>needs-hash</code> annotation. When set valid values for the annotation are <code>&quot;true&quot;</code> and <code>&quot;false&quot;</code> which respectively enable or disable hash suffixing for the resource. Omitting the annotation is equivalent to setting the value <code>&quot;false&quot;</code>.</p>
-<p>If this annotation is set on a resource not supported by the hash transformer the build will fail.</p>
+<p>Hashes are determined as follows:</p>
+<ul>
+<li>For <code>ConfigMap</code> resources, hashes are based on the values of the <code>name</code>, <code>data</code>, and <code>binaryData</code> fields.</li>
+<li>For <code>Secret</code> resources, hashes are based on the values of the <code>name</code>, <code>type</code>, <code>data</code>, and <code>stringData</code> fields.</li>
+<li>For any other object type, hashes are based on the entire object content (i.e. all fields).</li>
+</ul>
 <p>Example:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>v1<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ConfigMap<span style="color:#f8f8f8;text-decoration:underline">
@@ -732,7 +738,7 @@ go build -buildmode plugin \
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 17, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/bc581b70bf74e42fc2845c1cfc18e8fc6fbd8956">Fix go plugins caveats link (bc581b70)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 19, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/4fbe565b369267585e2dbfb3613fde57edb07db2">Allow hash suffixing of arbitrary types (4fbe565b)</a>
 </div>
 </div>
 
