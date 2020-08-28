@@ -49,3 +49,108 @@ patches:
 The `name` and `namespace` fields of the patch target selector are
 automatically anchored regular expressions. This means that the value `myapp`
 is equivalent to `^myapp$`. 
+
+Consider the following `deployment.yaml` common for both the examples:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: the-deployment
+spec:
+  replicas: 5
+  template:
+    containers:
+      - name: the-container
+        image: registry/conatiner:latest
+```
+
+## Example I
+
+### Intent
+
+To Make the container image point to a specific version and not to the latest container in the
+registry.
+
+### File Input
+
+```yaml
+# kustomization.yaml
+resources:
+- deployment.yaml
+
+patches:
+- path: patch.yaml
+```
+
+```yaml
+# patch.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: the-deployment
+spec:
+  template:
+    containers:
+      - name: the-container
+        image: registry/conatiner:1.0.0
+```
+
+### Build Output
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: the-deployment
+spec:
+  replicas: 5
+  template:
+    containers:
+    - image: registry/conatiner:1.0.0
+      name: the-container
+```
+
+## Example II
+
+### Intent
+
+To Make the container image point to a specific version and not to the latest container in the
+registry.
+
+### File Input
+
+```yaml
+# kustomization.yaml
+resources:
+- deployment.yaml
+
+patches:
+- target:
+    kind: Deployment
+    name: the-deployment
+  path: patch.json
+```
+
+```yaml
+# patch.json
+[
+   {"op": "replace", "path": "/spec/template/containers/0/image", "value": "registry/conatiner:1.0.0"}
+]
+
+```
+
+### Build Output
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: the-deployment
+spec:
+  replicas: 5
+  template:
+    containers:
+    - image: registry/conatiner:1.0.0
+      name: the-container
+```
