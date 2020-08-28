@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
@@ -70,21 +71,21 @@ func (r *ListSettersRunner) runE(c *cobra.Command, args []string) error {
 			return err
 		}
 
-		openAPIPaths, err := pathutil.SubDirsWithFile(args[0], openAPIFileName)
+		resourcePaths, err := pathutil.DirsWithFile(args[0], openAPIFileName, true)
 		if err != nil {
 			return err
 		}
-		if len(openAPIPaths) == 0 {
-			return errors.Errorf("unable to find %s in %s", openAPIFileName, args[0])
+		if len(resourcePaths) == 0 {
+			return errors.Errorf("unable to find %s in package %s", openAPIFileName, args[0])
 		}
 
 		// list setters for all the subpackages with openAPI file paths
-		for _, openAPIPath := range openAPIPaths {
+		for _, resourcePath := range resourcePaths {
 			r.List = setters2.List{
 				Name:            r.List.Name,
 				OpenAPIFileName: openAPIFileName,
 			}
-			resourcePath := strings.TrimSuffix(openAPIPath, openAPIFileName)
+			openAPIPath := filepath.Join(resourcePath, openAPIFileName)
 			fmt.Fprintf(c.OutOrStdout(), "%s\n", resourcePath)
 			if err := r.ListSetters(c, openAPIPath, resourcePath); err != nil {
 				return err

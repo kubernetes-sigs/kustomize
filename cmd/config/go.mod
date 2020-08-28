@@ -18,4 +18,4 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.7.1
 )
 
-replace sigs.k8s.io/kustomize/kyaml v0.7.1 => ../../kyaml
+replace sigs.k8s.io/kustomize/kyaml => ../../kyaml
