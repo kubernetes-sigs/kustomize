@@ -21,3 +21,6 @@
 *.DS_store
 
 .bin
+
+# for users of vscode
+.vscode
