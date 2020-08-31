@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.74.3" />
+<meta name="generator" content="Hugo 0.68.3" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -29,8 +29,7 @@
 <meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="patches">
 <meta itemprop="description" content="Patch resources
-">
-<meta name="twitter:card" content="summary"/>
+"><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="patches"/>
 <meta name="twitter:description" content="Patch resources
 "/>
@@ -507,10 +506,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kustomize/zh/api-reference/kustomization/patchesjson6902/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">patchesJson6902</a>
+    <a  href="/kustomize/zh/api-reference/kustomization/patchesjson6902/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">patchesJson6902</a>
   </li>
   <ul>
-    <li class="collapse " id="kustomizezhapi-referencekustomizationpatchesjson6902">
+    <li class="collapse show" id="kustomizezhapi-referencekustomizationpatchesjson6902">
       
       
       
@@ -530,10 +529,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kustomize/zh/api-reference/kustomization/patchesstrategicmerge/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">patchesStrategicMerge</a>
+    <a  href="/kustomize/zh/api-reference/kustomization/patchesstrategicmerge/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">patchesStrategicMerge</a>
   </li>
   <ul>
-    <li class="collapse " id="kustomizezhapi-referencekustomizationpatchesstrategicmerge">
+    <li class="collapse show" id="kustomizezhapi-referencekustomizationpatchesstrategicmerge">
       
       
       
@@ -702,6 +701,25 @@
 
 
 
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#示例1">示例1</a>
+      <ul>
+        <li><a href="#目的">目的</a></li>
+        <li><a href="#文件输入">文件输入</a></li>
+        <li><a href="#构建输出">构建输出</a></li>
+      </ul>
+    </li>
+    <li><a href="#示例2">示例2</a>
+      <ul>
+        <li><a href="#目的-1">目的</a></li>
+        <li><a href="#文件输入-1">文件输入</a></li>
+        <li><a href="#构建输出-1">构建输出</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
 
 
           </div>
@@ -776,7 +794,78 @@
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>MyKind<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">labelSelector</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;env=dev&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><p>patch 目标选择器的 <code>name</code> 和 <code>namespace</code> 字段是自动锚定的正则表达式。这意味着 <code>myapp</code> 的值相当于 <code>^myapp$</code>。</p>
-
+<p>示例 1 和示例 2 都将使用以下 <code>deployment.yaml</code>：</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>apps/v1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Deployment<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>the-deployment<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">replicas</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#0000cf;font-weight:bold">5</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">template</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">containers</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>the-container<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>registry/conatiner<span style="color:#000;font-weight:bold">:</span>latest<span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><h2 id="示例1">示例1</h2>
+<h3 id="目的">目的</h3>
+<p>将容器镜像指向特定版本，代替 latest 版本。</p>
+<h3 id="文件输入">文件输入</h3>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># kustomization.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">resources</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>- deployment.yaml<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">patches</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">path</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>patch.yaml<span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># patch.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>apps/v1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Deployment<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>the-deployment<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">template</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">containers</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>the-container<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>registry/conatiner<span style="color:#000;font-weight:bold">:</span><span style="color:#0000cf;font-weight:bold">1.0.0</span><span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><h3 id="构建输出">构建输出</h3>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>apps/v1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Deployment<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>the-deployment<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">replicas</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#0000cf;font-weight:bold">5</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">template</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">containers</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span>- <span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>registry/conatiner<span style="color:#000;font-weight:bold">:</span><span style="color:#0000cf;font-weight:bold">1.0.0</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>the-container<span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><h2 id="示例2">示例2</h2>
+<h3 id="目的-1">目的</h3>
+<p>同上。</p>
+<h3 id="文件输入-1">文件输入</h3>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># kustomization.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">resources</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>- deployment.yaml<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">patches</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">target</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Deployment<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>the-deployment<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">path</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>patch.json<span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># patch.json</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#000;font-weight:bold">[</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">   </span>{<span style="color:#204a87;font-weight:bold">&#34;op&#34;: &#34;replace&#34;, &#34;path&#34;: &#34;/spec/template/containers/0/image&#34;, &#34;value&#34;: </span><span style="color:#4e9a06">&#34;registry/conatiner:1.0.0&#34;</span>}<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#000;font-weight:bold">]</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><h3 id="构建输出-1">构建输出</h3>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>apps/v1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Deployment<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>the-deployment<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">replicas</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#0000cf;font-weight:bold">5</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">template</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">containers</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span>- <span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>registry/conatiner<span style="color:#000;font-weight:bold">:</span><span style="color:#0000cf;font-weight:bold">1.0.0</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>the-container<span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div>
         <div class="section-index">
     
     
