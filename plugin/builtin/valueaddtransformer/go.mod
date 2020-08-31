@@ -1,4 +1,4 @@
-module sigs.k8s.io/kustomize/plugin/someteam.example.com/v1/valueaddtransformer
+module sigs.k8s.io/kustomize/plugin/builtin/valueaddtransformer
 
 go 1.14
 
