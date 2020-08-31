@@ -45,17 +45,18 @@ $(MYGOBIN)/golangci-lint-kustomize:
 		GO111MODULE=on go build -tags=tools -o $(MYGOBIN)/golangci-lint-kustomize github.com/golangci/golangci-lint/cmd/golangci-lint; \
 	)
 
-# Version pinned by api/go.mod
+$(MYGOBIN)/gorepomod:
+	cd api; \
+	go install github.com/monopole/gorepomod
+
 $(MYGOBIN)/mdrip:
 	cd api; \
 	go install github.com/monopole/mdrip
 
-# Version pinned by api/go.mod
 $(MYGOBIN)/stringer:
 	cd api; \
 	go install golang.org/x/tools/cmd/stringer
 
-# Version pinned by api/go.mod
 $(MYGOBIN)/goimports:
 	cd api; \
 	go install golang.org/x/tools/cmd/goimports
@@ -81,6 +82,7 @@ $(MYGOBIN)/kustomize:
 install-tools: \
 	$(MYGOBIN)/goimports \
 	$(MYGOBIN)/golangci-lint-kustomize \
+	$(MYGOBIN)/gorepomod \
 	$(MYGOBIN)/mdrip \
 	$(MYGOBIN)/pluginator \
 	$(MYGOBIN)/stringer

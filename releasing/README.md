@@ -22,6 +22,19 @@ of one of the several [Go modules] in this repository.
 >  - sigs.k8s.io/kustomize/cmd/config
 >  - sigs.k8s.io/kustomize/api
 >  - sigs.k8s.io/kustomize/kustomize
+>
+> In commands this is roughly:
+>  - (cd releasing/releasing; go run . release kyaml patch)
+>  - # in the cli-utils repo. pin to kyaml v0.7.1, and tag cli-utils.
+>  - gorepomod pin kyaml v0.7.1
+>  - (cd releasing/releasing; go run . release cmd/config minor)
+>  - gorepomod pin cmd/config v0.7.0
+>  - (cd releasing/releasing; go run . release api minor)
+>  - gorepomod pin api v0.6.0
+>  - (cd releasing/releasing; go run . release kustomize minor)
+>  - gorepomod unpin api
+>  - gorepomod unpin cmd/config
+>  - gorepomod unpin kyaml
 
 Briefly:
 - The repo HEAD is in a clean state (all tests passing).
