@@ -17,7 +17,7 @@ resources:
 - myNamespace.yaml
 - sub-dir/some-deployment.yaml
 - ../../commonbase
-- github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6
+- github.com/kubernetes-sigs/kustomize/tree/v1.0.6/examples
 - deployment.yaml
 - github.com/kubernets-sigs/kustomize/examples/helloWorld?ref=test-branch
 ```

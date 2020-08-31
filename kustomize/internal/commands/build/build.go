@@ -46,7 +46,7 @@ The argument can be a URL resolving to a directory
 with a kustomization.yaml file, e.g.
 
   kustomize build \
-    github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6
+    github.com/kubernetes-sigs/kustomize/tree/v1.0.6/examples
 
 The URL should be formulated as described at
 https://github.com/hashicorp/go-getter#url-format

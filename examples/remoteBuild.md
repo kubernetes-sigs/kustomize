@@ -13,7 +13,7 @@ one pod in the output:
 <!-- @remoteOverlayBuild @testAgainstLatestRelease -->
 
 ```
-target="github.com/kubernetes-sigs/kustomize/examples/multibases/dev/?ref=v1.0.6"
+target="github.com/kubernetes-sigs/kustomize/tree/v1.0.6/examples"
 test 1 == \
   $(kustomize build $target | grep dev-myapp-pod | wc -l); \
   echo $?
@@ -25,7 +25,7 @@ someone who wants to send them all at the same time):
 
 <!-- @remoteBuild @testAgainstLatestRelease -->
 ```
-target="https://github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6"
+target="https://github.com/kubernetes-sigs/kustomize/tree/v1.0.6/examples"
 test 3 == \
   $(kustomize build $target | grep cluster-a-.*-myapp-pod | wc -l); \
   echo $?
@@ -51,7 +51,7 @@ DEMO_HOME=$(mktemp -d)
 
 cat <<EOF >$DEMO_HOME/kustomization.yaml
 resources:
-- github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6
+- github.com/kubernetes-sigs/kustomize/tree/v1.0.6/examples
 namePrefix: remote-
 EOF
 ```
