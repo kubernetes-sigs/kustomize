@@ -121,16 +121,7 @@ to create an access\_token. From my understanding, this is the only way to do
 these code search queries (without first specifying a repository).
 
 To generate a token, go to your GitHub's account in Settings > Developer
-Settings > Personal access tokens. It should look like this.
-
-![GitHub Token 1](
-https://sigs.k8s.io/kustomize/internal/tools/pictures/github_token.png)
-
-From here you want to generate a new token and  have the following
-configuration:
-
-![GitHub Token 1](
-https://sigs.k8s.io/kustomize/internal/tools/pictures/token_config.png)
+Settings > Personal access tokens.
 
 If you have uses for any other data from this token, (org data, or something
 else) you can pick and choose, but be careful since it can grant this
