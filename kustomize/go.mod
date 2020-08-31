@@ -20,3 +20,5 @@ exclude (
 )
 
 replace sigs.k8s.io/kustomize/api v0.6.0 => ../api
+
+replace sigs.k8s.io/kustomize/cmd/config v0.6.0 => ../cmd/config
