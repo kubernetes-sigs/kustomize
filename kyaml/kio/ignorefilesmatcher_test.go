@@ -53,7 +53,7 @@ testfile.yaml
 				assert.FailNow(t, err.Error())
 			}
 
-			ignoreFilesMatcher := ignoreFilesMatcher{}
+			ignoreFilesMatcher := IgnoreFilesMatcher{}
 			err = ignoreFilesMatcher.readIgnoreFile(dir)
 			if !assert.NoError(t, err) {
 				t.FailNow()

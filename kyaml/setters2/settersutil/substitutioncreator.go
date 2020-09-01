@@ -47,15 +47,23 @@ type SubstitutionCreator struct {
 	// Path to openAPI file
 	OpenAPIPath string
 
+	OpenAPIFileName string
+
+	RecurseSubPackages bool
+
 	// Path to resources folder
 	ResourcesPath string
 }
 
 func (c *SubstitutionCreator) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
-	return nil, c.Create(c.OpenAPIPath, c.ResourcesPath)
+	return nil, c.Create()
 }
 
-func (c SubstitutionCreator) Create(openAPIPath, resourcesPath string) error {
+func (c SubstitutionCreator) Create() error {
+	err := c.validateSubstitutionInfo()
+	if err != nil {
+		return err
+	}
 	values, err := markersAndRefs(c.Name, c.Pattern)
 	if err != nil {
 		return err
@@ -70,22 +78,22 @@ func (c SubstitutionCreator) Create(openAPIPath, resourcesPath string) error {
 	// the input substitution definition is updated in the openAPI file and then parsed
 	// to check if there are any cycles in nested substitutions, if there are
 	// any, the openAPI file will be reverted to current state and error is thrown
-	stat, err := os.Stat(openAPIPath)
+	stat, err := os.Stat(c.OpenAPIPath)
 	if err != nil {
 		return err
 	}
 
-	curOpenAPI, err := ioutil.ReadFile(openAPIPath)
+	curOpenAPI, err := ioutil.ReadFile(c.OpenAPIPath)
 	if err != nil {
 		return err
 	}
 
-	if err := d.AddToFile(openAPIPath); err != nil {
+	if err := d.AddToFile(c.OpenAPIPath); err != nil {
 		return err
 	}
 
 	// Load the updated definitions
-	if err := openapi.AddSchemaFromFile(openAPIPath); err != nil {
+	if err := openapi.AddSchemaFromFile(c.OpenAPIPath); err != nil {
 		return err
 	}
 
@@ -105,19 +113,19 @@ func (c SubstitutionCreator) Create(openAPIPath, resourcesPath string) error {
 		return err
 	}
 
-	err = c.CreateSettersForSubstitution(openAPIPath)
+	err = c.CreateSettersForSubstitution(c.OpenAPIPath)
 	if err != nil {
 		return err
 	}
 
 	// Load the updated definitions after setters are created
-	if err := openapi.AddSchemaFromFile(openAPIPath); err != nil {
+	if err := openapi.AddSchemaFromFile(c.OpenAPIPath); err != nil {
 		return err
 	}
 
 	// revert openAPI file if there are cycles detected in created input substitution
 	if err := checkForCycles(ext, visited); err != nil {
-		if writeErr := ioutil.WriteFile(openAPIPath, curOpenAPI, stat.Mode().Perm()); writeErr != nil {
+		if writeErr := ioutil.WriteFile(c.OpenAPIPath, curOpenAPI, stat.Mode().Perm()); writeErr != nil {
 			return writeErr
 		}
 		return err
@@ -130,7 +138,7 @@ func (c SubstitutionCreator) Create(openAPIPath, resourcesPath string) error {
 	}
 
 	// Update the resources with the substitution reference
-	inout := &kio.LocalPackageReadWriter{PackagePath: resourcesPath}
+	inout := &kio.LocalPackageReadWriter{PackagePath: c.ResourcesPath}
 	err = kio.Pipeline{
 		Inputs:  []kio.Reader{inout},
 		Filters: []kio.Filter{kio.FilterAll(a)},
@@ -203,7 +211,7 @@ func (c SubstitutionCreator) CreateSettersForSubstitution(openAPIPath string) er
 		// continue if ref is a substitution, as it has already been checked if it exists
 		// as part of preRunE
 		if strings.Contains(value.Ref, fieldmeta.SubstitutionDefinitionPrefix) {
-			fmt.Printf("found a substitution with name %s\n", value.Marker)
+			fmt.Printf("found a substitution with name %q\n", value.Marker)
 			continue
 		}
 		setterObj, err := y.Pipe(yaml.Lookup(
@@ -419,4 +427,33 @@ func min(a int, b int) int {
 		return a
 	}
 	return b
+}
+
+func (c SubstitutionCreator) validateSubstitutionInfo() error {
+	// check if substitution with same name exists and throw error
+	ref, err := spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SubstitutionDefinitionPrefix + c.Name)
+	if err != nil {
+		return err
+	}
+
+	subst, _ := openapi.Resolve(&ref)
+	// if substitution already exists with the input substitution name, throw error
+	if subst != nil {
+		return errors.Errorf("substitution with name %q already exists", c.Name)
+	}
+
+	// check if setter with same name exists and throw error
+	ref, err = spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + c.Name)
+	if err != nil {
+		return err
+	}
+
+	setter, _ := openapi.Resolve(&ref)
+	// if setter already exists with input substitution name, throw error
+	if setter != nil {
+		return errors.Errorf(fmt.Sprintf("setter with name %q already exists, "+
+			"substitution and setter can't have same name", c.Name))
+	}
+
+	return nil
 }

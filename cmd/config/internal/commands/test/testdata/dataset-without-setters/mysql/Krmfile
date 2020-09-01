@@ -1,0 +1,6 @@
+apiVersion: krm.dev/v1alpha1
+kind: Krmfile
+metadata:
+  name: mysql
+packageMetadata:
+  shortDescription: sample description

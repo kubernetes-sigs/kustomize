@@ -5,13 +5,13 @@ package commands
 
 import (
 	"fmt"
+	"path/filepath"
 
-	"github.com/go-openapi/spec"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/errors"
-	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
+	"sigs.k8s.io/kustomize/kyaml/pathutil"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
 
@@ -19,10 +19,10 @@ import (
 func NewCreateSubstitutionRunner(parent string) *CreateSubstitutionRunner {
 	r := &CreateSubstitutionRunner{}
 	cs := &cobra.Command{
-		Use:     "create-subst DIR NAME",
-		Args:    cobra.ExactArgs(2),
-		PreRunE: r.preRunE,
-		RunE:    r.runE,
+		Use:    "create-subst DIR NAME",
+		Args:   cobra.ExactArgs(2),
+		PreRun: r.preRun,
+		RunE:   r.runE,
 	}
 	cs.Flags().StringVar(&r.CreateSubstitution.FieldName, "field", "",
 		"name of the field to set -- e.g. --field image")
@@ -30,6 +30,8 @@ func NewCreateSubstitutionRunner(parent string) *CreateSubstitutionRunner {
 		"value of the field to create substitution for -- e.g. --field-value nginx:0.1.0")
 	cs.Flags().StringVar(&r.CreateSubstitution.Pattern, "pattern", "",
 		`substitution pattern -- e.g. --pattern \${my-image-setter}:\${my-tag-setter}`)
+	cs.Flags().BoolVarP(&r.CreateSubstitution.RecurseSubPackages, "recurse-subpackages", "R", false,
+		"creates substitution recursively in all the nested subpackages")
 	_ = cs.MarkFlagRequired("pattern")
 	_ = cs.MarkFlagRequired("field-value")
 	fixDocs(parent, cs)
@@ -49,49 +51,58 @@ type CreateSubstitutionRunner struct {
 }
 
 func (r *CreateSubstitutionRunner) runE(c *cobra.Command, args []string) error {
-	return handleError(c, r.CreateSubstitution.Create(r.OpenAPIFile, args[0]))
+	openAPIFileName, err := ext.OpenAPIFileName()
+	if err != nil {
+		return err
+	}
+
+	r.CreateSubstitution.OpenAPIFileName = openAPIFileName
+	resourcePackagesPaths, err := pathutil.DirsWithFile(args[0], openAPIFileName, r.CreateSubstitution.RecurseSubPackages)
+	if err != nil {
+		return err
+	}
+
+	if len(resourcePackagesPaths) == 0 {
+		return errors.Errorf("unable to find %q in package %q", r.CreateSubstitution.OpenAPIFileName, args[0])
+	}
+
+	for _, resourcesPath := range resourcePackagesPaths {
+		r.CreateSubstitution = settersutil.SubstitutionCreator{
+			Name:               r.CreateSubstitution.Name,
+			FieldName:          r.CreateSubstitution.FieldName,
+			FieldValue:         r.CreateSubstitution.FieldValue,
+			RecurseSubPackages: r.CreateSubstitution.RecurseSubPackages,
+			Pattern:            r.CreateSubstitution.Pattern,
+			OpenAPIFileName:    openAPIFileName,
+			OpenAPIPath:        filepath.Join(resourcesPath, openAPIFileName),
+			ResourcesPath:      resourcesPath,
+		}
+
+		// Add schema present in openAPI file for current package
+		if err := openapi.AddSchemaFromFile(r.CreateSubstitution.OpenAPIPath); err != nil {
+			return err
+		}
+		err := r.CreateSubstitution.Create()
+		if err != nil {
+			// return err if there is only package
+			if len(resourcePackagesPaths) == 1 {
+				return err
+			} else {
+				// print error message and continue if there are multiple packages to set
+				fmt.Fprintf(c.OutOrStdout(), "%s in package %q\n", err.Error(), r.CreateSubstitution.ResourcesPath)
+			}
+		} else {
+			fmt.Fprintf(c.OutOrStdout(), "created substitution %q in package %q\n", r.CreateSubstitution.Name, r.CreateSubstitution.ResourcesPath)
+		}
+
+		// Delete schema present in openAPI file for current package
+		if err := openapi.DeleteSchemaInFile(r.CreateSubstitution.OpenAPIPath); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func (r *CreateSubstitutionRunner) preRunE(c *cobra.Command, args []string) error {
-	var err error
+func (r *CreateSubstitutionRunner) preRun(c *cobra.Command, args []string) {
 	r.CreateSubstitution.Name = args[1]
-	if err != nil {
-		return err
-	}
-
-	r.OpenAPIFile, err = ext.GetOpenAPIFile(args)
-	if err != nil {
-		return err
-	}
-
-	if err := openapi.AddSchemaFromFile(r.OpenAPIFile); err != nil {
-		return err
-	}
-
-	// check if substitution with same name exists and throw error
-	ref, err := spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SubstitutionDefinitionPrefix + r.CreateSubstitution.Name)
-	if err != nil {
-		return err
-	}
-
-	subst, _ := openapi.Resolve(&ref)
-	// if substitution already exists with the input substitution name, throw error
-	if subst != nil {
-		return errors.Errorf("substitution with name %s already exists", r.CreateSubstitution.Name)
-	}
-
-	// check if setter with same name exists and throw error
-	ref, err = spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + r.CreateSubstitution.Name)
-	if err != nil {
-		return err
-	}
-
-	setter, _ := openapi.Resolve(&ref)
-	// if setter already exists with input substitution name, throw error
-	if setter != nil {
-		return errors.Errorf(fmt.Sprintf("setter with name %s already exists, "+
-			"substitution and setter can't have same name", r.CreateSubstitution.Name))
-	}
-
-	return nil
 }
