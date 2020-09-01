@@ -1,4 +1,4 @@
-# 使用 kustomize 对 helm chart s进行修改
+# 使用 kustomize 对 helm charts 进行修改
 
 [last mile]: https://testingclouds.wordpress.com/2018/07/20/844/
 [stable chart]: https://github.com/helm/charts/tree/master/stable
