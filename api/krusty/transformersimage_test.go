@@ -215,25 +215,25 @@ spec2:
   template:
     spec:
       containers:
-      - image: nginx:v1
+      - image: nginx:v2
         name: nginx3
-      - image: my-nginx:latest
+      - image: my-nginx:previous
         name: nginx4
 spec3:
   template:
     spec:
       initContainers:
-      - image: postgres:alpine-9
+      - image: my-postgres:v3
         name: postgresdb
-      - image: docker:17-git
+      - image: my-docker@sha256:25a0d4b4
         name: init-docker
-      - image: myprivaterepohostname:1234/my/image:latest
+      - image: myprivaterepohostname:1234/my/image:v1.0.1
         name: myImage
-      - image: myprivaterepohostname:1234/my/image
+      - image: myprivaterepohostname:1234/my/image:v1.0.1
         name: myImage2
       - image: my-app-image:v1
         name: my-app
-      - image: gcr.io:8080/my-project/my-cool-app:latest
+      - image: my-cool-app:latest
         name: my-cool-app
 `)
 }
