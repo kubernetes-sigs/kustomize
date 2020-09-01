@@ -6,6 +6,7 @@ package commands
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -13,6 +14,7 @@ import (
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/pathutil"
 	"sigs.k8s.io/kustomize/kyaml/setters"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
@@ -39,6 +41,8 @@ func NewSetRunner(parent string) *SetRunner {
 		"annotate the field with a description of its value")
 	c.Flags().StringVar(&setterVersion, "version", "",
 		"use this version of the setter format")
+	c.Flags().BoolVarP(&r.Set.RecurseSubPackages, "recurse-subpackages", "R", false,
+		"sets recursively in all the nested subpackages")
 	c.Flags().MarkHidden("version")
 
 	return r
@@ -126,15 +130,53 @@ func (r *SetRunner) preRunE(c *cobra.Command, args []string) error {
 			return err
 		}
 	}
-
 	return nil
 }
 
 func (r *SetRunner) runE(c *cobra.Command, args []string) error {
 	if setterVersion == "v2" {
-		count, err := r.Set.Set(r.OpenAPIFile, args[0])
-		fmt.Fprintf(c.OutOrStdout(), "set %d fields\n", count)
-		return handleError(c, err)
+		openAPIFileName, err := ext.OpenAPIFileName()
+		if err != nil {
+			return err
+		}
+
+		r.Set.OpenAPIFileName = openAPIFileName
+		resourcePackagesPaths, err := pathutil.DirsWithFile(args[0], openAPIFileName, r.Set.RecurseSubPackages)
+		if err != nil {
+			return err
+		}
+
+		if len(resourcePackagesPaths) == 0 {
+			return errors.Errorf("unable to find %q in package %q", r.Set.OpenAPIFileName, args[0])
+		}
+
+		for _, resourcesPath := range resourcePackagesPaths {
+			r.Set = settersutil.FieldSetter{
+				Name:               r.Set.Name,
+				Value:              r.Set.Value,
+				ListValues:         r.Set.ListValues,
+				Description:        r.Set.Description,
+				SetBy:              r.Set.SetBy,
+				Count:              0,
+				OpenAPIPath:        filepath.Join(resourcesPath, openAPIFileName),
+				OpenAPIFileName:    openAPIFileName,
+				ResourcesPath:      resourcesPath,
+				RecurseSubPackages: r.Set.RecurseSubPackages,
+			}
+			count, err := r.Set.Set()
+			if err != nil {
+				// return err if there is only package
+				if len(resourcePackagesPaths) == 1 {
+					return err
+				} else {
+					// print error message and continue if there are multiple packages to set
+					fmt.Fprintf(c.OutOrStdout(), "%s in package %q\n", err.Error(), r.Set.ResourcesPath)
+				}
+			} else {
+				fmt.Fprintf(c.OutOrStdout(), "set %d fields in package %q\n", count, r.Set.ResourcesPath)
+			}
+		}
+		return nil
 	}
 	if len(args) > 2 || c.Flag("values").Changed {
 		return handleError(c, r.perform(c, args))

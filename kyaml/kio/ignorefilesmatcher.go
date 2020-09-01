@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/ext"
 )
 
-// ignoreFilesMatcher handles `.krmignore` files, which allows for ignoring
+// IgnoreFilesMatcher handles `.krmignore` files, which allows for ignoring
 // files or folders in a package. The format of this file is a subset of the
 // gitignore format, with recursive patterns (like a/**/c) not supported. If a
 // file or folder matches any of the patterns in the .krmignore file for the
@@ -30,14 +30,14 @@ import (
 //   package contains a pattern that ignores the directory foo, if foo is a
 //   subpackage, it will still be included if the IncludeSubpackages property
 //   is set to true
-type ignoreFilesMatcher struct {
+type IgnoreFilesMatcher struct {
 	matchers []matcher
 }
 
 // readIgnoreFile checks whether there is a .krmignore file in the path, and
 // if it is, reads it in and turns it into a matcher. If we can't find a file,
 // we just add a matcher that match nothing.
-func (i *ignoreFilesMatcher) readIgnoreFile(path string) error {
+func (i *IgnoreFilesMatcher) readIgnoreFile(path string) error {
 	m, err := gitignore.NewGitIgnore(filepath.Join(path, ext.GetIgnoreFileName()))
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -60,7 +60,7 @@ func (i *ignoreFilesMatcher) readIgnoreFile(path string) error {
 // is correct for the provided filepath. Matchers are removed once
 // we encounter a filepath that is not a subpath of the basepath for
 // the matcher.
-func (i *ignoreFilesMatcher) verifyPath(path string) {
+func (i *IgnoreFilesMatcher) verifyPath(path string) {
 	for j := len(i.matchers) - 1; j >= 0; j-- {
 		matcher := i.matchers[j]
 		if !strings.HasPrefix(path, matcher.basePath) {
@@ -72,7 +72,7 @@ func (i *ignoreFilesMatcher) verifyPath(path string) {
 
 // matchFile checks whether the file given by the provided path matches
 // any of the patterns in the .krmignore file for the package.
-func (i *ignoreFilesMatcher) matchFile(path string) bool {
+func (i *IgnoreFilesMatcher) matchFile(path string) bool {
 	if len(i.matchers) == 0 {
 		return false
 	}
@@ -82,7 +82,7 @@ func (i *ignoreFilesMatcher) matchFile(path string) bool {
 
 // matchFile checks whether the directory given by the provided path matches
 // any of the patterns in the .krmignore file for the package.
-func (i *ignoreFilesMatcher) matchDir(path string) bool {
+func (i *IgnoreFilesMatcher) matchDir(path string) bool {
 	if len(i.matchers) == 0 {
 		return false
 	}

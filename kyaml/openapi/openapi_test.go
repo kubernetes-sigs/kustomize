@@ -160,6 +160,82 @@ openAPI:
 		fmt.Sprintf("%v", s.Schema.Extensions))
 }
 
+func TestDeleteSchemaInFile(t *testing.T) {
+	ResetOpenAPI()
+	inputyaml := `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.image-name:
+      x-k8s-cli:
+        setter:
+          name: image-name
+          value: "nginx"
+ `
+	f, err := ioutil.TempFile("", "openapi-")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.NoError(t, ioutil.WriteFile(f.Name(), []byte(inputyaml), 0600)) {
+		t.FailNow()
+	}
+
+	err = AddSchemaFromFile(f.Name())
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	s, err := GetSchema(`{"$ref": "#/definitions/io.k8s.cli.setters.image-name"}`)
+
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.Greater(t, len(globalSchema.schema.Definitions), 200) {
+		t.FailNow()
+	}
+	assert.Equal(t, `map[x-k8s-cli:map[setter:map[name:image-name value:nginx]]]`,
+		fmt.Sprintf("%v", s.Schema.Extensions))
+
+	err = DeleteSchemaInFile(f.Name())
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	_, err = GetSchema(`{"$ref": "#/definitions/io.k8s.cli.setters.image-name"}`)
+
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+
+	if !assert.Equal(t, `object has no key "io.k8s.cli.setters.image-name"`, err.Error()) {
+		t.FailNow()
+	}
+}
+
+func TestDeleteSchemaInFileNoDefs(t *testing.T) {
+	ResetOpenAPI()
+	inputyaml := `
+openAPI:
+  definitions:
+ `
+	f, err := ioutil.TempFile("", "openapi-")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.NoError(t, ioutil.WriteFile(f.Name(), []byte(inputyaml), 0600)) {
+		t.FailNow()
+	}
+
+	err = AddSchemaFromFile(f.Name())
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	err = DeleteSchemaInFile(f.Name())
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+}
+
 func TestPopulateDefsInOpenAPI_Substitution(t *testing.T) {
 	ResetOpenAPI()
 	inputyaml := `

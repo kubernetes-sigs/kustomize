@@ -5,7 +5,9 @@ package commands
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 
 	"github.com/go-openapi/spec"
@@ -13,9 +15,9 @@ import (
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/errors"
-	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
+	"sigs.k8s.io/kustomize/kyaml/pathutil"
 	"sigs.k8s.io/kustomize/kyaml/setters"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
@@ -59,6 +61,8 @@ func NewCreateSetterRunner(parent string) *CreateSetterRunner {
 	set.Flags().StringVar(&r.SchemaPath, "schema-path", "",
 		`openAPI schema file path for setter constraints -- file content `+
 			`e.g. {"type": "string", "maxLength": 15, "enum": ["allowedValue1", "allowedValue2"]}`)
+	set.Flags().BoolVarP(&r.CreateSetter.RecurseSubPackages, "recurse-subpackages", "R", false,
+		"creates setter recursively in all the nested subpackages")
 	set.Flags().MarkHidden("version")
 	fixDocs(parent, set)
 	r.Command = set
@@ -111,42 +115,6 @@ func (r *CreateSetterRunner) preRunE(c *cobra.Command, args []string) error {
 	}
 
 	if setterVersion == "v2" {
-		var err error
-		r.OpenAPIFile, err = ext.GetOpenAPIFile(args)
-		if err != nil {
-			return err
-		}
-
-		if err := openapi.AddSchemaFromFile(r.OpenAPIFile); err != nil {
-			return err
-		}
-
-		// check if substitution with same name exists and throw error
-		ref, err := spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SubstitutionDefinitionPrefix + r.CreateSetter.Name)
-		if err != nil {
-			return err
-		}
-
-		subst, _ := openapi.Resolve(&ref)
-		// if substitution already exists with the input setter name, throw error
-		if subst != nil {
-			return errors.Errorf("substitution with name %s already exists, "+
-				"substitution and setter can't have same name", r.CreateSetter.Name)
-		}
-
-		// check if setter with same name exists and throw error
-		ref, err = spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + r.CreateSetter.Name)
-		if err != nil {
-			return err
-		}
-
-		setter, _ := openapi.Resolve(&ref)
-		// if setter already exists with the input setter name, throw error
-		if setter != nil {
-			return errors.Errorf("setter with name %s already exists, "+
-				"if you want to modify it, please delete the existing setter and recreate it", r.CreateSetter.Name)
-		}
-
 		r.CreateSetter.Description = r.Set.SetPartialField.Description
 		r.CreateSetter.SetBy = r.Set.SetPartialField.SetBy
 		r.CreateSetter.Type = r.Set.SetPartialField.Type
@@ -212,7 +180,60 @@ func (r *CreateSetterRunner) processSchema() error {
 
 func (r *CreateSetterRunner) set(c *cobra.Command, args []string) error {
 	if setterVersion == "v2" {
-		return r.CreateSetter.Create(r.OpenAPIFile, args[0])
+		openAPIFileName, err := ext.OpenAPIFileName()
+		if err != nil {
+			return err
+		}
+
+		r.CreateSetter.OpenAPIFileName = openAPIFileName
+		resourcePackagesPaths, err := pathutil.DirsWithFile(args[0], openAPIFileName, r.CreateSetter.RecurseSubPackages)
+		if err != nil {
+			return err
+		}
+
+		if len(resourcePackagesPaths) == 0 {
+			return errors.Errorf("unable to find %q in package %q", r.CreateSetter.OpenAPIFileName, args[0])
+		}
+		for _, resourcesPath := range resourcePackagesPaths {
+			r.CreateSetter = settersutil.SetterCreator{
+				Name:               r.CreateSetter.Name,
+				SetBy:              r.CreateSetter.SetBy,
+				Description:        r.CreateSetter.Description,
+				Type:               r.CreateSetter.Type,
+				Schema:             r.CreateSetter.Schema,
+				FieldName:          r.CreateSetter.FieldName,
+				FieldValue:         r.CreateSetter.FieldValue,
+				Required:           r.CreateSetter.Required,
+				RecurseSubPackages: r.CreateSetter.RecurseSubPackages,
+				OpenAPIFileName:    openAPIFileName,
+				OpenAPIPath:        filepath.Join(resourcesPath, openAPIFileName),
+				ResourcesPath:      resourcesPath,
+			}
+
+			// Add schema present in openAPI file for current package
+			if err := openapi.AddSchemaFromFile(r.CreateSetter.OpenAPIPath); err != nil {
+				return err
+			}
+
+			err := r.CreateSetter.Create()
+			if err != nil {
+				// return err if there is only package
+				if len(resourcePackagesPaths) == 1 {
+					return err
+				} else {
+					// print error message and continue if there are multiple packages to set
+					fmt.Fprintf(c.OutOrStdout(), "%s in package %q\n", err.Error(), r.CreateSetter.ResourcesPath)
+				}
+			} else {
+				fmt.Fprintf(c.OutOrStdout(), "created setter %q in package %q\n", r.CreateSetter.Name, r.CreateSetter.ResourcesPath)
+			}
+
+			// Delete schema present in openAPI file for current package
+			if err := openapi.DeleteSchemaInFile(r.CreateSetter.OpenAPIPath); err != nil {
+				return err
+			}
+		}
+		return nil
 	}
 
 	rw := &kio.LocalPackageReadWriter{PackagePath: args[0]}
