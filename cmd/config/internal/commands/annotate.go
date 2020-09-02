@@ -4,9 +4,12 @@
 package commands
 
 import (
+	"fmt"
+	"io"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -31,6 +34,8 @@ func NewAnnotateRunner(parent string) *AnnotateRunner {
 	c.Flags().StringVar(&r.Name, "name", "", "Resource name to annotate")
 	c.Flags().StringVar(&r.Namespace, "namespace", "", "Resource namespace to annotate")
 	c.Flags().StringSliceVar(&r.Values, "kv", []string{}, "annotation as KEY=VALUE")
+	c.Flags().BoolVarP(&r.RecurseSubPackages, "recurse-subpackages", "R", false,
+		"add annotations recursively in all the nested subpackages")
 	return r
 }
 
@@ -39,13 +44,14 @@ func AnnotateCommand(parent string) *cobra.Command {
 }
 
 type AnnotateRunner struct {
-	Command    *cobra.Command
-	Values     []string
-	Kind       string
-	Name       string
-	ApiVersion string
-	Namespace  string
-	Path       string
+	Command            *cobra.Command
+	Values             []string
+	Kind               string
+	Name               string
+	ApiVersion         string
+	Namespace          string
+	Path               string
+	RecurseSubPackages bool
 }
 
 func (r *AnnotateRunner) runE(c *cobra.Command, args []string) error {
@@ -55,16 +61,54 @@ func (r *AnnotateRunner) runE(c *cobra.Command, args []string) error {
 		rw := &kio.ByteReadWriter{Reader: c.InOrStdin(), Writer: c.OutOrStdout()}
 		input = []kio.Reader{rw}
 		output = []kio.Writer{rw}
-	} else {
-		rw := &kio.LocalPackageReadWriter{PackagePath: args[0], NoDeleteFiles: true}
-		input = []kio.Reader{rw}
-		output = []kio.Writer{rw}
+
+		return handleError(c, kio.Pipeline{
+			Inputs:  input,
+			Filters: []kio.Filter{r},
+			Outputs: output,
+		}.Execute())
 	}
-	return handleError(c, kio.Pipeline{
+
+	e := executeCmdOnPkgs{
+		writer:             c.OutOrStdout(),
+		needOpenAPI:        false,
+		recurseSubPackages: r.RecurseSubPackages,
+		cmdRunner:          r,
+		rootPkgPath:        args[0],
+	}
+
+	err := e.execute()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *AnnotateRunner) executeCmd(w io.Writer, pkgPath string) error {
+	openAPIFileName, err := ext.OpenAPIFileName()
+	if err != nil {
+		return err
+	}
+	rw := &kio.LocalPackageReadWriter{PackagePath: pkgPath, NoDeleteFiles: true, PackageFileName: openAPIFileName}
+	input := []kio.Reader{rw}
+	output := []kio.Writer{rw}
+	err = kio.Pipeline{
 		Inputs:  input,
 		Filters: []kio.Filter{r},
 		Outputs: output,
-	}.Execute())
+	}.Execute()
+	if err != nil {
+		// return err if there is only package
+		if !r.RecurseSubPackages {
+			return err
+		} else {
+			// print error message and continue if there are multiple packages to annotate
+			fmt.Fprintf(w, "%s in package %q\n", err.Error(), pkgPath)
+		}
+	} else {
+		fmt.Fprintf(w, "added annotations in package %q\n", pkgPath)
+	}
+	return nil
 }
 
 func (r *AnnotateRunner) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {

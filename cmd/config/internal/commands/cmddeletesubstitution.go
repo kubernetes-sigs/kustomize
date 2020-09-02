@@ -4,6 +4,10 @@
 package commands
 
 import (
+	"fmt"
+	"io"
+	"path/filepath"
+
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
@@ -20,6 +24,8 @@ func NewDeleteSubstitutionRunner(parent string) *DeleteSubstitutionRunner {
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 	}
+	c.Flags().BoolVarP(&r.RecurseSubPackages, "recurse-subpackages", "R", false,
+		"deletes substitution recursively in all the nested subpackages")
 	fixDocs(parent, c)
 	r.Command = c
 
@@ -34,6 +40,7 @@ type DeleteSubstitutionRunner struct {
 	Command            *cobra.Command
 	DeleteSubstitution settersutil.DeleterCreator
 	OpenAPIFile        string
+	RecurseSubPackages bool
 }
 
 func (r *DeleteSubstitutionRunner) preRunE(c *cobra.Command, args []string) error {
@@ -54,9 +61,45 @@ func (r *DeleteSubstitutionRunner) preRunE(c *cobra.Command, args []string) erro
 }
 
 func (r *DeleteSubstitutionRunner) runE(c *cobra.Command, args []string) error {
-	return handleError(c, r.delete(c, args))
+	e := executeCmdOnPkgs{
+		needOpenAPI:        true,
+		writer:             c.OutOrStdout(),
+		rootPkgPath:        args[0],
+		recurseSubPackages: r.RecurseSubPackages,
+		cmdRunner:          r,
+	}
+	err := e.execute()
+	if err != nil {
+		return handleError(c, err)
+	}
+	return nil
 }
 
-func (r *DeleteSubstitutionRunner) delete(c *cobra.Command, args []string) error {
-	return r.DeleteSubstitution.Delete(r.OpenAPIFile, args[0])
+func (r *DeleteSubstitutionRunner) executeCmd(w io.Writer, pkgPath string) error {
+	openAPIFileName, err := ext.OpenAPIFileName()
+	if err != nil {
+		return err
+	}
+	r.DeleteSubstitution = settersutil.DeleterCreator{
+		Name:               r.DeleteSubstitution.Name,
+		DefinitionPrefix:   fieldmeta.SubstitutionDefinitionPrefix,
+		RecurseSubPackages: r.RecurseSubPackages,
+		OpenAPIFileName:    openAPIFileName,
+		OpenAPIPath:        filepath.Join(pkgPath, openAPIFileName),
+		ResourcesPath:      pkgPath,
+	}
+
+	err = r.DeleteSubstitution.Delete()
+	if err != nil {
+		// return err if RecurseSubPackages is false
+		if !r.DeleteSubstitution.RecurseSubPackages {
+			return err
+		} else {
+			// print error message and continue if RecurseSubPackages is true
+			fmt.Fprintf(w, "%s in package %q\n\n", err.Error(), pkgPath)
+		}
+	} else {
+		fmt.Fprintf(w, "deleted substitution %q in package %q\n\n", r.DeleteSubstitution.Name, pkgPath)
+	}
+	return nil
 }

@@ -7,11 +7,11 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/commands"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
@@ -79,6 +79,7 @@ spec:
       - name: sidecar
         image: nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.my.image"}
  `,
+			out: `deleted substitution "my.image" in package "${baseDir}"`,
 			expectedResources: `
 apiVersion: apps/v1
 kind: Deployment
@@ -169,6 +170,7 @@ spec:
       - name: sidecar
         image: nginx:1.7.9 # {"$openapi":"my-image-sub"}
  `,
+			out: `deleted substitution "my-image-sub" in package "${baseDir}"`,
 			expectedResources: `
 apiVersion: apps/v1
 kind: Deployment
@@ -297,7 +299,7 @@ openAPI:
           value: "3"
           setBy: me
  `,
-			err: "substitution with name my-image-sub-not-present does not exist",
+			err: `substitution "my-image-sub-not-present" does not exist`,
 		},
 
 		{
@@ -415,7 +417,7 @@ spec:
       - name: sidecar
         image: nginx::1.7.9 # {"$openapi":"my-image-subst"}
  `,
-			err: "substitution is used in substitution my-nested-subst, please delete the parent substitution first",
+			err: `substitution "my-image-subst" is used in substitution "my-nested-subst", please delete the parent substitution first`,
 		},
 	}
 	for i := range tests {
@@ -425,24 +427,18 @@ spec:
 			openapi.ResetOpenAPI()
 			defer openapi.ResetOpenAPI()
 
-			f, err := ioutil.TempFile("", "k8s-cli-")
+			baseDir, err := ioutil.TempDir("", "")
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			defer os.Remove(f.Name())
-
-			err = ioutil.WriteFile(f.Name(), []byte(test.inputOpenAPI), 0600)
+			defer os.RemoveAll(baseDir)
+			f := filepath.Join(baseDir, "Krmfile")
+			err = ioutil.WriteFile(f, []byte(test.inputOpenAPI), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
-			old := ext.GetOpenAPIFile
-			defer func() { ext.GetOpenAPIFile = old }()
-			ext.GetOpenAPIFile = func(args []string) (s string, err error) {
-				return f.Name(), nil
-			}
-
-			r, err := ioutil.TempFile("", "k8s-cli-*.yaml")
+			r, err := ioutil.TempFile(baseDir, "k8s-cli-*.yaml")
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -455,21 +451,38 @@ spec:
 			runner := commands.NewDeleteSubstitutionRunner("")
 			out := &bytes.Buffer{}
 			runner.Command.SetOut(out)
-			runner.Command.SetArgs(append([]string{r.Name()}, test.args...))
+			runner.Command.SetArgs(append([]string{baseDir}, test.args...))
 			err = runner.Command.Execute()
+
 			if test.err != "" {
 				if !assert.NotNil(t, err) {
 					t.FailNow()
-				} else {
-					assert.Equal(t, err.Error(), test.err)
-					return
 				}
+				assert.Equal(t, test.err, err.Error())
+				return
 			}
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
-			if !assert.Equal(t, test.out, out.String()) {
+			// normalize path format for windows
+			actualNorm := strings.Replace(
+				strings.Replace(out.String(), "\\", "/", -1),
+				"//", "/", -1)
+			expectedOut := strings.Replace(test.out, "${baseDir}", baseDir, -1)
+			expectedNorm := strings.Replace(expectedOut, "\\", "/", -1)
+
+			if !assert.Equal(t, expectedNorm, strings.TrimSpace(actualNorm)) {
+				t.FailNow()
+			}
+
+			actualOpenAPI, err := ioutil.ReadFile(f)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			if !assert.Equal(t,
+				strings.TrimSpace(test.expectedOpenAPI),
+				strings.TrimSpace(string(actualOpenAPI))) {
 				t.FailNow()
 			}
 
@@ -480,18 +493,9 @@ spec:
 			if !assert.Equal(t,
 				strings.TrimSpace(test.expectedResources),
 				strings.TrimSpace(string(actualResources))) {
-				return
+				t.FailNow()
 			}
 
-			actualOpenAPI, err := ioutil.ReadFile(f.Name())
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-			if !assert.Equal(t,
-				strings.TrimSpace(test.expectedOpenAPI),
-				strings.TrimSpace(string(actualOpenAPI))) {
-				t.FailNow()
-			}
 		})
 	}
 }
