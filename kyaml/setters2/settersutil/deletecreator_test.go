@@ -75,8 +75,10 @@ func TestDeleterCreator_Delete(t *testing.T) {
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
+	dc.OpenAPIPath = openAPI.Name()
+	dc.ResourcesPath = resource.Name()
 
-	err = dc.Delete(openAPI.Name(), resource.Name())
+	err = dc.Delete()
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
