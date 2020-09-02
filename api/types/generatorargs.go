@@ -13,6 +13,9 @@ type GeneratorArgs struct {
 	// NamePrefix + this.Name + hash(content of generated resource).
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 
+	// Mutability of the generated resource.
+	Immutable *bool `json:"immutable,omitempty" yaml:"immutable,omitempty"`
+
 	// Behavior of generated resource, must be one of:
 	//   'create': create a new one
 	//   'replace': replace the existing one

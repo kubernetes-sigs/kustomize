@@ -22,6 +22,7 @@ func makeFreshSecret(
 		s.Type = corev1.SecretTypeOpaque
 	}
 	s.Data = map[string][]byte{}
+	s.Immutable = args.Immutable
 	return s
 }
 

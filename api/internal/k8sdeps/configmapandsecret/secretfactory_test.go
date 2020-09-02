@@ -33,6 +33,13 @@ func makeEnvSecret(name string) *corev1.Secret {
 	}
 }
 
+func makeImmutableEnvSecret(name string) *corev1.Secret {
+	s := makeEnvSecret(name)
+	immutable := true
+	s.Immutable = &immutable
+	return s
+}
+
 func makeFileSecret(name string) *corev1.Secret {
 	return &corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
@@ -82,6 +89,8 @@ func TestConstructSecret(t *testing.T) {
 		expected    *corev1.Secret
 	}
 
+	immutable := true
+
 	testCases := []testCase{
 		{
 			description: "construct secret from env",
@@ -94,6 +103,19 @@ func TestConstructSecret(t *testing.T) {
 				},
 			},
 			expected: makeEnvSecret("envSecret"),
+		},
+		{
+			description: "construct immutable secret from env",
+			input: types.SecretArgs{
+				GeneratorArgs: types.GeneratorArgs{
+					Name:      "envSecret",
+					Immutable: &immutable,
+					KvPairSources: types.KvPairSources{
+						EnvSources: []string{"secret/app.env"},
+					},
+				},
+			},
+			expected: makeImmutableEnvSecret("envSecret"),
 		},
 		{
 			description: "construct secret from file",

@@ -33,6 +33,13 @@ func makeEnvConfigMap(name string) *corev1.ConfigMap {
 	}
 }
 
+func makeImmutableEnvConfigMap(name string) *corev1.ConfigMap {
+	cm := makeEnvConfigMap(name)
+	immutable := true
+	cm.Immutable = &immutable
+	return cm
+}
+
 func makeFileConfigMap(name string) *corev1.ConfigMap {
 	return &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
@@ -85,6 +92,7 @@ func TestConstructConfigMap(t *testing.T) {
 		expected    *corev1.ConfigMap
 	}
 
+	immutable := true
 	testCases := []testCase{
 		{
 			description: "construct config map from env",
@@ -99,6 +107,21 @@ func TestConstructConfigMap(t *testing.T) {
 				},
 			},
 			expected: makeEnvConfigMap("envConfigMap"),
+		},
+		{
+			description: "construct immutable config map from env",
+			input: types.ConfigMapArgs{
+				GeneratorArgs: types.GeneratorArgs{
+					Name:      "envConfigMap",
+					Immutable: &immutable,
+					KvPairSources: types.KvPairSources{
+						EnvSources: []string{
+							filepath.Join("configmap", "app.env"),
+						},
+					},
+				},
+			},
+			expected: makeImmutableEnvConfigMap("envConfigMap"),
 		},
 		{
 			description: "construct config map from file",

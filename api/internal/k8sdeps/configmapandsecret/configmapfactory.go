@@ -21,6 +21,7 @@ func makeFreshConfigMap(
 	cm.Name = args.Name
 	cm.Namespace = args.Namespace
 	cm.Data = map[string]string{}
+	cm.Immutable = args.Immutable
 	return cm
 }
 
